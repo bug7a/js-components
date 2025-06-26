@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        
+        <title>UI Toggle</title>
+        
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <script src="../comp-m1/light-motion.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+
+        let box = null;
+        
+        window.onload = function() {
+            
+            box = Box(40, 40, 100, 100, {
+                color: "red",
+            });
+
+            
+            LightMotion({
+                obj: box,
+                fromLeft: 40,
+                toLeft: 200,
+                fromTop: null,
+                toTop: null,
+                toOpacity: 1,
+                onComplate: function() {
+                    console.log("complated");
+                },
+            });
+            
+            
+            /*
+            box.setMotion("left 0.2s, opacity 0.2s");
+            box.opacity = 0;
+            box.withMotion(function(self) {
+                self.opacity = 1;
+                self.left = 200;
+            });
+            */
+            
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+        
+        <!-- HTML content -->
+        
+    </body>
+</html>

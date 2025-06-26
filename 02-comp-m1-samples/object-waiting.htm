@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        
+        <title>Object Waiting</title>
+        
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <script src="../comp-m1/object-waiting.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+
+        let btnAction = null;
+        let lblHide = null;
+        
+        window.onload = function() {
+
+            page.color = "whitesmoke";
+
+            startFlexBox();
+
+                // BUTTON: Show waiting.
+                btnAction = Button({
+                    text: "Download",
+                    color: basic.ACTION2_COLOR,
+                    width: 170,
+                    spaceX: 20,
+                    minimal: 0,
+                    border: 1,
+                    round: 6,
+                    borderColor: "rgba(0, 0, 0, 0.3)",
+                    type: 1,
+                });
+                that.setMotion("filter 0.2s");
+
+                // Because, btnAction is positioned automatically but objectWaiting is not
+                page.onResize(function() {
+                    if (btnAction.objectWaiting) {
+                        btnAction.objectWaiting.reposition();
+                    }
+                });
+
+                btnAction.on("click", function() {
+
+                    if (btnAction.type == 1) {
+
+                        // WAITING: Create object 1 time.
+                        btnAction.objectWaiting = ObjectWaiting({
+                            target: btnAction, // NOTE: or use for container box.
+                            waitingIcon: "../comp-m1/ui-waiting-view/clock.png",
+                        });
+
+                        that.onHide = function() {
+                            // Do something
+                            btnAction.objectWaiting = null;
+                        };
+
+                        lblHide.visible = 1;
+
+                    }
+
+                });
+
+                btnAction.on("mouseover", function() {
+                    btnAction.elem.style.filter = "brightness(110%)";
+                });
+
+                btnAction.on("mouseout", function() {
+                    btnAction.elem.style.filter = "brightness(100%)";
+                });
+                    
+
+            endFlexBox();
+
+            // LABEL: Hide the object waiting
+            lblHide = Label({
+                left: 30,
+                top: 30,
+                text: "Hide and Remove",
+                width: "auto",
+                fontSize: 14,
+                border: 0,
+                spaceX: 12,
+                spaceY: 4,
+                round: 4,
+                color: "lightgray",
+                visible: 0,
+            });
+            that.elem.style.cursor = "pointer";
+            that.on("click", function() {
+                btnAction.objectWaiting.hide();
+                btnAction.text = "Open";
+                btnAction.type = 2;
+                lblHide.visible = 0;
+            });
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+        
+        <!-- HTML content -->
+        
+    </body>
+</html>

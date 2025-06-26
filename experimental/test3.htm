@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pixel Perfect Navbar</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #ffffff;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Roboto', sans-serif;
+    }
+
+    .navbar {
+      width: 360px;
+      height: 80px;
+      background-color: #f0f0f0;
+      border: 1px solid #cccccc;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      box-sizing: border-box;
+      position: relative;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 32px;
+    }
+
+    .tab {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #999999;
+      font-size: 12px;
+      line-height: 14px;
+      letter-spacing: 0.5px;
+      font-weight: 500;
+      position: relative;
+      width: 80px;
+    }
+
+    .tab .icon {
+      width: 24px;
+      height: 24px;
+      margin-bottom: 4px;
+      background-color: currentColor;
+      mask: url('data:image/svg+xml;utf8,<svg fill="black" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h10M4 18h10"/></svg>') no-repeat center;
+      -webkit-mask: url('data:image/svg+xml;utf8,<svg fill="black" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h10M4 18h10"/></svg>') no-repeat center;
+      background-size: contain;
+    }
+
+    .tab.active {
+      color: #333333;
+    }
+
+    .tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 20px;
+      width: 40px;
+      height: 2px;
+      background-color: #4da6ff;
+      border-radius: 1px;
+    }
+
+    .add-button {
+      width: 64px;
+      min-width: 64px;
+      height: 64px;
+      border: 2px solid #cccccc;
+      border-radius: 50%;
+      background-color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .add-button::before {
+      content: '+';
+      font-size: 32px;
+      color: #666666;
+      line-height: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="navbar">
+    <div class="tabs">
+      <div class="tab">
+        <div class="icon" style="color: #999999;"></div>
+        STATUS
+      </div>
+      <div class="tab active">
+        <div class="icon" style="color: #333333;"></div>
+        RECEIPTS
+      </div>
+      <div class="tab">
+        <div class="icon" style="color: #999999;"></div>
+        TOOLS
+      </div>
+    </div>
+    <div class="add-button"></div>
+  </div>
+</body>
+</html>

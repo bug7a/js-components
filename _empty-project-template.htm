@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        
+        <title>New JS Component</title>
+        
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <!-- LIBRARY FILES -->
+        <!-- <link rel="preload" href="image.png" as="image"> -->
+        <link rel="preload" href="basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="basic/basic.min.css">
+        <script src="basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <!--<script src="basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>-->
+
+        
+        <!-- <script src="_component-template.min.js" type="text/javascript" charset="utf-8"></script> -->
+
+        <!-- ALL COMPONENTS IN ONE FILE -->
+        <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
+
+        <script>
+        
+        // *** VARIABLES:          
+        let myString = "";
+        let myInteger = 0;
+        let myFloat = 0.5;
+        let myArray = [];
+
+        // First running function.
+        window.onload = function() {
+
+            // GROUP: Autolayout
+            startFlexBox({
+                flexDirection: "column",
+                gap: "12px",
+            });
+
+                // COMP NAME: #1
+                CompName({
+                    key: "1",
+                    badgetText: "7",
+                });
+                that.onClick = function(self) {
+                    println("Clicked Comp " + self.key);
+                };
+                myArray.push(that);
+
+                // COMP NAME: #2
+                CompName({
+                    key: "2",
+                    badgetText: "11",
+                    boxBackgroundOverColor: "#F1E2C3",
+                });
+                that.onClick = function(self) {
+                    println("Clicked Comp " + self.key);
+                };
+                myArray.push(that);
+
+            endFlexBox(); // END GROUP
+
+            //myArray[1].setBadgetText("2");
+            //myArray[1].setBoxBackgroundOverColor(CompName("get").boxBackgroundOverColor);
+            
+        };
+        
+        // Function running every second.
+        const loop = function() {
+                        
+        };
+        
+        // *** OTHER FUNCTIONS:
+        const doSomthing1 = function() {
+            
+        };
+        
+        const doSomething2 = function() {
+            
+        };
+
+        </script>
+
+    </head>
+    <body>
+        
+        <!-- HTML content -->
+        
+    </body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        
+        <title>Check Box</title>
+        
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- ,user-scalable=no -->
+
+        <!-- LIBRARY FILES -->
+        <!-- <link rel="preload" href="image.png" as="image"> -->
+        <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <!--<script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>-->
+
+        <script src="../comp-m1/check-box.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <style>
+
+        /* 
+        body {
+            margin: 0px !important;
+            overflow: hidden !important;
+        }
+        */
+
+        </style>
+
+        <script>
+        
+        // VARIABLES            
+        const checkDataList = [
+            "Broccoli",
+            "Sweet potato",
+            "Blueberries",
+        ];
+        let checkList = [];
+
+        // First running function.
+        window.onload = function() {
+
+            // GROUP:
+            startFlexBox({
+                left: 40,
+                top: 40,
+                width: "auto",
+                height: "auto",
+                flexDirection: "column",
+                gap: "1px",
+                alignItems: "flex-start",
+                //justifyContent: "flex-start",
+            });
+
+                checkDataList.forEach(function(data, index) {
+
+                    // CHECK BOX: 
+                    CheckBox({
+                        left: 0,
+                        top: 0,
+                        id: "check-box-" + index,
+                        label: data,
+                        color: "white",
+                        //box_checkedColor: "indianred",
+                        //box_checkedIconReverseColorFilter: 0,
+                    });
+                    checkList.push(that);
+
+                    const _checkBox = that;
+                    that.onChange = function() {
+                        console.log(`${_checkBox.id}: ${_checkBox.checked}`);
+                    };
+
+                    // checkBox.setChecked(1);
+                    // checkBox.toggle();
+                    // checkBox.setLabel("I Agree");
+                    // checkBox.setColor("whitesmoke");
+
+                });
+
+            endFlexBox();
+
+            // Change colors
+            checkList.forEach(function(checkBox) {
+                checkBox.setColor("whitesmoke");
+            });
+
+            // Change value
+            checkList[0].setChecked(1);
+            
+        };
+
+        </script>
+
+    </head>
+    <body>
+        
+        <!-- HTML content -->
+        
+    </body>
+</html>
