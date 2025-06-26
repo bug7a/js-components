@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        
+        <title>Tooltip</title>
+        
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <!-- LIBRARY FILES -->
+        <!-- <link rel="preload" href="image.png" as="image"> -->
+        <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <!--<script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>-->
+
+        <script src="../comp-m2/tooltip.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <style>
+
+        /* 
+        body {
+            margin: 0px !important;
+            overflow: hidden !important;
+        }
+        */
+
+        </style>
+
+        <script>
+        
+        // VARIABLES            
+        let lblClean = null;
+        let btn1, btn2 = null;
+
+        // First running function.
+        window.onload = function() {
+
+            // GROUP: Autolayout
+            startFlexBox({
+                gap: "40px",
+            });
+
+                // BUTTON:
+                btn1 = Button({
+                    text: "Hover with Mouse",
+                    width: 220,
+                    minimal: 1,
+                    color: "whitesmoke",
+                });
+
+                // ICON: Carrot
+                btn2 = Icon({
+                    width: 70,
+                    height: 70,
+                });
+                that.load("tooltip/havuc.png")
+            
+            endFlexBox(); // GROUP End
+
+            // TOOLTIP: btn
+            btn1.tooltip = Tooltip({
+                target: btn1,
+                hintText: "Hint about this button",
+                lbl_color: "rgba(255, 255, 255, 0.80)",
+            });
+
+            // TOOLTIP: btn2
+            btn2.tooltip = Tooltip({
+                target: btn2,
+                hintText: "It's a Carrot",
+                hintPosition: "bottom",
+                lbl_color: "yellow",
+                lbl_border: 1,
+                lbl_textColor: "orangered",
+                lbl_borderColor: "orangered",
+                lbl_fontSize: 20,
+                lbl_round: 6,
+            });
+
+            
+
+            // LABEL: Clean the hints
+            lblClean = Label({
+                left: 30,
+                top: 30,
+                text: "Clean the Hints",
+                width: "auto",
+                fontSize: 14,
+                border: 0,
+                spaceX: 12,
+                spaceY: 4,
+                round: 4,
+                color: "lightgray",
+            });
+            that.elem.style.cursor = "pointer";
+            that.on("click", function() {
+
+                lblClean.visible = 0;
+                
+                if (btn1.tooltip) {
+                    btn1.tooltip.remove();
+                    btn1.tooltip = null;
+                }
+                
+                if (btn2.tooltip) {
+                    btn2.tooltip.remove();
+                    btn2.tooltip = null;
+                }
+            
+            });
+            
+        };
+
+        </script>
+
+    </head>
+    <body>
+        
+        <!-- HTML content -->
+        
+    </body>
+</html>

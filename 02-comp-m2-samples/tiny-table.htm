@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        
+        <title>TINY TABLE</title>
+        
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <!-- LIBRARY FILES -->
+        <!-- <link rel="preload" href="image.png" as="image"> -->
+        <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <!--<script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>-->
+
+        <script src="../comp-m2/tiny-table.js" type="text/javascript" charset="utf-8"></script>
+
+        <style>
+
+        /* 
+        body {
+            margin: 0px !important;
+            overflow: hidden !important;
+        }
+        */
+
+        </style>
+
+        <script>
+        
+        // VARIABLES            
+        let tinyTable = null;
+
+        // First running function.
+        window.onload = function() {
+
+            startFlexBox();
+
+                // TINY TABLE: 
+                tinyTable = TinyTable({
+                    columnHeaders: ["ID", "VALUE", "DESCRIPTION"],
+                    columnWidths: [50, 80, 380],
+                    dataRows: [
+                        ["1", "404", 'HTTP status code for <b>"Not Found"</b>'],
+                        ["2", "null", "Represents the absence of a value in many programming languages"], // <br> is also usable
+                        ["3", "true", 'Boolean value representing <b>"true"</b>'],
+                        ["4", "int", "Data type for <b>integers</b> in many programming languages"],
+                        ["5", "printf", "Function in <b>C</b> used to <b>print</b> formatted output"],
+                        ["6", "JSON", 'Lightweight data-interchange format'],
+                    ],
+                    headerBackgroundColor: "indianred",
+                    headerTextColor: "rgba(255, 255, 255, 0.8)",
+                    onCellRender: function(lbl) {
+
+                        if(lbl.index == 0) {
+                            lbl.textAlign = "center";
+                        }
+
+                        if(lbl.index == 1) {
+                            lbl.elem.style.fontFamily = "opensans-bold";
+                        }
+
+                    },
+                });
+                //that.left = 20;
+                //that.top = 20;
+
+            endFlexBox();
+            
+        };
+
+        </script>
+
+    </head>
+    <body>
+        
+        <!-- HTML content -->
+        
+    </body>
+</html>

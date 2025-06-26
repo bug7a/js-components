@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        
+        <title>Select Item</title>
+        
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <!-- LIBRARY FILES -->
+        <!-- <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous"> -->
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+
+        <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m1/select-item.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m1/item-list.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m1/search-input.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <style>
+
+        /* 
+        body {
+            margin: 0px !important;
+            overflow: hidden !important;
+        }
+        */
+
+        </style>
+
+        <script>
+        
+        // VARIABLES        
+        const itemDataList = [
+            { title:"Broccoli", desc:"Vegetable", iconFile:"select-item/fruids/brokoli.png", searchText: "Broccoli Vegetable", price: 4, previousPrice: 3 },
+            { title:"Strawberry", desc:"Fruit", iconFile:"select-item/fruids/cilek.png", searchText: "Strawberry Fruit", price: 8, previousPrice: 9 },
+            { title:"Tomato", desc:"Vegetable", iconFile:"select-item/fruids/domates.png", searchText: "Tomato Vegetable", price: 3, previousPrice: 3 },
+            { title:"Apple", desc:"Fruit", iconFile:"select-item/fruids/elma.png", searchText: "Apple Fruit", price: 2, previousPrice: 3 },
+            { title:"Carrot", desc:"Vegetable", iconFile:"select-item/fruids/havuc.png", searchText: "Carrot Vegetable", price: 6, previousPrice: 6 },
+            { title:"Watermelon", desc:"Fruit", iconFile:"select-item/fruids/karpuz.png", searchText: "Watermelon Fruit", price: 5, previousPrice: 3 },
+            { title:"Lemon", desc:"Fruit", iconFile:"select-item/fruids/limon.png", searchText: "Lemon Fruit", price: 7, previousPrice: 6 },
+            { title:"Banana", desc:"Fruit", iconFile:"select-item/fruids/muz.png", searchText: "Banana Fruit", price: 12, previousPrice: 12 },
+            { title:"Pomegranate", desc:"Fruit", iconFile:"select-item/fruids/nar.png", searchText: "Pomegranate Fruit", price: 13, previousPrice: 13 },
+            { title:"Eggplant", desc:"Vegetable", iconFile:"select-item/fruids/patlican.png", searchText: "Eggplant Vegetable", price: 5, previousPrice: 3 },
+            { title:"Blueberry", desc:"Fruit", iconFile:"select-item/fruids/yabanmersini.png", searchText: "Blueberry Fruit", price: 17, previousPrice: 18 },
+            { title:"Green Pepper", desc:"Vegetable", iconFile:"select-item/fruids/yesilbiber.png", searchText: "Green Pepper Vegetable", price: 6, previousPrice: 3 }
+        ];    
+        let myString = "";
+        let myInteger = 0;
+        let myFloat = 0.5;
+        let itemSelect = null;
+
+        // First running function.
+        window.onload = function() {
+
+            let selectedText = "";
+
+            itemSelect = SelectItem({
+                top: 40, // 40
+                left: 40, // 40
+                itemDataList: itemDataList,
+                Item: Item,
+                selectedIndex: 2,
+                //selection_Item: selection_Item,
+                //width: "100%",
+            });
+            page.add(that);
+            itemSelect.onSelect = function(index) {
+                console.log(index);
+            }
+            itemSelect.center();
+            //that.center();
+
+            /*
+            that.onClick(function() {
+                alert("a");
+            });
+            */
+            
+        }
+        
+        const Item = function(params = {}) {
+
+            // BOX: Item container
+            const box = startBox();
+
+            // Default values
+            const defaults = {
+                //left: 0,
+                //top: 0,
+                //position: "absolute",
+                width: 650, //350
+                height: 94,
+            };
+
+            box.props(defaults, params);
+
+            // *** Private variables:
+            let privateVar = "";
+
+            // *** Public variables:
+            box.publicVar = "";
+
+            // *** Private functions:
+            const privateFunc = () => {};
+
+            // *** Public functions:
+            box.publicFunc = () => {};
+            
+            box.setWidth = function(value) {
+                box.width = value;
+                const SPACE_X = 20;
+                box.boxBackground.left = SPACE_X;
+                box.boxBackground.width = box.width - (SPACE_X*2);
+            }
+
+            box.setHeight = function(value) {
+                box.height = value;
+                const SPACE_Y = 2;
+                box.boxBackground.top = SPACE_Y;
+                box.boxBackground.height = box.height - (SPACE_Y*2);
+            }
+
+                // *** OBJECT TEMPLATE:
+                box.color = "transparent";
+                box.elem.style.cursor = "pointer";
+                box.clickable = 1;
+                box.setMotion("background-color 0.2s");
+
+                // BOX: Item background.
+                box.boxBackground = Box();
+                that.color = "transparent";
+                that.round = 13;
+
+                // IMAGE: Item icon image.
+                box.ico = Icon(30, 12, 70, 70, {
+                    round: 4,
+                    color: "transparent",
+                    border: 0,
+                });
+                that.load(box.iconFile);
+                /*
+                if (box.darkTheme == 1) {
+                    box.ico.elem.style.filter = "invert(100%)";
+                }
+                */
+
+                // LABEL: Item title text.
+                box.lblTitle = Label(120, 25, 280, "auto", {
+                    text: box.title,
+                });
+
+                // LABEL: Item description text.
+                box.lblDesc = Label(120, 49, 280, "auto", {
+                    text: box.desc,
+                    textColor: "gray",
+                    fontSize: 14,
+                });
+
+            endBox();
+
+            // *** OBJECT INIT CODE:
+            box.setWidth(box.width);
+            box.setHeight(box.height);
+
+            box.onMouseOver = function() {
+                box.color = "white";
+            };
+
+            box.onMouseOut = function() {
+                box.color = "transparent";
+            };
+
+            box.elem.addEventListener("mouseover", box.onMouseOver);
+            box.elem.addEventListener("mouseout", box.onMouseOut);
+
+            makeBasicObject(box);
+            return box;
+
+        }
+
+        const selection_Item = function(params = {}) {
+
+            // BOX: Item container
+            const box = startBox();
+
+            // Default values
+            const defaults = {
+                width: 350,
+                height: 50,
+            };
+
+            box.props(defaults, params);
+
+            box.setWidth = function(value) {
+                box.width = value;
+            }
+
+            box.setHeight = function(value) {
+                box.height = value;
+            }
+
+                // *** OBJECT TEMPLATE:
+                box.color = "transparent";
+                box.elem.style.cursor = "pointer";
+                box.clickable = 1;
+                box.setMotion("background-color 0.2s");
+
+                // IMAGE: Item icon image.
+                box.ico = Icon(20, 5, 40, 40, {
+                    round: 4,
+                    color: "transparent",
+                    border: 0,
+                });
+                that.load(box.iconFile);
+
+                // LABEL: Item title text.
+                box.lblTitle = Label(66, 0, "calc(100% - 66px)", "auto", {
+                    text: box.title,
+                });
+                that.onResize(function(self) {
+                    self.center("top");
+                });
+
+            endBox();
+
+            // *** OBJECT INIT CODE:
+            box.setWidth(box.width);
+            box.setHeight(box.height);
+
+            box.onMouseOver = function() {
+                box.color = "white";
+            };
+
+            box.onMouseOut = function() {
+                box.color = "transparent";
+            };
+
+            box.elem.addEventListener("mouseover", box.onMouseOver);
+            box.elem.addEventListener("mouseout", box.onMouseOut);
+
+            makeBasicObject(box);
+            return box;
+
+        }
+
+        </script>
+
+    </head>
+    <body>
+        
+        <!-- HTML content -->
+        
+    </body>
+</html>

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        
+        <title>Slider JS Component</title>
+        
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- LIBRARY FILES -->
+        <!-- <link rel="preload" href="image.png" as="image"> -->
+        <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <!--<script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>-->
+
+        <script src="../comp-m2/slider.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+
+        let sliderA, sliderB;
+        
+        // First running function.
+        window.onload = function() {
+
+            page.color = "lightgray";
+
+            // PAGE:
+            AutoLayout({
+                flow: "vertical",
+                align: "center",
+                gap: 6,
+            });
+
+                // SLIDER A TITLE:
+                createSliderTitle("Carrots", "slider/carrot.png");
+
+                // SLIDER: A
+                sliderA = Slider({
+                    currentValue: random(0,100),
+                });
+
+                // SPACING
+                Box({
+                    height: 20,
+                    color: "transparent",
+                });
+
+                // SLIDER B TITLE
+                createSliderTitle("Blueberries", "slider/blueberries.png");
+
+                // SLIDER: B
+                sliderB = Slider({
+                    trackHeight: 44,
+                    trackColor: "indianred",
+                    currentValue: random(0,100),
+
+                });
+
+            endAutoLayout();
+
+            /*
+            // Performance test
+            startBox(0, 0, "100%", "100%");
+            that.color = "transparent";
+            that.scrollY = 1;
+                for(var i = 0; i < 300; i++) {
+                    Slider({
+                        left: 20,
+                        top: 20 + (i * 50),
+                        currentValue: random(0,100),
+                    });
+                }
+            endBox();
+            */
+
+            // GROUP: Top left buttons
+            AutoLayout({
+                flow: "horizontal",
+                align: "top left",
+                gap: 8,
+                padding: [20, 20],
+            });
+
+                const labelStyle = function(lbl) {
+                    lbl.padding = [12,4];
+                    //lbl.color = "lightgray",
+                    lbl.color = "white",
+                    //lbl.border = 1,
+                    lbl.border = 0,
+                    lbl.borderColor = "rgba(0,0,0,0.1)";
+                    lbl.round = 8;
+                    lbl.fontSize = 14;
+                    lbl.elem.style.cursor = "pointer";
+                };
+
+                const labelClickEffect = function(lbl) {
+                    // You can add
+                };
+
+                // BUTTON: Set Random Value
+                Label({
+                    text: "Set Random Values",
+                });
+                labelStyle(that);
+                that.on("click", function() {
+                    sliderA.setValue(random(0,100));
+                    sliderB.setValue(random(0,100));
+                });
+
+                // BUTTON: Show Value
+                Label({
+                    text: "Show Values",
+                });
+                labelStyle(that);
+                that.on("click", function() {
+                    sliderA.showValue();
+                    sliderB.showValue();
+                });
+
+            endAutoLayout();
+
+            // GROUP: Bottom info
+            AutoLayout({
+                flow: "vertical",
+                align: "left bottom",
+                padding: [20 ,20],
+            });
+
+                Label({
+                    text: "Inspired by Google Material 3",
+                    fontSize: 16,
+                });
+
+                Label({
+                    text: "(Not affiliated with Google)",
+                    opacity: 0.7,
+                    fontSize: 14,
+                });
+
+            endAutoLayout();
+
+        };
+
+        const createSliderTitle = function(titleText, iconPath) {
+
+            // SLIDER A TITLE:
+            AutoLayout({
+                flow: "horizontal",
+                align: "left center",
+                height: "auto",
+                width: 250,
+                gap: 8,
+                padding: [12, 0, 0, 0],
+            });
+
+                Icon({
+                    width: 32,
+                    height: 32,
+                });
+                that.load(iconPath);
+
+                Label({
+                    text: titleText,
+                });
+
+            endAutoLayout();
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+        
+        <!-- HTML content -->
+        
+    </body>
+</html>

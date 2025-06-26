@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        
+        <title>Waiting</title>
+        
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <script src="../comp-m2/waiting.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+
+        let btnAction = null;
+        let waiting = null;
+        
+        window.onload = function() {
+
+            page.color = "indianred";
+            
+            // BUTTON: Show waiting.
+            btnAction = Button(0, 40, "auto", {
+                text: "Show Waiting",
+                color: "rgba(0, 0, 0, 0.1)",
+                textColor: "black",
+                spaceX: 20,
+                minimal: 1,
+                border: 1,
+                borderColor: "rgba(0, 0, 0, 0.3)",
+            });
+            btnAction.center("left");
+            page.onResize(function() {
+                btnAction.center("left");
+            });
+
+            // WAITING: Create object 1 time.
+            waiting = Waiting();
+
+            btnAction.on("click", function() {
+
+                //waiting.setLabel("Loading...");
+                // Show waiting
+                waiting.show();
+                // Hide 1500ms later and dont remove on hide.
+                waiting.hide(1500, 0);
+                // When task is finished: hide directly
+                // waiting.hide();
+
+            });
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+        
+        <!-- HTML content -->
+        
+    </body>
+</html>
