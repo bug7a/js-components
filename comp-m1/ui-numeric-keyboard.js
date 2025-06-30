@@ -55,7 +55,7 @@ UINumericKeyboard.create = function($left = 0, $top = 0, $width = 600, $height =
             // IMAGE: Backspace icon.
             _boxBtn.imgIcon = createImage(0, 0, 42, 42);
             _boxBtn.add(that);
-            that.load("images/backspace.png");
+            that.load("../comp-m1/ui-numeric-keyboard/backspace.png");
             //that.opacity = 0.7;
             that.onResize(function(self) {
                 self.center();
@@ -143,7 +143,7 @@ UINumericKeyboard.create = function($left = 0, $top = 0, $width = 600, $height =
         that.bottom = _itemBottom;
         that.onClick(function(self) {
 
-            _firstValue = _box.lblValue.text;
+            const _firstValue = _box.lblValue.text;
 
             //if (_firstValue.length != 4  || self.value == -1) {
 

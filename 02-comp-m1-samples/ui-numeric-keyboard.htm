@@ -2,10 +2,10 @@
 <html lang="en">
     <head>
         
-        <title>New Project Name</title>
+        <title>UI Numeric Keyboard Component</title>
         
         <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- user-scalable=no -->
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
 
         <!-- LIBRARY FILES -->
         <!-- <link rel="preload" href="image.png" as="image"> -->
@@ -14,41 +14,30 @@
         <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
         <!--<script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>-->
 
-        <style>
+        <script src="../comp-m1/ui-numeric-keyboard.js" type="text/javascript" charset="utf-8"></script>
 
-        /* 
-        body {
-            margin: 0px !important;
-            overflow: hidden !important;
-        }
-        */
-
-        </style>
+        <!-- ALL COMPONENTS IN ONE FILE -->
+        <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
 
         <script>
         
-        // VARIABLES            
-        let myString = "";
-        let myInteger = 0;
-        let myFloat = 0.5;
+        // *** VARIABLES:          
+        let txtResult;
 
         // First running function.
         window.onload = function() {
-            
-        }
-        
-        // Function running every second.
-        const loop = function() {
-                        
-        }
-        
-        // OTHER FUNCTIONS
-        const doSomthing1 = function() {
-            
-        };
-        
-        const doSomething2 = function() {
-            
+
+            // NOTE: This component is not working with AutoLayout
+
+            txtResult = Label(10, 10);
+
+            UINumericKeyboard.MAX_NUMBER = "8";
+
+            UINumericKeyboard.create();
+            that.onChangeFunc = function(btnNumber) {
+                txtResult.text = btnNumber.getValue();
+            }
+
         };
 
         </script>

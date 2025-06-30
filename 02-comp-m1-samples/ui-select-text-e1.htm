@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        
+        <title>ui-select.text.js</title>
+        
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+        <!-- LIBRARY FILES -->
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <script src="../comp-m1/ui-select-text.js" type="text/javascript" charset="utf-8"></script>
+
+        <style>
+
+        body {
+            overflow: hidden;
+        }
+
+        .basic_box::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        
+        .basic_box::-webkit-scrollbar-track {
+            border-radius: 10px;
+            border: 3px solid rgba(0, 0, 0, 0);
+            background-clip: padding-box;
+        }
+
+        .basic_box::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            border: 3px solid rgba(0, 0, 0, 0);
+            background-clip: padding-box;
+        }
+
+        .basic_box::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 10px;
+            border: 3px solid rgba(0, 0, 0, 0);
+            background-clip: padding-box;
+        }
+
+        </style>
+
+        <script>
+        
+        var itemList = [
+            {id: "0", name: "(unselected)"},
+            {id: "1", name: "Banana"},
+            {id: "2", name: "Pineapple"},
+            {id: "3", name: "Peach"},
+            {id: "4", name: "Avocado"},
+            {id: "5", name: "Melon"},
+            {id: "6", name: "Lemon"},
+            {id: "7", name: "Orange"},
+            {id: "8", name: "Kiwi"},
+            {id: "9", name: "Passion Fruit"},
+            {id: "10", name: "Grapefruit"},
+            {id: "11", name: "Papaya"},
+            {id: "12", name: "Coconut"},
+            {id: "13", name: "Mango"},
+            {id: "14", name: "Strawberry"},
+            {id: "15", name: "Watermelon"},
+            {id: "16", name: "Cherry"},
+            {id: "17", name: "Raspberry"},
+            {id: "18", name: "Blueberry"},
+            {id: "19", name: "Blackberry"},
+            {id: "20", name: "Cranberry"},
+            {id: "21", name: "Apple"}
+        ]
+
+        var uiSelectFruits
+
+        var start = function() {
+
+            // NOTE: This component is not good for AutoLayout()
+            
+            uiSelectFruits = UISelectText.create()
+            that.createItemsByDataList(itemList)
+            that.onChange(printSelectedIndex)
+            that.setSelectedIndex(1)
+            that.center()
+            
+        }
+
+        var printSelectedIndex = function(self, index) {
+            
+            println("Selected item index: " + index)
+        }
+
+        </script>
+
+    </head>
+    <body>
+        
+        <!-- HTML content -->
+        
+    </body>
+</html>
