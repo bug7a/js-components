@@ -3,7 +3,7 @@
 
 /*
 
-basic.js (v25.06) A lightweight JavaScript library for building web-based applications with simple code. No need to write HTML or CSS — just use basic JavaScript.
+basic.js (v25.07) A lightweight JavaScript library for building web-based applications with simple code. No need to write HTML or CSS — just use basic JavaScript.
 - Project Site: https://bug7a.github.io/basic.js/
 
 Copyright 2020-2025 Bugra Ozden <bugra.ozden@gmail.com>
@@ -1924,7 +1924,7 @@ const calcSpace = function(elem, dir) {
 
 // Set styles with style object.
 const setProparties = function ($this, $defaultParams = [], $params = [], $props = []) {
-
+    /*
     // Tüm özellikleri bu değişkende topla.
     let allProps = {};
 
@@ -1940,6 +1940,37 @@ const setProparties = function ($this, $defaultParams = [], $params = [], $props
     for (let propName in $props) {
         allProps[propName] = $props[propName];
     }
+
+    // Tüm özellikleri tek seferde nesneye uygula.
+    for (let propName in allProps) {
+        $this[propName] = allProps[propName];
+    }
+    */
+
+    // Tüm özellikleri bu değişkende topla.
+    let allProps = {};
+
+    const mergeShallow = function (target, source) {
+        for (let key in source) {
+            if (
+                typeof source[key] === 'object' &&
+                source[key] !== null &&
+                !Array.isArray(source[key]) &&
+                typeof target[key] === 'object' &&
+                target[key] !== null &&
+                !Array.isArray(target[key])
+            ) {
+                // Sadece bir seviye derine inerek birleştir
+                target[key] = { ...target[key], ...source[key] };
+            } else {
+                target[key] = source[key];
+            }
+        }
+    };
+
+    mergeShallow(allProps, $defaultParams);
+    mergeShallow(allProps, $params);
+    mergeShallow(allProps, $props);
 
     // Tüm özellikleri tek seferde nesneye uygula.
     for (let propName in allProps) {

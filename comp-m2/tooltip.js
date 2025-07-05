@@ -108,7 +108,7 @@ const Tooltip = function(params = {}) {
 
     box.setLbl_color = function(color) {
         box.lbl_color = color;
-        if (!window.lblHint) {
+        if (window.lblHint) {
             window.lblHint.color = box.lbl_color;
         }
     }

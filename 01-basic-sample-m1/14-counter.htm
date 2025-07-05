@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
         
-        <title>New Project Name</title>
+        <title>Counter</title>
         
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
@@ -22,15 +22,15 @@
         <script>
 
         let count = 0;
-        let lblCount = null;
+        let lblCount;
 
         // First running function.
         window.onload = function() {
 
             // GROUP: Autolayout
-            startFlexBox({
-                flexDirection: "column",
-                gap: "4px",
+            AutoLayout({
+                flow: "vertical",
+                gap: 4,
             });
 
                 // LABEL: Count
@@ -71,13 +71,9 @@
                 });
 
                 refreshCount();
-                
 
-            endFlexBox(); // END GROUP
+            endAutoLayout(); // END GROUP
 
-            //myArray[1].setBadgetText("2");
-            //myArray[1].setBoxBackgroundOverColor(CompName("get").boxBackgroundOverColor);
-            
         };
         
         // *** OTHER FUNCTIONS:
