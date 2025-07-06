@@ -1307,6 +1307,10 @@ class BTextBox extends Basic_UIComponent {
         return this._element;
     }
 
+    set inputElement(elem) {
+        this._element = elem;
+    }
+
     get contElement() {
         return this._mainElement;
     }
@@ -1950,6 +1954,7 @@ const setProparties = function ($this, $defaultParams = [], $params = [], $props
     // Tüm özellikleri bu değişkende topla.
     let allProps = {};
 
+    /*
     const mergeShallow = function (target, source) {
         for (let key in source) {
             if (
@@ -1967,10 +1972,13 @@ const setProparties = function ($this, $defaultParams = [], $params = [], $props
             }
         }
     };
+    */
 
-    mergeShallow(allProps, $defaultParams);
-    mergeShallow(allProps, $params);
-    mergeShallow(allProps, $props);
+    //mergeInto();
+
+    mergeInto(allProps, $defaultParams);
+    mergeInto(allProps, $params);
+    mergeInto(allProps, $props);
 
     // Tüm özellikleri tek seferde nesneye uygula.
     for (let propName in allProps) {
@@ -2245,6 +2253,65 @@ window.makeBasicObject = function($newObject) {
 
 };
 //window.makeBasicObject = basic.makeBasicObject;
+
+// Sadece 1 kat derine inerek objeyi birleştirir.
+window.mergeInto = function (target, source) {
+
+    //let result = {};
+    
+    //const mergeShallow = function(target, source) {
+        for (let key in source) {
+            if (
+                typeof source[key] === 'object' &&
+                source[key] !== null &&
+                !Array.isArray(source[key]) &&
+                typeof target[key] === 'object' &&
+                target[key] !== null &&
+                !Array.isArray(target[key])
+            ) {
+                // Sadece bir seviye derine inerek birleştir
+                target[key] = { ...target[key], ...source[key] };
+            } else {
+                target[key] = source[key];
+            }
+        }           
+    //}
+
+    //mergeShallow(result, $target);
+    //mergeShallow(result, $source);
+
+    //return result;
+
+};
+
+window.mergeObject = function ($target, $source) {
+
+    let result = {};
+    
+    const mergeShallow = function(target, source) {
+        for (let key in source) {
+            if (
+                typeof source[key] === 'object' &&
+                source[key] !== null &&
+                !Array.isArray(source[key]) &&
+                typeof target[key] === 'object' &&
+                target[key] !== null &&
+                !Array.isArray(target[key])
+            ) {
+                // Sadece bir seviye derine inerek birleştir
+                target[key] = { ...target[key], ...source[key] };
+            } else {
+                target[key] = source[key];
+            }
+        }           
+    }
+
+    mergeShallow(result, $target);
+    mergeShallow(result, $source);
+
+    return result;
+
+};
 
 resizeDetection.onResize = function($object, $func) {
 
@@ -2806,16 +2873,26 @@ window.Button = function(...args) {
 
 };
 
-window.startObject = function(any) {
+window.startObject = function($defaults, $params) {
 
+    /*
     if (any) {
         println("basic.js: startObject(): Use .props(defaults, props) for giving parameters.", "warn");
     }
+    */
+
+    let allProps = {
+        color: "transparent",
+    };
+    if ($defaults) {
+        mergeInto(allProps, $defaults);
+    }
+    if ($params) {
+        mergeInto(allProps, $params);
+    }
 
     saveCurrentThat();
-    return startBox({
-        color: "transparent", // WHY: Bir UI nesnesinin başlangıç arkaplanının "transparent" olması daha uygun.
-    });
+    return startBox(allProps);
 
     /*
     let props = {};
@@ -2845,6 +2922,23 @@ window.endObject = function(box) {
     return box;
 
 };
+
+window.startExtendedObject = function(uiComponent, defaults = {}, params = {}) {
+
+    const _box = uiComponent(mergeObject(defaults, params));
+    saveCurrentThat();
+
+    return _box;
+
+};
+
+window.endExtendedObject = function(box) {
+
+    restoreThatFromSaved();
+    makeBasicObject(box);
+    return box;
+
+}
 
 /*
 window.BasicObject = function($defaultParams = {}, $params = {}, $props = {}) {

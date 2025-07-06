@@ -22,6 +22,7 @@ WebSite: https://bug7a.github.io/js-components
 - FormLogo: olabilir.
 - login form örneği yapılabilir.
 - waiting de mantar gibi çıkabilir. Hatta büyüme, küçülme sürekli devam da edebilir. Ama javascript te kod çalışırken kitlenme oluyor.
+- NumberInputB, EmailInputB, TelephoneInputB, PasswordInputB, URLInputB, TextareaInputB, ColorInputB
 
 */
 
@@ -78,10 +79,7 @@ const InputBDefaults = {
 const InputB = function(params = {}) {
 
     // BOX: Component container
-    const box = startObject();
-
-    // Apply default and custom parameters
-    box.props(InputBDefaults, params);
+    const box = startObject(InputBDefaults, params);
 
     // *** DATA CONTROL:
     if (box.descriptionText != "") {
@@ -103,14 +101,15 @@ const InputB = function(params = {}) {
 
     // Internal validation to control required logic
     const validateInput = function() {
-        const val = box.input.inputElement.value;
+        const val = box.getInputValue();
 
         if (box.isRequired) {
             if (val.length === 0) {
-                showWarningBall();
+                hideWarningBall();
                 box.warningBall.tooltip.setHintText(box.requiredText);
                 box.warningBall.tooltip.setLbl_color(box.requiredColor);
                 box.warningBall.color = box.requiredColor;
+                showWarningBall();
             } else {
                 hideWarningBall();
             }
@@ -120,8 +119,10 @@ const InputB = function(params = {}) {
     };
 
     const showWarningBall = function() {
-        box.warningBall.opacity = 1;
-        box.warningBall.elem.style.transform = "scale(1)";
+        box.warningBall.withMotion(function() {
+            box.warningBall.opacity = 1;
+            box.warningBall.elem.style.transform = "scale(1)";
+        });
     }
 
     const hideWarningBall = function() {
@@ -196,7 +197,7 @@ const InputB = function(params = {}) {
         box.isRequired = isRequired ? 1 : 0;
 
         if (box.isRequired) {
-            const val = box.input.inputElement.value;
+            const val = box.getInputValue();
             if (val.length === 0) {
                 box.showWarning();
             } else {
@@ -232,7 +233,7 @@ const InputB = function(params = {}) {
 
     // Shows a warning manually (used externally)
     box.showWarning = function() {
-        if (box.isRequired && box.input.inputElement.value.length === 0) {
+        if (box.isRequired && box.getInputValue().length === 0) {
             // If required and empty, show required tooltip
             showWarningBall();
             box.warningBall.color = "white";
@@ -272,7 +273,7 @@ const InputB = function(params = {}) {
         });
 
         // GROUP: Title, input, description
-        AutoLayout({
+        box.inputGroup = AutoLayout({
             flow: "vertical",
             align: "left top",
             height: "auto",
@@ -366,6 +367,7 @@ const InputB = function(params = {}) {
             round: 100,
             opacity: 0,
         });
+        box.warningBall.elem.style.transform = "scale(0.3)";
         box.warningBall.setMotion("opacity 0.2s, transform 0.2s");
 
         // TOOLTIP: warningBall
