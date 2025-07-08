@@ -20,6 +20,7 @@ Webpage: https://bug7a.github.io/js-components/
 // Default values
 const EmailInputBDefaults = {
     isRequired: 1,
+    type: "email",
     titleText: "EMAIL",
     placeholder: "example@sitename.com",
     warningText: "Invalid email format",
@@ -33,8 +34,10 @@ const EmailInputB = function(params = {}) {
     const box = startExtendedObject(InputB, EmailInputBDefaults, params);
 
     // *** PRIVATE VARIABLES:
+    const inputElem = box.input.inputElement;
 
     // *** PUBLIC VARIABLES:
+    box.isValid = 0;
 
     // *** PRIVATE FUNCTIONS:
 
@@ -45,22 +48,27 @@ const EmailInputB = function(params = {}) {
     // *** OBJECT INIT CODE:
     
     // Event bindings
-    const inputElem = box.input.inputElement;
-
     inputElem.addEventListener("input", function () {
+
         const value = inputElem.value;
 
         // E-posta doğrulaması için doğru regex
-        const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+        box.isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+        box.isValid = (box.isValid) ? 1 : 0;
 
-        if (isValid) {
-            box.hideWarning();  // eğer tanımlıysa
-        } else {
-            if(window.lblHint) {
-                window.lblHint.top = -1000;
+        if (value.length != 0) {
+
+            if (box.isValid) {
+                box.hideWarning();
+            } else {
+                if(window.lblHint) {
+                    window.lblHint.top = -1000;
+                }
+                box.showWarning();
             }
-            box.showWarning();  // eğer tanımlıysa
+
         }
+
     });
 
     return endExtendedObject(box);

@@ -15,23 +15,13 @@ WebSite: https://bug7a.github.io/js-components
 
 */
 
-/*
-
-- eposta kontrol yapan bir input daha ekle örneğe. ayrıca bu ex2 olsun. birder ex1 yap. sadece bir input tüm parametreler. hepsi kapalı halde.
-- FormTitle nesnesi eklenebilir. Otomatik JSON oluşturma kodu eklenebilir FormButton Eklenebilir.
-- FormLogo: olabilir.
-- login form örneği yapılabilir.
-- waiting de mantar gibi çıkabilir. Hatta büyüme, küçülme sürekli devam da edebilir. Ama javascript te kod çalışırken kitlenme oluyor.
-- NumberInputB, EmailInputB, TelephoneInputB, PasswordInputB, URLInputB, TextareaInputB, ColorInputB
-
-*/
-
 "use strict";
 
 // Default values
 const InputBDefaults = {
 
     key: "0",
+    type: "text",
     width: 350,
     height: "auto",
     leftPadding: 20,
@@ -45,7 +35,7 @@ const InputBDefaults = {
 
     backgroundColor: "#F6F6F6",
     selectedBackgroundColor: "#F3F4E0", // "#F1E2C4", "#F4FAFF",
-    lineColor: "#141414",
+    lineColor: "#373836",
     selectedLineColor: "#65A293", // "#F1E2C4", "#588ABE",
 
     isRequired: 0,
@@ -57,6 +47,7 @@ const InputBDefaults = {
     createLeftBox: 0,
     createRightBox: 0,
     createUnit: 0,
+    createInput: 1,
     unitText: "",
     unitStyle: {
         padding: [12, 4],
@@ -99,44 +90,57 @@ const InputB = function(params = {}) {
 
     // *** PRIVATE FUNCTIONS:
 
-    // Internal validation to control required logic
-    const validateInput = function() {
-        const val = box.getInputValue();
-
-        if (box.isRequired) {
-            if (val.length === 0) {
-                hideWarningBall();
-                box.warningBall.tooltip.setHintText(box.requiredText);
-                box.warningBall.tooltip.setLbl_color(box.requiredColor);
-                box.warningBall.color = box.requiredColor;
-                showWarningBall();
-            } else {
-                hideWarningBall();
-            }
-        } else {
-            hideWarningBall();
-        }
-    };
-
     const showWarningBall = function() {
         box.warningBall.withMotion(function() {
             box.warningBall.opacity = 1;
+            box.warningBall.clickable = 1;
             box.warningBall.elem.style.transform = "scale(1)";
         });
     }
 
     const hideWarningBall = function() {
         box.warningBall.opacity = 0;
+        box.warningBall.clickable = 0;
         box.warningBall.elem.style.transform = "scale(0.3)";
     }
 
     // *** PUBLIC FUNCTIONS:
+
+    box.checkIfInputIsRequiredAndEmpty = function() {
+        if (box.isRequired) {
+            if (box.getInputValue().length === 0) {
+                box.showWarning();
+                /*
+                hideWarningBall();
+                box.warningBall.tooltip.setHintText(box.requiredText);
+                box.warningBall.tooltip.setLbl_color(box.requiredColor);
+                box.warningBall.color = box.requiredColor;
+                showWarningBall();
+                */
+            } else {
+                box.hideWarning();
+                //hideWarningBall();
+            }
+        } else {
+            box.hideWarning();
+            //hideWarningBall();
+        }
+    };
+
+    /*
+    box.isNotEmpty = function() {
+        return (box.getInputValue() == "") ? 0 : 1;
+    }
+    */
 
     // Sets the title text for the input component
     box.setTitle = function(titleText) {
         box.titleText = titleText;
         if (box.title && typeof box.title.text !== "undefined") {
             box.title.text = titleText;
+            if (box.input) {
+                box.input.inputElement.setAttribute("aria-label", box.titleText);
+            }
         }
     };
     
@@ -162,12 +166,13 @@ const InputB = function(params = {}) {
 
     // Sets the input's current value programmatically
     box.setInputValue = function(value) {
+        box.inputValue = value;
         box.input.text = value;
     };
 
     // Returns the current value inside the input field
     box.getInputValue = function() {
-        return box.input.text;
+        return box.inputValue;
     };
 
     // Sets the background color of the input element itself
@@ -195,17 +200,7 @@ const InputB = function(params = {}) {
     // Enables required field validation and sets the custom message
     box.setRequired = function(isRequired) {
         box.isRequired = isRequired ? 1 : 0;
-
-        if (box.isRequired) {
-            const val = box.getInputValue();
-            if (val.length === 0) {
-                box.showWarning();
-            } else {
-                box.hideWarning();
-            }
-        } else {
-            box.hideWarning();
-        }
+        box.checkIfInputIsRequiredAndEmpty();
     };
 
     box.setRequiredText = function(text) {
@@ -235,16 +230,17 @@ const InputB = function(params = {}) {
     box.showWarning = function() {
         if (box.isRequired && box.getInputValue().length === 0) {
             // If required and empty, show required tooltip
-            showWarningBall();
-            box.warningBall.color = "white";
+            hideWarningBall();
+            box.warningBall.color = box.requiredColor;
             box.warningBall.tooltip.setHintText(box.requiredText);
             box.warningBall.tooltip.setLbl_color(box.requiredColor);
+            showWarningBall();
         } else {
             // Otherwise, show warning
-            showWarningBall();
             box.warningBall.color = box.warningColor;
             box.warningBall.tooltip.setHintText(box.warningText);
             box.warningBall.tooltip.setLbl_color(box.warningColor);
+            showWarningBall();
         }
     };
 
@@ -290,17 +286,26 @@ const InputB = function(params = {}) {
             });
 
             // INPUT: Main object
-            box.input = Input({
-                text: box.inputValue,
-                minimal: 1,
-                fontSize: 20,
-                height: 40,
-                color: "transparent",
-                width: "100%",
-            });
-            that.inputElement.style.padding = "0px 0px";
-            that.inputElement.placeholder = box.placeholder;
-            that.inputElement.maxLength = box.maxChar;
+            if(box.createInput == 1) {
+                box.input = Input({
+                    text: box.inputValue,
+                    minimal: 1,
+                    fontSize: 20,
+                    height: 40,
+                    color: "transparent",
+                    width: "100%",
+                });
+                that.inputElement.style.padding = "0px 0px";
+                that.inputElement.placeholder = box.placeholder;
+                that.inputElement.maxLength = box.maxChar;
+                that.inputElement.setAttribute("aria-label", box.titleText);
+            } else {
+                box.inputBox = Box({
+                    color: "transparent",
+                    height: 40,
+                    width: "100%",
+                });
+            }
 
             // LABEL: Description
             if (box.createDescription == 1) {
@@ -363,7 +368,7 @@ const InputB = function(params = {}) {
             height: 16,
             border: 2,
             color: box.requiredColor,
-            borderColor: "#141414",
+            borderColor: "#373836",
             round: 100,
             opacity: 0,
         });
@@ -386,23 +391,28 @@ const InputB = function(params = {}) {
     // *** OBJECT INIT CODE:
     
     // Event bindings
-    const iel = box.input.inputElement;
-    iel.addEventListener("focus", function () {
-        box.background.color = box.selectedBackgroundColor;
-        box.line.color = box.selectedLineColor;
-        box.onFocus();
-    });
-    iel.addEventListener("blur", function () {
-        box.background.color = box.backgroundColor;
-        box.line.color = box.lineColor;
-        box.onBlur();
-    });
-    iel.addEventListener("input", function () {
-        validateInput();
-        box.onEdit();
-    });
+    if(box.createInput == 1) {
 
-    validateInput();
+        const inputElem = box.input.inputElement;
+
+        inputElem.addEventListener("focus", function () {
+            box.background.color = box.selectedBackgroundColor;
+            box.line.color = box.selectedLineColor;
+            box.onFocus();
+        });
+        inputElem.addEventListener("blur", function () {
+            box.background.color = box.backgroundColor;
+            box.line.color = box.lineColor;
+            box.onBlur();
+        });
+        inputElem.addEventListener("input", function () {
+            box.inputValue = box.input.text;
+            box.checkIfInputIsRequiredAndEmpty();
+            box.onEdit();
+        });
+    }
+
+    box.checkIfInputIsRequiredAndEmpty();
 
     return endObject(box);
 

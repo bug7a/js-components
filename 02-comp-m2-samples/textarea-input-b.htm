@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
         
-        <title>EmailInputB JS Component</title>
+        <title>TextareaInputB JS Component</title>
         
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
@@ -12,11 +12,11 @@
         <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
         <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
         <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
-        <!--<script src="basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>-->
+        <script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
 
         <script src="../comp-m2/tooltip.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp-m2/input-b.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp-m2/email-input-b.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m2/textarea-input-b.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- ALL COMPONENTS IN ONE FILE -->
         <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
@@ -35,10 +35,8 @@
             AutoLayout();
 
                 // INPUT: #1
-                myInput = EmailInputB({
+                myInput = TextareaInputB({
                     key: "1",
-                    width: 350,
-                    maxChar: 35,
                     isRequired: 1,
                 });
                 

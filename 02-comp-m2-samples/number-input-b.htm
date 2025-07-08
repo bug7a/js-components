@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
         
-        <title>EmailInputB JS Component</title>
+        <title>NumberInputB JS Component</title>
         
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
@@ -16,7 +16,7 @@
 
         <script src="../comp-m2/tooltip.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp-m2/input-b.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp-m2/email-input-b.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m2/number-input-b.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- ALL COMPONENTS IN ONE FILE -->
         <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
@@ -35,11 +35,15 @@
             AutoLayout();
 
                 // INPUT: #1
-                myInput = EmailInputB({
+                myInput = NumberInputB({
                     key: "1",
                     width: 350,
+                    titleText: "NUMERIC",
                     maxChar: 35,
-                    isRequired: 1,
+                    allowNegative: 0,
+                    allowDecimal: 1,
+                    decimalSeparator: ".", // ","
+                    maxDecimalDigits: 2,
                 });
                 
             endAutoLayout(); // END GROUP

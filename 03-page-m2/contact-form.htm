@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        
+        <title>Contact Form</title>
+        
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <!-- LIBRARY FILES -->
+        <!-- <link rel="preload" href="image.png" as="image"> -->
+        <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <script src="../comp-m2/tooltip.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m2/input-b.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m2/email-input-b.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m2/textarea-input-b.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- ALL COMPONENTS IN ONE FILE -->
+        <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
+
+        <script>
+
+        /*
+
+        - Butona basıldığında, notice çıkabilir. eksik yerler var diye.
+        - Button gri olabilir, dolunca yeşile dönebilir.
+        - Butonun üzerine gelince aydınlık effect i verilebilir
+        - Butona basıldığında waiting çıksın ama iconu kağıt uçak olsun.
+        - kağıt uçak hareketle büyüyüp-küçülsün
+
+        */
+
+        // *** CONSTANTS:   
+        const MAX_WIDTH = 700; 
+        const MIN_WIDTH = 500; 
+        const BACKGROUND_COLOR = "white";
+        
+        // *** VARIABLES:          
+        let firstNameInput, lastNameInput, emailInput, subjectInput, messageInput, formBtn;
+        let scrollableBox, formContainer, nameGroup;
+
+        const inputList = [];
+
+        // First running function.
+        window.onload = function() {
+
+            page.fit(MIN_WIDTH);
+            page.color = BACKGROUND_COLOR;
+
+            // Scrollable page container
+            scrollableBox = startBox(0, 0, "100%", "100%", {
+                scrollY: 1,
+                color: "transparent",
+            });
+
+                // Form container 
+                formContainer = startBox(0, 0, {
+                    height: "auto",
+                    width: "100%",
+                    color: "transparent",
+                });
+                that.elem.style.minWidth = MIN_WIDTH + "px";
+                that.elem.style.maxWidth = MAX_WIDTH + "px";
+
+                    // GROUP: Form Items
+                    AutoLayout({
+                        flow: "vertical",
+                        align: "top center",
+                        gap: 20,
+                        padding: [40, 40],
+                        height: "auto",
+                        position: "relative", // Because formContainer.height = "auto"
+                    });
+
+                        // GROUP: Title, Description
+                        AutoLayout({
+                            flow: "vertical",
+                            align: "left top",
+                            gap: 0,
+                            width: "100%",
+                            height: "auto",
+                        });
+
+                            // LABEL: Title
+                            Label({
+                                text: "Get in Touch",
+                                textColor: "#373836",
+                                fontSize: 26,
+                            });
+                            that.elem.style.fontFamily = "opensans-bold";
+
+                            // LABEL: Description
+                            Label({
+                                text: "Feel free to share any questions, suggestions, or feedback with us. Fill out the form and we’ll get back to you as soon as possible.",
+                                fontSize: 16,
+                                textColor: "#999999",
+                            });
+                            that.elem.style.fontStyle = "italic";
+
+                        endAutoLayout(); // GROUP: Title, Description
+                        that.elem.style.marginBottom = "20px";
+
+                        // GROUP: First Name, Last Name
+                        nameGroup = AutoLayout({
+                            flow: "horizontal",
+                            gap: 20,
+                            width: "100%",
+                            height: "auto",
+                        });
+
+                            // INPUT: First Name
+                            firstNameInput = InputB({
+                                key: "1",
+                                isRequired: 1,
+                                placeholder: "Emily",
+                                leftPadding: 20,
+                                width: "100%"
+                            });
+                            that.setTitle("FIRST NAME");
+                            inputList.push(that);
+
+                            // INPUT: Last Name
+                            lastNameInput = InputB({
+                                key: "2",
+                                isRequired: 0,
+                                placeholder: "Brown",
+                                leftPadding: 20,
+                                width: "100%"
+                            });
+                            that.setTitle("LAST NAME");
+                            inputList.push(that);
+
+                        endAutoLayout(); // GROUP: First Name, Last Name
+
+                        // INPUT: Email
+                        emailInput = EmailInputB({
+                            key: "3",
+                            isRequired: 1,
+                            titleText: "EMAIL",
+                            placeholder: "example@sitename.com",
+                            warningText: "Invalid email format",
+                            warningColor: "#E5885E", // "#F1BF3C"
+                            maxChar: 35,
+                            width: "100%"
+                        });
+                        inputList.push(that);
+
+                        // TELEPHONE (Optional)
+
+                        // Subject
+                        subjectInput = InputB({
+                            key: "5",
+                            titleText: "SUBJECT",
+                            placeholder: "What's your message about?",
+                            descriptionText: "",
+                            isRequired: 0,
+                            width: "100%"
+                        });
+                        that.onEdit = function() {
+                            console.log(myInput2.getInputValue());
+                        }
+                        inputList.push(that);
+
+                        messageInput = TextareaInputB({
+                            key: "6",
+                            isRequired: 1,
+                            width: "100%",
+                        });
+
+                        // BUTTON: Send Button
+                        formBtn = Button({
+                            width: "100%",
+                            text: "SEND",
+                            color: "#65A293",
+                        });
+                        that.elem.style.marginTop = "20px";
+                        that.setMotion("filter 0.2s, transform 0.2s");
+                        that.on("mouseover", function() {
+                            formBtn.elem.style.filter = "brightness(120%)";
+                        });
+                        that.on("mouseout", function() {
+                            formBtn.elem.style.filter = "brightness(100%)";
+                        });
+                        that.on("mousedown", function() {
+                            formBtn.elem.style.transform = "scale(0.95)";
+                            formBtn.elem.style.filter = "brightness(80%)";
+                            // test data
+                            // create json
+                            // send json
+                            // show: your data sent message
+                            setTimeout(function(){
+                                formBtn.elem.style.transform = "scale(1)";
+                                formBtn.elem.style.filter = "brightness(120%)";
+                            }, 200);
+                        });
+
+                    endAutoLayout(); // GROUP: Form Items
+
+                endBox(); // Form container 
+
+            endBox(); // Scrollable page container
+
+            // Center form first time
+            formContainer.center("left");
+
+            // SCROLL BAR:
+            formContainer.scrollBar = ScrollBar({
+                scrollableBox: scrollableBox,
+                bar_border: 0,
+                bar_round: 2,
+                bar_borderColor: "rgba(0, 0, 0, 1)",
+                bar_width: 4,
+                bar_mouseOverWidth: 4, //8
+                bar_mouseOverColor: "#373836",
+                bar_opacity: 0.4,
+                bar_mouseOverOpacity: 0.9,
+                bar_padding: 2,
+                bar_color: "#373836",
+                neverHide: 0,
+                showDots: 1,
+            });
+
+            page.onResize(function() {
+
+                page.fit(MIN_WIDTH);
+                // NOTE: Page width will not be smaller than MIN_WIDTH but page.zoom (1) will start get smaller
+
+                if (page.width < 550) { // (page.width < 550), (page.zoom < 1)
+                    nameGroup.flow = "vertical";
+                } else {
+                    nameGroup.flow = "horizontal";
+                }
+
+                // Center form onResize
+                formContainer.center("left");
+
+            })
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+        
+        <!-- HTML content -->
+        
+    </body>
+</html>

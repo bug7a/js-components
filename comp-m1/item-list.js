@@ -209,12 +209,12 @@ const ItemList = function(params = {}) {
         scrollbar_round: 3,
         scrollbar_borderColor: "rgba(0, 0, 0, 1)",
         scrollbar_width: 4,
-        scrollbar_mouseOverWidth: 8,
-        scrollbar_mouseOverColor: "#141414",
-        scrollbar_opacity: 0.6,
-        scrollbar_mouseOverOpacity: 0.6,
+        scrollbar_mouseOverWidth: 4,
+        scrollbar_mouseOverColor: "#373836",
+        scrollbar_opacity: 0.4,
+        scrollbar_mouseOverOpacity: 0.9,
         scrollbar_padding: 2,
-        scrollbar_color: "#141414",
+        scrollbar_color: "#373836",
     };
 
     box.props(defaults, params);
