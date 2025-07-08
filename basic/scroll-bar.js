@@ -2,7 +2,7 @@
 
 /*
 
-Scroll Bar - v24.06
+Scroll Bar - v25.07
 
 UI COMPONENT TEMPLATE
 - You can customize, this template code as you need:
@@ -31,14 +31,15 @@ const ScrollBar = function(params = {}) {
         bar_round: 3,
         bar_borderColor: "rgba(0, 0, 0, 1)",
         bar_width: 4,
-        bar_mouseOverWidth: 8,
-        bar_mouseOverColor: "#141414",
-        bar_opacity: 0.6,
-        bar_mouseOverOpacity: 0.6,
+        bar_mouseOverWidth: 4, //8
+        bar_mouseOverColor: "#373836",
+        bar_opacity: 0.4,
+        bar_mouseOverOpacity: 0.9,
         bar_padding: 2,
-        bar_color: "#141414",
+        bar_color: "#373836",
         //scrollOnContent: 1,
-        neverHide: 0,
+        neverHide: 1,
+        showDots: 1,
     };
 
     box.props(defaults, params);
@@ -61,6 +62,10 @@ const ScrollBar = function(params = {}) {
             } else {
                 if (box.neverHide == 0) {
                     box.boxScrollBarTop.opacity = 0;
+                    box.boxScrollBarLeft.opacity = 0;
+                    box.topRightDot.visible = 0;  
+                    box.bottomLeftDot.visible = 0;
+                    box.bottomRightDot.visible = 0;
                 }
             }
         }, 3000);
@@ -160,8 +165,34 @@ const ScrollBar = function(params = {}) {
         //console.log('width Scroll: ' + box.scrollableBox.width);
         //console.log('height Scroll: ' + box.scrollableBox.height);
 
+        // Refresh dot buttons
+        box.refreshDotButtons();
+
         closeAuto();
 
+    };
+
+    box.refreshDotButtons = function() {
+        if (box.showDots) {
+            let visibleCount = 0;
+            if (box.boxScrollBarTop.visible == 0) {
+                visibleCount++;
+                box.topRightDot.visible = 0;                
+            } else {
+                box.topRightDot.visible = 1;   
+            }
+            if (box.boxScrollBarLeft.visible == 0) {
+                visibleCount++;
+                box.bottomLeftDot.visible = 0;
+            } else {
+                box.bottomLeftDot.visible = 1;
+            }
+            if (visibleCount > 1) {
+                box.bottomRightDot.visible = 0;
+            } else {
+                box.bottomRightDot.visible = 1;
+            }
+        }
     };
 
     /*
@@ -264,11 +295,46 @@ const ScrollBar = function(params = {}) {
         });
         box.boxScrollBarLeft.setMotion("height 0.2s, opacity 0.5s");
 
+        // scroll dot buttons
+        box.topRightDot = Box({
+            right: box.bar_padding,
+            top: 2,
+            width: box.bar_width,
+            height: box.bar_width,
+            color: box.bar_color,
+            opacity: box.bar_opacity,
+            round: box.bar_width,
+            visible: 0,
+        });
+
+        box.bottomRightDot = Box({
+            right: box.bar_padding,
+            bottom: 2,
+            width: box.bar_width,
+            height: box.bar_width,
+            color: box.bar_color,
+            opacity: box.bar_opacity,
+            round: box.bar_width,
+            visible: 0,
+        });
+
+        box.bottomLeftDot = Box({
+            left: 2,
+            bottom: box.bar_padding,
+            width: box.bar_width,
+            height: box.bar_width,
+            color: box.bar_color,
+            opacity: box.bar_opacity,
+            round: box.bar_width,
+            visible: 0,
+        });
+
     endBox();
 
     // *** OBJECT INIT CODE:
     //box.left = 0;
     //box.top = 0;
+    box.position = "absolute";
     box.refreshScroll();
     box.scrollableBox.onResize(box.refreshScroll);
     box.scrollableBox.elem.addEventListener('scroll', box.refreshScroll);
@@ -335,6 +401,7 @@ const ScrollBar = function(params = {}) {
     box.scrollableBox.elem.addEventListener("mouseover", function(event) {
         box.boxScrollBarTop.opacity = box.bar_opacity;
         box.boxScrollBarLeft.opacity = box.bar_opacity;
+        box.refreshDotButtons();
         closeAuto();
         //event.stopPropagation();
     });
@@ -439,6 +506,10 @@ const ScrollBar = function(params = {}) {
 
     });
 
+    window.addEventListener("resize", function () {
+        box.refreshScroll();
+    });
+    
     // scrollHeight değişirse, refreshScroll() çalıştır.
     const contentDiv = box.scrollableBox.elem;
     let lastScrollHeight = contentDiv.scrollHeight;
