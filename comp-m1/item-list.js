@@ -215,6 +215,8 @@ const ItemList = function(params = {}) {
         scrollbar_mouseOverOpacity: 0.9,
         scrollbar_padding: 2,
         scrollbar_color: "#373836",
+        scrollbar_neverHide: 1,
+        scrollbar_showDots: 1,
     };
 
     box.props(defaults, params);
@@ -254,6 +256,8 @@ const ItemList = function(params = {}) {
             bar_mouseOverOpacity: box.scrollbar_mouseOverOpacity,
             bar_padding: box.scrollbar_padding,
             bar_color: box.scrollbar_color,
+            neverHide: box.scrollbar_neverHide,
+            showDots: box.scrollbar_showDots,
         });
     }
     

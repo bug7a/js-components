@@ -103,6 +103,21 @@ const NumberInputB = function(params = {}) {
             }
         }
 
+        // Eğer birden fazla "0" girilir ise "00*" -> "0"
+        if (parseFloat(value) == 0 && !value.includes(box.decimalSeparator) && !value.includes("-")) {
+            value = "0";
+        }
+
+        // Eğer "." ile başlarsa "0." ya çevir
+        if (value == box.decimalSeparator) {
+            value = "0" + box.decimalSeparator;
+        }
+
+        // Eğer "-." ile başlarsa "0." ya çevir
+        if (value == ("-"+box.decimalSeparator)) {
+            value = "-0" + box.decimalSeparator;
+        }
+
         inputElem.value = value;
 
     });

@@ -41,19 +41,19 @@ const TextareaInputBDefaults = {
 const TextareaInputB = function(params = {}) {
 
     // Marge params first
-    const _params = mergeObject(TextareaInputBDefaults, params);
+    mergeIntoIfMissing(params, TextareaInputBDefaults);
 
     // Control params
-    _params.createInput = 0; // dont create input
-    _params.createDescription = 0;
-    _params.descriptionText = ""; // dont create desc
+    params.createInput = 0; // dont create input
+    params.createDescription = 0;
+    params.descriptionText = ""; // dont create desc
 
-    if (_params.showCount != 0) {
-        _params.createUnit = 1;
+    if (params.showCount != 0) {
+        params.createUnit = 1;
     }
 
     // BOX: Component container
-    const box = startExtendedObject(InputB, _params);
+    const box = startExtendedObject(InputB, params);
 
     // *** PRIVATE VARIABLES:
     const textareaElem = document.createElement("textarea");
@@ -77,7 +77,9 @@ const TextareaInputB = function(params = {}) {
     // Auto height
     const autoGrow = function(elem) {
         elem.style.height = "auto";                // önce sıfırla
-        elem.style.height = elem.scrollHeight + "px"; // sonra içeriğe göre ayarla
+        //elem.style.height = (num(elem.scrollHeight) - 4) + "px"; // sonra içeriğe göre ayarla
+        elem.style.height = elem.scrollHeight + "px";
+        elem.style.minHeight = "";
         //box.inputBox.scrollBar.refreshScroll();
         setTimeout(() => box.inputBox.scrollBar.refreshScroll(), 0);
     };
@@ -184,7 +186,9 @@ const TextareaInputB = function(params = {}) {
     */
     
     refreshCount();
-    autoGrow(textareaElem);
+    //autoGrow(textareaElem);
+    
+    textareaElem.style.minHeight = (box.inputBox.height - 4) + "px";
 
     return endExtendedObject(box);
 

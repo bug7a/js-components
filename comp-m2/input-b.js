@@ -91,6 +91,7 @@ const InputB = function(params = {}) {
     // *** PRIVATE FUNCTIONS:
 
     const showWarningBall = function() {
+        // just animate on show
         box.warningBall.withMotion(function() {
             box.warningBall.opacity = 1;
             box.warningBall.clickable = 1;
@@ -99,6 +100,7 @@ const InputB = function(params = {}) {
     }
 
     const hideWarningBall = function() {
+        box.warningBall.dontMotion();
         box.warningBall.opacity = 0;
         box.warningBall.clickable = 0;
         box.warningBall.elem.style.transform = "scale(0.3)";
@@ -294,6 +296,7 @@ const InputB = function(params = {}) {
                     height: 40,
                     color: "transparent",
                     width: "100%",
+                    textColor: "#373836",
                 });
                 that.inputElement.style.padding = "0px 0px";
                 that.inputElement.placeholder = box.placeholder;

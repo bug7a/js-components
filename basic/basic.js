@@ -2254,12 +2254,37 @@ window.makeBasicObject = function($newObject) {
 };
 //window.makeBasicObject = basic.makeBasicObject;
 
+// 
+window.mergeIntoIfMissing = function (target, source) {
+    for (let key in source) {
+        const sourceVal = source[key];
+        const targetVal = target[key];
+
+        if (
+            typeof sourceVal === 'object' &&
+            sourceVal !== null &&
+            !Array.isArray(sourceVal) &&
+            typeof targetVal === 'object' &&
+            targetVal !== null &&
+            !Array.isArray(targetVal)
+        ) {
+            // Yalnızca eksik olan alt alanları ekleyerek birleştir
+            for (let subKey in sourceVal) {
+                if (!(subKey in targetVal)) {
+                    targetVal[subKey] = sourceVal[subKey];
+                }
+            }
+        } else {
+            if (!(key in target)) {
+                target[key] = sourceVal;
+            }
+        }
+    }
+};
+
 // Sadece 1 kat derine inerek objeyi birleştirir.
 window.mergeInto = function (target, source) {
 
-    //let result = {};
-    
-    //const mergeShallow = function(target, source) {
         for (let key in source) {
             if (
                 typeof source[key] === 'object' &&
@@ -2274,13 +2299,7 @@ window.mergeInto = function (target, source) {
             } else {
                 target[key] = source[key];
             }
-        }           
-    //}
-
-    //mergeShallow(result, $target);
-    //mergeShallow(result, $source);
-
-    //return result;
+        }       
 
 };
 

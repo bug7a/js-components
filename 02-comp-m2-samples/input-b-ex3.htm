@@ -43,8 +43,14 @@
                     isRequired: 1,
                     placeholder: "Jack",
                     leftPadding: 20,
+                    backgroundColor: "transparent",
+                    selectedBackgroundColor: "whitesmoke", // "#F1E2C4", "#F4FAFF",
+                    lineColor: "transparent",
+                    selectedLineColor: "transparent", // "#F1E2C4", "#588ABE",
                 });
                 that.setTitle("FIRST NAME");
+                that.background.border = 1;
+                that.background.borderColor = "lightgray";
                 //inputList.push(that);
 
                 // INPUT: #2
@@ -55,68 +61,43 @@
                     descriptionText: "The vertical size...",
                     unitText: "cm",
                     isRequired: 0,
+                    backgroundColor: "whitesmoke",
+                    selectedBackgroundColor: "whitesmoke", // "#F1E2C4", "#F4FAFF",
+                    lineColor: "transparent",
+                    selectedLineColor: "lightgray", // "#F1E2C4", "#588ABE",
                 });
                 that.onEdit = function() {
                     console.log(myInput2.getInputValue());
                 }
                 //inputList.push(that);
 
-
                 // INPUT: #3
                 myInput3 = InputB({
                     key: "3",
-                    placeholder: "",
-                    titleText: "COUNT",
-                    descriptionText: "As you type something, it will write the number of characters.",
-                    isRequired: 1,
+                    placeholder: "Sample",
+                    titleText: "INPUT TITLE",
+                    descriptionText: "Its a style example for input fields.",
+                    isRequired: 0,
                     maxChar: 20,
-                    unitText: "0/20",
-                    unitStyle: {
-                        fontSize: 16,
-                    },
+                    leftPadding: 20,
+                    rightPadding: 20,
+                    unitText: "",
+                    backgroundColor: "transparent",
+                    selectedBackgroundColor: "transparent", // "#F1E2C4", "#F4FAFF",
+                    lineColor: "transparent",
+                    selectedLineColor: "transparent", // "#F1E2C4", "#588ABE",
                 });
+                that.inputGroup.gap = 4;
+                that.input.color = "whitesmoke";
+                that.input.border = 1;
+                that.input.borderColor = "lightgray";
+                that.input.inputElement.style.padding = "0px 12px";
                 that.onEdit = function() {
-                    const currentLength = myInput3.input.text.length;
-                    myInput3.setUnitText(`${currentLength}/${myInput3.maxChar}`);
+                    console.log(myInput3.getInputValue());
                 };
                 //inputList.push(that);
 
             endAutoLayout(); // END GROUP
-
-            // GROUP: Setting buttons
-            AutoLayout({
-                flow: "horizontal",
-                align: "left top",
-                gap: 8,
-                padding: [20, 20],
-            });
-
-                const styleSettingButton = function(btn) {
-                    btn.width = "auto";
-                    btn.height = "auto";
-                    btn.color = "lightgray";
-                    btn.fontSize = 16;
-                    btn.padding = [8, 4];
-                    btn.minimal = 1;
-                }
-
-                Button({
-                    text: "Show Warning",
-                });
-                styleSettingButton(that);
-                that.on("click", function() {
-                    myInput1.showWarning();
-                });
-
-                Button({
-                    text: "Hide Warning",
-                });
-                styleSettingButton(that);
-                that.on("click", function() {
-                    myInput1.hideWarning();
-                });
-
-            endAutoLayout();
 
         };
 

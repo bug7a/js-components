@@ -53,8 +53,7 @@ const EmailInputB = function(params = {}) {
         const value = inputElem.value;
 
         // E-posta doğrulaması için doğru regex
-        box.isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-        box.isValid = (box.isValid) ? 1 : 0;
+        box.isValid = (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) ? 1 : 0;
 
         if (value.length != 0) {
 
