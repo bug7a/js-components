@@ -142,7 +142,7 @@ Webpage: https://bug7a.github.io/js-components/
 const CurrencyInputBDefaults = {
     isRequired: 0,
     titleText: "CURRENCY",
-    placeholder: "1,000.00",
+    placeholder: "(auto)",
     maxChar: 35,
     allowNegative: 1,
     allowDecimal: 1,
@@ -283,7 +283,11 @@ const CurrencyInputB = function(params = {}) {
         box.setPlaceholder(box.placeholder);
     }
 
-    inputElem.addEventListener("input", function () {
+    // OVERRIDE:
+    box.inputFunc = function () {
+
+        box.inputValue = box.input.text;
+        box.checkIfInputIsRequiredAndEmpty();
 
         rememberCursorPosition();
         let value = clearGroupFormat(inputElem.value);
@@ -332,7 +336,10 @@ const CurrencyInputB = function(params = {}) {
         inputElem.value = formatWithGrouping(value);
         restoreCursorPosition();
 
-    });
+        box.inputValue = inputElem.value;
+        box.onEdit();
+
+    };
 
     return endExtendedObject(box);
 };

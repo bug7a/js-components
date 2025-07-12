@@ -35,15 +35,17 @@ const CompNameDefaults = {
 
 const CompName = function(params = {}) {
 
+    // Marge params first
+    mergeIntoIfMissing(params, CompNameDefaults);
+
+    // Edit params:
+    // params.width = getDefaultContainerBox().width;
+
     // BOX: Component container
-    const box = startObject();
+    const box = startObject(params);
 
-    // After box created; you can take values from containerBox
-    //CompNameDefaults.round = box.containerBox.round;
-    //CompNameDefaults.color = box.containerBox.color;
-
-    // Values are ready to use
-    box.props(CompNameDefaults, params);
+    // Parent container
+    // box.containerBox;
 
     // *** PRIVATE VARIABLES:
     //let privateVar = "";

@@ -86,7 +86,7 @@ const InputB = function(params = {}) {
     /* */
 
     // *** PUBLIC VARIABLES:
-    /* */
+    box.status = 0;
 
     // *** PRIVATE FUNCTIONS:
 
@@ -237,18 +237,21 @@ const InputB = function(params = {}) {
             box.warningBall.tooltip.setHintText(box.requiredText);
             box.warningBall.tooltip.setLbl_color(box.requiredColor);
             showWarningBall();
+            box.status = 1;
         } else {
             // Otherwise, show warning
             box.warningBall.color = box.warningColor;
             box.warningBall.tooltip.setHintText(box.warningText);
             box.warningBall.tooltip.setLbl_color(box.warningColor);
             showWarningBall();
+            box.status = 2;
         }
     };
 
     // Hides the warning icon and tooltip manually
     box.hideWarning = function() {
         hideWarningBall();
+        box.status = 0;
     };
 
     // *** OBJECT VIEW:
@@ -398,21 +401,27 @@ const InputB = function(params = {}) {
 
         const inputElem = box.input.inputElement;
 
-        inputElem.addEventListener("focus", function () {
+        box.focusFunc = function () {
             box.background.color = box.selectedBackgroundColor;
             box.line.color = box.selectedLineColor;
             box.onFocus();
-        });
-        inputElem.addEventListener("blur", function () {
+        }
+        inputElem.addEventListener("focus", function(){ box.focusFunc() });
+
+        box.blurFunc = function () {
             box.background.color = box.backgroundColor;
             box.line.color = box.lineColor;
             box.onBlur();
-        });
-        inputElem.addEventListener("input", function () {
+        }
+        inputElem.addEventListener("blur", function(){ box.blurFunc() });
+
+        box.inputFunc = function () { // If needed, you can override function on ExtendedObject.
             box.inputValue = box.input.text;
             box.checkIfInputIsRequiredAndEmpty();
             box.onEdit();
-        });
+        }
+        inputElem.addEventListener("input", function(){ box.inputFunc() });
+        
     }
 
     box.checkIfInputIsRequiredAndEmpty();

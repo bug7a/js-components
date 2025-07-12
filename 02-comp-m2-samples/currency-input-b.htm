@@ -38,6 +38,16 @@
                 myInput = CurrencyInputB({
                     key: "1",
                     width: 350,
+                    isRequired: 0,
+                    titleText: "CURRENCY",
+                    placeholder: "(auto)",
+                    maxChar: 35,
+                    allowNegative: 1,
+                    allowDecimal: 1,
+                    decimalSeparator: ".", // or ","
+                    maxDecimalDigits: 2,
+                    groupSeparator: ",", // for thousands grouping
+                    unitText: "TL",
                 });
                 
             endAutoLayout(); // END GROUP

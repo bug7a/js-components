@@ -22,10 +22,10 @@ const EmailInputBDefaults = {
     isRequired: 1,
     type: "email",
     titleText: "EMAIL",
-    placeholder: "example@sitename.com",
+    placeholder: "example@site.com",
     warningText: "Invalid email format",
     warningColor: "#E5885E", // "#F1BF3C"
-    maxChar: 35,
+    maxChar: 40,
 };
 
 const EmailInputB = function(params = {}) {
@@ -34,10 +34,8 @@ const EmailInputB = function(params = {}) {
     const box = startExtendedObject(InputB, EmailInputBDefaults, params);
 
     // *** PRIVATE VARIABLES:
-    const inputElem = box.input.inputElement;
 
     // *** PUBLIC VARIABLES:
-    box.isValid = 0;
 
     // *** PRIVATE FUNCTIONS:
 
@@ -48,16 +46,18 @@ const EmailInputB = function(params = {}) {
     // *** OBJECT INIT CODE:
     
     // Event bindings
-    inputElem.addEventListener("input", function () {
+    // OVERRIDE:
+    box.inputFunc = function () {
 
-        const value = inputElem.value;
-
+        box.inputValue = box.input.text;
+        box.checkIfInputIsRequiredAndEmpty();
+        
         // E-posta doğrulaması için doğru regex
-        box.isValid = (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) ? 1 : 0;
+        const isValid = (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(box.inputValue)) ? 1 : 0;
 
-        if (value.length != 0) {
+        if (box.inputValue.length != 0) {
 
-            if (box.isValid) {
+            if (isValid) {
                 box.hideWarning();
             } else {
                 if(window.lblHint) {
@@ -68,7 +68,9 @@ const EmailInputB = function(params = {}) {
 
         }
 
-    });
+        box.onEdit();
+
+    };
 
     return endExtendedObject(box);
 

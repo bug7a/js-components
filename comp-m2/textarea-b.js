@@ -2,7 +2,7 @@
 
 /*
 
-TextareaInputB - v25.07
+TextareaB - v25.07
 
 UI COMPONENT TEMPLATE
 - You can customize, this template code as you need:
@@ -18,7 +18,7 @@ Webpage: https://bug7a.github.io/js-components/
 "use strict";
 
 // Default values
-const TextareaInputBDefaults = {
+const TextareaBDefaults = {
     type: "textarea",
     titleText: "MESSAGE",
     placeholder: "How can we help you?",
@@ -38,10 +38,10 @@ const TextareaInputBDefaults = {
     },
 };
 
-const TextareaInputB = function(params = {}) {
+const TextareaB = function(params = {}) {
 
     // Marge params first
-    mergeIntoIfMissing(params, TextareaInputBDefaults);
+    mergeIntoIfMissing(params, TextareaBDefaults);
 
     // Control params
     params.createInput = 0; // dont create input
@@ -59,7 +59,6 @@ const TextareaInputB = function(params = {}) {
     const textareaElem = document.createElement("textarea");
 
     // *** PUBLIC VARIABLES:
-    box.isValid = 0;
 
     // *** PRIVATE FUNCTIONS:
     const refreshCount = function() {
@@ -97,7 +96,6 @@ const TextareaInputB = function(params = {}) {
         box.inputBox.color = "transparent"; //transparent
         box.inputBox.height = "calc(100% - 20px)";
         //box.inputBox.elem.style.margin = "10px 0px 10px 0px";
-
         
         textareaElem.classList.add("basic_textbox");
         textareaElem.classList.add("minimal");
@@ -137,28 +135,32 @@ const TextareaInputB = function(params = {}) {
     // *** OBJECT INIT CODE:
     
     // Event bindings
-    textareaElem.addEventListener("focus", function () {
+    box.focusFunc = function () {
         box.background.color = box.selectedBackgroundColor;
         box.line.color = box.selectedLineColor;
         box.onFocus();
-    });
-    textareaElem.addEventListener("blur", function () {
+    }
+    textareaElem.addEventListener("focus", function(){ box.focusFunc() });
+    
+    box.blurFunc = function () {
         box.background.color = box.backgroundColor;
         box.line.color = box.lineColor;
         box.onBlur();
-    });
-    textareaElem.addEventListener("input", function () {
+    }
+    textareaElem.addEventListener("blur", function(){ box.blurFunc() });
+
+    box.inputFunc = function () {
 
         box.inputValue = textareaElem.value;
         box.checkIfInputIsRequiredAndEmpty();
 
-        box.isValid = (box.inputValue.length > box.minCharCount) ? 1 : 0;
+        const isValid = (box.inputValue.length > box.minCharCount) ? 1 : 0;
  
         // Yeterince metin girilmiş mi?
         if (box.inputValue != "") {
 
             // Show warning if length is not enough
-            if (box.isValid) {
+            if (isValid) {
                 box.hideWarning();
             } else {
                 if(window.lblHint) {
@@ -175,7 +177,8 @@ const TextareaInputB = function(params = {}) {
 
         box.onEdit();
 
-    });
+    }
+    textareaElem.addEventListener("input", function(){ box.inputFunc() });
 
     /*
     textareaElem.addEventListener("keydown", function (e) {

@@ -18,15 +18,14 @@ Webpage: https://bug7a.github.io/js-components/
 
 // Default values
 const URLInputBDefaults = {
+    width: 400,
     isRequired: 1,
     titleText: "URL",
     placeholder: "example.com",
     warningText: "Invalid URL format",
     warningColor: "#E5885E",
     maxChar: 255,
-    createInput: 0,
     rightPadding: 20,
-    width: 400,
     tinySelectParams: {
         title: "",
         list: [
@@ -55,7 +54,6 @@ const URLInputB = function(params = {}) {
     // *** PRIVATE VARIABLES:
 
     // *** PUBLIC VARIABLES:
-    box.isValid = 0;
 
     // *** PRIVATE FUNCTIONS:
     const validateURL = function(url) {
@@ -101,24 +99,28 @@ const URLInputB = function(params = {}) {
     // *** INIT CODE:
     const inputElem = box.input.inputElement;
 
-    inputElem.addEventListener("focus", function () {
+    box.focusFunc = function () {
         box.background.color = box.selectedBackgroundColor;
         box.line.color = box.selectedLineColor;
         box.onFocus();
-    });
-    inputElem.addEventListener("blur", function () {
+    }
+    inputElem.addEventListener("focus", function(){ box.focusFunc() });
+
+    box.blurFunc = function () {
         box.background.color = box.backgroundColor;
         box.line.color = box.lineColor;
         box.onBlur();
-    });
-    inputElem.addEventListener("input", function () {
+    }
+    inputElem.addEventListener("blur", function(){ box.blurFunc() });
 
+    box.inputFunc = function () { // If needed, you can override function on ExtendedObject.
+        
         box.inputValue = box.input.text;
         box.checkIfInputIsRequiredAndEmpty();
 
-        box.isValid = validateURL(box.inputValue);
+        const isValid = validateURL(box.inputValue);
 
-        if (box.isValid) {
+        if (isValid) {
             box.hideWarning();
         } else {
             if (window.lblHint) {
@@ -128,8 +130,8 @@ const URLInputB = function(params = {}) {
         }
 
         box.onEdit();
-
-    });
+    }
+    inputElem.addEventListener("input", function(){ box.inputFunc() });
 
     return endExtendedObject(box);
 };

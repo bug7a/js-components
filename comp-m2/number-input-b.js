@@ -36,7 +36,6 @@ const NumberInputB = function(params = {}) {
     const box = startExtendedObject(InputB, NumberInputBDefaults, params);
 
     // *** PRIVATE VARIABLES:
-    const inputElem = box.input.inputElement;
 
     // *** PUBLIC VARIABLES:
 
@@ -58,7 +57,9 @@ const NumberInputB = function(params = {}) {
 
         return value;
 
-    }
+    };
+
+
 
     // *** PUBLIC FUNCTIONS:
     
@@ -73,9 +74,15 @@ const NumberInputB = function(params = {}) {
     }
     
     // Event bindings
-    inputElem.addEventListener("input", function () {
+    // OVERRIDE:
+    box.inputFunc = function () {
 
-        let value = inputElem.value;
+        //const inputElem = box.input.inputElement;
+
+        box.inputValue = box.input.text;
+        box.checkIfInputIsRequiredAndEmpty();
+
+        let value = box.inputValue;
 
         // 1. Geçerli karakter kümesini oluştur
         let allowedChars = "0-9";
@@ -118,9 +125,12 @@ const NumberInputB = function(params = {}) {
             value = "-0" + box.decimalSeparator;
         }
 
-        inputElem.value = value;
+        box.input.text = value;
+        box.inputValue = value;
 
-    });
+        box.onEdit();
+
+    };
 
     return endExtendedObject(box);
 

@@ -2,7 +2,7 @@
 
 /*
 
-Waiting - v24.06
+Waiting - v25.07
 
 UI COMPONENT TEMPLATE
 - You can customize, this template code as you need:
@@ -11,38 +11,44 @@ UI COMPONENT TEMPLATE
 Started Date: 7 July 2022
 Developer: Bugra Ozden
 Email: bugra.ozden@gmail.com
-Site: https://bug7a.github.io/javascript-mobile-app-template/
-
-
-EXAMPLE: {javascript-mobile-app-template}/waiting.htm
-
+Site: https://bug7a.github.io/js-components/
 
 */
 
 "use strict";
+const WaitingDefaults = {
+    //border: 0,
+    label: "",
+    textColor: "rgba(255, 255, 255, 0.9)",
+    //color: "transparent",
+    //opacity: 0,
+    //visible: 0,
+    //width: "100%",
+    //height: "100%",
+    waitingIcon: "../comp-m2/waiting/clock.png",
+    coverBackgroundColor: "rgba(0, 0, 0, 0.4)",
+    onHide: function() {},
+    animated: 0,
+};
+
 const Waiting = function(params = {}) {
 
-    const defaults = {
-        border: 0,
-        label: "",
-        color: "transparent",
-        opacity: 0,
-        visible: 0,
-        width: "100%",
-        height: "100%",
-        waitingIcon: "../comp-m2/waiting/clock.png",
-        coverBackgroundColor: "rgba(0, 0, 0, 0.4)",
-        onHide: function() {},
-    };
+    // Marge params first
+    mergeIntoIfMissing(params, WaitingDefaults);
 
-    if (params == "get") return defaults; // CompName("get").border
+    params.opacity = 0;
+    params.visible = 0;
+    params.color = "transparent";
+    params.border = 0;
+    params.width = "100%";
+    params.height = "100%";
 
     // BOX: Component container
-    const box = startObject();
-    page.add(box);
+    const box = startObject(params);
+    page.add(box); // Always create in page
 
-    // Values ready to use
-    box.props(defaults, params);
+    // *** PRIVATE VARIABLES:
+    let animationFrame = 1;
 
     box.show = function() {
 
@@ -50,6 +56,7 @@ const Waiting = function(params = {}) {
         box.withMotion(function(self) {
             box.opacity = 1;
         });
+        if (box.animated == 1) box.startAnimation();
         
     }
     
@@ -70,6 +77,7 @@ const Waiting = function(params = {}) {
                 if ($remove == 1) {
                     box.remove();
                 }
+                if (box.animated == 1) box.stopAnimation();
             }, 250);
 
         }, timer);
@@ -81,38 +89,62 @@ const Waiting = function(params = {}) {
         box.lbl.visible = 1;
     }
 
+    box.startAnimation = function() {
+        if (box.animationTimer) clearTimeout(box.animationTimer);
+        box.animationTimer = setTimeout(function() {
+            if (animationFrame == 1) {
+                box.icon.elem.style.transform = "scale(0.8)";
+                animationFrame = 0;
+            } else {
+                box.icon.elem.style.transform = "scale(1)";
+                animationFrame = 1;
+            }
+            box.startAnimation();
+        }, 400);
+    }
+
+    box.stopAnimation = function() {
+        if (box.animationTimer) clearTimeout(box.animationTimer);
+        box.icon.elem.style.transform = "scale(1)";
+        animationFrame = 1;
+    }
+
     // *** OBJECT VIEW:
-    box.setMotion("opacity 0.2s");
-    
-    // BOX: Cover.
-    box.coverBox = startFlexBox({
-        flexDirection: "column",
-        color: box.coverBackgroundColor,
-        clickable: 1,
-    });
-    box.add(that);
-
-        // ICON: Logo icon.
-        box.icon = Icon({
-            width: 50,
-            height: 50,
-            opacity: 1,
+        box.setMotion("opacity 0.2s");
+        
+        // BOX: Cover.
+        box.coverBox = startFlexBox({
+            flexDirection: "column",
+            color: box.coverBackgroundColor,
+            clickable: 1,
         });
-        that.load(box.waitingIcon);
+        box.add(that);
 
-        // LABEL: Some text.
-        box.lbl = Label({
-            textColor: "rgba(0, 0, 0, 0.8)",
-            text: box.label,
-            opacity: 1,
-            visible: (box.label == "") ? 0 : 1,
-        });
-        box.lbl.elem.fontFamily = "opensans-bold";
+            // ICON: Logo icon.
+            box.icon = Icon({
+                width: 50,
+                height: 50,
+                opacity: 1,
+            });
+            that.load(box.waitingIcon);
+            if (box.animated) {
+                box.icon.setMotion("transform 0.4s"); // opacity 0.2s, 
+            }
+            //box.warningBall.elem.style.transform = "scale(0.3)";
 
+            // LABEL: Some text.
+            box.lbl = Label({
+                textColor: box.textColor,
+                text: box.label,
+                opacity: 1,
+                textAlign: "center",
+                visible: (box.label == "") ? 0 : 1,
+            });
+            box.lbl.elem.fontFamily = "opensans-bold";
 
-    endFlexBox();
+        endFlexBox();
 
-    // Show at:
+    // *** INIT
     box.left = 0;
     box.top = 0;
 

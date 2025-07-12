@@ -16,6 +16,7 @@
 
         <script src="../comp-m2/tooltip.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp-m2/input-b.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m2/number-input-b.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- ALL COMPONENTS IN ONE FILE -->
         <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
@@ -48,13 +49,16 @@
                 //inputList.push(that);
 
                 // INPUT: #2
-                myInput2 = InputB({
+                myInput2 = NumberInputB({
                     key: "2",
                     titleText: "HEIGHT",
                     placeholder: "175",
                     descriptionText: "The vertical size...",
                     unitText: "cm",
+                    maxChar: 3,
                     isRequired: 0,
+                    allowNegative: 0,
+                    allowDecimal: 0,
                 });
                 that.onEdit = function() {
                     console.log(myInput2.getInputValue());
