@@ -30,12 +30,22 @@ const EmailInputBDefaults = {
 
 const EmailInputB = function(params = {}) {
 
+    // Marge params first
+    mergeIntoIfMissing(params, EmailInputBDefaults);
+
+    // Edit params:
+    // params.width = getDefaultContainerBox().width;
+
     // BOX: Component container
-    const box = startExtendedObject(InputB, EmailInputBDefaults, params);
+    const box = startExtendedObject(InputB, params);
 
     // *** PRIVATE VARIABLES:
 
     // *** PUBLIC VARIABLES:
+    box.isValid = function() { //OVERRIDE
+        // Check email format
+        return (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(box.getInputValue())) ? 1 : 0;
+    };
 
     // *** PRIVATE FUNCTIONS:
 
@@ -47,6 +57,7 @@ const EmailInputB = function(params = {}) {
     
     // Event bindings
     // OVERRIDE:
+    /*
     box.inputFunc = function () {
 
         box.inputValue = box.input.text;
@@ -71,6 +82,7 @@ const EmailInputB = function(params = {}) {
         box.onEdit();
 
     };
+    */
 
     return endExtendedObject(box);
 

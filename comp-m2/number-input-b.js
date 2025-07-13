@@ -32,8 +32,13 @@ const NumberInputBDefaults = {
 
 const NumberInputB = function(params = {}) {
 
+    // Marge params first
+    mergeIntoIfMissing(params, NumberInputBDefaults);
+
+    // Edit params:
+
     // BOX: Component container
-    const box = startExtendedObject(InputB, NumberInputBDefaults, params);
+    const box = startExtendedObject(InputB, params);
 
     // *** PRIVATE VARIABLES:
 
@@ -43,46 +48,22 @@ const NumberInputB = function(params = {}) {
     const makeExamamplePlaceholder = function() {
 
         let value = "";
-
         if (box.allowNegative) {
             value = "-"
         }
-
         value = value + "100";
-
         // 3. Ondalık ayraç sadece bir kez geçmeli
         if (box.allowDecimal) {
             value = value + box.decimalSeparator + "0".repeat(box.maxDecimalDigits);
         }
-
         return value;
 
     };
 
-
-
     // *** PUBLIC FUNCTIONS:
-    
-    // *** OBJECT VIEW:
+    box.applyFormattedValueToInput = function() {
 
-    // *** OBJECT INIT CODE:
-
-    // Show example placeholder
-    if (box.placeholder == "(auto)") {
-        box.placeholder = makeExamamplePlaceholder();
-        box.setPlaceholder(box.placeholder);
-    }
-    
-    // Event bindings
-    // OVERRIDE:
-    box.inputFunc = function () {
-
-        //const inputElem = box.input.inputElement;
-
-        box.inputValue = box.input.text;
-        box.checkIfInputIsRequiredAndEmpty();
-
-        let value = box.inputValue;
+        let value = box.getInputValue();
 
         // 1. Geçerli karakter kümesini oluştur
         let allowedChars = "0-9";
@@ -101,10 +82,11 @@ const NumberInputB = function(params = {}) {
         if (box.allowDecimal) {
             const sep = box.decimalSeparator;
             const parts = value.split(sep);
+            //console.table(parts)
             if (parts.length > 2) {
-                value = parts.shift() + sep + parts.join("");
+                value = parts.pop() + sep + parts.join("");
             }
-            if (parts.length === 2 && box.maxDecimalDigits >= 0) {
+            if (parts.length == 2 && box.maxDecimalDigits >= 0) {
                 parts[1] = parts[1].substring(0, box.maxDecimalDigits);
                 value = parts[0] + sep + parts[1];
             }
@@ -125,12 +107,18 @@ const NumberInputB = function(params = {}) {
             value = "-0" + box.decimalSeparator;
         }
 
-        box.input.text = value;
-        box.inputValue = value;
+        box.setInputValue(value); // Put back formatted value.
 
-        box.onEdit();
+    }
+    
+    // *** OBJECT VIEW:
 
-    };
+    // *** OBJECT INIT CODE:
+
+    // Show example placeholder
+    if (box.placeholder == "(auto)") {
+        box.setPlaceholder(makeExamamplePlaceholder());
+    }
 
     return endExtendedObject(box);
 

@@ -23,9 +23,9 @@ const TextareaBDefaults = {
     titleText: "MESSAGE",
     placeholder: "How can we help you?",
     isRequired: 1,
-    minCharCount: 80,
-    showCount: 1,
-    lengthText: "length",
+    minCharCount: 80, // 0, 80
+    showCount: 1, // 0, 1
+    lengthText: "length: ",
     warningText: "The entered text must be longer than 80",
     warningColor: "#E5885E", // "#F1BF3C"
     maxChar: 255,
@@ -63,8 +63,8 @@ const TextareaB = function(params = {}) {
     // *** PRIVATE FUNCTIONS:
     const refreshCount = function() {
         if (box.showCount) {
-            const currentLength = box.inputValue.length;
-            box.setUnitText(`${box.lengthText}: ${currentLength}`); // /${box.minCharCount}
+            const currentLength = box.getInputValue().length;
+            box.setUnitText(`${box.lengthText}${currentLength}`); // /${box.minCharCount}
             if (currentLength > box.minCharCount) {
                 box.unit.opacity = 0;
             } else {
@@ -84,10 +84,19 @@ const TextareaB = function(params = {}) {
     };
 
     // *** PUBLIC FUNCTIONS:
-    // Sets the input's current value programmatically
-    box.setInputValue = function(value) {
-        box.inputValue = value;
-        textareaElem.value = value;
+    box.setInputValue = function(value) { // OVERRIDE
+        if (value != textareaElem.value) {
+            box.inputValue = value;
+            textareaElem.value = value;
+        }
+    };
+
+    box.getInputValue = function() { // OVERRIDE
+        return textareaElem.value;
+    };
+
+    box.isValid = function() { // OVERRIDE
+        return (box.getInputValue().length > box.minCharCount) ? 1 : 0;
     };
     
     // *** OBJECT VIEW:
@@ -151,25 +160,9 @@ const TextareaB = function(params = {}) {
 
     box.inputFunc = function () {
 
-        box.inputValue = textareaElem.value;
+        box.applyFormattedValueToInput();
         box.checkIfInputIsRequiredAndEmpty();
-
-        const isValid = (box.inputValue.length > box.minCharCount) ? 1 : 0;
- 
-        // Yeterince metin girilmiş mi?
-        if (box.inputValue != "") {
-
-            // Show warning if length is not enough
-            if (isValid) {
-                box.hideWarning();
-            } else {
-                if(window.lblHint) {
-                    window.lblHint.top = -1000;
-                }
-                box.showWarning();
-            }
-
-        }
+        box.showWarningIfNotValid(box.isValid());
 
         // Refresh count on unit
         refreshCount();
@@ -179,6 +172,8 @@ const TextareaB = function(params = {}) {
 
     }
     textareaElem.addEventListener("input", function(){ box.inputFunc() });
+
+    box.checkIfInputIsRequiredAndEmpty();
 
     /*
     textareaElem.addEventListener("keydown", function (e) {

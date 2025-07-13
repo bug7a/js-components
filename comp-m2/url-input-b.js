@@ -56,19 +56,23 @@ const URLInputB = function(params = {}) {
     // *** PUBLIC VARIABLES:
 
     // *** PRIVATE FUNCTIONS:
-    const validateURL = function(url) {
+    box.isValid = function() {
+
         const regex = new RegExp(
             "^" +
             "((([a-zA-Z0-9\-]+)\\.)+[a-zA-Z]{2,})" +  // domain.com veya sub.domain.com
             "(\:\\d{2,5})?" +                          // :3000 gibi opsiyonel port
             "(\/[^\s]*)?$"                              // /path?query=1 gibi opsiyonel path ve query
         );
-        return (regex.test(url)) ? 1 : 0;
+
+        return (regex.test(box.input.text)) ? 1 : 0;
+        // WHY: box.getInputValue() verisi "http..." li olduğu için direk input (box.input.text) verisini kullanıyorum.
+
     };
 
     // *** PUBLIC FUNCTIONS:
     box.getInputValue = function() { // *** OVERRIDE ***
-        return box.tinySelect.list[box.tinySelect.selectedIndex].label + box.inputValue;
+        return box.tinySelect.list[box.tinySelect.selectedIndex].label + box.input.text;
     };
 
     // *** OBJECT VIEW:
@@ -114,24 +118,14 @@ const URLInputB = function(params = {}) {
     inputElem.addEventListener("blur", function(){ box.blurFunc() });
 
     box.inputFunc = function () { // If needed, you can override function on ExtendedObject.
-        
-        box.inputValue = box.input.text;
+        box.applyFormattedValueToInput();
         box.checkIfInputIsRequiredAndEmpty();
-
-        const isValid = validateURL(box.inputValue);
-
-        if (isValid) {
-            box.hideWarning();
-        } else {
-            if (window.lblHint) {
-                window.lblHint.top = -1000;
-            }
-            box.showWarning();
-        }
-
+        box.showWarningIfNotValid(box.isValid());
         box.onEdit();
     }
     inputElem.addEventListener("input", function(){ box.inputFunc() });
+
+    box.checkIfInputIsRequiredAndEmpty();
 
     return endExtendedObject(box);
 };

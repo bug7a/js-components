@@ -15,6 +15,36 @@ WebSite: https://bug7a.github.io/js-components
 
 */
 
+/*
+
+- box.status 
+-- 0: okay, 1: empty but required, 2: not valid
+
+- input.applyFormattedValueToInput(value);
+-- If you want to reformat the value override this func.
+
+- input.isValid(value);
+
+- input.setInputValue("Text");           // Set value programmatically
+
+- input.getInputValue();                  // Get current value
+
+- input.setPlaceholder("Text");          // Change placeholder
+
+- input.setTitle("Title");               // Set title text
+
+- input.setDescription("Description");   // Add description
+
+- input.setRequired(1);                   // Mark as required
+
+- input.setWarningText("Warning text");  // Set invalid input warning
+
+- input.showWarning();                    // Show warning
+
+- input.hideWarning();                    // Hide warning
+
+*/
+
 "use strict";
 
 // Default values
@@ -108,6 +138,12 @@ const InputB = function(params = {}) {
 
     // *** PUBLIC FUNCTIONS:
 
+    box.applyFormattedValueToInput = function(value) {
+        //let value = box.getInputValue();
+        // format the value
+        //box.setInputValue(value); // Put back formatted value.
+    }
+
     box.checkIfInputIsRequiredAndEmpty = function() {
         if (box.isRequired) {
             if (box.getInputValue().length === 0) {
@@ -126,6 +162,26 @@ const InputB = function(params = {}) {
         } else {
             box.hideWarning();
             //hideWarningBall();
+        }
+    };
+
+    box.isValid = function() {
+        //box.inputValue
+        return 1;
+    };
+
+    box.showWarningIfNotValid = function(isValid) {
+        if (box.getInputValue().length !== 0) {
+
+            if (isValid) {
+                box.hideWarning();
+            } else {
+                if(window.lblHint) {
+                    window.lblHint.top = -1000;
+                }
+                box.showWarning();
+            }
+
         }
     };
 
@@ -168,14 +224,24 @@ const InputB = function(params = {}) {
 
     // Sets the input's current value programmatically
     box.setInputValue = function(value) {
-        box.inputValue = value;
-        box.input.text = value;
+        if (value != box.input.text) {
+            box.inputValue = value;
+            box.input.text = value;
+        }
     };
 
     // Returns the current value inside the input field
     box.getInputValue = function() {
-        return box.inputValue;
+        return box.input.text;
+        //return box.inputValue;
     };
+
+    /*
+    box.getInputValueFromObject = function() {
+        // If you change the input object, you can override this function.
+        return box.input.text;
+    };
+    */
 
     // Sets the background color of the input element itself
     box.setBackgroundColor = function(color) {
@@ -416,15 +482,18 @@ const InputB = function(params = {}) {
         inputElem.addEventListener("blur", function(){ box.blurFunc() });
 
         box.inputFunc = function () { // If needed, you can override function on ExtendedObject.
-            box.inputValue = box.input.text;
+            box.inputValue = inputElem.value;
+            box.applyFormattedValueToInput();
             box.checkIfInputIsRequiredAndEmpty();
+            box.showWarningIfNotValid(box.isValid());
             box.onEdit();
         }
         inputElem.addEventListener("input", function(){ box.inputFunc() });
-        
+
+        box.checkIfInputIsRequiredAndEmpty();
     }
 
-    box.checkIfInputIsRequiredAndEmpty();
+    
 
     return endObject(box);
 

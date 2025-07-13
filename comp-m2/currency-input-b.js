@@ -244,53 +244,19 @@ const CurrencyInputB = function(params = {}) {
         }
 
         return newValue;
-        /*
 
-        parameter: numberString
-
-        const sep = box.groupSeparator;
-        const decSep = box.decimalSeparator;
-
-        let isNegative = numberString.startsWith("-");
-        if (isNegative) {
-            numberString = numberString.substring(1);
-        }
-
-        let parts = numberString.split(decSep);
-        let integerPart = parts[0];
-        let decimalPart = parts[1] || "";
-
-        integerPart = integerPart.replace(/^0+(?!$)/, "");
-        integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, sep);
-
-        if (box.allowDecimal && box.maxDecimalDigits >= 0) {
-            decimalPart = decimalPart.substring(0, box.maxDecimalDigits);
-            if (decimalPart.length > 0) {
-                return (isNegative ? "-" : "") + integerPart + decSep + decimalPart;
-            }
-        }
-
-        return (isNegative ? "-" : "") + integerPart;
-        */
     }
 
-    // *** INIT:
-    const inputElem = box.input.inputElement;
-
-    // Show example placeholder
-    if (box.placeholder == "(auto)") {
-        box.placeholder = makeExamamplePlaceholder();
-        box.setPlaceholder(box.placeholder);
+    // *** PUBLIC FONCTIONS:
+    box.getInputValueAsNumber = function() {
+        return clearGroupFormat(box.getInputValue());
     }
 
-    // OVERRIDE:
-    box.inputFunc = function () {
-
-        box.inputValue = box.input.text;
-        box.checkIfInputIsRequiredAndEmpty();
+    box.applyFormattedValueToInput = function() { // OVERRIDE
 
         rememberCursorPosition();
-        let value = clearGroupFormat(inputElem.value);
+
+        let value = clearGroupFormat(box.getInputValue());
 
         // 1. Geçerli karakter kümesini oluştur
         let allowedChars = "0-9";
@@ -310,7 +276,7 @@ const CurrencyInputB = function(params = {}) {
             const sep = box.decimalSeparator;
             const parts = value.split(sep);
             if (parts.length > 2) {
-                value = parts.shift() + sep + parts.join("");
+                value = parts.pop() + sep + parts.join("");
             }
             if (parts.length === 2 && box.maxDecimalDigits >= 0) {
                 parts[1] = parts[1].substring(0, box.maxDecimalDigits);
@@ -333,13 +299,20 @@ const CurrencyInputB = function(params = {}) {
             value = "-0" + box.decimalSeparator;
         }
 
-        inputElem.value = formatWithGrouping(value);
+        value = formatWithGrouping(value);
+        box.setInputValue(value); // Put back formatted value.
         restoreCursorPosition();
 
-        box.inputValue = inputElem.value;
-        box.onEdit();
-
     };
+
+    // *** OBJECT INIT CODE:
+    const inputElem = box.input.inputElement;
+
+    // Show example placeholder
+    if (box.placeholder == "(auto)") {
+        box.placeholder = makeExamamplePlaceholder();
+        box.setPlaceholder(box.placeholder);
+    }
 
     return endExtendedObject(box);
 };
