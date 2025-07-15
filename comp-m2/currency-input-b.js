@@ -136,6 +136,13 @@ Webpage: https://bug7a.github.io/js-components/
 
 */
 
+/*
+
+- input.getInputValueAsNumber();
+-- To get number with out groupSeparators
+
+*/
+
 "use strict";
 
 // Default values

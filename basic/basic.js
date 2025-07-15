@@ -6,6 +6,9 @@
 basic.js (v25.07) A lightweight JavaScript library for building web-based applications with simple code. No need to write HTML or CSS — just use basic JavaScript.
 - Project Site: https://bug7a.github.io/basic.js/
 
+The Art of Fun Coding — With basic.js
+
+
 Copyright 2020-2025 Bugra Ozden <bugra.ozden@gmail.com>
 - https://github.com/bug7a
 

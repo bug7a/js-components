@@ -54,35 +54,6 @@ const EmailInputB = function(params = {}) {
     // *** OBJECT VIEW:
 
     // *** OBJECT INIT CODE:
-    
-    // Event bindings
-    // OVERRIDE:
-    /*
-    box.inputFunc = function () {
-
-        box.inputValue = box.input.text;
-        box.checkIfInputIsRequiredAndEmpty();
-        
-        // E-posta doğrulaması için doğru regex
-        const isValid = (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(box.inputValue)) ? 1 : 0;
-
-        if (box.inputValue.length != 0) {
-
-            if (isValid) {
-                box.hideWarning();
-            } else {
-                if(window.lblHint) {
-                    window.lblHint.top = -1000;
-                }
-                box.showWarning();
-            }
-
-        }
-
-        box.onEdit();
-
-    };
-    */
 
     return endExtendedObject(box);
 

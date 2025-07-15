@@ -105,19 +105,19 @@
                 }
 
                 Button({
-                    text: "Show Warning",
+                    text: "Button A",
                 });
                 styleSettingButton(that);
                 that.on("click", function() {
-                    myInput1.showWarning();
+                    console.log("Button A");
                 });
 
                 Button({
-                    text: "Hide Warning",
+                    text: "Button B",
                 });
                 styleSettingButton(that);
                 that.on("click", function() {
-                    myInput1.hideWarning();
+                    console.log("Button B");
                 });
 
             endAutoLayout();

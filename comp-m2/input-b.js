@@ -17,7 +17,7 @@ WebSite: https://bug7a.github.io/js-components
 
 /*
 
-- box.status 
+- .status 
 -- 0: okay, 1: empty but required, 2: not valid
 
 - input.applyFormattedValueToInput(value);
@@ -38,10 +38,6 @@ WebSite: https://bug7a.github.io/js-components
 - input.setRequired(1);                   // Mark as required
 
 - input.setWarningText("Warning text");  // Set invalid input warning
-
-- input.showWarning();                    // Show warning
-
-- input.hideWarning();                    // Hide warning
 
 */
 
@@ -116,6 +112,8 @@ const InputB = function(params = {}) {
     /* */
 
     // *** PUBLIC VARIABLES:
+    
+    // 0: okay, 1: empty but required, 2: not valid
     box.status = 0;
 
     // *** PRIVATE FUNCTIONS:
@@ -136,6 +134,32 @@ const InputB = function(params = {}) {
         box.warningBall.elem.style.transform = "scale(0.3)";
     }
 
+    // Shows a warning manually (used externally)
+    const showWarning = function() {
+        if (box.isRequired && box.getInputValue().length === 0) {
+            // If required and empty, show required tooltip
+            hideWarningBall();
+            box.warningBall.color = box.requiredColor;
+            box.warningBall.tooltip.setHintText(box.requiredText);
+            box.warningBall.tooltip.setLbl_color(box.requiredColor);
+            showWarningBall();
+            box.status = 1;
+        } else {
+            // Otherwise, show warning
+            box.warningBall.color = box.warningColor;
+            box.warningBall.tooltip.setHintText(box.warningText);
+            box.warningBall.tooltip.setLbl_color(box.warningColor);
+            showWarningBall();
+            box.status = 2;
+        }
+    };
+
+    // Hides the warning icon and tooltip manually
+    const hideWarning = function() {
+        hideWarningBall();
+        box.status = 0;
+    };
+
     // *** PUBLIC FUNCTIONS:
 
     box.applyFormattedValueToInput = function(value) {
@@ -147,7 +171,7 @@ const InputB = function(params = {}) {
     box.checkIfInputIsRequiredAndEmpty = function() {
         if (box.isRequired) {
             if (box.getInputValue().length === 0) {
-                box.showWarning();
+                showWarning();
                 /*
                 hideWarningBall();
                 box.warningBall.tooltip.setHintText(box.requiredText);
@@ -156,11 +180,11 @@ const InputB = function(params = {}) {
                 showWarningBall();
                 */
             } else {
-                box.hideWarning();
+                hideWarning();
                 //hideWarningBall();
             }
         } else {
-            box.hideWarning();
+            hideWarning();
             //hideWarningBall();
         }
     };
@@ -174,19 +198,19 @@ const InputB = function(params = {}) {
         if (box.getInputValue().length !== 0) {
 
             if (isValid) {
-                box.hideWarning();
+                hideWarning();
             } else {
                 if(window.lblHint) {
                     window.lblHint.top = -1000;
                 }
-                box.showWarning();
+                showWarning();
             }
 
         }
     };
 
     /*
-    box.isNotEmpty = function() {
+    .isNotEmpty = function() {
         return (box.getInputValue() == "") ? 0 : 1;
     }
     */
@@ -237,7 +261,7 @@ const InputB = function(params = {}) {
     };
 
     /*
-    box.getInputValueFromObject = function() {
+    .getInputValueFromObject = function() {
         // If you change the input object, you can override this function.
         return box.input.text;
     };
@@ -292,32 +316,6 @@ const InputB = function(params = {}) {
         if (box.unit && typeof box.unit.text !== "undefined") {
             box.unit.text = text;
         }
-    };
-
-    // Shows a warning manually (used externally)
-    box.showWarning = function() {
-        if (box.isRequired && box.getInputValue().length === 0) {
-            // If required and empty, show required tooltip
-            hideWarningBall();
-            box.warningBall.color = box.requiredColor;
-            box.warningBall.tooltip.setHintText(box.requiredText);
-            box.warningBall.tooltip.setLbl_color(box.requiredColor);
-            showWarningBall();
-            box.status = 1;
-        } else {
-            // Otherwise, show warning
-            box.warningBall.color = box.warningColor;
-            box.warningBall.tooltip.setHintText(box.warningText);
-            box.warningBall.tooltip.setLbl_color(box.warningColor);
-            showWarningBall();
-            box.status = 2;
-        }
-    };
-
-    // Hides the warning icon and tooltip manually
-    box.hideWarning = function() {
-        hideWarningBall();
-        box.status = 0;
     };
 
     // *** OBJECT VIEW:
@@ -405,7 +403,7 @@ const InputB = function(params = {}) {
             box.unit = Label(box.unitStyle);
             box.unit.text = box.unitText;
             /*
-            box.unit = Label({
+            box.unit = abel({
                 text: box.unitText,
                 padding: [6, 0],
                 color: "white",
@@ -492,8 +490,6 @@ const InputB = function(params = {}) {
 
         box.checkIfInputIsRequiredAndEmpty();
     }
-
-    
 
     return endObject(box);
 
