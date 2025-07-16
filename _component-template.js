@@ -2,7 +2,7 @@
 
 /*
 
-Component Template - v25.06
+Component Template - v25.07
 
 UI COMPONENT TEMPLATE
 - You can customize, this template code as you need:
@@ -17,7 +17,7 @@ Webpage: https://bug7a.github.io/js-components/
 
 "use strict";
 
-// Default values
+// Default values:
 const CompNameDefaults = {
     key: 0,
     border: 1, // Standard box features are added automatically.
@@ -35,17 +35,16 @@ const CompNameDefaults = {
 
 const CompName = function(params = {}) {
 
-    // Marge params first
+    // Marge params:
     mergeIntoIfMissing(params, CompNameDefaults);
 
-    // Edit params:
+    // Edit params, if needed:
     // params.width = getDefaultContainerBox().width;
 
     // BOX: Component container
     const box = startObject(params);
 
-    // Parent container
-    // box.containerBox;
+    // NOTE: Parent container is box.containerBox
 
     // *** PRIVATE VARIABLES:
     //let privateVar = "";
@@ -57,16 +56,18 @@ const CompName = function(params = {}) {
     let badgetCurrentColor = null;
 
     // *** PUBLIC VARIABLES:
-    //box.publicVar = "";
+    // [var] Show this public var in navigator
+    box.publicVar = 1;
 
     // NOTE: Default values are also public variables.
 
+
     // *** PRIVATE FUNCTIONS:
-    //const privateFunc = function() {};
+    const privateFunc = function() {};
 
     // *** PUBLIC FUNCTIONS:
     // If you need to change a param after it is created. You can write a setter function for it.
-    //box.publicFunc = function() {};
+    box.publicFunc = function() {};
 
     box.setIconFile = function(iconFile) {
         box.iconFile = iconFile;
@@ -99,6 +100,8 @@ const CompName = function(params = {}) {
     box.setBoxOverColor = function(color) {
         box.boxOverColor = color;
     };
+
+
 
     // *** OBJECT VIEW:
     box.elem.style.cursor = "pointer";
@@ -143,6 +146,8 @@ const CompName = function(params = {}) {
         that.elem.style.whiteSpace = "nowrap";
         that.elem.style.fontFamily = "opensans-bold";
         that.setMotion("background-color 0.3s");
+
+
 
     // *** OBJECT INIT CODE:
     box.elem.addEventListener("click", function() {

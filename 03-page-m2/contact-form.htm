@@ -18,6 +18,7 @@
         <script src="../comp-m2/tooltip.min.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp-m2/input-b.min.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp-m2/email-input-b.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m2/phone-input-b.min.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp-m2/textarea-b.min.js" type="text/javascript" charset="utf-8"></script>
 
         <script src="../comp-m2/waiting.min.js" type="text/javascript" charset="utf-8"></script>
@@ -40,7 +41,7 @@
         const SERVICE_URL = "https://api.ornekadres.com/gonder";
 
         // *** VARIABLES:          
-        let firstNameInput, lastNameInput, emailInput, subjectInput, messageTextarea, formBtn;
+        let firstNameInput, lastNameInput, emailInput, phoneInput, subjectInput, messageTextarea, formBtn;
         let scrollableBox, formContainer, nameGroup;
         let warningLabel, sentMessageBox, lblSentMessage;
 
@@ -149,7 +150,23 @@
                         });
                         inputList.push(that);
 
-                        // TELEPHONE (Optional)
+                        // INPUT: Phone
+                        /*
+                        phoneInput = PhoneInputB({
+                            key: "4",
+                            isRequired: 1,
+                            titleText: "PHONE NUMBER",
+                            placeholder: "(auto)",
+                            warningText: "Invalid phone number format",
+                            warningColor: "#E5885E", // "#F1BF3C"
+                            countryCode: "+90",
+                            phoneMask: " (___) ___-____",
+                            unitText: "TR",
+                            width: "100%"
+                            //animatedWarningBall: 0,
+                        });
+                        inputList.push(that);
+                        */
 
                         // INPUT: Subject
                         subjectInput = InputB({
@@ -199,7 +216,7 @@
                                 text: "SEND",
                                 color: "#65A293",
                             });
-                            ActionButtonEffect(that);
+                            actionButtonEffect(that);
                             that.on("mousedown", function() {
                                 
                                 // FORM CHECKED AND READY:
@@ -281,7 +298,7 @@
             endBox(); // Scrollable page container
 
             // SCROLL BAR: Scrollable page container
-            formContainer.scrollBar = ScrollBar({
+            scrollableBox.scrollBar = ScrollBar({
                 scrollableBox: scrollableBox,
                 bar_border: 0,
                 bar_round: 2,
@@ -347,7 +364,7 @@
         };
 
         // Give effects to a button
-        const ActionButtonEffect = function(btn) {
+        const actionButtonEffect = function(btn) {
 
             btn.setMotion("filter 0.2s, transform 0.2s");
 

@@ -69,6 +69,7 @@ const InputBDefaults = {
     requiredColor: "white",
     warningText: "Invalid value format",
     warningColor: "#E5885E", // "#F1BF3C"
+    animatedWarningBall: 1,
 
     createLeftBox: 0,
     createRightBox: 0,
@@ -113,22 +114,28 @@ const InputB = function(params = {}) {
 
     // *** PUBLIC VARIABLES:
     
-    // 0: okay, 1: empty but required, 2: not valid
+    // [var] 0: okay, 1: empty but required, 2: not valid
     box.status = 0;
 
     // *** PRIVATE FUNCTIONS:
 
     const showWarningBall = function() {
         // just animate on show
-        box.warningBall.withMotion(function() {
+        const _showWarningBall = () => {
             box.warningBall.opacity = 1;
             box.warningBall.clickable = 1;
             box.warningBall.elem.style.transform = "scale(1)";
-        });
+        };
+
+        if (box.animatedWarningBall == 1) {
+            box.warningBall.withMotion(_showWarningBall);
+        } else {
+            _showWarningBall();
+        }
     }
 
     const hideWarningBall = function() {
-        box.warningBall.dontMotion();
+        if (box.animatedWarningBall == 1) box.warningBall.dontMotion();
         box.warningBall.opacity = 0;
         box.warningBall.clickable = 0;
         box.warningBall.elem.style.transform = "scale(0.3)";
@@ -146,6 +153,7 @@ const InputB = function(params = {}) {
             box.status = 1;
         } else {
             // Otherwise, show warning
+            hideWarningBall();
             box.warningBall.color = box.warningColor;
             box.warningBall.tooltip.setHintText(box.warningText);
             box.warningBall.tooltip.setLbl_color(box.warningColor);
@@ -443,7 +451,9 @@ const InputB = function(params = {}) {
             opacity: 0,
         });
         box.warningBall.elem.style.transform = "scale(0.3)";
-        box.warningBall.setMotion("opacity 0.2s, transform 0.2s");
+        if (box.animatedWarningBall == 1) {
+            box.warningBall.setMotion("opacity 0.2s, transform 0.2s");
+        }
 
         // TOOLTIP: warningBall
         box.warningBall.tooltip = Tooltip({
@@ -480,10 +490,10 @@ const InputB = function(params = {}) {
         inputElem.addEventListener("blur", function(){ box.blurFunc() });
 
         box.inputFunc = function () { // If needed, you can override function on ExtendedObject.
-            box.inputValue = inputElem.value;
             box.applyFormattedValueToInput();
             box.checkIfInputIsRequiredAndEmpty();
             box.showWarningIfNotValid(box.isValid());
+            box.inputValue = inputElem.value;
             box.onEdit();
         }
         inputElem.addEventListener("input", function(){ box.inputFunc() });
