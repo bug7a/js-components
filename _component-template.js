@@ -146,7 +146,7 @@ const CompName = function(params = {}) {
         that.elem.style.whiteSpace = "nowrap";
         that.elem.style.fontFamily = "opensans-bold";
         that.setMotion("background-color 0.3s");
-
+        
 
 
     // *** OBJECT INIT CODE:

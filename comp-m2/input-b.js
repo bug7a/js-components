@@ -259,6 +259,8 @@ const InputB = function(params = {}) {
         if (value != box.input.text) {
             box.inputValue = value;
             box.input.text = value;
+            box.checkIfInputIsRequiredAndEmpty();
+            box.showWarningIfNotValid(box.isValid());
         }
     };
 

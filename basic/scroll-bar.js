@@ -517,7 +517,6 @@ const ScrollBar = function(params = {}) {
     const observer = new MutationObserver(mutations => {
         mutations.forEach(mutation => {
             if (lastScrollHeight !== contentDiv.scrollHeight) {
-                //console.log('Scroll height changed:', contentDiv.scrollHeight);
                 box.refreshScroll();
                 lastScrollHeight = contentDiv.scrollHeight;
             }

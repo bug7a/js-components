@@ -178,7 +178,11 @@ const PhoneInputB = function(params = {}) {
 
     };
 
-
+    box.fillAutoPlaceholder = function() {
+        box.placeholder = box.countryCode + randomPhone();
+        box.setPlaceholder(box.placeholder);
+        
+    }
 
     // *** OBJECT VIEW:
     // 
@@ -190,8 +194,7 @@ const PhoneInputB = function(params = {}) {
     // Show example placeholder
     if (box.placeholder == "(auto)") {
         // Rasgele telefon numarası üret
-        box.placeholder = box.countryCode + randomPhone();
-        box.setPlaceholder(box.placeholder);
+        box.fillAutoPlaceholder();
     }
 
     if(box.createInput == 1) { // Always will be 1
@@ -220,9 +223,10 @@ const PhoneInputB = function(params = {}) {
             let formatted = box.countryCode + box.phoneMask;
             if (box.getInputValue() == formatted) {
                 box.setInputValue("");
+            } else {
+                //box.checkIfInputIsRequiredAndEmpty();
+                //box.showWarningIfNotValid(box.isValid());
             }
-            box.checkIfInputIsRequiredAndEmpty();
-            box.showWarningIfNotValid(box.isValid());
 
             box.onBlur();
         };

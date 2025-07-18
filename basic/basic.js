@@ -1,9 +1,8 @@
-
 /* Bismillah */
 
 /*
 
-basic.js (v25.07) A lightweight JavaScript library for building web-based applications with simple code. No need to write HTML or CSS — just use basic JavaScript.
+basic.js (v25.07.17) A lightweight JavaScript library for building web-based applications with simple code. No need to write HTML or CSS — just use basic JavaScript.
 - Project Site: https://bug7a.github.io/basic.js/
 
 The Art of Fun Coding — With basic.js
@@ -649,6 +648,21 @@ class Basic_UIComponent {
     
     // Nesneyi sil.
     remove() {
+        // 1. Eklenmiş tüm eventleri kaldır
+        if (this._eventFuncList && this._eventFuncList.length) {
+            for (let i = this._eventFuncList.length - 1; i >= 0; i--) {
+                const ev = this._eventFuncList[i];
+                ev.element.removeEventListener(ev.eventName, ev.func);
+                this._eventFuncList.pop();
+            }
+        }
+
+        // 2. Eğer resizeDetection kaydı varsa, onu da kaldır
+        if (resizeDetection && typeof resizeDetection.remove_onResize === "function") {
+            resizeDetection.remove_onResize(this.element, null); // null ile tüm fonksiyonları sil
+        }
+
+        // 3. DOM'dan sil
         this.contElement.remove();
     }
 
@@ -2348,22 +2362,14 @@ resizeDetection.onResize = function($object, $func) {
 };
 
 resizeDetection.remove_onResize = function($element, $func) {
-
     for(let j = resizeDetection.objectAndFunctionList.length - 1; j >= 0; j--) {
-
         if (resizeDetection.objectAndFunctionList[j].elem == $element) {
-            if (resizeDetection.objectAndFunctionList[j].func == $func) {
+            if (!$func || resizeDetection.objectAndFunctionList[j].func == $func) {
                 resizeDetection.objectAndFunctionList.splice(j, 1);
             }
         }
-
     }
-
-    // NOT: Dizi tersten kontrol edildiği için, silme işlemi, 
-    // kontrol edilmeyen kayıtların sıra numarasını değiştirmez.
-
     resizeDetection.whenDetected.unobserve($element);
-
 };
 
 resizeDetection.whenDetected = new ResizeObserver(function(entries) {
@@ -2662,6 +2668,18 @@ window.startFlexBox = function(p1 = {}, p2, p3, p4, p5) {
 //window.startFlexBox = basic.startFlexBox;
 window.AutoLayout = window.startFlexBox;
 
+window.HGroup = function(...args) {
+    const group = AutoLayout(...args);
+    group.flow = "horizontal";
+    return group;
+};
+
+window.VGroup = function(...args) {
+    const group = AutoLayout(...args);
+    group.flow = "vertical";
+    return group;
+};
+
 window.startBox = function(...args) {
 
     //let props = {};
@@ -2732,6 +2750,7 @@ window.endBox = function() {
 //window.endFlexBox = basic.endBox;
 window.endFlexBox = window.endBox;
 window.endAutoLayout = window.endBox;
+window.endGroup = window.endBox;
 
 /*
 basic.useImageAsText = function(parameters = {}, editCreatedImage) {

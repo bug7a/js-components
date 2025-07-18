@@ -19,98 +19,135 @@ Webpage: https://bug7a.github.io/js-components/
 // Default values
 const PasswordInputBDefaults = {
     isRequired: 1,
+    requiredText: "Password must be entered",
     type: "password",
     titleText: "PASSWORD",
     placeholder: "Enter your password",
     warningText: "Password must be at least 6 characters",
     warningColor: "#E5885E", // "#F1BF3C"
-    mustUseBigNumber: 1,
-    mustUseBigNumberWarningText: "some",
-    mustLongThen: 1,
-    maxChar: 40,
-    showPassword: 1,
+    maxChar: 25,
+    showPassword: 0,
     showShowPasswordButton: 1, // enable show/hide icon by default
-    createLeftBox: 1,
-    showPasswordIconFile: "../assets/icons/lamp.png",
-    hidePasswordIconFile: "../assets/icons/lamp-on.png",
+    showPasswordIconFile: "../comp-m2/password-input-b/show-btn.png",
+    hidePasswordIconFile: "../comp-m2/password-input-b/hide-btn.png",
     showTooltipMessage: "Show Password",
     hideTooltipMessage: "Hide Password",
     minChar: 6,
     minCharWarningText: "Password must be at least 6 characters",
-    mustUseNumber: 0,
+    mustUseNumber: 1,
     mustUseNumberWarningText: "Password must contain at least one number",
-    mustUseLetter: 0,
+    mustUseLetter: 1,
     mustUseLetterWarningText: "Password must contain at least one letter",
-    mustUseUppercase: 0,
+    mustUseUppercase: 1,
     mustUseUppercaseWarningText: "Password must contain at least one uppercase letter",
-    mustUseLowercase: 0,
+    mustUseLowercase: 1,
     mustUseLowercaseWarningText: "Password must contain at least one lowercase letter",
-    mustUseSpecialChar: 0,
+    mustUseSpecialChar: 1,
     mustUseSpecialCharWarningText: "Password must contain at least one special character",
 };
 
 const PasswordInputB = function(params = {}) {
 
-    // Merge params first
+    // Merge params:
     mergeIntoIfMissing(params, PasswordInputBDefaults);
+
+    // Edit params:
+    params.createLeftBox = 1; // WHY: to add show/hide password button
 
     // BOX: Component container
     const box = startExtendedObject(InputB, params);
 
     // *** PRIVATE VARIABLES:
-    let isPasswordVisible = false;
 
     // *** PUBLIC VARIABLES:
-    box.isValid = function() { // OVERRIDE
-        // Check password length
-        return (box.getInputValue().length >= box.minChar) ? 1 : 0;
-    };
-
-    box.repositionObjects = function() {
-        box.btnShowPassword.center("top");
-    };
 
     // *** PRIVATE FUNCTIONS:
 
-
     // *** PUBLIC FUNCTIONS:
+    box.isValid = function() { // OVERRIDE
+        const value = box.getInputValue();
+        // 1. Minimum karakter kontrolü
+        if (value.length < box.minChar) {
+            box.setWarningText(box.minCharWarningText);
+            return 0;
+        }
+        // 2. Rakam kontrolü
+        if (box.mustUseNumber == 1 && !(/[0-9]/.test(value))) {
+            box.setWarningText(box.mustUseNumberWarningText);
+            return 0;
+        }
+        // 3. Harf kontrolü
+        if (box.mustUseLetter == 1 && !(/[a-zA-Z]/.test(value))) {
+            box.setWarningText(box.mustUseLetterWarningText);
+            return 0;
+        }
+        // 4. Büyük harf kontrolü
+        if (box.mustUseUppercase == 1 && !(/[A-Z]/.test(value))) {
+            box.setWarningText(box.mustUseUppercaseWarningText);
+            return 0;
+        }
+        // 5. Küçük harf kontrolü
+        if (box.mustUseLowercase == 1 && !(/[a-z]/.test(value))) {
+            box.setWarningText(box.mustUseLowercaseWarningText);
+            return 0;
+        }
+        // 6. Özel karakter kontrolü
+        if (box.mustUseSpecialChar == 1 && !(/[^a-zA-Z0-9]/.test(value))) {
+            box.setWarningText(box.mustUseSpecialCharWarningText);
+            return 0;
+        }
+        // Geçtiyse uyarı yok
+        return 1;
+    };
+
     box.setShowPassword = function(show) {
-        if (show == 1) {
-            box.showPassword = 1;
+        if (show == 0) {
+            box.showPassword = 0;
             box.input.inputElement.type = "password";
             box.btnShowPassword.load(box.showPasswordIconFile);
         } else {
-            box.showPassword = 0;
+            box.showPassword = 1;
             box.input.inputElement.type = "text";
             box.btnShowPassword.load(box.hidePasswordIconFile);
         }
     };
     
+    box.destroy = function() {
+        box.btnShowPassword.remove();
+        box.remove();
+    };
+
+    box.refresh = function() {
+        
+    }
 
     // *** OBJECT VIEW:
     box.input.inputElement.type = "password";
 
-    box.btnShowPassword = Icon({
-        width: 32,
-        height: 32,
-        visible: box.showShowPasswordButton,
+    // btnShowPassword
+    AutoLayout({
+        align: "right center",
+        padding: [10, 0],
     });
-    //that.load(box.showPasswordIconFile);
-    that.position = "absolute";
-    that.clickable = 1;
-    that.elem.style.cursor = "pointer";
-    box.leftBox.add(box.btnShowPassword);
-    that.right = 30;
-    that.center("top");
+    box.leftBox.add(that);
+
+        box.btnShowPassword = Icon({
+            width: 32,
+            height: 32,
+            visible: box.showShowPasswordButton,
+        });
+        //that.position = "absolute";
+        that.clickable = 1;
+        that.elem.style.cursor = "pointer";
+        //that.right = 30;
+        //that.center("top");
+
+    endAutoLayout();
 
     // *** OBJECT INIT CODE:
     box.btnShowPassword.on("click", function() {
         box.setShowPassword((box.showPassword == 1) ? 0 : 1);
     });
-
-    box.onResize(function() {
-        box.repositionObjects();
-    })
 
     box.setShowPassword(box.showPassword);
 

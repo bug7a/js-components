@@ -427,6 +427,8 @@ const ItemList = function(params = {}) {
             }
         }
 
+        box.scrollBar.refreshScroll(); // WHY: ScrollTop: 0 iken filtre ile itemler azaldığında scroll güncellenmiyor du.
+
         return shownItemCount;
 
     };

@@ -103,9 +103,11 @@ const SelectItem = function(params = {}) {
     };
 
     const resized = function() {
-        console.log("resized trigged");
+        //console.log("resized trigged");
         if (box.itemSelectList) {
-            box.itemSelectList.refreshSizeAndPosition();
+            //box.itemSelectList.refreshSizeAndPosition();
+            box.itemSelectList.visible = 0; // WHY: Ekran boyutu değişiyor ise animasyonsun hemen gizle.
+            box.itemSelectList.close();
         }
     };
 
