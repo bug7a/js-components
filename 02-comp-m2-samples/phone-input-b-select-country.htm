@@ -21,6 +21,7 @@
         <script src="../comp-m1/select-item.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp-m1/item-list.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp-m1/search-input.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../experimental/text.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- ALL COMPONENTS IN ONE FILE -->
         <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
@@ -157,18 +158,18 @@
             page.color = "white";
 
             // PageContainer
-            HGroup();
+            AutoLayout();
 
                 // ItemGroup
                 VGroup({ 
-                    flow: "vertical", // Horizontal
+                    //flow: "vertical", // Horizontal
                     gap: 12,
                     width: 350,
                 });
 
                     // SelectCountryGroup
                     VGroup({ 
-                        flow: "vertical", 
+                        //flow: "vertical", 
                         gap: 0, 
                         width: "100%", 
                         height: "auto" 
@@ -220,12 +221,13 @@
 
                 endGroup(); // END GROUP
 
-            endGroup(); // End Page
+            endAutoLayout(); // End Page
 
             // Get value
             myInput.onEdit = function() {
                 console.log(myInput.getInputValue());
             }
+
         
         };
 
@@ -239,7 +241,12 @@
             };
 
             // BOX: Item container
-            const box = startObject(defaults, params);
+            let box = startObject(defaults, params);
+
+            box.destroy = function() {
+                box.remove();
+                box = null;
+            };
 
             // *** OBJECT VIEW:
             box.color = "transparent";

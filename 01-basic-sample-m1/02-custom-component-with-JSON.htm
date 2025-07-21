@@ -108,11 +108,11 @@
             });
 
             // INIT CODE:
-            box.on("mouseover", function(event) {
+            box.on("mouseover", function(self, event) {
                 box.backgroundBox.color = "rgba(90, 90, 0, 0.09)";
             });
 
-            box.on("mouseout", function(event) {
+            box.on("mouseout", function(self, event) {
                 box.backgroundBox.color = "rgba(0, 0, 0, 0.01)";
             });
 

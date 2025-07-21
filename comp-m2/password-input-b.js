@@ -55,7 +55,7 @@ const PasswordInputB = function(params = {}) {
     params.createLeftBox = 1; // WHY: to add show/hide password button
 
     // BOX: Component container
-    const box = startExtendedObject(InputB, params);
+    let box = startExtendedObject(InputB, params);
 
     // *** PRIVATE VARIABLES:
 
@@ -104,10 +104,12 @@ const PasswordInputB = function(params = {}) {
         if (show == 0) {
             box.showPassword = 0;
             box.input.inputElement.type = "password";
+            //box.btnShowPassword.tooltip.setHintText(box.showTooltipMessage);
             box.btnShowPassword.load(box.showPasswordIconFile);
         } else {
             box.showPassword = 1;
             box.input.inputElement.type = "text";
+            //box.btnShowPassword.tooltip.setHintText(box.hideTooltipMessage);
             box.btnShowPassword.load(box.hidePasswordIconFile);
         }
     };
@@ -115,6 +117,7 @@ const PasswordInputB = function(params = {}) {
     box.destroy = function() {
         box.btnShowPassword.remove();
         box.remove();
+        box = null;
     };
 
     box.refresh = function() {
@@ -143,6 +146,20 @@ const PasswordInputB = function(params = {}) {
         //that.center("top");
 
     endAutoLayout();
+
+    /*
+    box.btnShowPassword.tooltip = Tooltip({
+        target: box.btnShowPassword,
+        hintText: "",
+        hintPosition: "left",
+        lbl_border: 1,
+        lbl_color: "white",
+        lbl_textColor: "#141414",
+        lbl_borderColor: "#141414",
+        lbl_fontSize: 14,
+        lbl_round: 2,
+    });
+    */
 
     // *** OBJECT INIT CODE:
     box.btnShowPassword.on("click", function() {

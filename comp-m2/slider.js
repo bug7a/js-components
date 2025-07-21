@@ -292,7 +292,7 @@ const Slider = function(params = {}) {
     // *** OBJECT INIT CODE:
 
     // Mouse Events
-    const onMouseDown = (e) => {
+    const onMouseDown = (self, e) => {
         //isDragging = true;
         setIsDragging(true);
         startX = e.clientX || e.touches[0].clientX;

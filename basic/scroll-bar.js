@@ -22,7 +22,7 @@ EXAMPLE: {javascript-mobile-app-template}/comp-name.htm
 const ScrollBar = function(params = {}) {
 
     // BOX: Component container
-    const box = startBox();
+    let box = startBox();
 
     // Default values
     const defaults = {
@@ -509,6 +509,42 @@ const ScrollBar = function(params = {}) {
     window.addEventListener("resize", function () {
         box.refreshScroll();
     });
+
+    box.destroy = function() {
+
+        // TODO: Büyük projeler için geliştirilmesi lazım.
+
+        // Event temizliği: ScrollBar tarafından eklenen eventleri kaldır.
+        /*
+        // 1. Scroll bar butonlarına eklenen mousedown eventlerini kaldır
+        if (box.boxScrollBarTop && box.boxScrollBarTop.elem) {
+            box.boxScrollBarTop.elem.replaceWith(box.boxScrollBarTop.elem.cloneNode(true));
+        }
+        if (box.boxScrollBarLeft && box.boxScrollBarLeft.elem) {
+            box.boxScrollBarLeft.elem.replaceWith(box.boxScrollBarLeft.elem.cloneNode(true));
+        }
+
+        // 2. window'a eklenen resize eventini kaldırmak için, fonksiyon referansı tutulmadığı için tüm resize eventlerini kaldıramayız,
+        //    ancak component destroy edildiğinde birden fazla ScrollBar yoksa sorun olmaz.
+        //    Alternatif olarak, bir fonksiyon referansı tutup removeEventListener ile kaldırmak gerekirdi.
+
+        // 3. MutationObserver'ı durdur
+        if (observer && typeof observer.disconnect === "function") {
+            observer.disconnect();
+        }
+
+        // 4. _fullscreenBox varsa, onun üzerindeki mousemove, mouseup, mouseleave eventlerini kaldır
+        if (_fullscreenBox && _fullscreenBox.elem) {
+            _fullscreenBox.elem.replaceWith(_fullscreenBox.elem.cloneNode(true));
+        }
+
+        box.scrollableBox.remove_onResize(box.refreshScroll);
+        */
+       
+        //box.remove();
+        //box = null;
+
+    }
     
     // scrollHeight değişirse, refreshScroll() çalıştır.
     const contentDiv = box.scrollableBox.elem;

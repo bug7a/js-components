@@ -20,7 +20,7 @@ EXAMPLE: {javascript-mobile-app-template}/comp-name.htm
 const SelectItem = function(params = {}) {
 
     // BOX: Component container
-    const box = startBox();
+    let box = startBox();
 
     const defaults = {
         box: "container",
@@ -102,6 +102,7 @@ const SelectItem = function(params = {}) {
         
     };
 
+    /*
     const resized = function() {
         //console.log("resized trigged");
         if (box.itemSelectList) {
@@ -110,6 +111,7 @@ const SelectItem = function(params = {}) {
             box.itemSelectList.close();
         }
     };
+    */
 
     // *** Public functions:
     box.publicFunc = () => {};
@@ -183,8 +185,13 @@ const SelectItem = function(params = {}) {
 
     // Nesneyi, eventleri ile birlikte siler.
     box.removeAll = function() {
-        page.remove_onResize(resized);
+
+        if (box.itemSelectList) {
+            box.itemSelectList.close();
+        }
+
         box.remove();
+        box = null;
     };
 
     // Set a param after created.
@@ -230,8 +237,8 @@ const SelectItem = function(params = {}) {
     box.setDarkMode(box.darkMode);
     box.setSelectedIndex(box.selectedIndex);
 
-    // TODO: Bu nesne silindiğinde onResize çalışmaya devam eder. Buna bir çözüm bulunmalı.
-    page.onResize(resized);
+    //page.onResize(resized);
+    // TODO: Bu event SelectItem.SelectItemList içine taşınabilir.
     
     //endObject(box);
     makeBasicObject(box);
@@ -242,7 +249,7 @@ const SelectItem = function(params = {}) {
 // *** SELECT ITEM LIST
 SelectItem.SelectItemList = function(box) {
 
-    const cover = startBox(0, 0, "100%", "100%", {
+    let cover = startBox(0, 0, "100%", "100%", {
         clickable: 1,
         color: "transparent",
         //color: "rgba(0, 0, 0, 0.2)",
@@ -269,7 +276,20 @@ SelectItem.SelectItemList = function(box) {
             self.elem.style.transform = "scale(0.9)";
         });
         setTimeout(function() {
+
+            page.remove_onResize(resized);
+
+            container.uiItemList.destroy();
+            container.uiItemList = null;
+
+            container.remove();
+            container = null;
+
             cover.remove();
+            cover = null;
+
+            box.itemSelectList = null;
+
         }, 250);
     };
 
@@ -317,7 +337,7 @@ SelectItem.SelectItemList = function(box) {
 
     }
 
-        const container = startBox({
+        let container = startBox({
             color: "whitesmoke",
             border: 0,
             round: 4,
@@ -448,6 +468,16 @@ SelectItem.SelectItemList = function(box) {
         endBox();
 
     endBox();
+
+    const resized = function() {
+        //console.log("resized trigged");
+        if (box.itemSelectList) {
+            //box.itemSelectList.refreshSizeAndPosition();
+            box.itemSelectList.visible = 0; // WHY: Ekran boyutu değişiyor ise animasyonsun hemen gizle.
+            box.itemSelectList.close();
+        }
+    };
+    page.onResize(resized);
 
     cover.refreshSizeAndPosition();
     container.withMotion(function(self) {

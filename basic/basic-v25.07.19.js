@@ -109,20 +109,13 @@ basic.start = function () {
 };
 
 basic.afterStart = function () {
-
     // Hız testi:
     // var timeUsed = (Date.now() - basic.startTime)
     // console.log(timeUsed);
-
-    // Hız testi için kullanılabilecek yöntem.
-    //console.time("işlem");
-        // ağır işlem
-    //console.timeEnd("işlem");
 };
 
 // you cant use console.log in *.min.js files but println
 window.println = function ($message, $type = "log") {
-    // type: "error", "warn", "info", "table", "dir", ""
     const _console = console;
     _console[$type]($message);
 };
@@ -320,8 +313,7 @@ class Basic_UIComponent {
 
         this._motionString = "none";
         this._clickable = 0;
-        this._eventFuncList = []; // for _addEventListener()
-        //this._removeEventFuncList = []; // .on("click", func) ile oluşturulan evenleri, toplu olarak siler.
+        this._eventFuncList = [];
 
     }
 
@@ -656,8 +648,7 @@ class Basic_UIComponent {
     
     // Nesneyi sil.
     remove() {
-
-        // 1.  onClick, onChange yöntemi ile eklenmiş tüm eventleri kaldır. (OLD)
+        // 1. Eklenmiş tüm eventleri kaldır
         if (this._eventFuncList && this._eventFuncList.length) {
             for (let i = this._eventFuncList.length - 1; i >= 0; i--) {
                 const ev = this._eventFuncList[i];
@@ -666,31 +657,6 @@ class Basic_UIComponent {
             }
         }
 
-        // NOTE: on ile oluşturulan eventler otomatik silinmiyor. Geri döndürülen fonksiyon ile manuel silinebilir. (NEW)
-        /*
-        if (this._removeEventFuncList && this._removeEventFuncList.length) {
-            for (let i = this._removeEventFuncList.length - 1; i >= 0; i--) {
-                const removeEvent = this._removeEventFuncList[i];
-                removeEvent();
-                this._removeEventFuncList.pop();
-            }
-        };
-        */
-       /*
-        if (this._removeEventFuncList && this._removeEventFuncList.length) {
-            for (let i = this._removeEventFuncList.length - 1; i >= 0; i--) {
-                const eventInfo = this._removeEventFuncList[i];
-                try {
-                    eventInfo.removeEvent();
-                } catch (e) {
-                    // Event zaten kaldırılmış olabilir
-                    console.warn("Event already removed:", e);
-                }
-                this._removeEventFuncList.pop();
-            }
-        }
-        */
-
         // 2. Eğer resizeDetection kaydı varsa, onu da kaldır
         if (resizeDetection && typeof resizeDetection.remove_onResize === "function") {
             resizeDetection.remove_onResize(this.element, null); // null ile tüm fonksiyonları sil
@@ -698,17 +664,6 @@ class Basic_UIComponent {
 
         // 3. DOM'dan sil
         this.contElement.remove();
-
-        // 4. Tüm özellikleri sil:
-        /*
-        const _this = this;
-        setTimeout(function() {
-            for (let key in _this) {
-                delete _this[key];  // Tüm özellikleri sil
-            }
-        }, 1000);
-        */
-
     }
 
     // Toplu özellik değiştirmesi.
@@ -716,49 +671,24 @@ class Basic_UIComponent {
         setProparties(this, $defaultParams, $params, $props);
     }
 
-    // Olay ekleme: onClick, onResize da kullanılıyor.
-    _addEventListener($eventName, $func, $element, $useCapture = false) {
-
-        /* // More options:
-        $useCapture =
-        {
-            capture: false,    // Event capture mı bubbling mi? (varsayılan: false)
-            once: false,       // Sadece 1 defa mı çalışsın? (true ise dinleyici otomatik kaldırılır)
-            passive: false     // `event.preventDefault()` çağrılmayacaksa true yapılabilir
-        }
-        */
-
-        //this._removeEventListener($eventName, $func, $element); // WHY: Eğer daha önce aynı fonksiyon ile event eklenmiş ise tekrar ekleme.
-
+    // Olay eklemek.
+    _addEventListener($eventName, $func, $element) {
         let _that = this;
-
-        const eventFunc = function (event) {
-            $func(_that, event); // İlk parametre nesnenin kendisi.
+        const eventFunc = function ($ev) {
+            $func(_that, $ev);
         }
-        $element.addEventListener($eventName, eventFunc, $useCapture);
+        $element.addEventListener($eventName, eventFunc);
 
-        // Event bilgilerini sakla
         const eventDateItem = {};
         eventDateItem.eventName = $eventName;
         eventDateItem.originalFunc = $func;
         eventDateItem.func = eventFunc;
         eventDateItem.element = $element;
+        this._eventFuncList.push(eventDateItem);
+    }
 
-        this._eventFuncList.push(eventDateItem); // Nesne .remove() edilirken, hepsi temizlenir.
-
-        const removeEvent = function() {
-            _that._removeEventListener($eventName, $func, $element);
-        };
-
-        return removeEvent; // Eklenen olayı kolayca silmek için fonksiyon döndür.
-
-    };
-
-    // Olay silme: remove_onClick, remove_onResize da kullanılıyor.
     _removeEventListener($eventName, $func, $element) {
-
-        let func = null; // Orjinal fonksiyon bulunacak.
-        
+        let func = null
         for (let i = 0; i < this._eventFuncList.length; i++) {
             if (this._eventFuncList[i].originalFunc == $func) {
                 func = this._eventFuncList[i].func;
@@ -766,69 +696,25 @@ class Basic_UIComponent {
                 break;
             }
         }
-
         if (func) {
             $element.removeEventListener($eventName, func);
-            return 1; // İşlem başarılı.
-        }
+        }   
+    }
 
-        return 0;
-
-    };
-
-    // NEW: Olay ekleme: object.on("click", function);
     on($eventName, $func, $useCapture = false) {
-
-        const _elem = (this._type == "textbox") ? this.inputElement : this.element; // WHY: textbox için olayları input elementine bağla.
-        this.clickable = 1; // WHY: Clickable bazen 0 da unutulabilir, otomatik 1 ver. Gerekirse kullanıcı 0 yapar.
-        
-        return this._addEventListener($eventName, $func, _elem, $useCapture);
-
-        /* #1
+        const _elem = (this._type == "textbox") ? this.inputElement : this.elem;
+        // WHY: Clickable bazen 0 da unutulabilir, otomatik 1 ver. Gerekirse kullanıcı 0 yapar.
+        this.clickable = 1;
         _elem.addEventListener($eventName, $func, $useCapture);
-
-        // Olayı kolayca silebilmek için hazır bir fonksiyon oluştur.
-        const removeEvent = function() {
+        // Olayı kolayca silebilmek için hazır bir fonksiyon gönder.
+        return function removeEvent() {
             _elem.removeEventListener($eventName, $func);
         };
-
-        // Event bilgilerini sakla
-        const eventInfo = {
-            element: _elem,
-            eventName: $eventName,
-            func: $func,
-            removeEvent: removeEvent
-        };
-        
-        this._removeEventFuncList.push(eventInfo);
-        */
-        
-        // TODO: $eventName resize ise, resizeDetection.onResize ile ekleme yapılabilir.
-
     }
-    // NOTE: Bir olay eklendiğinde, silme fonksiyonunu oluşturup, return ediyor.
 
-    // NEW: Olay ekleme: object.off("click", function);
     off($eventName, $func) {
-
-        // Eğer ihityaç olursa, manuel olarak da, tek tek eventler silinebilir.
-        const _elem = (this._type == "textbox") ? this.inputElement : this.element;
-        
-        //_elem.removeEventListener($eventName, $func);
-        this._removeEventListener($eventName, $func, _elem);
-        
-
-        /* #2
-        for (let i = this._removeEventFuncList.length - 1; i >= 0; i--) {
-            const eventInfo = this._removeEventFuncList[i];
-            if (eventInfo.eventName === $eventName && eventInfo.func === $func) {
-                eventInfo.removeEvent();
-                this._removeEventFuncList.splice(i, 1);
-                break;
-            }
-        }
-        */
-
+        const _elem = (this._type == "textbox") ? this.inputElement : this.elem;
+        _elem.removeEventListener($eventName, $func);
     }
 
     onResize($func) {
@@ -931,7 +817,6 @@ class MainBox {
     get contElement() {
         return this._element;
     }
-    // NOTE: .elem, .element, .contElement all the same. You can delete contElement --> element
 
     get bodyElement() {
         return this._bodyElement;
@@ -1435,16 +1320,16 @@ class BTextBox extends Basic_UIComponent {
         return this._mainElement;
     }
 
-    get contElement() {
-        return this._mainElement;
-    }
-
     get inputElement() {
         return this._element;
     }
 
     set inputElement(elem) {
         this._element = elem;
+    }
+
+    get contElement() {
+        return this._mainElement;
     }
 
     get titleElement() {
@@ -1804,11 +1689,11 @@ class BImage extends Basic_UIComponent {
         return this._element;
     }
 
-    get contElement() {
+    get imageElement() {
         return this._element;
     }
 
-    get imageElement() {
+    get contElement() {
         return this._element;
     }
 
@@ -1947,15 +1832,7 @@ class BSound {
 
     }
 
-    get elem() {
-        return this._element;
-    }
-
     get element() {
-        return this._element;
-    }
-
-    get contElement() {
         return this._element;
     }
 
@@ -1963,8 +1840,12 @@ class BSound {
         return this._element;
     }
 
+    get contElement() {
+        return this._element;
+    }
+
     get time() {
-        return this.element.time;
+        return this.element.timr;
     }
 
     get timeLeft() {
@@ -2789,7 +2670,7 @@ window.AutoLayout = window.startFlexBox;
 
 window.HGroup = function(...args) {
     const group = AutoLayout(...args);
-    //group.flow = "horizontal"; // WHY: It is default value "horizontal"
+    group.flow = "horizontal";
     return group;
 };
 

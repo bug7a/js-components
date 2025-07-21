@@ -198,7 +198,7 @@ const ItemList = function(params = {}) {
     //if (!parameters.darkMode) parameters.darkMode = 0;
 
     // BOX: UI object container.
-    const box = createBox();
+    let box = createBox();
 
     const defaults = {
         width: 600,
@@ -382,6 +382,10 @@ const ItemList = function(params = {}) {
 
     box.clearItems = function() {
 
+        itemList.forEach(function(item) {
+            item.remove();
+        });
+
         box.html = "";
         itemList = [];
         selectedItemList = [];
@@ -479,6 +483,15 @@ const ItemList = function(params = {}) {
             sendItem(itemList[i]);
         }
 
+    }
+
+    box.destroy = function() {
+
+        box.scrollBar.destroy();
+        box.clearItems();
+        box.remove();
+        box = null;
+        
     }
 
     // *** CODE:

@@ -59,13 +59,13 @@
 
                         const _that = that;
 
-                        that.on("mouseover", function(event) {
+                        that.on("mouseover", function(self, event) {
                             _that.color = "white";
                             _that.elem.style.borderTop = "1px solid rgba(0, 0, 0, 0.2)";
                             _that.elem.style.borderBottom = "1px solid rgba(0, 0, 0, 0.2)";
                         });
 
-                        that.on("mouseout", function(event) {
+                        that.on("mouseout", function(self, event) {
                             _that.color = "rgba(255, 255, 255, 0.0)";
                             _that.elem.style.borderTop = "0px solid rgba(0, 0, 0, 0.2)";
                             _that.elem.style.borderBottom = "0px solid rgba(0, 0, 0, 0.2)";

@@ -31,9 +31,14 @@ const CompNameDefaults = {
     iconColor: "transparent",
     iconBorder: 0,
     badgetText: "",
+    backgroundStyle: {
+        color: "red",
+    },
 };
 
 const CompName = function(params = {}) {
+
+    //console.time("CompName");
 
     // Marge params:
     mergeIntoIfMissing(params, CompNameDefaults);
@@ -42,7 +47,7 @@ const CompName = function(params = {}) {
     // params.width = getDefaultContainerBox().width;
 
     // BOX: Component container
-    const box = startObject(params);
+    let box = startObject(params);
 
     // NOTE: Parent container is box.containerBox
 
@@ -56,7 +61,7 @@ const CompName = function(params = {}) {
     let badgetCurrentColor = null;
 
     // *** PUBLIC VARIABLES:
-    // [var] Show this public var in navigator
+    // [var] key for show this public var in navigator.
     box.publicVar = 1;
 
     // NOTE: Default values are also public variables.
@@ -101,6 +106,44 @@ const CompName = function(params = {}) {
         box.boxOverColor = color;
     };
 
+    box.applyUIState = function(stage) {
+        switch(stage) {
+
+            case "normal":
+                box.color = box.boxColor;
+                box.lblBadget.color = badgetCurrentColor;
+                break;
+
+            case "mouseover":
+                box.color = box.boxOverColor;
+                box.lblBadget.color = "white";
+                break;
+
+            case "disabled":
+                break;
+
+        }
+    };
+
+    box.refresh = function() {
+        
+        // NOTE: Check the child objects and make sure their states are appropriate.
+
+    };
+
+    box.destroy = function() {
+
+        // Remove basic objects
+        box.coverBox.remove();
+        box.icoLogo.remove();
+        box.lblBadget.remove();
+        
+        // Remove main container.
+        box.remove(); // Will remove all events like box.on("click"
+        box = null;
+
+    };
+
 
 
     // *** OBJECT VIEW:
@@ -111,7 +154,9 @@ const CompName = function(params = {}) {
     box.color = box.boxColor;
     //box.borderColor = "indianred";
     box.setMotion("background-color 0.3s");
-    
+
+        //box.background = Box(0, 0, "100%", "100%", backgroundStyle);
+
         // BOX: Cover.
         box.coverBox = Box(0, 0, "100%", "100%", {
             opacity: 0.2,
@@ -132,7 +177,7 @@ const CompName = function(params = {}) {
 
         // LABEL: Badget
         box.lblBadget = Label({
-            text: "", // If you have complex functions just use box.setBadgetText(box.badgetText); after OBJECT INIT CODE.
+            text: "", // NOTE: If you have complex functions just use box.setBadgetText(box.badgetText); after OBJECT INIT CODE.
             textColor: "rgba(0, 0, 0, 0.8)",
             border: 1,
             borderColor: "rgba(0, 0, 0, 0.6)",
@@ -150,18 +195,19 @@ const CompName = function(params = {}) {
 
 
     // *** OBJECT INIT CODE:
-    box.elem.addEventListener("click", function() {
+    box.on("click", function(self, event) {
         box.onClick(box);
     });
-    box.elem.addEventListener("mouseover", function() {
-        box.color = box.boxOverColor;
-        box.lblBadget.color = "white";
+    box.on("mouseover", function(self, event) {
+        box.applyUIState("mouseover");
     });
-    box.elem.addEventListener("mouseout", function() {
-        box.color = box.boxColor;
-        box.lblBadget.color = badgetCurrentColor;
+    box.on("mouseout", function(self, event) {
+        box.applyUIState("normal");
     });
+
     box.setBadgetText(box.badgetText);
+
+    //console.timeEnd("CompName");
     
     return endObject(box);
 
