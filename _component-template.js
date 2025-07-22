@@ -108,11 +108,11 @@ const CompName = function(params = {}) {
         box.boxOverColor = color;
     };
 
-    box.setState = function(stage) {
+    box.setState = function(state) {
         
         box.state = state;
 
-        switch(stage) {
+        switch(state) {
 
             case "normal":
                 box.color = box.boxColor;
