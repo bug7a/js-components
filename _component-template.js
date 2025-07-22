@@ -63,6 +63,8 @@ const CompName = function(params = {}) {
     // *** PUBLIC VARIABLES:
     // [var] key for show this public var in navigator.
     box.publicVar = 1;
+    // State of component [var]
+    box.state = "normal";
 
     // NOTE: Default values are also public variables.
 
@@ -106,7 +108,10 @@ const CompName = function(params = {}) {
         box.boxOverColor = color;
     };
 
-    box.applyUIState = function(stage) {
+    box.setState = function(stage) {
+        
+        box.state = state;
+
         switch(stage) {
 
             case "normal":
@@ -131,20 +136,18 @@ const CompName = function(params = {}) {
 
     };
 
-    box.destroy = function() {
-
+    box.superRemove = box.remove;
+    box.remove = function() { // OVERRIDE
+                
         // Remove basic objects
         box.coverBox.remove();
         box.icoLogo.remove();
         box.lblBadget.remove();
-        
-        // Remove main container.
-        box.remove(); // Will remove all events like box.on("click"
+
+        box.superRemove.call(box);
         box = null;
 
     };
-
-
 
     // *** OBJECT VIEW:
     box.elem.style.cursor = "pointer";
@@ -199,10 +202,10 @@ const CompName = function(params = {}) {
         box.onClick(box);
     });
     box.on("mouseover", function(self, event) {
-        box.applyUIState("mouseover");
+        box.setState("mouseover");
     });
     box.on("mouseout", function(self, event) {
-        box.applyUIState("normal");
+        box.setState("normal");
     });
 
     box.setBadgetText(box.badgetText);

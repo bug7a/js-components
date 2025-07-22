@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        
+        <title>New JS Component</title>
+        
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <script>
+        
+        // *** VARIABLES:          
+        let credit = 4;
+        let testItem;
+
+        // First running function.
+        window.onload = function() {
+
+            // if (credit % 2) credit--; // Create first.
+
+            setInterval(function() {
+
+                if (credit > 0) {
+                    if (credit % 2) {
+                        removeObject();
+                    } else {
+                        createObject();
+                        
+                    }
+                    console.log(credit);
+                }
+                credit--;
+
+            }, 1000);
+            
+        };
+        
+        // *** OTHER FUNCTIONS:
+        const createObject = function() {
+            console.log("create");
+
+        };
+        
+        const removeObject = function() {
+            console.log("remove");
+            
+        };
+
+        </script>
+
+    </head>
+    <body>
+        
+        <!-- HTML content -->
+        
+    </body>
+</html>

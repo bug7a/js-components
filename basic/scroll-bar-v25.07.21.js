@@ -10,8 +10,10 @@ UI COMPONENT TEMPLATE
 
 Developer: Bugra Ozden
 Email: bugra.ozden@gmail.com
-Webpage: https://bug7a.github.io/js-components/
+Site: https://bug7a.github.io/javascript-mobile-app-template/
 
+
+EXAMPLE: {javascript-mobile-app-template}/comp-name.htm
 
 
 */
@@ -43,13 +45,14 @@ const ScrollBar = function(params = {}) {
     box.props(defaults, params);
 
     // *** Private variables:
+    //let privateVar = "";
     let _fullscreenBox = null;
 
     // *** Public variables:
     //box.publicVar = "";
 
     // *** Private functions:
-    //const privateFunc = function() {};
+    //const privateFunc = () => {};
 
     const closeAuto = function() {
         if (box.setTimeoutVar) clearTimeout(box.setTimeoutVar);
@@ -74,23 +77,40 @@ const ScrollBar = function(params = {}) {
 
     box.refreshScroll = function() {
 
-        // WHY: Scroll bar, scroll edilecek nesne ile aynı taşıyıcıda olmalı.
-        box.scrollableBox.containerBox.add(box); // WHY: Scrollbar ı her zaman en üstte göster.
+        //console.log("***")
 
+        //box.scrollableBox.elem.appendChild(box.elem);
+        //box.add(box.scrollableBox.containerBox);
+
+        // WHY: Scroll bar, scroll edilecek nesne ile aynı taşıyıcıda olmalı.
+        
+        box.scrollableBox.containerBox.add(box); // WHY: Scrollbar ı her zaman en üstte göster.
+        //box.scrollableBox.add(box);
+
+        //box.color = "rgba(0, 0, 0, 0.6)";
         // WHY: Scroll bar, scroll edilecek nesne ile aynı boyda olmalı.
         box.width = box.scrollableBox.width;
         box.height = box.scrollableBox.height;
-
         // WHY: Scroll bar, scroll edilecek nesne ile aynı konumda olmalı.
-        box.aline(box.scrollableBox); // WHY: Belki alt ve sağ kullanılıyordur.
+        box.aline(box.scrollableBox);
 
-        // Yatay scroll değerleri
+        // Yatay scroll değeri
+        //let horizontalScroll = box.scrollableBox.elem.scrollLeft;
+
+        // Maksimum yatay scroll değeri
+        //let maxHorizontalScroll = box.scrollableBox.elem.scrollWidth - box.scrollableBox.elem.clientWidth;
+
         const scrollLeft = box.scrollableBox.elem.scrollLeft;
         const clientWidth = box.scrollableBox.elem.clientWidth;
         const scrollWidth = box.scrollableBox.elem.scrollWidth;
         const oranLeft = clientWidth / scrollWidth;
 
+        //box.left = scrollLeft;
+
         // WYH: box.bar_width değeri, scrollbar ın üst ve alttan bir miktan boşluk bırakmak içindir.
+        //box.boxScrollBarLeft.left = horizontalScroll + (box.bar_width * 2);
+        //box.boxScrollBarLeft.width = box.scrollableBox.elem.clientWidth - maxHorizontalScroll - (box.bar_width * 4);
+
         box.boxScrollBarLeft.left = (scrollLeft * oranLeft) + (box.bar_width * 2);
         box.boxScrollBarLeft.width = (clientWidth * oranLeft) - (box.bar_width * 4);
 
@@ -103,15 +123,31 @@ const ScrollBar = function(params = {}) {
             box.boxScrollBarLeft.visible = 1;
         }
 
-        // Dikey scroll değerleri
+        // Dikey scroll değeri
+        //let verticalScroll = box.scrollableBox.elem.scrollTop;
+        //console.log("Height: " + box.scrollableBox.height)
+        //console.log("scrollTop: " + box.scrollableBox.elem.scrollTop)
+
+        // Maksimum dikey scroll değeri
+        //let maxVerticalScroll = box.scrollableBox.elem.scrollHeight - box.scrollableBox.elem.clientHeight;
+        //console.log("maxVerticalScroll: " + maxVerticalScroll);
+
+        //const carpan = box.scrollableBox.elem.clientHeight / box.scrollableBox.elem.scrollHeight;
+        //console.log("carpan: " + carpan);
+
         const scrollTop = box.scrollableBox.elem.scrollTop;
         const clientHeight = box.scrollableBox.elem.clientHeight;
         const scrollHeight = box.scrollableBox.elem.scrollHeight;
         const oranTop = clientHeight / scrollHeight;
 
-        // WYH: box.bar_width değeri, scrollbarın sağ ve solunda boşluk bırakmak için
+        //box.top = scrollTop;
+
+        //box.boxScrollBarTop.top = verticalScroll + (box.bar_width * 2)
         box.boxScrollBarTop.top = (scrollTop * oranTop) + (box.bar_width * 2); //(scrollTop * clientHeight) / scrollHeight;
+        //console.log("box.boxScrollBarTop.top : " + box.boxScrollBarTop.top);
+        //box.boxScrollBarTop.height = box.scrollableBox.elem.clientHeight - maxVerticalScroll - (box.bar_width * 4);
         box.boxScrollBarTop.height = (clientHeight * oranTop) - (box.bar_width * 4); //(clientHeight * clientHeight) / scrollHeight;
+        //console.log("box.boxScrollBarTop.height : " + box.boxScrollBarTop.height);
 
         // Eğer scroll a gerek yok ise scroll bar ı gizle.
         if (scrollHeight == clientHeight || box.scrollableBox.scrollY == 0) {
@@ -121,6 +157,13 @@ const ScrollBar = function(params = {}) {
         } else if (box.scrollableBox.scrollY == 1) {
             box.boxScrollBarTop.visible = 1;
         }
+
+        //console.log('Maksimum Yatay Scroll: ' + maxHorizontalScroll);
+        //console.log('Maksimum Dikey Scroll: ' + maxVerticalScroll);
+        //console.log('Yatay Scroll: ' + horizontalScroll);
+        //console.log('Dikey Scroll: ' + verticalScroll);
+        //console.log('width Scroll: ' + box.scrollableBox.width);
+        //console.log('height Scroll: ' + box.scrollableBox.height);
 
         // Refresh dot buttons
         box.refreshDotButtons();
@@ -152,7 +195,39 @@ const ScrollBar = function(params = {}) {
         }
     };
 
-    const mouseMoved_scrollbarButton = function(self, event) {
+    /*
+    const mouseMoved_contentDrag = function(event) {
+
+        box.mouseMoving = 1;
+
+        //const clientHeight = box.scrollableBox.elem.clientHeight;
+        //const scrollHeight = box.scrollableBox.elem.scrollHeight;
+        //const oranTop = scrollHeight / clientHeight;
+
+        if (box.mouseX != 0 && box.boxScrollBarLeft.visible == 1) {
+            const fark = event.clientX - box.mouseX;
+            //box.scrollableBox.elem.scrollLeft += fark;
+            box.scrollableBox.elem.scrollLeft += (fark * -1);
+        }
+
+        if (box.mouseY != 0 && box.boxScrollBarTop.visible == 1) {
+            const fark = event.clientY - box.mouseY;
+            //box.scrollableBox.elem.scrollTop += fark;
+            box.scrollableBox.elem.scrollTop += (fark * -1);
+            //box.scrollableBox.elem.scrollTop += ((fark * oranTop) * -1);
+        }
+
+        box.mouseX = event.clientX; // Fare konumu yatay eksende
+        box.mouseY = event.clientY; // Fare konumu dikey eksende
+    
+        //console.log('Fare konumu: X=' + box.mouseX + ', Y=' + box.mouseY);
+        //event.stopPropagation();
+        closeAuto();
+
+    };
+    */
+
+    const mouseMoved_scrollbarButton = function(event) {
 
         box.mouseMoving = 1;
 
@@ -162,6 +237,7 @@ const ScrollBar = function(params = {}) {
 
         if (box.mouseX != 0 && box.boxScrollBarLeft.clicked == 1) {
             const fark = event.clientX - box.mouseX;
+            //box.scrollableBox.elem.scrollLeft += fark;
             box.scrollableBox.elem.scrollLeft += fark * oranLeft;
         }
 
@@ -186,6 +262,14 @@ const ScrollBar = function(params = {}) {
         // *** OBJECT TEMPLATE:
         box.color = "transparent";
         box.setMotion("opacity 0.2s");
+        //box.elem.style.position = "fixed";
+        //box.top = 0;
+        //box.left = 0;
+        //box.scrollableBox.containerBox.add(box);
+        
+        // BOX: Cover.
+        //box.boxCover = Box(0, 0, 20, 20);
+        //that.color = "transparent";
 
         // BOX: Dikey scroll bar.
         box.boxScrollBarTop = Box({
@@ -253,7 +337,7 @@ const ScrollBar = function(params = {}) {
     box.position = "absolute";
     box.refreshScroll();
     box.scrollableBox.onResize(box.refreshScroll); // {EVENT}
-    box.scrollableBox.on('scroll', box.refreshScroll); // {EVENT}
+    box.scrollableBox.elem.addEventListener('scroll', box.refreshScroll); // {EVENT}
 
     // Scroll barlar basarak kaydırılabilsin.
     box.boxScrollBarTop.clickable = 1;
@@ -274,13 +358,13 @@ const ScrollBar = function(params = {}) {
     };
 
     // Mouse scroll bar butonu üzerine gelindiğinde;
-    box.boxScrollBarTop.on("mouseover", function(self, event) { // {EVENT}
+    box.boxScrollBarTop.elem.addEventListener("mouseover", function(event) { // {EVENT}
         _highlightTopBar();
         clean_closeAuto();
     });
 
     // Mouse scroll bar butonu üzerindeyken bırakılır ise;
-    box.boxScrollBarTop.on("mouseout", function(self, event) { // {EVENT}
+    box.boxScrollBarTop.elem.addEventListener("mouseout", function(event) { // {EVENT}
         if (box.boxScrollBarTop.clicked != 1) {
             _lowlightTopBar();
             closeAuto();
@@ -300,13 +384,13 @@ const ScrollBar = function(params = {}) {
     };
 
     // Mouse scroll bar butonu üzerine gelindiğinde;
-    box.boxScrollBarLeft.on("mouseover", function(self, event) { // {EVENT}
+    box.boxScrollBarLeft.elem.addEventListener("mouseover", function(event) { // {EVENT}
         _highlightLeftBar();
         clean_closeAuto();
     });
 
     // Mouse scroll bar butonu üzerindeyken bırakılır ise;
-    box.boxScrollBarLeft.on("mouseout", function(self, event) { // {EVENT}
+    box.boxScrollBarLeft.elem.addEventListener("mouseout", function(event) { // {EVENT}
         if (box.boxScrollBarLeft.clicked != 1) {
             _lowlightLeftBar();
             closeAuto();
@@ -314,7 +398,7 @@ const ScrollBar = function(params = {}) {
     });
 
     // Mouse, scroll edilecek alana girer ise;
-    box.scrollableBox.on("mouseover", function(self, event) { // {EVENT}
+    box.scrollableBox.elem.addEventListener("mouseover", function(event) { // {EVENT}
         box.boxScrollBarTop.opacity = box.bar_opacity;
         box.boxScrollBarLeft.opacity = box.bar_opacity;
         box.refreshDotButtons();
@@ -323,13 +407,49 @@ const ScrollBar = function(params = {}) {
     });
 
     // Mouse scroll edilen alandan dışarı çıkar ise; mouseleave alt nesnelerin üzerine gelindiğinde tetiklenmez.
-    box.scrollableBox.on("mouseleave", function(self, event) { // {EVENT}
+    box.scrollableBox.elem.addEventListener("mouseleave", function(event) { // {EVENT}
         //box.boxScrollBarTop.opacity = 0;
         //event.stopPropagation();
         box.mouseDownForScrolling = 0; // TEST
         //box.elem.style.cursor = ""; // TEST
         closeAuto();
     });
+
+    // *** TEST ***
+    /*
+    if (box.scrollOnContent == 1) {
+        box.scrollableBox.elem.addEventListener("mousedown", function(event) { // mousedown
+            box.mouseDownForScrolling = 1;
+            box.elem.style.cursor = "grabbing";
+        });
+        box.scrollableBox.elem.addEventListener("mouseup", function(event) { // mousedown
+            box.mouseDownForScrolling = 0;
+            //box.clickable = 0;
+            //box.elem.style.cursor = "";
+            box.elem.style.cursor = "default"; // TODO: Silinebilir
+            box.boxScrollBarTop.elem.style.cursor = "default";
+            box.boxScrollBarLeft.elem.style.cursor = "default";
+            
+        });
+        box.elem.addEventListener("mouseup", function(event) { // mousedown
+            box.mouseDownForScrolling = 0;
+            box.clickable = 0;
+            box.elem.style.cursor = "default"; // TODO: Silinebilir
+        });
+        box.scrollableBox.elem.addEventListener("mousemove", function(event) { // mousedown
+            if (box.mouseDownForScrolling == 1) {
+                box.mouseX = 0;
+                box.mouseY = 0;
+                setTimeout(function() {
+                    box.clickable = 1;
+                }, 200);
+                box.elem.addEventListener('mousemove', mouseMoved_contentDrag);
+                box.mouseDownForScrolling = 0;
+            }
+            //event.stopPropagation();
+        });
+    }
+    */
 
     const _enterScrolling = function() {
 
@@ -344,7 +464,7 @@ const ScrollBar = function(params = {}) {
         //that.elem.style.cursor = "grabbing";
         page.add(that);
 
-        _fullscreenBox.on('mousemove', mouseMoved_scrollbarButton); // {EVENT}
+        _fullscreenBox.elem.addEventListener('mousemove', mouseMoved_scrollbarButton); // {EVENT}
 
         const _exitScrolling = function() {
 
@@ -360,18 +480,18 @@ const ScrollBar = function(params = {}) {
 
         };
 
-        _fullscreenBox.on("mouseup", function(self, event) { // {EVENT}
+        _fullscreenBox.elem.addEventListener("mouseup", function(event) { // {EVENT}
             _exitScrolling();
         });
 
-        _fullscreenBox.on("mouseleave", function(self, event) { // {EVENT}
+        _fullscreenBox.elem.addEventListener("mouseleave", function(event) { // {EVENT}
             _exitScrolling();
         });
 
     }
 
     // Sağdaki scroll bar butonuna basılırsa;
-    box.boxScrollBarTop.on("mousedown", function(self, event) { // mousedown // {EVENT}
+    box.boxScrollBarTop.elem.addEventListener("mousedown", function(event) { // mousedown // {EVENT}
 
         box.boxScrollBarTop.clicked = 1;
         _enterScrolling();
@@ -379,39 +499,52 @@ const ScrollBar = function(params = {}) {
     });
 
     // Alttaki scroll bar butonuna basılırsa;
-    box.boxScrollBarLeft.on("mousedown", function(self, event) { // mousedown // {EVENT}
+    box.boxScrollBarLeft.elem.addEventListener("mousedown", function(event) { // mousedown // {EVENT}
 
         box.boxScrollBarLeft.clicked = 1;
         _enterScrolling();
 
     });
 
-    page.onResize(box.refreshScroll);
+    window.addEventListener("resize", function () { // {EVENT}
+        box.refreshScroll();
+    });
 
-    box.superRemove = box.remove;
-    box.remove = function() {
+    box.destroy = function() {
 
-        // Remove object has event.
-        if (_fullscreenBox) _fullscreenBox.remove();
-        if (box.boxScrollBarLeft) box.boxScrollBarLeft.remove();
-        if (box.boxScrollBarTop) box.boxScrollBarTop.remove();
+        // TODO: Büyük projeler için geliştirilmesi lazım.
 
-        // Clean onResize events:
-        box.scrollableBox.remove_onResize(box.refreshScroll);
-        page.remove_onResize(box.refreshScroll);
+        // Event temizliği: ScrollBar tarafından eklenen eventleri kaldır.
+        /*
+        // 1. Scroll bar butonlarına eklenen mousedown eventlerini kaldır
+        if (box.boxScrollBarTop && box.boxScrollBarTop.elem) {
+            box.boxScrollBarTop.elem.replaceWith(box.boxScrollBarTop.elem.cloneNode(true));
+        }
+        if (box.boxScrollBarLeft && box.boxScrollBarLeft.elem) {
+            box.boxScrollBarLeft.elem.replaceWith(box.boxScrollBarLeft.elem.cloneNode(true));
+        }
 
-        // Clean timer
-        clean_closeAuto();
-       
-        // 3. Stop MutationObserver
+        // 2. window'a eklenen resize eventini kaldırmak için, fonksiyon referansı tutulmadığı için tüm resize eventlerini kaldıramayız,
+        //    ancak component destroy edildiğinde birden fazla ScrollBar yoksa sorun olmaz.
+        //    Alternatif olarak, bir fonksiyon referansı tutup removeEventListener ile kaldırmak gerekirdi.
+
+        // 3. MutationObserver'ı durdur
         if (observer && typeof observer.disconnect === "function") {
             observer.disconnect();
         }
 
-        box.superRemove.call(box);
-        box = null;
+        // 4. _fullscreenBox varsa, onun üzerindeki mousemove, mouseup, mouseleave eventlerini kaldır
+        if (_fullscreenBox && _fullscreenBox.elem) {
+            _fullscreenBox.elem.replaceWith(_fullscreenBox.elem.cloneNode(true));
+        }
 
-    };
+        box.scrollableBox.remove_onResize(box.refreshScroll);
+        */
+       
+        //box.remove();
+        //box = null;
+
+    }
     
     // scrollHeight değişirse, refreshScroll() çalıştır.
     const contentDiv = box.scrollableBox.elem;

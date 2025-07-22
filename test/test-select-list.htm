@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
         
-        <title>PhoneInputB JS Component</title>
+        <title>New JS Component</title>
         
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
@@ -11,24 +11,22 @@
         <!-- <link rel="preload" href="image.png" as="image"> -->
         <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
         <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
-        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+        <!--<script src="basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>-->
 
-        <script src="../comp-m2/tooltip.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp-m2/input-b.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp-m2/phone-input-b.js" type="text/javascript" charset="utf-8"></script>
-        
-        <script src="../comp-m1/select-item.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp-m1/item-list.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp-m1/search-input.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../experimental/text.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../_component-template.js" type="text/javascript" charset="utf-8"></script>
+        <!-- <script src="_component-template.min.js" type="text/javascript" charset="utf-8"></script> -->
 
         <!-- ALL COMPONENTS IN ONE FILE -->
         <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
 
         <script>
         
-        // *** VARIABLES:          
+        // *** VARIABLES:
+        const LOOP_TIMER = 10;          
+        let credit = 2;
+        let testItem;
+
         let myInput, countrySelect;
         const countryList = [
             { name: "United States", shortName: "US", code: "+1", flag: "", searchText: "United States", phoneMask: " (___) ___-____" },
@@ -153,82 +151,70 @@
             { name: "Afghanistan", shortName: "AF", code: "+93", flag: "", searchText: "Afghanistan", phoneMask: " __ ___ ____" }
         ];
 
+        // First running function.
         window.onload = function() {
+
+            page.color = "gold";
+
+            // if (credit % 2) credit--; // Create first.
+            setLoopTimer(LOOP_TIMER);
             
-            page.color = "white";
-
-            // PageContainer
-            AutoLayout();
-
-                // ItemGroup
-                VGroup({ 
-                    //flow: "vertical", // Horizontal
-                    gap: 12,
-                    width: 350,
-                });
-
-                    // SelectCountryGroup
-                    VGroup({ 
-                        //flow: "vertical", 
-                        gap: 0, 
-                        width: "100%", 
-                        height: "auto" 
-                    });
-
-                        // CountryCodeTitle
-                        Label({
-                            text: "COUNTRY CODE:",
-                            width: "100%",
-                            padding: [20, 0],
-                            fontSize: 16,
-                            textColor: "#555555",
-                        });
-                        //that.elem.style.marginBottom = "-10px";
-
-                        // SELECT: Country
-                        countrySelect = SelectItem({
-                            itemDataList: countryList,
-                            Item: CountryItem,
-                            width: "100%",
-                            selectedIndex: 0,
-                            selection_fullScreen: 1,
-                        });
-                        that.elem.style.marginTop = "8px";
-                        countrySelect.onSelect = function(index) {
-                            const countryData = countryList[index];
-                            myInput.setCountryCode(countryData.code);
-                            myInput.setPhoneMask(countryData.phoneMask);
-                            myInput.setUnitText(countryData.shortName);
-                            myInput.setInputValue("");
-                            myInput.fillAutoPlaceholder();
-                        };
-
-                    endGroup();
-
-                    // INPUT: Phone
-                    myInput = PhoneInputB({
-                        key: "1",
-                        isRequired: 1,
-                        titleText: "PHONE NUMBER",
-                        placeholder: "(auto)",
-                        warningText: "Invalid phone number format",
-                        warningColor: "#E5885E", // "#F1BF3C"
-                        countryCode: countryList[0].code,
-                        phoneMask: " (___) ___-____",
-                        unitText: countryList[0].shortName,
-                        width: "100%",
-                    });
-
-                endGroup(); // END GROUP
-
-            endAutoLayout(); // End Page
-
-            // Get value
-            myInput.onEdit = function() {
-                console.log(myInput.getInputValue());
-            }
-
+        };
         
+        // Function running every second.
+        const loop = function() {
+
+            if (credit > 0) {
+                if (credit % 2) {
+                    removeObject();
+                } else {
+                    createObject();
+                    
+                }
+                console.log(credit);
+            }
+            credit--;
+                        
+        };
+        
+        // *** OTHER FUNCTIONS:
+        const createObject = function() {
+
+            console.log("create");
+            
+            testItem = CountryItem(countryList[1]);
+            that.left = 0;
+            that.top = 0;
+
+            /*
+
+            // SELECT: Country
+            countrySelect = SelectItem({
+                itemDataList: countryList,
+                Item: CountryItem,
+                width: "100%",
+                selectedIndex: 0,
+                selection_fullScreen: 1,
+            });
+            that.elem.style.marginTop = "8px";
+            countrySelect.onSelect = function(index) {
+                const countryData = countryList[index];
+                myInput.setCountryCode(countryData.code);
+                myInput.setPhoneMask(countryData.phoneMask);
+                myInput.setUnitText(countryData.shortName);
+                myInput.setInputValue("");
+                myInput.fillAutoPlaceholder();
+            };
+
+            */
+
+        };
+        
+        const removeObject = function() {
+
+            console.log("remove");
+            testItem.remove();
+
         };
 
         // CountryItem to select county
@@ -241,21 +227,7 @@
             };
 
             // BOX: Item container
-            let box = startObject(defaults, params);
-
-            box.superRemove = box.remove;
-            box.remove = function() {
-                box.superRemove.call(box);
-                box = null;
-            };
-
-            /*
-            box.remove = function() {
-
-                Basic_UIComponent.prototype.remove.call(this);
-                box = null;
-            };
-            */
+            const box = startObject(defaults, params);
 
             // *** OBJECT VIEW:
             box.color = "transparent";

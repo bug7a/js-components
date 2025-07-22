@@ -485,14 +485,16 @@ const ItemList = function(params = {}) {
 
     }
 
-    box.destroy = function() {
+    box.superRemove = box.remove;
+    box.remove = function() {
 
-        box.scrollBar.destroy();
+        box.scrollBar.remove();
         box.clearItems();
-        box.remove();
+
+        box.superRemove.call(box);
         box = null;
         
-    }
+    };
 
     // *** CODE:
     box.setItemAlignment(ItemList.alignType.VERTICAL);

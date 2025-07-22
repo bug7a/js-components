@@ -306,6 +306,7 @@ class Basic_UIComponent {
 
     _motionString;
     _clickable;
+    _eventFuncList;
     */
 
     constructor($type) {
@@ -320,9 +321,8 @@ class Basic_UIComponent {
 
         this._motionString = "none";
         this._clickable = 0;
-        this._eventFuncList = []; // for _addEventListener()
-        //this._removeEventFuncList = []; // .on("click", func) ile oluşturulan evenleri, toplu olarak siler.
-
+        this._eventFuncList = []; // for _addEventListener() - Otomatik temizleme
+        
     }
 
     // alternative for containerBox
@@ -657,44 +657,21 @@ class Basic_UIComponent {
     // Nesneyi sil.
     remove() {
 
-        // 1.  onClick, onChange yöntemi ile eklenmiş tüm eventleri kaldır. (OLD)
+        // 1.  Eklenmiş tüm eventleri kaldır. _addEventListener() - Otomatik temizleme
         if (this._eventFuncList && this._eventFuncList.length) {
             for (let i = this._eventFuncList.length - 1; i >= 0; i--) {
                 const ev = this._eventFuncList[i];
-                ev.element.removeEventListener(ev.eventName, ev.func);
+                ev.element.removeEventListener(ev.eventName, ev.eventFunc);
                 this._eventFuncList.pop();
             }
         }
-
-        // NOTE: on ile oluşturulan eventler otomatik silinmiyor. Geri döndürülen fonksiyon ile manuel silinebilir. (NEW)
-        /*
-        if (this._removeEventFuncList && this._removeEventFuncList.length) {
-            for (let i = this._removeEventFuncList.length - 1; i >= 0; i--) {
-                const removeEvent = this._removeEventFuncList[i];
-                removeEvent();
-                this._removeEventFuncList.pop();
-            }
-        };
-        */
-       /*
-        if (this._removeEventFuncList && this._removeEventFuncList.length) {
-            for (let i = this._removeEventFuncList.length - 1; i >= 0; i--) {
-                const eventInfo = this._removeEventFuncList[i];
-                try {
-                    eventInfo.removeEvent();
-                } catch (e) {
-                    // Event zaten kaldırılmış olabilir
-                    console.warn("Event already removed:", e);
-                }
-                this._removeEventFuncList.pop();
-            }
-        }
-        */
 
         // 2. Eğer resizeDetection kaydı varsa, onu da kaldır
         if (resizeDetection && typeof resizeDetection.remove_onResize === "function") {
             resizeDetection.remove_onResize(this.element, null); // null ile tüm fonksiyonları sil
         }
+
+        // NOTE: Eğer page.onResize kullanılmış ise manuel kaldırılmalı.
 
         // 3. DOM'dan sil
         this.contElement.remove();
@@ -706,7 +683,7 @@ class Basic_UIComponent {
             for (let key in _this) {
                 delete _this[key];  // Tüm özellikleri sil
             }
-        }, 1000);
+        }, 1000); // WHY: May be have a css animation
         */
 
     }
@@ -728,8 +705,6 @@ class Basic_UIComponent {
         }
         */
 
-        //this._removeEventListener($eventName, $func, $element); // WHY: Eğer daha önce aynı fonksiyon ile event eklenmiş ise tekrar ekleme.
-
         let _that = this;
 
         const eventFunc = function (event) {
@@ -737,14 +712,14 @@ class Basic_UIComponent {
         }
         $element.addEventListener($eventName, eventFunc, $useCapture);
 
-        // Event bilgilerini sakla
-        const eventDateItem = {};
-        eventDateItem.eventName = $eventName;
-        eventDateItem.originalFunc = $func;
-        eventDateItem.func = eventFunc;
-        eventDateItem.element = $element;
+        // Otomatik temizleme için kaydet.
+        const eventDataItem = {};
+        eventDataItem.eventName = $eventName;
+        eventDataItem.originalFunc = $func;
+        eventDataItem.eventFunc = eventFunc;
+        eventDataItem.element = $element;
 
-        this._eventFuncList.push(eventDateItem); // Nesne .remove() edilirken, hepsi temizlenir.
+        this._eventFuncList.push(eventDataItem); // Nesne .remove() edilirken, hepsi temizlenir.
 
         const removeEvent = function() {
             _that._removeEventListener($eventName, $func, $element);
@@ -757,22 +732,22 @@ class Basic_UIComponent {
     // Olay silme: remove_onClick, remove_onResize da kullanılıyor.
     _removeEventListener($eventName, $func, $element) {
 
-        let func = null; // Orjinal fonksiyon bulunacak.
+        //Otomatik temizleme
+        let eventFunc = null; // Orjinal fonksiyon bulunacak.
         
         for (let i = 0; i < this._eventFuncList.length; i++) {
             if (this._eventFuncList[i].originalFunc == $func) {
-                func = this._eventFuncList[i].func;
+                eventFunc = this._eventFuncList[i].eventFunc;
                 this._eventFuncList.splice(i, 1);
                 break;
             }
         }
 
-        if (func) {
-            $element.removeEventListener($eventName, func);
-            return 1; // İşlem başarılı.
+        if (eventFunc) {
+            $element.removeEventListener($eventName, eventFunc);
         }
-
-        return 0;
+        
+        //$element.removeEventListener($eventName, $func);
 
     };
 
@@ -792,15 +767,8 @@ class Basic_UIComponent {
             _elem.removeEventListener($eventName, $func);
         };
 
-        // Event bilgilerini sakla
-        const eventInfo = {
-            element: _elem,
-            eventName: $eventName,
-            func: $func,
-            removeEvent: removeEvent
-        };
-        
-        this._removeEventFuncList.push(eventInfo);
+        return eventInfo;
+
         */
         
         // TODO: $eventName resize ise, resizeDetection.onResize ile ekleme yapılabilir.
@@ -816,18 +784,6 @@ class Basic_UIComponent {
         
         //_elem.removeEventListener($eventName, $func);
         this._removeEventListener($eventName, $func, _elem);
-        
-
-        /* #2
-        for (let i = this._removeEventFuncList.length - 1; i >= 0; i--) {
-            const eventInfo = this._removeEventFuncList[i];
-            if (eventInfo.eventName === $eventName && eventInfo.func === $func) {
-                eventInfo.removeEvent();
-                this._removeEventFuncList.splice(i, 1);
-                break;
-            }
-        }
-        */
 
     }
 

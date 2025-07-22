@@ -279,14 +279,21 @@ SelectItem.SelectItemList = function(box) {
 
             page.remove_onResize(resized);
 
-            container.uiItemList.destroy();
-            container.uiItemList = null;
+            // TODO: Bu kodları incele: nerelerden siliniyor.
+            if (container && typeof container.uiItemList !== undefined) {
+                container.uiItemList.remove();
+                container.uiItemList = null;
+            }
 
-            container.remove();
-            container = null;
+            if (container) {
+                container.remove();
+                container = null;
+            }
 
-            cover.remove();
-            cover = null;
+            if (cover) {
+                cover.remove();
+                cover = null;
+            }
 
             box.itemSelectList = null;
 
@@ -470,7 +477,7 @@ SelectItem.SelectItemList = function(box) {
     endBox();
 
     const resized = function() {
-        //console.log("resized trigged");
+        page.remove_onResize(resized); // WHY: Bir kere çalışsın. Resize olduğunda nesne silinecek.
         if (box.itemSelectList) {
             //box.itemSelectList.refreshSizeAndPosition();
             box.itemSelectList.visible = 0; // WHY: Ekran boyutu değişiyor ise animasyonsun hemen gizle.
