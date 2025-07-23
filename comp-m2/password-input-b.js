@@ -104,12 +104,12 @@ const PasswordInputB = function(params = {}) {
         if (show == 0) {
             box.showPassword = 0;
             box.input.inputElement.type = "password";
-            //box.btnShowPassword.tooltip.setHintText(box.showTooltipMessage);
+            box.btnShowPassword.tooltip.setHintText(box.showTooltipMessage);
             box.btnShowPassword.load(box.showPasswordIconFile);
         } else {
             box.showPassword = 1;
             box.input.inputElement.type = "text";
-            //box.btnShowPassword.tooltip.setHintText(box.hideTooltipMessage);
+            box.btnShowPassword.tooltip.setHintText(box.hideTooltipMessage);
             box.btnShowPassword.load(box.hidePasswordIconFile);
         }
     };
@@ -147,7 +147,6 @@ const PasswordInputB = function(params = {}) {
 
     endAutoLayout();
 
-    /*
     box.btnShowPassword.tooltip = Tooltip({
         target: box.btnShowPassword,
         hintText: "",
@@ -159,7 +158,6 @@ const PasswordInputB = function(params = {}) {
         lbl_fontSize: 14,
         lbl_round: 2,
     });
-    */
 
     // *** OBJECT INIT CODE:
     box.btnShowPassword.on("click", function() {

@@ -307,6 +307,9 @@ class Basic_UIComponent {
     _motionString;
     _clickable;
     _eventFuncList;
+
+    NOTE: Browsers perform "render optimization." JavaScript collects many small changes you make to the DOM or style attributes while it's running, then applies these changes all at once. But be careful! If you force Reflow/Style (for example, by calling .offsetHeight), the browser will be forced to apply all the changes at once.
+
     */
 
     constructor($type) {

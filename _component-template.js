@@ -136,15 +136,16 @@ const CompName = function(params = {}) {
 
     };
 
-    box.superRemove = box.remove;
-    box.remove = function() { // OVERRIDE
+    // box.superRemove = box.remove;
+    box.destroy = function() { 
                 
         // Remove basic objects
-        box.coverBox.remove();
+        box.coverBox.remove(); // NOTE: If you add event (box.coverBox.on("click") to other objects.
         box.icoLogo.remove();
         box.lblBadget.remove();
 
-        box.superRemove.call(box);
+        // box.superRemove.call(box);
+        box.remove(); // NOTE: It will clean all events like box.on("click"
         box = null;
 
     };

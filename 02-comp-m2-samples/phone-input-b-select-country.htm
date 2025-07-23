@@ -244,18 +244,10 @@
             let box = startObject(defaults, params);
 
             box.superRemove = box.remove;
-            box.remove = function() {
+            box.remove = function() { // OVERRIDE
                 box.superRemove.call(box);
                 box = null;
             };
-
-            /*
-            box.remove = function() {
-
-                Basic_UIComponent.prototype.remove.call(this);
-                box = null;
-            };
-            */
 
             // *** OBJECT VIEW:
             box.color = "transparent";

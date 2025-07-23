@@ -140,6 +140,17 @@ const Tooltip = function(params = {}) {
 
     _removeMouseMove = box.target.on("mousemove", function() {
         if (window.lblHint) {
+            
+            // WHY: Eğer mouse tooltip tetikleyen bir object üzerinde bırakılırsa ve
+            // başka bir olay, tooltip in text ve rengini değiştirirse; objeye giriş yapmadan hareket ettirilen mouse,
+            // diğer olayın metnini gösterebilir. O yüzden, metin kontrol ediliyor.
+            if (window.lblHint.text != box.hintText) {
+                window.lblHint.text = box.hintText;
+            }
+            if (window.lblHint.color != box.lbl_color) {
+                window.lblHint.color = box.lbl_color;
+            }
+
             refreshPosition(box.hintPosition);
         }
     });
