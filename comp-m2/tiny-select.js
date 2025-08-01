@@ -40,7 +40,60 @@ const TinySelectDefaults = {
     listFontSize: 14,
     listTextColor: "rgba(0, 0, 0, 0.8)",
     listOverTextColor: "indianred",
+    listBackgroundColor: "whitesmoke",
+    listBorder: 1,
+    listBorderColor: "rgba(0, 0, 0, 0.6)",
     emptyText: "Empty",
+    invertIconColor: 0,
+    labelBoldFont: 1,
+    labelTextColor: "rgba(0,0,0,0.8)",
+};
+
+const TinySelectDefaultsV2 = {
+    listData: [], // [{ id: "1", label: "(none)" },]
+    onSelect: function(index, id, label, title) {},
+    selectedIndex: 0,
+    width: "auto",
+    height: 50,
+    paddingX: 12,
+    disabled: 0,
+    backgroundStyle: {
+        border: 0,
+        color: White(0), // "whitesmoke"
+        overColor: White(0),
+        round: 3,
+    },
+    titleStyle: {
+        text: "",
+        fontSize: 20,
+    },
+    labelStyle: {
+        fontSize: 20,
+        useBoldFont: 1,
+        textColor: Black(0.8),
+    },
+    iconStyle: {
+        file: "../comp-m2/tiny-select/arrow.svg",
+        border: 0,
+        color: Black(0.2),
+        borderColor: Black(0.2),
+        width: 24,
+        height: 24,
+        round: 3,
+        invertColor: 0,
+    },
+    listBackgroundStyle: {
+        color: "whitesmoke",
+        border: 1,
+        borderColor: Black(0.6),
+    },
+    listLabelStyle: {
+        fontSize: 14,
+        textColor: Black(0.8),
+        overTextColor: "indianred",
+    },
+    emptyText: "Empty",
+    invertColor: 0,
 };
 
 const TinySelect = function(params = {}) {
@@ -139,8 +192,9 @@ const TinySelect = function(params = {}) {
     // LABEL: Label
     box.lblLabel = Label({
         fontSize: box.fontSize,
+        textColor: box.labelTextColor,
     });
-    that.elem.style.fontFamily = "opensans-bold";
+    if (box.labelBoldFont == 1) that.elem.style.fontFamily = "opensans-bold";
     that.elem.style.marginLeft = "6px";
     that.elem.style.marginRight = "4px";
 
@@ -158,6 +212,7 @@ const TinySelect = function(params = {}) {
     that.setMotion("transform 0.3s");
     that.elem.style.marginTop = "2px";
     that.elem.style.marginRight = box.paddingX + "px";
+    if (box.invertIconColor == 1) that.elem.style.filter = "invert(100%)";
 
     endFlexBox();
 
@@ -196,10 +251,11 @@ TinySelect.createList = function(connectedUI) {
         listBox.grp = startFlexBox({
             flexDirection: "column",
             alignItems: "flex-start",
-            color: "whitesmoke",
+            color: connectedUI.listBackgroundColor,
             width: "auto",
             height: "auto",
-            border: 1,
+            border: connectedUI.listBorder,
+            borderColor: connectedUI.listBorderColor,
             round: 3,
         });
         that.elem.style.padding = "5px";

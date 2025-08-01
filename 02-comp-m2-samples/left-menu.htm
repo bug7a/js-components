@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        
+        <title>Main Menu JS Component</title>
+        
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <!-- LIBRARY FILES -->
+        <!-- <link rel="preload" href="image.png" as="image"> -->
+        <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <script src="../comp-m2/left-menu.js" type="text/javascript" charset="utf-8"></script>
+        
+        <!-- ALL COMPONENTS IN ONE FILE -->
+        <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
+
+        <script>
+        
+        // *** VARIABLES:   
+        let mainMenu;
+        
+        // First running function.
+        window.onload = function() {
+
+            page.color = "white";
+
+            // Top bar
+            Box({
+                width: "100%",
+                height: 40,
+                color: "#344f6c",
+                top: 0,
+                left: 0,
+            });
+
+            // Menu items
+            const menuItems = [
+                { key: "home", type: "button", text: "Home", icon: "../comp-m2/left-menu/home.png" },
+                { key: "report", type: "button", text: "Reports", icon: "../comp-m2/left-menu/reports.png" },
+                { key: "divider1", type: "header", text: "CONTENTS" },
+                { key: "user", type: "button", text: "Users", icon: "../comp-m2/left-menu/data-table.png" },
+                { key: "content", type: "button", text: "Contents", icon: "../comp-m2/left-menu/data-table.png" },
+            ];
+
+            // Create main menu
+            mainMenu = LeftMenu({
+                items: menuItems,
+                onItemClick: function(item) {
+                    println("Clicked Key: " + item.key);
+                }
+            });
+
+            /*
+            // Add random items to top
+            for(var i = 0; i < 30; i++) {
+                mainMenu.addItemToTop({ key: "aaa" + i, type: "button", text: "Settings" + i, icon: "../assets/ui-bottom-bar/setting.svg" });
+            }
+            */
+
+            // Add item to bottom
+            mainMenu.addItemToBottom({ key: "settings", type: "button", text: "Settings", icon: "../assets/ui-bottom-bar/setting.svg" });
+            
+            mainMenu.setSelectedItem("home");
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+        
+        <!-- HTML content -->
+        
+    </body>
+</html>

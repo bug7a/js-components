@@ -22,47 +22,69 @@
 
         <script>
         
-        // *** VARIABLES:          
-        let myString = "";
-        let myInteger = 0;
-        let myFloat = 0.5;
-        let myArray = [];
-        let compa;
+        // *** VARIABLES:
+        //const compList = []; // When multiple objects are created by code, they can be added to an array.
+        let comp1, comp2, comp3;
 
         // First running function.
         window.onload = function() {
 
             // GROUP: Autolayout
-            startFlexBox({
-                flexDirection: "column",
-                gap: "12px",
+            VGroup({
+                gap: 12,
             });
 
                 // COMP NAME: #1
-                compa = CompName({
+                comp1 = CompName({
                     key: "1",
                     badgetText: "7",
+                    iconStyle: {
+                        file: "assets/categories/cappuccino.png",
+                        //invertColor: 1,
+                    },
+                    labelText: "Cappuccino",
+                    descText: "Hot",
+                    //invertColor: 1,
                 });
                 that.onClick = function(self) {
                     println("Clicked Comp " + self.key);
                 };
-                myArray.push(that);
+                //compList.push(that);
 
                 // COMP NAME: #2
-                CompName({
+                comp2 = CompName({
                     key: "2",
                     badgetText: "11",
-                    boxBackgroundOverColor: "#F1E2C3",
+                    iconStyle: {
+                        file: "assets/categories/milkshake.png",
+                    },
+                    labelText: "Milkshake",
+                    descText: "Cold",
                 });
                 that.onClick = function(self) {
                     println("Clicked Comp " + self.key);
                 };
-                myArray.push(that);
+                //compList.push(that);
 
-            endFlexBox(); // END GROUP
+                // COMP NAME: #3
+                comp3 = CompName({
+                    key: "3",
+                    badgetText: "21",
+                    iconStyle: {
+                        file: "assets/categories/orange-juice.png",
+                    },
+                    labelText: "Orange Juice",
+                    descText: "Cold",
+                });
+                that.onClick = function(self) {
+                    println("Clicked Comp " + self.key);
+                };
+                //compList.push(that);
 
-            //myArray[1].setBadgetText("2");
-            //myArray[1].setBoxBackgroundOverColor(CompName("get").boxBackgroundOverColor);
+            endGroup(); // END GROUP
+
+            //comp2.setBadgetText("2");
+            //comp2.setBackgroundOverColor("indianred");
             
         };
         

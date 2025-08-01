@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        
+        <title>Main Menu JS Component</title>
+        
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <!-- LIBRARY FILES -->
+        <!-- <link rel="preload" href="image.png" as="image"> -->
+        <link rel="preload" href="../../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../../basic/basic.min.css">
+        <script src="../../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <script src="common/top-bar.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../comp-m2/left-menu.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../comp-m2/badget-v2.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../comp-m1/search-input.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../comp-m2/tiny-select.js" type="text/javascript" charset="utf-8"></script>
+        
+        <!-- ALL COMPONENTS IN ONE FILE -->
+        <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
+
+        <script>
+        
+        // *** VARIABLES:   
+        let topBar, mainMenu;
+        
+        // First running function.
+        window.onload = function() {
+
+            page.color = "#000000";
+
+            // Content
+            startBox(40, 40, "calc(100% - 40px)", "calc(100% - 40px)", {
+                color: "black",
+            });
+
+                HGroup();
+
+                    Label({
+                        text: "Page Content",
+                        textColor: "white",
+                    });
+
+                endGroup();
+
+            endBox();
+
+            // Create main menu
+            topBar = TopBar({});
+
+            // Right Content
+            startBox({
+                top: 40,
+                right: 0,
+                width: 500,
+                height: "calc(100% - 40px)",
+                color: "#141414",
+            });
+            //that.visible = 0;
+
+                HGroup();
+
+                    Label({
+                        text: "Right Content",
+                        textColor: "white",
+                    });
+
+                endGroup();
+
+            endBox();
+
+            // Menu items
+            const menuItems = [
+                { key: "home", type: "button", text: "Home", icon: "assets/home.png" },
+                { key: "report", type: "button", text: "Reports", icon: "assets/reports.png" },
+                { key: "divider1", type: "header", text: "CONTENTS" },
+                { key: "user", type: "button", text: "Users", icon: "assets/data-table.png" },
+                { key: "content", type: "button", text: "Contents", icon: "assets/data-table.png" },
+            ];
+
+            // Create main menu
+            mainMenu = LeftMenu({
+                items: menuItems,
+                onItemClick: function(item) {
+                    println("Clicked Key: " + item.key);
+                }
+            });
+
+            
+            // Add random items to top
+            /*
+            for(var i = 0; i < 30; i++) {
+                mainMenu.addItemToTop({ key: "aaa" + i, type: "button", text: "Settings" + i, icon: "assets/data-table.png" });
+            }
+            */
+
+            // Add item to bottom
+            mainMenu.addItemToBottom({ key: "settings", type: "button", text: "Settings", icon: "assets/setting.png" });
+            
+            mainMenu.setSelectedItem("home");
+
+            // Content 2
+            startBox(0, 0, "100%", "100%", {
+                color: "black",
+            });
+            that.visible = 0;
+
+                HGroup();
+
+                    Label({
+                        text: "Page Content 2",
+                        textColor: "white",
+                    });
+
+                endGroup();
+
+            endBox();
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+        
+        <!-- HTML content -->
+        
+    </body>
+</html>

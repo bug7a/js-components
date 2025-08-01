@@ -51,6 +51,7 @@ const UI = {
   SPACING_L: 32,
 
   TRANSITION: "0.2s ease",
+  BOLD_FONT_NAME: "opensans-bold",
 
   BREAKPOINTS: {
     SM: 480,
@@ -60,6 +61,8 @@ const UI = {
   }
 
 };
+
+// White(0.2), White(0), White(1), Black(0.2)
 
 UI.createMotion = function(names = []) {
   let motionString = "";
@@ -103,5 +106,29 @@ UI.styleSecondButton = function(btn) {
   btn.textColor = UI.COLOR_BUTTON_TEXT;
   btn.color = UI.COLOR_SECOND;
   btn.minimal = 1;
+};
+
+UI.effectButton = function(btn) {
+
+  btn.setMotion("filter 0.2s, transform 0.2s");
+
+  btn.on("mouseover", function() {
+      btn.elem.style.filter = "brightness(120%)";
+  });
+
+  btn.on("mouseout", function() {
+      btn.elem.style.filter = "brightness(100%)";
+  });
+
+  btn.on("mousedown", function() {
+      btn.elem.style.transform = "scale(0.95)";
+      btn.elem.style.filter = "brightness(80%)";
+      
+      setTimeout(function(){
+          btn.elem.style.transform = "scale(1)";
+          btn.elem.style.filter = "brightness(120%)";
+      }, 200);
+  });
+
 };
 

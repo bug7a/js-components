@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        
+        <title>TEST</title>
+        
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <!-- LIBRARY FILES -->
+        <!-- <link rel="preload" href="image.png" as="image"> -->
+        <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <!--<script src="basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>-->
+
+        <!-- <script src="_component-template.min.js" type="text/javascript" charset="utf-8"></script> -->
+
+        <!-- ALL COMPONENTS IN ONE FILE -->
+        <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
+
+        <script>
+        
+        // *** VARIABLES:
+        const CompNameDefaults = {
+            a1: 1,
+            background: {
+                a1: 1,
+                style: {
+                    a1: 1,
+                    b1: 1, // gelmiyor.
+                },
+            }
+        };
+
+        // First running function.
+        window.onload = function() {
+
+            
+
+            const params = {
+                a1: 2,
+                background: {
+                    a1: 2,
+                    style: {
+                        a1: 2,
+                    }
+                }
+            }
+
+            // Eğer 3. seviye bir veri var ise, her biri için birleştirme yapılmalı.
+            //mergeIntoIfMissing(params.background.style, CompNameDefaults.background.style);
+            mergeIntoIfMissing(params, CompNameDefaults);
+
+            console.log(params);
+            
+        };
+        
+
+        </script>
+
+    </head>
+    <body>
+        
+        <!-- HTML content -->
+        
+    </body>
+</html>

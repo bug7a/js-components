@@ -19,32 +19,37 @@ Webpage: https://bug7a.github.io/js-components/
 
 // Default values:
 const CompNameDefaults = {
-    key: 0,
-    border: 1, // Standard box features are added automatically.
-    width: 90,
-    height: 50,
-    round: 4,
-    onClick: function(self) {},
-    boxColor: "white", // I didn't use color because I didn't want to add it automatically.
-    boxOverColor: "#8FC7B9",
-    iconFile: "assets/close.svg",
-    iconColor: "transparent",
-    iconBorder: 0,
+    key: "0",
+    width: 240, // Standard box features are added automatically.
+    height: 70,
+    labelText: "",
+    descText: "",
     badgetText: "",
+    invertColor: 0,
+    onClick: function(self) {},
     backgroundStyle: {
-        color: "red",
+        color: White(1),
+        overColor: "#EFE3C5",
+        round: 4,
+        border: 1,
+        borderColor: Black(0.8),
+    },
+    iconStyle: {
+        file: "assets/icons/alert-black.png",
+        color: White(0),
+        border: 0,
+        invertColor: 0,
     },
 };
 
 const CompName = function(params = {}) {
-
-    //console.time("CompName");
 
     // Marge params:
     mergeIntoIfMissing(params, CompNameDefaults);
 
     // Edit params, if needed:
     // params.width = getDefaultContainerBox().width;
+    // params.color = "transparent";
 
     // BOX: Component container
     let box = startObject(params);
@@ -58,7 +63,7 @@ const CompName = function(params = {}) {
         { min: 4, max: 10, color: "gold" },
         { min: 11, max: 100, color: "#D96450" },
     ];
-    let badgetCurrentColor = null;
+    let badgetCurrentColor;
 
     // *** PUBLIC VARIABLES:
     // [var] key for show this public var in navigator.
@@ -71,16 +76,22 @@ const CompName = function(params = {}) {
 
     // *** PRIVATE FUNCTIONS:
     const privateFunc = function() {};
+    /*
+    const boxResized = function(self) {
+        box.iconBackground.left = box.icon.left;
+        box.iconBackground.top = box.icon.top;
+    };
+    */
 
     // *** PUBLIC FUNCTIONS:
     // If you need to change a param after it is created. You can write a setter function for it.
     box.publicFunc = function() {};
 
-    box.setIconFile = function(iconFile) {
-        box.iconFile = iconFile;
-        box.icoLogo.load(iconFile);
+    box.setIconFile = function(file) {
+        box.iconStyle.file = file;
+        box.icon.load(file);
     }
-    // USAGE: get: componentName.iconFile, set: componentName.setIconFile("8")
+    // USAGE: get: componentName.iconStyle.file, set: componentName.setIconFile("8")
 
     box.setBadgetText = function(text) {
 
@@ -99,13 +110,13 @@ const CompName = function(params = {}) {
     };
     // USAGE: get: componentName.badgetText, set: componentName.setBadgetText("8")
 
-    box.setBoxColor = function(color) {
-        box.boxColor = color;
-        box.color = color;
+    box.setBackgroundColor = function(color) {
+        box.backgroundStyle.color = color;
+        box.background.color = color;
     };
 
-    box.setBoxOverColor = function(color) {
-        box.boxOverColor = color;
+    box.setBackgroundOverColor = function(color) {
+        box.backgroundStyle.overColor = color;
     };
 
     box.setState = function(state) {
@@ -115,13 +126,15 @@ const CompName = function(params = {}) {
         switch(state) {
 
             case "normal":
-                box.color = box.boxColor;
-                box.lblBadget.color = badgetCurrentColor;
+                box.background.color = box.backgroundStyle.color;
+                //box.lblBadget.color = badgetCurrentColor;
+                //box.background.border = 1;
                 break;
 
             case "mouseover":
-                box.color = box.boxOverColor;
-                box.lblBadget.color = "white";
+                box.background.color = box.backgroundStyle.overColor;
+                //box.lblBadget.color = "white";
+                //box.background.border = 3;
                 break;
 
             case "disabled":
@@ -137,12 +150,13 @@ const CompName = function(params = {}) {
     };
 
     // box.superRemove = box.remove;
-    box.destroy = function() { 
+    box.destroy = function() {
+
+        //page.remove_onResize(functionName); // on page resized.
                 
         // Remove basic objects
-        box.coverBox.remove(); // NOTE: If you add event (box.coverBox.on("click") to other objects.
-        box.icoLogo.remove();
-        box.lblBadget.remove();
+        box.background.remove(); // NOTE: If you add event (box.background.on("click") to other objects.
+        box.icon.remove();
 
         // box.superRemove.call(box);
         box.remove(); // NOTE: It will clean all events like box.on("click"
@@ -153,54 +167,96 @@ const CompName = function(params = {}) {
     // *** OBJECT VIEW:
     box.elem.style.cursor = "pointer";
     box.clickable = 1;
-    // Show outside of the box.
-    box.elem.style.overflow = "visible";
-    box.color = box.boxColor;
-    //box.borderColor = "indianred";
-    box.setMotion("background-color 0.3s");
+    // Show outside of the box. box.lblBadget will be shown at out of container.
+    box.clipContent = 0;
+    if(box.invertColor == 1) box.elem.style.filter = "invert(100%)";
 
-        //box.background = Box(0, 0, "100%", "100%", backgroundStyle);
+        // BOX: background
+        box.background = Box(0, 0, "100%", "100%", box.backgroundStyle);
+        box.background.setMotion("background-color 0.2s");
+        // WHY: Different background boxes are more useful in components.
 
-        // BOX: Cover.
-        box.coverBox = Box(0, 0, "100%", "100%", {
-            opacity: 0.2,
+        // BOX: Background effect
+        box.backgroundEffect = Box(0, 0, "100%", "100%", {
+            opacity: 0.15,
+            round: box.backgroundStyle.round, // clipContent: 0 so,
         });
         that.elem.style.background = "linear-gradient(to bottom, white, black)";
 
-        // ICON: Logo image.
-        box.icoLogo = Icon({
-            width: 32,
-            height: 32,
-            space: 10,
-            opacity: 0.7,
-            border: box.iconBorder,
-            color: box.iconColor,
+        // BOX: icon back
+        /*
+        box.iconBackground = Box(0, 0, 48, 48, {
+            border: 2,
+            borderColor: Black(0.2),
+            position: "absolute",
+            round: 100,
+            color: White(0.8),
         });
-        that.load(box.iconFile);
-        that.center();
+        */
+
+        // GROUP: icon, group (title, label)
+        HGroup({
+            align: "left center",
+            padding: [10, 0],
+            gap: 10,
+            // NOTE: this width, height: "100%" as default.
+        });
+
+            // ICON: image
+            box.icon = Icon({
+                width: 48,
+                height: 48,
+                space: 10,
+                border: box.iconStyle.border,
+                color: box.iconStyle.color,
+            });
+            that.load(box.iconStyle.file);
+            if(box.iconStyle.invertColor == 1) that.elem.style.filter = "invert(100%)";
+
+            // GROUP: label, description
+            VGroup({
+                width: "auto", // Wrap group content
+                height: "auto", // Wrap group content
+                align: "left top",
+            });
+
+                // LABEL: label
+                box.label = Label({
+                    text: box.labelText,
+                });
+
+                // LABEL: description
+                box.lblDesc = Label({
+                    text: box.descText,
+                    textColor: Black(0.4),
+                    fontSize: 16,
+                });
+                that.elem.style.marginTop = "-6px";
+
+            endGroup();
+
+        endGroup();
 
         // LABEL: Badget
         box.lblBadget = Label({
             text: "", // NOTE: If you have complex functions just use box.setBadgetText(box.badgetText); after OBJECT INIT CODE.
-            textColor: "rgba(0, 0, 0, 0.8)",
+            textColor: Black(0.8),
             border: 1,
-            borderColor: "rgba(0, 0, 0, 0.6)",
-            spaceX: 8,
-            spaceY: 2,
-            round: 8,
+            borderColor: Black(0.6),
+            padding: [8, 2],
+            round: 2,
             fontSize: 12,
+            right: -3,
+            top: -3,
         });
-        that.right = -6;
-        that.top = -6;
         that.elem.style.whiteSpace = "nowrap";
         that.elem.style.fontFamily = "opensans-bold";
-        that.setMotion("background-color 0.3s");
-        
+        that.setMotion("background-color 0.2s");
 
 
     // *** OBJECT INIT CODE:
     box.on("click", function(self, event) {
-        box.onClick(box);
+        box.onClick(box, event);
     });
     box.on("mouseover", function(self, event) {
         box.setState("mouseover");
@@ -209,9 +265,14 @@ const CompName = function(params = {}) {
         box.setState("normal");
     });
 
+    /*
+    box.onResize(boxResized);
+    boxResized();
+    */
+    
+    //page.onResize(functionName); // on page resized.
+    
     box.setBadgetText(box.badgetText);
-
-    //console.timeEnd("CompName");
     
     return endObject(box);
 

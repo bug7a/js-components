@@ -29,7 +29,7 @@ const SearchInput = function(params = {}) {
         height: 50,
         searchIconFile: "../comp-m1/search-input/search.svg",
         clearIconFile: "../comp-m1/search-input/clear.svg",
-        searchIconSize: 25,
+        searchIconSize: 24,
         isCancelEnabled: 1,
         placeholderText: "Search",
         color: "whitesmoke",
@@ -39,6 +39,7 @@ const SearchInput = function(params = {}) {
         borderBottomStyle: "2px solid rgba(0, 0, 0, 0.06)",
         round: 6,
         fontSize: 20,
+        invertIconColor: 0,
         onSearch: function() {},
     };
 
@@ -91,10 +92,11 @@ const SearchInput = function(params = {}) {
             space: 0,
         };
         that.load(box.searchIconFile);
+        if (box.invertIconColor == 1) that.elem.style.filter = "invert(100%)";
         that.center("top");
 
         // INPUT: Search textbox
-        box.txtSearch = Input(40, 0, {
+        box.txtSearch = Input(16 + box.searchIconSize + 8, 0, {
             width: box.width - 80,
             height: box.height,
             border: 0,
@@ -103,15 +105,17 @@ const SearchInput = function(params = {}) {
             textColor: box.textColor,
             color: "transparent",
         });
+        that.inputElement.style.paddingLeft = "0px";
         that.inputElement.setAttribute("placeholder", box.placeholderText);
 
         // ICON: Clear icon button
         box.imgClearIcon = Icon(5, 0, 20, 20, {
-            right: 20,
+            right: 16,
             opacity: 0,
             space: 0,
         });
         that.load(box.clearIconFile);
+        if (box.invertIconColor == 1) that.elem.style.filter = "invert(100%)";
         that.center("top");
         that.elem.style.cursor = "pointer";
         that.setMotion("opacity 0.3s");    

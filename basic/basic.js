@@ -2349,7 +2349,39 @@ window.makeBasicObject = function($newObject) {
 };
 //window.makeBasicObject = basic.makeBasicObject;
 
-// 
+
+window.mergeIntoIfMissing = function (target, source, depth = 1) {
+    if (depth > 3) return; // Maksimum derinlik sınırı
+
+    for (let key in source) {
+        const sourceVal = source[key];
+        const targetVal = target[key];
+
+        if (
+            typeof sourceVal === 'object' &&
+            sourceVal !== null &&
+            !Array.isArray(sourceVal)
+        ) {
+            if (
+                typeof targetVal !== 'object' ||
+                targetVal === null ||
+                Array.isArray(targetVal)
+            ) {
+                target[key] = {};
+            }
+
+            // Rekürsif olarak devam et
+            window.mergeIntoIfMissing(target[key], sourceVal, depth + 1);
+        } else {
+            if (!(key in target)) {
+                target[key] = sourceVal;
+            }
+        }
+    }
+};
+
+
+/*
 window.mergeIntoIfMissing = function (target, source) {
     for (let key in source) {
         const sourceVal = source[key];
@@ -2376,6 +2408,7 @@ window.mergeIntoIfMissing = function (target, source) {
         }
     }
 };
+*/
 
 // Sadece 1 kat derine inerek objeyi birleştirir.
 window.mergeInto = function (target, source) {
@@ -2764,38 +2797,6 @@ window.startBox = function(...args) {
     console.log(args.length);
     const box = Box(...args);
 
-    /*
-
-    params: (p1, p2, p3, p4, p5)
-
-    let box = null;
-
-    if (typeof p1 == "object") {
-        box = createBox();
-        props = p1;
-
-    } else if (typeof p2 == "object") {
-        box = createBox(p1);
-        props = p2;
-
-    } else if (typeof p3 == "object") {
-        box = createBox(p1, p2);
-        props = p3;
-        
-    } else if (typeof p4 == "object") {
-        box = createBox(p1, p2, p3);
-        props = p4;
-        
-    } else if (typeof p5 == "object") {
-        box = createBox(p1, p2, p3, p4);
-        props = p5;
-    } else {
-        box = createBox(p1, p2, p3, p4);
-    }
-
-    box.props(props);
-    */
-
     if (startedBoxList.length == 0) {
         startedBoxList.push(getDefaultContainerBox());
     }
@@ -2829,39 +2830,6 @@ window.endBox = function() {
 window.endFlexBox = window.endBox;
 window.endAutoLayout = window.endBox;
 window.endGroup = window.endBox;
-
-/*
-basic.useImageAsText = function(parameters = {}, editCreatedImage) {
-
-    if (!parameters.boxSize) parameters.boxSize = 16;
-    if (!parameters.outerSpaceRight) parameters.outerSpaceRight = 0;
-    if (!parameters.outerSpaceLeft) parameters.outerSpaceLeft = 0;
-
-    basic.saveCurrentThat();
-
-    const htmText = document.createElement('span');
-    htmText.style.display = "inline-block";
-    htmText.style.marginRight = parameters.outerSpaceRight + "px";
-    htmText.style.marginLeft = parameters.outerSpaceLeft + "px";
-
-    const box = createBox(0, 0, parameters.boxSize, parameters.boxSize);
-    that.color = "transparent";
-    that.element.style.position = "relative";
-    that.element.style.overflow = "visible";
-
-    createImage(0, 0);
-    box.add(that);
-    editCreatedImage(that);
-    that.center();
-
-    htmText.appendChild(box.element);
-
-    basic.restoreThatFromSaved();
-    return htmText.outerHTML;
-
-};
-window.useImageAsText = basic.useImageAsText;
-*/
 
 let savedThat = null;
 let savedExThat = null;
@@ -3057,30 +3025,20 @@ window.endExtendedObject = function(box) {
     makeBasicObject(box);
     return box;
 
-}
-
-/*
-window.BasicObject = function($defaultParams = {}, $params = {}, $props = {}) {
-
-    let obj = {};
-
-    // defaultPrams
-    for (let parameterName in $defaultParams) {
-        obj[parameterName] = $defaultParams[parameterName];
-    }
-    // params
-    for (let parameterName in $params) {
-        obj[parameterName] = $params[parameterName];
-    }
-    // props
-    for (let propName in $props) {
-        obj[propName] = $props[propName];
-    }
-
-    return obj;
-
 };
-*/
+
+window.Black = function(percent = 1) {
+    if (percent == 0) return "transparent";
+    if (percent == 1) return "black";
+    return `rgba(0,0,0,${percent})`;
+};
+
+window.White = function(percent = 1) {
+    if (percent == 0) return "transparent";
+    if (percent == 1) return "white";
+    return `rgba(255,255,255,${percent})`;
+};
+
 
 // When content is loaded,
 window.addEventListener("load", function () {

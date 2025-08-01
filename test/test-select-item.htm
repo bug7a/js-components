@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
         
-        <title>New JS Component</title>
+        <title>TEST</title>
         
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
@@ -11,23 +11,24 @@
         <!-- <link rel="preload" href="image.png" as="image"> -->
         <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
         <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
-        <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
-        <!--<script src="basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>-->
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
 
-        <script src="../_component-template.js" type="text/javascript" charset="utf-8"></script>
-        <!-- <script src="_component-template.min.js" type="text/javascript" charset="utf-8"></script> -->
+        <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
 
+        <script src="../comp-m2/tooltip.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m2/input-b.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m2/phone-input-b.js" type="text/javascript" charset="utf-8"></script>
+        
+        <script src="../comp-m1/select-item.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m1/item-list.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m1/search-input.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../experimental/text.js" type="text/javascript" charset="utf-8"></script>
         <!-- ALL COMPONENTS IN ONE FILE -->
         <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
 
         <script>
         
         // *** VARIABLES:
-        const LOOP_TIMER = 10;          
-        let credit = 2;
-        let testItem;
-
-        let myInput, countrySelect;
         const countryList = [
             { name: "United States", shortName: "US", code: "+1", flag: "", searchText: "United States", phoneMask: " (___) ___-____" },
             { name: "Canada", shortName: "CA", code: "+1", flag: "", searchText: "Canada", phoneMask: " (___) ___-____" },
@@ -151,45 +152,55 @@
             { name: "Afghanistan", shortName: "AF", code: "+93", flag: "", searchText: "Afghanistan", phoneMask: " __ ___ ____" }
         ];
 
+        const ITEM_COUNT = 100;
+
         // First running function.
         window.onload = function() {
 
-            page.color = "gold";
+            const box = startBox(0, 0, "100%", "100%");
+            that.scrollY = 1;
 
-            // if (credit % 2) credit--; // Create first.
-            setLoopTimer(LOOP_TIMER);
+                VGroup({ 
+                    //flow: "vertical", 
+                    gap: 10, 
+                    width: "100%", 
+                    height: "auto",
+                    padding: [20, 20],
+                });
+
+                    console.time("UIComponentRender");
+
+                    for (var i = 0; i < ITEM_COUNT; i++) {
+                        createObject();
+                    }
+
+                    console.timeEnd("UIComponentRender");
+
+                endGroup();
+
+            endBox();
+
+            ScrollBar({
+                scrollableBox: box,
+            });
             
-        };
-        
-        // Function running every second.
-        const loop = function() {
-
-            if (credit > 0) {
-                if (credit % 2) {
-                    removeObject();
-                } else {
-                    createObject();
-                    
-                }
-                console.log(credit);
-            }
-            credit--;
-                        
         };
         
         // *** OTHER FUNCTIONS:
         const createObject = function() {
 
-            console.log("create");
-            
-            testItem = CountryItem(countryList[1]);
-            that.left = 0;
-            that.top = 0;
-
-            /*
+            // CountryCodeTitle
+            Label({
+                text: "COUNTRY CODE:",
+                width: "100%",
+                padding: [20, 0],
+                fontSize: 16,
+                textColor: "#555555",
+            });
+            //that.elem.style.marginBottom = "-10px";
 
             // SELECT: Country
-            countrySelect = SelectItem({
+            SelectItem({
                 itemDataList: countryList,
                 Item: CountryItem,
                 width: "100%",
@@ -197,23 +208,18 @@
                 selection_fullScreen: 1,
             });
             that.elem.style.marginTop = "8px";
-            countrySelect.onSelect = function(index) {
-                const countryData = countryList[index];
-                myInput.setCountryCode(countryData.code);
-                myInput.setPhoneMask(countryData.phoneMask);
-                myInput.setUnitText(countryData.shortName);
-                myInput.setInputValue("");
-                myInput.fillAutoPlaceholder();
+            that.onSelect = function(index) {
+                console.log(index);
             };
-
-            */
 
         };
         
         const removeObject = function() {
 
             console.log("remove");
+
             testItem.remove();
+            testItem = null;
 
         };
 
@@ -227,7 +233,13 @@
             };
 
             // BOX: Item container
-            const box = startObject(defaults, params);
+            let box = startObject(defaults, params);
+
+            box.superRemove = box.remove;
+            box.remove = function() { // OVERRIDE
+                box.superRemove.call(box);
+                box = null;
+            };
 
             // *** OBJECT VIEW:
             box.color = "transparent";
