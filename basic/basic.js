@@ -80,13 +80,13 @@ basic.start = function () {
     page.containerBox = null;
     setDefaultContainerBox(page);
 
-    page.bodyElement.style.margin = "0px";
-    page.bodyElement.style.overflow = "hidden";
+    //page.bodyElement.style.margin = "0px";
+    //page.bodyElement.style.overflow = "hidden";
     // console.log("basic.js: set body { margin: 0px, overflow: hidden }");
     page.mainBox = createBox(0, 0, page.width, page.height);
     //page.mainBox = createBox(0, 0, "100%", "100%");
     page.mainBox.containerBox = null;
-    that.element.style.position = "fixed";
+    that.elem.style.position = "fixed";
     that.color = "transparent";
     
     
@@ -350,54 +350,54 @@ class Basic_UIComponent {
 
     get left() {
         if (this.position == "absolute") {
-            return parseFloat(this.contElement.style.left);
+            return parseFloat(this.elem.style.left);
         } else {
-            return this.contElement.offsetLeft;
+            return this.elem.offsetLeft;
         }
     }
 
     set left($value) {
-        this.contElement.style.right = "";
-        this.contElement.style.left = parseFloat($value) + "px";
+        this.elem.style.right = "";
+        this.elem.style.left = parseFloat($value) + "px";
     }
 
     get top() {
         if (this.position == "absolute") {
-            return parseFloat(this.contElement.style.top);
+            return parseFloat(this.elem.style.top);
         } else {
-            return this.contElement.offsetTop;
+            return this.elem.offsetTop;
         }
     }
 
     set top($value) {
-        this.contElement.style.bottom = "";
-        this.contElement.style.top = parseFloat($value) + "px";
+        this.elem.style.bottom = "";
+        this.elem.style.top = parseFloat($value) + "px";
     }
 
     get right() {
-        return parseFloat(this.contElement.style.right);
+        return parseFloat(this.elem.style.right);
     }
 
     set right($value) {
-        this.contElement.style.left = "";
-        this.contElement.style.right = parseFloat($value) + "px";
+        this.elem.style.left = "";
+        this.elem.style.right = parseFloat($value) + "px";
     }
 
     get bottom() {
-        return parseFloat(this.contElement.style.bottom);
+        return parseFloat(this.elem.style.bottom);
     }
 
     set bottom($value) {
-        this.contElement.style.top = "";
-        this.contElement.style.bottom = parseFloat($value) + "px";
+        this.elem.style.top = "";
+        this.elem.style.bottom = parseFloat($value) + "px";
     }
 
     get totalLeft() {
-        return calcSpace(this.contElement, "Left");
+        return calcSpace(this.elem, "Left");
     }
 
     get totalTop() {
-        return calcSpace(this.contElement, "Top");
+        return calcSpace(this.elem, "Top");
     }
     
     get width() {
@@ -405,7 +405,7 @@ class Basic_UIComponent {
         if (typeof this._width != "string") {
             return this._width || 0;
         } else {
-            return this.contElement.offsetWidth;
+            return this.elem.offsetWidth;
         }
 
     }
@@ -421,9 +421,9 @@ class Basic_UIComponent {
         this._width = $value;
 
         if (typeof $value != "string") {
-            this.contElement.style.width = parseFloat($value) + "px";
+            this.elem.style.width = parseFloat($value) + "px";
         } else {
-            this.contElement.style.width = $value;
+            this.elem.style.width = $value;
         }
         
     }
@@ -433,7 +433,7 @@ class Basic_UIComponent {
         if (typeof this._height != "string") {
             return this._height || 0;
         } else {
-            return this.contElement.offsetHeight;
+            return this.elem.offsetHeight;
         }
         
     }
@@ -443,9 +443,9 @@ class Basic_UIComponent {
         this._height = $value;
 
         if (typeof $value != "string") {
-            this.contElement.style.height = parseFloat($value) + "px";
+            this.elem.style.height = parseFloat($value) + "px";
         } else {
-            this.contElement.style.height = $value;
+            this.elem.style.height = $value;
         }
 
     }
@@ -456,7 +456,7 @@ class Basic_UIComponent {
 
     set rotate($value) {
         this._rotate = parseInt($value);
-        this.contElement.style.transform = "rotate(" + $value + "deg)";
+        this.elem.style.transform = "rotate(" + $value + "deg)";
     }
 
     // -- Hizalama ve boyutlandırma SONU
@@ -472,11 +472,11 @@ class Basic_UIComponent {
         this._visible = $value;
 
         // display tipini daha sonra kullanmak üzere sakla.
-        if (this.contElement.style.display && this.contElement.style.display != "none") {
-            this._displayType = this.contElement.style.display;
+        if (this.elem.style.display && this.elem.style.display != "none") {
+            this._displayType = this.elem.style.display;
         }
 
-        this.contElement.style.display = ($value == 1) ? this._displayType : "none";
+        this.elem.style.display = ($value == 1) ? this._displayType : "none";
 
     }
 
@@ -486,7 +486,7 @@ class Basic_UIComponent {
 
     set clickable($value) {
         this._clickable = $value;
-        this.contElement.style.pointerEvents = ($value == 1) ? "auto" : "none";
+        this.elem.style.pointerEvents = ($value == 1) ? "auto" : "none";
     }
 
     get opacity() {
@@ -495,7 +495,7 @@ class Basic_UIComponent {
 
     set opacity($value) {
         this._opacity = $value;
-        this.contElement.style.opacity = $value;
+        this.elem.style.opacity = $value;
     }
 
     get color() {
@@ -504,7 +504,7 @@ class Basic_UIComponent {
 
     set color($value) {
         this._backgroundColor = $value;
-        this.contElement.style.backgroundColor = $value;
+        this.elem.style.backgroundColor = $value;
     }
 
     get padding() {
@@ -548,10 +548,10 @@ class Basic_UIComponent {
             //throw new Error('padding değeri ya sayı olmalı ya da 1–4 elemanlı bir dizi olmalıdır.');
         }
 
-        this.contElement.style.paddingLeft   = paddingLeft  + 'px';
-        this.contElement.style.paddingTop    = paddingTop   + 'px';
-        this.contElement.style.paddingRight  = paddingRight + 'px';
-        this.contElement.style.paddingBottom = paddingBottom+ 'px';
+        this.elem.style.paddingLeft   = paddingLeft  + 'px';
+        this.elem.style.paddingTop    = paddingTop   + 'px';
+        this.elem.style.paddingRight  = paddingRight + 'px';
+        this.elem.style.paddingBottom = paddingBottom+ 'px';
     }
 
     // -- Genel özellikler SONU
@@ -564,7 +564,7 @@ class Basic_UIComponent {
 
     set border($value) {
         this._border = $value;
-        this.contElement.style.borderWidth = $value + "px";
+        this.elem.style.borderWidth = $value + "px";
     }
 
     get borderColor() {
@@ -573,7 +573,7 @@ class Basic_UIComponent {
 
     set borderColor($value) {
         this._borderColor = $value;
-        this.contElement.style.borderColor = $value;
+        this.elem.style.borderColor = $value;
     }
 
     get round() {
@@ -582,7 +582,7 @@ class Basic_UIComponent {
 
     set round($value) {
         this._round = $value;
-        this.contElement.style.borderRadius = $value + "px";
+        this.elem.style.borderRadius = $value + "px";
     }
 
     // -- Kenarlık SONU
@@ -595,7 +595,7 @@ class Basic_UIComponent {
 
     set fontSize($value) {
         this._fontSize = $value;
-        this.element.style.fontSize = $value + "px";
+        this.elem.style.fontSize = $value + "px";
     }
 
     // fontSize Alternatif kullanım.
@@ -605,7 +605,7 @@ class Basic_UIComponent {
 
     set textSize($value) {
         this._fontSize = $value;
-        this.element.style.fontSize = $value + "px";
+        this.elem.style.fontSize = $value + "px";
     }
     
     get textColor() {
@@ -614,7 +614,7 @@ class Basic_UIComponent {
 
     set textColor($value) {
         this._textColor = $value;
-        this.element.style.color = $value;
+        this.elem.style.color = $value;
     }
 
     get textAlign() {
@@ -623,17 +623,17 @@ class Basic_UIComponent {
 
     set textAlign($value) {
         this._textAlign = $value;
-        this.element.style.textAlign = $value;
+        this.elem.style.textAlign = $value;
     }
     
     // Metin özellikleri SONU
 
     get position() {
-        return (this.contElement.style.position) ? this.contElement.style.position : "absolute";
+        return (this.elem.style.position) ? this.elem.style.position : "absolute";
     }
 
     set position($value) {
-        this.contElement.style.position = $value;
+        this.elem.style.position = $value;
 
         if ($value == "relative") {
             this.left = 0;
@@ -664,20 +664,20 @@ class Basic_UIComponent {
         if (this._eventFuncList && this._eventFuncList.length) {
             for (let i = this._eventFuncList.length - 1; i >= 0; i--) {
                 const ev = this._eventFuncList[i];
-                ev.element.removeEventListener(ev.eventName, ev.eventFunc);
+                ev.elem.removeEventListener(ev.eventName, ev.eventFunc);
                 this._eventFuncList.pop();
             }
         }
 
         // 2. Eğer resizeDetection kaydı varsa, onu da kaldır
         if (resizeDetection && typeof resizeDetection.remove_onResize === "function") {
-            resizeDetection.remove_onResize(this.element, null); // null ile tüm fonksiyonları sil
+            resizeDetection.remove_onResize(this.elem, null); // null ile tüm fonksiyonları sil
         }
 
         // NOTE: Eğer page.onResize kullanılmış ise manuel kaldırılmalı.
 
         // 3. DOM'dan sil
-        this.contElement.remove();
+        this.elem.remove();
 
         // 4. Tüm özellikleri sil:
         /*
@@ -720,7 +720,7 @@ class Basic_UIComponent {
         eventDataItem.eventName = $eventName;
         eventDataItem.originalFunc = $func;
         eventDataItem.eventFunc = eventFunc;
-        eventDataItem.element = $element;
+        eventDataItem.elem = $element;
 
         this._eventFuncList.push(eventDataItem); // Nesne .remove() edilirken, hepsi temizlenir.
 
@@ -757,7 +757,7 @@ class Basic_UIComponent {
     // NEW: Olay ekleme: object.on("click", function);
     on($eventName, $func, $useCapture = false) {
 
-        const _elem = (this._type == "textbox") ? this.inputElement : this.element; // WHY: textbox için olayları input elementine bağla.
+        const _elem = (this._type == "textbox") ? this.inputElement : this.elem; // WHY: textbox için olayları input elementine bağla.
         this.clickable = 1; // WHY: Clickable bazen 0 da unutulabilir, otomatik 1 ver. Gerekirse kullanıcı 0 yapar.
         
         return this._addEventListener($eventName, $func, _elem, $useCapture);
@@ -783,7 +783,7 @@ class Basic_UIComponent {
     off($eventName, $func) {
 
         // Eğer ihityaç olursa, manuel olarak da, tek tek eventler silinebilir.
-        const _elem = (this._type == "textbox") ? this.inputElement : this.element;
+        const _elem = (this._type == "textbox") ? this.inputElement : this.elem;
         
         //_elem.removeEventListener($eventName, $func);
         this._removeEventListener($eventName, $func, _elem);
@@ -795,7 +795,7 @@ class Basic_UIComponent {
     }
 
     remove_onResize($func) {
-        resizeDetection.remove_onResize(this.element, $func);
+        resizeDetection.remove_onResize(this.elem, $func);
     }
 
     // Hareket
@@ -820,7 +820,7 @@ class Basic_UIComponent {
     setMotionNow($motionString) {
 
         this._motionString = $motionString;
-        this.contElement.style.transition = $motionString;
+        this.elem.style.transition = $motionString;
 
     }
 
@@ -840,19 +840,19 @@ class Basic_UIComponent {
     // Harekete, belli bir süre ara ver.
     dontMotion() {
 
-        this.contElement.style.transition = "none";
+        this.elem.style.transition = "none";
         const _that = this;
 
         if(this._dontMotionTimeout) clearTimeout(this._dontMotionTimeout);
         this._dontMotionTimeout = setTimeout(function(){
-            _that.contElement.style.transition = _that._motionString;
+            _that.elem.style.transition = _that._motionString;
         }, motionController.DONT_MOTION_TIME);
 
     }
 
     // Harekete arayı, süresi dolmadan iptal et.
     canMotionNow() {
-        this.contElement.style.transition = this._motionString;
+        this.elem.style.transition = this._motionString;
     }
 
 }
@@ -887,10 +887,12 @@ class MainBox {
         return this._element;
     }
 
+    /*
     get contElement() {
         return this._element;
     }
-    // NOTE: .elem, .element, .contElement all the same. You can delete contElement --> element
+    */
+    // NOTE: .elem, .elem, .elem all the same. You can delete contElement --> element
 
     get bodyElement() {
         return this._bodyElement;
@@ -902,7 +904,7 @@ class MainBox {
 
     set mainBox($value) {
         this._box = $value;
-        this._element = this._box.element;
+        this._element = this._box.elem;
     }
 
     get width() {
@@ -919,11 +921,11 @@ class MainBox {
 
     // .text alternatif kullanım:
     get html() {
-        return this._box.element.innerHTML;
+        return this._box.elem.innerHTML;
     }
 
     set html($value) {
-        this._box.element.innerHTML = $value;
+        this._box.elem.innerHTML = $value;
     }
 
     get zoom() {
@@ -1022,7 +1024,7 @@ class MainBox {
         if ($obj.containerBox != this) {
             $obj.containerBox = this;
             // this.box.clickable = 1;
-            this.element.appendChild($obj.contElement);
+            this.elem.appendChild($obj.elem);
         }
     }
 
@@ -1059,7 +1061,7 @@ class BBox extends Basic_UIComponent {
         this._element = divElement;
         this._containerBox = defaultContainerBox;
         if (defaultContainerBox != null) {
-            defaultContainerBox.element.appendChild(this._element);
+            defaultContainerBox.elem.appendChild(this._element);
         } else {
             println("basic.js: The library is not yet ready for use. Put your code in window.onload", "error");
         }
@@ -1067,7 +1069,7 @@ class BBox extends Basic_UIComponent {
         this.width = $width;
         this.height = $height;
 
-        if (defaultContainerBox.element.style.display == "flex") {
+        if (defaultContainerBox.elem.style.display == "flex") {
             this.position = "relative";
         }
 
@@ -1083,25 +1085,27 @@ class BBox extends Basic_UIComponent {
         return this._element;
     }
 
+    /*
     get contElement() {
         return this._element;
     }
+    */
 
     get text() {
-        return this.element.innerHTML;
+        return this.elem.innerHTML;
     }
 
     set text($value) {
-        this.element.innerHTML = $value;
+        this.elem.innerHTML = $value;
     }
 
     // .text alternatif kullanım:
     get html() {
-        return this.element.innerHTML;
+        return this.elem.innerHTML;
     }
 
     set html($value) {
-        this.element.innerHTML = $value;
+        this.elem.innerHTML = $value;
     }
 
     get clipContent() {
@@ -1111,47 +1115,47 @@ class BBox extends Basic_UIComponent {
     set clipContent($value) {
         this._clipContent = $value;
         if ($value) {
-            this.contElement.style.overflowX = "hidden";
-            this.contElement.style.overflowY = "hidden";
+            this.elem.style.overflowX = "hidden";
+            this.elem.style.overflowY = "hidden";
         } else {
-            this.contElement.style.overflowX = "visible";
-            this.contElement.style.overflowY = "visible";
+            this.elem.style.overflowX = "visible";
+            this.elem.style.overflowY = "visible";
         }
     }
     
     get scrollX() {
-        return (this.contElement.style.overflowX == "auto") ? 1 : 0;
+        return (this.elem.style.overflowX == "auto") ? 1 : 0;
     }
 
     get scrollY() {
-        return (this.contElement.style.overflowY == "auto") ? 1 : 0;
+        return (this.elem.style.overflowY == "auto") ? 1 : 0;
     }
 
     set scrollX($value) {
-        this.contElement.style.overflowX = "hidden";
+        this.elem.style.overflowX = "hidden";
 
         if ($value == 1) {
             this.clickable = 1;
-            this.contElement.style.overflowX = "auto";
+            this.elem.style.overflowX = "auto";
         }
     }
 
     set scrollY($value) {
-        this.contElement.style.overflowY = "hidden";
+        this.elem.style.overflowY = "hidden";
 
         if ($value == 1) {
             this.clickable = 1;
-            this.contElement.style.overflowY = "auto";
+            this.elem.style.overflowY = "auto";
         }
     }
 
     onClick($func) {
         this.clickable = 1;
-        this._addEventListener("click", $func, this.contElement);
+        this._addEventListener("click", $func, this.elem);
     }
 
     remove_onClick($func) {
-        this._removeEventListener("click", $func, this.contElement);
+        this._removeEventListener("click", $func, this.elem);
     }
 
     add($obj) {
@@ -1160,7 +1164,7 @@ class BBox extends Basic_UIComponent {
             $obj.containerBox = this;
             // İçine başka bir nesne eklendiğinde, artık basılabilir.
             //this.clickable = 1;
-            this.element.appendChild($obj.contElement);
+            this.elem.appendChild($obj.elem);
         //}
     }
 
@@ -1219,12 +1223,12 @@ class BButton extends Basic_UIComponent {
 
         this._element = buttonElement;
         this._containerBox = defaultContainerBox;
-        defaultContainerBox.element.appendChild(this._element);
+        defaultContainerBox.elem.appendChild(this._element);
 
         this.width = $width;
         this.height = $height;
 
-        if (defaultContainerBox.element.style.display == "flex") {
+        if (defaultContainerBox.elem.style.display == "flex") {
             this.position = "relative";
         }
 
@@ -1240,9 +1244,10 @@ class BButton extends Basic_UIComponent {
         return this._element;
     }
 
+    /*
     get contElement() {
         return this._element;
-    }
+    }*/
 
     get buttonElement() {
         return this._element;
@@ -1286,12 +1291,12 @@ class BButton extends Basic_UIComponent {
     }
 
     get spaceX() {
-        return parseInt(this.contElement.style.paddingLeft) || 0;
+        return parseInt(this.elem.style.paddingLeft) || 0;
     }
 
     set spaceX($value) {
-        this.contElement.style.paddingLeft = $value + "px";
-        this.contElement.style.paddingRight = $value + "px";
+        this.elem.style.paddingLeft = $value + "px";
+        this.elem.style.paddingRight = $value + "px";
     }
 
     onClick($func) {
@@ -1373,12 +1378,12 @@ class BTextBox extends Basic_UIComponent {
         mainElement.appendChild(this._element);
 
         this._containerBox = defaultContainerBox;
-        defaultContainerBox.element.appendChild(this._mainElement);
+        defaultContainerBox.elem.appendChild(this._mainElement);
 
         this.width = $width;
         this.height = $height;
 
-        if (defaultContainerBox.element.style.display == "flex") {
+        if (defaultContainerBox.elem.style.display == "flex") {
             this.position = "relative";
         }
 
@@ -1393,10 +1398,10 @@ class BTextBox extends Basic_UIComponent {
     get element() {
         return this._mainElement;
     }
-
+    /*
     get contElement() {
         return this._mainElement;
-    }
+    }*/
 
     get inputElement() {
         return this._element;
@@ -1594,12 +1599,12 @@ class BLabel extends Basic_UIComponent {
 
         this._element = divElement;
         this._containerBox = defaultContainerBox;
-        defaultContainerBox.element.appendChild(this._element);
+        defaultContainerBox.elem.appendChild(this._element);
 
         this.width = $width;
         this.height = $height;
 
-        if (defaultContainerBox.element.style.display == "flex") {
+        if (defaultContainerBox.elem.style.display == "flex") {
             this.position = "relative";
         }
 
@@ -1616,53 +1621,53 @@ class BLabel extends Basic_UIComponent {
     get element() {
         return this._element;
     }
-
+    /*
     get contElement() {
         return this._element;
-    }
+    }*/
 
     get text() {
-        return this.element.innerHTML;
+        return this.elem.innerHTML;
     }
 
     set text($value) {
-        this.element.innerHTML = $value;
+        this.elem.innerHTML = $value;
     }
 
     get space() {
-        return parseInt(this.contElement.style.padding) || 0;
+        return parseInt(this.elem.style.padding) || 0;
     }
 
     set space($value) {
-        this.contElement.style.padding = $value + "px";
+        this.elem.style.padding = $value + "px";
     }
 
     get spaceX() {
-        return parseInt(this.contElement.style.paddingLeft) || 0;
+        return parseInt(this.elem.style.paddingLeft) || 0;
     }
 
     set spaceX($value) {
-        this.contElement.style.paddingLeft = $value + "px";
-        this.contElement.style.paddingRight = $value + "px";
+        this.elem.style.paddingLeft = $value + "px";
+        this.elem.style.paddingRight = $value + "px";
     }
 
     get spaceY() {
-        return parseInt(this.contElement.style.paddingTop) || 0;
+        return parseInt(this.elem.style.paddingTop) || 0;
     }
 
     set spaceY($value) {
-        this.contElement.style.paddingTop = $value + "px";
-        this.contElement.style.paddingBottom = $value + "px";
+        this.elem.style.paddingTop = $value + "px";
+        this.elem.style.paddingBottom = $value + "px";
     }
 
     onClick($func) {
         this.clickable = 1;
-        this._addEventListener("click", $func, this.contElement);
+        this._addEventListener("click", $func, this.elem);
     }
 
     remove_onClick($func) {
         //this.clickable = 0;
-        this._removeEventListener("click", $func, this.contElement);
+        this._removeEventListener("click", $func, this.elem);
     }
 
     add($obj) {
@@ -1717,7 +1722,7 @@ class BImage extends Basic_UIComponent {
 
         this._element = imageElement;
         this._containerBox = defaultContainerBox;
-        defaultContainerBox.element.appendChild(this._element);
+        defaultContainerBox.elem.appendChild(this._element);
 
         super.width = $width;
         super.height = $height;
@@ -1747,7 +1752,7 @@ class BImage extends Basic_UIComponent {
             
         //}
 
-        if (defaultContainerBox.element.style.display == "flex") {
+        if (defaultContainerBox.elem.style.display == "flex") {
             this.position = "relative";
         }
 
@@ -1762,10 +1767,10 @@ class BImage extends Basic_UIComponent {
     get element() {
         return this._element;
     }
-
+    /*
     get contElement() {
         return this._element;
-    }
+    }*/
 
     get imageElement() {
         return this._element;
@@ -1811,7 +1816,7 @@ class BImage extends Basic_UIComponent {
 
     get space() {
         return this._space;
-        // return parseInt(this.contElement.style.padding) || 0;
+        // return parseInt(this.elem.style.padding) || 0;
     }
     
     set space($value) {
@@ -1825,25 +1830,25 @@ class BImage extends Basic_UIComponent {
         }
 
         this._space = $value;
-        //this.contElement.style.padding = String($value + "%");
+        //this.elem.style.padding = String($value + "%");
         const spaceX = parseInt((this.width / 100) * $value);
         const spaceY = parseInt((this.height / 100) * $value);
 
-        this.contElement.style.paddingLeft = spaceX + "px";
-        this.contElement.style.paddingRight = spaceX + "px";
-        this.contElement.style.paddingTop = spaceY + "px";
-        this.contElement.style.paddingBottom = spaceY + "px";
+        this.elem.style.paddingLeft = spaceX + "px";
+        this.elem.style.paddingRight = spaceX + "px";
+        this.elem.style.paddingTop = spaceY + "px";
+        this.elem.style.paddingBottom = spaceY + "px";
 
     }
 
     onClick($func) {
         this.clickable = 1;
-        this._addEventListener("click", $func, this.contElement);
+        this._addEventListener("click", $func, this.elem);
     }
 
     remove_onClick($func) {
         //this.clickable = 0;
-        this._removeEventListener("click", $func, this.contElement);
+        this._removeEventListener("click", $func, this.elem);
     }
 
     onLoad($func) {
@@ -1913,69 +1918,69 @@ class BSound {
     get element() {
         return this._element;
     }
-
+    /*
     get contElement() {
         return this._element;
-    }
+    }*/
 
     get soundElement() {
         return this._element;
     }
 
     get time() {
-        return this.element.time;
+        return this.elem.time;
     }
 
     get timeLeft() {
-        return this.element.timeLeft;
+        return this.elem.timeLeft;
     }
 
     get currentTime() {
-        return this.element.currentTime;
+        return this.elem.currentTime;
     }
 
     get paused() {
-        return this.element.paused;
+        return this.elem.paused;
     }
 
     get playing() {
-        return !this.element.paused;
+        return !this.elem.paused;
     }
 
     get loop() {
-        return (this.element.getAttribute("loop") == "loop") ? 1 : 0;
+        return (this.elem.getAttribute("loop") == "loop") ? 1 : 0;
     }
 
     set loop($value) {
         if ($value == 1) {
-            this.element.setAttribute("loop", "loop");
+            this.elem.setAttribute("loop", "loop");
         } else {
-            this.element.setAttribute("loop", "");
+            this.elem.setAttribute("loop", "");
         }
     }
 
     play() {
         if (this.paused) {
-            this.element.play();
+            this.elem.play();
         }
     }
 
     pause($value) {
         if (!this.paused) {
-            this.element.pause();
+            this.elem.pause();
         }
     }
 
     stop() {
         if (!this.paused) {
-            this.element.pause();
-            this.element.currentTime = 0;
+            this.elem.pause();
+            this.elem.currentTime = 0;
         }
     }
     
     onLoad($func) {
         let _that = this;
-        this.element.addEventListener("canplaythrough", function () {
+        this.elem.addEventListener("canplaythrough", function () {
             $func(_that);
         });
     }
@@ -1988,13 +1993,13 @@ class BSound {
             fileType = "audio/mpeg";
         }
 
-        this.element.children[0].setAttribute("src", $path);
-        this.element.children[0].setAttribute("type", fileType);
+        this.elem.children[0].setAttribute("src", $path);
+        this.elem.children[0].setAttribute("type", fileType);
 
     }
 
     remove() {
-        this.contElement.remove();
+        this.elem.remove();
     }
 
 };
@@ -2022,65 +2027,28 @@ const calcSpace = function(elem, dir) {
 };
 
 // Set styles with style object.
-const setProparties = function ($this, $defaultParams = [], $params = [], $props = []) {
-    /*
-    // Tüm özellikleri bu değişkende topla.
-    let allProps = {};
+const setProparties = function ($this, $defaultParams, $params, $props) {
 
-    // defaultPrams
-    for (let parameterName in $defaultParams) {
-        allProps[parameterName] = $defaultParams[parameterName];
+    // Tüm özellikleri bu değişkende topla.
+    const _params = {};
+
+    if ($props) {
+        mergeIntoIfMissing(_params, $props);
     }
-    // params
-    for (let parameterName in $params) {
-        allProps[parameterName] = $params[parameterName];
+    if ($params) {
+        mergeIntoIfMissing(_params, $params);
     }
-    // props
-    for (let propName in $props) {
-        allProps[propName] = $props[propName];
+    if ($defaultParams) {
+        mergeIntoIfMissing(_params, $defaultParams);
     }
 
     // Tüm özellikleri tek seferde nesneye uygula.
-    for (let propName in allProps) {
-        $this[propName] = allProps[propName];
-    }
-    */
-
-    // Tüm özellikleri bu değişkende topla.
-    let allProps = {};
-
-    /*
-    const mergeShallow = function (target, source) {
-        for (let key in source) {
-            if (
-                typeof source[key] === 'object' &&
-                source[key] !== null &&
-                !Array.isArray(source[key]) &&
-                typeof target[key] === 'object' &&
-                target[key] !== null &&
-                !Array.isArray(target[key])
-            ) {
-                // Sadece bir seviye derine inerek birleştir
-                target[key] = { ...target[key], ...source[key] };
-            } else {
-                target[key] = source[key];
-            }
-        }
-    };
-    */
-
-    //mergeInto();
-
-    mergeInto(allProps, $defaultParams);
-    mergeInto(allProps, $params);
-    mergeInto(allProps, $props);
-
-    // Tüm özellikleri tek seferde nesneye uygula.
-    for (let propName in allProps) {
-        $this[propName] = allProps[propName];
+    for (let propName in _params) {
+        $this[propName] = _params[propName];
     }
 
 };
+
 
 // Centering one object to box.
 const moveToCenter = function ($this, $position) {
@@ -2349,9 +2317,9 @@ window.makeBasicObject = function($newObject) {
 };
 //window.makeBasicObject = basic.makeBasicObject;
 
+window.mergeIntoIfMissing = function (target, source, depth = 1, maxDepth = 4) {
 
-window.mergeIntoIfMissing = function (target, source, depth = 1) {
-    if (depth > 3) return; // Maksimum derinlik sınırı
+    if (depth > maxDepth) return; // Maksimum derinlik sınırı
 
     for (let key in source) {
         const sourceVal = source[key];
@@ -2362,6 +2330,17 @@ window.mergeIntoIfMissing = function (target, source, depth = 1) {
             sourceVal !== null &&
             !Array.isArray(sourceVal)
         ) {
+            // Eğer class instance ise → doğrudan referansla ata
+            const isPlainObject = Object.getPrototypeOf(sourceVal)?.constructor?.name === 'Object';
+
+            if (!isPlainObject) {
+                if (!(key in target)) {
+                    target[key] = sourceVal; // referansla ekle
+                }
+                continue;
+            }
+
+            // Sıradan obje ise → katmanlı birleştir
             if (
                 typeof targetVal !== 'object' ||
                 targetVal === null ||
@@ -2370,47 +2349,19 @@ window.mergeIntoIfMissing = function (target, source, depth = 1) {
                 target[key] = {};
             }
 
-            // Rekürsif olarak devam et
-            window.mergeIntoIfMissing(target[key], sourceVal, depth + 1);
+            window.mergeIntoIfMissing(target[key], sourceVal, depth + 1, maxDepth);
+
         } else {
             if (!(key in target)) {
                 target[key] = sourceVal;
             }
         }
     }
+
 };
-
-
-/*
-window.mergeIntoIfMissing = function (target, source) {
-    for (let key in source) {
-        const sourceVal = source[key];
-        const targetVal = target[key];
-
-        if (
-            typeof sourceVal === 'object' &&
-            sourceVal !== null &&
-            !Array.isArray(sourceVal) &&
-            typeof targetVal === 'object' &&
-            targetVal !== null &&
-            !Array.isArray(targetVal)
-        ) {
-            // Yalnızca eksik olan alt alanları ekleyerek birleştir
-            for (let subKey in sourceVal) {
-                if (!(subKey in targetVal)) {
-                    targetVal[subKey] = sourceVal[subKey];
-                }
-            }
-        } else {
-            if (!(key in target)) {
-                target[key] = sourceVal;
-            }
-        }
-    }
-};
-*/
 
 // Sadece 1 kat derine inerek objeyi birleştirir.
+/*
 window.mergeInto = function (target, source) {
 
         for (let key in source) {
@@ -2430,7 +2381,9 @@ window.mergeInto = function (target, source) {
         }       
 
 };
+*/
 
+/*
 window.mergeObject = function ($target, $source) {
 
     let result = {};
@@ -2459,16 +2412,17 @@ window.mergeObject = function ($target, $source) {
     return result;
 
 };
+*/
 
 resizeDetection.onResize = function($object, $func) {
 
     const object = {};
     object.obj = $object;
-    object.elem = $object.element;
+    object.elem = $object.elem;
     object.func = $func;
 
     resizeDetection.objectAndFunctionList.push(object);
-    resizeDetection.whenDetected.observe($object.element);
+    resizeDetection.whenDetected.observe($object.elem);
 
 };
 
@@ -2693,7 +2647,7 @@ window.startFlexBox = function(p1 = {}, p2, p3, p4, p5) {
         props.gap = checkGap(props.gap);
     }
 
-    that.element.style.display = "flex";
+    that.elem.style.display = "flex";
     box.props(defaults, defaultFlexStyles, props);
 
     /*
@@ -2712,7 +2666,7 @@ window.startFlexBox = function(p1 = {}, p2, p3, p4, p5) {
     //that.color = "transparent";
 
     for (let parameterName in defaultFlexStyles) {
-        box.element.style[parameterName] = box[parameterName];
+        box.elem.style[parameterName] = box[parameterName];
     }
 
     // .flow: getter, setter
@@ -2824,9 +2778,7 @@ window.endBox = function() {
     }
 
 };
-//basic.endFlexBox = basic.endBox;
-//window.endBox = basic.endBox;
-//window.endFlexBox = basic.endBox;
+
 window.endFlexBox = window.endBox;
 window.endAutoLayout = window.endBox;
 window.endGroup = window.endBox;
@@ -2851,9 +2803,8 @@ window.restoreThatFromSaved = function() {
 };
 //window.restoreThatFromSaved = basic.restoreThatFromSaved;
 
-// Text, Input, Icon, Box, Button
-// Lbl, Inp, Img, Box, Btn
-// *** Label, Input, Icon, Box, Button
+// Objects: Label, Input, Icon, Box, Button
+// Shorts: lbl, inp, ico, box, btn
 
 window.Label = function(...args) {
 
@@ -2868,41 +2819,6 @@ window.Label = function(...args) {
   return label;
 
 };
-
-/*
-window.Label = function(p1, p2, p3, p4, p5) {
-
-    let props = {};
-    let obj = null;
-
-    if (typeof p1 == "object") {
-        obj = createLabel();
-        props = p1;
-
-    } else if (typeof p2 == "object") {
-        obj = createLabel(p1);
-        props = p2;
-
-    } else if (typeof p3 == "object") {
-        obj = createLabel(p1, p2);
-        props = p3;
-        
-    } else if (typeof p4 == "object") {
-        obj = createLabel(p1, p2, p3);
-        props = p4;
-        
-    } else if (typeof p5 == "object") {
-        obj = createLabel(p1, p2, p3, p4);
-        props = p5;
-    } else {
-        obj = createLabel(p1, p2, p3, p4);
-    }
-
-    obj.props(props);
-    return obj;
-
-};
-*/
 
 window.Input = function(...args) {
 
@@ -2962,42 +2878,27 @@ window.Button = function(...args) {
 
 window.startObject = function($defaults, $params) {
 
-    /*
-    if (any) {
-        println("basic.js: startObject(): Use .props(defaults, props) for giving parameters.", "warn");
-    }
-    */
+    const _params = {};
 
-    let allProps = {
-        color: "transparent",
-    };
-    if ($defaults) {
-        mergeInto(allProps, $defaults);
-    }
     if ($params) {
-        mergeInto(allProps, $params);
+        mergeIntoIfMissing(_params, $params);
+    }
+    if ($defaults) {
+        mergeIntoIfMissing(_params, $defaults);
     }
 
-    saveCurrentThat();
-    return startBox(allProps);
-
+    // Defaults values
+    if (!_params.color) {
+        _params.color = "transparent";
+    }
     /*
-    let props = {};
-    if (args.length && typeof args[args.length - 1] === "object") {
-        props = args.pop();
-    }
-
-    const defaults = {
-        color: "transparent", // WHY: Bir UI nesnesinin başlangıç arkaplanının "transparent" olması daha uygun.
-    }
+    mergeIntoIfMissing(_params, {
+        color: "transparent",
+    });
+    */
 
     saveCurrentThat();
-
-    const box =  startBox(...args);
-    box.props(defaults, props);
-
-    return box;
-    */
+    return startBox(_params);
 
 };
 
@@ -3010,9 +2911,17 @@ window.endObject = function(box) {
 
 };
 
-window.startExtendedObject = function(uiComponent, defaults = {}, params = {}) {
+window.startExtendedObject = function(uiComponent, defaults, params) {
 
-    const _box = uiComponent(mergeObject(defaults, params));
+    const _params = {};
+    if (params) {
+        mergeIntoIfMissing(_params, params);
+    }
+    if (defaults) {
+        mergeIntoIfMissing(_params, defaults);
+    }
+
+    const _box = uiComponent(_params);
     saveCurrentThat();
 
     return _box;

@@ -11,7 +11,7 @@
         <!-- <link rel="preload" href="image.png" as="image"> -->
         <link rel="preload" href="basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
         <link rel="stylesheet" type="text/css" href="basic/basic.min.css">
-        <script src="basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="basic/basic.js" type="text/javascript" charset="utf-8"></script>
         <!--<script src="basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>-->
 
         <script src="_component-template.js" type="text/javascript" charset="utf-8"></script>
@@ -38,8 +38,8 @@
                 comp1 = CompName({
                     key: "1",
                     badgetText: "7",
+                    iconFile: "assets/categories/cappuccino.png",
                     iconStyle: {
-                        file: "assets/categories/cappuccino.png",
                         //invertColor: 1,
                     },
                     labelText: "Cappuccino",
@@ -47,7 +47,7 @@
                     //invertColor: 1,
                 });
                 that.onClick = function(self) {
-                    println("Clicked Comp " + self.key);
+                    println(`Clicked Comp ${self.key}`);
                 };
                 //compList.push(that);
 
@@ -55,14 +55,12 @@
                 comp2 = CompName({
                     key: "2",
                     badgetText: "11",
-                    iconStyle: {
-                        file: "assets/categories/milkshake.png",
-                    },
+                    iconFile: "assets/categories/milkshake.png",
                     labelText: "Milkshake",
                     descText: "Cold",
                 });
                 that.onClick = function(self) {
-                    println("Clicked Comp " + self.key);
+                    println(`Clicked Comp ${self.key}`);
                 };
                 //compList.push(that);
 
@@ -70,14 +68,12 @@
                 comp3 = CompName({
                     key: "3",
                     badgetText: "21",
-                    iconStyle: {
-                        file: "assets/categories/orange-juice.png",
-                    },
+                    iconFile: "assets/categories/orange-juice.png",
                     labelText: "Orange Juice",
                     descText: "Cold",
                 });
                 that.onClick = function(self) {
-                    println("Clicked Comp " + self.key);
+                    println(`Clicked Comp ${self.key}`);
                 };
                 //compList.push(that);
 

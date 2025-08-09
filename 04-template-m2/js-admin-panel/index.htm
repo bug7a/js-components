@@ -11,8 +11,8 @@
         <!-- <link rel="preload" href="image.png" as="image"> -->
         <link rel="preload" href="../../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
         <link rel="stylesheet" type="text/css" href="../../basic/basic.min.css">
-        <script src="../../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
 
         <script src="common/top-bar.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../comp-m2/left-menu.js" type="text/javascript" charset="utf-8"></script>
@@ -23,10 +23,10 @@
         <!-- ALL COMPONENTS IN ONE FILE -->
         <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
 
-        <script>
+        <script type="module">
         
         // *** VARIABLES:   
-        let topBar, mainMenu;
+        let topBar, leftMenu;
         
         // First running function.
         window.onload = function() {
@@ -83,25 +83,25 @@
             ];
 
             // Create main menu
-            mainMenu = LeftMenu({
+            leftMenu = LeftMenu({
                 items: menuItems,
                 onItemClick: function(item) {
                     println("Clicked Key: " + item.key);
                 }
             });
-
             
             // Add random items to top
-            /*
             for(var i = 0; i < 30; i++) {
-                mainMenu.addItemToTop({ key: "aaa" + i, type: "button", text: "Settings" + i, icon: "assets/data-table.png" });
+                leftMenu.addItemToTop({ key: "aaa" + i, type: "button", text: "Settings" + i, icon: "assets/data-table.png" });
             }
-            */
 
             // Add item to bottom
-            mainMenu.addItemToBottom({ key: "settings", type: "button", text: "Settings", icon: "assets/setting.png" });
+            leftMenu.addItemToBottom({ key: "settings", type: "button", text: "Settings", icon: "assets/setting.png" });
             
-            mainMenu.setSelectedItem("home");
+            // Select home
+            leftMenu.setSelectedItem("home");
+
+
 
             // Content 2
             startBox(0, 0, "100%", "100%", {

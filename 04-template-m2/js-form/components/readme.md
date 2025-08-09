@@ -1,0 +1,1 @@
+Copy-paste component js files from ../../comp-m2/ folder.

@@ -34,8 +34,8 @@ const CompNameDefaults = {
         border: 1,
         borderColor: Black(0.8),
     },
+    iconFile: "assets/icons/alert-black.png", // WHY: Not in the iconStyle, because this is a frequently used parameter.
     iconStyle: {
-        file: "assets/icons/alert-black.png",
         color: White(0),
         border: 0,
         invertColor: 0,
@@ -88,10 +88,10 @@ const CompName = function(params = {}) {
     box.publicFunc = function() {};
 
     box.setIconFile = function(file) {
-        box.iconStyle.file = file;
+        box.iconFile = file;
         box.icon.load(file);
     }
-    // USAGE: get: componentName.iconStyle.file, set: componentName.setIconFile("8")
+    // USAGE: get: componentName.iconFile, set: componentName.setIconFile("8")
 
     box.setBadgetText = function(text) {
 
@@ -137,7 +137,12 @@ const CompName = function(params = {}) {
                 //box.background.border = 3;
                 break;
 
+            case "selected":
+                
+                break;
+
             case "disabled":
+
                 break;
 
         }
@@ -210,7 +215,7 @@ const CompName = function(params = {}) {
                 border: box.iconStyle.border,
                 color: box.iconStyle.color,
             });
-            that.load(box.iconStyle.file);
+            that.load(box.iconFile);
             if(box.iconStyle.invertColor == 1) that.elem.style.filter = "invert(100%)";
 
             // GROUP: label, description

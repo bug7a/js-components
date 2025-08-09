@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        
+        <title>Contact Form</title>
+        
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <!-- LIBRARY FILES -->
+        <!-- <link rel="preload" href="image.png" as="image"> -->
+        <link rel="preload" href="../../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="preload" href="../../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../../basic/basic.min.css">
+        <script src="../../basic/basic.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8" defer></script>
+
+        <script src="../../comp-m2/tooltip.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m2/input-b.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m2/email-input-b.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m2/phone-input-b.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m2/textarea-b.min.js" type="text/javascript" charset="utf-8" defer></script>
+
+        <script src="../../comp-m2/waiting.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m2/form.min.js" type="text/javascript" charset="utf-8" defer></script>
+
+        <!-- ALL COMPONENTS IN ONE FILE -->
+        <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
+
+        <script type="module">
+
+        // This example will post data to your SUPABASE table. (https://supabase.com/)
+        // or you can write your custom service on your server.
+
+        // *** CONSTANTS:
+        const SUPABASE_PROJECT_URL = "https://xhzzgxhjyoqcsftamtyz.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhoenpneGhqeW9xY3NmdGFtdHl6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUzMTg2MDAsImV4cCI6MjA2MDg5NDYwMH0.XptujcYMNgl9XIzIQ2_CUig9JzkYOCKONfYAmMPd_wc";
+        const FORM_TITLE = "Get in Touch";
+        const FORM_DESCRIPTION = "Feel free to share any questions, suggestions, or feedback with us. Fill out the form and we’ll get back to you as soon as possible.";
+
+        // *** VARIABLES:
+        let background, form, waiting;
+        let firstNameInput, lastNameInput, emailInput, phoneInput, subjectInput, messageTextarea;
+
+        // Load supabase client on load:
+        import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+        const supabase = createClient(SUPABASE_PROJECT_URL, SUPABASE_ANON_KEY);
+
+        // First running function.
+        window.onload = function() {
+
+            page.color = "white";
+
+            // BOX: Background 
+            /*
+            background = Box(0, 0, "100%", "100%", { round: 4, border: 0, });
+            that.elem.style.background = "linear-gradient(to bottom, white, lightgray)";
+            */
+
+            // FORM:
+            form = Form({
+                minWidth: 700,
+                maxWidth: 700,
+                buttonColor:  "#65A293",
+                buttonText: "SEND",
+                showDetailWarning: 1,
+                missingEntryText: "{{count}} missing entry",
+                missingEntriesText: "{{count}} missing entries",
+                warningText: "<b>{{name}}</b> can't be empty",
+                errorText: "<b>{{name}}</b> is not valid",
+                minimalButton: 0,
+                doubleInputAlwaysHorizontal: 0,
+                onSendClick: function(json) {
+
+                    waiting.show();
+
+                    sendFormToSupabase();
+                    // NOTE: To create a table on supabase (use: contact-form-table.sql)
+
+                    //sendFormToCustomService(json);
+
+                },
+                onEdit: function(input) {
+                    console.log(input.titleText);
+                },
+            });
+
+            // ICON: Logo
+            /*
+            Icon({
+                width: 80,
+                height: 80,
+            });
+            that.load("assets/logo.png");
+            form.addTitle(that);
+            */
+
+            // LABEL: Title
+            Label({
+                text: FORM_TITLE,
+                textColor: "#373836",
+                fontSize: 26,
+            });
+            that.elem.style.fontFamily = "opensans-bold";
+            form.addTitle(that);
+
+            // LABEL: Descriptiona
+            if (FORM_DESCRIPTION != "") {
+                Label({
+                    text: FORM_DESCRIPTION,
+                    fontSize: 16,
+                    textColor: "#999999",
+                });
+                that.elem.style.fontStyle = "italic";
+                form.addTitle(that);
+            }
+
+            // Title alignment:
+            //form.titleGroup.align = "center top";
+
+             // Common input params:
+            const inputStyle = {
+                width: "100%",
+                /*
+                backgroundColor: "white",
+                selectedBackgroundColor: "#F3E7C2", // "#F1E2C4", "#F4FAFF",
+                lineColor: "transparent",
+                selectedLineColor: "#A5513A", // "#F1E2C4", "#588ABE",
+                */
+            };
+
+            // INPUT: First Name
+            firstNameInput = InputB({
+                key: "1",
+                ...inputStyle,
+                isRequired: 1, // 1
+                titleText: "FIRST NAME",
+                placeholder: "Jack",
+                leftPadding: 20,
+            });
+            styleInput(that);
+
+            // INPUT: Last Name
+            lastNameInput = InputB({
+                key: "2",
+                ...inputStyle,
+                isRequired: 0,
+                titleText: "LAST NAME",
+                placeholder: "Brown",
+                leftPadding: 20,
+            });
+            styleInput(that);
+            form.addDoubleInput(firstNameInput, lastNameInput);
+
+            // INPUT: Email
+            emailInput = EmailInputB({
+                key: "3",
+                ...inputStyle,
+                isRequired: 1, // 1
+                titleText: "YOUR EMAIL",
+                placeholder: "example@site.com",
+                warningText: "Invalid email format",
+                warningColor: "#E5885E", // "#F1BF3C"
+                maxChar: 35,
+            });
+            styleInput(that);
+            form.addInput(emailInput);
+            //box.inputList.push(that);
+
+            // INPUT: Phone        
+            phoneInput = PhoneInputB({
+                key: "4",
+                ...inputStyle,
+                isRequired: 0,
+                titleText: "PHONE NUMBER",
+                placeholder: "(auto)",
+                warningText: "Invalid phone number format",
+                warningColor: "#E5885E", // "#F1BF3C"
+                countryCode: "+90",
+                phoneMask: " (___) ___-____",
+                unitText: "TR",
+                //animatedWarningBall: 0,
+            });
+            styleInput(that);
+            form.addInput(phoneInput);
+
+            // INPUT: Subject
+            subjectInput = InputB({
+                key: "5",
+                ...inputStyle,
+                titleText: "SUBJECT",
+                placeholder: "What's your message about?",
+                descriptionText: "",
+                isRequired: 0,
+            });
+            styleInput(that);
+            form.addInput(subjectInput);
+
+            // INPUT: Textarea
+            messageTextarea = TextareaB({
+                key: "6",
+                ...inputStyle,
+                isRequired: 1, // 1
+                titleText: "MESSAGE",
+                placeholder: "How can we help you?",
+                minCharCount: 80, // 80, 0
+                showCount: 1, // 1, 0
+                lengthText: "length: ",
+                warningText: "The entered text must be longer than 80",
+                warningColor: "#E5885E", // "#F1BF3C"
+                maxChar: 255,
+                height: 170, // 170 (4line)
+                rightPadding: 5,
+                unitStyle: {
+                    padding: [12, 4],
+                    color: "#373836EE",
+                    textColor: "white",
+                },
+            });
+            styleInput(that);
+            form.addInput(messageTextarea);
+
+            // WAITING: Create object 1 time.
+            waiting = Waiting({
+                animated: 1,
+                waitingIcon: "assets/mail.png",
+                coverBackgroundColor: "rgba(0, 0, 0, 0.85)",
+                //label: "Data Sending...<br><span style='font-size:16px'>Please a litle bit.</span>",
+            });
+            waiting.icon.elem.style.filter = "invert(100%)";
+            //waiting.icon.color = "white";
+            //waiting.icon.round = 4;
+            //waiting.icon.border = 0;
+
+        };
+
+        const sendFormToSupabase = async function() {
+
+            // Load supabase client on send:
+            //const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+            //const supabase = createClient(SUPABASE_PROJECT_URL, SUPABASE_ANON_KEY);
+
+            const { data, error } = await supabase
+            .from('contactTable')
+            .insert([
+                { 
+                    first_name: firstNameInput.getInputValue(), 
+                    last_name: lastNameInput.getInputValue(), 
+                    email: emailInput.getInputValue(), 
+                    phone: phoneInput.getInputValue(), 
+                    subject: subjectInput.getInputValue(), 
+                    message: messageTextarea.getInputValue() 
+                },
+            ]);
+
+            waiting.hide();
+
+            if (error) {
+
+                form.showMessage({
+                    iconColor: "indianred",
+                    iconFile: "assets/error.png",
+                    messageText: "Data could not be sent.",
+                    buttonText: "CLOSE",
+                    backgroundColor: "rgba(255,255,255,0.85)",
+                    onClose: function() {},
+                });
+                //console.error("Error: ", error.message);
+
+            } else {
+
+                form.showMessage({
+                    iconColor: "#3C8553",
+                    iconFile: "assets/success.png",
+                    messageText: "Data sent successfully.",
+                    buttonText: "OKAY",
+                    backgroundColor: "rgba(255,255,255,0.85)",
+                    onClose: function() {
+
+                        // Clean the form.
+                        firstNameInput.setInputValue(""); 
+                        lastNameInput.setInputValue(""); 
+                        emailInput.setInputValue(""); 
+                        phoneInput.setInputValue("");
+                        subjectInput.setInputValue("");
+                        messageTextarea.setInputValue("");
+
+                        form.refresh();
+
+                    },
+                });
+
+            }
+
+        };
+
+        const sendFormToCustomService = function(json) {
+
+            form.postJSON("https://service_url", json, function (err, response) {
+                if (err) {
+                    // Error
+                } else {
+                    // Success
+                }
+            });
+
+        };
+
+        // Style
+        const styleInput = function(obj) {
+            /*
+            //obj.background.setMotion("background-color 0.2s");
+            obj.background.round = 4;
+            obj.background.border = 1;
+            obj.background.borderColor = "rgba(0,0,0,0.2)";
+            if (obj.type != "textarea") {
+                // Onlt for textarea
+            } else {
+                //obj.inputGroup.gap = 4;
+                //obj.input.color = "whitesmoke";
+                //obj.input.border = 1;
+                //obj.input.borderColor = "lightgray";
+                //obj.input.inputElement.style.padding = "0px 6px";
+                //obj.input.inputElement.style.marginLeft = "-6px";
+            }
+            */
+        };
+
+        </script>
+
+    </head>
+    <body>
+        
+        <!-- HTML content -->
+        
+    </body>
+</html>
