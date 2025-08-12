@@ -277,6 +277,7 @@ const PhoneInputB = function(params = {}) {
                 // WHY: Backspace e bastığında da, güncellesin.
                 box.checkIfInputIsRequiredAndEmpty();
                 box.showWarningIfNotValid(box.isValid());
+                box.onEdit(); // WHY: Silme işleminde edit tetiklenmeli.
             }
         });
 

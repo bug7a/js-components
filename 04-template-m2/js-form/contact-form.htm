@@ -72,8 +72,6 @@
                 doubleInputAlwaysHorizontal: 0,
                 onSendClick: function(json) {
 
-                    waiting.show();
-
                     sendFormToSupabase();
                     // NOTE: To create a table on supabase (use: contact-form-table.sql)
 
@@ -235,6 +233,8 @@
         };
 
         const sendFormToSupabase = async function() {
+
+            waiting.show();
 
             // Load supabase client on send:
             //const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');

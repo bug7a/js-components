@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Login</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- LIBRARY FILES -->
+        <link rel="preload" href="../../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="preload" href="../../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../../basic/basic.min.css">
+        <script src="../../basic/basic.min.js" charset="utf-8" defer></script>
+        <script src="../../basic/scroll-bar.min.js" charset="utf-8" defer></script>
+
+        
+        <script src="../../comp-m2/tooltip.min.js" charset="utf-8" defer></script>
+        <script src="../../comp-m2/input-b.min.js" charset="utf-8" defer></script>
+        <script src="../../comp-m2/email-input-b.min.js" charset="utf-8" defer></script>
+        <script src="../../comp-m2/password-input-b.min.js" charset="utf-8" defer></script>
+        <script src="../../comp-m2/waiting.min.js" charset="utf-8" defer></script>
+        <script src="../../comp-m2/text-tabs.js" type="text/javascript" charset="utf-8" defer></script>
+
+        <script type="module">
+        // Supabase constants
+        const SUPABASE_PROJECT_URL = "https://xhzzgxhjyoqcsftamtyz.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhoenpneGhqeW9xY3NmdGFtdHl6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUzMTg2MDAsImV4cCI6MjA2MDg5NDYwMH0.XptujcYMNgl9XIzIQ2_CUig9JzkYOCKONfYAmMPd_wc";
+
+        // UI refs
+        let box, tabSelectedBox, userData;
+        let signupEmail, signupPassword, signupPassword2, signupBtn;
+
+        const WIDTH = 420;
+
+        window.onload = function() {
+
+            //page.bodyElement.style.filter = "invert(100%)";
+
+            page.color = "white";
+
+            box = Box(0, 0, "100%", "100%");
+            that.color = "white";
+
+            // Waiting
+            box.waiting = Waiting({ animated: 1, coverBackgroundColor: "rgba(0,0,0,0.6)" });
+            box.waiting.icon.elem.style.filter = "invert(100%)";
+
+            showIfLoginNeeded(box);
+
+        };
+
+        const showIfLoginNeeded = async function(box) {
+
+            box.waiting.show();
+
+            userData = await checkIfLoggedIn();
+            if (userData) {
+                console.log("giriş yapıldı");
+                box.waiting.hide();
+            } else {
+                console.log("giriş ihtiyaç var");
+                openLoginView(box);
+                box.waiting.hide();
+            }
+            
+        }
+
+        const openLoginView = function(box) {
+
+            // Page container
+            box.container = AutoLayout({
+                flow: "vertical",
+                align: "center top",
+                width: "100%",
+                height: "100%",
+                padding: [30, 50],
+                gap: 40,
+            });
+            box.add(that);
+
+                // Title
+                box.title = Label({
+                    text: "My Panel v25.08.11", 
+                    left: 20,
+                    bottom: 20,
+                    fontSize: 14, 
+                    textColor: "gray", 
+                    position: "absolute", 
+                });
+                //that.elem.style.fontFamily = "opensans-bold";
+
+                // Logo
+                /*
+                Icon({
+                    width: 90,
+                    height: 90,
+                    round: 13,
+                });
+                that.load("assets/logo2.png");
+                box.container.add(that);
+                */
+
+                // Tab Bar
+                box.tabBar = TextTabs({
+                    key: "0",
+                    selectedIndex: 0,
+                    tabList: ["LOGIN", "SIGN UP"],
+                    invertColor: 0,
+                    backgroundStyle: {
+                        colorBottom: "whitesmoke",
+                        colorTop: "#DBDDDC",
+                        round: 8,
+                        border: 0,
+                        borderColor: Black(0.2),
+                    },
+                    labelStyle: {
+                        fontSize: 14, 
+                        textColor: "#373836",
+                        padding: [12, 4],
+                        round: 0,
+                        color: "transparent",
+                    },
+                    selectedLabelStyle: {
+                        color: "white",
+                        round: 6,
+                        border: 0,
+                        borderColor: Black(0.2),
+                    },
+                });
+                that.onClick = function(self) {
+                    setActiveTab(self.index);
+                    println(`Clicked Tab ${self.index}`);
+                };
+
+                // Views wrapper
+                box.contentContainer = startBox({
+                    width: WIDTH, 
+                    height: "auto", 
+                    color: "transparent", 
+                    clipContent: 0,
+                });
+
+                    box.viewGroup = HGroup({
+                        align: "left top",
+                        height: "auto",
+                        //position: "relative",
+                        color: "transparent",
+                        width: WIDTH * 2,
+                    });
+                    box.viewGroup.setMotion("left 0.2s");
+
+                        // LOGIN VIEW
+                        box.loginView = AutoLayout({ 
+                            flow: "vertical", 
+                            align: "left top", 
+                            gap: 10, 
+                            height: "auto", 
+                            width: WIDTH, 
+                            color:"transparent",
+                            opacity: 0,
+                        });
+                        that.setMotion("opacity 0.2s");
+
+                            const common = { width: "100%", leftPadding: 16, rightPadding: 16, lineColor: "transparent" };
+                            
+                            box.loginEmail = EmailInputB({
+                                ...common,
+                                titleText: "EMAIL",
+                                placeholder: "example@site.com",
+                                isRequired: 0,
+                                maxChar: 60,
+                            });
+                            styleInput(that);
+
+                            box.loginPassword = PasswordInputB({
+                                ...common,
+                                titleText: "PASSWORD",
+                                placeholder: "Enter your password",
+                                maxChar: 60,
+                                showShowPasswordButton: 1,
+                                isRequired: 0,
+                                showPasswordIconFile: "../../comp-m2/password-input-b/show-btn.png",
+                                hidePasswordIconFile: "../../comp-m2/password-input-b/hide-btn.png",
+                            });
+                            styleInput(that);
+
+                            // Login button
+                            box.loginBtnBox = Button({ text: "LOGIN", textColor: Black(0.65), fontSize: 20, width: "100%", height: 50, round: 6, color: "#65A293", minimal: 0  });
+                            box.loginBtnBox.clickable = 1;
+                            box.loginBtnBox.elem.style.cursor = "pointer";
+                            
+                        endAutoLayout(); // end login view
+
+                        // SIGN UP VIEW
+                        box.signupView = AutoLayout({
+                            flow: "vertical", 
+                            align: "left top", 
+                            gap: 10, 
+                            height: "auto", 
+                            width: WIDTH, 
+                            color: "transparent",
+                        });
+                        that.opacity = 0;
+                        that.setMotion("opacity 0.2s");
+                        
+                            signupEmail = EmailInputB({
+                                ...common,
+                                titleText: "EMAIL",
+                                placeholder: "example@site.com",
+                                isRequired: 1,
+                                maxChar: 60,
+                            });
+                            styleInput(that);
+
+                            signupPassword = PasswordInputB({
+                                ...common,
+                                titleText: "PASSWORD",
+                                placeholder: "Create a password",
+                                maxChar: 60,
+                                showShowPasswordButton: 1,
+                                showPasswordIconFile: "../../comp-m2/password-input-b/show-btn.png",
+                                hidePasswordIconFile: "../../comp-m2/password-input-b/hide-btn.png",
+                            });
+                            styleInput(that);
+
+                            signupPassword2 = PasswordInputB({
+                                ...common,
+                                titleText: "CONFIRM PASSWORD",
+                                placeholder: "Re-enter password",
+                                maxChar: 60,
+                                showShowPasswordButton: 1,
+                                showPasswordIconFile: "../../comp-m2/password-input-b/show-btn.png",
+                                hidePasswordIconFile: "../../comp-m2/password-input-b/hide-btn.png",
+                            });
+                            styleInput(that);
+
+                            const signupBtnBox =  Button({ 
+                                text: "SIGN UP", 
+                                textColor: Black(0.65), 
+                                fontSize: 20, 
+                                width: "100%", 
+                                height: 50, 
+                                round: 6, 
+                                color: "#65A293", 
+                                minimal: 0,
+                            });
+                            signupBtnBox.clickable = 1;
+                            signupBtnBox.elem.style.cursor = "pointer";
+                            signupBtn = signupBtnBox;
+
+                        endAutoLayout(); // END SIGN UP VIEW
+
+                    endGroup(); // box.viewGroup
+
+                endBox(); // box.contentContainer
+
+            endAutoLayout(); // box.container
+
+            box.loginBtnBox.on("click", onLoginClick);
+            signupBtn.on("click", onSignupClick);
+
+            // Default tab
+            setActiveTab(0);
+
+        };        
+
+        // Helpers
+        const setActiveTab = function(index) {
+
+            if (index === 0) {
+                box.viewGroup.left = 0;
+                box.loginView.opacity = 1;
+                box.signupView.opacity = 0;
+            } else {
+                box.viewGroup.left = WIDTH * -1;
+                box.loginView.opacity = 0;
+                box.signupView.opacity = 1;
+            }
+
+        };
+
+        // Style
+        const styleInput = function(obj) {
+
+            obj.background.round = 4;
+            obj.background.border = 1;
+            obj.background.borderColor = "rgba(0,0,0,0.1)";
+            /*
+            //obj.background.setMotion("background-color 0.2s");
+            if (obj.type != "textarea") {
+                // Onlt for textarea
+            } else {
+                //obj.inputGroup.gap = 4;
+                //obj.input.color = "whitesmoke";
+                //obj.input.border = 1;
+                //obj.input.borderColor = "lightgray";
+                //obj.input.inputElement.style.padding = "0px 6px";
+                //obj.input.inputElement.style.marginLeft = "-6px";
+            }
+            */
+
+        };
+
+        box.logout = async function() {
+
+            const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+            const supabase = createClient(SUPABASE_PROJECT_URL, SUPABASE_ANON_KEY);
+
+            await supabase.auth.signOut();
+            window.location.reload();
+
+        };
+
+        const checkIfLoggedIn = async function() {
+
+            const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+            const supabase = createClient(SUPABASE_PROJECT_URL, SUPABASE_ANON_KEY);
+
+            const { data, error } = await supabase.auth.getSession();
+            return data.session !== null;
+
+        };
+
+        // Actions
+        const onLoginClick = async function() {
+
+            const email = box.loginEmail.getInputValue();
+            const password = box.loginPassword.getInputValue();
+            if (!email || !password) { alert("Please enter email and password"); return; }
+
+            box.waiting.show();
+
+            try {
+                const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+                const supabase = createClient(SUPABASE_PROJECT_URL, SUPABASE_ANON_KEY);
+                const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+                if (error) {
+                    alert("Login failed: " + error.message);
+                } else {
+                    alert("Login successful");
+                    console.table(data);
+                }
+            } catch (e) {
+                alert("Login error");
+            } finally {
+                box.waiting.hide();
+            }
+
+        };
+
+        const onSignupClick = async function() {
+
+            const email = signupEmail.getInputValue();
+            const p1 = signupPassword.getInputValue();
+            const p2 = signupPassword2.getInputValue();
+
+            if (!email || !p1 || !p2) { alert("Please fill all fields"); return; }
+            if (p1 !== p2) { alert("Passwords do not match"); return; }
+
+            box.waiting.show();
+
+            try {
+                const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+                const supabase = createClient(SUPABASE_PROJECT_URL, SUPABASE_ANON_KEY);
+                const { error } = await supabase.auth.signUp({ email, password: p1 });
+                if (error) {
+                    alert("Sign up failed: " + error.message);
+                } else {
+                    alert("Sign up successful. Check your email to confirm.");
+                    signupPassword.setInputValue("");
+                    signupPassword2.setInputValue("");
+                }
+            } catch (e) {
+                alert("Sign up error");
+            } finally {
+                box.waiting.hide();
+            }
+
+        };
+
+        </script>
+    </head>
+    <body></body>
+</html>
