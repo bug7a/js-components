@@ -17,14 +17,8 @@ Site: https://bug7a.github.io/js-components/
 
 "use strict";
 const WaitingDefaults = {
-    //border: 0,
     label: "",
     textColor: "rgba(255, 255, 255, 0.9)",
-    //color: "transparent",
-    //opacity: 0,
-    //visible: 0,
-    //width: "100%",
-    //height: "100%",
     waitingIcon: "../comp-m2/waiting/clock.png",
     coverBackgroundColor: "rgba(0, 0, 0, 0.4)",
     onHide: function() {},

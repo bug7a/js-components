@@ -11,30 +11,73 @@
         <!-- <link rel="preload" href="image.png" as="image"> -->
         <link rel="preload" href="../../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
         <link rel="stylesheet" type="text/css" href="../../basic/basic.min.css">
+        <link rel="stylesheet" type="text/css" href="common/ui-standards.css">
         <script src="../../basic/basic.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
 
+        <script src="common/ui-standards.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../comp-m2/ui-effects.js" type="text/javascript" charset="utf-8"></script>
         <script src="common/top-bar.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../comp-m2/tooltip.min.js" charset="utf-8" defer></script>
+        <script src="../../comp-m2/input-b.min.js" charset="utf-8" defer></script>
+        <script src="../../comp-m2/email-input-b.min.js" charset="utf-8" defer></script>
+        <script src="../../comp-m2/password-input-b.min.js" charset="utf-8" defer></script>
         <script src="../../comp-m2/left-menu.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../comp-m2/badget-v2.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../comp-m1/search-input.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../comp-m2/tiny-select.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../comp-m2/waiting.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../comp-m2/text-tabs.js" type="text/javascript" charset="utf-8"></script>
+
+        <script src="common/login-page.js" type="text/javascript" charset="utf-8"></script>
         
         <!-- ALL COMPONENTS IN ONE FILE -->
         <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
 
         <script type="module">
-        
-        // *** VARIABLES:   
-        let topBar, leftMenu;
-        
+
+        // Supabase constants
+        const SUPABASE_PROJECT_URL = "https://xhzzgxhjyoqcsftamtyz.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhoenpneGhqeW9xY3NmdGFtdHl6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUzMTg2MDAsImV4cCI6MjA2MDg5NDYwMH0.XptujcYMNgl9XIzIQ2_CUig9JzkYOCKONfYAmMPd_wc";
+
         // First running function.
-        window.onload = function() {
+        window.onload = async function() {
 
             page.color = "#000000";
 
-            // Content
-            startBox(40, 40, "calc(100% - 40px)", "calc(100% - 40px)", {
+            const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+            window.supabase = createClient(SUPABASE_PROJECT_URL, SUPABASE_ANON_KEY);
+
+            window.userData = await checkIfLoggedIn();
+
+            if (!userData) {
+
+                // Show Login Page
+                LoginPage({
+                    supabase: supabase,
+                    panelWidth: 420,
+                    primaryColor: "#2C5A38",
+                    panelName: "MY PANEL v25.08.11",
+                });
+
+            } else {
+
+                // Show Panel Home Page
+                createStructure();
+
+            }
+
+        };
+
+        window.createStructure = function() {
+
+            if (!userData) {
+                logout();
+                return 0;
+            }
+
+            // Main Content
+            window.mainView = startBox(40, 40, "calc(100% - 40px)", "calc(100% - 40px)", {
                 color: "black",
             });
 
@@ -49,11 +92,11 @@
 
             endBox();
 
-            // Create main menu
-            topBar = TopBar({});
+            // Top Bar
+            window.topBar = TopBar({});
 
             // Right Content
-            startBox({
+            window.rightView = startBox({
                 top: 40,
                 right: 0,
                 width: 500,
@@ -82,8 +125,8 @@
                 { key: "content", type: "button", text: "Contents", icon: "assets/data-table.png" },
             ];
 
-            // Create main menu
-            leftMenu = LeftMenu({
+            // Left Menu
+            window.leftMenu = LeftMenu({
                 items: menuItems,
                 onItemClick: function(item) {
                     println("Clicked Key: " + item.key);
@@ -101,24 +144,62 @@
             // Select home
             leftMenu.setSelectedItem("home");
 
-
-
-            // Content 2
-            startBox(0, 0, "100%", "100%", {
+            // Full Content
+            window.fullView = startBox(0, 0, "100%", "100%", {
                 color: "black",
+                visible: 0,
             });
-            that.visible = 0;
 
+                /*
                 HGroup();
 
                     Label({
-                        text: "Page Content 2",
+                        text: "FullView Content",
                         textColor: "white",
                     });
 
                 endGroup();
+                */
 
             endBox();
+
+            // Waiting
+            window.waiting = Waiting({
+                animated: 1, 
+                coverBackgroundColor: "rgba(0,0,0,0.6)",
+                waitingIcon: "../../comp-m2/waiting/clock-blue.png", 
+            });
+            //waiting.icon.elem.style.filter = "invert(100%)";
+
+        };
+
+        window.openPageByKey = function(key) {
+
+            switch (key) {
+
+                case "login":
+                    fullView.visible = 1;
+                    LoginPage();
+                    break;
+
+                case "b":
+                    break;
+
+            }
+
+        };
+
+        window.checkIfLoggedIn = async function() {
+
+            const { data, error } = await supabase.auth.getSession();
+            return data.session !== null;
+
+        };
+
+        window.logout = async function() {
+
+            await supabase.auth.signOut();
+            window.location.reload();
 
         };
 

@@ -49,6 +49,7 @@ const TinySelectDefaults = {
     labelTextColor: "rgba(0,0,0,0.8)",
 };
 
+/*
 const TinySelectDefaultsV2 = {
     listData: [], // [{ id: "1", label: "(none)" },]
     onSelect: function(index, id, label, title) {},
@@ -95,6 +96,7 @@ const TinySelectDefaultsV2 = {
     emptyText: "Empty",
     invertColor: 0,
 };
+*/
 
 const TinySelect = function(params = {}) {
 

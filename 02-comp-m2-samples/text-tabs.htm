@@ -24,26 +24,27 @@
         
         // *** VARIABLES:
         //const compList = []; // When multiple objects are created by code, they can be added to an array.
-        let comp1, comp2, comp3;
+        let textTabs;
 
         // First running function.
         window.onload = function() {
 
+            page.color = "whitesmoke";
+
             // GROUP: Autolayout
-            VGroup({
-                gap: 12,
-            });
+            VGroup();
 
                 // COMP NAME: #1
-                comp1 = TextTabs({
+                textTabs = TextTabs({
                     key: "0",
                     selectedIndex: 0,
                     tabList: ["Tab1", "Tab2", "Tab3"],
                     invertColor: 0,
+                    tabPadding: 1,
                     backgroundStyle: {
-                        colorBottom: "whitesmoke",
-                        colorTop: "#DBDDDC",
-                        round: 8,
+                        colorBottom: "lightgray",
+                        colorTop: "lightgray",
+                        round: 6,
                         border: 0,
                         borderColor: Black(0.2),
                     },
@@ -54,7 +55,7 @@
                         round: 0,
                         color: "transparent",
                     },
-                    selectedLabelStyle: {
+                    selectedStyle: {
                         color: "white",
                         round: 6,
                         border: 0,

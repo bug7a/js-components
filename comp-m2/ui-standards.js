@@ -108,6 +108,7 @@ UI.styleSecondButton = function(btn) {
   btn.minimal = 1;
 };
 
+// DELETE IT and use ui-fx.js class
 UI.effectButton = function(btn) {
 
   btn.setMotion("filter 0.2s, transform 0.2s");

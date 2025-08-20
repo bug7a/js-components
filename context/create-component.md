@@ -54,9 +54,29 @@ const ComponentNameDefaults = {
     onClick: function(self) {},
     boxColor: "white",
     boxOverColor: "#8FC7B9",
-    // ... diğer varsayılan değerler
 };
 ```
+
+#### Önerilen: startObject(Defaults, params)
+```javascript
+const MyComponentDefaults = {
+    width: 240,
+    height: 70,
+    // diğer varsayılanlar...
+};
+
+const MyComponent = function(params = {}) {
+    // Önerilen kalıp: defaults ve params doğrudan startObject ile birleştirilir
+    const box = startObject(MyComponentDefaults, params);
+
+    // Artık tüm varsayılanlar + parametreler box üzerinde hazırdır
+    // box.width, box.height, vb.
+
+    return endObject(box);
+};
+```
+- Bu kalıp comp-m2/input-b.js ve comp-m2/badget-v2.js içinde kullanılmaktadır (startObject(Defaults, params)).
+- Eski kalıp olan mergeIntoIfMissing + startObject(params) hâlâ desteklenir, ancak yeni bileşenlerde startObject(Defaults, params) tercih edin.
 
 ### 3. Bileşen Fonksiyonu Yapısı
 ```javascript
@@ -64,7 +84,7 @@ const ComponentName = function(params = {}) {
     //console.time("ComponentName");
 
     // Merge params:
-    mergeIntoIfMissing(params, ComponentNameDefaults);
+
 
     // BOX: Component container
     let box = startObject(params);
@@ -94,8 +114,6 @@ const ComponentName = function(params = {}) {
 };
 ```
 
-## 🧩 Temel Bileşen Yapısı
-
 ### 1. Box Nesnesi Kullanımı - DOĞRU YAKLAŞIM
 
 #### ✅ DOĞRU: Box zaten bir taşıyıcıdır
@@ -107,7 +125,6 @@ const ComponentName = function(params = {}) {
     // BOX: Component container - box zaten bir Box() nesnesidir
     let box = startObject(params);
 
-    // *** OBJECT VIEW:
     // Arka plan için ayrı box oluştur (gerekirse)
     box.background = Box(0, 0, "100%", "100%", {
         color: box.backgroundColor,
@@ -116,10 +133,8 @@ const ComponentName = function(params = {}) {
     });
 
     // UI elemanları doğrudan box'a eklenir
-    box.title = Label({
         text: box.titleText,
         fontSize: 16,
-        textColor: "#555555",
     });
 
     return endObject(box);
@@ -129,10 +144,8 @@ const ComponentName = function(params = {}) {
 #### ❌ YANLIŞ: Gereksiz startBox() endBox() kullanımı
 ```javascript
 // ❌ Bu yöntem kullanılmaz
-startBox({
     width: box.width,
     height: box.height,
-    color: box.backgroundColor
 });
 // UI elemanları
 endBox();
@@ -142,10 +155,8 @@ endBox();
 
 #### ✅ DOĞRU: Parametreler zaten box'a aktarılmıştır
 ```javascript
-const ComponentDefaults = {
     backgroundColor: "white",
     borderColor: "rgba(0, 0, 0, 0.1)",
-    titleText: "Title",
     // ... diğer parametreler
 };
 
@@ -155,10 +166,8 @@ const ComponentName = function(params = {}) {
     // Parametreler artık box.propertyName olarak kullanılır
     box.background = Box(0, 0, "100%", "100%", {
         color: box.backgroundColor,        // ✅ Doğru
-        borderColor: box.borderColor      // ✅ Doğru
     });
 
-    box.title = Label({
         text: box.titleText,              // ✅ Doğru
         fontSize: 16
     });
@@ -168,31 +177,13 @@ const ComponentName = function(params = {}) {
 #### ❌ YANLIŞ: Parametreleri tekrar aktarma
 ```javascript
 // ❌ Bu yöntem kullanılmaz
-startBox({
     width: box.width,                     // ❌ Gereksiz
     height: box.height,                   // ❌ Gereksiz
-    color: box.backgroundColor            // ❌ Gereksiz
-});
-```
-
-### 3. Arka Plan Box'ı Oluşturma - ÖNERİLEN
-
-#### ✅ DOĞRU: Ayrı arka plan box'ı
 ```javascript
 // Arka plan için ayrı box oluştur
-box.background = Box(0, 0, "100%", "100%", {
-    color: box.backgroundColor,
-    border: box.borderBottom,
-    borderColor: box.borderColor,
     round: box.round
 });
-
-// UI elemanları buraya eklenir
-box.title = Label({
-    text: box.titleText,
-    fontSize: 16
 });
-```
 
 ### 4. Basit Bileşen Örneği (input-b.js)
 ```javascript

@@ -249,7 +249,10 @@ const TopBar = function(params = {}) {
         TopBarIconButton({
             iconPath: "assets/top-bar/user.png",
             invertIconColor: 1,
-            onClick: function() {},
+            onClick: function() {
+                waiting.show();
+                logout();
+            },
         });
 
     endGroup();

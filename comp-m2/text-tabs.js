@@ -24,6 +24,7 @@ const TextTabsDefaults = {
     tabList: ["Tab1", "Tab2", "Tab3"],
     invertColor: 0,
     onClick: function(self) {},
+    tabPadding: [2, 2],
     backgroundStyle: {
         colorBottom: "whitesmoke",
         colorTop: "#DBDDDC",
@@ -38,7 +39,7 @@ const TextTabsDefaults = {
         round: 0,
         color: "transparent",
     },
-    selectedLabelStyle: {
+    selectedStyle: {
         color: "white",
         round: 6,
         border: 0,
@@ -134,7 +135,7 @@ const TextTabs = function(params = {}) {
         gap: 3, 
         height: "auto",
         width: "auto",
-        padding: [2,2,3,2],
+        padding: box.tabPadding,
         round: 8,
         position: "relative",
         color: "transparent",
@@ -143,7 +144,7 @@ const TextTabs = function(params = {}) {
         box.selectedLabelBack = Box({
             position: "absolute",
             opacity: 1,
-            ...box.selectedLabelStyle,
+            ...box.selectedStyle,
         });
         that.setMotion("left 0.2s, opacity 0.2s, width 0.2s");
 
