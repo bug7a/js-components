@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
         
-        <title>Main Menu JS Component</title>
+        <title>Admin Panel</title>
         
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
@@ -30,6 +30,9 @@
         <script src="../../comp-m2/text-tabs.js" type="text/javascript" charset="utf-8"></script>
 
         <script src="common/login-page.js" type="text/javascript" charset="utf-8"></script>
+        <script src="common/main-view.js" type="text/javascript" charset="utf-8"></script>
+        <script src="common/right-view.js" type="text/javascript" charset="utf-8"></script>
+        <script src="common/full-view.js" type="text/javascript" charset="utf-8"></script>
         
         <!-- ALL COMPONENTS IN ONE FILE -->
         <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
@@ -43,7 +46,7 @@
         // First running function.
         window.onload = async function() {
 
-            page.color = "#000000";
+            page.color = "black";
 
             const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
             window.supabase = createClient(SUPABASE_PROJECT_URL, SUPABASE_ANON_KEY);
@@ -58,6 +61,10 @@
                     panelWidth: 420,
                     primaryColor: "#2C5A38",
                     panelName: "MY PANEL v25.08.11",
+                    onSuccess: function() {
+                        // If loggedIn then
+                        window.location.reload();
+                    },
                 });
 
             } else {
@@ -71,50 +78,16 @@
 
         window.createStructure = function() {
 
-            if (!userData) {
-                logout();
-                return 0;
-            }
+            if (!userData) { logout(); return 0; }
 
             // Main Content
-            window.mainView = startBox(40, 40, "calc(100% - 40px)", "calc(100% - 40px)", {
-                color: "black",
-            });
-
-                HGroup();
-
-                    Label({
-                        text: "Page Content",
-                        textColor: "white",
-                    });
-
-                endGroup();
-
-            endBox();
+            window.mainView = MainView();
 
             // Top Bar
-            window.topBar = TopBar({});
+            window.topBar = TopBar();
 
             // Right Content
-            window.rightView = startBox({
-                top: 40,
-                right: 0,
-                width: 500,
-                height: "calc(100% - 40px)",
-                color: "#141414",
-            });
-            //that.visible = 0;
-
-                HGroup();
-
-                    Label({
-                        text: "Right Content",
-                        textColor: "white",
-                    });
-
-                endGroup();
-
-            endBox();
+            window.rightView = RightView();
 
             // Menu items
             const menuItems = [
@@ -129,39 +102,23 @@
             window.leftMenu = LeftMenu({
                 items: menuItems,
                 onItemClick: function(item) {
-                    println("Clicked Key: " + item.key);
+                    //println("Clicked Key: " + item.key);
+                    openPageByKey(item.key);
                 }
             });
             
             // Add random items to top
+            /*
             for(var i = 0; i < 30; i++) {
                 leftMenu.addItemToTop({ key: "aaa" + i, type: "button", text: "Settings" + i, icon: "assets/data-table.png" });
             }
+            */
 
             // Add item to bottom
             leftMenu.addItemToBottom({ key: "settings", type: "button", text: "Settings", icon: "assets/setting.png" });
-            
-            // Select home
-            leftMenu.setSelectedItem("home");
 
             // Full Content
-            window.fullView = startBox(0, 0, "100%", "100%", {
-                color: "black",
-                visible: 0,
-            });
-
-                /*
-                HGroup();
-
-                    Label({
-                        text: "FullView Content",
-                        textColor: "white",
-                    });
-
-                endGroup();
-                */
-
-            endBox();
+            window.fullView = FullView();
 
             // Waiting
             window.waiting = Waiting({
@@ -170,6 +127,11 @@
                 waitingIcon: "../../comp-m2/waiting/clock-blue.png", 
             });
             //waiting.icon.elem.style.filter = "invert(100%)";
+
+            // Select home
+            leftMenu.setSelectedItem("home");
+            // Open home page
+            openPageByKey("home");
 
         };
 

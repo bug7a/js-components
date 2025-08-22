@@ -13,6 +13,11 @@ Developer: Bugra Ozden
 Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
 
+- Karanlık ve aydınlık sayfaları parametrelerden ayarlayabilsin.
+- giriş için iki input da boş ise button pasif olsun.
+- signup form için form hatasız ise button akfif olsun.
+- login-page.js belki bir komponent gibi genel klasöre eklenebilir. Başka sistemlerle de aynı şekilde kullanılabilir.
+
 */
 
 "use strict";
@@ -26,6 +31,7 @@ const LoginPageDefaults = {
     panelName: "MY PANEL v25.08.11",
     googleLogo: "https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg",
     appleLogo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSRsP-EH-Fc-gjQMFgxj4g1pkFGVCK8Y2deHA&s",
+    onSuccess: function() {},
 };
 
 const LoginPage = function(params = {}) {
@@ -41,6 +47,8 @@ const LoginPage = function(params = {}) {
 
     // BOX: Component container
     let box = startObject(params);
+    //box.elem.style.filter = "invert(100%)";
+    //page.color = "white";
 
     const createView = function() {
 
@@ -153,9 +161,16 @@ const LoginPage = function(params = {}) {
                             maxChar: 60,
                             showShowPasswordButton: 1,
                             isRequired: 0,
-                            showPasswordIconFile: "../../comp-m2/password-input-b/show-btn2.png",
-                            hidePasswordIconFile: "../../comp-m2/password-input-b/hide-btn2.png",
+                            showPasswordIconFile: "../../comp-m2/password-input-b/show-btn.png",
+                            hidePasswordIconFile: "../../comp-m2/password-input-b/hide-btn.png",
                             inputValue: "123456",
+                            minChar: 0,
+                            mustUseNumber: 0,
+                            mustUseLetter: 0,
+                            mustUseUppercase: 0,
+                            mustUseLowercase: 0,
+                            mustUseSpecialChar: 0,
+
                         });
                         styleInput(that);
                         that.btnShowPassword.elem.style.filter = "invert(100%)";
@@ -201,48 +216,7 @@ const LoginPage = function(params = {}) {
                         endBox();
 
                         box.createButtonWithIcon("Sign in with Google", box.googleLogo, onLoginWithGoogle);
-
-                        /*
-                        HGroup({
-                            width: "100%", height: 50, round: 4, color: "#141414", gap: 12, border: 1, borderColor: White(0.1),
-                        });
-                        that.elem.style.cursor = "pointer";
-                        that.on("click", onLoginWithGoogle);
-                        UIEffects.button(that);
-
-                            Icon(0, 0, 24, 24);
-                            that.load("https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg");
-
-                            Label({
-                                text: "Sign in with Google",
-                                textColor: White(0.75), 
-                                fontSize: 20, 
-                            });
-
-                        endBox();
-                        */
-
                         box.createButtonWithIcon("Sign in with Apple", box.appleLogo, onLoginWithApple);
-
-                        /*
-                        HGroup({
-                            width: "100%", height: 50, round: 4, color: "#141414", gap: 12, border: 1, borderColor: White(0.1),
-                        });
-                        that.elem.style.cursor = "pointer";
-                        that.on("click", onLoginWithApple);
-                        UIEffects.button(that);
-
-                            Icon(0, 0, 24, 24);
-                            that.load("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSRsP-EH-Fc-gjQMFgxj4g1pkFGVCK8Y2deHA&s");
-
-                            Label({
-                                text: "Sign in with Apple",
-                                textColor: White(0.75), 
-                                fontSize: 20, 
-                            });
-
-                        endBox();
-                        */
 
                     endAutoLayout(); // end login view
 
@@ -277,6 +251,7 @@ const LoginPage = function(params = {}) {
                             hidePasswordIconFile: "../../comp-m2/password-input-b/hide-btn.png",
                         });
                         styleInput(that);
+                        that.btnShowPassword.elem.style.filter = "invert(100%)";
 
                         box.signupPassword2 = PasswordInputB({
                             ...common,
@@ -288,6 +263,7 @@ const LoginPage = function(params = {}) {
                             hidePasswordIconFile: "../../comp-m2/password-input-b/hide-btn.png",
                         });
                         styleInput(that);
+                        that.btnShowPassword.elem.style.filter = "invert(100%)";
 
                         box.signupBtn =  Button({ 
                             text: "SIGN UP", 
@@ -311,6 +287,46 @@ const LoginPage = function(params = {}) {
             endBox(); // box.contentContainer
 
         endAutoLayout(); // box.container
+
+        box.alertBox = startBox(0, 0, "100%", "100%", {
+            color: Black(0.8),
+            opacity: 0,
+            clickable: 0,
+        });
+        box.alertBox.setMotion("opacity 0.2s");
+
+            //AutoLayout();
+
+                box.lblAlert = Label({
+                    left: 40,
+                    top: 40,
+                    text: "Some Alert",
+                    textColor: "indianred",
+                    padding: [12, 4],
+                    round: 4,
+                    border: 1,
+                    borderColor: White(0.2),
+                });
+
+            //endAutoLayout();
+
+        endBox();
+
+        box.showAlert = function(text = "Error", color = "indianred") {
+
+            box.lblAlert.text = text;
+            box.lblAlert.textColor = color;
+            box.alertBox.opacity = 1;
+            box.alertBox.clickable = 1;
+
+            if (box.alertBox.timer) clearTimeout(box.alertBox.timer);
+            box.alertBox.timer = setTimeout(function() {
+                // close alert
+                box.alertBox.opacity = 0;
+                box.alertBox.clickable = 0;
+            }, 1000);
+
+        };
 
         // Waiting
         box.waiting = Waiting({
@@ -419,25 +435,25 @@ const LoginPage = function(params = {}) {
 
         const email = box.loginEmail.getInputValue();
         const password = box.loginPassword.getInputValue();
-        if (!email || !password) { alert("Please enter email and password"); return; }
+
+        if (!email || !password) { box.showAlert("Please enter email and password"); return; }
 
         box.waiting.show();
 
         try {
-            //const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
-            //const supabase = createClient(SUPABASE_PROJECT_URL, SUPABASE_ANON_KEY);
             const { data, error } = await box.supabase.auth.signInWithPassword({ email, password });
             if (error) {
-                //alert("Login failed: " + error.message);
+                box.showAlert("Login failed: " + error.message);
             } else {
-                //alert("Login successful");
-                //box.visible = 0;
-                //contentBox.visible = 1;
+                
+                // Login successful
                 //console.table(data);
-                window.location.reload();
+                box.onSuccess();
+                //window.location.reload();
+
             }
         } catch (e) {
-            //alert("Login error");
+            box.showAlert("Login error");
         } finally {
             box.waiting.hide();
         }
@@ -450,24 +466,24 @@ const LoginPage = function(params = {}) {
         const p1 = box.signupPassword.getInputValue();
         const p2 = box.signupPassword2.getInputValue();
 
-        if (!email || !p1 || !p2) { alert("Please fill all fields"); return; }
-        if (p1 !== p2) { alert("Passwords do not match"); return; }
+        if (!email || !p1 || !p2) { box.showAlert("Please fill all fields"); return; }
+        if (p1 !== p2) { box.showAlert("Passwords do not match"); return; }
 
         box.waiting.show();
 
         try {
-            //const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
-            //const supabase = createClient(SUPABASE_PROJECT_URL, SUPABASE_ANON_KEY);
             const { error } = await box.supabase.auth.signUp({ email, password: p1 });
             if (error) {
-                alert("Sign up failed: " + error.message);
+                box.showAlert("Sign up failed: " + error.message);
             } else {
-                alert("Sign up successful. Check your email to confirm.");
+                box.showAlert("Sign up successful. Check your email to confirm.", "#5DB182");
                 box.signupPassword.setInputValue("");
                 box.signupPassword2.setInputValue("");
+                box.loginEmail.setInputValue(box.signupEmail.getInputValue());
+                box.setActiveTab(0);
             }
         } catch (e) {
-            alert("Sign up error");
+            box.showAlert("Sign up error");
         } finally {
             box.waiting.hide();
         }
