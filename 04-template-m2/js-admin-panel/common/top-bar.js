@@ -106,6 +106,17 @@ const TopBar = function(params = {}) {
         // TODO: Implement height setting
     };
 
+    box.manageSelectionForButton = function(key, button, view) {
+        if (view.isShown(key)) {
+            button.setSelected(1);
+            view.onClose = () => {
+                button.setSelected(0);
+            };
+        } else {
+            button.setSelected(0);
+        }
+    };
+
     // *** OBJECT VIEW:
     // MAIN CONTAINER: Top bar container
 
@@ -149,7 +160,7 @@ const TopBar = function(params = {}) {
         TinySelect({
             title: "",
             label: "",
-            fontSize: 16,
+            fontSize: 14,
             height: 30,
             paddingX: 8,
             labelBoldFont: 0,
@@ -187,6 +198,8 @@ const TopBar = function(params = {}) {
         TopBarIconButton({
             iconPath: "assets/top-bar/add.png",
             invertIconColor: 1,
+            hintText: "Add New",
+            hintPosition: "right",
             onClick: function() {}
         });
     
@@ -203,14 +216,56 @@ const TopBar = function(params = {}) {
         TopBarIconButton({
             iconPath: "assets/top-bar/apps.png",
             invertIconColor: 1,
-            onClick: function() {}
+            hintText: "Module 4 (MainView)",
+            hintPosition: "right",
+            onClick: function(self) {
+                openPageByKey("module4");
+                box.manageSelectionForButton("module4", self, mainView);
+            },
         });
 
         TopBarIconButton({
             iconPath: "assets/top-bar/bookmark.png",
             invertIconColor: 1,
-            onClick: function() {}
+            hintText: "Module 5 (LeftView)",
+            hintPosition: "right",
+            onClick: function(self) {
+                openPageByKey("module5");
+                box.manageSelectionForButton("module5", self, rightView);
+            },
         });
+
+        // toggleTitle
+        Label({
+            text: "SWITCH:",
+            textColor: White(0.65),
+            fontSize: 14,
+        });
+
+        Toggle({
+            key: "0",
+            width: 50, // Standard box features are added automatically.
+            height: 30,
+            spacing: 3,
+            value: 1,
+            invertColor: 0,
+            backgroundStyle: {
+                color: "black",
+                selectedColor: "indianred",
+                border: 1,
+                borderColor: Black(0.75),
+                round: 100,
+            },
+            buttonStyle: {
+                color: White(0.25),
+                selectedColor: White(0.75),
+                border: 0,
+                round: 100,
+            }
+        });
+        that.onChange = function(self) {
+            println(`Changed: ${self.value}`);
+        };
 
     endGroup();
 
@@ -243,15 +298,32 @@ const TopBar = function(params = {}) {
             iconPath: "assets/top-bar/notification.png",
             invertIconColor: 1,
             badgeProps: { value: 5 },
-            onClick: function() {}
+            hintText: "Notifications",
+            hintPosition: "left",
+            onClick: function(self) {
+                openPageByKey(NotificationsPage.KEY);
+                box.manageSelectionForButton(NotificationsPage.KEY, self, rightView);
+            },
         });
         
         TopBarIconButton({
             iconPath: "assets/top-bar/user.png",
             invertIconColor: 1,
-            onClick: function() {
-                waiting.show();
-                logout();
+            hintText: "Profile",
+            hintPosition: "left",
+            onClick: function(self) {
+                openPageByKey(UserActionsPage.KEY);
+                box.manageSelectionForButton(UserActionsPage.KEY, self, rightView);
+                /*
+                if (rightView.isShown(UserActionsPage.KEY)) {
+                    rightView.hide();
+                    rightView.clean();
+                } else {
+                    openPageByKey(UserActionsPage.KEY);
+                }
+                */
+                //waiting.show();
+                //logout();
             },
         });
 
@@ -279,10 +351,13 @@ const TopBarIconButtonDefaults = {
     invertIconColor: 0,
     hoverIconOpacity: 1,
     createBudge: 1,
+    isSelected: 0,
     badge: null,
     badgeProps: {
         value: 0,
     },
+    hintText: "Info",
+    hintPosition: "right",
     onClick: function() {},
 };
 
@@ -329,12 +404,20 @@ const TopBarIconButton = function(params = {}) {
 
     };
 
+    box.setSelected = function(selected) {
+        box.isSelected = selected;
+        if (box.state != "mouseover") {
+            box.setState((selected) ? "selected" : "normal");
+        }
+    };
+
     // *** OBJECT VIEW:
         // Creates an icon button with an optional info badge
         box.background = Box(4, 4, "calc(100% - 8px)", "calc(100% - 8px)", {
             color: box.backgroundColor,
             round: 8,
             border: 0,
+            borderColor: White(1),
         });
         box.background.setMotion("background-color 0.2s");
 
@@ -365,6 +448,18 @@ const TopBarIconButton = function(params = {}) {
             box.badge = Badge(box.badgeProps);
         }
 
+        box.tooltip = Tooltip({
+            target: box,
+            hintText: box.hintText,
+            hintPosition: box.hintPosition,
+            lbl_color: "#141414",
+            lbl_border: 1,
+            lbl_textColor: White(0.75),
+            lbl_borderColor: White(0.5),
+            lbl_fontSize: 12,
+            lbl_round: 4,
+        });
+
     // *** OBJECT INIT CODE:
     box.setMotion("background-color 0.2s");
     box.elem.style.cursor = "pointer";
@@ -375,7 +470,11 @@ const TopBarIconButton = function(params = {}) {
     });
 
     box.on("mouseout", function() {
-        box.setState("normal");
+        if (box.isSelected === 1) {
+            box.setState("selected");
+        } else {
+            box.setState("normal");
+        }
     });
 
     // Click event

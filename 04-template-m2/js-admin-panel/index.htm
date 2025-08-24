@@ -17,7 +17,7 @@
 
         <script src="common/ui-standards.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../comp-m2/ui-effects.js" type="text/javascript" charset="utf-8"></script>
-        <script src="common/top-bar.js" type="text/javascript" charset="utf-8"></script>
+        
         <script src="../../comp-m2/tooltip.min.js" charset="utf-8" defer></script>
         <script src="../../comp-m2/input-b.min.js" charset="utf-8" defer></script>
         <script src="../../comp-m2/email-input-b.min.js" charset="utf-8" defer></script>
@@ -28,15 +28,34 @@
         <script src="../../comp-m2/tiny-select.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../comp-m2/waiting.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../comp-m2/text-tabs.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../comp-m1/ui-web-view.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../comp-m2/toggle.js" type="text/javascript" charset="utf-8"></script>
 
-        <script src="common/login-page.js" type="text/javascript" charset="utf-8"></script>
+        <script src="common/top-bar.js" type="text/javascript" charset="utf-8"></script>
         <script src="common/main-view.js" type="text/javascript" charset="utf-8"></script>
         <script src="common/right-view.js" type="text/javascript" charset="utf-8"></script>
         <script src="common/full-view.js" type="text/javascript" charset="utf-8"></script>
         
+        <script src="common/start-page.js" type="text/javascript" charset="utf-8"></script>
+        <script src="common/module-page.js" type="text/javascript" charset="utf-8"></script>
+        <script src="common/login-page.js" type="text/javascript" charset="utf-8"></script>
+        <script src="pages/home.js" type="text/javascript" charset="utf-8"></script>
+        <script src="pages/contents.js" type="text/javascript" charset="utf-8"></script>
+        <script src="pages/notifications.js" type="text/javascript" charset="utf-8"></script>
+        <script src="pages/reports.js" type="text/javascript" charset="utf-8"></script>
+        <script src="pages/settings.js" type="text/javascript" charset="utf-8"></script>
+        <script src="pages/users.js" type="text/javascript" charset="utf-8"></script>
+        <script src="pages/user-actions.js" type="text/javascript" charset="utf-8"></script>
+        
         <!-- ALL COMPONENTS IN ONE FILE -->
         <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
-
+         
+        <!--
+        
+        - Eğer left menu, mainView dışında açılır ise button seçilmesin.
+        
+        -->
+        
         <script type="module">
 
         // Supabase constants
@@ -91,11 +110,15 @@
 
             // Menu items
             const menuItems = [
-                { key: "home", type: "button", text: "Home", icon: "assets/home.png" },
-                { key: "report", type: "button", text: "Reports", icon: "assets/reports.png" },
+                { key: HomePage.KEY, type: "button", text: "Home", icon: "assets/left-menu/home.png" },
+                { key: ReportsPage.KEY, type: "button", text: "Reports", icon: "assets/left-menu/reports.png" },
                 { key: "divider1", type: "header", text: "CONTENTS" },
-                { key: "user", type: "button", text: "Users", icon: "assets/data-table.png" },
-                { key: "content", type: "button", text: "Contents", icon: "assets/data-table.png" },
+                { key: UsersPage.KEY, type: "button", text: "Users", icon: "assets/left-menu/data-table.png" },
+                { key: ContentsPage.KEY, type: "button", text: "Contents", icon: "assets/left-menu/data-table.png" },
+                { key: "divider1", type: "header", text: "MODULES" },
+                { key: "module1", type: "button", text: "Module 1", icon: "assets/left-menu/brick.png" },
+                { key: "module2", type: "button", text: "Module 2", icon: "assets/left-menu/brick.png" },
+                { key: "module3", type: "button", text: "Module 3", icon: "assets/left-menu/brick.png" },
             ];
 
             // Left Menu
@@ -115,7 +138,7 @@
             */
 
             // Add item to bottom
-            leftMenu.addItemToBottom({ key: "settings", type: "button", text: "Settings", icon: "assets/setting.png" });
+            leftMenu.addItemToBottom({ key: SettingsPage.KEY, type: "button", text: "Settings", icon: "assets/left-menu/setting.png" });
 
             // Full Content
             window.fullView = FullView();
@@ -129,22 +152,109 @@
             //waiting.icon.elem.style.filter = "invert(100%)";
 
             // Select home
-            leftMenu.setSelectedItem("home");
+            leftMenu.setSelectedItem(HomePage.KEY);
             // Open home page
-            openPageByKey("home");
+            openPageByKey(HomePage.KEY);
 
         };
 
         window.openPageByKey = function(key) {
 
+            if (!userData) { logout(); return 0; }
+
+            const isRightViewShown = () => {
+                if (rightView.isShown(key)) {
+                    rightView.hide();
+                    rightView.clean();
+                    return 1;
+                } else {
+                    return 0;
+                }
+            };
+
             switch (key) {
 
-                case "login":
-                    fullView.visible = 1;
-                    LoginPage();
+                case "logout":
+                    logout();
                     break;
 
-                case "b":
+                case HomePage.KEY:
+                    HomePage();
+                    break;
+
+                case ContentsPage.KEY:
+                    ContentsPage();
+                    break;
+
+                case NotificationsPage.KEY:
+                    if(!isRightViewShown()) { // If true then close view
+                        NotificationsPage();
+                    }
+                    break;
+
+                case ReportsPage.KEY:
+                    ReportsPage();
+                    break;
+
+                case SettingsPage.KEY:
+                    SettingsPage();
+                    break;
+
+                case UsersPage.KEY:
+                    UsersPage();
+                    break;
+
+                case UserActionsPage.KEY:
+                    //UserActionsPage(); // open in rightView
+                    if(!isRightViewShown()) { // If true then close view
+                        UserActionsPage();
+                    }
+                    break;
+
+                case "module1":
+                    ModulePage({
+                        pageKey: "module1",
+                        moduleURL: "module1/index.htm",
+                        container: mainView,
+                    });
+                    break;
+
+                case "module2":
+                    ModulePage({
+                        pageKey: "module2",
+                        moduleURL: "module2/index.htm",
+                        container: fullView,
+                    });
+                    break;
+
+                case "module3":
+                    if(!isRightViewShown()) { // If true then close view
+                        ModulePage({
+                            pageKey: "module3",
+                            moduleURL: "module3/index.htm",
+                            container: rightView,
+                        });
+                        rightView.setWidth(800);
+                    }
+                    break;
+
+                case "module4":
+                    ModulePage({
+                        pageKey: "module4",
+                        moduleURL: "module4/index.htm",
+                        container: mainView,
+                    });
+                    break;
+
+                case "module5":
+                    if(!isRightViewShown()) { // If true then close view
+                        ModulePage({
+                            pageKey: "module5",
+                            moduleURL: "module5/index.htm",
+                            container: rightView,
+                        });
+                        rightView.setWidth(600);
+                    }
                     break;
 
             }

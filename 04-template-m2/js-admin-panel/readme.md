@@ -2,14 +2,12 @@
 
 - Developing... (Not ready to use)
 
-- Each module can work independently. This way, the control panel can be expanded indefinitely without needing to be rewritten.
-- Each module can be developed with completely different technologies and techniques.
+- **Modular Architecture**: Build and expand your admin panel with independent modules using any technology stack, without rewriting existing code.
+- This admin panel is good for the Management of small mobile and web applications.
+- This project is an example of how to build an application with the basic.js library.
 - I will design it to work with supabase.
-
-## Areas of use:
-
-*** Management for small mobile and web applications *** - Practical, fast, simple.
+- This admin panel was developed for computers only.
+- Practical, fast, simple.
 
 ## Mission:
-
-*** View and edit information in a table. ***
+*** View and edit data in a table. ***
