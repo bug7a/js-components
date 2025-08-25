@@ -11,8 +11,10 @@ const FullView = function() {
         top: 20,
         width: 40,
         height: 40,
-        color: White(0.6),
+        color: White(0.75),
         round: 100,
+        border: 1,
+        borderColor: Black(0.2),
     });
     that.elem.style.cursor = "pointer";
     that.tooltip = Tooltip({
@@ -22,7 +24,7 @@ const FullView = function() {
         lbl_color: "#141414",
         lbl_border: 1,
         lbl_textColor: White(0.75),
-        lbl_borderColor: White(0.5),
+        lbl_borderColor: White(0.2),
         lbl_fontSize: 12,
         lbl_round: 4,
     });

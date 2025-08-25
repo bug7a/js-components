@@ -7,43 +7,45 @@ Search Input - v24.04
 UI COMPONENT TEMPLATE
 - You can customize, this template code as you need:
 
+Started Date: December 2025
 Developer: Bugra Ozden
 Email: bugra.ozden@gmail.com
-Site: https://bug7a.github.io/
-
-EXAMPLE: {javascript-mobile-app-template}/comp-name.htm
+Webpage: https://bug7a.github.io/js-components/
 
 */
 
 "use strict";
+// Default values
+const SearchInputDefaults = {
+    left: 0,
+    top: 0,
+    width: 300,
+    height: 50,
+    searchIconFile: "../comp-m1/search-input/search.svg",
+    clearIconFile: "../comp-m1/search-input/clear.svg",
+    searchIconSize: 24,
+    isCancelEnabled: 1,
+    placeholderText: "Search",
+    color: "whitesmoke",
+    textColor: "rgba(0, 0, 0, 0.8)",
+    border: 0,
+    borderColor: "rgba(0, 0, 0, 0.1)",
+    borderBottomStyle: "2px solid rgba(0, 0, 0, 0.06)",
+    round: 6,
+    fontSize: 20,
+    invertIconColor: 0,
+    onSearch: function(searchedText, self) {},
+};
+
 const SearchInput = function(params = {}) {
+
+    // Marge params:
+    mergeIntoIfMissing(params, SearchInputDefaults);
 
     // BOX: Component container
     const box = startBox();
 
-    // Default values
-    const defaults = {
-        left: 0,
-        top: 0,
-        width: 300,
-        height: 50,
-        searchIconFile: "../comp-m1/search-input/search.svg",
-        clearIconFile: "../comp-m1/search-input/clear.svg",
-        searchIconSize: 24,
-        isCancelEnabled: 1,
-        placeholderText: "Search",
-        color: "whitesmoke",
-        textColor: "rgba(0, 0, 0, 0.8)",
-        border: 0,
-        borderColor: "rgba(0, 0, 0, 0.1)",
-        borderBottomStyle: "2px solid rgba(0, 0, 0, 0.06)",
-        round: 6,
-        fontSize: 20,
-        invertIconColor: 0,
-        onSearch: function(searchedText, self) {},
-    };
-
-    box.props(defaults, params);
+    box.props(params);
     
     // *** Private variables:
     let privateVar = "";

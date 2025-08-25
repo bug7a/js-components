@@ -20,9 +20,9 @@ Webpage: https://bug7a.github.io/js-components/
 
 // Default values:
 const TopBarDefaults = {
-    key: 0,
-    panelIcon: "",
-    panelName: "",
+    key: "0",
+    panelIcon: "assets/panel-icon.png",
+    panelName: "MY PANEL",
     backgroundColor: "#2C5A38", // "#344f6c", "#583432", "#2C5A38"
     onItemClick: function(item) {},
 };
@@ -118,7 +118,6 @@ const TopBar = function(params = {}) {
     };
 
     // *** OBJECT VIEW:
-    // MAIN CONTAINER: Top bar container
 
     // Arka plan için ayrı box oluştur
     box.background = Box(0, 0, "100%", "100%", {
@@ -141,22 +140,16 @@ const TopBar = function(params = {}) {
             width: 20,
             height: 20,
         });
-        that.load("assets/panel-icon.png");
+        that.load(box.panelIcon);
         
 
         Label({
-            text: "MY PANEL",
+            text: box.panelName,
             textColor: "#F3F4E0",
             fontSize: 14,
         });
 
-        /*
-        TopBarIconButton({
-            iconPath: "assets/add.png",
-            onClick: function() {}
-        });
-        */
-
+        // EXAMPLE: How to add a ComboBox on topBar
         TinySelect({
             title: "",
             label: "",
@@ -185,7 +178,7 @@ const TopBar = function(params = {}) {
         });
         //that.elem.style.filter = "invert(100%)";
         that.onSelect = function(index, id, label, title) {
-            console.log(`${title}: ${label} (${id})`);
+            console.log(`TinySelect: ${title}: ${label} (${id})`);
         };
         that.setMotion("background-color 0.2s");
         that.on("mouseover", function(self) {
@@ -196,11 +189,29 @@ const TopBar = function(params = {}) {
         });
 
         TopBarIconButton({
-            iconPath: "assets/top-bar/add.png",
+            iconPath: "assets/top-bar/comment.png",
             invertIconColor: 1,
-            hintText: "Add New",
+            hintText: "Show Dialog",
             hintPosition: "right",
-            onClick: function() {}
+            onClick: function() {
+
+                // EXAMPLE: How to use a Dialog
+                Dialog({
+                    icon: "assets/maybe.png",
+                    title: "Warning!",
+                    desc: "Are you sure you want to log out?",
+                    confirmButtonText: "Yes, I'm sure",
+                    callback: function(id) {
+                        println("answer: " + id);
+                        if (id === 1) logout();
+                    },
+                    cancelButtonText: "Cancel",
+                    confirmButtonColor: basic.WARNING_COLOR,
+                    color: Black(0.7), // Black(0.7)
+                });
+                //that.elem.style.filter = "invert(100%)";
+
+            },
         });
     
     endGroup();
@@ -235,6 +246,8 @@ const TopBar = function(params = {}) {
             },
         });
 
+
+        // EXAMPLE: How to add a Label on topBar
         // toggleTitle
         Label({
             text: "SWITCH:",
@@ -242,6 +255,7 @@ const TopBar = function(params = {}) {
             fontSize: 14,
         });
 
+        // EXAMPLE: How to add a Toggle on topBar
         Toggle({
             key: "0",
             width: 50, // Standard box features are added automatically.
@@ -264,7 +278,7 @@ const TopBar = function(params = {}) {
             }
         });
         that.onChange = function(self) {
-            println(`Changed: ${self.value}`);
+            println(`Toggle: ${self.value}`);
         };
 
     endGroup();
@@ -277,6 +291,7 @@ const TopBar = function(params = {}) {
     });
     // TODO: Add right section items here
 
+        // EXAMPLE: How to add a SearchInput on topBar
         box.searchInput = SearchInput({
             top: 0,
             left: 0,
@@ -293,6 +308,10 @@ const TopBar = function(params = {}) {
             searchIconFile: "assets/top-bar/search.png",
             clearIconFile: "assets/top-bar/cancel.png",
         });
+        box.searchInput.onSearch = function(searchedText, self) {
+            console.log(`Searched: ${searchedText}`);
+        };
+        //box.searchInput.visible = 0; // to hide/show searchInput
 
         TopBarIconButton({
             iconPath: "assets/top-bar/notification.png",
@@ -314,16 +333,6 @@ const TopBar = function(params = {}) {
             onClick: function(self) {
                 openPageByKey(UserActionsPage.KEY);
                 box.manageSelectionForButton(UserActionsPage.KEY, self, rightView);
-                /*
-                if (rightView.isShown(UserActionsPage.KEY)) {
-                    rightView.hide();
-                    rightView.clean();
-                } else {
-                    openPageByKey(UserActionsPage.KEY);
-                }
-                */
-                //waiting.show();
-                //logout();
             },
         });
 

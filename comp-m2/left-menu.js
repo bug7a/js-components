@@ -4,11 +4,8 @@
 
 LeftMenu - v25.07
 
-UI COMPONENT: Collapsible Sidebar Menu
-- A collapsible sidebar menu that expands on hover
-- Contains clickable buttons with icons and text, and header items
-- Supports dynamic item addition from top and bottom
-- Selection state management for buttons
+UI COMPONENT TEMPLATE
+- You can customize, this template code as you need:
 
 Started Date: December 2024
 Developer: Bugra Ozden
@@ -108,7 +105,9 @@ const LeftMenu = function(params = {}) {
         // Click handler
         buttonBox.on("click", function() {
             if (selectedItemKey != item.key) {
-                selectItem(item.key);
+                if (!item.dontSelect) {
+                    selectItem(item.key);
+                }
                 box.onItemClick(item);
             }
         });
@@ -187,8 +186,8 @@ const LeftMenu = function(params = {}) {
 
     };
 
-    // Bir öğeyi seç (görsel durumu güncelle)
-    const selectItem = function(itemKey) {
+    box.clearSelection = function() {
+
         // Önceki seçili öğeyi bırak
         if (selectedItemKey) {
             const prev = itemElements.find(el => el.data.key === selectedItemKey);
@@ -198,17 +197,29 @@ const LeftMenu = function(params = {}) {
                 prev.textLabel.textColor = box.textColor;
                 prev.elem.style.cursor = "pointer";
             }
+
+            selectedItemKey = null;
         }
 
+    }
+
+    // Bir öğeyi seç (görsel durumu güncelle)
+    const selectItem = function(itemKey) {
+
+        // Önceki seçili öğeyi bırak
+        box.clearSelection();
+
         // Yeni öğeyi seç
-        selectedItemKey = itemKey;
         const current = itemElements.find(el => el.data.key === itemKey);
         if (current && current.data.type === "button") {
             current.elem.style.background = `linear-gradient(to right, ${box.selectedColor} 0%, rgba(0,0,0,0) 100%)`;
             current.icon.opacity = 1;
             current.textLabel.textColor = box.selectedTextColor;
             current.elem.style.cursor = "default";
+
+            selectedItemKey = itemKey;
         }
+
     };
 
     // Expand menu
@@ -264,6 +275,9 @@ const LeftMenu = function(params = {}) {
 
     // Remove item by key
     box.removeItem = function(itemKey) {
+
+        if (itemKey === selectedItemKey) box.clearSelection(); // Eğer seçili olan silinmeye çalışıyor ise, önce seçimi kaldır.
+        
         const index = itemList.findIndex(item => item.key === itemKey);
         if (index !== -1) {
             const element = itemElements[index];
@@ -271,6 +285,7 @@ const LeftMenu = function(params = {}) {
             itemList.splice(index, 1);
             itemElements.splice(index, 1);
         }
+
     };
 
     // Get selected item

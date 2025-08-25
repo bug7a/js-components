@@ -5,8 +5,19 @@ AbcPageDefaults = {
 const AbcPage = function(params = {}) {
 
     // BOX: Page container
-    let box = startPage(params, AbcPageDefaults, mainView);
+    let box = startPage(params, AbcPageDefaults, mainView); // (mainView, rightView, fullView)
 
+    box.destroy = function() {
+        box.remove();
+        box = null;
+    };
+
+    mainView.setKey(AbcPage.KEY);
+
+    // *** VARIABLES
+    // *** FUNCTIONS
+
+    // VIEW
     AutoLayout();
 
         Label({
@@ -15,6 +26,8 @@ const AbcPage = function(params = {}) {
         });
 
     endAutoLayout();
+
+    // INIT
     
     return box.endPage();
 

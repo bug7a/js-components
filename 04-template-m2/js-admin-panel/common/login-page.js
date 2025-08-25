@@ -332,7 +332,7 @@ const LoginPage = function(params = {}) {
         box.waiting = Waiting({
             animated: 1, 
             coverBackgroundColor: "rgba(0,0,0,0.6)",
-            waitingIcon: "../../comp-m2/waiting/clock2.png",
+            waitingIcon: "../../comp-m2/waiting/clock3.png",
         });         
         box.waiting.icon.elem.style.filter = "invert(100%)";
 
