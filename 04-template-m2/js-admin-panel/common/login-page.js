@@ -26,8 +26,16 @@ Webpage: https://bug7a.github.io/js-components/
 const LoginPageDefaults = {
     supabase: null,
     panelWidth: 420,
-    autoFit: 1,
+    //autoFit: 1, // add page.fit() function onResize
     primaryColor: "#2C5A38",
+    tab_backgroundColorBottom: "#242424", // "#242424", "whitesmoke"
+    tab_backgroundColorTop: "#242424", // "#242424", "#DBDDDC",
+    tab_borderColor: White(0.1), // White(0.1), Black(0.2),
+    tab_textColor: White(0.75), // White(0.75), "#373836",
+    tab_selectedColor: "#000000", // "#000000", "white",
+    input_backgroundColor: "#141414",
+    input_lineColor: "transparent",
+    input_selectedBackgroundColor: "#202020",
     panelName: "MY PANEL v25.08.11",
     googleLogo: "https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg",
     appleLogo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSRsP-EH-Fc-gjQMFgxj4g1pkFGVCK8Y2deHA&s",
@@ -80,21 +88,21 @@ const LoginPage = function(params = {}) {
                 tabList: ["LOGIN", "SIGN UP"],
                 invertColor: 0,
                 backgroundStyle: {
-                    colorBottom: "#242424", // "whitesmoke",
-                    colorTop: "#242424", // "#DBDDDC",
+                    colorBottom: box.tab_backgroundColorBottom, // "whitesmoke",
+                    colorTop: box.tab_backgroundColorTop, // "#DBDDDC",
                     round: 8,
                     border: 1,
-                    borderColor: White(0.1),
+                    borderColor: box.tab_borderColor,
                 },
                 labelStyle: {
                     fontSize: 14, 
-                    textColor: White(0.75), //"#373836",
+                    textColor: box.tab_textColor, //"#373836",
                     padding: [12, 4],
                     round: 0,
                     color: "transparent",
                 },
                 selectedStyle: {
-                    color: "#000000", // "#2C5A38", // "white"
+                    color: box.tab_selectedColor, // "#000000", "white"
                     round: 6,
                     border: 0,
                     borderColor: Black(0.2),
@@ -138,9 +146,9 @@ const LoginPage = function(params = {}) {
                             width: "100%", 
                             leftPadding: 16, 
                             rightPadding: 16, 
-                            backgroundColor: "#141414",
-                            lineColor: "transparent",
-                            selectedBackgroundColor: "#202020",
+                            backgroundColor: box.input_backgroundColor,
+                            lineColor: box.input_lineColor,
+                            selectedBackgroundColor: box.input_selectedBackgroundColor,
                             selectedLineColor: box.primaryColor,
                         };
                         
@@ -150,9 +158,12 @@ const LoginPage = function(params = {}) {
                             placeholder: "example@site.com",
                             isRequired: 0,
                             maxChar: 60,
-                            inputValue: "bugra.ozden@gmail.com"
+                            inputValue: ""
                         });
                         styleInput(that);
+                        that.onEdit = function() {
+                            checkLoginForm();
+                        }
 
                         box.loginPassword = PasswordInputB({
                             ...common,
@@ -163,7 +174,7 @@ const LoginPage = function(params = {}) {
                             isRequired: 0,
                             showPasswordIconFile: "../../comp-m2/password-input-b/show-btn.png",
                             hidePasswordIconFile: "../../comp-m2/password-input-b/hide-btn.png",
-                            inputValue: "123456",
+                            inputValue: "",
                             minChar: 0,
                             mustUseNumber: 0,
                             mustUseLetter: 0,
@@ -174,6 +185,9 @@ const LoginPage = function(params = {}) {
                         });
                         styleInput(that);
                         that.btnShowPassword.elem.style.filter = "invert(100%)";
+                        that.onEdit = function() {
+                            checkLoginForm();
+                        }
 
                         // Login button
                         box.loginBtn = Button({ 
@@ -240,6 +254,9 @@ const LoginPage = function(params = {}) {
                             maxChar: 60,
                         });
                         styleInput(that);
+                        that.onEdit = function() {
+                            checkSignupForm();
+                        }
 
                         box.signupPassword = PasswordInputB({
                             ...common,
@@ -249,9 +266,19 @@ const LoginPage = function(params = {}) {
                             showShowPasswordButton: 1,
                             showPasswordIconFile: "../../comp-m2/password-input-b/show-btn.png",
                             hidePasswordIconFile: "../../comp-m2/password-input-b/hide-btn.png",
+                            minChar: 8,
+                            minCharWarningText: "Password must be at least 8 characters",
+                            mustUseNumber: 1,
+                            mustUseLetter: 1,
+                            mustUseUppercase: 0,
+                            mustUseLowercase: 0,
+                            mustUseSpecialChar: 0,
                         });
                         styleInput(that);
                         that.btnShowPassword.elem.style.filter = "invert(100%)";
+                        that.onEdit = function() {
+                            checkSignupForm();
+                        }
 
                         box.signupPassword2 = PasswordInputB({
                             ...common,
@@ -261,9 +288,19 @@ const LoginPage = function(params = {}) {
                             showShowPasswordButton: 1,
                             showPasswordIconFile: "../../comp-m2/password-input-b/show-btn.png",
                             hidePasswordIconFile: "../../comp-m2/password-input-b/hide-btn.png",
+                            minChar: 8,
+                            minCharWarningText: "Password must be at least 8 characters",
+                            mustUseNumber: 1,
+                            mustUseLetter: 1,
+                            mustUseUppercase: 0,
+                            mustUseLowercase: 0,
+                            mustUseSpecialChar: 0,
                         });
                         styleInput(that);
                         that.btnShowPassword.elem.style.filter = "invert(100%)";
+                        that.onEdit = function() {
+                            checkSignupForm();
+                        }
 
                         box.signupBtn =  Button({ 
                             text: "SIGN UP", 
@@ -300,7 +337,7 @@ const LoginPage = function(params = {}) {
                 box.lblAlert = Label({
                     left: 40,
                     top: 40,
-                    text: "Some Alert",
+                    text: "",
                     textColor: "indianred",
                     padding: [12, 4],
                     round: 4,
@@ -339,6 +376,10 @@ const LoginPage = function(params = {}) {
         // events:
         box.loginBtn.on("click", onLoginClick);
         box.signupBtn.on("click", onSignupClick);
+
+        // First check
+        checkLoginForm();
+        checkSignupForm();
 
         // Default tab
         box.setActiveTab(0);
@@ -405,6 +446,39 @@ const LoginPage = function(params = {}) {
             //obj.input.inputElement.style.marginLeft = "-6px";
         }
         
+
+    };
+
+    const checkLoginForm = function() {
+
+        const _count1 = box.loginEmail.getInputValue().length;
+        const _count2 = box.loginPassword.getInputValue().length;
+
+        if (_count1 > 0 && _count2 > 0 && box.loginEmail.status === 0) {
+            box.loginBtn.clickable = 1;
+            box.loginBtn.elem.style.filter = "grayscale(0%)";
+            //box.loginBtn.color = box.primaryColor;
+        } else {
+            box.loginBtn.clickable = 0;
+            box.loginBtn.elem.style.filter = "grayscale(100%)";
+            //box.loginBtn.color = "gray";
+        }
+
+    };
+
+    const checkSignupForm = function() {
+
+        const _status1 = box.signupEmail.status;
+        const _status2 = box.signupPassword.status;
+        const _status3 = box.signupPassword2.status;
+
+        if (_status1 === 0 && _status2 === 0 && _status3 === 0) {
+            box.signupBtn.clickable = 1;
+            box.signupBtn.elem.style.filter = "grayscale(0%)";
+        } else {
+            box.signupBtn.clickable = 0;
+            box.signupBtn.elem.style.filter = "grayscale(100%)";
+        }
 
     };
 

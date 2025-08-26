@@ -23,6 +23,7 @@ const ModulePage = function(params = {}) {
     box.container.clean();
     box.container.setKey(box.pageKey);
     box.container.add(box);
+    box.container.page = box;
 
         box.htmPage = UIWebView.create(0, 0);
         that.width = "100%";

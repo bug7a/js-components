@@ -15,6 +15,7 @@ const startPage = function(params, defaults, view) {
 
     view.clean();
     view.add(box);
+    view.page = box; // You can control created page with this variable
 
     box.endPage = function() {
 

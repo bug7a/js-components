@@ -5,6 +5,9 @@ const MainView = function() {
         clickable: 1,
     });
 
+    // [var] page name
+    box.page = null;
+
     box.show = function() {
         box.visible = 1;
     };
@@ -37,7 +40,7 @@ const MainView = function() {
     box.clean = function() {
         if (typeof box.onClose === "function") box.onClose();
         box.onClose = null;
-        
+
         if (typeof box.destroyPage === "function") {
             box.destroyPage();
             box.destroyPage = null;

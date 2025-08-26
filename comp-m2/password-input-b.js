@@ -23,7 +23,7 @@ const PasswordInputBDefaults = {
     type: "password",
     titleText: "PASSWORD",
     placeholder: "Enter your password",
-    warningText: "Password must be at least 6 characters",
+    warningText: "",
     warningColor: "#E5885E", // "#F1BF3C"
     maxChar: 25,
     showPassword: 0,
@@ -38,11 +38,11 @@ const PasswordInputBDefaults = {
     mustUseNumberWarningText: "Password must contain at least one number",
     mustUseLetter: 1,
     mustUseLetterWarningText: "Password must contain at least one letter",
-    mustUseUppercase: 1,
+    mustUseUppercase: 0,
     mustUseUppercaseWarningText: "Password must contain at least one uppercase letter",
-    mustUseLowercase: 1,
+    mustUseLowercase: 0,
     mustUseLowercaseWarningText: "Password must contain at least one lowercase letter",
-    mustUseSpecialChar: 1,
+    mustUseSpecialChar: 0,
     mustUseSpecialCharWarningText: "Password must contain at least one special character",
 };
 

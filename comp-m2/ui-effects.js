@@ -7,7 +7,7 @@ UIEffects.button = function(btn, type = "default") {
         case "default":
 
             btn.elem.style.cursor = "pointer";
-            btn.setMotion("filter 0.2s, transform 0.2s");
+            btn.setMotion("filter 0.2s, transform 0.2s, color 0.2s");
 
             btn.on("mouseover", function() {
                 btn.elem.style.filter = "brightness(120%)";

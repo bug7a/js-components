@@ -89,6 +89,12 @@
                     },
                 });
 
+                // TEST DATA: Fill the user data
+                that.loginEmail.setInputValue("bugra.ozden@gmail.com");
+                that.loginPassword.setInputValue("123456");
+                // Call manuel to check form with out edit
+                that.loginEmail.onEdit();
+
             } else {
 
                 // Show Panel Home Page
@@ -299,14 +305,14 @@
 
                 case "url3":
                     if(shouldOpenRightView()) { // If 0 then just close the page
-                        const _app = ModulePage({
+                        ModulePage({
                             pageKey: key,
                             moduleURL: "https://bug7a.github.io/javascript-single-page-application-example/sample1.htm",
                             container: rightView,
                         });
                         rightView.setWidth(450);
-                        _app.elem.style.filter = "invert(100%)";
-                        _app.elem.style.borderLeft = "1px solid rgba(0,0,0,0.15)";
+                        rightView.page.elem.style.filter = "invert(100%)";
+                        rightView.page.elem.style.borderLeft = "1px solid rgba(0,0,0,0.15)";
                     }
                     break;
 
