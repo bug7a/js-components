@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Login</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- LIBRARY FILES -->
+        <link rel="preload" href="../../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="preload" href="../../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../../basic/basic.min.css">
+        <script src="../../basic/basic.min.js" charset="utf-8" defer></script>
+        <script src="../../basic/scroll-bar.min.js" charset="utf-8" defer></script>
+
+        <script src="../../comp-m2/ui-effects.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../comp-m2/tooltip.min.js" charset="utf-8" defer></script>
+        <script src="../../comp-m2/input-b.min.js" charset="utf-8" defer></script>
+        <script src="../../comp-m2/email-input-b.min.js" charset="utf-8" defer></script>
+        <script src="../../comp-m2/password-input-b.min.js" charset="utf-8" defer></script>
+        <script src="../../comp-m2/waiting.min.js" charset="utf-8" defer></script>
+        <script src="../../comp-m2/text-tabs.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m2/login-page.js" type="text/javascript" charset="utf-8" defer></script>
+
+        <script type="module">
+
+        // Supabase constants
+        const SUPABASE_PROJECT_URL = "https://xhzzgxhjyoqcsftamtyz.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhoenpneGhqeW9xY3NmdGFtdHl6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUzMTg2MDAsImV4cCI6MjA2MDg5NDYwMH0.XptujcYMNgl9XIzIQ2_CUig9JzkYOCKONfYAmMPd_wc";
+
+        // First running function.
+        window.onload = async function() {
+
+            page.color = "white";
+
+            const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+            window.supabase = createClient(SUPABASE_PROJECT_URL, SUPABASE_ANON_KEY);
+
+            window.userData = await checkIfLoggedIn();
+
+            if (!userData) {
+
+                // Show Login Page
+                LoginPage({
+                    supabase: supabase,
+                    panelWidth: 420,
+                    primaryColor: "#2C5A38",
+                    panelName: "MY PANEL v25.08.11",
+                    //autoFit: 1, // add page.fit() function onResize
+                    primaryColor: "#65A293", // "#2C5A38", "#65A293"
+                    tab_backgroundColorBottom: "whitesmoke", // "#242424", "whitesmoke"
+                    tab_backgroundColorTop: "#DBDDDC", // "#242424", "#DBDDDC",
+                    tab_border: 0, // 1, 0
+                    tab_borderColor: Black(0), // White(0.1), Black(0.2),
+                    tab_textColor: "#373836", // White(0.75), "#373836",
+                    tab_selectedColor: "white", // "#000000", "white",
+                    input_backgroundColor: "#F6F6F6", // "#141414", "#F6F6F6",
+                    input_lineColor: "transparent",
+                    input_selectedBackgroundColor: "#F3F4E0", // "#202020", "#F3F4E0",
+                    // waiting_invertIconColor: 1,
+                    input_textColor: Black(0.85), // Black(0.85), White(0.85)
+                    input_border: 1, // 1, 0
+                    input_borderColor: Black(0.1), // White(0.1), Black(0.1)
+                    onSuccess: function() {
+                        // If loggedIn then
+                        window.location.reload();
+                    },
+                });
+
+                // TEST DATA: Fill the user data
+                that.loginEmail.setInputValue("bugra.ozden@gmail.com");
+                that.loginPassword.setInputValue("123456");
+                // Call manuel to check form with out edit
+                that.loginEmail.onEdit();
+
+            } else {
+
+                // Show Panel Home Page
+                createStructure();
+
+            }
+
+        };
+
+        window.createStructure = function() {
+
+            HGroup({
+                    gap: 20,
+                });
+
+                Label({
+                    text: "Logged In.",
+                });
+
+                Label({
+                    text: "Logout",
+                    color: "indianred",
+                    textColor: "white",
+                    padding: [8, 2],
+                    round: 4,
+                });
+                that.elem.style.cursor = "pointer";
+                that.on("click", function() {
+                    logout();
+                });
+
+            endGroup();
+
+        };
+
+        window.openPageByKey = function(key) {
+
+            if (!userData) { logout(); return 0; }
+
+            switch (key) {
+
+                case "page1":
+                    // open page 1
+                    break;
+
+                case "page2":
+                    // open page 2
+                    break;
+
+            }
+
+        };
+
+        window.checkIfLoggedIn = async function() {
+
+            const { data, error } = await supabase.auth.getSession();
+            return data.session !== null;
+
+        };
+
+        window.logout = async function() {
+
+            await supabase.auth.signOut();
+            window.location.reload();
+
+        };
+
+        </script>
+        
+    </head>
+    <body></body>
+</html>

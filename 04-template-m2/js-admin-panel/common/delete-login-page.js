@@ -27,15 +27,16 @@ const LoginPageDefaults = {
     supabase: null,
     panelWidth: 420,
     //autoFit: 1, // add page.fit() function onResize
-    primaryColor: "#2C5A38",
+    primaryColor: "#2C5A38", // "#2C5A38", "#65A293"
     tab_backgroundColorBottom: "#242424", // "#242424", "whitesmoke"
     tab_backgroundColorTop: "#242424", // "#242424", "#DBDDDC",
     tab_borderColor: White(0.1), // White(0.1), Black(0.2),
     tab_textColor: White(0.75), // White(0.75), "#373836",
     tab_selectedColor: "#000000", // "#000000", "white",
-    input_backgroundColor: "#141414",
+    input_backgroundColor: "#141414", // "#141414", "#F6F6F6",
     input_lineColor: "transparent",
-    input_selectedBackgroundColor: "#202020",
+    input_selectedBackgroundColor: "#202020", // "#202020", "#F3F4E0",
+    // waiting_invertIconColor: 1,
     panelName: "MY PANEL v25.08.11",
     googleLogo: "https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg",
     appleLogo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSRsP-EH-Fc-gjQMFgxj4g1pkFGVCK8Y2deHA&s",

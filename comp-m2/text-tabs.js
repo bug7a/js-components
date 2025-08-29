@@ -126,7 +126,7 @@ const TextTabs = function(params = {}) {
     if(box.invertColor) box.elem.style.filter = "invert(100%)";
 
     box.background = Box(0, 0, "100%", "100%", box.backgroundStyle);
-    that.elem.style.background = `linear-gradient(to top,  ${box.backgroundStyle.colorBottom},  ${box.backgroundStyle.colorTop})`;
+    that.elem.style.background = `linear-gradient(to bottom,  ${box.backgroundStyle.colorBottom},  ${box.backgroundStyle.colorTop})`;
 
     // Tab Bar
     box.tabGroup = HGroup({
@@ -138,7 +138,6 @@ const TextTabs = function(params = {}) {
         padding: box.tabPadding,
         round: 8,
         position: "relative",
-        color: "transparent",
     });
 
         box.selectedLabelBack = Box({
