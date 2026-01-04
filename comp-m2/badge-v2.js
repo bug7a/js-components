@@ -32,7 +32,7 @@ const BadgeDefaults = {
     },
 };
 
-const Badge = function(params = {}) {
+const Badge = function (params = {}) {
 
     // Merge params:
     mergeIntoIfMissing(params, BadgeDefaults);
@@ -54,10 +54,10 @@ const Badge = function(params = {}) {
     // *** PUBLIC VARIABLES:
 
     // "hidden", "dot", "number" [var]
-    box.state = "hidden"; 
+    box.state = "hidden";
 
     // *** PRIVATE FUNCTIONS:
-    const updateBadgeDisplay = function() {
+    const updateBadgeDisplay = function () {
 
         if (box.value === undefined || box.value === null || box.value === 0) {
 
@@ -83,7 +83,7 @@ const Badge = function(params = {}) {
                 displayText = box.maxValue + "+";
             }
             box.label.text = displayText;
-            
+
             box.setState("number");
 
         } else {
@@ -95,7 +95,7 @@ const Badge = function(params = {}) {
 
     };
 
-    const validateValue = function(value) {
+    const validateValue = function (value) {
 
         if (value === undefined || value === null) return 0;
 
@@ -113,37 +113,37 @@ const Badge = function(params = {}) {
     };
 
     // *** PUBLIC FUNCTIONS:
-    box.setValue = function(value) {
+    box.setValue = function (value) {
         box.value = validateValue(value);
         updateBadgeDisplay();
         return box;
     };
 
-    box.getValue = function() {
+    box.getValue = function () {
         return box.value;
     };
 
-    box.show = function() {
+    box.show = function () {
         if (box.value > 0) {
             box.visible = 1;
         }
         return box;
     };
 
-    box.hide = function() {
+    box.hide = function () {
         box.visible = 0;
         return box;
     };
 
-    box.getState = function() {
+    box.getState = function () {
         return box.state;
     };
 
-    box.isVisible = function() {
+    box.isVisible = function () {
         return box.visible === 1;
     };
 
-    box.setState = function(state) {
+    box.setState = function (state) {
 
         box.state = state;
 
@@ -176,35 +176,35 @@ const Badge = function(params = {}) {
 
     // *** OBJECT VIEW:
 
-        box.dot = Box({
-            width: box.dotSize,
-            height: box.dotSize,
-            top: 4,
-            right: 4,
-            round: 100,
-            opacity: 0,
-        });
-        box.dot.props(box.badgeStyle);
-        box.dot.setMotion("opacity 0.2s");
+    box.dot = Box({
+        width: box.dotSize,
+        height: box.dotSize,
+        top: 4,
+        right: 4,
+        round: 100,
+        opacity: 0,
+    });
+    box.dot.props(box.badgeStyle);
+    box.dot.setMotion("opacity 0.2s");
 
-        // Badge label for number display
-        box.label = Label({
-            text: "0",
-            fontSize: 12,
-            round: 3,
-            padding: [3, 0],
-            opacity: 0,
-            right: 0,
-            top: 0,
-        });
-        box.label.props(box.badgeStyle);
-        box.label.setMotion("opacity 0.2s");
+    // Badge label for number display
+    box.label = Label({
+        text: "0",
+        fontSize: 12,
+        round: 3,
+        padding: [3, 0],
+        opacity: 0,
+        right: 0,
+        top: 0,
+    });
+    box.label.props(box.badgeStyle);
+    box.label.setMotion("opacity 0.2s");
 
     // *** OBJECT INIT CODE:
 
     // Initialize badge display
     box.value = validateValue(box.value);
     updateBadgeDisplay();
-    
+
     return endObject(box);
 };
