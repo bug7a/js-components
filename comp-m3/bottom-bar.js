@@ -23,17 +23,30 @@ const BottomBarDefaults = {
     height: 100,
     items: [], // JSON list for buttons: [{ icon: "file.png", text: "Home" }]
     onItemClick: function (item, index) { },
+    hoverEffect: true, // For desktop usage
     style: {
-        background: {
+        container: {
             color: "transparent",
             gradient: "linear-gradient(to bottom, transparent, whitesmoke)",
             border: 0,
         },
+        background: {
+            gradient: "linear-gradient(to right, #FFC8C1, #A5E5EB)",
+            border: 0,
+            round: 100,
+        },
         icon: {
-            // Default style for items
+            width: 40,
+            height: 40,
         },
         label: {
-            // Default style for items
+            textColor: "#FE5D49",
+        },
+        selectedBox: {
+            color: "#EAEAE9",
+            round: 100,
+            border: 1,
+            borderColor: "#FFFFFF",
         }
     }
 };
@@ -45,9 +58,9 @@ const BottomBar = function (params = {}) {
 
     // BOX: Component container
     let box = startObject(params);
-    box.color = box.style.background.color;
-    box.border = box.style.background.border;
-    box.elem.style.background = box.style.background.gradient;
+    box.color = box.style.container.color;
+    box.border = box.style.container.border;
+    box.elem.style.background = box.style.container.gradient;
 
     // *** PRIVATE VARIABLES:
 
@@ -78,14 +91,14 @@ const BottomBar = function (params = {}) {
         that.elem.style.cursor = "pointer";
         that.on("click", function () {
             box.selectedIndex = index;
-            box.onItemClick(item, index);
+            box.onItemClick(_item, index);
             box.refresh();
         });
 
         // ICON #NORMAL (BLACK)
         _item.icon.i1 = Icon(0, 0, {
-            width: 40,
-            height: 40,
+            width: box.style.icon.width,
+            height: box.style.icon.height,
             position: "absolute" // Essential for manual layout
         }); // Add to innerBox
         that.load(item.icon);
@@ -93,13 +106,25 @@ const BottomBar = function (params = {}) {
 
         // ICON #SELECTED (ORANGE)
         _item.icon.i2 = Icon(0, 0, {
-            width: 40,
-            height: 40,
+            width: box.style.icon.width,
+            height: box.style.icon.height,
             position: "absolute", // Essential for manual layout
             opacity: 0,
         }); // Add to innerBox
         that.load(item.icon.replace(".png", "s.png"));
         that.setMotion("opacity 0.3s");
+
+        // Hover effect for icons (for desktop usage)
+        if (box.hoverEffect) {
+            _item.icon.on("mouseover", function () {
+                _item.icon.i2.opacity = 0.5;
+            });
+            _item.icon.on("mouseout", function () {
+                if (box.selectedIndex != index) {
+                    _item.icon.i2.opacity = 0;
+                }
+            });
+        }
 
         // Badge with number
         _item.badge = Badge({
@@ -120,23 +145,30 @@ const BottomBar = function (params = {}) {
             height: "auto",
             color: "transparent",
             text: item.text,
-            textColor: "#FE5D49",
-            position: "absolute" // Essential for manual layout
+            textColor: box.style.label.textColor,
+            position: "absolute", // Essential for manual layout
+            opacity: 0,
         }); // Add to innerBox
         box.innerBox.add(that);
         that.center("top");
         that.top -= 2;
         that.setMotion("left 0.3s, opacity 0.3s");
+        that.onResize(box.refreshOneTime);
 
         _item.index = index;
         _item.data = item;
 
         box.itemObjList.push(_item);
-        setTimeout(function () { box.refresh(); }, 20);
+        box.refreshOneTime();
 
     };
 
     // *** PUBLIC FUNCTIONS:
+
+    box.refreshOneTime = function () {
+        if (box.refreshTimeout) clearTimeout(box.refreshTimeout);
+        box.refreshTimeout = setTimeout(function () { box.refresh(); }, 5);
+    };
 
     box.setBadge = function (index, value) {
         box.itemObjList[index].badge.setValue(value);
@@ -144,12 +176,12 @@ const BottomBar = function (params = {}) {
 
     box.selectNone = function () {
         box.selectedIndex = -1;
-        box.refresh();
+        box.refreshOneTime();
     };
 
     box.selectByIndex = function (index) {
         box.selectedIndex = index;
-        box.refresh();
+        box.refreshOneTime();
     };
 
     box.refresh = function () {
@@ -157,6 +189,20 @@ const BottomBar = function (params = {}) {
         const _padding = 40;
         const _space = 20;
         let _width = _padding;
+
+        const _selectedItem = function (item) {
+            item.label.opacity = 1;
+            item.icon.i1.opacity = 0;
+            item.icon.i2.opacity = 1;
+            box.selectedBox.opacity = 1;
+        }
+
+        const _normalItem = function (item) {
+            item.label.opacity = 0;
+            item.icon.i1.opacity = 1;
+            item.icon.i2.opacity = 0;
+            item.icon.clickable = 1;
+        }
 
         box.itemObjList.forEach((item, index) => {
 
@@ -173,9 +219,7 @@ const BottomBar = function (params = {}) {
                 item.label.left = _width;
                 _width += item.label.width + _space;
 
-                item.label.opacity = 1;
-                item.icon.i1.opacity = 0;
-                item.icon.i2.opacity = 1;
+                _selectedItem(item);
 
                 box.selectedBox.opacity = 1;
                 box.selectedBox.left = item.icon.left - 14;
@@ -183,21 +227,11 @@ const BottomBar = function (params = {}) {
 
                 item.icon.clickable = 0;
 
-                //item.icon.color = "red";
-                //item.label.color = "red";
-
             }
             else {
                 _width += item.icon.width + _space;
-
                 item.label.left = item.icon.left;
-                item.label.opacity = 0;
-                item.icon.i1.opacity = 1;
-                item.icon.i2.opacity = 0;
-
-                item.icon.clickable = 1;
-                //item.icon.color = "black";
-                //item.label.color = "black";
+                _normalItem(item);
             }
 
         });
@@ -218,20 +252,17 @@ const BottomBar = function (params = {}) {
     */
 
     box.innerBox = startBox({
-        round: 100,
+        round: box.style.background.round,
         width: 350,
         height: 76,
+        border: box.style.background.border,
     });
-    that.elem.style.background = "linear-gradient(to right, #FFC8C1, #A5E5EB)";
+    that.elem.style.background = box.style.background.gradient;
     //that.elem.style.shadow = box.style.innerBox.shadow;
     that.setMotion("width 0.3s, left 0.3s");
 
-    box.selectedBox = Box(0, 0, 142, 56, {
-        color: "#EAEAE9",
-        round: 100,
-        border: 1,
-        borderColor: "#FFFFFF",
-    });
+    box.selectedBox = Box(0, 0, 142, 56, box.style.selectedBox);
+    that.opacity = 0;
     that.setMotion("left 0.3s, width 0.3s, opacity 0.3s");
     that.center("top");
 

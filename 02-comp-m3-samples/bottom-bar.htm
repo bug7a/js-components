@@ -19,7 +19,7 @@
 
             page.color = "white";
 
-            const bottomBar = BottomBar({
+            window.bottomBar = BottomBar({
                 bottom: 0,
                 selectedIndex: 0,
                 items: [
@@ -28,8 +28,8 @@
                     { icon: "bottom-bar/icon3.png", text: "Favorites" },
                     { icon: "bottom-bar/icon4.png", text: "Notifications" }
                 ],
-                onItemClick: function (item, index) {
-                    console.log("Clicked:", item);
+                onItemClick: function (itemObj, index) {
+                    console.log("Clicked:", itemObj);
                 }
             });
 
