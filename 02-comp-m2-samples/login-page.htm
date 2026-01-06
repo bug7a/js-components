@@ -6,20 +6,20 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
         <!-- LIBRARY FILES -->
-        <link rel="preload" href="../../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
-        <link rel="preload" href="../../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
-        <link rel="stylesheet" type="text/css" href="../../basic/basic.min.css">
-        <script src="../../basic/basic.min.js" charset="utf-8" defer></script>
-        <script src="../../basic/scroll-bar.min.js" charset="utf-8" defer></script>
+        <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" charset="utf-8" defer></script>
+        <script src="../basic/scroll-bar.min.js" charset="utf-8" defer></script>
 
-        <script src="../../comp-m2/ui-effects.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../comp-m2/tooltip.min.js" charset="utf-8" defer></script>
-        <script src="../../comp-m2/input-b.min.js" charset="utf-8" defer></script>
-        <script src="../../comp-m2/email-input-b.min.js" charset="utf-8" defer></script>
-        <script src="../../comp-m2/password-input-b.min.js" charset="utf-8" defer></script>
-        <script src="../../comp-m2/waiting.min.js" charset="utf-8" defer></script>
-        <script src="../../comp-m2/text-tabs.js" type="text/javascript" charset="utf-8" defer></script>
-        <script src="../../comp-m2/login-page.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../comp-m2/ui-effects.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m2/tooltip.min.js" charset="utf-8" defer></script>
+        <script src="../comp-m2/input-b.min.js" charset="utf-8" defer></script>
+        <script src="../comp-m2/email-input-b.min.js" charset="utf-8" defer></script>
+        <script src="../comp-m2/password-input-b.min.js" charset="utf-8" defer></script>
+        <script src="../comp-m2/waiting.min.js" charset="utf-8" defer></script>
+        <script src="../comp-m2/text-tabs.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../comp-m2/login-page.js" type="text/javascript" charset="utf-8" defer></script>
 
         <script type="module">
 
@@ -126,6 +126,8 @@
         };
 
         window.checkIfLoggedIn = async function() {
+
+            return false; // TEST
 
             const { data, error } = await supabase.auth.getSession();
             return data.session !== null;
