@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
         
-        <title>Admin Panel</title>
+        <title>Admin Panel Layout</title>
         
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
@@ -23,7 +23,7 @@
         <script src="../../comp-m2/email-input-b.min.js" charset="utf-8" defer></script>
         <script src="../../comp-m2/password-input-b.min.js" charset="utf-8" defer></script>
         <script src="../../comp-m2/left-menu.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../comp-m2/badget-v2.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../comp-m2/badge-v2.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../comp-m2/search-input-v2.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../comp-m2/tiny-select.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../comp-m2/waiting.js" type="text/javascript" charset="utf-8"></script>
@@ -322,6 +322,9 @@
         };
 
         window.checkIfLoggedIn = async function() {
+
+            // TEST:
+            return true;
 
             const { data, error } = await supabase.auth.getSession();
             return data.session !== null;
