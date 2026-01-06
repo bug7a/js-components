@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>ProgressBar Component Sample</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp-m3/progress-bar.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        let progressBar1;
+        let progressBar2;
+
+        window.onload = function () {
+
+            page.color = "whitesmoke";
+
+            // PAGE LAYOUT
+            AutoLayout({
+                flow: "vertical",
+                align: "left top",
+                gap: 20,
+                padding: 50,
+            });
+
+            // TITLE
+            const title = Label({
+                text: "Progress Bar Component",
+                fontSize: 24,
+            });
+            title.elem.style.marginBottom = "10px";
+
+            // SAMPLE 1: Default
+            const lbl1 = Label({ text: "Default Style" });
+            lbl1.elem.style.marginBottom = "5px";
+
+            progressBar1 = ProgressBar({
+                progress: 30,
+                height: 12,
+            });
+            progressBar1.elem.style.marginBottom = "20px";
+
+            // SAMPLE 2: Custom Colors
+            const lbl2 = Label({ text: "Custom Colors & Size" });
+            lbl2.elem.style.marginBottom = "5px";
+
+            progressBar2 = ProgressBar({
+                width: 400,
+                height: 12,
+                progress: 75,
+                primaryColor: "dodgerblue",
+                secondaryColor: "rgba(0,0,0,0.1)",
+                showValueLabel: true,
+            });
+            progressBar2.elem.style.marginBottom = "20px";
+
+            // CONTROLS
+            const lbl3 = Label({ text: "Controls" });
+            lbl3.elem.style.marginBottom = "5px";
+
+            const btnStyle = {
+                width: "auto",
+                padding: [10, 20],
+                color: "white",
+                backgroundColor: "#333",
+                round: 4,
+                cursor: "pointer",
+            };
+
+            // We are already inside an AutoLayout (vertical). 
+            // Let's make a horizontal one for buttons.
+            AutoLayout({
+                flow: "horizontal",
+                gap: 10,
+            });
+
+            // Button 0%
+            const btn0 = Label({ text: "0%", ...btnStyle });
+            btn0.on("click", function () {
+                progressBar1.setProgress(0);
+                progressBar2.setProgress(0);
+            });
+
+            // Button 50%
+            const btn50 = Label({ text: "50%", ...btnStyle });
+            btn50.on("click", function () {
+                progressBar1.setProgress(50);
+                progressBar2.setProgress(50);
+            });
+
+            // Button 100%
+            const btn100 = Label({ text: "100%", ...btnStyle });
+            btn100.on("click", function () {
+                progressBar1.setProgress(100);
+                progressBar2.setProgress(100);
+            });
+
+            // Button Random
+            const btnRandom = Label({ text: "Random", ...btnStyle });
+            btnRandom.on("click", function () {
+                progressBar1.setProgress(Math.random() * 100);
+                progressBar2.setProgress(Math.random() * 100);
+            });
+
+            // Animation Loop
+            let animating = false;
+            let animInterval;
+            const btnAnim = Label({ text: "Animate", ...btnStyle });
+            btnAnim.on("click", function () {
+                if (animating) {
+                    clearInterval(animInterval);
+                    animating = false;
+                    btnAnim.text = "Animate";
+                } else {
+                    animating = true;
+                    btnAnim.text = "Stop";
+                    let p = 0;
+                    animInterval = setInterval(function () {
+                        p += 1;
+                        if (p > 100) p = 0;
+                        progressBar1.setProgress(p);
+                        progressBar2.setProgress(p);
+                    }, 50);
+                }
+            });
+
+            endAutoLayout(); // End controls row
+
+            endAutoLayout(); // End page layout
+
+        };
+    </script>
+</head>
+
+<body></body>
+
+</html>

@@ -323,7 +323,7 @@
 
         window.checkIfLoggedIn = async function() {
 
-            // TEST:
+            // FOR TEST: Open app without login
             return true;
 
             const { data, error } = await supabase.auth.getSession();
