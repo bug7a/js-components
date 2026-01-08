@@ -35,6 +35,13 @@ const BottomBarDefaults = {
             border: 0,
             round: 100,
         },
+        // Layout configuration
+        layout: {
+            padding: 40,
+            itemSpacing: 20,
+            iconGap: 6,
+            selectionPadding: 14,
+        },
         icon: {
             width: 40,
             height: 40,
@@ -68,6 +75,21 @@ const BottomBar = function (params = {}) {
     box.itemObjList = [];
 
     // *** PRIVATE FUNCTIONS:
+    const updateItemVisuals = function (item, isSelected) {
+        if (isSelected) {
+            item.label.opacity = 1;
+            item.icon.i1.opacity = 0;
+            item.icon.i2.opacity = 1;
+            box.selectedBox.opacity = 1;
+            item.icon.clickable = 0;
+        } else {
+            item.label.opacity = 0;
+            item.icon.i1.opacity = 1;
+            item.icon.i2.opacity = 0;
+            item.icon.clickable = 1;
+        }
+    };
+
     const createButtons = function (items) {
         items.forEach((item, index) => {
             createButton(item, index);
@@ -186,71 +208,46 @@ const BottomBar = function (params = {}) {
 
     box.refresh = function () {
 
-        const _padding = 40;
-        const _space = 20;
-        let _width = _padding;
-
-        const _selectedItem = function (item) {
-            item.label.opacity = 1;
-            item.icon.i1.opacity = 0;
-            item.icon.i2.opacity = 1;
-            box.selectedBox.opacity = 1;
-        }
-
-        const _normalItem = function (item) {
-            item.label.opacity = 0;
-            item.icon.i1.opacity = 1;
-            item.icon.i2.opacity = 0;
-            item.icon.clickable = 1;
-        }
+        const _layout = box.style.layout;
+        let _currentLeft = _layout.padding;
 
         box.itemObjList.forEach((item, index) => {
 
-            item.icon.left = _width;
+            item.icon.left = _currentLeft;
 
             if (box.selectedIndex == -1) {
                 box.selectedBox.opacity = 0;
             }
 
             if (index == box.selectedIndex) {
+                _currentLeft += item.icon.width + _layout.iconGap;
 
-                _width += item.icon.width + 6;
+                item.label.left = _currentLeft;
+                _currentLeft += item.label.width + _layout.itemSpacing;
 
-                item.label.left = _width;
-                _width += item.label.width + _space;
-
-                _selectedItem(item);
+                updateItemVisuals(item, true);
 
                 box.selectedBox.opacity = 1;
-                box.selectedBox.left = item.icon.left - 14;
-                box.selectedBox.width = item.icon.width + 6 + item.label.width + 28;
+                // Calculate selected box position and size based on layout params
+                box.selectedBox.left = item.icon.left - _layout.selectionPadding;
+                const contentWidth = item.icon.width + _layout.iconGap + item.label.width;
+                box.selectedBox.width = contentWidth + (_layout.selectionPadding * 2);
 
-                item.icon.clickable = 0;
-
-            }
-            else {
-                _width += item.icon.width + _space;
+            } else {
+                _currentLeft += item.icon.width + _layout.itemSpacing;
                 item.label.left = item.icon.left;
-                _normalItem(item);
+                updateItemVisuals(item, false);
             }
 
         });
 
-        _width += _padding - _space;
-        box.innerBox.width = _width;
-
+        _currentLeft += _layout.padding - _layout.itemSpacing;
+        box.innerBox.width = _currentLeft;
         box.innerBox.center();
 
     };
 
     // *** OBJECT VIEW:
-    // Basic setup
-    /*
-    HGroup({
-        align: "center"
-    });
-    */
-
     box.innerBox = startBox({
         round: box.style.background.round,
         width: 350,
@@ -267,8 +264,6 @@ const BottomBar = function (params = {}) {
     that.center("top");
 
     endBox();
-
-    //endGroup();
 
     // INIT:
     createButtons(box.items);
