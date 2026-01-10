@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Hold to Confirm Button Component</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp-m3/hold-to-confirm-button.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        window.onload = function () {
+
+            page.color = "whitesmoke";
+
+            // Icon container
+            HGroup({
+                height: "50%",
+            });
+
+            // Icon
+            window.icoFruid = Icon({
+                width: 80,
+                height: 80,
+            });
+            that.load("../assets/fruids/yabanmersini.png");
+            that.setMotion("opacity 0.2s");
+
+            endGroup();
+
+            // Buttons container
+            HGroup({
+                gap: 8,
+            });
+
+            const _assetsPath = "../comp-m3/hold-to-confirm-button/";
+
+            // Confirm Button
+            window.btnConfirm = HoldToConfirmButton({
+                width: "auto",
+                labelText: "Hold to Delete",
+                completedText: "DELETED",
+                iconFile: _assetsPath + "trash.png",
+                holdingIconFile: _assetsPath + "trash-red.png",
+                style: {
+                    layout: {
+                        gap: 4,
+                        padding: [18, 5],
+                    },
+                    label: {
+                        fontSize: 20,
+                        textColor: Black(0.65),
+                    },
+                    box: {
+                        color: "white",
+                        border: 1,
+                        borderColor: Black(0.3),
+                        round: 8,
+                    },
+                    holdingBox: {
+                        color: "#FFD1CB",
+                    },
+                }
+            });
+
+            btnConfirm.onConfirm = function (self) {
+                console.log("Button held!");
+                refreshView("delete-fruid");
+            };
+
+            btnConfirm.onReset = function (self) {
+                refreshView("disable-delete-button");
+            };
+
+            // Show Button
+            window.btnShow = Button({
+                text: "Show",
+                color: "white",
+                minimal: 1,
+                round: 8,
+                border: 1,
+            });
+
+            btnShow.on("click", function() {
+                refreshView("show-fruid");
+            });
+            //that.elem.style.fontFamily = "opensans-bold";
+
+            endGroup();
+
+            // FUNCTIONS:
+
+            const refreshView = function(state) {
+
+                switch (state) {
+
+                    case "show-fruid":
+                        
+                        // show icon
+                        icoFruid.opacity = 1;    
+
+                        // delete button usable
+                        btnConfirm.opacity = 1;
+                        btnConfirm.clickable = 1;
+
+                        // show button disabled
+                        btnShow.opacity = 0.5;
+                        btnShow.clickable = 0;
+                                
+                        break;
+
+                    case "delete-fruid":
+
+                        // show icon
+                        icoFruid.opacity = 0; 
+
+                        break;
+
+                    case "disable-delete-button":
+
+                        // delete button disabled
+                        btnConfirm.opacity = 0.5;
+                        btnConfirm.clickable = 0;
+
+                        // show button usable
+                        btnShow.opacity = 1;
+                        btnShow.clickable = 1;
+                        
+                        break;
+
+                }
+            };
+
+            // INIT CODE:
+
+            refreshView("show-fruid");
+
+        };
+    </script>
+</head>
+
+<body></body>
+
+</html>
