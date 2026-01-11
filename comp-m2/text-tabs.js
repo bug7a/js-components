@@ -89,6 +89,21 @@ const TextTabs = function(params = {}) {
             box.selectByIndex(self.index);
             box.onClick(self);
         });
+
+        // Eğer metin uzunluğu değişirse, seçili nesnenin boyutunu güncelle.
+        that.onResize(function(self) {
+            if (self.index == box.selectedIndex) {
+
+                    const _back = box.selectedLabelBack;
+
+                    _back.left = self.left;
+                    _back.top = self.top;
+                    _back.width = self.width;
+                    _back.height = self.height;
+                    _back.opacity = 1;
+
+            }
+        });
         
     };
 
