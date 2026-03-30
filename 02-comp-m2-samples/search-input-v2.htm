@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        
+        <title>Search Input</title>
+        
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <!-- LIBRARY FILES -->
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <script src="../comp-m2/search-input-v2.js" type="text/javascript" charset="utf-8"></script>
+
+        <style>
+
+        .search-box::-webkit-input-placeholder {
+            color: rgba(0, 0, 0, 0.4);
+        }
+
+        </style>
+
+        <script>
+
+        window.onload = function() {
+
+            HGroup();
+
+                SearchInput({
+                    width: 300,
+                    height: 50,
+                    searchIconFile: "../comp-m2/search-input-v2/search.svg",
+                    clearIconFile: "../comp-m2/search-input-v2/clear.svg",
+                    searchIconSize: 24,
+                    isCancelEnabled: 1,
+                    placeholderText: "Search",
+                    color: "whitesmoke",
+                    textColor: "rgba(0, 0, 0, 0.8)",
+                    border: 0,
+                    borderColor: "rgba(0, 0, 0, 0.1)",
+                    borderBottomStyle: "2px solid rgba(0, 0, 0, 0.06)",
+                    round: 6,
+                    fontSize: 20,
+                    invertIconColor: 0,
+                });
+                that.setText("");
+                that.onSearch = function(searchedText, self) {
+                    console.log(searchedText);
+                }
+
+            endGroup();
+            
+        }
+
+        </script>
+
+    </head>
+    <body>
+        
+        <!-- HTML content -->
+        
+    </body>
+</html>

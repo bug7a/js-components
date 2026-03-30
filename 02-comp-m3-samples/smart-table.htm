@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Smart Table Component Sample</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp-m2/search-input-v2.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp-m3/smart-table.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        let titleDataList = [
+            { name: "ID", dataTitle: "id", dataType: "integer", width: 100, shortable: 1 },
+            { name: "NAME", dataTitle: "name", dataType: "string", width: 180, shortable: 1 },
+            { name: "EMAIL", dataTitle: "email", dataType: "string", width: 290, shortable: 0 },
+            { name: "", dataTitle: "active", dataType: "boolean", width: 80, shortable: 0 },
+        ];
+
+        let itemDataList = [
+            { id: 1, name: "Bugra Ozden", desc: "Developer", email: "bugra.ozden@gmail.com", active: 1 },
+            { id: 2, name: "Alper Kaya", desc: "Product Manager", email: "a.kaya@company.net", active: 1 },
+            { id: 3, name: "Murat Demir", desc: "Backend Engineer", email: "mdemir@work.io", active: 0 },
+            { id: 4, name: "Deniz Arslan", desc: "UI/UX Designer", email: "deniz_arslan@studio.com", active: 1 },
+            { id: 5, name: "Nilüfer Çelik", desc: "Data Analyst", email: "n.celik@datahouse.org", active: 1 },
+            { id: 6, name: "Frank Weber", desc: "DevOps Engineer", email: "frank.weber@infrateam.de", active: 0 },
+            { id: 7, name: "Dany Moreau", desc: "Mobile Developer", email: "dmoreau@appworks.fr", active: 0 },
+            { id: 8, name: "Duygu Şahin", desc: "QA Engineer", email: "duygu.sahin@testlab.com", active: 0 },
+            { id: 9, name: "Filiz Yıldız", desc: "Scrum Master", email: "f.yildiz@agile.io", active: 1 },
+            { id: 10, name: "Anka Polat", desc: "System Architect", email: "anka_polat@systems.net", active: 1 },
+            { id: 11, name: "Ceren Aktaş", desc: "Frontend Developer", email: "ceren.aktas@webco.com", active: 1 },
+            { id: 12, name: "Emre Güneş", desc: "Database Administrator", email: "e.gunes@dbworks.org", active: 0 },
+            { id: 13, name: "Selin Koç", desc: "Business Analyst", email: "selin.koc@analytics.io", active: 1 },
+            { id: 14, name: "Tarık Yılmaz", desc: "Cloud Engineer", email: "tarik.yilmaz@cloudbase.co", active: 1 },
+            { id: 15, name: "Yasemin Doğan", desc: "Technical Writer", email: "y.dogan@docshub.net", active: 0 },
+            { id: 16, name: "Kemal Aydın", desc: "Security Specialist", email: "kemal_aydin@securelab.com", active: 1 },
+            { id: 17, name: "Pınar Erdoğan", desc: "HR Manager", email: "p.erdogan@people.io", active: 0 },
+            { id: 18, name: "Baran Çetin", desc: "Full Stack Developer", email: "baran.cetin@devstack.net", active: 1 },
+            { id: 19, name: "Zeynep Karaca", desc: "Marketing Specialist", email: "zkaraca@brandworks.com", active: 1 },
+            { id: 20, name: "Hakan Bulut", desc: "Network Engineer", email: "h.bulut@netcore.org", active: 0 },
+        ];
+
+        window.onload = function () {
+
+            page.color = "darkgray";
+
+            HGroup({
+                align: "top left",
+                padding: [5, 5],
+            });
+
+            window.smartTable1 = SmartTable({
+                fillTestData: 1,
+                titleDataList: titleDataList,
+                itemDataList: itemDataList,
+                createCustomItemCell: createCustomItemCell,
+                updateCustomItemCell: updateCustomItemCell,
+                //sortByTitleIndex: 0,
+                //sortDirection: "Z-A", // "A-Z" or "Z-A"
+                style: { width: "100%", height: "100%" },
+            });
+            smartTable1.onSelect = function (data) {
+
+                console.log(data);
+
+            };
+
+            endGroup();
+
+            // Hybrid useage with HTML pages:
+            // document.getElementById("element-id").appendChild(smartTable1.elem);
+
+        };
+
+        const updateCustomItemCell = function (itemCell, titleDataIndex, data) {
+
+            // dataTitle: active
+            if (titleDataIndex == 3) {
+
+                if (data == 1) {
+                    itemCell.boxCheck.color = "#E7BB67";
+
+                } else {
+                    itemCell.boxCheck.color = "white";
+                }
+
+                const _size = itemCell.height - 12;
+
+                itemCell.boxCheck.width = _size;
+                itemCell.boxCheck.height = _size;
+
+            };
+
+        };
+
+        const createCustomItemCell = function (itemCell, titleDataIndex) {
+
+            // CALL ONE TIME
+
+            // dataTitle: active
+            if (titleDataIndex == 3) {
+
+                itemCell.label.visible = 0;
+
+                itemCell.boxCustom = HGroup();
+                itemCell.add(itemCell.boxCustom);
+
+                const _size = itemCell.height - 12;
+
+                itemCell.boxCheck = Box({
+                    width: _size,
+                    height: _size,
+                    border: 1,
+                    color: "white",
+                    round: 100,
+                });
+                that.elem.style.minHeight = "10px";
+                that.elem.style.minWidth = "10px";
+
+                endGroup();
+
+            };
+
+            return itemCell;
+
+        };
+
+    </script>
+</head>
+
+<body></body>
+
+</html>

@@ -37,7 +37,6 @@ const Badge = function (params = {}) {
     // Merge params:
     mergeIntoIfMissing(params, BadgeDefaults);
 
-    // 
     params.width = "100%";
     params.height = "100%";
     params.left = 0;
@@ -50,9 +49,9 @@ const Badge = function (params = {}) {
     let box = startObject(params);
 
     // *** PRIVATE VARIABLES:
+    //
 
     // *** PUBLIC VARIABLES:
-
     // "hidden", "dot", "number" [var]
     box.state = "hidden";
 

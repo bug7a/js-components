@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        
+        <title>UI Table - Custom Cells</title>
+        
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+        <link rel="stylesheet" type="text/css" href="../../basic/basic.css">
+        <script src="../../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+
+        <script src="js/table-data.js" type="text/javascript" charset="utf-8"></script>
+        <script src="js/components/ui-search-box.js" type="text/javascript" charset="utf-8"></script>
+        <script src="js/components/ui-table.js" type="text/javascript" charset="utf-8"></script>
+
+
+        <style>
+
+            body {
+                margin: 0px !important;
+                overflow: auto !important;
+            }
+
+            #my-table-div {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                width: 700px;
+                height: 500px;
+                transform:translateX(-50%) translateY(-50%);
+            }
+
+            /* Customize mouse over and click effects with css */
+            .table-title-cell {
+                cursor: pointer;
+            }
+
+            .table-title-cell:hover {
+                background-color: rgba(211, 207, 193, 0.3) !important;
+                /* border: 1px solid rgba(0, 0, 0, 0.2) !important; */
+                border-bottom: 1px solid rgba(0, 0, 0, 0.2) !important;
+            }
+
+            .table-item-row {
+                cursor: pointer;
+            }
+
+            .table-item-row:hover {
+                background-color: rgba(211, 207, 193, 0.2) !important;
+                /* border: 1px solid rgba(0, 0, 0, 0.2) !important; */
+                opacity: 1;
+                border-radius: 2px !important;
+            }
+
+            .table-item-row:active {
+                background-color: rgba(211, 207, 193, 0.4) !important;
+                /* border: 1px solid rgba(0, 0, 0, 0.2) !important; */
+                opacity: 1;
+                border-radius: 2px !important;
+            }
+
+            .table-item-row.selected {
+                background-color: rgba(211, 207, 193, 0.2) !important;
+                /* border: 1px solid rgba(0, 0, 0, 0.2) !important; */
+                opacity: 1;
+                border-radius: 2px !important;
+            }
+
+            .table-item-cell {
+                cursor: pointer;
+            }
+
+            .table-item-cell:hover {
+                background-color: whitesmoke !important;
+                border: 1px solid black !important;
+            }
+
+            .icon-button {
+                cursor: pointer;
+                background-color: transparent !important;
+                transform: scale(0.8) !important;
+                transform-origin: center !important;
+                transition: transform 0.3s, background-color 0.3s !important;
+            }
+            
+            .icon-button:hover {
+                background-color: rgba(0, 0, 0, 0.05) !important;
+                transform: scale(1) !important;
+            }
+
+            .icon-button:hover ~ .table-item-row {
+                background-color: rgba(254, 193, 8, 0.1) !important;
+                /* border: 1px solid rgba(0, 0, 0, 0.2) !important; */
+                opacity: 1 !important;
+                border-radius: 2px !important;
+            }
+
+            .icon-button:active {
+                background-color: rgba(0, 0, 0, 0.1) !important;
+                transform: scale(1) !important;
+            }
+
+        </style>
+
+        <script>
+
+        window.onload = function() {
+
+            var startTime = performance.now();
+
+            const tableOptions = {
+                titleHeight: 50,
+                createItemCellContentBox: 1,
+                createItemCellBackground: 1,
+                titleRowBackgroundColor: "whitesmoke",
+                itemSelectedBackgroundColor: "rgba(211, 207, 193, 0.2)",
+                itemRowBottomBorderString: "1px solid rgba(0, 0, 0, 0.1)",
+                itemEvenBackgroundColor: "white",
+                itemCellRightBorderString: "0px solid rgba(0, 0, 0, 0.08)",
+            };
+
+            // UI TABLE: Create table.
+            window.myTable = UITable.create(tableOptions);
+            // Add table into the div element.
+            document.getElementById("my-table-div").append(myTable.element);
+            myTable.opacity = 0;
+            myTable.setMotion("opacity 0.2s");
+            myTable.left = 0;
+            myTable.top = 0;
+
+            // Customize title and item style:
+            myTable.setTitleRowStyle(titleRowStyle);
+            myTable.setTitleCellStyle(titleCellStyle);
+            myTable.setItemRowStyle(itemRowStyle);
+            myTable.setItemCellStyle(itemCellStyle);
+
+            const titleDataList = [
+                { id:"id", name: "ID", itemDataIndex: 0, itemDataType: "string", width: 60, itemTextAlign: "center", titleTextAlign: "left", enableSorting: 1 },
+                { id:"title", name: "First And Last Name", itemDataIndex: 1, itemDataType: "string", width: 210, itemTextAlign: "left", titleTextAlign: "left", enableSorting: 1, sortBy: "asc" },
+                { id:"age", name: "City", itemDataIndex: 2, itemDataType: "string", width: 100, itemTextAlign: "left", titleTextAlign: "left", enableSorting: 1 },
+                { id:"graph", name: "GRAPH", itemDataIndex: 0, itemDataType: "string", width: 120, itemTextAlign: "left", titleTextAlign: "left", enableSorting: 1 },
+                { id:"action", name: "", itemDataIndex: 4, itemDataType: "string", width: "auto", itemTextAlign: "left", titleTextAlign: "left"}
+            ];
+            // NOTE: For multi line title, use <br> tag.
+
+            myTable.createTitles(titleDataList);
+            
+            /* TEST: 
+            for(var i = 101; i <= 300; i++) {
+                testData.push([i, "John Smith", "New York", 30, "photography", "hiking", "Software Engineer", "Bachelor's degree in Computer Science"]);
+            }
+            */
+            
+            myTable.createItems(testData);
+
+            //myTable.orderBy({ titleIndex:2, type:"desc" });
+            //myTable.filterByText("AI");
+
+            //that.getTitleBackgroundBox(0);
+
+            // UI SEARCH BOX:
+            UISearchBox.resetDefault();
+            UISearchBox.default.fontSize = 16;
+
+            const searchBoxOptions = {
+                width: 180,
+                height: 40,
+                fontSize: 16,
+                color: "white",
+                border: 1,
+                searchIconSpace: 15,
+            };
+            
+            // Create search box.
+            const uiSearchBox = UISearchBox.create(searchBoxOptions);
+            document.getElementById("my-table-div").append(uiSearchBox.element);
+            that.right = 10;
+            that.top = 5;
+
+            uiSearchBox.onSearch(function(searchText, uiSearchBox) {
+                println("uiSearchBox2 text: " + searchText);
+                myTable.filterByText(searchText);
+            });
+
+            // Show the table:
+            myTable.withMotion(function(self) {
+                self.opacity = 1;
+            });
+
+            // Filter data: title id "age" and search text is "Istanbul"
+            //myTable.filterByText("Istanbul", "age");
+
+            // Sort data: title id "age" and sort type is "desc"
+            //myTable.sort("age", "desc");
+            
+        }
+
+        const titleRowStyle = function(titleRow) {
+
+            //titleRow.background.element.style.borderRadius = "6px 6px 0px 0px";
+
+        };
+
+        const titleCellStyle = function(titleCell, titleCellData, titleIndex, state) {
+
+            titleCell.label.element.style.fontFamily = "opensans-bold";
+            titleCell.label.element.style.textTransform = "uppercase";
+
+            if (titleCellData.id == "id") {
+
+                titleCell.background.element.style.borderTopLeftRadius = "6px";
+                titleCell.background.color = "#FFF0C2";
+                titleCell.background.element.style.borderRight = "1px solid rgba(0, 0, 0, 0.2)";
+                titleCell.background.element.style.borderBottom = "1px solid rgba(0, 0, 0, 0.2)";
+            
+            } else if (titleCellData.id == "age") {
+
+                // Make Age title text align to center
+                //titleCell.label.textAlign = "center";
+
+            } else if (titleCellData.id == "action") {
+                titleCell.background.element.style.borderTopRightRadius = "6px";
+            }
+            
+            if (titleCellData.id != "action") {
+                // Make right left border line for title cells
+                //titleCell.background.element.style.borderRight = "1px solid rgba(0, 0, 0, 0.1)";
+            }
+            //titleCell.background.element.style.borderLeft = "1px solid rgba(0, 0, 0, 0.1)";
+
+            // Clickable titles for sorting.
+            if (titleCellData.id == "id" || titleCellData.id == "title" || titleCellData.id == "age" || titleCellData.id == "graph") {
+                titleCell.background.element.classList.add("table-title-cell");
+            }
+
+        };
+
+        const itemRowStyle = function(itemRow, itemData, itemIndex) {
+
+            itemRow.background.element.classList.add("table-item-row");
+
+        };
+
+        const itemCellStyle = function(itemCell, itemCellData, titleCellData, itemRow, itemCellIndex) {
+
+            if (titleCellData.id == "id") {
+
+                itemCell.background.color = "#FFF0C2";
+                itemCell.background.opacity = 0.5;
+                itemCell.background.element.style.borderRight = "1px solid rgba(0, 0, 0, 0.2)";
+                itemCell.background.element.style.borderBottom = "1px solid rgba(0, 0, 0, 0.1)";
+                itemCell.label.element.style.fontFamily = "opensans-bold";
+
+            } else if(titleCellData.id == "title") {
+                itemCell.label.fontSize = 12;
+
+            } else if(titleCellData.id == "age") {
+                grayItemCellStyle(itemCell);
+
+            } else if (titleCellData.id == "graph") {
+
+                itemCell.label.visible = 0;
+                createSmallChart(itemCell, itemCellData);
+
+            } else if (titleCellData.id == "action") {
+
+                itemCell.label.visible = 0;
+                createTrashButton(itemCell, itemCellData);
+
+            }
+
+        };
+
+        const grayItemCellStyle = function(itemCell) {
+
+            itemCell.background.color = "rgba(0, 0, 0, 0.03)";
+            itemCell.background.round = 8;
+            itemCell.background.left = 2;
+            itemCell.background.top = 5;
+            itemCell.background.border = 1;
+            itemCell.background.borderColor = "rgba(0, 0, 0, 0.0)";
+            itemCell.background.element.style.width = "calc(100% - 4px)";
+            itemCell.background.element.style.height = "calc(100% - 11px)";
+            itemCell.label.textAlign = "center";
+            itemCell.label.textColor = "rgba(0, 0, 0, 0.5)";
+
+        };
+
+        const createSmallChart = function(itemCell, itemCellData) {
+
+            // BOX: Graph container
+            const boxGraphBackground = createBox();
+            itemCell.box.add(that);
+            boxGraphBackground.element.style.width = "calc(100% - 8px)";
+            boxGraphBackground.element.style.height = "8px";
+            boxGraphBackground.left = 4;
+            boxGraphBackground.border = 1;
+            boxGraphBackground.borderColor = "rgba(0, 0, 0, 0.8)";
+            boxGraphBackground.color = "white";
+            boxGraphBackground.round = 2;
+            boxGraphBackground.top = 10;
+            itemCell.box.onResize((self) => {
+                boxGraphBackground.top = (itemCell.box.element.offsetHeight-boxGraphBackground.element.offsetHeight)/2;
+            });
+
+            // optimize edilmeli: 30ms sürüyor.
+            
+            //const partValue = (boxGraphBackground.element.offsetWidth / 10);
+            const partValue = (itemCell.box.containerBox.width - 8) / 100;
+            //const partValue = (100 / 10);
+
+            // BOX: Graph value
+            boxGraphBackground.boxValue = createBox();
+            boxGraphBackground.add(that);
+            //that.color = "rgba(0, 0, 0, 0.2)";
+            that.opacity = 0.6;
+            that.width = partValue * num(itemCellData); //.value;
+            that.height = 6;
+            that.element.style.borderRight = "2px solid rgba(0, 0, 0, 1)";
+            that.left = 0;
+            that.top = 0;
+            if (num(itemCellData) < 40) {
+                that.color = "orangered";
+            } else if (num(itemCellData) < 80) {
+                that.color = "#689BD2";
+            } else if (num(itemCellData) >= 80) {
+                that.color = "seagreen";
+            }
+
+            boxGraphBackground.clickable = 0;
+            boxGraphBackground.boxValue.clickable = 0;
+            itemCell.box.clickable = 0;
+
+        };
+
+        const createTrashButton = function(itemCell, itemCellData) {
+
+            // BOX: Image button background and container.
+            const boxButton = createBox();
+            itemCell.box.add(that);
+            boxButton.width = 40;
+            boxButton.height = 40;
+            boxButton.color = "transparent";
+            //boxButton.round = boxButton.width;
+            //boxButton.setMotion("background-color 0.2s");
+
+            // BOX: Button background.
+            boxButton.background = createBox();
+            boxButton.add(that);
+            that.width = boxButton.width;
+            that.height = boxButton.height;
+            that.color = "transparent";
+            that.round = boxButton.width;
+            that.top = 0;
+            that.left = 0;
+
+            // BOX: Trash icon.
+            boxButton.imgTrash = createImage();
+            boxButton.add(that);
+            boxButton.imgTrash.width = 18;
+            boxButton.imgTrash.height = 18;
+            boxButton.imgTrash.opacity = 0.6;
+            boxButton.imgTrash.load("assets/trash.svg");
+            boxButton.imgTrash.left = 11;
+            boxButton.imgTrash.top = 11;
+            itemCell.box.onResize((self) => {
+                boxButton.left = 20;
+                boxButton.top = (itemCell.box.element.offsetHeight-boxButton.element.offsetHeight)/2;
+            });
+
+            //boxButton.clickable = 0;
+            boxButton.background.clickable = 1;
+            boxButton.background.element.classList.add("icon-button");
+
+            itemCell.box.clickable = 0;
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+        
+        <!-- HTML content -->
+        <div id="my-table-div"></div>
+        
+    </body>
+</html>

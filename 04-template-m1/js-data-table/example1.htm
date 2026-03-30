@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        
+        <title>UI Table - Basic Example</title>
+        
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+        <link rel="stylesheet" type="text/css" href="../../basic/basic.css">
+        <script src="../../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+
+        <script src="js/table-data.js" type="text/javascript" charset="utf-8"></script>
+        <script src="js/components/ui-table.js" type="text/javascript" charset="utf-8"></script>
+
+        <style>
+
+            body {
+                margin: 0px !important;
+                overflow: auto !important;
+            }
+
+            #my-table-div {
+                position: absolute;
+                top: 20px;
+                left: 50%;
+                width: 600px;
+                height: 432px;
+                transform:translateX(-50%);
+            }
+
+            /* Custom scroll bar */
+            .table-scrollbar::-webkit-scrollbar {
+                width: 10px;
+                height: 10px;
+            }
+
+        </style>
+
+        <script type="module">
+
+        // Run on load:
+        window.onload = function() {
+
+            // UI TABLE: Options.
+            const tableOptions = {
+                borderString: "0px solid lightgray",
+                borderRadius: "0px 0px 0px 0px",
+                boxShadow: "none",
+                backgroundColor: "white",
+                titleRowBackgroundColor: "white",
+                titleRowBottomBorderString: "0px solid rgba(0, 0, 0, 0.2)",
+                titleCellBackgroundColor: "white",
+                titleCellRightBorderString: "0px solid rgba(0, 0, 0, 0.08)",
+                titleCellBottomBorderString: "1px solid rgba(0, 0, 0, 0.2)",
+                itemRowBottomBorderString: "1px solid rgba(0, 0, 0, 0.1)",
+                itemCellRightBorderString: "0px solid rgba(0, 0, 0, 0.03)",
+                itemEvenBackgroundColor: "white",
+                itemsCanSelectable: 1,
+                itemSelectedBackgroundColor: "rgba(0, 0, 0, 0.03)", 
+                titleBoxShadow: "none",
+            };
+
+            // UI TABLE: Create table.
+            window.myTable = UITable.create(tableOptions);
+            
+            // Move object into "my-table-div"
+            myTable.moveIntoDiv("my-table-div");
+            // Custom scrollbar:
+            myTable.addScrollBarCssClass("table-scrollbar");
+
+            // Table titles options:
+            const titleDataList = [
+                { id: "id", name: "#", itemDataIndex: 0, width: 60 },
+                { id: "name", name: "Name", itemDataIndex: 1, width: 220, enableSorting: 1 },
+                { id: "age", name: "Age", itemDataIndex: 3, width: 120 },
+                { id: "city", name: "City", itemDataIndex: 2 }
+            ];
+
+            // Create titles.
+            myTable.createTitles(titleDataList);
+
+            // On table item click:
+            myTable.on("click", function(itemRow) {
+                println(itemRow.index);
+                println(itemRow.data);
+            });
+
+            // Fill data:
+            myTable_fillData();
+            
+        };
+
+        const myTable_fillData = function() {
+
+            // Insert data:
+            myTable.createItems(testData);
+
+            // Delete all items:
+            // myTable.clearItems(testData);
+            // Update items (Add, delete, change):
+            // myTable.updateItems(testData);
+
+            // NOTE: testData in js/table-data.js
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+        
+        <!-- HTML content -->
+        <div id="my-table-div"></div>
+        
+    </body>
+</html>

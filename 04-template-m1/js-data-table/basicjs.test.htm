@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        
+        <title>UI Table</title>
+        
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+        <link rel="stylesheet" type="text/css" href="basic/basic.css">
+        <script src="basic/basic.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+        
+        const start = function() {
+
+            /*
+            const txt = createImage();
+            that.width = 100;
+            that.height = 100;
+            that.load("lock.png");
+            that.left = 10
+            that.top = 10
+            print(that.height)
+            */
+
+            /*
+            const box = createBox();
+            that.width = 100;
+            that.height = 100;
+            that.top = 0;
+            that.left = 0;
+            that.scrollY = 1;
+            that.color = "red";
+            that.border = 10;
+            that.html = "a<br>b<br>c<br>d<br>e<br>f<br>";
+            print(box.element.clientHeight);
+            print(box.element.offsetHeight);
+            print(box.element.scrollHeight);
+            */
+
+            var startTime = performance.now();
+
+            const box = createLabel();
+            that.width = "auto";
+            that.height = "auto";
+            that.text = "Some Text";
+            that.left = 0;
+            that.top = 0;
+            print(box.element.clientWidth);
+            print(box.element.offsetWidth);
+            print(box.element.scrollWidth);
+            that.onResize(function(self) {
+                print("auto: " + self.width);
+            });
+
+            var endTime = performance.now();
+
+            // Ölçülen süreyi hesaplayın ve milisaniye cinsinden yazdırın
+            var elapsedTime = endTime - startTime;
+            console.log('Elapsed time: ' + elapsedTime + 'ms');
+            
+        }
+
+        </script>
+
+    </head>
+    <body>
+        
+    </body>
+</html>

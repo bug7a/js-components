@@ -189,7 +189,7 @@ const BottomBar = function (params = {}) {
 
     box.refreshOneTime = function () {
         if (box.refreshTimeout) clearTimeout(box.refreshTimeout);
-        box.refreshTimeout = setTimeout(function () { box.refresh(); }, 5);
+        box.refreshTimeout = setTimeout(function () { box.refresh(); }, 3);
     };
 
     box.setBadge = function (index, value) {
@@ -222,12 +222,13 @@ const BottomBar = function (params = {}) {
             if (index == box.selectedIndex) {
                 _currentLeft += item.icon.width + _layout.iconGap;
 
+                updateItemVisuals(item, true);
+
                 item.label.left = _currentLeft;
                 _currentLeft += item.label.width + _layout.itemSpacing;
 
-                updateItemVisuals(item, true);
-
                 box.selectedBox.opacity = 1;
+                
                 // Calculate selected box position and size based on layout params
                 box.selectedBox.left = item.icon.left - _layout.selectionPadding;
                 const contentWidth = item.icon.width + _layout.iconGap + item.label.width;

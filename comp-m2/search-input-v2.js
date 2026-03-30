@@ -21,8 +21,8 @@ const SearchInputDefaults = {
     top: 0,
     width: 300,
     height: 50,
-    searchIconFile: "../comp-m1/search-input/search.svg",
-    clearIconFile: "../comp-m1/search-input/clear.svg",
+    searchIconFile: "../comp-m2/search-input-v2/search.svg",
+    clearIconFile: "../comp-m2/search-input-v2/clear.svg",
     searchIconSize: 24,
     isCancelEnabled: 1,
     placeholderText: "Search",
@@ -35,6 +35,7 @@ const SearchInputDefaults = {
     fontSize: 20,
     invertIconColor: 0,
     onSearch: function(searchedText, self) {},
+    onSubmit: function(searchedText, self) {},
 };
 
 const SearchInput = function(params = {}) {
@@ -125,9 +126,15 @@ const SearchInput = function(params = {}) {
     endBox();
 
      // *** CODE:
-     box.txtSearch.inputElement.addEventListener("keyup", function() {
+     box.txtSearch.inputElement.addEventListener("keyup", function(event) {
 
+        // Her tuşa basınca
         box.onSearch(box.txtSearch.text.toLowerCase(), box);
+
+        // Sadece enter a basınca.
+        if (event.key === "Enter") {
+            box.onSubmit(box.txtSearch.text.toLowerCase(), box);
+        }
 
         if (box.isCancelEnabled) {
             if (box.txtSearch.text.length > 0) {
@@ -147,8 +154,10 @@ const SearchInput = function(params = {}) {
         self.clickable = 0;
         box.txtSearch.text = "";
         box.onSearch(box.txtSearch.text.toLowerCase(), box);
+        box.onSubmit(box.txtSearch.text.toLowerCase(), box);
 
     });
+    box.imgClearIcon.clickable = 0;
 
     makeBasicObject(box);
     return box;

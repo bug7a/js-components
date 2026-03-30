@@ -26,7 +26,8 @@ const CompNameDefaults = {
     descText: "",
     badgetText: "",
     invertColor: 0,
-    onClick: function(self) {},
+    dataList: "", // Object will create with this data.
+    onClick: function (self) { },
     backgroundStyle: {
         color: White(1),
         overColor: "#EFE3C5",
@@ -40,9 +41,14 @@ const CompNameDefaults = {
         border: 0,
         invertColor: 0,
     },
+    style: { // Test
+        box: {},
+        icon: { color: White(0), border: 0, invertColor: 0, },
+        label: {},
+    }
 };
 
-const CompName = function(params = {}) {
+const CompName = function (params = {}) {
 
     // Marge params:
     mergeIntoIfMissing(params, CompNameDefaults);
@@ -70,12 +76,16 @@ const CompName = function(params = {}) {
     box.publicVar = 1;
     // State of component [var]
     box.state = "normal";
+    // [var]
+    box.refreshTimer = null;
+    // Created items by data [var]
+    box.list = [];
 
     // NOTE: Default values are also public variables.
 
 
     // *** PRIVATE FUNCTIONS:
-    const privateFunc = function() {};
+    const privateFunc = function () { };
     /*
     const boxResized = function(self) {
         box.iconBackground.left = box.icon.left;
@@ -85,22 +95,22 @@ const CompName = function(params = {}) {
 
     // *** PUBLIC FUNCTIONS:
     // If you need to change a param after it is created. You can write a setter function for it.
-    box.publicFunc = function() {};
+    box.publicFunc = function () { };
 
-    box.setIconFile = function(file) {
+    box.setIconFile = function (file) {
         box.iconFile = file;
         box.icon.load(file);
     }
     // USAGE: get: componentName.iconFile, set: componentName.setIconFile("8")
 
-    box.setBadgetText = function(text) {
+    box.setBadgetText = function (text) {
 
         box.badgetText = text;
         box.lblBadget.text = text;
 
         const _num = parseInt(text);
 
-        badgetColors.forEach(function(data, index) {
+        badgetColors.forEach(function (data, index) {
             if (_num >= data.min && _num <= data.max) {
                 box.lblBadget.color = data.color;
                 badgetCurrentColor = data.color;
@@ -110,20 +120,21 @@ const CompName = function(params = {}) {
     };
     // USAGE: get: componentName.badgetText, set: componentName.setBadgetText("8")
 
-    box.setBackgroundColor = function(color) {
+    box.setBackgroundColor = function (color) {
         box.backgroundStyle.color = color;
         box.background.color = color;
     };
 
-    box.setBackgroundOverColor = function(color) {
+    box.setBackgroundOverColor = function (color) {
         box.backgroundStyle.overColor = color;
     };
 
-    box.setState = function(state) {
-        
+    // setView
+    box.setState = function (state) {
+
         box.state = state;
 
-        switch(state) {
+        switch (state) {
 
             case "normal":
                 box.background.color = box.backgroundStyle.color;
@@ -138,7 +149,7 @@ const CompName = function(params = {}) {
                 break;
 
             case "selected":
-                
+
                 break;
 
             case "disabled":
@@ -148,17 +159,40 @@ const CompName = function(params = {}) {
         }
     };
 
-    box.refresh = function() {
-        
-        // NOTE: Check the child objects and make sure their states are appropriate.
+    const refresh = function(level = "layout") {
 
+        if (level === "layout") {
+            // layout değişince scroll da data da güncellenmeli:
+            level = "scroll"; 
+        }
+
+        if (level === "scroll") {
+            // scroll değişince pozisyon da data da güncellenmeli:
+            level = "position";
+        }
+
+        if (level === "position") {
+            level = "data";
+        }
+
+        if (level === "data") {
+            level = "info";
+        }
+
+        if (level === "info") {
+        }
+    
+    };
+
+    box.refresh = function (time = 3) {
+        box.refreshTimer = waitAndRun(box.refreshTimer, refresh, time);
     };
 
     // box.superRemove = box.remove;
-    box.destroy = function() {
+    box.destroy = function () {
 
         //page.remove_onResize(functionName); // on page resized.
-                
+
         // Remove basic objects
         box.background.remove(); // NOTE: If you add event (box.background.on("click") to other objects.
         box.icon.remove();
@@ -174,99 +208,99 @@ const CompName = function(params = {}) {
     box.clickable = 1;
     // Show outside of the box. box.lblBadget will be shown at out of container.
     box.clipContent = 0;
-    if(box.invertColor == 1) box.elem.style.filter = "invert(100%)";
+    if (box.invertColor == 1) box.elem.style.filter = "invert(100%)";
 
-        // BOX: background
-        box.background = Box(0, 0, "100%", "100%", box.backgroundStyle);
-        box.background.setMotion("background-color 0.2s");
-        // WHY: Different background boxes are more useful in components.
+    // BOX: background
+    box.background = Box(0, 0, "100%", "100%", box.backgroundStyle);
+    box.background.setMotion("background-color 0.2s");
+    // WHY: Different background boxes are more useful in components.
 
-        // BOX: Background effect
-        box.backgroundEffect = Box(0, 0, "100%", "100%", {
-            opacity: 0.15,
-            round: box.backgroundStyle.round, // clipContent: 0 so,
-        });
-        that.elem.style.background = "linear-gradient(to bottom, white, black)";
+    // BOX: Background effect
+    box.backgroundEffect = Box(0, 0, "100%", "100%", {
+        opacity: 0.15,
+        round: box.backgroundStyle.round, // clipContent: 0 so,
+    });
+    that.elem.style.background = "linear-gradient(to bottom, white, black)";
 
-        // BOX: icon back
-        /*
-        box.iconBackground = Box(0, 0, 48, 48, {
-            border: 2,
-            borderColor: Black(0.2),
-            position: "absolute",
-            round: 100,
-            color: White(0.8),
-        });
-        */
+    // BOX: icon back
+    /*
+    box.iconBackground = Box(0, 0, 48, 48, {
+        border: 2,
+        borderColor: Black(0.2),
+        position: "absolute",
+        round: 100,
+        color: White(0.8),
+    });
+    */
 
-        // GROUP: icon, group (title, label)
-        HGroup({
-            align: "left center",
-            padding: [10, 0],
-            gap: 10,
-            // NOTE: this width, height: "100%" as default.
-        });
+    // GROUP: icon, group (title, label)
+    HGroup({
+        align: "left center",
+        padding: [10, 0],
+        gap: 10,
+        // NOTE: this width, height: "100%" as default.
+    });
 
-            // ICON: image
-            box.icon = Icon({
-                width: 48,
-                height: 48,
-                space: 10,
-                border: box.iconStyle.border,
-                color: box.iconStyle.color,
-            });
-            that.load(box.iconFile);
-            if(box.iconStyle.invertColor == 1) that.elem.style.filter = "invert(100%)";
+    // ICON: image
+    box.icon = Icon({
+        width: 48,
+        height: 48,
+        space: 10,
+        border: box.iconStyle.border,
+        color: box.iconStyle.color,
+    });
+    that.load(box.iconFile);
+    if (box.iconStyle.invertColor == 1) that.elem.style.filter = "invert(100%)";
 
-            // GROUP: label, description
-            VGroup({
-                width: "auto", // Wrap group content
-                height: "auto", // Wrap group content
-                align: "left top",
-            });
+    // GROUP: label, description
+    VGroup({
+        width: "auto", // Wrap group content
+        height: "auto", // Wrap group content
+        align: "left top",
+    });
 
-                // LABEL: label
-                box.label = Label({
-                    text: box.labelText,
-                });
+    // LABEL: label
+    box.label = Label({
+        text: box.labelText,
+    });
 
-                // LABEL: description
-                box.lblDesc = Label({
-                    text: box.descText,
-                    textColor: Black(0.4),
-                    fontSize: 16,
-                });
-                that.elem.style.marginTop = "-6px";
+    // LABEL: description
+    box.lblDesc = Label({
+        text: box.descText,
+        textColor: Black(0.4),
+        fontSize: 16,
+    });
+    that.elem.style.marginTop = "-6px";
 
-            endGroup();
+    endGroup();
 
-        endGroup();
+    endGroup();
 
-        // LABEL: Badget
-        box.lblBadget = Label({
-            text: "", // NOTE: If you have complex functions just use box.setBadgetText(box.badgetText); after OBJECT INIT CODE.
-            textColor: Black(0.8),
-            border: 1,
-            borderColor: Black(0.6),
-            padding: [8, 2],
-            round: 2,
-            fontSize: 12,
-            right: -3,
-            top: -3,
-        });
-        that.elem.style.whiteSpace = "nowrap";
-        that.elem.style.fontFamily = "opensans-bold";
-        that.setMotion("background-color 0.2s");
+    // LABEL: Badget
+    box.lblBadget = Label({
+        text: "", // NOTE: If you have complex functions just use box.setBadgetText(box.badgetText); after OBJECT INIT CODE.
+        textColor: Black(0.8),
+        border: 1,
+        borderColor: Black(0.6),
+        padding: [8, 2],
+        round: 2,
+        fontSize: 12,
+        right: -3,
+        top: -3,
+    });
+    that.elem.style.whiteSpace = "nowrap";
+    that.elem.style.fontFamily = "opensans-bold";
+    that.setMotion("background-color 0.2s");
 
 
     // *** OBJECT INIT CODE:
-    box.on("click", function(self, event) {
+    box.on("click", function (self, event) {
         box.onClick(box, event);
     });
-    box.on("mouseover", function(self, event) {
+    box.on("mouseover", function (self, event) {
         box.setState("mouseover");
     });
-    box.on("mouseout", function(self, event) {
+    box.on("mouseout", function (self, event) {
         box.setState("normal");
     });
 
@@ -274,11 +308,11 @@ const CompName = function(params = {}) {
     box.onResize(boxResized);
     boxResized();
     */
-    
+
     //page.onResize(functionName); // on page resized.
-    
+
     box.setBadgetText(box.badgetText);
-    
+
     return endObject(box);
 
 };

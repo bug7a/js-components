@@ -15,6 +15,12 @@
 
     <script>
 
+        const UI_STATES = {
+            SHOW_FRUID: "show-fruid",
+            DELETE_FRUID: "delete-fruid",
+            DISABLE_DELETE: "disable-delete-button"
+        };
+
         window.onload = function () {
 
             page.color = "whitesmoke";
@@ -49,33 +55,20 @@
                 iconFile: _assetsPath + "trash.png",
                 holdingIconFile: _assetsPath + "trash-red.png",
                 style: {
-                    layout: {
-                        gap: 4,
-                        padding: [18, 5],
-                    },
-                    label: {
-                        fontSize: 20,
-                        textColor: Black(0.65),
-                    },
-                    box: {
-                        color: "white",
-                        border: 1,
-                        borderColor: Black(0.3),
-                        round: 8,
-                    },
-                    holdingBox: {
-                        color: "#FFD1CB",
-                    },
+                    layout: { gap: 4, padding: [18, 5], },
+                    label: { fontSize: 20, textColor: Black(0.65), },
+                    box: { color: "white", border: 1, borderColor: Black(0.3), round: 8, },
+                    holdingBox: { color: "#FFD1CB", },
                 }
             });
 
             btnConfirm.onConfirm = function (self) {
                 console.log("Button held!");
-                refreshView("delete-fruid");
+                refreshView(UI_STATES.DELETE_FRUID);
             };
 
             btnConfirm.onReset = function (self) {
-                refreshView("disable-delete-button");
+                refreshView(UI_STATES.DISABLE_DELETE);
             };
 
             // Show Button
@@ -87,8 +80,8 @@
                 border: 1,
             });
 
-            btnShow.on("click", function() {
-                refreshView("show-fruid");
+            btnShow.on("click", function () {
+                refreshView(UI_STATES.SHOW_FRUID);
             });
             //that.elem.style.fontFamily = "opensans-bold";
 
@@ -96,14 +89,14 @@
 
             // FUNCTIONS:
 
-            const refreshView = function(state) {
+            const refreshView = function (state) {
 
                 switch (state) {
 
-                    case "show-fruid":
-                        
+                    case UI_STATES.SHOW_FRUID:
+
                         // show icon
-                        icoFruid.opacity = 1;    
+                        icoFruid.opacity = 1;
 
                         // delete button usable
                         btnConfirm.opacity = 1;
@@ -112,17 +105,17 @@
                         // show button disabled
                         btnShow.opacity = 0.5;
                         btnShow.clickable = 0;
-                                
+
                         break;
 
-                    case "delete-fruid":
+                    case UI_STATES.DELETE_FRUID:
 
                         // show icon
-                        icoFruid.opacity = 0; 
+                        icoFruid.opacity = 0;
 
                         break;
 
-                    case "disable-delete-button":
+                    case UI_STATES.DISABLE_DELETE:
 
                         // delete button disabled
                         btnConfirm.opacity = 0.5;
@@ -131,7 +124,7 @@
                         // show button usable
                         btnShow.opacity = 1;
                         btnShow.clickable = 1;
-                        
+
                         break;
 
                 }

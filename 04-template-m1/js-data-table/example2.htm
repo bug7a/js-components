@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        
+        <title>UI Table - Full Custom </title>
+        
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+        <link rel="stylesheet" type="text/css" href="../../basic/basic.css">
+        <script src="../../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+
+        <script src="js/table-data.js" type="text/javascript" charset="utf-8"></script>
+        <script src="js/components/ui-table.js" type="text/javascript" charset="utf-8"></script>
+        <script src="js/components/ui-search-box.js" type="text/javascript" charset="utf-8"></script>
+
+        <style>
+
+            body {
+                margin: 0px !important;
+                overflow: auto !important;
+            }
+
+            #my-table-div {
+                position: absolute;
+                top: 20px;
+                left: 20px;
+                width: calc(100% - 40px);
+                height: calc(100% - 40px);
+            }
+
+            /* Customize mouse over and click effects with css */
+            .table-title-cell {
+                cursor: pointer;
+            }
+
+            .table-title-cell:hover {
+                background-color: white !important;
+                /* border: 1px solid rgba(0, 0, 0, 0.2) !important; */
+                border-bottom: 1px solid rgba(0, 0, 0, 0.2) !important;
+            }
+
+            .table-item-row {
+                cursor: pointer;
+            }
+
+            .table-item-row:hover {
+                background-color: rgba(254, 193, 8, 0.1) !important;
+                /* border: 1px solid rgba(0, 0, 0, 0.2) !important; */
+                opacity: 1;
+                border-radius: 2px !important;
+            }
+
+            .table-item-row:active {
+                background-color: rgba(254, 193, 8, 0.2) !important;
+                /* border: 1px solid rgba(0, 0, 0, 0.2) !important; */
+                opacity: 1;
+                border-radius: 2px !important;
+            }
+
+            .table-item-cell {
+                cursor: pointer;
+            }
+
+            .table-item-cell:hover {
+                background-color: whitesmoke !important;
+                border: 1px solid black !important;
+            }
+
+            /* Custom scroll bar */
+            .table-scrollbar::-webkit-scrollbar {
+                width: 10px;
+                height: 10px;
+            }
+
+            .table-scrollbar::-webkit-scrollbar-thumb {
+                background: lightgray;
+                border-radius: 6px;
+                border: 2px solid rgba(0, 0, 0, 0);
+                background-clip: padding-box;
+            }
+
+            .table-scrollbar::-webkit-scrollbar-thumb:hover {
+                background: gray;
+                border-radius: 6px;
+                border: 2px solid rgba(0, 0, 0, 0);
+                background-clip: padding-box;
+            }
+
+            .table-scrollbar::-webkit-scrollbar-thumb:active {
+                background: gray;
+                border-radius: 6px;
+                border: 2px solid rgba(0, 0, 0, 0);
+                background-clip: padding-box;
+            }
+
+            .table-scrollbar::-webkit-scrollbar-track {
+                background: white;
+                border-left: 1px solid rgba(0, 0, 0, 0.2);
+                background-clip: padding-box;
+            }
+
+            .table-scrollbar::-webkit-scrollbar-corner {
+                background-color: transparent;
+            }
+
+
+        </style>
+
+        <script>
+        
+        // Run on load:
+        window.onload = function() {
+
+            window.startTime = date.now;
+
+            // UI TABLE: Options.
+            const tableOptions = {
+                width: "100%",
+                height: "calc(100% - 50px)",
+                borderString: "1px solid rgba(0, 0, 0, 0.2)",
+                boxShadow: "none",
+                titleBoxShadow: "none",
+            };
+
+            // UI TABLE: Create table.
+            window.myTable = UITable.create(tableOptions);
+
+            // Move object into "my-table-div"
+            myTable.moveIntoDiv("my-table-div");
+            // Set position:
+            myTable.left = 0;
+            myTable.top = 50;
+
+            // Customize title and item style:
+            myTable.setTitleRowStyle(titleRowStyle);
+            myTable.setTitleCellStyle(titleCellStyle);
+            myTable.setItemRowStyle(itemRowStyle);
+            myTable.setItemCellStyle(itemCellStyle);
+
+            // Custom scrollbar:
+            myTable.addScrollBarCssClass("table-scrollbar");
+
+            // itemDataIndex, itemDataType
+            // if width == undefined { width = "auto" } 
+            // if itemDataIndex == undefined use index of titleData
+            // use itemTextAlign
+            // canSortable = 1
+            // sortBy = "asc"
+            const titleDataList = [
+                { id:"id", name: "ID", itemDataIndex: 0, itemDataType: "integer", width: 60, itemTextAlign: "left", enableSorting: 1, sortBy: "desc" },
+                { id:"name", name: "Name", itemDataIndex: 1, itemDataType: "string", width: "auto", itemTextAlign: "left", enableSorting: 1 },
+                { id:"age", name: "Age", itemDataIndex: 3, itemDataType: "integer", width: 100, itemTextAlign: "center", enableSorting: 1 },
+                { id:"city", name: "City", itemDataIndex: 2, itemDataType: "string", width: "auto", itemTextAlign: "left" }
+            ];
+            // NOTE: For multi line title, use <br> tag.
+
+            myTable.createTitles(titleDataList);
+
+            myTable_fillData();
+            myTable_createTableTitle();
+            myTable_setTableTitle("Information Table");
+            myTable_createSearchBox();
+
+            myTable.on("click", function(itemRow) {
+                println(itemRow.index);
+                println(itemRow.data);
+            });
+
+            // .getTitleCellWidthById("id");
+            // .setTitleCellWidthById("id", 300);
+
+            // .getSelectedItemData()
+            // .getSelectedItemRow
+            // .getSelectedItemRow.forEach(itemCell)
+            // .setSelectedItemById()
+            // .setSelectedItemById
+            // myTable.getTitleIndexById("title");
+            // myTable.getTitleCellById("title");
+            // myTable.getTitleRow();
+
+            println(date.now - window.startTime);
+            
+        }
+
+        const myTable_fillData = function() {
+            /* TEST:
+            for(var i = 101; i <= 1000; i++) {
+                testData.push([i, "John Smith", "New York", 30, "photography", "hiking", "Software Engineer", "Bachelor's degree in Computer Science"]);
+            }
+            */
+            myTable.createItems(testData);
+        }
+
+        const myTable_createTableTitle = function() {
+
+            // LABEL: Table title.
+            myTable.title = createLabel();
+            // Move object into "my-table-div"
+            document.getElementById("my-table-div").append(myTable.title.element);
+
+            that.text = "";
+            that.fontSize = 20;
+            that.textColor = "rgba(0, 0, 0, 0.7)";
+            that.element.style.fontFamily = "opensans-bold";
+            // Set object position:
+            that.left = 0;
+            that.top = 6;
+
+        }
+
+        const myTable_setTableTitle = function(titleText) {
+            myTable.title.text = titleText;
+        }
+
+        const myTable_createSearchBox = function() {
+
+            // UI SEARCH BOX:
+            const searchBoxOptions = {
+                width: 180,
+                height: 40,
+                fontSize: 16,
+                border: 1,
+                color: "white"
+            };
+            // NOTE: For more options, look into js/components/ui-search-box.js
+            
+            // UI SEARCH BOX: Create search box.
+            myTable.uiSearchBox = UISearchBox.create(searchBoxOptions);
+            // Move object into "my-table-div"
+            document.getElementById("my-table-div").append(myTable.uiSearchBox.element);
+
+            // Set object position:
+            that.right = 0;
+            that.top = 0;
+            that.imgIcon.space = 15;
+
+            myTable.uiSearchBox.onSearch(function(searchText, uiSearchBox) {
+                println("uiSearchBox2 text: " + searchText);
+                myTable.filterByText(searchText);
+            });
+            
+        }
+
+        const titleRowStyle = function(titleRow) {
+
+        };
+
+        const titleCellStyle = function(titleCell, titleCellData, titleCellIndex) {
+
+            titleCell.label.element.style.textTransform = "uppercase";
+
+            // Clickable titles for sorting.
+            if (titleCellData.id == "id" || titleCellData.id == "name" || titleCellData.id == "age") {
+                titleCell.background.element.classList.add("table-title-cell");
+            }
+
+        };
+
+        const itemRowStyle = function(itemRow, itemData, itemIndex) {
+
+            itemRow.background.element.classList.add("table-item-row");
+
+        };
+
+        const itemCellStyle = function(itemCell, itemCellData, titleCellData, itemRow, itemCellIndex) {
+
+            if (titleCellData.id == "id") {
+                
+            }
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+        
+        <!-- HTML content -->
+        <div id="my-table-div"></div>
+        
+    </body>
+</html>

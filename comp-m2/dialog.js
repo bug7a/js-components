@@ -17,7 +17,7 @@ Webpage: https://bug7a.github.io/js-components/
 
 "use strict";
 
-// Dialog: Component example
+// Default values:
 const DialogDefaults = {
     icon: "dialog/key.png",
     title: "?",
@@ -26,12 +26,13 @@ const DialogDefaults = {
     callback: function(id) {},
     cancelButtonText: "Cancel",
     confirmButtonColor: basic.ACTION_COLOR,
-    color: "rgba(0,0,0,0.7)",
+    color: Black(0.7),
 };
 
 const Dialog = function(params = {}) {
 
-    const box = startObject();
+    // Merge params:
+    mergeIntoIfMissing(params, DialogDefaults);
 
     // You can't set these values over params.
     params.opacity = 0;
@@ -39,17 +40,18 @@ const Dialog = function(params = {}) {
     params.top = 0;
     params.width = "100%";
     params.height = "100%";
-    
-    // Values are ready to use
-    box.props(DialogDefaults, params);
 
+    // BOX: Component container
+    let box = startObject(params);
+
+    // Add smooth animation for the main container.
     that.setMotion("opacity 0.2s");
     that.withMotion(function(self) {
         self.opacity = 1;
     });
 
-        // Close alert
-        Box(0,0,"100%","100%", {
+        // Close it when the background is pressed.
+        Box(0, 0, "100%", "100%", {
             color: "transparent",
         });
         that.on("click", function() {
@@ -58,7 +60,7 @@ const Dialog = function(params = {}) {
         });
 
         // GROUP: Cover background
-        AutoLayout({
+        HGroup({
             align: "center",
         });
 
@@ -72,6 +74,7 @@ const Dialog = function(params = {}) {
             that.elem.style.minWidth = "500px";
             that.opacity = 0;
             that.elem.style.transform = "translateY(50px)";
+            // Add smooth animation
             that.setMotion("transform 0.2s, opacity 0.2s");
             that.withMotion(function(self) {
                 self.opacity = 1;
@@ -80,7 +83,7 @@ const Dialog = function(params = {}) {
             that.elem.style.boxShadow = "0px 0px 8px rgba(0, 0, 0, 0.2)";
             that.clickable = 1;
 
-                // Buttons background
+                // Buttons background ()
                 Box({
                     color: "whitesmoke",
                     width: "100%",
@@ -91,7 +94,7 @@ const Dialog = function(params = {}) {
                 that.elem.style.borderTop = "1px solid rgba(0,0,0,0.3)";
 
                 // GROUP: Title
-                AutoLayout({
+                HGroup({
                     align: "top left",
                     gap: 6,
                     padding: 12,
@@ -111,10 +114,10 @@ const Dialog = function(params = {}) {
                     });
                     that.elem.style.fontFamily = "opensans-bold";
 
-                endAutoLayout();
+                endGroup(); // TITLE GROUP
 
                 // GROUP: Description
-                AutoLayout({
+                HGroup({
                     align: "left top",
                     padding: [12, 50, 12, 80],
                 });
@@ -126,10 +129,10 @@ const Dialog = function(params = {}) {
                         textColor: "#4A4A4A",
                     });
 
-                endAutoLayout();
+                endGroup(); // DESC GROUP
 
                 // GROUP: Buttons
-                AutoLayout({
+                HGroup({
                     align: "right bottom",
                     gap: 6,
                     padding: 12,
@@ -168,11 +171,11 @@ const Dialog = function(params = {}) {
                         box.callback(1);
                     });
 
-                endAutoLayout(); // Button group
+                endGroup(); // BUTTONS GROUP
 
             endBox(); // Alert box
 
-        endAutoLayout(); // Cover black background
+        endGroup(); // Cover black background
 
     return endObject(box);
     

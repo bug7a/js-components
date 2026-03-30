@@ -205,19 +205,19 @@
 
                     endGroup();
 
-                    // INPUT: Phone
-                    myInput = PhoneInputB({
-                        key: "1",
-                        isRequired: 1,
-                        titleText: "PHONE NUMBER",
-                        placeholder: "(auto)",
-                        warningText: "Invalid phone number format",
-                        warningColor: "#E5885E", // "#F1BF3C"
-                        countryCode: countryList[0].code,
-                        phoneMask: " (___) ___-____",
-                        unitText: countryList[0].shortName,
-                        width: "100%",
-                    });
+        // INPUT: Phone
+        myInput = PhoneInputB({
+            key: "1",
+            isRequired: 1,
+            titleText: "PHONE NUMBER",
+            placeholder: "(auto)",
+            warningText: "Invalid phone number format",
+            warningColor: "#E5885E", // "#F1BF3C"
+            countryCode: countryList[0].code,
+            phoneMask: " (___) ___-____",
+            unitText: countryList[0].shortName,
+            width: "100%",
+        });
 
                 endGroup(); // END GROUP
 

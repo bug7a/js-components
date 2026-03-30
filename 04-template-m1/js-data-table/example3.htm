@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        
+        <title>UI Table - Add, Edit, Delete Example</title>
+        
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+        <link rel="stylesheet" type="text/css" href="../../basic/basic.css">
+        <script src="../../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+
+        <script src="js/table-data.js" type="text/javascript" charset="utf-8"></script>
+        <script src="js/components/tool.js" type="text/javascript" charset="utf-8"></script>
+        <script src="js/components/ui-table.js" type="text/javascript" charset="utf-8"></script>
+
+        <style>
+
+            body {
+                margin: 0px !important;
+                overflow: auto !important;
+            }
+
+            /* Customize mouse over and click effects with css */
+            .table-title-cell {
+                cursor: pointer;
+            }
+
+            .table-title-cell:hover {
+                background-color: whitesmoke !important;
+                /* border: 1px solid rgba(0, 0, 0, 0.2) !important; */
+                border-bottom: 1px solid rgba(0, 0, 0, 0.2) !important;
+            }
+
+            /* Custom scroll bar */
+            .table-scrollbar::-webkit-scrollbar {
+
+                width: 10px;
+                height: 10px;
+
+            }
+
+        </style>
+
+        <script>
+
+        // Table titles options:
+        const titleDataList = [
+            { id: "id", name: "#", itemDataIndex: 0, width: 60, enableSorting: 1 },
+            { id: "name", name: "Palette Name", itemDataIndex: 1, width: "auto", enableSorting: 1 },
+            { id: "color", name: "Colors", itemDataIndex: 2, width: "auto" }
+        ];
+
+        // Table items:
+        let itemDataList = [
+            [1, "Complementary", ["#689BD2", "#BE94CA", "#FE5D49"]],
+            [2, "Split Complementary", ["#CC75AA", "#FEC108", "#4577C1"]],
+            [3, "Triadic", ["#63B964", "#9F60BD"]],
+            [4, "Square", ["#FEC108", "#FE5D49", "#4577C1", "#5ABB9F"]]
+        ];
+
+        // Run on load:
+        window.onload = function() {
+
+            page.fit(700);
+
+            // UI TABLE: Options.
+            const tableOptions = {
+                borderString: "0px solid lightgray",
+                borderRadius: "4px 4px 4px 4px",
+                boxShadow: "none",
+                backgroundColor: "white",
+                titleRowBackgroundColor: "transparent",
+                titleRowBottomBorderString: "1px solid rgba(0, 0, 0, 0.2)",
+                titleCellBackgroundColor: "white",
+                titleCellRightBorderString: "1px solid rgba(0, 0, 0, 0.08)",
+                titleCellBottomBorderString: "1px solid rgba(0, 0, 0, 0.2)",
+                itemRowBottomBorderString: "1px solid rgba(0, 0, 0, 0.1)",
+                itemCellRightBorderString: "0px solid rgba(0, 0, 0, 0.03)",
+                itemEvenBackgroundColor: "white",
+                itemsCanSelectable: 0,
+                itemSelectedBackgroundColor: "rgba(0, 0, 0, 0.03)", 
+                titleBoxShadow: "none",
+                createItemCellContentBox: 1,
+            };
+
+            // UI TABLE: Create table.
+            window.myTable = UITable.create(tableOptions);
+            // Set position:
+            myTable.left = 0;
+            myTable.top = 0;
+            // Custom scrollbar
+            myTable.boxItems.element.classList.add("table-scrollbar");
+
+            // Customize title and item style:
+            myTable.setTitleCellStyle(titleCellStyle);
+            myTable.setItemCellStyle(itemCellStyle);
+
+            // Add icon to the title text.
+            titleDataList[2].name = tool.useImageAsText({
+                fontSize: 12,
+                outerSpaceRight: 6,
+                outerSpaceLeft: 4,
+            }, function editCreatedImage(image) {
+                image.width = 16;
+                image.height = 16;
+                image.load("assets/palette.svg");
+            }) + "Colors";
+
+            // Create titles.
+            myTable.createTitles(titleDataList);
+
+            // Fill data.
+            myTable_fillData();
+
+            // Test buttons.
+            addTestButtons();
+
+            page.onResize(function(self) {
+                page.fit(700);
+            });
+            
+        };
+
+        const myTable_fillData = function() {
+
+            // Take data from service with AJAX:
+            myTable.createItems(itemDataList);
+
+        };
+
+        const titleCellStyle = function(titleCell, titleCellData, titleIndex) {
+
+            titleCell.label.element.style.fontFamily = "opensans-bold";
+            titleCell.label.element.style.textTransform = "uppercase";
+
+            // Clickable titles for sorting.
+            if (titleCellData.id == "name" || titleCellData.id == "id") {
+                titleCell.background.element.classList.add("table-title-cell");
+            }
+
+        };
+
+        const itemCellStyle = function(itemCell, itemCellData, titleCellData, itemRow, itemCellIndex) {
+
+            if (titleCellData.id == "color") {
+
+                itemCell.label.visible = 0;
+
+                itemCell.box.html = "";
+                // Content will be centered always;
+                itemCell.box.element.style.display = "flex";
+                itemCell.box.element.style.alignItems = "center";
+                itemCell.box.element.style.justifyContent = "center";
+
+                itemCell.box.colorBox = createColorPalette(itemCellData);
+                itemCell.box.add(that);
+                that.position = "relative";
+
+            }
+
+        };
+
+        const createColorPalette = function(colorList) {
+
+            const box = createBox();
+
+            box.width = 30;
+            box.height = 30;
+            box.color = "transparent";
+
+            for(var i = 0; i < colorList.length; i++) {
+
+                box["color" + i] = createBox();
+                box.add(that);
+                that.width = 30;
+                that.height = 30;
+                that.round = 15;
+                that.border = 1;
+                that.borderColor = "rgba(0, 0, 0, 0.8)";
+                that.color = colorList[i];
+
+                that.top = 0;
+                that.left = ((that.width) * 1.2) * i;
+                box.width = that.left + that.width;
+
+            }
+
+            makeBasicObject(box);
+            return box;
+
+        };
+
+        const addTestButtons = function() {
+
+            // Shared style
+            const buttonStyle = function(btn) {
+                btn.color = "lightgray";
+                btn.minimal = 1;
+                btn.fontSize = 18;
+                btn.width = 140;
+                btn.color = "#5ABB9F";
+            }
+
+            // BUTTON: Add new
+            window.btnAddNew = createButton();
+            that.text = "Add Items";
+            buttonStyle(that);
+            that.bottom = 10;
+            that.left = 10;
+
+            // BUTTON: Update
+            window.btnUpdate = createButton();
+            buttonStyle(that);
+            that.text = "Update Items";
+            that.aline(previousThat, "right", 4);
+
+            // BUTTON: Delete
+            window.btnDelete = createButton();
+            buttonStyle(that);
+            that.text = "Delete Items";
+            that.color = "indianred";
+            that.aline(previousThat, "right", 4);
+
+            // BUTTON: Clear All
+            window.btnClear = createButton();
+            buttonStyle(that);
+            that.text = "Clear All";
+            that.color = "indianred";
+            that.aline(previousThat, "right", 4);
+
+            // Events
+            btnAddNew.onClick(test1_add);
+            btnUpdate.onClick(test2_update);
+            btnDelete.onClick(test3_delete);
+            btnClear.onClick(test4_clearAll);
+
+        };
+
+        // Add 2 items.
+        const test1_add = function() {
+
+            const biggestId = myTable.getBiggestId(itemDataList);
+
+            const newItem1 = [biggestId + 1, "Rectangle", ["#9F60BD", "#FE5D49", "#FE5D49", "#5ABB9F"]];
+            const newItem2 = [biggestId + 2, "Natural", ["#5ABB9F", "#9F60BD", "#FE5D49"]];
+            
+            itemDataList.push(newItem1);
+            itemDataList.push(newItem2);
+
+            myTable.updateItems(itemDataList);
+
+        };
+
+        // Edit item index 0 name and colors.
+        const test2_update = function() {
+
+            itemDataList[0][1] = "Edited Name";
+            itemDataList[0][2] = ["#000000", "#FFFFFF"];
+
+            myTable.updateItems(itemDataList);
+
+        };
+
+        // Delete two items, start from index 1
+        const test3_delete = function() {
+
+            itemDataList.splice(1, 2);
+            myTable.updateItems(itemDataList);
+
+        };
+
+        const test4_clearAll = function() {
+
+            myTable.clearItems();
+
+        };
+
+        </script>
+
+    </head>
+    <body></body>
+</html>

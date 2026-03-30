@@ -42,14 +42,14 @@ const EmailInputB = function(params = {}) {
     // *** PRIVATE VARIABLES:
 
     // *** PUBLIC VARIABLES:
-    box.isValid = function() { //OVERRIDE
-        // Check email format
-        return (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(box.getInputValue())) ? 1 : 0;
-    };
 
     // *** PRIVATE FUNCTIONS:
 
     // *** PUBLIC FUNCTIONS:
+    box.isValid = function() { //OVERRIDE
+        // Check email format
+        return (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(box.getInputValue())) ? 1 : 0;
+    };
     
     // *** OBJECT VIEW:
 
