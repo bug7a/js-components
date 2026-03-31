@@ -103,7 +103,7 @@ const SmartTableDefaults = {
         btnScrollUpIconFile: "../comp-m3/smart-table/up.png",
 
         box: { color: "white" },
-        boxBorder: { color: "transparent", border: 2, borderColor: Black(0.8) },
+        boxBorder: { border: 2, borderColor: Black(0.8) },
         boxTitleLine: { color: "#65A293", },
         boxTitleCell: { padding: [8, 0], borderRight: "1px solid rgba(0, 0, 0, 0.5)", borderBottom: "2px solid #141414", },
         lblTitleCell: { fontSize: 20, fontFamily: "opensans", },
@@ -137,7 +137,7 @@ const SmartTable = function (params = {}) {
     box.titleCellCount = 0;
     // [var]
     box.itemLineList = [];
-    // [var]
+    // [var] en üstteki kaydın index i
     box.startedItemIndexForScrolling = 0;
     // Scroll haraketi için gerekli değişkenler [var]
     box.scrollVars = {};
@@ -145,6 +145,7 @@ const SmartTable = function (params = {}) {
     box.recalcItemHeight = 0;
     // [var]
     box.resizeTimer = null;
+    box.refreshTimer = null;
 
     // *** PUBLIC FUNCTIONS:
 
@@ -185,9 +186,7 @@ const SmartTable = function (params = {}) {
     box.refresh = function (time = 3) {
 
         // NOTE: Check the child objects and make sure their states are appropriate.
-        if (box.refreshTimeout) clearTimeout(box.refreshTimeout);
-
-        box.refreshTimeout = setTimeout(refresh, time);
+        box.refreshTimer = waitAndRun(box.refreshTimer, refresh, 3);
 
     };
 
@@ -206,7 +205,7 @@ const SmartTable = function (params = {}) {
 
     };
 
-    box.refreshData = function () {
+    box.refreshData = function () { // [GOOD]
 
         const _startIndex = box.startedItemIndexForScrolling;
         const _dataList = box.visibleItemDataList;
@@ -223,27 +222,38 @@ const SmartTable = function (params = {}) {
 
             // Eğer veri varsa satırı güncelle, yoksa temizle/gizle
             if (_rowData) {
+
                 _itemLine.opacity = 1; // Veya opacity: 1
+                _itemLine.clickable = 1;
+
+                // DATA IN OBJECT (itemLine)
                 _itemLine.itemData = _rowData; // WHY: Line a basıldığında bu bilgi kullanılacak.
-                //_itemLine.visible = 1;
+
+                // TODO: If selected itemData == this item data then make colored.
+
+                // Her bir itemCell için;
                 for (let j = 0; j < _titleCount; j++) {
 
                     const titleData = _titleDataList[j];
                     const cell = _itemLine["itemCell" + j];
                     const newValue = _rowData[titleData.dataTitle] ?? "";
 
-                    // PERFORMANCE HACK: Sadece değer değişmişse DOM'a dokun
-                    if (cell.label.text !== newValue) {
+                    // Sadece değer değişmişse DOM'a dokun
+                    if (cell.label.text != newValue) {
                         cell.label.text = newValue;
                     }
 
-                    box.updateCustomItemCell(cell, j, newValue);
+                    // Özel cell tasarımını güncelle.
+                    box.updateCustomItemCell(cell, j, newValue); 
 
                 }
+
             } else {
+
                 // Veri bitmişse satırı boş göster veya gizle
                 _itemLine.opacity = 0;
-                //_itemLine.visible = 0;
+                _itemLine.clickable = 0;
+                
             }
         }
 
@@ -253,7 +263,7 @@ const SmartTable = function (params = {}) {
 
     };
 
-    box.setVerticalScrollEnabled = function (enabled) {
+    box.setVerticalScrollEnabled = function (enabled) { // [GOOD]
 
         // Sadece kullanılabilir durumda ise enabled yapılabilir.
         if (enabled && box.visibleItemDataList.length > box.itemLineCount) {
@@ -277,7 +287,7 @@ const SmartTable = function (params = {}) {
 
     }
 
-    box.setTitleCellWidth = function (titleCellIndex, width) {
+    box.setTitleCellWidth = function (titleCellIndex, width) { // [GOOD]
 
         if (titleCellIndex < 0 || titleCellIndex >= box.titleCellCount) return;
 
@@ -291,7 +301,7 @@ const SmartTable = function (params = {}) {
     }
 
     // Başlık listesini oluştur
-    box.createTitleLine = function () {
+    box.createTitleLine = function () { // [GOOD]
 
         box.titleCellList = [];
         box.boxTitleLine.html = "";
@@ -308,42 +318,52 @@ const SmartTable = function (params = {}) {
 
     };
 
-    box.createSortIcon = function (cell) {
+    box.setTitleDataList = function(titleDataList) { // [NOT READY]
+
+        box.titleDataList = [...titleDataList];
+        box.createTitleLine();
+        // - clean box.itemDataList
+
+    }
+
+    box.createSortIcon = function (titleCell) { // [NOT BAD]
 
         startBox({
             align: "right center",
             color: "#65A293", // "#65A293",
             round: 100,
-            border: 1,
+            border: 0, // 1
             borderColor: "rgba(0,0,0,0.1)",
             width: 22,
             height: 22,
             right: 2,
             padding: [4, 0],
             position: "absolute",
-            top: 15,
+            //top: 15,
         });
-        if (cell.shortable == 0) that.opacity = 0;
-        cell.add(that);
+        if (titleCell.shortable == 0) that.opacity = 0;
+        titleCell.add(that);
+        that.center("top");
 
-        cell.icon = Icon({
-            width: 20,
-            height: 20,
+        titleCell.icon = Icon({
+            width: 22,
+            height: 22,
             left: 0,
             top: 0,
             opacity: 0.5,
         });
         that.setMotion("opacity 0.3s, transform 0.3s");
         that.load("../comp-m3/smart-table/sort.png");
+        that.center();
 
         endBox();
 
     };
 
-    box.resetSortIcons = function (self) {
+    box.resetSortIcons = function (currentTitleCell) {
 
         box.titleCellList.forEach(function (titleCell, titleCellIndex) {
-            if (titleCellIndex != self.titleCellIndex) {
+            if (titleCellIndex != currentTitleCell.titleCellIndex) {
                 titleCell.icon.rotate = 0;
                 titleCell.icon.opacity = 0.5;
                 titleCell.sortDirection = "";
@@ -356,7 +376,7 @@ const SmartTable = function (params = {}) {
     box.createTitleCell = function (titleData, titleCellIndex) {
 
         // TitleCell
-        const cell = AutoLayout({
+        const titleCell = AutoLayout({
             flow: "horizontal",
             align: "center left",
             width: titleData.width || 100,
@@ -370,11 +390,12 @@ const SmartTable = function (params = {}) {
         that.elem.style.borderBottom = box.style.boxTitleCell.borderBottom;
         that.elem.style.cursor = "pointer";
 
+        // DATA IN OBJECT (titleCell)
         that.titleCellIndex = titleCellIndex;
         that.titleDataTitle = titleData.dataTitle;
         that.shortable = titleData.shortable;
 
-        cell.label = Label({
+        titleCell.label = Label({
             text: titleData.name,
             ...box.style.lblTitleCell,
         });
@@ -382,14 +403,15 @@ const SmartTable = function (params = {}) {
 
         endAutoLayout();
 
-        box.createSortIcon(cell);
+        box.createSortIcon(titleCell);
 
-        cell.on("click", function (self, event) {
+        titleCell.on("click", function (self, event) {
 
             if (self.shortable == 1) {
 
                 // Clear All
-                // box.resetSortIcons(self);
+                box.resetSortIcons(self);
+                /*
                 box.titleCellList.forEach(function (titleCell, titleCellIndex) {
                     if (titleCellIndex != self.titleCellIndex) {
                         titleCell.icon.rotate = 0;
@@ -397,35 +419,53 @@ const SmartTable = function (params = {}) {
                         titleCell.sortDirection = "";
                     }
                 });
+                */
 
                 box.sortByTitleIndex = self.titleCellIndex;
+
                 if (self.sortDirection != "A-Z") {
                     box.sortDirection = "A-Z";
-                    cell.icon.rotate = 0;
+                    //titleCell.icon.rotate = 0;
 
                 } else {
                     box.sortDirection = "Z-A";
-                    cell.icon.rotate = 180;
+                    //titleCell.icon.rotate = 180;
 
                 }
-                cell.icon.opacity = 1;
-                self.sortDirection = box.sortDirection;
-
+                //titleCell.icon.opacity = 1;
+                //self.sortDirection = box.sortDirection;
+                box.updateSortIcon();
                 box.filterAndSortData();
 
             }
 
         });
 
-        cell.on("mouseover", function (self, event) {
+        titleCell.on("mouseover", function (self, event) {
             box.applyColumnHighlight(self);
         });
 
-        cell.on("mouseout", function (self, event) {
+        titleCell.on("mouseout", function (self, event) {
             box.clearColumnHighlight(self);
         });
 
-        return cell;
+        return titleCell;
+
+    };
+
+    box.updateSortIcon = function() {
+
+        const titleCell = box.titleCellList[box.sortByTitleIndex];
+        
+        if (box.sortDirection == "A-Z") {
+            titleCell.sortDirection = "A-Z";
+            titleCell.icon.rotate = 0;
+        } else {
+            titleCell.sortDirection = "Z-A";
+            titleCell.icon.rotate = 180;
+        }
+
+        titleCell.icon.opacity = 1;
 
     };
 
@@ -974,8 +1014,9 @@ const SmartTable = function (params = {}) {
     box.setWidth = function (width) {
 
         // Eğer genişlik tam olacak ise, scroll için boş alan ekle.
-        if (width == "100%") {
-            box.width = "calc(100% - " + (box.style.verticalScrollWidth + box.style.verticalScrollMargin) + "px)";
+        //if (width == "100%") {
+        if (width.includes("%")) {
+            box.width = "calc(" + width + " - " + (box.style.verticalScrollWidth + box.style.verticalScrollMargin) + "px)";
         } else {
             box.width = width;
         }
@@ -1033,6 +1074,12 @@ const SmartTable = function (params = {}) {
         that.setMotion("opacity 0.2s")
 
         endGroup();
+
+    };
+
+    box.selectKeyForSearch = function() {
+
+        
 
     };
 
@@ -1153,6 +1200,7 @@ const SmartTable = function (params = {}) {
         // boxBorder
         box.boxBorder = Box(0, 0, "100%", "100%", box.style.boxBorder);
         that.round = box.style.round;
+        that.color = "transparent";
 
         box.createVerticalScroll();
 
@@ -1171,10 +1219,12 @@ const SmartTable = function (params = {}) {
     box.init(); // Create UI
     box.createTitleLine();
     box.createItemLines();
-    if (box.fillTestData) box.generateTestData(); // Add test data
     box.createScrollEvents();
     box.stretchLastCell(box.calcLastCellWidth());
+    box.updateSortIcon();
     box.filterAndSortData();
+
+    if (box.fillTestData) box.generateTestData(); // Add test data WHY: En sonda olmazsa, kayıtlar önce düz yükleniyor, sonra sort a göre yeniden sıralanıyor.
 
     return endObject(box);
 

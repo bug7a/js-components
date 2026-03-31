@@ -15,6 +15,8 @@
     <script src="../comp-m2/search-input-v2.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp-m2/tooltip.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp-m2/input-b.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp-m2/email-input-b.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp-m2/number-input-b.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp-m3/hold-to-confirm-button.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp-m3/smart-table.js" type="text/javascript" charset="utf-8"></script>
 
@@ -50,41 +52,65 @@
             { id: 20, name: "Hakan Bulut", desc: "Network Engineer", email: "h.bulut@netcore.org", active: 0 },
         ];
 
+        let newId = null;
         let selectedId = null;
+        let smartTable1 = null;
         let inputId, inputName, inputEmail, inputActive, lblStatus;
+        let btnEdit, btnDelete, btnClean;
 
         window.onload = function () {
 
             page.color = "whitesmoke";
+            newId = findNextAvailableID();
 
             // LEFT: Form Panel
             VGroup({
-                width: "50%",
+                width: "40%",
                 gap: 8,
                 padding: [0, 16],
                 align: "top left",
             });
+
+            initTitle();
+            initEditForm();
+            initStatusLabel();
+            initFormButtons();
+
+            endGroup();
+
+            // RIGHT: Smart Data Table
+            smartTable1 = SmartTable({
+                top: 0,
+                titleDataList: titleDataList,
+                onSelect: function (data) {
+
+                    console.log(data);
+                    fillForm(data);
+
+                },
+                style: { width: "60%", height: "100%" },
+            });
+            smartTable1.right = smartTable1.getVerticalScrollWidth() + 2;
+            smartTable1.setItemDataList(itemDataList);
+
+        };
+
+        const initTitle = function () {
 
             // Title
             Label({
                 text: "Record Details",
                 fontSize: 24,
                 padding: [20, 6],
+                textColor: "#65A293",
             });
             that.elem.style.fontFamily = "opensans-bold";
             that.elem.style.marginBottom = "8px";
+            that.elem.style.whiteSpace = "nowrap";
 
-            // ID (read-only)
-            inputId = createInput("ID", "Auto");
+        };
 
-            // Name
-            inputName = createInput("NAME", "Enter name");
-
-            // Email
-            inputEmail = createInput("EMAIL", "Enter email");
-
-            // Active
-            inputActive = createInput("ACTIVE", "1 or 0");
+        const initStatusLabel = function () {
 
             // Status Label
             lblStatus = Label({
@@ -95,7 +121,119 @@
             that.elem.style.color = "#999";
             that.elem.style.marginTop = "8px";
 
-            // Buttons Row
+        }
+
+        // Fill input fields from selected data
+        const fillForm = function (data) {
+
+            selectedId = data.id;
+            inputId.setInputValue(String(data.id));
+            inputName.setInputValue(data.name);
+            inputEmail.setInputValue(data.email);
+            inputActive.setInputValue(String(data.active));
+            lblStatus.text = "Selected ID: " + data.id;
+            btnEdit.enabled = 1;
+            btnDelete.clickable = 1;
+            btnDelete.opacity = 1;
+
+        };
+
+        // Clear input fields
+        const clearForm = function () {
+
+            selectedId = null;
+            inputId.setInputValue("");
+            inputName.setInputValue("");
+            inputEmail.setInputValue("");
+            inputActive.setInputValue("");
+            lblStatus.text = "No record selected";
+            btnEdit.enabled = 0;
+            btnDelete.clickable = 0;
+            btnDelete.opacity = 0.6;
+
+        };
+
+        const initEditForm = function () {
+
+            const inputStyle = {
+                width: "100%",
+                height: "auto",
+                leftPadding: 20,
+                rightPadding: 20,
+                createDescription: 0,
+                backgroundColor: "#F6F6F6",
+                selectedBackgroundColor: "#FFFFFF",
+                lineColor: "transparent",
+                selectedLineColor: "#65A293",
+                createLeftBox: 0,
+                createRightBox: 0,
+                createUnit: 0,
+                inputValue: "",
+                maxChar: 100,
+            };
+
+            // ID (read-only)
+            inputId = InputB({
+                key: "id",
+                ...inputStyle,
+                titleText: "ID",
+                placeholder: "Auto",
+            });
+            // Read-only
+            inputId.input.enabled = 0;
+
+            // Name
+            inputName = InputB({
+                key: "name",
+                ...inputStyle,
+                titleText: "NAME",
+                placeholder: "Enter name",
+            });
+
+            // Email
+            inputEmail = EmailInputB({
+                key: "email",
+                ...inputStyle,
+                isRequired: 0,
+                titleText: "EMAIL",
+                placeholder: "Enter email",
+                warningText: "Invalid email format",
+                warningColor: "#E5885E", // "#F1BF3C"
+            });
+
+            // Active
+            inputActive = NumberInputB({
+                key: "active",
+                ...inputStyle,
+                titleText: "ACTIVE",
+                placeholder: "1 or 0",
+                maxChar: 1,
+                allowNegative: 0,
+                allowDecimal: 0,
+            });
+
+            // 0 or whatever enter just write 1
+            inputActive.onEdit = function () {
+                if (![0, 1].includes(inputActive.getInputValue())) {
+                    inputActive.setInputValue("1");
+                }
+            }
+
+        };
+
+        const initFormButtons = function () {
+
+            const buttonStyle = {
+                width: "auto",
+                padding: [12, 0],
+                color: "#A8CFB1",
+                fontSize: 16,
+                minimal: 1,
+                border: 0,
+                round: 8,
+            };
+
+            // Buttons Group
             HGroup({
                 fit: 1,
                 gap: 8,
@@ -104,16 +242,12 @@
             });
 
             // Edit Button
-            Button({
+            btnEdit = Button({
                 text: "Update Record",
-                width: "auto",
-                padding: [12, 0],
-                color: "lightgray",
-                fontSize: 16,
-                minimal: 1,
-                //border: 1,
-                round: 8,
+                enabled: 0,
+                ...buttonStyle,
             });
+            that.elem.style.whiteSpace = "nowrap";
             that.on("click", function () {
                 if (selectedId === null) return;
 
@@ -132,21 +266,23 @@
 
             // Delete Button (Hold to Confirm)
             const _assetsPath = "../comp-m3/hold-to-confirm-button/";
-            const btnDelete = HoldToConfirmButton({
+            btnDelete = HoldToConfirmButton({
                 width: "auto",
                 labelText: "Hold to Delete",
                 completedText: "DELETED",
                 iconFile: _assetsPath + "trash.png",
                 holdingIconFile: _assetsPath + "trash-red.png",
                 style: {
-                    layout: { gap: 4, padding: [12, 5], },
+                    layout: { gap: 4, padding: buttonStyle.padding, },
                     icon: { width: 24, height: 24, },
-                    label: { fontSize: 16, textColor: Black(0.65), },
-                    box: { color: "lightgray", border: 0, borderColor: Black(0.3), round: 8, },
+                    label: { fontSize: buttonStyle.fontSize, textColor: Black(0.65), },
+                    box: { color: buttonStyle.color, border: buttonStyle.border, borderColor: Black(0.3), round: buttonStyle.round, },
                     holdingBox: { color: "#FFD1CB", },
-                    holdingLabel: { fontSize: 16, },
+                    holdingLabel: { fontSize: buttonStyle.fontSize, },
                 }
             });
+            btnDelete.clickable = 0;
+            btnDelete.opacity = 0.6;
 
             btnDelete.onConfirm = function (self) {
                 if (selectedId === null) return;
@@ -164,84 +300,51 @@
             };
 
             // Clear Form Button
-            Button({
+            btnClean = Button({
                 text: "Clear Form",
                 width: "auto",
-                padding: [12, 0],
-                color: "lightgray",
-                minimal: 1,
-                //border: 1,
-                round: 8,
-                fontSize: 16,
+                ...buttonStyle,
             });
+            that.elem.style.whiteSpace = "nowrap";
             that.on("click", function () {
                 clearForm();
             });
 
             endGroup();
 
-            endGroup();
-
-            // RIGHT: Smart Data Table
-            window.smartTable1 = SmartTable({
-                top: 0,
-                titleDataList: titleDataList,
-                onSelect: function (data) {
-                    console.log(data);
-                    fillForm(data);
-                },
-                style: { width: "50%", height: "100%" },
-            });
-            smartTable1.right = smartTable1.getVerticalScrollWidth() + 2;
-            smartTable1.setItemDataList(itemDataList);
-
-        };
-
-        // Helper: Create an InputB field
-        const createInput = function (title, placeholder) {
-
-            return InputB({
-                width: "100%",
+            Button({
+                text: "Add New",
+                width: "auto",
                 height: "auto",
-                leftPadding: 20,
-                rightPadding: 20,
-                titleText: title,
-                placeholder: placeholder,
-                inputValue: "",
-                maxChar: 100,
-                createDescription: 0,
-                backgroundColor: "#F6F6F6",
-                selectedBackgroundColor: "#FFFFFF",
-                lineColor: "transparent",
-                selectedLineColor: "#65A293",
-                createLeftBox: 0,
-                createRightBox: 0,
-                createUnit: 0,
+                color: "#65A293",
+                padding: [6, 2],
+                fontSize: 16,
+                position: "absolute",
+                right: 20,
+                top: 10,
+            });
+            that.on("click", function () {
+
+                let data = { id: newId, name: "User " + newId, desc: "desc", email: "user" + newId + "a@test.com", active: 0 };
+                itemDataList.push(data);
+                newId++;
+                smartTable1.setItemDataList(itemDataList);
+                fillForm(data);
+
             });
 
         };
 
-        // Fill input fields from selected data
-        const fillForm = function (data) {
+        const findNextAvailableID = function () {
 
-            selectedId = data.id;
-            inputId.setInputValue(String(data.id));
-            inputName.setInputValue(data.name);
-            inputEmail.setInputValue(data.email);
-            inputActive.setInputValue(String(data.active));
-            lblStatus.text = "Selected ID: " + data.id;
+            if (itemDataList.length === 0) return 1;
 
-        };
+            let maxId = 0;
+            for (let i = 0; i < itemDataList.length; i++) {
+                if (itemDataList[i].id > maxId) maxId = itemDataList[i].id;
+            }
 
-        // Clear input fields
-        const clearForm = function () {
-
-            selectedId = null;
-            inputId.setInputValue("");
-            inputName.setInputValue("");
-            inputEmail.setInputValue("");
-            inputActive.setInputValue("");
-            lblStatus.text = "No record selected";
+            return maxId + 1;
 
         };
 

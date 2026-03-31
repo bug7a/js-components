@@ -218,6 +218,7 @@ const HoldToConfirmButton = function (params = {}) {
     box.label = Label(0, 0, box.style.label);
     box.label.setMotion("opacity 0.2s");
     box.label.text = box.labelText;
+    box.label.elem.style.whiteSpace = "nowrap";
 
     endGroup();
 
@@ -276,6 +277,7 @@ const HoldToConfirmButton = function (params = {}) {
 
     Label(box.style.completedLabel);
     that.text = box.completedText;
+    that.elem.style.whiteSpace = "nowrap";
     //that.elem.style.textTransform = "uppercase";
 
     endGroup();
