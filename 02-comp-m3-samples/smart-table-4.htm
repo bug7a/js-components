@@ -64,15 +64,22 @@
                 updateCustomItemCell: updateCustomItemCell,
                 sortByTitleIndex: 0,
                 sortDirection: "Z-A", // "A-Z" or "Z-A"
+                highlightTitle: false,
                 style: { 
                     width: "100%", 
                     height: "100%",
                     round: 2,
-                    boxBorder: { border: 0, borderColor: Black(0.8) },
-                    boxTitleCell: { padding: [8, 0], borderRight: "1px solid rgba(0, 0, 0, 0.5)", borderBottom: "0px solid #141414", },
-                    boxTitleLine: { color: "lightgray", },
-                    boxItemCell: { borderBottom: "0px solid darkgray", borderRight: "0px solid rgba(0, 0, 0, 0.05)", padding: [8, 0], },
+                    line1Color: "white",
+                    line2Color: "whitesmoke",
+                    highlightItemCellColor: "#DBDDDC",
+                    highlightTitleCellColor: "#DBDDDC",
+                    boxBorder: { border: 1, borderColor: Black(0.8) },
+                    boxTitleCell: { padding: [8, 0], borderRight: "1px solid rgba(0, 0, 0, 0.8)", borderBottom: "1px solid #141414", },
+                    boxTitleLine: { color: "#F3E3C1", },
+                    boxInfoLine: { color: "#F3E3C1", borderTop: "1px solid rgba(0, 0, 0, 0.2)" },
+                    boxItemCell: { borderBottom: "0px solid darkgray", borderRight: "1px solid rgba(0, 0, 0, 0.2)", padding: [8, 0], },
                     lblItemCell: { fontSize: 20, textColor: Black(0.75), fontFamily: "opensans", },
+                    boxSort: { color: "#F3E3C1" },
                 },
             });
             smartTable1.onSelect = function (data) {
@@ -94,7 +101,7 @@
             if (titleDataIndex == 3) {
 
                 if (data == 1) {
-                    itemCell.boxCheck.color = "#E7BB67";
+                    itemCell.boxCheck.color = "darkgray";
 
                 } else {
                     itemCell.boxCheck.color = "white";
@@ -128,7 +135,7 @@
                     height: _size,
                     border: 1,
                     color: "white",
-                    round: 100,
+                    round: 13,
                 });
                 that.elem.style.minHeight = "10px";
                 that.elem.style.minWidth = "10px";

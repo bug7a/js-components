@@ -109,11 +109,12 @@ const SmartTableDefaults = {
         lblTitleCell: { fontSize: 20, fontFamily: "opensans", },
         boxItemCell: { borderBottom: "1px solid darkgray", borderRight: "1px solid rgba(0, 0, 0, 0.05)", padding: [8, 0], },
         lblItemCell: { fontSize: 20, textColor: Black(0.75), fontFamily: "opensans", },
-        boxInfoLine: { color: "#E4E4E4", },
+        boxInfoLine: { color: "#E4E4E4", borderTop: "1px solid rgba(0, 0, 0, 0)" },
         lblNoDataFound: { color: "lightgray", padding: [8, 2], fontSize: 14, round: 8, border: 1, borderColor: Black(0.4), },
         btnScrollCenter: { color: "white", round: 100, borderColor: "rgba(0,0,0,0.4)", border: 1, },
         btnScrollUp: { color: "lightgray", round: 100, border: 1, },
         btnScrollDown: { color: "lightgray", round: 100, border: 1, },
+        boxSort: { color: "#65A293" },
 
     },
 };
@@ -130,7 +131,7 @@ const SmartTable = function (params = {}) {
     // State of component [var]
     box.state = "normal";
     // Created items by data [var]
-    box.visibleItemDataList = [];
+    box.visibleItemDataList = [...box.itemDataList];
     // [var]
     box.titleCellList = [];
     // [var]
@@ -239,7 +240,7 @@ const SmartTable = function (params = {}) {
                     const newValue = _rowData[titleData.dataTitle] ?? "";
 
                     // Sadece değer değişmişse DOM'a dokun
-                    if (cell.label.text != newValue) {
+                    if (cell.label.text !== newValue) { // WHY: eğer !== olmaz ise, ilk yüklenmede 0 değeri yazılmayabiliyor. 0 ile "" aynı sayılıyor.
                         cell.label.text = newValue;
                     }
 
@@ -330,7 +331,7 @@ const SmartTable = function (params = {}) {
 
         startBox({
             align: "right center",
-            color: "#65A293", // "#65A293",
+            color: box.style.boxSort.color, // "#65A293",
             round: 100,
             border: 0, // 1
             borderColor: "rgba(0,0,0,0.1)",
@@ -734,7 +735,7 @@ const SmartTable = function (params = {}) {
 
         const totalData = box.visibleItemDataList.length;
 
-        if (totalData === 0) {
+        if (totalData == 0) {
             box.boxInfoLine.label.text = "0 - 0 / 0";
             box.lblNoDataFound.opacity = 1;
             // TODO: Show a alert text at center (No data!)
@@ -1079,7 +1080,7 @@ const SmartTable = function (params = {}) {
 
     box.selectKeyForSearch = function() {
 
-        
+
 
     };
 
@@ -1104,10 +1105,20 @@ const SmartTable = function (params = {}) {
             box.scrollBar.refreshScroll(); // Ekranı daraltırken, scroll gereksiz görünmesin diye.
 
             box.refreshData();
+            //box.showScrollTimer = waitAndRun(box.showScrollTimer,  box.showScrollX, 300);
 
         };
 
+        /*
+        box.showScrollTimer = null;
+        box.showScrollX = function() {
+            box.scrollBar.opacity = 1;
+        }
+        */
+
         box.onResize(function (self) {
+
+            //box.scrollBar.opacity = 0;
 
             // Item yüksekliği otomatik hesaplanacak.
             box.resizeTimer = waitAndRun(box.resizeTimer, _resizeUI, 3);
@@ -1122,7 +1133,7 @@ const SmartTable = function (params = {}) {
         box.clickable = 1;
         // Show outside of the box.
         box.clipContent = 0;
-        box.color = box.style.color;
+        box.color = box.style.box.color;
         box.round = box.style.round;
         if (box.invertColor == 1) box.elem.style.filter = "invert(100%)";
         box.setWidth(box.style.width);
@@ -1192,6 +1203,7 @@ const SmartTable = function (params = {}) {
         that.elem.style.borderTopRightRadius = "0px";    // Üst Sağ Köşe
         that.elem.style.borderBottomRightRadius = box.style.round + "px"; // Alt Sağ Köşe
         that.elem.style.borderBottomLeftRadius = box.style.round + "px";   // Alt Sol Köşe
+        that.elem.style.borderTop = box.style.boxInfoLine.borderTop;
         that.clickable = 0;
 
         box.createToolbar();

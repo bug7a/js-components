@@ -82,6 +82,7 @@
             smartTable1 = SmartTable({
                 top: 0,
                 titleDataList: titleDataList,
+                itemDataList: itemDataList,
                 onSelect: function (data) {
 
                     console.log(data);
@@ -91,7 +92,6 @@
                 style: { width: "60%", height: "100%" },
             });
             smartTable1.right = smartTable1.getVerticalScrollWidth() + 2;
-            smartTable1.setItemDataList(itemDataList);
 
         };
 
@@ -214,9 +214,10 @@
 
             // 0 or whatever enter just write 1
             inputActive.onEdit = function () {
-                if (![0, 1].includes(inputActive.getInputValue())) {
-                    inputActive.setInputValue("1");
-                }
+
+                const value = inputActive.getInputValue();
+                if (!(value == 1 || value == 0)) inputActive.setInputValue("1");
+                
             }
 
         };
