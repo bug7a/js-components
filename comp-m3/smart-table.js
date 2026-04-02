@@ -13,12 +13,9 @@ Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
 
 
-- style değerlerini ekle
-- eğer yüksekli değişirse, itemcell yüksekliği hesaplanıp değişsin. Eğer itemCell değişirse height auto olsun.
 - filter da bir title seçilebilmeli, default: ALL olsun.
 - Eğer itemHeight 20px den küçük ise otomatik itemLineCount düşür ve eğer itemHeight büyükse 100px den itemLineCount arttır.
-- sort yaparken, arama yaparken (waitAndRun ekle) bir yüklenme görünsün çünkü 1milyon kayıtta bu işlem zaman alıyor.
-- sort parametre olarak verildiğinde, sort iconları güncellenmeli. Ve fonksiyon ile kontrol edilebilmeli.
+
 
 */
 

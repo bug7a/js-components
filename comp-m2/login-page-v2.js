@@ -25,7 +25,6 @@ Webpage: https://bug7a.github.io/js-components/
 
 // Default values:
 const LoginPageDefaults = {
-    supabase: null,
     panelWidth: 420,
     //autoFit: 1, // add page.fit() function onResize
     primaryColor: "#2C5A38",
@@ -41,10 +40,45 @@ const LoginPageDefaults = {
     input_textColor: White(0.85), // Black(0.85), White(0.85)
     input_border: 1, // 1, 0
     input_borderColor: White(0.1), // White(0.1), Black(0.1)
+    orTextColor: White(0.75), // White(0.75), Black(0.75)
+    orLineColor: White(0.1), // White(0.1), Black(0.1)
     panelName: "MY PANEL v25.08.11",
-    googleLogo: "https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg",
-    appleLogo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSRsP-EH-Fc-gjQMFgxj4g1pkFGVCK8Y2deHA&s",
-    onSuccess: function() {},
+    onLoginClick: function() {},
+    onSignupClick: function() {},
+    showPasswordIconInvert: 1,
+    waitingIconInvert: 1,
+    showPasswordIconFile: "../../comp-m2/password-input-b/show-btn.png",
+    hidePasswordIconFile: "../../comp-m2/password-input-b/hide-btn.png",
+    waitingIcon: "../../comp-m2/waiting/clock3.png",
+    customLoginButtonParams: {
+        height: 50, round: 4, color: "#141414", gap: 12, border: 1, borderColor: White(0.1), textColor: White(0.75),
+    },
+};
+
+const LoginPageLightStyle = {
+    primaryColor: "#2C5A38",
+    panelName: "MY PANEL v25.08.11",
+    //autoFit: 1, // add page.fit() function onResize
+    primaryColor: "#65A293", // "#2C5A38", "#65A293"
+    tab_backgroundColorBottom: "whitesmoke", // "#242424", "whitesmoke"
+    tab_backgroundColorTop: "#DBDDDC", // "#242424", "#DBDDDC",
+    tab_border: 0, // 1, 0
+    tab_borderColor: Black(0), // White(0.1), Black(0.2),
+    tab_textColor: "#373836", // White(0.75), "#373836",
+    tab_selectedColor: "white", // "#000000", "white",
+    input_backgroundColor: "#F6F6F6", // "#141414", "#F6F6F6",
+    input_lineColor: "transparent",
+    input_selectedBackgroundColor: "#F3F4E0", // "#202020", "#F3F4E0",
+    // waiting_invertIconColor: 1,
+    input_textColor: Black(0.85), // Black(0.85), White(0.85)
+    input_border: 1, // 1, 0
+    input_borderColor: Black(0.1), // White(0.1), Black(0.1)
+    orTextColor: Black(0.75), // White(0.75), Black(0.75)
+    orLineColor: Black(0.1), // White(0.1), Black(0.1)
+    showPasswordIconInvert: 0,
+    customLoginButtonParams: {
+        height: 50, round: 4, color: "whitesmoke", gap: 12, border: 1, borderColor: Black(0.2), textColor: Black(0.75),
+    },
 };
 
 const LoginPage = function(params = {}) {
@@ -63,7 +97,9 @@ const LoginPage = function(params = {}) {
     //box.elem.style.filter = "invert(100%)";
     //page.color = "white";
 
-    const createView = function() {
+    box.customButtonCount = 0;
+
+    const initView = function() {
 
         // Page container
         box.container = AutoLayout({
@@ -163,7 +199,7 @@ const LoginPage = function(params = {}) {
                             placeholder: "example@site.com",
                             isRequired: 0,
                             maxChar: 60,
-                            inputValue: ""
+                            inputValue: "",
                         });
                         styleInput(that);
                         that.onEdit = function() {
@@ -177,8 +213,8 @@ const LoginPage = function(params = {}) {
                             maxChar: 60,
                             showShowPasswordButton: 1,
                             isRequired: 0,
-                            showPasswordIconFile: "../../comp-m2/password-input-b/show-btn.png",
-                            hidePasswordIconFile: "../../comp-m2/password-input-b/hide-btn.png",
+                            showPasswordIconFile: box.showPasswordIconFile,
+                            hidePasswordIconFile: box.hidePasswordIconFile,
                             inputValue: "",
                             minChar: 0,
                             mustUseNumber: 0,
@@ -186,10 +222,10 @@ const LoginPage = function(params = {}) {
                             mustUseUppercase: 0,
                             mustUseLowercase: 0,
                             mustUseSpecialChar: 0,
-
+                            showPasswordIconInvert: box.showPasswordIconInvert,
                         });
                         styleInput(that);
-                        that.btnShowPassword.elem.style.filter = "invert(100%)";
+                        //that.btnShowPassword.elem.style.filter = "invert(100%)";
                         that.onEdit = function() {
                             checkLoginForm();
                         }
@@ -210,15 +246,16 @@ const LoginPage = function(params = {}) {
                         UIEffects.button(that);
 
                         // or group
-                        startBox({
+                        box.boxOR = startBox({
                             width: "100%",
                             height: 60,
                             color: "transparent",
                         });
+                        that.opacity = 0;
 
                             // line
                             Box(0,0,"100%",1, {
-                                color: White(0.1),
+                                color: box.orLineColor,
                             });
                             that.center("top");
                             that.top += 2;
@@ -226,16 +263,16 @@ const LoginPage = function(params = {}) {
                             // or
                             Label({
                                 text: "or",
-                                textColor: White(0.75),
-                                color: "#000000",
+                                textColor: box.orTextColor,
+                                color: box.parentBox.color, // "#000000",
                                 padding: [12,6],
                             });
                             that.center();
 
                         endBox();
 
-                        box.createButtonWithIcon("Sign in with Google", box.googleLogo, onLoginWithGoogle);
-                        box.createButtonWithIcon("Sign in with Apple", box.appleLogo, onLoginWithApple);
+                        //box.createButtonWithIcon("Sign in with Google", box.googleLogo, onLoginWithGoogle);
+                        //box.createButtonWithIcon("Sign in with Apple", box.appleLogo, onLoginWithApple);
 
                     endAutoLayout(); // end login view
 
@@ -269,8 +306,8 @@ const LoginPage = function(params = {}) {
                             placeholder: "Create a password",
                             maxChar: 60,
                             showShowPasswordButton: 1,
-                            showPasswordIconFile: "../../comp-m2/password-input-b/show-btn.png",
-                            hidePasswordIconFile: "../../comp-m2/password-input-b/hide-btn.png",
+                            showPasswordIconFile: box.showPasswordIconFile,
+                            hidePasswordIconFile: box.hidePasswordIconFile,
                             minChar: 8,
                             minCharWarningText: "Password must be at least 8 characters",
                             mustUseNumber: 1,
@@ -278,9 +315,10 @@ const LoginPage = function(params = {}) {
                             mustUseUppercase: 0,
                             mustUseLowercase: 0,
                             mustUseSpecialChar: 0,
+                            showPasswordIconInvert: box.showPasswordIconInvert,
                         });
                         styleInput(that);
-                        that.btnShowPassword.elem.style.filter = "invert(100%)";
+                        //that.btnShowPassword.elem.style.filter = "invert(100%)";
                         that.onEdit = function() {
                             checkSignupForm();
                         }
@@ -291,8 +329,8 @@ const LoginPage = function(params = {}) {
                             placeholder: "Re-enter password",
                             maxChar: 60,
                             showShowPasswordButton: 1,
-                            showPasswordIconFile: "../../comp-m2/password-input-b/show-btn.png",
-                            hidePasswordIconFile: "../../comp-m2/password-input-b/hide-btn.png",
+                            showPasswordIconFile: box.showPasswordIconFile,
+                            hidePasswordIconFile: box.hidePasswordIconFile,
                             minChar: 8,
                             minCharWarningText: "Password must be at least 8 characters",
                             mustUseNumber: 1,
@@ -300,9 +338,10 @@ const LoginPage = function(params = {}) {
                             mustUseUppercase: 0,
                             mustUseLowercase: 0,
                             mustUseSpecialChar: 0,
+                            showPasswordIconInvert: box.showPasswordIconInvert,
                         });
                         styleInput(that);
-                        that.btnShowPassword.elem.style.filter = "invert(100%)";
+                        //that.btnShowPassword.elem.style.filter = "invert(100%)";
                         that.onEdit = function() {
                             checkSignupForm();
                         }
@@ -374,13 +413,13 @@ const LoginPage = function(params = {}) {
         box.waiting = Waiting({
             animated: 1, 
             coverBackgroundColor: "rgba(0,0,0,0.6)",
-            waitingIcon: "../../comp-m2/waiting/clock3.png",
+            waitingIcon: box.waitingIcon,
         });         
-        box.waiting.icon.elem.style.filter = "invert(100%)";
+        if (box.waitingIconInvert == 1) box.waiting.icon.elem.style.filter = "invert(100%)";
 
         // events:
-        box.loginBtn.on("click", onLoginClick);
-        box.signupBtn.on("click", onSignupClick);
+        box.loginBtn.on("click", box.onLoginClick);
+        box.signupBtn.on("click", box.onSignupClick);
 
         // First check
         checkLoginForm();
@@ -408,10 +447,16 @@ const LoginPage = function(params = {}) {
     };
 
     box.createButtonWithIcon = function(text, iconFile, onClick) {
+
+        box.customButtonCount++;
+        if (box.customButtonCount > 0) {
+            box.boxOR.opacity = 1;
+        }
     
         HGroup({
-            width: "100%", height: 50, round: 4, color: "#141414", gap: 12, border: 1, borderColor: White(0.1),
+            width: "100%", position: "relative", ...box.customLoginButtonParams,
         });
+        box.loginBox.add(that);
         that.elem.style.cursor = "pointer";
         that.on("click", onClick);
         UIEffects.button(that);
@@ -421,7 +466,7 @@ const LoginPage = function(params = {}) {
 
             Label({
                 text: text,
-                textColor: White(0.75), 
+                textColor: box.customLoginButtonParams.textColor, 
                 fontSize: 20, 
             });
 
@@ -487,89 +532,7 @@ const LoginPage = function(params = {}) {
 
     };
 
-    const onLoginWithGoogle = async function() {
-
-        const { data, error } = await box.supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-                redirectTo: `http://example.com/auth/callback`,
-            },
-        });
-
-    };
-
-    const onLoginWithApple = async function() {
-
-        const { data, error } = await box.supabase.auth.signInWithOAuth({
-            provider: 'apple',
-            options: {
-                redirectTo: `http://example.com/auth/callback`,
-            },
-        });
-
-    };
-
-    // Actions
-    const onLoginClick = async function() {
-
-        const email = box.loginEmail.getInputValue();
-        const password = box.loginPassword.getInputValue();
-
-        if (!email || !password) { box.showAlert("Please enter email and password"); return; }
-
-        box.waiting.show();
-
-        try {
-            const { data, error } = await box.supabase.auth.signInWithPassword({ email, password });
-            if (error) {
-                box.showAlert("Login failed: " + error.message);
-            } else {
-                
-                // Login successful
-                //console.table(data);
-                box.onSuccess();
-                //window.location.reload();
-
-            }
-        } catch (e) {
-            box.showAlert("Login error");
-        } finally {
-            box.waiting.hide();
-        }
-
-    };
-
-    const onSignupClick = async function() {
-
-        const email = box.signupEmail.getInputValue();
-        const p1 = box.signupPassword.getInputValue();
-        const p2 = box.signupPassword2.getInputValue();
-
-        if (!email || !p1 || !p2) { box.showAlert("Please fill all fields"); return; }
-        if (p1 !== p2) { box.showAlert("Passwords do not match"); return; }
-
-        box.waiting.show();
-
-        try {
-            const { error } = await box.supabase.auth.signUp({ email, password: p1 });
-            if (error) {
-                box.showAlert("Sign up failed: " + error.message);
-            } else {
-                box.showAlert("Sign up successful. Check your email to confirm.", "#5DB182");
-                box.signupPassword.setInputValue("");
-                box.signupPassword2.setInputValue("");
-                box.loginEmail.setInputValue(box.signupEmail.getInputValue());
-                box.setActiveTab(0);
-            }
-        } catch (e) {
-            box.showAlert("Sign up error");
-        } finally {
-            box.waiting.hide();
-        }
-
-    };
-
-    createView();
+    initView();
     
     return endObject(box);
 

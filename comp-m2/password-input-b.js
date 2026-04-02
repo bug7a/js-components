@@ -44,6 +44,7 @@ const PasswordInputBDefaults = {
     mustUseLowercaseWarningText: "Password must contain at least one lowercase letter",
     mustUseSpecialChar: 0,
     mustUseSpecialCharWarningText: "Password must contain at least one special character",
+    showPasswordIconInvert: 0, 
 };
 
 const PasswordInputB = function(params = {}) {
@@ -144,6 +145,9 @@ const PasswordInputB = function(params = {}) {
         that.elem.style.cursor = "pointer";
         //that.right = 30;
         //that.center("top");
+        if (box.showPasswordIconInvert == 1) {
+            box.btnShowPassword.elem.style.filter = "invert(100%)";
+        }
 
     endAutoLayout();
 
