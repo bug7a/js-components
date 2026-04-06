@@ -17,6 +17,9 @@
 
         <script src="common/ui-standards.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../comp-m2/ui-effects.js" type="text/javascript" charset="utf-8"></script>
+
+        <script src="managers/login.js" type="text/javascript" charset="utf-8"></script>
+        <script src="managers/database.js" type="text/javascript" charset="utf-8"></script>
         
         <script src="../../comp-m2/tooltip.min.js" charset="utf-8" defer></script>
         <script src="../../comp-m2/input-b.min.js" charset="utf-8" defer></script>
@@ -31,6 +34,10 @@
         <script src="../../comp-m1/ui-web-view.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../comp-m2/toggle.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../comp-m2/dialog.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../comp-m2/number-input-b.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../comp-m3/hold-to-confirm-button.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../comp-m3/smart-table.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../comp-m2/login-page-v2.js" type="text/javascript" charset="utf-8"></script>
 
         <script src="common/top-bar.js" type="text/javascript" charset="utf-8"></script>
         <script src="common/main-view.js" type="text/javascript" charset="utf-8"></script>
@@ -39,7 +46,6 @@
         
         <script src="common/start-page.js" type="text/javascript" charset="utf-8"></script>
         <script src="common/module-page.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../comp-m2/login-page.js" type="text/javascript" charset="utf-8"></script>
         <script src="pages/home.js" type="text/javascript" charset="utf-8"></script>
         <script src="pages/contents.js" type="text/javascript" charset="utf-8"></script>
         <script src="pages/notifications.js" type="text/javascript" charset="utf-8"></script>
@@ -47,6 +53,7 @@
         <script src="pages/settings.js" type="text/javascript" charset="utf-8"></script>
         <script src="pages/users.js" type="text/javascript" charset="utf-8"></script>
         <script src="pages/user-actions.js" type="text/javascript" charset="utf-8"></script>
+        <script src="pages/edit-user.js" type="text/javascript" charset="utf-8"></script>
         
         <!-- ALL COMPONENTS IN ONE FILE -->
         <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
@@ -59,52 +66,68 @@
         
         -->
         
-        <script type="module">
+        <script>
 
-        // Supabase constants
-        const SUPABASE_PROJECT_URL = "https://xhzzgxhjyoqcsftamtyz.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhoenpneGhqeW9xY3NmdGFtdHl6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUzMTg2MDAsImV4cCI6MjA2MDg5NDYwMH0.XptujcYMNgl9XIzIQ2_CUig9JzkYOCKONfYAmMPd_wc";
-
-        // First running function.
-        window.onload = async function() {
+        let loginPage = null;
+        let userData = null;
+        
+        window.onload = function() {
 
             page.color = "black";
 
-            const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
-            window.supabase = createClient(SUPABASE_PROJECT_URL, SUPABASE_ANON_KEY);
-
-            window.userData = await checkIfLoggedIn();
-
-            if (!userData) {
-
-                // Show Login Page
-                LoginPage({
-                    supabase: supabase,
-                    panelWidth: 420,
-                    primaryColor: "#2C5A38",
-                    panelName: "MY PANEL v25.08.11",
-                    onSuccess: function() {
-                        // If loggedIn then
-                        window.location.reload();
-                    },
-                });
-
-                // TEST DATA: Fill the user data
-                that.loginEmail.setInputValue("bugra.ozden@gmail.com");
-                that.loginPassword.setInputValue("123456");
-                // Call manuel to check form with out edit
-                that.loginEmail.onEdit();
-
-            } else {
-
-                // Show Panel Home Page
-                createStructure();
-
-            }
+            checkIfLoggedIn({
+                onSuccess: initAdminPanel, // Show Panel Home Page
+                onFail: initLoginView,
+            });
 
         };
 
-        window.createStructure = function() {
+        const fillTestData = function() {
+
+            // TEST DATA: Fill the user data
+            loginPage.loginEmail.setInputValue("bugra.ozden@gmail.com");
+            loginPage.loginPassword.setInputValue("123456");
+            // Call manuel to check form with out edit
+            loginPage.loginEmail.onEdit();
+
+        };
+
+        const initLoginView = function() {
+                
+            // Show Login Page
+            loginPage = LoginPage({
+                panelWidth: 420,
+                primaryColor: "#2C5A38",
+                panelName: "MY PANEL v25.08.11",
+                onLoginClick: onLoginClick,
+                onSignupClick: onSignupClick,
+                showPasswordIconFile: "../../comp-m2/password-input-b/show-btn.png",
+                hidePasswordIconFile: "../../comp-m2/password-input-b/hide-btn.png",
+                waitingIcon: "../../comp-m2/waiting/clock3.png",
+                signupPasswordParams: {
+                    minChar: 8,
+                    minCharWarningText: "Password must be at least 8 characters",
+                    mustUseNumber: 1,
+                    mustUseLetter: 1,
+                    mustUseUppercase: 0,
+                    mustUseLowercase: 0,
+                    mustUseSpecialChar: 0,
+                }
+            });
+
+            const _googleIconFile = "https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg";
+            const _appleIconFile = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSRsP-EH-Fc-gjQMFgxj4g1pkFGVCK8Y2deHA&s";
+
+            // Add custom login buttons:
+            loginPage.createButtonWithIcon("Sign in with Google", _googleIconFile, onLoginWithGoogle);
+            loginPage.createButtonWithIcon("Sign in with Apple", _appleIconFile, onLoginWithApple);
+
+            // TEST
+            fillTestData();
+
+        };
+
+        const initAdminPanel = function() {
 
             if (!userData) { logout(); return 0; }
 
@@ -115,7 +138,7 @@
             window.topBar = TopBar({
                 panelIcon: "assets/panel-icon.png",
                 panelName: "MY PANEL",
-                backgroundColor: "#2C5A38", // "#344f6c", "#583432", "#2C5A38"
+                backgroundColor: "#2C5A38", //"#3D7A6B", // "#344f6c", "#583432", "#2C5A38"
                 tab_border: 1, // 1, 0
             });
 
@@ -321,22 +344,131 @@
 
         };
 
-        window.checkIfLoggedIn = async function() {
+        const checkIfLoggedIn = function(callback) {
 
-            // FOR TEST: Open app without login
-            return true;
+            // callback: { onSuccess: func, onFail: func }
 
-            const { data, error } = await supabase.auth.getSession();
-            return data.session !== null;
+            // TODO: Check logged in with your service
+
+            // TEST LOGIN:
+            userData = basic.storage.load("appid_login");
+
+            if (userData) {
+                callback.onSuccess();
+            } else {
+                callback.onFail();
+            }
 
         };
 
-        window.logout = async function() {
+        window.logout = function() {
 
-            await supabase.auth.signOut();
+            // TEST LOGIN:
+            userData = null;
+            basic.storage.save("appid_login", userData);
+
+            // Try to logout with your service
             window.location.reload();
 
         };
+
+        // Actions
+        const onLoginClick = function() {
+
+            loginPage.showAlert("login");
+
+            const email = loginPage.loginEmail.getInputValue();
+            const password = loginPage.loginPassword.getInputValue();
+
+            if (!email || !password) { loginPage.showAlert("Please enter email and password"); return; }
+
+            const onSuccess = function() {
+
+                window.location.reload();
+
+            };
+
+            const onFail = function(message) {
+                loginPage.showAlert("Login failed: " + message);
+            };
+
+            loginPage.waiting.show();
+
+            try {
+                
+                // TEST LOGIN:
+                userData = { user: "test" };
+                basic.storage.save("appid_login", userData);
+
+                // TODO: Try to login with your service
+                onSuccess();
+                //onFail();
+
+
+            } catch (e) {
+                loginPage.showAlert("Login error");
+
+            } finally {
+                loginPage.waiting.hide();
+            }
+
+        };
+
+        const onSignupClick = function() {
+
+            const email = loginPage.signupEmail.getInputValue();
+            const p1 = loginPage.signupPassword.getInputValue();
+            const p2 = loginPage.signupPassword2.getInputValue();
+
+            if (!email || !p1 || !p2) { loginPage.showAlert("Please fill all fields"); return; }
+            if (p1 !== p2) { loginPage.showAlert("Passwords do not match"); return; }
+
+            const onSuccess = function() {
+
+                loginPage.showAlert("Sign up successful. Check your email to confirm.", "#5DB182");
+                loginPage.signupPassword.setInputValue("");
+                loginPage.signupPassword2.setInputValue("");
+                loginPage.loginEmail.setInputValue(loginPage.signupEmail.getInputValue());
+                loginPage.setActiveTab(0);
+                loginPage.tabBar.selectByIndex(0);
+
+            };
+
+            const onFail = function(message) {
+                loginPage.showAlert("Sign up failed: " + message);
+            };
+
+            loginPage.waiting.show();
+
+            try {
+                
+                // TODO: Try to Signup with your service
+                onSuccess();
+                //onFail();
+                
+            } catch (e) {
+                loginPage.showAlert("Sign up error");
+
+            } finally {
+                loginPage.waiting.hide();
+            }
+
+        };
+
+        const onLoginWithGoogle = function() {
+
+            // TODO: Login with Google
+            loginPage.showAlert("Logged in with Google.", "#5DB182");
+
+        };
+
+        const onLoginWithApple = function() {
+
+            // TODO: Login with Apple
+            loginPage.showAlert("Logged in with Apple.", "#5DB182");
+
+        };
+
 
         </script>
 

@@ -50,9 +50,18 @@ const LoginPageDefaults = {
     showPasswordIconFile: "../../comp-m2/password-input-b/show-btn.png",
     hidePasswordIconFile: "../../comp-m2/password-input-b/hide-btn.png",
     waitingIcon: "../../comp-m2/waiting/clock3.png",
-    customLoginButtonParams: {
-        height: 50, round: 4, color: "#141414", gap: 12, border: 1, borderColor: White(0.1), textColor: White(0.75),
+    signupPasswordParams: {
+        minChar: 8,
+        minCharWarningText: "Password must be at least 8 characters",
+        mustUseNumber: 1,
+        mustUseLetter: 1,
+        mustUseUppercase: 0,
+        mustUseLowercase: 0,
+        mustUseSpecialChar: 0,
     },
+    style: {
+        customLoginButton: { height: 50, round: 4, color: "#141414", gap: 12, border: 1, borderColor: White(0.1), textColor: White(0.75), },
+    }
 };
 
 const LoginPageLightStyle = {
@@ -76,8 +85,8 @@ const LoginPageLightStyle = {
     orTextColor: Black(0.75), // White(0.75), Black(0.75)
     orLineColor: Black(0.1), // White(0.1), Black(0.1)
     showPasswordIconInvert: 0,
-    customLoginButtonParams: {
-        height: 50, round: 4, color: "whitesmoke", gap: 12, border: 1, borderColor: Black(0.2), textColor: Black(0.75),
+    style: {
+        customLoginButton: { height: 50, round: 4, color: "whitesmoke", gap: 12, border: 1, borderColor: Black(0.2), textColor: Black(0.75), },
     },
 };
 
@@ -305,16 +314,10 @@ const LoginPage = function(params = {}) {
                             titleText: "PASSWORD",
                             placeholder: "Create a password",
                             maxChar: 60,
-                            showShowPasswordButton: 1,
                             showPasswordIconFile: box.showPasswordIconFile,
                             hidePasswordIconFile: box.hidePasswordIconFile,
-                            minChar: 8,
-                            minCharWarningText: "Password must be at least 8 characters",
-                            mustUseNumber: 1,
-                            mustUseLetter: 1,
-                            mustUseUppercase: 0,
-                            mustUseLowercase: 0,
-                            mustUseSpecialChar: 0,
+                            showShowPasswordButton: 1,
+                            ...box.signupPasswordParams,
                             showPasswordIconInvert: box.showPasswordIconInvert,
                         });
                         styleInput(that);
@@ -328,16 +331,10 @@ const LoginPage = function(params = {}) {
                             titleText: "CONFIRM PASSWORD",
                             placeholder: "Re-enter password",
                             maxChar: 60,
-                            showShowPasswordButton: 1,
                             showPasswordIconFile: box.showPasswordIconFile,
                             hidePasswordIconFile: box.hidePasswordIconFile,
-                            minChar: 8,
-                            minCharWarningText: "Password must be at least 8 characters",
-                            mustUseNumber: 1,
-                            mustUseLetter: 1,
-                            mustUseUppercase: 0,
-                            mustUseLowercase: 0,
-                            mustUseSpecialChar: 0,
+                            showShowPasswordButton: 1,
+                            ...box.signupPasswordParams,
                             showPasswordIconInvert: box.showPasswordIconInvert,
                         });
                         styleInput(that);
@@ -454,7 +451,7 @@ const LoginPage = function(params = {}) {
         }
     
         HGroup({
-            width: "100%", position: "relative", ...box.customLoginButtonParams,
+            width: "100%", position: "relative", ...box.style.customLoginButton,
         });
         box.loginBox.add(that);
         that.elem.style.cursor = "pointer";
@@ -466,7 +463,7 @@ const LoginPage = function(params = {}) {
 
             Label({
                 text: text,
-                textColor: box.customLoginButtonParams.textColor, 
+                textColor: box.style.customLoginButton.textColor, 
                 fontSize: 20, 
             });
 

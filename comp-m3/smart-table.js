@@ -98,15 +98,19 @@ const SmartTableDefaults = {
         verticalScrollMargin: 2,
         btnScrollDownIconFile: "../comp-m3/smart-table/down.png",
         btnScrollUpIconFile: "../comp-m3/smart-table/up.png",
+        btnScrollCenterIconFile: "../comp-m3/smart-table/scroll.png",
+        sortIconFile: "../comp-m3/smart-table/sort.png",
+        invertIconColor: 0,
 
         box: { color: "white" },
         boxBorder: { border: 2, borderColor: Black(0.8) },
         boxTitleLine: { color: "#65A293", },
         boxTitleCell: { padding: [8, 0], borderRight: "1px solid rgba(0, 0, 0, 0.5)", borderBottom: "2px solid #141414", },
-        lblTitleCell: { fontSize: 20, fontFamily: "opensans", },
+        lblTitleCell: { fontSize: 20, fontFamily: "opensans", textColor: Black(0.8), },
         boxItemCell: { borderBottom: "1px solid darkgray", borderRight: "1px solid rgba(0, 0, 0, 0.05)", padding: [8, 0], },
         lblItemCell: { fontSize: 20, textColor: Black(0.75), fontFamily: "opensans", },
         boxInfoLine: { color: "#E4E4E4", borderTop: "1px solid rgba(0, 0, 0, 0)" },
+        lblBoxInfoLine: { fontSize: 16, textColor: Black(0.85), },
         lblNoDataFound: { color: "lightgray", padding: [8, 2], fontSize: 14, round: 8, border: 1, borderColor: Black(0.4), },
         btnScrollCenter: { color: "white", round: 100, borderColor: "rgba(0,0,0,0.4)", border: 1, },
         btnScrollUp: { color: "lightgray", round: 100, border: 1, },
@@ -351,7 +355,8 @@ const SmartTable = function (params = {}) {
             opacity: 0.5,
         });
         that.setMotion("opacity 0.3s, transform 0.3s");
-        that.load("../comp-m3/smart-table/sort.png");
+        that.load(box.style.sortIconFile);
+        if (box.style.invertIconColor == 1) that.elem.style.filter = "invert(100%)";
         that.center();
 
         endBox();
@@ -862,7 +867,8 @@ const SmartTable = function (params = {}) {
         });
 
         Icon(0, 0, "100%", "100%");
-        that.load("../comp-m3/smart-table/scroll.png");
+        that.load(box.style.btnScrollCenterIconFile);
+        //if (box.style.invertIconColor == 1) that.elem.style.filter = "invert(100%)";
 
         endBox();
 
@@ -878,6 +884,7 @@ const SmartTable = function (params = {}) {
         Icon(0, 0, "100%", "100%");
         box.btnScrollUp.add(that);
         that.load(box.style.btnScrollUpIconFile);
+        if (box.style.invertIconColor == 1) that.elem.style.filter = "invert(100%)";
 
         box.btnScrollDown = Box(0, 0, scrollWidth, box.infoHeight, {
             right: scrollRight,
@@ -892,6 +899,7 @@ const SmartTable = function (params = {}) {
         Icon(0, 0, "100%", "100%");
         box.btnScrollDown.add(that);
         that.load(box.style.btnScrollDownIconFile);
+        if (box.style.invertIconColor == 1) that.elem.style.filter = "invert(100%)";
 
     };
 
@@ -920,7 +928,7 @@ const SmartTable = function (params = {}) {
 
         box.boxInfoLine.label = Label({
             text: "0 - 0 / 0",
-            fontSize: 16,
+            ...box.style.lblBoxInfoLine,
         })
 
         endGroup();

@@ -9,7 +9,7 @@ Description: A date picker component with month navigation.
 
 Created by AI (Antigravity Gemini)
 
-- not finished
+- NOT FINISHED
 
 */
 
