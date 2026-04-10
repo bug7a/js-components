@@ -1,12 +1,12 @@
-# basic.js — Motion (Hareket ve Animasyonlar)
+# basic.js — Motion (Movement and Animations)
 
-basic.js kütüphanesinde oluşturulan herhangi bir GUI nesnesinin (Box, Button, Image vb.) pozisyonlarını, boyutlarını veya renklerini anında (sertçe) değiştirmek yerine, yavaş ve estetik geçişlerle (akıcı şekilde) değiştirmek için `Motion` mekanizması kullanılır.
+In the basic.js library, the `Motion` mechanism is used to change the positions, sizes, or colors of any GUI object (Box, Button, Image, etc.) with slow and aesthetic transitions (fluidly) instead of changing them instantly (harshly).
 
 ---
 
-## Motion Başlatma
+## Starting Motion
 
-Animasyon komutu, öncelikle hangi özelliklerin "hangi sürede" değişeceğini bir kural olarak tanımlar ve `.setMotion()` ile nesneye verilir.
+An animation command first defines which properties will change in "what duration" as a rule and is given to the object with `.setMotion()`.
 
 ```javascript
 window.onload = function() {
@@ -19,12 +19,12 @@ window.onload = function() {
             color: "orangered" 
         });
         
-        // Herhangi bir değişiklik olduğunda 0.3 saniyede akıcı (soft) geçiş yap.
+        // Make a fluid (soft) transition in 0.3 seconds whenever any change occurs.
         box.setMotion("left 0.3s, top 0.3s, width 0.3s, height 0.3s");
 
         box.on("click", function() {
             
-            // Genişlik ve yükseklik kod ile sertçe değiştirildiğinde, .setMotion araya girerek bir animasyon uygular.
+            // When width and height are changed harshly via code, .setMotion intervenes and applies an animation.
             box.width += 50;
             box.height += 50;
 
@@ -37,17 +37,17 @@ window.onload = function() {
 
 ---
 
-## Hareket Metodları
+## Motion Methods
 
-Temel seviye nesnelere eklenen başlıca animasyon kontrolleri şunlardır:
+The main animation controls added to base-level objects are as follows:
 
-### `.setMotion(kural_dizgesi)`
-Nesneye uygulanan genel CSS (transition) komut stringini alır. 
-- Örnek: `box.setMotion("all 0.5s")` (Tüm özellikler yarım saniyede değişsin)
-- Örnek: `box.setMotion("opacity 0.2s, background-color 1s")`
+### `.setMotion(rule_string)`
+Takes the general CSS (transition) command string applied to the object.
+- Example: `box.setMotion("all 0.5s")` (All properties change in half a second)
+- Example: `box.setMotion("opacity 0.2s, background-color 1s")`
 
-### `.withMotion(fonksiyon)`
-Genellikle birden fazla css değişkeniyle oluşan veya anlık eklenen animasyonların düzgün işlenmesi adına (browser buglarını önlemek için) ufak bir zaman damgasıyla bir kere çalıştırılan akıllı bir fonksiyondur.
+### `.withMotion(function)`
+It is a smart function that is run once with a small timestamp to handle animations that usually consist of multiple CSS variables or are added instantly (to prevent browser bugs).
 
 ```javascript
 window.onload = function() {
@@ -72,23 +72,23 @@ window.onload = function() {
 ```
 
 ### `.dontMotion()`
-Animasyon verilmiş bir nesnenin, herhangi bir olayı anlık/sert olarak yapmak istediğinde aradan geçici bir süreliğine animasyonu kaldırmasını olanak tanıyan fonksiyondur.
+It is a function that allows an animated object to temporarily remove the animation when it wants to perform an event instantly/harshly.
 
 ```javascript
-// Bu işlemler yavaş ve pürüzsüz uygulanacaktır (Önceki .setMotion ayarlarından dolayı)
+// These operations will be applied slowly and smoothly (due to previous .setMotion settings)
 box.width = 200;
 
-// Ancak yerinin hemen DEĞİŞMESİ, animasyonsuz anında sekmesi gerekiyor
+// However, its position needs to CHANGE immediately, jumping instantly without animation
 box.dontMotion();
 box.left = 10;
 ```
 
 ---
 
-## Örnekler
+## Examples
 
-### Örnek 1: Açılır / Kapanır Pop-up Box Tasarımı
-Ekranda baştan oluşturulmuş ancak görünmez (opacity = 0) olan bir yapıyı, sonradan aşağıdan yukarıya doğru çekip görünür yapmak.
+### Example 1: Show / Hide Pop-up Box Design
+Pulling a structure that was initially created on the screen but is invisible (opacity = 0) from bottom to top and making it visible.
 
 ```javascript
 let box = null;
@@ -107,17 +107,17 @@ window.onload = function() {
 
     endGroup();
         
-    // Başlangıç değerleri (Aşağıda ve opaklıkta)
+    // Initial values (Bottom and transparent)
     box.opacity = 0;
     box.elem.style.transform = "translateY(150px)";
 
-    // Hangi özelliklerin animasyon ile değişeceğini söylüyoruz
+    // We specify which properties will change with animation
     box.setMotion("transform 0.3s, opacity 0.3s");
     
-    // Çıkarılmasını izleyen ufak bir zamanlama aralığı
+    // A small timing interval following its creation
     box.withMotion(function(self) {
         self.opacity = 1;
-        self.elem.style.transform = "translateY(0px)";  // Havaya sıçrat
+        self.elem.style.transform = "translateY(0px)";  // Jump up
     });
 
 };
@@ -125,7 +125,7 @@ window.onload = function() {
 
 ---
 
-## Özet
-- basic.js'de arayüz geçişleri CSS `transition` üzerinden yürütülür ve en çok `.setMotion` metodu ile tetiklenir.
-- Tarayıcıda performans ve sekme sorunlarını çözmek için DOM değişiklikleri sonrasında `.withMotion()` kullanılmalıdır.
-- Yalnızca anında zıplama yapması gereken objelerde (örneğin kaydırma scroll pozisyonu algılandığında elementin takibi vs.) `.dontMotion()` yapıları kullanılır.
+## Summary
+- In basic.js, interface transitions are carried out via CSS `transition` and are most triggered with the `.setMotion` method.
+- `.withMotion()` should be used after DOM changes to solve performance and flickering issues in the browser.
+- `.dontMotion()` structures are used only on objects that need to jump instantly (e.g., tracking an element when scroll position is detected, etc.).

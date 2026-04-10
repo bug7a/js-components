@@ -1,11 +1,11 @@
-# basic.js — Faydalı Örnekler (Useful Examples)
+# basic.js — Useful Examples
 
-basic.js kullanırken CSS özelliklerine JavaScript üzerinden pratik olarak nasıl müdahale edilebileceğini ve sık karşılaşılan arayüz (GUI) ihtiyaçlarının kütüphane nesneleriyle nasıl çözüleceğini gösteren yararlı kod parçacıkları aşağıda listelenmiştir.
+The useful code snippets below demonstrate how to practically manipulate CSS properties through JavaScript while using basic.js, and how common GUI (interface) needs can be solved using library objects.
 
 ---
 
-## Gölgelendirme (Box Shadow)
-Nesnelere derinlik (gölge) katmak için, objenin element (`elem`) özellikleri üzerinden standart CSS gölgeleme tanımları kullanılabilir.
+## Box Shadow
+To add depth (shadow) to objects, standard CSS shadow definitions can be used through the element (`elem`) properties of the object.
 
 ```javascript
 window.onload = function() {
@@ -14,11 +14,11 @@ window.onload = function() {
 
     VGroup({ gap: 20 });
 
-        // Örnek 1: Sağ alta doğru keskin gölge
+        // Example 1: Sharp shadow towards bottom-right
         Box({ color: "white" });
         that.elem.style.boxShadow = "2px 3px 6px rgba(0, 0, 0, 0.6)";
 
-        // Örnek 2: Merkez etrafında yumuşak dağılan parıltılı gölge
+        // Example 2: Soft glowing shadow around center
         Box({ color: "white" });
         that.elem.style.boxShadow = "0px 0px 8px rgba(0, 0, 0, 0.2)";
 
@@ -29,19 +29,19 @@ window.onload = function() {
 
 ---
 
-## İç ve Dış Çizgiler (Spaceless Inner and Outer Border)
-Kutunun kendi `border` özelliğini kullanmak boyutları kaydırabilir. Bunun yerine gölgelendirme (box-shadow) hilesiyle yer kaplamayan iç veya dış kenarlıklar (border) yapılabilir.
+## Inner and Outer Borders (Spaceless)
+Using the object's own `border` property may shift dimensions. Instead, you can create inner or outer borders without affecting layout using the box-shadow trick.
 
 ```javascript
 window.onload = function() {
 
     VGroup({ gap: 20 });
 
-        // İç kenarlık (Inner border)
+        // Inner border
         Box({ color: "white", round: 20 });
         that.elem.style.boxShadow = "inset 0px 0px 0px 1px rgba(0, 0, 0, 1)";
 
-        // Dış kenarlık (Outer border)
+        // Outer border
         Box({ color: "white", round: 20 });
         that.elem.style.boxShadow = "0px 0px 0px 1px rgba(0, 0, 0, 1)";
 
@@ -52,49 +52,48 @@ window.onload = function() {
 
 ---
 
-## Kesilmeyen ve Taşan Metin (Nowrap & Ellipsis)
-Uzun bir metnin (ne kadar uzun olursa olsun) alt satıra geçmesini engellemek veya kutuya sığmadığında sonuna üç nokta (`...`) eklemek için CSS beyaz boşluk kuralları kullanılır.
+## Nowrap & Ellipsis Text
+To prevent long text from wrapping or to truncate it with ellipsis (`...`) when it overflows, CSS white-space rules are used.
 
 ```javascript
 window.onload = function() {
 
-    // Sadece alt satıra geçmeyi engeller (Taşar)
+    // Prevent wrapping only (overflow allowed)
     Label(20, 80, 200, {
-        text: "Ne kadar uzun olursa olsun bir satırda kalmaya devam eden etiket.",
+        text: "A label that stays on a single line no matter how long it is.",
         color: "peru",
     });
     that.elem.style.whiteSpace = "nowrap";
 
-    // Alt satıra geçmez ve sığmadığı yerde 3 Nokta (...) ile kırpılır
+    // Prevent wrapping and truncate with ellipsis
     Label(20, {
-        text: "Kutuya sığmayacak kadar uzun olan bir etiket",
+        text: "A label that is too long to fit in the box",
         color: "peru",
         bottom: 80,
         width: 200,
     });
     that.elem.style.whiteSpace = "nowrap";
-    that.elem.style.textOverflow = "ellipsis"; // Taşmayı üç nokta yapar (1 satır için)
+    that.elem.style.textOverflow = "ellipsis";
 
 };
 ```
 
 ---
 
-## Tıklanabilir Ekran İmleci (Pointer Cursor)
-Bir objenin/metnin üzerine gelindiğinde farenin (mouse) "el işareti"ne dönüşmesi, kullanıcılara tıklanabildiğine dair güçlü bir mesaj verir.
+## Pointer Cursor
+Changing the mouse cursor to a pointer (hand) when hovering over an object/text gives a strong indication that it is clickable.
 
 ```javascript
 window.onload = function() {
 
     Label({
-        text: "Bana Tıkla",
+        text: "Click Me",
         border: 1, 
         padding: [12, 4], 
         round: 3, 
-        clickable: 1, // Tıklanma olayı alınabilsin diye
+        clickable: 1,
     }).center();
 
-    // İmleci "el (pointer)" tipine dönüştür
     that.elem.style.cursor = "pointer";
 
 };
@@ -102,20 +101,19 @@ window.onload = function() {
 
 ---
 
-## Farklı Fare Olayları Eklemek (Mouse Events)
-`.on("click")` dışında temel DOM olaylarını da (örn: `mouseover`, `mouseout`) `addEventListener` ile yakalayabilirsiniz.
+## Mouse Events
+Besides `.on("click")`, you can also listen to native DOM events like `mouseover` and `mouseout`.
 
 ```javascript
 window.onload = function() {
 
     const lbl = Label(20, 20, {
-        text: "Fare ile üzerine gel!",
+        text: "Hover over me!",
         round: 12, 
         padding: [12, 6], 
         clickable: 1,
     });
 
-    // Eskiden .elem.addEventListener(...) yapılıyordu, artık .on("mouseover") da kullanılabilir.
     lbl.on("mouseover", function() {
         lbl.color = "indianred";
     });
@@ -129,27 +127,23 @@ window.onload = function() {
 
 ---
 
-## Sınırları Aşan Kutular (clipContent)
-Normal şartlarda objeler varsayılan `clipContent: 1` davranışı ile kutu sınırlarını kestikleri noktada görünmez olurlar (overflow: hidden). Eğer bir açılır menü ya da alt bileşen, kapsayıcı kutudan dışarı taşmalıysa `clipContent: 0` özelliği kullanılarak sınır dışı görünürlük sağlanır (overflow: visible).
+## Overflowing Content (clipContent)
+By default, objects use `clipContent: 1` (overflow: hidden). If child elements need to overflow outside the container, use `clipContent: 0` (overflow: visible).
 
 ```javascript
 window.onload = function() {
 
     HGroup();
 
-        // clipContent: 0 ile kutunun dışına taşan alt (child) nesnelerin görünmesine izin verilir.
         const box = Box({ 
             color: "orange", 
             clipContent: 0 
         });
 
-        // Oluşturduktan sonra değiştirmek gerekirse: 
-        // box.clipContent = 0;
-
     endGroup();
 
     Label({
-        text: "Kutu sınırlarından çok daha dışarılara uzanacak bir metin.",
+        text: "A text that extends far beyond the container boundaries.",
         left: 10, 
         top: 10, 
         width: "auto", 
@@ -163,27 +157,23 @@ window.onload = function() {
 
 ---
 
-## Renk Geçişleri (Gradients)
-Arayüzleri şıklaştırmak amacıyla çizgisel (linear), merkezden (radial) ya da dairesel (conic) renk geçişleri CSS `background` komutlarıyla eklenebilir.
+## Gradients
+Enhance UI with linear, radial, or conic gradients using CSS background.
 
 ```javascript
 window.onload = function() {
 
-    VGroup({ gap: 8, });
+    VGroup({ gap: 8 });
 
-        // (Linear) Soldan sağa renk geçişi (Saydamdan -> Yeşile)
         Box({ width: 200 });
         that.elem.style.background = "linear-gradient(to right, #FFFFFF00, seagreen)";
 
-        // (Linear) Yukarıdan aşağı çoklu renk
         Box({ width: 200 });
         that.elem.style.background = "linear-gradient(to bottom, pink, purple, indianred)";
 
-        // (Radial) Merkezden dışarı dağılan (Güneş benzeri) renk geçişi
         Box({ width: 200 });
         that.elem.style.background = "radial-gradient(gold, indianred, black)";
 
-        // (Conic) Saat yönünde yuvarlak renk turu
         Box({ width: 200 });
         that.elem.style.background = "conic-gradient(red, yellow, green, blue, black)";
 
@@ -194,43 +184,32 @@ window.onload = function() {
 
 ---
 
-## Görsel Filtreleme (CSS Filters)
-Bir `Icon` ya da genel bir objenin rengini, pusluğunu ve karşıtlığını tek tıkla değiştirebilirsiniz.
+## CSS Filters
+You can quickly adjust color, blur, and contrast of an `Icon` or any object.
 
 ```javascript
 window.onload = function() {
 
     Icon(10, 10, 100, 100, { border: 1 }).load("test.png");
-    
-    // Tamamen Siyah / Beyaz yapar
+
     that.elem.style.filter = "grayscale(100%)";
 
-    // Renkleri tam tersiyle değiştirir (Negatif etki)
     Icon(10, 118, 100, 100, { border: 1 }).load("test.png");
     that.elem.style.filter = "invert(100%)";
-
-    // DİĞER FİLTRE DEĞERLERİ:
-    // "blur(5px)", "brightness(200%)", "sepia(100%)", 
-    // "saturate(8)", "hue-rotate(90deg)", "contrast(200%)"
-    // "drop-shadow(8px 8px 10px gray)" // Görselin seffaf alanlarına etki etmeden atılan gölge
-
-    // BİRDEN FAZLA FİLTREYİ BİRLİKTE KULLANMAK İÇİN:
-    // that.elem.style.filter = "grayscale(50%) blur(2px)";
 
 };
 ```
 
 ---
 
-## Özel Yazı Tipi Atama (Custom Fonts)
-Yazılarınızın standardı dışına çıkmak istediğinizde, sisteme yüklü bir Google Fonts ya da harici web font değerini doğrudan atayabilirsiniz.
+## Custom Fonts
+You can assign custom fonts (Google Fonts or external fonts) directly.
 
 ```javascript
 window.onload = function() {
 
-    Label(20, 20, { text: "Farklı Bir Font Denemesi" });
+    Label(20, 20, { text: "Custom Font Example" });
 
-    // Sayfaya @font-face olarak eklenmiş olmalıdır.
     that.elem.style.fontFamily = "opensans-bold";
 
 };
@@ -238,8 +217,8 @@ window.onload = function() {
 
 ---
 
-## Ölçekleme ve Hareket (.transform & scale)
-Fare efektiyle arayüz elemanlarını CSS Matrix/Transform destekli olarak büyütüp küçültebilir ve animasyonlar ekleyebilirsiniz.
+## Transform & Scale
+You can scale elements and add animations using CSS transform.
 
 ```javascript
 window.onload = function() {
@@ -254,21 +233,19 @@ window.onload = function() {
             round: 13,
         });
 
-        // Boyut katsayısı ve merkezin durumu
         lbl.elem.style.transform = "scale(1)";
-        lbl.elem.style.transformOrigin = "50% 50%"; // Tam ortadan büyür
+        lbl.elem.style.transformOrigin = "50% 50%";
 
-        // Etki geçişlerini pürüzsüzleştirir
         lbl.setMotion("transform 0.5s, background-color 0.5s");
 
-        lbl.on("mouseover", function(self, event) {
+        lbl.on("mouseover", function(self) {
             self.color = "indianred";
-            self.element.style.transform = "scale(1.2)"; // %20 daha büyüt
+            self.element.style.transform = "scale(1.2)";
         });
 
-        lbl.on("mouseout", function(self, event) {
+        lbl.on("mouseout", function(self) {
             self.color = "white";
-            self.element.style.transform = "scale(1)"; // Eski haline geri getir
+            self.element.style.transform = "scale(1)";
         });
 
     endGroup();
@@ -278,16 +255,15 @@ window.onload = function() {
 
 ---
 
-## Seçilebilir Metin (Selectable Text)
-Kütüphanede kullanıcı arayüzü dokunmatik cihazlardaki "metin kopyalama çubuğu" açılmaması için kapatılmıştır. Ancak dilediğiniz bir metnin Mouse/Ekran ile kopyalanmasını isterseniz seçilebilirliği aktif edebilirsiniz.
+## Selectable Text
+Text selection is disabled by default. You can enable it if needed.
 
 ```javascript
 window.onload = function() {
 
-    Label(10, 10, { text: "Kopyalanabilir Makale Formatı..." });
+    Label(10, 10, { text: "Selectable text..." });
 
-    // Bunu bir label/buton için serbest bırakır.
-    that.elem.style.userSelect = "text"; // "text" ya da "all" (komple blok seçmek için)
+    that.elem.style.userSelect = "text";
     that.elem.style.pointerEvents = "auto";
 
 };
@@ -295,26 +271,23 @@ window.onload = function() {
 
 ---
 
-## CSS Sınıfları Ekleme (classList.add)
-Bileşenlere hazır bir sınıfı atayarak global bir CSS bloğunu (`.css` dosyasında yazılmış) etkili biçimde çalıştırabilirsiniz.
+## Adding CSS Classes
+You can attach predefined CSS classes.
 
 ```javascript
 window.onload = function() {
-    
+
     Box(10, 10, 50, 50, { color: "red" });
 
-    // JavaScript kullanarak CSS sınıf düzenleme
     that.elem.classList.add("highlight");
-    // that.elem.classList.toggle("highlight"); // Varsa sil, yoksa ekle.
-    // that.elem.classList.remove("highlight");
 
 };
 ```
 
 ---
 
-## Özel Kenarlıklar Çizme (Custom Border)
-Belirli bir objenin yalnızca sağında veya solunda, bazı köşelerinde farklı çerçeveler olmasını isterseniz tekil sınırları CSS ile çizebilirsiniz.
+## Custom Borders
+You can define borders individually per side.
 
 ```javascript
 window.onload = function() {
@@ -328,12 +301,9 @@ window.onload = function() {
         height: 300, 
         color: "rgba(255, 255, 255, 0.7)" 
     });
-    
-    // Her kenara farklı bir çizim vermek
-    that.elem.style.borderTop = "2px dotted rgba(0, 0, 0, 0.9)"; // Noktalı tavan çizgisi
-    that.elem.style.borderBottom = "5px solid rgba(0, 0, 0, 0.9)"; // Kalın ve düz taban çizgisi
-    // that.elem.style.borderLeft = "1px dashed rgba(0, 0, 0, 0.9)"; 
-    // that.elem.style.borderRight = "1px dashed rgba(0, 0, 0, 0.9)";
+
+    that.elem.style.borderTop = "2px dotted rgba(0, 0, 0, 0.9)";
+    that.elem.style.borderBottom = "5px solid rgba(0, 0, 0, 0.9)";
 
 };
 ```

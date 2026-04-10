@@ -1,19 +1,19 @@
-# basic.js — BSound (Ses Nesnesi)
+# basic.js — BSound (Sound Object)
 
-basic.js kütüphanesinde `BSound` sınıfı, tarayıcı üzerinde ses ve müzik dosyalarını yönetmek ve çalmak için kullanılır. Görünmez (arayüzü olmayan) bir ses motorudur.
+In the basic.js library, the `BSound` class is used to manage and play audio and music files on the browser. It is an invisible (no interface) sound engine.
 
 ---
 
-## Ses Motorunu Başlatma
+## Starting the Sound Engine
 
-Basit bir `BSound` örneği (instance) yaratılarak ve müzik dosyası adresi belirtilerek oluşturulur.
+It is created by instantiating a simple `BSound` object and specifying the music file address.
 
 ```javascript
 window.onload = function() {
 
     const backgroundMusic = new BSound();
     
-    // Ses dosyasını yüklemeye başlat (.wav veya .mp3)
+    // Start loading the audio file (.wav or .mp3)
     backgroundMusic.load("assets/audio/loop_theme.mp3");
 
 }
@@ -21,58 +21,58 @@ window.onload = function() {
 
 ---
 
-## Metodlar ve Olaylar
+## Methods and Events
 
-### Oynatma (Playback) Metodları
-- `.play()` — Yüklenmiş olan sesi başlatır. Eğer duraklatılmış (pause) ise kaldığı yerden devam eder.
-- `.pause()` — Çalan sesi duraklatır.
-- `.stop()` — Çalan sesi tamamen durdurur ve başlatma/ilerleme çubuğunu `0` saniyesine (başa) çeker.
+### Playback Methods
+- `.play()` — Starts the loaded sound. If it is paused, it continues from where it left off.
+- `.pause()` — Pauses the playing sound.
+- `.stop()` — Completely stops the playing sound and moves the playback slider to `0` seconds (the beginning).
 
-### Kontrol Özellikleri
-- `.loop` (boolean) — Sesin / müziğin bittiğinde tekrar baştan başlamasını ayarlayan yapı (Değer `1` veya `0` alır).
-- `.playing` (boolean) — Sesin şu anda etkin bir şekilde çalıp çalınmadığını okur (Dönen değerler `true/false`, salt okunurdur).
-- `.paused` (boolean) — Sesin duraklatılıp duraklatılmadığını kontrol eder.
-- `time` ve `timeLeft`, `currentTime` özelliği aracılığı ile arka plan çalar saat süreleri takip edilebilir.
+### Control Properties
+- `.loop` (boolean) — Structure that sets the sound/music to restart from the beginning when it ends (Takes a value of `1` or `0`).
+- `.playing` (boolean) — Reads whether the sound is currently actively playing (Returns `true/false`, read-only).
+- `.paused` (boolean) — Checks whether the sound is paused.
+- The background playback durations can be tracked via `time`, `timeLeft`, and `currentTime` properties.
 
-### Yüklenme Olayı (.onLoad)
-Grafik nesnelerinde (Image/Icon) olduğu gibi, ses dosyaları da boyutları sebebiyle anında hazır olmayabilirler. Çalmaya (okumaya) hazır olduğu durumu `.onLoad()` ile yakalanır.
+### Load Event (.onLoad)
+Just like graphic objects (Image/Icon), audio files may not be ready instantly due to their sizes. The condition where it is ready to play (be read) is captured with `.onLoad()`.
 
 ```javascript
 const fxOkey = new BSound();
 fxOkey.load("assets/audio/ok.wav");
 
-// Ses dosyasının tarayıcı tarafından belleğe alınarak çalmaya hazır hale geldiği an
+// The moment when the sound file is loaded into memory by the browser and is ready to play
 fxOkey.onLoad(function(loadedSound) {
-    println("Ses dosyası başarıyla hazırlandı.");
+    println("Sound file successfully prepared.");
 });
 ```
 
 ---
 
-## Örnekler
+## Examples
 
-### Örnek 1: Döngüsel Arka Plan Müziği ve Buton Kontrolü
+### Example 1: Looping Background Music and Button Control
 
 ```javascript
 window.onload = function() {
     
-    // Sesi hazırla
+    // Prepare the sound
     const gameMusic = new BSound();
     gameMusic.load("music.mp3");
-    gameMusic.loop = 1; // Sürekli baştan çalacak
+    gameMusic.loop = 1; // Will play continuously from the beginning
     
     HGroup({ gap: 10, align: "center" });
 
-        // Oynat Butonu
-        Button({ text: "Başlat", color: "mediumseagreen" })
+        // Play Button
+        Button({ text: "Play", color: "mediumseagreen" })
         .on("click", function() {
             gameMusic.play();
         });
 
-        // Durdur Butonu
-        Button({ text: "Durdur", color: "tomato" })
+        // Stop Button
+        Button({ text: "Stop", color: "tomato" })
         .on("click", function() {
-            gameMusic.stop(); // Tamamen ve baştan sustur
+            gameMusic.stop(); // Silence completely and from the beginning
         });
 
     endGroup();
@@ -82,7 +82,7 @@ window.onload = function() {
 
 ---
 
-## Özet
-- `BSound` → Ekran üzerinden bağımsız olarak görünmez şekilde ses çalıştıran yapıdır.
-- Bir kere yaratılıp `.load()` fonksiyonu ile içerik verildikten sonra, yazılımla defalarca kez `.play()` edilebilir.
-- Arka plan müzikleri için idealdir ve `.loop = 1` şeklinde kullanılabilir.
+## Summary
+- `BSound` → It is the structure that runs sound invisibly and independently from the screen.
+- Once created and content is provided with the `.load()` function, it can be `.play()`ed many times via code.
+- It is ideal for background music and can be used as `.loop = 1`.

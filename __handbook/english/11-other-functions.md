@@ -1,45 +1,45 @@
-# basic.js — Diğer Fonksiyonlar (Other Functions)
+# basic.js — Other Functions
 
-basic.js kütüphanesinin ekosistemini yönetmek ve varsayılan (default) davranışları manipüle etmek amacıyla arka planda çalışan global yardımcı fonksiyonlardır.
+These are global helper functions that work in the background to manage the basic.js library ecosystem and manipulate default behaviors.
 
 ---
 
-## 1. Döngü Zamanlayıcısı (Loop Timer)
+## 1. Loop Timer
 
 **`setLoopTimer(milisecond)`**
-Sayfanızda / projenizde genel geçer bir `loop()` fonksiyonu tanımladıysanız, bu fonksiyonun ne sıklıkla çalıştırılacağını (tekrar edileceğini) belirleyen metottur.
-- Parametre olarak milisaniye (`Integer`) cinsinden süre verilir.
-- Standart (varsayılan) değeri `1000`'dir (Yani saniyede 1 kez çalışır).
+If you have defined a general-purpose `loop()` function in your page/project, this method determines how often (repeat interval) this function should be run.
+- The duration is given as a parameter in milliseconds (`Integer`).
+- The standard (default) value is `1000` (meaning it runs once per second).
 
 ---
 
-## 2. Varsayılan Kapsayıcı Yönetimi (Container Box)
+## 2. Default Container Management (Container Box)
 
-Yeni bir arayüz elemanı oluşturulduğunda (Örneğin `Box()`, `Button()`), bu nesnenin içine ekleneceği ilk ana çatı varsayılan olarak `page` (Sayfa / MainBox) nesnesidir. Aşağıdaki fonksiyonlar aracılığıyla bu yapıya dışarıdan müdahale edilebilir.
+When a new interface element is created (e.g., `Box()`, `Button()`), the primary frame into which this object is added by default is the `page` (Page / MainBox) object. This structure can be externally manipulated through the following functions.
 
 **`setDefaultContainerBox(boxObject)`**
-Oluşturulacak nesnelerin otomatik olarak (bizzat `.add()` yazılmasına gerek kalmadan) hangi objenin içine taşınacağını / ekleneceğini belirler.
-- `page` dışında başka bir `Box` veya ebeveyn eleman verildiğinde, kod hiyerarşisindeki yaratılan yeni buton veya etiketler otomatik o nesnenin içerisine akar.
-- Tekrar en başa dönmek ve varsayılan yapıyı sıfırlamak için `setDefaultContainerBox(page)` kullanılabilir.
+Determines which object the created elements will be automatically moved/added to (without the need to explicitly write `.add()`).
+- When a `Box` or parent element other than `page` is provided, new buttons or labels created in the code hierarchy automatically flow into that object.
+- To return to the beginning and reset the default structure, `setDefaultContainerBox(page)` can be used.
 
 **`getDefaultContainerBox()`**
-Mevcut durumda yaratılan nesnelerin eklendiği ebeveyn nesneyi (`Box` veya `MainBox`) döndürür / okur.
+Returns / reads the parent object (`Box` or `MainBox`) where currently created objects are added.
 
 **`restoreDefaultContainerBox()`**
-Varsayılan listesinde / hiyerarşisinde belirlenmiş olan bir önceki konteyner kutusuna pratik bir şekilde geri dönmeyi sağlar.
+Provides a practical way to return to the previous container box defined in the default list/hierarchy.
 
 ---
 
-## 3. Yakınlaştırma Hesaplaması (Page Zoom)
+## 3. Zoom Calculation (Page Zoom)
 
 **`withPageZoom(length)`**
-`page.zoom` ayarı ile ekran ölçülerini (uzaklık/yakınlık) değiştirdiyseniz, bir `uzunluk (length)` birimini sayfanın güncel zoom değerine oranlayıp hesaplayarak (`Float`) olarak geri dönen zeki hesaplama ayarcısıdır. 
+If you have changed the screen dimensions (scaling/zooming) with the `page.zoom` setting, this is a smart calculation helper that calculates a `length` unit proportional to the page's current zoom value and returns it as a `Float`.
 
 ---
 
-## 4. Özel Nesneyi Sisteme Bağlama
+## 4. Connecting Custom Objects to the System
 
 **`makeBasicObject(object)`**
-Uygulamada kendi oluşturduğunuz özel tasarımlı / gelişmiş bir nesneyi, basic.js ekosistemine sorunsuzca entegre edip tanıtmayı sağlar.
-- Fonksiyondan geçen nesneye, yeni bir basic.js nesnesi yaratılana dek global boyutlardaki `that` isimli değişkenden erişilebilir.
-- Eğer geliştirmek istediğiniz özel nesne; birden fazla temel bileşenden (Label, Button vs) oluşuyorsa, hepsini üzerinde barındıran temel taşıyıcı eleman olarak `Box` elemanını kullanmanız ve kutuyu makeBasicObject içine yollamanız tavsiye edilir.
+Allows you to seamlessly integrate and introduce a custom-designed/advanced object you've created in the application into the basic.js ecosystem.
+- The object passed through the function can be accessed via the global `that` variable until a new basic.js object is created.
+- If the custom object you want to develop consists of multiple basic components (Label, Button, etc.), it is recommended to use a `Box` element as the main carrier housing all of them and pass that box into `makeBasicObject`.
