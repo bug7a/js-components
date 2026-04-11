@@ -1,6 +1,7 @@
 # JS-Component Suite
 
 > **"Minimum Code, Maximum Visual Impact"**
+
 A high-level, object-oriented UI framework designed for developers who want to build professional web interfaces without the overhead of traditional CSS management.
 
 ---
