@@ -13,24 +13,24 @@ Not to make coding harder, but **to turn it into an enjoyable and fluent experie
 
 - **Highly Readable Code:** Instead of getting lost among complex structures, it focuses on offering a fluent, self-explanatory syntax that is immediately understood at a glance, as if you were reading a story. It aims to make software development as simple and enjoyable as putting together lego pieces.
 
-* Code is written not just for the machine, but for humans too.
+`Code is written not just for the machine, but for humans too.`
 
 - **Zero Learning Curve:** Instead of endless documents or heavy theoretical concepts, it builds a natural and effortless learning path where you can go into production in minutes just by looking at the flow of the code. It aims to help you quickly grasp the core concepts and instantly transform your ideas into working interfaces.
 
-* There are a small number of basic concepts.
+`There are a small number of basic concepts.`
 
 - **Lightweight and High Performance:** With its structure free from unnecessary burdens and external dependencies, it aims to deliver the highest response speed with the lowest resource consumption directly on the DOM. Thanks to its lean structure that prioritizes performance, it offers a fluent experience, especially in projects where speed and flexibility are critical.
 
-* No extra dependencies.
+`No extra dependencies.`
 
 - **Full Control and Flexibility:** Instead of splitting between HTML and CSS files, it tries to create a limitless space for you to move by transferring all UI processes and layouts to a fully JavaScript-based structure. It provides a development infrastructure where you can manage every detail from a single center with full control.
 
-* Provides a more flexible structure.
+`Provides a more flexible structure.`
 
 - **Rapid Prototyping and Agile Development:** Instead of overly complex structures where tasks are heavily divided, it endeavors to make the process much more efficient for solo developers, especially in small to medium-scale projects where interface flexibility and logic speed are in the foreground.
 
-* No over-engineering.
-* Keeps simple things simple.
+`No over-engineering.`
+`Keeps simple things simple.`
 
 ---
 
