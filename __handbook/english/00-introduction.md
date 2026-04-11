@@ -114,6 +114,8 @@ This handbook exemplifies how you can use the library most efficiently, from bas
 
 Also, to quickly look at the latest developments and fresh methods added to the library, you can review the **`00-what-is-new.md`** release notes.
 
+I wish you to see its benefits.
+
 
 ## LICENSE
 
@@ -121,3 +123,4 @@ Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com>
 - https://github.com/bug7a
 
 Licensed under the Apache License, Version 2.0
+
