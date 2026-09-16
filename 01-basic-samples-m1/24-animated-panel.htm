@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        
+        <title>Animated Panel</title>
+        
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- user-scalable=no -->
+
+        <!-- LIBRARY FILES -->
+        <!-- <link rel="preload" href="image.png" as="image"> -->
+        <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <!--<script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>-->
+
+        <script>
+
+        // make panel data list with params
+        // 1 right, 1 left, 1 bottom
+        // Buttonlara effect ekle.
+        
+        // VARIABLES
+        let box;
+        let btnOpenPanel;
+
+        const buttonStyle = {
+            textColor: Black(0.5),
+            border: 1,
+            borderColor: Black(0.2),
+            minimal: 1,
+            width: "auto",
+            padding: [20, 0],
+        };
+
+        // First running function.
+        window.onload = function() {
+
+            page.color = "lightgray";
+
+            HGroup();
+
+                btnOpenPanel = Button({
+                    text: "Open Panel",
+                    color: "#8FC7B9",
+                    ...buttonStyle,
+                });
+                // Open Panel B
+                // Open Panel C
+
+            endGroup();
+
+            box = initPanel();
+
+            btnOpenPanel.on("click", box.showPanel);
+            
+        };
+        
+        // OTHER FUNCTIONS
+        const initPanel = function(params = {}) {
+
+            const defaults = {
+
+            };
+
+            // Marge params:
+            mergeIntoIfMissing(params, defaults);
+
+            const box = startObject(params);
+
+            // [var]
+            box.isOpened = 0;
+
+            const initView = function() {
+
+                box.panel = Box({
+                    right: 0,
+                    top: 0,
+                    width: 500,
+                    height: "100%",
+                    color: "white",
+                    border: 1,
+                    borderColor: Black(0.2),
+                    opacity: 1,
+                });
+                that.elem.style.transformOrigin = "50% 50%"; // Tam ortadan büyür
+                that.elem.style.transform = "scale(0.8) translateX(250px)";
+                that.setMotion("transform 0.3s, opacity 0.3s");
+
+                HGroup();
+                box.panel.add(that);
+
+                    Button({
+                        text: "Close Panel",
+                        color: "#D57056",
+                        ...buttonStyle,
+                    });
+                    that.on("click", box.hidePanel);
+
+                endGroup();
+
+            };
+
+            box.setState = function(state) {
+                switch(state) {
+                    case "show":
+                        box.panel.opacity = 1;
+                        box.panel.elem.style.transform = "scale(1) translateX(0px)";
+                        break;
+                    case "hide":
+                        box.panel.opacity = 0;
+                        box.panel.elem.style.transform = "scale(0.8) translateX(250px)";
+                        break;
+                }
+            };
+
+            box.showPanel = function() {
+
+                if (box.isOpened === 1) return;
+
+                box.isOpened = 1;
+                box.panel.visible = 1;
+                
+                box.panel.dontMotion();
+                box.setState("hide");
+
+                box.panel.withMotion(function(self) {
+                    box.setState("show");
+                });
+                
+            };
+            
+            box.hidePanel = function() {
+
+                if (box.isOpened === 0) return;
+
+                box.isOpened = 0;
+
+                box.panel.withMotion(function(self) {
+                    box.setState("hide");
+                });
+
+                setTimeout(function() {
+                    box.panel.visible = 0;
+                }, 300);
+                
+            };
+
+            initView();
+
+            return endObject(box);
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+        
+        <!-- HTML content -->
+        
+    </body>
+</html>

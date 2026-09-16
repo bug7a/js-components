@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>Recruitment Form</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <!-- LIBRARY FILES -->
+        <!-- <link rel="preload" href="image.png" as="image"> -->
+        <link rel="preload" href="../../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="preload" href="../../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../../basic/basic.min.css">
+        <script src="../../basic/basic.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8" defer></script>
+
+        <script src="../../comp-m2/tooltip.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m2/input-b.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m2/email-input-b.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m2/phone-input-b.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m2/textarea-b.min.js" type="text/javascript" charset="utf-8" defer></script>
+
+        <script src="../../comp-m2/waiting.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m2/form.min.js" type="text/javascript" charset="utf-8" defer></script>
+
+        <script src="../../comp-m3/check-box.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m3/radio-button.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m4/select-date.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m4/select-file.js" type="text/javascript" charset="utf-8" defer></script>
+
+        <!-- ALL COMPONENTS IN ONE FILE -->
+        <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
+
+        <!--
+
+        /* Bismillah */
+
+        - A job application form.
+        - InputB, EmailInputB, PhoneInputB, TextareaB (comp-m2)
+        - CheckBox, RadioButton (comp-m3)
+        - SelectDate, SelectFile (comp-m4)
+
+        - CheckBox, RadioButton, SelectDate and SelectFile are placed in an InputB field (createInput: 0).
+          So they look like the other inputs and the Form checks them too. (See: createField)
+
+        -->
+
+        <script>
+
+        // This example posts the form data and the CV file to your server with FormData.
+        // SERVICE_URL is empty: Demo mode (nothing is sent, data is printed to the console).
+
+        // *** CONSTANTS:
+        const SERVICE_URL = ""; // Ex: "https://your-site.com/api/job-application"
+        const FORM_TITLE = "Join Our Team";
+        const FORM_DESCRIPTION = "We are always looking for talented people. Tell us about yourself, upload your CV and we’ll get back to you within 5 business days.";
+
+        const ACCENT_COLOR = "#65A293";
+        const TEXT_COLOR = "#373836";
+
+        // *** VARIABLES:
+        let form, waiting;
+        let firstNameInput, lastNameInput, emailInput, phoneInput, portfolioInput, coverLetterTextarea;
+        let positionField, experienceField, startDateField, workModelField, skillsField, cvField, consentField;
+
+        // Common input params:
+        let inputStyle;
+
+        // First running function. (basic.js calls start() when the page object is ready)
+        // WHY: Not window.onload, because the library files are loaded with "defer".
+        const start = function() {
+
+            page.color = "white";
+
+            inputStyle = {
+                width: "100%",
+                backgroundColor: "#F6F6F6",
+                selectedBackgroundColor: "#F6F6F6",
+                lineColor: Black(0),
+                selectedLineColor: Black(0),
+                backBorderColor: Black(0),
+                selectedBackBorderColor: Black(0.4),
+                backBorderTopRound: 8,
+                backBorderBottomRound: 8,
+            };
+
+            // FORM:
+            form = Form({
+                minWidth: 700,
+                maxWidth: 700,
+                buttonColor: ACCENT_COLOR,
+                buttonText: "SUBMIT APPLICATION",
+                showDetailWarning: 1,
+                missingEntryText: "{{count}} missing entry",
+                missingEntriesText: "{{count}} missing entries",
+                warningText: "<b>{{name}}</b> can't be empty",
+                errorText: "<b>{{name}}</b> is not valid",
+                minimalButton: 0,
+                doubleInputAlwaysHorizontal: 0,
+                onSendClick: function(json) {
+                    sendApplication(json);
+                },
+                onEdit: function(input) {
+                    //console.log(input.titleText);
+                },
+            });
+
+            // LABEL: Title
+            Label({
+                text: FORM_TITLE,
+                textColor: TEXT_COLOR,
+                fontSize: 26,
+            });
+            that.elem.style.fontFamily = "opensans-bold";
+            form.addTitle(that);
+
+            // LABEL: Description
+            if (FORM_DESCRIPTION != "") {
+                Label({
+                    text: FORM_DESCRIPTION,
+                    fontSize: 16,
+                    textColor: "#999999",
+                });
+                //that.elem.style.fontStyle = "italic";
+                form.addTitle(that);
+            }
+
+            // *** PERSONAL INFORMATION
+
+            addSectionTitle("1. Personal Information");
+
+            // INPUT: First Name
+            firstNameInput = InputB({
+                key: "firstName",
+                ...inputStyle,
+                isRequired: 1,
+                titleText: "FIRST NAME",
+                placeholder: "Jack",
+                leftPadding: 20,
+            });
+
+            // INPUT: Last Name
+            lastNameInput = InputB({
+                key: "lastName",
+                ...inputStyle,
+                isRequired: 1,
+                titleText: "LAST NAME",
+                placeholder: "Brown",
+                leftPadding: 20,
+            });
+            form.addDoubleInput(firstNameInput, lastNameInput);
+
+            // INPUT: Email
+            emailInput = EmailInputB({
+                key: "email",
+                ...inputStyle,
+                isRequired: 1,
+                titleText: "YOUR EMAIL",
+                placeholder: "example@site.com",
+                warningText: "Invalid email format",
+                warningColor: "#E5885E",
+                maxChar: 50,
+            });
+
+            // INPUT: Phone
+            phoneInput = PhoneInputB({
+                key: "phone",
+                ...inputStyle,
+                isRequired: 1,
+                titleText: "PHONE NUMBER",
+                placeholder: "(auto)",
+                warningText: "Invalid phone number format",
+                warningColor: "#E5885E",
+                countryCode: "+90",
+                phoneMask: " (___) ___-____",
+                unitText: "TR",
+            });
+            form.addDoubleInput(emailInput, phoneInput);
+
+            // *** THE POSITION
+
+            addSectionTitle("2. The Position");
+
+            // RADIO BUTTON: Position
+            positionField = createField({
+                key: "position",
+                type: "radio",
+                titleText: "POSITION",
+                isRequired: 1,
+            }, function(field) {
+
+                createWrapGroup();
+
+                    ["Frontend Developer", "Backend Developer", "UI/UX Designer", "Product Manager", "QA Engineer", "Data Analyst"].forEach(function(name) {
+                        RadioButton({
+                            group: "position",
+                            value: name,
+                            labelText: name,
+                            onChange: field.update,
+                            ...radioStyle(),
+                        });
+                        that.width = 280; // 2 columns
+                    });
+
+                endGroup();
+
+                field.getInputValue = function() {
+                    return RadioButton.getValue("position");
+                };
+
+            });
+            form.addInput(positionField);
+
+            // RADIO BUTTON: Experience
+            experienceField = createField({
+                key: "experience",
+                type: "radio",
+                titleText: "EXPERIENCE",
+                isRequired: 1,
+            }, function(field) {
+
+                createWrapGroup();
+
+                    ["0-1 years", "1-3 years", "3-5 years", "5+ years"].forEach(function(name) {
+                        RadioButton({
+                            group: "experience",
+                            value: name,
+                            labelText: name,
+                            onChange: field.update,
+                            ...radioStyle(),
+                        });
+                    });
+
+                endGroup();
+
+                field.getInputValue = function() {
+                    return RadioButton.getValue("experience");
+                };
+
+            });
+            form.addInput(experienceField);
+
+            // SELECT DATE: Available start date
+            startDateField = createField({
+                key: "startDate",
+                type: "date",
+                titleText: "AVAILABLE FROM",
+                isRequired: 1,
+            }, function(field) {
+
+                field.picker = SelectDate({
+                    width: "100%",
+                    height: 40,
+                    minDate: new Date(), // Not in the past
+                    format: "D MMMM YYYY, dddd",
+                    placeholder: "Select a date",
+                    onChange: field.update,
+                    onOpen: function() { setFieldFocus(field, 1); },
+                    onClose: function() { setFieldFocus(field, 0); },
+                    style: {
+                        // Looks like the text of the other inputs:
+                        field: { color: "transparent", border: 0, round: 0, padding: [0, 0] },
+                        fieldHover: { borderColor: "transparent" },
+                        fieldFocus: { borderColor: "transparent" },
+                        fieldText: { fontSize: 20, textColor: TEXT_COLOR },
+                        placeholder: { textColor: Black(0.45) },
+                        icon: { color: Black(0.45) },
+                        today: { borderColor: ACCENT_COLOR },
+                        selectedDay: { color: ACCENT_COLOR },
+                        footerButton: { textColor: ACCENT_COLOR },
+                    },
+                });
+
+                field.getInputValue = function() {
+                    return field.picker.value; // "YYYY-MM-DD"
+                };
+
+            });
+
+            // CHECK BOX: Work model
+            workModelField = createField({
+                key: "workModel",
+                type: "checkbox",
+                titleText: "WORK MODEL",
+                isRequired: 1,
+            }, function(field) {
+
+                field.checkBoxes = [];
+
+                createWrapGroup();
+
+                    ["Remote", "Hybrid", "On-site"].forEach(function(name) {
+                        CheckBox({
+                            labelText: name,
+                            onChange: field.update,
+                            ...checkBoxStyle(),
+                        });
+                        field.checkBoxes.push(that);
+                    });
+
+                endGroup();
+
+                field.getInputValue = function() {
+                    return getCheckedLabels(field.checkBoxes); // [] when nothing is checked
+                };
+
+            });
+            form.addDoubleInput(startDateField, workModelField);
+            topAlignLastDoubleInput();
+
+            // *** SKILLS AND DOCUMENTS
+
+            addSectionTitle("3. Skills & Documents");
+
+            // CHECK BOX: Skills
+            skillsField = createField({
+                key: "skills",
+                type: "checkbox",
+                titleText: "SKILLS",
+                descriptionText: "Select all that apply.",
+                isRequired: 0,
+            }, function(field) {
+
+                field.checkBoxes = [];
+
+                createWrapGroup();
+
+                    ["JavaScript", "TypeScript", "HTML/CSS", "Node.js", "SQL", "Python", "Figma", "Git"].forEach(function(name) {
+                        CheckBox({
+                            labelText: name,
+                            onChange: field.update,
+                            ...checkBoxStyle(),
+                        });
+                        that.width = 125; // 4 columns
+                        field.checkBoxes.push(that);
+                    });
+
+                endGroup();
+
+                field.getInputValue = function() {
+                    return getCheckedLabels(field.checkBoxes);
+                };
+
+            });
+            form.addInput(skillsField);
+
+            // SELECT FILE: CV
+            cvField = createField({
+                key: "cv",
+                type: "file",
+                titleText: "CV / RESUME",
+                isRequired: 1,
+            }, function(field) {
+
+                field.fileSelector = SelectFile({
+                    width: "100%",
+                    accept: ".pdf,.doc,.docx",
+                    maxSize: 5 * 1024 * 1024,
+                    zoneHeight: 140,
+                    titleText: "Drag and drop your CV here",
+                    descText: "or click to select a file",
+                    onChange: function() {
+                        cvErrorLabel.text = "";
+                        field.update();
+                    },
+                    onError: function(self, errors) {
+                        cvErrorLabel.text = errors.map(function(e) { return SelectFile.escapeHtml(e.message); }).join("<br>");
+                    },
+                    style: {
+                        zone: { color: White(1), borderColor: Black(0.15), round: 8 },
+                        zoneHover: { color: White(1), borderColor: Black(0.4) },
+                        zoneDragOver: { color: "#EEF6F4", borderColor: ACCENT_COLOR },
+                        icon: { color: Black(0.4), dragOverColor: ACCENT_COLOR },
+                        title: { textColor: TEXT_COLOR },
+                        item: { color: White(1), borderColor: Black(0.08) },
+                        badge: { color: "#E6F1EE", textColor: ACCENT_COLOR },
+                    },
+                });
+
+                // LABEL: File errors
+                const cvErrorLabel = Label({
+                    text: "",
+                    fontSize: 14,
+                    textColor: "#E5885E",
+                });
+
+                field.getInputValue = function() {
+                    return field.fileSelector.files.map(function(info) { return info.name; });
+                };
+
+            });
+            form.addInput(cvField);
+
+            // INPUT: Portfolio
+            portfolioInput = InputB({
+                key: "portfolio",
+                ...inputStyle,
+                isRequired: 0,
+                titleText: "PORTFOLIO / LINKEDIN",
+                placeholder: "https://",
+                maxChar: 120,
+            });
+            form.addInput(portfolioInput);
+
+            // INPUT: Cover letter
+            coverLetterTextarea = TextareaB({
+                key: "coverLetter",
+                ...inputStyle,
+                isRequired: 0,
+                titleText: "COVER LETTER",
+                placeholder: "Why would you like to work with us?",
+                minCharCount: 0,
+                showCount: 1,
+                lengthText: "length: ",
+                maxChar: 1000,
+                height: 170,
+                rightPadding: 5,
+                unitStyle: {
+                    padding: [12, 4],
+                    color: "#373836EE",
+                    textColor: "white",
+                },
+            });
+            form.addInput(coverLetterTextarea);
+
+            // CHECK BOX: Consent
+            consentField = createField({
+                key: "consent",
+                type: "checkbox",
+                titleText: "CONSENT",
+                isRequired: 1,
+            }, function(field) {
+
+                field.checkBox = CheckBox({
+                    labelText: "I agree that my personal data will be processed for recruitment purposes.",
+                    onChange: field.update,
+                    ...checkBoxStyle(),
+                });
+                // Long label: use the full width and wrap the text.
+                field.checkBox.width = "100%";
+                field.checkBox.contentBox.width = "100%";
+                field.checkBox.mark.elem.style.flexShrink = "0";
+                field.checkBox.label.elem.style.whiteSpace = "normal";
+                field.checkBox.label.elem.style.flex = "1 1 0";
+                field.checkBox.label.fontSize = 16;
+
+                field.getInputValue = function() {
+                    return (field.checkBox.checked == 1) ? "accepted" : "";
+                };
+
+            });
+            form.addInput(consentField);
+
+            // WAITING: Create object 1 time.
+            waiting = Waiting({
+                animated: 1,
+                waitingIcon: "assets/mail.png",
+                coverBackgroundColor: "rgba(0, 0, 0, 0.85)",
+            });
+            waiting.icon.elem.style.filter = "invert(100%)";
+
+        };
+
+        // *** FORM FIELDS (for CheckBox, RadioButton, SelectDate, SelectFile):
+
+        // Creates an InputB field without an input and puts custom content in it.
+        // The field works with Form: title, required warning, status, getInputValue().
+        const createField = function(params, buildContent) {
+
+            const field = InputB({
+                ...inputStyle,
+                rightPadding: 20,
+                ...params,
+                createInput: 0, // No text input, we add our own content.
+            });
+
+            // BOX: Content area (created by InputB)
+            field.inputBox.height = "auto";
+            field.inputBox.elem.style.marginTop = "10px";
+            field.inputBox.elem.style.marginBottom = "4px";
+            field.inputBox.clipContent = 0;
+
+            // Call after the value is changed:
+            field.update = function() {
+                field.checkIfInputIsRequiredAndEmpty();
+                field.onEdit(); // Form checks all fields.
+            };
+
+            const previousContainer = getDefaultContainerBox();
+            setDefaultContainerBox(field.inputBox);
+
+                // GROUP: Field content
+                field.content = VGroup({
+                    width: "100%",
+                    height: "auto",
+                    align: "left top",
+                    gap: 6,
+                    position: "relative", // WHY: inputBox height is "auto".
+                });
+                field.content.clipContent = 0;
+
+                    buildContent(field); // Must set field.getInputValue()
+
+                endGroup();
+
+            setDefaultContainerBox(previousContainer);
+
+            // Show "Required" warning if needed, like other inputs.
+            field.checkIfInputIsRequiredAndEmpty();
+
+            return field;
+
+        };
+
+        // GROUP: Wrapping row for radio buttons and check boxes
+        const createWrapGroup = function() {
+            AutoLayout({
+                flow: "horizontal",
+                align: "left top",
+                flexWrap: "wrap",
+                width: "100%",
+                height: "auto",
+                gap: 4,
+            });
+            that.elem.style.columnGap = "20px";
+        };
+
+        // Selected field look (like focused inputs)
+        const setFieldFocus = function(field, isFocused) {
+            field.background.borderColor = (isFocused) ? field.selectedBackBorderColor : field.backBorderColor;
+        };
+
+        // In a double row, fields with different heights start at the top and have the same height.
+        const topAlignLastDoubleInput = function() {
+            const group = form.groupList[form.groupList.length - 1];
+            group.elem.style.alignItems = "stretch";
+        };
+
+        const getCheckedLabels = function(checkBoxes) {
+            return checkBoxes
+                .filter(function(chk) { return chk.checked == 1; })
+                .map(function(chk) { return chk.labelText; });
+        };
+
+        const radioStyle = function() {
+            return {
+                style: {
+                    mark: { color: White(1), borderColor: Black(0.3) },
+                    checkedMark: { color: White(1), borderColor: ACCENT_COLOR },
+                    hoverMark: { borderColor: ACCENT_COLOR },
+                    dot: { color: ACCENT_COLOR },
+                    label: { fontSize: 18, textColor: TEXT_COLOR },
+                },
+            };
+        };
+
+        const checkBoxStyle = function() {
+            return {
+                style: {
+                    mark: { color: White(1), borderColor: Black(0.3), round: 6 },
+                    checkedMark: { color: ACCENT_COLOR, borderColor: ACCENT_COLOR },
+                    hoverMark: { borderColor: ACCENT_COLOR },
+                    label: { fontSize: 18, textColor: TEXT_COLOR },
+                },
+            };
+        };
+
+        // LABEL: Section title
+        const addSectionTitle = function(text) {
+            const lbl = Label({
+                text: text,
+                fontSize: 14,
+                textColor: ACCENT_COLOR,
+                width: "100%",
+                padding: [0, 6],
+            });
+            lbl.elem.style.fontFamily = "opensans-bold";
+            lbl.elem.style.letterSpacing = "1px";
+            lbl.elem.style.textTransform = "uppercase";
+            lbl.elem.style.borderBottom = "1px solid " + Black(0.08);
+            form.inputGroup.add(lbl);
+            lbl.position = "relative";
+            if (form.inputGroup.elem.children.length > 1) lbl.elem.style.marginTop = "16px";
+        };
+
+        // *** SEND:
+
+        const sendApplication = async function(json) {
+
+            // Form values + CV file in one request:
+            const formData = new FormData();
+            formData.append("application", JSON.stringify(json));
+            cvField.fileSelector.files.forEach(function(info) {
+                formData.append("cv", info.file, info.name);
+            });
+
+            waiting.show();
+
+            let isSent = false;
+
+            try {
+
+                if (SERVICE_URL == "") {
+                    // DEMO MODE:
+                    console.table(json.map(function(item) {
+                        return { key: item.key, type: item.type, title: item.titleText, value: JSON.stringify(item.inputValue) };
+                    }));
+                    await new Promise(function(resolve) { setTimeout(resolve, 1200); });
+                    isSent = true;
+                } else {
+                    const response = await fetch(SERVICE_URL, { method: "POST", body: formData });
+                    isSent = response.ok;
+                }
+
+            } catch (error) {
+                console.error(error);
+                isSent = false;
+            }
+
+            waiting.hide();
+
+            if (isSent) {
+
+                form.showMessage({
+                    iconColor: "#3C8553",
+                    iconFile: "assets/success.png",
+                    messageText: "Thank you! Your application has been received.",
+                    buttonText: "OKAY",
+                    backgroundColor: "rgba(255,255,255,0.85)",
+                    onClose: clearForm,
+                });
+
+            } else {
+
+                form.showMessage({
+                    iconColor: "indianred",
+                    iconFile: "assets/error.png",
+                    messageText: "Your application could not be sent.",
+                    buttonText: "CLOSE",
+                    backgroundColor: "rgba(255,255,255,0.85)",
+                    onClose: function() {},
+                });
+
+            }
+
+        };
+
+        // Clean the form.
+        const clearForm = function() {
+
+            [firstNameInput, lastNameInput, emailInput, phoneInput, portfolioInput, coverLetterTextarea].forEach(function(input) {
+                input.setInputValue("");
+            });
+
+            RadioButton.clear("position");
+            RadioButton.clear("experience");
+            startDateField.picker.setDate(null, 1);
+            workModelField.checkBoxes.forEach(function(chk) { chk.setChecked(0, 1); });
+            skillsField.checkBoxes.forEach(function(chk) { chk.setChecked(0, 1); });
+            cvField.fileSelector.clear(1);
+            consentField.checkBox.setChecked(0, 1);
+
+            [positionField, experienceField, startDateField, workModelField, skillsField, cvField, consentField].forEach(function(field) {
+                field.checkIfInputIsRequiredAndEmpty();
+            });
+
+            form.refresh();
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+
+        <!-- HTML content -->
+
+    </body>
+</html>

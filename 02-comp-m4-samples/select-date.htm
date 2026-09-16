@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Select Date</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp-m4/select-date.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // *** VARIABLES:
+        let dateBirth, dateCheckIn, dateCheckOut, dateInline, dateDisabled;
+        let lblBirth, lblStay, lblInline;
+
+        const start = function () {
+
+            page.color = "whitesmoke";
+
+            // BOX: Full screen scrollable container
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            startBox(0, 0, "100%", "100%", {
+                color: "transparent",
+                scrollY: 1,
+            });
+
+                // GROUP: Page layout
+                VGroup({
+                    width: "100%",
+                    height: "auto", // Grows with content, so the Box can scroll.
+                    align: "center top",
+                    gap: 30,
+                    padding: 50,
+                });
+
+                    // LABEL: Title
+                    Label({
+                        text: "Select Date",
+                        fontSize: 26,
+                        fontFamily: "opensans-bold",
+                    });
+
+                    // SAMPLE 1: Default (popup)
+                    startCard("1. Default");
+
+                        dateBirth = SelectDate({
+                            width: 260,
+                            placeholder: "Birth date",
+                            maxDate: new Date(), // No future dates
+                            onChange: function (self) {
+                                println("Birth date: " + self.value);
+                                lblBirth.text = "value: \"" + self.value + "\", text: \"" + self.dateText + "\"";
+                            },
+                        });
+
+                        lblBirth = Label({
+                            text: "Tip: Click the month title to select a year.",
+                            fontSize: 14,
+                            textColor: Black(0.5),
+                        });
+
+                    endCard();
+
+                    // SAMPLE 2: Turkish, format, min/max
+                    startCard("2. Türkçe, Min / Max (Rezervasyon)");
+
+                        // GROUP: Check-in, check-out
+                        HGroup({
+                            width: "auto",
+                            height: "auto",
+                            gap: 12,
+                        });
+
+                            dateCheckIn = SelectDate({
+                                width: 170,
+                                language: "tr",
+                                placeholder: "Giriş",
+                                minDate: new Date(),
+                                onChange: function (self) {
+                                    // Check-out must be after check-in.
+                                    const nextDay = (self.date) ? addDays(self.date, 1) : new Date();
+                                    dateCheckOut.setMinDate(nextDay);
+                                    if (dateCheckOut.date && self.date && dateCheckOut.date <= self.date) {
+                                        dateCheckOut.setDate(null, 1);
+                                    }
+                                    refreshStay();
+                                },
+                            });
+
+                            dateCheckOut = SelectDate({
+                                width: 170,
+                                language: "tr",
+                                placeholder: "Çıkış",
+                                minDate: addDays(new Date(), 1),
+                                onChange: refreshStay,
+                            });
+
+                        endGroup();
+
+                        lblStay = Label({
+                            text: "",
+                            fontSize: 14,
+                            textColor: Black(0.5),
+                        });
+
+                    endCard();
+
+                    // SAMPLE 3: Inline calendar with custom style
+                    startCard("3. Inline (Custom Style)");
+
+                        dateInline = SelectDate({
+                            inline: 1,
+                            date: new Date(),
+                            firstDayOfWeek: 0, // Sunday
+                            format: "dddd, MMMM D, YYYY",
+                            showClearButton: 0,
+                            onChange: function (self) {
+                                lblInline.text = self.dateText;
+                            },
+                            style: {
+                                panel: { border: 0, padding: 4, shadow: "none" },
+                                day: { size: 40, round: 10, hoverColor: "#DFEFE6" },
+                                today: { borderColor: "#5DB182" },
+                                selectedDay: { color: "#5DB182" },
+                                footerButton: { textColor: "#3E8E62" },
+                            },
+                        });
+
+                        lblInline = Label({
+                            text: dateInline.dateText,
+                            fontSize: 14,
+                            textColor: Black(0.5),
+                        });
+
+                    endCard();
+
+                    // SAMPLE 4: Public functions
+                    startCard("4. Functions");
+
+                        dateDisabled = SelectDate({
+                            width: 260,
+                            format: "D MMM YYYY",
+                            date: "2026-01-15",
+                            enabled: 0,
+                        });
+
+                        // GROUP: Buttons
+                        HGroup({
+                            width: "auto",
+                            height: "auto",
+                            gap: 8,
+                        });
+
+                            Button({ text: "Enable", width: 90, height: 36, fontSize: 14, color: "lightgray" });
+                            that.on("click", function (self) {
+                                dateDisabled.setEnabled(dateDisabled.enabled ? 0 : 1);
+                                self.text = (dateDisabled.enabled) ? "Disable" : "Enable";
+                            });
+
+                            Button({ text: "Today", width: 90, height: 36, fontSize: 14 });
+                            that.on("click", function () {
+                                dateDisabled.setDate(new Date());
+                            });
+
+                            Button({ text: "Open", width: 90, height: 36, fontSize: 14 });
+                            that.on("click", function () {
+                                dateDisabled.open(); // Only works if enabled
+                            });
+
+                        endGroup();
+
+                        Label({
+                            text: "SelectDate.format(new Date(), \"D MMMM YYYY, dddd\", \"tr\"):<br><b>"
+                                + SelectDate.format(new Date(), "D MMMM YYYY, dddd", "tr") + "</b>",
+                            fontSize: 14,
+                            textColor: Black(0.5),
+                        });
+
+                    endCard();
+
+                endGroup();
+
+            endBox();
+
+            refreshStay();
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        // GROUP: A white card with a title.
+        const startCard = function (title) {
+            VGroup({
+                width: 420,
+                height: "auto",
+                align: "left top",
+                gap: 12,
+                padding: 20,
+                color: "white",
+                round: 10,
+                border: 1,
+                borderColor: Black(0.1),
+            });
+            Label({
+                text: title,
+                fontSize: 14,
+                textColor: Black(0.45),
+            });
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+        const addDays = function (date, days) {
+            return new Date(date.getFullYear(), date.getMonth(), date.getDate() + days);
+        };
+
+        const refreshStay = function () {
+            if (dateCheckIn.date && dateCheckOut.date) {
+                const nights = Math.round((dateCheckOut.date - dateCheckIn.date) / 86400000);
+                lblStay.text = dateCheckIn.dateText + " → " + dateCheckOut.dateText + " (" + nights + " gece)";
+            } else {
+                lblStay.text = "Giriş ve çıkış tarihlerini seçin.";
+            }
+        };
+
+    </script>
+</head>
+
+<body></body>
+
+</html>

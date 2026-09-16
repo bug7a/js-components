@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Select File</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp-m4/select-file.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // *** VARIABLES:
+        let fileSingle, fileImages, fileFolder, fileCompact;
+        let lblSingle, lblContent, lblImages, lblErrors, lblFolder;
+
+        const start = function () {
+
+            page.color = "whitesmoke";
+
+            // BOX: Full screen scrollable container
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            startBox(0, 0, "100%", "100%", {
+                color: "transparent",
+                scrollY: 1,
+            });
+
+                // GROUP: Page layout
+                VGroup({
+                    width: "100%",
+                    height: "auto", // Grows with content, so the Box can scroll.
+                    align: "center top",
+                    gap: 30,
+                    padding: 50,
+                });
+
+                    // LABEL: Title
+                    Label({
+                        text: "Select File",
+                        fontSize: 26,
+                        fontFamily: "opensans-bold",
+                    });
+
+                    // LABEL: Note about the file path
+                    Label({
+                        width: 420,
+                        text: "Note: Browsers do not give the real disk path of a file (security rule). "
+                            + "You get the name, size, type and the File object (to read or upload it). "
+                            + "In folder selection, <b>path</b> is the relative path in the folder.",
+                        fontSize: 13,
+                        textColor: Black(0.55),
+                        color: "#FFF8E1",
+                        border: 1,
+                        borderColor: "#F1C74A",
+                        round: 8,
+                        padding: [12, 10],
+                    });
+
+                    // SAMPLE 1: Single file, read content
+                    startCard("1. Single File");
+
+                        fileSingle = SelectFile({
+                            onChange: function (self) {
+                                const info = self.files[0];
+                                if (!info) {
+                                    lblSingle.text = "No file.";
+                                    lblContent.text = "";
+                                    return;
+                                }
+                                println(info);
+                                lblSingle.text = "<b>name:</b> " + SelectFile.escapeHtml(info.name)
+                                    + "<br><b>path:</b> " + SelectFile.escapeHtml(info.path)
+                                    + "<br><b>size:</b> " + info.sizeText + " (" + info.size + " bytes)"
+                                    + "<br><b>type:</b> " + (info.type || "-")
+                                    + "<br><b>lastModified:</b> " + new Date(info.lastModified).toLocaleString();
+                                showTextContent(info);
+                            },
+                        });
+
+                        lblSingle = Label({
+                            text: "No file.",
+                            fontSize: 13,
+                            textColor: Black(0.6),
+                        });
+
+                        lblContent = Label({
+                            width: "100%",
+                            text: "",
+                            fontSize: 12,
+                            textColor: Black(0.6),
+                        });
+                        that.elem.style.whiteSpace = "pre-wrap";
+                        that.elem.style.fontFamily = "monospace";
+
+                    endCard();
+
+                    // SAMPLE 2: Multiple images with limits
+                    startCard("2. Images (multiple, max 2 MB, max 5)");
+
+                        fileImages = SelectFile({
+                            multiple: 1,
+                            accept: "image/*",
+                            maxSize: 2 * 1024 * 1024,
+                            maxFiles: 5,
+                            titleText: "Drop images here",
+                            descText: "or click to browse",
+                            onChange: function (self) {
+                                const total = self.files.reduce(function (sum, f) { return sum + f.size; }, 0);
+                                lblImages.text = self.files.length + " image(s), total " + SelectFile.formatSize(total);
+                                lblErrors.text = "";
+                            },
+                            onError: function (self, errors) {
+                                lblErrors.text = errors.map(function (e) { return SelectFile.escapeHtml(e.message); }).join("<br>");
+                            },
+                        });
+
+                        lblImages = Label({
+                            text: "0 image(s)",
+                            fontSize: 13,
+                            textColor: Black(0.6),
+                        });
+
+                        lblErrors = Label({
+                            text: "",
+                            fontSize: 13,
+                            textColor: "#FE5D49",
+                        });
+
+                    endCard();
+
+                    // SAMPLE 3: Folder
+                    startCard("3. Folder (relative paths)");
+
+                        fileFolder = SelectFile({
+                            directory: 1,
+                            showPreview: 0,
+                            zoneHeight: 130,
+                            titleText: "Click to select a folder",
+                            descText: "All files in the folder are listed",
+                            onChange: function (self) {
+                                lblFolder.text = self.files.length + " file(s)";
+                            },
+                        });
+
+                        lblFolder = Label({
+                            text: "",
+                            fontSize: 13,
+                            textColor: Black(0.6),
+                        });
+
+                    endCard();
+
+                    // SAMPLE 4: Functions and custom style
+                    startCard("4. Functions & Custom Style");
+
+                        fileCompact = SelectFile({
+                            multiple: 1,
+                            accept: ".pdf,.doc,.docx,.txt",
+                            zoneHeight: 110,
+                            showIcon: 0,
+                            enabled: 0,
+                            titleText: "Documents",
+                            descText: "PDF, Word or text",
+                            style: {
+                                zone: { color: "#F4FAF6", borderColor: "#5DB182", round: 14 },
+                                zoneHover: { color: "#E6F4EC", borderColor: "#3E8E62" },
+                                zoneDragOver: { color: "#DFEFE6", borderColor: "#3E8E62" },
+                                icon: { color: "#5DB182", dragOverColor: "#3E8E62" },
+                                title: { textColor: "#3E8E62" },
+                                badge: { color: "#DFEFE6", textColor: "#3E8E62" },
+                            },
+                        });
+
+                        // GROUP: Buttons
+                        HGroup({
+                            width: "auto",
+                            height: "auto",
+                            gap: 8,
+                        });
+
+                            Button({ text: "Enable", width: 100, height: 36, fontSize: 14, color: "lightgray" });
+                            that.on("click", function (self) {
+                                fileCompact.setEnabled(fileCompact.enabled ? 0 : 1);
+                                self.text = (fileCompact.enabled) ? "Disable" : "Enable";
+                            });
+
+                            Button({ text: "Browse...", width: 100, height: 36, fontSize: 14 });
+                            that.on("click", function () {
+                                fileCompact.open(); // Works only if enabled
+                            });
+
+                            Button({ text: "Clear All", width: 100, height: 36, fontSize: 14 });
+                            that.on("click", function () {
+                                fileSingle.clear();
+                                fileImages.clear();
+                                fileFolder.clear();
+                                fileCompact.clear();
+                            });
+
+                        endGroup();
+
+                    endCard();
+
+                endGroup();
+
+            endBox();
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        // GROUP: A white card with a title.
+        const startCard = function (title) {
+            VGroup({
+                width: 420,
+                height: "auto",
+                align: "left top",
+                gap: 12,
+                padding: 20,
+                color: "white",
+                round: 10,
+                border: 1,
+                borderColor: Black(0.1),
+            });
+            Label({
+                text: title,
+                fontSize: 14,
+                textColor: Black(0.45),
+            });
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+        // Read the first characters of a text file. (The File object can be read or uploaded.)
+        const showTextContent = function (info) {
+
+            const isText = info.type.startsWith("text/") || ["txt", "md", "csv", "json", "js", "html", "htm", "css"].includes(info.extension);
+
+            if (!isText) {
+                lblContent.text = "";
+                return;
+            }
+
+            info.file.text().then(function (content) {
+                const preview = content.slice(0, 300) + ((content.length > 300) ? "\n..." : "");
+                lblContent.text = SelectFile.escapeHtml(preview);
+            });
+
+        };
+
+    </script>
+</head>
+
+<body></body>
+
+</html>

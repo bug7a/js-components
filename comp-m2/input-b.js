@@ -63,6 +63,10 @@ const InputBDefaults = {
     selectedBackgroundColor: "#F3F4E0", // "#F1E2C4", "#F4FAFF",
     lineColor: "#373836",
     selectedLineColor: "#65A293", // "#F1E2C4", "#588ABE",
+    backBorderColor: Black(0),
+    selectedBackBorderColor: Black(0),
+    backBorderTopRound: 2,
+    backBorderBottomRound: 0,
 
     isRequired: 0,
     requiredText: "Required",
@@ -333,10 +337,20 @@ const InputB = function(params = {}) {
         // BOX: Background
         box.background = Box(0, 0, "100%", "100%", {
             color: box.backgroundColor,
+            border: 1,
+            borderColor: box.backBorderColor,
         });
         // Corner Radius
-        that.elem.style.borderTopRightRadius = "2px";
-        that.elem.style.borderTopLeftRadius = "2px";
+        that.elem.style.borderTopRightRadius = box.backBorderTopRound + "px";
+        that.elem.style.borderTopLeftRadius = box.backBorderTopRound + "px";
+        that.elem.style.borderBottomRightRadius = box.backBorderBottomRound + "px";
+        that.elem.style.borderBottomLeftRadius = box.backBorderBottomRound + "px";
+        /*
+        that.clickable = 1;
+        if(box.createInput == 1) {
+            that.elem.style.cursor = "text";
+        }
+        */
 
         // BOX: Bottom Line
         box.line = Box({
@@ -479,6 +493,7 @@ const InputB = function(params = {}) {
 
         box.focusFunc = function () {
             box.background.color = box.selectedBackgroundColor;
+            box.background.borderColor = box.selectedBackBorderColor;
             box.line.color = box.selectedLineColor;
             box.onFocus();
         }
@@ -486,6 +501,7 @@ const InputB = function(params = {}) {
 
         box.blurFunc = function () {
             box.background.color = box.backgroundColor;
+            box.background.borderColor = box.backBorderColor;
             box.line.color = box.lineColor;
             box.onBlur();
         }

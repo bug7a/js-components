@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Select Time</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp-m4/select-time.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // *** VARIABLES:
+        let timeDefault, timeStart, timeEnd, timeNight, timeInline, timeFunctions;
+        let lblDefault, lblMeeting, lblInline, lblFunctions;
+
+        const start = function () {
+
+            page.color = "whitesmoke";
+
+            // BOX: Full screen scrollable container
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            startBox(0, 0, "100%", "100%", {
+                color: "transparent",
+                scrollY: 1,
+            });
+
+                // GROUP: Page layout
+                VGroup({
+                    width: "100%",
+                    height: "auto", // Grows with content, so the Box can scroll.
+                    align: "center top",
+                    gap: 30,
+                    padding: 50,
+                });
+
+                    // LABEL: Title
+                    Label({
+                        text: "Select Time",
+                        fontSize: 26,
+                    });
+                    that.elem.style.fontFamily = "opensans-bold";
+
+                    // SAMPLE 1: Default (popup)
+                    startCard("1. Default (minuteStep: 5)");
+
+                        timeDefault = SelectTime({
+                            width: 180,
+                            time: "19:30",
+                            onChange: function (self) {
+                                lblDefault.text = "value: \"" + self.value + "\", hours: " + self.hours + ", minutes: " + self.minutes;
+                            },
+                        });
+
+                        lblDefault = infoLabel("value: \"19:30\"");
+
+                    endCard();
+
+                    // SAMPLE 2: Turkish, min / max, minuteStep 15
+                    startCard("2. Türkçe, Min / Max, 15 dakika (Toplantı: 09:00 - 18:00)");
+
+                        // GROUP: Start, end
+                        HGroup({ width: "auto", height: "auto", gap: 12, align: "left center" });
+
+                            timeStart = SelectTime({
+                                width: 150,
+                                language: "tr",
+                                placeholder: "Başlangıç",
+                                minuteStep: 15,
+                                minTime: "09:00",
+                                maxTime: "17:45",
+                                onChange: function (self) {
+                                    // End must be after start.
+                                    timeEnd.setMinTime((self.minutesOfDay !== null) ? SelectTime.format(self.minutesOfDay + 15) : "09:15");
+                                    if (timeEnd.minutesOfDay !== null && self.minutesOfDay !== null && timeEnd.minutesOfDay <= self.minutesOfDay) {
+                                        timeEnd.setTime(null, 1);
+                                    }
+                                    refreshMeeting();
+                                },
+                            });
+
+                            Label({ text: "–", fontSize: 18, textColor: Black(0.4) });
+
+                            timeEnd = SelectTime({
+                                width: 150,
+                                language: "tr",
+                                placeholder: "Bitiş",
+                                minuteStep: 15,
+                                minTime: "09:15",
+                                maxTime: "18:00",
+                                onChange: refreshMeeting,
+                            });
+
+                        endGroup();
+
+                        lblMeeting = infoLabel("Saatler dışındaki değerler seçilemez.");
+
+                    endCard();
+
+                    // SAMPLE 3: Over midnight, 12h text
+                    startCard("3. Over midnight (22:00 - 02:00), format: \"h:mm A\"");
+
+                        timeNight = SelectTime({
+                            width: 180,
+                            minTime: "22:00",
+                            maxTime: "02:00",
+                            minuteStep: 30,
+                            format: "h:mm A",
+                            placeholder: "Night shift",
+                        });
+
+                    endCard();
+
+                    // SAMPLE 4: Inline with custom style
+                    startCard("4. Inline (Custom Style, minuteStep: 1, closeOnSelect is not used)");
+
+                        timeInline = SelectTime({
+                            inline: 1,
+                            time: new Date(),
+                            minuteStep: 1,
+                            showClearButton: 0,
+                            onChange: function (self) {
+                                lblInline.text = "Selected: <b>" + self.value + "</b>";
+                            },
+                            style: {
+                                panel: { border: 0, padding: 4, shadow: "none" },
+                                cell: { width: 72, round: 10, hoverColor: "#DFEFE6" },
+                                selectedCell: { color: "#5DB182" },
+                                columnTitle: { activeTextColor: "#3E8E62" },
+                                footerButton: { textColor: "#3E8E62" },
+                            },
+                        });
+
+                        lblInline = infoLabel("Selected: <b>" + timeInline.value + "</b>");
+
+                    endCard();
+
+                    // SAMPLE 5: Public functions
+                    startCard("5. Functions");
+
+                        timeFunctions = SelectTime({
+                            width: 180,
+                            onChange: function (self) {
+                                lblFunctions.text = "onChange: \"" + self.value + "\"";
+                            },
+                        });
+
+                        // GROUP: Buttons
+                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
+                        that.elem.style.flexWrap = "wrap";
+
+                            smallButton("setTime(\"08:45\")", function () {
+                                timeFunctions.setTime("08:45");
+                            });
+
+                            smallButton("setTime(null)", function () {
+                                timeFunctions.setTime(null);
+                            });
+
+                            smallButton("minuteStep: 10", function (self) {
+                                const step = (timeFunctions.minuteStep == 10) ? 5 : 10;
+                                timeFunctions.setMinuteStep(step);
+                                self.text = "minuteStep: " + ((step == 10) ? 5 : 10);
+                            });
+
+                            smallButton("Disable", function (self) {
+                                timeFunctions.setEnabled(timeFunctions.enabled ? 0 : 1);
+                                self.text = (timeFunctions.enabled) ? "Disable" : "Enable";
+                            });
+
+                        endGroup();
+
+                        lblFunctions = infoLabel("Keyboard: Tab to the field, Enter to open, ↑ ↓ change, ← → column, Enter to close.");
+
+                    endCard();
+
+                endGroup();
+
+            endBox();
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        const refreshMeeting = function () {
+            if (timeStart.minutesOfDay === null || timeEnd.minutesOfDay === null) {
+                lblMeeting.text = "Saatler dışındaki değerler seçilemez.";
+                return;
+            }
+            const minutes = timeEnd.minutesOfDay - timeStart.minutesOfDay;
+            lblMeeting.text = "Toplantı: <b>" + timeStart.value + " - " + timeEnd.value + "</b> (" + Math.floor(minutes / 60) + " sa " + (minutes % 60) + " dk)";
+        };
+
+        // GROUP: A white card with a title.
+        const startCard = function (title) {
+            VGroup({
+                width: 460,
+                height: "auto",
+                align: "left top",
+                gap: 12,
+                padding: 20,
+                color: "white",
+                round: 10,
+                border: 1,
+                borderColor: Black(0.1),
+            });
+            Label({
+                text: title,
+                fontSize: 14,
+                textColor: Black(0.45),
+            });
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+        const infoLabel = function (text) {
+            return Label({
+                text: text,
+                fontSize: 13,
+                textColor: Black(0.55),
+            });
+        };
+
+        const smallButton = function (text, func) {
+            const btn = Button({ text: text, width: "auto", height: 34, fontSize: 13, color: "#E8E8E8", textColor: Black(0.75), round: 6 });
+            btn.elem.style.padding = "0 14px";
+            btn.on("click", function (self) { func(self); });
+            return btn;
+        };
+
+    </script>
+</head>
+
+<body></body>
+
+</html>

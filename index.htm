@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        
+        <title>JavaScript UI Components – Lightweight, Customizable, Reusable | basicUI</title>
+        
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+        <meta name="description" content="Clean, object-oriented, and easily customizable UI components, built with JavaScript for modern web-based applications.">
+        <meta name="keywords" content="JavaScript components, UI components, reusable JavaScript UI, frontend components, lightweight JS libraries, vanilla JS UI, custom web components, JS UI kit, frontend UI tools, object-oriented JavaScript, modular JavaScript, open source UI library, basicUI">
+
+
+        <!-- LIBRARY FILES -->
+        <!-- <link rel="preload" href="basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous"> -->
+        <link rel="stylesheet" type="text/css" href="basic/basic.min.css">
+        <script src="basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <script src="comp-m1/select-text.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="comp-m1/select-item.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="comp-m1/item-list.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="comp-m1/search-input.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="comp-m1/ui-web-view.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+        
+        const itemDataList = [
+            { type: "normal", title:"Slider (New)", desc:"slider/slider.htm", actionType: "url", actionValue: "02-comp-m2-samples/slider.htm", searchText: "slider" },
+            { type: "normal", title:"Tiny Select", desc:"tiny-select.htm", actionType: "url", actionValue: "02-comp-m2-samples/tiny-select.htm", searchText: "tiny select text" },
+            { type: "normal", title:"Check Box", desc:"check-box.htm", actionType: "url", actionValue: "02-comp-m1-samples/ui-check-box.htm", searchText: "check box" },
+            { type: "normal", title:"Tiny Table", desc:"tiny-table.htm", actionType: "url", actionValue: "02-comp-m2-samples/tiny-table.htm", searchText: "tiny table data list" },
+            { type: "normal", title:"Toggle", desc:"ui-toggle.htm", actionType: "url", actionValue: "02-comp-m1-samples/ui-toggle.htm", searchText: "toggle checkbox" },
+            { type: "normal", title:"Page Control", desc:"ui-page-control.htm", actionType: "url", actionValue: "02-comp-m1-samples/ui-page-control.htm", searchText: "page control" },
+            { type: "normal", title:"Tabs", desc:"ui-tabs.htm", actionType: "url", actionValue: "02-comp-m1-samples/ui-tabs.htm", searchText: "tabs segment" },
+            { type: "normal", title:"Select Text", desc:"select-text.htm", actionType: "url", actionValue: "02-comp-m1-samples/select-text.htm", searchText: "select text" },
+            { type: "normal", title:"Select Item", desc:"select-item.htm", actionType: "url", actionValue: "02-comp-m1-samples/select-item.htm", searchText: "select item" },
+            { type: "normal", title:"Title", desc:"ui-title.htm", actionType: "url", actionValue: "02-comp-m1-samples/ui-title.htm", searchText: "title" },
+            { type: "normal", title:"Left Title", desc:"ui-left-title.htm", actionType: "url", actionValue: "02-comp-m1-samples/ui-left-title.htm", searchText: "left title" },
+            { type: "normal", title:"Search Input", desc:"ui-search-box.htm", actionType: "url", actionValue: "02-comp-m1-samples/ui-search-box.htm", searchText: "search box" },
+            { type: "normal", title:"Action Button", desc:"ui-action-button.htm", actionType: "url", actionValue: "02-comp-m1-samples/ui-action-button.htm", searchText: "action button" },
+            { type: "normal", title:"Progress Bar", desc:"ui-progress-bar.htm", actionType: "url", actionValue: "02-comp-m1-samples/ui-progress-bar.htm", searchText: "progress bar" },
+            { type: "normal", title:"Notice", desc:"ui-notice.htm", actionType: "url", actionValue: "02-comp-m1-samples/ui-notice.htm", searchText: "notice tiny alert" },
+            { type: "normal", title:"Stepper", desc:"ui-stepper.htm", actionType: "url", actionValue: "02-comp-m1-samples/ui-stepper.htm", searchText: "stepper" },
+            { type: "normal", title:"Tooltip", desc:"tooltip.htm", actionType: "url", actionValue: "02-comp-m2-samples/tooltip.htm", searchText: "tooltip tips hint" },
+            { type: "normal", title:"Object Waiting", desc:"object-waiting.htm", actionType: "url", actionValue: "02-comp-m1-samples/object-waiting.htm", searchText: "object waiting" },
+            { type: "normal", title:"Waiting", desc:"waiting.htm", actionType: "url", actionValue: "02-comp-m2-samples/waiting.htm", searchText: "waiting" },
+            /* { type: "normal", title:"Bars Test", desc:"js/page/default/bars-test-page.js", actionType: "code", actionValue: barsTestPage.PAGE_ID, searchText: "bars text" }, */
+            /*
+            { type: "normal", title:"Web View", desc:"ui-web-view.htm", actionType: "url", actionValue: "ui-web-view.htm", searchText: "web view htm" },
+            { type: "title", title: "VIEWS", searchText: "*" },
+            { type: "normal", title:"defaultView", desc:"js/page/default/default-example-page.js", actionType: "code", actionValue: defaultExamplePage.PAGE_ID, searchText: "default view" },
+            { type: "normal", title:"secondView", desc:"js/page/second/second-example-page.js", actionType: "code", actionValue: secondExamplePage.PAGE_ID, searchText: "second view" },
+            { type: "normal", title:"smallView", desc:"js/page/small/small-example-page.js", actionType: "code", actionValue: smallExamplePage.PAGE_ID, searchText: "small view" },
+            { type: "title", title: "PAGE TEMPLATES", searchText: "*" },
+            { type: "normal", title:"Custom Tab Bar", desc:"custom-tab-bar.htm", actionType: "url", actionValue: "custom-tab-bar.htm", searchText: "custom bottom tab bar" },
+            { type: "normal", title:"Select Item Dialog", desc:"js/page/small/select-color-dialog.js", actionType: "code", actionValue: selectColorDialog.PAGE_ID, searchText: "title" },
+            { type: "normal", title:"Edit Item Dialog", desc:"js/page/small/edit-item-dialog.js", actionType: "code", actionValue: editItemDialog.PAGE_ID, searchText: "edit item" },
+            { type: "normal", title:"Item List (Icons)", desc:"js/page/second/my-documents-page.js", actionType: "code", actionValue: myDocumentsPage.PAGE_ID, searchText: "title" },
+            { type: "normal", title:"Template A", desc:"js/page/second/template-a-page.js", actionType: "code", actionValue: templateAPage.PAGE_ID, searchText: "title" },
+            { type: "title", title: "TECHNIQUES", searchText: "*" },
+            { type: "normal", title:"Autolayout Group", desc:"ui-autolayout-group.htm", actionType: "url", actionValue: "ui-autolayout-group.htm", searchText: "group autolayout startFlexBox flex box" },
+            { type: "normal", title:"Cells", desc:"ui-cells.htm", actionType: "url", actionValue: "ui-cells.htm", searchText: "cell cells" },
+            { type: "normal", title:"Scrolling Text", desc:"ui-scrolling-text.htm", actionType: "url", actionValue: "ui-scrolling-text.htm", searchText: "Scrolling Text" },
+            { type: "normal", title:"HTML Model Usage", desc:"html-model-usage.htm", actionType: "url", actionValue: "html-model-usage.htm", searchText: "html model css htm" },
+            { type: "title", title: "BONUS", searchText: "*" },
+            { type: "normal", title:"Select Item Dialog (B)", desc:"custom-dialog-b.htm", actionType: "url", actionValue: "custom-dialog-b.htm", searchText: "custom dialog" },
+            { type: "normal", title:"Period Bar", desc:"ui-period-bar.htm", actionType: "url", actionValue: "ui-period-bar.htm", searchText: "period bar date" },
+            */
+        ];
+        let grpPage = null;
+        let icoPreview = null;
+        let htmPage = null;
+        let grpHtmPage = null;
+        let icoLogo = null;
+        let mySelectText = null;
+        let btnExample = null;
+        let lblInfo = null;
+        let boxBottomSpace = null;
+        
+        window.onload = function() {
+
+            page.fit(600);
+
+            grpPage = startBox(0, 0, "100%", "100%", {
+                color: "transparent",
+            });
+
+                // ICON: Preview
+                
+                icoPreview = Icon(30, {
+                    top: 240,
+                    opacity: 0.4,
+                });
+                that.autoSize = 2;
+                that.load("assets/web/preview/i1.png");
+                
+
+                // BOX: Background
+                Box(0, 0, "100%", "100%");
+                //that.position = "fixed";
+                //that.elem.style.position = "fixed";
+                that.left = 0;
+                that.elem.style.minWidth = "1400px";
+                that.elem.style.background = "linear-gradient(to right, #FFFFFF00, #FFFFFF00, lightgray)";
+                //that.color = "red";
+
+                // GROUP: Componentlerin yüklendiği alan.
+                grpHtmPage = startFlexBox({
+                    justifyContent: "flex-end",
+                    width: 600,
+                    left: 420,
+                    //color: "white",
+                });
+                that.elem.style.borderLeft = "1px solid rgba(0, 0, 0, 0.2)";
+                that.elem.style.borderRight = "1px solid rgba(0, 0, 0, 0.2)";
+
+                    // UI WEB VIEW: Object description.
+                    htmPage = UIWebView.create();
+                    that.left = 0;
+                    that.top = 0;
+                    that.width = 600;
+                    that.height = "100%";
+                    //htmPage.loadHTMLFile("app-todo.htm");
+
+                endFlexBox();
+
+                // ICON: Logo
+                //icoLogo = Icon(40, 30, 278 * 0.6, 142 * 0.6);
+                //that.load("assets/web/ui-components-logo.svg");
+                icoLogo = Icon(-40, -20);
+                that.load("assets/web/basicui.png");
+                that.onLoad(function() {
+                    icoLogo.width = icoLogo.width / 3;
+                    icoLogo.height = icoLogo.height / 3;
+                })
+
+                /*
+                const _searchInput = SearchInput({
+                    top: 140,
+                    left: 40,
+                    width: 340,
+                    height: 40,
+                    color: "whitesmoke",
+                    round: 2,
+                    fontSize: 18,
+                    searchIconSize: 22,
+                    placeholderText: "Search",
+                });
+
+                //mySelectText = null;
+                // ITEM LIST:  
+                _itemList = ItemList({ 
+                    width: _searchInput.width, 
+                    height: "calc(100% - 276px)",
+                });
+                _itemList.top = _searchInput.top + _searchInput.height;
+                _itemList.left = _searchInput.left;
+                _itemList.setItemAlignment(ItemList.alignType.VERTICAL);
+                _itemList.setItemCreationFunction(SelectTextItem);
+                _itemList.createItemsByDataList(itemDataList);
+
+                _itemList.onSelectionChange(function(ui, self, lastSelectedItem, event) {
+
+                    if (lastSelectedItem) {
+                        lastSelectedItem.opacity = 1;
+                        lastSelectedItem.clickable = 1;
+                        ui.removeItemFromSelectedList(lastSelectedItem);
+                    }
+
+                    if (self) {
+                        self.opacity = 0.5;
+                        self.clickable = 0;
+                        ui.addItemToSelectedList(self);
+                    }
+
+                    htmPage.loadHTMLFile(itemDataList[self.getIndex()].actionValue);
+
+                    if (event) {
+                        //box.setSelectedIndex(self.getIndex());
+                        //cover.close();
+                    }
+
+                });
+                _itemList.selectItemByIndex(0);
+
+                _searchInput.onSearch = function(searchedText) {
+                    const shownItemCount = _itemList.searchItemByText(searchedText);
+                    //cover.refreshSizeAndPosition(shownItemCount);
+                }
+                */
+
+                
+                // SELECT TEXT: List of components.
+                mySelectText = SelectText({
+                    top: 140,
+                    left: 40,
+                    width: 340,
+                    itemDataList: itemDataList,
+                    selection_fullScreen: 0,
+                    buttonIconFile: "comp-m1/select-item/expand.svg",
+                    search_searchIconFile: "comp-m1/search-input/search.svg",
+                    search_clearIconFile: "comp-m1/search-input/clear.svg",
+                });
+
+                that.onSelect = function(index) {
+                    console.log(index);
+                    htmPage.loadHTMLFile(itemDataList[index].actionValue);
+                    //selectedText = itemDataList[index].actionValue;
+                };
+
+                that.setSelectedIndex(0);
+                
+
+                // LABEL: Full project example button
+                btnExample = Label({
+                    left: 1050,
+                    top: 30,
+                    width: "auto",
+                    height: "auto",
+                    text: "Full Project Example",
+                    //color: "rgba(0, 0, 0, 0.05)",
+                    color: "rgba(255, 255, 255, 0.7)",
+                    border: 1,
+                    borderColor: "rgba(0, 0, 0, 0.2)",
+                    round: 6,
+                    fontSize: 16,
+                    spaceY: 8,
+                    spaceX: 18,
+                    clickable: 1,
+                });
+                //that.element.style.borderBottom = "3px solid rgba(0, 0, 0, 0.2)";
+                that.elem.style.whiteSpace = "nowrap";
+                that.elem.style.cursor = "pointer";
+                that.onClick(function() {
+                    window.open("https://bug7a.github.io/javascript-mobile-app-template/", "_blank");
+                });
+
+                // LABEL: Info.
+                lblInfo = Label({
+                    left: 40,
+                    bottom: 30,
+                    width: 300,
+                    fontSize: 12,
+                    opacity: 0.8,
+                    clickable: 1,
+                });
+                that.text = "Copyright 2020-2025 <b onclick='goto_MySite();' style='cursor: pointer;'>Bugra Ozden</b><br>Licensed under <b onclick='goto_LicensSite();' style='cursor: pointer;'>the Apache License</b>, Version 2.0";
+                
+                boxBottomSpace = Box(0, 0, 40, 40, {
+                    color: "transparent",
+                });
+                that.bottom = 0;
+
+            endBox();
+
+            /*
+            page.mainBox.scrollY = 1;
+            page.mainBox.scrollX = 1;
+            */
+
+            grpPage.scrollX = 1;
+            
+            
+            grpPage.scrollBar = ScrollBar({
+                scrollableBox: grpPage,
+                scrollOnContent: 0,
+                neverHide: 1,
+            });
+            //grpPage.scrollBar.color = "rgba(0, 0, 0, 0.3)";
+            
+
+            resized();
+            page.onResize(resized);
+
+            grpPage.elem.addEventListener('scroll', scrolled);
+
+        };
+
+        const resized = function() {
+
+            page.fit(600);
+
+            /*
+            if (page.width < 1000) {
+                htmPage.top = 220;
+                grpHtmPage.left = 0;
+                lblInfo.aline(grpHtmPage, "bottom", 80);
+                lblInfo.left = 40;
+                boxBottomSpace.aline(lblInfo, "bottom");
+                icoPreview.visible = 0;
+            } else {
+                htmPage.top = 0;
+                grpHtmPage.right = 0;
+                lblInfo.left = 40;
+                lblInfo.bottom = 30;
+                boxBottomSpace.bottom = 0;
+                icoPreview.visible = 1;
+            }
+            */
+
+        };
+
+        function smoothScrollTo(element, to, duration) {
+            var start = element.scrollLeft,
+                change = to - start,
+                currentTime = 0,
+                increment = 20;
+
+            function animateScroll() {
+                currentTime += increment;
+                var val = easeInOutQuad(currentTime, start, change, duration);
+                element.scrollLeft = val;
+                if (currentTime < duration) {
+                    requestAnimationFrame(animateScroll);
+                }
+            }
+
+            animateScroll();
+        }
+
+        function easeInOutQuad(t, b, c, d) {
+            t /= d / 2;
+            if (t < 1) return c / 2 * t * t + b;
+            t--;
+            return -c / 2 * (t * (t - 2) - 1) + b;
+        }
+
+        // DENEYSEL: MOBILE DE YATAY KULLANIM: SAYFALARIN YATAY OLARAK DİZİLMESİ VE KAYDIRILMASI
+        const scrolled = function() {
+
+            const scrollLeft = grpPage.elem.scrollLeft;
+            const clientWidth = grpPage.clientWidth;
+            const scrollWidth = grpPage.elem.scrollWidth;
+
+            if (grpPage.scrollX == 1) {
+
+                if (scrollLeft > 50 && scrollLeft < 100) {
+                    grpPage.scrollX = 0;
+                    smoothScrollTo(grpPage.elem, 420, 200);
+                    setTimeout(function() {
+                        grpPage.scrollX = 1;
+                    }, 400);
+                }
+
+                if (scrollLeft < (420 - 50) && scrollLeft > (420 - 100)) {
+                    grpPage.scrollX = 0;
+                    smoothScrollTo(grpPage.elem, 0, 200);
+                    setTimeout(function() {
+                        grpPage.scrollX = 1;
+                    }, 400);
+                }
+
+                if (scrollLeft > 470 && scrollLeft < 520) {
+                    grpPage.scrollX = 0;
+                    smoothScrollTo(grpPage.elem, 800, 200);
+                    setTimeout(function() {
+                        grpPage.scrollX = 1;
+                    }, 400);
+                }
+                
+                if (scrollLeft < (800 - 50) && scrollLeft > (800 - 100)) {
+                    grpPage.scrollX = 0;
+                    smoothScrollTo(grpPage.elem, 420, 200);
+                    setTimeout(function() {
+                        grpPage.scrollX = 1;
+                    }, 400);
+                }
+                
+
+            }
+
+        };
+
+        const goto_MySite = function() {
+            window.open("https://bug7a.github.io/", "_blank");
+        }
+
+        const goto_LicensSite = function() {
+            window.open("http://www.apache.org/licenses/LICENSE-2.0", "_blank");
+        }
+
+        </script>
+
+    </head>
+    <body>
+        
+        <!-- HTML content -->
+        
+    </body>
+</html>

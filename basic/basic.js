@@ -138,7 +138,8 @@ window.random = function ($first, $second) {
             println("basic.js: random(): The second parameter (number) must be greater than the first.", "error");
         
         } else {
-            result = $first + Math.round(Math.random() * ($second - $first));
+            // WHY: Math.round ile ilk ve son sayı, diğerlerinin yarısı kadar çıkıyordu.
+            result = $first + Math.floor(Math.random() * (($second - $first) + 1));
         }
 
     } else {
@@ -299,10 +300,10 @@ basic.date = {
         return dt.getDay(); // 0-6
     },
     get gunAdi() {
-        return basic.gunler[this.dayNumber];
+        return basic.gunler[this.dayOfWeek];
     },
     get dayName() {
-        return basic.days[this.dayNumber];
+        return basic.days[this.dayOfWeek];
     },
     get dayOfMonth() {
         let dt = new Date();
@@ -1454,7 +1455,8 @@ class BTextBox extends Basic_UIComponent {
     }
 
     set text($value) {
-        this.inputElement.value = $value.toString();
+        // WHY: null / undefined gelir ise hata vermek yerine alanı boşaltsın.
+        this.inputElement.value = ($value === null || $value === undefined) ? "" : String($value);
     }
 
     // ÖZEL: Renk özelliği
@@ -1780,6 +1782,10 @@ class BImage extends Basic_UIComponent {
                     _that.width = parseInt(_that.naturalWidth / _autoSize) + "px";
                     _that.height = parseInt(_that.naturalHeight / _autoSize) + "px";
 
+                    // WHY: .width ve .height, autoSize değerini 0 yapar.
+                    // Geri konmaz ise; aynı nesneye ikinci bir resim yüklendiğinde, eski ölçüde kalır.
+                    _that.autoSize = _autoSize;
+
                 }
 
             });
@@ -1961,12 +1967,14 @@ class BSound {
         return this._element;
     }
 
+    // Sesin toplam süresi (saniye). Dosya hazır değil ise 0 döner.
     get time() {
-        return this.elem.time;
+        return (isNaN(this.elem.duration)) ? 0 : this.elem.duration;
     }
 
+    // Sesin kalan süresi (saniye).
     get timeLeft() {
-        return this.elem.timeLeft;
+        return (isNaN(this.elem.duration)) ? 0 : (this.elem.duration - this.elem.currentTime);
     }
 
     get currentTime() {
@@ -1989,7 +1997,8 @@ class BSound {
         if ($value == 1) {
             this.elem.setAttribute("loop", "loop");
         } else {
-            this.elem.setAttribute("loop", "");
+            // WHY: loop bir "boolean attribute" tur. Boş değer verilir ise bile açık sayılır, silinmeli.
+            this.elem.removeAttribute("loop");
         }
     }
 
@@ -2037,6 +2046,8 @@ class BSound {
     }
 
 };
+// WHY: Kütüphane bir IIFE içinde. Dışarı açılmaz ise new BSound() çalışmaz.
+window.BSound = BSound;
 
 
 /* ### FUNCTIONS ### */
@@ -2468,7 +2479,21 @@ resizeDetection.remove_onResize = function($element, $func) {
             }
         }
     }
-    resizeDetection.whenDetected.unobserve($element);
+
+    // Aynı nesnede başka dinleyici kalmış ise izlemeyi bırakma.
+    // WHY: Tek fonksiyon silindiğinde, o nesnenin bütün onResize leri çalışmaz oluyordu.
+    let isStillUsed = 0;
+    for (let j = 0; j < resizeDetection.objectAndFunctionList.length; j++) {
+        if (resizeDetection.objectAndFunctionList[j].elem == $element) {
+            isStillUsed = 1;
+            break;
+        }
+    }
+
+    if (!isStillUsed) {
+        resizeDetection.whenDetected.unobserve($element);
+    }
+
 };
 
 resizeDetection.whenDetected = new ResizeObserver(function(entries) {
@@ -2788,7 +2813,6 @@ window.VGroup = function(...args) {
 window.startBox = function(...args) {
 
     //let props = {};
-    console.log(args.length);
     const box = Box(...args);
 
     if (startedBoxList.length == 0) {
@@ -2806,6 +2830,13 @@ window.startBox = function(...args) {
 //window.startBox = basic.startBox;
 
 window.endBox = function() {
+
+    // Açılmış kutu yok ise (fazladan end çağrısı) hiçbir şey yapma.
+    // WHY: Aksi halde defaultContainerBox boşalıyor ve sonradan hiçbir nesne oluşturulamıyordu.
+    if (startedBoxList.length == 0) {
+        println("basic.js: There is no started box to end. (Extra end call)", "warn");
+        return;
+    }
 
     if (startedBoxList.length > 1) {
         startedBoxList.pop();

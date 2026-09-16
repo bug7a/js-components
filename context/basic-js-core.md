@@ -13,6 +13,22 @@
 - `page.fit(width, [maxWidth])`: Scales the page content to fit a specific width.
 - `page.autoFit(width, height)`: Scales the page to fit within a specific aspect ratio.
 
+### Scrolling Rule
+- **`page` does not scroll.** `basic.css` sets `body { overflow: hidden }`, and `page` only represents the visible area of the screen.
+- If content can be taller or wider than the screen, place it inside a **full-screen `Box`** and enable that Box's `scrollY` (or `scrollX`) property.
+- Give the inner layout group `height: "auto"` (or `width: "auto"` for horizontal scrolling) so the content can grow beyond the Box.
+```javascript
+// BOX: Full screen scrollable container
+startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+
+    // GROUP: Page layout
+    VGroup({ width: "100%", height: "auto", align: "center top", gap: 20, padding: 40 });
+        // ... page content
+    endGroup();
+
+endBox();
+```
+
 ### The `that` Object
 - `that`: Refers to the most recently created object. This is a central pattern in `basic.js` to avoid repetitive variable assignments for quick prototyping.
 - `makeBasicObject(obj)`: Registers a custom object to be accessible via `that`.
