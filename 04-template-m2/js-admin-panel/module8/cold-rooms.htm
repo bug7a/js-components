@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>Cold Rooms</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <!-- LIBRARY FILES -->
+        <link rel="preload" href="../../../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../../../basic/basic.min.css">
+        <script src="../../../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- COMPONENTS -->
+        <script src="../../../comp-m2/tiny-select.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m2/tiny-table.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m2/toggle.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m2/slider.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m2/dialog.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m2/waiting.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m3/button-with-icon.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m3/check-box.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m3/radio-button.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m3/hold-to-confirm-button.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m4/mini-graph-box.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m4/chart-box.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m4/context-menu.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m4/select-time.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m4/select-date.js" type="text/javascript" charset="utf-8"></script>
+
+        <!--
+
+        /* Bismillah */
+
+        Module #8: Cold Rooms (Template) - v26.09
+
+        - Moved from Module #1 (Device Manager). Module #1 is an empty sample now.
+
+        - Manages cold room controllers: live sensor data, relays, operation mode, alerts, restart and firmware update.
+        - Runs inside the admin panel (iframe), but it can work alone too.
+        - All devices are simulated. Replace the "DEVICE SERVICE" functions with your API calls (MQTT, REST, Supabase...).
+
+        -->
+
+        <script>
+
+        // *** CONSTANTS:
+        const LIB_PATH = "../../../";
+        const ASSETS = "../assets/";
+
+        const PAGE_COLOR = "black";
+        const CARD_COLOR = "#1A1A19"; // Same with ChartBox dark theme background
+        const CARD_BORDER_COLOR = White(0.1);
+        const FIELD_COLOR = "#232322";
+        const PRIMARY_COLOR = "#3D7A6B";
+        const ACCENT_COLOR = "#65A293";
+        const WARNING_COLOR = "#C98500";
+        const ERROR_COLOR = "#E66767";
+        const CHART_COLORS = [ACCENT_COLOR, "#3987E5", WARNING_COLOR, "#D55181", "#9085E9"];
+
+        const TARGET_MIN = -30; // °C (Slider: 0)
+        const TARGET_MAX = 10; // °C (Slider: 100)
+        const CHART_COUNT = 30; // Seconds on the chart
+        const HISTORY_COUNT = 60; // Values kept for the mini graphs
+        const LATEST_FIRMWARE = "v2.5.0";
+
+        const STATUS_LIST = {
+            online: { text: "Online", color: ACCENT_COLOR },
+            alarm: { text: "Alarm", color: ERROR_COLOR },
+            restarting: { text: "Restarting", color: WARNING_COLOR },
+            offline: { text: "Offline", color: "#898781" },
+        };
+
+        const LEVEL_COLORS = {
+            "Info": White(0.6),
+            "Success": ACCENT_COLOR,
+            "Warning": WARNING_COLOR,
+            "Error": ERROR_COLOR,
+        };
+
+        // auto: 1 -> Controlled by the thermostat in "auto" and "eco" modes.
+        const RELAYS = [
+            { key: "compressor", title: "Compressor", desc: "Cooling unit", auto: 1 },
+            { key: "fan", title: "Evaporator fan", desc: "Air circulation", auto: 0 },
+            { key: "defrost", title: "Defrost heater", desc: "Removes the ice", auto: 1 },
+            { key: "light", title: "Room light", desc: "Inside lighting", auto: 0 },
+        ];
+
+        const MODES = [
+            { value: "auto", text: "Auto", desc: "Thermostat keeps the target (±0.5 °C)" },
+            { value: "eco", text: "Eco", desc: "Wider range (±1.5 °C), uses less energy" },
+            { value: "manual", text: "Manual", desc: "You control all the relays" },
+        ];
+
+        const ALERTS = [
+            { key: "email", text: "E-mail on alarm" },
+            { key: "sms", text: "SMS on alarm" },
+            { key: "offline", text: "Notify when the device is offline" },
+        ];
+
+        // *** TEST DATA: (DEVICE SERVICE)
+        const DEVICES = [
+            {
+                id: "crc-a", name: "Cold Room A", model: "CRC-200", serial: "CRC200-24-00731",
+                firmware: "v2.4.1", ip: "192.168.1.41", location: "Warehouse 1 / North",
+                online: 1, mode: "auto", target: -18, temp: -17.4, humidity: 86, signal: 88, uptime: 297240,
+                relays: { compressor: 1, fan: 1, defrost: 0, light: 0 },
+                alerts: { email: 1, sms: 0, offline: 1 },
+                defrostTime: "03:00", maintenanceDate: "2026-10-05",
+            },
+            {
+                id: "crc-b", name: "Chiller Room B", model: "CRC-200", serial: "CRC200-24-00745",
+                firmware: LATEST_FIRMWARE, ip: "192.168.1.42", location: "Warehouse 1 / South",
+                online: 1, mode: "eco", target: 2, temp: 2.8, humidity: 91, signal: 74, uptime: 86820,
+                relays: { compressor: 0, fan: 1, defrost: 0, light: 1 },
+                alerts: { email: 1, sms: 1, offline: 1 },
+                defrostTime: "04:30", maintenanceDate: "2026-11-12",
+            },
+            {
+                id: "frz-c", name: "Freezer C", model: "CRC-300", serial: "CRC300-25-00112",
+                firmware: "v2.3.8", ip: "192.168.2.17", location: "Warehouse 2",
+                online: 0, mode: "auto", target: -24, temp: -23.1, humidity: 78, signal: 12, uptime: 0,
+                relays: { compressor: 1, fan: 1, defrost: 0, light: 0 },
+                alerts: { email: 1, sms: 1, offline: 1 },
+                defrostTime: "02:00", maintenanceDate: "2026-09-20",
+                lastSeen: Date.now() - 2 * 60 * 60 * 1000,
+            },
+        ];
+
+        // *** VARIABLES:
+        let device = null; // Selected device
+        let isReady = 0;
+        let isRendering = 0; // WHY: Component setters call onChange. Changes made by code must not be logged.
+
+        let deviceSelect, lblStatus, btnMore, moreMenu;
+        let kpiBoxList = [];
+        let chartTemp;
+        let infoLabels = {};
+        let lblOfflineInfo;
+        let relayToggles = {};
+        let lblRelayHint, lblTarget, sliderTarget, grpTarget;
+        let selectDefrostTime, selectMaintenanceDate;
+        let alertCheckBoxes = {};
+        let grpEventTable, eventTable = null;
+        let btnRestart, btnUpdate, lblFirmwareInfo;
+        let waiting;
+
+        // First running function.
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            DEVICES.forEach(initDevice);
+
+            // BOX: Full screen scrollable container
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            startBox(0, 0, "100%", "100%", {
+                color: "transparent",
+                scrollY: 1,
+            });
+
+                VGroup({
+                    width: "100%",
+                    height: "auto", // Grows with content, so the Box can scroll.
+                    align: "left top",
+                    gap: 16,
+                    padding: 24,
+                });
+
+                    initHeader();
+                    initKpiRow();
+                    initChartRow();
+                    initControlRow();
+                    initLogRow();
+
+                endGroup();
+
+            endBox();
+
+            // WAITING: Restart, firmware update, connection
+            waiting = Waiting({
+                animated: 1,
+                coverBackgroundColor: "rgba(0, 0, 0, 0.6)",
+                waitingIcon: LIB_PATH + "comp-m2/waiting/clock3.png",
+            });
+            waiting.icon.elem.style.filter = "invert(100%)";
+
+            // WHY: Bar count was calculated with the default width (before flex).
+            kpiBoxList.forEach(function (kpiBox) { kpiBox.refresh(); });
+
+            isReady = 1;
+            selectDevice(0);
+
+        };
+
+        // Runs every second: simulated sensor data.
+        const loop = function () {
+
+            if (!isReady) return;
+
+            DEVICES.forEach(function (d) {
+                simulateDevice(d, getTimeText(new Date()));
+            });
+
+            if (device.online) {
+                const h = device.history;
+                const last = h.labels.length - 1;
+                chartTemp.addValue(h.labels[last], [h.temp[last], h.target[last]]);
+                kpiBoxList[0].addValue(h.tempBars[last]);
+                kpiBoxList[1].addValue(h.humidity[last]);
+                kpiBoxList[2].addValue(h.power[last]);
+                kpiBoxList[3].addValue(h.signal[last]);
+            }
+
+            renderLiveValues();
+
+        };
+
+        // *** DEVICE SERVICE (SIMULATION):
+
+        const initDevice = function (d) {
+
+            d.restarting = 0;
+            d.alarm = 0;
+            d.events = [];
+            d.history = { labels: [], temp: [], tempBars: [], target: [], humidity: [], power: [], signal: [] };
+
+            // Fill the history with the last 60 seconds. (Offline device: before it was last seen)
+            const wasOnline = d.online;
+            const lastTime = d.lastSeen || Date.now();
+            d.online = 1;
+            for (let i = HISTORY_COUNT; i > 0; i--) {
+                simulateDevice(d, getTimeText(new Date(lastTime - i * 1000)), 1);
+            }
+            d.online = wasOnline;
+
+            if (d.online) {
+                addEvent(d, "Info", "Connected to the panel");
+            } else {
+                addEvent(d, "Error", "Connection lost (no heartbeat)", new Date(d.lastSeen));
+            }
+
+        };
+
+        // One second of the device. silent: 1 -> No events.
+        const simulateDevice = function (d, timeText, silent = 0) {
+
+            if (!d.online || d.restarting) return;
+
+            // Thermostat
+            if (d.mode != "manual") {
+                const range = (d.mode == "eco") ? 1.5 : 0.5;
+                if (d.temp > d.target + range && !d.relays.compressor) setRelay(d, "compressor", 1, "thermostat", silent);
+                if (d.temp < d.target - range && d.relays.compressor) setRelay(d, "compressor", 0, "thermostat", silent);
+            }
+
+            // Temperature
+            // NOTE: Faster than a real room, so the alarm can be tested in about 30 seconds. (Manual mode, compressor off)
+            let change = 0.15; // Heat from outside
+            if (d.relays.compressor) change -= (d.relays.fan) ? 0.35 : 0.22;
+            if (d.relays.defrost) change += 0.25;
+            if (d.relays.light) change += 0.01;
+            d.temp = round1(d.temp + change + (Math.random() - 0.5) * 0.08);
+
+            d.humidity = Math.min(98, Math.max(70, d.humidity + (Math.random() - 0.5) * 1.2 + (d.relays.defrost ? 0.3 : 0)));
+            d.signal = Math.min(100, Math.max(40, d.signal + random(-3, 3)));
+            d.uptime++;
+
+            const power = (d.relays.compressor ? 1200 : 0) + (d.relays.fan ? 150 : 0) + (d.relays.defrost ? 800 : 0) + (d.relays.light ? 40 : 0) + 25 + random(-15, 15);
+
+            // Alarm
+            if (!d.alarm && d.temp > d.target + 4) {
+                d.alarm = 1;
+                if (!silent) addEvent(d, "Warning", "High temperature alarm: " + d.temp.toFixed(1) + " °C");
+            } else if (d.alarm && d.temp <= d.target + 3) {
+                d.alarm = 0;
+                if (!silent) addEvent(d, "Success", "Temperature is normal again");
+            }
+
+            // History
+            const h = d.history;
+            h.labels.push(timeText);
+            h.temp.push(d.temp);
+            // WHY: MiniGraphBox can not show negative values. Bars start from TARGET_MIN.
+            h.tempBars.push({ value: round1(d.temp - TARGET_MIN), color: (d.alarm) ? ERROR_COLOR : "" });
+            h.target.push(d.target);
+            h.humidity.push(Math.round(d.humidity));
+            h.power.push(power);
+            h.signal.push(d.signal);
+
+            for (const key in h) {
+                if (h[key].length > HISTORY_COUNT) h[key].shift();
+            }
+
+        };
+
+        const setRelay = function (d, key, value, source, silent = 0) {
+
+            if (d.relays[key] == value) return;
+            d.relays[key] = value;
+
+            const relay = RELAYS.find(function (r) { return r.key == key; });
+            if (!silent) addEvent(d, "Info", relay.title + " turned " + ((value) ? "on" : "off") + " (" + source + ")");
+            if (d == device) renderControls();
+
+        };
+
+        const addEvent = function (d, level, message, date = new Date()) {
+
+            d.events.unshift({ time: getTimeText(date), level: level, message: message });
+            if (d.events.length > 100) d.events.pop();
+
+            if (d == device && isReady) renderEvents();
+
+        };
+
+        // Test: Restart takes 3 seconds.
+        const restartDevice = function (d, reason = "Restarted by user") {
+
+            if (!d.online) return;
+
+            d.restarting = 1;
+            addEvent(d, "Warning", reason);
+            renderAll();
+
+            waiting.setLabel("Restarting " + d.name + "...");
+            waiting.show();
+
+            setTimeout(function () {
+                d.restarting = 0;
+                d.uptime = 0;
+                addEvent(d, "Success", "Device is online again");
+                waiting.hide();
+                renderAll();
+            }, 3000);
+
+        };
+
+        // Test: Connection always fails for offline devices.
+        const reconnectDevice = function (d) {
+
+            waiting.setLabel("Connecting to " + d.name + " (" + d.ip + ")...");
+            waiting.show();
+
+            setTimeout(function () {
+                waiting.hide();
+                if (d.online) {
+                    addEvent(d, "Info", "Device data refreshed");
+                } else {
+                    addEvent(d, "Error", "Connection failed: timeout (" + d.ip + ")");
+                }
+            }, 1500);
+
+        };
+
+        const updateFirmware = function (d) {
+
+            if (!d.online || d.firmware == LATEST_FIRMWARE) return;
+
+            waiting.setLabel("Installing firmware " + LATEST_FIRMWARE + "...");
+            waiting.show();
+
+            setTimeout(function () {
+                addEvent(d, "Success", "Firmware updated: " + d.firmware + " → " + LATEST_FIRMWARE);
+                d.firmware = LATEST_FIRMWARE;
+                waiting.hide();
+                restartDevice(d, "Restarting after the firmware update");
+            }, 2500);
+
+        };
+
+        const factoryReset = function (d) {
+
+            d.mode = "auto";
+            d.target = (d.model == "CRC-300") ? -24 : -18;
+            d.relays = { compressor: 0, fan: 1, defrost: 0, light: 0 };
+            d.alerts = { email: 1, sms: 0, offline: 1 };
+            d.defrostTime = "03:00";
+
+            addEvent(d, "Warning", "Factory reset");
+            restartDevice(d, "Restarting after the factory reset");
+
+        };
+
+        // *** HELPERS:
+
+        const round1 = function (value) {
+            return Math.round(value * 10) / 10;
+        };
+
+        const getTimeText = function (date) {
+            return date.toLocaleTimeString("en-GB"); // 14:05:09
+        };
+
+        const formatUptime = function (seconds) {
+            const days = Math.floor(seconds / 86400);
+            const hours = Math.floor((seconds % 86400) / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            return days + "d " + hours + "h " + minutes + "m";
+        };
+
+        const getStatus = function (d) {
+            if (!d.online) return "offline";
+            if (d.restarting) return "restarting";
+            if (d.alarm) return "alarm";
+            return "online";
+        };
+
+        const isControllable = function (d) {
+            return d.online && !d.restarting;
+        };
+
+        const targetToSlider = function (target) {
+            return Math.round((target - TARGET_MIN) / (TARGET_MAX - TARGET_MIN) * 100);
+        };
+
+        const sliderToTarget = function (value) {
+            return Math.round(TARGET_MIN + value / 100 * (TARGET_MAX - TARGET_MIN));
+        };
+
+        // WHY: Some components have no enabled setting. "inert" blocks the mouse and keyboard for all the children.
+        const setInteractive = function (obj, enabled) {
+            obj.elem.inert = !enabled;
+            obj.opacity = (enabled) ? 1 : 0.4;
+        };
+
+        const downloadEventsAsCSV = function (d) {
+            const lines = ["time,level,message"];
+            d.events.forEach(function (e) {
+                lines.push([e.time, e.level, '"' + e.message.replace(/"/g, '""') + '"'].join(","));
+            });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/csv" }));
+            link.download = d.id + "-events.csv";
+            link.click();
+            URL.revokeObjectURL(link.href);
+        };
+
+        // *** VIEW HELPERS:
+
+        // GROUP: Cards side by side (wraps on small screens)
+        const startRow = function () {
+            HGroup({
+                width: "100%",
+                height: "auto",
+                align: "left top",
+                gap: 16,
+            });
+            that.elem.style.flexWrap = "wrap";
+            that.elem.style.alignItems = "stretch"; // WHY: Cards in the same row have the same height.
+        };
+
+        // flex: "1 1 320px" (grow, shrink, min width before wrap)
+        const setFlex = function (obj, flex) {
+            obj.elem.style.flex = flex;
+            obj.elem.style.minWidth = "0";
+        };
+
+        const startCard = function (title, subtitle, flex) {
+
+            const card = VGroup({
+                height: "auto",
+                align: "left top",
+                gap: 16,
+                padding: 16,
+                color: CARD_COLOR,
+                border: 1,
+                borderColor: CARD_BORDER_COLOR,
+                round: 12,
+            });
+            setFlex(card, flex);
+
+                VGroup({ width: "100%", height: "auto", align: "left top", gap: 0 });
+
+                    Label({
+                        text: title,
+                        fontSize: 16,
+                        textColor: White(0.95),
+                    });
+                    that.elem.style.fontFamily = "opensans-bold";
+
+                    if (subtitle) {
+                        Label({
+                            text: subtitle,
+                            fontSize: 12,
+                            textColor: White(0.45),
+                        });
+                    }
+
+                endGroup();
+
+            return card;
+
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+        // GROUP: Left and right items (space between)
+        const startSpaceBetween = function (gap = 12) {
+            HGroup({ width: "100%", height: "auto", align: "left center", gap: gap });
+            that.elem.style.justifyContent = "space-between";
+        };
+
+        const createSmallTitle = function (text) {
+            Label({
+                text: text.toUpperCase(),
+                fontSize: 11,
+                textColor: White(0.45),
+            });
+            that.elem.style.letterSpacing = "1px";
+        };
+
+        const createButton = function (text, iconFile, onClick, params = {}) {
+
+            const btn = ButtonWithIcon({
+                width: params.width || "auto",
+                labelText: text,
+                iconFile: (iconFile) ? ASSETS + iconFile : "",
+                onClick: onClick,
+                style: {
+                    layout: { gap: 10, padding: [14, 8], align: params.align || "center center" },
+                    icon: { width: 20, height: 20 },
+                    label: { fontSize: 14, textColor: White(0.9) },
+                    box: { color: params.color || FIELD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8 },
+                    hover: { color: params.hoverColor || "#2C2C2A" },
+                    active: { color: params.activeColor || "#383835" },
+                },
+            });
+            if (btn.icon) btn.icon.elem.style.filter = "invert(100%)"; // WHY: Panel icons are black.
+
+            return btn;
+
+        };
+
+        // Dark style for SelectTime and SelectDate
+        const PICKER_STYLE = {
+            field: { color: FIELD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8 },
+            fieldHover: { borderColor: White(0.3) },
+            fieldFocus: { borderColor: ACCENT_COLOR },
+            fieldText: { fontSize: 14, textColor: White(0.9) },
+            placeholder: { textColor: White(0.4) },
+            icon: { color: White(0.55) },
+            panel: { color: FIELD_COLOR, borderColor: White(0.12), shadow: "0 8px 24px rgba(0, 0, 0, 0.5)" },
+            footerButton: { textColor: ACCENT_COLOR },
+            disabled: { opacity: 0.4 },
+        };
+
+        // *** VIEW:
+
+        const initHeader = function () {
+
+            startSpaceBetween(16);
+            that.elem.style.flexWrap = "wrap";
+
+                // Title and device select
+                HGroup({ width: "auto", height: "auto", align: "left center", gap: 20 });
+                that.elem.style.flexWrap = "wrap";
+
+                    VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
+
+                        Label({
+                            text: "Cold Rooms",
+                            fontSize: 26,
+                            textColor: White(0.95),
+                        });
+                        that.elem.style.fontFamily = "opensans-bold";
+
+                        Label({
+                            text: "Cold room controllers",
+                            fontSize: 14,
+                            textColor: White(0.5),
+                        });
+
+                    endGroup();
+
+                    deviceSelect = TinySelect({
+                        title: "Device",
+                        list: DEVICES.map(function (d) { return { id: d.id, label: d.name }; }),
+                        height: 40,
+                        fontSize: 15,
+                        color: CARD_COLOR,
+                        border: 1,
+                        borderColor: CARD_BORDER_COLOR,
+                        round: 8,
+                        labelTextColor: White(0.95),
+                        arrowIcon: LIB_PATH + "comp-m2/tiny-select/arrow.svg",
+                        arrowSize: 20,
+                        invertIconColor: 1,
+                        listFontSize: 15,
+                        listTextColor: White(0.85),
+                        listOverTextColor: ACCENT_COLOR,
+                        listBackgroundColor: FIELD_COLOR,
+                        listBorderColor: White(0.15),
+                        onSelect: function (index) {
+                            if (isReady) selectDevice(index);
+                        },
+                    });
+                    deviceSelect.lblTitle.textColor = White(0.5);
+
+                    lblStatus = Label({
+                        text: "",
+                        fontSize: 13,
+                        round: 100,
+                        border: 1,
+                        padding: [12, 4],
+                    });
+                    lblStatus.elem.style.whiteSpace = "nowrap";
+
+                endGroup();
+
+                // Buttons
+                HGroup({ width: "auto", height: "auto", align: "right center", gap: 10 });
+
+                    createButton("Refresh", "", function () {
+                        reconnectDevice(device);
+                    });
+
+                    btnMore = createButton("More", "top-bar/apps.png", function () { });
+
+                    // MENU: More actions
+                    moreMenu = ContextMenu({
+                        items: [
+                            { text: "Sync device clock", key: "sync" },
+                            { text: "Download event log (CSV)", key: "csv" },
+                            { text: "Copy serial number", key: "copy" },
+                            "-",
+                            { text: "Factory reset...", key: "reset" },
+                        ],
+                        onClick: function (self, item) {
+                            onMoreMenuClick(item.key);
+                        },
+                        style: {
+                            menu: { color: FIELD_COLOR, borderColor: White(0.12), shadow: "0px 8px 24px rgba(0, 0, 0, 0.5)" },
+                            item: { textColor: White(0.85) },
+                            itemHover: { textColor: White(1), color: White(0.08) },
+                            disabled: { textColor: White(0.3) },
+                            separator: { color: White(0.1) },
+                        },
+                    });
+                    moreMenu.attachTo(btnMore, "click");
+
+                endGroup();
+
+            endGroup();
+
+        };
+
+        const initKpiRow = function () {
+
+            const KPI_LIST = [
+                { title: "Temperature", iconFile: "light.png", barColor: ACCENT_COLOR, maxValue: TARGET_MAX - TARGET_MIN },
+                { title: "Humidity", iconFile: "maybe.png", barColor: "#3987E5", maxValue: 100 },
+                { title: "Power", iconFile: "left-menu/bolt.png", barColor: WARNING_COLOR, maxValue: 0 },
+                { title: "Signal", iconFile: "left-menu/url.png", barColor: "#9085E9", maxValue: 100 },
+            ];
+
+            startRow();
+
+                KPI_LIST.forEach(function (kpi) {
+
+                    const kpiBox = MiniGraphBox({
+                        height: 100,
+                        title: kpi.title,
+                        valueText: "",
+                        iconFile: ASSETS + kpi.iconFile,
+                        barColor: kpi.barColor,
+                        maxValue: kpi.maxValue,
+                        style: {
+                            box: { color: CARD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 12 },
+                            text: { padding: 14 },
+                            title: { fontSize: 13, textColor: White(0.5) },
+                            valueText: { fontSize: 24, textColor: White(0.95) },
+                            icon: { width: 20, height: 20 },
+                            bars: { height: 34, barWidth: 4, gap: 2, padding: 14, round: 2 },
+                        },
+                    });
+                    setFlex(kpiBox, "1 1 220px");
+                    kpiBox.icon.elem.style.filter = "invert(100%)"; // WHY: Panel icons are black.
+                    kpiBox.icon.opacity = 0.5;
+
+                    kpiBoxList.push(kpiBox);
+
+                });
+
+            endGroup();
+
+        };
+
+        const initChartRow = function () {
+
+            startRow();
+
+                // LINE: Live temperature
+                chartTemp = ChartBox({
+                    height: 340,
+                    type: "line",
+                    theme: "dark",
+                    title: "Temperature",
+                    subtitle: "Live, last " + CHART_COUNT + " seconds",
+                    maxCount: CHART_COUNT,
+                    beginAtZero: 0,
+                    animated: 0, // WHY: A new value every second. With animation, new points rise from the bottom every time.
+                    labels: [],
+                    datasets: [
+                        {
+                            label: "Temperature",
+                            data: [],
+                            fill: "start", // WHY: "true" fills to 0. Temperatures can be negative.
+                            tension: 0.35,
+                            backgroundColor: ChartBox.gradient("rgba(101, 162, 147, 0.3)", "rgba(101, 162, 147, 0)"),
+                        },
+                        {
+                            label: "Target",
+                            data: [],
+                            borderDash: [5, 5],
+                        },
+                    ],
+                    formatValue: function (value) { return value + " °C"; },
+                    options: {
+                        elements: { point: { radius: 0 } },
+                        scales: { x: { ticks: { maxTicksLimit: 6 } } },
+                    },
+                    style: {
+                        box: { color: CARD_COLOR, borderColor: CARD_BORDER_COLOR, round: 12, padding: 16 },
+                        chart: { colors: CHART_COLORS },
+                    },
+                });
+                setFlex(chartTemp, "2 1 520px");
+                // WHY: The chart gets the row height, if the card in the same row is taller.
+                chartTemp.elem.style.height = "auto";
+                chartTemp.elem.style.minHeight = "340px";
+
+                // INFO: Device information
+                startCard("Device Info", "", "1 1 320px");
+
+                    const INFO_LIST = [
+                        { key: "model", title: "Model" },
+                        { key: "serial", title: "Serial number" },
+                        { key: "firmware", title: "Firmware" },
+                        { key: "ip", title: "IP address" },
+                        { key: "location", title: "Location" },
+                        { key: "uptime", title: "Uptime" },
+                        { key: "setpoint", title: "Target" },
+                    ];
+
+                    VGroup({ width: "100%", height: "auto", align: "left top", gap: 0 });
+
+                        INFO_LIST.forEach(function (info, index) {
+
+                            startSpaceBetween();
+                            that.elem.style.padding = "9px 0px";
+                            if (index > 0) that.elem.style.borderTop = "1px solid " + White(0.06);
+
+                                Label({ text: info.title, fontSize: 14, textColor: White(0.5) });
+
+                                infoLabels[info.key] = Label({ text: "", fontSize: 14, textColor: White(0.9) });
+                                that.elem.style.whiteSpace = "nowrap";
+
+                            endGroup();
+
+                        });
+
+                    endGroup();
+
+                    lblOfflineInfo = Label({
+                        text: "",
+                        fontSize: 13,
+                        textColor: ERROR_COLOR,
+                        color: "rgba(230, 103, 103, 0.1)",
+                        round: 8,
+                        padding: [12, 8],
+                        width: "100%",
+                    });
+
+                endCard();
+
+            endGroup();
+
+        };
+
+        const initControlRow = function () {
+
+            startRow();
+
+                // RELAYS
+                startCard("Relays", "Outputs of the controller", "1 1 320px");
+
+                    RELAYS.forEach(function (relay) {
+
+                        startSpaceBetween();
+
+                            VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
+                                Label({ text: relay.title, fontSize: 15, textColor: White(0.9) });
+                                Label({ text: relay.desc, fontSize: 12, textColor: White(0.45) });
+                            endGroup();
+
+                            relayToggles[relay.key] = Toggle({
+                                width: 52,
+                                height: 30,
+                                spacing: 3,
+                                backgroundStyle: {
+                                    color: "#2C2C2A",
+                                    selectedColor: PRIMARY_COLOR,
+                                    border: 1,
+                                    borderColor: CARD_BORDER_COLOR,
+                                },
+                                buttonStyle: {
+                                    color: White(0.35),
+                                    selectedColor: White(0.95),
+                                },
+                                onChange: function (self) {
+                                    if (isRendering) return;
+                                    setRelay(device, relay.key, self.value, "manual");
+                                },
+                            });
+
+                        endGroup();
+
+                    });
+
+                    lblRelayHint = Label({
+                        text: "Compressor and defrost heater are controlled by the thermostat. Select <b>Manual</b> mode to change them.",
+                        fontSize: 12,
+                        textColor: White(0.45),
+                        width: "100%",
+                    });
+
+                endCard();
+
+                // OPERATION
+                startCard("Operation", "Mode, target and schedule", "1 1 320px");
+
+                    VGroup({ width: "100%", height: "auto", align: "left top", gap: 10 });
+
+                        createSmallTitle("Mode");
+
+                        MODES.forEach(function (mode) {
+
+                            RadioButton({
+                                group: "mode",
+                                value: mode.value,
+                                labelText: mode.text + " <span style='color:" + White(0.4) + "; font-size: 12px'>" + mode.desc + "</span>",
+                                style: {
+                                    mark: { width: 20, height: 20, color: "transparent", borderColor: White(0.35) },
+                                    checkedMark: { color: "transparent", borderColor: ACCENT_COLOR },
+                                    hoverMark: { borderColor: White(0.7) },
+                                    dot: { color: ACCENT_COLOR },
+                                    label: { fontSize: 14, textColor: White(0.9) },
+                                },
+                                onChange: function (self) {
+                                    if (isRendering) return;
+                                    device.mode = self.value;
+                                    addEvent(device, "Info", "Mode changed to " + mode.text);
+                                    renderControls();
+                                },
+                            });
+
+                        });
+
+                    endGroup();
+
+                    grpTarget = VGroup({ width: "100%", height: "auto", align: "left top", gap: 8 });
+
+                        startSpaceBetween();
+                            createSmallTitle("Target temperature");
+                            lblTarget = Label({ text: "", fontSize: 16, textColor: White(0.95) });
+                            that.elem.style.fontFamily = "opensans-bold";
+                        endGroup();
+
+                        sliderTarget = Slider({
+                            width: 280,
+                            trackHeight: 10,
+                            minThumbHeight: 28,
+                            trackColor: ACCENT_COLOR,
+                            trackBackgroundColor: White(0.1),
+                            thumbColor: White(0.9),
+                            showValueOnSet: 0,
+                            showValueOnDrag: 0, // WHY: Slider shows 0-100. The real value is shown in lblTarget.
+                            onDragMove: function (value) {
+                                lblTarget.text = sliderToTarget(value) + " °C";
+                            },
+                            onDragEnd: function () {
+                                const target = sliderToTarget(sliderTarget.getValue());
+                                if (target == device.target) return;
+                                device.target = target;
+                                addEvent(device, "Info", "Target temperature set to " + target + " °C");
+                                renderControls();
+                            },
+                        });
+
+                    endGroup();
+
+                    // SCHEDULE
+                    HGroup({ width: "100%", height: "auto", align: "left top", gap: 12 });
+                    that.elem.style.flexWrap = "wrap";
+
+                        VGroup({ width: "auto", height: "auto", align: "left top", gap: 8 });
+
+                            createSmallTitle("Daily defrost");
+
+                            selectDefrostTime = SelectTime({
+                                width: 130,
+                                height: 40,
+                                minuteStep: 15,
+                                showClearButton: 0,
+                                style: Object.assign({}, PICKER_STYLE, {
+                                    columnTitle: { textColor: White(0.45), activeTextColor: White(0.9) },
+                                    cell: { textColor: White(0.85), hoverColor: White(0.08) },
+                                    selectedCell: { color: PRIMARY_COLOR, textColor: White(1) },
+                                    disabledCell: { textColor: White(0.2) },
+                                }),
+                                onChange: function (self) {
+                                    if (isRendering || !self.value) return;
+                                    device.defrostTime = self.value;
+                                    addEvent(device, "Info", "Daily defrost time set to " + self.value);
+                                },
+                            });
+
+                        endGroup();
+
+                        VGroup({ width: "auto", height: "auto", align: "left top", gap: 8 });
+
+                            createSmallTitle("Next maintenance");
+
+                            selectMaintenanceDate = SelectDate({
+                                width: 170,
+                                height: 40,
+                                minDate: new Date(),
+                                format: "DD MMM YYYY",
+                                showClearButton: 0,
+                                style: Object.assign({}, PICKER_STYLE, {
+                                    title: { textColor: White(0.9) },
+                                    arrow: { color: White(0.6), hoverColor: White(0.08) },
+                                    weekDay: { textColor: White(0.45) },
+                                    day: { textColor: White(0.85), hoverColor: White(0.08) },
+                                    today: { borderColor: White(0.35) },
+                                    selectedDay: { color: PRIMARY_COLOR, textColor: White(1) },
+                                    disabledDay: { textColor: White(0.2) },
+                                }),
+                                onChange: function (self) {
+                                    if (isRendering || !self.value) return;
+                                    device.maintenanceDate = self.value;
+                                    addEvent(device, "Info", "Next maintenance set to " + self.dateText);
+                                },
+                            });
+
+                        endGroup();
+
+                    endGroup();
+
+                endCard();
+
+                // ALERTS
+                startCard("Alerts", "Sent by the panel (works when the device is offline)", "1 1 320px");
+
+                    VGroup({ width: "100%", height: "auto", align: "left top", gap: 12 });
+
+                        ALERTS.forEach(function (alert) {
+
+                            alertCheckBoxes[alert.key] = CheckBox({
+                                labelText: alert.text,
+                                style: {
+                                    mark: { width: 20, height: 20, color: "transparent", borderColor: White(0.35) },
+                                    checkedMark: { color: PRIMARY_COLOR, borderColor: PRIMARY_COLOR },
+                                    hoverMark: { borderColor: White(0.7) },
+                                    tick: { color: White(1) },
+                                    label: { fontSize: 14, textColor: White(0.9) },
+                                },
+                                onChange: function (self) {
+                                    if (isRendering) return;
+                                    device.alerts[alert.key] = self.checked;
+                                    addEvent(device, "Info", "Alert \"" + alert.text + "\" " + ((self.checked) ? "enabled" : "disabled"));
+                                },
+                            });
+
+                        });
+
+                    endGroup();
+
+                    // MAINTENANCE
+                    VGroup({ width: "100%", height: "auto", align: "left top", gap: 10 });
+                    that.elem.style.borderTop = "1px solid " + White(0.06);
+                    that.elem.style.paddingTop = "16px";
+
+                        createSmallTitle("Maintenance");
+
+                        lblFirmwareInfo = Label({ text: "", fontSize: 13, textColor: White(0.6), width: "100%" });
+
+                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 10 });
+                        that.elem.style.flexWrap = "wrap";
+
+                            btnUpdate = createButton("Update Firmware", "left-menu/extension.png", function () {
+                                updateFirmware(device);
+                            });
+
+                            // WHY: Hold to confirm, so the device is not restarted by mistake.
+                            btnRestart = HoldToConfirmButton({
+                                height: 38,
+                                labelText: "Hold to Restart",
+                                completedText: "RESTARTING",
+                                iconFile: ASSETS + "left-menu/bolt.png",
+                                holdingIconFile: ASSETS + "left-menu/bolt.png",
+                                holdDuration: 1500,
+                                resetDelay: 3000,
+                                style: {
+                                    layout: { gap: 8, padding: [14, 0] },
+                                    icon: { width: 20, height: 20 },
+                                    label: { fontSize: 14, textColor: White(0.9) },
+                                    holdingLabel: { fontSize: 14, textColor: "#B03A2E" },
+                                    completedLabel: { fontSize: 14, textColor: "#2C5A38" },
+                                    box: { color: FIELD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8 },
+                                    holdingBox: { color: "#FFD1CB", borderColor: ERROR_COLOR, round: 8 },
+                                    completedBox: { color: "#DFEFE6", borderColor: ACCENT_COLOR, round: 8 },
+                                },
+                                onConfirm: function () {
+                                    restartDevice(device);
+                                },
+                            });
+                            btnRestart.icon.elem.style.filter = "invert(100%)"; // WHY: Only the normal icon is on a dark background.
+
+                        endGroup();
+
+                    endGroup();
+
+                endCard();
+
+            endGroup();
+
+        };
+
+        const initLogRow = function () {
+
+            startRow();
+
+                startCard("Event Log", "Last 10 events of the device. Full list: More > Download event log", "1 1 520px");
+
+                    // GROUP: Table (created again when an event is added)
+                    grpEventTable = HGroup({ width: "100%", height: "auto", align: "left top" });
+                    that.elem.style.overflowX = "auto";
+                    endGroup();
+
+                endCard();
+
+            endGroup();
+
+        };
+
+        // *** RENDER:
+
+        const selectDevice = function (index) {
+
+            device = DEVICES[index];
+
+            // Chart and mini graphs: history of the device
+            const h = device.history;
+            chartTemp.data.labels = h.labels.slice(-CHART_COUNT);
+            chartTemp.data.datasets[0].data = h.temp.slice(-CHART_COUNT);
+            chartTemp.data.datasets[1].data = h.target.slice(-CHART_COUNT);
+            chartTemp.update("none");
+            chartTemp.setSubtitle((device.online) ? "Live, last " + CHART_COUNT + " seconds" : "Last data before the connection was lost");
+
+            kpiBoxList[0].setValues(h.tempBars);
+            kpiBoxList[1].setValues(h.humidity);
+            kpiBoxList[2].setValues(h.power);
+            kpiBoxList[3].setValues(h.signal);
+
+            renderAll();
+
+        };
+
+        const renderAll = function () {
+            renderLiveValues();
+            renderInfo();
+            renderControls();
+            renderEvents();
+        };
+
+        // Changes every second.
+        const renderLiveValues = function () {
+
+            const d = device;
+            const h = d.history;
+            const last = h.labels.length - 1;
+            const hasData = d.online && !d.restarting;
+
+            kpiBoxList[0].setValueText((hasData) ? d.temp.toFixed(1) + " °C" : "—");
+            kpiBoxList[1].setValueText((hasData) ? h.humidity[last] + "%" : "—");
+            kpiBoxList[2].setValueText((hasData) ? h.power[last].toLocaleString("en-US") + " W" : "—");
+            kpiBoxList[3].setValueText((hasData) ? h.signal[last] + "%" : "—");
+            kpiBoxList.forEach(function (kpiBox) { kpiBox.opacity = (hasData) ? 1 : 0.5; });
+
+            // Status
+            const status = STATUS_LIST[getStatus(d)];
+            lblStatus.text = "● " + status.text;
+            lblStatus.textColor = status.color;
+            lblStatus.color = ChartBox.alpha(status.color, 0.12);
+            lblStatus.borderColor = ChartBox.alpha(status.color, 0.4);
+
+            infoLabels.uptime.text = (hasData) ? formatUptime(d.uptime) : "—";
+
+        };
+
+        const renderInfo = function () {
+
+            const d = device;
+
+            infoLabels.model.text = d.model;
+            infoLabels.serial.text = d.serial;
+            infoLabels.firmware.text = d.firmware + ((d.firmware != LATEST_FIRMWARE) ? " <span style='color:" + WARNING_COLOR + "'>(update)</span>" : "");
+            infoLabels.ip.text = d.ip;
+            infoLabels.location.text = d.location;
+
+            lblOfflineInfo.visible = (d.online) ? 0 : 1;
+            if (!d.online) {
+                const minutes = Math.round((Date.now() - d.lastSeen) / 60000);
+                const lastSeenText = (minutes >= 60) ? Math.floor(minutes / 60) + " hours ago" : minutes + " minutes ago";
+                lblOfflineInfo.text = "Device is offline. Last seen <b>" + lastSeenText + "</b>. Check the power and the network cable, then press Refresh.";
+            }
+
+            lblFirmwareInfo.text = (d.firmware == LATEST_FIRMWARE)
+                ? "Firmware " + d.firmware + " is up to date."
+                : "Firmware " + LATEST_FIRMWARE + " is available. (Installed: " + d.firmware + ")";
+
+        };
+
+        // Relays, mode, target, schedule, alerts
+        const renderControls = function () {
+
+            const d = device;
+            const controllable = isControllable(d);
+
+            isRendering = 1;
+
+            RELAYS.forEach(function (relay) {
+                const toggle = relayToggles[relay.key];
+                if (toggle.value !== d.relays[relay.key]) toggle.setValue(d.relays[relay.key]);
+                const enabled = controllable && !(relay.auto && d.mode != "manual");
+                toggle.setSecondState((enabled) ? "normal" : "disabled");
+                toggle.opacity = (enabled) ? 1 : 0.4; // WHY: The disabled state of Toggle is not easy to see on a dark background.
+            });
+            lblRelayHint.visible = (d.mode != "manual") ? 1 : 0;
+
+            RadioButton.setValue("mode", d.mode, 1);
+            RadioButton.getGroup("mode").forEach(function (radio) { radio.setEnabled(controllable); });
+
+            lblTarget.text = d.target + " °C";
+            infoLabels.setpoint.text = d.target + " °C";
+            if (sliderToTarget(sliderTarget.getValue()) != d.target) sliderTarget.setValue(targetToSlider(d.target));
+            setInteractive(sliderTarget, controllable);
+
+            selectDefrostTime.setTime(d.defrostTime, 1);
+            selectDefrostTime.setEnabled(controllable);
+            selectMaintenanceDate.setDate(d.maintenanceDate, 1);
+            selectMaintenanceDate.setEnabled(controllable);
+
+            ALERTS.forEach(function (alert) {
+                alertCheckBoxes[alert.key].setChecked(d.alerts[alert.key], 1);
+            });
+
+            setInteractive(btnUpdate, controllable && d.firmware != LATEST_FIRMWARE);
+            setInteractive(btnRestart, controllable);
+
+            ["sync", "reset"].forEach(function (key) { moreMenu.setItemEnabled(key, controllable); });
+
+            isRendering = 0;
+
+        };
+
+        const renderEvents = function () {
+
+            if (eventTable) eventTable.remove();
+
+            const previous = getDefaultContainerBox();
+            setDefaultContainerBox(grpEventTable);
+
+                eventTable = TinyTable({
+                    columnHeaders: ["TIME", "LEVEL", "MESSAGE"],
+                    columnWidths: ["15%", "14%", "70%"], // 99%: 1px gaps between cells
+                    dataRows: device.events.slice(0, 10).map(function (e) { return [e.time, e.level, e.message]; }),
+                    headerBackgroundColor: FIELD_COLOR,
+                    headerTextColor: White(0.6),
+                    headerBorderColor: FIELD_COLOR,
+                    headerFontSize: 12,
+                    borderWidth: 1,
+                    borderRadius: 8,
+                    borderColor: CARD_BORDER_COLOR,
+                    bodyBackgroundColor: CARD_COLOR,
+                    cellFontSize: 14,
+                    cellTextColor: White(0.8),
+                    rowHoverBackgroundColor: White(0.05),
+                    rowHoverBorderColor: White(0.1),
+                    onCellRender: function (cell) {
+                        if (cell.index == 0) cell.textColor = White(0.5);
+                        if (cell.index == 1) cell.textColor = LEVEL_COLORS[cell.text] || White(0.8);
+                    },
+                });
+                // Fill the card. (Scrolls under the min width.)
+                eventTable.width = "100%";
+                eventTable.elem.style.minWidth = "560px";
+
+            setDefaultContainerBox(previous);
+
+        };
+
+        // *** ACTIONS:
+
+        const onMoreMenuClick = function (key) {
+
+            switch (key) {
+
+                case "sync":
+                    addEvent(device, "Success", "Device clock synced: " + getTimeText(new Date()));
+                    break;
+
+                case "csv":
+                    downloadEventsAsCSV(device);
+                    break;
+
+                case "copy":
+                    navigator.clipboard.writeText(device.serial).then(function () {
+                        addEvent(device, "Info", "Serial number copied: " + device.serial);
+                    }).catch(function () {
+                        addEvent(device, "Error", "Serial number could not be copied");
+                    });
+                    break;
+
+                case "reset": {
+                    const d = device;
+                    Dialog({
+                        icon: ASSETS + "warning.png",
+                        title: "Factory Reset",
+                        desc: "All settings of <b>" + d.name + "</b> will be deleted and the device will restart.",
+                        confirmButtonText: "Reset Device",
+                        confirmButtonColor: ERROR_COLOR,
+                        callback: function (isConfirmed) {
+                            if (isConfirmed) factoryReset(d);
+                        },
+                    });
+                    break;
+                }
+
+            }
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+
+        <!-- HTML content -->
+
+    </body>
+</html>

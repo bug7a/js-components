@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>Order Form</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <!-- LIBRARY FILES -->
+        <link rel="preload" href="../../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="preload" href="../../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../../basic/basic.min.css">
+        <script src="../../basic/basic.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8" defer></script>
+
+        <script src="../../comp-m2/tooltip.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m2/input-b.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m2/email-input-b.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m2/phone-input-b.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m2/textarea-b.min.js" type="text/javascript" charset="utf-8" defer></script>
+
+        <script src="../../comp-m2/waiting.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m2/form.min.js" type="text/javascript" charset="utf-8" defer></script>
+
+        <script src="../../comp-m3/check-box.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m3/radio-button.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m4/select-date.js" type="text/javascript" charset="utf-8" defer></script>
+
+        <!-- ALL COMPONENTS IN ONE FILE -->
+        <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
+
+        <!--
+
+        /* Bismillah */
+
+        - An order form for a small shop. (Bakery, coffee roaster, florist, farm shop, restaurant...)
+        - InputB, EmailInputB, PhoneInputB, TextareaB, Form, Waiting (comp-m2)
+        - CheckBox, RadioButton (comp-m3)
+        - SelectDate (comp-m4)
+
+        - Products with quantity steppers (- 1 +). The order summary (subtotal, discount, delivery, total) is
+          updated on every change.
+        - Coupon codes: percent discount, fixed amount or free delivery. An unknown code blocks the form until it
+          is fixed or cleared.
+        - Delivery or pick up: the address fields are only shown (and required) for delivery.
+          Delivery is free above FREE_DELIVERY_OVER.
+        - Delivery date (no Sundays, not today after the cut-off time) and a time window.
+        - Payment method, gift option with a message, order notes and the terms check box.
+        - After the order, the visitor gets an order number and can download the receipt (.txt).
+
+        - CheckBox, RadioButton and SelectDate are placed in an InputB field (createInput: 0).
+          So they look like the other inputs and the Form checks them too. (See: createField)
+
+        -->
+
+        <script>
+
+        // This example posts the order as JSON to your server.
+        // SERVICE_URL is empty: Demo mode (nothing is sent, data is printed to the console).
+
+        // *** CONSTANTS:
+        const SERVICE_URL = ""; // Ex: "https://your-site.com/api/orders"
+        const SHOP_NAME = "Bosphorus Roasters";
+        const SHOP_ADDRESS = "Moda Cad. No: 48, Kadikoy, Istanbul";
+        const SHOP_PHONE = "+90 216 000 00 00";
+        const FORM_TITLE = "Order Online";
+        const FORM_DESCRIPTION = "Freshly roasted coffee and pastries. Order until 16:00 for next-day delivery.";
+
+        const ACCENT_COLOR = "#65A293";
+        const TEXT_COLOR = "#373836";
+        const WARNING_COLOR = "#E5885E";
+        const CURRENCY = "$";
+
+        const PRODUCTS = [
+            { id: "espresso-250", name: "House Espresso", description: "250 g · whole beans", price: 14.5 },
+            { id: "filter-250", name: "Ethiopia Guji Filter", description: "250 g · floral, peach", price: 17.0 },
+            { id: "decaf-250", name: "Decaf Colombia", description: "250 g · sugar cane process", price: 15.5 },
+            { id: "cold-brew", name: "Cold Brew Bottle", description: "500 ml · keep refrigerated", price: 6.9 },
+            { id: "croissant-4", name: "Butter Croissants", description: "Box of 4 · baked at 06:00", price: 9.0 },
+            { id: "cookie-6", name: "Chocolate Chip Cookies", description: "Box of 6", price: 8.5 },
+            { id: "mug", name: "Roasters Mug", description: "350 ml · stoneware", price: 12.0 },
+        ];
+        const MAX_QUANTITY = 20;
+
+        // type: "percent" (value: %), "amount" (value: money), "freeDelivery"
+        const COUPONS = {
+            "WELCOME10": { type: "percent", value: 10, text: "10% off" },
+            "COFFEE5": { type: "amount", value: 5, text: CURRENCY + "5 off", minSubtotal: 25 },
+            "FREESHIP": { type: "freeDelivery", value: 0, text: "Free delivery" },
+        };
+
+        const DELIVERY_FEE = 6.9;
+        const FREE_DELIVERY_OVER = 60;
+        const DELIVERY_DAYS = 14; // How many days ahead
+        const CUTOFF_HOUR = 16; // After this hour, the first delivery day is the day after tomorrow.
+        const CLOSED_WEEKDAYS = [0]; // 0: Sunday
+        const TIME_WINDOWS = ["09:00 – 12:00", "12:00 – 15:00", "15:00 – 18:00"];
+        const PICKUP_HOURS = "Mon–Sat 08:00–19:00";
+
+        const PAYMENT_METHODS = [
+            { id: "card-on-delivery", name: "Card on delivery", description: "Pay with card when you receive the order" },
+            { id: "bank-transfer", name: "Bank transfer", description: "Bank details are sent by e-mail" },
+            { id: "online", name: "Pay online", description: "A secure payment link is sent by e-mail" },
+        ];
+
+        // *** VARIABLES:
+        let form, waiting;
+        let itemsField, couponInput, fulfillmentField, addressInput, cityInput, postalInput, dateField, timeField;
+        let firstNameInput, lastNameInput, emailInput, phoneInput;
+        let paymentField, giftField, giftMessageTextarea, notesTextarea, termsField;
+        let summaryLabel;
+        let quantities = {}; // productId -> quantity
+
+        // Common input params:
+        let inputStyle;
+
+        // First running function. (basic.js calls start() when the page object is ready)
+        // WHY: Not window.onload, because the library files are loaded with "defer".
+        const start = function() {
+
+            page.color = "white";
+            addChoiceStyles(); // CheckBox and RadioButton style package: "form"
+
+            inputStyle = {
+                width: "100%",
+                backgroundColor: "#F6F6F6",
+                selectedBackgroundColor: "#F6F6F6",
+                lineColor: Black(0),
+                selectedLineColor: Black(0),
+                backBorderColor: Black(0),
+                selectedBackBorderColor: Black(0.4),
+                backBorderTopRound: 8,
+                backBorderBottomRound: 8,
+            };
+
+            // FORM:
+            form = Form({
+                minWidth: 700,
+                maxWidth: 700,
+                buttonColor: ACCENT_COLOR,
+                buttonText: "PLACE ORDER",
+                showDetailWarning: 1,
+                missingEntryText: "{{count}} missing entry",
+                missingEntriesText: "{{count}} missing entries",
+                warningText: "<b>{{name}}</b> can't be empty",
+                errorText: "<b>{{name}}</b> is not valid",
+                minimalButton: 0,
+                doubleInputAlwaysHorizontal: 0,
+                onSendClick: function(json) {
+                    sendOrder(json);
+                },
+                onEdit: function(input) {
+                    updateSummary();
+                },
+            });
+
+            // LABEL: Title
+            Label({
+                text: FORM_TITLE,
+                textColor: TEXT_COLOR,
+                fontSize: 26,
+            });
+            that.elem.style.fontFamily = "opensans-bold";
+            form.addTitle(that);
+
+            // LABEL: Description
+            if (FORM_DESCRIPTION != "") {
+                Label({
+                    text: FORM_DESCRIPTION,
+                    fontSize: 16,
+                    textColor: "#999999",
+                });
+                form.addTitle(that);
+            }
+
+            // *** PRODUCTS
+
+            addSectionTitle("1. Products");
+
+            // ITEMS: Product list with quantity steppers
+            itemsField = createField({
+                key: "items",
+                type: "items",
+                titleText: "YOUR BASKET",
+                descriptionText: "Add at least one product.",
+                isRequired: 1,
+            }, function(field) {
+
+                field.rows = {};
+                PRODUCTS.forEach(function(product) {
+                    quantities[product.id] = 0;
+                    field.rows[product.id] = createProductRow(product, field);
+                });
+
+                // [{ id, name, quantity, price, total }] (only the products with a quantity)
+                field.getInputValue = function() {
+                    return getBasket();
+                };
+
+            });
+            form.addInput(itemsField);
+
+            // INPUT: Coupon code
+            couponInput = InputB({
+                key: "coupon",
+                ...inputStyle,
+                isRequired: 0,
+                titleText: "COUPON CODE",
+                descriptionText: "Try WELCOME10, COFFEE5 or FREESHIP. (Optional)",
+                placeholder: "Have a code?",
+                warningText: "Unknown coupon code",
+                warningColor: WARNING_COLOR,
+                maxChar: 20,
+                leftPadding: 20,
+            });
+            couponInput.input.elem.style.textTransform = "uppercase";
+            couponInput.isValid = function() {
+                const code = getCouponCode();
+                if (!code) return 1;
+                const coupon = COUPONS[code];
+                if (!coupon) { couponInput.setWarningText("Unknown coupon code"); return 0; }
+                if (coupon.minSubtotal && getSubtotal() < coupon.minSubtotal) {
+                    couponInput.setWarningText("This code needs a subtotal of " + formatPrice(coupon.minSubtotal) + " or more");
+                    return 0;
+                }
+                return 1;
+            };
+            form.addInput(couponInput);
+
+            // *** DELIVERY
+
+            addSectionTitle("2. Delivery");
+
+            // RADIO BUTTON: Delivery or pick up
+            fulfillmentField = createField({
+                key: "fulfillment",
+                type: "radio",
+                titleText: "HOW DO YOU WANT TO GET IT?",
+                isRequired: 1,
+            }, function(field) {
+
+                createWrapGroup();
+
+                    RadioButton({
+                        styleName: "form",
+                        group: "fulfillment",
+                        value: "delivery",
+                        labelText: "Delivery <span style='color:" + Black(0.45) + "; font-size: 15px'>· " + formatPrice(DELIVERY_FEE) + ", free over " + formatPrice(FREE_DELIVERY_OVER) + "</span>",
+                        checked: 1,
+                        onChange: function() { field.update(); updateFulfillment(); },
+                    });
+                    RadioButton({
+                        styleName: "form",
+                        group: "fulfillment",
+                        value: "pickup",
+                        labelText: "Pick up at the shop <span style='color:" + Black(0.45) + "; font-size: 15px'>· Free</span>",
+                        onChange: function() { field.update(); updateFulfillment(); },
+                    });
+
+                endGroup();
+
+                // LABEL: Shop address (pick up)
+                field.pickupLabel = Label({
+                    text: SHOP_ADDRESS + " · " + PICKUP_HOURS,
+                    fontSize: 14,
+                    textColor: Black(0.45),
+                    visible: 0,
+                });
+
+                field.getInputValue = function() {
+                    return RadioButton.getValue("fulfillment");
+                };
+
+            });
+            form.addInput(fulfillmentField);
+
+            // INPUT: Address
+            addressInput = InputB({
+                key: "address",
+                ...inputStyle,
+                isRequired: 1,
+                titleText: "STREET ADDRESS",
+                placeholder: "Street, building, apartment",
+                maxChar: 120,
+                leftPadding: 20,
+            });
+            form.addInput(addressInput);
+
+            // INPUT: City
+            cityInput = InputB({
+                key: "city",
+                ...inputStyle,
+                isRequired: 1,
+                titleText: "CITY / DISTRICT",
+                placeholder: "Kadikoy",
+                maxChar: 40,
+                leftPadding: 20,
+            });
+
+            // INPUT: Postal code
+            postalInput = InputB({
+                key: "postalCode",
+                ...inputStyle,
+                isRequired: 1,
+                titleText: "POSTAL CODE",
+                placeholder: "34710",
+                warningText: "Postal code must be 5 digits",
+                warningColor: WARNING_COLOR,
+                maxChar: 5,
+                leftPadding: 20,
+            });
+            postalInput.isValid = function() {
+                return (/^\d{5}$/.test(postalInput.getInputValue().trim())) ? 1 : 0;
+            };
+            form.addDoubleInput(cityInput, postalInput);
+
+            // SELECT DATE: Delivery / pick up day
+            dateField = createField({
+                key: "date",
+                type: "date",
+                titleText: "DELIVERY DATE",
+                isRequired: 1,
+                warningText: "We do not deliver on this day",
+                warningColor: WARNING_COLOR,
+            }, function(field) {
+
+                field.picker = SelectDate({
+                    width: "100%",
+                    height: 40,
+                    minDate: getFirstDeliveryDate(),
+                    maxDate: addDays(new Date(), DELIVERY_DAYS),
+                    format: "D MMMM YYYY, dddd",
+                    placeholder: "Select a day",
+                    onChange: field.update,
+                    onOpen: function() { setFieldFocus(field, 1); },
+                    onClose: function() { setFieldFocus(field, 0); },
+                    style: {
+                        // Looks like the text of the other inputs:
+                        field: { color: "transparent", border: 0, round: 0, padding: [0, 0] },
+                        fieldHover: { borderColor: "transparent" },
+                        fieldFocus: { borderColor: "transparent" },
+                        fieldText: { fontSize: 20, textColor: TEXT_COLOR },
+                        placeholder: { textColor: Black(0.45) },
+                        icon: { color: Black(0.45) },
+                        today: { borderColor: ACCENT_COLOR },
+                        selectedDay: { color: ACCENT_COLOR },
+                        footerButton: { textColor: ACCENT_COLOR },
+                    },
+                });
+
+                // LABEL: Info
+                field.infoLabel = Label({
+                    text: "",
+                    fontSize: 14,
+                    textColor: Black(0.45),
+                });
+
+                field.getInputValue = function() {
+                    return field.picker.value; // "YYYY-MM-DD"
+                };
+
+                // A closed day is not valid.
+                field.isValid = function() {
+                    return (field.picker.date && !isClosedDay(field.picker.date)) ? 1 : 0;
+                };
+
+            });
+            form.addInput(dateField);
+
+            // RADIO BUTTON: Time window
+            timeField = createField({
+                key: "timeWindow",
+                type: "radio",
+                titleText: "TIME WINDOW",
+                isRequired: 1,
+            }, function(field) {
+
+                createWrapGroup();
+
+                    TIME_WINDOWS.forEach(function(text) {
+                        RadioButton({
+                            styleName: "form",
+                            group: "timeWindow",
+                            value: text,
+                            labelText: text,
+                            onChange: field.update,
+                        });
+                    });
+
+                endGroup();
+
+                field.getInputValue = function() {
+                    return RadioButton.getValue("timeWindow");
+                };
+
+            });
+            form.addInput(timeField);
+
+            // *** CONTACT
+
+            addSectionTitle("3. Your Details");
+
+            // INPUT: First Name
+            firstNameInput = InputB({
+                key: "firstName",
+                ...inputStyle,
+                isRequired: 1,
+                titleText: "FIRST NAME",
+                placeholder: "Jack",
+                leftPadding: 20,
+            });
+
+            // INPUT: Last Name
+            lastNameInput = InputB({
+                key: "lastName",
+                ...inputStyle,
+                isRequired: 1,
+                titleText: "LAST NAME",
+                placeholder: "Brown",
+                leftPadding: 20,
+            });
+            form.addDoubleInput(firstNameInput, lastNameInput);
+
+            // INPUT: Email
+            emailInput = EmailInputB({
+                key: "email",
+                ...inputStyle,
+                isRequired: 1,
+                titleText: "YOUR EMAIL",
+                placeholder: "example@site.com",
+                warningText: "Invalid email format",
+                warningColor: WARNING_COLOR,
+                maxChar: 50,
+            });
+
+            // INPUT: Phone
+            phoneInput = PhoneInputB({
+                key: "phone",
+                ...inputStyle,
+                isRequired: 1,
+                titleText: "PHONE NUMBER",
+                placeholder: "(auto)",
+                warningText: "Invalid phone number format",
+                warningColor: WARNING_COLOR,
+                countryCode: "+90",
+                phoneMask: " (___) ___-____",
+                unitText: "TR",
+            });
+            form.addDoubleInput(emailInput, phoneInput);
+
+            // *** PAYMENT AND EXTRAS
+
+            addSectionTitle("4. Payment & Extras");
+
+            // RADIO BUTTON: Payment method
+            paymentField = createField({
+                key: "payment",
+                type: "radio",
+                titleText: "PAYMENT METHOD",
+                isRequired: 1,
+            }, function(field) {
+
+                PAYMENT_METHODS.forEach(function(method) {
+                    RadioButton({
+                        styleName: "form",
+                        group: "payment",
+                        value: method.id,
+                        labelText: method.name + " <span style='color:" + Black(0.45) + "; font-size: 15px'>· " + method.description + "</span>",
+                        onChange: field.update,
+                    });
+                });
+
+                field.getInputValue = function() {
+                    return RadioButton.getValue("payment");
+                };
+
+            });
+            form.addInput(paymentField);
+
+            // CHECK BOX: Gift
+            giftField = createField({
+                key: "gift",
+                type: "checkbox",
+                titleText: "GIFT",
+                isRequired: 0,
+            }, function(field) {
+
+                field.checkBox = CheckBox({
+                    styleName: "form",
+                    labelText: "This is a gift <span style='color:" + Black(0.45) + "; font-size: 15px'>· gift wrap, no prices on the receipt</span>",
+                    onChange: function() { field.update(); updateGift(); },
+                });
+
+                field.getInputValue = function() {
+                    return (field.checkBox.checked == 1) ? "yes" : "";
+                };
+
+            });
+            form.addInput(giftField);
+
+            // TEXTAREA: Gift message (shown when "gift" is checked)
+            giftMessageTextarea = TextareaB({
+                key: "giftMessage",
+                ...inputStyle,
+                isRequired: 0,
+                titleText: "GIFT MESSAGE",
+                placeholder: "We print this on the card. (Optional)",
+                minCharCount: 0,
+                showCount: 1,
+                lengthText: "length: ",
+                maxChar: 200,
+                height: 110,
+                rightPadding: 5,
+                unitStyle: {
+                    padding: [12, 4],
+                    color: "#373836EE",
+                    textColor: "white",
+                },
+            });
+            form.addInput(giftMessageTextarea);
+
+            // TEXTAREA: Order notes
+            notesTextarea = TextareaB({
+                key: "notes",
+                ...inputStyle,
+                isRequired: 0,
+                titleText: "ORDER NOTES",
+                placeholder: "Grind size, door code, allergies... (Optional)",
+                minCharCount: 0,
+                showCount: 1,
+                lengthText: "length: ",
+                maxChar: 400,
+                height: 120,
+                rightPadding: 5,
+                unitStyle: {
+                    padding: [12, 4],
+                    color: "#373836EE",
+                    textColor: "white",
+                },
+            });
+            form.addInput(notesTextarea);
+
+            // CHECK BOX: Terms
+            termsField = createField({
+                key: "terms",
+                type: "checkbox",
+                titleText: "TERMS",
+                isRequired: 1,
+            }, function(field) {
+
+                field.checkBox = CheckBox({
+                    styleName: "form",
+                    labelText: "I accept the terms of sale and the privacy policy. Fresh products can not be returned.",
+                    onChange: field.update,
+                });
+                // Long label: use the full width and wrap the text.
+                field.checkBox.width = "100%";
+                field.checkBox.contentBox.width = "100%";
+                field.checkBox.mark.elem.style.flexShrink = "0";
+                field.checkBox.label.elem.style.whiteSpace = "normal";
+                field.checkBox.label.elem.style.flex = "1 1 0";
+
+                field.getInputValue = function() {
+                    return (field.checkBox.checked == 1) ? "accepted" : "";
+                };
+
+            });
+            form.addInput(termsField);
+
+            // LABEL: Summary (above the button)
+            summaryLabel = Label({
+                text: "",
+                width: "100%",
+                fontSize: 16,
+                textColor: TEXT_COLOR,
+                color: "#EEF6F4",
+                border: 1,
+                borderColor: "#CFE5DF",
+                round: 8,
+                padding: [20, 16],
+            });
+            summaryLabel.elem.style.lineHeight = "26px";
+            form.inputGroup.add(summaryLabel);
+            summaryLabel.position = "relative";
+
+            // WAITING: Create object 1 time.
+            waiting = Waiting({
+                animated: 1,
+                waitingIcon: "assets/mail.png",
+                coverBackgroundColor: "rgba(0, 0, 0, 0.85)",
+            });
+            waiting.icon.elem.style.filter = "invert(100%)";
+
+            updateFulfillment();
+            updateGift();
+            updateSummary();
+
+        };
+
+        // *** PRODUCTS:
+
+        // GROUP: One product row: name, description, price, quantity stepper, line total
+        const createProductRow = function(product, field) {
+
+            const row = AutoLayout({
+                flow: "horizontal",
+                align: "left center",
+                width: "100%",
+                height: "auto",
+                gap: 12,
+                padding: [8, 8],
+                round: 8,
+            });
+            row.elem.style.borderBottom = "1px solid " + Black(0.06);
+            row.setMotion("background-color 0.2s");
+
+                // GROUP: Name and description
+                VGroup({ width: "auto", height: "auto", align: "left top", gap: 2 });
+                that.elem.style.flex = "1 1 0";
+                that.elem.style.minWidth = "0";
+
+                    Label({ text: product.name, fontSize: 18, textColor: TEXT_COLOR });
+                    Label({ text: product.description + " · " + formatPrice(product.price), fontSize: 14, textColor: Black(0.45) });
+
+                endGroup();
+
+                // GROUP: Stepper (- quantity +)
+                const stepper = HGroup({ width: "auto", height: 36, align: "center center", gap: 0, color: "white", border: 1, borderColor: Black(0.15), round: 18 });
+                stepper.elem.style.flexShrink = "0";
+
+                    const btnMinus = createStepButton("−");
+                    const lblQuantity = Label({ text: "0", width: 36, fontSize: 18, textColor: TEXT_COLOR, textAlign: "center" });
+                    lblQuantity.elem.style.fontFamily = "opensans-bold";
+                    const btnPlus = createStepButton("+");
+
+                endGroup();
+
+                // LABEL: Line total
+                const lblTotal = Label({ text: "", width: 72, fontSize: 16, textColor: TEXT_COLOR, textAlign: "right" });
+                lblTotal.elem.style.flexShrink = "0";
+
+            endGroup();
+
+            const render = function() {
+                const quantity = quantities[product.id];
+                lblQuantity.text = String(quantity);
+                lblTotal.text = (quantity > 0) ? "<b>" + formatPrice(quantity * product.price) + "</b>" : "<span style='color:" + Black(0.3) + "'>—</span>";
+                row.color = (quantity > 0) ? "#F3F8F6" : "transparent";
+                btnMinus.elem.style.opacity = (quantity > 0) ? "1" : "0.3";
+                btnPlus.elem.style.opacity = (quantity < MAX_QUANTITY) ? "1" : "0.3";
+            };
+
+            const change = function(delta) {
+                const next = Math.min(Math.max(quantities[product.id] + delta, 0), MAX_QUANTITY);
+                if (next == quantities[product.id]) return;
+                quantities[product.id] = next;
+                render();
+                field.update(); // Form checks the basket and updates the summary. (onEdit)
+                couponInput.showWarningIfNotValid(couponInput.isValid()); // WHY: A coupon can need a minimum subtotal.
+            };
+
+            btnMinus.on("click", function() { change(-1); });
+            btnPlus.on("click", function() { change(1); });
+
+            row.render = render;
+            render();
+            return row;
+
+        };
+
+        // LABEL: Round stepper button
+        const createStepButton = function(text) {
+            const btn = Label({
+                text: text,
+                width: 36,
+                height: 34,
+                fontSize: 20,
+                textColor: ACCENT_COLOR,
+                textAlign: "center",
+                clickable: 1,
+                round: 17,
+            });
+            btn.elem.style.lineHeight = "34px";
+            btn.elem.style.cursor = "pointer";
+            btn.elem.style.userSelect = "none";
+            btn.setMotion("background-color 0.15s");
+            btn.on("mouseenter", function() { btn.color = "#EEF6F4"; });
+            btn.on("mouseleave", function() { btn.color = "transparent"; });
+            return btn;
+        };
+
+        // [{ id, name, quantity, price, total }]
+        const getBasket = function() {
+            return PRODUCTS
+                .filter(function(product) { return quantities[product.id] > 0; })
+                .map(function(product) {
+                    const quantity = quantities[product.id];
+                    return { id: product.id, name: product.name, quantity: quantity, price: product.price, total: round2(quantity * product.price) };
+                });
+        };
+
+        // *** PRICES:
+
+        const getSubtotal = function() {
+            return round2(getBasket().reduce(function(sum, item) { return sum + item.total; }, 0));
+        };
+
+        const getCouponCode = function() {
+            return (couponInput) ? couponInput.getInputValue().trim().toUpperCase() : "";
+        };
+
+        // The valid coupon or null
+        const getCoupon = function() {
+            const code = getCouponCode();
+            const coupon = COUPONS[code];
+            if (!coupon) return null;
+            if (coupon.minSubtotal && getSubtotal() < coupon.minSubtotal) return null;
+            return { code: code, ...coupon };
+        };
+
+        const isDelivery = function() {
+            return RadioButton.getValue("fulfillment") != "pickup";
+        };
+
+        // { subtotal, discount, deliveryFee, total, coupon }
+        const getTotals = function() {
+
+            const subtotal = getSubtotal();
+            const coupon = getCoupon();
+            let discount = 0;
+            let deliveryFee = 0;
+
+            if (coupon && coupon.type == "percent") discount = round2(subtotal * coupon.value / 100);
+            if (coupon && coupon.type == "amount") discount = Math.min(coupon.value, subtotal);
+
+            if (isDelivery() && subtotal > 0) {
+                const isFree = (subtotal - discount >= FREE_DELIVERY_OVER) || (coupon && coupon.type == "freeDelivery");
+                deliveryFee = (isFree) ? 0 : DELIVERY_FEE;
+            }
+
+            return {
+                subtotal: subtotal,
+                discount: discount,
+                deliveryFee: deliveryFee,
+                total: round2(subtotal - discount + deliveryFee),
+                coupon: coupon,
+            };
+
+        };
+
+        // *** DELIVERY:
+
+        const isClosedDay = function(date) {
+            return CLOSED_WEEKDAYS.includes(date.getDay());
+        };
+
+        // Tomorrow, or the day after tomorrow after the cut-off hour. Closed days are skipped.
+        const getFirstDeliveryDate = function() {
+            const now = new Date();
+            let date = addDays(now, (now.getHours() >= CUTOFF_HOUR) ? 2 : 1);
+            while (isClosedDay(date)) date = addDays(date, 1);
+            return date;
+        };
+
+        // Delivery: address fields are shown and required. Pick up: they are hidden.
+        const updateFulfillment = function() {
+
+            const delivery = isDelivery();
+
+            [addressInput, cityInput, postalInput].forEach(function(input) {
+                input.setRequired(delivery ? 1 : 0);
+                input.showWarningIfNotValid((delivery) ? input.isValid() : 1);
+            });
+            addressInput.visible = (delivery) ? 1 : 0;
+            // WHY: City and postal code are in one group (addDoubleInput). The group is hidden with its basic.js object,
+            //      so its "display: flex" comes back when it is shown again. (style.display = "" would break the row.)
+            cityInput.elem.parentElement._basicObject.visible = (delivery) ? 1 : 0;
+
+            dateField.setTitle((delivery) ? "DELIVERY DATE" : "PICK UP DATE");
+            dateField.setWarningText((delivery) ? "We do not deliver on this day" : "We are closed on this day");
+            dateField.infoLabel.text = (delivery)
+                ? "Order until " + CUTOFF_HOUR + ":00 for next-day delivery. No delivery on Sundays."
+                : "Ready from 10:00 at the shop. Closed on Sundays.";
+            timeField.setTitle((delivery) ? "TIME WINDOW" : "PICK UP TIME");
+            fulfillmentField.pickupLabel.visible = (delivery) ? 0 : 1;
+
+            form.refresh();
+            updateSummary();
+
+        };
+
+        // Gift: the message textarea is shown only when "gift" is checked.
+        const updateGift = function() {
+            giftMessageTextarea.visible = (giftField.checkBox.checked == 1) ? 1 : 0;
+            if (giftField.checkBox.checked != 1) giftMessageTextarea.setInputValue("");
+        };
+
+        // *** SUMMARY:
+
+        const updateSummary = function() {
+
+            if (!summaryLabel) return;
+
+            const basket = getBasket();
+            const totals = getTotals();
+            const delivery = isDelivery();
+            const date = dateField.picker.date;
+            const timeWindow = RadioButton.getValue("timeWindow");
+
+            const priceLine = function(title, value, isBold) {
+                const text = (isBold) ? "<b>" + value + "</b>" : value;
+                return "<span style='display: flex; justify-content: space-between'><span style='color:" + ((isBold) ? TEXT_COLOR : Black(0.55)) + "'>" + title + "</span><span>" + text + "</span></span>";
+            };
+
+            const lines = ["<b style='color:" + ACCENT_COLOR + "'>YOUR ORDER</b>"];
+
+            if (basket.length == 0) {
+                lines.push("<span style='color:" + Black(0.4) + "'>Your basket is empty.</span>");
+            } else {
+                basket.forEach(function(item) {
+                    lines.push(priceLine(item.quantity + " × " + item.name, formatPrice(item.total)));
+                });
+                lines.push("<span style='display: block; border-top: 1px solid #CFE5DF; margin: 6px 0'></span>");
+                lines.push(priceLine("Subtotal", formatPrice(totals.subtotal)));
+                if (totals.coupon) {
+                    const text = (totals.discount > 0) ? "−" + formatPrice(totals.discount) : totals.coupon.text;
+                    lines.push(priceLine("Coupon " + totals.coupon.code + " (" + totals.coupon.text + ")", text));
+                }
+                lines.push(priceLine((delivery) ? "Delivery" : "Pick up", (totals.deliveryFee > 0) ? formatPrice(totals.deliveryFee) : "Free"));
+                lines.push(priceLine("Total", formatPrice(totals.total), 1));
+                if (delivery && totals.deliveryFee > 0 && !(totals.coupon && totals.coupon.type == "freeDelivery")) {
+                    const missing = round2(FREE_DELIVERY_OVER - (totals.subtotal - totals.discount));
+                    lines.push("<span style='color:" + ACCENT_COLOR + "; font-size: 14px'>Add " + formatPrice(missing) + " more for free delivery.</span>");
+                }
+            }
+
+            if (date || timeWindow) {
+                const when = ((date) ? date.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" }) : "") + ((timeWindow) ? ", " + timeWindow : "");
+                lines.push("<span style='color:" + Black(0.55) + "; font-size: 14px'>" + ((delivery) ? "Delivery: " : "Pick up: ") + when + "</span>");
+            }
+
+            summaryLabel.text = lines.join("<br>");
+
+        };
+
+        // *** FORM FIELDS (for CheckBox, RadioButton, SelectDate and the product list):
+
+        // Creates an InputB field without an input and puts custom content in it.
+        // The field works with Form: title, required warning, status, getInputValue().
+        const createField = function(params, buildContent) {
+
+            const field = InputB({
+                ...inputStyle,
+                rightPadding: 20,
+                ...params,
+                createInput: 0, // No text input, we add our own content.
+            });
+
+            // BOX: Content area (created by InputB)
+            field.inputBox.height = "auto";
+            field.inputBox.elem.style.marginTop = "10px";
+            field.inputBox.elem.style.marginBottom = "4px";
+            field.inputBox.clipContent = 0;
+
+            // Call after the value is changed:
+            field.update = function() {
+                field.checkIfInputIsRequiredAndEmpty();
+                field.showWarningIfNotValid(field.isValid());
+                field.onEdit(); // Form checks all fields.
+            };
+
+            const previousContainer = getDefaultContainerBox();
+            setDefaultContainerBox(field.inputBox);
+
+                // GROUP: Field content
+                field.content = VGroup({
+                    width: "100%",
+                    height: "auto",
+                    align: "left top",
+                    gap: 6,
+                    position: "relative", // WHY: inputBox height is "auto".
+                });
+                field.content.clipContent = 0;
+
+                    buildContent(field); // Must set field.getInputValue()
+
+                endGroup();
+
+            setDefaultContainerBox(previousContainer);
+
+            // Show "Required" warning if needed, like other inputs.
+            field.checkIfInputIsRequiredAndEmpty();
+
+            return field;
+
+        };
+
+        // GROUP: Wrapping row for radio buttons and check boxes
+        const createWrapGroup = function() {
+            const group = AutoLayout({
+                flow: "horizontal",
+                align: "left top",
+                flexWrap: "wrap",
+                width: "100%",
+                height: "auto",
+                gap: 4,
+            });
+            group.elem.style.columnGap = "12px"; // Choices have their own padding.
+            return group;
+        };
+
+        // Selected field look (like focused inputs)
+        const setFieldFocus = function(field, isFocused) {
+            field.background.borderColor = (isFocused) ? field.selectedBackBorderColor : field.backBorderColor;
+        };
+
+        // STYLE PACKAGE: "form" for CheckBox and RadioButton (like the modern style, with the form colors)
+        // NOTE: Light colors are 20% and 30% of ACCENT_COLOR on white. (Solid colors, so they do not stack.)
+        // WHY: Called in start(), because the component files are loaded with "defer".
+        const addChoiceStyles = function() {
+
+            const getStyle = function() {
+                return {
+                    box: { color: "transparent", round: 8 },
+                    hoverBox: { color: "#EDF0EF" },
+                    checkedBox: { color: "#E0ECE9" }, // 20%
+                    hoverCheckedBox: { color: "#D1E3DF" }, // 30%
+                    layout: { gap: 8, padding: [6, 6], align: "left center" }, // Small padding: fits in narrow columns.
+                    mark: { width: 22, height: 22, color: White(1), border: 1, borderColor: Black(0.4), round: 4 },
+                    checkedMark: { color: "#D1E3DF", borderColor: "transparent" }, // Same as hoverCheckedBox.color
+                    hoverMark: { borderColor: ACCENT_COLOR },
+                    label: { fontSize: 18, textColor: TEXT_COLOR }, // Input texts are 20
+                };
+            };
+
+            CheckBox.styles.form = getStyle();
+            CheckBox.styles.form.tick = { color: ACCENT_COLOR, thickness: 2.5 };
+
+            RadioButton.styles.form = getStyle();
+            RadioButton.styles.form.mark.round = 100;
+            RadioButton.styles.form.dot = { color: ACCENT_COLOR, size: 0.5, round: 100 };
+
+        };
+
+        // LABEL: Section title
+        const addSectionTitle = function(text) {
+            const lbl = Label({
+                text: text,
+                fontSize: 14,
+                textColor: ACCENT_COLOR,
+                width: "100%",
+                padding: [0, 6],
+            });
+            lbl.elem.style.fontFamily = "opensans-bold";
+            lbl.elem.style.letterSpacing = "1px";
+            lbl.elem.style.textTransform = "uppercase";
+            lbl.elem.style.borderBottom = "1px solid " + Black(0.08);
+            form.inputGroup.add(lbl);
+            lbl.position = "relative";
+            if (form.inputGroup.elem.children.length > 1) lbl.elem.style.marginTop = "16px";
+        };
+
+        // *** HELPERS:
+
+        const round2 = function(value) {
+            return Math.round(value * 100) / 100;
+        };
+
+        const formatPrice = function(price) {
+            return CURRENCY + Number(price).toFixed(2);
+        };
+
+        const addDays = function(date, days) {
+            return new Date(date.getFullYear(), date.getMonth(), date.getDate() + days);
+        };
+
+        // Order number from the time: "ORD-260917-4821"
+        const createOrderNumber = function() {
+            const now = new Date();
+            const pad = function(n) { return String(n).padStart(2, "0"); };
+            return "ORD-" + String(now.getFullYear()).slice(2) + pad(now.getMonth() + 1) + pad(now.getDate()) + "-" + String(1000 + Math.floor(Math.random() * 9000));
+        };
+
+        // *** RECEIPT (.txt):
+
+        const downloadReceipt = function(order) {
+
+            const pad = function(text, width) { return String(text).padEnd(width); };
+            const money = function(value) { return formatPrice(value).padStart(10); };
+            const lines = [
+                SHOP_NAME.toUpperCase(),
+                SHOP_ADDRESS + " · " + SHOP_PHONE,
+                "",
+                "Order " + order.number + " · " + order.createdAt.toLocaleString("en-GB"),
+                "Customer: " + order.customer,
+                ((order.delivery) ? "Delivery: " + order.address : "Pick up at the shop") + " · " + order.when,
+                "Payment: " + order.paymentName,
+                "",
+            ];
+
+            if (order.gift) {
+                lines.push("GIFT ORDER (prices are not shown)");
+                order.basket.forEach(function(item) { lines.push(pad(item.quantity + " x " + item.name, 40)); });
+            } else {
+                order.basket.forEach(function(item) { lines.push(pad(item.quantity + " x " + item.name, 40) + money(item.total)); });
+                lines.push("".padEnd(50, "-"));
+                lines.push(pad("Subtotal", 40) + money(order.totals.subtotal));
+                if (order.totals.discount > 0) lines.push(pad("Coupon " + order.totals.coupon.code, 40) + ("-" + formatPrice(order.totals.discount)).padStart(10));
+                lines.push(pad((order.delivery) ? "Delivery" : "Pick up", 40) + ((order.totals.deliveryFee > 0) ? money(order.totals.deliveryFee) : "Free".padStart(10)));
+                lines.push(pad("TOTAL", 40) + money(order.totals.total));
+            }
+
+            if (order.notes) lines.push("", "Notes: " + order.notes);
+            lines.push("", "Thank you for your order!");
+
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(new Blob([lines.join("\r\n")], { type: "text/plain" }));
+            link.download = order.number + ".txt";
+            link.click();
+            URL.revokeObjectURL(link.href);
+
+        };
+
+        // *** SEND:
+
+        const sendOrder = async function(json) {
+
+            // Keep the order before the form is cleared (for the message and the receipt).
+            const delivery = isDelivery();
+            const payment = PAYMENT_METHODS.find(function(method) { return method.id == RadioButton.getValue("payment"); });
+            const order = {
+                number: createOrderNumber(),
+                createdAt: new Date(),
+                customer: firstNameInput.getInputValue().trim() + " " + lastNameInput.getInputValue().trim(),
+                email: emailInput.getInputValue(),
+                delivery: delivery,
+                address: (delivery) ? addressInput.getInputValue() + ", " + postalInput.getInputValue() + " " + cityInput.getInputValue() : "",
+                when: dateField.picker.date.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" }) + ", " + RadioButton.getValue("timeWindow"),
+                paymentName: (payment) ? payment.name : "",
+                gift: (giftField.checkBox.checked == 1),
+                notes: notesTextarea.getInputValue().trim(),
+                basket: getBasket(),
+                totals: getTotals(),
+            };
+
+            // The totals are also sent, so the server can compare them with its own calculation.
+            json.push({ key: "orderNumber", type: "text", titleText: "ORDER NUMBER", inputValue: order.number });
+            json.push({ key: "totals", type: "totals", titleText: "TOTALS", inputValue: { subtotal: order.totals.subtotal, discount: order.totals.discount, deliveryFee: order.totals.deliveryFee, total: order.totals.total, coupon: (order.totals.coupon) ? order.totals.coupon.code : "" } });
+
+            waiting.show();
+
+            let result = "error"; // "sent", "error"
+
+            try {
+
+                if (SERVICE_URL == "") {
+                    // DEMO MODE:
+                    console.table(json.map(function(item) {
+                        return { key: item.key, type: item.type, title: item.titleText, value: JSON.stringify(item.inputValue) };
+                    }));
+                    await new Promise(function(resolve) { setTimeout(resolve, 1200); });
+                    result = "sent";
+                } else {
+                    const response = await fetch(SERVICE_URL, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(json),
+                    });
+                    result = (response.ok) ? "sent" : "error";
+                }
+
+            } catch (error) {
+                console.error(error);
+                result = "error";
+            }
+
+            waiting.hide();
+
+            if (result == "sent") {
+
+                const nextStep = {
+                    "card-on-delivery": "Please have your card ready " + ((delivery) ? "at the door." : "at the shop."),
+                    "bank-transfer": "The bank details are in your e-mail. The order is prepared after the payment arrives.",
+                    "online": "The payment link is in your e-mail. The order is prepared after the payment.",
+                }[RadioButton.getValue("payment")] || "";
+
+                form.showMessage({
+                    iconColor: "#3C8553",
+                    iconFile: "assets/success.png",
+                    messageText: "<b>Thank you! Your order " + order.number + " is received.</b><br>" +
+                        ((delivery) ? "Delivery" : "Pick up") + ": " + order.when + " · Total: " + formatPrice(order.totals.total) + "<br>" +
+                        "<span style='color:" + Black(0.55) + "; font-size: 14px'>" + nextStep + " A confirmation is sent to " + order.email + ".</span>",
+                    buttonText: "OKAY",
+                    backgroundColor: "rgba(255,255,255,0.92)",
+                    onClose: clearForm,
+                });
+
+                addReceiptButtonToMessage(order);
+
+            } else {
+
+                form.showMessage({
+                    iconColor: "indianred",
+                    iconFile: "assets/error.png",
+                    messageText: "Your order could not be sent. Please try again or call us: " + SHOP_PHONE,
+                    buttonText: "CLOSE",
+                    backgroundColor: "rgba(255,255,255,0.92)",
+                    onClose: function() {},
+                });
+
+            }
+
+        };
+
+        // BUTTON: "Download receipt" in the success message.
+        // WHY: Form.showMessage() has one button. The last created object (that) is its button,
+        // so the new button is put before it in the same message box.
+        const addReceiptButtonToMessage = function(order) {
+
+            const btnOkay = that;
+
+            const btnReceipt = Label({
+                text: "DOWNLOAD RECEIPT",
+                padding: [12, 4],
+                round: 12,
+                color: ACCENT_COLOR,
+                textColor: "white",
+                fontSize: 14,
+                clickable: 1,
+            });
+            btnReceipt.elem.style.cursor = "pointer";
+            btnReceipt.on("click", function() {
+                downloadReceipt(order);
+            });
+
+            btnOkay.elem.parentElement.insertBefore(btnReceipt.elem, btnOkay.elem);
+            btnReceipt.position = "relative";
+
+        };
+
+        // Clean the form.
+        const clearForm = function() {
+
+            PRODUCTS.forEach(function(product) { quantities[product.id] = 0; itemsField.rows[product.id].render(); });
+
+            [couponInput, addressInput, cityInput, postalInput, firstNameInput, lastNameInput, emailInput, phoneInput, giftMessageTextarea, notesTextarea].forEach(function(input) {
+                input.setInputValue("");
+            });
+
+            RadioButton.setValue("fulfillment", "delivery", 1);
+            RadioButton.clear("timeWindow");
+            RadioButton.clear("payment");
+            dateField.picker.setDate(null, 1);
+            giftField.checkBox.setChecked(0, 1);
+            termsField.checkBox.setChecked(0, 1);
+
+            [itemsField, fulfillmentField, dateField, timeField, paymentField, giftField, termsField].forEach(function(field) {
+                field.checkIfInputIsRequiredAndEmpty();
+            });
+
+            updateFulfillment();
+            updateGift();
+            updateSummary();
+            form.refresh();
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+
+        <!-- HTML content -->
+
+    </body>
+</html>

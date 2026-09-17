@@ -24,6 +24,7 @@ const TextTabsDefaults = {
     tabList: ["Tab1", "Tab2", "Tab3"],
     invertColor: 0,
     onClick: function(self) {},
+    tabHeight: 0, // 0: The label padding decides the height. Ex: 40 -> every tab is 40px high and the text is centered. (Same height as the buttons and inputs next to it.)
     tabPadding: [2, 2],
     backgroundStyle: {
         colorBottom: "whitesmoke",
@@ -80,6 +81,15 @@ const TextTabs = function(params = {}) {
             ...box.labelStyle,
         });
         that.elem.style.cursor = "pointer";
+
+        // Fixed height: the tab is as high as the objects next to it (buttons, inputs) and the text stays centered.
+        if (num(box.tabHeight) > 0) {
+            const _tabPaddingY = (Array.isArray(box.tabPadding)) ? num(box.tabPadding[1] ?? box.tabPadding[0]) : num(box.tabPadding);
+            const _labelPaddingY = (Array.isArray(box.labelStyle.padding)) ? num(box.labelStyle.padding[1] ?? box.labelStyle.padding[0]) : num(box.labelStyle.padding);
+            that.height = num(box.tabHeight) - _tabPaddingY * 2;
+            // WHY: Label is border-box; its height holds the padding. One line of text is centered with the line height.
+            that.elem.style.lineHeight = (that.height - _labelPaddingY * 2) + "px";
+        }
 
         that.index = box.tabItemList.length;
         box.tabItemList.push(that);

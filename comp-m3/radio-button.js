@@ -10,6 +10,8 @@ UI COMPONENT TEMPLATE
 - Mark is drawn with code (no image files needed).
 - Supports: checked, enabled, value, label position (left/right),
   keyboard (Space/Enter to select, Arrow keys to move in the group).
+- Whole object background can change on hover and checked states (style.hoverBox, style.checkedBox).
+- Style packages: "classic" (default), "modern". Select with styleName. (RadioButton.styles)
 
 Started Date: September 2026
 Developer: Bugra Ozden
@@ -32,7 +34,21 @@ const RadioButtonDefaults = {
     labelText: "",
     labelPosition: "right", // "right", "left"
     onChange: function (self) { }, // Called when this radio button is selected.
-    style: {
+    styleName: "classic", // "classic", "modern" or a name added to RadioButton.styles
+    style: { // Classic style package (default)
+        box: { // Whole object background
+            color: "transparent",
+            round: 0,
+        },
+        hoverBox: { // Mouse over (whole object background)
+            color: null, // null: uses box.color
+        },
+        checkedBox: { // Checked (whole object background)
+            color: null, // null: uses box.color
+        },
+        hoverCheckedBox: { // Checked and mouse over (whole object background)
+            color: null, // null: uses checkedBox.color
+        },
         layout: {
             gap: 10,
             padding: [0, 4],
@@ -70,11 +86,19 @@ const RadioButtonDefaults = {
 
 const RadioButton = function (params = {}) {
 
+    // Merge style package: params.style > RadioButton.styles[styleName] > RadioButtonDefaults.style (classic)
+    const _styleName = params.styleName || RadioButtonDefaults.styleName;
+    const _stylePackage = RadioButton.styles[_styleName];
+    if (!_stylePackage) console.warn("RadioButton: Style package not found: " + _styleName);
+    params.style = params.style || {};
+    mergeIntoIfMissing(params.style, _stylePackage || {});
+
     // Merge params:
     mergeIntoIfMissing(params, RadioButtonDefaults);
 
     // Edit params, if needed:
-    params.color = "transparent";
+    params.color = params.style.box.color;
+    params.round = params.style.box.round;
 
     // BOX: Component container
     let box = startObject(params);
@@ -96,15 +120,24 @@ const RadioButton = function (params = {}) {
 
         const _mark = box.style.mark;
         const _checked = box.style.checkedMark;
+        const _hover = (isMouseOver && box.enabled == 1);
+
+        // Whole object background colors:
+        const _boxColor = box.style.box.color;
+        const _hoverBoxColor = box.style.hoverBox.color || _boxColor;
+        const _checkedBoxColor = box.style.checkedBox.color || _boxColor;
+        const _hoverCheckedBoxColor = box.style.hoverCheckedBox.color || _checkedBoxColor;
 
         if (box.checked == 1) {
+            box.color = (_hover) ? _hoverCheckedBoxColor : _checkedBoxColor;
             box.mark.color = _checked.color;
             box.mark.borderColor = _checked.borderColor;
             box.dot.elem.style.opacity = "1";
             box.dot.elem.style.transform = "scale(1)";
         } else {
+            box.color = (_hover) ? _hoverBoxColor : _boxColor;
             box.mark.color = _mark.color;
-            box.mark.borderColor = (isMouseOver && box.enabled == 1) ? box.style.hoverMark.borderColor : _mark.borderColor;
+            box.mark.borderColor = (_hover) ? box.style.hoverMark.borderColor : _mark.borderColor;
             box.dot.elem.style.opacity = "0";
             box.dot.elem.style.transform = "scale(0.3)";
         }
@@ -203,6 +236,7 @@ const RadioButton = function (params = {}) {
     box.elem.setAttribute("role", "radio");
     box.elem.style.outline = "none";
     box.elem.style.userSelect = "none";
+    box.setMotion("background-color 0.15s");
 
     // GROUP: mark, label
     box.contentBox = HGroup({
@@ -237,12 +271,16 @@ const RadioButton = function (params = {}) {
     // BOX: dot (inner circle)
     const _innerW = box.style.mark.width - (box.style.mark.border * 2);
     const _innerH = box.style.mark.height - (box.style.mark.border * 2);
-    const _dotW = Math.round(_innerW * box.style.dot.size);
-    const _dotH = Math.round(_innerH * box.style.dot.size);
+    // NOTE: Round the space first, then calculate the dot size from it.
+    // So the space is the same on both sides and the dot stays in the exact center.
+    const _spaceX = Math.round((_innerW - (_innerW * box.style.dot.size)) / 2);
+    const _spaceY = Math.round((_innerH - (_innerH * box.style.dot.size)) / 2);
+    const _dotW = _innerW - (_spaceX * 2);
+    const _dotH = _innerH - (_spaceY * 2);
 
     box.dot = Box({
-        left: Math.round((_innerW - _dotW) / 2),
-        top: Math.round((_innerH - _dotH) / 2),
+        left: _spaceX,
+        top: _spaceY,
         width: _dotW,
         height: _dotH,
         color: box.style.dot.color,
@@ -339,4 +377,65 @@ RadioButton.setValue = function (group = "default", value, silent = 0) {
 // Unselects all radio buttons of a group.
 RadioButton.clear = function (group = "default") {
     RadioButton.getGroup(group).forEach(function (radio) { radio._uncheck(); });
+};
+
+// *** STYLE PACKAGES:
+// USAGE: RadioButton({ styleName: "modern" })
+// USAGE: RadioButton({ styleName: "modern", style: { dot: { color: "tomato" } } }) // Change only some keys.
+// NOTE: A new package needs only the keys that differ from the default (classic) style.
+// USAGE: RadioButton.styles.myStyle = { dot: { color: "red" } };
+RadioButton.styles = {
+
+    // White circle with a border. When checked, dark border and dark dot. No background.
+    classic: RadioButtonDefaults.style,
+
+    // Light circle, thin border. When checked, the circle stays without border behind the dot, on a light background.
+    modern: {
+        box: { // Whole object background
+            color: "transparent",
+            round: 8,
+        },
+        hoverBox: { // Mouse over (whole object background)
+            color: "whitesmoke", // null: uses box.color
+        },
+        checkedBox: { // Checked (whole object background)
+            color: "#EFF5F6", // 10% of dot color on white. null: uses box.color
+        },
+        hoverCheckedBox: { // Checked and mouse over (whole object background)
+            color: "#DFECEC", // 20% of dot color on white. null: uses checkedBox.color
+        },
+        layout: {
+            gap: 12,
+            padding: [12, 10],
+            align: "left center",
+        },
+        mark: { // Unchecked circle
+            width: 22,
+            height: 22,
+            color: "whitesmoke",
+            border: 1,
+            borderColor: Black(0.7),
+            round: 100,
+        },
+        checkedMark: { // Checked circle (stays without border, behind the dot)
+            color: "#DFECEC", // Same as hoverCheckedBox.color, so the circle is not visible on mouse over.
+            borderColor: "transparent",
+        },
+        hoverMark: { // Mouse over (only border)
+            borderColor: Black(0.7),
+        },
+        dot: {
+            color: "cadetblue", // #5F9EA0
+            size: 0.5, // Ratio of the inner circle size (0 - 1)
+            round: 100,
+        },
+        label: {
+            fontSize: 16,
+            textColor: Black(0.85),
+        },
+        disabled: {
+            opacity: 0.4,
+        },
+    },
+
 };

@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>Event Registration Form</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <!-- LIBRARY FILES -->
+        <!-- <link rel="preload" href="image.png" as="image"> -->
+        <link rel="preload" href="../../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="preload" href="../../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../../basic/basic.min.css">
+        <script src="../../basic/basic.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8" defer></script>
+
+        <script src="../../comp-m2/tooltip.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m2/input-b.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m2/email-input-b.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m2/phone-input-b.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m2/textarea-b.min.js" type="text/javascript" charset="utf-8" defer></script>
+
+        <script src="../../comp-m2/waiting.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m2/form.min.js" type="text/javascript" charset="utf-8" defer></script>
+
+        <script src="../../comp-m3/check-box.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m3/radio-button.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m4/select-file.js" type="text/javascript" charset="utf-8" defer></script>
+
+        <!-- ALL COMPONENTS IN ONE FILE -->
+        <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
+
+        <!--
+
+        /* Bismillah */
+
+        - An event registration (ticket order) form. (Conference, workshop, seminar, concert...)
+        - InputB, EmailInputB, PhoneInputB, TextareaB, Form, Waiting (comp-m2)
+        - CheckBox, RadioButton (comp-m3)
+        - SelectFile (comp-m4)
+
+        - Ticket types with a quantity stepper (limits: stock, max per order).
+        - Attendee fields are shown for each extra ticket. (The buyer is the first attendee.)
+        - Student tickets need a student ID file. Company invoice needs company details.
+        - Promo codes (with rules) and a live order summary (subtotal, discount, VAT, total).
+        - Hidden questions are not required and not sent.
+
+        - CheckBox, RadioButton, SelectFile and the ticket list are placed in an InputB field (createInput: 0).
+          So they look like the other inputs and the Form checks them too. (See: createField)
+
+        -->
+
+        <script>
+
+        // This example posts the order and the student ID files to your server with FormData.
+        // SERVICE_URL is empty: Demo mode (nothing is sent, data is printed to the console).
+        // NOTE: Always calculate the prices and check the promo codes again on the server.
+
+        // *** CONSTANTS:
+        const SERVICE_URL = ""; // Ex: "https://your-site.com/api/event-registration"
+        const EVENT_NAME = "Frontend Summit 2026";
+        const EVENT_INFO = "14–15 November 2026 · Haliç Congress Center, Istanbul";
+        const FORM_DESCRIPTION = "Two days of talks and hands-on workshops about the modern web. Select your tickets and tell us who is coming.";
+
+        const ACCENT_COLOR = "#65A293";
+        const TEXT_COLOR = "#373836";
+        const WARNING_COLOR = "#E5885E";
+
+        const CURRENCY = "$";
+        const VAT_RATE = 0.20; // Prices include VAT.
+        const MAX_TICKETS_PER_ORDER = 6;
+
+        // stock: Tickets left. requiresStudentId: A student ID file is needed.
+        const TICKETS = [
+            { id: "early", name: "Early Bird", desc: "All talks, both days. Limited.", price: 49, stock: 2 },
+            { id: "standard", name: "Standard", desc: "All talks, both days.", price: 79, stock: 100 },
+            { id: "vip", name: "VIP", desc: "Front seats, speaker dinner and a gift pack.", price: 149, stock: 12 },
+            { id: "student", name: "Student", desc: "All talks. A valid student ID is needed.", price: 29, stock: 40, requiresStudentId: 1 },
+        ];
+
+        // type: "percent" or "amount". minTickets: Needed ticket count.
+        const PROMO_CODES = {
+            "WELCOME10": { type: "percent", value: 10, text: "10% off" },
+            "TEAM20": { type: "percent", value: 20, minTickets: 3, text: "20% off for 3+ tickets" },
+            "SAVE15": { type: "amount", value: 15, text: CURRENCY + "15 off" },
+        };
+
+        const WORKSHOPS = [
+            "Web Performance (Day 1, 14:00)",
+            "Accessible UI (Day 1, 16:00)",
+            "CSS Architecture (Day 2, 14:00)",
+            "Testing in Practice (Day 2, 16:00)",
+        ];
+
+        const DIETS = ["No preference", "Vegetarian", "Vegan", "Gluten-free"];
+
+        // *** VARIABLES:
+        let form, waiting, summaryLabel;
+        let ticketsField, studentIdField;
+        let firstNameInput, lastNameInput, emailInput, phoneInput;
+        let attendeeRows = []; // [{ nameInput, emailInput, group }]
+        let workshopsField, dietField, accessibilityTextarea;
+        let invoiceField, companyInput, taxNumberInput, companyGroup, addressInput;
+        let promoInput, consentField;
+
+        const quantities = {}; // ticket id -> count
+
+        // Common input params:
+        let inputStyle;
+
+        // First running function. (basic.js calls start() when the page object is ready)
+        // WHY: Not window.onload, because the library files are loaded with "defer".
+        const start = function() {
+
+            page.color = "white";
+            addChoiceStyles(); // CheckBox and RadioButton style package: "form"
+
+            TICKETS.forEach(function(ticket) { quantities[ticket.id] = 0; });
+
+            inputStyle = {
+                width: "100%",
+                backgroundColor: "#F6F6F6",
+                selectedBackgroundColor: "#F6F6F6",
+                lineColor: Black(0),
+                selectedLineColor: Black(0),
+                backBorderColor: Black(0),
+                selectedBackBorderColor: Black(0.4),
+                backBorderTopRound: 8,
+                backBorderBottomRound: 8,
+            };
+
+            // FORM:
+            form = Form({
+                minWidth: 700,
+                maxWidth: 700,
+                buttonColor: ACCENT_COLOR,
+                buttonText: "COMPLETE REGISTRATION",
+                showDetailWarning: 1,
+                missingEntryText: "{{count}} missing entry",
+                missingEntriesText: "{{count}} missing entries",
+                warningText: "<b>{{name}}</b> can't be empty",
+                errorText: "<b>{{name}}</b> is not valid",
+                minimalButton: 0,
+                doubleInputAlwaysHorizontal: 0,
+                onSendClick: function(json) {
+                    sendRegistration(json);
+                },
+                onEdit: function(input) {
+                    if (input === promoInput) checkPromoCode(); // Also updates the summary
+                    else updateSummary();
+                },
+            });
+
+            // LABEL: Title
+            Label({
+                text: EVENT_NAME,
+                textColor: TEXT_COLOR,
+                fontSize: 26,
+            });
+            that.elem.style.fontFamily = "opensans-bold";
+            form.addTitle(that);
+
+            // LABEL: Event info
+            Label({
+                text: EVENT_INFO,
+                textColor: ACCENT_COLOR,
+                fontSize: 16,
+            });
+            that.elem.style.fontFamily = "opensans-bold";
+            form.addTitle(that);
+
+            // LABEL: Description
+            Label({
+                text: FORM_DESCRIPTION,
+                fontSize: 16,
+                textColor: "#999999",
+            });
+            that.elem.style.marginTop = "8px";
+            form.addTitle(that);
+
+            // *** TICKETS
+
+            addSectionTitle("1. Tickets");
+
+            // TICKET LIST: Quantity steppers
+            ticketsField = createField({
+                key: "tickets",
+                type: "tickets",
+                titleText: "TICKETS",
+                descriptionText: "Up to " + MAX_TICKETS_PER_ORDER + " tickets in one order. Prices include VAT.",
+                isRequired: 1,
+            }, function(field) {
+
+                field.rows = {};
+
+                TICKETS.forEach(function(ticket, index) {
+                    field.rows[ticket.id] = createTicketRow(ticket, index, function() {
+                        field.update();
+                        updateTicketDependencies();
+                    });
+                });
+
+                field.getInputValue = function() {
+                    // [] when no ticket is selected (so it is empty for "required")
+                    return TICKETS
+                        .filter(function(ticket) { return quantities[ticket.id] > 0; })
+                        .map(function(ticket) { return { id: ticket.id, name: ticket.name, quantity: quantities[ticket.id], price: ticket.price }; });
+                };
+
+            });
+            form.addInput(ticketsField);
+
+            // SELECT FILE: Student ID (only with student tickets)
+            studentIdField = createField({
+                key: "studentId",
+                type: "file",
+                titleText: "STUDENT ID",
+                descriptionText: "A photo or PDF of a valid student ID. One file for each student ticket.",
+                isRequired: 0, // WHY: Required only when it is shown. (updateTicketDependencies)
+            }, function(field) {
+
+                field.fileSelector = SelectFile({
+                    width: "100%",
+                    multiple: 1,
+                    maxFiles: MAX_TICKETS_PER_ORDER,
+                    accept: "image/*,.pdf",
+                    maxSize: 5 * 1024 * 1024,
+                    zoneHeight: 110,
+                    showIcon: 0,
+                    titleText: "Drag and drop student ID files here",
+                    descText: "or click to select",
+                    onChange: function() {
+                        errorLabel.text = "";
+                        field.update();
+                    },
+                    onError: function(self, errors) {
+                        errorLabel.text = errors.map(function(e) { return SelectFile.escapeHtml(e.message); }).join("<br>");
+                    },
+                    style: fileStyle(),
+                });
+
+                const errorLabel = Label({ text: "", fontSize: 14, textColor: WARNING_COLOR });
+
+                field.getInputValue = function() {
+                    return field.fileSelector.files.map(function(info) { return info.name; });
+                };
+
+                // One file for each student ticket.
+                field.isValid = function() {
+                    return (field.fileSelector.files.length >= quantities.student) ? 1 : 0;
+                };
+
+            });
+            form.addInput(studentIdField);
+
+            // *** ATTENDEES
+
+            addSectionTitle("2. Your Details");
+
+            // INPUT: First Name
+            firstNameInput = InputB({
+                key: "firstName",
+                ...inputStyle,
+                isRequired: 1,
+                titleText: "FIRST NAME",
+                placeholder: "Jack",
+                leftPadding: 20,
+            });
+
+            // INPUT: Last Name
+            lastNameInput = InputB({
+                key: "lastName",
+                ...inputStyle,
+                isRequired: 1,
+                titleText: "LAST NAME",
+                placeholder: "Brown",
+                leftPadding: 20,
+            });
+            form.addDoubleInput(firstNameInput, lastNameInput);
+
+            // INPUT: Email
+            emailInput = EmailInputB({
+                key: "email",
+                ...inputStyle,
+                isRequired: 1,
+                titleText: "YOUR EMAIL",
+                placeholder: "example@site.com",
+                descriptionText: "Tickets are sent to this address.",
+                warningText: "Invalid email format",
+                warningColor: WARNING_COLOR,
+                maxChar: 50,
+            });
+
+            // INPUT: Phone
+            phoneInput = PhoneInputB({
+                key: "phone",
+                ...inputStyle,
+                isRequired: 1,
+                titleText: "PHONE NUMBER",
+                placeholder: "(auto)",
+                warningText: "Invalid phone number format",
+                warningColor: WARNING_COLOR,
+                countryCode: "+90",
+                phoneMask: " (___) ___-____",
+                unitText: "TR",
+            });
+            form.addDoubleInput(emailInput, phoneInput);
+            topAlignLastDoubleInput();
+
+            // INPUTS: Other attendees (the buyer is the first attendee)
+            // WHY: Form can not remove inputs. All rows are created one time; extra rows are hidden.
+            for (let i = 2; i <= MAX_TICKETS_PER_ORDER; i++) {
+
+                const nameInput = InputB({
+                    key: "attendee" + i + "Name",
+                    ...inputStyle,
+                    isRequired: 0,
+                    titleText: "ATTENDEE " + i + " – FULL NAME",
+                    placeholder: "Full name",
+                    leftPadding: 20,
+                    maxChar: 60,
+                });
+
+                const attendeeEmailInput = EmailInputB({
+                    key: "attendee" + i + "Email",
+                    ...inputStyle,
+                    isRequired: 0,
+                    titleText: "ATTENDEE " + i + " – EMAIL",
+                    placeholder: "example@site.com",
+                    warningText: "Invalid email format",
+                    warningColor: WARNING_COLOR,
+                    maxChar: 50,
+                });
+
+                form.addDoubleInput(nameInput, attendeeEmailInput);
+                attendeeRows.push({ nameInput: nameInput, emailInput: attendeeEmailInput, group: form.groupList[form.groupList.length - 1] });
+
+            }
+
+            // *** PREFERENCES
+
+            addSectionTitle("3. Preferences");
+
+            // CHECK BOX: Workshops
+            workshopsField = createField({
+                key: "workshops",
+                type: "checkbox",
+                titleText: "WORKSHOPS",
+                descriptionText: "Optional. Seats are limited; you get a place in the order of registration.",
+                isRequired: 0,
+            }, function(field) {
+
+                field.checkBoxes = [];
+
+                createWrapGroup();
+
+                    WORKSHOPS.forEach(function(name) {
+                        CheckBox({
+                            styleName: "form",
+                            labelText: name,
+                            onChange: field.update,
+                        });
+                        that.elem.style.minWidth = "290px"; // 2 columns. Long labels make it wider.
+                        field.checkBoxes.push(that);
+                    });
+
+                endGroup();
+
+                field.getInputValue = function() {
+                    return getCheckedLabels(field.checkBoxes);
+                };
+
+            });
+            form.addInput(workshopsField);
+
+            // RADIO BUTTON: Diet
+            dietField = createField({
+                key: "diet",
+                type: "radio",
+                titleText: "LUNCH",
+                isRequired: 1,
+            }, function(field) {
+
+                createWrapGroup();
+
+                    DIETS.forEach(function(name, index) {
+                        RadioButton({
+                            styleName: "form",
+                            group: "diet",
+                            value: name,
+                            labelText: name,
+                            checked: (index == 0) ? 1 : 0,
+                            onChange: field.update,
+                        });
+                    });
+
+                endGroup();
+
+                field.getInputValue = function() {
+                    return RadioButton.getValue("diet");
+                };
+
+            });
+            form.addInput(dietField);
+
+            // INPUT: Accessibility
+            accessibilityTextarea = TextareaB({
+                key: "accessibility",
+                ...inputStyle,
+                isRequired: 0,
+                titleText: "ACCESSIBILITY NEEDS",
+                placeholder: "Wheelchair access, sign language, allergies... (Optional)",
+                minCharCount: 0,
+                showCount: 0,
+                maxChar: 300,
+                height: 110,
+                rightPadding: 5,
+            });
+            form.addInput(accessibilityTextarea);
+
+            // *** PAYMENT
+
+            addSectionTitle("4. Invoice & Promo Code");
+
+            // CHECK BOX: Company invoice
+            invoiceField = createField({
+                key: "companyInvoice",
+                type: "checkbox",
+                titleText: "INVOICE",
+                isRequired: 0,
+            }, function(field) {
+
+                field.checkBox = CheckBox({
+                    styleName: "form",
+                    labelText: "I need an invoice for a company",
+                    onChange: function() {
+                        field.update();
+                        updateInvoiceFields();
+                    },
+                });
+
+                field.getInputValue = function() {
+                    return (field.checkBox.checked == 1) ? "yes" : "";
+                };
+
+            });
+            form.addInput(invoiceField);
+
+            // INPUT: Company
+            companyInput = InputB({
+                key: "companyName",
+                ...inputStyle,
+                isRequired: 0,
+                titleText: "COMPANY NAME",
+                placeholder: "Acme Ltd.",
+                leftPadding: 20,
+                maxChar: 80,
+            });
+
+            // INPUT: Tax number
+            taxNumberInput = InputB({
+                key: "taxNumber",
+                ...inputStyle,
+                isRequired: 0,
+                titleText: "TAX OFFICE / NUMBER",
+                placeholder: "Kadikoy / 1234567890",
+                leftPadding: 20,
+                maxChar: 50,
+            });
+            form.addDoubleInput(companyInput, taxNumberInput);
+            companyGroup = form.groupList[form.groupList.length - 1];
+
+            // INPUT: Billing address
+            addressInput = InputB({
+                key: "billingAddress",
+                ...inputStyle,
+                isRequired: 0,
+                titleText: "BILLING ADDRESS",
+                placeholder: "Street, number, district, city",
+                maxChar: 150,
+            });
+            form.addInput(addressInput);
+
+            // INPUT: Promo code
+            promoInput = InputB({
+                key: "promoCode",
+                ...inputStyle,
+                isRequired: 0,
+                titleText: "PROMO CODE",
+                placeholder: "Optional",
+                descriptionText: " ",
+                warningColor: WARNING_COLOR,
+                maxChar: 20,
+            });
+            // Upper case, no spaces
+            promoInput.input.inputElement.style.textTransform = "uppercase";
+            promoInput.isValid = function() {
+                return (getPromoError() == "") ? 1 : 0;
+            };
+            form.addInput(promoInput);
+
+            // CHECK BOX: Terms
+            consentField = createField({
+                key: "terms",
+                type: "checkbox",
+                titleText: "TERMS",
+                isRequired: 1,
+            }, function(field) {
+
+                field.checkBox = CheckBox({
+                    styleName: "form",
+                    labelText: "I accept the event terms. Tickets can be refunded until 30 days before the event, and names can be changed until 3 days before.",
+                    onChange: field.update,
+                });
+                // Long label: use the full width and wrap the text.
+                field.checkBox.width = "100%";
+                field.checkBox.contentBox.width = "100%";
+                field.checkBox.mark.elem.style.flexShrink = "0";
+                field.checkBox.label.elem.style.whiteSpace = "normal";
+                field.checkBox.label.elem.style.flex = "1 1 0";
+
+                field.getInputValue = function() {
+                    return (field.checkBox.checked == 1) ? "accepted" : "";
+                };
+
+            });
+            form.addInput(consentField);
+
+            // LABEL: Order summary (above the button)
+            summaryLabel = Label({
+                text: "",
+                width: "100%",
+                fontSize: 16,
+                textColor: TEXT_COLOR,
+                color: "#EEF6F4",
+                border: 1,
+                borderColor: "#CFE5DF",
+                round: 8,
+                padding: [20, 16],
+            });
+            summaryLabel.elem.style.lineHeight = "26px";
+            form.inputGroup.add(summaryLabel);
+            summaryLabel.position = "relative";
+
+            // WAITING: Create object 1 time.
+            waiting = Waiting({
+                animated: 1,
+                waitingIcon: "assets/mail.png",
+                coverBackgroundColor: "rgba(0, 0, 0, 0.85)",
+            });
+            waiting.icon.elem.style.filter = "invert(100%)";
+
+            updateTicketDependencies();
+            updateInvoiceFields();
+
+        };
+
+        // *** TICKETS:
+
+        const getTotalQuantity = function() {
+            return TICKETS.reduce(function(sum, ticket) { return sum + quantities[ticket.id]; }, 0);
+        };
+
+        // GROUP: One ticket type with a quantity stepper
+        const createTicketRow = function(ticket, index, onChange) {
+
+            const row = HGroup({ width: "100%", height: "auto", align: "left center", gap: 12, padding: [0, 10] });
+            that.elem.style.justifyContent = "space-between";
+            if (index > 0) that.elem.style.borderTop = "1px solid " + Black(0.06);
+
+                // Name, description, price
+                VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
+                that.elem.style.flex = "1 1 auto";
+                that.elem.style.minWidth = "0";
+
+                    Label({ text: ticket.name + " <span style='color:" + ACCENT_COLOR + "'>" + formatMoney(ticket.price) + "</span>", fontSize: 18, textColor: TEXT_COLOR });
+                    that.elem.style.fontFamily = "opensans-bold";
+
+                    row.lblDesc = Label({ text: ticket.desc, fontSize: 14, textColor: Black(0.5), width: "100%" });
+
+                endGroup();
+
+                // Stepper
+                HGroup({ width: "auto", height: "auto", align: "right center", gap: 0 });
+
+                    row.btnMinus = createStepperButton("−", "Remove one " + ticket.name + " ticket");
+                    row.lblCount = Label({ text: "0", width: 44, fontSize: 18, textAlign: "center", textColor: TEXT_COLOR });
+                    row.lblCount.elem.setAttribute("aria-live", "polite");
+                    row.btnPlus = createStepperButton("+", "Add one " + ticket.name + " ticket");
+
+                endGroup();
+
+            endGroup();
+
+            const change = function(step) {
+                const next = quantities[ticket.id] + step;
+                if (next < 0 || next > ticket.stock || getTotalQuantity() + step > MAX_TICKETS_PER_ORDER) return;
+                quantities[ticket.id] = next;
+                onChange();
+            };
+
+            row.btnMinus.onPress = function() { change(-1); };
+            row.btnPlus.onPress = function() { change(1); };
+
+            return row;
+
+        };
+
+        // LABEL: Round stepper button (mouse and keyboard)
+        const createStepperButton = function(text, ariaLabel) {
+
+            const btn = Label({
+                text: text,
+                width: 38,
+                height: 38,
+                fontSize: 22,
+                textAlign: "center",
+                textColor: TEXT_COLOR,
+                color: White(1),
+                border: 1,
+                borderColor: Black(0.2),
+                round: 100,
+                clickable: 1,
+            });
+            btn.elem.style.lineHeight = "34px";
+            btn.elem.style.cursor = "pointer";
+            btn.elem.style.userSelect = "none";
+            btn.elem.tabIndex = 0;
+            btn.elem.setAttribute("role", "button");
+            btn.elem.setAttribute("aria-label", ariaLabel);
+            btn.setMotion("background-color 0.15s, border-color 0.15s, opacity 0.15s");
+
+            btn.on("mouseover", function() { if (btn.isEnabled) btn.borderColor = ACCENT_COLOR; });
+            btn.on("mouseout", function() { btn.borderColor = Black(0.2); });
+            btn.on("click", function() { if (btn.isEnabled) btn.onPress(); });
+            btn.on("keydown", function(self, event) {
+                if ((event.key == "Enter" || event.key == " ") && btn.isEnabled) {
+                    event.preventDefault();
+                    btn.onPress();
+                }
+            });
+
+            btn.isEnabled = 1;
+            btn.setEnabled = function(enabled) {
+                btn.isEnabled = enabled ? 1 : 0;
+                btn.opacity = (enabled) ? 1 : 0.3;
+                btn.elem.style.cursor = (enabled) ? "pointer" : "default";
+                btn.elem.setAttribute("aria-disabled", (enabled) ? "false" : "true");
+            };
+
+            return btn;
+
+        };
+
+        // Steppers, stock texts, student ID, attendee rows and promo code depend on the ticket count.
+        const updateTicketDependencies = function() {
+
+            const total = getTotalQuantity();
+
+            TICKETS.forEach(function(ticket) {
+                const row = ticketsField.rows[ticket.id];
+                const count = quantities[ticket.id];
+                row.lblCount.text = String(count);
+                row.btnMinus.setEnabled(count > 0);
+                row.btnPlus.setEnabled(count < ticket.stock && total < MAX_TICKETS_PER_ORDER);
+                row.lblDesc.text = ticket.desc + ((ticket.stock <= 5) ? " <span style='color:" + WARNING_COLOR + "'>Only " + ticket.stock + " left.</span>" : "");
+            });
+
+            // Student ID
+            const needsStudentId = quantities.student > 0;
+            setFieldVisible(studentIdField, needsStudentId);
+            studentIdField.setWarningText("Add " + quantities.student + " student ID file" + ((quantities.student > 1) ? "s" : ""));
+            if (needsStudentId) studentIdField.showWarningIfNotValid(studentIdField.isValid());
+
+            // Attendees
+            attendeeRows.forEach(function(row, index) {
+                const isVisible = (index + 2) <= total;
+                row.group.visible = (isVisible) ? 1 : 0;
+                [row.nameInput, row.emailInput].forEach(function(input) {
+                    setFieldVisible(input, isVisible, 0);
+                });
+            });
+
+            // Promo code rules can change (min tickets).
+            checkPromoCode();
+
+        };
+
+        // The field is required only when it is visible.
+        // setOwnVisible: 0 -> Only "required" changes (the parent group is shown or hidden).
+        const setFieldVisible = function(field, isVisible, setOwnVisible = 1) {
+            if (setOwnVisible) field.visible = (isVisible) ? 1 : 0;
+            field.setRequired(isVisible);
+            // WHY: setRequired() only checks "empty". A visible field with a wrong value must show the error again.
+            if (isVisible && field.getInputValue().length) field.showWarningIfNotValid(field.isValid());
+            form.refresh();
+        };
+
+        const updateInvoiceFields = function() {
+            const needsInvoice = invoiceField.checkBox.checked == 1;
+            companyGroup.visible = (needsInvoice) ? 1 : 0;
+            setFieldVisible(companyInput, needsInvoice, 0);
+            setFieldVisible(taxNumberInput, needsInvoice, 0);
+            setFieldVisible(addressInput, needsInvoice);
+        };
+
+        // *** PROMO CODE AND PRICES:
+
+        const getPromoCode = function() {
+            return promoInput.getInputValue().trim().toUpperCase();
+        };
+
+        // "" when the code is empty or can be used.
+        const getPromoError = function() {
+            const code = getPromoCode();
+            if (!code) return "";
+            const promo = PROMO_CODES[code];
+            if (!promo) return "This promo code is not valid";
+            if (promo.minTickets && getTotalQuantity() < promo.minTickets) return code + " needs at least " + promo.minTickets + " tickets";
+            return "";
+        };
+
+        const checkPromoCode = function() {
+            const error = getPromoError();
+            const code = getPromoCode();
+            promoInput.setWarningText(error);
+            promoInput.setDescription((code && !error) ? "<span style='color:" + ACCENT_COLOR + "'>✓ " + PROMO_CODES[code].text + " is applied.</span>" : "");
+            promoInput.checkIfInputIsRequiredAndEmpty();
+            promoInput.showWarningIfNotValid(promoInput.isValid());
+            form.refresh();
+            updateSummary();
+        };
+
+        const getPrices = function() {
+
+            const subtotal = TICKETS.reduce(function(sum, ticket) { return sum + quantities[ticket.id] * ticket.price; }, 0);
+
+            let discount = 0;
+            const code = getPromoCode();
+            if (code && getPromoError() == "") {
+                const promo = PROMO_CODES[code];
+                discount = (promo.type == "percent") ? subtotal * promo.value / 100 : promo.value;
+                discount = Math.min(subtotal, Math.round(discount * 100) / 100);
+            }
+
+            const total = subtotal - discount;
+            const vat = Math.round((total - total / (1 + VAT_RATE)) * 100) / 100;
+
+            return { subtotal: subtotal, discount: discount, total: total, vat: vat, code: (discount > 0) ? code : "" };
+
+        };
+
+        const formatMoney = function(value) {
+            return CURRENCY + value.toLocaleString("en-US", { minimumFractionDigits: (value % 1) ? 2 : 0, maximumFractionDigits: 2 });
+        };
+
+        const updateSummary = function() {
+
+            if (!summaryLabel) return;
+
+            const prices = getPrices();
+            const lines = ["<b style='color:" + ACCENT_COLOR + "'>ORDER SUMMARY</b>"];
+
+            const row = function(left, right, style = "") {
+                return "<span style='display:flex; justify-content:space-between; " + style + "'><span>" + left + "</span><span>" + right + "</span></span>";
+            };
+
+            const selected = TICKETS.filter(function(ticket) { return quantities[ticket.id] > 0; });
+
+            if (selected.length == 0) {
+                lines.push("<span style='color:" + Black(0.45) + "'>No tickets selected yet.</span>");
+            } else {
+                selected.forEach(function(ticket) {
+                    lines.push(row(quantities[ticket.id] + " × " + ticket.name, formatMoney(quantities[ticket.id] * ticket.price)));
+                });
+                if (prices.discount > 0) {
+                    lines.push(row("Discount (" + prices.code + ")", "−" + formatMoney(prices.discount), "color:" + ACCENT_COLOR));
+                }
+                lines.push(row("<b>Total</b>", "<b>" + formatMoney(prices.total) + "</b>", "border-top:1px solid " + Black(0.1) + "; margin-top:6px; padding-top:6px; font-size:18px"));
+                lines.push(row("Includes VAT (" + (VAT_RATE * 100) + "%)", formatMoney(prices.vat), "color:" + Black(0.5) + "; font-size:14px"));
+            }
+
+            summaryLabel.text = lines.join("");
+
+        };
+
+        // *** FORM FIELDS (for CheckBox, RadioButton, SelectFile and the ticket list):
+
+        // Creates an InputB field without an input and puts custom content in it.
+        // The field works with Form: title, required warning, status, getInputValue().
+        const createField = function(params, buildContent) {
+
+            const field = InputB({
+                ...inputStyle,
+                rightPadding: 20,
+                ...params,
+                createInput: 0, // No text input, we add our own content.
+            });
+
+            // BOX: Content area (created by InputB)
+            field.inputBox.height = "auto";
+            field.inputBox.elem.style.marginTop = "10px";
+            field.inputBox.elem.style.marginBottom = "4px";
+            field.inputBox.clipContent = 0;
+
+            // Call after the value is changed:
+            field.update = function() {
+                field.checkIfInputIsRequiredAndEmpty();
+                if (field.getInputValue().length) field.showWarningIfNotValid(field.isValid());
+                field.onEdit(); // Form checks all fields.
+            };
+
+            const previousContainer = getDefaultContainerBox();
+            setDefaultContainerBox(field.inputBox);
+
+                // GROUP: Field content
+                field.content = VGroup({
+                    width: "100%",
+                    height: "auto",
+                    align: "left top",
+                    gap: 6,
+                    position: "relative", // WHY: inputBox height is "auto".
+                });
+                field.content.clipContent = 0;
+
+                    buildContent(field); // Must set field.getInputValue()
+
+                endGroup();
+
+            setDefaultContainerBox(previousContainer);
+
+            // Show "Required" warning if needed, like other inputs.
+            field.checkIfInputIsRequiredAndEmpty();
+
+            return field;
+
+        };
+
+        // GROUP: Wrapping row for radio buttons and check boxes
+        const createWrapGroup = function() {
+            const group = AutoLayout({
+                flow: "horizontal",
+                align: "left top",
+                flexWrap: "wrap",
+                width: "100%",
+                height: "auto",
+                gap: 4,
+            });
+            group.elem.style.columnGap = "12px"; // Choices have their own padding.
+            return group;
+        };
+
+        // In a double row, fields with different heights start at the top and have the same height.
+        const topAlignLastDoubleInput = function() {
+            const group = form.groupList[form.groupList.length - 1];
+            group.elem.style.alignItems = "stretch";
+        };
+
+        const getCheckedLabels = function(checkBoxes) {
+            return checkBoxes
+                .filter(function(chk) { return chk.checked == 1; })
+                .map(function(chk) { return chk.labelText; });
+        };
+
+        const fileStyle = function() {
+            return {
+                zone: { color: White(1), borderColor: Black(0.15), round: 8 },
+                zoneHover: { color: White(1), borderColor: Black(0.4) },
+                zoneDragOver: { color: "#EEF6F4", borderColor: ACCENT_COLOR },
+                icon: { color: Black(0.4), dragOverColor: ACCENT_COLOR },
+                title: { textColor: TEXT_COLOR },
+                item: { color: White(1), borderColor: Black(0.08) },
+                badge: { color: "#E6F1EE", textColor: ACCENT_COLOR },
+            };
+        };
+
+        // STYLE PACKAGE: "form" for CheckBox and RadioButton (like the modern style, with the form colors)
+        // NOTE: Light colors are 20% and 30% of ACCENT_COLOR on white. (Solid colors, so they do not stack.)
+        // WHY: Called in start(), because the component files are loaded with "defer".
+        const addChoiceStyles = function() {
+
+            const getStyle = function() {
+                return {
+                    box: { color: "transparent", round: 8 },
+                    hoverBox: { color: "#EDF0EF" },
+                    checkedBox: { color: "#E0ECE9" }, // 20%
+                    hoverCheckedBox: { color: "#D1E3DF" }, // 30%
+                    layout: { gap: 8, padding: [6, 6], align: "left center" }, // Small padding: fits in narrow columns.
+                    mark: { width: 22, height: 22, color: White(1), border: 1, borderColor: Black(0.4), round: 4 },
+                    checkedMark: { color: "#D1E3DF", borderColor: "transparent" }, // Same as hoverCheckedBox.color
+                    hoverMark: { borderColor: ACCENT_COLOR },
+                    label: { fontSize: 18, textColor: TEXT_COLOR }, // Input texts are 20
+                };
+            };
+
+            CheckBox.styles.form = getStyle();
+            CheckBox.styles.form.tick = { color: ACCENT_COLOR, thickness: 2.5 };
+
+            RadioButton.styles.form = getStyle();
+            RadioButton.styles.form.mark.round = 100;
+            RadioButton.styles.form.dot = { color: ACCENT_COLOR, size: 0.5, round: 100 };
+
+        };
+
+        // LABEL: Section title
+        const addSectionTitle = function(text) {
+            const lbl = Label({
+                text: text,
+                fontSize: 14,
+                textColor: ACCENT_COLOR,
+                width: "100%",
+                padding: [0, 6],
+            });
+            lbl.elem.style.fontFamily = "opensans-bold";
+            lbl.elem.style.letterSpacing = "1px";
+            lbl.elem.style.textTransform = "uppercase";
+            lbl.elem.style.borderBottom = "1px solid " + Black(0.08);
+            form.inputGroup.add(lbl);
+            lbl.position = "relative";
+            if (form.inputGroup.elem.children.length > 1) lbl.elem.style.marginTop = "16px";
+        };
+
+        // *** SEND:
+
+        const sendRegistration = async function(json) {
+
+            // WHY: Hidden questions are not sent.
+            json = json.filter(function(item) {
+                const input = form.inputList.find(function(i) { return i.key == item.key; });
+                return isShown(input);
+            });
+
+            const prices = getPrices();
+            const orderNumber = "EVT-" + new Date().getFullYear() + "-" + String(Math.floor(Math.random() * 90000) + 10000);
+            json.push({ key: "order", type: "order", titleText: "ORDER", inputValue: { number: orderNumber, ...prices } });
+
+            // Form values + student ID files in one request:
+            const formData = new FormData();
+            formData.append("registration", JSON.stringify(json));
+            if (isShown(studentIdField)) {
+                studentIdField.fileSelector.files.forEach(function(info) {
+                    formData.append("studentId", info.file, info.name);
+                });
+            }
+
+            const email = emailInput.getInputValue();
+
+            waiting.show();
+
+            let isSent = false;
+
+            try {
+
+                if (SERVICE_URL == "") {
+                    // DEMO MODE:
+                    console.table(json.map(function(item) {
+                        return { key: item.key, type: item.type, title: item.titleText, value: JSON.stringify(item.inputValue) };
+                    }));
+                    await new Promise(function(resolve) { setTimeout(resolve, 1200); });
+                    isSent = true;
+                } else {
+                    const response = await fetch(SERVICE_URL, { method: "POST", body: formData });
+                    isSent = response.ok;
+                }
+
+            } catch (error) {
+                console.error(error);
+                isSent = false;
+            }
+
+            waiting.hide();
+
+            if (isSent) {
+
+                form.showMessage({
+                    iconColor: "#3C8553",
+                    iconFile: "assets/success.png",
+                    messageText: "<b>You are registered!</b><br>Order number: <b>" + orderNumber + "</b> · Total: <b>" + formatMoney(prices.total) + "</b>" +
+                        "<br>Payment link and tickets are sent to " + SelectFile.escapeHtml(email) + ".",
+                    buttonText: "OKAY",
+                    backgroundColor: "rgba(255,255,255,0.92)",
+                    onClose: clearForm,
+                });
+
+            } else {
+
+                form.showMessage({
+                    iconColor: "indianred",
+                    iconFile: "assets/error.png",
+                    messageText: "Your registration could not be completed. Please try again.",
+                    buttonText: "CLOSE",
+                    backgroundColor: "rgba(255,255,255,0.92)",
+                    onClose: function() {},
+                });
+
+            }
+
+        };
+
+        // An input is shown if it and its parents are visible.
+        const isShown = function(input) {
+            if (!input) return true;
+            let obj = input;
+            while (obj && obj.elem) {
+                if (obj.elem.style.display == "none") return false;
+                obj = obj.containerBox;
+            }
+            return true;
+        };
+
+        // Clean the form.
+        const clearForm = function() {
+
+            TICKETS.forEach(function(ticket) { quantities[ticket.id] = 0; });
+
+            const textInputs = [firstNameInput, lastNameInput, emailInput, phoneInput, accessibilityTextarea, companyInput, taxNumberInput, addressInput, promoInput];
+            attendeeRows.forEach(function(row) { textInputs.push(row.nameInput, row.emailInput); });
+            textInputs.forEach(function(input) { input.setInputValue(""); });
+
+            studentIdField.fileSelector.clear(1);
+            workshopsField.checkBoxes.forEach(function(chk) { chk.setChecked(0, 1); });
+            RadioButton.setValue("diet", DIETS[0], 1);
+            invoiceField.checkBox.setChecked(0, 1);
+            consentField.checkBox.setChecked(0, 1);
+
+            form.inputList.forEach(function(input) { input.checkIfInputIsRequiredAndEmpty(); });
+
+            updateTicketDependencies();
+            updateInvoiceFields();
+            updateSummary();
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+
+        <!-- HTML content -->
+
+    </body>
+</html>

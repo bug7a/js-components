@@ -2,10 +2,14 @@
 
 /*
 
-Component: ProgressBar
-Version: 1.0
+Component: LineProgressBar
+Version: 1.1
 Created: November 2025
 Description: A progress bar component composed of vertical lines.
+
+NOTE (September 2026): Renamed from "ProgressBar" to "LineProgressBar".
+WHY: comp-m4/progress-bar.js is the standard "ProgressBar". Two "const ProgressBar" on the same page
+     is an error. "ProgressBar()" still works on pages that load only this file (see the end of the file).
 
 Created by AI (Antigravity Gemini)
 
@@ -13,7 +17,7 @@ Created by AI (Antigravity Gemini)
 
 "use strict";
 
-const ProgressBarDefaults = {
+const LineProgressBarDefaults = {
     width: 300,
     height: 50,
     progress: 0, // 0 to 100
@@ -23,10 +27,10 @@ const ProgressBarDefaults = {
     backgroundColor: "transparent",
 };
 
-const ProgressBar = function (params = {}) {
+const LineProgressBar = function (params = {}) {
 
     // Merge params
-    mergeIntoIfMissing(params, ProgressBarDefaults);
+    mergeIntoIfMissing(params, LineProgressBarDefaults);
 
     // BOX: Component container
     const box = startObject(params);
@@ -204,3 +208,7 @@ const ProgressBar = function (params = {}) {
 
     return endObject(box);
 };
+
+// Old name. WHY: Pages made before the rename call ProgressBar().
+// NOTE: A property of window, not a "const". If comp-m4/progress-bar.js is loaded too, its ProgressBar is used.
+if (typeof window.ProgressBar === "undefined") window.ProgressBar = LineProgressBar;

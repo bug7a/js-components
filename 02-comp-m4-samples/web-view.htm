@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Web View</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp-m4/web-view.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // *** VARIABLES:
+        let viewPage, lblPage;
+        let viewMessage, lblMessage, messageCount = 0;
+        let viewPreview;
+        let viewAuto;
+
+        // Sample pages of this repository (same origin, so postMessage and autoHeight can be shown)
+        const PAGES = ["stepper.htm", "tabs.htm", "progress-bar.htm", "tag-input.htm"];
+
+        // A small page as HTML text. It answers the messages of the parent.
+        const MESSAGE_PAGE_HTML = [
+            "<!DOCTYPE html><html><head><meta charset='UTF-8'><style>",
+            "body { margin: 0; font-family: sans-serif; padding: 20px; transition: background 0.3s, color 0.3s; }",
+            "body.dark { background: #232322; color: #eee; }",
+            "button { font-size: 14px; padding: 8px 14px; border-radius: 6px; border: 1px solid #999; background: #fff; cursor: pointer; }",
+            "</style></head><body>",
+            "<h3 style='margin: 0 0 6px'>Page inside the WebView</h3>",
+            "<p id='info' style='margin: 0 0 14px; color: #888'>Waiting for a message...</p>",
+            "<button onclick=\"window.parent.postMessage({ type: 'hello', from: 'page', time: Date.now() }, '*')\">Send a message to the parent</button>",
+            "<script>",
+            "window.addEventListener('message', function (event) {",
+            "  var data = event.data || {};",
+            "  if (data.type === 'theme') { document.body.classList.toggle('dark', data.value === 'dark'); }",
+            "  document.getElementById('info').textContent = 'Got: ' + JSON.stringify(data);",
+            "  window.parent.postMessage({ type: 'ack', of: data.type }, '*');",
+            "});",
+            "<\/script></body></html>",
+        ].join("\n");
+
+        const start = function () {
+
+            page.color = "#F4F5F2";
+
+            // BOX: Full screen scrollable container
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            startBox(0, 0, "100%", "100%", {
+                color: "transparent",
+                scrollY: 1,
+            });
+
+                // GROUP: Page layout
+                VGroup({
+                    width: "100%",
+                    height: "auto", // Grows with content, so the Box can scroll.
+                    align: "center top",
+                    gap: 30,
+                    padding: 50,
+                });
+
+                    // LABEL: Title
+                    Label({
+                        text: "Web View",
+                        fontSize: 26,
+                        fontFamily: "opensans-bold",
+                    });
+
+                    // SAMPLE 1: Load pages, toolbar
+                    startCard("1. Pages with a toolbar", "load(url), reload(), clear(). The spinner is shown until the page is loaded.");
+
+                        viewPage = WebView({
+                            width: "100%",
+                            height: 360,
+                            url: PAGES[0],
+                            toolbar: 1,
+                            loadTimeout: 15,
+                            onLoad: function (self) { lblPage.text = "Loaded: " + self.url; },
+                            onTimeout: function (self) { self.showError("The page did not load in 15 seconds."); },
+                        });
+
+                        // GROUP: Buttons
+                        HGroup({ width: "100%", height: "auto", gap: 8 });
+                        that.elem.style.flexWrap = "wrap";
+                            PAGES.forEach(function (url) {
+                                addSampleButton(url.replace(".htm", ""), function () { viewPage.load(url); });
+                            });
+                            addSampleButton("Clear", function () { viewPage.clear(); lblPage.text = "Cleared"; }, 1);
+                            addSampleButton("Error", function () { viewPage.showError("This is how an error looks. (showError)"); }, 1);
+                        endGroup();
+
+                        lblPage = addInfoLabel("Loading...");
+
+                    endCard();
+
+                    // SAMPLE 2: HTML text and messages
+                    startCard("2. HTML text (loadHtml) and messages (postMessage / onMessage)", "The page and the parent talk with window.postMessage. Only the messages of this iframe are delivered.");
+
+                        viewMessage = WebView({
+                            width: "100%",
+                            height: 180,
+                            htmlText: MESSAGE_PAGE_HTML,
+                            onMessage: function (self, data) {
+                                messageCount++;
+                                lblMessage.text = "Message " + messageCount + " from the page: " + JSON.stringify(data);
+                            },
+                        });
+
+                        // GROUP: Buttons
+                        HGroup({ width: "100%", height: "auto", gap: 8 });
+                        that.elem.style.flexWrap = "wrap";
+                            addSampleButton("Dark theme", function () { viewMessage.postMessage({ type: "theme", value: "dark" }); });
+                            addSampleButton("Light theme", function () { viewMessage.postMessage({ type: "theme", value: "light" }); });
+                            addSampleButton("Reload", function () { viewMessage.reload(); }, 1);
+                        endGroup();
+
+                        lblMessage = addInfoLabel("No message yet. Click the button inside the page.");
+
+                    endCard();
+
+                    // SAMPLE 3: Scaled preview
+                    startCard("3. Preview (scale: 0.5, interactive: 0)", "A half size preview. The page can not be clicked; the click goes to onClick.");
+
+                        HGroup({ width: "100%", height: "auto", align: "left top", gap: 16 });
+
+                            viewPreview = WebView({
+                                width: 320,
+                                height: 200,
+                                url: PAGES[1],
+                                scale: 0.5,
+                                interactive: 0,
+                                onClick: function (self) { window.open(self.url, "_blank", "noopener"); },
+                            });
+
+                            VGroup({ width: "auto", height: "auto", align: "left top", gap: 8 });
+                                addSampleButton("Scale 0.25", function () { viewPreview.setScale(0.25); }, 1);
+                                addSampleButton("Scale 0.5", function () { viewPreview.setScale(0.5); }, 1);
+                                addSampleButton("Scale 1", function () { viewPreview.setScale(1); }, 1);
+                                addSampleButton("Interactive", function (self) { viewPreview.setInteractive(!viewPreview.interactive); }, 1);
+                            endGroup();
+
+                        endGroup();
+
+                    endCard();
+
+                    // SAMPLE 4: Auto height
+                    startCard("4. Auto height (autoHeight: 1)", "The box grows with the page. (Same origin pages only)");
+
+                        viewAuto = WebView({
+                            width: "100%",
+                            height: 100,
+                            autoHeight: 1,
+                            htmlText: "<!DOCTYPE html><html><body style='margin: 0; padding: 16px; font-family: sans-serif'><p>This page is 3 lines high.</p><p>The WebView takes its height.</p><p id='last'>Click the button below to add lines.</p></body></html>",
+                        });
+
+                        addSampleButton("Add a line", function () {
+                            const doc = viewAuto.getDocument();
+                            const p = doc.createElement("p");
+                            p.textContent = "Another line " + (doc.querySelectorAll("p").length + 1);
+                            doc.body.appendChild(p);
+                        });
+
+                    endCard();
+
+                endGroup();
+
+            endBox();
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        // GROUP: A card with a title and a short description.
+        const startCard = function (title, description = "") {
+            VGroup({
+                width: 640,
+                height: "auto",
+                align: "left top",
+                gap: 16,
+                padding: 20,
+                color: "white",
+                round: 10,
+                border: 1,
+                borderColor: Black(0.1),
+            });
+            that.elem.style.alignItems = "stretch";
+            Label({
+                text: title,
+                fontSize: 14,
+                textColor: Black(0.45),
+            });
+            if (description) {
+                Label({
+                    text: description,
+                    fontSize: 13,
+                    textColor: Black(0.35),
+                });
+                that.elem.style.marginTop = "-10px";
+            }
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+        const addSampleButton = function (text, onClick, isSecondary = 0) {
+            const btn = Button({
+                text: text,
+                width: 110,
+                height: 36,
+                fontSize: 14,
+            });
+            if (isSecondary) btn.color = "lightgray";
+            btn.on("click", onClick);
+            return btn;
+        };
+
+        const addInfoLabel = function (text) {
+            return Label({
+                text: text,
+                fontSize: 14,
+                textColor: Black(0.5),
+            });
+        };
+
+    </script>
+</head>
+
+<body></body>
+
+</html>

@@ -146,6 +146,7 @@ const TextareaB = function(params = {}) {
     // Event bindings
     box.focusFunc = function () {
         box.background.color = box.selectedBackgroundColor;
+        box.background.borderColor = box.selectedBackBorderColor;
         box.line.color = box.selectedLineColor;
         box.onFocus();
     }
@@ -153,6 +154,7 @@ const TextareaB = function(params = {}) {
     
     box.blurFunc = function () {
         box.background.color = box.backgroundColor;
+        box.background.borderColor = box.backBorderColor;
         box.line.color = box.lineColor;
         box.onBlur();
     }

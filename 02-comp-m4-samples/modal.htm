@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Modal</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp-m4/modal.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // *** VARIABLES:
+        let isDark = 0;
+        let lblTitle, lblConfirm, lblPrompt, lblForm;
+        let cardList = [];
+        let fileName = "report-2026.pdf";
+
+        const start = function () {
+
+            page.color = "#F4F5F2";
+            Modal.options.theme = "light";
+
+            // BOX: Full screen scrollable container
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            startBox(0, 0, "100%", "100%", {
+                color: "transparent",
+                scrollY: 1,
+            });
+
+                // GROUP: Page layout
+                VGroup({
+                    width: "100%",
+                    height: "auto", // Grows with content, so the Box can scroll.
+                    align: "center top",
+                    gap: 20,
+                    padding: 40,
+                });
+
+                    lblTitle = Label({ text: "Modal", fontSize: 26, textColor: "#1B1B1A" });
+                    that.elem.style.fontFamily = "opensans-bold";
+
+                    // SAMPLE 1: Helpers
+                    startCard("1. Modal.confirm(), Modal.alert() (they return a Promise)");
+
+                        lblConfirm = infoLabel("Result: -");
+
+                        startButtonRow();
+
+                            smallButton("Confirm", async function () {
+                                const ok = await Modal.confirm({
+                                    title: "Publish the page?",
+                                    message: "Everybody will see \"Summer Sale\" on the website.",
+                                    confirmText: "Publish",
+                                });
+                                lblConfirm.text = "Result: <b>" + ok + "</b>";
+                            });
+
+                            smallButton("Delete (danger + busy)", async function () {
+                                const ok = await Modal.confirm({
+                                    title: "Delete this file?",
+                                    message: fileName + " will be deleted. This can not be undone.",
+                                    confirmText: "Delete",
+                                    danger: 1,
+                                    // WHY: A Promise: the button shows a spinner until the request ends.
+                                    onConfirm: function () { return wait(1500); },
+                                });
+                                lblConfirm.text = "Result: <b>" + ok + "</b>" + ((ok) ? " (deleted after the request)" : "");
+                            });
+
+                            smallButton("Alert", async function () {
+                                await Modal.alert({ title: "Upload is complete", message: "12 photos are uploaded.\nThey are in the \"Products\" folder." });
+                                lblConfirm.text = "Alert is closed.";
+                            });
+
+                        endGroup();
+
+                    endCard();
+
+                    // SAMPLE 2: Prompt
+                    startCard("2. Modal.prompt() with validation");
+
+                        lblPrompt = infoLabel("File name: <b>" + fileName + "</b>");
+
+                        startButtonRow();
+                            smallButton("Rename file", async function () {
+                                const name = await Modal.prompt({
+                                    title: "Rename file",
+                                    message: "Use letters, numbers, \"-\" and \".\" only.",
+                                    value: fileName,
+                                    confirmText: "Rename",
+                                    maxLength: 60,
+                                    validate: function (text) {
+                                        if (!text.trim()) return "File name is required.";
+                                        if (!/^[A-Za-z0-9.-]+$/.test(text)) return "The name has a character that can not be used.";
+                                        return "";
+                                    },
+                                });
+                                if (name !== null) fileName = name;
+                                lblPrompt.text = "File name: <b>" + Modal.escapeHtml(fileName) + "</b>" + ((name === null) ? " (cancelled)" : "");
+                            });
+                        endGroup();
+
+                    endCard();
+
+                    // SAMPLE 3: Custom content
+                    startCard("3. Custom content (a form), returns a Promise from Save");
+
+                        lblForm = infoLabel("Saved: -");
+
+                        startButtonRow();
+                            smallButton("Edit profile", openProfileModal);
+                            smallButton("Long content (scroll)", openTermsModal);
+                            smallButton("Nested modal", openNestedModal);
+                        endGroup();
+
+                    endCard();
+
+                    // SAMPLE 4: Sizes and theme
+                    startCard("4. Sizes and theme");
+
+                        startButtonRow();
+                            ["small", "medium", "large", "full"].forEach(function (size) {
+                                smallButton(size, function () {
+                                    Modal({
+                                        size: size,
+                                        title: "Size: " + size,
+                                        description: (size == "full") ? "Full screen (with a small margin)." : Modal.SIZES[size] + " px wide. On small screens, the full width.",
+                                        content: function () {
+                                            Label({ text: "Press Escape, click outside or use the buttons.", width: "100%", fontSize: 15, textColor: Modal.getThemeColors().text });
+                                        },
+                                        buttons: [{ text: "Close", type: "primary" }],
+                                    });
+                                });
+                            });
+                        endGroup();
+
+                        startButtonRow();
+                            smallButton("Dark / light theme", function () {
+                                isDark = (isDark) ? 0 : 1;
+                                setPageTheme();
+                            });
+                        endGroup();
+
+                    endCard();
+
+                endGroup();
+
+            endBox();
+
+        };
+
+        // *** MODALS:
+
+        const openProfileModal = function () {
+
+            const colors = Modal.getThemeColors();
+
+            Modal({
+                title: "Edit profile",
+                description: "This information is shown to your team.",
+                content: function (modal) {
+                    modal.nameInput = formInput("Full name", "Bugra Ozden", colors);
+                    modal.emailInput = formInput("E-mail", "bugra.ozden@gmail.com", colors);
+                    modal.roleInput = formInput("Job title", "Developer", colors);
+                    modal.lblError = Label({ text: "", fontSize: 13, textColor: colors.error, visible: 0 });
+                },
+                buttons: [
+                    { text: "Cancel", type: "secondary" },
+                    {
+                        text: "Save changes",
+                        type: "primary",
+                        key: "save",
+                        onClick: function (modal) {
+                            const name = modal.nameInput.text.trim();
+                            const email = modal.emailInput.text.trim();
+                            if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                                modal.lblError.text = "Enter a name and a valid e-mail.";
+                                modal.lblError.visible = 1;
+                                return false; // Stay open
+                            }
+                            // TEST: Like a server request. The buttons are busy until it ends.
+                            return wait(1200).then(function () {
+                                lblForm.text = "Saved: <b>" + Modal.escapeHtml(name) + "</b>, " + Modal.escapeHtml(email);
+                            });
+                        },
+                    },
+                ],
+            });
+
+        };
+
+        const openTermsModal = function () {
+            Modal({
+                size: "medium",
+                title: "Terms of service",
+                description: "Last update: September 2026",
+                content: function () {
+                    for (let i = 1; i <= 14; i++) {
+                        Label({ text: "<b>" + i + ". Section title</b><br>Lorem ipsum text for the section " + i + ". The body scrolls, the title and the buttons stay in place. This is useful for long forms and documents.", width: "100%", fontSize: 14, textColor: Modal.getThemeColors().text });
+                        that.elem.style.lineHeight = "1.55";
+                    }
+                },
+                buttons: [
+                    { text: "Decline", type: "secondary" },
+                    { text: "Accept", type: "primary" },
+                ],
+            });
+        };
+
+        const openNestedModal = function () {
+            Modal({
+                size: "medium",
+                title: "Project settings",
+                content: function () {
+                    Label({ text: "A modal can open another modal. Escape closes the top one first.", width: "100%", fontSize: 15, textColor: Modal.getThemeColors().text });
+                },
+                buttons: [
+                    {
+                        text: "Delete project...",
+                        type: "danger",
+                        onClick: function () {
+                            // WHY: Not an async function. A returned Promise would make this modal busy while the second one is open.
+                            Modal.confirm({ title: "Delete project?", message: "All data of the project will be deleted.", confirmText: "Delete", danger: 1 }).then(function (ok) {
+                                if (ok) Modal.alert({ title: "Deleted", message: "(Test) The project is deleted." });
+                            });
+                            return false; // The first modal stays open.
+                        },
+                    },
+                    { text: "Close", type: "secondary" },
+                ],
+            });
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        const wait = function (ms) {
+            return new Promise(function (resolve) { setTimeout(resolve, ms); });
+        };
+
+        // GROUP: Title and input (for the form sample)
+        const formInput = function (title, value, colors) {
+            VGroup({ width: "100%", height: "auto", align: "left top", gap: 6 });
+                Label({ text: title, fontSize: 13, textColor: colors.description });
+                const input = Input({ width: "100%", height: 42, minimal: 1, fontSize: 15, text: value, color: colors.input.background, textColor: colors.input.text });
+                input.elem.style.border = "1px solid " + colors.input.border;
+                input.elem.style.borderRadius = "8px";
+                input.elem.style.boxSizing = "border-box";
+                input.inputElement.style.padding = "0px 12px";
+                input.inputElement.setAttribute("aria-label", title);
+                input.inputElement.addEventListener("focus", function () { input.elem.style.borderColor = colors.input.focus; });
+                input.inputElement.addEventListener("blur", function () { input.elem.style.borderColor = colors.input.border; });
+            endGroup();
+            return input;
+        };
+
+        const setPageTheme = function () {
+            Modal.options.theme = (isDark) ? "dark" : "light";
+            page.color = (isDark) ? "#0D0D0D" : "#F4F5F2";
+            lblTitle.textColor = (isDark) ? "#FFFFFF" : "#1B1B1A";
+            cardList.forEach(function (card) {
+                card.color = (isDark) ? "#1A1A19" : "white";
+                card.borderColor = (isDark) ? White(0.1) : Black(0.1);
+                card.titleLabel.textColor = (isDark) ? White(0.5) : Black(0.45);
+            });
+        };
+
+        // GROUP: A white card with a title.
+        const startCard = function (title) {
+            const card = VGroup({
+                width: 640,
+                height: "auto",
+                align: "left top",
+                gap: 12,
+                padding: 20,
+                color: "white",
+                round: 10,
+                border: 1,
+                borderColor: Black(0.1),
+            });
+            that.elem.style.maxWidth = "100%";
+            card.titleLabel = Label({ text: Modal.escapeHtml(title), fontSize: 14, textColor: Black(0.45) });
+            cardList.push(card);
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+        const startButtonRow = function () {
+            HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
+            that.elem.style.flexWrap = "wrap";
+        };
+
+        const smallButton = function (text, onClick) {
+            const btn = Button({ text: text, width: "auto", height: 36, fontSize: 14, color: "#E8E8E8", textColor: Black(0.75), round: 6 });
+            btn.elem.style.padding = "0 14px";
+            btn.on("click", onClick);
+            return btn;
+        };
+
+        const infoLabel = function (text) {
+            return Label({ text: text, fontSize: 13, textColor: Black(0.6) });
+        };
+
+    </script>
+
+</head>
+
+<body></body>
+
+</html>

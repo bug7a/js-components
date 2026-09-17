@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Toast</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp-m4/toast.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // *** VARIABLES:
+        let isDark = 0;
+        let lblTitle, lblPosition, lblUndo, lblCopyCount;
+        let cardList = [];
+        let fileCount = 3;
+        let copyCount = 0;
+
+        const start = function () {
+
+            page.color = "#F4F5F2";
+            Toast.setOptions({ theme: "light" });
+
+            // BOX: Full screen scrollable container
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            startBox(0, 0, "100%", "100%", {
+                color: "transparent",
+                scrollY: 1,
+            });
+
+                // GROUP: Page layout
+                VGroup({
+                    width: "100%",
+                    height: "auto", // Grows with content, so the Box can scroll.
+                    align: "center top",
+                    gap: 20,
+                    padding: 40,
+                });
+
+                    lblTitle = Label({ text: "Toast", fontSize: 26, textColor: "#1B1B1A" });
+                    that.elem.style.fontFamily = "opensans-bold";
+
+                    // SAMPLE 1: Types
+                    startCard("1. Types (success, error, warning, info, loading)");
+
+                        startButtonRow();
+                            smallButton("Success", function () { Toast.success("Changes are saved."); });
+                            smallButton("Error", function () { Toast.error("Could not connect to the server. Check your internet connection.", { title: "Connection error" }); });
+                            smallButton("Warning", function () { Toast.warning("Only 2 products are left in stock."); });
+                            smallButton("Info", function () { Toast.info("A new version is available."); });
+                            smallButton("Loading (stays)", function () { Toast.show({ type: "loading", message: "Waiting for the server..." }); });
+                        endGroup();
+
+                        infoLabel("Move the mouse on a toast: the time stops. The error toast stays longer (7 s).");
+
+                    endCard();
+
+                    // SAMPLE 2: Action
+                    startCard("2. Action button (Undo)");
+
+                        lblUndo = infoLabel("Files: <b>" + fileCount + "</b>");
+
+                        startButtonRow();
+                            smallButton("Delete a file", function () {
+                                if (fileCount == 0) return Toast.warning("There are no files to delete.");
+                                fileCount--;
+                                lblUndo.text = "Files: <b>" + fileCount + "</b>";
+                                Toast.show({
+                                    type: "info",
+                                    title: "File is deleted",
+                                    message: "report-" + (fileCount + 1) + ".pdf",
+                                    duration: 6000,
+                                    action: {
+                                        text: "Undo",
+                                        onClick: function () {
+                                            fileCount++;
+                                            lblUndo.text = "Files: <b>" + fileCount + "</b> (restored)";
+                                        },
+                                    },
+                                });
+                            });
+                        endGroup();
+
+                    endCard();
+
+                    // SAMPLE 3: Promise and update
+                    startCard("3. Toast.promise() and toast.update()");
+
+                        startButtonRow();
+                            smallButton("Save (works)", function () {
+                                Toast.promise(fakeRequest(1500, true), {
+                                    loading: "Saving the settings...",
+                                    success: function (data) { return "Saved at " + data + "."; },
+                                    error: "Could not save.",
+                                });
+                            });
+                            smallButton("Save (fails)", function () {
+                                Toast.promise(fakeRequest(1500, false), {
+                                    loading: "Saving the settings...",
+                                    success: "Saved.",
+                                    error: function (error) { return "Could not save: " + error.message; },
+                                });
+                            });
+                            smallButton("Upload with progress", function () {
+                                const toast = Toast.show({ type: "loading", title: "Uploading photos.zip", message: "0%" });
+                                let percent = 0;
+                                const timer = setInterval(function () {
+                                    percent += 20;
+                                    if (percent < 100) {
+                                        toast.update({ type: "loading", title: "Uploading photos.zip", message: percent + "%" });
+                                    } else {
+                                        clearInterval(timer);
+                                        toast.update({ type: "success", title: "Upload is complete", message: "photos.zip (24 MB)" });
+                                    }
+                                }, 500);
+                            });
+                        endGroup();
+
+                    endCard();
+
+                    // SAMPLE 4: Same key
+                    startCard("4. Same key: update instead of adding again");
+
+                        lblCopyCount = infoLabel("Press many times. Only one toast is shown, and its time starts again.");
+
+                        startButtonRow();
+                            smallButton("Copy link", function () {
+                                copyCount++;
+                                Toast.show({ key: "copy", type: "success", message: "Link is copied." + ((copyCount > 1) ? " (" + copyCount + " times)" : "") });
+                            });
+                            smallButton("Without key", function () {
+                                Toast.success("Link is copied.");
+                            });
+                        endGroup();
+
+                    endCard();
+
+                    // SAMPLE 5: Options
+                    startCard("5. Position, theme and limit");
+
+                        lblPosition = infoLabel("Position: <b>" + Toast.options.position + "</b>");
+
+                        startButtonRow();
+                            Toast.POSITIONS.forEach(function (position) {
+                                smallButton(position, function () {
+                                    Toast.setOptions({ position: position });
+                                    lblPosition.text = "Position: <b>" + position + "</b>";
+                                    Toast.info("Toasts are shown here now.");
+                                });
+                            });
+                        endGroup();
+
+                        startButtonRow();
+                            smallButton("Dark / light theme", function () {
+                                isDark = (isDark) ? 0 : 1;
+                                setPageTheme();
+                                Toast.info("Theme: " + ((isDark) ? "dark" : "light"));
+                            });
+                            smallButton("Show 8 (max 5)", function () {
+                                for (let i = 1; i <= 8; i++) Toast.info("Message " + i, { duration: 8000 });
+                            });
+                            smallButton("Sticky (duration: 0)", function () {
+                                Toast.warning("This toast stays until you close it.", { duration: 0 });
+                            });
+                            smallButton("Close all", function () { Toast.closeAll(); });
+                        endGroup();
+
+                    endCard();
+
+                endGroup();
+
+            endBox();
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        // A request that ends after ms.
+        const fakeRequest = function (ms, isOk) {
+            return new Promise(function (resolve, reject) {
+                setTimeout(function () {
+                    if (isOk) resolve(new Date().toLocaleTimeString("en-GB"));
+                    else reject(new Error("The server is busy"));
+                }, ms);
+            });
+        };
+
+        const setPageTheme = function () {
+            Toast.setOptions({ theme: (isDark) ? "dark" : "light" });
+            page.color = (isDark) ? "#0D0D0D" : "#F4F5F2";
+            lblTitle.textColor = (isDark) ? "#FFFFFF" : "#1B1B1A";
+            cardList.forEach(function (card) {
+                card.color = (isDark) ? "#1A1A19" : "white";
+                card.borderColor = (isDark) ? White(0.1) : Black(0.1);
+                card.titleLabel.textColor = (isDark) ? White(0.5) : Black(0.45);
+            });
+        };
+
+        // GROUP: A white card with a title.
+        const startCard = function (title) {
+            const card = VGroup({
+                width: 640,
+                height: "auto",
+                align: "left top",
+                gap: 12,
+                padding: 20,
+                color: "white",
+                round: 10,
+                border: 1,
+                borderColor: Black(0.1),
+            });
+            that.elem.style.maxWidth = "100%";
+            card.titleLabel = Label({
+                text: Toast.escapeHtml(title),
+                fontSize: 14,
+                textColor: Black(0.45),
+            });
+            cardList.push(card);
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+        const startButtonRow = function () {
+            HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
+            that.elem.style.flexWrap = "wrap";
+        };
+
+        const smallButton = function (text, onClick) {
+            const btn = Button({ text: text, width: "auto", height: 36, fontSize: 14, color: "#E8E8E8", textColor: Black(0.75), round: 6 });
+            btn.elem.style.padding = "0 14px";
+            btn.on("click", onClick);
+            return btn;
+        };
+
+        const infoLabel = function (text) {
+            return Label({
+                text: text,
+                fontSize: 13,
+                textColor: Black(0.6),
+            });
+        };
+
+    </script>
+
+</head>
+
+<body></body>
+
+</html>

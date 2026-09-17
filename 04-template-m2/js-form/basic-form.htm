@@ -37,22 +37,18 @@
 
         <script type="module">
 
-        // This example will post data to your SUPABASE table. (https://supabase.com/)
-        // or you can write your custom service on your server.
+        // This example will post form data (JSON) to your custom service URL.
+        // Any 2xx response is accepted as success.
 
         // *** CONSTANTS:
-        const SUPABASE_PROJECT_URL = "https://xhzzgxhjyoqcsftamtyz.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhoenpneGhqeW9xY3NmdGFtdHl6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUzMTg2MDAsImV4cCI6MjA2MDg5NDYwMH0.XptujcYMNgl9XIzIQ2_CUig9JzkYOCKONfYAmMPd_wc";
+        const SERVICE_URL = "https://your-server.com/api/contact"; // Your service URL
+        const SERVICE_TIMEOUT = 15000; // ms
         const FORM_TITLE = "Get in Touch";
         const FORM_DESCRIPTION = "Feel free to share any questions, suggestions, or feedback with us. Fill out the form and we’ll get back to you as soon as possible.";
 
         // *** VARIABLES:
         let background, form, waiting;
         let firstNameInput, lastNameInput, emailInput, phoneInput, subjectInput, messageTextarea;
-
-        // Load supabase client on load:
-        import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-        const supabase = createClient(SUPABASE_PROJECT_URL, SUPABASE_ANON_KEY);
 
         // First running function.
         window.onload = function() {
@@ -78,9 +74,7 @@
                 doubleInputAlwaysHorizontal: 0,
                 onSendClick: function(json) {
 
-                    sendFormToSupabase();
-                    // NOTE: To create a table on supabase (use: contact-form-table.sql)
-                    //sendFormToCustomService(json);
+                    sendFormToService();
 
                 },
                 onEdit: function(input) {
@@ -114,7 +108,7 @@
                     fontSize: 16,
                     textColor: "#999999",
                 });
-                that.elem.style.fontStyle = "italic";
+                //that.elem.style.fontStyle = "italic";
                 form.addTitle(that);
             }
 
@@ -138,6 +132,7 @@
                 selectedBackBorderColor: Black(0.4),
                 backBorderTopRound: 8,
                 backBorderBottomRound: 8,
+                warningBallType: "icon", // "color", "icon"
             };
 
             // INPUT: First Name
@@ -245,30 +240,44 @@
 
         };
 
-        const sendFormToSupabase = async function() {
+        const sendFormToService = async function() {
 
             waiting.show();
 
-            // Load supabase client on send:
-            //const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
-            //const supabase = createClient(SUPABASE_PROJECT_URL, SUPABASE_ANON_KEY);
+            const formData = {
+                first_name: firstNameInput.getInputValue(),
+                last_name: lastNameInput.getInputValue(),
+                email: emailInput.getInputValue(),
+                phone: phoneInput.getInputValue(),
+                subject: subjectInput.getInputValue(),
+                message: messageTextarea.getInputValue(),
+            };
 
-            const { data, error } = await supabase
-            .from('contactTable')
-            .insert([
-                { 
-                    first_name: firstNameInput.getInputValue(), 
-                    last_name: lastNameInput.getInputValue(), 
-                    email: emailInput.getInputValue(), 
-                    phone: phoneInput.getInputValue(), 
-                    subject: subjectInput.getInputValue(), 
-                    message: messageTextarea.getInputValue() 
-                },
-            ]);
+            // Cancel the request if the service does not respond in time
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), SERVICE_TIMEOUT);
 
+            let error = null;
+
+            try {
+                const response = await fetch(SERVICE_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(formData),
+                    signal: controller.signal,
+                });
+                if (!response.ok) {
+                    error = new Error("HTTP error: " + response.status);
+                }
+            } catch (e) {
+                error = e; // Network error, CORS error or timeout
+            }
+
+            clearTimeout(timeoutId);
             waiting.hide();
 
             if (error) {
+                //console.error("Error: ", error.message);
 
                 form.showMessage({
                     iconColor: "indianred",
@@ -278,7 +287,6 @@
                     backgroundColor: "rgba(255,255,255,0.85)",
                     onClose: function() {},
                 });
-                //console.error("Error: ", error.message);
 
             } else {
 
@@ -304,18 +312,6 @@
                 });
 
             }
-
-        };
-
-        const sendFormToCustomService = function(json) {
-
-            form.postJSON("https://service_url", json, function (err, response) {
-                if (err) {
-                    // Error
-                } else {
-                    // Success
-                }
-            });
 
         };
 

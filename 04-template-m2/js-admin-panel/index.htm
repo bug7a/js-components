@@ -39,6 +39,22 @@
         <script src="../../comp-m4/context-menu.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../comp-m3/smart-table.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../comp-m2/login-page-v2.js" type="text/javascript" charset="utf-8"></script>
+        <!-- Home page (dashboard) components -->
+        <script src="../../comp-m2/tiny-table.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../comp-m3/button-with-icon.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../comp-m3/progress-bar.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../comp-m4/mini-graph-box.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../comp-m4/chart-box.js" type="text/javascript" charset="utf-8"></script>
+        <!-- Reports page components -->
+        <script src="../../comp-m3/check-box.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../comp-m4/select-date.js" type="text/javascript" charset="utf-8"></script>
+        <!-- Media page components -->
+        <script src="../../comp-m4/breadcrumbs.js" type="text/javascript" charset="utf-8"></script>
+        <!-- Settings page components -->
+        <script src="../../comp-m3/radio-button.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../comp-m2/slider.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../comp-m4/select-time.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../comp-m4/select-file.js" type="text/javascript" charset="utf-8"></script>
 
         <script src="common/top-bar.js" type="text/javascript" charset="utf-8"></script>
         <script src="common/main-view.js" type="text/javascript" charset="utf-8"></script>
@@ -49,10 +65,17 @@
         <script src="common/module-page.js" type="text/javascript" charset="utf-8"></script>
         <script src="pages/home.js" type="text/javascript" charset="utf-8"></script>
         <script src="pages/contents.js" type="text/javascript" charset="utf-8"></script>
+        <script src="pages/media.js" type="text/javascript" charset="utf-8"></script>
         <script src="pages/notifications.js" type="text/javascript" charset="utf-8"></script>
         <script src="pages/reports.js" type="text/javascript" charset="utf-8"></script>
+        <script src="pages/orders.js" type="text/javascript" charset="utf-8"></script>
+        <script src="pages/products.js" type="text/javascript" charset="utf-8"></script>
         <script src="pages/settings.js" type="text/javascript" charset="utf-8"></script>
         <script src="pages/users.js" type="text/javascript" charset="utf-8"></script>
+        <script src="pages/user-list.js" type="text/javascript" charset="utf-8"></script>
+        <script src="pages/customers.js" type="text/javascript" charset="utf-8"></script>
+        <script src="pages/roles.js" type="text/javascript" charset="utf-8"></script>
+        <script src="pages/activity.js" type="text/javascript" charset="utf-8"></script>
         <script src="pages/user-actions.js" type="text/javascript" charset="utf-8"></script>
         <script src="pages/edit-user.js" type="text/javascript" charset="utf-8"></script>
         
@@ -143,6 +166,14 @@
                 tab_border: 1, // 1, 0
             });
 
+            // Saved settings: panel name, panel color (pages/settings.js)
+            const settings = SettingsPage.load();
+            SettingsPage.applyToPanel(settings);
+
+            // Notifications: badge count on the bell and a test feed (pages/notifications.js)
+            // TODO: Connect to your notification service instead of the test feed.
+            NotificationsPage.startTestFeed(45000);
+
             // Right Content
             window.rightView = RightView();
 
@@ -150,13 +181,25 @@
             const menuItems = [
                 { key: HomePage.KEY, type: "button", text: "Home", icon: "assets/left-menu/home.png" },
                 { key: ReportsPage.KEY, type: "button", text: "Reports", icon: "assets/left-menu/reports.png" },
+                { key: OrdersPage.KEY, type: "button", text: "Orders", icon: "assets/top-bar/bookmark.png" },
+                { key: ProductsPage.KEY, type: "button", text: "Products", icon: "assets/left-menu/extension.png" },
+                { key: CustomersPage.KEY, type: "button", text: "Customers", icon: "assets/top-bar/user.png" },
                 { key: "divider1", type: "header", text: "CONTENTS" },
-                { key: UsersPage.KEY, type: "button", text: "Users", icon: "assets/left-menu/data-table.png" },
+                //{ key: UsersPage.KEY, type: "button", text: "Users", icon: "assets/left-menu/data-table.png" },
+                { key: UserListPage.KEY, type: "button", text: "User List", icon: "assets/top-bar/user.png" },
+                { key: RolesPage.KEY, type: "button", text: "Roles & Permissions", icon: "assets/maybe.png" },
+                { key: ActivityPage.KEY, type: "button", text: "Activity Log", icon: "assets/top-bar/filter.png" },
                 { key: ContentsPage.KEY, type: "button", text: "Contents", icon: "assets/left-menu/data-table.png" },
+                { key: MediaPage.KEY, type: "button", text: "Media Library", icon: "assets/left-menu/dashboard.png" },
                 { key: "divider1", type: "header", text: "MODULES" },
                 { key: "module1", type: "button", text: "Module 1 (Main)", icon: "assets/left-menu/brick.png" },
                 { key: "module2", type: "button", text: "Module 2 (Full)", icon: "assets/left-menu/brick.png", dontSelect: 1 },
                 { key: "module3", type: "button", text: "Module 3 (Right)", icon: "assets/left-menu/brick.png", dontSelect: 1 },
+                { key: "module6", type: "button", text: "Energy Hub (Full)", icon: "assets/left-menu/bolt.png", dontSelect: 1 },
+                { key: "module7", type: "button", text: "3D Printers (Right)", icon: "assets/left-menu/extension.png", dontSelect: 1 },
+                { key: "module8", type: "button", text: "Cold Rooms (Main)", icon: "assets/left-menu/dashboard.png" },
+                { key: "module9", type: "button", text: "Elevator Fleet (Main)", icon: "assets/left-menu/url.png" },
+                { key: "module10", type: "button", text: "Greenhouse (Main)", icon: "assets/left-menu/code.png" },
                 { key: "divider1", type: "header", text: "URL MODULES" },
                 { key: "url1", type: "button", text: "HandBook", icon: "assets/left-menu/bolt.png", dontSelect: 1 },
                 { key: "url2", type: "button", text: "Personal Expense", icon: "assets/left-menu/code.png", dontSelect: 1 },
@@ -174,6 +217,9 @@
 
             // Add item to bottom
             leftMenu.addItemToBottom({ key: SettingsPage.KEY, type: "button", text: "Settings", icon: "assets/left-menu/setting.png" });
+
+            // Pages for the search on the top bar
+            topBar.setSearchPages(menuItems.concat([{ key: SettingsPage.KEY, type: "button", text: "Settings" }]));
 
             
             // Add random items to top
@@ -194,10 +240,9 @@
             });
             waiting.icon.elem.style.filter = "invert(100%)";
 
-            // Select home
-            leftMenu.setSelectedItem(HomePage.KEY);
-            // Open home page
-            openPageByKey(HomePage.KEY);
+            // Open the start page (Settings > Appearance)
+            leftMenu.setSelectedItem(settings.startPage);
+            openPageByKey(settings.startPage);
 
         };
 
@@ -234,6 +279,18 @@
                     ContentsPage();
                     break;
 
+                case MediaPage.KEY:
+                    MediaPage();
+                    break;
+
+                case RolesPage.KEY:
+                    RolesPage();
+                    break;
+
+                case ActivityPage.KEY:
+                    ActivityPage();
+                    break;
+
                 case NotificationsPage.KEY:
                     if(shouldOpenRightView()) { // If 0 then just close the page
                         NotificationsPage();
@@ -244,12 +301,28 @@
                     ReportsPage();
                     break;
 
+                case OrdersPage.KEY:
+                    OrdersPage();
+                    break;
+
+                case ProductsPage.KEY:
+                    ProductsPage();
+                    break;
+
                 case SettingsPage.KEY:
                     SettingsPage();
                     break;
 
                 case UsersPage.KEY:
                     UsersPage();
+                    break;
+
+                case CustomersPage.KEY:
+                    CustomersPage();
+                    break;
+
+                case UserListPage.KEY:
+                    UserListPage();
                     break;
 
                 case UserActionsPage.KEY:
@@ -261,7 +334,31 @@
                 case "module1":
                     ModulePage({
                         pageKey: key,
-                        moduleURL: "module1/index.htm",
+                        moduleURL: "module1/empty-main.htm",
+                        container: mainView,
+                    });
+                    break;
+
+                case "module10":
+                    ModulePage({
+                        pageKey: key,
+                        moduleURL: "module10/greenhouse.htm",
+                        container: mainView,
+                    });
+                    break;
+
+                case "module9":
+                    ModulePage({
+                        pageKey: key,
+                        moduleURL: "module9/elevator-fleet.htm",
+                        container: mainView,
+                    });
+                    break;
+
+                case "module8":
+                    ModulePage({
+                        pageKey: key,
+                        moduleURL: "module8/cold-rooms.htm",
                         container: mainView,
                     });
                     break;
@@ -269,17 +366,36 @@
                 case "module2":
                     ModulePage({
                         pageKey: key,
-                        moduleURL: "module2/index.htm",
+                        moduleURL: "module2/empty-full.htm",
                         container: fullView,
                     });
                     //fullView.color = "white";
+                    break;
+
+                case "module6":
+                    ModulePage({
+                        pageKey: key,
+                        moduleURL: "module6/energy-hub.htm",
+                        container: fullView,
+                    });
+                    break;
+
+                case "module7":
+                    if(shouldOpenRightView()) { // If 0 then just close the page
+                        ModulePage({
+                            pageKey: key,
+                            moduleURL: "module7/3d-printers.htm",
+                            container: rightView,
+                        });
+                        rightView.setWidth(520);
+                    }
                     break;
 
                 case "module3":
                     if(shouldOpenRightView()) { // If 0 then just close the page
                         ModulePage({
                             pageKey: key,
-                            moduleURL: "module3/index.htm",
+                            moduleURL: "module3/empty-right.htm",
                             container: rightView,
                         });
                         rightView.setWidth(800);
@@ -290,7 +406,7 @@
                     if (!mainView.isShown(key)) { // If already opened dont open again.
                         ModulePage({
                             pageKey: key,
-                            moduleURL: "module4/index.htm",
+                            moduleURL: "module4/empty-main-topbar.htm",
                             container: mainView,
                         });
 
@@ -302,7 +418,7 @@
                     if(shouldOpenRightView()) { // If 0 then just close the page
                         ModulePage({
                             pageKey: key,
-                            moduleURL: "module5/index.htm",
+                            moduleURL: "module5/empty-right-topbar.htm",
                             container: rightView,
                         });
                         rightView.setWidth(600);

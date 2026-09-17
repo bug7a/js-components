@@ -72,6 +72,7 @@
         const start = function() {
 
             page.color = "white";
+            addChoiceStyles(); // CheckBox and RadioButton style package: "form"
 
             inputStyle = {
                 width: "100%",
@@ -194,13 +195,13 @@
 
                     ["Frontend Developer", "Backend Developer", "UI/UX Designer", "Product Manager", "QA Engineer", "Data Analyst"].forEach(function(name) {
                         RadioButton({
+                            styleName: "form",
                             group: "position",
                             value: name,
                             labelText: name,
                             onChange: field.update,
-                            ...radioStyle(),
                         });
-                        that.width = 280; // 2 columns
+                        that.elem.style.minWidth = "280px"; // 2 columns. Long labels make it wider.
                     });
 
                 endGroup();
@@ -224,11 +225,11 @@
 
                     ["0-1 years", "1-3 years", "3-5 years", "5+ years"].forEach(function(name) {
                         RadioButton({
+                            styleName: "form",
                             group: "experience",
                             value: name,
                             labelText: name,
                             onChange: field.update,
-                            ...radioStyle(),
                         });
                     });
 
@@ -292,9 +293,9 @@
 
                     ["Remote", "Hybrid", "On-site"].forEach(function(name) {
                         CheckBox({
+                            styleName: "form",
                             labelText: name,
                             onChange: field.update,
-                            ...checkBoxStyle(),
                         });
                         field.checkBoxes.push(that);
                     });
@@ -328,11 +329,11 @@
 
                     ["JavaScript", "TypeScript", "HTML/CSS", "Node.js", "SQL", "Python", "Figma", "Git"].forEach(function(name) {
                         CheckBox({
+                            styleName: "form",
                             labelText: name,
                             onChange: field.update,
-                            ...checkBoxStyle(),
                         });
-                        that.width = 125; // 4 columns
+                        that.elem.style.minWidth = "125px"; // 4 columns. Long labels make it wider.
                         field.checkBoxes.push(that);
                     });
 
@@ -433,9 +434,9 @@
             }, function(field) {
 
                 field.checkBox = CheckBox({
+                    styleName: "form",
                     labelText: "I agree that my personal data will be processed for recruitment purposes.",
                     onChange: field.update,
-                    ...checkBoxStyle(),
                 });
                 // Long label: use the full width and wrap the text.
                 field.checkBox.width = "100%";
@@ -443,7 +444,6 @@
                 field.checkBox.mark.elem.style.flexShrink = "0";
                 field.checkBox.label.elem.style.whiteSpace = "normal";
                 field.checkBox.label.elem.style.flex = "1 1 0";
-                field.checkBox.label.fontSize = 16;
 
                 field.getInputValue = function() {
                     return (field.checkBox.checked == 1) ? "accepted" : "";
@@ -523,7 +523,7 @@
                 height: "auto",
                 gap: 4,
             });
-            that.elem.style.columnGap = "20px";
+            that.elem.style.columnGap = "12px"; // Choices have their own padding.
         };
 
         // Selected field look (like focused inputs)
@@ -543,27 +543,32 @@
                 .map(function(chk) { return chk.labelText; });
         };
 
-        const radioStyle = function() {
-            return {
-                style: {
-                    mark: { color: White(1), borderColor: Black(0.3) },
-                    checkedMark: { color: White(1), borderColor: ACCENT_COLOR },
-                    hoverMark: { borderColor: ACCENT_COLOR },
-                    dot: { color: ACCENT_COLOR },
-                    label: { fontSize: 18, textColor: TEXT_COLOR },
-                },
-            };
-        };
+        // STYLE PACKAGE: "form" for CheckBox and RadioButton (like the modern style, with the form colors)
+        // NOTE: Light colors are 20% and 30% of ACCENT_COLOR on white. (Solid colors, so they do not stack.)
+        // WHY: Called in start(), because the component files are loaded with "defer".
+        const addChoiceStyles = function() {
 
-        const checkBoxStyle = function() {
-            return {
-                style: {
-                    mark: { color: White(1), borderColor: Black(0.3), round: 6 },
-                    checkedMark: { color: ACCENT_COLOR, borderColor: ACCENT_COLOR },
+            const getStyle = function() {
+                return {
+                    box: { color: "transparent", round: 8 },
+                    hoverBox: { color: "#EDF0EF" },
+                    checkedBox: { color: "#E0ECE9" }, // 20%
+                    hoverCheckedBox: { color: "#D1E3DF" }, // 30%
+                    layout: { gap: 8, padding: [6, 6], align: "left center" }, // Small padding: fits in narrow columns.
+                    mark: { width: 22, height: 22, color: White(1), border: 1, borderColor: Black(0.4), round: 4 },
+                    checkedMark: { color: "#D1E3DF", borderColor: "transparent" }, // Same as hoverCheckedBox.color
                     hoverMark: { borderColor: ACCENT_COLOR },
-                    label: { fontSize: 18, textColor: TEXT_COLOR },
-                },
+                    label: { fontSize: 18, textColor: TEXT_COLOR }, // Input texts are 20
+                };
             };
+
+            CheckBox.styles.form = getStyle();
+            CheckBox.styles.form.tick = { color: ACCENT_COLOR, thickness: 2.5 };
+
+            RadioButton.styles.form = getStyle();
+            RadioButton.styles.form.mark.round = 100;
+            RadioButton.styles.form.dot = { color: ACCENT_COLOR, size: 0.5, round: 100 };
+
         };
 
         // LABEL: Section title

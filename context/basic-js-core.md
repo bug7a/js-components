@@ -131,6 +131,11 @@ btn.on("click", function(self, event) {
 - `onResize(func)`
 - `onChange(func)` (for TextBox)
 
+### Removing Objects
+- `obj.remove()` removes the object, its events and `onResize` registrations, and **all basic.js objects inside it** (parents first). If a child has `destroy()` (component template), it is called first, so components clean their global events (`page.onResize`, `window` events, static lists).
+- A removed object has `_isRemoved = 1` and must not be added to the screen again. Create a new one.
+- Objects created on `page` from inside another object (for example a `ContextMenu`) are not its children. Destroy them yourself.
+
 ## Motion (Animations)
 - `setMotion(string)`: Defines the transition (e.g., "left 0.5s, opacity 1s").
 - `withMotion(func)`: Executes changes within the defined motion.

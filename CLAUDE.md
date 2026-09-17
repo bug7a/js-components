@@ -16,10 +16,10 @@ There is **no build system, package.json, bundler, linter or test runner**. Ever
 | `comp-m1/` | Generation 1 components (legacy). They use the `UICore.createDefaultValues(Comp, {...})` namespace-object pattern from `ui-core.js`. |
 | `comp-m2/` | Generation 2 components that use `startObject`/`endObject`. Includes `ui-standards.js`/`.css`, which provide design tokens (`UI.COLOR_*`, `UI.TEXT_*`, `UI.ROUND_*`), CSS variables and `UI.applyTheme(isDark)` for dark mode. |
 | `comp-m3/` | Generation 3 components (newest, 2026). They follow the same pattern as m2 and group styles in a nested `style: {...}` default. Some were AI-generated. |
-| `comp-m4/` | Generation 4 components (started September 2026), same m2/m3 pattern. `select-date.js` (replaces the unfinished `comp-m3/select-date.js`) and `select-file.js` (drop zone / file dialog; browsers never expose real disk paths). |
+| `comp-m4/` | Generation 4 components (started September 2026), same m2/m3 pattern. `select-date.js` (replaces the unfinished `comp-m3/select-date.js`), `select-file.js` (drop zone / file dialog; browsers never expose real disk paths), `progress-bar.js` (the standard `ProgressBar`; the vertical-lines bar in `comp-m3/progress-bar.js` is now `LineProgressBar`) `tag-input.js` (`TagInput`: chips with suggestions, validation and paste splitting) and `tabs.js` (`Tabs`: underline/pill variants, counts, badges, closable tabs, scrolling bar, vertical mode, optional panels via `startPanel(key)`/`endPanel()`; replaces `comp-m2/text-tabs.js` for new pages). Both have style packages `classic`, `modern`, `dark`. `spark-line-box.js` (`SparkLineBox`) is the line-graph alternative to `mini-graph-box.js` with the same API plus a trend badge, min/max dots and a hover tooltip. `stepper.js` (`Stepper`: number stepper with decimals, unit text, typed editing, hold-to-repeat, wrap and a compact layout; replaces `comp-m1/ui-stepper.js`; style packages `classic`, `modern`, `dark`). `web-view.js` (`WebView`: iframe box with `load`/`loadHtml`, loading spinner, `onError`/`onTimeout`, `postMessage`/`onMessage` filtered to its own iframe, `scale` previews, `interactive: 0` cover, `autoHeight`, optional toolbar; replaces `comp-m1/ui-web-view.js`). `page-control.js` (`PageControl`: sliding/fading page container for wizards, carousels and app screens with `addPage`/`startPage`/`endPage`, swipe, keyboard, dots, arrows, loop, autoPlay, `onBeforeChange` veto; replaces `comp-m1/ui-page-control.js`). `CheckBox`, `RadioButton` (comp-m3) and `ProgressBar` have style packages: `styleName: "classic"` (default) or `"modern"`, registry in `Comp.styles`. |
 | `01-basic-samples-m1/` | Numbered tutorial pages for the core library. |
 | `02-comp-m{1,2,3,4}-samples/` | One demo `.htm` per component. Each page loads `../basic/...` and `../comp-mX/<name>.js`. |
-| `03-page-m2/`, `04-template-m1/`, `04-template-m2/` | Full app templates: `js-admin-panel` (a modular admin panel planned to use Supabase, with iframe modules and `managers/`, `common/`, `pages/`), `js-form` (a contact form that posts to Supabase), `todo-app` and `js-data-table`. |
+| `03-page-m2/`, `04-template-m1/`, `04-template-m2/` | Full app templates: `js-admin-panel` (a modular admin panel planned to use Supabase, with `managers/`, `common/`, `pages/` and iframe modules, each `moduleN/<name>.htm`: `module1`-`module5` are empty samples (`empty-main.htm`, `empty-full.htm`, `empty-right.htm`, `empty-main-topbar.htm`, `empty-right-topbar.htm`), `module6/energy-hub.htm` (full view), `module7/3d-printers.htm` (right view), `module8/cold-rooms.htm`, `module9/elevator-fleet.htm`, `module10/greenhouse.htm` (main view); the paths are in `index.htm` (`openPageByKey` cases)), `js-form` (a contact form that posts to Supabase), `todo-app` and `js-data-table`. |
 | `05-showcase-m2/` | Links (`.webloc`) to live showcase apps. |
 | `__handbook/english`, `__handbook/turkce` | The basic.js handbook in Markdown, in English and Turkish. |
 | `context/` | Short AI-context docs: `basic-js-core.md` and `basic-js-components.md`. |
@@ -50,7 +50,7 @@ Files and folders prefixed with `delete-` (and `context-delete/`) are marked obs
 - **Common props**: `color` (background), `textColor`, `border`, `borderColor`, `round`, `opacity`, `visible`, `clickable`, `clipContent`, `scrollY`. Alignment helpers: `center()`, `centerBy(obj)`, `aline(obj, "right", space, "center")`.
 - **Events**: `obj.on("click", (self, event) => {})` returns a remover function. Resize handlers use `obj.onResize(fn)` and `page.onResize(fn)`.
 - **Motion**: `obj.setMotion("left 0.3s, opacity 0.2s")`, then change the properties.
-- **Helpers**: `Black(a)`, `White(a)` (rgba strings), `println`, `num`, `str`, `random`, `storage.save/load`, `waitAndRun(timer, fn, ms)` (debounce), `withPageZoom`, `isMobile`, `go(url)`.
+- **Helpers**: `Black(a)`, `White(a)` (rgba strings), `println`, `num`, `str`, `random`, `basic.storage.save/load` (the global `storage` alias is commented out in basic.js), `waitAndRun(timer, fn, ms)` (debounce), `withPageZoom`, `isMobile`, `go(url)`.
 
 ## Writing a component (m2/m3 pattern)
 
@@ -66,7 +66,7 @@ const MyComp = function (params = {}) {
 
     // *** PRIVATE VARIABLES / FUNCTIONS
     // *** PUBLIC VARIABLES / FUNCTIONS  → box.setX = function (v) { box.x = v; box.child.text = v; };
-    box.destroy = function () { box.remove(); box = null; };
+    box.destroy = function () { box.remove(); box = null; };   // also clean global events here (window, page.onResize, static lists)
 
     // *** OBJECT VIEW  → build children (box.label = Label({...}), groups, etc.)
     // *** OBJECT INIT CODE  → box.on("click", ...), initial setters
@@ -75,6 +75,7 @@ const MyComp = function (params = {}) {
 ```
 
 - `startObject(defaults, params)` (the two-argument form used in `input-b.js`) does the same merge. Params take precedence over defaults in both forms.
+- `remove()` (basic.js v26.09.17+) also removes every basic.js object inside the removed object, parents first, and calls their `destroy()` first when they have one. So put global cleanup (`window`/`document` listeners, `page.onResize`, static registries) in `destroy()`. A removed object must not be re-added. Objects a component creates directly on `page` (menus, popups) are not its children: destroy them in its `destroy()`.
 - Every default value becomes a public property on `box`. After creation, change values through explicit `setX()` methods, not JS getters or setters.
 - To inherit from another component, use `startExtendedObject(ParentComp, params)` … `endExtendedObject(box)` (see `comp-m2/email-input-b.js`, which extends `InputB`).
 - Name components in PascalCase with a matching `XxxDefaults` object. Put component assets in a sibling folder with the same name (`comp-m3/smart-table/*.png`).
@@ -86,4 +87,9 @@ const MyComp = function (params = {}) {
 - Template folders contain **copies** of the library and components, for example `04-template-m1/todo-app/library/basic.js`, which differs from `basic/basic.js`, and `js-admin-panel/common/ui-standards.js`. Fixing `basic/` or `comp-m*/` does not update those copies.
 - Script order matters: load `basic.css` and `basic.js` first, then `ui-standards` if you use it, then the components, then the page code. A component that extends another must load after its parent.
 - Paths are relative to the `.htm` file (samples use `../basic/`, templates in `04-template-*/<app>/` use `../../basic/`).
-- The current library version is in the `basic/basic.js` header (v26.03.26 at the time of writing).
+- The current library version is in the `basic/basic.js` header (v26.09.17 at the time of writing). Release notes: `__handbook/english/00-what-is-new.md` (and `turkce/`).
+- `basic.css` gives every basic.js box `pointer-events: none` and the page `user-select: none`, and both are inherited. A raw HTML element added into a box (for example a `<textarea>`) needs `pointer-events: auto; user-select: text` or it can not be clicked.
+- A Box with `height: "auto"` does not grow with basic.js children (they are absolutely positioned). Use a group (`VGroup`/`HGroup`), or set the child wrapper to `position = "relative"`.
+- `setDefaultContainerBox(box)` is not part of the start/end stack: after the next `endGroup()` the default container is the stacked parent again, not `box`. Set it again before each object you create directly in `box` (see `comp-m4/tag-input.js` chips), or create one wrapper group in it. Children created while a group is hidden (`visible: 0` at create time) are absolutely positioned, not flex items: hide the group after its children are created. Also, `visible: 0` in the props is undone if you set `elem.style.display` afterwards: set the display first, then `obj.visible = 0`. A flex group with `width: "auto"` inside a scrolling Box does not grow with its children (extra children are clipped): give it `width: max-content`.
+- Page and component helpers are global. Do not name them like basic.js internals (a page `const createButton` broke `Button()` with infinite recursion). Prefer `MyPage.createButton`.
+- Every default value of a component becomes a property on its box, so a default must not be named like a basic.js setter: `html` sets `innerHTML` (it wiped a component's children), `zoom` belongs to the page, `text`, `color`, `title`, `visible`... Use names like `htmlText` or `scale`.

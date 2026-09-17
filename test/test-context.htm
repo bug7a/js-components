@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        
+        <title>TEST</title>
+        
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
+
+
+        <script>
+        
+        // *** VARIABLES:
+
+        // First running function.
+        window.onload = function() {
+
+        // Kutu: Ana taşıyıcı Box
+        const infoBox = Box({
+            left: 50,
+            top: 50,
+            width: 200,
+            height: 80,
+            position: "absolute",
+            color: "white",
+            border: 1,
+            borderColor: "#eee",
+            round: 8,
+            shadow: 2,
+        });
+
+        // İçerik: Yatay grup (ikon + dikey yazı grubu)
+        const  group = HGroup({
+            gap: 12,
+            align: "center",
+            parent: infoBox,
+            width: "100%",
+            height: "100%",
+            padding: [12, 12, 12, 12],
+        });
+
+            // İkon (sol)
+            Icon({
+                icon: "user", // veya bir resim url'si: src: "img/user.png"
+                size: 40,
+                color: "#4A90E2",
+            });
+
+            // Yazı ve açıklama (sağda, alt alta)
+            VGroup({
+                gap: 4,
+                align: "left",
+                width: "auto",
+                height: "auto",
+            });
+
+                Label({
+                    text: "Kullanıcı Adı",
+                    fontSize: 16,
+                    textColor: "#222",
+                    bold: true,
+                });
+
+                Label({
+                    text: "Açıklama metni buraya gelecek.",
+                    fontSize: 13,
+                    textColor: "#666",
+                });
+
+            endGroup(); // VGroup
+
+        endGroup(); // HGroup
+
+        infoBox.add(group);
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+        
+        <!-- HTML content -->
+        
+    </body>
+</html>

@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Tabs</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp-m4/tabs.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // *** VARIABLES:
+        let tabsBasic, lblBasic;
+        let tabsPill, lblPill;
+        let tabsDocs, lblDocs, docCounter = 4;
+        let tabsPanels;
+        let tabsVertical;
+        let tabsModern, tabsDark;
+
+        // ICONS: Inline SVG (no image file needed)
+        const svgIcon = function (paths, color = "#555") {
+            return "data:image/svg+xml," + encodeURIComponent(
+                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + paths + '</svg>'
+            );
+        };
+        const ICON_HOME = svgIcon('<path d="M3 11 12 3l9 8"/><path d="M5 10v10h14V10"/>');
+        const ICON_BOX = svgIcon('<path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/>');
+        const ICON_USER = svgIcon('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>');
+        const ICON_GEAR = svgIcon('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>');
+
+        const start = function () {
+
+            page.color = "#F4F5F2";
+
+            // BOX: Full screen scrollable container
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            startBox(0, 0, "100%", "100%", {
+                color: "transparent",
+                scrollY: 1,
+            });
+
+                // GROUP: Page layout
+                VGroup({
+                    width: "100%",
+                    height: "auto", // Grows with content, so the Box can scroll.
+                    align: "center top",
+                    gap: 30,
+                    padding: 50,
+                });
+
+                    // LABEL: Title
+                    Label({
+                        text: "Tabs",
+                        fontSize: 26,
+                        fontFamily: "opensans-bold",
+                    });
+
+                    // SAMPLE 1: Default (underline) with icons, counts, a badge and a disabled tab
+                    startCard("1. Default (underline)", "Icons, counts, a badge dot and a disabled tab. Use the arrow keys when a tab has the focus.");
+
+                        tabsBasic = Tabs({
+                            width: "100%",
+                            tabs: [
+                                { key: "home", text: "Overview", iconFile: ICON_HOME },
+                                { key: "orders", text: "Orders", iconFile: ICON_BOX, count: 12 },
+                                { key: "customers", text: "Customers", iconFile: ICON_USER, badge: 1 },
+                                { key: "settings", text: "Settings", iconFile: ICON_GEAR, disabled: 1 },
+                            ],
+                            value: "orders",
+                            onChange: function (self) {
+                                lblBasic.text = "Active: " + self.value + " (was " + self.previousValue + ")";
+                                if (self.value === "customers") self.setBadge("customers", 0); // Seen
+                            },
+                        });
+
+                        // GROUP: Buttons
+                        HGroup({ width: "auto", height: "auto", gap: 8 });
+                            addSampleButton("Orders +1", function () { tabsBasic.setCount("orders", (tabsBasic.getTab("orders").count || 0) + 1); });
+                            addSampleButton("Badge", function () { tabsBasic.setBadge("customers", 1); }, 1);
+                            addSampleButton("Settings", function () { tabsBasic.setTabEnabled("settings", tabsBasic.getTab("settings").disabled); }, 1);
+                        endGroup();
+
+                        lblBasic = addInfoLabel("Active: orders");
+
+                    endCard();
+
+                    // SAMPLE 2: Pill (segmented control)
+                    startCard("2. Pill variant", "A filled shape moves behind the active tab. fullWidth: 1 shares the width.");
+
+                        tabsPill = Tabs({
+                            variant: "pill",
+                            tabs: ["Day", "Week", "Month", "Year"],
+                            value: "Week",
+                            onChange: function (self) { lblPill.text = "Range: " + self.value; },
+                        });
+
+                        Tabs({
+                            variant: "pill",
+                            width: "100%",
+                            fullWidth: 1,
+                            tabs: [{ key: "list", text: "List" }, { key: "grid", text: "Grid" }, { key: "map", text: "Map", count: 3 }],
+                        });
+
+                        lblPill = addInfoLabel("Range: Week");
+
+                    endCard();
+
+                    // SAMPLE 3: Closable tabs, add button, many tabs (scroll)
+                    startCard("3. Document tabs (closable, addButton)", "Close with (x), Delete key or the middle mouse button. Too many tabs: arrows appear and the wheel scrolls.");
+
+                        tabsDocs = Tabs({
+                            width: "100%",
+                            closable: 1,
+                            addButton: 1,
+                            tabs: ["Untitled 1", "Report 2026", "Invoice 1042", "Notes"],
+                            onAdd: function (self) {
+                                docCounter++;
+                                const tab = self.addTab({ key: "doc" + docCounter, text: "Untitled " + docCounter });
+                                self.setValue(tab.key);
+                            },
+                            onClose: function (self, tab) {
+                                if (self.getTabs().length === 1) { lblDocs.text = "The last tab can not be closed."; return false; }
+                                lblDocs.text = "Closed: " + tab.text;
+                            },
+                            onChange: function (self) { lblDocs.text = "Active: " + (self.getActiveTab() ? self.getActiveTab().text : "-"); },
+                        });
+
+                        lblDocs = addInfoLabel("Active: Untitled 1");
+
+                    endCard();
+
+                    // SAMPLE 4: Panels
+                    startCard("4. Panels (panels: 1)", "startPanel(key) ... endPanel() puts objects into the panel of a tab.");
+
+                        tabsPanels = Tabs({
+                            width: "100%",
+                            panels: 1,
+                            panelHeight: 120,
+                            tabs: ["Details", "History", "Notes"],
+                            style: { panel: { color: White(1), border: 1, borderColor: Black(0.08), round: 8, padding: [16, 16] } },
+                        });
+
+                        tabsPanels.startPanel("Details");
+                            Label({ text: "Order #1042", fontSize: 16, fontFamily: "opensans-bold" });
+                            Label({ text: "3 items · $248.00 · Paid with card", fontSize: 14, textColor: Black(0.6) });
+                        tabsPanels.endPanel();
+
+                        tabsPanels.startPanel("History");
+                            VGroup({ width: "100%", height: "auto", align: "left top", gap: 6 });
+                                ["2026-09-15 Created", "2026-09-16 Paid", "2026-09-17 Shipped"].forEach(function (line) {
+                                    Label({ text: line, fontSize: 14, textColor: Black(0.7) });
+                                });
+                            endGroup();
+                        tabsPanels.endPanel();
+
+                        tabsPanels.startPanel("Notes");
+                            Label({ text: "No notes yet.", fontSize: 14, textColor: Black(0.45) });
+                        tabsPanels.endPanel();
+
+                    endCard();
+
+                    // SAMPLE 5: Vertical
+                    startCard("5. Vertical (vertical: 1) with panels", "");
+
+                        tabsVertical = Tabs({
+                            width: "100%",
+                            vertical: 1,
+                            panels: 1,
+                            barWidth: 150,
+                            tabs: [
+                                { key: "general", text: "General", iconFile: ICON_HOME },
+                                { key: "security", text: "Security", iconFile: ICON_USER, badge: 1 },
+                                { key: "billing", text: "Billing", iconFile: ICON_BOX, count: 2 },
+                                { key: "advanced", text: "Advanced", iconFile: ICON_GEAR },
+                            ],
+                            style: { panel: { padding: [20, 4] } },
+                        });
+
+                        ["general", "security", "billing", "advanced"].forEach(function (key) {
+                            tabsVertical.startPanel(key);
+                                Label({ text: tabsVertical.getTab(key).text + " settings", fontSize: 16, fontFamily: "opensans-bold" });
+                                Label({ text: "The content of the " + key + " section.", fontSize: 14, textColor: Black(0.6) });
+                            tabsVertical.endPanel();
+                        });
+
+                    endCard();
+
+                    // SAMPLE 6: Modern style
+                    startCard("6. Modern Style", "");
+
+                        tabsModern = Tabs({
+                            styleName: "modern",
+                            width: "100%",
+                            tabs: [{ key: "all", text: "All", count: 34 }, { key: "vip", text: "VIP", count: 3 }, { key: "new", text: "New", count: 2, badge: 1 }, { key: "risk", text: "At risk", count: 2 }],
+                        });
+
+                        Tabs({
+                            styleName: "modern",
+                            variant: "pill",
+                            tabs: ["Light", "Dark", "System"],
+                            value: "System",
+                        });
+
+                    endCard();
+
+                    // SAMPLE 7: Dark style
+                    startCard("7. Dark Style", "", 1);
+
+                        tabsDark = Tabs({
+                            styleName: "dark",
+                            width: "100%",
+                            tabs: [{ key: "all", text: "All", count: 34 }, { key: "vip", text: "VIP", count: 3 }, { key: "new", text: "New", count: 2 }, { key: "lead", text: "Lead", count: 24 }],
+                        });
+
+                        Tabs({
+                            styleName: "dark",
+                            variant: "pill",
+                            tabs: ["Table", "Cards", "Timeline"],
+                        });
+
+                    endCard();
+
+                endGroup();
+
+            endBox();
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        // GROUP: A card with a title and a short description.
+        const startCard = function (title, description = "", isDark = 0) {
+            VGroup({
+                width: 600,
+                height: "auto",
+                align: "left top",
+                gap: 16,
+                padding: 20,
+                color: (isDark) ? "#1C1C1B" : "white",
+                round: 10,
+                border: 1,
+                borderColor: (isDark) ? "#1C1C1B" : Black(0.1),
+            });
+            that.elem.style.alignItems = "stretch";
+            Label({
+                text: title,
+                fontSize: 14,
+                textColor: (isDark) ? White(0.5) : Black(0.45),
+            });
+            if (description) {
+                Label({
+                    text: description,
+                    fontSize: 13,
+                    textColor: (isDark) ? White(0.4) : Black(0.35),
+                });
+                that.elem.style.marginTop = "-10px";
+            }
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+        const addSampleButton = function (text, onClick, isSecondary = 0) {
+            const btn = Button({
+                text: text,
+                width: 100,
+                height: 36,
+                fontSize: 14,
+            });
+            if (isSecondary) btn.color = "lightgray";
+            btn.on("click", onClick);
+            return btn;
+        };
+
+        const addInfoLabel = function (text) {
+            return Label({
+                text: text,
+                fontSize: 14,
+                textColor: Black(0.5),
+            });
+        };
+
+    </script>
+</head>
+
+<body></body>
+
+</html>

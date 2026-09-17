@@ -8,6 +8,8 @@ UI COMPONENT TEMPLATE
 - A customizable check box with a label.
 - Checkmark is drawn with code (no image files needed).
 - Supports: checked, enabled, label position (left/right), keyboard (Space/Enter).
+- Whole object background can change on hover and checked states (style.hoverBox, style.checkedBox).
+- Style packages: "classic" (default), "modern". Select with styleName. (CheckBox.styles)
 
 Started Date: September 2026
 Developer: Bugra Ozden
@@ -28,7 +30,21 @@ const CheckBoxDefaults = {
     labelText: "",
     labelPosition: "right", // "right", "left"
     onChange: function (self) { }, // self.checked
-    style: {
+    styleName: "classic", // "classic", "modern" or a name added to CheckBox.styles
+    style: { // Classic style package (default)
+        box: { // Whole object background
+            color: "transparent",
+            round: 0,
+        },
+        hoverBox: { // Mouse over (whole object background)
+            color: null, // null: uses box.color
+        },
+        checkedBox: { // Checked (whole object background)
+            color: null, // null: uses box.color
+        },
+        hoverCheckedBox: { // Checked and mouse over (whole object background)
+            color: null, // null: uses checkedBox.color
+        },
         layout: {
             gap: 10,
             padding: [0, 4],
@@ -65,11 +81,19 @@ const CheckBoxDefaults = {
 
 const CheckBox = function (params = {}) {
 
+    // Merge style package: params.style > CheckBox.styles[styleName] > CheckBoxDefaults.style (classic)
+    const _styleName = params.styleName || CheckBoxDefaults.styleName;
+    const _stylePackage = CheckBox.styles[_styleName];
+    if (!_stylePackage) console.warn("CheckBox: Style package not found: " + _styleName);
+    params.style = params.style || {};
+    mergeIntoIfMissing(params.style, _stylePackage || {});
+
     // Merge params:
     mergeIntoIfMissing(params, CheckBoxDefaults);
 
     // Edit params, if needed:
-    params.color = "transparent";
+    params.color = params.style.box.color;
+    params.round = params.style.box.round;
 
     // BOX: Component container
     let box = startObject(params);
@@ -87,15 +111,24 @@ const CheckBox = function (params = {}) {
 
         const _mark = box.style.mark;
         const _checked = box.style.checkedMark;
+        const _hover = (isMouseOver && box.enabled == 1);
+
+        // Whole object background colors:
+        const _boxColor = box.style.box.color;
+        const _hoverBoxColor = box.style.hoverBox.color || _boxColor;
+        const _checkedBoxColor = box.style.checkedBox.color || _boxColor;
+        const _hoverCheckedBoxColor = box.style.hoverCheckedBox.color || _checkedBoxColor;
 
         if (box.checked == 1) {
+            box.color = (_hover) ? _hoverCheckedBoxColor : _checkedBoxColor;
             box.mark.color = _checked.color;
             box.mark.borderColor = _checked.borderColor;
             box.tick.elem.style.opacity = "1";
             box.tick.elem.style.transform = "rotate(45deg) scale(1)";
         } else {
+            box.color = (_hover) ? _hoverBoxColor : _boxColor;
             box.mark.color = _mark.color;
-            box.mark.borderColor = (isMouseOver) ? box.style.hoverMark.borderColor : _mark.borderColor;
+            box.mark.borderColor = (_hover) ? box.style.hoverMark.borderColor : _mark.borderColor;
             box.tick.elem.style.opacity = "0";
             box.tick.elem.style.transform = "rotate(45deg) scale(0.4)";
         }
@@ -157,6 +190,7 @@ const CheckBox = function (params = {}) {
     box.elem.setAttribute("role", "checkbox");
     box.elem.style.outline = "none";
     box.elem.style.userSelect = "none";
+    box.setMotion("background-color 0.15s");
 
     // GROUP: mark, label
     box.contentBox = HGroup({
@@ -241,5 +275,65 @@ const CheckBox = function (params = {}) {
     updateView();
 
     return endObject(box);
+
+};
+
+// *** STYLE PACKAGES:
+// USAGE: CheckBox({ styleName: "modern" })
+// USAGE: CheckBox({ styleName: "modern", style: { tick: { color: "tomato" } } }) // Change only some keys.
+// NOTE: A new package needs only the keys that differ from the default (classic) style.
+// USAGE: CheckBox.styles.myStyle = { tick: { color: "red" } };
+CheckBox.styles = {
+
+    // White box with a border. When checked, dark filled box with a white tick. No background.
+    classic: CheckBoxDefaults.style,
+
+    // Light box, thin border. When checked, only the tick is visible on a light background.
+    modern: {
+        box: { // Whole object background
+            color: "transparent",
+            round: 8,
+        },
+        hoverBox: { // Mouse over (whole object background)
+            color: "whitesmoke", // null: uses box.color
+        },
+        checkedBox: { // Checked (whole object background)
+            color: "#EFF5F6", // 10% of tick color on white. null: uses box.color
+        },
+        hoverCheckedBox: { // Checked and mouse over (whole object background)
+            color: "#DFECEC", // 20% of tick color on white. null: uses checkedBox.color
+        },
+        layout: {
+            gap: 12,
+            padding: [12, 10],
+            align: "left center",
+        },
+        mark: { // Unchecked square
+            width: 22,
+            height: 22,
+            color: "whitesmoke",
+            border: 1,
+            borderColor: Black(0.7),
+            round: 4,
+        },
+        checkedMark: { // Checked square (stays without border, behind the tick)
+            color: "#DFECEC", // Same as hoverCheckedBox.color, so the square is not visible on mouse over.
+            borderColor: "transparent",
+        },
+        hoverMark: { // Mouse over (only border)
+            borderColor: Black(0.7),
+        },
+        tick: {
+            color: "cadetblue", // #5F9EA0
+            thickness: 3,
+        },
+        label: {
+            fontSize: 16,
+            textColor: Black(0.85),
+        },
+        disabled: {
+            opacity: 0.4,
+        },
+    },
 
 };

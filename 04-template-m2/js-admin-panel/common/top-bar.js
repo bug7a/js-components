@@ -2,12 +2,18 @@
 
 /*
 
-TopBar - v25.07
+TopBar - v26.09
 
 UI COMPONENT TEMPLATE
-- Top bar component with left, center, and right sections
-- Supports icon buttons and text items
-- Fixed position at top of screen
+- Top bar of the admin panel with left, center, and right sections.
+- LEFT: Panel icon and name (click: Home), language (saved to Settings), keyboard shortcuts.
+- CENTER: Module buttons, maintenance mode switch (saved to Settings, asks before turning on).
+- RIGHT:
+  - Search: Pages, users, customers, orders, contents and products. Results open under the input.
+    Keyboard: Ctrl+K, Cmd+K or "/" to search, ArrowUp/ArrowDown to move, Enter to open, Escape to close.
+  - Create menu (+): Invite user, new product, new post.
+  - Notifications (unread count), profile (initials and status dot).
+- Escape also closes the right view.
 
 Started Date: June 2024
 Developer: Bugra Ozden
@@ -44,6 +50,22 @@ const TopBar = function(params = {}) {
 
     // *** PRIVATE VARIABLES:
 
+    const WARNING_COLOR = "#F2B24C";
+    const MAX_RESULTS_PER_GROUP = 5;
+
+    const LANGUAGES = [
+        { id: "en", label: "English" },
+        { id: "tr", label: "Türkçe" },
+        { id: "de", label: "Deutsch" },
+    ];
+
+    let searchPages = []; // Menu items (setSearchPages)
+    let searchTimer = null;
+    let searchText = "";
+    let results = []; // [{ group, text, desc, open }]
+    let activeResultIndex = -1;
+    let isRendering = 0; // WHY: Component setters call onChange/onSelect. Values written by code are not user changes.
+
     // *** PUBLIC VARIABLES:
     // All items [var]
     box.items = [];
@@ -68,6 +90,262 @@ const TopBar = function(params = {}) {
     const handleItemClick = function(item, sectionType) {
         // Handles item click events
         // TODO: Implement click handling
+    };
+
+    const escapeHtml = function(text) {
+        return String(text).replace(/[&<>"']/g, function(c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c]; });
+    };
+
+    // Saves one setting and applies it to the panel.
+    const saveSetting = function(key, value) {
+        if (typeof SettingsPage === "undefined") return;
+        const settings = SettingsPage.load();
+        settings[key] = value;
+        SettingsPage.saveAndApply(settings); // WHY: Also updates the Settings page, if it is open.
+    };
+
+    // Closes the right view and opens a page in the main view.
+    const openMainPage = function(pageKey, openPage) {
+        if (rightView.isShown()) {
+            rightView.hide();
+            rightView.clean();
+        }
+        leftMenu.setSelectedItem(pageKey);
+        openPage();
+    };
+
+    // *** SEARCH:
+
+    // Finds the results for a text. Every group has a few results.
+    const findResults = function(text) {
+
+        const list = [];
+        const query = text.trim().toLowerCase();
+        if (!query) return list;
+
+        const has = function(value) { return String(value).toLowerCase().includes(query); };
+        const addGroup = function(group, items) {
+            items.slice(0, MAX_RESULTS_PER_GROUP).forEach(function(item) { item.group = group; list.push(item); });
+        };
+
+        // Pages
+        addGroup("Pages", searchPages.filter(function(item) { return item.type == "button" && has(item.text); }).map(function(item) {
+            return {
+                text: item.text,
+                desc: "Page",
+                open: function() {
+                    if (!item.dontSelect) leftMenu.setSelectedItem(item.key);
+                    openPageByKey(item.key);
+                },
+            };
+        }));
+
+        // Users
+        if (typeof UserListPage !== "undefined") {
+            const data = UserListPage.load();
+            addGroup("Users", data.users.filter(function(user) { return has(user.name) || has(user.email); }).map(function(user) {
+                return {
+                    text: user.name,
+                    desc: user.email + " · " + UserListPage.getRoleName(data, user.roleId),
+                    open: function() { openMainPage(UserListPage.KEY, function() { UserListPage({ openUserId: user.id }); }); },
+                };
+            }));
+        }
+
+        // Customers
+        if (typeof CustomersPage !== "undefined") {
+            addGroup("Customers", CustomersPage.getCustomers().filter(function(c) { return has(c.name) || has(c.email); }).map(function(c) {
+                return {
+                    text: c.name,
+                    desc: c.email + " · " + c.orderCount + " orders · " + OrdersPage.formatMoney(c.totalSpent),
+                    open: function() { openMainPage(CustomersPage.KEY, function() { CustomersPage({ openCustomerId: c.id }); }); },
+                };
+            }));
+        }
+
+        // Orders
+        if (typeof OrdersPage !== "undefined") {
+            addGroup("Orders", OrdersPage.getOrders().filter(function(order) { return has(order.id) || has(order.customer.name); }).map(function(order) {
+                return {
+                    text: order.id + " · " + order.customer.name,
+                    desc: OrdersPage.formatMoney(order.total) + " · " + OrdersPage.STATUSES[order.status].label + " · " + OrdersPage.formatDateTime(order.time),
+                    open: function() { openMainPage(OrdersPage.KEY, function() { OrdersPage({ openOrderId: order.id }); }); },
+                };
+            }));
+        }
+
+        // Contents
+        if (typeof ContentsPage !== "undefined") {
+            addGroup("Contents", ContentsPage.getContents().filter(function(content) { return has(content.title) || has(content.slug); }).map(function(content) {
+                return {
+                    text: content.title,
+                    desc: ContentsPage.TYPES[content.type].label + " · " + ContentsPage.STATUSES[content.status].label + " · " + ContentsPage.TYPES[content.type].path + content.slug,
+                    open: function() { openMainPage(ContentsPage.KEY, function() { ContentsPage({ openContentId: content.id }); }); },
+                };
+            }));
+        }
+
+        // Products
+        if (typeof ProductsPage !== "undefined") {
+            addGroup("Products", ProductsPage.getProducts().filter(function(product) { return has(product.name) || has(product.sku); }).map(function(product) {
+                return {
+                    text: product.name,
+                    desc: product.sku + " · " + ProductsPage.formatMoney(product.price),
+                    open: function() { openMainPage(ProductsPage.KEY, function() { ProductsPage({ openProductId: product.id }); }); },
+                };
+            }));
+        }
+
+        return list;
+
+    };
+
+    // Creates the content of a container again. (One group is started and ended in it.)
+    // WHY: setDefaultContainerBox() is not in the start/end list of basic.js. One wrapper group is safe.
+    const renderInto = function(container, buildContent) {
+        if (container.wrapper) container.wrapper.remove();
+        const previous = getDefaultContainerBox();
+        setDefaultContainerBox(container);
+            container.wrapper = VGroup({ width: "100%", height: "auto", align: "left top", gap: 0 });
+                buildContent();
+            endGroup();
+        setDefaultContainerBox(previous);
+    };
+
+    const renderResults = function() {
+
+        renderInto(box.resultsBox, function() {
+
+            if (results.length == 0) {
+                Label({ text: "No results for \"" + escapeHtml(searchText.trim()) + "\"", fontSize: 13, textColor: White(0.5), padding: [14, 12] });
+                return;
+            }
+
+            let lastGroup = "";
+            box.resultRows = [];
+
+            results.forEach(function(result, index) {
+
+                if (result.group != lastGroup) {
+                    lastGroup = result.group;
+                    Label({ text: result.group.toUpperCase(), fontSize: 10, textColor: White(0.4), padding: [12, 6] });
+                    that.elem.style.letterSpacing = "1px";
+                    that.elem.style.marginTop = (index > 0) ? "4px" : "0px";
+                }
+
+                const row = VGroup({ width: "100%", height: "auto", align: "left top", gap: 0, padding: [12, 6], round: 6, color: "transparent" });
+                row.elem.style.cursor = "pointer";
+                // WHY: mousedown, not click. The input loses the focus on mousedown and the results are closed before a click.
+                row.elem.addEventListener("mousedown", function(event) {
+                    event.preventDefault();
+                    openResult(index);
+                });
+                row.on("mouseover", function() { setActiveResult(index); });
+
+                    Label({ text: escapeHtml(result.text), fontSize: 14, textColor: White(0.92) });
+                    that.elem.style.whiteSpace = "nowrap";
+                    Label({ text: escapeHtml(result.desc), fontSize: 12, textColor: White(0.45) });
+                    that.elem.style.whiteSpace = "nowrap";
+
+                endGroup();
+
+                box.resultRows.push(row);
+
+            });
+
+            // Hint
+            Label({ text: "↑ ↓ to move · Enter to open · Esc to close", fontSize: 11, textColor: White(0.35), padding: [12, 8] });
+            that.elem.style.borderTop = "1px solid " + White(0.08);
+            that.elem.style.marginTop = "4px";
+            that.width = "100%";
+
+        });
+
+        // WHY: The results box grows with the content only when the content is in the flow.
+        box.resultsBox.wrapper.position = "relative";
+
+        setActiveResult((results.length) ? 0 : -1);
+
+    };
+
+    const setActiveResult = function(index) {
+        activeResultIndex = index;
+        (box.resultRows || []).forEach(function(row, i) {
+            row.color = (i == index) ? White(0.08) : "transparent";
+        });
+        const row = (box.resultRows || [])[index];
+        if (row) row.elem.scrollIntoView({ block: "nearest" });
+    };
+
+    const openResult = function(index) {
+        const result = results[index];
+        if (!result) return;
+        closeResults();
+        box.searchInput.setText("");
+        box.searchInput.imgClearIcon.opacity = 0;
+        box.searchInput.imgClearIcon.clickable = 0;
+        searchText = "";
+        box.searchInput.txtSearch.inputElement.blur();
+        result.open();
+    };
+
+    const showResults = function() {
+
+        results = findResults(searchText);
+
+        if (!searchText.trim()) {
+            closeResults();
+            return;
+        }
+
+        renderResults();
+        positionResults();
+        box.resultsBox.visible = 1;
+
+    };
+
+    // Under the search input, right aligned
+    const positionResults = function() {
+        const rect = box.searchInput.elem.getBoundingClientRect();
+        const width = 380;
+        box.resultsBox.left = Math.max(8, withPageZoom(rect.right) - width);
+        box.resultsBox.top = withPageZoom(rect.bottom) + 6;
+        box.resultsBox.width = width;
+    };
+
+    const closeResults = function() {
+        box.resultsBox.visible = 0;
+        activeResultIndex = -1;
+    };
+
+    const isResultsOpen = function() {
+        return box.resultsBox.visible == 1;
+    };
+
+    // *** DIALOGS:
+
+    const showShortcuts = function() {
+        const line = function(keys, text) {
+            return "<div style='display:flex; justify-content:space-between; gap:24px; padding:4px 0'><b>" + keys + "</b><span>" + text + "</span></div>";
+        };
+        Dialog({
+            icon: "assets/maybe.png",
+            title: "Keyboard Shortcuts",
+            desc: line("Ctrl K  /  ⌘ K  /  /", "Search")
+                + line("↑  ↓", "Move in the results")
+                + line("Enter", "Open the result")
+                + line("Esc", "Close the results or the right panel"),
+            confirmButtonText: "OK",
+            cancelButtonText: "Close",
+            confirmButtonColor: "#3D7A6B",
+            color: Black(0.7),
+            callback: function() {},
+        });
+    };
+
+    const setMaintenanceView = function(isOn) {
+        box.lblMaintenance.text = (isOn) ? "MAINTENANCE ON" : "MAINTENANCE";
+        box.lblMaintenance.textColor = (isOn) ? WARNING_COLOR : White(0.65);
     };
 
     // *** PUBLIC FUNCTIONS:
@@ -97,8 +375,51 @@ const TopBar = function(params = {}) {
     };
 
     box.setBackgroundColor = function(color) {
-        // Sets the background color of the top bar
-        // TODO: Implement background color setting
+        box.backgroundColor = color;
+        box.background.color = color;
+        if (box.avatarDot) box.avatarDot.borderColor = color;
+    };
+
+    // Unread notification count on the bell. (0: hidden, 1: dot, 2+: number)
+    box.setNotificationCount = function(count) {
+        box.btnNotifications.badge.setValue(count);
+    };
+
+    box.setPanelName = function(name) {
+        box.panelName = name;
+        box.lblPanelName.text = name;
+    };
+
+    // Pages for the search. (The menu items of the left menu)
+    box.setSearchPages = function(items) {
+        searchPages = items;
+    };
+    // USAGE: topBar.setSearchPages(menuItems)
+
+    // Language, maintenance mode and the user (from Settings)
+    box.applySettings = function(settings) {
+        isRendering = 1;
+        const index = box.selLanguage.getIndexById(settings.language);
+        if (index >= 0 && index != box.selLanguage.selectedIndex) box.selLanguage.setSelectedIndex(index);
+        if (box.tglMaintenance.value != (settings.maintenance ? 1 : 0)) box.tglMaintenance.setValue(settings.maintenance ? 1 : 0);
+        setMaintenanceView(settings.maintenance == 1);
+        isRendering = 0;
+        box.refreshUser();
+    };
+
+    // Initials and status dot of the profile button
+    box.refreshUser = function() {
+        if (typeof UserActionsPage === "undefined") return;
+        const user = UserActionsPage.getCurrentUser();
+        box.lblAvatar.text = UserActionsPage.getInitials(user.name);
+        box.avatar.color = user.avatarColor;
+        box.avatarDot.color = UserActionsPage.STATUSES[UserActionsPage.getStatus()].color;
+        box.btnProfile.tooltip.setHintText(escapeHtml(user.name) + " · " + UserActionsPage.STATUSES[UserActionsPage.getStatus()].label);
+    };
+
+    box.focusSearch = function() {
+        box.searchInput.focus();
+        box.searchInput.txtSearch.inputElement.select();
     };
 
     box.setHeight = function(height) {
@@ -133,24 +454,33 @@ const TopBar = function(params = {}) {
         align: "center left",
         padding: [10, 0, 0, 0]
     });
-    // TODO: Add left section items here
 
-        
-        Icon({
-            width: 20,
-            height: 20,
+        // GROUP: Panel icon and name (click: Home)
+        box.btnHome = HGroup({ width: "auto", height: 30, align: "left center", gap: 8, padding: [4, 0], round: 6 });
+        that.elem.style.cursor = "pointer";
+        that.elem.title = "Home";
+        that.on("click", function() {
+            openMainPage(HomePage.KEY, function() { HomePage(); });
         });
-        that.load(box.panelIcon);
-        
 
-        Label({
-            text: box.panelName,
-            textColor: "#F3F4E0",
-            fontSize: 14,
-        });
+            Icon({
+                width: 20,
+                height: 20,
+            });
+            that.load(box.panelIcon);
+
+            box.lblPanelName = Label({
+                text: box.panelName,
+                textColor: "#F3F4E0",
+                fontSize: 14,
+            });
+            that.elem.style.whiteSpace = "nowrap";
+
+        endGroup();
 
         // EXAMPLE: How to add a ComboBox on topBar
-        TinySelect({
+        // Language (saved to Settings > General)
+        box.selLanguage = TinySelect({
             title: "",
             label: "",
             fontSize: 14,
@@ -160,60 +490,31 @@ const TopBar = function(params = {}) {
             round: 8,
             color: "#141414DD", // "whitesmoke"
             labelTextColor: "rgba(255,255,255,0.8)",
-            round: 3,
             listTextColor: "rgba(255, 255, 255, 0.8)",
-            listOverTextColor: "indianred",
+            listOverTextColor: "#65A293",
             listBackgroundColor: "#141414",
             listBorder: 1,
             listBorderColor: "rgba(255,255,255,0.4)",
-            list: [
-                { id: "1", label: "English" },
-                { id: "2", label: "Spanish" },
-                { id: "3", label: "French" },
-                { id: "4", label: "Turkish" },
-            ],
-            arrowIcon: "assets/arrow_down.png",
+            list: LANGUAGES,
+            arrowIcon: "assets/top-bar/arrow-down.svg",
             invertIconColor: 1,
-            selectedIndex: 3,
+            selectedIndex: 0,
         });
-        //that.elem.style.filter = "invert(100%)";
-        that.onSelect = function(index, id, label, title) {
-            console.log(`TinySelect: ${title}: ${label} (${id})`);
+        that.onSelect = function(index, id) {
+            if (isRendering) return;
+            // TODO: Load the texts of the language.
+            saveSetting("language", id);
         };
-        that.setMotion("background-color 0.2s");
-        that.on("mouseover", function(self) {
-            //self.color = "rgba(0,0,0,0.4)";
-        });
-        that.on("mouseout", function(self) {
-            //self.color = "rgba(0,0,0,0.1)";
-        });
 
+        // EXAMPLE: How to use a Dialog
         TopBarIconButton({
-            iconPath: "assets/top-bar/comment.png",
+            iconPath: "assets/top-bar/keyboard.svg",
             invertIconColor: 1,
-            hintText: "Show Dialog",
+            hintText: "Keyboard shortcuts",
             hintPosition: "right",
-            onClick: function() {
-
-                // EXAMPLE: How to use a Dialog
-                Dialog({
-                    icon: "assets/maybe.png",
-                    title: "Warning!",
-                    desc: "Are you sure you want to log out?",
-                    confirmButtonText: "Yes, I'm sure",
-                    callback: function(id) {
-                        println("answer: " + id);
-                        if (id === 1) logout();
-                    },
-                    cancelButtonText: "Cancel",
-                    confirmButtonColor: basic.WARNING_COLOR,
-                    color: Black(0.7), // Black(0.7)
-                });
-                //that.elem.style.filter = "invert(100%)";
-
-            },
+            onClick: showShortcuts,
         });
-    
+
     endGroup();
 
     // CENTER SECTION
@@ -222,12 +523,11 @@ const TopBar = function(params = {}) {
         align: "center center",
         padding: [0, 16, 0, 16]
     });
-    // TODO: Add center section items here
 
         TopBarIconButton({
-            iconPath: "assets/top-bar/apps.png",
+            iconPath: "assets/top-bar/apps.svg",
             invertIconColor: 1,
-            hintText: "Module 4 (MainView)",
+            hintText: "Module 4 (Main View)",
             hintPosition: "right",
             onClick: function(self) {
                 openPageByKey("module4");
@@ -236,9 +536,9 @@ const TopBar = function(params = {}) {
         });
 
         TopBarIconButton({
-            iconPath: "assets/top-bar/bookmark.png",
+            iconPath: "assets/top-bar/bookmark.svg",
             invertIconColor: 1,
-            hintText: "Module 5 (LeftView)",
+            hintText: "Module 5 (Right View)",
             hintPosition: "right",
             onClick: function(self) {
                 openPageByKey("module5");
@@ -246,39 +546,68 @@ const TopBar = function(params = {}) {
             },
         });
 
-
-        // EXAMPLE: How to add a Label on topBar
-        // toggleTitle
-        Label({
-            text: "SWITCH:",
+        // EXAMPLE: How to add a Label and a Toggle on topBar
+        // Maintenance mode (saved to Settings > Advanced)
+        box.lblMaintenance = Label({
+            text: "MAINTENANCE",
             textColor: White(0.65),
-            fontSize: 14,
+            fontSize: 12,
         });
+        that.elem.style.letterSpacing = "1px";
+        that.elem.style.marginLeft = "8px";
+        that.setMotion("color 0.2s");
 
-        // EXAMPLE: How to add a Toggle on topBar
-        Toggle({
+        box.tglMaintenance = Toggle({
             key: "0",
             width: 50, // Standard box features are added automatically.
             height: 30,
             spacing: 3,
-            value: 1,
+            value: 0,
             invertColor: 0,
             backgroundStyle: {
                 color: "black",
-                selectedColor: "indianred",
+                selectedColor: "#B87A1A",
                 border: 1,
                 borderColor: Black(0.75),
                 round: 100,
             },
             buttonStyle: {
                 color: White(0.25),
-                selectedColor: White(0.75),
+                selectedColor: White(0.9),
                 border: 0,
                 round: 100,
             }
         });
+        box.tglMaintenance.elem.title = "Maintenance mode: users see a maintenance page";
         that.onChange = function(self) {
-            println(`Toggle: ${self.value}`);
+
+            if (isRendering) return;
+
+            if (self.value !== 1) {
+                saveSetting("maintenance", 0);
+                return;
+            }
+
+            // WHY: Users can not use the site. Ask before turning it on.
+            Dialog({
+                icon: "assets/warning.png",
+                title: "Maintenance Mode",
+                desc: "Users will see a maintenance page and can not use the site. Admins can still use the panel.",
+                confirmButtonText: "Turn On",
+                cancelButtonText: "Cancel",
+                confirmButtonColor: "#B87A1A",
+                color: Black(0.7),
+                callback: function(isConfirmed) {
+                    if (isConfirmed) {
+                        saveSetting("maintenance", 1);
+                    } else {
+                        isRendering = 1;
+                        self.setValue(0);
+                        isRendering = 0;
+                    }
+                },
+            });
+
         };
 
     endGroup();
@@ -289,34 +618,45 @@ const TopBar = function(params = {}) {
         align: "center right",
         padding: [0, 0, 10, 0]
     });
-    // TODO: Add right section items here
 
         // EXAMPLE: How to add a SearchInput on topBar
+        // Search: pages, users, orders, products
         box.searchInput = SearchInput({
             top: 0,
             left: 0,
-            width: 200,
+            width: 260,
             height: 30,
             color: "#141414DD", // rgba(255,255,255,0.8), rgba(0,0,0,0.1)
             textColor: "#EBEBEB",
             round: 30,
-            fontSize: 16,
-            searchIconSize: 20,
-            placeholderText: "Search",
+            fontSize: 14,
+            searchIconSize: 18,
+            placeholderText: "Search  (Ctrl K)",
             position: "relative",
             invertIconColor: 1,
-            searchIconFile: "assets/top-bar/search.png",
-            clearIconFile: "assets/top-bar/cancel.png",
+            searchIconFile: "assets/top-bar/search.svg",
+            clearIconFile: "assets/top-bar/close.svg",
         });
-        box.searchInput.onSearch = function(searchedText, self) {
-            console.log(`Searched: ${searchedText}`);
+        box.searchInput.onSearch = function(text) {
+            if (text == searchText) return; // WHY: Arrow keys also call onSearch (keyup).
+            searchText = text;
+            searchTimer = waitAndRun(searchTimer, showResults, 120);
         };
-        //box.searchInput.visible = 0; // to hide/show searchInput
 
-        TopBarIconButton({
-            iconPath: "assets/top-bar/notification.png",
+        // Create menu (+)
+        box.btnCreate = TopBarIconButton({
+            iconPath: "assets/top-bar/add.svg",
             invertIconColor: 1,
-            badgeProps: { value: 5 },
+            hintText: "Create",
+            hintPosition: "left",
+            createBudge: 0,
+            onClick: function() {},
+        });
+
+        box.btnNotifications = TopBarIconButton({
+            iconPath: "assets/top-bar/bell.svg",
+            invertIconColor: 1,
+            badgeProps: { value: 0 }, // Set with setNotificationCount()
             hintText: "Notifications",
             hintPosition: "left",
             onClick: function(self) {
@@ -324,22 +664,143 @@ const TopBar = function(params = {}) {
                 box.manageSelectionForButton(NotificationsPage.KEY, self, rightView);
             },
         });
-        
-        TopBarIconButton({
-            iconPath: "assets/top-bar/user.png",
+
+        // Profile: initials and status dot on the button
+        box.btnProfile = TopBarIconButton({
+            iconPath: "assets/top-bar/user.svg",
             invertIconColor: 1,
             hintText: "Profile",
             hintPosition: "left",
+            createBudge: 0,
             onClick: function(self) {
                 openPageByKey(UserActionsPage.KEY);
                 box.manageSelectionForButton(UserActionsPage.KEY, self, rightView);
             },
         });
+        box.btnProfile.icon.visible = 0;
 
     endGroup();
 
+    // BOX: Avatar (inside the profile button)
+    const previousContainer = getDefaultContainerBox();
+    setDefaultContainerBox(box.btnProfile);
+
+        box.avatar = HGroup({ left: 8, top: 8, width: 24, height: 24, align: "center center", round: 100, color: "#3D7A6B" });
+        that.elem.style.pointerEvents = "none";
+            box.lblAvatar = Label({ text: "", fontSize: 10, textColor: White(0.95) });
+            that.elem.style.fontFamily = "opensans-bold";
+        endGroup();
+
+        box.avatarDot = Box({ left: 25, top: 25, width: 10, height: 10, round: 100, border: 2, borderColor: box.backgroundColor, color: "#65A293" });
+        that.elem.style.pointerEvents = "none";
+
+    setDefaultContainerBox(previousContainer);
+
+    // MENU: Create (on the page, over everything)
+    box.createMenu = ContextMenu({
+        items: [
+            { text: "Invite User", key: "invite" },
+            { text: "New Product", key: "product" },
+            { text: "New Post", key: "post" },
+            "-",
+            { text: "Keyboard Shortcuts", key: "shortcuts" },
+        ],
+        onClick: function(self, item) {
+            if (item.key == "invite" && typeof UserListPage !== "undefined") {
+                openMainPage(UserListPage.KEY, function() { UserListPage({ openUserId: "invite" }); });
+            }
+            if (item.key == "product" && typeof ProductsPage !== "undefined") {
+                openMainPage(ProductsPage.KEY, function() { ProductsPage({ openProductId: "new" }); });
+            }
+            if (item.key == "post" && typeof ContentsPage !== "undefined") {
+                openMainPage(ContentsPage.KEY, function() { ContentsPage({ openContentId: "new" }); });
+            }
+            if (item.key == "shortcuts") showShortcuts();
+        },
+        style: {
+            menu: { color: "#1A1A19", border: 1, borderColor: White(0.14), round: 8, padding: 4, shadow: "0px 8px 24px " + Black(0.5) },
+            item: { textColor: White(0.85) },
+            itemHover: { textColor: White(0.95), color: White(0.08) },
+            separator: { color: White(0.1) },
+        },
+    });
+    box.createMenu.attachTo(box.btnCreate, "click");
+
+    // BOX: Search results (on the page, over everything)
+    setDefaultContainerBox(page);
+
+        box.resultsBox = Box({ left: 0, top: 44, width: 380, height: "auto", color: "#1A1A19", border: 1, borderColor: White(0.14), round: 10, visible: 0 });
+        box.resultsBox.elem.style.position = "fixed";
+        box.resultsBox.elem.style.zIndex = "1000";
+        box.resultsBox.elem.style.maxHeight = "70vh";
+        box.resultsBox.elem.style.overflowY = "auto";
+        box.resultsBox.elem.style.padding = "6px";
+        box.resultsBox.elem.style.boxShadow = "0px 12px 32px " + Black(0.5);
+
+    setDefaultContainerBox(previousContainer);
+
+    // *** OBJECT INIT CODE:
+
+    const searchElem = box.searchInput.txtSearch.inputElement;
+
+    // Keyboard in the search input
+    searchElem.addEventListener("keydown", function(event) {
+        if (!isResultsOpen()) {
+            if (event.key === "Escape") searchElem.blur();
+            return;
+        }
+        if (event.key === "ArrowDown") {
+            event.preventDefault();
+            setActiveResult(Math.min(activeResultIndex + 1, results.length - 1));
+        } else if (event.key === "ArrowUp") {
+            event.preventDefault();
+            setActiveResult(Math.max(activeResultIndex - 1, 0));
+        } else if (event.key === "Enter") {
+            event.preventDefault();
+            openResult(Math.max(activeResultIndex, 0));
+        } else if (event.key === "Escape") {
+            event.preventDefault();
+            closeResults();
+        }
+    });
+
+    searchElem.addEventListener("focus", function() {
+        if (searchText.trim()) showResults();
+    });
+
+    searchElem.addEventListener("blur", function() {
+        closeResults();
+    });
+
+    // Keyboard shortcuts for the panel
+    document.addEventListener("keydown", function(event) {
+
+        const target = event.target;
+        const isTyping = target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
+
+        // Ctrl+K, Cmd+K, or "/" (when not typing): Search
+        if (((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") || (event.key === "/" && !isTyping)) {
+            event.preventDefault();
+            box.focusSearch();
+            return;
+        }
+
+        // Escape (when not typing): Close the right view
+        if (event.key === "Escape" && !isTyping && rightView.isShown()) {
+            rightView.hide();
+            rightView.clean();
+        }
+
+    });
+
+    page.onResize(function() {
+        if (isResultsOpen()) positionResults();
+    });
+
+    if (typeof SettingsPage !== "undefined") box.applySettings(SettingsPage.load());
+
     //console.timeEnd("TopBar");
-    
+
     return endObject(box);
 };
 

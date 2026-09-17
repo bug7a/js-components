@@ -17,6 +17,8 @@ Webpage: https://bug7a.github.io/js-components/
 -- searchTitleIndex: -1 (ALL: tüm sütunlar), showSearchTitleSelect: 0 ise kutu gizlenir.
 -- Liste için comp-m4/context-menu.js yüklenmelidir. Yüklenmemiş ise, kutuya her basışta sıradaki sütuna geçer.
 - Eğer itemHeight 20px den küçük ise otomatik itemLineCount düşür ve eğer itemHeight büyükse 100px den itemLineCount arttır.
+- wheelScroll: 1 ise fare tekerleği tablonun satırlarını kaydırır (sayfa kaymaz). Varsayılan 0: tekerlek sayfayı kaydırır, satırlar scroll çubuğu ve butonlar ile kaydırılır.
+-- smartTable.setWheelScroll(1) ile sonradan açılabilir.
 
 
 */
@@ -38,6 +40,7 @@ const SmartTableDefaults = {
     searchKeyword: "",
     searchTitleIndex: -1, // -1: Search in all columns (ALL). 0, 1...: Search only in this column.
     showSearchTitleSelect: 1, // 0: Hide the column select box (ALL) next to the search input.
+    wheelScroll: 0, // 1: The mouse wheel scrolls the rows (and the page does not scroll). 0: The wheel is left to the page.
     allTitlesText: "ALL",
     sortByTitleIndex: 0,
     sortDirection: "A-Z", // "A-Z" or "Z-A"
@@ -105,6 +108,7 @@ const SmartTableDefaults = {
         btnScrollUpIconFile: "../comp-m3/smart-table/up.png",
         btnScrollCenterIconFile: "../comp-m3/smart-table/scroll.png",
         sortIconFile: "../comp-m3/smart-table/sort.png",
+        loadingIconFile: "../comp-m3/smart-table/clock.png",
         searchTitleCheckIconFile: "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#373836" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17.5 19 7"/></svg>'),
         invertIconColor: 0,
 
@@ -666,6 +670,9 @@ const SmartTable = function (params = {}) {
         // 1. MOUSE WHEEL DESTEĞİ (Her kaydı görmeyi sağlar)
         box.on("wheel", function (self, event) {
 
+            // WHY: Varsayılan olarak tekerlek sayfaya bırakılır; tablo sayfanın kaymasını engellemesin. (wheelScroll: 1 ile açılır)
+            if (box.wheelScroll != 1) return;
+
             // ÖNEMLİ: Eğer yatayda bir hareket varsa (deltaX), 
             // dikey scroll kodunu çalıştırma ve tarayıcının yatay kaydırmasına izin ver.
             if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
@@ -1129,7 +1136,7 @@ const SmartTable = function (params = {}) {
             width: 32,
             height: 32,
         });
-        that.load("../comp-m3/smart-table/clock.png");
+        that.load(box.style.loadingIconFile);
 
         endGroup();
 
@@ -1220,6 +1227,12 @@ const SmartTable = function (params = {}) {
         box.updateSearchTitleSelect();
     };
     // USAGE: smartTable.setShowSearchTitleSelect(0)
+
+    // Fare tekerleği ile satır kaydırma. 0: Tekerlek sayfaya bırakılır.
+    box.setWheelScroll = function (enabled) {
+        box.wheelScroll = (enabled == 1 || enabled === true) ? 1 : 0;
+    };
+    // USAGE: smartTable.setWheelScroll(1)
 
     box.createResizeEvent = function () {
 

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Progress Bar</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp-m4/progress-bar.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // *** VARIABLES:
+        let prgBasic, lblBasic;
+        let prgUpload, uploadTimer = null;
+        let prgConnect;
+        let prgModern, prgModernTasks;
+
+        const start = function () {
+
+            page.color = "whitesmoke";
+
+            // BOX: Full screen scrollable container
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            startBox(0, 0, "100%", "100%", {
+                color: "transparent",
+                scrollY: 1,
+            });
+
+                // GROUP: Page layout
+                VGroup({
+                    width: "100%",
+                    height: "auto", // Grows with content, so the Box can scroll.
+                    align: "center top",
+                    gap: 30,
+                    padding: 50,
+                });
+
+                    // LABEL: Title
+                    Label({
+                        text: "Progress Bar",
+                        fontSize: 26,
+                        fontFamily: "opensans-bold",
+                    });
+
+                    // SAMPLE 1: Default (classic)
+                    startCard("1. Default");
+
+                        prgBasic = ProgressBar({
+                            width: "100%",
+                            titleText: "Profile completed",
+                            value: 40,
+                            onChange: function (self) {
+                                lblBasic.text = "Value: " + self.value;
+                            },
+                            onComplete: function (self) {
+                                lblBasic.text = "Completed!";
+                            },
+                        });
+
+                        // GROUP: Buttons
+                        HGroup({ width: "auto", height: "auto", gap: 8 });
+                            addSampleButton("- 10", function () { prgBasic.addValue(-10); });
+                            addSampleButton("+ 10", function () { prgBasic.addValue(10); });
+                            addSampleButton("Reset", function () { prgBasic.reset(); lblBasic.text = "Value: 0"; }, 1);
+                        endGroup();
+
+                        lblBasic = addInfoLabel("Value: 40");
+
+                    endCard();
+
+                    // SAMPLE 2: Custom max, value text on the right, status
+                    startCard("2. Upload (max, valueFormat, status)");
+
+                        prgUpload = ProgressBar({
+                            width: "100%",
+                            titleText: "Uploading photos",
+                            max: 12,
+                            valuePosition: "right",
+                            valueFormat: function (self) {
+                                return self.value + " / " + self.max;
+                            },
+                            onComplete: function (self) {
+                                stopUpload();
+                                self.setStatus("success");
+                                self.setTitleText("12 photos uploaded");
+                            },
+                        });
+
+                        // GROUP: Buttons
+                        HGroup({ width: "auto", height: "auto", gap: 8 });
+                            addSampleButton("Start", startUpload);
+                            addSampleButton("Fail", function () {
+                                stopUpload();
+                                prgUpload.setStatus("error");
+                                prgUpload.setTitleText("Upload failed");
+                            }, 1);
+                            addSampleButton("Reset", function () {
+                                stopUpload();
+                                prgUpload.reset();
+                                prgUpload.setTitleText("Uploading photos");
+                            }, 1);
+                        endGroup();
+
+                    endCard();
+
+                    // SAMPLE 3: Indeterminate
+                    startCard("3. Indeterminate");
+
+                        prgConnect = ProgressBar({
+                            width: "100%",
+                            titleText: "Connecting to the server...",
+                            indeterminate: 1,
+                        });
+
+                        // GROUP: Buttons
+                        HGroup({ width: "auto", height: "auto", gap: 8 });
+                            addSampleButton("Connected", function () {
+                                prgConnect.setTitleText("Downloading data");
+                                prgConnect.setValue(25); // A known value ends the indeterminate mode.
+                            });
+                            addSampleButton("Waiting", function () {
+                                prgConnect.setTitleText("Connecting to the server...");
+                                prgConnect.setIndeterminate(1);
+                            }, 1);
+                        endGroup();
+
+                    endCard();
+
+                    // SAMPLE 4: Modern style
+                    startCard("4. Modern Style");
+
+                        prgModern = ProgressBar({
+                            styleName: "modern",
+                            width: "100%",
+                            titleText: "Storage",
+                            max: 50,
+                            value: 32,
+                            valueFormat: function (self) {
+                                return self.value + " GB of " + self.max + " GB";
+                            },
+                        });
+
+                        prgModernTasks = ProgressBar({
+                            styleName: "modern",
+                            width: "100%",
+                            valuePosition: "right",
+                            value: 70,
+                        });
+
+                        ProgressBar({
+                            styleName: "modern",
+                            width: "100%",
+                            titleText: "Backup",
+                            value: 100,
+                            status: "success",
+                            valueFormat: function () { return "Done"; },
+                        });
+
+                        ProgressBar({
+                            styleName: "modern",
+                            width: "100%",
+                            titleText: "Sync",
+                            value: 45,
+                            status: "error",
+                            valueFormat: function () { return "Stopped at 45%"; },
+                        });
+
+                        ProgressBar({
+                            styleName: "modern",
+                            width: "100%",
+                            titleText: "Searching for devices...",
+                            indeterminate: 1,
+                        });
+
+                        // GROUP: Buttons
+                        HGroup({ width: "auto", height: "auto", gap: 8 });
+                            addSampleButton("Random", function () {
+                                prgModern.setValue(random(0, 50));
+                                prgModernTasks.setValue(random(0, 100));
+                            });
+                        endGroup();
+
+                    endCard();
+
+                    // SAMPLE 5: Custom style
+                    startCard("5. Custom Style");
+
+                        ProgressBar({
+                            width: "100%",
+                            titleText: "Thick bar, no value text",
+                            valuePosition: "none",
+                            value: 60,
+                            style: {
+                                track: { height: 16, color: "#FFE0DA", round: 8 },
+                                bar: { color: "tomato" },
+                                title: { fontSize: 15, textColor: "tomato" },
+                            },
+                        });
+
+                        ProgressBar({
+                            width: "100%",
+                            valuePosition: "right",
+                            value: 25,
+                            style: {
+                                track: { height: 4, color: Black(0.08), round: 2 },
+                                bar: { color: "#689BD2" },
+                                valueText: { fontSize: 12, textColor: "#689BD2" },
+                            },
+                        });
+
+                    endCard();
+
+                endGroup();
+
+            endBox();
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        const startUpload = function () {
+            if (uploadTimer) return;
+            if (prgUpload.value >= prgUpload.max || prgUpload.status !== "normal") {
+                prgUpload.reset();
+                prgUpload.setTitleText("Uploading photos");
+            }
+            uploadTimer = setInterval(function () {
+                prgUpload.addValue(1);
+            }, 350);
+        };
+
+        const stopUpload = function () {
+            clearInterval(uploadTimer);
+            uploadTimer = null;
+        };
+
+        // GROUP: A white card with a title.
+        const startCard = function (title) {
+            VGroup({
+                width: 420,
+                height: "auto",
+                align: "left top",
+                gap: 16,
+                padding: 20,
+                color: "white",
+                round: 10,
+                border: 1,
+                borderColor: Black(0.1),
+            });
+            Label({
+                text: title,
+                fontSize: 14,
+                textColor: Black(0.45),
+            });
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+        const addSampleButton = function (text, onClick, isSecondary = 0) {
+            const btn = Button({
+                text: text,
+                width: 100,
+                height: 36,
+                fontSize: 14,
+            });
+            if (isSecondary) btn.color = "lightgray";
+            btn.on("click", onClick);
+            return btn;
+        };
+
+        const addInfoLabel = function (text) {
+            return Label({
+                text: text,
+                fontSize: 14,
+                textColor: Black(0.5),
+            });
+        };
+
+    </script>
+</head>
+
+<body></body>
+
+</html>

@@ -1,0 +1,9 @@
+Bu fonksiyonu basic.js kütüphanesine ekle ve dökümanları güncelle:
+
+// Create objects inside a container, after the component is created.
+const createIn = function (container, func) {
+    const previous = getDefaultContainerBox();
+    setDefaultContainerBox(container);
+    func();
+    setDefaultContainerBox(previous);
+};

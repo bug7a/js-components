@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-    <title>ProgressBar Component Sample</title>
+    <title>LineProgressBar Component Sample</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -41,7 +41,7 @@
             const lbl1 = Label({ text: "Default Style" });
             lbl1.elem.style.marginBottom = "5px";
 
-            progressBar1 = ProgressBar({
+            progressBar1 = LineProgressBar({
                 progress: 30,
                 height: 12,
             });
@@ -51,7 +51,7 @@
             const lbl2 = Label({ text: "Custom Colors & Size" });
             lbl2.elem.style.marginBottom = "5px";
 
-            progressBar2 = ProgressBar({
+            progressBar2 = LineProgressBar({
                 width: 400,
                 height: 12,
                 progress: 75,

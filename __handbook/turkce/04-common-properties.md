@@ -113,4 +113,4 @@ lblName.onResize(function(resizedLabel) {
 
 - `object.elem` — Kütüphanenin yarattığı elemanın bizzat Javascript (Document Object Model) altındaki Element karşılığıdır. `elem.style` ile her şeye müdahale edilebilir.
 - `object.containerBox` veya `object.parentBox` — Objenin eklendiği Container (Box sınıfından doğar) değişkenini getirir. (`page` nesnesi genel varsayılan konteynerdir).
-- `object.remove()` — Objeyi ekrandan DOM modelinden, olaylardan ve ebeveyn ağacından kalıcı siler.
+- `object.remove()` — Objeyi ekrandan DOM modelinden, olaylardan ve ebeveyn ağacından kalıcı siler. İçindeki basic.js nesneleri de silinir (varsa önce `destroy()` fonksiyonları çağrılır). Silinen bir nesneyi tekrar kullanmayın.

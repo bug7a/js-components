@@ -39,6 +39,14 @@ WebSite: https://bug7a.github.io/js-components
 
 - input.setWarningText("Warning text");  // Set invalid input warning
 
+- input.setRequiredIcon("icons/required.svg"); // Icon for required state (warningBallType: "icon")
+
+- input.setWarningIcon("icons/warning.svg");   // Icon for invalid state (warningBallType: "icon")
+
+- warningBallType: "color" | "icon"
+-- "color": Top-right colored ball (requiredColor / warningColor).
+-- "icon": Top-right icon (requiredIcon / warningIcon). Empty path uses the built-in icon.
+
 */
 
 "use strict";
@@ -74,6 +82,12 @@ const InputBDefaults = {
     warningText: "Invalid value format",
     warningColor: "#E5885E", // "#F1BF3C"
     animatedWarningBall: 1,
+
+    warningBallType: "color", // "color": colored ball, "icon": icon image
+    warningIconSize: 20,
+    requiredIcon: "", // image path or data URI. "": built-in icon
+    warningIcon: "", // image path or data URI. "": built-in icon
+    requiredIconColor: "#373836", // built-in required icon color (built-in warning icon uses warningColor)
 
     createLeftBox: 0,
     createRightBox: 0,
@@ -145,12 +159,39 @@ const InputB = function(params = {}) {
         box.warningBall.elem.style.transform = "scale(0.3)";
     }
 
+    // Built-in icons (SVG data URI): "required" (asterisk), "warning" (exclamation)
+    const createBuiltInIcon = function(kind, color) {
+        const glyph = (kind == "required")
+            ? '<path d="M12 6.5v11M7.2 9.25l9.6 5.5M7.2 14.75l9.6-5.5" stroke="white" stroke-width="2.2" stroke-linecap="round"/>'
+            : '<path d="M12 6.5v7" stroke="white" stroke-width="2.6" stroke-linecap="round"/><circle cx="12" cy="17.4" r="1.5" fill="white"/>';
+        const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="' + color + '"/>' + glyph + '</svg>';
+        return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+    };
+
+    // kind: "required" or "warning"
+    const applyWarningBallStyle = function(kind) {
+        if (box.warningBallType == "icon") {
+            let src;
+            if (kind == "required") {
+                src = box.requiredIcon || createBuiltInIcon("required", box.requiredIconColor);
+            } else {
+                src = box.warningIcon || createBuiltInIcon("warning", box.warningColor);
+            }
+            // Reload only if changed (prevents flicker)
+            if (box.warningBall.icon.imageElement.getAttribute("src") != src) {
+                box.warningBall.icon.load(src);
+            }
+        } else {
+            box.warningBall.color = (kind == "required") ? box.requiredColor : box.warningColor;
+        }
+    };
+
     // Shows a warning manually (used externally)
     const showWarning = function() {
         if (box.isRequired && box.getInputValue().length === 0) {
             // If required and empty, show required tooltip
             hideWarningBall();
-            box.warningBall.color = box.requiredColor;
+            applyWarningBallStyle("required");
             box.warningBall.tooltip.setHintText(box.requiredText);
             box.warningBall.tooltip.setLbl_color(box.requiredColor);
             showWarningBall();
@@ -158,7 +199,7 @@ const InputB = function(params = {}) {
         } else {
             // Otherwise, show warning
             hideWarningBall();
-            box.warningBall.color = box.warningColor;
+            applyWarningBallStyle("warning");
             box.warningBall.tooltip.setHintText(box.warningText);
             box.warningBall.tooltip.setLbl_color(box.warningColor);
             showWarningBall();
@@ -323,6 +364,18 @@ const InputB = function(params = {}) {
         box.warningColor = color;
     };
 
+    // Sets the icon shown when input is required and empty (warningBallType: "icon")
+    box.setRequiredIcon = function(path) {
+        box.requiredIcon = path;
+        if (box.warningBallType == "icon" && box.status == 1) applyWarningBallStyle("required");
+    };
+
+    // Sets the icon shown when input value is not valid (warningBallType: "icon")
+    box.setWarningIcon = function(path) {
+        box.warningIcon = path;
+        if (box.warningBallType == "icon" && box.status == 2) applyWarningBallStyle("warning");
+    };
+
     // Sets the unit label (e.g., KG) displayed near the input field
     box.setUnitText = function(text) {
         box.unitText = text;
@@ -455,17 +508,29 @@ const InputB = function(params = {}) {
         }
 
         // BOX: Warning Ball:
+        const isIconBall = (box.warningBallType == "icon");
         box.warningBall = Box({
             right: 5,
             top: 5,
-            width: 16,
-            height: 16,
-            border: 2,
-            color: box.requiredColor,
+            width: isIconBall ? box.warningIconSize : 16,
+            height: isIconBall ? box.warningIconSize : 16,
+            border: isIconBall ? 0 : 2,
+            color: isIconBall ? "transparent" : box.requiredColor,
             borderColor: "#373836",
             round: 100,
             opacity: 0,
         });
+
+        // ICON: Warning icon (only in icon mode)
+        if (isIconBall) {
+            box.warningBall.icon = Icon({
+                left: 0,
+                top: 0,
+                width: "100%",
+                height: "100%",
+            });
+            box.warningBall.add(that);
+        }
         box.warningBall.elem.style.transform = "scale(0.3)";
         if (box.animatedWarningBall == 1) {
             box.warningBall.setMotion("opacity 0.2s, transform 0.2s");

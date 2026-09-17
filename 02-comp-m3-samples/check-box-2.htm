@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Check Box 2</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp-m3/check-box.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // *** VARIABLES:
+        let lblTasks, chkDisabled;
+        const taskList = [];
+
+        // Selection color (tick) and its light versions (backgrounds):
+        // NOTE: Light versions are solid colors (10% and 20% of ACCENT on white), not rgba.
+        // WHY: A transparent mark on a transparent row background stacks and looks darker.
+        // NOTE: Same alternatives as radio-button-2.htm
+
+        // Pastel green:
+        //const ACCENT = "#6FCF97";
+        //const ACCENT_10 = "#F1FAF5";
+        //const ACCENT_20 = "#E2F5EA";
+
+        // Blue (alternative):
+        //const ACCENT = "#689BD2";
+        //const ACCENT_10 = "#F0F5FB";
+        //const ACCENT_20 = "#E1EBF6";
+
+        // Cadet blue (alternative):
+        const ACCENT = "cadetblue"; // #5F9EA0
+        const ACCENT_10 = "#EFF5F6";
+        const ACCENT_20 = "#DFECEC";
+
+        // Tomato (alternative):
+        //const ACCENT = "tomato"; // #FF6347
+        //const ACCENT_10 = "#FFEFED";
+        //const ACCENT_20 = "#FFE0DA";
+
+        const start = function () {
+
+            page.color = "whitesmoke";
+
+            // BOX: Full screen scrollable container
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            startBox(0, 0, "100%", "100%", {
+                color: "transparent",
+                scrollY: 1,
+            });
+
+                // GROUP: Page layout
+                VGroup({
+                    width: "100%",
+                    height: "auto", // Grows with content, so the Box can scroll.
+                    align: "center top",
+                    gap: 30,
+                    padding: 50,
+                });
+
+                    // LABEL: Title
+                    Label({
+                        text: "Check Box 2",
+                        fontSize: 26,
+                        fontFamily: "opensans-bold",
+                    });
+
+                    Label({
+                        text: "Custom style: light box, thin border, only tick when checked.",
+                        fontSize: 14,
+                        textColor: Black(0.5),
+                    });
+
+                    // SAMPLE 1: Task list (full width rows)
+                    startCard("1. Task List");
+
+                        ["Buy groceries", "Call the dentist", "Finish the report", "Go for a walk"].forEach(function (name, index) {
+                            CheckBox({
+                                key: String(index),
+                                width: "100%",
+                                labelText: name,
+                                checked: (index == 1) ? 1 : 0,
+                                onChange: refreshTasks,
+                                styleName: "modern",
+                                style: getCustomStyle(),
+                            });
+                            taskList.push(that);
+                        });
+
+                        lblTasks = Label({
+                            text: "",
+                            fontSize: 14,
+                            textColor: Black(0.5),
+                            padding: [12, 8],
+                        });
+
+                    endCard();
+
+                    // SAMPLE 2: States
+                    startCard("2. States");
+
+                        chkDisabled = CheckBox({
+                            width: "100%",
+                            labelText: "Disabled (checked)",
+                            checked: 1,
+                            enabled: 0,
+                            styleName: "modern",
+                            style: getCustomStyle(),
+                        });
+
+                        CheckBox({
+                            width: "100%",
+                            labelText: "Enable the check box above",
+                            onChange: function (self) {
+                                chkDisabled.setEnabled(self.checked);
+                            },
+                            styleName: "modern",
+                            style: getCustomStyle(),
+                        });
+
+                        CheckBox({
+                            width: "100%",
+                            labelText: "Label on the left",
+                            labelPosition: "left",
+                            styleName: "modern",
+                            style: getCustomStyle(),
+                        });
+
+                        // Without label (auto width)
+                        HGroup({ width: "auto", height: "auto", gap: 4 });
+                            CheckBox({ styleName: "modern", style: getCustomStyle() });
+                            CheckBox({ checked: 1, styleName: "modern", style: getCustomStyle() });
+                        endGroup();
+
+                    endCard();
+
+                endGroup();
+
+            endBox();
+
+            refreshTasks();
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        // Returns a new style object for each check box.
+        // NOTE: Layout, sizes and borders come from the "modern" style package. Only the selection colors are set here.
+        // WHY: CheckBox fills missing keys into the given object, so do not share one object.
+        const getCustomStyle = function () {
+            return {
+                checkedBox: {
+                    color: ACCENT_10,
+                },
+                hoverCheckedBox: {
+                    color: ACCENT_20, // A bit darker, so mouse over is visible on checked rows too.
+                },
+                checkedMark: { // The square stays without border, behind the tick. Same color as hoverCheckedBox.
+                    color: ACCENT_20,
+                },
+                tick: {
+                    color: ACCENT,
+                },
+            };
+        };
+
+        // GROUP: A white card with a title.
+        const startCard = function (title) {
+            VGroup({
+                width: 360,
+                height: "auto",
+                align: "left top",
+                gap: 4,
+                padding: 12,
+                color: "white",
+                round: 12,
+                border: 1,
+                borderColor: Black(0.1),
+            });
+            Label({
+                text: title,
+                fontSize: 14,
+                textColor: Black(0.45),
+                padding: [12, 8],
+            });
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+        const refreshTasks = function () {
+            const done = taskList.filter(function (chk) { return chk.checked == 1; }).length;
+            lblTasks.text = "Done: " + done + " / " + taskList.length;
+        };
+
+    </script>
+</head>
+
+<body></body>
+
+</html>

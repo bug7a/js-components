@@ -4,6 +4,17 @@ Bu belgede basic.js kütüphanesine eklenen yeni özellikler, güncellemeler ve 
 
 ---
 
+## Versiyon 26.09.17
+
+*   **`remove()` içindeki nesneleri de siler:** Bir nesne silindiğinde, içindeki bütün basic.js nesneleri de silinir (önce üstteki nesneler). Bir alt nesnenin `destroy()` fonksiyonu varsa (bileşen şablonu) önce o çağrılır. Böylece bileşenler global olaylarını temizleyebilir (örneğin `page.onResize`, `window` olayları, `RadioButton` grupları gibi statik listeler).
+    *   **Neden:** Önceden yalnızca silinen nesnenin kendisi temizleniyordu. Alt nesnelerin `onResize` kayıtları ve global olayları kalıyordu, bu yüzden silinen bir sayfa bütün nesneleriyle birlikte bellekte kalıyordu. Admin panel şablonunda her sayfa değişiminde yaklaşık 400 DOM düğümü ve 250 olay dinleyicisi kalıyordu (240 sayfa değişiminden sonra: 70 MB bellek, 121.000 DOM düğümü). Artık 0.
+    *   **Not:** Silinen bir nesne tekrar kullanılmak için değildir. `remove()` sonrası nesneyi ekrana tekrar eklemeyin, yenisini oluşturun.
+    *   **Not:** Doğrudan `page` üzerinde oluşturulan nesneler (örneğin bir sayfanın açtığı `ContextMenu`) sayfa kutusunun içinde değildir. Onların `destroy()` fonksiyonunu sayfanızın `destroy()` fonksiyonunda çağırın.
+*   **`object.elem._basicObject`:** Her element, kendi basic.js nesnesine bir bağlantı tutar (`makeBasicObject()` ekler).
+*   **`object._isRemoved`:** `remove()` sonrası `1` olur. İkinci `remove()` çağrısı bir şey yapmaz.
+
+---
+
 ## Versiyon 26.03.26
 
 *   **`HGroup()`, `VGroup()`, `endGroup()`:** Arayüz elemanlarını ekranda yatay veya dikey olarak otomatik hizalayabilmek (Auto Layout) için eklendi.

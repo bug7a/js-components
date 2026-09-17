@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>Appointment Form</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <!-- LIBRARY FILES -->
+        <!-- <link rel="preload" href="image.png" as="image"> -->
+        <link rel="preload" href="../../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="preload" href="../../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../../basic/basic.min.css">
+        <script src="../../basic/basic.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8" defer></script>
+
+        <script src="../../comp-m2/tooltip.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m2/input-b.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m2/email-input-b.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m2/phone-input-b.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m2/textarea-b.min.js" type="text/javascript" charset="utf-8" defer></script>
+
+        <script src="../../comp-m2/waiting.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m2/form.min.js" type="text/javascript" charset="utf-8" defer></script>
+
+        <script src="../../comp-m3/check-box.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m3/radio-button.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m4/select-date.js" type="text/javascript" charset="utf-8" defer></script>
+
+        <!-- ALL COMPONENTS IN ONE FILE -->
+        <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
+
+        <!--
+
+        /* Bismillah */
+
+        - An appointment booking form. (Clinic, consultant, salon, service desk...)
+        - InputB, EmailInputB, PhoneInputB, TextareaB, Form, Waiting (comp-m2)
+        - CheckBox, RadioButton (comp-m3)
+        - SelectDate (comp-m4)
+
+        - Time slots are created from the opening hours, the service duration and the booked times.
+          A slot is shown only if the whole service fits before closing and does not overlap a booked time.
+        - After the booking, the visitor can download a calendar file (.ics).
+
+        - CheckBox, RadioButton and SelectDate are placed in an InputB field (createInput: 0).
+          So they look like the other inputs and the Form checks them too. (See: createField)
+
+        -->
+
+        <script>
+
+        // This example posts the booking as JSON to your server.
+        // SERVICE_URL is empty: Demo mode (nothing is sent, data is printed to the console).
+
+        // *** CONSTANTS:
+        const SERVICE_URL = ""; // Ex: "https://your-site.com/api/appointments"
+        const BUSINESS_NAME = "Green Clinic";
+        const BUSINESS_ADDRESS = "Bagdat Cad. No: 12, Kadikoy, Istanbul";
+        const FORM_TITLE = "Book an Appointment";
+        const FORM_DESCRIPTION = "Choose a service and a time that suits you. You will get a confirmation e-mail right after booking.";
+
+        const ACCENT_COLOR = "#65A293";
+        const TEXT_COLOR = "#373836";
+        const WARNING_COLOR = "#E5885E";
+
+        const SERVICES = [
+            { id: "first", name: "First Consultation", duration: 45, price: 0 },
+            { id: "follow-up", name: "Follow-up Session", duration: 30, price: 60 },
+            { id: "extended", name: "Extended Session", duration: 60, price: 110 },
+            { id: "check-up", name: "Full Check-up", duration: 90, price: 180 },
+        ];
+
+        const MEETING_TYPES = ["In person", "Video call", "Phone call"];
+
+        // Opening hours: day of week (0: Sunday) -> [open, close] in "HH:mm". null: Closed
+        const OPENING_HOURS = {
+            0: null,
+            1: ["09:00", "18:00"],
+            2: ["09:00", "18:00"],
+            3: ["09:00", "18:00"],
+            4: ["09:00", "18:00"],
+            5: ["09:00", "18:00"],
+            6: ["10:00", "14:00"],
+        };
+
+        const SLOT_MINUTES = 30; // Time between two start times
+        const BOOKING_DAYS = 60; // How many days ahead a booking can be made
+        const MIN_NOTICE_MINUTES = 120; // Today: the first slot starts at least 2 hours later
+
+        // *** VARIABLES:
+        let form, waiting;
+        let firstNameInput, lastNameInput, emailInput, phoneInput, notesTextarea;
+        let serviceField, meetingTypeField, dateField, timeField, reminderField, consentField;
+        let summaryLabel;
+        let timeRadios = [];
+
+        // Common input params:
+        let inputStyle;
+
+        // First running function. (basic.js calls start() when the page object is ready)
+        // WHY: Not window.onload, because the library files are loaded with "defer".
+        const start = function() {
+
+            page.color = "white";
+            addChoiceStyles(); // CheckBox and RadioButton style package: "form"
+
+            inputStyle = {
+                width: "100%",
+                backgroundColor: "#F6F6F6",
+                selectedBackgroundColor: "#F6F6F6",
+                lineColor: Black(0),
+                selectedLineColor: Black(0),
+                backBorderColor: Black(0),
+                selectedBackBorderColor: Black(0.4),
+                backBorderTopRound: 8,
+                backBorderBottomRound: 8,
+            };
+
+            // FORM:
+            form = Form({
+                minWidth: 700,
+                maxWidth: 700,
+                buttonColor: ACCENT_COLOR,
+                buttonText: "BOOK APPOINTMENT",
+                showDetailWarning: 1,
+                missingEntryText: "{{count}} missing entry",
+                missingEntriesText: "{{count}} missing entries",
+                warningText: "<b>{{name}}</b> can't be empty",
+                errorText: "<b>{{name}}</b> is not valid",
+                minimalButton: 0,
+                doubleInputAlwaysHorizontal: 0,
+                onSendClick: function(json) {
+                    sendBooking(json);
+                },
+                onEdit: function(input) {
+                    updateSummary();
+                },
+            });
+
+            // LABEL: Title
+            Label({
+                text: FORM_TITLE,
+                textColor: TEXT_COLOR,
+                fontSize: 26,
+            });
+            that.elem.style.fontFamily = "opensans-bold";
+            form.addTitle(that);
+
+            // LABEL: Description
+            if (FORM_DESCRIPTION != "") {
+                Label({
+                    text: FORM_DESCRIPTION,
+                    fontSize: 16,
+                    textColor: "#999999",
+                });
+                form.addTitle(that);
+            }
+
+            // *** SERVICE
+
+            addSectionTitle("1. Service");
+
+            // RADIO BUTTON: Service
+            serviceField = createField({
+                key: "service",
+                type: "radio",
+                titleText: "SERVICE",
+                isRequired: 1,
+            }, function(field) {
+
+                SERVICES.forEach(function(service) {
+                    RadioButton({
+                        styleName: "form",
+                        group: "service",
+                        value: service.id,
+                        labelText: service.name + " <span style='color:" + Black(0.45) + "; font-size: 15px'>· " + service.duration + " min · " + formatPrice(service.price) + "</span>",
+                        onChange: function() {
+                            field.update();
+                            renderTimeSlots(); // WHY: A longer service can not use the late slots.
+                        },
+                    });
+                });
+
+                field.getInputValue = function() {
+                    return RadioButton.getValue("service");
+                };
+
+            });
+            form.addInput(serviceField);
+
+            // RADIO BUTTON: Meeting type
+            meetingTypeField = createField({
+                key: "meetingType",
+                type: "radio",
+                titleText: "MEETING TYPE",
+                isRequired: 1,
+            }, function(field) {
+
+                createWrapGroup();
+
+                    MEETING_TYPES.forEach(function(name) {
+                        RadioButton({
+                            styleName: "form",
+                            group: "meetingType",
+                            value: name,
+                            labelText: name,
+                            onChange: field.update,
+                        });
+                    });
+
+                endGroup();
+
+                field.getInputValue = function() {
+                    return RadioButton.getValue("meetingType");
+                };
+
+            });
+            form.addInput(meetingTypeField);
+
+            // *** DATE AND TIME
+
+            addSectionTitle("2. Date & Time");
+
+            // SELECT DATE: Day
+            dateField = createField({
+                key: "date",
+                type: "date",
+                titleText: "DATE",
+                isRequired: 1,
+                warningText: "We are closed on this day",
+                warningColor: WARNING_COLOR,
+            }, function(field) {
+
+                field.picker = SelectDate({
+                    width: "100%",
+                    height: 40,
+                    minDate: new Date(),
+                    maxDate: addDays(new Date(), BOOKING_DAYS),
+                    format: "D MMMM YYYY, dddd",
+                    placeholder: "Select a date",
+                    onChange: function() {
+                        field.update();
+                        renderTimeSlots();
+                    },
+                    onOpen: function() { setFieldFocus(field, 1); },
+                    onClose: function() { setFieldFocus(field, 0); },
+                    style: {
+                        // Looks like the text of the other inputs:
+                        field: { color: "transparent", border: 0, round: 0, padding: [0, 0] },
+                        fieldHover: { borderColor: "transparent" },
+                        fieldFocus: { borderColor: "transparent" },
+                        fieldText: { fontSize: 20, textColor: TEXT_COLOR },
+                        placeholder: { textColor: Black(0.45) },
+                        icon: { color: Black(0.45) },
+                        today: { borderColor: ACCENT_COLOR },
+                        selectedDay: { color: ACCENT_COLOR },
+                        footerButton: { textColor: ACCENT_COLOR },
+                    },
+                });
+
+                // LABEL: Opening hours
+                Label({
+                    text: "Mon–Fri 09:00–18:00 · Sat 10:00–14:00 · Sun closed",
+                    fontSize: 14,
+                    textColor: Black(0.45),
+                });
+
+                field.getInputValue = function() {
+                    return field.picker.value; // "YYYY-MM-DD"
+                };
+
+                // A closed day is not valid.
+                field.isValid = function() {
+                    return (field.picker.date && getOpeningHours(field.picker.date)) ? 1 : 0;
+                };
+
+            });
+            form.addInput(dateField);
+
+            // RADIO BUTTON: Time slots (created by renderTimeSlots)
+            timeField = createField({
+                key: "time",
+                type: "radio",
+                titleText: "TIME",
+                isRequired: 1,
+            }, function(field) {
+
+                // LABEL: Info (no date, closed day, no free slot)
+                field.infoLabel = Label({
+                    text: "",
+                    fontSize: 16,
+                    textColor: Black(0.45),
+                });
+
+                field.getInputValue = function() {
+                    return RadioButton.getValue("time"); // "HH:mm"
+                };
+
+            });
+            form.addInput(timeField);
+
+            // *** YOUR DETAILS
+
+            addSectionTitle("3. Your Details");
+
+            // INPUT: First Name
+            firstNameInput = InputB({
+                key: "firstName",
+                ...inputStyle,
+                isRequired: 1,
+                titleText: "FIRST NAME",
+                placeholder: "Jack",
+                leftPadding: 20,
+            });
+
+            // INPUT: Last Name
+            lastNameInput = InputB({
+                key: "lastName",
+                ...inputStyle,
+                isRequired: 1,
+                titleText: "LAST NAME",
+                placeholder: "Brown",
+                leftPadding: 20,
+            });
+            form.addDoubleInput(firstNameInput, lastNameInput);
+
+            // INPUT: Email
+            emailInput = EmailInputB({
+                key: "email",
+                ...inputStyle,
+                isRequired: 1,
+                titleText: "YOUR EMAIL",
+                placeholder: "example@site.com",
+                warningText: "Invalid email format",
+                warningColor: WARNING_COLOR,
+                maxChar: 50,
+            });
+
+            // INPUT: Phone
+            phoneInput = PhoneInputB({
+                key: "phone",
+                ...inputStyle,
+                isRequired: 1,
+                titleText: "PHONE NUMBER",
+                placeholder: "(auto)",
+                warningText: "Invalid phone number format",
+                warningColor: WARNING_COLOR,
+                countryCode: "+90",
+                phoneMask: " (___) ___-____",
+                unitText: "TR",
+            });
+            form.addDoubleInput(emailInput, phoneInput);
+
+            // INPUT: Notes
+            notesTextarea = TextareaB({
+                key: "notes",
+                ...inputStyle,
+                isRequired: 0,
+                titleText: "NOTES",
+                placeholder: "Anything we should know before the appointment? (Optional)",
+                minCharCount: 0,
+                showCount: 1,
+                lengthText: "length: ",
+                maxChar: 500,
+                height: 140,
+                rightPadding: 5,
+                unitStyle: {
+                    padding: [12, 4],
+                    color: "#373836EE",
+                    textColor: "white",
+                },
+            });
+            form.addInput(notesTextarea);
+
+            // CHECK BOX: Reminders
+            reminderField = createField({
+                key: "reminders",
+                type: "checkbox",
+                titleText: "REMINDERS",
+                descriptionText: "We remind you one day before the appointment.",
+                isRequired: 0,
+            }, function(field) {
+
+                field.checkBoxes = [];
+
+                createWrapGroup();
+
+                    ["E-mail", "SMS"].forEach(function(name) {
+                        CheckBox({
+                            styleName: "form",
+                            labelText: name,
+                            checked: 1,
+                            onChange: field.update,
+                        });
+                        field.checkBoxes.push(that);
+                    });
+
+                endGroup();
+
+                field.getInputValue = function() {
+                    return getCheckedLabels(field.checkBoxes);
+                };
+
+            });
+            form.addInput(reminderField);
+
+            // CHECK BOX: Consent
+            consentField = createField({
+                key: "consent",
+                type: "checkbox",
+                titleText: "CANCELLATION POLICY",
+                isRequired: 1,
+            }, function(field) {
+
+                field.checkBox = CheckBox({
+                    styleName: "form",
+                    labelText: "I understand that I must cancel or change my appointment at least 24 hours before it starts.",
+                    onChange: field.update,
+                });
+                // Long label: use the full width and wrap the text.
+                field.checkBox.width = "100%";
+                field.checkBox.contentBox.width = "100%";
+                field.checkBox.mark.elem.style.flexShrink = "0";
+                field.checkBox.label.elem.style.whiteSpace = "normal";
+                field.checkBox.label.elem.style.flex = "1 1 0";
+
+                field.getInputValue = function() {
+                    return (field.checkBox.checked == 1) ? "accepted" : "";
+                };
+
+            });
+            form.addInput(consentField);
+
+            // LABEL: Summary (above the button)
+            summaryLabel = Label({
+                text: "",
+                width: "100%",
+                fontSize: 16,
+                textColor: TEXT_COLOR,
+                color: "#EEF6F4",
+                border: 1,
+                borderColor: "#CFE5DF",
+                round: 8,
+                padding: [20, 16],
+            });
+            summaryLabel.elem.style.lineHeight = "26px";
+            form.inputGroup.add(summaryLabel);
+            summaryLabel.position = "relative";
+
+            // WAITING: Create object 1 time.
+            waiting = Waiting({
+                animated: 1,
+                waitingIcon: "assets/mail.png",
+                coverBackgroundColor: "rgba(0, 0, 0, 0.85)",
+            });
+            waiting.icon.elem.style.filter = "invert(100%)";
+
+            renderTimeSlots();
+            updateSummary();
+
+        };
+
+        // *** TIME SLOTS:
+
+        // Opening hours of a date: { open, close } in minutes of the day, or null (closed)
+        const getOpeningHours = function(date) {
+            const hours = OPENING_HOURS[date.getDay()];
+            return (hours) ? { open: toMinutes(hours[0]), close: toMinutes(hours[1]) } : null;
+        };
+
+        // TEST: Booked start times of a date. (The same date always gives the same result.)
+        // TODO: Get the booked times from your service.
+        const getBookedSlots = function(dateValue) {
+            const booked = new Set();
+            for (let minutes = 0; minutes < 24 * 60; minutes += SLOT_MINUTES) {
+                const hash = hashText(dateValue + "-" + minutes);
+                if (hash % 10 < 3) booked.add(minutes); // About 30% is booked.
+            }
+            return booked;
+        };
+
+        // Free start times for the selected date and service: [{ minutes, text, isFree }]
+        const getTimeSlots = function(date, duration) {
+
+            const hours = getOpeningHours(date);
+            if (!hours) return [];
+
+            const booked = getBookedSlots(toDateValue(date));
+            const isToday = toDateValue(date) == toDateValue(new Date());
+            const now = new Date();
+            const earliest = (isToday) ? now.getHours() * 60 + now.getMinutes() + MIN_NOTICE_MINUTES : 0;
+
+            const slots = [];
+
+            // WHY: The whole service must end before closing.
+            for (let start = hours.open; start + duration <= hours.close; start += SLOT_MINUTES) {
+
+                let isFree = start >= earliest;
+
+                // WHY: A long service uses more than one slot. None of them can be booked.
+                for (let minutes = start; minutes < start + duration && isFree; minutes += SLOT_MINUTES) {
+                    if (booked.has(minutes)) isFree = false;
+                }
+
+                slots.push({ minutes: start, text: toTimeText(start), isFree: isFree });
+
+            }
+
+            return slots;
+
+        };
+
+        // Creates the time radio buttons again. (Date or service is changed.)
+        const renderTimeSlots = function() {
+
+            const field = timeField;
+            const selectedTime = RadioButton.getValue("time");
+            const date = dateField.picker.date;
+            const service = getSelectedService();
+
+            // Remove old radio buttons (also from the static group list)
+            timeRadios.forEach(function(radio) { radio.destroy(); });
+            timeRadios = [];
+            if (field.slotGroup) field.slotGroup.remove();
+            field.slotGroup = null;
+
+            // Info texts
+            if (!date) {
+                field.infoLabel.text = "Select a date to see the available times.";
+            } else if (!getOpeningHours(date)) {
+                field.infoLabel.text = "We are closed on " + date.toLocaleDateString("en-GB", { weekday: "long" }) + "s. Please select another day.";
+            } else if (!service) {
+                field.infoLabel.text = "Select a service to see the available times.";
+            } else {
+
+                const slots = getTimeSlots(date, service.duration);
+                const freeCount = slots.filter(function(slot) { return slot.isFree; }).length;
+
+                field.infoLabel.text = (freeCount > 0)
+                    ? freeCount + " free times for " + service.duration + " minutes. Crossed times are booked."
+                    : "No free time on this day. Please select another day.";
+
+                // WHY: setDefaultContainerBox() is not in the start/end list. One group is started and ended in it,
+                // so the radio buttons are created in the group.
+                const previousContainer = getDefaultContainerBox();
+                setDefaultContainerBox(field.content);
+
+                    field.slotGroup = createWrapGroup();
+
+                        slots.forEach(function(slot) {
+                            const radio = RadioButton({
+                                styleName: "form",
+                                group: "time",
+                                value: slot.text,
+                                labelText: slot.text,
+                                enabled: (slot.isFree) ? 1 : 0,
+                                checked: (slot.isFree && slot.text == selectedTime) ? 1 : 0, // Keep the time if it is still free.
+                                onChange: field.update,
+                            });
+                            that.elem.style.minWidth = "100px"; // Column width. Long labels make it wider.
+                            if (!slot.isFree) radio.label.elem.style.textDecoration = "line-through";
+                            timeRadios.push(radio);
+                        });
+
+                    endGroup();
+
+                setDefaultContainerBox(previousContainer);
+
+            }
+
+            field.update();
+
+        };
+
+        const getSelectedService = function() {
+            const id = RadioButton.getValue("service");
+            return SERVICES.find(function(service) { return service.id == id; }) || null;
+        };
+
+        // *** SUMMARY:
+
+        const updateSummary = function() {
+
+            if (!summaryLabel) return;
+
+            const service = getSelectedService();
+            const meetingType = RadioButton.getValue("meetingType");
+            const date = dateField.picker.date;
+            const time = RadioButton.getValue("time");
+
+            const line = function(title, value) {
+                return "<span style='color:" + Black(0.5) + "'>" + title + ":</span> " + ((value) ? "<b>" + value + "</b>" : "<span style='color:" + Black(0.35) + "'>—</span>");
+            };
+
+            let timeText = "";
+            if (time && service) {
+                timeText = time + " – " + toTimeText(toMinutes(time) + service.duration);
+            }
+
+            summaryLabel.text = [
+                "<b style='color:" + ACCENT_COLOR + "'>YOUR APPOINTMENT</b>",
+                line("Service", (service) ? service.name + " (" + formatPrice(service.price) + ")" : ""),
+                line("When", (date) ? date.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" }) + ((timeText) ? ", " + timeText : "") : ""),
+                line("Where", (meetingType == "In person") ? BUSINESS_ADDRESS : meetingType),
+            ].join("<br>");
+
+        };
+
+        // *** FORM FIELDS (for CheckBox, RadioButton, SelectDate):
+
+        // Creates an InputB field without an input and puts custom content in it.
+        // The field works with Form: title, required warning, status, getInputValue().
+        const createField = function(params, buildContent) {
+
+            const field = InputB({
+                ...inputStyle,
+                rightPadding: 20,
+                ...params,
+                createInput: 0, // No text input, we add our own content.
+            });
+
+            // BOX: Content area (created by InputB)
+            field.inputBox.height = "auto";
+            field.inputBox.elem.style.marginTop = "10px";
+            field.inputBox.elem.style.marginBottom = "4px";
+            field.inputBox.clipContent = 0;
+
+            // Call after the value is changed:
+            field.update = function() {
+                field.checkIfInputIsRequiredAndEmpty();
+                field.showWarningIfNotValid(field.isValid());
+                field.onEdit(); // Form checks all fields.
+            };
+
+            const previousContainer = getDefaultContainerBox();
+            setDefaultContainerBox(field.inputBox);
+
+                // GROUP: Field content
+                field.content = VGroup({
+                    width: "100%",
+                    height: "auto",
+                    align: "left top",
+                    gap: 6,
+                    position: "relative", // WHY: inputBox height is "auto".
+                });
+                field.content.clipContent = 0;
+
+                    buildContent(field); // Must set field.getInputValue()
+
+                endGroup();
+
+            setDefaultContainerBox(previousContainer);
+
+            // Show "Required" warning if needed, like other inputs.
+            field.checkIfInputIsRequiredAndEmpty();
+
+            return field;
+
+        };
+
+        // GROUP: Wrapping row for radio buttons and check boxes
+        const createWrapGroup = function() {
+            const group = AutoLayout({
+                flow: "horizontal",
+                align: "left top",
+                flexWrap: "wrap",
+                width: "100%",
+                height: "auto",
+                gap: 4,
+            });
+            group.elem.style.columnGap = "12px"; // Choices have their own padding.
+            return group;
+        };
+
+        // Selected field look (like focused inputs)
+        const setFieldFocus = function(field, isFocused) {
+            field.background.borderColor = (isFocused) ? field.selectedBackBorderColor : field.backBorderColor;
+        };
+
+        const getCheckedLabels = function(checkBoxes) {
+            return checkBoxes
+                .filter(function(chk) { return chk.checked == 1; })
+                .map(function(chk) { return chk.labelText; });
+        };
+
+        // STYLE PACKAGE: "form" for CheckBox and RadioButton (like the modern style, with the form colors)
+        // NOTE: Light colors are 20% and 30% of ACCENT_COLOR on white. (Solid colors, so they do not stack.)
+        // WHY: Called in start(), because the component files are loaded with "defer".
+        const addChoiceStyles = function() {
+
+            const getStyle = function() {
+                return {
+                    box: { color: "transparent", round: 8 },
+                    hoverBox: { color: "#EDF0EF" },
+                    checkedBox: { color: "#E0ECE9" }, // 20%
+                    hoverCheckedBox: { color: "#D1E3DF" }, // 30%
+                    layout: { gap: 8, padding: [6, 6], align: "left center" }, // Small padding: fits in narrow columns.
+                    mark: { width: 22, height: 22, color: White(1), border: 1, borderColor: Black(0.4), round: 4 },
+                    checkedMark: { color: "#D1E3DF", borderColor: "transparent" }, // Same as hoverCheckedBox.color
+                    hoverMark: { borderColor: ACCENT_COLOR },
+                    label: { fontSize: 18, textColor: TEXT_COLOR }, // Input texts are 20
+                };
+            };
+
+            CheckBox.styles.form = getStyle();
+            CheckBox.styles.form.tick = { color: ACCENT_COLOR, thickness: 2.5 };
+
+            RadioButton.styles.form = getStyle();
+            RadioButton.styles.form.mark.round = 100;
+            RadioButton.styles.form.dot = { color: ACCENT_COLOR, size: 0.5, round: 100 };
+
+        };
+
+        // LABEL: Section title
+        const addSectionTitle = function(text) {
+            const lbl = Label({
+                text: text,
+                fontSize: 14,
+                textColor: ACCENT_COLOR,
+                width: "100%",
+                padding: [0, 6],
+            });
+            lbl.elem.style.fontFamily = "opensans-bold";
+            lbl.elem.style.letterSpacing = "1px";
+            lbl.elem.style.textTransform = "uppercase";
+            lbl.elem.style.borderBottom = "1px solid " + Black(0.08);
+            form.inputGroup.add(lbl);
+            lbl.position = "relative";
+            if (form.inputGroup.elem.children.length > 1) lbl.elem.style.marginTop = "16px";
+        };
+
+        // *** HELPERS:
+
+        const formatPrice = function(price) {
+            return (price) ? "$" + price : "Free";
+        };
+
+        // "09:30" -> 570
+        const toMinutes = function(text) {
+            const parts = text.split(":");
+            return Number(parts[0]) * 60 + Number(parts[1]);
+        };
+
+        // 570 -> "09:30"
+        const toTimeText = function(minutes) {
+            return String(Math.floor(minutes / 60)).padStart(2, "0") + ":" + String(minutes % 60).padStart(2, "0");
+        };
+
+        // Local date: "2026-09-16"
+        const toDateValue = function(date) {
+            return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0");
+        };
+
+        const addDays = function(date, days) {
+            return new Date(date.getFullYear(), date.getMonth(), date.getDate() + days);
+        };
+
+        // Small text hash (for the test data): FNV-1a with a final mix
+        // WHY: A simple "hash * 31" gave a repeating pattern for texts that differ only at the end.
+        const hashText = function(text) {
+            let hash = 2166136261;
+            for (let i = 0; i < text.length; i++) hash = Math.imul(hash ^ text.charCodeAt(i), 16777619);
+            hash ^= hash >>> 16;
+            hash = Math.imul(hash, 0x45d9f3b);
+            hash ^= hash >>> 16;
+            return hash >>> 0;
+        };
+
+        // *** CALENDAR FILE (.ics):
+
+        const downloadCalendarFile = function(booking) {
+
+            const pad = function(n) { return String(n).padStart(2, "0"); };
+            // Local time without a time zone ("floating"): the calendar app uses the time zone of the visitor.
+            const toICSDate = function(date) {
+                return date.getFullYear() + pad(date.getMonth() + 1) + pad(date.getDate()) + "T" + pad(date.getHours()) + pad(date.getMinutes()) + "00";
+            };
+            const escapeText = function(text) {
+                return String(text).replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\n/g, "\\n");
+            };
+
+            const now = new Date();
+            const lines = [
+                "BEGIN:VCALENDAR",
+                "VERSION:2.0",
+                "PRODID:-//JS Form//Appointment//EN",
+                "BEGIN:VEVENT",
+                "UID:" + now.getTime() + "@js-form",
+                "DTSTAMP:" + now.toISOString().replace(/[-:]/g, "").slice(0, 15) + "Z",
+                "DTSTART:" + toICSDate(booking.start),
+                "DTEND:" + toICSDate(booking.end),
+                "SUMMARY:" + escapeText(booking.service.name + " – " + BUSINESS_NAME),
+                "LOCATION:" + escapeText((booking.meetingType == "In person") ? BUSINESS_ADDRESS : booking.meetingType),
+                "DESCRIPTION:" + escapeText("Please cancel or change at least 24 hours before."),
+                "BEGIN:VALARM",
+                "TRIGGER:-PT1H",
+                "ACTION:DISPLAY",
+                "DESCRIPTION:" + escapeText(booking.service.name),
+                "END:VALARM",
+                "END:VEVENT",
+                "END:VCALENDAR",
+            ];
+
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(new Blob([lines.join("\r\n")], { type: "text/calendar" }));
+            link.download = "appointment.ics";
+            link.click();
+            URL.revokeObjectURL(link.href);
+
+        };
+
+        // *** SEND:
+
+        const sendBooking = async function(json) {
+
+            // Keep the booking before the form is cleared (for the message and the calendar file).
+            const service = getSelectedService();
+            const time = RadioButton.getValue("time");
+            const start = new Date(dateField.picker.date);
+            start.setHours(0, toMinutes(time), 0, 0);
+            const booking = {
+                service: service,
+                meetingType: RadioButton.getValue("meetingType"),
+                start: start,
+                end: new Date(start.getTime() + service.duration * 60000),
+            };
+
+            waiting.show();
+
+            let result = "error"; // "sent", "taken", "error"
+
+            try {
+
+                if (SERVICE_URL == "") {
+                    // DEMO MODE:
+                    console.table(json.map(function(item) {
+                        return { key: item.key, type: item.type, title: item.titleText, value: JSON.stringify(item.inputValue) };
+                    }));
+                    await new Promise(function(resolve) { setTimeout(resolve, 1200); });
+                    result = "sent";
+                } else {
+                    const response = await fetch(SERVICE_URL, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(json),
+                    });
+                    // NOTE: Your service can answer 409 (Conflict) if the time was booked by someone else.
+                    result = (response.ok) ? "sent" : (response.status == 409) ? "taken" : "error";
+                }
+
+            } catch (error) {
+                console.error(error);
+                result = "error";
+            }
+
+            waiting.hide();
+
+            if (result == "sent") {
+
+                form.showMessage({
+                    iconColor: "#3C8553",
+                    iconFile: "assets/success.png",
+                    messageText: "<b>Your appointment is booked.</b><br>" + booking.service.name + ", " +
+                        booking.start.toLocaleDateString("en-GB", { day: "numeric", month: "long" }) + " at " + time + ".",
+                    buttonText: "OKAY",
+                    backgroundColor: "rgba(255,255,255,0.92)",
+                    onClose: clearForm,
+                });
+
+                addCalendarButtonToMessage(booking);
+
+            } else if (result == "taken") {
+
+                form.showMessage({
+                    iconColor: WARNING_COLOR,
+                    iconFile: "assets/error.png",
+                    messageText: "Sorry, this time was just booked by someone else. Please select another time.",
+                    buttonText: "SELECT ANOTHER TIME",
+                    backgroundColor: "rgba(255,255,255,0.92)",
+                    onClose: renderTimeSlots,
+                });
+
+            } else {
+
+                form.showMessage({
+                    iconColor: "indianred",
+                    iconFile: "assets/error.png",
+                    messageText: "Your appointment could not be booked. Please try again.",
+                    buttonText: "CLOSE",
+                    backgroundColor: "rgba(255,255,255,0.92)",
+                    onClose: function() {},
+                });
+
+            }
+
+        };
+
+        // BUTTON: "Add to calendar" in the success message.
+        // WHY: Form.showMessage() has one button. The last created object (that) is its button,
+        // so the new button is put before it in the same message box.
+        const addCalendarButtonToMessage = function(booking) {
+
+            const btnOkay = that;
+
+            const btnCalendar = Label({
+                text: "ADD TO CALENDAR",
+                padding: [12, 4],
+                round: 12,
+                color: ACCENT_COLOR,
+                textColor: "white",
+                fontSize: 14,
+                clickable: 1,
+            });
+            btnCalendar.elem.style.cursor = "pointer";
+            btnCalendar.on("click", function() {
+                downloadCalendarFile(booking);
+            });
+
+            btnOkay.elem.parentElement.insertBefore(btnCalendar.elem, btnOkay.elem);
+            btnCalendar.position = "relative";
+
+        };
+
+        // Clean the form.
+        const clearForm = function() {
+
+            [firstNameInput, lastNameInput, emailInput, phoneInput, notesTextarea].forEach(function(input) {
+                input.setInputValue("");
+            });
+
+            RadioButton.clear("service");
+            RadioButton.clear("meetingType");
+            dateField.picker.setDate(null, 1);
+            reminderField.checkBoxes.forEach(function(chk) { chk.setChecked(1, 1); });
+            consentField.checkBox.setChecked(0, 1);
+
+            renderTimeSlots(); // Also clears the time
+
+            [serviceField, meetingTypeField, dateField, timeField, reminderField, consentField].forEach(function(field) {
+                field.checkIfInputIsRequiredAndEmpty();
+            });
+
+            updateSummary();
+            form.refresh();
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+
+        <!-- HTML content -->
+
+    </body>
+</html>

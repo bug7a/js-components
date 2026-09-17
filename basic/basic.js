@@ -2,7 +2,7 @@
 
 /*
 
-basic.js (v26.03.26) A lightweight JavaScript library for building web-based applications with simple code. No need to write HTML or CSS — just use basic JavaScript.
+basic.js (v26.09.17) A lightweight JavaScript library for building web-based applications with simple code. No need to write HTML or CSS — just use basic JavaScript.
 - Project Site: https://bug7a.github.io/basic.js/
 
 The Art of Fun Coding — With basic.js
@@ -60,6 +60,7 @@ let previousDefaultContainerBox;
 let loopTimer;
 const resizeDetection = {};
 resizeDetection.objectAndFunctionList = [];
+let removeCascadeDepth = 0; // remove(): 0 -> Children of the object are removed too. (Only in the first remove() call)
 
 const motionController = {};
 motionController.WITH_MOTION_TIME = 50;
@@ -694,6 +695,46 @@ class Basic_UIComponent {
     
     // Nesneyi sil.
     remove() {
+
+        // WHY: A child can be removed by its parent (below) and by its own code. Only the first call works.
+        if (this._isRemoved) return;
+        this._isRemoved = 1;
+
+        // 0. Remove the basic.js objects inside this object too.
+        // WHY: Only this object was cleaned before. Its children kept their global registrations
+        //      (resizeDetection list and ResizeObserver, page.onResize of ScrollBar, SelectDate, SelectTime,
+        //      static lists like RadioButton groups...), so a removed page stayed in the memory with all
+        //      of its objects (about 400 DOM nodes and 250 event listeners for every page change).
+        if (removeCascadeDepth == 0) {
+
+            removeCascadeDepth++;
+
+            try {
+
+                const childElements = this.elem.querySelectorAll("*");
+
+                // Parents first (document order).
+                // WHY: destroy() of a component can clean its own children, then they are skipped here.
+                for (let i = 0; i < childElements.length; i++) {
+
+                    const child = childElements[i]._basicObject;
+                    if (!child || child === this || child._isRemoved) continue;
+
+                    try {
+                        // Components clean their global events in destroy(). (Component template)
+                        if (typeof child.destroy === "function") child.destroy();
+                        if (!child._isRemoved) child.remove();
+                    } catch (error) {
+                        println("basic.js: A child object could not be removed: " + error.message, "warn");
+                    }
+
+                }
+
+            } finally {
+                removeCascadeDepth--;
+            }
+
+        }
 
         // 1.  Eklenmiş tüm eventleri kaldır. _addEventListener() - Otomatik temizleme
         if (this._eventFuncList && this._eventFuncList.length) {
@@ -2353,6 +2394,10 @@ window.getDefaultContainerBox = function () {
 
 // Add your custom object to basic.js ecosystem.
 window.makeBasicObject = function($newObject) {
+
+    // Element -> object link.
+    // WHY: remove() finds the basic.js objects inside a removed object with it, to clean them too.
+    if ($newObject && $newObject.elem) $newObject.elem._basicObject = $newObject;
 
     // Object can be called as that.
     previousThat = that;

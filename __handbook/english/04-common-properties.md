@@ -113,4 +113,4 @@ lblName.onResize(function(resizedLabel) {
 
 - `object.elem` — It is the Element equivalent of the item created by the library directly under Javascript (Document Object Model). Everything can be manipulated with `elem.style`.
 - `object.containerBox` or `object.parentBox` — Retrieves the Container variable (originating from the Box class) to which the object is added. (The `page` object is the global default container).
-- `object.remove()` — Permanently deletes the object from the screen DOM model, from events, and from the parent tree.
+- `object.remove()` — Permanently deletes the object from the screen DOM model, from events, and from the parent tree. The basic.js objects inside it are removed too (their `destroy()` is called first, if they have one). Do not use a removed object again.

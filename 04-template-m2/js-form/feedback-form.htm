@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>Feedback Form</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <!-- LIBRARY FILES -->
+        <!-- <link rel="preload" href="image.png" as="image"> -->
+        <link rel="preload" href="../../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="preload" href="../../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../../basic/basic.min.css">
+        <script src="../../basic/basic.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8" defer></script>
+
+        <script src="../../comp-m2/tooltip.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m2/input-b.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m2/email-input-b.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m2/textarea-b.min.js" type="text/javascript" charset="utf-8" defer></script>
+
+        <script src="../../comp-m2/waiting.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m2/form.min.js" type="text/javascript" charset="utf-8" defer></script>
+
+        <script src="../../comp-m3/check-box.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m3/radio-button.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m4/select-file.js" type="text/javascript" charset="utf-8" defer></script>
+
+        <!-- ALL COMPONENTS IN ONE FILE -->
+        <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
+
+        <!--
+
+        /* Bismillah */
+
+        - A customer feedback (satisfaction survey) form.
+        - InputB, EmailInputB, TextareaB, Form, Waiting (comp-m2)
+        - CheckBox, RadioButton (comp-m3)
+        - SelectFile (comp-m4)
+
+        - Star rating (1-5) and NPS score (0-10) are drawn with labels in an InputB field.
+          They work with the keyboard too (Tab, arrow keys).
+        - Questions change with the answers:
+          Rating 1-3: "What went wrong?" (required), rating 4-5: "What did you like?" (optional).
+          "May we contact you?" Yes: name and e-mail are shown and required.
+        - Hidden questions are not required, so the Form does not wait for them.
+
+        - CheckBox, RadioButton, SelectFile and the ratings are placed in an InputB field (createInput: 0).
+          So they look like the other inputs and the Form checks them too. (See: createField)
+
+        -->
+
+        <script>
+
+        // This example posts the feedback and the screenshots to your server with FormData.
+        // SERVICE_URL is empty: Demo mode (nothing is sent, data is printed to the console).
+
+        // *** CONSTANTS:
+        const SERVICE_URL = ""; // Ex: "https://your-site.com/api/feedback"
+        const FORM_TITLE = "How Did We Do?";
+        const FORM_DESCRIPTION = "Your feedback helps us get better. It takes about 2 minutes. Answers are anonymous unless you want us to contact you.";
+
+        const ACCENT_COLOR = "#65A293";
+        const TEXT_COLOR = "#373836";
+        const WARNING_COLOR = "#E5885E";
+        const STAR_COLOR = "#F1B434";
+
+        const RATING_TEXTS = ["", "Very bad", "Bad", "Okay", "Good", "Excellent"];
+        const LOW_RATING = 3; // Rating 1-3: Ask what went wrong.
+
+        const USED_CHANNELS = ["Website", "Mobile app", "Customer support", "Store", "Delivery"];
+        const PROBLEMS = ["Slow delivery", "Product quality", "Price", "Customer support", "Website / app issues", "Other"];
+        const GOOD_POINTS = ["Fast delivery", "Product quality", "Good price", "Helpful support", "Easy to use"];
+
+        // *** VARIABLES:
+        let form, waiting;
+        let ratingField, npsField, channelsField, problemsField, goodPointsField;
+        let commentsTextarea, screenshotField, contactField, nameInput, emailInput, contactGroup;
+
+        // Common input params:
+        let inputStyle;
+
+        // First running function. (basic.js calls start() when the page object is ready)
+        // WHY: Not window.onload, because the library files are loaded with "defer".
+        const start = function() {
+
+            page.color = "white";
+            addChoiceStyles(); // CheckBox and RadioButton style package: "form"
+
+            inputStyle = {
+                width: "100%",
+                backgroundColor: "#F6F6F6",
+                selectedBackgroundColor: "#F6F6F6",
+                lineColor: Black(0),
+                selectedLineColor: Black(0),
+                backBorderColor: Black(0),
+                selectedBackBorderColor: Black(0.4),
+                backBorderTopRound: 8,
+                backBorderBottomRound: 8,
+            };
+
+            // FORM:
+            form = Form({
+                minWidth: 700,
+                maxWidth: 700,
+                buttonColor: ACCENT_COLOR,
+                buttonText: "SEND FEEDBACK",
+                showDetailWarning: 1,
+                missingEntryText: "{{count}} missing entry",
+                missingEntriesText: "{{count}} missing entries",
+                warningText: "<b>{{name}}</b> can't be empty",
+                errorText: "<b>{{name}}</b> is not valid",
+                minimalButton: 0,
+                doubleInputAlwaysHorizontal: 0,
+                onSendClick: function(json) {
+                    sendFeedback(json);
+                },
+            });
+
+            // LABEL: Title
+            Label({
+                text: FORM_TITLE,
+                textColor: TEXT_COLOR,
+                fontSize: 26,
+            });
+            that.elem.style.fontFamily = "opensans-bold";
+            form.addTitle(that);
+
+            // LABEL: Description
+            if (FORM_DESCRIPTION != "") {
+                Label({
+                    text: FORM_DESCRIPTION,
+                    fontSize: 16,
+                    textColor: "#999999",
+                });
+                form.addTitle(that);
+            }
+
+            // *** YOUR EXPERIENCE
+
+            addSectionTitle("1. Your Experience");
+
+            // RATING: Overall (1-5 stars)
+            ratingField = createField({
+                key: "rating",
+                type: "rating",
+                titleText: "OVERALL, HOW SATISFIED ARE YOU?",
+                isRequired: 1,
+            }, function(field) {
+
+                createRating(field, {
+                    count: 5,
+                    ariaLabel: "Overall satisfaction",
+                    createItem: function(value) {
+                        const star = Label({
+                            text: "★",
+                            fontSize: 40,
+                            textColor: Black(0.15),
+                            padding: [2, 0],
+                        });
+                        star.elem.style.lineHeight = "44px";
+                        return star;
+                    },
+                    paintItem: function(item, value, shownValue) {
+                        item.textColor = (value <= shownValue) ? STAR_COLOR : Black(0.15);
+                        item.elem.style.transform = (value == shownValue) ? "scale(1.15)" : "scale(1)";
+                    },
+                    onShow: function(shownValue) {
+                        if (!field.ratingText) return; // Created after the stars
+                        field.ratingText.text = RATING_TEXTS[shownValue] || "Click a star to rate";
+                        field.ratingText.textColor = (shownValue) ? TEXT_COLOR : Black(0.45);
+                    },
+                    onChange: function() {
+                        field.update();
+                        updateQuestions();
+                    },
+                });
+
+                // LABEL: Rating text (next to the stars)
+                field.ratingText = Label({ text: "Click a star to rate", fontSize: 18, textColor: Black(0.45) });
+                field.ratingGroup.add(field.ratingText);
+                field.ratingText.position = "relative";
+                field.ratingText.elem.style.marginLeft = "12px";
+
+            });
+            form.addInput(ratingField);
+
+            // RATING: NPS (0-10)
+            npsField = createField({
+                key: "nps",
+                type: "nps",
+                titleText: "HOW LIKELY ARE YOU TO RECOMMEND US TO A FRIEND?",
+                isRequired: 1,
+            }, function(field) {
+
+                createRating(field, {
+                    count: 11,
+                    firstValue: 0,
+                    ariaLabel: "Likelihood to recommend, 0 to 10",
+                    createItem: function(value) {
+                        const item = Label({
+                            text: String(value),
+                            width: 46,
+                            height: 42,
+                            fontSize: 17,
+                            textAlign: "center",
+                            textColor: TEXT_COLOR,
+                            color: White(1),
+                            border: 1,
+                            borderColor: Black(0.15),
+                            round: 8,
+                        });
+                        item.elem.style.lineHeight = "40px";
+                        item.setMotion("background-color 0.15s, border-color 0.15s");
+                        return item;
+                    },
+                    paintItem: function(item, value, shownValue, selectedValue) {
+                        const color = getNpsColor(value);
+                        const isSelected = (value === selectedValue);
+                        const isShown = (value === shownValue);
+                        item.color = (isSelected) ? color : (isShown) ? alphaColor(color, 0.15) : White(1);
+                        item.textColor = (isSelected) ? White(1) : TEXT_COLOR;
+                        item.borderColor = (isSelected || isShown) ? color : Black(0.15);
+                    },
+                    onChange: function() {
+                        field.update();
+                    },
+                });
+                field.ratingGroup.gap = 6;
+
+                // GROUP: Scale texts
+                HGroup({ width: 11 * 46 + 10 * 6, height: "auto", align: "left center" });
+                that.elem.style.justifyContent = "space-between";
+                    Label({ text: "Not likely at all", fontSize: 13, textColor: Black(0.45) });
+                    Label({ text: "Extremely likely", fontSize: 13, textColor: Black(0.45) });
+                endGroup();
+
+            });
+            form.addInput(npsField);
+
+            // CHECK BOX: Used channels
+            channelsField = createField({
+                key: "channels",
+                type: "checkbox",
+                titleText: "WHAT DID YOU USE?",
+                descriptionText: "Select all that apply.",
+                isRequired: 0,
+            }, function(field) {
+                createCheckBoxList(field, USED_CHANNELS, 190);
+            });
+            form.addInput(channelsField);
+
+            // CHECK BOX: What went wrong? (Rating 1-3)
+            problemsField = createField({
+                key: "problems",
+                type: "checkbox",
+                titleText: "WHAT WENT WRONG?",
+                descriptionText: "Sorry to hear that. Select all that apply.",
+                isRequired: 0, // WHY: Required only when it is shown. (updateQuestions)
+            }, function(field) {
+                createCheckBoxList(field, PROBLEMS, 240);
+            });
+            form.addInput(problemsField);
+
+            // CHECK BOX: What did you like? (Rating 4-5)
+            goodPointsField = createField({
+                key: "goodPoints",
+                type: "checkbox",
+                titleText: "WHAT DID YOU LIKE THE MOST?",
+                descriptionText: "Great! Select all that apply. (Optional)",
+                isRequired: 0,
+            }, function(field) {
+                createCheckBoxList(field, GOOD_POINTS, 240);
+            });
+            form.addInput(goodPointsField);
+
+            // *** TELL US MORE
+
+            addSectionTitle("2. Tell Us More");
+
+            // TEXTAREA: Comments
+            commentsTextarea = TextareaB({
+                key: "comments",
+                ...inputStyle,
+                isRequired: 0,
+                titleText: "COMMENTS",
+                placeholder: "What should we keep doing, or do better? (Optional)",
+                minCharCount: 0,
+                showCount: 1,
+                lengthText: "length: ",
+                maxChar: 1000,
+                height: 170,
+                rightPadding: 5,
+                unitStyle: {
+                    padding: [12, 4],
+                    color: "#373836EE",
+                    textColor: "white",
+                },
+            });
+            form.addInput(commentsTextarea);
+
+            // SELECT FILE: Screenshots
+            screenshotField = createField({
+                key: "screenshots",
+                type: "file",
+                titleText: "SCREENSHOTS",
+                descriptionText: "Optional. Up to 3 images, 5 MB each.",
+                isRequired: 0,
+            }, function(field) {
+
+                field.fileSelector = SelectFile({
+                    width: "100%",
+                    multiple: 1,
+                    maxFiles: 3,
+                    accept: "image/*",
+                    maxSize: 5 * 1024 * 1024,
+                    zoneHeight: 120,
+                    showIcon: 1,
+                    titleText: "Drag and drop screenshots here",
+                    descText: "or click to select images",
+                    onChange: function() {
+                        errorLabel.text = "";
+                        field.update();
+                    },
+                    onError: function(self, errors) {
+                        errorLabel.text = errors.map(function(e) { return SelectFile.escapeHtml(e.message); }).join("<br>");
+                    },
+                    style: {
+                        zone: { color: White(1), borderColor: Black(0.15), round: 8 },
+                        zoneHover: { color: White(1), borderColor: Black(0.4) },
+                        zoneDragOver: { color: "#EEF6F4", borderColor: ACCENT_COLOR },
+                        icon: { color: Black(0.4), dragOverColor: ACCENT_COLOR },
+                        title: { textColor: TEXT_COLOR },
+                        item: { color: White(1), borderColor: Black(0.08) },
+                        badge: { color: "#E6F1EE", textColor: ACCENT_COLOR },
+                    },
+                });
+
+                // LABEL: File errors
+                const errorLabel = Label({ text: "", fontSize: 14, textColor: WARNING_COLOR });
+
+                field.getInputValue = function() {
+                    return field.fileSelector.files.map(function(info) { return info.name; });
+                };
+
+            });
+            form.addInput(screenshotField);
+
+            // *** CONTACT
+
+            addSectionTitle("3. Follow-up");
+
+            // RADIO BUTTON: May we contact you?
+            contactField = createField({
+                key: "contactMe",
+                type: "radio",
+                titleText: "MAY WE CONTACT YOU ABOUT YOUR FEEDBACK?",
+                isRequired: 1,
+            }, function(field) {
+
+                createWrapGroup();
+
+                    [["yes", "Yes, you can contact me"], ["no", "No, keep it anonymous"]].forEach(function(item) {
+                        RadioButton({
+                            styleName: "form",
+                            group: "contactMe",
+                            value: item[0],
+                            labelText: item[1],
+                            onChange: function() {
+                                field.update();
+                                updateQuestions();
+                            },
+                        });
+                    });
+
+                endGroup();
+
+                field.getInputValue = function() {
+                    return RadioButton.getValue("contactMe");
+                };
+
+            });
+            form.addInput(contactField);
+
+            // INPUT: Name
+            nameInput = InputB({
+                key: "name",
+                ...inputStyle,
+                isRequired: 0, // WHY: Required only when "Yes" is selected. (updateQuestions)
+                requiredText: "Required",
+                titleText: "YOUR NAME",
+                placeholder: "Jack Brown",
+                leftPadding: 20,
+                maxChar: 50,
+            });
+
+            // INPUT: Email
+            emailInput = EmailInputB({
+                key: "email",
+                ...inputStyle,
+                isRequired: 0,
+                titleText: "YOUR EMAIL",
+                placeholder: "example@site.com",
+                warningText: "Invalid email format",
+                warningColor: WARNING_COLOR,
+                maxChar: 50,
+            });
+            form.addDoubleInput(nameInput, emailInput);
+            contactGroup = form.groupList[form.groupList.length - 1];
+
+            // WAITING: Create object 1 time.
+            waiting = Waiting({
+                animated: 1,
+                waitingIcon: "assets/mail.png",
+                coverBackgroundColor: "rgba(0, 0, 0, 0.85)",
+            });
+            waiting.icon.elem.style.filter = "invert(100%)";
+
+            updateQuestions();
+
+        };
+
+        // *** CONDITIONAL QUESTIONS:
+
+        // Shows the questions for the current answers. A hidden question is not required.
+        const updateQuestions = function() {
+
+            const rating = Number(ratingField.getInputValue()) || 0;
+            const wantsContact = (RadioButton.getValue("contactMe") == "yes");
+
+            setQuestionVisible(problemsField, rating > 0 && rating <= LOW_RATING, 1);
+            setQuestionVisible(goodPointsField, rating > LOW_RATING, 0);
+
+            contactGroup.visible = (wantsContact) ? 1 : 0;
+            nameInput.setRequired(wantsContact);
+            emailInput.setRequired(wantsContact);
+            // WHY: A hidden e-mail with a wrong text must not block the form.
+            if (!wantsContact) emailInput.setInputValue("");
+
+            form.refresh();
+
+        };
+
+        const setQuestionVisible = function(field, isVisible, isRequiredWhenVisible) {
+            field.visible = (isVisible) ? 1 : 0;
+            field.setRequired(isVisible && isRequiredWhenVisible);
+            if (!isVisible && field.checkBoxes) {
+                // WHY: Answers of a hidden question are not sent.
+                field.checkBoxes.forEach(function(chk) { chk.setChecked(0, 1); });
+                field.checkIfInputIsRequiredAndEmpty();
+            }
+        };
+
+        // *** RATING (stars and NPS):
+
+        // Creates a keyboard friendly rating row in a field.
+        // options: { count, firstValue, ariaLabel, createItem(value), paintItem(item, value, shownValue, selectedValue), onShow(shownValue), onChange(value) }
+        const createRating = function(field, options) {
+
+            const firstValue = options.firstValue ?? 1;
+            let selectedValue = null;
+            let hoverValue = null;
+
+            const items = [];
+
+            const paint = function() {
+                const shownValue = (hoverValue !== null) ? hoverValue : selectedValue;
+                items.forEach(function(item) {
+                    options.paintItem(item, item.value, shownValue, selectedValue);
+                    item.elem.setAttribute("aria-checked", (item.value === selectedValue) ? "true" : "false");
+                    // WHY: Only one item is in the Tab order (the selected one, or the first one).
+                    const isTabItem = (selectedValue === null) ? (item.value === firstValue) : (item.value === selectedValue);
+                    item.elem.tabIndex = (isTabItem) ? 0 : -1;
+                });
+                if (options.onShow) options.onShow(shownValue);
+            };
+
+            const select = function(value) {
+                selectedValue = value;
+                paint();
+                options.onChange(value);
+            };
+
+            // GROUP: Items
+            field.ratingGroup = HGroup({ width: "auto", height: "auto", align: "left center", gap: 2 });
+            that.elem.setAttribute("role", "radiogroup");
+            that.elem.setAttribute("aria-label", options.ariaLabel);
+
+                for (let i = 0; i < options.count; i++) {
+
+                    const value = firstValue + i;
+                    const item = options.createItem(value);
+                    item.value = value;
+                    item.clickable = 1;
+                    item.elem.style.cursor = "pointer";
+                    item.elem.style.userSelect = "none";
+                    item.elem.style.outlineOffset = "2px";
+                    item.elem.setAttribute("role", "radio");
+                    item.elem.setAttribute("aria-label", String(value));
+                    item.setMotion("transform 0.15s, color 0.15s, background-color 0.15s, border-color 0.15s");
+
+                    item.on("mouseover", function() { hoverValue = value; paint(); });
+                    item.on("mouseout", function() { hoverValue = null; paint(); });
+                    item.on("click", function() { select(value); });
+
+                    item.on("keydown", function(self, event) {
+                        let next = null;
+                        const lastValue = firstValue + options.count - 1;
+                        if (event.key == "ArrowRight" || event.key == "ArrowUp") next = Math.min(lastValue, value + 1);
+                        if (event.key == "ArrowLeft" || event.key == "ArrowDown") next = Math.max(firstValue, value - 1);
+                        if (event.key == " " || event.key == "Enter") next = value;
+                        if (next === null) return;
+                        event.preventDefault();
+                        select(next);
+                        items[next - firstValue].elem.focus();
+                    });
+
+                    items.push(item);
+
+                }
+
+            endGroup();
+
+            field.getInputValue = function() {
+                // WHY: InputB checks ".length" for required fields. A text is used, so 0 is not empty.
+                return (selectedValue === null) ? "" : String(selectedValue);
+            };
+
+            field.clearRating = function() {
+                selectedValue = null;
+                hoverValue = null;
+                paint();
+            };
+
+            paint();
+
+        };
+
+        // NPS: 0-6 detractor, 7-8 passive, 9-10 promoter
+        const getNpsColor = function(value) {
+            if (value <= 6) return "#E5885E";
+            if (value <= 8) return "#E0B03C";
+            return ACCENT_COLOR;
+        };
+
+        // "#65A293", 0.15 -> "rgba(101, 162, 147, 0.15)"
+        const alphaColor = function(hex, alpha) {
+            const n = parseInt(hex.slice(1), 16);
+            return "rgba(" + (n >> 16) + ", " + ((n >> 8) & 255) + ", " + (n & 255) + ", " + alpha + ")";
+        };
+
+        // *** FORM FIELDS (for CheckBox, RadioButton, SelectFile and ratings):
+
+        // Creates an InputB field without an input and puts custom content in it.
+        // The field works with Form: title, required warning, status, getInputValue().
+        const createField = function(params, buildContent) {
+
+            const field = InputB({
+                ...inputStyle,
+                rightPadding: 20,
+                ...params,
+                createInput: 0, // No text input, we add our own content.
+            });
+
+            // BOX: Content area (created by InputB)
+            field.inputBox.height = "auto";
+            field.inputBox.elem.style.marginTop = "10px";
+            field.inputBox.elem.style.marginBottom = "4px";
+            field.inputBox.clipContent = 0;
+
+            // Call after the value is changed:
+            field.update = function() {
+                field.checkIfInputIsRequiredAndEmpty();
+                field.onEdit(); // Form checks all fields.
+            };
+
+            const previousContainer = getDefaultContainerBox();
+            setDefaultContainerBox(field.inputBox);
+
+                // GROUP: Field content
+                field.content = VGroup({
+                    width: "100%",
+                    height: "auto",
+                    align: "left top",
+                    gap: 6,
+                    position: "relative", // WHY: inputBox height is "auto".
+                });
+                field.content.clipContent = 0;
+
+                    buildContent(field); // Must set field.getInputValue()
+
+                endGroup();
+
+            setDefaultContainerBox(previousContainer);
+
+            // Show "Required" warning if needed, like other inputs.
+            field.checkIfInputIsRequiredAndEmpty();
+
+            return field;
+
+        };
+
+        // Check boxes in columns. field.checkBoxes, field.getInputValue()
+        const createCheckBoxList = function(field, labels, columnWidth) {
+
+            field.checkBoxes = [];
+
+            createWrapGroup();
+
+                labels.forEach(function(name) {
+                    CheckBox({
+                        styleName: "form",
+                        labelText: name,
+                        onChange: field.update,
+                    });
+                    that.elem.style.minWidth = columnWidth + "px"; // Column width. Long labels make it wider.
+                    field.checkBoxes.push(that);
+                });
+
+            endGroup();
+
+            field.getInputValue = function() {
+                return getCheckedLabels(field.checkBoxes); // [] when nothing is checked
+            };
+
+        };
+
+        // GROUP: Wrapping row for radio buttons and check boxes
+        const createWrapGroup = function() {
+            const group = AutoLayout({
+                flow: "horizontal",
+                align: "left top",
+                flexWrap: "wrap",
+                width: "100%",
+                height: "auto",
+                gap: 4,
+            });
+            group.elem.style.columnGap = "12px"; // Choices have their own padding.
+            return group;
+        };
+
+        const getCheckedLabels = function(checkBoxes) {
+            return checkBoxes
+                .filter(function(chk) { return chk.checked == 1; })
+                .map(function(chk) { return chk.labelText; });
+        };
+
+        // STYLE PACKAGE: "form" for CheckBox and RadioButton (like the modern style, with the form colors)
+        // NOTE: Light colors are 20% and 30% of ACCENT_COLOR on white. (Solid colors, so they do not stack.)
+        // WHY: Called in start(), because the component files are loaded with "defer".
+        const addChoiceStyles = function() {
+
+            const getStyle = function() {
+                return {
+                    box: { color: "transparent", round: 8 },
+                    hoverBox: { color: "#EDF0EF" },
+                    checkedBox: { color: "#E0ECE9" }, // 20%
+                    hoverCheckedBox: { color: "#D1E3DF" }, // 30%
+                    layout: { gap: 8, padding: [6, 6], align: "left center" }, // Small padding: fits in narrow columns.
+                    mark: { width: 22, height: 22, color: White(1), border: 1, borderColor: Black(0.4), round: 4 },
+                    checkedMark: { color: "#D1E3DF", borderColor: "transparent" }, // Same as hoverCheckedBox.color
+                    hoverMark: { borderColor: ACCENT_COLOR },
+                    label: { fontSize: 18, textColor: TEXT_COLOR }, // Input texts are 20
+                };
+            };
+
+            CheckBox.styles.form = getStyle();
+            CheckBox.styles.form.tick = { color: ACCENT_COLOR, thickness: 2.5 };
+
+            RadioButton.styles.form = getStyle();
+            RadioButton.styles.form.mark.round = 100;
+            RadioButton.styles.form.dot = { color: ACCENT_COLOR, size: 0.5, round: 100 };
+
+        };
+
+        // LABEL: Section title
+        const addSectionTitle = function(text) {
+            const lbl = Label({
+                text: text,
+                fontSize: 14,
+                textColor: ACCENT_COLOR,
+                width: "100%",
+                padding: [0, 6],
+            });
+            lbl.elem.style.fontFamily = "opensans-bold";
+            lbl.elem.style.letterSpacing = "1px";
+            lbl.elem.style.textTransform = "uppercase";
+            lbl.elem.style.borderBottom = "1px solid " + Black(0.08);
+            form.inputGroup.add(lbl);
+            lbl.position = "relative";
+            if (form.inputGroup.elem.children.length > 1) lbl.elem.style.marginTop = "16px";
+        };
+
+        // *** SEND:
+
+        const sendFeedback = async function(json) {
+
+            // WHY: Hidden questions are not sent.
+            const hiddenKeys = [problemsField, goodPointsField].filter(function(field) { return !field.visible; }).map(function(field) { return field.key; });
+            if (RadioButton.getValue("contactMe") != "yes") hiddenKeys.push("name", "email");
+            json = json.filter(function(item) { return !hiddenKeys.includes(item.key); });
+
+            // Form values + screenshots in one request:
+            const formData = new FormData();
+            formData.append("feedback", JSON.stringify(json));
+            screenshotField.fileSelector.files.forEach(function(info) {
+                formData.append("screenshots", info.file, info.name);
+            });
+
+            const nps = Number(npsField.getInputValue());
+
+            waiting.show();
+
+            let isSent = false;
+
+            try {
+
+                if (SERVICE_URL == "") {
+                    // DEMO MODE:
+                    console.table(json.map(function(item) {
+                        return { key: item.key, type: item.type, title: item.titleText, value: JSON.stringify(item.inputValue) };
+                    }));
+                    await new Promise(function(resolve) { setTimeout(resolve, 1200); });
+                    isSent = true;
+                } else {
+                    const response = await fetch(SERVICE_URL, { method: "POST", body: formData });
+                    isSent = response.ok;
+                }
+
+            } catch (error) {
+                console.error(error);
+                isSent = false;
+            }
+
+            waiting.hide();
+
+            if (isSent) {
+
+                // A different thank you text for promoters and detractors.
+                let message = "<b>Thank you for your feedback!</b>";
+                if (nps >= 9) message += "<br>We are happy you would recommend us.";
+                else if (nps <= 6) message += "<br>We will use it to do better.";
+                if (RadioButton.getValue("contactMe") == "yes") message += "<br>Our team will contact you soon.";
+
+                form.showMessage({
+                    iconColor: "#3C8553",
+                    iconFile: "assets/success.png",
+                    messageText: message,
+                    buttonText: "OKAY",
+                    backgroundColor: "rgba(255,255,255,0.92)",
+                    onClose: clearForm,
+                });
+
+            } else {
+
+                form.showMessage({
+                    iconColor: "indianred",
+                    iconFile: "assets/error.png",
+                    messageText: "Your feedback could not be sent. Please try again.",
+                    buttonText: "CLOSE",
+                    backgroundColor: "rgba(255,255,255,0.92)",
+                    onClose: function() {},
+                });
+
+            }
+
+        };
+
+        // Clean the form.
+        const clearForm = function() {
+
+            ratingField.clearRating();
+            npsField.clearRating();
+            [channelsField, problemsField, goodPointsField].forEach(function(field) {
+                field.checkBoxes.forEach(function(chk) { chk.setChecked(0, 1); });
+            });
+            commentsTextarea.setInputValue("");
+            screenshotField.fileSelector.clear(1);
+            RadioButton.clear("contactMe");
+            nameInput.setInputValue("");
+            emailInput.setInputValue("");
+
+            [ratingField, npsField, channelsField, screenshotField, contactField].forEach(function(field) {
+                field.checkIfInputIsRequiredAndEmpty();
+            });
+
+            updateQuestions();
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+
+        <!-- HTML content -->
+
+    </body>
+</html>

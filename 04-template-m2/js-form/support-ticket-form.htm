@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>Support Ticket Form</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <!-- LIBRARY FILES -->
+        <!-- <link rel="preload" href="image.png" as="image"> -->
+        <link rel="preload" href="../../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="preload" href="../../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../../basic/basic.min.css">
+        <script src="../../basic/basic.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8" defer></script>
+
+        <script src="../../comp-m2/tooltip.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m2/input-b.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m2/email-input-b.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m2/phone-input-b.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m2/textarea-b.min.js" type="text/javascript" charset="utf-8" defer></script>
+
+        <script src="../../comp-m2/waiting.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m2/form.min.js" type="text/javascript" charset="utf-8" defer></script>
+
+        <script src="../../comp-m3/check-box.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m3/radio-button.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m4/select-file.js" type="text/javascript" charset="utf-8" defer></script>
+
+        <!-- ALL COMPONENTS IN ONE FILE -->
+        <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
+
+        <!--
+
+        /* Bismillah */
+
+        - A support ticket (help desk) form.
+        - InputB, EmailInputB, PhoneInputB, TextareaB, Form, Waiting (comp-m2)
+        - CheckBox, RadioButton (comp-m3)
+        - SelectFile (comp-m4)
+
+        - Help articles are suggested while the subject is written. (Fewer tickets for known questions.)
+        - Questions change with the category:
+          Order and payment problems need an order number. Technical problems ask for steps and system information.
+        - Priority shows the expected first response time.
+        - Contact by phone needs a phone number.
+        - The ticket number can be copied from the success message.
+        - Hidden questions are not required and not sent.
+
+        - CheckBox, RadioButton and SelectFile are placed in an InputB field (createInput: 0).
+          So they look like the other inputs and the Form checks them too. (See: createField)
+
+        -->
+
+        <script>
+
+        // This example posts the ticket and the attachments to your server with FormData.
+        // SERVICE_URL is empty: Demo mode (nothing is sent, data is printed to the console).
+
+        // *** CONSTANTS:
+        const SERVICE_URL = ""; // Ex: "https://your-site.com/api/support-tickets"
+        const FORM_TITLE = "Contact Support";
+        const FORM_DESCRIPTION = "Tell us what happened and we’ll help you as soon as possible. The more details you give, the faster we can solve it.";
+        const HELP_CENTER_URL = "https://your-site.com/help";
+
+        const ACCENT_COLOR = "#65A293";
+        const TEXT_COLOR = "#373836";
+        const WARNING_COLOR = "#E5885E";
+
+        // needsOrder: Order number is required. isTechnical: Steps and system information are asked.
+        const CATEGORIES = [
+            { id: "order", name: "Order & delivery", needsOrder: 1 },
+            { id: "payment", name: "Payment & billing", needsOrder: 1 },
+            { id: "return", name: "Return & refund", needsOrder: 1 },
+            { id: "account", name: "Account & login" },
+            { id: "technical", name: "Technical problem", isTechnical: 1 },
+            { id: "other", name: "Other question" },
+        ];
+
+        // response: Expected first response time (show it to the customer).
+        const PRIORITIES = [
+            { id: "low", name: "Low", desc: "General question", response: "within 3 business days" },
+            { id: "normal", name: "Normal", desc: "Something does not work as expected", response: "within 24 hours" },
+            { id: "high", name: "High", desc: "I can’t use an important feature", response: "within 8 hours" },
+            { id: "urgent", name: "Urgent", desc: "Service is down or payment is taken twice", response: "within 2 hours" },
+        ];
+
+        const ORDER_NUMBER_PATTERN = /^ORD-\d{6}$/; // Ex: ORD-104582
+
+        // TEST: Help articles. keywords are matched with the subject.
+        // TODO: Search your help center (API) instead.
+        const HELP_ARTICLES = [
+            { title: "Where is my order? Tracking your delivery", url: HELP_CENTER_URL + "/track-order", keywords: ["order", "delivery", "cargo", "shipping", "track", "late", "where"] },
+            { title: "How to return a product and get a refund", url: HELP_CENTER_URL + "/returns", keywords: ["return", "refund", "money", "back", "cancel", "broken", "wrong"] },
+            { title: "I was charged twice. What should I do?", url: HELP_CENTER_URL + "/double-charge", keywords: ["charged", "twice", "payment", "double", "card", "bank"] },
+            { title: "Reset your password", url: HELP_CENTER_URL + "/reset-password", keywords: ["password", "login", "sign", "reset", "forgot", "account", "locked"] },
+            { title: "Change your e-mail or phone number", url: HELP_CENTER_URL + "/change-contact", keywords: ["email", "e-mail", "phone", "change", "update", "account"] },
+            { title: "Download your invoice", url: HELP_CENTER_URL + "/invoice", keywords: ["invoice", "bill", "receipt", "tax", "billing"] },
+            { title: "The app does not open or crashes", url: HELP_CENTER_URL + "/app-crash", keywords: ["app", "crash", "open", "error", "freeze", "slow", "bug"] },
+        ];
+
+        // Common words that are not used for the article search.
+        const STOP_WORDS = ["the", "and", "for", "with", "was", "are", "not", "but", "you", "your", "my", "can", "have", "has", "this", "that", "from", "why", "how", "what", "when", "does", "did"];
+
+        // *** VARIABLES:
+        let form, waiting;
+        let nameInput, emailInput, subjectInput, descriptionTextarea, stepsTextarea, phoneInput;
+        let categoryField, orderInput, priorityField, attachmentsField, systemInfoField, contactField;
+        let articlesBox;
+        let articleItems = []; // Labels in articlesBox
+
+        // Common input params:
+        let inputStyle;
+
+        // First running function. (basic.js calls start() when the page object is ready)
+        // WHY: Not window.onload, because the library files are loaded with "defer".
+        const start = function() {
+
+            page.color = "white";
+            addChoiceStyles(); // CheckBox and RadioButton style package: "form"
+
+            inputStyle = {
+                width: "100%",
+                backgroundColor: "#F6F6F6",
+                selectedBackgroundColor: "#F6F6F6",
+                lineColor: Black(0),
+                selectedLineColor: Black(0),
+                backBorderColor: Black(0),
+                selectedBackBorderColor: Black(0.4),
+                backBorderTopRound: 8,
+                backBorderBottomRound: 8,
+            };
+
+            // FORM:
+            form = Form({
+                minWidth: 700,
+                maxWidth: 700,
+                buttonColor: ACCENT_COLOR,
+                buttonText: "SUBMIT TICKET",
+                showDetailWarning: 1,
+                missingEntryText: "{{count}} missing entry",
+                missingEntriesText: "{{count}} missing entries",
+                warningText: "<b>{{name}}</b> can't be empty",
+                errorText: "<b>{{name}}</b> is not valid",
+                minimalButton: 0,
+                doubleInputAlwaysHorizontal: 0,
+                onSendClick: function(json) {
+                    sendTicket(json);
+                },
+                onEdit: function(input) {
+                    if (input === subjectInput) updateArticles();
+                },
+            });
+
+            // LABEL: Title
+            Label({
+                text: FORM_TITLE,
+                textColor: TEXT_COLOR,
+                fontSize: 26,
+            });
+            that.elem.style.fontFamily = "opensans-bold";
+            form.addTitle(that);
+
+            // LABEL: Description
+            Label({
+                text: FORM_DESCRIPTION,
+                fontSize: 16,
+                textColor: "#999999",
+            });
+            form.addTitle(that);
+
+            // *** YOUR DETAILS
+
+            addSectionTitle("1. Your Details");
+
+            // INPUT: Name
+            nameInput = InputB({
+                key: "name",
+                ...inputStyle,
+                isRequired: 1,
+                titleText: "FULL NAME",
+                placeholder: "Jack Brown",
+                leftPadding: 20,
+                maxChar: 60,
+            });
+
+            // INPUT: Email
+            emailInput = EmailInputB({
+                key: "email",
+                ...inputStyle,
+                isRequired: 1,
+                titleText: "YOUR EMAIL",
+                placeholder: "example@site.com",
+                warningText: "Invalid email format",
+                warningColor: WARNING_COLOR,
+                maxChar: 50,
+            });
+            form.addDoubleInput(nameInput, emailInput);
+
+            // *** THE PROBLEM
+
+            addSectionTitle("2. The Problem");
+
+            // RADIO BUTTON: Category
+            categoryField = createField({
+                key: "category",
+                type: "radio",
+                titleText: "CATEGORY",
+                isRequired: 1,
+            }, function(field) {
+
+                createWrapGroup();
+
+                    CATEGORIES.forEach(function(category) {
+                        RadioButton({
+                            styleName: "form",
+                            group: "category",
+                            value: category.id,
+                            labelText: category.name,
+                            onChange: function() {
+                                field.update();
+                                updateQuestions();
+                            },
+                        });
+                        that.elem.style.minWidth = "280px"; // 2 columns. Long labels make it wider.
+                    });
+
+                endGroup();
+
+                field.getInputValue = function() {
+                    return RadioButton.getValue("category");
+                };
+
+            });
+            form.addInput(categoryField);
+
+            // INPUT: Order number (order, payment, return)
+            orderInput = InputB({
+                key: "orderNumber",
+                ...inputStyle,
+                isRequired: 0, // WHY: Required only when it is shown. (updateQuestions)
+                titleText: "ORDER NUMBER",
+                placeholder: "ORD-000000",
+                descriptionText: "You can find it in your order confirmation e-mail.",
+                warningText: "Use this format: ORD-104582",
+                warningColor: WARNING_COLOR,
+                maxChar: 10,
+            });
+            orderInput.input.inputElement.style.textTransform = "uppercase";
+            orderInput.isValid = function() {
+                return ORDER_NUMBER_PATTERN.test(orderInput.getInputValue().trim().toUpperCase()) ? 1 : 0;
+            };
+            form.addInput(orderInput);
+
+            // INPUT: Subject
+            subjectInput = InputB({
+                key: "subject",
+                ...inputStyle,
+                isRequired: 1,
+                titleText: "SUBJECT",
+                placeholder: "Short summary, e.g. “My order has not arrived”",
+                maxChar: 80,
+            });
+            form.addInput(subjectInput);
+
+            // BOX: Suggested help articles (below the subject)
+            articlesBox = VGroup({
+                width: "100%",
+                height: "auto",
+                align: "left top",
+                gap: 2,
+                padding: [16, 12],
+                color: "#EEF6F4",
+                border: 1,
+                borderColor: "#CFE5DF",
+                round: 8,
+            });
+            endGroup();
+            form.inputGroup.add(articlesBox);
+            articlesBox.position = "relative";
+            articlesBox.elem.style.marginTop = "-8px"; // Close to the subject
+            articlesBox.elem.setAttribute("aria-live", "polite");
+
+            // TEXTAREA: Description
+            descriptionTextarea = TextareaB({
+                key: "description",
+                ...inputStyle,
+                isRequired: 1,
+                titleText: "DESCRIPTION",
+                placeholder: "What happened? What did you expect to happen?",
+                minCharCount: 30,
+                showCount: 1,
+                lengthText: "min 30 · length: ",
+                warningText: "Please write at least 30 characters",
+                warningColor: WARNING_COLOR,
+                maxChar: 2000,
+                height: 170,
+                rightPadding: 5,
+                unitStyle: {
+                    padding: [12, 4],
+                    color: "#373836EE",
+                    textColor: "white",
+                },
+            });
+            form.addInput(descriptionTextarea);
+
+            // TEXTAREA: Steps (technical)
+            stepsTextarea = TextareaB({
+                key: "steps",
+                ...inputStyle,
+                isRequired: 0,
+                titleText: "STEPS TO REPRODUCE",
+                placeholder: "1. Open the app\n2. Go to ...\n3. Click ...",
+                minCharCount: 0,
+                showCount: 0,
+                maxChar: 1000,
+                height: 170, // WHY: The placeholder has 3 lines.
+                rightPadding: 5,
+            });
+            form.addInput(stepsTextarea);
+
+            // CHECK BOX: System information (technical)
+            systemInfoField = createField({
+                key: "systemInfo",
+                type: "checkbox",
+                titleText: "SYSTEM INFORMATION",
+                isRequired: 0,
+            }, function(field) {
+
+                field.info = getSystemInfo();
+
+                Label({
+                    text: Object.keys(field.info).map(function(key) {
+                        return "<span style='color:" + Black(0.45) + "'>" + key + ":</span> " + SelectFile.escapeHtml(field.info[key]);
+                    }).join("<br>"),
+                    fontSize: 14,
+                    textColor: TEXT_COLOR,
+                });
+                that.elem.style.lineHeight = "22px";
+
+                field.checkBox = CheckBox({
+                    styleName: "form",
+                    labelText: "Send this information with my ticket",
+                    checked: 1,
+                    onChange: field.update,
+                });
+
+                field.getInputValue = function() {
+                    return (field.checkBox.checked == 1) ? field.info : "";
+                };
+
+            });
+            form.addInput(systemInfoField);
+
+            // RADIO BUTTON: Priority
+            priorityField = createField({
+                key: "priority",
+                type: "radio",
+                titleText: "PRIORITY",
+                isRequired: 1,
+            }, function(field) {
+
+                PRIORITIES.forEach(function(priority, index) {
+                    RadioButton({
+                        styleName: "form",
+                        group: "priority",
+                        value: priority.id,
+                        labelText: priority.name + " <span style='color:" + Black(0.45) + "; font-size: 15px'>· " + priority.desc + "</span>",
+                        checked: (priority.id == "normal") ? 1 : 0,
+                        onChange: function() {
+                            field.update();
+                            updatePriorityText();
+                        },
+                    });
+                });
+
+                // LABEL: Response time
+                field.responseLabel = Label({ text: "", fontSize: 14, textColor: ACCENT_COLOR });
+                that.elem.style.marginTop = "4px";
+
+                field.getInputValue = function() {
+                    return RadioButton.getValue("priority");
+                };
+
+            });
+            form.addInput(priorityField);
+
+            // SELECT FILE: Attachments
+            attachmentsField = createField({
+                key: "attachments",
+                type: "file",
+                titleText: "ATTACHMENTS",
+                descriptionText: "Optional. Screenshots, PDF or log files. Up to 5 files, 10 MB each.",
+                isRequired: 0,
+            }, function(field) {
+
+                field.fileSelector = SelectFile({
+                    width: "100%",
+                    multiple: 1,
+                    maxFiles: 5,
+                    accept: "image/*,.pdf,.txt,.log,.zip",
+                    maxSize: 10 * 1024 * 1024,
+                    zoneHeight: 110,
+                    showIcon: 0,
+                    titleText: "Drag and drop files here",
+                    descText: "or click to select",
+                    onChange: function() {
+                        errorLabel.text = "";
+                        field.update();
+                    },
+                    onError: function(self, errors) {
+                        errorLabel.text = errors.map(function(e) { return SelectFile.escapeHtml(e.message); }).join("<br>");
+                    },
+                    style: {
+                        zone: { color: White(1), borderColor: Black(0.15), round: 8 },
+                        zoneHover: { color: White(1), borderColor: Black(0.4) },
+                        zoneDragOver: { color: "#EEF6F4", borderColor: ACCENT_COLOR },
+                        icon: { color: Black(0.4), dragOverColor: ACCENT_COLOR },
+                        title: { textColor: TEXT_COLOR },
+                        item: { color: White(1), borderColor: Black(0.08) },
+                        badge: { color: "#E6F1EE", textColor: ACCENT_COLOR },
+                    },
+                });
+
+                const errorLabel = Label({ text: "", fontSize: 14, textColor: WARNING_COLOR });
+
+                field.getInputValue = function() {
+                    return field.fileSelector.files.map(function(info) { return info.name; });
+                };
+
+            });
+            form.addInput(attachmentsField);
+
+            // *** CONTACT
+
+            addSectionTitle("3. How Should We Reply?");
+
+            // RADIO BUTTON: Contact method
+            contactField = createField({
+                key: "contactMethod",
+                type: "radio",
+                titleText: "REPLY BY",
+                isRequired: 1,
+            }, function(field) {
+
+                createWrapGroup();
+
+                    [["email", "E-mail"], ["phone", "Phone call"]].forEach(function(item, index) {
+                        RadioButton({
+                            styleName: "form",
+                            group: "contactMethod",
+                            value: item[0],
+                            labelText: item[1],
+                            checked: (index == 0) ? 1 : 0,
+                            onChange: function() {
+                                field.update();
+                                updateQuestions();
+                            },
+                        });
+                    });
+
+                endGroup();
+
+                field.getInputValue = function() {
+                    return RadioButton.getValue("contactMethod");
+                };
+
+            });
+            form.addInput(contactField);
+
+            // INPUT: Phone (phone call)
+            phoneInput = PhoneInputB({
+                key: "phone",
+                ...inputStyle,
+                isRequired: 0,
+                titleText: "PHONE NUMBER",
+                placeholder: "(auto)",
+                descriptionText: "We call on weekdays between 09:00 and 18:00.",
+                warningText: "Invalid phone number format",
+                warningColor: WARNING_COLOR,
+                countryCode: "+90",
+                phoneMask: " (___) ___-____",
+                unitText: "TR",
+            });
+            form.addInput(phoneInput);
+
+            // WAITING: Create object 1 time.
+            waiting = Waiting({
+                animated: 1,
+                waitingIcon: "assets/mail.png",
+                coverBackgroundColor: "rgba(0, 0, 0, 0.85)",
+            });
+            waiting.icon.elem.style.filter = "invert(100%)";
+
+            updateQuestions();
+            updatePriorityText();
+            updateArticles();
+
+        };
+
+        // *** CONDITIONAL QUESTIONS:
+
+        const getSelectedCategory = function() {
+            const id = RadioButton.getValue("category");
+            return CATEGORIES.find(function(category) { return category.id == id; }) || null;
+        };
+
+        // Shows the questions for the current answers. A hidden question is not required.
+        const updateQuestions = function() {
+
+            const category = getSelectedCategory();
+            const isTechnical = !!(category && category.isTechnical);
+
+            setFieldVisible(orderInput, !!(category && category.needsOrder), 1);
+            setFieldVisible(stepsTextarea, isTechnical, 0);
+            setFieldVisible(systemInfoField, isTechnical, 0);
+            setFieldVisible(phoneInput, RadioButton.getValue("contactMethod") == "phone", 1);
+
+            form.refresh();
+
+        };
+
+        // isRequiredWhenVisible: 1 -> Required when shown.
+        const setFieldVisible = function(field, isVisible, isRequiredWhenVisible) {
+            field.visible = (isVisible) ? 1 : 0;
+            field.setRequired(isVisible && isRequiredWhenVisible);
+            // WHY: setRequired() only checks "empty". A shown field with a wrong value must show the error again.
+            if (isVisible && field.getInputValue().length) field.showWarningIfNotValid(field.isValid());
+        };
+
+        const updatePriorityText = function() {
+            const priority = PRIORITIES.find(function(p) { return p.id == RadioButton.getValue("priority"); });
+            priorityField.responseLabel.text = (priority)
+                ? "⏱ Expected first response: <b>" + priority.response + "</b>" + ((priority.id == "urgent") ? " · Please use it only when the service is down or money is lost." : "")
+                : "";
+        };
+
+        // *** HELP ARTICLES:
+
+        // Shows the articles that match the words of the subject.
+        const updateArticles = function() {
+
+            const words = subjectInput.getInputValue().toLowerCase().split(/[^a-z0-9-]+/).filter(function(word) {
+                return word.length >= 3 && !STOP_WORDS.includes(word);
+            });
+
+            // Same word, or the start of a word ("pass" -> "password", "orders" -> "order").
+            // WHY: Prefix match only for 4+ letters. Short words ("for") matched unrelated keywords ("forgot").
+            const isMatch = function(word, keyword) {
+                if (word == keyword) return true;
+                return word.length >= 4 && keyword.length >= 4 && (keyword.startsWith(word) || word.startsWith(keyword));
+            };
+
+            const matches = HELP_ARTICLES
+                .map(function(article) {
+                    const score = words.filter(function(word) {
+                        return article.keywords.some(function(keyword) { return isMatch(word, keyword); });
+                    }).length;
+                    return { article: article, score: score };
+                })
+                .filter(function(item) { return item.score > 0; })
+                .sort(function(a, b) { return b.score - a.score; })
+                .slice(0, 3);
+
+            // Remove old items (remove() also cleans their events)
+            articleItems.forEach(function(item) { item.remove(); });
+            articleItems = [];
+
+            articlesBox.visible = (matches.length) ? 1 : 0;
+            if (!matches.length) return;
+
+            // WHY: Objects are created in the current container, then moved into the box.
+            // (setDefaultContainerBox is not in the start/end list of basic.js.)
+            const title = Label({ text: "These articles may solve it right away:", fontSize: 14, textColor: Black(0.55) });
+            articlesBox.add(title);
+            articleItems.push(title);
+            title.position = "relative";
+            title.elem.style.marginBottom = "4px";
+
+            matches.forEach(function(item) {
+
+                const link = Label({
+                    text: "→ " + item.article.title,
+                    fontSize: 16,
+                    textColor: ACCENT_COLOR,
+                    clickable: 1,
+                });
+                link.elem.style.cursor = "pointer";
+                link.elem.tabIndex = 0;
+                link.elem.setAttribute("role", "link");
+                link.on("mouseover", function() { link.elem.style.textDecoration = "underline"; });
+                link.on("mouseout", function() { link.elem.style.textDecoration = "none"; });
+                link.on("click", function() { window.open(item.article.url, "_blank", "noopener"); });
+                link.on("keydown", function(self, event) {
+                    if (event.key == "Enter") window.open(item.article.url, "_blank", "noopener");
+                });
+
+                articlesBox.add(link);
+                articleItems.push(link);
+                link.position = "relative";
+
+            });
+
+        };
+
+        // *** SYSTEM INFORMATION:
+
+        // Browser, operating system, screen, language and time zone of the visitor.
+        const getSystemInfo = function() {
+
+            const ua = navigator.userAgent;
+
+            const browsers = [["Edge", /Edg\/([\d.]+)/], ["Opera", /OPR\/([\d.]+)/], ["Chrome", /Chrome\/([\d.]+)/], ["Firefox", /Firefox\/([\d.]+)/], ["Safari", /Version\/([\d.]+).*Safari/]];
+            let browser = "Unknown";
+            for (const item of browsers) {
+                const match = ua.match(item[1]);
+                if (match) { browser = item[0] + " " + match[1].split(".")[0]; break; }
+            }
+
+            let os = "Unknown";
+            if (/Windows NT/.test(ua)) os = "Windows";
+            else if (/iPhone|iPad/.test(ua)) os = "iOS";
+            else if (/Mac OS X/.test(ua)) os = "macOS";
+            else if (/Android/.test(ua)) os = "Android";
+            else if (/Linux/.test(ua)) os = "Linux";
+
+            return {
+                "Browser": browser,
+                "Operating system": os,
+                "Screen": window.screen.width + " × " + window.screen.height,
+                "Language": navigator.language,
+                "Time zone": Intl.DateTimeFormat().resolvedOptions().timeZone,
+                "Page": location.href,
+            };
+
+        };
+
+        // *** FORM FIELDS (for CheckBox, RadioButton and SelectFile):
+
+        // Creates an InputB field without an input and puts custom content in it.
+        // The field works with Form: title, required warning, status, getInputValue().
+        const createField = function(params, buildContent) {
+
+            const field = InputB({
+                ...inputStyle,
+                rightPadding: 20,
+                ...params,
+                createInput: 0, // No text input, we add our own content.
+            });
+
+            // BOX: Content area (created by InputB)
+            field.inputBox.height = "auto";
+            field.inputBox.elem.style.marginTop = "10px";
+            field.inputBox.elem.style.marginBottom = "4px";
+            field.inputBox.clipContent = 0;
+
+            // Call after the value is changed:
+            field.update = function() {
+                field.checkIfInputIsRequiredAndEmpty();
+                field.onEdit(); // Form checks all fields.
+            };
+
+            const previousContainer = getDefaultContainerBox();
+            setDefaultContainerBox(field.inputBox);
+
+                // GROUP: Field content
+                field.content = VGroup({
+                    width: "100%",
+                    height: "auto",
+                    align: "left top",
+                    gap: 6,
+                    position: "relative", // WHY: inputBox height is "auto".
+                });
+                field.content.clipContent = 0;
+
+                    buildContent(field); // Must set field.getInputValue()
+
+                endGroup();
+
+            setDefaultContainerBox(previousContainer);
+
+            // Show "Required" warning if needed, like other inputs.
+            field.checkIfInputIsRequiredAndEmpty();
+
+            return field;
+
+        };
+
+        // GROUP: Wrapping row for radio buttons and check boxes
+        const createWrapGroup = function() {
+            const group = AutoLayout({
+                flow: "horizontal",
+                align: "left top",
+                flexWrap: "wrap",
+                width: "100%",
+                height: "auto",
+                gap: 4,
+            });
+            group.elem.style.columnGap = "12px"; // Choices have their own padding.
+            return group;
+        };
+
+        // STYLE PACKAGE: "form" for CheckBox and RadioButton (like the modern style, with the form colors)
+        // NOTE: Light colors are 20% and 30% of ACCENT_COLOR on white. (Solid colors, so they do not stack.)
+        // WHY: Called in start(), because the component files are loaded with "defer".
+        const addChoiceStyles = function() {
+
+            const getStyle = function() {
+                return {
+                    box: { color: "transparent", round: 8 },
+                    hoverBox: { color: "#EDF0EF" },
+                    checkedBox: { color: "#E0ECE9" }, // 20%
+                    hoverCheckedBox: { color: "#D1E3DF" }, // 30%
+                    layout: { gap: 8, padding: [6, 6], align: "left center" }, // Small padding: fits in narrow columns.
+                    mark: { width: 22, height: 22, color: White(1), border: 1, borderColor: Black(0.4), round: 4 },
+                    checkedMark: { color: "#D1E3DF", borderColor: "transparent" }, // Same as hoverCheckedBox.color
+                    hoverMark: { borderColor: ACCENT_COLOR },
+                    label: { fontSize: 18, textColor: TEXT_COLOR }, // Input texts are 20
+                };
+            };
+
+            CheckBox.styles.form = getStyle();
+            CheckBox.styles.form.tick = { color: ACCENT_COLOR, thickness: 2.5 };
+
+            RadioButton.styles.form = getStyle();
+            RadioButton.styles.form.mark.round = 100;
+            RadioButton.styles.form.dot = { color: ACCENT_COLOR, size: 0.5, round: 100 };
+
+        };
+
+        // LABEL: Section title
+        const addSectionTitle = function(text) {
+            const lbl = Label({
+                text: text,
+                fontSize: 14,
+                textColor: ACCENT_COLOR,
+                width: "100%",
+                padding: [0, 6],
+            });
+            lbl.elem.style.fontFamily = "opensans-bold";
+            lbl.elem.style.letterSpacing = "1px";
+            lbl.elem.style.textTransform = "uppercase";
+            lbl.elem.style.borderBottom = "1px solid " + Black(0.08);
+            form.inputGroup.add(lbl);
+            lbl.position = "relative";
+            if (form.inputGroup.elem.children.length > 1) lbl.elem.style.marginTop = "16px";
+        };
+
+        // *** SEND:
+
+        const sendTicket = async function(json) {
+
+            // WHY: Hidden questions are not sent.
+            const hiddenKeys = [orderInput, stepsTextarea, systemInfoField, phoneInput]
+                .filter(function(input) { return !input.visible; })
+                .map(function(input) { return input.key; });
+            json = json.filter(function(item) { return !hiddenKeys.includes(item.key); });
+
+            // Order number in upper case
+            json.forEach(function(item) {
+                if (item.key == "orderNumber") item.inputValue = item.inputValue.trim().toUpperCase();
+            });
+
+            // Form values + attachments in one request:
+            const formData = new FormData();
+            formData.append("ticket", JSON.stringify(json));
+            attachmentsField.fileSelector.files.forEach(function(info) {
+                formData.append("attachments", info.file, info.name);
+            });
+
+            const priority = PRIORITIES.find(function(p) { return p.id == RadioButton.getValue("priority"); });
+            const replyByPhone = RadioButton.getValue("contactMethod") == "phone";
+            const email = emailInput.getInputValue();
+
+            waiting.show();
+
+            let ticketNumber = "";
+
+            try {
+
+                if (SERVICE_URL == "") {
+                    // DEMO MODE:
+                    console.table(json.map(function(item) {
+                        return { key: item.key, type: item.type, title: item.titleText, value: JSON.stringify(item.inputValue) };
+                    }));
+                    await new Promise(function(resolve) { setTimeout(resolve, 1200); });
+                    ticketNumber = "TCK-" + String(Math.floor(Math.random() * 900000) + 100000);
+                } else {
+                    // NOTE: Your service returns the ticket number. Ex: { "ticketNumber": "TCK-482913" }
+                    const response = await fetch(SERVICE_URL, { method: "POST", body: formData });
+                    if (response.ok) ticketNumber = (await response.json()).ticketNumber || "";
+                }
+
+            } catch (error) {
+                console.error(error);
+                ticketNumber = "";
+            }
+
+            waiting.hide();
+
+            if (ticketNumber) {
+
+                form.showMessage({
+                    iconColor: "#3C8553",
+                    iconFile: "assets/success.png",
+                    messageText: "<b>Your ticket is created: " + ticketNumber + "</b><br>" +
+                        "We will " + ((replyByPhone) ? "call you" : "reply to " + SelectFile.escapeHtml(email)) + " " + priority.response + ".<br>" +
+                        "<span style='font-size:14px; color:" + Black(0.5) + "'>Keep the ticket number to follow your request.</span>",
+                    buttonText: "OKAY",
+                    backgroundColor: "rgba(255,255,255,0.92)",
+                    onClose: clearForm,
+                });
+
+                addCopyButtonToMessage(ticketNumber);
+
+            } else {
+
+                form.showMessage({
+                    iconColor: "indianred",
+                    iconFile: "assets/error.png",
+                    messageText: "Your ticket could not be sent. Please try again.",
+                    buttonText: "CLOSE",
+                    backgroundColor: "rgba(255,255,255,0.92)",
+                    onClose: function() {},
+                });
+
+            }
+
+        };
+
+        // BUTTON: "Copy ticket number" in the success message.
+        // WHY: Form.showMessage() has one button. The last created object (that) is its button,
+        // so the new button is put before it in the same message box.
+        const addCopyButtonToMessage = function(ticketNumber) {
+
+            const btnOkay = that;
+
+            const btnCopy = Label({
+                text: "COPY TICKET NUMBER",
+                padding: [12, 4],
+                round: 12,
+                color: ACCENT_COLOR,
+                textColor: "white",
+                fontSize: 14,
+                clickable: 1,
+            });
+            btnCopy.elem.style.cursor = "pointer";
+            btnCopy.on("click", function() {
+                navigator.clipboard.writeText(ticketNumber).then(function() {
+                    btnCopy.text = "COPIED ✓";
+                    setTimeout(function() { btnCopy.text = "COPY TICKET NUMBER"; }, 1500);
+                });
+            });
+
+            btnOkay.elem.parentElement.insertBefore(btnCopy.elem, btnOkay.elem);
+            btnCopy.position = "relative";
+
+        };
+
+        // Clean the form.
+        const clearForm = function() {
+
+            [nameInput, emailInput, orderInput, subjectInput, descriptionTextarea, stepsTextarea, phoneInput].forEach(function(input) {
+                input.setInputValue("");
+            });
+
+            RadioButton.clear("category");
+            RadioButton.setValue("priority", "normal", 1);
+            RadioButton.setValue("contactMethod", "email", 1);
+            systemInfoField.checkBox.setChecked(1, 1);
+            attachmentsField.fileSelector.clear(1);
+
+            form.inputList.forEach(function(input) { input.checkIfInputIsRequiredAndEmpty(); });
+
+            updateQuestions();
+            updatePriorityText();
+            updateArticles();
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+
+        <!-- HTML content -->
+
+    </body>
+</html>

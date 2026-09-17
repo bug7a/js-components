@@ -1,6 +1,6 @@
 const ModelePageDefaults = {
     pageKey: null,
-    moduleURL: "module1/index.htm",
+    moduleURL: "module1/empty-main.htm",
     container: "(default)",
     color: "transparent",
 };

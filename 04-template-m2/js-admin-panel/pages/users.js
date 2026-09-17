@@ -273,6 +273,7 @@ const UsersPage = function(params = {}) {
                 btnScrollUpIconFile: "../../comp-m3/smart-table/up.png",
                 btnScrollCenterIconFile: "../../comp-m3/smart-table/scroll.png",
                 sortIconFile: "../../comp-m3/smart-table/sort.png",
+                loadingIconFile: "../../comp-m3/smart-table/clock.png",
                 invertIconColor: 1,
 
                 box: { color: "#1E1E1E" },

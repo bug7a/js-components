@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Stepper</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp-m4/stepper.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // *** VARIABLES:
+        let stpQuantity, lblQuantity;
+        let stpWeight, lblWeight;
+        let stpPercent, stpHour, lblHour;
+        let stpCompact, stpApi, lblApi;
+
+        const start = function () {
+
+            page.color = "#F4F5F2";
+
+            // BOX: Full screen scrollable container
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            startBox(0, 0, "100%", "100%", {
+                color: "transparent",
+                scrollY: 1,
+            });
+
+                // GROUP: Page layout
+                VGroup({
+                    width: "100%",
+                    height: "auto", // Grows with content, so the Box can scroll.
+                    align: "center top",
+                    gap: 30,
+                    padding: 50,
+                });
+
+                    // LABEL: Title
+                    Label({
+                        text: "Stepper",
+                        fontSize: 26,
+                        fontFamily: "opensans-bold",
+                    });
+
+                    // SAMPLE 1: Default
+                    startCard("1. Default", "Click the value to type it. Hold a button to change the value continuously. Arrow keys, PageUp / PageDown, Home / End work when it has the focus.");
+
+                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 16 });
+
+                            stpQuantity = Stepper({
+                                value: 1,
+                                min: 1,
+                                max: 10,
+                                onChange: function (self) {
+                                    lblQuantity.text = "Quantity: " + self.value + ((self.value === self.max) ? " (max)" : "");
+                                },
+                            });
+
+                            lblQuantity = addInfoLabel("Quantity: 1");
+
+                        endGroup();
+
+                    endCard();
+
+                    // SAMPLE 2: Decimal steps and unit
+                    startCard("2. Decimal steps and unit text", "step: 0.5, precision: 1, unitText: \" kg\". PageUp adds 10 steps (5 kg).");
+
+                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 16 });
+
+                            stpWeight = Stepper({
+                                width: 170,
+                                value: 2.5,
+                                min: 0,
+                                max: 20,
+                                step: 0.5,
+                                precision: 1,
+                                unitText: " kg",
+                                onChange: function (self) { lblWeight.text = "Price: $" + (self.value * 4.2).toFixed(2); },
+                            });
+
+                            lblWeight = addInfoLabel("Price: $10.50");
+
+                        endGroup();
+
+                    endCard();
+
+                    // SAMPLE 3: Not editable, wrap
+                    startCard("3. Percent (not editable) and hours (wrap: 1)", "The percent value can not be typed. The hour goes from 23 back to 0.");
+
+                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 16 });
+                        that.elem.style.flexWrap = "wrap";
+
+                            stpPercent = Stepper({
+                                value: 50,
+                                min: 0,
+                                max: 100,
+                                step: 5,
+                                unitText: "%",
+                                editable: 0,
+                            });
+
+                            stpHour = Stepper({
+                                value: 9,
+                                min: 0,
+                                max: 23,
+                                wrap: 1,
+                                valueFormat: function (value) { return String(value).padStart(2, "0") + ":00"; },
+                                onChange: function (self) { lblHour.text = "Alarm at " + String(self.value).padStart(2, "0") + ":00"; },
+                            });
+
+                            lblHour = addInfoLabel("Alarm at 09:00");
+
+                        endGroup();
+
+                    endCard();
+
+                    // SAMPLE 4: Compact layout, sizes
+                    startCard("4. Compact layout and sizes", "layout: \"compact\" puts both buttons at the right, like a spinner.");
+
+                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 16 });
+                        that.elem.style.flexWrap = "wrap";
+
+                            stpCompact = Stepper({ layout: "compact", width: 130, value: 3, min: 0, max: 99 });
+
+                            Stepper({ width: 120, height: 36, value: 2, min: 0, max: 9, style: { button: { width: 30, iconSize: 12 }, value: { fontSize: 15 } } });
+
+                            Stepper({ width: 200, height: 56, value: 250, min: 0, max: 5000, step: 50, unitText: " ml", style: { button: { width: 48, iconSize: 18 }, value: { fontSize: 22 } } });
+
+                        endGroup();
+
+                    endCard();
+
+                    // SAMPLE 5: Styles
+                    startCard("5. Modern and Dark Styles", "");
+
+                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 16 });
+                        that.elem.style.flexWrap = "wrap";
+
+                            Stepper({ styleName: "modern", value: 4, min: 1, max: 12 });
+                            Stepper({ styleName: "modern", layout: "compact", width: 140, value: 1.5, min: 0, max: 10, step: 0.25, precision: 2, unitText: " h" });
+
+                            // GROUP: Dark background
+                            HGroup({ width: "auto", height: "auto", align: "left center", gap: 16, padding: 16, color: "#1C1C1B", round: 10 });
+                                Stepper({ styleName: "dark", value: 2, min: 0, max: 5 });
+                                Stepper({ styleName: "dark", layout: "compact", width: 130, value: 20, min: 0, max: 100, step: 10, unitText: "%" });
+                            endGroup();
+
+                        endGroup();
+
+                    endCard();
+
+                    // SAMPLE 6: API
+                    startCard("6. API", "setValue(), increase(), decrease(), setRange(), setStep(), setUnitText(), setEnabled()");
+
+                        stpApi = Stepper({
+                            value: 5,
+                            min: 0,
+                            max: 10,
+                            onChange: function (self) { lblApi.text = "Value: " + self.value + " (range " + self.min + " – " + self.max + ", step " + self.step + ")"; },
+                        });
+
+                        // GROUP: Buttons
+                        HGroup({ width: "100%", height: "auto", gap: 8 });
+                        that.elem.style.flexWrap = "wrap";
+                            addSampleButton("Set 8", function () { stpApi.setValue(8); });
+                            addSampleButton("+3", function () { stpApi.increase(3); });
+                            addSampleButton("−3", function () { stpApi.decrease(3); }, 1);
+                            addSampleButton("Range 0–100", function () { stpApi.setRange(0, 100); stpApi.onChange(stpApi); }, 1);
+                            addSampleButton("Step 5", function () { stpApi.setStep((stpApi.step === 5) ? 1 : 5); stpApi.onChange(stpApi); }, 1);
+                            addSampleButton("Unit", function () { stpApi.setUnitText(stpApi.unitText ? "" : " pcs"); }, 1);
+                            addSampleButton("On / Off", function () { stpApi.setEnabled(!stpApi.enabled); }, 1);
+                        endGroup();
+
+                        lblApi = addInfoLabel("Value: 5 (range 0 – 10, step 1)");
+
+                    endCard();
+
+                endGroup();
+
+            endBox();
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        // GROUP: A card with a title and a short description.
+        const startCard = function (title, description = "") {
+            VGroup({
+                width: 560,
+                height: "auto",
+                align: "left top",
+                gap: 16,
+                padding: 20,
+                color: "white",
+                round: 10,
+                border: 1,
+                borderColor: Black(0.1),
+            });
+            that.elem.style.alignItems = "stretch";
+            Label({
+                text: title,
+                fontSize: 14,
+                textColor: Black(0.45),
+            });
+            if (description) {
+                Label({
+                    text: description,
+                    fontSize: 13,
+                    textColor: Black(0.35),
+                });
+                that.elem.style.marginTop = "-10px";
+            }
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+        const addSampleButton = function (text, onClick, isSecondary = 0) {
+            const btn = Button({
+                text: text,
+                width: 110,
+                height: 36,
+                fontSize: 14,
+            });
+            if (isSecondary) btn.color = "lightgray";
+            btn.on("click", onClick);
+            return btn;
+        };
+
+        const addInfoLabel = function (text) {
+            return Label({
+                text: text,
+                fontSize: 14,
+                textColor: Black(0.5),
+            });
+        };
+
+    </script>
+</head>
+
+<body></body>
+
+</html>

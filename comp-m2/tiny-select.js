@@ -301,8 +301,10 @@ TinySelect.createList = function(connectedUI) {
         if (connectedUI.closeListBox != null) connectedUI.closeListBox();
     });
 
-    listBox.grp.left = connectedUI.totalLeft + connectedUI.width - listBox.grp.width;
-    listBox.grp.top = connectedUI.totalTop + connectedUI.height;
+    // WHY: totalLeft/totalTop do not count the scroll of parent boxes. In a scrolled page, the list was opened at a wrong place.
+    const rect = connectedUI.elem.getBoundingClientRect();
+    listBox.grp.left = withPageZoom(rect.right) - listBox.grp.width;
+    listBox.grp.top = withPageZoom(rect.bottom);
 
     endFlexBox();
 
