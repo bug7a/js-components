@@ -6,13 +6,16 @@ TopBar - v26.09
 
 UI COMPONENT TEMPLATE
 - Top bar of the admin panel with left, center, and right sections.
-- LEFT: Panel icon and name (click: Home), language (saved to Settings), keyboard shortcuts.
-- CENTER: Module buttons, maintenance mode switch (saved to Settings, asks before turning on).
+- LEFT: Panel icon and name (click: Home), panel select (A, B, C: opens another panel by its URL),
+  keyboard shortcuts button (hidden, see SHOW_SHORTCUTS_BUTTON).
+- CENTER: Module buttons and the maintenance mode switch. Hidden, see SHOW_CENTER_ITEMS.
+  The code stays as an example of what can be put in the center.
 - RIGHT:
   - Search: Pages, users, customers, orders, contents and products. Results open under the input.
+    The input gets narrower on small screens (SEARCH_SIZES), so the other buttons also fit on mobile.
     Keyboard: Ctrl+K, Cmd+K or "/" to search, ArrowUp/ArrowDown to move, Enter to open, Escape to close.
   - Create menu (+): Invite user, new product, new post.
-  - Notifications (unread count), profile (initials and status dot).
+  - Notifications (unread count), profile (initials).
 - Escape also closes the right view.
 
 Started Date: June 2024
@@ -53,10 +56,26 @@ const TopBar = function(params = {}) {
     const WARNING_COLOR = "#F2B24C";
     const MAX_RESULTS_PER_GROUP = 5;
 
-    const LANGUAGES = [
-        { id: "en", label: "English" },
-        { id: "tr", label: "Türkçe" },
-        { id: "de", label: "Deutsch" },
+    // Hidden parts. Set to 1 to show them again. (The code stays as an example.)
+    const SHOW_CENTER_ITEMS = 0;
+    const SHOW_SHORTCUTS_BUTTON = 0;
+
+    // Panels of the select box on the left. Write the URL of the other panel to switch to it.
+    // USAGE: { id: "b", label: "B", url: "../other-panel/index.htm" }
+    const PANELS = [
+        { id: "a", label: "A", url: "" },
+        { id: "b", label: "B", url: "" },
+        { id: "c", label: "C", url: "" },
+    ];
+
+    // Width of the search input by the page width. The first matching line is used.
+    // WHY: On a narrow screen the search must not fill the top bar. Create, notifications
+    //      and profile buttons need space too.
+    const SEARCH_SIZES = [
+        { minPageWidth: 1200, width: 260, placeholderText: "Search  (Ctrl K)" },
+        { minPageWidth: 1000, width: 200, placeholderText: "Search  (Ctrl K)" },
+        { minPageWidth: 760, width: 160, placeholderText: "Search" },
+        { minPageWidth: 0, width: 130, placeholderText: "" },
     ];
 
     let searchPages = []; // Menu items (setSearchPages)
@@ -307,7 +326,7 @@ const TopBar = function(params = {}) {
     // Under the search input, right aligned
     const positionResults = function() {
         const rect = box.searchInput.elem.getBoundingClientRect();
-        const width = 380;
+        const width = Math.min(380, page.width - 16); // WHY: The results must stay on the screen on mobile.
         box.resultsBox.left = Math.max(8, withPageZoom(rect.right) - width);
         box.resultsBox.top = withPageZoom(rect.bottom) + 6;
         box.resultsBox.width = width;
@@ -320,6 +339,16 @@ const TopBar = function(params = {}) {
 
     const isResultsOpen = function() {
         return box.resultsBox.visible == 1;
+    };
+
+    // *** RESPONSIVE:
+
+    // Makes the search input narrower when the screen gets narrower. (SEARCH_SIZES)
+    const layoutSearchInput = function() {
+        const size = SEARCH_SIZES.find(function(item) { return page.width >= item.minPageWidth; });
+        if (!size || box.searchInput.width == size.width) return;
+        box.searchInput.width = size.width; // WHY: SearchInput lays its parts out again on resize.
+        box.searchInput.setPlaceholderText(size.placeholderText);
     };
 
     // *** DIALOGS:
@@ -396,11 +425,9 @@ const TopBar = function(params = {}) {
     };
     // USAGE: topBar.setSearchPages(menuItems)
 
-    // Language, maintenance mode and the user (from Settings)
+    // Maintenance mode and the user (from Settings)
     box.applySettings = function(settings) {
         isRendering = 1;
-        const index = box.selLanguage.getIndexById(settings.language);
-        if (index >= 0 && index != box.selLanguage.selectedIndex) box.selLanguage.setSelectedIndex(index);
         if (box.tglMaintenance.value != (settings.maintenance ? 1 : 0)) box.tglMaintenance.setValue(settings.maintenance ? 1 : 0);
         setMaintenanceView(settings.maintenance == 1);
         isRendering = 0;
@@ -413,7 +440,7 @@ const TopBar = function(params = {}) {
         const user = UserActionsPage.getCurrentUser();
         box.lblAvatar.text = UserActionsPage.getInitials(user.name);
         box.avatar.color = user.avatarColor;
-        box.avatarDot.color = UserActionsPage.STATUSES[UserActionsPage.getStatus()].color;
+        if (box.avatarDot) box.avatarDot.color = UserActionsPage.STATUSES[UserActionsPage.getStatus()].color;
         box.btnProfile.tooltip.setHintText(escapeHtml(user.name) + " · " + UserActionsPage.STATUSES[UserActionsPage.getStatus()].label);
     };
 
@@ -479,8 +506,8 @@ const TopBar = function(params = {}) {
         endGroup();
 
         // EXAMPLE: How to add a ComboBox on topBar
-        // Language (saved to Settings > General)
-        box.selLanguage = TinySelect({
+        // Panel select: opens another panel. Write the URLs into PANELS.
+        box.selPanel = TinySelect({
             title: "",
             label: "",
             fontSize: 14,
@@ -495,29 +522,33 @@ const TopBar = function(params = {}) {
             listBackgroundColor: "#141414",
             listBorder: 1,
             listBorderColor: "rgba(255,255,255,0.4)",
-            list: LANGUAGES,
+            list: PANELS,
             arrowIcon: "assets/top-bar/arrow-down.svg",
             invertIconColor: 1,
             selectedIndex: 0,
         });
         that.onSelect = function(index, id) {
             if (isRendering) return;
-            // TODO: Load the texts of the language.
-            saveSetting("language", id);
+            const panel = PANELS[index];
+            if (panel && panel.url) go(panel.url); // USAGE: go(url, "_blank") opens it in a new tab.
         };
 
         // EXAMPLE: How to use a Dialog
-        TopBarIconButton({
+        // NOTE: Hidden. The same dialog is also in the create menu (+) as "Keyboard Shortcuts".
+        box.btnShortcuts = TopBarIconButton({
             iconPath: "assets/top-bar/keyboard.svg",
             invertIconColor: 1,
             hintText: "Keyboard shortcuts",
             hintPosition: "right",
             onClick: showShortcuts,
         });
+        box.btnShortcuts.visible = SHOW_SHORTCUTS_BUTTON;
 
     endGroup();
 
     // CENTER SECTION
+    // NOTE: Hidden (SHOW_CENTER_ITEMS). Everything below stays as an example of what can be
+    //       put in the center: icon buttons, a Label and a Toggle.
     box.centerBox = HGroup({
         gap: 8,
         align: "center center",
@@ -612,6 +643,10 @@ const TopBar = function(params = {}) {
 
     endGroup();
 
+    // WHY: The group is hidden after its children are created. Children created in a hidden
+    //      group are absolutely positioned, not flex items.
+    box.centerBox.visible = SHOW_CENTER_ITEMS;
+
     // RIGHT SECTION
     box.rightBox = HGroup({
         gap: 8,
@@ -682,8 +717,10 @@ const TopBar = function(params = {}) {
     endGroup();
 
     // BOX: Avatar (inside the profile button)
-    const previousContainer = getDefaultContainerBox();
-    setDefaultContainerBox(box.btnProfile);
+    // WHY: createIn() sets the container, runs the function and sets the previous container back.
+    //      setDefaultContainerBox() is not in the start/end stack: after the endGroup() below the
+    //      container would be the top bar again, and the next object would land on the top bar.
+    createIn(box.btnProfile, function() {
 
         box.avatar = HGroup({ left: 8, top: 8, width: 24, height: 24, align: "center center", round: 100, color: "#3D7A6B" });
         that.elem.style.pointerEvents = "none";
@@ -691,10 +728,11 @@ const TopBar = function(params = {}) {
             that.elem.style.fontFamily = "opensans-bold";
         endGroup();
 
-        box.avatarDot = Box({ left: 25, top: 25, width: 10, height: 10, round: 100, border: 2, borderColor: box.backgroundColor, color: "#65A293" });
-        that.elem.style.pointerEvents = "none";
+        // NOTE: No status dot. The notifications badge already shows the state.
+        // box.avatarDot = Box({ left: 25, top: 25, width: 10, height: 10, round: 100, border: 2, borderColor: box.backgroundColor, color: "#65A293" });
+        // that.elem.style.pointerEvents = "none";
 
-    setDefaultContainerBox(previousContainer);
+    });
 
     // MENU: Create (on the page, over everything)
     box.createMenu = ContextMenu({
@@ -727,7 +765,7 @@ const TopBar = function(params = {}) {
     box.createMenu.attachTo(box.btnCreate, "click");
 
     // BOX: Search results (on the page, over everything)
-    setDefaultContainerBox(page);
+    createIn(page, function() {
 
         box.resultsBox = Box({ left: 0, top: 44, width: 380, height: "auto", color: "#1A1A19", border: 1, borderColor: White(0.14), round: 10, visible: 0 });
         box.resultsBox.elem.style.position = "fixed";
@@ -737,7 +775,7 @@ const TopBar = function(params = {}) {
         box.resultsBox.elem.style.padding = "6px";
         box.resultsBox.elem.style.boxShadow = "0px 12px 32px " + Black(0.5);
 
-    setDefaultContainerBox(previousContainer);
+    });
 
     // *** OBJECT INIT CODE:
 
@@ -794,8 +832,11 @@ const TopBar = function(params = {}) {
     });
 
     page.onResize(function() {
+        layoutSearchInput();
         if (isResultsOpen()) positionResults();
     });
+
+    layoutSearchInput();
 
     if (typeof SettingsPage !== "undefined") box.applySettings(SettingsPage.load());
 
