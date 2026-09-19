@@ -2,10 +2,16 @@
 
 /*
 
-LeftMenu - v25.07
+LeftMenu - v26.09
 
 UI COMPONENT TEMPLATE
 - You can customize, this template code as you need:
+
+- The menu opens when the mouse is over it. On a touch device there is no hover, so it opens with a tap:
+  the first tap opens the menu (it does not select an item, because the texts are not visible when it is closed),
+  the second tap selects the item and closes the menu. A tap outside the menu also closes it.
+-- openOnClick: "auto" (touch device: tap, mouse: hover), 1: always tap, 0: always hover.
+-- leftMenu.setOpenOnClick(1) changes it later.
 
 Started Date: December 2024
 Developer: Bugra Ozden
@@ -28,6 +34,7 @@ const LeftMenuDefaults = {
     textColor: "rgba(255, 255, 255, 0.6)",           // Text color
     selectedTextColor: "rgba(255, 255, 255, 0.95)",
     invertIconColor: 1,
+    openOnClick: "auto",          // "auto": Tap on a touch device, hover with a mouse. 1: Always tap, 0: Always hover.
     items: [],                    // Menu items array
     onItemClick: function(item) {}, // Callback when item is clicked
     onMenuToggle: function(isExpanded) {}, // Callback when menu expands/collapses
@@ -47,6 +54,7 @@ const LeftMenu = function(params = {}) {
     let isExpanded = 0;           // Menu expansion state
     let selectedItemKey = null;   // Currently selected item
     let hoverTimeout = null;      // Hover delay timer
+    let useTapMode = 0;           // 1: The menu opens with a tap (touch device), not with hover.
     const itemList = [];          // Array to store menu items
     const itemElements = [];      // Array to store item UI elements
     const WIDTH = 40;
@@ -103,17 +111,32 @@ const LeftMenu = function(params = {}) {
         endBox();
 
         // Click handler
-        buttonBox.on("click", function() {
+        buttonBox.on("click", function(self, event) {
+
+            // WHY: The menu box also listens for the tap (to open itself). Without this, closing after a selection would open it again.
+            if (event) event.stopPropagation();
+
+            // WHY: Touch device, closed menu: only the icons are visible. The first tap opens the menu, it does not select.
+            if (useTapMode && !isExpanded) {
+                expandMenu();
+                return;
+            }
+
             if (selectedItemKey != item.key) {
                 if (!item.dontSelect) {
                     selectItem(item.key);
                 }
                 box.onItemClick(item);
             }
+
+            // Touch device: the open menu must not stay over the page.
+            if (useTapMode) collapseMenu();
+
         });
 
         // Hover effects
         buttonBox.on("mouseover", function() {
+            if (useTapMode) return; // WHY: A touch also fires mouseover; the color would stay on the item.
             //buttonBox.color = box.hoverColor;
             // INSERT_YOUR_CODE
             // Create a left-to-right fading gradient effect on hover
@@ -128,6 +151,7 @@ const LeftMenu = function(params = {}) {
         });
 
         buttonBox.on("mouseout", function() {
+            if (useTapMode) return;
             if (selectedItemKey != item.key) {
                 buttonBox.elem.style.background = `transparent`;
                 buttonBox.icon.opacity = 0.6;
@@ -244,7 +268,47 @@ const LeftMenu = function(params = {}) {
         box.onMenuToggle(0);
     };
 
+    // Is this a touch device? (No mouse hover.)
+    const isTouchDevice = function() {
+        // WHY: "hover: none" is the real question (a tablet, a phone). isMobile() is the fallback for old browsers.
+        if (window.matchMedia && window.matchMedia("(hover: none)").matches) return 1;
+        if (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) return 1;
+        return (typeof isMobile === "function" && isMobile()) ? 1 : 0;
+    };
+
+    // Tap outside the menu: close it. (Only in tap mode)
+    const onDocumentPointerDown = function(event) {
+        if (!box || !useTapMode || !isExpanded) return;
+        if (box.elem.contains(event.target)) return;
+        collapseMenu();
+    };
+
     // *** PUBLIC FUNCTIONS:
+
+    // "auto": Tap on a touch device, hover with a mouse. 1: Always tap, 0: Always hover.
+    box.setOpenOnClick = function(openOnClick) {
+        box.openOnClick = openOnClick;
+        useTapMode = (openOnClick === "auto") ? isTouchDevice() : ((openOnClick == 1 || openOnClick === true) ? 1 : 0);
+        if (!useTapMode) collapseMenu(); // WHY: Hover mode starts closed; the mouse decides.
+        return useTapMode;
+    };
+    // USAGE: leftMenu.setOpenOnClick(1) // Returns 1 if the menu opens with a tap.
+
+    box.isTapMode = function() {
+        return useTapMode;
+    };
+
+    box.destroy = function() {
+
+        // WHY: document and page events are not cleaned by box.remove().
+        document.removeEventListener("pointerdown", onDocumentPointerDown, true);
+        page.remove_onResize(resizeScrollableBox);
+        clearTimeout(hoverTimeout);
+
+        box.remove(); // NOTE: It will clean all events like box.on("click"
+        box = null;
+
+    };
 
     // Add item to top of menu
     box.addItemToTop = function(item) {
@@ -400,18 +464,30 @@ const LeftMenu = function(params = {}) {
 
     // *** OBJECT INIT CODE:
     
-    // Hover events for expansion
+    box.setOpenOnClick(box.openOnClick);
+
+    // Hover events for expansion (mouse)
     box.on("mouseenter", function() {
+        if (useTapMode) return;
         expandMenu();
         //clearTimeout(hoverTimeout);
         //hoverTimeout = setTimeout(expandMenu, 200); // 200ms delay
     });
 
     box.on("mouseleave", function() {
+        if (useTapMode) return;
         collapseMenu();
         //clearTimeout(hoverTimeout);
         //hoverTimeout = setTimeout(collapseMenu, 500); // 500ms delay before collapse
     });
+
+    // Tap on the menu (also on an empty place of it): open it. (Touch device)
+    box.on("click", function() {
+        if (useTapMode && !isExpanded) expandMenu();
+    });
+
+    // WHY: Capture, so it also works when the tap is stopped by another object. (Ex: a page that closes its own menu)
+    document.addEventListener("pointerdown", onDocumentPointerDown, true);
 
     //console.timeEnd("LeftMenu");
     
