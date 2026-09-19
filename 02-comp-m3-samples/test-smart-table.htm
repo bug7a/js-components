@@ -70,7 +70,8 @@
 
         const initTable = function() {
 
-            if (window.smartTable1) window.smartTable1.remove();
+            // WHY: remove() bileşenin kendi destroy() unu çağırmaz; menü, window eventleri ve timer lar geride kalır.
+            if (window.smartTable1) window.smartTable1.destroy();
 
             window.smartTable1 = SmartTable({
                 fillTestData: 1,
