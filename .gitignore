@@ -12,3 +12,9 @@ desktop.ini
 # Gecici dosyalar
 *.log
 *.tmp
+
+# Kişisel projeler: bu klasörün içeriği hiçbir zaman GitHub'a gönderilmez.
+__projects/
+
+# Kişisel notlar
+__notes.txt
