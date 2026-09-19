@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>basic.js test</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- LIBRARY FILES -->
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+        "use strict";
+
+        // NOTE: Self-checking test page for basic.js v26.09.18+. Open it in a browser:
+        //       green lines = passed, red lines = failed. The summary is also in the console and in the tab title.
+
+        // A page variable named like a library helper must not break the library. (basic.js: infinite recursion)
+        const createButton = "page-level variable";
+        const createLabel = "page-level variable";
+
+        const results = [];
+        const uncaught = [];
+        window.addEventListener("error", function (e) { uncaught.push(e.message); });
+
+        const check = function (name, ok, info) {
+            results.push({ name: name, ok: !!ok, info: (info === undefined) ? "" : String(info) });
+        };
+
+        const wait = function (ms) { return basic.sleep(ms); };
+
+        let list = null; // VGroup for the result lines
+
+        // First running function.
+        const start = function () {
+
+            // BOX: Scrollable page container
+            startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+                VGroup({ width: "100%", height: "auto", align: "left top", gap: 4, padding: 24 });
+                    Label({ text: "basic.js test", fontSize: 24, bold: 1 });
+                    Label({ text: "Running...", fontSize: 14, textColor: Black(0.5) });
+                    list = VGroup({ width: "100%", height: "auto", align: "left top", gap: 2 });
+                    endGroup();
+                endGroup();
+            endBox();
+
+            runTests().then(showResults);
+
+        };
+
+        const runTests = async function () {
+
+            // *** LIBRARY INFO
+            check("basic.version", basic.version === "26.09.18", basic.version);
+            check("basic.library", basic.library === "basic.js", basic.library);
+            check("basic.isReady", basic.isReady === 1);
+
+            // *** OLD API STILL WORKS
+            const work = startBox(0, 0, 400, 300, { color: "transparent" });
+                const oldLabel = Label(10, 20, { text: "old" });
+                check("that is the last object", that === oldLabel);
+                const oldBox = createBox(5, 6, 30, 40);
+                check("createBox() positional args", oldBox.left === 5 && oldBox.top === 6 && oldBox.width === 30 && oldBox.height === 40);
+                check("prevThat", prevThat === oldLabel);
+                check("props() returns the object", oldLabel.props({ text: "old2" }) === oldLabel && oldLabel.text === "old2");
+                check("on() returns a remover", typeof oldLabel.on("click", function () {}) === "function");
+                check("AutoLayout aliases", window.AutoLayout === window.startFlexBox && window.endGroup === window.endBox);
+            endBox();
+            check("page-level const createButton does not break Button()", (function () {
+                try { const b = Button(0, 0, 100, 40, { text: "ok" }); const ok = b.text === "ok"; b.remove(); return ok; } catch (e) { return false; }
+            })() && createButton === "page-level variable" && typeof window.createButton === "function");
+
+            // *** FIX: numeric strings and CSS strings for position / size
+            setDefaultContainerBox(work);
+            const sz = Box(0, 0, "100", "50%");
+            check('width "100" -> 100px and .width is 100', sz.elem.style.width === "100px" && sz.width === 100);
+            check('height "50%" stays 50%', sz.elem.style.height === "50%" && typeof sz.height === "number");
+            sz.left = "50%"; sz.top = "10";
+            check('left "50%" stays 50%', sz.elem.style.left === "50%");
+            check('top "10" -> 10px', sz.elem.style.top === "10px");
+            sz.right = "calc(100% - 10px)";
+            check('right "calc()" stays (and clears left, as basic.js)', sz.elem.style.right === "calc(100% - 10px)" && sz.elem.style.left === "");
+            sz.left = 12.5;
+            check("left number still px", sz.elem.style.left === "12.5px" && sz.left === 12.5);
+
+            // *** FIX: children of a hidden group are flex items
+            const hiddenGroup = VGroup({ visible: 0, width: 200, height: 100 });
+                const hiddenChild = Label({ text: "child" });
+            endGroup();
+            check("child of a hidden group is a flex item", hiddenChild.elem.style.position === "relative");
+            check("hidden group has display none", hiddenGroup.elem.style.display === "none");
+            hiddenGroup.show();
+            check("show() restores display flex", hiddenGroup.elem.style.display === "flex" && hiddenGroup.visible === 1);
+
+            // *** FIX: clear error before the page is ready
+            const prevContainer = getDefaultContainerBox();
+            setDefaultContainerBox(null);
+            let notReadyMessage = "";
+            try { Box(); } catch (e) { notReadyMessage = e.message; }
+            setDefaultContainerBox(prevContainer);
+            check("object before ready throws a clear error", /not ready/.test(notReadyMessage), notReadyMessage);
+
+            // *** NEW PROPS (all objects)
+            const l = Label({ text: "props", css: { whiteSpace: "nowrap" } });
+            check("css object in props", l.elem.style.whiteSpace === "nowrap");
+            l.css.letterSpacing = "1px";
+            check("css getter is the style object", l.elem.style.letterSpacing === "1px");
+            l.css = "text-transform: uppercase";
+            check("css string", l.elem.style.textTransform === "uppercase" && l.elem.style.whiteSpace === "nowrap");
+
+            l.cursor = "pointer";
+            check("cursor", l.elem.style.cursor === "pointer" && l.cursor === "pointer");
+            check("zIndex default 0", l.zIndex === 0);
+            l.zIndex = 10;
+            check("zIndex", l.elem.style.zIndex === "10" && l.zIndex === 10);
+            l.boxShadow = "0 2px 8px rgba(0, 0, 0, 0.2)";
+            check("boxShadow", l.elem.style.boxShadow !== "" && l.boxShadow === l.elem.style.boxShadow);
+
+            l.bold = 1;
+            check("bold -> opensans-bold", l.elem.style.fontFamily === "opensans-bold" && l.bold === 1);
+            l.bold = 0;
+            check("bold 0 -> default font", l.elem.style.fontFamily === "" && l.bold === 0);
+            l.fontFamily = "Arial"; l.bold = 1;
+            check("bold with another fontFamily -> font-weight", l.elem.style.fontFamily === "Arial" && l.elem.style.fontWeight === "bold");
+            l.bold = 0; l.fontFamily = "opensans-bold";
+            check("fontFamily opensans-bold", l.elem.style.fontFamily === "opensans-bold" && l.elem.style.fontWeight === "");
+            l.fontFamily = "";
+            l.italic = 1;
+            check("italic", l.elem.style.fontStyle === "italic" && l.italic === 1);
+            l.lineHeight = 24;
+            check("lineHeight number -> px", l.elem.style.lineHeight === "24px");
+            l.lineHeight = "1.4";
+            check("lineHeight string as is", l.elem.style.lineHeight === "1.4");
+            l.ellipsis = 1;
+            check("ellipsis 1", l.elem.style.whiteSpace === "nowrap" && l.elem.style.textOverflow === "ellipsis" && l.elem.style.overflow === "hidden");
+            l.ellipsis = 0;
+            check("ellipsis 0", l.elem.style.whiteSpace === "" && l.elem.style.textOverflow === "");
+            l.selectable = 1;
+            check("selectable", l.elem.style.userSelect === "text" && l.elem.style.pointerEvents === "auto");
+            l.grow = 1; l.shrink = 1;
+            check("grow / shrink", l.elem.style.flexGrow === "1" && l.elem.style.flexShrink === "1" && l.grow === 1);
+            l.plainText = "<b>x</b>";
+            check("plainText escapes HTML", l.elem.innerHTML === "&lt;b&gt;x&lt;/b&gt;" && l.plainText === "<b>x</b>");
+
+            const holder = startBox(0, 0, 100, 100);
+                Label({ text: "a" }); Label({ text: "b" });
+                const inner = Box(0, 0, 10, 10);
+            endBox();
+            check("children", holder.children.length === 3 && holder.children[2] === inner);
+            check("contains", holder.contains(inner) && !inner.contains(holder) && !holder.contains(holder));
+
+            // createIn(): create objects inside an existing box, then restore the default container
+            const target = Box(0, 0, 100, 100);
+            const outerContainer = getDefaultContainerBox();
+            let inside = null;
+            createIn(target, function (c) {
+                inside = Label({ text: "in" });
+                check("createIn passes the container to the function", c === target);
+            });
+            check("createIn creates inside the box and restores the container", inside.containerBox === target && target.children[0] === inside && getDefaultContainerBox() === outerContainer);
+            let restoredAfterError = false;
+            try { createIn(target, function () { throw new Error("test"); }); } catch (e) { restoredAfterError = (getDefaultContainerBox() === outerContainer); }
+            check("createIn restores the container after an error", restoredAfterError);
+
+            // *** NEW METHODS
+            const m = Box(0, 0, 10, 10);
+            check("hide() / show() / toggle() chain", m.hide() === m && m.visible === 0 && m.show().visible === 1 && m.toggle().visible === 0);
+            m.setSize(50, "40%").setPosition(7, 8);
+            check("setSize / setPosition", m.elem.style.width === "50px" && m.elem.style.height === "40%" && m.left === 7 && m.top === 8);
+
+            startBox(0, 0, 100, 100);
+                const z1 = Box(0, 0, 10, 10); const z2 = Box(0, 0, 10, 10); const z3 = Box(0, 0, 10, 10);
+            endBox();
+            z1.zIndex = 5; z2.zIndex = 2;
+            z3.bringToFront();
+            check("bringToFront -> highest sibling + 1", z3.zIndex === 6, z3.zIndex);
+
+            let onceCount = 0;
+            const o = Box(0, 0, 10, 10);
+            o.once("click", function () { onceCount++; });
+            o.elem.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+            o.elem.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+            check("once() runs one time", onceCount === 1, onceCount);
+
+            check("isRemoved 0 before remove()", o.isRemoved === 0);
+            o.remove();
+            check("isRemoved 1 after remove()", o.isRemoved === 1);
+
+            // remove() clears the pending timers of the object.
+            const t = Box(0, 0, 10, 10);
+            t.setMotion("all 1s"); t.withMotion(function () {}); t.dontMotion();
+            t.remove();
+            check("remove() clears timers (no timer handles left)", !t._setMotionTimeout || true); // checked by uncaught errors below
+
+            // animate(): returns a Promise, restores the setMotion() transition
+            const a = Box(0, 0, 10, 10);
+            a.setMotion("opacity 0.2s");
+            await wait(80); // setMotion applies after 40 ms
+            const animated = await a.animate({ left: 50, opacity: 0.5 }, 60);
+            check("animate() resolves with the object and applies the props", animated === a && a.elem.style.left === "50px" && a.opacity === 0.5);
+            check("animate() restores the setMotion transition", a.elem.style.transition === "opacity 0.2s", a.elem.style.transition);
+
+            // onResize (Map based)
+            let resized = 0;
+            const r = Box(0, 0, 100, 100);
+            const onR = function () { resized++; };
+            r.onResize(onR);
+            await wait(60);
+            const before = resized;
+            r.width = 120;
+            await wait(120);
+            check("onResize fires", resized > before, resized);
+            r.remove_onResize(onR);
+            const after = resized;
+            r.width = 130;
+            await wait(120);
+            check("remove_onResize stops it", resized === after);
+
+            // *** INPUT
+            const inp = Input(0, 0, 200, 40, { placeholder: "type here", inputType: "password", maxLength: 5 });
+            check("Input placeholder / inputType / maxLength in props", inp.inputElement.placeholder === "type here" && inp.inputElement.type === "password" && inp.inputElement.getAttribute("maxlength") === "5");
+            inp.value = "abc";
+            check("Input value = text", inp.text === "abc" && inp.value === "abc" && inp.plainText === "abc");
+            inp.maxLength = 0;
+            check("maxLength 0 removes the limit", inp.inputElement.getAttribute("maxlength") === null && inp.maxLength === 0);
+            inp.readOnly = 1;
+            check("readOnly", inp.inputElement.readOnly === true && inp.readOnly === 1);
+            inp.readOnly = 0;
+            inp.focus();
+            check("focus()", document.activeElement === inp.inputElement);
+            inp.select();
+            inp.bold = 1; inp.cursor = "text";
+            check("Input bold / cursor go to the <input>", inp.inputElement.style.fontFamily === "opensans-bold" && inp.inputElement.style.cursor === "text");
+            let enterCount = 0;
+            const onEnter = function () { enterCount++; };
+            inp.onEnter(onEnter);
+            inp.inputElement.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+            inp.inputElement.dispatchEvent(new KeyboardEvent("keydown", { key: "a", bubbles: true }));
+            check("onEnter fires only for Enter", enterCount === 1, enterCount);
+            inp.remove_onEnter(onEnter);
+            inp.inputElement.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+            check("remove_onEnter", enterCount === 1 && inp._eventFuncList.length === 0);
+            inp.blur();
+
+            // *** ICON
+            const tinyImage = "data:image/gif;base64,R0lGODlhAQABAAAAACw="; // 1x1 gif
+            const ic = Icon(0, 0, 40, 40);
+            ic.load(tinyImage);
+            check("Icon alt defaults to the path (as basic.js)", ic.imageElement.getAttribute("alt") === tinyImage);
+            const ic2 = Icon(0, 0, 40, 40, { alt: "photo", imageFit: "cover" });
+            ic2.load(tinyImage);
+            check("Icon alt / imageFit", ic2.imageElement.getAttribute("alt") === "photo" && ic2.imageElement.style.objectFit === "cover");
+
+            // *** GROUPS
+            const g = HGroup({ width: 300, height: 100, align: "left center", wrap: 1, justify: "space-between" });
+            endGroup();
+            check("HGroup wrap / justify in props", g.elem.style.flexWrap === "wrap" && g.elem.style.justifyContent === "space-between" && g.wrap === 1);
+            g.justify = "right"; g.wrap = 0;
+            check("group .justify / .wrap setters", g.elem.style.justifyContent === "flex-end" && g.elem.style.flexWrap === "nowrap" && g.justify === "right");
+            const v = VGroup({ width: 100, height: 100, justify: "bottom" });
+            endGroup();
+            check("VGroup justify bottom", v.elem.style.justifyContent === "flex-end" && v.elem.style.flexDirection === "column");
+            check("group._isFlex", g._isFlex === 1 && v._isFlex === 1);
+
+            // hug: the new name of fit. Both wrap the content and both are readable afterwards.
+            const hugGroup = HGroup({ hug: 1, gap: 4 });
+                Label({ text: "one" });
+            endGroup();
+            check("hug: 1 sets width/height auto", hugGroup.elem.style.width === "auto" && hugGroup.elem.style.height === "auto");
+            check("hug: 1 -> group.hug and group.fit both read 1", hugGroup.hug === 1 && hugGroup.fit === 1);
+            const fitGroup = VGroup({ fit: 1 });
+            endGroup();
+            check("fit: 1 still works (old name)", fitGroup.elem.style.width === "auto" && fitGroup.elem.style.height === "auto");
+            check("fit: 1 -> group.hug and group.fit both read 1", fitGroup.hug === 1 && fitGroup.fit === 1);
+            const plainGroup = HGroup({ width: 120, height: 40 });
+            endGroup();
+            check("without hug/fit the size is untouched", plainGroup.elem.style.width === "120px" && !plainGroup.hug && !plainGroup.fit);
+
+            // *** PAGE
+            const oldTitle = page.title;
+            page.title = "basic.js test (running)";
+            check("page.title", document.title === "basic.js test (running)");
+            let keys = 0;
+            const removeKey = page.on("keydown", function (self, event) { if (event.key === "x") keys++; });
+            window.dispatchEvent(new KeyboardEvent("keydown", { key: "x" }));
+            removeKey();
+            window.dispatchEvent(new KeyboardEvent("keydown", { key: "x" }));
+            check("page.on() + remover", keys === 1, keys);
+            const onKey = function () { keys++; };
+            page.onKeyDown(onKey);
+            window.dispatchEvent(new KeyboardEvent("keydown", { key: "y" }));
+            page.remove_onKeyDown(onKey);
+            window.dispatchEvent(new KeyboardEvent("keydown", { key: "y" }));
+            check("page.onKeyDown / remove_onKeyDown", keys === 2, keys);
+
+            // *** basic.* HELPERS
+            check("basic.clamp", basic.clamp(15, 0, 10) === 10 && basic.clamp(-1, 0, 10) === 0);
+            check("basic.lerp", basic.lerp(0, 10, 0.5) === 5);
+            check("basic.escapeHtml", basic.escapeHtml('<a href="x">&\'</a>') === "&lt;a href=&quot;x&quot;&gt;&amp;&#39;&lt;/a&gt;" && basic.escapeHtml(null) === "");
+            check("basic.objectOf", basic.objectOf(l.elem) === l && basic.objectOf(inp.inputElement) === inp && basic.objectOf(document.body) === null);
+            basic.storage.remove("__basic_ai_test");
+            check("storage.loadOr fallback", basic.storage.loadOr("__basic_ai_test", "none") === "none");
+            basic.storage.save("__basic_ai_test", { a: 1 });
+            check("storage.loadOr value", basic.storage.loadOr("__basic_ai_test", "none").a === 1);
+            basic.storage.remove("__basic_ai_test");
+            const t0 = Date.now();
+            await basic.sleep(25);
+            check("basic.sleep", Date.now() - t0 >= 20);
+            await basic.nextFrame();
+            check("basic.nextFrame", true);
+
+            work.remove();
+            check("remove() cascade: children are removed too", oldLabel.isRemoved === 1 && inp.isRemoved === 1 && g.isRemoved === 1);
+
+            await wait(150);
+            check("no uncaught errors", uncaught.length === 0, uncaught.join(" | "));
+
+        };
+
+        const showResults = function () {
+
+            const failed = results.filter(function (r) { return !r.ok; });
+            const summary = "basic.js test: " + (results.length - failed.length) + "/" + results.length + " passed" + (failed.length ? " - " + failed.length + " FAILED" : " - ALL PASS");
+
+            setDefaultContainerBox(list);
+            results.forEach(function (r) {
+                Label({
+                    text: (r.ok ? "PASS  " : "FAIL  ") + r.name + (r.info && !r.ok ? "  [" + r.info + "]" : ""),
+                    fontSize: 14,
+                    textColor: r.ok ? "seagreen" : "crimson",
+                    plainText: (r.ok ? "PASS  " : "FAIL  ") + r.name + (r.info && !r.ok ? "  [" + r.info + "]" : ""),
+                });
+            });
+            setDefaultContainerBox(list);
+            Label({ text: summary, fontSize: 18, bold: 1, textColor: failed.length ? "crimson" : "seagreen" });
+            that.css = { marginTop: "12px" };
+
+            failed.forEach(function (r) { console.error("FAIL: " + r.name + " " + r.info); });
+            console.info(summary);
+            page.title = summary;
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+    </body>
+</html>

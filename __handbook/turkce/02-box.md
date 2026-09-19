@@ -82,6 +82,20 @@ startBox({ left: 0, top: 40, width: "100%", height: 100 });
 endBox();
 ```
 
+### createIn() ile Var Olan Bir Kutunun İçinde Nesne Oluşturma
+`createIn(container, func)`, `func` fonksiyonunu `container` varsayılan kap olacak şekilde çalıştırır ve ardından önceki kabı geri yükler (`func` hata fırlatsa bile). Zaten var olan bir kutuya nesne eklemek için kullanılır; örneğin bir bileşen oluşturulduktan sonra onun liste kutusuna satır eklemek için. Tek başına `setDefaultContainerBox()` çağrısından farklı olarak elle geri alma gerekmez.
+
+```javascript
+const card = Box({ left: 0, top: 40, width: 300, height: 200 });
+
+// ... daha sonra, kodun herhangi bir yerinde:
+createIn(card, function (box) {           // box === card
+    Label({ left: 10, top: 10, text: "Sonradan, kartın içinde oluşturuldu" });
+    Button({ left: 10, top: 50, text: "Tamam" });
+});
+// Varsayılan kap, bu çağrıdan önceki ile aynıdır.
+```
+
 ---
 
 ## Örnekler

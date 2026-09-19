@@ -82,6 +82,20 @@ startBox({ left: 0, top: 40, width: "100%", height: 100 });
 endBox();
 ```
 
+### Creating Objects in an Existing Box with createIn()
+`createIn(container, func)` runs `func` with `container` as the default container and then puts the previous container back (also when `func` throws). Use it to add objects to a box that already exists, for example a component's list box after the component is created. Unlike a bare `setDefaultContainerBox()` call, nothing has to be restored by hand.
+
+```javascript
+const card = Box({ left: 0, top: 40, width: 300, height: 200 });
+
+// ... later, anywhere in the code:
+createIn(card, function (box) {           // box === card
+    Label({ left: 10, top: 10, text: "Created later, inside the card" });
+    Button({ left: 10, top: 50, text: "OK" });
+});
+// The default container is the same as before this call.
+```
+
 ---
 
 ## Examples
