@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>Mobile Fit Skeleton</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"><!-- , user-scalable=no -->
+
+        <!-- PWA -->
+        <link rel="manifest" href="manifest.webmanifest">
+        <meta name="theme-color" content="#141414">
+        <meta name="description" content="A basic.js progressive web app skeleton with a fixed content width.">
+        <link rel="icon" type="image/png" sizes="32x32" href="icon/favicon-32.png">
+
+        <!-- PWA: iOS (Safari manifest'in her ozelligini desteklemez) -->
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <meta name="apple-mobile-web-app-title" content="Mobile Fit">
+        <link rel="apple-touch-icon" href="icon/apple-touch-icon.png">
+
+        <!-- LIBRARY FILES -->
+        <link rel="preload" href="basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="basic/basic.min.css">
+        <script src="basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <style>
+
+        /* Telefon centigi / alt cubugu icin guvenli alan. */
+        body {
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+            background-color: #141414;
+        }
+
+        </style>
+
+        <script>
+
+        // VARIABLES
+        let myString = "";
+        let myInteger = 0;
+        let myFloat = 0.5;
+
+        // PWA VARIABLES
+        let installEvent = null;        // beforeinstallprompt olayi burada beklet.
+        let waitingWorker = null;       // Yeni surum yuklendiginde burada bekler.
+        let installButton = null;
+        let updateButton = null;
+        let statusLabel = null;
+
+        // First running function.
+        window.onload = function() {
+
+            page.fit(600, 800);
+            // NOTE: Content design width 600px, maximum width 800px
+            // If your screen is small, you will see content smaller. But always fit
+
+            // GROUP: Centered
+            AutoLayout({
+                color: "#141414",
+            });
+                // BOX: Content container
+                startBox({
+                    width: 600,
+                    height: "100%",
+                    color: "white",
+                    border: 4,
+                    borderColor: "seagreen",
+                });
+
+                    // PUT CONTENT
+                    AutoLayout({
+                        flow: "vertical",
+                        gap: 10,
+                    });
+
+                        Label(10, 10, {
+                            text: "Mobile Content"
+                        });
+
+                        Label(10, 10, {
+                            textColor: "rgba(0,0,0,0.5)",
+                            fontSize: 16,
+                            text: "(Width: 600px)"
+                        });
+
+                        // LABEL: Online / offline durumu
+                        statusLabel = Label(10, 10, {
+                            fontSize: 16,
+                            text: ""
+                        });
+
+                        // BUTTON: Cihaza kur (sadece tarayici izin verince gorunur)
+                        installButton = Button(0, 0, 260, 54, {
+                            text: "Install App",
+                            round: 8,
+                        });
+                        installButton.visible = 0;
+                        installButton.on("click", installApp);
+
+                        // BUTTON: Yeni surum hazir (sadece guncelleme varken gorunur)
+                        updateButton = Button(0, 0, 260, 54, {
+                            text: "Update Available - Reload",
+                            round: 8,
+                            color: "#007aff",
+                            textColor: "white",
+                        });
+                        updateButton.visible = 0;
+                        updateButton.on("click", applyUpdate);
+
+                    endAutoLayout();
+
+                endBox();
+            endAutoLayout();
+
+            page.onResize(pageResized);
+
+            // PWA baslangici
+            startPWA();
+
+        };
+
+        const pageResized = function() {
+
+            page.fit(600, 800);
+
+        };
+
+        // *** PWA FUNCTIONS:
+
+        // Service worker'i kaydet ve olaylari dinle.
+        const startPWA = function() {
+
+            showNetworkStatus();
+            window.addEventListener("online", showNetworkStatus);
+            window.addEventListener("offline", showNetworkStatus);
+
+            // Tarayici "kurulabilir" dediginde olayi sakla, butonu goster.
+            window.addEventListener("beforeinstallprompt", function(event) {
+                event.preventDefault();      // Tarayicinin kendi balonunu engelle.
+                installEvent = event;
+                installButton.visible = 1;
+            });
+
+            // Kurulum bitince butonu gizle.
+            window.addEventListener("appinstalled", function() {
+                installEvent = null;
+                installButton.visible = 0;
+                println("PWA: Installed.");
+            });
+
+            if (!("serviceWorker" in navigator)) {
+                println("PWA: Service worker is not supported by this browser.", "warn");
+                return;
+            }
+
+            // NOT: Service worker sadece https:// veya localhost uzerinde calisir.
+            //      Dosyayi cift tiklayip file:// olarak acarsan kaydolmaz.
+            navigator.serviceWorker.register("sw.js", { scope: "./" })
+                .then(function(registration) {
+
+                    println("PWA: Service worker registered.");
+
+                    // Zaten bekleyen bir yeni surum var mi?
+                    if (registration.waiting) showUpdateButton(registration.waiting);
+
+                    // Yeni surum inmeye baslarsa takip et.
+                    registration.addEventListener("updatefound", function() {
+                        const newWorker = registration.installing;
+                        if (!newWorker) return;
+                        newWorker.addEventListener("statechange", function() {
+                            // Kurulum bitti ve eski surum hala calisiyorsa: guncelleme var.
+                            if (newWorker.state == "installed" && navigator.serviceWorker.controller) {
+                                showUpdateButton(newWorker);
+                            }
+                        });
+                    });
+
+                })
+                .catch(function(error) {
+                    println("PWA: Service worker registration failed: " + error, "error");
+                });
+
+            // Yeni surum devreye girince sayfayi bir kez yenile.
+            let reloading = false;
+            navigator.serviceWorker.addEventListener("controllerchange", function() {
+                if (reloading) return;
+                reloading = true;
+                window.location.reload();
+            });
+
+        };
+
+        // Kurulum penceresini ac.
+        const installApp = function() {
+
+            if (!installEvent) return;
+
+            installEvent.prompt();
+            installEvent.userChoice.then(function(choice) {
+                println("PWA: User choice: " + choice.outcome);
+                installEvent = null;
+                installButton.visible = 0;
+            });
+
+        };
+
+        // Guncelleme butonunu goster.
+        const showUpdateButton = function($worker) {
+
+            waitingWorker = $worker;
+            updateButton.visible = 1;
+
+        };
+
+        // Bekleyen surumu devreye al (sonrasinda controllerchange sayfayi yeniler).
+        const applyUpdate = function() {
+
+            if (!waitingWorker) return;
+
+            updateButton.text = "Updating...";
+            waitingWorker.postMessage({ type: "SKIP_WAITING" });
+
+        };
+
+        // Baglanti durumunu yaz.
+        const showNetworkStatus = function() {
+
+            if (!statusLabel) return;
+
+            statusLabel.text = navigator.onLine ? "Online" : "Offline (running from cache)";
+            statusLabel.textColor = navigator.onLine ? "rgba(0,0,0,0.5)" : "#c0392b";
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+
+        <!-- HTML content -->
+
+    </body>
+</html>
