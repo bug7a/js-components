@@ -29,6 +29,9 @@ const HeroSection = function () {
         "radial-gradient(700px 400px at 8% 98%, rgba(44, 90, 56, 0.45), rgba(0, 0, 0, 0) 60%), " +
         SITE.INK;
 
+    // Hareketli arka plan: kayan ızgara, süzülen ışık bulutları ve geçen parlama. (js/background.js)
+    SITE.backgroundEffect(strip);
+
         const textW = L.mobile ? L.content : Math.round(L.content * 0.46);
         const visualW = L.mobile ? L.content : (L.content - textW - 40);
 

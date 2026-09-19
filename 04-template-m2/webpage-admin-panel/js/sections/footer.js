@@ -19,13 +19,16 @@ const FooterSection = function (params = {}) {
     const T = SITE.T.footer;
 
     // SECTION: Alt bilgi
-    SITE.startSection({
+    const strip = SITE.startSection({
         key: "footer",
         color: SITE.INK,
         align: "left top",
         gap: L.mobile ? 34 : 46,
         padY: L.mobile ? 46 : 64,
     });
+
+    // Hareketli arka plan: Açılış ekranının sönük hali. Sayfa aynı havayla biter. (js/background.js)
+    SITE.backgroundEffect(strip, { level: 0.5, sheen: 0 });
 
         const brandW = L.mobile ? L.content : Math.round(L.content * 0.34);
         const colW = L.mobile ? Math.floor((L.content - 20) / 2) : Math.floor((L.content - brandW - 40) / 3);
