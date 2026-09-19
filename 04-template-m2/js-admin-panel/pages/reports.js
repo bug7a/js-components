@@ -15,7 +15,7 @@ COMPONENTS:
 - TinySelect (comp-m2): Region and group by
 - CheckBox (comp-m3): Compare with the previous period
 - ButtonWithIcon (comp-m3) + ContextMenu (comp-m4): Export menu
-- MiniGraphBox (comp-m4): Summary boxes
+- MiniGraphBox / SparkLineBox (comp-m4): Summary boxes (bars for counts, a line for money and rates)
 - ChartBox (comp-m4): Revenue, regions, orders by category, refund rates
 - SmartTable (comp-m3): Report details (sort, filter)
 - Waiting (comp-m2): Report query (window.waiting of the panel)
@@ -748,31 +748,50 @@ const ReportsPage = function(params = {}) {
 
     const initKpiRow = function() {
 
+        // graphType: "bar" -> MiniGraphBox, "line" -> SparkLineBox.
+        // WHY: Bars for things you can count, a line for money, averages and rates.
         const KPI_LIST = [
-            { title: "Revenue", barColor: ACCENT_COLOR },
-            { title: "Orders", barColor: "#3987E5" },
-            { title: "Avg. Order Value", barColor: "#C98500" },
-            { title: "Refund Rate", barColor: "#D55181" },
+            { title: "Revenue", color: ACCENT_COLOR, graphType: "line" },
+            { title: "Orders", color: "#3987E5", graphType: "bar" },
+            { title: "Avg. Order Value", color: "#C98500", graphType: "line" },
+            { title: "Refund Rate", color: "#D55181", graphType: "line" },
         ];
+
+        const createKpiBox = function(kpi) {
+
+            const params = {
+                height: 100,
+                title: kpi.title,
+                valueText: "",
+                iconFile: "",
+                style: {
+                    box: { color: CARD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 12 },
+                    text: { padding: 14 },
+                    title: { fontSize: 13, textColor: White(0.5) },
+                    valueText: { fontSize: 24, textColor: White(0.95) },
+                },
+            };
+
+            if (kpi.graphType == "bar") {
+                params.barColor = kpi.color;
+                params.style.bars = { height: 34, barWidth: 4, gap: 2, padding: 14, round: 2 };
+                return MiniGraphBox(params);
+            }
+
+            params.lineColor = kpi.color;
+            params.style.graph = { height: 34, padding: 14 };
+            // WHY: showTrend 0 -> The title already shows the change against the previous period
+            //      (getChangeText). Two up / down percentages on one box were confusing.
+            params.showTrend = 0;
+            return SparkLineBox(params);
+
+        };
 
         startRow();
 
             KPI_LIST.forEach(function(kpi) {
 
-                const kpiBox = MiniGraphBox({
-                    height: 100,
-                    title: kpi.title,
-                    valueText: "",
-                    iconFile: "",
-                    barColor: kpi.barColor,
-                    style: {
-                        box: { color: CARD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 12 },
-                        text: { padding: 14 },
-                        title: { fontSize: 13, textColor: White(0.5) },
-                        valueText: { fontSize: 24, textColor: White(0.95) },
-                        bars: { height: 34, barWidth: 4, gap: 2, padding: 14, round: 2 },
-                    },
-                });
+                const kpiBox = createKpiBox(kpi);
                 setFlex(kpiBox, "1 1 220px");
 
                 kpiBoxList.push(kpiBox);

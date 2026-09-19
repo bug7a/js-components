@@ -21,7 +21,7 @@
         <script src="../../../comp-m3/check-box.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m3/radio-button.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m3/hold-to-confirm-button.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m4/mini-graph-box.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m4/spark-line-box.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m4/chart-box.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m4/context-menu.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m4/select-date.js" type="text/javascript" charset="utf-8"></script>
@@ -731,21 +731,21 @@
         const initKpiRow = function () {
 
             const KPI_LIST = [
-                { title: "Trips Today", iconFile: "left-menu/extension.png", barColor: ACCENT_COLOR, maxValue: 0 },
-                { title: "Avg. Wait Time", iconFile: "light.png", barColor: "#3987E5", maxValue: 0 },
-                { title: "Door Cycles Today", iconFile: "left-menu/dashboard.png", barColor: "#9085E9", maxValue: 0 },
-                { title: "Faults", iconFile: "warning.png", barColor: ERROR_COLOR, maxValue: 0 },
+                { title: "Trips Today", iconFile: "left-menu/extension.png", lineColor: ACCENT_COLOR, maxValue: 0 },
+                { title: "Avg. Wait Time", iconFile: "light.png", lineColor: "#3987E5", maxValue: 0 },
+                { title: "Door Cycles Today", iconFile: "left-menu/dashboard.png", lineColor: "#9085E9", maxValue: 0 },
+                { title: "Faults", iconFile: "warning.png", lineColor: ERROR_COLOR, maxValue: 0 },
             ];
 
             startRow();
 
                 KPI_LIST.forEach(function (kpi) {
-                    const kpiBox = MiniGraphBox({
+                    const kpiBox = SparkLineBox({
                         height: 100,
                         title: kpi.title,
                         valueText: "",
                         iconFile: ASSETS + kpi.iconFile,
-                        barColor: kpi.barColor,
+                        lineColor: kpi.lineColor,
                         maxValue: kpi.maxValue,
                         style: {
                             box: { color: CARD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 12 },
@@ -753,7 +753,7 @@
                             title: { fontSize: 13, textColor: White(0.5) },
                             valueText: { fontSize: 24, textColor: White(0.95) },
                             icon: { width: 20, height: 20 },
-                            bars: { height: 34, barWidth: 4, gap: 2, padding: 14, round: 2 },
+                            graph: { height: 34, padding: 14 },
                         },
                     });
                     setFlex(kpiBox, "1 1 220px");

@@ -13,7 +13,7 @@ Products Page (Template) - v26.09
   Changes are kept while the panel is open. Replace the "PRODUCT SERVICE" functions with your service.
 
 COMPONENTS:
-- MiniGraphBox (comp-m4): Summary
+- MiniGraphBox (comp-m4): Summary (bars: one value per category, not a time series)
 - TextTabs, SearchInput, TinySelect (comp-m2): Filters
 - SmartTable (comp-m3): Product list (custom thumbnail cell)
 - InputB, NumberInputB (comp-m2): Editor fields
@@ -251,6 +251,7 @@ const ProductsPage = function(params = {}) {
 
             KPI_LIST.forEach(function(kpi) {
 
+                // WHY: MiniGraphBox (bars), not SparkLineBox: every bar is a category, not a point in time.
                 const kpiBox = MiniGraphBox({
                     height: 96,
                     title: kpi.title,

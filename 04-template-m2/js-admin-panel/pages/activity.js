@@ -17,7 +17,7 @@ COMPONENTS:
 - SearchInput (comp-m2): Search
 - TinySelect (comp-m2): User, action and module filters
 - Toggle (comp-m2): Live updates
-- MiniGraphBox (comp-m4): Summary graphs
+- SparkLineBox (comp-m4): Summary graphs
 - SmartTable (comp-m3): Event list
 - TinyTable (comp-m2): Changes (details panel)
 - ButtonWithIcon (comp-m3): Actions
@@ -470,10 +470,10 @@ const ActivityPage = function(params = {}) {
     const initSummary = function() {
 
         const KPI_LIST = [
-            { title: "Events · 24 hours", barColor: S.ACCENT_COLOR },
-            { title: "Failed sign-ins · 24 hours", barColor: "#E0A03C" },
-            { title: "Active users · 7 days", barColor: "#3987E5" },
-            { title: "Deletions · 7 days", barColor: S.ERROR_COLOR },
+            { title: "Events · 24 hours", lineColor: S.ACCENT_COLOR },
+            { title: "Failed sign-ins · 24 hours", lineColor: "#E0A03C" },
+            { title: "Active users · 7 days", lineColor: "#3987E5" },
+            { title: "Deletions · 7 days", lineColor: S.ERROR_COLOR },
         ];
 
         HGroup({ width: "100%", height: "auto", align: "left top", gap: 16 });
@@ -481,18 +481,18 @@ const ActivityPage = function(params = {}) {
 
             KPI_LIST.forEach(function(kpi) {
 
-                const kpiBox = MiniGraphBox({
+                const kpiBox = SparkLineBox({
                     height: 96,
                     title: kpi.title,
                     valueText: "",
                     iconFile: "",
-                    barColor: kpi.barColor,
+                    lineColor: kpi.lineColor,
                     style: {
                         box: { color: S.CARD_COLOR, border: 1, borderColor: S.CARD_BORDER_COLOR, round: 12 },
                         text: { padding: 14 },
                         title: { fontSize: 13, textColor: White(0.5) },
                         valueText: { fontSize: 24, textColor: White(0.95) },
-                        bars: { height: 30, barWidth: 6, gap: 3, padding: 14, round: 2 },
+                        graph: { height: 30, padding: 14 },
                     },
                 });
                 setFlex(kpiBox, "1 1 220px");

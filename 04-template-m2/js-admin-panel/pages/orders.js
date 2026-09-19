@@ -14,7 +14,7 @@ Orders Page (Template) - v26.09
 
 COMPONENTS:
 - TextTabs (comp-m2): Status tabs
-- MiniGraphBox (comp-m4): Summary graphs
+- SparkLineBox (comp-m4): Summary graphs
 - SearchInput, TinySelect (comp-m2): Filters
 - SmartTable (comp-m3): Order list
 - TinyTable (comp-m2): Order items
@@ -246,10 +246,10 @@ const OrdersPage = function(params = {}) {
     const initSummary = function() {
 
         const KPI_LIST = [
-            { title: "Orders · 24 hours", barColor: S.ACCENT_COLOR },
-            { title: "Revenue · 24 hours", barColor: "#3987E5" },
-            { title: "Waiting to ship", barColor: "#C98500" },
-            { title: "Refunds · 30 days", barColor: S.ERROR_COLOR },
+            { title: "Orders · 24 hours", lineColor: S.ACCENT_COLOR },
+            { title: "Revenue · 24 hours", lineColor: "#3987E5" },
+            { title: "Waiting to ship", lineColor: "#C98500" },
+            { title: "Refunds · 30 days", lineColor: S.ERROR_COLOR },
         ];
 
         HGroup({ width: "100%", height: "auto", align: "left top", gap: 16 });
@@ -257,18 +257,18 @@ const OrdersPage = function(params = {}) {
 
             KPI_LIST.forEach(function(kpi) {
 
-                const kpiBox = MiniGraphBox({
+                const kpiBox = SparkLineBox({
                     height: 96,
                     title: kpi.title,
                     valueText: "",
                     iconFile: "",
-                    barColor: kpi.barColor,
+                    lineColor: kpi.lineColor,
                     style: {
                         box: { color: S.CARD_COLOR, border: 1, borderColor: S.CARD_BORDER_COLOR, round: 12 },
                         text: { padding: 14 },
                         title: { fontSize: 13, textColor: White(0.5) },
                         valueText: { fontSize: 24, textColor: White(0.95) },
-                        bars: { height: 30, barWidth: 5, gap: 2, padding: 14, round: 2 },
+                        graph: { height: 30, padding: 14 },
                     },
                 });
                 setFlex(kpiBox, "1 1 220px");

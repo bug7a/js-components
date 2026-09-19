@@ -10,7 +10,7 @@ Home Page (Dashboard Template) - v26.09
 COMPONENTS:
 - TextTabs (comp-m2): Period select
 - ButtonWithIcon (comp-m3): Header and quick action buttons
-- MiniGraphBox (comp-m4): KPI boxes
+- MiniGraphBox / SparkLineBox (comp-m4): KPI boxes (bars for counts, a line for money and live values)
 - ChartBox (comp-m4): Line, doughnut and bar charts (Chart.js is loaded from comp-m4/chart-box)
 - TinyTable (comp-m2): Recent orders
 - LineProgressBar (comp-m3): Monthly goals
@@ -80,11 +80,13 @@ const HomePage = function(params = {}) {
         },
     ];
 
+    // graphType: "bar" -> MiniGraphBox, "line" -> SparkLineBox.
+    // WHY: Bars for things you can count, a line for money and for live values.
     const KPI_LIST = [
-        { title: "Revenue", iconFile: "left-menu/reports.png", barColor: ACCENT_COLOR, min: 20, max: 60 },
-        { title: "Orders", iconFile: "top-bar/bookmark.png", barColor: "#3987E5", min: 10, max: 40 },
-        { title: "Active Users", iconFile: "top-bar/user.png", barColor: "#C98500", min: 180, max: 260 }, // Live
-        { title: "New Comments", iconFile: "top-bar/comment.png", barColor: "#D55181", min: 2, max: 20 },
+        { title: "Revenue", iconFile: "left-menu/reports.png", color: ACCENT_COLOR, graphType: "line", min: 20, max: 60 },
+        { title: "Orders", iconFile: "top-bar/bookmark.png", color: "#3987E5", graphType: "bar", min: 10, max: 40 },
+        { title: "Active Users", iconFile: "top-bar/user.png", color: "#C98500", graphType: "line", min: 180, max: 260 }, // Live
+        { title: "New Comments", iconFile: "top-bar/comment.png", color: "#D55181", graphType: "bar", min: 2, max: 20 },
     ];
 
     const RECENT_ORDERS = [
@@ -345,27 +347,43 @@ const HomePage = function(params = {}) {
 
     };
 
+    // Creates the KPI box of one item: bars (MiniGraphBox) or a line (SparkLineBox).
+    // NOTE: Both components have the same API (setValues, setValueText, setTitle, refresh, .icon).
+    const createKpiBox = function(kpi) {
+
+        const params = {
+            height: 100,
+            title: kpi.title,
+            valueText: "",
+            iconFile: ASSETS + kpi.iconFile,
+            style: {
+                box: { color: CARD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 12 },
+                text: { padding: 14 },
+                title: { fontSize: 13, textColor: White(0.5) },
+                valueText: { fontSize: 24, textColor: White(0.95) },
+                icon: { width: 20, height: 20 },
+            },
+        };
+
+        if (kpi.graphType == "bar") {
+            params.barColor = kpi.color;
+            params.style.bars = { height: 34, barWidth: 4, gap: 2, padding: 14, round: 2 };
+            return MiniGraphBox(params);
+        }
+
+        params.lineColor = kpi.color;
+        params.style.graph = { height: 34, padding: 14 };
+        return SparkLineBox(params);
+
+    };
+
     const initKpiRow = function() {
 
         startRow();
 
             KPI_LIST.forEach(function(kpi) {
 
-                const kpiBox = MiniGraphBox({
-                    height: 100,
-                    title: kpi.title,
-                    valueText: "",
-                    iconFile: ASSETS + kpi.iconFile,
-                    barColor: kpi.barColor,
-                    style: {
-                        box: { color: CARD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 12 },
-                        text: { padding: 14 },
-                        title: { fontSize: 13, textColor: White(0.5) },
-                        valueText: { fontSize: 24, textColor: White(0.95) },
-                        icon: { width: 20, height: 20 },
-                        bars: { height: 34, barWidth: 4, gap: 2, padding: 14, round: 2 },
-                    },
-                });
+                const kpiBox = createKpiBox(kpi);
                 setFlex(kpiBox, "1 1 220px");
                 kpiBox.icon.elem.style.filter = "invert(100%)"; // WHY: Panel icons are black.
                 kpiBox.icon.opacity = 0.5;

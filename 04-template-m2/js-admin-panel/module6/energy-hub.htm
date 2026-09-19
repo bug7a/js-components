@@ -22,7 +22,7 @@
         <script src="../../../comp-m3/check-box.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m3/radio-button.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m4/progress-bar.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m4/mini-graph-box.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m4/spark-line-box.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m4/chart-box.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m4/context-menu.js" type="text/javascript" charset="utf-8"></script>
 
@@ -755,30 +755,33 @@
         const initKpiRow = function () {
 
             const KPI_LIST = [
-                { title: "Solar production", iconFile: "light.png", barColor: SOLAR_COLOR, maxValue: system.pv.peakKw },
-                { title: "Consumption (home + EV)", iconFile: "left-menu/home.png", barColor: HOME_COLOR, maxValue: 0 },
-                { title: "Grid (import / export)", iconFile: "left-menu/bolt.png", barColor: GRID_COLOR, maxValue: 0 },
-                { title: "Self-sufficiency now", iconFile: "left-menu/extension.png", barColor: BATTERY_COLOR, maxValue: 100 },
+                { title: "Solar production", iconFile: "light.png", lineColor: SOLAR_COLOR, maxValue: system.pv.peakKw },
+                { title: "Consumption (home + EV)", iconFile: "left-menu/home.png", lineColor: HOME_COLOR, maxValue: 0 },
+                { title: "Grid (import / export)", iconFile: "left-menu/bolt.png", lineColor: GRID_COLOR, maxValue: 0 },
+                { title: "Self-sufficiency now", iconFile: "left-menu/extension.png", lineColor: BATTERY_COLOR, maxValue: 100 },
             ];
 
             startRow();
 
                 KPI_LIST.forEach(function (kpi) {
 
-                    const kpiBox = MiniGraphBox({
+                    const kpiBox = SparkLineBox({
                         height: 100,
                         title: kpi.title,
                         valueText: "",
                         iconFile: ASSETS + kpi.iconFile,
-                        barColor: kpi.barColor,
+                        lineColor: kpi.lineColor,
                         maxValue: kpi.maxValue,
+                        // WHY: With a fixed maxValue the scale starts at zero, as the bars did before.
+                        //      maxValue 0 (auto) keeps the automatic range of the line graph.
+                        minValue: (kpi.maxValue) ? 0 : null,
                         style: {
                             box: { color: CARD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 12 },
                             text: { padding: 14 },
                             title: { fontSize: 13, textColor: White(0.5) },
                             valueText: { fontSize: 24, textColor: White(0.95) },
                             icon: { width: 20, height: 20 },
-                            bars: { height: 34, barWidth: 4, gap: 2, padding: 14, round: 2 },
+                            graph: { height: 34, padding: 14 },
                         },
                     });
                     setFlex(kpiBox, "1 1 220px");

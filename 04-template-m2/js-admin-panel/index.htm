@@ -44,6 +44,7 @@
         <script src="../../comp-m3/button-with-icon.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../comp-m3/progress-bar.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../comp-m4/mini-graph-box.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../comp-m4/spark-line-box.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../comp-m4/chart-box.js" type="text/javascript" charset="utf-8"></script>
         <!-- Reports page components -->
         <script src="../../comp-m3/check-box.js" type="text/javascript" charset="utf-8"></script>
@@ -94,10 +95,27 @@
 
         let loginPage = null;
         let userData = null;
-        
+
+        // PAGE FIT: İçerik tasarım genişliği.
+        // Ekran bu değerden genişse panel normal boyutta görünür (zoom 1).
+        // Daha dar ekranlarda, yerleşim bozulmasın diye panelin tamamı küçülür (zoom out).
+        const PAGE_FIT_WIDTH = 650;
+
+        // NOTE: page.fit(650) -> ekran >= 650px ise zoom 1, değilse zoom = ekranGenisligi / 650.
+        const fitPageWidth = function() {
+            page.fit(PAGE_FIT_WIDTH);
+        };
+
         window.onload = function() {
 
             page.color = "black";
+
+            // Önce sayfayı sığdır, sonra arayüzü kur.
+            // WHY: Nesneler, doğru page.width değeri ile oluşturulsun.
+            fitPageWidth();
+            page.onResize(fitPageWidth);
+            // WHY: Bu onResize, bileşenlerinkinden önce eklendi. Böylece ekran boyutu değişince
+            //      önce zoom ayarlanır, bileşenler de güncel page.width değerine göre yerleşir.
 
             checkIfLoggedIn({
                 onSuccess: initAdminPanel, // Show Panel Home Page

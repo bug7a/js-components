@@ -23,7 +23,7 @@
         <script src="../../../comp-m3/radio-button.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m3/hold-to-confirm-button.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m4/progress-bar.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m4/mini-graph-box.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m4/spark-line-box.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m4/chart-box.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m4/context-menu.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m4/select-time.js" type="text/javascript" charset="utf-8"></script>
@@ -713,23 +713,23 @@
         const initKpiRow = function () {
 
             const KPI_LIST = [
-                { title: "Average temperature", iconFile: "light.png", barColor: TEMP_COLOR, maxValue: 0 },
-                { title: "Water today", iconFile: "maybe.png", barColor: HUMIDITY_COLOR, maxValue: 0 },
-                { title: "Energy today", iconFile: "left-menu/bolt.png", barColor: LIGHT_COLOR, maxValue: 0 },
-                { title: "Active alarms", iconFile: "warning.png", barColor: ERROR_COLOR, maxValue: 0 },
+                { title: "Average temperature", iconFile: "light.png", lineColor: TEMP_COLOR, maxValue: 0 },
+                { title: "Water today", iconFile: "maybe.png", lineColor: HUMIDITY_COLOR, maxValue: 0 },
+                { title: "Energy today", iconFile: "left-menu/bolt.png", lineColor: LIGHT_COLOR, maxValue: 0 },
+                { title: "Active alarms", iconFile: "warning.png", lineColor: ERROR_COLOR, maxValue: 0 },
             ];
 
             startRow();
                 KPI_LIST.forEach(function (kpi) {
-                    const kpiBox = MiniGraphBox({
-                        height: 100, title: kpi.title, valueText: "", iconFile: ASSETS + kpi.iconFile, barColor: kpi.barColor, maxValue: kpi.maxValue,
+                    const kpiBox = SparkLineBox({
+                        height: 100, title: kpi.title, valueText: "", iconFile: ASSETS + kpi.iconFile, lineColor: kpi.lineColor, maxValue: kpi.maxValue,
                         style: {
                             box: { color: CARD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 12 },
                             text: { padding: 14 },
                             title: { fontSize: 13, textColor: White(0.5) },
                             valueText: { fontSize: 24, textColor: White(0.95) },
                             icon: { width: 20, height: 20 },
-                            bars: { height: 34, barWidth: 4, gap: 2, padding: 14, round: 2 },
+                            graph: { height: 34, padding: 14 },
                         },
                     });
                     setFlex(kpiBox, "1 1 220px");

@@ -23,7 +23,7 @@
         <script src="../../../comp-m3/check-box.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m3/radio-button.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m3/hold-to-confirm-button.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m4/mini-graph-box.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m4/spark-line-box.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m4/chart-box.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m4/context-menu.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m4/select-time.js" type="text/javascript" charset="utf-8"></script>
@@ -207,7 +207,7 @@
                 const h = device.history;
                 const last = h.labels.length - 1;
                 chartTemp.addValue(h.labels[last], [h.temp[last], h.target[last]]);
-                kpiBoxList[0].addValue(h.tempBars[last]);
+                kpiBoxList[0].addValue(h.tempPoints[last]);
                 kpiBoxList[1].addValue(h.humidity[last]);
                 kpiBoxList[2].addValue(h.power[last]);
                 kpiBoxList[3].addValue(h.signal[last]);
@@ -224,7 +224,7 @@
             d.restarting = 0;
             d.alarm = 0;
             d.events = [];
-            d.history = { labels: [], temp: [], tempBars: [], target: [], humidity: [], power: [], signal: [] };
+            d.history = { labels: [], temp: [], tempPoints: [], target: [], humidity: [], power: [], signal: [] };
 
             // Fill the history with the last 60 seconds. (Offline device: before it was last seen)
             const wasOnline = d.online;
@@ -282,8 +282,8 @@
             const h = d.history;
             h.labels.push(timeText);
             h.temp.push(d.temp);
-            // WHY: MiniGraphBox can not show negative values. Bars start from TARGET_MIN.
-            h.tempBars.push({ value: round1(d.temp - TARGET_MIN), color: (d.alarm) ? ERROR_COLOR : "" });
+            // Marked value: a colored dot on the line while the room is in alarm.
+            h.tempPoints.push({ value: round1(d.temp), color: (d.alarm) ? ERROR_COLOR : "" });
             h.target.push(d.target);
             h.humidity.push(Math.round(d.humidity));
             h.power.push(power);
@@ -651,22 +651,24 @@
         const initKpiRow = function () {
 
             const KPI_LIST = [
-                { title: "Temperature", iconFile: "light.png", barColor: ACCENT_COLOR, maxValue: TARGET_MAX - TARGET_MIN },
-                { title: "Humidity", iconFile: "maybe.png", barColor: "#3987E5", maxValue: 100 },
-                { title: "Power", iconFile: "left-menu/bolt.png", barColor: WARNING_COLOR, maxValue: 0 },
-                { title: "Signal", iconFile: "left-menu/url.png", barColor: "#9085E9", maxValue: 100 },
+                // minValue / maxValue: The fixed scale of the graph. null: Automatic.
+                { title: "Temperature", iconFile: "light.png", lineColor: ACCENT_COLOR, minValue: TARGET_MIN, maxValue: TARGET_MAX },
+                { title: "Humidity", iconFile: "maybe.png", lineColor: "#3987E5", minValue: 0, maxValue: 100 },
+                { title: "Power", iconFile: "left-menu/bolt.png", lineColor: WARNING_COLOR, minValue: null, maxValue: 0 },
+                { title: "Signal", iconFile: "left-menu/url.png", lineColor: "#9085E9", minValue: 0, maxValue: 100 },
             ];
 
             startRow();
 
                 KPI_LIST.forEach(function (kpi) {
 
-                    const kpiBox = MiniGraphBox({
+                    const kpiBox = SparkLineBox({
                         height: 100,
                         title: kpi.title,
                         valueText: "",
                         iconFile: ASSETS + kpi.iconFile,
-                        barColor: kpi.barColor,
+                        lineColor: kpi.lineColor,
+                        minValue: kpi.minValue,
                         maxValue: kpi.maxValue,
                         style: {
                             box: { color: CARD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 12 },
@@ -674,7 +676,7 @@
                             title: { fontSize: 13, textColor: White(0.5) },
                             valueText: { fontSize: 24, textColor: White(0.95) },
                             icon: { width: 20, height: 20 },
-                            bars: { height: 34, barWidth: 4, gap: 2, padding: 14, round: 2 },
+                            graph: { height: 34, padding: 14 },
                         },
                     });
                     setFlex(kpiBox, "1 1 220px");
@@ -1062,7 +1064,7 @@
             chartTemp.update("none");
             chartTemp.setSubtitle((device.online) ? "Live, last " + CHART_COUNT + " seconds" : "Last data before the connection was lost");
 
-            kpiBoxList[0].setValues(h.tempBars);
+            kpiBoxList[0].setValues(h.tempPoints);
             kpiBoxList[1].setValues(h.humidity);
             kpiBoxList[2].setValues(h.power);
             kpiBoxList[3].setValues(h.signal);
