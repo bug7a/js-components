@@ -80,6 +80,8 @@ const SmartTableDefaults = {
         neverHide: 0,
         showDots: 0,
     },
+    // Filtredeki sütun listesinin (ContextMenu) parametreleri. (Sadece stil için; onClick bileşen tarafından verilir.)
+    searchTitleMenuParams: {},
     searchInputParams: {
         width: "50%",
         height: 36,
@@ -122,6 +124,8 @@ const SmartTableDefaults = {
         boxInfoLine: { color: "#E4E4E4", borderTop: "1px solid rgba(0, 0, 0, 0)" },
         lblBoxInfoLine: { fontSize: 16, textColor: Black(0.85), },
         lblNoDataFound: { color: "lightgray", padding: [8, 2], fontSize: 14, round: 8, border: 1, borderColor: Black(0.4), },
+        // Filtre kutusundaki sütun seçim etiketi (ALL). Boş ise lblNoDataFound stili kullanılır.
+        lblSearchTitle: {},
         btnScrollCenter: { color: "white", round: 100, borderColor: "rgba(0,0,0,0.4)", border: 1, },
         btnScrollUp: { color: "lightgray", round: 100, border: 1, },
         btnScrollDown: { color: "lightgray", round: 100, border: 1, },
@@ -1000,6 +1004,7 @@ const SmartTable = function (params = {}) {
             opacity: 1,
             clickable: 1,
             ...box.style.lblNoDataFound,
+            ...box.style.lblSearchTitle, // WHY: Etiket filtre kutusunun içinde duruyor; "no data" etiketinden ayrı stil verilebilsin.
         });
         that.elem.style.cursor = "pointer";
         that.elem.style.whiteSpace = "nowrap";
@@ -1015,6 +1020,7 @@ const SmartTable = function (params = {}) {
             // MENU: Sütun listesi (Items: box.updateSearchTitleSelect)
             box.searchTitleMenu = ContextMenu({
                 minWidth: 160,
+                ...box.searchTitleMenuParams,
                 onClick: function (self, item) {
                     box.setSearchTitleIndex(item.data);
                 },

@@ -1125,11 +1125,27 @@ ProductsPage.getSmartTableStyle = function(libPath) {
             bar_mouseOverColor: "#A0A0A0", bar_opacity: 0.4, bar_mouseOverOpacity: 0.9, bar_padding: 2, bar_color: "#A0A0A0",
             neverHide: 0, showDots: 0,
         },
+        // WHY: Filtre kutusu ile alt bar aynı renkti, kutu görünmüyordu. Bar kart rengine, kutu ise alan rengine (FIELD_COLOR) alındı.
         searchInputParams: {
-            width: "50%", height: 36, border: 0, round: 8, color: S.FIELD_COLOR, textColor: "#EBEBEB", searchIconSize: 16,
-            placeholderText: "Filter the table", fontSize: 14, invertIconColor: 1,
+            width: "50%", height: 34, border: 1, round: 8, color: S.FIELD_COLOR, borderColor: S.CARD_BORDER_COLOR,
+            borderBottomStyle: "1px solid " + S.CARD_BORDER_COLOR,
+            textColor: White(0.9), placeholderColor: White(0.4), fontSize: 14,
+            placeholderText: "Filter the table",
+            searchIconSize: 15, searchIconOpacity: 0.55, invertIconColor: 1,
             searchIconFile: libPath + "comp-m2/search-input-v2/filter.png",
             clearIconFile: libPath + "comp-m2/search-input-v2/clear.svg",
+        },
+        // Filtre kutusundaki sütun seçim listesi (ALL) de koyu tema ile açılsın.
+        searchTitleMenuParams: {
+            minWidth: 170,
+            style: {
+                menu: { color: S.FIELD_COLOR, border: 1, borderColor: White(0.12), round: 8, padding: 4, shadow: "0 8px 24px rgba(0, 0, 0, 0.5)" },
+                item: { height: 30, fontSize: 13, textColor: White(0.75), color: "transparent", round: 6, padding: 10, gap: 10 },
+                itemHover: { textColor: "white", color: White(0.08) },
+                disabled: { textColor: White(0.3), opacity: 0.4 },
+                icon: { width: 14, height: 14 },
+                separator: { color: White(0.1), space: 4 },
+            },
         },
         style: {
             width: "100%",
@@ -1145,6 +1161,8 @@ ProductsPage.getSmartTableStyle = function(libPath) {
             btnScrollUpIconFile: libPath + "comp-m3/smart-table/up.png",
             btnScrollCenterIconFile: libPath + "comp-m3/smart-table/scroll.png",
             sortIconFile: libPath + "comp-m3/smart-table/sort.png",
+            // WHY: Varsayılan tik ikonu koyu renkli; koyu menüde görünmüyordu.
+            searchTitleCheckIconFile: "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + S.ACCENT_COLOR + '" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17.5 19 7"/></svg>'),
             loadingIconFile: libPath + "comp-m3/smart-table/clock.png",
             invertIconColor: 1,
             box: { color: S.CARD_COLOR },
@@ -1154,9 +1172,11 @@ ProductsPage.getSmartTableStyle = function(libPath) {
             lblTitleCell: { fontSize: 13, fontFamily: "opensans", textColor: White(0.6) },
             boxItemCell: { borderBottom: "1px solid rgba(255, 255, 255, 0.05)", borderRight: "1px solid rgba(255, 255, 255, 0.03)", padding: [10, 0] },
             lblItemCell: { fontSize: 14, textColor: "rgba(255, 255, 255, 0.75)", fontFamily: "opensans" },
-            boxInfoLine: { color: S.FIELD_COLOR, borderTop: "1px solid rgba(255, 255, 255, 0.08)" },
-            lblBoxInfoLine: { fontSize: 14, textColor: White(0.7) },
+            boxInfoLine: { color: S.CARD_COLOR, borderTop: "1px solid rgba(255, 255, 255, 0.08)" },
+            lblBoxInfoLine: { fontSize: 13, textColor: White(0.55) },
             lblNoDataFound: { color: "#2C2C2A", textColor: White(0.6), padding: [8, 2], fontSize: 13, round: 8, border: 1, borderColor: White(0.15) },
+            // Filtre kutusunun içindeki sütun etiketi: Kutunun içinde durduğu için daha hafif bir chip.
+            lblSearchTitle: { color: White(0.08), textColor: White(0.6), padding: [8, 1], fontSize: 12, round: 6, border: 1, borderColor: White(0.14) },
             btnScrollCenter: { color: "#2C2C2A", round: 100, borderColor: White(0.2), border: 1 },
             btnScrollUp: { color: "#3A3A38", round: 100, border: 1, borderColor: White(0.3) },
             btnScrollDown: { color: "#3A3A38", round: 100, border: 1, borderColor: White(0.3) },

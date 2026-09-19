@@ -28,6 +28,8 @@ const SearchInputDefaults = {
     placeholderText: "Search",
     color: "whitesmoke",
     textColor: "rgba(0, 0, 0, 0.8)",
+    placeholderColor: "", // "": Tarayıcının kendi rengi. Koyu zeminde White(0.35) gibi bir renk verin.
+    searchIconOpacity: 1,
     border: 0,
     borderColor: "rgba(0, 0, 0, 0.1)",
     borderBottomStyle: "2px solid rgba(0, 0, 0, 0.06)",
@@ -90,10 +92,10 @@ const SearchInput = function(params = {}) {
         box.element.style.borderBottom = box.borderBottomStyle;
 
         // ICON: Search icon
-        box.imgIcon = Icon(16, 0, box.searchIconSize, box.searchIconSize), {
-            opacity: 0.6,
+        box.imgIcon = Icon(16, 0, box.searchIconSize, box.searchIconSize, {
+            opacity: box.searchIconOpacity,
             space: 0,
-        };
+        });
         that.load(box.searchIconFile);
         if (box.invertIconColor == 1) that.elem.style.filter = "invert(100%)";
         that.center("top");
@@ -110,6 +112,12 @@ const SearchInput = function(params = {}) {
         });
         that.inputElement.style.paddingLeft = "0px";
         that.inputElement.setAttribute("placeholder", box.placeholderText);
+        // WHY: ::placeholder rengi sadece CSS ile değişir. Kural sayfaya bir kez eklenir; rengi her input kendi değişkeninde taşır.
+        if (box.placeholderColor !== "") {
+            SearchInput.addPlaceholderStyle();
+            that.inputElement.setAttribute("data-placeholder-color", "1");
+            that.inputElement.style.setProperty("--placeholder-color", box.placeholderColor);
+        }
 
         // ICON: Clear icon button
         box.imgClearIcon = Icon(5, 0, 20, 20, {
@@ -161,5 +169,17 @@ const SearchInput = function(params = {}) {
 
     makeBasicObject(box);
     return box;
+
+};
+
+// Sayfaya bir kez eklenen ::placeholder kuralı. (Sadece placeholderColor verilen inputları etkiler.)
+SearchInput.addPlaceholderStyle = function() {
+
+    if (document.getElementById("searchInputPlaceholderStyle")) return;
+
+    const styleElement = document.createElement("style");
+    styleElement.id = "searchInputPlaceholderStyle";
+    styleElement.textContent = "input[data-placeholder-color]::placeholder { color: var(--placeholder-color); opacity: 1; }";
+    document.head.appendChild(styleElement);
 
 };
