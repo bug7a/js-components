@@ -83,7 +83,7 @@ const MyComp = function (params = {}) {
 
 ## Conventions and gotchas
 
-- **`.min.js` twins**: most sources have a hand-produced `name.min.js` next to them, and samples and templates often load the `.min` version. The repo has no minification script for single files. After you edit a source file, tell the user that its `.min.js` is now stale, or regenerate it if asked. Otherwise pages that load the `.min` file won't pick up the change.
+- **`.min.js` twins**: most sources have a `name.min.js` next to them, and samples and templates often load the `.min` version. After you edit a source file its twin is stale, so pages that load the `.min` file won't pick up the change. Rebuild it with `./_make-min-js.sh --build comp-m3/smart-table.js` (no arguments: lists the stale twins and writes nothing; `--build` alone: rebuilds all the stale ones). It runs terser through `npx`, keeps the `/* Bismillah */` header and never creates a twin for a source that does not already have one. Staleness is read from the file dates, which a fresh clone or a branch change rewrites, so a listed file is not always really stale.
 - Template folders contain **copies** of the library and components, for example `04-template-m1/todo-app/library/basic.js`, which differs from `basic/basic.js`, and `js-admin-panel/common/ui-standards.js`. Fixing `basic/` or `comp-m*/` does not update those copies.
 - Script order matters: load `basic.css` and `basic.js` first, then `ui-standards` if you use it, then the components, then the page code. A component that extends another must load after its parent.
 - Paths are relative to the `.htm` file (samples use `../basic/`, templates in `04-template-*/<app>/` use `../../basic/`).
