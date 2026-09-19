@@ -1,0 +1,14 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+
+# Windows / Linux
+Thumbs.db
+desktop.ini
+*~
+
+# Gecici dosyalar
+*.log
+*.tmp
