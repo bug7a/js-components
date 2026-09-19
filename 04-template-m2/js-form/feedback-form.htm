@@ -55,9 +55,13 @@
 
         // This example posts the feedback and the screenshots to your server with FormData.
         // SERVICE_URL is empty: Demo mode (nothing is sent, data is printed to the console).
+        // To get the form as an e-mail: upload service/send-form-mail.php to your server and write its
+        // address to SERVICE_URL. Nothing else is needed. (See service/readme.md)
 
         // *** CONSTANTS:
-        const SERVICE_URL = ""; // Ex: "https://your-site.com/api/feedback"
+        const SERVICE_URL = ""; // Ex: "https://your-site.com/service/send-form-mail.php"
+        const FORM_NAME = "feedback";       // Which form is this? (Written by the mail service.)
+        const FORM_MAIL_TITLE = "Feedback"; // Title on top of the mail.
         const FORM_TITLE = "How Did We Do?";
         const FORM_DESCRIPTION = "Your feedback helps us get better. It takes about 2 minutes. Answers are anonymous unless you want us to contact you.";
 
@@ -703,9 +707,12 @@
 
             // Form values + screenshots in one request:
             const formData = new FormData();
-            formData.append("feedback", JSON.stringify(json));
+            formData.append("formName", FORM_NAME);
+            formData.append("formTitle", FORM_MAIL_TITLE);
+            formData.append("fields", JSON.stringify(json));
+            // WHY: The name ends with "[]", so every file arrives on the server, not only the last one.
             screenshotField.fileSelector.files.forEach(function(info) {
-                formData.append("screenshots", info.file, info.name);
+                formData.append("screenshots[]", info.file, info.name);
             });
 
             const nps = Number(npsField.getInputValue());

@@ -50,9 +50,13 @@
 
         // This example posts the form data and the CV file to your server with FormData.
         // SERVICE_URL is empty: Demo mode (nothing is sent, data is printed to the console).
+        // To get the form as an e-mail: upload service/send-form-mail.php to your server and write its
+        // address to SERVICE_URL. Nothing else is needed. (See service/readme.md)
 
         // *** CONSTANTS:
-        const SERVICE_URL = ""; // Ex: "https://your-site.com/api/job-application"
+        const SERVICE_URL = ""; // Ex: "https://your-site.com/service/send-form-mail.php"
+        const FORM_NAME = "job-application";       // Which form is this? (Written by the mail service.)
+        const FORM_MAIL_TITLE = "Job Application"; // Title on top of the mail.
         const FORM_TITLE = "Join Our Team";
         const FORM_DESCRIPTION = "We are always looking for talented people. Tell us about yourself, upload your CV and we’ll get back to you within 5 business days.";
 
@@ -595,9 +599,12 @@
 
             // Form values + CV file in one request:
             const formData = new FormData();
-            formData.append("application", JSON.stringify(json));
+            formData.append("formName", FORM_NAME);
+            formData.append("formTitle", FORM_MAIL_TITLE);
+            formData.append("fields", JSON.stringify(json));
+            // WHY: The name ends with "[]", so every file arrives on the server, not only the last one.
             cvField.fileSelector.files.forEach(function(info) {
-                formData.append("cv", info.file, info.name);
+                formData.append("cv[]", info.file, info.name);
             });
 
             waiting.show();

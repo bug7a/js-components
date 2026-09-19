@@ -57,9 +57,14 @@
 
         // This example posts the ticket and the attachments to your server with FormData.
         // SERVICE_URL is empty: Demo mode (nothing is sent, data is printed to the console).
+        // To get the form as an e-mail: upload service/send-form-mail.php to your server and write its
+        // address to SERVICE_URL. Nothing else is needed. (See service/readme.md)
 
         // *** CONSTANTS:
-        const SERVICE_URL = ""; // Ex: "https://your-site.com/api/support-tickets"
+        const SERVICE_URL = ""; // Ex: "https://your-site.com/service/send-form-mail.php"
+        const FORM_NAME = "support-ticket";       // Which form is this? (Written by the mail service.)
+        const FORM_MAIL_TITLE = "Support Ticket"; // Title on top of the mail.
+        const TICKET_PREFIX = "TCK";              // The service answers with a number like TCK-482913.
         const FORM_TITLE = "Contact Support";
         const FORM_DESCRIPTION = "Tell us what happened and we’ll help you as soon as possible. The more details you give, the faster we can solve it.";
         const HELP_CENTER_URL = "https://your-site.com/help";
@@ -764,9 +769,13 @@
 
             // Form values + attachments in one request:
             const formData = new FormData();
-            formData.append("ticket", JSON.stringify(json));
+            formData.append("formName", FORM_NAME);
+            formData.append("formTitle", FORM_MAIL_TITLE);
+            formData.append("referencePrefix", TICKET_PREFIX);
+            formData.append("fields", JSON.stringify(json));
+            // WHY: The name ends with "[]", so every file arrives on the server, not only the last one.
             attachmentsField.fileSelector.files.forEach(function(info) {
-                formData.append("attachments", info.file, info.name);
+                formData.append("attachments[]", info.file, info.name);
             });
 
             const priority = PRIORITIES.find(function(p) { return p.id == RadioButton.getValue("priority"); });
@@ -787,9 +796,12 @@
                     await new Promise(function(resolve) { setTimeout(resolve, 1200); });
                     ticketNumber = "TCK-" + String(Math.floor(Math.random() * 900000) + 100000);
                 } else {
-                    // NOTE: Your service returns the ticket number. Ex: { "ticketNumber": "TCK-482913" }
+                    // NOTE: The service returns the ticket number. Ex: { "reference": "TCK-482913" }
                     const response = await fetch(SERVICE_URL, { method: "POST", body: formData });
-                    if (response.ok) ticketNumber = (await response.json()).ticketNumber || "";
+                    if (response.ok) {
+                        const answer = await response.json();
+                        ticketNumber = answer.reference || answer.ticketNumber || "";
+                    }
                 }
 
             } catch (error) {

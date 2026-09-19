@@ -39,8 +39,13 @@
 
         // This example will post data to your SUPABASE table. (https://supabase.com/)
         // or you can write your custom service on your server.
+        // To get the form as an e-mail instead: upload service/send-form-mail.php to your server, write its
+        // address to SERVICE_URL and call sendFormToMailService(json) in onSendClick. (See service/readme.md)
 
         // *** CONSTANTS:
+        const SERVICE_URL = ""; // Ex: "https://your-site.com/service/send-form-mail.php"
+        const FORM_NAME = "contact";            // Which form is this? (Written by the mail service.)
+        const FORM_MAIL_TITLE = "Contact Form"; // Title on top of the mail.
         const SUPABASE_PROJECT_URL = "https://xhzzgxhjyoqcsftamtyz.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhoenpneGhqeW9xY3NmdGFtdHl6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUzMTg2MDAsImV4cCI6MjA2MDg5NDYwMH0.XptujcYMNgl9XIzIQ2_CUig9JzkYOCKONfYAmMPd_wc";
         const FORM_TITLE = "Get in Touch";
@@ -80,7 +85,7 @@
 
                     sendFormToSupabase();
                     // NOTE: To create a table on supabase (use: contact-form-table.sql)
-                    //sendFormToCustomService(json);
+                    //sendFormToMailService(json); // Sends the form as an e-mail (service/send-form-mail.php)
 
                 },
                 onEdit: function(input) {
@@ -299,15 +304,62 @@
 
         };
 
-        const sendFormToCustomService = function(json) {
+        // Sends the form as an e-mail with service/send-form-mail.php. (json: the JSON of the Form)
+        const sendFormToMailService = async function(json) {
 
-            form.postJSON("https://service_url", json, function (err, response) {
-                if (err) {
-                    // Error
-                } else {
-                    // Success
-                }
-            });
+            waiting.show();
+
+            let isSent = false;
+
+            try {
+                const response = await fetch(SERVICE_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ formName: FORM_NAME, formTitle: FORM_MAIL_TITLE, fields: json }),
+                });
+                isSent = response.ok;
+            } catch (error) {
+                console.error(error);
+                isSent = false;
+            }
+
+            waiting.hide();
+
+            if (isSent) {
+
+                form.showMessage({
+                    iconColor: "#3C8553",
+                    iconFile: "assets/success.png",
+                    messageText: "Data sent successfully.",
+                    buttonText: "OKAY",
+                    backgroundColor: "rgba(255,255,255,0.85)",
+                    onClose: function() {
+
+                        // Clean the form.
+                        firstNameInput.setInputValue("");
+                        lastNameInput.setInputValue("");
+                        emailInput.setInputValue("");
+                        phoneInput.setInputValue("");
+                        subjectInput.setInputValue("");
+                        messageTextarea.setInputValue("");
+
+                        form.refresh();
+
+                    },
+                });
+
+            } else {
+
+                form.showMessage({
+                    iconColor: "indianred",
+                    iconFile: "assets/error.png",
+                    messageText: "Data could not be sent.",
+                    buttonText: "CLOSE",
+                    backgroundColor: "rgba(255,255,255,0.85)",
+                    onClose: function() {},
+                });
+
+            }
 
         };
 

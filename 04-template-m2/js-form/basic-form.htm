@@ -39,9 +39,13 @@
 
         // This example will post form data (JSON) to your custom service URL.
         // Any 2xx response is accepted as success.
+        // To get the form as an e-mail: upload service/send-form-mail.php to your server and write its
+        // address to SERVICE_URL. Nothing else is needed. (See service/readme.md)
 
         // *** CONSTANTS:
-        const SERVICE_URL = "https://your-server.com/api/contact"; // Your service URL
+        const SERVICE_URL = "https://your-site.com/service/send-form-mail.php"; // Your service URL
+        const FORM_NAME = "contact";            // Which form is this? (Written by the mail service.)
+        const FORM_MAIL_TITLE = "Contact Form"; // Title on top of the mail.
         const SERVICE_TIMEOUT = 15000; // ms
         const FORM_TITLE = "Get in Touch";
         const FORM_DESCRIPTION = "Feel free to share any questions, suggestions, or feedback with us. Fill out the form and we’ll get back to you as soon as possible.";
@@ -244,13 +248,18 @@
 
             waiting.show();
 
+            // WHY: The mail service writes the titles to the mail, so the fields are sent with their titles.
             const formData = {
-                first_name: firstNameInput.getInputValue(),
-                last_name: lastNameInput.getInputValue(),
-                email: emailInput.getInputValue(),
-                phone: phoneInput.getInputValue(),
-                subject: subjectInput.getInputValue(),
-                message: messageTextarea.getInputValue(),
+                formName: FORM_NAME,
+                formTitle: FORM_MAIL_TITLE,
+                fields: [
+                    { key: "first_name", type: "text", titleText: "FIRST NAME", inputValue: firstNameInput.getInputValue() },
+                    { key: "last_name", type: "text", titleText: "LAST NAME", inputValue: lastNameInput.getInputValue() },
+                    { key: "email", type: "email", titleText: "E-MAIL", inputValue: emailInput.getInputValue() },
+                    { key: "phone", type: "text", titleText: "PHONE", inputValue: phoneInput.getInputValue() },
+                    { key: "subject", type: "text", titleText: "SUBJECT", inputValue: subjectInput.getInputValue() },
+                    { key: "message", type: "textarea", titleText: "MESSAGE", inputValue: messageTextarea.getInputValue() },
+                ],
             };
 
             // Cancel the request if the service does not respond in time

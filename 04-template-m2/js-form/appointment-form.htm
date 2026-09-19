@@ -53,9 +53,13 @@
 
         // This example posts the booking as JSON to your server.
         // SERVICE_URL is empty: Demo mode (nothing is sent, data is printed to the console).
+        // To get the form as an e-mail: upload service/send-form-mail.php to your server and write its
+        // address to SERVICE_URL. Nothing else is needed. (See service/readme.md)
 
         // *** CONSTANTS:
-        const SERVICE_URL = ""; // Ex: "https://your-site.com/api/appointments"
+        const SERVICE_URL = ""; // Ex: "https://your-site.com/service/send-form-mail.php"
+        const FORM_NAME = "appointment";       // Which form is this? (Written by the mail service.)
+        const FORM_MAIL_TITLE = "Appointment"; // Title on top of the mail.
         const BUSINESS_NAME = "Green Clinic";
         const BUSINESS_ADDRESS = "Bagdat Cad. No: 12, Kadikoy, Istanbul";
         const FORM_TITLE = "Book an Appointment";
@@ -844,9 +848,10 @@
                     const response = await fetch(SERVICE_URL, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(json),
+                        body: JSON.stringify({ formName: FORM_NAME, formTitle: FORM_MAIL_TITLE, fields: json }),
                     });
                     // NOTE: Your service can answer 409 (Conflict) if the time was booked by someone else.
+                    //       (The mail service always answers 200; it does not know the booked times.)
                     result = (response.ok) ? "sent" : (response.status == 409) ? "taken" : "error";
                 }
 

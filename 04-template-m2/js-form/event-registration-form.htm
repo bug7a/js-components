@@ -56,9 +56,13 @@
         // This example posts the order and the student ID files to your server with FormData.
         // SERVICE_URL is empty: Demo mode (nothing is sent, data is printed to the console).
         // NOTE: Always calculate the prices and check the promo codes again on the server.
+        // To get the form as an e-mail: upload service/send-form-mail.php to your server and write its
+        // address to SERVICE_URL. Nothing else is needed. (See service/readme.md)
 
         // *** CONSTANTS:
-        const SERVICE_URL = ""; // Ex: "https://your-site.com/api/event-registration"
+        const SERVICE_URL = ""; // Ex: "https://your-site.com/service/send-form-mail.php"
+        const FORM_NAME = "event-registration";       // Which form is this? (Written by the mail service.)
+        const FORM_MAIL_TITLE = "Event Registration"; // Title on top of the mail.
         const EVENT_NAME = "Frontend Summit 2026";
         const EVENT_INFO = "14–15 November 2026 · Haliç Congress Center, Istanbul";
         const FORM_DESCRIPTION = "Two days of talks and hands-on workshops about the modern web. Select your tickets and tell us who is coming.";
@@ -937,10 +941,13 @@
 
             // Form values + student ID files in one request:
             const formData = new FormData();
-            formData.append("registration", JSON.stringify(json));
+            formData.append("formName", FORM_NAME);
+            formData.append("formTitle", FORM_MAIL_TITLE);
+            formData.append("fields", JSON.stringify(json));
             if (isShown(studentIdField)) {
+                // WHY: The name ends with "[]", so every file arrives on the server, not only the last one.
                 studentIdField.fileSelector.files.forEach(function(info) {
-                    formData.append("studentId", info.file, info.name);
+                    formData.append("studentId[]", info.file, info.name);
                 });
             }
 
