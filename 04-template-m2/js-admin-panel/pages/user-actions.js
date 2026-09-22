@@ -70,7 +70,7 @@ const UserActionsPage = function(params = {}) {
     const updateColorView = function() {
         const color = SettingsPage.load().panelColor;
         colorSwatches.forEach(function(swatch) {
-            swatch.borderColor = (swatch.panelColor == color) ? White(0.9) : "transparent";
+            swatch.borderColor = (swatch.panelColor == color) ? Ink(0.9) : "transparent";
         });
     };
 
@@ -86,16 +86,16 @@ const UserActionsPage = function(params = {}) {
     const startSection = function(title) {
         const group = VGroup({ width: "100%", height: "auto", align: "left top", gap: 8 });
         if (title) {
-            Label({ text: title.toUpperCase(), fontSize: 11, textColor: White(0.45), padding: [4, 0] });
+            Label({ text: title.toUpperCase(), fontSize: 11, textColor: Ink(0.45), padding: [4, 0] });
             that.elem.style.letterSpacing = "1px";
         }
         return group;
     };
 
-    const createInfoLine = function(left, right, rightColor = White(0.85)) {
+    const createInfoLine = function(left, right, rightColor = Ink(0.85)) {
         HGroup({ width: "100%", height: "auto", align: "left center", gap: 12 });
         that.elem.style.justifyContent = "space-between";
-            Label({ text: left, fontSize: 13, textColor: White(0.5) });
+            Label({ text: left, fontSize: 13, textColor: Ink(0.5) });
             that.elem.style.flexShrink = "0";
             Label({ text: right, fontSize: 13, textColor: rightColor, textAlign: "right" });
         endGroup();
@@ -114,18 +114,18 @@ const UserActionsPage = function(params = {}) {
 
             Icon({ width: 20, height: 20 });
             that.load(iconFile);
-            that.elem.style.filter = "invert(100%)";
+            that.elem.style.filter = T.iconFilter;
             that.elem.style.flexShrink = "0";
             that.opacity = 0.75;
 
             VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
             that.elem.style.flex = "1 1 auto";
             that.elem.style.minWidth = "0";
-                Label({ text: text, fontSize: 15, textColor: White(0.9) });
-                if (desc) Label({ text: desc, fontSize: 12, textColor: White(0.45) });
+                Label({ text: text, fontSize: 15, textColor: Ink(0.9) });
+                if (desc) Label({ text: desc, fontSize: 12, textColor: Ink(0.45) });
             endGroup();
 
-            item.lblRight = Label({ text: "", fontSize: 12, textColor: White(0.95), color: S.PRIMARY_COLOR, round: 100, padding: [7, 1], visible: 0 });
+            item.lblRight = Label({ text: "", fontSize: 12, textColor: Ink(0.95), color: S.PRIMARY_COLOR, round: 100, padding: [7, 1], visible: 0 });
 
         endGroup();
 
@@ -144,7 +144,7 @@ const UserActionsPage = function(params = {}) {
     // *** PAGE VIEW:
 
     // Left line
-    Box(0, 0, 1, "100%", { color: White(0.12) });
+    Box(0, 0, 1, "100%", { color: Ink(0.12) });
 
     // GROUP: Scrollable content
     startBox(0, 0, "100%", "calc(100% - 72px)", { color: "transparent", scrollY: 1 });
@@ -162,7 +162,7 @@ const UserActionsPage = function(params = {}) {
                     that.clipContent = 0;
 
                         HGroup({ left: 0, top: 0, width: 52, height: 52, align: "center center", round: 100, color: user.avatarColor });
-                            Label({ text: UserActionsPage.getInitials(user.name), fontSize: 18, textColor: White(0.95) });
+                            Label({ text: UserActionsPage.getInitials(user.name), fontSize: 18, textColor: Ink(0.95) });
                         endGroup();
 
                         avatarDot = Box({ left: 38, top: 38, width: 14, height: 14, round: 100, border: 2, borderColor: S.CARD_COLOR });
@@ -173,14 +173,14 @@ const UserActionsPage = function(params = {}) {
                     that.elem.style.flex = "1 1 auto";
                     that.elem.style.minWidth = "0";
 
-                        Label({ text: escape(user.name), fontSize: 17, textColor: White(0.95) });
+                        Label({ text: escape(user.name), fontSize: 17, textColor: Ink(0.95) });
                         that.elem.style.fontFamily = "opensans-bold";
                         that.elem.style.whiteSpace = "nowrap";
                         that.elem.style.overflow = "hidden";
                         that.elem.style.textOverflow = "ellipsis";
                         that.width = "100%";
 
-                        Label({ text: escape(user.email), fontSize: 13, textColor: White(0.5) });
+                        Label({ text: escape(user.email), fontSize: 13, textColor: Ink(0.5) });
                         that.elem.style.whiteSpace = "nowrap";
                         that.elem.style.overflow = "hidden";
                         that.elem.style.textOverflow = "ellipsis";
@@ -209,7 +209,7 @@ const UserActionsPage = function(params = {}) {
                         });
 
                             Box({ width: 8, height: 8, round: 100, color: STATUSES[id].color });
-                            Label({ text: STATUSES[id].label, fontSize: 12, textColor: White(0.85) });
+                            Label({ text: STATUSES[id].label, fontSize: 12, textColor: Ink(0.85) });
                             that.elem.style.whiteSpace = "nowrap";
 
                         endGroup();
@@ -267,7 +267,7 @@ const UserActionsPage = function(params = {}) {
                         swatch.panelColor = item.color;
                         swatch.elem.title = item.name;
                         swatch.elem.style.cursor = "pointer";
-                        swatch.elem.style.boxShadow = "0 0 0 1px " + White(0.15) + " inset";
+                        swatch.elem.style.boxShadow = "0 0 0 1px " + Ink(0.15) + " inset";
                         swatch.on("click", function() {
                             const saved = SettingsPage.load();
                             saved.panelColor = item.color;
@@ -291,10 +291,10 @@ const UserActionsPage = function(params = {}) {
                     createInfoLine("Signed in", UserActionsPage.formatRelative(sessionStart));
                     createInfoLine("Device", escape(UserActionsPage.getDeviceName()));
                     createInfoLine("Auto sign out", "After " + settings.sessionTimeout + " min idle");
-                    createInfoLine("Two-factor", (settings.twoFactor) ? "On" : "Off", (settings.twoFactor) ? S.ACCENT_COLOR : "#C98500");
+                    createInfoLine("Two-factor", (settings.twoFactor) ? "On" : "Off", (settings.twoFactor) ? S.ACCENT_COLOR : T.warning);
 
                     if (!settings.twoFactor) {
-                        Label({ text: "Turn on two-factor authentication in My Account to protect your account.", fontSize: 12, textColor: White(0.45), width: "100%" });
+                        Label({ text: "Turn on two-factor authentication in My Account to protect your account.", fontSize: 12, textColor: Ink(0.45), width: "100%" });
                     }
 
                 endGroup();
@@ -307,7 +307,7 @@ const UserActionsPage = function(params = {}) {
 
     // GROUP: Bottom (sign out)
     HGroup({ left: 0, bottom: 0, width: "100%", height: 72, align: "left center", gap: 10, padding: [18, 0] });
-    that.elem.style.borderTop = "1px solid " + White(0.08);
+    that.elem.style.borderTop = "1px solid " + Ink(0.08);
 
         const btnSignOut = ButtonWithIcon({
             width: "auto",
@@ -334,7 +334,7 @@ const UserActionsPage = function(params = {}) {
         that.elem.style.flex = "1 1 auto";
         endGroup();
 
-        Label({ text: escape(settings.panelName), fontSize: 12, textColor: White(0.35) });
+        Label({ text: escape(settings.panelName), fontSize: 12, textColor: Ink(0.35) });
 
     endGroup();
 
@@ -354,18 +354,18 @@ UserActionsPage.KEY = "UserActions";
 // *** STATIC: STYLE AND HELPERS
 
 UserActionsPage.STYLE = {
-    CARD_COLOR: "#1A1A19",
-    CARD_BORDER_COLOR: White(0.1),
-    FIELD_COLOR: "#232322",
-    PRIMARY_COLOR: "#3D7A6B",
-    ACCENT_COLOR: "#65A293",
-    ERROR_COLOR: "#E66767",
+    CARD_COLOR: T.surface,
+    CARD_BORDER_COLOR: Ink(0.1),
+    FIELD_COLOR: T.surface2,
+    PRIMARY_COLOR: T.primary,
+    ACCENT_COLOR: T.accent,
+    ERROR_COLOR: T.danger,
 };
 
 UserActionsPage.STATUSES = {
-    online: { label: "Online", color: "#65A293" },
-    away: { label: "Away", color: "#C98500" },
-    busy: { label: "Do not disturb", color: "#E66767" },
+    online: { label: "Online", color: T.accent },
+    away: { label: "Away", color: T.warning },
+    busy: { label: "Do not disturb", color: T.danger },
 };
 
 UserActionsPage.STATUS_STORAGE_KEY = "adminPanel.userStatus";
@@ -375,7 +375,7 @@ UserActionsPage.escapeHtml = function(text) {
     return String(text).replace(/[&<>"']/g, function(c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c]; });
 };
 
-// "#65A293", 0.2 -> "rgba(101, 162, 147, 0.2)"
+// T.accent, 0.2 -> "rgba(101, 162, 147, 0.2)"
 UserActionsPage.alpha = function(hex, alpha) {
     const n = parseInt(hex.slice(1), 16);
     return "rgba(" + (n >> 16) + ", " + ((n >> 8) & 255) + ", " + (n & 255) + ", " + alpha + ")";

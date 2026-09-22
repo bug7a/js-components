@@ -350,7 +350,7 @@ const MediaPage = function(params = {}) {
 
         // Remove old cards
         cardList.forEach(function(card) {
-            card.checkBox.destroy();
+            card.checkBox.remove();
             card.remove();
         });
         cardList = [];
@@ -418,10 +418,10 @@ const MediaPage = function(params = {}) {
                 checked: (isSelected) ? 1 : 0,
                 style: {
                     layout: { padding: [0, 0] },
-                    mark: { width: 22, height: 22, color: Black(0.45), borderColor: White(0.7) },
-                    checkedMark: { color: S.PRIMARY_COLOR, borderColor: White(0.9) },
-                    hoverMark: { borderColor: White(1) },
-                    tick: { color: White(1) },
+                    mark: { width: 22, height: 22, color: Black(0.45), borderColor: Ink(0.7) },
+                    checkedMark: { color: S.PRIMARY_COLOR, borderColor: Ink(0.9) },
+                    hoverMark: { borderColor: Ink(1) },
+                    tick: { color: Ink(1) },
                 },
                 onChange: function(self) {
                     if (self.checked) selectedIds.add(item.id);
@@ -436,7 +436,7 @@ const MediaPage = function(params = {}) {
 
             // LABEL: New (right top)
             if (item.isNew) {
-                Label({ text: "NEW", fontSize: 11, textColor: White(1), color: S.PRIMARY_COLOR, round: 6, padding: [8, 3] });
+                Label({ text: "NEW", fontSize: 11, textColor: Ink(1), color: S.PRIMARY_COLOR, round: 6, padding: [8, 3] });
                 that.position = "absolute";
                 that.right = 10;
                 that.top = 10;
@@ -449,13 +449,13 @@ const MediaPage = function(params = {}) {
                 that.elem.style.flex = "1 1 auto";
                 that.elem.style.minWidth = "0";
 
-                    Label({ text: item.name, fontSize: 14, textColor: White(0.9), width: "100%" });
+                    Label({ text: item.name, fontSize: 14, textColor: Ink(0.9), width: "100%" });
                     that.elem.style.whiteSpace = "nowrap";
                     that.elem.style.overflow = "hidden";
                     that.elem.style.textOverflow = "ellipsis";
                     that.elem.title = item.name;
 
-                    Label({ text: MediaPage.formatSize(item.size) + " · " + typeInfo.label, fontSize: 12, textColor: White(0.45) });
+                    Label({ text: MediaPage.formatSize(item.size) + " · " + typeInfo.label, fontSize: 12, textColor: Ink(0.45) });
 
                 endGroup();
 
@@ -463,14 +463,14 @@ const MediaPage = function(params = {}) {
                 card.btnMore = Label({
                     text: "•••",
                     fontSize: 12,
-                    textColor: White(0.6),
+                    textColor: Ink(0.6),
                     padding: [8, 4],
                     round: 6,
                     clickable: 1,
                 });
                 card.btnMore.elem.style.cursor = "pointer";
                 card.btnMore.elem.setAttribute("aria-label", "More actions");
-                card.btnMore.on("mouseover", function(self) { self.color = White(0.08); });
+                card.btnMore.on("mouseover", function(self) { self.color = Ink(0.08); });
                 card.btnMore.on("mouseout", function(self) { self.color = "transparent"; });
                 card.btnMore.item = item;
 
@@ -522,7 +522,7 @@ const MediaPage = function(params = {}) {
     };
 
     const createSmallTitle = function(text) {
-        Label({ text: text.toUpperCase(), fontSize: 11, textColor: White(0.45) });
+        Label({ text: text.toUpperCase(), fontSize: 11, textColor: Ink(0.45) });
         that.elem.style.letterSpacing = "1px";
     };
 
@@ -533,11 +533,11 @@ const MediaPage = function(params = {}) {
         closeDetails();
 
         // WHY: These components have objects or events on the page. box.remove() does not remove them.
-        cardList.forEach(function(card) { card.checkBox.destroy(); });
-        if (itemMenu) itemMenu.destroy();
-        if (uploadFile) uploadFile.destroy();
-        if (smartTable) smartTable.destroy();
-        if (breadcrumbs) breadcrumbs.destroy();
+        cardList.forEach(function(card) { card.checkBox.remove(); });
+        if (itemMenu) itemMenu.remove();
+        if (uploadFile) uploadFile.remove();
+        if (smartTable) smartTable.remove();
+        if (breadcrumbs) breadcrumbs.remove();
 
         box.remove();
         box = null;
@@ -554,10 +554,10 @@ const MediaPage = function(params = {}) {
 
             VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
 
-                Label({ text: "Media Library", fontSize: 26, textColor: White(0.95) });
+                Label({ text: "Media Library", fontSize: 26, textColor: Ink(0.95) });
                 that.elem.style.fontFamily = "opensans-bold";
 
-                lblSubtitle = Label({ text: "", fontSize: 14, textColor: White(0.5) });
+                lblSubtitle = Label({ text: "", fontSize: 14, textColor: Ink(0.5) });
 
             endGroup();
 
@@ -579,9 +579,9 @@ const MediaPage = function(params = {}) {
             that.elem.style.justifyContent = "space-between";
 
                 VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
-                    Label({ text: "Upload Files", fontSize: 16, textColor: White(0.95) });
+                    Label({ text: "Upload Files", fontSize: 16, textColor: Ink(0.95) });
                     that.elem.style.fontFamily = "opensans-bold";
-                    Label({ text: "Images, videos, audio, PDF, Office and ZIP files. Max 20 MB each, 10 files at once.", fontSize: 12, textColor: White(0.45) });
+                    Label({ text: "Images, videos, audio, PDF, Office and ZIP files. Max 20 MB each, 10 files at once.", fontSize: 12, textColor: Ink(0.45) });
                 endGroup();
 
             endGroup();
@@ -606,7 +606,7 @@ const MediaPage = function(params = {}) {
             HGroup({ width: "100%", height: "auto", align: "right center", gap: 10 });
             that.elem.style.flexWrap = "wrap";
 
-                Label({ text: "Upload to", fontSize: 14, textColor: White(0.6) });
+                Label({ text: "Upload to", fontSize: 14, textColor: Ink(0.6) });
 
                 uploadFolderSelect = MediaPage.createTinySelect(
                     MediaPage.FOLDERS.map(function(folder) { return { id: folder, label: folder }; }),
@@ -656,10 +656,10 @@ const MediaPage = function(params = {}) {
                         onClick: function() { openFolder(folder); },
                         style: {
                             layout: { gap: 8, padding: [10, 8], align: "left center" },
-                            label: { fontSize: 14, textColor: White(0.9) },
+                            label: { fontSize: 14, textColor: Ink(0.9) },
                             box: { color: "transparent", border: 0, round: 8 },
-                            hover: { color: White(0.06) },
-                            active: { color: White(0.1) },
+                            hover: { color: Ink(0.06) },
+                            active: { color: Ink(0.1) },
                         },
                     });
                 });
@@ -670,21 +670,21 @@ const MediaPage = function(params = {}) {
 
                 createSmallTitle("Storage");
 
-                lblStorage = Label({ text: "", fontSize: 14, textColor: White(0.9) });
+                lblStorage = Label({ text: "", fontSize: 14, textColor: Ink(0.9) });
 
                 storageBar = LineProgressBar({
                     width: 204,
                     height: 14,
                     progress: 0,
                     // WHY: LineProgressBar is made for light backgrounds (the current line is black).
-                    // The bar is inverted, so the colors are given inverted too.
-                    primaryColor: MediaPage.invertColor(S.ACCENT_COLOR),
-                    secondaryColor: MediaPage.invertColor("#3A3A38"),
+                    // On the dark themes the bar is inverted, so the colors are given inverted too.
+                    primaryColor: (T.isDark) ? MediaPage.invertColor(S.ACCENT_COLOR) : S.ACCENT_COLOR,
+                    secondaryColor: (T.isDark) ? MediaPage.invertColor(T.surface4) : T.surface4,
                 });
-                storageBar.elem.style.filter = "invert(100%)";
+                storageBar.elem.style.filter = T.iconFilter;
                 storageBar.elem.style.margin = "4px 0px";
 
-                lblStorageTypes = Label({ text: "", fontSize: 12, textColor: White(0.55) });
+                lblStorageTypes = Label({ text: "", fontSize: 12, textColor: Ink(0.55) });
                 that.elem.style.lineHeight = "20px";
 
             endGroup();
@@ -703,10 +703,10 @@ const MediaPage = function(params = {}) {
                     openFolder(item.key);
                 },
                 style: {
-                    item: { fontSize: 15, textColor: White(0.55) },
-                    itemHover: { textColor: White(0.95), color: White(0.08) },
-                    current: { textColor: White(0.95) },
-                    separator: { textColor: White(0.3) },
+                    item: { fontSize: 15, textColor: Ink(0.55) },
+                    itemHover: { textColor: Ink(0.95), color: Ink(0.08) },
+                    current: { textColor: Ink(0.95) },
+                    separator: { textColor: Ink(0.3) },
                     focus: { color: S.ACCENT_COLOR },
                 },
             });
@@ -722,11 +722,11 @@ const MediaPage = function(params = {}) {
                     borderBottomStyle: "1px solid " + S.CARD_BORDER_COLOR,
                     round: 8,
                     color: S.FIELD_COLOR,
-                    textColor: White(0.9),
+                    textColor: Ink(0.9),
                     fontSize: 14,
                     searchIconSize: 16,
                     placeholderText: "Search files",
-                    invertIconColor: 1,
+                    invertIconColor: T.invertIcon,
                     searchIconFile: LIB_PATH + "comp-m2/search-input-v2/search.svg",
                     clearIconFile: LIB_PATH + "comp-m2/search-input-v2/clear.svg",
                     onSearch: function(text) {
@@ -764,7 +764,7 @@ const MediaPage = function(params = {}) {
                     },
                     backgroundStyle: { colorBottom: S.FIELD_COLOR, colorTop: S.FIELD_COLOR, round: 8, border: 1, borderColor: S.CARD_BORDER_COLOR },
                     tabPadding: [3, 3],
-                    labelStyle: { fontSize: 14, textColor: White(0.85), padding: [14, 6] },
+                    labelStyle: { fontSize: 14, textColor: Ink(0.85), padding: [14, 6] },
                     selectedStyle: { color: S.PRIMARY_COLOR, round: 6 },
                 });
 
@@ -782,14 +782,14 @@ const MediaPage = function(params = {}) {
             align: "left center",
             gap: 10,
             padding: [16, 10],
-            color: "#1F2B28",
+            color: T.tableHighlight,
             border: 1,
             borderColor: MediaPage.alpha(S.ACCENT_COLOR, 0.4),
             round: 12,
         });
         that.elem.style.flexWrap = "wrap";
 
-            lblSelection = Label({ text: "", fontSize: 14, textColor: White(0.95) });
+            lblSelection = Label({ text: "", fontSize: 14, textColor: Ink(0.95) });
             that.elem.style.fontFamily = "opensans-bold";
 
             MediaPage.createButton("Clear", "", function() {
@@ -875,7 +875,7 @@ const MediaPage = function(params = {}) {
             text: "",
             width: "100%",
             fontSize: 14,
-            textColor: White(0.5),
+            textColor: Ink(0.5),
             textAlign: "center",
             padding: [16, 40],
             border: 1,
@@ -985,7 +985,7 @@ const MediaDetails = function(params = {}) {
     params.top = 0;
     params.width = "100%";
     params.height = "100%";
-    params.color = "#141414";
+    params.color = T.surfaceDeep;
 
     // WHY: item is a live object of the list. startObject() would copy it.
     const item = params.item;
@@ -1009,7 +1009,7 @@ const MediaDetails = function(params = {}) {
         leftPadding: 14,
         rightPadding: 36,
         backgroundColor: S.FIELD_COLOR,
-        selectedBackgroundColor: "#262625",
+        selectedBackgroundColor: T.surface3,
         lineColor: "transparent",
         selectedLineColor: "transparent",
         backBorderColor: S.CARD_BORDER_COLOR,
@@ -1022,10 +1022,10 @@ const MediaDetails = function(params = {}) {
 
     // WHY: InputB has fixed text colors for light backgrounds.
     const styleInput = function(input) {
-        input.title.textColor = White(0.45);
+        input.title.textColor = Ink(0.45);
         input.title.fontSize = 11;
         input.title.elem.style.letterSpacing = "1px";
-        input.input.textColor = White(0.9);
+        input.input.textColor = Ink(0.9);
         input.input.fontSize = 15;
         input.input.height = 32;
         input.warningBall.borderColor = S.CARD_COLOR;
@@ -1033,7 +1033,7 @@ const MediaDetails = function(params = {}) {
     };
 
     // Left line
-    Box(0, 0, 1, "100%", { color: White(0.12) });
+    Box(0, 0, 1, "100%", { color: Ink(0.12) });
 
     // GROUP: Scrollable content
     startBox(0, 0, "100%", "calc(100% - 76px)", { color: "transparent", scrollY: 1 });
@@ -1044,12 +1044,12 @@ const MediaDetails = function(params = {}) {
             HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
             that.elem.style.justifyContent = "space-between";
 
-                Label({ text: "File Details", fontSize: 18, textColor: White(0.95) });
+                Label({ text: "File Details", fontSize: 18, textColor: Ink(0.95) });
                 that.elem.style.fontFamily = "opensans-bold";
 
                 Icon({ width: 28, height: 28, clickable: 1 });
                 that.load("assets/close.png");
-                that.elem.style.filter = "invert(100%)";
+                that.elem.style.filter = T.iconFilter;
                 that.elem.style.cursor = "pointer";
                 that.opacity = 0.6;
                 that.on("click", function() {
@@ -1095,7 +1095,7 @@ const MediaDetails = function(params = {}) {
             }
 
             VGroup({ width: "100%", height: "auto", align: "left top", gap: 8 });
-                Label({ text: "FOLDER", fontSize: 11, textColor: White(0.45) });
+                Label({ text: "FOLDER", fontSize: 11, textColor: Ink(0.45) });
                 that.elem.style.letterSpacing = "1px";
                 folderSelect = MediaPage.createTinySelect(
                     box.folders.map(function(folder) { return { id: folder, label: folder }; }),
@@ -1118,9 +1118,9 @@ const MediaDetails = function(params = {}) {
                 INFO.forEach(function(info, index) {
                     HGroup({ width: "100%", height: "auto", align: "left center", padding: [0, 8] });
                     that.elem.style.justifyContent = "space-between";
-                    if (index > 0) that.elem.style.borderTop = "1px solid " + White(0.06);
-                        Label({ text: info[0], fontSize: 13, textColor: White(0.5) });
-                        Label({ text: info[1], fontSize: 13, textColor: White(0.9) });
+                    if (index > 0) that.elem.style.borderTop = "1px solid " + Ink(0.06);
+                        Label({ text: info[0], fontSize: 13, textColor: Ink(0.5) });
+                        Label({ text: info[1], fontSize: 13, textColor: Ink(0.9) });
                     endGroup();
                 });
 
@@ -1129,12 +1129,12 @@ const MediaDetails = function(params = {}) {
             // URL
             VGroup({ width: "100%", height: "auto", align: "left top", gap: 8 });
 
-                Label({ text: "PUBLIC URL", fontSize: 11, textColor: White(0.45) });
+                Label({ text: "PUBLIC URL", fontSize: 11, textColor: Ink(0.45) });
                 that.elem.style.letterSpacing = "1px";
 
                 HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
 
-                    Label({ text: item.publicUrl, fontSize: 12, textColor: White(0.75), color: S.FIELD_COLOR, round: 8, padding: [10, 10], border: 1, borderColor: S.CARD_BORDER_COLOR });
+                    Label({ text: item.publicUrl, fontSize: 12, textColor: Ink(0.75), color: S.FIELD_COLOR, round: 8, padding: [10, 10], border: 1, borderColor: S.CARD_BORDER_COLOR });
                     that.elem.style.fontFamily = "monospace";
                     that.elem.style.whiteSpace = "nowrap";
                     that.elem.style.overflow = "hidden";
@@ -1158,7 +1158,7 @@ const MediaDetails = function(params = {}) {
 
     // GROUP: Buttons (bottom)
     HGroup({ left: 0, bottom: 0, width: "100%", height: 76, align: "left center", gap: 8, padding: [20, 0] });
-    that.elem.style.borderTop = "1px solid " + White(0.08);
+    that.elem.style.borderTop = "1px solid " + Ink(0.08);
 
         MediaPage.createHoldToDelete(function() {
             box.onDelete(item);
@@ -1207,44 +1207,44 @@ MediaDetails.KEY = "MediaDetails";
 // *** STATIC: STYLE AND COMPONENT HELPERS
 
 MediaPage.STYLE = {
-    CARD_COLOR: "#1A1A19",
-    CARD_BORDER_COLOR: White(0.1),
-    FIELD_COLOR: "#232322",
-    PRIMARY_COLOR: "#3D7A6B",
-    ACCENT_COLOR: "#65A293",
+    CARD_COLOR: T.surface,
+    CARD_BORDER_COLOR: Ink(0.1),
+    FIELD_COLOR: T.surface2,
+    PRIMARY_COLOR: T.primary,
+    ACCENT_COLOR: T.accent,
     SELECTED_COLOR: "rgba(101, 162, 147, 0.18)",
-    ERROR_COLOR: "#E66767",
+    ERROR_COLOR: T.danger,
 };
 
 MediaPage.TYPES = {
-    image: { label: "Image", color: "#3987E5" },
-    document: { label: "Document", color: "#C98500" },
+    image: { label: "Image", color: T.info },
+    document: { label: "Document", color: T.warning },
     video: { label: "Video", color: "#D55181" },
     audio: { label: "Audio", color: "#9085E9" },
     archive: { label: "Archive", color: "#898781" },
 };
 
 MediaPage.CONTEXT_MENU_STYLE = {
-    menu: { color: "#232322", borderColor: White(0.12), shadow: "0px 8px 24px rgba(0, 0, 0, 0.5)" },
-    item: { textColor: White(0.85) },
-    itemHover: { textColor: White(1), color: White(0.08) },
-    disabled: { textColor: White(0.3) },
-    separator: { color: White(0.1) },
+    menu: { color: T.surface2, borderColor: Ink(0.12), shadow: "0px 8px 24px " + Black(0.5) },
+    item: { textColor: Ink(0.85) },
+    itemHover: { textColor: Ink(1), color: Ink(0.08) },
+    disabled: { textColor: Ink(0.3) },
+    separator: { color: Ink(0.1) },
 };
 
 MediaPage.SELECT_FILE_STYLE = {
-    zone: { color: "#232322", border: 2, borderColor: White(0.12), round: 10 },
-    zoneHover: { color: "#262625", borderColor: White(0.3) },
-    zoneDragOver: { color: "#1F2B28", borderColor: "#65A293" },
-    icon: { color: White(0.45), dragOverColor: "#65A293" },
-    title: { fontSize: 15, textColor: White(0.9) },
-    desc: { fontSize: 13, textColor: White(0.5) },
-    hint: { textColor: White(0.4) },
-    item: { color: "#232322", borderColor: White(0.1) },
-    itemName: { textColor: White(0.85) },
-    itemSize: { textColor: White(0.45) },
-    badge: { color: White(0.08), textColor: White(0.6) },
-    removeButton: { textColor: White(0.45), hoverColor: "#E66767" },
+    zone: { color: T.surface2, border: 2, borderColor: Ink(0.12), round: 10 },
+    zoneHover: { color: T.surface3, borderColor: Ink(0.3) },
+    zoneDragOver: { color: T.tableHighlight, borderColor: T.accent },
+    icon: { color: Ink(0.45), dragOverColor: T.accent },
+    title: { fontSize: 15, textColor: Ink(0.9) },
+    desc: { fontSize: 13, textColor: Ink(0.5) },
+    hint: { textColor: Ink(0.4) },
+    item: { color: T.surface2, borderColor: Ink(0.1) },
+    itemName: { textColor: Ink(0.85) },
+    itemSize: { textColor: Ink(0.45) },
+    badge: { color: Ink(0.08), textColor: Ink(0.6) },
+    removeButton: { textColor: Ink(0.45), hoverColor: T.danger },
 };
 
 // params: { primary: 1, width }
@@ -1258,13 +1258,13 @@ MediaPage.createButton = function(text, iconFile, onClick, params = {}) {
         style: {
             layout: { gap: 8, padding: [14, 8] },
             icon: { width: 18, height: 18 },
-            label: { fontSize: 14, textColor: White(0.92) },
+            label: { fontSize: 14, textColor: Ink(0.92) },
             box: { color: (params.primary) ? S.PRIMARY_COLOR : S.FIELD_COLOR, border: 1, borderColor: S.CARD_BORDER_COLOR, round: 8 },
-            hover: { color: (params.primary) ? "#468A79" : "#2C2C2A" },
-            active: { color: (params.primary) ? "#2C5A38" : "#383835" },
+            hover: { color: (params.primary) ? T.primaryHover : T.surface3 },
+            active: { color: (params.primary) ? T.primaryActive : T.surface4 },
         },
     });
-    if (btn.icon) btn.icon.elem.style.filter = "invert(100%)"; // WHY: Panel icons are black.
+    if (btn.icon) btn.icon.elem.style.filter = T.iconFilter; // WHY: Panel icons are black.
     return btn;
 };
 
@@ -1279,15 +1279,15 @@ MediaPage.createTinySelect = function(list, onSelect) {
         borderColor: S.CARD_BORDER_COLOR,
         round: 8,
         labelBoldFont: 0,
-        labelTextColor: White(0.9),
+        labelTextColor: Ink(0.9),
         arrowIcon: "../../comp-m2/tiny-select/arrow.svg",
         arrowSize: 18,
-        invertIconColor: 1,
+        invertIconColor: T.invertIcon,
         listFontSize: 14,
-        listTextColor: White(0.85),
+        listTextColor: Ink(0.85),
         listOverTextColor: S.ACCENT_COLOR,
         listBackgroundColor: S.FIELD_COLOR,
-        listBorderColor: White(0.15),
+        listBorderColor: Ink(0.15),
         onSelect: onSelect,
     });
 };
@@ -1305,16 +1305,16 @@ MediaPage.createHoldToDelete = function(onConfirm) {
         style: {
             layout: { gap: 6, padding: [14, 0] },
             icon: { width: 20, height: 20 },
-            label: { fontSize: 14, textColor: White(0.9) },
+            label: { fontSize: 14, textColor: Ink(0.9) },
             holdingLabel: { fontSize: 14, textColor: "#B03A2E" },
-            completedLabel: { fontSize: 14, textColor: "#2C5A38" },
+            completedLabel: { fontSize: 14, textColor: T.primaryActive },
             box: { color: S.FIELD_COLOR, border: 1, borderColor: S.CARD_BORDER_COLOR, round: 8 },
             holdingBox: { color: "#FFD1CB", borderColor: S.ERROR_COLOR, round: 8 },
             completedBox: { color: "#DFEFE6", borderColor: S.ACCENT_COLOR, round: 8 },
         },
         onConfirm: onConfirm,
     });
-    btn.icon.elem.style.filter = "invert(100%)"; // WHY: Only the normal icon is on a dark background.
+    btn.icon.elem.style.filter = T.iconFilter; // WHY: Only the normal icon is on a dark background.
     return btn;
 };
 
@@ -1322,17 +1322,17 @@ MediaPage.getSmartTableStyle = function(libPath, placeholderText) {
     const S = MediaPage.STYLE;
     return {
         scrollBarParams: {
-            bar_border: 0, bar_round: 3, bar_borderColor: "rgba(255, 255, 255, 0.15)", bar_width: 4, bar_mouseOverWidth: 4,
-            bar_mouseOverColor: "#A0A0A0", bar_opacity: 0.4, bar_mouseOverOpacity: 0.9, bar_padding: 2, bar_color: "#A0A0A0",
+            bar_border: 0, bar_round: 3, bar_borderColor: Ink(0.15), bar_width: 4, bar_mouseOverWidth: 4,
+            bar_mouseOverColor: T.scrollBar, bar_opacity: 0.4, bar_mouseOverOpacity: 0.9, bar_padding: 2, bar_color: T.scrollBar,
             neverHide: 0, showDots: 0,
         },
         // WHY: Filtre kutusu ile alt bar aynı renkti, kutu görünmüyordu. Bar kart rengine, kutu ise alan rengine (FIELD_COLOR) alındı.
         searchInputParams: {
             width: "50%", height: 34, border: 1, round: 8, color: S.FIELD_COLOR, borderColor: S.CARD_BORDER_COLOR,
             borderBottomStyle: "1px solid " + S.CARD_BORDER_COLOR,
-            textColor: White(0.9), placeholderColor: White(0.4), fontSize: 14,
+            textColor: Ink(0.9), placeholderColor: Ink(0.4), fontSize: 14,
             placeholderText: placeholderText,
-            searchIconSize: 15, searchIconOpacity: 0.55, invertIconColor: 1,
+            searchIconSize: 15, searchIconOpacity: 0.55, invertIconColor: T.invertIcon,
             searchIconFile: libPath + "comp-m2/search-input-v2/filter.png",
             clearIconFile: libPath + "comp-m2/search-input-v2/clear.svg",
         },
@@ -1340,12 +1340,12 @@ MediaPage.getSmartTableStyle = function(libPath, placeholderText) {
         searchTitleMenuParams: {
             minWidth: 170,
             style: {
-                menu: { color: S.FIELD_COLOR, border: 1, borderColor: White(0.12), round: 8, padding: 4, shadow: "0 8px 24px rgba(0, 0, 0, 0.5)" },
-                item: { height: 30, fontSize: 13, textColor: White(0.75), color: "transparent", round: 6, padding: 10, gap: 10 },
-                itemHover: { textColor: "white", color: White(0.08) },
-                disabled: { textColor: White(0.3), opacity: 0.4 },
+                menu: { color: S.FIELD_COLOR, border: 1, borderColor: Ink(0.12), round: 8, padding: 4, shadow: "0 8px 24px " + Black(0.5) },
+                item: { height: 30, fontSize: 13, textColor: Ink(0.75), color: "transparent", round: 6, padding: 10, gap: 10 },
+                itemHover: { textColor: "white", color: Ink(0.08) },
+                disabled: { textColor: Ink(0.3), opacity: 0.4 },
                 icon: { width: 14, height: 14 },
-                separator: { color: White(0.1), space: 4 },
+                separator: { color: Ink(0.1), space: 4 },
             },
         },
         style: {
@@ -1353,9 +1353,9 @@ MediaPage.getSmartTableStyle = function(libPath, placeholderText) {
             height: "100%",
             round: 8,
             line1Color: S.CARD_COLOR,
-            line2Color: "#202020",
-            highlightItemCellColor: "#2A3A36",
-            highlightTitleCellColor: White(0.08),
+            line2Color: T.tableRow2,
+            highlightItemCellColor: T.tableHighlight,
+            highlightTitleCellColor: Ink(0.08),
             verticalScrollWidth: 20,
             verticalScrollMargin: 2,
             btnScrollDownIconFile: libPath + "comp-m3/smart-table/down.png",
@@ -1365,22 +1365,22 @@ MediaPage.getSmartTableStyle = function(libPath, placeholderText) {
             // WHY: Varsayılan tik ikonu koyu renkli; koyu menüde görünmüyordu.
             searchTitleCheckIconFile: "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + S.ACCENT_COLOR + '" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17.5 19 7"/></svg>'),
             loadingIconFile: libPath + "comp-m3/smart-table/clock.png",
-            invertIconColor: 1,
+            invertIconColor: T.invertIcon,
             box: { color: S.CARD_COLOR },
             boxBorder: { border: 1, borderColor: S.CARD_BORDER_COLOR },
             boxTitleLine: { color: S.FIELD_COLOR },
-            boxTitleCell: { padding: [10, 0], borderRight: "1px solid rgba(255, 255, 255, 0.06)", borderBottom: "1px solid rgba(255, 255, 255, 0.12)" },
-            lblTitleCell: { fontSize: 13, fontFamily: "opensans", textColor: White(0.6) },
-            boxItemCell: { borderBottom: "1px solid rgba(255, 255, 255, 0.05)", borderRight: "1px solid rgba(255, 255, 255, 0.03)", padding: [10, 0] },
-            lblItemCell: { fontSize: 14, textColor: "rgba(255, 255, 255, 0.75)", fontFamily: "opensans" },
-            boxInfoLine: { color: S.CARD_COLOR, borderTop: "1px solid rgba(255, 255, 255, 0.08)" },
-            lblBoxInfoLine: { fontSize: 13, textColor: White(0.55) },
-            lblNoDataFound: { color: "#2C2C2A", textColor: White(0.6), padding: [8, 2], fontSize: 13, round: 8, border: 1, borderColor: White(0.15) },
+            boxTitleCell: { padding: [10, 0], borderRight: "1px solid " + Ink(0.06), borderBottom: "1px solid " + Ink(0.12) },
+            lblTitleCell: { fontSize: 13, fontFamily: "opensans", textColor: Ink(0.6) },
+            boxItemCell: { borderBottom: "1px solid " + Ink(0.05), borderRight: "1px solid " + Ink(0.03), padding: [10, 0] },
+            lblItemCell: { fontSize: 14, textColor: Ink(0.75), fontFamily: "opensans" },
+            boxInfoLine: { color: S.CARD_COLOR, borderTop: "1px solid " + Ink(0.08) },
+            lblBoxInfoLine: { fontSize: 13, textColor: Ink(0.55) },
+            lblNoDataFound: { color: T.surface3, textColor: Ink(0.6), padding: [8, 2], fontSize: 13, round: 8, border: 1, borderColor: Ink(0.15) },
             // Filtre kutusunun içindeki sütun etiketi: Kutunun içinde durduğu için daha hafif bir chip.
-            lblSearchTitle: { color: White(0.08), textColor: White(0.6), padding: [8, 1], fontSize: 12, round: 6, border: 1, borderColor: White(0.14) },
-            btnScrollCenter: { color: "#2C2C2A", round: 100, borderColor: White(0.2), border: 1 },
-            btnScrollUp: { color: "#3A3A38", round: 100, border: 1, borderColor: White(0.3) },
-            btnScrollDown: { color: "#3A3A38", round: 100, border: 1, borderColor: White(0.3) },
+            lblSearchTitle: { color: Ink(0.08), textColor: Ink(0.6), padding: [8, 1], fontSize: 12, round: 6, border: 1, borderColor: Ink(0.14) },
+            btnScrollCenter: { color: T.surface3, round: 100, borderColor: Ink(0.2), border: 1 },
+            btnScrollUp: { color: T.surface4, round: 100, border: 1, borderColor: Ink(0.3) },
+            btnScrollDown: { color: T.surface4, round: 100, border: 1, borderColor: Ink(0.3) },
             boxSort: { color: S.PRIMARY_COLOR },
         },
     };
@@ -1424,13 +1424,13 @@ MediaPage.getPublicUrl = function(item) {
     return "https://cdn.mypanel.com/media/" + item.folder.toLowerCase() + "/" + encodeURIComponent(item.name);
 };
 
-// "#65A293", 0.2 -> "rgba(101, 162, 147, 0.2)"
+// T.accent, 0.2 -> "rgba(101, 162, 147, 0.2)"
 MediaPage.alpha = function(hex, alpha) {
     const n = parseInt(hex.slice(1), 16);
     return "rgba(" + (n >> 16) + ", " + ((n >> 8) & 255) + ", " + (n & 255) + ", " + alpha + ")";
 };
 
-// "#65A293" -> "#9A5D6C"
+// T.accent -> "#9A5D6C"
 MediaPage.invertColor = function(hex) {
     return "#" + (0xFFFFFF ^ parseInt(hex.slice(1), 16)).toString(16).padStart(6, "0");
 };

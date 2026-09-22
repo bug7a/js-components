@@ -1,6 +1,6 @@
 /* Bismillah */
 
-// SERVICE WORKER - v1.0.0
+// SERVICE WORKER - v1.1.5
 // Developer: Bugra Ozden
 // NOT: Bu dosya normal sayfa kodundan ayri bir worker icinde calisir.
 //      Burada "window", "document" ve basic.js yoktur.
@@ -11,16 +11,29 @@
 
 // NOT: Yeni bir surum yayinlarken bu numarayi degistir.
 //      Degisince eski cache silinir ve dosyalar yeniden indirilir.
-const CACHE_VERSION = "v1.0.0";
-const CACHE_NAME = "mobile-fit-skeleton-" + CACHE_VERSION;
+const CACHE_VERSION = "v1.1.5";
+
+// APP PATH: sw.js dosyasinin bulundugu klasorun yolu (ornek: "-project1-pwa-example-").
+// NOT: Cache Storage alan adina (origin) gore ortaktir, klasore gore degil. Bu proje ile
+//      ayni alan adina (ornek: bir GitHub Pages hesabinin farkli repo'lari) birden fazla
+//      uygulama kurulursa, CACHE_PREFIX'e eklenen bu yol sayesinde her uygulama otomatik
+//      kendi cache adini kullanir; biri digerinin cache'ini "activate" sirasinda silmez.
+const APP_PATH = self.location.pathname.replace(/[^a-z0-9]/gi, "-");
+const CACHE_PREFIX = "mobile-app" + APP_PATH;
+const CACHE_NAME = CACHE_PREFIX + CACHE_VERSION;
 
 // APP SHELL: Offline calismasi icin gereken dosyalar.
+// NOT: content/ klasorune birden fazla dosyali bir proje eklenirse (kendi css/js/gorsel
+//      dosyalari), o dosyalarin her biri de buraya eklenmeli, yoksa cevrimdisi acilmaz.
 const APP_SHELL = [
     "./",
     "./index.htm",
     "./manifest.webmanifest",
     "./basic/basic.min.css",
     "./basic/basic.min.js",
+    "./comp/web-view.js",
+    "./comp/toast.js",
+    "./content/index.htm",
     "./basic/font/open-sans/OpenSans-Regular.ttf",
     "./basic/font/open-sans/OpenSans-Bold.ttf",
     "./basic/img/button-background.png",
@@ -63,7 +76,7 @@ self.addEventListener("activate", function (event) {
 
         const names = await caches.keys();
         await Promise.all(names.map(function (name) {
-            if (name !== CACHE_NAME && name.indexOf("mobile-fit-skeleton-") === 0) {
+            if (name !== CACHE_NAME && name.indexOf(CACHE_PREFIX) === 0) {
                 return caches.delete(name);
             }
         }));
@@ -87,16 +100,25 @@ self.addEventListener("fetch", function (event) {
     if (new URL(request.url).origin !== self.location.origin) return;
 
     // SAYFA ACILISI: Once agdan dene, olmazsa cache'ten ver.
+    // NOT: "navigate" sadece ust pencerenin acilisi degil, WebView icindeki iframe'in yerel bir
+    //      sayfaya (content/index.htm gibi) gecisi de bu moddadir. Onbellek anahtari bu yuzden
+    //      hep istegin kendi URL'si; sadece ust sayfanin (destination "document") hicbir kaydi
+    //      yoksa index.htm'e dusulur. Aksi halde content/ sayfasi index.htm'in ustune yazilirdi.
     if (request.mode === "navigate") {
         event.respondWith((async function () {
             try {
                 const fresh = await fetch(request);
                 const cache = await caches.open(CACHE_NAME);
-                cache.put("./index.htm", fresh.clone());
+                cache.put(request, fresh.clone());
                 return fresh;
             } catch (e) {
-                const cached = await caches.match("./index.htm", { ignoreSearch: true });
-                return cached || Response.error();
+                const cached = await caches.match(request, { ignoreSearch: true });
+                if (cached) return cached;
+                if (request.destination === "document") {
+                    const indexCached = await caches.match("./index.htm", { ignoreSearch: true });
+                    if (indexCached) return indexCached;
+                }
+                return Response.error();
             }
         })());
         return;

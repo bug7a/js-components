@@ -7,6 +7,8 @@ Select Time - v26.09
 UI COMPONENT TEMPLATE
 - A time picker: a field that opens a panel (popup), or an always visible panel (inline: 1).
 - The panel has two scrollable columns: hours (00-23) and minutes (with minuteStep).
+- The columns scroll with basic/scroll-bar.js (ScrollBar), not with the scrollbar of the browser.
+  (useScrollBar: 0, or the file is not loaded: the scrollbar of the browser is used.)
 - Supports: minTime, maxTime (also over midnight: 22:00 - 02:00), minuteStep, format,
   language (en, tr), Now/Clear buttons, enabled, keyboard navigation.
 - Everything is drawn with code (no image files needed).
@@ -40,6 +42,7 @@ const SelectTimeDefaults = {
     inline: 0, // 1: Panel is always visible, no field.
     enabled: 1,
     closeOnSelect: 1, // 1: Close after a minute is selected.
+    useScrollBar: 1, // basic/scroll-bar.js. 0: the scrollbar of the browser.
     showNowButton: 1,
     showClearButton: 1,
     onChange: function (self) { }, // self.value ("19:30" or ""), self.hours, self.minutes (number or null), self.timeText
@@ -85,6 +88,17 @@ const SelectTimeDefaults = {
         column: {
             rows: 6, // Visible rows
             gap: 8, // Space between the hours and minutes columns
+        },
+        scrollBar: { // basic/scroll-bar.js (ScrollBar) parameters of the columns
+            bar_color: "#141414",
+            bar_mouseOverColor: "#141414",
+            bar_width: 4,
+            bar_round: 3,
+            bar_opacity: 0.2,
+            bar_mouseOverOpacity: 0.5,
+            bar_padding: 2,
+            neverHide: 1, // The column is short: the bar says that there is more to see.
+            showDots: 0,
         },
         cell: {
             width: 64,
@@ -140,6 +154,8 @@ const SelectTime = function (params = {}) {
     let hourCells = []; // index: hour
     let minuteCells = []; // index: position in minuteList
     let minuteList = []; // [0, 5, 10, ...]
+    // WHY: The component works without basic/scroll-bar.js too, the file is not loaded on every page.
+    const useScrollBar = (box.useScrollBar == 1 && typeof ScrollBar !== "undefined");
 
     // *** PUBLIC VARIABLES:
     // [var] Selected time: minutes from 00:00 (0 - 1439) or null
@@ -277,30 +293,48 @@ const SelectTime = function (params = {}) {
                 textColor: _s.columnTitle.textColor,
             });
 
-            // BOX: Scrollable list
-            group.scrollBox = startBox({
+            // BOX: Scroll area. The scrolling box and its ScrollBar are in it.
+            // WHY: ScrollBar alines itself with the left / top of the scrolling box, inside the
+            //      container box of it. A flex item has left = 0 and top = 0 (flex places it), so
+            //      in the group the bar landed on the title. This box is the flex item instead.
+            group.scrollArea = startBox({
                 width: cellWidth,
                 height: columnHeight,
                 color: "transparent",
-                scrollY: 1,
             });
-            group.scrollBox.elem.style.scrollbarWidth = "none"; // WHY: Narrow column. Mouse wheel and touch still scroll.
-            group.scrollBox.elem.style.position = "relative";
 
-                group.list = VGroup({
-                    width: "100%",
-                    height: "auto",
-                    align: "center top",
-                    gap: 0,
+                // BOX: Scrollable list
+                group.scrollBox = startBox(0, 0, cellWidth, columnHeight, {
+                    color: "transparent",
+                    scrollY: 1,
                 });
+                group.scrollBox.elem.style.position = "relative";
+                // WHY: Narrow column. Mouse wheel and touch still scroll.
+                if (useScrollBar) group.scrollBox.elem.style.scrollbarWidth = "none";
 
-                // NOTE: Cells are added by the caller.
+                    group.list = VGroup({
+                        width: "100%",
+                        height: "auto",
+                        align: "center top",
+                        gap: 0,
+                    });
 
-                endGroup();
+                    // NOTE: Cells are added by the caller.
+
+                    endGroup();
+
+                endBox();
 
             endBox();
 
         endGroup();
+
+        // SCROLL BAR: basic/scroll-bar.js instead of the scrollbar of the browser.
+        if (useScrollBar) {
+            createIn(group.scrollArea, function () {
+                group.scrollBar = ScrollBar(Object.assign({ scrollableBox: group.scrollBox }, _s.scrollBar));
+            });
+        }
 
         return group;
 
@@ -339,6 +373,13 @@ const SelectTime = function (params = {}) {
         const minute = (box.minutes !== null) ? box.minutes : 0;
         const index = minuteList.indexOf(minute - (minute % box.minuteStep));
         scrollToCell(box.minutesColumn, minuteCells[Math.max(0, index)], smooth);
+    };
+
+    // The bars can not measure a hidden panel (its size is 0), so they are refreshed after it is shown.
+    const refreshScrollBars = function () {
+        if (!useScrollBar) return;
+        if (box.hoursColumn && box.hoursColumn.scrollBar) box.hoursColumn.scrollBar.refreshScroll();
+        if (box.minutesColumn && box.minutesColumn.scrollBar) box.minutesColumn.scrollBar.refreshScroll();
     };
 
     const renderPanel = function () {
@@ -544,6 +585,7 @@ const SelectTime = function (params = {}) {
         box.panel.visible = 1;
         positionPanel();
         scrollToSelected();
+        refreshScrollBars();
         box.panel.elem.focus({ preventScroll: true });
 
         updateField();
@@ -595,17 +637,27 @@ const SelectTime = function (params = {}) {
         createMinuteCells();
         renderPanel();
         if (isOpen || box.inline == 1) scrollToSelected();
+        refreshScrollBars();
     };
 
     box.refresh = function () {
         updateValue();
         updateField();
         renderPanel();
+        refreshScrollBars();
     };
 
-    box.destroy = function () {
+    // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
+    const superRemove = box.remove;
+    box.superRemove = superRemove;
+    box.remove = function () {
 
+        if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
         page.remove_onResize(onPageResize);
+
+        // WHY: A ScrollBar has its own page events and observer, they live outside its box.
+        if (box.hoursColumn.scrollBar) { box.hoursColumn.scrollBar.remove(); box.hoursColumn.scrollBar = null; }
+        if (box.minutesColumn.scrollBar) { box.minutesColumn.scrollBar.remove(); box.minutesColumn.scrollBar = null; }
 
         // Remove objects that were moved to the page.
         if (box.inline != 1) {
@@ -613,7 +665,7 @@ const SelectTime = function (params = {}) {
             box.panel.remove();
         }
 
-        box.remove(); // NOTE: It will clean all events like box.on("click"
+        superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
         box = null;
 
     };
@@ -806,7 +858,7 @@ const SelectTime = function (params = {}) {
 
     if (box.inline == 1) {
         // WHY: Layout is not ready while the page is being created. Scroll after it.
-        setTimeout(function () { if (box) scrollToSelected(); }, 0);
+        setTimeout(function () { if (box) { scrollToSelected(); refreshScrollBars(); } }, 0);
     }
 
     return endObject(box);

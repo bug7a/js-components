@@ -180,8 +180,8 @@ const ContentsPage = function(params = {}) {
         closeEditor();
 
         // WHY: SmartTable and ContextMenu are on the page and have window events. box.remove() does not remove them.
-        if (smartTable) smartTable.destroy();
-        if (box.newMenu) box.newMenu.destroy();
+        if (smartTable) smartTable.remove();
+        if (box.newMenu) box.newMenu.remove();
 
         box.remove();
         box = null;
@@ -198,10 +198,10 @@ const ContentsPage = function(params = {}) {
 
             VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
 
-                Label({ text: "Contents", fontSize: 26, textColor: White(0.95) });
+                Label({ text: "Contents", fontSize: 26, textColor: Ink(0.95) });
                 that.elem.style.fontFamily = "opensans-bold";
 
-                Label({ text: "Pages, blog posts and banners of your site", fontSize: 14, textColor: White(0.5) });
+                Label({ text: "Pages, blog posts and banners of your site", fontSize: 14, textColor: Ink(0.5) });
 
             endGroup();
 
@@ -231,7 +231,7 @@ const ContentsPage = function(params = {}) {
             { title: "Published", color: STATUSES.published.color },
             { title: "Drafts", color: STATUSES.draft.color },
             { title: "Scheduled", color: STATUSES.scheduled.color },
-            { title: "SEO to check", color: "#C98500" },
+            { title: "SEO to check", color: T.warning },
         ];
 
         HGroup({ width: "100%", height: "auto", align: "left top", gap: 16 });
@@ -242,9 +242,9 @@ const ContentsPage = function(params = {}) {
                 const card = VGroup({ width: "auto", height: "auto", align: "left top", gap: 2, padding: 14, color: S.CARD_COLOR, border: 1, borderColor: S.CARD_BORDER_COLOR, round: 12 });
                 setFlex(card, "1 1 200px");
 
-                    Label({ text: item.title, fontSize: 13, textColor: White(0.5) });
+                    Label({ text: item.title, fontSize: 13, textColor: Ink(0.5) });
                     card.lblValue = Label({ text: "", fontSize: 26, textColor: item.color });
-                    card.lblDesc = Label({ text: "", fontSize: 12, textColor: White(0.45) });
+                    card.lblDesc = Label({ text: "", fontSize: 12, textColor: Ink(0.45) });
 
                 endGroup();
 
@@ -272,7 +272,7 @@ const ContentsPage = function(params = {}) {
                     },
                     backgroundStyle: { colorBottom: S.FIELD_COLOR, colorTop: S.FIELD_COLOR, round: 8, border: 1, borderColor: S.CARD_BORDER_COLOR },
                     tabPadding: [3, 3],
-                    labelStyle: { fontSize: 14, textColor: White(0.85), padding: [12, 6] },
+                    labelStyle: { fontSize: 14, textColor: Ink(0.85), padding: [12, 6] },
                     selectedStyle: { color: S.PRIMARY_COLOR, round: 6 },
                 });
 
@@ -284,11 +284,11 @@ const ContentsPage = function(params = {}) {
                     borderBottomStyle: "1px solid " + S.CARD_BORDER_COLOR,
                     round: 8,
                     color: S.FIELD_COLOR,
-                    textColor: White(0.9),
+                    textColor: Ink(0.9),
                     fontSize: 14,
                     searchIconSize: 16,
                     placeholderText: "Title, URL or tag",
-                    invertIconColor: 1,
+                    invertIconColor: T.invertIcon,
                     searchIconFile: LIB_PATH + "comp-m2/search-input-v2/search.svg",
                     clearIconFile: LIB_PATH + "comp-m2/search-input-v2/clear.svg",
                     onSearch: function(text) {
@@ -313,7 +313,7 @@ const ContentsPage = function(params = {}) {
                 that.elem.style.flex = "1 1 auto";
                 endGroup();
 
-                lblResultCount = Label({ text: "", fontSize: 13, textColor: White(0.55) });
+                lblResultCount = Label({ text: "", fontSize: 13, textColor: Ink(0.55) });
 
             endGroup();
 
@@ -350,13 +350,13 @@ const ContentsPage = function(params = {}) {
                 updateCustomItemCell: function(cell, titleDataIndex, data) {
                     if (titleDataIndex == 2) {
                         const status = ContentsPage.getStatusByLabel(data);
-                        cell.label.textColor = (status) ? status.color : White(0.75);
+                        cell.label.textColor = (status) ? status.color : Ink(0.75);
                     }
                     if (titleDataIndex == 5 && data !== "") {
                         cell.label.text = Number(data).toLocaleString("en-US");
                     }
                     if (titleDataIndex == 6) {
-                        cell.label.textColor = (data == "Good") ? S.ACCENT_COLOR : "#C98500";
+                        cell.label.textColor = (data == "Good") ? S.ACCENT_COLOR : T.warning;
                     }
                 },
                 ...ContentsPage.getSmartTableStyle(LIB_PATH),
@@ -426,7 +426,7 @@ const ContentEditor = function(params = {}) {
     params.top = 0;
     params.width = "100%";
     params.height = "100%";
-    params.color = "#141414";
+    params.color = T.surfaceDeep;
 
     // WHY: content is a live object of the list. startObject() would copy it.
     const content = params.content;
@@ -599,12 +599,12 @@ const ContentEditor = function(params = {}) {
         const checks = ContentsPage.getSeoChecks(draft);
         const okCount = checks.filter(function(check) { return check.ok; }).length;
         lblSeoScore.text = okCount + " / " + checks.length;
-        lblSeoScore.textColor = (okCount == checks.length) ? S.ACCENT_COLOR : "#C98500";
+        lblSeoScore.textColor = (okCount == checks.length) ? S.ACCENT_COLOR : T.warning;
         grpSeoChecks.lines.forEach(function(line, index) {
             const check = checks[index];
             line.visible = (check) ? 1 : 0;
             if (!check) return;
-            line.text = "<span style='color:" + ((check.ok) ? S.ACCENT_COLOR : "#C98500") + "'>" + ((check.ok) ? "✓" : "!") + "</span>&nbsp;&nbsp;" + check.text;
+            line.text = "<span style='color:" + ((check.ok) ? S.ACCENT_COLOR : T.warning) + "'>" + ((check.ok) ? "✓" : "!") + "</span>&nbsp;&nbsp;" + check.text;
         });
 
     };
@@ -639,7 +639,7 @@ const ContentEditor = function(params = {}) {
             const previousTile = getDefaultContainerBox();
             setDefaultContainerBox(tileNone);
                 HGroup({ left: 0, top: 0, width: "100%", height: "100%", align: "center center" });
-                    Label({ text: "None", fontSize: 12, textColor: White(0.5) });
+                    Label({ text: "None", fontSize: 12, textColor: Ink(0.5) });
                 endGroup();
             setDefaultContainerBox(previousTile);
 
@@ -660,15 +660,15 @@ const ContentEditor = function(params = {}) {
         const group = VGroup({ width: "100%", height: "auto", align: "left top", gap: 10, padding: [16, 14], color: S.CARD_COLOR, border: 1, borderColor: S.CARD_BORDER_COLOR, round: 10 });
         HGroup({ width: "100%", height: "auto", align: "left center", gap: 10 });
         that.elem.style.justifyContent = "space-between";
-            Label({ text: title.toUpperCase(), fontSize: 11, textColor: White(0.45) });
+            Label({ text: title.toUpperCase(), fontSize: 11, textColor: Ink(0.45) });
             that.elem.style.letterSpacing = "1px";
-            group.lblRight = Label({ text: rightText || "", fontSize: 12, textColor: White(0.5) });
+            group.lblRight = Label({ text: rightText || "", fontSize: 12, textColor: Ink(0.5) });
         endGroup();
         return group;
     };
 
     const createFieldTitle = function(text) {
-        Label({ text: text, fontSize: 11, textColor: White(0.45) });
+        Label({ text: text, fontSize: 11, textColor: Ink(0.45) });
         that.elem.style.letterSpacing = "1px";
         return that;
     };
@@ -680,7 +680,7 @@ const ContentEditor = function(params = {}) {
             leftPadding: 14,
             rightPadding: 36,
             backgroundColor: S.FIELD_COLOR,
-            selectedBackgroundColor: "#262625",
+            selectedBackgroundColor: T.surface3,
             lineColor: "transparent",
             selectedLineColor: "transparent",
             backBorderColor: S.CARD_BORDER_COLOR,
@@ -693,10 +693,10 @@ const ContentEditor = function(params = {}) {
             ...params,
         });
         // WHY: InputB has fixed text colors for light backgrounds.
-        input.title.textColor = White(0.45);
+        input.title.textColor = Ink(0.45);
         input.title.fontSize = 11;
         input.title.elem.style.letterSpacing = "1px";
-        input.input.textColor = White(0.9);
+        input.input.textColor = Ink(0.9);
         input.input.fontSize = 15;
         input.input.height = 32;
         input.warningBall.borderColor = S.CARD_COLOR;
@@ -713,27 +713,27 @@ const ContentEditor = function(params = {}) {
     };
 
     const darkRadioStyle = {
-        mark: { width: 20, height: 20, color: "transparent", borderColor: White(0.35) },
+        mark: { width: 20, height: 20, color: "transparent", borderColor: Ink(0.35) },
         checkedMark: { color: "transparent", borderColor: S.ACCENT_COLOR },
-        hoverMark: { borderColor: White(0.7) },
+        hoverMark: { borderColor: Ink(0.7) },
         dot: { color: S.ACCENT_COLOR },
-        label: { fontSize: 14, textColor: White(0.9) },
+        label: { fontSize: 14, textColor: Ink(0.9) },
     };
 
     const darkCheckStyle = {
         layout: { padding: [0, 2] },
-        mark: { width: 20, height: 20, color: "transparent", borderColor: White(0.35) },
+        mark: { width: 20, height: 20, color: "transparent", borderColor: Ink(0.35) },
         checkedMark: { color: S.PRIMARY_COLOR, borderColor: S.PRIMARY_COLOR },
-        hoverMark: { borderColor: White(0.7) },
-        tick: { color: White(1) },
-        label: { fontSize: 14, textColor: White(0.9) },
+        hoverMark: { borderColor: Ink(0.7) },
+        tick: { color: Ink(1) },
+        label: { fontSize: 14, textColor: Ink(0.9) },
     };
 
     box.destroy = function() {
         clearTimeout(saveTimer);
-        radioList.forEach(function(radio) { radio.destroy(); }); // WHY: Radio groups are static lists.
-        if (dateSchedule) dateSchedule.destroy();
-        if (timeSchedule && timeSchedule.destroy) timeSchedule.destroy();
+        radioList.forEach(function(radio) { radio.remove(); }); // WHY: Radio groups are static lists.
+        if (dateSchedule) dateSchedule.remove();
+        if (timeSchedule && timeSchedule.remove) timeSchedule.remove();
         box.remove();
         box = null;
     };
@@ -741,7 +741,7 @@ const ContentEditor = function(params = {}) {
     // *** VIEW:
 
     // Left line
-    Box(0, 0, 1, "100%", { color: White(0.12) });
+    Box(0, 0, 1, "100%", { color: Ink(0.12) });
 
     // GROUP: Scrollable content
     startBox(0, 0, "100%", "calc(100% - 76px)", { color: "transparent", scrollY: 1 });
@@ -753,16 +753,16 @@ const ContentEditor = function(params = {}) {
             that.elem.style.justifyContent = "space-between";
 
                 VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
-                    Label({ text: (isNew) ? "New " + TYPES[draft.type].label : "Edit " + TYPES[draft.type].label, fontSize: 20, textColor: White(0.95) });
+                    Label({ text: (isNew) ? "New " + TYPES[draft.type].label : "Edit " + TYPES[draft.type].label, fontSize: 20, textColor: Ink(0.95) });
                     that.elem.style.fontFamily = "opensans-bold";
                     if (!isNew) {
-                        Label({ text: "Last change: " + new Date(content.updatedAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }) + " by " + escape(content.updatedBy) + " · " + content.views.toLocaleString("en-US") + " views", fontSize: 12, textColor: White(0.45) });
+                        Label({ text: "Last change: " + new Date(content.updatedAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }) + " by " + escape(content.updatedBy) + " · " + content.views.toLocaleString("en-US") + " views", fontSize: 12, textColor: Ink(0.45) });
                     }
                 endGroup();
 
                 Icon({ width: 28, height: 28, clickable: 1 });
                 that.load("assets/close.png");
-                that.elem.style.filter = "invert(100%)";
+                that.elem.style.filter = T.iconFilter;
                 that.elem.style.cursor = "pointer";
                 that.opacity = 0.6;
                 that.on("click", closeEditor);
@@ -803,7 +803,7 @@ const ContentEditor = function(params = {}) {
                     },
                 });
 
-                lblUrl = Label({ text: "", fontSize: 12, textColor: White(0.45), width: "100%" });
+                lblUrl = Label({ text: "", fontSize: 12, textColor: Ink(0.45), width: "100%" });
                 that.elem.style.marginTop = "-4px";
                 that.elem.style.wordBreak = "break-all";
 
@@ -818,7 +818,7 @@ const ContentEditor = function(params = {}) {
                 HGroup({ width: "100%", height: "auto", align: "left center", gap: 10 });
                 that.elem.style.justifyContent = "space-between";
                     createFieldTitle("TEXT");
-                    lblBodyInfo = Label({ text: "", fontSize: 12, textColor: White(0.45) });
+                    lblBodyInfo = Label({ text: "", fontSize: 12, textColor: Ink(0.45) });
                 endGroup();
 
                 // TEXTAREA: Content text (native, so it has a normal text editing)
@@ -830,7 +830,7 @@ const ContentEditor = function(params = {}) {
                 // WHY: basic.css gives "pointer-events: none" to the boxes and "user-select: none" to the page. They are inherited,
                 // so the textarea could not be clicked or selected. They are set back for the textarea.
                 bodyArea.style.cssText = "position:absolute; left:0; top:0; width:100%; height:100%; box-sizing:border-box; padding:12px 14px; " +
-                    "background:transparent; border:0; outline:none; resize:none; color:" + White(0.9) + "; font-family:inherit; font-size:15px; line-height:1.6; " +
+                    "background:transparent; border:0; outline:none; resize:none; color:" + Ink(0.9) + "; font-family:inherit; font-size:15px; line-height:1.6; " +
                     "pointer-events:auto; user-select:text; -webkit-user-select:text; cursor:text;";
                 bodyArea.addEventListener("focus", function() { bodyBox.borderColor = S.ACCENT_COLOR; });
                 bodyArea.addEventListener("blur", function() { bodyBox.borderColor = S.CARD_BORDER_COLOR; });
@@ -937,7 +937,7 @@ const ContentEditor = function(params = {}) {
 
                 endGroup();
 
-                Label({ text: "Draft: only the team can see it. Published: visible on the site. Scheduled: published at the time. Archived: hidden, kept for later.", fontSize: 12, textColor: White(0.45), width: "100%" });
+                Label({ text: "Draft: only the team can see it. Published: visible on the site. Scheduled: published at the time. Archived: hidden, kept for later.", fontSize: 12, textColor: Ink(0.45), width: "100%" });
 
                 // Schedule
                 grpSchedule = HGroup({ width: "100%", height: "auto", align: "left bottom", gap: 10 });
@@ -1032,7 +1032,7 @@ const ContentEditor = function(params = {}) {
                 grpSeoChecks = VGroup({ width: "100%", height: "auto", align: "left top", gap: 4 });
                 grpSeoChecks.lines = [];
                     for (let i = 0; i < 6; i++) {
-                        grpSeoChecks.lines.push(Label({ text: "", fontSize: 13, textColor: White(0.8), width: "100%" }));
+                        grpSeoChecks.lines.push(Label({ text: "", fontSize: 13, textColor: Ink(0.8), width: "100%" }));
                     }
                 endGroup();
 
@@ -1044,7 +1044,7 @@ const ContentEditor = function(params = {}) {
 
     // GROUP: Buttons (bottom)
     HGroup({ left: 0, bottom: 0, width: "100%", height: 76, align: "left center", gap: 8, padding: [20, 0] });
-    that.elem.style.borderTop = "1px solid " + White(0.08);
+    that.elem.style.borderTop = "1px solid " + Ink(0.08);
 
         if (!isNew) {
 
@@ -1059,16 +1059,16 @@ const ContentEditor = function(params = {}) {
                 style: {
                     layout: { gap: 6, padding: [14, 0] },
                     icon: { width: 20, height: 20 },
-                    label: { fontSize: 14, textColor: White(0.9) },
+                    label: { fontSize: 14, textColor: Ink(0.9) },
                     holdingLabel: { fontSize: 14, textColor: "#B03A2E" },
-                    completedLabel: { fontSize: 14, textColor: "#2C5A38" },
+                    completedLabel: { fontSize: 14, textColor: T.primaryActive },
                     box: { color: S.FIELD_COLOR, border: 1, borderColor: S.CARD_BORDER_COLOR, round: 8 },
                     holdingBox: { color: "#FFD1CB", borderColor: S.ERROR_COLOR, round: 8 },
                     completedBox: { color: "#DFEFE6", borderColor: S.ACCENT_COLOR, round: 8 },
                 },
                 onConfirm: deleteContent,
             });
-            btnDelete.icon.elem.style.filter = "invert(100%)"; // WHY: Only the normal icon is on a dark background.
+            btnDelete.icon.elem.style.filter = T.iconFilter; // WHY: Only the normal icon is on a dark background.
 
             ContentsPage.createButton("Duplicate", "", duplicateContent);
 
@@ -1115,12 +1115,12 @@ ContentsPage.DAY = 24 * 60 * 60 * 1000;
 ContentsPage.SITE_URL = "https://mysite.com";
 
 ContentsPage.STYLE = {
-    CARD_COLOR: "#1A1A19",
-    CARD_BORDER_COLOR: White(0.1),
-    FIELD_COLOR: "#232322",
-    PRIMARY_COLOR: "#3D7A6B",
-    ACCENT_COLOR: "#65A293",
-    ERROR_COLOR: "#E66767",
+    CARD_COLOR: T.surface,
+    CARD_BORDER_COLOR: Ink(0.1),
+    FIELD_COLOR: T.surface2,
+    PRIMARY_COLOR: T.primary,
+    ACCENT_COLOR: T.accent,
+    ERROR_COLOR: T.danger,
 };
 
 // path: The start of the URL on the site
@@ -1131,9 +1131,9 @@ ContentsPage.TYPES = {
 };
 
 ContentsPage.STATUSES = {
-    published: { label: "Published", color: "#65A293" },
-    draft: { label: "Draft", color: "#A9A79F" },
-    scheduled: { label: "Scheduled", color: "#3987E5" },
+    published: { label: "Published", color: T.accent },
+    draft: { label: "Draft", color: Theme.readable("#A9A79F") },
+    scheduled: { label: "Scheduled", color: T.info },
     archived: { label: "Archived", color: "#8A6F5C" },
 };
 
@@ -1141,42 +1141,42 @@ ContentsPage.CATEGORIES = ["News", "Guides", "Campaigns", "Company"];
 ContentsPage.PLACEMENTS = ["Home (top)", "Home (middle)", "Shop (sidebar)", "Checkout"];
 
 ContentsPage.CONTEXT_MENU_STYLE = {
-    menu: { color: "#1A1A19", border: 1, borderColor: White(0.14), round: 8, padding: 4, shadow: "0px 8px 24px " + Black(0.5) },
-    item: { textColor: White(0.85) },
-    itemHover: { textColor: White(0.95), color: White(0.08) },
-    separator: { color: White(0.1) },
+    menu: { color: T.surface, border: 1, borderColor: Ink(0.14), round: 8, padding: 4, shadow: "0px 8px 24px " + Black(0.5) },
+    item: { textColor: Ink(0.85) },
+    itemHover: { textColor: Ink(0.95), color: Ink(0.08) },
+    separator: { color: Ink(0.1) },
 };
 
 ContentsPage.DATE_STYLE = {
-    field: { color: "#232322", border: 1, borderColor: White(0.1), round: 8 },
-    fieldHover: { borderColor: White(0.3) },
-    fieldFocus: { borderColor: "#65A293" },
-    fieldText: { fontSize: 14, textColor: White(0.9) },
-    placeholder: { textColor: White(0.4) },
-    icon: { color: White(0.55) },
-    panel: { color: "#232322", borderColor: White(0.12), shadow: "0 8px 24px rgba(0, 0, 0, 0.5)" },
-    title: { textColor: White(0.9) },
-    arrow: { color: White(0.6), hoverColor: White(0.08) },
-    weekDay: { textColor: White(0.45) },
-    day: { textColor: White(0.85), hoverColor: White(0.08) },
-    today: { borderColor: White(0.35) },
-    selectedDay: { color: "#3D7A6B", textColor: White(1) },
-    disabledDay: { textColor: White(0.2) },
-    footerButton: { textColor: "#65A293" },
+    field: { color: T.surface2, border: 1, borderColor: Ink(0.1), round: 8 },
+    fieldHover: { borderColor: Ink(0.3) },
+    fieldFocus: { borderColor: T.accent },
+    fieldText: { fontSize: 14, textColor: Ink(0.9) },
+    placeholder: { textColor: Ink(0.4) },
+    icon: { color: Ink(0.55) },
+    panel: { color: T.surface2, borderColor: Ink(0.12), shadow: "0 8px 24px " + Black(0.5) },
+    title: { textColor: Ink(0.9) },
+    arrow: { color: Ink(0.6), hoverColor: Ink(0.08) },
+    weekDay: { textColor: Ink(0.45) },
+    day: { textColor: Ink(0.85), hoverColor: Ink(0.08) },
+    today: { borderColor: Ink(0.35) },
+    selectedDay: { color: T.primary, textColor: Ink(1) },
+    disabledDay: { textColor: Ink(0.2) },
+    footerButton: { textColor: T.accent },
 };
 
 ContentsPage.TIME_STYLE = {
-    field: { color: "#232322", border: 1, borderColor: White(0.1), round: 8 },
-    fieldHover: { borderColor: White(0.3) },
-    fieldFocus: { borderColor: "#65A293" },
-    fieldText: { fontSize: 14, textColor: White(0.9) },
-    icon: { color: White(0.55) },
-    panel: { color: "#232322", borderColor: White(0.12), shadow: "0 8px 24px rgba(0, 0, 0, 0.5)" },
-    columnTitle: { textColor: White(0.45), activeTextColor: White(0.9) },
-    cell: { textColor: White(0.85), hoverColor: White(0.08) },
-    selectedCell: { color: "#3D7A6B", textColor: White(1) },
-    disabledCell: { textColor: White(0.2) },
-    footerButton: { textColor: "#65A293" },
+    field: { color: T.surface2, border: 1, borderColor: Ink(0.1), round: 8 },
+    fieldHover: { borderColor: Ink(0.3) },
+    fieldFocus: { borderColor: T.accent },
+    fieldText: { fontSize: 14, textColor: Ink(0.9) },
+    icon: { color: Ink(0.55) },
+    panel: { color: T.surface2, borderColor: Ink(0.12), shadow: "0 8px 24px " + Black(0.5) },
+    columnTitle: { textColor: Ink(0.45), activeTextColor: Ink(0.9) },
+    cell: { textColor: Ink(0.85), hoverColor: Ink(0.08) },
+    selectedCell: { color: T.primary, textColor: Ink(1) },
+    disabledCell: { textColor: Ink(0.2) },
+    footerButton: { textColor: T.accent },
 };
 
 ContentsPage.getStatusByLabel = function(label) {
@@ -1264,13 +1264,13 @@ ContentsPage.createButton = function(text, iconFile, onClick, params = {}) {
         style: {
             layout: { gap: 8, padding: [14, 8] },
             icon: { width: 18, height: 18 },
-            label: { fontSize: 14, textColor: White(0.92) },
+            label: { fontSize: 14, textColor: Ink(0.92) },
             box: { color: (params.primary) ? S.PRIMARY_COLOR : S.FIELD_COLOR, border: 1, borderColor: S.CARD_BORDER_COLOR, round: 8 },
-            hover: { color: (params.primary) ? "#468A79" : "#2C2C2A" },
-            active: { color: (params.primary) ? "#2C5A38" : "#383835" },
+            hover: { color: (params.primary) ? T.primaryHover : T.surface3 },
+            active: { color: (params.primary) ? T.primaryActive : T.surface4 },
         },
     });
-    if (btn.icon) btn.icon.elem.style.filter = "invert(100%)"; // WHY: Panel icons are black.
+    if (btn.icon) btn.icon.elem.style.filter = T.iconFilter; // WHY: Panel icons are black.
     return btn;
 };
 
@@ -1288,15 +1288,15 @@ ContentsPage.createTinySelect = function(list, onSelect, selectedIndex = 0) {
         borderColor: S.CARD_BORDER_COLOR,
         round: 8,
         labelBoldFont: 0,
-        labelTextColor: White(0.9),
+        labelTextColor: Ink(0.9),
         arrowIcon: "../../comp-m2/tiny-select/arrow.svg",
         arrowSize: 18,
-        invertIconColor: 1,
+        invertIconColor: T.invertIcon,
         listFontSize: 14,
-        listTextColor: White(0.85),
+        listTextColor: Ink(0.85),
         listOverTextColor: S.ACCENT_COLOR,
         listBackgroundColor: S.FIELD_COLOR,
-        listBorderColor: White(0.15),
+        listBorderColor: Ink(0.15),
         onSelect: function(index, id) {
             if (isReady) onSelect(id);
         },
@@ -1309,17 +1309,17 @@ ContentsPage.getSmartTableStyle = function(libPath) {
     const S = ContentsPage.STYLE;
     return {
         scrollBarParams: {
-            bar_border: 0, bar_round: 3, bar_borderColor: "rgba(255, 255, 255, 0.15)", bar_width: 4, bar_mouseOverWidth: 4,
-            bar_mouseOverColor: "#A0A0A0", bar_opacity: 0.4, bar_mouseOverOpacity: 0.9, bar_padding: 2, bar_color: "#A0A0A0",
+            bar_border: 0, bar_round: 3, bar_borderColor: Ink(0.15), bar_width: 4, bar_mouseOverWidth: 4,
+            bar_mouseOverColor: T.scrollBar, bar_opacity: 0.4, bar_mouseOverOpacity: 0.9, bar_padding: 2, bar_color: T.scrollBar,
             neverHide: 0, showDots: 0,
         },
         // WHY: Filtre kutusu ile alt bar aynı renkti, kutu görünmüyordu. Bar kart rengine, kutu ise alan rengine (FIELD_COLOR) alındı.
         searchInputParams: {
             width: "50%", height: 34, border: 1, round: 8, color: S.FIELD_COLOR, borderColor: S.CARD_BORDER_COLOR,
             borderBottomStyle: "1px solid " + S.CARD_BORDER_COLOR,
-            textColor: White(0.9), placeholderColor: White(0.4), fontSize: 14,
+            textColor: Ink(0.9), placeholderColor: Ink(0.4), fontSize: 14,
             placeholderText: "Filter the table",
-            searchIconSize: 15, searchIconOpacity: 0.55, invertIconColor: 1,
+            searchIconSize: 15, searchIconOpacity: 0.55, invertIconColor: T.invertIcon,
             searchIconFile: libPath + "comp-m2/search-input-v2/filter.png",
             clearIconFile: libPath + "comp-m2/search-input-v2/clear.svg",
         },
@@ -1327,12 +1327,12 @@ ContentsPage.getSmartTableStyle = function(libPath) {
         searchTitleMenuParams: {
             minWidth: 170,
             style: {
-                menu: { color: S.FIELD_COLOR, border: 1, borderColor: White(0.12), round: 8, padding: 4, shadow: "0 8px 24px rgba(0, 0, 0, 0.5)" },
-                item: { height: 30, fontSize: 13, textColor: White(0.75), color: "transparent", round: 6, padding: 10, gap: 10 },
-                itemHover: { textColor: "white", color: White(0.08) },
-                disabled: { textColor: White(0.3), opacity: 0.4 },
+                menu: { color: S.FIELD_COLOR, border: 1, borderColor: Ink(0.12), round: 8, padding: 4, shadow: "0 8px 24px " + Black(0.5) },
+                item: { height: 30, fontSize: 13, textColor: Ink(0.75), color: "transparent", round: 6, padding: 10, gap: 10 },
+                itemHover: { textColor: "white", color: Ink(0.08) },
+                disabled: { textColor: Ink(0.3), opacity: 0.4 },
                 icon: { width: 14, height: 14 },
-                separator: { color: White(0.1), space: 4 },
+                separator: { color: Ink(0.1), space: 4 },
             },
         },
         style: {
@@ -1340,9 +1340,9 @@ ContentsPage.getSmartTableStyle = function(libPath) {
             height: "100%",
             round: 8,
             line1Color: S.CARD_COLOR,
-            line2Color: "#202020",
-            highlightItemCellColor: "#2A3A36",
-            highlightTitleCellColor: White(0.08),
+            line2Color: T.tableRow2,
+            highlightItemCellColor: T.tableHighlight,
+            highlightTitleCellColor: Ink(0.08),
             verticalScrollWidth: 20,
             verticalScrollMargin: 2,
             btnScrollDownIconFile: libPath + "comp-m3/smart-table/down.png",
@@ -1352,22 +1352,22 @@ ContentsPage.getSmartTableStyle = function(libPath) {
             // WHY: Varsayılan tik ikonu koyu renkli; koyu menüde görünmüyordu.
             searchTitleCheckIconFile: "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + S.ACCENT_COLOR + '" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17.5 19 7"/></svg>'),
             loadingIconFile: libPath + "comp-m3/smart-table/clock.png",
-            invertIconColor: 1,
+            invertIconColor: T.invertIcon,
             box: { color: S.CARD_COLOR },
             boxBorder: { border: 1, borderColor: S.CARD_BORDER_COLOR },
             boxTitleLine: { color: S.FIELD_COLOR },
-            boxTitleCell: { padding: [10, 0], borderRight: "1px solid rgba(255, 255, 255, 0.06)", borderBottom: "1px solid rgba(255, 255, 255, 0.12)" },
-            lblTitleCell: { fontSize: 13, fontFamily: "opensans", textColor: White(0.6) },
-            boxItemCell: { borderBottom: "1px solid rgba(255, 255, 255, 0.05)", borderRight: "1px solid rgba(255, 255, 255, 0.03)", padding: [10, 0] },
-            lblItemCell: { fontSize: 14, textColor: "rgba(255, 255, 255, 0.75)", fontFamily: "opensans" },
-            boxInfoLine: { color: S.CARD_COLOR, borderTop: "1px solid rgba(255, 255, 255, 0.08)" },
-            lblBoxInfoLine: { fontSize: 13, textColor: White(0.55) },
-            lblNoDataFound: { color: "#2C2C2A", textColor: White(0.6), padding: [8, 2], fontSize: 13, round: 8, border: 1, borderColor: White(0.15) },
+            boxTitleCell: { padding: [10, 0], borderRight: "1px solid " + Ink(0.06), borderBottom: "1px solid " + Ink(0.12) },
+            lblTitleCell: { fontSize: 13, fontFamily: "opensans", textColor: Ink(0.6) },
+            boxItemCell: { borderBottom: "1px solid " + Ink(0.05), borderRight: "1px solid " + Ink(0.03), padding: [10, 0] },
+            lblItemCell: { fontSize: 14, textColor: Ink(0.75), fontFamily: "opensans" },
+            boxInfoLine: { color: S.CARD_COLOR, borderTop: "1px solid " + Ink(0.08) },
+            lblBoxInfoLine: { fontSize: 13, textColor: Ink(0.55) },
+            lblNoDataFound: { color: T.surface3, textColor: Ink(0.6), padding: [8, 2], fontSize: 13, round: 8, border: 1, borderColor: Ink(0.15) },
             // Filtre kutusunun içindeki sütun etiketi: Kutunun içinde durduğu için daha hafif bir chip.
-            lblSearchTitle: { color: White(0.08), textColor: White(0.6), padding: [8, 1], fontSize: 12, round: 6, border: 1, borderColor: White(0.14) },
-            btnScrollCenter: { color: "#2C2C2A", round: 100, borderColor: White(0.2), border: 1 },
-            btnScrollUp: { color: "#3A3A38", round: 100, border: 1, borderColor: White(0.3) },
-            btnScrollDown: { color: "#3A3A38", round: 100, border: 1, borderColor: White(0.3) },
+            lblSearchTitle: { color: Ink(0.08), textColor: Ink(0.6), padding: [8, 1], fontSize: 12, round: 6, border: 1, borderColor: Ink(0.14) },
+            btnScrollCenter: { color: T.surface3, round: 100, borderColor: Ink(0.2), border: 1 },
+            btnScrollUp: { color: T.surface4, round: 100, border: 1, borderColor: Ink(0.3) },
+            btnScrollDown: { color: T.surface4, round: 100, border: 1, borderColor: Ink(0.3) },
             boxSort: { color: S.PRIMARY_COLOR },
         },
     };

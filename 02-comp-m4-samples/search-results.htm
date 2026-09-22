@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Search Results</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp-m2/search-input-v2.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp-m4/search-results.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // *** VARIABLES:
+        let lightInput, lightResults, lblLight;
+        let darkInput, darkResults;
+
+        // DATA: Some rows to search in.
+        const DATA = [
+            { group: "Pages", text: "Dashboard", desc: "Page" },
+            { group: "Pages", text: "Products", desc: "Page" },
+            { group: "Pages", text: "Orders", desc: "Page" },
+            { group: "Pages", text: "Settings", desc: "Page" },
+            { group: "Users", text: "Ada Lovelace", desc: "ada@example.com · Admin" },
+            { group: "Users", text: "Grace Hopper", desc: "grace@example.com · Editor" },
+            { group: "Users", text: "Alan Turing", desc: "alan@example.com · Viewer" },
+            { group: "Users", text: "Katherine Johnson", desc: "katherine@example.com · Admin" },
+            { group: "Orders", text: "#1042 · Ada Lovelace", desc: "$248.00 · Paid" },
+            { group: "Orders", text: "#1043 · Alan Turing", desc: "$92.50 · Shipped" },
+            { group: "Orders", text: "#1044 · Grace Hopper", desc: "$1,120.00 · Pending" },
+            { group: "Products", text: "Aluminium Frame 40x40", desc: "SKU-1001 · $12.40" },
+            { group: "Products", text: "Steel Bracket", desc: "SKU-1002 · $3.10" },
+            { group: "Products", text: "Rubber Gasket <M8>", desc: "SKU-1003 · $0.80" },
+            { group: "Products", text: "Ball Bearing 6202", desc: "SKU-1004 · $2.25" },
+            { group: "Products", text: "Linear Rail 500mm", desc: "SKU-1005 · $48.00" },
+            { group: "Products", text: "Timing Belt GT2", desc: "SKU-1006 · $6.90" },
+            { group: "Products", text: "Stepper Motor NEMA17", desc: "SKU-1007 · $18.50" },
+        ];
+
+        const findResults = function (text) {
+            const query = text.trim().toLowerCase();
+            if (!query) return [];
+            return DATA.filter(function (row) {
+                return (row.text + " " + row.desc).toLowerCase().includes(query);
+            });
+        };
+
+        const start = function () {
+
+            page.color = "#F4F5F2";
+
+            // BOX: Full screen scrollable container
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+
+                VGroup({ width: "100%", height: "auto", align: "center top", gap: 30, padding: 50 });
+
+                    Label({ text: "Search Results", fontSize: 26, fontFamily: "opensans-bold" });
+
+                    // SAMPLE 1: Classic
+                    startCard("1. Default (classic)", "Type \"a\" or \"ord\". ArrowUp / ArrowDown move, Enter opens, Escape closes. The list scrolls with ScrollBar.");
+
+                        // SEARCH INPUT: comp-m2/search-input-v2.js
+                        lightInput = SearchInput({
+                            width: "100%",
+                            height: 44,
+                            position: "relative", // WHY: It is created in a group.
+                            placeholderText: "Search pages, users, orders, products...",
+                            fontSize: 15,
+                            searchIconSize: 18,
+                            round: 8,
+                            border: 1,
+                            borderColor: Black(0.15),
+                            borderBottomStyle: "",
+                        });
+
+                        lblLight = Label({ text: "Nothing was opened yet.", fontSize: 14, textColor: Black(0.5) });
+
+                    endCard();
+
+                    // SAMPLE 2: Dark, left aligned
+                    startCard("2. styleName: \"dark\", anchorAlign: \"left\"", "The same component with the dark package, lined up with the left edge of the input.", 1);
+
+                        darkInput = SearchInput({
+                            width: "100%",
+                            height: 44,
+                            position: "relative",
+                            placeholderText: "Search...",
+                            fontSize: 15,
+                            searchIconSize: 18,
+                            round: 8,
+                            color: "#141414",
+                            textColor: "#EBEBEB",
+                            placeholderColor: White(0.35), // WHY: The browser colour is not readable on a dark box.
+                            invertIconColor: 1, // WHY: The icons are black, the box is dark.
+                            border: 1,
+                            borderColor: White(0.15),
+                            borderBottomStyle: "",
+                        });
+
+                    endCard();
+
+                endGroup();
+
+            endBox();
+
+            // *** RESULT LISTS:
+            // NOTE: They are created here, inside the scrolling Box, but a SearchResults always puts
+            //       itself on the page, so it is not clipped by the Box or by the card.
+
+            lightResults = SearchResults({
+                anchor: lightInput,
+                anchorAlign: "left",
+                maxWidth: 520,
+                onSelect: function (self, item) {
+                    lblLight.text = "Opened: " + item.text + "  (" + item.group + ")";
+                    clearSearchInput(lightInput);
+                },
+            });
+            lightResults.attachTo(lightInput.txtSearch.inputElement);
+            // NOTE: SearchInput gives the text in lower case. The raw text is in txtSearch.text.
+            lightInput.onSearch = function (text, self) {
+                lightResults.setItems(findResults(text), self.txtSearch.text);
+            };
+
+            darkResults = SearchResults({
+                anchor: darkInput,
+                anchorAlign: "left",
+                maxWidth: 520,
+                styleName: "dark",
+                onSelect: function (self, item) {
+                    println("Opened: " + item.text);
+                    clearSearchInput(darkInput);
+                },
+            });
+            darkResults.attachTo(darkInput.txtSearch.inputElement);
+            darkInput.onSearch = function (text, self) {
+                darkResults.setItems(findResults(text), self.txtSearch.text);
+            };
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        const startCard = function (title, description = "", isDark = 0) {
+            VGroup({
+                width: 600,
+                height: "auto",
+                align: "left top",
+                gap: 16,
+                padding: 20,
+                color: (isDark) ? "#1C1C1B" : "white",
+                round: 10,
+                border: 1,
+                borderColor: (isDark) ? "#1C1C1B" : Black(0.1),
+            });
+            that.elem.style.alignItems = "stretch";
+            Label({ text: title, fontSize: 14, textColor: (isDark) ? White(0.5) : Black(0.45) });
+            if (description) {
+                Label({ text: description, fontSize: 13, textColor: (isDark) ? White(0.4) : Black(0.35) });
+                that.elem.style.marginTop = "-10px";
+            }
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+        // Cleans a SearchInput after a result was opened. (The clear (x) icon goes with the text.)
+        const clearSearchInput = function (input) {
+            input.setText("");
+            input.imgClearIcon.opacity = 0;
+            input.imgClearIcon.clickable = 0;
+            input.txtSearch.inputElement.blur();
+        };
+
+    </script>
+</head>
+
+<body></body>
+
+</html>

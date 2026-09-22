@@ -1,7 +1,7 @@
 const MainView = function() {
     
     let box = Box(40, 40, "calc(100% - 40px)", "calc(100% - 40px)", {
-        color: "black",
+        color: T.page,
         clickable: 1,
     });
 

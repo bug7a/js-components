@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>Arduino Projects</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- LIBRARY FILES -->
+        <link rel="preload" href="../../../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../../../basic/basic.min.css">
+        <script src="../../../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../common/theme.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- COMPONENTS -->
+        <script src="../../../comp-m2/tiny-select.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m2/tiny-table.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m2/toggle.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m2/slider.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m2/dialog.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m3/button-with-icon.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m3/radio-button.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m3/hold-to-confirm-button.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m4/progress-bar.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m4/spark-line-box.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m4/chart-box.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m4/context-menu.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m4/gauge.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m4/tabs.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m4/stepper.js" type="text/javascript" charset="utf-8"></script>
+
+        <!--
+
+        /* Bismillah */
+
+        Module #11: Arduino Projects (Template) - v26.09
+
+        - Managing a small fleet of Arduino / ESP boards: the board and its firmware, live telemetry
+          (free RAM, loop frequency, Wi-Fi signal, sensors), the pins, the serial monitor, the
+          libraries of the sketch and the outputs of the board.
+        - Everything is built from the components of the suite: Gauge, SparkLineBox, ChartBox, Tabs,
+          TinyTable, ProgressBar, Stepper, Slider, Toggle, RadioButton, TinySelect, ContextMenu,
+          ButtonWithIcon, HoldToConfirmButton, Dialog and ScrollBar.
+        - Runs inside the admin panel (iframe), but it can work alone too.
+        - Simulation: 1 second = 1 second of the board. Replace the "BOARD SERVICE" functions with
+          your own link to the boards (serial, MQTT, HTTP, WebSocket...).
+
+        -->
+
+        <script>
+
+        // *** CONSTANTS:
+        const LIB_PATH = "../../../";
+        const ASSETS = "../assets/";
+
+        const PAGE_COLOR = T.page;
+        const CARD_COLOR = T.surface;
+        const CARD_BORDER_COLOR = Ink(0.1);
+        const FIELD_COLOR = T.surface2;
+        const PRIMARY_COLOR = "#2F7E78";  // Arduino teal
+        const ACCENT_COLOR = T.accent;
+        const WARNING_COLOR = T.warning;
+        const DANGER_COLOR = "#C9564B";
+        const TEMP_COLOR = "#E0715A";
+        const HUM_COLOR = "#5A8FE0";
+
+        const CHART_COUNT = 40;          // Points on the chart
+        const KPI_COUNT = 30;            // Points of a SparkLineBox
+        const SERIAL_MAX_LINES = 120;
+
+        // *** BOARDS (the data that would come from your service):
+
+        const BOARDS = [
+            {
+                id: "uno",
+                name: "Line Counter",
+                board: "Arduino Uno R4 WiFi",
+                mcu: "RA4M1 · 48 MHz",
+                flashKB: 256, ramKB: 32,
+                sketch: "line-counter.ino", version: "1.4.2",
+                sketchKB: 96, ramUsedKB: 12,
+                ip: "192.168.1.51", mac: "A8:61:0A:44:12:9C",
+                color: ACCENT_COLOR,
+            },
+            {
+                id: "esp32",
+                name: "Greenhouse Node",
+                board: "ESP32-S3 DevKitC",
+                mcu: "Xtensa LX7 · 240 MHz",
+                flashKB: 8192, ramKB: 512,
+                sketch: "greenhouse-node.ino", version: "2.0.0",
+                sketchKB: 1240, ramUsedKB: 186,
+                ip: "192.168.1.52", mac: "3C:61:05:12:AA:04",
+                color: "#7E6BC4",
+            },
+            {
+                id: "nano",
+                name: "Door Sensor",
+                board: "Arduino Nano 33 IoT",
+                mcu: "SAMD21 · 48 MHz",
+                flashKB: 256, ramKB: 32,
+                sketch: "door-sensor.ino", version: "0.9.1",
+                sketchKB: 74, ramUsedKB: 9,
+                ip: "192.168.1.53", mac: "F4:12:FA:90:31:77",
+                color: T.warning,
+            },
+        ];
+
+        // The pins of a sketch. (mode: "IN", "OUT", "PWM", "ANALOG")
+        const PIN_TEMPLATE = [
+            { pin: "D2", mode: "IN", label: "Start button", value: 0 },
+            { pin: "D3", mode: "IN", label: "Photo barrier", value: 1 },
+            { pin: "D5", mode: "PWM", label: "Fan speed", value: 60 },
+            { pin: "D7", mode: "OUT", label: "Status LED", value: 1 },
+            { pin: "D8", mode: "OUT", label: "Relay", value: 0 },
+            { pin: "D9", mode: "OUT", label: "Buzzer", value: 0 },
+            { pin: "A0", mode: "ANALOG", label: "Temperature (NTC)", value: 512 },
+            { pin: "A1", mode: "ANALOG", label: "Humidity", value: 430 },
+        ];
+
+        const LIBRARIES = [
+            ["ArduinoJson", "7.1.0", "Benoit Blanchon"],
+            ["PubSubClient", "2.8.0", "Nick O'Leary"],
+            ["DHT sensor library", "1.4.6", "Adafruit"],
+            ["WiFiNINA", "1.8.14", "Arduino"],
+            ["OneWire", "2.3.8", "Paul Stoffregen"],
+        ];
+
+        const MODES = [
+            { id: "auto", label: "Auto", desc: "The sketch decides" },
+            { id: "manual", label: "Manual", desc: "You drive the outputs" },
+        ];
+
+        // *** VARIABLES:
+
+        let boards = [];
+        let board = null;                // The board that is shown
+        let isReady = 0;
+        let isRendering = 0;             // WHY: Setters call onChange. A value written by code is not a user change.
+        let simSecond = 0;
+
+        let boardSelect, lblSubtitle, lblStatus, lblClock, lblUptime, moreMenu;
+        let alertBox, lblAlert, btnAlertClose;
+        let gaugeVoltage, gaugeTemp;
+        let boardInfo = {};
+        let progressFlash, progressRam, progressUpload, lblUploadInfo, btnUpload;
+        let kpiBoxList = [];
+        let chartSensors;
+        let tabs, pinTable, libraryTable, serialBox, serialGroup, serialInput, serialScrollBar;
+        let outputToggles = {}, pwmSlider, lblPwm, intervalStepper;
+        let boardTable, eventTable;
+
+        // *** START:
+
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            BOARDS.forEach(initBoard);
+            board = boards[0];
+
+            // A little history, so the graphs are not empty at the start.
+            for (let i = 0; i < CHART_COUNT; i++) {
+                simSecond = i;
+                boards.forEach(function (b) { readSensors(b, 1); });
+            }
+
+            // BOX: Full screen scrollable container
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            startBox(0, 0, "100%", "100%", {
+                color: "transparent",
+                scrollY: 1,
+            });
+
+                VGroup({
+                    width: "100%",
+                    height: "auto", // Grows with content, so the Box can scroll.
+                    align: "left top",
+                    gap: 16,
+                    padding: 24,
+                });
+
+                    initHeader();
+                    initAlert();
+                    initHeroRow();
+                    initKpiRow();
+                    initChartRow();
+                    initTabsRow();
+                    initControlRow();
+                    initBottomRow();
+
+                endGroup();
+
+            endBox();
+
+            // WHY: The point count was calculated with the default width (before flex).
+            kpiBoxList.forEach(function (kpiBox) { kpiBox.refresh(); });
+
+            isReady = 1;
+            selectBoard(0);
+
+        };
+
+        // Runs every second.
+        const loop = function () {
+
+            if (!isReady) return;
+
+            simSecond++;
+
+            boards.forEach(function (b) {
+                readSensors(b);
+                stepUpload(b);
+            });
+
+            renderLive();
+
+        };
+
+        // *** BOARD SERVICE (replace with your own link to the boards):
+
+        const initBoard = function (data) {
+
+            const b = Object.assign({}, data);
+
+            b.isOnline = 1;
+            b.mode = "auto";
+            b.uptimeS = 3600 * 6 + 1200 + Math.round(Math.random() * 600);
+            b.intervalMs = 1000;
+            b.pwm = 60;
+            b.pins = PIN_TEMPLATE.map(function (p) { return Object.assign({}, p); });
+            b.temperature = 22 + Math.random() * 3;
+            b.humidity = 48 + Math.random() * 6;
+            b.voltage = 4.98;
+            b.mcuTemp = 38;
+            b.freeRamKB = b.ramKB - b.ramUsedKB;
+            b.loopHz = 980;
+            b.rssi = -54;
+            b.upload = { isRunning: 0, percent: 0, step: "" };
+            b.serial = [];
+            b.events = [];
+            b.history = { temperature: [], humidity: [], freeRam: [], loopHz: [], rssi: [] };
+            b.labels = [];
+
+            addSerial(b, "Booting " + b.sketch + " v" + b.version);
+            addSerial(b, "WiFi connected, IP " + b.ip);
+            addEvent(b, "Info", "Board connected");
+
+            boards.push(b);
+
+        };
+
+        // One reading of every sensor. (quiet: no events, used to fill the history)
+        const readSensors = function (b, quiet) {
+
+            const wave = Math.sin(simSecond / 14) ;
+            b.temperature = 23 + wave * 2.2 + (Math.random() - 0.5) * 0.4;
+            b.humidity = 50 - wave * 4 + (Math.random() - 0.5) * 1.2;
+            b.voltage = 4.92 + Math.random() * 0.14;
+            b.mcuTemp = 36 + wave * 4 + Math.random();
+            b.freeRamKB = Math.max(1, b.ramKB - b.ramUsedKB - Math.random() * 2);
+            b.loopHz = 900 + Math.round(Math.random() * 180);
+            b.rssi = -48 - Math.round(Math.random() * 22);
+            b.uptimeS++;
+
+            // The analog pins follow the sensors.
+            b.pins.forEach(function (p) {
+                if (p.pin === "A0") p.value = Math.round(b.temperature / 50 * 1023);
+                if (p.pin === "A1") p.value = Math.round(b.humidity / 100 * 1023);
+                if (p.mode === "PWM") p.value = b.pwm;
+            });
+
+            // In Auto mode the sketch drives the outputs.
+            if (b.mode === "auto") {
+                setPinValue(b, "D7", 1);
+                setPinValue(b, "D8", (b.temperature > 24.5) ? 1 : 0);
+                setPinValue(b, "D9", 0);
+            }
+
+            pushHistory(b);
+
+            if (quiet) return;
+
+            // Now and then a line on the serial port.
+            if (simSecond % 5 === 0) {
+                addSerial(b, "T=" + b.temperature.toFixed(1) + "C H=" + b.humidity.toFixed(0) + "% RAM=" + Math.round(b.freeRamKB) + "kB");
+            }
+
+            if (b.voltage < 4.9 && !b.lowVoltage) {
+                b.lowVoltage = 1;
+                addEvent(b, "Warning", "Supply voltage under 4.90 V");
+            } else if (b.voltage >= 4.95) {
+                b.lowVoltage = 0;
+            }
+
+        };
+
+        const pushHistory = function (b) {
+            const push = function (list, value) {
+                list.push(value);
+                if (list.length > CHART_COUNT) list.shift();
+            };
+            push(b.history.temperature, Number(b.temperature.toFixed(2)));
+            push(b.history.humidity, Number(b.humidity.toFixed(1)));
+            push(b.history.freeRam, Number(b.freeRamKB.toFixed(1)));
+            push(b.history.loopHz, b.loopHz);
+            push(b.history.rssi, b.rssi);
+            push(b.labels, formatClock(b.uptimeS));
+        };
+
+        const setPinValue = function (b, pin, value) {
+            const item = b.pins.find(function (p) { return p.pin === pin; });
+            if (item) item.value = value;
+        };
+
+        const getPin = function (b, pin) {
+            return b.pins.find(function (p) { return p.pin === pin; });
+        };
+
+        const addSerial = function (b, text) {
+            b.serial.push({ time: formatClock(b.uptimeS || 0), text: text });
+            if (b.serial.length > SERIAL_MAX_LINES) b.serial.shift();
+        };
+
+        const addEvent = function (b, level, message) {
+            b.events.unshift({ time: new Date().toLocaleTimeString("en-GB"), level: level, message: message });
+            if (b.events.length > 40) b.events.pop();
+        };
+
+        // *** UPLOAD (flashing the sketch):
+
+        const startUpload = function (b) {
+            if (b.upload.isRunning) return;
+            b.upload = { isRunning: 1, percent: 0, step: "Compiling" };
+            addSerial(b, "--- Upload started ---");
+            addEvent(b, "Info", "Upload started: " + b.sketch);
+            renderLive();
+        };
+
+        const stepUpload = function (b) {
+
+            if (!b.upload.isRunning) return;
+
+            b.upload.percent = Math.min(100, b.upload.percent + 8 + Math.random() * 10);
+            b.upload.step = (b.upload.percent < 35) ? "Compiling" : (b.upload.percent < 90) ? "Writing flash" : "Verifying";
+
+            if (b.upload.percent >= 100) {
+                b.upload.isRunning = 0;
+                b.upload.step = "Done";
+                b.version = nextVersion(b.version);
+                b.uptimeS = 0;
+                addSerial(b, "--- Upload finished, board restarted ---");
+                addSerial(b, "Booting " + b.sketch + " v" + b.version);
+                addEvent(b, "Success", "Uploaded and restarted (v" + b.version + ")");
+            }
+
+        };
+
+        const nextVersion = function (version) {
+            const parts = String(version).split(".");
+            parts[2] = String(Number(parts[2] || 0) + 1);
+            return parts.join(".");
+        };
+
+        // *** VIEW:
+
+        const initHeader = function () {
+
+            startSpaceBetween(16);
+            that.elem.style.flexWrap = "wrap";
+
+                HGroup({ width: "auto", height: "auto", align: "left center", gap: 20 });
+                that.elem.style.flexWrap = "wrap";
+
+                    VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
+                        Label({ text: "Arduino Projects", fontSize: 26, textColor: Ink(0.95) });
+                        that.elem.style.fontFamily = "opensans-bold";
+                        lblSubtitle = Label({ text: "", fontSize: 14, textColor: Ink(0.5) });
+                    endGroup();
+
+                    boardSelect = TinySelect({
+                        title: "Board",
+                        list: BOARDS.map(function (b) { return { id: b.id, label: b.name }; }),
+                        height: 40, fontSize: 15, color: CARD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8,
+                        labelTextColor: Ink(0.95),
+                        arrowIcon: LIB_PATH + "comp-m2/tiny-select/arrow.svg", arrowSize: 20, invertIconColor: T.invertIcon,
+                        listFontSize: 15, listTextColor: Ink(0.85), listOverTextColor: ACCENT_COLOR,
+                        listBackgroundColor: FIELD_COLOR, listBorderColor: Ink(0.15),
+                        onSelect: function (index) { if (isReady) selectBoard(index); },
+                    });
+                    boardSelect.lblTitle.textColor = Ink(0.5);
+
+                    lblStatus = Label({ text: "", fontSize: 13, round: 100, border: 1, padding: [12, 4] });
+                    lblStatus.elem.style.whiteSpace = "nowrap";
+
+                endGroup();
+
+                HGroup({ width: "auto", height: "auto", align: "right center", gap: 16 });
+
+                    VGroup({ width: "auto", height: "auto", align: "right center", gap: 0 });
+                        lblClock = Label({ text: "", fontSize: 22, textColor: Ink(0.95) });
+                        that.elem.style.fontVariantNumeric = "tabular-nums";
+                        lblUptime = Label({ text: "", fontSize: 12, textColor: Ink(0.5) });
+                        that.elem.style.whiteSpace = "nowrap";
+                    endGroup();
+
+                    const btnMore = createButton("More", "top-bar/apps.png", function () { });
+                    moreMenu = ContextMenu({
+                        items: [
+                            { text: "Send a test line to the serial port", key: "serial" },
+                            { text: "Test: Wi-Fi signal drops", key: "rssi" },
+                            { text: "Test: Board goes offline", key: "offline" },
+                            { type: "separator" },
+                            { text: "Clear the serial monitor", key: "clear" },
+                        ],
+                        styleName: T.compStyle,
+                        onSelect: function (self, item) { runTestAction(item.key); },
+                    });
+                    moreMenu.attachTo(btnMore, "click");
+
+                endGroup();
+
+            endGroup();
+
+        };
+
+        const initAlert = function () {
+
+            alertBox = HGroup({ width: "100%", height: "auto", align: "left center", gap: 12, padding: [14, 10], round: 10, border: 1, visible: 0 });
+                lblAlert = Label({ text: "", fontSize: 14, grow: 1 });
+                btnAlertClose = createButton("Dismiss", "", function () { hideAlert(); });
+            endGroup();
+
+        };
+
+        const showAlert = function (text, color) {
+            lblAlert.text = text;
+            lblAlert.textColor = color;
+            alertBox.color = ChartBox.alpha(color, 0.12);
+            alertBox.borderColor = ChartBox.alpha(color, 0.4);
+            alertBox.visible = 1;
+        };
+
+        const hideAlert = function () {
+            alertBox.visible = 0;
+        };
+
+        const initHeroRow = function () {
+
+            startRow();
+
+                // CARD: The board
+                startCard("Board", "Live telemetry", "2 1 460px");
+
+                    // GAUGES: comp-m4/gauge.js (half arc)
+                    HGroup({ width: "100%", height: "auto", align: "center center", gap: 30, wrap: 1 });
+                    that.clipContent = 0;
+
+                        gaugeVoltage = Gauge({
+                            width: 180, height: 120, styleName: T.compStyle,
+                            startAngle: -90, sweepAngle: 180, radius: 54,
+                            minValue: 0, maxValue: 6, value: 5, decimals: 2,
+                            valueSuffix: " V", titleText: "Supply",
+                            markerValue: 5, // The nominal voltage
+                            style: { bar: { color: ACCENT_COLOR, width: 10 }, track: { width: 10 }, value: { fontSize: 24 }, sub: { fontSize: 12 } },
+                        });
+                        gaugeVoltage.elem.style.flexShrink = "0";
+
+                        gaugeTemp = Gauge({
+                            width: 180, height: 120, styleName: T.compStyle,
+                            startAngle: -90, sweepAngle: 180, radius: 54,
+                            minValue: 0, maxValue: 90, value: 38,
+                            valueSuffix: "°", titleText: "MCU",
+                            markerValue: 70, // The limit
+                            style: { bar: { color: TEMP_COLOR, width: 10 }, track: { width: 10 }, value: { fontSize: 24 }, sub: { fontSize: 12 } },
+                        });
+                        gaugeTemp.elem.style.flexShrink = "0";
+
+                    endGroup();
+
+                    VGroup({ width: "100%", height: "auto", align: "left top", gap: 0 });
+                        boardInfo.board = createInfoLine("Model", 1);
+                        boardInfo.mcu = createInfoLine("MCU");
+                        boardInfo.ip = createInfoLine("IP address");
+                        boardInfo.mac = createInfoLine("MAC");
+                        boardInfo.uptime = createInfoLine("Uptime");
+                    endGroup();
+
+                endCard();
+
+                // CARD: The firmware
+                startCard("Firmware", "Sketch and memory", "1 1 340px");
+
+                    VGroup({ width: "100%", height: "auto", align: "left top", gap: 0 });
+                        boardInfo.sketch = createInfoLine("Sketch", 1);
+                        boardInfo.version = createInfoLine("Version");
+                    endGroup();
+
+                    VGroup({ width: "100%", height: "auto", align: "left top", gap: 10 });
+                        progressFlash = createProgress("Flash", PRIMARY_COLOR);
+                        progressRam = createProgress("RAM", "#7E6BC4");
+                    endGroup();
+
+                    VGroup({ width: "100%", height: "auto", align: "left top", gap: 8 });
+                    that.elem.style.paddingTop = "6px";
+                    that.elem.style.borderTop = "1px solid " + Ink(0.06);
+
+                        btnUpload = HoldToConfirmButton({
+                            width: "100%",
+                            height: 38,
+                            labelText: "Hold to Upload Sketch",
+                            completedText: "UPLOADING",
+                            iconFile: ASSETS + "left-menu/bolt.png",
+                            holdingIconFile: ASSETS + "left-menu/bolt.png",
+                            holdDuration: 1200,
+                            resetDelay: 2500,
+                            style: {
+                                layout: { gap: 8, padding: [14, 0] },
+                                icon: { width: 18, height: 18 },
+                                label: { fontSize: 14, textColor: Ink(0.9) },
+                                holdingLabel: { fontSize: 14, textColor: "#B03A2E" },
+                                completedLabel: { fontSize: 14, textColor: T.primaryActive },
+                                box: { color: FIELD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8 },
+                                holdingBox: { color: "#FFD1CB", borderColor: DANGER_COLOR, round: 8 },
+                                completedBox: { color: "#DFEFE6", borderColor: ACCENT_COLOR, round: 8 },
+                            },
+                            onConfirm: function () { startUpload(board); },
+                        });
+                        btnUpload.icon.elem.style.filter = T.iconFilter; // WHY: Only the normal icon is on a dark background.
+
+                        progressUpload = ProgressBar({
+                            width: "100%", value: 0, styleName: "modern",
+                            valueFormat: function (self) { return Math.round(self.value) + "%"; },
+                            style: { track: { height: 8, color: Ink(0.08) }, bar: { color: ACCENT_COLOR }, valueText: { fontSize: 12, textColor: Ink(0.6) } },
+                        });
+                        lblUploadInfo = Label({ text: "", fontSize: 12, textColor: Ink(0.45) });
+
+                    endGroup();
+
+                endCard();
+
+            endGroup();
+
+        };
+
+        const initKpiRow = function () {
+
+            const KPI_LIST = [
+                { title: "Free RAM", iconFile: "left-menu/dashboard.png", lineColor: "#7E6BC4", key: "freeRam" },
+                { title: "Loop frequency", iconFile: "left-menu/bolt.png", lineColor: ACCENT_COLOR, key: "loopHz" },
+                { title: "Wi-Fi signal", iconFile: "left-menu/url.png", lineColor: HUM_COLOR, key: "rssi" },
+                { title: "Temperature", iconFile: "left-menu/reports.png", lineColor: TEMP_COLOR, key: "temperature" },
+            ];
+
+            startRow();
+
+                KPI_LIST.forEach(function (kpi) {
+                    const kpiBox = SparkLineBox({
+                        height: 100, title: kpi.title, valueText: "", iconFile: ASSETS + kpi.iconFile, lineColor: kpi.lineColor,
+                        style: {
+                            box: { color: CARD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 12 },
+                            text: { padding: 14 },
+                            title: { fontSize: 13, textColor: Ink(0.5) },
+                            valueText: { fontSize: 24, textColor: Ink(0.95) },
+                            trend: { flatColor: Ink(0.45) }, // WHY: The default flat color is made for light cards.
+                            icon: { width: 20, height: 20 },
+                            graph: { height: 34, padding: 14 },
+                        },
+                    });
+                    setFlex(kpiBox, "1 1 220px");
+                    kpiBox.icon.elem.style.filter = T.iconFilter; // WHY: Panel icons are black.
+                    kpiBox.icon.opacity = 0.5;
+                    kpiBox.dataKey = kpi.key;
+                    kpiBoxList.push(kpiBox);
+                });
+
+            endGroup();
+
+        };
+
+        const initChartRow = function () {
+
+            startRow();
+
+                startCard("Sensors", "The last " + CHART_COUNT + " readings", "1 1 100%");
+
+                    chartSensors = ChartBox({
+                        width: "100%", height: 220, type: "line", theme: T.chartTheme, legend: "top",
+                        maxCount: CHART_COUNT, animated: 0, labels: [],
+                        datasets: [
+                            { label: "Temperature (C)", data: [], borderColor: TEMP_COLOR, tension: 0.3 },
+                            { label: "Humidity (%)", data: [], borderColor: HUM_COLOR, tension: 0.3 },
+                        ],
+                        options: { elements: { point: { radius: 0 } } },
+                    });
+
+                endCard();
+
+            endGroup();
+
+        };
+
+        const initTabsRow = function () {
+
+            startRow();
+
+                startCard("Sketch", "Pins, serial monitor and libraries", "1 1 100%");
+
+                    // TABS: comp-m4/tabs.js
+                    tabs = Tabs({
+                        width: "100%",
+                        styleName: T.compStyle,
+                        panels: 1,
+                        panelHeight: 290,
+                        tabs: [
+                            { key: "pins", text: "Pins", count: PIN_TEMPLATE.length },
+                            { key: "serial", text: "Serial Monitor" },
+                            { key: "libraries", text: "Libraries", count: LIBRARIES.length },
+                        ],
+                        style: { panel: { color: "transparent", padding: [0, 12] } },
+                    });
+
+                    // PANEL: Pins
+                    tabs.startPanel("pins");
+                        pinTable = createTableHost(["PIN", "MODE", "LABEL", "VALUE"], ["12%", "16%", "52%", "20%"], 420);
+                    tabs.endPanel();
+
+                    // PANEL: Serial monitor
+                    tabs.startPanel("serial");
+
+                        VGroup({ width: "100%", height: "auto", align: "left top", gap: 10 });
+
+                            serialBox = Box({ width: "100%", height: 200, color: "#0E0F0D", border: 1, borderColor: CARD_BORDER_COLOR, round: 8, scrollY: 1 });
+
+                            createIn(serialBox, function () {
+                                serialGroup = VGroup({ width: "100%", height: "auto", align: "left top", gap: 2, padding: 12 });
+                                serialGroup.elem.style.alignItems = "stretch";
+                                serialGroup.position = "relative"; // WHY: A box grows with content only when it is in the flow.
+                                endGroup();
+                            });
+
+                            // SCROLL BAR: basic/scroll-bar.js
+                            serialScrollBar = ScrollBar({
+                                scrollableBox: serialBox,
+                                bar_color: "#8A8A88", bar_mouseOverColor: "#BFBFBD",
+                                bar_width: 4, bar_round: 3, bar_opacity: 0.4, bar_mouseOverOpacity: 0.9, bar_padding: 2,
+                                neverHide: 0, showDots: 0,
+                            });
+
+                            startSpaceBetween(10);
+
+                                serialInput = Input({
+                                    height: 36, grow: 1,
+                                    placeholder: "Send a command to the board and press Enter",
+                                    fontSize: 14, color: FIELD_COLOR, textColor: Ink(0.9),
+                                    border: 1, borderColor: CARD_BORDER_COLOR, round: 8,
+                                });
+                                serialInput.onEnter(function (self) { sendSerialCommand(self.text); });
+
+                                createButton("Send", "", function () { sendSerialCommand(serialInput.text); });
+
+                            endGroup();
+
+                        endGroup();
+
+                    tabs.endPanel();
+
+                    // PANEL: Libraries
+                    tabs.startPanel("libraries");
+                        libraryTable = createTableHost(["LIBRARY", "VERSION", "AUTHOR"], ["50%", "20%", "30%"], 420);
+                        renderTable(libraryTable, LIBRARIES);
+                    tabs.endPanel();
+
+                endCard();
+
+            endGroup();
+
+        };
+
+        const initControlRow = function () {
+
+            startRow();
+
+                // CARD: Outputs
+                startCard("Outputs", "The digital pins of the board", "1 1 340px");
+
+                    ["D7", "D8", "D9"].forEach(function (pin) {
+                        startSpaceBetween();
+                        that.elem.style.padding = "8px 0px";
+                        that.elem.style.borderTop = "1px solid " + Ink(0.06);
+                            const item = PIN_TEMPLATE.find(function (p) { return p.pin === pin; });
+                            Label({ text: pin + " · " + item.label, fontSize: 14, textColor: Ink(0.8) });
+                            outputToggles[pin] = createToggle(function (self) {
+                                setPinValue(board, pin, (self.value) ? 1 : 0);
+                                addSerial(board, "digitalWrite(" + pin + ", " + ((self.value) ? "HIGH" : "LOW") + ")");
+                                renderLive();
+                            });
+                        endGroup();
+                    });
+
+                endCard();
+
+                // CARD: PWM and interval
+                startCard("Tuning", "PWM and the sampling interval", "1 1 340px");
+
+                    VGroup({ width: "100%", height: "auto", align: "left top", gap: 8 });
+                        startSpaceBetween();
+                            createSmallTitle("D5 · Fan speed (PWM)");
+                            lblPwm = Label({ text: "", fontSize: 14, textColor: Ink(0.9) });
+                        endGroup();
+                        // NOTE: Slider (comp-m2) sends the value (0 - 100) to onDragMove, not the object.
+                        pwmSlider = createSlider(ACCENT_COLOR, function (value) {
+                            board.pwm = Math.round(value / 100 * 255);
+                            lblPwm.text = board.pwm + " / 255";
+                        }, function () {
+                            addSerial(board, "analogWrite(D5, " + board.pwm + ")");
+                            renderLive();
+                        });
+                    endGroup();
+
+                    startSpaceBetween();
+                    that.elem.style.padding = "10px 0px 0px 0px";
+                    that.elem.style.borderTop = "1px solid " + Ink(0.06);
+
+                        createSmallTitle("Sampling interval");
+
+                        // STEPPER: comp-m4/stepper.js
+                        intervalStepper = Stepper({
+                            width: 170, height: 40, styleName: T.compStyle,
+                            value: 1000, min: 100, max: 5000, step: 100,
+                            unitText: " ms",
+                            onChange: function (self) {
+                                if (isRendering) return;
+                                board.intervalMs = self.value;
+                                addSerial(board, "setInterval(" + self.value + ")");
+                            },
+                        });
+
+                    endGroup();
+
+                endCard();
+
+                // CARD: Mode
+                startCard("Mode", "Who drives the outputs", "1 1 280px");
+
+                    VGroup({ width: "100%", height: "auto", align: "left top", gap: 10 });
+                        MODES.forEach(function (mode) {
+                            RadioButton({
+                                group: "arduinoMode", value: mode.id,
+                                labelText: mode.label + " <span style='color:" + Ink(0.4) + "; font-size: 12px'>" + mode.desc + "</span>",
+                                style: DARK_RADIO_STYLE,
+                                onChange: function (self) {
+                                    if (isRendering) return;
+                                    board.mode = self.value;
+                                    addEvent(board, "Info", "Mode: " + self.value);
+                                    renderLive();
+                                },
+                            });
+                        });
+                    endGroup();
+
+                endCard();
+
+            endGroup();
+
+        };
+
+        const initBottomRow = function () {
+
+            startRow();
+
+                startCard("Boards", "Every board of the project", "1 1 480px");
+                    boardTable = createTableHost(["BOARD", "MODEL", "IP", "SKETCH", "STATE"], ["22%", "26%", "18%", "22%", "12%"], 560);
+                endCard();
+
+                startCard("Events", "The last events of this board", "1 1 420px");
+                    eventTable = createTableHost(["TIME", "LEVEL", "MESSAGE"], ["18%", "18%", "64%"], 420);
+                endCard();
+
+            endGroup();
+
+        };
+
+        // *** RENDER:
+
+        const selectBoard = function (index) {
+
+            board = boards[index];
+            hideAlert();
+
+            isRendering = 1;
+            intervalStepper.setValue(board.intervalMs, 1);
+            pwmSlider.setValue(Math.round(board.pwm / 255 * 100));
+            RadioButton.setValue("arduinoMode", board.mode, 1);
+            isRendering = 0;
+
+            renderLive();
+
+        };
+
+        const renderLive = function () {
+
+            const b = board;
+
+            // HEADER:
+            lblSubtitle.text = b.board + " · " + b.mcu;
+            lblClock.text = formatClock(b.uptimeS);
+            lblUptime.text = "uptime · " + formatDuration(b.uptimeS);
+            setPill(lblStatus, (b.isOnline) ? "Online" : "Offline", (b.isOnline) ? ACCENT_COLOR : DANGER_COLOR);
+
+            // GAUGES:
+            gaugeVoltage.setValue(Number(b.voltage.toFixed(2)));
+            gaugeVoltage.setBarColor((b.voltage < 4.9) ? WARNING_COLOR : ACCENT_COLOR);
+            gaugeVoltage.setSubText((b.voltage < 4.9) ? "Low" : "Normal");
+            gaugeTemp.setValue(Math.round(b.mcuTemp));
+            gaugeTemp.setBarColor((b.mcuTemp > 70) ? DANGER_COLOR : TEMP_COLOR);
+            gaugeTemp.setSubText((b.mcuTemp > 70) ? "Hot" : "Normal");
+
+            // BOARD INFO:
+            boardInfo.board.text = b.board;
+            boardInfo.mcu.text = b.mcu;
+            boardInfo.ip.text = b.ip;
+            boardInfo.mac.text = b.mac;
+            boardInfo.uptime.text = formatDuration(b.uptimeS);
+            boardInfo.sketch.text = b.sketch;
+            boardInfo.version.text = "v" + b.version;
+
+            // MEMORY:
+            progressFlash.setValue(b.sketchKB / b.flashKB * 100);
+            progressFlash.setTitleText("Flash · " + b.sketchKB + " / " + b.flashKB + " kB");
+            progressRam.setValue((b.ramKB - b.freeRamKB) / b.ramKB * 100);
+            progressRam.setTitleText("RAM · " + Math.round(b.ramKB - b.freeRamKB) + " / " + b.ramKB + " kB");
+
+            // UPLOAD:
+            progressUpload.setValue(b.upload.percent);
+            lblUploadInfo.text = (b.upload.isRunning) ? b.upload.step + "..." : (b.upload.step === "Done") ? "Last upload finished." : "The board restarts after the upload.";
+            btnUpload.opacity = (b.upload.isRunning) ? 0.5 : 1;
+            btnUpload.clickable = (b.upload.isRunning) ? 0 : 1;
+
+            // KPI:
+            kpiBoxList.forEach(function (kpiBox) {
+                const list = b.history[kpiBox.dataKey] || [];
+                kpiBox.setValues(list);
+                const last = list[list.length - 1];
+                kpiBox.setValueText(formatKpi(kpiBox.dataKey, last));
+            });
+
+            // CHART:
+            chartSensors.setLabels(b.labels);
+            chartSensors.setValues(b.history.temperature, 0);
+            chartSensors.setValues(b.history.humidity, 1);
+
+            // TABLES:
+            renderTable(pinTable, b.pins.map(function (p) {
+                return [p.pin, p.mode, p.label, formatPinValue(p)];
+            }));
+
+            renderTable(boardTable, boards.map(function (item) {
+                return [item.name, item.board, item.ip, item.sketch + " v" + item.version, (item.isOnline) ? "Online" : "Offline"];
+            }));
+
+            renderTable(eventTable, b.events.slice(0, 8).map(function (e) { return [e.time, e.level, e.message]; }));
+
+            // OUTPUTS:
+            isRendering = 1;
+            Object.keys(outputToggles).forEach(function (pin) {
+                const item = getPin(b, pin);
+                const on = (item && item.value == 1) ? 1 : 0;
+                // WHY: setValue() fires onChange, so it is only called when the value really changed.
+                if (outputToggles[pin].value != on) outputToggles[pin].setValue(on);
+                outputToggles[pin].opacity = (b.mode === "auto") ? 0.45 : 1;
+                outputToggles[pin].clickable = (b.mode === "auto") ? 0 : 1;
+            });
+            lblPwm.text = b.pwm + " / 255";
+            isRendering = 0;
+
+            renderSerial();
+
+            // ALERT:
+            if (!b.isOnline) showAlert(b.name + " does not answer. Check the power and the Wi-Fi.", DANGER_COLOR);
+            else if (b.mcuTemp > 70) showAlert("The MCU is over 70 °C. The board may slow itself down.", WARNING_COLOR);
+
+        };
+
+        const renderSerial = function () {
+
+            const isAtBottom = (serialBox.elem.scrollTop + serialBox.elem.clientHeight >= serialBox.elem.scrollHeight - 24);
+
+            serialGroup.children.forEach(function (child) { child.remove(); });
+
+            createIn(serialGroup, function () {
+                board.serial.slice(-60).forEach(function (line) {
+                    HGroup({ width: "100%", height: "auto", align: "left top", gap: 10 });
+                        Label({ plainText: line.time, fontSize: 12, textColor: Ink(0.3) });
+                        that.elem.style.fontVariantNumeric = "tabular-nums";
+                        that.elem.style.flexShrink = "0";
+                        Label({ plainText: line.text, fontSize: 12, textColor: Ink(0.75), grow: 1 });
+                    endGroup();
+                });
+            });
+
+            // WHY: Follow the new lines only when the user is already at the bottom.
+            if (isAtBottom) serialBox.elem.scrollTop = serialBox.elem.scrollHeight;
+            if (serialScrollBar) serialScrollBar.refreshScroll();
+
+        };
+
+        const sendSerialCommand = function (text) {
+            const command = String(text || "").trim();
+            if (!command) return;
+            addSerial(board, "> " + command);
+            addSerial(board, "OK");
+            serialInput.text = "";
+            renderLive();
+        };
+
+        const runTestAction = function (key) {
+            if (key === "serial") addSerial(board, "Test line " + simSecond);
+            if (key === "rssi") { board.rssi = -88; addEvent(board, "Warning", "Wi-Fi signal is weak (-88 dBm)"); }
+            if (key === "offline") { board.isOnline = (board.isOnline) ? 0 : 1; addEvent(board, (board.isOnline) ? "Info" : "Error", (board.isOnline) ? "Board is back" : "Board went offline"); }
+            if (key === "clear") board.serial = [];
+            renderLive();
+        };
+
+        // *** VIEW HELPERS:
+
+        const startRow = function () {
+            HGroup({ width: "100%", height: "auto", align: "left top", gap: 16 });
+            that.elem.style.flexWrap = "wrap";
+            that.elem.style.alignItems = "stretch"; // WHY: Cards in the same row have the same height.
+        };
+
+        const setFlex = function (obj, flex) {
+            obj.elem.style.flex = flex;
+            obj.elem.style.minWidth = "0";
+        };
+
+        const startCard = function (title, subtitle, flex) {
+            const cardBox = VGroup({ height: "auto", align: "left top", gap: 14, padding: 16, color: CARD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 12 });
+            setFlex(cardBox, flex);
+                startSpaceBetween();
+                    VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
+                        Label({ text: title, fontSize: 15, textColor: Ink(0.95) });
+                        that.elem.style.fontFamily = "opensans-bold";
+                        if (subtitle) Label({ text: subtitle, fontSize: 12, textColor: Ink(0.45) });
+                    endGroup();
+                    cardBox.lblRight = Label({ text: "", fontSize: 12, textColor: Ink(0.5) });
+                    that.elem.style.whiteSpace = "nowrap";
+                endGroup();
+            return cardBox;
+        };
+
+        const endCard = function () { endGroup(); };
+
+        const startSpaceBetween = function (gap = 12) {
+            HGroup({ width: "100%", height: "auto", align: "left center", gap: gap });
+            that.elem.style.justifyContent = "space-between";
+        };
+
+        const createSmallTitle = function (text) {
+            Label({ text: text.toUpperCase(), fontSize: 11, textColor: Ink(0.45) });
+            that.elem.style.letterSpacing = "1px";
+            return that;
+        };
+
+        const setPill = function (label, text, color) {
+            label.text = text;
+            label.textColor = color;
+            label.color = ChartBox.alpha(color, 0.12);
+            label.borderColor = ChartBox.alpha(color, 0.4);
+        };
+
+        const createInfoLine = function (title, first) {
+            startSpaceBetween();
+            that.elem.style.padding = "8px 0px";
+            if (!first) that.elem.style.borderTop = "1px solid " + Ink(0.06);
+                Label({ text: title, fontSize: 14, textColor: Ink(0.5) });
+                const value = Label({ text: "", fontSize: 14, textColor: Ink(0.9) });
+                that.elem.style.whiteSpace = "nowrap";
+            endGroup();
+            return value;
+        };
+
+        const createButton = function (text, iconFile, onClick, params = {}) {
+            const btn = ButtonWithIcon({
+                width: params.width || "auto",
+                labelText: text,
+                iconFile: (iconFile) ? ASSETS + iconFile : "",
+                onClick: onClick,
+                style: {
+                    layout: { gap: 10, padding: [14, 8], align: "center center" },
+                    icon: { width: 18, height: 18 },
+                    label: { fontSize: 14, textColor: Ink(0.9) },
+                    box: { color: params.color || FIELD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8 },
+                    hover: { color: params.hoverColor || T.surface3 },
+                    active: { color: params.activeColor || T.surface4 },
+                },
+            });
+            if (btn.icon) btn.icon.elem.style.filter = T.iconFilter; // WHY: Panel icons are black.
+            return btn;
+        };
+
+        const createSlider = function (color, onDragMove, onDragEnd) {
+            return Slider({
+                width: "100%",
+                trackHeight: 8,
+                minThumbHeight: 26,
+                trackColor: color,
+                trackBackgroundColor: Ink(0.1),
+                thumbColor: Ink(0.9),
+                showValueOnSet: 0,
+                showValueOnDrag: 0, // WHY: Slider shows 0-100. The real value is in a label.
+                onDragMove: onDragMove,
+                onDragEnd: onDragEnd,
+            });
+        };
+
+        const createToggle = function (onChange) {
+            return Toggle({
+                width: 52,
+                height: 30,
+                spacing: 3,
+                backgroundStyle: { color: T.surface3, selectedColor: PRIMARY_COLOR, border: 1, borderColor: CARD_BORDER_COLOR },
+                buttonStyle: { color: Ink(0.35), selectedColor: Ink(0.95) },
+                onChange: function (self) { if (!isRendering) onChange(self); },
+            });
+        };
+
+        const createProgress = function (title, color) {
+            const bar = ProgressBar({
+                width: "100%", value: 0, styleName: "modern",
+                valueFormat: function (self) { return Math.round(self.value) + "%"; },
+                // NOTE: The style key of the title label is "title". ("titleText" is the text itself, set with setTitleText().)
+                style: { track: { height: 8, color: Ink(0.08) }, bar: { color: color }, valueText: { fontSize: 12, textColor: Ink(0.6) }, title: { fontSize: 12, textColor: Ink(0.75) } },
+            });
+            bar.setTitleText(title);
+            return bar;
+        };
+
+        // A place for a table. The table itself is made again on every render.
+        // WHY: TinyTable has no setter for its rows; the panel modules remove it and create it again.
+        const createTableHost = function (headers, widths, minWidth) {
+            const host = VGroup({ width: "100%", height: "auto", align: "left top", gap: 0, color: "transparent", scrollX: 1 });
+            endGroup();
+            host.tableHeaders = headers;
+            host.tableWidths = widths;
+            host.tableMinWidth = minWidth || 0;
+            host.table = null;
+            return host;
+        };
+
+        const renderTable = function (host, rows) {
+
+            if (host.table) host.table.remove();
+
+            createIn(host, function () {
+                host.table = TinyTable({
+                    columnHeaders: host.tableHeaders,
+                    columnWidths: host.tableWidths,
+                    dataRows: rows,
+                    headerBackgroundColor: FIELD_COLOR,
+                    headerTextColor: Ink(0.6),
+                    headerBorderColor: FIELD_COLOR,
+                    headerFontSize: 12,
+                    borderWidth: 1,
+                    borderRadius: 8,
+                    borderColor: CARD_BORDER_COLOR,
+                    bodyBackgroundColor: CARD_COLOR,
+                    cellFontSize: 14,
+                    cellTextColor: Ink(0.8),
+                    rowHoverBackgroundColor: Ink(0.05),
+                    rowHoverBorderColor: Ink(0.1),
+                });
+            });
+
+            host.table.width = "100%";
+            if (host.tableMinWidth) host.table.elem.style.minWidth = host.tableMinWidth + "px";
+
+        };
+
+        const DARK_RADIO_STYLE = {
+            mark: { width: 20, height: 20, color: "transparent", borderColor: Ink(0.35) },
+            checkedMark: { color: "transparent", borderColor: ACCENT_COLOR },
+            hoverMark: { borderColor: Ink(0.7) },
+            dot: { color: ACCENT_COLOR },
+            label: { fontSize: 14, textColor: Ink(0.9) },
+            description: { fontSize: 12, textColor: Ink(0.45) },
+        };
+
+        // *** FORMAT:
+
+        const formatClock = function (seconds) {
+            const h = Math.floor(seconds / 3600) % 24;
+            const m = Math.floor(seconds / 60) % 60;
+            const s = Math.floor(seconds) % 60;
+            const pad = function (n) { return String(n).padStart(2, "0"); };
+            return pad(h) + ":" + pad(m) + ":" + pad(s);
+        };
+
+        const formatDuration = function (seconds) {
+            const d = Math.floor(seconds / 86400);
+            const h = Math.floor(seconds / 3600) % 24;
+            const m = Math.floor(seconds / 60) % 60;
+            if (d > 0) return d + " d " + h + " h";
+            if (h > 0) return h + " h " + m + " min";
+            return m + " min";
+        };
+
+        const formatKpi = function (key, value) {
+            if (value === undefined) return "—";
+            if (key === "freeRam") return Math.round(value) + " kB";
+            if (key === "loopHz") return Math.round(value) + " Hz";
+            if (key === "rssi") return Math.round(value) + " dBm";
+            return Number(value).toFixed(1) + " °C";
+        };
+
+        const formatPinValue = function (p) {
+            if (p.mode === "ANALOG") return String(p.value);
+            if (p.mode === "PWM") return p.value + " / 255";
+            return (p.value == 1) ? "HIGH" : "LOW";
+        };
+
+        </script>
+
+    </head>
+    <body></body>
+</html>

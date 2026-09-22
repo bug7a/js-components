@@ -11,7 +11,7 @@ const RightView = function() {
         right: 0,
         width: 500,
         height: "calc(100% - 40px)",
-        color: "#141414",
+        color: T.surfaceDeep,
         visible: 0,
     });
 

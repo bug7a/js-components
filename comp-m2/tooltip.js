@@ -88,15 +88,25 @@ const Tooltip = function(params = {}) {
     // *** Public functions:
     //box.publicFunc = () => {};
 
+    // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
+    const superRemove = box.remove;
+    box.superRemove = superRemove;
     box.remove = function() {
+
+        if (box._isRemoved) return; // WHY: remove() can be called twice (also by the parent's remove()).
+
+        // WHY: The mouse events are on the target object, box.remove() does not clean them.
         _removeMouseOver();
         _removeMouseMove();
+        _removeMouseOut();
+
         if (window.lblHint) {
             window.lblHint.remove();
             window.lblHint = null;
         };
-        _removeMouseOut();
-        box.elem.remove();
+
+        superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
+
     }
 
     box.setHintText = function(text) {

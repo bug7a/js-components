@@ -55,7 +55,7 @@ const ModalDefaults = {
     closeOnOverlay: 1, // Click outside the panel
     closeOnEscape: 1,
     autoOpen: 1,
-    destroyOnClose: 1, // 0: close() only hides it. open() shows it again.
+    removeOnClose: 1, // 0: close() only hides it. open() shows it again.
     theme: null, // null: Modal.options.theme
     ariaLabel: "", // Used when there is no title
     onOpen: function (modal) { },
@@ -341,7 +341,7 @@ const Modal = function (params = {}) {
             if (box !== self || isOpen) return; // Opened again
             self.visible = 0;
             self.onClose(self, reason, buttonKey);
-            if (self.destroyOnClose == 1) self.destroy();
+            if (self.removeOnClose == 1) self.remove();
         }, 160);
 
     };
@@ -407,11 +407,14 @@ const Modal = function (params = {}) {
         applyTheme();
     };
 
-    box.destroy = function () {
-        if (!box) return;
+    // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
+    const superRemove = box.remove;
+    box.superRemove = superRemove;
+    box.remove = function () {
+        if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
         Modal.stack = Modal.stack.filter(function (modal) { return modal !== box; });
         page.remove_onResize(layout);
-        box.remove(); // NOTE: It will clean all events like box.on("click"
+        superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
         box = null;
     };
 

@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
 
-        <title>Mobile Fit Skeleton</title>
+        <title>App Example</title>
 
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"><!-- , user-scalable=no -->
@@ -10,7 +10,7 @@
         <!-- PWA -->
         <link rel="manifest" href="manifest.webmanifest">
         <meta name="theme-color" content="#141414">
-        <meta name="description" content="A basic.js progressive web app skeleton with a fixed content width.">
+        <meta name="description" content="A basic.js progressive web app that shows a web site or a local page like a mobile app.">
         <link rel="icon" type="image/png" sizes="32x32" href="icon/favicon-32.png">
 
         <!-- PWA: iOS (Safari manifest'in her ozelligini desteklemez) -->
@@ -25,6 +25,10 @@
         <link rel="stylesheet" type="text/css" href="basic/basic.min.css">
         <script src="basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
 
+        <!-- COMPONENTS (comp-m4) -->
+        <script src="comp/web-view.js" type="text/javascript" charset="utf-8"></script>
+        <script src="comp/toast.js" type="text/javascript" charset="utf-8"></script>
+
         <style>
 
         /* Telefon centigi / alt cubugu icin guvenli alan. */
@@ -37,93 +41,270 @@
 
         <script>
 
-        // VARIABLES
-        let myString = "";
-        let myInteger = 0;
-        let myFloat = 0.5;
+        // *** SETTINGS: Change this part for your own app.
+
+        // The page of the app: a site address or a local .htm file next to this file.
+        // Ex: "https://bug7a.github.io/expense/"   Ex: "content/index.htm"
+        const CONTENT_URL = "https://bug7a.github.io/kodlama-egitimi/";
+
+        // Does the content need internet?
+        // "online"  -> no connection blocks the content: the offline screen below is shown instead.
+        // "offline" -> the content works without internet (a local page, or a site that caches
+        //              itself): no connection does not block it, a toast just warns about it.
+        const APP_MODE = "online";
+
+        // Texts of the "no internet" screen. ("online" mode) (English)
+        const OFFLINE_TITLE = "No internet connection";
+        const OFFLINE_MESSAGE = "Please check your internet connection. <br>The page opens again as soon as you are back online.";
+        const OFFLINE_BUTTON_TEXT = "Try again";
+
+        // Texts of the "no internet" toast. ("offline" mode) (English)
+        const NO_CONNECTION_TITLE = "No internet connection";
+        const NO_CONNECTION_MESSAGE = "You are offline. Some features may not work.";
+
+        // Chrome / Edge on a desktop computer can install the app too (not just Android).
+        // false: the install toast is only offered on phones and tablets.
+        const ALLOW_DESKTOP_INSTALL = true;
+
+        // Texts of the install toast. (English)
+        const INSTALL_TITLE = "Install this app";
+        const INSTALL_MESSAGE = "Add it to your device and open it like a normal app.";
+        const INSTALL_BUTTON_TEXT = "Install";
+
+        // iOS (Safari) has no install button: the user adds the app by hand.
+        const IOS_INSTALL_TITLE = "Add to Home Screen";
+        const IOS_INSTALL_MESSAGE = "Tap the Share button below, then choose \"Add to Home Screen\".";
+
+        // Layout and behaviour
+        const USE_PAGE_FIT = false;     // page.fit() ile olcekleme. Varsayilan: kapali.
+        const CONTENT_WIDTH = 600;      // Design width of the content
+        const MAX_WIDTH = 700;          // The content is not wider than this
+        const PAGE_COLOR = "#141414";   // Behind the content
+        const LOAD_TIMEOUT = 15;        // Seconds. The page did not load in this time -> offline screen
+        const INSTALL_TOAST_DELAY = 1500; // ms. The install toast comes this late after the app is opened.
+
+        // Icon of the "no internet" screen. (SVG: no file, so it also works offline.)
+        const OFFLINE_ICON_SVG =
+            '<svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="#8C949E"' +
+            ' stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' +
+            '<path d="M1 1l22 22"/>' +
+            '<path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/>' +
+            '<path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/>' +
+            '<path d="M10.71 5.05A16 16 0 0 1 22.58 9"/>' +
+            '<path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/>' +
+            '<path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>' +
+            '<line x1="12" y1="20" x2="12.01" y2="20"/>' +
+            '</svg>';
+
+        // *** VARIABLES
+
+        let webView = null;             // The page of the app (comp/web-view.js)
+        let offlinePanel = null;        // "No internet connection" screen over the web view
+        let installToast = null;        // The toast at the bottom (comp/toast.js)
 
         // PWA VARIABLES
         let installEvent = null;        // beforeinstallprompt olayi burada beklet.
         let waitingWorker = null;       // Yeni surum yuklendiginde burada bekler.
-        let installButton = null;
         let updateButton = null;
-        let statusLabel = null;
 
         // First running function.
         window.onload = function() {
 
-            page.fit(600, 800);
+            if (USE_PAGE_FIT) {
+                page.fit(CONTENT_WIDTH, MAX_WIDTH);
+                fitBodyToPage();
+            }
             // NOTE: Content design width 600px, maximum width 800px
             // If your screen is small, you will see content smaller. But always fit
 
+            // Toasts: at the bottom center, over the content.
+            Toast.setOptions({ position: "bottom-center", theme: "dark", width: CONTENT_WIDTH - 40 });
+
             // GROUP: Centered
             AutoLayout({
-                color: "#141414",
+                color: PAGE_COLOR,
             });
+
                 // BOX: Content container
                 startBox({
-                    width: 600,
+                    width: USE_PAGE_FIT ? CONTENT_WIDTH : "100%",
                     height: "100%",
                     color: "white",
-                    border: 4,
-                    borderColor: "seagreen",
                 });
 
-                    // PUT CONTENT
-                    AutoLayout({
-                        flow: "vertical",
-                        gap: 10,
+                    // WEB VIEW: The site or the .htm file of the app
+                    webView = WebView({
+                        left: 0,
+                        top: 0,
+                        width: "100%",
+                        height: "100%",
+                        url: "", // The page is loaded by showContent(), after the connection is checked.
+                        loadTimeout: LOAD_TIMEOUT, // A page that never loads -> onTimeout -> offline screen
+                        allow: "clipboard-write; fullscreen",
+                        placeholderText: "",
+                        style: {
+                            box: { color: "white", border: 0, round: 0 },
+                            loading: { color: White(0.9), spinnerColor: "#3D7A6B", spinnerSize: 28 },
+                        },
+                        onTimeout: function(self) {
+                            // WHY: A page of another site can not be checked by the browser. If it does
+                            //      not load in time, it is treated like a connection problem.
+                            showOffline();
+                        },
+                        onError: function(self) {
+                            showOffline();
+                        },
                     });
 
-                        Label(10, 10, {
-                            text: "Mobile Content"
+                    // BOX: "No internet connection" screen (over the web view)
+                    offlinePanel = startBox(0, 0, "100%", "100%", {
+                        color: "#F4F6F8",
+                    });
+
+                        VGroup({
+                            align: "center center",
+                            gap: 12,
+                            padding: [30, 0],
                         });
 
-                        Label(10, 10, {
-                            textColor: "rgba(0,0,0,0.5)",
-                            fontSize: 16,
-                            text: "(Width: 600px)"
-                        });
+                            // ICON: Wi-Fi off (SVG)
+                            const iconBox = Box({
+                                width: 56,
+                                height: 56,
+                                color: "transparent",
+                            });
+                            iconBox.elem.innerHTML = OFFLINE_ICON_SVG;
 
-                        // LABEL: Online / offline durumu
-                        statusLabel = Label(10, 10, {
-                            fontSize: 16,
-                            text: ""
-                        });
+                            // LABEL: Title
+                            Label({
+                                text: OFFLINE_TITLE,
+                                fontSize: 20,
+                                textColor: "rgba(0, 0, 0, 0.85)",
+                            });
+                            that.elem.style.fontFamily = "opensans-bold";
 
-                        // BUTTON: Cihaza kur (sadece tarayici izin verince gorunur)
-                        installButton = Button(0, 0, 260, 54, {
-                            text: "Install App",
-                            round: 8,
-                        });
-                        installButton.visible = 0;
-                        installButton.on("click", installApp);
+                            // LABEL: Message
+                            Label({
+                                text: OFFLINE_MESSAGE,
+                                fontSize: 15,
+                                textColor: "rgba(0, 0, 0, 0.5)",
+                                width: 320,
+                            });
+                            that.elem.style.textAlign = "center";
+                            that.elem.style.lineHeight = "22px";
 
-                        // BUTTON: Yeni surum hazir (sadece guncelleme varken gorunur)
-                        updateButton = Button(0, 0, 260, 54, {
-                            text: "Update Available - Reload",
-                            round: 8,
-                            color: "#007aff",
-                            textColor: "white",
-                        });
-                        updateButton.visible = 0;
-                        updateButton.on("click", applyUpdate);
+                            // BUTTON: Try again
+                            Button(0, 0, 160, 46, {
+                                text: OFFLINE_BUTTON_TEXT,
+                                round: 8,
+                                color: "#3D7A6B",
+                                textColor: "white",
+                                fontSize: 16,
+                            });
+                            that.elem.style.marginTop = "6px";
+                            that.on("click", showContent);
 
-                    endAutoLayout();
+                        endGroup();
+
+                    endBox();
+
+                    // WHY: The children of a hidden group are not flex items. The panel is hidden
+                    //      after it is created. (basic.js)
+                    offlinePanel.visible = 0;
+
+                    // BUTTON: Yeni surum hazir (sadece guncelleme varken gorunur)
+                    updateButton = Button({
+                        width: 220,
+                        height: 44,
+                        bottom: 14,
+                        text: "Update - Reload",
+                        round: 8,
+                        color: "#007aff",
+                        textColor: "white",
+                        fontSize: 15,
+                    });
+                    updateButton.center("left"); // Horizontally centered in the content box
+                    updateButton.visible = 0;
+                    updateButton.on("click", applyUpdate);
 
                 endBox();
+
             endAutoLayout();
 
             page.onResize(pageResized);
 
+            // The page of the app (or the offline screen, when there is no connection).
+            showContent();
+
             // PWA baslangici
             startPWA();
+
+            // The install button at the bottom center.
+            setTimeout(showInstallToast, INSTALL_TOAST_DELAY);
 
         };
 
         const pageResized = function() {
 
-            page.fit(600, 800);
+            if (USE_PAGE_FIT) {
+                page.fit(CONTENT_WIDTH, MAX_WIDTH);
+                fitBodyToPage();
+            }
+
+        };
+
+        // WHY: page.fit() scales the body (CSS transform). A "position: fixed" object (the toasts of
+        //      comp/toast.js) is then placed inside the body, not inside the screen. The body has no
+        //      size of its own (basic.js puts everything on it absolutely), so the toasts landed
+        //      outside the screen. Here the body is made as big as the design area.
+        const fitBodyToPage = function() {
+
+            page.bodyElement.style.width = page.width + "px";
+            page.bodyElement.style.height = page.height + "px";
+
+        };
+
+        // *** CONTENT FUNCTIONS:
+
+        // Loads CONTENT_URL. "online" mode: with no connection the offline screen is shown
+        // instead. "offline" mode: the content is loaded anyway, a toast just warns about it.
+        const showContent = function() {
+
+            if (!navigator.onLine) {
+
+                if (APP_MODE === "offline") {
+                    showNoConnectionToast();
+                } else {
+                    showOffline();
+                    return;
+                }
+
+            }
+
+            offlinePanel.visible = 0;
+            webView.load(CONTENT_URL);
+
+        };
+
+        // "No internet connection" screen over the web view. ("online" mode)
+        const showOffline = function() {
+
+            offlinePanel.visible = 1;
+
+            // WHY: The half loaded page under the screen would keep trying.
+            webView.clear();
+
+        };
+
+        // "No internet connection" toast over the content. ("offline" mode)
+        const showNoConnectionToast = function() {
+
+            Toast.show({
+                key: "no-connection",
+                type: "warning",
+                title: NO_CONNECTION_TITLE,
+                message: NO_CONNECTION_MESSAGE,
+            });
 
         };
 
@@ -132,21 +313,33 @@
         // Service worker'i kaydet ve olaylari dinle.
         const startPWA = function() {
 
-            showNetworkStatus();
-            window.addEventListener("online", showNetworkStatus);
-            window.addEventListener("offline", showNetworkStatus);
+            // Connection lost: "online" mode blocks the content, "offline" mode just warns.
+            window.addEventListener("offline", function() {
+                if (APP_MODE === "offline") {
+                    showNoConnectionToast();
+                } else {
+                    showOffline();
+                }
+            });
 
-            // Tarayici "kurulabilir" dediginde olayi sakla, butonu goster.
+            // The connection comes back: "online" mode reloads the content ("offline" mode
+            // already has it open, there is nothing to reload).
+            window.addEventListener("online", function() {
+                if (APP_MODE === "online") showContent();
+            });
+
+            // Tarayici "kurulabilir" dediginde olayi sakla, kurulum toast'ini goster.
             window.addEventListener("beforeinstallprompt", function(event) {
                 event.preventDefault();      // Tarayicinin kendi balonunu engelle.
                 installEvent = event;
-                installButton.visible = 1;
+                showInstallToast();
             });
 
-            // Kurulum bitince butonu gizle.
+            // Kurulum bitince toast'i kapat.
             window.addEventListener("appinstalled", function() {
                 installEvent = null;
-                installButton.visible = 0;
+                if (installToast) installToast.close();
+                installToast = null;
                 println("PWA: Installed.");
             });
 
@@ -192,6 +385,60 @@
 
         };
 
+        // *** INSTALL FUNCTIONS:
+
+        // iPhone / iPad. (iPadOS 13+ says "Macintosh", so the touch points are checked too.)
+        const isIOS = function() {
+            const ua = navigator.userAgent || "";
+            if (/iPad|iPhone|iPod/.test(ua)) return 1;
+            if (ua.indexOf("Macintosh") > -1 && navigator.maxTouchPoints > 1) return 1;
+            return 0;
+        };
+
+        // The app is already installed and opened from the home screen.
+        const isInstalled = function() {
+            if (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) return 1;
+            if (navigator.standalone === true) return 1; // iOS
+            return 0;
+        };
+
+        // The install button (or the iOS text) at the bottom center.
+        const showInstallToast = function() {
+
+            if (isInstalled()) return;     // Already installed: nothing to show.
+            if (installToast) return;      // It is already on the screen.
+
+            // iOS: There is no install event. The user adds the app from the Share menu.
+            if (isIOS()) {
+
+                installToast = Toast.show({
+                    key: "install",
+                    type: "info",
+                    title: IOS_INSTALL_TITLE,
+                    message: IOS_INSTALL_MESSAGE,
+                    duration: 0, // Stays until it is closed.
+                    onClose: function() { installToast = null; },
+                });
+
+                return;
+            }
+
+            // Android / desktop: the browser said the app can be installed.
+            if (!installEvent) return; // Not installable (or the event did not come yet).
+            if (!isMobile() && !ALLOW_DESKTOP_INSTALL) return; // Desktop computer, turned off.
+
+            installToast = Toast.show({
+                key: "install",
+                type: "info",
+                title: INSTALL_TITLE,
+                message: INSTALL_MESSAGE,
+                duration: 0,
+                action: { text: INSTALL_BUTTON_TEXT, onClick: installApp },
+                onClose: function() { installToast = null; },
+            });
+
+        };
+
         // Kurulum penceresini ac.
         const installApp = function() {
 
@@ -201,7 +448,6 @@
             installEvent.userChoice.then(function(choice) {
                 println("PWA: User choice: " + choice.outcome);
                 installEvent = null;
-                installButton.visible = 0;
             });
 
         };
@@ -221,16 +467,6 @@
 
             updateButton.text = "Updating...";
             waitingWorker.postMessage({ type: "SKIP_WAITING" });
-
-        };
-
-        // Baglanti durumunu yaz.
-        const showNetworkStatus = function() {
-
-            if (!statusLabel) return;
-
-            statusLabel.text = navigator.onLine ? "Online" : "Offline (running from cache)";
-            statusLabel.textColor = navigator.onLine ? "rgba(0,0,0,0.5)" : "#c0392b";
 
         };
 

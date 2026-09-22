@@ -211,9 +211,12 @@ const SmartTable = function (params = {}) {
 
     };
 
-    // box.superRemove = box.remove;
-    box.destroy = function () {
+    // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
+    const superRemove = box.remove;
+    box.superRemove = superRemove;
+    box.remove = function () {
 
+        if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
         //page.remove_onResize(functionName); // on page resized.
 
         // WHY: window eventleri box.remove() ile temizlenmiyor. Kalırsa box = null olduktan sonra mousemove hata verir.
@@ -224,14 +227,13 @@ const SmartTable = function (params = {}) {
         clearTimeout(box.filterTimer);
 
         // WHY: Menü page üzerinde oluşturuluyor; box.remove() onu silmez.
-        if (box.searchTitleMenu) box.searchTitleMenu.destroy();
+        if (box.searchTitleMenu) box.searchTitleMenu.remove();
 
         // Remove basic objects
         //box.background.remove(); // NOTE: If you add event (box.background.on("click") to other objects.
         //box.icon.remove();
 
-        // box.superRemove.call(box);
-        box.remove(); // NOTE: It will clean all events like box.on("click"
+        superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
         box = null;
 
     };
@@ -720,7 +722,7 @@ const SmartTable = function (params = {}) {
 
     };
 
-    // WHY: destroy() içinde kaldırılabilmesi için isimli fonksiyon.
+    // WHY: remove() içinde kaldırılabilmesi için isimli fonksiyon.
     const onWindowMouseMove = function (event) {
 
         if (!box || !box.scrollVars.isDragging) return;

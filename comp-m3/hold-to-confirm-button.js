@@ -175,17 +175,19 @@ const HoldToConfirmButton = function (params = {}) {
 
     };
 
-    // box.superRemove = box.remove;
-    box.destroy = function () {
+    // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
+    const superRemove = box.remove;
+    box.superRemove = superRemove;
+    box.remove = function () {
 
+        if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
         //page.remove_onResize(functionName); // on page resized.
 
         // Remove basic objects
         //box.background.remove(); // NOTE: If you add event (box.background.on("click") to other objects.
         //box.icon.remove();
 
-        // box.superRemove.call(box);
-        box.remove(); // NOTE: It will clean all events like box.on("click"
+        superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
         box = null;
 
     };

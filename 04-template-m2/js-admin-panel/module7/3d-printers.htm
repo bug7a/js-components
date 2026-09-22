@@ -11,6 +11,7 @@
         <link rel="preload" href="../../../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
         <link rel="stylesheet" type="text/css" href="../../../basic/basic.min.css">
         <script src="../../../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../common/theme.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- COMPONENTS -->
         <script src="../../../comp-m2/tiny-select.js" type="text/javascript" charset="utf-8"></script>
@@ -20,6 +21,7 @@
         <script src="../../../comp-m3/button-with-icon.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m3/hold-to-confirm-button.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m4/progress-bar.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m4/gauge.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m4/chart-box.js" type="text/javascript" charset="utf-8"></script>
 
         <!--
@@ -46,16 +48,16 @@
         const LIB_PATH = "../../../";
         const ASSETS = "../assets/";
 
-        const PAGE_COLOR = "#141414";
-        const CARD_COLOR = "#1A1A19";
-        const CARD_BORDER_COLOR = White(0.1);
-        const FIELD_COLOR = "#232322";
-        const PRIMARY_COLOR = "#3D7A6B";
-        const ACCENT_COLOR = "#65A293";
-        const WARNING_COLOR = "#C98500";
-        const ERROR_COLOR = "#E66767";
-        const NOZZLE_COLOR = "#E8894A";
-        const BED_COLOR = "#3987E5";
+        const PAGE_COLOR = T.page;
+        const CARD_COLOR = T.surface;
+        const CARD_BORDER_COLOR = Ink(0.1);
+        const FIELD_COLOR = T.surface2;
+        const PRIMARY_COLOR = T.primary;
+        const ACCENT_COLOR = T.accent;
+        const WARNING_COLOR = T.warning;
+        const ERROR_COLOR = T.danger;
+        const NOZZLE_COLOR = Theme.readable("#E8894A");
+        const BED_COLOR = T.info;
 
         const TEMP_MAX = 300; // °C (gauge)
         const CHART_COUNT = 60; // Seconds on the chart
@@ -67,7 +69,7 @@
             heating: { text: "Heating", color: NOZZLE_COLOR },
             paused: { text: "Paused", color: WARNING_COLOR },
             done: { text: "Finished", color: "#9085E9" },
-            idle: { text: "Idle", color: "#A9A79F" },
+            idle: { text: "Idle", color: Theme.readable("#A9A79F") },
         };
 
         const PRESETS = [
@@ -107,7 +109,7 @@
                 job: null,
                 nozzle: { temp: ROOM_TEMP, target: 0 }, bed: { temp: ROOM_TEMP, target: 0 },
                 speed: 100, fan: 100, lights: 0, position: { x: 0, y: 0, z: 0 },
-                filament: { material: "PETG", colorName: "Ocean Blue", color: "#3987E5", spoolG: 1000, leftG: 180 },
+                filament: { material: "PETG", colorName: "Ocean Blue", color: T.info, spoolG: 1000, leftG: 180 },
                 queue: [
                     { file: "drone-frame.gcode", shape: "frame", minutes: 185, layers: 420, grams: 210, material: "PETG" },
                     { file: "cable-clips.gcode", shape: "gear", minutes: 35, layers: 90, grams: 14, material: "PETG" },
@@ -120,7 +122,7 @@
                 job: { file: "planter-large.gcode", shape: "planter", minutes: 340, done: 228, layers: 980, grams: 390, material: "PETG" },
                 nozzle: { temp: 170, target: 170 }, bed: { temp: 80, target: 80 },
                 speed: 100, fan: 60, lights: 1, position: { x: 12, y: 280, z: 0 },
-                filament: { material: "PETG", colorName: "Forest Green", color: "#65A293", spoolG: 1000, leftG: 0 },
+                filament: { material: "PETG", colorName: "Forest Green", color: T.accent, spoolG: 1000, leftG: 0 },
                 queue: [],
                 printHours: 2310,
             },
@@ -133,7 +135,7 @@
 
         let printerSelect, lblStatus, lblSubtitle;
         let previewBox, lblJobFile, lblJobInfo, jobProgress, grpJobButtons, btnPause, btnCancel, btnStartNext, lblJobEmpty, grpJob;
-        let gaugeBox, presetSelect, chartTemp, lblTempInfo;
+        let gaugeNozzle, gaugeBed, presetSelect, chartTemp, lblTempInfo;
         let lblSpeed, sliderSpeed, lblFan, sliderFan, toggleLights, grpJog, lblPosition;
         let spoolBox, filamentLabels = {}, lblFilamentCheck, btnLoad, btnUnload;
         let grpQueueHost, grpEventHost;
@@ -374,11 +376,11 @@
 
                 startSpaceBetween();
                     VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
-                        Label({ text: title, fontSize: 15, textColor: White(0.95) });
+                        Label({ text: title, fontSize: 15, textColor: Ink(0.95) });
                         that.elem.style.fontFamily = "opensans-bold";
-                        if (subtitle) Label({ text: subtitle, fontSize: 12, textColor: White(0.45) });
+                        if (subtitle) Label({ text: subtitle, fontSize: 12, textColor: Ink(0.45) });
                     endGroup();
-                    card.lblRight = Label({ text: "", fontSize: 12, textColor: White(0.5) });
+                    card.lblRight = Label({ text: "", fontSize: 12, textColor: Ink(0.5) });
                     that.elem.style.whiteSpace = "nowrap";
                 endGroup();
 
@@ -397,7 +399,7 @@
         };
 
         const createSmallTitle = function (text) {
-            Label({ text: text.toUpperCase(), fontSize: 11, textColor: White(0.45) });
+            Label({ text: text.toUpperCase(), fontSize: 11, textColor: Ink(0.45) });
             that.elem.style.letterSpacing = "1px";
             return that;
         };
@@ -418,10 +420,10 @@
                 style: {
                     layout: { gap: 0, padding: [14, 8], align: "center center" },
                     icon: { width: 0, height: 0 },
-                    label: { fontSize: 14, textColor: White(0.92) },
+                    label: { fontSize: 14, textColor: Ink(0.92) },
                     box: { color: (params.primary) ? PRIMARY_COLOR : FIELD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8 },
-                    hover: { color: (params.primary) ? "#468A79" : "#2C2C2A" },
-                    active: { color: (params.primary) ? "#2C5A38" : "#383835" },
+                    hover: { color: (params.primary) ? T.primaryHover : T.surface3 },
+                    active: { color: (params.primary) ? T.primaryActive : T.surface4 },
                 },
             });
         };
@@ -432,8 +434,8 @@
                 trackHeight: 8,
                 minThumbHeight: 26,
                 trackColor: color,
-                trackBackgroundColor: White(0.1),
-                thumbColor: White(0.9),
+                trackBackgroundColor: Ink(0.1),
+                thumbColor: Ink(0.9),
                 showValueOnSet: 0,
                 showValueOnDrag: 0, // WHY: Slider shows 0-100. The real value is shown in a label.
                 onDragMove: onDragMove,
@@ -451,15 +453,15 @@
                 borderColor: CARD_BORDER_COLOR,
                 round: 8,
                 labelBoldFont: 0,
-                labelTextColor: White(0.9),
+                labelTextColor: Ink(0.9),
                 arrowIcon: LIB_PATH + "comp-m2/tiny-select/arrow.svg",
                 arrowSize: 18,
-                invertIconColor: 1,
+                invertIconColor: T.invertIcon,
                 listFontSize: 14,
-                listTextColor: White(0.85),
+                listTextColor: Ink(0.85),
                 listOverTextColor: ACCENT_COLOR,
                 listBackgroundColor: FIELD_COLOR,
-                listBorderColor: White(0.15),
+                listBorderColor: Ink(0.15),
                 onSelect: function (index, id) {
                     if (isReady && !isRendering) onSelect(index, id);
                 },
@@ -475,9 +477,9 @@
                 startSpaceBetween();
 
                     VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
-                        Label({ text: "3D Printers", fontSize: 22, textColor: White(0.95) });
+                        Label({ text: "3D Printers", fontSize: 22, textColor: Ink(0.95) });
                         that.elem.style.fontFamily = "opensans-bold";
-                        lblSubtitle = Label({ text: "", fontSize: 12, textColor: White(0.45) });
+                        lblSubtitle = Label({ text: "", fontSize: 12, textColor: Ink(0.45) });
                     endGroup();
 
                     lblStatus = Label({ text: "", fontSize: 13, round: 100, border: 1, padding: [12, 4] });
@@ -500,16 +502,16 @@
             grpJob = card;
 
                 // Preview
-                HGroup({ width: "100%", height: "auto", align: "center center", color: "#121212", round: 10, padding: [0, 6] });
-                that.elem.style.border = "1px solid " + White(0.06);
+                HGroup({ width: "100%", height: "auto", align: "center center", color: T.surfaceDeep, round: 10, padding: [0, 6] });
+                that.elem.style.border = "1px solid " + Ink(0.06);
                     previewBox = Box({ width: "100%", height: "auto", color: "transparent" });
                     previewBox.position = "relative";
                 endGroup();
 
                 VGroup({ width: "100%", height: "auto", align: "left top", gap: 4 });
-                    lblJobFile = Label({ text: "", fontSize: 15, textColor: White(0.95), width: "100%" });
+                    lblJobFile = Label({ text: "", fontSize: 15, textColor: Ink(0.95), width: "100%" });
                     that.elem.style.wordBreak = "break-all";
-                    lblJobInfo = Label({ text: "", fontSize: 12, textColor: White(0.5), width: "100%" });
+                    lblJobInfo = Label({ text: "", fontSize: 12, textColor: Ink(0.5), width: "100%" });
                 endGroup();
 
                 jobProgress = ProgressBar({
@@ -517,15 +519,15 @@
                     valuePosition: "right",
                     styleName: "modern",
                     style: {
-                        track: { height: 10, color: White(0.08) },
+                        track: { height: 10, color: Ink(0.08) },
                         bar: { color: ACCENT_COLOR },
                         successBar: { color: "#9085E9" },
                         errorBar: { color: WARNING_COLOR },
-                        valueText: { fontSize: 14, textColor: White(0.9) },
+                        valueText: { fontSize: 14, textColor: Ink(0.9) },
                     },
                 });
 
-                lblJobEmpty = Label({ text: "", fontSize: 13, textColor: White(0.5), width: "100%" });
+                lblJobEmpty = Label({ text: "", fontSize: 13, textColor: Ink(0.5), width: "100%" });
 
                 grpJobButtons = HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
                 that.elem.style.flexWrap = "wrap";
@@ -552,9 +554,9 @@
                         style: {
                             layout: { gap: 6, padding: [14, 0] },
                             icon: { width: 18, height: 18 },
-                            label: { fontSize: 14, textColor: White(0.9) },
+                            label: { fontSize: 14, textColor: Ink(0.9) },
                             holdingLabel: { fontSize: 14, textColor: "#B03A2E" },
-                            completedLabel: { fontSize: 14, textColor: "#2C5A38" },
+                            completedLabel: { fontSize: 14, textColor: T.primaryActive },
                             box: { color: FIELD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8 },
                             holdingBox: { color: "#FFD1CB", borderColor: ERROR_COLOR, round: 8 },
                             completedBox: { color: "#DFEFE6", borderColor: ACCENT_COLOR, round: 8 },
@@ -563,7 +565,7 @@
                             if (printer.job) cancelPrint(printer);
                         },
                     });
-                    btnCancel.icon.elem.style.filter = "invert(100%)"; // WHY: Only the normal icon is on a dark background.
+                    btnCancel.icon.elem.style.filter = T.iconFilter; // WHY: Only the normal icon is on a dark background.
 
                 endGroup();
 
@@ -575,10 +577,10 @@
 
             startCard("Temperatures", "Nozzle and heated bed");
 
-                HGroup({ width: "100%", height: "auto", align: "center center" });
-                    gaugeBox = Box({ width: "100%", height: "auto", color: "transparent" });
-                    gaugeBox.position = "relative";
-                    gaugeBox.elem.innerHTML = createGaugesSvg();
+                // GAUGES: comp-m4/gauge.js (half arc). One for the nozzle, one for the bed.
+                HGroup({ width: "100%", height: "auto", align: "center center", gap: 40, wrap: 1 });
+                    gaugeNozzle = createHeaterGauge("Nozzle", NOZZLE_COLOR);
+                    gaugeBed = createHeaterGauge("Bed", BED_COLOR);
                 endGroup();
 
                 startSpaceBetween();
@@ -592,13 +594,13 @@
                     });
                 endGroup();
 
-                lblTempInfo = Label({ text: "", fontSize: 12, textColor: White(0.45), width: "100%" });
+                lblTempInfo = Label({ text: "", fontSize: 12, textColor: Ink(0.45), width: "100%" });
 
                 chartTemp = ChartBox({
                     width: "100%",
                     height: 200,
                     type: "line",
-                    theme: "dark",
+                    theme: T.chartTheme,
                     legend: "top",
                     beginAtZero: 1,
                     maxCount: CHART_COUNT,
@@ -614,7 +616,7 @@
                         scales: { x: { ticks: { maxTicksLimit: 4 } }, y: { suggestedMax: 260 } },
                     },
                     style: {
-                        box: { color: "#121212", border: 1, borderColor: White(0.06), round: 10, padding: 10 },
+                        box: { color: T.surfaceDeep, border: 1, borderColor: Ink(0.06), round: 10, padding: 10 },
                         chart: { colors: [NOZZLE_COLOR, BED_COLOR] },
                     },
                 });
@@ -631,7 +633,7 @@
                 VGroup({ width: "100%", height: "auto", align: "left top", gap: 6 });
                     startSpaceBetween();
                         createSmallTitle("Print speed");
-                        lblSpeed = Label({ text: "", fontSize: 15, textColor: White(0.95) });
+                        lblSpeed = Label({ text: "", fontSize: 15, textColor: Ink(0.95) });
                         that.elem.style.fontFamily = "opensans-bold";
                     endGroup();
                     sliderSpeed = createSlider(ACCENT_COLOR,
@@ -650,7 +652,7 @@
                 VGroup({ width: "100%", height: "auto", align: "left top", gap: 6 });
                     startSpaceBetween();
                         createSmallTitle("Part cooling fan");
-                        lblFan = Label({ text: "", fontSize: 15, textColor: White(0.95) });
+                        lblFan = Label({ text: "", fontSize: 15, textColor: Ink(0.95) });
                         that.elem.style.fontFamily = "opensans-bold";
                     endGroup();
                     sliderFan = createSlider(BED_COLOR,
@@ -667,15 +669,15 @@
                 // Lights
                 startSpaceBetween();
                     VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
-                        Label({ text: "Chamber lights", fontSize: 14, textColor: White(0.9) });
-                        Label({ text: "For the camera and a quick look", fontSize: 12, textColor: White(0.45) });
+                        Label({ text: "Chamber lights", fontSize: 14, textColor: Ink(0.9) });
+                        Label({ text: "For the camera and a quick look", fontSize: 12, textColor: Ink(0.45) });
                     endGroup();
                     toggleLights = Toggle({
                         width: 52,
                         height: 30,
                         spacing: 3,
-                        backgroundStyle: { color: "#2C2C2A", selectedColor: PRIMARY_COLOR, border: 1, borderColor: CARD_BORDER_COLOR },
-                        buttonStyle: { color: White(0.35), selectedColor: White(0.95) },
+                        backgroundStyle: { color: T.surface3, selectedColor: PRIMARY_COLOR, border: 1, borderColor: CARD_BORDER_COLOR },
+                        buttonStyle: { color: Ink(0.35), selectedColor: Ink(0.95) },
                         onChange: function (self) {
                             if (isRendering) return;
                             printer.lights = self.value;
@@ -687,12 +689,12 @@
 
                 // Jog pad
                 VGroup({ width: "100%", height: "auto", align: "left top", gap: 8 });
-                that.elem.style.borderTop = "1px solid " + White(0.06);
+                that.elem.style.borderTop = "1px solid " + Ink(0.06);
                 that.elem.style.paddingTop = "14px";
 
                     startSpaceBetween();
                         createSmallTitle("Move axes");
-                        lblPosition = Label({ text: "", fontSize: 12, textColor: White(0.6) });
+                        lblPosition = Label({ text: "", fontSize: 12, textColor: Ink(0.6) });
                         that.elem.style.fontVariantNumeric = "tabular-nums";
                     endGroup();
 
@@ -712,11 +714,11 @@
                         // Z
                         VGroup({ width: "auto", height: "auto", align: "center center", gap: 4 });
                             createJogButton("Z+", function () { jog("z", 1); });
-                            Label({ text: "1 mm", fontSize: 11, textColor: White(0.4) });
+                            Label({ text: "1 mm", fontSize: 11, textColor: Ink(0.4) });
                             createJogButton("Z−", function () { jog("z", -1); });
                         endGroup();
 
-                        Label({ text: "X / Y: 10 mm steps<br>⌂: Home all axes<br><span style='color:" + White(0.35) + "'>Not available while printing</span>", fontSize: 12, textColor: White(0.5) });
+                        Label({ text: "X / Y: 10 mm steps<br>⌂: Home all axes<br><span style='color:" + Ink(0.35) + "'>Not available while printing</span>", fontSize: 12, textColor: Ink(0.5) });
                         that.elem.style.lineHeight = "1.6";
 
                     endGroup();
@@ -731,10 +733,10 @@
             const btn = HGroup({ width: 44, height: 44, align: "center center", round: 10, color: FIELD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR });
             btn.elem.style.cursor = "pointer";
             btn.setMotion("background-color 0.15s");
-            btn.on("mouseover", function () { btn.color = "#2C2C2A"; });
+            btn.on("mouseover", function () { btn.color = T.surface3; });
             btn.on("mouseout", function () { btn.color = FIELD_COLOR; });
             btn.on("click", onClick);
-                Label({ text: text, fontSize: 14, textColor: color || White(0.85) });
+                Label({ text: text, fontSize: 14, textColor: color || Ink(0.85) });
             endGroup();
             return btn;
         };
@@ -753,9 +755,9 @@
                     VGroup({ width: "auto", height: "auto", align: "left top", gap: 2 });
                     that.elem.style.flex = "1 1 auto";
                     that.elem.style.minWidth = "0";
-                        filamentLabels.material = Label({ text: "", fontSize: 16, textColor: White(0.95) });
-                        filamentLabels.color = Label({ text: "", fontSize: 13, textColor: White(0.6) });
-                        filamentLabels.left = Label({ text: "", fontSize: 13, textColor: White(0.6) });
+                        filamentLabels.material = Label({ text: "", fontSize: 16, textColor: Ink(0.95) });
+                        filamentLabels.color = Label({ text: "", fontSize: 13, textColor: Ink(0.6) });
+                        filamentLabels.left = Label({ text: "", fontSize: 13, textColor: Ink(0.6) });
                         lblFilamentCheck = Label({ text: "", fontSize: 12, round: 6, padding: [8, 4], width: "auto" });
                         that.elem.style.marginTop = "6px";
                     endGroup();
@@ -839,7 +841,7 @@
                 const d = "M" + points.map(function (pt) { return pt[0].toFixed(1) + " " + pt[1].toFixed(1); }).join(" L") + " Z";
 
                 const printedY = bedY - progress * maxH;
-                shape = "<path d='" + d + "' fill='" + White(0.03) + "' stroke='" + White(0.2) + "' stroke-width='1' stroke-dasharray='3 4'/>";
+                shape = "<path d='" + d + "' fill='" + Ink(0.03) + "' stroke='" + Ink(0.2) + "' stroke-width='1' stroke-dasharray='3 4'/>";
                 printed = "<clipPath id='cut'><rect id='cut-rect' x='0' y='" + printedY.toFixed(1) + "' width='" + W + "' height='" + (bedY - printedY + 1).toFixed(1) + "'/></clipPath>" +
                     "<path d='" + d + "' fill='url(#fill)' clip-path='url(#cut)'/>" +
                     "<g clip-path='url(#cut)' opacity='0.35'>" + (function () {
@@ -852,7 +854,7 @@
                 const moving = (p.status == "printing") ? "nozzle-move" : "";
                 nozzle = "<g class='" + moving + "' style='transform-origin:" + cx + "px 0'>" +
                     "<g id='nozzle-pos' transform='translate(" + cx + " " + (printedY - 2).toFixed(1) + ")'>" +
-                    "<rect x='-26' y='-40' width='52' height='20' rx='4' fill='#3A3A38' stroke='" + White(0.2) + "'/>" +
+                    "<rect x='-26' y='-40' width='52' height='20' rx='4' fill='#3A3A38' stroke='" + Ink(0.2) + "'/>" +
                     "<path d='M-9 -20 L9 -20 L4 -8 L-4 -8 Z' fill='#8A8A86'/>" +
                     "<path d='M-3 -8 L3 -8 L0 -1 Z' fill='" + ((p.nozzle.temp > 150) ? NOZZLE_COLOR : "#8A8A86") + "'/>" +
                     ((p.status == "printing") ? "<circle cx='0' cy='0' r='3' fill='" + color + "'/>" : "") +
@@ -867,13 +869,13 @@
 
             }
 
-            const bed = "<rect x='50' y='" + bedY + "' width='" + (W - 100) + "' height='10' rx='3' fill='" + ((p.bed.temp > 40) ? ChartBox.alpha(BED_COLOR, 0.55) : "#3A3A38") + "'/>" +
+            const bed = "<rect x='50' y='" + bedY + "' width='" + (W - 100) + "' height='10' rx='3' fill='" + ((p.bed.temp > 40) ? ChartBox.alpha(BED_COLOR, 0.55) : T.surface4) + "'/>" +
                 "<rect x='40' y='" + (bedY + 10) + "' width='" + (W - 80) + "' height='6' rx='2' fill='#2A2A28'/>";
 
             return "<svg viewBox='0 0 " + W + " " + H + "' style='display:block; width:100%; height:auto; opacity:" + light + "; transition: opacity 0.4s'>" +
                 "<style>" +
-                ".t-small { fill:" + White(0.5) + "; font-size:12px; }" +
-                ".t-empty { fill:" + White(0.4) + "; font-size:14px; }" +
+                ".t-small { fill:" + Ink(0.5) + "; font-size:12px; }" +
+                ".t-empty { fill:" + Ink(0.4) + "; font-size:14px; }" +
                 ".nozzle-move { animation: nozzle 1.6s ease-in-out infinite alternate; }" +
                 "@keyframes nozzle { from { transform: translateX(-60px); } to { transform: translateX(60px); } }" +
                 "</style>" +
@@ -885,23 +887,32 @@
 
         };
 
-        // Two half-circle gauges: nozzle and bed (current value and the target mark)
-        const GAUGE_R = 58;
-
-        const createGaugesSvg = function () {
-            const gauge = function (id, cx, title, color) {
-                const cy = 86;
-                const arc = "M" + (cx - GAUGE_R) + " " + cy + " A" + GAUGE_R + " " + GAUGE_R + " 0 0 1 " + (cx + GAUGE_R) + " " + cy;
-                return "<path d='" + arc + "' fill='none' stroke='" + White(0.07) + "' stroke-width='10' stroke-linecap='round'/>" +
-                    "<path id='" + id + "-bar' d='" + arc + "' fill='none' stroke='" + color + "' stroke-width='10' stroke-linecap='round' pathLength='100' stroke-dasharray='0 100' style='transition: stroke-dasharray 0.8s'/>" +
-                    "<line id='" + id + "-target' x1='" + cx + "' y1='" + (cy - GAUGE_R - 10) + "' x2='" + cx + "' y2='" + (cy - GAUGE_R + 8) + "' stroke='" + White(0.85) + "' stroke-width='2.5' stroke-linecap='round' style='transition: transform 0.4s'/>" +
-                    "<text id='" + id + "-value' x='" + cx + "' y='" + (cy - 8) + "' text-anchor='middle' style='fill:" + White(0.95) + "; font-size:26px; font-weight:bold'></text>" +
-                    "<text id='" + id + "-target-text' x='" + cx + "' y='" + (cy + 12) + "' text-anchor='middle' style='fill:" + White(0.45) + "; font-size:12px'></text>" +
-                    "<text x='" + cx + "' y='" + (cy + 34) + "' text-anchor='middle' style='fill:" + color + "; font-size:13px'>" + title + "</text>";
-            };
-            return "<svg viewBox='0 0 440 130' style='display:block; width:100%; height:auto'>" +
-                gauge("nozzle", 110, "Nozzle", NOZZLE_COLOR) + gauge("bed", 330, "Bed", BED_COLOR) +
-                "</svg>";
+        // One heater gauge: a half arc, the value in the middle and the target as a marker line.
+        const createHeaterGauge = function (titleText, color) {
+            const gauge = Gauge({
+                width: 190,
+                height: 125,
+                styleName: T.compStyle,
+                startAngle: -90, // The arc opens upwards.
+                sweepAngle: 180,
+                radius: 58,
+                minValue: 0,
+                maxValue: TEMP_MAX,
+                value: 0,
+                markerValue: 0, // The target.
+                valueSuffix: "°",
+                titleText: titleText,
+                style: {
+                    bar: { color: color, width: 10 },
+                    track: { width: 10 },
+                    value: { fontSize: 26 },
+                    sub: { fontSize: 12 },
+                },
+            });
+            // WHY: A fixed width keeps the two gauges next to each other, as they were in the
+            //      single SVG before. The group centers them and wraps on a narrow card.
+            gauge.elem.style.flexShrink = "0";
+            return gauge;
         };
 
         // Spool: the filament ring gets thinner when it is used.
@@ -913,12 +924,12 @@
             let rings = "";
             for (let rr = inner + 3; rr < r; rr += 3) rings += "<circle cx='55' cy='55' r='" + rr + "' fill='none' stroke='black' stroke-opacity='0.18' stroke-width='0.8'/>";
             return "<svg viewBox='0 0 110 110' style='display:block; width:100%; height:100%'>" +
-                "<circle cx='55' cy='55' r='53' fill='#2A2A28' stroke='" + White(0.15) + "'/>" +
+                "<circle cx='55' cy='55' r='53' fill='#2A2A28' stroke='" + Ink(0.15) + "'/>" +
                 ((ratio > 0) ? "<circle cx='55' cy='55' r='" + r.toFixed(1) + "' fill='" + f.color + "'/>" + rings : "") +
-                "<circle cx='55' cy='55' r='" + inner + "' fill='#1E1E1D' stroke='" + White(0.2) + "'/>" +
-                "<circle cx='55' cy='55' r='7' fill='" + PAGE_COLOR + "' stroke='" + White(0.25) + "'/>" +
+                "<circle cx='55' cy='55' r='" + inner + "' fill='#1E1E1D' stroke='" + Ink(0.2) + "'/>" +
+                "<circle cx='55' cy='55' r='7' fill='" + PAGE_COLOR + "' stroke='" + Ink(0.25) + "'/>" +
                 [0, 120, 240].map(function (a) { const rad = a * Math.PI / 180; return "<circle cx='" + (55 + Math.cos(rad) * 14).toFixed(1) + "' cy='" + (55 + Math.sin(rad) * 14).toFixed(1) + "' r='3' fill='" + PAGE_COLOR + "'/>"; }).join("") +
-                "<text x='55' y='104' text-anchor='middle' style='fill:" + White(0.95) + "; font-size:0px'></text>" +
+                "<text x='55' y='104' text-anchor='middle' style='fill:" + Ink(0.95) + "; font-size:0px'></text>" +
                 "</svg>";
         };
 
@@ -1062,19 +1073,15 @@
 
         const renderTemperatures = function () {
 
-            const svg = gaugeBox.elem.querySelector("svg");
-            const set = function (id, heater, cx) {
-                const value = Math.max(0, Math.min(100, heater.temp / TEMP_MAX * 100));
-                svg.querySelector("#" + id + "-bar").setAttribute("stroke-dasharray", value.toFixed(1) + " 100");
-                svg.querySelector("#" + id + "-value").textContent = Math.round(heater.temp) + "°";
-                svg.querySelector("#" + id + "-target-text").textContent = (heater.target > 0) ? "Target " + heater.target + "°" : "Off";
-                const angle = -90 + Math.min(1, heater.target / TEMP_MAX) * 180;
-                const target = svg.querySelector("#" + id + "-target");
-                target.setAttribute("transform", "rotate(" + angle.toFixed(1) + " " + cx + " 86)");
-                target.style.opacity = (heater.target > 0) ? 1 : 0;
+            const set = function (gauge, heater) {
+                gauge.setValue(Math.round(heater.temp));
+                gauge.setMarkerValue(heater.target);
+                gauge.setSubText((heater.target > 0) ? "Target " + heater.target + "°" : "Off");
+                // WHY: With the heater off the target line means nothing, so it is hidden.
+                gauge.elem.querySelector(".gauge-marker").style.opacity = (heater.target > 0) ? 1 : 0;
             };
-            set("nozzle", printer.nozzle, 110);
-            set("bed", printer.bed, 330);
+            set(gaugeNozzle, printer.nozzle);
+            set(gaugeBed, printer.bed);
 
             const p = printer;
             const heating = (p.nozzle.target > 0 && p.nozzle.temp < p.nozzle.target - 3) || (p.bed.target > 0 && p.bed.temp < p.bed.target - 2);
@@ -1116,7 +1123,7 @@
             filamentLabels.card.lblRight.text = Math.round(f.leftG / f.spoolG * 100) + "%";
 
             const needed = getNeededGrams(printer);
-            let text = "No job to check", color = White(0.5);
+            let text = "No job to check", color = Ink(0.5);
             if (needed > 0) {
                 const what = (printer.job) ? "the job" : "the next job";
                 if (f.leftG >= needed * 1.1) { text = "✓ Enough for " + what + " (" + Math.round(needed) + " g)"; color = ACCENT_COLOR; }
@@ -1158,7 +1165,7 @@
             renderInto(grpQueueHost, function () {
 
                 if (!p.queue.length) {
-                    Label({ text: "The queue is empty. Send a job from your slicer.", fontSize: 13, textColor: White(0.45), padding: [0, 4] });
+                    Label({ text: "The queue is empty. Send a job from your slicer.", fontSize: 13, textColor: Ink(0.45), padding: [0, 4] });
                     return;
                 }
 
@@ -1166,34 +1173,34 @@
 
                     HGroup({ width: "100%", height: "auto", align: "left center", gap: 12 });
                     that.elem.style.padding = "10px 0px";
-                    if (index > 0) that.elem.style.borderTop = "1px solid " + White(0.06);
+                    if (index > 0) that.elem.style.borderTop = "1px solid " + Ink(0.06);
 
-                        Label({ text: String(index + 1), fontSize: 13, textColor: White(0.5), width: 26, height: 26, round: 100, color: FIELD_COLOR, textAlign: "center" });
+                        Label({ text: String(index + 1), fontSize: 13, textColor: Ink(0.5), width: 26, height: 26, round: 100, color: FIELD_COLOR, textAlign: "center" });
                         that.elem.style.lineHeight = "26px";
                         that.elem.style.flexShrink = "0";
 
                         VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
                         that.elem.style.flex = "1 1 auto";
                         that.elem.style.minWidth = "0";
-                            Label({ text: escapeHtml(job.file), fontSize: 14, textColor: White(0.9), width: "100%" });
+                            Label({ text: escapeHtml(job.file), fontSize: 14, textColor: Ink(0.9), width: "100%" });
                             that.elem.style.whiteSpace = "nowrap";
                             that.elem.style.overflow = "hidden";
                             that.elem.style.textOverflow = "ellipsis";
                             const wrongMaterial = job.material != p.filament.material;
-                            Label({ text: formatMinutes(job.minutes) + " · " + job.grams + " g · " + ((wrongMaterial) ? "<span style='color:" + ERROR_COLOR + "'>" + job.material + " (not loaded)</span>" : job.material), fontSize: 12, textColor: White(0.45) });
+                            Label({ text: formatMinutes(job.minutes) + " · " + job.grams + " g · " + ((wrongMaterial) ? "<span style='color:" + ERROR_COLOR + "'>" + job.material + " (not loaded)</span>" : job.material), fontSize: 12, textColor: Ink(0.45) });
                         endGroup();
 
                         const btnRemove = HGroup({ width: 30, height: 30, align: "center center", round: 8 });
                         btnRemove.elem.style.cursor = "pointer";
                         btnRemove.elem.title = "Remove from the queue";
-                        btnRemove.on("mouseover", function () { btnRemove.color = White(0.08); });
+                        btnRemove.on("mouseover", function () { btnRemove.color = Ink(0.08); });
                         btnRemove.on("mouseout", function () { btnRemove.color = "transparent"; });
                         btnRemove.on("click", function () {
                             p.queue.splice(index, 1);
                             addEvent(p, "Info", "Removed from the queue: " + job.file);
                             renderAll();
                         });
-                            Label({ text: "✕", fontSize: 14, textColor: White(0.5) });
+                            Label({ text: "✕", fontSize: 14, textColor: Ink(0.5) });
                         endGroup();
 
                     endGroup();
@@ -1206,7 +1213,7 @@
 
         const renderEvents = function () {
 
-            const LEVEL_COLORS = { "Info": White(0.35), "Success": ACCENT_COLOR, "Warning": WARNING_COLOR, "Error": ERROR_COLOR };
+            const LEVEL_COLORS = { "Info": Ink(0.35), "Success": ACCENT_COLOR, "Warning": WARNING_COLOR, "Error": ERROR_COLOR };
 
             renderInto(grpEventHost, function () {
 
@@ -1214,17 +1221,17 @@
 
                     HGroup({ width: "100%", height: "auto", align: "left top", gap: 10 });
                     that.elem.style.padding = "7px 0px";
-                    if (index > 0) that.elem.style.borderTop = "1px solid " + White(0.05);
+                    if (index > 0) that.elem.style.borderTop = "1px solid " + Ink(0.05);
 
                         Box({ width: 8, height: 8, round: 100, color: LEVEL_COLORS[e.level] });
                         that.elem.style.marginTop = "6px";
                         that.elem.style.flexShrink = "0";
 
-                        Label({ text: escapeHtml(e.message), fontSize: 13, textColor: White(0.8), width: "auto" });
+                        Label({ text: escapeHtml(e.message), fontSize: 13, textColor: Ink(0.8), width: "auto" });
                         that.elem.style.flex = "1 1 auto";
                         that.elem.style.minWidth = "0";
 
-                        Label({ text: e.time, fontSize: 12, textColor: White(0.4) });
+                        Label({ text: e.time, fontSize: 12, textColor: Ink(0.4) });
                         that.elem.style.flexShrink = "0";
 
                     endGroup();

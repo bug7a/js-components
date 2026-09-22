@@ -110,7 +110,7 @@ const NotificationsPage = function(params = {}) {
                 const group = NotificationsPage.getDayGroup(item.time);
                 if (group != lastGroup) {
                     lastGroup = group;
-                    Label({ text: group.toUpperCase(), fontSize: 11, textColor: White(0.45), padding: [20, 8] });
+                    Label({ text: group.toUpperCase(), fontSize: 11, textColor: Ink(0.45), padding: [20, 8] });
                     that.elem.style.letterSpacing = "1px";
                     that.elem.style.marginTop = "8px";
                 }
@@ -139,10 +139,10 @@ const NotificationsPage = function(params = {}) {
             Label({ text: "✓", fontSize: 30, textColor: S.ACCENT_COLOR, width: 60, height: 60, textAlign: "center", round: 100, color: NotificationsPage.alpha(S.ACCENT_COLOR, 0.12) });
             that.elem.style.lineHeight = "60px";
 
-            Label({ text: (tabId == "unread") ? "You are all caught up" : "No notifications here", fontSize: 16, textColor: White(0.9) });
+            Label({ text: (tabId == "unread") ? "You are all caught up" : "No notifications here", fontSize: 16, textColor: Ink(0.9) });
             that.elem.style.fontFamily = "opensans-bold";
 
-            Label({ text: "New notifications will be shown here.", fontSize: 13, textColor: White(0.5) });
+            Label({ text: "New notifications will be shown here.", fontSize: 13, textColor: Ink(0.5) });
 
         endGroup();
 
@@ -166,7 +166,7 @@ const NotificationsPage = function(params = {}) {
             that.elem.style.flexShrink = "0";
                 Icon({ width: 18, height: 18 });
                 that.load(type.icon);
-                that.elem.style.filter = "invert(100%)"; // WHY: Panel icons are black. A white icon on the colored circle.
+                that.elem.style.filter = T.iconFilter; // WHY: Panel icons are black. A white icon on the colored circle.
                 that.opacity = 0.85;
             endGroup();
 
@@ -175,14 +175,14 @@ const NotificationsPage = function(params = {}) {
             that.elem.style.flex = "1 1 auto";
             that.elem.style.minWidth = "0";
 
-                Label({ text: NotificationsPage.escapeHtml(item.title), fontSize: 14, textColor: (item.isRead) ? White(0.75) : White(0.95), width: "100%" });
+                Label({ text: NotificationsPage.escapeHtml(item.title), fontSize: 14, textColor: (item.isRead) ? Ink(0.75) : Ink(0.95), width: "100%" });
                 if (!item.isRead) that.elem.style.fontFamily = "opensans-bold";
 
                 if (item.text) {
-                    Label({ text: NotificationsPage.escapeHtml(item.text), fontSize: 13, textColor: White(0.5), width: "100%" });
+                    Label({ text: NotificationsPage.escapeHtml(item.text), fontSize: 13, textColor: Ink(0.5), width: "100%" });
                 }
 
-                Label({ text: NotificationsPage.formatRelative(item.time) + " · " + type.label, fontSize: 12, textColor: White(0.38) });
+                Label({ text: NotificationsPage.formatRelative(item.time) + " · " + type.label, fontSize: 12, textColor: Ink(0.38) });
                 that.elem.title = new Date(item.time).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" });
 
             endGroup();
@@ -191,10 +191,10 @@ const NotificationsPage = function(params = {}) {
             VGroup({ width: 28, height: "auto", align: "center top", gap: 8 });
             that.elem.style.flexShrink = "0";
 
-                row.btnMore = Label({ text: "•••", fontSize: 11, textColor: White(0.5), padding: [6, 2], round: 6, clickable: 1 });
+                row.btnMore = Label({ text: "•••", fontSize: 11, textColor: Ink(0.5), padding: [6, 2], round: 6, clickable: 1 });
                 row.btnMore.elem.style.cursor = "pointer";
                 row.btnMore.elem.setAttribute("aria-label", "Notification actions");
-                row.btnMore.on("mouseover", function(self) { self.color = White(0.1); });
+                row.btnMore.on("mouseover", function(self) { self.color = Ink(0.1); });
                 row.btnMore.on("mouseout", function(self) { self.color = "transparent"; });
 
                 if (!item.isRead) {
@@ -205,7 +205,7 @@ const NotificationsPage = function(params = {}) {
 
         endGroup();
 
-        row.on("mouseover", function() { row.color = White(0.05); });
+        row.on("mouseover", function() { row.color = Ink(0.05); });
         row.on("mouseout", function() { row.color = (item.isRead) ? "transparent" : NotificationsPage.alpha(S.ACCENT_COLOR, 0.06); });
 
         row.on("click", function(self, event) {
@@ -243,7 +243,7 @@ const NotificationsPage = function(params = {}) {
         NotificationsPage.removeListener(render);
 
         // WHY: The menu is created on the page. box.remove() does not remove it.
-        if (itemMenu) itemMenu.destroy();
+        if (itemMenu) itemMenu.remove();
 
         box.remove();
         box = null;
@@ -253,15 +253,15 @@ const NotificationsPage = function(params = {}) {
     // *** PAGE VIEW:
 
     // Left line
-    Box(0, 0, 1, "100%", { color: White(0.12) });
+    Box(0, 0, 1, "100%", { color: Ink(0.12) });
 
     // GROUP: Header
     VGroup({ left: 0, top: 0, width: "100%", height: 112, align: "left top", gap: 12, padding: [20, 14] });
-    that.elem.style.borderBottom = "1px solid " + White(0.08);
+    that.elem.style.borderBottom = "1px solid " + Ink(0.08);
 
         HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
 
-            lblTitle = Label({ text: "Notifications", fontSize: 20, textColor: White(0.95) });
+            lblTitle = Label({ text: "Notifications", fontSize: 20, textColor: Ink(0.95) });
             that.elem.style.fontFamily = "opensans-bold";
             that.elem.style.flex = "1 1 auto";
 
@@ -271,7 +271,7 @@ const NotificationsPage = function(params = {}) {
 
             Icon({ width: 28, height: 28, clickable: 1 });
             that.load("assets/close.png");
-            that.elem.style.filter = "invert(100%)";
+            that.elem.style.filter = T.iconFilter;
             that.elem.style.cursor = "pointer";
             that.elem.setAttribute("aria-label", "Close");
             that.opacity = 0.6;
@@ -292,7 +292,7 @@ const NotificationsPage = function(params = {}) {
             },
             backgroundStyle: { colorBottom: S.FIELD_COLOR, colorTop: S.FIELD_COLOR, round: 8, border: 1, borderColor: S.CARD_BORDER_COLOR },
             tabPadding: [3, 3],
-            labelStyle: { fontSize: 13, textColor: White(0.85), padding: [10, 5] },
+            labelStyle: { fontSize: 13, textColor: Ink(0.85), padding: [10, 5] },
             selectedStyle: { color: S.PRIMARY_COLOR, round: 6 },
         });
 
@@ -308,7 +308,7 @@ const NotificationsPage = function(params = {}) {
 
     // GROUP: Footer
     HGroup({ left: 0, bottom: 0, width: "100%", height: 52, align: "center center" });
-    that.elem.style.borderTop = "1px solid " + White(0.08);
+    that.elem.style.borderTop = "1px solid " + Ink(0.08);
 
         Label({ text: "Notification settings", fontSize: 13, textColor: S.ACCENT_COLOR, clickable: 1 });
         that.elem.style.cursor = "pointer";
@@ -348,29 +348,29 @@ NotificationsPage.KEY = "Notifications";
 // *** STATIC: STYLE AND HELPERS
 
 NotificationsPage.STYLE = {
-    CARD_BORDER_COLOR: White(0.1),
-    FIELD_COLOR: "#232322",
-    PRIMARY_COLOR: "#3D7A6B",
-    ACCENT_COLOR: "#65A293",
+    CARD_BORDER_COLOR: Ink(0.1),
+    FIELD_COLOR: T.surface2,
+    PRIMARY_COLOR: T.primary,
+    ACCENT_COLOR: T.accent,
 };
 
 // group: The tab of the type
 NotificationsPage.TYPES = {
-    order: { label: "Order", group: "orders", color: "#65A293", icon: "assets/top-bar/bookmark.png" },
-    refund: { label: "Refund", group: "orders", color: "#E66767", icon: "assets/top-bar/bookmark.png" },
-    stock: { label: "Stock", group: "system", color: "#C98500", icon: "assets/warning.png" },
-    user: { label: "User", group: "users", color: "#3987E5", icon: "assets/top-bar/user.png" },
+    order: { label: "Order", group: "orders", color: T.accent, icon: "assets/top-bar/bookmark.png" },
+    refund: { label: "Refund", group: "orders", color: T.danger, icon: "assets/top-bar/bookmark.png" },
+    stock: { label: "Stock", group: "system", color: T.warning, icon: "assets/warning.png" },
+    user: { label: "User", group: "users", color: T.info, icon: "assets/top-bar/user.png" },
     comment: { label: "Comment", group: "users", color: "#9085E9", icon: "assets/top-bar/comment.png" },
-    security: { label: "Security", group: "system", color: "#E66767", icon: "assets/maybe.png" },
-    report: { label: "Report", group: "system", color: "#3987E5", icon: "assets/left-menu/reports.png" },
+    security: { label: "Security", group: "system", color: T.danger, icon: "assets/maybe.png" },
+    report: { label: "Report", group: "system", color: T.info, icon: "assets/left-menu/reports.png" },
 };
 
 NotificationsPage.CONTEXT_MENU_STYLE = {
-    menu: { color: "#232322", borderColor: White(0.12), shadow: "0px 8px 24px rgba(0, 0, 0, 0.5)" },
-    item: { textColor: White(0.85) },
-    itemHover: { textColor: White(1), color: White(0.08) },
-    disabled: { textColor: White(0.3) },
-    separator: { color: White(0.1) },
+    menu: { color: T.surface2, borderColor: Ink(0.12), shadow: "0px 8px 24px " + Black(0.5) },
+    item: { textColor: Ink(0.85) },
+    itemHover: { textColor: Ink(1), color: Ink(0.08) },
+    disabled: { textColor: Ink(0.3) },
+    separator: { color: Ink(0.1) },
 };
 
 NotificationsPage.createButton = function(text, onClick) {
@@ -381,10 +381,10 @@ NotificationsPage.createButton = function(text, onClick) {
         onClick: onClick,
         style: {
             layout: { gap: 6, padding: [12, 6] },
-            label: { fontSize: 13, textColor: White(0.9) },
+            label: { fontSize: 13, textColor: Ink(0.9) },
             box: { color: S.FIELD_COLOR, border: 1, borderColor: S.CARD_BORDER_COLOR, round: 8 },
-            hover: { color: "#2C2C2A" },
-            active: { color: "#383835" },
+            hover: { color: T.surface3 },
+            active: { color: T.surface4 },
         },
     });
 };
@@ -393,7 +393,7 @@ NotificationsPage.escapeHtml = function(text) {
     return String(text).replace(/[&<>"']/g, function(c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c]; });
 };
 
-// "#65A293", 0.2 -> "rgba(101, 162, 147, 0.2)"
+// T.accent, 0.2 -> "rgba(101, 162, 147, 0.2)"
 NotificationsPage.alpha = function(hex, alpha) {
     const n = parseInt(hex.slice(1), 16);
     return "rgba(" + (n >> 16) + ", " + ((n >> 8) & 255) + ", " + (n & 255) + ", " + alpha + ")";

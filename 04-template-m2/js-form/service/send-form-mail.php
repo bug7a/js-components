@@ -129,6 +129,14 @@ if (TO_EMAIL === "" || TO_EMAIL === "you@your-site.com") {
     answer(500, ["ok" => false, "error" => "The service is not ready: write your address to TO_EMAIL."]);
 }
 
+// WHY: Many hosting companies (LiteSpeed / cPanel are the usual ones) do not give the mail()
+//      function and want SMTP instead. Calling it then stops PHP with a fatal error and the
+//      answer is an empty 500: the form only says "could not be sent" and nothing tells you why.
+//      Open this address in a browser: "mailFunction" says whether the server has it.
+if (!function_exists("mail")) {
+    answer(500, ["ok" => false, "error" => "This server does not have the PHP mail() function. Ask your hosting company to turn it on, or send the mail over SMTP."]);
+}
+
 // *** READ THE POSTED DATA:
 
 $contentType = isset($_SERVER["CONTENT_TYPE"]) ? strtolower($_SERVER["CONTENT_TYPE"]) : "";

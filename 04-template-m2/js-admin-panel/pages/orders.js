@@ -213,7 +213,7 @@ const OrdersPage = function(params = {}) {
         closeDetails();
 
         // WHY: SmartTable has window events and a menu on the page. box.remove() does not remove them.
-        if (smartTable) smartTable.destroy();
+        if (smartTable) smartTable.remove();
 
         box.remove();
         box = null;
@@ -230,10 +230,10 @@ const OrdersPage = function(params = {}) {
 
             VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
 
-                Label({ text: "Orders", fontSize: 26, textColor: White(0.95) });
+                Label({ text: "Orders", fontSize: 26, textColor: Ink(0.95) });
                 that.elem.style.fontFamily = "opensans-bold";
 
-                Label({ text: "Process, ship and refund the orders of your store", fontSize: 14, textColor: White(0.5) });
+                Label({ text: "Process, ship and refund the orders of your store", fontSize: 14, textColor: Ink(0.5) });
 
             endGroup();
 
@@ -247,8 +247,8 @@ const OrdersPage = function(params = {}) {
 
         const KPI_LIST = [
             { title: "Orders · 24 hours", lineColor: S.ACCENT_COLOR },
-            { title: "Revenue · 24 hours", lineColor: "#3987E5" },
-            { title: "Waiting to ship", lineColor: "#C98500" },
+            { title: "Revenue · 24 hours", lineColor: T.info },
+            { title: "Waiting to ship", lineColor: T.warning },
             { title: "Refunds · 30 days", lineColor: S.ERROR_COLOR },
         ];
 
@@ -266,8 +266,9 @@ const OrdersPage = function(params = {}) {
                     style: {
                         box: { color: S.CARD_COLOR, border: 1, borderColor: S.CARD_BORDER_COLOR, round: 12 },
                         text: { padding: 14 },
-                        title: { fontSize: 13, textColor: White(0.5) },
-                        valueText: { fontSize: 24, textColor: White(0.95) },
+                        title: { fontSize: 13, textColor: Ink(0.5) },
+                        valueText: { fontSize: 24, textColor: Ink(0.95) },
+                        trend: { flatColor: Ink(0.45) }, // WHY: The default flat color is made for light cards.
                         graph: { height: 30, padding: 14 },
                     },
                 });
@@ -300,7 +301,7 @@ const OrdersPage = function(params = {}) {
                     },
                     backgroundStyle: { colorBottom: S.FIELD_COLOR, colorTop: S.FIELD_COLOR, round: 8, border: 1, borderColor: S.CARD_BORDER_COLOR },
                     tabPadding: [3, 3],
-                    labelStyle: { fontSize: 14, textColor: White(0.85), padding: [12, 6] },
+                    labelStyle: { fontSize: 14, textColor: Ink(0.85), padding: [12, 6] },
                     selectedStyle: { color: S.PRIMARY_COLOR, round: 6 },
                 });
 
@@ -317,11 +318,11 @@ const OrdersPage = function(params = {}) {
                     borderBottomStyle: "1px solid " + S.CARD_BORDER_COLOR,
                     round: 8,
                     color: S.FIELD_COLOR,
-                    textColor: White(0.9),
+                    textColor: Ink(0.9),
                     fontSize: 14,
                     searchIconSize: 16,
                     placeholderText: "Search orders",
-                    invertIconColor: 1,
+                    invertIconColor: T.invertIcon,
                     searchIconFile: LIB_PATH + "comp-m2/search-input-v2/search.svg",
                     clearIconFile: LIB_PATH + "comp-m2/search-input-v2/clear.svg",
                     onSearch: function(text) {
@@ -347,7 +348,7 @@ const OrdersPage = function(params = {}) {
                 that.elem.style.flex = "1 1 auto";
                 endGroup();
 
-                lblResultCount = Label({ text: "", fontSize: 13, textColor: White(0.55) });
+                lblResultCount = Label({ text: "", fontSize: 13, textColor: Ink(0.55) });
 
             endGroup();
 
@@ -384,7 +385,7 @@ const OrdersPage = function(params = {}) {
                     if (titleDataIndex == 4 && data !== "") cell.label.text = OrdersPage.formatMoney(data);
                     if (titleDataIndex == 6) {
                         const status = OrdersPage.getStatusByLabel(data);
-                        cell.label.textColor = (status) ? status.color : White(0.75);
+                        cell.label.textColor = (status) ? status.color : Ink(0.75);
                     }
                 },
                 ...OrdersPage.getSmartTableStyle(LIB_PATH),
@@ -448,7 +449,7 @@ const OrderDetails = function(params = {}) {
     params.top = 0;
     params.width = "100%";
     params.height = "100%";
-    params.color = "#141414";
+    params.color = T.surfaceDeep;
 
     // WHY: order is a live object of the list. startObject() would copy it.
     const order = params.order;
@@ -487,7 +488,7 @@ const OrderDetails = function(params = {}) {
     const startSection = function(title) {
         const group = VGroup({ width: "100%", height: "auto", align: "left top", gap: 8, padding: [16, 14], color: S.CARD_COLOR, border: 1, borderColor: S.CARD_BORDER_COLOR, round: 10 });
         if (title) {
-            Label({ text: title.toUpperCase(), fontSize: 11, textColor: White(0.45) });
+            Label({ text: title.toUpperCase(), fontSize: 11, textColor: Ink(0.45) });
             that.elem.style.letterSpacing = "1px";
         }
         return group;
@@ -496,9 +497,9 @@ const OrderDetails = function(params = {}) {
     const createInfoLine = function(left, right, rightStyle = {}) {
         HGroup({ width: "100%", height: "auto", align: "left center", gap: 16 });
         that.elem.style.justifyContent = "space-between";
-            Label({ text: left, fontSize: 14, textColor: White(0.55) });
+            Label({ text: left, fontSize: 14, textColor: Ink(0.55) });
             that.elem.style.flexShrink = "0";
-            Label({ text: right, fontSize: 14, textColor: White(0.9), textAlign: "right", ...rightStyle });
+            Label({ text: right, fontSize: 14, textColor: Ink(0.9), textAlign: "right", ...rightStyle });
         endGroup();
     };
 
@@ -508,7 +509,7 @@ const OrderDetails = function(params = {}) {
             leftPadding: 14,
             rightPadding: 36,
             backgroundColor: S.FIELD_COLOR,
-            selectedBackgroundColor: "#262625",
+            selectedBackgroundColor: T.surface3,
             lineColor: "transparent",
             selectedLineColor: "transparent",
             backBorderColor: S.CARD_BORDER_COLOR,
@@ -520,10 +521,10 @@ const OrderDetails = function(params = {}) {
             ...params,
         });
         // WHY: InputB has fixed text colors for light backgrounds.
-        input.title.textColor = White(0.45);
+        input.title.textColor = Ink(0.45);
         input.title.fontSize = 11;
         input.title.elem.style.letterSpacing = "1px";
-        input.input.textColor = White(0.9);
+        input.input.textColor = Ink(0.9);
         input.input.fontSize = 15;
         input.input.height = 32;
         input.warningBall.borderColor = S.CARD_COLOR;
@@ -547,7 +548,7 @@ const OrderDetails = function(params = {}) {
     const status = OrdersPage.STATUSES[order.status];
 
     // Left line
-    Box(0, 0, 1, "100%", { color: White(0.12) });
+    Box(0, 0, 1, "100%", { color: Ink(0.12) });
 
     // GROUP: Scrollable content
     startBox(0, 0, "100%", "calc(100% - 76px)", { color: "transparent", scrollY: 1 });
@@ -561,19 +562,19 @@ const OrderDetails = function(params = {}) {
                 that.elem.style.flex = "1 1 auto";
 
                     HGroup({ width: "auto", height: "auto", align: "left center", gap: 10 });
-                        Label({ text: order.id, fontSize: 20, textColor: White(0.95) });
+                        Label({ text: order.id, fontSize: 20, textColor: Ink(0.95) });
                         that.elem.style.fontFamily = "opensans-bold";
                         Label({ text: status.label.toUpperCase(), fontSize: 11, textColor: status.color, color: OrdersPage.alpha(status.color, 0.15), round: 6, padding: [8, 3] });
                         that.elem.style.letterSpacing = "1px";
                     endGroup();
 
-                    Label({ text: new Date(order.time).toLocaleString("en-GB", { dateStyle: "long", timeStyle: "short" }) + " · " + escape(order.payment), fontSize: 13, textColor: White(0.5) });
+                    Label({ text: new Date(order.time).toLocaleString("en-GB", { dateStyle: "long", timeStyle: "short" }) + " · " + escape(order.payment), fontSize: 13, textColor: Ink(0.5) });
 
                 endGroup();
 
                 Icon({ width: 28, height: 28, clickable: 1 });
                 that.load("assets/close.png");
-                that.elem.style.filter = "invert(100%)";
+                that.elem.style.filter = T.iconFilter;
                 that.elem.style.cursor = "pointer";
                 that.opacity = 0.6;
                 that.on("click", function() {
@@ -588,7 +589,7 @@ const OrderDetails = function(params = {}) {
 
                 if (order.status == "pending") {
                     startSection("Next step");
-                        Label({ text: "A new order. Check the payment and start preparing it.", fontSize: 14, textColor: White(0.8), width: "100%" });
+                        Label({ text: "A new order. Check the payment and start preparing it.", fontSize: 14, textColor: Ink(0.8), width: "100%" });
                         OrdersPage.createButton("Start Processing", "", function() {
                             updateOrder({ status: "processing" }, "Order is being prepared", "processing");
                         }, { primary: 1 });
@@ -604,7 +605,7 @@ const OrderDetails = function(params = {}) {
                         HGroup({ width: "100%", height: "auto", align: "left bottom", gap: 10 });
 
                             VGroup({ width: "auto", height: "auto", align: "left top", gap: 6 });
-                                Label({ text: "CARRIER", fontSize: 11, textColor: White(0.45) });
+                                Label({ text: "CARRIER", fontSize: 11, textColor: Ink(0.45) });
                                 that.elem.style.letterSpacing = "1px";
                                 OrdersPage.createTinySelect(OrdersPage.CARRIERS.map(function(name) { return { id: name, label: name }; }), function(id) { carrierId = id; });
                             endGroup();
@@ -637,7 +638,7 @@ const OrderDetails = function(params = {}) {
 
                 if (order.status == "shipped") {
                     startSection("Next step");
-                        Label({ text: "Shipped with " + escape(order.carrier) + ". Tracking number: <b>" + escape(order.tracking) + "</b>", fontSize: 14, textColor: White(0.8), width: "100%" });
+                        Label({ text: "Shipped with " + escape(order.carrier) + ". Tracking number: <b>" + escape(order.tracking) + "</b>", fontSize: 14, textColor: Ink(0.8), width: "100%" });
                         OrdersPage.createButton("Mark as Delivered", "", function() {
                             updateOrder({ status: "delivered" }, "Delivered to the customer", "delivered");
                         }, { primary: 1 });
@@ -655,10 +656,10 @@ const OrderDetails = function(params = {}) {
                     columnHeaders: ["PRODUCT", "QTY", "PRICE", "TOTAL"],
                     columnWidths: ["46%", "12%", "20%", "20%"], // 98%: 1px gaps between cells
                     dataRows: order.items.map(function(item) {
-                        return [escape(item.name) + "<br><span style='font-size:12px; color:" + White(0.4) + "'>" + escape(item.sku) + "</span>", String(item.qty), OrdersPage.formatMoney(item.price), OrdersPage.formatMoney(item.qty * item.price)];
+                        return [escape(item.name) + "<br><span style='font-size:12px; color:" + Ink(0.4) + "'>" + escape(item.sku) + "</span>", String(item.qty), OrdersPage.formatMoney(item.price), OrdersPage.formatMoney(item.qty * item.price)];
                     }),
                     headerBackgroundColor: S.FIELD_COLOR,
-                    headerTextColor: White(0.6),
+                    headerTextColor: Ink(0.6),
                     headerBorderColor: S.FIELD_COLOR,
                     headerFontSize: 12,
                     borderWidth: 1,
@@ -666,9 +667,9 @@ const OrderDetails = function(params = {}) {
                     borderColor: S.CARD_BORDER_COLOR,
                     bodyBackgroundColor: S.CARD_COLOR,
                     cellFontSize: 14,
-                    cellTextColor: White(0.85),
-                    rowHoverBackgroundColor: White(0.05),
-                    rowHoverBorderColor: White(0.1),
+                    cellTextColor: Ink(0.85),
+                    rowHoverBackgroundColor: Ink(0.05),
+                    rowHoverBorderColor: Ink(0.1),
                     onCellRender: function(cell) {
                         if (cell.index == 0) cell.elem.style.whiteSpace = "normal";
                         if (cell.index > 0) cell.textAlign = "right";
@@ -693,13 +694,13 @@ const OrderDetails = function(params = {}) {
             // CUSTOMER
             startSection("Customer");
 
-                Label({ text: escape(order.customer.name), fontSize: 16, textColor: White(0.95) });
-                Label({ text: escape(order.customer.email) + " · " + escape(order.customer.phone), fontSize: 13, textColor: White(0.55), width: "100%" });
+                Label({ text: escape(order.customer.name), fontSize: 16, textColor: Ink(0.95) });
+                Label({ text: escape(order.customer.email) + " · " + escape(order.customer.phone), fontSize: 13, textColor: Ink(0.55), width: "100%" });
 
-                Label({ text: "SHIPPING ADDRESS", fontSize: 11, textColor: White(0.45) });
+                Label({ text: "SHIPPING ADDRESS", fontSize: 11, textColor: Ink(0.45) });
                 that.elem.style.letterSpacing = "1px";
                 that.elem.style.marginTop = "6px";
-                Label({ text: escape(order.address), fontSize: 14, textColor: White(0.85), width: "100%" });
+                Label({ text: escape(order.address), fontSize: 14, textColor: Ink(0.85), width: "100%" });
 
                 HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
                 that.elem.style.marginTop = "4px";
@@ -719,7 +720,7 @@ const OrderDetails = function(params = {}) {
                 // Newest first
                 order.history.slice().reverse().forEach(function(entry, index, list) {
 
-                    const color = (OrdersPage.STATUSES[entry.type]) ? OrdersPage.STATUSES[entry.type].color : White(0.5);
+                    const color = (OrdersPage.STATUSES[entry.type]) ? OrdersPage.STATUSES[entry.type].color : Ink(0.5);
 
                     HGroup({ width: "100%", height: "auto", align: "left top", gap: 12 });
 
@@ -729,7 +730,7 @@ const OrderDetails = function(params = {}) {
                             Box({ width: 10, height: 10, round: 100, color: color });
                             that.elem.style.marginTop = "5px";
                             if (index < list.length - 1) {
-                                Box({ width: 2, height: "auto", color: White(0.1) });
+                                Box({ width: 2, height: "auto", color: Ink(0.1) });
                                 that.elem.style.flex = "1 1 auto";
                                 that.elem.style.minHeight = "20px";
                             }
@@ -739,8 +740,8 @@ const OrderDetails = function(params = {}) {
                         that.elem.style.flex = "1 1 auto";
                         that.elem.style.minWidth = "0";
                         that.elem.style.paddingBottom = "12px";
-                            Label({ text: escape(entry.text), fontSize: 14, textColor: (entry.type == "note") ? "#E8D9A8" : White(0.9), width: "100%" });
-                            Label({ text: new Date(entry.time).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }) + " · " + escape(entry.by), fontSize: 12, textColor: White(0.45) });
+                            Label({ text: escape(entry.text), fontSize: 14, textColor: (entry.type == "note") ? Theme.readable("#E8D9A8") : Ink(0.9), width: "100%" });
+                            Label({ text: new Date(entry.time).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }) + " · " + escape(entry.by), fontSize: 12, textColor: Ink(0.45) });
                         endGroup();
 
                     endGroup();
@@ -773,7 +774,7 @@ const OrderDetails = function(params = {}) {
 
     // GROUP: Buttons (bottom)
     HGroup({ left: 0, bottom: 0, width: "100%", height: 76, align: "left center", gap: 8, padding: [20, 0] });
-    that.elem.style.borderTop = "1px solid " + White(0.08);
+    that.elem.style.borderTop = "1px solid " + Ink(0.08);
 
         const canCancel = ["pending", "processing"].includes(order.status);
         const canRefund = ["shipped", "delivered"].includes(order.status);
@@ -807,9 +808,9 @@ const OrderDetails = function(params = {}) {
                 style: {
                     layout: { gap: 6, padding: [14, 0] },
                     icon: { width: 0, height: 0 },
-                    label: { fontSize: 14, textColor: White(0.9) },
+                    label: { fontSize: 14, textColor: Ink(0.9) },
                     holdingLabel: { fontSize: 14, textColor: "#B03A2E" },
-                    completedLabel: { fontSize: 14, textColor: "#2C5A38" },
+                    completedLabel: { fontSize: 14, textColor: T.primaryActive },
                     box: { color: S.FIELD_COLOR, border: 1, borderColor: S.CARD_BORDER_COLOR, round: 8 },
                     holdingBox: { color: "#FFD1CB", borderColor: S.ERROR_COLOR, round: 8 },
                     completedBox: { color: "#DFEFE6", borderColor: S.ACCENT_COLOR, round: 8 },
@@ -824,7 +825,7 @@ const OrderDetails = function(params = {}) {
         }
 
         if (!canCancel && !canRefund) {
-            Label({ text: "No more actions for a " + status.label.toLowerCase() + " order.", fontSize: 13, textColor: White(0.45) });
+            Label({ text: "No more actions for a " + status.label.toLowerCase() + " order.", fontSize: 13, textColor: Ink(0.45) });
         }
 
     endGroup();
@@ -847,21 +848,21 @@ OrderDetails.KEY = "OrderDetails";
 // *** STATIC: STYLE AND HELPERS
 
 OrdersPage.STYLE = {
-    CARD_COLOR: "#1A1A19",
-    CARD_BORDER_COLOR: White(0.1),
-    FIELD_COLOR: "#232322",
-    PRIMARY_COLOR: "#3D7A6B",
-    ACCENT_COLOR: "#65A293",
-    ERROR_COLOR: "#E66767",
+    CARD_COLOR: T.surface,
+    CARD_BORDER_COLOR: Ink(0.1),
+    FIELD_COLOR: T.surface2,
+    PRIMARY_COLOR: T.primary,
+    ACCENT_COLOR: T.accent,
+    ERROR_COLOR: T.danger,
 };
 
 OrdersPage.STATUSES = {
-    pending: { label: "Pending", color: "#C98500" },
-    processing: { label: "Processing", color: "#3987E5" },
+    pending: { label: "Pending", color: T.warning },
+    processing: { label: "Processing", color: T.info },
     shipped: { label: "Shipped", color: "#9085E9" },
-    delivered: { label: "Delivered", color: "#65A293" },
-    cancelled: { label: "Cancelled", color: "#A9A79F" },
-    refunded: { label: "Refunded", color: "#E66767" },
+    delivered: { label: "Delivered", color: T.accent },
+    cancelled: { label: "Cancelled", color: Theme.readable("#A9A79F") },
+    refunded: { label: "Refunded", color: T.danger },
 };
 
 OrdersPage.PAYMENTS = ["Credit card", "PayPal", "Bank transfer", "Cash on delivery"];
@@ -887,7 +888,7 @@ OrdersPage.escapeHtml = function(text) {
     return String(text).replace(/[&<>"']/g, function(c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c]; });
 };
 
-// "#65A293", 0.2 -> "rgba(101, 162, 147, 0.2)"
+// T.accent, 0.2 -> "rgba(101, 162, 147, 0.2)"
 OrdersPage.alpha = function(hex, alpha) {
     const n = parseInt(hex.slice(1), 16);
     return "rgba(" + (n >> 16) + ", " + ((n >> 8) & 255) + ", " + (n & 255) + ", " + alpha + ")";
@@ -904,13 +905,13 @@ OrdersPage.createButton = function(text, iconFile, onClick, params = {}) {
         style: {
             layout: { gap: 8, padding: [14, 8] },
             icon: { width: 18, height: 18 },
-            label: { fontSize: 14, textColor: White(0.92) },
+            label: { fontSize: 14, textColor: Ink(0.92) },
             box: { color: (params.primary) ? S.PRIMARY_COLOR : S.FIELD_COLOR, border: 1, borderColor: S.CARD_BORDER_COLOR, round: 8 },
-            hover: { color: (params.primary) ? "#468A79" : "#2C2C2A" },
-            active: { color: (params.primary) ? "#2C5A38" : "#383835" },
+            hover: { color: (params.primary) ? T.primaryHover : T.surface3 },
+            active: { color: (params.primary) ? T.primaryActive : T.surface4 },
         },
     });
-    if (btn.icon) btn.icon.elem.style.filter = "invert(100%)"; // WHY: Panel icons are black.
+    if (btn.icon) btn.icon.elem.style.filter = T.iconFilter; // WHY: Panel icons are black.
     return btn;
 };
 
@@ -928,15 +929,15 @@ OrdersPage.createTinySelect = function(list, onSelect, selectedIndex = 0) {
         borderColor: S.CARD_BORDER_COLOR,
         round: 8,
         labelBoldFont: 0,
-        labelTextColor: White(0.9),
+        labelTextColor: Ink(0.9),
         arrowIcon: "../../comp-m2/tiny-select/arrow.svg",
         arrowSize: 18,
-        invertIconColor: 1,
+        invertIconColor: T.invertIcon,
         listFontSize: 14,
-        listTextColor: White(0.85),
+        listTextColor: Ink(0.85),
         listOverTextColor: S.ACCENT_COLOR,
         listBackgroundColor: S.FIELD_COLOR,
-        listBorderColor: White(0.15),
+        listBorderColor: Ink(0.15),
         onSelect: function(index, id) {
             if (isReady) onSelect(id);
         },
@@ -949,17 +950,17 @@ OrdersPage.getSmartTableStyle = function(libPath) {
     const S = OrdersPage.STYLE;
     return {
         scrollBarParams: {
-            bar_border: 0, bar_round: 3, bar_borderColor: "rgba(255, 255, 255, 0.15)", bar_width: 4, bar_mouseOverWidth: 4,
-            bar_mouseOverColor: "#A0A0A0", bar_opacity: 0.4, bar_mouseOverOpacity: 0.9, bar_padding: 2, bar_color: "#A0A0A0",
+            bar_border: 0, bar_round: 3, bar_borderColor: Ink(0.15), bar_width: 4, bar_mouseOverWidth: 4,
+            bar_mouseOverColor: T.scrollBar, bar_opacity: 0.4, bar_mouseOverOpacity: 0.9, bar_padding: 2, bar_color: T.scrollBar,
             neverHide: 0, showDots: 0,
         },
         // WHY: Filtre kutusu ile alt bar aynı renkti, kutu görünmüyordu. Bar kart rengine, kutu ise alan rengine (FIELD_COLOR) alındı.
         searchInputParams: {
             width: "50%", height: 34, border: 1, round: 8, color: S.FIELD_COLOR, borderColor: S.CARD_BORDER_COLOR,
             borderBottomStyle: "1px solid " + S.CARD_BORDER_COLOR,
-            textColor: White(0.9), placeholderColor: White(0.4), fontSize: 14,
+            textColor: Ink(0.9), placeholderColor: Ink(0.4), fontSize: 14,
             placeholderText: "Filter the table",
-            searchIconSize: 15, searchIconOpacity: 0.55, invertIconColor: 1,
+            searchIconSize: 15, searchIconOpacity: 0.55, invertIconColor: T.invertIcon,
             searchIconFile: libPath + "comp-m2/search-input-v2/filter.png",
             clearIconFile: libPath + "comp-m2/search-input-v2/clear.svg",
         },
@@ -967,12 +968,12 @@ OrdersPage.getSmartTableStyle = function(libPath) {
         searchTitleMenuParams: {
             minWidth: 170,
             style: {
-                menu: { color: S.FIELD_COLOR, border: 1, borderColor: White(0.12), round: 8, padding: 4, shadow: "0 8px 24px rgba(0, 0, 0, 0.5)" },
-                item: { height: 30, fontSize: 13, textColor: White(0.75), color: "transparent", round: 6, padding: 10, gap: 10 },
-                itemHover: { textColor: "white", color: White(0.08) },
-                disabled: { textColor: White(0.3), opacity: 0.4 },
+                menu: { color: S.FIELD_COLOR, border: 1, borderColor: Ink(0.12), round: 8, padding: 4, shadow: "0 8px 24px " + Black(0.5) },
+                item: { height: 30, fontSize: 13, textColor: Ink(0.75), color: "transparent", round: 6, padding: 10, gap: 10 },
+                itemHover: { textColor: "white", color: Ink(0.08) },
+                disabled: { textColor: Ink(0.3), opacity: 0.4 },
                 icon: { width: 14, height: 14 },
-                separator: { color: White(0.1), space: 4 },
+                separator: { color: Ink(0.1), space: 4 },
             },
         },
         style: {
@@ -980,9 +981,9 @@ OrdersPage.getSmartTableStyle = function(libPath) {
             height: "100%",
             round: 8,
             line1Color: S.CARD_COLOR,
-            line2Color: "#202020",
-            highlightItemCellColor: "#2A3A36",
-            highlightTitleCellColor: White(0.08),
+            line2Color: T.tableRow2,
+            highlightItemCellColor: T.tableHighlight,
+            highlightTitleCellColor: Ink(0.08),
             verticalScrollWidth: 20,
             verticalScrollMargin: 2,
             btnScrollDownIconFile: libPath + "comp-m3/smart-table/down.png",
@@ -992,22 +993,22 @@ OrdersPage.getSmartTableStyle = function(libPath) {
             // WHY: Varsayılan tik ikonu koyu renkli; koyu menüde görünmüyordu.
             searchTitleCheckIconFile: "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + S.ACCENT_COLOR + '" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17.5 19 7"/></svg>'),
             loadingIconFile: libPath + "comp-m3/smart-table/clock.png",
-            invertIconColor: 1,
+            invertIconColor: T.invertIcon,
             box: { color: S.CARD_COLOR },
             boxBorder: { border: 1, borderColor: S.CARD_BORDER_COLOR },
             boxTitleLine: { color: S.FIELD_COLOR },
-            boxTitleCell: { padding: [10, 0], borderRight: "1px solid rgba(255, 255, 255, 0.06)", borderBottom: "1px solid rgba(255, 255, 255, 0.12)" },
-            lblTitleCell: { fontSize: 13, fontFamily: "opensans", textColor: White(0.6) },
-            boxItemCell: { borderBottom: "1px solid rgba(255, 255, 255, 0.05)", borderRight: "1px solid rgba(255, 255, 255, 0.03)", padding: [10, 0] },
-            lblItemCell: { fontSize: 14, textColor: "rgba(255, 255, 255, 0.75)", fontFamily: "opensans" },
-            boxInfoLine: { color: S.CARD_COLOR, borderTop: "1px solid rgba(255, 255, 255, 0.08)" },
-            lblBoxInfoLine: { fontSize: 13, textColor: White(0.55) },
-            lblNoDataFound: { color: "#2C2C2A", textColor: White(0.6), padding: [8, 2], fontSize: 13, round: 8, border: 1, borderColor: White(0.15) },
+            boxTitleCell: { padding: [10, 0], borderRight: "1px solid " + Ink(0.06), borderBottom: "1px solid " + Ink(0.12) },
+            lblTitleCell: { fontSize: 13, fontFamily: "opensans", textColor: Ink(0.6) },
+            boxItemCell: { borderBottom: "1px solid " + Ink(0.05), borderRight: "1px solid " + Ink(0.03), padding: [10, 0] },
+            lblItemCell: { fontSize: 14, textColor: Ink(0.75), fontFamily: "opensans" },
+            boxInfoLine: { color: S.CARD_COLOR, borderTop: "1px solid " + Ink(0.08) },
+            lblBoxInfoLine: { fontSize: 13, textColor: Ink(0.55) },
+            lblNoDataFound: { color: T.surface3, textColor: Ink(0.6), padding: [8, 2], fontSize: 13, round: 8, border: 1, borderColor: Ink(0.15) },
             // Filtre kutusunun içindeki sütun etiketi: Kutunun içinde durduğu için daha hafif bir chip.
-            lblSearchTitle: { color: White(0.08), textColor: White(0.6), padding: [8, 1], fontSize: 12, round: 6, border: 1, borderColor: White(0.14) },
-            btnScrollCenter: { color: "#2C2C2A", round: 100, borderColor: White(0.2), border: 1 },
-            btnScrollUp: { color: "#3A3A38", round: 100, border: 1, borderColor: White(0.3) },
-            btnScrollDown: { color: "#3A3A38", round: 100, border: 1, borderColor: White(0.3) },
+            lblSearchTitle: { color: Ink(0.08), textColor: Ink(0.6), padding: [8, 1], fontSize: 12, round: 6, border: 1, borderColor: Ink(0.14) },
+            btnScrollCenter: { color: T.surface3, round: 100, borderColor: Ink(0.2), border: 1 },
+            btnScrollUp: { color: T.surface4, round: 100, border: 1, borderColor: Ink(0.3) },
+            btnScrollDown: { color: T.surface4, round: 100, border: 1, borderColor: Ink(0.3) },
             boxSort: { color: S.PRIMARY_COLOR },
         },
     };

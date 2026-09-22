@@ -188,20 +188,23 @@ const CompName = function (params = {}) {
         box.refreshTimer = waitAndRun(box.refreshTimer, refresh, time);
     };
 
-    // box.superRemove = box.remove;
-    box.destroy = function () {
+    // WHY: The component cleans itself in remove(). superRemove is the remove() of basic.js.
+    // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
+    const superRemove = box.remove;
+    box.superRemove = superRemove;
+    box.remove = function () {
+
+        if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
 
         //page.remove_onResize(functionName); // on page resized.
+        // NOTE: Clean the global registrations here: window / document events, timers,
+        //       static lists and the objects created on the page (menus, popups).
 
-        // Remove basic objects
-        box.background.remove(); // NOTE: If you add event (box.background.on("click") to other objects.
-        box.icon.remove();
-
-        // box.superRemove.call(box);
-        box.remove(); // NOTE: It will clean all events like box.on("click"
+        superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
         box = null;
 
     };
+    // USAGE: componentName.remove();
 
     // *** OBJECT VIEW:
     box.elem.style.cursor = "pointer";

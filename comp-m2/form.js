@@ -30,6 +30,8 @@ const FormDefaults = {
     errorText: "<b>{{name}}</b> is not valid",
     minimalButton: 0,
     doubleInputAlwaysHorizontal: 0,
+    showPassiveButtonHint: 1, // 1: A hint is shown when the mouse is over the passive send button.
+    passiveButtonHintText: "Please fill in the missing fields to send the form.",
     onEdit: function(input) {},
     onSendClick: function(json) {},
 };
@@ -165,6 +167,23 @@ const Form = function(params = {}) {
 
     };
 
+    // Puts the cover exactly over the send button. (The button width is 100%.)
+    const layoutSendCover = function() {
+        if (!box.btnSendCover) return;
+        box.btnSendCover.left = box.btnSend.left;
+        box.btnSendCover.top = box.btnSend.top;
+        box.btnSendCover.width = box.btnSend.elem.offsetWidth || box.btnSend.width;
+        box.btnSendCover.height = box.btnSend.elem.offsetHeight || box.btnSend.height;
+    };
+
+    // The cover works only while the send button is passive.
+    // WHY: With the form ready the cover would be over the button and would eat the click.
+    const setPassiveButtonCover = function(isOn) {
+        if (!box.btnSendCover) return;
+        box.btnSendCover.clickable = isOn;
+        if (!isOn && box.btnSendCover.tooltip) box.btnSendCover.tooltip.visible = 0;
+    };
+
     // Check the form and create warnings, active the send button
     const checkForm = function() {
 
@@ -188,6 +207,7 @@ const Form = function(params = {}) {
         if (warningCount > 0) {
             box.btnSend.clickable = 0;
             box.btnSend.elem.style.filter = "grayscale(100%)";
+            setPassiveButtonCover(1);
             if (warningCount == 1) {
                 box.lblWarning.text = box.missingEntryText.replace("{{count}}", warningCount);
             } else {
@@ -201,6 +221,7 @@ const Form = function(params = {}) {
             box.lblWarning.clickable = 0;
             box.btnSend.clickable = 1;
             box.btnSend.elem.style.filter = "grayscale(0%)";
+            setPassiveButtonCover(0);
         }
 
     };
@@ -286,6 +307,13 @@ const Form = function(params = {}) {
     };
 
     // *** PUBLIC FUNCTIONS:
+
+    box.setPassiveButtonHintText = function(text) {
+        box.passiveButtonHintText = text;
+        if (box.btnSendCover && box.btnSendCover.tooltip) box.btnSendCover.tooltip.setHintText(text);
+    };
+    // USAGE: get: form.passiveButtonHintText, set: form.setPassiveButtonHintText("...")
+
     // If you need to change a param after it is created. You can write a setter function for it.
     box.addInput = function(input) {
 
@@ -463,6 +491,40 @@ const Form = function(params = {}) {
                     });
                     box.btnSend.clickable = 0; // that.on("mousedown" set box.btnSend.clickable = 1
                     box.btnSend.elem.style.filter = "grayscale(100%)";
+
+                    // BOX: Catches the mouse while the send button is passive.
+                    // WHY: clickable: 0 puts "pointer-events: none" on the button, so the button
+                    //      itself can not see the mouse and can not show a hint.
+                    // NOTE: A Button can NOT hold other objects, only a Box can. So the cover is a
+                    //       brother of the button in the same group and is put over it, the same way
+                    //       box.lblWarning is. (A box created inside the button would also send its
+                    //       mouse events up to the button and colour it on hover.)
+                    //       It is turned off as soon as the form is ready, so it never eats a click.
+                    if (box.showPassiveButtonHint == 1 && typeof Tooltip !== "undefined") {
+
+                        box.btnSendCover = Box({
+                            position: "absolute",
+                            color: "transparent",
+                            clickable: 1,
+                        });
+                        //box.btnSendCover.elem.style.cursor = "not-allowed";
+
+                        box.btnSendCover.tooltip = Tooltip({
+                            target: box.btnSendCover,
+                            hintText: box.passiveButtonHintText,
+                            hintPosition: "top",
+                            lbl_color: "white",
+                            lbl_textColor: "#141414",
+                            lbl_borderColor: "#141414",
+                            lbl_border: 1,
+                            lbl_fontSize: 14,
+                            lbl_round: 2,
+                        });
+
+                        layoutSendCover();
+                        box.btnSend.onResize(layoutSendCover); // The button is 100% wide.
+
+                    }
 
                     // LABEL: box.lblWarning
                     box.lblWarning = Label({

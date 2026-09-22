@@ -64,8 +64,16 @@ const Slider = function(params = {}) {
     
     let startX = 0;
     let startLeft = 0;
-    const maxLeft = box.width - 20; // Maximum left position (px)
     let diff = maxValue - minValue;
+
+    // Maximum left position of the thumb (px).
+    // WHY: It was read once at create time (box.width - 20). With width: "100%" the real width comes
+    //      after the layout and changes with the page, so the old value stayed too big and the thumb
+    //      could be dragged out of the slider (and out of the screen). Now it is read every time.
+    const getMaxLeft = function() {
+        const max = box.width - thumbBox.width;
+        return (max > 0) ? max : 0;
+    };
 
 
     let normalSpace = 6;
@@ -83,11 +91,14 @@ const Slider = function(params = {}) {
         emptyTrackBox.width = box.width - (thumbBox.left + thumbBox.width) + thumbLineBox.left - normalSpace;
     };
     const updateThumbPosition = function(newLeft, animated = 0) {
+        const maxLeft = getMaxLeft();
+        if (newLeft < 0 || !isFinite(newLeft)) newLeft = 0;
+        if (newLeft > maxLeft) newLeft = maxLeft;
         if (animated == 0) thumbBox.dontMotion();
         thumbBox.left = newLeft;
         updateTrack(animated);
         //box.currentValue = parseInt((newLeft/maxLeft)*100);
-        box.currentValue = parseInt(((newLeft/maxLeft)*diff) + minValue);
+        box.currentValue = (maxLeft > 0) ? parseInt(((newLeft/maxLeft)*diff) + minValue) : minValue;
         if (animated == 0) valueBox.dontMotion();
         valueBox.text = box.currentValue;
         valueBox.aline(thumbBox, "top", 6, "center");
@@ -138,7 +149,7 @@ const Slider = function(params = {}) {
         if (val > maxValue) val = maxValue;
 
         //const sabit = maxLeft / 100;
-        const sabit = maxLeft / diff;
+        const sabit = getMaxLeft() / diff;
         const newLeft = (val - minValue) * sabit;
         showHideTracks(val, 1);
         updateThumbPosition(newLeft, 1);
@@ -309,6 +320,7 @@ const Slider = function(params = {}) {
         if (!isDragging) return;
         e.preventDefault();
         const clientX = e.clientX || e.touches[0].clientX;
+        const maxLeft = getMaxLeft();
         let dx = clientX - startX;
         let newLeft = startLeft + dx;
 
@@ -336,6 +348,17 @@ const Slider = function(params = {}) {
 
     thumbBox.on("mousedown", onMouseDown);
     thumbBox.on("touchstart", onMouseDown, { passive: false });
+
+    // WHY: With width: "100%" the slider gets its real width after the layout, and it changes with
+    //      the page. The thumb must stay on its value. (No animation and no value bubble here.)
+    box.onResize(function() {
+        if (isDragging) return;
+        const value = box.currentValue;
+        updateThumbPosition((value - minValue) * (getMaxLeft() / diff));
+        box.currentValue = value; // WHY: updateThumbPosition() reads the value back from the position.
+        valueBox.text = value;
+        showHideTracks(value, 0);
+    });
 
     box.setValue(box.currentValue);
     //updateThumbPosition(0);

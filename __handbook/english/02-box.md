@@ -2,6 +2,11 @@
 
 In the `basic.js` library, the `Box()` object is used to create basic rectangular or square views on the screen. It generally functions as a background, structural container, or to group other objects.
 
+> **Only a Box holds other objects.** `startBox()`, `createIn()` and the groups (`AutoLayout`,
+> `HGroup`, `VGroup`, which are Box objects too) all work with a Box. A `Button`, `Label`, `Input`
+> or `Icon` can **not** hold children. To put something over a button, create it as a brother of
+> the button in the same box and place it with `position: "absolute"`.
+
 ---
 
 ## Creating a Box

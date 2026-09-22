@@ -11,6 +11,8 @@
         <link rel="preload" href="../../../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
         <link rel="stylesheet" type="text/css" href="../../../basic/basic.min.css">
         <script src="../../../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../common/theme.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- COMPONENTS -->
         <script src="../../../comp-m2/tiny-select.js" type="text/javascript" charset="utf-8"></script>
@@ -49,15 +51,15 @@
         const LIB_PATH = "../../../";
         const ASSETS = "../assets/";
 
-        const PAGE_COLOR = "black";
-        const CARD_COLOR = "#1A1A19"; // Same with ChartBox dark theme background
-        const CARD_BORDER_COLOR = White(0.1);
-        const FIELD_COLOR = "#232322";
-        const PRIMARY_COLOR = "#3D7A6B";
-        const ACCENT_COLOR = "#65A293";
-        const WARNING_COLOR = "#C98500";
-        const ERROR_COLOR = "#E66767";
-        const CHART_COLORS = [ACCENT_COLOR, "#3987E5", WARNING_COLOR, "#D55181", "#9085E9"];
+        const PAGE_COLOR = T.page;
+        const CARD_COLOR = T.surface; // Same with ChartBox dark theme background
+        const CARD_BORDER_COLOR = Ink(0.1);
+        const FIELD_COLOR = T.surface2;
+        const PRIMARY_COLOR = T.primary;
+        const ACCENT_COLOR = T.accent;
+        const WARNING_COLOR = T.warning;
+        const ERROR_COLOR = T.danger;
+        const CHART_COLORS = [ACCENT_COLOR, T.info, WARNING_COLOR, "#D55181", "#9085E9"];
 
         const TARGET_MIN = -30; // °C (Slider: 0)
         const TARGET_MAX = 10; // °C (Slider: 100)
@@ -73,7 +75,7 @@
         };
 
         const LEVEL_COLORS = {
-            "Info": White(0.6),
+            "Info": Ink(0.6),
             "Success": ACCENT_COLOR,
             "Warning": WARNING_COLOR,
             "Error": ERROR_COLOR,
@@ -184,7 +186,7 @@
                 coverBackgroundColor: "rgba(0, 0, 0, 0.6)",
                 waitingIcon: LIB_PATH + "comp-m2/waiting/clock3.png",
             });
-            waiting.icon.elem.style.filter = "invert(100%)";
+            waiting.icon.elem.style.filter = T.iconFilter;
 
             // WHY: Bar count was calculated with the default width (before flex).
             kpiBoxList.forEach(function (kpiBox) { kpiBox.refresh(); });
@@ -476,7 +478,7 @@
                     Label({
                         text: title,
                         fontSize: 16,
-                        textColor: White(0.95),
+                        textColor: Ink(0.95),
                     });
                     that.elem.style.fontFamily = "opensans-bold";
 
@@ -484,7 +486,7 @@
                         Label({
                             text: subtitle,
                             fontSize: 12,
-                            textColor: White(0.45),
+                            textColor: Ink(0.45),
                         });
                     }
 
@@ -508,7 +510,7 @@
             Label({
                 text: text.toUpperCase(),
                 fontSize: 11,
-                textColor: White(0.45),
+                textColor: Ink(0.45),
             });
             that.elem.style.letterSpacing = "1px";
         };
@@ -523,13 +525,13 @@
                 style: {
                     layout: { gap: 10, padding: [14, 8], align: params.align || "center center" },
                     icon: { width: 20, height: 20 },
-                    label: { fontSize: 14, textColor: White(0.9) },
+                    label: { fontSize: 14, textColor: Ink(0.9) },
                     box: { color: params.color || FIELD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8 },
-                    hover: { color: params.hoverColor || "#2C2C2A" },
-                    active: { color: params.activeColor || "#383835" },
+                    hover: { color: params.hoverColor || T.surface3 },
+                    active: { color: params.activeColor || T.surface4 },
                 },
             });
-            if (btn.icon) btn.icon.elem.style.filter = "invert(100%)"; // WHY: Panel icons are black.
+            if (btn.icon) btn.icon.elem.style.filter = T.iconFilter; // WHY: Panel icons are black.
 
             return btn;
 
@@ -538,12 +540,12 @@
         // Dark style for SelectTime and SelectDate
         const PICKER_STYLE = {
             field: { color: FIELD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8 },
-            fieldHover: { borderColor: White(0.3) },
+            fieldHover: { borderColor: Ink(0.3) },
             fieldFocus: { borderColor: ACCENT_COLOR },
-            fieldText: { fontSize: 14, textColor: White(0.9) },
-            placeholder: { textColor: White(0.4) },
-            icon: { color: White(0.55) },
-            panel: { color: FIELD_COLOR, borderColor: White(0.12), shadow: "0 8px 24px rgba(0, 0, 0, 0.5)" },
+            fieldText: { fontSize: 14, textColor: Ink(0.9) },
+            placeholder: { textColor: Ink(0.4) },
+            icon: { color: Ink(0.55) },
+            panel: { color: FIELD_COLOR, borderColor: Ink(0.12), shadow: "0 8px 24px rgba(0, 0, 0, 0.5)" },
             footerButton: { textColor: ACCENT_COLOR },
             disabled: { opacity: 0.4 },
         };
@@ -564,14 +566,14 @@
                         Label({
                             text: "Cold Rooms",
                             fontSize: 26,
-                            textColor: White(0.95),
+                            textColor: Ink(0.95),
                         });
                         that.elem.style.fontFamily = "opensans-bold";
 
                         Label({
                             text: "Cold room controllers",
                             fontSize: 14,
-                            textColor: White(0.5),
+                            textColor: Ink(0.5),
                         });
 
                     endGroup();
@@ -585,20 +587,20 @@
                         border: 1,
                         borderColor: CARD_BORDER_COLOR,
                         round: 8,
-                        labelTextColor: White(0.95),
+                        labelTextColor: Ink(0.95),
                         arrowIcon: LIB_PATH + "comp-m2/tiny-select/arrow.svg",
                         arrowSize: 20,
-                        invertIconColor: 1,
+                        invertIconColor: T.invertIcon,
                         listFontSize: 15,
-                        listTextColor: White(0.85),
+                        listTextColor: Ink(0.85),
                         listOverTextColor: ACCENT_COLOR,
                         listBackgroundColor: FIELD_COLOR,
-                        listBorderColor: White(0.15),
+                        listBorderColor: Ink(0.15),
                         onSelect: function (index) {
                             if (isReady) selectDevice(index);
                         },
                     });
-                    deviceSelect.lblTitle.textColor = White(0.5);
+                    deviceSelect.lblTitle.textColor = Ink(0.5);
 
                     lblStatus = Label({
                         text: "",
@@ -633,11 +635,11 @@
                             onMoreMenuClick(item.key);
                         },
                         style: {
-                            menu: { color: FIELD_COLOR, borderColor: White(0.12), shadow: "0px 8px 24px rgba(0, 0, 0, 0.5)" },
-                            item: { textColor: White(0.85) },
-                            itemHover: { textColor: White(1), color: White(0.08) },
-                            disabled: { textColor: White(0.3) },
-                            separator: { color: White(0.1) },
+                            menu: { color: FIELD_COLOR, borderColor: Ink(0.12), shadow: "0px 8px 24px rgba(0, 0, 0, 0.5)" },
+                            item: { textColor: Ink(0.85) },
+                            itemHover: { textColor: Ink(1), color: Ink(0.08) },
+                            disabled: { textColor: Ink(0.3) },
+                            separator: { color: Ink(0.1) },
                         },
                     });
                     moreMenu.attachTo(btnMore, "click");
@@ -653,7 +655,7 @@
             const KPI_LIST = [
                 // minValue / maxValue: The fixed scale of the graph. null: Automatic.
                 { title: "Temperature", iconFile: "light.png", lineColor: ACCENT_COLOR, minValue: TARGET_MIN, maxValue: TARGET_MAX },
-                { title: "Humidity", iconFile: "maybe.png", lineColor: "#3987E5", minValue: 0, maxValue: 100 },
+                { title: "Humidity", iconFile: "maybe.png", lineColor: T.info, minValue: 0, maxValue: 100 },
                 { title: "Power", iconFile: "left-menu/bolt.png", lineColor: WARNING_COLOR, minValue: null, maxValue: 0 },
                 { title: "Signal", iconFile: "left-menu/url.png", lineColor: "#9085E9", minValue: 0, maxValue: 100 },
             ];
@@ -673,14 +675,15 @@
                         style: {
                             box: { color: CARD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 12 },
                             text: { padding: 14 },
-                            title: { fontSize: 13, textColor: White(0.5) },
-                            valueText: { fontSize: 24, textColor: White(0.95) },
+                            title: { fontSize: 13, textColor: Ink(0.5) },
+                            valueText: { fontSize: 24, textColor: Ink(0.95) },
+                            trend: { flatColor: Ink(0.45) }, // WHY: The default flat color is made for light cards.
                             icon: { width: 20, height: 20 },
                             graph: { height: 34, padding: 14 },
                         },
                     });
                     setFlex(kpiBox, "1 1 220px");
-                    kpiBox.icon.elem.style.filter = "invert(100%)"; // WHY: Panel icons are black.
+                    kpiBox.icon.elem.style.filter = T.iconFilter; // WHY: Panel icons are black.
                     kpiBox.icon.opacity = 0.5;
 
                     kpiBoxList.push(kpiBox);
@@ -699,7 +702,7 @@
                 chartTemp = ChartBox({
                     height: 340,
                     type: "line",
-                    theme: "dark",
+                    theme: T.chartTheme,
                     title: "Temperature",
                     subtitle: "Live, last " + CHART_COUNT + " seconds",
                     maxCount: CHART_COUNT,
@@ -754,11 +757,11 @@
 
                             startSpaceBetween();
                             that.elem.style.padding = "9px 0px";
-                            if (index > 0) that.elem.style.borderTop = "1px solid " + White(0.06);
+                            if (index > 0) that.elem.style.borderTop = "1px solid " + Ink(0.06);
 
-                                Label({ text: info.title, fontSize: 14, textColor: White(0.5) });
+                                Label({ text: info.title, fontSize: 14, textColor: Ink(0.5) });
 
-                                infoLabels[info.key] = Label({ text: "", fontSize: 14, textColor: White(0.9) });
+                                infoLabels[info.key] = Label({ text: "", fontSize: 14, textColor: Ink(0.9) });
                                 that.elem.style.whiteSpace = "nowrap";
 
                             endGroup();
@@ -795,8 +798,8 @@
                         startSpaceBetween();
 
                             VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
-                                Label({ text: relay.title, fontSize: 15, textColor: White(0.9) });
-                                Label({ text: relay.desc, fontSize: 12, textColor: White(0.45) });
+                                Label({ text: relay.title, fontSize: 15, textColor: Ink(0.9) });
+                                Label({ text: relay.desc, fontSize: 12, textColor: Ink(0.45) });
                             endGroup();
 
                             relayToggles[relay.key] = Toggle({
@@ -804,14 +807,14 @@
                                 height: 30,
                                 spacing: 3,
                                 backgroundStyle: {
-                                    color: "#2C2C2A",
+                                    color: T.surface3,
                                     selectedColor: PRIMARY_COLOR,
                                     border: 1,
                                     borderColor: CARD_BORDER_COLOR,
                                 },
                                 buttonStyle: {
-                                    color: White(0.35),
-                                    selectedColor: White(0.95),
+                                    color: Ink(0.35),
+                                    selectedColor: Ink(0.95),
                                 },
                                 onChange: function (self) {
                                     if (isRendering) return;
@@ -826,7 +829,7 @@
                     lblRelayHint = Label({
                         text: "Compressor and defrost heater are controlled by the thermostat. Select <b>Manual</b> mode to change them.",
                         fontSize: 12,
-                        textColor: White(0.45),
+                        textColor: Ink(0.45),
                         width: "100%",
                     });
 
@@ -844,13 +847,13 @@
                             RadioButton({
                                 group: "mode",
                                 value: mode.value,
-                                labelText: mode.text + " <span style='color:" + White(0.4) + "; font-size: 12px'>" + mode.desc + "</span>",
+                                labelText: mode.text + " <span style='color:" + Ink(0.4) + "; font-size: 12px'>" + mode.desc + "</span>",
                                 style: {
-                                    mark: { width: 20, height: 20, color: "transparent", borderColor: White(0.35) },
+                                    mark: { width: 20, height: 20, color: "transparent", borderColor: Ink(0.35) },
                                     checkedMark: { color: "transparent", borderColor: ACCENT_COLOR },
-                                    hoverMark: { borderColor: White(0.7) },
+                                    hoverMark: { borderColor: Ink(0.7) },
                                     dot: { color: ACCENT_COLOR },
-                                    label: { fontSize: 14, textColor: White(0.9) },
+                                    label: { fontSize: 14, textColor: Ink(0.9) },
                                 },
                                 onChange: function (self) {
                                     if (isRendering) return;
@@ -868,7 +871,7 @@
 
                         startSpaceBetween();
                             createSmallTitle("Target temperature");
-                            lblTarget = Label({ text: "", fontSize: 16, textColor: White(0.95) });
+                            lblTarget = Label({ text: "", fontSize: 16, textColor: Ink(0.95) });
                             that.elem.style.fontFamily = "opensans-bold";
                         endGroup();
 
@@ -877,8 +880,8 @@
                             trackHeight: 10,
                             minThumbHeight: 28,
                             trackColor: ACCENT_COLOR,
-                            trackBackgroundColor: White(0.1),
-                            thumbColor: White(0.9),
+                            trackBackgroundColor: Ink(0.1),
+                            thumbColor: Ink(0.9),
                             showValueOnSet: 0,
                             showValueOnDrag: 0, // WHY: Slider shows 0-100. The real value is shown in lblTarget.
                             onDragMove: function (value) {
@@ -909,10 +912,10 @@
                                 minuteStep: 15,
                                 showClearButton: 0,
                                 style: Object.assign({}, PICKER_STYLE, {
-                                    columnTitle: { textColor: White(0.45), activeTextColor: White(0.9) },
-                                    cell: { textColor: White(0.85), hoverColor: White(0.08) },
-                                    selectedCell: { color: PRIMARY_COLOR, textColor: White(1) },
-                                    disabledCell: { textColor: White(0.2) },
+                                    columnTitle: { textColor: Ink(0.45), activeTextColor: Ink(0.9) },
+                                    cell: { textColor: Ink(0.85), hoverColor: Ink(0.08) },
+                                    selectedCell: { color: PRIMARY_COLOR, textColor: Ink(1) },
+                                    disabledCell: { textColor: Ink(0.2) },
                                 }),
                                 onChange: function (self) {
                                     if (isRendering || !self.value) return;
@@ -934,13 +937,13 @@
                                 format: "DD MMM YYYY",
                                 showClearButton: 0,
                                 style: Object.assign({}, PICKER_STYLE, {
-                                    title: { textColor: White(0.9) },
-                                    arrow: { color: White(0.6), hoverColor: White(0.08) },
-                                    weekDay: { textColor: White(0.45) },
-                                    day: { textColor: White(0.85), hoverColor: White(0.08) },
-                                    today: { borderColor: White(0.35) },
-                                    selectedDay: { color: PRIMARY_COLOR, textColor: White(1) },
-                                    disabledDay: { textColor: White(0.2) },
+                                    title: { textColor: Ink(0.9) },
+                                    arrow: { color: Ink(0.6), hoverColor: Ink(0.08) },
+                                    weekDay: { textColor: Ink(0.45) },
+                                    day: { textColor: Ink(0.85), hoverColor: Ink(0.08) },
+                                    today: { borderColor: Ink(0.35) },
+                                    selectedDay: { color: PRIMARY_COLOR, textColor: Ink(1) },
+                                    disabledDay: { textColor: Ink(0.2) },
                                 }),
                                 onChange: function (self) {
                                     if (isRendering || !self.value) return;
@@ -965,11 +968,11 @@
                             alertCheckBoxes[alert.key] = CheckBox({
                                 labelText: alert.text,
                                 style: {
-                                    mark: { width: 20, height: 20, color: "transparent", borderColor: White(0.35) },
+                                    mark: { width: 20, height: 20, color: "transparent", borderColor: Ink(0.35) },
                                     checkedMark: { color: PRIMARY_COLOR, borderColor: PRIMARY_COLOR },
-                                    hoverMark: { borderColor: White(0.7) },
-                                    tick: { color: White(1) },
-                                    label: { fontSize: 14, textColor: White(0.9) },
+                                    hoverMark: { borderColor: Ink(0.7) },
+                                    tick: { color: Ink(1) },
+                                    label: { fontSize: 14, textColor: Ink(0.9) },
                                 },
                                 onChange: function (self) {
                                     if (isRendering) return;
@@ -984,12 +987,12 @@
 
                     // MAINTENANCE
                     VGroup({ width: "100%", height: "auto", align: "left top", gap: 10 });
-                    that.elem.style.borderTop = "1px solid " + White(0.06);
+                    that.elem.style.borderTop = "1px solid " + Ink(0.06);
                     that.elem.style.paddingTop = "16px";
 
                         createSmallTitle("Maintenance");
 
-                        lblFirmwareInfo = Label({ text: "", fontSize: 13, textColor: White(0.6), width: "100%" });
+                        lblFirmwareInfo = Label({ text: "", fontSize: 13, textColor: Ink(0.6), width: "100%" });
 
                         HGroup({ width: "100%", height: "auto", align: "left center", gap: 10 });
                         that.elem.style.flexWrap = "wrap";
@@ -1010,9 +1013,9 @@
                                 style: {
                                     layout: { gap: 8, padding: [14, 0] },
                                     icon: { width: 20, height: 20 },
-                                    label: { fontSize: 14, textColor: White(0.9) },
+                                    label: { fontSize: 14, textColor: Ink(0.9) },
                                     holdingLabel: { fontSize: 14, textColor: "#B03A2E" },
-                                    completedLabel: { fontSize: 14, textColor: "#2C5A38" },
+                                    completedLabel: { fontSize: 14, textColor: T.primaryActive },
                                     box: { color: FIELD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8 },
                                     holdingBox: { color: "#FFD1CB", borderColor: ERROR_COLOR, round: 8 },
                                     completedBox: { color: "#DFEFE6", borderColor: ACCENT_COLOR, round: 8 },
@@ -1021,7 +1024,7 @@
                                     restartDevice(device);
                                 },
                             });
-                            btnRestart.icon.elem.style.filter = "invert(100%)"; // WHY: Only the normal icon is on a dark background.
+                            btnRestart.icon.elem.style.filter = T.iconFilter; // WHY: Only the normal icon is on a dark background.
 
                         endGroup();
 
@@ -1183,7 +1186,7 @@
                     columnWidths: ["15%", "14%", "70%"], // 99%: 1px gaps between cells
                     dataRows: device.events.slice(0, 10).map(function (e) { return [e.time, e.level, e.message]; }),
                     headerBackgroundColor: FIELD_COLOR,
-                    headerTextColor: White(0.6),
+                    headerTextColor: Ink(0.6),
                     headerBorderColor: FIELD_COLOR,
                     headerFontSize: 12,
                     borderWidth: 1,
@@ -1191,12 +1194,12 @@
                     borderColor: CARD_BORDER_COLOR,
                     bodyBackgroundColor: CARD_COLOR,
                     cellFontSize: 14,
-                    cellTextColor: White(0.8),
-                    rowHoverBackgroundColor: White(0.05),
-                    rowHoverBorderColor: White(0.1),
+                    cellTextColor: Ink(0.8),
+                    rowHoverBackgroundColor: Ink(0.05),
+                    rowHoverBorderColor: Ink(0.1),
                     onCellRender: function (cell) {
-                        if (cell.index == 0) cell.textColor = White(0.5);
-                        if (cell.index == 1) cell.textColor = LEVEL_COLORS[cell.text] || White(0.8);
+                        if (cell.index == 0) cell.textColor = Ink(0.5);
+                        if (cell.index == 1) cell.textColor = LEVEL_COLORS[cell.text] || Ink(0.8);
                     },
                 });
                 // Fill the card. (Scrolls under the min width.)

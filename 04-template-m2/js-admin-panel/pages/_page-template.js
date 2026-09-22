@@ -22,7 +22,7 @@ const AbcPage = function(params = {}) {
 
         Label({
             text: "Abc Page",
-            textColor: White(0.65),
+            textColor: Ink(0.65),
         });
 
     endAutoLayout();

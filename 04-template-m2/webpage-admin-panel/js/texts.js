@@ -45,7 +45,7 @@ TEXTS.tr = {
     // HERO:
     hero: {
         eyebrow: "ÖZEL ADMIN PANEL & DASHBOARD",
-        title: "İşinize özel yönetim paneli,<br>birkaç hafta içinde hazır.",
+        title: "Şirketinize özel, hafif ve modüler yönetim panelleri tasarlıyoruz.",
         lead: "Uygulamanızın içeriğini, müşterilerinizi, siparişlerinizi veya raporlarınızı tek ekrandan yönetin. Mobil uygulama stüdyoları, ajanslar ve işletmeler için sabit fiyatla, size özel paneller geliştiriyoruz. Panel kendi sunucunuzda çalışır; kaynak kodu da veriniz de sizde kalır.",
         primaryButton: "Teklif Alın",
         secondaryButton: "Canlı Demoyu Görün",

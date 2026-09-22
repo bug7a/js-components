@@ -86,8 +86,12 @@ const ButtonWithIcon = function (params = {}) {
     };
 
     // box.superRemove = box.remove;
-    box.destroy = function () {
-        box.remove();
+    // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
+    const superRemove = box.remove;
+    box.superRemove = superRemove;
+    box.remove = function () {
+        if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
+        superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
         box = null;
     };
 

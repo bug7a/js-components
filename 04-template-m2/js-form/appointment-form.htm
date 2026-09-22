@@ -525,7 +525,7 @@
             const service = getSelectedService();
 
             // Remove old radio buttons (also from the static group list)
-            timeRadios.forEach(function(radio) { radio.destroy(); });
+            timeRadios.forEach(function(radio) { radio.remove(); });
             timeRadios = [];
             if (field.slotGroup) field.slotGroup.remove();
             field.slotGroup = null;

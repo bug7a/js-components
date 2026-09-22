@@ -66,7 +66,7 @@ const UsersPage = function(params = {}) {
         if (titleDataIndex == 3) {
 
             if (data == 1) {
-                itemCell.boxCheck.color = "#3D7A6B"; //"#E7BB67";
+                itemCell.boxCheck.color = T.primary; //"#E7BB67";
 
             } else {
                 itemCell.boxCheck.color = "white";
@@ -175,7 +175,7 @@ const UsersPage = function(params = {}) {
 
         Label({
             text: "USERS TABLE",
-            textColor: White(0.85),
+            textColor: Ink(0.85),
         });
 
     endGroup();
@@ -191,13 +191,13 @@ const UsersPage = function(params = {}) {
             fontSize: 16,
             width: "auto",
             padding: [20, 0],
-            color: "#3D7A6B", // "#2C5A38", // "#344f6c", "#583432", "#2C5A38"
+            color: T.primary, // T.primaryActive, // "#344f6c", "#583432", T.primaryActive
             minimal: 1,
             round: 100,
             height: 40,
-            textColor: White(0.95),
+            textColor: Ink(0.95),
             border: 1,
-            borderColor: White(0.3),
+            borderColor: Ink(0.3),
         });
         UI.effectButton(that);
         that.on("click", function(self, event) {
@@ -231,14 +231,14 @@ const UsersPage = function(params = {}) {
             scrollBarParams: {
                 bar_border: 0,
                 bar_round: 3,
-                bar_borderColor: "rgba(255, 255, 255, 0.15)",
+                bar_borderColor: Ink(0.15),
                 bar_width: 4,
                 bar_mouseOverWidth: 4,
-                bar_mouseOverColor: "#A0A0A0",
+                bar_mouseOverColor: T.scrollBar,
                 bar_opacity: 0.4,
                 bar_mouseOverOpacity: 0.9,
                 bar_padding: 2,
-                bar_color: "#A0A0A0",
+                bar_color: T.scrollBar,
                 neverHide: 0,
                 showDots: 0,
             },
@@ -248,16 +248,16 @@ const UsersPage = function(params = {}) {
                 height: 34,
                 border: 1,
                 round: 8,
-                color: "#141414", // rgba(255,255,255,0.8), rgba(0,0,0,0.1)
-                borderColor: White(0.12),
-                borderBottomStyle: "1px solid " + White(0.12),
-                textColor: White(0.9),
-                placeholderColor: White(0.4),
+                color: T.surfaceDeep, // rgba(255,255,255,0.8), rgba(0,0,0,0.1)
+                borderColor: Ink(0.12),
+                borderBottomStyle: "1px solid " + Ink(0.12),
+                textColor: Ink(0.9),
+                placeholderColor: Ink(0.4),
                 searchIconSize: 15,
                 searchIconOpacity: 0.55,
                 placeholderText: "Filter the table",
                 fontSize: 15,
-                invertIconColor: 1,
+                invertIconColor: T.invertIcon,
                 searchIconFile: "../../comp-m2/search-input-v2/filter.png",
                 clearIconFile: "../../comp-m2/search-input-v2/clear.svg",
 
@@ -266,22 +266,22 @@ const UsersPage = function(params = {}) {
             searchTitleMenuParams: {
                 minWidth: 170,
                 style: {
-                    menu: { color: "#252525", border: 1, borderColor: White(0.12), round: 8, padding: 4, shadow: "0 8px 24px rgba(0, 0, 0, 0.5)" },
-                    item: { height: 30, fontSize: 14, textColor: White(0.75), color: "transparent", round: 6, padding: 10, gap: 10 },
-                    itemHover: { textColor: "white", color: White(0.08) },
-                    disabled: { textColor: White(0.3), opacity: 0.4 },
+                    menu: { color: T.tableFooter, border: 1, borderColor: Ink(0.12), round: 8, padding: 4, shadow: "0 8px 24px " + Black(0.5) },
+                    item: { height: 30, fontSize: 14, textColor: Ink(0.75), color: "transparent", round: 6, padding: 10, gap: 10 },
+                    itemHover: { textColor: "white", color: Ink(0.08) },
+                    disabled: { textColor: Ink(0.3), opacity: 0.4 },
                     icon: { width: 14, height: 14 },
-                    separator: { color: White(0.1), space: 4 },
+                    separator: { color: Ink(0.1), space: 4 },
                 },
             },
             style: {
                 width: "100%",
                 height: "100%",
                 round: 6,
-                line1Color: "#1E1E1E",
-                line2Color: "#2A2A2A",
+                line1Color: T.tableRow1,
+                line2Color: T.tableRow2,
                 highlightItemCellColor: "#583432", // "#3A3010",
-                highlightTitleCellColor: White(0.08),
+                highlightTitleCellColor: Ink(0.08),
                 verticalScrollWidth: 20,
                 verticalScrollMargin: 2,
                 btnScrollDownIconFile: "../../comp-m3/smart-table/down.png",
@@ -289,26 +289,26 @@ const UsersPage = function(params = {}) {
                 btnScrollCenterIconFile: "../../comp-m3/smart-table/scroll.png",
                 sortIconFile: "../../comp-m3/smart-table/sort.png",
                 // WHY: Varsayılan tik ikonu koyu renkli; koyu menüde görünmüyordu.
-                searchTitleCheckIconFile: "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#65A293" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17.5 19 7"/></svg>'),
+                searchTitleCheckIconFile: "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke=T.accent stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17.5 19 7"/></svg>'),
                 loadingIconFile: "../../comp-m3/smart-table/clock.png",
-                invertIconColor: 1,
+                invertIconColor: T.invertIcon,
 
-                box: { color: "#1E1E1E" },
-                boxBorder: { border: 2, borderColor: "rgba(255, 255, 255, 0.15)" },
-                boxTitleLine: { color: "#3D7A6B" },
-                boxTitleCell: { padding: [8, 0], borderRight: "1px solid rgba(255, 255, 255, 0.08)", borderBottom: "2px solid #FFFFFF44" },
-                lblTitleCell: { fontSize: 20, fontFamily: "opensans", textColor: White(0.95), },
-                boxItemCell: { borderBottom: "1px solid rgba(255, 255, 255, 0.08)", borderRight: "1px solid rgba(255, 255, 255, 0.04)", padding: [8, 0] },
-                lblItemCell: { fontSize: 20, textColor: "rgba(255, 255, 255, 0.75)", fontFamily: "opensans" },
-                boxInfoLine: { color: "#252525", borderTop: "1px solid rgba(255, 255, 255, 0.08)" },
-                lblBoxInfoLine: { fontSize: 14, textColor: White(0.6), },
-                lblNoDataFound: { color: "#707070", padding: [8, 2], fontSize: 14, round: 8, border: 1, borderColor: "rgba(255, 255, 255, 0.2)" },
+                box: { color: T.tableRow1 },
+                boxBorder: { border: 2, borderColor: Ink(0.15) },
+                boxTitleLine: { color: T.primary },
+                boxTitleCell: { padding: [8, 0], borderRight: "1px solid " + Ink(0.08), borderBottom: "2px solid #FFFFFF44" },
+                lblTitleCell: { fontSize: 20, fontFamily: "opensans", textColor: Ink(0.95), },
+                boxItemCell: { borderBottom: "1px solid " + Ink(0.08), borderRight: "1px solid " + Ink(0.04), padding: [8, 0] },
+                lblItemCell: { fontSize: 20, textColor: Ink(0.75), fontFamily: "opensans" },
+                boxInfoLine: { color: T.tableFooter, borderTop: "1px solid " + Ink(0.08) },
+                lblBoxInfoLine: { fontSize: 14, textColor: Ink(0.6), },
+                lblNoDataFound: { color: "#707070", padding: [8, 2], fontSize: 14, round: 8, border: 1, borderColor: Ink(0.2) },
                 // Filtre kutusunun içindeki sütun etiketi: Kutunun içinde durduğu için daha hafif bir chip.
-                lblSearchTitle: { color: White(0.08), textColor: White(0.6), padding: [8, 1], fontSize: 12, round: 6, border: 1, borderColor: White(0.14) },
-                btnScrollCenter: { color: "#2C2C2C", round: 100, borderColor: "rgba(255,255,255,0.2)", border: 1 },
-                btnScrollUp: { color: "#3A3A3A", round: 100, border: 1, borderColor: White(0.3), },
-                btnScrollDown: { color: "#3A3A3A", round: 100, border: 1, borderColor: White(0.3), },
-                boxSort: { color: "#3D7A6B" },
+                lblSearchTitle: { color: Ink(0.08), textColor: Ink(0.6), padding: [8, 1], fontSize: 12, round: 6, border: 1, borderColor: Ink(0.14) },
+                btnScrollCenter: { color: "#2C2C2C", round: 100, borderColor: Ink(0.2), border: 1 },
+                btnScrollUp: { color: T.surface4, round: 100, border: 1, borderColor: Ink(0.3), },
+                btnScrollDown: { color: T.surface4, round: 100, border: 1, borderColor: Ink(0.3), },
+                boxSort: { color: T.primary },
 
             },
         });

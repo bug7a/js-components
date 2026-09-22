@@ -18,3 +18,13 @@ __projects/
 
 # Kişisel notlar
 __notes.txt
+__notes.md
+
+# Video kaydi: ciktilar ve kaydedicinin paketleri repoya girmez.
+# (__video/record.js icin "npm install puppeteer-core ffmpeg-static" ~100 MB node_modules yaratir.)
+__video/node_modules/
+__video/package.json
+__video/package-lock.json
+__video/_frames/
+__video/*.mp4
+__video/*.webm

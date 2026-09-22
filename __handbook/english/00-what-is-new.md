@@ -23,7 +23,8 @@ This document contains new features, updates, and changes added to the basic.js 
 *   **`remove()` removes the children too:** When an object is removed, all basic.js objects inside it are removed as well (parents first). If a child has a `destroy()` function (the component template), it is called first, so components can clean their global events (for example `page.onResize`, `window` events, static lists like `RadioButton` groups).
     *   **Why:** Before, only the removed object itself was cleaned. The children kept their `onResize` registrations and global events, so a removed page stayed in the memory with all of its objects. In the admin panel template, every page change kept about 400 DOM nodes and 250 event listeners (after 240 page changes: 70 MB memory, 121,000 DOM nodes). Now it is 0.
     *   **Note:** A removed object is not for use again. Do not add an object to the screen again after `remove()`; create a new one.
-    *   **Note:** Objects created directly on `page` (for example a `ContextMenu` opened by a page) are not inside the page box. Call their `destroy()` in the `destroy()` of your page.
+    *   **Note:** Objects created directly on `page` (for example a `ContextMenu` opened by a page) are not inside the page box. Remove them yourself in the `remove()` of your page or component.
+    *   **Note:** The components of this suite now put that cleanup in `remove()` instead of `destroy()` (`const superRemove = box.remove;` … `superRemove.call(box);`), so a component is removed like any other object: `myComponent.remove();`. `destroy()` is still called first for the objects that have one (for example `ScrollBar`).
 *   **`object.elem._basicObject`:** Every element keeps a link to its basic.js object (set by `makeBasicObject()`).
 *   **`object._isRemoved`:** `1` after `remove()`. A second `remove()` call does nothing.
 

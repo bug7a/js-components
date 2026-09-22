@@ -69,7 +69,7 @@ const EditUser = function(params = {}) {
             backgroundColor: "#F6F6F6",
             selectedBackgroundColor: "#FFFFFF",
             lineColor: "transparent",
-            selectedLineColor: "#65A293",
+            selectedLineColor: T.accent,
             //backgroundColor: "transparent",
             //selectedBackgroundColor: "transparent", // "#F1E2C4", "#F4FAFF",
             //lineColor: "transparent",
@@ -121,7 +121,7 @@ const EditUser = function(params = {}) {
             titleText: "EMAIL",
             placeholder: "Enter email",
             warningText: "Invalid email format",
-            warningColor: "#E5885E", // "#F1BF3C"
+            warningColor: Theme.readable("#E5885E"), // "#F1BF3C"
         });
         styleInput(that);
         box.grpContent.add(that);
@@ -195,14 +195,14 @@ const EditUser = function(params = {}) {
                     invertColor: 0,
                     backgroundStyle: {
                         color: "black",
-                        selectedColor: "#2C5A38",
+                        selectedColor: T.primaryActive,
                         border: 1,
                         borderColor: Black(0.25),
                         round: 100,
                     },
                     buttonStyle: {
-                        color: White(0.25),
-                        selectedColor: White(0.75),
+                        color: Ink(0.25),
+                        selectedColor: Ink(0.75),
                         border: 0,
                         round: 100,
                     }
@@ -237,7 +237,7 @@ const EditUser = function(params = {}) {
         btnEdit = Button({
             text: "Save",
             enabled: 0,
-            color: "#86BA84",
+            color: Theme.readable("#86BA84"),
             ...buttonStyle,
         });
         box.grpButtons.add(that);
@@ -353,7 +353,7 @@ const EditUser = function(params = {}) {
     rightView.setWidth(550);
     rightView.add(box);
     
-    box.elem.style.filter = "invert(100%)";
+    box.elem.style.filter = T.iconFilter;
 
     initView();
 

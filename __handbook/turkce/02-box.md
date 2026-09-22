@@ -2,6 +2,11 @@
 
 basic.js kütüphanesinde `Box()` nesnesi, ekranda dikdörtgen veya kare şeklinde temel görünümler oluşturmak için kullanılır. Genellikle arka plan, yapısal kapsayıcı (container) veya diğer nesneleri gruplamak için işlev görür. 
 
+> **Sadece Box nesnesi başka nesneleri içinde tutabilir.** `startBox()`, `createIn()` ve gruplar
+> (`AutoLayout`, `HGroup`, `VGroup` — bunlar da Box nesnesidir) hep bir Box ile çalışır. `Button`,
+> `Label`, `Input` veya `Icon` içine nesne **alamaz**. Bir butonun üzerine bir şey koymak için, onu
+> butonla aynı kutuda kardeş olarak oluşturun ve `position: "absolute"` ile yerleştirin.
+
 ---
 
 ## Box Oluşturma

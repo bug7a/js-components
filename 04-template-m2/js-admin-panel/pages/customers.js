@@ -194,7 +194,7 @@ const CustomersPage = function(params = {}) {
         closeDetails();
 
         // WHY: SmartTable has window events and a menu on the page. box.remove() does not remove them.
-        if (smartTable) smartTable.destroy();
+        if (smartTable) smartTable.remove();
 
         box.remove();
         box = null;
@@ -211,10 +211,10 @@ const CustomersPage = function(params = {}) {
 
             VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
 
-                Label({ text: "Customers", fontSize: 26, textColor: White(0.95) });
+                Label({ text: "Customers", fontSize: 26, textColor: Ink(0.95) });
                 that.elem.style.fontFamily = "opensans-bold";
 
-                Label({ text: "Who buys from your store, what they spend and how to reach them", fontSize: 14, textColor: White(0.5) });
+                Label({ text: "Who buys from your store, what they spend and how to reach them", fontSize: 14, textColor: Ink(0.5) });
 
             endGroup();
 
@@ -235,7 +235,7 @@ const CustomersPage = function(params = {}) {
     const initSummary = function() {
 
         const CARD_LIST = [
-            { title: "Customers", color: White(0.95) },
+            { title: "Customers", color: Ink(0.95) },
             { title: "VIP customers", color: CustomersPage.SEGMENTS.vip.color },
             { title: "At risk", color: CustomersPage.SEGMENTS.risk.color },
             { title: "Lifetime value", color: S.ACCENT_COLOR },
@@ -249,9 +249,9 @@ const CustomersPage = function(params = {}) {
                 const card = VGroup({ width: "auto", height: "auto", align: "left top", gap: 2, padding: 14, color: S.CARD_COLOR, border: 1, borderColor: S.CARD_BORDER_COLOR, round: 12 });
                 setFlex(card, "1 1 200px");
 
-                    Label({ text: item.title, fontSize: 13, textColor: White(0.5) });
+                    Label({ text: item.title, fontSize: 13, textColor: Ink(0.5) });
                     card.lblValue = Label({ text: "", fontSize: 26, textColor: item.color });
-                    card.lblDesc = Label({ text: "", fontSize: 12, textColor: White(0.45) });
+                    card.lblDesc = Label({ text: "", fontSize: 12, textColor: Ink(0.45) });
 
                 endGroup();
 
@@ -279,7 +279,7 @@ const CustomersPage = function(params = {}) {
                     },
                     backgroundStyle: { colorBottom: S.FIELD_COLOR, colorTop: S.FIELD_COLOR, round: 8, border: 1, borderColor: S.CARD_BORDER_COLOR },
                     tabPadding: [3, 3],
-                    labelStyle: { fontSize: 14, textColor: White(0.85), padding: [12, 6] },
+                    labelStyle: { fontSize: 14, textColor: Ink(0.85), padding: [12, 6] },
                     selectedStyle: { color: S.PRIMARY_COLOR, round: 6 },
                 });
 
@@ -296,11 +296,11 @@ const CustomersPage = function(params = {}) {
                     borderBottomStyle: "1px solid " + S.CARD_BORDER_COLOR,
                     round: 8,
                     color: S.FIELD_COLOR,
-                    textColor: White(0.9),
+                    textColor: Ink(0.9),
                     fontSize: 14,
                     searchIconSize: 16,
                     placeholderText: "Name, e-mail, city or tag",
-                    invertIconColor: 1,
+                    invertIconColor: T.invertIcon,
                     searchIconFile: LIB_PATH + "comp-m2/search-input-v2/search.svg",
                     clearIconFile: LIB_PATH + "comp-m2/search-input-v2/clear.svg",
                     onSearch: function(text) {
@@ -322,7 +322,7 @@ const CustomersPage = function(params = {}) {
                 that.elem.style.flex = "1 1 auto";
                 endGroup();
 
-                lblResultCount = Label({ text: "", fontSize: 13, textColor: White(0.55) });
+                lblResultCount = Label({ text: "", fontSize: 13, textColor: Ink(0.55) });
 
             endGroup();
 
@@ -360,7 +360,7 @@ const CustomersPage = function(params = {}) {
                     if (titleDataIndex == 5 && data !== "") cell.label.text = OrdersPage.formatMoney(data);
                     if (titleDataIndex == 7) {
                         const segment = CustomersPage.getSegmentByLabel(data);
-                        cell.label.textColor = (segment) ? segment.color : White(0.75);
+                        cell.label.textColor = (segment) ? segment.color : Ink(0.75);
                     }
                 },
                 ...CustomersPage.getSmartTableStyle(LIB_PATH),
@@ -425,7 +425,7 @@ const CustomerDetails = function(params = {}) {
     params.top = 0;
     params.width = "100%";
     params.height = "100%";
-    params.color = "#141414";
+    params.color = T.surfaceDeep;
 
     // BOX: Component container
     let box = startObject(params);
@@ -474,7 +474,7 @@ const CustomerDetails = function(params = {}) {
     const startSection = function(title) {
         const group = VGroup({ width: "100%", height: "auto", align: "left top", gap: 8, padding: [16, 14], color: S.CARD_COLOR, border: 1, borderColor: S.CARD_BORDER_COLOR, round: 10 });
         if (title) {
-            Label({ text: title.toUpperCase(), fontSize: 11, textColor: White(0.45) });
+            Label({ text: title.toUpperCase(), fontSize: 11, textColor: Ink(0.45) });
             that.elem.style.letterSpacing = "1px";
         }
         return group;
@@ -483,9 +483,9 @@ const CustomerDetails = function(params = {}) {
     const createInfoLine = function(left, right, rightStyle = {}) {
         HGroup({ width: "100%", height: "auto", align: "left center", gap: 16 });
         that.elem.style.justifyContent = "space-between";
-            Label({ text: left, fontSize: 14, textColor: White(0.55) });
+            Label({ text: left, fontSize: 14, textColor: Ink(0.55) });
             that.elem.style.flexShrink = "0";
-            Label({ text: right, fontSize: 14, textColor: White(0.9), textAlign: "right", ...rightStyle });
+            Label({ text: right, fontSize: 14, textColor: Ink(0.9), textAlign: "right", ...rightStyle });
         endGroup();
     };
 
@@ -495,7 +495,7 @@ const CustomerDetails = function(params = {}) {
             leftPadding: 14,
             rightPadding: 36,
             backgroundColor: S.FIELD_COLOR,
-            selectedBackgroundColor: "#262625",
+            selectedBackgroundColor: T.surface3,
             lineColor: "transparent",
             selectedLineColor: "transparent",
             backBorderColor: S.CARD_BORDER_COLOR,
@@ -508,10 +508,10 @@ const CustomerDetails = function(params = {}) {
             ...params,
         });
         // WHY: InputB has fixed text colors for light backgrounds.
-        input.title.textColor = White(0.45);
+        input.title.textColor = Ink(0.45);
         input.title.fontSize = 11;
         input.title.elem.style.letterSpacing = "1px";
-        input.input.textColor = White(0.9);
+        input.input.textColor = Ink(0.9);
         input.input.fontSize = 15;
         input.input.height = 32;
         input.warningBall.borderColor = S.CARD_COLOR;
@@ -543,7 +543,7 @@ const CustomerDetails = function(params = {}) {
     // *** VIEW:
 
     // Left line
-    Box(0, 0, 1, "100%", { color: White(0.12) });
+    Box(0, 0, 1, "100%", { color: Ink(0.12) });
 
     // GROUP: Scrollable content
     startBox(0, 0, "100%", "calc(100% - 76px)", { color: "transparent", scrollY: 1 });
@@ -555,14 +555,14 @@ const CustomerDetails = function(params = {}) {
 
                 HGroup({ width: 48, height: 48, align: "center center", round: 100, color: CustomersPage.getAvatarColor(customer.id) });
                 that.elem.style.flexShrink = "0";
-                    Label({ text: CustomersPage.getInitials(customer.name), fontSize: 17, textColor: White(0.95) });
+                    Label({ text: CustomersPage.getInitials(customer.name), fontSize: 17, textColor: Ink(0.95) });
                 endGroup();
 
                 VGroup({ width: "auto", height: "auto", align: "left top", gap: 2 });
                 that.elem.style.flex = "1 1 auto";
                 that.elem.style.minWidth = "0";
                     HGroup({ width: "auto", height: "auto", align: "left center", gap: 10 });
-                        Label({ text: escape(customer.name), fontSize: 20, textColor: White(0.95) });
+                        Label({ text: escape(customer.name), fontSize: 20, textColor: Ink(0.95) });
                         that.elem.style.fontFamily = "opensans-bold";
                         Label({ text: segment.label.toUpperCase(), fontSize: 11, textColor: segment.color, color: OrdersPage.alpha(segment.color, 0.15), round: 6, padding: [8, 3] });
                         that.elem.style.letterSpacing = "1px";
@@ -571,12 +571,12 @@ const CustomerDetails = function(params = {}) {
                             that.elem.style.letterSpacing = "1px";
                         }
                     endGroup();
-                    Label({ text: "Customer since " + new Date(customer.registeredAt).toLocaleDateString("en-GB", { dateStyle: "medium" }) + " · " + escape(customer.city), fontSize: 13, textColor: White(0.5) });
+                    Label({ text: "Customer since " + new Date(customer.registeredAt).toLocaleDateString("en-GB", { dateStyle: "medium" }) + " · " + escape(customer.city), fontSize: 13, textColor: Ink(0.5) });
                 endGroup();
 
                 Icon({ width: 28, height: 28, clickable: 1 });
                 that.load("assets/close.png");
-                that.elem.style.filter = "invert(100%)";
+                that.elem.style.filter = T.iconFilter;
                 that.elem.style.cursor = "pointer";
                 that.opacity = 0.6;
                 that.on("click", function() {
@@ -604,8 +604,8 @@ const CustomerDetails = function(params = {}) {
                     VGroup({ width: "auto", height: "auto", align: "left top", gap: 2, padding: [12, 10], color: S.CARD_COLOR, border: 1, borderColor: S.CARD_BORDER_COLOR, round: 10 });
                     that.elem.style.flex = "1 1 100px";
                     that.elem.style.minWidth = "0";
-                        Label({ text: item[0], fontSize: 12, textColor: White(0.5) });
-                        Label({ text: item[1], fontSize: 17, textColor: White(0.95) });
+                        Label({ text: item[0], fontSize: 12, textColor: Ink(0.5) });
+                        Label({ text: item[1], fontSize: 17, textColor: Ink(0.95) });
                         that.elem.style.whiteSpace = "nowrap";
                     endGroup();
                 });
@@ -668,8 +668,8 @@ const CustomerDetails = function(params = {}) {
 
                     customer.tags.forEach(function(tag) {
                         HGroup({ width: "auto", height: 28, align: "left center", gap: 6, padding: [10, 0], round: 100, color: S.FIELD_COLOR, border: 1, borderColor: S.CARD_BORDER_COLOR });
-                            Label({ text: escape(tag), fontSize: 13, textColor: White(0.85) });
-                            const btnRemove = Label({ text: "✕", fontSize: 12, textColor: White(0.45), clickable: 1 });
+                            Label({ text: escape(tag), fontSize: 13, textColor: Ink(0.85) });
+                            const btnRemove = Label({ text: "✕", fontSize: 12, textColor: Ink(0.45), clickable: 1 });
                             btnRemove.elem.style.cursor = "pointer";
                             btnRemove.elem.title = "Remove the tag";
                             btnRemove.on("click", function() {
@@ -678,7 +678,7 @@ const CustomerDetails = function(params = {}) {
                         endGroup();
                     });
 
-                    if (!customer.tags.length) Label({ text: "No tags yet.", fontSize: 13, textColor: White(0.45) });
+                    if (!customer.tags.length) Label({ text: "No tags yet.", fontSize: 13, textColor: Ink(0.45) });
 
                 endGroup();
 
@@ -699,13 +699,13 @@ const CustomerDetails = function(params = {}) {
                 that.elem.style.justifyContent = "space-between";
                 that.elem.style.marginTop = "6px";
                     VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
-                        Label({ text: "Marketing e-mails", fontSize: 14, textColor: White(0.9) });
-                        Label({ text: (customer.consent) ? "Opted in on " + new Date(customer.consentAt).toLocaleDateString("en-GB", { dateStyle: "medium" }) : "Not opted in. Do not send campaigns.", fontSize: 12, textColor: White(0.45) });
+                        Label({ text: "Marketing e-mails", fontSize: 14, textColor: Ink(0.9) });
+                        Label({ text: (customer.consent) ? "Opted in on " + new Date(customer.consentAt).toLocaleDateString("en-GB", { dateStyle: "medium" }) : "Not opted in. Do not send campaigns.", fontSize: 12, textColor: Ink(0.45) });
                     endGroup();
                     Toggle({
                         width: 52, height: 30, spacing: 3, value: (customer.consent) ? 1 : 0,
-                        backgroundStyle: { color: "#2C2C2A", selectedColor: S.PRIMARY_COLOR, border: 1, borderColor: S.CARD_BORDER_COLOR },
-                        buttonStyle: { color: White(0.35), selectedColor: White(0.95) },
+                        backgroundStyle: { color: T.surface3, selectedColor: S.PRIMARY_COLOR, border: 1, borderColor: S.CARD_BORDER_COLOR },
+                        buttonStyle: { color: Ink(0.35), selectedColor: Ink(0.95) },
                         onChange: function(self) {
                             if (self.value == ((customer.consent) ? 1 : 0)) return;
                             saveChange(function(c) { c.consent = self.value; c.consentAt = Date.now(); return ""; }, (self.value) ? "Marketing consent is on." : "Marketing consent is off.");
@@ -720,7 +720,7 @@ const CustomerDetails = function(params = {}) {
             startSection("Orders" + ((customer.orderCount > orders.length) ? " · last " + orders.length + " of " + customer.orderCount : ""));
 
                 if (!orders.length) {
-                    Label({ text: "No orders yet. This customer registered but did not buy anything.", fontSize: 13, textColor: White(0.5), width: "100%" });
+                    Label({ text: "No orders yet. This customer registered but did not buy anything.", fontSize: 13, textColor: Ink(0.5), width: "100%" });
                 } else {
                     const table = TinyTable({
                         columnHeaders: ["ORDER", "DATE", "TOTAL", "STATUS"],
@@ -729,7 +729,7 @@ const CustomerDetails = function(params = {}) {
                             return [escape(order.id), OrdersPage.formatDateTime(order.time).slice(0, 10), OrdersPage.formatMoney(order.total), OrdersPage.STATUSES[order.status].label];
                         }),
                         headerBackgroundColor: S.FIELD_COLOR,
-                        headerTextColor: White(0.6),
+                        headerTextColor: Ink(0.6),
                         headerBorderColor: S.FIELD_COLOR,
                         headerFontSize: 12,
                         borderWidth: 1,
@@ -737,9 +737,9 @@ const CustomerDetails = function(params = {}) {
                         borderColor: S.CARD_BORDER_COLOR,
                         bodyBackgroundColor: S.CARD_COLOR,
                         cellFontSize: 14,
-                        cellTextColor: White(0.85),
-                        rowHoverBackgroundColor: White(0.05),
-                        rowHoverBorderColor: White(0.1),
+                        cellTextColor: Ink(0.85),
+                        rowHoverBackgroundColor: Ink(0.05),
+                        rowHoverBorderColor: Ink(0.1),
                         // WHY: TinyTable has no row click. cell.lineCount is the row, so every cell opens its order.
                         onCellRender: function(cell) {
                             const order = orders[cell.lineCount];
@@ -757,7 +757,7 @@ const CustomerDetails = function(params = {}) {
                         },
                     });
                     table.width = "100%";
-                    Label({ text: "Click an order to open it on the Orders page.", fontSize: 12, textColor: White(0.4) });
+                    Label({ text: "Click an order to open it on the Orders page.", fontSize: 12, textColor: Ink(0.4) });
                 }
 
             endGroup();
@@ -772,7 +772,7 @@ const CustomerDetails = function(params = {}) {
                             Box({ width: 10, height: 10, round: 100, color: S.ACCENT_COLOR });
                             that.elem.style.marginTop = "5px";
                             if (index < list.length - 1) {
-                                Box({ width: 2, height: "auto", color: White(0.1) });
+                                Box({ width: 2, height: "auto", color: Ink(0.1) });
                                 that.elem.style.flex = "1 1 auto";
                                 that.elem.style.minHeight = "16px";
                             }
@@ -781,13 +781,13 @@ const CustomerDetails = function(params = {}) {
                         that.elem.style.flex = "1 1 auto";
                         that.elem.style.minWidth = "0";
                         that.elem.style.paddingBottom = "10px";
-                            Label({ text: escape(note.text), fontSize: 14, textColor: White(0.9), width: "100%" });
-                            Label({ text: new Date(note.time).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }) + " · " + escape(note.by), fontSize: 12, textColor: White(0.45) });
+                            Label({ text: escape(note.text), fontSize: 14, textColor: Ink(0.9), width: "100%" });
+                            Label({ text: new Date(note.time).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }) + " · " + escape(note.by), fontSize: 12, textColor: Ink(0.45) });
                         endGroup();
                     endGroup();
                 });
 
-                if (!customer.notes.length) Label({ text: "No notes yet.", fontSize: 13, textColor: White(0.45) });
+                if (!customer.notes.length) Label({ text: "No notes yet.", fontSize: 13, textColor: Ink(0.45) });
 
                 HGroup({ width: "100%", height: "auto", align: "left bottom", gap: 8 });
                     const inputNote = createDarkInput({ titleText: "ADD A NOTE", placeholder: "Only the team can see it", maxChar: 200 });
@@ -809,7 +809,7 @@ const CustomerDetails = function(params = {}) {
 
     // GROUP: Buttons (bottom)
     HGroup({ left: 0, bottom: 0, width: "100%", height: 76, align: "left center", gap: 8, padding: [20, 0] });
-    that.elem.style.borderTop = "1px solid " + White(0.08);
+    that.elem.style.borderTop = "1px solid " + Ink(0.08);
 
         CustomersPage.createButton((customer.blocked) ? "Unblock" : "Block Customer", "", function() {
             if (customer.blocked) {
@@ -841,9 +841,9 @@ const CustomerDetails = function(params = {}) {
             style: {
                 layout: { gap: 6, padding: [14, 0] },
                 icon: { width: 18, height: 18 },
-                label: { fontSize: 14, textColor: White(0.9) },
+                label: { fontSize: 14, textColor: Ink(0.9) },
                 holdingLabel: { fontSize: 14, textColor: "#B03A2E" },
-                completedLabel: { fontSize: 14, textColor: "#2C5A38" },
+                completedLabel: { fontSize: 14, textColor: T.primaryActive },
                 box: { color: S.FIELD_COLOR, border: 1, borderColor: S.CARD_BORDER_COLOR, round: 8 },
                 holdingBox: { color: "#FFD1CB", borderColor: S.ERROR_COLOR, round: 8 },
                 completedBox: { color: "#DFEFE6", borderColor: S.ACCENT_COLOR, round: 8 },
@@ -857,10 +857,10 @@ const CustomerDetails = function(params = {}) {
                 }, "", 1);
             },
         });
-        btnDelete.icon.elem.style.filter = "invert(100%)"; // WHY: Only the normal icon is on a dark background.
+        btnDelete.icon.elem.style.filter = T.iconFilter; // WHY: Only the normal icon is on a dark background.
         if (customer.orderCount > 0) btnDelete.elem.title = "Customers with orders can not be deleted";
 
-        Label({ text: (customer.orderCount > 0) ? "Has orders: can be blocked, not deleted." : "", fontSize: 12, textColor: White(0.4) });
+        Label({ text: (customer.orderCount > 0) ? "Has orders: can be blocked, not deleted." : "", fontSize: 12, textColor: Ink(0.4) });
 
     endGroup();
 
@@ -884,20 +884,20 @@ CustomerDetails.KEY = "CustomerDetails";
 CustomersPage.DAY = 24 * 60 * 60 * 1000;
 
 CustomersPage.STYLE = {
-    CARD_COLOR: "#1A1A19",
-    CARD_BORDER_COLOR: White(0.1),
-    FIELD_COLOR: "#232322",
-    PRIMARY_COLOR: "#3D7A6B",
-    ACCENT_COLOR: "#65A293",
-    ERROR_COLOR: "#E66767",
+    CARD_COLOR: T.surface,
+    CARD_BORDER_COLOR: Ink(0.1),
+    FIELD_COLOR: T.surface2,
+    PRIMARY_COLOR: T.primary,
+    ACCENT_COLOR: T.accent,
+    ERROR_COLOR: T.danger,
 };
 
 CustomersPage.SEGMENTS = {
-    vip: { label: "VIP", color: "#E8B04A" },
-    regular: { label: "Regular", color: "#65A293" },
-    new: { label: "New", color: "#3987E5" },
-    risk: { label: "At risk", color: "#E66767" },
-    lead: { label: "Lead", color: "#A9A79F" },
+    vip: { label: "VIP", color: Theme.readable("#E8B04A") },
+    regular: { label: "Regular", color: T.accent },
+    new: { label: "New", color: T.info },
+    risk: { label: "At risk", color: T.danger },
+    lead: { label: "Lead", color: Theme.readable("#A9A79F") },
 };
 
 // The order matters: a customer that stopped buying is "At risk" even if the spending is high.
@@ -957,13 +957,13 @@ CustomersPage.createButton = function(text, iconFile, onClick, params = {}) {
         style: {
             layout: { gap: 8, padding: [14, 8] },
             icon: { width: 18, height: 18 },
-            label: { fontSize: 14, textColor: White(0.92) },
+            label: { fontSize: 14, textColor: Ink(0.92) },
             box: { color: (params.primary) ? S.PRIMARY_COLOR : S.FIELD_COLOR, border: 1, borderColor: S.CARD_BORDER_COLOR, round: 8 },
-            hover: { color: (params.primary) ? "#468A79" : "#2C2C2A" },
-            active: { color: (params.primary) ? "#2C5A38" : "#383835" },
+            hover: { color: (params.primary) ? T.primaryHover : T.surface3 },
+            active: { color: (params.primary) ? T.primaryActive : T.surface4 },
         },
     });
-    if (btn.icon) btn.icon.elem.style.filter = "invert(100%)"; // WHY: Panel icons are black.
+    if (btn.icon) btn.icon.elem.style.filter = T.iconFilter; // WHY: Panel icons are black.
     return btn;
 };
 
@@ -981,15 +981,15 @@ CustomersPage.createTinySelect = function(list, onSelect, selectedIndex = 0) {
         borderColor: S.CARD_BORDER_COLOR,
         round: 8,
         labelBoldFont: 0,
-        labelTextColor: White(0.9),
+        labelTextColor: Ink(0.9),
         arrowIcon: "../../comp-m2/tiny-select/arrow.svg",
         arrowSize: 18,
-        invertIconColor: 1,
+        invertIconColor: T.invertIcon,
         listFontSize: 14,
-        listTextColor: White(0.85),
+        listTextColor: Ink(0.85),
         listOverTextColor: S.ACCENT_COLOR,
         listBackgroundColor: S.FIELD_COLOR,
-        listBorderColor: White(0.15),
+        listBorderColor: Ink(0.15),
         onSelect: function(index, id) {
             if (isReady) onSelect(id);
         },
@@ -1002,17 +1002,17 @@ CustomersPage.getSmartTableStyle = function(libPath) {
     const S = CustomersPage.STYLE;
     return {
         scrollBarParams: {
-            bar_border: 0, bar_round: 3, bar_borderColor: "rgba(255, 255, 255, 0.15)", bar_width: 4, bar_mouseOverWidth: 4,
-            bar_mouseOverColor: "#A0A0A0", bar_opacity: 0.4, bar_mouseOverOpacity: 0.9, bar_padding: 2, bar_color: "#A0A0A0",
+            bar_border: 0, bar_round: 3, bar_borderColor: Ink(0.15), bar_width: 4, bar_mouseOverWidth: 4,
+            bar_mouseOverColor: T.scrollBar, bar_opacity: 0.4, bar_mouseOverOpacity: 0.9, bar_padding: 2, bar_color: T.scrollBar,
             neverHide: 0, showDots: 0,
         },
         // WHY: Filtre kutusu ile alt bar aynı renkti, kutu görünmüyordu. Bar kart rengine, kutu ise alan rengine (FIELD_COLOR) alındı.
         searchInputParams: {
             width: "50%", height: 34, border: 1, round: 8, color: S.FIELD_COLOR, borderColor: S.CARD_BORDER_COLOR,
             borderBottomStyle: "1px solid " + S.CARD_BORDER_COLOR,
-            textColor: White(0.9), placeholderColor: White(0.4), fontSize: 14,
+            textColor: Ink(0.9), placeholderColor: Ink(0.4), fontSize: 14,
             placeholderText: "Filter the table",
-            searchIconSize: 15, searchIconOpacity: 0.55, invertIconColor: 1,
+            searchIconSize: 15, searchIconOpacity: 0.55, invertIconColor: T.invertIcon,
             searchIconFile: libPath + "comp-m2/search-input-v2/filter.png",
             clearIconFile: libPath + "comp-m2/search-input-v2/clear.svg",
         },
@@ -1020,12 +1020,12 @@ CustomersPage.getSmartTableStyle = function(libPath) {
         searchTitleMenuParams: {
             minWidth: 170,
             style: {
-                menu: { color: S.FIELD_COLOR, border: 1, borderColor: White(0.12), round: 8, padding: 4, shadow: "0 8px 24px rgba(0, 0, 0, 0.5)" },
-                item: { height: 30, fontSize: 13, textColor: White(0.75), color: "transparent", round: 6, padding: 10, gap: 10 },
-                itemHover: { textColor: "white", color: White(0.08) },
-                disabled: { textColor: White(0.3), opacity: 0.4 },
+                menu: { color: S.FIELD_COLOR, border: 1, borderColor: Ink(0.12), round: 8, padding: 4, shadow: "0 8px 24px " + Black(0.5) },
+                item: { height: 30, fontSize: 13, textColor: Ink(0.75), color: "transparent", round: 6, padding: 10, gap: 10 },
+                itemHover: { textColor: "white", color: Ink(0.08) },
+                disabled: { textColor: Ink(0.3), opacity: 0.4 },
                 icon: { width: 14, height: 14 },
-                separator: { color: White(0.1), space: 4 },
+                separator: { color: Ink(0.1), space: 4 },
             },
         },
         style: {
@@ -1033,9 +1033,9 @@ CustomersPage.getSmartTableStyle = function(libPath) {
             height: "100%",
             round: 8,
             line1Color: S.CARD_COLOR,
-            line2Color: "#202020",
-            highlightItemCellColor: "#2A3A36",
-            highlightTitleCellColor: White(0.08),
+            line2Color: T.tableRow2,
+            highlightItemCellColor: T.tableHighlight,
+            highlightTitleCellColor: Ink(0.08),
             verticalScrollWidth: 20,
             verticalScrollMargin: 2,
             btnScrollDownIconFile: libPath + "comp-m3/smart-table/down.png",
@@ -1045,22 +1045,22 @@ CustomersPage.getSmartTableStyle = function(libPath) {
             // WHY: Varsayılan tik ikonu koyu renkli; koyu menüde görünmüyordu.
             searchTitleCheckIconFile: "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + S.ACCENT_COLOR + '" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17.5 19 7"/></svg>'),
             loadingIconFile: libPath + "comp-m3/smart-table/clock.png",
-            invertIconColor: 1,
+            invertIconColor: T.invertIcon,
             box: { color: S.CARD_COLOR },
             boxBorder: { border: 1, borderColor: S.CARD_BORDER_COLOR },
             boxTitleLine: { color: S.FIELD_COLOR },
-            boxTitleCell: { padding: [10, 0], borderRight: "1px solid rgba(255, 255, 255, 0.06)", borderBottom: "1px solid rgba(255, 255, 255, 0.12)" },
-            lblTitleCell: { fontSize: 13, fontFamily: "opensans", textColor: White(0.6) },
-            boxItemCell: { borderBottom: "1px solid rgba(255, 255, 255, 0.05)", borderRight: "1px solid rgba(255, 255, 255, 0.03)", padding: [10, 0] },
-            lblItemCell: { fontSize: 14, textColor: "rgba(255, 255, 255, 0.75)", fontFamily: "opensans" },
-            boxInfoLine: { color: S.CARD_COLOR, borderTop: "1px solid rgba(255, 255, 255, 0.08)" },
-            lblBoxInfoLine: { fontSize: 13, textColor: White(0.55) },
-            lblNoDataFound: { color: "#2C2C2A", textColor: White(0.6), padding: [8, 2], fontSize: 13, round: 8, border: 1, borderColor: White(0.15) },
+            boxTitleCell: { padding: [10, 0], borderRight: "1px solid " + Ink(0.06), borderBottom: "1px solid " + Ink(0.12) },
+            lblTitleCell: { fontSize: 13, fontFamily: "opensans", textColor: Ink(0.6) },
+            boxItemCell: { borderBottom: "1px solid " + Ink(0.05), borderRight: "1px solid " + Ink(0.03), padding: [10, 0] },
+            lblItemCell: { fontSize: 14, textColor: Ink(0.75), fontFamily: "opensans" },
+            boxInfoLine: { color: S.CARD_COLOR, borderTop: "1px solid " + Ink(0.08) },
+            lblBoxInfoLine: { fontSize: 13, textColor: Ink(0.55) },
+            lblNoDataFound: { color: T.surface3, textColor: Ink(0.6), padding: [8, 2], fontSize: 13, round: 8, border: 1, borderColor: Ink(0.15) },
             // Filtre kutusunun içindeki sütun etiketi: Kutunun içinde durduğu için daha hafif bir chip.
-            lblSearchTitle: { color: White(0.08), textColor: White(0.6), padding: [8, 1], fontSize: 12, round: 6, border: 1, borderColor: White(0.14) },
-            btnScrollCenter: { color: "#2C2C2A", round: 100, borderColor: White(0.2), border: 1 },
-            btnScrollUp: { color: "#3A3A38", round: 100, border: 1, borderColor: White(0.3) },
-            btnScrollDown: { color: "#3A3A38", round: 100, border: 1, borderColor: White(0.3) },
+            lblSearchTitle: { color: Ink(0.08), textColor: Ink(0.6), padding: [8, 1], fontSize: 12, round: 6, border: 1, borderColor: Ink(0.14) },
+            btnScrollCenter: { color: T.surface3, round: 100, borderColor: Ink(0.2), border: 1 },
+            btnScrollUp: { color: T.surface4, round: 100, border: 1, borderColor: Ink(0.3) },
+            btnScrollDown: { color: T.surface4, round: 100, border: 1, borderColor: Ink(0.3) },
             boxSort: { color: S.PRIMARY_COLOR },
         },
     };

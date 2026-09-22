@@ -42,13 +42,13 @@ const RolesPage = function(params = {}) {
     const ASSETS = "assets/";
     const LIB_PATH = "../../";
 
-    const CARD_COLOR = "#1A1A19";
-    const CARD_BORDER_COLOR = White(0.1);
-    const FIELD_COLOR = "#232322";
-    const PRIMARY_COLOR = "#3D7A6B";
-    const ACCENT_COLOR = "#65A293";
+    const CARD_COLOR = T.surface;
+    const CARD_BORDER_COLOR = Ink(0.1);
+    const FIELD_COLOR = T.surface2;
+    const PRIMARY_COLOR = T.primary;
+    const ACCENT_COLOR = T.accent;
     const SELECTED_COLOR = "rgba(101, 162, 147, 0.18)";
-    const ERROR_COLOR = "#E66767";
+    const ERROR_COLOR = T.danger;
 
     const MODULES = RolesPage.MODULES;
     const ACTIONS = RolesPage.ACTIONS;
@@ -284,11 +284,11 @@ const RolesPage = function(params = {}) {
 
                 const isSelected = role.id == selectedRoleId;
                 const memberCount = getMemberIds(role.id).length;
-                const tag = (role.isSystem) ? " <span style='font-size:11px; padding:1px 6px; border-radius:6px; background:" + White(0.08) + "; color:" + White(0.55) + "'>SYSTEM</span>" : "";
+                const tag = (role.isSystem) ? " <span style='font-size:11px; padding:1px 6px; border-radius:6px; background:" + Ink(0.08) + "; color:" + Ink(0.55) + "'>SYSTEM</span>" : "";
 
                 ButtonWithIcon({
                     width: "100%",
-                    labelText: escapeHtml(role.name) + tag + "<br><span style='font-size:12px; color:" + White(0.45) + "'>" + memberCount + " member" + ((memberCount == 1) ? "" : "s") + " · " + role.permissions.length + " permissions</span>",
+                    labelText: escapeHtml(role.name) + tag + "<br><span style='font-size:12px; color:" + Ink(0.45) + "'>" + memberCount + " member" + ((memberCount == 1) ? "" : "s") + " · " + role.permissions.length + " permissions</span>",
                     iconFile: "",
                     onClick: function() {
                         if (role.id == selectedRoleId) return;
@@ -296,10 +296,10 @@ const RolesPage = function(params = {}) {
                     },
                     style: {
                         layout: { gap: 8, padding: [12, 8], align: "left center" },
-                        label: { fontSize: 15, textColor: White(0.92) },
+                        label: { fontSize: 15, textColor: Ink(0.92) },
                         box: { color: (isSelected) ? SELECTED_COLOR : "transparent", border: 0, round: 8 },
-                        hover: { color: (isSelected) ? SELECTED_COLOR : White(0.06) },
-                        active: { color: White(0.1) },
+                        hover: { color: (isSelected) ? SELECTED_COLOR : Ink(0.06) },
+                        active: { color: Ink(0.1) },
                     },
                 });
                 that.label.elem.style.whiteSpace = "normal";
@@ -345,7 +345,7 @@ const RolesPage = function(params = {}) {
             // Header
             HGroup({ width: "100%", height: 44, align: "left center", color: FIELD_COLOR, round: 8, padding: [14, 0] });
 
-                Label({ text: "MODULE", fontSize: 12, textColor: White(0.5) });
+                Label({ text: "MODULE", fontSize: 12, textColor: Ink(0.5) });
                 that.elem.style.flex = "1 1 auto";
                 that.elem.style.letterSpacing = "1px";
 
@@ -358,7 +358,7 @@ const RolesPage = function(params = {}) {
                             });
                             afterPermissionChange();
                         }, 12);
-                        columnChecks[action.id].label.textColor = White(0.5);
+                        columnChecks[action.id].label.textColor = Ink(0.5);
                     endGroup();
                 });
 
@@ -368,7 +368,7 @@ const RolesPage = function(params = {}) {
             MODULES.forEach(function(module, index) {
 
                 HGroup({ width: "100%", height: "auto", align: "left center", padding: [14, 12] });
-                that.elem.style.borderBottom = (index < MODULES.length - 1) ? "1px solid " + White(0.06) : "none";
+                that.elem.style.borderBottom = (index < MODULES.length - 1) ? "1px solid " + Ink(0.06) : "none";
 
                     HGroup({ width: "auto", height: "auto", align: "left center", gap: 12 });
                     that.elem.style.flex = "1 1 auto";
@@ -381,8 +381,8 @@ const RolesPage = function(params = {}) {
                         });
 
                         VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
-                            Label({ text: module.name, fontSize: 15, textColor: White(0.92) });
-                            Label({ text: module.desc, fontSize: 12, textColor: White(0.45) });
+                            Label({ text: module.name, fontSize: 15, textColor: Ink(0.92) });
+                            Label({ text: module.desc, fontSize: 12, textColor: Ink(0.45) });
                         endGroup();
 
                     endGroup();
@@ -397,7 +397,7 @@ const RolesPage = function(params = {}) {
                                 });
                                 matrixChecks[key].elem.setAttribute("aria-label", module.name + ": " + action.name);
                             } else {
-                                Label({ text: "—", fontSize: 14, textColor: White(0.2) });
+                                Label({ text: "—", fontSize: 14, textColor: Ink(0.2) });
                                 that.elem.title = "Not used for this module";
                             }
                         endGroup();
@@ -472,7 +472,7 @@ const RolesPage = function(params = {}) {
                     text: (members.length) ? "No member matches the search." : "This role has no members yet.",
                     width: "100%",
                     fontSize: 14,
-                    textColor: White(0.5),
+                    textColor: Ink(0.5),
                     textAlign: "center",
                     padding: [16, 30],
                 });
@@ -482,7 +482,7 @@ const RolesPage = function(params = {}) {
             shown.forEach(function(user, index) {
 
                 HGroup({ width: "100%", height: "auto", align: "left center", gap: 12, padding: [4, 10] });
-                if (index < shown.length - 1) that.elem.style.borderBottom = "1px solid " + White(0.06);
+                if (index < shown.length - 1) that.elem.style.borderBottom = "1px solid " + Ink(0.06);
 
                     // Avatar (initials)
                     Label({
@@ -491,7 +491,7 @@ const RolesPage = function(params = {}) {
                         height: 38,
                         fontSize: 14,
                         textAlign: "center",
-                        textColor: White(0.95),
+                        textColor: Ink(0.95),
                         color: RolesPage.getAvatarColor(user.id),
                         round: 100,
                     });
@@ -501,8 +501,8 @@ const RolesPage = function(params = {}) {
                     VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
                     that.elem.style.flex = "1 1 auto";
                     that.elem.style.minWidth = "0";
-                        Label({ text: escapeHtml(user.name), fontSize: 15, textColor: White(0.92) });
-                        Label({ text: escapeHtml(user.email), fontSize: 12, textColor: White(0.45) });
+                        Label({ text: escapeHtml(user.name), fontSize: 15, textColor: Ink(0.92) });
+                        Label({ text: escapeHtml(user.email), fontSize: 12, textColor: Ink(0.45) });
                     endGroup();
 
                     // WHY: Everybody must have a role. Members of the default role can only move to another role.
@@ -533,7 +533,7 @@ const RolesPage = function(params = {}) {
 
         if (isDirty()) {
             lblFooter.text = "You have unsaved changes in <b>" + escapeHtml(saved.name) + "</b>.";
-            lblFooter.textColor = White(0.85);
+            lblFooter.textColor = Ink(0.85);
             btnDiscard.visible = 1;
             btnSave.visible = 1;
             showFooter(1);
@@ -606,11 +606,11 @@ const RolesPage = function(params = {}) {
             labelPosition: "right",
             style: {
                 layout: { gap: 8, padding: [0, 0] },
-                mark: { width: 20, height: 20, color: "transparent", borderColor: White(0.35) },
+                mark: { width: 20, height: 20, color: "transparent", borderColor: Ink(0.35) },
                 checkedMark: { color: PRIMARY_COLOR, borderColor: PRIMARY_COLOR },
-                hoverMark: { borderColor: White(0.7) },
-                tick: { color: White(1) },
-                label: { fontSize: fontSize, textColor: White(0.9) },
+                hoverMark: { borderColor: Ink(0.7) },
+                tick: { color: Ink(1) },
+                label: { fontSize: fontSize, textColor: Ink(0.9) },
             },
             onChange: function(self) {
                 if (isRendering) return;
@@ -628,13 +628,13 @@ const RolesPage = function(params = {}) {
             style: {
                 layout: { gap: 8, padding: [14, 8] },
                 icon: { width: 18, height: 18 },
-                label: { fontSize: 14, textColor: White(0.92) },
+                label: { fontSize: 14, textColor: Ink(0.92) },
                 box: { color: (params.primary) ? PRIMARY_COLOR : FIELD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8 },
-                hover: { color: (params.primary) ? "#468A79" : "#2C2C2A" },
-                active: { color: (params.primary) ? "#2C5A38" : "#383835" },
+                hover: { color: (params.primary) ? T.primaryHover : T.surface3 },
+                active: { color: (params.primary) ? T.primaryActive : T.surface4 },
             },
         });
-        if (btn.icon) btn.icon.elem.style.filter = "invert(100%)"; // WHY: Panel icons are black.
+        if (btn.icon) btn.icon.elem.style.filter = T.iconFilter; // WHY: Panel icons are black.
         return btn;
     };
 
@@ -645,7 +645,7 @@ const RolesPage = function(params = {}) {
             leftPadding: 14,
             rightPadding: 36,
             backgroundColor: FIELD_COLOR,
-            selectedBackgroundColor: "#262625",
+            selectedBackgroundColor: T.surface3,
             lineColor: "transparent",
             selectedLineColor: "transparent",
             backBorderColor: CARD_BORDER_COLOR,
@@ -657,10 +657,10 @@ const RolesPage = function(params = {}) {
             ...params,
         });
         // WHY: InputB has fixed text colors for light backgrounds.
-        input.title.textColor = White(0.45);
+        input.title.textColor = Ink(0.45);
         input.title.fontSize = 11;
         input.title.elem.style.letterSpacing = "1px";
-        input.input.textColor = White(0.9);
+        input.input.textColor = Ink(0.9);
         input.input.fontSize = 16;
         input.input.height = 34;
         input.warningBall.borderColor = CARD_COLOR;
@@ -676,7 +676,7 @@ const RolesPage = function(params = {}) {
         if (saveTimer && typeof waiting !== "undefined") waiting.hide();
 
         // WHY: The menu is created on the page. box.remove() does not remove it.
-        if (roleMenu) roleMenu.destroy();
+        if (roleMenu) roleMenu.remove();
 
         box.remove();
         box = null;
@@ -693,10 +693,10 @@ const RolesPage = function(params = {}) {
 
             VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
 
-                Label({ text: "Roles & Permissions", fontSize: 26, textColor: White(0.95) });
+                Label({ text: "Roles & Permissions", fontSize: 26, textColor: Ink(0.95) });
                 that.elem.style.fontFamily = "opensans-bold";
 
-                Label({ text: "Control what each role can see and do in the panel", fontSize: 14, textColor: White(0.5) });
+                Label({ text: "Control what each role can see and do in the panel", fontSize: 14, textColor: Ink(0.5) });
 
             endGroup();
 
@@ -715,9 +715,9 @@ const RolesPage = function(params = {}) {
 
             HGroup({ width: "100%", height: "auto", align: "left center", padding: [8, 6] });
             that.elem.style.justifyContent = "space-between";
-                Label({ text: "ROLES", fontSize: 11, textColor: White(0.45) });
+                Label({ text: "ROLES", fontSize: 11, textColor: Ink(0.45) });
                 that.elem.style.letterSpacing = "1px";
-                lblRoleCount = Label({ text: "", fontSize: 12, textColor: White(0.45) });
+                lblRoleCount = Label({ text: "", fontSize: 12, textColor: Ink(0.45) });
             endGroup();
 
             grpRoleList = VGroup({ width: "100%", height: "auto", align: "left top" });
@@ -763,7 +763,7 @@ const RolesPage = function(params = {}) {
                 },
             });
 
-            lblSystemInfo = Label({ text: "", fontSize: 13, textColor: White(0.6), color: White(0.05), round: 8, padding: [12, 8], width: "100%" });
+            lblSystemInfo = Label({ text: "", fontSize: 13, textColor: Ink(0.6), color: Ink(0.05), round: 8, padding: [12, 8], width: "100%" });
 
         endGroup();
 
@@ -780,11 +780,11 @@ const RolesPage = function(params = {}) {
                 if (item.key == "delete") deleteRole(role);
             },
             style: {
-                menu: { color: FIELD_COLOR, borderColor: White(0.12), shadow: "0px 8px 24px rgba(0, 0, 0, 0.5)" },
-                item: { textColor: White(0.85) },
-                itemHover: { textColor: White(1), color: White(0.08) },
-                disabled: { textColor: White(0.3) },
-                separator: { color: White(0.1) },
+                menu: { color: FIELD_COLOR, borderColor: Ink(0.12), shadow: "0px 8px 24px " + Black(0.5) },
+                item: { textColor: Ink(0.85) },
+                itemHover: { textColor: Ink(1), color: Ink(0.08) },
+                disabled: { textColor: Ink(0.3) },
+                separator: { color: Ink(0.1) },
             },
         });
         roleMenu.attachTo(btnRoleMenu, "click");
@@ -801,7 +801,7 @@ const RolesPage = function(params = {}) {
             },
             backgroundStyle: { colorBottom: CARD_COLOR, colorTop: CARD_COLOR, round: 10, border: 1, borderColor: CARD_BORDER_COLOR },
             tabPadding: [4, 4],
-            labelStyle: { fontSize: 14, textColor: White(0.85), padding: [16, 7] },
+            labelStyle: { fontSize: 14, textColor: Ink(0.85), padding: [16, 7] },
             selectedStyle: { color: PRIMARY_COLOR, round: 7 },
         });
 
@@ -816,9 +816,9 @@ const RolesPage = function(params = {}) {
             that.elem.style.flexWrap = "wrap";
 
                 VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
-                    Label({ text: "Permissions", fontSize: 16, textColor: White(0.95) });
+                    Label({ text: "Permissions", fontSize: 16, textColor: Ink(0.95) });
                     that.elem.style.fontFamily = "opensans-bold";
-                    Label({ text: "Create, edit and delete need view. Use the row and column boxes to select many.", fontSize: 12, textColor: White(0.45) });
+                    Label({ text: "Create, edit and delete need view. Use the row and column boxes to select many.", fontSize: 12, textColor: Ink(0.45) });
                 endGroup();
 
                 lblPermissionCount = Label({ text: "", fontSize: 13, textColor: ACCENT_COLOR });
@@ -854,11 +854,11 @@ const RolesPage = function(params = {}) {
                     borderBottomStyle: "1px solid " + CARD_BORDER_COLOR,
                     round: 8,
                     color: FIELD_COLOR,
-                    textColor: White(0.9),
+                    textColor: Ink(0.9),
                     fontSize: 14,
                     searchIconSize: 16,
                     placeholderText: "Search members",
-                    invertIconColor: 1,
+                    invertIconColor: T.invertIcon,
                     searchIconFile: LIB_PATH + "comp-m2/search-input-v2/search.svg",
                     clearIconFile: LIB_PATH + "comp-m2/search-input-v2/clear.svg",
                     onSearch: function(text) {
@@ -882,15 +882,15 @@ const RolesPage = function(params = {}) {
                     borderColor: CARD_BORDER_COLOR,
                     round: 8,
                     labelBoldFont: 0,
-                    labelTextColor: White(0.9),
+                    labelTextColor: Ink(0.9),
                     arrowIcon: LIB_PATH + "comp-m2/tiny-select/arrow.svg",
                     arrowSize: 18,
-                    invertIconColor: 1,
+                    invertIconColor: T.invertIcon,
                     listFontSize: 14,
-                    listTextColor: White(0.85),
+                    listTextColor: Ink(0.85),
                     listOverTextColor: ACCENT_COLOR,
                     listBackgroundColor: FIELD_COLOR,
-                    listBorderColor: White(0.15),
+                    listBorderColor: Ink(0.15),
                     onSelect: function(index, id) {
                         if (isRendering || !id || !draft) return;
                         draft.memberIds.push(Number(id));
@@ -901,7 +901,7 @@ const RolesPage = function(params = {}) {
 
             endGroup();
 
-            Label({ text: "A user has one role. Adding a user here moves them from their current role. Removed members get the Viewer role.", fontSize: 12, textColor: White(0.45), width: "100%" });
+            Label({ text: "A user has one role. Adding a user here moves them from their current role. Removed members get the Viewer role.", fontSize: 12, textColor: Ink(0.45), width: "100%" });
 
             grpMembersHost = VGroup({ width: "100%", height: "auto", align: "left top" });
             endGroup();
@@ -926,16 +926,16 @@ const RolesPage = function(params = {}) {
                 align: "left center",
                 gap: 10,
                 padding: [20, 12],
-                color: "#2C2C2A",
+                color: T.surface3,
                 border: 1,
-                borderColor: White(0.15),
+                borderColor: Ink(0.15),
                 round: 12,
                 clickable: 1,
             });
             that.elem.style.maxWidth = "960px";
-            that.elem.style.boxShadow = "0 8px 24px rgba(0, 0, 0, 0.5)";
+            that.elem.style.boxShadow = "0 8px 24px " + Black(0.5);
 
-                lblFooter = Label({ text: "", fontSize: 14, textColor: White(0.85) });
+                lblFooter = Label({ text: "", fontSize: 14, textColor: Ink(0.85) });
                 setFlex(lblFooter, "1 1 auto");
 
                 btnDiscard = createButton("Discard", "", function() {

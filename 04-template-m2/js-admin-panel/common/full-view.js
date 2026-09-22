@@ -1,7 +1,7 @@
 const FullView = function() {
     
     let box = Box(0, 0, "100%", "100%", {
-        color: "black",
+        color: T.page,
         visible: 0,
     });
 

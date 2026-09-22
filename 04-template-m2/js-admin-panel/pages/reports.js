@@ -18,7 +18,6 @@ COMPONENTS:
 - MiniGraphBox / SparkLineBox (comp-m4): Summary boxes (bars for counts, a line for money and rates)
 - ChartBox (comp-m4): Revenue, regions, orders by category, refund rates
 - SmartTable (comp-m3): Report details (sort, filter)
-- Waiting (comp-m2): Report query (window.waiting of the panel)
 
 */
 
@@ -38,16 +37,16 @@ const ReportsPage = function(params = {}) {
     const ASSETS = "assets/";
     const LIB_PATH = "../../";
 
-    const CARD_COLOR = "#1A1A19"; // Same with ChartBox dark theme background
-    const CARD_BORDER_COLOR = White(0.1);
-    const FIELD_COLOR = "#232322";
-    const PRIMARY_COLOR = "#3D7A6B";
-    const ACCENT_COLOR = "#65A293";
+    const CARD_COLOR = T.surface; // Same with ChartBox dark theme background
+    const CARD_BORDER_COLOR = Ink(0.1);
+    const FIELD_COLOR = T.surface2;
+    const PRIMARY_COLOR = T.primary;
+    const ACCENT_COLOR = T.accent;
     const PREVIOUS_COLOR = "#898781";
     const GOOD_COLOR = ACCENT_COLOR;
-    const BAD_COLOR = "#E66767";
+    const BAD_COLOR = T.danger;
     // One color for each category (same order with CATEGORIES)
-    const CATEGORY_COLORS = [ACCENT_COLOR, "#3987E5", "#C98500", "#D55181", "#9085E9"];
+    const CATEGORY_COLORS = [ACCENT_COLOR, T.info, T.warning, "#D55181", "#9085E9"];
 
     const CATEGORIES = ReportsPage.CATEGORIES;
     const REGIONS = ReportsPage.REGIONS;
@@ -83,7 +82,6 @@ const ReportsPage = function(params = {}) {
 
     let isReady = 0;
     let reportTimer = null;
-    let queryTimer = null;
 
     // Components
     let quickTabs, fromDate, toDate, regionSelect, groupSelect, compareCheckBox;
@@ -224,24 +222,14 @@ const ReportsPage = function(params = {}) {
 
     };
 
-    // Waits for more filter changes, then runs the report. (Test: shows the waiting like a server query.)
+    // Waits for more filter changes, then runs the report.
     const scheduleReport = function() {
 
         if (!isReady) return;
 
         reportTimer = waitAndRun(reportTimer, function() {
-
             if (!box) return;
-
-            if (typeof waiting !== "undefined") waiting.show();
-
-            clearTimeout(queryTimer);
-            queryTimer = setTimeout(function() {
-                if (!box) return;
-                runReport();
-                if (typeof waiting !== "undefined") waiting.hide();
-            }, 300);
-
+            runReport();
         }, 50);
 
     };
@@ -412,14 +400,14 @@ const ReportsPage = function(params = {}) {
                 Label({
                     text: title,
                     fontSize: 16,
-                    textColor: White(0.95),
+                    textColor: Ink(0.95),
                 });
                 that.elem.style.fontFamily = "opensans-bold";
 
                 card.lblSubtitle = Label({
                     text: subtitle,
                     fontSize: 12,
-                    textColor: White(0.45),
+                    textColor: Ink(0.45),
                 });
 
             endGroup();
@@ -435,7 +423,7 @@ const ReportsPage = function(params = {}) {
     const createChartBox = function(flex, params) {
 
         const chart = ChartBox({
-            theme: "dark",
+            theme: T.chartTheme,
             style: {
                 box: { color: CARD_COLOR, borderColor: CARD_BORDER_COLOR, round: 12, padding: 16 },
                 chart: { colors: CATEGORY_COLORS },
@@ -454,7 +442,7 @@ const ReportsPage = function(params = {}) {
     // GROUP: Small title and a field
     const startField = function(title) {
         VGroup({ width: "auto", height: "auto", align: "left top", gap: 6 });
-        Label({ text: title.toUpperCase(), fontSize: 11, textColor: White(0.45) });
+        Label({ text: title.toUpperCase(), fontSize: 11, textColor: Ink(0.45) });
         that.elem.style.letterSpacing = "1px";
     };
 
@@ -465,19 +453,19 @@ const ReportsPage = function(params = {}) {
     // Dark style for SelectDate
     const DATE_STYLE = {
         field: { color: FIELD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8 },
-        fieldHover: { borderColor: White(0.3) },
+        fieldHover: { borderColor: Ink(0.3) },
         fieldFocus: { borderColor: ACCENT_COLOR },
-        fieldText: { fontSize: 14, textColor: White(0.9) },
-        placeholder: { textColor: White(0.4) },
-        icon: { color: White(0.55) },
-        panel: { color: FIELD_COLOR, borderColor: White(0.12), shadow: "0 8px 24px rgba(0, 0, 0, 0.5)" },
-        title: { textColor: White(0.9) },
-        arrow: { color: White(0.6), hoverColor: White(0.08) },
-        weekDay: { textColor: White(0.45) },
-        day: { textColor: White(0.85), hoverColor: White(0.08) },
-        today: { borderColor: White(0.35) },
-        selectedDay: { color: PRIMARY_COLOR, textColor: White(1) },
-        disabledDay: { textColor: White(0.2) },
+        fieldText: { fontSize: 14, textColor: Ink(0.9) },
+        placeholder: { textColor: Ink(0.4) },
+        icon: { color: Ink(0.55) },
+        panel: { color: FIELD_COLOR, borderColor: Ink(0.12), shadow: "0 8px 24px " + Black(0.5) },
+        title: { textColor: Ink(0.9) },
+        arrow: { color: Ink(0.6), hoverColor: Ink(0.08) },
+        weekDay: { textColor: Ink(0.45) },
+        day: { textColor: Ink(0.85), hoverColor: Ink(0.08) },
+        today: { borderColor: Ink(0.35) },
+        selectedDay: { color: PRIMARY_COLOR, textColor: Ink(1) },
+        disabledDay: { textColor: Ink(0.2) },
         footerButton: { textColor: ACCENT_COLOR },
     };
 
@@ -492,15 +480,15 @@ const ReportsPage = function(params = {}) {
             borderColor: CARD_BORDER_COLOR,
             round: 8,
             labelBoldFont: 0,
-            labelTextColor: White(0.9),
+            labelTextColor: Ink(0.9),
             arrowIcon: LIB_PATH + "comp-m2/tiny-select/arrow.svg",
             arrowSize: 18,
-            invertIconColor: 1,
+            invertIconColor: T.invertIcon,
             listFontSize: 14,
-            listTextColor: White(0.85),
+            listTextColor: Ink(0.85),
             listOverTextColor: ACCENT_COLOR,
             listBackgroundColor: FIELD_COLOR,
-            listBorderColor: White(0.15),
+            listBorderColor: Ink(0.15),
             onSelect: onSelect,
         });
 
@@ -513,19 +501,17 @@ const ReportsPage = function(params = {}) {
     box.destroy = function() {
 
         clearTimeout(reportTimer);
-        clearTimeout(queryTimer);
-        if (typeof waiting !== "undefined") waiting.hide();
 
-        // WHY: Chart.js instances keep resize listeners. They must be destroyed.
+        // WHY: ChartBox keeps a Chart.js instance with resize listeners. remove() cleans it.
         [chartRevenue, chartRegion, chartCategory, chartRefund].forEach(function(chart) {
-            if (chart) chart.destroy();
+            if (chart) chart.remove();
         });
 
         // WHY: These components have objects or events on the page. box.remove() does not remove them.
-        if (smartTable) smartTable.destroy();
-        if (exportMenu) exportMenu.destroy();
-        if (fromDate) fromDate.destroy();
-        if (toDate) toDate.destroy();
+        if (smartTable) smartTable.remove();
+        if (exportMenu) exportMenu.remove();
+        if (fromDate) fromDate.remove();
+        if (toDate) toDate.remove();
 
         box.remove();
         box = null;
@@ -545,14 +531,14 @@ const ReportsPage = function(params = {}) {
                 Label({
                     text: "Sales Report",
                     fontSize: 26,
-                    textColor: White(0.95),
+                    textColor: Ink(0.95),
                 });
                 that.elem.style.fontFamily = "opensans-bold";
 
                 lblSubtitle = Label({
                     text: "",
                     fontSize: 14,
-                    textColor: White(0.5),
+                    textColor: Ink(0.5),
                 });
 
             endGroup();
@@ -565,13 +551,13 @@ const ReportsPage = function(params = {}) {
                     style: {
                         layout: { gap: 10, padding: [14, 8] },
                         icon: { width: 20, height: 20 },
-                        label: { fontSize: 14, textColor: White(0.95) },
+                        label: { fontSize: 14, textColor: Ink(0.95) },
                         box: { color: PRIMARY_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8 },
-                        hover: { color: "#468A79" },
-                        active: { color: "#2C5A38" },
+                        hover: { color: T.primaryHover },
+                        active: { color: T.primaryActive },
                     },
                 });
-                btnExport.icon.elem.style.filter = "invert(100%)"; // WHY: Panel icons are black.
+                btnExport.icon.elem.style.filter = T.iconFilter; // WHY: Panel icons are black.
 
                 // MENU: Export
                 exportMenu = ContextMenu({
@@ -592,10 +578,10 @@ const ReportsPage = function(params = {}) {
                         }
                     },
                     style: {
-                        menu: { color: FIELD_COLOR, borderColor: White(0.12), shadow: "0px 8px 24px rgba(0, 0, 0, 0.5)" },
-                        item: { textColor: White(0.85) },
-                        itemHover: { textColor: White(1), color: White(0.08) },
-                        separator: { color: White(0.1) },
+                        menu: { color: FIELD_COLOR, borderColor: Ink(0.12), shadow: "0px 8px 24px " + Black(0.5) },
+                        item: { textColor: Ink(0.85) },
+                        itemHover: { textColor: Ink(1), color: Ink(0.08) },
+                        separator: { color: Ink(0.1) },
                     },
                 });
                 exportMenu.attachTo(btnExport, "click");
@@ -640,7 +626,7 @@ const ReportsPage = function(params = {}) {
                         tabPadding: [3, 3],
                         labelStyle: {
                             fontSize: 14,
-                            textColor: White(0.85),
+                            textColor: Ink(0.85),
                             padding: [12, 6],
                         },
                         selectedStyle: {
@@ -724,11 +710,11 @@ const ReportsPage = function(params = {}) {
                         labelText: "Compare with the previous period",
                         checked: filter.compare,
                         style: {
-                            mark: { width: 20, height: 20, color: "transparent", borderColor: White(0.35) },
+                            mark: { width: 20, height: 20, color: "transparent", borderColor: Ink(0.35) },
                             checkedMark: { color: PRIMARY_COLOR, borderColor: PRIMARY_COLOR },
-                            hoverMark: { borderColor: White(0.7) },
-                            tick: { color: White(1) },
-                            label: { fontSize: 14, textColor: White(0.9) },
+                            hoverMark: { borderColor: Ink(0.7) },
+                            tick: { color: Ink(1) },
+                            label: { fontSize: 14, textColor: Ink(0.9) },
                         },
                         onChange: function(self) {
                             filter.compare = self.checked;
@@ -752,8 +738,8 @@ const ReportsPage = function(params = {}) {
         // WHY: Bars for things you can count, a line for money, averages and rates.
         const KPI_LIST = [
             { title: "Revenue", color: ACCENT_COLOR, graphType: "line" },
-            { title: "Orders", color: "#3987E5", graphType: "bar" },
-            { title: "Avg. Order Value", color: "#C98500", graphType: "line" },
+            { title: "Orders", color: T.info, graphType: "bar" },
+            { title: "Avg. Order Value", color: T.warning, graphType: "line" },
             { title: "Refund Rate", color: "#D55181", graphType: "line" },
         ];
 
@@ -767,8 +753,9 @@ const ReportsPage = function(params = {}) {
                 style: {
                     box: { color: CARD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 12 },
                     text: { padding: 14 },
-                    title: { fontSize: 13, textColor: White(0.5) },
-                    valueText: { fontSize: 24, textColor: White(0.95) },
+                    title: { fontSize: 13, textColor: Ink(0.5) },
+                    valueText: { fontSize: 24, textColor: Ink(0.95) },
+                    trend: { flatColor: Ink(0.45) }, // WHY: The default flat color is made for light cards.
                 },
             };
 
@@ -942,21 +929,21 @@ const ReportsPage = function(params = {}) {
                                 break;
                             case "refundRate":
                                 cell.label.text = (data === "") ? "" : data.toFixed(1) + "%";
-                                cell.label.textColor = (data > HIGH_REFUND_RATE) ? BAD_COLOR : "rgba(255, 255, 255, 0.75)";
+                                cell.label.textColor = (data > HIGH_REFUND_RATE) ? BAD_COLOR : Ink(0.75);
                                 break;
                         }
                     },
                     scrollBarParams: {
                         bar_border: 0,
                         bar_round: 3,
-                        bar_borderColor: "rgba(255, 255, 255, 0.15)",
+                        bar_borderColor: Ink(0.15),
                         bar_width: 4,
                         bar_mouseOverWidth: 4,
-                        bar_mouseOverColor: "#A0A0A0",
+                        bar_mouseOverColor: T.scrollBar,
                         bar_opacity: 0.4,
                         bar_mouseOverOpacity: 0.9,
                         bar_padding: 2,
-                        bar_color: "#A0A0A0",
+                        bar_color: T.scrollBar,
                         neverHide: 0,
                         showDots: 0,
                     },
@@ -969,13 +956,13 @@ const ReportsPage = function(params = {}) {
                         color: FIELD_COLOR,
                         borderColor: CARD_BORDER_COLOR,
                         borderBottomStyle: "1px solid " + CARD_BORDER_COLOR,
-                        textColor: White(0.9),
-                        placeholderColor: White(0.4),
+                        textColor: Ink(0.9),
+                        placeholderColor: Ink(0.4),
                         searchIconSize: 15,
                         searchIconOpacity: 0.55,
                         placeholderText: "Filter (Ex: Books, 2026-09)",
                         fontSize: 14,
-                        invertIconColor: 1,
+                        invertIconColor: T.invertIcon,
                         searchIconFile: LIB_PATH + "comp-m2/search-input-v2/filter.png",
                         clearIconFile: LIB_PATH + "comp-m2/search-input-v2/clear.svg",
                     },
@@ -983,12 +970,12 @@ const ReportsPage = function(params = {}) {
                     searchTitleMenuParams: {
                         minWidth: 170,
                         style: {
-                            menu: { color: FIELD_COLOR, border: 1, borderColor: White(0.12), round: 8, padding: 4, shadow: "0 8px 24px rgba(0, 0, 0, 0.5)" },
-                            item: { height: 30, fontSize: 13, textColor: White(0.75), color: "transparent", round: 6, padding: 10, gap: 10 },
-                            itemHover: { textColor: "white", color: White(0.08) },
-                            disabled: { textColor: White(0.3), opacity: 0.4 },
+                            menu: { color: FIELD_COLOR, border: 1, borderColor: Ink(0.12), round: 8, padding: 4, shadow: "0 8px 24px " + Black(0.5) },
+                            item: { height: 30, fontSize: 13, textColor: Ink(0.75), color: "transparent", round: 6, padding: 10, gap: 10 },
+                            itemHover: { textColor: "white", color: Ink(0.08) },
+                            disabled: { textColor: Ink(0.3), opacity: 0.4 },
                             icon: { width: 14, height: 14 },
-                            separator: { color: White(0.1), space: 4 },
+                            separator: { color: Ink(0.1), space: 4 },
                         },
                     },
                     style: {
@@ -996,9 +983,9 @@ const ReportsPage = function(params = {}) {
                         height: "100%",
                         round: 8,
                         line1Color: CARD_COLOR,
-                        line2Color: "#202020",
-                        highlightItemCellColor: "#2A3A36",
-                        highlightTitleCellColor: White(0.08),
+                        line2Color: T.tableRow2,
+                        highlightItemCellColor: T.tableHighlight,
+                        highlightTitleCellColor: Ink(0.08),
                         verticalScrollWidth: 20,
                         verticalScrollMargin: 2,
                         btnScrollDownIconFile: LIB_PATH + "comp-m3/smart-table/down.png",
@@ -1008,23 +995,23 @@ const ReportsPage = function(params = {}) {
                         // WHY: Varsayılan tik ikonu koyu renkli; koyu menüde görünmüyordu.
                         searchTitleCheckIconFile: "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + ACCENT_COLOR + '" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17.5 19 7"/></svg>'),
                         loadingIconFile: LIB_PATH + "comp-m3/smart-table/clock.png",
-                        invertIconColor: 1,
+                        invertIconColor: T.invertIcon,
 
                         box: { color: CARD_COLOR },
                         boxBorder: { border: 1, borderColor: CARD_BORDER_COLOR },
                         boxTitleLine: { color: FIELD_COLOR },
-                        boxTitleCell: { padding: [10, 0], borderRight: "1px solid rgba(255, 255, 255, 0.06)", borderBottom: "1px solid rgba(255, 255, 255, 0.12)" },
-                        lblTitleCell: { fontSize: 13, fontFamily: "opensans", textColor: White(0.6) },
-                        boxItemCell: { borderBottom: "1px solid rgba(255, 255, 255, 0.05)", borderRight: "1px solid rgba(255, 255, 255, 0.03)", padding: [10, 0] },
-                        lblItemCell: { fontSize: 14, textColor: "rgba(255, 255, 255, 0.75)", fontFamily: "opensans" },
-                        boxInfoLine: { color: CARD_COLOR, borderTop: "1px solid rgba(255, 255, 255, 0.08)" },
-                        lblBoxInfoLine: { fontSize: 13, textColor: White(0.55) },
-                        lblNoDataFound: { color: "#2C2C2A", textColor: White(0.6), padding: [8, 2], fontSize: 13, round: 8, border: 1, borderColor: White(0.15) },
+                        boxTitleCell: { padding: [10, 0], borderRight: "1px solid " + Ink(0.06), borderBottom: "1px solid " + Ink(0.12) },
+                        lblTitleCell: { fontSize: 13, fontFamily: "opensans", textColor: Ink(0.6) },
+                        boxItemCell: { borderBottom: "1px solid " + Ink(0.05), borderRight: "1px solid " + Ink(0.03), padding: [10, 0] },
+                        lblItemCell: { fontSize: 14, textColor: Ink(0.75), fontFamily: "opensans" },
+                        boxInfoLine: { color: CARD_COLOR, borderTop: "1px solid " + Ink(0.08) },
+                        lblBoxInfoLine: { fontSize: 13, textColor: Ink(0.55) },
+                        lblNoDataFound: { color: T.surface3, textColor: Ink(0.6), padding: [8, 2], fontSize: 13, round: 8, border: 1, borderColor: Ink(0.15) },
                         // Filtre kutusunun içindeki sütun etiketi: Kutunun içinde durduğu için daha hafif bir chip.
-                        lblSearchTitle: { color: White(0.08), textColor: White(0.6), padding: [8, 1], fontSize: 12, round: 6, border: 1, borderColor: White(0.14) },
-                        btnScrollCenter: { color: "#2C2C2A", round: 100, borderColor: White(0.2), border: 1 },
-                        btnScrollUp: { color: "#3A3A38", round: 100, border: 1, borderColor: White(0.3) },
-                        btnScrollDown: { color: "#3A3A38", round: 100, border: 1, borderColor: White(0.3) },
+                        lblSearchTitle: { color: Ink(0.08), textColor: Ink(0.6), padding: [8, 1], fontSize: 12, round: 6, border: 1, borderColor: Ink(0.14) },
+                        btnScrollCenter: { color: T.surface3, round: 100, borderColor: Ink(0.2), border: 1 },
+                        btnScrollUp: { color: T.surface4, round: 100, border: 1, borderColor: Ink(0.3) },
+                        btnScrollDown: { color: T.surface4, round: 100, border: 1, borderColor: Ink(0.3) },
                         boxSort: { color: PRIMARY_COLOR },
                     },
                 });
@@ -1069,6 +1056,13 @@ const ReportsPage = function(params = {}) {
 
     quickTabs.selectByIndex(DEFAULT_RANGE_INDEX);
     selectQuickRange(DEFAULT_RANGE_INDEX);
+
+    // WHY: The first report is not waited for (scheduleReport() runs it 50 ms later). The subtitle under
+    //      the title was written in renderReport(), so the header grew after the page was shown and
+    //      the whole content slid down. Now the page is complete before it is shown.
+    clearTimeout(reportTimer);
+    reportTimer = null;
+    runReport();
 
     return box.endPage();
 

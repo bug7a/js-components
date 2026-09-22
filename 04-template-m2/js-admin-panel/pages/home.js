@@ -33,18 +33,18 @@ const HomePage = function(params = {}) {
 
     const ASSETS = "assets/";
 
-    const CARD_COLOR = "#1A1A19"; // Same with ChartBox dark theme background
-    const CARD_BORDER_COLOR = White(0.1);
-    const BUTTON_COLOR = "#232322";
-    const PRIMARY_COLOR = "#3D7A6B";
-    const ACCENT_COLOR = "#65A293";
+    const CARD_COLOR = T.surface; // Same with ChartBox dark theme background
+    const CARD_BORDER_COLOR = Ink(0.1);
+    const BUTTON_COLOR = T.surface2;
+    const PRIMARY_COLOR = T.primary;
+    const ACCENT_COLOR = T.accent;
     // WHY: The first chart color follows the panel color. Others are from ChartBox dark theme.
-    const CHART_COLORS = [ACCENT_COLOR, "#3987E5", "#C98500", "#D55181", "#9085E9", "#E66767"];
+    const CHART_COLORS = [ACCENT_COLOR, T.info, T.warning, "#D55181", "#9085E9", T.danger];
 
     const STATUS_COLORS = {
         "Paid": ACCENT_COLOR,
-        "Pending": "#C98500",
-        "Refunded": "#E66767",
+        "Pending": T.warning,
+        "Refunded": T.danger,
     };
 
     let liveTimer = null;
@@ -84,8 +84,8 @@ const HomePage = function(params = {}) {
     // WHY: Bars for things you can count, a line for money and for live values.
     const KPI_LIST = [
         { title: "Revenue", iconFile: "left-menu/reports.png", color: ACCENT_COLOR, graphType: "line", min: 20, max: 60 },
-        { title: "Orders", iconFile: "top-bar/bookmark.png", color: "#3987E5", graphType: "bar", min: 10, max: 40 },
-        { title: "Active Users", iconFile: "top-bar/user.png", color: "#C98500", graphType: "line", min: 180, max: 260 }, // Live
+        { title: "Orders", iconFile: "top-bar/bookmark.png", color: T.info, graphType: "bar", min: 10, max: 40 },
+        { title: "Active Users", iconFile: "top-bar/user.png", color: T.warning, graphType: "line", min: 180, max: 260 }, // Live
         { title: "New Comments", iconFile: "top-bar/comment.png", color: "#D55181", graphType: "bar", min: 2, max: 20 },
     ];
 
@@ -112,7 +112,7 @@ const HomePage = function(params = {}) {
         return list;
     };
 
-    // "#65A293" -> "#9A5D6C"
+    // T.accent -> "#9A5D6C"
     const invertColor = function(hex) {
         return "#" + (0xFFFFFF ^ parseInt(hex.slice(1), 16)).toString(16).padStart(6, "0");
     };
@@ -165,7 +165,7 @@ const HomePage = function(params = {}) {
                 Label({
                     text: title,
                     fontSize: 16,
-                    textColor: White(0.95),
+                    textColor: Ink(0.95),
                 });
                 that.elem.style.fontFamily = "opensans-bold";
 
@@ -173,7 +173,7 @@ const HomePage = function(params = {}) {
                     Label({
                         text: subtitle,
                         fontSize: 12,
-                        textColor: White(0.45),
+                        textColor: Ink(0.45),
                     });
                 }
 
@@ -193,7 +193,7 @@ const HomePage = function(params = {}) {
         delete params.flex; // Not a ChartBox param
 
         const chart = ChartBox({
-            theme: "dark",
+            theme: T.chartTheme,
             style: {
                 box: { color: CARD_COLOR, borderColor: CARD_BORDER_COLOR, round: 12, padding: 16 },
                 chart: { colors: CHART_COLORS },
@@ -222,13 +222,13 @@ const HomePage = function(params = {}) {
             style: {
                 layout: { gap: 10, padding: [14, 8], align: params.align || "center center" },
                 icon: { width: 20, height: 20 },
-                label: { fontSize: 14, textColor: White(0.9) },
+                label: { fontSize: 14, textColor: Ink(0.9) },
                 box: { color: color, border: 1, borderColor: CARD_BORDER_COLOR, round: 8 },
-                hover: { color: params.hoverColor || "#2C2C2A" },
-                active: { color: params.activeColor || "#383835" },
+                hover: { color: params.hoverColor || T.surface3 },
+                active: { color: params.activeColor || T.surface4 },
             },
         });
-        btn.icon.elem.style.filter = "invert(100%)"; // WHY: Panel icons are black.
+        btn.icon.elem.style.filter = T.iconFilter; // WHY: Panel icons are black.
 
         return btn;
 
@@ -264,9 +264,9 @@ const HomePage = function(params = {}) {
 
         clearInterval(liveTimer);
 
-        // WHY: Chart.js instances keep resize listeners. They must be destroyed.
+        // WHY: ChartBox keeps a Chart.js instance with resize listeners. remove() cleans it.
         [chartRevenue, chartTraffic, chartCategory].forEach(function(chart) {
-            if (chart) chart.destroy();
+            if (chart) chart.remove();
         });
 
         box.remove();
@@ -293,14 +293,14 @@ const HomePage = function(params = {}) {
                 Label({
                     text: "Dashboard",
                     fontSize: 26,
-                    textColor: White(0.95),
+                    textColor: Ink(0.95),
                 });
                 that.elem.style.fontFamily = "opensans-bold";
 
                 Label({
                     text: new Date().toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "long", year: "numeric" }),
                     fontSize: 14,
-                    textColor: White(0.5),
+                    textColor: Ink(0.5),
                 });
 
             endGroup();
@@ -324,7 +324,7 @@ const HomePage = function(params = {}) {
                     },
                     labelStyle: {
                         fontSize: 14,
-                        textColor: White(0.85),
+                        textColor: Ink(0.85),
                         padding: [14, 5],
                     },
                     selectedStyle: {
@@ -337,9 +337,16 @@ const HomePage = function(params = {}) {
                     chartRevenue.download("revenue-" + PERIODS[selectedPeriodIndex].name.toLowerCase() + ".png");
                 });
 
-                box.btnAddUser = createButton("Add User", "top-bar/add.png", function() {
-                    openPage(UsersPage.KEY);
-                }, { color: PRIMARY_COLOR, hoverColor: "#468A79", activeColor: "#2C5A38" });
+                box.btnInviteUser = createButton("Invite User", "top-bar/add.png", function() {
+                    // WHY: The same action as the "Invite User" item of the top bar: the user list
+                    //      is opened with the invite panel, not just the page.
+                    if (rightView.isShown()) {
+                        rightView.hide();
+                        rightView.clean();
+                    }
+                    leftMenu.setSelectedItem(UserListPage.KEY);
+                    UserListPage({ openUserId: "invite" });
+                }, { color: PRIMARY_COLOR, hoverColor: T.primaryHover, activeColor: T.primaryActive });
 
             endGroup();
 
@@ -359,9 +366,10 @@ const HomePage = function(params = {}) {
             style: {
                 box: { color: CARD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 12 },
                 text: { padding: 14 },
-                title: { fontSize: 13, textColor: White(0.5) },
-                valueText: { fontSize: 24, textColor: White(0.95) },
+                title: { fontSize: 13, textColor: Ink(0.5) },
+                valueText: { fontSize: 24, textColor: Ink(0.95) },
                 icon: { width: 20, height: 20 },
+                trend: { flatColor: Ink(0.45) }, // WHY: The default flat color is made for light cards.
             },
         };
 
@@ -385,7 +393,7 @@ const HomePage = function(params = {}) {
 
                 const kpiBox = createKpiBox(kpi);
                 setFlex(kpiBox, "1 1 220px");
-                kpiBox.icon.elem.style.filter = "invert(100%)"; // WHY: Panel icons are black.
+                kpiBox.icon.elem.style.filter = T.iconFilter; // WHY: Panel icons are black.
                 kpiBox.icon.opacity = 0.5;
 
                 kpiBoxList.push(kpiBox);
@@ -466,18 +474,18 @@ const HomePage = function(params = {}) {
                         columnHeaders: ["ORDER", "CUSTOMER", "DATE", "AMOUNT", "STATUS"],
                         columnWidths: ["16%", "29%", "18%", "18%", "18%"], // 99%: 1px gaps between cells
                         dataRows: RECENT_ORDERS,
-                        headerBackgroundColor: "#232322",
-                        headerTextColor: White(0.6),
-                        headerBorderColor: "#232322",
+                        headerBackgroundColor: T.surface2,
+                        headerTextColor: Ink(0.6),
+                        headerBorderColor: T.surface2,
                         headerFontSize: 12,
                         borderWidth: 1,
                         borderRadius: 8,
                         borderColor: CARD_BORDER_COLOR,
                         bodyBackgroundColor: CARD_COLOR,
                         cellFontSize: 14,
-                        cellTextColor: White(0.8),
-                        rowHoverBackgroundColor: White(0.05),
-                        rowHoverBorderColor: White(0.1),
+                        cellTextColor: Ink(0.8),
+                        rowHoverBackgroundColor: Ink(0.05),
+                        rowHoverBorderColor: Ink(0.1),
                         onCellRender: function(cell) {
 
                             // AMOUNT
@@ -487,7 +495,7 @@ const HomePage = function(params = {}) {
 
                             // STATUS
                             if (cell.index == 4) {
-                                cell.textColor = STATUS_COLORS[cell.text] || White(0.8);
+                                cell.textColor = STATUS_COLORS[cell.text] || Ink(0.8);
                             }
 
                         },
@@ -513,13 +521,13 @@ const HomePage = function(params = {}) {
                             Label({
                                 text: goal.title,
                                 fontSize: 14,
-                                textColor: White(0.85),
+                                textColor: Ink(0.85),
                             });
 
                             Label({
                                 text: goal.valueText + " <b>(" + goal.progress + "%)</b>",
                                 fontSize: 12,
-                                textColor: White(0.5),
+                                textColor: Ink(0.5),
                             });
 
                         endGroup();
@@ -529,11 +537,11 @@ const HomePage = function(params = {}) {
                             height: 18,
                             progress: goal.progress,
                             // WHY: LineProgressBar is made for light backgrounds (the current line is black).
-                            // The whole bar is inverted, so the colors are given inverted too.
-                            primaryColor: invertColor(ACCENT_COLOR),
-                            secondaryColor: invertColor("#3A3A38"),
+                            // On the dark themes the whole bar is inverted, so the colors are given inverted too.
+                            primaryColor: (T.isDark) ? invertColor(ACCENT_COLOR) : ACCENT_COLOR,
+                            secondaryColor: (T.isDark) ? invertColor(T.surface4) : T.surface4,
                         });
-                        progressBar.elem.style.filter = "invert(100%)";
+                        progressBar.elem.style.filter = T.iconFilter;
                         progressBar.elem.style.margin = "4px 0px 8px 0px"; // WHY: The current line is taller than the bar.
 
                     endGroup();
@@ -590,9 +598,9 @@ const HomePage = function(params = {}) {
                 const badge = Badge({
                     value: 12,
                     badgeStyle: {
-                        color: "#E66767",
+                        color: T.danger,
                         border: 0,
-                        textColor: White(0.95),
+                        textColor: Ink(0.95),
                     },
                 });
                 btnNotifications.add(badge);

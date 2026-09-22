@@ -113,8 +113,11 @@ then created from the field names (`first_name` → `First Name`).
 
 - **Check the spam folder first.** A mail sent from `no-reply@your-site.com` with the visitor's address in
   Reply-To is the safest setup; do not put the visitor's address into `FROM_EMAIL`.
-- Open the service address in the browser: `mailFunction: false` means `mail()` is closed on your hosting.
-  Ask your hosting company, or use an SMTP library (PHPMailer) inside `sendMail()`.
+- **The form says "could not be sent" and the service answers HTTP 500 with an empty body.** The server
+  does not have `mail()` at all, and PHP stops before it can write the JSON answer. Open the service
+  address in the browser: `mailFunction: false` means `mail()` is closed on your hosting. Ask your hosting
+  company to turn it on, or send the mail over SMTP inside `sendMail()`. (LiteSpeed and cPanel hosting
+  often close it and want SMTP.)
 - `{"ok":false,"error":"The mail could not be sent by the server."}`: `mail()` returned false. Usually the
   `From` address does not belong to the domain of the server.
 - The browser console shows a CORS error: the form page and the service are on different domains. Write the

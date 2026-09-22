@@ -1,6 +1,6 @@
 {
-    "name": "Mobile Fit Skeleton",
-    "short_name": "Mobile Fit",
+    "name": "App Example",
+    "short_name": "App Example",
     "description": "A basic.js progressive web app skeleton with a fixed content width.",
     "id": "./index.htm",
     "start_url": "./index.htm",

@@ -74,6 +74,20 @@ Use `startObject` to create the main container (`box`) and merge `params` with `
     };
 ```
 
+**Cleaning up**: A component removes itself with `remove()`. Extend it, do the global cleanup, then call the original `remove()` of basic.js.
+```javascript
+    // WHY: the local const is called below, because an extending component overwrites box.superRemove.
+    const superRemove = box.remove;
+    box.superRemove = superRemove;
+    box.remove = function () {
+        if (!box) return;                 // WHY: remove() can be called twice.
+        // window / document events, timers, page.remove_onResize(), static lists,
+        // and the objects created directly on page (menus, popups).
+        superRemove.call(box);            // basic.js remove(): cleans the events and the objects inside.
+        box = null;
+    };
+```
+
 ### 5. Build UI
 Create child components inside the `box`. You can use `AutoLayout` or absolute positioning.
 
@@ -169,6 +183,7 @@ const ToggleButton = function(params = {}) {
 ```
 
 ## Best Practices
+- **Removing**: Never write a `destroy()` function for a new component. Override `remove()` as shown above, so the component is removed like any other basic.js object and a parent's `remove()` cleans it automatically.
 - **Naming**: Use PascalCase for Component names (e.g., `MyComponent`) and `ComponentDefaults` for defaults.
 - **Getters/Setters**: For properties that need to update the UI when changed, create explicit `setPropName` methods (e.g., `setValue`, `setText`) instead of JS setters, or use the `box.prop` pattern if simple.
 - **`that` usage**: Use `that` immediately after creating an object to apply styles or layout properties without creating a variable if you don't need to reference it later.

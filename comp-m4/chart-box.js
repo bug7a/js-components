@@ -245,6 +245,13 @@ const ChartBox = function (params = {}) {
         const font = { family: t.fontFamily, size: t.fontSize };
         const type = box.type;
 
+        // The axis of the "index" interaction mode.
+        // WHY: Chart.js uses "x" for that mode, whatever indexAxis is. With horizontal bars the index
+        //      runs on the y axis, so the tooltip showed the bar that was nearest on the x axis
+        //      (the one with a similar length), not the one under the pointer.
+        const hoverAxis = (box.horizontal == 1 && !isPieType(type) && !RADIAL_TYPES.includes(type)
+            && type != "scatter" && type != "bubble") ? "y" : "x";
+
         const options = {
             responsive: true,
             maintainAspectRatio: false, // WHY: The chart fills the box. The box size is set by basic.js.
@@ -253,7 +260,7 @@ const ChartBox = function (params = {}) {
             animation: (box.animated == 1) ? {} : false,
             interaction: (isPieType(type) || type == "scatter" || type == "bubble")
                 ? { mode: "nearest", intersect: true }
-                : { mode: "index", intersect: false },
+                : { mode: "index", intersect: false, axis: hoverAxis },
             elements: {
                 line: { borderWidth: 2, borderCapStyle: "round", borderJoinStyle: "round" },
                 point: { radius: 4, hoverRadius: 6, borderWidth: 2, hitRadius: 8 },
@@ -612,13 +619,17 @@ const ChartBox = function (params = {}) {
         link.click();
     };
 
-    box.destroy = function () {
+    // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
+    const superRemove = box.remove;
+    box.superRemove = superRemove;
+    box.remove = function () {
 
+        if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
         if (mediaQuery) mediaQuery.removeEventListener("change", onSystemThemeChange);
         if (box.chart) box.chart.destroy();
         box.chart = null;
 
-        box.remove(); // NOTE: It will clean all events like box.on("click"
+        superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
         box = null;
 
     };

@@ -143,7 +143,7 @@ const ProductsPage = function(params = {}) {
         const needAction = low.length + out.length;
         alertBox.visible = (needAction > 0) ? 1 : 0;
         lblAlert.text = "<b>" + needAction + " products need stock:</b> " + out.length + " out of stock, " + low.length + " low. " +
-            "<span style='color:" + White(0.55) + "'>Customers can not buy products that are out of stock.</span>";
+            "<span style='color:" + Ink(0.55) + "'>Customers can not buy products that are out of stock.</span>";
 
     };
 
@@ -199,7 +199,7 @@ const ProductsPage = function(params = {}) {
         closeEditor();
 
         // WHY: SmartTable has window events and a menu on the page. box.remove() does not remove them.
-        if (smartTable) smartTable.destroy();
+        if (smartTable) smartTable.remove();
 
         box.remove();
         box = null;
@@ -216,10 +216,10 @@ const ProductsPage = function(params = {}) {
 
             VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
 
-                Label({ text: "Products", fontSize: 26, textColor: White(0.95) });
+                Label({ text: "Products", fontSize: 26, textColor: Ink(0.95) });
                 that.elem.style.fontFamily = "opensans-bold";
 
-                Label({ text: "Manage your catalog, prices and stock", fontSize: 14, textColor: White(0.5) });
+                Label({ text: "Manage your catalog, prices and stock", fontSize: 14, textColor: Ink(0.5) });
 
             endGroup();
 
@@ -241,8 +241,8 @@ const ProductsPage = function(params = {}) {
 
         const KPI_LIST = [
             { title: "Products (not archived)", barColor: S.ACCENT_COLOR },
-            { title: "Inventory value (cost)", barColor: "#3987E5" },
-            { title: "Low stock", barColor: "#C98500" },
+            { title: "Inventory value (cost)", barColor: T.info },
+            { title: "Low stock", barColor: T.warning },
             { title: "Out of stock", barColor: S.ERROR_COLOR },
         ];
 
@@ -261,8 +261,9 @@ const ProductsPage = function(params = {}) {
                     style: {
                         box: { color: S.CARD_COLOR, border: 1, borderColor: S.CARD_BORDER_COLOR, round: 12 },
                         text: { padding: 14 },
-                        title: { fontSize: 13, textColor: White(0.5) },
-                        valueText: { fontSize: 24, textColor: White(0.95) },
+                        title: { fontSize: 13, textColor: Ink(0.5) },
+                        valueText: { fontSize: 24, textColor: Ink(0.95) },
+                        trend: { flatColor: Ink(0.45) }, // WHY: The default flat color is made for light cards.
                         bars: { height: 30, barWidth: 10, gap: 4, padding: 14, round: 2 },
                     },
                 });
@@ -294,7 +295,7 @@ const ProductsPage = function(params = {}) {
         });
         that.elem.style.flexWrap = "wrap";
 
-            lblAlert = Label({ text: "", fontSize: 14, textColor: White(0.9) });
+            lblAlert = Label({ text: "", fontSize: 14, textColor: Ink(0.9) });
             setFlex(lblAlert, "1 1 300px");
 
             ProductsPage.createButton("Show Low Stock", "", function() { setStockFilter("low"); });
@@ -320,7 +321,7 @@ const ProductsPage = function(params = {}) {
                     },
                     backgroundStyle: { colorBottom: S.FIELD_COLOR, colorTop: S.FIELD_COLOR, round: 8, border: 1, borderColor: S.CARD_BORDER_COLOR },
                     tabPadding: [3, 3],
-                    labelStyle: { fontSize: 14, textColor: White(0.85), padding: [12, 6] },
+                    labelStyle: { fontSize: 14, textColor: Ink(0.85), padding: [12, 6] },
                     selectedStyle: { color: S.PRIMARY_COLOR, round: 6 },
                 });
 
@@ -332,11 +333,11 @@ const ProductsPage = function(params = {}) {
                     borderBottomStyle: "1px solid " + S.CARD_BORDER_COLOR,
                     round: 8,
                     color: S.FIELD_COLOR,
-                    textColor: White(0.9),
+                    textColor: Ink(0.9),
                     fontSize: 14,
                     searchIconSize: 16,
                     placeholderText: "Name or SKU",
-                    invertIconColor: 1,
+                    invertIconColor: T.invertIcon,
                     searchIconFile: LIB_PATH + "comp-m2/search-input-v2/search.svg",
                     clearIconFile: LIB_PATH + "comp-m2/search-input-v2/clear.svg",
                     onSearch: function(text) {
@@ -358,7 +359,7 @@ const ProductsPage = function(params = {}) {
                 that.elem.style.flex = "1 1 auto";
                 endGroup();
 
-                lblResultCount = Label({ text: "", fontSize: 13, textColor: White(0.55) });
+                lblResultCount = Label({ text: "", fontSize: 13, textColor: Ink(0.55) });
 
             endGroup();
 
@@ -427,7 +428,7 @@ const ProductsPage = function(params = {}) {
                     }
                     if (titleDataIndex == 6) {
                         const status = ProductsPage.getStatusByLabel(data);
-                        cell.label.textColor = (status) ? status.color : White(0.75);
+                        cell.label.textColor = (status) ? status.color : Ink(0.75);
                     }
                 },
                 ...ProductsPage.getSmartTableStyle(LIB_PATH),
@@ -497,7 +498,7 @@ const ProductEditor = function(params = {}) {
     params.top = 0;
     params.width = "100%";
     params.height = "100%";
-    params.color = "#141414";
+    params.color = T.surfaceDeep;
 
     // WHY: product is a live object of the list. startObject() would copy it.
     const product = params.product;
@@ -604,7 +605,7 @@ const ProductEditor = function(params = {}) {
         }
         if (draft.cost !== null && draft.price > 0) {
             const profit = draft.price - draft.cost;
-            const color = (profit >= 0) ? White(0.8) : S.ERROR_COLOR;
+            const color = (profit >= 0) ? Ink(0.8) : S.ERROR_COLOR;
             parts.push("<span style='color:" + color + "'>Margin " + Math.round(profit / draft.price * 100) + "% (" + ProductsPage.formatMoney(profit) + " profit)</span>");
         }
         lblPriceInfo.text = parts.join(" · ") || "Add a cost to see the margin.";
@@ -627,7 +628,7 @@ const ProductEditor = function(params = {}) {
 
     const startSection = function(title) {
         const group = VGroup({ width: "100%", height: "auto", align: "left top", gap: 10, padding: [16, 14], color: S.CARD_COLOR, border: 1, borderColor: S.CARD_BORDER_COLOR, round: 10 });
-        Label({ text: title.toUpperCase(), fontSize: 11, textColor: White(0.45) });
+        Label({ text: title.toUpperCase(), fontSize: 11, textColor: Ink(0.45) });
         that.elem.style.letterSpacing = "1px";
         return group;
     };
@@ -639,7 +640,7 @@ const ProductEditor = function(params = {}) {
             leftPadding: 14,
             rightPadding: 36,
             backgroundColor: S.FIELD_COLOR,
-            selectedBackgroundColor: "#262625",
+            selectedBackgroundColor: T.surface3,
             lineColor: "transparent",
             selectedLineColor: "transparent",
             backBorderColor: S.CARD_BORDER_COLOR,
@@ -652,10 +653,10 @@ const ProductEditor = function(params = {}) {
             ...params,
         });
         // WHY: InputB has fixed text colors for light backgrounds.
-        input.title.textColor = White(0.45);
+        input.title.textColor = Ink(0.45);
         input.title.fontSize = 11;
         input.title.elem.style.letterSpacing = "1px";
-        input.input.textColor = White(0.9);
+        input.input.textColor = Ink(0.9);
         input.input.fontSize = 15;
         input.input.height = 32;
         input.warningBall.borderColor = S.CARD_COLOR;
@@ -673,8 +674,8 @@ const ProductEditor = function(params = {}) {
 
     box.destroy = function() {
         clearTimeout(saveTimer);
-        radioList.forEach(function(radio) { radio.destroy(); }); // WHY: Radio groups are static lists.
-        if (imageFile) imageFile.destroy();
+        radioList.forEach(function(radio) { radio.remove(); }); // WHY: Radio groups are static lists.
+        if (imageFile) imageFile.remove();
         box.remove();
         box = null;
     };
@@ -682,7 +683,7 @@ const ProductEditor = function(params = {}) {
     // *** VIEW:
 
     // Left line
-    Box(0, 0, 1, "100%", { color: White(0.12) });
+    Box(0, 0, 1, "100%", { color: Ink(0.12) });
 
     // GROUP: Scrollable content
     startBox(0, 0, "100%", "calc(100% - 76px)", { color: "transparent", scrollY: 1 });
@@ -694,16 +695,16 @@ const ProductEditor = function(params = {}) {
             that.elem.style.justifyContent = "space-between";
 
                 VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
-                    Label({ text: (isNew) ? "New Product" : "Edit Product", fontSize: 20, textColor: White(0.95) });
+                    Label({ text: (isNew) ? "New Product" : "Edit Product", fontSize: 20, textColor: Ink(0.95) });
                     that.elem.style.fontFamily = "opensans-bold";
                     if (!isNew) {
-                        Label({ text: "Last change: " + new Date(product.updatedAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }), fontSize: 12, textColor: White(0.45) });
+                        Label({ text: "Last change: " + new Date(product.updatedAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }), fontSize: 12, textColor: Ink(0.45) });
                     }
                 endGroup();
 
                 Icon({ width: 28, height: 28, clickable: 1 });
                 that.load("assets/close.png");
-                that.elem.style.filter = "invert(100%)";
+                that.elem.style.filter = T.iconFilter;
                 that.elem.style.cursor = "pointer";
                 that.opacity = 0.6;
                 that.on("click", function() {
@@ -742,7 +743,7 @@ const ProductEditor = function(params = {}) {
 
                     VGroup({ width: "auto", height: "auto", align: "left top", gap: 6 });
                     flex(that);
-                        Label({ text: "CATEGORY", fontSize: 11, textColor: White(0.45) });
+                        Label({ text: "CATEGORY", fontSize: 11, textColor: Ink(0.45) });
                         that.elem.style.letterSpacing = "1px";
                         that.elem.style.marginTop = "4px";
                         categorySelect = ProductsPage.createTinySelect(
@@ -762,7 +763,7 @@ const ProductEditor = function(params = {}) {
                     onEdit: function() { draft.description = inputDescription.getInputValue(); },
                 });
 
-                Label({ text: "STATUS", fontSize: 11, textColor: White(0.45) });
+                Label({ text: "STATUS", fontSize: 11, textColor: Ink(0.45) });
                 that.elem.style.letterSpacing = "1px";
 
                 HGroup({ width: "100%", height: "auto", align: "left center", gap: 20 });
@@ -773,13 +774,13 @@ const ProductEditor = function(params = {}) {
                             group: "productStatus",
                             value: status,
                             checked: (draft.status == status) ? 1 : 0,
-                            labelText: ProductsPage.STATUSES[status].label + " <span style='font-size:12px; color:" + White(0.4) + "'>" + ProductsPage.STATUSES[status].desc + "</span>",
+                            labelText: ProductsPage.STATUSES[status].label + " <span style='font-size:12px; color:" + Ink(0.4) + "'>" + ProductsPage.STATUSES[status].desc + "</span>",
                             style: {
-                                mark: { width: 20, height: 20, color: "transparent", borderColor: White(0.35) },
+                                mark: { width: 20, height: 20, color: "transparent", borderColor: Ink(0.35) },
                                 checkedMark: { color: "transparent", borderColor: S.ACCENT_COLOR },
-                                hoverMark: { borderColor: White(0.7) },
+                                hoverMark: { borderColor: Ink(0.7) },
                                 dot: { color: S.ACCENT_COLOR },
-                                label: { fontSize: 14, textColor: White(0.9) },
+                                label: { fontSize: 14, textColor: Ink(0.9) },
                             },
                             onChange: function(self) { draft.status = self.value; },
                         });
@@ -824,7 +825,7 @@ const ProductEditor = function(params = {}) {
 
                 endGroup();
 
-                lblPriceInfo = Label({ text: "", fontSize: 13, textColor: White(0.6), width: "100%" });
+                lblPriceInfo = Label({ text: "", fontSize: 13, textColor: Ink(0.6), width: "100%" });
 
             endGroup();
 
@@ -858,7 +859,7 @@ const ProductEditor = function(params = {}) {
                 HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
                 that.elem.style.flexWrap = "wrap";
 
-                    Label({ text: "Restock:", fontSize: 13, textColor: White(0.55) });
+                    Label({ text: "Restock:", fontSize: 13, textColor: Ink(0.55) });
                     [10, 25, 50].forEach(function(amount) {
                         ProductsPage.createButton("+" + amount, "", function() { setStock(draft.stock + amount); });
                     });
@@ -871,16 +872,16 @@ const ProductEditor = function(params = {}) {
                     checked: (draft.continueSelling) ? 1 : 0,
                     style: {
                         layout: { padding: [0, 2] },
-                        mark: { width: 20, height: 20, color: "transparent", borderColor: White(0.35) },
+                        mark: { width: 20, height: 20, color: "transparent", borderColor: Ink(0.35) },
                         checkedMark: { color: S.PRIMARY_COLOR, borderColor: S.PRIMARY_COLOR },
-                        hoverMark: { borderColor: White(0.7) },
-                        tick: { color: White(1) },
-                        label: { fontSize: 14, textColor: White(0.9) },
+                        hoverMark: { borderColor: Ink(0.7) },
+                        tick: { color: Ink(1) },
+                        label: { fontSize: 14, textColor: Ink(0.9) },
                     },
                     onChange: function(self) { draft.continueSelling = self.checked; updateStockInfo(); },
                 });
 
-                lblStockInfo = Label({ text: "", fontSize: 13, textColor: White(0.6), width: "100%" });
+                lblStockInfo = Label({ text: "", fontSize: 13, textColor: Ink(0.6), width: "100%" });
 
             endGroup();
 
@@ -910,17 +911,17 @@ const ProductEditor = function(params = {}) {
                     titleText: "Drop new images here",
                     descText: "or click to select (the first image is the main image)",
                     style: {
-                        zone: { color: S.FIELD_COLOR, border: 2, borderColor: White(0.12), round: 10 },
-                        zoneHover: { color: "#262625", borderColor: White(0.3) },
-                        zoneDragOver: { color: "#1F2B28", borderColor: S.ACCENT_COLOR },
-                        title: { fontSize: 14, textColor: White(0.9) },
-                        desc: { fontSize: 13, textColor: White(0.5) },
-                        hint: { textColor: White(0.4) },
-                        item: { color: S.FIELD_COLOR, borderColor: White(0.1) },
-                        itemName: { textColor: White(0.85) },
-                        itemSize: { textColor: White(0.45) },
-                        badge: { color: White(0.08), textColor: White(0.6) },
-                        removeButton: { textColor: White(0.45), hoverColor: S.ERROR_COLOR },
+                        zone: { color: S.FIELD_COLOR, border: 2, borderColor: Ink(0.12), round: 10 },
+                        zoneHover: { color: T.surface3, borderColor: Ink(0.3) },
+                        zoneDragOver: { color: T.tableHighlight, borderColor: S.ACCENT_COLOR },
+                        title: { fontSize: 14, textColor: Ink(0.9) },
+                        desc: { fontSize: 13, textColor: Ink(0.5) },
+                        hint: { textColor: Ink(0.4) },
+                        item: { color: S.FIELD_COLOR, borderColor: Ink(0.1) },
+                        itemName: { textColor: Ink(0.85) },
+                        itemSize: { textColor: Ink(0.45) },
+                        badge: { color: Ink(0.08), textColor: Ink(0.6) },
+                        removeButton: { textColor: Ink(0.45), hoverColor: S.ERROR_COLOR },
                     },
                 });
 
@@ -932,7 +933,7 @@ const ProductEditor = function(params = {}) {
 
     // GROUP: Buttons (bottom)
     HGroup({ left: 0, bottom: 0, width: "100%", height: 76, align: "left center", gap: 8, padding: [20, 0] });
-    that.elem.style.borderTop = "1px solid " + White(0.08);
+    that.elem.style.borderTop = "1px solid " + Ink(0.08);
 
         if (!isNew) {
 
@@ -947,16 +948,16 @@ const ProductEditor = function(params = {}) {
                 style: {
                     layout: { gap: 6, padding: [14, 0] },
                     icon: { width: 20, height: 20 },
-                    label: { fontSize: 14, textColor: White(0.9) },
+                    label: { fontSize: 14, textColor: Ink(0.9) },
                     holdingLabel: { fontSize: 14, textColor: "#B03A2E" },
-                    completedLabel: { fontSize: 14, textColor: "#2C5A38" },
+                    completedLabel: { fontSize: 14, textColor: T.primaryActive },
                     box: { color: S.FIELD_COLOR, border: 1, borderColor: S.CARD_BORDER_COLOR, round: 8 },
                     holdingBox: { color: "#FFD1CB", borderColor: S.ERROR_COLOR, round: 8 },
                     completedBox: { color: "#DFEFE6", borderColor: S.ACCENT_COLOR, round: 8 },
                 },
                 onConfirm: deleteProduct,
             });
-            btnDelete.icon.elem.style.filter = "invert(100%)"; // WHY: Only the normal icon is on a dark background.
+            btnDelete.icon.elem.style.filter = T.iconFilter; // WHY: Only the normal icon is on a dark background.
 
             ProductsPage.createButton("Duplicate", "", duplicateProduct);
 
@@ -993,33 +994,33 @@ ProductEditor.KEY = "ProductEditor";
 // *** STATIC: STYLE AND HELPERS
 
 ProductsPage.STYLE = {
-    CARD_COLOR: "#1A1A19",
-    CARD_BORDER_COLOR: White(0.1),
-    FIELD_COLOR: "#232322",
-    PRIMARY_COLOR: "#3D7A6B",
-    ACCENT_COLOR: "#65A293",
-    ERROR_COLOR: "#E66767",
+    CARD_COLOR: T.surface,
+    CARD_BORDER_COLOR: Ink(0.1),
+    FIELD_COLOR: T.surface2,
+    PRIMARY_COLOR: T.primary,
+    ACCENT_COLOR: T.accent,
+    ERROR_COLOR: T.danger,
 };
 
 ProductsPage.STATUSES = {
-    active: { label: "Active", desc: "On sale", color: "#65A293" },
-    draft: { label: "Draft", desc: "Not visible", color: "#C98500" },
-    archived: { label: "Archived", desc: "Old product", color: "#A9A79F" },
+    active: { label: "Active", desc: "On sale", color: T.accent },
+    draft: { label: "Draft", desc: "Not visible", color: T.warning },
+    archived: { label: "Archived", desc: "Old product", color: Theme.readable("#A9A79F") },
 };
 
 ProductsPage.STOCK_STATES = {
-    in: { label: "In stock", color: "rgba(255, 255, 255, 0.8)" },
-    low: { label: "Low", color: "#E0A03C" },
-    out: { label: "Out of stock", color: "#E66767" },
+    in: { label: "In stock", color: Ink(0.8) },
+    low: { label: "Low", color: Theme.readable("#E0A03C") },
+    out: { label: "Out of stock", color: T.danger },
 };
 
 ProductsPage.CATEGORIES = [
-    { name: "Audio", color: "#3987E5" },
+    { name: "Audio", color: T.info },
     { name: "Wearables", color: "#9085E9" },
     { name: "Shoes", color: "#D55181" },
-    { name: "Home", color: "#C98500" },
-    { name: "Bags", color: "#65A293" },
-    { name: "Books", color: "#E66767" },
+    { name: "Home", color: T.warning },
+    { name: "Bags", color: T.accent },
+    { name: "Books", color: T.danger },
     { name: "Accessories", color: "#199E70" },
 ];
 
@@ -1076,13 +1077,13 @@ ProductsPage.createButton = function(text, iconFile, onClick, params = {}) {
         style: {
             layout: { gap: 8, padding: [14, 8] },
             icon: { width: 18, height: 18 },
-            label: { fontSize: 14, textColor: White(0.92) },
+            label: { fontSize: 14, textColor: Ink(0.92) },
             box: { color: (params.primary) ? S.PRIMARY_COLOR : S.FIELD_COLOR, border: 1, borderColor: S.CARD_BORDER_COLOR, round: 8 },
-            hover: { color: (params.primary) ? "#468A79" : "#2C2C2A" },
-            active: { color: (params.primary) ? "#2C5A38" : "#383835" },
+            hover: { color: (params.primary) ? T.primaryHover : T.surface3 },
+            active: { color: (params.primary) ? T.primaryActive : T.surface4 },
         },
     });
-    if (btn.icon) btn.icon.elem.style.filter = "invert(100%)"; // WHY: Panel icons are black.
+    if (btn.icon) btn.icon.elem.style.filter = T.iconFilter; // WHY: Panel icons are black.
     return btn;
 };
 
@@ -1100,15 +1101,15 @@ ProductsPage.createTinySelect = function(list, onSelect, selectedIndex = 0) {
         borderColor: S.CARD_BORDER_COLOR,
         round: 8,
         labelBoldFont: 0,
-        labelTextColor: White(0.9),
+        labelTextColor: Ink(0.9),
         arrowIcon: "../../comp-m2/tiny-select/arrow.svg",
         arrowSize: 18,
-        invertIconColor: 1,
+        invertIconColor: T.invertIcon,
         listFontSize: 14,
-        listTextColor: White(0.85),
+        listTextColor: Ink(0.85),
         listOverTextColor: S.ACCENT_COLOR,
         listBackgroundColor: S.FIELD_COLOR,
-        listBorderColor: White(0.15),
+        listBorderColor: Ink(0.15),
         onSelect: function(index, id) {
             if (isReady) onSelect(id);
         },
@@ -1121,17 +1122,17 @@ ProductsPage.getSmartTableStyle = function(libPath) {
     const S = ProductsPage.STYLE;
     return {
         scrollBarParams: {
-            bar_border: 0, bar_round: 3, bar_borderColor: "rgba(255, 255, 255, 0.15)", bar_width: 4, bar_mouseOverWidth: 4,
-            bar_mouseOverColor: "#A0A0A0", bar_opacity: 0.4, bar_mouseOverOpacity: 0.9, bar_padding: 2, bar_color: "#A0A0A0",
+            bar_border: 0, bar_round: 3, bar_borderColor: Ink(0.15), bar_width: 4, bar_mouseOverWidth: 4,
+            bar_mouseOverColor: T.scrollBar, bar_opacity: 0.4, bar_mouseOverOpacity: 0.9, bar_padding: 2, bar_color: T.scrollBar,
             neverHide: 0, showDots: 0,
         },
         // WHY: Filtre kutusu ile alt bar aynı renkti, kutu görünmüyordu. Bar kart rengine, kutu ise alan rengine (FIELD_COLOR) alındı.
         searchInputParams: {
             width: "50%", height: 34, border: 1, round: 8, color: S.FIELD_COLOR, borderColor: S.CARD_BORDER_COLOR,
             borderBottomStyle: "1px solid " + S.CARD_BORDER_COLOR,
-            textColor: White(0.9), placeholderColor: White(0.4), fontSize: 14,
+            textColor: Ink(0.9), placeholderColor: Ink(0.4), fontSize: 14,
             placeholderText: "Filter the table",
-            searchIconSize: 15, searchIconOpacity: 0.55, invertIconColor: 1,
+            searchIconSize: 15, searchIconOpacity: 0.55, invertIconColor: T.invertIcon,
             searchIconFile: libPath + "comp-m2/search-input-v2/filter.png",
             clearIconFile: libPath + "comp-m2/search-input-v2/clear.svg",
         },
@@ -1139,12 +1140,12 @@ ProductsPage.getSmartTableStyle = function(libPath) {
         searchTitleMenuParams: {
             minWidth: 170,
             style: {
-                menu: { color: S.FIELD_COLOR, border: 1, borderColor: White(0.12), round: 8, padding: 4, shadow: "0 8px 24px rgba(0, 0, 0, 0.5)" },
-                item: { height: 30, fontSize: 13, textColor: White(0.75), color: "transparent", round: 6, padding: 10, gap: 10 },
-                itemHover: { textColor: "white", color: White(0.08) },
-                disabled: { textColor: White(0.3), opacity: 0.4 },
+                menu: { color: S.FIELD_COLOR, border: 1, borderColor: Ink(0.12), round: 8, padding: 4, shadow: "0 8px 24px " + Black(0.5) },
+                item: { height: 30, fontSize: 13, textColor: Ink(0.75), color: "transparent", round: 6, padding: 10, gap: 10 },
+                itemHover: { textColor: "white", color: Ink(0.08) },
+                disabled: { textColor: Ink(0.3), opacity: 0.4 },
                 icon: { width: 14, height: 14 },
-                separator: { color: White(0.1), space: 4 },
+                separator: { color: Ink(0.1), space: 4 },
             },
         },
         style: {
@@ -1152,9 +1153,9 @@ ProductsPage.getSmartTableStyle = function(libPath) {
             height: "100%",
             round: 8,
             line1Color: S.CARD_COLOR,
-            line2Color: "#202020",
-            highlightItemCellColor: "#2A3A36",
-            highlightTitleCellColor: White(0.08),
+            line2Color: T.tableRow2,
+            highlightItemCellColor: T.tableHighlight,
+            highlightTitleCellColor: Ink(0.08),
             verticalScrollWidth: 20,
             verticalScrollMargin: 2,
             btnScrollDownIconFile: libPath + "comp-m3/smart-table/down.png",
@@ -1164,22 +1165,22 @@ ProductsPage.getSmartTableStyle = function(libPath) {
             // WHY: Varsayılan tik ikonu koyu renkli; koyu menüde görünmüyordu.
             searchTitleCheckIconFile: "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + S.ACCENT_COLOR + '" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17.5 19 7"/></svg>'),
             loadingIconFile: libPath + "comp-m3/smart-table/clock.png",
-            invertIconColor: 1,
+            invertIconColor: T.invertIcon,
             box: { color: S.CARD_COLOR },
             boxBorder: { border: 1, borderColor: S.CARD_BORDER_COLOR },
             boxTitleLine: { color: S.FIELD_COLOR },
-            boxTitleCell: { padding: [10, 0], borderRight: "1px solid rgba(255, 255, 255, 0.06)", borderBottom: "1px solid rgba(255, 255, 255, 0.12)" },
-            lblTitleCell: { fontSize: 13, fontFamily: "opensans", textColor: White(0.6) },
-            boxItemCell: { borderBottom: "1px solid rgba(255, 255, 255, 0.05)", borderRight: "1px solid rgba(255, 255, 255, 0.03)", padding: [10, 0] },
-            lblItemCell: { fontSize: 14, textColor: "rgba(255, 255, 255, 0.75)", fontFamily: "opensans" },
-            boxInfoLine: { color: S.CARD_COLOR, borderTop: "1px solid rgba(255, 255, 255, 0.08)" },
-            lblBoxInfoLine: { fontSize: 13, textColor: White(0.55) },
-            lblNoDataFound: { color: "#2C2C2A", textColor: White(0.6), padding: [8, 2], fontSize: 13, round: 8, border: 1, borderColor: White(0.15) },
+            boxTitleCell: { padding: [10, 0], borderRight: "1px solid " + Ink(0.06), borderBottom: "1px solid " + Ink(0.12) },
+            lblTitleCell: { fontSize: 13, fontFamily: "opensans", textColor: Ink(0.6) },
+            boxItemCell: { borderBottom: "1px solid " + Ink(0.05), borderRight: "1px solid " + Ink(0.03), padding: [10, 0] },
+            lblItemCell: { fontSize: 14, textColor: Ink(0.75), fontFamily: "opensans" },
+            boxInfoLine: { color: S.CARD_COLOR, borderTop: "1px solid " + Ink(0.08) },
+            lblBoxInfoLine: { fontSize: 13, textColor: Ink(0.55) },
+            lblNoDataFound: { color: T.surface3, textColor: Ink(0.6), padding: [8, 2], fontSize: 13, round: 8, border: 1, borderColor: Ink(0.15) },
             // Filtre kutusunun içindeki sütun etiketi: Kutunun içinde durduğu için daha hafif bir chip.
-            lblSearchTitle: { color: White(0.08), textColor: White(0.6), padding: [8, 1], fontSize: 12, round: 6, border: 1, borderColor: White(0.14) },
-            btnScrollCenter: { color: "#2C2C2A", round: 100, borderColor: White(0.2), border: 1 },
-            btnScrollUp: { color: "#3A3A38", round: 100, border: 1, borderColor: White(0.3) },
-            btnScrollDown: { color: "#3A3A38", round: 100, border: 1, borderColor: White(0.3) },
+            lblSearchTitle: { color: Ink(0.08), textColor: Ink(0.6), padding: [8, 1], fontSize: 12, round: 6, border: 1, borderColor: Ink(0.14) },
+            btnScrollCenter: { color: T.surface3, round: 100, borderColor: Ink(0.2), border: 1 },
+            btnScrollUp: { color: T.surface4, round: 100, border: 1, borderColor: Ink(0.3) },
+            btnScrollDown: { color: T.surface4, round: 100, border: 1, borderColor: Ink(0.3) },
             boxSort: { color: S.PRIMARY_COLOR },
         },
     };

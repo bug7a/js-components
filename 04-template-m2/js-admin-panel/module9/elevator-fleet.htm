@@ -11,6 +11,7 @@
         <link rel="preload" href="../../../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
         <link rel="stylesheet" type="text/css" href="../../../basic/basic.min.css">
         <script src="../../../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../common/theme.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- COMPONENTS -->
         <script src="../../../comp-m2/tiny-select.js" type="text/javascript" charset="utf-8"></script>
@@ -49,17 +50,17 @@
         const LIB_PATH = "../../../";
         const ASSETS = "../assets/";
 
-        const PAGE_COLOR = "black";
-        const CARD_COLOR = "#1A1A19";
-        const CARD_BORDER_COLOR = White(0.1);
-        const FIELD_COLOR = "#232322";
-        const PRIMARY_COLOR = "#3D7A6B";
-        const ACCENT_COLOR = "#65A293";
-        const WARNING_COLOR = "#C98500";
-        const ERROR_COLOR = "#E66767";
+        const PAGE_COLOR = T.page;
+        const CARD_COLOR = T.surface;
+        const CARD_BORDER_COLOR = Ink(0.1);
+        const FIELD_COLOR = T.surface2;
+        const PRIMARY_COLOR = T.primary;
+        const ACCENT_COLOR = T.accent;
+        const WARNING_COLOR = T.warning;
+        const ERROR_COLOR = T.danger;
 
         // One color for each car, used everywhere (shaft, charts, badges).
-        const FLEET_COLORS = { A: "#65A293", B: "#3987E5", C: "#9085E9" };
+        const FLEET_COLORS = { A: T.accent, B: T.info, C: "#9085E9" };
 
         // Floors from the bottom to the top. "L": Lobby (ground floor).
         const FLOORS = ["B1", "L", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"];
@@ -70,7 +71,7 @@
         const HISTORY_COUNT = 60; // Values kept for the mini graphs
 
         const STATUS_LIST = {
-            idle: { text: "Idle", color: "#A9A79F" },
+            idle: { text: "Idle", color: Theme.readable("#A9A79F") },
             moving: { text: "Moving", color: ACCENT_COLOR },
             doors: { text: "Doors Open", color: WARNING_COLOR },
             outOfService: { text: "Out of Service", color: "#898781" },
@@ -484,11 +485,11 @@
 
                 startSpaceBetween();
                     VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
-                        Label({ text: title, fontSize: 15, textColor: White(0.95) });
+                        Label({ text: title, fontSize: 15, textColor: Ink(0.95) });
                         that.elem.style.fontFamily = "opensans-bold";
-                        if (subtitle) Label({ text: subtitle, fontSize: 12, textColor: White(0.45) });
+                        if (subtitle) Label({ text: subtitle, fontSize: 12, textColor: Ink(0.45) });
                     endGroup();
-                    cardBox.lblRight = Label({ text: "", fontSize: 12, textColor: White(0.5) });
+                    cardBox.lblRight = Label({ text: "", fontSize: 12, textColor: Ink(0.5) });
                     that.elem.style.whiteSpace = "nowrap";
                 endGroup();
 
@@ -506,7 +507,7 @@
         };
 
         const createSmallTitle = function (text) {
-            Label({ text: text.toUpperCase(), fontSize: 11, textColor: White(0.45) });
+            Label({ text: text.toUpperCase(), fontSize: 11, textColor: Ink(0.45) });
             that.elem.style.letterSpacing = "1px";
             return that;
         };
@@ -521,9 +522,9 @@
         const createInfoLine = function (title, first) {
             startSpaceBetween();
             that.elem.style.padding = "8px 0px";
-            if (!first) that.elem.style.borderTop = "1px solid " + White(0.06);
-                Label({ text: title, fontSize: 14, textColor: White(0.5) });
-                const value = Label({ text: "", fontSize: 14, textColor: White(0.9) });
+            if (!first) that.elem.style.borderTop = "1px solid " + Ink(0.06);
+                Label({ text: title, fontSize: 14, textColor: Ink(0.5) });
+                const value = Label({ text: "", fontSize: 14, textColor: Ink(0.9) });
                 that.elem.style.whiteSpace = "nowrap";
             endGroup();
             return value;
@@ -538,13 +539,13 @@
                 style: {
                     layout: { gap: 10, padding: [14, 8], align: "center center" },
                     icon: { width: 18, height: 18 },
-                    label: { fontSize: 14, textColor: White(0.9) },
+                    label: { fontSize: 14, textColor: Ink(0.9) },
                     box: { color: params.color || FIELD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8 },
-                    hover: { color: params.hoverColor || "#2C2C2A" },
-                    active: { color: params.activeColor || "#383835" },
+                    hover: { color: params.hoverColor || T.surface3 },
+                    active: { color: params.activeColor || T.surface4 },
                 },
             });
-            if (btn.icon) btn.icon.elem.style.filter = "invert(100%)"; // WHY: Panel icons are black.
+            if (btn.icon) btn.icon.elem.style.filter = T.iconFilter; // WHY: Panel icons are black.
             return btn;
         };
 
@@ -554,8 +555,8 @@
                 trackHeight: 8,
                 minThumbHeight: 26,
                 trackColor: color,
-                trackBackgroundColor: White(0.1),
-                thumbColor: White(0.9),
+                trackBackgroundColor: Ink(0.1),
+                thumbColor: Ink(0.9),
                 showValueOnSet: 0,
                 showValueOnDrag: 0, // WHY: Slider shows 0-100. The real value is shown in a label.
                 onDragMove: onDragMove,
@@ -564,38 +565,38 @@
         };
 
         const DARK_RADIO_STYLE = {
-            mark: { width: 20, height: 20, color: "transparent", borderColor: White(0.35) },
+            mark: { width: 20, height: 20, color: "transparent", borderColor: Ink(0.35) },
             checkedMark: { color: "transparent", borderColor: ACCENT_COLOR },
-            hoverMark: { borderColor: White(0.7) },
+            hoverMark: { borderColor: Ink(0.7) },
             dot: { color: ACCENT_COLOR },
-            label: { fontSize: 14, textColor: White(0.9) },
+            label: { fontSize: 14, textColor: Ink(0.9) },
         };
 
         const DARK_CHECK_STYLE = {
             layout: { padding: [0, 2] },
-            mark: { width: 18, height: 18, color: "transparent", borderColor: White(0.35) },
+            mark: { width: 18, height: 18, color: "transparent", borderColor: Ink(0.35) },
             checkedMark: { color: PRIMARY_COLOR, borderColor: PRIMARY_COLOR },
-            hoverMark: { borderColor: White(0.7) },
-            tick: { color: White(1) },
-            label: { fontSize: 13, textColor: White(0.75) },
+            hoverMark: { borderColor: Ink(0.7) },
+            tick: { color: Ink(1) },
+            label: { fontSize: 13, textColor: Ink(0.75) },
         };
 
         // Dark style for SelectDate
         const PICKER_STYLE = {
             field: { color: FIELD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8 },
-            fieldHover: { borderColor: White(0.3) },
+            fieldHover: { borderColor: Ink(0.3) },
             fieldFocus: { borderColor: ACCENT_COLOR },
-            fieldText: { fontSize: 14, textColor: White(0.9) },
-            placeholder: { textColor: White(0.4) },
-            icon: { color: White(0.55) },
-            panel: { color: FIELD_COLOR, borderColor: White(0.12), shadow: "0 8px 24px rgba(0, 0, 0, 0.5)" },
-            title: { textColor: White(0.9) },
-            arrow: { color: White(0.6), hoverColor: White(0.08) },
-            weekDay: { textColor: White(0.45) },
-            day: { textColor: White(0.85), hoverColor: White(0.08) },
-            today: { borderColor: White(0.35) },
-            selectedDay: { color: PRIMARY_COLOR, textColor: White(1) },
-            disabledDay: { textColor: White(0.2) },
+            fieldText: { fontSize: 14, textColor: Ink(0.9) },
+            placeholder: { textColor: Ink(0.4) },
+            icon: { color: Ink(0.55) },
+            panel: { color: FIELD_COLOR, borderColor: Ink(0.12), shadow: "0 8px 24px rgba(0, 0, 0, 0.5)" },
+            title: { textColor: Ink(0.9) },
+            arrow: { color: Ink(0.6), hoverColor: Ink(0.08) },
+            weekDay: { textColor: Ink(0.45) },
+            day: { textColor: Ink(0.85), hoverColor: Ink(0.08) },
+            today: { borderColor: Ink(0.35) },
+            selectedDay: { color: PRIMARY_COLOR, textColor: Ink(1) },
+            disabledDay: { textColor: Ink(0.2) },
             footerButton: { textColor: ACCENT_COLOR },
         };
 
@@ -610,9 +611,9 @@
                 that.elem.style.flexWrap = "wrap";
 
                     VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
-                        Label({ text: "Elevator Fleet", fontSize: 26, textColor: White(0.95) });
+                        Label({ text: "Elevator Fleet", fontSize: 26, textColor: Ink(0.95) });
                         that.elem.style.fontFamily = "opensans-bold";
-                        lblBuilding = Label({ text: "", fontSize: 14, textColor: White(0.5) });
+                        lblBuilding = Label({ text: "", fontSize: 14, textColor: Ink(0.5) });
                     endGroup();
 
                     carSelect = TinySelect({
@@ -624,18 +625,18 @@
                         border: 1,
                         borderColor: CARD_BORDER_COLOR,
                         round: 8,
-                        labelTextColor: White(0.95),
+                        labelTextColor: Ink(0.95),
                         arrowIcon: LIB_PATH + "comp-m2/tiny-select/arrow.svg",
                         arrowSize: 20,
-                        invertIconColor: 1,
+                        invertIconColor: T.invertIcon,
                         listFontSize: 15,
-                        listTextColor: White(0.85),
+                        listTextColor: Ink(0.85),
                         listOverTextColor: ACCENT_COLOR,
                         listBackgroundColor: FIELD_COLOR,
-                        listBorderColor: White(0.15),
+                        listBorderColor: Ink(0.15),
                         onSelect: function (index) { if (isReady) selectCar(index); },
                     });
-                    carSelect.lblTitle.textColor = White(0.5);
+                    carSelect.lblTitle.textColor = Ink(0.5);
 
                     lblStatus = Label({ text: "", fontSize: 13, round: 100, border: 1, padding: [12, 4] });
                     lblStatus.elem.style.whiteSpace = "nowrap";
@@ -657,11 +658,11 @@
                         ],
                         onClick: function (self, item) { onMoreMenuClick(item.key); },
                         style: {
-                            menu: { color: FIELD_COLOR, borderColor: White(0.12), shadow: "0px 8px 24px rgba(0, 0, 0, 0.5)" },
-                            item: { textColor: White(0.85) },
-                            itemHover: { textColor: White(1), color: White(0.08) },
-                            disabled: { textColor: White(0.3) },
-                            separator: { color: White(0.1) },
+                            menu: { color: FIELD_COLOR, borderColor: Ink(0.12), shadow: "0px 8px 24px rgba(0, 0, 0, 0.5)" },
+                            item: { textColor: Ink(0.85) },
+                            itemHover: { textColor: Ink(1), color: Ink(0.08) },
+                            disabled: { textColor: Ink(0.3) },
+                            separator: { color: Ink(0.1) },
                         },
                     });
                     moreMenu.attachTo(btnMore, "click");
@@ -681,7 +682,7 @@
             });
             that.elem.style.flexWrap = "wrap";
 
-                lblAlert = Label({ text: "", fontSize: 14, textColor: White(0.9) });
+                lblAlert = Label({ text: "", fontSize: 14, textColor: Ink(0.9) });
                 lblAlert.elem.style.flex = "1 1 300px";
 
                 createButton("Reset After Emergency", "", function () { setGridEmergency(0); }, { color: ERROR_COLOR, hoverColor: "#C24E4E" });
@@ -704,9 +705,10 @@
                     HGroup({ width: "100%", height: "auto", align: "left center", gap: 16 });
                     that.elem.style.flexWrap = "wrap";
                         Object.keys(FLEET_COLORS).forEach(function (key) {
-                            Label({ text: "<span style='color:" + FLEET_COLORS[key] + "'>●</span> Car " + key, fontSize: 12, textColor: White(0.6) });
+                            Label({ text: "<span style='color:" + FLEET_COLORS[key] + "'>●</span> Car " + key, fontSize: 12, textColor: Ink(0.6) });
                         });
-                        Label({ text: "<span style='color:" + WARNING_COLOR + "'>▲▼</span> Waiting call", fontSize: 12, textColor: White(0.45) });
+                        Label({ text: "<span style='color:" + WARNING_COLOR + "'>●</span> Doors open", fontSize: 12, textColor: Ink(0.45) });
+                        Label({ text: "<span style='color:" + WARNING_COLOR + "'>▲▼</span> Waiting call", fontSize: 12, textColor: Ink(0.45) });
                     endGroup();
 
                 endCard();
@@ -732,7 +734,7 @@
 
             const KPI_LIST = [
                 { title: "Trips Today", iconFile: "left-menu/extension.png", lineColor: ACCENT_COLOR, maxValue: 0 },
-                { title: "Avg. Wait Time", iconFile: "light.png", lineColor: "#3987E5", maxValue: 0 },
+                { title: "Avg. Wait Time", iconFile: "light.png", lineColor: T.info, maxValue: 0 },
                 { title: "Door Cycles Today", iconFile: "left-menu/dashboard.png", lineColor: "#9085E9", maxValue: 0 },
                 { title: "Faults", iconFile: "warning.png", lineColor: ERROR_COLOR, maxValue: 0 },
             ];
@@ -750,14 +752,15 @@
                         style: {
                             box: { color: CARD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 12 },
                             text: { padding: 14 },
-                            title: { fontSize: 13, textColor: White(0.5) },
-                            valueText: { fontSize: 24, textColor: White(0.95) },
+                            title: { fontSize: 13, textColor: Ink(0.5) },
+                            valueText: { fontSize: 24, textColor: Ink(0.95) },
+                            trend: { flatColor: Ink(0.45) }, // WHY: The default flat color is made for light cards.
                             icon: { width: 20, height: 20 },
                             graph: { height: 34, padding: 14 },
                         },
                     });
                     setFlex(kpiBox, "1 1 220px");
-                    kpiBox.icon.elem.style.filter = "invert(100%)";
+                    kpiBox.icon.elem.style.filter = T.iconFilter;
                     kpiBox.icon.opacity = 0.5;
                     kpiBoxList.push(kpiBox);
                 });
@@ -773,7 +776,7 @@
                 chartPosition = ChartBox({
                     height: 320,
                     type: "line",
-                    theme: "dark",
+                    theme: T.chartTheme,
                     title: "Car Position",
                     subtitle: "Live, last " + CHART_COUNT + " seconds",
                     maxCount: CHART_COUNT,
@@ -798,7 +801,7 @@
                 chartStops = ChartBox({
                     height: 320,
                     type: "bar",
-                    theme: "dark",
+                    theme: T.chartTheme,
                     title: "Stops by Floor Today",
                     subtitle: "Whole fleet",
                     horizontal: 1,
@@ -807,7 +810,7 @@
                     values: fleet.stopsByFloorToday.slice(),
                     style: {
                         box: { color: CARD_COLOR, borderColor: CARD_BORDER_COLOR, round: 12, padding: 16 },
-                        chart: { colors: ["#3987E5"] },
+                        chart: { colors: [T.info] },
                     },
                 });
                 setFlex(chartStops, "1 1 260px");
@@ -827,21 +830,21 @@
                         MODES.forEach(function (mode) {
                             RadioButton({
                                 group: "carMode", value: mode.value,
-                                labelText: mode.text + "<br><span style='color:" + White(0.4) + "; font-size: 12px'>" + mode.desc + "</span>",
+                                labelText: mode.text + "<br><span style='color:" + Ink(0.4) + "; font-size: 12px'>" + mode.desc + "</span>",
                                 style: DARK_RADIO_STYLE,
                                 onChange: function (self) { onModeChange(self.value); },
                             });
                         });
                     endGroup();
 
-                    lblModeInfo = Label({ text: "", fontSize: 12, textColor: White(0.45), width: "100%" });
+                    lblModeInfo = Label({ text: "", fontSize: 12, textColor: Ink(0.45), width: "100%" });
 
                     VGroup({ width: "100%", height: "auto", align: "left top", gap: 8 });
-                    that.elem.style.borderTop = "1px solid " + White(0.06);
+                    that.elem.style.borderTop = "1px solid " + Ink(0.06);
                     that.elem.style.paddingTop = "14px";
                         startSpaceBetween();
                             createSmallTitle("Door hold time");
-                            lblHold = Label({ text: "", fontSize: 15, textColor: White(0.95) });
+                            lblHold = Label({ text: "", fontSize: 15, textColor: Ink(0.95) });
                             that.elem.style.fontFamily = "opensans-bold";
                         endGroup();
                         sliderHold = createSlider(WARNING_COLOR,
@@ -867,14 +870,14 @@
                             btn.elem.style.cursor = "pointer";
                             btn.setMotion("background-color 0.15s, border-color 0.15s");
                             btn.on("click", function () { onFloorButtonClick(index); });
-                                btn.lbl = Label({ text: label, fontSize: 13, textColor: White(0.85) });
+                                btn.lbl = Label({ text: label, fontSize: 13, textColor: Ink(0.85) });
                             endGroup();
                             floorButtons[index] = btn;
                         });
                     endGroup();
 
                     HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
-                    that.elem.style.borderTop = "1px solid " + White(0.06);
+                    that.elem.style.borderTop = "1px solid " + Ink(0.06);
                     that.elem.style.paddingTop = "14px";
                         btnOpenDoor = createButton("Open Door", "", function () { onDoorButtonClick("open"); });
                         btnCloseDoor = createButton("Close Door", "", function () { onDoorButtonClick("close"); });
@@ -892,7 +895,7 @@
                         gaugeBox.elem.innerHTML = createLoadGaugeSvg();
                     endGroup();
 
-                    lblLoadInfo = Label({ text: "", fontSize: 12, textColor: White(0.45), width: "100%" });
+                    lblLoadInfo = Label({ text: "", fontSize: 12, textColor: Ink(0.45), width: "100%" });
 
                     btnForceClose = HoldToConfirmButton({
                         height: 40,
@@ -905,19 +908,19 @@
                         style: {
                             layout: { gap: 6, padding: [14, 0] },
                             icon: { width: 18, height: 18 },
-                            label: { fontSize: 14, textColor: White(0.9) },
+                            label: { fontSize: 14, textColor: Ink(0.9) },
                             holdingLabel: { fontSize: 14, textColor: "#B03A2E" },
-                            completedLabel: { fontSize: 14, textColor: "#2C5A38" },
+                            completedLabel: { fontSize: 14, textColor: T.primaryActive },
                             box: { color: FIELD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8 },
                             holdingBox: { color: "#FFD1CB", borderColor: ERROR_COLOR, round: 8 },
                             completedBox: { color: "#DFEFE6", borderColor: ACCENT_COLOR, round: 8 },
                         },
                         onConfirm: function () { forceCloseDoors(car); },
                     });
-                    btnForceClose.icon.elem.style.filter = "invert(100%)";
+                    btnForceClose.icon.elem.style.filter = T.iconFilter;
 
                     VGroup({ width: "100%", height: "auto", align: "left top", gap: 8 });
-                    that.elem.style.borderTop = "1px solid " + White(0.06);
+                    that.elem.style.borderTop = "1px solid " + Ink(0.06);
                     that.elem.style.paddingTop = "14px";
                         createSmallTitle("Skip floors (express)");
                         HGroup({ width: "100%", height: "auto", align: "left top", gap: [4, 10] });
@@ -976,11 +979,16 @@
 
         const createShaftSvg = function () {
 
-            let rows = "", skipRows = "";
+            let rows = "", skipRows = "", rails = "";
+
+            Object.keys(FLEET_COLORS).forEach(function (key) {
+                // WHY: A faint track behind each car so its movement reads against a fixed shaft, not empty space.
+                rails += "<rect x='" + (LANE_X[key] - LANE_WIDTH / 2) + "' y='" + (SHAFT_TOP - SHAFT_SPACING / 2) + "' width='" + LANE_WIDTH + "' height='" + (SHAFT_BOTTOM - SHAFT_TOP + SHAFT_SPACING) + "' fill='" + Ink(0.025) + "' stroke='" + Ink(0.06) + "'/>";
+            });
 
             FLOORS.forEach(function (label, index) {
                 const y = floorY(index);
-                rows += "<line x1='104' y1='" + y + "' x2='430' y2='" + y + "' stroke='" + White(0.05) + "'/>" +
+                rows += "<line x1='104' y1='" + y + "' x2='430' y2='" + y + "' stroke='" + Ink(0.05) + "'/>" +
                     "<text x='34' y='" + (y + 4) + "' text-anchor='end' class='t-floor'>" + label + "</text>" +
                     "<text id='call-up-" + index + "' x='52' y='" + (y + 4) + "' class='t-call' style='opacity:0'>▲</text>" +
                     "<text id='call-down-" + index + "' x='68' y='" + (y + 4) + "' class='t-call' style='opacity:0'>▼</text>";
@@ -989,15 +997,20 @@
 
             const carGroup = function (key) {
                 const color = FLEET_COLORS[key];
-                return "<g id='car-" + key + "' style='transform: translate(" + LANE_X[key] + "px, " + SHAFT_BOTTOM + "px); transition: transform 0.9s linear'>" +
-                    "<text id='dir-" + key + "' y='-30' text-anchor='middle' class='t-dir' style='opacity:0'></text>" +
-                    "<rect x='-35' y='-13' width='70' height='26' rx='6' fill='" + FIELD_COLOR + "' stroke='" + color + "' stroke-width='1.5'/>" +
-                    "<g style='clip-path: inset(0px round 6px)'>" +
-                    "<rect id='door-l-" + key + "' x='-17' y='-11' width='17' height='22' fill='#141414' style='transition: transform 0.5s'/>" +
-                    "<rect id='door-r-" + key + "' x='0' y='-11' width='17' height='22' fill='#141414' style='transition: transform 0.5s'/>" +
+                // WHY: Doors sit on top of a warning-colored "cabin light" rect. Closed, they hide it; open,
+                //      they slide clear and the light shows through, so "doors open" reads at a glance.
+                return "<g id='car-" + key + "' class='car' style='transform: translate(" + LANE_X[key] + "px, " + SHAFT_BOTTOM + "px); transition: transform 0.9s linear'>" +
+                    "<text id='dir-" + key + "' y='-34' text-anchor='middle' class='t-dir' style='opacity:0'></text>" +
+                    "<circle id='status-" + key + "' cx='0' cy='-22' r='5' fill='" + Ink(0.3) + "' stroke='" + Black(0.3) + "'/>" +
+                    "<rect x='-38' y='-15' width='76' height='30' rx='7' fill='" + ChartBox.alpha(color, 0.16) + "' stroke='" + color + "' stroke-width='2'/>" +
+                    "<g style='clip-path: inset(2px round 5px)'>" +
+                    "<rect id='glow-" + key + "' x='-20' y='-13' width='40' height='26' fill='" + WARNING_COLOR + "' style='opacity:0; transition: opacity 0.4s'/>" +
+                    "<rect id='door-l-" + key + "' x='-20' y='-13' width='20' height='26' fill='" + Ink(0.35) + "' style='transition: transform 0.5s'/>" +
+                    "<rect id='door-r-" + key + "' x='0' y='-13' width='20' height='26' fill='" + Ink(0.35) + "' style='transition: transform 0.5s'/>" +
+                    "<line x1='0' y1='-13' x2='0' y2='13' stroke='" + Black(0.35) + "'/>" +
                     "</g>" +
-                    "<rect x='-25' y='17' width='50' height='5' rx='2' fill='" + White(0.08) + "'/>" +
-                    "<rect id='load-" + key + "' x='-25' y='17' width='50' height='5' rx='2' fill='" + color + "' style='transform-origin:-25px 0px; transition: transform 0.4s, fill 0.3s'/>" +
+                    "<rect x='-28' y='19' width='56' height='5' rx='2' fill='" + Ink(0.08) + "'/>" +
+                    "<rect id='load-" + key + "' x='-28' y='19' width='56' height='5' rx='2' fill='" + color + "' style='transform-origin:-28px 0px; transition: transform 0.4s, fill 0.3s'/>" +
                     "</g>";
             };
 
@@ -1005,11 +1018,13 @@
 
             return "<svg viewBox='0 0 460 460' style='display:block; width:100%; height:auto; max-height:460px; font-family:inherit'>" +
                 "<style>" +
-                ".t-floor { fill:" + White(0.5) + "; font-size:12px; }" +
-                ".t-call { fill:" + WARNING_COLOR + "; font-size:12px; transition: opacity 0.3s; }" +
-                ".t-dir { fill:" + White(0.9) + "; font-size:16px; transition: opacity 0.3s; }" +
+                ".t-floor { fill:" + Ink(0.5) + "; font-size:12px; }" +
+                ".t-call { fill:" + WARNING_COLOR + "; font-size:13px; font-weight:bold; transition: opacity 0.3s; }" +
+                ".t-dir { fill:" + Ink(0.9) + "; font-size:16px; font-weight:bold; transition: opacity 0.3s; }" +
+                "@keyframes carPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }" +
+                ".car.doors-open circle { animation: carPulse 1.1s ease-in-out infinite; }" +
                 "</style>" +
-                overlay + rows + carGroup("A") + carGroup("B") + carGroup("C") +
+                rails + overlay + rows + carGroup("A") + carGroup("B") + carGroup("C") +
                 "</svg>";
 
         };
@@ -1020,10 +1035,10 @@
             const cx = 100, cy = 100;
             const arc = "M" + (cx - GAUGE_R) + " " + cy + " A" + GAUGE_R + " " + GAUGE_R + " 0 0 1 " + (cx + GAUGE_R) + " " + cy;
             return "<svg viewBox='0 0 200 130' style='display:block; width:100%; height:auto'>" +
-                "<path d='" + arc + "' fill='none' stroke='" + White(0.07) + "' stroke-width='12' stroke-linecap='round'/>" +
+                "<path d='" + arc + "' fill='none' stroke='" + Ink(0.07) + "' stroke-width='12' stroke-linecap='round'/>" +
                 "<path id='load-bar' d='" + arc + "' fill='none' stroke='" + ACCENT_COLOR + "' stroke-width='12' stroke-linecap='round' pathLength='100' stroke-dasharray='0 100' style='transition: stroke-dasharray 0.6s, stroke 0.3s'/>" +
-                "<text id='load-value' x='" + cx + "' y='" + (cy - 8) + "' text-anchor='middle' style='fill:" + White(0.95) + "; font-size:26px; font-weight:bold'></text>" +
-                "<text id='load-percent' x='" + cx + "' y='" + (cy + 12) + "' text-anchor='middle' style='fill:" + White(0.45) + "; font-size:12px'></text>" +
+                "<text id='load-value' x='" + cx + "' y='" + (cy - 8) + "' text-anchor='middle' style='fill:" + Ink(0.95) + "; font-size:26px; font-weight:bold'></text>" +
+                "<text id='load-percent' x='" + cx + "' y='" + (cy + 12) + "' text-anchor='middle' style='fill:" + Ink(0.45) + "; font-size:12px'></text>" +
                 "</svg>";
         };
 
@@ -1225,7 +1240,7 @@
         const renderAlert = function () {
             alertBox.visible = fleet.emergencyActive ? 1 : 0;
             lblAlert.text = "<b>Emergency recall is active.</b> All cars are heading to the Lobby and holding their doors open. " +
-                "<span style='color:" + White(0.55) + "'>Hall calls are not answered.</span>";
+                "<span style='color:" + Ink(0.55) + "'>Hall calls are not answered.</span>";
         };
 
         const renderCarInfo = function () {
@@ -1258,9 +1273,14 @@
                     dirText.style.opacity = 0;
                 }
 
+                const status = STATUS_LIST[getStatusKey(c)];
+                shaft.svg.querySelector("#status-" + c.key).setAttribute("fill", status.color);
+
                 const isOpen = (c.doorState === "open" || c.doorState === "opening");
-                shaft.svg.querySelector("#door-l-" + c.key).style.transform = "translateX(" + ((isOpen) ? -16 : 0) + "px)";
-                shaft.svg.querySelector("#door-r-" + c.key).style.transform = "translateX(" + ((isOpen) ? 16 : 0) + "px)";
+                shaft.svg.querySelector("#door-l-" + c.key).style.transform = "translateX(" + ((isOpen) ? -20 : 0) + "px)";
+                shaft.svg.querySelector("#door-r-" + c.key).style.transform = "translateX(" + ((isOpen) ? 20 : 0) + "px)";
+                shaft.svg.querySelector("#glow-" + c.key).style.opacity = (isOpen) ? 1 : 0;
+                shaft.svg.querySelector("#car-" + c.key).classList.toggle("doors-open", isOpen);
 
                 const loadBar = shaft.svg.querySelector("#load-" + c.key);
                 const ratio = Math.max(0, Math.min(1.3, c.load / c.capacity));
@@ -1342,7 +1362,7 @@
                 const isHere = (Math.round(c.floorPos) === index);
                 btn.color = (isHere) ? PRIMARY_COLOR : (requested) ? "rgba(101, 162, 147, 0.18)" : FIELD_COLOR;
                 btn.borderColor = (isHere || requested) ? ACCENT_COLOR : CARD_BORDER_COLOR;
-                btn.lbl.textColor = (isHere) ? White(1) : (serviced) ? White(0.85) : White(0.25);
+                btn.lbl.textColor = (isHere) ? Ink(1) : (serviced) ? Ink(0.85) : Ink(0.25);
                 btn.elem.style.cursor = (controllable && serviced) ? "pointer" : "default";
                 btn.elem.style.pointerEvents = (controllable && serviced) ? "auto" : "none";
             });
@@ -1366,7 +1386,7 @@
             renderInto(grpQueueHost, function () {
 
                 if (!hallCalls.length) {
-                    Label({ text: "No hall calls waiting.", fontSize: 13, textColor: White(0.45), padding: [0, 4] });
+                    Label({ text: "No hall calls waiting.", fontSize: 13, textColor: Ink(0.45), padding: [0, 4] });
                     return;
                 }
 
@@ -1374,18 +1394,18 @@
 
                     HGroup({ width: "100%", height: "auto", align: "left center", gap: 12 });
                     that.elem.style.padding = "8px 0px";
-                    if (index > 0) that.elem.style.borderTop = "1px solid " + White(0.06);
+                    if (index > 0) that.elem.style.borderTop = "1px solid " + Ink(0.06);
 
                         Label({ text: (call.direction === "up") ? "▲" : "▼", fontSize: 14, textColor: WARNING_COLOR, width: 20 });
 
                         VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
                         that.elem.style.flex = "1 1 auto";
-                            Label({ text: "Floor " + FLOORS[call.floor], fontSize: 14, textColor: White(0.9) });
+                            Label({ text: "Floor " + FLOORS[call.floor], fontSize: 14, textColor: Ink(0.9) });
                             const assignedCar = CARS.find(function (c) { return c.id === call.carId; });
-                            Label({ text: (assignedCar) ? "Car " + assignedCar.key + " is coming" : "Waiting for a car", fontSize: 12, textColor: (assignedCar) ? ACCENT_COLOR : White(0.45) });
+                            Label({ text: (assignedCar) ? "Car " + assignedCar.key + " is coming" : "Waiting for a car", fontSize: 12, textColor: (assignedCar) ? ACCENT_COLOR : Ink(0.45) });
                         endGroup();
 
-                        Label({ text: Math.round((Date.now() - call.time) / 1000) + " s", fontSize: 12, textColor: White(0.4) });
+                        Label({ text: Math.round((Date.now() - call.time) / 1000) + " s", fontSize: 12, textColor: Ink(0.4) });
 
                     endGroup();
 
@@ -1404,9 +1424,9 @@
 
                 HGroup({ width: "100%", height: "auto", align: "left center", gap: 10 });
                 that.elem.style.padding = "8px 0px";
-                that.elem.style.borderTop = "1px solid " + White(0.06);
+                that.elem.style.borderTop = "1px solid " + Ink(0.06);
                 that.elem.style.justifyContent = "space-between";
-                    Label({ text: "Next inspection", fontSize: 14, textColor: White(0.5) });
+                    Label({ text: "Next inspection", fontSize: 14, textColor: Ink(0.5) });
                     selectNextInspection = SelectDate({
                         width: 150, height: 36, format: "DD MMM YYYY",
                         date: c.inspection.next, minDate: new Date(),
@@ -1432,7 +1452,7 @@
 
         const renderEvents = function () {
             if (grpEventHost.table) { grpEventHost.table.remove(); grpEventHost.table = null; }
-            const LEVEL_COLORS = { "Info": White(0.6), "Success": ACCENT_COLOR, "Warning": WARNING_COLOR, "Error": ERROR_COLOR };
+            const LEVEL_COLORS = { "Info": Ink(0.6), "Success": ACCENT_COLOR, "Warning": WARNING_COLOR, "Error": ERROR_COLOR };
             const previous = getDefaultContainerBox();
             setDefaultContainerBox(grpEventHost);
                 grpEventHost.table = TinyTable({
@@ -1440,7 +1460,7 @@
                     columnWidths: ["18%", "18%", "63%"],
                     dataRows: car.events.slice(0, 10).map(function (e) { return [e.time, e.level, e.message]; }),
                     headerBackgroundColor: FIELD_COLOR,
-                    headerTextColor: White(0.6),
+                    headerTextColor: Ink(0.6),
                     headerBorderColor: FIELD_COLOR,
                     headerFontSize: 12,
                     borderWidth: 1,
@@ -1448,12 +1468,12 @@
                     borderColor: CARD_BORDER_COLOR,
                     bodyBackgroundColor: CARD_COLOR,
                     cellFontSize: 13,
-                    cellTextColor: White(0.8),
-                    rowHoverBackgroundColor: White(0.05),
-                    rowHoverBorderColor: White(0.1),
+                    cellTextColor: Ink(0.8),
+                    rowHoverBackgroundColor: Ink(0.05),
+                    rowHoverBorderColor: Ink(0.1),
                     onCellRender: function (cell) {
-                        if (cell.index === 0) cell.textColor = White(0.5);
-                        if (cell.index === 1) cell.textColor = LEVEL_COLORS[cell.text] || White(0.8);
+                        if (cell.index === 0) cell.textColor = Ink(0.5);
+                        if (cell.index === 1) cell.textColor = LEVEL_COLORS[cell.text] || Ink(0.8);
                     },
                 });
                 grpEventHost.table.width = "100%";

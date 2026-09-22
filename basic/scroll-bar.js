@@ -42,6 +42,7 @@ const ScrollBar = function (params = {}) {
     box.props(defaults, params);
 
     // --- Private state ---
+    const DRAG_LAYER_Z_INDEX = 2147483000; // Sürükleme katmanı: her şeyin üstünde.
     let _fullscreenBox = null;
     let _autoHideTimer = null;
     let _observer = null;
@@ -332,6 +333,12 @@ const ScrollBar = function (params = {}) {
         _fullscreenBox.position = "absolute"; // WHY: flex bir kutu içinde oluşturulmuş ise relative kalıyor.
         _fullscreenBox.left = 0;
         _fullscreenBox.top = 0;
+
+        // Sürükleme katmanı her şeyin üstünde olmalı.
+        // WHY: ScrollBar, z-index verilmiş bir kutunun (dialog, menü, açılır liste) içinde ise
+        //      katman onun altında kalıyor, mousemove kutuya gidiyor ve bar sürüklenemiyordu.
+        //      Katman yalnızca sürükleme boyunca yaşıyor, saydam ve mouseup ta siliniyor.
+        _fullscreenBox.elem.style.zIndex = String(DRAG_LAYER_Z_INDEX);
 
         _fullscreenBox.on("mousemove", _onDragMove);
         _fullscreenBox.on("mouseup", _exitDragging);

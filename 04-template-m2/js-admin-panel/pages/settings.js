@@ -43,14 +43,16 @@ const SettingsPage = function(params = {}) {
     const ASSETS = "assets/";
     const LIB_PATH = "../../";
 
-    const CARD_COLOR = "#1A1A19";
-    const CARD_BORDER_COLOR = White(0.1);
-    const FIELD_COLOR = "#232322";
-    const PRIMARY_COLOR = "#3D7A6B";
-    const ACCENT_COLOR = "#65A293";
-    const ERROR_COLOR = "#E66767";
+    const CARD_COLOR = T.surface;
+    const CARD_BORDER_COLOR = Ink(0.1);
+    const FIELD_COLOR = T.surface2;
+    const PRIMARY_COLOR = T.primary;
+    const ACCENT_COLOR = T.accent;
+    const ERROR_COLOR = T.danger;
 
     const SECTIONS = ["General", "Account", "Notifications", "Appearance", "Advanced"];
+
+    const currentThemeName = Theme.load(); // The theme of the panel now (Settings > Appearance)
 
     const LANGUAGES = [
         { id: "en", label: "English" },
@@ -300,7 +302,7 @@ const SettingsPage = function(params = {}) {
         if (dirty) {
             clearTimeout(messageTimer);
             lblFooter.text = "You have unsaved changes.";
-            lblFooter.textColor = White(0.85);
+            lblFooter.textColor = Ink(0.85);
             btnDiscard.visible = 1;
             btnSave.visible = 1;
             showFooter(1);
@@ -368,11 +370,11 @@ const SettingsPage = function(params = {}) {
 
             VGroup({ width: "100%", height: "auto", align: "left top", gap: 0 });
 
-                Label({ text: title, fontSize: 16, textColor: White(0.95) });
+                Label({ text: title, fontSize: 16, textColor: Ink(0.95) });
                 that.elem.style.fontFamily = "opensans-bold";
 
                 if (subtitle) {
-                    Label({ text: subtitle, fontSize: 13, textColor: White(0.45), width: "100%" });
+                    Label({ text: subtitle, fontSize: 13, textColor: Ink(0.45), width: "100%" });
                 }
 
             endGroup();
@@ -396,7 +398,7 @@ const SettingsPage = function(params = {}) {
     const startField = function(title, flex = "1 1 260px") {
         const group = VGroup({ width: (flex) ? "auto" : "100%", height: "auto", align: "left top", gap: 8 });
         if (flex) setFlex(group, flex);
-        Label({ text: title.toUpperCase(), fontSize: 11, textColor: White(0.45) });
+        Label({ text: title.toUpperCase(), fontSize: 11, textColor: Ink(0.45) });
         that.elem.style.letterSpacing = "1px";
         return group;
     };
@@ -411,8 +413,8 @@ const SettingsPage = function(params = {}) {
         that.elem.style.justifyContent = "space-between";
             VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
             setFlex(that, "1 1 auto");
-                Label({ text: title, fontSize: 15, textColor: White(0.9) });
-                if (desc) Label({ text: desc, fontSize: 12, textColor: White(0.45), width: "100%" });
+                Label({ text: title, fontSize: 15, textColor: Ink(0.9) });
+                if (desc) Label({ text: desc, fontSize: 12, textColor: Ink(0.45), width: "100%" });
             endGroup();
     };
 
@@ -421,7 +423,7 @@ const SettingsPage = function(params = {}) {
     };
 
     const createDivider = function() {
-        Box({ width: "100%", height: 1, color: White(0.06) });
+        Box({ width: "100%", height: 1, color: Ink(0.06) });
     };
 
     // Dark style for the InputB family
@@ -430,7 +432,7 @@ const SettingsPage = function(params = {}) {
         leftPadding: 14,
         rightPadding: 36,
         backgroundColor: FIELD_COLOR,
-        selectedBackgroundColor: "#262625",
+        selectedBackgroundColor: T.surface3,
         lineColor: "transparent",
         selectedLineColor: "transparent",
         backBorderColor: CARD_BORDER_COLOR,
@@ -443,10 +445,10 @@ const SettingsPage = function(params = {}) {
 
     // WHY: InputB has fixed text colors for light backgrounds.
     const styleInput = function(input) {
-        input.title.textColor = White(0.45);
+        input.title.textColor = Ink(0.45);
         input.title.fontSize = 11;
         input.title.elem.style.letterSpacing = "1px";
-        input.input.textColor = White(0.9);
+        input.input.textColor = Ink(0.9);
         input.input.fontSize = 16;
         input.input.height = 34;
         input.warningBall.borderColor = CARD_COLOR;
@@ -463,15 +465,15 @@ const SettingsPage = function(params = {}) {
             borderColor: CARD_BORDER_COLOR,
             round: 8,
             labelBoldFont: 0,
-            labelTextColor: White(0.9),
+            labelTextColor: Ink(0.9),
             arrowIcon: LIB_PATH + "comp-m2/tiny-select/arrow.svg",
             arrowSize: 18,
-            invertIconColor: 1,
+            invertIconColor: T.invertIcon,
             listFontSize: 14,
-            listTextColor: White(0.85),
+            listTextColor: Ink(0.85),
             listOverTextColor: ACCENT_COLOR,
             listBackgroundColor: FIELD_COLOR,
-            listBorderColor: White(0.15),
+            listBorderColor: Ink(0.15),
             onSelect: onSelect,
         });
     };
@@ -482,11 +484,11 @@ const SettingsPage = function(params = {}) {
             value: value,
             labelText: labelText,
             style: {
-                mark: { width: 20, height: 20, color: "transparent", borderColor: White(0.35) },
+                mark: { width: 20, height: 20, color: "transparent", borderColor: Ink(0.35) },
                 checkedMark: { color: "transparent", borderColor: ACCENT_COLOR },
-                hoverMark: { borderColor: White(0.7) },
+                hoverMark: { borderColor: Ink(0.7) },
                 dot: { color: ACCENT_COLOR },
-                label: { fontSize: 14, textColor: White(0.9) },
+                label: { fontSize: 14, textColor: Ink(0.9) },
             },
             onChange: onChange,
         });
@@ -499,11 +501,11 @@ const SettingsPage = function(params = {}) {
             labelText: labelText,
             style: {
                 layout: { padding: [0, 0] },
-                mark: { width: 20, height: 20, color: "transparent", borderColor: White(0.35) },
+                mark: { width: 20, height: 20, color: "transparent", borderColor: Ink(0.35) },
                 checkedMark: { color: PRIMARY_COLOR, borderColor: PRIMARY_COLOR },
-                hoverMark: { borderColor: White(0.7) },
-                tick: { color: White(1) },
-                label: { fontSize: 14, textColor: White(0.9) },
+                hoverMark: { borderColor: Ink(0.7) },
+                tick: { color: Ink(1) },
+                label: { fontSize: 14, textColor: Ink(0.9) },
             },
             onChange: onChange,
         });
@@ -514,8 +516,8 @@ const SettingsPage = function(params = {}) {
             width: 52,
             height: 30,
             spacing: 3,
-            backgroundStyle: { color: "#2C2C2A", selectedColor: PRIMARY_COLOR, border: 1, borderColor: CARD_BORDER_COLOR },
-            buttonStyle: { color: White(0.35), selectedColor: White(0.95) },
+            backgroundStyle: { color: T.surface3, selectedColor: PRIMARY_COLOR, border: 1, borderColor: CARD_BORDER_COLOR },
+            buttonStyle: { color: Ink(0.35), selectedColor: Ink(0.95) },
             onChange: onChange,
         });
     };
@@ -528,29 +530,29 @@ const SettingsPage = function(params = {}) {
             style: {
                 layout: { gap: 8, padding: [14, 8] },
                 icon: { width: 18, height: 18 },
-                label: { fontSize: 14, textColor: White(0.9) },
+                label: { fontSize: 14, textColor: Ink(0.9) },
                 box: { color: params.color || FIELD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8 },
-                hover: { color: params.hoverColor || "#2C2C2A" },
-                active: { color: params.activeColor || "#383835" },
+                hover: { color: params.hoverColor || T.surface3 },
+                active: { color: params.activeColor || T.surface4 },
             },
         });
-        if (btn.icon) btn.icon.elem.style.filter = "invert(100%)"; // WHY: Panel icons are black.
+        if (btn.icon) btn.icon.elem.style.filter = T.iconFilter; // WHY: Panel icons are black.
         return btn;
     };
 
     const SELECT_FILE_STYLE = {
-        zone: { color: FIELD_COLOR, border: 2, borderColor: White(0.12), round: 10 },
-        zoneHover: { color: "#262625", borderColor: White(0.3) },
-        zoneDragOver: { color: "#1F2B28", borderColor: ACCENT_COLOR },
-        icon: { color: White(0.45), dragOverColor: ACCENT_COLOR },
-        title: { fontSize: 14, textColor: White(0.9) },
-        desc: { fontSize: 13, textColor: White(0.5) },
-        hint: { textColor: White(0.4) },
-        item: { color: FIELD_COLOR, borderColor: White(0.1) },
-        itemName: { textColor: White(0.85) },
-        itemSize: { textColor: White(0.45) },
-        badge: { color: White(0.08), textColor: White(0.6) },
-        removeButton: { textColor: White(0.45), hoverColor: ERROR_COLOR },
+        zone: { color: FIELD_COLOR, border: 2, borderColor: Ink(0.12), round: 10 },
+        zoneHover: { color: T.surface3, borderColor: Ink(0.3) },
+        zoneDragOver: { color: T.tableHighlight, borderColor: ACCENT_COLOR },
+        icon: { color: Ink(0.45), dragOverColor: ACCENT_COLOR },
+        title: { fontSize: 14, textColor: Ink(0.9) },
+        desc: { fontSize: 13, textColor: Ink(0.5) },
+        hint: { textColor: Ink(0.4) },
+        item: { color: FIELD_COLOR, borderColor: Ink(0.1) },
+        itemName: { textColor: Ink(0.85) },
+        itemSize: { textColor: Ink(0.45) },
+        badge: { color: Ink(0.08), textColor: Ink(0.6) },
+        removeButton: { textColor: Ink(0.45), hoverColor: ERROR_COLOR },
     };
 
     // *** SECTIONS:
@@ -617,7 +619,7 @@ const SettingsPage = function(params = {}) {
                     });
                     selectFiles.push(logoFile);
 
-                    lblLogo = Label({ text: "", fontSize: 13, textColor: White(0.5) });
+                    lblLogo = Label({ text: "", fontSize: 13, textColor: Ink(0.5) });
 
                 endField();
 
@@ -651,7 +653,7 @@ const SettingsPage = function(params = {}) {
 
                     endGroup();
 
-                    lblDatePreview = Label({ text: "", fontSize: 13, textColor: White(0.5) });
+                    lblDatePreview = Label({ text: "", fontSize: 13, textColor: Ink(0.5) });
 
                 endField();
 
@@ -766,8 +768,8 @@ const SettingsPage = function(params = {}) {
                             trackHeight: 10,
                             minThumbHeight: 28,
                             trackColor: ACCENT_COLOR,
-                            trackBackgroundColor: White(0.1),
-                            thumbColor: White(0.9),
+                            trackBackgroundColor: Ink(0.1),
+                            thumbColor: Ink(0.9),
                             showValueOnSet: 0,
                             showValueOnDrag: 0, // WHY: Slider shows 0-100. Minutes are shown in lblTimeout.
                             onDragMove: function(value) {
@@ -778,7 +780,7 @@ const SettingsPage = function(params = {}) {
                             },
                         });
 
-                        lblTimeout = Label({ text: "", fontSize: 15, textColor: White(0.9), width: 70 });
+                        lblTimeout = Label({ text: "", fontSize: 15, textColor: Ink(0.9), width: 70 });
                         that.elem.style.fontFamily = "opensans-bold";
 
                     endGroup();
@@ -832,7 +834,7 @@ const SettingsPage = function(params = {}) {
                 columnWidths: ["44%", "30%", "25%"], // 99%: 1px gaps between cells
                 dataRows: sessionList,
                 headerBackgroundColor: FIELD_COLOR,
-                headerTextColor: White(0.6),
+                headerTextColor: Ink(0.6),
                 headerBorderColor: FIELD_COLOR,
                 headerFontSize: 12,
                 borderWidth: 1,
@@ -840,9 +842,9 @@ const SettingsPage = function(params = {}) {
                 borderColor: CARD_BORDER_COLOR,
                 bodyBackgroundColor: CARD_COLOR,
                 cellFontSize: 14,
-                cellTextColor: White(0.8),
-                rowHoverBackgroundColor: White(0.05),
-                rowHoverBorderColor: White(0.1),
+                cellTextColor: Ink(0.8),
+                rowHoverBackgroundColor: Ink(0.05),
+                rowHoverBorderColor: Ink(0.1),
                 onCellRender: function(cell) {
                     if (cell.index == 2 && cell.text == "Active now") cell.textColor = ACCENT_COLOR;
                 },
@@ -862,10 +864,10 @@ const SettingsPage = function(params = {}) {
 
                 // Header
                 HGroup({ width: "100%", height: "auto", align: "left center", gap: 0 });
-                    Label({ text: "EVENT", fontSize: 11, textColor: White(0.45) });
+                    Label({ text: "EVENT", fontSize: 11, textColor: Ink(0.45) });
                     setFlex(that, "1 1 auto");
                     ["E-MAIL", "PUSH"].forEach(function(text) {
-                        Label({ text: text, fontSize: 11, textColor: White(0.45), width: 80, textAlign: "center" });
+                        Label({ text: text, fontSize: 11, textColor: Ink(0.45), width: 80, textAlign: "center" });
                     });
                 endGroup();
 
@@ -877,8 +879,8 @@ const SettingsPage = function(params = {}) {
 
                         VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
                         setFlex(that, "1 1 auto");
-                            Label({ text: event.title, fontSize: 15, textColor: White(0.9) });
-                            Label({ text: event.desc, fontSize: 12, textColor: White(0.45) });
+                            Label({ text: event.title, fontSize: 15, textColor: Ink(0.9) });
+                            Label({ text: event.desc, fontSize: 12, textColor: Ink(0.45) });
                         endGroup();
 
                         notifyCheckBoxes[event.key] = {};
@@ -920,15 +922,15 @@ const SettingsPage = function(params = {}) {
                                 showClearButton: 0,
                                 style: {
                                     field: { color: FIELD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8 },
-                                    fieldHover: { borderColor: White(0.3) },
+                                    fieldHover: { borderColor: Ink(0.3) },
                                     fieldFocus: { borderColor: ACCENT_COLOR },
-                                    fieldText: { fontSize: 15, textColor: White(0.9) },
-                                    icon: { color: White(0.55) },
-                                    panel: { color: FIELD_COLOR, borderColor: White(0.12), shadow: "0 8px 24px rgba(0, 0, 0, 0.5)" },
-                                    columnTitle: { textColor: White(0.45), activeTextColor: White(0.9) },
-                                    cell: { textColor: White(0.85), hoverColor: White(0.08) },
-                                    selectedCell: { color: PRIMARY_COLOR, textColor: White(1) },
-                                    disabledCell: { textColor: White(0.2) },
+                                    fieldText: { fontSize: 15, textColor: Ink(0.9) },
+                                    icon: { color: Ink(0.55) },
+                                    panel: { color: FIELD_COLOR, borderColor: Ink(0.12), shadow: "0 8px 24px " + Black(0.5) },
+                                    columnTitle: { textColor: Ink(0.45), activeTextColor: Ink(0.9) },
+                                    cell: { textColor: Ink(0.85), hoverColor: Ink(0.08) },
+                                    selectedCell: { color: PRIMARY_COLOR, textColor: Ink(1) },
+                                    disabledCell: { textColor: Ink(0.2) },
                                     footerButton: { textColor: ACCENT_COLOR },
                                 },
                                 onChange: function(self) {
@@ -953,9 +955,93 @@ const SettingsPage = function(params = {}) {
 
     };
 
+    // One theme of the panel: a small preview (page, card, action color) and its name.
+    const createThemeItem = function(item) {
+
+        const isSelected = (item.name == currentThemeName);
+
+        const itemBox = VGroup({
+            width: 190, height: "auto", align: "left top", gap: 0,
+            color: FIELD_COLOR, border: 2, borderColor: (isSelected) ? ACCENT_COLOR : Ink(0.12),
+            round: 10, clickable: 1,
+        });
+        itemBox.elem.style.cursor = "pointer";
+        itemBox.clipContent = 1;
+
+            // PREVIEW: The page of that theme with a card and two buttons on it.
+            const preview = Box({ width: "100%", height: 74, color: item.page });
+            createIn(preview, function() {
+                Box(12, 12, 100, 30, { color: item.surface, border: 1, borderColor: (item.isDark) ? White(0.12) : Black(0.12), round: 6 });
+                Box(12, 50, 46, 12, { color: item.primary, round: 4 });
+                Box(64, 50, 46, 12, { color: item.surface2, border: 1, borderColor: (item.isDark) ? White(0.12) : Black(0.12), round: 4 });
+                Box(124, 12, 54, 50, { color: item.surface, border: 1, borderColor: (item.isDark) ? White(0.12) : Black(0.12), round: 6 });
+            });
+
+            VGroup({ width: "100%", height: "auto", align: "left top", gap: 2, padding: [12, 10] });
+
+                HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
+                that.elem.style.justifyContent = "space-between";
+                    Label({ text: item.label, fontSize: 14, textColor: Ink(0.9) });
+                    that.elem.style.fontFamily = "opensans-bold";
+                    if (isSelected) {
+                        Label({ text: "Selected", fontSize: 11, textColor: Theme.textOn(ACCENT_COLOR), color: ACCENT_COLOR, padding: [8, 2], round: 100 });
+                        that.elem.style.whiteSpace = "nowrap";
+                    }
+                endGroup();
+
+                Label({ text: item.desc, fontSize: 12, textColor: Ink(0.45), width: "100%" });
+
+            endGroup();
+
+        endGroup();
+
+        itemBox.on("click", function() { selectTheme(item.name); });
+
+        return itemBox;
+
+    };
+
+    // The panel is created again with the new colors (index.htm builds the top bar and the menu once).
+    const selectTheme = function(name) {
+
+        if (name == currentThemeName) return;
+
+        // WHY: The page is loaded again, so the draft of this page is lost.
+        if (isDirty()) {
+            Dialog({
+                icon: ASSETS + "warning.png",
+                title: "Change Theme",
+                desc: "The panel opens again with the new colors. The changes you did not save are lost.",
+                confirmButtonText: "Change Theme",
+                confirmButtonColor: PRIMARY_COLOR,
+                callback: function(isConfirmed) { if (isConfirmed) applyTheme(name); },
+            });
+            return;
+        }
+
+        applyTheme(name);
+
+    };
+
+    const applyTheme = function(name) {
+        basic.storage.save(SettingsPage.SECTION_KEY, 3); // WHY: This page opens again on Appearance.
+        Theme.select(name, SettingsPage.KEY); // Saves the theme and loads the panel again.
+    };
+
     const initAppearance = function() {
 
         startSection();
+
+            startCard("Theme", "The colors of the panel. The panel opens again when the theme changes.");
+
+                HGroup({ width: "100%", height: "auto", align: "left top", gap: 14 });
+                that.elem.style.flexWrap = "wrap";
+
+                    Theme.getList().forEach(function(item) { createThemeItem(item); });
+
+                endGroup();
+
+            endCard();
 
             startCard("Panel Color", "Color of the top bar. You see it now; it is kept after Save.");
 
@@ -963,7 +1049,7 @@ const SettingsPage = function(params = {}) {
                 that.elem.style.flexWrap = "wrap";
 
                     SettingsPage.PANEL_COLORS.forEach(function(item) {
-                        const swatch = "<span style='display:inline-block; width:14px; height:14px; border-radius:4px; vertical-align:-2px; margin-right:6px; background:" + item.color + "; border:1px solid " + White(0.2) + "'></span>";
+                        const swatch = "<span style='display:inline-block; width:14px; height:14px; border-radius:4px; vertical-align:-2px; margin-right:6px; background:" + item.color + "; border:1px solid " + Ink(0.2) + "'></span>";
                         createRadioButton("settingsPanelColor", item.color, swatch + item.name, function(self) {
                             topBar.setBackgroundColor(self.value); // Preview
                             setDraft("panelColor", self.value);
@@ -998,7 +1084,7 @@ const SettingsPage = function(params = {}) {
                     lblApiKey = Label({
                         text: "",
                         fontSize: 14,
-                        textColor: White(0.85),
+                        textColor: Ink(0.85),
                         color: FIELD_COLOR,
                         border: 1,
                         borderColor: CARD_BORDER_COLOR,
@@ -1091,7 +1177,7 @@ const SettingsPage = function(params = {}) {
                             link.click();
                             URL.revokeObjectURL(link.href);
                         });
-                        Label({ text: "Saved settings (without the API key)", fontSize: 12, textColor: White(0.45) });
+                        Label({ text: "Saved settings (without the API key)", fontSize: 12, textColor: Ink(0.45) });
 
                     endGroup();
 
@@ -1150,9 +1236,9 @@ const SettingsPage = function(params = {}) {
                         style: {
                             layout: { gap: 6, padding: [14, 0] },
                             icon: { width: 20, height: 20 },
-                            label: { fontSize: 14, textColor: White(0.9) },
+                            label: { fontSize: 14, textColor: Ink(0.9) },
                             holdingLabel: { fontSize: 14, textColor: "#B03A2E" },
-                            completedLabel: { fontSize: 14, textColor: "#2C5A38" },
+                            completedLabel: { fontSize: 14, textColor: T.primaryActive },
                             box: { color: FIELD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8 },
                             holdingBox: { color: "#FFD1CB", borderColor: ERROR_COLOR, round: 8 },
                             completedBox: { color: "#DFEFE6", borderColor: ACCENT_COLOR, round: 8 },
@@ -1164,7 +1250,7 @@ const SettingsPage = function(params = {}) {
                             fillForm(draft);
                         },
                     });
-                    that.icon.elem.style.filter = "invert(100%)"; // WHY: Only the normal icon is on a dark background.
+                    that.icon.elem.style.filter = T.iconFilter; // WHY: Only the normal icon is on a dark background.
 
                 endSettingLine();
 
@@ -1186,9 +1272,9 @@ const SettingsPage = function(params = {}) {
         SettingsPage.applyToPanel(saved);
 
         // WHY: These components have objects, events or static lists on the page. box.remove() does not remove them.
-        radioList.forEach(function(radio) { radio.destroy(); });
-        selectTimes.forEach(function(selectTime) { selectTime.destroy(); });
-        selectFiles.forEach(function(selectFile) { selectFile.destroy(); });
+        radioList.forEach(function(radio) { radio.remove(); });
+        selectTimes.forEach(function(selectTime) { selectTime.remove(); });
+        selectFiles.forEach(function(selectFile) { selectFile.remove(); });
 
         SettingsPage.refreshOpenPage = null;
 
@@ -1219,10 +1305,10 @@ const SettingsPage = function(params = {}) {
 
                 VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
 
-                    Label({ text: "Settings", fontSize: 26, textColor: White(0.95) });
+                    Label({ text: "Settings", fontSize: 26, textColor: Ink(0.95) });
                     that.elem.style.fontFamily = "opensans-bold";
 
-                    Label({ text: "Manage the panel and your account", fontSize: 14, textColor: White(0.5) });
+                    Label({ text: "Manage the panel and your account", fontSize: 14, textColor: Ink(0.5) });
 
                 endGroup();
 
@@ -1241,7 +1327,7 @@ const SettingsPage = function(params = {}) {
                     tabPadding: [4, 4],
                     labelStyle: {
                         fontSize: 14,
-                        textColor: White(0.85),
+                        textColor: Ink(0.85),
                         padding: [16, 7],
                     },
                     selectedStyle: {
@@ -1280,21 +1366,21 @@ const SettingsPage = function(params = {}) {
             align: "left center",
             gap: 10,
             padding: [20, 12],
-            color: "#2C2C2A",
+            color: T.surface3,
             border: 1,
-            borderColor: White(0.15),
+            borderColor: Ink(0.15),
             round: 12,
             clickable: 1,
         });
         that.elem.style.maxWidth = "960px";
-        that.elem.style.boxShadow = "0 8px 24px rgba(0, 0, 0, 0.5)";
+        that.elem.style.boxShadow = "0 8px 24px " + Black(0.5);
 
-            lblFooter = Label({ text: "", fontSize: 14, textColor: White(0.85) });
+            lblFooter = Label({ text: "", fontSize: 14, textColor: Ink(0.85) });
             setFlex(lblFooter, "1 1 auto");
 
             btnDiscard = createButton("Discard", "", discardChanges);
 
-            btnSave = createButton("Save Changes", "", saveSettings, { color: PRIMARY_COLOR, hoverColor: "#468A79", activeColor: "#2C5A38" });
+            btnSave = createButton("Save Changes", "", saveSettings, { color: PRIMARY_COLOR, hoverColor: T.primaryHover, activeColor: T.primaryActive });
 
         endGroup();
 
@@ -1305,6 +1391,13 @@ const SettingsPage = function(params = {}) {
 
     // *** PAGE INIT CODE:
 
+    // WHY: After a theme change the panel is loaded again. The user comes back to Appearance.
+    const savedSection = basic.storage.load(SettingsPage.SECTION_KEY);
+    if (savedSection !== null && savedSection !== undefined) {
+        basic.storage.remove(SettingsPage.SECTION_KEY);
+        box.sectionIndex = savedSection;
+    }
+
     showSection(box.sectionIndex);
     renderSessions();
     fillForm(draft);
@@ -1314,6 +1407,9 @@ const SettingsPage = function(params = {}) {
 };
 
 SettingsPage.KEY = "Settings";
+
+// The section of the page after a reload. (Used by the theme change.)
+SettingsPage.SECTION_KEY = "appid_settings_section";
 
 // *** STATIC:
 

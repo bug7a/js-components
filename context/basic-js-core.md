@@ -39,6 +39,10 @@ endBox();
 - `AutoLayout` (or `startFlexBox`): Starts a flexbox container.
 - `HGroup(...)`: Alias for `AutoLayout` with horizontal flow.
 - `VGroup(...)`: Alias for `AutoLayout` with vertical flow.
+- **Only a Box can hold other objects.** The groups above are Box objects too. A `Button`, `Label`,
+  `Input` or `Icon` can NOT hold children: an object created inside a button also sends its mouse
+  events up to the button (its hover effect then fires). To put something over a button, create it
+  as a brother of the button in the same box and place it with `position: "absolute"`.
 
 ## UI Components
 
@@ -132,9 +136,10 @@ btn.on("click", function(self, event) {
 - `onChange(func)` (for TextBox)
 
 ### Removing Objects
-- `obj.remove()` removes the object, its events and `onResize` registrations, and **all basic.js objects inside it** (parents first). If a child has `destroy()` (component template), it is called first, so components clean their global events (`page.onResize`, `window` events, static lists).
+- `obj.remove()` removes the object, its events and `onResize` registrations, and **all basic.js objects inside it** (parents first). A child with a `destroy()` function gets that call first (older objects such as `ScrollBar`).
+- **Components are removed with `remove()` too.** A component overrides `remove()` (`const superRemove = box.remove;` … `superRemove.call(box);`) and cleans its global events there (`window` / `document` events, timers, `page.onResize`, static lists), so `myComponent.remove();` is enough.
 - A removed object has `_isRemoved = 1` and must not be added to the screen again. Create a new one.
-- Objects created on `page` from inside another object (for example a `ContextMenu`) are not its children. Destroy them yourself.
+- Objects created on `page` from inside another object (for example a `ContextMenu`) are not its children. Remove them yourself.
 
 ## Motion (Animations)
 - `setMotion(string)`: Defines the transition (e.g., "left 0.5s, opacity 1s").

@@ -81,8 +81,6 @@ const TopBar = function(params = {}) {
     let searchPages = []; // Menu items (setSearchPages)
     let searchTimer = null;
     let searchText = "";
-    let results = []; // [{ group, text, desc, open }]
-    let activeResultIndex = -1;
     let isRendering = 0; // WHY: Component setters call onChange/onSelect. Values written by code are not user changes.
 
     // *** PUBLIC VARIABLES:
@@ -219,126 +217,11 @@ const TopBar = function(params = {}) {
 
     };
 
-    // Creates the content of a container again. (One group is started and ended in it.)
-    // WHY: setDefaultContainerBox() is not in the start/end list of basic.js. One wrapper group is safe.
-    const renderInto = function(container, buildContent) {
-        if (container.wrapper) container.wrapper.remove();
-        const previous = getDefaultContainerBox();
-        setDefaultContainerBox(container);
-            container.wrapper = VGroup({ width: "100%", height: "auto", align: "left top", gap: 0 });
-                buildContent();
-            endGroup();
-        setDefaultContainerBox(previous);
-    };
-
-    const renderResults = function() {
-
-        renderInto(box.resultsBox, function() {
-
-            if (results.length == 0) {
-                Label({ text: "No results for \"" + escapeHtml(searchText.trim()) + "\"", fontSize: 13, textColor: White(0.5), padding: [14, 12] });
-                return;
-            }
-
-            let lastGroup = "";
-            box.resultRows = [];
-
-            results.forEach(function(result, index) {
-
-                if (result.group != lastGroup) {
-                    lastGroup = result.group;
-                    Label({ text: result.group.toUpperCase(), fontSize: 10, textColor: White(0.4), padding: [12, 6] });
-                    that.elem.style.letterSpacing = "1px";
-                    that.elem.style.marginTop = (index > 0) ? "4px" : "0px";
-                }
-
-                const row = VGroup({ width: "100%", height: "auto", align: "left top", gap: 0, padding: [12, 6], round: 6, color: "transparent" });
-                row.elem.style.cursor = "pointer";
-                // WHY: mousedown, not click. The input loses the focus on mousedown and the results are closed before a click.
-                row.elem.addEventListener("mousedown", function(event) {
-                    event.preventDefault();
-                    openResult(index);
-                });
-                row.on("mouseover", function() { setActiveResult(index); });
-
-                    Label({ text: escapeHtml(result.text), fontSize: 14, textColor: White(0.92) });
-                    that.elem.style.whiteSpace = "nowrap";
-                    Label({ text: escapeHtml(result.desc), fontSize: 12, textColor: White(0.45) });
-                    that.elem.style.whiteSpace = "nowrap";
-
-                endGroup();
-
-                box.resultRows.push(row);
-
-            });
-
-            // Hint
-            Label({ text: "↑ ↓ to move · Enter to open · Esc to close", fontSize: 11, textColor: White(0.35), padding: [12, 8] });
-            that.elem.style.borderTop = "1px solid " + White(0.08);
-            that.elem.style.marginTop = "4px";
-            that.width = "100%";
-
-        });
-
-        // WHY: The results box grows with the content only when the content is in the flow.
-        box.resultsBox.wrapper.position = "relative";
-
-        setActiveResult((results.length) ? 0 : -1);
-
-    };
-
-    const setActiveResult = function(index) {
-        activeResultIndex = index;
-        (box.resultRows || []).forEach(function(row, i) {
-            row.color = (i == index) ? White(0.08) : "transparent";
-        });
-        const row = (box.resultRows || [])[index];
-        if (row) row.elem.scrollIntoView({ block: "nearest" });
-    };
-
-    const openResult = function(index) {
-        const result = results[index];
-        if (!result) return;
-        closeResults();
-        box.searchInput.setText("");
-        box.searchInput.imgClearIcon.opacity = 0;
-        box.searchInput.imgClearIcon.clickable = 0;
-        searchText = "";
-        box.searchInput.txtSearch.inputElement.blur();
-        result.open();
-    };
-
+    // Shows the results of the current text in the SearchResults component.
+    // WHY: The list itself (rows, groups, keyboard, scrolling) is comp-m4/search-results.js now.
+    //      Only what is searched and what happens when a result is opened stays here.
     const showResults = function() {
-
-        results = findResults(searchText);
-
-        if (!searchText.trim()) {
-            closeResults();
-            return;
-        }
-
-        renderResults();
-        positionResults();
-        box.resultsBox.visible = 1;
-
-    };
-
-    // Under the search input, right aligned
-    const positionResults = function() {
-        const rect = box.searchInput.elem.getBoundingClientRect();
-        const width = Math.min(380, page.width - 16); // WHY: The results must stay on the screen on mobile.
-        box.resultsBox.left = Math.max(8, withPageZoom(rect.right) - width);
-        box.resultsBox.top = withPageZoom(rect.bottom) + 6;
-        box.resultsBox.width = width;
-    };
-
-    const closeResults = function() {
-        box.resultsBox.visible = 0;
-        activeResultIndex = -1;
-    };
-
-    const isResultsOpen = function() {
-        return box.resultsBox.visible == 1;
+        box.searchResults.setItems(findResults(searchText), searchText);
     };
 
     // *** RESPONSIVE:
@@ -471,7 +354,7 @@ const TopBar = function(params = {}) {
     box.background = Box(0, 0, "100%", "100%", {
         color: box.backgroundColor,
         border: 1,
-        borderColor: "rgba(0,0,0,0.1)",
+        borderColor: Black(0.1),
     });
     box.background.elem.style.borderBottom = "solid 1px #141414";
 
@@ -516,12 +399,12 @@ const TopBar = function(params = {}) {
             labelBoldFont: 0,
             round: 8,
             color: "#141414DD", // "whitesmoke"
-            labelTextColor: "rgba(255,255,255,0.8)",
-            listTextColor: "rgba(255, 255, 255, 0.8)",
-            listOverTextColor: "#65A293",
-            listBackgroundColor: "#141414",
+            labelTextColor: White(0.8), // WHY: On the colored top bar, not on the page.
+            listTextColor: Ink(0.8),
+            listOverTextColor: T.accent,
+            listBackgroundColor: T.surfaceDeep,
             listBorder: 1,
-            listBorderColor: "rgba(255,255,255,0.4)",
+            listBorderColor: Ink(0.4),
             list: PANELS,
             arrowIcon: "assets/top-bar/arrow-down.svg",
             invertIconColor: 1,
@@ -756,59 +639,39 @@ const TopBar = function(params = {}) {
             if (item.key == "shortcuts") showShortcuts();
         },
         style: {
-            menu: { color: "#1A1A19", border: 1, borderColor: White(0.14), round: 8, padding: 4, shadow: "0px 8px 24px " + Black(0.5) },
-            item: { textColor: White(0.85) },
-            itemHover: { textColor: White(0.95), color: White(0.08) },
-            separator: { color: White(0.1) },
+            menu: { color: T.surface, border: 1, borderColor: Ink(0.14), round: 8, padding: 4, shadow: "0px 8px 24px " + Black(0.5) },
+            item: { textColor: Ink(0.85) },
+            itemHover: { textColor: Ink(0.95), color: Ink(0.08) },
+            separator: { color: Ink(0.1) },
         },
     });
     box.createMenu.attachTo(box.btnCreate, "click");
 
-    // BOX: Search results (on the page, over everything)
-    createIn(page, function() {
-
-        box.resultsBox = Box({ left: 0, top: 44, width: 380, height: "auto", color: "#1A1A19", border: 1, borderColor: White(0.14), round: 10, visible: 0 });
-        box.resultsBox.elem.style.position = "fixed";
-        box.resultsBox.elem.style.zIndex = "1000";
-        box.resultsBox.elem.style.maxHeight = "70vh";
-        box.resultsBox.elem.style.overflowY = "auto";
-        box.resultsBox.elem.style.padding = "6px";
-        box.resultsBox.elem.style.boxShadow = "0px 12px 32px " + Black(0.5);
-
+    // SEARCH RESULTS: comp-m4/search-results.js
+    // NOTE: The component puts itself on the page and is placed under the search input, so the
+    //       top bar can not clip it. It scrolls with basic/scroll-bar.js.
+    box.searchResults = SearchResults({
+        anchor: box.searchInput,
+        anchorAlign: "right",
+        maxWidth: 380,
+        styleName: T.compStyle,
+        onSelect: function(self, item) {
+            // Clean the search input and open what was found.
+            box.searchInput.setText("");
+            box.searchInput.imgClearIcon.opacity = 0;
+            box.searchInput.imgClearIcon.clickable = 0;
+            searchText = "";
+            box.searchInput.txtSearch.inputElement.blur();
+            item.open();
+        },
     });
 
     // *** OBJECT INIT CODE:
 
     const searchElem = box.searchInput.txtSearch.inputElement;
 
-    // Keyboard in the search input
-    searchElem.addEventListener("keydown", function(event) {
-        if (!isResultsOpen()) {
-            if (event.key === "Escape") searchElem.blur();
-            return;
-        }
-        if (event.key === "ArrowDown") {
-            event.preventDefault();
-            setActiveResult(Math.min(activeResultIndex + 1, results.length - 1));
-        } else if (event.key === "ArrowUp") {
-            event.preventDefault();
-            setActiveResult(Math.max(activeResultIndex - 1, 0));
-        } else if (event.key === "Enter") {
-            event.preventDefault();
-            openResult(Math.max(activeResultIndex, 0));
-        } else if (event.key === "Escape") {
-            event.preventDefault();
-            closeResults();
-        }
-    });
-
-    searchElem.addEventListener("focus", function() {
-        if (searchText.trim()) showResults();
-    });
-
-    searchElem.addEventListener("blur", function() {
-        closeResults();
-    });
+    // ArrowUp / ArrowDown, Enter, Escape, focus and blur: all of it is in the component.
+    box.searchResults.attachTo(searchElem);
 
     // Keyboard shortcuts for the panel
     document.addEventListener("keydown", function(event) {
@@ -833,7 +696,7 @@ const TopBar = function(params = {}) {
 
     page.onResize(function() {
         layoutSearchInput();
-        if (isResultsOpen()) positionResults();
+        box.searchResults.refresh(); // WHY: The input moved, the list is under it.
     });
 
     layoutSearchInput();
@@ -857,8 +720,8 @@ const TopBarIconButtonDefaults = {
     iconWidth: 24,
     iconHeight: 24,
     iconOpacity: 0.75,
-    backgroundColor: "rgba(0,0,0,0.1)",
-    hoverBackgroundColor: "rgba(0,0,0,0.4)",
+    backgroundColor: Black(0.1),
+    hoverBackgroundColor: Black(0.4),
     invertIconColor: 0,
     hoverIconOpacity: 1,
     createBudge: 1,

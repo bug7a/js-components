@@ -441,8 +441,12 @@ const SelectFile = function (params = {}) {
         renderList();
     };
 
-    box.destroy = function () {
+    // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
+    const superRemove = box.remove;
+    box.superRemove = superRemove;
+    box.remove = function () {
 
+        if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
         revokePreviews();
 
         if (box.preventPageDrop == 1) {
@@ -450,7 +454,7 @@ const SelectFile = function (params = {}) {
             window.removeEventListener("drop", onPageDragOver);
         }
 
-        box.remove(); // NOTE: It will clean all events like box.on("click"
+        superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
         box = null;
 
     };

@@ -11,6 +11,7 @@
         <link rel="preload" href="../../../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
         <link rel="stylesheet" type="text/css" href="../../../basic/basic.min.css">
         <script src="../../../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../common/theme.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- COMPONENTS -->
         <script src="../../../comp-m2/tiny-select.js" type="text/javascript" charset="utf-8"></script>
@@ -23,6 +24,7 @@
         <script src="../../../comp-m3/radio-button.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m4/progress-bar.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m4/spark-line-box.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m4/gauge.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m4/chart-box.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m4/context-menu.js" type="text/javascript" charset="utf-8"></script>
 
@@ -50,19 +52,19 @@
         const LIB_PATH = "../../../";
         const ASSETS = "../assets/";
 
-        const PAGE_COLOR = "black";
-        const CARD_COLOR = "#1A1A19"; // Same with ChartBox dark theme background
-        const CARD_BORDER_COLOR = White(0.1);
-        const FIELD_COLOR = "#232322";
-        const PRIMARY_COLOR = "#3D7A6B";
-        const ACCENT_COLOR = "#65A293";
-        const WARNING_COLOR = "#C98500";
-        const ERROR_COLOR = "#E66767";
+        const PAGE_COLOR = T.page;
+        const CARD_COLOR = T.surface; // Same with ChartBox dark theme background
+        const CARD_BORDER_COLOR = Ink(0.1);
+        const FIELD_COLOR = T.surface2;
+        const PRIMARY_COLOR = T.primary;
+        const ACCENT_COLOR = T.accent;
+        const WARNING_COLOR = T.warning;
+        const ERROR_COLOR = T.danger;
 
         // Colors of the energy parts (used in all the charts and the diagram)
-        const SOLAR_COLOR = "#E8B04A";
-        const HOME_COLOR = "#3987E5";
-        const BATTERY_COLOR = "#65A293";
+        const SOLAR_COLOR = Theme.readable("#E8B04A");
+        const HOME_COLOR = T.info;
+        const BATTERY_COLOR = T.accent;
         const GRID_COLOR = "#9085E9";
         const EV_COLOR = "#D55181";
 
@@ -76,9 +78,9 @@
 
         // Tariff periods (time-of-use)
         const TARIFFS = {
-            night: { text: "Night", price: 0.11, color: "#3987E5" },
-            day: { text: "Day", price: 0.24, color: "#A9A79F" },
-            peak: { text: "Peak", price: 0.39, color: "#E66767" },
+            night: { text: "Night", price: 0.11, color: T.info },
+            day: { text: "Day", price: 0.24, color: Theme.readable("#A9A79F") },
+            peak: { text: "Peak", price: 0.39, color: T.danger },
         };
 
         const MODES = [
@@ -90,7 +92,7 @@
         const TARGET_SOC_LIST = [60, 70, 80, 90, 100];
 
         const LEVEL_COLORS = {
-            "Info": White(0.6),
+            "Info": Ink(0.6),
             "Success": ACCENT_COLOR,
             "Warning": WARNING_COLOR,
             "Error": ERROR_COLOR,
@@ -124,7 +126,7 @@
 
         let lblClock, lblWeather, lblStatus, moreMenu;
         let flowBox, flow = {};
-        let gaugeBox, gauge = {}, batteryInfo = {};
+        let gaugeBattery, batteryInfo = {};
         let kpiBoxList = [];
         let chartPower, chartMix;
         let lblReserve, sliderReserve, lblModeInfo;
@@ -451,9 +453,9 @@
                 startSpaceBetween();
 
                     VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
-                        Label({ text: title, fontSize: 16, textColor: White(0.95) });
+                        Label({ text: title, fontSize: 16, textColor: Ink(0.95) });
                         that.elem.style.fontFamily = "opensans-bold";
-                        if (subtitle) Label({ text: subtitle, fontSize: 12, textColor: White(0.45) });
+                        if (subtitle) Label({ text: subtitle, fontSize: 12, textColor: Ink(0.45) });
                     endGroup();
 
                     card.lblRight = Label({ text: "", fontSize: 12, round: 100, padding: [10, 3], border: 1, borderColor: "transparent" });
@@ -476,7 +478,7 @@
         };
 
         const createSmallTitle = function (text) {
-            Label({ text: text.toUpperCase(), fontSize: 11, textColor: White(0.45) });
+            Label({ text: text.toUpperCase(), fontSize: 11, textColor: Ink(0.45) });
             that.elem.style.letterSpacing = "1px";
             return that;
         };
@@ -492,9 +494,9 @@
         const createInfoLine = function (title, first) {
             startSpaceBetween();
             that.elem.style.padding = "8px 0px";
-            if (!first) that.elem.style.borderTop = "1px solid " + White(0.06);
-                Label({ text: title, fontSize: 14, textColor: White(0.5) });
-                const value = Label({ text: "", fontSize: 14, textColor: White(0.9) });
+            if (!first) that.elem.style.borderTop = "1px solid " + Ink(0.06);
+                Label({ text: title, fontSize: 14, textColor: Ink(0.5) });
+                const value = Label({ text: "", fontSize: 14, textColor: Ink(0.9) });
                 that.elem.style.whiteSpace = "nowrap";
             endGroup();
             return value;
@@ -509,13 +511,13 @@
                 style: {
                     layout: { gap: 10, padding: [14, 8], align: "center center" },
                     icon: { width: 20, height: 20 },
-                    label: { fontSize: 14, textColor: White(0.9) },
+                    label: { fontSize: 14, textColor: Ink(0.9) },
                     box: { color: FIELD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8 },
-                    hover: { color: "#2C2C2A" },
-                    active: { color: "#383835" },
+                    hover: { color: T.surface3 },
+                    active: { color: T.surface4 },
                 },
             });
-            if (btn.icon) btn.icon.elem.style.filter = "invert(100%)"; // WHY: Panel icons are black.
+            if (btn.icon) btn.icon.elem.style.filter = T.iconFilter; // WHY: Panel icons are black.
             return btn;
         };
 
@@ -524,8 +526,8 @@
                 width: 52,
                 height: 30,
                 spacing: 3,
-                backgroundStyle: { color: "#2C2C2A", selectedColor: PRIMARY_COLOR, border: 1, borderColor: CARD_BORDER_COLOR },
-                buttonStyle: { color: White(0.35), selectedColor: White(0.95) },
+                backgroundStyle: { color: T.surface3, selectedColor: PRIMARY_COLOR, border: 1, borderColor: CARD_BORDER_COLOR },
+                buttonStyle: { color: Ink(0.35), selectedColor: Ink(0.95) },
                 onChange: function (self) {
                     if (!isRendering) onChange(self);
                 },
@@ -538,8 +540,8 @@
                 trackHeight: 8,
                 minThumbHeight: 26,
                 trackColor: color,
-                trackBackgroundColor: White(0.1),
-                thumbColor: White(0.9),
+                trackBackgroundColor: Ink(0.1),
+                thumbColor: Ink(0.9),
                 showValueOnSet: 0,
                 showValueOnDrag: 0, // WHY: Slider shows 0-100. The real value is shown in a label.
                 onDragMove: onDragMove,
@@ -549,20 +551,20 @@
         };
 
         const DARK_RADIO_STYLE = {
-            mark: { width: 20, height: 20, color: "transparent", borderColor: White(0.35) },
+            mark: { width: 20, height: 20, color: "transparent", borderColor: Ink(0.35) },
             checkedMark: { color: "transparent", borderColor: ACCENT_COLOR },
-            hoverMark: { borderColor: White(0.7) },
+            hoverMark: { borderColor: Ink(0.7) },
             dot: { color: ACCENT_COLOR },
-            label: { fontSize: 14, textColor: White(0.9) },
+            label: { fontSize: 14, textColor: Ink(0.9) },
         };
 
         const DARK_CHECK_STYLE = {
             layout: { padding: [0, 2] },
-            mark: { width: 18, height: 18, color: "transparent", borderColor: White(0.35) },
+            mark: { width: 18, height: 18, color: "transparent", borderColor: Ink(0.35) },
             checkedMark: { color: PRIMARY_COLOR, borderColor: PRIMARY_COLOR },
-            hoverMark: { borderColor: White(0.7) },
-            tick: { color: White(1) },
-            label: { fontSize: 13, textColor: White(0.75) },
+            hoverMark: { borderColor: Ink(0.7) },
+            tick: { color: Ink(1) },
+            label: { fontSize: 13, textColor: Ink(0.75) },
         };
 
         // *** VIEW:
@@ -577,9 +579,9 @@
                 that.elem.style.flexWrap = "wrap";
 
                     VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
-                        Label({ text: "Energy Hub", fontSize: 26, textColor: White(0.95) });
+                        Label({ text: "Energy Hub", fontSize: 26, textColor: Ink(0.95) });
                         that.elem.style.fontFamily = "opensans-bold";
-                        Label({ text: system.site + " · Solar " + system.pv.peakKw + " kWp · Battery " + system.battery.capacity + " kWh · EV charger", fontSize: 14, textColor: White(0.5) });
+                        Label({ text: system.site + " · Solar " + system.pv.peakKw + " kWp · Battery " + system.battery.capacity + " kWh · EV charger", fontSize: 14, textColor: Ink(0.5) });
                     endGroup();
 
                     lblStatus = Label({ text: "", fontSize: 13, round: 100, border: 1, padding: [12, 4] });
@@ -590,9 +592,9 @@
                 HGroup({ width: "auto", height: "auto", align: "right center", gap: 16 });
 
                     VGroup({ width: "auto", height: "auto", align: "right center", gap: 0 });
-                        lblClock = Label({ text: "", fontSize: 22, textColor: White(0.95) });
+                        lblClock = Label({ text: "", fontSize: 22, textColor: Ink(0.95) });
                         that.elem.style.fontVariantNumeric = "tabular-nums";
-                        lblWeather = Label({ text: "", fontSize: 12, textColor: White(0.5) });
+                        lblWeather = Label({ text: "", fontSize: 12, textColor: Ink(0.5) });
                         that.elem.style.whiteSpace = "nowrap";
                     endGroup();
 
@@ -609,11 +611,11 @@
                         ],
                         onClick: function (self, item) { onMoreMenuClick(item.key); },
                         style: {
-                            menu: { color: FIELD_COLOR, borderColor: White(0.12), shadow: "0px 8px 24px rgba(0, 0, 0, 0.5)" },
-                            item: { textColor: White(0.85) },
-                            itemHover: { textColor: White(1), color: White(0.08) },
-                            disabled: { textColor: White(0.3) },
-                            separator: { color: White(0.1) },
+                            menu: { color: FIELD_COLOR, borderColor: Ink(0.12), shadow: "0px 8px 24px rgba(0, 0, 0, 0.5)" },
+                            item: { textColor: Ink(0.85) },
+                            itemHover: { textColor: Ink(1), color: Ink(0.08) },
+                            disabled: { textColor: Ink(0.3) },
+                            separator: { color: Ink(0.1) },
                         },
                     });
                     moreMenu.attachTo(btnMore, "click");
@@ -643,10 +645,22 @@
                 const batteryCard = startCard("Battery", system.battery.model + " · " + system.battery.capacity + " kWh", "1 1 320px");
                 batteryInfo.card = batteryCard;
 
+                    // GAUGE: comp-m4/gauge.js (full ring). The marker line is the reserve.
                     HGroup({ width: "100%", height: "auto", align: "center center" });
-                        gaugeBox = Box({ width: 180, height: 180, color: "transparent" });
-                        gaugeBox.position = "relative";
-                        gaugeBox.elem.innerHTML = createGaugeSvg();
+                        gaugeBattery = Gauge({
+                            width: 180,
+                            height: 180,
+                            styleName: T.compStyle,
+                            radius: 74,
+                            value: system.battery.soc,
+                            markerValue: system.reserve,
+                            ariaLabel: "Battery charge",
+                            style: {
+                                bar: { color: BATTERY_COLOR },
+                                marker: { color: WARNING_COLOR, width: 3, length: 18 },
+                                value: { fontSize: 38 },
+                            },
+                        });
                     endGroup();
 
                     VGroup({ width: "100%", height: "auto", align: "left top", gap: 0 });
@@ -699,7 +713,7 @@
                 const x2 = FLOW_HUB.x - ux * (FLOW_HUB.r + 6), y2 = FLOW_HUB.y - uy * (FLOW_HUB.r + 6);
                 const d = "M" + x1.toFixed(1) + " " + y1.toFixed(1) + " L" + x2.toFixed(1) + " " + y2.toFixed(1);
 
-                lines += "<path d='" + d + "' stroke='" + White(0.07) + "' stroke-width='4' stroke-linecap='round'/>" +
+                lines += "<path d='" + d + "' stroke='" + Ink(0.07) + "' stroke-width='4' stroke-linecap='round'/>" +
                     "<path id='flow-" + key + "' class='flow' d='" + d + "' stroke='" + n.color + "' stroke-width='4'/>";
 
                 // Label position
@@ -717,8 +731,8 @@
 
             });
 
-            const hub = "<circle cx='" + FLOW_HUB.x + "' cy='" + FLOW_HUB.y + "' r='" + FLOW_HUB.r + "' fill='" + FIELD_COLOR + "' stroke='" + White(0.18) + "' stroke-width='1.5'/>" +
-                "<circle cx='" + FLOW_HUB.x + "' cy='" + FLOW_HUB.y + "' r='" + (FLOW_HUB.r + 8) + "' fill='none' stroke='" + White(0.05) + "' stroke-width='1'/>" +
+            const hub = "<circle cx='" + FLOW_HUB.x + "' cy='" + FLOW_HUB.y + "' r='" + FLOW_HUB.r + "' fill='" + FIELD_COLOR + "' stroke='" + Ink(0.18) + "' stroke-width='1.5'/>" +
+                "<circle cx='" + FLOW_HUB.x + "' cy='" + FLOW_HUB.y + "' r='" + (FLOW_HUB.r + 8) + "' fill='none' stroke='" + Ink(0.05) + "' stroke-width='1'/>" +
                 "<text x='" + FLOW_HUB.x + "' y='" + (FLOW_HUB.y - 4) + "' text-anchor='middle' class='t-hub'>Inverter</text>" +
                 "<text id='hub-sub' x='" + FLOW_HUB.x + "' y='" + (FLOW_HUB.y + 14) + "' text-anchor='middle' class='t-sub'></text>";
 
@@ -726,10 +740,10 @@
                 "<style>" +
                 ".flow { fill:none; stroke-dasharray:2 12; stroke-linecap:round; animation: flowmove 1s linear infinite; transition: opacity 0.4s; }" +
                 "@keyframes flowmove { to { stroke-dashoffset: -28; } }" +
-                ".t-title { fill:" + White(0.5) + "; font-size:13px; }" +
-                ".t-value { fill:" + White(0.95) + "; font-size:19px; font-weight:bold; }" +
-                ".t-sub { fill:" + White(0.45) + "; font-size:12px; }" +
-                ".t-hub { fill:" + White(0.85) + "; font-size:13px; }" +
+                ".t-title { fill:" + Ink(0.5) + "; font-size:13px; }" +
+                ".t-value { fill:" + Ink(0.95) + "; font-size:19px; font-weight:bold; }" +
+                ".t-sub { fill:" + Ink(0.45) + "; font-size:12px; }" +
+                ".t-hub { fill:" + Ink(0.85) + "; font-size:13px; }" +
                 "</style>" +
                 lines + hub + nodes +
                 "</svg>";
@@ -737,20 +751,6 @@
         };
 
         // SVG: Ring gauge of the battery charge, with the reserve mark.
-        const GAUGE = { size: 180, r: 74, stroke: 12 };
-
-        const createGaugeSvg = function () {
-            const c = GAUGE.size / 2;
-            const length = 2 * Math.PI * GAUGE.r;
-            return "<svg viewBox='0 0 " + GAUGE.size + " " + GAUGE.size + "' style='display:block; width:100%; height:100%'>" +
-                "<circle cx='" + c + "' cy='" + c + "' r='" + GAUGE.r + "' fill='none' stroke='" + White(0.07) + "' stroke-width='" + GAUGE.stroke + "'/>" +
-                "<circle id='gauge-bar' cx='" + c + "' cy='" + c + "' r='" + GAUGE.r + "' fill='none' stroke='" + BATTERY_COLOR + "' stroke-width='" + GAUGE.stroke + "' stroke-linecap='round' " +
-                "stroke-dasharray='" + length.toFixed(1) + "' stroke-dashoffset='" + length.toFixed(1) + "' transform='rotate(-90 " + c + " " + c + ")' style='transition: stroke-dashoffset 0.6s, stroke 0.4s'/>" +
-                "<line id='gauge-reserve' x1='" + c + "' y1='" + (c - GAUGE.r - 9) + "' x2='" + c + "' y2='" + (c - GAUGE.r + 9) + "' stroke='" + WARNING_COLOR + "' stroke-width='3' stroke-linecap='round'/>" +
-                "<text id='gauge-value' x='" + c + "' y='" + (c + 6) + "' text-anchor='middle' style='fill:" + White(0.95) + "; font-size:38px; font-weight:bold'></text>" +
-                "<text id='gauge-state' x='" + c + "' y='" + (c + 30) + "' text-anchor='middle' style='fill:" + White(0.5) + "; font-size:13px'></text>" +
-                "</svg>";
-        };
 
         const initKpiRow = function () {
 
@@ -778,14 +778,15 @@
                         style: {
                             box: { color: CARD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 12 },
                             text: { padding: 14 },
-                            title: { fontSize: 13, textColor: White(0.5) },
-                            valueText: { fontSize: 24, textColor: White(0.95) },
+                            title: { fontSize: 13, textColor: Ink(0.5) },
+                            valueText: { fontSize: 24, textColor: Ink(0.95) },
+                            trend: { flatColor: Ink(0.45) }, // WHY: The default flat color is made for light cards.
                             icon: { width: 20, height: 20 },
                             graph: { height: 34, padding: 14 },
                         },
                     });
                     setFlex(kpiBox, "1 1 220px");
-                    kpiBox.icon.elem.style.filter = "invert(100%)"; // WHY: Panel icons are black.
+                    kpiBox.icon.elem.style.filter = T.iconFilter; // WHY: Panel icons are black.
                     kpiBox.icon.opacity = 0.5;
                     kpiBoxList.push(kpiBox);
 
@@ -803,7 +804,7 @@
                 chartPower = ChartBox({
                     height: 340,
                     type: "line",
-                    theme: "dark",
+                    theme: T.chartTheme,
                     title: "Power Today",
                     subtitle: "Every 15 minutes. Battery: + charging, − discharging. Grid: + import, − export.",
                     beginAtZero: 0,
@@ -835,7 +836,7 @@
                 chartMix = ChartBox({
                     height: 340,
                     type: "doughnut",
-                    theme: "dark",
+                    theme: T.chartTheme,
                     title: "Energy Mix Today",
                     subtitle: "Where the used energy came from",
                     legend: "bottom",
@@ -866,7 +867,7 @@
                             RadioButton({
                                 group: "energyMode",
                                 value: mode.value,
-                                labelText: mode.text + "<br><span style='color:" + White(0.4) + "; font-size: 12px'>" + mode.desc + "</span>",
+                                labelText: mode.text + "<br><span style='color:" + Ink(0.4) + "; font-size: 12px'>" + mode.desc + "</span>",
                                 style: DARK_RADIO_STYLE,
                                 onChange: function (self) {
                                     if (isRendering) return;
@@ -883,7 +884,7 @@
 
                         startSpaceBetween();
                             createSmallTitle("Battery reserve");
-                            lblReserve = Label({ text: "", fontSize: 16, textColor: White(0.95) });
+                            lblReserve = Label({ text: "", fontSize: 16, textColor: Ink(0.95) });
                             that.elem.style.fontFamily = "opensans-bold";
                         endGroup();
 
@@ -898,7 +899,7 @@
                             }
                         );
 
-                        lblModeInfo = Label({ text: "", fontSize: 12, textColor: White(0.45), width: "100%" });
+                        lblModeInfo = Label({ text: "", fontSize: 12, textColor: Ink(0.45), width: "100%" });
 
                     endGroup();
 
@@ -916,22 +917,22 @@
                             valueFormat: function (self) { return Math.round(self.value) + "% of " + system.ev.targetSoc + "% target"; },
                             styleName: "modern",
                             style: {
-                                track: { height: 12, color: White(0.08) },
+                                track: { height: 12, color: Ink(0.08) },
                                 bar: { color: EV_COLOR },
                                 successBar: { color: ACCENT_COLOR },
-                                title: { fontSize: 14, textColor: White(0.85) },
-                                valueText: { fontSize: 13, textColor: White(0.6) },
+                                title: { fontSize: 14, textColor: Ink(0.85) },
+                                valueText: { fontSize: 13, textColor: Ink(0.6) },
                             },
                         });
 
-                        lblEvSession = Label({ text: "", fontSize: 12, textColor: White(0.45), width: "100%" });
+                        lblEvSession = Label({ text: "", fontSize: 12, textColor: Ink(0.45), width: "100%" });
 
                     endGroup();
 
                     startSpaceBetween();
                         VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
-                            Label({ text: "Charging", fontSize: 15, textColor: White(0.9) });
-                            Label({ text: "Pause or start the session", fontSize: 12, textColor: White(0.45) });
+                            Label({ text: "Charging", fontSize: 15, textColor: Ink(0.9) });
+                            Label({ text: "Pause or start the session", fontSize: 12, textColor: Ink(0.45) });
                         endGroup();
                         toggleEv = createToggle(function (self) {
                             system.ev.enabled = self.value;
@@ -944,7 +945,7 @@
 
                         startSpaceBetween();
                             createSmallTitle("Current limit");
-                            lblEvLimit = Label({ text: "", fontSize: 16, textColor: White(0.95) });
+                            lblEvLimit = Label({ text: "", fontSize: 16, textColor: Ink(0.95) });
                             that.elem.style.fontFamily = "opensans-bold";
                         endGroup();
 
@@ -976,7 +977,7 @@
                         });
 
                         HGroup({ width: "auto", height: "auto", align: "left center", gap: 8 });
-                            Label({ text: "Target", fontSize: 13, textColor: White(0.5) });
+                            Label({ text: "Target", fontSize: 13, textColor: Ink(0.5) });
                             targetSelect = TinySelect({
                                 list: TARGET_SOC_LIST.map(function (v) { return { id: String(v), label: v + "%" }; }),
                                 selectedIndex: TARGET_SOC_LIST.indexOf(system.ev.targetSoc),
@@ -987,15 +988,15 @@
                                 borderColor: CARD_BORDER_COLOR,
                                 round: 8,
                                 labelBoldFont: 0,
-                                labelTextColor: White(0.9),
+                                labelTextColor: Ink(0.9),
                                 arrowIcon: LIB_PATH + "comp-m2/tiny-select/arrow.svg",
                                 arrowSize: 16,
-                                invertIconColor: 1,
+                                invertIconColor: T.invertIcon,
                                 listFontSize: 14,
-                                listTextColor: White(0.85),
+                                listTextColor: Ink(0.85),
                                 listOverTextColor: ACCENT_COLOR,
                                 listBackgroundColor: FIELD_COLOR,
-                                listBorderColor: White(0.15),
+                                listBorderColor: Ink(0.15),
                                 onSelect: function (index, id) {
                                     if (!isReady || isRendering || Number(id) == system.ev.targetSoc) return;
                                     system.ev.targetSoc = Number(id);
@@ -1025,16 +1026,16 @@
 
                             const row = VGroup({ width: "100%", height: "auto", align: "left top", gap: 6 });
                             that.elem.style.padding = "12px 0px";
-                            if (index > 0) that.elem.style.borderTop = "1px solid " + White(0.06);
+                            if (index > 0) that.elem.style.borderTop = "1px solid " + Ink(0.06);
 
                                 startSpaceBetween();
 
                                     HGroup({ width: "auto", height: "auto", align: "left center", gap: 10 });
-                                        row.dot = Box({ width: 10, height: 10, round: 100, color: White(0.2) });
+                                        row.dot = Box({ width: 10, height: 10, round: 100, color: Ink(0.2) });
                                         row.dot.setMotion("background-color 0.3s");
                                         VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
-                                            Label({ text: load.title, fontSize: 15, textColor: White(0.9) });
-                                            row.lblState = Label({ text: "", fontSize: 12, textColor: White(0.45) });
+                                            Label({ text: load.title, fontSize: 15, textColor: Ink(0.9) });
+                                            row.lblState = Label({ text: "", fontSize: 12, textColor: Ink(0.45) });
                                         endGroup();
                                     endGroup();
 
@@ -1098,14 +1099,14 @@
                         endGroup();
 
                         startSpaceBetween();
-                            ["00", "06", "12", "18", "24"].forEach(function (text) { Label({ text: text, fontSize: 11, textColor: White(0.35) }); });
+                            ["00", "06", "12", "18", "24"].forEach(function (text) { Label({ text: text, fontSize: 11, textColor: Ink(0.35) }); });
                         endGroup();
 
                         HGroup({ width: "100%", height: "auto", align: "left center", gap: 14 });
                         that.elem.style.flexWrap = "wrap";
                             Object.keys(TARIFFS).forEach(function (id) {
                                 const tariff = TARIFFS[id];
-                                Label({ text: "<span style='color:" + tariff.color + "'>■</span> " + tariff.text + " " + tariff.price.toFixed(2) + " $", fontSize: 12, textColor: White(0.6) });
+                                Label({ text: "<span style='color:" + tariff.color + "'>■</span> " + tariff.text + " " + tariff.price.toFixed(2) + " $", fontSize: 12, textColor: Ink(0.6) });
                             });
                         endGroup();
 
@@ -1118,7 +1119,7 @@
                         [["savings", "Saved today", ACCENT_COLOR], ["co2", "CO₂ avoided", SOLAR_COLOR], ["import", "Grid import", GRID_COLOR], ["export", "Grid export", ACCENT_COLOR]].forEach(function (item) {
                             VGroup({ width: "auto", height: "auto", align: "left top", gap: 2, padding: [12, 10], color: FIELD_COLOR, round: 10 });
                             setFlex(that, "1 1 120px");
-                                Label({ text: item[1], fontSize: 12, textColor: White(0.5) });
+                                Label({ text: item[1], fontSize: 12, textColor: Ink(0.5) });
                                 savingsLabels[item[0]] = Label({ text: "", fontSize: 20, textColor: item[2] });
                             endGroup();
                         });
@@ -1257,20 +1258,16 @@
 
             const b = system.battery;
             const kw = system.now.battery;
-            const length = 2 * Math.PI * GAUGE.r;
-            const svg = gaugeBox.elem.querySelector("svg");
             const reserve = (system.mode == "backup") ? Math.max(80, system.reserve) : system.reserve;
             const color = (b.soc <= reserve) ? WARNING_COLOR : BATTERY_COLOR;
 
-            svg.querySelector("#gauge-bar").setAttribute("stroke-dashoffset", (length * (1 - b.soc / 100)).toFixed(1));
-            svg.querySelector("#gauge-bar").setAttribute("stroke", color);
-            svg.querySelector("#gauge-value").textContent = Math.round(b.soc) + "%";
-            svg.querySelector("#gauge-state").textContent = (kw > 0.05) ? "Charging" : (kw < -0.05) ? "Discharging" : "Idle";
-            const c = GAUGE.size / 2;
-            svg.querySelector("#gauge-reserve").setAttribute("transform", "rotate(" + (reserve * 3.6) + " " + c + " " + c + ")");
+            gaugeBattery.setValue(Math.round(b.soc));
+            gaugeBattery.setBarColor(color);
+            gaugeBattery.setMarkerValue(reserve);
+            gaugeBattery.setSubText((kw > 0.05) ? "Charging" : (kw < -0.05) ? "Discharging" : "Idle");
 
             batteryInfo.power.text = (kw > 0.05) ? "+" + formatKw(kw) : (kw < -0.05) ? "−" + formatKw(kw) : "0 kW";
-            batteryInfo.power.textColor = (kw > 0.05) ? ACCENT_COLOR : (kw < -0.05) ? WARNING_COLOR : White(0.9);
+            batteryInfo.power.textColor = (kw > 0.05) ? ACCENT_COLOR : (kw < -0.05) ? WARNING_COLOR : Ink(0.9);
 
             let estimate = "—";
             if (kw > 0.05) estimate = "Full in " + formatDuration((100 - b.soc) / 100 * b.capacity / kw);
@@ -1316,7 +1313,7 @@
 
             const hour = Math.floor(simMinute / 60);
             tariffCells.forEach(function (cell, index) {
-                cell.borderColor = (index == hour) ? White(0.9) : "transparent";
+                cell.borderColor = (index == hour) ? Ink(0.9) : "transparent";
                 cell.opacity = (index < hour) ? 0.5 : 1;
             });
 
@@ -1421,10 +1418,10 @@
                 row.chkSolar.setChecked(load.solarOnly, 1);
                 setInteractive(row.chkSolar, load.enabled == 1);
 
-                let state = "Off", color = White(0.2);
+                let state = "Off", color = Ink(0.2);
                 if (load.enabled && load.running) { state = "Running · " + load.kw + " kW"; color = (load.solarOnly) ? SOLAR_COLOR : HOME_COLOR; }
                 else if (load.enabled && load.solarOnly) { state = "Waiting for excess solar (" + load.kw + " kW)"; color = WARNING_COLOR; }
-                else if (load.enabled) { state = "On, not running now"; color = White(0.35); }
+                else if (load.enabled) { state = "On, not running now"; color = Ink(0.35); }
                 row.lblState.text = state;
                 row.dot.color = color;
             });
@@ -1445,7 +1442,7 @@
                     columnWidths: ["12%", "14%", "73%"], // 99%: 1px gaps between cells
                     dataRows: system.events.slice(0, 10).map(function (e) { return [e.time, e.level, e.message]; }),
                     headerBackgroundColor: FIELD_COLOR,
-                    headerTextColor: White(0.6),
+                    headerTextColor: Ink(0.6),
                     headerBorderColor: FIELD_COLOR,
                     headerFontSize: 12,
                     borderWidth: 1,
@@ -1453,12 +1450,12 @@
                     borderColor: CARD_BORDER_COLOR,
                     bodyBackgroundColor: CARD_COLOR,
                     cellFontSize: 14,
-                    cellTextColor: White(0.8),
-                    rowHoverBackgroundColor: White(0.05),
-                    rowHoverBorderColor: White(0.1),
+                    cellTextColor: Ink(0.8),
+                    rowHoverBackgroundColor: Ink(0.05),
+                    rowHoverBorderColor: Ink(0.1),
                     onCellRender: function (cell) {
-                        if (cell.index == 0) cell.textColor = White(0.5);
-                        if (cell.index == 1) cell.textColor = LEVEL_COLORS[cell.text] || White(0.8);
+                        if (cell.index == 0) cell.textColor = Ink(0.5);
+                        if (cell.index == 1) cell.textColor = LEVEL_COLORS[cell.text] || Ink(0.8);
                     },
                 });
                 eventTable.width = "100%";

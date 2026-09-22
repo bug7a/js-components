@@ -11,6 +11,8 @@
         <link rel="preload" href="../../../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
         <link rel="stylesheet" type="text/css" href="../../../basic/basic.min.css">
         <script src="../../../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../common/theme.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- COMPONENTS -->
         <script src="../../../comp-m2/tiny-select.js" type="text/javascript" charset="utf-8"></script>
@@ -51,19 +53,19 @@
         const LIB_PATH = "../../../";
         const ASSETS = "../assets/";
 
-        const PAGE_COLOR = "black";
-        const CARD_COLOR = "#1A1A19";
-        const CARD_BORDER_COLOR = White(0.1);
-        const FIELD_COLOR = "#232322";
-        const PRIMARY_COLOR = "#3D7A6B";
-        const ACCENT_COLOR = "#65A293";
-        const WARNING_COLOR = "#C98500";
-        const ERROR_COLOR = "#E66767";
+        const PAGE_COLOR = T.page;
+        const CARD_COLOR = T.surface;
+        const CARD_BORDER_COLOR = Ink(0.1);
+        const FIELD_COLOR = T.surface2;
+        const PRIMARY_COLOR = T.primary;
+        const ACCENT_COLOR = T.accent;
+        const WARNING_COLOR = T.warning;
+        const ERROR_COLOR = T.danger;
 
-        const TEMP_COLOR = "#E8894A";
-        const HUMIDITY_COLOR = "#3987E5";
+        const TEMP_COLOR = Theme.readable("#E8894A");
+        const HUMIDITY_COLOR = T.info;
         const SOIL_COLOR = "#9085E9";
-        const LIGHT_COLOR = "#E8B04A";
+        const LIGHT_COLOR = Theme.readable("#E8B04A");
 
         const DAY_MINUTES = 24 * 60;
         const START_MINUTE = 7 * 60 + 40; // Simulation starts at 07:40 (sunrise, the controller starts working)
@@ -100,7 +102,7 @@
         // *** TEST DATA: (GREENHOUSE SERVICE)
         const ZONES = [
             {
-                id: "z1", name: "Bay 1 · Tomatoes", crop: "Tomato", color: "#E66767", rows: 5,
+                id: "z1", name: "Bay 1 · Tomatoes", crop: "Tomato", color: T.danger, rows: 5,
                 planted: "2026-07-20", harvestDays: 75,
                 temp: 18.2, humidity: 72, soil: 58, co2: 480, light: 0, ph: 6.1, ec: 2.4,
                 setpoints: { dayTemp: 24, nightTemp: 18, humidityMax: 80, soilMin: 40, co2Target: 900 },
@@ -108,7 +110,7 @@
                 mode: "auto", lightFrom: "06:00", lightTo: "20:00", irrigationMinutes: 8,
             },
             {
-                id: "z2", name: "Bay 2 · Lettuce", crop: "Lettuce", color: "#65A293", rows: 7,
+                id: "z2", name: "Bay 2 · Lettuce", crop: "Lettuce", color: T.accent, rows: 7,
                 planted: "2026-08-28", harvestDays: 45,
                 temp: 17.5, humidity: 78, soil: 66, co2: 500, light: 0, ph: 6.4, ec: 1.6,
                 setpoints: { dayTemp: 20, nightTemp: 15, humidityMax: 85, soilMin: 50, co2Target: 800 },
@@ -116,7 +118,7 @@
                 mode: "auto", lightFrom: "05:30", lightTo: "21:30", irrigationMinutes: 5,
             },
             {
-                id: "z3", name: "Bay 3 · Peppers", crop: "Pepper", color: "#E8B04A", rows: 5,
+                id: "z3", name: "Bay 3 · Peppers", crop: "Pepper", color: Theme.readable("#E8B04A"), rows: 5,
                 planted: "2026-07-05", harvestDays: 90,
                 temp: 19.0, humidity: 68, soil: 34, co2: 460, light: 0, ph: 5.9, ec: 2.1,
                 setpoints: { dayTemp: 25, nightTemp: 19, humidityMax: 75, soilMin: 40, co2Target: 900 },
@@ -424,8 +426,8 @@
                 const ch = function (shift) { return Math.round(((pa >> shift) & 255) * (1 - t) + ((pb >> shift) & 255) * t); };
                 return "rgb(" + ch(16) + "," + ch(8) + "," + ch(0) + ")";
             };
-            if (temp <= 22) return mix("#3987E5", "#65A293", Math.max(0, Math.min(1, (temp - 12) / 10)));
-            return mix("#65A293", "#E66767", Math.max(0, Math.min(1, (temp - 22) / 10)));
+            if (temp <= 22) return mix(T.info, T.accent, Math.max(0, Math.min(1, (temp - 12) / 10)));
+            return mix(T.accent, T.danger, Math.max(0, Math.min(1, (temp - 22) / 10)));
         };
 
         // Creates the content of a container again. (One group is started and ended in it.)
@@ -458,11 +460,11 @@
             setFlex(cardBox, flex);
                 startSpaceBetween();
                     VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
-                        Label({ text: title, fontSize: 15, textColor: White(0.95) });
+                        Label({ text: title, fontSize: 15, textColor: Ink(0.95) });
                         that.elem.style.fontFamily = "opensans-bold";
-                        if (subtitle) Label({ text: subtitle, fontSize: 12, textColor: White(0.45) });
+                        if (subtitle) Label({ text: subtitle, fontSize: 12, textColor: Ink(0.45) });
                     endGroup();
-                    cardBox.lblRight = Label({ text: "", fontSize: 12, textColor: White(0.5) });
+                    cardBox.lblRight = Label({ text: "", fontSize: 12, textColor: Ink(0.5) });
                     that.elem.style.whiteSpace = "nowrap";
                 endGroup();
             return cardBox;
@@ -476,7 +478,7 @@
         };
 
         const createSmallTitle = function (text) {
-            Label({ text: text.toUpperCase(), fontSize: 11, textColor: White(0.45) });
+            Label({ text: text.toUpperCase(), fontSize: 11, textColor: Ink(0.45) });
             that.elem.style.letterSpacing = "1px";
             return that;
         };
@@ -491,9 +493,9 @@
         const createInfoLine = function (title, first) {
             startSpaceBetween();
             that.elem.style.padding = "8px 0px";
-            if (!first) that.elem.style.borderTop = "1px solid " + White(0.06);
-                Label({ text: title, fontSize: 14, textColor: White(0.5) });
-                const value = Label({ text: "", fontSize: 14, textColor: White(0.9) });
+            if (!first) that.elem.style.borderTop = "1px solid " + Ink(0.06);
+                Label({ text: title, fontSize: 14, textColor: Ink(0.5) });
+                const value = Label({ text: "", fontSize: 14, textColor: Ink(0.9) });
                 that.elem.style.whiteSpace = "nowrap";
             endGroup();
             return value;
@@ -508,13 +510,13 @@
                 style: {
                     layout: { gap: 10, padding: [14, 8], align: "center center" },
                     icon: { width: 18, height: 18 },
-                    label: { fontSize: 14, textColor: White(0.9) },
+                    label: { fontSize: 14, textColor: Ink(0.9) },
                     box: { color: params.color || FIELD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8 },
-                    hover: { color: params.hoverColor || "#2C2C2A" },
-                    active: { color: params.activeColor || "#383835" },
+                    hover: { color: params.hoverColor || T.surface3 },
+                    active: { color: params.activeColor || T.surface4 },
                 },
             });
-            if (btn.icon) btn.icon.elem.style.filter = "invert(100%)"; // WHY: Panel icons are black.
+            if (btn.icon) btn.icon.elem.style.filter = T.iconFilter; // WHY: Panel icons are black.
             return btn;
         };
 
@@ -524,8 +526,8 @@
                 trackHeight: 8,
                 minThumbHeight: 26,
                 trackColor: color,
-                trackBackgroundColor: White(0.1),
-                thumbColor: White(0.9),
+                trackBackgroundColor: Ink(0.1),
+                thumbColor: Ink(0.9),
                 showValueOnSet: 0,
                 showValueOnDrag: 0, // WHY: Slider shows 0-100. The real value is shown in a label.
                 onDragMove: onDragMove,
@@ -538,53 +540,53 @@
                 width: 52,
                 height: 30,
                 spacing: 3,
-                backgroundStyle: { color: "#2C2C2A", selectedColor: PRIMARY_COLOR, border: 1, borderColor: CARD_BORDER_COLOR },
-                buttonStyle: { color: White(0.35), selectedColor: White(0.95) },
+                backgroundStyle: { color: T.surface3, selectedColor: PRIMARY_COLOR, border: 1, borderColor: CARD_BORDER_COLOR },
+                buttonStyle: { color: Ink(0.35), selectedColor: Ink(0.95) },
                 onChange: function (self) { if (!isRendering) onChange(self); },
             });
         };
 
         const DARK_RADIO_STYLE = {
-            mark: { width: 20, height: 20, color: "transparent", borderColor: White(0.35) },
+            mark: { width: 20, height: 20, color: "transparent", borderColor: Ink(0.35) },
             checkedMark: { color: "transparent", borderColor: ACCENT_COLOR },
-            hoverMark: { borderColor: White(0.7) },
+            hoverMark: { borderColor: Ink(0.7) },
             dot: { color: ACCENT_COLOR },
-            label: { fontSize: 14, textColor: White(0.9) },
+            label: { fontSize: 14, textColor: Ink(0.9) },
         };
 
         const DARK_CHECK_STYLE = {
             layout: { padding: [0, 2] },
-            mark: { width: 18, height: 18, color: "transparent", borderColor: White(0.35) },
+            mark: { width: 18, height: 18, color: "transparent", borderColor: Ink(0.35) },
             checkedMark: { color: PRIMARY_COLOR, borderColor: PRIMARY_COLOR },
-            hoverMark: { borderColor: White(0.7) },
-            tick: { color: White(1) },
-            label: { fontSize: 13, textColor: White(0.75) },
+            hoverMark: { borderColor: Ink(0.7) },
+            tick: { color: Ink(1) },
+            label: { fontSize: 13, textColor: Ink(0.75) },
         };
 
         const PICKER_STYLE = {
             field: { color: FIELD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8 },
-            fieldHover: { borderColor: White(0.3) },
+            fieldHover: { borderColor: Ink(0.3) },
             fieldFocus: { borderColor: ACCENT_COLOR },
-            fieldText: { fontSize: 14, textColor: White(0.9) },
-            placeholder: { textColor: White(0.4) },
-            icon: { color: White(0.55) },
-            panel: { color: FIELD_COLOR, borderColor: White(0.12), shadow: "0 8px 24px rgba(0, 0, 0, 0.5)" },
+            fieldText: { fontSize: 14, textColor: Ink(0.9) },
+            placeholder: { textColor: Ink(0.4) },
+            icon: { color: Ink(0.55) },
+            panel: { color: FIELD_COLOR, borderColor: Ink(0.12), shadow: "0 8px 24px rgba(0, 0, 0, 0.5)" },
             footerButton: { textColor: ACCENT_COLOR },
         };
         const TIME_STYLE = Object.assign({}, PICKER_STYLE, {
-            columnTitle: { textColor: White(0.45), activeTextColor: White(0.9) },
-            cell: { textColor: White(0.85), hoverColor: White(0.08) },
-            selectedCell: { color: PRIMARY_COLOR, textColor: White(1) },
-            disabledCell: { textColor: White(0.2) },
+            columnTitle: { textColor: Ink(0.45), activeTextColor: Ink(0.9) },
+            cell: { textColor: Ink(0.85), hoverColor: Ink(0.08) },
+            selectedCell: { color: PRIMARY_COLOR, textColor: Ink(1) },
+            disabledCell: { textColor: Ink(0.2) },
         });
         const DATE_STYLE = Object.assign({}, PICKER_STYLE, {
-            title: { textColor: White(0.9) },
-            arrow: { color: White(0.6), hoverColor: White(0.08) },
-            weekDay: { textColor: White(0.45) },
-            day: { textColor: White(0.85), hoverColor: White(0.08) },
-            today: { borderColor: White(0.35) },
-            selectedDay: { color: PRIMARY_COLOR, textColor: White(1) },
-            disabledDay: { textColor: White(0.2) },
+            title: { textColor: Ink(0.9) },
+            arrow: { color: Ink(0.6), hoverColor: Ink(0.08) },
+            weekDay: { textColor: Ink(0.45) },
+            day: { textColor: Ink(0.85), hoverColor: Ink(0.08) },
+            today: { borderColor: Ink(0.35) },
+            selectedDay: { color: PRIMARY_COLOR, textColor: Ink(1) },
+            disabledDay: { textColor: Ink(0.2) },
         });
 
         // *** VIEW:
@@ -598,21 +600,21 @@
                 that.elem.style.flexWrap = "wrap";
 
                     VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
-                        Label({ text: "Greenhouse", fontSize: 26, textColor: White(0.95) });
+                        Label({ text: "Greenhouse", fontSize: 26, textColor: Ink(0.95) });
                         that.elem.style.fontFamily = "opensans-bold";
-                        lblHouse = Label({ text: "", fontSize: 14, textColor: White(0.5) });
+                        lblHouse = Label({ text: "", fontSize: 14, textColor: Ink(0.5) });
                     endGroup();
 
                     zoneSelect = TinySelect({
                         title: "Zone",
                         list: ZONES.map(function (z) { return { id: z.id, label: z.name }; }),
                         height: 40, fontSize: 15, color: CARD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8,
-                        labelTextColor: White(0.95),
-                        arrowIcon: LIB_PATH + "comp-m2/tiny-select/arrow.svg", arrowSize: 20, invertIconColor: 1,
-                        listFontSize: 15, listTextColor: White(0.85), listOverTextColor: ACCENT_COLOR, listBackgroundColor: FIELD_COLOR, listBorderColor: White(0.15),
+                        labelTextColor: Ink(0.95),
+                        arrowIcon: LIB_PATH + "comp-m2/tiny-select/arrow.svg", arrowSize: 20, invertIconColor: T.invertIcon,
+                        listFontSize: 15, listTextColor: Ink(0.85), listOverTextColor: ACCENT_COLOR, listBackgroundColor: FIELD_COLOR, listBorderColor: Ink(0.15),
                         onSelect: function (index) { if (isReady) selectZone(index); },
                     });
-                    zoneSelect.lblTitle.textColor = White(0.5);
+                    zoneSelect.lblTitle.textColor = Ink(0.5);
 
                     lblStatus = Label({ text: "", fontSize: 13, round: 100, border: 1, padding: [12, 4] });
                     lblStatus.elem.style.whiteSpace = "nowrap";
@@ -622,9 +624,9 @@
                 HGroup({ width: "auto", height: "auto", align: "right center", gap: 16 });
 
                     VGroup({ width: "auto", height: "auto", align: "right center", gap: 0 });
-                        lblClock = Label({ text: "", fontSize: 22, textColor: White(0.95) });
+                        lblClock = Label({ text: "", fontSize: 22, textColor: Ink(0.95) });
                         that.elem.style.fontVariantNumeric = "tabular-nums";
-                        lblWeather = Label({ text: "", fontSize: 12, textColor: White(0.5) });
+                        lblWeather = Label({ text: "", fontSize: 12, textColor: Ink(0.5) });
                         that.elem.style.whiteSpace = "nowrap";
                     endGroup();
 
@@ -639,11 +641,11 @@
                         ],
                         onClick: function (self, item) { onMoreMenuClick(item.key); },
                         style: {
-                            menu: { color: FIELD_COLOR, borderColor: White(0.12), shadow: "0px 8px 24px rgba(0, 0, 0, 0.5)" },
-                            item: { textColor: White(0.85) },
-                            itemHover: { textColor: White(1), color: White(0.08) },
-                            disabled: { textColor: White(0.3) },
-                            separator: { color: White(0.1) },
+                            menu: { color: FIELD_COLOR, borderColor: Ink(0.12), shadow: "0px 8px 24px rgba(0, 0, 0, 0.5)" },
+                            item: { textColor: Ink(0.85) },
+                            itemHover: { textColor: Ink(1), color: Ink(0.08) },
+                            disabled: { textColor: Ink(0.3) },
+                            separator: { color: Ink(0.1) },
                         },
                     });
                     moreMenu.attachTo(btnMore, "click");
@@ -660,7 +662,7 @@
                 color: "rgba(230, 103, 103, 0.10)", border: 1, borderColor: "rgba(230, 103, 103, 0.45)", round: 12, visible: 0,
             });
             that.elem.style.flexWrap = "wrap";
-                lblAlert = Label({ text: "", fontSize: 14, textColor: White(0.9) });
+                lblAlert = Label({ text: "", fontSize: 14, textColor: Ink(0.9) });
                 lblAlert.elem.style.flex = "1 1 300px";
             endGroup();
         };
@@ -683,11 +685,11 @@
 
                     HGroup({ width: "100%", height: "auto", align: "left center", gap: 14 });
                     that.elem.style.flexWrap = "wrap";
-                        Label({ text: "<span style='color:" + LIGHT_COLOR + "'>■</span> Lights on", fontSize: 12, textColor: White(0.55) });
-                        Label({ text: "<span style='color:" + HUMIDITY_COLOR + "'>●</span> Irrigating", fontSize: 12, textColor: White(0.55) });
-                        Label({ text: "<span style='color:" + White(0.6) + "'>◐</span> Fan", fontSize: 12, textColor: White(0.55) });
-                        Label({ text: "<span style='color:" + White(0.6) + "'>▨</span> Shade screen", fontSize: 12, textColor: White(0.55) });
-                        Label({ text: "Fill color: temperature (blue → green → red)", fontSize: 12, textColor: White(0.4) });
+                        Label({ text: "<span style='color:" + LIGHT_COLOR + "'>■</span> Lights on", fontSize: 12, textColor: Ink(0.55) });
+                        Label({ text: "<span style='color:" + HUMIDITY_COLOR + "'>●</span> Irrigating", fontSize: 12, textColor: Ink(0.55) });
+                        Label({ text: "<span style='color:" + Ink(0.6) + "'>◐</span> Fan", fontSize: 12, textColor: Ink(0.55) });
+                        Label({ text: "<span style='color:" + Ink(0.6) + "'>▨</span> Shade screen", fontSize: 12, textColor: Ink(0.55) });
+                        Label({ text: "Fill color: temperature (blue → green → red)", fontSize: 12, textColor: Ink(0.4) });
                     endGroup();
 
                 endCard();
@@ -726,14 +728,15 @@
                         style: {
                             box: { color: CARD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 12 },
                             text: { padding: 14 },
-                            title: { fontSize: 13, textColor: White(0.5) },
-                            valueText: { fontSize: 24, textColor: White(0.95) },
+                            title: { fontSize: 13, textColor: Ink(0.5) },
+                            valueText: { fontSize: 24, textColor: Ink(0.95) },
+                            trend: { flatColor: Ink(0.45) }, // WHY: The default flat color is made for light cards.
                             icon: { width: 20, height: 20 },
                             graph: { height: 34, padding: 14 },
                         },
                     });
                     setFlex(kpiBox, "1 1 220px");
-                    kpiBox.icon.elem.style.filter = "invert(100%)";
+                    kpiBox.icon.elem.style.filter = T.iconFilter;
                     kpiBox.icon.opacity = 0.5;
                     kpiBoxList.push(kpiBox);
                 });
@@ -746,7 +749,7 @@
             startRow();
 
                 chartClimate = ChartBox({
-                    height: 320, type: "line", theme: "dark",
+                    height: 320, type: "line", theme: T.chartTheme,
                     title: "Zone Climate Today", subtitle: "Every 15 minutes",
                     beginAtZero: 0, animated: 0, legend: "top",
                     labels: [],
@@ -774,7 +777,7 @@
                 chartClimate.elem.style.minHeight = "320px";
 
                 chartRuntime = ChartBox({
-                    height: 320, type: "bar", theme: "dark", horizontal: 1,
+                    height: 320, type: "bar", theme: T.chartTheme, horizontal: 1,
                     title: "Actuator Runtime Today", subtitle: "Minutes, selected zone",
                     labels: ["Heater", "Fan", "Lights", "Irrigation", "CO₂"],
                     values: [0, 0, 0, 0, 0],
@@ -801,14 +804,14 @@
                         MODES.forEach(function (mode) {
                             RadioButton({
                                 group: "zoneMode", value: mode.value,
-                                labelText: mode.text + " <span style='color:" + White(0.4) + "; font-size: 12px'>" + mode.desc + "</span>",
+                                labelText: mode.text + " <span style='color:" + Ink(0.4) + "; font-size: 12px'>" + mode.desc + "</span>",
                                 style: DARK_RADIO_STYLE,
                                 onChange: function (self) { if (isRendering) return; setMode(zone, self.value); renderAll(); },
                             });
                         });
                     endGroup();
 
-                    lblModeInfo = Label({ text: "", fontSize: 12, textColor: White(0.45), width: "100%" });
+                    lblModeInfo = Label({ text: "", fontSize: 12, textColor: Ink(0.45), width: "100%" });
 
                     [
                         { key: "dayTemp", title: "Day temperature", color: TEMP_COLOR, min: 15, max: 32, unit: " °C" },
@@ -817,10 +820,10 @@
                         { key: "soilMin", title: "Irrigate below soil", color: SOIL_COLOR, min: 20, max: 70, unit: "%" },
                     ].forEach(function (item, index) {
                         VGroup({ width: "100%", height: "auto", align: "left top", gap: 8 });
-                        if (index === 0) { that.elem.style.borderTop = "1px solid " + White(0.06); that.elem.style.paddingTop = "14px"; }
+                        if (index === 0) { that.elem.style.borderTop = "1px solid " + Ink(0.06); that.elem.style.paddingTop = "14px"; }
                             startSpaceBetween();
                                 createSmallTitle(item.title);
-                                setpointLabels[item.key] = Label({ text: "", fontSize: 15, textColor: White(0.95) });
+                                setpointLabels[item.key] = Label({ text: "", fontSize: 15, textColor: Ink(0.95) });
                                 that.elem.style.fontFamily = "opensans-bold";
                             endGroup();
                             setpointSliders[item.key] = createSlider(item.color,
@@ -847,13 +850,13 @@
                         ACTUATORS.forEach(function (item, index) {
                             startSpaceBetween();
                             that.elem.style.padding = "9px 0px";
-                            if (index > 0) that.elem.style.borderTop = "1px solid " + White(0.06);
+                            if (index > 0) that.elem.style.borderTop = "1px solid " + Ink(0.06);
                                 HGroup({ width: "auto", height: "auto", align: "left center", gap: 10 });
-                                    actuatorStates[item.key] = Box({ width: 10, height: 10, round: 100, color: White(0.2) });
+                                    actuatorStates[item.key] = Box({ width: 10, height: 10, round: 100, color: Ink(0.2) });
                                     actuatorStates[item.key].setMotion("background-color 0.3s");
                                     VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
-                                        Label({ text: item.title, fontSize: 14, textColor: White(0.9) });
-                                        Label({ text: item.desc, fontSize: 12, textColor: White(0.45) });
+                                        Label({ text: item.title, fontSize: 14, textColor: Ink(0.9) });
+                                        Label({ text: item.desc, fontSize: 12, textColor: Ink(0.45) });
                                     endGroup();
                                 endGroup();
                                 actuatorToggles[item.key] = createToggle(function (self) {
@@ -865,11 +868,11 @@
                     endGroup();
 
                     VGroup({ width: "100%", height: "auto", align: "left top", gap: 8 });
-                    that.elem.style.borderTop = "1px solid " + White(0.06);
+                    that.elem.style.borderTop = "1px solid " + Ink(0.06);
                     that.elem.style.paddingTop = "14px";
                         startSpaceBetween();
                             createSmallTitle("Roof vents");
-                            lblVent = Label({ text: "", fontSize: 15, textColor: White(0.95) });
+                            lblVent = Label({ text: "", fontSize: 15, textColor: Ink(0.95) });
                             that.elem.style.fontFamily = "opensans-bold";
                         endGroup();
                         sliderVent = createSlider(ACCENT_COLOR,
@@ -896,20 +899,20 @@
                             width: 116, height: 38, minuteStep: 30, showClearButton: 0, style: TIME_STYLE,
                             onChange: function (self) { if (isRendering || !self.value) return; zone.lightFrom = self.value; addEvent(zone, "Info", "Lights schedule from " + self.value); },
                         });
-                        Label({ text: "to", fontSize: 13, textColor: White(0.5) });
+                        Label({ text: "to", fontSize: 13, textColor: Ink(0.5) });
                         selectLightTo = SelectTime({
                             width: 116, height: 38, minuteStep: 30, showClearButton: 0, style: TIME_STYLE,
                             onChange: function (self) { if (isRendering || !self.value) return; zone.lightTo = self.value; addEvent(zone, "Info", "Lights schedule to " + self.value); },
                         });
                     endGroup();
-                    Label({ text: "Lights turn on in this window when the natural light is below 600 µmol.", fontSize: 12, textColor: White(0.45), width: "100%" });
+                    Label({ text: "Lights turn on in this window when the natural light is below 600 µmol.", fontSize: 12, textColor: Ink(0.45), width: "100%" });
 
                     VGroup({ width: "100%", height: "auto", align: "left top", gap: 8 });
-                    that.elem.style.borderTop = "1px solid " + White(0.06);
+                    that.elem.style.borderTop = "1px solid " + Ink(0.06);
                     that.elem.style.paddingTop = "14px";
                         startSpaceBetween();
                             createSmallTitle("Irrigation run time");
-                            lblIrrigation = Label({ text: "", fontSize: 15, textColor: White(0.95) });
+                            lblIrrigation = Label({ text: "", fontSize: 15, textColor: Ink(0.95) });
                             that.elem.style.fontFamily = "opensans-bold";
                         endGroup();
                         sliderIrrigation = createSlider(HUMIDITY_COLOR,
@@ -929,10 +932,10 @@
                     endGroup();
 
                     VGroup({ width: "100%", height: "auto", align: "left top", gap: 10 });
-                    that.elem.style.borderTop = "1px solid " + White(0.06);
+                    that.elem.style.borderTop = "1px solid " + Ink(0.06);
                     that.elem.style.paddingTop = "14px";
                         createSmallTitle("Nutrient solution");
-                        lblNutrients = Label({ text: "", fontSize: 14, textColor: White(0.9), width: "100%" });
+                        lblNutrients = Label({ text: "", fontSize: 14, textColor: Ink(0.9), width: "100%" });
                         HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
                         that.elem.style.flexWrap = "wrap";
                             btnDoseAcid = createButton("Dose pH Down", "", function () { dose(zone, "acid"); });
@@ -1001,8 +1004,8 @@
                     plants +
                     // Roof vents: two flaps on the top edge, they lift with the vent %
                     "<g id='vent-" + id + "' style='transform-origin:" + (x + 60) + "px " + (y + 4) + "px'>" +
-                    "<line x1='" + (x + 60) + "' y1='" + (y + 4) + "' x2='" + (x + 130) + "' y2='" + (y + 4) + "' stroke='" + White(0.7) + "' stroke-width='3' stroke-linecap='round' style='transition: transform 0.6s; transform-origin:" + (x + 60) + "px " + (y + 4) + "px' id='ventL-" + id + "'/>" +
-                    "<line x1='" + (x + BAY.w - 60) + "' y1='" + (y + 4) + "' x2='" + (x + BAY.w - 130) + "' y2='" + (y + 4) + "' stroke='" + White(0.7) + "' stroke-width='3' stroke-linecap='round' style='transition: transform 0.6s; transform-origin:" + (x + BAY.w - 60) + "px " + (y + 4) + "px' id='ventR-" + id + "'/>" +
+                    "<line x1='" + (x + 60) + "' y1='" + (y + 4) + "' x2='" + (x + 130) + "' y2='" + (y + 4) + "' stroke='" + Ink(0.7) + "' stroke-width='3' stroke-linecap='round' style='transition: transform 0.6s; transform-origin:" + (x + 60) + "px " + (y + 4) + "px' id='ventL-" + id + "'/>" +
+                    "<line x1='" + (x + BAY.w - 60) + "' y1='" + (y + 4) + "' x2='" + (x + BAY.w - 130) + "' y2='" + (y + 4) + "' stroke='" + Ink(0.7) + "' stroke-width='3' stroke-linecap='round' style='transition: transform 0.6s; transform-origin:" + (x + BAY.w - 60) + "px " + (y + 4) + "px' id='ventR-" + id + "'/>" +
                     "</g>" +
                     // Water drops
                     "<g id='water-" + id + "' style='opacity:0; transition: opacity 0.4s'>" +
@@ -1010,14 +1013,14 @@
                     "</g>" +
                     // Fan
                     "<g id='fan-" + id + "' style='transform-origin:" + (x + 26) + "px " + (y + BAY.h - 26) + "px'>" +
-                    "<circle cx='" + (x + 26) + "' cy='" + (y + BAY.h - 26) + "' r='11' fill='" + Black(0.4) + "' stroke='" + White(0.4) + "'/>" +
-                    "<path d='M" + (x + 26) + " " + (y + BAY.h - 26) + " l0 -9 a9 9 0 0 1 8 5 z M" + (x + 26) + " " + (y + BAY.h - 26) + " l8 4 a9 9 0 0 1 -8 5 z M" + (x + 26) + " " + (y + BAY.h - 26) + " l-8 4 a9 9 0 0 1 0 -9 z' fill='" + White(0.75) + "'/>" +
+                    "<circle cx='" + (x + 26) + "' cy='" + (y + BAY.h - 26) + "' r='11' fill='" + Black(0.4) + "' stroke='" + Ink(0.4) + "'/>" +
+                    "<path d='M" + (x + 26) + " " + (y + BAY.h - 26) + " l0 -9 a9 9 0 0 1 8 5 z M" + (x + 26) + " " + (y + BAY.h - 26) + " l8 4 a9 9 0 0 1 -8 5 z M" + (x + 26) + " " + (y + BAY.h - 26) + " l-8 4 a9 9 0 0 1 0 -9 z' fill='" + Ink(0.75) + "'/>" +
                     "</g>" +
                     // Labels
                     "<text x='" + (x + 14) + "' y='" + (y + 26) + "' class='t-name'>" + escapeHtml(z.name) + "</text>" +
                     "<text id='temp-" + id + "' x='" + (x + BAY.w - 14) + "' y='" + (y + 27) + "' text-anchor='end' class='t-value'></text>" +
                     "<text id='sub-" + id + "' x='" + (x + 46) + "' y='" + (y + BAY.h - 21) + "' class='t-sub'></text>" +
-                    "<rect id='frame-" + id + "' x='" + x + "' y='" + y + "' width='" + BAY.w + "' height='" + BAY.h + "' rx='10' fill='none' stroke='" + White(0.12) + "' stroke-width='2' style='transition: stroke 0.3s'/>" +
+                    "<rect id='frame-" + id + "' x='" + x + "' y='" + y + "' width='" + BAY.w + "' height='" + BAY.h + "' rx='10' fill='none' stroke='" + Ink(0.12) + "' stroke-width='2' style='transition: stroke 0.3s'/>" +
                     "</g>";
 
             });
@@ -1026,9 +1029,9 @@
 
             return "<svg viewBox='0 0 " + W + " " + H + "' style='display:block; width:100%; height:auto; font-family:inherit'>" +
                 "<style>" +
-                ".t-name { fill:" + White(0.95) + "; font-size:14px; font-weight:bold; }" +
-                ".t-value { fill:" + White(0.95) + "; font-size:15px; font-weight:bold; }" +
-                ".t-sub { fill:" + White(0.75) + "; font-size:11px; }" +
+                ".t-name { fill:" + Ink(0.95) + "; font-size:14px; font-weight:bold; }" +
+                ".t-value { fill:" + Ink(0.95) + "; font-size:15px; font-weight:bold; }" +
+                ".t-sub { fill:" + Ink(0.75) + "; font-size:11px; }" +
                 ".fan-on { animation: spin 0.8s linear infinite; }" +
                 "@keyframes spin { to { transform: rotate(360deg); } }" +
                 ".drop { animation: drip 1.2s ease-in infinite; }" +
@@ -1175,7 +1178,7 @@
                 s.querySelector("#temp-" + id).textContent = ((z.sensorFault) ? "?" : z.temp.toFixed(1)) + " °C";
                 s.querySelector("#sub-" + id).textContent = Math.round(z.humidity) + "% RH · soil " + Math.round(z.soil) + "% · vents " + z.vent + "%";
                 const alarmCount = Object.keys(z.alarms).length;
-                s.querySelector("#frame-" + id).setAttribute("stroke", (alarmCount) ? ERROR_COLOR : (z === zone) ? White(0.9) : White(0.12));
+                s.querySelector("#frame-" + id).setAttribute("stroke", (alarmCount) ? ERROR_COLOR : (z === zone) ? Ink(0.9) : Ink(0.12));
                 s.querySelector("#frame-" + id).setAttribute("stroke-width", (z === zone) ? 3 : 2);
             });
         };
@@ -1242,7 +1245,7 @@
                 const on = z.actuators[item.key];
                 if (actuatorToggles[item.key].value !== on) actuatorToggles[item.key].setValue(on);
                 setInteractive(actuatorToggles[item.key], manual);
-                actuatorStates[item.key].color = (on) ? ((item.key === "lights") ? LIGHT_COLOR : (item.key === "irrigation") ? HUMIDITY_COLOR : ACCENT_COLOR) : White(0.2);
+                actuatorStates[item.key].color = (on) ? ((item.key === "lights") ? LIGHT_COLOR : (item.key === "irrigation") ? HUMIDITY_COLOR : ACCENT_COLOR) : Ink(0.2);
             });
             lblVent.text = z.vent + "% open";
             if (Math.round(sliderVent.getValue() / 10) * 10 !== z.vent) sliderVent.setValue(z.vent);
@@ -1271,16 +1274,16 @@
             const keys = Object.keys(zone.alarms);
             renderInto(grpAlarmsHost, function () {
                 if (!keys.length) {
-                    Label({ text: "No active alarms. Rules: ±6 °C from the setpoint, humidity limit +10%, soil below 10%, sensor fault.", fontSize: 13, textColor: White(0.45), width: "100%" });
+                    Label({ text: "No active alarms. Rules: ±6 °C from the setpoint, humidity limit +10%, soil below 10%, sensor fault.", fontSize: 13, textColor: Ink(0.45), width: "100%" });
                     return;
                 }
                 keys.forEach(function (key, index) {
                     const rule = ALARM_RULES.find(function (r) { return r.key === key; });
                     HGroup({ width: "100%", height: "auto", align: "left center", gap: 10 });
                     that.elem.style.padding = "8px 0px";
-                    if (index > 0) that.elem.style.borderTop = "1px solid " + White(0.06);
+                    if (index > 0) that.elem.style.borderTop = "1px solid " + Ink(0.06);
                         Box({ width: 10, height: 10, round: 100, color: ERROR_COLOR });
-                        Label({ text: rule.text, fontSize: 14, textColor: White(0.9) });
+                        Label({ text: rule.text, fontSize: 14, textColor: Ink(0.9) });
                     endGroup();
                 });
             });
@@ -1300,16 +1303,16 @@
                     harvestProgress = ProgressBar({
                         width: "100%", value: Math.min(100, z.daysSincePlanted / z.harvestDays * 100), styleName: "modern",
                         valueFormat: function (self) { return Math.round(self.value) + "%"; },
-                        style: { track: { height: 10, color: White(0.08) }, bar: { color: z.color }, valueText: { fontSize: 13, textColor: White(0.6) } },
+                        style: { track: { height: 10, color: Ink(0.08) }, bar: { color: z.color }, valueText: { fontSize: 13, textColor: Ink(0.6) } },
                     });
                     harvestProgress.setTitleText("Growth");
                 endGroup();
 
                 HGroup({ width: "100%", height: "auto", align: "left center", gap: 10 });
                 that.elem.style.padding = "8px 0px";
-                that.elem.style.borderTop = "1px solid " + White(0.06);
+                that.elem.style.borderTop = "1px solid " + Ink(0.06);
                 that.elem.style.justifyContent = "space-between";
-                    Label({ text: "Planted", fontSize: 14, textColor: White(0.5) });
+                    Label({ text: "Planted", fontSize: 14, textColor: Ink(0.5) });
                     selectPlanted = SelectDate({
                         width: 150, height: 36, format: "DD MMM YYYY", date: z.planted, maxDate: new Date(),
                         showClearButton: 0, style: DATE_STYLE,
@@ -1328,19 +1331,19 @@
 
         const renderEvents = function () {
             if (grpEventHost.table) { grpEventHost.table.remove(); grpEventHost.table = null; }
-            const LEVEL_COLORS = { "Info": White(0.6), "Success": ACCENT_COLOR, "Warning": WARNING_COLOR, "Error": ERROR_COLOR };
+            const LEVEL_COLORS = { "Info": Ink(0.6), "Success": ACCENT_COLOR, "Warning": WARNING_COLOR, "Error": ERROR_COLOR };
             const previous = getDefaultContainerBox();
             setDefaultContainerBox(grpEventHost);
                 grpEventHost.table = TinyTable({
                     columnHeaders: ["TIME", "LEVEL", "MESSAGE"],
                     columnWidths: ["16%", "18%", "65%"],
                     dataRows: zone.events.slice(0, 10).map(function (e) { return [e.time, e.level, e.message]; }),
-                    headerBackgroundColor: FIELD_COLOR, headerTextColor: White(0.6), headerBorderColor: FIELD_COLOR, headerFontSize: 12,
+                    headerBackgroundColor: FIELD_COLOR, headerTextColor: Ink(0.6), headerBorderColor: FIELD_COLOR, headerFontSize: 12,
                     borderWidth: 1, borderRadius: 8, borderColor: CARD_BORDER_COLOR, bodyBackgroundColor: CARD_COLOR,
-                    cellFontSize: 13, cellTextColor: White(0.8), rowHoverBackgroundColor: White(0.05), rowHoverBorderColor: White(0.1),
+                    cellFontSize: 13, cellTextColor: Ink(0.8), rowHoverBackgroundColor: Ink(0.05), rowHoverBorderColor: Ink(0.1),
                     onCellRender: function (cell) {
-                        if (cell.index === 0) cell.textColor = White(0.5);
-                        if (cell.index === 1) cell.textColor = LEVEL_COLORS[cell.text] || White(0.8);
+                        if (cell.index === 0) cell.textColor = Ink(0.5);
+                        if (cell.index === 1) cell.textColor = LEVEL_COLORS[cell.text] || Ink(0.8);
                     },
                 });
                 grpEventHost.table.width = "100%";
