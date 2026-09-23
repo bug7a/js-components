@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>3D Printers</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <!-- LIBRARY FILES -->
+        <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../common/theme.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- COMPONENTS -->
+        <script src="../comp/tiny-select.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/toggle.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/slider.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/dialog.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/button-with-icon.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/hold-to-confirm-button.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/progress-bar.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/gauge.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/chart-box.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <!--
+
+        /* Bismillah */
+
+        Module #7: 3D Printers (Right View Template) - v26.09
+
+        - Control and monitoring of 3D printers in a narrow panel (right view): one column of cards.
+        - Print job: live preview (the object is printed layer by layer), progress, time, layer, pause / resume, cancel.
+        - Temperatures: nozzle and bed gauges (current and target), material presets, live chart.
+        - Motion: print speed, part fan, lights, jog pad (X, Y, Z, home) when the printer is not printing.
+        - Filament: spool, material, remaining amount, "enough for the job" check, load / unload.
+        - Queue: next jobs (start, remove) and an event log.
+        - Runs inside the admin panel (iframe), but it can work alone too.
+        - Simulation: 1 second = 1 minute of printing. Replace the "PRINTER SERVICE" functions with your API calls
+          (OctoPrint, Moonraker, PrusaLink...).
+
+        -->
+
+        <script>
+
+        // *** CONSTANTS:
+        const LIB_PATH = "../";
+        const ASSETS = "../assets/";
+
+        const PAGE_COLOR = T.page;
+        const CARD_COLOR = T.surface;
+        const CARD_BORDER_COLOR = Ink(0.1);
+        const FIELD_COLOR = T.surface2;
+        const PRIMARY_COLOR = T.primary;
+        const ACCENT_COLOR = T.accent;
+        const WARNING_COLOR = T.warning;
+        const ERROR_COLOR = T.danger;
+        const NOZZLE_COLOR = Theme.readable("#E8894A");
+        const BED_COLOR = T.info;
+
+        const TEMP_MAX = 300; // °C (gauge)
+        const CHART_COUNT = 60; // Seconds on the chart
+        const ROOM_TEMP = 24;
+        const GRAMS_PER_METER = 2.98; // 1.75 mm filament
+
+        const STATUS_LIST = {
+            printing: { text: "Printing", color: ACCENT_COLOR },
+            heating: { text: "Heating", color: NOZZLE_COLOR },
+            paused: { text: "Paused", color: WARNING_COLOR },
+            done: { text: "Finished", color: "#9085E9" },
+            idle: { text: "Idle", color: Theme.readable("#A9A79F") },
+        };
+
+        const PRESETS = [
+            { id: "pla", label: "PLA · 215 / 60 °C", nozzle: 215, bed: 60 },
+            { id: "petg", label: "PETG · 240 / 80 °C", nozzle: 240, bed: 80 },
+            { id: "abs", label: "ABS · 255 / 100 °C", nozzle: 255, bed: 100 },
+            { id: "off", label: "Cool down · 0 / 0", nozzle: 0, bed: 0 },
+        ];
+
+        // Object shapes for the preview: [top width, bottom width] at height 0-1 (a list from the bottom to the top)
+        const SHAPES = {
+            vase: [0.42, 0.55, 0.66, 0.7, 0.66, 0.54, 0.4, 0.33, 0.34, 0.42],
+            planter: [0.5, 0.56, 0.62, 0.68, 0.74, 0.8, 0.86, 0.9],
+            stand: [0.9, 0.9, 0.22, 0.22, 0.22, 0.22, 0.6, 0.62],
+            gear: [0.8, 0.8, 0.8, 0.5, 0.5, 0.5],
+            frame: [0.95, 0.95, 0.3, 0.3, 0.95, 0.95],
+        };
+
+        // *** TEST DATA: (PRINTER SERVICE)
+        const PRINTERS = [
+            {
+                id: "p1", name: "Printer 1 · MK4S", model: "MK4S", ip: "192.168.1.60", firmware: "6.2.1",
+                status: "printing", pauseReason: "",
+                job: { file: "vase-spiral.gcode", shape: "vase", minutes: 212, done: 88, layers: 640, grams: 118, material: "PLA" },
+                nozzle: { temp: 215, target: 215 }, bed: { temp: 60, target: 60 },
+                speed: 100, fan: 80, lights: 1, position: { x: 118, y: 104, z: 0 },
+                filament: { material: "PLA", colorName: "Sunset Orange", color: "#E8894A", spoolG: 1000, leftG: 640 },
+                queue: [
+                    { file: "phone-stand.gcode", shape: "stand", minutes: 74, layers: 310, grams: 36, material: "PLA" },
+                    { file: "gear-set.gcode", shape: "gear", minutes: 128, layers: 240, grams: 52, material: "PLA" },
+                ],
+                printHours: 1284,
+            },
+            {
+                id: "p2", name: "Printer 2 · MK4S", model: "MK4S", ip: "192.168.1.61", firmware: "6.1.3",
+                status: "idle", pauseReason: "",
+                job: null,
+                nozzle: { temp: ROOM_TEMP, target: 0 }, bed: { temp: ROOM_TEMP, target: 0 },
+                speed: 100, fan: 100, lights: 0, position: { x: 0, y: 0, z: 0 },
+                filament: { material: "PETG", colorName: "Ocean Blue", color: T.info, spoolG: 1000, leftG: 180 },
+                queue: [
+                    { file: "drone-frame.gcode", shape: "frame", minutes: 185, layers: 420, grams: 210, material: "PETG" },
+                    { file: "cable-clips.gcode", shape: "gear", minutes: 35, layers: 90, grams: 14, material: "PETG" },
+                ],
+                printHours: 862,
+            },
+            {
+                id: "p3", name: "Printer 3 · XL", model: "XL", ip: "192.168.1.62", firmware: "6.2.1",
+                status: "paused", pauseReason: "Filament runout",
+                job: { file: "planter-large.gcode", shape: "planter", minutes: 340, done: 228, layers: 980, grams: 390, material: "PETG" },
+                nozzle: { temp: 170, target: 170 }, bed: { temp: 80, target: 80 },
+                speed: 100, fan: 60, lights: 1, position: { x: 12, y: 280, z: 0 },
+                filament: { material: "PETG", colorName: "Forest Green", color: T.accent, spoolG: 1000, leftG: 0 },
+                queue: [],
+                printHours: 2310,
+            },
+        ];
+
+        // *** VARIABLES:
+        let printer = null; // Selected printer
+        let isReady = 0;
+        let isRendering = 0; // WHY: Component setters call onChange. Changes made by code must not be logged.
+
+        let printerSelect, lblStatus, lblSubtitle;
+        let previewBox, lblJobFile, lblJobInfo, jobProgress, grpJobButtons, btnPause, btnCancel, btnStartNext, lblJobEmpty, grpJob;
+        let gaugeNozzle, gaugeBed, presetSelect, chartTemp, lblTempInfo;
+        let lblSpeed, sliderSpeed, lblFan, sliderFan, toggleLights, grpJog, lblPosition;
+        let spoolBox, filamentLabels = {}, lblFilamentCheck, btnLoad, btnUnload;
+        let grpQueueHost, grpEventHost;
+
+        // First running function.
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            PRINTERS.forEach(initPrinter);
+
+            // BOX: Full screen scrollable container
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            startBox(0, 0, "100%", "100%", {
+                color: "transparent",
+                scrollY: 1,
+            });
+
+                VGroup({
+                    width: "100%",
+                    height: "auto", // Grows with content, so the Box can scroll.
+                    align: "left top",
+                    gap: 14,
+                    padding: [16, 18],
+                });
+
+                    initHeader();
+                    initJobCard();
+                    initTemperatureCard();
+                    initMotionCard();
+                    initFilamentCard();
+                    initQueueCard();
+                    initEventCard();
+
+                endGroup();
+
+            endBox();
+
+            isReady = 1;
+            selectPrinter(0);
+
+        };
+
+        // Runs every second: one minute of printing.
+        const loop = function () {
+
+            if (!isReady) return;
+
+            PRINTERS.forEach(simulatePrinter);
+
+            const h = printer.history;
+            const last = h.labels.length - 1;
+            chartTemp.whenReady(function () {
+                chartTemp.addValue(h.labels[last], [h.nozzle[last], h.bed[last]]);
+            });
+
+            renderLive();
+
+        };
+
+        // *** PRINTER SERVICE (SIMULATION):
+
+        const initPrinter = function (p) {
+            p.events = [];
+            p.history = { labels: [], nozzle: [], bed: [] };
+            const now = Date.now();
+            for (let i = CHART_COUNT; i > 0; i--) {
+                pushHistory(p, new Date(now - i * 1000));
+            }
+            if (p.job) p.position.z = zForJob(p);
+            addEvent(p, "Info", "Connected (" + p.ip + ")");
+            if (p.status == "paused") addEvent(p, "Warning", "Print paused: " + p.pauseReason);
+        };
+
+        const pushHistory = function (p, date) {
+            const h = p.history;
+            h.labels.push(date.toLocaleTimeString("en-GB"));
+            h.nozzle.push(Math.round(p.nozzle.temp));
+            h.bed.push(Math.round(p.bed.temp));
+            for (const key in h) {
+                if (h[key].length > CHART_COUNT) h[key].shift();
+            }
+        };
+
+        // Temperatures move to the target. Target 0: cools to the room temperature.
+        const moveTemp = function (heater, heatStep, coolRate) {
+            const goal = (heater.target > 0) ? heater.target : ROOM_TEMP;
+            const diff = goal - heater.temp;
+            if (diff > 0) heater.temp += Math.min(diff, heatStep);
+            else heater.temp += diff * coolRate;
+            heater.temp += (Math.random() - 0.5) * ((heater.target > 0 && Math.abs(diff) < 3) ? 0.8 : 0.2);
+        };
+
+        const simulatePrinter = function (p) {
+
+            moveTemp(p.nozzle, 9, 0.08);
+            moveTemp(p.bed, 2.5, 0.04);
+
+            if (p.status == "heating") {
+                if (Math.abs(p.nozzle.temp - p.nozzle.target) < 3 && Math.abs(p.bed.temp - p.bed.target) < 2) {
+                    p.status = "printing";
+                    addEvent(p, "Success", "Target temperatures reached. Printing " + p.job.file);
+                }
+            }
+
+            if (p.status == "printing") {
+
+                const minutes = p.speed / 100; // 1 second = 1 minute (at 100% speed)
+                const grams = p.job.grams / p.job.minutes * minutes;
+
+                if (p.filament.leftG <= 0) {
+                    pausePrint(p, "Filament runout");
+                } else {
+                    p.job.done = Math.min(p.job.minutes, p.job.done + minutes);
+                    p.filament.leftG = Math.max(0, p.filament.leftG - grams);
+                    p.position.x = Math.round(40 + Math.random() * 170);
+                    p.position.y = Math.round(40 + Math.random() * 170);
+                    p.position.z = zForJob(p);
+                    p.printHours += minutes / 60;
+                    if (p.job.done >= p.job.minutes) finishPrint(p);
+                }
+
+            }
+
+            pushHistory(p, new Date());
+
+        };
+
+        const zForJob = function (p) {
+            return Math.round(p.job.done / p.job.minutes * p.job.layers * 0.2 * 10) / 10; // 0.2 mm layers
+        };
+
+        const startJob = function (p, job) {
+            p.job = Object.assign({ done: 0 }, job);
+            const preset = PRESETS.find(function (preset) { return preset.id == job.material.toLowerCase(); }) || PRESETS[0];
+            p.nozzle.target = preset.nozzle;
+            p.bed.target = preset.bed;
+            p.status = "heating";
+            p.pauseReason = "";
+            addEvent(p, "Info", "Job started: " + job.file + ". Heating to " + preset.nozzle + " / " + preset.bed + " °C");
+        };
+
+        const pausePrint = function (p, reason) {
+            p.status = "paused";
+            p.pauseReason = reason;
+            p.pausedNozzleTarget = p.nozzle.target;
+            p.nozzle.target = 170; // WHY: The nozzle is kept warm, but not hot, so the filament does not leak.
+            addEvent(p, (reason == "Paused by user") ? "Info" : "Warning", "Print paused: " + reason);
+            if (p == printer) renderAll();
+        };
+
+        const resumePrint = function (p) {
+            if (p.filament.leftG <= 0) {
+                addEvent(p, "Error", "Can not resume: load filament first");
+                return;
+            }
+            p.nozzle.target = p.pausedNozzleTarget || 215;
+            p.status = "heating";
+            p.pauseReason = "";
+            addEvent(p, "Info", "Resuming the print");
+            renderAll();
+        };
+
+        const cancelPrint = function (p) {
+            addEvent(p, "Warning", "Job cancelled: " + p.job.file + " (" + Math.round(p.job.done / p.job.minutes * 100) + "%)");
+            p.job = null;
+            p.status = "idle";
+            p.nozzle.target = 0;
+            p.bed.target = 0;
+            renderAll();
+        };
+
+        const finishPrint = function (p) {
+            p.status = "done";
+            p.nozzle.target = 0;
+            p.bed.target = 0;
+            addEvent(p, "Success", "Print finished: " + p.job.file + " (" + formatMinutes(p.job.minutes) + ")");
+            if (p == printer) renderAll();
+        };
+
+        const clearBed = function (p) {
+            p.job = null;
+            p.status = "idle";
+            addEvent(p, "Info", "Print removed from the bed");
+            renderAll();
+        };
+
+        const addEvent = function (p, level, message) {
+            p.events.unshift({ time: new Date().toLocaleTimeString("en-GB"), level: level, message: message });
+            if (p.events.length > 50) p.events.pop();
+            if (p == printer && isReady) renderEvents();
+        };
+
+        // *** HELPERS:
+
+        const formatMinutes = function (minutes) {
+            minutes = Math.round(minutes);
+            return (minutes >= 60) ? Math.floor(minutes / 60) + " h " + (minutes % 60) + " min" : minutes + " min";
+        };
+
+        const escapeHtml = function (text) {
+            return String(text).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c]; });
+        };
+
+        const isBusy = function (p) {
+            return p.status == "printing" || p.status == "heating";
+        };
+
+        const getNeededGrams = function (p) {
+            if (p.job) return p.job.grams * (1 - p.job.done / p.job.minutes);
+            if (p.queue.length) return p.queue[0].grams;
+            return 0;
+        };
+
+        // WHY: Some components have no enabled setting. "inert" blocks the mouse and keyboard for all the children.
+        const setInteractive = function (obj, enabled) {
+            obj.elem.inert = !enabled;
+            obj.opacity = (enabled) ? 1 : 0.4;
+        };
+
+        // Creates the content of a container again. (One group is started and ended in it.)
+        // WHY: setDefaultContainerBox() is not in the start/end list of basic.js. One wrapper group is safe.
+        const renderInto = function (container, buildContent) {
+            if (container.wrapper) container.wrapper.remove();
+            const previous = getDefaultContainerBox();
+            setDefaultContainerBox(container);
+                container.wrapper = VGroup({ width: "100%", height: "auto", align: "left top", gap: 0 });
+                    buildContent();
+                endGroup();
+            setDefaultContainerBox(previous);
+        };
+
+        // *** VIEW HELPERS:
+
+        const startCard = function (title, subtitle) {
+
+            const card = VGroup({ width: "100%", height: "auto", align: "left top", gap: 14, padding: 16, color: CARD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 12 });
+
+                startSpaceBetween();
+                    VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
+                        Label({ text: title, fontSize: 15, textColor: Ink(0.95) });
+                        that.elem.style.fontFamily = "opensans-bold";
+                        if (subtitle) Label({ text: subtitle, fontSize: 12, textColor: Ink(0.45) });
+                    endGroup();
+                    card.lblRight = Label({ text: "", fontSize: 12, textColor: Ink(0.5) });
+                    that.elem.style.whiteSpace = "nowrap";
+                endGroup();
+
+            return card;
+
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+        // GROUP: Left and right items (space between)
+        const startSpaceBetween = function (gap = 12) {
+            HGroup({ width: "100%", height: "auto", align: "left center", gap: gap });
+            that.elem.style.justifyContent = "space-between";
+        };
+
+        const createSmallTitle = function (text) {
+            Label({ text: text.toUpperCase(), fontSize: 11, textColor: Ink(0.45) });
+            that.elem.style.letterSpacing = "1px";
+            return that;
+        };
+
+        const setPill = function (label, text, color) {
+            label.text = text;
+            label.textColor = color;
+            label.color = ChartBox.alpha(color, 0.12);
+            label.borderColor = ChartBox.alpha(color, 0.4);
+        };
+
+        const createButton = function (text, onClick, params = {}) {
+            return ButtonWithIcon({
+                width: params.width || "auto",
+                labelText: text,
+                iconFile: "",
+                onClick: onClick,
+                style: {
+                    layout: { gap: 0, padding: [14, 8], align: "center center" },
+                    icon: { width: 0, height: 0 },
+                    label: { fontSize: 14, textColor: Ink(0.92) },
+                    box: { color: (params.primary) ? PRIMARY_COLOR : FIELD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8 },
+                    hover: { color: (params.primary) ? T.primaryHover : T.surface3 },
+                    active: { color: (params.primary) ? T.primaryActive : T.surface4 },
+                },
+            });
+        };
+
+        const createSlider = function (color, onDragMove, onDragEnd) {
+            return Slider({
+                width: 250,
+                trackHeight: 8,
+                minThumbHeight: 26,
+                trackColor: color,
+                trackBackgroundColor: Ink(0.1),
+                thumbColor: Ink(0.9),
+                showValueOnSet: 0,
+                showValueOnDrag: 0, // WHY: Slider shows 0-100. The real value is shown in a label.
+                onDragMove: onDragMove,
+                onDragEnd: onDragEnd,
+            });
+        };
+
+        const createSelect = function (list, onSelect, height = 38) {
+            return TinySelect({
+                list: list,
+                height: height,
+                fontSize: 14,
+                color: FIELD_COLOR,
+                border: 1,
+                borderColor: CARD_BORDER_COLOR,
+                round: 8,
+                labelBoldFont: 0,
+                labelTextColor: Ink(0.9),
+                arrowIcon: LIB_PATH + "comp/tiny-select/arrow.svg",
+                arrowSize: 18,
+                invertIconColor: T.invertIcon,
+                listFontSize: 14,
+                listTextColor: Ink(0.85),
+                listOverTextColor: ACCENT_COLOR,
+                listBackgroundColor: FIELD_COLOR,
+                listBorderColor: Ink(0.15),
+                onSelect: function (index, id) {
+                    if (isReady && !isRendering) onSelect(index, id);
+                },
+            });
+        };
+
+        // *** VIEW:
+
+        const initHeader = function () {
+
+            VGroup({ width: "100%", height: "auto", align: "left top", gap: 10 });
+
+                startSpaceBetween();
+
+                    VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
+                        Label({ text: "3D Printers", fontSize: 22, textColor: Ink(0.95) });
+                        that.elem.style.fontFamily = "opensans-bold";
+                        lblSubtitle = Label({ text: "", fontSize: 12, textColor: Ink(0.45) });
+                    endGroup();
+
+                    lblStatus = Label({ text: "", fontSize: 13, round: 100, border: 1, padding: [12, 4] });
+                    that.elem.style.whiteSpace = "nowrap";
+
+                endGroup();
+
+                printerSelect = createSelect(PRINTERS.map(function (p) { return { id: p.id, label: p.name }; }), function (index) {
+                    selectPrinter(index);
+                }, 40);
+                printerSelect.elem.style.alignSelf = "stretch";
+
+            endGroup();
+
+        };
+
+        const initJobCard = function () {
+
+            const card = startCard("Print Job", "");
+            grpJob = card;
+
+                // Preview
+                HGroup({ width: "100%", height: "auto", align: "center center", color: T.surfaceDeep, round: 10, padding: [0, 6] });
+                that.elem.style.border = "1px solid " + Ink(0.06);
+                    previewBox = Box({ width: "100%", height: "auto", color: "transparent" });
+                    previewBox.position = "relative";
+                endGroup();
+
+                VGroup({ width: "100%", height: "auto", align: "left top", gap: 4 });
+                    lblJobFile = Label({ text: "", fontSize: 15, textColor: Ink(0.95), width: "100%" });
+                    that.elem.style.wordBreak = "break-all";
+                    lblJobInfo = Label({ text: "", fontSize: 12, textColor: Ink(0.5), width: "100%" });
+                endGroup();
+
+                jobProgress = ProgressBar({
+                    width: "100%",
+                    valuePosition: "right",
+                    styleName: "modern",
+                    style: {
+                        track: { height: 10, color: Ink(0.08) },
+                        bar: { color: ACCENT_COLOR },
+                        successBar: { color: "#9085E9" },
+                        errorBar: { color: WARNING_COLOR },
+                        valueText: { fontSize: 14, textColor: Ink(0.9) },
+                    },
+                });
+
+                lblJobEmpty = Label({ text: "", fontSize: 13, textColor: Ink(0.5), width: "100%" });
+
+                grpJobButtons = HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
+                that.elem.style.flexWrap = "wrap";
+
+                    btnPause = createButton("Pause", function () {
+                        if (printer.status == "paused") resumePrint(printer);
+                        else if (isBusy(printer)) pausePrint(printer, "Paused by user");
+                        else if (printer.status == "done") clearBed(printer);
+                    }, { primary: 1 });
+
+                    btnStartNext = createButton("Start Next Job", function () {
+                        startNextJob(printer);
+                    }, { primary: 1 });
+
+                    // WHY: Hold to confirm, so a long print is not cancelled by mistake.
+                    btnCancel = HoldToConfirmButton({
+                        height: 38,
+                        labelText: "Hold to Cancel",
+                        completedText: "CANCELLED",
+                        iconFile: LIB_PATH + "comp/hold-to-confirm-button/trash.png",
+                        holdingIconFile: LIB_PATH + "comp/hold-to-confirm-button/trash-red.png",
+                        holdDuration: 1500,
+                        resetDelay: 800,
+                        style: {
+                            layout: { gap: 6, padding: [14, 0] },
+                            icon: { width: 18, height: 18 },
+                            label: { fontSize: 14, textColor: Ink(0.9) },
+                            holdingLabel: { fontSize: 14, textColor: "#B03A2E" },
+                            completedLabel: { fontSize: 14, textColor: T.primaryActive },
+                            box: { color: FIELD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8 },
+                            holdingBox: { color: "#FFD1CB", borderColor: ERROR_COLOR, round: 8 },
+                            completedBox: { color: "#DFEFE6", borderColor: ACCENT_COLOR, round: 8 },
+                        },
+                        onConfirm: function () {
+                            if (printer.job) cancelPrint(printer);
+                        },
+                    });
+                    btnCancel.icon.elem.style.filter = T.iconFilter; // WHY: Only the normal icon is on a dark background.
+
+                endGroup();
+
+            endCard();
+
+        };
+
+        const initTemperatureCard = function () {
+
+            startCard("Temperatures", "Nozzle and heated bed");
+
+                // GAUGES: comp-m4/gauge.js (half arc). One for the nozzle, one for the bed.
+                HGroup({ width: "100%", height: "auto", align: "center center", gap: 40, wrap: 1 });
+                    gaugeNozzle = createHeaterGauge("Nozzle", NOZZLE_COLOR);
+                    gaugeBed = createHeaterGauge("Bed", BED_COLOR);
+                endGroup();
+
+                startSpaceBetween();
+                    createSmallTitle("Preset");
+                    presetSelect = createSelect(PRESETS.map(function (preset) { return { id: preset.id, label: preset.label }; }), function (index) {
+                        const preset = PRESETS[index];
+                        printer.nozzle.target = preset.nozzle;
+                        printer.bed.target = preset.bed;
+                        addEvent(printer, "Info", (preset.nozzle) ? "Targets set: " + preset.nozzle + " / " + preset.bed + " °C (" + preset.id.toUpperCase() + ")" : "Heaters turned off (cool down)");
+                        renderLive();
+                    });
+                endGroup();
+
+                lblTempInfo = Label({ text: "", fontSize: 12, textColor: Ink(0.45), width: "100%" });
+
+                chartTemp = ChartBox({
+                    width: "100%",
+                    height: 200,
+                    type: "line",
+                    theme: T.chartTheme,
+                    legend: "top",
+                    beginAtZero: 1,
+                    maxCount: CHART_COUNT,
+                    animated: 0,
+                    labels: [],
+                    datasets: [
+                        { label: "Nozzle", data: [], borderColor: NOZZLE_COLOR, tension: 0.3 },
+                        { label: "Bed", data: [], borderColor: BED_COLOR, tension: 0.3, fill: "origin", backgroundColor: ChartBox.gradient("rgba(57, 135, 229, 0.25)", "rgba(57, 135, 229, 0)") },
+                    ],
+                    formatValue: function (value) { return value + " °C"; },
+                    options: {
+                        elements: { point: { radius: 0 } },
+                        scales: { x: { ticks: { maxTicksLimit: 4 } }, y: { suggestedMax: 260 } },
+                    },
+                    style: {
+                        box: { color: T.surfaceDeep, border: 1, borderColor: Ink(0.06), round: 10, padding: 10 },
+                        chart: { colors: [NOZZLE_COLOR, BED_COLOR] },
+                    },
+                });
+
+            endCard();
+
+        };
+
+        const initMotionCard = function () {
+
+            startCard("Motion & Speed", "");
+
+                // Speed
+                VGroup({ width: "100%", height: "auto", align: "left top", gap: 6 });
+                    startSpaceBetween();
+                        createSmallTitle("Print speed");
+                        lblSpeed = Label({ text: "", fontSize: 15, textColor: Ink(0.95) });
+                        that.elem.style.fontFamily = "opensans-bold";
+                    endGroup();
+                    sliderSpeed = createSlider(ACCENT_COLOR,
+                        function (value) { lblSpeed.text = sliderToSpeed(value) + "%"; },
+                        function () {
+                            const speed = sliderToSpeed(sliderSpeed.getValue());
+                            if (speed == printer.speed) return;
+                            printer.speed = speed;
+                            addEvent(printer, "Info", "Print speed set to " + speed + "%");
+                            renderLive();
+                        }
+                    );
+                endGroup();
+
+                // Fan
+                VGroup({ width: "100%", height: "auto", align: "left top", gap: 6 });
+                    startSpaceBetween();
+                        createSmallTitle("Part cooling fan");
+                        lblFan = Label({ text: "", fontSize: 15, textColor: Ink(0.95) });
+                        that.elem.style.fontFamily = "opensans-bold";
+                    endGroup();
+                    sliderFan = createSlider(BED_COLOR,
+                        function (value) { lblFan.text = Math.round(value) + "%"; },
+                        function () {
+                            const fan = Math.round(sliderFan.getValue());
+                            if (fan == printer.fan) return;
+                            printer.fan = fan;
+                            addEvent(printer, "Info", "Fan speed set to " + fan + "%");
+                        }
+                    );
+                endGroup();
+
+                // Lights
+                startSpaceBetween();
+                    VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
+                        Label({ text: "Chamber lights", fontSize: 14, textColor: Ink(0.9) });
+                        Label({ text: "For the camera and a quick look", fontSize: 12, textColor: Ink(0.45) });
+                    endGroup();
+                    toggleLights = Toggle({
+                        width: 52,
+                        height: 30,
+                        spacing: 3,
+                        backgroundStyle: { color: T.surface3, selectedColor: PRIMARY_COLOR, border: 1, borderColor: CARD_BORDER_COLOR },
+                        buttonStyle: { color: Ink(0.35), selectedColor: Ink(0.95) },
+                        onChange: function (self) {
+                            if (isRendering) return;
+                            printer.lights = self.value;
+                            addEvent(printer, "Info", "Lights turned " + ((self.value) ? "on" : "off"));
+                            renderPreview();
+                        },
+                    });
+                endGroup();
+
+                // Jog pad
+                VGroup({ width: "100%", height: "auto", align: "left top", gap: 8 });
+                that.elem.style.borderTop = "1px solid " + Ink(0.06);
+                that.elem.style.paddingTop = "14px";
+
+                    startSpaceBetween();
+                        createSmallTitle("Move axes");
+                        lblPosition = Label({ text: "", fontSize: 12, textColor: Ink(0.6) });
+                        that.elem.style.fontVariantNumeric = "tabular-nums";
+                    endGroup();
+
+                    grpJog = HGroup({ width: "100%", height: "auto", align: "left center", gap: 16 });
+
+                        // X / Y pad
+                        const pad = VGroup({ width: "auto", height: "auto", align: "center center", gap: 4 });
+                            createJogButton("Y+", function () { jog("y", 10); });
+                            HGroup({ width: "auto", height: "auto", align: "center center", gap: 4 });
+                                createJogButton("X−", function () { jog("x", -10); });
+                                createJogButton("⌂", function () { homeAxes(); }, ACCENT_COLOR);
+                                createJogButton("X+", function () { jog("x", 10); });
+                            endGroup();
+                            createJogButton("Y−", function () { jog("y", -10); });
+                        endGroup();
+
+                        // Z
+                        VGroup({ width: "auto", height: "auto", align: "center center", gap: 4 });
+                            createJogButton("Z+", function () { jog("z", 1); });
+                            Label({ text: "1 mm", fontSize: 11, textColor: Ink(0.4) });
+                            createJogButton("Z−", function () { jog("z", -1); });
+                        endGroup();
+
+                        Label({ text: "X / Y: 10 mm steps<br>⌂: Home all axes<br><span style='color:" + Ink(0.35) + "'>Not available while printing</span>", fontSize: 12, textColor: Ink(0.5) });
+                        that.elem.style.lineHeight = "1.6";
+
+                    endGroup();
+
+                endGroup();
+
+            endCard();
+
+        };
+
+        const createJogButton = function (text, onClick, color) {
+            const btn = HGroup({ width: 44, height: 44, align: "center center", round: 10, color: FIELD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR });
+            btn.elem.style.cursor = "pointer";
+            btn.setMotion("background-color 0.15s");
+            btn.on("mouseover", function () { btn.color = T.surface3; });
+            btn.on("mouseout", function () { btn.color = FIELD_COLOR; });
+            btn.on("click", onClick);
+                Label({ text: text, fontSize: 14, textColor: color || Ink(0.85) });
+            endGroup();
+            return btn;
+        };
+
+        const initFilamentCard = function () {
+
+            const card = startCard("Filament", "");
+            filamentLabels.card = card;
+
+                HGroup({ width: "100%", height: "auto", align: "left center", gap: 16 });
+
+                    spoolBox = Box({ width: 110, height: 110, color: "transparent" });
+                    spoolBox.position = "relative";
+                    spoolBox.elem.style.flexShrink = "0";
+
+                    VGroup({ width: "auto", height: "auto", align: "left top", gap: 2 });
+                    that.elem.style.flex = "1 1 auto";
+                    that.elem.style.minWidth = "0";
+                        filamentLabels.material = Label({ text: "", fontSize: 16, textColor: Ink(0.95) });
+                        filamentLabels.color = Label({ text: "", fontSize: 13, textColor: Ink(0.6) });
+                        filamentLabels.left = Label({ text: "", fontSize: 13, textColor: Ink(0.6) });
+                        lblFilamentCheck = Label({ text: "", fontSize: 12, round: 6, padding: [8, 4], width: "auto" });
+                        that.elem.style.marginTop = "6px";
+                    endGroup();
+
+                endGroup();
+
+                HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
+
+                    btnLoad = createButton("Load New Spool", function () {
+                        const p = printer;
+                        Dialog({
+                            icon: ASSETS + "maybe.png",
+                            title: "Load New Spool",
+                            desc: "Put a new 1 kg spool of <b>" + p.filament.material + "</b> on the holder. The printer heats the nozzle and pulls the filament in.",
+                            confirmButtonText: "Filament Is Loaded",
+                            confirmButtonColor: PRIMARY_COLOR,
+                            callback: function (isConfirmed) {
+                                if (!isConfirmed) return;
+                                p.filament.leftG = p.filament.spoolG;
+                                addEvent(p, "Success", "New " + p.filament.material + " spool loaded (" + p.filament.spoolG + " g)");
+                                if (p.status == "paused" && p.pauseReason == "Filament runout") resumePrint(p);
+                                renderAll();
+                            },
+                        });
+                    });
+
+                    btnUnload = createButton("Unload", function () {
+                        if (isBusy(printer)) return;
+                        printer.filament.leftG = 0;
+                        addEvent(printer, "Info", "Filament unloaded");
+                        renderAll();
+                    });
+
+                endGroup();
+
+            endCard();
+
+        };
+
+        const initQueueCard = function () {
+
+            const card = startCard("Queue", "Next jobs of this printer");
+            grpQueueHost = VGroup({ width: "100%", height: "auto", align: "left top", gap: 0 });
+            endGroup();
+            grpQueueHost.card = card;
+            endCard();
+
+        };
+
+        const initEventCard = function () {
+
+            startCard("Events", "");
+            grpEventHost = VGroup({ width: "100%", height: "auto", align: "left top", gap: 0 });
+            endGroup();
+            endCard();
+
+        };
+
+        // *** SVG:
+
+        // Print preview: the bed, the shape of the object, the printed part and the nozzle.
+        const createPreviewSvg = function (p) {
+
+            const W = 440, H = 230, bedY = 196, maxH = 150, maxW = 180, cx = W / 2;
+            const job = p.job;
+            const color = p.filament.color;
+            const light = (p.lights) ? 1 : 0.55;
+
+            let shape = "", printed = "", nozzle = "", layers = "";
+
+            if (job) {
+
+                const widths = SHAPES[job.shape] || SHAPES.vase;
+                const progress = job.done / job.minutes;
+                const top = bedY - maxH;
+
+                // Outline polygon (left side up, right side down)
+                const points = [];
+                widths.forEach(function (w, i) { points.push([cx - w * maxW / 2, bedY - i / (widths.length - 1) * maxH]); });
+                for (let i = widths.length - 1; i >= 0; i--) points.push([cx + widths[i] * maxW / 2, bedY - i / (widths.length - 1) * maxH]);
+                const d = "M" + points.map(function (pt) { return pt[0].toFixed(1) + " " + pt[1].toFixed(1); }).join(" L") + " Z";
+
+                const printedY = bedY - progress * maxH;
+                shape = "<path d='" + d + "' fill='" + Ink(0.03) + "' stroke='" + Ink(0.2) + "' stroke-width='1' stroke-dasharray='3 4'/>";
+                printed = "<clipPath id='cut'><rect id='cut-rect' x='0' y='" + printedY.toFixed(1) + "' width='" + W + "' height='" + (bedY - printedY + 1).toFixed(1) + "'/></clipPath>" +
+                    "<path d='" + d + "' fill='url(#fill)' clip-path='url(#cut)'/>" +
+                    "<g clip-path='url(#cut)' opacity='0.35'>" + (function () {
+                        let lines = "";
+                        for (let y = bedY - 4; y > top; y -= 4) lines += "<line x1='0' x2='" + W + "' y1='" + y + "' y2='" + y + "' stroke='black' stroke-width='1'/>";
+                        return lines;
+                    })() + "</g>";
+
+                // Nozzle on the top layer
+                const moving = (p.status == "printing") ? "nozzle-move" : "";
+                nozzle = "<g class='" + moving + "' style='transform-origin:" + cx + "px 0'>" +
+                    "<g id='nozzle-pos' transform='translate(" + cx + " " + (printedY - 2).toFixed(1) + ")'>" +
+                    "<rect x='-26' y='-40' width='52' height='20' rx='4' fill='#3A3A38' stroke='" + Ink(0.2) + "'/>" +
+                    "<path d='M-9 -20 L9 -20 L4 -8 L-4 -8 Z' fill='#8A8A86'/>" +
+                    "<path d='M-3 -8 L3 -8 L0 -1 Z' fill='" + ((p.nozzle.temp > 150) ? NOZZLE_COLOR : "#8A8A86") + "'/>" +
+                    ((p.status == "printing") ? "<circle cx='0' cy='0' r='3' fill='" + color + "'/>" : "") +
+                    "</g></g>";
+
+                layers = "<text id='layer-text' x='16' y='26' class='t-small'>Layer " + Math.max(1, Math.round(progress * job.layers)) + " / " + job.layers + "</text>" +
+                    "<text id='z-text' x='" + (W - 16) + "' y='26' text-anchor='end' class='t-small'>Z " + p.position.z.toFixed(1) + " mm</text>";
+
+            } else {
+
+                layers = "<text x='" + cx + "' y='" + (bedY - 70) + "' text-anchor='middle' class='t-empty'>" + ((p.queue.length) ? "Bed is empty · Next: " + escapeHtml(p.queue[0].file) : "Bed is empty") + "</text>";
+
+            }
+
+            const bed = "<rect x='50' y='" + bedY + "' width='" + (W - 100) + "' height='10' rx='3' fill='" + ((p.bed.temp > 40) ? ChartBox.alpha(BED_COLOR, 0.55) : T.surface4) + "'/>" +
+                "<rect x='40' y='" + (bedY + 10) + "' width='" + (W - 80) + "' height='6' rx='2' fill='#2A2A28'/>";
+
+            return "<svg viewBox='0 0 " + W + " " + H + "' style='display:block; width:100%; height:auto; opacity:" + light + "; transition: opacity 0.4s'>" +
+                "<style>" +
+                ".t-small { fill:" + Ink(0.5) + "; font-size:12px; }" +
+                ".t-empty { fill:" + Ink(0.4) + "; font-size:14px; }" +
+                ".nozzle-move { animation: nozzle 1.6s ease-in-out infinite alternate; }" +
+                "@keyframes nozzle { from { transform: translateX(-60px); } to { transform: translateX(60px); } }" +
+                "</style>" +
+                "<defs><linearGradient id='fill' x1='0' y1='0' x2='1' y2='0'>" +
+                "<stop offset='0' stop-color='" + color + "' stop-opacity='0.75'/><stop offset='0.5' stop-color='" + color + "'/><stop offset='1' stop-color='" + color + "' stop-opacity='0.6'/>" +
+                "</linearGradient></defs>" +
+                shape + printed + bed + nozzle + layers +
+                "</svg>";
+
+        };
+
+        // One heater gauge: a half arc, the value in the middle and the target as a marker line.
+        const createHeaterGauge = function (titleText, color) {
+            const gauge = Gauge({
+                width: 190,
+                height: 125,
+                styleName: T.compStyle,
+                startAngle: -90, // The arc opens upwards.
+                sweepAngle: 180,
+                radius: 58,
+                minValue: 0,
+                maxValue: TEMP_MAX,
+                value: 0,
+                markerValue: 0, // The target.
+                valueSuffix: "°",
+                titleText: titleText,
+                style: {
+                    bar: { color: color, width: 10 },
+                    track: { width: 10 },
+                    value: { fontSize: 26 },
+                    sub: { fontSize: 12 },
+                },
+            });
+            // WHY: A fixed width keeps the two gauges next to each other, as they were in the
+            //      single SVG before. The group centers them and wraps on a narrow card.
+            gauge.elem.style.flexShrink = "0";
+            return gauge;
+        };
+
+        // Spool: the filament ring gets thinner when it is used.
+        const createSpoolSvg = function (p) {
+            const f = p.filament;
+            const ratio = Math.max(0, Math.min(1, f.leftG / f.spoolG));
+            const inner = 22, outer = 50;
+            const r = inner + (outer - inner) * ratio;
+            let rings = "";
+            for (let rr = inner + 3; rr < r; rr += 3) rings += "<circle cx='55' cy='55' r='" + rr + "' fill='none' stroke='black' stroke-opacity='0.18' stroke-width='0.8'/>";
+            return "<svg viewBox='0 0 110 110' style='display:block; width:100%; height:100%'>" +
+                "<circle cx='55' cy='55' r='53' fill='#2A2A28' stroke='" + Ink(0.15) + "'/>" +
+                ((ratio > 0) ? "<circle cx='55' cy='55' r='" + r.toFixed(1) + "' fill='" + f.color + "'/>" + rings : "") +
+                "<circle cx='55' cy='55' r='" + inner + "' fill='#1E1E1D' stroke='" + Ink(0.2) + "'/>" +
+                "<circle cx='55' cy='55' r='7' fill='" + PAGE_COLOR + "' stroke='" + Ink(0.25) + "'/>" +
+                [0, 120, 240].map(function (a) { const rad = a * Math.PI / 180; return "<circle cx='" + (55 + Math.cos(rad) * 14).toFixed(1) + "' cy='" + (55 + Math.sin(rad) * 14).toFixed(1) + "' r='3' fill='" + PAGE_COLOR + "'/>"; }).join("") +
+                "<text x='55' y='104' text-anchor='middle' style='fill:" + Ink(0.95) + "; font-size:0px'></text>" +
+                "</svg>";
+        };
+
+        // *** VALUE CONVERTERS:
+
+        const sliderToSpeed = function (value) {
+            return Math.round((50 + value * 1.5) / 10) * 10; // 50% - 200%
+        };
+
+        const speedToSlider = function (speed) {
+            return (speed - 50) / 1.5;
+        };
+
+        // *** ACTIONS:
+
+        const jog = function (axis, step) {
+            if (isBusy(printer)) return;
+            const limits = { x: 250, y: 210, z: 220 };
+            const p = printer.position;
+            p[axis] = Math.round(Math.max(0, Math.min(limits[axis], p[axis] + step)) * 10) / 10;
+            renderLive();
+        };
+
+        const homeAxes = function () {
+            if (isBusy(printer)) return;
+            printer.position = { x: 0, y: 0, z: 0 };
+            addEvent(printer, "Info", "All axes are homed");
+            renderLive();
+        };
+
+        const startNextJob = function (p) {
+            if (isBusy(p) || !p.queue.length) return;
+            const job = p.queue[0];
+            if (job.material != p.filament.material) {
+                addEvent(p, "Error", "Wrong filament: the job needs " + job.material + ", loaded " + p.filament.material);
+                return;
+            }
+            if (p.filament.leftG < job.grams) {
+                Dialog({
+                    icon: ASSETS + "warning.png",
+                    title: "Not Enough Filament",
+                    desc: "<b>" + escapeHtml(job.file) + "</b> needs " + job.grams + " g, but " + Math.round(p.filament.leftG) + " g is left. The print will pause when the filament ends.",
+                    confirmButtonText: "Start Anyway",
+                    confirmButtonColor: WARNING_COLOR,
+                    callback: function (isConfirmed) {
+                        if (!isConfirmed) return;
+                        p.queue.shift();
+                        startJob(p, job);
+                        renderAll();
+                    },
+                });
+                return;
+            }
+            p.queue.shift();
+            startJob(p, job);
+            renderAll();
+        };
+
+        // *** RENDER:
+
+        const selectPrinter = function (index) {
+
+            printer = PRINTERS[index];
+
+            chartTemp.whenReady(function () {
+                const h = printer.history;
+                chartTemp.data.labels = h.labels.slice();
+                chartTemp.data.datasets[0].data = h.nozzle.slice();
+                chartTemp.data.datasets[1].data = h.bed.slice();
+                chartTemp.update("none");
+            });
+
+            renderAll();
+
+        };
+
+        const renderAll = function () {
+            renderControls();
+            renderPreview();
+            renderLive();
+            renderQueue();
+            renderEvents();
+        };
+
+        // Every second
+        const renderLive = function () {
+
+            const p = printer;
+            const status = STATUS_LIST[p.status];
+
+            setPill(lblStatus, "● " + status.text, status.color);
+            lblSubtitle.text = p.model + " · " + p.ip + " · FW " + p.firmware + " · " + Math.round(p.printHours).toLocaleString("en-US") + " print hours";
+
+            renderJob();
+            renderTemperatures();
+
+            lblSpeed.text = p.speed + "%";
+            lblFan.text = p.fan + "%";
+            lblPosition.text = "X " + p.position.x.toFixed(1) + " · Y " + p.position.y.toFixed(1) + " · Z " + p.position.z.toFixed(1) + " mm";
+            setInteractive(grpJog, !isBusy(p));
+
+            renderFilament();
+
+            if (p.status == "printing") updatePreview(); // WHY: The printed part grows.
+
+        };
+
+        const renderJob = function () {
+
+            const p = printer;
+            const job = p.job;
+
+            lblJobFile.visible = (job) ? 1 : 0;
+            lblJobInfo.visible = (job) ? 1 : 0;
+            jobProgress.visible = (job) ? 1 : 0;
+            lblJobEmpty.visible = (job) ? 0 : 1;
+
+            if (job) {
+                const progress = job.done / job.minutes;
+                const left = (job.minutes - job.done) / (p.speed / 100);
+                const eta = new Date(Date.now() + left * 60000).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+                lblJobFile.text = escapeHtml(job.file);
+                lblJobInfo.text = job.material + " · " + job.grams + " g · Elapsed " + formatMinutes(job.done) +
+                    ((p.status == "done") ? "" : " · Left " + formatMinutes(left) + " (ETA " + eta + ")") +
+                    ((p.pauseReason) ? " · <span style='color:" + WARNING_COLOR + "'>" + escapeHtml(p.pauseReason) + "</span>" : "");
+                jobProgress.setValue(Math.floor(progress * 1000) / 10, 1);
+                jobProgress.setStatus((p.status == "done") ? "success" : (p.status == "paused") ? "error" : "normal");
+                jobProgress.setTitleText("");
+            } else {
+                lblJobEmpty.text = (p.queue.length) ? "No job. " + p.queue.length + " jobs in the queue." : "No job and the queue is empty.";
+            }
+
+            grpJob.lblRight.text = (job) ? Math.floor(job.done / job.minutes * 100) + "%" : "";
+
+            btnPause.visible = (job) ? 1 : 0;
+            btnPause.setText((p.status == "paused") ? "Resume" : (p.status == "done") ? "Clear the Bed" : "Pause");
+            btnCancel.visible = (job && p.status != "done") ? 1 : 0;
+            btnStartNext.visible = (!job && p.queue.length) ? 1 : 0;
+
+        };
+
+        const renderTemperatures = function () {
+
+            const set = function (gauge, heater) {
+                gauge.setValue(Math.round(heater.temp));
+                gauge.setMarkerValue(heater.target);
+                gauge.setSubText((heater.target > 0) ? "Target " + heater.target + "°" : "Off");
+                // WHY: With the heater off the target line means nothing, so it is hidden.
+                gauge.elem.querySelector(".gauge-marker").style.opacity = (heater.target > 0) ? 1 : 0;
+            };
+            set(gaugeNozzle, printer.nozzle);
+            set(gaugeBed, printer.bed);
+
+            const p = printer;
+            const heating = (p.nozzle.target > 0 && p.nozzle.temp < p.nozzle.target - 3) || (p.bed.target > 0 && p.bed.temp < p.bed.target - 2);
+            lblTempInfo.text = (heating) ? "Heating… ready in about " + Math.max(1, Math.ceil(Math.max((p.nozzle.target - p.nozzle.temp) / 9, (p.bed.target - p.bed.temp) / 2.5))) + " s"
+                : (p.nozzle.target || p.bed.target) ? "Temperatures are stable." : "Heaters are off.";
+
+        };
+
+        const renderPreview = function () {
+            previewBox.elem.innerHTML = createPreviewSvg(printer);
+            previewBox.jobFile = (printer.job) ? printer.id + printer.job.file : "";
+        };
+
+        // Only the printed height, the nozzle and the texts are changed.
+        // WHY: Creating the SVG again every second restarts the nozzle animation (it jumps).
+        const updatePreview = function () {
+            const p = printer;
+            const svg = previewBox.elem.querySelector("svg");
+            if (!svg || !p.job || previewBox.jobFile != p.id + p.job.file || !svg.querySelector("#cut-rect")) return renderPreview();
+            const bedY = 196, maxH = 150;
+            const progress = p.job.done / p.job.minutes;
+            const printedY = bedY - progress * maxH;
+            const rect = svg.querySelector("#cut-rect");
+            rect.setAttribute("y", printedY.toFixed(1));
+            rect.setAttribute("height", (bedY - printedY + 1).toFixed(1));
+            svg.querySelector("#nozzle-pos").setAttribute("transform", "translate(220 " + (printedY - 2).toFixed(1) + ")");
+            svg.querySelector("#layer-text").textContent = "Layer " + Math.max(1, Math.round(progress * p.job.layers)) + " / " + p.job.layers;
+            svg.querySelector("#z-text").textContent = "Z " + p.position.z.toFixed(1) + " mm";
+        };
+
+        const renderFilament = function () {
+
+            const f = printer.filament;
+            spoolBox.elem.innerHTML = createSpoolSvg(printer);
+
+            filamentLabels.material.text = f.material + " · 1.75 mm";
+            filamentLabels.color.text = "<span style='color:" + f.color + "'>●</span> " + f.colorName;
+            filamentLabels.left.text = Math.round(f.leftG) + " g left · about " + Math.round(f.leftG / GRAMS_PER_METER) + " m";
+            filamentLabels.card.lblRight.text = Math.round(f.leftG / f.spoolG * 100) + "%";
+
+            const needed = getNeededGrams(printer);
+            let text = "No job to check", color = Ink(0.5);
+            if (needed > 0) {
+                const what = (printer.job) ? "the job" : "the next job";
+                if (f.leftG >= needed * 1.1) { text = "✓ Enough for " + what + " (" + Math.round(needed) + " g)"; color = ACCENT_COLOR; }
+                else if (f.leftG > 0) { text = "! Not enough for " + what + " (" + Math.round(needed) + " g)"; color = WARNING_COLOR; }
+                else { text = "✕ Spool is empty"; color = ERROR_COLOR; }
+            }
+            setPill(lblFilamentCheck, text, color);
+
+            setInteractive(btnLoad, !isBusy(printer));
+            setInteractive(btnUnload, !isBusy(printer) && f.leftG > 0);
+
+        };
+
+        // Speed, fan, lights, preset
+        const renderControls = function () {
+
+            const p = printer;
+            isRendering = 1;
+
+            if (sliderToSpeed(sliderSpeed.getValue()) != p.speed) sliderSpeed.setValue(speedToSlider(p.speed));
+            if (Math.round(sliderFan.getValue()) != p.fan) sliderFan.setValue(p.fan);
+            if (toggleLights.value !== p.lights) toggleLights.setValue(p.lights);
+
+            const presetIndex = PRESETS.findIndex(function (preset) { return preset.nozzle == p.nozzle.target && preset.bed == p.bed.target; });
+            if (presetIndex >= 0 && presetIndex != presetSelect.selectedIndex) presetSelect.setSelectedIndex(presetIndex);
+
+            const index = PRINTERS.indexOf(p);
+            if (printerSelect.selectedIndex != index) printerSelect.setSelectedIndex(index);
+
+            isRendering = 0;
+
+        };
+
+        const renderQueue = function () {
+
+            const p = printer;
+            grpQueueHost.card.lblRight.text = (p.queue.length) ? p.queue.length + " jobs · " + formatMinutes(p.queue.reduce(function (sum, job) { return sum + job.minutes; }, 0)) : "";
+
+            renderInto(grpQueueHost, function () {
+
+                if (!p.queue.length) {
+                    Label({ text: "The queue is empty. Send a job from your slicer.", fontSize: 13, textColor: Ink(0.45), padding: [0, 4] });
+                    return;
+                }
+
+                p.queue.forEach(function (job, index) {
+
+                    HGroup({ width: "100%", height: "auto", align: "left center", gap: 12 });
+                    that.elem.style.padding = "10px 0px";
+                    if (index > 0) that.elem.style.borderTop = "1px solid " + Ink(0.06);
+
+                        Label({ text: String(index + 1), fontSize: 13, textColor: Ink(0.5), width: 26, height: 26, round: 100, color: FIELD_COLOR, textAlign: "center" });
+                        that.elem.style.lineHeight = "26px";
+                        that.elem.style.flexShrink = "0";
+
+                        VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
+                        that.elem.style.flex = "1 1 auto";
+                        that.elem.style.minWidth = "0";
+                            Label({ text: escapeHtml(job.file), fontSize: 14, textColor: Ink(0.9), width: "100%" });
+                            that.elem.style.whiteSpace = "nowrap";
+                            that.elem.style.overflow = "hidden";
+                            that.elem.style.textOverflow = "ellipsis";
+                            const wrongMaterial = job.material != p.filament.material;
+                            Label({ text: formatMinutes(job.minutes) + " · " + job.grams + " g · " + ((wrongMaterial) ? "<span style='color:" + ERROR_COLOR + "'>" + job.material + " (not loaded)</span>" : job.material), fontSize: 12, textColor: Ink(0.45) });
+                        endGroup();
+
+                        const btnRemove = HGroup({ width: 30, height: 30, align: "center center", round: 8 });
+                        btnRemove.elem.style.cursor = "pointer";
+                        btnRemove.elem.title = "Remove from the queue";
+                        btnRemove.on("mouseover", function () { btnRemove.color = Ink(0.08); });
+                        btnRemove.on("mouseout", function () { btnRemove.color = "transparent"; });
+                        btnRemove.on("click", function () {
+                            p.queue.splice(index, 1);
+                            addEvent(p, "Info", "Removed from the queue: " + job.file);
+                            renderAll();
+                        });
+                            Label({ text: "✕", fontSize: 14, textColor: Ink(0.5) });
+                        endGroup();
+
+                    endGroup();
+
+                });
+
+            });
+
+        };
+
+        const renderEvents = function () {
+
+            const LEVEL_COLORS = { "Info": Ink(0.35), "Success": ACCENT_COLOR, "Warning": WARNING_COLOR, "Error": ERROR_COLOR };
+
+            renderInto(grpEventHost, function () {
+
+                printer.events.slice(0, 8).forEach(function (e, index) {
+
+                    HGroup({ width: "100%", height: "auto", align: "left top", gap: 10 });
+                    that.elem.style.padding = "7px 0px";
+                    if (index > 0) that.elem.style.borderTop = "1px solid " + Ink(0.05);
+
+                        Box({ width: 8, height: 8, round: 100, color: LEVEL_COLORS[e.level] });
+                        that.elem.style.marginTop = "6px";
+                        that.elem.style.flexShrink = "0";
+
+                        Label({ text: escapeHtml(e.message), fontSize: 13, textColor: Ink(0.8), width: "auto" });
+                        that.elem.style.flex = "1 1 auto";
+                        that.elem.style.minWidth = "0";
+
+                        Label({ text: e.time, fontSize: 12, textColor: Ink(0.4) });
+                        that.elem.style.flexShrink = "0";
+
+                    endGroup();
+
+                });
+
+            });
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+
+        <!-- HTML content -->
+
+    </body>
+</html>

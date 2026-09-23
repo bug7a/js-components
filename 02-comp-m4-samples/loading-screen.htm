@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Loading Screen</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp-m4/loading-screen.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // *** VARIABLES:
+        let cardLoading, splash;
+
+        // App icon of the samples (SVG: no file needed)
+        const APP_ICON_SVG =
+            '<svg viewBox="0 0 72 72" width="100%" height="100%">' +
+            '<rect width="72" height="72" rx="16" fill="#3D7A6B"/>' +
+            '<path d="M22 38l9 9 19-21" fill="none" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>' +
+            '</svg>';
+
+        const start = function () {
+
+            page.color = "#F4F5F2";
+
+            startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+
+                VGroup({ width: "100%", height: "auto", align: "center top", gap: 30, padding: 50 });
+
+                    Label({ text: "LoadingScreen", fontSize: 26, fontFamily: "opensans-bold" });
+
+                    // SAMPLE 1: Full page
+                    startCard("1. Full page", "Covers the page, closes after 2 seconds. minDuration keeps it at least 600 ms.");
+
+                        HGroup({ hug: 1, gap: 8 });
+                            addButton("Light", function () {
+                                const loading = LoadingScreen({
+                                    titleText: "Loading",
+                                    messageText: "Please wait a moment.",
+                                    removeOnClose: 1,
+                                });
+                                setTimeout(loading.close, 2000);
+                            });
+                            addButton("Dark + icon", function () {
+                                const loading = LoadingScreen({
+                                    styleName: "dark",
+                                    iconSvg: APP_ICON_SVG,
+                                    titleText: "My App",
+                                    spinnerType: "dots",
+                                    removeOnClose: 1,
+                                });
+                                setTimeout(loading.close, 2000);
+                            });
+                            addButton("Progress", function () {
+                                const loading = LoadingScreen({
+                                    styleName: "dark",
+                                    iconSvg: APP_ICON_SVG,
+                                    titleText: "Downloading",
+                                    messageText: "0%",
+                                    spinnerType: "none",
+                                    progress: 0,
+                                    removeOnClose: 1,
+                                });
+                                let value = 0;
+                                const timer = setInterval(function () {
+                                    value = Math.min(1, value + 0.1);
+                                    loading.setProgress(value);
+                                    loading.setMessage(Math.round(value * 100) + "%");
+                                    if (value >= 1) { clearInterval(timer); loading.close(); }
+                                }, 250);
+                            });
+                        endGroup();
+
+                    endCard();
+
+                    // SAMPLE 2: Inside a box
+                    startCard("2. Inside a box", "It covers only its container. open() and close() can be called again and again.");
+
+                        startBox({ width: "100%", height: 260, color: "white", round: 8, border: 1, borderColor: Black(0.1) });
+                        that.elem.style.overflow = "hidden";
+
+                            Label({ left: 20, top: 20, text: "The content of the box", fontSize: 16 });
+
+                            cardLoading = LoadingScreen({
+                                opened: 0,
+                                messageText: "Loading the list...",
+                                minDuration: 0,
+                                style: { message: { fontSize: 14 } },
+                            });
+
+                        endBox();
+
+                        HGroup({ hug: 1, gap: 8 });
+                            addButton("open()", function () { cardLoading.open(); });
+                            addButton("close()", function () { cardLoading.close(); });
+                        endGroup();
+
+                    endCard();
+
+                endGroup();
+
+            endBox();
+
+            // SAMPLE 0: The splash screen of this page (a real use: shown until the page is ready)
+            splash = LoadingScreen({
+                styleName: "dark",
+                iconSvg: APP_ICON_SVG,
+                titleText: "LoadingScreen",
+                messageText: "A sample splash screen.",
+                removeOnClose: 1,
+                onClose: function () { println("Splash closed."); },
+            });
+            setTimeout(splash.close, 1200);
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        const startCard = function (title, description = "") {
+            VGroup({
+                width: 600, height: "auto", align: "left top", gap: 16, padding: 20,
+                color: "white", round: 10, border: 1, borderColor: Black(0.1),
+            });
+            that.elem.style.alignItems = "stretch";
+            Label({ text: title, fontSize: 14, textColor: Black(0.45) });
+            if (description) {
+                Label({ text: description, fontSize: 13, textColor: Black(0.35) });
+                that.elem.style.marginTop = "-10px";
+            }
+        };
+
+        const endCard = function () { endGroup(); };
+
+        const addButton = function (text, onClick) {
+            const btn = Button({ text: text, width: 110, height: 34, fontSize: 14 });
+            btn.on("click", onClick);
+            return btn;
+        };
+
+    </script>
+</head>
+
+<body></body>
+
+</html>

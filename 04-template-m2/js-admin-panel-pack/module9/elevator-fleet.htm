@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>Elevator Fleet</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <!-- LIBRARY FILES -->
+        <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../common/theme.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- COMPONENTS -->
+        <script src="../comp/tiny-select.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/tiny-table.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/slider.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/dialog.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/button-with-icon.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/check-box.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/radio-button.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/hold-to-confirm-button.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/spark-line-box.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/chart-box.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/context-menu.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/select-date.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <!--
+
+        /* Bismillah */
+
+        Module #9: Elevator Fleet (Template) - v26.09
+
+        - Monitors and controls a fleet of 3 elevators in one building: a live shaft diagram (position, doors,
+          direction, hall calls), per-car mode (Normal / Attendant / Independent / Out of Service), a car panel
+          (manual floor buttons, open/close door), express floor lockout, load / overload, emergency recall,
+          maintenance hours and an inspection date.
+        - Dispatch is a simple "nearest available car" simulation. Runs inside the admin panel (iframe), but it
+          can work alone too.
+        - Simulation: 1 second = 1 tick. Replace the "FLEET SERVICE" functions with your elevator controller API
+          (BACnet, a vendor cloud API, KNX...).
+
+        -->
+
+        <script>
+
+        // *** CONSTANTS:
+        const LIB_PATH = "../";
+        const ASSETS = "../assets/";
+
+        const PAGE_COLOR = T.page;
+        const CARD_COLOR = T.surface;
+        const CARD_BORDER_COLOR = Ink(0.1);
+        const FIELD_COLOR = T.surface2;
+        const PRIMARY_COLOR = T.primary;
+        const ACCENT_COLOR = T.accent;
+        const WARNING_COLOR = T.warning;
+        const ERROR_COLOR = T.danger;
+
+        // One color for each car, used everywhere (shaft, charts, badges).
+        const FLEET_COLORS = { A: T.accent, B: T.info, C: "#9085E9" };
+
+        // Floors from the bottom to the top. "L": Lobby (ground floor).
+        const FLOORS = ["B1", "L", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"];
+        const LOBBY_INDEX = 1;
+        const TOP_INDEX = FLOORS.length - 1;
+
+        const CHART_COUNT = 60; // Seconds on the line chart
+        const HISTORY_COUNT = 60; // Values kept for the mini graphs
+
+        const STATUS_LIST = {
+            idle: { text: "Idle", color: Theme.readable("#A9A79F") },
+            moving: { text: "Moving", color: ACCENT_COLOR },
+            doors: { text: "Doors Open", color: WARNING_COLOR },
+            outOfService: { text: "Out of Service", color: "#898781" },
+            alarm: { text: "Alarm", color: ERROR_COLOR },
+            emergency: { text: "Emergency Recall", color: ERROR_COLOR },
+        };
+
+        const MODES = [
+            { value: "normal", text: "Normal", desc: "Answers hall calls automatically" },
+            { value: "attendant", text: "Attendant", desc: "Only the car panel works, hall calls are ignored" },
+            { value: "independent", text: "Independent", desc: "Like Attendant. Skip-floors are ignored, doors stay open" },
+            { value: "outOfService", text: "Out of Service", desc: "Parked. Does not answer any calls" },
+        ];
+
+        // *** TEST DATA: (FLEET SERVICE)
+        const CARS = [
+            {
+                id: "A", key: "A", name: "Car A", model: "Standard · 13 person", serial: "TKE-EVA-2024-01",
+                floorPos: LOBBY_INDEX, speed: 0.5, capacity: 1000,
+                mode: "normal", stops: [], doorState: "closed", doorTimer: 0,
+                direction: "idle", status: "idle", load: 0, overloaded: 0,
+                serviceFloors: FLOORS.map(function () { return true; }),
+                motorHours: 842, doorCyclesTotal: 15230, doorCycles: 0, tripsToday: 0, faults: 0,
+                inspection: { last: "2026-03-14", next: "2026-10-01" },
+                history: { labels: [], floor: [] }, events: [],
+            },
+            {
+                id: "B", key: "B", name: "Car B", model: "Standard · 13 person", serial: "TKE-EVA-2024-02",
+                floorPos: 6, speed: 0.45, capacity: 1000,
+                mode: "normal", stops: [], doorState: "closed", doorTimer: 0,
+                direction: "idle", status: "idle", load: 0, overloaded: 0,
+                serviceFloors: FLOORS.map(function () { return true; }),
+                motorHours: 1105, doorCyclesTotal: 19860, doorCycles: 0, tripsToday: 0, faults: 0,
+                inspection: { last: "2026-01-22", next: "2026-09-25" },
+                history: { labels: [], floor: [] }, events: [],
+            },
+            {
+                id: "C", key: "C", name: "Car C (Express)", model: "Express · 17 person", serial: "TKE-EXV-2025-01",
+                floorPos: 9, speed: 0.55, capacity: 1200,
+                mode: "normal", stops: [], doorState: "closed", doorTimer: 0,
+                direction: "idle", status: "idle", load: 0, overloaded: 0,
+                // WHY: The express car only serves the Lobby and the upper floors.
+                serviceFloors: FLOORS.map(function (name, index) { return index === LOBBY_INDEX || index >= 5; }),
+                motorHours: 318, doorCyclesTotal: 4720, doorCycles: 0, tripsToday: 0, faults: 0,
+                inspection: { last: "2026-06-02", next: "2026-11-15" },
+                history: { labels: [], floor: [] }, events: [],
+            },
+        ];
+
+        let hallCalls = []; // { id, floor, direction, time, carId }
+        let nextCallId = 1;
+        let recentWaits = []; // Last served calls' wait time (seconds), for the average
+
+        const fleet = {
+            buildingName: "Riverside Tower",
+            emergencyActive: 0,
+            doorHoldTicks: 4, // Seconds a door stays open (before it closes on its own)
+            stopsByFloorToday: FLOORS.map(function () { return 0; }),
+            history: { trips: [], wait: [], doors: [], faults: [] },
+            totalsBefore: { trips: 0, doors: 0, faults: 0 }, // Used to turn totals into per-tick bars
+        };
+
+        // *** VARIABLES:
+        let car = null; // Selected car
+        let isReady = 0;
+        let isRendering = 0; // WHY: Component setters call onChange. Changes made by code must not be logged.
+
+        let lblBuilding, carSelect, lblStatus, moreMenu;
+        let alertBox, lblAlert;
+        let shaftBox, shaft = {}, skipOverlayRows = [];
+        let carInfoLabels = {};
+        let kpiBoxList = [];
+        let chartPosition, chartStops;
+        let radioList = [];
+        let lblModeInfo, lblHold, sliderHold;
+        let floorButtons = {}, btnOpenDoor, btnCloseDoor;
+        let gaugeBox, lblLoadInfo, btnForceClose;
+        let serviceChecks = {};
+        let queueCard, grpQueueHost, grpMaintenanceHost, grpEventHost;
+        let selectNextInspection;
+
+        // First running function.
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            for (let i = 0; i < HISTORY_COUNT; i++) {
+                CARS.forEach(function (c) { pushHistory(c); });
+            }
+            CARS.forEach(function (c) { addEvent(c, "Info", "Connected (" + c.serial + ")"); });
+
+            // BOX: Full screen scrollable container
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            startBox(0, 0, "100%", "100%", {
+                color: "transparent",
+                scrollY: 1,
+            });
+
+                VGroup({
+                    width: "100%",
+                    height: "auto", // Grows with content, so the Box can scroll.
+                    align: "left top",
+                    gap: 16,
+                    padding: 24,
+                });
+
+                    initHeader();
+                    initAlert();
+                    initHeroRow();
+                    initKpiRow();
+                    initChartRow();
+                    initControlRow();
+                    initBottomRow();
+
+                endGroup();
+
+            endBox();
+
+            // WHY: Bar count was calculated with the default width (before flex).
+            kpiBoxList.forEach(function (kpiBox) { kpiBox.refresh(); });
+
+            isReady = 1;
+            selectCar(0);
+
+        };
+
+        // Runs every second: one tick of the simulation.
+        const loop = function () {
+
+            if (!isReady) return;
+
+            simulateTick();
+            renderLive();
+
+        };
+
+        // *** FLEET SERVICE (SIMULATION):
+
+        const isOut = function (c) {
+            return c.mode === "outOfService";
+        };
+
+        // A skip-floor (express lockout) is ignored in Independent mode.
+        const isServiced = function (c, floorIndex) {
+            return c.mode === "independent" || c.serviceFloors[floorIndex];
+        };
+
+        const pickNextTarget = function (c) {
+            if (c.stops.length === 0) return null;
+            let best = c.stops[0];
+            let bestDist = Math.abs(c.floorPos - best);
+            for (let i = 1; i < c.stops.length; i++) {
+                const dist = Math.abs(c.floorPos - c.stops[i]);
+                if (dist < bestDist) { best = c.stops[i]; bestDist = dist; }
+            }
+            return best;
+        };
+
+        const arriveAtFloor = function (c, floorIndex) {
+
+            c.stops = c.stops.filter(function (stop) { return stop !== floorIndex; });
+
+            // Serve (remove) the hall calls waiting at this floor, and record how long they waited.
+            const served = hallCalls.filter(function (call) { return call.floor === floorIndex; });
+            hallCalls = hallCalls.filter(function (call) { return call.floor !== floorIndex; });
+            served.forEach(function (call) {
+                recentWaits.push((Date.now() - call.time) / 1000);
+                if (recentWaits.length > 20) recentWaits.shift();
+            });
+
+            c.doorState = "opening";
+            c.status = "doors";
+
+            // Passengers board / alight.
+            const delta = random(-350, 420);
+            c.load = Math.max(0, Math.min(c.capacity * 1.35, c.load + delta));
+            c.overloaded = (c.load > c.capacity) ? 1 : 0;
+
+            c.doorCycles++;
+            c.doorCyclesTotal++;
+            c.tripsToday++;
+            fleet.stopsByFloorToday[floorIndex]++;
+
+            // WHY: Independent mode and the emergency recall hold the doors open (manual close only).
+            c.doorTimer = (c.mode === "independent" || fleet.emergencyActive) ? -1 : fleet.doorHoldTicks;
+
+            addEvent(c, (c.overloaded) ? "Warning" : "Info", "Arrived at " + FLOORS[floorIndex] + ((c.overloaded) ? " · Overloaded!" : ""));
+
+        };
+
+        const handleDoors = function (c) {
+
+            if (c.doorState === "opening") {
+                c.doorState = "open";
+            } else if (c.doorState === "open") {
+                if (c.overloaded) return; // Stuck open until "Force Close" or the load goes down.
+                if (c.doorTimer < 0) return; // Held open (Independent / emergency). Manual close only.
+                c.doorTimer--;
+                if (c.doorTimer <= 0) c.doorState = "closing";
+            } else if (c.doorState === "closing") {
+                c.doorState = "closed";
+            }
+
+        };
+
+        const moveCar = function (c) {
+
+            if (isOut(c)) {
+                c.status = "outOfService";
+                c.direction = "idle";
+                return;
+            }
+
+            if (c.doorState !== "closed") return; // Wait for the doors.
+
+            const target = pickNextTarget(c);
+            if (target === null) {
+                c.status = "idle";
+                c.direction = "idle";
+                return;
+            }
+
+            if (Math.abs(c.floorPos - target) < 0.001) {
+                arriveAtFloor(c, target);
+                return;
+            }
+
+            const dir = (target > c.floorPos) ? 1 : -1;
+            c.direction = (dir > 0) ? "up" : "down";
+            c.status = "moving";
+            c.motorHours += 0.0004; // Test data, not real-time accurate.
+
+            let next = c.floorPos + dir * c.speed;
+            if ((dir > 0 && next >= target) || (dir < 0 && next <= target)) next = target;
+            c.floorPos = next;
+
+            if (Math.abs(c.floorPos - target) < 0.001) arriveAtFloor(c, target);
+
+        };
+
+        const dispatch = function () {
+
+            if (fleet.emergencyActive) {
+                // All cars (that can move) head to the Lobby.
+                CARS.forEach(function (c) {
+                    if (isOut(c)) return;
+                    const atLobby = (Math.abs(c.floorPos - LOBBY_INDEX) < 0.001 && c.doorState !== "closed");
+                    if (!atLobby && (c.stops.length !== 1 || c.stops[0] !== LOBBY_INDEX)) c.stops = [LOBBY_INDEX];
+                });
+                return;
+            }
+
+            hallCalls.forEach(function (call) {
+
+                if (call.carId !== null) return;
+
+                const candidates = CARS.filter(function (c) { return c.mode === "normal" && isServiced(c, call.floor); });
+                if (!candidates.length) return; // Stays pending. Shown in the Queue card as "Waiting".
+
+                candidates.sort(function (a, b) { return Math.abs(a.floorPos - call.floor) - Math.abs(b.floorPos - call.floor); });
+                const chosen = candidates[0];
+
+                call.carId = chosen.id;
+                if (!chosen.stops.includes(call.floor)) chosen.stops.push(call.floor);
+
+            });
+
+        };
+
+        // One tick: random hall calls, dispatch, then move every car.
+        const simulateTick = function () {
+
+            if (!fleet.emergencyActive && Math.random() < 0.14) {
+                const floor = Math.floor(Math.random() * FLOORS.length);
+                const canUp = floor < TOP_INDEX, canDown = floor > 0;
+                const direction = (canUp && canDown) ? ((Math.random() < 0.5) ? "up" : "down") : ((canUp) ? "up" : "down");
+                const exists = hallCalls.some(function (call) { return call.floor === floor && call.direction === direction; });
+                if (!exists) hallCalls.push({ id: nextCallId++, floor: floor, direction: direction, time: Date.now(), carId: null });
+            }
+
+            dispatch();
+
+            CARS.forEach(function (c) {
+                handleDoors(c);
+                moveCar(c);
+                // Rare spontaneous fault (test data), so the "Faults" KPI is not only user-triggered.
+                if (!isOut(c) && Math.random() < 0.002) {
+                    c.faults++;
+                    addEvent(c, "Error", "Door sensor fault (auto-cleared)");
+                }
+                pushHistory(c);
+            });
+
+            updateFleetHistory();
+
+        };
+
+        const pushHistory = function (c) {
+            const h = c.history;
+            h.labels.push(new Date().toLocaleTimeString("en-GB"));
+            h.floor.push(round2(c.floorPos));
+            if (h.labels.length > HISTORY_COUNT) { h.labels.shift(); h.floor.shift(); }
+        };
+
+        const updateFleetHistory = function () {
+
+            const trips = sum(CARS, function (c) { return c.tripsToday; });
+            const doors = sum(CARS, function (c) { return c.doorCycles; });
+            const faults = sum(CARS, function (c) { return c.faults; });
+            const wait = (recentWaits.length) ? Math.round(recentWaits.reduce(function (a, b) { return a + b; }, 0) / recentWaits.length) : 0;
+
+            const h = fleet.history;
+            h.trips.push(trips - fleet.totalsBefore.trips);
+            h.doors.push(doors - fleet.totalsBefore.doors);
+            h.faults.push(faults - fleet.totalsBefore.faults);
+            h.wait.push(wait);
+            for (const key in h) { if (h[key].length > HISTORY_COUNT) h[key].shift(); }
+
+            fleet.totalsBefore = { trips: trips, doors: doors, faults: faults };
+
+        };
+
+        const setGridEmergency = function (active) {
+            fleet.emergencyActive = active ? 1 : 0;
+            if (!active) {
+                // WHY: Cars held open by the recall (doorTimer -1) must resume their normal auto-close countdown.
+                //      A car held open because of its own Independent mode (not the recall) stays held.
+                CARS.forEach(function (c) {
+                    if (c.doorState === "open" && c.doorTimer < 0 && c.mode !== "independent") c.doorTimer = fleet.doorHoldTicks;
+                });
+            }
+            addEvent(car, (active) ? "Error" : "Success", (active) ? "Emergency recall: all cars sent to the Lobby" : "Emergency recall cleared. Normal service resumed");
+            renderAll();
+        };
+
+        const forceCloseDoors = function (c) {
+            c.load = Math.round(c.capacity * 0.9);
+            c.overloaded = 0;
+            addEvent(c, "Warning", "Doors force-closed after overload");
+            c.faults++;
+            renderAll();
+        };
+
+        const setCarMode = function (c, mode) {
+            if (mode === "outOfService" && c.stops.length) {
+                addEvent(c, "Warning", "Taken out of service. " + c.stops.length + " stop(s) reassigned to the fleet");
+                // WHY: The car's own stops that came from hall calls go back to the pool (unassigned) automatically,
+                //      because hallCalls[].carId is only cleared here, then dispatch() reassigns them next tick.
+                hallCalls.forEach(function (call) { if (call.carId === c.id) call.carId = null; });
+            }
+            c.mode = mode;
+            if (mode === "outOfService") c.stops = [];
+            addEvent(c, "Info", "Mode set to " + MODES.find(function (m) { return m.value === mode; }).text);
+        };
+
+        const addEvent = function (c, level, message) {
+            c.events.unshift({ time: new Date().toLocaleTimeString("en-GB"), level: level, message: message });
+            if (c.events.length > 50) c.events.pop();
+            if (c === car && isReady) renderEvents();
+        };
+
+        // *** HELPERS:
+
+        const round2 = function (value) {
+            return Math.round(value * 100) / 100;
+        };
+
+        const sum = function (list, getValue) {
+            return list.reduce(function (total, item) { return total + getValue(item); }, 0);
+        };
+
+        const escapeHtml = function (text) {
+            return String(text).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c]; });
+        };
+
+        // WHY: Some components have no enabled setting. "inert" blocks the mouse and keyboard for all the children.
+        const setInteractive = function (obj, enabled) {
+            obj.elem.inert = !enabled;
+            obj.opacity = (enabled) ? 1 : 0.4;
+        };
+
+        // Creates the content of a container again. (One group is started and ended in it.)
+        // WHY: setDefaultContainerBox() is not in the start/end list of basic.js. One wrapper group is safe.
+        const renderInto = function (container, buildContent) {
+            if (container.wrapper) container.wrapper.remove();
+            const previous = getDefaultContainerBox();
+            setDefaultContainerBox(container);
+                container.wrapper = VGroup({ width: "100%", height: "auto", align: "left top", gap: 0 });
+                    buildContent();
+                endGroup();
+            setDefaultContainerBox(previous);
+        };
+
+        // *** VIEW HELPERS:
+
+        const startRow = function () {
+            HGroup({ width: "100%", height: "auto", align: "left top", gap: 16 });
+            that.elem.style.flexWrap = "wrap";
+            that.elem.style.alignItems = "stretch"; // WHY: Cards in the same row have the same height.
+        };
+
+        const setFlex = function (obj, flex) {
+            obj.elem.style.flex = flex;
+            obj.elem.style.minWidth = "0";
+        };
+
+        const startCard = function (title, subtitle, flex) {
+
+            const cardBox = VGroup({ height: "auto", align: "left top", gap: 14, padding: 16, color: CARD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 12 });
+            setFlex(cardBox, flex);
+
+                startSpaceBetween();
+                    VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
+                        Label({ text: title, fontSize: 15, textColor: Ink(0.95) });
+                        that.elem.style.fontFamily = "opensans-bold";
+                        if (subtitle) Label({ text: subtitle, fontSize: 12, textColor: Ink(0.45) });
+                    endGroup();
+                    cardBox.lblRight = Label({ text: "", fontSize: 12, textColor: Ink(0.5) });
+                    that.elem.style.whiteSpace = "nowrap";
+                endGroup();
+
+            return cardBox;
+
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+        const startSpaceBetween = function (gap = 12) {
+            HGroup({ width: "100%", height: "auto", align: "left center", gap: gap });
+            that.elem.style.justifyContent = "space-between";
+        };
+
+        const createSmallTitle = function (text) {
+            Label({ text: text.toUpperCase(), fontSize: 11, textColor: Ink(0.45) });
+            that.elem.style.letterSpacing = "1px";
+            return that;
+        };
+
+        const setPill = function (label, text, color) {
+            label.text = text;
+            label.textColor = color;
+            label.color = ChartBox.alpha(color, 0.12);
+            label.borderColor = ChartBox.alpha(color, 0.4);
+        };
+
+        const createInfoLine = function (title, first) {
+            startSpaceBetween();
+            that.elem.style.padding = "8px 0px";
+            if (!first) that.elem.style.borderTop = "1px solid " + Ink(0.06);
+                Label({ text: title, fontSize: 14, textColor: Ink(0.5) });
+                const value = Label({ text: "", fontSize: 14, textColor: Ink(0.9) });
+                that.elem.style.whiteSpace = "nowrap";
+            endGroup();
+            return value;
+        };
+
+        const createButton = function (text, iconFile, onClick, params = {}) {
+            const btn = ButtonWithIcon({
+                width: params.width || "auto",
+                labelText: text,
+                iconFile: (iconFile) ? ASSETS + iconFile : "",
+                onClick: onClick,
+                style: {
+                    layout: { gap: 10, padding: [14, 8], align: "center center" },
+                    icon: { width: 18, height: 18 },
+                    label: { fontSize: 14, textColor: Ink(0.9) },
+                    box: { color: params.color || FIELD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8 },
+                    hover: { color: params.hoverColor || T.surface3 },
+                    active: { color: params.activeColor || T.surface4 },
+                },
+            });
+            if (btn.icon) btn.icon.elem.style.filter = T.iconFilter; // WHY: Panel icons are black.
+            return btn;
+        };
+
+        const createSlider = function (color, onDragMove, onDragEnd) {
+            return Slider({
+                width: 250,
+                trackHeight: 8,
+                minThumbHeight: 26,
+                trackColor: color,
+                trackBackgroundColor: Ink(0.1),
+                thumbColor: Ink(0.9),
+                showValueOnSet: 0,
+                showValueOnDrag: 0, // WHY: Slider shows 0-100. The real value is shown in a label.
+                onDragMove: onDragMove,
+                onDragEnd: onDragEnd,
+            });
+        };
+
+        const DARK_RADIO_STYLE = {
+            mark: { width: 20, height: 20, color: "transparent", borderColor: Ink(0.35) },
+            checkedMark: { color: "transparent", borderColor: ACCENT_COLOR },
+            hoverMark: { borderColor: Ink(0.7) },
+            dot: { color: ACCENT_COLOR },
+            label: { fontSize: 14, textColor: Ink(0.9) },
+        };
+
+        const DARK_CHECK_STYLE = {
+            layout: { padding: [0, 2] },
+            mark: { width: 18, height: 18, color: "transparent", borderColor: Ink(0.35) },
+            checkedMark: { color: PRIMARY_COLOR, borderColor: PRIMARY_COLOR },
+            hoverMark: { borderColor: Ink(0.7) },
+            tick: { color: Ink(1) },
+            label: { fontSize: 13, textColor: Ink(0.75) },
+        };
+
+        // Dark style for SelectDate
+        const PICKER_STYLE = {
+            field: { color: FIELD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8 },
+            fieldHover: { borderColor: Ink(0.3) },
+            fieldFocus: { borderColor: ACCENT_COLOR },
+            fieldText: { fontSize: 14, textColor: Ink(0.9) },
+            placeholder: { textColor: Ink(0.4) },
+            icon: { color: Ink(0.55) },
+            panel: { color: FIELD_COLOR, borderColor: Ink(0.12), shadow: "0 8px 24px rgba(0, 0, 0, 0.5)" },
+            title: { textColor: Ink(0.9) },
+            arrow: { color: Ink(0.6), hoverColor: Ink(0.08) },
+            weekDay: { textColor: Ink(0.45) },
+            day: { textColor: Ink(0.85), hoverColor: Ink(0.08) },
+            today: { borderColor: Ink(0.35) },
+            selectedDay: { color: PRIMARY_COLOR, textColor: Ink(1) },
+            disabledDay: { textColor: Ink(0.2) },
+            footerButton: { textColor: ACCENT_COLOR },
+        };
+
+        // *** VIEW:
+
+        const initHeader = function () {
+
+            startSpaceBetween(16);
+            that.elem.style.flexWrap = "wrap";
+
+                HGroup({ width: "auto", height: "auto", align: "left center", gap: 20 });
+                that.elem.style.flexWrap = "wrap";
+
+                    VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
+                        Label({ text: "Elevator Fleet", fontSize: 26, textColor: Ink(0.95) });
+                        that.elem.style.fontFamily = "opensans-bold";
+                        lblBuilding = Label({ text: "", fontSize: 14, textColor: Ink(0.5) });
+                    endGroup();
+
+                    carSelect = TinySelect({
+                        title: "Car",
+                        list: CARS.map(function (c) { return { id: c.id, label: c.name }; }),
+                        height: 40,
+                        fontSize: 15,
+                        color: CARD_COLOR,
+                        border: 1,
+                        borderColor: CARD_BORDER_COLOR,
+                        round: 8,
+                        labelTextColor: Ink(0.95),
+                        arrowIcon: LIB_PATH + "comp/tiny-select/arrow.svg",
+                        arrowSize: 20,
+                        invertIconColor: T.invertIcon,
+                        listFontSize: 15,
+                        listTextColor: Ink(0.85),
+                        listOverTextColor: ACCENT_COLOR,
+                        listBackgroundColor: FIELD_COLOR,
+                        listBorderColor: Ink(0.15),
+                        onSelect: function (index) { if (isReady) selectCar(index); },
+                    });
+                    carSelect.lblTitle.textColor = Ink(0.5);
+
+                    lblStatus = Label({ text: "", fontSize: 13, round: 100, border: 1, padding: [12, 4] });
+                    lblStatus.elem.style.whiteSpace = "nowrap";
+
+                endGroup();
+
+                HGroup({ width: "auto", height: "auto", align: "right center", gap: 10 });
+
+                    const btnMore = createButton("More", "top-bar/apps.png", function () { });
+
+                    moreMenu = ContextMenu({
+                        items: [
+                            { text: "Test: Emergency recall", key: "recall" },
+                            { text: "Reset after emergency", key: "reset" },
+                            "-",
+                            { text: "Test: Overload the car", key: "overload" },
+                            { text: "Download today's report (CSV)", key: "csv" },
+                            { text: "Copy car serial number", key: "copy" },
+                        ],
+                        onClick: function (self, item) { onMoreMenuClick(item.key); },
+                        style: {
+                            menu: { color: FIELD_COLOR, borderColor: Ink(0.12), shadow: "0px 8px 24px rgba(0, 0, 0, 0.5)" },
+                            item: { textColor: Ink(0.85) },
+                            itemHover: { textColor: Ink(1), color: Ink(0.08) },
+                            disabled: { textColor: Ink(0.3) },
+                            separator: { color: Ink(0.1) },
+                        },
+                    });
+                    moreMenu.attachTo(btnMore, "click");
+
+                endGroup();
+
+            endGroup();
+
+        };
+
+        const initAlert = function () {
+
+            alertBox = HGroup({
+                width: "100%", height: "auto", align: "left center", gap: 12, padding: [16, 12],
+                color: "rgba(230, 103, 103, 0.10)", border: 1, borderColor: "rgba(230, 103, 103, 0.45)", round: 12,
+                visible: 0,
+            });
+            that.elem.style.flexWrap = "wrap";
+
+                lblAlert = Label({ text: "", fontSize: 14, textColor: Ink(0.9) });
+                lblAlert.elem.style.flex = "1 1 300px";
+
+                createButton("Reset After Emergency", "", function () { setGridEmergency(0); }, { color: ERROR_COLOR, hoverColor: "#C24E4E" });
+
+            endGroup();
+
+        };
+
+        const initHeroRow = function () {
+
+            startRow();
+
+                const shaftCard = startCard("Live Shaft", fleet.buildingName + " · " + FLOORS.length + " stops", "2 1 460px");
+
+                    shaftBox = Box({ width: "100%", height: "auto", color: "transparent" });
+                    shaftBox.position = "relative";
+                    shaftBox.elem.innerHTML = createShaftSvg();
+                    shaft.svg = shaftBox.elem.querySelector("svg");
+
+                    HGroup({ width: "100%", height: "auto", align: "left center", gap: 16 });
+                    that.elem.style.flexWrap = "wrap";
+                        Object.keys(FLEET_COLORS).forEach(function (key) {
+                            Label({ text: "<span style='color:" + FLEET_COLORS[key] + "'>●</span> Car " + key, fontSize: 12, textColor: Ink(0.6) });
+                        });
+                        Label({ text: "<span style='color:" + WARNING_COLOR + "'>●</span> Doors open", fontSize: 12, textColor: Ink(0.45) });
+                        Label({ text: "<span style='color:" + WARNING_COLOR + "'>▲▼</span> Waiting call", fontSize: 12, textColor: Ink(0.45) });
+                    endGroup();
+
+                endCard();
+
+                startCard("Car Details", "", "1 1 300px");
+
+                    VGroup({ width: "100%", height: "auto", align: "left top", gap: 0 });
+                        carInfoLabels.floor = createInfoLine("Current floor", 1);
+                        carInfoLabels.next = createInfoLine("Next stop");
+                        carInfoLabels.direction = createInfoLine("Direction");
+                        carInfoLabels.doors = createInfoLine("Doors");
+                        carInfoLabels.mode = createInfoLine("Mode");
+                        carInfoLabels.load = createInfoLine("Load");
+                    endGroup();
+
+                endCard();
+
+            endGroup();
+
+        };
+
+        const initKpiRow = function () {
+
+            const KPI_LIST = [
+                { title: "Trips Today", iconFile: "left-menu/extension.png", lineColor: ACCENT_COLOR, maxValue: 0 },
+                { title: "Avg. Wait Time", iconFile: "light.png", lineColor: T.info, maxValue: 0 },
+                { title: "Door Cycles Today", iconFile: "left-menu/dashboard.png", lineColor: "#9085E9", maxValue: 0 },
+                { title: "Faults", iconFile: "warning.png", lineColor: ERROR_COLOR, maxValue: 0 },
+            ];
+
+            startRow();
+
+                KPI_LIST.forEach(function (kpi) {
+                    const kpiBox = SparkLineBox({
+                        height: 100,
+                        title: kpi.title,
+                        valueText: "",
+                        iconFile: ASSETS + kpi.iconFile,
+                        lineColor: kpi.lineColor,
+                        maxValue: kpi.maxValue,
+                        style: {
+                            box: { color: CARD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 12 },
+                            text: { padding: 14 },
+                            title: { fontSize: 13, textColor: Ink(0.5) },
+                            valueText: { fontSize: 24, textColor: Ink(0.95) },
+                            trend: { flatColor: Ink(0.45) }, // WHY: The default flat color is made for light cards.
+                            icon: { width: 20, height: 20 },
+                            graph: { height: 34, padding: 14 },
+                        },
+                    });
+                    setFlex(kpiBox, "1 1 220px");
+                    kpiBox.icon.elem.style.filter = T.iconFilter;
+                    kpiBox.icon.opacity = 0.5;
+                    kpiBoxList.push(kpiBox);
+                });
+
+            endGroup();
+
+        };
+
+        const initChartRow = function () {
+
+            startRow();
+
+                chartPosition = ChartBox({
+                    height: 320,
+                    type: "line",
+                    theme: T.chartTheme,
+                    title: "Car Position",
+                    subtitle: "Live, last " + CHART_COUNT + " seconds",
+                    maxCount: CHART_COUNT,
+                    beginAtZero: 0,
+                    animated: 0,
+                    labels: [],
+                    datasets: [{ label: "Floor", data: [], fill: "start", tension: 0.2, backgroundColor: ChartBox.gradient("rgba(101, 162, 147, 0.3)", "rgba(101, 162, 147, 0)") }],
+                    formatValue: function (value) { return FLOORS[Math.round(value)] || value; },
+                    options: {
+                        elements: { point: { radius: 0 } },
+                        scales: { x: { ticks: { maxTicksLimit: 6 } }, y: { min: 0, max: TOP_INDEX, ticks: { stepSize: 1, autoSkip: false, callback: function (value) { return FLOORS[value] || ""; } } } },
+                    },
+                    style: {
+                        box: { color: CARD_COLOR, borderColor: CARD_BORDER_COLOR, round: 12, padding: 16 },
+                        chart: { colors: [ACCENT_COLOR] },
+                    },
+                });
+                setFlex(chartPosition, "2 1 520px");
+                chartPosition.elem.style.height = "auto";
+                chartPosition.elem.style.minHeight = "320px";
+
+                chartStops = ChartBox({
+                    height: 320,
+                    type: "bar",
+                    theme: T.chartTheme,
+                    title: "Stops by Floor Today",
+                    subtitle: "Whole fleet",
+                    horizontal: 1,
+                    beginAtZero: 1,
+                    labels: FLOORS.slice(),
+                    values: fleet.stopsByFloorToday.slice(),
+                    style: {
+                        box: { color: CARD_COLOR, borderColor: CARD_BORDER_COLOR, round: 12, padding: 16 },
+                        chart: { colors: [T.info] },
+                    },
+                });
+                setFlex(chartStops, "1 1 260px");
+
+            endGroup();
+
+        };
+
+        const initControlRow = function () {
+
+            startRow();
+
+                // DISPATCH & DOORS
+                startCard("Dispatch & Doors", "Mode and door timing", "1 1 300px");
+
+                    VGroup({ width: "100%", height: "auto", align: "left top", gap: 10 });
+                        MODES.forEach(function (mode) {
+                            RadioButton({
+                                group: "carMode", value: mode.value,
+                                labelText: mode.text + "<br><span style='color:" + Ink(0.4) + "; font-size: 12px'>" + mode.desc + "</span>",
+                                style: DARK_RADIO_STYLE,
+                                onChange: function (self) { onModeChange(self.value); },
+                            });
+                        });
+                    endGroup();
+
+                    lblModeInfo = Label({ text: "", fontSize: 12, textColor: Ink(0.45), width: "100%" });
+
+                    VGroup({ width: "100%", height: "auto", align: "left top", gap: 8 });
+                    that.elem.style.borderTop = "1px solid " + Ink(0.06);
+                    that.elem.style.paddingTop = "14px";
+                        startSpaceBetween();
+                            createSmallTitle("Door hold time");
+                            lblHold = Label({ text: "", fontSize: 15, textColor: Ink(0.95) });
+                            that.elem.style.fontFamily = "opensans-bold";
+                        endGroup();
+                        sliderHold = createSlider(WARNING_COLOR,
+                            function (value) { lblHold.text = sliderToHold(value) + " s"; },
+                            function () {
+                                const hold = sliderToHold(sliderHold.getValue());
+                                if (hold === fleet.doorHoldTicks) return;
+                                fleet.doorHoldTicks = hold;
+                                addEvent(car, "Info", "Door hold time set to " + hold + " s");
+                            }
+                        );
+                    endGroup();
+
+                endCard();
+
+                // CAR PANEL
+                startCard("Car Panel", "Manual floor selection", "1 1 300px");
+
+                    HGroup({ width: "100%", height: "auto", align: "left top", gap: 6 });
+                    that.elem.style.flexWrap = "wrap";
+                        FLOORS.forEach(function (label, index) {
+                            const btn = HGroup({ width: 44, height: 36, align: "center center", round: 8, color: FIELD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR });
+                            btn.elem.style.cursor = "pointer";
+                            btn.setMotion("background-color 0.15s, border-color 0.15s");
+                            btn.on("click", function () { onFloorButtonClick(index); });
+                                btn.lbl = Label({ text: label, fontSize: 13, textColor: Ink(0.85) });
+                            endGroup();
+                            floorButtons[index] = btn;
+                        });
+                    endGroup();
+
+                    HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
+                    that.elem.style.borderTop = "1px solid " + Ink(0.06);
+                    that.elem.style.paddingTop = "14px";
+                        btnOpenDoor = createButton("Open Door", "", function () { onDoorButtonClick("open"); });
+                        btnCloseDoor = createButton("Close Door", "", function () { onDoorButtonClick("close"); });
+                        createButton("Test: Alarm", "", function () { onAlarmTest(); }, { color: "rgba(230, 103, 103, 0.14)", hoverColor: "rgba(230, 103, 103, 0.22)" });
+                    endGroup();
+
+                endCard();
+
+                // LOAD & SAFETY
+                startCard("Load & Safety", "", "1 1 300px");
+
+                    HGroup({ width: "100%", height: "auto", align: "center center" });
+                        gaugeBox = Box({ width: 200, height: 130, color: "transparent" });
+                        gaugeBox.position = "relative";
+                        gaugeBox.elem.innerHTML = createLoadGaugeSvg();
+                    endGroup();
+
+                    lblLoadInfo = Label({ text: "", fontSize: 12, textColor: Ink(0.45), width: "100%" });
+
+                    btnForceClose = HoldToConfirmButton({
+                        height: 40,
+                        labelText: "Hold to Force Close",
+                        completedText: "CLOSED",
+                        iconFile: LIB_PATH + "comp/hold-to-confirm-button/trash.png",
+                        holdingIconFile: LIB_PATH + "comp/hold-to-confirm-button/trash-red.png",
+                        holdDuration: 1200,
+                        resetDelay: 800,
+                        style: {
+                            layout: { gap: 6, padding: [14, 0] },
+                            icon: { width: 18, height: 18 },
+                            label: { fontSize: 14, textColor: Ink(0.9) },
+                            holdingLabel: { fontSize: 14, textColor: "#B03A2E" },
+                            completedLabel: { fontSize: 14, textColor: T.primaryActive },
+                            box: { color: FIELD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8 },
+                            holdingBox: { color: "#FFD1CB", borderColor: ERROR_COLOR, round: 8 },
+                            completedBox: { color: "#DFEFE6", borderColor: ACCENT_COLOR, round: 8 },
+                        },
+                        onConfirm: function () { forceCloseDoors(car); },
+                    });
+                    btnForceClose.icon.elem.style.filter = T.iconFilter;
+
+                    VGroup({ width: "100%", height: "auto", align: "left top", gap: 8 });
+                    that.elem.style.borderTop = "1px solid " + Ink(0.06);
+                    that.elem.style.paddingTop = "14px";
+                        createSmallTitle("Skip floors (express)");
+                        HGroup({ width: "100%", height: "auto", align: "left top", gap: [4, 10] });
+                        that.elem.style.flexWrap = "wrap";
+                            FLOORS.forEach(function (label, index) {
+                                serviceChecks[index] = CheckBox({
+                                    labelText: label,
+                                    checked: 1,
+                                    style: DARK_CHECK_STYLE,
+                                    onChange: function (self) { onServiceFloorChange(index, self.checked); },
+                                });
+                                serviceChecks[index].elem.style.width = "25%";
+                            });
+                        endGroup();
+                    endGroup();
+
+                endCard();
+
+            endGroup();
+
+        };
+
+        const initBottomRow = function () {
+
+            startRow();
+
+                queueCard = startCard("Pending Calls", "Hall calls waiting for a car", "1 1 300px");
+                    grpQueueHost = VGroup({ width: "100%", height: "auto", align: "left top", gap: 0 });
+                    endGroup();
+                endCard();
+
+                startCard("Maintenance & Inspection", "", "1 1 300px");
+                    grpMaintenanceHost = VGroup({ width: "100%", height: "auto", align: "left top", gap: 0 });
+                    endGroup();
+                endCard();
+
+                startCard("Events", "", "1 1 300px");
+                    grpEventHost = VGroup({ width: "100%", height: "auto", align: "left top", gap: 0 });
+                    endGroup();
+                endCard();
+
+            endGroup();
+
+        };
+
+        // *** SVG:
+
+        const SHAFT_TOP = 20, SHAFT_BOTTOM = 428;
+        const SHAFT_SPACING = (SHAFT_BOTTOM - SHAFT_TOP) / (FLOORS.length - 1);
+        const LANE_WIDTH = 108;
+        const LANE_X = { A: 158, B: 266, C: 374 }; // Lane centers
+
+        const floorY = function (floorIndex) {
+            return SHAFT_BOTTOM - floorIndex * SHAFT_SPACING;
+        };
+
+        const createShaftSvg = function () {
+
+            let rows = "", skipRows = "", rails = "";
+
+            Object.keys(FLEET_COLORS).forEach(function (key) {
+                // WHY: A faint track behind each car so its movement reads against a fixed shaft, not empty space.
+                rails += "<rect x='" + (LANE_X[key] - LANE_WIDTH / 2) + "' y='" + (SHAFT_TOP - SHAFT_SPACING / 2) + "' width='" + LANE_WIDTH + "' height='" + (SHAFT_BOTTOM - SHAFT_TOP + SHAFT_SPACING) + "' fill='" + Ink(0.025) + "' stroke='" + Ink(0.06) + "'/>";
+            });
+
+            FLOORS.forEach(function (label, index) {
+                const y = floorY(index);
+                rows += "<line x1='104' y1='" + y + "' x2='430' y2='" + y + "' stroke='" + Ink(0.05) + "'/>" +
+                    "<text x='34' y='" + (y + 4) + "' text-anchor='end' class='t-floor'>" + label + "</text>" +
+                    "<text id='call-up-" + index + "' x='52' y='" + (y + 4) + "' class='t-call' style='opacity:0'>▲</text>" +
+                    "<text id='call-down-" + index + "' x='68' y='" + (y + 4) + "' class='t-call' style='opacity:0'>▼</text>";
+                skipRows += "<rect id='skip-row-" + index + "' x='0' y='" + (y - SHAFT_SPACING / 2) + "' width='" + LANE_WIDTH + "' height='" + SHAFT_SPACING + "' fill='" + Black(0.55) + "' style='opacity:0'/>";
+            });
+
+            const carGroup = function (key) {
+                const color = FLEET_COLORS[key];
+                // WHY: Doors sit on top of a warning-colored "cabin light" rect. Closed, they hide it; open,
+                //      they slide clear and the light shows through, so "doors open" reads at a glance.
+                return "<g id='car-" + key + "' class='car' style='transform: translate(" + LANE_X[key] + "px, " + SHAFT_BOTTOM + "px); transition: transform 0.9s linear'>" +
+                    "<text id='dir-" + key + "' y='-34' text-anchor='middle' class='t-dir' style='opacity:0'></text>" +
+                    "<circle id='status-" + key + "' cx='0' cy='-22' r='5' fill='" + Ink(0.3) + "' stroke='" + Black(0.3) + "'/>" +
+                    "<rect x='-38' y='-15' width='76' height='30' rx='7' fill='" + ChartBox.alpha(color, 0.16) + "' stroke='" + color + "' stroke-width='2'/>" +
+                    "<g style='clip-path: inset(2px round 5px)'>" +
+                    "<rect id='glow-" + key + "' x='-20' y='-13' width='40' height='26' fill='" + WARNING_COLOR + "' style='opacity:0; transition: opacity 0.4s'/>" +
+                    "<rect id='door-l-" + key + "' x='-20' y='-13' width='20' height='26' fill='" + Ink(0.35) + "' style='transition: transform 0.5s'/>" +
+                    "<rect id='door-r-" + key + "' x='0' y='-13' width='20' height='26' fill='" + Ink(0.35) + "' style='transition: transform 0.5s'/>" +
+                    "<line x1='0' y1='-13' x2='0' y2='13' stroke='" + Black(0.35) + "'/>" +
+                    "</g>" +
+                    "<rect x='-28' y='19' width='56' height='5' rx='2' fill='" + Ink(0.08) + "'/>" +
+                    "<rect id='load-" + key + "' x='-28' y='19' width='56' height='5' rx='2' fill='" + color + "' style='transform-origin:-28px 0px; transition: transform 0.4s, fill 0.3s'/>" +
+                    "</g>";
+            };
+
+            const overlay = "<g id='skip-overlay' style='transform: translateX(" + (LANE_X.A - LANE_WIDTH / 2) + "px); transition: transform 0.4s'>" + skipRows + "</g>";
+
+            return "<svg viewBox='0 0 460 460' style='display:block; width:100%; height:auto; max-height:460px; font-family:inherit'>" +
+                "<style>" +
+                ".t-floor { fill:" + Ink(0.5) + "; font-size:12px; }" +
+                ".t-call { fill:" + WARNING_COLOR + "; font-size:13px; font-weight:bold; transition: opacity 0.3s; }" +
+                ".t-dir { fill:" + Ink(0.9) + "; font-size:16px; font-weight:bold; transition: opacity 0.3s; }" +
+                "@keyframes carPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }" +
+                ".car.doors-open circle { animation: carPulse 1.1s ease-in-out infinite; }" +
+                "</style>" +
+                rails + overlay + rows + carGroup("A") + carGroup("B") + carGroup("C") +
+                "</svg>";
+
+        };
+
+        const GAUGE_R = 70;
+
+        const createLoadGaugeSvg = function () {
+            const cx = 100, cy = 100;
+            const arc = "M" + (cx - GAUGE_R) + " " + cy + " A" + GAUGE_R + " " + GAUGE_R + " 0 0 1 " + (cx + GAUGE_R) + " " + cy;
+            return "<svg viewBox='0 0 200 130' style='display:block; width:100%; height:auto'>" +
+                "<path d='" + arc + "' fill='none' stroke='" + Ink(0.07) + "' stroke-width='12' stroke-linecap='round'/>" +
+                "<path id='load-bar' d='" + arc + "' fill='none' stroke='" + ACCENT_COLOR + "' stroke-width='12' stroke-linecap='round' pathLength='100' stroke-dasharray='0 100' style='transition: stroke-dasharray 0.6s, stroke 0.3s'/>" +
+                "<text id='load-value' x='" + cx + "' y='" + (cy - 8) + "' text-anchor='middle' style='fill:" + Ink(0.95) + "; font-size:26px; font-weight:bold'></text>" +
+                "<text id='load-percent' x='" + cx + "' y='" + (cy + 12) + "' text-anchor='middle' style='fill:" + Ink(0.45) + "; font-size:12px'></text>" +
+                "</svg>";
+        };
+
+        // *** VALUE CONVERTERS:
+
+        const sliderToHold = function (value) {
+            return Math.round(2 + value / 100 * 8); // 2 - 10 seconds
+        };
+
+        const holdToSlider = function (hold) {
+            return (hold - 2) / 8 * 100;
+        };
+
+        // *** ACTIONS:
+
+        const onModeChange = function (value) {
+
+            if (isRendering) return;
+
+            if (value === "outOfService") {
+                const previousMode = car.mode;
+                Dialog({
+                    icon: ASSETS + "warning.png",
+                    title: "Take Out of Service",
+                    desc: "<b>" + car.name + "</b> will stop answering calls. Any of its pending stops go back to the fleet.",
+                    confirmButtonText: "Take Out of Service",
+                    confirmButtonColor: ERROR_COLOR,
+                    callback: function (isConfirmed) {
+                        if (!car) return;
+                        if (isConfirmed) {
+                            setCarMode(car, "outOfService");
+                            renderAll();
+                        } else {
+                            isRendering = 1;
+                            RadioButton.setValue("carMode", previousMode, 1);
+                            isRendering = 0;
+                        }
+                    },
+                });
+                return;
+            }
+
+            setCarMode(car, value);
+            renderAll();
+
+        };
+
+        const onFloorButtonClick = function (floorIndex) {
+            if (!car || isOut(car)) return;
+            if (!isServiced(car, floorIndex)) return;
+            if (!car.stops.includes(floorIndex)) car.stops.push(floorIndex);
+            addEvent(car, "Info", "Car panel: floor " + FLOORS[floorIndex] + " selected");
+            renderCarPanel();
+        };
+
+        const onDoorButtonClick = function (action) {
+            if (!car || isOut(car)) return;
+            if (action === "open" && car.doorState === "closed") {
+                car.doorState = "opening";
+                car.status = "doors";
+                car.doorTimer = (car.mode === "independent" || fleet.emergencyActive) ? -1 : fleet.doorHoldTicks;
+                addEvent(car, "Info", "Door opened manually");
+            } else if (action === "close" && car.doorState === "open" && !car.overloaded) {
+                car.doorState = "closing";
+                addEvent(car, "Info", "Door closed manually");
+            }
+            renderLive();
+        };
+
+        const onAlarmTest = function () {
+            if (!car) return;
+            car.status = "alarm";
+            car.faults++;
+            addEvent(car, "Error", "Alarm bell activated");
+            renderLive();
+            setTimeout(function () { if (car && car.status === "alarm") { car.status = "idle"; renderLive(); } }, 2500);
+        };
+
+        const onServiceFloorChange = function (floorIndex, checked) {
+            if (isRendering || !car) return;
+            car.serviceFloors[floorIndex] = checked;
+            addEvent(car, "Info", "Floor " + FLOORS[floorIndex] + (checked ? " is now serviced" : " is now skipped") + " by " + car.name);
+            renderSkipOverlay();
+            renderCarPanel();
+        };
+
+        const onMoreMenuClick = function (key) {
+            switch (key) {
+                case "recall":
+                    Dialog({
+                        icon: ASSETS + "warning.png",
+                        title: "Test an Emergency Recall",
+                        desc: "All cars head to the Lobby and hold their doors open. Hall calls are ignored until it is reset.",
+                        confirmButtonText: "Start Recall",
+                        confirmButtonColor: ERROR_COLOR,
+                        callback: function (isConfirmed) { if (isConfirmed) setGridEmergency(1); },
+                    });
+                    break;
+                case "reset":
+                    setGridEmergency(0);
+                    break;
+                case "overload":
+                    car.load = Math.round(car.capacity * 1.15);
+                    car.overloaded = 1;
+                    addEvent(car, "Warning", "Test: load set above capacity");
+                    renderAll();
+                    break;
+                case "csv":
+                    downloadReport();
+                    break;
+                case "copy":
+                    navigator.clipboard.writeText(car.serial).then(function () {
+                        addEvent(car, "Info", "Serial number copied: " + car.serial);
+                    }).catch(function () {
+                        addEvent(car, "Error", "Serial number could not be copied");
+                    });
+                    break;
+            }
+        };
+
+        const downloadReport = function () {
+            const lines = ["car,trips_today,door_cycles_today,faults,load_kg,mode"];
+            CARS.forEach(function (c) {
+                lines.push([c.name, c.tripsToday, c.doorCycles, c.faults, Math.round(c.load), c.mode].join(","));
+            });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/csv" }));
+            link.download = "elevator-fleet-report.csv";
+            link.click();
+            URL.revokeObjectURL(link.href);
+        };
+
+        // *** RENDER:
+
+        const selectCar = function (index) {
+
+            car = CARS[index];
+
+            chartPosition.whenReady(function () {
+                chartPosition.data.labels = car.history.labels.slice();
+                chartPosition.data.datasets[0].data = car.history.floor.slice();
+                chartPosition.update("none");
+                chartPosition.data.datasets[0].borderColor = FLEET_COLORS[car.key];
+                chartPosition.update("none");
+            });
+
+            renderAll();
+
+        };
+
+        const renderAll = function () {
+            renderHeader();
+            renderAlert();
+            // WHY: These two are also in renderLive() (every tick), but the shaft's car groups and the KPI
+            //      text/bars are otherwise stuck at their SVG-creation defaults until the first tick of loop()
+            //      (about 1 second after the page opens). Calling them here fixes the very first paint.
+            renderShaftLive();
+            renderKpis();
+            renderCarInfo();
+            renderControls();
+            renderCarPanel();
+            renderSkipOverlay();
+            renderLoadGauge();
+            renderQueue();
+            renderMaintenance();
+            renderEvents();
+        };
+
+        // Every second.
+        const renderLive = function () {
+            renderHeader();
+            renderAlert();
+            renderShaftLive();
+            renderCarInfo();
+            renderLoadGauge();
+            renderKpis();
+            renderQueue();
+            renderCarPanel();
+        };
+
+        const getStatusKey = function (c) {
+            if (fleet.emergencyActive && !isOut(c)) return "emergency";
+            if (c.status === "alarm") return "alarm";
+            if (isOut(c)) return "outOfService";
+            if (c.doorState !== "closed") return "doors";
+            if (c.direction === "up" || c.direction === "down") return "moving";
+            return "idle";
+        };
+
+        const renderHeader = function () {
+            lblBuilding.text = fleet.buildingName + " · " + car.model;
+            const status = STATUS_LIST[getStatusKey(car)];
+            setPill(lblStatus, "● " + status.text, status.color);
+            moreMenu.setItemEnabled("overload", !isOut(car));
+            moreMenu.setItemEnabled("recall", !fleet.emergencyActive);
+            moreMenu.setItemEnabled("reset", fleet.emergencyActive === 1);
+        };
+
+        const renderAlert = function () {
+            alertBox.visible = fleet.emergencyActive ? 1 : 0;
+            lblAlert.text = "<b>Emergency recall is active.</b> All cars are heading to the Lobby and holding their doors open. " +
+                "<span style='color:" + Ink(0.55) + "'>Hall calls are not answered.</span>";
+        };
+
+        const renderCarInfo = function () {
+            const c = car;
+            carInfoLabels.floor.text = FLOORS[Math.round(c.floorPos)];
+            const target = pickNextTarget(c);
+            carInfoLabels.next.text = (isOut(c)) ? "—" : (target !== null) ? FLOORS[target] : "None";
+            carInfoLabels.direction.text = (c.direction === "up") ? "▲ Up" : (c.direction === "down") ? "▼ Down" : "—";
+            carInfoLabels.doors.text = (c.doorState === "closed") ? "Closed" : (c.doorState === "open") ? "Open" : (c.doorState === "opening") ? "Opening" : "Closing";
+            carInfoLabels.mode.text = MODES.find(function (m) { return m.value === c.mode; }).text;
+            carInfoLabels.load.text = Math.round(c.load) + " / " + c.capacity + " kg" + ((c.overloaded) ? " <span style='color:" + ERROR_COLOR + "'>· Overloaded</span>" : "");
+        };
+
+        const setCarTransform = function (key, floorPos) {
+            const g = shaft.svg.querySelector("#car-" + key);
+            g.style.transform = "translate(" + LANE_X[key] + "px, " + floorY(floorPos) + "px)";
+        };
+
+        const renderShaftLive = function () {
+
+            CARS.forEach(function (c) {
+
+                setCarTransform(c.key, c.floorPos);
+
+                const dirText = shaft.svg.querySelector("#dir-" + c.key);
+                if (c.direction === "up" || c.direction === "down") {
+                    dirText.textContent = (c.direction === "up") ? "▲" : "▼";
+                    dirText.style.opacity = 1;
+                } else {
+                    dirText.style.opacity = 0;
+                }
+
+                const status = STATUS_LIST[getStatusKey(c)];
+                shaft.svg.querySelector("#status-" + c.key).setAttribute("fill", status.color);
+
+                const isOpen = (c.doorState === "open" || c.doorState === "opening");
+                shaft.svg.querySelector("#door-l-" + c.key).style.transform = "translateX(" + ((isOpen) ? -20 : 0) + "px)";
+                shaft.svg.querySelector("#door-r-" + c.key).style.transform = "translateX(" + ((isOpen) ? 20 : 0) + "px)";
+                shaft.svg.querySelector("#glow-" + c.key).style.opacity = (isOpen) ? 1 : 0;
+                shaft.svg.querySelector("#car-" + c.key).classList.toggle("doors-open", isOpen);
+
+                const loadBar = shaft.svg.querySelector("#load-" + c.key);
+                const ratio = Math.max(0, Math.min(1.3, c.load / c.capacity));
+                loadBar.style.transform = "scaleX(" + ratio + ")";
+                loadBar.setAttribute("fill", (c.overloaded) ? ERROR_COLOR : FLEET_COLORS[c.key]);
+
+            });
+
+            FLOORS.forEach(function (label, index) {
+                const up = hallCalls.some(function (call) { return call.floor === index && call.direction === "up"; });
+                const down = hallCalls.some(function (call) { return call.floor === index && call.direction === "down"; });
+                shaft.svg.querySelector("#call-up-" + index).style.opacity = (up) ? 1 : 0;
+                shaft.svg.querySelector("#call-down-" + index).style.opacity = (down) ? 1 : 0;
+            });
+
+        };
+
+        const renderSkipOverlay = function () {
+            const overlay = shaft.svg.querySelector("#skip-overlay");
+            overlay.style.transform = "translateX(" + (LANE_X[car.key] - LANE_WIDTH / 2) + "px)";
+            FLOORS.forEach(function (label, index) {
+                shaft.svg.querySelector("#skip-row-" + index).style.opacity = (car.serviceFloors[index]) ? 0 : 0.55;
+            });
+        };
+
+        const renderLoadGauge = function () {
+            const c = car;
+            const ratio = Math.max(0, Math.min(1, c.load / c.capacity));
+            const svg = gaugeBox.elem.querySelector("svg");
+            const color = (c.overloaded) ? ERROR_COLOR : (ratio > 0.85) ? WARNING_COLOR : ACCENT_COLOR;
+            svg.querySelector("#load-bar").setAttribute("stroke-dasharray", (ratio * 100).toFixed(1) + " 100");
+            svg.querySelector("#load-bar").setAttribute("stroke", color);
+            svg.querySelector("#load-value").textContent = Math.round(c.load) + " kg";
+            svg.querySelector("#load-percent").textContent = Math.round(c.load / c.capacity * 100) + "% of " + c.capacity + " kg";
+            lblLoadInfo.text = (c.overloaded) ? "Overloaded. The doors will not close until the load goes down or you force them." : "Normal load.";
+            setInteractive(btnForceClose, c.overloaded && c.doorState === "open");
+        };
+
+        const renderKpis = function () {
+            const h = fleet.history;
+            kpiBoxList[0].setValueText(String(sum(CARS, function (c) { return c.tripsToday; })));
+            kpiBoxList[1].setValueText((recentWaits.length) ? Math.round(recentWaits.reduce(function (a, b) { return a + b; }, 0) / recentWaits.length) + " s" : "—");
+            kpiBoxList[2].setValueText(String(sum(CARS, function (c) { return c.doorCycles; })));
+            kpiBoxList[3].setValueText(String(sum(CARS, function (c) { return c.faults; })));
+            kpiBoxList[0].setValues(h.trips);
+            kpiBoxList[1].setValues(h.wait);
+            kpiBoxList[2].setValues(h.doors);
+            kpiBoxList[3].setValues(h.faults);
+            chartStops.whenReady(function () {
+                chartStops.data.datasets[0].data = fleet.stopsByFloorToday.slice();
+                chartStops.update("none");
+            });
+        };
+
+        const renderControls = function () {
+            isRendering = 1;
+            RadioButton.setValue("carMode", car.mode, 1);
+            const info = {
+                normal: "The car answers hall calls automatically, in the order it can reach them.",
+                attendant: "The car only moves to floors selected on its own car panel.",
+                independent: "Like Attendant, but skip-floors are ignored and the doors stay open until you close them.",
+                outOfService: "The car is parked and does not answer any calls.",
+            };
+            lblModeInfo.text = info[car.mode];
+            lblHold.text = fleet.doorHoldTicks + " s";
+            if (sliderToHold(sliderHold.getValue()) !== fleet.doorHoldTicks) sliderHold.setValue(holdToSlider(fleet.doorHoldTicks));
+            isRendering = 0;
+        };
+
+        const renderCarPanel = function () {
+
+            const c = car;
+            const controllable = !isOut(c);
+
+            FLOORS.forEach(function (label, index) {
+                const btn = floorButtons[index];
+                const serviced = isServiced(c, index);
+                const requested = c.stops.includes(index);
+                const isHere = (Math.round(c.floorPos) === index);
+                btn.color = (isHere) ? PRIMARY_COLOR : (requested) ? "rgba(101, 162, 147, 0.18)" : FIELD_COLOR;
+                btn.borderColor = (isHere || requested) ? ACCENT_COLOR : CARD_BORDER_COLOR;
+                btn.lbl.textColor = (isHere) ? Ink(1) : (serviced) ? Ink(0.85) : Ink(0.25);
+                btn.elem.style.cursor = (controllable && serviced) ? "pointer" : "default";
+                btn.elem.style.pointerEvents = (controllable && serviced) ? "auto" : "none";
+            });
+
+            setInteractive(btnOpenDoor, controllable && c.doorState === "closed");
+            setInteractive(btnCloseDoor, controllable && c.doorState === "open" && !c.overloaded);
+
+            isRendering = 1;
+            FLOORS.forEach(function (label, index) {
+                serviceChecks[index].setChecked(c.serviceFloors[index], 1);
+                setInteractive(serviceChecks[index], c.mode !== "outOfService");
+            });
+            isRendering = 0;
+
+        };
+
+        const renderQueue = function () {
+
+            queueCard.lblRight.text = (hallCalls.length) ? hallCalls.length + " waiting" : "";
+
+            renderInto(grpQueueHost, function () {
+
+                if (!hallCalls.length) {
+                    Label({ text: "No hall calls waiting.", fontSize: 13, textColor: Ink(0.45), padding: [0, 4] });
+                    return;
+                }
+
+                hallCalls.slice(0, 10).forEach(function (call, index) {
+
+                    HGroup({ width: "100%", height: "auto", align: "left center", gap: 12 });
+                    that.elem.style.padding = "8px 0px";
+                    if (index > 0) that.elem.style.borderTop = "1px solid " + Ink(0.06);
+
+                        Label({ text: (call.direction === "up") ? "▲" : "▼", fontSize: 14, textColor: WARNING_COLOR, width: 20 });
+
+                        VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
+                        that.elem.style.flex = "1 1 auto";
+                            Label({ text: "Floor " + FLOORS[call.floor], fontSize: 14, textColor: Ink(0.9) });
+                            const assignedCar = CARS.find(function (c) { return c.id === call.carId; });
+                            Label({ text: (assignedCar) ? "Car " + assignedCar.key + " is coming" : "Waiting for a car", fontSize: 12, textColor: (assignedCar) ? ACCENT_COLOR : Ink(0.45) });
+                        endGroup();
+
+                        Label({ text: Math.round((Date.now() - call.time) / 1000) + " s", fontSize: 12, textColor: Ink(0.4) });
+
+                    endGroup();
+
+                });
+
+            });
+
+        };
+
+        const renderMaintenance = function () {
+            const c = car;
+            renderInto(grpMaintenanceHost, function () {
+                createInfoLine("Motor hours", 1).text = Math.round(c.motorHours).toLocaleString("en-US");
+                createInfoLine("Door cycles (total)").text = c.doorCyclesTotal.toLocaleString("en-US");
+                createInfoLine("Last inspection").text = c.inspection.last;
+
+                HGroup({ width: "100%", height: "auto", align: "left center", gap: 10 });
+                that.elem.style.padding = "8px 0px";
+                that.elem.style.borderTop = "1px solid " + Ink(0.06);
+                that.elem.style.justifyContent = "space-between";
+                    Label({ text: "Next inspection", fontSize: 14, textColor: Ink(0.5) });
+                    selectNextInspection = SelectDate({
+                        width: 150, height: 36, format: "DD MMM YYYY",
+                        date: c.inspection.next, minDate: new Date(),
+                        showClearButton: 0, style: PICKER_STYLE,
+                        onChange: function (self) {
+                            if (!self.value) return;
+                            car.inspection.next = self.value;
+                            addEvent(car, "Info", "Next inspection set to " + self.dateText);
+                        },
+                    });
+                endGroup();
+
+                const daysLeft = Math.round((new Date(c.inspection.next) - new Date()) / 86400000);
+                if (daysLeft <= 14) {
+                    Label({
+                        text: (daysLeft < 0) ? "Inspection is overdue." : "Inspection is due in " + daysLeft + " day(s).",
+                        fontSize: 12, textColor: WARNING_COLOR, width: "100%",
+                    });
+                    that.elem.style.marginTop = "6px";
+                }
+            });
+        };
+
+        const renderEvents = function () {
+            if (grpEventHost.table) { grpEventHost.table.remove(); grpEventHost.table = null; }
+            const LEVEL_COLORS = { "Info": Ink(0.6), "Success": ACCENT_COLOR, "Warning": WARNING_COLOR, "Error": ERROR_COLOR };
+            const previous = getDefaultContainerBox();
+            setDefaultContainerBox(grpEventHost);
+                grpEventHost.table = TinyTable({
+                    columnHeaders: ["TIME", "LEVEL", "MESSAGE"],
+                    columnWidths: ["18%", "18%", "63%"],
+                    dataRows: car.events.slice(0, 10).map(function (e) { return [e.time, e.level, e.message]; }),
+                    headerBackgroundColor: FIELD_COLOR,
+                    headerTextColor: Ink(0.6),
+                    headerBorderColor: FIELD_COLOR,
+                    headerFontSize: 12,
+                    borderWidth: 1,
+                    borderRadius: 8,
+                    borderColor: CARD_BORDER_COLOR,
+                    bodyBackgroundColor: CARD_COLOR,
+                    cellFontSize: 13,
+                    cellTextColor: Ink(0.8),
+                    rowHoverBackgroundColor: Ink(0.05),
+                    rowHoverBorderColor: Ink(0.1),
+                    onCellRender: function (cell) {
+                        if (cell.index === 0) cell.textColor = Ink(0.5);
+                        if (cell.index === 1) cell.textColor = LEVEL_COLORS[cell.text] || Ink(0.8);
+                    },
+                });
+                grpEventHost.table.width = "100%";
+                grpEventHost.table.elem.style.minWidth = "420px";
+            setDefaultContainerBox(previous);
+        };
+
+        </script>
+
+    </head>
+    <body>
+
+        <!-- HTML content -->
+
+    </body>
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>Local Content</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <script>
+            // The app gives its theme in the address ("?theme=dark"). It is set before the page is
+            // drawn, so the dark theme never shows a white frame.
+            if (/[?&]theme=dark\b/.test(location.search)) document.documentElement.className = "dark";
+        </script>
+
+        <style>
+
+            /* A page of the app itself. It is in the cache, so it also opens with no internet. */
+
+            html, body {
+                margin: 0;
+                padding: 0;
+                height: 100%;
+                background-color: #FFFFFF;
+                color: rgba(0, 0, 0, 0.85);
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            }
+
+            .page {
+                box-sizing: border-box;
+                min-height: 100%;
+                padding: 32px 24px;
+            }
+
+            h1 {
+                margin: 0 0 6px 0;
+                font-size: 26px;
+            }
+
+            p {
+                margin: 0 0 18px 0;
+                font-size: 15px;
+                line-height: 22px;
+                color: rgba(0, 0, 0, 0.55);
+            }
+
+            .card {
+                border: 1px solid rgba(0, 0, 0, 0.12);
+                border-radius: 12px;
+                padding: 16px;
+                margin-bottom: 12px;
+            }
+
+            .card b {
+                display: block;
+                margin-bottom: 4px;
+                font-size: 15px;
+            }
+
+            .card span {
+                font-size: 14px;
+                color: rgba(0, 0, 0, 0.55);
+            }
+
+            .tag {
+                display: inline-block;
+                margin-top: 10px;
+                padding: 6px 10px;
+                border-radius: 100px;
+                background-color: #E6F0EC;
+                color: #2C5A38;
+                font-size: 12px;
+            }
+
+            /* DARK THEME */
+
+            html.dark, html.dark body {
+                background-color: #141414;
+                color: rgba(255, 255, 255, 0.9);
+            }
+
+            html.dark p,
+            html.dark .card span {
+                color: rgba(255, 255, 255, 0.55);
+            }
+
+            html.dark .card {
+                border-color: rgba(255, 255, 255, 0.12);
+            }
+
+            html.dark .tag {
+                background-color: #1F3A33;
+                color: #8FD1BF;
+            }
+
+        </style>
+
+    </head>
+    <body>
+
+        <div class="page">
+
+            <h1>Local page</h1>
+            <p>This file (<b>content/index.htm</b>) is next to the app. Write
+               <b>"content/index.htm"</b> into CONTENT_URL in index.htm to show it instead of a
+               web site.</p>
+
+            <div class="card">
+                <b>Works with no internet</b>
+                <span>The file is in the cache of the service worker, so it opens offline too.</span>
+            </div>
+
+            <div class="card">
+                <b>Your own project</b>
+                <span>Replace the files in the <b>content/</b> folder with your own multi-file
+                      project (its own scripts, styles, images...), or give the address of your
+                      site in CONTENT_URL.</span>
+            </div>
+
+            <span class="tag">basic.js PWA example</span>
+
+        </div>
+
+    </body>
+</html>
