@@ -206,7 +206,7 @@ const LoginPage = function(params = {}) {
                         });
                         box.loginBtn.clickable = 1;
                         box.loginBtn.elem.style.cursor = "pointer";
-                        UIEffects.button(that);
+                        UIEffects.press(that);
 
                         // or group
                         startBox({
@@ -316,7 +316,7 @@ const LoginPage = function(params = {}) {
                             color: box.primaryColor, 
                             minimal: 1
                         });
-                        UIEffects.button(that);
+                        UIEffects.press(that);
                         box.signupBtn.clickable = 1;
                         box.signupBtn.elem.style.cursor = "pointer";
                         //box.signupBtn = box.signupBtn;
@@ -413,7 +413,7 @@ const LoginPage = function(params = {}) {
         });
         that.elem.style.cursor = "pointer";
         that.on("click", onClick);
-        UIEffects.button(that);
+        UIEffects.press(that);
 
             Icon(0, 0, 24, 24);
             that.load(iconFile);

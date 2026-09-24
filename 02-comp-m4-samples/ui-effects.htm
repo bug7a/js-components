@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>UI Effects</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp-m4/ui-effects.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // *** VARIABLES:
+        const COLORS = {
+            blue: "#4A90E2",
+            green: "#2EAD6B",
+            red: "#E2574C",
+            purple: "#8E6CEF",
+            orange: "#F2A33A",
+            dark: "#1C1C1B",
+        };
+
+        let lblClicked;
+        let boxTarget, txtEmail, lblEmail;
+        let boxBell, stopLoop = null, lblLoop;
+        let btnOff, offEffect = null;
+
+        const start = function () {
+
+            page.color = "#F4F5F2";
+
+            // BOX: Full screen scrollable container
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            startBox(0, 0, "100%", "100%", {
+                color: "transparent",
+                scrollY: 1,
+            });
+
+                // GROUP: Page layout
+                VGroup({
+                    width: "100%",
+                    height: "auto", // Grows with content, so the Box can scroll.
+                    align: "center top",
+                    gap: 30,
+                    padding: 50,
+                });
+
+                    // LABEL: Title
+                    Label({
+                        text: "UI Effects",
+                        fontSize: 26,
+                        fontFamily: "opensans-bold",
+                    });
+
+                    Label({
+                        text: "Hover and press effects for buttons, cards and links. Move the mouse over the objects and click them.",
+                        fontSize: 14,
+                        textColor: Black(0.45),
+                    });
+
+                    // SAMPLE 1: Press effects
+                    startCard("1. Press effects", "UIEffects.press(btn, type): a hover effect, a press effect and a pointer cursor. (UIEffects.button() is the old name, it still works.)");
+
+                        startRow();
+
+                            [
+                                ["default", COLORS.blue],
+                                ["press", COLORS.green],
+                                ["lift", COLORS.purple],
+                                ["glow", COLORS.red],
+                                ["ripple", COLORS.blue],
+                                ["shine", COLORS.orange],
+                                ["push", COLORS.green, { shadowColor: "#1E7A4A" }],
+                                ["jelly", COLORS.red],
+                                ["pop", COLORS.purple],
+                                ["ring", COLORS.dark],
+                            ].forEach(function (item) {
+                                const type = item[0];
+                                const btn = addFlatButton(type, item[1]);
+                                UIEffects.press(btn, type, item[2] || {});
+                                btn.on("click", function () { lblClicked.text = "Clicked: " + type; });
+                            });
+
+                        endRow();
+
+                        lblClicked = addInfoLabel("Clicked: -");
+
+                    endCard();
+
+                    // SAMPLE 2: Fill
+                    startCard("2. Outline buttons: fill", "UIEffects.press(btn, \"fill\", { color, textColor, direction }). The background fills from one side.");
+
+                        startRow();
+
+                            ["left", "right", "up", "down"].forEach(function (direction, index) {
+                                const color = [COLORS.blue, COLORS.green, COLORS.purple, COLORS.red][index];
+                                const btn = addOutlineButton("From " + direction, color);
+                                UIEffects.press(btn, "fill", { color: color, textColor: "white", direction: direction });
+                            });
+
+                        endRow();
+
+                    endCard();
+
+                    // SAMPLE 3: Combined effects
+                    startCard("3. Combined effects", "Give a list of types: UIEffects.press(btn, [\"lift\", \"ripple\"]). The last one is the classic basic.js button with the first effect: UIEffects.press(btn).");
+
+                        startRow();
+
+                            UIEffects.press(addFlatButton("lift + ripple", COLORS.blue), ["lift", "ripple"]);
+                            UIEffects.press(addFlatButton("glow + ripple", COLORS.red), ["glow", "ripple"]);
+                            UIEffects.press(addFlatButton("push + ripple", COLORS.orange), ["push", "ripple"], { shadowColor: "#B87414" });
+                            UIEffects.press(addFlatButton("grow + shine", COLORS.purple), ["grow", "shine"]);
+
+                            Button({ text: "Classic", width: 130, height: 44, fontSize: 16 });
+                            UIEffects.press(that);
+
+                        endRow();
+
+                    endCard();
+
+                    // SAMPLE 4: Hover effects on cards
+                    startCard("4. Hover effects on cards", "UIEffects.hover(card, type) shows that the pointer is over an object. The last card is a button: UIEffects.press(card, \"lift\").");
+
+                        startRow();
+
+                            UIEffects.hover(addCard("lift", "Rises with a shadow."), "lift");
+                            UIEffects.hover(addCard("grow", "Gets a little bigger."), "grow");
+                            UIEffects.hover(addCard("ring", "A focus ring around it."), "ring", { color: COLORS.blue });
+                            UIEffects.hover(addCard("color", "The background changes."), "color", { color: "#EAF2FC" });
+                            UIEffects.hover(addCard("border", "The border color changes."), "border", { color: COLORS.blue });
+                            UIEffects.hover(addCard("glow", "A soft light around it."), "glow", { color: "rgba(74, 144, 226, 0.45)", size: 20 });
+                            UIEffects.hover(addCard("color (no color)", "A thin dark layer on any color."), "color");
+
+                            const cardButton = addCard("Click me", "A card that is a button.");
+                            UIEffects.press(cardButton, "lift");
+                            cardButton.on("click", function () { UIEffects.play(cardButton, "tada"); });
+
+                        endRow();
+
+                    endCard();
+
+                    // SAMPLE 5: Tilt and spotlight
+                    startCard("5. 3D tilt and spotlight", "\"tilt\" turns to the pointer. \"spotlight\" is a light that follows the pointer. They can be used together.");
+
+                        startRow();
+
+                            UIEffects.hover(addDarkCard("tilt", "{ angle: 10 }", "linear-gradient(135deg, #4A90E2, #8E6CEF)"), "tilt", { angle: 10 });
+                            UIEffects.hover(addDarkCard("spotlight", "{ size: 160 }", ""), "spotlight", { size: 160 });
+                            UIEffects.hover(addDarkCard("tilt + spotlight", "Two effects.", "linear-gradient(135deg, #E2574C, #F2A33A)"), ["tilt", "spotlight"], { glare: 0 });
+
+                        endRow();
+
+                    endCard();
+
+                    // SAMPLE 6: Links
+                    startCard("6. Links and texts", "UIEffects.hover(label, \"underline\"): a line grows under the text. \"fade\" is a simple alternative.");
+
+                        startRow();
+
+                            ["Documentation", "Examples", "GitHub"].forEach(function (text) {
+                                const link = Label({ text: text, fontSize: 16, textColor: COLORS.blue });
+                                link.elem.style.cursor = "pointer";
+                                link.elem.style.paddingBottom = "2px";
+                                UIEffects.hover(link, "underline");
+                                link.on("click", function () { lblClicked.text = "Link: " + text; });
+                            });
+
+                            UIEffects.hover(Label({ text: "fade", fontSize: 16, textColor: Black(0.7) }), "fade", { amount: 0.5 });
+
+                        endRow();
+
+                    endCard();
+
+                    // SAMPLE 7: Focus group
+                    startCard("7. Focus group", "UIEffects.focusGroup(list, { scale: 1.04, grayscale: 1 }): when one card is hovered, the others are dimmed.");
+
+                        startRow();
+
+                            const focusCards = [
+                                addColorCard("Basic", "$0", COLORS.green),
+                                addColorCard("Pro", "$9", COLORS.blue),
+                                addColorCard("Team", "$29", COLORS.purple),
+                                addColorCard("Enterprise", "$99", COLORS.dark),
+                            ];
+                            UIEffects.focusGroup(focusCards, { scale: 1.04, grayscale: 1 });
+
+                        endRow();
+
+                    endCard();
+
+                    // SAMPLE 8: play()
+                    startCard("8. play(): one-time animations", "UIEffects.play(obj, name). Ex: shake an input when its value is not valid.");
+
+                        startRow();
+
+                            boxTarget = Box({ width: 90, height: 90, color: COLORS.orange, round: 14 });
+
+                            HGroup({ width: 420, height: "auto", align: "left center", gap: 8, wrap: 1 });
+                                ["shake", "jelly", "pop", "bounce", "tada", "heartbeat", "wiggle", "flash"].forEach(function (name) {
+                                    const btn = addSmallButton(name);
+                                    UIEffects.press(btn, "press");
+                                    btn.on("click", function () { UIEffects.play(boxTarget, name); });
+                                });
+                            endGroup();
+
+                        endRow();
+
+                        startRow();
+
+                            txtEmail = Input({ width: 240, height: 42, fontSize: 15, placeholder: "E-mail" });
+
+                            const btnSend = addFlatButton("Send", COLORS.blue);
+                            UIEffects.press(btnSend, "ripple");
+                            btnSend.on("click", checkEmail);
+                            txtEmail.onEnter(checkEmail);
+
+                            lblEmail = addInfoLabel("Try it empty.");
+
+                        endRow();
+
+                    endCard();
+
+                    // SAMPLE 9: loop()
+                    startCard("9. loop(): repeats until stop()", "const stop = UIEffects.loop(obj, name); stop(); For a new message, a waiting action or the next step.");
+
+                        startRow();
+
+                            // BOX: A notification icon
+                            boxBell = VGroup({ width: 64, height: 64, color: COLORS.red, round: 32 });
+                                Label({ text: "3", fontSize: 24, fontFamily: "opensans-bold", textColor: "white" });
+                            endGroup();
+
+                            HGroup({ width: 420, height: "auto", align: "left center", gap: 8, wrap: 1 });
+                                ["pulse", "glow", "breathe", "shake", "wiggle", "bounce", "heartbeat"].forEach(function (name) {
+                                    const btn = addSmallButton(name);
+                                    UIEffects.press(btn, "press");
+                                    btn.on("click", function () { startLoop(name); });
+                                });
+                                const btnStop = addSmallButton("stop", COLORS.dark);
+                                UIEffects.press(btnStop, "press");
+                                btnStop.on("click", function () { startLoop(""); });
+                            endGroup();
+
+                        endRow();
+
+                        lblLoop = addInfoLabel("Loop: pulse");
+
+                    endCard();
+
+                    // SAMPLE 10: off()
+                    startCard("10. Remove an effect: off()", "Every function (except play) returns a function that removes the effect and restores the styles.");
+
+                        startRow();
+
+                            btnOff = addFlatButton("lift + ripple", COLORS.purple);
+                            offEffect = UIEffects.press(btnOff, ["lift", "ripple"]);
+
+                            const btnToggle = addOutlineButton("Effect: On", COLORS.dark);
+                            UIEffects.press(btnToggle, "fill", { color: COLORS.dark, textColor: "white" });
+                            btnToggle.on("click", function () {
+                                if (offEffect) {
+                                    offEffect();
+                                    offEffect = null;
+                                    btnToggle.text = "Effect: Off";
+                                } else {
+                                    offEffect = UIEffects.press(btnOff, ["lift", "ripple"]);
+                                    btnToggle.text = "Effect: On";
+                                }
+                            });
+
+                        endRow();
+
+                    endCard();
+
+                endGroup();
+
+            endBox();
+
+            startLoop("pulse");
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        const checkEmail = function () {
+            const value = txtEmail.text.trim();
+            if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+                lblEmail.text = "Sent: " + value;
+                lblEmail.textColor = COLORS.green;
+                UIEffects.play(lblEmail, "pop");
+            } else {
+                lblEmail.text = "Please write a valid e-mail.";
+                lblEmail.textColor = COLORS.red;
+                UIEffects.play(txtEmail, "shake");
+            }
+        };
+
+        const startLoop = function (name) {
+            if (stopLoop) stopLoop();
+            stopLoop = null;
+            if (name) stopLoop = UIEffects.loop(boxBell, name);
+            lblLoop.text = "Loop: " + (name || "stopped");
+        };
+
+        // GROUP: A card with a title and a short description.
+        const startCard = function (title, description = "") {
+            VGroup({
+                width: 680,
+                height: "auto",
+                align: "left top",
+                gap: 16,
+                padding: 20,
+                color: "white",
+                round: 10,
+                border: 1,
+                borderColor: Black(0.1),
+            });
+            that.elem.style.alignItems = "stretch";
+            Label({
+                text: title,
+                fontSize: 14,
+                textColor: Black(0.45),
+            });
+            if (description) {
+                Label({
+                    text: description,
+                    fontSize: 13,
+                    textColor: Black(0.35),
+                });
+                that.elem.style.marginTop = "-10px";
+            }
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+        // GROUP: A row that does not clip the shadows and rings of the effects.
+        const startRow = function () {
+            HGroup({ width: "100%", height: "auto", align: "left center", gap: 14, wrap: 1, padding: 6, clipContent: 0 });
+        };
+
+        const endRow = function () {
+            endGroup();
+        };
+
+        const addFlatButton = function (text, color) {
+            return Button({
+                text: text,
+                width: 130,
+                height: 44,
+                fontSize: 15,
+                minimal: 1,
+                color: color,
+                textColor: "white",
+                round: 8,
+            });
+        };
+
+        const addOutlineButton = function (text, color) {
+            const btn = Button({
+                text: text,
+                width: 130,
+                height: 44,
+                fontSize: 15,
+                minimal: 1,
+                color: "white",
+                textColor: color,
+                round: 8,
+            });
+            btn.elem.style.border = "2px solid " + color;
+            return btn;
+        };
+
+        const addSmallButton = function (text, color = "#EDEEEA") {
+            return Button({
+                text: text,
+                width: 92,
+                height: 34,
+                fontSize: 13,
+                minimal: 1,
+                color: color,
+                textColor: (color === "#EDEEEA") ? Black(0.75) : "white",
+                round: 6,
+            });
+        };
+
+        const addCard = function (title, text) {
+            const card = VGroup({
+                width: 180,
+                height: 96,
+                align: "left top",
+                gap: 4,
+                padding: 16,
+                color: "white",
+                round: 12,
+                border: 1,
+                borderColor: Black(0.12),
+            });
+                Label({ text: title, fontSize: 16, fontFamily: "opensans-bold", textColor: Black(0.8) });
+                Label({ text: text, width: "100%", fontSize: 13, textColor: Black(0.5) });
+            endGroup();
+            return card;
+        };
+
+        const addDarkCard = function (title, text, background) {
+            const card = VGroup({
+                width: 200,
+                height: 130,
+                align: "left bottom",
+                gap: 2,
+                padding: 18,
+                color: COLORS.dark,
+                round: 14,
+            });
+            if (background) card.elem.style.backgroundImage = background;
+                Label({ text: title, fontSize: 17, fontFamily: "opensans-bold", textColor: "white" });
+                Label({ text: text, fontSize: 13, textColor: White(0.7) });
+            endGroup();
+            return card;
+        };
+
+        const addColorCard = function (title, price, color) {
+            const card = VGroup({
+                width: 140,
+                height: 120,
+                align: "left top",
+                gap: 6,
+                padding: 16,
+                color: color,
+                round: 12,
+            });
+                Label({ text: title, fontSize: 14, textColor: White(0.85) });
+                Label({ text: price, fontSize: 28, fontFamily: "opensans-bold", textColor: "white" });
+            endGroup();
+            return card;
+        };
+
+        const addInfoLabel = function (text) {
+            return Label({
+                text: text,
+                fontSize: 14,
+                textColor: Black(0.5),
+            });
+        };
+
+    </script>
+</head>
+
+<body></body>
+
+</html>

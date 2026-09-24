@@ -16,7 +16,7 @@ User Actions Page (Right View Template) - v26.09
 
 COMPONENTS:
 - ButtonWithIcon (comp-m3): Sign out
-- UIEffects (comp-m2): Click effect of the menu items
+- UIEffects (comp-m4): Click effect of the menu items
 
 */
 
@@ -110,7 +110,7 @@ const UserActionsPage = function(params = {}) {
         item.on("mouseover", function() { item.color = S.FIELD_COLOR; });
         item.on("mouseout", function() { item.color = "transparent"; });
         item.on("click", onClick);
-        UIEffects.button(item);
+        UIEffects.press(item);
 
             Icon({ width: 20, height: 20 });
             that.load(iconFile);
