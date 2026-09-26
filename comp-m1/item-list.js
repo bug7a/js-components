@@ -198,7 +198,7 @@ const ItemList = function(params = {}) {
     //if (!parameters.darkMode) parameters.darkMode = 0;
 
     // BOX: UI object container.
-    const box = createBox();
+    let box = createBox();
 
     const defaults = {
         width: 600,
@@ -209,12 +209,14 @@ const ItemList = function(params = {}) {
         scrollbar_round: 3,
         scrollbar_borderColor: "rgba(0, 0, 0, 1)",
         scrollbar_width: 4,
-        scrollbar_mouseOverWidth: 8,
-        scrollbar_mouseOverColor: "#141414",
-        scrollbar_opacity: 0.6,
-        scrollbar_mouseOverOpacity: 0.6,
+        scrollbar_mouseOverWidth: 4,
+        scrollbar_mouseOverColor: "#373836",
+        scrollbar_opacity: 0.4,
+        scrollbar_mouseOverOpacity: 0.9,
         scrollbar_padding: 2,
-        scrollbar_color: "#141414",
+        scrollbar_color: "#373836",
+        scrollbar_neverHide: 1,
+        scrollbar_showDots: 1,
     };
 
     box.props(defaults, params);
@@ -254,6 +256,8 @@ const ItemList = function(params = {}) {
             bar_mouseOverOpacity: box.scrollbar_mouseOverOpacity,
             bar_padding: box.scrollbar_padding,
             bar_color: box.scrollbar_color,
+            neverHide: box.scrollbar_neverHide,
+            showDots: box.scrollbar_showDots,
         });
     }
     
@@ -378,6 +382,10 @@ const ItemList = function(params = {}) {
 
     box.clearItems = function() {
 
+        itemList.forEach(function(item) {
+            item.remove();
+        });
+
         box.html = "";
         itemList = [];
         selectedItemList = [];
@@ -422,6 +430,8 @@ const ItemList = function(params = {}) {
                 itemList[i].visible = 0;
             }
         }
+
+        box.scrollBar.refreshScroll(); // WHY: ScrollTop: 0 iken filtre ile itemler azaldığında scroll güncellenmiyor du.
 
         return shownItemCount;
 
@@ -474,6 +484,17 @@ const ItemList = function(params = {}) {
         }
 
     }
+
+    box.superRemove = box.remove;
+    box.remove = function() {
+
+        box.scrollBar.remove();
+        box.clearItems();
+
+        box.superRemove.call(box);
+        box = null;
+        
+    };
 
     // *** CODE:
     box.setItemAlignment(ItemList.alignType.VERTICAL);

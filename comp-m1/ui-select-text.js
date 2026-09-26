@@ -58,6 +58,8 @@ UISelectText.create = function(left = 0,
     // LABEL: Component name label
     ui.txtName = createLabel(10, 0, "auto");
     ui.add(that);
+    that.left = 10;
+    that.top = 0;
     that.text = "";
     that.fontSize = 20;
     that.height = that.fontSize + (that.fontSize / 2);
@@ -72,13 +74,16 @@ UISelectText.create = function(left = 0,
     // BOX: Mask of txtName
     ui.boxMask = createBox(0, 0, 40, ui.height);
     ui.add(that);
+    that.top = 0;
     that.right = 0;
     that.element.style.background = "linear-gradient(to right, #FFFFFF00, " + UISelectText.uiBackgroundColor + ")";
 
     // IMAGE: Up arrow image
     ui.imgArrow1 = createImage(0, 0, 16, 16);
     ui.add(that);
-    that.load("components/ui-select-text/arrow.svg");
+    that.left = 0;
+    that.top = 0;
+    that.load("../comp-m1/ui-select-text/arrow.svg");
     that.right = 8;
     that.opacity = 0.7;
     that.rotate = 180;
@@ -90,7 +95,9 @@ UISelectText.create = function(left = 0,
     // IMAGE: Down arrow image
     ui.imgArrow2 = createImage(0, 0, 16, 16);
     ui.add(that);
-    that.load("components/ui-select-text/arrow.svg");
+    that.left = 0;
+    that.top = 0;
+    that.load("../comp-m1/ui-select-text/arrow.svg");
     that.right = 8;
     that.opacity = 0.7;
     that.onLoad(function(self) {
@@ -250,7 +257,7 @@ const createItemSelection = function(connectedUI) {
     // IMAGE: Search icon
     UISelectText.itemSelection.boxSearch.imgIcon = createImage(5, 0, 50, 50);
     UISelectText.itemSelection.boxSearch.add(that);
-    that.load("components/ui-select-text/search.svg");
+    that.load("../comp-m1/ui-select-text/search.svg");
     that.opacity = 0.4;
     that.space = 27;
 
@@ -277,7 +284,7 @@ const createItemSelection = function(connectedUI) {
     // IMAGE: Cancel button icon
     UISelectText.itemSelection.boxCancel.imgCancel = createImage(8, 8, 14, 14);
     UISelectText.itemSelection.boxCancel.add(that);
-    that.load("components/ui-select-text/cancel.svg");
+    that.load("../comp-m1/ui-select-text/cancel.svg");
     that.opacity = 0.5;
 
     // BOX: Scrollable box for items

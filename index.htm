@@ -1,390 +1,243 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        
-        <title>JavaScript UI Components – Lightweight, Customizable, Reusable | basicUI</title>
-        
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
-        <meta name="description" content="Clean, object-oriented, and easily customizable UI components, built with JavaScript for modern web-based applications.">
-        <meta name="keywords" content="JavaScript components, UI components, reusable JavaScript UI, frontend components, lightweight JS libraries, vanilla JS UI, custom web components, JS UI kit, frontend UI tools, object-oriented JavaScript, modular JavaScript, open source UI library, basicUI">
 
+<head>
 
-        <!-- LIBRARY FILES -->
-        <!-- <link rel="preload" href="basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous"> -->
-        <link rel="stylesheet" type="text/css" href="basic/basic.min.css">
-        <script src="basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
+    <title>JS Components – UI components for basic.js</title>
 
-        <script src="comp-m1/select-text.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="comp-m1/select-item.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="comp-m1/item-list.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="comp-m1/search-input.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="comp-m1/ui-web-view.min.js" type="text/javascript" charset="utf-8"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Plain JavaScript UI components built with basic.js. Every component with a live example and its code.">
+    <meta name="keywords" content="JavaScript components, UI components, vanilla JS UI, basic.js, component library, live examples, open source UI kit">
+    <meta name="author" content="Bugra Ozden">
+    <meta name="theme-color" content="#F4F4F1">
 
-        <script>
-        
-        const itemDataList = [
-            { type: "normal", title:"Slider (New)", desc:"slider/slider.htm", actionType: "url", actionValue: "02-comp-m2-samples/slider.htm", searchText: "slider" },
-            { type: "normal", title:"Tiny Select", desc:"tiny-select.htm", actionType: "url", actionValue: "02-comp-m2-samples/tiny-select.htm", searchText: "tiny select text" },
-            { type: "normal", title:"Check Box", desc:"check-box.htm", actionType: "url", actionValue: "02-comp-m1-samples/ui-check-box.htm", searchText: "check box" },
-            { type: "normal", title:"Tiny Table", desc:"tiny-table.htm", actionType: "url", actionValue: "02-comp-m2-samples/tiny-table.htm", searchText: "tiny table data list" },
-            { type: "normal", title:"Toggle", desc:"ui-toggle.htm", actionType: "url", actionValue: "02-comp-m1-samples/ui-toggle.htm", searchText: "toggle checkbox" },
-            { type: "normal", title:"Page Control", desc:"ui-page-control.htm", actionType: "url", actionValue: "02-comp-m1-samples/ui-page-control.htm", searchText: "page control" },
-            { type: "normal", title:"Tabs", desc:"ui-tabs.htm", actionType: "url", actionValue: "02-comp-m1-samples/ui-tabs.htm", searchText: "tabs segment" },
-            { type: "normal", title:"Select Text", desc:"select-text.htm", actionType: "url", actionValue: "02-comp-m1-samples/select-text.htm", searchText: "select text" },
-            { type: "normal", title:"Select Item", desc:"select-item.htm", actionType: "url", actionValue: "02-comp-m1-samples/select-item.htm", searchText: "select item" },
-            { type: "normal", title:"Title", desc:"ui-title.htm", actionType: "url", actionValue: "02-comp-m1-samples/ui-title.htm", searchText: "title" },
-            { type: "normal", title:"Left Title", desc:"ui-left-title.htm", actionType: "url", actionValue: "02-comp-m1-samples/ui-left-title.htm", searchText: "left title" },
-            { type: "normal", title:"Search Input", desc:"ui-search-box.htm", actionType: "url", actionValue: "02-comp-m1-samples/ui-search-box.htm", searchText: "search box" },
-            { type: "normal", title:"Action Button", desc:"ui-action-button.htm", actionType: "url", actionValue: "02-comp-m1-samples/ui-action-button.htm", searchText: "action button" },
-            { type: "normal", title:"Progress Bar", desc:"ui-progress-bar.htm", actionType: "url", actionValue: "02-comp-m1-samples/ui-progress-bar.htm", searchText: "progress bar" },
-            { type: "normal", title:"Notice", desc:"ui-notice.htm", actionType: "url", actionValue: "02-comp-m1-samples/ui-notice.htm", searchText: "notice tiny alert" },
-            { type: "normal", title:"Stepper", desc:"ui-stepper.htm", actionType: "url", actionValue: "02-comp-m1-samples/ui-stepper.htm", searchText: "stepper" },
-            { type: "normal", title:"Tooltip", desc:"tooltip.htm", actionType: "url", actionValue: "02-comp-m2-samples/tooltip.htm", searchText: "tooltip tips hint" },
-            { type: "normal", title:"Object Waiting", desc:"object-waiting.htm", actionType: "url", actionValue: "02-comp-m1-samples/object-waiting.htm", searchText: "object waiting" },
-            { type: "normal", title:"Waiting", desc:"waiting.htm", actionType: "url", actionValue: "02-comp-m2-samples/waiting.htm", searchText: "waiting" },
-            /* { type: "normal", title:"Bars Test", desc:"js/page/default/bars-test-page.js", actionType: "code", actionValue: barsTestPage.PAGE_ID, searchText: "bars text" }, */
-            /*
-            { type: "normal", title:"Web View", desc:"ui-web-view.htm", actionType: "url", actionValue: "ui-web-view.htm", searchText: "web view htm" },
-            { type: "title", title: "VIEWS", searchText: "*" },
-            { type: "normal", title:"defaultView", desc:"js/page/default/default-example-page.js", actionType: "code", actionValue: defaultExamplePage.PAGE_ID, searchText: "default view" },
-            { type: "normal", title:"secondView", desc:"js/page/second/second-example-page.js", actionType: "code", actionValue: secondExamplePage.PAGE_ID, searchText: "second view" },
-            { type: "normal", title:"smallView", desc:"js/page/small/small-example-page.js", actionType: "code", actionValue: smallExamplePage.PAGE_ID, searchText: "small view" },
-            { type: "title", title: "PAGE TEMPLATES", searchText: "*" },
-            { type: "normal", title:"Custom Tab Bar", desc:"custom-tab-bar.htm", actionType: "url", actionValue: "custom-tab-bar.htm", searchText: "custom bottom tab bar" },
-            { type: "normal", title:"Select Item Dialog", desc:"js/page/small/select-color-dialog.js", actionType: "code", actionValue: selectColorDialog.PAGE_ID, searchText: "title" },
-            { type: "normal", title:"Edit Item Dialog", desc:"js/page/small/edit-item-dialog.js", actionType: "code", actionValue: editItemDialog.PAGE_ID, searchText: "edit item" },
-            { type: "normal", title:"Item List (Icons)", desc:"js/page/second/my-documents-page.js", actionType: "code", actionValue: myDocumentsPage.PAGE_ID, searchText: "title" },
-            { type: "normal", title:"Template A", desc:"js/page/second/template-a-page.js", actionType: "code", actionValue: templateAPage.PAGE_ID, searchText: "title" },
-            { type: "title", title: "TECHNIQUES", searchText: "*" },
-            { type: "normal", title:"Autolayout Group", desc:"ui-autolayout-group.htm", actionType: "url", actionValue: "ui-autolayout-group.htm", searchText: "group autolayout startFlexBox flex box" },
-            { type: "normal", title:"Cells", desc:"ui-cells.htm", actionType: "url", actionValue: "ui-cells.htm", searchText: "cell cells" },
-            { type: "normal", title:"Scrolling Text", desc:"ui-scrolling-text.htm", actionType: "url", actionValue: "ui-scrolling-text.htm", searchText: "Scrolling Text" },
-            { type: "normal", title:"HTML Model Usage", desc:"html-model-usage.htm", actionType: "url", actionValue: "html-model-usage.htm", searchText: "html model css htm" },
-            { type: "title", title: "BONUS", searchText: "*" },
-            { type: "normal", title:"Select Item Dialog (B)", desc:"custom-dialog-b.htm", actionType: "url", actionValue: "custom-dialog-b.htm", searchText: "custom dialog" },
-            { type: "normal", title:"Period Bar", desc:"ui-period-bar.htm", actionType: "url", actionValue: "ui-period-bar.htm", searchText: "period bar date" },
-            */
-        ];
-        let grpPage = null;
-        let icoPreview = null;
-        let htmPage = null;
-        let grpHtmPage = null;
-        let icoLogo = null;
-        let mySelectText = null;
-        let btnExample = null;
-        let lblInfo = null;
-        let boxBottomSpace = null;
-        
-        window.onload = function() {
+    <meta name="robots" content="index, follow, max-image-preview:large">
 
-            page.fit(600);
+    <!-- LANGUAGES: The same page in English (https://bug7a.github.io/js-components/) and in Turkish (?lang=tr).
+         canonical is added by index/site.js: it is different for each language. -->
+    <link rel="alternate" hreflang="en" href="https://bug7a.github.io/js-components/">
+    <link rel="alternate" hreflang="tr" href="https://bug7a.github.io/js-components/?lang=tr">
+    <link rel="alternate" hreflang="x-default" href="https://bug7a.github.io/js-components/">
 
-            grpPage = startBox(0, 0, "100%", "100%", {
-                color: "transparent",
-            });
+    <!-- SEO: The page has two languages at the same address: ?lang=tr / ?lang=en (index/site.js, the default one has no ?lang).
+         The published address is CONFIG.siteURL (index/config.js): index/site.js adds canonical, hreflang and og:url with it.
+         The address is also written below (hreflang, og:url, og:image): link previews do not run JavaScript.
+         The <noscript> part and the JSON-LD are made from index/texts.js and index/catalog.js: keep them the same when the texts change. -->
 
-                // ICON: Preview
-                
-                icoPreview = Icon(30, {
-                    top: 240,
-                    opacity: 0.4,
-                });
-                that.autoSize = 2;
-                that.load("assets/web/preview/i1.png");
-                
+    <!-- SOCIAL (link preview) -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="JS Components">
+    <meta property="og:title" content="JS Components – UI components for basic.js">
+    <meta property="og:description" content="Plain JavaScript UI components built with basic.js. Every component with a live example and its code.">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="tr_TR">
+    <meta property="og:url" content="https://bug7a.github.io/js-components/">
+    <meta property="og:image" content="https://bug7a.github.io/js-components/index/og-image.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="JS Components – UI components for basic.js">
+    <meta name="twitter:card" content="summary_large_image">
 
-                // BOX: Background
-                Box(0, 0, "100%", "100%");
-                //that.position = "fixed";
-                //that.elem.style.position = "fixed";
-                that.left = 0;
-                that.elem.style.minWidth = "1400px";
-                that.elem.style.background = "linear-gradient(to right, #FFFFFF00, #FFFFFF00, lightgray)";
-                //that.color = "red";
+    <!-- STRUCTURED DATA (schema.org) -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareSourceCode",
+        "name": "JS Components",
+        "url": "https://bug7a.github.io/js-components/",
+        "description": "Plain JavaScript UI components built with basic.js. Every component with a live example and its code.",
+        "codeRepository": "https://github.com/bug7a/js-components",
+        "programmingLanguage": "JavaScript",
+        "runtimePlatform": "Web browser",
+        "license": "https://www.apache.org/licenses/LICENSE-2.0",
+        "isAccessibleForFree": true,
+        "inLanguage": [
+            "en",
+            "tr"
+        ],
+        "keywords": "JavaScript UI components, vanilla JS, basic.js, component library, Tabs, Breadcrumbs, PageControl, SearchResults, ContextMenu, SelectBox, SelectDate, SelectTime, SelectColor, SelectFile, TagInput, Stepper",
+        "author": {
+            "@type": "Person",
+            "name": "Buğra Özden",
+            "url": "https://bug7a.github.io/",
+            "sameAs": [
+                "https://github.com/bug7a/",
+                "https://www.linkedin.com/in/bugra-ozden/"
+            ]
+        }
+    }
+    </script>
 
-                // GROUP: Componentlerin yüklendiği alan.
-                grpHtmPage = startFlexBox({
-                    justifyContent: "flex-end",
-                    width: 600,
-                    left: 420,
-                    //color: "white",
-                });
-                that.elem.style.borderLeft = "1px solid rgba(0, 0, 0, 0.2)";
-                that.elem.style.borderRight = "1px solid rgba(0, 0, 0, 0.2)";
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23141414'/%3E%3Cpath d='m20 22 6-6-6-6M12 10l-6 6 6 6' fill='none' stroke='%23fff' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 
-                    // UI WEB VIEW: Object description.
-                    htmPage = UIWebView.create();
-                    that.left = 0;
-                    that.top = 0;
-                    that.width = 600;
-                    that.height = "100%";
-                    //htmPage.loadHTMLFile("app-todo.htm");
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="basic/basic.min.css">
+    <script src="basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
 
-                endFlexBox();
+    <!-- COMPONENT FILES -->
+    <script src="comp-m4/web-view.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="comp-m4/tabs.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="comp-m4/toast.js" type="text/javascript" charset="utf-8"></script>
 
-                // ICON: Logo
-                //icoLogo = Icon(40, 30, 278 * 0.6, 142 * 0.6);
-                //that.load("assets/web/ui-components-logo.svg");
-                icoLogo = Icon(-40, -20);
-                that.load("assets/web/basicui.png");
-                that.onLoad(function() {
-                    icoLogo.width = icoLogo.width / 3;
-                    icoLogo.height = icoLogo.height / 3;
-                })
+    <!-- SITE FILES -->
+    <script src="index/config.js" type="text/javascript" charset="utf-8"></script>
+    <script src="index/texts.js" type="text/javascript" charset="utf-8"></script>
+    <script src="index/catalog.js" type="text/javascript" charset="utf-8"></script>
+    <script src="index/theme.js" type="text/javascript" charset="utf-8"></script>
+    <script src="index/code-highlight.js" type="text/javascript" charset="utf-8"></script>
+    <script src="index/home.js" type="text/javascript" charset="utf-8"></script>
+    <script src="index/detail.js" type="text/javascript" charset="utf-8"></script>
+    <script src="index/site.js" type="text/javascript" charset="utf-8"></script>
 
-                /*
-                const _searchInput = SearchInput({
-                    top: 140,
-                    left: 40,
-                    width: 340,
-                    height: 40,
-                    color: "whitesmoke",
-                    round: 2,
-                    fontSize: 18,
-                    searchIconSize: 22,
-                    placeholderText: "Search",
-                });
+    <!--
 
-                //mySelectText = null;
-                // ITEM LIST:  
-                _itemList = ItemList({ 
-                    width: _searchInput.width, 
-                    height: "calc(100% - 276px)",
-                });
-                _itemList.top = _searchInput.top + _searchInput.height;
-                _itemList.left = _searchInput.left;
-                _itemList.setItemAlignment(ItemList.alignType.VERTICAL);
-                _itemList.setItemCreationFunction(SelectTextItem);
-                _itemList.createItemsByDataList(itemDataList);
+    /* Bismillah */
 
-                _itemList.onSelectionChange(function(ui, self, lastSelectedItem, event) {
+    JS COMPONENTS WEBSITE
+    - Bu projedeki bileşenleri, çalışan örnekleri ve kodlarıyla gösterir.
+    - Arayüzün tamamı basic.js ile, saf JavaScript ile çizilir. Framework yoktur.
+    - Bileşen listesi: index/catalog.js  |  Metinler: index/texts.js  |  Ayarlar: index/config.js
+    - Sayfa akışı: index/site.js -> start()
+    - Kodlar fetch ile okunur: sayfayı bir web sunucusu ile açın (VS Code Live Server).
 
-                    if (lastSelectedItem) {
-                        lastSelectedItem.opacity = 1;
-                        lastSelectedItem.clickable = 1;
-                        ui.removeItemFromSelectedList(lastSelectedItem);
-                    }
+    -->
 
-                    if (self) {
-                        self.opacity = 0.5;
-                        self.clickable = 0;
-                        ui.addItemToSelectedList(self);
-                    }
+    <style>
 
-                    htmPage.loadHTMLFile(itemDataList[self.getIndex()].actionValue);
-
-                    if (event) {
-                        //box.setSelectedIndex(self.getIndex());
-                        //cover.close();
-                    }
-
-                });
-                _itemList.selectItemByIndex(0);
-
-                _searchInput.onSearch = function(searchedText) {
-                    const shownItemCount = _itemList.searchItemByText(searchedText);
-                    //cover.refreshSizeAndPosition(shownItemCount);
-                }
-                */
-
-                
-                // SELECT TEXT: List of components.
-                mySelectText = SelectText({
-                    top: 140,
-                    left: 40,
-                    width: 340,
-                    itemDataList: itemDataList,
-                    selection_fullScreen: 0,
-                    buttonIconFile: "comp-m1/select-item/expand.svg",
-                    search_searchIconFile: "comp-m1/search-input/search.svg",
-                    search_clearIconFile: "comp-m1/search-input/clear.svg",
-                });
-
-                that.onSelect = function(index) {
-                    console.log(index);
-                    htmPage.loadHTMLFile(itemDataList[index].actionValue);
-                    //selectedText = itemDataList[index].actionValue;
-                };
-
-                that.setSelectedIndex(0);
-                
-
-                // LABEL: Full project example button
-                btnExample = Label({
-                    left: 1050,
-                    top: 30,
-                    width: "auto",
-                    height: "auto",
-                    text: "Full Project Example",
-                    //color: "rgba(0, 0, 0, 0.05)",
-                    color: "rgba(255, 255, 255, 0.7)",
-                    border: 1,
-                    borderColor: "rgba(0, 0, 0, 0.2)",
-                    round: 6,
-                    fontSize: 16,
-                    spaceY: 8,
-                    spaceX: 18,
-                    clickable: 1,
-                });
-                //that.element.style.borderBottom = "3px solid rgba(0, 0, 0, 0.2)";
-                that.elem.style.whiteSpace = "nowrap";
-                that.elem.style.cursor = "pointer";
-                that.onClick(function() {
-                    window.open("https://bug7a.github.io/javascript-mobile-app-template/", "_blank");
-                });
-
-                // LABEL: Info.
-                lblInfo = Label({
-                    left: 40,
-                    bottom: 30,
-                    width: 300,
-                    fontSize: 12,
-                    opacity: 0.8,
-                    clickable: 1,
-                });
-                that.text = "Copyright 2020-2025 <b onclick='goto_MySite();' style='cursor: pointer;'>Bugra Ozden</b><br>Licensed under <b onclick='goto_LicensSite();' style='cursor: pointer;'>the Apache License</b>, Version 2.0";
-                
-                boxBottomSpace = Box(0, 0, 40, 40, {
-                    color: "transparent",
-                });
-                that.bottom = 0;
-
-            endBox();
-
-            /*
-            page.mainBox.scrollY = 1;
-            page.mainBox.scrollX = 1;
-            */
-
-            grpPage.scrollX = 1;
-            
-            
-            grpPage.scrollBar = ScrollBar({
-                scrollableBox: grpPage,
-                scrollOnContent: 0,
-                neverHide: 1,
-            });
-            //grpPage.scrollBar.color = "rgba(0, 0, 0, 0.3)";
-            
-
-            resized();
-            page.onResize(resized);
-
-            grpPage.elem.addEventListener('scroll', scrolled);
-
-        };
-
-        const resized = function() {
-
-            page.fit(600);
-
-            /*
-            if (page.width < 1000) {
-                htmPage.top = 220;
-                grpHtmPage.left = 0;
-                lblInfo.aline(grpHtmPage, "bottom", 80);
-                lblInfo.left = 40;
-                boxBottomSpace.aline(lblInfo, "bottom");
-                icoPreview.visible = 0;
-            } else {
-                htmPage.top = 0;
-                grpHtmPage.right = 0;
-                lblInfo.left = 40;
-                lblInfo.bottom = 30;
-                boxBottomSpace.bottom = 0;
-                icoPreview.visible = 1;
-            }
-            */
-
-        };
-
-        function smoothScrollTo(element, to, duration) {
-            var start = element.scrollLeft,
-                change = to - start,
-                currentTime = 0,
-                increment = 20;
-
-            function animateScroll() {
-                currentTime += increment;
-                var val = easeInOutQuad(currentTime, start, change, duration);
-                element.scrollLeft = val;
-                if (currentTime < duration) {
-                    requestAnimationFrame(animateScroll);
-                }
-            }
-
-            animateScroll();
+        /* JavaScript kapalı ise gösterilecek metin */
+        .noscript-box {
+            position: absolute;
+            left: 0px;
+            top: 0px;
+            height: 100%;
+            overflow: auto; /* WHY: basic.css turns off the scrolling of <body>. */
+            width: 100%;
+            padding: 40px 20px;
+            box-sizing: border-box;
+            font-family: opensans;
+            font-size: 16px;
+            line-height: 1.6;
+            color: rgba(0, 0, 0, 0.82);
+            text-align: center;
         }
 
-        function easeInOutQuad(t, b, c, d) {
-            t /= d / 2;
-            if (t < 1) return c / 2 * t * t + b;
-            t--;
-            return -c / 2 * (t * (t - 2) - 1) + b;
-        }
+    </style>
 
-        // DENEYSEL: MOBILE DE YATAY KULLANIM: SAYFALARIN YATAY OLARAK DİZİLMESİ VE KAYDIRILMASI
-        const scrolled = function() {
+</head>
 
-            const scrollLeft = grpPage.elem.scrollLeft;
-            const clientWidth = grpPage.clientWidth;
-            const scrollWidth = grpPage.elem.scrollWidth;
+<body>
 
-            if (grpPage.scrollX == 1) {
+    <noscript>
+        <div class="noscript-box">
+            <div style="max-width: 760px; margin: 0 auto; text-align: left;">
+                <p><a href="?lang=tr" hreflang="tr" lang="tr" style="color: inherit;">Türkçe</a></p>
+                <h1>JS Components</h1>
+                <p>Plain JavaScript UI components built with basic.js. Every component with a live example and its code.</p>
+                <h2>Forms &amp; Inputs</h2>
+                <ul>
+                    <li><a href="#/select-file" style="color: inherit;">SelectFile</a>: Drop zone and file dialog that lists the chosen files with image previews and sizes.</li>
+                    <li><a href="#/tag-input" style="color: inherit;">TagInput</a>: A field of chips for tags, keywords or e-mails, with suggestions, validation and paste splitting.</li>
+                    <li><a href="#/stepper" style="color: inherit;">Stepper</a>: Number stepper with decimals, a unit, typed editing and hold-to-repeat buttons.</li>
+                    <li><a href="#/input-b" style="color: inherit;">InputB</a>: Labeled text field with an icon, a unit, hints and validation; the base of the other *InputB fields.</li>
+                    <li><a href="#/email-input-b" style="color: inherit;">EmailInputB</a>: An InputB that checks e-mail addresses.</li>
+                    <li><a href="#/password-input-b" style="color: inherit;">PasswordInputB</a>: Password field with a show and hide button.</li>
+                    <li><a href="#/number-input-b" style="color: inherit;">NumberInputB</a>: An InputB that accepts only numbers.</li>
+                    <li><a href="#/phone-input-b" style="color: inherit;">PhoneInputB</a>: Phone number field with a country code; one example opens a country list.</li>
+                    <li><a href="#/currency-input-b" style="color: inherit;">CurrencyInputB</a>: Money field that formats the amount and shows its currency.</li>
+                    <li><a href="#/url-input-b" style="color: inherit;">URLInputB</a>: Web address field with a protocol selector.</li>
+                    <li><a href="#/textarea-b" style="color: inherit;">TextareaB</a>: Multi-line text field in the InputB style, with a character counter.</li>
+                    <li><a href="#/search-input" style="color: inherit;">SearchInput</a>: Search field with a search icon and a clear button.</li>
+                    <li><a href="#/slider" style="color: inherit;">Slider</a>: Slider for choosing a value in a range, inspired by Material 3.</li>
+                    <li><a href="#/ui-stepper" style="color: inherit;">UIStepper</a>: The first number stepper. New pages use Stepper.</li>
+                    <li><a href="#/ui-search-box" style="color: inherit;">UISearchBox</a>: Search and filter boxes for light and colored backgrounds.</li>
+                    <li><a href="#/ui-numeric-keyboard" style="color: inherit;">UINumericKeyboard</a>: On-screen number keyboard for touch screens and kiosks.</li>
+                </ul>
+                <h2>Selection</h2>
+                <ul>
+                    <li><a href="#/select-box" style="color: inherit;">SelectBox</a>: Dropdown select for single or multiple selection, with select all and clear.</li>
+                    <li><a href="#/select-date" style="color: inherit;">SelectDate</a>: Date picker as a popup or an always visible calendar, with a month and year view.</li>
+                    <li><a href="#/select-time" style="color: inherit;">SelectTime</a>: Time picker with scrollable hour and minute columns, as a popup or inline.</li>
+                    <li><a href="#/select-color" style="color: inherit;">SelectColor</a>: Color picker: a field that opens a palette, or an always visible palette.</li>
+                    <li><a href="#/check-box" style="color: inherit;">CheckBox</a>: Check box with a label, drawn with code; classic and modern style packages.</li>
+                    <li><a href="#/radio-button" style="color: inherit;">RadioButton</a>: Radio buttons that work in groups, with keyboard support and style packages.</li>
+                    <li><a href="#/toggle" style="color: inherit;">Toggle</a>: On and off switch for light and dark pages.</li>
+                    <li><a href="#/tiny-select" style="color: inherit;">TinySelect</a>: Small inline select that fits into a sentence: Theme: Supernova.</li>
+                    <li><a href="#/ui-toggle" style="color: inherit;">UIToggle</a>: On and off switch with style presets like Google and Apple.</li>
+                    <li><a href="#/check-box-m1" style="color: inherit;">CheckBox (M1)</a>: The first check box. New pages use the M3 CheckBox.</li>
+                    <li><a href="#/select-item" style="color: inherit;">SelectItem</a>: A field that opens a searchable list of items with images.</li>
+                    <li><a href="#/select-text" style="color: inherit;">SelectText</a>: A field that opens a searchable text list.</li>
+                    <li><a href="#/ui-select-text" style="color: inherit;">UISelectText</a>: A select field that opens a searchable list of texts.</li>
+                </ul>
+                <h2>Buttons &amp; Menus</h2>
+                <ul>
+                    <li><a href="#/context-menu" style="color: inherit;">ContextMenu</a>: A simple menu that opens at the mouse point, with text or icon items.</li>
+                    <li><a href="#/button-with-icon" style="color: inherit;">ButtonWithIcon</a>: A button with an icon and a text; the icon on the left or on top.</li>
+                    <li><a href="#/hold-to-confirm-button" style="color: inherit;">HoldToConfirmButton</a>: A button that runs only after it is pressed and held; for risky actions like delete.</li>
+                    <li><a href="#/ui-action-button" style="color: inherit;">UIActionButton</a>: Round floating action button in the corner of the screen.</li>
+                </ul>
+                <h2>Navigation</h2>
+                <ul>
+                    <li><a href="#/tabs" style="color: inherit;">Tabs</a>: Tab bar with underline and pill variants, counts, badges, closable tabs, a vertical mode and optional panels.</li>
+                    <li><a href="#/breadcrumbs" style="color: inherit;">Breadcrumbs</a>: Shows where the current page is in a hierarchy: Home / Products / Laptops.</li>
+                    <li><a href="#/page-control" style="color: inherit;">PageControl</a>: Sliding or fading pages for wizards, carousels and app screens, with swipe, dots, arrows and auto play.</li>
+                    <li><a href="#/search-results" style="color: inherit;">SearchResults</a>: The result list that opens under a search input, like an autocomplete or a command palette.</li>
+                    <li><a href="#/bottom-bar" style="color: inherit;">BottomBar</a>: Mobile app bottom bar built from a JSON list of buttons, with badges.</li>
+                    <li><a href="#/text-tabs" style="color: inherit;">TextTabs</a>: Small text tab bar. New pages use Tabs.</li>
+                    <li><a href="#/left-menu" style="color: inherit;">LeftMenu</a>: Icon side menu that opens on hover, or with a tap on touch screens.</li>
+                    <li><a href="#/ui-tabs" style="color: inherit;">UITabs</a>: The first tab bar, with icon and text tabs. New pages use Tabs.</li>
+                    <li><a href="#/ui-page-control" style="color: inherit;">UIPageControl</a>: The first sliding page container. New pages use PageControl.</li>
+                </ul>
+                <h2>Data &amp; Charts</h2>
+                <ul>
+                    <li><a href="#/chart-box" style="color: inherit;">ChartBox</a>: Chart.js charts used like a basic.js object.</li>
+                    <li><a href="#/gauge" style="color: inherit;">Gauge</a>: A value drawn on an arc: a full ring or a half arc.</li>
+                    <li><a href="#/mini-graph-box" style="color: inherit;">MiniGraphBox</a>: Small KPI box with a title, a value, an icon and a live bar graph.</li>
+                    <li><a href="#/spark-line-box" style="color: inherit;">SparkLineBox</a>: KPI box with a line graph, a trend badge, min/max dots and a hover tooltip.</li>
+                    <li><a href="#/time-line" style="color: inherit;">TimeLine</a>: A vertical time line: a dot for every item and a line between the dots.</li>
+                    <li><a href="#/smart-table" style="color: inherit;">SmartTable</a>: Virtual-scroll table for millions of rows, with filtering, sorting, custom cells and editing.</li>
+                    <li><a href="#/tiny-table" style="color: inherit;">TinyTable</a>: A light table for short data lists.</li>
+                    <li><a href="#/ui-cells" style="color: inherit;">UICells</a>: Splits a box into rows and columns of cells to place objects in them.</li>
+                    <li><a href="#/tiny-table-m1" style="color: inherit;">TinyTable (M1)</a>: The first version of the light table.</li>
+                </ul>
+                <h2>Overlays &amp; Feedback</h2>
+                <ul>
+                    <li><a href="#/progress-bar" style="color: inherit;">ProgressBar</a>: Horizontal progress bar with a title and a value text; determinate or indeterminate.</li>
+                    <li><a href="#/toast" style="color: inherit;">Toast</a>: Short messages that come and go: success, error, loading, and actions like Undo.</li>
+                    <li><a href="#/modal" style="color: inherit;">Modal</a>: A dialog window over the page for any content; Modal.confirm() and Modal.alert() return a Promise.</li>
+                    <li><a href="#/side-panel" style="color: inherit;">SidePanel</a>: A drawer that slides in from a side of the screen, over the page.</li>
+                    <li><a href="#/loading-screen" style="color: inherit;">LoadingScreen</a>: Full cover splash and loading screen with an icon, a title, a spinner and progress.</li>
+                    <li><a href="#/line-progress-bar" style="color: inherit;">LineProgressBar</a>: A progress bar drawn with thin vertical lines.</li>
+                    <li><a href="#/dialog" style="color: inherit;">Dialog</a>: A simple dialog window.</li>
+                    <li><a href="#/tooltip" style="color: inherit;">Tooltip</a>: A small hint box that appears over an object.</li>
+                    <li><a href="#/waiting" style="color: inherit;">Waiting</a>: A waiting animation over the page while something loads.</li>
+                    <li><a href="#/badge" style="color: inherit;">BadgeV2</a>: Notification badge on an object: a dot, a number or custom content.</li>
+                    <li><a href="#/ui-progress-bar" style="color: inherit;">UIProgressBar</a>: The first progress bar. New pages use ProgressBar.</li>
+                    <li><a href="#/ui-notice" style="color: inherit;">UINotice</a>: Info, alert and error messages shown over the page.</li>
+                    <li><a href="#/object-waiting" style="color: inherit;">ObjectWaiting</a>: Waiting animation over a single object, like a button that downloads.</li>
+                </ul>
+                <h2>Pages &amp; Views</h2>
+                <ul>
+                    <li><a href="#/web-view" style="color: inherit;">WebView</a>: An iframe box with a loading spinner, errors, messages, scaled previews and a toolbar. The previews on this site use it.</li>
+                    <li><a href="#/login-page" style="color: inherit;">LoginPage</a>: A ready login and sign up page with e-mail, password and social buttons.</li>
+                    <li><a href="#/ui-title" style="color: inherit;">UITitle</a>: Mobile page title bar with a back button.</li>
+                    <li><a href="#/ui-left-title" style="color: inherit;">UILeftTitle</a>: A settings row with a title, a subtitle and an arrow.</li>
+                    <li><a href="#/ui-scrolling-text" style="color: inherit;">UIScrollingText</a>: A line of text that scrolls back and forth inside a small box.</li>
+                    <li><a href="#/ui-web-view" style="color: inherit;">UIWebView</a>: The first iframe box. New pages use WebView.</li>
+                </ul>
+                <h2>Effects &amp; Styles</h2>
+                <ul>
+                    <li><a href="#/ui-effects" style="color: inherit;">UIEffects</a>: Press, hover and attention effects for any basic.js object: ripple, lift, tilt, spotlight and more.</li>
+                    <li><a href="#/ui-standards" style="color: inherit;">UI Standards</a>: Design tokens and themes: colors, font sizes, corner radius and a light, dark or automatic theme.</li>
+                </ul>
+                <p><a href="https://github.com/bug7a/js-components" style="color: inherit;">github.com/bug7a/js-components</a></p>
+            </div>
+        </div>
+    </noscript>
 
-                if (scrollLeft > 50 && scrollLeft < 100) {
-                    grpPage.scrollX = 0;
-                    smoothScrollTo(grpPage.elem, 420, 200);
-                    setTimeout(function() {
-                        grpPage.scrollX = 1;
-                    }, 400);
-                }
+</body>
 
-                if (scrollLeft < (420 - 50) && scrollLeft > (420 - 100)) {
-                    grpPage.scrollX = 0;
-                    smoothScrollTo(grpPage.elem, 0, 200);
-                    setTimeout(function() {
-                        grpPage.scrollX = 1;
-                    }, 400);
-                }
-
-                if (scrollLeft > 470 && scrollLeft < 520) {
-                    grpPage.scrollX = 0;
-                    smoothScrollTo(grpPage.elem, 800, 200);
-                    setTimeout(function() {
-                        grpPage.scrollX = 1;
-                    }, 400);
-                }
-                
-                if (scrollLeft < (800 - 50) && scrollLeft > (800 - 100)) {
-                    grpPage.scrollX = 0;
-                    smoothScrollTo(grpPage.elem, 420, 200);
-                    setTimeout(function() {
-                        grpPage.scrollX = 1;
-                    }, 400);
-                }
-                
-
-            }
-
-        };
-
-        const goto_MySite = function() {
-            window.open("https://bug7a.github.io/", "_blank");
-        }
-
-        const goto_LicensSite = function() {
-            window.open("http://www.apache.org/licenses/LICENSE-2.0", "_blank");
-        }
-
-        </script>
-
-    </head>
-    <body>
-        
-        <!-- HTML content -->
-        
-    </body>
 </html>

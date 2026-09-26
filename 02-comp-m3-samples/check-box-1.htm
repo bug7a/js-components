@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Check Box</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp-m3/check-box.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // *** VARIABLES:
+        let chkTerms, chkNewsletter, chkDisabled, lblResult, btnSubmit;
+        const interestList = [];
+
+        const start = function () {
+
+            page.color = "whitesmoke";
+
+            // BOX: Full screen scrollable container
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            startBox(0, 0, "100%", "100%", {
+                color: "transparent",
+                scrollY: 1,
+            });
+
+                // GROUP: Page layout
+                VGroup({
+                    width: "100%",
+                    height: "auto", // Grows with content, so the Box can scroll.
+                    align: "center top",
+                    gap: 30,
+                    padding: 50,
+                });
+
+                    // LABEL: Title
+                    Label({
+                        text: "Check Box",
+                        fontSize: 26,
+                        fontFamily: "opensans-bold",
+                    });
+
+                    // SAMPLE 1: Default
+                    startCard("1. Default");
+
+                        chkTerms = CheckBox({
+                            labelText: "I accept the terms of use",
+                            onChange: function (self) {
+                                println("Terms: " + self.checked);
+                                btnSubmit.enabled = self.checked;
+                            },
+                        });
+
+                        chkNewsletter = CheckBox({
+                            labelText: "Send me the newsletter",
+                            checked: 1,
+                        });
+
+                        btnSubmit = Button({
+                            text: "Continue",
+                            width: 140,
+                            height: 36,
+                            fontSize: 14,
+                            enabled: 0,
+                        });
+                        that.on("click", function () {
+                            lblResult.text = "Terms: " + chkTerms.checked + ", Newsletter: " + chkNewsletter.checked;
+                        });
+
+                        lblResult = Label({
+                            text: "-",
+                            fontSize: 14,
+                            textColor: Black(0.5),
+                        });
+
+                    endCard();
+
+                    // SAMPLE 2: Created from an array
+                    startCard("2. From Data");
+
+                        ["JavaScript", "Design", "Music", "Travel"].forEach(function (name, index) {
+                            CheckBox({
+                                key: String(index),
+                                labelText: name,
+                                checked: (index == 0) ? 1 : 0,
+                                onChange: refreshInterests,
+                            });
+                            interestList.push(that);
+                        });
+
+                        // GROUP: Buttons
+                        HGroup({
+                            width: "auto",
+                            height: "auto",
+                            gap: 8,
+                        });
+
+                            Button({ text: "Select All", width: 120, height: 36, fontSize: 14 });
+                            that.on("click", function () { setAllInterests(1); });
+
+                            Button({ text: "Clear", width: 120, height: 36, fontSize: 14, color: "lightgray" });
+                            that.on("click", function () { setAllInterests(0); });
+
+                        endGroup();
+
+                        Label({
+                            text: "",
+                            fontSize: 14,
+                            textColor: Black(0.5),
+                        });
+                        window.lblInterests = that;
+
+                    endCard();
+
+                    // SAMPLE 3: States and custom style
+                    startCard("3. States & Style");
+
+                        chkDisabled = CheckBox({
+                            labelText: "Disabled (checked)",
+                            checked: 1,
+                            enabled: 0,
+                        });
+
+                        CheckBox({
+                            labelText: "Enable the check box above",
+                            onChange: function (self) {
+                                chkDisabled.setEnabled(self.checked);
+                            },
+                        });
+
+                        CheckBox({
+                            labelText: "Label on the left",
+                            labelPosition: "left",
+                        });
+
+                        CheckBox({
+                            labelText: "Custom style (green, round)",
+                            checked: 1,
+                            style: {
+                                mark: { width: 28, height: 28, round: 100, borderColor: "#5DB182" },
+                                checkedMark: { color: "#5DB182", borderColor: "#5DB182" },
+                                hoverMark: { borderColor: "#3E8E62" },
+                                tick: { thickness: 3 },
+                                label: { fontSize: 18, textColor: "#3E8E62" },
+                            },
+                        });
+
+                        // Without label
+                        HGroup({ width: "auto", height: "auto", gap: 4 });
+                            CheckBox();
+                            CheckBox({ checked: 1 });
+                            CheckBox({ checked: 1, style: { checkedMark: { color: "#FE5D49", borderColor: "#FE5D49" } } });
+                        endGroup();
+
+                    endCard();
+
+                endGroup();
+
+            endBox();
+
+            refreshInterests();
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        // GROUP: A white card with a title.
+        const startCard = function (title) {
+            VGroup({
+                width: 360,
+                height: "auto",
+                align: "left top",
+                gap: 12,
+                padding: 20,
+                color: "white",
+                round: 10,
+                border: 1,
+                borderColor: Black(0.1),
+            });
+            Label({
+                text: title,
+                fontSize: 14,
+                textColor: Black(0.45),
+            });
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+        const refreshInterests = function () {
+            const selected = interestList
+                .filter(function (chk) { return chk.checked == 1; })
+                .map(function (chk) { return chk.labelText; });
+            lblInterests.text = "Selected: " + (selected.length ? selected.join(", ") : "none");
+        };
+
+        const setAllInterests = function (checked) {
+            interestList.forEach(function (chk) {
+                chk.setChecked(checked, 1); // silent
+            });
+            refreshInterests();
+        };
+
+    </script>
+</head>
+
+<body></body>
+
+</html>

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Button with Icon</title>
+
+    <!-- STANDARD -->
+    <!-- LIBRARY FILES -->
+    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp-m3/button-with-icon.js"></script>
+
+</head>
+
+<body>
+
+    <script>
+
+        /* Bismillah */
+
+        const start = function () {
+
+            // Page Settings
+            page.color = "#F0F2F5";
+
+            const mainBox = VGroup({
+                width: 600,
+                height: "auto",
+                align: "center top",
+                gap: 20,
+                padding: 50,
+                style: {
+                    marginTop: 50
+                }
+            });
+
+            Label({
+                text: "Button with Icon",
+                fontSize: 24,
+                fontFamily: "opensans-bold",
+                marginBottom: 20
+            });
+
+            // 1. Default Button (Icon Left)
+            Label({ text: "Default (Icon Left):", fontSize: 14, textColor: "#666" });
+            ButtonWithIcon({
+                width: 200,
+                height: 50,
+                labelText: "Click Me",
+                iconFile: "https://cdn-icons-png.flaticon.com/512/709/709699.png", // Example Icon
+                onClick: function () {
+                    console.log("Button 1 Clicked");
+                    alert("Button 1 Clicked");
+                }
+            });
+
+            // 2. Icon Top
+            Label({ text: "Icon Top:", fontSize: 14, textColor: "#666", marginTop: 20 });
+            ButtonWithIcon({
+                labelText: "",
+                iconPosition: "top",
+                iconFile: "https://cdn-icons-png.flaticon.com/512/2874/2874091.png", // Example Icon
+                style: {
+                    box: {
+                        color: "white",
+                        border: 1,
+                        borderColor: "#ddd",
+                        round: 8,
+                        cursor: "pointer",
+                    },
+                    layout: {
+                        gap: 0,
+                        padding: [10, 10],
+                        align: "center center"
+                    },
+                    icon: {
+                        width: 32,
+                        height: 32
+                    },
+                    hover: {
+                        color: "#eef"
+                    },
+                    active: {
+                        color: "#dde"
+                    }
+                }
+            });
+
+            // 3. Custom Style
+            Label({ text: "Custom Style:", fontSize: 14, textColor: "#666", marginTop: 20 });
+            ButtonWithIcon({
+                width: "auto",
+                height: 26,
+                labelText: "SETTINGS",
+                iconFile: "https://cdn-icons-png.flaticon.com/512/4584/4584914.png",
+                style: {
+                    layout: { gap: 3, padding: [5, 0] },
+                    box: { color: Black(0.05), border: 0, borderColor: "#ffcdd2", round: 4, cursor: "pointer" },
+                    icon: { width: 20, height: 20 },
+                    label: { fontSize: 12, textColor: "#141414", fontFamily: "opensans-bold" },
+                    hover: { color: Black(0.1), },
+                    active: { color: Black(0.2), }
+                }
+            });
+
+            endGroup();
+
+        };
+
+    </script>
+
+</body>
+
+</html>

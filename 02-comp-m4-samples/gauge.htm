@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Gauge</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp-m4/gauge.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // *** VARIABLES:
+        let ring, nozzle, bed, arc270, modernRing;
+
+        const start = function () {
+
+            page.color = "#F4F5F2";
+
+            startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+
+                VGroup({ width: "100%", height: "auto", align: "center top", gap: 30, padding: 50 });
+
+                    Label({ text: "Gauge", fontSize: 26, fontFamily: "opensans-bold" });
+
+                    // SAMPLE 1: Ring
+                    startCard("1. Ring (sweepAngle: 360)", "A battery charge. The marker line is the reserve.", 1);
+
+                        HGroup({ width: "100%", height: "auto", align: "center center", gap: 20 });
+                            ring = Gauge({
+                                width: 180, height: 180,
+                                styleName: "dark",
+                                value: 46, subText: "Charging",
+                                markerValue: 20,
+                            });
+                        endGroup();
+
+                        HGroup({ hug: 1, gap: 8 });
+                            addButton("+15%", function () { ring.setValue(Math.min(100, ring.value + 15)); });
+                            addButton("−15%", function () { ring.setValue(Math.max(0, ring.value - 15)); });
+                            addButton("Low", function () { ring.setBarColor("#F2B24C"); ring.setSubText("Low"); });
+                        endGroup();
+
+                    endCard();
+
+                    // SAMPLE 2: Half arc
+                    startCard("2. Half arc (startAngle: -90, sweepAngle: 180)", "Two heaters. The white line is the target.", 1);
+
+                        HGroup({ width: "100%", height: "auto", align: "center center", gap: 30 });
+                            nozzle = Gauge({
+                                width: 200, height: 130,
+                                styleName: "dark",
+                                startAngle: -90, sweepAngle: 180,
+                                maxValue: 300, value: 215, markerValue: 220,
+                                valueSuffix: "°", subText: "Target 220°", titleText: "Nozzle",
+                                style: { bar: { color: "#E0715A" }, value: { fontSize: 26 } },
+                            });
+                            bed = Gauge({
+                                width: 200, height: 130,
+                                styleName: "dark",
+                                startAngle: -90, sweepAngle: 180,
+                                maxValue: 300, value: 58, markerValue: 60,
+                                valueSuffix: "°", subText: "Target 60°", titleText: "Bed",
+                                style: { bar: { color: "#5A8FE0" }, value: { fontSize: 26 } },
+                            });
+                        endGroup();
+
+                    endCard();
+
+                    // SAMPLE 3: Other sweeps and styles
+                    startCard("3. Any sweep, any style", "sweepAngle: 270 and the modern package.");
+
+                        HGroup({ width: "100%", height: "auto", align: "center center", gap: 30 });
+                            arc270 = Gauge({
+                                width: 170, height: 170,
+                                startAngle: -135, sweepAngle: 270,
+                                value: 68, subText: "Disk used", valueSuffix: "%",
+                            });
+                            modernRing = Gauge({
+                                width: 170, height: 170,
+                                styleName: "modern",
+                                value: 82, subText: "Score",
+                            });
+                        endGroup();
+
+                    endCard();
+
+                endGroup();
+
+            endBox();
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        const startCard = function (title, description = "", isDark = 0) {
+            VGroup({
+                width: 600, height: "auto", align: "left top", gap: 16, padding: 20,
+                color: (isDark) ? "#1C1C1B" : "white",
+                round: 10, border: 1, borderColor: (isDark) ? "#1C1C1B" : Black(0.1),
+            });
+            that.elem.style.alignItems = "stretch";
+            Label({ text: title, fontSize: 14, textColor: (isDark) ? White(0.5) : Black(0.45) });
+            if (description) {
+                Label({ text: description, fontSize: 13, textColor: (isDark) ? White(0.4) : Black(0.35) });
+                that.elem.style.marginTop = "-10px";
+            }
+        };
+
+        const endCard = function () { endGroup(); };
+
+        const addButton = function (text, onClick) {
+            const btn = Button({ text: text, width: 90, height: 34, fontSize: 14 });
+            btn.on("click", onClick);
+            return btn;
+        };
+
+    </script>
+</head>
+
+<body></body>
+
+</html>

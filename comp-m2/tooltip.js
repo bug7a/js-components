@@ -11,7 +11,7 @@ UI COMPONENT TEMPLATE
 Started Date: June 2024
 Developer: Bugra Ozden
 Email: bugra.ozden@gmail.com
-Web: https://bug7a.github.io/basic.js-ui-components/
+Webpage: https://bug7a.github.io/js-components/
 
 */
 
@@ -88,15 +88,25 @@ const Tooltip = function(params = {}) {
     // *** Public functions:
     //box.publicFunc = () => {};
 
+    // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
+    const superRemove = box.remove;
+    box.superRemove = superRemove;
     box.remove = function() {
+
+        if (box._isRemoved) return; // WHY: remove() can be called twice (also by the parent's remove()).
+
+        // WHY: The mouse events are on the target object, box.remove() does not clean them.
         _removeMouseOver();
         _removeMouseMove();
+        _removeMouseOut();
+
         if (window.lblHint) {
             window.lblHint.remove();
             window.lblHint = null;
         };
-        _removeMouseOut();
-        box.elem.remove();
+
+        superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
+
     }
 
     box.setHintText = function(text) {
@@ -108,7 +118,7 @@ const Tooltip = function(params = {}) {
 
     box.setLbl_color = function(color) {
         box.lbl_color = color;
-        if (!window.lblHint) {
+        if (window.lblHint) {
             window.lblHint.color = box.lbl_color;
         }
     }
@@ -140,6 +150,17 @@ const Tooltip = function(params = {}) {
 
     _removeMouseMove = box.target.on("mousemove", function() {
         if (window.lblHint) {
+            
+            // WHY: Eğer mouse tooltip tetikleyen bir object üzerinde bırakılırsa ve
+            // başka bir olay, tooltip in text ve rengini değiştirirse; objeye giriş yapmadan hareket ettirilen mouse,
+            // diğer olayın metnini gösterebilir. O yüzden, metin kontrol ediliyor.
+            if (window.lblHint.text != box.hintText) {
+                window.lblHint.text = box.hintText;
+            }
+            if (window.lblHint.color != box.lbl_color) {
+                window.lblHint.color = box.lbl_color;
+            }
+
             refreshPosition(box.hintPosition);
         }
     });

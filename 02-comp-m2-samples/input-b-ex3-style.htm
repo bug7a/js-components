@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        
+        <title>InputB JS Component</title>
+        
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <!-- LIBRARY FILES -->
+        <!-- <link rel="preload" href="image.png" as="image"> -->
+        <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <!--<script src="basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>-->
+
+        <script src="../comp-m2/tooltip.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m2/input-b.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- ALL COMPONENTS IN ONE FILE -->
+        <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
+
+        <script>
+        
+        // *** VARIABLES:          
+        let myInput1, myInput2, myInput3;
+        //const inputList = [];
+
+        // First running function.
+        window.onload = function() {
+
+            page.color = "white";
+
+            // GROUP: Autolayout
+            AutoLayout({
+                flow: "vertical",
+                gap: 20,
+            });
+
+                // INPUT: #1
+                myInput1 = InputB({
+                    key: "1",
+                    isRequired: 1,
+                    placeholder: "Jack",
+                    leftPadding: 20,
+                    backgroundColor: "transparent",
+                    selectedBackgroundColor: "whitesmoke", // "#F1E2C4", "#F4FAFF",
+                    lineColor: "transparent",
+                    selectedLineColor: "transparent", // "#F1E2C4", "#588ABE",
+                });
+                that.setTitle("FIRST NAME");
+                that.background.border = 1;
+                that.background.borderColor = "lightgray";
+                //inputList.push(that);
+
+                // INPUT: #2
+                myInput2 = InputB({
+                    key: "2",
+                    titleText: "HEIGHT",
+                    placeholder: "175",
+                    descriptionText: "The vertical size...",
+                    unitText: "cm",
+                    isRequired: 0,
+                    backgroundColor: "whitesmoke",
+                    selectedBackgroundColor: "whitesmoke", // "#F1E2C4", "#F4FAFF",
+                    lineColor: "transparent",
+                    selectedLineColor: "lightgray", // "#F1E2C4", "#588ABE",
+                });
+                that.onEdit = function() {
+                    console.log(myInput2.getInputValue());
+                }
+                //inputList.push(that);
+
+                // INPUT: #3
+                myInput3 = InputB({
+                    key: "3",
+                    placeholder: "Sample",
+                    titleText: "INPUT TITLE",
+                    descriptionText: "Its a style example for input fields.",
+                    isRequired: 0,
+                    maxChar: 20,
+                    leftPadding: 20,
+                    rightPadding: 20,
+                    unitText: "",
+                    backgroundColor: "transparent",
+                    selectedBackgroundColor: "transparent", // "#F1E2C4", "#F4FAFF",
+                    lineColor: "transparent",
+                    selectedLineColor: "transparent", // "#F1E2C4", "#588ABE",
+                });
+                that.inputGroup.gap = 4;
+                that.input.color = "whitesmoke";
+                that.input.border = 1;
+                that.input.borderColor = "lightgray";
+                that.input.inputElement.style.padding = "0px 12px";
+                that.onEdit = function() {
+                    console.log(myInput3.getInputValue());
+                };
+                //inputList.push(that);
+
+            endAutoLayout(); // END GROUP
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+        
+        <!-- HTML content -->
+        
+    </body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        
+        <title>TextTabs JS Component</title>
+        
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <!-- LIBRARY FILES -->
+        <!-- <link rel="preload" href="image.png" as="image"> -->
+        <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <!--<script src="basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>-->
+
+        <script src="../comp-m2/text-tabs.js" type="text/javascript" charset="utf-8"></script>
+        <!-- <script src="_component-template.min.js" type="text/javascript" charset="utf-8"></script> -->
+
+        <!-- ALL COMPONENTS IN ONE FILE -->
+        <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
+
+        <script>
+        
+        // *** VARIABLES:
+        //const compList = []; // When multiple objects are created by code, they can be added to an array.
+        let textTabs;
+
+        // First running function.
+        window.onload = function() {
+
+            page.color = "whitesmoke";
+
+            // GROUP: Autolayout
+            VGroup();
+
+                // COMP NAME: #1
+                textTabs = TextTabs({
+                    key: "0",
+                    selectedIndex: 0,
+                    tabList: ["Tab1", "Tab2", "Tab3"],
+                    invertColor: 0,
+                    tabPadding: 1,
+                    backgroundStyle: {
+                        colorBottom: "lightgray",
+                        colorTop: "lightgray",
+                        round: 6,
+                        border: 0,
+                        borderColor: Black(0.2),
+                    },
+                    labelStyle: {
+                        fontSize: 14, 
+                        textColor: "#373836",
+                        padding: [12, 4],
+                        round: 0,
+                        color: "transparent",
+                    },
+                    selectedStyle: {
+                        color: "white",
+                        round: 6,
+                        border: 0,
+                        borderColor: Black(0.2),
+                    },
+                });
+                that.onClick = function(self) {
+                    println(`Clicked Comp ${self.index}`);
+                };
+                //compList.push(that);
+
+            endGroup();
+            
+        };
+        
+        // Function running every second.
+        const loop = function() {
+                        
+        };
+        
+        // *** OTHER FUNCTIONS:
+        const doSomthing1 = function() {
+            
+        };
+        
+        const doSomething2 = function() {
+            
+        };
+
+        </script>
+
+    </head>
+    <body>
+        
+        <!-- HTML content -->
+        
+    </body>
+</html>

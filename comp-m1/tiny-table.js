@@ -11,7 +11,7 @@ UI COMPONENT TEMPLATE
 Started Date: June 2024
 Developer: Bugra Ozden
 Email: bugra.ozden@gmail.com
-Web: https://bug7a.github.io/basic.js-ui-components/
+Webpage: https://bug7a.github.io/js-components/
 
 */
 

@@ -51,8 +51,8 @@ clickEffect.showClick = function() {
             var posX = e.clientX;
             var posY = e.clientY;
 
-            posX = basic.withPageZoom(posX);
-            posY = basic.withPageZoom(posY);
+            posX = withPageZoom(posX);
+            posY = withPageZoom(posY);
 
             clickEffect.boxClick = createBox(posX - 40, posY - 40, 80, 80);
             //that.color = "#40A5AF"

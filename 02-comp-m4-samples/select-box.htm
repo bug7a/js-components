@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Select Box</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp-m4/select-box.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // *** VARIABLES:
+        let selectFruit, selectCountry, selectSkills, selectPayment, selectDark, selectBig;
+        let lblFruit, lblCountry, lblSkills, lblPayment, lblDark, lblBig;
+
+        // ICONS: Inline SVG (no image file needed)
+        const svgIcon = function (paths, color = "#555") {
+            return "data:image/svg+xml," + encodeURIComponent(
+                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + paths + '</svg>'
+            );
+        };
+
+        const start = function () {
+
+            page.color = "#F4F5F2";
+
+            // BOX: Full screen scrollable container
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            startBox(0, 0, "100%", "100%", {
+                color: "transparent",
+                scrollY: 1,
+            });
+
+                // GROUP: Page layout
+                VGroup({
+                    width: "100%",
+                    height: "auto", // Grows with content, so the Box can scroll.
+                    align: "center top",
+                    gap: 20,
+                    padding: 40,
+                });
+
+                    Label({ text: "Select Box", fontSize: 26, textColor: "#1B1B1A" });
+                    that.elem.style.fontFamily = "opensans-bold";
+
+                    // SAMPLE 1: Basic
+                    startCard("1. Basic (short list: no search), clearable");
+
+                        selectFruit = SelectBox({
+                            width: 280,
+                            options: ["Apple", "Banana", "Cherry", "Grape", "Orange"],
+                            value: "Banana",
+                            clearable: 1,
+                            placeholder: "Select a fruit",
+                            onChange: function (self) {
+                                lblFruit.text = "Value: <b>" + SelectBox.escapeHtml(String(self.value)) + "</b>";
+                            },
+                        });
+
+                        lblFruit = infoLabel("Value: <b>Banana</b> (onChange is not called on create)");
+
+                    endCard();
+
+                    // SAMPLE 2: Search, groups, descriptions
+                    startCard("2. Search, groups and descriptions (Tab to it and type a letter)");
+
+                        selectCountry = SelectBox({
+                            width: "100%",
+                            options: [
+                                { value: "tr", label: "Turkey", description: "Ankara · +90", group: "Europe / Asia" },
+                                { value: "de", label: "Germany", description: "Berlin · +49", group: "Europe" },
+                                { value: "fr", label: "France", description: "Paris · +33", group: "Europe" },
+                                { value: "nl", label: "Netherlands", description: "Amsterdam · +31", group: "Europe" },
+                                { value: "it", label: "Italy", description: "Rome · +39", group: "Europe" },
+                                { value: "jp", label: "Japan", description: "Tokyo · +81", group: "Asia" },
+                                { value: "kr", label: "South Korea", description: "Seoul · +82", group: "Asia" },
+                                { value: "in", label: "India", description: "New Delhi · +91", group: "Asia" },
+                                { value: "us", label: "United States", description: "Washington, D.C. · +1", group: "America" },
+                                { value: "br", label: "Brazil", description: "Brasília · +55", group: "America" },
+                                { value: "ca", label: "Canada", description: "Ottawa · +1", group: "America" },
+                            ],
+                            placeholder: "Select a country",
+                            searchPlaceholder: "Search country, city or code",
+                            onChange: function (self) {
+                                const option = self.getSelectedOptions()[0];
+                                lblCountry.text = (option) ? "Selected: <b>" + SelectBox.escapeHtml(option.label) + "</b> (" + option.value + ")" : "Nothing selected";
+                            },
+                        });
+
+                        lblCountry = infoLabel("Search looks at the name, description and group. Try: \"asia\", \"par\" or \"+49\".");
+
+                    endCard();
+
+                    // SAMPLE 3: Multiple
+                    startCard("3. Multiple (select all, clear)");
+
+                        selectSkills = SelectBox({
+                            width: "100%",
+                            multiple: 1,
+                            clearable: 1,
+                            options: ["JavaScript", "TypeScript", "HTML", "CSS", "Node.js", "SQL", "Python", "Figma", "Git", "Docker"],
+                            value: ["JavaScript", "CSS"],
+                            placeholder: "Select skills",
+                            onChange: function (self) {
+                                lblSkills.text = "Value: <b>" + SelectBox.escapeHtml(JSON.stringify(self.getValue())) + "</b>";
+                            },
+                        });
+
+                        lblSkills = infoLabel("Value: <b>[\"JavaScript\",\"CSS\"]</b>");
+
+                    endCard();
+
+                    // SAMPLE 4: Icons and disabled options
+                    startCard("4. Icons and disabled options");
+
+                        selectPayment = SelectBox({
+                            width: 320,
+                            options: [
+                                { value: "card", label: "Credit card", description: "Visa, Mastercard", iconFile: svgIcon('<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>') },
+                                { value: "bank", label: "Bank transfer", description: "1-2 business days", iconFile: svgIcon('<path d="M3 21h18M5 10v8M19 10v8M9 10v8M15 10v8M2 10l10-6 10 6z"/>') },
+                                { value: "cash", label: "Cash on delivery", description: "Not available for this address", iconFile: svgIcon('<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/>'), disabled: 1 },
+                                { value: "wallet", label: "Wallet", description: "Balance: $24.50", iconFile: svgIcon('<path d="M20 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0 0 4h15v12H5a2 2 0 0 1-2-2V5"/><path d="M16 13h.01"/>') },
+                            ],
+                            value: "card",
+                            onChange: function (self) {
+                                lblPayment.text = "Value: <b>" + self.value + "</b>";
+                            },
+                        });
+
+                        lblPayment = infoLabel("\"Cash on delivery\" can not be selected. Arrow keys skip it.");
+
+                    endCard();
+
+                    // SAMPLE 5: Dark
+                    startDarkCard("5. Dark style (SelectBox.DARK_STYLE)");
+
+                        selectDark = SelectBox({
+                            width: 300,
+                            options: [
+                                { value: "active", label: "Active", description: "Visible in the store" },
+                                { value: "draft", label: "Draft", description: "Only the team can see it" },
+                                { value: "archived", label: "Archived", description: "Old product" },
+                            ],
+                            value: "draft",
+                            style: SelectBox.DARK_STYLE,
+                            onChange: function (self) {
+                                lblDark.text = "Status: <b>" + self.value + "</b>";
+                            },
+                        });
+
+                        lblDark = Label({ text: "Status: <b>draft</b>", fontSize: 13, textColor: White(0.6) });
+
+                    endCard();
+
+                    // SAMPLE 6: Big list and functions
+                    startCard("6. Big list (2000 options) and functions");
+
+                        const bigOptions = [];
+                        for (let i = 1; i <= 2000; i++) bigOptions.push({ value: i, label: "Customer #" + String(i).padStart(4, "0"), description: "customer" + i + "@mail.com" });
+
+                        selectBig = SelectBox({
+                            width: "100%",
+                            options: bigOptions,
+                            placeholder: "Search 2000 customers",
+                            clearable: 1,
+                            onChange: function (self) {
+                                lblBig.text = "Value: <b>" + self.value + "</b>";
+                            },
+                        });
+
+                        lblBig = infoLabel("Only the first 300 matches are drawn. Type to find the others (Ex: 1999).");
+
+                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
+                        that.elem.style.flexWrap = "wrap";
+                            smallButton("setValue(1500)", function () { selectBig.setValue(1500); });
+                            smallButton("setValue(7, silent)", function () { selectBig.setValue(7, 1); lblBig.text = "Value set to 7 without onChange."; });
+                            smallButton("Enable / disable", function () { selectBig.setEnabled(selectBig.enabled ? 0 : 1); });
+                            smallButton("setOptions(first 10)", function () { selectBig.setOptions(bigOptions.slice(0, 10)); lblBig.text = "10 options (no search). Value kept if it is in them: <b>" + selectBig.value + "</b>"; });
+                        endGroup();
+
+                    endCard();
+
+                endGroup();
+
+            endBox();
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        // GROUP: A white card with a title.
+        const startCard = function (title, dark = 0) {
+            VGroup({
+                width: 640,
+                height: "auto",
+                align: "left top",
+                gap: 12,
+                padding: 20,
+                color: (dark) ? "#1A1A19" : "white",
+                round: 10,
+                border: 1,
+                borderColor: (dark) ? White(0.1) : Black(0.1),
+            });
+            that.elem.style.maxWidth = "100%";
+            Label({
+                text: SelectBox.escapeHtml(title),
+                fontSize: 14,
+                textColor: (dark) ? White(0.5) : Black(0.45),
+            });
+        };
+
+        const startDarkCard = function (title) {
+            startCard(title, 1);
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+        const smallButton = function (text, onClick) {
+            const btn = Button({ text: text, width: "auto", height: 36, fontSize: 14, color: "#E8E8E8", textColor: Black(0.75), round: 6 });
+            btn.elem.style.padding = "0 14px";
+            btn.on("click", onClick);
+            return btn;
+        };
+
+        const infoLabel = function (text) {
+            return Label({
+                text: text,
+                fontSize: 13,
+                textColor: Black(0.6),
+            });
+        };
+
+    </script>
+
+</head>
+
+<body></body>
+
+</html>

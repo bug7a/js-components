@@ -113,6 +113,7 @@ notice.show = function(parameters = {}) {
         box.boxBack = createBox(0, 0, box.width, box.height);
         box.add(that);
         that.opacity = 0;
+        that.clickable = 1;
         box.boxBack.color = box.default.coverBackgroundColor;
         box.boxBack.setMotion(box.default.coverMotionString);
 

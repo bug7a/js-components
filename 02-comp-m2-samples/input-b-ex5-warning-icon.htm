@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>InputB JS Component</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <!-- LIBRARY FILES -->
+        <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <script src="../comp-m2/tooltip.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m2/input-b.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m2/email-input-b.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+
+        // *** VARIABLES:
+        let myInput1, myInput2, myInput3;
+
+        // First running function.
+        window.onload = function() {
+
+            page.color = "white";
+
+            // GROUP: Autolayout
+            AutoLayout({
+                flow: "vertical",
+                gap: 20,
+            });
+
+                // INPUT: #1 Colored ball (default)
+                myInput1 = InputB({
+                    key: "1",
+                    isRequired: 1,
+                    titleText: "COLOR BALL (DEFAULT)",
+                    placeholder: "Jack",
+                });
+
+                // INPUT: #2 Built-in icons
+                myInput2 = EmailInputB({
+                    key: "2",
+                    isRequired: 1,
+                    titleText: "BUILT-IN ICON",
+                    placeholder: "example@site.com",
+                    warningText: "Invalid email format",
+                    warningBallType: "icon",
+                });
+
+                // INPUT: #3 Custom icons (image path or data URI)
+                myInput3 = EmailInputB({
+                    key: "3",
+                    isRequired: 1,
+                    titleText: "CUSTOM ICON",
+                    placeholder: "example@site.com",
+                    warningText: "Invalid email format",
+                    warningBallType: "icon",
+                    warningIconSize: 22,
+                    requiredIconColor: "#588ABE",
+                    // requiredIcon: "icons/required.svg",
+                    // warningIcon: "icons/warning.svg",
+                });
+
+            endAutoLayout(); // END GROUP
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+
+        <!-- HTML content -->
+
+    </body>
+</html>

@@ -1,12 +1,33 @@
-
 /* Bismillah */
 
 /*
 
-basic.js (v25.06) A lightweight JavaScript library for building web-based applications with simple code. No need to write HTML or CSS — just use basic JavaScript.
+basic.js (v26.09.18) A lightweight JavaScript library for building web-based applications with simple code. No need to write HTML or CSS — just use basic JavaScript.
 - Project Site: https://bug7a.github.io/basic.js/
 
-Copyright 2020-2025 Bugra Ozden <bugra.ozden@gmail.com>
+v26.09.18 is v26.09.17 plus the improvements below. Every page and component written for the
+previous versions works unchanged (same globals, same defaults, same DOM). The previous version is
+kept as basic/basic-bugra.js (and basic-bugra.min.js).
+
+WHAT IS NEW IN v26.09.18 (see basic/basic-v26.09.18.md for examples):
+- Fixes:      "100" and "50%" work for left/top/right/bottom/width/height. Children created in a hidden
+              HGroup/VGroup are real flex items (visible: 0 at create time). Objects created before the
+              page is ready throw a clear error. Timers of a removed object can not run anymore.
+              A page variable named like a library helper (const createButton) can not break the library.
+- Props:      css, cursor, zIndex, boxShadow, fontFamily, bold, italic, lineHeight, ellipsis, selectable,
+              grow, shrink, plainText, isRemoved, children
+- Methods:    show(), hide(), toggle(), once(), setSize(), setPosition(), bringToFront(), contains(), animate()
+- Input:      value, placeholder, inputType, maxLength, readOnly, focus(), blur(), select(), onEnter()
+- Icon:       alt, imageFit
+- Groups:     wrap, justify, hug (alternative name for fit) (HGroup / VGroup / AutoLayout)
+- Global:     createIn(container, func) - creates objects inside an existing box, then restores the container
+- page:       on(), off(), onKeyDown(), title
+- basic:      version, isReady, sleep(), nextFrame(), clamp(), lerp(), objectOf(), escapeHtml(), storage.loadOr()
+
+The Art of Fun Coding — With basic.js
+
+
+Copyright 2020-2026 Bugra Ozden <bugra.ozden@gmail.com>
 - https://github.com/bug7a
 
 Licensed under the Apache License, Version 2.0
@@ -16,6 +37,10 @@ Licensed under the Apache License, Version 2.0
 (function() {
 "use strict";
 const basic = {};
+
+basic.version = "26.09.18";
+basic.library = "basic.js";
+basic.isReady = 0; // 1 after the page object is created (before start() runs).
 
 /*
 if ( typeof module === "object" && typeof module.exports === "object" ) {
@@ -57,7 +82,7 @@ let defaultContainerBox = null;
 let previousDefaultContainerBox;
 let loopTimer;
 const resizeDetection = {};
-resizeDetection.objectAndFunctionList = [];
+let removeCascadeDepth = 0; // remove(): 0 -> Children of the object are removed too. (Only in the first remove() call)
 
 const motionController = {};
 motionController.WITH_MOTION_TIME = 50;
@@ -77,14 +102,15 @@ basic.start = function () {
     window.page = new MainBox();
     page.containerBox = null;
     setDefaultContainerBox(page);
+    basic.isReady = 1;
 
-    page.bodyElement.style.margin = "0px";
-    page.bodyElement.style.overflow = "hidden";
+    //page.bodyElement.style.margin = "0px";
+    //page.bodyElement.style.overflow = "hidden";
     // console.log("basic.js: set body { margin: 0px, overflow: hidden }");
     page.mainBox = createBox(0, 0, page.width, page.height);
     //page.mainBox = createBox(0, 0, "100%", "100%");
     page.mainBox.containerBox = null;
-    that.element.style.position = "fixed";
+    that.elem.style.position = "fixed";
     that.color = "transparent";
     
     
@@ -107,17 +133,24 @@ basic.start = function () {
 };
 
 basic.afterStart = function () {
+
     // Hız testi:
     // var timeUsed = (Date.now() - basic.startTime)
     // console.log(timeUsed);
+
+    // Hız testi için kullanılabilecek yöntem.
+    //console.time("işlem");
+        // ağır işlem
+    //console.timeEnd("işlem");
 };
 
 // you cant use console.log in *.min.js files but println
-window.println = function ($message, $type = "log") {
+const println = function ($message, $type = "log") {
+    // type: "error", "warn", "info", "table", "dir", ""
     const _console = console;
     _console[$type]($message);
 };
-//window.println = basic.println;
+window.println = println;
 
 window.random = function ($first, $second) {
 
@@ -129,7 +162,8 @@ window.random = function ($first, $second) {
             println("basic.js: random(): The second parameter (number) must be greater than the first.", "error");
         
         } else {
-            result = $first + Math.round(Math.random() * ($second - $first));
+            // WHY: Math.round ile ilk ve son sayı, diğerlerinin yarısı kadar çıkıyordu.
+            result = $first + Math.floor(Math.random() * (($second - $first) + 1));
         }
 
     } else {
@@ -196,6 +230,37 @@ window.twoDigitFormat = function($number) {
 };
 //window.twoDigitFormat = basic.twoDigitFormat;
 
+basic.storage = {
+
+    save(key, value) {
+        localStorage.setItem(key, JSON.stringify(value));
+    },
+
+    has(key) {
+        return localStorage.getItem(key) !== null;
+    },
+
+    load(key) {
+        try {
+            const value = localStorage.getItem(key);
+            return value ? JSON.parse(value) : null;
+        } catch (e) {
+            console.warn("storage parse error:", key);
+            return null;
+        }
+    },
+
+    remove(key) {
+        localStorage.removeItem(key);
+    },
+
+    clear() {
+        localStorage.clear();
+    }
+
+};
+// basic.storage olarak değiştirilebilir.
+/*
 window.storage = {
 
     save(key, value) {
@@ -209,9 +274,11 @@ window.storage = {
     }
 
 };
+*/
 //window.storage = basic.storage;
 
-window.clock = {
+// Zaman bilgisi
+basic.time = {
 
     get hour() {
         let dt = new Date();
@@ -225,7 +292,7 @@ window.clock = {
         let dt = new Date();
         return dt.getSeconds();
     }, 
-    get milisecond() {
+    get millisecond() {
         let dt = new Date();
         return dt.getMilliseconds();
     }
@@ -233,7 +300,8 @@ window.clock = {
 };
 //window.clock = basic.clock;
 
-window.date = {
+// Tarih bilgisi
+basic.date = {
 
     get year() {
         let dt = new Date();
@@ -251,19 +319,19 @@ window.date = {
     get monthName() {
         return basic.months[this.monthNumber - 1];
     },
-    get dayNumber() {
+    get dayOfWeek() {
         let dt = new Date();
-        return dt.getDay();
+        return dt.getDay(); // 0-6
     },
     get gunAdi() {
-        return basic.gunler[this.dayNumber];
+        return basic.gunler[this.dayOfWeek];
     },
     get dayName() {
-        return basic.days[this.dayNumber];
+        return basic.days[this.dayOfWeek];
     },
-    get today() {
+    get dayOfMonth() {
         let dt = new Date();
-        return dt.getDate();
+        return dt.getDate(); // 1-31
     },
     get now() {
         return Date.now();
@@ -271,6 +339,75 @@ window.date = {
 
 };
 //window.date = basic.date;
+
+// *** v26.09.18: small helpers under the basic namespace (no new globals).
+
+// await basic.sleep(300);
+basic.sleep = function ($ms = 0) {
+    return new Promise(function (resolve) { setTimeout(resolve, $ms); });
+};
+
+// await basic.nextFrame(); -> the browser painted once.
+basic.nextFrame = function () {
+    return new Promise(function (resolve) { requestAnimationFrame(resolve); });
+};
+
+basic.clamp = function ($value, $min, $max) {
+    return Math.min(Math.max($value, $min), $max);
+};
+
+// 0 -> $a, 1 -> $b
+basic.lerp = function ($a, $b, $t) {
+    return $a + ($b - $a) * $t;
+};
+
+// The basic.js object of a DOM element (or of its nearest parent that has one).
+basic.objectOf = function ($elem) {
+    let elem = $elem;
+    while (elem) {
+        if (elem._basicObject) return elem._basicObject;
+        elem = elem.parentElement;
+    }
+    return null;
+};
+
+// For user data in .text / .html: basic.escapeHtml(userName)
+basic.escapeHtml = function ($str) {
+    const map = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+    return String(($str === null || $str === undefined) ? "" : $str).replace(/[&<>"']/g, function (c) { return map[c]; });
+};
+
+// basic.storage.loadOr("settings", { theme: "light" })
+basic.storage.loadOr = function ($key, $fallback) {
+    const value = basic.storage.load($key);
+    return (value === null) ? $fallback : value;
+};
+
+// Position and size values: 100 -> "100px", "100" -> "100px", "50%" / "calc(100% - 10px)" / "auto" -> as is.
+const toCssLength = function ($value) {
+    if (typeof $value == "string") {
+        const s = $value.trim();
+        if (s !== "" && !isNaN(Number(s))) return Number(s) + "px";
+        return s;
+    }
+    return parseFloat($value) + "px"; // WHY: Same as basic.js for numbers. (NaN is ignored by the browser.)
+};
+
+// Adds a new object's element to the current default container.
+const attachToContainer = function ($obj, $element) {
+    if (!defaultContainerBox) {
+        throw new Error("basic.js: The library is not ready yet. Create objects in start() or window.onload.");
+    }
+    $obj._containerBox = defaultContainerBox;
+    defaultContainerBox.elem.appendChild($element);
+};
+
+// Is the container an HGroup / VGroup / AutoLayout?
+// WHY: basic.js checked elem.style.display == "flex". A hidden group (visible: 0) has display "none",
+//      so the children created in it were absolutely positioned instead of flex items.
+const isFlexContainer = function ($box) {
+    return !!($box && ($box._isFlex || ($box.elem && $box.elem.style.display == "flex")));
+};
 
 // Common methods and properties of basic objects.
 class Basic_UIComponent {
@@ -297,6 +434,10 @@ class Basic_UIComponent {
 
     _motionString;
     _clickable;
+    _eventFuncList;
+
+    NOTE: Browsers perform "render optimization." JavaScript collects many small changes you make to the DOM or style attributes while it's running, then applies these changes all at once. But be careful! If you force Reflow/Style (for example, by calling .offsetHeight), the browser will be forced to apply all the changes at once.
+
     */
 
     constructor($type) {
@@ -311,8 +452,8 @@ class Basic_UIComponent {
 
         this._motionString = "none";
         this._clickable = 0;
-        this._eventFuncList = [];
-
+        this._eventFuncList = []; // for _addEventListener() - Otomatik temizleme
+        
     }
 
     // alternative for containerBox
@@ -337,54 +478,54 @@ class Basic_UIComponent {
 
     get left() {
         if (this.position == "absolute") {
-            return parseFloat(this.contElement.style.left);
+            return parseFloat(this.elem.style.left);
         } else {
-            return this.contElement.offsetLeft;
+            return this.elem.offsetLeft;
         }
     }
 
     set left($value) {
-        this.contElement.style.right = "";
-        this.contElement.style.left = parseFloat($value) + "px";
+        this.elem.style.right = "";
+        this.elem.style.left = toCssLength($value);
     }
 
     get top() {
         if (this.position == "absolute") {
-            return parseFloat(this.contElement.style.top);
+            return parseFloat(this.elem.style.top);
         } else {
-            return this.contElement.offsetTop;
+            return this.elem.offsetTop;
         }
     }
 
     set top($value) {
-        this.contElement.style.bottom = "";
-        this.contElement.style.top = parseFloat($value) + "px";
+        this.elem.style.bottom = "";
+        this.elem.style.top = toCssLength($value);
     }
 
     get right() {
-        return parseFloat(this.contElement.style.right);
+        return parseFloat(this.elem.style.right);
     }
 
     set right($value) {
-        this.contElement.style.left = "";
-        this.contElement.style.right = parseFloat($value) + "px";
+        this.elem.style.left = "";
+        this.elem.style.right = toCssLength($value);
     }
 
     get bottom() {
-        return parseFloat(this.contElement.style.bottom);
+        return parseFloat(this.elem.style.bottom);
     }
 
     set bottom($value) {
-        this.contElement.style.top = "";
-        this.contElement.style.bottom = parseFloat($value) + "px";
+        this.elem.style.top = "";
+        this.elem.style.bottom = toCssLength($value);
     }
 
     get totalLeft() {
-        return calcSpace(this.contElement, "Left");
+        return calcSpace(this.elem, "Left");
     }
 
     get totalTop() {
-        return calcSpace(this.contElement, "Top");
+        return calcSpace(this.elem, "Top");
     }
     
     get width() {
@@ -392,7 +533,7 @@ class Basic_UIComponent {
         if (typeof this._width != "string") {
             return this._width || 0;
         } else {
-            return this.contElement.offsetWidth;
+            return this.elem.offsetWidth;
         }
 
     }
@@ -405,13 +546,10 @@ class Basic_UIComponent {
         // "100%"
         // "calc(100% - 10px)"
         
+        // "100" (numeric string) is stored as the number 100.
+        if (typeof $value == "string" && $value.trim() !== "" && !isNaN(Number($value))) $value = Number($value);
         this._width = $value;
-
-        if (typeof $value != "string") {
-            this.contElement.style.width = parseFloat($value) + "px";
-        } else {
-            this.contElement.style.width = $value;
-        }
+        this.elem.style.width = toCssLength($value);
         
     }
 
@@ -420,20 +558,16 @@ class Basic_UIComponent {
         if (typeof this._height != "string") {
             return this._height || 0;
         } else {
-            return this.contElement.offsetHeight;
+            return this.elem.offsetHeight;
         }
         
     }
 
     set height($value) {
         
+        if (typeof $value == "string" && $value.trim() !== "" && !isNaN(Number($value))) $value = Number($value);
         this._height = $value;
-
-        if (typeof $value != "string") {
-            this.contElement.style.height = parseFloat($value) + "px";
-        } else {
-            this.contElement.style.height = $value;
-        }
+        this.elem.style.height = toCssLength($value);
 
     }
 
@@ -443,7 +577,7 @@ class Basic_UIComponent {
 
     set rotate($value) {
         this._rotate = parseInt($value);
-        this.contElement.style.transform = "rotate(" + $value + "deg)";
+        this.elem.style.transform = "rotate(" + $value + "deg)";
     }
 
     // -- Hizalama ve boyutlandırma SONU
@@ -459,11 +593,11 @@ class Basic_UIComponent {
         this._visible = $value;
 
         // display tipini daha sonra kullanmak üzere sakla.
-        if (this.contElement.style.display && this.contElement.style.display != "none") {
-            this._displayType = this.contElement.style.display;
+        if (this.elem.style.display && this.elem.style.display != "none") {
+            this._displayType = this.elem.style.display;
         }
 
-        this.contElement.style.display = ($value == 1) ? this._displayType : "none";
+        this.elem.style.display = ($value == 1) ? this._displayType : "none";
 
     }
 
@@ -473,7 +607,7 @@ class Basic_UIComponent {
 
     set clickable($value) {
         this._clickable = $value;
-        this.contElement.style.pointerEvents = ($value == 1) ? "auto" : "none";
+        this.elem.style.pointerEvents = ($value == 1) ? "auto" : "none";
     }
 
     get opacity() {
@@ -482,7 +616,7 @@ class Basic_UIComponent {
 
     set opacity($value) {
         this._opacity = $value;
-        this.contElement.style.opacity = $value;
+        this.elem.style.opacity = $value;
     }
 
     get color() {
@@ -491,7 +625,7 @@ class Basic_UIComponent {
 
     set color($value) {
         this._backgroundColor = $value;
-        this.contElement.style.backgroundColor = $value;
+        this.elem.style.backgroundColor = $value;
     }
 
     get padding() {
@@ -535,10 +669,10 @@ class Basic_UIComponent {
             //throw new Error('padding değeri ya sayı olmalı ya da 1–4 elemanlı bir dizi olmalıdır.');
         }
 
-        this.contElement.style.paddingLeft   = paddingLeft  + 'px';
-        this.contElement.style.paddingTop    = paddingTop   + 'px';
-        this.contElement.style.paddingRight  = paddingRight + 'px';
-        this.contElement.style.paddingBottom = paddingBottom+ 'px';
+        this.elem.style.paddingLeft   = paddingLeft  + 'px';
+        this.elem.style.paddingTop    = paddingTop   + 'px';
+        this.elem.style.paddingRight  = paddingRight + 'px';
+        this.elem.style.paddingBottom = paddingBottom+ 'px';
     }
 
     // -- Genel özellikler SONU
@@ -551,7 +685,7 @@ class Basic_UIComponent {
 
     set border($value) {
         this._border = $value;
-        this.contElement.style.borderWidth = $value + "px";
+        this.elem.style.borderWidth = $value + "px";
     }
 
     get borderColor() {
@@ -560,7 +694,7 @@ class Basic_UIComponent {
 
     set borderColor($value) {
         this._borderColor = $value;
-        this.contElement.style.borderColor = $value;
+        this.elem.style.borderColor = $value;
     }
 
     get round() {
@@ -569,7 +703,7 @@ class Basic_UIComponent {
 
     set round($value) {
         this._round = $value;
-        this.contElement.style.borderRadius = $value + "px";
+        this.elem.style.borderRadius = $value + "px";
     }
 
     // -- Kenarlık SONU
@@ -582,7 +716,7 @@ class Basic_UIComponent {
 
     set fontSize($value) {
         this._fontSize = $value;
-        this.element.style.fontSize = $value + "px";
+        this.elem.style.fontSize = $value + "px";
     }
 
     // fontSize Alternatif kullanım.
@@ -592,7 +726,7 @@ class Basic_UIComponent {
 
     set textSize($value) {
         this._fontSize = $value;
-        this.element.style.fontSize = $value + "px";
+        this.elem.style.fontSize = $value + "px";
     }
     
     get textColor() {
@@ -601,7 +735,7 @@ class Basic_UIComponent {
 
     set textColor($value) {
         this._textColor = $value;
-        this.element.style.color = $value;
+        this.elem.style.color = $value;
     }
 
     get textAlign() {
@@ -610,17 +744,17 @@ class Basic_UIComponent {
 
     set textAlign($value) {
         this._textAlign = $value;
-        this.element.style.textAlign = $value;
+        this.elem.style.textAlign = $value;
     }
     
     // Metin özellikleri SONU
 
     get position() {
-        return (this.contElement.style.position) ? this.contElement.style.position : "absolute";
+        return (this.elem.style.position) ? this.elem.style.position : "absolute";
     }
 
     set position($value) {
-        this.contElement.style.position = $value;
+        this.elem.style.position = $value;
 
         if ($value == "relative") {
             this.left = 0;
@@ -643,61 +777,446 @@ class Basic_UIComponent {
     }
 
     // -- Otomatik hizalama metodları SONU
-    
+
+    // *** v26.09.18 ADDITIONS (all objects) ***
+
+    // The element that carries the text styles: TextBox -> its <input>, the others -> their own element.
+    get _textElem() {
+        return (this._type == "textbox" && this.inputElement) ? this.inputElement : this.elem;
+    }
+
+    // Raw CSS without touching .elem:
+    // obj.css = { whiteSpace: "nowrap" }   obj.css.whiteSpace = "nowrap"   obj.css = "white-space: nowrap"
+    get css() {
+        return this.elem.style;
+    }
+
+    set css($value) {
+        if (!$value) return;
+        if (typeof $value == "string") {
+            this.elem.style.cssText += "; " + $value;
+            return;
+        }
+        for (let key in $value) this.elem.style[key] = $value[key];
+    }
+
+    // "pointer", "default", "text", "move", "grab", "not-allowed"...
+    get cursor() {
+        return this._cursor || "";
+    }
+
+    set cursor($value) {
+        this._cursor = $value || "";
+        this.elem.style.cursor = this._cursor;
+        if (this._type == "textbox" && this.inputElement) this.inputElement.style.cursor = this._cursor;
+    }
+
+    get zIndex() {
+        const z = parseInt(this.elem.style.zIndex);
+        return isNaN(z) ? 0 : z;
+    }
+
+    set zIndex($value) {
+        this.elem.style.zIndex = ($value === "" || $value === null || $value === undefined) ? "" : String($value);
+    }
+
+    // "0 2px 8px rgba(0, 0, 0, 0.2)" or "none"
+    get boxShadow() {
+        return this.elem.style.boxShadow;
+    }
+
+    set boxShadow($value) {
+        this.elem.style.boxShadow = $value || "";
+    }
+
+    // "opensans" (default), "opensans-bold", or any font family name.
+    get fontFamily() {
+        return this._fontFamily || "";
+    }
+
+    set fontFamily($value) {
+        this._fontFamily = $value || "";
+        this._applyFont();
+    }
+
+    // bold: 1 -> opensans-bold (the bundled bold font). With another fontFamily -> font-weight: bold.
+    get bold() {
+        return this._bold ? 1 : 0;
+    }
+
+    set bold($value) {
+        this._bold = ($value) ? 1 : 0;
+        this._applyFont();
+    }
+
+    _applyFont() {
+        const family = this._fontFamily || "";
+        const el = this._textElem;
+        if (family === "" || family.indexOf("opensans") === 0) {
+            el.style.fontFamily = (this._bold) ? "opensans-bold" : family;
+            el.style.fontWeight = "";
+        } else {
+            el.style.fontFamily = family;
+            el.style.fontWeight = (this._bold) ? "bold" : "";
+        }
+    }
+
+    get italic() {
+        return this._italic ? 1 : 0;
+    }
+
+    set italic($value) {
+        this._italic = ($value) ? 1 : 0;
+        this._textElem.style.fontStyle = ($value) ? "italic" : "";
+    }
+
+    // Number -> px (lineHeight: 24). String -> as is (lineHeight: "1.4" = 1.4 x font size).
+    get lineHeight() {
+        return this._lineHeight;
+    }
+
+    set lineHeight($value) {
+        this._lineHeight = $value;
+        this._textElem.style.lineHeight = (typeof $value == "number") ? $value + "px" : ($value || "");
+    }
+
+    // ellipsis: 1 -> one line, "..." at the end when the text does not fit the width.
+    get ellipsis() {
+        return this._ellipsis ? 1 : 0;
+    }
+
+    set ellipsis($value) {
+        this._ellipsis = ($value) ? 1 : 0;
+        const el = this._textElem;
+        el.style.whiteSpace = ($value) ? "nowrap" : "";
+        el.style.textOverflow = ($value) ? "ellipsis" : "";
+        if ($value) el.style.overflow = "hidden";
+    }
+
+    // selectable: 1 -> the user can select and copy the text. (basic.css turns selection off for every object.)
+    get selectable() {
+        return this._selectable ? 1 : 0;
+    }
+
+    set selectable($value) {
+        this._selectable = ($value) ? 1 : 0;
+        this.elem.style.userSelect = ($value) ? "text" : "";
+        this.elem.style.webkitUserSelect = ($value) ? "text" : "";
+        if ($value) this.clickable = 1; // WHY: pointer-events: none blocks the selection too.
+    }
+
+    // Flex child (inside HGroup / VGroup): grow: 1 -> takes the free space. shrink: 1 -> can get smaller.
+    get grow() {
+        return this._grow || 0;
+    }
+
+    set grow($value) {
+        this._grow = $value;
+        this.elem.style.flexGrow = String($value);
+    }
+
+    get shrink() {
+        return this._shrink || 0;
+    }
+
+    set shrink($value) {
+        this._shrink = $value;
+        this.elem.style.flexShrink = String($value);
+    }
+
+    // Text without HTML. Safe for user data (.text is innerHTML).
+    get plainText() {
+        return this._textElem.textContent;
+    }
+
+    set plainText($value) {
+        this._textElem.textContent = ($value === null || $value === undefined) ? "" : String($value);
+    }
+
+    // 1 after remove().
+    get isRemoved() {
+        return this._isRemoved ? 1 : 0;
+    }
+
+    // The basic.js objects directly inside this object (not the deeper ones).
+    get children() {
+        const list = [];
+        const elems = this.elem.children;
+        for (let i = 0; i < elems.length; i++) {
+            if (elems[i]._basicObject) list.push(elems[i]._basicObject);
+        }
+        return list;
+    }
+
+    show() {
+        this.visible = 1;
+        return this;
+    }
+
+    hide() {
+        this.visible = 0;
+        return this;
+    }
+
+    toggle() {
+        this.visible = (this.visible == 1) ? 0 : 1;
+        return this;
+    }
+
+    setSize($width, $height) {
+        if ($width !== undefined && $width !== null) this.width = $width;
+        if ($height !== undefined && $height !== null) this.height = $height;
+        return this;
+    }
+
+    setPosition($left, $top) {
+        if ($left !== undefined && $left !== null) this.left = $left;
+        if ($top !== undefined && $top !== null) this.top = $top;
+        return this;
+    }
+
+    // Puts the object above its siblings (zIndex = highest sibling + 1). The DOM order does not change.
+    bringToFront() {
+        let max = 0;
+        const parent = this.elem.parentElement;
+        if (parent) {
+            for (let i = 0; i < parent.children.length; i++) {
+                const z = parseInt(parent.children[i].style.zIndex);
+                if (!isNaN(z) && z > max) max = z;
+            }
+        }
+        this.zIndex = max + 1;
+        return this;
+    }
+
+    // Is $obj inside this object (at any depth)?
+    contains($obj) {
+        return !!($obj && $obj !== this && $obj.elem && this.elem.contains($obj.elem));
+    }
+
+    // Like on(), but the function runs only once. Returns the remover function.
+    once($eventName, $func, $useCapture = false) {
+        let removeEvent = null;
+        removeEvent = this.on($eventName, function (self, event) {
+            if (removeEvent) removeEvent();
+            $func(self, event);
+        }, $useCapture);
+        return removeEvent;
+    }
+
+    // Animates property changes and returns a Promise:
+    // await box.animate({ left: 100, opacity: 0.5 }, 300);   box.animate({ width: 200 }, 500, "ease-out").then(...)
+    // The transition set by setMotion() is restored when the animation ends.
+    animate($props = {}, $duration = 300, $easing = "ease") {
+
+        const _that = this;
+
+        return new Promise(function (resolve) {
+
+            if (_that._isRemoved) { resolve(_that); return; }
+
+            // The transition to restore is the one before the first animate() call (chained calls keep it).
+            if (_that._animateTimeout) {
+                clearTimeout(_that._animateTimeout);
+            } else {
+                _that._animateBaseTransition = _that.elem.style.transition;
+            }
+
+            _that.elem.style.transition = "all " + $duration + "ms " + $easing;
+            void _that.elem.offsetWidth; // WHY: Forces a reflow, so the transition starts from the current values.
+
+            for (let key in $props) _that[key] = $props[key];
+
+            _that._animateTimeout = setTimeout(function () {
+                _that._animateTimeout = null;
+                if (!_that._isRemoved) _that.elem.style.transition = _that._animateBaseTransition || "";
+                resolve(_that);
+            }, $duration + 20);
+
+        });
+
+    }
+
+    // *** v26.09.18 ADDITIONS END ***
+
     // Nesneyi sil.
     remove() {
-        this.contElement.remove();
+
+        // WHY: A child can be removed by its parent (below) and by its own code. Only the first call works.
+        if (this._isRemoved) return;
+        this._isRemoved = 1;
+
+        // 0. Remove the basic.js objects inside this object too.
+        // WHY: Only this object was cleaned before. Its children kept their global registrations
+        //      (resizeDetection list and ResizeObserver, page.onResize of ScrollBar, SelectDate, SelectTime,
+        //      static lists like RadioButton groups...), so a removed page stayed in the memory with all
+        //      of its objects (about 400 DOM nodes and 250 event listeners for every page change).
+        if (removeCascadeDepth == 0) {
+
+            removeCascadeDepth++;
+
+            try {
+
+                const childElements = this.elem.querySelectorAll("*");
+
+                // Parents first (document order).
+                // WHY: destroy() of a component can clean its own children, then they are skipped here.
+                for (let i = 0; i < childElements.length; i++) {
+
+                    const child = childElements[i]._basicObject;
+                    if (!child || child === this || child._isRemoved) continue;
+
+                    try {
+                        // Components clean their global events in destroy(). (Component template)
+                        if (typeof child.destroy === "function") child.destroy();
+                        if (!child._isRemoved) child.remove();
+                    } catch (error) {
+                        println("basic.js: A child object could not be removed: " + error.message, "warn");
+                    }
+
+                }
+
+            } finally {
+                removeCascadeDepth--;
+            }
+
+        }
+
+        // v26.09.18: Pending timers of this object must not run after it is removed.
+        if (this._setMotionTimeout) clearTimeout(this._setMotionTimeout);
+        if (this._withMotionTimeout) clearTimeout(this._withMotionTimeout);
+        if (this._dontMotionTimeout) clearTimeout(this._dontMotionTimeout);
+        if (this._animateTimeout) clearTimeout(this._animateTimeout);
+
+        // 1.  Eklenmiş tüm eventleri kaldır. _addEventListener() - Otomatik temizleme
+        if (this._eventFuncList && this._eventFuncList.length) {
+            for (let i = this._eventFuncList.length - 1; i >= 0; i--) {
+                const ev = this._eventFuncList[i];
+                ev.elem.removeEventListener(ev.eventName, ev.eventFunc);
+                this._eventFuncList.pop();
+            }
+        }
+
+        // 2. Eğer resizeDetection kaydı varsa, onu da kaldır
+        if (resizeDetection && typeof resizeDetection.remove_onResize === "function") {
+            resizeDetection.remove_onResize(this.elem, null); // null ile tüm fonksiyonları sil
+        }
+
+        // NOTE: Eğer page.onResize kullanılmış ise manuel kaldırılmalı.
+
+        // 3. DOM'dan sil
+        this.elem.remove();
+
+        // 4. Tüm özellikleri sil:
+        /*
+        const _this = this;
+        setTimeout(function() {
+            for (let key in _this) {
+                delete _this[key];  // Tüm özellikleri sil
+            }
+        }, 1000); // WHY: May be have a css animation
+        */
+
     }
 
     // Toplu özellik değiştirmesi.
     props($defaultParams, $params, $props) {
         setProparties(this, $defaultParams, $params, $props);
+        return this;
     }
 
-    // Olay eklemek.
-    _addEventListener($eventName, $func, $element) {
-        let _that = this;
-        const eventFunc = function ($ev) {
-            $func(_that, $ev);
+    // Olay ekleme: onClick, onResize da kullanılıyor.
+    _addEventListener($eventName, $func, $element, $useCapture = false) {
+
+        /* // More options:
+        $useCapture =
+        {
+            capture: false,    // Event capture mı bubbling mi? (varsayılan: false)
+            once: false,       // Sadece 1 defa mı çalışsın? (true ise dinleyici otomatik kaldırılır)
+            passive: false     // `event.preventDefault()` çağrılmayacaksa true yapılabilir
         }
-        $element.addEventListener($eventName, eventFunc);
+        */
 
-        const eventDateItem = {};
-        eventDateItem.eventName = $eventName;
-        eventDateItem.originalFunc = $func;
-        eventDateItem.func = eventFunc;
-        eventDateItem.element = $element;
-        this._eventFuncList.push(eventDateItem);
-    }
+        let _that = this;
 
+        const eventFunc = function (event) {
+            $func(_that, event); // İlk parametre nesnenin kendisi.
+        }
+        $element.addEventListener($eventName, eventFunc, $useCapture);
+
+        // Otomatik temizleme için kaydet.
+        const eventDataItem = {};
+        eventDataItem.eventName = $eventName;
+        eventDataItem.originalFunc = $func;
+        eventDataItem.eventFunc = eventFunc;
+        eventDataItem.elem = $element;
+
+        this._eventFuncList.push(eventDataItem); // Nesne .remove() edilirken, hepsi temizlenir.
+
+        const removeEvent = function() {
+            _that._removeEventListener($eventName, $func, $element);
+        };
+
+        return removeEvent; // Eklenen olayı kolayca silmek için fonksiyon döndür.
+
+    };
+
+    // Olay silme: remove_onClick, remove_onResize da kullanılıyor.
     _removeEventListener($eventName, $func, $element) {
-        let func = null
+
+        //Otomatik temizleme
+        let eventFunc = null; // Orjinal fonksiyon bulunacak.
+        
         for (let i = 0; i < this._eventFuncList.length; i++) {
             if (this._eventFuncList[i].originalFunc == $func) {
-                func = this._eventFuncList[i].func;
+                eventFunc = this._eventFuncList[i].eventFunc;
                 this._eventFuncList.splice(i, 1);
                 break;
             }
         }
-        if (func) {
-            $element.removeEventListener($eventName, func);
-        }   
-    }
 
+        if (eventFunc) {
+            $element.removeEventListener($eventName, eventFunc);
+        }
+        
+        //$element.removeEventListener($eventName, $func);
+
+    };
+
+    // NEW: Olay ekleme: object.on("click", function);
     on($eventName, $func, $useCapture = false) {
-        const _elem = (this._type == "textbox") ? this.inputElement : this.elem;
-        // WHY: Clickable bazen 0 da unutulabilir, otomatik 1 ver. Gerekirse kullanıcı 0 yapar.
-        this.clickable = 1;
+
+        const _elem = (this._type == "textbox") ? this.inputElement : this.elem; // WHY: textbox için olayları input elementine bağla.
+        this.clickable = 1; // WHY: Clickable bazen 0 da unutulabilir, otomatik 1 ver. Gerekirse kullanıcı 0 yapar.
+        
+        return this._addEventListener($eventName, $func, _elem, $useCapture);
+
+        /* #1
         _elem.addEventListener($eventName, $func, $useCapture);
-        // Olayı kolayca silebilmek için hazır bir fonksiyon gönder.
-        return function removeEvent() {
+
+        // Olayı kolayca silebilmek için hazır bir fonksiyon oluştur.
+        const removeEvent = function() {
             _elem.removeEventListener($eventName, $func);
         };
-    }
 
+        return eventInfo;
+
+        */
+        
+        // TODO: $eventName resize ise, resizeDetection.onResize ile ekleme yapılabilir.
+
+    }
+    // NOTE: Bir olay eklendiğinde, silme fonksiyonunu oluşturup, return ediyor.
+
+    // NEW: Olay ekleme: object.off("click", function);
     off($eventName, $func) {
+
+        // Eğer ihityaç olursa, manuel olarak da, tek tek eventler silinebilir.
         const _elem = (this._type == "textbox") ? this.inputElement : this.elem;
-        _elem.removeEventListener($eventName, $func);
+        
+        //_elem.removeEventListener($eventName, $func);
+        this._removeEventListener($eventName, $func, _elem);
+
     }
 
     onResize($func) {
@@ -705,7 +1224,7 @@ class Basic_UIComponent {
     }
 
     remove_onResize($func) {
-        resizeDetection.remove_onResize(this.element, $func);
+        resizeDetection.remove_onResize(this.elem, $func);
     }
 
     // Hareket
@@ -730,7 +1249,7 @@ class Basic_UIComponent {
     setMotionNow($motionString) {
 
         this._motionString = $motionString;
-        this.contElement.style.transition = $motionString;
+        this.elem.style.transition = $motionString;
 
     }
 
@@ -750,19 +1269,19 @@ class Basic_UIComponent {
     // Harekete, belli bir süre ara ver.
     dontMotion() {
 
-        this.contElement.style.transition = "none";
+        this.elem.style.transition = "none";
         const _that = this;
 
         if(this._dontMotionTimeout) clearTimeout(this._dontMotionTimeout);
         this._dontMotionTimeout = setTimeout(function(){
-            _that.contElement.style.transition = _that._motionString;
+            _that.elem.style.transition = _that._motionString;
         }, motionController.DONT_MOTION_TIME);
 
     }
 
     // Harekete arayı, süresi dolmadan iptal et.
     canMotionNow() {
-        this.contElement.style.transition = this._motionString;
+        this.elem.style.transition = this._motionString;
     }
 
 }
@@ -797,9 +1316,12 @@ class MainBox {
         return this._element;
     }
 
+    /*
     get contElement() {
         return this._element;
     }
+    */
+    // NOTE: .elem, .elem, .elem all the same. You can delete contElement --> element
 
     get bodyElement() {
         return this._bodyElement;
@@ -811,7 +1333,7 @@ class MainBox {
 
     set mainBox($value) {
         this._box = $value;
-        this._element = this._box.element;
+        this._element = this._box.elem;
     }
 
     get width() {
@@ -828,11 +1350,11 @@ class MainBox {
 
     // .text alternatif kullanım:
     get html() {
-        return this._box.element.innerHTML;
+        return this._box.elem.innerHTML;
     }
 
     set html($value) {
-        this._box.element.innerHTML = $value;
+        this._box.elem.innerHTML = $value;
     }
 
     get zoom() {
@@ -926,12 +1448,42 @@ class MainBox {
         this._box._removeEventListener("resize", $func, window);
     }
 
+    // *** v26.09.18 ADDITIONS (page) ***
+
+    // Window events: page.on("keydown", function (self, event) {}). Returns the remover function.
+    on($eventName, $func, $useCapture = false) {
+        return this._box._addEventListener($eventName, $func, window, $useCapture);
+    }
+
+    off($eventName, $func) {
+        this._box._removeEventListener($eventName, $func, window);
+    }
+
+    onKeyDown($func) {
+        return this.on("keydown", $func);
+    }
+
+    remove_onKeyDown($func) {
+        this.off("keydown", $func);
+    }
+
+    // The browser tab title.
+    get title() {
+        return document.title;
+    }
+
+    set title($value) {
+        document.title = $value;
+    }
+
+    // *** v26.09.18 ADDITIONS END ***
+
     add($obj) {
         // Eklenen nesnenin, üst nesnesi değişiyor.
         if ($obj.containerBox != this) {
             $obj.containerBox = this;
             // this.box.clickable = 1;
-            this.element.appendChild($obj.contElement);
+            this.elem.appendChild($obj.elem);
         }
     }
 
@@ -966,17 +1518,12 @@ class BBox extends Basic_UIComponent {
         divElement.style.top = $top + "px";
 
         this._element = divElement;
-        this._containerBox = defaultContainerBox;
-        if (defaultContainerBox != null) {
-            defaultContainerBox.element.appendChild(this._element);
-        } else {
-            println("basic.js: The library is not yet ready for use. Put your code in window.onload", "error");
-        }
+        attachToContainer(this, this._element);
 
         this.width = $width;
         this.height = $height;
 
-        if (defaultContainerBox.element.style.display == "flex") {
+        if (isFlexContainer(defaultContainerBox)) {
             this.position = "relative";
         }
 
@@ -992,25 +1539,27 @@ class BBox extends Basic_UIComponent {
         return this._element;
     }
 
+    /*
     get contElement() {
         return this._element;
     }
+    */
 
     get text() {
-        return this.element.innerHTML;
+        return this.elem.innerHTML;
     }
 
     set text($value) {
-        this.element.innerHTML = $value;
+        this.elem.innerHTML = $value;
     }
 
     // .text alternatif kullanım:
     get html() {
-        return this.element.innerHTML;
+        return this.elem.innerHTML;
     }
 
     set html($value) {
-        this.element.innerHTML = $value;
+        this.elem.innerHTML = $value;
     }
 
     get clipContent() {
@@ -1020,47 +1569,47 @@ class BBox extends Basic_UIComponent {
     set clipContent($value) {
         this._clipContent = $value;
         if ($value) {
-            this.contElement.style.overflowX = "hidden";
-            this.contElement.style.overflowY = "hidden";
+            this.elem.style.overflowX = "hidden";
+            this.elem.style.overflowY = "hidden";
         } else {
-            this.contElement.style.overflowX = "visible";
-            this.contElement.style.overflowY = "visible";
+            this.elem.style.overflowX = "visible";
+            this.elem.style.overflowY = "visible";
         }
     }
     
     get scrollX() {
-        return (this.contElement.style.overflowX == "auto") ? 1 : 0;
+        return (this.elem.style.overflowX == "auto") ? 1 : 0;
     }
 
     get scrollY() {
-        return (this.contElement.style.overflowY == "auto") ? 1 : 0;
+        return (this.elem.style.overflowY == "auto") ? 1 : 0;
     }
 
     set scrollX($value) {
-        this.contElement.style.overflowX = "hidden";
+        this.elem.style.overflowX = "hidden";
 
         if ($value == 1) {
             this.clickable = 1;
-            this.contElement.style.overflowX = "auto";
+            this.elem.style.overflowX = "auto";
         }
     }
 
     set scrollY($value) {
-        this.contElement.style.overflowY = "hidden";
+        this.elem.style.overflowY = "hidden";
 
         if ($value == 1) {
             this.clickable = 1;
-            this.contElement.style.overflowY = "auto";
+            this.elem.style.overflowY = "auto";
         }
     }
 
     onClick($func) {
         this.clickable = 1;
-        this._addEventListener("click", $func, this.contElement);
+        this._addEventListener("click", $func, this.elem);
     }
 
     remove_onClick($func) {
-        this._removeEventListener("click", $func, this.contElement);
+        this._removeEventListener("click", $func, this.elem);
     }
 
     add($obj) {
@@ -1069,7 +1618,7 @@ class BBox extends Basic_UIComponent {
             $obj.containerBox = this;
             // İçine başka bir nesne eklendiğinde, artık basılabilir.
             //this.clickable = 1;
-            this.element.appendChild($obj.contElement);
+            this.elem.appendChild($obj.elem);
         //}
     }
 
@@ -1085,9 +1634,10 @@ class BBox extends Basic_UIComponent {
 //window.Box = Box;
 
 // Alternatif kullanım
-window.createBox = function ($left, $top, $width, $height) {
+const createBox = function ($left, $top, $width, $height) {
     return new BBox($left, $top, $width, $height);
-}
+};
+window.createBox = createBox;
 
 // Alternatif kullanım
 /*
@@ -1127,13 +1677,12 @@ class BButton extends Basic_UIComponent {
         buttonElement.style.top = $top + "px";
 
         this._element = buttonElement;
-        this._containerBox = defaultContainerBox;
-        defaultContainerBox.element.appendChild(this._element);
+        attachToContainer(this, this._element);
 
         this.width = $width;
         this.height = $height;
 
-        if (defaultContainerBox.element.style.display == "flex") {
+        if (isFlexContainer(defaultContainerBox)) {
             this.position = "relative";
         }
 
@@ -1149,9 +1698,10 @@ class BButton extends Basic_UIComponent {
         return this._element;
     }
 
+    /*
     get contElement() {
         return this._element;
-    }
+    }*/
 
     get buttonElement() {
         return this._element;
@@ -1195,12 +1745,12 @@ class BButton extends Basic_UIComponent {
     }
 
     get spaceX() {
-        return parseInt(this.contElement.style.paddingLeft) || 0;
+        return parseInt(this.elem.style.paddingLeft) || 0;
     }
 
     set spaceX($value) {
-        this.contElement.style.paddingLeft = $value + "px";
-        this.contElement.style.paddingRight = $value + "px";
+        this.elem.style.paddingLeft = $value + "px";
+        this.elem.style.paddingRight = $value + "px";
     }
 
     onClick($func) {
@@ -1220,9 +1770,10 @@ class BButton extends Basic_UIComponent {
 //window.Button = Button;
 
 // Alternatif kullanım1
-window.createButton = function ($left, $top, $width, $height) {
+const createButton = function ($left, $top, $width, $height) {
     return new BButton($left, $top, $width, $height);
-}
+};
+window.createButton = createButton;
 
 // Alternatif kullanım 2
 /*
@@ -1281,13 +1832,12 @@ class BTextBox extends Basic_UIComponent {
         mainElement.appendChild(this._titleElement);
         mainElement.appendChild(this._element);
 
-        this._containerBox = defaultContainerBox;
-        defaultContainerBox.element.appendChild(this._mainElement);
+        attachToContainer(this, this._mainElement);
 
         this.width = $width;
         this.height = $height;
 
-        if (defaultContainerBox.element.style.display == "flex") {
+        if (isFlexContainer(defaultContainerBox)) {
             this.position = "relative";
         }
 
@@ -1302,13 +1852,17 @@ class BTextBox extends Basic_UIComponent {
     get element() {
         return this._mainElement;
     }
+    /*
+    get contElement() {
+        return this._mainElement;
+    }*/
 
     get inputElement() {
         return this._element;
     }
 
-    get contElement() {
-        return this._mainElement;
+    set inputElement(elem) {
+        this._element = elem;
     }
 
     get titleElement() {
@@ -1320,7 +1874,8 @@ class BTextBox extends Basic_UIComponent {
     }
 
     set text($value) {
-        this.inputElement.value = $value.toString();
+        // WHY: null / undefined gelir ise hata vermek yerine alanı boşaltsın.
+        this.inputElement.value = ($value === null || $value === undefined) ? "" : String($value);
     }
 
     // ÖZEL: Renk özelliği
@@ -1438,6 +1993,100 @@ class BTextBox extends Basic_UIComponent {
         }
     }
 
+    // *** v26.09.18 ADDITIONS (Input / TextBox) ***
+
+    // .value = .text (what most developers expect from an input)
+    get value() {
+        return this.text;
+    }
+
+    set value($value) {
+        this.text = $value;
+    }
+
+    get plainText() {
+        return this.text;
+    }
+
+    set plainText($value) {
+        this.text = $value;
+    }
+
+    get placeholder() {
+        return this.inputElement.placeholder;
+    }
+
+    set placeholder($value) {
+        this.inputElement.placeholder = ($value === null || $value === undefined) ? "" : String($value);
+    }
+
+    // "text" (default), "password", "number", "email", "tel", "search", "url"
+    get inputType() {
+        return this.inputElement.type;
+    }
+
+    set inputType($value) {
+        this.inputElement.type = $value || "text";
+    }
+
+    // 0 -> no limit
+    get maxLength() {
+        return (this.inputElement.maxLength > 0) ? this.inputElement.maxLength : 0;
+    }
+
+    set maxLength($value) {
+        if ($value > 0) {
+            this.inputElement.maxLength = $value;
+        } else {
+            this.inputElement.removeAttribute("maxlength");
+        }
+    }
+
+    get readOnly() {
+        return (this.inputElement.readOnly) ? 1 : 0;
+    }
+
+    set readOnly($value) {
+        this.inputElement.readOnly = ($value) ? true : false;
+    }
+
+    focus() {
+        this.inputElement.focus();
+        return this;
+    }
+
+    blur() {
+        this.inputElement.blur();
+        return this;
+    }
+
+    // Selects the whole text.
+    select() {
+        this.inputElement.select();
+        return this;
+    }
+
+    // Enter key: input.onEnter(function (self, event) {}). Returns the remover function.
+    onEnter($func) {
+        const wrapper = function (self, event) {
+            if (event.key === "Enter") $func(self, event);
+        };
+        wrapper._enterFunc = $func;
+        return this._addEventListener("keydown", wrapper, this.inputElement);
+    }
+
+    remove_onEnter($func) {
+        for (let i = this._eventFuncList.length - 1; i >= 0; i--) {
+            const item = this._eventFuncList[i];
+            if (item.eventName == "keydown" && item.originalFunc._enterFunc === $func) {
+                item.elem.removeEventListener("keydown", item.eventFunc);
+                this._eventFuncList.splice(i, 1);
+            }
+        }
+    }
+
+    // *** v26.09.18 ADDITIONS END ***
+
     onChange($func) {
         this._addEventListener("input", $func, this.inputElement);
     }
@@ -1454,13 +2103,11 @@ class BTextBox extends Basic_UIComponent {
 //window.TextBox = TextBox;
 
 // Alternatif kullanım
-window.createTextBox = function ($left, $top, $width, $height) {
+const createTextBox = function ($left, $top, $width, $height) {
     return new BTextBox($left, $top, $width, $height);
-}
-
-window.createInput = function ($left, $top, $width, $height) {
-    return new BTextBox($left, $top, $width, $height);
-}
+};
+window.createTextBox = createTextBox;
+window.createInput = createTextBox;
 
 // Alternatif kullanım
 /*
@@ -1498,13 +2145,12 @@ class BLabel extends Basic_UIComponent {
         divElement.style.top = $top + "px";
 
         this._element = divElement;
-        this._containerBox = defaultContainerBox;
-        defaultContainerBox.element.appendChild(this._element);
+        attachToContainer(this, this._element);
 
         this.width = $width;
         this.height = $height;
 
-        if (defaultContainerBox.element.style.display == "flex") {
+        if (isFlexContainer(defaultContainerBox)) {
             this.position = "relative";
         }
 
@@ -1521,53 +2167,53 @@ class BLabel extends Basic_UIComponent {
     get element() {
         return this._element;
     }
-
+    /*
     get contElement() {
         return this._element;
-    }
+    }*/
 
     get text() {
-        return this.element.innerHTML;
+        return this.elem.innerHTML;
     }
 
     set text($value) {
-        this.element.innerHTML = $value;
+        this.elem.innerHTML = $value;
     }
 
     get space() {
-        return parseInt(this.contElement.style.padding) || 0;
+        return parseInt(this.elem.style.padding) || 0;
     }
 
     set space($value) {
-        this.contElement.style.padding = $value + "px";
+        this.elem.style.padding = $value + "px";
     }
 
     get spaceX() {
-        return parseInt(this.contElement.style.paddingLeft) || 0;
+        return parseInt(this.elem.style.paddingLeft) || 0;
     }
 
     set spaceX($value) {
-        this.contElement.style.paddingLeft = $value + "px";
-        this.contElement.style.paddingRight = $value + "px";
+        this.elem.style.paddingLeft = $value + "px";
+        this.elem.style.paddingRight = $value + "px";
     }
 
     get spaceY() {
-        return parseInt(this.contElement.style.paddingTop) || 0;
+        return parseInt(this.elem.style.paddingTop) || 0;
     }
 
     set spaceY($value) {
-        this.contElement.style.paddingTop = $value + "px";
-        this.contElement.style.paddingBottom = $value + "px";
+        this.elem.style.paddingTop = $value + "px";
+        this.elem.style.paddingBottom = $value + "px";
     }
 
     onClick($func) {
         this.clickable = 1;
-        this._addEventListener("click", $func, this.contElement);
+        this._addEventListener("click", $func, this.elem);
     }
 
     remove_onClick($func) {
         //this.clickable = 0;
-        this._removeEventListener("click", $func, this.contElement);
+        this._removeEventListener("click", $func, this.elem);
     }
 
     add($obj) {
@@ -1578,9 +2224,10 @@ class BLabel extends Basic_UIComponent {
 //window.Label = Label;
 
 // Alternatif kullanım
-window.createLabel = function ($left, $top, $width, $height) {
+const createLabel = function ($left, $top, $width, $height) {
     return new BLabel($left, $top, $width, $height);
-}
+};
+window.createLabel = createLabel;
 
 // Alternatif kullanım
 /*
@@ -1621,8 +2268,7 @@ class BImage extends Basic_UIComponent {
         imageElement.style.top = $top + "px";
 
         this._element = imageElement;
-        this._containerBox = defaultContainerBox;
-        defaultContainerBox.element.appendChild(this._element);
+        attachToContainer(this, this._element);
 
         super.width = $width;
         super.height = $height;
@@ -1646,13 +2292,17 @@ class BImage extends Basic_UIComponent {
                     _that.width = parseInt(_that.naturalWidth / _autoSize) + "px";
                     _that.height = parseInt(_that.naturalHeight / _autoSize) + "px";
 
+                    // WHY: .width ve .height, autoSize değerini 0 yapar.
+                    // Geri konmaz ise; aynı nesneye ikinci bir resim yüklendiğinde, eski ölçüde kalır.
+                    _that.autoSize = _autoSize;
+
                 }
 
             });
             
         //}
 
-        if (defaultContainerBox.element.style.display == "flex") {
+        if (isFlexContainer(defaultContainerBox)) {
             this.position = "relative";
         }
 
@@ -1667,12 +2317,12 @@ class BImage extends Basic_UIComponent {
     get element() {
         return this._element;
     }
+    /*
+    get contElement() {
+        return this._element;
+    }*/
 
     get imageElement() {
-        return this._element;
-    }
-
-    get contElement() {
         return this._element;
     }
 
@@ -1696,6 +2346,30 @@ class BImage extends Basic_UIComponent {
         super.height = $value;
     }
 
+    // *** v26.09.18 ADDITIONS (Icon / Image) ***
+
+    // Alternative text. (Without it, load() writes the file path, as basic.js does.)
+    get alt() {
+        return this._alt;
+    }
+
+    set alt($value) {
+        this._alt = $value;
+        this.imageElement.setAttribute("alt", ($value === null || $value === undefined) ? "" : String($value));
+    }
+
+    // How the image fills its width and height: "cover", "contain", "fill", "none", "scale-down"
+    get imageFit() {
+        return this._imageFit || "";
+    }
+
+    set imageFit($value) {
+        this._imageFit = $value || "";
+        this.imageElement.style.objectFit = this._imageFit;
+    }
+
+    // *** v26.09.18 ADDITIONS END ***
+
     // Resim yüklendikten sonra, çalışır.
     get naturalWidth() {
         return this.imageElement.naturalWidth;
@@ -1716,7 +2390,7 @@ class BImage extends Basic_UIComponent {
 
     get space() {
         return this._space;
-        // return parseInt(this.contElement.style.padding) || 0;
+        // return parseInt(this.elem.style.padding) || 0;
     }
     
     set space($value) {
@@ -1730,25 +2404,25 @@ class BImage extends Basic_UIComponent {
         }
 
         this._space = $value;
-        //this.contElement.style.padding = String($value + "%");
+        //this.elem.style.padding = String($value + "%");
         const spaceX = parseInt((this.width / 100) * $value);
         const spaceY = parseInt((this.height / 100) * $value);
 
-        this.contElement.style.paddingLeft = spaceX + "px";
-        this.contElement.style.paddingRight = spaceX + "px";
-        this.contElement.style.paddingTop = spaceY + "px";
-        this.contElement.style.paddingBottom = spaceY + "px";
+        this.elem.style.paddingLeft = spaceX + "px";
+        this.elem.style.paddingRight = spaceX + "px";
+        this.elem.style.paddingTop = spaceY + "px";
+        this.elem.style.paddingBottom = spaceY + "px";
 
     }
 
     onClick($func) {
         this.clickable = 1;
-        this._addEventListener("click", $func, this.contElement);
+        this._addEventListener("click", $func, this.elem);
     }
 
     remove_onClick($func) {
         //this.clickable = 0;
-        this._removeEventListener("click", $func, this.contElement);
+        this._removeEventListener("click", $func, this.elem);
     }
 
     onLoad($func) {
@@ -1761,7 +2435,7 @@ class BImage extends Basic_UIComponent {
 
     load($imagePath) {
         this.imageElement.setAttribute("src", $imagePath);
-        this.imageElement.setAttribute("alt", $imagePath);
+        if (this._alt === undefined) this.imageElement.setAttribute("alt", $imagePath);
     }
 
     add($obj) {
@@ -1772,17 +2446,11 @@ class BImage extends Basic_UIComponent {
 //window.BImage = BImage;
 
 // Alternatif kullanım
-window.createImage = function ($left, $top, $width, $height) {
-
+const createImage = function ($left, $top, $width, $height) {
     return new BImage($left, $top, $width, $height);
-
-}
-
-window.createIcon = function ($left, $top, $width, $height) {
-
-    return new BImage($left, $top, $width, $height);
-
-}
+};
+window.createImage = createImage;
+window.createIcon = createImage;
 
 // Alternatif kullanım
 /*
@@ -1811,72 +2479,79 @@ class BSound {
 
     }
 
+    get elem() {
+        return this._element;
+    }
+
     get element() {
         return this._element;
     }
+    /*
+    get contElement() {
+        return this._element;
+    }*/
 
     get soundElement() {
         return this._element;
     }
 
-    get contElement() {
-        return this._element;
-    }
-
+    // Sesin toplam süresi (saniye). Dosya hazır değil ise 0 döner.
     get time() {
-        return this.element.timr;
+        return (isNaN(this.elem.duration)) ? 0 : this.elem.duration;
     }
 
+    // Sesin kalan süresi (saniye).
     get timeLeft() {
-        return this.element.timeLeft;
+        return (isNaN(this.elem.duration)) ? 0 : (this.elem.duration - this.elem.currentTime);
     }
 
     get currentTime() {
-        return this.element.currentTime;
+        return this.elem.currentTime;
     }
 
     get paused() {
-        return this.element.paused;
+        return this.elem.paused;
     }
 
     get playing() {
-        return !this.element.paused;
+        return !this.elem.paused;
     }
 
     get loop() {
-        return (this.element.getAttribute("loop") == "loop") ? 1 : 0;
+        return (this.elem.getAttribute("loop") == "loop") ? 1 : 0;
     }
 
     set loop($value) {
         if ($value == 1) {
-            this.element.setAttribute("loop", "loop");
+            this.elem.setAttribute("loop", "loop");
         } else {
-            this.element.setAttribute("loop", "");
+            // WHY: loop bir "boolean attribute" tur. Boş değer verilir ise bile açık sayılır, silinmeli.
+            this.elem.removeAttribute("loop");
         }
     }
 
     play() {
         if (this.paused) {
-            this.element.play();
+            this.elem.play();
         }
     }
 
     pause($value) {
         if (!this.paused) {
-            this.element.pause();
+            this.elem.pause();
         }
     }
 
     stop() {
         if (!this.paused) {
-            this.element.pause();
-            this.element.currentTime = 0;
+            this.elem.pause();
+            this.elem.currentTime = 0;
         }
     }
     
     onLoad($func) {
         let _that = this;
-        this.element.addEventListener("canplaythrough", function () {
+        this.elem.addEventListener("canplaythrough", function () {
             $func(_that);
         });
     }
@@ -1889,16 +2564,18 @@ class BSound {
             fileType = "audio/mpeg";
         }
 
-        this.element.children[0].setAttribute("src", $path);
-        this.element.children[0].setAttribute("type", fileType);
+        this.elem.children[0].setAttribute("src", $path);
+        this.elem.children[0].setAttribute("type", fileType);
 
     }
 
     remove() {
-        this.contElement.remove();
+        this.elem.remove();
     }
 
 };
+// WHY: Kütüphane bir IIFE içinde. Dışarı açılmaz ise new BSound() çalışmaz.
+window.BSound = BSound;
 
 
 /* ### FUNCTIONS ### */
@@ -1923,30 +2600,28 @@ const calcSpace = function(elem, dir) {
 };
 
 // Set styles with style object.
-const setProparties = function ($this, $defaultParams = [], $params = [], $props = []) {
+const setProparties = function ($this, $defaultParams, $params, $props) {
 
     // Tüm özellikleri bu değişkende topla.
-    let allProps = {};
+    const _params = {};
 
-    // defaultPrams
-    for (let parameterName in $defaultParams) {
-        allProps[parameterName] = $defaultParams[parameterName];
+    if ($props) {
+        mergeIntoIfMissing(_params, $props);
     }
-    // params
-    for (let parameterName in $params) {
-        allProps[parameterName] = $params[parameterName];
+    if ($params) {
+        mergeIntoIfMissing(_params, $params);
     }
-    // props
-    for (let propName in $props) {
-        allProps[propName] = $props[propName];
+    if ($defaultParams) {
+        mergeIntoIfMissing(_params, $defaultParams);
     }
 
     // Tüm özellikleri tek seferde nesneye uygula.
-    for (let propName in allProps) {
-        $this[propName] = allProps[propName];
+    for (let propName in _params) {
+        $this[propName] = _params[propName];
     }
 
 };
+
 
 // Centering one object to box.
 const moveToCenter = function ($this, $position) {
@@ -2158,12 +2833,12 @@ const moveToAline = function ($this, $obj, $position, $space, $secondPosition) {
     
 };
 
-window.withPageZoom = function ($value) {
+const withPageZoom = function ($value) {
     return parseFloat($value * (1 / page.zoom));
 };
-//window.withPageZoom = basic.withPageZoom;
+window.withPageZoom = withPageZoom;
 
-window.setLoopTimer = function ($time) {
+const setLoopTimer = function ($time) {
     
     if (typeof loop === "function") {
 
@@ -2182,16 +2857,16 @@ window.setLoopTimer = function ($time) {
     }
 
 };
-//window.setLoopTimer = basic.setLoopTimer;
+window.setLoopTimer = setLoopTimer;
 
 // Yeni eklenen nesneler, seçili box nesnesinin içinde oluşturulur.
-window.setDefaultContainerBox = function ($box) {
+const setDefaultContainerBox = function ($box) {
 
     previousDefaultContainerBox = defaultContainerBox || page;
     defaultContainerBox = $box;
 
 };
-//window.setDefaultContainerBox = basic.setDefaultContainerBox;
+window.setDefaultContainerBox = setDefaultContainerBox;
 
 window.restoreDefaultContainerBox = function() {
     defaultContainerBox = previousDefaultContainerBox || page;
@@ -2199,13 +2874,36 @@ window.restoreDefaultContainerBox = function() {
 //window.restoreDefaultContainerBox = basic.restoreDefaultContainerBox;
 
 // Nesne hangi kutu nesnesinin içine eklendiği.
-window.getDefaultContainerBox = function () {
+const getDefaultContainerBox = function () {
     return defaultContainerBox;
 };
-//window.getDefaultContainerBox = basic.getDefaultContainerBox;
+window.getDefaultContainerBox = getDefaultContainerBox;
+
+// Creates objects inside an existing container and then restores the default container.
+// For example, adding rows to a component's list box after the component is created:
+// createIn(box.list, function () { Label({ text: "Row" }); });
+// NOTE: setDefaultContainerBox() alone is not part of the start/end stack; this function puts it back for you,
+//       also when $func throws.
+const createIn = function ($container, $func) {
+
+    const previous = getDefaultContainerBox();
+    setDefaultContainerBox($container);
+
+    try {
+        $func($container);
+    } finally {
+        setDefaultContainerBox(previous);
+    }
+
+};
+window.createIn = createIn;
 
 // Add your custom object to basic.js ecosystem.
-window.makeBasicObject = function($newObject) {
+const makeBasicObject = function($newObject) {
+
+    // Element -> object link.
+    // WHY: remove() finds the basic.js objects inside a removed object with it, to clean them too.
+    if ($newObject && $newObject.elem) $newObject.elem._basicObject = $newObject;
 
     // Object can be called as that.
     previousThat = that;
@@ -2213,52 +2911,148 @@ window.makeBasicObject = function($newObject) {
     that = $newObject;
 
 };
-//window.makeBasicObject = basic.makeBasicObject;
+window.makeBasicObject = makeBasicObject;
+
+const mergeIntoIfMissing = function (target, source, depth = 1, maxDepth = 4) {
+
+    if (depth > maxDepth) return; // Maksimum derinlik sınırı
+
+    for (let key in source) {
+        const sourceVal = source[key];
+        const targetVal = target[key];
+
+        if (
+            typeof sourceVal === 'object' &&
+            sourceVal !== null &&
+            !Array.isArray(sourceVal)
+        ) {
+            // Eğer class instance ise → doğrudan referansla ata
+            const isPlainObject = Object.getPrototypeOf(sourceVal)?.constructor?.name === 'Object';
+
+            if (!isPlainObject) {
+                if (!(key in target)) {
+                    target[key] = sourceVal; // referansla ekle
+                }
+                continue;
+            }
+
+            // Sıradan obje ise → katmanlı birleştir
+            if (
+                typeof targetVal !== 'object' ||
+                targetVal === null ||
+                Array.isArray(targetVal)
+            ) {
+                target[key] = {};
+            }
+
+            mergeIntoIfMissing(target[key], sourceVal, depth + 1, maxDepth);
+
+        } else {
+            if (!(key in target)) {
+                target[key] = sourceVal;
+            }
+        }
+    }
+
+};
+
+window.mergeIntoIfMissing = mergeIntoIfMissing;
+
+// Sadece 1 kat derine inerek objeyi birleştirir.
+/*
+window.mergeInto = function (target, source) {
+
+        for (let key in source) {
+            if (
+                typeof source[key] === 'object' &&
+                source[key] !== null &&
+                !Array.isArray(source[key]) &&
+                typeof target[key] === 'object' &&
+                target[key] !== null &&
+                !Array.isArray(target[key])
+            ) {
+                // Sadece bir seviye derine inerek birleştir
+                target[key] = { ...target[key], ...source[key] };
+            } else {
+                target[key] = source[key];
+            }
+        }       
+
+};
+*/
+
+/*
+window.mergeObject = function ($target, $source) {
+
+    let result = {};
+    
+    const mergeShallow = function(target, source) {
+        for (let key in source) {
+            if (
+                typeof source[key] === 'object' &&
+                source[key] !== null &&
+                !Array.isArray(source[key]) &&
+                typeof target[key] === 'object' &&
+                target[key] !== null &&
+                !Array.isArray(target[key])
+            ) {
+                // Sadece bir seviye derine inerek birleştir
+                target[key] = { ...target[key], ...source[key] };
+            } else {
+                target[key] = source[key];
+            }
+        }           
+    }
+
+    mergeShallow(result, $target);
+    mergeShallow(result, $source);
+
+    return result;
+
+};
+*/
+
+// v26.09.18: one list per element (Map) instead of one flat list for all elements.
+// WHY: The ResizeObserver callback looked at every registration for every resized element.
+resizeDetection.map = new Map(); // elem -> [{ obj, func }]
 
 resizeDetection.onResize = function($object, $func) {
 
-    const object = {};
-    object.obj = $object;
-    object.elem = $object.element;
-    object.func = $func;
-
-    resizeDetection.objectAndFunctionList.push(object);
-    resizeDetection.whenDetected.observe($object.element);
+    const list = resizeDetection.map.get($object.elem) || [];
+    list.push({ obj: $object, func: $func });
+    resizeDetection.map.set($object.elem, list);
+    resizeDetection.whenDetected.observe($object.elem);
 
 };
 
 resizeDetection.remove_onResize = function($element, $func) {
 
-    for(let j = resizeDetection.objectAndFunctionList.length - 1; j >= 0; j--) {
+    const list = resizeDetection.map.get($element);
+    if (!list) return;
 
-        if (resizeDetection.objectAndFunctionList[j].elem == $element) {
-            if (resizeDetection.objectAndFunctionList[j].func == $func) {
-                resizeDetection.objectAndFunctionList.splice(j, 1);
-            }
-        }
+    // null -> every function of the element.
+    const rest = ($func) ? list.filter(function (item) { return item.func != $func; }) : [];
 
+    // Aynı nesnede başka dinleyici kalmış ise izlemeyi bırakma.
+    if (rest.length) {
+        resizeDetection.map.set($element, rest);
+    } else {
+        resizeDetection.map.delete($element);
+        resizeDetection.whenDetected.unobserve($element);
     }
-
-    // NOT: Dizi tersten kontrol edildiği için, silme işlemi, 
-    // kontrol edilmeyen kayıtların sıra numarasını değiştirmez.
-
-    resizeDetection.whenDetected.unobserve($element);
 
 };
 
 resizeDetection.whenDetected = new ResizeObserver(function(entries) {
 
-    const detection = resizeDetection;
-
-	for (let i = 0; i < entries.length; i++) {
-        for(let j = 0; j < detection.objectAndFunctionList.length; j++) {
-
-            if (entries[i].target == detection.objectAndFunctionList[j].elem) {
-                detection.objectAndFunctionList[j].func(detection.objectAndFunctionList[j].obj);
-            }
-
+    for (let i = 0; i < entries.length; i++) {
+        const list = resizeDetection.map.get(entries[i].target);
+        if (!list) continue;
+        const copy = list.slice(); // WHY: A function may remove itself while we loop.
+        for (let j = 0; j < copy.length; j++) {
+            copy[j].func(copy[j].obj);
         }
-	}
+    }
 
 });
 
@@ -2281,7 +3075,7 @@ const checkStartedBox = function() {
     }, 100);
 
 }
-window.startFlexBox = function(p1 = {}, p2, p3, p4, p5) {
+const startFlexBox = function(p1 = {}, p2, p3, p4, p5) {
 
     // - Hiç bir parametre girilmez ise boş obje girilmiş gibi işlem yapar.
 
@@ -2327,12 +3121,39 @@ window.startFlexBox = function(p1 = {}, p2, p3, p4, p5) {
         flexShrink: 0, // Öğenin küçülmesini engeller.
     };
 
+    // Eğer fit:1 ise, objeyi otomatik olarak sar (shrink-to-fit).
+    // hug: fit ile aynıdır, alternatif kullanım. (Figma'daki "hug contents")
+    if (props.fit || props.hug) {
+        props.fit = 1;
+        props.hug = 1; // WHY: İkisi de aynı anlamda; box.fit ve box.hug aynı değeri versin.
+        props.width = "auto";
+        props.height = "auto";
+    };
+
     // align; flow a ihtiyaç duyuyor. Eğer align verilmiş ama flow boş geçilmiş ise; default flow is "horizontal".
     if (props.align) {
         if (!props.flow) {
             props.flow = "horizontal";
         }
     }
+
+    // JUSTIFY: "left" / "start", "center", "right" / "end", "space-between", "space-around", "space-evenly"
+    const getJustifyContent = function(justify) {
+        switch (justify) {
+            case "left":
+            case "top":
+            case "start":
+                return "flex-start";
+            case "right":
+            case "bottom":
+            case "end":
+                return "flex-end";
+            case "center":
+                return "center";
+            default:
+                return justify; // space-between, space-around, space-evenly
+        }
+    };
 
     const getFlexDirection = function(flow) {
         let flexDirection = defaultFlexStyles.flexDirection;
@@ -2444,6 +3265,18 @@ window.startFlexBox = function(p1 = {}, p2, p3, p4, p5) {
 
     };
 
+    // WRAP (v26.09.18): wrap: 1 -> the items continue on the next line / column when there is no space.
+    if (props.wrap !== undefined) {
+        box._wrap = (props.wrap) ? 1 : 0;
+        props.flexWrap = (props.wrap) ? "wrap" : "nowrap";
+    }
+
+    // JUSTIFY (v26.09.18): the main axis placement, overrides the one from align.
+    if (props.justify) {
+        box._justify = props.justify;
+        props.justifyContent = getJustifyContent(props.justify);
+    }
+
     const checkGap = function(gap) {
         if (Number.isInteger(gap)) {
             return gap = gap + "px";
@@ -2456,7 +3289,8 @@ window.startFlexBox = function(p1 = {}, p2, p3, p4, p5) {
         props.gap = checkGap(props.gap);
     }
 
-    that.element.style.display = "flex";
+    that.elem.style.display = "flex";
+    box._isFlex = 1; // WHY: isFlexContainer() - the children stay flex items even when the group is hidden.
     box.props(defaults, defaultFlexStyles, props);
 
     /*
@@ -2475,7 +3309,7 @@ window.startFlexBox = function(p1 = {}, p2, p3, p4, p5) {
     //that.color = "transparent";
 
     for (let parameterName in defaultFlexStyles) {
-        box.element.style[parameterName] = box[parameterName];
+        box.elem.style[parameterName] = box[parameterName];
     }
 
     // .flow: getter, setter
@@ -2507,6 +3341,7 @@ window.startFlexBox = function(p1 = {}, p2, p3, p4, p5) {
                 this.elem.style.justifyContent = alignList[2];
                 this.elem.style.alignItems = alignList[1];
             }
+            if (this._justify) this.elem.style.justifyContent = getJustifyContent(this._justify); // v26.09.18: justify wins
             
         }
     });
@@ -2516,7 +3351,7 @@ window.startFlexBox = function(p1 = {}, p2, p3, p4, p5) {
         box._gap = box.gap;
     };
 
-    // .gap: 
+    // .gap:
     Object.defineProperty(box, 'gap', {
         get: function() {
             return this._gap;
@@ -2527,6 +3362,28 @@ window.startFlexBox = function(p1 = {}, p2, p3, p4, p5) {
         }
     });
 
+    // .wrap (v26.09.18)
+    Object.defineProperty(box, 'wrap', {
+        get: function() {
+            return this._wrap || 0;
+        },
+        set: function(wrap) {
+            this._wrap = (wrap) ? 1 : 0;
+            this.elem.style.flexWrap = (wrap) ? "wrap" : "nowrap";
+        }
+    });
+
+    // .justify (v26.09.18)
+    Object.defineProperty(box, 'justify', {
+        get: function() {
+            return this._justify || "";
+        },
+        set: function(justify) {
+            this._justify = justify;
+            this.elem.style.justifyContent = getJustifyContent(justify);
+        }
+    });
+
     if (startedBoxList.length == 0) {
         startedBoxList.push(getDefaultContainerBox());
     }
@@ -2539,46 +3396,25 @@ window.startFlexBox = function(p1 = {}, p2, p3, p4, p5) {
     return box;
 
 };
-//window.startFlexBox = basic.startFlexBox;
-window.AutoLayout = window.startFlexBox;
+window.startFlexBox = startFlexBox;
+window.AutoLayout = startFlexBox;
 
-window.startBox = function(...args) {
+window.HGroup = function(...args) {
+    const group = startFlexBox(...args);
+    //group.flow = "horizontal"; // WHY: It is default value "horizontal"
+    return group;
+};
+
+window.VGroup = function(...args) {
+    const group = startFlexBox(...args);
+    group.flow = "vertical";
+    return group;
+};
+
+const startBox = function(...args) {
 
     //let props = {};
-    console.log(args.length);
     const box = Box(...args);
-
-    /*
-
-    params: (p1, p2, p3, p4, p5)
-
-    let box = null;
-
-    if (typeof p1 == "object") {
-        box = createBox();
-        props = p1;
-
-    } else if (typeof p2 == "object") {
-        box = createBox(p1);
-        props = p2;
-
-    } else if (typeof p3 == "object") {
-        box = createBox(p1, p2);
-        props = p3;
-        
-    } else if (typeof p4 == "object") {
-        box = createBox(p1, p2, p3);
-        props = p4;
-        
-    } else if (typeof p5 == "object") {
-        box = createBox(p1, p2, p3, p4);
-        props = p5;
-    } else {
-        box = createBox(p1, p2, p3, p4);
-    }
-
-    box.props(props);
-    */
 
     if (startedBoxList.length == 0) {
         startedBoxList.push(getDefaultContainerBox());
@@ -2592,9 +3428,16 @@ window.startBox = function(...args) {
     return box;
 
 };
-//window.startBox = basic.startBox;
+window.startBox = startBox;
 
-window.endBox = function() {
+const endBox = function() {
+
+    // Açılmış kutu yok ise (fazladan end çağrısı) hiçbir şey yapma.
+    // WHY: Aksi halde defaultContainerBox boşalıyor ve sonradan hiçbir nesne oluşturulamıyordu.
+    if (startedBoxList.length == 0) {
+        println("basic.js: There is no started box to end. (Extra end call)", "warn");
+        return;
+    }
 
     if (startedBoxList.length > 1) {
         startedBoxList.pop();
@@ -2607,68 +3450,34 @@ window.endBox = function() {
     }
 
 };
-//basic.endFlexBox = basic.endBox;
-//window.endBox = basic.endBox;
-//window.endFlexBox = basic.endBox;
-window.endFlexBox = window.endBox;
-window.endAutoLayout = window.endBox;
 
-/*
-basic.useImageAsText = function(parameters = {}, editCreatedImage) {
-
-    if (!parameters.boxSize) parameters.boxSize = 16;
-    if (!parameters.outerSpaceRight) parameters.outerSpaceRight = 0;
-    if (!parameters.outerSpaceLeft) parameters.outerSpaceLeft = 0;
-
-    basic.saveCurrentThat();
-
-    const htmText = document.createElement('span');
-    htmText.style.display = "inline-block";
-    htmText.style.marginRight = parameters.outerSpaceRight + "px";
-    htmText.style.marginLeft = parameters.outerSpaceLeft + "px";
-
-    const box = createBox(0, 0, parameters.boxSize, parameters.boxSize);
-    that.color = "transparent";
-    that.element.style.position = "relative";
-    that.element.style.overflow = "visible";
-
-    createImage(0, 0);
-    box.add(that);
-    editCreatedImage(that);
-    that.center();
-
-    htmText.appendChild(box.element);
-
-    basic.restoreThatFromSaved();
-    return htmText.outerHTML;
-
-};
-window.useImageAsText = basic.useImageAsText;
-*/
+window.endBox = endBox;
+window.endFlexBox = endBox;
+window.endAutoLayout = endBox;
+window.endGroup = endBox;
 
 let savedThat = null;
 let savedExThat = null;
 
-window.saveCurrentThat = function() {
+const saveCurrentThat = function() {
 
     savedThat = that;
     savedExThat = previousThat;
 
 };
-//window.saveCurrentThat = basic.saveCurrentThat;
+window.saveCurrentThat = saveCurrentThat;
 
-window.restoreThatFromSaved = function() {
+const restoreThatFromSaved = function() {
 
     that = savedThat;
     previousThat = savedExThat;
     prevThat = previousThat;
 
 };
-//window.restoreThatFromSaved = basic.restoreThatFromSaved;
+window.restoreThatFromSaved = restoreThatFromSaved;
 
-// Text, Input, Icon, Box, Button
-// Lbl, Inp, Img, Box, Btn
-// *** Label, Input, Icon, Box, Button
+// Objects: Label, Input, Icon, Box, Button
+// Shorts: lbl, inp, ico, box, btn
 
 window.Label = function(...args) {
 
@@ -2683,41 +3492,6 @@ window.Label = function(...args) {
   return label;
 
 };
-
-/*
-window.Label = function(p1, p2, p3, p4, p5) {
-
-    let props = {};
-    let obj = null;
-
-    if (typeof p1 == "object") {
-        obj = createLabel();
-        props = p1;
-
-    } else if (typeof p2 == "object") {
-        obj = createLabel(p1);
-        props = p2;
-
-    } else if (typeof p3 == "object") {
-        obj = createLabel(p1, p2);
-        props = p3;
-        
-    } else if (typeof p4 == "object") {
-        obj = createLabel(p1, p2, p3);
-        props = p4;
-        
-    } else if (typeof p5 == "object") {
-        obj = createLabel(p1, p2, p3, p4);
-        props = p5;
-    } else {
-        obj = createLabel(p1, p2, p3, p4);
-    }
-
-    obj.props(props);
-    return obj;
-
-};
-*/
 
 window.Input = function(...args) {
 
@@ -2747,10 +3521,10 @@ window.Icon = function(...args) {
 
 };
 
-window.Box = function(...args) {
+const Box = function(...args) {
 
     let props = {};
-        if (args.length && typeof args[args.length - 1] === "object") {
+    if (args.length && typeof args[args.length - 1] === "object") {
         props = args.pop();
     }
 
@@ -2760,6 +3534,7 @@ window.Box = function(...args) {
     return obj;
 
 };
+window.Box = Box;
 
 window.Button = function(...args) {
 
@@ -2775,34 +3550,29 @@ window.Button = function(...args) {
 
 };
 
-window.startObject = function(any) {
+window.startObject = function($defaults, $params) {
 
-    if (any) {
-        println("basic.js: startObject(): Use .props(defaults, props) for giving parameters.", "warn");
+    const _params = {};
+
+    if ($params) {
+        mergeIntoIfMissing(_params, $params);
+    }
+    if ($defaults) {
+        mergeIntoIfMissing(_params, $defaults);
     }
 
-    saveCurrentThat();
-    return startBox({
-        color: "transparent", // WHY: Bir UI nesnesinin başlangıç arkaplanının "transparent" olması daha uygun.
-    });
-
+    // Defaults values
+    if (!_params.color) {
+        _params.color = "transparent";
+    }
     /*
-    let props = {};
-    if (args.length && typeof args[args.length - 1] === "object") {
-        props = args.pop();
-    }
-
-    const defaults = {
-        color: "transparent", // WHY: Bir UI nesnesinin başlangıç arkaplanının "transparent" olması daha uygun.
-    }
+    mergeIntoIfMissing(_params, {
+        color: "transparent",
+    });
+    */
 
     saveCurrentThat();
-
-    const box =  startBox(...args);
-    box.props(defaults, props);
-
-    return box;
-    */
+    return startBox(_params);
 
 };
 
@@ -2815,28 +3585,51 @@ window.endObject = function(box) {
 
 };
 
-/*
-window.BasicObject = function($defaultParams = {}, $params = {}, $props = {}) {
+// Başka bir Basic Object ten miras alarak yeni bir Basic Object oluşturma.
+window.startExtendedObject = function(uiComponent, defaults, params) {
 
-    let obj = {};
-
-    // defaultPrams
-    for (let parameterName in $defaultParams) {
-        obj[parameterName] = $defaultParams[parameterName];
+    const _params = {};
+    if (params) {
+        mergeIntoIfMissing(_params, params);
     }
-    // params
-    for (let parameterName in $params) {
-        obj[parameterName] = $params[parameterName];
-    }
-    // props
-    for (let propName in $props) {
-        obj[propName] = $props[propName];
+    if (defaults) {
+        mergeIntoIfMissing(_params, defaults);
     }
 
-    return obj;
+    const _box = uiComponent(_params);
+    saveCurrentThat();
+
+    return _box;
 
 };
-*/
+
+window.endExtendedObject = function(box) {
+
+    restoreThatFromSaved();
+    makeBasicObject(box);
+    return box;
+
+};
+
+window.Black = function(percent = 1) {
+    if (percent == 0) return "transparent";
+    if (percent == 1) return "black";
+    return `rgba(0,0,0,${percent})`;
+};
+
+window.White = function(percent = 1) {
+    if (percent == 0) return "transparent";
+    if (percent == 1) return "white";
+    return `rgba(255,255,255,${percent})`;
+};
+
+// Çok fazla arka arkaya çağırılan fonksiyonların daha verimli çalışmasını sağlar. 
+window.waitAndRun = function (timer, callback, delay = 3) {
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(callback, delay);
+    return timer;
+};
+
 
 // When content is loaded,
 window.addEventListener("load", function () {

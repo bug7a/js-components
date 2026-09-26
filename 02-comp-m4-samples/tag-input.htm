@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Tag Input</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp-m4/tag-input.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // *** VARIABLES:
+        let tagsBasic, lblBasic;
+        let tagsCategory, lblCategory;
+        let tagsEmail, lblEmail;
+        let tagsModern, lblModern;
+        let tagsDark;
+        let tagsApi, lblApi;
+
+        const start = function () {
+
+            page.color = "#F4F5F2";
+
+            // BOX: Full screen scrollable container
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            startBox(0, 0, "100%", "100%", {
+                color: "transparent",
+                scrollY: 1,
+            });
+
+                // GROUP: Page layout
+                VGroup({
+                    width: "100%",
+                    height: "auto", // Grows with content, so the Box can scroll.
+                    align: "center top",
+                    gap: 30,
+                    padding: 50,
+                });
+
+                    // LABEL: Title
+                    Label({
+                        text: "Tag Input",
+                        fontSize: 26,
+                        fontFamily: "opensans-bold",
+                    });
+
+                    // SAMPLE 1: Default (classic)
+                    startCard("1. Default", "Type and press Enter or \",\". Suggestions open while typing. Backspace selects and removes the last tag.");
+
+                        tagsBasic = TagInput({
+                            width: "100%",
+                            tags: ["audio", "guide"],
+                            suggestions: ["audio", "fitness", "guide", "sale", "home", "news", "tips", "gift", "office", "2026"],
+                            maxTags: 6,
+                            onChange: function (self) {
+                                lblBasic.text = "Tags: " + (self.getTags().join(", ") || "-");
+                            },
+                            onReject: function (self, tag, reason) {
+                                lblBasic.text = "Rejected \"" + tag + "\": " + reason;
+                            },
+                        });
+
+                        lblBasic = addInfoLabel("Tags: audio, guide");
+
+                    endCard();
+
+                    // SAMPLE 2: Only the suggestions (fixed categories)
+                    startCard("2. Fixed list (allowCustom: 0)", "Only the categories in the list can be added. The list opens on focus.");
+
+                        tagsCategory = TagInput({
+                            width: "100%",
+                            allowCustom: 0,
+                            showSuggestionsOnFocus: 1,
+                            placeholder: "Choose categories...",
+                            suggestions: ["Electronics", "Home & Kitchen", "Sports", "Books", "Toys", "Garden", "Beauty", "Office", "Pet Supplies", "Music"],
+                            tags: ["Books"],
+                            emptyText: "No category matches",
+                            onChange: function (self) {
+                                lblCategory.text = "Categories: " + (self.getTags().join(", ") || "-");
+                            },
+                        });
+
+                        lblCategory = addInfoLabel("Categories: Books");
+
+                    endCard();
+
+                    // SAMPLE 3: Validation (e-mail recipients)
+                    startCard("3. Validation (e-mail recipients)", "validate() returns an error text. Paste \"a@x.com, b@x.com; c@x.com\" to add many at once.");
+
+                        tagsEmail = TagInput({
+                            width: "100%",
+                            placeholder: "Add an e-mail address",
+                            separators: ",; ",
+                            maxTags: 5,
+                            maxLength: 64,
+                            lowercase: 1,
+                            validate: function (tag) {
+                                return (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(tag)) ? "" : "\"" + tag + "\" is not an e-mail address.";
+                            },
+                            onChange: function (self) {
+                                lblEmail.text = "To: " + (self.getTags().join(", ") || "-");
+                            },
+                        });
+
+                        lblEmail = addInfoLabel("To: -");
+
+                    endCard();
+
+                    // SAMPLE 4: Modern style
+                    startCard("4. Modern Style", "Round chips. lowercase: 1 makes \"Audio\" -> \"audio\".");
+
+                        tagsModern = TagInput({
+                            styleName: "modern",
+                            width: "100%",
+                            lowercase: 1,
+                            tags: ["Sale", "Gift"],
+                            suggestions: ["audio", "fitness", "guide", "sale", "home", "news", "tips", "gift"],
+                            onChange: function (self) {
+                                lblModern.text = "Tags: " + (self.getTags().join(", ") || "-");
+                            },
+                        });
+
+                        lblModern = addInfoLabel("Tags: sale, gift");
+
+                    endCard();
+
+                    // SAMPLE 5: Dark style
+                    startCard("5. Dark Style", "", 1);
+
+                        tagsDark = TagInput({
+                            styleName: "dark",
+                            width: "100%",
+                            tags: ["vip", "newsletter"],
+                            suggestions: ["vip", "newsletter", "wholesale", "complaint", "returning", "b2b"],
+                            placeholder: "Customer tag...",
+                        });
+
+                    endCard();
+
+                    // SAMPLE 6: API
+                    startCard("6. API", "setTags(), addTag(), removeTag(), clear(), setEnabled(), setMaxTags()");
+
+                        tagsApi = TagInput({
+                            width: "100%",
+                            tags: ["one", "two"],
+                            onChange: function (self) {
+                                lblApi.text = "Tags: " + (self.getTags().join(", ") || "-");
+                            },
+                        });
+
+                        // GROUP: Buttons
+                        HGroup({ width: "100%", height: "auto", gap: 8 });
+                        that.elem.style.flexWrap = "wrap";
+                            addSampleButton("Set 3", function () { tagsApi.setTags(["red", "green", "blue"]); });
+                            addSampleButton("Add", function () { tagsApi.addTag("tag " + random(1, 99)); });
+                            addSampleButton("Remove 1st", function () { tagsApi.removeTag(tagsApi.getTags()[0]); }, 1);
+                            addSampleButton("Clear", function () { tagsApi.clear(); }, 1);
+                            addSampleButton("Max 3", function () { tagsApi.setMaxTags((tagsApi.maxTags) ? 0 : 3); }, 1);
+                            addSampleButton("On / Off", function () { tagsApi.setEnabled(!tagsApi.enabled); }, 1);
+                        endGroup();
+
+                        lblApi = addInfoLabel("Tags: one, two");
+
+                    endCard();
+
+                endGroup();
+
+            endBox();
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        // GROUP: A card with a title and a short description.
+        const startCard = function (title, description = "", isDark = 0) {
+            VGroup({
+                width: 460,
+                height: "auto",
+                align: "left top",
+                gap: 16,
+                padding: 20,
+                color: (isDark) ? "#1C1C1B" : "white",
+                round: 10,
+                border: 1,
+                borderColor: (isDark) ? "#1C1C1B" : Black(0.1),
+            });
+            Label({
+                text: title,
+                fontSize: 14,
+                textColor: (isDark) ? White(0.5) : Black(0.45),
+            });
+            if (description) {
+                Label({
+                    text: description,
+                    fontSize: 13,
+                    textColor: (isDark) ? White(0.4) : Black(0.35),
+                });
+                that.elem.style.marginTop = "-10px";
+            }
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+        const addSampleButton = function (text, onClick, isSecondary = 0) {
+            const btn = Button({
+                text: text,
+                width: 100,
+                height: 36,
+                fontSize: 14,
+            });
+            if (isSecondary) btn.color = "lightgray";
+            btn.on("click", onClick);
+            return btn;
+        };
+
+        const addInfoLabel = function (text) {
+            return Label({
+                text: text,
+                fontSize: 14,
+                textColor: Black(0.5),
+            });
+        };
+
+    </script>
+</head>
+
+<body></body>
+
+</html>

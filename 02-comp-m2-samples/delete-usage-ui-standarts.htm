@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        
+        <title>Usage UI Standarts</title>
+        
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <!-- LIBRARY FILES -->
+        <!-- <link rel="preload" href="image.png" as="image"> -->
+        <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <link rel="stylesheet" type="text/css" href="../comp-m2/ui-standards.css">
+        <script src="../comp-m2/ui-standards.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- ALL COMPONENTS IN ONE FILE -->
+        <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
+
+        <script>
+        
+        // *** VARIABLES:  
+        const DARK_MODE = "DARK MODE";
+        const LIGHT_MODE = "LIGHT MODE";
+
+        let mode = "light";
+
+        // First running function.
+        window.onload = function() {
+
+            page.color = UI.COLOR_PAGE;
+
+            // GROUP: PageContainer
+            VGroup({
+                gap: UI.SPACING_S,
+            });
+
+                Label({
+                    text: "Label A",
+                    round: UI.ROUND_B,
+                    border: 1,
+                    borderColor: UI.GRAY_300,
+                });
+                UI.styleLabel(that);
+
+                Label({
+                    text: "Label B",
+                    round: UI.ROUND_E,
+                });
+                UI.styleBlackLabel(that);
+
+                Button({
+                    text: "BUTTON A",
+                });
+                UI.styleButton(that);
+
+                Button({
+                    text: "BUTTON B",
+                });
+                UI.styleSecondButton(that);
+
+                Button({
+                    text: DARK_MODE,
+                    textColor: UI.DARK,
+                    width: "auto",
+                    left: UI.MARGIN_X,
+                    top: UI.MARGIN_Y,
+                    position: "absolute",
+                    padding: [UI.PADDING_X, 0],
+                    minimal: 1,
+                    color: "transparent",
+                });
+                that.on("click", function(self, event) {
+                    if (mode == "light") {
+                        self.text = LIGHT_MODE,
+                        mode = "dark";
+                        UI.applyTheme(1);
+                    } else {
+                        self.text = DARK_MODE,
+                        mode = "light";
+                        UI.applyTheme(0);       
+                    }
+                });
+
+            endGroup(); // PageContainer
+            
+        };
+
+        </script>
+
+    </head>
+    <body>
+        
+        <!-- HTML content -->
+        
+    </body>
+</html>

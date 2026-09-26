@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        
+        <title>InputB JS Component</title>
+        
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <!-- LIBRARY FILES -->
+        <!-- <link rel="preload" href="image.png" as="image"> -->
+        <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <!--<script src="basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>-->
+
+        <script src="../comp-m2/tooltip.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m2/input-b.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- ALL COMPONENTS IN ONE FILE -->
+        <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
+
+        <script>
+        
+        // *** VARIABLES:          
+        let myInput;
+
+        // First running function.
+        window.onload = function() {
+
+            page.color = "white";
+
+            // GROUP: Autolayout
+            AutoLayout();
+
+                // INPUT: #1
+                myInput = InputB({
+                    key: "1",
+                    titleText: "TITLE",
+                    placeholder: "Placeholder",
+                    maxChar: 10,
+
+                    backgroundColor: "transparent",
+                    selectedBackgroundColor: "transparent", // "#F1E2C4", "#F4FAFF",
+                    lineColor: "#DDD",
+                    selectedLineColor: "#373836", // "#F1E2C4", "#588ABE",
+                    isRequired: 0,
+                    createLeftBox: 0,
+                    createRightBox: 1,
+                    createUnit: 0,
+                    unitText: "",
+                    unitStyle: {
+                        padding: [12, 4],
+                        color: "#373836",
+                        textColor: "white",
+                        round: 40,
+                        //color: "white",
+                        //border: 1,
+                        //borderColor: "#999999",
+                        //round: 2,
+                        fontSize: 14,
+                    },
+                });
+                
+            endAutoLayout(); // END GROUP
+
+            // Hide the title
+            //myInput.title.visible = 0;
+
+            // Space between units
+            myInput.rightBox.gap = 2;
+
+            // Custom Unit #1
+            const customUnit1 = Label(InputBDefaults.unitStyle);
+            that.text = "LIGHT";
+            that.position = "relative";
+            myInput.rightBox.add(that);
+
+            // Custom Unit #1
+            const customUnit2 = Label(InputBDefaults.unitStyle);
+            that.text = "2+1";
+            that.position = "relative";
+            myInput.rightBox.add(that);
+
+            // Custom Unit #1
+            const customUnit3 = Label(InputBDefaults.unitStyle);
+            that.text = "XL";
+            that.position = "relative";
+            that.color = "#F0DB4E";
+            that.textColor = InputBDefaults.unitStyle.color;
+            that.border = 2;
+            that.padding = [8, 2];
+            //that.round = 2;
+            myInput.rightBox.add(that);
+
+            // Get value
+            myInput.onEdit = function() {
+                console.log(myInput.getInputValue());
+            }
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+        
+        <!-- HTML content -->
+        
+    </body>
+</html>

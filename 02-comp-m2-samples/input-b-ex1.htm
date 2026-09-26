@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        
+        <title>InputB JS Component</title>
+        
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <!-- LIBRARY FILES -->
+        <!-- <link rel="preload" href="image.png" as="image"> -->
+        <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <!--<script src="basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>-->
+
+        <script src="../comp-m2/tooltip.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m2/input-b.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- ALL COMPONENTS IN ONE FILE -->
+        <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
+
+        <script>
+        
+        // *** VARIABLES:          
+        let myInput;
+
+        // First running function.
+        window.onload = function() {
+
+            page.color = "white";
+
+            // GROUP: Autolayout
+            AutoLayout();
+
+                // INPUT: #1
+                myInput = InputB({
+                    key: "1",
+                    width: 350,
+                    height: "auto",
+                    leftPadding: 80, // 20
+                    rightPadding: 60,
+                    titleText: "FIRST NAME",
+                    placeholder: "Jack",
+                    inputValue: "",
+                    maxChar: 30,
+                    createDescription: 0,
+                    descriptionText: "",
+
+                    backgroundColor: "#F6F6F6",
+                    selectedBackgroundColor: "#F3F4E0", // "#F1E2C4", "#F4FAFF",
+                    lineColor: "#141414",
+                    selectedLineColor: "#65A293", // "#F1E2C4", "#588ABE",
+
+                    isRequired: 1,
+                    requiredText: "Required",
+                    requiredColor: "white",
+                    warningText: "Invalid value format",
+                    warningColor: "#E5885E", // "#F1BF3C"
+
+                    createLeftBox: 1,
+                    createRightBox: 0,
+                    createUnit: 0,
+                    unitText: "",
+                    unitStyle: {
+                        padding: [12, 4],
+                        color: "#373836",
+                        textColor: "white",
+                        round: 40,
+                        //color: "white",
+                        //border: 1,
+                        //borderColor: "#999999",
+                        //round: 2,
+                        fontSize: 14,
+                    },
+
+                    //onFocus: function() {},
+                    //onBlur: function() {},
+                    //onEdit: function() {},
+                });
+
+                //that.setTitle("TITLE");
+                //myInput.setTitle("TITLE");
+
+                //that.title.textColor = "blue";
+                //that.title.remove();
+                //that.setDescription("description"); // set createDescription: 1 before call this func.
+                //that.setMaxChar(3);
+                //that.setPlaceholder("Deneme");
+                //that.setBackgroundColor("white");
+                //that.background.color = "white";
+                //that.setSelectedBackgroundColor("white");
+                //that.setLineColor("lightgray");
+                //that.line.visible = 0;
+                //that.setSelectedLineColor("black");
+                //that.setRequired(0);
+                //that.setRequiredText("Some text");
+                
+            endAutoLayout(); // END GROUP
+
+            // Hide the title
+            //myInput.title.visible = 0;
+
+            // Get value
+            myInput.onEdit = function() {
+                console.log(myInput.getInputValue());
+            }
+
+            // *** ADD AN ICON into INPUT (createLeftBox: 1, leftPadding: 80)
+            myInput.leftBox.align = "top left"; // "left center"
+            myInput.leftBox.padding = [20, 20];
+            // ICON: 
+            myInput.icon = Icon({
+                width: 42,
+                height: 42,
+            });
+            that.load("../assets/fruids/brokoli.png");
+            myInput.leftBox.add(that);
+            that.position = "relative";
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+        
+        <!-- HTML content -->
+        
+    </body>
+</html>

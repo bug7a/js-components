@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Radio Button</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp-m3/radio-button.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // *** VARIABLES:
+        let lblSize, lblPayment, lblPlan, rdoPremium;
+
+        const paymentList = [
+            { value: "card", text: "Credit Card" },
+            { value: "cash", text: "Cash" },
+            { value: "transfer", text: "Bank Transfer" },
+        ];
+
+        const start = function () {
+
+            page.color = "whitesmoke";
+
+            // BOX: Full screen scrollable container
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            startBox(0, 0, "100%", "100%", {
+                color: "transparent",
+                scrollY: 1,
+            });
+
+                // GROUP: Page layout
+                VGroup({
+                    width: "100%",
+                    height: "auto", // Grows with content, so the Box can scroll.
+                    align: "center top",
+                    gap: 30,
+                    padding: 50,
+                });
+
+                    // LABEL: Title
+                    Label({
+                        text: "Radio Button",
+                        fontSize: 26,
+                        fontFamily: "opensans-bold",
+                    });
+
+                    // SAMPLE 1: Default group
+                    startCard("1. Default");
+
+                        ["Small", "Medium", "Large"].forEach(function (name) {
+                            RadioButton({
+                                group: "size",
+                                value: name.charAt(0), // S, M, L
+                                labelText: name,
+                                checked: (name == "Medium") ? 1 : 0,
+                                onChange: function (self) {
+                                    println("Size: " + self.value);
+                                    refreshSize();
+                                },
+                            });
+                        });
+
+                        lblSize = Label({
+                            text: "",
+                            fontSize: 14,
+                            textColor: Black(0.5),
+                        });
+
+                    endCard();
+
+                    // SAMPLE 2: From data, horizontal, group functions
+                    startCard("2. From Data (Horizontal)");
+
+                        // GROUP: Radio buttons
+                        HGroup({
+                            width: "auto",
+                            height: "auto",
+                            gap: 16,
+                        });
+
+                            paymentList.forEach(function (data) {
+                                RadioButton({
+                                    group: "payment",
+                                    value: data.value,
+                                    labelText: data.text,
+                                    onChange: refreshPayment,
+                                });
+                            });
+
+                        endGroup();
+
+                        // GROUP: Buttons
+                        HGroup({
+                            width: "auto",
+                            height: "auto",
+                            gap: 8,
+                        });
+
+                            Button({ text: "Select Cash", width: 120, height: 36, fontSize: 14 });
+                            that.on("click", function () {
+                                RadioButton.setValue("payment", "cash"); // Calls onChange
+                            });
+
+                            Button({ text: "Clear", width: 120, height: 36, fontSize: 14, color: "lightgray" });
+                            that.on("click", function () {
+                                RadioButton.clear("payment");
+                                refreshPayment();
+                            });
+
+                        endGroup();
+
+                        lblPayment = Label({
+                            text: "",
+                            fontSize: 14,
+                            textColor: Black(0.5),
+                        });
+
+                    endCard();
+
+                    // SAMPLE 3: States and custom style
+                    startCard("3. States & Style");
+
+                        RadioButton({
+                            group: "plan",
+                            value: "free",
+                            labelText: "Free",
+                            checked: 1,
+                            onChange: refreshPlan,
+                        });
+
+                        RadioButton({
+                            group: "plan",
+                            value: "pro",
+                            labelText: "Pro",
+                            onChange: refreshPlan,
+                        });
+
+                        rdoPremium = RadioButton({
+                            group: "plan",
+                            value: "premium",
+                            labelText: "Premium (disabled)",
+                            enabled: 0,
+                            onChange: refreshPlan,
+                        });
+
+                        // GROUP: Enable premium
+                        HGroup({ width: "auto", height: "auto", gap: 8 });
+
+                            Button({ text: "Enable Premium", width: 150, height: 36, fontSize: 14, color: "lightgray" });
+                            that.on("click", function (self) {
+                                rdoPremium.setEnabled(rdoPremium.enabled ? 0 : 1);
+                                rdoPremium.setLabelText("Premium" + (rdoPremium.enabled ? "" : " (disabled)"));
+                                self.text = (rdoPremium.enabled ? "Disable" : "Enable") + " Premium";
+                            });
+
+                        endGroup();
+
+                        lblPlan = Label({
+                            text: "",
+                            fontSize: 14,
+                            textColor: Black(0.5),
+                        });
+
+                        RadioButton({
+                            group: "side",
+                            labelText: "Label on the left",
+                            labelPosition: "left",
+                            checked: 1,
+                        });
+
+                        RadioButton({
+                            group: "color",
+                            labelText: "Custom style (green)",
+                            checked: 1,
+                            style: {
+                                mark: { width: 28, height: 28, borderColor: "#5DB182" },
+                                checkedMark: { color: "#DFEFE6", borderColor: "#5DB182" },
+                                hoverMark: { borderColor: "#3E8E62" },
+                                dot: { color: "#5DB182", size: 0.45 },
+                                label: { fontSize: 18, textColor: "#3E8E62" },
+                            },
+                        });
+
+                        // Without label, square dot
+                        HGroup({ width: "auto", height: "auto", gap: 8 });
+                            RadioButton({ group: "mini" });
+                            RadioButton({ group: "mini", checked: 1 });
+                            RadioButton({ group: "mini", style: { dot: { color: "#FE5D49", round: 2 }, checkedMark: { borderColor: "#FE5D49" } } });
+                        endGroup();
+
+                        Label({
+                            text: "Tip: Use Tab to focus, Arrow keys to move in a group.",
+                            fontSize: 12,
+                            textColor: Black(0.4),
+                        });
+
+                    endCard();
+
+                endGroup();
+
+            endBox();
+
+            refreshSize();
+            refreshPayment();
+            refreshPlan();
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        // GROUP: A white card with a title.
+        const startCard = function (title) {
+            VGroup({
+                width: 420,
+                height: "auto",
+                align: "left top",
+                gap: 12,
+                padding: 20,
+                color: "white",
+                round: 10,
+                border: 1,
+                borderColor: Black(0.1),
+            });
+            Label({
+                text: title,
+                fontSize: 14,
+                textColor: Black(0.45),
+            });
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+        const refreshSize = function () {
+            lblSize.text = "Selected size: " + RadioButton.getValue("size");
+        };
+
+        const refreshPayment = function () {
+            const selected = RadioButton.getSelected("payment");
+            lblPayment.text = "Payment: " + (selected ? selected.labelText + " (" + selected.value + ")" : "none");
+        };
+
+        const refreshPlan = function () {
+            lblPlan.text = "Plan: " + RadioButton.getValue("plan");
+        };
+
+    </script>
+</head>
+
+<body></body>
+
+</html>

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Page Control</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp-m4/page-control.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // *** VARIABLES:
+        let wizard, lblWizard, wizardStep = 0;
+        let carousel;
+        let screens, lblScreens;
+        let fader;
+
+        const WIZARD_STEPS = ["account", "profile", "done"];
+        const SLIDES = [
+            { title: "Fresh roasts every week", text: "Single origin beans, roasted on Mondays.", color: "#65A293" },
+            { title: "Free delivery over $60", text: "Same day in the city, next day everywhere else.", color: "#5B7BD5" },
+            { title: "Gift boxes", text: "Wrapped by hand with a card of your words.", color: "#E0457B" },
+            { title: "Brewing classes", text: "Saturday mornings at the shop.", color: "#E5885E" },
+        ];
+
+        const start = function () {
+
+            page.color = "#F4F5F2";
+
+            // BOX: Full screen scrollable container
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            startBox(0, 0, "100%", "100%", {
+                color: "transparent",
+                scrollY: 1,
+            });
+
+                // GROUP: Page layout
+                VGroup({
+                    width: "100%",
+                    height: "auto", // Grows with content, so the Box can scroll.
+                    align: "center top",
+                    gap: 30,
+                    padding: 50,
+                });
+
+                    // LABEL: Title
+                    Label({
+                        text: "Page Control",
+                        fontSize: 26,
+                        fontFamily: "opensans-bold",
+                    });
+
+                    // SAMPLE 1: Wizard (steps)
+                    startCard("1. Wizard (slide, no swipe)", "onBeforeChange stops the change when the step is not complete. The pages are filled with startPage() / endPage().");
+
+                        wizard = PageControl({
+                            width: "100%",
+                            height: 220,
+                            swipe: 0,
+                            keyboard: 0,
+                            pages: WIZARD_STEPS,
+                            onBeforeChange: function (self, fromKey, toKey) {
+                                // Only the "Continue" button can go forward.
+                                if (self.getIndex(toKey) > wizardStep) { lblWizard.text = "Complete the step first."; return false; }
+                            },
+                            onChange: function (self) { lblWizard.text = "Step " + (self.getIndex() + 1) + " of " + self.getCount() + ": " + self.value; },
+                            style: { box: { color: "white", border: 1, borderColor: Black(0.1), round: 10 } },
+                        });
+
+                        WIZARD_STEPS.forEach(function (key, index) {
+                            wizard.startPage(key);
+                                VGroup({ width: "100%", height: "100%", align: "left top", gap: 12, padding: 24 });
+                                    Label({ text: (index + 1) + ". " + key.charAt(0).toUpperCase() + key.slice(1), fontSize: 20, fontFamily: "opensans-bold" });
+                                    Label({ text: (index < 2) ? "Fill in the " + key + " details here, then continue." : "All done. Thank you!", fontSize: 14, textColor: Black(0.55) });
+                                    HGroup({ width: "auto", height: "auto", gap: 8 });
+                                    that.elem.style.marginTop = "auto";
+                                        if (index > 0) addSampleButton("Back", function () { wizard.previous(); }, 1);
+                                        if (index < 2) addSampleButton("Continue", function () { wizardStep = index + 1; wizard.next(); });
+                                        else addSampleButton("Start over", function () { wizardStep = 0; wizard.open("account"); }, 1);
+                                    endGroup();
+                                endGroup();
+                            wizard.endPage();
+                        });
+
+                        lblWizard = addInfoLabel("Step 1 of 3: account");
+
+                    endCard();
+
+                    // SAMPLE 2: Carousel
+                    startCard("2. Carousel (dots, arrows, loop, autoPlay: 4, swipe)", "Drag with the mouse or a finger. Arrow keys work when the box has the focus. Auto play pauses while the mouse is over it.");
+
+                        carousel = PageControl({
+                            width: "100%",
+                            height: 200,
+                            dots: 1,
+                            arrows: 1,
+                            loop: 1,
+                            autoPlay: 4,
+                            style: { box: { round: 10 } },
+                        });
+
+                        SLIDES.forEach(function (slide, index) {
+                            carousel.addPage("slide" + index);
+                            carousel.startPage("slide" + index);
+                                VGroup({ width: "100%", height: "100%", align: "center center", gap: 8, padding: 30, color: slide.color });
+                                    Label({ text: slide.title, fontSize: 22, textColor: "white", fontFamily: "opensans-bold", textAlign: "center" });
+                                    Label({ text: slide.text, fontSize: 14, textColor: White(0.85), textAlign: "center" });
+                                endGroup();
+                            carousel.endPage();
+                        });
+
+                    endCard();
+
+                    // SAMPLE 3: App screens, add / remove pages
+                    startCard("3. Screens (vertical slide, pageScroll: 1)", "Each page scrolls its own content. Pages can be added and removed at run time.");
+
+                        HGroup({ width: "100%", height: "auto", align: "left top", gap: 16 });
+
+                            screens = PageControl({
+                                width: 260,
+                                height: 300,
+                                transition: "slide-vertical",
+                                pageScroll: 1,
+                                dots: 0,
+                                pages: ["inbox", "settings"],
+                                onChange: function (self) { lblScreens.text = "Open: " + self.value + " · pages: " + self.getKeys().join(", "); },
+                                style: { box: { color: "white", border: 1, borderColor: Black(0.1), round: 16 } },
+                            });
+                            fillScreen("inbox", "#5B7BD5");
+                            fillScreen("settings", "#65A293");
+
+                            VGroup({ width: "auto", height: "auto", align: "left top", gap: 8 });
+                                addSampleButton("Next", function () { screens.next(); });
+                                addSampleButton("Previous", function () { screens.previous(); });
+                                addSampleButton("Add page", function () { const key = "page" + (screens.getCount() + 1); screens.addPage(key); fillScreen(key, "#E0457B"); screens.open(key); }, 1);
+                                addSampleButton("Remove open", function () { screens.removePage(screens.value); }, 1);
+                                lblScreens = addInfoLabel("Open: inbox · pages: inbox, settings");
+                            endGroup();
+
+                        endGroup();
+
+                    endCard();
+
+                    // SAMPLE 4: Fade
+                    startCard("4. Fade (transition: \"fade\")", "");
+
+                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 16 });
+
+                            fader = PageControl({
+                                width: 200,
+                                height: 120,
+                                transition: "fade",
+                                motion: 0.5,
+                                loop: 1,
+                                pages: ["a", "b", "c"],
+                                style: { box: { round: 10 } },
+                            });
+                            ["#65A293", "#5B7BD5", "#E5885E"].forEach(function (color, index) {
+                                fader.startPage(["a", "b", "c"][index]);
+                                    VGroup({ width: "100%", height: "100%", align: "center center", color: color });
+                                        Label({ text: ["A", "B", "C"][index], fontSize: 40, textColor: "white", fontFamily: "opensans-bold" });
+                                    endGroup();
+                                fader.endPage();
+                            });
+
+                            addSampleButton("Next", function () { fader.next(); });
+
+                        endGroup();
+
+                    endCard();
+
+                endGroup();
+
+            endBox();
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        // A screen with a header and a long list (to show pageScroll)
+        const fillScreen = function (key, color) {
+            screens.startPage(key);
+                VGroup({ width: "100%", height: "auto", align: "left top", gap: 0 });
+                    Label({ text: key.charAt(0).toUpperCase() + key.slice(1), width: "100%", fontSize: 18, textColor: "white", color: color, padding: [16, 14], fontFamily: "opensans-bold" });
+                    for (let i = 1; i <= 12; i++) {
+                        Label({ text: key + " item " + i, width: "100%", fontSize: 14, textColor: Black(0.7), padding: [16, 10] });
+                        that.elem.style.borderBottom = "1px solid " + Black(0.06);
+                    }
+                endGroup();
+            screens.endPage();
+        };
+
+        // GROUP: A card with a title and a short description.
+        const startCard = function (title, description = "") {
+            VGroup({
+                width: 620,
+                height: "auto",
+                align: "left top",
+                gap: 16,
+                padding: 20,
+                color: "white",
+                round: 10,
+                border: 1,
+                borderColor: Black(0.1),
+            });
+            that.elem.style.alignItems = "stretch";
+            Label({
+                text: title,
+                fontSize: 14,
+                textColor: Black(0.45),
+            });
+            if (description) {
+                Label({
+                    text: description,
+                    fontSize: 13,
+                    textColor: Black(0.35),
+                });
+                that.elem.style.marginTop = "-10px";
+            }
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+        const addSampleButton = function (text, onClick, isSecondary = 0) {
+            const btn = Button({
+                text: text,
+                width: 110,
+                height: 36,
+                fontSize: 14,
+            });
+            if (isSecondary) btn.color = "lightgray";
+            btn.on("click", onClick);
+            return btn;
+        };
+
+        const addInfoLabel = function (text) {
+            return Label({
+                text: text,
+                fontSize: 14,
+                textColor: Black(0.5),
+            });
+        };
+
+    </script>
+</head>
+
+<body></body>
+
+</html>

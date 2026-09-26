@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Context Menu</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp-m4/context-menu.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // *** VARIABLES:
+        let menuText, menuIcon, menuFiles, menuMore;
+        let lblText, lblIcon, lblFiles, lblMore;
+        let fileRows = [];
+
+        // ICONS: Inline SVG (no image file needed)
+        const svgIcon = function (paths) {
+            return "data:image/svg+xml," + encodeURIComponent(
+                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+                + paths + '</svg>'
+            );
+        };
+
+        const ICON = {
+            open: svgIcon('<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>'),
+            cut: svgIcon('<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.1 15.9M14.5 14.5 20 20M8.1 8.1 12 12"/>'),
+            copy: svgIcon('<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/>'),
+            paste: svgIcon('<rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3h6v1"/>'),
+            download: svgIcon('<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>'),
+            delete: svgIcon('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>'),
+        };
+
+        const start = function () {
+
+            page.color = "whitesmoke";
+
+            // BOX: Full screen scrollable container
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            startBox(0, 0, "100%", "100%", {
+                color: "transparent",
+                scrollY: 1,
+            });
+
+                // GROUP: Page layout
+                VGroup({
+                    width: "100%",
+                    height: "auto", // Grows with content, so the Box can scroll.
+                    align: "center top",
+                    gap: 30,
+                    padding: 50,
+                });
+
+                    // LABEL: Title
+                    Label({
+                        text: "Context Menu",
+                        fontSize: 26,
+                    });
+                    that.elem.style.fontFamily = "opensans-bold";
+
+                    // SAMPLE 1: Text only
+                    startCard("1. Text only (no icon: texts are near the left side)");
+
+                        const areaText = clickArea("Right click here");
+
+                        lblText = infoLabel("Clicked: -");
+
+                        menuText = ContextMenu({
+                            target: areaText,
+                            items: [
+                                { text: "Refresh", key: "refresh" },
+                                { text: "Select all", key: "selectAll" },
+                                "-",
+                                { text: "Sort by name", key: "sortName" },
+                                { text: "Sort by date", key: "sortDate" },
+                                "-",
+                                { text: "Properties", key: "properties" },
+                            ],
+                            onClick: function (self, item, index) {
+                                lblText.text = "Clicked: <b>" + ContextMenu.escapeHtml(item.text) + "</b> (key: " + item.key + ")";
+                            },
+                        });
+
+                    endCard();
+
+                    // SAMPLE 2: Icon + text
+                    startCard("2. Icon + text (\"Rename\" has no icon, but its text is aligned)");
+
+                        const areaIcon = clickArea("Right click here");
+
+                        lblIcon = infoLabel("Clicked: -");
+
+                        menuIcon = ContextMenu({
+                            target: areaIcon,
+                            items: [
+                                { text: "Open", key: "open", iconFile: ICON.open },
+                                "-",
+                                { text: "Cut", key: "cut", iconFile: ICON.cut },
+                                { text: "Copy", key: "copy", iconFile: ICON.copy },
+                                { text: "Paste", key: "paste", iconFile: ICON.paste, enabled: 0 },
+                                { text: "Rename", key: "rename" },
+                                "-",
+                                { text: "Delete", key: "delete", iconFile: ICON.delete },
+                            ],
+                            onClick: function (self, item) {
+                                lblIcon.text = "Clicked: <b>" + ContextMenu.escapeHtml(item.text) + "</b>";
+                                // "Paste" is enabled after "Copy" or "Cut".
+                                if (item.key == "copy" || item.key == "cut") self.setItemEnabled("paste", 1);
+                                if (item.key == "paste") self.setItemEnabled("paste", 0);
+                            },
+                        });
+
+                        Label({
+                            text: "\"Paste\" is disabled. Click \"Copy\" to enable it. Keyboard: ↑ ↓ Enter, Esc.",
+                            fontSize: 13,
+                            textColor: Black(0.45),
+                        });
+
+                    endCard();
+
+                    // SAMPLE 3: One menu for many objects
+                    startCard("3. One menu for many rows (self.source)");
+
+                        // GROUP: File list
+                        VGroup({
+                            width: "100%",
+                            height: "auto",
+                            align: "left top",
+                            gap: 0,
+                            border: 1,
+                            borderColor: Black(0.1),
+                            round: 6,
+                        });
+
+                            ["report-2026.pdf", "photo.jpg", "notes.txt", "budget.xlsx"].forEach(function (name) {
+
+                                const row = Label({
+                                    text: "📄 " + name,
+                                    width: "100%",
+                                    fontSize: 14,
+                                    textColor: Black(0.8),
+                                    color: "transparent",
+                                });
+                                row.elem.style.padding = "9px 12px";
+                                row.elem.style.boxSizing = "border-box";
+                                row.elem.style.cursor = "default";
+                                row.fileName = name;
+                                fileRows.push(row);
+
+                            });
+
+                        endGroup();
+
+                        lblFiles = infoLabel("Right click a file.");
+
+                        menuFiles = ContextMenu({
+                            target: fileRows,
+                            items: [
+                                { text: "Open", key: "open", iconFile: ICON.open },
+                                { text: "Download", key: "download", iconFile: ICON.download },
+                                "-",
+                                { text: "Delete", key: "delete", iconFile: ICON.delete },
+                            ],
+                            onOpen: function (self) {
+                                self.source.color = "#EEF4FF"; // Selected row
+                            },
+                            onClose: function (self) {
+                                if (self.source) self.source.color = "transparent";
+                            },
+                            onClick: function (self, item) {
+                                lblFiles.text = "<b>" + ContextMenu.escapeHtml(item.text) + "</b>: " + ContextMenu.escapeHtml(self.source.fileName);
+                            },
+                        });
+
+                    endCard();
+
+                    // SAMPLE 4: Left click
+                    startCard("4. Left click (trigger: \"click\")");
+
+                        // BUTTON: More
+                        const btnMore = Button({ text: "More ⋯", width: "auto", height: 36, fontSize: 14, color: "#E8E8E8", textColor: Black(0.75), round: 6 });
+                        btnMore.elem.style.padding = "0 16px";
+
+                        lblMore = infoLabel("Click the button. Click it again to close.");
+
+                        menuMore = ContextMenu({
+                            minWidth: 150,
+                            items: ["Edit", "Duplicate", "Archive", "-", "Share link"],
+                            onClick: function (self, item) {
+                                lblMore.text = "Clicked: <b>" + ContextMenu.escapeHtml(item.text) + "</b>";
+                            },
+                        });
+                        menuMore.attachTo(btnMore, "click");
+
+                    endCard();
+
+                endGroup();
+
+            endBox();
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        // GROUP: A white card with a title.
+        const startCard = function (title) {
+            VGroup({
+                width: 460,
+                height: "auto",
+                align: "left top",
+                gap: 12,
+                padding: 20,
+                color: "white",
+                round: 10,
+                border: 1,
+                borderColor: Black(0.1),
+            });
+            Label({
+                text: ContextMenu.escapeHtml(title),
+                fontSize: 14,
+                textColor: Black(0.45),
+            });
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+        // BOX: Dashed area to right click on.
+        const clickArea = function (text) {
+            const area = VGroup({
+                width: "100%",
+                height: 120,
+                align: "center center",
+                color: "#F7F8FA",
+                round: 8,
+            });
+            area.elem.style.border = "1px dashed " + Black(0.2);
+            area.elem.style.boxSizing = "border-box";
+                Label({ text: text, fontSize: 14, textColor: Black(0.4) });
+            endGroup();
+            return area;
+        };
+
+        const infoLabel = function (text) {
+            return Label({
+                text: text,
+                fontSize: 13,
+                textColor: Black(0.6),
+            });
+        };
+
+    </script>
+</head>
+
+<body></body>
+
+</html>

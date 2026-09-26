@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Chart Box</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- OPTIONAL: Chart.js can be loaded here. If not, ChartBox loads it from the comp-m4/chart-box folder. -->
+    <!-- <script src="../comp-m4/chart-box/chart-4.5.1.umd.min.js"></script> -->
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp-m4/chart-box.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // *** VARIABLES:
+        let chartLine, chartBar, chartDoughnut, chartRadar;
+        let chartLive, chartDemo;
+        let lblTitle, lblClicked;
+        let isDark = 0;
+        let isPaused = 0;
+        let liveSecond = 0;
+
+        const CHART_WIDTH = 520;
+        const CHART_HEIGHT = 320;
+
+        const start = function () {
+
+            page.color = "#F9F9F7";
+
+            // BOX: Full screen scrollable container
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            startBox(0, 0, "100%", "100%", {
+                color: "transparent",
+                scrollY: 1,
+            });
+
+                // GROUP: Page layout
+                VGroup({
+                    width: "100%",
+                    height: "auto", // Grows with content, so the Box can scroll.
+                    align: "center top",
+                    gap: 24,
+                    padding: 40,
+                });
+
+                    // LABEL: Title
+                    lblTitle = Label({
+                        text: "Chart Box",
+                        fontSize: 26,
+                        fontFamily: "opensans-bold",
+                        textColor: "#0B0B0B",
+                    });
+
+                    // GROUP: Top buttons
+                    HGroup({ width: "auto", height: "auto", gap: 8 });
+
+                        Button({ text: "Dark Theme", width: 130, height: 36, fontSize: 14 });
+                        that.on("click", function (self) {
+                            isDark = (isDark) ? 0 : 1;
+                            self.text = (isDark) ? "Light Theme" : "Dark Theme";
+                            setPageTheme();
+                        });
+
+                    endGroup();
+
+                    // SAMPLE 1: Dashboard (the 4 charts in 04-template-m2/chart-test.htm)
+                    startRow();
+
+                        // LINE: Gradient fill, dashed target line, formatValue
+                        chartLine = ChartBox({
+                            width: CHART_WIDTH,
+                            height: CHART_HEIGHT,
+                            type: "line",
+                            title: "Monthly Revenue",
+                            subtitle: "Actual vs. target, last 6 months",
+                            labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+                            datasets: [
+                                {
+                                    label: "Actual",
+                                    data: [42000, 58000, 51000, 69000, 83000, 94000],
+                                    fill: true,
+                                    tension: 0.4,
+                                    backgroundColor: ChartBox.gradient("rgba(42, 120, 214, 0.25)", "rgba(42, 120, 214, 0)"),
+                                },
+                                {
+                                    label: "Target",
+                                    data: [40000, 50000, 60000, 70000, 80000, 90000],
+                                    borderDash: [5, 5],
+                                    pointRadius: 0,
+                                    tension: 0.4,
+                                },
+                            ],
+                            formatValue: function (value) {
+                                return "₺" + value.toLocaleString("tr-TR");
+                            },
+                        });
+
+                        // BAR: One dataset (no legend), a color for each bar
+                        chartBar = ChartBox({
+                            width: CHART_WIDTH,
+                            height: CHART_HEIGHT,
+                            type: "bar",
+                            title: "Sales by Category",
+                            subtitle: "Units sold per product category",
+                            labels: ["Electronics", "Clothing", "Home", "Cosmetics", "Books"],
+                            values: [1250, 2100, 840, 1600, 920],
+                            onClick: function (self, item) {
+                                lblClicked.text = "Clicked: <b>" + item.label + "</b> = " + item.value;
+                            },
+                        });
+
+                        // DOUGHNUT: Deep Chart.js option (cutout)
+                        chartDoughnut = ChartBox({
+                            width: CHART_WIDTH,
+                            height: CHART_HEIGHT,
+                            type: "doughnut",
+                            title: "Traffic Sources",
+                            subtitle: "How users come to the site",
+                            labels: ["Organic Search", "Social Media", "Direct", "E-Mail", "Referral"],
+                            values: [42, 28, 15, 10, 5],
+                            formatValue: function (value) { return value + "%"; },
+                            options: {
+                                cutout: "70%",
+                            },
+                        });
+
+                        // RADAR: Deep options are not lost (scales.r.ticks.display)
+                        chartRadar = ChartBox({
+                            width: CHART_WIDTH,
+                            height: CHART_HEIGHT,
+                            type: "radar",
+                            title: "System Metrics",
+                            subtitle: "Current vs. optimized server",
+                            legend: "bottom",
+                            labels: ["Speed", "Security", "Uptime", "Scaling", "Memory", "Cost"],
+                            datasets: [
+                                { label: "Optimized", data: [90, 85, 99, 92, 80, 88] },
+                                { label: "Current", data: [65, 70, 85, 60, 50, 60] },
+                            ],
+                            options: {
+                                scales: { r: { ticks: { display: false } } },
+                            },
+                        });
+
+                    endGroup();
+
+                    lblClicked = Label({
+                        text: "Click a bar in \"Sales by Category\".",
+                        fontSize: 13,
+                        textColor: Black(0.55),
+                    });
+
+                    // SAMPLE 2: Live data and functions
+                    startRow();
+
+                        // LIVE: A new value every second, max 20 values
+                        chartLive = ChartBox({
+                            width: CHART_WIDTH,
+                            height: CHART_HEIGHT,
+                            type: "line",
+                            title: "Live Data",
+                            subtitle: "addValue() every second, maxCount: 20",
+                            maxCount: 20,
+                            labels: [],
+                            datasets: [
+                                { label: "CPU", data: [] },
+                                { label: "Memory", data: [] },
+                            ],
+                            beginAtZero: 1,
+                            formatValue: function (value) { return value + "%"; },
+                            options: {
+                                scales: { y: { max: 100 } },
+                                elements: { point: { radius: 0 } },
+                            },
+                        });
+
+                        // DEMO: Functions
+                        VGroup({ width: CHART_WIDTH, height: "auto", align: "left top", gap: 10 });
+
+                            chartDemo = ChartBox({
+                                width: CHART_WIDTH,
+                                height: CHART_HEIGHT - 46,
+                                type: "bar",
+                                title: "Quarterly Results",
+                                labels: ["Q1", "Q2", "Q3", "Q4"],
+                                datasets: [
+                                    { label: "2025", data: [12, 19, 14, 21] },
+                                    { label: "2026", data: [15, 22, 18, 25] },
+                                ],
+                                onReady: function (self) {
+                                    println("ChartBox is ready: " + self.title);
+                                },
+                            });
+
+                            // GROUP: Buttons
+                            HGroup({ width: "100%", height: "auto", align: "left center", gap: 6 });
+                            that.elem.style.flexWrap = "wrap";
+
+                                smallButton("Line", function () { chartDemo.setType("line"); });
+                                smallButton("Bar", function () { chartDemo.setType("bar"); });
+                                smallButton("Stacked", function () { chartDemo.setStacked(chartDemo.stacked ? 0 : 1); });
+                                smallButton("Horizontal", function () { chartDemo.setHorizontal(chartDemo.horizontal ? 0 : 1); });
+                                smallButton("Random", function () {
+                                    chartDemo.data.datasets.forEach(function (dataset) {
+                                        dataset.data = dataset.data.map(function () { return random(5, 30); });
+                                    });
+                                    chartDemo.update();
+                                });
+                                smallButton("Download", function () { chartDemo.download("quarterly.png"); });
+
+                            endGroup();
+
+                        endGroup();
+
+                    endGroup();
+
+                    // GROUP: Live buttons
+                    HGroup({ width: "auto", height: "auto", gap: 8 });
+
+                        Button({ text: "Pause", width: 100, height: 36, fontSize: 14 });
+                        that.on("click", function (self) {
+                            isPaused = (isPaused) ? 0 : 1;
+                            self.text = (isPaused) ? "Continue" : "Pause";
+                        });
+
+                    endGroup();
+
+                endGroup();
+
+            endBox();
+
+            setLoopTimer(1000);
+
+        };
+
+        // Runs every second.
+        const loop = function () {
+            if (isPaused || !chartLive) return;
+            liveSecond++;
+            chartLive.addValue(liveSecond + "s", [random(30, 70), random(50, 65)]);
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        const setPageTheme = function () {
+            const theme = (isDark) ? "dark" : "light";
+            page.color = (isDark) ? "#0D0D0D" : "#F9F9F7";
+            lblTitle.textColor = (isDark) ? "#FFFFFF" : "#0B0B0B";
+            lblClicked.textColor = (isDark) ? White(0.6) : Black(0.55);
+            [chartLine, chartBar, chartDoughnut, chartRadar, chartLive, chartDemo].forEach(function (chart) {
+                chart.setTheme(theme);
+            });
+        };
+
+        // GROUP: Charts side by side (wraps on small screens)
+        const startRow = function () {
+            HGroup({
+                width: "100%",
+                height: "auto",
+                align: "center top",
+                gap: 20,
+            });
+            that.elem.style.flexWrap = "wrap";
+        };
+
+        const smallButton = function (text, func) {
+            Button({ text: text, width: "auto", height: 30, fontSize: 13, padding: [12, 0] });
+            that.on("click", func);
+        };
+
+    </script>
+</head>
+
+<body></body>
+
+</html>

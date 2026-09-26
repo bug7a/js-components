@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Side Panel</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp-m4/side-panel.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // *** VARIABLES:
+        let rightPanel, leftPanel, bottomPanel, topPanel, longPanel, vetoPanel;
+        let lblInfo;
+        let isDirty = 1;   // For the onBeforeClose sample.
+
+        const start = function () {
+
+            page.color = "#F4F5F2";
+
+            // BOX: Full screen scrollable container
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            startBox(0, 0, "100%", "100%", {
+                color: "transparent",
+                scrollY: 1,
+            });
+
+                // GROUP: Page layout
+                VGroup({
+                    width: "100%",
+                    height: "auto", // Grows with content, so the Box can scroll.
+                    align: "center top",
+                    gap: 30,
+                    padding: 50,
+                });
+
+                    // LABEL: Title
+                    Label({ text: "Side Panel", fontSize: 26, fontFamily: "opensans-bold" });
+
+                    // SAMPLE 1: The four sides
+                    startCard("1. side: right / left / bottom / top", "The panel slides in from the side you ask for. ESC or a click on the backdrop closes it.");
+
+                        HGroup({ hug: 1, gap: 10, wrap: 1 });
+                            addSampleButton("Right", function () { rightPanel.open(); });
+                            addSampleButton("Left", function () { leftPanel.open(); }, 1);
+                            addSampleButton("Bottom", function () { bottomPanel.open(); }, 1);
+                            addSampleButton("Top", function () { topPanel.open(); }, 1);
+                        endGroup();
+
+                        lblInfo = addInfoLabel("No panel was opened yet.");
+
+                    endCard();
+
+                    // SAMPLE 2: A long body scrolls
+                    startCard("2. The body scrolls", "startBody() ... endBody() fills the panel. A tall content scrolls, the header stays.");
+
+                        HGroup({ hug: 1, gap: 10 });
+                            addSampleButton("Open list", function () { longPanel.open(); });
+                        endGroup();
+
+                    endCard();
+
+                    // SAMPLE 3: onBeforeClose
+                    startCard("3. onBeforeClose", "Return false to keep the panel open. Here the first close is stopped, like an unsaved form.");
+
+                        HGroup({ hug: 1, gap: 10 });
+                            addSampleButton("Open form", function () { isDirty = 1; vetoPanel.open(); });
+                        endGroup();
+
+                    endCard();
+
+                endGroup();
+
+            endBox();
+
+            // *** PANELS:
+            // NOTE: They are created here, inside the scrolling Box, but a SidePanel always puts
+            //       itself on the page, so it is not clipped by the Box or by the group.
+
+            rightPanel = SidePanel({
+                side: "right",
+                titleText: "Right Panel",
+                onOpen: function (self) { lblInfo.text = "Opened: " + self.titleText; },
+                onClose: function (self) { lblInfo.text = "Closed: " + self.titleText; },
+            });
+            rightPanel.startBody();
+                Label({ text: "side: \"right\"", fontSize: 15, fontFamily: "opensans-bold" });
+                Label({ text: "The panel is as tall as the screen and slides in from the right edge. On a narrow screen it gets smaller by itself.", fontSize: 15, textColor: Black(0.6) });
+            rightPanel.endBody();
+
+            leftPanel = SidePanel({
+                side: "left",
+                panelSize: 320,
+                styleName: "modern",
+                titleText: "Left Panel",
+                onOpen: function (self) { lblInfo.text = "Opened: " + self.titleText; },
+                onClose: function (self) { lblInfo.text = "Closed: " + self.titleText; },
+            });
+            leftPanel.startBody();
+                Label({ text: "styleName: \"modern\"", fontSize: 15, fontFamily: "opensans-bold" });
+                Label({ text: "A narrower panel on the other side, with the modern style package.", fontSize: 15, textColor: Black(0.6) });
+            leftPanel.endBody();
+
+            bottomPanel = SidePanel({
+                side: "bottom",
+                panelSize: 300,
+                styleName: "dark",
+                titleText: "Bottom Sheet",
+                onOpen: function (self) { lblInfo.text = "Opened: " + self.titleText; },
+                onClose: function (self) { lblInfo.text = "Closed: " + self.titleText; },
+            });
+            bottomPanel.startBody();
+                Label({ text: "side: \"bottom\", styleName: \"dark\"", fontSize: 15, fontFamily: "opensans-bold", textColor: White(0.9) });
+                Label({ text: "A sheet that slides up from the bottom edge.", fontSize: 15, textColor: White(0.55) });
+            bottomPanel.endBody();
+
+            topPanel = SidePanel({
+                side: "top",
+                panelSize: 220,
+                titleText: "Top Panel",
+                onOpen: function (self) { lblInfo.text = "Opened: " + self.titleText; },
+                onClose: function (self) { lblInfo.text = "Closed: " + self.titleText; },
+            });
+            topPanel.startBody();
+                Label({ text: "side: \"top\"", fontSize: 15, fontFamily: "opensans-bold" });
+                Label({ text: "Good for a notification bar or a search area.", fontSize: 15, textColor: Black(0.6) });
+            topPanel.endBody();
+
+            longPanel = SidePanel({ side: "right", panelSize: 380, titleText: "40 rows" });
+            longPanel.startBody();
+                for (let i = 1; i <= 40; i++) {
+                    Label({ text: "Row " + i, fontSize: 15, textColor: Black(0.7) });
+                }
+            longPanel.endBody();
+
+            vetoPanel = SidePanel({
+                side: "right",
+                panelSize: 360,
+                titleText: "Unsaved form",
+                onBeforeClose: function (self) {
+                    if (isDirty === 1) {
+                        isDirty = 0;
+                        self.setTitleText("Close again to leave");
+                        return false;   // Keeps the panel open.
+                    }
+                    self.setTitleText("Unsaved form");
+                },
+            });
+            vetoPanel.startBody();
+                Label({ text: "onBeforeClose", fontSize: 15, fontFamily: "opensans-bold" });
+                Label({ text: "The first close is stopped and the title changes. The second one really closes the panel.", fontSize: 15, textColor: Black(0.6) });
+            vetoPanel.endBody();
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        // GROUP: A card with a title and a short description.
+        const startCard = function (title, description = "") {
+            VGroup({
+                width: 600,
+                height: "auto",
+                align: "left top",
+                gap: 16,
+                padding: 20,
+                color: "white",
+                round: 10,
+                border: 1,
+                borderColor: Black(0.1),
+            });
+            that.elem.style.alignItems = "stretch";
+            Label({ text: title, fontSize: 14, textColor: Black(0.45) });
+            if (description) {
+                Label({ text: description, fontSize: 13, textColor: Black(0.35) });
+                that.elem.style.marginTop = "-10px";
+            }
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+        const addSampleButton = function (text, onClick, isSecondary = 0) {
+            const btn = Button({
+                text: text,
+                width: 110,
+                height: 36,
+                fontSize: 14,
+            });
+            if (isSecondary) btn.color = "lightgray";
+            btn.on("click", onClick);
+            return btn;
+        };
+
+        const addInfoLabel = function (text) {
+            return Label({
+                text: text,
+                fontSize: 14,
+                textColor: Black(0.5),
+            });
+        };
+
+    </script>
+</head>
+
+<body></body>
+
+</html>

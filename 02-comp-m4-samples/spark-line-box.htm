@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Spark Line Box</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp-m4/spark-line-box.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp-m4/mini-graph-box.js" type="text/javascript" charset="utf-8"></script><!-- Only for the comparison sample -->
+
+    <script>
+
+        /* Bismillah */
+
+        // *** VARIABLES:
+        let graphSold, graphUsers, graphCpu, graphWide, graphBars, graphLine;
+        let soldTotal = 1300;
+        let isPaused = 0;
+
+        const ICON_FOLDER = "../01-basic-samples-m1/assets/";
+
+        const start = function () {
+
+            page.color = "white";
+
+            // BOX: Full screen scrollable container
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            startBox(0, 0, "100%", "100%", {
+                color: "transparent",
+                scrollY: 1,
+            });
+
+                // GROUP: Page layout
+                VGroup({
+                    width: "100%",
+                    height: "auto", // Grows with content, so the Box can scroll.
+                    align: "center top",
+                    gap: 30,
+                    padding: 50,
+                });
+
+                    // LABEL: Title
+                    Label({
+                        text: "Spark Line Box",
+                        fontSize: 26,
+                    });
+                    that.elem.style.fontFamily = "opensans-bold";
+
+                    // SAMPLE 1: Live graphs
+                    startCard("1. Live data (a new value every 0.5 seconds)");
+
+                        // GROUP: Graphs
+                        HGroup({ width: "100%", height: "auto", align: "left top", gap: 16 });
+                        that.elem.style.flexWrap = "wrap";
+
+                            graphSold = SparkLineBox({
+                                title: "Sold Items",
+                                valueText: "1.3K",
+                                iconFile: ICON_FOLDER + "carrot.png",
+                                lineColor: "tomato",
+                                values: randomList(30, 10, 30),
+                            });
+
+                            graphUsers = SparkLineBox({
+                                title: "Active Users",
+                                valueText: "248",
+                                iconFile: ICON_FOLDER + "blueberries.png",
+                                lineColor: "#5B7BD5",
+                                maxPoints: 20,
+                                showMinMax: 1,
+                                values: randomList(12, 150, 300),
+                            });
+
+                            graphCpu = SparkLineBox({
+                                title: "CPU",
+                                valueText: "42%",
+                                lineColor: "#65A293",
+                                minValue: 0, // Base line: 0%
+                                maxValue: 100, // Top: 100%
+                                showTrend: 0,
+                                valueFormat: function (value) { return value + "%"; },
+                                style: {
+                                    box: { color: "white", borderColor: Black(0.15), round: 8 },
+                                    graph: { height: 34, lineWidth: 2.5 },
+                                },
+                            });
+
+                        endGroup();
+
+                        Label({
+                            text: "Move the mouse over a graph to see the values. \"Active Users\" shows the <b>min / max</b> dots. \"CPU\" has <b>minValue: 0, maxValue: 100</b> and marks the values over 80 with a red dot.",
+                            fontSize: 13,
+                            textColor: Black(0.55),
+                        });
+
+                        smallButton("Pause", function (self) {
+                            isPaused = isPaused ? 0 : 1;
+                            self.text = isPaused ? "Continue" : "Pause";
+                        });
+
+                    endCard();
+
+                    // SAMPLE 2: Change from outside
+                    startCard("2. Change title, text, icon, color and curve");
+
+                        graphWide = SparkLineBox({
+                            width: "100%",
+                            title: "Strawberry Orders",
+                            valueText: "86",
+                            iconFile: ICON_FOLDER + "strawberry.png",
+                            lineColor: "#E0457B",
+                            maxPoints: 60,
+                            values: randomList(60, 5, 40),
+                            style: { graph: { height: 36 } },
+                        });
+
+                        // GROUP: Buttons
+                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
+                        that.elem.style.flexWrap = "wrap";
+
+                            smallButton("Add value", function () {
+                                const value = random(5, 40);
+                                graphWide.addValue(value);
+                                graphWide.setValueText(String(value));
+                            });
+
+                            smallButton("Add marked value", function () {
+                                graphWide.addValue(random(30, 40), "orange");
+                            });
+
+                            smallButton("Change color", function () {
+                                const colors = ["#E0457B", "#5B7BD5", "#65A293", "#8E6CC9", "#373836"];
+                                graphWide.setLineColor(colors[(colors.indexOf(graphWide.lineColor) + 1) % colors.length]);
+                            });
+
+                            smallButton("Linear / Smooth", function (self) {
+                                graphWide.curve = (graphWide.curve === "smooth") ? "linear" : "smooth";
+                                graphWide.refresh();
+                            });
+
+                            smallButton("Change title & icon", function () {
+                                const isOlive = graphWide.iconFile.includes("olives");
+                                graphWide.setTitle(isOlive ? "Strawberry Orders" : "Olive Orders");
+                                graphWide.setIcon(ICON_FOLDER + (isOlive ? "strawberry.png" : "olives.png"));
+                            });
+
+                            smallButton("Custom trend", function (self) {
+                                graphWide.setTrendText(graphWide.trendText ? "" : "▲ 12% vs last week");
+                            });
+
+                            smallButton("Clear", function () {
+                                graphWide.clear();
+                            });
+
+                        endGroup();
+
+                    endCard();
+
+                    // SAMPLE 3: Comparison with MiniGraphBox
+                    startCard("3. The same data: MiniGraphBox (bars) and SparkLineBox (line)");
+
+                        // GROUP: Graphs
+                        HGroup({ width: "100%", height: "auto", align: "left top", gap: 16 });
+                        that.elem.style.flexWrap = "wrap";
+
+                            const data = randomList(30, 20, 60);
+
+                            graphBars = MiniGraphBox({
+                                width: 320,
+                                title: "Orders (bars)",
+                                valueText: String(data[data.length - 1]),
+                                barColor: "#8E6CC9",
+                                values: data,
+                                style: { bars: { barWidth: 8, gap: 2 } },
+                            });
+
+                            graphLine = SparkLineBox({
+                                width: 320,
+                                title: "Orders (line)",
+                                valueText: String(data[data.length - 1]),
+                                lineColor: "#8E6CC9",
+                                minValue: 0,
+                                maxPoints: 30,
+                                values: data,
+                            });
+
+                        endGroup();
+
+                        Label({
+                            text: "Bars show every value one by one. The line shows the trend, takes less space and has the trend badge and the tooltip.",
+                            fontSize: 13,
+                            textColor: Black(0.55),
+                        });
+
+                    endCard();
+
+                endGroup();
+
+            endBox();
+
+            setLoopTimer(500);
+
+        };
+
+        // Runs every 500 ms. (setLoopTimer)
+        const loop = function () {
+
+            if (isPaused) return;
+
+            const sold = random(10, 30);
+            soldTotal += sold;
+            graphSold.addValue(sold);
+            graphSold.setValueText((soldTotal / 1000).toFixed(1) + "K");
+
+            const users = random(150, 300);
+            graphUsers.addValue(users);
+            graphUsers.setValueText(String(users));
+
+            const cpu = random(5, 95);
+            // A value can be marked with a color: red when it is high.
+            graphCpu.addValue(cpu, (cpu > 80) ? "tomato" : "");
+            graphCpu.setValueText(cpu + "%");
+
+            const orders = random(20, 60);
+            graphBars.addValue(orders);
+            graphBars.setValueText(String(orders));
+            graphLine.addValue(orders);
+            graphLine.setValueText(String(orders));
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        const randomList = function (count, min, max) {
+            const list = [];
+            for (let i = 0; i < count; i++) list.push(random(min, max));
+            return list;
+        };
+
+        // GROUP: A white card with a title.
+        const startCard = function (title) {
+            VGroup({
+                width: 700,
+                height: "auto",
+                align: "left top",
+                gap: 14,
+                padding: 20,
+                color: "white",
+                round: 10,
+                border: 1,
+                borderColor: Black(0.1),
+            });
+            Label({
+                text: title,
+                fontSize: 14,
+                textColor: Black(0.45),
+            });
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+        const smallButton = function (text, func) {
+            const btn = Button({ text: text, width: "auto", height: 34, fontSize: 13, color: "#E8E8E8", textColor: Black(0.75), round: 6 });
+            btn.elem.style.padding = "0 14px";
+            btn.on("click", function (self) { func(self); });
+            return btn;
+        };
+
+    </script>
+</head>
+
+<body></body>
+
+</html>

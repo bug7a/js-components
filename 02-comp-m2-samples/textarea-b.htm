@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        
+        <title>TextareaInputB JS Component</title>
+        
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <!-- LIBRARY FILES -->
+        <!-- <link rel="preload" href="image.png" as="image"> -->
+        <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <script src="../comp-m2/tooltip.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m2/input-b.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m2/textarea-b.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- ALL COMPONENTS IN ONE FILE -->
+        <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
+
+        <script>
+        
+        // *** VARIABLES:          
+        let myInput;
+
+        // First running function.
+        window.onload = function() {
+
+            page.color = "white";
+
+            // GROUP: Centered container
+            AutoLayout();
+
+                // INPUT: #1
+                myInput = TextareaB({
+                    key: "1",
+                    height: 170, // 170 (4line)
+                    isRequired: 1,
+                    titleText: "MESSAGE",
+                    placeholder: "How can we help you?",
+                    minCharCount: 80,
+                    showCount: 1,
+                    lengthText: "length: ",
+                    warningText: "The entered text must be longer than 80",
+                    warningColor: "#E5885E", // "#F1BF3C"
+                    maxChar: 255,
+                    rightPadding: 5,
+                    unitStyle: {
+                        padding: [12, 4],
+                        color: "#373836EE",
+                        textColor: "white",
+                    },
+                });
+                
+            endAutoLayout(); // GROUP: Centered container
+
+            // Get value
+            myInput.onEdit = function() {
+                //console.log(myInput.getInputValue());
+            }
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+        
+        <!-- HTML content -->
+        
+    </body>
+</html>

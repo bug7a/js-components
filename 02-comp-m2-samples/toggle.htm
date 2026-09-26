@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        
+        <title>New JS Component</title>
+        
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <!-- LIBRARY FILES -->
+        <!-- <link rel="preload" href="image.png" as="image"> -->
+        <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+        <!--<script src="basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>-->
+
+        <script src="../comp-m2/toggle.js" type="text/javascript" charset="utf-8"></script>
+        <!-- <script src="_component-template.min.js" type="text/javascript" charset="utf-8"></script> -->
+
+        <!-- ALL COMPONENTS IN ONE FILE -->
+        <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
+
+        <script>
+        
+        // *** VARIABLES:
+        //const compList = []; // When multiple objects are created by code, they can be added to an array.
+        let toggle, toggle2;
+
+        // First running function.
+        window.onload = function() {
+
+            // GROUP: Autolayout
+            VGroup();
+
+                AutoLayout({
+                    color: "#141414",
+                    height: "50%",
+                });
+
+                    toggle = Toggle({
+                        key: "0",
+                        width: 70, // Standard box features are added automatically.
+                        height: 40,
+                        spacing: 3,
+                        value: 1,
+                        invertColor: 0,
+                        backgroundStyle: {
+                            color: "black",
+                            selectedColor: "#2C5A38",
+                            border: 1,
+                            borderColor: White(0.25),
+                            round: 100,
+                        },
+                        buttonStyle: {
+                            color: White(0.25),
+                            selectedColor: White(0.75),
+                            border: 0,
+                            round: 100,
+                        }
+                    });
+                    that.onChange = function(self) {
+                        println(`Changed: ${self.value}`);
+                    };
+
+                endAutoLayout();
+
+                AutoLayout({
+                    color: "white",
+                    height: "50%",
+                });
+
+                    toggle2 = Toggle({
+                        value: 1,
+                        //width: 44,
+                        //height: 24,
+                    });
+                
+                endAutoLayout();
+
+            endGroup(); // END GROUP
+            
+        };
+
+        </script>
+
+    </head>
+    <body>
+        
+        <!-- HTML content -->
+        
+    </body>
+</html>

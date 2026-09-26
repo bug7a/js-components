@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        
+        <title>InputB JS Component</title>
+        
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <!-- LIBRARY FILES -->
+        <!-- <link rel="preload" href="image.png" as="image"> -->
+        <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <!--<script src="basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>-->
+
+        <script src="../comp-m2/tooltip.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m2/input-b.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m2/number-input-b.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- ALL COMPONENTS IN ONE FILE -->
+        <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
+
+        <script>
+        
+        // *** VARIABLES:          
+        let myInput1, myInput2, myInput3;
+        //const inputList = [];
+
+        // First running function.
+        window.onload = function() {
+
+            page.color = "white";
+
+            // GROUP: Autolayout
+            AutoLayout({
+                flow: "vertical",
+                gap: 20,
+            });
+
+                // INPUT: #1
+                myInput1 = InputB({
+                    key: "1",
+                    isRequired: 1,
+                    placeholder: "Jack",
+                    leftPadding: 20,
+                });
+                that.setTitle("FIRST NAME");
+                //inputList.push(that);
+
+                // INPUT: #2
+                myInput2 = NumberInputB({
+                    key: "2",
+                    titleText: "HEIGHT",
+                    placeholder: "175",
+                    descriptionText: "The vertical size...",
+                    unitText: "cm",
+                    maxChar: 3,
+                    isRequired: 0,
+                    allowNegative: 0,
+                    allowDecimal: 0,
+                });
+                that.onEdit = function() {
+                    console.log(myInput2.getInputValue());
+                }
+                //inputList.push(that);
+
+
+                // INPUT: #3
+                myInput3 = InputB({
+                    key: "3",
+                    placeholder: "",
+                    titleText: "COUNT",
+                    descriptionText: "As you type something, it will write the number of characters.",
+                    isRequired: 1,
+                    maxChar: 20,
+                    unitText: "0/20",
+                    unitStyle: {
+                        fontSize: 16,
+                    },
+                });
+                that.onEdit = function() {
+                    const currentLength = myInput3.input.text.length;
+                    myInput3.setUnitText(`${currentLength}/${myInput3.maxChar}`);
+                };
+                //inputList.push(that);
+
+            endAutoLayout(); // END GROUP
+
+            // GROUP: Setting buttons
+            AutoLayout({
+                flow: "horizontal",
+                align: "left top",
+                gap: 8,
+                padding: [20, 20],
+            });
+
+                const styleSettingButton = function(btn) {
+                    btn.width = "auto";
+                    btn.height = "auto";
+                    btn.color = "lightgray";
+                    btn.fontSize = 16;
+                    btn.padding = [8, 4];
+                    btn.minimal = 1;
+                }
+
+                Button({
+                    text: "Button A",
+                });
+                styleSettingButton(that);
+                that.on("click", function() {
+                    console.log("Button A");
+                });
+
+                Button({
+                    text: "Button B",
+                });
+                styleSettingButton(that);
+                that.on("click", function() {
+                    console.log("Button B");
+                });
+
+            endAutoLayout();
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+        
+        <!-- HTML content -->
+        
+    </body>
+</html>
