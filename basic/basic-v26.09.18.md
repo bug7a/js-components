@@ -163,4 +163,4 @@ basic.storage.loadOr("settings", { theme: "light" });
   then open `test/basic-test.htm` in a browser (or with Live Server): the tab title must say `ALL PASS`.
 - `basic/basic-bugra.js` is frozen at v26.09.17 for reference; do not edit it.
 - `experimental/_make_basic_ai.py` is the script that derived v26.09.18 from v26.09.17 (anchored text edits). It is kept as a record of the changes; it writes to `basic/basic-regenerated.js` by default and must not overwrite `basic.js`.
-- Template folders that keep their own copy of the library (`04-template-m2/easy-pwa/basic/`, `04-template-m1/todo-app/library/`) still have the old version until you copy the new files there.
+- Template folders that keep their own copy of the library (`04-template-m2/delete-easy-pwa/basic/`, `04-template-m1/todo-app/library/`) still have the old version until you copy the new files there.

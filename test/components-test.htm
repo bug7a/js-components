@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>components test</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- LIBRARY FILES -->
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+        "use strict";
+
+        /* Bismillah */
+
+        /*
+
+        Components Test - v26.09
+        Self-checking health test for the comp-m2, comp-m3 and comp-m4 components.
+
+        Open it in a browser: green = passed, orange = passed with a warning, red = failed.
+        The summary is also in the console and in the tab title ("ALL PASS").
+        One component: components-test.htm?only=tabs (a part of the file path)
+
+        WHY IFRAMES: Every component is loaded alone in its own iframe with only its dependencies.
+        So two files that define the same global (comp-m2 and comp-m4 UIEffects) can be tested,
+        and a component that works only because another file was loaded before it is found.
+
+        CHECKS (for every component):
+        - The file loads without errors and defines its global.
+        - It is created with its default values: returns a basic.js object, "that" is that object,
+          every start call is ended (the default container is the same as before).
+        - Nothing goes wrong after the creation (errors, console warnings, broken icons).
+        - remove(): the element leaves the page, a second remove() does not throw, no error comes
+          from a timer after the removal.
+        - No leaks: a second instance is created and removed, and everything must be as before it:
+          the objects it created on the page, window/document listeners (page.onResize, page.on...),
+          setInterval timers, requestAnimationFrame loops, ResizeObserver (onResize) watches.
+          (The first instance may make one shared thing for all instances, like the Toast container.)
+        - The .min.js twin (if there is one) is created with the same public properties and
+          functions as the source. (A different list = the twin is stale: ./_make-min-js.sh --build)
+
+        NEW COMPONENT: add a line to COMPONENTS.
+        - deps: the files it needs, loaded before it.
+        - params: values for the creation (JSON). setup: a function that runs in the iframe and returns
+          more params, for the objects it needs (Ex: a target object).
+
+        Developer: Bugra Ozden
+
+        */
+
+        // *** SETTINGS:
+
+        const TIME_AFTER_CREATE = 400;  // ms: icons load, timers and animations start
+        const TIME_AFTER_REMOVE = 500;  // ms: timers left behind would fire
+        const TIME_LIMIT = 10000;       // ms: an iframe that does not answer fails
+        const PARALLEL = 4;             // iframes at the same time
+
+        const INPUT_B = ["comp-m2/tooltip.js", "comp-m2/input-b.js"];
+
+        // kind "object": a namespace, not a constructor. Only loading is checked.
+        const COMPONENTS = [
+            { file: "comp-m2/badge-v2.js", name: "Badge" },
+            { file: "comp-m2/badget.js", name: "Badget", setup: function () { return { target: Box(20, 20, 100, 100) }; } },
+            { file: "comp-m2/currency-input-b.js", name: "CurrencyInputB", deps: INPUT_B },
+            { file: "comp-m2/dialog.js", name: "Dialog" },
+            { file: "comp-m2/email-input-b.js", name: "EmailInputB", deps: INPUT_B },
+            { file: "comp-m2/form.js", name: "Form", deps: ["comp-m2/tooltip.js"] },
+            { file: "comp-m2/input-b.js", name: "InputB", deps: ["comp-m2/tooltip.js"] },
+            { file: "comp-m2/left-menu.js", name: "LeftMenu" },
+            { file: "comp-m2/login-page.js", name: "LoginPage", deps: ["comp-m4/ui-effects.js", ...INPUT_B, "comp-m2/email-input-b.js", "comp-m2/password-input-b.js", "comp-m2/waiting.js", "comp-m2/text-tabs.js"] },
+            { file: "comp-m2/login-page-v2.js", name: "LoginPage", deps: ["comp-m4/ui-effects.js", ...INPUT_B, "comp-m2/email-input-b.js", "comp-m2/password-input-b.js", "comp-m2/waiting.js", "comp-m2/text-tabs.js"] },
+            { file: "comp-m2/number-input-b.js", name: "NumberInputB", deps: INPUT_B },
+            { file: "comp-m2/password-input-b.js", name: "PasswordInputB", deps: INPUT_B },
+            { file: "comp-m2/phone-input-b.js", name: "PhoneInputB", deps: INPUT_B },
+            { file: "comp-m2/search-input-v2.js", name: "SearchInput" },
+            { file: "comp-m2/slider.js", name: "Slider" },
+            { file: "comp-m2/text-tabs.js", name: "TextTabs" },
+            { file: "comp-m2/textarea-b.js", name: "TextareaB", deps: INPUT_B },
+            { file: "comp-m2/tiny-select.js", name: "TinySelect" },
+            { file: "comp-m2/tiny-table.js", name: "TinyTable" },
+            { file: "comp-m2/toggle.js", name: "Toggle" },
+            { file: "comp-m2/tooltip.js", name: "Tooltip", setup: function () { return { target: Button({ text: "Target" }), hintText: "Hint" }; } },
+            { file: "comp-m2/ui-effects.js", name: "UIEffects", kind: "object" },
+            { file: "comp-m2/ui-standards.js", name: "UI", kind: "object" },
+            { file: "comp-m2/url-input-b.js", name: "URLInputB", deps: [...INPUT_B, "comp-m2/tiny-select.js"] },
+            { file: "comp-m2/waiting.js", name: "Waiting" },
+
+            { file: "comp-m3/bottom-bar.js", name: "BottomBar" },
+            { file: "comp-m3/button-with-icon.js", name: "ButtonWithIcon" },
+            { file: "comp-m3/check-box.js", name: "CheckBox" },
+            { file: "comp-m3/hold-to-confirm-button.js", name: "HoldToConfirmButton" },
+            { file: "comp-m3/progress-bar.js", name: "LineProgressBar" },
+            { file: "comp-m3/radio-button.js", name: "RadioButton" },
+            { file: "comp-m3/smart-table.js", name: "SmartTable", deps: ["comp-m2/search-input-v2.js", "comp-m4/context-menu.js"] },
+
+            { file: "comp-m4/breadcrumbs.js", name: "Breadcrumbs" },
+            { file: "comp-m4/chart-box.js", name: "ChartBox" },
+            { file: "comp-m4/context-menu.js", name: "ContextMenu" },
+            { file: "comp-m4/gauge.js", name: "Gauge" },
+            { file: "comp-m4/loading-screen.js", name: "LoadingScreen" },
+            { file: "comp-m4/mini-graph-box.js", name: "MiniGraphBox" },
+            { file: "comp-m4/modal.js", name: "Modal" },
+            { file: "comp-m4/page-control.js", name: "PageControl" },
+            { file: "comp-m4/progress-bar.js", name: "ProgressBar" },
+            { file: "comp-m4/search-results.js", name: "SearchResults", deps: ["comp-m2/search-input-v2.js"] },
+            { file: "comp-m4/select-box.js", name: "SelectBox" },
+            { file: "comp-m4/select-color.js", name: "SelectColor" },
+            { file: "comp-m4/select-date.js", name: "SelectDate" },
+            { file: "comp-m4/select-file.js", name: "SelectFile" },
+            { file: "comp-m4/select-time.js", name: "SelectTime" },
+            { file: "comp-m4/side-panel.js", name: "SidePanel" },
+            { file: "comp-m4/spark-line-box.js", name: "SparkLineBox" },
+            { file: "comp-m4/stepper.js", name: "Stepper" },
+            { file: "comp-m4/tabs.js", name: "Tabs" },
+            { file: "comp-m4/tag-input.js", name: "TagInput" },
+            { file: "comp-m4/time-line.js", name: "TimeLine" },
+            { file: "comp-m4/toast.js", name: "Toast" },
+            { file: "comp-m4/ui-effects.js", name: "UIEffects", kind: "object" },
+            { file: "comp-m4/ui-standards.js", name: "UI", kind: "object" },
+            { file: "comp-m4/web-view.js", name: "WebView" },
+        ];
+
+        // *** PRIVATE VARIABLES:
+
+        let resultList = null;   // VGroup of the result rows
+        let lblStatus = null;
+        let nextFrameId = 0;
+        const waitingFrames = {}; // id -> resolve function
+
+        // *** PROBE: runs INSIDE each iframe (its text is copied into the iframe).
+
+        // Watches the page before basic.js is loaded: errors, warnings, listeners, timers, animation frames.
+        const installWatchers = function () {
+            const probe = window.__probe = { errors: [], warnings: [], missingFiles: [], listeners: [], intervals: new Set(), frameCount: 0, observed: [] };
+            const shortFile = function (url) { return String(url || "").split("/").slice(-2).join("/"); };
+
+            window.addEventListener("error", function (e) {
+                // Browser notice, not an error of the code: a resize callback changed the layout again.
+                if (/ResizeObserver loop/.test(e.message)) return;
+                probe.errors.push(e.message + (e.filename ? " (" + shortFile(e.filename) + ":" + e.lineno + ")" : ""));
+            });
+            window.addEventListener("unhandledrejection", function (e) {
+                probe.errors.push("Unhandled promise: " + ((e.reason && e.reason.message) || e.reason));
+            });
+
+            const originalWarn = console.warn;
+            console.warn = function () { probe.warnings.push([].slice.call(arguments).join(" ")); return originalWarn.apply(console, arguments); };
+            const originalError = console.error;
+            console.error = function () { probe.errors.push("console.error: " + [].slice.call(arguments).join(" ")); return originalError.apply(console, arguments); };
+
+            // window/document listeners. ("once" and "signal" listeners remove themselves, they are not counted.)
+            const isWatched = function (target) { return target === window || target === document || target === document.documentElement || target === document.body; };
+            const isCapture = function (options) { return (typeof options === "boolean") ? options : !!(options && options.capture); };
+            const targetName = function (target) { return (target === window) ? "window" : (target === document) ? "document" : target.nodeName.toLowerCase(); };
+            const originalAdd = EventTarget.prototype.addEventListener;
+            const originalRemove = EventTarget.prototype.removeEventListener;
+
+            EventTarget.prototype.addEventListener = function (type, func, options) {
+                if (isWatched(this) && func && !(options && (options.once || options.signal))) {
+                    const capture = isCapture(options);
+                    const target = this;
+                    if (!probe.listeners.some(function (l) { return l.target === target && l.type === type && l.func === func && l.capture === capture; })) {
+                        probe.listeners.push({ target: this, name: targetName(this), type: type, func: func, capture: capture });
+                    }
+                }
+                return originalAdd.call(this, type, func, options);
+            };
+            EventTarget.prototype.removeEventListener = function (type, func, options) {
+                if (isWatched(this)) {
+                    const capture = isCapture(options);
+                    const target = this;
+                    probe.listeners = probe.listeners.filter(function (l) { return !(l.target === target && l.type === type && l.func === func && l.capture === capture); });
+                }
+                return originalRemove.call(this, type, func, options);
+            };
+
+            // setInterval timers (clearTimeout can clear them too)
+            const originalSetInterval = window.setInterval;
+            const originalClearInterval = window.clearInterval;
+            const originalClearTimeout = window.clearTimeout;
+            window.setInterval = function () { const id = originalSetInterval.apply(window, arguments); probe.intervals.add(id); return id; };
+            window.clearInterval = function (id) { probe.intervals.delete(id); return originalClearInterval.call(window, id); };
+            window.clearTimeout = function (id) { probe.intervals.delete(id); return originalClearTimeout.call(window, id); };
+
+            const originalFrame = window.requestAnimationFrame;
+            window.requestAnimationFrame = function (func) { probe.frameCount++; return originalFrame.call(window, func); };
+
+            // Watched elements of every ResizeObserver (basic.js onResize() uses one inside the library)
+            const observer = window.ResizeObserver.prototype;
+            const originalObserve = observer.observe;
+            const originalUnobserve = observer.unobserve;
+            const originalDisconnect = observer.disconnect;
+            observer.observe = function (elem, options) {
+                const self = this;
+                if (!probe.observed.some(function (o) { return o.observer === self && o.elem === elem; })) probe.observed.push({ observer: this, elem: elem });
+                return originalObserve.call(this, elem, options);
+            };
+            observer.unobserve = function (elem) {
+                const self = this;
+                probe.observed = probe.observed.filter(function (o) { return !(o.observer === self && o.elem === elem); });
+                return originalUnobserve.call(this, elem);
+            };
+            observer.disconnect = function () {
+                const self = this;
+                probe.observed = probe.observed.filter(function (o) { return o.observer !== self; });
+                return originalDisconnect.call(this);
+            };
+        };
+
+        // Creates, checks and removes the component. Returns { steps, keys }.
+        const runProbe = async function (test, setup) {
+            const probe = window.__probe;
+            const steps = [];
+            // level "fail" makes the component fail; level "warn" only shows the problem.
+            const check = function (name, ok, info, level) { steps.push({ name: name, ok: !!ok, info: info ? String(info) : "", level: level || "fail" }); return !!ok; };
+            const sleep = function (ms) { return new Promise(function (resolve) { setTimeout(resolve, ms); }); };
+            const bodyCount = function () { return document.body.getElementsByTagName("*").length; };
+            const listenerText = function (list) { return list.map(function (l) { return l.name + " " + l.type; }).join(", "); };
+            const brokenImages = function () {
+                return [].slice.call(document.images).filter(function (img) { return img.getAttribute("src") && img.complete && img.naturalWidth === 0; })
+                    .map(function (img) { return img.getAttribute("src"); });
+            };
+            const newItems = function (list, from) { return list.slice(from); };
+            const countFrames = async function (ms) { const start = probe.frameCount; await sleep(ms); return probe.frameCount - start; };
+
+            if (probe.missingFiles.indexOf(test.file) >= 0) return { steps: steps, missingFile: 1 };
+            if (!check("every file is found", probe.missingFiles.length === 0, "not found: " + probe.missingFiles.join(", "))) return { steps: steps };
+            if (!check("loads without errors", probe.errors.length === 0, probe.errors.join(" | "))) return { steps: steps };
+
+            let Comp;
+            try { Comp = (0, eval)(test.name); } catch (e) { Comp = undefined; }
+            if (!check("defines " + test.name, Comp !== undefined && Comp !== null)) return { steps: steps };
+
+            if (test.kind === "object") {
+                check("no console warnings", probe.warnings.length === 0, probe.warnings.join(" | "), "warn");
+                return { steps: steps };
+            }
+
+            if (!check(test.name + " is a function", typeof Comp === "function")) return { steps: steps };
+
+            // The params of one instance. setup() creates the objects it needs (Ex: a target), before the measurements.
+            const makeParams = function () { return Object.assign({}, test.params || {}, setup ? setup() : {}); };
+
+            // *** FIRST INSTANCE: creation, API, remove()
+
+            let params = makeParams();
+            const containerBefore = getDefaultContainerBox();
+            const errorsBefore = probe.errors.length;
+            const warningsBefore = probe.warnings.length;
+
+            let box = null;
+            try {
+                box = Comp(params);
+            } catch (e) {
+                check("creates with default values", false, e.message + ((e.stack || "").split("\n")[1] || "").replace(/\s+at\s+/, " at "));
+                return { steps: steps };
+            }
+            if (!check("returns a basic.js object", box && box.elem instanceof HTMLElement)) return { steps: steps };
+            check("that is the new object", window.that === box);
+            const isContainerSame = getDefaultContainerBox() === containerBefore;
+
+            await sleep(test.wait || 400);
+            const keys = Object.keys(box).sort();
+            // basic.js writes this warning 100 ms after a start call that was never ended.
+            const newWarnings = newItems(probe.warnings, warningsBefore);
+            const notEnded = newWarnings.filter(function (w) { return /not ended/.test(w); });
+            check("every start call is ended", isContainerSame && !notEnded.length, isContainerSame ? notEnded.join(" | ") : "the default container changed");
+            check("no errors after create", probe.errors.length === errorsBefore, newItems(probe.errors, errorsBefore).join(" | "));
+            check("no console warnings", newWarnings.length === notEnded.length, newWarnings.filter(function (w) { return notEnded.indexOf(w) < 0; }).join(" | "), "warn");
+            const broken = brokenImages();
+            check("icons load", broken.length === 0, "not found: " + broken.join(", "), "warn");
+
+            if (test.keysOnly) return { steps: steps, keys: keys };
+
+            // REMOVE:
+            if (!check("has remove()", typeof box.remove === "function")) return { steps: steps, keys: keys };
+            const errorsBeforeRemove = probe.errors.length;
+            try { box.remove(); } catch (e) { check("remove() does not throw", false, e.message); return { steps: steps, keys: keys }; }
+            check("element left the page", !box.elem.isConnected);
+            try { box.remove(); check("second remove() does not throw", true); } catch (e) { check("second remove() does not throw", false, e.message); }
+
+            await sleep(test.waitAfterRemove || 500);
+            check("no errors after remove", probe.errors.length === errorsBeforeRemove, newItems(probe.errors, errorsBeforeRemove).join(" | "));
+
+            // *** SECOND INSTANCE: leaks
+            // WHY: A component may make one shared thing for all its instances (Toast: one container on the page and
+            // one page.onResize). The first instance made it. What the second instance leaves, every instance leaves.
+
+            params = makeParams();
+            await sleep(50);
+            const framesBefore = await countFrames(150);
+            const listenersBefore = probe.listeners.slice();
+            const intervalsBefore = probe.intervals.size;
+            const bodyBefore = bodyCount();
+            const observedBefore = probe.observed.slice();
+            const errorsBeforeSecond = probe.errors.length;
+
+            try {
+                const box2 = Comp(params);
+                await sleep(test.wait || 400);
+                box2.remove();
+            } catch (e) {
+                check("second instance is created and removed", false, e.message);
+                return { steps: steps, keys: keys };
+            }
+
+            await sleep(test.waitAfterRemove || 500);
+            const bodyAfter = bodyCount();
+            check("objects on the page removed", bodyAfter <= bodyBefore, (bodyAfter - bodyBefore) + " element(s) left in <body> by each instance");
+            const leftListeners = probe.listeners.filter(function (l) { return listenersBefore.indexOf(l) < 0; });
+            check("window/document listeners removed", leftListeners.length === 0, leftListeners.length + " left: " + listenerText(leftListeners));
+            check("setInterval timers cleared", probe.intervals.size <= intervalsBefore, (probe.intervals.size - intervalsBefore) + " interval(s) still running");
+            const framesAfter = await countFrames(150);
+            check("no animation loop left", framesAfter <= framesBefore, framesAfter + " requestAnimationFrame call(s) in 150 ms after remove()");
+            const leftObserved = probe.observed.filter(function (o) { return observedBefore.indexOf(o) < 0 && !o.elem.isConnected; });
+            check("onResize of removed objects cleared", leftObserved.length === 0, leftObserved.length + " removed element(s) still watched by a ResizeObserver", "warn");
+            check("second instance has no errors", probe.errors.length === errorsBeforeSecond, newItems(probe.errors, errorsBeforeSecond).join(" | "));
+
+            return { steps: steps, keys: keys };
+        };
+
+        // *** PARENT PAGE:
+
+        // The iframe page: watchers, basic.js, dependencies, the file, then the probe in start().
+        const makeFrameHtml = function (id, test, file) {
+            const scripts = ["basic/basic.js", "basic/scroll-bar.js"].concat(test.deps || [], [file]);
+            const probeTest = { name: test.name, kind: test.kind, params: test.params, file: file, wait: TIME_AFTER_CREATE, waitAfterRemove: TIME_AFTER_REMOVE, keysOnly: test.keysOnly };
+            return "<!DOCTYPE html><html><head><meta charset=\"UTF-8\">" +
+                "<script>(" + installWatchers.toString() + ")();<\/script>" +
+                "<link rel=\"stylesheet\" href=\"../basic/basic.min.css\">" +
+                scripts.map(function (src) { return "<script src=\"../" + src + "\" onerror=\"__probe.missingFiles.push('" + src + "')\"><\/script>"; }).join("") +
+                "<script>const __runProbe = " + runProbe.toString() + ";" +
+                "const __setup = " + (test.setup ? test.setup.toString() : "null") + ";" +
+                "function start() { __runProbe(" + JSON.stringify(probeTest) + ", __setup)" +
+                ".then(function (r) { parent.__frameDone(" + id + ", r); })" +
+                ".catch(function (e) { parent.__frameDone(" + id + ", { steps: [{ name: \"test code\", ok: false, info: e.message, level: \"fail\" }] }); }); }" +
+                "<\/script><\/head><body><\/body><\/html>"; // WHY "<\/": Live Server puts its script before the first body end tag in the file, and it was in this string.
+        };
+
+        window.__frameDone = function (id, result) {
+            if (waitingFrames[id]) waitingFrames[id](result);
+        };
+
+        // Runs one file in a new iframe and returns its result.
+        const runInFrame = function (test, file) {
+            return new Promise(function (resolve) {
+                const id = ++nextFrameId;
+                const frame = document.createElement("iframe");
+                frame.style.cssText = "position: fixed; left: -12000px; top: 0; width: 1024px; height: 768px; border: 0;";
+
+                const timer = setTimeout(function () {
+                    finish({ steps: [{ name: "answers in " + (TIME_LIMIT / 1000) + " s", ok: false, info: "start() did not finish (a script did not load?)", level: "fail" }] });
+                }, TIME_LIMIT);
+
+                const finish = function (result) {
+                    clearTimeout(timer);
+                    delete waitingFrames[id];
+                    frame.remove();
+                    resolve(result);
+                };
+
+                waitingFrames[id] = finish;
+                frame.srcdoc = makeFrameHtml(id, test, file);
+                document.body.appendChild(frame);
+            });
+        };
+
+        // Source test, then the .min.js twin (created only, to compare the public keys).
+        const testComponent = async function (test) {
+            const result = await runInFrame(test, test.file);
+
+            if (test.kind !== "object" && result.keys) {
+                const minFile = test.file.replace(/\.js$/, ".min.js");
+                const minResult = await runInFrame(Object.assign({}, test, { keysOnly: 1 }), minFile);
+
+                if (minResult.missingFile) {
+                    result.steps.push({ name: "no .min.js twin", ok: true, info: "", level: "info" });
+                } else if (!minResult.keys) {
+                    const failedStep = minResult.steps.find(function (s) { return !s.ok; });
+                    result.steps.push({ name: ".min.js twin works", ok: false, info: failedStep ? failedStep.name + ": " + failedStep.info : "", level: "fail" });
+                } else {
+                    const missing = result.keys.filter(function (k) { return minResult.keys.indexOf(k) < 0; });
+                    const extra = minResult.keys.filter(function (k) { return result.keys.indexOf(k) < 0; });
+                    result.steps.push({
+                        name: ".min.js twin has the same API", ok: !missing.length && !extra.length, level: "fail",
+                        info: (missing.length ? "missing in .min: " + missing.join(", ") : "") + (extra.length ? (missing.length ? " / " : "") + "only in .min: " + extra.join(", ") : "") + " (stale? ./_make-min-js.sh --build " + test.file + ")",
+                    });
+                }
+            }
+            return result;
+        };
+
+        const showRow = function (test, result) {
+            const failed = result.steps.filter(function (s) { return !s.ok && s.level === "fail"; });
+            const warned = result.steps.filter(function (s) { return !s.ok && s.level === "warn"; });
+            const passedCount = result.steps.filter(function (s) { return s.ok && s.level !== "info"; }).length;
+            const state = failed.length ? "FAIL" : warned.length ? "WARN" : "PASS";
+            const color = { PASS: "seagreen", WARN: "darkorange", FAIL: "crimson" }[state];
+
+            setDefaultContainerBox(resultList);
+            const row = VGroup({ width: "100%", height: "auto", align: "left top", gap: 2 });
+                const title = state + "  " + test.file + "  (" + test.name + ")  " + passedCount + "/" + result.steps.filter(function (s) { return s.level !== "info"; }).length +
+                    (result.steps.some(function (s) { return s.level === "info"; }) ? "  - no .min.js twin" : "");
+                Label({ text: title, plainText: title, fontSize: 14, bold: state !== "PASS", textColor: color });
+                failed.concat(warned).forEach(function (s) {
+                    const text = "      " + (s.level === "fail" ? "✗ " : "! ") + s.name + (s.info ? ":  " + s.info : "");
+                    Label({ text: text, plainText: text, fontSize: 12, textColor: (s.level === "fail") ? "crimson" : "darkorange", ellipsis: 0 });
+                    that.css = { whiteSpace: "pre-wrap", wordBreak: "break-word", maxWidth: "100%" };
+                });
+            endGroup();
+
+            failed.forEach(function (s) { console.error("FAIL: " + test.file + " - " + s.name + " " + s.info); });
+            warned.forEach(function (s) { console.warn("WARN: " + test.file + " - " + s.name + " " + s.info); });
+            return state;
+        };
+
+        const runAll = async function () {
+            const only = new URLSearchParams(location.search).get("only");
+            const tests = COMPONENTS.filter(function (t) { return !only || t.file.indexOf(only) >= 0; });
+            const states = new Array(tests.length);
+            const results = new Array(tests.length);
+            let done = 0;
+            let shown = 0;
+
+            // Parallel, but the rows are shown in the list order.
+            let next = 0;
+            const worker = async function () {
+                while (next < tests.length) {
+                    const index = next++;
+                    results[index] = await testComponent(tests[index]);
+                    done++;
+                    lblStatus.text = "Running... " + done + "/" + tests.length;
+                    while (shown < tests.length && results[shown]) { states[shown] = showRow(tests[shown], results[shown]); shown++; }
+                }
+            };
+            const workers = [];
+            for (let i = 0; i < Math.min(PARALLEL, tests.length); i++) workers.push(worker());
+            await Promise.all(workers);
+
+            const failCount = states.filter(function (s) { return s === "FAIL"; }).length;
+            const warnCount = states.filter(function (s) { return s === "WARN"; }).length;
+            const summary = "components test: " + (tests.length - failCount) + "/" + tests.length + " passed" +
+                (failCount ? " - " + failCount + " FAILED" : " - ALL PASS") + (warnCount ? " (" + warnCount + " with warnings)" : "");
+
+            lblStatus.text = summary;
+            lblStatus.textColor = failCount ? "crimson" : "seagreen";
+            lblStatus.bold = 1;
+            console.info(summary);
+            page.title = summary;
+        };
+
+        // First running function.
+        const start = function () {
+
+            // BOX: Scrollable page container
+            const scrollBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+                VGroup({ width: "100%", height: "auto", align: "left top", gap: 4, padding: 24 });
+                    Label({ text: "Components test", fontSize: 24, bold: 1 });
+                    Label({ text: "comp-m2, comp-m3, comp-m4: each file in its own iframe. Create with default values, remove() cleanup, icons, .min.js twin.", fontSize: 13, textColor: Black(0.5) });
+                    lblStatus = Label({ text: "Running...", fontSize: 16, textColor: Black(0.6) });
+                    that.css = { margin: "8px 0" };
+                    resultList = VGroup({ width: "100%", height: "auto", align: "left top", gap: 6 });
+                    endGroup();
+                endGroup();
+            endBox();
+
+            if (typeof ScrollBar === "function") ScrollBar({ scrollableBox: scrollBox }); // after the box (it goes on the box's parent)
+
+            runAll();
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+    </body>
+</html>

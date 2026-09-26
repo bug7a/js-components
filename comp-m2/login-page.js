@@ -390,6 +390,22 @@ const LoginPage = function(params = {}) {
 
     };        
 
+    // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
+    const superRemove = box.remove;
+    box.superRemove = superRemove;
+    box.remove = function () {
+
+        // NOTE: box is not set to null. WHY: onSuccess() may remove the page, and then the "finally" of the
+        //       login click still calls box.waiting.hide().
+        if (box._isRemoved) return; // WHY: remove() can be called twice (also by the parent's remove()).
+        clearTimeout(box.alertBox.timer);
+        // WHY: Waiting is always created on the page (page.add), not in the box.
+        box.waiting.remove();
+
+        superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
+
+    };
+
     // Helpers
     box.setActiveTab = function(index) {
 

@@ -82,7 +82,7 @@ Load scripts in this order: `basic.css` and `basic.js` first, then `ui-standards
 | `comp-m1/` … `comp-m4/` | Components, grouped by generation. `m1` is legacy and `m4` is the newest. |
 | `01-basic-samples-m1/` | Step-by-step tutorial pages for the core library |
 | `02-comp-m*-samples/` | One demo page per component |
-| `03-page-m2/`, `04-template-m*/` | Full app templates: admin panel, contact form, to-do app, data table |
+| `03-webpage-m2/`, `04-template-m*/` | Full app templates: admin panel, contact form, to-do app, data table |
 | `__handbook/` | The basic.js handbook in [English](__handbook/english/) and [Turkish](__handbook/turkce/) |
 | `context/` | Short reference docs for the core library and components |
 | `__developer-toolkit/` | VS Code extensions for basic.js: completer, object navigator, view inspector |

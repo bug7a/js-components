@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>Dark Contact Form</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+        <meta name="theme-color" content="#07070B">
+
+        <!-- FONT: Plus Jakarta Sans (Open Sans of basic.js is the fallback, when there is no internet) -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+
+        <!-- LIBRARY FILES -->
+        <!-- <link rel="preload" href="image.png" as="image"> -->
+        <link rel="preload" href="../../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="preload" href="../../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../../basic/basic.min.css">
+        <script src="../../basic/basic.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8" defer></script>
+
+        <script src="../../comp-m2/tooltip.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m2/input-b.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m2/email-input-b.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m2/phone-input-b.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m2/textarea-b.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m3/radio-button.min.js" type="text/javascript" charset="utf-8" defer></script>
+
+        <script src="../../comp-m2/waiting.min.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m2/form.min.js" type="text/javascript" charset="utf-8" defer></script>
+
+        <!--
+
+        /* Bismillah */
+
+        - The contact form (contact-form-to-mail.htm) on a dark page, with a topic question (radio buttons).
+        - The components are made for a white page. Their colors are given in the params (inputStyle) and
+          changed after they are created (styleForm, styleInput, getRadioStyle). All the colors are in THEME.
+        - The radio buttons use the theme of 02-comp-m3-samples/radio-button-2.htm ("modern" style package).
+
+        -->
+
+        <script type="module">
+
+        // This example will post form data (JSON) to your custom service URL.
+        // Any 2xx response is accepted as success.
+        // To get the form as an e-mail: upload service/send-form-mail.php to your server and write its
+        // address to SERVICE_URL. Nothing else is needed. (See service/readme.md)
+
+        // *** CONSTANTS:
+        const SERVICE_URL = "https://your-site.com/service/send-form-mail.php"; // Your service URL
+
+        const FORM_NAME = "dark-contact";       // Which form is this? (Written by the mail service.)
+        const FORM_MAIL_TITLE = "Contact Form"; // Title on top of the mail.
+        const SERVICE_TIMEOUT = 15000; // ms
+        const FORM_TITLE = "Get in Touch";
+        const FORM_DESCRIPTION = "Feel free to share any questions, suggestions, or feedback with us. Fill out the form and we’ll get back to you as soon as possible.";
+
+        // Topic question (radio buttons, above the subject). One is always selected.
+        const TOPIC_TITLE = "WHAT IS IT ABOUT?";
+        const TOPIC_GROUP = "contact-topic"; // The group name of the radio buttons
+        const TOPICS = [
+            { value: "question", text: "General question" },
+            { value: "quote", text: "Price or quote" },
+            { value: "support", text: "Technical support" },
+            { value: "other", text: "Something else" },
+        ];
+        const TOPIC_DEFAULT = "other"; // Selected when the form opens (and after it is sent)
+
+        // Colors and font of the page
+        const THEME = {
+            page: "#07070B",
+            text: "#F4F4F7",
+            softText: "rgba(244, 244, 247, 0.66)",
+            faintText: "rgba(244, 244, 247, 0.42)",
+            line: "rgba(255, 255, 255, 0.08)",
+            lineHover: "rgba(255, 255, 255, 0.2)",
+            field: "rgba(255, 255, 255, 0.04)",          // Input background
+            selectedField: "rgba(255, 255, 255, 0.07)",  // Input background on focus
+            selectedLine: "rgba(167, 139, 250, 0.75)",   // Input border on focus
+            accent: "#8B5CF6",
+            accentLight: "#A78BFA",
+            accent2: "#22D3EE",
+            warning: "#E5885E",
+            success: "#34D399",
+            error: "#F87171",
+            popup: "#16161E",                            // Tooltips and the list of the missing entries
+            font: "'Plus Jakarta Sans', opensans, sans-serif",
+        };
+        THEME.gradient = "linear-gradient(110deg, " + THEME.accent + " 0%, " + THEME.accent2 + " 100%)";
+
+        // *** VARIABLES:
+        let background, form, waiting, honeypot;
+        let firstNameInput, lastNameInput, emailInput, phoneInput, topicGroup, subjectInput, messageTextarea;
+
+        // First running function.
+        window.onload = function() {
+
+            page.color = THEME.page;
+
+            // BOX: Background (two soft lights)
+            background = Box(0, 0, "100%", "100%", {
+                color: "transparent",
+                border: 0,
+            });
+            that.elem.style.backgroundImage = "radial-gradient(640px circle at 15% 0%, rgba(139, 92, 246, 0.24), transparent 60%), " +
+                "radial-gradient(560px circle at 90% 100%, rgba(34, 211, 238, 0.16), transparent 60%)";
+
+            // FORM:
+            form = Form({
+                minWidth: 700,
+                maxWidth: 700,
+                buttonColor: THEME.accent,
+                buttonText: "SEND MESSAGE",
+                showDetailWarning: 1,
+                missingEntryText: "{{count}} missing entry",
+                missingEntriesText: "{{count}} missing entries",
+                warningText: "<b>{{name}}</b> can't be empty",
+                errorText: "<b>{{name}}</b> is not valid",
+                minimalButton: 1,
+                doubleInputAlwaysHorizontal: 0,
+                passiveButtonHintText: "Please fill in the missing fields to send the message.",
+                onSendClick: function(json) {
+
+                    sendFormToService();
+
+                },
+            });
+
+            // LABEL: Title
+            Label({
+                text: FORM_TITLE,
+                textColor: THEME.text,
+                fontSize: 34,
+                fontFamily: THEME.font,
+            });
+            that.elem.style.fontWeight = "800";
+            that.elem.style.letterSpacing = "-0.025em";
+            form.addTitle(that);
+
+            // LABEL: Description
+            if (FORM_DESCRIPTION != "") {
+                Label({
+                    text: FORM_DESCRIPTION,
+                    fontSize: 16,
+                    textColor: THEME.softText,
+                    fontFamily: THEME.font,
+                });
+                that.elem.style.lineHeight = "1.75";
+                that.elem.style.marginTop = "12px";
+                form.addTitle(that);
+            }
+
+            // Common input params:
+            const inputStyle = {
+                width: "100%",
+                backgroundColor: THEME.field,
+                selectedBackgroundColor: THEME.selectedField,
+                lineColor: Black(0),
+                selectedLineColor: Black(0),
+                backBorderColor: THEME.line,
+                selectedBackBorderColor: THEME.selectedLine,
+                backBorderTopRound: 14,
+                backBorderBottomRound: 14,
+                warningBallType: "icon", // "color", "icon"
+                requiredColor: THEME.text,
+                requiredIconColor: "rgba(255, 255, 255, 0.28)",
+            };
+
+            // Unit (TR, length) of the inputs:
+            const unitStyle = {
+                padding: [12, 4],
+                color: "rgba(255, 255, 255, 0.1)",
+                textColor: THEME.softText,
+                round: 40,
+                fontSize: 13,
+            };
+
+            // INPUT: First Name
+            firstNameInput = InputB({
+                key: "1",
+                ...inputStyle,
+                isRequired: 1, // 1
+                titleText: "FIRST NAME",
+                placeholder: "Jack",
+                leftPadding: 20,
+            });
+            styleInput(that);
+
+            // INPUT: Last Name
+            lastNameInput = InputB({
+                key: "2",
+                ...inputStyle,
+                isRequired: 0,
+                titleText: "LAST NAME",
+                placeholder: "Brown",
+                leftPadding: 20,
+            });
+            styleInput(that);
+            form.addDoubleInput(firstNameInput, lastNameInput);
+
+            // INPUT: Email
+            emailInput = EmailInputB({
+                key: "3",
+                ...inputStyle,
+                isRequired: 1, // 1
+                titleText: "YOUR EMAIL",
+                placeholder: "example@site.com",
+                warningText: "Invalid email format",
+                warningColor: THEME.warning,
+                maxChar: 60,
+            });
+            styleInput(that);
+            form.addInput(emailInput);
+
+            // INPUT: Phone
+            phoneInput = PhoneInputB({
+                key: "4",
+                ...inputStyle,
+                isRequired: 0,
+                titleText: "PHONE NUMBER",
+                placeholder: "(auto)",
+                warningText: "Invalid phone number format",
+                warningColor: THEME.warning,
+                countryCode: "+90",
+                phoneMask: " (___) ___-____",
+                unitText: "TR",
+                unitStyle: unitStyle,
+            });
+            styleInput(that);
+            form.addInput(phoneInput);
+
+            // GROUP: Topic (radio buttons), above the subject
+            topicGroup = createTopicGroup();
+            form.inputGroup.add(topicGroup);
+            topicGroup.position = "relative";
+            // NOTE: Not in form.inputList: one is always selected, so Form does not check it.
+
+            // INPUT: Subject
+            subjectInput = InputB({
+                key: "5",
+                ...inputStyle,
+                titleText: "SUBJECT",
+                placeholder: "What's your message about?",
+                descriptionText: "",
+                isRequired: 0,
+                maxChar: 80,
+            });
+            styleInput(that);
+            form.addInput(subjectInput);
+
+            // INPUT: Textarea
+            messageTextarea = TextareaB({
+                key: "6",
+                ...inputStyle,
+                isRequired: 1, // 1
+                titleText: "MESSAGE",
+                placeholder: "How can we help you?",
+                minCharCount: 20, // 80, 0
+                showCount: 1, // 1, 0
+                lengthText: "length: ",
+                warningText: "The message must be longer than 20 characters",
+                warningColor: THEME.warning,
+                maxChar: 2000,
+                height: 190, // 170 (4line)
+                rightPadding: 5,
+                unitStyle: unitStyle,
+            });
+            styleInput(that);
+            form.addInput(messageTextarea);
+
+            styleForm();
+
+            // WAITING: Create object 1 time.
+            waiting = Waiting({
+                animated: 1,
+                waitingIcon: "assets/mail.png",
+                coverBackgroundColor: "rgba(7, 7, 11, 0.85)",
+            });
+            waiting.icon.elem.style.filter = "invert(100%)";
+
+            // WHY: A field that people do not see. A robot fills it, and the mail service does not send that mail.
+            //      (HONEYPOT_FIELD of service/send-form-mail.php)
+            honeypot = document.createElement("INPUT");
+            honeypot.type = "text";
+            honeypot.name = "website";
+            honeypot.tabIndex = -1;
+            honeypot.autocomplete = "off";
+            honeypot.setAttribute("aria-hidden", "true");
+            honeypot.style.display = "none";
+            form.elem.appendChild(honeypot);
+
+        };
+
+        const sendFormToService = async function() {
+
+            waiting.show();
+
+            // WHY: The mail service writes the titles to the mail, so the fields are sent with their titles.
+            const formData = {
+                formName: FORM_NAME,
+                formTitle: FORM_MAIL_TITLE,
+                website: honeypot.value,
+                fields: [
+                    { key: "first_name", type: "text", titleText: "FIRST NAME", inputValue: firstNameInput.getInputValue() },
+                    { key: "last_name", type: "text", titleText: "LAST NAME", inputValue: lastNameInput.getInputValue() },
+                    { key: "email", type: "email", titleText: "E-MAIL", inputValue: emailInput.getInputValue() },
+                    { key: "phone", type: "text", titleText: "PHONE", inputValue: phoneInput.getInputValue() },
+                    { key: "topic", type: "text", titleText: "TOPIC", inputValue: getTopicText() },
+                    { key: "subject", type: "text", titleText: "SUBJECT", inputValue: subjectInput.getInputValue() },
+                    { key: "message", type: "textarea", titleText: "MESSAGE", inputValue: messageTextarea.getInputValue() },
+                ],
+            };
+
+            // Cancel the request if the service does not respond in time
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), SERVICE_TIMEOUT);
+
+            let error = null;
+
+            try {
+                const response = await fetch(SERVICE_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(formData),
+                    signal: controller.signal,
+                });
+                if (!response.ok) {
+                    error = new Error("HTTP error: " + response.status);
+                }
+            } catch (e) {
+                error = e; // Network error, CORS error or timeout
+            }
+
+            clearTimeout(timeoutId);
+            waiting.hide();
+
+            if (error) {
+                //console.error("Error: ", error.message);
+
+                showMessage({
+                    iconColor: THEME.error,
+                    iconFile: "assets/error.png",
+                    messageText: "Data could not be sent.",
+                    buttonText: "CLOSE",
+                    onClose: function() {},
+                });
+
+            } else {
+
+                showMessage({
+                    iconColor: THEME.success,
+                    iconFile: "assets/success.png",
+                    messageText: "Data sent successfully.",
+                    buttonText: "OKAY",
+                    onClose: function() {
+
+                        // Clean the form.
+                        firstNameInput.setInputValue("");
+                        lastNameInput.setInputValue("");
+                        emailInput.setInputValue("");
+                        phoneInput.setInputValue("");
+                        RadioButton.setValue(TOPIC_GROUP, TOPIC_DEFAULT, 1);
+                        subjectInput.setInputValue("");
+                        messageTextarea.setInputValue("");
+
+                        form.refresh();
+
+                    },
+                });
+
+            }
+
+        };
+
+        // form.showMessage() in the colors of the page.
+        const showMessage = function(messageData) {
+
+            messageData.backgroundColor = "rgba(7, 7, 11, 0.9)";
+            form.showMessage(messageData);
+
+            // "that" is the button of the message. The message text is just before it.
+            const btn = that;
+            const lblMessage = btn.elem.previousElementSibling;
+
+            if (lblMessage) {
+                Object.assign(lblMessage.style, {
+                    color: THEME.text,
+                    fontFamily: THEME.font,
+                    fontSize: "18px",
+                    fontWeight: "600",
+                    textAlign: "center",
+                    padding: "6px 24px",
+                });
+            }
+
+            Object.assign(btn.elem.style, {
+                backgroundColor: "#FFFFFF",
+                color: THEME.page,
+                fontFamily: THEME.font,
+                fontWeight: "700",
+                letterSpacing: "0.08em",
+                borderRadius: "999px",
+                padding: "12px 26px",
+                marginTop: "8px",
+            });
+
+        };
+
+        // GROUP: Topic. RadioButton (comp-m3) rows in a box that looks like the inputs.
+        const createTopicGroup = function() {
+
+            const group = VGroup({
+                width: "100%",
+                height: "auto",
+                align: "left top",
+                gap: 4,
+            });
+            Object.assign(group.elem.style, {
+                padding: "14px 8px 8px 8px",
+                borderRadius: "14px",
+                border: "1px solid " + THEME.line,
+                backgroundColor: THEME.field,
+            });
+
+                // LABEL: Title (the same as the titles of the inputs)
+                Label({
+                    text: TOPIC_TITLE,
+                    fontSize: 12,
+                    textColor: THEME.softText,
+                    fontFamily: THEME.font,
+                });
+                Object.assign(that.elem.style, { fontWeight: "700", letterSpacing: "0.1em", marginLeft: "12px", marginBottom: "4px" });
+
+                // GROUP: Radio buttons (two in a row)
+                HGroup({
+                    width: "100%",
+                    height: "auto",
+                    align: "left top",
+                    gap: 4,
+                    wrap: 1,
+                });
+
+                    TOPICS.forEach(function(topic) {
+                        RadioButton({
+                            width: "calc(50% - 2px)", // 2px: half of the gap
+                            group: TOPIC_GROUP,
+                            value: topic.value,
+                            labelText: topic.text,
+                            checked: (topic.value == TOPIC_DEFAULT) ? 1 : 0,
+                            styleName: "modern",
+                            style: getRadioStyle(),
+                        });
+                    });
+
+                endGroup();
+
+            endGroup();
+
+            return group;
+
+        };
+
+        // Returns a new style object for each radio button. (The same way as radio-button-2.htm)
+        // NOTE: Layout and sizes come from the "modern" style package. The colors are for the dark page.
+        // WHY: RadioButton fills missing keys into the given object, so do not share one object.
+        const getRadioStyle = function() {
+            return {
+                box: {
+                    color: "transparent",
+                    round: 10,
+                },
+                hoverBox: {
+                    color: "rgba(255, 255, 255, 0.05)",
+                },
+                checkedBox: {
+                    color: "rgba(139, 92, 246, 0.16)",
+                },
+                hoverCheckedBox: {
+                    color: "rgba(139, 92, 246, 0.24)", // A bit stronger, so mouse over is visible on checked rows too.
+                },
+                mark: { // Unchecked circle
+                    color: "rgba(255, 255, 255, 0.04)",
+                    borderColor: "rgba(255, 255, 255, 0.35)",
+                },
+                hoverMark: {
+                    borderColor: "rgba(255, 255, 255, 0.75)",
+                },
+                checkedMark: { // The circle stays without border, behind the dot.
+                    color: "rgba(139, 92, 246, 0.3)",
+                    borderColor: "transparent",
+                },
+                dot: {
+                    color: THEME.accentLight,
+                },
+                label: {
+                    fontSize: 15,
+                    textColor: THEME.text,
+                    fontFamily: THEME.font,
+                },
+            };
+        };
+
+        // The text of the selected topic, or "".
+        const getTopicText = function() {
+            const selected = RadioButton.getSelected(TOPIC_GROUP);
+            return (selected) ? selected.labelText : "";
+        };
+
+        // Style: The parts of the Form (made for a white page) in the colors of the page.
+        const styleForm = function() {
+
+            // BUTTON: Send (The gradient becomes gray while it is passive: Form puts grayscale on it.)
+            form.btnSend.height = 54;
+            form.btnSend.textColor = "#FFFFFF";
+            Object.assign(form.btnSend.elem.style, {
+                borderRadius: "999px",
+                border: "0",
+                boxShadow: "none",
+                backgroundImage: THEME.gradient,
+                fontFamily: THEME.font,
+                fontSize: "15px",
+                fontWeight: "700",
+                letterSpacing: "0.08em",
+            });
+
+            // LABEL: "3 missing entries" (on the button)
+            form.lblWarning.color = "#FBBF24";
+            form.lblWarning.textColor = THEME.page;
+            form.lblWarning.border = 0;
+            form.lblWarning.round = 40;
+            Object.assign(form.lblWarning.elem.style, { fontFamily: THEME.font, fontSize: "12px", fontWeight: "700" });
+            form.lblWarning.left = form.btnSend.left + 14;
+            form.lblWarning.top = form.btnSend.top + 15;
+
+            // LABEL: The list of the missing entries (on the mouse over the label above)
+            form.lblWarningDetail.color = THEME.popup;
+            form.lblWarningDetail.textColor = THEME.text;
+            form.lblWarningDetail.borderColor = THEME.lineHover;
+            form.lblWarningDetail.round = 10;
+            Object.assign(form.lblWarningDetail.elem.style, { fontFamily: THEME.font, fontSize: "13px", lineHeight: "1.7" });
+
+            // TOOLTIP: On the passive send button
+            if (form.btnSendCover && form.btnSendCover.tooltip) {
+                const tooltip = form.btnSendCover.tooltip;
+                tooltip.lbl_color = THEME.popup;
+                tooltip.lbl_textColor = THEME.text;
+                tooltip.lbl_borderColor = THEME.lineHover;
+                tooltip.lbl_round = 8;
+            }
+
+            // SCROLL BAR: The page (the form scrolls)
+            if (form.scrollBar) styleScrollBar(form.scrollBar);
+
+        };
+
+        // Style: An InputB (or an extended one) in the colors of the page.
+        const styleInput = function(obj) {
+
+            // LABEL: Title
+            obj.title.textColor = THEME.softText;
+            obj.title.fontSize = 12;
+            Object.assign(obj.title.elem.style, { fontFamily: THEME.font, fontWeight: "700", letterSpacing: "0.1em" });
+            obj.inputGroup.gap = 4;
+
+            obj.background.elem.style.transition = "background-color 0.2s, border-color 0.2s";
+
+            // The warning icon is not on the round corner.
+            obj.warningBall.elem.style.right = "12px";
+            obj.warningBall.elem.style.top = "12px";
+
+            // TOOLTIP: The warning of the input
+            obj.warningBall.tooltip.lbl_borderColor = "rgba(0, 0, 0, 0.6)";
+
+            // WHY: colorScheme: dark keeps the browser's autofill colors dark.
+            const textStyle = {
+                color: THEME.text,
+                fontFamily: THEME.font,
+                fontSize: "17px",
+                colorScheme: "dark",
+            };
+
+            if (obj.input) {
+                Object.assign(obj.input.inputElement.style, textStyle);
+            }
+
+            // TextareaB: its <textarea> and its scroll bar
+            if (obj.type == "textarea") {
+                const textarea = obj.inputBox.elem.querySelector("textarea");
+                if (textarea) Object.assign(textarea.style, textStyle, { fontSize: "16px", lineHeight: "1.6" });
+                if (obj.inputBox.scrollBar) styleScrollBar(obj.inputBox.scrollBar);
+            }
+
+            if (obj.unit) obj.unit.elem.style.fontFamily = THEME.font;
+
+        };
+
+        // Style: A ScrollBar in white (It is dark by default.)
+        const styleScrollBar = function(scrollBar) {
+            scrollBar.bar_color = "#FFFFFF";
+            scrollBar.bar_mouseOverColor = "#FFFFFF";
+            ["boxScrollBarTop", "boxScrollBarLeft", "topRightDot", "bottomRightDot", "bottomLeftDot"].forEach(function(key) {
+                if (scrollBar[key]) scrollBar[key].color = "#FFFFFF";
+            });
+        };
+
+        </script>
+
+    </head>
+    <body>
+
+        <!-- HTML content -->
+
+    </body>
+</html>

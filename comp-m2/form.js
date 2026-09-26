@@ -49,7 +49,7 @@ const Form = function(params = {}) {
     params.color = "transparent";
 
     // BOX: Component container
-    const box = startObject(params);
+    let box = startObject(params);
 
     // NOTE: Parent container is box.containerBox
 
@@ -307,6 +307,22 @@ const Form = function(params = {}) {
     };
 
     // *** PUBLIC FUNCTIONS:
+
+    // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
+    const superRemove = box.remove;
+    box.superRemove = superRemove;
+    box.remove = function () {
+
+        if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
+        // WHY: page events are not cleaned by box.remove().
+        page.remove_onResize(pageResized);
+        // WHY: The form itself scrolls, so its scroll bar is on the parent (page), not in the box.
+        if (box.scrollBar) box.scrollBar.remove();
+
+        superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
+        box = null;
+
+    };
 
     box.setPassiveButtonHintText = function(text) {
         box.passiveButtonHintText = text;
@@ -578,8 +594,8 @@ const Form = function(params = {}) {
 
         endBox(); // Form container 
 
-        // SCROLL BAR: Scrollable page container
-        box.scrollBar = ScrollBar({
+        // SCROLL BAR: Scrollable page container (only if basic/scroll-bar.js is loaded)
+        if (typeof ScrollBar === "function") box.scrollBar = ScrollBar({
             scrollableBox: box,
             bar_border: 0,
             bar_round: 2,

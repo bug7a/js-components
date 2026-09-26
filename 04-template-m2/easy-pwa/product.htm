@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ürün - Demo Shop</title>
+    <link rel="stylesheet" href="shop.css">
+</head>
+<body>
+
+    <header>
+        <a href="index.htm">Demo Shop</a>
+        <span class="space"></span>
+        <span class="cart">Sepet (0)</span>
+    </header>
+
+    <main>
+        <div class="detail">
+            <div class="image" id="image" style="background: #CC75AA;"></div>
+            <div>
+                <h1 id="name">Ürün</h1>
+                <p>Bu, easy-pwa.js denemesi için örnek bir ürün sayfası.</p>
+                <button class="buy" type="button">Sepete ekle</button>
+                <p><a href="index.htm">&larr; Tüm ürünler</a></p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const products = {
+            "1": ["Pembe Kupa", "#CC75AA"], "2": ["Yeşil Defter", "#86BA84"],
+            "3": ["Mavi Kalem", "#23ACCF"], "4": ["Sarı Çanta", "#F1C74A"],
+        };
+        const product = products[new URLSearchParams(location.search).get("id")] || products["1"];
+        document.getElementById("name").textContent = product[0];
+        document.getElementById("image").style.background = product[1];
+    </script>
+
+    <script src="easy-pwa.js" defer></script>
+
+</body>
+</html>

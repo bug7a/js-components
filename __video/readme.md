@@ -1,6 +1,7 @@
 # Component videos (YouTube Shorts)
 
 `tabs-short.htm` is a self-playing 9:16 demo of `comp-m4/tabs.js`, made to be screen recorded.
+(`ui-effects-short.htm` is another one, see "UIEffects video" below.)
 The code of every sample is written on the top half and the live component runs on the bottom
 half, where a fake cursor clicks it. The code on the screen is the code that really builds the
 component below it.
@@ -94,6 +95,43 @@ Samples: https://bug7a.github.io/js-components/
 ```
 
 **Pinned comment idea:** the full sample page is `02-comp-m4-samples/tabs.htm`.
+
+## UIEffects video
+
+`ui-effects-short.htm` is the same kind of page for `comp-m4/ui-effects.js` (made from `tabs-short.htm`,
+about 51 seconds). The effects listen to pointer events, so its fake cursor sends real `PointerEvent`s to
+the objects (`enter()`, `click()`, `glide()`, `leave()` in the page): the effect code that runs is the
+real one.
+
+```
+node record.js ui-effects-short.htm ui-effects-short.mp4
+```
+
+| Scene | What it shows |
+|---|---|
+| 1. `press()` | `UIEffects.press(btn, "ripple")`, two clicks at two points |
+| 2. Pick a type | `lift`, `push`, `glow` on three buttons |
+| 3. `fill` | An outline button fills with a color |
+| 4. tilt + spotlight | A card follows the cursor |
+| 5. `focusGroup()` | The other cards step back |
+| 6. `play()` and `loop()` | `shake` on an input, `pulse` on a bell |
+
+**Title:** Hover and press effects in plain JavaScript - no CSS (basic.js)
+
+**Description:**
+
+```
+UIEffects: ripple, lift, push, glow, fill, tilt, spotlight, focus groups and attention
+animations for any basic.js object, in one line of JavaScript. No CSS file, no build step.
+
+Component: comp-m4/ui-effects.js
+Source: https://github.com/bug7a/js-components
+Samples: https://bug7a.github.io/js-components/
+
+#javascript #webdev #frontend #ui #nocss
+```
+
+**Tags (besides the channel defaults):** ui effects, hover effects, button animation, ripple effect, css animation alternative
 
 ## Making one for another component
 

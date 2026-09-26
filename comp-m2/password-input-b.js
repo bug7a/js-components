@@ -120,6 +120,8 @@ const PasswordInputB = function(params = {}) {
     box.superRemove = superRemove;
     box.remove = function () {
         if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
+        // WHY: The tooltip is created after the component is closed, so it is on the parent (page), not in the box.
+        box.btnShowPassword.tooltip.remove();
         box.btnShowPassword.remove();
         superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
         box = null;

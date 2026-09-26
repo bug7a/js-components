@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <title>basic.js Handbook – Build web UIs with plain JavaScript</title>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Learn basic.js step by step: objects, layout, events, motion. Every example runs in the page and can be edited.">
+    <meta name="keywords" content="basic.js, handbook, tutorial, JavaScript UI, vanilla JS, no HTML, no CSS, live examples">
+    <meta name="author" content="Bugra Ozden">
+    <meta name="theme-color" content="#FBFBF9">
+
+    <meta name="robots" content="index, follow, max-image-preview:large">
+
+    <!-- LANGUAGES: The same page in English (https://bug7a.github.io/basic.js-handbook/) and in Turkish (?lang=tr).
+         canonical is added by js/site.js: it is different for each language. -->
+    <link rel="alternate" hreflang="en" href="https://bug7a.github.io/basic.js-handbook/">
+    <link rel="alternate" hreflang="tr" href="https://bug7a.github.io/basic.js-handbook/?lang=tr">
+    <link rel="alternate" hreflang="x-default" href="https://bug7a.github.io/basic.js-handbook/">
+
+    <!-- SEO: The page has two languages at the same address: ?lang=tr / ?lang=en (js/site.js, the default one has no ?lang).
+         The published address is CONFIG.siteURL (js/config.js): js/site.js adds canonical, hreflang and og:url with it.
+         The address is also written below (hreflang, og:url, og:image): link previews do not run JavaScript.
+         The <noscript> part and the JSON-LD are made from js/texts.js and the chapters: keep them the same when the texts change. -->
+
+    <!-- SOCIAL (link preview) -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="basic.js Handbook">
+    <meta property="og:title" content="basic.js Handbook – Build web UIs with plain JavaScript">
+    <meta property="og:description" content="Learn basic.js step by step: objects, layout, events, motion. Every example runs in the page and can be edited.">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="tr_TR">
+    <meta property="og:url" content="https://bug7a.github.io/basic.js-handbook/">
+    <meta property="og:image" content="https://bug7a.github.io/basic.js-handbook/assets/og-image.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="basic.js Handbook – Build web UIs with plain JavaScript">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <!-- STRUCTURED DATA (schema.org) -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Book",
+        "name": "basic.js Handbook",
+        "url": "https://bug7a.github.io/basic.js-handbook/",
+        "description": "Learn basic.js step by step: objects, layout, events, motion. Every example runs in the page and can be edited.",
+        "inLanguage": [
+            "en",
+            "tr"
+        ],
+        "isAccessibleForFree": true,
+        "license": "https://www.apache.org/licenses/LICENSE-2.0",
+        "about": {
+            "@type": "SoftwareSourceCode",
+            "name": "basic.js",
+            "codeRepository": "https://github.com/bug7a/js-components",
+            "programmingLanguage": "JavaScript"
+        },
+        "hasPart": [
+            {
+                "@type": "Chapter",
+                "name": "Getting Started and Philosophy (Introduction)",
+                "position": 1
+            },
+            {
+                "@type": "Chapter",
+                "name": "Quick start",
+                "position": 2
+            },
+            {
+                "@type": "Chapter",
+                "name": "Box (Box Object)",
+                "position": 3
+            },
+            {
+                "@type": "Chapter",
+                "name": "Label (Text Object)",
+                "position": 4
+            },
+            {
+                "@type": "Chapter",
+                "name": "Image / Icon (Image Object)",
+                "position": 5
+            },
+            {
+                "@type": "Chapter",
+                "name": "Button (Button Object)",
+                "position": 6
+            },
+            {
+                "@type": "Chapter",
+                "name": "Input / TextBox (Text Input Object)",
+                "position": 7
+            },
+            {
+                "@type": "Chapter",
+                "name": "Common Properties and Methods",
+                "position": 8
+            },
+            {
+                "@type": "Chapter",
+                "name": "Autolayout",
+                "position": 9
+            },
+            {
+                "@type": "Chapter",
+                "name": "Page (Page Object)",
+                "position": 10
+            },
+            {
+                "@type": "Chapter",
+                "name": "Motion (Movement and Animations)",
+                "position": 11
+            },
+            {
+                "@type": "Chapter",
+                "name": "BSound (Sound Object)",
+                "position": 12
+            },
+            {
+                "@type": "Chapter",
+                "name": "Utility Functions (Utilities)",
+                "position": 13
+            },
+            {
+                "@type": "Chapter",
+                "name": "Other Functions",
+                "position": 14
+            },
+            {
+                "@type": "Chapter",
+                "name": "Useful Examples",
+                "position": 15
+            },
+            {
+                "@type": "Chapter",
+                "name": "Release Notes (What is New?)",
+                "position": 16
+            }
+        ],
+        "author": {
+            "@type": "Person",
+            "name": "Buğra Özden",
+            "url": "https://bug7a.github.io/",
+            "sameAs": [
+                "https://github.com/bug7a/",
+                "https://www.linkedin.com/in/bugra-ozden/"
+            ]
+        }
+    }
+    </script>
+
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23141414'/%3E%3Cpath d='M9 22.5A2 2 0 0 1 11 20.5h12V8H11a2 2 0 0 0-2 2z M9 22.5a2 2 0 0 0 2 2h12v-4' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+    <!-- APP (PWA): easy-pwa.js (04-template-m2/easy-pwa) with the offline mode: the handbook also opens
+         without internet. Settings at the top of easy-pwa.js; its offlineFiles list is written by _update-copies.sh. -->
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="icon/apple-touch-icon.png">
+    <script src="easy-pwa.js" defer></script>
+
+    <!-- LIBRARY FILES: copies in basic/ (_update-copies.sh). The site works on its own, outside the repository. -->
+    <link rel="preload" href="basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="basic/basic.min.css">
+    <script src="basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES: copies in comp/ (_update-copies.sh) -->
+    <script src="comp/web-view.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="comp/search-results.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="comp/toast.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- SITE FILES -->
+    <script src="js/config.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/texts.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/theme.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/markdown.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/code-highlight.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/code-block.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/doc-view.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/layout.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/site.js" type="text/javascript" charset="utf-8"></script>
+
+    <!--
+
+    /* Bismillah */
+
+    BASIC.JS HANDBOOK WEBSITE
+    - basic.js el kitabını web sayfası olarak gösterir. Metinler __handbook/english ve __handbook/turkce
+      klasörlerindeki Markdown dosyalarından okunur; kod örnekleri sayfanın içinde çalıştırılabilir.
+    - Arayüzün tamamı basic.js ile, saf JavaScript ile çizilir. Framework yoktur.
+    - Bölüm sırası: js/config.js  |  Arayüz yazıları ve Hızlı başlangıç: js/texts.js
+    - Sayfa akışı: js/site.js -> start()
+    - Dosyalar fetch ile okunur: sayfayı bir web sunucusu ile açın (VS Code Live Server).
+
+    -->
+
+    <style>
+
+        /* JavaScript kapalı ise gösterilecek metin */
+        .noscript-box {
+            position: absolute;
+            left: 0px;
+            top: 0px;
+            height: 100%;
+            overflow: auto; /* WHY: basic.css turns off the scrolling of <body>. */
+            width: 100%;
+            padding: 40px 20px;
+            box-sizing: border-box;
+            font-family: opensans;
+            font-size: 16px;
+            line-height: 1.6;
+            color: rgba(0, 0, 0, 0.82);
+            text-align: center;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <noscript>
+        <div class="noscript-box">
+            <div style="max-width: 760px; margin: 0 auto; text-align: left;">
+                <p><a href="?lang=tr" hreflang="tr" lang="tr" style="color: inherit;">Türkçe</a></p>
+                <h1>basic.js Handbook</h1>
+                <p>Learn basic.js step by step: objects, layout, events, motion. Every example runs in the page and can be edited.</p>
+                <h2>Getting started</h2>
+                <ul>
+                    <li><a href="#/introduction" style="color: inherit;">Getting Started and Philosophy (Introduction)</a></li>
+                    <li><a href="#/quick-start" style="color: inherit;">Quick start</a></li>
+                </ul>
+                <h2>Objects</h2>
+                <ul>
+                    <li><a href="#/box" style="color: inherit;">Box (Box Object)</a></li>
+                    <li><a href="#/label" style="color: inherit;">Label (Text Object)</a></li>
+                    <li><a href="#/image" style="color: inherit;">Image / Icon (Image Object)</a></li>
+                    <li><a href="#/button" style="color: inherit;">Button (Button Object)</a></li>
+                    <li><a href="#/input" style="color: inherit;">Input / TextBox (Text Input Object)</a></li>
+                </ul>
+                <h2>Layout and page</h2>
+                <ul>
+                    <li><a href="#/common-properties" style="color: inherit;">Common Properties and Methods</a></li>
+                    <li><a href="#/autolayout" style="color: inherit;">Autolayout</a></li>
+                    <li><a href="#/page" style="color: inherit;">Page (Page Object)</a></li>
+                </ul>
+                <h2>Motion and more</h2>
+                <ul>
+                    <li><a href="#/motion" style="color: inherit;">Motion (Movement and Animations)</a></li>
+                    <li><a href="#/sound" style="color: inherit;">BSound (Sound Object)</a></li>
+                    <li><a href="#/utilities" style="color: inherit;">Utility Functions (Utilities)</a></li>
+                    <li><a href="#/other-functions" style="color: inherit;">Other Functions</a></li>
+                    <li><a href="#/useful-examples" style="color: inherit;">Useful Examples</a></li>
+                    <li><a href="#/what-is-new" style="color: inherit;">Release Notes (What is New?)</a></li>
+                </ul>
+                <p><a href="https://github.com/bug7a/js-components/tree/main/__handbook" style="color: inherit;">The handbook on GitHub (Markdown)</a></p>
+            </div>
+        </div>
+    </noscript>
+
+</body>
+
+</html>

@@ -9,7 +9,8 @@ UI COMPONENT TEMPLATE
 - load(url), loadHtml(html) (srcdoc), reload(), clear(). The iframe always fills the box (also with width: "100%").
 - Loading overlay (spinner) until the page is ready, a placeholder text when nothing is loaded, and showError(text)
   for your own error messages. A same origin URL that fails (404, missing file) calls onError. Other origins can not be
-  checked by the browser; loadTimeout -> onTimeout helps for pages that never load.
+  checked by the browser; loadTimeout -> onTimeout helps for pages that never load. Only the page opened by load() is
+  checked: a link in the page that opens another site in the iframe (Ex: a payment page) calls onLoad, not onError.
 - Messages: postMessage(data) sends to the page, onMessage(self, data, event) gets the messages of the page.
   Only the messages of this iframe are delivered. (Ex: modules in js-admin-panel)
 - Same origin pages: getWindow(), getDocument(), autoHeight: 1 (the box grows with the page).
@@ -56,7 +57,7 @@ const WebViewDefaults = {
     placeholderText: "No page", // Shown when nothing is loaded
     loadTimeout: 0, // Seconds. 0: No timeout. Ex: 15 -> onTimeout is called when the page is not loaded in 15 seconds.
     onLoad: function (self) { },
-    onError: function (self) { }, // Same origin URL that could not be loaded (the browser shows its error page)
+    onError: function (self) { }, // Same origin URL of load() that could not be loaded (the browser shows its error page)
     onTimeout: function (self) { },
     onMessage: function (self, data, event) { }, // Messages from the page (window.parent.postMessage)
     onClick: function (self) { }, // interactive: 0 -> click on the cover
@@ -182,7 +183,9 @@ const WebView = function (params = {}) {
         // WHY: Chrome fires "load" for about:blank too. Nothing is loaded then.
         if (!box.url && !box.htmlText) return;
         // WHY: A failed same origin page (404, missing file) also fires "load", with the error page of the browser. Its document can not be read.
-        if (box.url && isSameOrigin(box.url) && !box.getDocument()) {
+        //      Only the page opened by load() is checked (isLoading). A link in the page can open another site in the
+        //      iframe (a payment or 3D Secure page of a shop); its document can not be read either, but it is not an error.
+        if (isLoading && box.url && isSameOrigin(box.url) && !box.getDocument()) {
             setLoading(0);
             box.onError(box);
             return;

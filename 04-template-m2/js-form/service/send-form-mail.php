@@ -6,11 +6,12 @@
 Form Mail Service - v26.09
 
 - Sends the data of a js-form page as an e-mail, with the same style as the forms.
-- One file, no dependencies. It only needs PHP 7.4+ and a working mail() function.
+- Sends over SMTP with PHPMailer (the "PHPMailer" folder next to this file), so the server's
+  mail() function is not needed. MAIL_METHOD "mail" uses mail() instead. It needs PHP 7.4+.
 
 USAGE:
-1. Write your e-mail address to TO_EMAIL below. (The other settings are optional.)
-2. Upload this file to your server. Ex: https://your-site.com/service/send-form-mail.php
+1. Write your e-mail address to TO_EMAIL and your mail account to the SMTP settings below.
+2. Upload this file and the "PHPMailer" folder to your server. Ex: https://your-site.com/service/send-form-mail.php
 3. Write that URL to the SERVICE_URL constant of the form page. Nothing else is needed.
 
 WHAT IT ACCEPTS:
@@ -37,9 +38,30 @@ Webpage: https://bug7a.github.io/js-components/
 // Where the form mails are sent. More than one address: "a@site.com, b@site.com"
 define("TO_EMAIL", "you@your-site.com");
 
-// The sender of the mail. Empty: "no-reply@<your server host>"
-// WHY: Most servers only send mails from their own domain. Do not write the visitor's address here;
-//      the visitor's address is put into Reply-To, so "Reply" in your mail program works.
+// How the mail is sent:
+// "smtp": logs in to a mail account and sends from it (PHPMailer). Works when mail() is closed.
+// "mail": the PHP mail() function of the server.
+define("MAIL_METHOD", "smtp");
+
+// SMTP: the mail account the mails are sent from. (Create one in your hosting panel, ex: no-reply@your-site.com)
+// The host is in the "Mail client settings" of the account. Usually "mail.your-site.com" (or "localhost").
+define("SMTP_HOST", "mail.your-site.com");
+define("SMTP_USER", "no-reply@your-site.com");
+define("SMTP_PASSWORD", "");
+// "ssl" + 465 or "tls" + 587. ("" + 25: no encryption, only for "localhost")
+define("SMTP_SECURE", "ssl");
+define("SMTP_PORT", 465);
+// WHY: On shared hosting "mail.your-site.com" often has the certificate of the server's own name,
+//      and the connection stops with a certificate error. false skips that check. Keep true if it works.
+define("SMTP_VERIFY_CERTIFICATE", true);
+
+// true: the error answer also tells why the mail could not be sent (SMTP error), and the
+// address ?check=smtp logs in to the account without sending a mail. Set false when it works.
+define("DEBUG_MODE", false);
+
+// The sender of the mail. Empty: SMTP_USER (smtp) or "no-reply@<your server host>" (mail)
+// WHY: Most servers only send mails from their own domain (with SMTP: from the account that logs in).
+//      Do not write the visitor's address here; it is put into Reply-To, so "Reply" in your mail program works.
 define("FROM_EMAIL", "");
 define("FROM_NAME", "Web Form");
 
@@ -111,30 +133,40 @@ if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
 
 // Open the address in a browser to see if the service is running.
 if ($_SERVER["REQUEST_METHOD"] === "GET") {
+
+    // ?check=smtp : logs in to the SMTP account, sends nothing. (Only in DEBUG_MODE)
+    if (isset($_GET["check"]) && $_GET["check"] === "smtp") {
+        if (!DEBUG_MODE) answer(403, ["ok" => false, "error" => "Turn DEBUG_MODE on to check the SMTP login."]);
+        $setupError = findSetupError();
+        if ($setupError !== "") answer(500, ["ok" => false, "error" => $setupError]);
+        $loginError = checkSmtpLogin();
+        answer(($loginError === "") ? 200 : 500, ($loginError === "")
+            ? ["ok" => true, "smtp" => "The login works: " . SMTP_USER . " @ " . SMTP_HOST . ":" . SMTP_PORT, "setupWarning" => findSetupWarning()]
+            : ["ok" => false, "error" => $loginError]);
+    }
+
     answer(200, [
         "ok" => true,
         "service" => "js-form mail service",
         "version" => "26.09",
         "php" => PHP_VERSION,
+        "mailMethod" => MAIL_METHOD,
+        "phpMailerFound" => file_exists(__DIR__ . "/PHPMailer/PHPMailer.php"),
         "mailFunction" => function_exists("mail"),
         "toEmailSet" => (TO_EMAIL !== "" && TO_EMAIL !== "you@your-site.com"),
+        "setupError" => findSetupError(),
+        "setupWarning" => findSetupWarning(),
     ]);
+
 }
 
 if ($_SERVER["REQUEST_METHOD"] !== "POST") {
     answer(405, ["ok" => false, "error" => "Only POST is accepted."]);
 }
 
-if (TO_EMAIL === "" || TO_EMAIL === "you@your-site.com") {
-    answer(500, ["ok" => false, "error" => "The service is not ready: write your address to TO_EMAIL."]);
-}
-
-// WHY: Many hosting companies (LiteSpeed / cPanel are the usual ones) do not give the mail()
-//      function and want SMTP instead. Calling it then stops PHP with a fatal error and the
-//      answer is an empty 500: the form only says "could not be sent" and nothing tells you why.
-//      Open this address in a browser: "mailFunction" says whether the server has it.
-if (!function_exists("mail")) {
-    answer(500, ["ok" => false, "error" => "This server does not have the PHP mail() function. Ask your hosting company to turn it on, or send the mail over SMTP."]);
+$setupError = findSetupError();
+if ($setupError !== "") {
+    answer(500, ["ok" => false, "error" => $setupError]);
 }
 
 // *** READ THE POSTED DATA:
@@ -292,6 +324,10 @@ $htmlBody = buildHtmlMail($formTitle, $reference, $fields, $attachments);
 $textBody = buildTextMail($formTitle, $reference, $fields, $attachments);
 
 $fromEmail = FROM_EMAIL;
+if ($fromEmail === "" && MAIL_METHOD === "smtp") {
+    // WHY: Most SMTP servers only send from the account that logged in.
+    $fromEmail = filter_var(SMTP_USER, FILTER_VALIDATE_EMAIL) ? SMTP_USER : "";
+}
 if ($fromEmail === "") {
     $host = isset($_SERVER["HTTP_HOST"]) ? (string)$_SERVER["HTTP_HOST"] : "localhost";
     $host = explode(":", $host)[0]; // WHY: "site.com:8080" -> "site.com" (the port is not part of the address)
@@ -301,10 +337,16 @@ if ($fromEmail === "") {
     $fromEmail = "no-reply@" . $host;
 }
 
-$isSent = sendMail(TO_EMAIL, $subject, $htmlBody, $textBody, $fromEmail, FROM_NAME, $replyTo, $attachments);
+if (MAIL_METHOD === "smtp") {
+    $sendError = sendMailWithSmtp(TO_EMAIL, $subject, $htmlBody, $textBody, $fromEmail, FROM_NAME, $replyTo, $attachments);
+} else {
+    $sendError = sendMail(TO_EMAIL, $subject, $htmlBody, $textBody, $fromEmail, FROM_NAME, $replyTo, $attachments) ? "" : "mail() returned false.";
+}
 
-if (!$isSent) {
-    answer(500, ["ok" => false, "error" => "The mail could not be sent by the server."]);
+if ($sendError !== "") {
+    // WHY: The visitor does not need the SMTP details, but you do: they are in the PHP error log.
+    error_log("js-form mail service: " . $sendError);
+    answer(500, ["ok" => false, "error" => "The mail could not be sent by the server." . (DEBUG_MODE ? " " . $sendError : "")]);
 }
 
 answer(200, ["ok" => true, "reference" => $reference, "ticketNumber" => $reference]);
@@ -322,6 +364,55 @@ function answer($status, $data) {
     }
 
     exit;
+
+}
+
+// What is missing in the settings or on the server. "": ready.
+function findSetupError() {
+
+    if (TO_EMAIL === "" || TO_EMAIL === "you@your-site.com") {
+        return "The service is not ready: write your address to TO_EMAIL.";
+    }
+
+    if (MAIL_METHOD === "smtp") {
+        if (!file_exists(__DIR__ . "/PHPMailer/PHPMailer.php") || !file_exists(__DIR__ . "/PHPMailer/SMTP.php")) {
+            return "The PHPMailer folder was not found next to send-form-mail.php. Upload it too.";
+        }
+        if (SMTP_HOST === "" || SMTP_HOST === "mail.your-site.com" || SMTP_USER === "" || SMTP_PASSWORD === "") {
+            return "The service is not ready: write your mail account to the SMTP settings.";
+        }
+        return "";
+    }
+
+    if (MAIL_METHOD === "mail") {
+        // WHY: Many hosting companies (LiteSpeed / cPanel are the usual ones) do not give the mail()
+        //      function. Calling it then stops PHP with a fatal error and the answer is an empty 500.
+        if (!function_exists("mail")) {
+            return "This server does not have the PHP mail() function. Use MAIL_METHOD \"smtp\".";
+        }
+        return "";
+    }
+
+    return "MAIL_METHOD must be \"smtp\" or \"mail\".";
+
+}
+
+// A setting that works but may lose the mails. "": nothing to say. (It does not stop the sending.)
+function findSetupWarning() {
+
+    if (MAIL_METHOD !== "smtp" || FROM_EMAIL === "") return "";
+
+    // WHY: The SMTP server accepts the mail and the service answers "ok", but a sender from another
+    //      domain (ex: a gmail.com address sent from your hosting) fails the SPF check of that domain.
+    //      The receiver (Gmail...) then drops the mail or puts it into spam, and nothing shows an error.
+    $fromDomain = strtolower(substr(strrchr(FROM_EMAIL, "@"), 1));
+    $userDomain = strtolower(substr(strrchr(SMTP_USER, "@"), 1));
+
+    if ($fromDomain !== "" && $userDomain !== "" && $fromDomain !== $userDomain) {
+        return "FROM_EMAIL (" . $fromDomain . ") is not on the domain of SMTP_USER (" . $userDomain . "). The mails may not arrive: leave FROM_EMAIL empty.";
+    }
+
+    return "";
 
 }
 
@@ -700,6 +791,86 @@ function formatSize($bytes) {
 
 // *** MAIL SENDING:
 
+// A PHPMailer ready to send over SMTP with the settings. (It throws on errors.)
+function createSmtpMailer() {
+
+    require_once __DIR__ . "/PHPMailer/Exception.php";
+    require_once __DIR__ . "/PHPMailer/PHPMailer.php";
+    require_once __DIR__ . "/PHPMailer/SMTP.php";
+
+    $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
+
+    $mail->isSMTP();
+    $mail->Host = SMTP_HOST;
+    $mail->Port = (int)SMTP_PORT;
+    $mail->SMTPAuth = true;
+    $mail->Username = SMTP_USER;
+    $mail->Password = SMTP_PASSWORD;
+    $mail->SMTPSecure = SMTP_SECURE; // "ssl", "tls" or ""
+    $mail->Timeout = 20; // WHY: The default is 300 seconds; the form would wait that long for a wrong host.
+    $mail->CharSet = "UTF-8";
+    $mail->Encoding = "base64";
+    $mail->XMailer = "js-form mail service";
+
+    if (!SMTP_VERIFY_CERTIFICATE) {
+        $mail->SMTPOptions = ["ssl" => ["verify_peer" => false, "verify_peer_name" => false, "allow_self_signed" => true]];
+    }
+
+    return $mail;
+
+}
+
+// Logs in to the SMTP account and closes the connection. "": the login works.
+function checkSmtpLogin() {
+
+    $mail = null;
+
+    try {
+        $mail = createSmtpMailer();
+        $mail->smtpConnect();
+        $mail->smtpClose();
+        return "";
+    } catch (\Throwable $e) {
+        return ($mail !== null && $mail->ErrorInfo !== "") ? $mail->ErrorInfo : $e->getMessage();
+    }
+
+}
+
+// Sends the mail over SMTP. "": sent, otherwise the error.
+function sendMailWithSmtp($to, $subject, $htmlBody, $textBody, $fromEmail, $fromName, $replyTo, $attachments) {
+
+    $mail = null;
+
+    try {
+
+        $mail = createSmtpMailer();
+
+        // WHY: PHPMailer removes new lines and encodes UTF-8 in the headers itself.
+        $mail->setFrom($fromEmail, $fromName);
+        foreach (explode(",", $to) as $address) {
+            if (trim($address) !== "") $mail->addAddress(trim($address));
+        }
+        if ($replyTo !== "") $mail->addReplyTo($replyTo);
+
+        $mail->Subject = $subject;
+        $mail->isHTML(true);
+        $mail->Body = $htmlBody;
+        $mail->AltBody = $textBody;
+
+        foreach ($attachments as $file) {
+            $mail->addStringAttachment($file["content"], $file["name"], "base64", $file["type"]);
+        }
+
+        $mail->send();
+        return "";
+
+    } catch (\Throwable $e) {
+        return ($mail !== null && $mail->ErrorInfo !== "") ? $mail->ErrorInfo : $e->getMessage();
+    }
+
+}
+
+// Sends the mail with the PHP mail() function of the server. (MAIL_METHOD "mail")
 function sendMail($to, $subject, $htmlBody, $textBody, $fromEmail, $fromName, $replyTo, $attachments) {
 
     $to = cleanHeader($to);

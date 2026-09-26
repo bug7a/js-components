@@ -1,374 +1,427 @@
-# Easy PWA
+# Easy PWA Script
 
-**Easily turns a web site or local web files (.htm, css, js) into a PWA (Progressive Web App): an app
-that can be installed on phones and computers.**
+One file that makes a web site an installable app (PWA): an e-commerce site, a company site, documentation,
+a tool or a small web app. It is added to the pages of the site itself, so payment pages, "Sign in with Google"
+and links work like on the normal site.
 
-When a user opens the app's address, an **install toast** appears at the bottom. One tap (on iOS:
-**Share > Add to Home Screen**) installs the app; from then on it opens from the home screen like a
-normal app, without the browser bar.
+No library is needed (no basic.js, no framework, no build step). The banner, the notice and the launch screen are
+drawn in a Shadow DOM: the CSS of the site does not change them and they do not change the site.
 
-**Live example:** [https://bug7a.github.io/pwa/](https://bug7a.github.io/pwa/) (open it on a phone to see the install toast)
+[Türkçe](#türkçe)
 
-No coding needed: change the settings at the top of `index.htm` and publish the folder.
-Written with basic.js; no build tool or package manager required.
+## What it does
 
-[Türkçe açıklama aşağıda.](#türkçe)
+- **Installable app:** adds the manifest link and the iOS meta tags when the page does not have them, and registers
+  a service worker. The same file is the page script **and** the service worker.
+- **Install banner** at the bottom center (phones and tablets): an "Install" button on Android (and on desktop Chrome /
+  Edge with `installBannerOnDesktop`), the "Share > Add to Home Screen" help on iPhone / iPad.
+- **"No internet connection" page** when a page can not be opened. It opens the page again by itself when the
+  connection comes back.
+- **Notice at the top** while the connection is lost.
+- **Two ways to work:**
+  - **Online** (default): no file of the site is saved. Right for shops: cart, account and prices are never old.
+  - **Offline mode** (`offlineMode: true`): the files of the site are saved while they are used, so the site also
+    opens without internet. Right for documentation, tools and small apps.
+- **Optional:** a launch screen in the installed app, a light / dark theme for its screens, a page timeout for weak
+  connections, and an API for your own install button.
+- **Texts** in Turkish or English by the language of the browser (or your own texts in `TEXTS`).
 
-## Quick start
+## Files
 
-1. **`index.htm` > settings**:
-   - `APP_ID`: a short name unique to your app (e.g. `"expense"`).
-   - `CONTENT_URL`: the site address to show (`"https://..."`) or a local page (`"content/index.htm"`).
-   - `THEME`: `"dark"` (default) or `"light"`. The colors of each theme are in `THEMES`. With
-     `"light"`, also set `background_color` and `theme_color` in `manifest.webmanifest` to `THEMES.light.page`
-     (the splash screen of the installed app).
-   - `<title>` and `apple-mobile-web-app-title`: the name of the app.
-2. **`manifest.webmanifest`**: `name`, `short_name`, `description`, `theme_color`, `background_color`.
-3. **`icon/`**: replace the PNGs with your own icons (same names and sizes).
-   For `icon-maskable-512.png`, keep the important part of the icon inside the central 80% circle.
-4. Upload the folder to a place with **`https://`** (GitHub Pages, your own server...). The folder
-   contains its own copies of `basic/` and `comp/`, so it can be published on its own.
-5. Open the address on a phone: the install toast appears, install the app.
-
-On every later release, don't forget to increase `CACHE_VERSION` in `sw.js` (see [Publishing a new version](#publishing-a-new-version)).
-
-## How it works
-
-- The content opens inside a full-screen `WebView` (iframe). Until it is ready, a `LoadingScreen` in the
-  theme colors covers the app (`LOADING_ICON`, `LOADING_TITLE`, `LOADING_MESSAGE`).
-- `sw.js` (the service worker) caches the app's files, so the app opens even without internet.
-- Without internet, a **No internet connection** screen is shown instead of the content, or just a
-  warning toast (see `APP_MODE`).
-- On startup, an install toast for the user's operating system appears at the bottom center.
-
-## Files in the folder
-
-| File | Purpose |
+| File | |
 |---|---|
-| `index.htm` | The app page. Settings (`APP_ID`, `CONTENT_URL`, texts), web view, offline screen, install toast and service worker registration are here. |
-| `content/` | Sample local content (`index.htm`). With `CONTENT_URL = "content/index.htm"` this page opens. You can also put a multi-file project here with its own css/js/image files. |
-| `manifest.webmanifest` | The app's identity: name, icons, start address, colors, full-screen mode. |
-| `sw.js` | Service worker. Caches the files and opens the app from the cache when there is no internet. |
-| `icon/` | App icons (192, 512, maskable 512, apple-touch 180, favicon 32). |
-| `comp/` | Components used: `web-view.min.js`, `toast.min.js` and `loading-screen.min.js` (copies from comp-m4). |
-| `basic/` | A copy of the basic.js library in this folder. |
+| `easy-pwa.js` | The page script **and** the service worker (the same file). Settings at the top (`SETTINGS`). |
+| `manifest.webmanifest` | Name, colors and icons of the app |
+| `icon/` | App icons (192, 512, maskable 512, apple-touch-icon 180) |
+| `index.htm`, `product.htm`, `shop.css` | A demo shop for tests. Do not copy them to your site. |
 
-## Content to show
+## Setup
 
-```js
-const CONTENT_URL = "https://bug7a.github.io/expense/";  // A site address
-// const CONTENT_URL = "content/index.htm";              // The local project in the content/ folder
-```
+1. Copy `easy-pwa.js`, `manifest.webmanifest` and the `icon/` folder to the folder of the site:
+   - **The whole site:** the **root folder** (`site.com/easy-pwa.js`).
+   - **A site in a folder** (Ex: `site.com/docs/`): that folder (`site.com/docs/easy-pwa.js`).
 
-- **Site address**: the page opens in an iframe. Because the browser can not inspect another site,
-  if it does not load within `LOAD_TIMEOUT` seconds it is treated as a connection problem and the
-  offline screen is shown. The site must allow being shown in an iframe: sites that forbid it with
-  `X-Frame-Options` or `Content-Security-Policy: frame-ancestors` (most large sites) appear blank.
-  Your own site (e.g. on GitHub Pages) usually works.
-- **Local page** (like `content/index.htm`): also add the file to the `APP_SHELL` list in `sw.js`,
-  so it opens without internet. If you put a multi-file project in `content/` (its own css/js/image
-  files), add all of those files to `APP_SHELL`.
+   A service worker only controls the pages under its own folder.
+2. Change `manifest.webmanifest`: `name`, `short_name`, `description`, `lang`, `background_color` (the splash screen
+   of Android), `theme_color`, `start_url` (the page the app opens with). Its addresses are relative (`"scope": "./"`, `"id": "./"`,
+   `"start_url": "./index.htm?source=pwa"`), so the same file works in the root and in a folder.
+   (`?source=pwa` shows the app visits in your statistics.)
+3. Change your icons in `icon/` (same file names and sizes). For `icon-maskable-512.png`, keep the important part of
+   the icon inside the central 80% circle.
+4. Change `SETTINGS` at the top of `easy-pwa.js`: at least `appName` and `themeColor`; see the table below.
+5. Add this line to **every page** (usually to the footer of the theme):
 
-## Does the content need internet?
+   ```html
+   <script src="/easy-pwa.js" defer></script>          <!-- the whole site -->
+   <script src="/docs/easy-pwa.js" defer></script>     <!-- a site in site.com/docs/ -->
+   ```
 
-`APP_MODE` (`index.htm`) sets how much the content depends on a connection:
+   The address must point to the folder of step 1, on the same site. (Not a CDN, not a theme folder.)
+6. The site must be `https://` (`localhost` works for tests).
 
-```js
-const APP_MODE = "online";   // Default.
-// const APP_MODE = "offline";
-```
+## Settings
 
-- **`"online"`**: the content needs internet (like a web site). With no connection the content is
-  hidden and the "No internet connection" screen is shown.
-- **`"offline"`**: the content works without internet (a local page, or a site that caches itself).
-  With no connection the content still opens; a toast just says there is no internet.
+All of them are in `SETTINGS` at the top of `easy-pwa.js`.
 
-## Install toast
+| Setting | Default | |
+|---|---|---|
+| `appName` | `"Demo Shop"` | The name under the icon on iPhone and in the install banner |
+| `manifestUrl`, `iconUrl`, `appleTouchIconUrl` | `manifest.webmanifest`, `icon/...` | Relative to `easy-pwa.js`. `iconUrl: ""`: no icon in the banner |
+| `themeColor` | `"#141414"` | The color of the browser bar (only when the page has no `<meta name="theme-color">`) |
+| `language` | `"auto"` | Texts: `"auto"` (Turkish for a Turkish browser, English for the others), `"tr"`, `"en"` |
+| `serviceWorker` | `true` | `false` removes the service worker from the visitors' browsers (see "Turning it off") |
+| `replaceOtherServiceWorker` | `false` | The site already has a service worker in the same folder: `false` keeps it, `true` replaces it |
+| `offlinePage` | `true` | The "No internet connection" page |
+| `pageTimeout` | `0` | ms. A page that does not come in this time shows the "No internet connection" page. `0`: off |
+| `offlineNotice` | `true` | The notice at the top while the connection is lost |
+| `offlineMode` | `false` | `true`: the files of the site are saved (see "Offline mode") |
+| `offlineFiles` | `[]` | Saved at the first visit (offline mode) |
+| `offlineExcludePaths` | `[]` | Never saved (offline mode). Ex: `["/cart", "/account", "/api/"]` |
+| `offlineNetworkTimeout` | `4000` | ms. On a slow network the saved copy is shown after this time (offline mode). `0`: always wait |
+| `offlineCacheVersion` | `1` | Change it (2, 3...) to delete all the saved files of the app one time |
+| `installBanner` | `true` | The install banner |
+| `installBannerOnDesktop` | `false` | Also on a computer (Chrome / Edge) |
+| `installBannerDelay` | `3000` | ms after the page is opened |
+| `installBannerHideDays` | `14` | Closed by the visitor: it comes back after this many days |
+| `installBannerHiddenPaths` | `[]` | No banner on these pages. Ex: `["/cart", "/checkout"]` |
+| `theme` | `"auto"` | Colors of the "No internet connection" page and of the launch screen: `"auto"` (by the device), `"light"`, `"dark"` |
+| `themes` | light / dark | `page`, `title`, `text`, `spinner` of each theme |
+| `launchScreen` | `false` | A launch screen in the installed app (see "Launch screen") |
+| `launchScreenIconUrl` | `icon/icon-192.png` | Relative to `easy-pwa.js`. `""`: no icon |
+| `launchScreenTitle` | `""` | `""`: `appName`. `" "`: no title |
+| `launchScreenMessage` | `""` | Ex: `"Loading..."` |
+| `launchScreenMinDuration` | `600` | ms. Not a short flash on a fast page |
+| `launchScreenHideByCode` | `false` | `true`: stays until the site calls `EasyPWA.hideLaunchScreen()` (max. 10 s) |
+| `launchScreenInBrowser` | `false` | `true`: also in the browser (for tests) |
+| `colors` | | The install banner, the notice and the button of the "No internet connection" page |
 
-`INSTALL_TOAST_DELAY` ms after the app opens, the install toast appears at the bottom center:
+The texts are in `TEXTS` below `SETTINGS` (`tr`, `en`).
 
-- **Chrome / Edge (Android and desktop)**: the browser fires `beforeinstallprompt`; the toast shows
-  an **Install** button that opens the browser's install dialog. With `ALLOW_DESKTOP_INSTALL = false`
-  the toast only appears on phones and tablets (`isMobile()`).
-- **iOS Safari**: `beforeinstallprompt` is not supported. The toast shows the title **Add to Home
-  Screen** and the text "Tap the Share button below, then choose Add to Home Screen."
-  (iPad is also detected with `navigator.maxTouchPoints`; iPadOS reports itself as "Macintosh".)
-  Not affected by `ALLOW_DESKTOP_INSTALL`.
-- If the app is already installed and opened from the home screen (`display-mode: standalone`),
-  no toast appears.
+## Two examples
 
-The texts are in the settings (`INSTALL_TITLE`, `INSTALL_MESSAGE`, `INSTALL_BUTTON_TEXT`,
-`IOS_INSTALL_TITLE`, `IOS_INSTALL_MESSAGE`). The meta tags iOS needs (`apple-mobile-web-app-*`,
-`apple-touch-icon`) are already in `index.htm`.
-
-## Without internet
-
-**Offline screen** (`"online"` mode). The texts and the icon are at the top of `index.htm`:
-
-```js
-const OFFLINE_TITLE = "No internet connection";
-const OFFLINE_MESSAGE = "Please check your internet connection. ...";
-const OFFLINE_BUTTON_TEXT = "Try again";
-const OFFLINE_ICON_SVG = "<svg ...>";   // SVG, not a file: it shows offline too
-```
-
-The screen is updated on the `online` / `offline` events, on a web view timeout and by the
-**Try again** button. When the connection returns, the content reloads by itself.
-
-**Connection toast** (`"offline"` mode). The content stays open; when the connection is lost (on
-startup or on the `offline` event) this toast appears:
+**A shop (online only):**
 
 ```js
-const NO_CONNECTION_TITLE = "No internet connection";
-const NO_CONNECTION_MESSAGE = "You are offline. Some features may not work.";
+appName: "My Shop",
+themeColor: "#1F2326",
+offlineMode: false,                              // prices, stock and the cart are never old
+installBannerHiddenPaths: ["/cart", "/checkout"],
+pageTimeout: 15000,                              // a page that does not come in 15 s: "No internet connection"
 ```
 
-## Running and testing
-
-The service worker **only works on `https://` or `localhost`**.
-If you open the file by double-clicking (`file://`), the page shows but the PWA features are off.
-
-- **VS Code Live Server**: right-click `index.htm`, "Open with Live Server" (port 5505).
-- **Terminal**: in this folder run `python3 -m http.server 5599`, then open `http://localhost:5599/index.htm`.
-
-Testing in Chrome:
-
-1. Open the page, `F12` > **Application** tab.
-2. **Manifest**: the icons and "Installability" should show no warnings.
-3. **Service Workers**: the status should be `activated and is running`.
-4. **Cache Storage** > `pwa:app-example:v1.1.5` (`APP_ID` + `CACHE_VERSION`): all files should be listed.
-5. Offline test: choose `Offline` in the **Network** tab and reload. The app should open and show the
-   **No internet connection** screen instead of the content. When the connection returns, the content loads by itself.
-
-## Publishing a new version
-
-The browser keeps using the files cached by `sw.js`; if `sw.js` does not change, it does not notice
-new files. So **before every release** change the version number in `sw.js`:
+**Documentation or a tool (works offline):**
 
 ```js
-const CACHE_VERSION = "v1.1.6";
+appName: "My Docs",
+offlineMode: true,
+offlineFiles: ["./", "index.htm", "js/site.js", "docs/chapter-1.md", "docs/chapter-2.md"],
+theme: "light",
+launchScreen: true,
+launchScreenHideByCode: true,                    // the page calls EasyPWA.hideLaunchScreen() when it is drawn
 ```
 
-Then:
+## Offline mode
 
-1. The old cache is deleted and the files are downloaded again.
-2. An **Update Available - Reload** button appears on the open page.
-3. Pressing it activates the new version and reloads the page once.
+`offlineMode: false` (default): nothing is saved, the site works online only.
 
-If you added a new file (component, image, sound...), also add it to the `APP_SHELL` list in `sw.js`.
-Files not in the list are cached the first time they are opened, but they are missing on the first offline start.
+`offlineMode: true`: the files of the site are saved while they are used, so the site also opens without internet.
+
+- **Network first:** with internet the newest file is always used and saved again; without internet the saved one.
+  So there is no version number to change: a changed file is saved again the next time it is opened online.
+- **Saved:** every GET file of the site under the folder of `easy-pwa.js` (pages, scripts, styles, pictures,
+  `fetch()` data). **Not saved:** forms (POST), other sites (CDN, Google Fonts, APIs of other domains), audio and
+  video parts (206), and `offlineExcludePaths`.
+- **`offlineFiles`:** files saved at the first visit, so they open offline before the visitor opens them (relative to
+  `easy-pwa.js`). A file that can not be read is written to the console, the others are still saved.
+  The files of the app are saved without being written here: `easy-pwa.js`, the manifest and every icon in it, the
+  banner, iOS and launch screen icons.
+- **`offlineExcludePaths`:** addresses that are never saved. **Never** save pages that change for every visitor (cart,
+  account, payment, prices): an old copy would be shown offline.
+- **`offlineNetworkTimeout`:** on a slow network the saved copy is shown after this time; the network answer still
+  saves the new copy.
+- A page with another `?query` opens from the saved file of the same page (Ex: `product.htm?id=3` from `product.htm`).
+  A page that is not saved shows the "No internet connection" page.
+- Every address is saved on its own: a site with many `?query` addresses (Ex: `?id=1`, `?id=2`...) saves each one it opens.
+- The notice at the top says "You are offline: saved pages are shown".
+- `EasyPWA.clearOfflineFiles()` deletes the saved files from the page; `offlineCacheVersion` deletes them one time for
+  every visitor; turning the mode off (`offlineMode: false`) deletes them at the next visit.
+- Apps on the same domain (`site.com/app1/`, `site.com/app2/`) keep their saved files apart.
+
+## Launch screen, theme and page timeout
+
+- **Launch screen** (`launchScreen: true`): a screen over the page while it opens (icon, title, message, spinner), in
+  the installed app only, on the first page of a visit (not on every link). It closes when the page is loaded and
+  `launchScreenMinDuration` is over. A site that draws itself with JavaScript can keep it until it is ready:
+  `launchScreenHideByCode: true` and `EasyPWA.hideLaunchScreen()` (after 10 s it closes anyway).
+- **Theme** (`theme`): the colors of the "No internet connection" page and of the launch screen. `"auto"` follows the
+  light / dark setting of the device. The colors are in `themes`.
+- **Page timeout** (`pageTimeout`, ms): a page that does not come in this time (a weak connection) shows the
+  "No internet connection" page, instead of a long white wait. In the offline mode only when the page has no saved
+  copy (a saved one is shown after `offlineNetworkTimeout`).
+
+## API
+
+```js
+EasyPWA.canInstall();                   // 1: install() can be used now (Android / desktop event, or iOS help)
+EasyPWA.install();                      // Promise: "accepted", "dismissed", "ios" (help shown) or "unavailable"
+EasyPWA.isInstalled();                  // 1: opened as the installed app
+EasyPWA.isIOS();
+EasyPWA.onInstallable(function () {});  // Runs when install() becomes possible. Returns a remover function.
+EasyPWA.showInstallBanner();            // Shows the banner now (also when it was closed before).
+EasyPWA.hideInstallBanner();
+EasyPWA.clearOfflineFiles();            // Promise: deletes the saved files of the offline mode (this app only).
+EasyPWA.hideLaunchScreen();             // The site is ready (launchScreenHideByCode: true).
+
+window.addEventListener("easypwa:installable", fn);
+window.addEventListener("easypwa:installed", fn);
+```
+
+**Your own install button:**
+
+```js
+window.addEventListener("easypwa:installable", function () { myButton.style.display = "block"; });
+myButton.onclick = function () { EasyPWA.install(); };
+```
+
+## Test
+
+1. Open `index.htm` with Live Server (`localhost`), not by double clicking the file.
+2. Chrome DevTools > Application > **Manifest** (no errors) and **Service workers** (`easy-pwa.js` is running).
+3. DevTools > Network > **Offline**, then open a product: the "No internet connection" page is shown
+   (with `offlineMode: true`: the saved page).
+4. The banner is only shown on phones and tablets. Test it with the device toolbar of DevTools, or set
+   `installBannerOnDesktop: true`. The launch screen: `launchScreenInBrowser: true`.
+
+## Updates and turning it off
+
+- Change `easy-pwa.js` (or the files of the site) and upload it: the browsers get the new version by themselves.
+  There is no version number to change: nothing is saved (or, in the offline mode, every file is read from the
+  network first).
+- To turn it off, set `serviceWorker: false` and keep the file on the site for a while: it removes its service
+  worker (and its saved files) from the visitors' browsers. Then remove the script line.
 
 ## Notes
 
-- **Several apps on the same domain**: Cache Storage is shared per domain (origin), not per folder.
-  If you make several apps with this project and publish them on the same domain (e.g. different
-  repos of one GitHub Pages account), give each one a different `APP_ID`. `index.htm` passes this
-  name to the service worker in its registration address (`sw.js?app=...`) and `sw.js` builds the
-  cache name from it, so one app's old-cache cleanup never deletes another app's cache.
-- **Page width**: with `USE_PAGE_FIT` off (default `false`) the content fills the whole screen.
-  When on, `page.fit(CONTENT_WIDTH, MAX_WIDTH)` is used: the content is fixed to `CONTENT_WIDTH`,
-  scaled up to `MAX_WIDTH` and centered. Because `page.fit()` scales the body, `position: fixed`
-  toasts landed outside the screen; `fitBodyToPage()` sizes the body to the design size so the toasts
-  stay at the bottom center (both are switched on and off together).
-- **Local pages offline**: a `WebView` loading a local page like `content/index.htm` is also a
-  "navigate" request for the browser (even inside an iframe). So `sw.js` always uses the request's
-  own URL as the cache key, and only falls back to `index.htm` when the top page
-  (`destination: "document"`) has no entry at all. This way the `content/` page never overwrites
-  the cached `index.htm`.
-- **Theme**: the theme color is given to `<html>` by a script in `<head>`, before anything is drawn,
-  so the dark theme never shows a white frame while the app opens. A local page gets the theme in its
-  address (`content/index.htm?theme=dark`) and draws itself in the same colors; a site address is
-  loaded as it is, so a site with a white background still shows white.
-- **Notch and bottom bar**: the page uses `viewport-fit=cover` and `env(safe-area-inset-*)`; in
-  full-screen mode the content does not go under the phone's notch or bottom bar.
-- **Copies**: `basic/` and `comp/` are copies of the main folders (`../../basic/`, `../../comp-m4/`)
-  and are not updated by themselves. `comp/` only holds `.min.js` files: copy `web-view.min.js` and
-  `loading-screen.min.js` from `comp-m4/`; `comp-m4/toast.js` has no `.min` twin, so build it with terser:
-  `npx terser ../../comp-m4/toast.js --compress --mangle --comments /Bismillah/ -o comp/toast.min.js`
+- **Another service worker:** if the site already has one in the same folder, `easy-pwa.js` keeps it and does not
+  register (a warning is written to the console). `replaceOtherServiceWorker: true` replaces it.
+- **Hosted platforms** (Shopify, ikas, Ticimax, IdeaSoft...) usually do not let you put a file in the root folder.
+  Then a service worker can not be installed.
+- **iPhone:** there is no "Install" button on iOS, the visitor adds the app from the Share menu. The installed app has
+  no back button of the browser: the site needs its own menu and links. Safari can not tell a web page that the app
+  is already installed, so the help banner can come again in Safari (after `installBannerHideDays` days).
+- **Payment pages** of banks (3D Secure) are on another site, so the browser usually shows them with a small bar at
+  the top of the app window. Test a real payment on Android and iPhone before you publish the app.
+- A strict `Content-Security-Policy` of the site must allow this script (`script-src 'self'`).
 
 ---
 
-# Türkçe
+## Türkçe
 
-**Bir web sitesini veya yerel web dosyalarini (.htm, css, js) kolayca bir PWA'ya (Progressive Web App), yani telefona ve
-bilgisayara kurulabilen bir uygulamaya cevirir.**
+Bir web sitesini kurulabilir bir uygulamaya (PWA) çeviren tek dosya: bir e-ticaret sitesi, bir firma sitesi,
+dokümantasyon, bir araç veya küçük bir web uygulaması. Sitenin kendi sayfalarına eklenir; bu yüzden ödeme sayfaları,
+"Google ile giriş" ve bağlantılar normal sitedeki gibi çalışır.
 
-Kullanici uygulamanin adresini actiginda altta bir **kurulum toast'i** cikar. Tek dokunusla
-(iOS'ta **Paylas > Ana Ekrana Ekle** ile) uygulama kurulur; sonra ana ekrandan, tarayici cubugu
-olmadan normal bir uygulama gibi acilir.
+Hiçbir kütüphane gerekmez (basic.js, framework ve derleme adımı yok). Banner, uyarı ve açılış ekranı Shadow DOM
+içinde çizilir: sitenin CSS'i onları değiştirmez, onlar da siteyi değiştirmez.
 
-**Canli ornek:** [https://bug7a.github.io/pwa/](https://bug7a.github.io/pwa/) (kurulum toast'ini gormek icin telefonda ac)
+### Ne yapar
 
-Kod yazman gerekmez: `index.htm` basindaki ayarlari degistirip klasoru yayinlaman yeterli.
-basic.js ile yazilmistir, build araci veya paket yoneticisi gerektirmez.
+- **Kurulabilir uygulama:** Sayfada yoksa manifest bağlantısını ve iOS meta etiketlerini ekler, bir service worker
+  kaydeder. Aynı dosya hem sayfa script'i **hem de** service worker'dır.
+- **Yükleme banner'ı** altta ortada (telefon ve tablet): Android'de "Yükle" butonu (`installBannerOnDesktop` ile
+  bilgisayardaki Chrome / Edge'de de), iPhone / iPad'de "Paylaş > Ana Ekrana Ekle" açıklaması.
+- Bir sayfa açılamazsa **"İnternet bağlantısı yok" sayfası**. Bağlantı gelince sayfayı kendisi tekrar açar.
+- Bağlantı koptuğu sürece **üstte küçük bir uyarı**.
+- **İki çalışma şekli:**
+  - **Çevrimiçi** (varsayılan): sitenin hiçbir dosyası kaydedilmez. Mağazalar için doğrusu budur: sepet, hesap ve
+    fiyatlar hiçbir zaman eski olmaz.
+  - **Çevrimdışı mod** (`offlineMode: true`): sitenin dosyaları kullanıldıkça kaydedilir, site internet yokken de açılır.
+    Dokümantasyon, araçlar ve küçük uygulamalar için.
+- **İsteğe bağlı:** kurulu uygulamada açılış ekranı, ekranları için açık / koyu tema, zayıf bağlantı için sayfa zaman
+  aşımı ve sitenin kendi yükleme butonu için API.
+- **Yazılar** tarayıcının diline göre Türkçe veya İngilizce (ya da `TEXTS` içindeki kendi yazılarınız).
 
-## Hizli baslangic
+### Dosyalar
 
-1. **`index.htm` > ayarlar**:
-   - `APP_ID`: uygulamana ozel kisa bir ad (ornek: `"expense"`).
-   - `CONTENT_URL`: gosterilecek site adresi (`"https://..."`) ya da yerel sayfa (`"content/index.htm"`).
-   - `THEME`: `"dark"` (varsayilan) veya `"light"`. Her temanin renkleri `THEMES` icindedir. `"light"`
-     secersen `manifest.webmanifest` icindeki `background_color` ve `theme_color`'i de `THEMES.light.page`
-     yap (kurulu uygulamanin acilis ekrani).
-   - `<title>` ve `apple-mobile-web-app-title`: uygulamanin adi.
-2. **`manifest.webmanifest`**: `name`, `short_name`, `description`, `theme_color`, `background_color`.
-3. **`icon/`**: PNG'leri kendi ikonlarinla degistir (ayni isim ve olculerde).
-   `icon-maskable-512.png` icin ikonun onemli kismi ortadaki %80'lik dairenin icinde kalmali.
-4. Klasoru **`https://`** olan bir yere yukle (GitHub Pages, kendi sunucun...). Klasor kendi
-   `basic/` ve `comp/` kopyalarini icerir, tek basina yayinlanabilir.
-5. Adresi telefonda ac: kurulum toast'i cikar, uygulamayi kur.
-
-Sonraki her yayinda `sw.js` icindeki `CACHE_VERSION`'i artirmayi unutma (bkz. [Yeni surum yayinlama](#yeni-surum-yayinlama)).
-
-## Nasil calisir
-
-- Icerik tam ekran bir `WebView` (iframe) icinde acilir.
-  Icerik hazir olana kadar uygulamayi tema renklerinde bir `LoadingScreen` kaplar
-  (`LOADING_ICON`, `LOADING_TITLE`, `LOADING_MESSAGE`).
-- `sw.js` (service worker) uygulamanin dosyalarini onbellege alir; uygulama internet yokken de acilir.
-- Internet yoksa icerigin yerine **No internet connection** ekrani, ya da sadece bir uyari toast'i
-  gorunur (bkz. `APP_MODE`).
-- Acilista isletim sistemine gore alt ortada kurulum toast'i cikar.
-
-## Klasordeki dosyalar
-
-| Dosya | Ne ise yarar |
+| Dosya | |
 |---|---|
-| `index.htm` | Uygulama sayfasi. Ayarlar (`APP_ID`, `CONTENT_URL`, metinler), web view, offline ekrani, kurulum toast'i, service worker kaydi burada. |
-| `content/` | Ornek yerel icerik (`index.htm`). `CONTENT_URL = "content/index.htm"` yapinca bu sayfa acilir. Buraya kendi css/js/gorsel dosyalarinla birden fazla dosyali bir proje de koyabilirsin. |
-| `manifest.webmanifest` | Uygulama kimligi: isim, ikonlar, acilis adresi, renkler, tam ekran modu. |
-| `sw.js` | Service worker. Dosyalari onbellege alir, internet yokken uygulamayi cache'ten acar. |
-| `icon/` | Uygulama ikonlari (192, 512, maskable 512, apple-touch 180, favicon 32). |
-| `comp/` | Kullanilan bilesenler: `web-view.min.js`, `toast.min.js` ve `loading-screen.min.js` (comp-m4 kopyalari). |
-| `basic/` | basic.js kutuphanesinin bu klasore kopyalanmis hali. |
+| `easy-pwa.js` | Sayfa script'i **ve** service worker (aynı dosya). Ayarlar en üstte (`SETTINGS`). |
+| `manifest.webmanifest` | Uygulamanın adı, renkleri ve ikonları |
+| `icon/` | Uygulama ikonları (192, 512, maskable 512, apple-touch-icon 180) |
+| `index.htm`, `product.htm`, `shop.css` | Test için örnek bir mağaza. Sitenize kopyalamayın. |
 
-## Gosterilecek icerik
+### Kurulum
 
-```js
-const CONTENT_URL = "https://bug7a.github.io/expense/";  // Bir site adresi
-// const CONTENT_URL = "content/index.htm";              // content/ klasorundeki yerel proje
-```
+1. `easy-pwa.js`, `manifest.webmanifest` ve `icon/` klasörünü sitenin klasörüne kopyala:
+   - **Bütün site:** **kök klasör** (`site.com/easy-pwa.js`).
+   - **Bir klasördeki site** (ör. `site.com/docs/`): o klasör (`site.com/docs/easy-pwa.js`).
 
-- **Site adresi**: sayfa iframe icinde acilir. Tarayici baska bir siteyi kontrol edemedigi icin,
-  `LOAD_TIMEOUT` saniyede yuklenmezse baglanti sorunu kabul edilir ve offline ekrani gosterilir.
-  Site iframe icinde gosterilmeye izin vermeli: `X-Frame-Options` veya `Content-Security-Policy:
-  frame-ancestors` ile bunu yasaklayan siteler (cogu buyuk site) bos gorunur. Kendi siten
-  (ornek: GitHub Pages) genelde sorunsuzdur.
-- **Yerel sayfa** (`content/index.htm` gibi): dosyayi `sw.js` icindeki `APP_SHELL` listesine de ekle;
-  boylece internet olmadan da acilir. `content/` klasorune birden fazla dosyali bir proje koyarsan
-  (kendi css/js/gorsel dosyalari), o dosyalarin hepsini `APP_SHELL` listesine ekle.
+   Service worker sadece kendi klasörünün altındaki sayfaları kontrol eder.
+2. `manifest.webmanifest` dosyasını değiştir: `name`, `short_name`, `description`, `lang`, `background_color`
+   (Android'in açılış ekranı), `theme_color`, `start_url` (uygulamanın açıldığı sayfa). Adresleri göreli (`"scope": "./"`,
+   `"id": "./"`, `"start_url": "./index.htm?source=pwa"`); aynı dosya kökte de bir klasörde de çalışır.
+   (`?source=pwa` istatistiklerde uygulama ziyaretlerini gösterir.)
+3. `icon/` içindeki ikonları kendi ikonlarınla değiştir (aynı dosya adları ve boyutlar). `icon-maskable-512.png` için
+   ikonun önemli kısmını ortadaki %80'lik dairenin içinde tut.
+4. `easy-pwa.js` dosyasının başındaki `SETTINGS` bölümünü değiştir: en azından `appName` ve `themeColor`; tabloya bak.
+5. Bu satırı **her sayfaya** ekle (genelde temanın alt kısmına / footer'a):
 
-## Icerik internet gerektiriyor mu?
+   ```html
+   <script src="/easy-pwa.js" defer></script>          <!-- bütün site -->
+   <script src="/docs/easy-pwa.js" defer></script>     <!-- site.com/docs/ içindeki bir site -->
+   ```
 
-`APP_MODE` (`index.htm`) icerigin baglantiya ne kadar bagimli oldugunu belirler:
+   Adres, 1. adımdaki klasörü göstermeli ve aynı sitede olmalı. (CDN veya tema klasörü olmaz.)
+6. Site `https://` olmalı (test için `localhost` çalışır).
 
-```js
-const APP_MODE = "online";   // Varsayilan.
-// const APP_MODE = "offline";
-```
+### Ayarlar
 
-- **`"online"`**: icerik internet gerektirir (bir web sitesi gibi). Baglanti yoksa icerik
-  gizlenir, "No internet connection" ekrani gosterilir.
-- **`"offline"`**: icerik internetsiz de calisir (yerel bir sayfa, ya da kendini cache'leyen bir
-  site). Baglanti yoksa icerik yine acilir, sadece bir toast ile internetin olmadigi bildirilir.
+Hepsi `easy-pwa.js` dosyasının en üstündeki `SETTINGS` içinde.
 
-## Kurulum toast'i
+| Ayar | Varsayılan | |
+|---|---|---|
+| `appName` | `"Demo Shop"` | iPhone'da ikonun altındaki ve yükleme banner'ındaki ad |
+| `manifestUrl`, `iconUrl`, `appleTouchIconUrl` | `manifest.webmanifest`, `icon/...` | `easy-pwa.js`'e göre. `iconUrl: ""`: banner'da ikon yok |
+| `themeColor` | `"#141414"` | Tarayıcı çubuğunun rengi (sadece sayfada `<meta name="theme-color">` yoksa) |
+| `language` | `"auto"` | Yazılar: `"auto"` (Türkçe tarayıcıda Türkçe, diğerlerinde İngilizce), `"tr"`, `"en"` |
+| `serviceWorker` | `true` | `false`: service worker'ı ziyaretçilerin tarayıcısından siler ("Kapatma"ya bak) |
+| `replaceOtherServiceWorker` | `false` | Aynı klasörde sitenin kendi service worker'ı varsa: `false` ona dokunmaz, `true` onun yerine geçer |
+| `offlinePage` | `true` | "İnternet bağlantısı yok" sayfası |
+| `pageTimeout` | `0` | ms. Bu sürede gelmeyen sayfa "İnternet bağlantısı yok" sayfasını gösterir. `0`: kapalı |
+| `offlineNotice` | `true` | Bağlantı koptuğu sürece üstteki uyarı |
+| `offlineMode` | `false` | `true`: sitenin dosyaları kaydedilir ("Çevrimdışı mod"a bak) |
+| `offlineFiles` | `[]` | İlk ziyarette kaydedilir (çevrimdışı mod) |
+| `offlineExcludePaths` | `[]` | Asla kaydedilmez (çevrimdışı mod). Ör: `["/sepet", "/hesap", "/api/"]` |
+| `offlineNetworkTimeout` | `4000` | ms. Yavaş ağda bu süreden sonra kaydedilmiş kopya gösterilir (çevrimdışı mod). `0`: hep bekle |
+| `offlineCacheVersion` | `1` | Bir kez değiştirilince (2, 3...) uygulamanın bütün kayıtları silinir |
+| `installBanner` | `true` | Yükleme banner'ı |
+| `installBannerOnDesktop` | `false` | Bilgisayarda da (Chrome / Edge) |
+| `installBannerDelay` | `3000` | Sayfa açıldıktan kaç ms sonra |
+| `installBannerHideDays` | `14` | Ziyaretçi kapatırsa kaç gün sonra tekrar gelir |
+| `installBannerHiddenPaths` | `[]` | Bu sayfalarda banner yok. Ör: `["/sepet", "/odeme"]` |
+| `theme` | `"auto"` | "İnternet bağlantısı yok" sayfasının ve açılış ekranının renkleri: `"auto"` (cihaza göre), `"light"`, `"dark"` |
+| `themes` | light / dark | Her temanın `page`, `title`, `text`, `spinner` renkleri |
+| `launchScreen` | `false` | Kurulu uygulamada açılış ekranı ("Açılış ekranı"na bak) |
+| `launchScreenIconUrl` | `icon/icon-192.png` | `easy-pwa.js`'e göre. `""`: ikon yok |
+| `launchScreenTitle` | `""` | `""`: `appName`. `" "`: başlık yok |
+| `launchScreenMessage` | `""` | Ör: `"Yükleniyor..."` |
+| `launchScreenMinDuration` | `600` | ms. Hızlı bir sayfada kısa bir yanıp sönme olmasın |
+| `launchScreenHideByCode` | `false` | `true`: site `EasyPWA.hideLaunchScreen()` çağırana kadar kalır (en çok 10 sn) |
+| `launchScreenInBrowser` | `false` | `true`: tarayıcıda da (test için) |
+| `colors` | | Yükleme banner'ı, uyarı ve "İnternet bağlantısı yok" sayfasının butonu |
 
-Uygulama acildiktan `INSTALL_TOAST_DELAY` ms sonra alt ortada kurulum toast'i cikar:
+Yazılar `SETTINGS`'in altındaki `TEXTS` içinde (`tr`, `en`).
 
-- **Chrome / Edge (Android ve masaustu)**: tarayici `beforeinstallprompt` olayini verir;
-  toast icinde **Install** butonu gorunur, basilinca tarayicinin kurulum penceresi acilir.
-  `ALLOW_DESKTOP_INSTALL = false` yapilirsa toast sadece telefon ve tablette (`isMobile()`) cikar.
-- **iOS Safari**: `beforeinstallprompt` desteklenmez. Toast **Add to Home Screen** basligiyla
-  "Tap the Share button below, then choose Add to Home Screen." yazisini gosterir.
-  (iPad `navigator.maxTouchPoints` ile de taninir; iPadOS kendini "Macintosh" gosterir.)
-  `ALLOW_DESKTOP_INSTALL`'dan etkilenmez.
-- Uygulama zaten kurulu ve ana ekrandan aciliyorsa (`display-mode: standalone`) toast cikmaz.
+### İki örnek
 
-Metinler ayarlar bolumundedir (`INSTALL_TITLE`, `INSTALL_MESSAGE`, `INSTALL_BUTTON_TEXT`,
-`IOS_INSTALL_TITLE`, `IOS_INSTALL_MESSAGE`). iOS icin gereken meta etiketleri
-(`apple-mobile-web-app-*`, `apple-touch-icon`) `index.htm` icinde hazirdir.
-
-## Internet yokken
-
-**Offline ekrani** (`"online"` modu). Metinler ve ikon `index.htm` basindadir:
-
-```js
-const OFFLINE_TITLE = "No internet connection";
-const OFFLINE_MESSAGE = "Please check your internet connection. ...";
-const OFFLINE_BUTTON_TEXT = "Try again";
-const OFFLINE_ICON_SVG = "<svg ...>";   // Dosya degil, SVG: offline da gorunur
-```
-
-Ekran `online` / `offline` olaylarinda, web view zaman asiminda ve **Try again** butonunda
-guncellenir. Baglanti gelince icerik kendiliginden yeniden yuklenir.
-
-**Baglanti toast'i** (`"offline"` modu). Icerik acik kalir; baglanti kesildiginde (acilista veya
-`offline` olayinda) su toast gorunur:
-
-```js
-const NO_CONNECTION_TITLE = "No internet connection";
-const NO_CONNECTION_MESSAGE = "You are offline. Some features may not work.";
-```
-
-## Calistirma ve test
-
-Service worker **sadece `https://` veya `localhost` uzerinde** calisir.
-Dosyayi cift tiklayip `file://` olarak acarsan sayfa gorunur ama PWA ozellikleri devre disi kalir.
-
-- **VS Code Live Server**: `index.htm` dosyasina sag tikla, "Open with Live Server" (port 5505).
-- **Terminal**: bu klasorde `python3 -m http.server 5599`, sonra `http://localhost:5599/index.htm`.
-
-Chrome'da test:
-
-1. Sayfayi ac, `F12` > **Application** sekmesi.
-2. **Manifest**: ikonlar ve "Installability" uyarisiz gorunmeli.
-3. **Service Workers**: durum `activated and is running` olmali.
-4. **Cache Storage** > `pwa:app-example:v1.1.5` (`APP_ID` + `CACHE_VERSION`): tum dosyalar listelenmeli.
-5. Offline testi: **Network** sekmesinde `Offline` sec ve sayfayi yenile. Uygulama acilmali ve
-   icerik yerine **No internet connection** ekrani gorunmeli. Baglanti gelince icerik kendiliginden yuklenir.
-
-## Yeni surum yayinlama
-
-Tarayici `sw.js` ile onbellege aldigi dosyalari kullanmaya devam eder; `sw.js` degismezse yeni
-dosyalari fark etmez. Bu yuzden **her yayindan once** `sw.js` icindeki surum numarasini degistir:
+**Bir mağaza (sadece çevrimiçi):**
 
 ```js
-const CACHE_VERSION = "v1.1.6";
+appName: "Mağazam",
+themeColor: "#1F2326",
+offlineMode: false,                              // fiyat, stok ve sepet hiçbir zaman eski olmaz
+installBannerHiddenPaths: ["/sepet", "/odeme"],
+pageTimeout: 15000,                              // 15 sn'de gelmeyen sayfa: "İnternet bağlantısı yok"
 ```
 
-Sonra:
+**Dokümantasyon veya bir araç (çevrimdışı çalışır):**
 
-1. Eski cache silinir, dosyalar yeniden indirilir.
-2. Acik olan sayfada **Update Available - Reload** butonu belirir.
-3. Butona basilinca yeni surum devreye girer ve sayfa bir kez yenilenir.
+```js
+appName: "Dokümanlarım",
+offlineMode: true,
+offlineFiles: ["./", "index.htm", "js/site.js", "docs/bolum-1.md", "docs/bolum-2.md"],
+theme: "light",
+launchScreen: true,
+launchScreenHideByCode: true,                    // sayfa çizilince EasyPWA.hideLaunchScreen() çağırır
+```
 
-Yeni bir dosya eklediysen (component, resim, ses...) `sw.js` icindeki `APP_SHELL` listesine de ekle.
-Listede olmayan dosyalar ilk kez acildiklarinda onbellege alinir, ama offline ilk acilista bulunamazlar.
+### Çevrimdışı mod
 
-## Notlar
+`offlineMode: false` (varsayılan): hiçbir şey kaydedilmez, site sadece çevrimiçi çalışır.
 
-- **Ayni alan adinda birden fazla uygulama**: Cache Storage klasore gore degil, alan adina (origin)
-  gore ortaktir. Bu proje ile birden fazla uygulama yapip ayni alan adina (ornek: bir GitHub Pages
-  hesabinin farkli repo'lari) kurarsan, her uygulamaya farkli bir `APP_ID` ver. `index.htm` bu adi
-  service worker'a kayit adresiyle iletir (`sw.js?app=...`), `sw.js` de onbellek adini ondan olusturur;
-  boylece bir uygulamanin eski cache temizligi, digerinin cache'ini silmez.
-- **Sayfa genisligi**: `USE_PAGE_FIT` (varsayilan `false`) kapaliyken icerik ekranin tamamini kaplar.
-  Acilirsa `page.fit(CONTENT_WIDTH, MAX_WIDTH)` devreye girer; icerik `CONTENT_WIDTH`'e sabitlenir ve
-  `MAX_WIDTH`'e kadar buyutulup ortalanir. `page.fit()` govdeyi (body) olcekledigi icin
-  `position: fixed` toast'lar ekranin disina dusuyordu; `fitBodyToPage()` govdeyi tasarim olculerine
-  getirir ve toast'lar alt ortada kalir (ikisi birlikte acilip kapanir).
-- **Yerel sayfalar offline**: `WebView`'in `content/index.htm` gibi yerel bir sayfa yuklemesi de
-  tarayici icin bir "navigate" istegidir (iframe icinde olsa da). `sw.js` bu yuzden onbellek anahtari
-  olarak hep istegin kendi URL'sini kullanir; sadece ust sayfanin (`destination: "document"`) hicbir
-  kaydi yoksa `index.htm`'e duser. Boylece `content/` sayfasi, `index.htm`'in onbellegini ezmez.
-- **Tema**: tema rengi `<head>` icindeki bir script ile, sayfa daha cizilmeden `<html>`'e verilir;
-  karanlik temada acilista beyaz bir kare gorunmez. Yerel bir sayfa temayi adresinden alir
-  (`content/index.htm?theme=dark`) ve kendini ayni renklerle cizer; site adresi oldugu gibi yuklenir,
-  beyaz arka planli bir site yine beyaz gorunur.
-- **Centik ve alt cubuk**: sayfa `viewport-fit=cover` ve `env(safe-area-inset-*)` kullanir; tam ekran
-  modda icerik telefonun centiginin ve alt cubugunun altinda kalmaz.
-- **Kopyalar**: `basic/` ve `comp/` ana klasorlerin (`../../basic/`, `../../comp-m4/`) kopyalaridir ve
-  kendiliginden guncellenmez. `comp/` yalnizca `.min.js` dosyalarini tutar: `web-view.min.js`'i
-  `comp-m4/web-view.min.js`'ten ve `loading-screen.min.js`'i `comp-m4/loading-screen.min.js`'ten kopyala; `comp-m4/toast.js`'in `.min` ikizi olmadigi icin onu terser ile uret:
-  `npx terser ../../comp-m4/toast.js --compress --mangle --comments /Bismillah/ -o comp/toast.min.js`
+`offlineMode: true`: sitenin dosyaları kullanıldıkça kaydedilir, site internet yokken de açılır.
+
+- **Önce ağ:** İnternet varken her zaman en yeni dosya kullanılır ve tekrar kaydedilir; yokken kaydedilmiş olan.
+  Bu yüzden sürüm numarası değiştirmek gerekmez: değişen dosya, çevrimiçi açıldığı ilk seferde yeniden kaydedilir.
+- **Kaydedilir:** `easy-pwa.js`'in klasörü altındaki bütün GET dosyaları (sayfalar, script'ler, stiller, resimler,
+  `fetch()` verileri). **Kaydedilmez:** formlar (POST), başka siteler (CDN, Google Fonts, başka alan adındaki API'ler),
+  ses ve video parçaları (206) ve `offlineExcludePaths`.
+- **`offlineFiles`:** ilk ziyarette kaydedilen dosyalar; ziyaretçi açmadan önce de çevrimdışı açılırlar (`easy-pwa.js`'e
+  göre). Okunamayan dosya konsola yazılır, diğerleri kaydedilir. Uygulamanın kendi dosyaları buraya yazılmadan kaydedilir:
+  `easy-pwa.js`, manifest ve içindeki bütün ikonlar, banner, iOS ve açılış ekranı ikonları.
+- **`offlineExcludePaths`:** asla kaydedilmeyen adresler. Her ziyaretçide değişen sayfaları (sepet, hesap, ödeme,
+  fiyatlar) **asla** kaydetmeyin: çevrimdışıyken eski bir kopya gösterilir.
+- **`offlineNetworkTimeout`:** yavaş ağda bu süreden sonra kaydedilmiş kopya gösterilir; ağın cevabı yine de yeni
+  kopyayı kaydeder.
+- Başka bir `?sorgu` ile açılan sayfa, aynı sayfanın kaydından açılır (ör. `product.htm?id=3`, `product.htm`'den).
+  Kaydedilmemiş bir sayfa "İnternet bağlantısı yok" sayfasını gösterir.
+- Her adres ayrı kaydedilir: çok sayıda `?sorgu` adresi olan bir site (ör. `?id=1`, `?id=2`...) açtığı her birini kaydeder.
+- Üstteki uyarı "Çevrimdışısınız: kaydedilmiş sayfalar gösteriliyor" der.
+- `EasyPWA.clearOfflineFiles()` kayıtları sayfadan siler; `offlineCacheVersion` her ziyaretçide bir kez siler; modu
+  kapatmak (`offlineMode: false`) bir sonraki ziyarette siler.
+- Aynı alan adındaki uygulamaların (`site.com/app1/`, `site.com/app2/`) kayıtları birbirine karışmaz.
+
+### Açılış ekranı, tema ve sayfa zaman aşımı
+
+- **Açılış ekranı** (`launchScreen: true`): Sayfa açılırken üstünde bir ekran (ikon, başlık, mesaj, dönen simge); sadece
+  kurulu uygulamada ve bir ziyaretin ilk sayfasında (her bağlantıda değil). Sayfa yüklenince ve `launchScreenMinDuration`
+  dolunca kapanır. Kendini JavaScript ile çizen bir site, hazır olana kadar tutabilir: `launchScreenHideByCode: true` ve
+  `EasyPWA.hideLaunchScreen()` (10 sn sonra her durumda kapanır).
+- **Tema** (`theme`): "İnternet bağlantısı yok" sayfasının ve açılış ekranının renkleri. `"auto"` cihazın açık / koyu
+  ayarını izler. Renkler `themes` içinde.
+- **Sayfa zaman aşımı** (`pageTimeout`, ms): Bu sürede gelmeyen bir sayfa (zayıf bağlantı), uzun bir beyaz bekleme
+  yerine "İnternet bağlantısı yok" sayfasını gösterir. Çevrimdışı modda sadece sayfanın kaydı yoksa (kaydı olan,
+  `offlineNetworkTimeout` sonra gösterilir).
+
+### API
+
+```js
+EasyPWA.canInstall();                   // 1: install() şimdi kullanılabilir (Android / masaüstü olayı veya iOS açıklaması)
+EasyPWA.install();                      // Promise: "accepted", "dismissed", "ios" (açıklama gösterildi) veya "unavailable"
+EasyPWA.isInstalled();                  // 1: kurulu uygulama olarak açıldı
+EasyPWA.isIOS();
+EasyPWA.onInstallable(function () {});  // install() mümkün olunca çalışır. Kaldırma fonksiyonu döner.
+EasyPWA.showInstallBanner();            // Banner'ı şimdi gösterir (daha önce kapatılmışsa da).
+EasyPWA.hideInstallBanner();
+EasyPWA.clearOfflineFiles();            // Promise: çevrimdışı modun kayıtlarını siler (sadece bu uygulamanın).
+EasyPWA.hideLaunchScreen();             // Site hazır (launchScreenHideByCode: true).
+
+window.addEventListener("easypwa:installable", fn);
+window.addEventListener("easypwa:installed", fn);
+```
+
+**Sitenin kendi yükleme butonu:**
+
+```js
+window.addEventListener("easypwa:installable", function () { myButton.style.display = "block"; });
+myButton.onclick = function () { EasyPWA.install(); };
+```
+
+### Test
+
+1. `index.htm` dosyasını Live Server ile (`localhost`) aç, dosyaya çift tıklayarak değil.
+2. Chrome DevTools > Application > **Manifest** (hata olmamalı) ve **Service workers** (`easy-pwa.js` çalışıyor).
+3. DevTools > Network > **Offline** seç, sonra bir ürün aç: "İnternet bağlantısı yok" sayfası gelir
+   (`offlineMode: true` ile: kaydedilmiş sayfa).
+4. Banner sadece telefon ve tablette gösterilir. DevTools'un cihaz görünümüyle dene veya
+   `installBannerOnDesktop: true` yap. Açılış ekranı için: `launchScreenInBrowser: true`.
+
+### Güncelleme ve kapatma
+
+- `easy-pwa.js` dosyasını (veya sitenin dosyalarını) değiştirip yükle: tarayıcılar yeni sürümü kendileri alır.
+  Değiştirilecek bir sürüm numarası yok: hiçbir şey kaydedilmez (çevrimdışı modda da her dosya önce ağdan okunur).
+- Kapatmak için `serviceWorker: false` yap ve dosyayı bir süre sitede tut: ziyaretçilerin tarayıcısından kendi service
+  worker'ını (ve kayıtlarını) siler. Sonra script satırını kaldır.
+
+### Notlar
+
+- **Başka bir service worker:** Aynı klasörde sitenin zaten bir service worker'ı varsa `easy-pwa.js` ona dokunmaz ve
+  kaydolmaz (konsola uyarı yazar). `replaceOtherServiceWorker: true` onun yerine geçer.
+- **Hazır platformlar** (Shopify, ikas, Ticimax, IdeaSoft...) genelde kök klasöre dosya koymaya izin vermez.
+  O zaman service worker kurulamaz.
+- **iPhone:** iOS'ta "Yükle" butonu yoktur, ziyaretçi uygulamayı Paylaş menüsünden ekler. Kurulan uygulamada
+  tarayıcının geri tuşu yoktur: sitenin kendi menüsü ve bağlantıları olmalı. Safari, uygulamanın zaten kurulu
+  olduğunu sayfaya söyleyemez; bu yüzden açıklama banner'ı Safari'de tekrar gelebilir (`installBannerHideDays` gün sonra).
+- Bankaların **ödeme sayfaları** (3D Secure) başka bir sitede olduğu için tarayıcı onları genelde uygulama penceresinde
+  üstte küçük bir çubukla gösterir. Uygulamayı yayınlamadan önce Android ve iPhone'da gerçek bir ödeme dene.
+- Sitenin sıkı bir `Content-Security-Policy` ayarı varsa bu script'e izin vermeli (`script-src 'self'`).

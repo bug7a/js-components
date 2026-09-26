@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+
+    <title>Web Sitenize Hazır Formlar: İletişim, Randevu, Sipariş | JS Form</title>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="İletişim, randevu, sipariş, iş başvurusu ve destek formları. Sitenize tek satırla eklenir, cevaplar düzenli bir e-posta olarak size gelir. Aylık form servisi ücreti yok; açık kaynak.">
+    <meta name="keywords" content="web formu, iletişim formu, randevu formu, sipariş formu, iş başvuru formu, destek talebi formu, etkinlik kayıt formu, form e-posta gönderme, php mail formu, açık kaynak form, javascript form">
+    <meta name="author" content="Bugra Ozden">
+    <meta name="theme-color" content="#0E1A14">
+
+    <meta name="robots" content="index, follow, max-image-preview:large">
+
+    <!-- SEO: The page has two languages at the same address: ?lang=tr / ?lang=en (js/site.js, the default one has no ?lang).
+         canonical, hreflang and og:url are added by js/site.js when CONFIG.siteURL (js/config.js) is written.
+         When the address is known, also make og:image below a full address: link previews do not run JavaScript.
+         The <noscript> part and the JSON-LD are made from js/texts.js: keep them the same when the texts change. -->
+
+    <!-- SOCIAL (link preview) -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="JS Form">
+    <meta property="og:title" content="Web Sitenize Hazır Formlar: İletişim, Randevu, Sipariş | JS Form">
+    <meta property="og:description" content="İletişim, randevu, sipariş, iş başvurusu ve destek formları. Sitenize tek satırla eklenir, cevaplar düzenli bir e-posta olarak size gelir. Aylık form servisi ücreti yok; açık kaynak.">
+    <meta property="og:locale" content="tr_TR">
+    <meta property="og:locale:alternate" content="en_US">
+    <meta property="og:image" content="assets/og-image.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Web Sitenize Hazır Formlar: İletişim, Randevu, Sipariş | JS Form">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <!-- STRUCTURED DATA (schema.org) -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "Service",
+                "name": "Web Sitenize Hazır Formlar: İletişim, Randevu, Sipariş",
+                "description": "İletişim, randevu, sipariş, iş başvurusu ve destek formları. Sitenize tek satırla eklenir, cevaplar düzenli bir e-posta olarak size gelir. Aylık form servisi ücreti yok; açık kaynak.",
+                "serviceType": "Web form development",
+                "provider": {
+                    "@type": "Person",
+                    "name": "Buğra Özden",
+                    "url": "https://bug7a.github.io/",
+                    "sameAs": [
+                        "https://github.com/bug7a/",
+                        "https://www.linkedin.com/in/bugra-ozden/"
+                    ]
+                },
+                "areaServed": [
+                    {
+                        "@type": "City",
+                        "name": "İstanbul"
+                    },
+                    {
+                        "@type": "Country",
+                        "name": "Türkiye"
+                    },
+                    "Worldwide"
+                ],
+                "inLanguage": [
+                    "tr",
+                    "en"
+                ],
+                "offers": [
+                    {
+                        "@type": "Offer",
+                        "name": "Açık Kaynak",
+                        "price": "0",
+                        "priceCurrency": "TRY"
+                    },
+                    {
+                        "@type": "Offer",
+                        "name": "Kurulum",
+                        "priceCurrency": "TRY",
+                        "priceSpecification": {
+                            "@type": "PriceSpecification",
+                            "minPrice": 7500,
+                            "priceCurrency": "TRY"
+                        }
+                    },
+                    {
+                        "@type": "Offer",
+                        "name": "Özel Form",
+                        "priceCurrency": "TRY",
+                        "priceSpecification": {
+                            "@type": "PriceSpecification",
+                            "minPrice": 18000,
+                            "priceCurrency": "TRY"
+                        }
+                    }
+                ]
+            },
+            {
+                "@type": "FAQPage",
+                "inLanguage": "tr",
+                "mainEntity": [
+                    {
+                        "@type": "Question",
+                        "name": "Formu kendi siteme nasıl eklerim?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "Form bağımsız bir sayfadır. Sitenize tek satırlık bir iframe kodu ile eklenir; iframe eklemeye izin veren her sitede çalışır (WordPress, Webflow, Wix, kendi siteniz). İsterseniz formu doğrudan kendi adresinde de açabilirsiniz."
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "Cevaplar nereye gidiyor?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "Varsayılan olarak e-postanıza: mail servisi, cevabı formla aynı görünümde bir kart olarak gönderir ve dosyaları ekler. İsterseniz cevaplar Supabase'deki bir tabloya veya kendi API'nize de kaydedilir."
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "Aylık ücret ödeyecek miyiz?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "Hayır. Form ve mail servisi kendi hosting'inizde çalışır; bir form servisine abonelik yoktur. Sadece zaten ödediğiniz hosting ve alan adı ücretleri kalır."
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "Nasıl bir hosting gerekiyor?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "PHP 7.4 veya üstü ve hosting panelinizden açacağınız bir e-posta hesabı. Veri tabanı gerekmez. cPanel veya Plesk ile gelen paylaşımlı hosting'lerin neredeyse hepsi yeterlidir."
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "E-postalar spam'e düşer mi?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "Servis e-postayı kendi alan adınızdaki bir hesaptan (ör. no-reply@siteniz.com) SMTP ile gönderir ve ziyaretçinin adresini \"Yanıtla\" alanına koyar; bu, en güvenilir yöntemdir. Kurulumda gerçek gönderimlerle test ediyoruz."
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "Spam ve bot gönderimleri nasıl engelleniyor?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "Botların doldurduğu gizli bir tuzak alanı, aynı adresten art arda gönderim sınırı, servisin sadece sizin sitenize açılması ve izin verilen form adları. Hepsi servis dosyasının başındaki ayarlarla yönetilir."
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "Dosya yüklenebiliyor mu?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "Evet. CV, ekran görüntüsü veya belge sürükle bırak ile yüklenir ve e-postaya eklenir. Dosya boyutu, sayısı ve izin verilen türler ayarlanabilir."
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "KVKK açısından veriler nerede duruyor?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "Cevaplar sizin posta kutunuza veya veri tabanınıza gider; üçüncü bir form servisinden geçmez. Forma aydınlatma metni ve onay kutusu eklenebilir. Aydınlatma metni gibi KVKK yükümlülükleri veri sorumlusu olarak işletmenize aittir; bu konuda hukuki danışmanlık vermiyoruz."
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "Formu sonradan kendimiz değiştirebilir miyiz?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "Evet. Başlıklar, metinler, renkler ve alanlar formun sayfasında açıkça tanımlıdır. JavaScript bilen herkes yeni bir alan ekleyebilir; derleme adımı yoktur, dosyayı kaydedip yüklemek yeterlidir."
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "Hangi teknoloji kullanılıyor?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "Formlar saf JavaScript ile, basic.js adlı küçük ve bağımsız bir kütüphaneyle çizilir. React, Vue gibi bir framework veya paket yöneticisi yoktur. Mail servisi tek bir PHP dosyasıdır ve SMTP için PHPMailer kullanır."
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "Açık kaynak sürümle ne yapabilirim?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "Apache 2.0 lisansı ticari kullanıma izin verir; formları indirip kendi veya müşteri projelerinizde kullanabilirsiniz. Mail servisinin kullandığı PHPMailer ayrıca LGPL lisanslıdır. Kurulum desteği isterseniz bize yazın."
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "Ne kadar sürede teslim ediliyor?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "Hazır bir formun uyarlanıp kurulması genelde 2–3 gün, sıfırdan tasarlanan bir form yaklaşık bir hafta sürer. Teslim tarihi teklifte yazılı olarak belirlenir."
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+    </script>
+
+
+    <link rel="icon" type="image/png" href="assets/logo.png">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../../basic/basic.min.css">
+    <script src="../../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../../comp-m2/tooltip.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../../comp-m2/input-b.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../../comp-m2/email-input-b.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../../comp-m2/textarea-b.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- SITE FILES -->
+    <script src="js/config.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/texts.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/theme.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/background.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/mockup.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/header.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- SECTION FILES -->
+    <script src="js/sections/hero.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/sections/stats.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/sections/services.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/sections/features.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/sections/usecases.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/sections/process.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/sections/demo.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/sections/pricing.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/sections/opensource.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/sections/faq.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/sections/contact.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/sections/footer.js" type="text/javascript" charset="utf-8"></script>
+
+    <script src="js/site.js" type="text/javascript" charset="utf-8"></script>
+
+    <!--
+
+    /* Bismillah */
+
+    JS FORM - Tanıtım ve satış sayfası (js-form projesi)
+    - Canlı demodaki formlar: ../js-form/ (demo modunda, SERVICE_URL boş)
+    - Arayüzün tamamı basic.js ile, saf JavaScript ile çizilir. Framework yoktur.
+    - Metinler: js/texts.js  |  Ayarlar: js/config.js  |  Renkler: js/theme.js
+    - Sayfa akışı: js/site.js -> buildSite()
+
+    -->
+
+    <style>
+
+        /*
+        NOTE: basic.js ile CSS yazılmaz. Buradaki birkaç satır sadece;
+        Label içine yazılan HTML etiketleri (<b>) ve kaydırma çubuğu içindir.
+        */
+
+        b, strong {
+            font-family: opensans-bold;
+            font-weight: normal;
+        }
+
+        ::selection {
+            background: #2C5A38;
+            color: #FFFFFF;
+        }
+
+        .basic_box::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .basic_box::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .basic_box::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.18);
+            border-radius: 10px;
+            border: 3px solid #F6F6F3;
+        }
+
+        .basic_box::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.32);
+        }
+
+        /* JavaScript kapalı ise gösterilecek metin */
+        .noscript-box {
+            position: absolute;
+            left: 0px;
+            top: 0px;
+            height: 100%;
+            overflow: auto; /* WHY: basic.css turns off the scrolling of <body>. */
+            width: 100%;
+            padding: 40px 20px;
+            box-sizing: border-box;
+            font-family: opensans;
+            font-size: 16px;
+            line-height: 1.6;
+            color: rgba(0, 0, 0, 0.82);
+            text-align: center;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <noscript>
+        <div class="noscript-box">
+            <div style="max-width: 760px; margin: 0 auto; text-align: left;">
+                <p><a href="?lang=en" hreflang="en" lang="en" style="color: inherit;">English</a></p>
+                <h1>Sitenize eklenen, cevapları doğrudan e‑postanıza gelen formlar.</h1>
+                <p>İletişim, randevu, sipariş, iş başvurusu, destek talebi… Hazır formları markanıza uyarlıyor ve kendi hosting'inize kuruyoruz. Her cevap e-postanıza düzenli bir kart olarak gelir. Aylık form servisi ücreti ödemezsiniz; veriniz üçüncü bir firmadan geçmez.</p>
+                <h2>Formunuzu hazırlıyor, kuruyor ve bağlıyoruz</h2>
+                <p>İster hazır bir formu markanıza uyarlayalım, ister sıfırdan tasarlayalım; formunuz sizin sitenizde, cevapları sizin posta kutunuzda.</p>
+                <ul>
+                    <li><b>Kurulum ve e-posta servisi.</b> Hazır formlardan birini logonuz, renkleriniz ve metinlerinizle uyarlıyor; mail servisini kendi hosting'inize kuruyoruz. Formu sitenize ekleyip gerçek bir gönderimle test ediyoruz. (Hosting'inize kurulum, SMTP ve spam ayarları, Sitenize ekleme ve test)</li>
+                    <li><b>Size özel form.</b> Başvuru, teklif isteme, rezervasyon, anket… İhtiyacınıza göre alanları, kuralları ve adımları tasarlıyoruz. Fiyat hesaplama, dosya yükleme ve koşullu alanlar dahil. (Doğrulamalı alanlar, Hesaplama ve özet, Dosya ve fotoğraf yükleme)</li>
+                    <li><b>Veri tabanı ve panel.</b> Cevaplar e-postanın yanında bir tabloya da kaydedilsin: Supabase, kendi API'niz veya veri tabanınız. İsterseniz gelen başvuruları izleyeceğiniz bir yönetim ekranı da ekliyoruz. (Supabase veya kendi API'niz, Cevapları listeleme ekranı, Excel / CSV dışa aktarma)</li>
+                </ul>
+                <h2>Bir formda olması gereken her şey</h2>
+                <p>Formlar basic.js ile, saf JavaScript ile yazılır. Framework ve derleme adımı yoktur; form tek bir sayfa olarak her hosting'de çalışır ve yıllar sonra da kolayca değiştirilir.</p>
+                <ul>
+                    <li><b>Yazarken doğrulama.</b> Zorunlu alanlar, e-posta ve telefon biçimi yazarken kontrol edilir. Gönder düğmesi eksik alan sayısını gösterir; hatalı form hiç gönderilmez.</li>
+                    <li><b>Düzenli e-postalar.</b> Her cevap, formla aynı görünümde bir kart olarak gelir: başlık, referans numarası, tarih ve alanlar. "Yanıtla" doğrudan ziyaretçiye gider.</li>
+                    <li><b>Dosya yükleme.</b> Sürükle bırak ile CV, ekran görüntüsü veya belge yüklenir. Dosyalar e-postaya eklenir; boyut, sayı ve tür sınırlarını siz belirlersiniz.</li>
+                    <li><b>Her siteye eklenir.</b> Form bağımsız bir sayfadır; iframe eklemeye izin veren her siteye tek satırla yerleşir: WordPress, Webflow, Wix, kendi siteniz.</li>
+                    <li><b>Spam koruması.</b> Gizli tuzak alanı (honeypot), aynı adresten gönderim sınırı, sadece sizin sitenize açık servis ve form adı kontrolü.</li>
+                    <li><b>Telefonda da çalışır.</b> Formlar küçük ekrana uyum sağlar. Tarih seçici, ülke kodlu telefon alanı ve büyük dokunma alanlarıyla mobilde rahat doldurulur.</li>
+                    <li><b>Markanıza göre.</b> Renk, logo, başlıklar ve bütün metinler düzenlenir; form istediğiniz dilde olur. E-postanın rengi de formla aynıdır.</li>
+                    <li><b>Kodu ve veriniz sizin.</b> Cevaplar sizin posta kutunuza veya veri tabanınıza gider. Kaynak kodu teslimde size geçer; abonelik ve lisans kilidi yoktur.</li>
+                </ul>
+                <h2>Hazır form servislerine aylık ödemek istemeyenler için</h2>
+                <ul>
+                    <li><b>Ajanslar ve web tasarımcılar.</b> Müşterilerinizin sitelerine iletişim ve teklif formları gerekiyor. Formu müşterinizin markasıyla, onun hosting'ine kuruyoruz; her ay bir form servisine ödeme yapmıyor.</li>
+                    <li><b>Klinik, salon ve danışmanlar.</b> Hizmet, tarih ve saat seçilen randevu formu. Çalışma saatleri ve kapalı günler formda tanımlı; randevu isteği e-postanıza referans numarasıyla gelir.</li>
+                    <li><b>Kafe, restoran ve küçük dükkânlar.</b> Ürün adetleri, kupon kodu ve toplam tutarın hesaplandığı sipariş formu. Pazaryeri komisyonu olmadan kendi sitenizden sipariş alın.</li>
+                    <li><b>İK, etkinlik ve destek ekipleri.</b> CV yüklemeli iş başvurusu, bilet seçmeli etkinlik kaydı ve talep numarası veren destek formu. Hepsi aynı mail servisiyle çalışır.</li>
+                </ul>
+                <h2>Dört adımda yayında</h2>
+                <ul>
+                    <li><b>Kısa görüşme</b> (1. gün): Hangi form, hangi alanlar ve cevapların nereye gideceğini konuşuyoruz: e-posta, veri tabanı veya ikisi birden.</li>
+                    <li><b>Taslak ve teklif</b> (1–2 gün): Formun alan listesi, görünüm taslağı, sabit fiyat ve teslim tarihi. Siz onaylamadan başlamıyoruz.</li>
+                    <li><b>Geliştirme ve kurulum</b> (2–7 gün): Form ve mail servisi kendi hosting'inize kurulur, sitenize eklenir, gerçek gönderimlerle test edilir.</li>
+                    <li><b>Teslim ve destek</b> (Teslim): Kaynak kodu ve kısa bir kullanım notu. Ardından paketinize göre ücretsiz düzeltme desteği.</li>
+                </ul>
+                <h2>Net kapsam, sabit fiyat</h2>
+                <p>İş bazlı çalışıyoruz. Aşağıdakiler başlangıç fiyatlarıdır; kapsamı birlikte netleştiririz ve teklifte yazan fiyat iş sırasında değişmez.</p>
+                <ul>
+                    <li><b>Açık Kaynak: Ücretsiz</b> Apache 2.0. Formları ve mail servisini indirin, kendiniz kurun. (8 hazır form sayfası, PHP mail servisi (SMTP), Supabase örneği, Kurulum rehberi, GitHub üzerinden destek)</li>
+                    <li><b>Kurulum: ₺7.500</b> başlangıç fiyatı. Hazır bir form, markanıza uyarlanıp hosting'inize kurulur. (1 hazır form, marka uyarlaması, Mail servisi kurulumu (SMTP), Sitenize ekleme ve test, 2–3 gün teslim, 1 ay ücretsiz düzeltme desteği)</li>
+                    <li><b>Özel Form: ₺18.000</b> başlangıç fiyatı. İhtiyacınıza göre sıfırdan tasarlanan form. (Size özel alanlar ve kurallar, Hesaplama, özet, koşullu alanlar, Dosya yükleme, E-posta + veri tabanı kaydı, 3 ay ücretsiz düzeltme desteği)</li>
+                    <li><b>Kurumsal: Özel</b> görüşmeye göre. Birden çok form, cevap paneli ve entegrasyonlar. (Birden çok form, Cevapları izleme paneli, API ve sistem entegrasyonu, Kendi markanızla (white-label) teslim, Sözleşmeli destek (SLA))</li>
+                </ul>
+                <h2>İsterseniz kendiniz kurun</h2><p>JS Form, Apache 2.0 lisansı ile açık kaynak. İndirin, inceleyin, kendi ve müşteri projelerinizde ticari olarak kullanın. Kurulumda takılırsanız buradayız.</p>
+                <ul>
+                    <li>8 hazır form: iletişim, randevu, sipariş, geri bildirim, iş başvurusu, destek talebi, etkinlik kaydı</li>
+                    <li>Form bileşeni ve alanlar: metin, e-posta, telefon, tarih, seçenekler, dosya</li>
+                    <li>PHP mail servisi: SMTP (PHPMailer), dosya ekleri, spam koruması</li>
+                    <li>Supabase'e kayıt örneği ve SQL tablosu</li>
+                </ul>
+                <h2>Merak edilenler</h2>
+                <h3>Formu kendi siteme nasıl eklerim?</h3><p>Form bağımsız bir sayfadır. Sitenize tek satırlık bir iframe kodu ile eklenir; iframe eklemeye izin veren her sitede çalışır (WordPress, Webflow, Wix, kendi siteniz). İsterseniz formu doğrudan kendi adresinde de açabilirsiniz.</p>
+                <h3>Cevaplar nereye gidiyor?</h3><p>Varsayılan olarak e-postanıza: mail servisi, cevabı formla aynı görünümde bir kart olarak gönderir ve dosyaları ekler. İsterseniz cevaplar Supabase'deki bir tabloya veya kendi API'nize de kaydedilir.</p>
+                <h3>Aylık ücret ödeyecek miyiz?</h3><p>Hayır. Form ve mail servisi kendi hosting'inizde çalışır; bir form servisine abonelik yoktur. Sadece zaten ödediğiniz hosting ve alan adı ücretleri kalır.</p>
+                <h3>Nasıl bir hosting gerekiyor?</h3><p>PHP 7.4 veya üstü ve hosting panelinizden açacağınız bir e-posta hesabı. Veri tabanı gerekmez. cPanel veya Plesk ile gelen paylaşımlı hosting'lerin neredeyse hepsi yeterlidir.</p>
+                <h3>E-postalar spam'e düşer mi?</h3><p>Servis e-postayı kendi alan adınızdaki bir hesaptan (ör. no-reply@siteniz.com) SMTP ile gönderir ve ziyaretçinin adresini "Yanıtla" alanına koyar; bu, en güvenilir yöntemdir. Kurulumda gerçek gönderimlerle test ediyoruz.</p>
+                <h3>Spam ve bot gönderimleri nasıl engelleniyor?</h3><p>Botların doldurduğu gizli bir tuzak alanı, aynı adresten art arda gönderim sınırı, servisin sadece sizin sitenize açılması ve izin verilen form adları. Hepsi servis dosyasının başındaki ayarlarla yönetilir.</p>
+                <h3>Dosya yüklenebiliyor mu?</h3><p>Evet. CV, ekran görüntüsü veya belge sürükle bırak ile yüklenir ve e-postaya eklenir. Dosya boyutu, sayısı ve izin verilen türler ayarlanabilir.</p>
+                <h3>KVKK açısından veriler nerede duruyor?</h3><p>Cevaplar sizin posta kutunuza veya veri tabanınıza gider; üçüncü bir form servisinden geçmez. Forma aydınlatma metni ve onay kutusu eklenebilir. Aydınlatma metni gibi KVKK yükümlülükleri veri sorumlusu olarak işletmenize aittir; bu konuda hukuki danışmanlık vermiyoruz.</p>
+                <h3>Formu sonradan kendimiz değiştirebilir miyiz?</h3><p>Evet. Başlıklar, metinler, renkler ve alanlar formun sayfasında açıkça tanımlıdır. JavaScript bilen herkes yeni bir alan ekleyebilir; derleme adımı yoktur, dosyayı kaydedip yüklemek yeterlidir.</p>
+                <h3>Hangi teknoloji kullanılıyor?</h3><p>Formlar saf JavaScript ile, basic.js adlı küçük ve bağımsız bir kütüphaneyle çizilir. React, Vue gibi bir framework veya paket yöneticisi yoktur. Mail servisi tek bir PHP dosyasıdır ve SMTP için PHPMailer kullanır.</p>
+                <h3>Açık kaynak sürümle ne yapabilirim?</h3><p>Apache 2.0 lisansı ticari kullanıma izin verir; formları indirip kendi veya müşteri projelerinizde kullanabilirsiniz. Mail servisinin kullandığı PHPMailer ayrıca LGPL lisanslıdır. Kurulum desteği isterseniz bize yazın.</p>
+                <h3>Ne kadar sürede teslim ediliyor?</h3><p>Hazır bir formun uyarlanıp kurulması genelde 2–3 gün, sıfırdan tasarlanan bir form yaklaşık bir hafta sürer. Teslim tarihi teklifte yazılı olarak belirlenir.</p>
+                <p><a href="https://github.com/bug7a/js-components" style="color: inherit;">GitHub</a> · <a href="mailto:bugra.ozden@gmail.com" style="color: inherit;">bugra.ozden@gmail.com</a></p>
+            </div>
+        </div>
+    </noscript>
+
+</body>
+
+</html>

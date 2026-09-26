@@ -15,6 +15,15 @@ Webpage: https://bug7a.github.io/js-components/
 
 */
 
+/*
+
+- input.getInputValue();
+-- Returns "" while no digit is written. (The field holds only its mask: "+90 (___) ___-____")
+-- So an optional field with no number is not wrong, a required one shows "Required",
+   and a form does not send the mask.
+
+*/
+
 "use strict";
 
 // Default values:
@@ -82,7 +91,7 @@ const PhoneInputB = function(params = {}) {
     // Girilen numarayı box.phoneMask a uygun hale getir.
     box.applyFormattedValueToInput = function() { // OVERRIDE
 
-        let value = box.getInputValue();
+        let value = inputElem.value; // WHY: The field itself, also when it holds only the mask. (getInputValue() is "" then.)
 
         // 1. Başından countryCode uzunluğu kadar karakteri sil
         if (typeof box.countryCode === "string" && box.countryCode.length > 0) {
@@ -159,6 +168,14 @@ const PhoneInputB = function(params = {}) {
         box.refreshInput();
     };
 
+    // WHY: The mask is written into the field on focus, and it is not a value. Before, an empty field with
+    //      the mask was "not valid": a form counted an optional phone as a missing entry while the cursor
+    //      was in it, a required one showed "Invalid" instead of "Required", and the mask could be sent.
+    box.getInputValue = function() { // OVERRIDE
+        const value = box.input.text;
+        return (value === box.countryCode + box.phoneMask) ? "" : value;
+    };
+
     box.isValid = function() {
         const val = box.getInputValue();
         if (!val || val.indexOf("_") !== -1) {
@@ -221,7 +238,7 @@ const PhoneInputB = function(params = {}) {
             box.line.color = box.lineColor;
 
             let formatted = box.countryCode + box.phoneMask;
-            if (box.getInputValue() == formatted) {
+            if (inputElem.value == formatted) { // WHY: The field itself. (getInputValue() is "" for the mask.)
                 box.setInputValue("");
             } else {
                 //box.checkIfInputIsRequiredAndEmpty();

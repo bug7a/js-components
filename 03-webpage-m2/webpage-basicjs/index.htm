@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <title>basic.js – Build web interfaces with plain JavaScript</title>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="basic.js is a small, dependency-free JavaScript library that creates the DOM for you. No HTML markup, no CSS files, no build step.">
+    <meta name="keywords" content="basic.js, JavaScript library, vanilla JS, UI library, no HTML, no CSS, no build step, lightweight, open source">
+    <meta name="author" content="Bugra Ozden">
+    <meta name="theme-color" content="#0F1012">
+
+    <meta name="robots" content="index, follow, max-image-preview:large">
+
+    <!-- LANGUAGES: The same page in English (https://bug7a.github.io/basic.js/) and in Turkish (?lang=tr).
+         canonical is added by js/site.js: it is different for each language. -->
+    <link rel="alternate" hreflang="en" href="https://bug7a.github.io/basic.js/">
+    <link rel="alternate" hreflang="tr" href="https://bug7a.github.io/basic.js/?lang=tr">
+    <link rel="alternate" hreflang="x-default" href="https://bug7a.github.io/basic.js/">
+
+    <!-- SEO: The page has two languages at the same address: ?lang=tr / ?lang=en (js/site.js, the default one has no ?lang).
+         The published address is CONFIG.siteURL (js/config.js): js/site.js adds canonical, hreflang and og:url with it.
+         The address is also written below (hreflang, og:url, og:image): link previews do not run JavaScript.
+         The <noscript> part and the JSON-LD are made from js/texts.js: keep them the same when the texts change. -->
+
+    <!-- SOCIAL (link preview) -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="basic.js">
+    <meta property="og:title" content="basic.js – Build web interfaces with plain JavaScript">
+    <meta property="og:description" content="basic.js is a small, dependency-free JavaScript library that creates the DOM for you. No HTML markup, no CSS files, no build step.">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="tr_TR">
+    <meta property="og:url" content="https://bug7a.github.io/basic.js/">
+    <meta property="og:image" content="https://bug7a.github.io/basic.js/assets/og-image.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="basic.js – Build web interfaces with plain JavaScript">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <!-- STRUCTURED DATA (schema.org) -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareSourceCode",
+        "name": "basic.js",
+        "url": "https://bug7a.github.io/basic.js/",
+        "description": "basic.js is a small, dependency-free JavaScript library that creates the DOM for you. No HTML markup, no CSS files, no build step.",
+        "codeRepository": "https://github.com/bug7a/js-components",
+        "programmingLanguage": "JavaScript",
+        "runtimePlatform": "Web browser",
+        "license": "https://www.apache.org/licenses/LICENSE-2.0",
+        "isAccessibleForFree": true,
+        "inLanguage": [
+            "en",
+            "tr"
+        ],
+        "keywords": "JavaScript library, UI library, vanilla JS, no build step, DOM",
+        "author": {
+            "@type": "Person",
+            "name": "Buğra Özden",
+            "url": "https://bug7a.github.io/",
+            "sameAs": [
+                "https://github.com/bug7a/",
+                "https://www.linkedin.com/in/bugra-ozden/"
+            ]
+        }
+    }
+    </script>
+
+
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg"><!-- The paper boat of the logo (assets/basicjs-ui-library.svg) -->
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="basic/basic.min.css">
+    <script src="basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="comp/web-view.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="comp/tabs.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="comp/toast.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- SITE FILES -->
+    <script src="js/config.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/texts.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/samples.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/theme.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/code-highlight.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/live-code.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/header.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- SECTION FILES -->
+    <script src="js/sections/hero.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/sections/why.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/sections/compare.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/sections/concepts.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/sections/playground.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/sections/ecosystem.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/sections/start.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/sections/footer.js" type="text/javascript" charset="utf-8"></script>
+
+    <script src="js/site.js" type="text/javascript" charset="utf-8"></script>
+
+    <!--
+
+    /* Bismillah */
+
+    BASIC.JS WEBSITE
+    - basic.js kütüphanesinin tanıtım sayfası. Canlı kod örnekleri ve bir deneme alanı içerir.
+    - Arayüzün tamamı basic.js ile, saf JavaScript ile çizilir. Framework yoktur.
+    - Metinler: js/texts.js  |  Kod örnekleri: js/samples.js  |  Ayarlar: js/config.js  |  Renkler: js/theme.js
+    - Sayfa akışı: js/site.js -> SiteApp.build()
+
+    -->
+
+    <style>
+
+        /* JavaScript kapalı ise gösterilecek metin */
+        .noscript-box {
+            position: absolute;
+            left: 0px;
+            top: 0px;
+            height: 100%;
+            overflow: auto; /* WHY: basic.css turns off the scrolling of <body>. */
+            width: 100%;
+            padding: 40px 20px;
+            box-sizing: border-box;
+            font-family: opensans;
+            font-size: 16px;
+            line-height: 1.6;
+            color: rgba(0, 0, 0, 0.82);
+            text-align: center;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <noscript>
+        <div class="noscript-box">
+            <div style="max-width: 760px; margin: 0 auto; text-align: left;">
+                <p><a href="?lang=tr" hreflang="tr" lang="tr" style="color: inherit;">Türkçe</a></p>
+                <h1>Build web interfaces with plain JavaScript.</h1>
+                <p>basic.js creates the page objects for you. No HTML markup, no CSS files, no build step: write one function and open the page in a browser.</p>
+                <p>12 KB gzipped · 0 dependencies · No build step · Apache 2.0</p>
+                <h2>Keep simple things simple</h2>
+                <ul>
+                    <li><b>Reads like the screen.</b> The code of a screen follows its layout: a group, a title, a button. You understand it at a glance, months later too.</li>
+                    <li><b>Small and dependency-free.</b> One 12 KB file works directly on the DOM. No framework runtime, no virtual DOM, no node_modules.</li>
+                    <li><b>No build step.</b> Add a script tag, save, refresh. There is nothing to compile, bundle or configure.</li>
+                    <li><b>Full control in one place.</b> Layout, style and behavior live together in JavaScript, so there is no markup and stylesheet to keep in sync.</li>
+                </ul>
+                <h2>The same card, two ways</h2><p>With HTML and CSS a screen is split into markup, styles and scripts that must stay in sync. With basic.js it is one function that reads like the screen.</p>
+                <h2>Everything you need fits on one screen</h2><p>basic.js has a handful of concepts. Learn them once and you can read any page built with it.</p>
+                <ul>
+                    <li><b>Objects.</b> Box, Label, Button, Input and Icon. Settings go in one object; positions (left, top, width, height) can come first.</li>
+                    <li><b>that.</b> The object created last. Style it right after you create it, without a variable.</li>
+                    <li><b>Containers.</b> Objects created between startBox() and endBox() go inside that box. Every start has its end.</li>
+                    <li><b>AutoLayout.</b> HGroup and VGroup place their objects in a row or a column, with gap, padding and alignment.</li>
+                    <li><b>Events.</b> on("click", ...) on any object. The handler gets the object itself and the event.</li>
+                    <li><b>Motion.</b> Tell an object what to animate with setMotion(), then just change its properties.</li>
+                </ul>
+                <h2>Start in three steps</h2>
+                <ol>
+                    <li><b>Get the basic folder.</b> Copy the basic folder (basic.min.js, basic.min.css and the font folder) next to your page.</li>
+                    <li><b>Create a page.</b> Load the two files, then your own script. The body stays empty.</li>
+                    <li><b>Write start().</b> basic.js creates the page and calls start(). Open the file in a browser, or with VS Code Live Server.</li>
+                </ol>
+                <h2>More than a library</h2><p>basic.js comes with a handbook, a component suite and ready app templates, all written with the same few ideas.</p>
+                <ul>
+                    <li><a href="https://bug7a.github.io/basic.js-handbook/" style="color: inherit;">Handbook</a>: 16 chapters, from the first Box to motion and utilities. Every example runs in the page.</li>
+                    <li><a href="https://bug7a.github.io/js-components/" style="color: inherit;">Components</a>: 72 ready components: tabs, tables, date pickers, charts, toasts, modals… each with a live example and its code.</li>
+                    <li><a href="https://github.com/bug7a/js-components/tree/main/04-template-m2/js-admin-panel" style="color: inherit;">App templates</a>: A modular admin panel, an installable PWA shell and forms that post to a service. Start from a working app.</li>
+                    <li><a href="https://github.com/bug7a/js-components/tree/main/__developer-toolkit" style="color: inherit;">VS Code tools</a>: Extensions for basic.js: code completion, an object navigator and a view inspector.</li>
+                </ul>
+                <p><a href="https://github.com/bug7a/js-components" style="color: inherit;">Download from GitHub</a> · basic.js is open source under the Apache 2.0 license.</p>
+            </div>
+        </div>
+    </noscript>
+
+</body>
+
+</html>

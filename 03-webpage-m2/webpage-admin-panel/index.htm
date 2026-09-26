@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+
+    <title>Özel Admin Panel ve Dashboard Geliştirme | JS Admin Panel</title>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="İşletmeniz, uygulamanız veya müşterileriniz için özel admin paneli ve dashboard. Sabit fiyat, 2–4 haftada teslim; kaynak kodu ve veriniz sizde kalır.">
+    <meta name="keywords" content="admin panel, yönetim paneli, özel admin panel, yönetim paneli yazılımı, dashboard geliştirme, rapor paneli, raporlama ekranı, özel yazılım, excel yerine panel, javascript admin panel, açık kaynak admin panel">
+    <meta name="author" content="Bugra Ozden">
+    <meta name="theme-color" content="#0E1A14">
+
+    <meta name="robots" content="index, follow, max-image-preview:large">
+
+    <!-- SEO: The page has two languages at the same address: ?lang=tr / ?lang=en (js/site.js, the default one has no ?lang).
+         canonical, hreflang and og:url are added by js/site.js when CONFIG.siteURL (js/config.js) is written.
+         When the address is known, also make og:image below a full address: link previews do not run JavaScript.
+         The <noscript> part and the JSON-LD are made from js/texts.js: keep them the same when the texts change. -->
+
+    <!-- SOCIAL (link preview) -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="JS Admin Panel">
+    <meta property="og:title" content="Özel Admin Panel ve Dashboard Geliştirme | JS Admin Panel">
+    <meta property="og:description" content="İşletmeniz, uygulamanız veya müşterileriniz için özel admin paneli ve dashboard. Sabit fiyat, 2–4 haftada teslim; kaynak kodu ve veriniz sizde kalır.">
+    <meta property="og:locale" content="tr_TR">
+    <meta property="og:locale:alternate" content="en_US">
+    <meta property="og:image" content="assets/og-image.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Özel Admin Panel ve Dashboard Geliştirme | JS Admin Panel">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <!-- STRUCTURED DATA (schema.org) -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "Service",
+                "name": "Özel Admin Panel ve Dashboard Geliştirme",
+                "description": "İşletmeniz, uygulamanız veya müşterileriniz için özel admin paneli ve dashboard. Sabit fiyat, 2–4 haftada teslim; kaynak kodu ve veriniz sizde kalır.",
+                "serviceType": "Admin panel and dashboard development",
+                "provider": {
+                    "@type": "Person",
+                    "name": "Buğra Özden",
+                    "url": "https://bug7a.github.io/",
+                    "sameAs": [
+                        "https://github.com/bug7a/",
+                        "https://www.linkedin.com/in/bugra-ozden/"
+                    ]
+                },
+                "areaServed": [
+                    {
+                        "@type": "City",
+                        "name": "İstanbul"
+                    },
+                    {
+                        "@type": "Country",
+                        "name": "Türkiye"
+                    },
+                    "Worldwide"
+                ],
+                "inLanguage": [
+                    "tr",
+                    "en"
+                ],
+                "offers": [
+                    {
+                        "@type": "Offer",
+                        "name": "Açık Kaynak",
+                        "price": "0",
+                        "priceCurrency": "TRY"
+                    },
+                    {
+                        "@type": "Offer",
+                        "name": "Başlangıç",
+                        "priceCurrency": "TRY",
+                        "priceSpecification": {
+                            "@type": "PriceSpecification",
+                            "minPrice": 45000,
+                            "priceCurrency": "TRY"
+                        }
+                    },
+                    {
+                        "@type": "Offer",
+                        "name": "Profesyonel",
+                        "priceCurrency": "TRY",
+                        "priceSpecification": {
+                            "@type": "PriceSpecification",
+                            "minPrice": 95000,
+                            "priceCurrency": "TRY"
+                        }
+                    }
+                ]
+            },
+            {
+                "@type": "FAQPage",
+                "inLanguage": "tr",
+                "mainEntity": [
+                    {
+                        "@type": "Question",
+                        "name": "Ne kadar sürede teslim ediliyor?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "Tek modüllü sade bir panel yaklaşık 2 hafta, çok modüllü ve raporlu bir panel 3–4 hafta sürer. Teslim tarihi teklifte yazılı olarak belirlenir."
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "Kaynak kodu bizde mi kalıyor?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "Evet. Teslimde kodun tamamı size geçer; istediğiniz gibi değiştirir, dilediğiniz sunucuda çalıştırırsınız. Abonelik veya lisans kilidi yok, başka bir yazılımcıyla da devam edebilirsiniz."
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "KVKK açısından verilerimiz nerede duruyor?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "Panel sizin sunucunuzda çalışır ve verilerinize doğrudan sizin altyapınızdan erişir; veriler bizim sunucularımızdan geçmez. Kimin hangi veriyi görebileceği kullanıcı yetkileriyle sınırlanır. Aydınlatma metni, VERBİS kaydı gibi KVKK yükümlülükleri veri sorumlusu olarak işletmenize aittir; bu konuda hukuki danışmanlık vermiyoruz."
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "Kendi veri tabanımızı bağlayabilir miyiz?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "Evet. Panel, veriyi nereden aldığından bağımsız çalışır: Supabase, Firebase, REST API, GraphQL veya kendi SQL sunucunuz. Erişim izni olan bir ERP'nin (ör. Logo, Mikro) veri tabanından veya API'sinden rapor ekranları da hazırlanabilir; bunu keşif görüşmesinde birlikte inceliyoruz."
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "Excel'deki verilerimizi panele aktarabilir miyiz?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "Evet. Mevcut Excel veya CSV dosyalarınız ilk kurulumda panele aktarılabilir. İhtiyacınız varsa panele kalıcı bir içe ve dışa aktarma ekranı da eklenir."
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "Sunucumuz yok, ne yapmalıyız?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "Panel sade dosyalardan oluştuğu için neredeyse her hosting hizmetinde çalışır. Veri tarafı için Supabase gibi hazır bir servis veya Türkiye'deki bir sunucu kullanılabilir; size uygun seçeneği keşif görüşmesinde birlikte belirliyoruz."
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "Teslimden sonra ücret ödeyecek miyiz?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "Bize ödeyeceğiniz zorunlu bir aylık ücret yok. Pakete dahil ücretsiz düzeltme süresinden sonra yeni modül, değişiklik veya bakım isterseniz ayrıca teklif veriyoruz. Sunucu ve veri servisi masrafları varsa doğrudan sizin hesabınızdan ödenir."
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "Panel mobilde çalışıyor mu?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "Panel masaüstü ekranlar için tasarlandı; asıl kullanım senaryosu bilgisayar başında veri yönetmek. Mobil uyumlu özel ekranlar da yapılabilir, bunu keşif görüşmesinde konuşuyoruz."
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "Mevcut panelimize modül eklenebilir mi?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "Paneliniz bu iskelet üzerine kuruluysa doğrudan eklenir. Değilse modülü bağımsız bir sayfa olarak geliştirip mevcut panelinizin içine yerleştirebiliriz; çalışan kodunuza dokunmadan."
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "Kendi markamızla (white-label) teslim yapıyor musunuz?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "Evet. Ajansların sık tercih ettiği bir yöntem: panel sizin markanızla teslim edilir, biz görünmeyiz. Kurumsal pakette standart olarak sunulur."
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "Panel hangi teknolojiyle yazılıyor?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "Saf JavaScript ile. Arayüz, basic.js adlı küçük ve bağımsız bir kütüphane ile çiziliyor. React, Vue veya Angular gibi bir framework, derleme adımı veya paket yöneticisi yok. Bu yüzden panel küçük kalıyor, yıllar sonra da aynı şekilde çalışıyor ve JavaScript bilen her yazılımcı üzerinde çalışabiliyor."
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "Açık kaynak sürümle ne yapabilirim?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "Apache 2.0 lisansı ticari kullanıma izin verir; indirip kendi veya müşteri projelerinizde kullanabilirsiniz. Kurulum ve özelleştirme desteği isterseniz bize yazın."
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+    </script>
+
+
+    <link rel="icon" type="image/png" href="assets/logo.png">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../../basic/basic.min.css">
+    <script src="../../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../../comp-m2/tooltip.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../../comp-m2/input-b.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../../comp-m2/email-input-b.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../../comp-m2/textarea-b.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- SITE FILES -->
+    <script src="js/config.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/texts.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/theme.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/background.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/mockup.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/header.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- SECTION FILES -->
+    <script src="js/sections/hero.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/sections/stats.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/sections/services.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/sections/features.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/sections/usecases.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/sections/process.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/sections/demo.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/sections/pricing.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/sections/opensource.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/sections/faq.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/sections/contact.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/sections/footer.js" type="text/javascript" charset="utf-8"></script>
+
+    <script src="js/site.js" type="text/javascript" charset="utf-8"></script>
+
+    <!--
+
+    /* Bismillah */
+
+    WEB ADMIN PANEL - Tanıtım ve satış sayfası
+    - Arayüzün tamamı basic.js ile, saf JavaScript ile çizilir. Framework yoktur.
+    - Metinler: js/texts.js  |  Ayarlar: js/config.js  |  Renkler: js/theme.js
+    - Sayfa akışı: js/site.js -> buildSite()
+
+    -->
+
+    <style>
+
+        /*
+        NOTE: basic.js ile CSS yazılmaz. Buradaki birkaç satır sadece;
+        Label içine yazılan HTML etiketleri (<b>) ve kaydırma çubuğu içindir.
+        */
+
+        b, strong {
+            font-family: opensans-bold;
+            font-weight: normal;
+        }
+
+        ::selection {
+            background: #2C5A38;
+            color: #FFFFFF;
+        }
+
+        .basic_box::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .basic_box::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .basic_box::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.18);
+            border-radius: 10px;
+            border: 3px solid #F6F6F3;
+        }
+
+        .basic_box::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.32);
+        }
+
+        /* JavaScript kapalı ise gösterilecek metin */
+        .noscript-box {
+            position: absolute;
+            left: 0px;
+            top: 0px;
+            height: 100%;
+            overflow: auto; /* WHY: basic.css turns off the scrolling of <body>. */
+            width: 100%;
+            padding: 40px 20px;
+            box-sizing: border-box;
+            font-family: opensans;
+            font-size: 16px;
+            line-height: 1.6;
+            color: rgba(0, 0, 0, 0.82);
+            text-align: center;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <noscript>
+        <div class="noscript-box">
+            <div style="max-width: 760px; margin: 0 auto; text-align: left;">
+                <p><a href="?lang=en" hreflang="en" lang="en" style="color: inherit;">English</a></p>
+                <h1>Şirketinize özel, hafif ve modüler yönetim panelleri tasarlıyoruz.</h1>
+                <p>Uygulamanızın içeriğini, müşterilerinizi, siparişlerinizi veya raporlarınızı tek ekrandan yönetin. Mobil uygulama stüdyoları, ajanslar ve işletmeler için sabit fiyatla, size özel paneller geliştiriyoruz. Panel kendi sunucunuzda çalışır; kaynak kodu da veriniz de sizde kalır.</p>
+                <h2>Üç tür iş alıyoruz</h2>
+                <p>Hepsinin ortak noktası aynı: hızlı açılan, kullanımı kolay, bakımı ucuz ekranlar.</p>
+                <ul>
+                    <li><b>Uygulamanız için admin paneli.</b> Mobil veya web uygulamanızın içerik, kullanıcı, bildirim ve ayar yönetimi. Uygulamanızı yayınladınız ama arkasında bir yönetim ekranı yoksa, sade bir panel yaklaşık iki haftada hazır olur. (Kullanıcı ve içerik yönetimi, Bildirim gönderme, Rol ve yetkilendirme)</li>
+                    <li><b>Verileriniz için rapor ve dashboard.</b> Satış, sipariş, stok veya kullanıcı verileriniz Excel dosyalarına, veri tabanına ya da farklı yazılımlara dağılmışsa; takip ettiğiniz metrikleri tek ekranda, güncel olarak görün. Pahalı BI lisanslarına gerek kalmaz. (Güncel metrik kartları, Tablo ve grafik raporları, Excel / CSV içe ve dışa aktarma)</li>
+                    <li><b>Mevcut panelinize modül.</b> Panelin iskeleti modüler. Her modül kendi başına çalışan bağımsız bir sayfadır ve panelin içine yerleşir. Paneliniz, çalışan kodunuza dokunulmadan büyür. (Bağımsız modüller, Farklı teknolojilerle uyumlu, Mevcut kodu bozmaz)</li>
+                </ul>
+                <h2>Panelinizde neler olabilir?</h2>
+                <p>Her panel ihtiyaca göre şekillenir; aşağıdakiler her projede sunabildiğimiz temeller. Arayüz, basic.js ile saf JavaScript kullanılarak yazılır. Framework ve derleme adımı olmadığı için panel yıllar sonra da kolayca bakılabilir kalır.</p>
+                <ul>
+                    <li><b>Hafif ve hızlı.</b> Harici bağımlılık yok, dosyalar küçük; panel hemen açılır. Kütüphane güncellemeleri paneli bozmaz, bakım masrafı düşük kalır.</li>
+                    <li><b>Modüler yapı.</b> Her modül bağımsız bir sayfa. Yeni bir modül eklemek, çalışan hiçbir şeyi yeniden yazmayı gerektirmez.</li>
+                    <li><b>Tabloda düzenleme.</b> Kayıtları tablo hâlinde görün, hücreye tıklayıp düzenleyin; filtreleyin, arayın, Excel'e aktarın.</li>
+                    <li><b>Giriş ve yetkiler.</b> E-posta/şifre, Google veya Apple ile giriş. Kimin hangi ekranı göreceğine ve neyi değiştirebileceğine siz karar verirsiniz.</li>
+                    <li><b>Veriniz sizin sunucunuzda.</b> Panel verinize doğrudan sizin altyapınızdan erişir; veriler bizim sunucumuzdan geçmez. Supabase, REST API, SQL sunucunuz veya mevcut sisteminiz.</li>
+                    <li><b>Markanıza göre tema.</b> Renk, logo, yazı tipi ve koyu tema; panel sizin ya da müşterinizin markasıyla uyumlu görünür.</li>
+                    <li><b>Türkçe arayüz.</b> Menüler, uyarılar, tarih ve para biçimleri Türkçe. İhtiyaç varsa İngilizce veya başka dillerde de.</li>
+                    <li><b>Kaynak kodu sizin.</b> Teslimde kodun tamamı size geçer. Tek bir firmaya bağlı kalmazsınız, abonelik zorunluluğu yoktur.</li>
+                </ul>
+                <h2>Hazır yazılıma sığmayan işler için</h2>
+                <ul>
+                    <li><b>Reklam ajansları.</b> Müşteriniz için uygulama veya site yaptınız, içeriği kendisi yönetsin istiyorsunuz. Paneli sizin markanızla (white-label) teslim ediyoruz; siz de müşterinize kendi işiniz olarak sunuyorsunuz.</li>
+                    <li><b>Mobil uygulama stüdyoları.</b> Uygulama hazır ama arkasında bir yönetim ekranı yok. Ekibinizi panel yazmaya ayırmak yerine bu işi dışarıdan alın, siz ürününüze odaklanın.</li>
+                    <li><b>KOBİ'ler ve e-ticaret.</b> Sipariş, stok, müşteri ve kampanya takibi Excel dosyalarına mı dağıldı? API'si veya veri tabanı erişimi olan sistemlerinizdeki verileri toplayıp ekibinizin kullanacağı sade ekranlar hazırlıyoruz.</li>
+                    <li><b>SaaS ve teknoloji firmaları.</b> Destek ve operasyon ekibinizin kullanacağı iç araçlar: kullanıcı arama, abonelik düzeltme, kayıt inceleme. Ana ürününüzü yavaşlatmadan.</li>
+                </ul>
+                <h2>Dört adımda teslim</h2>
+                <ul>
+                    <li><b>Keşif görüşmesi</b> (1. gün): 30 dakika. Hangi verinin, kim tarafından, hangi ekranda yönetileceğini konuşuyoruz.</li>
+                    <li><b>Ekran planı ve teklif</b> (2–3 gün): Modül listesi, ekran taslakları, sabit fiyat ve teslim tarihi. Siz onaylamadan başlamıyoruz.</li>
+                    <li><b>Geliştirme</b> (2–4 hafta): Her hafta çalışan bir sürümü birlikte inceliyoruz. Panel kendi sunucunuzda, kendi verinizle kurulur.</li>
+                    <li><b>Teslim ve destek</b> (Teslim): Kaynak kodu, kurulum dokümanı ve kullanım eğitimi. Ardından paketinize göre 1–3 ay ücretsiz düzeltme desteği.</li>
+                </ul>
+                <h2>Net kapsam, sabit fiyat</h2>
+                <p>Saatlik değil, iş bazlı çalışıyoruz. Aşağıdakiler başlangıç fiyatlarıdır; kapsamı birlikte netleştiririz ve teklifte yazan fiyat iş sırasında değişmez.</p>
+                <ul>
+                    <li><b>Açık Kaynak: Ücretsiz</b> Apache 2.0. Panelin iskeletini indirin, kendiniz kurun. (Tam kaynak kodu, Modüler iskelet, Örnek sayfalar ve bileşenler, GitHub üzerinden destek)</li>
+                    <li><b>Başlangıç: ₺45.000</b> başlangıç fiyatı. Tek bir uygulamanın yönetimi için sade bir panel. (1 modül, 3 veri tablosuna kadar, Giriş ekranı ve kullanıcı yönetimi, Temel tema uyarlaması, 2 hafta teslim, 1 ay ücretsiz düzeltme desteği)</li>
+                    <li><b>Profesyonel: ₺95.000</b> başlangıç fiyatı. Birden çok modül, roller ve raporlarla tam panel. (5 modüle kadar, Rol ve yetkilendirme, Dashboard ve rapor ekranları, Markanıza özel tema, Mevcut veri tabanı / API bağlantısı, 3 ay ücretsiz düzeltme desteği)</li>
+                    <li><b>Kurumsal: Özel</b> görüşmeye göre. Sınırsız modül, özel entegrasyon ve sürekli geliştirme. (Sınırsız modül, Özel entegrasyonlar, Kendi markanızla (white-label) teslim, Ekip eğitimi, Sözleşmeli destek (SLA))</li>
+                </ul>
+                <h2>İsterseniz kendiniz kurun</h2><p>Panelin iskeleti Apache 2.0 lisansı ile açık kaynak. İndirin, inceleyin, ticari projelerinizde kullanın. Yardıma ihtiyacınız olursa buradayız.</p>
+                <ul>
+                    <li>Panel iskeleti: sol menü, üst bar, modül sistemi, giriş ekranı</li>
+                    <li>40'tan fazla hazır arayüz bileşeni</li>
+                    <li>Örnek sayfalar, şablonlar ve el kitabı</li>
+                    <li>Ticari kullanıma açık, lisans ve telif bildirimini korumanız yeterli</li>
+                </ul>
+                <h2>Merak edilenler</h2>
+                <h3>Ne kadar sürede teslim ediliyor?</h3><p>Tek modüllü sade bir panel yaklaşık 2 hafta, çok modüllü ve raporlu bir panel 3–4 hafta sürer. Teslim tarihi teklifte yazılı olarak belirlenir.</p>
+                <h3>Kaynak kodu bizde mi kalıyor?</h3><p>Evet. Teslimde kodun tamamı size geçer; istediğiniz gibi değiştirir, dilediğiniz sunucuda çalıştırırsınız. Abonelik veya lisans kilidi yok, başka bir yazılımcıyla da devam edebilirsiniz.</p>
+                <h3>KVKK açısından verilerimiz nerede duruyor?</h3><p>Panel sizin sunucunuzda çalışır ve verilerinize doğrudan sizin altyapınızdan erişir; veriler bizim sunucularımızdan geçmez. Kimin hangi veriyi görebileceği kullanıcı yetkileriyle sınırlanır. Aydınlatma metni, VERBİS kaydı gibi KVKK yükümlülükleri veri sorumlusu olarak işletmenize aittir; bu konuda hukuki danışmanlık vermiyoruz.</p>
+                <h3>Kendi veri tabanımızı bağlayabilir miyiz?</h3><p>Evet. Panel, veriyi nereden aldığından bağımsız çalışır: Supabase, Firebase, REST API, GraphQL veya kendi SQL sunucunuz. Erişim izni olan bir ERP'nin (ör. Logo, Mikro) veri tabanından veya API'sinden rapor ekranları da hazırlanabilir; bunu keşif görüşmesinde birlikte inceliyoruz.</p>
+                <h3>Excel'deki verilerimizi panele aktarabilir miyiz?</h3><p>Evet. Mevcut Excel veya CSV dosyalarınız ilk kurulumda panele aktarılabilir. İhtiyacınız varsa panele kalıcı bir içe ve dışa aktarma ekranı da eklenir.</p>
+                <h3>Sunucumuz yok, ne yapmalıyız?</h3><p>Panel sade dosyalardan oluştuğu için neredeyse her hosting hizmetinde çalışır. Veri tarafı için Supabase gibi hazır bir servis veya Türkiye'deki bir sunucu kullanılabilir; size uygun seçeneği keşif görüşmesinde birlikte belirliyoruz.</p>
+                <h3>Teslimden sonra ücret ödeyecek miyiz?</h3><p>Bize ödeyeceğiniz zorunlu bir aylık ücret yok. Pakete dahil ücretsiz düzeltme süresinden sonra yeni modül, değişiklik veya bakım isterseniz ayrıca teklif veriyoruz. Sunucu ve veri servisi masrafları varsa doğrudan sizin hesabınızdan ödenir.</p>
+                <h3>Panel mobilde çalışıyor mu?</h3><p>Panel masaüstü ekranlar için tasarlandı; asıl kullanım senaryosu bilgisayar başında veri yönetmek. Mobil uyumlu özel ekranlar da yapılabilir, bunu keşif görüşmesinde konuşuyoruz.</p>
+                <h3>Mevcut panelimize modül eklenebilir mi?</h3><p>Paneliniz bu iskelet üzerine kuruluysa doğrudan eklenir. Değilse modülü bağımsız bir sayfa olarak geliştirip mevcut panelinizin içine yerleştirebiliriz; çalışan kodunuza dokunmadan.</p>
+                <h3>Kendi markamızla (white-label) teslim yapıyor musunuz?</h3><p>Evet. Ajansların sık tercih ettiği bir yöntem: panel sizin markanızla teslim edilir, biz görünmeyiz. Kurumsal pakette standart olarak sunulur.</p>
+                <h3>Panel hangi teknolojiyle yazılıyor?</h3><p>Saf JavaScript ile. Arayüz, basic.js adlı küçük ve bağımsız bir kütüphane ile çiziliyor. React, Vue veya Angular gibi bir framework, derleme adımı veya paket yöneticisi yok. Bu yüzden panel küçük kalıyor, yıllar sonra da aynı şekilde çalışıyor ve JavaScript bilen her yazılımcı üzerinde çalışabiliyor.</p>
+                <h3>Açık kaynak sürümle ne yapabilirim?</h3><p>Apache 2.0 lisansı ticari kullanıma izin verir; indirip kendi veya müşteri projelerinizde kullanabilirsiniz. Kurulum ve özelleştirme desteği isterseniz bize yazın.</p>
+                <p><a href="https://github.com/bug7a/js-components" style="color: inherit;">GitHub</a> · <a href="mailto:bugra.ozden@gmail.com" style="color: inherit;">bugra.ozden@gmail.com</a></p>
+            </div>
+        </div>
+    </noscript>
+
+</body>
+
+</html>
