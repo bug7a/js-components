@@ -74,9 +74,12 @@ const framesDir = path.join(path.dirname(outFile), "_frames");
     const client = await page.createCDPSession();
     const frames = [];
 
+    let isRecording = 0; // WHY: the first frame comes about 1 s after startScreencast; the warm-up frames are not kept.
+
     client.on("Page.screencastFrame", function (frame) {
         // WHY: the handler has to stay cheap, the frames flood the event loop.
         client.send("Page.screencastFrameAck", { sessionId: frame.sessionId }).catch(function () { });
+        if (!isRecording) return;
         const file = path.join(framesDir, "f" + String(frames.length).padStart(5, "0") + ".jpg");
         frames.push({ file: file, t: frame.metadata.timestamp });
         fs.writeFile(file, Buffer.from(frame.data, "base64"), function () { });
@@ -86,6 +89,9 @@ const framesDir = path.join(path.dirname(outFile), "_frames");
 
     // WHY: play() is async and evaluate() waits for it, so this returns when the video is over.
     //      The capture slows the page down; the page clock and the frame timestamps stay right.
+    // WHY: Without the warm-up the intro (the first 1.2 s) was not in the video.
+    await new Promise(function (r) { setTimeout(r, 1500); });           // warm-up (the autoplay keeps running)
+    isRecording = 1;
     await page.evaluate(function () { return play(); });
     await new Promise(function (r) { setTimeout(r, 2500); });           // hold the last frame
 
