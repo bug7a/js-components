@@ -39,7 +39,7 @@ const CONFIG = {
     // Canlı demodaki formlar. (Bu sayfaya göre yol; key: js/texts.js -> demo.forms)
     // NOTE: Bu formlarda SERVICE_URL boştur, yani "demo modunda" çalışırlar: gönderilen hiçbir şey bir yere gitmez.
     //       Kendi SERVICE_URL adresinizi yazdığınız bir formu buraya koymayın.
-    demoBaseURL: "../js-form/",
+    demoBaseURL: "demo/", // A copy of the forms of 04-template-m2/js-form (update it by hand when they change)
     demoForms: [
         { key: "appointment", file: "appointment-form.htm" },
         { key: "order", file: "order-form.htm" },
