@@ -163,6 +163,9 @@ DocView.createHeading = function (block) {
     label.elem.style.letterSpacing = (block.level == 1) ? "-0.6px" : "-0.2px";
     label.elem.style.borderRadius = "6px";
     label.elem.id = "hb-" + block.id;
+    // SEO: A Label is a <div>. The role makes it a heading for search engines and screen readers.
+    label.elem.setAttribute("role", "heading");
+    label.elem.setAttribute("aria-level", String(block.level));
     if (block.level == 2) label.elem.style.marginTop = "10px";
     label.selectable = 1;
 

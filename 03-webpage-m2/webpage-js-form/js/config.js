@@ -39,7 +39,7 @@ const CONFIG = {
     // Canlı demodaki formlar. (Bu sayfaya göre yol; key: js/texts.js -> demo.forms)
     // NOTE: Bu formlarda SERVICE_URL boştur, yani "demo modunda" çalışırlar: gönderilen hiçbir şey bir yere gitmez.
     //       Kendi SERVICE_URL adresinizi yazdığınız bir formu buraya koymayın.
-    demoBaseURL: "../js-form/",
+    demoBaseURL: "demo/", // A copy of the forms of 04-template-m2/js-form (update it by hand when they change)
     demoForms: [
         { key: "appointment", file: "appointment-form.htm" },
         { key: "order", file: "order-form.htm" },
@@ -69,7 +69,7 @@ const CONFIG = {
     // The published address of this page (ex: "https://bug7a.github.io/basic.js/"). "": not known yet.
     // With it, the page adds its canonical, hreflang (?lang=tr / ?lang=en) and og:url links.
     // Also write it into og:image in index.htm: link previews do not run JavaScript.
-    siteURL: "",
+    siteURL: "https://bug7a.github.io/advanced-web-forms/",
     ogImage: "assets/og-image.jpg", // The link preview picture (1200 x 630), relative to this page
 
     // *** BEHAVIOR:

@@ -15,18 +15,24 @@
     <meta name="robots" content="index, follow, max-image-preview:large">
 
     <!-- SEO: The page has two languages at the same address: ?lang=tr / ?lang=en (js/site.js, the default one has no ?lang).
-         canonical, hreflang and og:url are added by js/site.js when CONFIG.siteURL (js/config.js) is written.
-         When the address is known, also make og:image below a full address: link previews do not run JavaScript.
-         The <noscript> part and the JSON-LD are made from js/texts.js: keep them the same when the texts change. -->
+         canonical, hreflang and og:url are added by js/site.js with CONFIG.siteURL (js/config.js).
+         The address is also written below (hreflang, og:url, og:image): link previews do not run JavaScript.
+         The <noscript> part and the JSON-LD are made from js/texts.js: keep them the same when the texts change.
+         hreflang is written here (the same for both languages); canonical is not: it is different for ?lang=en.
+         sitemap.xml has both addresses: send it in Google Search Console (property: https://bug7a.github.io/advanced-web-forms/). -->
+    <link rel="alternate" hreflang="en" href="https://bug7a.github.io/advanced-web-forms/?lang=en">
+    <link rel="alternate" hreflang="tr" href="https://bug7a.github.io/advanced-web-forms/">
+    <link rel="alternate" hreflang="x-default" href="https://bug7a.github.io/advanced-web-forms/">
 
     <!-- SOCIAL (link preview) -->
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="JS Form">
     <meta property="og:title" content="Web Sitenize Hazır Formlar: İletişim, Randevu, Sipariş | JS Form">
     <meta property="og:description" content="İletişim, randevu, sipariş, iş başvurusu ve destek formları. Sitenize tek satırla eklenir, cevaplar düzenli bir e-posta olarak size gelir. Aylık form servisi ücreti yok; açık kaynak.">
+    <meta property="og:url" content="https://bug7a.github.io/advanced-web-forms/">
     <meta property="og:locale" content="tr_TR">
     <meta property="og:locale:alternate" content="en_US">
-    <meta property="og:image" content="assets/og-image.jpg">
+    <meta property="og:image" content="https://bug7a.github.io/advanced-web-forms/assets/og-image.jpg">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta property="og:image:alt" content="Web Sitenize Hazır Formlar: İletişim, Randevu, Sipariş | JS Form">
@@ -40,6 +46,7 @@
             {
                 "@type": "Service",
                 "name": "Web Sitenize Hazır Formlar: İletişim, Randevu, Sipariş",
+                "url": "https://bug7a.github.io/advanced-web-forms/",
                 "description": "İletişim, randevu, sipariş, iş başvurusu ve destek formları. Sitenize tek satırla eklenir, cevaplar düzenli bir e-posta olarak size gelir. Aylık form servisi ücreti yok; açık kaynak.",
                 "serviceType": "Web form development",
                 "provider": {
@@ -205,17 +212,17 @@
     <link rel="icon" type="image/png" href="assets/logo.png">
 
     <!-- LIBRARY FILES -->
-    <link rel="preload" href="../../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
-    <link rel="preload" href="../../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
-    <link rel="stylesheet" type="text/css" href="../../basic/basic.min.css">
-    <script src="../../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
-    <script src="../../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
+    <link rel="preload" href="basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="basic/basic.min.css">
+    <script src="basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
 
     <!-- COMPONENT FILES -->
-    <script src="../../comp-m2/tooltip.min.js" type="text/javascript" charset="utf-8"></script>
-    <script src="../../comp-m2/input-b.min.js" type="text/javascript" charset="utf-8"></script>
-    <script src="../../comp-m2/email-input-b.min.js" type="text/javascript" charset="utf-8"></script>
-    <script src="../../comp-m2/textarea-b.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="comp/tooltip.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="comp/input-b.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="comp/email-input-b.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="comp/textarea-b.min.js" type="text/javascript" charset="utf-8"></script>
 
     <!-- SITE FILES -->
     <script src="js/config.js" type="text/javascript" charset="utf-8"></script>
