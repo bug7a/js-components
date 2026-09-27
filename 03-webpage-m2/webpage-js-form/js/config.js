@@ -69,7 +69,7 @@ const CONFIG = {
     // The published address of this page (ex: "https://bug7a.github.io/basic.js/"). "": not known yet.
     // With it, the page adds its canonical, hreflang (?lang=tr / ?lang=en) and og:url links.
     // Also write it into og:image in index.htm: link previews do not run JavaScript.
-    siteURL: "",
+    siteURL: "https://bug7a.github.io/advanced-web-forms/",
     ogImage: "assets/og-image.jpg", // The link preview picture (1200 x 630), relative to this page
 
     // *** BEHAVIOR:
