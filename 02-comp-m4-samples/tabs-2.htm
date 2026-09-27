@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Tabs 2</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp-m4/tabs.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // Tabs (comp-m4) with the look of the old UITabs sample: 02-comp-m1-samples/ui-tabs.htm
+        // - variant: "pill" + a style for every bar (the colors, sizes and rounds of the old sample).
+        // - selectedColor, selectedTextColor and selectedIconFile of a tab: the active tab takes its own colors and icon.
+
+        // ICONS: The image files of the old sample.
+        const ICON_PATH = "../02-comp-m1-samples/ui-tabs/";
+
+        const tabList1 = [
+            { key: "1", text: "LOW", iconFile: ICON_PATH + "lamp.png", selectedColor: "white", selectedIconFile: ICON_PATH + "lamp-on.png" },
+            { key: "2", text: "MEDIUM", iconFile: ICON_PATH + "lamp.png", selectedColor: "white", selectedIconFile: ICON_PATH + "lamp-on.png" },
+            { key: "3", text: "ALL POWER", iconFile: ICON_PATH + "lamp.png", selectedColor: "white", selectedIconFile: ICON_PATH + "lamp-on.png" },
+        ];
+
+        const tabList2 = [
+            { key: "1", text: "Coffee", selectedColor: "Lavender", selectedTextColor: "#734f96" },
+            { key: "2", text: "Milkshake", selectedColor: "PaleTurquoise", selectedTextColor: "#0F4E4E" },
+            { key: "3", text: "Iced Caffee", selectedColor: "Bisque", selectedTextColor: "#B86500" },
+        ];
+
+        const tabList3 = [
+            { key: "1", text: "Coffee", iconFile: ICON_PATH + "coffee.png" },
+            { key: "2", text: "Milkshake" },
+            { key: "3", text: "Frappe" },
+            { key: "4", text: "Tea" },
+            { key: "5", text: "", iconFile: ICON_PATH + "search.svg" },
+        ];
+
+        const tabList4 = [
+            { key: "1", text: "", iconFile: ICON_PATH + "i1-white.png", selectedIconFile: ICON_PATH + "i1.png" },
+            { key: "2", text: "", iconFile: ICON_PATH + "i2-white.png", selectedIconFile: ICON_PATH + "i2.png" },
+            { key: "3", text: "", iconFile: ICON_PATH + "i3-white.png", selectedIconFile: ICON_PATH + "i3.png" },
+            { key: "4", text: "", iconFile: ICON_PATH + "i4-white.png", selectedIconFile: ICON_PATH + "i4.png" },
+            { key: "5", text: "", iconFile: ICON_PATH + "i5-white.png", selectedIconFile: ICON_PATH + "i5.png" },
+        ];
+
+        let tabs1, tabs2, tabs3, tabs4;
+
+        // Named styles of the Tabs in this page. USAGE: Tabs({ style: getTabsStyle("dark") })
+        const getTabsStyle = function (name) {
+
+            const styles = {
+
+                // Dark bar, white selected tab (Example 1)
+                dark: {
+                    pillBar: { color: "#141414", padding: [4, 4], gap: 8, round: 13 },
+                    tab: { fontSize: 20, textColor: White(0.8), padding: [20, 0], gap: 4, minHeight: 62 },
+                    tabHover: { color: "transparent", textColor: White(0.8) },
+                    pillActive: { textColor: Black(0.8) },
+                    pillIndicator: { color: "white", round: 13, shadow: "none", motion: 0.2 },
+                    icon: { size: 28, passiveOpacity: 1 },
+                },
+
+                // No bar, every tab has its own selected color (Example 2)
+                colorful: {
+                    pillBar: { color: "transparent", padding: [1, 1], gap: 2, round: 6 },
+                    tab: { fontSize: 20, textColor: Black(0.8), padding: [20, 0], minHeight: 48 },
+                    tabHover: { color: "transparent", textColor: Black(0.8) },
+                    pillActive: { textColor: Black(0.8) },
+                    pillIndicator: { color: "white", round: 6, shadow: "none", motion: 0.2 },
+                },
+
+                // Light gray bar (Example 3)
+                light: {
+                    pillBar: { color: "#EBEAE8", padding: [1, 1], gap: 2, round: 13 },
+                    tab: { fontSize: 20, textColor: Black(0.8), padding: [20, 0], gap: 4, minHeight: 48 },
+                    tabHover: { color: "transparent", textColor: Black(0.8) },
+                    pillActive: { textColor: Black(0.8) },
+                    pillIndicator: { color: "white", round: 13, shadow: "none", motion: 0.2 },
+                    icon: { size: 20, passiveOpacity: 1 },
+                },
+
+                // Round bar for icon only tabs (Example 4)
+                round: {
+                    pillBar: { color: "#EBEAE8", padding: [2, 2], gap: 4, round: 50 },
+                    tab: { padding: [8, 0], minHeight: 46 },
+                    tabHover: { color: "transparent" },
+                    pillIndicator: { color: "white", round: 50, shadow: "none", motion: 0.2 },
+                    icon: { size: 30, passiveOpacity: 1 },
+                },
+
+            };
+
+            return styles[name];
+
+        };
+
+        const start = function () {
+
+            page.color = "whitesmoke";
+
+            // BOX: Full screen scrollable container
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            startBox(0, 0, "100%", "100%", {
+                color: "transparent",
+                scrollY: 1,
+            });
+
+                // GROUP: Page layout (top: 100, 80 between the bars, like the old sample)
+                VGroup({
+                    width: "100%",
+                    height: "auto",
+                    align: "center top",
+                    gap: 80,
+                    padding: [0, 100],
+                });
+
+                    // *** EXAMPLE 1:
+                    tabs1 = Tabs({
+                        variant: "pill",
+                        width: "calc(100% - 40px)",
+                        tabs: tabList1,
+                        value: "2",
+                        style: getTabsStyle("dark"),
+                        onChange: function (self) {
+                            console.log("tabs1: " + self.value);
+                        },
+                    });
+                    // WHY: A fixed width bar (autoWidth: 0 in the old sample): the tabs stay in the middle.
+                    tabs1.stripInner.elem.style.margin = "0 auto";
+
+                    // *** EXAMPLE 2:
+                    tabs2 = Tabs({
+                        variant: "pill",
+                        tabs: tabList2,
+                        value: "3",
+                        style: getTabsStyle("colorful"),
+                        onChange: function (self) {
+                            console.log("tabs2: " + self.value);
+                        },
+                    });
+
+                    // *** EXAMPLE 3:
+                    tabs3 = Tabs({
+                        variant: "pill",
+                        tabs: tabList3,
+                        style: getTabsStyle("light"),
+                        onChange: function (self) {
+                            console.log("tabs3: " + self.value);
+                        },
+                    });
+
+                    // *** EXAMPLE 4:
+                    tabs4 = Tabs({
+                        variant: "pill",
+                        tabs: tabList4,
+                        value: "3",
+                        style: getTabsStyle("round"),
+                        onChange: function (self) {
+                            console.log("tabs4: " + self.value);
+                        },
+                    });
+
+                endGroup();
+
+            endBox();
+            const pageBox = that;
+            if (typeof ScrollBar === "function") ScrollBar({ scrollableBox: pageBox });
+
+        };
+
+    </script>
+</head>
+
+<body>
+</body>
+
+</html>

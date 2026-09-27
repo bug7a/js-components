@@ -22,7 +22,10 @@ UI COMPONENT TEMPLATE
 - Style packages: "classic" (default), "modern", "dark". Select with styleName. (Tabs.styles)
 - Everything is drawn with code (no image files needed).
 
-TAB: { key, text, iconFile, count, badge, disabled, closable }
+TAB: { key, text, iconFile, count, badge, disabled, closable, selectedColor, selectedTextColor, selectedIconFile }
+- selectedColor: Indicator color when the tab is active. (pill: the shape, underline: the line)
+- selectedTextColor: Text color when the tab is active.
+- selectedIconFile: Icon when the tab is active. (Ex: a filled version of the icon)
 - A string is also accepted: "Orders" -> { key: "Orders", text: "Orders" }
 
 USAGE:
@@ -59,7 +62,7 @@ const TabsDefaults = {
     key: "0",
     width: "auto",
     height: "auto",
-    tabs: [], // [{ key, text, iconFile, count, badge, disabled, closable }] or ["A", "B"]
+    tabs: [], // [{ key, text, iconFile, count, badge, disabled, closable, selectedColor, selectedTextColor, selectedIconFile }] or ["A", "B"]
     value: null, // Key of the active tab. null: the first enabled tab.
     variant: "underline", // "underline", "pill" (Only at create time)
     vertical: 0, // 1: Tabs are stacked. (Only at create time)
@@ -129,6 +132,7 @@ const TabsDefaults = {
         },
         icon: {
             size: 16,
+            passiveOpacity: 0.7, // Icon of a passive tab. (Active or hover: 1)
         },
         count: {
             fontSize: 11,
@@ -244,7 +248,7 @@ const Tabs = function (params = {}) {
         const activeStyle = (isPill) ? _s.pillActive : _s.tabActive;
 
         item.group.color = (active) ? ((isPill) ? "transparent" : _s.tabActive.color) : ((hover) ? _s.tabHover.color : "transparent");
-        item.label.textColor = (active) ? activeStyle.textColor : ((hover) ? _s.tabHover.textColor : _s.tab.textColor);
+        item.label.textColor = (active) ? (item.tab.selectedTextColor || activeStyle.textColor) : ((hover) ? _s.tabHover.textColor : _s.tab.textColor);
         item.group.elem.style.opacity = (item.tab.disabled) ? String(_s.tabDisabled.opacity) : "1";
         item.group.elem.style.cursor = (item.tab.disabled) ? "default" : "pointer";
         item.group.elem.setAttribute("aria-selected", (active) ? "true" : "false");
@@ -255,7 +259,12 @@ const Tabs = function (params = {}) {
             item.countLabel.color = (active) ? _s.count.activeColor : _s.count.color;
             item.countLabel.textColor = (active) ? _s.count.activeTextColor : _s.count.textColor;
         }
-        if (item.icon) item.icon.elem.style.opacity = (active || hover) ? "1" : "0.7";
+        if (item.icon) {
+            item.icon.elem.style.opacity = (active || hover) ? "1" : String(_s.icon.passiveOpacity);
+            const iconFile = (active && item.tab.selectedIconFile) ? item.tab.selectedIconFile : item.tab.iconFile;
+            item.icon.visible = (iconFile) ? 1 : 0;
+            if (iconFile && item.icon._loadedFile !== iconFile) { item.icon.load(iconFile); item.icon._loadedFile = iconFile; }
+        }
 
     };
 
@@ -294,6 +303,7 @@ const Tabs = function (params = {}) {
             ind.height = thickness;
         }
 
+        ind.color = item.tab.selectedColor || ((isPill) ? _s.pillIndicator.color : _s.indicator.color);
         ind.opacity = 1;
 
         // WHY: The first position must not be animated. (The indicator would fly in from the corner.)
@@ -308,7 +318,7 @@ const Tabs = function (params = {}) {
     const getIndicatorMotion = function () {
         const seconds = (isPill) ? _s.pillIndicator.motion : _s.indicator.motion;
         if (!seconds) return "none";
-        return "left " + seconds + "s, top " + seconds + "s, width " + seconds + "s, height " + seconds + "s, opacity 0.15s";
+        return "left " + seconds + "s, top " + seconds + "s, width " + seconds + "s, height " + seconds + "s, background-color " + seconds + "s, opacity 0.15s";
     };
 
     const scrollToActive = function () {
@@ -437,13 +447,14 @@ const Tabs = function (params = {}) {
 
             // ICON:
             let icon = null;
-            if (tab.iconFile) {
+            if (tab.iconFile || tab.selectedIconFile) {
                 icon = Icon({ width: _s.icon.size, height: _s.icon.size });
-                icon.load(tab.iconFile);
                 icon.elem.alt = "";
                 icon.elem.style.flexShrink = "0";
                 icon.elem.style.transition = "opacity 0.15s";
                 icon.elem.setAttribute("aria-hidden", "true");
+                // WHY: The selected icon is loaded before the first click, so it does not flash in.
+                if (tab.selectedIconFile) (new Image()).src = tab.selectedIconFile;
             }
 
             // LABEL: Text
@@ -537,6 +548,8 @@ const Tabs = function (params = {}) {
     const applyItemContent = function (item) {
         const tab = item.tab;
         item.label.text = Tabs.escapeHtml(tab.text);
+        // WHY: An empty label still takes a gap, so the icon of an icon only tab would not be in the middle.
+        item.label.visible = (tab.text !== "") ? 1 : 0;
         item.group.elem.setAttribute("aria-label", tab.text);
         const hasCount = (tab.count !== undefined && tab.count !== null && tab.count !== "");
         item.countLabel.text = (hasCount) ? Tabs.escapeHtml(tab.count) : "";
@@ -544,8 +557,7 @@ const Tabs = function (params = {}) {
         item.badgeDot.visible = (tab.badge == 1 || tab.badge === true) ? 1 : 0;
         item.closeButton.visible = (isClosable(tab)) ? 1 : 0;
         item.closeButton.elem.setAttribute("aria-label", "Close " + tab.text);
-        if (item.icon && tab.iconFile && item.icon._loadedFile !== tab.iconFile) { item.icon.load(tab.iconFile); item.icon._loadedFile = tab.iconFile; }
-        paintItem(item);
+        paintItem(item); // NOTE: It also loads the icon. (iconFile or selectedIconFile)
     };
 
     const removeItemObjects = function (item) {
@@ -671,7 +683,7 @@ const Tabs = function (params = {}) {
         if (!item) return 0;
         Object.assign(item.tab, changes || {});
         item.tab.disabled = (item.tab.disabled == 1 || item.tab.disabled === true) ? 1 : 0;
-        if (changes && changes.iconFile !== undefined && !item.icon) console.warn("Tabs: An icon can only be changed on a tab that was created with an iconFile.");
+        if (changes && (changes.iconFile !== undefined || changes.selectedIconFile !== undefined) && !item.icon) console.warn("Tabs: An icon can only be changed on a tab that was created with an iconFile.");
         applyItemContent(item);
         if (item.tab.disabled && box.value === key) { box.value = pickValue(null); updatePanels(); }
         update();
