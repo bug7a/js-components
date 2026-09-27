@@ -158,7 +158,8 @@ const HoldToConfirmButton = function (params = {}) {
         box.completedBox.dontMotion();
         box.completedBox.opacity = 1;
 
-        setTimeout(function () {
+        box.resetTimer = setTimeout(function () {
+            box.resetTimer = null;
             //box.elem.style.filter = "none";
             //box.opacity = 1;
             box.clickable = 1;
@@ -182,6 +183,12 @@ const HoldToConfirmButton = function (params = {}) {
 
         if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
         //page.remove_onResize(functionName); // on page resized.
+
+        // WHY: A timer that fires after the removal used box (null): "Cannot read properties of null".
+        clearTimeout(box.holdTimer);
+        clearTimeout(box.resetTimer);
+        box.holdTimer = null;
+        box.resetTimer = null;
 
         // Remove basic objects
         //box.background.remove(); // NOTE: If you add event (box.background.on("click") to other objects.
