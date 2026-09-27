@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>basic samples test</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- LIBRARY FILES -->
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+        "use strict";
+
+        /* Bismillah */
+
+        /*
+
+        Basic Samples Test - v26.09
+        Self-checking test: every page in 01-basic-samples-m1 runs without errors.
+
+        Open it in a browser with a web server (Live Server), not file:// (the pages are read with fetch).
+        Green = passed, orange = passed with a warning, red = failed.
+        The summary is also in the console and in the tab title ("ALL PASS").
+        One page: basic-samples-test.htm?only=counter (a part of the file name)
+
+        HOW: Every page is read with fetch, a watcher script and <base href> are put at the top of its
+        <head>, and it runs in its own iframe (a blob address of the same origin). So the watcher sees
+        everything from the first script on, and the page loads its files from its own folder.
+
+        CHECKS (for every page):
+        - Every file it loads is found (scripts, styles, fonts, images).
+        - It loads and runs without errors (errors, unhandled promises, console.error),
+          also in the timers and loop() after the start (it runs for RUN_TIME ms).
+        - The page is drawn (start() or window.onload created objects).
+        - Every start call is ended (basic.js "not ended" warning).
+        - No console warnings (only a warning).
+        - It is resized to a phone width and back without errors (onResize code).
+
+        alert(), confirm() and prompt() are replaced (they would stop the test).
+
+        NEW SAMPLE: add its file name to SAMPLES. ({ file, isEmpty: 1 }: a page that draws nothing)
+
+        Developer: Bugra Ozden
+
+        */
+
+        // *** SETTINGS:
+
+        const SAMPLE_FOLDER = "../01-basic-samples-m1/";
+        const RUN_TIME = 2500;          // ms after the load: timers, loop() (every 1000 ms) and animations run
+        const RESIZE_TIME = 400;        // ms after each size change
+        const TIME_LIMIT = 15000;       // ms: an iframe that does not answer fails
+        const PARALLEL = 4;             // iframes at the same time
+
+        const SAMPLES = [
+            { file: "00-empty-project-template.htm", isEmpty: 1 }, // start() is empty: nothing is drawn
+            "01-first-example.htm",
+            "02-custom-component-with-JSON.htm",
+            "03-button.htm",
+            "04-label.htm",
+            "05-icon.htm",
+            "06-input.htm",
+            "07-box.htm",
+            "08-motion.htm",
+            "09-center-aline.htm",
+            "10-autolayout-group.htm",
+            "11-html-template-css.htm",
+            "12-auto-fit.htm",
+            "13-mobile-fit-skeleton.htm",
+            "14-dialog-comp.htm",
+            "15-sliders-comp.htm",
+            "16-counter.htm",
+            "17-card.htm",
+            "18-solar-system.htm",
+            "19-3D-solar-system.htm",
+            "20-objects-from-array.htm",
+            "21-mini-graph-box.htm",
+            "22-autolayout.htm",
+            "23-basic-animated-panel.htm",
+            "24-animated-panel.htm",
+            "25-face.htm",
+            "26-shopping-list.htm",
+            "27-sign-up-form.htm",
+            "28-responsive-layout.htm",
+            "29-sticky-notes.htm",
+            "30-pomodoro-timer.htm",
+            "31-fetch-data.htm",
+            "32-new-features.htm",
+            "33-screens-and-routing.htm",
+            "34-light-dark-theme.htm",
+            "35-drawing-canvas.htm",
+            "custom-scrollbar-usage-1.htm",
+            "custom-scrollbar-usage-2.htm",
+            "custom-scrollbar-usage-3.htm",
+        ];
+
+        // *** PRIVATE VARIABLES:
+
+        let resultList = null;   // VGroup of the result rows
+        let lblStatus = null;
+        let nextFrameId = 0;
+        const waitingFrames = {}; // id -> resolve function
+        const blobURLs = {};      // id -> blob address of the page
+
+        // *** PROBE: runs INSIDE each iframe (its text is copied to the top of the page).
+
+        const installWatchers = function (id, settings) {
+            const probe = window.__probe = { errors: [], warnings: [], missingFiles: [], dialogs: [] };
+            const shortFile = function (url) { return String(url || "").split("/").slice(-2).join("/"); };
+
+            // WHY capture: The load errors of files (script, link, img) do not bubble, but they come to window in the capture phase.
+            window.addEventListener("error", function (e) {
+                const target = e.target;
+                if (target && target !== window && target.nodeName) {
+                    probe.missingFiles.push(shortFile(target.src || target.href || target.getAttribute("src") || target.getAttribute("href")));
+                    return;
+                }
+                // Browser notice, not an error of the code: a resize callback changed the layout again.
+                if (/ResizeObserver loop/.test(e.message)) return;
+                // An error in the page's own code: its file name and its line in the file (without the lines of this watcher).
+                const place = (e.filename === location.href) ? settings.file + ":" + (e.lineno - settings.lineOffset) : shortFile(e.filename) + ":" + e.lineno;
+                probe.errors.push(e.message + (e.filename ? " (" + place + ")" : ""));
+            }, true);
+            window.addEventListener("unhandledrejection", function (e) {
+                probe.errors.push("Unhandled promise: " + ((e.reason && e.reason.message) || e.reason));
+            });
+
+            const originalWarn = console.warn;
+            console.warn = function () { probe.warnings.push([].slice.call(arguments).join(" ")); return originalWarn.apply(console, arguments); };
+            const originalError = console.error;
+            console.error = function () { probe.errors.push("console.error: " + [].slice.call(arguments).join(" ")); return originalError.apply(console, arguments); };
+
+            // They would stop the page until someone clicks.
+            window.alert = function (text) { probe.dialogs.push("alert: " + text); };
+            window.confirm = function (text) { probe.dialogs.push("confirm: " + text); return false; };
+            window.prompt = function (text) { probe.dialogs.push("prompt: " + text); return null; };
+
+            const sleep = function (ms) { return new Promise(function (resolve) { setTimeout(resolve, ms); }); };
+
+            const runProbe = async function () {
+                const steps = [];
+                // level "fail" makes the page fail; level "warn" only shows the problem.
+                const check = function (name, ok, info, level) { steps.push({ name: name, ok: !!ok, info: info ? String(info) : "", level: level || "fail" }); return !!ok; };
+
+                await sleep(settings.runTime);
+
+                check("every file is found", probe.missingFiles.length === 0, "not found: " + probe.missingFiles.join(", "));
+                check("runs without errors", probe.errors.length === 0, probe.errors.join(" | "));
+                const isReady = window.page && window.page.elem instanceof HTMLElement;
+                if (check("basic.js page is ready", isReady, "window.page was not created (basic.js did not load?)") && !settings.isEmpty) {
+                    check("page is drawn", document.body.getElementsByTagName("*").length > 1, "no objects on the page (start() or window.onload did not run?)");
+                }
+                const notEnded = probe.warnings.filter(function (w) { return /not ended/.test(w); });
+                check("every start call is ended", notEnded.length === 0, notEnded.join(" | "));
+                const otherWarnings = probe.warnings.filter(function (w) { return notEnded.indexOf(w) < 0; });
+                check("no console warnings", otherWarnings.length === 0, otherWarnings.join(" | "), "warn");
+
+                // RESIZE: phone width, then back. (onResize code of the page)
+                const frame = window.frameElement;
+                if (frame) {
+                    const errorsBefore = probe.errors.length;
+                    const originalWidth = frame.style.width;
+                    frame.style.width = "390px";
+                    await sleep(settings.resizeTime);
+                    frame.style.width = originalWidth;
+                    await sleep(settings.resizeTime);
+                    check("resizes without errors", probe.errors.length === errorsBefore, probe.errors.slice(errorsBefore).join(" | "));
+                }
+
+                return { steps: steps, dialogs: probe.dialogs };
+            };
+
+            window.addEventListener("load", function () {
+                runProbe()
+                    .then(function (r) { parent.__sampleDone(id, r); })
+                    .catch(function (e) { parent.__sampleDone(id, { steps: [{ name: "test code", ok: false, info: e.message, level: "fail" }] }); });
+            });
+        };
+
+        // *** PARENT PAGE:
+
+        // The page text with the <base> and the watcher at the top of its <head>.
+        const makeFrameHtml = function (id, html, baseURL, sample) {
+            // Live Server puts its reload script in the pages it serves: not needed in the test.
+            html = html.replace(/<\!-- Code injected by live-server -->[\s\S]*?<\/script>/i, "");
+            const settings = { runTime: RUN_TIME, resizeTime: RESIZE_TIME, isEmpty: !!sample.isEmpty, file: sample.file, lineOffset: 0 };
+            const watcherText = "(" + installWatchers.toString() + ")(" + id + ", ";
+            settings.lineOffset = watcherText.split("\n").length - 1; // the lines this script adds before the page's own lines
+            const top = "<base href=\"" + baseURL + "\">" + "<script>" + watcherText + JSON.stringify(settings) + ");<\/script>";
+            const headMatch = html.match(/<head[^>]*>/i);
+            if (headMatch) return html.replace(headMatch[0], headMatch[0] + top);
+            return top + html;
+        };
+
+        window.__sampleDone = function (id, result) {
+            if (waitingFrames[id]) waitingFrames[id](result);
+        };
+
+        // Runs one sample page in a new iframe and returns its result.
+        const runSample = async function (sample) {
+            const url = new URL(SAMPLE_FOLDER + sample.file, location.href).href;
+            let html;
+            try {
+                const response = await fetch(url, { cache: "no-store" });
+                if (!response.ok) throw new Error("HTTP " + response.status);
+                html = await response.text();
+            } catch (e) {
+                return { steps: [{ name: "page is found", ok: false, info: e.message, level: "fail" }] };
+            }
+
+            return new Promise(function (resolve) {
+                const id = ++nextFrameId;
+                const frame = document.createElement("iframe");
+                frame.style.cssText = "position: fixed; left: -12000px; top: 0; width: 1024px; height: 768px; border: 0;";
+
+                const timer = setTimeout(function () {
+                    finish({ steps: [{ name: "answers in " + (TIME_LIMIT / 1000) + " s", ok: false, info: "the page did not finish loading", level: "fail" }] });
+                }, TIME_LIMIT);
+
+                const finish = function (result) {
+                    clearTimeout(timer);
+                    delete waitingFrames[id];
+                    frame.remove();
+                    URL.revokeObjectURL(blobURLs[id]);
+                    delete blobURLs[id];
+                    resolve(result);
+                };
+
+                waitingFrames[id] = finish;
+                // WHY blob and not srcdoc: The page has a real address, so location.hash works (33-screens-and-routing).
+                blobURLs[id] = URL.createObjectURL(new Blob([makeFrameHtml(id, html, new URL(".", url).href, sample)], { type: "text/html" }));
+                frame.src = blobURLs[id];
+                document.body.appendChild(frame);
+            });
+        };
+
+        const showRow = function (file, result) {
+            const failed = result.steps.filter(function (s) { return !s.ok && s.level === "fail"; });
+            const warned = result.steps.filter(function (s) { return !s.ok && s.level === "warn"; });
+            const passedCount = result.steps.filter(function (s) { return s.ok; }).length;
+            const state = failed.length ? "FAIL" : warned.length ? "WARN" : "PASS";
+            const color = { PASS: "seagreen", WARN: "darkorange", FAIL: "crimson" }[state];
+
+            setDefaultContainerBox(resultList);
+            VGroup({ width: "100%", height: "auto", align: "left top", gap: 2 });
+                const title = state + "  " + file + "  " + passedCount + "/" + result.steps.length;
+                Label({ text: title, plainText: title, fontSize: 14, bold: state !== "PASS", textColor: color });
+                failed.concat(warned).forEach(function (s) {
+                    const text = "      " + (s.level === "fail" ? "✗ " : "! ") + s.name + (s.info ? ":  " + s.info : "");
+                    Label({ text: text, plainText: text, fontSize: 12, textColor: (s.level === "fail") ? "crimson" : "darkorange", ellipsis: 0 });
+                    that.css = { whiteSpace: "pre-wrap", wordBreak: "break-word", maxWidth: "100%" };
+                });
+            endGroup();
+
+            failed.forEach(function (s) { console.error("FAIL: " + file + " - " + s.name + " " + s.info); });
+            warned.forEach(function (s) { console.warn("WARN: " + file + " - " + s.name + " " + s.info); });
+            return state;
+        };
+
+        const runAll = async function () {
+            if (location.protocol === "file:") {
+                lblStatus.text = "Open this page with a web server (Live Server), not file://";
+                lblStatus.textColor = "crimson";
+                page.title = "basic samples test: needs a web server";
+                return;
+            }
+
+            const only = new URLSearchParams(location.search).get("only");
+            const samples = SAMPLES.map(function (s) { return (typeof s === "string") ? { file: s } : s; })
+                .filter(function (s) { return !only || s.file.indexOf(only) >= 0; });
+            const states = new Array(samples.length);
+            const results = new Array(samples.length);
+            let done = 0;
+            let shown = 0;
+
+            // Parallel, but the rows are shown in the list order.
+            let next = 0;
+            const worker = async function () {
+                while (next < samples.length) {
+                    const index = next++;
+                    results[index] = await runSample(samples[index]);
+                    done++;
+                    lblStatus.text = "Running... " + done + "/" + samples.length;
+                    while (shown < samples.length && results[shown]) { states[shown] = showRow(samples[shown].file, results[shown]); shown++; }
+                }
+            };
+            const workers = [];
+            for (let i = 0; i < Math.min(PARALLEL, samples.length); i++) workers.push(worker());
+            await Promise.all(workers);
+
+            const failCount = states.filter(function (s) { return s === "FAIL"; }).length;
+            const warnCount = states.filter(function (s) { return s === "WARN"; }).length;
+            const summary = "basic samples test: " + (samples.length - failCount) + "/" + samples.length + " passed" +
+                (failCount ? " - " + failCount + " FAILED" : " - ALL PASS") + (warnCount ? " (" + warnCount + " with warnings)" : "");
+
+            lblStatus.text = summary;
+            lblStatus.textColor = failCount ? "crimson" : "seagreen";
+            lblStatus.bold = 1;
+            console.info(summary);
+            page.title = summary;
+        };
+
+        // First running function.
+        const start = function () {
+
+            // BOX: Scrollable page container
+            const scrollBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+                VGroup({ width: "100%", height: "auto", align: "left top", gap: 4, padding: 24 });
+                    Label({ text: "Basic samples test", fontSize: 24, bold: 1 });
+                    Label({ text: "01-basic-samples-m1: each page in its own iframe. Files found, no errors while it runs, page drawn, start/end balance, resize.", fontSize: 13, textColor: Black(0.5) });
+                    lblStatus = Label({ text: "Running...", fontSize: 16, textColor: Black(0.6) });
+                    that.css = { margin: "8px 0" };
+                    resultList = VGroup({ width: "100%", height: "auto", align: "left top", gap: 6 });
+                    endGroup();
+                endGroup();
+            endBox();
+
+            if (typeof ScrollBar === "function") ScrollBar({ scrollableBox: scrollBox }); // after the box (it goes on the box's parent)
+
+            runAll();
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+    </body>
+</html>
