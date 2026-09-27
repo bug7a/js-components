@@ -163,6 +163,13 @@ SITE.eyebrow = function (text, onDark = 0) {
 
 };
 
+// SEO: A heading for search engines and screen readers. (A Label is a <div>: without it the page has no headings.)
+SITE.markHeading = function (label, level) {
+    label.elem.setAttribute("role", "heading");
+    label.elem.setAttribute("aria-level", String(level));
+    return label;
+};
+
 // LABEL: Ana başlık (hero)
 SITE.h1 = function (text, onDark = 0) {
 
@@ -174,6 +181,7 @@ SITE.h1 = function (text, onDark = 0) {
     });
     that.elem.style.fontFamily = SITE.BOLD;
     that.elem.style.lineHeight = "1.12";
+    SITE.markHeading(that, 1);
     that.elem.style.overflow = "visible"; // WHY: Büyük yazının harfleri (Ö, Ş, ğ, g) satır kutusunun dışına taşar; basic.css etiketi keser.
     that.elem.style.letterSpacing = "-0.6px";
 
@@ -192,6 +200,7 @@ SITE.h2 = function (text, onDark = 0) {
     });
     that.elem.style.fontFamily = SITE.BOLD;
     that.elem.style.lineHeight = "1.2";
+    SITE.markHeading(that, 2);
     that.elem.style.overflow = "visible"; // WHY: Büyük yazının harfleri (Ö, Ş, ğ, g) satır kutusunun dışına taşar; basic.css etiketi keser.
     that.elem.style.letterSpacing = "-0.3px";
 
@@ -210,6 +219,7 @@ SITE.h3 = function (text, onDark = 0, width = "100%") {
     });
     that.elem.style.fontFamily = SITE.BOLD;
     that.elem.style.lineHeight = "1.3";
+    SITE.markHeading(that, 3);
     that.elem.style.overflow = "visible"; // WHY: Büyük yazının harfleri (Ö, Ş, ğ, g) satır kutusunun dışına taşar; basic.css etiketi keser.
 
     return that;

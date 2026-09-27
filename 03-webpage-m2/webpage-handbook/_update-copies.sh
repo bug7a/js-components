@@ -48,8 +48,8 @@ echo "  handbook/  ok"
 node - "$SITE" <<'NODE'
 const fs = require("fs"), path = require("path");
 const site = process.argv[2];
-// WHY: Not needed offline: notes, this script, the link preview picture (assets/og-image.jpg; the logo in assets/ is saved). (The app files are saved by easy-pwa.js itself.)
-const skip = /^(readme\.md|_update-copies\.sh|assets\/og-image\.jpg|\.DS_Store|.*\/\.DS_Store)/;
+// WHY: Not needed offline: notes, this script, sitemap.xml (for search engines), the link preview picture (assets/og-image.jpg; the logo in assets/ is saved). (The app files are saved by easy-pwa.js itself.)
+const skip = /^(readme\.md|sitemap\.xml|_update-copies\.sh|assets\/og-image\.jpg|\.DS_Store|.*\/\.DS_Store)/;
 const files = [];
 const walk = function (dir) {
     fs.readdirSync(dir, { withFileTypes: true }).forEach(function (entry) {
