@@ -13,7 +13,7 @@ Framework, derleme adımı, paket yöneticisi ve CSS dosyası yoktur.
 | Bölüm | Dosya | İçerik |
 |---|---|---|
 | Üst çubuk | `js/header.js` | Sabit menü. Hero üzerindeyken şeffaf, kaydırınca açık zeminli. Mobilde tam ekran menü. |
-| Hero | `js/sections/hero.js` | Başlık, kısa anlatım, iki düğme ve panel görseli (`js/mockup.js`). |
+| Hero | `js/sections/hero.js` | Başlık, kısa anlatım, iki düğme ve panelin gerçek ekran görüntüleri (`assets/screens/`, `PageControl` ile kayan gösteri; ekran adları `texts.js` → `hero.screens`). |
 | Rakamlar | `js/sections/stats.js` | Dört güven rakamı. |
 | Hizmetler | `js/sections/services.js` | Satılan üç iş türü. |
 | Özellikler | `js/sections/features.js` | Sekiz özellik kartı. |
@@ -42,6 +42,10 @@ Bütün yazılar `js/texts.js` içindedir: `TEXTS.tr` ve `TEXTS.en`.
 ### Ayarlar
 `js/config.js`: marka adı, logo, e-posta, telefon, GitHub ve el kitabı adresleri,
 demo adresi, form servisi ve varsayılan dil.
+
+`showPricing: 0` fiyat bölümünü ve menüdeki (üst çubuk, mobil menü, alt bilgi) "Fiyatlar" bağlantılarını gizler.
+`1` yapınca `index.htm` içinde yorum satırına alınan iki kısmı da geri koyun: `<noscript>` içindeki fiyat listesi
+ve JSON-LD'deki ücretli paketler (ikisi de `PRICING (hidden...` yorumunun içindedir).
 
 ### Renkler
 `js/theme.js` başındaki `SITE` nesnesi. Ana renk `PRIMARY` (`#2C5A38`) panelin rengiyle aynıdır.
@@ -114,6 +118,7 @@ yeniden kurulmaz.
 - Kütüphane ve bileşenler kopyalanmadı: `../../basic/` ve `../../comp-m2/` doğrudan kullanılır.
 - Kullanılan bileşenler: `tooltip`, `input-b`, `email-input-b`, `textarea-b` (comp-m2) ve `scroll-bar` (basic).
 - Sayfadaki ikonlar `assets/icons/` içindedir (Material Symbols, 48×48 PNG).
+- Hero'daki ekran görüntüleri `assets/screens/` içindedir (1440×900 JPG, canlı demodan). Yeni bir ekran eklemek için dosyayı oraya koyun, `hero.js` → `HERO_SCREEN_FILES` ve `texts.js` → `hero.screens` listelerine aynı sırada ekleyin.
 
 ---
 

@@ -69,7 +69,7 @@ const buildSite = function (keepSectionKey) {
             UseCasesSection();
             ProcessSection();
             DemoSection();
-            PricingSection();
+            if (CONFIG.showPricing) PricingSection();
             OpenSourceSection();
             FaqSection();
             ContactSection();

@@ -34,7 +34,13 @@ const CONFIG = {
 
     // *** DEMO:
     // Canlı demo, bu adresi bir iframe içinde açar.
-    demoURL: "../js-admin-panel/index.htm",
+    // demo/: the self-contained copy of js-admin-panel (only .min.js files). Changes to js-admin-panel are carried over by hand.
+    demoURL: "demo/index.htm",
+
+    // *** PRICING:
+    // 0: The pricing section and its menu links are hidden. (Also in index.htm: the <noscript> prices and the
+    //    JSON-LD offers are in comments. Put them back when this is 1.)
+    showPricing: 0,
 
     // *** FORM SERVICE:
     // Formu POST edeceğiniz servisin adresi. (Formspree, Web3Forms, Make, n8n, kendi API'niz...)
@@ -54,7 +60,7 @@ const CONFIG = {
     // The published address of this page (ex: "https://bug7a.github.io/basic.js/"). "": not known yet.
     // With it, the page adds its canonical, hreflang (?lang=tr / ?lang=en) and og:url links.
     // Also write it into og:image in index.htm: link previews do not run JavaScript.
-    siteURL: "",
+    siteURL: "https://bug7a.github.io/admin-panel/",
     ogImage: "assets/og-image.jpg", // The link preview picture (1200 x 630), relative to this page
 
     // *** BEHAVIOR:

@@ -17,7 +17,12 @@
     <!-- SEO: The page has two languages at the same address: ?lang=tr / ?lang=en (js/site.js, the default one has no ?lang).
          canonical, hreflang and og:url are added by js/site.js when CONFIG.siteURL (js/config.js) is written.
          When the address is known, also make og:image below a full address: link previews do not run JavaScript.
-         The <noscript> part and the JSON-LD are made from js/texts.js: keep them the same when the texts change. -->
+         The <noscript> part and the JSON-LD are made from js/texts.js: keep them the same when the texts change.
+         hreflang is also written here (the same for both languages); canonical is not: it is different for ?lang=en.
+         sitemap.xml has both addresses: send it in Google Search Console (property: https://bug7a.github.io/admin-panel/). -->
+    <link rel="alternate" hreflang="en" href="https://bug7a.github.io/admin-panel/?lang=en">
+    <link rel="alternate" hreflang="tr" href="https://bug7a.github.io/admin-panel/">
+    <link rel="alternate" hreflang="x-default" href="https://bug7a.github.io/admin-panel/">
 
     <!-- SOCIAL (link preview) -->
     <meta property="og:type" content="website">
@@ -26,13 +31,36 @@
     <meta property="og:description" content="İşletmeniz, uygulamanız veya müşterileriniz için özel admin paneli ve dashboard. Sabit fiyat, 2–4 haftada teslim; kaynak kodu ve veriniz sizde kalır.">
     <meta property="og:locale" content="tr_TR">
     <meta property="og:locale:alternate" content="en_US">
-    <meta property="og:image" content="assets/og-image.jpg">
+    <meta property="og:image" content="https://bug7a.github.io/admin-panel/assets/og-image.jpg">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta property="og:image:alt" content="Özel Admin Panel ve Dashboard Geliştirme | JS Admin Panel">
     <meta name="twitter:card" content="summary_large_image">
 
     <!-- STRUCTURED DATA (schema.org) -->
+    <!-- PRICING (hidden: CONFIG.showPricing is 0). The paid offers, to put back into "offers" below:
+                    ,
+                    {
+                        "@type": "Offer",
+                        "name": "Başlangıç",
+                        "priceCurrency": "TRY",
+                        "priceSpecification": {
+                            "@type": "PriceSpecification",
+                            "minPrice": 45000,
+                            "priceCurrency": "TRY"
+                        }
+                    },
+                    {
+                        "@type": "Offer",
+                        "name": "Profesyonel",
+                        "priceCurrency": "TRY",
+                        "priceSpecification": {
+                            "@type": "PriceSpecification",
+                            "minPrice": 95000,
+                            "priceCurrency": "TRY"
+                        }
+                    }
+    -->
     <script type="application/ld+json">
     {
         "@context": "https://schema.org",
@@ -40,6 +68,7 @@
             {
                 "@type": "Service",
                 "name": "Özel Admin Panel ve Dashboard Geliştirme",
+                "url": "https://bug7a.github.io/admin-panel/",
                 "description": "İşletmeniz, uygulamanız veya müşterileriniz için özel admin paneli ve dashboard. Sabit fiyat, 2–4 haftada teslim; kaynak kodu ve veriniz sizde kalır.",
                 "serviceType": "Admin panel and dashboard development",
                 "provider": {
@@ -72,26 +101,6 @@
                         "name": "Açık Kaynak",
                         "price": "0",
                         "priceCurrency": "TRY"
-                    },
-                    {
-                        "@type": "Offer",
-                        "name": "Başlangıç",
-                        "priceCurrency": "TRY",
-                        "priceSpecification": {
-                            "@type": "PriceSpecification",
-                            "minPrice": 45000,
-                            "priceCurrency": "TRY"
-                        }
-                    },
-                    {
-                        "@type": "Offer",
-                        "name": "Profesyonel",
-                        "priceCurrency": "TRY",
-                        "priceSpecification": {
-                            "@type": "PriceSpecification",
-                            "minPrice": 95000,
-                            "priceCurrency": "TRY"
-                        }
                     }
                 ]
             },
@@ -205,24 +214,24 @@
     <link rel="icon" type="image/png" href="assets/logo.png">
 
     <!-- LIBRARY FILES -->
-    <link rel="preload" href="../../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
-    <link rel="preload" href="../../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
-    <link rel="stylesheet" type="text/css" href="../../basic/basic.min.css">
-    <script src="../../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
-    <script src="../../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
+    <link rel="preload" href="basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="basic/basic.min.css">
+    <script src="basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
 
     <!-- COMPONENT FILES -->
-    <script src="../../comp-m2/tooltip.min.js" type="text/javascript" charset="utf-8"></script>
-    <script src="../../comp-m2/input-b.min.js" type="text/javascript" charset="utf-8"></script>
-    <script src="../../comp-m2/email-input-b.min.js" type="text/javascript" charset="utf-8"></script>
-    <script src="../../comp-m2/textarea-b.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="comp/tooltip.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="comp/input-b.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="comp/email-input-b.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="comp/textarea-b.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="comp/page-control.min.js" type="text/javascript" charset="utf-8"></script>
 
     <!-- SITE FILES -->
     <script src="js/config.js" type="text/javascript" charset="utf-8"></script>
     <script src="js/texts.js" type="text/javascript" charset="utf-8"></script>
     <script src="js/theme.js" type="text/javascript" charset="utf-8"></script>
     <script src="js/background.js" type="text/javascript" charset="utf-8"></script>
-    <script src="js/mockup.js" type="text/javascript" charset="utf-8"></script>
     <script src="js/header.js" type="text/javascript" charset="utf-8"></script>
 
     <!-- SECTION FILES -->
@@ -329,7 +338,7 @@
                     <li><b>Hafif ve hızlı.</b> Harici bağımlılık yok, dosyalar küçük; panel hemen açılır. Kütüphane güncellemeleri paneli bozmaz, bakım masrafı düşük kalır.</li>
                     <li><b>Modüler yapı.</b> Her modül bağımsız bir sayfa. Yeni bir modül eklemek, çalışan hiçbir şeyi yeniden yazmayı gerektirmez.</li>
                     <li><b>Tabloda düzenleme.</b> Kayıtları tablo hâlinde görün, hücreye tıklayıp düzenleyin; filtreleyin, arayın, Excel'e aktarın.</li>
-                    <li><b>Giriş ve yetkiler.</b> E-posta/şifre, Google veya Apple ile giriş. Kimin hangi ekranı göreceğine ve neyi değiştirebileceğine siz karar verirsiniz.</li>
+                    <li><b>Giriş ve yetkiler.</b> E-posta ve şifre ile giriş. Kimin hangi ekranı göreceğine ve neyi değiştirebileceğine siz karar verirsiniz.</li>
                     <li><b>Veriniz sizin sunucunuzda.</b> Panel verinize doğrudan sizin altyapınızdan erişir; veriler bizim sunucumuzdan geçmez. Supabase, REST API, SQL sunucunuz veya mevcut sisteminiz.</li>
                     <li><b>Markanıza göre tema.</b> Renk, logo, yazı tipi ve koyu tema; panel sizin ya da müşterinizin markasıyla uyumlu görünür.</li>
                     <li><b>Türkçe arayüz.</b> Menüler, uyarılar, tarih ve para biçimleri Türkçe. İhtiyaç varsa İngilizce veya başka dillerde de.</li>
@@ -344,11 +353,12 @@
                 </ul>
                 <h2>Dört adımda teslim</h2>
                 <ul>
-                    <li><b>Keşif görüşmesi</b> (1. gün): 30 dakika. Hangi verinin, kim tarafından, hangi ekranda yönetileceğini konuşuyoruz.</li>
+                    <li><b>Keşif görüşmesi</b> (1. gün): Hangi verinin, kim tarafından, hangi ekranda yönetileceğini konuşuyoruz.</li>
                     <li><b>Ekran planı ve teklif</b> (2–3 gün): Modül listesi, ekran taslakları, sabit fiyat ve teslim tarihi. Siz onaylamadan başlamıyoruz.</li>
                     <li><b>Geliştirme</b> (2–4 hafta): Her hafta çalışan bir sürümü birlikte inceliyoruz. Panel kendi sunucunuzda, kendi verinizle kurulur.</li>
                     <li><b>Teslim ve destek</b> (Teslim): Kaynak kodu, kurulum dokümanı ve kullanım eğitimi. Ardından paketinize göre 1–3 ay ücretsiz düzeltme desteği.</li>
                 </ul>
+                <!-- PRICING (hidden: CONFIG.showPricing is 0)
                 <h2>Net kapsam, sabit fiyat</h2>
                 <p>Saatlik değil, iş bazlı çalışıyoruz. Aşağıdakiler başlangıç fiyatlarıdır; kapsamı birlikte netleştiririz ve teklifte yazan fiyat iş sırasında değişmez.</p>
                 <ul>
@@ -357,6 +367,7 @@
                     <li><b>Profesyonel: ₺95.000</b> başlangıç fiyatı. Birden çok modül, roller ve raporlarla tam panel. (5 modüle kadar, Rol ve yetkilendirme, Dashboard ve rapor ekranları, Markanıza özel tema, Mevcut veri tabanı / API bağlantısı, 3 ay ücretsiz düzeltme desteği)</li>
                     <li><b>Kurumsal: Özel</b> görüşmeye göre. Sınırsız modül, özel entegrasyon ve sürekli geliştirme. (Sınırsız modül, Özel entegrasyonlar, Kendi markanızla (white-label) teslim, Ekip eğitimi, Sözleşmeli destek (SLA))</li>
                 </ul>
+                -->
                 <h2>İsterseniz kendiniz kurun</h2><p>Panelin iskeleti Apache 2.0 lisansı ile açık kaynak. İndirin, inceleyin, ticari projelerinizde kullanın. Yardıma ihtiyacınız olursa buradayız.</p>
                 <ul>
                     <li>Panel iskeleti: sol menü, üst bar, modül sistemi, giriş ekranı</li>

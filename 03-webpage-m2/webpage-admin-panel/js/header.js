@@ -54,9 +54,9 @@ const SiteHeader = function (params = {}) {
     const navLabelList = [];
 
     // Masaüstünde gösterilecek menü başlıkları
-    const navKeys = (L.w >= 1180)
+    const navKeys = ((L.w >= 1180)
         ? ["services", "features", "demo", "pricing", "openSource", "faq"]
-        : ["services", "features", "demo", "pricing", "faq"];
+        : ["services", "features", "demo", "pricing", "faq"]).filter(SITE.hasSection);
 
     // *** PRIVATE FUNCTIONS:
 
@@ -312,7 +312,7 @@ const SiteHeader = function (params = {}) {
                     SITE.space(18);
 
                     // LABEL: Menü satırları
-                    ["services", "features", "demo", "pricing", "openSource", "faq", "contact"].forEach(function (key) {
+                    ["services", "features", "demo", "pricing", "openSource", "faq", "contact"].filter(SITE.hasSection).forEach(function (key) {
 
                         Label({
                             text: T.menu[key],

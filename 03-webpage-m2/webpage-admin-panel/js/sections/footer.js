@@ -102,7 +102,7 @@ const FooterSection = function (params = {}) {
 
                     SITE.space(2);
 
-                    column.links.forEach(function (link) {
+                    column.links.filter(function (link) { return SITE.hasSection(link.action); }).forEach(function (link) {
                         SITE.link(link.text, function () { params.onNavClick(link.action); }, 1, L.small + 1);
                     });
 

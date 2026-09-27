@@ -703,6 +703,7 @@ Webpage: https://bug7a.github.io/js-components/
 
         const isBannerAllowed = function () {
             if (!SETTINGS.installBanner) return 0;
+            if (window.self !== window.top) return 0; // WHY: The site is shown in a frame of another page (a live demo).
             if (isBannerHiddenByVisitor() || isBannerHiddenOnThisPage()) return 0;
             if (!isPhoneOrTablet() && !SETTINGS.installBannerOnDesktop) return 0;
             return 1;

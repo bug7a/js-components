@@ -222,8 +222,12 @@ const PageControl = function (params = {}) {
         dotList.forEach(function (dot) { dot.remove(); });
         dotList = [];
         items.forEach(function (item) {
-            setDefaultContainerBox(box.dotsBox); // WHY: setDefaultContainerBox() is not in the start/end list.
-            const dot = Box({ width: _s.dots.size, height: _s.dots.size, color: _s.dots.color, round: 100, clickable: 1 });
+            let dot = null;
+            // WHY: createIn() restores the container. (setDefaultContainerBox() left it on the dots, so the next
+            //      object of the page, created after addPage(), went into the dots group.)
+            createIn(box.dotsBox, function () {
+                dot = Box({ width: _s.dots.size, height: _s.dots.size, color: _s.dots.color, round: 100, clickable: 1 });
+            });
             dot.elem.style.flexShrink = "0";
             dot.elem.style.cursor = "pointer";
             dot.elem.style.transition = "width " + _s.dots.motion + "s, background-color " + _s.dots.motion + "s";
@@ -348,10 +352,12 @@ const PageControl = function (params = {}) {
     box.addPage = function (key, index = -1) {
         if (findItem(key)) { console.warn("PageControl: A page with this key exists: " + key); return findItem(key).page; }
 
-        setDefaultContainerBox(box.track); // WHY: setDefaultContainerBox() is not in the start/end list.
-
         // BOX: Page
-        const page = Box({ width: "100%", height: "100%", color: _s.page.color });
+        // WHY: createIn() restores the container, so objects created after addPage() stay where they were.
+        let page = null;
+        createIn(box.track, function () {
+            page = Box({ width: "100%", height: "100%", color: _s.page.color });
+        });
         page.elem.style.position = (isSlide) ? "relative" : "absolute";
         page.elem.style.left = "0px";
         page.elem.style.top = "0px";

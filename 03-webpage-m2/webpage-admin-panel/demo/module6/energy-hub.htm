@@ -1,0 +1,1519 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>Energy Hub</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <!-- LIBRARY FILES -->
+        <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../common/theme.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- COMPONENTS -->
+        <script src="../comp/tiny-select.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/tiny-table.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/toggle.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/slider.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/dialog.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/button-with-icon.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/check-box.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/radio-button.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/progress-bar.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/spark-line-box.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/gauge.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/chart-box.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/context-menu.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <!--
+
+        /* Bismillah */
+
+        Module #6: Energy Hub (Template) - v26.09
+
+        - Control and monitoring of a home energy system: solar panels, a home battery, the grid,
+          an EV charger and smart loads (water heater, pool pump, air conditioner).
+        - Live energy flow diagram (SVG), battery gauge, summary graphs, today's power chart and energy mix.
+        - Controls: battery strategy (self-use, backup, time-of-use), battery reserve, EV charging
+          (current limit, solar only, target charge), smart loads (only with excess solar).
+        - Tariff of the day, savings, CO₂ and an event log.
+        - Opens full screen in the admin panel (iframe), but it can work alone too.
+        - Simulation: 1 second = 1 minute of the day, so the sun and the tariff periods can be seen.
+          Replace the "ENERGY SERVICE" functions with your API calls (Modbus, MQTT, cloud API of the inverter...).
+
+        -->
+
+        <script>
+
+        // *** CONSTANTS:
+        const LIB_PATH = "../";
+        const ASSETS = "../assets/";
+
+        const PAGE_COLOR = T.page;
+        const CARD_COLOR = T.surface; // Same with ChartBox dark theme background
+        const CARD_BORDER_COLOR = Ink(0.1);
+        const FIELD_COLOR = T.surface2;
+        const PRIMARY_COLOR = T.primary;
+        const ACCENT_COLOR = T.accent;
+        const WARNING_COLOR = T.warning;
+        const ERROR_COLOR = T.danger;
+
+        // Colors of the energy parts (used in all the charts and the diagram)
+        const SOLAR_COLOR = Theme.readable("#E8B04A");
+        const HOME_COLOR = T.info;
+        const BATTERY_COLOR = T.accent;
+        const GRID_COLOR = "#9085E9";
+        const EV_COLOR = "#D55181";
+
+        const DAY_MINUTES = 24 * 60;
+        const START_MINUTE = 10 * 60 + 30; // Simulation starts at 10:30 (morning: solar rises, battery charges)
+        const CHART_STEP = 15; // Minutes between the chart points
+        const KPI_COUNT = 60; // Minutes on the summary graphs
+
+        const EXPORT_PRICE = 0.08; // $/kWh
+        const CO2_PER_KWH = 0.42; // kg (grid electricity)
+
+        // Tariff periods (time-of-use)
+        const TARIFFS = {
+            night: { text: "Night", price: 0.11, color: T.info },
+            day: { text: "Day", price: 0.24, color: Theme.readable("#A9A79F") },
+            peak: { text: "Peak", price: 0.39, color: T.danger },
+        };
+
+        const MODES = [
+            { value: "self", text: "Self-use", desc: "Solar first, battery at night, grid last" },
+            { value: "backup", text: "Backup", desc: "Keeps the battery full for power cuts" },
+            { value: "tou", text: "Time-of-use", desc: "Charges at night (cheap), uses it at peak" },
+        ];
+
+        const TARGET_SOC_LIST = [60, 70, 80, 90, 100];
+
+        const LEVEL_COLORS = {
+            "Info": Ink(0.6),
+            "Success": ACCENT_COLOR,
+            "Warning": WARNING_COLOR,
+            "Error": ERROR_COLOR,
+        };
+
+        // *** TEST DATA: (ENERGY SERVICE)
+        const system = {
+            site: "Home · Izmir",
+            inverter: { model: "SH-10K Hybrid", serial: "SH10K-25-01184", firmware: "v3.2.0", efficiency: 97.4 },
+            pv: { peakKw: 9.6, cloud: 0.95, cloudTimer: 0 },
+            battery: { model: "BX-13.5", capacity: 13.5, soc: 46, maxKw: 5, temp: 27, health: 98, cycles: 412 },
+            ev: { plugged: 0, enabled: 1, limitA: 16, solarOnly: 0, carCapacity: 64, carSoc: 38, targetSoc: 80, sessionKwh: 0, state: "" },
+            mode: "self",
+            reserve: 20, // %
+            gridOnline: 1,
+            loads: [
+                { key: "heater", title: "Water heater", kw: 2.0, enabled: 1, solarOnly: 1, running: 0 },
+                { key: "pool", title: "Pool pump", kw: 0.75, enabled: 1, solarOnly: 1, running: 0 },
+                { key: "ac", title: "Air conditioner", kw: 1.3, enabled: 1, solarOnly: 0, running: 0 },
+            ],
+            now: { solar: 0, home: 0, ev: 0, battery: 0, grid: 0 }, // kW. battery: + charging. grid: + import.
+            today: {},
+            history: { solar: [], home: [], grid: [], selfUse: [] }, // Last minutes (summary graphs)
+            events: [],
+        };
+
+        // *** VARIABLES:
+        let simMinute = 0; // Minute of the simulated day
+        let isReady = 0;
+        let isRendering = 0; // WHY: Component setters call onChange. Changes made by code must not be logged.
+
+        let lblClock, lblWeather, lblStatus, moreMenu;
+        let flowBox, flow = {};
+        let gaugeBattery, batteryInfo = {};
+        let kpiBoxList = [];
+        let chartPower, chartMix;
+        let lblReserve, sliderReserve, lblModeInfo;
+        let lblEvState, evProgress, toggleEv, lblEvLimit, sliderEvLimit, chkSolarOnly, lblEvSession, btnPlug, targetSelect;
+        let loadRows = {};
+        let tariffCells = [], lblTariffNow, savingsLabels = {};
+        let grpEventTable, eventTable = null;
+
+        // First running function.
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            // Today until the start time (fast, without events)
+            resetToday();
+            for (let m = 0; m < START_MINUTE; m++) {
+                simMinute = m;
+                simulateMinute(1);
+            }
+            simMinute = START_MINUTE;
+
+            // Test: The car is plugged in when the page opens.
+            system.ev.plugged = 1;
+            system.ev.carSoc = 38;
+            system.ev.sessionKwh = 0;
+
+            addEvent("Info", "Connected to " + system.inverter.model + " (" + system.inverter.serial + ")");
+            addEvent("Success", "EV connected, charging started at " + system.ev.limitA + " A");
+
+            // BOX: Full screen scrollable container
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            startBox(0, 0, "100%", "100%", {
+                color: "transparent",
+                scrollY: 1,
+            });
+
+                VGroup({
+                    width: "100%",
+                    height: "auto", // Grows with content, so the Box can scroll.
+                    align: "left top",
+                    gap: 16,
+                    padding: 24,
+                });
+
+                    initHeader();
+                    initHeroRow();
+                    initKpiRow();
+                    initChartRow();
+                    initControlRow();
+                    initBottomRow();
+
+                endGroup();
+
+            endBox();
+
+            // WHY: Bar count was calculated with the default width (before flex).
+            kpiBoxList.forEach(function (kpiBox) { kpiBox.refresh(); });
+
+            isReady = 1;
+            renderAll();
+
+        };
+
+        // Runs every second: one minute of the day.
+        const loop = function () {
+
+            if (!isReady) return;
+
+            simMinute++;
+            if (simMinute >= DAY_MINUTES) {
+                simMinute = 0;
+                resetToday();
+                addEvent("Info", "A new day. Today's totals are reset.");
+            }
+
+            simulateMinute(0);
+            renderLive();
+
+        };
+
+        // *** ENERGY SERVICE (SIMULATION):
+
+        const resetToday = function () {
+            system.today = { solar: 0, consumption: 0, import: 0, export: 0, charge: 0, discharge: 0, ev: 0, savings: 0, co2: 0, cost: 0 };
+            system.chart = { solar: [], consumption: [], battery: [], grid: [] }; // One value for each CHART_STEP
+        };
+
+        const getTariffId = function (minute) {
+            const hour = Math.floor(minute / 60);
+            if (hour < 7) return "night";
+            if (hour >= 17 && hour < 22) return "peak";
+            return "day";
+        };
+
+        // One minute of the system. silent: 1 -> No events.
+        const simulateMinute = function (silent) {
+
+            const s = system;
+            const hour = simMinute / 60;
+            const dtH = 1 / 60;
+            const tariffId = getTariffId(simMinute);
+            const tariff = TARIFFS[tariffId];
+            const event = function (level, text) { if (!silent) addEvent(level, text); };
+
+            // Tariff period changes
+            if (simMinute > 0 && getTariffId(simMinute - 1) != tariffId) event("Info", tariff.text + " tariff started (" + tariff.price.toFixed(2) + " $/kWh)");
+
+            // SOLAR: Sun curve, clouds move slowly
+            if (s.pv.cloudTimer > 0) {
+                s.pv.cloudTimer--;
+                s.pv.cloud = Math.max(0.2, s.pv.cloud - 0.08);
+                if (s.pv.cloudTimer == 0) event("Info", "The cloud has passed");
+            } else {
+                s.pv.cloud = Math.min(1, Math.max(0.55, s.pv.cloud + (Math.random() - 0.48) * 0.04));
+            }
+            const sun = Math.max(0, Math.sin(Math.PI * (hour - 6.3) / 13.4));
+            let solar = s.pv.peakKw * 0.86 * Math.pow(sun, 1.3) * s.pv.cloud; // 0.86: Heat and cable losses
+
+            // HOME: Base load (more in the morning and the evening)
+            let base = 0.35 + ((hour > 6.5 && hour < 8.5) ? 0.6 : 0) + ((hour > 18 && hour < 23) ? 0.9 : 0) + (Math.random() - 0.5) * 0.1;
+
+            // SMART LOADS: "Only with excess solar" loads run when there is enough solar power.
+            let surplus = solar - base;
+            let loadsKw = 0;
+            s.loads.forEach(function (load) {
+                let run = load.enabled;
+                if (run && load.solarOnly) run = (load.running) ? surplus >= load.kw * 0.6 : surplus >= load.kw * 1.1; // Hysteresis
+                if (run && load.key == "ac") run = (hour > 11 && hour < 23); // Test: AC runs in the hot hours
+                if (run != load.running) {
+                    load.running = run;
+                    if (load.solarOnly && load.enabled) event("Info", load.title + (run ? " started with excess solar" : " stopped (not enough solar)"));
+                }
+                if (run) { loadsKw += load.kw; surplus -= load.kw; }
+            });
+            const home = base + loadsKw;
+
+            // EV CHARGER
+            let ev = 0;
+            let evState = "Unplugged";
+            if (s.ev.plugged) {
+                const maxKw = s.ev.limitA * 230 / 1000;
+                if (s.ev.carSoc >= s.ev.targetSoc) {
+                    evState = "Complete";
+                } else if (!s.ev.enabled) {
+                    evState = "Paused";
+                } else if (!s.gridOnline) {
+                    evState = "Paused (power cut)";
+                } else if (s.ev.solarOnly) {
+                    const available = solar - home;
+                    if (available >= 1.4) { ev = Math.min(available, maxKw); evState = "Charging with solar"; } else { evState = "Waiting for solar"; }
+                } else {
+                    ev = maxKw;
+                    evState = "Charging";
+                }
+            }
+            if (evState != s.ev.state) {
+                if (evState == "Complete" && s.ev.state) event("Success", "EV charging complete: " + Math.round(s.ev.carSoc) + "% (" + s.ev.sessionKwh.toFixed(1) + " kWh)");
+                s.ev.state = evState;
+            }
+
+            // BATTERY: Strategy
+            const load = home + ev;
+            const net = solar - load; // + surplus, - deficit
+            const b = s.battery;
+            const canCharge = b.soc < 100;
+            const canDischarge = function (limit) { return b.soc > limit; };
+            let battery = 0; // + charge, - discharge
+            const reserve = (s.mode == "backup") ? Math.max(80, s.reserve) : s.reserve;
+
+            if (!s.gridOnline) {
+                // Power cut: the battery covers everything (down to 5%)
+                if (net > 0 && canCharge) battery = Math.min(net, b.maxKw);
+                if (net < 0 && canDischarge(5)) battery = -Math.min(-net, b.maxKw);
+            } else if (s.mode == "self") {
+                if (net > 0 && canCharge) battery = Math.min(net, b.maxKw);
+                if (net < 0 && canDischarge(reserve)) battery = -Math.min(-net, b.maxKw);
+            } else if (s.mode == "backup") {
+                if (net > 0 && canCharge) battery = Math.min(net, b.maxKw);
+                if (b.soc < reserve) battery = Math.max(battery, 2); // Charges from the grid too, to keep the reserve
+            } else if (s.mode == "tou") {
+                if (tariffId == "night" && b.soc < 95) battery = 3; // Cheap grid energy
+                else if (net > 0 && canCharge) battery = Math.min(net, b.maxKw);
+                else if (tariffId == "peak" && net < 0 && canDischarge(reserve)) battery = -Math.min(-net, b.maxKw);
+            }
+
+            // Battery limits
+            if (battery > 0 && b.soc >= 100) battery = 0;
+            b.soc = Math.min(100, Math.max(0, b.soc + battery * dtH * ((battery > 0) ? 0.95 : 1) / b.capacity * 100));
+            b.temp = Math.round((27 + Math.abs(battery) * 0.9 + (Math.random() - 0.5)) * 10) / 10;
+
+            // GRID
+            let grid = load + battery - solar; // + import, - export
+            if (!s.gridOnline) {
+                if (grid < 0) solar += grid; // Solar is limited: no export in a power cut
+                grid = 0;
+            }
+
+            // EV car charge
+            if (ev > 0) {
+                s.ev.carSoc = Math.min(100, s.ev.carSoc + ev * dtH * 0.92 / s.ev.carCapacity * 100);
+                s.ev.sessionKwh += ev * dtH;
+            }
+
+            // Battery events
+            if (!silent) {
+                if (b.soc >= 100 && s.now.battery > 0) event("Success", "Battery is full");
+                if (s.mode == "self" && s.gridOnline && Math.round(b.soc) == reserve && s.now.battery < 0 && battery == 0) event("Warning", "Battery reserve (" + reserve + "%) reached. Home uses the grid.");
+            }
+
+            s.now = { solar: solar, home: home, ev: ev, battery: battery, grid: grid };
+
+            // Today
+            const t = s.today;
+            t.solar += solar * dtH;
+            t.consumption += load * dtH;
+            t.import += Math.max(0, grid) * dtH;
+            t.export += Math.max(0, -grid) * dtH;
+            t.charge += Math.max(0, battery) * dtH;
+            t.discharge += Math.max(0, -battery) * dtH;
+            t.ev += ev * dtH;
+            t.cost += Math.max(0, grid) * dtH * tariff.price - Math.max(0, -grid) * dtH * EXPORT_PRICE;
+            t.savings = Math.max(0, t.consumption * 0.24 - t.cost); // Compared with the day price, without the system
+            t.co2 = (t.solar) * CO2_PER_KWH;
+
+            // History for the summary graphs
+            const h = s.history;
+            h.solar.push(solar);
+            h.home.push(load);
+            h.grid.push({ value: Math.abs(grid), color: (grid < 0) ? ACCENT_COLOR : "" });
+            h.selfUse.push((load > 0) ? Math.round((1 - Math.max(0, grid) / load) * 100) : 100);
+            for (const key in h) {
+                if (h[key].length > KPI_COUNT) h[key].shift();
+            }
+
+            // Chart points (every CHART_STEP minutes)
+            if (simMinute % CHART_STEP == 0) {
+                const c = s.chart;
+                c.solar.push(round2(solar));
+                c.consumption.push(round2(load));
+                c.battery.push(round2(battery));
+                c.grid.push(round2(grid));
+            }
+
+        };
+
+        const setGridOnline = function (online) {
+            if (system.gridOnline == online) return;
+            system.gridOnline = online;
+            addEvent((online) ? "Success" : "Error", (online) ? "Grid power is back" : "Power cut! The battery powers the home.");
+            renderAll();
+        };
+
+        const passCloud = function () {
+            system.pv.cloudTimer = 25;
+            addEvent("Warning", "Test: A cloud is passing over the panels");
+        };
+
+        // *** HELPERS:
+
+        const round2 = function (value) {
+            return Math.round(value * 100) / 100;
+        };
+
+        const formatKw = function (kw) {
+            return (Math.abs(kw) < 0.05) ? "0 kW" : Math.abs(kw).toFixed(1) + " kW";
+        };
+
+        const formatMinute = function (minute) {
+            const pad = function (n) { return String(n).padStart(2, "0"); };
+            return pad(Math.floor(minute / 60) % 24) + ":" + pad(minute % 60);
+        };
+
+        const getChartLabels = function () {
+            const labels = [];
+            for (let m = 0; m < DAY_MINUTES; m += CHART_STEP) labels.push(formatMinute(m));
+            return labels;
+        };
+
+        // WHY: Some components have no enabled setting. "inert" blocks the mouse and keyboard for all the children.
+        const setInteractive = function (obj, enabled) {
+            obj.elem.inert = !enabled;
+            obj.opacity = (enabled) ? 1 : 0.4;
+        };
+
+        const addEvent = function (level, message) {
+            system.events.unshift({ time: formatMinute(simMinute), level: level, message: message });
+            if (system.events.length > 100) system.events.pop();
+            if (isReady) renderEvents();
+        };
+
+        const downloadReport = function () {
+            const t = system.today;
+            const lines = ["metric,value", "time," + formatMinute(simMinute)];
+            [["solar_kwh", t.solar], ["consumption_kwh", t.consumption], ["grid_import_kwh", t.import], ["grid_export_kwh", t.export],
+                ["battery_charge_kwh", t.charge], ["battery_discharge_kwh", t.discharge], ["ev_kwh", t.ev], ["cost_usd", t.cost], ["savings_usd", t.savings], ["co2_avoided_kg", t.co2]]
+                .forEach(function (row) { lines.push(row[0] + "," + row[1].toFixed(2)); });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/csv" }));
+            link.download = "energy-report.csv";
+            link.click();
+            URL.revokeObjectURL(link.href);
+        };
+
+        // *** VIEW HELPERS:
+
+        // GROUP: Cards side by side (wraps on small screens)
+        const startRow = function () {
+            HGroup({ width: "100%", height: "auto", align: "left top", gap: 16 });
+            that.elem.style.flexWrap = "wrap";
+            that.elem.style.alignItems = "stretch"; // WHY: Cards in the same row have the same height.
+        };
+
+        // flex: "1 1 320px" (grow, shrink, min width before wrap)
+        const setFlex = function (obj, flex) {
+            obj.elem.style.flex = flex;
+            obj.elem.style.minWidth = "0";
+        };
+
+        const startCard = function (title, subtitle, flex) {
+
+            const card = VGroup({ height: "auto", align: "left top", gap: 16, padding: 16, color: CARD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 12 });
+            setFlex(card, flex);
+
+                startSpaceBetween();
+
+                    VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
+                        Label({ text: title, fontSize: 16, textColor: Ink(0.95) });
+                        that.elem.style.fontFamily = "opensans-bold";
+                        if (subtitle) Label({ text: subtitle, fontSize: 12, textColor: Ink(0.45) });
+                    endGroup();
+
+                    card.lblRight = Label({ text: "", fontSize: 12, round: 100, padding: [10, 3], border: 1, borderColor: "transparent" });
+                    that.elem.style.whiteSpace = "nowrap";
+
+                endGroup();
+
+            return card;
+
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+        // GROUP: Left and right items (space between)
+        const startSpaceBetween = function (gap = 12) {
+            HGroup({ width: "100%", height: "auto", align: "left center", gap: gap });
+            that.elem.style.justifyContent = "space-between";
+        };
+
+        const createSmallTitle = function (text) {
+            Label({ text: text.toUpperCase(), fontSize: 11, textColor: Ink(0.45) });
+            that.elem.style.letterSpacing = "1px";
+            return that;
+        };
+
+        // A pill label: text and color
+        const setPill = function (label, text, color) {
+            label.text = text;
+            label.textColor = color;
+            label.color = ChartBox.alpha(color, 0.12);
+            label.borderColor = ChartBox.alpha(color, 0.4);
+        };
+
+        const createInfoLine = function (title, first) {
+            startSpaceBetween();
+            that.elem.style.padding = "8px 0px";
+            if (!first) that.elem.style.borderTop = "1px solid " + Ink(0.06);
+                Label({ text: title, fontSize: 14, textColor: Ink(0.5) });
+                const value = Label({ text: "", fontSize: 14, textColor: Ink(0.9) });
+                that.elem.style.whiteSpace = "nowrap";
+            endGroup();
+            return value;
+        };
+
+        const createButton = function (text, iconFile, onClick) {
+            const btn = ButtonWithIcon({
+                width: "auto",
+                labelText: text,
+                iconFile: (iconFile) ? ASSETS + iconFile : "",
+                onClick: onClick,
+                style: {
+                    layout: { gap: 10, padding: [14, 8], align: "center center" },
+                    icon: { width: 20, height: 20 },
+                    label: { fontSize: 14, textColor: Ink(0.9) },
+                    box: { color: FIELD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8 },
+                    hover: { color: T.surface3 },
+                    active: { color: T.surface4 },
+                },
+            });
+            if (btn.icon) btn.icon.elem.style.filter = T.iconFilter; // WHY: Panel icons are black.
+            return btn;
+        };
+
+        const createToggle = function (onChange) {
+            return Toggle({
+                width: 52,
+                height: 30,
+                spacing: 3,
+                backgroundStyle: { color: T.surface3, selectedColor: PRIMARY_COLOR, border: 1, borderColor: CARD_BORDER_COLOR },
+                buttonStyle: { color: Ink(0.35), selectedColor: Ink(0.95) },
+                onChange: function (self) {
+                    if (!isRendering) onChange(self);
+                },
+            });
+        };
+
+        const createSlider = function (width, color, onDragMove, onDragEnd) {
+            const slider = Slider({
+                width: width,
+                trackHeight: 8,
+                minThumbHeight: 26,
+                trackColor: color,
+                trackBackgroundColor: Ink(0.1),
+                thumbColor: Ink(0.9),
+                showValueOnSet: 0,
+                showValueOnDrag: 0, // WHY: Slider shows 0-100. The real value is shown in a label.
+                onDragMove: onDragMove,
+                onDragEnd: onDragEnd,
+            });
+            return slider;
+        };
+
+        const DARK_RADIO_STYLE = {
+            mark: { width: 20, height: 20, color: "transparent", borderColor: Ink(0.35) },
+            checkedMark: { color: "transparent", borderColor: ACCENT_COLOR },
+            hoverMark: { borderColor: Ink(0.7) },
+            dot: { color: ACCENT_COLOR },
+            label: { fontSize: 14, textColor: Ink(0.9) },
+        };
+
+        const DARK_CHECK_STYLE = {
+            layout: { padding: [0, 2] },
+            mark: { width: 18, height: 18, color: "transparent", borderColor: Ink(0.35) },
+            checkedMark: { color: PRIMARY_COLOR, borderColor: PRIMARY_COLOR },
+            hoverMark: { borderColor: Ink(0.7) },
+            tick: { color: Ink(1) },
+            label: { fontSize: 13, textColor: Ink(0.75) },
+        };
+
+        // *** VIEW:
+
+        const initHeader = function () {
+
+            startSpaceBetween(16);
+            that.elem.style.flexWrap = "wrap";
+            that.elem.style.paddingRight = "60px"; // WHY: The close button of the full view is on the right top.
+
+                HGroup({ width: "auto", height: "auto", align: "left center", gap: 20 });
+                that.elem.style.flexWrap = "wrap";
+
+                    VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
+                        Label({ text: "Energy Hub", fontSize: 26, textColor: Ink(0.95) });
+                        that.elem.style.fontFamily = "opensans-bold";
+                        Label({ text: system.site + " · Solar " + system.pv.peakKw + " kWp · Battery " + system.battery.capacity + " kWh · EV charger", fontSize: 14, textColor: Ink(0.5) });
+                    endGroup();
+
+                    lblStatus = Label({ text: "", fontSize: 13, round: 100, border: 1, padding: [12, 4] });
+                    that.elem.style.whiteSpace = "nowrap";
+
+                endGroup();
+
+                HGroup({ width: "auto", height: "auto", align: "right center", gap: 16 });
+
+                    VGroup({ width: "auto", height: "auto", align: "right center", gap: 0 });
+                        lblClock = Label({ text: "", fontSize: 22, textColor: Ink(0.95) });
+                        that.elem.style.fontVariantNumeric = "tabular-nums";
+                        lblWeather = Label({ text: "", fontSize: 12, textColor: Ink(0.5) });
+                        that.elem.style.whiteSpace = "nowrap";
+                    endGroup();
+
+                    const btnMore = createButton("More", "top-bar/apps.png", function () { });
+
+                    moreMenu = ContextMenu({
+                        items: [
+                            { text: "Test: Power cut", key: "cut" },
+                            { text: "Test: Grid power back", key: "back" },
+                            { text: "Test: A cloud passes", key: "cloud" },
+                            "-",
+                            { text: "Download today's report (CSV)", key: "csv" },
+                            { text: "Copy inverter serial number", key: "copy" },
+                        ],
+                        onClick: function (self, item) { onMoreMenuClick(item.key); },
+                        style: {
+                            menu: { color: FIELD_COLOR, borderColor: Ink(0.12), shadow: "0px 8px 24px rgba(0, 0, 0, 0.5)" },
+                            item: { textColor: Ink(0.85) },
+                            itemHover: { textColor: Ink(1), color: Ink(0.08) },
+                            disabled: { textColor: Ink(0.3) },
+                            separator: { color: Ink(0.1) },
+                        },
+                    });
+                    moreMenu.attachTo(btnMore, "click");
+
+                endGroup();
+
+            endGroup();
+
+        };
+
+        const initHeroRow = function () {
+
+            startRow();
+
+                // FLOW: Live energy flow diagram
+                const flowCard = startCard("Live Energy Flow", "Where the power comes from and where it goes", "2 1 560px");
+                flow.card = flowCard;
+
+                    flowBox = Box({ width: "100%", height: "auto", color: "transparent" });
+                    flowBox.position = "relative";
+                    flowBox.elem.innerHTML = createFlowSvg();
+                    flow.svg = flowBox.elem.querySelector("svg");
+
+                endCard();
+
+                // BATTERY
+                const batteryCard = startCard("Battery", system.battery.model + " · " + system.battery.capacity + " kWh", "1 1 320px");
+                batteryInfo.card = batteryCard;
+
+                    // GAUGE: comp-m4/gauge.js (full ring). The marker line is the reserve.
+                    HGroup({ width: "100%", height: "auto", align: "center center" });
+                        gaugeBattery = Gauge({
+                            width: 180,
+                            height: 180,
+                            styleName: T.compStyle,
+                            radius: 74,
+                            value: system.battery.soc,
+                            markerValue: system.reserve,
+                            ariaLabel: "Battery charge",
+                            style: {
+                                bar: { color: BATTERY_COLOR },
+                                marker: { color: WARNING_COLOR, width: 3, length: 18 },
+                                value: { fontSize: 38 },
+                            },
+                        });
+                    endGroup();
+
+                    VGroup({ width: "100%", height: "auto", align: "left top", gap: 0 });
+                        batteryInfo.power = createInfoLine("Power", 1);
+                        batteryInfo.time = createInfoLine("Estimate");
+                        batteryInfo.reserve = createInfoLine("Reserve");
+                        batteryInfo.temp = createInfoLine("Temperature");
+                        batteryInfo.health = createInfoLine("Health");
+                    endGroup();
+
+                endCard();
+
+            endGroup();
+
+        };
+
+        // SVG: Nodes (solar, grid, home, battery, EV) around the inverter, with moving dashes on the lines.
+        const FLOW_NODES = {
+            solar: { x: 320, y: 64, color: SOLAR_COLOR, title: "Solar", label: "right" },
+            grid: { x: 96, y: 206, color: GRID_COLOR, title: "Grid", label: "below" },
+            home: { x: 544, y: 206, color: HOME_COLOR, title: "Home", label: "below" },
+            battery: { x: 196, y: 338, color: BATTERY_COLOR, title: "Battery", label: "left" },
+            ev: { x: 444, y: 338, color: EV_COLOR, title: "EV", label: "right" },
+        };
+        const FLOW_HUB = { x: 320, y: 206, r: 46 };
+        const NODE_R = 34;
+
+        const FLOW_ICONS = {
+            solar: "<circle r='8'/>" + [0, 45, 90, 135, 180, 225, 270, 315].map(function (a) {
+                const r = a * Math.PI / 180;
+                return "<line x1='" + (Math.cos(r) * 12).toFixed(1) + "' y1='" + (Math.sin(r) * 12).toFixed(1) + "' x2='" + (Math.cos(r) * 17).toFixed(1) + "' y2='" + (Math.sin(r) * 17).toFixed(1) + "'/>";
+            }).join(""),
+            grid: "<path d='M-10 16 L-4 -14 L4 -14 L10 16 M-13 -6 L13 -6 M-8 4 L8 4 M-4 -14 L0 -19 L4 -14 M-7 4 L4 -6 M7 4 L-4 -6'/>",
+            home: "<path d='M-15 2 L0 -13 L15 2 M-10 -2 L-10 14 L10 14 L10 -2 M-3 14 L-3 5 L3 5 L3 14'/>",
+            battery: "<rect x='-9' y='-14' width='18' height='30' rx='3'/><rect x='-4' y='-18' width='8' height='4' rx='1'/><rect class='level' x='-5.5' y='12.5' width='11' height='0' rx='1.5' stroke='none'/>",
+            ev: "<path d='M-16 6 L-16 -1 L-11 -9 L11 -9 L16 -1 L16 6 Z M-11 -1 L11 -1'/><circle cx='-8' cy='9' r='3'/><circle cx='8' cy='9' r='3'/>",
+        };
+
+        const createFlowSvg = function () {
+
+            let lines = "", nodes = "";
+
+            Object.keys(FLOW_NODES).forEach(function (key) {
+
+                const n = FLOW_NODES[key];
+                const dx = FLOW_HUB.x - n.x, dy = FLOW_HUB.y - n.y;
+                const length = Math.sqrt(dx * dx + dy * dy);
+                const ux = dx / length, uy = dy / length;
+                const x1 = n.x + ux * (NODE_R + 6), y1 = n.y + uy * (NODE_R + 6);
+                const x2 = FLOW_HUB.x - ux * (FLOW_HUB.r + 6), y2 = FLOW_HUB.y - uy * (FLOW_HUB.r + 6);
+                const d = "M" + x1.toFixed(1) + " " + y1.toFixed(1) + " L" + x2.toFixed(1) + " " + y2.toFixed(1);
+
+                lines += "<path d='" + d + "' stroke='" + Ink(0.07) + "' stroke-width='4' stroke-linecap='round'/>" +
+                    "<path id='flow-" + key + "' class='flow' d='" + d + "' stroke='" + n.color + "' stroke-width='4'/>";
+
+                // Label position
+                let tx = n.x, ty = n.y + NODE_R + 22, anchor = "middle";
+                if (n.label == "right") { tx = n.x + NODE_R + 14; ty = n.y - 4; anchor = "start"; }
+                if (n.label == "left") { tx = n.x - NODE_R - 14; ty = n.y - 4; anchor = "end"; }
+
+                nodes += "<g transform='translate(" + n.x + " " + n.y + ")'>" +
+                    "<circle id='node-" + key + "' r='" + NODE_R + "' fill='" + ChartBox.alpha(n.color, 0.12) + "' stroke='" + ChartBox.alpha(n.color, 0.6) + "' stroke-width='1.5'/>" +
+                    "<g id='icon-" + key + "' fill='none' stroke='" + n.color + "' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>" + FLOW_ICONS[key] + "</g>" +
+                    "</g>" +
+                    "<text x='" + tx + "' y='" + ty + "' text-anchor='" + anchor + "' class='t-title'>" + n.title + "</text>" +
+                    "<text id='value-" + key + "' x='" + tx + "' y='" + (ty + 22) + "' text-anchor='" + anchor + "' class='t-value'></text>" +
+                    "<text id='sub-" + key + "' x='" + tx + "' y='" + (ty + 40) + "' text-anchor='" + anchor + "' class='t-sub'></text>";
+
+            });
+
+            const hub = "<circle cx='" + FLOW_HUB.x + "' cy='" + FLOW_HUB.y + "' r='" + FLOW_HUB.r + "' fill='" + FIELD_COLOR + "' stroke='" + Ink(0.18) + "' stroke-width='1.5'/>" +
+                "<circle cx='" + FLOW_HUB.x + "' cy='" + FLOW_HUB.y + "' r='" + (FLOW_HUB.r + 8) + "' fill='none' stroke='" + Ink(0.05) + "' stroke-width='1'/>" +
+                "<text x='" + FLOW_HUB.x + "' y='" + (FLOW_HUB.y - 4) + "' text-anchor='middle' class='t-hub'>Inverter</text>" +
+                "<text id='hub-sub' x='" + FLOW_HUB.x + "' y='" + (FLOW_HUB.y + 14) + "' text-anchor='middle' class='t-sub'></text>";
+
+            return "<svg viewBox='0 0 640 410' style='display:block; width:100%; height:auto; max-height:430px; font-family:inherit'>" +
+                "<style>" +
+                ".flow { fill:none; stroke-dasharray:2 12; stroke-linecap:round; animation: flowmove 1s linear infinite; transition: opacity 0.4s; }" +
+                "@keyframes flowmove { to { stroke-dashoffset: -28; } }" +
+                ".t-title { fill:" + Ink(0.5) + "; font-size:13px; }" +
+                ".t-value { fill:" + Ink(0.95) + "; font-size:19px; font-weight:bold; }" +
+                ".t-sub { fill:" + Ink(0.45) + "; font-size:12px; }" +
+                ".t-hub { fill:" + Ink(0.85) + "; font-size:13px; }" +
+                "</style>" +
+                lines + hub + nodes +
+                "</svg>";
+
+        };
+
+        // SVG: Ring gauge of the battery charge, with the reserve mark.
+
+        const initKpiRow = function () {
+
+            const KPI_LIST = [
+                { title: "Solar production", iconFile: "light.png", lineColor: SOLAR_COLOR, maxValue: system.pv.peakKw },
+                { title: "Consumption (home + EV)", iconFile: "left-menu/home.png", lineColor: HOME_COLOR, maxValue: 0 },
+                { title: "Grid (import / export)", iconFile: "left-menu/bolt.png", lineColor: GRID_COLOR, maxValue: 0 },
+                { title: "Self-sufficiency now", iconFile: "left-menu/extension.png", lineColor: BATTERY_COLOR, maxValue: 100 },
+            ];
+
+            startRow();
+
+                KPI_LIST.forEach(function (kpi) {
+
+                    const kpiBox = SparkLineBox({
+                        height: 100,
+                        title: kpi.title,
+                        valueText: "",
+                        iconFile: ASSETS + kpi.iconFile,
+                        lineColor: kpi.lineColor,
+                        maxValue: kpi.maxValue,
+                        // WHY: With a fixed maxValue the scale starts at zero, as the bars did before.
+                        //      maxValue 0 (auto) keeps the automatic range of the line graph.
+                        minValue: (kpi.maxValue) ? 0 : null,
+                        style: {
+                            box: { color: CARD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 12 },
+                            text: { padding: 14 },
+                            title: { fontSize: 13, textColor: Ink(0.5) },
+                            valueText: { fontSize: 24, textColor: Ink(0.95) },
+                            trend: { flatColor: Ink(0.45) }, // WHY: The default flat color is made for light cards.
+                            icon: { width: 20, height: 20 },
+                            graph: { height: 34, padding: 14 },
+                        },
+                    });
+                    setFlex(kpiBox, "1 1 220px");
+                    kpiBox.icon.elem.style.filter = T.iconFilter; // WHY: Panel icons are black.
+                    kpiBox.icon.opacity = 0.5;
+                    kpiBoxList.push(kpiBox);
+
+                });
+
+            endGroup();
+
+        };
+
+        const initChartRow = function () {
+
+            startRow();
+
+                // LINE: Power today
+                chartPower = ChartBox({
+                    height: 340,
+                    type: "line",
+                    theme: T.chartTheme,
+                    title: "Power Today",
+                    subtitle: "Every 15 minutes. Battery: + charging, − discharging. Grid: + import, − export.",
+                    beginAtZero: 0,
+                    animated: 0,
+                    legend: "top",
+                    labels: getChartLabels(),
+                    datasets: [
+                        { label: "Solar", data: [], borderColor: SOLAR_COLOR, fill: "origin", tension: 0.35, backgroundColor: ChartBox.gradient("rgba(232, 176, 74, 0.35)", "rgba(232, 176, 74, 0)") },
+                        { label: "Consumption", data: [], borderColor: HOME_COLOR, tension: 0.35 },
+                        { label: "Battery", data: [], borderColor: BATTERY_COLOR, tension: 0.35, borderDash: [5, 4] },
+                        { label: "Grid", data: [], borderColor: GRID_COLOR, tension: 0.35 },
+                    ],
+                    formatValue: function (value) { return value + " kW"; },
+                    options: {
+                        elements: { point: { radius: 0 } },
+                        interaction: { mode: "index", intersect: false },
+                        scales: { x: { ticks: { maxTicksLimit: 9 } } },
+                    },
+                    style: {
+                        box: { color: CARD_COLOR, borderColor: CARD_BORDER_COLOR, round: 12, padding: 16 },
+                        chart: { colors: [SOLAR_COLOR, HOME_COLOR, BATTERY_COLOR, GRID_COLOR] }, // WHY: The legend uses the theme colors.
+                    },
+                });
+                setFlex(chartPower, "2 1 560px");
+                chartPower.elem.style.height = "auto";
+                chartPower.elem.style.minHeight = "340px";
+
+                // DOUGHNUT: Energy mix today
+                chartMix = ChartBox({
+                    height: 340,
+                    type: "doughnut",
+                    theme: T.chartTheme,
+                    title: "Energy Mix Today",
+                    subtitle: "Where the used energy came from",
+                    legend: "bottom",
+                    labels: ["Solar", "Battery", "Grid"],
+                    datasets: [{ data: [0, 0, 0], backgroundColor: [SOLAR_COLOR, BATTERY_COLOR, GRID_COLOR], borderColor: CARD_COLOR, borderWidth: 3 }],
+                    formatValue: function (value) { return value + " kWh"; },
+                    options: { cutout: "68%" },
+                    style: {
+                        box: { color: CARD_COLOR, borderColor: CARD_BORDER_COLOR, round: 12, padding: 16 },
+                    },
+                });
+                setFlex(chartMix, "1 1 320px");
+
+            endGroup();
+
+        };
+
+        const initControlRow = function () {
+
+            startRow();
+
+                // BATTERY STRATEGY
+                startCard("Battery Strategy", "How the battery is used", "1 1 320px");
+
+                    VGroup({ width: "100%", height: "auto", align: "left top", gap: 10 });
+
+                        MODES.forEach(function (mode) {
+                            RadioButton({
+                                group: "energyMode",
+                                value: mode.value,
+                                labelText: mode.text + "<br><span style='color:" + Ink(0.4) + "; font-size: 12px'>" + mode.desc + "</span>",
+                                style: DARK_RADIO_STYLE,
+                                onChange: function (self) {
+                                    if (isRendering) return;
+                                    system.mode = self.value;
+                                    addEvent("Info", "Battery strategy: " + mode.text);
+                                    renderControls();
+                                },
+                            });
+                        });
+
+                    endGroup();
+
+                    VGroup({ width: "100%", height: "auto", align: "left top", gap: 8 });
+
+                        startSpaceBetween();
+                            createSmallTitle("Battery reserve");
+                            lblReserve = Label({ text: "", fontSize: 16, textColor: Ink(0.95) });
+                            that.elem.style.fontFamily = "opensans-bold";
+                        endGroup();
+
+                        sliderReserve = createSlider(260, WARNING_COLOR,
+                            function (value) { lblReserve.text = sliderToReserve(value) + "%"; },
+                            function () {
+                                const reserve = sliderToReserve(sliderReserve.getValue());
+                                if (reserve == system.reserve) return;
+                                system.reserve = reserve;
+                                addEvent("Info", "Battery reserve set to " + reserve + "%");
+                                renderControls();
+                            }
+                        );
+
+                        lblModeInfo = Label({ text: "", fontSize: 12, textColor: Ink(0.45), width: "100%" });
+
+                    endGroup();
+
+                endCard();
+
+                // EV CHARGER
+                const evCard = startCard("EV Charger", "WB-22 Wallbox · 230 V", "1 1 320px");
+                lblEvState = evCard.lblRight;
+
+                    VGroup({ width: "100%", height: "auto", align: "left top", gap: 6 });
+
+                        evProgress = ProgressBar({
+                            width: "100%",
+                            titleText: "Car battery",
+                            valueFormat: function (self) { return Math.round(self.value) + "% of " + system.ev.targetSoc + "% target"; },
+                            styleName: "modern",
+                            style: {
+                                track: { height: 12, color: Ink(0.08) },
+                                bar: { color: EV_COLOR },
+                                successBar: { color: ACCENT_COLOR },
+                                title: { fontSize: 14, textColor: Ink(0.85) },
+                                valueText: { fontSize: 13, textColor: Ink(0.6) },
+                            },
+                        });
+
+                        lblEvSession = Label({ text: "", fontSize: 12, textColor: Ink(0.45), width: "100%" });
+
+                    endGroup();
+
+                    startSpaceBetween();
+                        VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
+                            Label({ text: "Charging", fontSize: 15, textColor: Ink(0.9) });
+                            Label({ text: "Pause or start the session", fontSize: 12, textColor: Ink(0.45) });
+                        endGroup();
+                        toggleEv = createToggle(function (self) {
+                            system.ev.enabled = self.value;
+                            addEvent("Info", "EV charging " + ((self.value) ? "started" : "paused") + " by user");
+                            renderEv();
+                        });
+                    endGroup();
+
+                    VGroup({ width: "100%", height: "auto", align: "left top", gap: 8 });
+
+                        startSpaceBetween();
+                            createSmallTitle("Current limit");
+                            lblEvLimit = Label({ text: "", fontSize: 16, textColor: Ink(0.95) });
+                            that.elem.style.fontFamily = "opensans-bold";
+                        endGroup();
+
+                        sliderEvLimit = createSlider(260, EV_COLOR,
+                            function (value) { lblEvLimit.text = getLimitText(sliderToAmps(value)); },
+                            function () {
+                                const amps = sliderToAmps(sliderEvLimit.getValue());
+                                if (amps == system.ev.limitA) return;
+                                system.ev.limitA = amps;
+                                addEvent("Info", "EV current limit set to " + amps + " A");
+                                renderEv();
+                            }
+                        );
+
+                    endGroup();
+
+                    HGroup({ width: "100%", height: "auto", align: "left center", gap: 12 });
+                    that.elem.style.flexWrap = "wrap";
+                    that.elem.style.justifyContent = "space-between";
+
+                        chkSolarOnly = CheckBox({
+                            labelText: "Charge only with excess solar",
+                            style: DARK_CHECK_STYLE,
+                            onChange: function (self) {
+                                if (isRendering) return;
+                                system.ev.solarOnly = self.checked;
+                                addEvent("Info", "EV solar-only charging " + ((self.checked) ? "on" : "off"));
+                            },
+                        });
+
+                        HGroup({ width: "auto", height: "auto", align: "left center", gap: 8 });
+                            Label({ text: "Target", fontSize: 13, textColor: Ink(0.5) });
+                            targetSelect = TinySelect({
+                                list: TARGET_SOC_LIST.map(function (v) { return { id: String(v), label: v + "%" }; }),
+                                selectedIndex: TARGET_SOC_LIST.indexOf(system.ev.targetSoc),
+                                height: 34,
+                                fontSize: 14,
+                                color: FIELD_COLOR,
+                                border: 1,
+                                borderColor: CARD_BORDER_COLOR,
+                                round: 8,
+                                labelBoldFont: 0,
+                                labelTextColor: Ink(0.9),
+                                arrowIcon: LIB_PATH + "comp/tiny-select/arrow.svg",
+                                arrowSize: 16,
+                                invertIconColor: T.invertIcon,
+                                listFontSize: 14,
+                                listTextColor: Ink(0.85),
+                                listOverTextColor: ACCENT_COLOR,
+                                listBackgroundColor: FIELD_COLOR,
+                                listBorderColor: Ink(0.15),
+                                onSelect: function (index, id) {
+                                    if (!isReady || isRendering || Number(id) == system.ev.targetSoc) return;
+                                    system.ev.targetSoc = Number(id);
+                                    addEvent("Info", "EV target charge set to " + id + "%");
+                                    renderEv();
+                                },
+                            });
+                        endGroup();
+
+                    endGroup();
+
+                    btnPlug = createButton("Test: Unplug the car", "", function () { // WHY: Created with a text. A button without a text has no label.
+                        system.ev.plugged = (system.ev.plugged) ? 0 : 1;
+                        if (system.ev.plugged) system.ev.sessionKwh = 0;
+                        addEvent("Info", "Test: EV " + ((system.ev.plugged) ? "plugged in" : "unplugged"));
+                        renderEv();
+                    });
+
+                endCard();
+
+                // SMART LOADS
+                startCard("Smart Loads", "Devices controlled by the energy hub", "1 1 320px");
+
+                    VGroup({ width: "100%", height: "auto", align: "left top", gap: 0 });
+
+                        system.loads.forEach(function (load, index) {
+
+                            const row = VGroup({ width: "100%", height: "auto", align: "left top", gap: 6 });
+                            that.elem.style.padding = "12px 0px";
+                            if (index > 0) that.elem.style.borderTop = "1px solid " + Ink(0.06);
+
+                                startSpaceBetween();
+
+                                    HGroup({ width: "auto", height: "auto", align: "left center", gap: 10 });
+                                        row.dot = Box({ width: 10, height: 10, round: 100, color: Ink(0.2) });
+                                        row.dot.setMotion("background-color 0.3s");
+                                        VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
+                                            Label({ text: load.title, fontSize: 15, textColor: Ink(0.9) });
+                                            row.lblState = Label({ text: "", fontSize: 12, textColor: Ink(0.45) });
+                                        endGroup();
+                                    endGroup();
+
+                                    row.toggle = createToggle(function (self) {
+                                        load.enabled = self.value;
+                                        addEvent("Info", load.title + " " + ((self.value) ? "enabled" : "disabled"));
+                                        renderLoads();
+                                    });
+
+                                endGroup();
+
+                                row.chkSolar = CheckBox({
+                                    labelText: "Only with excess solar",
+                                    style: DARK_CHECK_STYLE,
+                                    onChange: function (self) {
+                                        if (isRendering) return;
+                                        load.solarOnly = self.checked;
+                                        addEvent("Info", load.title + ": only with excess solar " + ((self.checked) ? "on" : "off"));
+                                        renderLoads();
+                                    },
+                                });
+                                row.chkSolar.elem.style.marginLeft = "20px";
+
+                            endGroup();
+
+                            loadRows[load.key] = row;
+
+                        });
+
+                    endGroup();
+
+                endCard();
+
+            endGroup();
+
+        };
+
+        const initBottomRow = function () {
+
+            startRow();
+
+                // TARIFF AND SAVINGS
+                startCard("Tariff & Savings", "Time-of-use prices of today", "1 1 380px");
+
+                    VGroup({ width: "100%", height: "auto", align: "left top", gap: 6 });
+
+                        startSpaceBetween();
+                            createSmallTitle("Now");
+                            lblTariffNow = Label({ text: "", fontSize: 13, round: 100, border: 1, padding: [10, 3] });
+                        endGroup();
+
+                        // 24 hours
+                        HGroup({ width: "100%", height: 26, align: "left center", gap: 2 });
+                            for (let hour = 0; hour < 24; hour++) {
+                                const tariff = TARIFFS[getTariffId(hour * 60)];
+                                const cell = Box({ width: "auto", height: 26, round: 3, color: ChartBox.alpha(tariff.color, 0.35), border: 2, borderColor: "transparent" });
+                                cell.elem.style.flex = "1 1 0";
+                                cell.elem.title = formatMinute(hour * 60) + " · " + tariff.text + " " + tariff.price.toFixed(2) + " $/kWh";
+                                tariffCells.push(cell);
+                            }
+                        endGroup();
+
+                        startSpaceBetween();
+                            ["00", "06", "12", "18", "24"].forEach(function (text) { Label({ text: text, fontSize: 11, textColor: Ink(0.35) }); });
+                        endGroup();
+
+                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 14 });
+                        that.elem.style.flexWrap = "wrap";
+                            Object.keys(TARIFFS).forEach(function (id) {
+                                const tariff = TARIFFS[id];
+                                Label({ text: "<span style='color:" + tariff.color + "'>■</span> " + tariff.text + " " + tariff.price.toFixed(2) + " $", fontSize: 12, textColor: Ink(0.6) });
+                            });
+                        endGroup();
+
+                    endGroup();
+
+                    // Savings tiles
+                    HGroup({ width: "100%", height: "auto", align: "left top", gap: 10 });
+                    that.elem.style.flexWrap = "wrap";
+
+                        [["savings", "Saved today", ACCENT_COLOR], ["co2", "CO₂ avoided", SOLAR_COLOR], ["import", "Grid import", GRID_COLOR], ["export", "Grid export", ACCENT_COLOR]].forEach(function (item) {
+                            VGroup({ width: "auto", height: "auto", align: "left top", gap: 2, padding: [12, 10], color: FIELD_COLOR, round: 10 });
+                            setFlex(that, "1 1 120px");
+                                Label({ text: item[1], fontSize: 12, textColor: Ink(0.5) });
+                                savingsLabels[item[0]] = Label({ text: "", fontSize: 20, textColor: item[2] });
+                            endGroup();
+                        });
+
+                    endGroup();
+
+                endCard();
+
+                // EVENT LOG
+                startCard("Event Log", "Last 10 events (simulated time)", "2 1 520px");
+
+                    grpEventTable = HGroup({ width: "100%", height: "auto", align: "left top" });
+                    that.elem.style.overflowX = "auto";
+                    endGroup();
+
+                endCard();
+
+            endGroup();
+
+        };
+
+        // *** VALUE CONVERTERS:
+
+        const sliderToReserve = function (value) {
+            return Math.round((10 + value * 0.8) / 5) * 5; // 10% - 90%
+        };
+
+        const reserveToSlider = function (reserve) {
+            return (reserve - 10) / 0.8;
+        };
+
+        const sliderToAmps = function (value) {
+            return Math.round(6 + value / 100 * 26); // 6 A - 32 A
+        };
+
+        const ampsToSlider = function (amps) {
+            return (amps - 6) / 26 * 100;
+        };
+
+        const getLimitText = function (amps) {
+            return amps + " A · " + (amps * 230 / 1000).toFixed(1) + " kW";
+        };
+
+        // *** RENDER:
+
+        const renderAll = function () {
+            renderControls();
+            renderEv();
+            renderLoads();
+            renderLive();
+            renderChart();
+            renderEvents();
+        };
+
+        // Every second
+        const renderLive = function () {
+            renderHeader();
+            renderFlow();
+            renderBattery();
+            renderKpis();
+            renderTariff();
+            renderEvLive();
+            renderLoads();
+            if (simMinute % CHART_STEP == 0) renderChart();
+        };
+
+        const renderHeader = function () {
+
+            lblClock.text = formatMinute(simMinute);
+            const cloud = system.pv.cloud;
+            const hour = simMinute / 60;
+            const isDay = hour > 6.3 && hour < 19.7;
+            const weather = (!isDay) ? "☾ Night" : (cloud > 0.8) ? "☀ Sunny" : (cloud > 0.5) ? "⛅ Partly cloudy" : "☁ Cloudy";
+            lblWeather.text = weather + " · 1 s = 1 min (simulation)";
+
+            if (!system.gridOnline) {
+                setPill(lblStatus, "● Power cut · Battery backup", ERROR_COLOR);
+            } else if (system.now.grid < -0.05) {
+                setPill(lblStatus, "● Online · Exporting to the grid", ACCENT_COLOR);
+            } else if (system.now.grid > 0.05) {
+                setPill(lblStatus, "● Online · Using the grid", GRID_COLOR);
+            } else {
+                setPill(lblStatus, "● Online · Self-powered", ACCENT_COLOR);
+            }
+
+            moreMenu.setItemEnabled("cut", system.gridOnline == 1);
+            moreMenu.setItemEnabled("back", system.gridOnline == 0);
+
+        };
+
+        // Sets the dash animation of a line. direction: 1 (to the inverter), -1 (from the inverter)
+        const setFlowLine = function (key, kw, direction) {
+            const path = flow.svg.querySelector("#flow-" + key);
+            const active = Math.abs(kw) >= 0.05;
+            path.style.opacity = (active) ? 1 : 0;
+            path.style.animationDuration = Math.max(0.35, Math.min(2.2, 2.4 - Math.abs(kw) * 0.28)).toFixed(2) + "s";
+            path.style.animationDirection = (direction > 0) ? "normal" : "reverse";
+        };
+
+        const setNodeText = function (key, value, sub) {
+            flow.svg.querySelector("#value-" + key).textContent = value;
+            flow.svg.querySelector("#sub-" + key).textContent = sub;
+        };
+
+        const renderFlow = function () {
+
+            const n = system.now;
+            const b = system.battery;
+
+            setFlowLine("solar", n.solar, 1);
+            setNodeText("solar", formatKw(n.solar), (n.solar > 0.05) ? Math.round(n.solar / system.pv.peakKw * 100) + "% of peak" : "No sun");
+
+            setFlowLine("grid", n.grid, (n.grid >= 0) ? 1 : -1);
+            setNodeText("grid", (system.gridOnline) ? formatKw(n.grid) : "Offline", (!system.gridOnline) ? "Power cut" : (n.grid > 0.05) ? "Import" : (n.grid < -0.05) ? "Export" : "Idle");
+            flow.svg.querySelector("#node-grid").setAttribute("stroke", (system.gridOnline) ? ChartBox.alpha(GRID_COLOR, 0.6) : ERROR_COLOR);
+
+            setFlowLine("home", n.home, -1);
+            setNodeText("home", formatKw(n.home), system.loads.filter(function (l) { return l.running; }).length + " smart loads on");
+
+            setFlowLine("battery", n.battery, (n.battery > 0) ? -1 : 1);
+            setNodeText("battery", Math.round(b.soc) + "%", (n.battery > 0.05) ? "Charging " + formatKw(n.battery) : (n.battery < -0.05) ? "Discharging " + formatKw(n.battery) : "Idle");
+            const level = flow.svg.querySelector("#icon-battery .level");
+            const levelHeight = 23 * b.soc / 100;
+            level.setAttribute("height", levelHeight.toFixed(1));
+            level.setAttribute("y", (12.5 - levelHeight).toFixed(1));
+            level.setAttribute("fill", (b.soc <= system.reserve) ? WARNING_COLOR : BATTERY_COLOR);
+
+            setFlowLine("ev", n.ev, -1);
+            setNodeText("ev", formatKw(n.ev), (system.ev.plugged) ? "Car " + Math.round(system.ev.carSoc) + "%" : "Unplugged");
+
+            flow.svg.querySelector("#hub-sub").textContent = system.inverter.efficiency + "% eff.";
+
+        };
+
+        const renderBattery = function () {
+
+            const b = system.battery;
+            const kw = system.now.battery;
+            const reserve = (system.mode == "backup") ? Math.max(80, system.reserve) : system.reserve;
+            const color = (b.soc <= reserve) ? WARNING_COLOR : BATTERY_COLOR;
+
+            gaugeBattery.setValue(Math.round(b.soc));
+            gaugeBattery.setBarColor(color);
+            gaugeBattery.setMarkerValue(reserve);
+            gaugeBattery.setSubText((kw > 0.05) ? "Charging" : (kw < -0.05) ? "Discharging" : "Idle");
+
+            batteryInfo.power.text = (kw > 0.05) ? "+" + formatKw(kw) : (kw < -0.05) ? "−" + formatKw(kw) : "0 kW";
+            batteryInfo.power.textColor = (kw > 0.05) ? ACCENT_COLOR : (kw < -0.05) ? WARNING_COLOR : Ink(0.9);
+
+            let estimate = "—";
+            if (kw > 0.05) estimate = "Full in " + formatDuration((100 - b.soc) / 100 * b.capacity / kw);
+            if (kw < -0.05) estimate = "Reserve in " + formatDuration(Math.max(0, b.soc - reserve) / 100 * b.capacity / -kw);
+            batteryInfo.time.text = estimate;
+            batteryInfo.reserve.text = reserve + "%" + ((system.mode == "backup") ? " (backup)" : "");
+            batteryInfo.temp.text = b.temp.toFixed(1) + " °C";
+            batteryInfo.health.text = b.health + "% · " + b.cycles + " cycles";
+
+            setPill(batteryInfo.card.lblRight, (b.soc <= reserve) ? "Low" : (b.soc >= 99.5) ? "Full" : "Normal", (b.soc <= reserve) ? WARNING_COLOR : ACCENT_COLOR);
+
+        };
+
+        const formatDuration = function (hours) {
+            if (!isFinite(hours)) return "—";
+            const minutes = Math.round(hours * 60);
+            return (minutes >= 60) ? Math.floor(minutes / 60) + " h " + (minutes % 60) + " min" : minutes + " min";
+        };
+
+        const renderKpis = function () {
+
+            const n = system.now;
+            const h = system.history;
+            const last = h.solar.length - 1;
+
+            kpiBoxList[0].setValueText(formatKw(n.solar));
+            kpiBoxList[1].setValueText(formatKw(n.home + n.ev));
+            kpiBoxList[2].setValueText(((n.grid > 0.05) ? "↓ " : (n.grid < -0.05) ? "↑ " : "") + ((system.gridOnline) ? formatKw(n.grid) : "Offline"));
+            kpiBoxList[3].setValueText(h.selfUse[last] + "%");
+
+            kpiBoxList[0].setValues(h.solar);
+            kpiBoxList[1].setValues(h.home);
+            kpiBoxList[2].setValues(h.grid);
+            kpiBoxList[3].setValues(h.selfUse);
+
+        };
+
+        const renderTariff = function () {
+
+            const tariffId = getTariffId(simMinute);
+            const tariff = TARIFFS[tariffId];
+            setPill(lblTariffNow, tariff.text + " · " + tariff.price.toFixed(2) + " $/kWh", tariff.color);
+
+            const hour = Math.floor(simMinute / 60);
+            tariffCells.forEach(function (cell, index) {
+                cell.borderColor = (index == hour) ? Ink(0.9) : "transparent";
+                cell.opacity = (index < hour) ? 0.5 : 1;
+            });
+
+            const t = system.today;
+            savingsLabels.savings.text = "$" + t.savings.toFixed(2);
+            savingsLabels.co2.text = t.co2.toFixed(1) + " kg";
+            savingsLabels.import.text = t.import.toFixed(1) + " kWh";
+            savingsLabels.export.text = t.export.toFixed(1) + " kWh";
+
+        };
+
+        const renderChart = function () {
+
+            const c = system.chart;
+            chartPower.whenReady(function () {
+                chartPower.data.datasets[0].data = c.solar.slice();
+                chartPower.data.datasets[1].data = c.consumption.slice();
+                chartPower.data.datasets[2].data = c.battery.slice();
+                chartPower.data.datasets[3].data = c.grid.slice();
+                chartPower.update("none");
+            });
+
+            // Energy mix: solar used directly = consumption - grid import - battery discharge
+            const t = system.today;
+            const fromBattery = t.discharge;
+            const fromGrid = t.import;
+            const fromSolar = Math.max(0, t.consumption - fromGrid - fromBattery);
+            chartMix.whenReady(function () {
+                chartMix.data.datasets[0].data = [round2(fromSolar), round2(fromBattery), round2(fromGrid)];
+                chartMix.update();
+            });
+
+        };
+
+        // Battery strategy controls
+        const renderControls = function () {
+
+            isRendering = 1;
+
+            RadioButton.setValue("energyMode", system.mode, 1);
+            lblReserve.text = system.reserve + "%";
+            if (sliderToReserve(sliderReserve.getValue()) != system.reserve) sliderReserve.setValue(reserveToSlider(system.reserve));
+
+            const info = {
+                self: "The battery is used down to the reserve. The reserve is kept for power cuts.",
+                backup: "Backup keeps at least 80% charge. It charges from the grid when it is lower.",
+                tou: "Charges from the grid at night (" + TARIFFS.night.price.toFixed(2) + " $), discharges at peak (" + TARIFFS.peak.price.toFixed(2) + " $) down to the reserve.",
+            };
+            lblModeInfo.text = info[system.mode];
+
+            isRendering = 0;
+
+        };
+
+        // EV settings (on change)
+        const renderEv = function () {
+
+            const ev = system.ev;
+            isRendering = 1;
+
+            if (toggleEv.value !== ev.enabled) toggleEv.setValue(ev.enabled);
+            lblEvLimit.text = getLimitText(ev.limitA);
+            if (sliderToAmps(sliderEvLimit.getValue()) != ev.limitA) sliderEvLimit.setValue(ampsToSlider(ev.limitA));
+            chkSolarOnly.setChecked(ev.solarOnly, 1);
+            const index = TARGET_SOC_LIST.indexOf(ev.targetSoc);
+            if (index >= 0 && index != targetSelect.selectedIndex) targetSelect.setSelectedIndex(index);
+
+            btnPlug.setText((ev.plugged) ? "Test: Unplug the car" : "Test: Plug in the car");
+            [toggleEv, sliderEvLimit, chkSolarOnly, targetSelect].forEach(function (obj) { setInteractive(obj, ev.plugged == 1); });
+
+            isRendering = 0;
+            renderEvLive();
+
+        };
+
+        // EV state (every second)
+        const renderEvLive = function () {
+
+            const ev = system.ev;
+            const colors = { "Charging": EV_COLOR, "Charging with solar": SOLAR_COLOR, "Complete": ACCENT_COLOR, "Unplugged": "#898781" };
+            setPill(lblEvState, ev.state, colors[ev.state] || WARNING_COLOR);
+
+            evProgress.setValue(Math.floor(ev.carSoc), 1);
+            evProgress.setStatus((ev.state == "Complete") ? "success" : "normal");
+            evProgress.setTitleText((ev.plugged) ? "Car battery · " + Math.round(ev.carSoc / 100 * ev.carCapacity) + " / " + ev.carCapacity + " kWh" : "No car connected");
+
+            const remaining = (ev.targetSoc - ev.carSoc) / 100 * ev.carCapacity;
+            const kw = system.now.ev;
+            lblEvSession.text = "Session: " + ev.sessionKwh.toFixed(1) + " kWh" +
+                ((kw > 0.05 && remaining > 0) ? " · Target in " + formatDuration(remaining / (kw * 0.92)) : "") +
+                " · Today: " + system.today.ev.toFixed(1) + " kWh";
+
+        };
+
+        const renderLoads = function () {
+
+            isRendering = 1;
+
+            system.loads.forEach(function (load) {
+                const row = loadRows[load.key];
+                if (row.toggle.value !== load.enabled) row.toggle.setValue(load.enabled);
+                row.chkSolar.setChecked(load.solarOnly, 1);
+                setInteractive(row.chkSolar, load.enabled == 1);
+
+                let state = "Off", color = Ink(0.2);
+                if (load.enabled && load.running) { state = "Running · " + load.kw + " kW"; color = (load.solarOnly) ? SOLAR_COLOR : HOME_COLOR; }
+                else if (load.enabled && load.solarOnly) { state = "Waiting for excess solar (" + load.kw + " kW)"; color = WARNING_COLOR; }
+                else if (load.enabled) { state = "On, not running now"; color = Ink(0.35); }
+                row.lblState.text = state;
+                row.dot.color = color;
+            });
+
+            isRendering = 0;
+
+        };
+
+        const renderEvents = function () {
+
+            if (eventTable) eventTable.remove();
+
+            const previous = getDefaultContainerBox();
+            setDefaultContainerBox(grpEventTable);
+
+                eventTable = TinyTable({
+                    columnHeaders: ["TIME", "LEVEL", "MESSAGE"],
+                    columnWidths: ["12%", "14%", "73%"], // 99%: 1px gaps between cells
+                    dataRows: system.events.slice(0, 10).map(function (e) { return [e.time, e.level, e.message]; }),
+                    headerBackgroundColor: FIELD_COLOR,
+                    headerTextColor: Ink(0.6),
+                    headerBorderColor: FIELD_COLOR,
+                    headerFontSize: 12,
+                    borderWidth: 1,
+                    borderRadius: 8,
+                    borderColor: CARD_BORDER_COLOR,
+                    bodyBackgroundColor: CARD_COLOR,
+                    cellFontSize: 14,
+                    cellTextColor: Ink(0.8),
+                    rowHoverBackgroundColor: Ink(0.05),
+                    rowHoverBorderColor: Ink(0.1),
+                    onCellRender: function (cell) {
+                        if (cell.index == 0) cell.textColor = Ink(0.5);
+                        if (cell.index == 1) cell.textColor = LEVEL_COLORS[cell.text] || Ink(0.8);
+                    },
+                });
+                eventTable.width = "100%";
+                eventTable.elem.style.minWidth = "520px";
+
+            setDefaultContainerBox(previous);
+
+        };
+
+        // *** ACTIONS:
+
+        const onMoreMenuClick = function (key) {
+
+            switch (key) {
+
+                case "cut":
+                    Dialog({
+                        icon: ASSETS + "warning.png",
+                        title: "Test a Power Cut",
+                        desc: "The grid will be offline. The battery powers the home, EV charging pauses and solar export stops.",
+                        confirmButtonText: "Start Test",
+                        confirmButtonColor: ERROR_COLOR,
+                        callback: function (isConfirmed) {
+                            if (isConfirmed) setGridOnline(0);
+                        },
+                    });
+                    break;
+
+                case "back":
+                    setGridOnline(1);
+                    break;
+
+                case "cloud":
+                    passCloud();
+                    break;
+
+                case "csv":
+                    downloadReport();
+                    break;
+
+                case "copy":
+                    navigator.clipboard.writeText(system.inverter.serial).then(function () {
+                        addEvent("Info", "Serial number copied: " + system.inverter.serial);
+                    }).catch(function () {
+                        addEvent("Error", "Serial number could not be copied");
+                    });
+                    break;
+
+            }
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+
+        <!-- HTML content -->
+
+    </body>
+</html>

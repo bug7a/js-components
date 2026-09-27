@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>Greenhouse</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
+
+        <!-- LIBRARY FILES -->
+        <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../common/theme.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- COMPONENTS -->
+        <script src="../comp/tiny-select.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/tiny-table.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/toggle.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/slider.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/dialog.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/button-with-icon.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/check-box.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/radio-button.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/hold-to-confirm-button.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/progress-bar.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/spark-line-box.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/chart-box.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/context-menu.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/select-time.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/select-date.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <!--
+
+        /* Bismillah */
+
+        Module #10: Greenhouse (Template) - v26.09
+
+        - Climate control and monitoring of a greenhouse with 4 zones (bays): a top-down map (temperature color,
+          roof vents, grow lights, irrigation, fans, shade screen, alarms), per-zone sensors (temperature, humidity,
+          soil moisture, CO2, light, pH, EC), setpoints (day / night temperature, humidity, soil), Auto / Manual
+          mode with actuator switches, light schedule, irrigation, nutrient dosing, crop and harvest progress.
+        - Runs inside the admin panel (iframe), but it can work alone too.
+        - Simulation: 1 second = 1 minute of the day, so the day / night cycle and the controller can be seen.
+          Replace the "GREENHOUSE SERVICE" functions with your controller API (Modbus, MQTT, a cloud API...).
+
+        -->
+
+        <script>
+
+        // *** CONSTANTS:
+        const LIB_PATH = "../";
+        const ASSETS = "../assets/";
+
+        const PAGE_COLOR = T.page;
+        const CARD_COLOR = T.surface;
+        const CARD_BORDER_COLOR = Ink(0.1);
+        const FIELD_COLOR = T.surface2;
+        const PRIMARY_COLOR = T.primary;
+        const ACCENT_COLOR = T.accent;
+        const WARNING_COLOR = T.warning;
+        const ERROR_COLOR = T.danger;
+
+        const TEMP_COLOR = Theme.readable("#E8894A");
+        const HUMIDITY_COLOR = T.info;
+        const SOIL_COLOR = "#9085E9";
+        const LIGHT_COLOR = Theme.readable("#E8B04A");
+
+        const DAY_MINUTES = 24 * 60;
+        const START_MINUTE = 7 * 60 + 40; // Simulation starts at 07:40 (sunrise, the controller starts working)
+        const CHART_STEP = 15; // Minutes between the chart points
+        const KPI_COUNT = 60; // Minutes on the summary graphs
+        const OUTSIDE_CO2 = 420;
+
+        const IRRIGATION_LPM = 6; // Liters per minute for one zone
+        const POWER = { heater: 3.0, lights: 1.2, fan: 0.3, co2: 0.1, pump: 0.4 }; // kW
+
+        const MODES = [
+            { value: "auto", text: "Auto", desc: "The controller keeps the setpoints" },
+            { value: "manual", text: "Manual", desc: "You switch the actuators yourself" },
+        ];
+
+        const ACTUATORS = [
+            { key: "heater", title: "Heater", desc: "Hot water pipes" },
+            { key: "fan", title: "Circulation fan", desc: "Air movement, dries the leaves" },
+            { key: "lights", title: "Grow lights", desc: "LED, 400 µmol" },
+            { key: "irrigation", title: "Irrigation", desc: "Drip lines" },
+            { key: "shade", title: "Shade screen", desc: "Blocks 50% of the sun" },
+            { key: "co2", title: "CO₂ injector", desc: "Only when the vents are closed" },
+        ];
+
+        // Alarm rules: [key, text, level, test(zone, setpoint)]
+        const ALARM_RULES = [
+            { key: "hot", text: "High temperature", test: function (z, sp) { return z.temp > sp + 6; } },
+            { key: "cold", text: "Low temperature", test: function (z, sp) { return z.temp < sp - 6; } },
+            { key: "humid", text: "Humidity too high (disease risk)", test: function (z) { return z.humidity > z.setpoints.humidityMax + 10; } },
+            { key: "dry", text: "Soil is dry", test: function (z) { return z.soil < 10; } },
+            { key: "sensor", text: "Temperature sensor fault", test: function (z) { return z.sensorFault == 1; } },
+        ];
+
+        // *** TEST DATA: (GREENHOUSE SERVICE)
+        const ZONES = [
+            {
+                id: "z1", name: "Bay 1 · Tomatoes", crop: "Tomato", color: T.danger, rows: 5,
+                planted: "2026-07-20", harvestDays: 75,
+                temp: 18.2, humidity: 72, soil: 58, co2: 480, light: 0, ph: 6.1, ec: 2.4,
+                setpoints: { dayTemp: 24, nightTemp: 18, humidityMax: 80, soilMin: 40, co2Target: 900 },
+                actuators: { heater: 1, fan: 0, lights: 0, irrigation: 0, shade: 0, co2: 0 }, vent: 0,
+                mode: "auto", lightFrom: "06:00", lightTo: "20:00", irrigationMinutes: 8,
+            },
+            {
+                id: "z2", name: "Bay 2 · Lettuce", crop: "Lettuce", color: T.accent, rows: 7,
+                planted: "2026-08-28", harvestDays: 45,
+                temp: 17.5, humidity: 78, soil: 66, co2: 500, light: 0, ph: 6.4, ec: 1.6,
+                setpoints: { dayTemp: 20, nightTemp: 15, humidityMax: 85, soilMin: 50, co2Target: 800 },
+                actuators: { heater: 1, fan: 1, lights: 0, irrigation: 0, shade: 0, co2: 0 }, vent: 0,
+                mode: "auto", lightFrom: "05:30", lightTo: "21:30", irrigationMinutes: 5,
+            },
+            {
+                id: "z3", name: "Bay 3 · Peppers", crop: "Pepper", color: Theme.readable("#E8B04A"), rows: 5,
+                planted: "2026-07-05", harvestDays: 90,
+                temp: 19.0, humidity: 68, soil: 34, co2: 460, light: 0, ph: 5.9, ec: 2.1,
+                setpoints: { dayTemp: 25, nightTemp: 19, humidityMax: 75, soilMin: 40, co2Target: 900 },
+                actuators: { heater: 1, fan: 0, lights: 0, irrigation: 0, shade: 0, co2: 0 }, vent: 0,
+                mode: "auto", lightFrom: "06:00", lightTo: "20:00", irrigationMinutes: 8,
+            },
+            {
+                id: "z4", name: "Bay 4 · Seedlings", crop: "Seedlings", color: "#9085E9", rows: 9,
+                planted: "2026-09-10", harvestDays: 21,
+                temp: 20.5, humidity: 82, soil: 70, co2: 520, light: 0, ph: 6.2, ec: 1.2,
+                setpoints: { dayTemp: 23, nightTemp: 20, humidityMax: 88, soilMin: 55, co2Target: 700 },
+                actuators: { heater: 1, fan: 0, lights: 1, irrigation: 0, shade: 0, co2: 0 }, vent: 0,
+                mode: "auto", lightFrom: "04:00", lightTo: "22:00", irrigationMinutes: 4,
+            },
+        ];
+
+        const house = {
+            name: "North Greenhouse",
+            outsideTemp: 12, sun: 0, rainForecast: 0,
+            today: { water: 0, energy: 0 },
+            history: { temp: [], water: [], energy: [], alarms: [] }, // Summary graphs (per minute)
+        };
+
+        // *** VARIABLES:
+        let zone = null; // Selected zone
+        let simMinute = 0;
+        let isReady = 0;
+        let isRendering = 0; // WHY: Component setters call onChange. Changes made by code must not be logged.
+
+        let lblHouse, zoneSelect, lblStatus, lblClock, lblWeather, moreMenu;
+        let alertBox, lblAlert;
+        let mapBox, map = {};
+        let zoneInfo = {};
+        let kpiBoxList = [];
+        let chartClimate, chartRuntime;
+        let lblModeInfo, setpointSliders = {}, setpointLabels = {};
+        let actuatorToggles = {}, actuatorStates = {}, lblVent, sliderVent;
+        let selectLightFrom, selectLightTo, lblIrrigation, sliderIrrigation, chkRain, lblNutrients, btnDoseAcid, btnDoseNutrient;
+        let grpAlarmsHost, grpCropHost, grpEventHost;
+        let selectPlanted, harvestProgress;
+
+        // First running function.
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            ZONES.forEach(initZone);
+
+            // The day until the start time (fast, without events)
+            for (let m = 0; m < START_MINUTE; m++) {
+                simMinute = m;
+                simulateMinute(1);
+            }
+            simMinute = START_MINUTE;
+            ZONES.forEach(function (z) { addEvent(z, "Info", "Connected to the zone controller"); });
+
+            // BOX: Full screen scrollable container
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            startBox(0, 0, "100%", "100%", {
+                color: "transparent",
+                scrollY: 1,
+            });
+
+                VGroup({
+                    width: "100%",
+                    height: "auto", // Grows with content, so the Box can scroll.
+                    align: "left top",
+                    gap: 16,
+                    padding: 24,
+                });
+
+                    initHeader();
+                    initAlert();
+                    initHeroRow();
+                    initKpiRow();
+                    initChartRow();
+                    initControlRow();
+                    initBottomRow();
+
+                endGroup();
+
+            endBox();
+
+            // WHY: Bar count was calculated with the default width (before flex).
+            kpiBoxList.forEach(function (kpiBox) { kpiBox.refresh(); });
+
+            isReady = 1;
+            selectZone(0);
+
+        };
+
+        // Runs every second: one minute of the day.
+        const loop = function () {
+
+            if (!isReady) return;
+
+            simMinute++;
+            if (simMinute >= DAY_MINUTES) {
+                simMinute = 0;
+                house.today = { water: 0, energy: 0 };
+                ZONES.forEach(function (z) {
+                    z.daysSincePlanted++;
+                    z.runtime = { heater: 0, fan: 0, lights: 0, irrigation: 0, co2: 0 };
+                    z.chart = { labels: [], temp: [], humidity: [], soil: [] };
+                });
+                addEvent(zone, "Info", "A new day. Today's totals are reset.");
+            }
+
+            simulateMinute(0);
+            renderLive();
+
+        };
+
+        // *** GREENHOUSE SERVICE (SIMULATION):
+
+        const initZone = function (z) {
+            z.events = [];
+            z.alarms = {}; // key -> 1 (active)
+            z.sensorFault = 0;
+            z.irrigationLeft = 0; // Minutes left of the current irrigation
+            z.runtime = { heater: 0, fan: 0, lights: 0, irrigation: 0, co2: 0 }; // Minutes today
+            z.chart = { labels: [], temp: [], humidity: [], soil: [] };
+            z.daysSincePlanted = Math.max(0, Math.round((new Date() - new Date(z.planted)) / 86400000));
+        };
+
+        const isDay = function (minute) {
+            const hour = minute / 60;
+            return hour >= 6.5 && hour < 20;
+        };
+
+        const minuteOf = function (text) { // "06:30" -> 390
+            const parts = String(text).split(":");
+            return Number(parts[0]) * 60 + Number(parts[1] || 0);
+        };
+
+        const isInWindow = function (minute, from, to) {
+            const a = minuteOf(from), b = minuteOf(to);
+            return (a <= b) ? (minute >= a && minute < b) : (minute >= a || minute < b);
+        };
+
+        const updateOutside = function () {
+            const hour = simMinute / 60;
+            house.sun = Math.max(0, Math.sin(Math.PI * (hour - 6.3) / 13.6));
+            // Outside temperature: 9 °C at night, 24 °C in the afternoon
+            house.outsideTemp = 9 + 15 * Math.max(0, Math.sin(Math.PI * (hour - 7) / 15)) + (Math.random() - 0.5) * 0.2;
+            if (house.heatwave) house.outsideTemp += 9;
+        };
+
+        // The controller: decides the actuators of a zone in Auto mode.
+        const control = function (z) {
+
+            const sp = getSetpoint(z);
+            const a = z.actuators;
+
+            a.heater = (z.temp < sp - 1) ? 1 : (z.temp > sp) ? 0 : a.heater;
+            if (z.temp > sp + 1) z.vent = Math.min(100, z.vent + 10);
+            else if (z.temp < sp - 0.5) z.vent = Math.max(0, z.vent - 10);
+            a.fan = (z.humidity > z.setpoints.humidityMax) ? 1 : (z.humidity < z.setpoints.humidityMax - 8) ? 0 : a.fan;
+            a.shade = (house.sun > 0.8 && z.temp > sp + 0.5) ? 1 : (house.sun < 0.6) ? 0 : a.shade;
+
+            const naturalLight = house.sun * 1800 * ((a.shade) ? 0.5 : 0.85);
+            a.lights = (isInWindow(simMinute, z.lightFrom, z.lightTo) && naturalLight < 600) ? 1 : 0;
+
+            if (z.irrigationLeft <= 0 && z.soil < z.setpoints.soilMin && !(z.skipRain && house.rainForecast)) {
+                z.irrigationLeft = z.irrigationMinutes;
+                if (isReady) addEvent(z, "Info", "Irrigation started (" + z.irrigationMinutes + " min)");
+            }
+
+            a.co2 = (naturalLight + ((a.lights) ? 400 : 0) > 300 && z.co2 < z.setpoints.co2Target && z.vent < 20) ? 1 : 0;
+
+        };
+
+        const getSetpoint = function (z) {
+            return (isDay(simMinute)) ? z.setpoints.dayTemp : z.setpoints.nightTemp;
+        };
+
+        // One minute of a zone.
+        const simulateZone = function (z, silent) {
+
+            if (z.mode === "auto") control(z);
+
+            const a = z.actuators;
+            const naturalLight = house.sun * 1800 * ((a.shade) ? 0.5 : 0.85);
+            z.light = Math.round(naturalLight + ((a.lights) ? 400 : 0));
+
+            // Irrigation valve (in both modes the timer runs; Manual can also switch it directly)
+            if (z.irrigationLeft > 0) { a.irrigation = 1; z.irrigationLeft--; if (z.irrigationLeft <= 0 && z.mode === "auto") a.irrigation = 0; }
+
+            // Temperature
+            let drift = (house.outsideTemp - z.temp) * (0.012 + z.vent / 100 * 0.05);
+            drift += house.sun * 0.11 * ((a.shade) ? 0.5 : 1);
+            drift += (a.heater) ? 0.16 : 0;
+            drift -= (a.fan) ? 0.02 : 0;
+            drift += (a.lights) ? 0.02 : 0;
+            if (!z.sensorFault) z.temp = round1(z.temp + drift + (Math.random() - 0.5) * 0.06);
+
+            // Humidity
+            let hDrift = 0.12 + ((a.irrigation) ? 0.5 : 0) - z.vent / 100 * 0.45 - ((a.fan) ? 0.35 : 0) - ((a.heater) ? 0.15 : 0);
+            z.humidity = Math.min(100, Math.max(30, z.humidity + hDrift + (Math.random() - 0.5) * 0.3));
+
+            // Soil moisture
+            z.soil = Math.min(100, Math.max(0, z.soil - 0.07 - house.sun * 0.05 + ((a.irrigation) ? 1.4 : 0)));
+
+            // CO2
+            const photosynthesis = (z.light > 300) ? 4 : 0;
+            z.co2 = Math.min(1500, Math.max(300, z.co2 - photosynthesis + ((a.co2) ? 25 : 0) + (OUTSIDE_CO2 - z.co2) * (0.004 + z.vent / 100 * 0.06) + 1.5));
+
+            // Nutrients drift slowly
+            z.ph = Math.min(8, Math.max(4.5, z.ph + 0.0015));
+            if (a.irrigation) z.ec = Math.max(0.3, z.ec - 0.004);
+
+            // Totals
+            house.today.water += (a.irrigation) ? IRRIGATION_LPM : 0;
+            house.today.energy += ((a.heater) ? POWER.heater : 0) / 60 + ((a.lights) ? POWER.lights : 0) / 60 + ((a.fan) ? POWER.fan : 0) / 60 + ((a.co2) ? POWER.co2 : 0) / 60 + ((a.irrigation) ? POWER.pump : 0) / 60;
+            ["heater", "fan", "lights", "irrigation", "co2"].forEach(function (key) { if (a[key]) z.runtime[key]++; });
+
+            // Alarms
+            const sp = getSetpoint(z);
+            ALARM_RULES.forEach(function (rule) {
+                const active = rule.test(z, sp) ? 1 : 0;
+                if (active && !z.alarms[rule.key]) {
+                    z.alarms[rule.key] = 1;
+                    if (!silent) addEvent(z, "Error", "Alarm: " + rule.text);
+                } else if (!active && z.alarms[rule.key]) {
+                    delete z.alarms[rule.key];
+                    if (!silent) addEvent(z, "Success", "Cleared: " + rule.text);
+                }
+            });
+
+            // Chart points
+            if (simMinute % CHART_STEP === 0) {
+                const c = z.chart;
+                c.labels.push(formatMinute(simMinute));
+                c.temp.push(round1(z.temp));
+                c.humidity.push(Math.round(z.humidity));
+                c.soil.push(Math.round(z.soil));
+            }
+
+        };
+
+        const simulateMinute = function (silent) {
+
+            updateOutside();
+            ZONES.forEach(function (z) { simulateZone(z, silent); });
+
+            const h = house.history;
+            h.temp.push(round1(ZONES.reduce(function (s, z) { return s + z.temp; }, 0) / ZONES.length));
+            h.water.push(ZONES.filter(function (z) { return z.actuators.irrigation; }).length * IRRIGATION_LPM);
+            h.energy.push(round2(ZONES.reduce(function (s, z) { const a = z.actuators; return s + ((a.heater) ? POWER.heater : 0) + ((a.lights) ? POWER.lights : 0) + ((a.fan) ? POWER.fan : 0); }, 0)));
+            h.alarms.push(ZONES.reduce(function (s, z) { return s + Object.keys(z.alarms).length; }, 0));
+            for (const key in h) { if (h[key].length > KPI_COUNT) h[key].shift(); }
+
+        };
+
+        const setActuator = function (z, key, value, source) {
+            if (z.actuators[key] == value) return;
+            z.actuators[key] = value;
+            if (key === "irrigation") z.irrigationLeft = (value) ? 9999 : 0; // Manual: stays on until it is switched off
+            const actuator = ACTUATORS.find(function (item) { return item.key === key; });
+            addEvent(z, "Info", actuator.title + " turned " + ((value) ? "on" : "off") + " (" + source + ")");
+        };
+
+        const setMode = function (z, mode) {
+            z.mode = mode;
+            if (mode === "manual" && z.irrigationLeft > 0 && z.irrigationLeft < 9999) z.irrigationLeft = 0;
+            addEvent(z, "Info", "Mode set to " + ((mode === "auto") ? "Auto" : "Manual"));
+        };
+
+        const dose = function (z, what) {
+            if (what === "acid") { z.ph = round1(Math.max(4.5, z.ph - 0.4)); addEvent(z, "Info", "pH down dosed: 200 ml acid. pH is now " + z.ph.toFixed(1)); }
+            if (what === "nutrient") { z.ec = round1(Math.min(4, z.ec + 0.5)); addEvent(z, "Info", "Nutrient dosed: EC is now " + z.ec.toFixed(1) + " mS/cm"); }
+            renderNutrients();
+        };
+
+        const addEvent = function (z, level, message) {
+            z.events.unshift({ time: formatMinute(simMinute), level: level, message: message });
+            if (z.events.length > 50) z.events.pop();
+            if (z === zone && isReady) renderEvents();
+        };
+
+        // *** HELPERS:
+
+        const round1 = function (value) { return Math.round(value * 10) / 10; };
+        const round2 = function (value) { return Math.round(value * 100) / 100; };
+
+        const formatMinute = function (minute) {
+            const pad = function (n) { return String(n).padStart(2, "0"); };
+            return pad(Math.floor(minute / 60) % 24) + ":" + pad(minute % 60);
+        };
+
+        const escapeHtml = function (text) {
+            return String(text).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c]; });
+        };
+
+        // WHY: Some components have no enabled setting. "inert" blocks the mouse and keyboard for all the children.
+        const setInteractive = function (obj, enabled) {
+            obj.elem.inert = !enabled;
+            obj.opacity = (enabled) ? 1 : 0.4;
+        };
+
+        // Temperature -> color (12 °C blue, 22 °C green, 32 °C red)
+        const tempColor = function (temp) {
+            const mix = function (a, b, t) {
+                const pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16);
+                const ch = function (shift) { return Math.round(((pa >> shift) & 255) * (1 - t) + ((pb >> shift) & 255) * t); };
+                return "rgb(" + ch(16) + "," + ch(8) + "," + ch(0) + ")";
+            };
+            if (temp <= 22) return mix(T.info, T.accent, Math.max(0, Math.min(1, (temp - 12) / 10)));
+            return mix(T.accent, T.danger, Math.max(0, Math.min(1, (temp - 22) / 10)));
+        };
+
+        // Creates the content of a container again. (One group is started and ended in it.)
+        // WHY: setDefaultContainerBox() is not in the start/end list of basic.js. One wrapper group is safe.
+        const renderInto = function (container, buildContent) {
+            if (container.wrapper) container.wrapper.remove();
+            const previous = getDefaultContainerBox();
+            setDefaultContainerBox(container);
+                container.wrapper = VGroup({ width: "100%", height: "auto", align: "left top", gap: 0 });
+                    buildContent();
+                endGroup();
+            setDefaultContainerBox(previous);
+        };
+
+        // *** VIEW HELPERS:
+
+        const startRow = function () {
+            HGroup({ width: "100%", height: "auto", align: "left top", gap: 16 });
+            that.elem.style.flexWrap = "wrap";
+            that.elem.style.alignItems = "stretch"; // WHY: Cards in the same row have the same height.
+        };
+
+        const setFlex = function (obj, flex) {
+            obj.elem.style.flex = flex;
+            obj.elem.style.minWidth = "0";
+        };
+
+        const startCard = function (title, subtitle, flex) {
+            const cardBox = VGroup({ height: "auto", align: "left top", gap: 14, padding: 16, color: CARD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 12 });
+            setFlex(cardBox, flex);
+                startSpaceBetween();
+                    VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
+                        Label({ text: title, fontSize: 15, textColor: Ink(0.95) });
+                        that.elem.style.fontFamily = "opensans-bold";
+                        if (subtitle) Label({ text: subtitle, fontSize: 12, textColor: Ink(0.45) });
+                    endGroup();
+                    cardBox.lblRight = Label({ text: "", fontSize: 12, textColor: Ink(0.5) });
+                    that.elem.style.whiteSpace = "nowrap";
+                endGroup();
+            return cardBox;
+        };
+
+        const endCard = function () { endGroup(); };
+
+        const startSpaceBetween = function (gap = 12) {
+            HGroup({ width: "100%", height: "auto", align: "left center", gap: gap });
+            that.elem.style.justifyContent = "space-between";
+        };
+
+        const createSmallTitle = function (text) {
+            Label({ text: text.toUpperCase(), fontSize: 11, textColor: Ink(0.45) });
+            that.elem.style.letterSpacing = "1px";
+            return that;
+        };
+
+        const setPill = function (label, text, color) {
+            label.text = text;
+            label.textColor = color;
+            label.color = ChartBox.alpha(color, 0.12);
+            label.borderColor = ChartBox.alpha(color, 0.4);
+        };
+
+        const createInfoLine = function (title, first) {
+            startSpaceBetween();
+            that.elem.style.padding = "8px 0px";
+            if (!first) that.elem.style.borderTop = "1px solid " + Ink(0.06);
+                Label({ text: title, fontSize: 14, textColor: Ink(0.5) });
+                const value = Label({ text: "", fontSize: 14, textColor: Ink(0.9) });
+                that.elem.style.whiteSpace = "nowrap";
+            endGroup();
+            return value;
+        };
+
+        const createButton = function (text, iconFile, onClick, params = {}) {
+            const btn = ButtonWithIcon({
+                width: params.width || "auto",
+                labelText: text,
+                iconFile: (iconFile) ? ASSETS + iconFile : "",
+                onClick: onClick,
+                style: {
+                    layout: { gap: 10, padding: [14, 8], align: "center center" },
+                    icon: { width: 18, height: 18 },
+                    label: { fontSize: 14, textColor: Ink(0.9) },
+                    box: { color: params.color || FIELD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8 },
+                    hover: { color: params.hoverColor || T.surface3 },
+                    active: { color: params.activeColor || T.surface4 },
+                },
+            });
+            if (btn.icon) btn.icon.elem.style.filter = T.iconFilter; // WHY: Panel icons are black.
+            return btn;
+        };
+
+        const createSlider = function (color, onDragMove, onDragEnd) {
+            return Slider({
+                width: 250,
+                trackHeight: 8,
+                minThumbHeight: 26,
+                trackColor: color,
+                trackBackgroundColor: Ink(0.1),
+                thumbColor: Ink(0.9),
+                showValueOnSet: 0,
+                showValueOnDrag: 0, // WHY: Slider shows 0-100. The real value is shown in a label.
+                onDragMove: onDragMove,
+                onDragEnd: onDragEnd,
+            });
+        };
+
+        const createToggle = function (onChange) {
+            return Toggle({
+                width: 52,
+                height: 30,
+                spacing: 3,
+                backgroundStyle: { color: T.surface3, selectedColor: PRIMARY_COLOR, border: 1, borderColor: CARD_BORDER_COLOR },
+                buttonStyle: { color: Ink(0.35), selectedColor: Ink(0.95) },
+                onChange: function (self) { if (!isRendering) onChange(self); },
+            });
+        };
+
+        const DARK_RADIO_STYLE = {
+            mark: { width: 20, height: 20, color: "transparent", borderColor: Ink(0.35) },
+            checkedMark: { color: "transparent", borderColor: ACCENT_COLOR },
+            hoverMark: { borderColor: Ink(0.7) },
+            dot: { color: ACCENT_COLOR },
+            label: { fontSize: 14, textColor: Ink(0.9) },
+        };
+
+        const DARK_CHECK_STYLE = {
+            layout: { padding: [0, 2] },
+            mark: { width: 18, height: 18, color: "transparent", borderColor: Ink(0.35) },
+            checkedMark: { color: PRIMARY_COLOR, borderColor: PRIMARY_COLOR },
+            hoverMark: { borderColor: Ink(0.7) },
+            tick: { color: Ink(1) },
+            label: { fontSize: 13, textColor: Ink(0.75) },
+        };
+
+        const PICKER_STYLE = {
+            field: { color: FIELD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8 },
+            fieldHover: { borderColor: Ink(0.3) },
+            fieldFocus: { borderColor: ACCENT_COLOR },
+            fieldText: { fontSize: 14, textColor: Ink(0.9) },
+            placeholder: { textColor: Ink(0.4) },
+            icon: { color: Ink(0.55) },
+            panel: { color: FIELD_COLOR, borderColor: Ink(0.12), shadow: "0 8px 24px rgba(0, 0, 0, 0.5)" },
+            footerButton: { textColor: ACCENT_COLOR },
+        };
+        const TIME_STYLE = Object.assign({}, PICKER_STYLE, {
+            columnTitle: { textColor: Ink(0.45), activeTextColor: Ink(0.9) },
+            cell: { textColor: Ink(0.85), hoverColor: Ink(0.08) },
+            selectedCell: { color: PRIMARY_COLOR, textColor: Ink(1) },
+            disabledCell: { textColor: Ink(0.2) },
+        });
+        const DATE_STYLE = Object.assign({}, PICKER_STYLE, {
+            title: { textColor: Ink(0.9) },
+            arrow: { color: Ink(0.6), hoverColor: Ink(0.08) },
+            weekDay: { textColor: Ink(0.45) },
+            day: { textColor: Ink(0.85), hoverColor: Ink(0.08) },
+            today: { borderColor: Ink(0.35) },
+            selectedDay: { color: PRIMARY_COLOR, textColor: Ink(1) },
+            disabledDay: { textColor: Ink(0.2) },
+        });
+
+        // *** VIEW:
+
+        const initHeader = function () {
+
+            startSpaceBetween(16);
+            that.elem.style.flexWrap = "wrap";
+
+                HGroup({ width: "auto", height: "auto", align: "left center", gap: 20 });
+                that.elem.style.flexWrap = "wrap";
+
+                    VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
+                        Label({ text: "Greenhouse", fontSize: 26, textColor: Ink(0.95) });
+                        that.elem.style.fontFamily = "opensans-bold";
+                        lblHouse = Label({ text: "", fontSize: 14, textColor: Ink(0.5) });
+                    endGroup();
+
+                    zoneSelect = TinySelect({
+                        title: "Zone",
+                        list: ZONES.map(function (z) { return { id: z.id, label: z.name }; }),
+                        height: 40, fontSize: 15, color: CARD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8,
+                        labelTextColor: Ink(0.95),
+                        arrowIcon: LIB_PATH + "comp/tiny-select/arrow.svg", arrowSize: 20, invertIconColor: T.invertIcon,
+                        listFontSize: 15, listTextColor: Ink(0.85), listOverTextColor: ACCENT_COLOR, listBackgroundColor: FIELD_COLOR, listBorderColor: Ink(0.15),
+                        onSelect: function (index) { if (isReady) selectZone(index); },
+                    });
+                    zoneSelect.lblTitle.textColor = Ink(0.5);
+
+                    lblStatus = Label({ text: "", fontSize: 13, round: 100, border: 1, padding: [12, 4] });
+                    lblStatus.elem.style.whiteSpace = "nowrap";
+
+                endGroup();
+
+                HGroup({ width: "auto", height: "auto", align: "right center", gap: 16 });
+
+                    VGroup({ width: "auto", height: "auto", align: "right center", gap: 0 });
+                        lblClock = Label({ text: "", fontSize: 22, textColor: Ink(0.95) });
+                        that.elem.style.fontVariantNumeric = "tabular-nums";
+                        lblWeather = Label({ text: "", fontSize: 12, textColor: Ink(0.5) });
+                        that.elem.style.whiteSpace = "nowrap";
+                    endGroup();
+
+                    const btnMore = createButton("More", "top-bar/apps.png", function () { });
+                    moreMenu = ContextMenu({
+                        items: [
+                            { text: "Test: Heatwave outside", key: "heatwave" },
+                            { text: "Test: Rain forecast", key: "rain" },
+                            { text: "Test: Sensor fault in this zone", key: "fault" },
+                            "-",
+                            { text: "Download today's report (CSV)", key: "csv" },
+                        ],
+                        onClick: function (self, item) { onMoreMenuClick(item.key); },
+                        style: {
+                            menu: { color: FIELD_COLOR, borderColor: Ink(0.12), shadow: "0px 8px 24px rgba(0, 0, 0, 0.5)" },
+                            item: { textColor: Ink(0.85) },
+                            itemHover: { textColor: Ink(1), color: Ink(0.08) },
+                            disabled: { textColor: Ink(0.3) },
+                            separator: { color: Ink(0.1) },
+                        },
+                    });
+                    moreMenu.attachTo(btnMore, "click");
+
+                endGroup();
+
+            endGroup();
+
+        };
+
+        const initAlert = function () {
+            alertBox = HGroup({
+                width: "100%", height: "auto", align: "left center", gap: 12, padding: [16, 12],
+                color: "rgba(230, 103, 103, 0.10)", border: 1, borderColor: "rgba(230, 103, 103, 0.45)", round: 12, visible: 0,
+            });
+            that.elem.style.flexWrap = "wrap";
+                lblAlert = Label({ text: "", fontSize: 14, textColor: Ink(0.9) });
+                lblAlert.elem.style.flex = "1 1 300px";
+            endGroup();
+        };
+
+        const initHeroRow = function () {
+
+            startRow();
+
+                startCard("Greenhouse Map", "Click a bay to select it", "2 1 520px");
+
+                    mapBox = Box({ width: "100%", height: "auto", color: "transparent", clickable: 1 });
+                    mapBox.position = "relative";
+                    mapBox.elem.innerHTML = createMapSvg();
+                    map.svg = mapBox.elem.querySelector("svg");
+                    ZONES.forEach(function (z, index) {
+                        const g = map.svg.querySelector("#zone-" + z.id);
+                        g.style.cursor = "pointer";
+                        g.addEventListener("click", function () { zoneSelect.setSelectedIndex(index); });
+                    });
+
+                    HGroup({ width: "100%", height: "auto", align: "left center", gap: 14 });
+                    that.elem.style.flexWrap = "wrap";
+                        Label({ text: "<span style='color:" + LIGHT_COLOR + "'>■</span> Lights on", fontSize: 12, textColor: Ink(0.55) });
+                        Label({ text: "<span style='color:" + HUMIDITY_COLOR + "'>●</span> Irrigating", fontSize: 12, textColor: Ink(0.55) });
+                        Label({ text: "<span style='color:" + Ink(0.6) + "'>◐</span> Fan", fontSize: 12, textColor: Ink(0.55) });
+                        Label({ text: "<span style='color:" + Ink(0.6) + "'>▨</span> Shade screen", fontSize: 12, textColor: Ink(0.55) });
+                        Label({ text: "Fill color: temperature (blue → green → red)", fontSize: 12, textColor: Ink(0.4) });
+                    endGroup();
+
+                endCard();
+
+                startCard("Zone Sensors", "", "1 1 300px");
+
+                    VGroup({ width: "100%", height: "auto", align: "left top", gap: 0 });
+                        zoneInfo.temp = createInfoLine("Temperature", 1);
+                        zoneInfo.humidity = createInfoLine("Humidity");
+                        zoneInfo.soil = createInfoLine("Soil moisture");
+                        zoneInfo.co2 = createInfoLine("CO₂");
+                        zoneInfo.light = createInfoLine("Light (PAR)");
+                        zoneInfo.vent = createInfoLine("Roof vents");
+                        zoneInfo.setpoint = createInfoLine("Setpoint now");
+                    endGroup();
+
+                endCard();
+
+            endGroup();
+
+        };
+
+        const initKpiRow = function () {
+
+            const KPI_LIST = [
+                { title: "Average temperature", iconFile: "light.png", lineColor: TEMP_COLOR, maxValue: 0 },
+                { title: "Water today", iconFile: "maybe.png", lineColor: HUMIDITY_COLOR, maxValue: 0 },
+                { title: "Energy today", iconFile: "left-menu/bolt.png", lineColor: LIGHT_COLOR, maxValue: 0 },
+                { title: "Active alarms", iconFile: "warning.png", lineColor: ERROR_COLOR, maxValue: 0 },
+            ];
+
+            startRow();
+                KPI_LIST.forEach(function (kpi) {
+                    const kpiBox = SparkLineBox({
+                        height: 100, title: kpi.title, valueText: "", iconFile: ASSETS + kpi.iconFile, lineColor: kpi.lineColor, maxValue: kpi.maxValue,
+                        style: {
+                            box: { color: CARD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 12 },
+                            text: { padding: 14 },
+                            title: { fontSize: 13, textColor: Ink(0.5) },
+                            valueText: { fontSize: 24, textColor: Ink(0.95) },
+                            trend: { flatColor: Ink(0.45) }, // WHY: The default flat color is made for light cards.
+                            icon: { width: 20, height: 20 },
+                            graph: { height: 34, padding: 14 },
+                        },
+                    });
+                    setFlex(kpiBox, "1 1 220px");
+                    kpiBox.icon.elem.style.filter = T.iconFilter;
+                    kpiBox.icon.opacity = 0.5;
+                    kpiBoxList.push(kpiBox);
+                });
+            endGroup();
+
+        };
+
+        const initChartRow = function () {
+
+            startRow();
+
+                chartClimate = ChartBox({
+                    height: 320, type: "line", theme: T.chartTheme,
+                    title: "Zone Climate Today", subtitle: "Every 15 minutes",
+                    beginAtZero: 0, animated: 0, legend: "top",
+                    labels: [],
+                    datasets: [
+                        { label: "Temperature (°C)", data: [], borderColor: TEMP_COLOR, tension: 0.35, yAxisID: "y" },
+                        { label: "Humidity (%)", data: [], borderColor: HUMIDITY_COLOR, tension: 0.35, yAxisID: "y1" },
+                        { label: "Soil (%)", data: [], borderColor: SOIL_COLOR, tension: 0.35, borderDash: [5, 4], yAxisID: "y1" },
+                    ],
+                    options: {
+                        elements: { point: { radius: 0 } },
+                        interaction: { mode: "index", intersect: false },
+                        scales: {
+                            x: { ticks: { maxTicksLimit: 8 } },
+                            y: { position: "left", suggestedMin: 10, suggestedMax: 35, title: { display: true, text: "°C" } },
+                            y1: { position: "right", min: 0, max: 100, grid: { drawOnChartArea: false }, title: { display: true, text: "%" } },
+                        },
+                    },
+                    style: {
+                        box: { color: CARD_COLOR, borderColor: CARD_BORDER_COLOR, round: 12, padding: 16 },
+                        chart: { colors: [TEMP_COLOR, HUMIDITY_COLOR, SOIL_COLOR] },
+                    },
+                });
+                setFlex(chartClimate, "2 1 520px");
+                chartClimate.elem.style.height = "auto";
+                chartClimate.elem.style.minHeight = "320px";
+
+                chartRuntime = ChartBox({
+                    height: 320, type: "bar", theme: T.chartTheme, horizontal: 1,
+                    title: "Actuator Runtime Today", subtitle: "Minutes, selected zone",
+                    labels: ["Heater", "Fan", "Lights", "Irrigation", "CO₂"],
+                    values: [0, 0, 0, 0, 0],
+                    formatValue: function (value) { return value + " min"; },
+                    style: {
+                        box: { color: CARD_COLOR, borderColor: CARD_BORDER_COLOR, round: 12, padding: 16 },
+                        chart: { colors: [ACCENT_COLOR] },
+                    },
+                });
+                setFlex(chartRuntime, "1 1 280px");
+
+            endGroup();
+
+        };
+
+        const initControlRow = function () {
+
+            startRow();
+
+                // SETPOINTS & MODE
+                startCard("Climate Setpoints", "Auto mode keeps these", "1 1 300px");
+
+                    VGroup({ width: "100%", height: "auto", align: "left top", gap: 10 });
+                        MODES.forEach(function (mode) {
+                            RadioButton({
+                                group: "zoneMode", value: mode.value,
+                                labelText: mode.text + " <span style='color:" + Ink(0.4) + "; font-size: 12px'>" + mode.desc + "</span>",
+                                style: DARK_RADIO_STYLE,
+                                onChange: function (self) { if (isRendering) return; setMode(zone, self.value); renderAll(); },
+                            });
+                        });
+                    endGroup();
+
+                    lblModeInfo = Label({ text: "", fontSize: 12, textColor: Ink(0.45), width: "100%" });
+
+                    [
+                        { key: "dayTemp", title: "Day temperature", color: TEMP_COLOR, min: 15, max: 32, unit: " °C" },
+                        { key: "nightTemp", title: "Night temperature", color: "#B8683A", min: 10, max: 25, unit: " °C" },
+                        { key: "humidityMax", title: "Humidity limit", color: HUMIDITY_COLOR, min: 50, max: 95, unit: "%" },
+                        { key: "soilMin", title: "Irrigate below soil", color: SOIL_COLOR, min: 20, max: 70, unit: "%" },
+                    ].forEach(function (item, index) {
+                        VGroup({ width: "100%", height: "auto", align: "left top", gap: 8 });
+                        if (index === 0) { that.elem.style.borderTop = "1px solid " + Ink(0.06); that.elem.style.paddingTop = "14px"; }
+                            startSpaceBetween();
+                                createSmallTitle(item.title);
+                                setpointLabels[item.key] = Label({ text: "", fontSize: 15, textColor: Ink(0.95) });
+                                that.elem.style.fontFamily = "opensans-bold";
+                            endGroup();
+                            setpointSliders[item.key] = createSlider(item.color,
+                                function (value) { setpointLabels[item.key].text = sliderToRange(value, item.min, item.max) + item.unit; },
+                                function () {
+                                    const v = sliderToRange(setpointSliders[item.key].getValue(), item.min, item.max);
+                                    if (v === zone.setpoints[item.key]) return;
+                                    zone.setpoints[item.key] = v;
+                                    setpointLabels[item.key].text = v + item.unit;
+                                    addEvent(zone, "Info", item.title + " set to " + v + item.unit);
+                                    renderLive();
+                                }
+                            );
+                            setpointSliders[item.key].range = item;
+                        endGroup();
+                    });
+
+                endCard();
+
+                // ACTUATORS
+                startCard("Actuators", "Switch them in Manual mode", "1 1 300px");
+
+                    VGroup({ width: "100%", height: "auto", align: "left top", gap: 0 });
+                        ACTUATORS.forEach(function (item, index) {
+                            startSpaceBetween();
+                            that.elem.style.padding = "9px 0px";
+                            if (index > 0) that.elem.style.borderTop = "1px solid " + Ink(0.06);
+                                HGroup({ width: "auto", height: "auto", align: "left center", gap: 10 });
+                                    actuatorStates[item.key] = Box({ width: 10, height: 10, round: 100, color: Ink(0.2) });
+                                    actuatorStates[item.key].setMotion("background-color 0.3s");
+                                    VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
+                                        Label({ text: item.title, fontSize: 14, textColor: Ink(0.9) });
+                                        Label({ text: item.desc, fontSize: 12, textColor: Ink(0.45) });
+                                    endGroup();
+                                endGroup();
+                                actuatorToggles[item.key] = createToggle(function (self) {
+                                    setActuator(zone, item.key, self.value, "manual");
+                                    renderLive();
+                                });
+                            endGroup();
+                        });
+                    endGroup();
+
+                    VGroup({ width: "100%", height: "auto", align: "left top", gap: 8 });
+                    that.elem.style.borderTop = "1px solid " + Ink(0.06);
+                    that.elem.style.paddingTop = "14px";
+                        startSpaceBetween();
+                            createSmallTitle("Roof vents");
+                            lblVent = Label({ text: "", fontSize: 15, textColor: Ink(0.95) });
+                            that.elem.style.fontFamily = "opensans-bold";
+                        endGroup();
+                        sliderVent = createSlider(ACCENT_COLOR,
+                            function (value) { lblVent.text = Math.round(value / 10) * 10 + "% open"; },
+                            function () {
+                                const v = Math.round(sliderVent.getValue() / 10) * 10;
+                                if (v === zone.vent) return;
+                                zone.vent = v;
+                                addEvent(zone, "Info", "Roof vents set to " + v + "% (manual)");
+                                renderLive();
+                            }
+                        );
+                    endGroup();
+
+                endCard();
+
+                // LIGHT, WATER & NUTRIENTS
+                startCard("Light, Water & Nutrients", "", "1 1 300px");
+
+                    createSmallTitle("Grow light schedule");
+                    HGroup({ width: "100%", height: "auto", align: "left center", gap: 10 });
+                    that.elem.style.flexWrap = "wrap";
+                        selectLightFrom = SelectTime({
+                            width: 116, height: 38, minuteStep: 30, showClearButton: 0, style: TIME_STYLE,
+                            onChange: function (self) { if (isRendering || !self.value) return; zone.lightFrom = self.value; addEvent(zone, "Info", "Lights schedule from " + self.value); },
+                        });
+                        Label({ text: "to", fontSize: 13, textColor: Ink(0.5) });
+                        selectLightTo = SelectTime({
+                            width: 116, height: 38, minuteStep: 30, showClearButton: 0, style: TIME_STYLE,
+                            onChange: function (self) { if (isRendering || !self.value) return; zone.lightTo = self.value; addEvent(zone, "Info", "Lights schedule to " + self.value); },
+                        });
+                    endGroup();
+                    Label({ text: "Lights turn on in this window when the natural light is below 600 µmol.", fontSize: 12, textColor: Ink(0.45), width: "100%" });
+
+                    VGroup({ width: "100%", height: "auto", align: "left top", gap: 8 });
+                    that.elem.style.borderTop = "1px solid " + Ink(0.06);
+                    that.elem.style.paddingTop = "14px";
+                        startSpaceBetween();
+                            createSmallTitle("Irrigation run time");
+                            lblIrrigation = Label({ text: "", fontSize: 15, textColor: Ink(0.95) });
+                            that.elem.style.fontFamily = "opensans-bold";
+                        endGroup();
+                        sliderIrrigation = createSlider(HUMIDITY_COLOR,
+                            function (value) { lblIrrigation.text = sliderToRange(value, 2, 20) + " min"; },
+                            function () {
+                                const v = sliderToRange(sliderIrrigation.getValue(), 2, 20);
+                                if (v === zone.irrigationMinutes) return;
+                                zone.irrigationMinutes = v;
+                                addEvent(zone, "Info", "Irrigation run time set to " + v + " min");
+                            }
+                        );
+                        chkRain = CheckBox({
+                            labelText: "Skip irrigation when rain is forecast",
+                            style: DARK_CHECK_STYLE,
+                            onChange: function (self) { if (isRendering) return; zone.skipRain = self.checked; addEvent(zone, "Info", "Skip on rain " + ((self.checked) ? "on" : "off")); },
+                        });
+                    endGroup();
+
+                    VGroup({ width: "100%", height: "auto", align: "left top", gap: 10 });
+                    that.elem.style.borderTop = "1px solid " + Ink(0.06);
+                    that.elem.style.paddingTop = "14px";
+                        createSmallTitle("Nutrient solution");
+                        lblNutrients = Label({ text: "", fontSize: 14, textColor: Ink(0.9), width: "100%" });
+                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
+                        that.elem.style.flexWrap = "wrap";
+                            btnDoseAcid = createButton("Dose pH Down", "", function () { dose(zone, "acid"); });
+                            btnDoseNutrient = createButton("Dose Nutrients", "", function () { dose(zone, "nutrient"); });
+                        endGroup();
+                    endGroup();
+
+                endCard();
+
+            endGroup();
+
+        };
+
+        const initBottomRow = function () {
+
+            startRow();
+
+                startCard("Alarms", "Active in this zone", "1 1 300px");
+                    grpAlarmsHost = VGroup({ width: "100%", height: "auto", align: "left top", gap: 0 });
+                    endGroup();
+                endCard();
+
+                startCard("Crop & Harvest", "", "1 1 300px");
+                    grpCropHost = VGroup({ width: "100%", height: "auto", align: "left top", gap: 0 });
+                    endGroup();
+                endCard();
+
+                startCard("Events", "", "1 1 300px");
+                    grpEventHost = VGroup({ width: "100%", height: "auto", align: "left top", gap: 0 });
+                    endGroup();
+                endCard();
+
+            endGroup();
+
+        };
+
+        // *** SVG:
+
+        // Top-down map: 4 bays in 2 rows. Each bay: fill (temperature), roof vent lines, plant rows, lights, water, fan, shade.
+        const BAY = { w: 290, h: 150, gapX: 20, gapY: 20, x0: 20, y0: 20 };
+
+        const createMapSvg = function () {
+
+            let bays = "";
+
+            ZONES.forEach(function (z, index) {
+
+                const x = BAY.x0 + (index % 2) * (BAY.w + BAY.gapX);
+                const y = BAY.y0 + Math.floor(index / 2) * (BAY.h + BAY.gapY);
+                const id = z.id;
+
+                // Plant rows
+                let plants = "";
+                for (let r = 0; r < z.rows; r++) {
+                    const py = y + 42 + r * ((BAY.h - 60) / (z.rows - 1));
+                    for (let p = 0; p < 12; p++) {
+                        const px = x + 24 + p * ((BAY.w - 48) / 11);
+                        plants += "<circle cx='" + px.toFixed(1) + "' cy='" + py.toFixed(1) + "' r='" + ((z.crop === "Seedlings") ? 2 : 3.5) + "' fill='" + z.color + "' opacity='0.8'/>";
+                    }
+                }
+
+                bays += "<g id='zone-" + id + "'>" +
+                    "<rect id='fill-" + id + "' x='" + x + "' y='" + y + "' width='" + BAY.w + "' height='" + BAY.h + "' rx='10' fill='" + tempColor(z.temp) + "' style='transition: fill 1s'/>" + // WHY: The first paint must not wait for the fill transition.
+                    "<rect id='shade-" + id + "' x='" + x + "' y='" + y + "' width='" + BAY.w + "' height='" + BAY.h + "' rx='10' fill='url(#hatch)' style='opacity:0; transition: opacity 0.5s'/>" +
+                    "<rect id='light-" + id + "' x='" + x + "' y='" + y + "' width='" + BAY.w + "' height='" + BAY.h + "' rx='10' fill='" + LIGHT_COLOR + "' style='opacity:0; transition: opacity 0.5s'/>" +
+                    plants +
+                    // Roof vents: two flaps on the top edge, they lift with the vent %
+                    "<g id='vent-" + id + "' style='transform-origin:" + (x + 60) + "px " + (y + 4) + "px'>" +
+                    "<line x1='" + (x + 60) + "' y1='" + (y + 4) + "' x2='" + (x + 130) + "' y2='" + (y + 4) + "' stroke='" + Ink(0.7) + "' stroke-width='3' stroke-linecap='round' style='transition: transform 0.6s; transform-origin:" + (x + 60) + "px " + (y + 4) + "px' id='ventL-" + id + "'/>" +
+                    "<line x1='" + (x + BAY.w - 60) + "' y1='" + (y + 4) + "' x2='" + (x + BAY.w - 130) + "' y2='" + (y + 4) + "' stroke='" + Ink(0.7) + "' stroke-width='3' stroke-linecap='round' style='transition: transform 0.6s; transform-origin:" + (x + BAY.w - 60) + "px " + (y + 4) + "px' id='ventR-" + id + "'/>" +
+                    "</g>" +
+                    // Water drops
+                    "<g id='water-" + id + "' style='opacity:0; transition: opacity 0.4s'>" +
+                    [0, 1, 2].map(function (i) { return "<path d='M" + (x + BAY.w - 40 + i * 12) + " " + (y + BAY.h - 34) + " q-5 8 0 12 q5 -4 0 -12z' fill='" + HUMIDITY_COLOR + "' class='drop' style='animation-delay:" + (i * 0.3) + "s'/>"; }).join("") +
+                    "</g>" +
+                    // Fan
+                    "<g id='fan-" + id + "' style='transform-origin:" + (x + 26) + "px " + (y + BAY.h - 26) + "px'>" +
+                    "<circle cx='" + (x + 26) + "' cy='" + (y + BAY.h - 26) + "' r='11' fill='" + Black(0.4) + "' stroke='" + Ink(0.4) + "'/>" +
+                    "<path d='M" + (x + 26) + " " + (y + BAY.h - 26) + " l0 -9 a9 9 0 0 1 8 5 z M" + (x + 26) + " " + (y + BAY.h - 26) + " l8 4 a9 9 0 0 1 -8 5 z M" + (x + 26) + " " + (y + BAY.h - 26) + " l-8 4 a9 9 0 0 1 0 -9 z' fill='" + Ink(0.75) + "'/>" +
+                    "</g>" +
+                    // Labels
+                    "<text x='" + (x + 14) + "' y='" + (y + 26) + "' class='t-name'>" + escapeHtml(z.name) + "</text>" +
+                    "<text id='temp-" + id + "' x='" + (x + BAY.w - 14) + "' y='" + (y + 27) + "' text-anchor='end' class='t-value'></text>" +
+                    "<text id='sub-" + id + "' x='" + (x + 46) + "' y='" + (y + BAY.h - 21) + "' class='t-sub'></text>" +
+                    "<rect id='frame-" + id + "' x='" + x + "' y='" + y + "' width='" + BAY.w + "' height='" + BAY.h + "' rx='10' fill='none' stroke='" + Ink(0.12) + "' stroke-width='2' style='transition: stroke 0.3s'/>" +
+                    "</g>";
+
+            });
+
+            const W = BAY.x0 * 2 + BAY.w * 2 + BAY.gapX, H = BAY.y0 * 2 + BAY.h * 2 + BAY.gapY;
+
+            return "<svg viewBox='0 0 " + W + " " + H + "' style='display:block; width:100%; height:auto; font-family:inherit'>" +
+                "<style>" +
+                ".t-name { fill:" + Ink(0.95) + "; font-size:14px; font-weight:bold; }" +
+                ".t-value { fill:" + Ink(0.95) + "; font-size:15px; font-weight:bold; }" +
+                ".t-sub { fill:" + Ink(0.75) + "; font-size:11px; }" +
+                ".fan-on { animation: spin 0.8s linear infinite; }" +
+                "@keyframes spin { to { transform: rotate(360deg); } }" +
+                ".drop { animation: drip 1.2s ease-in infinite; }" +
+                "@keyframes drip { 0% { transform: translateY(-6px); opacity: 0; } 30% { opacity: 1; } 100% { transform: translateY(8px); opacity: 0; } }" +
+                "</style>" +
+                "<defs><pattern id='hatch' width='8' height='8' patternUnits='userSpaceOnUse' patternTransform='rotate(45)'>" +
+                "<line x1='0' y1='0' x2='0' y2='8' stroke='" + Black(0.5) + "' stroke-width='4'/></pattern></defs>" +
+                bays +
+                "</svg>";
+
+        };
+
+        // *** VALUE CONVERTERS:
+
+        const sliderToRange = function (value, min, max) {
+            return Math.round(min + value / 100 * (max - min));
+        };
+
+        const rangeToSlider = function (v, min, max) {
+            return (v - min) / (max - min) * 100;
+        };
+
+        // *** ACTIONS:
+
+        const onMoreMenuClick = function (key) {
+            switch (key) {
+                case "heatwave":
+                    house.heatwave = (house.heatwave) ? 0 : 1;
+                    addEvent(zone, "Warning", (house.heatwave) ? "Test: heatwave outside (+9 °C)" : "Test: heatwave ended");
+                    renderLive();
+                    break;
+                case "rain":
+                    house.rainForecast = (house.rainForecast) ? 0 : 1;
+                    addEvent(zone, "Info", (house.rainForecast) ? "Test: rain is forecast for today" : "Test: rain forecast cleared");
+                    renderLive();
+                    break;
+                case "fault":
+                    zone.sensorFault = (zone.sensorFault) ? 0 : 1;
+                    addEvent(zone, (zone.sensorFault) ? "Error" : "Success", (zone.sensorFault) ? "Test: temperature sensor stopped updating" : "Test: sensor is back");
+                    renderLive();
+                    break;
+                case "csv":
+                    downloadReport();
+                    break;
+            }
+        };
+
+        const downloadReport = function () {
+            const lines = ["zone,crop,temp_c,humidity,soil,co2_ppm,ph,ec,mode,heater_min,lights_min,irrigation_min,alarms"];
+            ZONES.forEach(function (z) {
+                lines.push([z.name, z.crop, z.temp.toFixed(1), Math.round(z.humidity), Math.round(z.soil), Math.round(z.co2), z.ph.toFixed(1), z.ec.toFixed(1), z.mode, z.runtime.heater, z.runtime.lights, z.runtime.irrigation, Object.keys(z.alarms).length].join(","));
+            });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/csv" }));
+            link.download = "greenhouse-report.csv";
+            link.click();
+            URL.revokeObjectURL(link.href);
+        };
+
+        // *** RENDER:
+
+        const selectZone = function (index) {
+
+            zone = ZONES[index];
+
+            chartClimate.whenReady(function () {
+                chartClimate.data.labels = zone.chart.labels.slice();
+                chartClimate.data.datasets[0].data = zone.chart.temp.slice();
+                chartClimate.data.datasets[1].data = zone.chart.humidity.slice();
+                chartClimate.data.datasets[2].data = zone.chart.soil.slice();
+                chartClimate.update("none");
+            });
+
+            renderAll();
+
+        };
+
+        const renderAll = function () {
+            renderHeader();
+            renderAlert();
+            renderMap();
+            renderSensors();
+            renderKpis();
+            renderControls();
+            renderActuators();
+            renderSchedule();
+            renderNutrients();
+            renderAlarms();
+            renderCrop();
+            renderEvents();
+        };
+
+        // Every minute (tick)
+        const renderLive = function () {
+            renderHeader();
+            renderAlert();
+            renderMap();
+            renderSensors();
+            renderKpis();
+            renderActuators();
+            renderAlarms();
+            if (simMinute % CHART_STEP === 0) renderCharts();
+        };
+
+        const getStatus = function (z) {
+            const count = Object.keys(z.alarms).length;
+            if (count) return { text: count + " alarm" + ((count > 1) ? "s" : ""), color: ERROR_COLOR };
+            if (z.mode === "manual") return { text: "Manual", color: WARNING_COLOR };
+            return { text: "Auto · OK", color: ACCENT_COLOR };
+        };
+
+        const renderHeader = function () {
+            lblHouse.text = house.name + " · " + ZONES.length + " zones · " + escapeHtml(zone.crop);
+            const status = getStatus(zone);
+            setPill(lblStatus, "● " + status.text, status.color);
+            lblClock.text = formatMinute(simMinute);
+            const sky = (!isDay(simMinute)) ? "☾ Night" : (house.sun > 0.75) ? "☀ Sunny" : "⛅ Morning / evening sun";
+            lblWeather.text = sky + " · Outside " + house.outsideTemp.toFixed(0) + " °C" + ((house.heatwave) ? " (heatwave)" : "") + ((house.rainForecast) ? " · Rain forecast" : "") + " · 1 s = 1 min";
+        };
+
+        const renderAlert = function () {
+            const list = [];
+            ZONES.forEach(function (z) {
+                Object.keys(z.alarms).forEach(function (key) {
+                    list.push("<b>" + escapeHtml(z.name) + "</b>: " + ALARM_RULES.find(function (r) { return r.key === key; }).text);
+                });
+            });
+            alertBox.visible = (list.length) ? 1 : 0;
+            lblAlert.text = list.join(" · ");
+        };
+
+        const renderMap = function () {
+            ZONES.forEach(function (z) {
+                const id = z.id, s = map.svg, a = z.actuators;
+                s.querySelector("#fill-" + id).setAttribute("fill", tempColor(z.temp));
+                s.querySelector("#shade-" + id).style.opacity = (a.shade) ? 0.6 : 0;
+                s.querySelector("#light-" + id).style.opacity = (a.lights) ? 0.22 : 0;
+                s.querySelector("#water-" + id).style.opacity = (a.irrigation) ? 1 : 0;
+                const angle = -z.vent / 100 * 40;
+                s.querySelector("#ventL-" + id).style.transform = "rotate(" + angle + "deg)";
+                s.querySelector("#ventR-" + id).style.transform = "rotate(" + (-angle) + "deg)";
+                const fan = s.querySelector("#fan-" + id);
+                if (a.fan) fan.classList.add("fan-on"); else fan.classList.remove("fan-on");
+                s.querySelector("#temp-" + id).textContent = ((z.sensorFault) ? "?" : z.temp.toFixed(1)) + " °C";
+                s.querySelector("#sub-" + id).textContent = Math.round(z.humidity) + "% RH · soil " + Math.round(z.soil) + "% · vents " + z.vent + "%";
+                const alarmCount = Object.keys(z.alarms).length;
+                s.querySelector("#frame-" + id).setAttribute("stroke", (alarmCount) ? ERROR_COLOR : (z === zone) ? Ink(0.9) : Ink(0.12));
+                s.querySelector("#frame-" + id).setAttribute("stroke-width", (z === zone) ? 3 : 2);
+            });
+        };
+
+        const renderSensors = function () {
+            const z = zone;
+            zoneInfo.temp.text = ((z.sensorFault) ? "<span style='color:" + ERROR_COLOR + "'>sensor fault</span>" : z.temp.toFixed(1) + " °C");
+            zoneInfo.humidity.text = Math.round(z.humidity) + "%";
+            zoneInfo.soil.text = Math.round(z.soil) + "%" + ((z.actuators.irrigation) ? " <span style='color:" + HUMIDITY_COLOR + "'>· watering</span>" : "");
+            zoneInfo.co2.text = Math.round(z.co2) + " ppm";
+            zoneInfo.light.text = z.light + " µmol";
+            zoneInfo.vent.text = z.vent + "% open";
+            zoneInfo.setpoint.text = getSetpoint(z) + " °C (" + ((isDay(simMinute)) ? "day" : "night") + ")";
+        };
+
+        const renderKpis = function () {
+            const h = house.history;
+            const avg = ZONES.reduce(function (s, z) { return s + z.temp; }, 0) / ZONES.length;
+            const alarms = ZONES.reduce(function (s, z) { return s + Object.keys(z.alarms).length; }, 0);
+            kpiBoxList[0].setValueText(avg.toFixed(1) + " °C");
+            kpiBoxList[1].setValueText(Math.round(house.today.water).toLocaleString("en-US") + " L");
+            kpiBoxList[2].setValueText(house.today.energy.toFixed(1) + " kWh");
+            kpiBoxList[3].setValueText(String(alarms));
+            kpiBoxList[0].setValues(h.temp);
+            kpiBoxList[1].setValues(h.water);
+            kpiBoxList[2].setValues(h.energy);
+            kpiBoxList[3].setValues(h.alarms);
+        };
+
+        const renderCharts = function () {
+            chartClimate.whenReady(function () {
+                chartClimate.data.labels = zone.chart.labels.slice();
+                chartClimate.data.datasets[0].data = zone.chart.temp.slice();
+                chartClimate.data.datasets[1].data = zone.chart.humidity.slice();
+                chartClimate.data.datasets[2].data = zone.chart.soil.slice();
+                chartClimate.update("none");
+            });
+            chartRuntime.whenReady(function () {
+                const r = zone.runtime;
+                chartRuntime.data.datasets[0].data = [r.heater, r.fan, r.lights, r.irrigation, r.co2];
+                chartRuntime.update("none");
+            });
+        };
+
+        const renderControls = function () {
+            isRendering = 1;
+            RadioButton.setValue("zoneMode", zone.mode, 1);
+            lblModeInfo.text = (zone.mode === "auto")
+                ? "Heater, vents, fan, shade, lights, irrigation and CO₂ follow the setpoints and the schedule."
+                : "The controller is off for this zone. Alarms still work.";
+            Object.keys(setpointSliders).forEach(function (key) {
+                const item = setpointSliders[key].range;
+                setpointLabels[key].text = zone.setpoints[key] + item.unit;
+                if (sliderToRange(setpointSliders[key].getValue(), item.min, item.max) !== zone.setpoints[key]) setpointSliders[key].setValue(rangeToSlider(zone.setpoints[key], item.min, item.max));
+            });
+            isRendering = 0;
+            renderCharts();
+        };
+
+        const renderActuators = function () {
+            const z = zone, manual = (z.mode === "manual");
+            isRendering = 1;
+            ACTUATORS.forEach(function (item) {
+                const on = z.actuators[item.key];
+                if (actuatorToggles[item.key].value !== on) actuatorToggles[item.key].setValue(on);
+                setInteractive(actuatorToggles[item.key], manual);
+                actuatorStates[item.key].color = (on) ? ((item.key === "lights") ? LIGHT_COLOR : (item.key === "irrigation") ? HUMIDITY_COLOR : ACCENT_COLOR) : Ink(0.2);
+            });
+            lblVent.text = z.vent + "% open";
+            if (Math.round(sliderVent.getValue() / 10) * 10 !== z.vent) sliderVent.setValue(z.vent);
+            setInteractive(sliderVent, manual);
+            isRendering = 0;
+        };
+
+        const renderSchedule = function () {
+            isRendering = 1;
+            selectLightFrom.setTime(zone.lightFrom, 1);
+            selectLightTo.setTime(zone.lightTo, 1);
+            lblIrrigation.text = zone.irrigationMinutes + " min";
+            if (sliderToRange(sliderIrrigation.getValue(), 2, 20) !== zone.irrigationMinutes) sliderIrrigation.setValue(rangeToSlider(zone.irrigationMinutes, 2, 20));
+            chkRain.setChecked((zone.skipRain) ? 1 : 0, 1);
+            isRendering = 0;
+        };
+
+        const renderNutrients = function () {
+            const z = zone;
+            const phState = (z.ph > 6.5) ? "<span style='color:" + WARNING_COLOR + "'>high, dose pH down</span>" : (z.ph < 5.5) ? "<span style='color:" + WARNING_COLOR + "'>low</span>" : "<span style='color:" + ACCENT_COLOR + "'>ok</span>";
+            const ecState = (z.ec < 1.2) ? "<span style='color:" + WARNING_COLOR + "'>low, dose nutrients</span>" : "<span style='color:" + ACCENT_COLOR + "'>ok</span>";
+            lblNutrients.text = "pH <b>" + z.ph.toFixed(1) + "</b> (" + phState + ") · EC <b>" + z.ec.toFixed(1) + " mS/cm</b> (" + ecState + ")";
+        };
+
+        const renderAlarms = function () {
+            const keys = Object.keys(zone.alarms);
+            renderInto(grpAlarmsHost, function () {
+                if (!keys.length) {
+                    Label({ text: "No active alarms. Rules: ±6 °C from the setpoint, humidity limit +10%, soil below 10%, sensor fault.", fontSize: 13, textColor: Ink(0.45), width: "100%" });
+                    return;
+                }
+                keys.forEach(function (key, index) {
+                    const rule = ALARM_RULES.find(function (r) { return r.key === key; });
+                    HGroup({ width: "100%", height: "auto", align: "left center", gap: 10 });
+                    that.elem.style.padding = "8px 0px";
+                    if (index > 0) that.elem.style.borderTop = "1px solid " + Ink(0.06);
+                        Box({ width: 10, height: 10, round: 100, color: ERROR_COLOR });
+                        Label({ text: rule.text, fontSize: 14, textColor: Ink(0.9) });
+                    endGroup();
+                });
+            });
+        };
+
+        const renderCrop = function () {
+            const z = zone;
+            renderInto(grpCropHost, function () {
+
+                createInfoLine("Crop", 1).text = escapeHtml(z.crop) + " · " + z.rows + " rows";
+                createInfoLine("Days since planting").text = z.daysSincePlanted + " / " + z.harvestDays;
+                const daysLeft = Math.max(0, z.harvestDays - z.daysSincePlanted);
+                createInfoLine("Expected harvest").text = (daysLeft) ? "in " + daysLeft + " day" + ((daysLeft > 1) ? "s" : "") : "<span style='color:" + ACCENT_COLOR + "'>ready</span>";
+
+                VGroup({ width: "100%", height: "auto", align: "left top", gap: 6 });
+                that.elem.style.padding = "10px 0px";
+                    harvestProgress = ProgressBar({
+                        width: "100%", value: Math.min(100, z.daysSincePlanted / z.harvestDays * 100), styleName: "modern",
+                        valueFormat: function (self) { return Math.round(self.value) + "%"; },
+                        style: { track: { height: 10, color: Ink(0.08) }, bar: { color: z.color }, valueText: { fontSize: 13, textColor: Ink(0.6) } },
+                    });
+                    harvestProgress.setTitleText("Growth");
+                endGroup();
+
+                HGroup({ width: "100%", height: "auto", align: "left center", gap: 10 });
+                that.elem.style.padding = "8px 0px";
+                that.elem.style.borderTop = "1px solid " + Ink(0.06);
+                that.elem.style.justifyContent = "space-between";
+                    Label({ text: "Planted", fontSize: 14, textColor: Ink(0.5) });
+                    selectPlanted = SelectDate({
+                        width: 150, height: 36, format: "DD MMM YYYY", date: z.planted, maxDate: new Date(),
+                        showClearButton: 0, style: DATE_STYLE,
+                        onChange: function (self) {
+                            if (!self.value) return;
+                            zone.planted = self.value;
+                            zone.daysSincePlanted = Math.max(0, Math.round((new Date() - new Date(self.value)) / 86400000));
+                            addEvent(zone, "Info", "Planting date set to " + self.dateText);
+                            renderCrop();
+                        },
+                    });
+                endGroup();
+
+            });
+        };
+
+        const renderEvents = function () {
+            if (grpEventHost.table) { grpEventHost.table.remove(); grpEventHost.table = null; }
+            const LEVEL_COLORS = { "Info": Ink(0.6), "Success": ACCENT_COLOR, "Warning": WARNING_COLOR, "Error": ERROR_COLOR };
+            const previous = getDefaultContainerBox();
+            setDefaultContainerBox(grpEventHost);
+                grpEventHost.table = TinyTable({
+                    columnHeaders: ["TIME", "LEVEL", "MESSAGE"],
+                    columnWidths: ["16%", "18%", "65%"],
+                    dataRows: zone.events.slice(0, 10).map(function (e) { return [e.time, e.level, e.message]; }),
+                    headerBackgroundColor: FIELD_COLOR, headerTextColor: Ink(0.6), headerBorderColor: FIELD_COLOR, headerFontSize: 12,
+                    borderWidth: 1, borderRadius: 8, borderColor: CARD_BORDER_COLOR, bodyBackgroundColor: CARD_COLOR,
+                    cellFontSize: 13, cellTextColor: Ink(0.8), rowHoverBackgroundColor: Ink(0.05), rowHoverBorderColor: Ink(0.1),
+                    onCellRender: function (cell) {
+                        if (cell.index === 0) cell.textColor = Ink(0.5);
+                        if (cell.index === 1) cell.textColor = LEVEL_COLORS[cell.text] || Ink(0.8);
+                    },
+                });
+                grpEventHost.table.width = "100%";
+                grpEventHost.table.elem.style.minWidth = "420px";
+            setDefaultContainerBox(previous);
+        };
+
+        </script>
+
+    </head>
+    <body>
+
+        <!-- HTML content -->
+
+    </body>
+</html>

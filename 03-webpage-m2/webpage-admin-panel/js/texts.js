@@ -50,7 +50,9 @@ TEXTS.tr = {
         primaryButton: "Teklif Alın",
         secondaryButton: "Canlı Demoyu Görün",
         note: "Açık kaynak sürümü ücretsiz indirilebilir · Apache 2.0",
-        mockupCaption: "Bu sayfadaki her şey gibi, panel de saf JavaScript ile çizilir.",
+        // Ekran görüntüleri (hero.js SCREEN_FILES ile aynı sırada). {screen}: ekranın adı.
+        screens: ["Dashboard", "Siparişler", "Soğuk oda izleme", "Enerji merkezi"],
+        screenCaption: "{screen} · Canlı demodan gerçek ekran görüntüsü",
     },
 
     // STATS:
@@ -97,7 +99,7 @@ TEXTS.tr = {
             { icon: "assets/icons/bolt.png", title: "Hafif ve hızlı", text: "Harici bağımlılık yok, dosyalar küçük; panel hemen açılır. Kütüphane güncellemeleri paneli bozmaz, bakım masrafı düşük kalır." },
             { icon: "assets/icons/extension.png", title: "Modüler yapı", text: "Her modül bağımsız bir sayfa. Yeni bir modül eklemek, çalışan hiçbir şeyi yeniden yazmayı gerektirmez." },
             { icon: "assets/icons/data-table.png", title: "Tabloda düzenleme", text: "Kayıtları tablo hâlinde görün, hücreye tıklayıp düzenleyin; filtreleyin, arayın, Excel'e aktarın." },
-            { icon: "assets/icons/user.png", title: "Giriş ve yetkiler", text: "E-posta/şifre, Google veya Apple ile giriş. Kimin hangi ekranı göreceğine ve neyi değiştirebileceğine siz karar verirsiniz." },
+            { icon: "assets/icons/user.png", title: "Giriş ve yetkiler", text: "E-posta ve şifre ile giriş. Kimin hangi ekranı göreceğine ve neyi değiştirebileceğine siz karar verirsiniz." },
             { icon: "assets/icons/url.png", title: "Veriniz sizin sunucunuzda", text: "Panel verinize doğrudan sizin altyapınızdan erişir; veriler bizim sunucumuzdan geçmez. Supabase, REST API, SQL sunucunuz veya mevcut sisteminiz." },
             { icon: "assets/icons/light.png", title: "Markanıza göre tema", text: "Renk, logo, yazı tipi ve koyu tema; panel sizin ya da müşterinizin markasıyla uyumlu görünür." },
             { icon: "assets/icons/apps.png", title: "Türkçe arayüz", text: "Menüler, uyarılar, tarih ve para biçimleri Türkçe. İhtiyaç varsa İngilizce veya başka dillerde de." },
@@ -124,7 +126,7 @@ TEXTS.tr = {
         title: "Dört adımda teslim",
         lead: "",
         items: [
-            { step: "01", title: "Keşif görüşmesi", text: "30 dakika. Hangi verinin, kim tarafından, hangi ekranda yönetileceğini konuşuyoruz.", time: "1. gün" },
+            { step: "01", title: "Keşif görüşmesi", text: "Hangi verinin, kim tarafından, hangi ekranda yönetileceğini konuşuyoruz.", time: "1. gün" },
             { step: "02", title: "Ekran planı ve teklif", text: "Modül listesi, ekran taslakları, sabit fiyat ve teslim tarihi. Siz onaylamadan başlamıyoruz.", time: "2–3 gün" },
             { step: "03", title: "Geliştirme", text: "Her hafta çalışan bir sürümü birlikte inceliyoruz. Panel kendi sunucunuzda, kendi verinizle kurulur.", time: "2–4 hafta" },
             { step: "04", title: "Teslim ve destek", text: "Kaynak kodu, kurulum dokümanı ve kullanım eğitimi. Ardından paketinize göre 1–3 ay ücretsiz düzeltme desteği.", time: "Teslim" },
@@ -312,7 +314,8 @@ TEXTS.en = {
         primaryButton: "Get a Quote",
         secondaryButton: "See the Live Demo",
         note: "The open source edition is free to download · Apache 2.0",
-        mockupCaption: "Like everything on this page, the panel is drawn in plain JavaScript.",
+        screens: ["Dashboard", "Orders", "Cold room monitoring", "Energy hub"],
+        screenCaption: "{screen} · A real screenshot from the live demo",
     },
 
     // STATS:
@@ -359,7 +362,7 @@ TEXTS.en = {
             { icon: "assets/icons/bolt.png", title: "No framework", text: "Zero external dependencies. No upgrade treadmill, no node_modules, no build queue." },
             { icon: "assets/icons/extension.png", title: "Modular architecture", text: "Every module is an independent page. Adding one never means rewriting what already works." },
             { icon: "assets/icons/data-table.png", title: "Edit in the table", text: "See records as a list, click a cell to edit it, filter and search without leaving the page." },
-            { icon: "assets/icons/user.png", title: "Login and permissions", text: "Email/password, Google and Apple sign-in, with role-based access to screens and actions." },
+            { icon: "assets/icons/user.png", title: "Login and permissions", text: "Email and password sign-in, with role-based access to screens and actions." },
             { icon: "assets/icons/url.png", title: "Your own data", text: "Supabase, a REST API, your own SQL server or an existing back end. The data stays with you." },
             { icon: "assets/icons/light.png", title: "Themed for your brand", text: "Colors, logo, typography and dark mode, so the panel matches your client's brand." },
             { icon: "assets/icons/apps.png", title: "Opens instantly", text: "Small files, single page application. The panel is usable the moment it appears." },
@@ -386,7 +389,7 @@ TEXTS.en = {
         title: "Four steps",
         lead: "",
         items: [
-            { step: "01", title: "Discovery call", text: "Thirty minutes. We work out what data is managed, by whom, and on which screen.", time: "Day 1" },
+            { step: "01", title: "Discovery call", text: "We work out what data is managed, by whom, and on which screen.", time: "Day 1" },
             { step: "02", title: "Screen plan and quote", text: "Module list, screen sketches, a fixed price and a delivery date. Nothing starts before you approve it.", time: "2–3 days" },
             { step: "03", title: "Development", text: "A working build every week, running on your server against your own data.", time: "2–4 weeks" },
             { step: "04", title: "Handover and support", text: "Source code, setup documentation and training, plus a month of free fixes.", time: "Delivery" },

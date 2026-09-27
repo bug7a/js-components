@@ -3,11 +3,19 @@
 /*
 
 Hero Section - v26.09
-- Sayfanın ilk ekranı: başlık, kısa anlatım, düğmeler ve panel görseli.
+- Sayfanın ilk ekranı: başlık, kısa anlatım, düğmeler ve panelin ekran görüntüleri (PageControl).
 
 */
 
 "use strict";
+
+// Ekran görüntüleri: texts.js hero.screens ile aynı sırada.
+const HERO_SCREEN_FILES = [
+    "assets/screens/dashboard.jpg",
+    "assets/screens/orders.jpg",
+    "assets/screens/cold-rooms.jpg",
+    "assets/screens/energy-hub.jpg",
+];
 
 const HeroSection = function () {
 
@@ -100,18 +108,66 @@ const HeroSection = function () {
                 gap: 14,
             });
 
-                const mockupW = Math.min(visualW, L.mobile ? L.content : 620);
-                const mockupH = Math.round(mockupW * (L.mobile ? 0.72 : 0.66));
+                // Panelin gerçek ekran görüntüleri (1440 x 900), PageControl ile kayan bir gösteri.
+                const screenW = Math.min(visualW, L.mobile ? L.content : 620);
+                const screenH = Math.round(screenW * 900 / 1440);
 
-                PanelMockup({
-                    width: mockupW,
-                    height: mockupH,
+                const screens = PageControl({
+                    width: screenW,
+                    height: screenH,
+                    dots: 1,
+                    arrows: !L.mobile,
+                    loop: 1,
+                    autoPlay: 4,
+                    ariaLabel: T.screenCaption.replace("{screen} · ", ""),
+                    style: {
+                        box: { color: SITE.INK, border: 1, borderColor: White(0.14), round: 12 },
+                        dots: { color: White(0.35), activeColor: SITE.WHITE, bottom: 10 },
+                        arrows: { size: 32, iconSize: 16 },
+                    },
+                    onChange: function (self) {
+                        SITE.heroScreen = self.value;
+                        captionLabel.text = captionText(self.value);
+                    },
                 });
+                screens.clipContent = 1;
+                screens.elem.style.boxShadow = "0px 26px 60px rgba(0, 0, 0, 0.35)";
+                // WHY: The dots are over a busy picture: a dark pill behind them.
+                if (screens.dotsBox) {
+                    screens.dotsBox.color = "rgba(0, 0, 0, 0.45)";
+                    screens.dotsBox.round = 100;
+                }
 
-                // LABEL: Görsel açıklaması
-                Label({
-                    text: T.mockupCaption,
-                    width: mockupW,
+                    HERO_SCREEN_FILES.forEach(function (file, index) {
+                        const key = String(index);
+                        screens.addPage(key);
+                        screens.startPage(key);
+                            Icon(0, 0, "100%", "100%", {
+                                imageFit: "cover",
+                                alt: T.screens[index],
+                            });
+                            that.load(file);
+                            that.elem.style.objectPosition = "left top";
+                        screens.endPage();
+                    });
+
+                // WHY: The site is drawn again on resize: stay on the same screen (without the slide motion).
+                if (SITE.heroScreen) {
+                    const motion = screens.motion;
+                    screens.motion = 0;
+                    screens.open(SITE.heroScreen, 1);
+                    screens.motion = motion;
+                }
+
+                // "Dashboard · Canlı demodan gerçek ekran görüntüsü"
+                const captionText = function (key) {
+                    return T.screenCaption.replace("{screen}", T.screens[Number(key) || 0]);
+                };
+
+                // LABEL: Görsel açıklaması (açık ekranın adı)
+                const captionLabel = Label({
+                    text: captionText(screens.value),
+                    width: screenW,
                     fontSize: L.tiny + 1,
                     textAlign: "center",
                     textColor: SITE.ON_DARK_FAINT,

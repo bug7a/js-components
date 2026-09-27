@@ -47,6 +47,9 @@ WebSite: https://bug7a.github.io/js-components
 -- "color": Top-right colored ball (requiredColor / warningColor).
 -- "icon": Top-right icon (requiredIcon / warningIcon). Empty path uses the built-in icon.
 
+- tooltipStyle: { color, textColor, border, borderColor, round, fontSize }
+-- The tooltip of the warning ball. color "": requiredColor / warningColor (the old look).
+
 */
 
 "use strict";
@@ -88,6 +91,16 @@ const InputBDefaults = {
     requiredIcon: "", // image path or data URI. "": built-in icon
     warningIcon: "", // image path or data URI. "": built-in icon
     requiredIconColor: "#373836", // built-in required icon color (built-in warning icon uses warningColor)
+
+    // The tooltip of the warning ball (required / warning text)
+    tooltipStyle: {
+        color: "", // "": requiredColor / warningColor
+        textColor: "#141414",
+        border: 1,
+        borderColor: "#141414",
+        round: 2,
+        fontSize: 14,
+    },
 
     createLeftBox: 0,
     createRightBox: 0,
@@ -193,7 +206,7 @@ const InputB = function(params = {}) {
             hideWarningBall();
             applyWarningBallStyle("required");
             box.warningBall.tooltip.setHintText(box.requiredText);
-            box.warningBall.tooltip.setLbl_color(box.requiredColor);
+            box.warningBall.tooltip.setLbl_color(box.tooltipStyle.color || box.requiredColor);
             showWarningBall();
             box.status = 1;
         } else {
@@ -201,7 +214,7 @@ const InputB = function(params = {}) {
             hideWarningBall();
             applyWarningBallStyle("warning");
             box.warningBall.tooltip.setHintText(box.warningText);
-            box.warningBall.tooltip.setLbl_color(box.warningColor);
+            box.warningBall.tooltip.setLbl_color(box.tooltipStyle.color || box.warningColor);
             showWarningBall();
             box.status = 2;
         }
@@ -541,12 +554,12 @@ const InputB = function(params = {}) {
             target: box.warningBall,
             hintText: "",
             hintPosition: "left",
-            lbl_border: 1,
-            lbl_color: "white",
-            lbl_textColor: "#141414",
-            lbl_borderColor: "#141414",
-            lbl_fontSize: 14,
-            lbl_round: 2,
+            lbl_border: box.tooltipStyle.border,
+            lbl_color: box.tooltipStyle.color || "white",
+            lbl_textColor: box.tooltipStyle.textColor,
+            lbl_borderColor: box.tooltipStyle.borderColor,
+            lbl_fontSize: box.tooltipStyle.fontSize,
+            lbl_round: box.tooltipStyle.round,
         });
 
     // *** OBJECT INIT CODE:
