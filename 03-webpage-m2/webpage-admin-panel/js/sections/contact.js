@@ -212,7 +212,7 @@ const ContactSection = function () {
         const padding = L.mobile ? 22 : 32;
         const innerW = formW - (padding * 2) - 2;
 
-        // Ortak alan görünümü (04-template-m2/js-form/unfinished-basic-form.htm ile aynı).
+        // Ortak alan görünümü (04-template-m2/web-forms/unfinished-basic-form.htm ile aynı).
         const inputStyle = {
             backgroundColor: "#F6F6F6",
             selectedBackgroundColor: "#F6F6F6",
