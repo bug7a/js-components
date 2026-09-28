@@ -1,7 +1,0 @@
-# Made by _make-standalone.sh (repository root). Do not edit: run the script again.
-# <file in comp/> <- <its source in the repository>
-email-input-b.min.js <- comp-m2/email-input-b.js
-input-b.min.js <- comp-m2/input-b.js
-page-control.min.js <- comp-m4/page-control.js
-textarea-b.min.js <- comp-m2/textarea-b.js
-tooltip.min.js <- comp-m2/tooltip.js
