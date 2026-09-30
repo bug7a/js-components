@@ -86,7 +86,6 @@ const PropertyPanelDefaults = {
             captionSize: 11,
             titleSize: 13,
             sectionTitleSize: 12,
-            boldFontFamily: "opensans-bold",
         },
         field: {
             color: "#383838",
@@ -147,11 +146,11 @@ const PropertyPanel = function (params = {}) {
     const _t = _s.text;
     const _g = _s.grid;
     const panelWidth = Number(box.width) || PropertyPanelDefaults.width;
-    let controllers = {}; // key -> { item, sectionKey, setValue(), setEnabled() }
+    let controllers = {}; // key -> { item, sectionKey, field, cell, setValue(), setEnabled() }
     let listeners = [];
     let tabLabels = {};
-    let menu = null; // { obj, anchor }
-    let lastClosedMenu = { anchor: null, time: 0 };
+    let titleLabel = null;
+    let menu = null; // { obj, opener }
 
     // *** PUBLIC VARIABLES:
     // NOTE: Default values are also public variables. (box.data: the JSON with the current values)
@@ -163,7 +162,7 @@ const PropertyPanel = function (params = {}) {
         if (!name) return "";
         if (String(name).trim().indexOf("<svg") === 0) return name;
         const path = PropertyPanel.icons[name];
-        if (!path) return PropertyPanel.escapeHtml(name); // Not an icon: shown as text (Ex: "X")
+        if (!path) return basic.escapeHtml(name); // Not an icon: shown as text (Ex: "X")
         return '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="' + path + '"/></svg>';
     };
 
@@ -173,32 +172,37 @@ const PropertyPanel = function (params = {}) {
         return _g.columnWidth;
     };
 
-    // A one line text (or icon) label. It never takes the pointer, its field does.
-    const textLabel = function (text, props = {}) {
+    // Color of a text or an icon: its own color, or the disabled color.
+    const ink = function (enabled, color) {
+        return (enabled) ? color : _t.disabledColor;
+    };
+
+    // A one line label. html: an icon or a short text. props.plainText: a user text (never read as HTML).
+    // props.flex: takes the free space of its row and ends with "...". It never takes the pointer, its field does.
+    const textLabel = function (html, props = {}) {
         const lbl = Label({
-            text: text,
+            text: html,
             fontSize: props.fontSize || _t.fontSize,
             textColor: props.textColor || _t.color,
         });
         lbl.clickable = 0;
-        lbl.elem.style.display = "flex";
-        lbl.elem.style.alignItems = "center";
-        lbl.elem.style.whiteSpace = "nowrap";
-        lbl.elem.style.flexShrink = "0";
-        if (props.bold) lbl.elem.style.fontFamily = _t.boldFontFamily;
-        if (props.width !== undefined) {
-            lbl.width = props.width;
-            lbl.elem.style.justifyContent = "center";
-        }
+        lbl.shrink = 0;
+        if (props.bold) lbl.bold = 1;
         if (props.height !== undefined) lbl.height = props.height;
         if (props.flex) {
-            lbl.elem.style.flex = "1 1 0";
-            lbl.elem.style.minWidth = "0";
-            lbl.elem.style.overflow = "hidden";
-            lbl.elem.style.textOverflow = "ellipsis";
-            lbl.elem.style.display = "block";
-            lbl.elem.style.lineHeight = (props.height || _g.itemHeight) + "px";
+            lbl.grow = 1;
+            lbl.shrink = 1;
+            lbl.ellipsis = 1;
+            lbl.lineHeight = props.height || _g.itemHeight;
+            lbl.css = { flexBasis: "0px", minWidth: "0px" };
+        } else {
+            lbl.css = { display: "flex", alignItems: "center", whiteSpace: "nowrap" };
+            if (props.width !== undefined) {
+                lbl.width = props.width;
+                lbl.elem.style.justifyContent = "center";
+            }
         }
+        if (props.plainText !== undefined) lbl.plainText = props.plainText;
         return lbl;
     };
 
@@ -207,12 +211,20 @@ const PropertyPanel = function (params = {}) {
         obj.elem.style.boxShadow = (color) ? "inset 0 0 0 1px " + color : "none";
     };
 
-    // Hover border of a field (not while it has the focus or is disabled).
-    const bindFieldHover = function (field, state) {
-        field.on("mouseenter", function () { state.isHover = 1; paintField(field, state); });
-        field.on("mouseleave", function () { state.isHover = 0; paintField(field, state); });
+    // fn(1) on mouseenter, fn(0) on mouseleave.
+    const onHover = function (obj, fn) {
+        obj.on("mouseenter", function () { fn(1); });
+        obj.on("mouseleave", function () { fn(0); });
     };
 
+    // Enter and Space (and extraKeys) run fn, like a click.
+    const onActivateKey = function (obj, fn, extraKeys = []) {
+        obj.on("keydown", function (self, event) {
+            if (event.key === "Enter" || event.key === " " || extraKeys.indexOf(event.key) > -1) { event.preventDefault(); fn(); }
+        });
+    };
+
+    // Border of a field: focus, hover (when enabled) or none.
     const paintField = function (field, state) {
         if (state.isFocus) setBorder(field, _s.field.focusBorderColor);
         else if (state.isHover && state.enabled) setBorder(field, _s.field.hoverBorderColor);
@@ -248,34 +260,38 @@ const PropertyPanel = function (params = {}) {
         listeners.slice().forEach(function (fn) { fn(change, box); });
     };
 
-    // A value item changed by the user.
-    const changeValue = function (ctrl, value) {
+    // Some item types fill the missing parts of a value. (Ex: constraints)
+    const normalizeValue = function (item, value) {
+        const builder = ITEM_TYPES[item.type];
+        return (builder && builder.normalize) ? builder.normalize(value) : value;
+    };
+
+    // Keeps a new value of an item and sends the change (not when silent). Returns 1 when the value changed.
+    const changeValue = function (ctrl, value, silent = 0) {
+        value = normalizeValue(ctrl.item, value);
         const oldValue = ctrl.item.value;
-        if (PropertyPanel.isSameValue(oldValue, value)) return;
-        ctrl.item.value = PropertyPanel.copyValue(value);
-        dispatch({ kind: "value", key: ctrl.item.key, value: PropertyPanel.copyValue(value), oldValue: oldValue, item: ctrl.item, sectionKey: ctrl.sectionKey });
+        if (PropertyPanel.isSameValue(oldValue, value)) return 0;
+        ctrl.item.value = value;
+        if (!silent) dispatch({ kind: "value", key: ctrl.item.key, value: PropertyPanel.copyValue(value), oldValue: oldValue, item: ctrl.item, sectionKey: ctrl.sectionKey });
+        return 1;
     };
 
     // A button without a value was clicked.
-    const sendAction = function (item, sectionKey, value) {
-        dispatch({ kind: "action", key: item.key, value: value, oldValue: undefined, item: item, sectionKey: sectionKey });
+    const sendAction = function (ctrl, value) {
+        dispatch({ kind: "action", key: ctrl.item.key, value: value, oldValue: undefined, item: ctrl.item, sectionKey: ctrl.sectionKey });
     };
 
     // *** MENU (select, combo):
 
     const closeMenu = function () {
         if (!menu) return;
-        lastClosedMenu = { anchor: menu.anchor, time: Date.now() };
         menu.obj.remove();
         menu = null;
     };
 
-    // WHY: The pointerdown that closes a menu is followed by a click on its field. That click must not open it again.
-    const wasJustClosed = function (anchor) {
-        return lastClosedMenu.anchor === anchor && (Date.now() - lastClosedMenu.time) < 400;
-    };
-
-    const openMenu = function (anchor, options, currentValue, onPick) {
+    // anchor: the menu is placed under it. opener: the object that opens it; a click on it again closes the menu.
+    const openMenu = function (anchor, opener, options, currentValue, onPick) {
+        if (menu && menu.opener === opener) { closeMenu(); return; }
         closeMenu();
         if (!options.length) return;
         const rect = anchor.elem.getBoundingClientRect();
@@ -286,13 +302,9 @@ const PropertyPanel = function (params = {}) {
 
             // GROUP: Menu
             const obj = VGroup({ left: 0, top: 0, width: width, height: "auto", align: "left top", gap: 0, color: ms.color, round: ms.round });
-            obj.elem.style.padding = "6px 0px";
-            obj.elem.style.boxSizing = "border-box";
-            obj.elem.style.boxShadow = "0 0 0 1px " + ms.borderColor + ", 0 8px 24px rgba(0, 0, 0, 0.45)";
-            obj.elem.style.zIndex = "2147482000";
-            obj.elem.style.maxHeight = ms.maxHeight + "px";
-            obj.elem.style.overflowY = "auto";
-            obj.elem.style.alignItems = "stretch";
+            obj.boxShadow = "0 0 0 1px " + ms.borderColor + ", 0 8px 24px rgba(0, 0, 0, 0.45)";
+            obj.zIndex = 2147482000;
+            obj.css = { padding: "6px 0px", boxSizing: "border-box", maxHeight: ms.maxHeight + "px", overflowY: "auto", alignItems: "stretch" };
             obj.elem.setAttribute("role", "listbox");
             obj.clickable = 1;
 
@@ -302,20 +314,19 @@ const PropertyPanel = function (params = {}) {
 
                     // GROUP: Menu row
                     const row = HGroup({ width: "100%", height: ms.rowHeight, align: "left center", gap: 0, color: "transparent" });
-                    row.elem.style.flexShrink = "0";
-                    row.elem.style.cursor = "pointer";
+                    row.shrink = 0;
+                    row.cursor = "pointer";
                     row.elem.setAttribute("role", "option");
                     row.elem.setAttribute("aria-selected", (isSelected) ? "true" : "false");
                     row.clickable = 1;
 
                         textLabel((isSelected) ? getIcon("check", 14) : "", { width: 28, height: ms.rowHeight, textColor: ms.textColor });
                         if (option.icon) textLabel(getIcon(option.icon, 16), { width: 22, height: ms.rowHeight, textColor: ms.textColor });
-                        textLabel(PropertyPanel.escapeHtml(option.text), { flex: 1, height: ms.rowHeight, textColor: ms.textColor });
+                        textLabel("", { flex: 1, height: ms.rowHeight, textColor: ms.textColor, plainText: option.text });
 
                     endGroup();
 
-                    row.on("mouseenter", function () { row.color = ms.hoverColor; });
-                    row.on("mouseleave", function () { row.color = "transparent"; });
+                    onHover(row, function (isHover) { row.color = (isHover) ? ms.hoverColor : "transparent"; });
                     row.on("click", function () { closeMenu(); onPick(option.value); });
 
                 });
@@ -329,13 +340,14 @@ const PropertyPanel = function (params = {}) {
             obj.left = Math.max(8, Math.min(rect.left, window.innerWidth - width - 8));
             obj.top = top;
 
-            menu = { obj: obj, anchor: anchor };
+            menu = { obj: obj, opener: opener };
 
         });
     };
 
+    // WHY: A pointerdown on the opener is left to its click, which closes the menu (a toggle).
     const onDocumentPointerDown = function (event) {
-        if (menu && !menu.obj.elem.contains(event.target)) closeMenu();
+        if (menu && !menu.obj.elem.contains(event.target) && !menu.opener.elem.contains(event.target)) closeMenu();
     };
 
     const onDocumentKeyDown = function (event) {
@@ -344,15 +356,73 @@ const PropertyPanel = function (params = {}) {
 
     // *** SMALL OBJECTS USED BY THE ITEM TYPES:
 
-    // FIELD: number input. Used by "number" and "combo".
-    // Returns { field, setValue(), setEnabled() }. onCommit(value) is called with a new value.
-    const buildNumberInput = function (item, width, onCommit, props = {}) {
+    // FIELD: A text input in a field, with an optional prefix (a text or an icon). Used by "number" and "text".
+    // Returns { field, input, el, prefix, setEnabled() }. The caller adds its own commit code.
+    const buildInputField = function (item, width, prefixValue) {
 
         const state = { isHover: 0, isFocus: 0, enabled: item.enabled != 0 };
+        const paint = function () { paintField(field, state); };
+
+        // GROUP: Field
+        const field = HGroup({ width: width, height: _g.itemHeight, align: "left center", gap: 0, color: _s.field.color, round: _s.field.round });
+        field.shrink = 0;
+        field.css = { boxSizing: "border-box", transition: "box-shadow 0.12s" };
+
+            // LABEL: Prefix ("X" or an icon)
+            const prefix = (prefixValue) ? textLabel(getIcon(prefixValue, 16), { width: 26, height: _g.itemHeight, textColor: _t.softColor }) : null;
+            if (prefix) prefix.elem.style.paddingLeft = "2px";
+
+            // INPUT: Value
+            const input = Input({ width: 10, height: _g.itemHeight, minimal: 1, fontSize: _t.fontSize, textColor: _t.color });
+            input.grow = 1;
+            input.shrink = 1;
+            input.elem.style.minWidth = "0px";
+            const el = input.inputElement;
+            Object.assign(el.style, {
+                width: "100%",
+                height: "100%",
+                boxSizing: "border-box",
+                padding: (prefix) ? "0px 4px 0px 2px" : "0px 8px",
+                backgroundColor: "transparent",
+                border: "0px",
+                color: _t.color,
+                fontSize: _t.fontSize + "px",
+            });
+            el.setAttribute("spellcheck", "false");
+            el.setAttribute("aria-label", item.hint || item.label || item.prefix || item.key);
+
+        endGroup();
+
+        onHover(field, function (isHover) { state.isHover = isHover; paint(); });
+        el.addEventListener("focus", function () { state.isFocus = 1; paint(); });
+        el.addEventListener("blur", function () { state.isFocus = 0; paint(); });
+
+        const setEnabled = function (enabled) {
+            state.enabled = !!enabled;
+            el.disabled = !state.enabled;
+            el.style.color = ink(state.enabled, _t.color);
+            if (prefix) prefix.textColor = ink(state.enabled, _t.softColor);
+            paint();
+        };
+
+        setEnabled(state.enabled);
+
+        return { field: field, input: input, el: el, prefix: prefix, state: state, setEnabled: setEnabled };
+
+    };
+
+    // FIELD: number input. Used by "number" and "combo". A new value goes to changeValue(ctrl).
+    const buildNumberInput = function (ctrl, width) {
+
+        const item = ctrl.item;
         const precision = precisionOf(item);
         const step = Math.abs(Number(item.step)) || 1;
+        const min = (item.min !== undefined) ? Number(item.min) : -Infinity;
+        const max = (item.max !== undefined) ? Number(item.max) : Infinity;
         let value = item.value;
         let scrub = null;
+
+        const { field, input, el, prefix, state, setEnabled: setFieldEnabled } = buildInputField(item, width, item.icon || item.prefix);
 
         const format = function (v) {
             if (v === null || v === undefined || v === "") return item.autoText || "";
@@ -360,10 +430,8 @@ const PropertyPanel = function (params = {}) {
         };
 
         const clamp = function (v) {
-            if (item.min !== undefined) v = Math.max(Number(item.min), v);
-            if (item.max !== undefined) v = Math.min(Number(item.max), v);
             const factor = Math.pow(10, precision);
-            return Math.round(v * factor) / factor;
+            return Math.round(basic.clamp(v, min, max) * factor) / factor;
         };
 
         // Text -> value. undefined: not a number (the old value comes back).
@@ -376,60 +444,13 @@ const PropertyPanel = function (params = {}) {
         };
 
         const commit = function (next) {
-            if (next === undefined) { input.text = format(value); return; }
-            value = next;
+            if (next !== undefined) value = next;
             input.text = format(value);
-            onCommit(value);
+            if (next !== undefined) changeValue(ctrl, value);
         };
 
-        // GROUP: Field
-        const field = HGroup({ width: width, height: _g.itemHeight, align: "left center", gap: 0, color: _s.field.color, round: _s.field.round });
-        field.elem.style.flexShrink = "0";
-        field.elem.style.boxSizing = "border-box";
-        field.elem.style.transition = "box-shadow 0.12s";
-        if (props.roundRight === 0) field.elem.style.borderRadius = _s.field.round + "px 0px 0px " + _s.field.round + "px";
-
-            // LABEL: Prefix ("X" or an icon). Drag it to change the value.
-            let prefix = null;
-            const prefixValue = item.icon || item.prefix;
-            if (prefixValue) {
-                prefix = textLabel(getIcon(prefixValue, 16), { width: 26, height: _g.itemHeight, textColor: _t.softColor, fontSize: _t.fontSize });
-                prefix.clickable = 1;
-                prefix.elem.style.cursor = "ew-resize";
-                prefix.elem.style.touchAction = "none";
-                prefix.elem.style.paddingLeft = "2px";
-            }
-
-            // INPUT: Value
-            const input = Input({ width: 10, height: _g.itemHeight, minimal: 1, fontSize: _t.fontSize, textColor: _t.color });
-            input.elem.style.flex = "1 1 0";
-            input.elem.style.minWidth = "0";
-            const el = input.inputElement;
-            el.style.width = "100%";
-            el.style.height = "100%";
-            el.style.boxSizing = "border-box";
-            el.style.padding = (prefix) ? "0px 4px 0px 2px" : "0px 8px";
-            el.style.backgroundColor = "transparent";
-            el.style.border = "0px";
-            el.style.color = _t.color;
-            el.style.fontSize = _t.fontSize + "px";
-            el.setAttribute("spellcheck", "false");
-            el.setAttribute("aria-label", item.hint || item.label || item.prefix || item.key);
-
-        endGroup();
-
-        bindFieldHover(field, state);
-
-        el.addEventListener("focus", function () {
-            state.isFocus = 1;
-            paintField(field, state);
-            el.select();
-        });
-        el.addEventListener("blur", function () {
-            state.isFocus = 0;
-            paintField(field, state);
-            commit(parse(input.text));
-        });
+        el.addEventListener("focus", function () { input.select(); });
+        el.addEventListener("blur", function () { commit(parse(input.text)); });
         el.addEventListener("keydown", function (event) {
             if (event.key === "Enter") { event.preventDefault(); el.blur(); }
             else if (event.key === "Escape") { event.preventDefault(); input.text = format(value); el.blur(); }
@@ -439,12 +460,14 @@ const PropertyPanel = function (params = {}) {
                 const start = (base === null || base === undefined) ? (Number(value) || 0) : base;
                 const direction = (event.key === "ArrowUp") ? 1 : -1;
                 commit(clamp(start + direction * step * (event.shiftKey ? 10 : 1)));
-                el.select();
+                input.select();
             }
         });
 
         // Scrub: drag the prefix left / right. 1 px = 1 step (Shift: 10 steps)
         if (prefix) {
+            prefix.clickable = 1;
+            prefix.elem.style.touchAction = "none";
             prefix.on("pointerdown", function (self, event) {
                 if (!state.enabled || event.button !== 0) return;
                 event.preventDefault();
@@ -468,14 +491,8 @@ const PropertyPanel = function (params = {}) {
         };
 
         const setEnabled = function (enabled) {
-            state.enabled = !!enabled;
-            el.disabled = !state.enabled;
-            el.style.color = (state.enabled) ? _t.color : _t.disabledColor;
-            if (prefix) {
-                prefix.textColor = (state.enabled) ? _t.softColor : _t.disabledColor;
-                prefix.elem.style.cursor = (state.enabled) ? "ew-resize" : "default";
-            }
-            paintField(field, state);
+            setFieldEnabled(enabled);
+            if (prefix) prefix.cursor = (state.enabled) ? "ew-resize" : "default";
         };
 
         setValue(value);
@@ -487,7 +504,7 @@ const PropertyPanel = function (params = {}) {
 
     // FIELD: select (a menu of options). Used by "select" and "constraints".
     // look: "field" (default) or "plain" (no background, width hugs the text)
-    const buildSelect = function (config, onPick) {
+    const buildSelect = function (config, width, onPick) {
 
         const options = normalizeOptions(config.options);
         const isPlain = (config.look === "plain");
@@ -495,12 +512,10 @@ const PropertyPanel = function (params = {}) {
         let value = config.value;
 
         // GROUP: Field
-        const field = HGroup({ width: (isPlain) ? "auto" : config.width, height: _g.itemHeight, align: "left center", gap: 0, color: (isPlain) ? "transparent" : _s.field.color, round: _s.field.round });
-        field.elem.style.flexShrink = "0";
-        field.elem.style.boxSizing = "border-box";
-        field.elem.style.cursor = "pointer";
-        field.elem.style.outline = "none";
-        field.elem.style.paddingLeft = (config.icon) ? "0px" : "8px";
+        const field = HGroup({ width: (isPlain) ? "auto" : width, height: _g.itemHeight, align: "left center", gap: 0, color: (isPlain) ? "transparent" : _s.field.color, round: _s.field.round });
+        field.shrink = 0;
+        field.cursor = "pointer";
+        field.css = { boxSizing: "border-box", outline: "none", paddingLeft: (config.icon) ? "0px" : "8px" };
         field.elem.tabIndex = 0;
         field.elem.setAttribute("role", "button");
         field.elem.setAttribute("aria-haspopup", "listbox");
@@ -508,44 +523,43 @@ const PropertyPanel = function (params = {}) {
         field.clickable = 1;
 
             if (config.icon) textLabel(getIcon(config.icon, 16), { width: 28, height: _g.itemHeight, textColor: _t.softColor });
-            const lblText = textLabel("", { flex: (isPlain) ? 0 : 1, height: _g.itemHeight });
+            const lblText = textLabel("", { flex: !isPlain, height: _g.itemHeight });
             const lblArrow = textLabel(getIcon("chevronDown", 12), { width: 22, height: _g.itemHeight, textColor: _t.softColor });
 
         endGroup();
 
-        if (!isPlain) bindFieldHover(field, state);
-        else {
-            field.on("mouseenter", function () { if (state.enabled) field.color = _s.button.hoverColor; });
-            field.on("mouseleave", function () { field.color = "transparent"; });
-        }
+        // Plain: a hover background, no border.
+        const paint = function () {
+            if (isPlain) field.color = (state.isHover && state.enabled) ? _s.button.hoverColor : "transparent";
+            else paintField(field, state);
+        };
 
         const open = function () {
-            if (!state.enabled || wasJustClosed(field)) return;
-            openMenu(field, options, value, function (picked) {
+            if (!state.enabled) return;
+            openMenu(field, field, options, value, function (picked) {
                 setValue(picked);
                 onPick(picked);
             });
         };
         field.on("click", open);
-        field.on("keydown", function (self, event) {
-            if (event.key === "Enter" || event.key === " " || event.key === "ArrowDown") { event.preventDefault(); open(); }
-        });
-        field.on("focus", function () { state.isFocus = 1; if (!isPlain) paintField(field, state); });
-        field.on("blur", function () { state.isFocus = 0; if (!isPlain) paintField(field, state); });
+        onActivateKey(field, open, ["ArrowDown"]);
+        onHover(field, function (isHover) { state.isHover = isHover; paint(); });
+        field.on("focus", function () { state.isFocus = !isPlain; paint(); });
+        field.on("blur", function () { state.isFocus = 0; paint(); });
 
         const setValue = function (v) {
             value = v;
             const option = findOption(options, v);
-            lblText.text = PropertyPanel.escapeHtml((option) ? option.text : (v === undefined || v === null) ? "" : String(v));
+            lblText.plainText = (option) ? option.text : (v === undefined || v === null) ? "" : String(v);
         };
 
         const setEnabled = function (enabled) {
             state.enabled = !!enabled;
-            lblText.textColor = (state.enabled) ? _t.color : _t.disabledColor;
-            lblArrow.textColor = (state.enabled) ? _t.softColor : _t.disabledColor;
-            field.elem.style.cursor = (state.enabled) ? "pointer" : "default";
+            lblText.textColor = ink(state.enabled, _t.color);
+            lblArrow.textColor = ink(state.enabled, _t.softColor);
+            field.cursor = (state.enabled) ? "pointer" : "default";
             field.elem.tabIndex = (state.enabled) ? 0 : -1;
-            if (!isPlain) paintField(field, state);
+            paint();
         };
 
         setValue(value);
@@ -555,109 +569,92 @@ const PropertyPanel = function (params = {}) {
 
     };
 
-    // BUTTON: A small icon button. Used by "iconButton" and the actions of the title and the sections.
+    // BUTTON: A small icon button. Used by "iconButton", the title actions and the section actions.
     // toggle: 1 -> value true / false (active look). Otherwise an action.
-    const buildIconButton = function (item, sectionKey, onToggle) {
+    const buildIconButton = function (ctrl) {
 
+        const item = ctrl.item;
         const isToggle = (item.toggle == 1);
         const useAccent = (item.accent !== 0);
-        let value = !!item.value;
-        let enabled = item.enabled != 0;
-        let isHover = 0;
+        const state = { value: !!item.value, enabled: item.enabled != 0, isHover: 0 };
 
         // LABEL: Button
         const btn = textLabel("", { width: _g.iconColumnWidth, height: _g.itemHeight, textColor: _s.button.iconColor });
         btn.round = _s.field.round;
         btn.clickable = 1;
-        btn.elem.style.cursor = "pointer";
-        btn.elem.style.outline = "none";
-        btn.elem.style.transition = "background-color 0.12s";
+        btn.cursor = "pointer";
+        btn.css = { outline: "none", transition: "background-color 0.12s" };
         btn.elem.tabIndex = 0;
         btn.elem.setAttribute("role", "button");
         btn.elem.setAttribute("aria-label", item.hint || item.key);
         if (item.hint) btn.elem.title = item.hint;
 
-        const paint = function () {
-            const isActive = isToggle && value && useAccent;
-            btn.text = getIcon((isToggle && value && item.iconActive) ? item.iconActive : item.icon, 16);
-            btn.color = (isActive) ? _s.button.activeColor : (isHover && enabled) ? _s.button.hoverColor : "transparent";
-            btn.textColor = (!enabled) ? _t.disabledColor : (isActive) ? _s.button.activeIconColor : _s.button.iconColor;
-            if (isToggle) btn.elem.setAttribute("aria-pressed", (value) ? "true" : "false");
+        // WHY: The icon (innerHTML) is only written when the value changes, not on every hover.
+        const paintIcon = function () {
+            btn.text = getIcon((isToggle && state.value && item.iconActive) ? item.iconActive : item.icon, 16);
+            if (isToggle) btn.elem.setAttribute("aria-pressed", (state.value) ? "true" : "false");
+        };
+
+        const paintColors = function () {
+            const isActive = isToggle && state.value && useAccent;
+            btn.color = (isActive) ? _s.button.activeColor : (state.isHover && state.enabled) ? _s.button.hoverColor : "transparent";
+            btn.textColor = ink(state.enabled, (isActive) ? _s.button.activeIconColor : _s.button.iconColor);
         };
 
         const press = function () {
-            if (!enabled) return;
-            if (isToggle) { value = !value; paint(); onToggle(value); }
-            else sendAction(item, sectionKey, item.value);
+            if (!state.enabled) return;
+            if (!isToggle) { sendAction(ctrl, item.value); return; }
+            state.value = !state.value;
+            paintIcon();
+            paintColors();
+            changeValue(ctrl, state.value);
         };
 
-        btn.on("mouseenter", function () { isHover = 1; paint(); });
-        btn.on("mouseleave", function () { isHover = 0; paint(); });
+        onHover(btn, function (isHover) { state.isHover = isHover; paintColors(); });
         btn.on("click", press);
-        btn.on("keydown", function (self, event) { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); press(); } });
+        onActivateKey(btn, press);
 
-        paint();
+        paintIcon();
+        paintColors();
 
         return {
             field: btn,
-            setValue: function (v) { value = !!v; paint(); },
-            setEnabled: function (e) { enabled = !!e; btn.elem.style.cursor = (enabled) ? "pointer" : "default"; paint(); },
+            setValue: function (v) { state.value = !!v; paintIcon(); paintColors(); },
+            setEnabled: function (e) { state.enabled = !!e; btn.cursor = (state.enabled) ? "pointer" : "default"; paintColors(); },
         };
 
     };
 
     // *** ITEM TYPES:
-    // Each one creates its object in the current container and returns { setValue(v), setEnabled(e) }.
-    // ctrl.item is the working copy of the JSON item. changeValue(ctrl, v) sends the change.
+    // Each one creates its object in the current container and returns { field, setValue(v), setEnabled(e) }.
+    // ctrl.item is the working copy of the JSON item. changeValue(ctrl, v) keeps the value and sends the change.
+    // An optional .normalize(value) fills the missing parts of a value (used before the value is kept).
 
     const ITEM_TYPES = {
 
         // [X  396]  prefix / icon, unit, min, max, step, precision, autoText ("Auto" when the value is null)
         number: function (ctrl) {
-            return buildNumberInput(ctrl.item, getSpanWidth(ctrl.item.span), function (v) { changeValue(ctrl, v); });
+            return buildNumberInput(ctrl, getSpanWidth(ctrl.item.span));
         },
 
         // [ text ]  placeholder
         text: function (ctrl) {
             const item = ctrl.item;
-            const state = { isHover: 0, isFocus: 0, enabled: item.enabled != 0 };
-            const field = HGroup({ width: getSpanWidth(item.span), height: _g.itemHeight, align: "left center", gap: 0, color: _s.field.color, round: _s.field.round });
-            field.elem.style.flexShrink = "0";
-            field.elem.style.transition = "box-shadow 0.12s";
-                const input = Input({ width: 10, height: _g.itemHeight, minimal: 1, fontSize: _t.fontSize, textColor: _t.color });
-                input.elem.style.flex = "1 1 0";
-                input.elem.style.minWidth = "0";
-                const el = input.inputElement;
-                el.style.width = "100%";
-                el.style.height = "100%";
-                el.style.boxSizing = "border-box";
-                el.style.padding = "0px 8px";
-                el.style.backgroundColor = "transparent";
-                el.style.border = "0px";
-                el.style.color = _t.color;
-                el.style.fontSize = _t.fontSize + "px";
-                el.setAttribute("spellcheck", "false");
-                el.setAttribute("aria-label", item.hint || item.label || item.key);
-                if (item.placeholder) el.placeholder = item.placeholder;
-            endGroup();
-            bindFieldHover(field, state);
-            el.addEventListener("focus", function () { state.isFocus = 1; paintField(field, state); });
-            el.addEventListener("blur", function () { state.isFocus = 0; paintField(field, state); changeValue(ctrl, String(input.text)); });
+            const { field, input, el, setEnabled } = buildInputField(item, getSpanWidth(item.span));
+            if (item.placeholder) input.placeholder = item.placeholder;
+            const setValue = function (v) { input.text = (v === undefined || v === null) ? "" : String(v); };
+            el.addEventListener("blur", function () { changeValue(ctrl, String(input.text)); });
             el.addEventListener("keydown", function (event) {
                 if (event.key === "Enter") { event.preventDefault(); el.blur(); }
-                else if (event.key === "Escape") { event.preventDefault(); input.text = ctrl.item.value || ""; el.blur(); }
+                else if (event.key === "Escape") { event.preventDefault(); setValue(ctrl.item.value); el.blur(); }
             });
-            return {
-                setValue: function (v) { input.text = (v === undefined || v === null) ? "" : String(v); },
-                setEnabled: function (e) { state.enabled = !!e; el.disabled = !state.enabled; el.style.color = (state.enabled) ? _t.color : _t.disabledColor; },
-            };
+            setValue(item.value);
+            return { field: field, setValue: setValue, setEnabled: setEnabled };
         },
 
         // [ Left ⌄]  options: ["A", "B"] or [{ value, text, icon }], icon, look: "plain"
         select: function (ctrl) {
-            const item = ctrl.item;
-            const config = Object.assign({}, item, { width: getSpanWidth(item.span) });
-            return buildSelect(config, function (v) { changeValue(ctrl, v); });
+            return buildSelect(ctrl.item, getSpanWidth(ctrl.item.span), function (v) { changeValue(ctrl, v); });
         },
 
         // [16 | ⌄]  a number field and preset values (options)
@@ -665,37 +662,39 @@ const PropertyPanel = function (params = {}) {
             const item = ctrl.item;
             const width = getSpanWidth(item.span);
             const arrowWidth = 22;
+            const r = _s.field.round + "px";
             let enabled = item.enabled != 0;
 
             // GROUP: Number field + menu button
             const group = HGroup({ width: width, height: _g.itemHeight, align: "left center", gap: 1, color: "transparent" });
-            group.elem.style.flexShrink = "0";
+            group.shrink = 0;
 
-                const numberInput = buildNumberInput(item, width - arrowWidth - 1, function (v) { changeValue(ctrl, v); }, { roundRight: 0 });
+                const numberInput = buildNumberInput(ctrl, width - arrowWidth - 1);
+                numberInput.field.elem.style.borderRadius = r + " 0px 0px " + r;
 
                 // LABEL: Menu button
                 const btnArrow = textLabel(getIcon("chevronDown", 12), { width: arrowWidth, height: _g.itemHeight, textColor: _t.softColor });
                 btnArrow.color = _s.field.color;
                 btnArrow.clickable = 1;
-                btnArrow.elem.style.cursor = "pointer";
-                btnArrow.elem.style.borderRadius = "0px " + _s.field.round + "px " + _s.field.round + "px 0px";
+                btnArrow.cursor = "pointer";
+                btnArrow.elem.style.borderRadius = "0px " + r + " " + r + " 0px";
 
             endGroup();
 
             const options = normalizeOptions(item.options);
-            btnArrow.on("mouseenter", function () { if (enabled) btnArrow.color = _s.segmented.hoverColor; });
-            btnArrow.on("mouseleave", function () { btnArrow.color = _s.field.color; });
+            onHover(btnArrow, function (isHover) { btnArrow.color = (isHover && enabled) ? _s.segmented.hoverColor : _s.field.color; });
             btnArrow.on("click", function () {
-                if (!enabled || wasJustClosed(group)) return;
-                openMenu(group, options, ctrl.item.value, function (picked) {
+                if (!enabled) return;
+                openMenu(group, btnArrow, options, ctrl.item.value, function (picked) {
                     numberInput.setValue(picked);
                     changeValue(ctrl, picked);
                 });
             });
 
             return {
+                field: group,
                 setValue: numberInput.setValue,
-                setEnabled: function (e) { enabled = !!e; numberInput.setEnabled(e); btnArrow.textColor = (enabled) ? _t.softColor : _t.disabledColor; },
+                setEnabled: function (e) { enabled = !!e; numberInput.setEnabled(e); btnArrow.textColor = ink(enabled, _t.softColor); },
             };
         },
 
@@ -704,77 +703,82 @@ const PropertyPanel = function (params = {}) {
             const item = ctrl.item;
             const options = normalizeOptions(item.options);
             const isSelect = (item.mode) ? (item.mode === "select") : (item.value !== undefined);
+            const r = _s.field.round + "px";
             let value = item.value;
             let enabled = item.enabled != 0;
-            const segments = [];
+            const parts = []; // { seg, option, isHover }
+
+            // One segment: background, border, icon color.
+            const paintPart = function (part) {
+                const isSelected = isSelect && PropertyPanel.isSameValue(part.option.value, value);
+                const seg = part.seg;
+                if (isSelected) seg.color = _s.segmented.selectedColor;
+                else if (part.isHover && enabled) seg.color = _s.segmented.hoverColor;
+                else seg.color = (isSelect) ? "transparent" : _s.field.color;
+                setBorder(seg, (isSelected) ? _s.segmented.selectedBorderColor : "");
+                seg.textColor = ink(enabled, (isSelect && !isSelected) ? _t.softColor : _s.button.iconColor);
+                if (isSelect) seg.elem.setAttribute("aria-checked", (isSelected) ? "true" : "false");
+            };
+            const paint = function () { parts.forEach(paintPart); };
 
             // GROUP: Segments
             const group = HGroup({ width: getSpanWidth(item.span), height: _g.itemHeight, align: "left center", gap: (isSelect) ? 0 : 1, color: (isSelect) ? _s.field.color : "transparent", round: _s.field.round });
-            group.elem.style.flexShrink = "0";
+            group.shrink = 0;
             group.elem.setAttribute("role", (isSelect) ? "radiogroup" : "group");
             group.elem.setAttribute("aria-label", item.hint || item.label || item.key);
 
                 options.forEach(function (option, index) {
                     // LABEL: Segment
-                    const seg = textLabel((option.icon) ? getIcon(option.icon, 16) : PropertyPanel.escapeHtml(option.text), { width: 10, height: _g.itemHeight, textColor: _s.button.iconColor });
-                    seg.elem.style.flex = "1 1 0";
-                    seg.elem.style.cursor = "pointer";
-                    seg.elem.style.outline = "none";
-                    seg.elem.style.transition = "background-color 0.12s";
+                    const seg = textLabel((option.icon) ? getIcon(option.icon, 16) : basic.escapeHtml(option.text), { width: 10, height: _g.itemHeight, textColor: _s.button.iconColor });
+                    seg.grow = 1;
+                    seg.shrink = 1;
+                    seg.cursor = "pointer";
+                    seg.clickable = 1;
+                    seg.css = {
+                        flexBasis: "0px",
+                        outline: "none",
+                        transition: "background-color 0.12s",
+                        borderRadius: (isSelect) ? r : (index === 0) ? r + " 0 0 " + r : (index === options.length - 1) ? "0 " + r + " " + r + " 0" : "0",
+                    };
                     seg.elem.tabIndex = 0;
                     seg.elem.setAttribute("role", (isSelect) ? "radio" : "button");
                     seg.elem.setAttribute("aria-label", option.hint || option.text);
                     if (option.hint) seg.elem.title = option.hint;
-                    seg.clickable = 1;
-                    const r = _s.field.round + "px";
-                    seg.elem.style.borderRadius = (isSelect) ? r : ((index === 0) ? r + " 0 0 " + r : (index === options.length - 1) ? "0 " + r + " " + r + " 0" : "0");
-                    seg.option = option;
-                    seg.isHover = 0;
-                    segments.push(seg);
+
+                    const part = { seg: seg, option: option, isHover: 0 };
+                    parts.push(part);
 
                     const press = function () {
                         if (!enabled) return;
-                        if (isSelect) { value = option.value; paint(); changeValue(ctrl, value); }
-                        else sendAction(item, ctrl.sectionKey, option.value);
+                        if (!isSelect) { sendAction(ctrl, option.value); return; }
+                        value = option.value;
+                        paint();
+                        changeValue(ctrl, value);
                     };
-                    seg.on("mouseenter", function () { seg.isHover = 1; paint(); });
-                    seg.on("mouseleave", function () { seg.isHover = 0; paint(); });
+                    onHover(seg, function (isHover) { part.isHover = isHover; paintPart(part); });
                     seg.on("click", press);
-                    seg.on("keydown", function (self, event) { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); press(); } });
+                    onActivateKey(seg, press);
                 });
 
             endGroup();
 
-            const paint = function () {
-                segments.forEach(function (seg) {
-                    const isSelected = isSelect && PropertyPanel.isSameValue(seg.option.value, value);
-                    if (isSelected) seg.color = _s.segmented.selectedColor;
-                    else if (seg.isHover && enabled) seg.color = _s.segmented.hoverColor;
-                    else seg.color = (isSelect) ? "transparent" : _s.field.color;
-                    setBorder(seg, (isSelected) ? _s.segmented.selectedBorderColor : "");
-                    seg.textColor = (!enabled) ? _t.disabledColor : (isSelect && !isSelected) ? _t.softColor : _s.button.iconColor;
-                    if (isSelect) seg.elem.setAttribute("aria-checked", (isSelected) ? "true" : "false");
-                });
-            };
-
             paint();
 
             return {
+                field: group,
                 setValue: function (v) { value = v; paint(); },
                 setEnabled: function (e) { enabled = !!e; paint(); },
             };
         },
 
         // [◎]  icon, iconActive, toggle: 1 (value true / false), accent: 0 (no blue look when on)
-        iconButton: function (ctrl) {
-            return buildIconButton(ctrl.item, ctrl.sectionKey, function (v) { changeValue(ctrl, v); });
-        },
+        iconButton: buildIconButton,
 
         // Horizontal / vertical selects at the left and the constraints diagram at the right.
         // value: { horizontal: "left" | "right" | "leftRight" | "center" | "scale", vertical: "top" | "bottom" | "topBottom" | "center" | "scale" }
         constraints: function (ctrl) {
             const item = ctrl.item;
-            let value = Object.assign({ horizontal: "left", vertical: "top" }, item.value || {});
+            let value = item.value; // Normalized: always has horizontal and vertical.
             let enabled = item.enabled != 0;
             const H_OPTIONS = [{ value: "left", text: "Left" }, { value: "right", text: "Right" }, { value: "leftRight", text: "Left and right" }, { value: "center", text: "Center" }, { value: "scale", text: "Scale" }];
             const V_OPTIONS = [{ value: "top", text: "Top" }, { value: "bottom", text: "Bottom" }, { value: "topBottom", text: "Top and bottom" }, { value: "center", text: "Center" }, { value: "scale", text: "Scale" }];
@@ -788,19 +792,19 @@ const PropertyPanel = function (params = {}) {
             };
 
             // GROUP: Selects + diagram
-            HGroup({ width: getSpanWidth(2), height: H, align: "left top", gap: _g.gap, color: "transparent" });
-            that.elem.style.flexShrink = "0";
+            const group = HGroup({ width: getSpanWidth(2), height: H, align: "left top", gap: _g.gap, color: "transparent" });
+            group.shrink = 0;
 
                 // GROUP: Selects
                 VGroup({ width: W, height: H, align: "left top", gap: _g.rowGap, color: "transparent" });
-                that.elem.style.flexShrink = "0";
-                    const selH = buildSelect({ key: item.key + "-h", hint: "Horizontal constraint", icon: "constraintH", width: W, options: H_OPTIONS, value: value.horizontal }, function (v) { change({ horizontal: v }); });
-                    const selV = buildSelect({ key: item.key + "-v", hint: "Vertical constraint", icon: "constraintV", width: W, options: V_OPTIONS, value: value.vertical }, function (v) { change({ vertical: v }); });
+                that.shrink = 0;
+                    const selH = buildSelect({ key: item.key + "-h", hint: "Horizontal constraint", icon: "constraintH", options: H_OPTIONS, value: value.horizontal }, W, function (v) { change({ horizontal: v }); });
+                    const selV = buildSelect({ key: item.key + "-v", hint: "Vertical constraint", icon: "constraintV", options: V_OPTIONS, value: value.vertical }, W, function (v) { change({ vertical: v }); });
                 endGroup();
 
                 // BOX: Diagram
                 const diagram = startBox({ width: W, height: H, color: _s.field.color, round: _s.field.round });
-                diagram.elem.style.flexShrink = "0";
+                diagram.shrink = 0;
 
                     const cx = Math.round(W / 2);
                     const cy = Math.round(H / 2);
@@ -829,7 +833,7 @@ const PropertyPanel = function (params = {}) {
                     const hitArea = function (left, top, width, height, onClick) {
                         const obj = Box({ left: left, top: top, width: width, height: height, color: "transparent" });
                         obj.clickable = 1;
-                        obj.elem.style.cursor = "pointer";
+                        obj.cursor = "pointer";
                         obj.on("click", function (self, event) { if (enabled) onClick(event.shiftKey); });
                         return obj;
                     };
@@ -845,13 +849,12 @@ const PropertyPanel = function (params = {}) {
 
             const paint = function () {
                 const h = value.horizontal, v = value.vertical;
-                const on = function (obj, isOn) { obj.color = (isOn && enabled) ? _s.accent.color : (isOn) ? _t.softColor : _t.disabledColor; };
-                on(lines.top, v === "top" || v === "topBottom");
-                on(lines.bottom, v === "bottom" || v === "topBottom");
-                on(lines.left, h === "left" || h === "leftRight");
-                on(lines.right, h === "right" || h === "leftRight");
-                on(lines.centerH, h === "center");
-                on(lines.centerV, v === "center");
+                // Side lines: accent when on, gray when off. Center lines: accent when on, soft when off.
+                const side = function (obj, isOn) { obj.color = (isOn) ? ink(enabled, _s.accent.color) : _t.disabledColor; };
+                side(lines.top, v === "top" || v === "topBottom");
+                side(lines.bottom, v === "bottom" || v === "topBottom");
+                side(lines.left, h === "left" || h === "leftRight");
+                side(lines.right, h === "right" || h === "leftRight");
                 lines.centerH.color = (h === "center" && enabled) ? _s.accent.color : _t.softColor;
                 lines.centerV.color = (v === "center" && enabled) ? _s.accent.color : _t.softColor;
                 selH.setValue(h);
@@ -861,76 +864,88 @@ const PropertyPanel = function (params = {}) {
             paint();
 
             return {
-                setValue: function (v) { value = Object.assign({ horizontal: "left", vertical: "top" }, v || {}); paint(); },
+                field: group,
+                setValue: function (v) { value = v; paint(); },
                 setEnabled: function (e) { enabled = !!e; selH.setEnabled(e); selV.setEnabled(e); paint(); },
             };
         },
 
     };
 
-    // Width of an item in its row.
-    const getItemWidth = function (item) {
-        if (item.type === "iconButton") return _g.iconColumnWidth;
-        if (item.type === "constraints") return getSpanWidth(2);
-        return getSpanWidth(item.span);
+    ITEM_TYPES.constraints.normalize = function (value) {
+        return Object.assign({ horizontal: "left", vertical: "top" }, value || {});
     };
 
     // *** VIEW BUILDERS:
 
-    // One item: the caption (if the row has one) and its object.
+    // Builds an item with its type and registers it by its key. Returns its controller (or null).
+    const registerItem = function (item, sectionKey) {
+        const builder = ITEM_TYPES[item.type];
+        if (!builder) { console.warn("PropertyPanel: Unknown item type: " + item.type); return null; }
+        item.value = normalizeValue(item, item.value);
+        const ctrl = { item: item, sectionKey: sectionKey };
+        Object.assign(ctrl, builder(ctrl));
+        if (item.key !== undefined) {
+            if (controllers[item.key]) console.warn("PropertyPanel: Same key twice: " + item.key);
+            controllers[item.key] = ctrl;
+        }
+        return ctrl;
+    };
+
+    // item.visible: 0 hides the cell of the item (or the object itself when it has no cell).
+    const applyVisible = function (ctrl) {
+        if (ctrl) (ctrl.cell || ctrl.field).visible = (ctrl.item.visible === 0 || ctrl.item.visible === false) ? 0 : 1;
+    };
+
+    // One item of a row: the caption (if the row has one) and its object.
     const buildItem = function (item, sectionKey, hasCaption) {
 
-        const builder = ITEM_TYPES[item.type];
-        if (!builder) { console.warn("PropertyPanel: Unknown item type: " + item.type); return; }
+        // GROUP: Cell (as wide as its object)
+        const cell = VGroup({ hug: 1, align: "left top", gap: 6, color: "transparent" });
+        cell.shrink = 0;
 
-        // GROUP: Cell
-        const cell = VGroup({ width: getItemWidth(item), height: "auto", align: "left top", gap: 6, color: "transparent" });
-        cell.elem.style.flexShrink = "0";
-
-            if (hasCaption) textLabel(PropertyPanel.escapeHtml(item.label || ""), { fontSize: _t.captionSize, textColor: _t.softColor, height: 16 });
-
-            const ctrl = { item: item, sectionKey: sectionKey };
-            const api = builder(ctrl);
-            ctrl.setValue = api.setValue;
-            ctrl.setEnabled = api.setEnabled;
-            ctrl.cell = cell;
-            if (item.key !== undefined) {
-                if (controllers[item.key]) console.warn("PropertyPanel: Same key twice: " + item.key);
-                controllers[item.key] = ctrl;
+            if (hasCaption) {
+                const caption = textLabel("", { fontSize: _t.captionSize, textColor: _t.softColor, height: 16, plainText: item.label || "" });
+                // WHY: A long caption must not make the cell wider than its object: it takes the width of the cell.
+                caption.css = { width: "0px", minWidth: "100%" };
             }
+
+            const ctrl = registerItem(item, sectionKey);
 
         endGroup();
 
-        if (item.visible === 0 || item.visible === false) cell.visible = 0;
+        if (ctrl) {
+            ctrl.cell = cell;
+            applyVisible(ctrl);
+        }
 
     };
 
-    // Title + actions row (the panel title or a section title).
+    // Title + actions row (the panel title or a section title). Returns the title label.
     const buildTitleRow = function (text, actions, sectionKey, isMainTitle) {
+        let lbl = null;
         HGroup({ width: "100%", height: (isMainTitle) ? 32 : 24, align: "left center", gap: 2, color: "transparent" });
-            textLabel(PropertyPanel.escapeHtml(text || ""), { fontSize: (isMainTitle) ? _t.titleSize : _t.sectionTitleSize, bold: 1, flex: 1, height: 24 });
+            lbl = textLabel("", { fontSize: (isMainTitle) ? _t.titleSize : _t.sectionTitleSize, bold: 1, flex: 1, height: 24, plainText: text || "" });
             (actions || []).forEach(function (action) {
-                const item = Object.assign({ type: "iconButton", accent: 0 }, action);
-                const ctrl = { item: item, sectionKey: sectionKey };
-                const api = buildIconButton(item, sectionKey, function (v) { changeValue(ctrl, v); });
-                ctrl.setValue = api.setValue;
-                ctrl.setEnabled = api.setEnabled;
-                if (item.key !== undefined) controllers[item.key] = ctrl;
-                return action;
+                applyVisible(registerItem(Object.assign({ type: "iconButton", accent: 0 }, action), sectionKey));
             });
         endGroup();
+        return lbl;
     };
 
     const buildSection = function (section, isTitleBlock) {
 
         // GROUP: Section
         const group = VGroup({ width: "100%", height: "auto", align: "left top", gap: _g.rowGap, color: "transparent" });
-        group.elem.style.padding = (isTitleBlock ? "8px " : "12px ") + _ps.paddingRight + "px " + (isTitleBlock ? "8px " : "16px ") + _ps.paddingLeft + "px";
-        group.elem.style.boxSizing = "border-box";
-        group.elem.style.borderBottom = "1px solid " + _ps.dividerColor;
-        group.elem.style.flexShrink = "0";
+        group.shrink = 0;
+        group.css = {
+            padding: (isTitleBlock ? "8px " : "12px ") + _ps.paddingRight + "px " + (isTitleBlock ? "8px " : "16px ") + _ps.paddingLeft + "px",
+            boxSizing: "border-box",
+            borderBottom: "1px solid " + _ps.dividerColor,
+        };
 
-            buildTitleRow(section.title, section.actions, section.key, isTitleBlock);
+            const lbl = buildTitleRow(section.title, section.actions, section.key, isTitleBlock);
+            if (isTitleBlock) titleLabel = lbl;
 
             (section.items || []).forEach(function (row) {
                 const items = (Array.isArray(row)) ? row : [row];
@@ -947,6 +962,19 @@ const PropertyPanel = function (params = {}) {
 
     };
 
+    const paintTab = function (key) {
+        const isActive = (key === box.data.activeTab);
+        const lbl = tabLabels[key];
+        lbl.color = (isActive) ? _s.field.color : "transparent";
+        lbl.textColor = (isActive) ? _t.color : _t.softColor;
+        lbl.bold = isActive;
+        lbl.elem.setAttribute("aria-selected", (isActive) ? "true" : "false");
+    };
+
+    const paintTabs = function () {
+        Object.keys(tabLabels).forEach(paintTab);
+    };
+
     // Tabs and the item at the right of the header (Ex: zoom).
     const buildHeader = function () {
 
@@ -959,37 +987,33 @@ const PropertyPanel = function (params = {}) {
             // GROUP: Tabs row (created again by setData)
             box.headerRow = HGroup({ width: "100%", height: "100%", align: "left center", gap: 2, color: "transparent" });
 
-            (data.tabs || []).forEach(function (tab) {
-                // LABEL: Tab
-                const lbl = textLabel(PropertyPanel.escapeHtml(tab.text || tab.key), { height: 28, bold: 1 });
-                lbl.round = _s.field.round;
-                lbl.clickable = 1;
-                lbl.elem.style.padding = "0px 10px";
-                lbl.elem.style.cursor = "pointer";
-                lbl.elem.style.outline = "none";
-                lbl.elem.tabIndex = 0;
-                lbl.elem.setAttribute("role", "tab");
-                tabLabels[tab.key] = lbl;
-                const select = function () { box.setActiveTab(tab.key); };
-                lbl.on("click", select);
-                lbl.on("keydown", function (self, event) { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); select(); } });
-                lbl.on("mouseenter", function () { if (data.activeTab !== tab.key) lbl.textColor = _t.color; });
-                lbl.on("mouseleave", function () { paintTabs(); });
-            });
+                (data.tabs || []).forEach(function (tab) {
+                    // LABEL: Tab
+                    const lbl = textLabel("", { height: 28, plainText: tab.text || tab.key });
+                    lbl.round = _s.field.round;
+                    lbl.clickable = 1;
+                    lbl.cursor = "pointer";
+                    lbl.css = { padding: "0px 10px", outline: "none" };
+                    lbl.elem.tabIndex = 0;
+                    lbl.elem.setAttribute("role", "tab");
+                    tabLabels[tab.key] = lbl;
+                    const select = function () { box.setActiveTab(tab.key); };
+                    lbl.on("click", select);
+                    onActivateKey(lbl, select);
+                    onHover(lbl, function (isHover) {
+                        if (isHover && data.activeTab !== tab.key) lbl.textColor = _t.color;
+                        else paintTab(tab.key);
+                    });
+                });
 
-            // BOX: Space
-            const space = Box({ width: 10, height: 1, color: "transparent" });
-            space.elem.style.flex = "1 1 0";
+                // BOX: Space
+                const space = Box({ width: 10, height: 1, color: "transparent" });
+                space.grow = 1;
 
-            if (data.headerItem) {
-                const item = Object.assign({ type: "select", look: "plain" }, data.headerItem);
-                data.headerItem = item;
-                const ctrl = { item: item, sectionKey: "header" };
-                const api = (item.type === "select") ? buildSelect(item, function (v) { changeValue(ctrl, v); }) : buildIconButton(item, "header", function (v) { changeValue(ctrl, v); });
-                ctrl.setValue = api.setValue;
-                ctrl.setEnabled = api.setEnabled;
-                if (item.key !== undefined) controllers[item.key] = ctrl;
-            }
+                if (data.headerItem) {
+                    data.headerItem = Object.assign({ type: "select", look: "plain" }, data.headerItem);
+                    applyVisible(registerItem(data.headerItem, "header"));
+                }
 
             endGroup();
 
@@ -999,20 +1023,11 @@ const PropertyPanel = function (params = {}) {
 
     };
 
-    const paintTabs = function () {
-        Object.keys(tabLabels).forEach(function (key) {
-            const isActive = (key === box.data.activeTab);
-            tabLabels[key].color = (isActive) ? _s.field.color : "transparent";
-            tabLabels[key].textColor = (isActive) ? _t.color : _t.softColor;
-            tabLabels[key].elem.style.fontFamily = (isActive) ? _t.boldFontFamily : "";
-            tabLabels[key].elem.setAttribute("aria-selected", (isActive) ? "true" : "false");
-        });
-    };
-
     // Title block and sections (in the scrolling box).
     const buildContent = function () {
 
         if (box.content) box.content.remove();
+        titleLabel = null;
         const data = box.data;
 
         createIn(box.scrollBox, function () {
@@ -1063,12 +1078,10 @@ const PropertyPanel = function (params = {}) {
     box.setValue = function (key, value, silent = 0) {
         const ctrl = controllers[key];
         if (!ctrl) { console.warn("PropertyPanel: No item with the key: " + key); return 0; }
-        const oldValue = ctrl.item.value;
-        ctrl.item.value = PropertyPanel.copyValue(value);
-        ctrl.setValue(PropertyPanel.copyValue(value));
-        if (!silent && !PropertyPanel.isSameValue(oldValue, value)) {
-            dispatch({ kind: "value", key: key, value: PropertyPanel.copyValue(value), oldValue: oldValue, item: ctrl.item, sectionKey: ctrl.sectionKey });
-        }
+        const next = normalizeValue(ctrl.item, PropertyPanel.copyValue(value));
+        if (PropertyPanel.isSameValue(ctrl.item.value, next)) return 1; // WHY: No DOM write for the same value.
+        ctrl.setValue(PropertyPanel.copyValue(next));
+        changeValue(ctrl, next, silent);
         return 1;
     };
     // USAGE: panel.setValue("x", 120, 1)
@@ -1089,9 +1102,9 @@ const PropertyPanel = function (params = {}) {
 
     box.setItemVisible = function (key, visible) {
         const ctrl = controllers[key];
-        if (!ctrl || !ctrl.cell) return 0;
+        if (!ctrl) return 0;
         ctrl.item.visible = (visible == 1 || visible === true) ? 1 : 0;
-        ctrl.cell.visible = ctrl.item.visible;
+        applyVisible(ctrl);
         return 1;
     };
 
@@ -1102,7 +1115,8 @@ const PropertyPanel = function (params = {}) {
 
     box.setTitle = function (text) {
         box.data.title = text;
-        buildContent();
+        if (titleLabel) titleLabel.plainText = text || "";
+        else buildContent(); // The title block did not exist.
     };
 
     // silent: 1 -> no change event.
@@ -1154,7 +1168,7 @@ const PropertyPanel = function (params = {}) {
 
     // *** OBJECT VIEW:
 
-    box.elem.style.boxShadow = "inset 1px 0 0 " + _ps.dividerColor;
+    box.boxShadow = "inset 1px 0 0 " + _ps.dividerColor;
     box.elem.style.transition = "transform " + _ps.motion + " ease";
     box.elem.setAttribute("role", "complementary");
     box.elem.setAttribute("aria-label", "Properties");
@@ -1162,9 +1176,7 @@ const PropertyPanel = function (params = {}) {
 
     // GROUP: Header (tabs)
     box.header = HGroup({ left: 0, top: 0, width: "100%", height: _ps.headerHeight, align: "left center", gap: 2, color: "transparent" });
-    box.header.elem.style.padding = "0px " + _ps.paddingRight + "px 0px 10px";
-    box.header.elem.style.boxSizing = "border-box";
-    box.header.elem.style.borderBottom = "1px solid " + _ps.dividerColor;
+    box.header.css = { padding: "0px " + _ps.paddingRight + "px 0px 10px", boxSizing: "border-box", borderBottom: "1px solid " + _ps.dividerColor };
     box.header.elem.setAttribute("role", "tablist");
     endGroup();
 
@@ -1196,11 +1208,6 @@ const PropertyPanel = function (params = {}) {
 };
 
 // *** STATIC FUNCTIONS:
-
-// WHY: Label.text uses innerHTML. Texts must not be read as HTML.
-PropertyPanel.escapeHtml = function (text) {
-    return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-};
 
 // Values are numbers, texts, booleans or plain objects (constraints).
 PropertyPanel.copyValue = function (value) {

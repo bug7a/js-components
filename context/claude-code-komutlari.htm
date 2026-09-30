@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <title>Claude Code Komutları</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        :root {
+            --page: #F6F6F4;
+            --surface: #FFFFFF;
+            --text: #1F1F1E;
+            --soft: #6B6B68;
+            --border: #E3E3DF;
+            --code-bg: #EFEFEC;
+            --accent: #2F6F73;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --page: #1C1C1B;
+                --surface: #262625;
+                --text: #EDEDEA;
+                --soft: #A3A39F;
+                --border: #3A3A38;
+                --code-bg: #33332F;
+                --accent: #7FC1C4;
+            }
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background: var(--page);
+            color: var(--text);
+            font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", "Open Sans", sans-serif;
+        }
+
+        main {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 16px 60px;
+        }
+
+        h1 { font-size: 26px; margin: 0 0 6px; }
+        h2 { font-size: 17px; margin: 36px 0 10px; }
+        .lead { color: var(--soft); margin: 0 0 8px; }
+
+        .table-wrap {
+            overflow-x: auto;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+        }
+
+        table { width: 100%; border-collapse: collapse; }
+        th, td { text-align: left; vertical-align: top; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+        tr:last-child td { border-bottom: 0; }
+        th { font-size: 12px; font-weight: 600; color: var(--soft); text-transform: uppercase; letter-spacing: 0.04em; }
+        td:first-child { white-space: nowrap; }
+
+        code {
+            font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 5px;
+        }
+
+        .flow {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--accent);
+            border-radius: 10px;
+            padding: 14px 18px;
+        }
+
+        .flow ol, .tips ul { margin: 6px 0 0; padding-left: 22px; }
+        .flow li, .tips li { margin: 4px 0; }
+        .note { color: var(--soft); font-size: 13px; margin-top: 28px; }
+    </style>
+</head>
+
+<body>
+    <main>
+
+        <h1>Claude Code Komutları</h1>
+        <p class="lead">Sık kullanılan komutlar ve ne işe yaradıkları. Tam liste için sohbet kutusuna <code>/help</code> yazın. VS Code panelinde bazı komutlar terminal sürümünden farklı olabilir.</p>
+
+        <h2>Kod kalitesi ve inceleme</h2>
+        <div class="table-wrap">
+            <table>
+                <tr><th>Komut</th><th>Ne yapar</th><th>Ne zaman</th></tr>
+                <tr><td><code>/simplify [hedef]</code></td><td>Değişen kodu tekrar, sadeleştirme, verimlilik ve doğru seviyede çözüm açısından inceler, düzeltmeleri uygular. Hata aramaz.</td><td>Bir bileşeni bitirince, commit'ten önce</td></tr>
+                <tr><td><code>/code-review [seviye] [hedef]</code></td><td>Değişiklikte hata arar. Seviye <code>low</code>…<code>max</code>; <code>ultra</code> bulutta çok ajanlı derin inceleme yapar (ücretli). <code>--fix</code> ile bulguları uygular.</td><td>Önemli bir değişiklikten sonra</td></tr>
+                <tr><td><code>/security-review</code></td><td>Bekleyen değişikliklerde güvenlik açığı arar.</td><td>Form, servis, dışarıya veri gönderen kod yazınca</td></tr>
+            </table>
+        </div>
+
+        <h2>Sohbet ve bağlam</h2>
+        <div class="table-wrap">
+            <table>
+                <tr><th>Komut</th><th>Ne yapar</th><th>Ne zaman</th></tr>
+                <tr><td><code>/clear</code></td><td>Sohbeti sıfırlar, yeni ve temiz bir bağlamla başlar.</td><td>Konu tamamen değişince</td></tr>
+                <tr><td><code>/compact</code></td><td>Sohbeti özetleyip yer açar, işe devam eder.</td><td>Uzun bir oturumda</td></tr>
+                <tr><td><code>/context</code></td><td>Bağlamın ne kadar dolu olduğunu ve neyin yer kapladığını gösterir.</td><td>Oturum ağırlaşınca</td></tr>
+                <tr><td><code>/resume</code></td><td>Eski bir sohbete geri döner.</td><td>Yarım kalan bir işe devam ederken</td></tr>
+                <tr><td><code>/rewind</code></td><td>Sohbeti ve kod değişikliklerini önceki bir noktaya geri alır.</td><td>Yanlış yöne gidilince</td></tr>
+            </table>
+        </div>
+
+        <h2>Ayarlar ve proje</h2>
+        <div class="table-wrap">
+            <table>
+                <tr><th>Komut</th><th>Ne yapar</th><th>Ne zaman</th></tr>
+                <tr><td><code>/init</code></td><td>Proje için <code>CLAUDE.md</code> oluşturur (bu repoda zaten var).</td><td>Yeni bir projede</td></tr>
+                <tr><td><code>/memory</code></td><td><code>CLAUDE.md</code> ve hafıza dosyalarını düzenler.</td><td>Kalıcı bir kural eklemek için</td></tr>
+                <tr><td><code>/model</code></td><td>Kullanılan modeli değiştirir.</td><td>Hız ya da güç tercihi için</td></tr>
+                <tr><td><code>/fast</code></td><td>Hızlı modu açar/kapatır (aynı model, daha hızlı çıktı).</td><td>Beklemek istemediğinizde</td></tr>
+                <tr><td><code>/config</code></td><td>Ayarlar menüsünü açar.</td><td>Genel tercihler için</td></tr>
+                <tr><td><code>/permissions</code></td><td>Hangi komutların sormadan çalışacağını ayarlar.</td><td>İzin soruları çok sıksa</td></tr>
+                <tr><td><code>/fewer-permission-prompts</code></td><td>Geçmişe bakıp güvenli komutları izin listesine eklemeyi önerir.</td><td>Aynı izni sürekli verdiğinizde</td></tr>
+            </table>
+        </div>
+
+        <h2>Otomasyon</h2>
+        <div class="table-wrap">
+            <table>
+                <tr><th>Komut</th><th>Ne yapar</th><th>Ne zaman</th></tr>
+                <tr><td><code>/loop [aralık] [komut]</code></td><td>Bir isteği ya da komutu belirli aralıklarla tekrarlar.</td><td>Bir şeyi takip ederken</td></tr>
+                <tr><td><code>/schedule</code></td><td>Bulutta zamanlanmış görev kurar (her gün, belli bir saatte).</td><td>Düzenli işler için</td></tr>
+                <tr><td><code>/run</code></td><td>Uygulamayı başlatıp değişikliğin gerçekten çalıştığını gösterir.</td><td>Sonucu görmek için</td></tr>
+            </table>
+        </div>
+
+        <h2>Kısayollar</h2>
+        <div class="table-wrap">
+            <table>
+                <tr><th>Kısayol</th><th>Ne yapar</th></tr>
+                <tr><td><code>Esc</code></td><td>Çalışan işi hemen durdurur (yapılan değişiklikler kalır).</td></tr>
+                <tr><td><code>@dosya</code></td><td>Mesaja bir dosya ekler, örneğin <code>@comp-m4/tabs.js</code>.</td></tr>
+                <tr><td>Çalışırken mesaj yazmak</td><td>Mesaj sıraya girer, sonraki adımda dikkate alınır. Bulunamayan bir bilgiyi o anda vermek için en iyi yol.</td></tr>
+            </table>
+        </div>
+
+        <h2>Bu repo için akış</h2>
+        <div class="flow">
+            <ol>
+                <li>Bileşeni yaz ve örnek sayfada dene.</li>
+                <li>Commit et (sonraki değişiklikler geri alınabilsin diye).</li>
+                <li><code>/simplify comp-m4/dosya.js</code> — yeni dosyalar <code>git diff</code> içinde görünmez, yolu verin.</li>
+                <li><code>/code-review</code></li>
+                <li><code>test/components-test.htm</code> ve örnek sayfayı tekrar çalıştır (sekme başlığı ALL PASS olmalı).</li>
+                <li>Tekrar commit et.</li>
+            </ol>
+        </div>
+
+        <h2>/simplify için ipuçları</h2>
+        <div class="tips">
+            <ul>
+                <li>Dört inceleme ajanı paralel çalışır: tekrar kullanım, sadeleştirme, verimlilik, doğru seviyede çözüm. Sonra bulgular birleştirilip uygulanır.</li>
+                <li>Dosyaları doğrudan değiştirir: önce commit edin, sonra sonucu <code>git diff</code> ile görün.</li>
+                <li>Normal bir istekten daha fazla token harcar: her küçük değişiklikten sonra değil, bir bileşeni bitirince bir kez çalıştırın.</li>
+            </ul>
+        </div>
+
+        <p class="note">Hazırlanma: Eylül 2026.</p>
+
+    </main>
+</body>
+
+</html>

@@ -124,15 +124,11 @@
 
                 // LABEL: The selected text object
                 lblText = Label({ left: 396, top: 668, text: "Text", fontSize: 16, textColor: "#FFFFFF" });
-                lblText.elem.style.outline = "1px solid #0C8CE9";
-                lblText.elem.style.transformOrigin = "center";
-                lblText.elem.style.whiteSpace = "nowrap";
+                lblText.css = { outline: "1px solid #0C8CE9", transformOrigin: "center", whiteSpace: "nowrap" };
 
                 // LABEL: Log of the changes
-                lblLog = Label({ left: 20, top: 20, width: 420, text: "Change the values in the panel.", fontSize: 12, textColor: "rgba(255, 255, 255, 0.55)" });
-                lblLog.elem.style.fontFamily = "monospace";
-                lblLog.elem.style.whiteSpace = "pre-wrap";
-                lblLog.elem.style.lineHeight = "1.6";
+                lblLog = Label({ left: 20, top: 20, width: 420, text: "Change the values in the panel.", fontSize: 12, textColor: "rgba(255, 255, 255, 0.55)", fontFamily: "monospace", lineHeight: "1.6" });
+                lblLog.css = { whiteSpace: "pre-wrap" };
 
                 // BUTTON: Open / close the panel
                 const btnToggle = Button({ left: 20, top: 250, width: 140, height: 32, text: "Toggle panel", fontSize: 13 });
@@ -148,9 +144,9 @@
                 },
             });
 
-            // A second listener from outside: applies the values to the text object.
+            // A second listener from outside: applies the changed value to the text object.
             panel.listen(function (change, self) {
-                if (change.kind === "value") applyValues(self.getValues());
+                if (change.kind === "value") applyValue(change.key, change.value);
                 if (change.kind === "action") runAction(change);
             });
 
@@ -158,24 +154,31 @@
             const startX = Math.min(396, Math.max(20, canvas.width - 120));
             const startY = Math.min(668, Math.max(300, canvas.height - 80));
             panel.setValues({ x: startX, y: startY }, 1); // silent
-            applyValues(panel.getValues());
-            updateSize();
+            const values = panel.getValues();
+            Object.keys(values).forEach(function (key) { applyValue(key, values[key]); });
 
         };
 
         // *** OTHER FUNCTIONS:
 
-        const applyValues = function (v) {
-            lblText.left = v.x;
-            lblText.top = v.y;
-            lblText.opacity = (v.visible) ? 0 : v.opacity / 100; // visible: the "hide" toggle
-            lblText.elem.style.transform = "rotate(" + (-v.rotation) + "deg)";
-            lblText.elem.style.fontFamily = (v.fontWeight === "bold") ? "opensans-bold" : (v.fontFamily === "Open Sans") ? "" : "'" + v.fontFamily + "', sans-serif";
-            lblText.fontSize = v.fontSize;
-            lblText.elem.style.lineHeight = (v.lineHeight === null) ? "normal" : (v.lineHeight / 100);
-            lblText.elem.style.letterSpacing = (v.letterSpacing / 100) + "em";
-            lblText.elem.style.textAlign = v.textAlign;
-            updateSize();
+        // Values that change the size of the text: W and H are measured again after them.
+        const SIZE_KEYS = ["fontFamily", "fontWeight", "fontSize", "lineHeight", "letterSpacing", "textAlign"];
+
+        // Applies one value of the panel to the text object.
+        const applyValue = function (key, value) {
+            switch (key) {
+                case "x": lblText.left = value; break;
+                case "y": lblText.top = value; break;
+                case "rotation": lblText.elem.style.transform = "rotate(" + (-value) + "deg)"; break;
+                case "opacity": case "visible": lblText.opacity = (panel.getValue("visible")) ? 0 : panel.getValue("opacity") / 100; break; // visible: the "hide" toggle
+                case "fontFamily": lblText.fontFamily = (value === "Open Sans") ? "" : "'" + value + "', sans-serif"; break;
+                case "fontWeight": lblText.bold = (value === "bold"); break;
+                case "fontSize": lblText.fontSize = value; break;
+                case "lineHeight": lblText.lineHeight = (value === null) ? "normal" : String(value / 100); break;
+                case "letterSpacing": lblText.elem.style.letterSpacing = (value / 100) + "em"; break;
+                case "textAlign": lblText.textAlign = value; break;
+            }
+            if (SIZE_KEYS.indexOf(key) > -1) updateSize();
         };
 
         // W and H follow the text (auto width).
@@ -201,7 +204,7 @@
             const value = (typeof change.value === "object" && change.value !== null) ? JSON.stringify(change.value) : String(change.value);
             logLines.unshift(change.kind + "  " + change.key + " = " + value);
             if (logLines.length > 10) logLines.pop();
-            lblLog.text = PropertyPanel.escapeHtml(logLines.join("\n"));
+            lblLog.plainText = logLines.join("\n");
         };
 
     </script>
