@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>LabelEditor</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <!-- NOTE: LabelEditor draws its panel with these components, so they are loaded first. -->
+    <script src="../comp-m4/side-panel.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp-m4/stepper.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp-m4/select-color.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp-m4/tabs.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp-m3/check-box.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp-m4/label-editor.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // *** VARIABLES:
+        let edtLabels, lblInfo;
+        let edtTurkish;
+
+        const start = function () {
+
+            page.color = "#F4F5F2";
+
+            // BOX: Full screen scrollable container
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            startBox(0, 0, "100%", "100%", {
+                color: "transparent",
+                scrollY: 1,
+            });
+            const pageBox = that;
+
+                // GROUP: Page layout
+                VGroup({
+                    width: "100%",
+                    height: "auto", // Grows with content, so the Box can scroll.
+                    align: "center top",
+                    gap: 30,
+                    padding: 40,
+                });
+
+                    // LABEL: Title
+                    Label({
+                        text: "LabelEditor",
+                        fontSize: 26,
+                        fontFamily: "opensans-bold",
+                    });
+
+                    // SAMPLE 1: Default
+                    startCard("1. Default (the saved styles are kept in this browser)", "Click \"+ Add label\", then click a label: its properties open at the right side of the screen. Write a style name and Save. Select another label and click the style chip to apply it. Saving the same name again updates every label that uses it.");
+
+                        edtLabels = LabelEditor({
+                            width: "100%",
+                            height: 560,
+                            storageKey: "label-editor-sample-styles",
+                            savedStyles: [
+                                { name: "Title", props: { fontSize: 26, bold: 1, textColor: "#1F2328" } },
+                                { name: "Note", props: { fontSize: 13, italic: 1, textColor: "#8A5A00", color: "#FFF3C4", padding: 10, round: 6, fullWidth: 1 } },
+                                { name: "Tag", props: { fontSize: 12, bold: 1, textColor: "#FFFFFF", color: "#2F6FB0", padding: 6, round: 20 } },
+                            ],
+                            labels: [
+                                { text: "Monthly report", fontSize: 26, bold: 1, textColor: "#1F2328", styleName: "Title" },
+                                { text: "Sales grew 12% this month. The Izmir branch had its best month so far." },
+                                { text: "NEW", fontSize: 12, bold: 1, textColor: "#FFFFFF", color: "#2F6FB0", padding: 6, round: 20, styleName: "Tag" },
+                                { text: "Check the supplier payments before Friday.", fontSize: 13, italic: 1, textColor: "#8A5A00", color: "#FFF3C4", padding: 10, round: 6, fullWidth: 1, styleName: "Note" },
+                            ],
+                            onChange: function (self) { showInfo(); },
+                            onStylesChange: function (self) { showInfo(); },
+                        });
+
+                        lblInfo = addInfoLabel("");
+
+                        // GROUP: Buttons
+                        HGroup({ width: "100%", height: "auto", gap: 8 });
+                        that.elem.style.flexWrap = "wrap";
+                            addSampleButton("Print JSON", function () { println(JSON.stringify(edtLabels.getLabels(), null, 2)); lblInfo.text = "getLabels() is printed to the console."; });
+                            addSampleButton("Reset styles", function () { edtLabels.setSavedStyles([{ name: "Title", props: { fontSize: 26, bold: 1, textColor: "#1F2328" } }]); showInfo(); }, 1);
+                        endGroup();
+
+                    endCard();
+
+                    // SAMPLE 2: Dark, Turkish texts
+                    startCard("2. Dark style and Turkish texts", "styleName: \"dark\", texts: { ... }. Without storageKey the saved styles live only on this page.");
+
+                        edtTurkish = LabelEditor({
+                            width: "100%",
+                            height: 460,
+                            styleName: "dark",
+                            newLabel: { text: "Etiket {n}", textColor: "#E8E8E6" },
+                            texts: {
+                                title: "Etiketler", addButton: "+ Label ekle", empty: "Henüz etiket yok. \"Label ekle\" ile başlayın.",
+                                panelTitle: "Özellikler", text: "Yazı", fontSize: "Yazı boyutu", fontStyle: "Yazı stili", bold: "Kalın", italic: "İtalik",
+                                align: "Hizalama", left: "Sol", center: "Orta", right: "Sağ", width: "Genişlik", widthAuto: "Otomatik", widthFull: "Tam",
+                                textColor: "Yazı rengi", background: "Arka plan", none: "Yok", colorOn: "Renk", backgroundColor: "Arka plan rengi", padding: "İç boşluk", round: "Köşe", border: "Kenarlık", borderColor: "Kenarlık rengi",
+                                savedStyles: "Kayıtlı stiller", styleNamePlaceholder: "Stil adı", save: "Kaydet",
+                                noStyles: "Henüz kayıtlı stil yok. Bir etiketi düzenleyin, bir ad yazıp kaydedin.",
+                                applyHint: "Seçili etikete uygulamak için bir stile tıklayın.", currentStyle: "Stil: {name}", changed: "(değişti)", noStyle: "Stil yok",
+                                duplicate: "Çoğalt", remove: "Sil", removeStyle: "Stili sil",
+                            },
+                        });
+                        edtTurkish.addLabel({ text: "Merhaba", fontSize: 22, bold: 1, textColor: "#8FD1BF" });
+                        edtTurkish.addLabel({ text: "Bir etikete tıklayın, sağdaki panelden düzenleyin." , textColor: "#E8E8E6" });
+
+                    endCard();
+
+                endGroup();
+
+            endBox();
+
+            if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: pageBox });
+
+            showInfo();
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        const showInfo = function () {
+            const labels = edtLabels.getLabels();
+            const styles = edtLabels.getSavedStyles().map(function (st) { return st.name; });
+            lblInfo.plainText = labels.length + " labels · Saved styles: " + (styles.length ? styles.join(", ") : "(none)");
+        };
+
+        // GROUP: A card with a title and a short description.
+        const startCard = function (title, description = "") {
+            VGroup({
+                width: 960,
+                height: "auto",
+                align: "left top",
+                gap: 16,
+                padding: 20,
+                color: "white",
+                round: 10,
+                border: 1,
+                borderColor: Black(0.1),
+            });
+            that.elem.style.alignItems = "stretch";
+            that.elem.style.maxWidth = "100%";
+            Label({
+                text: title,
+                fontSize: 14,
+                textColor: Black(0.45),
+            });
+            if (description) {
+                Label({
+                    text: description,
+                    fontSize: 13,
+                    textColor: Black(0.35),
+                });
+                that.elem.style.marginTop = "-10px";
+            }
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+        const addSampleButton = function (text, onClick, isSecondary = 0) {
+            const btn = Button({
+                text: text,
+                width: 130,
+                height: 36,
+                fontSize: 14,
+            });
+            if (isSecondary) btn.color = "lightgray";
+            btn.on("click", onClick);
+            return btn;
+        };
+
+        const addInfoLabel = function (text) {
+            return Label({
+                plainText: text,
+                fontSize: 14,
+                textColor: Black(0.5),
+            });
+        };
+
+    </script>
+</head>
+
+<body></body>
+
+</html>

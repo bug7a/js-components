@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>RichTextEditor</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp-m4/rich-text-editor.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // *** VARIABLES:
+        let edtDefault, lblHtml;
+        let edtLimited, edtApi, lblApi;
+
+        const start = function () {
+
+            page.color = "#F4F5F2";
+
+            // BOX: Full screen scrollable container
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            startBox(0, 0, "100%", "100%", {
+                color: "transparent",
+                scrollY: 1,
+            });
+            const pageBox = that;
+
+                // GROUP: Page layout
+                VGroup({
+                    width: "100%",
+                    height: "auto", // Grows with content, so the Box can scroll.
+                    align: "center top",
+                    gap: 30,
+                    padding: 50,
+                });
+
+                    // LABEL: Title
+                    Label({
+                        text: "RichTextEditor",
+                        fontSize: 26,
+                        fontFamily: "opensans-bold",
+                    });
+
+                    // SAMPLE 1: Default
+                    startCard("1. Default", "Select text and use the toolbar. Ctrl / Cmd + B, I, U, K (link), Z (undo). The HTML below is the output of getHtml(): only the allowed tags, no styles or scripts.");
+
+                        edtDefault = RichTextEditor({
+                            width: "100%",
+                            height: 300,
+                            htmlText: "<h2>Monthly report</h2><p>Sales grew <b>12%</b> this month. The <i>Izmir</i> branch had its best month so far.</p><ul><li>Collections: on time</li><li>Stock: two products are low</li></ul><blockquote>Next step: check the supplier payments.</blockquote><p>Details: <a href=\"https://example.com\">example.com</a></p>",
+                            onChange: function (self) { showHtml(); },
+                        });
+
+                        // LABEL: HTML output
+                        lblHtml = Label({
+                            plainText: "",
+                            width: "100%",
+                            fontSize: 12,
+                            textColor: Black(0.55),
+                            color: "#F4F5F2",
+                            padding: 12,
+                            round: 6,
+                        });
+                        that.elem.style.fontFamily = "ui-monospace, Menlo, monospace";
+                        that.elem.style.whiteSpace = "pre-wrap";
+                        that.elem.style.wordBreak = "break-all";
+
+                    endCard();
+
+                    // SAMPLE 2: Few tools, limit, counter
+                    startCard("2. Few tools, a limit and a counter", "tools: [\"bold\", \"italic\", \"|\", \"ul\", \"ol\", \"|\", \"link\"], maxLength: 200, showCounter: 1, pasteAs: \"text\".");
+
+                        edtLimited = RichTextEditor({
+                            width: "100%",
+                            height: 180,
+                            tools: ["bold", "italic", "|", "ul", "ol", "|", "link"],
+                            maxLength: 200,
+                            showCounter: 1,
+                            pasteAs: "text",
+                            placeholderText: "A short product description (200 characters)...",
+                        });
+
+                    endCard();
+
+                    // SAMPLE 3: Styles
+                    startCard("3. Modern and Dark Styles", "");
+
+                        RichTextEditor({
+                            width: "100%",
+                            height: 200,
+                            styleName: "modern",
+                            showCounter: 1,
+                            placeholderText: "Write a note for the team...",
+                        });
+
+                        // GROUP: Dark background
+                        VGroup({ width: "100%", height: "auto", align: "left top", padding: 16, color: "#1C1C1B", round: 10 });
+                        that.elem.style.alignItems = "stretch";
+
+                            RichTextEditor({
+                                width: "100%",
+                                height: 200,
+                                styleName: "dark",
+                                htmlText: "<h3>Release notes</h3><p>Fixed the <b>login</b> page and the price list.</p>",
+                            });
+
+                        endGroup();
+
+                    endCard();
+
+                    // SAMPLE 4: API
+                    startCard("4. API", "setHtml(), getHtml(), getText(), insertText(), runTool(), clear(), isEmpty(), setReadOnly(), setEnabled()");
+
+                        edtApi = RichTextEditor({
+                            width: "100%",
+                            height: 160,
+                            tools: ["bold", "italic", "underline", "|", "h3", "ul", "|", "undo", "redo"],
+                            onChange: function (self) { showApiState(); },
+                        });
+
+                        // GROUP: Buttons
+                        HGroup({ width: "100%", height: "auto", gap: 8 });
+                        that.elem.style.flexWrap = "wrap";
+                            addSampleButton("Set HTML", function () { edtApi.setHtml("<p>Hello <b>world</b>!</p><ul><li>One</li><li>Two</li></ul>"); showApiState(); });
+                            addSampleButton("Insert text", function () { edtApi.insertText(" (added)"); }, 1);
+                            addSampleButton("Bold", function () { edtApi.runTool("bold"); }, 1);
+                            addSampleButton("Clear", function () { edtApi.clear(); showApiState(); }, 1);
+                            addSampleButton("Read only", function () { edtApi.setReadOnly(!edtApi.readOnly); }, 1);
+                            addSampleButton("On / Off", function () { edtApi.setEnabled(!edtApi.enabled); }, 1);
+                        endGroup();
+
+                        lblApi = addInfoLabel("");
+
+                    endCard();
+
+                endGroup();
+
+            endBox();
+
+            if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: pageBox });
+
+            showHtml();
+            showApiState();
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        const showHtml = function () {
+            lblHtml.plainText = edtDefault.getHtml() || "(empty)";
+        };
+
+        const showApiState = function () {
+            lblApi.plainText = "isEmpty: " + edtApi.isEmpty() + " · getText(): " + (JSON.stringify(edtApi.getText()));
+        };
+
+        // GROUP: A card with a title and a short description.
+        const startCard = function (title, description = "") {
+            VGroup({
+                width: 600,
+                height: "auto",
+                align: "left top",
+                gap: 16,
+                padding: 20,
+                color: "white",
+                round: 10,
+                border: 1,
+                borderColor: Black(0.1),
+            });
+            that.elem.style.alignItems = "stretch";
+            that.elem.style.maxWidth = "100%";
+            Label({
+                text: title,
+                fontSize: 14,
+                textColor: Black(0.45),
+            });
+            if (description) {
+                Label({
+                    text: description,
+                    fontSize: 13,
+                    textColor: Black(0.35),
+                });
+                that.elem.style.marginTop = "-10px";
+            }
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+        const addSampleButton = function (text, onClick, isSecondary = 0) {
+            const btn = Button({
+                text: text,
+                width: 110,
+                height: 36,
+                fontSize: 14,
+            });
+            if (isSecondary) btn.color = "lightgray";
+            btn.on("click", onClick);
+            return btn;
+        };
+
+        const addInfoLabel = function (text) {
+            return Label({
+                plainText: text,
+                fontSize: 14,
+                textColor: Black(0.5),
+            });
+        };
+
+    </script>
+</head>
+
+<body></body>
+
+</html>

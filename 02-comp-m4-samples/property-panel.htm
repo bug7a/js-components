@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>PropertyPanel</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp-m4/property-panel.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // *** VARIABLES:
+        let panel, canvas, lblText, lblLog;
+        const logLines = [];
+
+        // The JSON of the panel. Every item: type, key, value and its own settings.
+        const PANEL_DATA = {
+            tabs: [
+                { key: "design", text: "Design" },
+                { key: "prototype", text: "Prototype" },
+            ],
+            activeTab: "design",
+            headerItem: { key: "zoom", type: "select", value: 72, options: [{ value: 50, text: "50%" }, { value: 72, text: "72%" }, { value: 100, text: "100%" }, { value: 200, text: "200%" }] },
+            title: "Text",
+            titleActions: [
+                { key: "createComponent", icon: "component", hint: "Create component" },
+                { key: "copyLink", icon: "link", hint: "Copy link" },
+                { key: "inspect", icon: "target", hint: "Inspect" },
+                { key: "more", icon: "more", hint: "More" },
+            ],
+            sections: [
+                {
+                    key: "position",
+                    title: "Position",
+                    items: [
+                        [
+                            { key: "alignH", type: "segmented", label: "Alignment", options: [{ value: "left", icon: "alignLeft", hint: "Align left" }, { value: "center", icon: "alignCenterH", hint: "Align horizontal centers" }, { value: "right", icon: "alignRight", hint: "Align right" }] },
+                            { key: "alignV", type: "segmented", options: [{ value: "top", icon: "alignTop", hint: "Align top" }, { value: "middle", icon: "alignCenterV", hint: "Align vertical centers" }, { value: "bottom", icon: "alignBottom", hint: "Align bottom" }] },
+                        ],
+                        [
+                            { key: "x", type: "number", label: "Position", prefix: "X", value: 396 },
+                            { key: "y", type: "number", prefix: "Y", value: 668 },
+                            { key: "absolute", type: "iconButton", icon: "frame", toggle: 1, value: true, hint: "Absolute position" },
+                        ],
+                        [
+                            { key: "constraints", type: "constraints", label: "Constraints", value: { horizontal: "left", vertical: "top" } },
+                        ],
+                        [
+                            { key: "rotation", type: "number", label: "Rotation", icon: "angle", value: 0, unit: "°", min: -360, max: 360 },
+                            { key: "transform", type: "segmented", options: [{ value: "rotate90", icon: "rotate", hint: "Rotate 90°" }, { value: "flipH", icon: "flipH", hint: "Flip horizontal" }, { value: "flipV", icon: "flipV", hint: "Flip vertical" }] },
+                        ],
+                    ],
+                },
+                {
+                    key: "layout",
+                    title: "Layout",
+                    items: [
+                        { key: "resizing", type: "segmented", label: "Resizing", span: 2, value: "autoWidth", options: [{ value: "autoWidth", icon: "hugWidth", hint: "Auto width" }, { value: "autoHeight", icon: "fixedWidth", hint: "Auto height" }, { value: "fixed", icon: "autoHeight", hint: "Fixed size" }] },
+                        [
+                            { key: "w", type: "number", label: "Dimensions", prefix: "W", value: 31, min: 1, enabled: 0 },
+                            { key: "h", type: "number", prefix: "H", value: 23, min: 1, enabled: 0 },
+                            { key: "clipContent", type: "iconButton", icon: "clip", toggle: 1, value: false, accent: 0, hint: "Clip content" },
+                        ],
+                    ],
+                },
+                {
+                    key: "appearance",
+                    title: "Appearance",
+                    actions: [
+                        { key: "visible", icon: "eye", iconActive: "eyeOff", toggle: 1, value: false, hint: "Hide" },
+                        { key: "blendMode", icon: "drop", hint: "Blend mode" },
+                    ],
+                    items: [
+                        [
+                            { key: "opacity", type: "number", label: "Opacity", icon: "opacity", value: 100, unit: "%", min: 0, max: 100 },
+                            { key: "radius", type: "number", label: "Corner radius", icon: "radius", value: 0, min: 0, enabled: 0 },
+                        ],
+                    ],
+                },
+                {
+                    key: "typography",
+                    title: "Typography",
+                    actions: [
+                        { key: "textStyles", icon: "styles", hint: "Text styles" },
+                    ],
+                    items: [
+                        { key: "fontFamily", type: "select", span: 2, value: "Open Sans", options: ["Open Sans", "Istok Web", "Inter", "Georgia", "Courier New"] },
+                        [
+                            { key: "fontWeight", type: "select", value: "regular", options: [{ value: "regular", text: "Regular" }, { value: "bold", text: "Bold" }] },
+                            { key: "fontSize", type: "combo", value: 16, min: 1, max: 400, options: [10, 11, 12, 13, 14, 16, 20, 24, 32, 36, 40, 48, 64, 96, 128] },
+                        ],
+                        [
+                            { key: "lineHeight", type: "number", label: "Line height", icon: "lineHeight", value: null, autoText: "Auto", unit: "%", min: 50, max: 400 },
+                            { key: "letterSpacing", type: "number", label: "Letter spacing", icon: "letterSpacing", value: 0, unit: "%", min: -50, max: 100, step: 0.5, precision: 0 },
+                        ],
+                        [
+                            { key: "textAlign", type: "segmented", label: "Alignment", value: "left", options: [{ value: "left", icon: "textLeft", hint: "Align left" }, { value: "center", icon: "textCenter", hint: "Align center" }, { value: "right", icon: "textRight", hint: "Align right" }] },
+                            { key: "verticalAlign", type: "segmented", value: "top", options: [{ value: "top", icon: "textTop", hint: "Top" }, { value: "middle", icon: "textMiddle", hint: "Middle" }, { value: "bottom", icon: "textBottom", hint: "Bottom" }] },
+                            { key: "typeDetails", type: "iconButton", icon: "sliders", hint: "Type details" },
+                        ],
+                    ],
+                },
+            ],
+        };
+
+        const start = function () {
+
+            page.color = "#1E1E1E";
+
+            // BOX: Canvas (the left part of the screen)
+            canvas = startBox(0, 0, "calc(100% - 240px)", "100%", { color: "#1E1E1E" });
+            canvas.clipContent = 1;
+
+                // LABEL: The selected text object
+                lblText = Label({ left: 396, top: 668, text: "Text", fontSize: 16, textColor: "#FFFFFF" });
+                lblText.elem.style.outline = "1px solid #0C8CE9";
+                lblText.elem.style.transformOrigin = "center";
+                lblText.elem.style.whiteSpace = "nowrap";
+
+                // LABEL: Log of the changes
+                lblLog = Label({ left: 20, top: 20, width: 420, text: "Change the values in the panel.", fontSize: 12, textColor: "rgba(255, 255, 255, 0.55)" });
+                lblLog.elem.style.fontFamily = "monospace";
+                lblLog.elem.style.whiteSpace = "pre-wrap";
+                lblLog.elem.style.lineHeight = "1.6";
+
+                // BUTTON: Open / close the panel
+                const btnToggle = Button({ left: 20, top: 250, width: 140, height: 32, text: "Toggle panel", fontSize: 13 });
+                btnToggle.on("click", function () { panel.toggle(); });
+
+            endBox();
+
+            // PROPERTY PANEL:
+            panel = PropertyPanel({
+                data: PANEL_DATA,
+                onChange: function (change, self) {
+                    addLog(change);
+                },
+            });
+
+            // A second listener from outside: applies the values to the text object.
+            panel.listen(function (change, self) {
+                if (change.kind === "value") applyValues(self.getValues());
+                if (change.kind === "action") runAction(change);
+            });
+
+            // The selected object may be moved on the page: fit it into the canvas at the start.
+            const startX = Math.min(396, Math.max(20, canvas.width - 120));
+            const startY = Math.min(668, Math.max(300, canvas.height - 80));
+            panel.setValues({ x: startX, y: startY }, 1); // silent
+            applyValues(panel.getValues());
+            updateSize();
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        const applyValues = function (v) {
+            lblText.left = v.x;
+            lblText.top = v.y;
+            lblText.opacity = (v.visible) ? 0 : v.opacity / 100; // visible: the "hide" toggle
+            lblText.elem.style.transform = "rotate(" + (-v.rotation) + "deg)";
+            lblText.elem.style.fontFamily = (v.fontWeight === "bold") ? "opensans-bold" : (v.fontFamily === "Open Sans") ? "" : "'" + v.fontFamily + "', sans-serif";
+            lblText.fontSize = v.fontSize;
+            lblText.elem.style.lineHeight = (v.lineHeight === null) ? "normal" : (v.lineHeight / 100);
+            lblText.elem.style.letterSpacing = (v.letterSpacing / 100) + "em";
+            lblText.elem.style.textAlign = v.textAlign;
+            updateSize();
+        };
+
+        // W and H follow the text (auto width).
+        const updateSize = function () {
+            panel.setValues({ w: lblText.elem.offsetWidth, h: lblText.elem.offsetHeight }, 1);
+        };
+
+        const runAction = function (change) {
+            const cw = canvas.width, ch = canvas.height;
+            const w = lblText.elem.offsetWidth, h = lblText.elem.offsetHeight;
+            const moves = {
+                left: { x: 0 }, center: { x: Math.round((cw - w) / 2) }, right: { x: cw - w },
+                top: { y: 0 }, middle: { y: Math.round((ch - h) / 2) }, bottom: { y: ch - h },
+            };
+            if (change.key === "alignH" || change.key === "alignV") {
+                panel.setValues(moves[change.value]); // Not silent: the change is sent, the listener moves the text.
+            } else if (change.key === "transform" && change.value === "rotate90") {
+                panel.setValue("rotation", ((panel.getValue("rotation") + 90 + 180) % 360) - 180);
+            }
+        };
+
+        const addLog = function (change) {
+            const value = (typeof change.value === "object" && change.value !== null) ? JSON.stringify(change.value) : String(change.value);
+            logLines.unshift(change.kind + "  " + change.key + " = " + value);
+            if (logLines.length > 10) logLines.pop();
+            lblLog.text = PropertyPanel.escapeHtml(logLines.join("\n"));
+        };
+
+    </script>
+</head>
+
+<body></body>
+
+</html>

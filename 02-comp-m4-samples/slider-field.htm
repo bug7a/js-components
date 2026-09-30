@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>SliderField</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp-m4/slider-field.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // *** VARIABLES:
+        let sfDefault, lblDefault;
+        let boxPreview, boxShape;
+        let sfApi, lblApi;
+
+        const start = function () {
+
+            page.color = "#F4F5F2";
+
+            // BOX: Full screen scrollable container
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            const scrollBox = startBox(0, 0, "100%", "100%", {
+                color: "transparent",
+                scrollY: 1,
+            });
+
+                // GROUP: Page layout
+                VGroup({
+                    width: "100%",
+                    height: "auto", // Grows with content, so the Box can scroll.
+                    align: "center top",
+                    gap: 30,
+                    padding: 50,
+                });
+
+                    // LABEL: Title
+                    Label({
+                        text: "SliderField",
+                        fontSize: 26,
+                        fontFamily: "opensans-bold",
+                    });
+
+                    // SAMPLE 1: Default
+                    startCard("1. Default", "Drag anywhere on the field or click a point. Click the value to type it. Arrow keys, PageUp / PageDown, Home / End work when it has the focus.");
+
+                        sfDefault = SliderField({
+                            labelText: "Width",
+                            value: 3,
+                            min: 0,
+                            max: 10,
+                            onChange: function (self) { lblDefault.text = "onChange: " + self.value; },
+                            onChangeEnd: function (self) { lblDefault.text = "onChangeEnd: " + self.value; },
+                        });
+
+                        lblDefault = addInfoLabel("Value: 3");
+
+                    endCard();
+
+                    // SAMPLE 2: Property panel
+                    startCard("2. Property panel", "width: \"100%\" sliders that change a shape. The dots divide the range evenly when there are too many steps (maxTicks).");
+
+                        HGroup({ width: "100%", height: "auto", align: "left top", gap: 20 });
+                        that.elem.style.flexWrap = "wrap";
+
+                            // BOX: Preview
+                            boxPreview = startBox({ width: 180, height: 220, color: "#F2F2F4", round: 12 });
+                                boxShape = Box({ width: 100, height: 100, color: "cadetblue", round: 12 });
+                                boxShape.center();
+                                boxShape.setMotion("width 0.1s, height 0.1s, left 0.1s, top 0.1s");
+                            endBox();
+
+                            // GROUP: Sliders
+                            VGroup({ width: 300, height: "auto", align: "left top", gap: 8 });
+                            that.elem.style.flex = "1 1 240px";
+
+                                SliderField({ width: "100%", labelText: "Width", value: 100, min: 20, max: 160, step: 10, unitText: "px", onChange: function (self) { boxShape.width = self.value; boxShape.center(); } });
+                                SliderField({ width: "100%", labelText: "Height", value: 100, min: 20, max: 200, step: 10, unitText: "px", onChange: function (self) { boxShape.height = self.value; boxShape.center(); } });
+                                SliderField({ width: "100%", labelText: "Radius", value: 12, min: 0, max: 50, step: 1, valueFormat: function (value) { return value + "%"; }, onChange: function (self) { boxShape.elem.style.borderRadius = self.value + "%"; } });
+                                SliderField({ width: "100%", labelText: "Opacity", value: 1, min: 0, max: 1, step: 0.05, valueFormat: function (value) { return Math.round(value * 100) + "%"; }, onChange: function (self) { boxShape.opacity = self.value; } });
+                                SliderField({ width: "100%", labelText: "Rotate", value: 0, min: -180, max: 180, step: 15, unitText: "°", onChange: function (self) { boxShape.elem.style.transform = "rotate(" + self.value + "deg)"; } });
+
+                            endGroup();
+
+                        endGroup();
+
+                    endCard();
+
+                    // SAMPLE 3: Decimals and formats
+                    startCard("3. Decimals, unit text and valueFormat", "precision \"auto\" reads the decimals from the step. showTicks: 0 hides the dots.");
+
+                        SliderField({ labelText: "Scale", value: 1.5, min: 0.5, max: 3, step: 0.1, unitText: "×" });
+                        SliderField({ labelText: "Weight", value: 2.25, min: 0, max: 5, step: 0.25, unitText: " kg" });
+                        SliderField({ labelText: "Blur", value: 0, min: 0, max: 20, valueFormat: function (value) { return (value === 0) ? "Off" : value + " px"; } });
+                        SliderField({ labelText: "Volume", value: 64, min: 0, max: 100, showTicks: 0, unitText: "%" });
+
+                    endCard();
+
+                    // SAMPLE 4: Styles
+                    startCard("4. Modern and Dark Styles", "");
+
+                        SliderField({ styleName: "modern", labelText: "Brightness", value: 6, min: 0, max: 10 });
+                        SliderField({ styleName: "modern", labelText: "Contrast", value: 40, min: 0, max: 100, step: 10, unitText: "%" });
+
+                        // GROUP: Dark background
+                        VGroup({ width: "100%", height: "auto", align: "left top", gap: 8, padding: 16, color: "#1C1C1B", round: 10 });
+                            SliderField({ styleName: "dark", width: "100%", labelText: "Width", value: 3, min: 0, max: 10 });
+                            SliderField({ styleName: "dark", width: "100%", labelText: "Spacing", value: 16, min: 0, max: 48, step: 4, unitText: "px" });
+                        endGroup();
+
+                    endCard();
+
+                    // SAMPLE 5: API
+                    startCard("5. API", "setValue(), increase(), decrease(), setRange(), setStep(), setLabelText(), setUnitText(), setShowTicks(), setEnabled()");
+
+                        sfApi = SliderField({
+                            labelText: "Size",
+                            value: 5,
+                            min: 0,
+                            max: 10,
+                            onChange: function (self) { lblApi.text = "Value: " + self.value + " (range " + self.min + " – " + self.max + ", step " + self.step + ")"; },
+                        });
+
+                        // GROUP: Buttons
+                        HGroup({ width: "100%", height: "auto", gap: 8 });
+                        that.elem.style.flexWrap = "wrap";
+                            addSampleButton("Set 8", function () { sfApi.setValue(8); });
+                            addSampleButton("+3", function () { sfApi.increase(3); });
+                            addSampleButton("−3", function () { sfApi.decrease(3); }, 1);
+                            addSampleButton("Range 0–100", function () { sfApi.setRange(0, 100); sfApi.onChange(sfApi); }, 1);
+                            addSampleButton("Step 5", function () { sfApi.setStep((sfApi.step === 5) ? 1 : 5); sfApi.onChange(sfApi); }, 1);
+                            addSampleButton("Label", function () { sfApi.setLabelText((sfApi.labelText === "Size") ? "Font size" : "Size"); }, 1);
+                            addSampleButton("Unit", function () { sfApi.setUnitText(sfApi.unitText ? "" : "px"); }, 1);
+                            addSampleButton("Dots", function () { sfApi.setShowTicks(!sfApi.showTicks); }, 1);
+                            addSampleButton("On / Off", function () { sfApi.setEnabled(!sfApi.enabled); }, 1);
+                        endGroup();
+
+                        lblApi = addInfoLabel("Value: 5 (range 0 – 10, step 1)");
+
+                    endCard();
+
+                endGroup();
+
+            endBox();
+
+            if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: scrollBox });
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        // GROUP: A card with a title and a short description.
+        const startCard = function (title, description = "") {
+            VGroup({
+                width: 560,
+                height: "auto",
+                align: "left top",
+                gap: 16,
+                padding: 20,
+                color: "white",
+                round: 10,
+                border: 1,
+                borderColor: Black(0.1),
+            });
+            that.elem.style.alignItems = "stretch";
+            that.elem.style.maxWidth = "100%";
+            Label({
+                text: title,
+                fontSize: 14,
+                textColor: Black(0.45),
+            });
+            if (description) {
+                Label({
+                    text: description,
+                    fontSize: 13,
+                    textColor: Black(0.35),
+                });
+                that.elem.style.marginTop = "-10px";
+            }
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+        const addSampleButton = function (text, onClick, isSecondary = 0) {
+            const btn = Button({
+                text: text,
+                width: 110,
+                height: 36,
+                fontSize: 14,
+            });
+            if (isSecondary) btn.color = "lightgray";
+            btn.on("click", onClick);
+            return btn;
+        };
+
+        const addInfoLabel = function (text) {
+            return Label({
+                text: text,
+                fontSize: 14,
+                textColor: Black(0.5),
+            });
+        };
+
+    </script>
+</head>
+
+<body></body>
+
+</html>

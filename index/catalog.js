@@ -119,6 +119,36 @@ CATALOG.COMPONENTS = [
         tr: "Ondalık, birim, elle yazma ve basılı tutunca tekrarlayan düğmeleriyle sayı seçici.",
     },
     {
+        key: "slider-field", name: "SliderField", gen: 4, cat: "inputs",
+        source: "comp-m4/slider-field.js", samples: ["02-comp-m4-samples/slider-field.htm"],
+        en: "A slider in the shape of a field: the label at the left, the value at the right, step dots, drag, click to jump and typed editing.",
+        tr: "Alan şeklinde kaydırıcı: solda etiket, sağda değer, adım noktaları; sürükleme, tıklayıp atlama ve elle yazma.",
+    },
+    {
+        key: "property-panel", name: "PropertyPanel", gen: 4, cat: "inputs",
+        source: "comp-m4/property-panel.js", samples: ["02-comp-m4-samples/property-panel.htm"],
+        en: "A design tool style property inspector at the right side, built from a JSON: numbers, selects, segmented buttons, toggles and constraints, with change events.",
+        tr: "Sağda açılan, tasarım aracı tarzı özellik paneli; JSON ile kurulur: sayılar, seçim kutuları, bölmeli düğmeler, açma/kapama ve kısıtlar, değişiklik olaylarıyla.",
+    },
+    {
+        key: "label-editor", name: "LabelEditor", gen: 4, cat: "inputs",
+        source: "comp-m4/label-editor.js", samples: ["02-comp-m4-samples/label-editor.htm"],
+        en: "An object based editor: add labels, change their properties in a side panel, save the styles with a name and apply them to other labels.",
+        tr: "Nesne tabanlı editör: label ekleyin, özelliklerini yan panelden değiştirin, stilleri bir adla kaydedip başka label'lara uygulayın.",
+    },
+    {
+        key: "rich-text-editor", name: "RichTextEditor", gen: 4, cat: "inputs",
+        source: "comp-m4/rich-text-editor.js", samples: ["02-comp-m4-samples/rich-text-editor.htm"],
+        en: "A simple rich text editor with a toolbar (bold, headings, lists, quote, link, undo), cleaned HTML output and a character limit.",
+        tr: "Araç çubuklu basit zengin metin editörü (kalın, başlık, liste, alıntı, link, geri al); temizlenmiş HTML çıktısı ve karakter sınırı.",
+    },
+    {
+        key: "sortable-list", name: "SortableList", gen: 4, cat: "inputs",
+        source: "comp-m4/sortable-list.js", samples: ["02-comp-m4-samples/sortable-list.htm"],
+        en: "A list whose order is changed by drag and drop, the keyboard or up / down buttons, with locked rows.",
+        tr: "Sırası sürükle-bırak, klavye veya yukarı / aşağı düğmeleriyle değiştirilen liste; kilitli satırlar da olur.",
+    },
+    {
         key: "progress-bar", name: "ProgressBar", gen: 4, cat: "feedback",
         source: "comp-m4/progress-bar.js", samples: ["02-comp-m4-samples/progress-bar.htm"],
         en: "Horizontal progress bar with a title and a value text; determinate or indeterminate.",
