@@ -18,6 +18,7 @@ WHAT IS NEW IN v26.09.18 (see basic/basic-v26.09.18.md for examples):
               grow, shrink, plainText, isRemoved, children
 - Methods:    show(), hide(), toggle(), once(), setSize(), setPosition(), bringToFront(), contains(), animate()
 - Input:      value, placeholder, inputType, maxLength, readOnly, focus(), blur(), select(), onEnter()
+- basic.css:  is in basic.js too: a page needs only basic.js (basic.cssAdded; a basic.css link still works)
 - Label:      clipContent (0: the text is not cut at the edges)
 - Icon:       alt, imageFit
 - Groups:     wrap, justify, hug (alternative name for fit) (HGroup / VGroup / AutoLayout)
@@ -53,6 +54,43 @@ if ( typeof module === "object" && typeof module.exports === "object" ) {
 
 window.basic = basic;
 basic.startTime = Date.now();
+
+// *** BASIC CSS: basic.css is also in this file, so a page needs only <script src="basic/basic.js">.
+// - A page that loads basic.css / basic.min.css itself (the old pages) keeps it: nothing is added then.
+// - <script src="basic/basic.js" data-no-css> -> nothing is added (the page has its own copy of basic.css).
+// - The <style data-basic-css> is put before the other styles of <head>, like a basic.css loaded first.
+// - The font paths are made from the address of this file, so they work from any folder.
+// NOTE: The text is basic/basic.min.css. "./_make-min-js.sh --build basic/basic.js" writes it again
+//       between "BASIC CSS START" and "BASIC CSS END": change basic.css + basic.min.css, then run it.
+basic.cssAdded = 0; // 1: this file added basic.css to the page.
+(function () {
+
+    // WHY: currentScript is empty in a module or a script added later; then the last basic.js script is used.
+    const script = document.currentScript || Array.from(document.getElementsByTagName("script")).reverse().find(function (item) {
+        return /basic(\.min)?\.js(\?|#|$)/.test(item.src);
+    }) || null;
+
+    if (script && script.hasAttribute("data-no-css")) return;
+    if (document.querySelector("style[data-basic-css]")) return;
+    const hasLink = Array.from(document.querySelectorAll('link[rel~="stylesheet"]')).some(function (link) {
+        return /(^|\/)basic(\.min)?\.css(\?|#|$)/.test(link.getAttribute("href") || "");
+    });
+    if (hasLink) return;
+
+    const base = (script && script.src) ? new URL(".", script.src).href : "";
+    // BASIC CSS START
+    const cssText = "@font-face{font-family:opensans;src:url(font/open-sans/OpenSans-Regular.ttf);font-display:block}@font-face{font-family:opensans-bold;src:url(font/open-sans/OpenSans-Bold.ttf);font-display:block}body{margin:0;padding:0;font-family:opensans;overflow:hidden}.basic_box,.basic_label,.basic_button,.basic_textbox-main,.basic_image{-webkit-tap-highlight-color:rgba(0,0,0,0);touch-action:manipulation;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;-webkit-touch-callout:none;-webkit-text-size-adjust:auto;user-select:none;-webkit-user-select:none}.basic_box{position:absolute;display:block;overflow-x:hidden;overflow-y:hidden;background-color:whitesmoke;border-radius:0;border:0 solid rgba(0,0,0,.6);font-family:opensans;font-size:16px;text-align:left;color:rgba(0,0,0,.8);padding:0;margin:0;box-sizing:border-box;pointer-events:none}.basic_label{position:absolute;display:block;overflow:hidden;font-family:opensans;font-size:20px;text-align:left;color:rgba(0,0,0,.8);background-color:transparent;border:0 solid rgba(0,0,0,.6);padding:0;box-sizing:border-box;pointer-events:none}.basic_button{position:absolute;display:block;overflow:hidden;font-family:opensans;font-size:20px;text-align:center;color:rgba(0,0,0,.65);border:1px solid rgba(0,0,0,.40);box-shadow:inset 0px -2px 0 0 rgba(0,0,0,.40);margin:0;box-sizing:border-box;border-radius:4px;background-color:#689BD2;background-image:linear-gradient(to bottom,rgba(0,0,0,0),rgba(0,0,0,.02) 60%,rgba(0,0,0,.055));background-position:left top;background-repeat:no-repeat;background-size:100% 100%;pointer-events:auto;cursor:pointer}.basic_button.minimal{border:0 solid rgba(0,0,0,.40);box-shadow:none;background-image:none}.basic_button:focus{outline:none}.basic_button:disabled{opacity:.6!important;cursor:default}.basic_textbox-main{position:absolute;display:block}.basic_textbox{position:absolute;font-family:opensans;font-size:20px;text-align:left;color:#4A4A4A;background-color:#FFFFFF;left:0;right:0;border:1px solid #4A4A4A;width:270px;height:50px;padding:12px 15px;margin:0;box-sizing:border-box;border-radius:4px;background-image:linear-gradient(to top,rgba(0,0,0,0),rgba(0,0,0,.02) 60%,rgba(0,0,0,.055));background-position:left top;background-repeat:no-repeat;background-size:100% 100%;pointer-events:auto}.basic_textbox.minimal{border:0 solid #4A4A4A;background-image:none}.basic_textbox:focus{outline:none;padding:12px 14px;background-color:#FFFFFF;border:2px solid #689BD2}.basic_textbox.minimal:focus{outline:none;padding:12px 15px;border:0 solid steelblue}.basic_textbox:disabled{opacity:.6!important}.basic_textbox-title{position:absolute;background-color:transparent;font-family:opensans;font-size:16px;text-align:left;color:#4A4A4A;height:28px;top:-28px;left:0;padding:2px;padding-left:0;border:0;border-top-left-radius:6px;border-top-right-radius:6px;border-bottom-left-radius:0;border-bottom-right-radius:0;background-image:none}.basic_image{position:absolute;display:block;overflow:hidden;background-color:transparent;border:0 solid rgba(0,0,0,.6);padding:0;margin:0;box-sizing:border-box;border-radius:0;pointer-events:none}.basic_box::-webkit-scrollbar{width:0;height:0}.basic_box::-webkit-scrollbar-thumb{background:rgba(0,0,0,.15);border-radius:6px;border:2px solid rgba(0,0,0,0);background-clip:padding-box}.basic_box::-webkit-scrollbar-thumb:hover{background:rgba(0,0,0,.2);border-radius:6px;border:2px solid rgba(0,0,0,0);background-clip:padding-box}.basic_box::-webkit-scrollbar-thumb:active{background:rgba(0,0,0,.25);border-radius:6px;border:2px solid rgba(0,0,0,0);background-clip:padding-box}.basic_box::-webkit-scrollbar-track{background:transparent;border-radius:0;background-clip:padding-box}.basic_box::-webkit-scrollbar-corner{background-color:transparent}";
+    // BASIC CSS END
+
+    const style = document.createElement("style");
+    style.setAttribute("data-basic-css", "");
+    style.textContent = cssText.replace(/url\((["']?)font\//g, "url($1" + base + "font/");
+    const head = document.head || document.documentElement;
+    const first = head.querySelector('link[rel~="stylesheet"], style');
+    head.insertBefore(style, (first && first.parentNode === head) ? first : null);
+    basic.cssAdded = 1;
+
+})();
 
 basic.ACTION_COLOR = "#689BD2";
 basic.ACTION2_COLOR = "cadetblue";

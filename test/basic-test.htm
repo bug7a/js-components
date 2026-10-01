@@ -56,6 +56,7 @@
             check("basic.version", basic.version === "26.09.18", basic.version);
             check("basic.library", basic.library === "basic.js", basic.library);
             check("basic.isReady", basic.isReady === 1);
+            check("basic.css link on the page -> basic.js adds no CSS", basic.cssAdded === 0 && !document.querySelector("style[data-basic-css]"));
 
             // *** OLD API STILL WORKS
             const work = startBox(0, 0, 400, 300, { color: "transparent" });

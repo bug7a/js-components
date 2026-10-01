@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>basic.js CSS test</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- A style of the page: the CSS of basic.js must come before it. -->
+        <style id="page-style">.page-style-test { color: rgb(1, 2, 3); }</style>
+
+        <!-- LIBRARY FILES: only basic.js (no basic.css link). -->
+        <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+        "use strict";
+
+        // NOTE: Self-checking test of the CSS inside basic.js. Open it in a browser (a web server or file://):
+        //       the tab title must say ALL PASS. The page loads only basic.js; two iframes check a page with
+        //       a basic.css link and a page with <script data-no-css>.
+
+        const results = [];
+        const check = function (name, ok, info) {
+            results.push({ name: name, ok: !!ok, info: (info === undefined) ? "" : String(info) });
+        };
+
+        // An iframe page next to this one. (The base makes its relative paths work in srcdoc.)
+        const loadFrame = function (headHtml) {
+            return new Promise(function (resolve) {
+                const frame = document.createElement("iframe");
+                frame.style.cssText = "position: absolute; left: -2000px; width: 300px; height: 200px;";
+                frame.onload = function () { resolve(frame); };
+                frame.srcdoc = '<!DOCTYPE html><html><head><base href="' + location.href + '">' + headHtml + '<\/head><body><\/body><\/html>';
+                document.body.appendChild(frame);
+            });
+        };
+
+        const runTests = async function () {
+
+            // *** THIS PAGE: only basic.js
+            const styles = document.querySelectorAll("style[data-basic-css]");
+            check("basic.cssAdded is 1", basic.cssAdded === 1, basic.cssAdded);
+            check("one <style data-basic-css>", styles.length === 1, styles.length);
+            check("it is before the styles of the page", styles[0] && styles[0].compareDocumentPosition(document.getElementById("page-style")) & Node.DOCUMENT_POSITION_FOLLOWING);
+            const fontUrl = new URL("../basic/font/open-sans/OpenSans-Regular.ttf", location.href).href;
+            check("font paths are made from the address of basic.js", styles[0] && styles[0].textContent.indexOf("url(" + fontUrl + ")") > -1, fontUrl);
+            check("body: margin 0, overflow hidden", getComputedStyle(document.body).overflow === "hidden" && getComputedStyle(document.body).marginTop === "0px");
+
+            const box = Box(0, 0, 50, 50);
+            const label = Label({ text: "Çığ" });
+            const button = Button(0, 0, 100, 40, { text: "ok" });
+            check("Box: position absolute, overflow hidden", getComputedStyle(box.elem).position === "absolute" && getComputedStyle(box.elem).overflowX === "hidden");
+            check("Label: font opensans, pointer-events none", getComputedStyle(label.elem).fontFamily === "opensans" && getComputedStyle(label.elem).pointerEvents === "none");
+            check("Button: the shade gradient", getComputedStyle(button.elem).backgroundImage.indexOf("linear-gradient") === 0);
+
+            try { await document.fonts.load("16px opensans"); await document.fonts.load("16px opensans-bold"); } catch (e) {}
+            check("font opensans is loaded", document.fonts.check("16px opensans"));
+            check("font opensans-bold is loaded", document.fonts.check("16px opensans-bold"));
+
+            box.remove(); label.remove(); button.remove();
+
+            // *** A PAGE WITH A basic.css LINK (the old pages): nothing is added
+            const withLink = await loadFrame('<link rel="stylesheet" href="../basic/basic.min.css"><script src="../basic/basic.js"><\/script>');
+            const w = withLink.contentWindow;
+            check("basic.css link -> nothing added", w.basic && w.basic.cssAdded === 0 && !w.document.querySelector("style[data-basic-css]"));
+            check("basic.css link -> the page still has the basic.js styles", w.getComputedStyle(w.document.body).overflow === "hidden");
+
+            // *** <script data-no-css>: nothing is added
+            const noCss = await loadFrame('<script src="../basic/basic.js" data-no-css><\/script>');
+            const n = noCss.contentWindow;
+            check("data-no-css -> nothing added", n.basic && n.basic.cssAdded === 0 && !n.document.querySelector("style[data-basic-css]"));
+
+            // *** basic.min.js carries the CSS too
+            const minOnly = await loadFrame('<script src="../basic/basic.min.js"><\/script>');
+            const m = minOnly.contentWindow;
+            check("basic.min.js alone adds the CSS", m.basic && m.basic.cssAdded === 1 && m.document.querySelectorAll("style[data-basic-css]").length === 1);
+
+        };
+
+        const showResults = function () {
+
+            const failed = results.filter(function (r) { return !r.ok; });
+            const summary = "basic.js CSS test: " + (results.length - failed.length) + "/" + results.length + " passed" + (failed.length ? " - " + failed.length + " FAILED" : " - ALL PASS");
+            document.title = summary;
+
+            // BOX: Scrollable page container
+            startBox(0, 0, "100%", "100%", { color: "white", scrollY: 1 });
+                VGroup({ width: "100%", height: "auto", align: "left top", gap: 4, padding: 24 });
+                    Label({ text: summary, fontSize: 20, bold: 1, textColor: failed.length ? "tomato" : "seagreen" });
+                    results.forEach(function (r) {
+                        Label({ text: (r.ok ? "PASS " : "FAIL ") + r.name + (r.ok || !r.info ? "" : " (" + r.info + ")"), fontSize: 14, textColor: r.ok ? Black(0.7) : "tomato" });
+                    });
+                endGroup();
+            endBox();
+
+        };
+
+        // First running function.
+        const start = function () {
+            runTests().then(showResults, function (error) { check("no error", false, error); showResults(); });
+        };
+
+        </script>
+
+    </head>
+    <body>
+    </body>
+</html>
