@@ -89,19 +89,6 @@ inp.remove_onEnter(fn);     // or call the returned remover
 
 `bold`, `italic`, `fontFamily`, `lineHeight`, `ellipsis`, `cursor` of an Input go to its `<input>` element (like `fontSize`, `textColor`).
 
-## basic.css is in basic.js
-
-A page needs only basic.js now: it adds basic.css itself (a `<style data-basic-css>` before the other styles of `<head>`, the font paths made from the address of basic.js, so it works from any folder and from `file://`).
-
-```html
-<script src="basic/basic.js"></script>                 <!-- enough -->
-<link rel="stylesheet" href="basic/basic.min.css">     <!-- the old pages: still works, then basic.js adds nothing -->
-<script src="basic/basic.js" data-no-css></script>     <!-- your own copy of basic.css: basic.js adds nothing -->
-```
-
-`basic.cssAdded` is 1 when basic.js added it. The text inside basic.js is `basic.min.css`: after a change to `basic.css` (and `basic.min.css`), run `./_make-min-js.sh --build basic/basic.js`, it writes the copy inside basic.js again and makes `basic.min.js`. Test: `test/basic-css-test.htm` (the tab title must say ALL PASS).
-A site with a strict Content-Security-Policy (no `'unsafe-inline'` in `style-src`) blocks the added `<style>`: load `basic.min.css` with a `<link>` there.
-
 ## Label
 
 ```js

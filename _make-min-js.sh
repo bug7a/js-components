@@ -19,7 +19,6 @@
 #       "git clone" or a branch change can rewrite the dates, so after one of those
 #       run "--build --all" or trust git instead of this list.
 #
-# basic/basic.js: the copy of basic.min.css inside it is written again first.
 # It only needs node (npx downloads terser). A twin is never created for a source
 # that does not already have one.
 
@@ -55,31 +54,11 @@ collectSources() {
     done
 }
 
-# basic.js carries basic.min.css (a page needs only basic.js): writes it again between
-# "BASIC CSS START" and "BASIC CSS END" in basic/basic.js. Returns 1 when the markers are not found.
-embedBasicCss() {
-    node - <<'NODE'
-const fs = require("fs");
-const file = "basic/basic.js";
-const text = fs.readFileSync(file, "utf8");
-const css = fs.readFileSync("basic/basic.min.css", "utf8").replace(/\/\*[\s\S]*?\*\//g, "").trim();
-const re = /(\/\/ BASIC CSS START\r?\n)[^\n]*\n(\s*\/\/ BASIC CSS END)/;
-const match = re.exec(text);
-if (!match) { console.error("   basic.js: BASIC CSS START / END not found"); process.exit(1); }
-const nl = match[1].endsWith("\r\n") ? "\r\n" : "\n";
-const line = "    const cssText = " + JSON.stringify(css) + ";" + nl;
-const next = text.replace(re, function (all, start, end) { return start + line + end; });
-if (next !== text) { fs.writeFileSync(file, next); console.log("   basic/basic.js: the CSS inside is written again from basic.min.css"); }
-NODE
-}
-
 # Writes the .min.js of one source. Returns 1 when terser or the syntax check fails.
 buildOne() {
     local src="$1" min="${1%.js}.min.js" comments="$KEEP_COMMENTS" tempDir temp
 
     [ "$src" = "basic/basic.js" ] && comments="$KEEP_COMMENTS_BASIC"
-
-    if [ "$src" = "basic/basic.js" ]; then embedBasicCss || return 1; fi
 
     # NOTE: the temp file must end with ".js", "node --check" refuses the random mktemp name.
     tempDir="$(mktemp -d)"
