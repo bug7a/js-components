@@ -88,6 +88,11 @@ const TextareaB = function(params = {}) {
         if (value != textareaElem.value) {
             box.inputValue = value;
             textareaElem.value = value;
+            // WHY: Same as InputB.setInputValue. Without it, a required textarea cleared by code (after a form is sent) showed no required icon.
+            box.checkIfInputIsRequiredAndEmpty();
+            box.showWarningIfNotValid(box.isValid());
+            refreshCount();
+            autoGrow(textareaElem);
         }
     };
 
