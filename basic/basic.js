@@ -607,7 +607,7 @@ class Basic_UIComponent {
 
     set clickable($value) {
         this._clickable = $value;
-        this.elem.style.pointerEvents = ($value == 1) ? "auto" : "none";
+        this._textElem.style.pointerEvents = ($value == 1) ? "auto" : "none";
     }
 
     get opacity() {
@@ -625,7 +625,7 @@ class Basic_UIComponent {
 
     set color($value) {
         this._backgroundColor = $value;
-        this.elem.style.backgroundColor = $value;
+        this._textElem.style.backgroundColor = $value;
     }
 
     get padding() {
@@ -647,11 +647,7 @@ class Basic_UIComponent {
             if (len === 1) {
                 paddingLeft = paddingRight = paddingTop = paddingBottom = $value[0];
             }
-            else if (len === 2) {
-                paddingLeft  = paddingRight  = $value[0];
-                paddingTop   = paddingBottom = $value[1];
-            }
-            else if (len === 3) {
+            else if (len === 2 || len === 3) {
                 paddingLeft  = paddingRight  = $value[0];
                 paddingTop   = paddingBottom = $value[1];
             }
@@ -685,7 +681,7 @@ class Basic_UIComponent {
 
     set border($value) {
         this._border = $value;
-        this.elem.style.borderWidth = $value + "px";
+        this._textElem.style.borderWidth = $value + "px";
     }
 
     get borderColor() {
@@ -694,7 +690,7 @@ class Basic_UIComponent {
 
     set borderColor($value) {
         this._borderColor = $value;
-        this.elem.style.borderColor = $value;
+        this._textElem.style.borderColor = $value;
     }
 
     get round() {
@@ -703,7 +699,7 @@ class Basic_UIComponent {
 
     set round($value) {
         this._round = $value;
-        this.elem.style.borderRadius = $value + "px";
+        this._textElem.style.borderRadius = $value + "px";
     }
 
     // -- Kenarlık SONU
@@ -716,17 +712,16 @@ class Basic_UIComponent {
 
     set fontSize($value) {
         this._fontSize = $value;
-        this.elem.style.fontSize = $value + "px";
+        this._textElem.style.fontSize = $value + "px";
     }
 
     // fontSize Alternatif kullanım.
     get textSize() {
-        return this._fontSize;
+        return this.fontSize;
     }
 
     set textSize($value) {
-        this._fontSize = $value;
-        this.elem.style.fontSize = $value + "px";
+        this.fontSize = $value;
     }
     
     get textColor() {
@@ -735,7 +730,7 @@ class Basic_UIComponent {
 
     set textColor($value) {
         this._textColor = $value;
-        this.elem.style.color = $value;
+        this._textElem.style.color = $value;
     }
 
     get textAlign() {
@@ -744,7 +739,7 @@ class Basic_UIComponent {
 
     set textAlign($value) {
         this._textAlign = $value;
-        this.elem.style.textAlign = $value;
+        this._textElem.style.textAlign = $value;
     }
     
     // Metin özellikleri SONU
@@ -780,9 +775,9 @@ class Basic_UIComponent {
 
     // *** v26.09.18 ADDITIONS (all objects) ***
 
-    // The element that carries the text styles: TextBox -> its <input>, the others -> their own element.
+    // The element that carries the color, border, click and text styles and the events: TextBox overrides it with its <input>.
     get _textElem() {
-        return (this._type == "textbox" && this.inputElement) ? this.inputElement : this.elem;
+        return this.elem;
     }
 
     // Raw CSS without touching .elem:
@@ -808,7 +803,7 @@ class Basic_UIComponent {
     set cursor($value) {
         this._cursor = $value || "";
         this.elem.style.cursor = this._cursor;
-        if (this._type == "textbox" && this.inputElement) this.inputElement.style.cursor = this._cursor;
+        if (this._textElem !== this.elem) this._textElem.style.cursor = this._cursor;
     }
 
     get zIndex() {
@@ -1186,7 +1181,7 @@ class Basic_UIComponent {
     // NEW: Olay ekleme: object.on("click", function);
     on($eventName, $func, $useCapture = false) {
 
-        const _elem = (this._type == "textbox") ? this.inputElement : this.elem; // WHY: textbox için olayları input elementine bağla.
+        const _elem = this._textElem; // WHY: textbox için olayları input elementine bağla.
         this.clickable = 1; // WHY: Clickable bazen 0 da unutulabilir, otomatik 1 ver. Gerekirse kullanıcı 0 yapar.
         
         return this._addEventListener($eventName, $func, _elem, $useCapture);
@@ -1212,7 +1207,7 @@ class Basic_UIComponent {
     off($eventName, $func) {
 
         // Eğer ihityaç olursa, manuel olarak da, tek tek eventler silinebilir.
-        const _elem = (this._type == "textbox") ? this.inputElement : this.elem;
+        const _elem = this._textElem;
         
         //_elem.removeEventListener($eventName, $func);
         this._removeEventListener($eventName, $func, _elem);
@@ -1624,10 +1619,7 @@ class BBox extends Basic_UIComponent {
 
     // Ağaç şeklinde kod blokları oluştumak için bir teknik. (Deneysel Teknik)
     in($func) {
-        const _selectedBox = getDefaultContainerBox();
-        setDefaultContainerBox(this);
-        $func(this);
-        setDefaultContainerBox(_selectedBox);
+        createIn(this, $func);
     }
 
 }
@@ -1878,16 +1870,10 @@ class BTextBox extends Basic_UIComponent {
         this.inputElement.value = ($value === null || $value === undefined) ? "" : String($value);
     }
 
-    // ÖZEL: Renk özelliği
-    get color() {
-        return super.color;
+    // ÖZEL: renk, kenarlık, clickable ve metin özellikleri <input>'a gider (base setters use _textElem).
+    get _textElem() {
+        return this.inputElement || this.elem;
     }
-
-    set color($value) {
-        this._backgroundColor = $value;
-        this.inputElement.style.backgroundColor = $value;
-    }
-    // ÖZEL SONU
 
     get title() {
         return this.titleElement.innerHTML;
@@ -1903,82 +1889,6 @@ class BTextBox extends Basic_UIComponent {
 
     set enabled($value) {
         this.inputElement.disabled = ($value) ? 0 : 1;
-    }
-
-    // ÖZEL: Kenarlık
-    set border($value) {
-        this._border = $value;
-        this.inputElement.style.borderWidth = $value + "px";
-    }
-
-    get border() {
-        return super.border;
-    }
-
-    get borderColor() {
-        return super.borderColor;
-    }
-
-    set borderColor($value) {
-        this._borderColor = $value;
-        this.inputElement.style.borderColor = $value;
-    }
-
-    set round($value) {
-        this._round = $value;
-        this.inputElement.style.borderRadius = $value + "px";
-    }
-
-    get round() {
-        return super.round;
-    }
-    // Özel kenarlık SONU
-
-    // ÖZEL
-
-    get clickable() {
-        return super.clickable;
-    }
-
-    set clickable($value) {
-        this._clickable = $value;
-        this.inputElement.style.pointerEvents = ($value == 1) ? "auto" : "none";
-    }
-    
-    get fontSize() {
-        return super.fontSize;
-    }
-
-    set fontSize($value) {
-        this._fontSize = $value;
-        this.inputElement.style.fontSize = $value + "px";
-    }
-
-    get textSize() {
-        return super.textSize;
-    }
-
-    set textSize($value) {
-        this._fontSize = $value;
-        this.inputElement.style.fontSize = $value + "px";
-    }
-    
-    get textColor() {
-        return super.textColor;
-    }
-
-    set textColor($value) {
-        this._textColor = $value;
-        this.inputElement.style.color = $value;
-    }
-
-    get textAlign() {
-        return super.textAlign;
-    }
-
-    set textAlign($value) {
-        this._textAlign = $value;
-        this.inputElement.style.textAlign = $value;
     }
 
     get minimal() {
@@ -2599,21 +2509,20 @@ const calcSpace = function(elem, dir) {
 
 };
 
+// Merges the sources into a new object, the first source wins.
+const mergeLayers = function (...sources) {
+    const out = {};
+    for (const source of sources) {
+        if (source) mergeIntoIfMissing(out, source);
+    }
+    return out;
+};
+
 // Set styles with style object.
 const setProparties = function ($this, $defaultParams, $params, $props) {
 
     // Tüm özellikleri bu değişkende topla.
-    const _params = {};
-
-    if ($props) {
-        mergeIntoIfMissing(_params, $props);
-    }
-    if ($params) {
-        mergeIntoIfMissing(_params, $params);
-    }
-    if ($defaultParams) {
-        mergeIntoIfMissing(_params, $defaultParams);
-    }
+    const _params = mergeLayers($props, $params, $defaultParams);
 
     // Tüm özellikleri tek seferde nesneye uygula.
     for (let propName in _params) {
@@ -3075,51 +2984,162 @@ const checkStartedBox = function() {
     }, 100);
 
 }
+// Starts a box: it becomes the default container until its end call.
+const pushStartedBox = function(box) {
+
+    if (startedBoxList.length == 0) {
+        startedBoxList.push(getDefaultContainerBox());
+    }
+
+    setDefaultContainerBox(box);
+    startedBoxList.push(box);
+
+    checkStartedBox();
+
+    return box;
+
+};
+
+// AutoLayout helpers (shared by every group, created once).
+
+const FLEX_DEFAULTS = {
+    color: "transparent",
+};
+
+const FLEX_STYLES = {
+    flexDirection: "row", // row, column
+    flexWrap: "nowrap", // wrap, nowrap
+    alignContent: "center",
+    justifyContent: "center", // flex-start, center, flex-end (row)
+    alignItems: "center", // flex-start, center, flex-end (column)
+    gap: "0px",
+    flexBasis: "auto", // Öğenin doğal boyutuna göre yer kaplamasını sağlar.
+    flexGrow: 0, // Öğenin büyümesini engeller.
+    flexShrink: 0, // Öğenin küçülmesini engeller.
+};
+
+// JUSTIFY: "left" / "start", "center", "right" / "end", "space-between", "space-around", "space-evenly"
+const getJustifyContent = function(justify) {
+    switch (justify) {
+        case "left":
+        case "top":
+        case "start":
+            return "flex-start";
+        case "right":
+        case "bottom":
+        case "end":
+            return "flex-end";
+        case "center":
+            return "center";
+        default:
+            return justify; // space-between, space-around, space-evenly
+    }
+};
+
+const getFlexDirection = function(flow) {
+    return (flow == "vertical") ? "column" : "row";
+};
+
+// align -> [justifyContent, alignItems] for flexDirection "row". (alignContent is always "center")
+const FLEX_ALIGN = {
+    "left top": ["flex-start", "flex-start"],
+    "center top": ["center", "flex-start"],
+    "right top": ["flex-end", "flex-start"],
+    "left center": ["flex-start", "center"],
+    "center center": ["center", "center"],
+    "right center": ["flex-end", "center"],
+    "left bottom": ["flex-start", "flex-end"],
+    "center bottom": ["center", "flex-end"],
+    "right bottom": ["flex-end", "flex-end"],
+};
+FLEX_ALIGN["center"] = FLEX_ALIGN["center center"];
+for (const key of Object.keys(FLEX_ALIGN)) {
+    const words = key.split(" ");
+    if (words.length == 2) FLEX_ALIGN[words[1] + " " + words[0]] = FLEX_ALIGN[key];
+}
+
+// Writes the align styles into a style object (props or elem.style).
+// NOTE: The list is for flexDirection "row", if it is not row, justifyContent and alignItems change places.
+const applyFlexAlign = function($style, align, isRow) {
+    const alignList = FLEX_ALIGN[align] || FLEX_ALIGN["center"];
+    $style.alignContent = "center";
+    $style.justifyContent = (isRow) ? alignList[0] : alignList[1];
+    $style.alignItems = (isRow) ? alignList[1] : alignList[0];
+};
+
+const checkGap = function(gap) {
+    return (Number.isInteger(gap)) ? gap + "px" : gap;
+};
+
+// .flow, .align, .gap, .wrap, .justify of every group.
+const FLEX_ACCESSORS = {
+    flow: {
+        get: function() {
+            return this._flow;
+        },
+        set: function(flow) {
+            this._flow = flow;
+            this.elem.style.flexDirection = getFlexDirection(flow);
+            this.align = this.align;
+        }
+    },
+    align: {
+        get: function() {
+            return this._align;
+        },
+        set: function(align) {
+            this._align = align;
+            applyFlexAlign(this.elem.style, align, this.elem.style.flexDirection == "row");
+            if (this._justify) this.elem.style.justifyContent = getJustifyContent(this._justify); // v26.09.18: justify wins
+        }
+    },
+    gap: {
+        get: function() {
+            return this._gap;
+        },
+        set: function(gap) {
+            this._gap = checkGap(gap);
+            this.elem.style.gap = this._gap;
+        }
+    },
+    // (v26.09.18)
+    wrap: {
+        get: function() {
+            return this._wrap || 0;
+        },
+        set: function(wrap) {
+            this._wrap = (wrap) ? 1 : 0;
+            this.elem.style.flexWrap = (wrap) ? "wrap" : "nowrap";
+        }
+    },
+    // (v26.09.18)
+    justify: {
+        get: function() {
+            return this._justify || "";
+        },
+        set: function(justify) {
+            this._justify = justify;
+            this.elem.style.justifyContent = getJustifyContent(justify);
+        }
+    },
+};
+
 const startFlexBox = function(p1 = {}, p2, p3, p4, p5) {
 
     // - Hiç bir parametre girilmez ise boş obje girilmiş gibi işlem yapar.
+    // - The first object parameter is the props, the missing positions before it are 0, 0, "100%", "100%".
 
+    const args = [p1, p2, p3, p4, p5];
+    const propsIndex = args.findIndex(arg => typeof arg == "object");
     let props = {};
     let box = null;
 
-    if (typeof p1 == "object") {
-        box = createBox(0, 0, "100%", "100%");
-        props = p1;
-
-    } else if (typeof p2 == "object") {
-        box = createBox(p1, 0, "100%", "100%");
-        props = p2;
-
-    } else if (typeof p3 == "object") {
-        box = createBox(p1, p2, "100%", "100%");
-        props = p3;
-        
-    } else if (typeof p4 == "object") {
-        box = createBox(p1, p2, p3, "100%");
-        props = p4;
-        
-    } else if (typeof p5 == "object") {
+    if (propsIndex == -1) {
         box = createBox(p1, p2, p3, p4);
-        props = p5;
     } else {
-        box = createBox(p1, p2, p3, p4);
+        props = args[propsIndex];
+        box = createBox(...[0, 0, "100%", "100%"].map((value, i) => (i < propsIndex) ? args[i] : value));
     }
-
-    const defaults = {
-        color: "transparent",
-    }
-
-    const defaultFlexStyles = {
-        flexDirection: "row", // row, column
-        flexWrap: "nowrap", // wrap, nowrap
-        alignContent: "center", 
-        justifyContent: "center", // flex-start, center, flex-end (row)
-        alignItems: "center", // flex-start, center, flex-end (column)
-        gap: "0px",
-        flexBasis: "auto", // Öğenin doğal boyutuna göre yer kaplamasını sağlar.
-        flexGrow: 0, // Öğenin büyümesini engeller.
-        flexShrink: 0, // Öğenin küçülmesini engeller.
-    };
 
     // Eğer fit:1 ise, objeyi otomatik olarak sar (shrink-to-fit).
     // hug: fit ile aynıdır, alternatif kullanım. (Figma'daki "hug contents")
@@ -3137,132 +3157,16 @@ const startFlexBox = function(p1 = {}, p2, p3, p4, p5) {
         }
     }
 
-    // JUSTIFY: "left" / "start", "center", "right" / "end", "space-between", "space-around", "space-evenly"
-    const getJustifyContent = function(justify) {
-        switch (justify) {
-            case "left":
-            case "top":
-            case "start":
-                return "flex-start";
-            case "right":
-            case "bottom":
-            case "end":
-                return "flex-end";
-            case "center":
-                return "center";
-            default:
-                return justify; // space-between, space-around, space-evenly
-        }
-    };
-
-    const getFlexDirection = function(flow) {
-        let flexDirection = defaultFlexStyles.flexDirection;
-        switch(flow) {
-            case "horizontal":
-                flexDirection = "row";
-                break;
-            case "vertical":
-                flexDirection = "column";
-                break;
-        }
-        return flexDirection;
-    };
-
     // FLOW:
     if (props.flow) {
         box._flow = props.flow;
         props.flexDirection = getFlexDirection(props.flow);
     }
 
-    const getAlignList = function(align = "center") {
-
-        // NOTE: Bu flexDirection = "row" için, eğer row değil ise justifyContent, alignItems yer değiştir.
-
-        // else: set as default
-        let alignContent = "center";
-        let justifyContent = "center";
-        let alignItems = "center";
-
-        switch(align) {
-            case "top left":
-            case "left top":
-                alignContent = "center";
-                justifyContent = "flex-start";
-                alignItems = "flex-start";
-                break;
-            case "top center":
-            case "center top":
-                alignContent = "center";
-                justifyContent = "center";
-                alignItems = "flex-start";
-                break;
-            case "top right":
-            case "right top":
-                alignContent = "center";
-                justifyContent = "flex-end";
-                alignItems = "flex-start";
-                break;
-            
-            case "center left":
-            case "left center":
-                alignContent = "center";
-                justifyContent = "flex-start";
-                alignItems = "center";
-                break;
-            case "center":
-            case "center center":
-                alignContent = "center";
-                justifyContent = "center";
-                alignItems = "center";
-                break;
-            case "center right":
-            case "right center":
-                alignContent = "center";
-                justifyContent = "flex-end";
-                alignItems = "center";
-                break;
-
-            case "bottom left":
-            case "left bottom":
-                alignContent = "center";
-                justifyContent = "flex-start";
-                alignItems = "flex-end";
-                break;
-            case "bottom center":
-            case "center bottom":
-                alignContent = "center";
-                justifyContent = "center";
-                alignItems = "flex-end";
-                break;
-            case "bottom right":
-            case "right bottom":
-                alignContent = "center";
-                justifyContent = "flex-end";
-                alignItems = "flex-end";
-                break;
-            
-        }
-
-        return [alignContent, justifyContent, alignItems];
-    }
-
     // ALIGN:
     if (props.align) {
-
         box._align = props.align;
-        const alignList = getAlignList(props.align);
-        
-        // else: set as default
-        props.alignContent = alignList[0];
-        if (props.flexDirection == "row") {
-            props.justifyContent = alignList[1];
-            props.alignItems = alignList[2];
-        } else {
-            props.justifyContent = alignList[2];
-            props.alignItems = alignList[1];
-        }
-        
-
+        applyFlexAlign(props, props.align, props.flexDirection == "row");
     };
 
     // WRAP (v26.09.18): wrap: 1 -> the items continue on the next line / column when there is no space.
@@ -3277,123 +3181,26 @@ const startFlexBox = function(p1 = {}, p2, p3, p4, p5) {
         props.justifyContent = getJustifyContent(props.justify);
     }
 
-    const checkGap = function(gap) {
-        if (Number.isInteger(gap)) {
-            return gap = gap + "px";
-        } else {
-            return gap;
-        }
-    }
-
     if (Number.isInteger(props.gap)) {
         props.gap = checkGap(props.gap);
     }
 
     that.elem.style.display = "flex";
     box._isFlex = 1; // WHY: isFlexContainer() - the children stay flex items even when the group is hidden.
-    box.props(defaults, defaultFlexStyles, props);
+    box.props(FLEX_DEFAULTS, FLEX_STYLES, props);
 
-    /*
-    Object.defineProperty(box, 'gap', {
-        get: function() {
-            return this._gap;
-        },
-        set: function(value) {
-            this._gap = value;
-            this.elem.style.gap = value + "px";
-        }
-    });
-    */
-
-    //const box = createBox(0, 0, "100%", "100%");
-    //that.color = "transparent";
-
-    for (let parameterName in defaultFlexStyles) {
+    for (let parameterName in FLEX_STYLES) {
         box.elem.style[parameterName] = box[parameterName];
     }
-
-    // .flow: getter, setter
-    Object.defineProperty(box, 'flow', {
-        get: function() {
-            return this._flow;
-        },
-        set: function(flow) {
-            this._flow = flow;
-            this.elem.style.flexDirection = getFlexDirection(flow);
-            this.align = this.align;
-        }
-    });
-
-    // .align: 
-    Object.defineProperty(box, 'align', {
-        get: function() {
-            return this._align;
-        },
-        set: function(align) {
-            this._align = align;
-            const alignList = getAlignList(align);
-
-            this.elem.style.alignContent = alignList[0];
-            if (box.elem.style.flexDirection == "row") {
-                this.elem.style.justifyContent = alignList[1];
-                this.elem.style.alignItems = alignList[2];
-            } else {
-                this.elem.style.justifyContent = alignList[2];
-                this.elem.style.alignItems = alignList[1];
-            }
-            if (this._justify) this.elem.style.justifyContent = getJustifyContent(this._justify); // v26.09.18: justify wins
-            
-        }
-    });
 
     // GAP:
     if (box.gap) {
         box._gap = box.gap;
     };
 
-    // .gap:
-    Object.defineProperty(box, 'gap', {
-        get: function() {
-            return this._gap;
-        },
-        set: function(gap) {
-            this._gap = checkGap(gap);
-            this.elem.style.gap = this._gap;
-        }
-    });
+    Object.defineProperties(box, FLEX_ACCESSORS);
 
-    // .wrap (v26.09.18)
-    Object.defineProperty(box, 'wrap', {
-        get: function() {
-            return this._wrap || 0;
-        },
-        set: function(wrap) {
-            this._wrap = (wrap) ? 1 : 0;
-            this.elem.style.flexWrap = (wrap) ? "wrap" : "nowrap";
-        }
-    });
-
-    // .justify (v26.09.18)
-    Object.defineProperty(box, 'justify', {
-        get: function() {
-            return this._justify || "";
-        },
-        set: function(justify) {
-            this._justify = justify;
-            this.elem.style.justifyContent = getJustifyContent(justify);
-        }
-    });
-
-    if (startedBoxList.length == 0) {
-        startedBoxList.push(getDefaultContainerBox());
-    }
-
-    setDefaultContainerBox(box);
-    startedBoxList.push(box);
-
-    checkStartedBox();
-
-    return box;
+    return pushStartedBox(box);
 
 };
 window.startFlexBox = startFlexBox;
@@ -3412,21 +3219,7 @@ window.VGroup = function(...args) {
 };
 
 const startBox = function(...args) {
-
-    //let props = {};
-    const box = Box(...args);
-
-    if (startedBoxList.length == 0) {
-        startedBoxList.push(getDefaultContainerBox());
-    }
-
-    setDefaultContainerBox(box);
-    startedBoxList.push(box);
-
-    checkStartedBox();
-
-    return box;
-
+    return pushStartedBox(Box(...args));
 };
 window.startBox = startBox;
 
@@ -3479,87 +3272,33 @@ window.restoreThatFromSaved = restoreThatFromSaved;
 // Objects: Label, Input, Icon, Box, Button
 // Shorts: lbl, inp, ico, box, btn
 
-window.Label = function(...args) {
+// Positional parameters, then an optional props object as the last parameter.
+const withProps = function($create) {
+    return function(...args) {
 
-  let props = {};
-  if (args.length && typeof args[args.length - 1] === "object") {
-    props = args.pop();
-  }
+        let props = {};
+        if (args.length && typeof args[args.length - 1] === "object") {
+            props = args.pop();
+        }
 
-  const label = createLabel(...args);
-  label.props(props);
+        const obj = $create(...args);
+        obj.props(props);
 
-  return label;
+        return obj;
 
+    };
 };
 
-window.Input = function(...args) {
-
-    let props = {};
-    if (args.length && typeof args[args.length - 1] === "object") {
-        props = args.pop();
-    }
-
-    const obj = createTextBox(...args);
-    obj.props(props);
-
-    return obj;
-
-};
-
-window.Icon = function(...args) {
-
-    let props = {};
-    if (args.length && typeof args[args.length - 1] === "object") {
-        props = args.pop();
-    }
-
-    const obj = createImage(...args);
-    obj.props(props);
-
-    return obj;
-
-};
-
-const Box = function(...args) {
-
-    let props = {};
-    if (args.length && typeof args[args.length - 1] === "object") {
-        props = args.pop();
-    }
-
-    const obj = createBox(...args);
-    obj.props(props);
-
-    return obj;
-
-};
+window.Label = withProps(createLabel);
+window.Input = withProps(createTextBox);
+window.Icon = withProps(createImage);
+const Box = withProps(createBox);
 window.Box = Box;
-
-window.Button = function(...args) {
-
-    let props = {};
-    if (args.length && typeof args[args.length - 1] === "object") {
-        props = args.pop();
-    }
-
-    const obj = createButton(...args);
-    obj.props(props);
-
-    return obj;
-
-};
+window.Button = withProps(createButton);
 
 window.startObject = function($defaults, $params) {
 
-    const _params = {};
-
-    if ($params) {
-        mergeIntoIfMissing(_params, $params);
-    }
-    if ($defaults) {
-        mergeIntoIfMissing(_params, $defaults);
-    }
+    const _params = mergeLayers($params, $defaults);
 
     // Defaults values
     if (!_params.color) {
@@ -3588,13 +3327,7 @@ window.endObject = function(box) {
 // Başka bir Basic Object ten miras alarak yeni bir Basic Object oluşturma.
 window.startExtendedObject = function(uiComponent, defaults, params) {
 
-    const _params = {};
-    if (params) {
-        mergeIntoIfMissing(_params, params);
-    }
-    if (defaults) {
-        mergeIntoIfMissing(_params, defaults);
-    }
+    const _params = mergeLayers(params, defaults);
 
     const _box = uiComponent(_params);
     saveCurrentThat();
