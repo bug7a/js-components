@@ -9,7 +9,7 @@
 # This script copies what the pages of a project load into the project folder, and
 # rewrites those paths:
 #
-#   my-project/basic/   basic.min.js, basic.min.css, LICENSE, font/, img/
+#   my-project/basic/   basic.min.js, basic.min.css, LICENSE, font/
 #                       + the other files of basic/ the pages load, as .min (scroll-bar.min.js)
 #   my-project/comp/    every component the pages load, as name.min.js (made from its source
 #                       with terser), and its icon folder (comp-m2/waiting/ -> comp/waiting/;
@@ -35,7 +35,7 @@ cd "$(dirname "$0")" || exit 1   # the repo root
 
 # *** SETTINGS:
 
-export BASIC_ALWAYS="basic.min.js basic.min.css LICENSE font img"   # basic/ files every copy gets
+export BASIC_ALWAYS="basic.min.js basic.min.css LICENSE font"   # basic/ files every copy gets
 export COMP_DIRS="comp-m1 comp-m2 comp-m3 comp-m4"
 export KEEP_COMMENTS="Bismillah"                                    # the house header stays in the min file
 
@@ -184,7 +184,7 @@ pages.forEach(function (page) {
                 basicFiles[min] = path.join(REPO, "basic", min);
                 newTarget = path.join(BASIC_OUT, min);
             } else {
-                // font/..., img/... (copied with the folder)
+                // font/... (copied with the folder)
                 newTarget = path.join(BASIC_OUT, name);
             }
 

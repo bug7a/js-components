@@ -26,7 +26,7 @@ echo "Site: $SITE"
 rm -rf "$SITE/basic"
 mkdir -p "$SITE/basic"
 cp "$REPO/basic/basic.min.js" "$REPO/basic/basic.min.css" "$REPO/basic/scroll-bar.min.js" "$REPO/basic/LICENSE" "$SITE/basic/"
-cp -R "$REPO/basic/font" "$REPO/basic/img" "$SITE/basic/"
+cp -R "$REPO/basic/font" "$SITE/basic/"
 echo "  basic/     ok"
 
 # COMP
