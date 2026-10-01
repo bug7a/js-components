@@ -18,6 +18,7 @@ WHAT IS NEW IN v26.09.18 (see basic/basic-v26.09.18.md for examples):
               grow, shrink, plainText, isRemoved, children
 - Methods:    show(), hide(), toggle(), once(), setSize(), setPosition(), bringToFront(), contains(), animate()
 - Input:      value, placeholder, inputType, maxLength, readOnly, focus(), blur(), select(), onEnter()
+- Label:      clipContent (0: the text is not cut at the edges)
 - Icon:       alt, imageFit
 - Groups:     wrap, justify, hug (alternative name for fit) (HGroup / VGroup / AutoLayout)
 - Global:     createIn(container, func) - creates objects inside an existing box, then restores the container
@@ -885,7 +886,8 @@ class Basic_UIComponent {
         const el = this._textElem;
         el.style.whiteSpace = ($value) ? "nowrap" : "";
         el.style.textOverflow = ($value) ? "ellipsis" : "";
-        if ($value) el.style.overflow = "hidden";
+        // WHY: Off -> back to clipContent (Label, Box: 0 -> visible), or to basic.css.
+        el.style.overflow = ($value) ? "hidden" : ((this._clipContent === 0) ? "visible" : "");
     }
 
     // selectable: 1 -> the user can select and copy the text. (basic.css turns selection off for every object.)
@@ -2088,6 +2090,19 @@ class BLabel extends Basic_UIComponent {
 
     set text($value) {
         this.elem.innerHTML = $value;
+    }
+
+    // clipContent: 1 (default) -> the text is cut at the edges of the label (basic.css: overflow hidden).
+    // 0 -> not cut: the letters that go out of the line box (g, ş, ğ, Ö), text shadows, a text that does not fit.
+    // WHY: ellipsis: 1 always cuts ("..." needs it).
+    get clipContent() {
+        return (this._clipContent === 0) ? 0 : 1;
+    }
+
+    set clipContent($value) {
+        this._clipContent = ($value) ? 1 : 0;
+        if (this._ellipsis) return;
+        this.elem.style.overflow = ($value) ? "" : "visible";
     }
 
     get space() {

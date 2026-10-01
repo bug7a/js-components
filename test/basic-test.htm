@@ -137,6 +137,15 @@
             check("ellipsis 1", l.elem.style.whiteSpace === "nowrap" && l.elem.style.textOverflow === "ellipsis" && l.elem.style.overflow === "hidden");
             l.ellipsis = 0;
             check("ellipsis 0", l.elem.style.whiteSpace === "" && l.elem.style.textOverflow === "");
+            check("label clipContent default 1", l.clipContent === 1 && l.elem.style.overflow === "");
+            l.clipContent = 0;
+            check("label clipContent 0 -> visible", l.clipContent === 0 && l.elem.style.overflow === "visible");
+            l.ellipsis = 1;
+            check("ellipsis cuts with clipContent 0", l.elem.style.overflow === "hidden");
+            l.ellipsis = 0;
+            check("ellipsis 0 -> back to clipContent 0", l.elem.style.overflow === "visible");
+            l.clipContent = 1;
+            check("label clipContent 1 -> basic.css", l.elem.style.overflow === "");
             l.selectable = 1;
             check("selectable", l.elem.style.userSelect === "text" && l.elem.style.pointerEvents === "auto");
             l.grow = 1; l.shrink = 1;

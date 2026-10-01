@@ -89,6 +89,16 @@ inp.remove_onEnter(fn);     // or call the returned remover
 
 `bold`, `italic`, `fontFamily`, `lineHeight`, `ellipsis`, `cursor` of an Input go to its `<input>` element (like `fontSize`, `textColor`).
 
+## Label
+
+```js
+Label({ text: "Çığ gibi", fontSize: 40, height: 44, clipContent: 0 });  // the letters out of the line box (g, ş, ğ) are not cut
+that.clipContent = 1;          // default: the text is cut at the edges of the label (basic.css: overflow hidden)
+```
+
+`clipContent: 0` also shows a text that does not fit (it goes out of the label). `ellipsis: 1` always cuts, `"..."` needs it.
+Only Label (and Box, as before) has it: a Button's lift or shadow is cut by the Box it is in, so give that Box `clipContent: 0`.
+
 ## Icon
 
 ```js
