@@ -98,6 +98,9 @@ const ContextMenu = function (params = {}) {
     params.border = _ms.border;
     params.borderColor = _ms.borderColor;
     params.round = _ms.round;
+    params.padding = _ms.padding;
+    params.zIndex = _ms.zIndex;
+    params.boxShadow = _ms.shadow;
 
     // WHY: The menu must be over everything. Create it directly on the page,
     // even if ContextMenu() is called inside a group.
@@ -125,12 +128,8 @@ const ContextMenu = function (params = {}) {
 
     // *** PRIVATE FUNCTIONS:
 
-    // Create objects inside a container, after the component is created.
-    const createIn = function (container, func) {
-        const previous = getDefaultContainerBox();
-        setDefaultContainerBox(container);
-        func();
-        setDefaultContainerBox(previous);
+    const toFlag = function (value) {
+        return (value == 1 || value === true) ? 1 : 0;
     };
 
     const normalizeItem = function (item) {
@@ -142,7 +141,7 @@ const ContextMenu = function (params = {}) {
         }
         const result = Object.assign({ text: "", enabled: 1 }, item);
         result.type = "item";
-        result.enabled = (result.enabled == 1 || result.enabled === true) ? 1 : 0;
+        result.enabled = toFlag(result.enabled);
         return result;
     };
 
@@ -175,6 +174,15 @@ const ContextMenu = function (params = {}) {
         row.label.textColor = (row.item.enabled == 1) ? style.textColor : _s.disabled.textColor;
     };
 
+    // Enabled/disabled view of a row. (Colors, cursor, icon opacity)
+    const updateRowEnabled = function (row) {
+        const enabled = (row.item.enabled == 1);
+        row.cursor = (enabled) ? "pointer" : "default";
+        row.elem.setAttribute("aria-disabled", (enabled) ? "false" : "true");
+        if (row.icon) row.icon.opacity = (enabled || !row.item.iconFile) ? 1 : _s.disabled.opacity;
+        setRowHover(row, 0);
+    };
+
     // Move the active item with the keyboard. Skips separators and disabled items.
     const moveActive = function (direction) {
 
@@ -200,8 +208,8 @@ const ContextMenu = function (params = {}) {
             width: "auto",
             height: 1,
             color: _s.separator.color,
+            shrink: 0,
         });
-        line.elem.style.flexShrink = "0";
         line.elem.style.margin = _s.separator.space + "px " + _s.item.padding + "px";
         line.elem.setAttribute("role", "separator");
 
@@ -217,16 +225,11 @@ const ContextMenu = function (params = {}) {
             height: _s.item.height,
             align: "left center",
             gap: _s.item.gap,
-            color: _s.item.color,
+            padding: [_s.item.padding, 0],
             round: _s.item.round,
         });
-        row.elem.style.padding = "0px " + _s.item.padding + "px";
-        row.elem.style.flexShrink = "0";
-        row.elem.style.cursor = (item.enabled == 1) ? "pointer" : "default";
         row.elem.setAttribute("role", "menuitem");
-        row.elem.setAttribute("aria-disabled", (item.enabled == 1) ? "false" : "true");
         row.item = item;
-        row.index = index;
 
             // ICON: Only if one of the items has an icon.
             // WHY: Items without an icon get an empty space, so every text starts at the same place.
@@ -235,33 +238,33 @@ const ContextMenu = function (params = {}) {
                     row.icon = Icon({
                         width: _s.icon.width,
                         height: _s.icon.height,
+                        shrink: 0,
                     });
                     row.icon.load(item.iconFile);
                     row.icon.elem.alt = "";
-                    if (item.enabled != 1) row.icon.opacity = _s.disabled.opacity;
                 } else {
                     row.icon = Box({
                         width: _s.icon.width,
                         height: _s.icon.height,
                         color: "transparent",
+                        shrink: 0,
                     });
                 }
-                row.icon.elem.style.flexShrink = "0";
             }
 
             // LABEL: Text
+            // WHY: plainText: Item texts must not be read as HTML. (Label.text uses innerHTML.)
             row.label = Label({
-                text: ContextMenu.escapeHtml(item.text),
+                plainText: item.text,
                 fontSize: _s.item.fontSize,
-                textColor: (item.enabled == 1) ? _s.item.textColor : _s.disabled.textColor,
+                ellipsis: 1,
+                shrink: 1,
             });
-            row.label.elem.style.whiteSpace = "nowrap";
-            row.label.elem.style.overflow = "hidden";
-            row.label.elem.style.textOverflow = "ellipsis";
             row.label.elem.style.minWidth = "0";
-            row.label.elem.style.flexShrink = "1";
 
         endGroup();
+
+        updateRowEnabled(row);
 
         row.on("mouseenter", function () {
             setActive((item.enabled == 1) ? index : -1);
@@ -283,21 +286,11 @@ const ContextMenu = function (params = {}) {
 
         const hasIcon = box.items.some(function (item) { return item.type == "item" && item.iconFile; });
 
-        createIn(box.content, function () {
-
-            box.items.forEach(function (item, index) {
-
-                // WHY: endGroup() (in createItem) sets the container to the last started group, not to box.content.
-                setDefaultContainerBox(box.content);
-
-                if (item.type == "separator") {
-                    rows.push(createSeparator());
-                } else {
-                    rows.push(createItem(item, index, hasIcon));
-                }
-
+        box.items.forEach(function (item, index) {
+            // WHY: One createIn per row: endGroup() (in createItem) sets the container to the last started group, not to box.content.
+            createIn(box.content, function () {
+                rows.push((item.type == "separator") ? createSeparator() : createItem(item, index, hasIcon));
             });
-
         });
 
     };
@@ -383,30 +376,23 @@ const ContextMenu = function (params = {}) {
         if (isOpen && page.width + "x" + page.height != openPageSize) box.close();
     };
 
-    const addDocumentEvents = function () {
+    // Events only needed while the menu is open.
+    const setOpenEvents = function (isOn) {
+        const method = (isOn) ? "addEventListener" : "removeEventListener";
         // WHY: Capture phase: Some objects stop the event. The menu must still close.
-        document.addEventListener("pointerdown", onDocumentPointerDown, true);
-        document.addEventListener("keydown", onDocumentKeyDown, true);
-        document.addEventListener("wheel", onDocumentWheel, true);
-        window.addEventListener("blur", onWindowBlur);
-    };
-
-    const removeDocumentEvents = function () {
-        document.removeEventListener("pointerdown", onDocumentPointerDown, true);
-        document.removeEventListener("keydown", onDocumentKeyDown, true);
-        document.removeEventListener("wheel", onDocumentWheel, true);
-        window.removeEventListener("blur", onWindowBlur);
-    };
-
-    const setItemsSilent = function (items) {
-        box.items = (items || []).map(normalizeItem);
-        render();
+        document[method]("pointerdown", onDocumentPointerDown, true);
+        document[method]("keydown", onDocumentKeyDown, true);
+        document[method]("wheel", onDocumentWheel, true);
+        window[method]("blur", onWindowBlur);
+        if (isOn) page.onResize(onPageResize);
+        else page.remove_onResize(onPageResize);
     };
 
     // *** PUBLIC FUNCTIONS:
 
     box.setItems = function (items) {
-        setItemsSilent(items);
+        box.items = (items || []).map(normalizeItem);
+        render();
         if (isOpen) box.close(); // WHY: The size changes. Open it again at the new point.
     };
     // USAGE: menu.setItems(["Open", "-", { text: "Delete", key: "delete" }])
@@ -422,8 +408,12 @@ const ContextMenu = function (params = {}) {
     box.setItemEnabled = function (key, enabled) {
         const item = box.getItemByKey(key);
         if (!item) return;
-        item.enabled = (enabled == 1 || enabled === true) ? 1 : 0;
-        render();
+        item.enabled = toFlag(enabled);
+        // WHY: Update only this row, not render() all of them.
+        const index = box.items.indexOf(item);
+        if (item.enabled != 1 && activeIndex == index) setActive(-1);
+        updateRowEnabled(rows[index]);
+        if (activeIndex == index) setRowHover(rows[index], 1);
     };
     // USAGE: menu.setItemEnabled("paste", 0)
 
@@ -454,7 +444,7 @@ const ContextMenu = function (params = {}) {
         });
 
         box.elem.focus({ preventScroll: true });
-        addDocumentEvents();
+        setOpenEvents(1);
         box.onOpen(box);
 
     };
@@ -470,7 +460,7 @@ const ContextMenu = function (params = {}) {
         if (!isOpen) return;
         isOpen = 0;
 
-        removeDocumentEvents();
+        setOpenEvents(0);
         setActive(-1);
         box.setMotion("none");
         box.visible = 0;
@@ -536,14 +526,12 @@ const ContextMenu = function (params = {}) {
     };
 
     box.setEnabled = function (enabled) {
-        box.enabled = (enabled == 1 || enabled === true) ? 1 : 0;
+        box.enabled = toFlag(enabled);
         if (box.enabled != 1) box.close();
     };
     // USAGE: get: menu.enabled, set: menu.setEnabled(0)
 
-    box.refresh = function () {
-        render();
-    };
+    box.refresh = render;
 
     // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
     const superRemove = box.remove;
@@ -553,7 +541,6 @@ const ContextMenu = function (params = {}) {
         if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
         box.close();
         attachedList.slice().forEach(function (info) { box.detach(info.obj); });
-        page.remove_onResize(onPageResize);
 
         superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
         box = null;
@@ -563,9 +550,6 @@ const ContextMenu = function (params = {}) {
     // *** OBJECT VIEW:
 
     box.elem.style.position = "fixed";
-    box.elem.style.zIndex = String(_ms.zIndex);
-    box.elem.style.boxShadow = _ms.shadow;
-    box.elem.style.padding = _ms.padding + "px";
     box.elem.style.boxSizing = "border-box";
     box.elem.style.minWidth = box.minWidth + "px";
     if (box.maxWidth > 0) box.elem.style.maxWidth = box.maxWidth + "px";
@@ -595,10 +579,8 @@ const ContextMenu = function (params = {}) {
     box.on("contextmenu", function (self, event) { event.preventDefault(); });
     box.on("mouseleave", function () { setActive(-1); });
 
-    page.onResize(onPageResize);
-
-    box.enabled = (box.enabled == 1 || box.enabled === true) ? 1 : 0;
-    setItemsSilent(params.items); // WHY: Copy the array. The default [] must not be shared between components.
+    box.setEnabled(box.enabled);
+    box.setItems(params.items); // WHY: Copy the array. The default [] must not be shared between components.
     box.visible = 0;
 
     if (box.target) {
@@ -616,7 +598,5 @@ const ContextMenu = function (params = {}) {
 
 // *** STATIC FUNCTIONS:
 
-// WHY: Label.text uses innerHTML. Item texts must not be read as HTML.
-ContextMenu.escapeHtml = function (text) {
-    return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-};
+// For user data in your own Label.text. (Kept for old code: same as basic.escapeHtml.)
+ContextMenu.escapeHtml = basic.escapeHtml;
