@@ -15,6 +15,8 @@ drawn in a Shadow DOM: the CSS of the site does not change them and they do not 
   a service worker. The same file is the page script **and** the service worker.
 - **Install banner** at the bottom center (phones and tablets): an "Install" button on Android (and on desktop Chrome /
   Edge with `installBannerOnDesktop`), the "Share > Add to Home Screen" help on iPhone / iPad.
+  Without the banner a computer can still install the site: Chrome / Edge show their own install icon in the address
+  bar. To keep the site a plain web page on computers, set `desktopApp: false`.
 - **"No internet connection" page** when a page can not be opened. It opens the page again by itself when the
   connection comes back.
 - **Notice at the top** while the connection is lost.
@@ -79,6 +81,7 @@ All of them are in `SETTINGS` at the top of `easy-pwa.js`.
 | `offlineExcludePaths` | `[]` | Never saved (offline mode). Ex: `["/cart", "/account", "/api/"]` |
 | `offlineNetworkTimeout` | `4000` | ms. On a slow network the saved copy is shown after this time (offline mode). `0`: always wait |
 | `offlineCacheVersion` | `1` | Change it (2, 3...) to delete all the saved files of the app one time |
+| `desktopApp` | `true` | `false`: on a computer no manifest link (the browser offers no install), no service worker (an old one is removed) and no banner; phones and tablets are not changed. Then do not write `<link rel="manifest">` in the page. A computer with a touch screen can be taken as a tablet |
 | `installBanner` | `true` | The install banner |
 | `installBannerOnDesktop` | `false` | Also on a computer (Chrome / Edge) |
 | `installBannerDelay` | `3000` | ms after the page is opened |
@@ -191,6 +194,8 @@ myButton.onclick = function () { EasyPWA.install(); };
    (with `offlineMode: true`: the saved page).
 4. The banner is only shown on phones and tablets. Test it with the device toolbar of DevTools, or set
    `installBannerOnDesktop: true`. The launch screen: `launchScreenInBrowser: true`.
+5. With `desktopApp: false`, on a computer: Application > **Manifest** says there is no manifest and
+   **Service workers** is empty; with the device toolbar (and a reload) both are back.
 
 ## Updates and turning it off
 
@@ -230,6 +235,8 @@ içinde çizilir: sitenin CSS'i onları değiştirmez, onlar da siteyi değişti
   kaydeder. Aynı dosya hem sayfa script'i **hem de** service worker'dır.
 - **Yükleme banner'ı** altta ortada (telefon ve tablet): Android'de "Yükle" butonu (`installBannerOnDesktop` ile
   bilgisayardaki Chrome / Edge'de de), iPhone / iPad'de "Paylaş > Ana Ekrana Ekle" açıklaması.
+  Banner olmasa da site bilgisayara kurulabilir: Chrome / Edge adres çubuğunda kendi yükleme ikonunu gösterir.
+  Bilgisayarda site sade bir web sayfası kalsın istersen `desktopApp: false` yap.
 - Bir sayfa açılamazsa **"İnternet bağlantısı yok" sayfası**. Bağlantı gelince sayfayı kendisi tekrar açar.
 - Bağlantı koptuğu sürece **üstte küçük bir uyarı**.
 - **İki çalışma şekli:**
@@ -294,6 +301,7 @@ Hepsi `easy-pwa.js` dosyasının en üstündeki `SETTINGS` içinde.
 | `offlineExcludePaths` | `[]` | Asla kaydedilmez (çevrimdışı mod). Ör: `["/sepet", "/hesap", "/api/"]` |
 | `offlineNetworkTimeout` | `4000` | ms. Yavaş ağda bu süreden sonra kaydedilmiş kopya gösterilir (çevrimdışı mod). `0`: hep bekle |
 | `offlineCacheVersion` | `1` | Bir kez değiştirilince (2, 3...) uygulamanın bütün kayıtları silinir |
+| `desktopApp` | `true` | `false`: bilgisayarda manifest bağlantısı yok (tarayıcı yükleme önermez), service worker yok (eskisi silinir), banner yok; telefon ve tablet değişmez. O zaman sayfaya `<link rel="manifest">` yazma. Dokunmatik ekranlı bir bilgisayar tablet sayılabilir |
 | `installBanner` | `true` | Yükleme banner'ı |
 | `installBannerOnDesktop` | `false` | Bilgisayarda da (Chrome / Edge) |
 | `installBannerDelay` | `3000` | Sayfa açıldıktan kaç ms sonra |
@@ -405,6 +413,8 @@ myButton.onclick = function () { EasyPWA.install(); };
    (`offlineMode: true` ile: kaydedilmiş sayfa).
 4. Banner sadece telefon ve tablette gösterilir. DevTools'un cihaz görünümüyle dene veya
    `installBannerOnDesktop: true` yap. Açılış ekranı için: `launchScreenInBrowser: true`.
+5. `desktopApp: false` ile bilgisayarda: Application > **Manifest** manifest olmadığını söyler ve **Service workers**
+   boştur; cihaz görünümünde (sayfayı yenileyince) ikisi de geri gelir.
 
 ### Güncelleme ve kapatma
 
