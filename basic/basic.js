@@ -2811,11 +2811,17 @@ window.getDefaultContainerBox = getDefaultContainerBox;
 const createIn = function ($container, $func) {
 
     const previous = getDefaultContainerBox();
+    // WHY: $func has its own start stack, so a group started and ended in it goes back to $container.
+    // With the stack of the caller (createIn called between a startBox and its endBox), endGroup() went back
+    // to the caller's box and the next objects were created there (the 2nd row of a list went to the page).
+    const previousStartedBoxList = startedBoxList;
+    startedBoxList = [];
     setDefaultContainerBox($container);
 
     try {
         $func($container);
     } finally {
+        startedBoxList = previousStartedBoxList;
         setDefaultContainerBox(previous);
     }
 

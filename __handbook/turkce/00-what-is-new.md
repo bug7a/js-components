@@ -13,7 +13,7 @@ Bu belgede basic.js kütüphanesine eklenen yeni özellikler, güncellemeler ve 
 *   **Input:** `value`, `placeholder`, `inputType`, `maxLength`, `readOnly`, `focus()`, `blur()`, `select()`, `onEnter()`. **Icon:** `alt`, `imageFit`.
 *   **Gruplar:** `HGroup` / `VGroup` / `AutoLayout` için `wrap: 1` ve `justify: "space-between" | "left" | "center" | "right" | ...`.
 *   **`hug: 1`:** Grupların `fit: 1` parametresi için daha anlaşılır yeni bir ad (grup içindeki nesneleri sarar, `width/height: "auto"`). `fit` eskisi gibi çalışmaya devam eder; oluşturduktan sonra `group.hug` ve `group.fit` ikisi de 1 döndürür.
-*   **`createIn(container, func)`:** Var olan bir kutunun içinde nesne oluşturur (örneğin bileşen oluşturulduktan sonra onun liste kutusuna) ve ardından önceki varsayılan kabı geri yükler; `func` hata fırlatsa bile. `setDefaultContainerBox()` fonksiyonunun güvenli hâli.
+*   **`createIn(container, func)`:** Var olan bir kutunun içinde nesne oluşturur (örneğin bileşen oluşturulduktan sonra onun liste kutusuna) ve ardından önceki varsayılan kabı geri yükler; `func` hata fırlatsa bile. `setDefaultContainerBox()` fonksiyonunun güvenli hâli. Kendi başlat/bitir yığınını kullanır; bu yüzden başka bir kutu açıkken çağrılsa bile içinde açılan gruplar o kutuda kalır (2026-10-05'te düzeltildi).
 *   **page:** `on()`, `off()`, `onKeyDown()`, `title`. **basic:** `version`, `isReady`, `sleep()`, `nextFrame()`, `clamp()`, `lerp()`, `objectOf()`, `escapeHtml()`, `storage.loadOr()`.
 
 ---

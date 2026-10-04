@@ -133,6 +133,8 @@ createIn(box.list, function (container) {      // container === box.list
 
 Safe replacement for the `setDefaultContainerBox(container)` ... `setDefaultContainerBox(previous)` pattern (the comp-m4 components had their own local `createIn`; it is now in the library).
 
+The function has its own start/end stack: a group started and ended inside it goes back to `container`, also when `createIn()` is called while a box of the caller is still open (between a `startBox()` and its `endBox()`). Fixed on 2026-10-05: before, the first `endGroup()` inside went back to the caller's open box and the next objects were created there (the second row of a list landed on the page).
+
 ## page
 
 ```js
