@@ -721,7 +721,12 @@ const SelectBox = function (params = {}) {
     // NOTE: endGroup() of the panel below returns the default container to the component box.
 
     // BOX: Transparent overlay (click outside: close)
-    box.overlay = Box(0, 0, "100%", "100%", { color: "transparent", clickable: 1 });
+    // WHY a very big box and not 100% x 100%: with position "fixed" the "100%" is taken from the nearest parent that
+    // has a zoom or a transform (page.autoFit, a scaled preview); there the overlay had no height (0 px) and a click
+    // outside the list did not close it. A box that starts far before the screen and ends far after it covers the
+    // screen in every case.
+    const OVERLAY_SIZE = 20000; // px
+    box.overlay = Box(-OVERLAY_SIZE, -OVERLAY_SIZE, OVERLAY_SIZE * 2, OVERLAY_SIZE * 2, { color: "transparent", clickable: 1 });
     box.overlay.elem.style.position = "fixed";
     box.overlay.elem.style.zIndex = "1000";
 
