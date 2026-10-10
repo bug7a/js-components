@@ -35,8 +35,8 @@
 
             page.autoFit(1280, 720);
 
-            // GROUP: Centered
-            startFlexBox({
+            // GROUP: Centered (HGroup centers its children by default)
+            HGroup({
                 color: "#141414",
             });
                 // BOX: Content container
@@ -53,7 +53,7 @@
                     that.center();
 
                 endBox();
-            endFlexBox();
+            endGroup();
 
             page.onResize(pageResized);
             
