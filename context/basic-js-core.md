@@ -36,9 +36,10 @@ endBox();
 ### Container System
 - Objects are automatically added to the `defaultContainerBox`.
 - `startBox()` / `endBox()`: Used to create nested structures. Objects created between these calls are added to the started box.
-- `AutoLayout` (or `startFlexBox`): Starts a flexbox container.
-- `HGroup(...)`: Alias for `AutoLayout` with horizontal flow.
-- `VGroup(...)`: Alias for `AutoLayout` with vertical flow.
+- `HGroup({...})` / `VGroup({...})` ... `endGroup()`: Start a flexbox group (a Box) with a horizontal / vertical flow.
+  Objects created until `endGroup()` are its children and are arranged automatically.
+- NOTE: `AutoLayout()` / `endAutoLayout()` and `startFlexBox()` / `endFlexBox()` are old names of the same group.
+  They still work in old pages, but do not use them in new code: write `HGroup` / `VGroup` and `endGroup()`.
 - **Only a Box can hold other objects.** The groups above are Box objects too. A `Button`, `Label`,
   `Input` or `Icon` can NOT hold children: an object created inside a button also sends its mouse
   events up to the button (its hover effect then fires). To put something over a button, create it
@@ -100,16 +101,23 @@ Image(left, top, width, height);
     - `position`: "left", "right", "top", "bottom" (e.g., put *this* to the right of *obj*).
     - `secondPosition`: "top", "bottom", "left", "right", "center" (secondary alignment).
 
-### Flexbox (AutoLayout)
+### Flexbox (HGroup / VGroup)
 ```javascript
-AutoLayout({
-    flow: "horizontal", // or "vertical"
-    align: "center", // "top left", "center right", etc.
-    gap: 10
+HGroup({                 // a row; VGroup({...}) is a column
+    align: "left center", // "center", "center top", "right bottom"... (horizontal word + vertical word)
+    gap: 10,              // space between the children (px)
+    padding: [16, 8],     // a number or [x, y]
+    // wrap: 1,           // continue on the next line when there is no space
+    // justify: "space-between",
+    // hug: 1,            // width and height "auto": the group wraps its content (default: 100% x 100%)
 });
-    // Children added here are automatically arranged
-endAutoLayout();
+    // Children created here are arranged automatically
+    Label({ text: "Name" });
+    Button({ text: "Save" });
+endGroup();
 ```
+Groups can be nested (a `VGroup` with `HGroup` rows). Every `HGroup` / `VGroup` needs its `endGroup()`.
+(`AutoLayout` and `startFlexBox` are old names of the same function: do not use them in new code.)
 
 ## Styling
 - `color`: Background color.

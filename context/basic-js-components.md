@@ -89,7 +89,7 @@ Use `startObject` to create the main container (`box`) and merge `params` with `
 ```
 
 ### 5. Build UI
-Create child components inside the `box`. You can use `AutoLayout` or absolute positioning.
+Create child components inside the `box`. You can use `HGroup` / `VGroup` ... `endGroup()` or absolute positioning.
 
 ```javascript
     // Example: Adding a label
@@ -187,9 +187,9 @@ const ToggleButton = function(params = {}) {
 - **Naming**: Use PascalCase for Component names (e.g., `MyComponent`) and `ComponentDefaults` for defaults.
 - **Getters/Setters**: For properties that need to update the UI when changed, create explicit `setPropName` methods (e.g., `setValue`, `setText`) instead of JS setters, or use the `box.prop` pattern if simple.
 - **`that` usage**: Use `that` immediately after creating an object to apply styles or layout properties without creating a variable if you don't need to reference it later.
-- **`AutoLayout`**: Prefer `AutoLayout` (Flexbox) for internal layout when possible for responsiveness.
+- **`HGroup` / `VGroup`**: Prefer `HGroup` / `VGroup` ... `endGroup()` (flexbox) for internal layout when possible for responsiveness. (`AutoLayout` and `startFlexBox` are old names: do not use them in new code.)
 - **Visibility & Layout**: Components created with `basic.js` (using `Box`, `Label`, etc.) are often absolute positioned by default. To ensure they are visible:
-    - Place them inside an `AutoLayout` or `HGroup`/`VGroup`.
+    - Place them inside an `HGroup`/`VGroup`.
     - OR explicitly set `left`, `top`, `width`, and `height`.
     - If a component seems "invisible", check if it has dimensions and a position, or if it's inside a container that handles layout.
 - **Gradients**: The `color` property typically handles solid colors. For gradients, set the style directly on the element:
