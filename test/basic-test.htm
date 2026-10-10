@@ -377,6 +377,17 @@
             check("nested startObject: that and prevThat", that === fixOuter && prevThat === fixBefore);
             fixOuter.remove(); fixBefore.remove();
 
+            const deepTarget = {}; mergeIntoIfMissing(deepTarget, { a: { b: { c: { d: { e: 1 } } } } });
+            check("mergeIntoIfMissing keeps the objects under the depth limit", deepTarget.a.b.c.d.e === 1, JSON.stringify(deepTarget));
+            check("storage.save returns 1", basic.storage.save("__basic_test_save", 1) === 1);
+            basic.storage.remove("__basic_test_save");
+            const fixSound = new BSound();
+            fixSound.load("x.ogg?v=2");
+            const fixSoundType = fixSound.elem.children[0].getAttribute("type");
+            fixSound.load("x.mp3");
+            check("Sound.load: the type of the file, a second load() changes the source", fixSoundType === "audio/ogg" && fixSound.elem.children[0].getAttribute("type") === "audio/mpeg" && /x\.mp3$/.test(fixSound.elem.children[0].src));
+            fixSound.remove();
+
             work.remove();
             check("remove() cascade: children are removed too", oldLabel.isRemoved === 1 && inp.isRemoved === 1 && g.isRemoved === 1);
 
