@@ -22,6 +22,19 @@ Naming rule for the additions: no new globals. New things are properties/methods
 
 `obj.props({...})` now returns the object (chaining); before it returned `undefined`.
 
+Fixed in October 2026 (a bug report; `test/basic-test.htm` checks them):
+
+| Before | Now |
+|---|---|
+| `mergeIntoIfMissing({}, JSON.parse('{"__proto__": {...}}'))` wrote into `Object.prototype` (every object of the page). | `__proto__`, `constructor` and `prototype` keys are skipped. |
+| A listener added with capture (`on("click", fn, true)` or `{ capture: true }`) stayed after its remover or `remove()`. | The capture value is kept and given to `removeEventListener()`. |
+| The same function on two events: `off("keydown", fn)` removed the click entry and left keydown working. | `off()` matches the event name and the element too; the remover of `on()` removes its own listener. |
+| `animate()` cut by a second `animate()`, or by `remove()`: its Promise never resolved (`await` waited forever). | It resolves (with the object) when it is cut or removed. |
+| `Box("50%", "calc(100% - 20px)", 40, 40)`: the constructor wrote `"50%px"`, so left/top were empty. | The constructors use the same CSS length rule as the setters. |
+| `gap: 2.5` was not applied (only integers got `px`). | Every number gets `px`. |
+| `sound.stop()` on a paused sound did not go back to the start. | `stop()` always sets `currentTime = 0`. |
+| A component created inside another one (nested `startObject`) left `prevThat === that` after the outer one. | The saved `that` is a stack: `prevThat` is the object before the outer component. |
+
 ---
 
 ## New properties (every object: Box, Label, Button, Input, Icon)
