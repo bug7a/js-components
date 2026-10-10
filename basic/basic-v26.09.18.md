@@ -34,6 +34,9 @@ Fixed in October 2026 (a bug report; `test/basic-test.htm` checks them):
 | `gap: 2.5` was not applied (only integers got `px`). | Every number gets `px`. |
 | `sound.stop()` on a paused sound did not go back to the start. | `stop()` always sets `currentTime = 0`. |
 | A component created inside another one (nested `startObject`) left `prevThat === that` after the outer one. | The saved `that` is a stack: `prevThat` is the object before the outer component. |
+| `mergeIntoIfMissing` (and `props()`, `startObject()`) replaced an object at the depth limit (the 5th level) with an empty `{}`: the keys under it were lost. | The object is added as it is (by reference). |
+| `basic.storage.save()` / `has()` / `remove()` threw where `localStorage` can not be used (a sandboxed iframe, blocked site data, a full quota) and stopped the calling code. | They do not throw; `save()` returns 1 or 0. |
+| `Sound.load()` a second time kept playing the first file (a changed `<source>` is not read again). Every file but `.mp3` got the type `audio/wav`. | `load()` calls `audio.load()`; the type comes from the extension (`mp3`, `wav`, `ogg`, `m4a`, `aac`, `webm`), none for an unknown one. |
 
 ---
 

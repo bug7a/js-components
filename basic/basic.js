@@ -231,14 +231,26 @@ window.twoDigitFormat = function($number) {
 };
 //window.twoDigitFormat = basic.twoDigitFormat;
 
+// WHY: localStorage throws when it can not be used (a sandboxed iframe, blocked site data, a full quota).
+//      An error here stopped the code that called it (a theme change, saving a setting). save() returns 1 or 0.
 basic.storage = {
 
     save(key, value) {
-        localStorage.setItem(key, JSON.stringify(value));
+        try {
+            localStorage.setItem(key, JSON.stringify(value));
+            return 1;
+        } catch (e) {
+            console.warn("storage save error:", key, e.name);
+            return 0;
+        }
     },
 
     has(key) {
-        return localStorage.getItem(key) !== null;
+        try {
+            return localStorage.getItem(key) !== null;
+        } catch (e) {
+            return false;
+        }
     },
 
     load(key) {
@@ -252,11 +264,11 @@ basic.storage = {
     },
 
     remove(key) {
-        localStorage.removeItem(key);
+        try { localStorage.removeItem(key); } catch (e) {}
     },
 
     clear() {
-        localStorage.clear();
+        try { localStorage.clear(); } catch (e) {}
     }
 
 };
@@ -2490,14 +2502,16 @@ class BSound {
 
     load($path) {
 
-        let fileType = "audio/wav";
+        const types = { mp3: "audio/mpeg", wav: "audio/wav", ogg: "audio/ogg", oga: "audio/ogg", m4a: "audio/mp4", aac: "audio/aac", webm: "audio/webm" };
+        const extension = String($path).split(/[?#]/)[0].split(".").pop().toLowerCase();
+        const source = this.elem.children[0];
 
-        if ($path.substr(-3).toLowerCase() == "mp3") {
-            fileType = "audio/mpeg";
-        }
+        source.setAttribute("src", $path);
+        // WHY: A wrong type (an .ogg file as "audio/wav") makes some browsers skip the file. Unknown: no type.
+        if (types[extension]) source.setAttribute("type", types[extension]); else source.removeAttribute("type");
 
-        this.elem.children[0].setAttribute("src", $path);
-        this.elem.children[0].setAttribute("type", fileType);
+        // WHY: A changed <source> is not read again by itself: the second load() kept playing the first file.
+        this.elem.load();
 
     }
 
@@ -2873,6 +2887,13 @@ const mergeIntoIfMissing = function (target, source, depth = 1, maxDepth = 4) {
                 if (!(key in target)) {
                     target[key] = sourceVal; // referansla ekle
                 }
+                continue;
+            }
+
+            // WHY: At the depth limit the object was replaced by an empty {} (the keys under it were lost).
+            //      Now it is added as it is (by reference) when the target does not have it.
+            if (depth >= maxDepth) {
+                if (!(key in target)) target[key] = sourceVal;
                 continue;
             }
 
