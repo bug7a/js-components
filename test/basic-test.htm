@@ -338,6 +338,45 @@
             await basic.nextFrame();
             check("basic.nextFrame", true);
 
+            // *** FIXES (October 2026: the basic.js bug report)
+            try { mergeIntoIfMissing({}, JSON.parse('{"__proto__":{"__basic_test_polluted__":1}}')); check("mergeIntoIfMissing skips __proto__", ({}).__basic_test_polluted__ === undefined); }
+            finally { delete Object.prototype.__basic_test_polluted__; }
+            let fixCalls = 0;
+            const fb = Box();
+            const offCapture = fb.on("click", function () { fixCalls++; }, true);
+            offCapture(); fb.elem.dispatchEvent(new Event("click"));
+            fb.on("click", function () { fixCalls++; }, { capture: true });
+            const fbElem = fb.elem; fb.remove(); fbElem.dispatchEvent(new Event("click"));
+            check("capture listeners: the remover and remove() clean them", fixCalls === 0, fixCalls);
+            let fixClick = 0, fixKey = 0;
+            const fb2 = Box();
+            const fixFn = function (self, event) { if (event.type === "click") fixClick++; else fixKey++; };
+            fb2.on("click", fixFn); fb2.on("keydown", fixFn); fb2.off("keydown", fixFn);
+            fb2.elem.dispatchEvent(new Event("click")); fb2.elem.dispatchEvent(new Event("keydown"));
+            check("off(): the same function on two events, only the named one is removed", fixClick === 1 && fixKey === 0, fixClick + "/" + fixKey);
+            const fb2Elem = fb2.elem; fb2.remove(); fb2Elem.dispatchEvent(new Event("click"));
+            check("remove() cleans the other one", fixClick === 1, fixClick);
+            const fb3 = Box();
+            let firstDone = 0, secondDone = 0, removedDone = 0;
+            fb3.animate({ left: 20 }, 30).then(function () { firstDone = 1; });
+            fb3.animate({ left: 40 }, 20).then(function () { secondDone = 1; });
+            await wait(120);
+            check("animate(): a cut animation resolves too", firstDone === 1 && secondDone === 1);
+            fb3.animate({ left: 60 }, 300).then(function () { removedDone = 1; });
+            fb3.remove(); await wait(10);
+            check("animate(): remove() resolves the animation", removedDone === 1);
+            const fb4 = Box("50%", "calc(100% - 20px)", 40, 40);
+            check("constructor left/top keep CSS strings", fb4.elem.style.left === "50%" && fb4.elem.style.top === "calc(100% - 20px)", fb4.elem.style.left + " " + fb4.elem.style.top);
+            fb4.remove();
+            const fg = HGroup({ gap: 2.5 }); endGroup();
+            const fgCreate = fg.elem.style.gap; fg.gap = 3.5;
+            check("decimal gap -> px", fgCreate === "2.5px" && fg.elem.style.gap === "3.5px", fgCreate + " " + fg.elem.style.gap);
+            fg.remove();
+            const fixBefore = Label({ text: "before" });
+            const fixOuter = startObject({}); const fixInner = startObject({}); endObject(fixInner); endObject(fixOuter);
+            check("nested startObject: that and prevThat", that === fixOuter && prevThat === fixBefore);
+            fixOuter.remove(); fixBefore.remove();
+
             work.remove();
             check("remove() cascade: children are removed too", oldLabel.isRemoved === 1 && inp.isRemoved === 1 && g.isRemoved === 1);
 

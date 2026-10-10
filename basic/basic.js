@@ -1015,6 +1015,8 @@ class Basic_UIComponent {
             // The transition to restore is the one before the first animate() call (chained calls keep it).
             if (_that._animateTimeout) {
                 clearTimeout(_that._animateTimeout);
+                // WHY: The animation is cut by this one: its Promise is resolved now (await must not wait forever).
+                if (_that._animateResolve) _that._animateResolve(_that);
             } else {
                 _that._animateBaseTransition = _that.elem.style.transition;
             }
@@ -1024,8 +1026,10 @@ class Basic_UIComponent {
 
             for (let key in $props) _that[key] = $props[key];
 
+            _that._animateResolve = resolve;
             _that._animateTimeout = setTimeout(function () {
                 _that._animateTimeout = null;
+                _that._animateResolve = null;
                 if (!_that._isRemoved) _that.elem.style.transition = _that._animateBaseTransition || "";
                 resolve(_that);
             }, $duration + 20);
@@ -1084,12 +1088,13 @@ class Basic_UIComponent {
         if (this._withMotionTimeout) clearTimeout(this._withMotionTimeout);
         if (this._dontMotionTimeout) clearTimeout(this._dontMotionTimeout);
         if (this._animateTimeout) clearTimeout(this._animateTimeout);
+        if (this._animateResolve) { this._animateResolve(this); this._animateResolve = null; } // WHY: await animate() ends.
 
         // 1.  Eklenmiş tüm eventleri kaldır. _addEventListener() - Otomatik temizleme
         if (this._eventFuncList && this._eventFuncList.length) {
             for (let i = this._eventFuncList.length - 1; i >= 0; i--) {
                 const ev = this._eventFuncList[i];
-                ev.elem.removeEventListener(ev.eventName, ev.eventFunc);
+                ev.elem.removeEventListener(ev.eventName, ev.eventFunc, ev.capture);
                 this._eventFuncList.pop();
             }
         }
@@ -1147,11 +1152,17 @@ class Basic_UIComponent {
         eventDataItem.originalFunc = $func;
         eventDataItem.eventFunc = eventFunc;
         eventDataItem.elem = $element;
+        // WHY: removeEventListener() must get the same capture value, or a capture listener stays.
+        eventDataItem.capture = (typeof $useCapture == "object" && $useCapture !== null) ? !!$useCapture.capture : !!$useCapture;
 
         this._eventFuncList.push(eventDataItem); // Nesne .remove() edilirken, hepsi temizlenir.
 
+        // WHY: The remover removes its own listener (the same function can be added to several events).
         const removeEvent = function() {
-            _that._removeEventListener($eventName, $func, $element);
+            const index = _that._eventFuncList ? _that._eventFuncList.indexOf(eventDataItem) : -1;
+            if (index < 0) return;
+            _that._eventFuncList.splice(index, 1);
+            eventDataItem.elem.removeEventListener(eventDataItem.eventName, eventDataItem.eventFunc, eventDataItem.capture);
         };
 
         return removeEvent; // Eklenen olayı kolayca silmek için fonksiyon döndür.
@@ -1162,18 +1173,14 @@ class Basic_UIComponent {
     _removeEventListener($eventName, $func, $element) {
 
         //Otomatik temizleme
-        let eventFunc = null; // Orjinal fonksiyon bulunacak.
-        
+        // WHY: The event name and the element must match too: the same function can be on click and keydown.
         for (let i = 0; i < this._eventFuncList.length; i++) {
-            if (this._eventFuncList[i].originalFunc == $func) {
-                eventFunc = this._eventFuncList[i].eventFunc;
+            const item = this._eventFuncList[i];
+            if (item.originalFunc == $func && item.eventName == $eventName && item.elem == $element) {
                 this._eventFuncList.splice(i, 1);
+                $element.removeEventListener($eventName, item.eventFunc, item.capture);
                 break;
             }
-        }
-
-        if (eventFunc) {
-            $element.removeEventListener($eventName, eventFunc);
         }
         
         //$element.removeEventListener($eventName, $func);
@@ -1511,8 +1518,8 @@ class BBox extends Basic_UIComponent {
         const divElement = document.createElement("DIV");
         divElement.classList.add("basic_box");
 
-        divElement.style.left = $left + "px";
-        divElement.style.top = $top + "px";
+        divElement.style.left = toCssLength($left);
+        divElement.style.top = toCssLength($top);
 
         this._element = divElement;
         attachToContainer(this, this._element);
@@ -1667,8 +1674,8 @@ class BButton extends Basic_UIComponent {
         buttonElement.classList.add("basic_button");
         buttonElement.setAttribute("type", "button");
 
-        buttonElement.style.left = $left + "px";
-        buttonElement.style.top = $top + "px";
+        buttonElement.style.left = toCssLength($left);
+        buttonElement.style.top = toCssLength($top);
 
         this._element = buttonElement;
         attachToContainer(this, this._element);
@@ -1820,8 +1827,8 @@ class BTextBox extends Basic_UIComponent {
         element.style.height = "100%";
         this._element = element;
 
-        mainElement.style.left = $left + "px";
-        mainElement.style.top = $top + "px";
+        mainElement.style.left = toCssLength($left);
+        mainElement.style.top = toCssLength($top);
 
         mainElement.appendChild(this._titleElement);
         mainElement.appendChild(this._element);
@@ -1991,7 +1998,7 @@ class BTextBox extends Basic_UIComponent {
         for (let i = this._eventFuncList.length - 1; i >= 0; i--) {
             const item = this._eventFuncList[i];
             if (item.eventName == "keydown" && item.originalFunc._enterFunc === $func) {
-                item.elem.removeEventListener("keydown", item.eventFunc);
+                item.elem.removeEventListener("keydown", item.eventFunc, item.capture);
                 this._eventFuncList.splice(i, 1);
             }
         }
@@ -2053,8 +2060,8 @@ class BLabel extends Basic_UIComponent {
         //divElement.innerHTML = "";
         divElement.classList.add("basic_label");
 
-        divElement.style.left = $left + "px";
-        divElement.style.top = $top + "px";
+        divElement.style.left = toCssLength($left);
+        divElement.style.top = toCssLength($top);
 
         this._element = divElement;
         attachToContainer(this, this._element);
@@ -2189,8 +2196,8 @@ class BImage extends Basic_UIComponent {
         const imageElement = document.createElement("IMG");
         imageElement.classList.add("basic_image");
 
-        imageElement.style.left = $left + "px";
-        imageElement.style.top = $top + "px";
+        imageElement.style.left = toCssLength($left);
+        imageElement.style.top = toCssLength($top);
 
         this._element = imageElement;
         attachToContainer(this, this._element);
@@ -2470,8 +2477,8 @@ class BSound {
     stop() {
         if (!this.paused) {
             this.elem.pause();
-            this.elem.currentTime = 0;
         }
+        this.elem.currentTime = 0; // WHY: A paused sound goes back to the start too.
     }
     
     onLoad($func) {
@@ -2848,6 +2855,9 @@ const mergeIntoIfMissing = function (target, source, depth = 1, maxDepth = 4) {
     if (depth > maxDepth) return; // Maksimum derinlik sınırı
 
     for (let key in source) {
+        // WHY: JSON.parse('{"__proto__": {...}}') gives an own "__proto__" key; target["__proto__"] is
+        //      Object.prototype, so the merge would write into every object of the page.
+        if (key === "__proto__" || key === "constructor" || key === "prototype") continue;
         const sourceVal = source[key];
         const targetVal = target[key];
 
@@ -3089,7 +3099,7 @@ const applyFlexAlign = function($style, align, isRow) {
 };
 
 const checkGap = function(gap) {
-    return (Number.isInteger(gap)) ? gap + "px" : gap;
+    return (typeof gap == "number" && isFinite(gap)) ? gap + "px" : gap; // WHY: 2.5 -> "2.5px" too (not only integers).
 };
 
 // .flow, .align, .gap, .wrap, .justify of every group.
@@ -3202,7 +3212,7 @@ const startFlexBox = function(p1 = {}, p2, p3, p4, p5) {
         props.justifyContent = getJustifyContent(props.justify);
     }
 
-    if (Number.isInteger(props.gap)) {
+    if (typeof props.gap == "number") {
         props.gap = checkGap(props.gap);
     }
 
@@ -3272,17 +3282,24 @@ window.endGroup = endBox;
 
 let savedThat = null;
 let savedExThat = null;
+const savedThatStack = []; // WHY: A component created inside another one must not overwrite the saved that of the outer one.
 
 const saveCurrentThat = function() {
 
     savedThat = that;
     savedExThat = previousThat;
+    savedThatStack.push({ that: that, previousThat: previousThat });
 
 };
 window.saveCurrentThat = saveCurrentThat;
 
 const restoreThatFromSaved = function() {
 
+    const saved = savedThatStack.pop();
+    if (saved) {
+        savedThat = saved.that;
+        savedExThat = saved.previousThat;
+    }
     that = savedThat;
     previousThat = savedExThat;
     prevThat = previousThat;
