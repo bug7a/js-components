@@ -88,6 +88,15 @@ const MyComp = function (params = {}) {
 - Name components in PascalCase with a matching `XxxDefaults` object. Put component assets in a sibling folder with the same name (`comp-m3/smart-table/*.png`).
 - Files keep the house header comment (`/* Bismillah */`, name/version, developer). Comments mix English and Turkish. Keep the existing section markers (`// *** PUBLIC FUNCTIONS:`, `// BOX:`, `// LABEL:`, …).
 
+## Helper: the Codex CLI (the user, 2026-10-11)
+
+The user opened the Codex CLI in the terminal as a helper. **Every picture that must be drawn is made with it** (Claude can not draw images). It may also take a share of other work when it helps (things the user did not think of), give a second look, debug, and write a debug report. Pick the model and the effort that fit the job.
+
+- `codex exec [-m MODEL] -c model_reasoning_effort="low|medium|high" -C <dir> -s workspace-write -o <last-message-file> "<prompt>"` (non-interactive); `-i <img>` attaches reference images; `--skip-git-repo-check` outside a git repository. The feature `image_generation` is on. The defaults are in `~/.codex/config.toml` (2026-10-11: model `gpt-6-astra`, effort `high`).
+- Effort: low / medium for one image or a small check, high for debugging and reports.
+- Give it the exact output path, the size and the look; open the result (read the image) before it is used. It writes files: keep it in the folder it is given and review what it changed.
+- Fishing Company Tycoon: its own CLAUDE.md and `docs/drawings.md` ("THE CODEX CLI") say how its pictures go into the game.
+
 ## Conventions and gotchas
 
 - **Standalone copies**: `./_make-standalone.sh <project-folder>` (`--list`: only shows) makes a project folder work outside the repo: it reads the `<script src>` / `<link href>` of its `.htm` pages, copies what they load from `basic/` into `<project>/basic/` (`.min` files, `font/`, `LICENSE`) and from `comp-m*/` into `<project>/comp/` (`name.min.js` made from the source with terser, icon folders copied and their paths rewritten to `comp/<folder>/`, origins in `comp/_sources.txt`), and rewrites the page paths. Run it again to refresh the copies. It only lists the paths that leave the folder in the project's own code (a `rootPath: "../../"` in a `config.js`): change those by hand. `03-webpage-m2/webpage-basicjs` and `__projects/webpage-admin-panel` are made standalone with it (the admin panel site "Ozden Panel", to be published at `https://bug7a.github.io/ozden-panel/`, has its live demo in `demo/` (the self-contained copy of `js-admin-panel`, see `04-template-m2`); its contact form uses the Form component and a private mail service address, which is why it is kept out of the repository).
