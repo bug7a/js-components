@@ -74,15 +74,24 @@ Use `startObject` to create the main container (`box`) and merge `params` with `
     };
 ```
 
-**Cleaning up**: A component removes itself with `remove()`. Extend it, do the global cleanup, then call the original `remove()` of basic.js.
+**Cleaning up** (basic.js v26.10.23): register the global things through the box, then `remove()` of basic.js cleans them. Most components need no `remove()` of their own.
+```javascript
+    box.listenTo(window, "keydown", function (self, event) { /* ... */ }); // window / document events
+    box.onPageResize(function () { /* ... */ });                          // instead of page.onResize
+    const cancel = box.after(300, function () { /* ... */ });            // instead of setTimeout
+    const stop = box.every(1000, function () { /* ... */ });             // instead of setInterval
+    box.menu = box.own(createIn(page, function () { return Box(/* ... */); })); // an object on the page
+```
+Also: `box.onHoverChange(fn(self, isOver))`, `box.setFocusRing(color)` (keyboard only), `basic.isOn(v)` (1, "1", true), `basic.addCss(id, css)` (a `<style>` once), `basic.escapeHtml(text)`.
+
+Override `remove()` only for what basic.js can not know: a static list of the component, an instance of another library (Chart.js), an observer of a document in an iframe. Keep this shape:
 ```javascript
     // WHY: the local const is called below, because an extending component overwrites box.superRemove.
     const superRemove = box.remove;
     box.superRemove = superRemove;
     box.remove = function () {
         if (!box) return;                 // WHY: remove() can be called twice.
-        // window / document events, timers, page.remove_onResize(), static lists,
-        // and the objects created directly on page (menus, popups).
+        // Only what basic.js does not know. (Ex: MyComp.list = MyComp.list.filter(c => c !== box);)
         superRemove.call(box);            // basic.js remove(): cleans the events and the objects inside.
         box = null;
     };

@@ -4,6 +4,17 @@ This document contains new features, updates, and changes added to the basic.js 
 
 ---
 
+## Version 26.10.23
+
+*   **Simpler components, fully compatible:** every page and component written for the previous versions works unchanged. The global things of an object are now cleaned by its `remove()`, so a component does not need its own `remove()` for them (before, 42 of the 63 components overrode `remove()` only to clean them, and a forgotten one leaked). Reference with examples: `basic/basic-v26.10.23.md`. Self-checking test page: `test/basic-test.htm` (123 checks).
+*   **Cleaned by `remove()`:** `obj.listenTo(window, "keydown", func)` (an event of another element; returns the remover), `obj.onPageResize(func)`, `obj.after(ms, func)` (once; returns the cancel function), `obj.every(ms, func)` (again and again; returns the stop function), `obj.own(otherObject)` (an object made somewhere else, for example a menu on `page`, is removed with it).
+*   **New methods (every object):** `onHoverChange(func)` (`func(self, isOver)`), `setFocusRing(color)` (a focus ring only for the keyboard, CSS `:focus-visible`).
+*   **basic:** `isOn(value)` (`1`, `"1"`, `true`), `addCss(id, css, replace)` (a `<style>` once: for `:hover`, `::-webkit-scrollbar`, `@keyframes`...).
+*   **`createIn(container, func)`** returns the result of `func`: `const menu = box.own(createIn(page, function () { return Box(...); }));`
+*   **The component template** (`_component-template.js`) is written with them; `comp-m4/tree-view.js` is the first component without its own `remove()`.
+
+---
+
 ## Version 26.09.18
 
 *   **Fixes and additions, fully compatible:** every page and component written for the previous versions works unchanged (137 sample and template pages were compared in headless Chrome: identical DOM). Nothing to change in pages. The previous version (26.09.17) is kept as `basic/basic-bugra.js` / `basic-bugra.min.js` for reference. Full reference with examples: `basic/basic-v26.09.18.md`. Self-checking test page: `test/basic-test.htm`.

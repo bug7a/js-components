@@ -14,7 +14,7 @@
         <script>
         "use strict";
 
-        // NOTE: Self-checking test page for basic.js v26.09.18+. Open it in a browser:
+        // NOTE: Self-checking test page for basic.js v26.10.23+ (also checks the features of v26.09.18). Open it in a browser:
         //       green lines = passed, red lines = failed. The summary is also in the console and in the tab title.
 
         // A page variable named like a library helper must not break the library. (basic.js: infinite recursion)
@@ -53,7 +53,7 @@
         const runTests = async function () {
 
             // *** LIBRARY INFO
-            check("basic.version", basic.version === "26.09.18", basic.version);
+            check("basic.version", basic.version === "26.10.23", basic.version);
             check("basic.library", basic.library === "basic.js", basic.library);
             check("basic.isReady", basic.isReady === 1);
 
@@ -390,6 +390,71 @@
 
             work.remove();
             check("remove() cascade: children are removed too", oldLabel.isRemoved === 1 && inp.isRemoved === 1 && g.isRemoved === 1);
+
+            // *** v26.10.23 ADDITIONS: THE GLOBAL THINGS OF AN OBJECT ARE CLEANED BY ITS remove()
+            const owner = Box(-500, -500, 50, 50);
+            let heardKey = 0, heardResize = 0, afterRuns = 0, everyRuns = 0, hoverLog = [];
+            const removeTestKey = owner.listenTo(window, "basic-test-key", function (self) { if (self === owner) heardKey++; });
+            owner.onPageResize(function () { heardResize++; });
+            window.dispatchEvent(new Event("basic-test-key"));
+            window.dispatchEvent(new Event("resize"));
+            check("listenTo: an event of window, func(self)", heardKey === 1, heardKey);
+            check("onPageResize: the resize of the window", heardResize >= 1, heardResize);
+            removeTestKey();
+            window.dispatchEvent(new Event("basic-test-key"));
+            check("listenTo: the remover removes it", heardKey === 1, heardKey);
+            owner.listenTo(window, "basic-test-key", function () { heardKey++; });
+
+            owner.after(20, function () { afterRuns++; });
+            const cancelAfter = owner.after(20, function () { afterRuns += 100; });
+            cancelAfter();
+            const stopEvery = owner.every(15, function () { everyRuns++; });
+            // WHY: A tab in the background slows its timers down (to about 1 s): wait for the result, not for a time.
+            const waitUntil = async function (test, maxMs) { const t0 = Date.now(); while (!test() && Date.now() - t0 < maxMs) await wait(20); };
+            await waitUntil(function () { return afterRuns >= 1 && everyRuns >= 2; }, 4000);
+            check("after: runs once, its cancel function stops it", afterRuns === 1, afterRuns);
+            check("every: runs again and again", everyRuns >= 2, everyRuns);
+            stopEvery();
+            const everyStopped = everyRuns;
+            await wait(50);
+            check("every: its stop function stops it", everyRuns === everyStopped, everyRuns + " / " + everyStopped);
+
+            owner.onHoverChange(function (self, isOver) { hoverLog.push(isOver); });
+            owner.elem.dispatchEvent(new MouseEvent("mouseenter"));
+            owner.elem.dispatchEvent(new MouseEvent("mouseleave"));
+            check("onHoverChange: func(self, 1) then func(self, 0)", hoverLog.join(",") === "1,0", hoverLog.join(","));
+
+            owner.setFocusRing("red");
+            check("setFocusRing: a class and the css (:focus-visible)", owner.elem.classList.contains("basic-focus-ring") &&
+                !!document.getElementById("basic-focus-ring") && owner.elem.style.getPropertyValue("--basic-focus-ring") === "red");
+            owner.setFocusRing("");
+            check("setFocusRing(\"\"): no ring", !owner.elem.classList.contains("basic-focus-ring"));
+
+            const ownedBox = createIn(page, function () { return Box(-500, -500, 10, 10); });
+            owner.own(ownedBox);
+            owner.after(30, function () { afterRuns += 1000; });
+            owner.every(15, function () { everyRuns += 1000; });
+            const everyBefore = everyRuns;
+            owner.remove();
+            window.dispatchEvent(new Event("basic-test-key"));
+            const heardBefore = heardResize;
+            window.dispatchEvent(new Event("resize"));
+            await wait(60);
+            check("remove(): its listenTo events are removed", heardKey === 1, heardKey);
+            check("remove(): its onPageResize is removed", heardResize === heardBefore, heardResize + " / " + heardBefore);
+            check("remove(): its after / every timers are stopped", afterRuns === 1 && everyRuns === everyBefore, afterRuns + " / " + everyRuns);
+            check("remove(): the objects of own() are removed", ownedBox.isRemoved === 1);
+
+            const createdIn = createIn(page, function () { return "result"; });
+            check("createIn returns the result of its function", createdIn === "result", createdIn);
+            check("basic.isOn: 1, \"1\", true -> true; 0, \"0\", false, undefined -> false",
+                basic.isOn(1) && basic.isOn("1") && basic.isOn(true) && !basic.isOn(0) && !basic.isOn("0") && !basic.isOn(false) && !basic.isOn(undefined));
+            const css1 = basic.addCss("basic-test-css", ".x { color: red; }");
+            const css2 = basic.addCss("basic-test-css", ".x { color: blue; }");
+            check("basic.addCss: once (the same id again: the same element, not changed)", css1 === css2 && css1.textContent.indexOf("red") > 0);
+            basic.addCss("basic-test-css", ".x { color: blue; }", 1);
+            check("basic.addCss: replace", css1.textContent.indexOf("blue") > 0);
+            css1.remove();
 
             await wait(150);
             check("no uncaught errors", uncaught.length === 0, uncaught.join(" | "));

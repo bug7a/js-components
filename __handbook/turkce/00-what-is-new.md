@@ -4,6 +4,17 @@ Bu belgede basic.js kütüphanesine eklenen yeni özellikler, güncellemeler ve 
 
 ---
 
+## Versiyon 26.10.23
+
+*   **Daha sade bileşenler, tam uyumlu:** Önceki sürümler için yazılmış bütün sayfalar ve bileşenler değişiklik gerekmeden çalışır. Bir nesnenin global kayıtları artık kendi `remove()`'u ile temizlenir; bu yüzden bir bileşenin bunlar için kendi `remove()`'unu yazmasına gerek kalmaz (önceden 63 bileşenden 42'si `remove()`'u yalnızca bunları temizlemek için eziyordu ve unutulan bir temizlik bellek sızıntısına yol açıyordu). Örnekli başvuru: `basic/basic-v26.10.23.md`. Kendi kendini kontrol eden test sayfası: `test/basic-test.htm` (123 kontrol).
+*   **`remove()` ile temizlenenler:** `obj.listenTo(window, "keydown", func)` (başka bir elemanın olayı; kaldırma fonksiyonunu döndürür), `obj.onPageResize(func)`, `obj.after(ms, func)` (bir kez; iptal fonksiyonunu döndürür), `obj.every(ms, func)` (tekrar tekrar; durdurma fonksiyonunu döndürür), `obj.own(başkaNesne)` (başka bir yerde, örneğin `page` üzerinde oluşturulan bir menü, bu nesneyle birlikte silinir).
+*   **Yeni metotlar (bütün nesneler):** `onHoverChange(func)` (`func(self, isOver)`), `setFocusRing(color)` (yalnızca klavyede görünen odak halkası, CSS `:focus-visible`).
+*   **basic:** `isOn(value)` (`1`, `"1"`, `true`), `addCss(id, css, replace)` (bir `<style>`'ı bir kez ekler: `:hover`, `::-webkit-scrollbar`, `@keyframes` gibi satır içi yazılamayanlar için).
+*   **`createIn(container, func)`** artık `func`'ın sonucunu döndürür: `const menu = box.own(createIn(page, function () { return Box(...); }));`
+*   **Bileşen şablonu** (`_component-template.js`) bunlarla yazıldı; `comp-m4/tree-view.js` kendi `remove()`'u olmayan ilk bileşen.
+
+---
+
 ## Versiyon 26.09.18
 
 *   **Tam uyumlu düzeltmeler ve eklemeler:** Önceki sürümler için yazılmış bütün sayfalar ve bileşenler değişiklik gerekmeden çalışır (137 örnek ve şablon sayfası headless Chrome'da karşılaştırıldı: DOM birebir aynı). Sayfalarda değişiklik gerekmez. Önceki sürüm (26.09.17) başvuru için `basic/basic-bugra.js` / `basic-bugra.min.js` olarak saklanır. Örnekli tam başvuru: `basic/basic-v26.09.18.md`. Kendi kendini kontrol eden test sayfası: `test/basic-test.htm`.

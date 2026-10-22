@@ -2,12 +2,17 @@
 
 /*
 
-basic.js (v26.09.18) A lightweight JavaScript library for building web-based applications with simple code. No need to write HTML or CSS — just use basic JavaScript.
+basic.js (v26.10.23) A lightweight JavaScript library for building web-based applications with simple code. No need to write HTML or CSS — just use basic JavaScript.
 - Project Site: https://bug7a.github.io/basic.js/
 
-v26.09.18 is v26.09.17 plus the improvements below. Every page and component written for the
-previous versions works unchanged (same globals, same defaults, same DOM). The previous version is
-kept as basic/basic-bugra.js (and basic-bugra.min.js).
+v26.10.23 is v26.09.18 plus the additions below. Every page and component written for the
+previous versions works unchanged (same globals, same defaults, same DOM).
+
+WHAT IS NEW IN v26.10.23 (for simpler components; see basic/basic-v26.10.23.md):
+- Cleaned in remove(): listenTo(target, event, func), onPageResize(func), after(ms, func), every(ms, func), own(obj)
+- Methods:    onHoverChange(func), setFocusRing(color)
+- Global:     createIn() returns the result of its function
+- basic:      isOn(), addCss()
 
 WHAT IS NEW IN v26.09.18 (see basic/basic-v26.09.18.md for examples):
 - Fixes:      "100" and "50%" work for left/top/right/bottom/width/height. Children created in a hidden
@@ -39,7 +44,7 @@ Licensed under the Apache License, Version 2.0
 "use strict";
 const basic = {};
 
-basic.version = "26.09.18";
+basic.version = "26.10.23";
 basic.library = "basic.js";
 basic.isReady = 0; // 1 after the page object is created (before start() runs).
 
@@ -388,6 +393,27 @@ basic.objectOf = function ($elem) {
 basic.escapeHtml = function ($str) {
     const map = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
     return String(($str === null || $str === undefined) ? "" : $str).replace(/[&<>"']/g, function (c) { return map[c]; });
+};
+
+// v26.10.23: An "on" value of a param: 1, "1", true. (Components wrote (v == 1 || v === true) again and again.)
+// basic.isOn(box.closable)
+basic.isOn = function ($value) {
+    return $value === true || $value === 1 || $value === "1";
+};
+
+// v26.10.23: Adds a <style> to the page once (the same id again: nothing, unless $replace). Returns the element.
+// For what inline styles can not do: :hover, :focus-visible, ::placeholder, ::-webkit-scrollbar, @keyframes.
+// basic.addCss("tabs-css", ".tabs-strip::-webkit-scrollbar { display: none; }")
+basic.addCss = function ($id, $cssText, $replace = 0) {
+    let style = document.getElementById($id);
+    if (style && !$replace) return style;
+    if (!style) {
+        style = document.createElement("style");
+        style.id = $id;
+        document.head.appendChild(style);
+    }
+    style.textContent = $cssText;
+    return style;
 };
 
 // basic.storage.loadOr("settings", { theme: "light" })
@@ -1050,6 +1076,72 @@ class Basic_UIComponent {
 
     }
 
+    // *** v26.10.23 ADDITIONS (all objects): THE GLOBAL THINGS OF AN OBJECT ARE CLEANED BY ITS remove() ***
+    // WHY: A component had to clean its window / document events, its timers, its page.onResize and the objects it
+    //      made on the page in its own remove() (42 components overrode remove() for it; a forgotten one leaked).
+
+    // An event of another element (window, document...): func(self, event). Returns the remover function.
+    // obj.listenTo(window, "keydown", function (self, event) {})
+    listenTo($target, $eventName, $func, $useCapture = false) {
+        return this._addEventListener($eventName, $func, $target, $useCapture);
+    }
+
+    // The resize of the window: func(self, event). Returns the remover function. (page.onResize is not cleaned.)
+    onPageResize($func) {
+        return this.listenTo(window, "resize", $func);
+    }
+
+    // A timer of the object: func(self) once after ms. Returns the cancel function.
+    after($ms, $func) {
+        const _that = this;
+        if (!this._timerList) this._timerList = new Set();
+        const id = setTimeout(function () {
+            _that._timerList.delete(id);
+            if (!_that._isRemoved) $func(_that);
+        }, $ms);
+        this._timerList.add(id);
+        return function () { clearTimeout(id); _that._timerList.delete(id); };
+    }
+
+    // A timer of the object: func(self) every ms. Returns the stop function.
+    every($ms, $func) {
+        const _that = this;
+        if (!this._intervalList) this._intervalList = new Set();
+        const id = setInterval(function () { if (!_that._isRemoved) $func(_that); }, $ms);
+        this._intervalList.add(id);
+        return function () { clearInterval(id); _that._intervalList.delete(id); };
+    }
+
+    // An object made somewhere else (Ex: a menu on the page) is removed with this one. Returns the object.
+    // const menu = obj.own(createIn(page, function () { return Box(...); }))
+    own($obj) {
+        if (!$obj) return $obj;
+        if (!this._ownedList) this._ownedList = [];
+        this._ownedList.push($obj);
+        return $obj;
+    }
+
+    // The mouse comes on / leaves the object: func(self, isOver, event). Returns the remover function.
+    // obj.onHoverChange(function (self, isOver) { self.color = isOver ? "#EEE" : "white"; })
+    onHoverChange($func) {
+        const removeEnter = this.on("mouseenter", function (self, event) { $func(self, 1, event); });
+        const removeLeave = this.on("mouseleave", function (self, event) { $func(self, 0, event); });
+        return function () { removeEnter(); removeLeave(); };
+    }
+
+    // A focus ring for the keyboard only (:focus-visible: not after a mouse click). "" or 0: no ring.
+    // WHY: Components drew it by hand with focus / blur / mousedown events.
+    setFocusRing($color = "rgba(95, 158, 160, 0.8)") {
+        basic.addCss("basic-focus-ring", ".basic-focus-ring:focus { outline: none; }" +
+            ".basic-focus-ring:focus-visible { outline: 2px solid var(--basic-focus-ring); outline-offset: -2px; }");
+        const el = this._textElem;
+        el.classList.toggle("basic-focus-ring", !!$color);
+        if ($color) el.style.setProperty("--basic-focus-ring", $color);
+        return this;
+    }
+
+    // *** v26.10.23 ADDITIONS END ***
+
     // *** v26.09.18 ADDITIONS END ***
 
     // Nesneyi sil.
@@ -1101,6 +1193,18 @@ class Basic_UIComponent {
         if (this._dontMotionTimeout) clearTimeout(this._dontMotionTimeout);
         if (this._animateTimeout) clearTimeout(this._animateTimeout);
         if (this._animateResolve) { this._animateResolve(this); this._animateResolve = null; } // WHY: await animate() ends.
+
+        // v26.10.23: the timers of after() / every() and the objects of own(). (listenTo / onPageResize are events: step 1)
+        if (this._timerList) { this._timerList.forEach(function (id) { clearTimeout(id); }); this._timerList.clear(); }
+        if (this._intervalList) { this._intervalList.forEach(function (id) { clearInterval(id); }); this._intervalList.clear(); }
+        if (this._ownedList) {
+            const owned = this._ownedList;
+            this._ownedList = null;
+            owned.forEach(function (obj) {
+                try { if (obj && !obj._isRemoved && typeof obj.remove === "function") obj.remove(); }
+                catch (error) { println("basic.js: An owned object could not be removed: " + error.message, "warn"); }
+            });
+        }
 
         // 1.  Eklenmiş tüm eventleri kaldır. _addEventListener() - Otomatik temizleme
         if (this._eventFuncList && this._eventFuncList.length) {
@@ -2840,7 +2944,8 @@ const createIn = function ($container, $func) {
     setDefaultContainerBox($container);
 
     try {
-        $func($container);
+        // v26.10.23: the result of $func is returned. (const menu = createIn(page, function () { return Box(...); }))
+        return $func($container);
     } finally {
         startedBoxList = previousStartedBoxList;
         setDefaultContainerBox(previous);

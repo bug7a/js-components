@@ -1,5 +1,7 @@
 # basic.js v26.09.18 — what changed
 
+> The next version: **v26.10.23**, see `basic/basic-v26.10.23.md`.
+
 `basic/basic.js` (v26.09.18) is the previous `basic.js` (v26.09.17, now kept as `basic/basic-bugra.js` and `basic-bugra.min.js`) plus the fixes and additions below. Every page and component written for the previous versions runs unchanged, with the same globals, the same defaults and the same DOM output. Nothing to change in pages: they already load `basic/basic.js` or `basic/basic.min.js`.
 
 Files: `basic/basic.js` (source), `basic/basic.min.js` (minified with terser), `test/basic-test.htm` (self-checking test page: every feature below has a green/red line; the tab title says `ALL PASS`).
