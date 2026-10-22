@@ -118,7 +118,7 @@ const WebView = function (params = {}) {
     const _s = box.style;
     let iframe = null;
     let isLoading = 0;
-    let loadTimer = null;
+    let cancelLoadTimer = null; // (box.after: stopped by remove())
     let heightObserver = null;
     let heightTimer = null;
     let toolbarHeight = 0;
@@ -147,13 +147,15 @@ const WebView = function (params = {}) {
     const setLoading = function (loading) {
         isLoading = loading;
         box.loadingBox.visible = (loading && box.showLoading == 1) ? 1 : 0;
-        clearTimeout(loadTimer);
+        if (cancelLoadTimer) cancelLoadTimer();
+        cancelLoadTimer = null;
         if (loading && box.loadTimeout > 0) {
-            loadTimer = setTimeout(function () {
-                if (!box || !isLoading) return;
+            cancelLoadTimer = box.after(box.loadTimeout * 1000, function () {
+                cancelLoadTimer = null;
+                if (!isLoading) return;
                 setLoading(0);
                 box.onTimeout(box);
-            }, box.loadTimeout * 1000);
+            });
         }
     };
 
@@ -197,7 +199,7 @@ const WebView = function (params = {}) {
     };
 
     // Messages of this iframe only
-    const onWindowMessage = function (event) {
+    const onWindowMessage = function (self, event) {
         if (!box || !iframe || event.source !== iframe.contentWindow) return;
         box.onMessage(box, event.data, event);
     };
@@ -318,12 +320,12 @@ const WebView = function (params = {}) {
     // USAGE: view.setScale(0.5)
 
     box.setInteractive = function (interactive) {
-        box.interactive = (interactive == 1 || interactive === true) ? 1 : 0;
+        box.interactive = basic.isOn(interactive) ? 1 : 0;
         applyInteractive();
     };
 
     box.setAutoHeight = function (autoHeight) {
-        box.autoHeight = (autoHeight == 1 || autoHeight === true) ? 1 : 0;
+        box.autoHeight = basic.isOn(autoHeight) ? 1 : 0;
         if (box.autoHeight == 1 && box.isLoaded) startHeightObserver();
         else stopHeightObserver();
     };
@@ -348,10 +350,7 @@ const WebView = function (params = {}) {
     box.superRemove = superRemove;
     box.remove = function () {
         if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
-        clearTimeout(loadTimer);
-        stopHeightObserver();
-        window.removeEventListener("message", onWindowMessage);
-        iframe.removeEventListener("load", onIframeLoad);
+        stopHeightObserver(); // (a ResizeObserver of the document in the iframe: basic.js does not know it)
         iframe.removeAttribute("srcdoc");
         iframe.src = "about:blank"; // WHY: Unload the page (stops its timers and sounds).
         superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
@@ -459,8 +458,8 @@ const WebView = function (params = {}) {
     // *** OBJECT INIT CODE:
     WebView.injectCss();
 
-    iframe.addEventListener("load", onIframeLoad);
-    window.addEventListener("message", onWindowMessage);
+    box.listenTo(iframe, "load", onIframeLoad); // (removed with the box)
+    box.listenTo(window, "message", onWindowMessage);
 
     box.cover.on("click", function () { box.onClick(box); });
     if (box.toolbarBox) {
@@ -483,9 +482,7 @@ const WebView = function (params = {}) {
 // *** STATIC FUNCTIONS:
 
 // WHY: Label.text uses innerHTML. Texts must not be read as HTML.
-WebView.escapeHtml = function (text) {
-    return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-};
+WebView.escapeHtml = basic.escapeHtml; // (the name is kept: other code may use it)
 
 // LABEL: Small icon button of the toolbar
 WebView.createIconButton = function (svg, ariaLabel, style) {
@@ -515,9 +512,5 @@ WebView.getOpenSvg = function (color) {
 
 // The spinner animation can not be set with inline styles.
 WebView.injectCss = function () {
-    if (document.getElementById("web-view-css")) return;
-    const style = document.createElement("style");
-    style.id = "web-view-css";
-    style.textContent = "@keyframes webViewSpin { to { transform: rotate(360deg); } }";
-    document.head.appendChild(style);
+    basic.addCss("web-view-css", "@keyframes webViewSpin { to { transform: rotate(360deg); } }");
 };

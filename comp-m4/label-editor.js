@@ -156,11 +156,9 @@ const LabelEditor = function (params = {}) {
     if (_missing.length) console.error("LabelEditor: Load these components before label-editor.js: " + _missing.join(", "));
 
     // Merge style package: params.style > LabelEditor.styles[styleName] > LabelEditorDefaults.style (classic)
-    const _styleName = params.styleName || LabelEditorDefaults.styleName;
-    const _stylePackage = LabelEditor.styles[_styleName];
-    if (!_stylePackage) console.warn("LabelEditor: Style package not found: " + _styleName);
-    params.style = params.style || {};
-    mergeIntoIfMissing(params.style, _stylePackage || {});
+    const _stylePackage = LabelEditor.styles[params.styleName || LabelEditorDefaults.styleName];
+    if (!_stylePackage) console.warn("LabelEditor: Style package not found: " + params.styleName);
+    mergeIntoIfMissing(params, { style: _stylePackage || {} });
 
     // Merge params:
     mergeIntoIfMissing(params, LabelEditorDefaults);
@@ -690,17 +688,6 @@ const LabelEditor = function (params = {}) {
         updateEmpty();
     };
 
-    // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
-    const superRemove = box.remove;
-    box.superRemove = superRemove;
-    box.remove = function () {
-        if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
-        if (box.listScrollBar) { box.listScrollBar.remove(); box.listScrollBar = null; }
-        // WHY: The panel lives on the page, not in the box. (Its components clean their own popups.)
-        if (box.sidePanel) { box.sidePanel.remove(); box.sidePanel = null; }
-        superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
-        box = null;
-    };
 
     // *** OBJECT VIEW:
 
@@ -761,6 +748,7 @@ const LabelEditor = function (params = {}) {
             if (item.label && (!active || active === document.body || (box.sidePanel && box.sidePanel.elem.contains(active)))) item.label.elem.focus({ preventScroll: true });
         },
     });
+    box.own(box.sidePanel); // WHY: It is on the page, not in the box: removed with the box.
 
     box.sidePanel.startBody();
 

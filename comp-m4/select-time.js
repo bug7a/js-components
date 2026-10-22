@@ -615,7 +615,7 @@ const SelectTime = function (params = {}) {
     };
 
     box.setEnabled = function (enabled) {
-        box.enabled = (enabled == 1 || enabled === true) ? 1 : 0;
+        box.enabled = basic.isOn(enabled) ? 1 : 0;
         if (box.enabled != 1) box.close();
         updateField();
         renderPanel();
@@ -647,28 +647,6 @@ const SelectTime = function (params = {}) {
         refreshScrollBars();
     };
 
-    // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
-    const superRemove = box.remove;
-    box.superRemove = superRemove;
-    box.remove = function () {
-
-        if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
-        page.remove_onResize(onPageResize);
-
-        // WHY: A ScrollBar has its own page events and observer, they live outside its box.
-        if (box.hoursColumn.scrollBar) { box.hoursColumn.scrollBar.remove(); box.hoursColumn.scrollBar = null; }
-        if (box.minutesColumn.scrollBar) { box.minutesColumn.scrollBar.remove(); box.minutesColumn.scrollBar = null; }
-
-        // Remove objects that were moved to the page.
-        if (box.inline != 1) {
-            box.overlay.remove();
-            box.panel.remove();
-        }
-
-        superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
-        box = null;
-
-    };
 
     // *** OBJECT VIEW:
     box.elem.style.outline = "none";
@@ -836,7 +814,10 @@ const SelectTime = function (params = {}) {
             updateField();
         });
 
-        page.onResize(onPageResize);
+        // (onPageResize / own: the overlay and the panel are on the page, they are removed with the box)
+        box.onPageResize(onPageResize);
+        box.own(box.overlay);
+        box.own(box.panel);
 
     } else {
         box.panel.elem.tabIndex = 0;
@@ -848,7 +829,7 @@ const SelectTime = function (params = {}) {
     // WHY: Keep the keyboard focus on the panel when a cell is clicked.
     box.panel.on("mousedown", function (self, event) { event.preventDefault(); });
 
-    box.enabled = (box.enabled == 1 || box.enabled === true) ? 1 : 0;
+    box.enabled = basic.isOn(box.enabled) ? 1 : 0;
     // WHY: A start time out of the range is not accepted.
     if (box.minutesOfDay !== null && !isInRange(box.minutesOfDay)) box.minutesOfDay = null;
 
@@ -858,7 +839,7 @@ const SelectTime = function (params = {}) {
 
     if (box.inline == 1) {
         // WHY: Layout is not ready while the page is being created. Scroll after it.
-        setTimeout(function () { if (box) { scrollToSelected(); refreshScrollBars(); } }, 0);
+        box.after(0, function () { scrollToSelected(); refreshScrollBars(); });
     }
 
     return endObject(box);

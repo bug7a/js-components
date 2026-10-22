@@ -78,11 +78,9 @@ const ProgressBarDefaults = {
 const ProgressBar = function (params = {}) {
 
     // Merge style package: params.style > ProgressBar.styles[styleName] > ProgressBarDefaults.style (classic)
-    const _styleName = params.styleName || ProgressBarDefaults.styleName;
-    const _stylePackage = ProgressBar.styles[_styleName];
-    if (!_stylePackage) console.warn("ProgressBar: Style package not found: " + _styleName);
-    params.style = params.style || {};
-    mergeIntoIfMissing(params.style, _stylePackage || {});
+    const _stylePackage = ProgressBar.styles[params.styleName || ProgressBarDefaults.styleName];
+    if (!_stylePackage) console.warn("ProgressBar: Style package not found: " + params.styleName);
+    mergeIntoIfMissing(params, { style: _stylePackage || {} });
 
     // Merge params:
     mergeIntoIfMissing(params, ProgressBarDefaults);
@@ -213,7 +211,7 @@ const ProgressBar = function (params = {}) {
     // USAGE: get: progressBar.max, set: progressBar.setMax(20) // Ex: 20 files
 
     box.setIndeterminate = function (indeterminate) {
-        box.indeterminate = (indeterminate == 1 || indeterminate === true) ? 1 : 0;
+        box.indeterminate = basic.isOn(indeterminate) ? 1 : 0;
         updateViewWithoutMotion(); // WHY: No width animation between the moving bar size and the value.
     };
     // USAGE: get: progressBar.indeterminate, set: progressBar.setIndeterminate(1)
@@ -244,15 +242,6 @@ const ProgressBar = function (params = {}) {
         updateView();
     };
 
-    // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
-    const superRemove = box.remove;
-    box.superRemove = superRemove;
-    box.remove = function () {
-        if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
-        stopMoveAnimation();
-        superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
-        box = null;
-    };
 
     // *** OBJECT VIEW:
     box.elem.setAttribute("role", "progressbar");
@@ -346,7 +335,7 @@ const ProgressBar = function (params = {}) {
 
     box.max = (Number(box.max) >= 0) ? Number(box.max) : 100;
     box.value = clampValue(box.value);
-    box.indeterminate = (box.indeterminate == 1 || box.indeterminate === true) ? 1 : 0;
+    box.indeterminate = basic.isOn(box.indeterminate) ? 1 : 0;
     box.status = (box.status === "success" || box.status === "error") ? box.status : "normal";
 
     updateTopRow();

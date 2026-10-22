@@ -97,11 +97,9 @@ const StepperDefaults = {
 const Stepper = function (params = {}) {
 
     // Merge style package: params.style > Stepper.styles[styleName] > StepperDefaults.style (classic)
-    const _styleName = params.styleName || StepperDefaults.styleName;
-    const _stylePackage = Stepper.styles[_styleName];
-    if (!_stylePackage) console.warn("Stepper: Style package not found: " + _styleName);
-    params.style = params.style || {};
-    mergeIntoIfMissing(params.style, _stylePackage || {});
+    const _stylePackage = Stepper.styles[params.styleName || StepperDefaults.styleName];
+    if (!_stylePackage) console.warn("Stepper: Style package not found: " + params.styleName);
+    mergeIntoIfMissing(params, { style: _stylePackage || {} });
 
     // Merge params:
     mergeIntoIfMissing(params, StepperDefaults);
@@ -121,7 +119,7 @@ const Stepper = function (params = {}) {
     const _s = box.style;
     const isCompact = (box.layout === "compact");
     let isEditing = 0;
-    let holdTimer = null;
+    let cancelHold = null; // (box.after: stopped by remove())
     let holdCount = 0;
     let isFocused = 0;
 
@@ -198,14 +196,14 @@ const Stepper = function (params = {}) {
             // Faster after a while: 400 ms, then 120 ms, then 50 ms
             const delay = (holdCount < 3) ? 400 : (holdCount < 12) ? 120 : 50;
             if (!stepValue(direction)) { stopHold(); return; }
-            holdTimer = setTimeout(tick, delay);
+            cancelHold = box.after(delay, tick);
         };
-        holdTimer = setTimeout(tick, 400); // First repeat after a short wait (a normal click does not repeat)
+        cancelHold = box.after(400, tick); // First repeat after a short wait (a normal click does not repeat)
     };
 
     const stopHold = function () {
-        clearTimeout(holdTimer);
-        holdTimer = null;
+        if (cancelHold) cancelHold();
+        cancelHold = null;
     };
 
     // *** EDIT (type the value):
@@ -330,7 +328,7 @@ const Stepper = function (params = {}) {
     // USAGE: stepper.setUnitText(" kg")
 
     box.setEnabled = function (enabled) {
-        box.enabled = (enabled == 1 || enabled === true) ? 1 : 0;
+        box.enabled = basic.isOn(enabled) ? 1 : 0;
         if (box.enabled != 1) { endEdit(0); stopHold(); }
         box.elem.style.opacity = (box.enabled == 1) ? "1" : String(_s.disabled.opacity);
         box.elem.tabIndex = (box.enabled == 1) ? 0 : -1;
@@ -352,17 +350,6 @@ const Stepper = function (params = {}) {
         updateView();
     };
 
-    // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
-    const superRemove = box.remove;
-    box.superRemove = superRemove;
-    box.remove = function () {
-        if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
-        stopHold();
-        document.removeEventListener("mouseup", stopHold);
-        document.removeEventListener("touchend", stopHold);
-        superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
-        box = null;
-    };
 
     // *** OBJECT VIEW:
 
@@ -494,8 +481,8 @@ const Stepper = function (params = {}) {
 
     bindButton(box.btnMinus, -1);
     bindButton(box.btnPlus, 1);
-    document.addEventListener("mouseup", stopHold);
-    document.addEventListener("touchend", stopHold);
+    box.listenTo(document, "mouseup", stopHold); // (removed with the box)
+    box.listenTo(document, "touchend", stopHold);
 
     box.valueBox.on("click", function () { startEdit(); });
     box.input.inputElement.addEventListener("blur", function () { endEdit(1); });
@@ -523,9 +510,7 @@ const Stepper = function (params = {}) {
 // *** STATIC FUNCTIONS:
 
 // WHY: Label.text uses innerHTML. Texts must not be read as HTML.
-Stepper.escapeHtml = function (text) {
-    return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-};
+Stepper.escapeHtml = basic.escapeHtml; // (the name is kept: other code may use it)
 
 Stepper.getPlusSvg = function (color, size) {
     return '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';

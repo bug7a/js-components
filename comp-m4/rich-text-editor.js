@@ -157,11 +157,9 @@ const RichTextEditorDefaults = {
 const RichTextEditor = function (params = {}) {
 
     // Merge style package: params.style > RichTextEditor.styles[styleName] > RichTextEditorDefaults.style (classic)
-    const _styleName = params.styleName || RichTextEditorDefaults.styleName;
-    const _stylePackage = RichTextEditor.styles[_styleName];
-    if (!_stylePackage) console.warn("RichTextEditor: Style package not found: " + _styleName);
-    params.style = params.style || {};
-    mergeIntoIfMissing(params.style, _stylePackage || {});
+    const _stylePackage = RichTextEditor.styles[params.styleName || RichTextEditorDefaults.styleName];
+    if (!_stylePackage) console.warn("RichTextEditor: Style package not found: " + params.styleName);
+    mergeIntoIfMissing(params, { style: _stylePackage || {} });
 
     // Merge params:
     mergeIntoIfMissing(params, RichTextEditorDefaults);
@@ -514,13 +512,13 @@ const RichTextEditor = function (params = {}) {
     };
 
     box.setReadOnly = function (readOnly) {
-        box.readOnly = (readOnly == 1 || readOnly === true) ? 1 : 0;
+        box.readOnly = basic.isOn(readOnly) ? 1 : 0;
         applyEditableState();
     };
     // USAGE: editor.setReadOnly(1) // The text can be selected and copied, not changed.
 
     box.setEnabled = function (enabled) {
-        box.enabled = (enabled == 1 || enabled === true) ? 1 : 0;
+        box.enabled = basic.isOn(enabled) ? 1 : 0;
         applyEditableState();
     };
     // USAGE: get: editor.enabled, set: editor.setEnabled(0)
@@ -544,16 +542,6 @@ const RichTextEditor = function (params = {}) {
         contentChanged(0);
     };
 
-    // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
-    const superRemove = box.remove;
-    box.superRemove = superRemove;
-    box.remove = function () {
-        if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
-        document.removeEventListener("selectionchange", onSelectionChange);
-        if (box.scrollBar) { box.scrollBar.remove(); box.scrollBar = null; }
-        superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
-        box = null;
-    };
 
     // *** OBJECT VIEW:
 
@@ -768,7 +756,7 @@ const RichTextEditor = function (params = {}) {
     box.editArea.on("mousedown", function (self, event) {
         if (event.target === box.editArea.elem && isEditable()) { event.preventDefault(); box.focusEnd(); }
     });
-    document.addEventListener("selectionchange", onSelectionChange);
+    box.listenTo(document, "selectionchange", onSelectionChange); // (removed with the box)
 
     box.linkInput.inputElement.addEventListener("keydown", function (event) {
         if (event.key === "Enter") { event.preventDefault(); applyLink(); }
@@ -858,9 +846,7 @@ RichTextEditor.htmlToText = function (html) {
     return lines.map(function (l) { return l.trim(); }).join("\n").trim();
 };
 
-RichTextEditor.escapeHtml = function (text) {
-    return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-};
+RichTextEditor.escapeHtml = basic.escapeHtml; // (kept: the name is used outside)
 
 // Icons use currentColor: the color of the button label.
 RichTextEditor.getIconSvg = function (name, size) {
@@ -888,11 +874,8 @@ RichTextEditor.getIconSvg = function (name, size) {
 
 // Styles of the content (headings, lists, quotes, links, the placeholder) can not be set with inline styles.
 RichTextEditor.injectCss = function () {
-    if (document.getElementById("rich-text-editor-css")) return;
-    const style = document.createElement("style");
-    style.id = "rich-text-editor-css";
     const c = ".rich-text-editor-content";
-    style.textContent =
+    basic.addCss("rich-text-editor-css",
         c + " { position: relative; outline: none; pointer-events: auto; user-select: text; -webkit-user-select: text; overflow-wrap: break-word; word-break: break-word; }" +
         c + " p, " + c + " div { margin: 0 0 0.6em 0; }" +
         c + " h2 { font-size: 1.45em; line-height: 1.3; margin: 0.4em 0 0.4em 0; font-weight: 700; }" +
@@ -905,8 +888,7 @@ RichTextEditor.injectCss = function () {
         c + " a { color: var(--rte-link); text-decoration: underline; cursor: text; }" +
         c + " > :first-child { margin-top: 0; }" +
         c + " ::selection { background: var(--rte-selection); }" +
-        c + ".is-empty::before { content: attr(data-placeholder); position: absolute; color: var(--rte-placeholder); pointer-events: none; }";
-    document.head.appendChild(style);
+        c + ".is-empty::before { content: attr(data-placeholder); position: absolute; color: var(--rte-placeholder); pointer-events: none; }");
 };
 
 // *** STYLE PACKAGES:

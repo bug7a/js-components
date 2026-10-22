@@ -129,7 +129,7 @@ const ContextMenu = function (params = {}) {
     // *** PRIVATE FUNCTIONS:
 
     const toFlag = function (value) {
-        return (value == 1 || value === true) ? 1 : 0;
+        return basic.isOn(value) ? 1 : 0;
     };
 
     const normalizeItem = function (item) {

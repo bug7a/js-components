@@ -452,7 +452,7 @@ const Breadcrumbs = function (params = {}) {
     };
 
     box.setEnabled = function (enabled) {
-        box.enabled = (enabled == 1 || enabled === true) ? 1 : 0;
+        box.enabled = basic.isOn(enabled) ? 1 : 0;
         render(); // WHY: tabIndex and cursor of every item change.
     };
     // USAGE: get: breadcrumbs.enabled, set: breadcrumbs.setEnabled(0)
@@ -461,14 +461,6 @@ const Breadcrumbs = function (params = {}) {
         render();
     };
 
-    // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
-    const superRemove = box.remove;
-    box.superRemove = superRemove;
-    box.remove = function () {
-        if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
-        superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
-        box = null;
-    };
 
     // *** OBJECT VIEW:
 
@@ -488,7 +480,7 @@ const Breadcrumbs = function (params = {}) {
 
     // *** OBJECT INIT CODE:
 
-    box.enabled = (box.enabled == 1 || box.enabled === true) ? 1 : 0;
+    box.enabled = basic.isOn(box.enabled) ? 1 : 0;
     setItemsSilent(params.items); // WHY: Copy the array. The default [] must not be shared between components.
 
     return endObject(box);
@@ -498,9 +490,7 @@ const Breadcrumbs = function (params = {}) {
 // *** STATIC FUNCTIONS:
 
 // WHY: Label.text uses innerHTML. Item texts must not be read as HTML.
-Breadcrumbs.escapeHtml = function (text) {
-    return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-};
+Breadcrumbs.escapeHtml = basic.escapeHtml; // (the name is kept: other code may use it)
 
 // Creates items from a path. Every item has the path until it as key.
 Breadcrumbs.fromPath = function (path, rootText = "Home", divider = "/") {

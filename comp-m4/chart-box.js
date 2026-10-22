@@ -527,7 +527,7 @@ const ChartBox = function (params = {}) {
 
     box.setDatasetVisible = function (index, visible) {
         if (!box.chart) return;
-        box.chart.setDatasetVisibility(index, visible == 1 || visible === true);
+        box.chart.setDatasetVisibility(index, basic.isOn(visible));
         box.chart.update();
     };
 
@@ -566,12 +566,12 @@ const ChartBox = function (params = {}) {
     // USAGE: "auto", "top", "bottom", "left", "right", "none"
 
     box.setStacked = function (stacked) {
-        box.stacked = (stacked == 1 || stacked === true) ? 1 : 0;
+        box.stacked = basic.isOn(stacked) ? 1 : 0;
         box.refreshOptions();
     };
 
     box.setHorizontal = function (horizontal) {
-        box.horizontal = (horizontal == 1 || horizontal === true) ? 1 : 0;
+        box.horizontal = basic.isOn(horizontal) ? 1 : 0;
         box.refreshOptions();
     };
 
@@ -625,7 +625,6 @@ const ChartBox = function (params = {}) {
     box.remove = function () {
 
         if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
-        if (mediaQuery) mediaQuery.removeEventListener("change", onSystemThemeChange);
         if (box.chart) box.chart.destroy();
         box.chart = null;
 
@@ -680,7 +679,7 @@ const ChartBox = function (params = {}) {
 
     if (box.theme == "auto" && window.matchMedia) {
         mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-        mediaQuery.addEventListener("change", onSystemThemeChange);
+        box.listenTo(mediaQuery, "change", onSystemThemeChange); // (removed with the box)
     }
 
     ChartBox.load(function (isLoaded) {

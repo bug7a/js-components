@@ -94,7 +94,7 @@ const MiniGraphBox = function (params = {}) {
     // *** PRIVATE VARIABLES:
     const _s = box.style;
     let barList = []; // Bar objects (created one time for the bar count)
-    let resizeTimer = null;
+    let cancelResize = null; // (box.after: stopped by remove())
     const BAR_MOTION = "height 0.2s, background-color 0.2s";
 
     // *** PUBLIC VARIABLES:
@@ -305,15 +305,6 @@ const MiniGraphBox = function (params = {}) {
         refreshSize();
     };
 
-    // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
-    const superRemove = box.remove;
-    box.superRemove = superRemove;
-    box.remove = function () {
-        if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
-        clearTimeout(resizeTimer);
-        superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
-        box = null;
-    };
 
     // *** OBJECT VIEW:
 
@@ -379,7 +370,8 @@ const MiniGraphBox = function (params = {}) {
     updateBars();
 
     box.onResize(function () {
-        resizeTimer = waitAndRun(resizeTimer, refreshSize, 30);
+        if (cancelResize) cancelResize();
+        cancelResize = box.after(30, function () { cancelResize = null; refreshSize(); });
     });
 
     return endObject(box);

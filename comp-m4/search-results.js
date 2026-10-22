@@ -119,11 +119,9 @@ const SearchResults = function (params = {}) {
     // Merge style package: params.style > SearchResults.styles[styleName] > Defaults.style (classic)
     // WHY: Before the defaults. mergeIntoIfMissing() only fills what is missing, so the classic
     //      style of the defaults would win over the chosen package.
-    const _styleName = params.styleName || SearchResultsDefaults.styleName;
-    const _stylePackage = SearchResults.styles[_styleName];
-    if (!_stylePackage) console.warn("SearchResults: Style package not found: " + _styleName);
-    params.style = params.style || {};
-    mergeIntoIfMissing(params.style, _stylePackage || {});
+    const _stylePackage = SearchResults.styles[params.styleName || SearchResultsDefaults.styleName];
+    if (!_stylePackage) console.warn("SearchResults: Style package not found: " + params.styleName);
+    mergeIntoIfMissing(params, { style: _stylePackage || {} });
 
     // Merge params:
     mergeIntoIfMissing(params, SearchResultsDefaults);
@@ -437,10 +435,6 @@ const SearchResults = function (params = {}) {
         if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
         box.detach();
 
-        // WHY: These live outside the box, so remove() does not clean them.
-        page.remove_onResize(box.refresh);
-        if (box.scrollBar) { box.scrollBar.remove(); box.scrollBar = null; }
-
         superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
         box = null;
 
@@ -481,7 +475,7 @@ const SearchResults = function (params = {}) {
 
     // *** OBJECT INIT CODE:
 
-    page.onResize(box.refresh);
+    box.onPageResize(function () { box.refresh(); }); // (removed with the box)
 
     const results = endObject(box);
 

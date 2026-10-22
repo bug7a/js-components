@@ -383,7 +383,7 @@ const SelectFile = function (params = {}) {
 
     };
 
-    const onPageDragOver = function (event) {
+    const onPageDragOver = function (self, event) {
         event.preventDefault();
     };
 
@@ -421,7 +421,7 @@ const SelectFile = function (params = {}) {
     };
 
     box.setEnabled = function (enabled) {
-        box.enabled = (enabled == 1 || enabled === true) ? 1 : 0;
+        box.enabled = basic.isOn(enabled) ? 1 : 0;
         updateView();
     };
     // USAGE: get: selectFile.enabled, set: selectFile.setEnabled(0)
@@ -448,11 +448,6 @@ const SelectFile = function (params = {}) {
 
         if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
         revokePreviews();
-
-        if (box.preventPageDrop == 1) {
-            window.removeEventListener("dragover", onPageDragOver);
-            window.removeEventListener("drop", onPageDragOver);
-        }
 
         superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
         box = null;
@@ -616,11 +611,11 @@ const SelectFile = function (params = {}) {
     });
 
     if (box.preventPageDrop == 1) {
-        window.addEventListener("dragover", onPageDragOver);
-        window.addEventListener("drop", onPageDragOver);
+        box.listenTo(window, "dragover", onPageDragOver); // (removed with the box)
+        box.listenTo(window, "drop", onPageDragOver);
     }
 
-    box.enabled = (box.enabled == 1 || box.enabled === true) ? 1 : 0;
+    box.enabled = basic.isOn(box.enabled) ? 1 : 0;
     setState("normal");
     updateView();
     renderList();
@@ -642,6 +637,4 @@ SelectFile.formatSize = function (bytes) {
 // USAGE: SelectFile.formatSize(5 * 1024 * 1024) -> "5.0 MB"
 
 // WHY: Label.text uses innerHTML. File names must not be read as HTML.
-SelectFile.escapeHtml = function (text) {
-    return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-};
+SelectFile.escapeHtml = basic.escapeHtml; // (the name is kept: other code may use it)

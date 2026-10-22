@@ -100,11 +100,9 @@ const SidePanel = function (params = {}) {
     // Merge style package: params.style > SidePanel.styles[styleName] > SidePanelDefaults.style (classic)
     // WHY: This is done BEFORE the defaults. mergeIntoIfMissing() only fills the keys that are
     //      missing, so the classic style of the defaults would win over the chosen package.
-    const _styleName = params.styleName || SidePanelDefaults.styleName;
-    const _stylePackage = SidePanel.styles[_styleName];
-    if (!_stylePackage) console.warn("SidePanel: Style package not found: " + _styleName);
-    params.style = params.style || {};
-    mergeIntoIfMissing(params.style, _stylePackage || {});
+    const _stylePackage = SidePanel.styles[params.styleName || SidePanelDefaults.styleName];
+    if (!_stylePackage) console.warn("SidePanel: Style package not found: " + params.styleName);
+    mergeIntoIfMissing(params, { style: _stylePackage || {} });
 
     // Marge params:
     mergeIntoIfMissing(params, SidePanelDefaults);
@@ -140,8 +138,7 @@ const SidePanel = function (params = {}) {
     // *** PRIVATE VARIABLES:
 
     let size = box.panelSize;       // The size that is really used. (See layout().)
-    let removeKeyEvent = null;      // The remover of the window keydown event.
-    let closeTimer = null;
+    let cancelClose = null;         // (box.after: stopped by remove())
     const bodyStack = [];           // For startBody() / endBody()
 
     // *** PRIVATE FUNCTIONS:
@@ -209,7 +206,7 @@ const SidePanel = function (params = {}) {
             SidePanel.openedPanel.close();
         }
 
-        if (closeTimer) { clearTimeout(closeTimer); closeTimer = null; }
+        if (cancelClose) { cancelClose(); cancelClose = null; }
 
         box.isOpened = 1;
         SidePanel.openedPanel = box;
@@ -247,13 +244,13 @@ const SidePanel = function (params = {}) {
 
         // WHY: The panel is hidden only after the animation, and the wait is the duration of that
         //      animation, not a number written twice.
-        if (closeTimer) clearTimeout(closeTimer);
-        closeTimer = setTimeout(function () {
-            closeTimer = null;
-            if (!box || box.isOpened === 1) return;
+        if (cancelClose) cancelClose();
+        cancelClose = box.after(box.duration, function () {
+            cancelClose = null;
+            if (box.isOpened === 1) return;
             box.visible = 0;
             if (backdrop) backdrop.visible = 0;
-        }, box.duration);
+        });
 
         box.elem.setAttribute("aria-hidden", "true");
         box.onClose(box);
@@ -297,13 +294,7 @@ const SidePanel = function (params = {}) {
     box.remove = function () {
 
         if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
-        if (closeTimer) { clearTimeout(closeTimer); closeTimer = null; }
-
-        // WHY: These live outside the box, so remove() does not clean them.
-        if (removeKeyEvent) { removeKeyEvent(); removeKeyEvent = null; }
-        page.remove_onResize(layout);
         if (SidePanel.openedPanel === box) SidePanel.openedPanel = null;
-        if (backdrop) { backdrop.remove(); backdrop = null; }
 
         superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
         box = null;
@@ -425,10 +416,12 @@ const SidePanel = function (params = {}) {
         backdrop.on("click", function () { if (box.closeOnBackdrop == 1) box.close(); });
     }
 
-    removeKeyEvent = page.on("keydown", onKeyDown);
+    // (listenTo / onPageResize / own: removed with the box)
+    box.listenTo(window, "keydown", onKeyDown);
+    if (backdrop) box.own(backdrop); // WHY: It is on the page, not in the box.
 
     layout();
-    page.onResize(layout);
+    box.onPageResize(layout);
 
     // WHY: The groups above are created first. A group that is created inside a hidden box is not
     //      laid out as a flex group, so the panel is hidden only now.

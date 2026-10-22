@@ -99,11 +99,9 @@ const LoadingScreenDefaults = {
 const LoadingScreen = function (params = {}) {
 
     // Merge style package: params.style > LoadingScreen.styles[styleName] > LoadingScreenDefaults.style (light)
-    const _styleName = params.styleName || LoadingScreenDefaults.styleName;
-    const _stylePackage = LoadingScreen.styles[_styleName];
-    if (!_stylePackage) console.warn("LoadingScreen: Style package not found: " + _styleName);
-    params.style = params.style || {};
-    mergeIntoIfMissing(params.style, _stylePackage || {});
+    const _stylePackage = LoadingScreen.styles[params.styleName || LoadingScreenDefaults.styleName];
+    if (!_stylePackage) console.warn("LoadingScreen: Style package not found: " + params.styleName);
+    mergeIntoIfMissing(params, { style: _stylePackage || {} });
 
     // Merge params:
     mergeIntoIfMissing(params, LoadingScreenDefaults);
@@ -119,8 +117,8 @@ const LoadingScreen = function (params = {}) {
     // *** PRIVATE VARIABLES:
     const _s = box.style;
     let openedTime = 0;
-    let closeTimer = null;
-    let fadeTimer = null;
+    let cancelClose = null; // (box.after: the timers are stopped by remove())
+    let cancelFade = null;
 
     // *** PUBLIC VARIABLES:
     // NOTE: Default values are also public variables. (box.opened, box.progress, box.titleText)
@@ -128,10 +126,10 @@ const LoadingScreen = function (params = {}) {
     // *** PRIVATE FUNCTIONS:
 
     const clearTimers = function () {
-        clearTimeout(closeTimer);
-        clearTimeout(fadeTimer);
-        closeTimer = null;
-        fadeTimer = null;
+        if (cancelClose) cancelClose();
+        if (cancelFade) cancelFade();
+        cancelClose = null;
+        cancelFade = null;
     };
 
     const updateProgressView = function () {
@@ -141,15 +139,15 @@ const LoadingScreen = function (params = {}) {
     };
 
     const fadeOut = function () {
-        closeTimer = null;
+        cancelClose = null;
         box.opacity = 0;
-        fadeTimer = setTimeout(function () {
-            fadeTimer = null;
+        cancelFade = box.after(box.fadeDuration * 1000, function () {
+            cancelFade = null;
             box.visible = 0;
             box.elem.style.pointerEvents = "none";
             box.onClose(box);
-            if (box && box.removeOnClose) box.remove();
-        }, box.fadeDuration * 1000);
+            if (box.removeOnClose) box.remove();
+        });
     };
 
     // *** PUBLIC FUNCTIONS:
@@ -173,7 +171,7 @@ const LoadingScreen = function (params = {}) {
         clearTimers();
         box.setMotionNow("opacity " + box.fadeDuration + "s");
         const wait = Math.max(0, box.minDuration - (Date.now() - openedTime));
-        closeTimer = setTimeout(fadeOut, wait);
+        cancelClose = box.after(wait, fadeOut);
     };
 
     box.setTitle = function (text) {
@@ -195,15 +193,6 @@ const LoadingScreen = function (params = {}) {
         updateProgressView();
     };
 
-    // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
-    const superRemove = box.remove;
-    box.superRemove = superRemove;
-    box.remove = function () {
-        if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
-        clearTimers();
-        superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
-        box = null;
-    };
 
     // *** OBJECT VIEW:
 
@@ -346,11 +335,7 @@ LoadingScreen.styles = {
 
 // The animations can not be set with inline styles.
 LoadingScreen.injectCss = function () {
-    if (document.getElementById("loading-screen-css")) return;
-    const style = document.createElement("style");
-    style.id = "loading-screen-css";
-    style.textContent =
+    basic.addCss("loading-screen-css",
         "@keyframes loadingScreenSpin { to { transform: rotate(360deg); } }" +
-        "@keyframes loadingScreenDot { 0%, 80%, 100% { transform: scale(0.6); opacity: 0.35; } 40% { transform: scale(1); opacity: 1; } }";
-    document.head.appendChild(style);
+        "@keyframes loadingScreenDot { 0%, 80%, 100% { transform: scale(0.6); opacity: 0.35; } 40% { transform: scale(1); opacity: 1; } }");
 };

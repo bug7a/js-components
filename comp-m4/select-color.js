@@ -365,7 +365,7 @@ const SelectColor = function (params = {}) {
     };
 
     box.setEnabled = function (enabled) {
-        box.enabled = (enabled == 1 || enabled === true) ? 1 : 0;
+        box.enabled = basic.isOn(enabled) ? 1 : 0;
         if (box.enabled != 1) box.close();
         updateField();
         renderPanel();
@@ -377,25 +377,6 @@ const SelectColor = function (params = {}) {
         renderPanel();
     };
 
-    // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
-    const superRemove = box.remove;
-    box.superRemove = superRemove;
-    box.remove = function () {
-
-        if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
-        page.remove_onResize(onPageResize);
-
-        // Remove the objects that were created on the page.
-        if (box.inline != 1) {
-            box.overlay.remove();
-            box.panel.remove();
-        }
-
-        superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
-        box = null;
-
-    };
-    // USAGE: picker.remove();
 
     // *** OBJECT VIEW:
     box.elem.style.outline = "none";
@@ -511,7 +492,10 @@ const SelectColor = function (params = {}) {
             updateField();
         });
 
-        page.onResize(onPageResize);
+        // (onPageResize / own: the overlay and the panel are on the page, they are removed with the box)
+        box.onPageResize(onPageResize);
+        box.own(box.overlay);
+        box.own(box.panel);
 
     } else {
         box.panel.elem.tabIndex = 0;
@@ -523,7 +507,7 @@ const SelectColor = function (params = {}) {
     // WHY: Keep the keyboard focus on the panel when a swatch is clicked.
     box.panel.on("mousedown", function (self, event) { event.preventDefault(); });
 
-    box.enabled = (box.enabled == 1 || box.enabled === true) ? 1 : 0;
+    box.enabled = basic.isOn(box.enabled) ? 1 : 0;
 
     box.setColors(params.colors); // WHY: Copy the array. The default list must not be shared between components.
     updateField();

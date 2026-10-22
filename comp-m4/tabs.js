@@ -182,11 +182,9 @@ const TabsDefaults = {
 const Tabs = function (params = {}) {
 
     // Merge style package: params.style > Tabs.styles[styleName] > TabsDefaults.style (classic)
-    const _styleName = params.styleName || TabsDefaults.styleName;
-    const _stylePackage = Tabs.styles[_styleName];
-    if (!_stylePackage) console.warn("Tabs: Style package not found: " + _styleName);
-    params.style = params.style || {};
-    mergeIntoIfMissing(params.style, _stylePackage || {});
+    const _stylePackage = Tabs.styles[params.styleName || TabsDefaults.styleName];
+    if (!_stylePackage) console.warn("Tabs: Style package not found: " + params.styleName);
+    mergeIntoIfMissing(params, { style: _stylePackage || {} });
 
     // Merge params:
     mergeIntoIfMissing(params, TabsDefaults);
@@ -205,7 +203,7 @@ const Tabs = function (params = {}) {
     const _s = box.style;
     const id = "tabs-" + (Tabs._counter++);
     const isPill = (box.variant === "pill");
-    const isVertical = (box.vertical == 1 || box.vertical === true);
+    const isVertical = basic.isOn(box.vertical);
     let items = []; // [{ tab, group, label, countLabel, badgeDot, closeButton, icon, panel }]
     let panelStack = []; // startPanel() / endPanel()
     let indicatorReady = 0;
@@ -225,20 +223,7 @@ const Tabs = function (params = {}) {
     };
 
     const isClosable = function (tab) {
-        return (tab.closable === 1 || tab.closable === true) || (box.closable == 1 && tab.closable !== 0 && tab.closable !== false);
-    };
-
-    // Creates objects in a container again. (One group is started and ended in it.)
-    // WHY: setDefaultContainerBox() is not in the start/end list of basic.js. With one top-level group, all objects stay in the container.
-    const renderInto = function (container, buildContent) {
-        if (container.wrapper) container.wrapper.remove();
-        const previous = getDefaultContainerBox();
-        setDefaultContainerBox(container);
-            container.wrapper = VGroup({ width: "100%", height: "auto", align: "left top", gap: 0, position: "relative" });
-            container.wrapper.elem.style.alignItems = "stretch";
-                buildContent();
-            endGroup();
-        setDefaultContainerBox(previous);
+        return basic.isOn(tab.closable) || (basic.isOn(box.closable) && tab.closable !== 0 && tab.closable !== false);
     };
 
     const paintItem = function (item) {
@@ -420,75 +405,79 @@ const Tabs = function (params = {}) {
     // Creates the objects of one tab in the strip.
     const createItem = function (tab) {
 
-        // WHY: setDefaultContainerBox() is not in the start/end list of basic.js. It is set again for every tab.
-        setDefaultContainerBox(box.stripInner);
+        let group, icon = null, label, countLabel, badgeDot, closeButton;
 
-        // GROUP: Tab
-        const group = HGroup({
-            width: (isVertical || box.fullWidth == 1) ? "100%" : "auto",
-            height: "auto",
-            align: (isVertical) ? "left center" : "center center",
-            gap: _s.tab.gap,
-            padding: _s.tab.padding,
-            round: _s.tab.round,
-            color: "transparent",
-            clickable: 1,
+        // WHY: createIn() puts the container back after it (also on an error). setDefaultContainerBox() did not:
+        //      after addTab() / setTabs() of the page, its next objects went into the strip of the tabs.
+        createIn(box.stripInner, function () {
+
+            // GROUP: Tab
+            group = HGroup({
+                width: (isVertical || box.fullWidth == 1) ? "100%" : "auto",
+                height: "auto",
+                align: (isVertical) ? "left center" : "center center",
+                gap: _s.tab.gap,
+                padding: _s.tab.padding,
+                round: _s.tab.round,
+                color: "transparent",
+                clickable: 1,
+            });
+            group.elem.id = id + "-tab-" + Tabs.toId(tab.key);
+            group.elem.style.minHeight = _s.tab.minHeight + "px";
+            group.elem.style.flexShrink = "0";
+            group.elem.style.transition = "background-color 0.15s";
+            group.elem.style.outline = "none";
+            group.elem.style.boxSizing = "border-box";
+            group.elem.style.whiteSpace = "nowrap";
+            group.elem.setAttribute("role", "tab");
+            if (box.panels == 1) group.elem.setAttribute("aria-controls", id + "-panel-" + Tabs.toId(tab.key));
+            if (box.fullWidth == 1 && !isVertical) group.elem.style.flex = "1 1 0";
+
+                // ICON:
+                if (tab.iconFile || tab.selectedIconFile) {
+                    icon = Icon({ width: _s.icon.size, height: _s.icon.size });
+                    icon.elem.alt = "";
+                    icon.elem.style.flexShrink = "0";
+                    icon.elem.style.transition = "opacity 0.15s";
+                    icon.elem.setAttribute("aria-hidden", "true");
+                    // WHY: The selected icon is loaded before the first click, so it does not flash in.
+                    if (tab.selectedIconFile) (new Image()).src = tab.selectedIconFile;
+                }
+
+                // LABEL: Text
+                label = Label({ text: Tabs.escapeHtml(tab.text), fontSize: _s.tab.fontSize, textColor: _s.tab.textColor });
+                label.elem.style.transition = "color 0.15s";
+                label.elem.style.whiteSpace = "nowrap";
+                label.elem.style.overflow = "hidden";
+                label.elem.style.textOverflow = "ellipsis";
+                label.elem.style.minWidth = "0";
+                if (isVertical) label.elem.style.flex = "1 1 auto";
+
+                // LABEL: Count
+                countLabel = Label({ text: "", fontSize: _s.count.fontSize, textColor: _s.count.textColor, color: _s.count.color, round: _s.count.round, padding: _s.count.padding, visible: 0 });
+                countLabel.elem.style.flexShrink = "0";
+                countLabel.elem.style.lineHeight = "1.4";
+                countLabel.elem.style.transition = "background-color 0.15s, color 0.15s";
+
+                // BOX: Badge dot
+                badgeDot = Box({ width: _s.badge.size, height: _s.badge.size, color: _s.badge.color, round: _s.badge.size, visible: 0 });
+                badgeDot.elem.style.flexShrink = "0";
+                badgeDot.elem.setAttribute("aria-label", "New");
+
+                // LABEL: Close (x)
+                closeButton = Label({ text: Tabs.getCloseSvg(_s.close.color, _s.close.size), width: _s.close.size, height: _s.close.size, clickable: 1, visible: 0 });
+                closeButton.elem.style.flexShrink = "0";
+                closeButton.elem.style.lineHeight = "0";
+                closeButton.elem.style.cursor = "pointer";
+                closeButton.elem.style.borderRadius = "3px";
+                closeButton.elem.setAttribute("role", "button");
+                closeButton.elem.setAttribute("aria-label", "Close " + tab.text);
+                closeButton.elem.setAttribute("tabindex", "-1");
+                if (isVertical) closeButton.elem.style.marginLeft = "auto";
+
+            endGroup();
+
         });
-        group.elem.id = id + "-tab-" + Tabs.toId(tab.key);
-        group.elem.style.minHeight = _s.tab.minHeight + "px";
-        group.elem.style.flexShrink = "0";
-        group.elem.style.transition = "background-color 0.15s";
-        group.elem.style.outline = "none";
-        group.elem.style.boxSizing = "border-box";
-        group.elem.style.whiteSpace = "nowrap";
-        group.elem.setAttribute("role", "tab");
-        if (box.panels == 1) group.elem.setAttribute("aria-controls", id + "-panel-" + Tabs.toId(tab.key));
-        if (box.fullWidth == 1 && !isVertical) group.elem.style.flex = "1 1 0";
-
-            // ICON:
-            let icon = null;
-            if (tab.iconFile || tab.selectedIconFile) {
-                icon = Icon({ width: _s.icon.size, height: _s.icon.size });
-                icon.elem.alt = "";
-                icon.elem.style.flexShrink = "0";
-                icon.elem.style.transition = "opacity 0.15s";
-                icon.elem.setAttribute("aria-hidden", "true");
-                // WHY: The selected icon is loaded before the first click, so it does not flash in.
-                if (tab.selectedIconFile) (new Image()).src = tab.selectedIconFile;
-            }
-
-            // LABEL: Text
-            const label = Label({ text: Tabs.escapeHtml(tab.text), fontSize: _s.tab.fontSize, textColor: _s.tab.textColor });
-            label.elem.style.transition = "color 0.15s";
-            label.elem.style.whiteSpace = "nowrap";
-            label.elem.style.overflow = "hidden";
-            label.elem.style.textOverflow = "ellipsis";
-            label.elem.style.minWidth = "0";
-            if (isVertical) label.elem.style.flex = "1 1 auto";
-
-            // LABEL: Count
-            const countLabel = Label({ text: "", fontSize: _s.count.fontSize, textColor: _s.count.textColor, color: _s.count.color, round: _s.count.round, padding: _s.count.padding, visible: 0 });
-            countLabel.elem.style.flexShrink = "0";
-            countLabel.elem.style.lineHeight = "1.4";
-            countLabel.elem.style.transition = "background-color 0.15s, color 0.15s";
-
-            // BOX: Badge dot
-            const badgeDot = Box({ width: _s.badge.size, height: _s.badge.size, color: _s.badge.color, round: _s.badge.size, visible: 0 });
-            badgeDot.elem.style.flexShrink = "0";
-            badgeDot.elem.setAttribute("aria-label", "New");
-
-            // LABEL: Close (x)
-            const closeButton = Label({ text: Tabs.getCloseSvg(_s.close.color, _s.close.size), width: _s.close.size, height: _s.close.size, clickable: 1, visible: 0 });
-            closeButton.elem.style.flexShrink = "0";
-            closeButton.elem.style.lineHeight = "0";
-            closeButton.elem.style.cursor = "pointer";
-            closeButton.elem.style.borderRadius = "3px";
-            closeButton.elem.setAttribute("role", "button");
-            closeButton.elem.setAttribute("aria-label", "Close " + tab.text);
-            closeButton.elem.setAttribute("tabindex", "-1");
-            if (isVertical) closeButton.elem.style.marginLeft = "auto";
-
-        endGroup();
 
         // WHY: The indicator must stay under the tabs. It was created first, so the tabs are painted over it.
 
@@ -520,23 +509,24 @@ const Tabs = function (params = {}) {
 
         // PANEL:
         if (box.panels == 1) {
-            setDefaultContainerBox(box.panelsBox);
-            item.panel = Box({
-                width: "100%",
-                height: (box.panelHeight === "auto") ? "auto" : "100%",
-                color: _s.panel.color,
-                round: _s.panel.round,
-                border: _s.panel.border,
-                borderColor: _s.panel.borderColor,
-                visible: 0,
-                position: "relative",
+            createIn(box.panelsBox, function () {
+                item.panel = Box({
+                    width: "100%",
+                    height: (box.panelHeight === "auto") ? "auto" : "100%",
+                    color: _s.panel.color,
+                    round: _s.panel.round,
+                    border: _s.panel.border,
+                    borderColor: _s.panel.borderColor,
+                    visible: 0,
+                    position: "relative",
+                });
+                item.panel.elem.id = id + "-panel-" + Tabs.toId(tab.key);
+                item.panel.elem.setAttribute("role", "tabpanel");
+                item.panel.elem.setAttribute("aria-labelledby", group.elem.id);
+                item.panel.elem.style.boxSizing = "border-box";
+                item.panel.elem.style.padding = _s.panel.padding[1] + "px " + _s.panel.padding[0] + "px";
+                if (box.panelHeight !== "auto") { item.panel.elem.style.position = "absolute"; item.panel.elem.style.left = "0px"; item.panel.elem.style.top = "0px"; item.panel.elem.style.overflow = "auto"; }
             });
-            item.panel.elem.id = id + "-panel-" + Tabs.toId(tab.key);
-            item.panel.elem.setAttribute("role", "tabpanel");
-            item.panel.elem.setAttribute("aria-labelledby", group.elem.id);
-            item.panel.elem.style.boxSizing = "border-box";
-            item.panel.elem.style.padding = _s.panel.padding[1] + "px " + _s.panel.padding[0] + "px";
-            if (box.panelHeight !== "auto") { item.panel.elem.style.position = "absolute"; item.panel.elem.style.left = "0px"; item.panel.elem.style.top = "0px"; item.panel.elem.style.overflow = "auto"; }
         }
 
         applyItemContent(item);
@@ -554,7 +544,7 @@ const Tabs = function (params = {}) {
         const hasCount = (tab.count !== undefined && tab.count !== null && tab.count !== "");
         item.countLabel.text = (hasCount) ? Tabs.escapeHtml(tab.count) : "";
         item.countLabel.visible = (hasCount) ? 1 : 0;
-        item.badgeDot.visible = (tab.badge == 1 || tab.badge === true) ? 1 : 0;
+        item.badgeDot.visible = basic.isOn(tab.badge) ? 1 : 0;
         item.closeButton.visible = (isClosable(tab)) ? 1 : 0;
         item.closeButton.elem.setAttribute("aria-label", "Close " + tab.text);
         paintItem(item); // NOTE: It also loads the icon. (iconFile or selectedIconFile)
@@ -682,7 +672,7 @@ const Tabs = function (params = {}) {
         const item = findItem(key);
         if (!item) return 0;
         Object.assign(item.tab, changes || {});
-        item.tab.disabled = (item.tab.disabled == 1 || item.tab.disabled === true) ? 1 : 0;
+        item.tab.disabled = basic.isOn(item.tab.disabled) ? 1 : 0;
         if (changes && (changes.iconFile !== undefined || changes.selectedIconFile !== undefined) && !item.icon) console.warn("Tabs: An icon can only be changed on a tab that was created with an iconFile.");
         applyItemContent(item);
         if (item.tab.disabled && box.value === key) { box.value = pickValue(null); updatePanels(); }
@@ -697,16 +687,16 @@ const Tabs = function (params = {}) {
     // USAGE: tabs.setCount("open", 12) // tabs.setCount("open", "") removes the count
 
     box.setBadge = function (key, badge = 1) {
-        return box.updateTab(key, { badge: (badge == 1 || badge === true) ? 1 : 0 });
+        return box.updateTab(key, { badge: basic.isOn(badge) ? 1 : 0 });
     };
     // USAGE: tabs.setBadge("done") / tabs.setBadge("done", 0)
 
     box.setTabEnabled = function (key, enabled) {
-        return box.updateTab(key, { disabled: (enabled == 1 || enabled === true) ? 0 : 1 });
+        return box.updateTab(key, { disabled: basic.isOn(enabled) ? 0 : 1 });
     };
 
     box.setEnabled = function (enabled) {
-        box.enabled = (enabled == 1 || enabled === true) ? 1 : 0;
+        box.enabled = basic.isOn(enabled) ? 1 : 0;
         box.elem.style.opacity = (box.enabled == 1) ? "1" : String(_s.disabled.opacity);
         box.elem.style.pointerEvents = (box.enabled == 1) ? "" : "none";
     };
@@ -747,15 +737,6 @@ const Tabs = function (params = {}) {
         if (item) focusItem(item);
     };
 
-    // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
-    const superRemove = box.remove;
-    box.superRemove = superRemove;
-    box.remove = function () {
-        if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
-        if (box._fontsHandler) box._fontsHandler.cancelled = 1;
-        superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
-        box = null;
-    };
 
     // *** OBJECT VIEW:
     Tabs.injectCss();
@@ -903,9 +884,7 @@ const Tabs = function (params = {}) {
     box.stripInner.onResize(function () { moveIndicator(); updateArrows(); });
     box.onResize(function () { moveIndicator(); updateArrows(); });
     if (document.fonts && document.fonts.ready) {
-        box._fontsHandler = { cancelled: 0 };
-        const handler = box._fontsHandler;
-        document.fonts.ready.then(function () { if (!handler.cancelled && box) { moveIndicator(); updateArrows(); } });
+        document.fonts.ready.then(function () { if (!box.isRemoved) { moveIndicator(); updateArrows(); } });
     }
 
     Tabs.normalizeTabs(startTabs).forEach(function (tab) { items.push(createItem(tab)); });
@@ -935,8 +914,8 @@ Tabs.normalizeTabs = function (tabs) {
         result.text = String(tab.text ?? tab.key);
         result.iconFile = tab.iconFile || "";
         result.count = (tab.count !== undefined) ? tab.count : null;
-        result.badge = (tab.badge == 1 || tab.badge === true) ? 1 : 0;
-        result.disabled = (tab.disabled == 1 || tab.disabled === true) ? 1 : 0;
+        result.badge = basic.isOn(tab.badge) ? 1 : 0;
+        result.disabled = basic.isOn(tab.disabled) ? 1 : 0;
         return result;
     });
 };
@@ -947,9 +926,7 @@ Tabs.toId = function (key) {
 };
 
 // WHY: Label.text uses innerHTML. Texts must not be read as HTML.
-Tabs.escapeHtml = function (text) {
-    return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-};
+Tabs.escapeHtml = basic.escapeHtml; // (the name is kept: other code may use it)
 
 Tabs.getCloseSvg = function (color, size) {
     return '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>';
@@ -966,13 +943,9 @@ Tabs.getArrowSvg = function (direction, color, size) {
 
 // The scroll bar of the strip can not be hidden with inline styles.
 Tabs.injectCss = function () {
-    if (document.getElementById("tabs-css")) return;
-    const style = document.createElement("style");
-    style.id = "tabs-css";
-    style.textContent =
+    basic.addCss("tabs-css",
         ".tabs-strip { scrollbar-width: none; -ms-overflow-style: none; scroll-behavior: smooth; }" +
-        ".tabs-strip::-webkit-scrollbar { display: none; }";
-    document.head.appendChild(style);
+        ".tabs-strip::-webkit-scrollbar { display: none; }");
 };
 
 // *** STYLE PACKAGES:

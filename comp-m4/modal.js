@@ -413,7 +413,6 @@ const Modal = function (params = {}) {
     box.remove = function () {
         if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
         Modal.stack = Modal.stack.filter(function (modal) { return modal !== box; });
-        page.remove_onResize(layout);
         superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
         box = null;
     };
@@ -545,7 +544,7 @@ const Modal = function (params = {}) {
     box.layoutGroup.clickable = 1;
 
     box.on("keydown", onKeyDown);
-    page.onResize(layout);
+    box.onPageResize(layout); // (removed with the box)
 
     box.visible = 0;
 
@@ -770,9 +769,7 @@ Modal.prompt = function (params = {}) {
 // USAGE: const name = await Modal.prompt({ title: "Rename", value: "a.pdf", validate: (t) => (t.trim()) ? "" : "Required" });
 
 // WHY: Label.text uses innerHTML. Texts must not be read as HTML.
-Modal.escapeHtml = function (text) {
-    return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-};
+Modal.escapeHtml = basic.escapeHtml; // (the name is kept: other code may use it)
 
 Modal.getCloseSvg = function (color) {
     return '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>';

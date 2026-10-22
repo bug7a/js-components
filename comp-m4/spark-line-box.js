@@ -130,7 +130,7 @@ const SparkLineBox = function (params = {}) {
     let svg, areaPath, linePath, lastDot, minDot, maxDot, hoverLine, hoverDot;
     let markDots = []; // Dots of the marked values (with a color)
     let points = []; // [{ x, y, item }] of the last draw
-    let resizeTimer = null;
+    let cancelResize = null; // (box.after: stopped by remove())
     let graphWidth = 0;
     let hoverIndex = -1;
 
@@ -519,15 +519,6 @@ const SparkLineBox = function (params = {}) {
         refreshSize();
     };
 
-    // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
-    const superRemove = box.remove;
-    box.superRemove = superRemove;
-    box.remove = function () {
-        if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
-        clearTimeout(resizeTimer);
-        superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
-        box = null;
-    };
 
     // *** OBJECT VIEW:
 
@@ -647,7 +638,8 @@ const SparkLineBox = function (params = {}) {
     refreshSize();
 
     box.onResize(function () {
-        resizeTimer = waitAndRun(resizeTimer, refreshSize, 30);
+        if (cancelResize) cancelResize();
+        cancelResize = box.after(30, function () { cancelResize = null; refreshSize(); });
     });
 
     return endObject(box);

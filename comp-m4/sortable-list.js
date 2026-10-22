@@ -160,11 +160,9 @@ const SortableListDefaults = {
 const SortableList = function (params = {}) {
 
     // Merge style package: params.style > SortableList.styles[styleName] > SortableListDefaults.style (classic)
-    const _styleName = params.styleName || SortableListDefaults.styleName;
-    const _stylePackage = SortableList.styles[_styleName];
-    if (!_stylePackage) console.warn("SortableList: Style package not found: " + _styleName);
-    params.style = params.style || {};
-    mergeIntoIfMissing(params.style, _stylePackage || {});
+    const _stylePackage = SortableList.styles[params.styleName || SortableListDefaults.styleName];
+    if (!_stylePackage) console.warn("SortableList: Style package not found: " + params.styleName);
+    mergeIntoIfMissing(params, { style: _stylePackage || {} });
 
     // Merge params:
     mergeIntoIfMissing(params, SortableListDefaults);
@@ -189,7 +187,7 @@ const SortableList = function (params = {}) {
     let drag = null; // Pointer drag state
     let grab = null; // Keyboard grab state: { entry, startIndex }
     let isSettling = 0; // The dropped row is sliding to its place
-    let settleTimer = null;
+    let cancelSettle = null; // (box.after: stopped by remove())
     let autoScrollFrame = null;
     let isReordering = 0; // WHY: Moving a focused row in the DOM fires blur. It must not drop the grabbed row.
     let suppressClick = 0; // WHY: The pointerup of a drag also fires a click on the row.
@@ -208,7 +206,7 @@ const SortableList = function (params = {}) {
             key: isObject ? String(item.key ?? text) : text,
             text: text,
             desc: isObject ? String(item.desc ?? "") : "",
-            locked: (isObject && (item.locked == 1 || item.locked === true)) ? 1 : 0,
+            locked: (isObject && basic.isOn(item.locked)) ? 1 : 0,
             row: null,
         };
     };
@@ -525,10 +523,9 @@ const SortableList = function (params = {}) {
         isSettling = 1;
         paintRow(d.entry);
 
-        settleTimer = setTimeout(function () {
-            settleTimer = null;
+        cancelSettle = box.after(170, function () {
+            cancelSettle = null;
             isSettling = 0;
-            if (!box) return;
             entries.forEach(function (e) {
                 e.row.elem.style.transition = "none";
                 e.row.elem.style.transform = "";
@@ -542,7 +539,7 @@ const SortableList = function (params = {}) {
                 announce(box.texts.dropped, d.entry);
                 box.onChange(box, d.entry.item, i, finalIndex);
             }
-        }, 170);
+        });
     };
 
     // *** VIEW:
@@ -828,7 +825,7 @@ const SortableList = function (params = {}) {
     // USAGE: list.removeItem(2)
 
     box.setEnabled = function (enabled) {
-        box.enabled = (enabled == 1 || enabled === true) ? 1 : 0;
+        box.enabled = basic.isOn(enabled) ? 1 : 0;
         if (box.enabled != 1 && grab) endGrab(0);
         box.elem.style.opacity = (box.enabled == 1) ? "1" : String(_s.disabled.opacity);
         box.elem.setAttribute("aria-disabled", (box.enabled == 1) ? "false" : "true");
@@ -845,20 +842,6 @@ const SortableList = function (params = {}) {
         updateRows();
     };
 
-    // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
-    const superRemove = box.remove;
-    box.superRemove = superRemove;
-    box.remove = function () {
-        if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
-        stopAutoScroll();
-        clearTimeout(settleTimer);
-        settleTimer = null;
-        drag = null;
-        grab = null;
-        if (box.scrollBar) { box.scrollBar.remove(); box.scrollBar = null; }
-        superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
-        box = null;
-    };
 
     // *** OBJECT VIEW:
 

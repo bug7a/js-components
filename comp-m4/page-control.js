@@ -127,8 +127,8 @@ const PageControl = function (params = {}) {
     let items = []; // [{ key, page }]
     let dotList = [];
     let panelStack = [];
-    let closeTimer = null;
-    let autoPlayTimer = null;
+    let cancelClose = null; // (box.after / box.every: stopped by remove())
+    let stopAutoPlayTimer = null;
     let isHover = 0;
     let drag = null; // { startX, startY, x, y, time, active }
 
@@ -242,10 +242,11 @@ const PageControl = function (params = {}) {
 
     // onClose of the old page after the motion
     const scheduleClose = function (key) {
-        clearTimeout(closeTimer);
+        if (cancelClose) cancelClose();
+        cancelClose = null;
         if (key === null || key === undefined) return;
         const delay = (box.transition === "none") ? 0 : getMotion() * 1000 + 30;
-        closeTimer = setTimeout(function () { if (box) box.onClose(box, key); }, delay);
+        cancelClose = box.after(delay, function () { cancelClose = null; box.onClose(box, key); });
     };
 
     // *** AUTO PLAY:
@@ -253,16 +254,16 @@ const PageControl = function (params = {}) {
     const startAutoPlay = function () {
         stopAutoPlay();
         if (!(box.autoPlay > 0) || items.length < 2) return;
-        autoPlayTimer = setInterval(function () {
-            if (!box || isHover || (drag && drag.active) || box.enabled != 1) return;
+        stopAutoPlayTimer = box.every(box.autoPlay * 1000, function () {
+            if (isHover || (drag && drag.active) || box.enabled != 1) return;
             const index = getIndex(box.value);
             box.open(items[(index + 1) % items.length].key);
-        }, box.autoPlay * 1000);
+        });
     };
 
     const stopAutoPlay = function () {
-        clearInterval(autoPlayTimer);
-        autoPlayTimer = null;
+        if (stopAutoPlayTimer) stopAutoPlayTimer();
+        stopAutoPlayTimer = null;
     };
 
     // *** SWIPE:
@@ -310,7 +311,7 @@ const PageControl = function (params = {}) {
         if (!wasActive) return;
         event.preventDefault();
         box._swiped = 1; // WHY: The "click" after this pointer up is stopped. (onClickCapture)
-        setTimeout(function () { if (box) box._swiped = 0; }, 50);
+        box.after(50, function () { box._swiped = 0; });
 
         const size = (isVertical) ? box.elem.clientHeight : box.elem.clientWidth;
         const offset = (isVertical) ? dy : dx;
@@ -331,8 +332,8 @@ const PageControl = function (params = {}) {
     };
 
     // WHY: A drag must not end as a click on the page content.
-    const onClickCapture = function (event) {
-        if (box && box._swiped) { event.stopPropagation(); event.preventDefault(); box._swiped = 0; }
+    const onClickCapture = function (self, event) {
+        if (box._swiped) { event.stopPropagation(); event.preventDefault(); box._swiped = 0; }
     };
 
     const onKeyDown = function (self, event) {
@@ -497,7 +498,7 @@ const PageControl = function (params = {}) {
     };
 
     box.setLoop = function (loop) {
-        box.loop = (loop == 1 || loop === true) ? 1 : 0;
+        box.loop = basic.isOn(loop) ? 1 : 0;
         updateArrows();
     };
 
@@ -508,7 +509,7 @@ const PageControl = function (params = {}) {
     // USAGE: pages.setAutoPlay(4) or pages.setAutoPlay(0) to stop
 
     box.setEnabled = function (enabled) {
-        box.enabled = (enabled == 1 || enabled === true) ? 1 : 0;
+        box.enabled = basic.isOn(enabled) ? 1 : 0;
         box.elem.style.opacity = (box.enabled == 1) ? "1" : String(_s.disabled.opacity);
         box.elem.tabIndex = (box.enabled == 1 && box.keyboard == 1) ? 0 : -1;
         updateArrows();
@@ -522,17 +523,6 @@ const PageControl = function (params = {}) {
         box.elem.focus({ preventScroll: true });
     };
 
-    // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
-    const superRemove = box.remove;
-    box.superRemove = superRemove;
-    box.remove = function () {
-        if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
-        clearTimeout(closeTimer);
-        stopAutoPlay();
-        box.elem.removeEventListener("click", onClickCapture, true);
-        superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
-        box = null;
-    };
 
     // *** OBJECT VIEW:
 
@@ -607,7 +597,7 @@ const PageControl = function (params = {}) {
     box.on("mouseleave", function () { isHover = 0; });
     box.on("focus", function () { box.elem.style.boxShadow = "inset 0 0 0 2px " + _s.focus.outlineColor; });
     box.on("blur", function () { box.elem.style.boxShadow = "none"; });
-    box.elem.addEventListener("click", onClickCapture, true); // WHY: After a swipe, the click must not reach the page content.
+    box.listenTo(box.elem, "click", onClickCapture, true); // WHY: After a swipe, the click must not reach the page content.
 
     (startPages || []).forEach(function (key) { box.addPage(key); });
     if (startValue !== null && startValue !== undefined && findItem(startValue)) box.value = startValue;

@@ -15,7 +15,7 @@ UI COMPONENT TEMPLATE
   Home / End min / max, Enter (or a digit) starts the typing, Escape cancels it.
 - Step dots: one dot for each step, up to maxTicks (then fewer dots that divide the range evenly).
   Dots under the fill, the label or the value are hidden. showTicks: 0 hides them all.
-- Width can be a percent ("100%"): the view is updated with a ResizeObserver (disconnected in remove()).
+- Width can be a percent ("100%"): the view is updated with box.onResize (basic.js removes it with the box).
 - onChange is called while dragging (every new value), onChangeEnd when the change is finished
   (the drag is released, a key step, a typed value). Neither is called at create time or with silent: 1.
 - Everything is drawn with code (no image files needed). Accessibility: role="slider", aria-valuenow...
@@ -117,11 +117,9 @@ const SliderFieldDefaults = {
 const SliderField = function (params = {}) {
 
     // Merge style package: params.style > SliderField.styles[styleName] > SliderFieldDefaults.style (classic)
-    const _styleName = params.styleName || SliderFieldDefaults.styleName;
-    const _stylePackage = SliderField.styles[_styleName];
-    if (!_stylePackage) console.warn("SliderField: Style package not found: " + _styleName);
-    params.style = params.style || {};
-    mergeIntoIfMissing(params.style, _stylePackage || {});
+    const _stylePackage = SliderField.styles[params.styleName || SliderFieldDefaults.styleName];
+    if (!_stylePackage) console.warn("SliderField: Style package not found: " + params.styleName);
+    mergeIntoIfMissing(params, { style: _stylePackage || {} });
 
     // Merge params:
     mergeIntoIfMissing(params, SliderFieldDefaults);
@@ -147,7 +145,6 @@ const SliderField = function (params = {}) {
     let isKeyboardFocus = 0; // WHY: The focus border is only for the keyboard, not after a click.
     let isPointerFocusing = 0;
     let drag = null; // { pointerId, startX, isMoving, onValue }
-    let resizeObserver = null;
 
     // *** PUBLIC VARIABLES:
     // NOTE: Default values are also public variables. (box.value, box.min, box.max, box.step)
@@ -501,13 +498,13 @@ const SliderField = function (params = {}) {
     // USAGE: slider.setUnitText("px")
 
     box.setShowTicks = function (showTicks) {
-        box.showTicks = (showTicks == 1 || showTicks === true) ? 1 : 0;
+        box.showTicks = basic.isOn(showTicks) ? 1 : 0;
         buildTicks();
         layout();
     };
 
     box.setEnabled = function (enabled) {
-        box.enabled = (enabled == 1 || enabled === true) ? 1 : 0;
+        box.enabled = basic.isOn(enabled) ? 1 : 0;
         if (box.enabled != 1) { endEdit(0); drag = null; setMotion(1); }
         box.elem.style.opacity = (box.enabled == 1) ? "1" : String(_s.disabled.opacity);
         box.elem.style.cursor = (box.enabled == 1) ? "pointer" : "default";
@@ -531,17 +528,6 @@ const SliderField = function (params = {}) {
         updateView();
     };
 
-    // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
-    const superRemove = box.remove;
-    box.superRemove = superRemove;
-    box.remove = function () {
-        if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
-        if (resizeObserver) resizeObserver.disconnect();
-        resizeObserver = null;
-        ticks = [];
-        superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
-        box = null;
-    };
 
     // *** OBJECT VIEW:
 
@@ -638,10 +624,7 @@ const SliderField = function (params = {}) {
     box.input.inputElement.addEventListener("blur", function () { endEdit(1); });
     box.input.inputElement.addEventListener("keydown", onKeyDown);
 
-    if (typeof ResizeObserver !== "undefined") {
-        resizeObserver = new ResizeObserver(function () { if (box) layout(); });
-        resizeObserver.observe(box.elem);
-    }
+    box.onResize(function () { layout(); }); // (removed with the box)
 
     box.min = Number(box.min) || 0;
     box.max = Number(box.max);
@@ -662,9 +645,7 @@ const SliderField = function (params = {}) {
 // *** STATIC FUNCTIONS:
 
 // WHY: Label.text uses innerHTML. Texts must not be read as HTML.
-SliderField.escapeHtml = function (text) {
-    return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-};
+SliderField.escapeHtml = basic.escapeHtml; // (the name is kept: other code may use it)
 
 // *** STYLE PACKAGES:
 // USAGE: SliderField({ styleName: "modern" })

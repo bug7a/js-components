@@ -346,11 +346,11 @@ const PropertyPanel = function (params = {}) {
     };
 
     // WHY: A pointerdown on the opener is left to its click, which closes the menu (a toggle).
-    const onDocumentPointerDown = function (event) {
+    const onDocumentPointerDown = function (self, event) {
         if (menu && !menu.obj.elem.contains(event.target) && !menu.opener.elem.contains(event.target)) closeMenu();
     };
 
-    const onDocumentKeyDown = function (event) {
+    const onDocumentKeyDown = function (self, event) {
         if (menu && event.key === "Escape") closeMenu();
     };
 
@@ -1094,7 +1094,7 @@ const PropertyPanel = function (params = {}) {
     box.setEnabled = function (key, enabled) {
         const ctrl = controllers[key];
         if (!ctrl) return 0;
-        ctrl.item.enabled = (enabled == 1 || enabled === true) ? 1 : 0;
+        ctrl.item.enabled = basic.isOn(enabled) ? 1 : 0;
         ctrl.setEnabled(ctrl.item.enabled);
         return 1;
     };
@@ -1103,7 +1103,7 @@ const PropertyPanel = function (params = {}) {
     box.setItemVisible = function (key, visible) {
         const ctrl = controllers[key];
         if (!ctrl) return 0;
-        ctrl.item.visible = (visible == 1 || visible === true) ? 1 : 0;
+        ctrl.item.visible = basic.isOn(visible) ? 1 : 0;
         applyVisible(ctrl);
         return 1;
     };
@@ -1157,11 +1157,6 @@ const PropertyPanel = function (params = {}) {
     box.remove = function () {
         if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
         closeMenu();
-        document.removeEventListener("pointerdown", onDocumentPointerDown, true);
-        document.removeEventListener("keydown", onDocumentKeyDown);
-        window.removeEventListener("resize", closeMenu);
-        listeners = [];
-        controllers = {};
         superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
         box = null;
     };
@@ -1185,9 +1180,10 @@ const PropertyPanel = function (params = {}) {
 
     // *** OBJECT INIT CODE:
 
-    document.addEventListener("pointerdown", onDocumentPointerDown, true);
-    document.addEventListener("keydown", onDocumentKeyDown);
-    window.addEventListener("resize", closeMenu);
+    // (listenTo / onPageResize: removed with the box)
+    box.listenTo(document, "pointerdown", onDocumentPointerDown, true);
+    box.listenTo(document, "keydown", onDocumentKeyDown);
+    box.onPageResize(closeMenu);
     box.scrollBox.elem.addEventListener("scroll", closeMenu);
 
     box.setData(startData);

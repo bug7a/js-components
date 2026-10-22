@@ -277,7 +277,7 @@ const TimeLine = function (params = {}) {
     };
 
     box.setEnabled = function (enabled) {
-        box.enabled = (enabled == 1 || enabled === true) ? 1 : 0;
+        box.enabled = basic.isOn(enabled) ? 1 : 0;
         render(); // WHY: The cursor and the click of every row change.
     };
     // USAGE: get: timeLine.enabled, set: timeLine.setEnabled(0)
@@ -286,18 +286,6 @@ const TimeLine = function (params = {}) {
         render();
     };
 
-    // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
-    const superRemove = box.remove;
-    box.superRemove = superRemove;
-    box.remove = function () {
-
-        if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
-
-        superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
-        box = null;
-
-    };
-    // USAGE: timeLine.remove();
 
     // *** OBJECT VIEW:
 
@@ -316,7 +304,7 @@ const TimeLine = function (params = {}) {
 
     // *** OBJECT INIT CODE:
 
-    box.enabled = (box.enabled == 1 || box.enabled === true) ? 1 : 0;
+    box.enabled = basic.isOn(box.enabled) ? 1 : 0;
     box.setItems(params.items); // WHY: Copy the array. The default [] must not be shared between components.
 
     return endObject(box);

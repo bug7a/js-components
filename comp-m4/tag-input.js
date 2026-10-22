@@ -170,11 +170,9 @@ const TagInputDefaults = {
 const TagInput = function (params = {}) {
 
     // Merge style package: params.style > TagInput.styles[styleName] > TagInputDefaults.style (classic)
-    const _styleName = params.styleName || TagInputDefaults.styleName;
-    const _stylePackage = TagInput.styles[_styleName];
-    if (!_stylePackage) console.warn("TagInput: Style package not found: " + _styleName);
-    params.style = params.style || {};
-    mergeIntoIfMissing(params.style, _stylePackage || {});
+    const _stylePackage = TagInput.styles[params.styleName || TagInputDefaults.styleName];
+    if (!_stylePackage) console.warn("TagInput: Style package not found: " + params.styleName);
+    mergeIntoIfMissing(params, { style: _stylePackage || {} });
 
     // Merge params:
     mergeIntoIfMissing(params, TagInputDefaults);
@@ -197,8 +195,8 @@ const TagInput = function (params = {}) {
     let filtered = []; // Suggestions in the list
     let rows = []; // Rows in the list
     let activeIndex = -1; // Active suggestion
-    let messageTimer = null;
-    let errorTimer = null;
+    let cancelMessage = null; // (box.after: the timers are stopped by remove())
+    let cancelError = null;
     let isRendering = 0;
 
     // *** PUBLIC VARIABLES:
@@ -282,8 +280,8 @@ const TagInput = function (params = {}) {
     };
 
     const showMessage = function (text) {
-        clearTimeout(messageTimer);
-        clearTimeout(errorTimer);
+        if (cancelMessage) cancelMessage();
+        if (cancelError) cancelError();
         box.messageLabel.text = TagInput.escapeHtml(text);
         box.messageLabel.visible = 1;
         updateCounter();
@@ -292,13 +290,13 @@ const TagInput = function (params = {}) {
         box.field.elem.style.animation = "none";
         box.field.elem.offsetWidth; // WHY: Restart the animation.
         box.field.elem.style.animation = "tagInputShake 0.3s";
-        errorTimer = setTimeout(function () { if (box) box.field.elem.style.animation = "none"; }, 350);
-        messageTimer = setTimeout(hideMessage, 2500);
+        cancelError = box.after(350, function () { cancelError = null; box.field.elem.style.animation = "none"; });
+        cancelMessage = box.after(2500, hideMessage);
     };
 
     const hideMessage = function () {
-        clearTimeout(messageTimer);
-        if (!box) return;
+        if (cancelMessage) cancelMessage();
+        cancelMessage = null;
         box.messageLabel.visible = 0;
         updateCounter();
         updateFieldBorder();
@@ -680,12 +678,12 @@ const TagInput = function (params = {}) {
     };
 
     // WHY: The panel is on the page, not in the scrolled container. It must follow the field.
-    const onAnyScroll = function (event) {
+    const onAnyScroll = function (self, event) {
         if (!isOpen || event.target === box.list.elem) return;
         positionPanel();
     };
 
-    const onDocumentPointerDown = function (event) {
+    const onDocumentPointerDown = function (self, event) {
         if (!box) return;
         if (box.elem.contains(event.target) || box.panel.elem.contains(event.target)) return;
         closePanel();
@@ -741,7 +739,7 @@ const TagInput = function (params = {}) {
     // USAGE: tagInput.setSuggestions(["a", "b"])
 
     box.setEnabled = function (enabled) {
-        box.enabled = (enabled == 1 || enabled === true) ? 1 : 0;
+        box.enabled = basic.isOn(enabled) ? 1 : 0;
         box.input.inputElement.disabled = (box.enabled != 1);
         box.elem.style.opacity = (box.enabled == 1) ? "1" : String(_s.disabled.opacity);
         box.elem.style.pointerEvents = (box.enabled == 1) ? "" : "none";
@@ -768,21 +766,6 @@ const TagInput = function (params = {}) {
         box.input.inputElement.blur();
     };
 
-    // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
-    const superRemove = box.remove;
-    box.superRemove = superRemove;
-    box.remove = function () {
-        if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
-        clearTimeout(messageTimer);
-        clearTimeout(errorTimer);
-        page.remove_onResize(onPageResize);
-        document.removeEventListener("pointerdown", onDocumentPointerDown, true);
-        document.removeEventListener("scroll", onAnyScroll, true);
-        box.input.inputElement.removeEventListener("paste", onPaste);
-        box.panel.remove(); // Created on the page
-        superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
-        box = null;
-    };
 
     // *** OBJECT VIEW:
     TagInput.injectCss();
@@ -913,9 +896,11 @@ const TagInput = function (params = {}) {
     // WHY: Keep the keyboard focus in the input when a suggestion is pressed.
     box.panel.on("mousedown", function (self, event) { event.preventDefault(); });
 
-    document.addEventListener("pointerdown", onDocumentPointerDown, true);
-    document.addEventListener("scroll", onAnyScroll, true);
-    page.onResize(onPageResize);
+    // (listenTo / onPageResize / own: removed with the box)
+    box.listenTo(document, "pointerdown", onDocumentPointerDown, true);
+    box.listenTo(document, "scroll", onAnyScroll, true);
+    box.onPageResize(onPageResize);
+    box.own(box.panel); // WHY: It is on the page, not in the box.
 
     box.suggestions = (box.suggestions || []).map(normalize).filter(Boolean);
     box.maxTags = Math.max(0, Number(box.maxTags) || 0);
@@ -932,9 +917,7 @@ const TagInput = function (params = {}) {
 TagInput._counter = 1;
 
 // WHY: Label.text uses innerHTML. Texts must not be read as HTML.
-TagInput.escapeHtml = function (text) {
-    return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-};
+TagInput.escapeHtml = basic.escapeHtml; // (the name is kept: other code may use it)
 
 TagInput.getCloseSvg = function (color) {
     return '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>';
@@ -942,14 +925,10 @@ TagInput.getCloseSvg = function (color) {
 
 // Placeholder color and the shake animation can not be set with inline styles.
 TagInput.injectCss = function () {
-    if (document.getElementById("tag-input-css")) return;
-    const style = document.createElement("style");
-    style.id = "tag-input-css";
-    style.textContent =
+    basic.addCss("tag-input-css",
         ".tag-input-input input::placeholder { color: var(--tag-input-placeholder, rgba(0,0,0,0.4)); opacity: 1; }" +
         ".tag-input-input input { pointer-events: auto; user-select: text; -webkit-user-select: text; }" +
-        "@keyframes tagInputShake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }";
-    document.head.appendChild(style);
+        "@keyframes tagInputShake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }");
 };
 
 // *** STYLE PACKAGES:

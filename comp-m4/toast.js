@@ -118,7 +118,8 @@ const Toast = function (params = {}) {
 
     // *** PRIVATE VARIABLES:
     const _s = box.style;
-    let timer = null;
+    let timer = null; // The cancel function of box.after (stopped by remove())
+    let removeVisibilityEvent = null;
     let remaining = 0; // ms
     let startedAt = 0;
     let isHovered = 0;
@@ -210,9 +211,14 @@ const Toast = function (params = {}) {
         style.width = width;
     };
 
+    const stopTimer = function () {
+        if (timer) timer();
+        timer = null;
+    };
+
     const startTimer = function () {
 
-        clearTimeout(timer);
+        stopTimer();
         const duration = getDuration();
 
         const showProgress = duration > 0 && box.showProgress == 1;
@@ -232,7 +238,7 @@ const Toast = function (params = {}) {
         }
 
         startedAt = Date.now();
-        timer = setTimeout(function () { box.close("timeout"); }, remaining);
+        timer = box.after(remaining, function () { timer = null; box.close("timeout"); });
         if (showProgress) animateProgress(remaining, true);
 
     };
@@ -243,8 +249,7 @@ const Toast = function (params = {}) {
 
     const pause = function () {
         if (!timer) return;
-        clearTimeout(timer);
-        timer = null;
+        stopTimer();
         remaining = Math.max(0, remaining - (Date.now() - startedAt));
         freezeProgress();
     };
@@ -252,7 +257,7 @@ const Toast = function (params = {}) {
     const resume = function () {
         if (timer || !(remaining > 0) || isPaused() || box.isClosing) return;
         startedAt = Date.now();
-        timer = setTimeout(function () { box.close("timeout"); }, remaining);
+        timer = box.after(remaining, function () { timer = null; box.close("timeout"); });
         if (box.progress.visible) animateProgress(remaining, false);
     };
 
@@ -287,7 +292,7 @@ const Toast = function (params = {}) {
         const style = box.card.elem.style;
         style.transition = "transform 0.12s";
         style.transform = "scale(1.03)";
-        setTimeout(function () { if (box) style.transform = "scale(1)"; }, 120);
+        box.after(120, function () { style.transform = "scale(1)"; });
     };
 
     box.close = function (reason = "api") {
@@ -295,8 +300,8 @@ const Toast = function (params = {}) {
         if (!box || box.isClosing) return;
         box.isClosing = 1;
 
-        clearTimeout(timer);
-        document.removeEventListener("visibilitychange", onVisibilityChange);
+        stopTimer();
+        if (removeVisibilityEvent) removeVisibilityEvent();
         Toast.list = Toast.list.filter(function (toast) { return toast !== box; });
 
         const self = box;
@@ -336,8 +341,6 @@ const Toast = function (params = {}) {
     box.superRemove = superRemove;
     box.remove = function () {
         if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
-        clearTimeout(timer);
-        document.removeEventListener("visibilitychange", onVisibilityChange);
         Toast.list = Toast.list.filter(function (toast) { return toast !== box; });
         superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
         box = null;
@@ -488,7 +491,7 @@ const Toast = function (params = {}) {
     box.card.on("mouseleave", function () { isHovered = 0; updatePause(); });
     box.card.on("focusin", function () { isFocused = 1; updatePause(); });
     box.card.on("focusout", function () { isFocused = 0; updatePause(); });
-    document.addEventListener("visibilitychange", onVisibilityChange);
+    removeVisibilityEvent = box.listenTo(document, "visibilitychange", onVisibilityChange); // (removed with the box)
 
     render();
 
@@ -697,9 +700,7 @@ Toast.layoutContainers = function () {
 };
 
 // WHY: Label.text uses innerHTML. Texts must not be read as HTML.
-Toast.escapeHtml = function (text) {
-    return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-};
+Toast.escapeHtml = basic.escapeHtml; // (the name is kept: other code may use it)
 
 // "#2A78D6", 0.2 -> "rgba(42, 120, 214, 0.2)" (rgba texts are used as they are)
 Toast.alpha = function (color, alpha) {

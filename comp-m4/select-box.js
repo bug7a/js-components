@@ -634,7 +634,7 @@ const SelectBox = function (params = {}) {
     };
 
     box.setEnabled = function (enabled) {
-        box.enabled = (enabled == 1 || enabled === true) ? 1 : 0;
+        box.enabled = basic.isOn(enabled) ? 1 : 0;
         if (box.enabled != 1) box.close();
         updateField();
     };
@@ -648,22 +648,6 @@ const SelectBox = function (params = {}) {
         box.elem.focus();
     };
 
-    // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
-    const superRemove = box.remove;
-    box.superRemove = superRemove;
-    box.remove = function () {
-
-        if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
-        page.remove_onResize(onPageResize);
-
-        // Remove objects that were created on the page.
-        box.overlay.remove();
-        box.panel.remove();
-
-        superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
-        box = null;
-
-    };
 
     // *** OBJECT VIEW:
 
@@ -835,9 +819,12 @@ const SelectBox = function (params = {}) {
         box.clear();
     });
 
-    page.onResize(onPageResize);
+    // (onPageResize / own: the overlay and the panel are on the page, they are removed with the box)
+    box.onPageResize(onPageResize);
+    box.own(box.overlay);
+    box.own(box.panel);
 
-    box.enabled = (box.enabled == 1 || box.enabled === true) ? 1 : 0;
+    box.enabled = basic.isOn(box.enabled) ? 1 : 0;
     box.options = SelectBox.normalizeOptions(startOptions);
     box.value = normalizeValue(startValue);
 
@@ -864,15 +851,13 @@ SelectBox.normalizeOptions = function (options) {
             description: option.description || "",
             iconFile: option.iconFile || "",
             group: option.group || "",
-            disabled: (option.disabled == 1 || option.disabled === true) ? 1 : 0,
+            disabled: basic.isOn(option.disabled) ? 1 : 0,
         };
     });
 };
 
 // WHY: Label.text uses innerHTML. Texts must not be read as HTML.
-SelectBox.escapeHtml = function (text) {
-    return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-};
+SelectBox.escapeHtml = basic.escapeHtml; // (the name is kept: other code may use it)
 
 SelectBox.getArrowSvg = function (color) {
     return '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';

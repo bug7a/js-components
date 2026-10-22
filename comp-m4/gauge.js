@@ -98,11 +98,9 @@ const Gauge = function (params = {}) {
     // Merge style package: params.style > Gauge.styles[styleName] > GaugeDefaults.style (classic)
     // WHY: Before the defaults. mergeIntoIfMissing() only fills what is missing, so the classic
     //      style of the defaults would win over the chosen package.
-    const _styleName = params.styleName || GaugeDefaults.styleName;
-    const _stylePackage = Gauge.styles[_styleName];
-    if (!_stylePackage) console.warn("Gauge: Style package not found: " + _styleName);
-    params.style = params.style || {};
-    mergeIntoIfMissing(params.style, _stylePackage || {});
+    const _stylePackage = Gauge.styles[params.styleName || GaugeDefaults.styleName];
+    if (!_stylePackage) console.warn("Gauge: Style package not found: " + params.styleName);
+    mergeIntoIfMissing(params, { style: _stylePackage || {} });
 
     // Merge params:
     mergeIntoIfMissing(params, GaugeDefaults);
@@ -336,17 +334,6 @@ const Gauge = function (params = {}) {
         build();
     };
 
-    // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
-    const superRemove = box.remove;
-    box.superRemove = superRemove;
-    box.remove = function () {
-        if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
-        box.elem.innerHTML = "";
-        svg = null;
-        elements = {};
-        superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
-        box = null;
-    };
 
     // *** OBJECT VIEW:
 

@@ -371,12 +371,7 @@ UI._writeThemeCss = function () {
         }
         css += "    color-scheme: " + (theme.scheme || "light") + ";\n}\n";
     }
-    if (!UI._styleElement) {
-        UI._styleElement = document.createElement("style");
-        UI._styleElement.id = "ui-standards-themes";
-        document.head.appendChild(UI._styleElement);
-    }
-    UI._styleElement.textContent = css;
+    UI._styleElement = basic.addCss("ui-standards-themes", css, 1); // (replace: the themes can change)
 };
 
 UI._applyActiveTheme = function () {
