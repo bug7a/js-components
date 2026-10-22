@@ -53,6 +53,12 @@ CATALOG.COMPONENTS = [
         tr: "Alt çizgili ve hap görünümlü sekme çubuğu: sayı, rozet, kapatılabilir sekme, dikey düzen ve isteğe bağlı paneller.",
     },
     {
+        key: "tree-view", name: "TreeView", gen: 4, cat: "navigation",
+        source: "comp-m4/tree-view.js", samples: ["02-comp-m4-samples/tree-view.htm"],
+        en: "A tree of nested items with lazy branches, keyboard and type-ahead: a file explorer, a category tree, a menu or design tool layers.",
+        tr: "İç içe öğelerden oluşan ağaç; sonradan yüklenen dallar, klavye ve harfle atlama: dosya gezgini, kategori ağacı, menü veya tasarım aracı katmanları.",
+    },
+    {
         key: "breadcrumbs", name: "Breadcrumbs", gen: 4, cat: "navigation",
         source: "comp-m4/breadcrumbs.js", samples: ["02-comp-m4-samples/breadcrumbs.htm"],
         en: "Shows where the current page is in a hierarchy: Home / Products / Laptops.",

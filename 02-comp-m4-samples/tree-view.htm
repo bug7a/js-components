@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>TreeView</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp-m4/tree-view.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // *** VARIABLES:
+        let treeFiles, lblFiles, newFileCount = 0;
+        let treeLazy, lblLazy;
+        let treeLayers, lblLayers;
+        let treeBig, lblBig;
+
+        // ICONS: Inline SVG (no image file needed)
+        const svgIcon = function (paths, color = "#777") {
+            return "data:image/svg+xml," + encodeURIComponent(
+                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + paths + '</svg>'
+            );
+        };
+        const ICON_FOLDER = svgIcon('<path d="M3 6a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>', "#D9A441");
+        const ICON_FILE = svgIcon('<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/>');
+        const ICON_IMAGE = svgIcon('<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 17-5-5-9 8"/>', "#4A90C2");
+
+        const folder = function (key, text, children, expanded = 0) {
+            return { key: key, text: text, iconFile: ICON_FOLDER, children: children, expanded: expanded };
+        };
+        const file = function (key, text, note) {
+            return { key: key, text: text, iconFile: /\.(png|jpg|svg)$/.test(text) ? ICON_IMAGE : ICON_FILE, note: note };
+        };
+
+        const start = function () {
+
+            page.color = "#F4F5F2";
+
+            // BOX: Full screen scrollable container
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            startBox(0, 0, "100%", "100%", {
+                color: "transparent",
+                scrollY: 1,
+            });
+            const pageBox = that;
+
+                // GROUP: Page layout
+                VGroup({
+                    width: "100%",
+                    height: "auto", // Grows with content, so the Box can scroll.
+                    align: "center top",
+                    gap: 30,
+                    padding: 50,
+                });
+
+                    // LABEL: Title
+                    Label({
+                        text: "TreeView",
+                        fontSize: 26,
+                        fontFamily: "opensans-bold",
+                    });
+
+                    // SAMPLE 1: File explorer
+                    startCard("1. File explorer (classic)", "Icons and notes. Click the arrow or press ArrowRight / ArrowLeft to open and close, ArrowUp / ArrowDown to move, Enter or a double click to open a file, type a letter to jump.");
+
+                        treeFiles = TreeView({
+                            width: "100%",
+                            height: 280,
+                            items: [
+                                folder("src", "src", [
+                                    file("src/app.js", "app.js", "4 KB"),
+                                    file("src/router.js", "router.js", "2 KB"),
+                                    folder("src/components", "components", [
+                                        file("src/components/button.js", "button.js", "3 KB"),
+                                        file("src/components/modal.js", "modal.js", "6 KB"),
+                                        file("src/components/tabs.js", "tabs.js", "12 KB"),
+                                    ]),
+                                    folder("src/assets", "assets", [
+                                        file("src/assets/logo.svg", "logo.svg", "1 KB"),
+                                        file("src/assets/hero.png", "hero.png", "84 KB"),
+                                    ]),
+                                ], 1),
+                                folder("docs", "docs", [
+                                    file("docs/intro.md", "intro.md", "2 KB"),
+                                    file("docs/api.md", "api.md", "9 KB"),
+                                ]),
+                                file("readme", "readme.md", "1 KB"),
+                                { key: "secret", text: ".env (disabled)", iconFile: ICON_FILE, disabled: 1 },
+                            ],
+                            value: "src/app.js",
+                            onSelect: function (self, node) { lblFiles.plainText = "Selected: " + self.getPath(node.key).map(function (n) { return n.text; }).join(" / "); },
+                            onActivate: function (self, node) { lblFiles.plainText = "Open: " + node.key; },
+                        });
+
+                        // GROUP: Buttons
+                        HGroup({ width: "auto", height: "auto", gap: 8, wrap: 1 });
+                            addSampleButton("Expand all", function () { treeFiles.expandAll(); });
+                            addSampleButton("Collapse all", function () { treeFiles.collapseAll(); }, 1);
+                            addSampleButton("New file", function () {
+                                newFileCount++;
+                                const parent = treeFiles.getSelectedNode();
+                                const parentKey = (parent && parent.children) ? parent.key : treeFiles.getParent(treeFiles.value) ? treeFiles.getParent(treeFiles.value).key : null;
+                                const node = treeFiles.addNode(parentKey, file("new-" + newFileCount, "new-" + newFileCount + ".js", "0 KB"), 0);
+                                if (parentKey) treeFiles.expand(parentKey);
+                                treeFiles.setValue(node.key);
+                            }, 1);
+                            addSampleButton("Remove", function () { if (treeFiles.value) treeFiles.removeNode(treeFiles.value); lblFiles.plainText = "Removed."; }, 1);
+                        endGroup();
+
+                        lblFiles = addInfoLabel("Selected: src / app.js");
+
+                    endCard();
+
+                    // SAMPLE 2: Lazy children, modern style
+                    startCard("2. Lazy children (modern)", "hasChildren: 1 shows an arrow without children. When it opens, onLoadChildren asks for them; setChildren() draws only that branch.");
+
+                        treeLazy = TreeView({
+                            styleName: "modern",
+                            width: "100%",
+                            height: "auto", // Grows with its rows.
+                            items: [
+                                { key: "eu", text: "Europe", hasChildren: 1, note: "click to load" },
+                                { key: "as", text: "Asia", hasChildren: 1, note: "click to load" },
+                                { key: "am", text: "Americas", hasChildren: 1, note: "click to load" },
+                            ],
+                            onLoadChildren: function (self, node) {
+                                self.updateNode(node.key, { note: "loading…" });
+                                lblLazy.plainText = "Loading " + node.text + " …";
+                                setTimeout(function () {
+                                    const data = {
+                                        eu: ["Türkiye", "Germany", "France", "Italy"],
+                                        as: ["Japan", "Korea", "India"],
+                                        am: ["Brazil", "Canada", "Mexico", "Chile"],
+                                    }[node.key];
+                                    self.setChildren(node.key, data.map(function (name) { return { key: node.key + "/" + name, text: name }; }));
+                                    self.updateNode(node.key, { note: data.length + " countries" });
+                                    lblLazy.plainText = node.text + " loaded.";
+                                }, 600);
+                            },
+                        });
+
+                        lblLazy = addInfoLabel("Open a continent.");
+
+                    endCard();
+
+                    // SAMPLE 3: Dark style, tags (the layers of a design tool)
+                    startCard("3. Layers (dark)", "tag: a second text in the accent color (tagColor per node). note: a soft text. textColor per node.");
+
+                        treeLayers = TreeView({
+                            styleName: "dark",
+                            width: "100%",
+                            height: 220,
+                            items: [
+                                { key: "page", text: "page", tag: "Box", expanded: 1, children: [
+                                    { key: "layout", text: "layout", tag: "VGroup", expanded: 1, children: [
+                                        { key: "title", text: "lblTitle", tag: "Label", note: '"Tabs"' },
+                                        { key: "tabs", text: "tabsBasic", tag: "Tabs", tagColor: "#C792EA", hasChildren: 0, children: [
+                                            { key: "strip", text: "box.strip", tag: "Box" },
+                                            { key: "ind", text: "box.indicator", tag: "Box" },
+                                        ] },
+                                        { key: "buttons", text: "buttons", tag: "HGroup", children: [
+                                            { key: "b1", text: "btn", tag: "Button", note: '"Orders +1"' },
+                                            { key: "b2", text: "btn", tag: "Button", note: '"Badge"' },
+                                        ] },
+                                        { key: "info", text: "lblInfo", tag: "Label", note: "✎ a note", textColor: "#F5C04A" },
+                                    ] },
+                                ] },
+                            ],
+                            value: "title",
+                            onSelect: function (self, node) { lblLayers.plainText = "Selected: " + node.text + " (" + node.tag + ")"; },
+                            onHover: function (self, node) { if (node) lblLayers.plainText = "Hover: " + node.text; },
+                        });
+
+                        lblLayers = addInfoLabel("Selected: lblTitle (Label)");
+
+                    endCard();
+
+                    // SAMPLE 4: A big tree
+                    startCard("4. A big tree (10 000 nodes)", "Only the open branches are created: 100 groups of 100 items. Open them, then use the keyboard.");
+
+                        const bigItems = [];
+                        for (let g = 1; g <= 100; g++) {
+                            const children = [];
+                            for (let i = 1; i <= 100; i++) children.push({ key: g + "-" + i, text: "Item " + g + "." + i, note: "#" + ((g - 1) * 100 + i) });
+                            bigItems.push({ key: "g" + g, text: "Group " + g, children: children, note: "100" });
+                        }
+                        const t0 = performance.now();
+                        treeBig = TreeView({ width: "100%", height: 240, items: bigItems });
+                        const ms = Math.round(performance.now() - t0);
+
+                        // GROUP: Buttons
+                        HGroup({ width: "auto", height: "auto", gap: 8, wrap: 1 });
+                            addSampleButton("Expand all", function () {
+                                const t = performance.now();
+                                treeBig.expandAll();
+                                lblBig.plainText = "Expand all: " + Math.round(performance.now() - t) + " ms (10 000 rows created)";
+                            });
+                            addSampleButton("Collapse all", function () { treeBig.collapseAll(); }, 1);
+                            addSampleButton("Go to 73.40", function () { treeBig.setValue("73-40"); treeBig.focus(); }, 1);
+                        endGroup();
+
+                        lblBig = addInfoLabel("Created in " + ms + " ms (100 rows).");
+
+                    endCard();
+
+                endGroup();
+
+            endBox();
+
+            // WHY: page.onResize() and the ScrollBar need the scroll box.
+            if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: pageBox });
+
+        };
+
+        const startCard = function (title, description = "") {
+            VGroup({
+                width: 560,
+                height: "auto",
+                align: "left top",
+                gap: 16,
+                padding: 20,
+                color: "white",
+                round: 10,
+                border: 1,
+                borderColor: Black(0.1),
+            });
+            that.elem.style.alignItems = "stretch";
+            that.elem.style.maxWidth = "100%";
+            Label({
+                text: title,
+                fontSize: 14,
+                textColor: Black(0.45),
+            });
+            if (description) {
+                Label({
+                    text: description,
+                    fontSize: 13,
+                    textColor: Black(0.35),
+                });
+                that.elem.style.marginTop = "-10px";
+            }
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+        const addSampleButton = function (text, onClick, isSecondary = 0) {
+            const btn = Button({
+                text: text,
+                width: 110,
+                height: 36,
+                fontSize: 14,
+            });
+            if (isSecondary) btn.color = "lightgray";
+            btn.on("click", onClick);
+            return btn;
+        };
+
+        const addInfoLabel = function (text) {
+            return Label({
+                plainText: text,
+                fontSize: 14,
+                textColor: Black(0.5),
+            });
+        };
+
+    </script>
+</head>
+
+<body></body>
+
+</html>
