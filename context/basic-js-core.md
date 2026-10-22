@@ -149,6 +149,9 @@ btn.on("click", function(self, event) {
 - A removed object has `_isRemoved = 1` and must not be added to the screen again. Create a new one.
 - Objects created on `page` from inside another object (for example a `ContextMenu`) are not its children. Remove them yourself.
 
+### Things cleaned by `remove()` (v26.10.23)
+`obj.listenTo(window, "keydown", fn)`, `obj.onPageResize(fn)`, `obj.after(ms, fn)`, `obj.every(ms, fn)` and `obj.own(otherObj)` are removed / stopped by `obj.remove()`. A component uses them instead of `window.addEventListener`, `page.onResize`, `setTimeout` / `setInterval`, so it does not need its own `remove()`. Also: `obj.onHoverChange(fn(self, isOver))`, `obj.setFocusRing(color)` (keyboard only), `basic.isOn(v)`, `basic.addCss(id, css)`, and `createIn()` returns the result of its function.
+
 ## Motion (Animations)
 - `setMotion(string)`: Defines the transition (e.g., "left 0.5s, opacity 1s").
 - `withMotion(func)`: Executes changes within the defined motion.
@@ -160,9 +163,6 @@ btn.on("click", function(self, event) {
 - `println(message, type)`: Safe console logging.
 - `random(min, max)`: Random integer.
 - `num(str)`: Parse float/int.
-### Things cleaned by `remove()` (v26.10.23)
-`obj.listenTo(window, "keydown", fn)`, `obj.onPageResize(fn)`, `obj.after(ms, fn)`, `obj.every(ms, fn)` and `obj.own(otherObj)` are removed / stopped by `obj.remove()`. A component uses them instead of `window.addEventListener`, `page.onResize`, `setTimeout` / `setInterval`, so it does not need its own `remove()`. Also: `obj.onHoverChange(fn(self, isOver))`, `obj.setFocusRing(color)` (keyboard only), `basic.isOn(v)`, `basic.addCss(id, css)`, and `createIn()` returns the result of its function.
-
 - `str(num)`: Convert to string.
 - `isMobile()`: Returns 1 if mobile device.
 - `go(url)`: Navigate to URL.
