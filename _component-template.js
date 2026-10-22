@@ -2,11 +2,57 @@
 
 /*
 
-Component Template - v25.07
+Component Template - v26.10
 
 UI COMPONENT TEMPLATE
-- You can customize, this template code as you need:
+- The starting point of a new component. Copy it, rename CompName (and CompNameDefaults, CompName.styles),
+  then delete what the new component does not need.
+- The sample is a card button: an icon, a label, a description, a badge and a row of small items (tags).
+  It shows the standards of the components of this repository:
+  - DEFAULTS: every default value becomes a public variable on the box (box.labelText...).
+  - STYLE PACKAGES: styleName "light" / "dark" (CompName.styles). params.style > the package > CompNameDefaults.style.
+  - LAYOUT: box.layout is the group that places the parts of the component.
+  - STATE: box.state ("normal", "hover", "pressed", "selected", "disabled") is decided in one place (getState).
+  - REFRESH: one place that draws the component again, by levels: "data" > "content" > "paint".
+  - SETTERS: a value is changed after create with a setX() function that asks for the refresh level it needs.
+  - EVENTS: onClick, onChange (onChange is NOT called at create time or with silent: 1).
+  - OBJECTS ADDED LATER: createIn(container, fn) (it puts the container back, also on an error).
+  - KEYBOARD AND ACCESSIBILITY: role, aria-*, tabIndex, Enter / Space, setFocusRing() (only for the keyboard).
+  - GLOBAL THINGS ARE CLEANED BY basic.js: box.listenTo(window, ...), box.onPageResize(), box.after(), box.every(),
+    box.own(obj) are removed / stopped by remove(). So most components do not override remove() any more.
+  - basic.isOn(v): an "on" value of a param (1, "1", true).
 
+USAGE:
+const card = CompName({
+    labelText: "Orders",
+    descText: "12 new orders today",
+    badgeText: "3",
+    items: ["Today", "Paid"],
+    onClick: function (self) { self.setSelected(!self.selected); },
+    onChange: function (self) { println("selected: " + self.selected); },
+});
+card.setText("Orders", "15 new orders today");
+card.setBadge("");              // no badge
+card.setItems(["A", "B", "C"]);
+card.setSelected(1, 1);         // silent: onChange is not called
+card.setEnabled(0);
+CompName({ styleName: "dark", labelText: "On a dark page" });
+CompName({ styleName: "dark", style: { box: { round: 16 } } }); // Change only some keys of a package.
+
+GOTCHAS (CLAUDE.md):
+- A default must not be named like a basic.js setter: text, color, title, html, visible, zoom... (use labelText, htmlText).
+- A group clips its content. Give clipContent: 0 to a group whose content moves out of it (a lift, a glow, a badge).
+- visible: 0 in the props is undone if elem.style.display is set after it: set the display first, then visible = 0.
+  Hide a group after its children are created.
+- A text of the user goes in with plainText (Label.text is innerHTML).
+- A Box with height: "auto" does not grow with basic.js children: put them in a group (box.layout) with position: "relative".
+
+WHEN THE NEW COMPONENT IS READY:
+- A sample page: 02-comp-mX-samples/<name>.htm (a scrolling Box, the cards of the other sample pages).
+- test/components-test.htm: add it to COMPONENTS ({ file, name, deps }) and open it (the tab title: ALL PASS).
+- The .min.js twin: _make-min-js.sh makes it only when one is there: create an empty <name>.min.js once,
+  then ./_make-min-js.sh --build comp-mX/<name>.js
+- The catalog: index/catalog.js (and the <noscript> list of index.htm), and its line in CLAUDE.md.
 
 Started Date: June 2024
 Developer: Bugra Ozden
@@ -21,41 +67,57 @@ Webpage: https://bug7a.github.io/js-components/
 const CompNameDefaults = {
     key: "0",
     width: 240, // Standard box features are added automatically.
-    height: 70,
-    labelText: "",
-    descText: "",
-    badgetText: "",
-    invertColor: 0,
-    dataList: "", // Object will create with this data.
-    onClick: function (self) { },
-    backgroundStyle: {
-        color: White(1),
-        overColor: "#EFE3C5",
-        round: 4,
-        border: 1,
-        borderColor: Black(0.8),
+    height: "auto", // Grows with box.layout.
+    labelText: "Label",
+    descText: "Description", // "": no description
+    badgeText: "", // "": no badge
+    iconFile: "", // WHY: Not in the style, because it is a frequently used param. "": no icon
+    items: [], // ["A", "B"]: small tags under the texts. Changed later with setItems().
+    selected: 0,
+    enabled: 1,
+    ariaLabel: "", // "": the labelText is read
+    onClick: function (self, event) { },
+    onChange: function (self) { }, // self.selected changed. (Not at create time, not with silent: 1)
+    styleName: "light", // "light", "dark" or a name added to CompName.styles
+    style: { // Light style package (default)
+        layout: {
+            gap: 10,
+            padding: [12, 10],
+            align: "left center",
+        },
+        box: {
+            color: White(1),
+            border: 1,
+            borderColor: Black(0.15),
+            round: 8,
+        },
+        // A state: only the keys that change. (The others come from box.)
+        hover: { color: "#F5F6F4" },
+        pressed: { color: "#E9EBE8" },
+        selected: { color: "#EAF3F2", borderColor: "cadetblue" },
+        disabled: { opacity: 0.45 },
+        focus: { ringColor: "rgba(95, 158, 160, 0.6)" }, // The ring of the keyboard focus
+        icon: { width: 32, height: 32, color: "transparent" },
+        label: { fontSize: 15, textColor: Black(0.85), fontFamily: "opensans-bold" },
+        desc: { fontSize: 13, textColor: Black(0.5) },
+        badge: { fontSize: 11, textColor: White(1), color: "tomato", round: 9 },
+        item: { fontSize: 11, textColor: Black(0.6), color: Black(0.06), round: 9 },
     },
-    iconFile: "assets/icons/alert-black.png", // WHY: Not in the iconStyle, because this is a frequently used parameter.
-    iconStyle: {
-        color: White(0),
-        border: 0,
-        invertColor: 0,
-    },
-    style: { // Test
-        box: {},
-        icon: { color: White(0), border: 0, invertColor: 0, },
-        label: {},
-    }
 };
 
 const CompName = function (params = {}) {
 
-    // Marge params:
+    // Merge style package: params.style > CompName.styles[styleName] > CompNameDefaults.style (light)
+    const _stylePackage = CompName.styles[params.styleName || CompNameDefaults.styleName];
+    if (!_stylePackage) console.warn("CompName: Style package not found: " + params.styleName);
+    mergeIntoIfMissing(params, { style: _stylePackage || {} });
+
+    // Merge params:
     mergeIntoIfMissing(params, CompNameDefaults);
 
     // Edit params, if needed:
-    // params.width = getDefaultContainerBox().width;
-    // params.color = "transparent";
+    const startItems = params.items;
+    params.items = []; // WHY: The items are made by setItems() after the view is made.
 
     // BOX: Component container
     let box = startObject(params);
@@ -63,132 +125,160 @@ const CompName = function (params = {}) {
     // NOTE: Parent container is box.containerBox
 
     // *** PRIVATE VARIABLES:
-    //let privateVar = "";
-    const badgetColors = [
-        { min: 0, max: 3, color: "whitesmoke" },
-        { min: 4, max: 10, color: "gold" },
-        { min: 11, max: 100, color: "#D96450" },
-    ];
-    let badgetCurrentColor;
+    const _s = box.style;
+    let isHover = 0;
+    let isPressed = 0;
+    let cancelRefresh = null; // The cancel function of the waiting box.refresh() (box.after)
 
     // *** PUBLIC VARIABLES:
-    // [var] key for show this public var in navigator.
-    box.publicVar = 1;
-    // State of component [var]
-    box.state = "normal";
-    // [var]
-    box.refreshTimer = null;
-    // Created items by data [var]
-    box.list = [];
-
-    // NOTE: Default values are also public variables.
-
+    box.state = "normal"; // "normal", "hover", "pressed", "selected", "disabled" (read only: it comes from getState)
+    box.itemList = []; // The Labels of the items
+    // NOTE: Default values are also public variables. (box.labelText, box.selected, box.enabled...)
 
     // *** PRIVATE FUNCTIONS:
-    const privateFunc = function () { };
-    /*
-    const boxResized = function(self) {
-        box.iconBackground.left = box.icon.left;
-        box.iconBackground.top = box.icon.top;
-    };
-    */
 
-    // *** PUBLIC FUNCTIONS:
-    // If you need to change a param after it is created. You can write a setter function for it.
-    box.publicFunc = function () { };
-
-    box.setIconFile = function (file) {
-        box.iconFile = file;
-        box.icon.load(file);
-    }
-    // USAGE: get: componentName.iconFile, set: componentName.setIconFile("8")
-
-    box.setBadgetText = function (text) {
-
-        box.badgetText = text;
-        box.lblBadget.text = text;
-
-        const _num = parseInt(text);
-
-        badgetColors.forEach(function (data, index) {
-            if (_num >= data.min && _num <= data.max) {
-                box.lblBadget.color = data.color;
-                badgetCurrentColor = data.color;
-            }
-        });
-
-    };
-    // USAGE: get: componentName.badgetText, set: componentName.setBadgetText("8")
-
-    box.setBackgroundColor = function (color) {
-        box.backgroundStyle.color = color;
-        box.background.color = color;
+    // THE STATE: decided in one place, from the flags.
+    const getState = function () {
+        if (box.enabled != 1) return "disabled";
+        if (isPressed) return "pressed";
+        if (box.selected == 1) return "selected";
+        if (isHover) return "hover";
+        return "normal";
     };
 
-    box.setBackgroundOverColor = function (color) {
-        box.backgroundStyle.overColor = color;
-    };
-
-    // setView
-    box.setState = function (state) {
-
-        box.state = state;
-
-        switch (state) {
-
-            case "normal":
-                box.background.color = box.backgroundStyle.color;
-                //box.lblBadget.color = badgetCurrentColor;
-                //box.background.border = 1;
-                break;
-
-            case "mouseover":
-                box.background.color = box.backgroundStyle.overColor;
-                //box.lblBadget.color = "white";
-                //box.background.border = 3;
-                break;
-
-            case "selected":
-
-                break;
-
-            case "disabled":
-
-                break;
-
-        }
-    };
-
-    const refresh = function(level = "layout") {
-
-        if (level === "layout") {
-            // layout değişince scroll da data da güncellenmeli:
-            level = "scroll"; 
-        }
-
-        if (level === "scroll") {
-            // scroll değişince pozisyon da data da güncellenmeli:
-            level = "position";
-        }
-
-        if (level === "position") {
-            level = "data";
-        }
+    // REFRESH: the one place that draws the component again. A level does its own work, then the levels under it:
+    // "data"    -> the objects made from the data are made again       (setItems)
+    // "content" -> the texts, the icon, the badge                       (setText, setBadge, setIcon)
+    // "paint"   -> the colors and the look of the state                 (hover, pressed, selected, enabled)
+    // WHY: A cheap change (the mouse on it) asks only for "paint"; nothing is made again for it.
+    const refresh = function (level = "data") {
 
         if (level === "data") {
-            level = "info";
+            buildItems();
+            level = "content";
         }
 
-        if (level === "info") {
+        if (level === "content") {
+            applyContent();
+            level = "paint";
         }
-    
+
+        if (level === "paint") {
+            paint();
+        }
+
     };
 
-    box.refresh = function (time = 3) {
-        box.refreshTimer = waitAndRun(box.refreshTimer, refresh, time);
+    // DATA: the items (made again in their own group)
+    const buildItems = function () {
+        if (box.itemsGroup) box.itemsGroup.remove();
+        box.itemList = [];
+        // WHY: createIn() puts the container back after it (also on an error). setDefaultContainerBox() does not:
+        //      the next objects of the page would go into this component.
+        createIn(box.texts, function () {
+            box.itemsGroup = HGroup({ width: "100%", height: "auto", gap: 4, align: "left center", wrap: 1, position: "relative" });
+                box.items.forEach(function (text) {
+                    const lbl = Label({ plainText: String(text), ..._s.item });
+                    lbl.css = { padding: "1px 7px", whiteSpace: "nowrap" };
+                    lbl.shrink = 0;
+                    box.itemList.push(lbl);
+                });
+            endGroup();
+            box.itemsGroup.css.marginTop = "4px";
+            box.itemsGroup.visible = (box.items.length) ? 1 : 0; // WHY: Hidden after its children are created.
+        });
     };
 
-    // WHY: The component cleans itself in remove(). superRemove is the remove() of basic.js.
+    // CONTENT: the texts, the icon, the badge
+    const applyContent = function () {
+        box.label.plainText = box.labelText;
+        box.lblDesc.plainText = box.descText;
+        box.lblDesc.visible = (box.descText) ? 1 : 0;
+        const hasBadge = (box.badgeText !== "" && box.badgeText !== null && box.badgeText !== undefined);
+        box.lblBadge.plainText = (hasBadge) ? String(box.badgeText) : "";
+        box.lblBadge.visible = (hasBadge) ? 1 : 0;
+        box.icon.visible = (box.iconFile) ? 1 : 0;
+        if (box.iconFile && box.icon.loadedFile !== box.iconFile) {
+            box.icon.load(box.iconFile);
+            box.icon.loadedFile = box.iconFile;
+        }
+        box.elem.setAttribute("aria-label", box.ariaLabel || box.labelText);
+    };
+
+    // PAINT: the look of the state
+    const paint = function () {
+        box.state = getState();
+        const look = _s[box.state] || {}; // "normal" has no keys of its own
+        box.color = look.color || _s.box.color;
+        box.borderColor = look.borderColor || _s.box.borderColor;
+        box.opacity = (box.state === "disabled") ? _s.disabled.opacity : 1;
+        box.cursor = (box.state === "disabled") ? "default" : "pointer";
+        box.elem.tabIndex = (box.enabled == 1) ? 0 : -1;
+        box.elem.setAttribute("aria-pressed", (box.selected == 1) ? "true" : "false");
+        box.elem.setAttribute("aria-disabled", (box.enabled == 1) ? "false" : "true");
+    };
+
+    // A GLOBAL EVENT: a narrow page makes the card smaller. (box.onPageResize: basic.js removes it with the box)
+    const onPageResize = function () {
+        if (!box) return;
+        box.layout.gap = (page.width < 480) ? 6 : _s.layout.gap;
+    };
+
+    // *** PUBLIC FUNCTIONS:
+    // A param that can change after create gets a setter. It saves the value, then asks for the level it needs.
+
+    box.setText = function (labelText, descText = box.descText) {
+        box.labelText = labelText;
+        box.descText = descText;
+        refresh("content");
+    };
+    // USAGE: get: card.labelText, set: card.setText("Orders", "12 new")
+
+    box.setBadge = function (text) {
+        box.badgeText = text;
+        refresh("content");
+    };
+    // USAGE: card.setBadge("3") / card.setBadge("") // no badge
+
+    box.setIcon = function (file) {
+        box.iconFile = file;
+        refresh("content");
+    };
+
+    box.setItems = function (items) {
+        box.items = (Array.isArray(items)) ? items.slice() : [];
+        refresh("data");
+    };
+    // USAGE: card.setItems(["Today", "Paid"])
+
+    // silent: 1 -> onChange is not called.
+    box.setSelected = function (value, silent = 0) {
+        value = basic.isOn(value) ? 1 : 0;
+        if (box.selected == value) return;
+        box.selected = value;
+        refresh("paint");
+        if (!silent) box.onChange(box);
+    };
+    // USAGE: get: card.selected, set: card.setSelected(1)
+
+    box.setEnabled = function (value) {
+        box.enabled = basic.isOn(value) ? 1 : 0;
+        if (box.enabled != 1) { isHover = 0; isPressed = 0; }
+        refresh("paint");
+    };
+    // USAGE: get: card.enabled, set: card.setEnabled(0)
+
+    // Draws everything again (once, after many changes in a row). delay: ms
+    // NOTE: box.after() is a timer of the box: it can not run after remove().
+    box.refresh = function (delay = 0) {
+        if (cancelRefresh) cancelRefresh();
+        cancelRefresh = box.after(delay, function () { cancelRefresh = null; refresh("data"); });
+    };
+    // USAGE: card.labelText = "A"; card.items = ["B"]; card.refresh();
+
+    // REMOVE: basic.js remove() cleans the objects inside, their events, and what was added with listenTo,
+    // onPageResize, after, every and own. Override it only for something else (Ex: a static list of the component,
+    // a Chart.js instance, an observer). Then keep this shape:
     // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
     const superRemove = box.remove;
     box.superRemove = superRemove;
@@ -196,126 +286,116 @@ const CompName = function (params = {}) {
 
         if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
 
-        //page.remove_onResize(functionName); // on page resized.
-        // NOTE: Clean the global registrations here: window / document events, timers,
-        //       static lists and the objects created on the page (menus, popups).
+        // NOTE: Clean here only what basic.js does not know. (Ex: CompName.list.splice(CompName.list.indexOf(box), 1))
 
         superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
         box = null;
 
     };
-    // USAGE: componentName.remove();
+    // USAGE: card.remove();
 
     // *** OBJECT VIEW:
-    box.elem.style.cursor = "pointer";
+
+    // BOX: Container look
+    box.props(_s.box);
     box.clickable = 1;
-    // Show outside of the box. box.lblBadget will be shown at out of container.
-    box.clipContent = 0;
-    if (box.invertColor == 1) box.elem.style.filter = "invert(100%)";
+    box.clipContent = 0; // WHY: The badge stands out of the top right corner.
+    box.setMotion("background-color 0.2s, border-color 0.2s, opacity 0.2s");
+    box.elem.setAttribute("role", "button");
 
-    // BOX: background
-    box.background = Box(0, 0, "100%", "100%", box.backgroundStyle);
-    box.background.setMotion("background-color 0.2s");
-    // WHY: Different background boxes are more useful in components.
-
-    // BOX: Background effect
-    box.backgroundEffect = Box(0, 0, "100%", "100%", {
-        opacity: 0.15,
-        round: box.backgroundStyle.round, // clipContent: 0 so,
-    });
-    that.elem.style.background = "linear-gradient(to bottom, white, black)";
-
-    // BOX: icon back
-    /*
-    box.iconBackground = Box(0, 0, 48, 48, {
-        border: 2,
-        borderColor: Black(0.2),
-        position: "absolute",
-        round: 100,
-        color: White(0.8),
-    });
-    */
-
-    // GROUP: icon, group (title, label)
-    HGroup({
-        align: "left center",
-        padding: [10, 0],
-        gap: 10,
-        // NOTE: this width, height: "100%" as default.
+    // GROUP: Layout (icon, texts)
+    // NOTE: box.layout is the group that places the parts of the component. (Ex: HGroup or VGroup by a param)
+    box.layout = HGroup({
+        width: "100%",
+        height: "auto",
+        position: "relative", // WHY: The box (height: "auto") grows with it.
+        ..._s.layout,
     });
 
-    // ICON: image
-    box.icon = Icon({
-        width: 48,
-        height: 48,
-        space: 10,
-        border: box.iconStyle.border,
-        color: box.iconStyle.color,
-    });
-    that.load(box.iconFile);
-    if (box.iconStyle.invertColor == 1) that.elem.style.filter = "invert(100%)";
+        // ICON
+        box.icon = Icon(0, 0, _s.icon);
+        box.icon.shrink = 0;
 
-    // GROUP: label, description
-    VGroup({
-        width: "auto", // Wrap group content
-        height: "auto", // Wrap group content
-        align: "left top",
-    });
+        // GROUP: Texts (label, description, items)
+        box.texts = VGroup({ width: "auto", height: "auto", gap: 2, align: "left top" });
+        box.texts.css = { flex: "1 1 0", minWidth: "0px" }; // WHY: It takes the free room, its texts end with "..."
 
-    // LABEL: label
-    box.label = Label({
-        text: box.labelText,
-    });
+            // LABEL: Label
+            box.label = Label({ ..._s.label, ellipsis: 1, css: { maxWidth: "100%" } });
 
-    // LABEL: description
-    box.lblDesc = Label({
-        text: box.descText,
-        textColor: Black(0.4),
-        fontSize: 16,
-    });
-    that.elem.style.marginTop = "-6px";
+            // LABEL: Description
+            box.lblDesc = Label({ ..._s.desc, ellipsis: 1, css: { maxWidth: "100%" } });
+
+            // NOTE: The items group is made by buildItems() (refresh "data").
+
+        endGroup();
 
     endGroup();
 
-    endGroup();
-
-    // LABEL: Badget
-    box.lblBadget = Label({
-        text: "", // NOTE: If you have complex functions just use box.setBadgetText(box.badgetText); after OBJECT INIT CODE.
-        textColor: Black(0.8),
-        border: 1,
-        borderColor: Black(0.6),
-        padding: [8, 2],
-        round: 2,
-        fontSize: 12,
-        right: -3,
-        top: -3,
-    });
-    that.elem.style.whiteSpace = "nowrap";
-    that.elem.style.fontFamily = "opensans-bold";
-    that.setMotion("background-color 0.2s");
-
+    // LABEL: Badge (out of the layout, at the top right corner)
+    box.lblBadge = Label({ right: -6, top: -6, ..._s.badge });
+    box.lblBadge.css = { padding: "1px 7px", whiteSpace: "nowrap", boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)" };
 
     // *** OBJECT INIT CODE:
+
+    box.onHoverChange(function (self, isOver) {
+        isHover = isOver;
+        if (!isOver) isPressed = 0;
+        refresh("paint");
+    });
+    box.on("mousedown", function () {
+        if (box.enabled != 1) return;
+        isPressed = 1;
+        refresh("paint");
+    });
+    box.on("mouseup", function () { isPressed = 0; refresh("paint"); });
     box.on("click", function (self, event) {
+        if (box.enabled != 1) return;
         box.onClick(box, event);
     });
-    box.on("mouseover", function (self, event) {
-        box.setState("mouseover");
+
+    // KEYBOARD: Enter / Space act like a click. setFocusRing: a ring only for the keyboard (not after a mouse click).
+    box.setFocusRing(_s.focus.ringColor);
+    box.on("keydown", function (self, event) {
+        if (box.enabled != 1) return;
+        if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            box.onClick(box, event);
+        }
     });
-    box.on("mouseout", function (self, event) {
-        box.setState("normal");
-    });
 
-    /*
-    box.onResize(boxResized);
-    boxResized();
-    */
+    box.onPageResize(onPageResize);
+    onPageResize();
 
-    //page.onResize(functionName); // on page resized.
-
-    box.setBadgetText(box.badgetText);
+    box.setItems(startItems); // NOTE: refresh("data"): everything is drawn the first time.
 
     return endObject(box);
+
+};
+
+// *** STATIC VARIABLES AND FUNCTIONS:
+// NOTE: Helpers that do not need a box. (Ex: CompName.toId(key), CompName._counter for element ids)
+
+// *** STYLE PACKAGES:
+// USAGE: CompName({ styleName: "dark" })
+// USAGE: CompName({ styleName: "dark", style: { label: { textColor: "tomato" } } }) // Change only some keys.
+// NOTE: A new package needs only the keys that differ from the default (light) style.
+// USAGE: CompName.styles.myStyle = { box: { color: "tomato" } };
+CompName.styles = {
+
+    // White card, dark text, a soft line.
+    light: CompNameDefaults.style,
+
+    // For a dark page.
+    dark: {
+        box: { color: "#2B2D31", border: 1, borderColor: "rgba(255, 255, 255, 0.12)", round: 8 },
+        hover: { color: "#33353A" },
+        pressed: { color: "#3C3E44" },
+        selected: { color: "#24383A", borderColor: "#5FB3B5" },
+        focus: { ringColor: "rgba(95, 179, 181, 0.7)" },
+        label: { fontSize: 15, textColor: "rgba(255, 255, 255, 0.92)", fontFamily: "opensans-bold" },
+        desc: { fontSize: 13, textColor: "rgba(255, 255, 255, 0.55)" },
+        item: { fontSize: 11, textColor: "rgba(255, 255, 255, 0.7)", color: "rgba(255, 255, 255, 0.08)", round: 9 },
+    },
 
 };

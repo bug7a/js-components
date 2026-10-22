@@ -1,109 +1,148 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        
+
         <title>New JS Component</title>
-        
+
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
 
         <!-- LIBRARY FILES -->
         <!-- <link rel="preload" href="image.png" as="image"> -->
         <link rel="preload" href="basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="preload" href="basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
         <link rel="stylesheet" type="text/css" href="basic/basic.min.css">
         <script src="basic/basic.js" type="text/javascript" charset="utf-8"></script>
-        <!--<script src="basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>-->
+        <script src="basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
 
+        <!-- COMPONENT FILES -->
         <script src="_component-template.js" type="text/javascript" charset="utf-8"></script>
-        <!-- <script src="_component-template.min.js" type="text/javascript" charset="utf-8"></script> -->
-
-        <!-- ALL COMPONENTS IN ONE FILE -->
-        <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
 
         <script>
-        
+
+        /* Bismillah */
+
         // *** VARIABLES:
         //const compList = []; // When multiple objects are created by code, they can be added to an array.
-        let comp1, comp2, comp3;
+        let comp1, comp2, comp3, compDark;
+        let lblInfo;
 
-        // First running function.
-        window.onload = function() {
+        // First running function. (basic.js calls it when the page is ready: page is created before it)
+        const start = function () {
 
-            // GROUP: Autolayout
-            VGroup({
-                gap: 12,
+            page.color = "#F4F5F2";
+
+            // BOX: Full screen scrollable container
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            startBox(0, 0, "100%", "100%", {
+                color: "transparent",
+                scrollY: 1,
             });
+            const pageBox = that;
 
-                // COMP NAME: #1
-                comp1 = CompName({
-                    key: "1",
-                    badgetText: "7",
-                    iconFile: "assets/categories/cappuccino.png",
-                    iconStyle: {
-                        //invertColor: 1,
-                    },
-                    labelText: "Cappuccino",
-                    descText: "Hot",
-                    //invertColor: 1,
+                // GROUP: Page layout
+                VGroup({
+                    width: "100%",
+                    height: "auto", // Grows with content, so the Box can scroll.
+                    align: "left top",
+                    gap: 12,
+                    padding: 40,
                 });
-                that.onClick = function(self) {
-                    println(`Clicked Comp ${self.key}`);
-                };
-                //compList.push(that);
 
-                // COMP NAME: #2
-                comp2 = CompName({
-                    key: "2",
-                    badgetText: "11",
-                    iconFile: "assets/categories/milkshake.png",
-                    labelText: "Milkshake",
-                    descText: "Cold",
-                });
-                that.onClick = function(self) {
-                    println(`Clicked Comp ${self.key}`);
-                };
-                //compList.push(that);
+                    // COMP NAME: #1
+                    comp1 = CompName({
+                        key: "1",
+                        labelText: "Cappuccino",
+                        descText: "Hot",
+                        badgeText: "7",
+                        iconFile: "assets/categories/cappuccino.png",
+                        items: ["Coffee", "Milk"],
+                        onClick: onCompClick,
+                        onChange: onCompChange,
+                    });
+                    //compList.push(that);
 
-                // COMP NAME: #3
-                comp3 = CompName({
-                    key: "3",
-                    badgetText: "21",
-                    iconFile: "assets/categories/orange-juice.png",
-                    labelText: "Orange Juice",
-                    descText: "Cold",
-                });
-                that.onClick = function(self) {
-                    println(`Clicked Comp ${self.key}`);
-                };
-                //compList.push(that);
+                    // COMP NAME: #2
+                    comp2 = CompName({
+                        key: "2",
+                        labelText: "Milkshake",
+                        descText: "Cold",
+                        badgeText: "11",
+                        iconFile: "assets/categories/milkshake.png",
+                        onClick: onCompClick,
+                        onChange: onCompChange,
+                    });
+                    //compList.push(that);
 
-            endGroup(); // END GROUP
+                    // COMP NAME: #3
+                    comp3 = CompName({
+                        key: "3",
+                        labelText: "Orange Juice",
+                        descText: "Cold",
+                        badgeText: "21",
+                        iconFile: "assets/categories/orange-juice.png",
+                        onClick: onCompClick,
+                        onChange: onCompChange,
+                    });
+                    //compList.push(that);
 
-            //comp2.setBadgetText("2");
-            //comp2.setBackgroundOverColor("indianred");
-            
+                    // GROUP: The dark style package on a dark area
+                    HGroup({ hug: 1, padding: 20, color: "#1E1F22", round: 10 });
+                    that.clipContent = 0; // WHY: The badge stands out of the corner of the card.
+
+                        // COMP NAME: #4 (dark)
+                        compDark = CompName({
+                            key: "4",
+                            styleName: "dark",
+                            labelText: "Espresso",
+                            descText: "Hot, on a dark page",
+                            badgeText: "2",
+                            iconFile: "assets/categories/cappuccino.png",
+                            onClick: onCompClick,
+                            onChange: onCompChange,
+                        });
+
+                    endGroup();
+
+                    // LABEL: Info
+                    lblInfo = Label({
+                        text: "Click a card.",
+                        fontSize: 14,
+                        textColor: Black(0.5),
+                    });
+
+                endGroup(); // END GROUP
+
+            endBox();
+
+            if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: pageBox });
+
+            //comp2.setBadge("2");
+            //comp2.setText("Milkshake", "Cold, with ice");
+            //comp2.setItems(["Milk", "Banana"]);
+            //comp3.setEnabled(0);
+
         };
-        
-        // Function running every second.
-        const loop = function() {
-                        
-        };
-        
+
+        // Function running every second. (Remove it when it is not needed: basic.js runs it with a timer.)
+        //const loop = function () {
+        //};
+
         // *** OTHER FUNCTIONS:
-        const doSomthing1 = function() {
-            
+        const onCompClick = function (self) {
+            self.setSelected(!self.selected);
         };
-        
-        const doSomething2 = function() {
-            
+
+        const onCompChange = function (self) {
+            lblInfo.text = "Comp " + self.key + " (" + self.labelText + "): " + (self.selected ? "selected" : "not selected");
         };
 
         </script>
 
     </head>
     <body>
-        
+
         <!-- HTML content -->
-        
+
     </body>
 </html>
