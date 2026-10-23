@@ -166,6 +166,9 @@ const TreeView = function (params = {}) {
     let typeBuffer = "";
     let cancelTypeTimer = null; // (box.after: the timer is stopped by remove())
     let keyCounter = 1;
+    const TYPE_AHEAD_RESET_MS = 600; // The typed letters are forgotten after this pause.
+    const SCROLL_SPACE = 4; // Space above / below a row that is scrolled into view.
+    const AUTO_HEIGHT_PAGE_SIZE = 10; // PageUp / PageDown step when the tree does not scroll.
 
     // *** PUBLIC VARIABLES:
     box.previousValue = null;
@@ -173,15 +176,26 @@ const TreeView = function (params = {}) {
 
     // *** PRIVATE FUNCTIONS:
 
-    const esc = function (text) {
+    const escapeText = function (text) {
         return basic.escapeHtml(String((text === undefined || text === null) ? "" : text));
+    };
+
+    const isFilled = function (value) {
+        return value !== undefined && value !== null && value !== "";
+    };
+
+    // A <span> with inline styles. styles: ["flex:0 0 auto", "color:red"]
+    const span = function (styles, content, attributes = "") {
+        return "<span" + attributes + ' style="' + styles.join(";") + '">' + content + "</span>";
     };
 
     // NODE -> a copy of the node with a key (children are copied too). data is kept by reference.
     const normalize = function (node) {
-        if (typeof node === "string" || typeof node === "number") node = { key: String(node), text: String(node) };
+        if (typeof node === "string" || typeof node === "number") {
+            node = { key: String(node), text: String(node) };
+        }
         const out = Object.assign({}, node);
-        if (out.key === undefined || out.key === null || out.key === "") out.key = "node-" + (keyCounter++);
+        if (!isFilled(out.key)) out.key = "node-" + (keyCounter++);
         out.key = String(out.key);
         if (out.text === undefined) out.text = out.key;
         out.expanded = (out.expanded == 1) ? 1 : 0;
@@ -189,59 +203,121 @@ const TreeView = function (params = {}) {
         return out;
     };
 
-    const hasKids = function (rec) {
-        return (rec.node.children && rec.node.children.length > 0) || (rec.node.hasChildren == 1 && !rec.node.children);
+    // Has an arrow: children, or lazy children that are not loaded yet.
+    const canExpand = function (rec) {
+        const node = rec.node;
+        if (node.children && node.children.length > 0) return true;
+        return node.hasChildren == 1 && !node.children;
     };
 
     const isOpen = function (rec) {
-        return rec.node.expanded == 1 && hasKids(rec);
+        return rec.node.expanded == 1 && canExpand(rec);
     };
 
-    const rowId = function (rec) {
+    const getRowId = function (rec) {
         return id + "-" + TreeView.toId(rec.node.key);
     };
 
     const getArrowHtml = function (rec) {
-        const a = _s.arrow;
-        const motion = (a.motion) ? "transition:transform " + a.motion + "s;" : "";
-        const svg = (hasKids(rec)) ? TreeView.getChevronSvg(a.color, a.size) : "";
-        return '<span data-tv-arrow="1" style="display:inline-flex;align-items:center;justify-content:center;flex:0 0 ' + (a.size + 4) + "px;height:100%;" +
-            motion + "transform:rotate(" + (isOpen(rec) ? 90 : 0) + 'deg)">' + svg + "</span>";
+        const arrow = _s.arrow;
+        const styles = [
+            "display:inline-flex",
+            "align-items:center",
+            "justify-content:center",
+            "flex:0 0 " + (arrow.size + 4) + "px",
+            "height:100%",
+            "transform:rotate(" + (isOpen(rec) ? 90 : 0) + "deg)",
+        ];
+        if (arrow.motion) styles.push("transition:transform " + arrow.motion + "s");
+        const svg = (canExpand(rec)) ? TreeView.getChevronSvg(arrow.color, arrow.size) : "";
+        return span(styles, svg, ' data-tv-arrow="1"');
+    };
+
+    const getIconHtml = function (node) {
+        const size = _s.icon.size + "px";
+        const styles = [
+            "flex:0 0 " + size,
+            "width:" + size,
+            "height:" + size,
+            "margin-left:" + (_s.row.gap - 4) + "px",
+            "object-fit:contain",
+        ];
+        return '<img src="' + escapeText(node.iconFile) + '" alt="" style="' + styles.join(";") + '">';
+    };
+
+    const getTextHtml = function (node) {
+        const styles = [
+            "margin-left:" + ((node.iconFile) ? _s.row.gap : 2) + "px",
+            "flex:0 1 auto",
+            "min-width:0",
+            "overflow:hidden",
+            "text-overflow:ellipsis",
+        ];
+        if (node.textColor) styles.push("color:" + escapeText(node.textColor));
+        return span(styles, escapeText(node.text));
+    };
+
+    const getTagHtml = function (node) {
+        const styles = [
+            "margin-left:" + _s.row.gap + "px",
+            "flex:0 0 auto",
+            "color:" + escapeText(node.tagColor || _s.tag.textColor),
+            "font-size:" + _s.tag.fontSize + "px",
+        ];
+        return span(styles, escapeText(node.tag));
+    };
+
+    const getNoteHtml = function (node) {
+        const styles = [
+            "margin-left:" + _s.row.gap + "px",
+            "flex:0 1 auto",
+            "min-width:0",
+            "overflow:hidden",
+            "text-overflow:ellipsis",
+            "color:" + _s.note.textColor,
+            "font-size:" + _s.note.fontSize + "px",
+        ];
+        return span(styles, escapeText(node.note));
     };
 
     // The inside of a row: arrow, icon, text, tag, note.
+    // WHY: One Label with HTML, not one object for each part: a tree of thousands of rows stays light.
     const getRowHtml = function (rec) {
-        const n = rec.node;
-        const r = _s.row;
+        const node = rec.node;
         let html = getArrowHtml(rec);
-        if (n.iconFile) {
-            html += '<img src="' + esc(n.iconFile) + '" alt="" style="flex:0 0 ' + _s.icon.size + "px;width:" + _s.icon.size + "px;height:" + _s.icon.size + 'px;margin-left:' + (r.gap - 4) + 'px;object-fit:contain">';
-        }
-        html += '<span style="margin-left:' + (n.iconFile ? r.gap : 2) + "px;flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis" +
-            (n.textColor ? ";color:" + esc(n.textColor) : "") + '">' + esc(n.text) + "</span>";
-        if (n.tag !== undefined && n.tag !== null && n.tag !== "") {
-            html += '<span style="margin-left:' + r.gap + "px;flex:0 0 auto;color:" + esc(n.tagColor || _s.tag.textColor) + ";font-size:" + _s.tag.fontSize + 'px">' + esc(n.tag) + "</span>";
-        }
-        if (n.note !== undefined && n.note !== null && n.note !== "") {
-            html += '<span style="margin-left:' + r.gap + "px;flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;color:" + _s.note.textColor + ";font-size:" + _s.note.fontSize + 'px">' + esc(n.note) + "</span>";
-        }
+        if (node.iconFile) html += getIconHtml(node);
+        html += getTextHtml(node);
+        if (isFilled(node.tag)) html += getTagHtml(node);
+        if (isFilled(node.note)) html += getNoteHtml(node);
         return html;
+    };
+
+    const getRowColor = function (isSelected, isHover) {
+        if (isSelected) return _s.rowSelected.color;
+        if (isHover) return _s.rowHover.color;
+        return "transparent";
     };
 
     // Colors and aria of a row. (The text is not drawn again.)
     const paintRow = function (rec) {
+
         if (!rec.row) return;
-        const selected = (rec.node.key === box.value);
-        const hover = (rec === hoverRec) && !selected && !rec.node.disabled;
-        const el = rec.row.elem;
-        rec.row.color = (selected) ? _s.rowSelected.color : ((hover) ? _s.rowHover.color : "transparent");
-        rec.row.textColor = (selected) ? _s.rowSelected.textColor : _s.row.textColor;
-        el.style.opacity = (rec.node.disabled) ? String(_s.disabled.opacity) : "1";
-        el.style.boxShadow = (selected && hasFocus) ? "inset 0 0 0 1px " + _s.rowFocus.outlineColor : "none";
-        el.setAttribute("aria-selected", (selected) ? "true" : "false");
-        el.setAttribute("aria-disabled", (rec.node.disabled) ? "true" : "false");
-        if (hasKids(rec)) el.setAttribute("aria-expanded", isOpen(rec) ? "true" : "false");
-        else el.removeAttribute("aria-expanded");
+
+        const node = rec.node;
+        const row = rec.row;
+        const isSelected = (node.key === box.value);
+        const isHover = (rec === hoverRec) && !isSelected && !node.disabled;
+
+        row.color = getRowColor(isSelected, isHover);
+        row.textColor = (isSelected) ? _s.rowSelected.textColor : _s.row.textColor;
+        row.opacity = (node.disabled) ? _s.disabled.opacity : 1;
+        row.boxShadow = (isSelected && hasFocus) ? "inset 0 0 0 1px " + _s.rowFocus.outlineColor : "none";
+
+        row.elem.setAttribute("aria-selected", (isSelected) ? "true" : "false");
+        row.elem.setAttribute("aria-disabled", (node.disabled) ? "true" : "false");
+        if (canExpand(rec)) row.elem.setAttribute("aria-expanded", isOpen(rec) ? "true" : "false");
+        else row.elem.removeAttribute("aria-expanded");
+
     };
 
     // Text, arrow and colors of a row.
@@ -257,25 +333,34 @@ const TreeView = function (params = {}) {
         const rec = { node: node, parent: parent, level: level, row: null, group: null, built: 0 };
         recs.set(node.key, rec);
 
-        const r = _s.row;
+        const rowStyle = _s.row;
 
         // LABEL: Row
-        rec.row = Label({ width: "100%", height: r.height, text: "", fontSize: r.fontSize, textColor: r.textColor, color: "transparent", round: r.round });
-        const el = rec.row.elem;
-        el.style.position = "relative";
-        el.style.display = "flex";
-        el.style.alignItems = "center";
-        el.style.whiteSpace = "nowrap";
-        el.style.overflow = "hidden";
-        el.style.flexShrink = "0";
-        el.style.boxSizing = "border-box";
-        el.style.paddingLeft = (r.paddingLeft + level * r.indent) + "px";
-        el.style.paddingRight = r.paddingRight + "px";
-        el.style.cursor = "default";
-        el.id = rowId(rec);
-        el.setAttribute("role", "treeitem");
-        el.setAttribute("aria-level", String(level + 1));
-        el._treeRec = rec;
+        rec.row = Label({
+            width: "100%",
+            height: rowStyle.height,
+            text: "",
+            fontSize: rowStyle.fontSize,
+            textColor: rowStyle.textColor,
+            color: "transparent",
+            round: rowStyle.round,
+            shrink: 0,
+            cursor: "default",
+            css: {
+                position: "relative",
+                display: "flex",
+                alignItems: "center",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                boxSizing: "border-box",
+                paddingLeft: (rowStyle.paddingLeft + level * rowStyle.indent) + "px",
+                paddingRight: rowStyle.paddingRight + "px",
+            },
+        });
+        rec.row.elem.id = getRowId(rec);
+        rec.row.elem.setAttribute("role", "treeitem");
+        rec.row.elem.setAttribute("aria-level", String(level + 1));
+        rec.row.elem._treeRec = rec; // WHY: One click listener for all the rows finds the rec of a row with it.
         rec.row.clickable = 1;
         drawRow(rec);
 
@@ -293,9 +378,15 @@ const TreeView = function (params = {}) {
 
         // GROUP: Children
         createIn(rec.row.containerBox, function () {
-            rec.group = VGroup({ width: "100%", height: "auto", align: "left top", gap: 0, color: "transparent", position: "relative" });
-            rec.group.elem.style.alignItems = "stretch";
-            rec.group.elem.style.flexShrink = "0";
+            rec.group = VGroup({
+                width: "100%",
+                height: "auto",
+                align: "left top",
+                gap: 0,
+                color: "transparent",
+                position: "relative",
+                css: { alignItems: "stretch" },
+            });
             rec.group.elem.setAttribute("role", "group");
                 rec.children = rec.node.children.map(function (child) { return buildRec(child, rec, rec.level + 1); });
             endGroup();
@@ -314,15 +405,15 @@ const TreeView = function (params = {}) {
     };
 
     const indexNodes = function (list, parentNode) {
-        (list || []).forEach(function (n) {
-            index.set(n.key, { node: n, parent: parentNode });
-            if (n.children) indexNodes(n.children, n);
+        (list || []).forEach(function (node) {
+            index.set(node.key, { node: node, parent: parentNode });
+            if (node.children) indexNodes(node.children, node);
         });
     };
 
-    const unindexNode = function (n) {
-        index.delete(n.key);
-        (n.children || []).forEach(unindexNode);
+    const unindexNode = function (node) {
+        index.delete(node.key);
+        (node.children || []).forEach(unindexNode);
     };
 
     // The rec of a key: the closed parents are opened (their rows are created) first.
@@ -341,11 +432,10 @@ const TreeView = function (params = {}) {
 
     // The selection was removed (it is not in the tree any more).
     const dropLostValue = function () {
-        if (box.value !== null && !index.get(box.value)) {
-            box.previousValue = box.value;
-            box.value = null;
-            box.listArea.elem.removeAttribute("aria-activedescendant");
-        }
+        if (box.value === null || index.get(box.value)) return;
+        box.previousValue = box.value;
+        box.value = null;
+        box.listArea.elem.removeAttribute("aria-activedescendant");
     };
 
     const removeRecView = function (rec) {
@@ -387,55 +477,68 @@ const TreeView = function (params = {}) {
         return out;
     };
 
+    const getEnabledVisibleRecs = function () {
+        return getVisibleRecs().filter(function (rec) { return !rec.node.disabled; });
+    };
+
     const scrollRowIntoView = function (rec) {
         if (!rec || !rec.row || isAutoHeight) return;
         const area = box.listArea.elem;
-        const a = area.getBoundingClientRect();
-        const r = rec.row.elem.getBoundingClientRect();
-        if (r.top < a.top) area.scrollTop -= (a.top - r.top) + 4;
-        else if (r.bottom > a.bottom) area.scrollTop += (r.bottom - a.bottom) + 4;
+        const areaBox = area.getBoundingClientRect();
+        const rowBox = rec.row.elem.getBoundingClientRect();
+        if (rowBox.top < areaBox.top) area.scrollTop -= (areaBox.top - rowBox.top) + SCROLL_SPACE;
+        else if (rowBox.bottom > areaBox.bottom) area.scrollTop += (rowBox.bottom - areaBox.bottom) + SCROLL_SPACE;
     };
 
     const setHover = function (rec) {
         if (rec === hoverRec) return;
-        const old = hoverRec;
+        const oldRec = hoverRec;
         hoverRec = rec;
-        if (old) paintRow(old);
+        if (oldRec) paintRow(oldRec);
         if (rec) paintRow(rec);
-        box.onHover(box, rec ? rec.node : null);
+        box.onHover(box, (rec) ? rec.node : null);
+    };
+
+    const openRec = function (rec) {
+        if (rec.node.children && rec.built) {
+            rec.group.visible = 1;
+            return;
+        }
+        if (rec.node.children) {
+            buildChildren(rec);
+            return;
+        }
+        // Lazy: the code gives the children with setChildren().
+        drawRow(rec);
+        box.onLoadChildren(box, rec.node);
+    };
+
+    const closeRec = function (rec, fromUser) {
+        if (rec.group) rec.group.visible = 0;
+        // WHY: The selection must stay where it can be seen (keyboard).
+        const selected = recs.get(box.value);
+        if (fromUser && selected && isInside(selected, rec)) selectRec(rec, 1);
     };
 
     const setExpanded = function (rec, expanded, fromUser) {
-        if (!rec || !hasKids(rec)) return;
+        if (!rec || !canExpand(rec)) return;
         expanded = (expanded) ? 1 : 0;
         if (rec.node.expanded == expanded) return;
         rec.node.expanded = expanded;
 
-        if (expanded) {
-            if (!rec.node.children) {
-                // Lazy: the code gives the children with setChildren().
-                drawRow(rec);
-                box.onLoadChildren(box, rec.node);
-                if (!box) return;
-            } else if (!rec.built) {
-                buildChildren(rec);
-            } else {
-                rec.group.visible = 1;
-            }
-        } else {
-            if (rec.group) rec.group.visible = 0;
-            // WHY: The selection must stay where it can be seen (keyboard).
-            const selected = recs.get(box.value);
-            if (fromUser && selected && isInside(selected, rec)) selectRec(rec, 1);
-        }
+        if (expanded) openRec(rec);
+        else closeRec(rec, fromUser);
+        if (!box) return; // WHY: onLoadChildren can remove the tree.
+
         drawRow(rec);
         refreshScroll();
         box.onToggle(box, rec.node);
     };
 
     const isInside = function (rec, parent) {
-        let p = rec.parent;
-        while (p) { if (p === parent) return true; p = p.parent; }
+        for (let p = rec.parent; p; p = p.parent) {
+            if (p === parent) return true;
+        }
         return false;
     };
 
@@ -443,12 +546,12 @@ const TreeView = function (params = {}) {
     const selectRec = function (rec, fromUser) {
         if (!rec || rec.node.disabled) return;
         if (rec.node.key === box.value) return;
-        const old = recs.get(box.value);
+        const oldRec = recs.get(box.value);
         box.previousValue = box.value;
         box.value = rec.node.key;
-        if (old) paintRow(old);
+        if (oldRec) paintRow(oldRec);
         paintRow(rec);
-        box.listArea.elem.setAttribute("aria-activedescendant", rowId(rec));
+        box.listArea.elem.setAttribute("aria-activedescendant", getRowId(rec));
         scrollRowIntoView(rec);
         if (fromUser) box.onSelect(box, rec.node);
     };
@@ -458,89 +561,157 @@ const TreeView = function (params = {}) {
         box.onActivate(box, rec.node);
     };
 
+    // step: +1 down, -1 up; Infinity / -Infinity: the last / the first row.
     const moveSelection = function (step) {
-        const list = getVisibleRecs().filter(function (rec) { return !rec.node.disabled; });
+        const list = getEnabledVisibleRecs();
         if (!list.length) return;
-        const current = recs.get(box.value);
-        let index = list.indexOf(current);
-        if (index === -1) index = (step > 0) ? -1 : list.length;
-        index = Math.max(0, Math.min(list.length - 1, index + step));
-        selectRec(list[index], 1);
+        let position = list.indexOf(recs.get(box.value));
+        if (position === -1) position = (step > 0) ? -1 : list.length;
+        position = basic.clamp(position + step, 0, list.length - 1);
+        selectRec(list[position], 1);
     };
 
-    const pageSize = function () {
-        if (isAutoHeight) return 10;
+    const getPageSize = function () {
+        if (isAutoHeight) return AUTO_HEIGHT_PAGE_SIZE;
         return Math.max(1, Math.floor(box.listArea.elem.clientHeight / _s.row.height) - 1);
     };
 
-    const onKeyDown = function (event) {
+    // ArrowRight: opens a closed node, or goes to the first child of an open one.
+    const goRight = function (current) {
+        if (!current) {
+            moveSelection(1);
+            return;
+        }
+        if (canExpand(current) && !isOpen(current)) {
+            setExpanded(current, 1, 1);
+            return;
+        }
+        if (!isOpen(current) || !current.children) return;
+        const firstChild = current.children.find(function (child) { return !child.node.disabled; });
+        selectRec(firstChild, 1);
+    };
 
-        if (box.enabled != 1) return;
+    // ArrowLeft: closes an open node, or goes to the parent.
+    const goLeft = function (current) {
+        if (!current) return;
+        if (isOpen(current)) setExpanded(current, 0, 1);
+        else if (current.parent) selectRec(current.parent, 1);
+    };
+
+    const isTypeAheadKey = function (event) {
+        if (box.typeAhead != 1 || event.key.length !== 1) return false;
+        return !event.ctrlKey && !event.metaKey && !event.altKey;
+    };
+
+    // Returns 1 when the key was used by the tree.
+    const handleKey = function (event) {
+
         const current = recs.get(box.value);
-        let handled = 1;
 
         switch (event.key) {
-            case "ArrowDown": moveSelection(1); break;
-            case "ArrowUp": moveSelection(-1); break;
-            case "PageDown": moveSelection(pageSize()); break;
-            case "PageUp": moveSelection(-pageSize()); break;
-            case "Home": moveSelection(-1e9); break;
-            case "End": moveSelection(1e9); break;
-            case "ArrowRight":
-                if (!current) { moveSelection(1); break; }
-                if (hasKids(current) && !isOpen(current)) setExpanded(current, 1, 1);
-                else if (isOpen(current) && current.children && current.children.length) selectRec(current.children.find(function (c) { return !c.node.disabled; }), 1);
-                break;
-            case "ArrowLeft":
-                if (!current) break;
-                if (isOpen(current)) setExpanded(current, 0, 1);
-                else if (current.parent) selectRec(current.parent, 1);
-                break;
-            case "Enter": activateRec(current); break;
+            case "ArrowDown": moveSelection(1); return 1;
+            case "ArrowUp": moveSelection(-1); return 1;
+            case "PageDown": moveSelection(getPageSize()); return 1;
+            case "PageUp": moveSelection(-getPageSize()); return 1;
+            case "Home": moveSelection(-Infinity); return 1;
+            case "End": moveSelection(Infinity); return 1;
+            case "ArrowRight": goRight(current); return 1;
+            case "ArrowLeft": goLeft(current); return 1;
+            case "Enter": activateRec(current); return 1;
             case " ":
-                if (current && hasKids(current)) setExpanded(current, !isOpen(current), 1);
-                break;
-            default:
-                handled = 0;
-                if (box.typeAhead == 1 && event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
-                    handled = 1;
-                    typeAhead(event.key);
-                }
+                if (current && canExpand(current)) setExpanded(current, !isOpen(current), 1);
+                return 1;
         }
 
-        if (handled) {
-            event.preventDefault();
-            event.stopPropagation();
-        }
+        if (!isTypeAheadKey(event)) return 0;
+        typeAhead(event.key);
+        return 1;
 
+    };
+
+    const onKeyDown = function (event) {
+        if (box.enabled != 1) return;
+        if (!handleKey(event)) return;
+        event.preventDefault();
+        event.stopPropagation();
     };
 
     // Jumps to the next row whose text starts with the typed letters.
     const typeAhead = function (char) {
+
         if (cancelTypeTimer) cancelTypeTimer();
-        cancelTypeTimer = box.after(600, function () { typeBuffer = ""; cancelTypeTimer = null; });
+        cancelTypeTimer = box.after(TYPE_AHEAD_RESET_MS, function () {
+            typeBuffer = "";
+            cancelTypeTimer = null;
+        });
         typeBuffer += char.toLocaleLowerCase();
-        const list = getVisibleRecs().filter(function (rec) { return !rec.node.disabled; });
+
+        const list = getEnabledVisibleRecs();
         if (!list.length) return;
+
         const start = Math.max(0, list.indexOf(recs.get(box.value)));
-        const from = (typeBuffer.length === 1) ? start + 1 : start; // One letter: the next match. More: stay if it still matches.
+        // WHY: One letter: the next match. More letters: the same row, while it still matches.
+        const from = (typeBuffer.length === 1) ? start + 1 : start;
         for (let i = 0; i < list.length; i++) {
             const rec = list[(from + i) % list.length];
-            if (String(rec.node.text).toLocaleLowerCase().indexOf(typeBuffer) === 0) { selectRec(rec, 1); return; }
+            const text = String(rec.node.text).toLocaleLowerCase();
+            if (text.indexOf(typeBuffer) !== 0) continue;
+            selectRec(rec, 1);
+            return;
         }
+
     };
 
     const recOfEvent = function (event) {
-        let el = event.target;
-        while (el && el !== box.listArea.elem) {
+        for (let el = event.target; el && el !== box.listArea.elem; el = el.parentElement) {
             if (el._treeRec) return el._treeRec;
-            el = el.parentElement;
         }
         return null;
     };
 
     const isArrowEvent = function (event) {
         return !!(event.target && event.target.closest && event.target.closest("[data-tv-arrow]"));
+    };
+
+    // Puts the row (and its children group) before the row of next. (No next: it stays at the end.)
+    const moveRecTo = function (rec, next) {
+        if (!next || !next.row) return;
+        next.row.elem.before(rec.row.elem);
+        if (rec.group) rec.row.elem.after(rec.group.elem);
+    };
+
+    const getInsertPosition = function (position, length) {
+        return (position < 0 || position > length) ? length : position;
+    };
+
+    const addRootNode = function (node, position) {
+        const at = getInsertPosition(position, roots.length);
+        indexNodes([node], null);
+        const rec = createIn(box.list, function () { return buildRec(node, null, 0); });
+        roots.splice(at, 0, rec);
+        moveRecTo(rec, roots[at + 1]);
+    };
+
+    const addChildNode = function (parentEntry, node, position) {
+
+        const parentNode = parentEntry.node;
+        parentNode.children = parentNode.children || [];
+        const at = getInsertPosition(position, parentNode.children.length);
+        indexNodes([node], parentNode);
+        parentNode.children.splice(at, 0, node);
+
+        // Not drawn yet (closed or not created): drawn when it opens. Only the arrow of the parent can change.
+        const parent = recs.get(parentNode.key);
+        if (!parent || !parent.built) {
+            if (parent) drawRow(parent);
+            return;
+        }
+
+        const rec = createIn(parent.group, function () { return buildRec(node, parent, parent.level + 1); });
+        parent.children.splice(at, 0, rec);
+        moveRecTo(rec, parent.children[at + 1]);
+        drawRow(parent);
+
     };
 
     // *** PUBLIC FUNCTIONS:
@@ -605,10 +776,10 @@ const TreeView = function (params = {}) {
     // silent: 1 -> onSelect is not called. null: nothing is selected.
     box.setValue = function (key, silent = 0) {
         if (key === null || key === undefined) {
-            const old = recs.get(box.value);
+            const oldRec = recs.get(box.value);
             box.previousValue = box.value;
             box.value = null;
-            if (old) paintRow(old);
+            if (oldRec) paintRow(oldRec);
             box.listArea.elem.removeAttribute("aria-activedescendant");
             return;
         }
@@ -621,13 +792,22 @@ const TreeView = function (params = {}) {
     // NOTE: A node in a closed branch only keeps the state: it is drawn so when its parent opens.
     const setNodeExpanded = function (key, expanded) {
         const rec = recs.get(String(key));
-        if (rec) { setExpanded(rec, expanded); return; }
+        if (rec) {
+            setExpanded(rec, expanded);
+            return;
+        }
         const entry = index.get(String(key));
         if (entry) entry.node.expanded = (expanded) ? 1 : 0;
     };
 
-    box.expand = function (key) { setNodeExpanded(key, 1); };
-    box.collapse = function (key) { setNodeExpanded(key, 0); };
+    box.expand = function (key) {
+        setNodeExpanded(key, 1);
+    };
+
+    box.collapse = function (key) {
+        setNodeExpanded(key, 0);
+    };
+
     box.toggle = function (key) {
         const node = box.getNode(key);
         if (node) setNodeExpanded(key, !(node.expanded == 1));
@@ -637,10 +817,9 @@ const TreeView = function (params = {}) {
     box.expandAll = function () {
         const walk = function (list) {
             list.forEach(function (rec) {
-                if (rec.node.children && rec.node.children.length) {
-                    setExpanded(rec, 1);
-                    walk(rec.children || []);
-                }
+                if (!rec.node.children || !rec.node.children.length) return;
+                setExpanded(rec, 1);
+                walk(rec.children || []);
             });
         };
         walk(roots);
@@ -648,7 +827,9 @@ const TreeView = function (params = {}) {
 
     box.collapseAll = function () {
         recs.forEach(function (rec) { setExpanded(rec, 0); });
-        index.forEach(function (entry, key) { if (!recs.get(key)) entry.node.expanded = 0; });
+        index.forEach(function (entry, key) {
+            if (!recs.get(key)) entry.node.expanded = 0;
+        });
     };
 
     // Opens the parents of a node and scrolls to it.
@@ -661,7 +842,8 @@ const TreeView = function (params = {}) {
         const entry = index.get(String(key));
         if (!entry) return;
         Object.keys(props).forEach(function (name) {
-            if (name !== "children" && name !== "key" && name !== "expanded") entry.node[name] = props[name];
+            if (name === "children" || name === "key" || name === "expanded") return;
+            entry.node[name] = props[name];
         });
         const rec = recs.get(String(key));
         if (rec) drawRow(rec);
@@ -683,71 +865,60 @@ const TreeView = function (params = {}) {
 
     // Adds a node under parentKey (null: a root) at position (-1: the end). Returns the node.
     box.addNode = function (parentKey, node, position = -1) {
-        const hasParent = (parentKey !== null && parentKey !== undefined);
-        const parentEntry = (hasParent) ? index.get(String(parentKey)) : null;
-        if (hasParent && !parentEntry) return null;
-        const n = normalize(node);
-        if (index.get(n.key)) { console.warn("TreeView: The key is used: " + n.key); return null; }
-        const siblings = (hasParent) ? (parentEntry.node.children = parentEntry.node.children || []) : null;
-        const list = (hasParent) ? siblings : roots.map(function (r) { return r.node; });
-        const at = (position < 0 || position > list.length) ? list.length : position;
-        indexNodes([n], (hasParent) ? parentEntry.node : null);
-        const parent = (hasParent) ? recs.get(String(parentKey)) : null;
 
-        if (hasParent) {
-            siblings.splice(at, 0, n);
-            if (!parent || !parent.built) { if (parent) drawRow(parent); refreshScroll(); return n; } // Drawn when it opens.
-            let rec = null;
-            createIn(parent.group, function () { rec = buildRec(n, parent, parent.level + 1); });
-            parent.children.splice(at, 0, rec);
-            moveRecTo(rec, parent.children[at + 1]);
-            drawRow(parent);
-        } else {
-            let rec = null;
-            createIn(box.list, function () { rec = buildRec(n, null, 0); });
-            roots.splice(at, 0, rec);
-            moveRecTo(rec, roots[at + 1]);
+        const isRoot = (parentKey === null || parentKey === undefined);
+        const parentEntry = (isRoot) ? null : index.get(String(parentKey));
+        if (!isRoot && !parentEntry) return null;
+
+        const newNode = normalize(node);
+        if (index.get(newNode.key)) {
+            console.warn("TreeView: The key is used: " + newNode.key);
+            return null;
         }
+
+        if (isRoot) addRootNode(newNode, position);
+        else addChildNode(parentEntry, newNode, position);
+
         updateEmpty();
         refreshScroll();
-        return n;
-    };
+        return newNode;
 
-    // Puts the row (and its children group) before the row of next. (No next: it stays at the end.)
-    const moveRecTo = function (rec, next) {
-        if (!next || !next.row) return;
-        next.row.elem.before(rec.row.elem);
-        if (rec.group) rec.row.elem.after(rec.group.elem);
     };
 
     box.removeNode = function (key) {
+
         const entry = index.get(String(key));
         if (!entry) return;
-        const rec = recs.get(String(key));
+
         if (entry.parent) {
-            const ni = entry.parent.children.indexOf(entry.node);
-            if (ni !== -1) entry.parent.children.splice(ni, 1);
+            const siblings = entry.parent.children;
+            const position = siblings.indexOf(entry.node);
+            if (position !== -1) siblings.splice(position, 1);
         }
         unindexNode(entry.node);
+
+        const rec = recs.get(String(key));
         if (rec) {
             const list = (rec.parent) ? rec.parent.children : roots;
-            const i = list.indexOf(rec);
-            if (i !== -1) list.splice(i, 1);
+            const position = list.indexOf(rec);
+            if (position !== -1) list.splice(position, 1);
             forget(rec);
             removeRecView(rec);
         }
+
         dropLostValue();
         const parentRec = (entry.parent) ? recs.get(entry.parent.key) : null;
         if (parentRec) drawRow(parentRec);
         updateEmpty();
         refreshScroll();
+
     };
 
     box.setEnabled = function (enabled) {
         box.enabled = (enabled) ? 1 : 0;
         box.listArea.elem.tabIndex = (box.enabled == 1) ? 0 : -1;
-        box.elem.style.opacity = (box.enabled == 1) ? "1" : String(_s.disabled.opacity);
-        box.listArea.elem.style.pointerEvents = (box.enabled == 1) ? "" : "none";
+        box.opacity = (box.enabled == 1) ? 1 : _s.disabled.opacity;
+        box.listArea.css.pointerEvents = (box.enabled == 1) ? "" : "none";
     };
 
     box.focus = function () {
@@ -770,43 +941,72 @@ const TreeView = function (params = {}) {
     box.round = _s.box.round;
 
     // BOX: Scrolling area (it takes the focus)
-    box.listArea = startBox(0, 0, "100%", (isAutoHeight) ? "auto" : "100%", { color: "transparent", scrollY: (isAutoHeight) ? 0 : 1 });
-    if (isAutoHeight) box.listArea.elem.style.position = "relative";
-    box.listArea.clickable = 1;
+    box.listArea = startBox(0, 0, "100%", (isAutoHeight) ? "auto" : "100%", {
+        color: "transparent",
+        scrollY: (isAutoHeight) ? 0 : 1,
+        clickable: 1,
+        css: { outline: "none" },
+    });
+    // WHY: With height "auto" the area must be in the flow, so the tree grows with its rows.
+    if (isAutoHeight) box.listArea.css.position = "relative";
     box.listArea.elem.tabIndex = 0;
-    box.listArea.elem.style.outline = "none";
     box.listArea.elem.setAttribute("role", "tree");
     box.listArea.elem.setAttribute("aria-label", box.ariaLabel);
 
         // GROUP: Rows
-        box.list = VGroup({ width: "100%", height: "auto", align: "left top", gap: 0, padding: _s.box.padding, color: "transparent", position: "relative" });
-        box.list.elem.style.alignItems = "stretch";
+        box.list = VGroup({
+            width: "100%",
+            height: "auto",
+            align: "left top",
+            gap: 0,
+            padding: _s.box.padding,
+            color: "transparent",
+            position: "relative",
+            css: { alignItems: "stretch" },
+        });
         endGroup();
 
         // LABEL: Empty text
-        box.lblEmpty = Label({ plainText: box.emptyText, width: "100%", top: 16, fontSize: _s.empty.fontSize, textColor: _s.empty.textColor, textAlign: "center", visible: 0 });
+        box.lblEmpty = Label({
+            plainText: box.emptyText,
+            width: "100%",
+            top: 16,
+            fontSize: _s.empty.fontSize,
+            textColor: _s.empty.textColor,
+            textAlign: "center",
+            visible: 0,
+        });
 
     endBox();
 
     if (!isAutoHeight && box.useScrollBar == 1 && typeof ScrollBar !== "undefined") {
-        box.scrollBar = ScrollBar(Object.assign({ scrollableBox: box.listArea, neverHide: 0, showDots: 0 }, _s.scrollBar));
+        const scrollBarProps = { scrollableBox: box.listArea, neverHide: 0, showDots: 0 };
+        box.scrollBar = ScrollBar(Object.assign(scrollBarProps, _s.scrollBar));
     }
 
     // *** OBJECT INIT CODE:
+
+    const repaintSelected = function () {
+        const rec = recs.get(box.value);
+        if (rec) paintRow(rec);
+    };
 
     // EVENTS: One listener for all the rows (the rows are drawn again often).
     box.listArea.on("click", function (self, event) {
         if (box.enabled != 1) return;
         const rec = recOfEvent(event);
         if (!rec) return;
-        if (isArrowEvent(event) && hasKids(rec)) { setExpanded(rec, !isOpen(rec), 1); return; }
+        if (isArrowEvent(event) && canExpand(rec)) {
+            setExpanded(rec, !isOpen(rec), 1);
+            return;
+        }
         selectRec(rec, 1);
     });
     box.listArea.on("dblclick", function (self, event) {
         if (box.enabled != 1) return;
         const rec = recOfEvent(event);
         if (!rec || isArrowEvent(event) || rec.node.disabled) return;
-        if (hasKids(rec)) setExpanded(rec, !isOpen(rec), 1);
+        if (canExpand(rec)) setExpanded(rec, !isOpen(rec), 1);
         activateRec(rec);
     });
     box.listArea.on("mousemove", function (self, event) {
@@ -817,13 +1017,11 @@ const TreeView = function (params = {}) {
     box.listArea.on("keydown", function (self, event) { onKeyDown(event); });
     box.listArea.on("focus", function () {
         hasFocus = 1;
-        const rec = recs.get(box.value);
-        if (rec) paintRow(rec);
+        repaintSelected();
     });
     box.listArea.on("blur", function () {
         hasFocus = 0;
-        const rec = recs.get(box.value);
-        if (rec) paintRow(rec);
+        repaintSelected();
     });
 
     box.setItems(startItems, startValue);
@@ -842,7 +1040,9 @@ TreeView.toId = function (key) {
 
 // A small right arrow (rotated 90° when the node is open).
 TreeView.getChevronSvg = function (color, size) {
-    return '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 0 12 12" fill="none" stroke="' + color + '" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M4.5 2.5 8 6l-3.5 3.5"/></svg>';
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 0 12 12"' +
+        ' fill="none" stroke="' + color + '" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:block">' +
+        '<path d="M4.5 2.5 8 6l-3.5 3.5"/></svg>';
 };
 
 // *** STYLE PACKAGES:
