@@ -94,6 +94,20 @@
             hiddenGroup.show();
             check("show() restores display flex", hiddenGroup.elem.style.display === "flex" && hiddenGroup.visible === 1);
 
+            // *** FIX (v26.10.23): grow, shrink and css in the props of a group are not written over by its flex styles
+            const stretchGroup = VGroup({ width: 200, height: 100, align: "left top", css: { alignItems: "stretch" } });
+            endGroup();
+            check("group props: css.alignItems is kept", stretchGroup.elem.style.alignItems === "stretch");
+            const growGroup = HGroup({ width: "auto", height: 20, grow: 1, shrink: 1 });
+            endGroup();
+            check("group props: grow and shrink are kept", growGroup.elem.style.flexGrow === "1" && growGroup.elem.style.flexShrink === "1");
+            const alignOnlyGroup = VGroup({ width: 200, height: 100, align: "left top" });
+            endGroup();
+            check("group without them: align still sets alignItems", alignOnlyGroup.elem.style.alignItems === "flex-start" && alignOnlyGroup.elem.style.flexGrow === "0");
+            stretchGroup.remove();
+            growGroup.remove();
+            alignOnlyGroup.remove();
+
             // *** FIX: clear error before the page is ready
             const prevContainer = getDefaultContainerBox();
             setDefaultContainerBox(null);

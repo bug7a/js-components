@@ -8,13 +8,14 @@ basic.js (v26.10.23) A lightweight JavaScript library for building web-based app
 v26.10.23 is v26.09.18 plus the additions below. Every page and component written for the
 previous versions works unchanged (same globals, same defaults, same DOM).
 
-WHAT IS NEW IN v26.10.23 (for simpler components; see basic/basic-v26.10.23.md):
+WHAT IS NEW IN v26.10.23 (for simpler components; see basic/basic-what-is-new.md):
 - Cleaned in remove(): listenTo(target, event, func), onPageResize(func), after(ms, func), every(ms, func), own(obj)
 - Methods:    onHoverChange(func), setFocusRing(color)
 - Global:     createIn() returns the result of its function
 - basic:      isOn(), addCss()
+- Fix:        grow, shrink and css in the props of a group are not written over by its flex styles
 
-WHAT IS NEW IN v26.09.18 (see basic/basic-v26.09.18.md for examples):
+WHAT IS NEW IN v26.09.18 (see basic/basic-what-is-new.md for examples):
 - Fixes:      "100" and "50%" work for left/top/right/bottom/width/height. Children created in a hidden
               HGroup/VGroup are real flex items (visible: 0 at create time). Objects created before the
               page is ready throw a clear error. Timers of a removed object can not run anymore.
@@ -3350,6 +3351,14 @@ const startFlexBox = function(p1 = {}, p2, p3, p4, p5) {
         box.elem.style[parameterName] = box[parameterName];
     }
 
+    // WHY: The loop above writes the flex styles (alignItems, flexGrow, flexShrink...) again, over the props.
+    //      grow, shrink and css of the props are applied after it, so they are not lost.
+    //      Ex: VGroup({ align: "left top", css: { alignItems: "stretch" } }), HGroup({ grow: 1 })
+    if (props.grow !== undefined) box.grow = props.grow;
+    if (props.shrink !== undefined) box.shrink = props.shrink;
+    if (props.css) box.css = props.css;
+    box._propsCss = props.css; // WHY: VGroup() sets the flow after this, and the flow writes alignItems again.
+
     // GAP:
     if (box.gap) {
         box._gap = box.gap;
@@ -3372,6 +3381,7 @@ window.HGroup = function(...args) {
 window.VGroup = function(...args) {
     const group = startFlexBox(...args);
     group.flow = "vertical";
+    if (group._propsCss) group.css = group._propsCss;
     return group;
 };
 
