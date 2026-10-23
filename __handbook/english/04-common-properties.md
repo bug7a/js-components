@@ -146,6 +146,8 @@ lblName.onResize(function(resizedLabel) {
 - `object.getMotion()` — Shows the assigned String-based motion command value.
 - `object.withMotion(function)` — It is a smart function that sends the motion process to a very short delay (assigning a timestamp) so that the initial values do not jump.
 - `object.dontMotion()` — The pause command that allows an object assigned a rule (if setMotion is applied) to skip the animation during an instant change.
+- **A change in the same moment as `setMotion()` does not animate** (by design: the first values of a new object must not fly in). Change the value later (a click, a timer), or use `setMotionNow()` when it must animate at once.
+- **Many moving objects with a shadow:** the shadows are painted again on every frame (300 cards: ~110 ms per frame, with `left` and with `translate`). Give them `css: { willChange: "transform" }`: each one gets its own layer and they move at 60 fps. Without shadows, `left` is fast enough.
 
 ---
 

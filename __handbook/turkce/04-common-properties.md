@@ -146,6 +146,8 @@ lblName.onResize(function(resizedLabel) {
 - `object.getMotion()` — Atanan String tabanlı hareket komut değerini gösterir.
 - `object.withMotion(fonksiyon)` — İlk değerlerin sıçramaması için hareket işlemini çok kısa bir ertelemeye salan (zaman damgası atanaran) zeki bir fonksiyondur.
 - `object.dontMotion()` — Kural atanmış bir objenin (setMotion yapılmışsa) anlık bir değişikliğinde animasyonu es geçmesine yarayan, duraklama komutudur.
+- **`setMotion()` ile aynı anda yapılan değişiklik hareket etmez** (bilerek: yeni bir nesnenin ilk değerleri uçarak gelmemeli). Değeri sonra değiştirin (bir tıklama, bir zamanlayıcı) ya da hemen hareket etmesi gerekiyorsa `setMotionNow()` kullanın.
+- **Gölgeli, çok sayıda hareketli nesne:** gölgeler her frame'de yeniden boyanır (300 kart: `left` ile de `translate` ile de frame başına ~110 ms). Onlara `css: { willChange: "transform" }` verin: her biri kendi katmanını alır ve 60 fps hareket eder. Gölge yoksa `left` yeterince hızlıdır.
 
 ---
 

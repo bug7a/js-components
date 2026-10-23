@@ -30,6 +30,8 @@ Aşağıdaki maddeler önem sırasına göre dizildi. **Önce ölçmek** doğru 
 
 ## 2. Hareket `left / top / width` üzerinden yapılıyor
 
+**ÖLÇÜLDÜ (2026-10-23):** `left` ile `translate` arasında fark yok; maliyet gölgelerin boyanması. `willChange: "transform"` ile ikisi de 60 fps. `x` / `y` gerekmiyor (bkz. bench sonuçları).
+
 **Bağlı hata DÜZELTİLDİ (2026-10-23):** `rotate` artık yalnızca transform'un kendi `rotate()` kısmını, yerinde değiştiriyor (`setTransformPart`, IIFE içinde, global değil). CSS'in ayrı `rotate` özelliği seçilmedi: `TinySelect`, `SmartTable`, `comp-m1` ActionButton dönüşü `setMotion("transform 0.3s")` ile hareket ettiriyor, ayrı özellik bu hareketi sessizce durdururdu. `basic-test` 137/137, `components-test` 63/63. **`x` / `y` eklenmedi:** bileşen varsayılanlarında yok ama `obj.x = ...` nesneye veri koymanın çok yaygın yolu (özellikle oyunlarda); bir setter nesneleri birden kaydırırdı. Translate için bir ad gerekirse daha az genel bir ad (`moveX` / `moveY`, ya da `shift = [x, y]`) seçilmeli; `setTransformPart(…, "translate", …)` hazır.
 
 **Nerede:** `setMotion("left 0.3s, top 0.3s")`, `animate({ left: 100 })`, handbook örnekleri.
@@ -44,6 +46,8 @@ Aşağıdaki maddeler önem sırasına göre dizildi. **Önce ölçmek** doğru 
 **Dikkat:** `transform` kullanan bileşenler yeni özellikle çakışabilir (`comp-m4/ui-effects.js` `press` lift / push, `hover` tilt; `comp-m4/page-control.js`; CSS animasyonlu bileşenler). Değişiklikten sonra `test/components-test.htm` de çalıştırılmalı.
 
 ## 3. `setMotion` / `withMotion` / `dontMotion` sabit `setTimeout` ile çalışıyor
+
+**ÖLÇÜLDÜ, DEĞİŞTİRİLMEDİ (2026-10-23):** bkz. aşağıdaki bench sonuçları. Aynı anda yapılan değişikliğin atlaması tasarım gereği; sonuç makinenin hızına bağlı değil.
 
 **Nerede:** ~satır 1247-1295; `motionController.WITH_MOTION_TIME = 50`, `DONT_MOTION_TIME = 40` (~satır 89-90).
 
@@ -221,6 +225,24 @@ basic.white = White;
 3. `setMotion` ile hemen ardından bir değişiklik: CPU yavaşlatıldığında (DevTools, CPU x6) geçişin atlanıp atlanmadığına bakmak (madde 3).
 
 Sonuçlar burada not edilir; değişiklik ancak fark görülürse yapılır.
+
+**YAPILDI: `experimental/basic-bench.htm` (2026-10-23, Apple M1, Chrome, görünür sekme; boş bir frame 16.7 ms):**
+
+| Test | Sonuç |
+|---|---|
+| 300 gölgeli kart, `left` | 114 ms / frame |
+| 300 gölgeli kart, `translate` | 110 ms / frame |
+| 300 kart, gölgesiz, `left` | 16.7 ms (60 fps) |
+| 300 gölgeli kart, `left` + `willChange: "transform"` | 16.7 ms (60 fps) |
+| 200 Label: yaz + oku iç içe | 130 ms |
+| 200 Label: önce oku, sonra yaz | 7.2 ms (~18 kat) |
+| `setMotion` + aynı anda değişiklik | 20 / 20 atladı (hareket yok) |
+| `setMotion` + sonra değişiklik | 20 / 20 hareket ediyor |
+
+**Kararlar:**
+- **Madde 2:** `left` yavaş değil; yavaş olan gölgelerin yeniden boyanması (`translate` de aynı). `x` / `y` (translate) özelliklerine gerek yok. Not handbook'a: çok sayıda hareketli, gölgeli nesnede `css: { willChange: "transform" }`.
+- **Madde 1:** Fark gerçek ve büyük (~18 kat). Handbook notu yazıldı (Dimensioning). `basic.measure()` yardımcısı eklenmedi: "önce oku, sonra yaz" iki satırla yazılıyor, yardımcı bir şey kazandırmıyor.
+- **Madde 3:** Aynı anda yapılan değişikliğin atlaması TASARIM GEREĞİ (yeni bir nesnenin ilk değerleri hareket etmez). Zamanlayıcı her zaman o anki koddan sonra çalıştığı için yavaş bir makinede de sonuç aynı. Değiştirilmedi; handbook'a not yazıldı.
 
 ## Bir değişiklik yapılırsa
 

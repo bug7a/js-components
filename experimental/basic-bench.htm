@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>basic.js bench</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+
+        /* Bismillah */
+
+        // NOTE: The measurements of basic/improvement-ideas.md (items 1, 2, 3), before the library is changed.
+        //       Open it in a browser and press "Run all". The results are also in window.benchResults
+        //       and in the tab title. For a weak phone: DevTools > Performance > CPU 6x slowdown.
+
+        // *** VARIABLES:
+        const CARD_COUNT = 300;      // Item 2: moving cards
+        const MOVE_DURATION = 2000;  // ms of each movement test
+        const LABEL_COUNT = 200;     // Item 1: labels that are measured
+        const MOTION_BOXES = 20;     // Item 3: boxes that start a motion
+        const SLOW_FRAME = 20;       // ms: a frame slower than this is a dropped frame (60 Hz: 16.7 ms)
+
+        const Bench = {};
+        window.benchResults = {};
+        let stage, lblResult;
+
+        const start = function () {
+
+            page.color = "#F4F5F2";
+
+            // GROUP: Page
+            VGroup({ align: "left top", gap: 12, padding: 20 });
+
+                Label({ text: "basic.js bench", fontSize: 22, bold: 1 });
+
+                // GROUP: Buttons
+                HGroup({ hug: 1, gap: 8 });
+                    Bench.button("Run all", Bench.runAll);
+                    Bench.button("2. left / translate", Bench.runMoveTest);
+                    Bench.button("1. read / write", Bench.runMeasureTest);
+                    Bench.button("3. setMotion", Bench.runMotionTest);
+                endGroup();
+
+                lblResult = Label({
+                    width: "100%",
+                    text: "Press a button.",
+                    fontSize: 14,
+                    textColor: Black(0.7),
+                    css: { whiteSpace: "pre-wrap", fontFamily: "monospace" },
+                });
+
+                // BOX: The test area (its objects are created and removed by each test)
+                stage = Box({ width: "100%", height: 420, color: White(1), round: 8 });
+
+            endGroup();
+
+        };
+
+        // *** HELPERS:
+
+        Bench.button = function (text, onClick) {
+            const button = Button({ text: text, width: "auto", height: 36, padding: [14, 0] });
+            button.on("click", function () { onClick(); });
+            return button;
+        };
+
+        Bench.wait = function (ms) {
+            return new Promise(function (resolve) { setTimeout(resolve, ms); });
+        };
+
+        Bench.show = function (key, text) {
+            window.benchResults[key] = text;
+            lblResult.plainText = Object.keys(window.benchResults).map(function (name) {
+                return name + ": " + window.benchResults[name];
+            }).join("\n");
+        };
+
+        Bench.clearStage = function () {
+            stage.children.slice().forEach(function (child) { child.remove(); });
+        };
+
+        Bench.round = function (value) {
+            return Math.round(value * 10) / 10;
+        };
+
+        // Frame times while move(time) runs on every frame.
+        Bench.measureFrames = async function (move) {
+            const frameTimes = [];
+            const startTime = performance.now();
+            let lastTime = startTime;
+            await new Promise(function (resolve) {
+                const step = function (now) {
+                    frameTimes.push(now - lastTime);
+                    lastTime = now;
+                    move(now - startTime);
+                    if (now - startTime < MOVE_DURATION) requestAnimationFrame(step);
+                    else resolve();
+                };
+                requestAnimationFrame(step);
+            });
+            frameTimes.shift(); // WHY: The first one is the wait for the first frame.
+            const average = frameTimes.reduce(function (a, b) { return a + b; }, 0) / frameTimes.length;
+            const slow = frameTimes.filter(function (time) { return time > SLOW_FRAME; }).length;
+            return Bench.round(average) + " ms / frame, " + slow + " slow of " + frameTimes.length;
+        };
+
+        // *** 2. MOVING: left / top against transform: translate
+
+        Bench.createCards = function () {
+            const cards = [];
+            createIn(stage, function () {
+                for (let i = 0; i < CARD_COUNT; i++) {
+                    cards.push(Box({
+                        left: (i % 30) * 30,
+                        top: Math.floor(i / 30) * 40,
+                        width: 26,
+                        height: 34,
+                        round: 4,
+                        color: "hsl(" + (i * 7) % 360 + ", 60%, 60%)",
+                        boxShadow: "0 2px 6px " + Black(0.2),
+                    }));
+                }
+            });
+            return cards;
+        };
+
+        const moveWithLeft = function (card, i, time) {
+            card.left = (i % 30) * 30 + Math.sin(time / 200 + i) * 20;
+        };
+
+        const moveWithTranslate = function (card, i, time) {
+            card.elem.style.transform = "translateX(" + Math.sin(time / 200 + i) * 20 + "px)";
+        };
+
+        // One movement test: new cards, prepare(card) once, then move(card, i, time) on every frame.
+        Bench.runMoveCase = async function (name, prepare, move) {
+            Bench.clearStage();
+            const cards = Bench.createCards();
+            cards.forEach(prepare);
+            await Bench.wait(200);
+            Bench.show(name, await Bench.measureFrames(function (time) {
+                cards.forEach(function (card, i) { move(card, i, time); });
+            }));
+        };
+
+        // NOTE: 2026-10-23 (Apple M1, Chrome): with the shadows both left and translate were ~105 ms / frame;
+        //       without the shadows, or with willChange, both were 16.7 ms (60 fps). The cost is the paint
+        //       of the shadows, not the layout of left.
+        Bench.runMoveTest = async function () {
+            const keepShadow = function () {};
+            const noShadow = function (card) { card.boxShadow = "none"; };
+            const ownLayer = function (card) { card.css.willChange = "transform"; };
+            await Bench.runMoveCase("2. left, shadow", keepShadow, moveWithLeft);
+            await Bench.runMoveCase("2. translate, shadow", keepShadow, moveWithTranslate);
+            await Bench.runMoveCase("2. left, no shadow", noShadow, moveWithLeft);
+            await Bench.runMoveCase("2. left, shadow, willChange", ownLayer, moveWithLeft);
+            Bench.clearStage();
+        };
+
+        // *** 1. MEASURING: reading a size between writes
+
+        Bench.createLabels = function () {
+            const labels = [];
+            createIn(stage, function () {
+                VGroup({ align: "left top", gap: 0, wrap: 1 });
+                    for (let i = 0; i < LABEL_COUNT; i++) {
+                        labels.push(Label({ text: "Label " + i, width: "auto", fontSize: 12 }));
+                    }
+                endGroup();
+            });
+            return labels;
+        };
+
+        Bench.runMeasureTest = async function () {
+
+            Bench.clearStage();
+            const labels = Bench.createLabels();
+            await Bench.wait(100);
+
+            // Write, read, write, read... (the browser lays the page out at every read)
+            let startTime = performance.now();
+            labels.forEach(function (label, i) {
+                label.padding = [i % 3, 0];
+                label.textColor = (label.width > 50) ? "tomato" : "#333";
+            });
+            Bench.show("1. write and read mixed", Bench.round(performance.now() - startTime) + " ms");
+
+            await Bench.wait(100);
+
+            // Read everything, then write everything (one layout)
+            startTime = performance.now();
+            labels.forEach(function (label, i) { label.padding = [(i + 1) % 3, 0]; });
+            const widths = labels.map(function (label) { return label.width; });
+            labels.forEach(function (label, i) { label.textColor = (widths[i] > 50) ? "tomato" : "#333"; });
+            Bench.show("1. read first, then write", Bench.round(performance.now() - startTime) + " ms");
+
+            Bench.clearStage();
+
+        };
+
+        // *** 3. setMotion: a change in the same moment, and a change later
+
+        // NOTE: 2026-10-23: the same moment -> it jumps (setMotion is applied ~40 ms later, BY DESIGN:
+        //       the first values of a new object do not animate). Later -> it moves. The timer always
+        //       runs after the current code, so a slow machine gives the same result.
+        Bench.getStageLeft = function (box) {
+            return Math.round(box.elem.getBoundingClientRect().left - stage.elem.getBoundingClientRect().left);
+        };
+
+        Bench.runMotionTest = async function () {
+
+            Bench.clearStage();
+            const boxes = [];
+            createIn(stage, function () {
+                for (let i = 0; i < MOTION_BOXES; i++) {
+                    boxes.push(Box({ left: 0, top: i * 20, width: 16, height: 16, color: "cadetblue" }));
+                }
+            });
+            await Bench.wait(100);
+
+            // The same moment
+            boxes.forEach(function (box) {
+                box.setMotion("left 0.4s linear");
+                box.left = 400;
+            });
+            await Bench.wait(100);
+            const jumped = boxes.filter(function (box) { return Bench.getStageLeft(box) === 400; }).length;
+            Bench.show("3. setMotion + change in the same moment", jumped + " of " + MOTION_BOXES + " jumped (no motion)");
+
+            // Later (the usual way)
+            await Bench.wait(400);
+            boxes.forEach(function (box) { box.left = 0; });
+            await Bench.wait(100);
+            const moving = boxes.filter(function (box) {
+                const left = Bench.getStageLeft(box);
+                return left > 1 && left < 399;
+            }).length;
+            Bench.show("3. change later", moving + " of " + MOTION_BOXES + " in motion after 100 ms");
+
+            await Bench.wait(400);
+            Bench.clearStage();
+
+        };
+
+        Bench.runAll = async function () {
+            window.benchResults = {};
+            document.title = "basic.js bench (running)";
+            await Bench.runMoveTest();
+            await Bench.runMeasureTest();
+            await Bench.runMotionTest();
+            document.title = "basic.js bench: done";
+        };
+
+        </script>
+
+    </head>
+    <body>
+    </body>
+</html>
