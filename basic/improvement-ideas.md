@@ -22,7 +22,7 @@ Aşağıdaki maddeler önem sırasına göre dizildi. **Önce ölçmek** doğru 
 **Sorun:** Kodda yazma ve okuma iç içe geçince (bir değer yaz, `center()` ile oku, tekrar yaz) tarayıcı her okumada layout'u yeniden hesaplamak zorunda kalıyor (layout thrashing / forced reflow). `box.width` bazen ücretsiz (sayı), bazen pahalı (string): kullanan kişi bunu bilmiyor. Fishing Company Tycoon'da en büyük betik maliyeti tam bu desendi (`MapView.getView`: aynı frame'de DOM'a yazıldıktan sonra `scrollLeft` / `clientWidth` okuyordu).
 
 **Öneriler:**
-- Handbook'a (`__handbook/english` + `turkce`) ve `basic-v26.09.18.md`'ye kısa bir not: "string genişlikli bir nesnede `width` / `height` okumak bir layout ölçümüdür; döngü içinde yazma ve okumayı karıştırma, önce hepsini oku, sonra yaz".
+- Handbook'a (`__handbook/english` + `turkce`) ve `basic-what-is-new.md`'ye kısa bir not: "string genişlikli bir nesnede `width` / `height` okumak bir layout ölçümüdür; döngü içinde yazma ve okumayı karıştırma, önce hepsini oku, sonra yaz".
 - İstenirse bir yardımcı: `basic.measure(readFn, writeFn)`. Okumaları bir arada yapar, yazmaları sonra yapar (ya da bir sonraki `requestAnimationFrame`'e bırakır). Yeni bir global olmamalı, `basic.` altında durmalı.
 - Seçenek (daha riskli): string boyutlar için frame başına önbellek. Getter'ın anlamını değiştirdiği için önerilmez.
 
@@ -170,7 +170,7 @@ basic.white = White;
 - Toplu bul-değiştir yapılırken **kendi `createButton`'ını tanımlayan dosyalara dokunulmamalı** (o dosyalardaki `createButton(...)` çağrıları basic.js'in değil, kendi yardımcılarının). Önce `(const|let|var|function) createButton` arayıp o dosyaları listeden çıkarmak gerekir.
 - basic.js'in içi etkilenmez: `startFlexBox`, `withProps` gibi iç kodlar kapsamdaki `createBox`'ı kullanıyor, `window` adını değil.
 - `test/basic-test.htm`'deki "page-level const createButton does not break Button()" kontrolü kalmalı; kaldırma adımında `window.createButton`'ın artık tanımlı olmadığını doğrulayan bir kontrol eklenebilir.
-- Dokümanlar: `__handbook` (iki dil), `context/basic-js-core.md`, `basic/basic-v26.09.18.md`'nin yerine gelecek sürüm notu. Eski adlar geçiyorsa "eski, yerine `Box()`" diye işaretlenmeli.
+- Dokümanlar: `__handbook` (iki dil), `context/basic-js-core.md`, `basic/basic-what-is-new.md`'ye yeni sürümün bölümü. Eski adlar geçiyorsa "eski, yerine `Box()`" diye işaretlenmeli.
 - Kendi basic.js kopyasını taşıyan yerler (`04-template-m1/todo-app/library/`, `delete-easy-pwa`, oyun, `webpage-handbook/basic/`) kendi kopyalarını kullandığı için etkilenmez; bilerek eski tutulanlar (bkz. CLAUDE.md) öyle kalır.
 
 ---
@@ -191,7 +191,7 @@ basic.white = White;
 
 `comp-m4/tabs.js`, `bugra-rules.md`'ye göre yeniden yazıldı (79 `elem.style` satırı → 0; davranış aynı: 404 eleman × 26 stil, 4 durumda fark yok). Bu sırada basic.js'te eksikliği görülen, tekrar eden çiftler:
 
-1. **Bir grubun props'undaki `css.alignItems` sessizce eziliyor (bir tuzak, önce bu).** `startFlexBox` önce props'u uyguluyor, sonra `FLEX_STYLES` (`alignItems`, `justifyContent`, `flexGrow`, `flexShrink`...) döngüsüyle elem'e yeniden yazıyor. Bu yüzden `VGroup({ align: "left top", css: { alignItems: "stretch" } })` çalışmıyor, ardından `group.css.alignItems = "stretch"` yazmak gerekiyor (Tabs'te 4 kez). Öneri: `css`'i FLEX_STYLES döngüsünden sonra uygulamak, ya da `align`'a bir "uzat" değeri (`align: "left stretch"`).
+1. **(YAPILDI, 2026-10-23: `grow`, `shrink`, `css` artık flex stillerinden ve `VGroup`'un flow'undan sonra uygulanıyor; `basic-test` 126/126, kaynak ve min; repoda değişen tek yer `comp-m4/time-line.js` metinleri, ekranda aynı yerde.) Bir grubun props'undaki `css.alignItems` sessizce eziliyor (bir tuzak, önce bu).** `startFlexBox` önce props'u uyguluyor, sonra `FLEX_STYLES` (`alignItems`, `justifyContent`, `flexGrow`, `flexShrink`...) döngüsüyle elem'e yeniden yazıyor. Bu yüzden `VGroup({ align: "left top", css: { alignItems: "stretch" } })` çalışmıyor, ardından `group.css.alignItems = "stretch"` yazmak gerekiyor (Tabs'te 4 kez). Öneri: `css`'i FLEX_STYLES döngüsünden sonra uygulamak, ya da `align`'a bir "uzat" değeri (`align: "left stretch"`).
 2. **`role` / `aria`:** Tabs'te 17 `elem.setAttribute("role" | "aria-…")` satırı var. Öneri: `obj.role = "tab"` ve `obj.aria = { label: "Close", selected: true }` (değer `false` → `"false"`, `null` → kaldır). Not: `ariaLabel` Tabs'in bir varsayılanı; yeni adlar bir bileşen varsayılanıyla çakışmamalı (`role`, `aria` için repoda arama yapılmalı).
 3. **`id` ve `tabIndex`:** `elem.id = ...`, `elem.tabIndex = 0` sık. Öneri: `obj.tabIndex` özelliği (`id` adı bir bileşen varsayılanıyla çakışabilir: önce bakılmalı).
 4. **Esnek "kalan yeri doldur":** `css.flex = "1 1 0"` + `css.minWidth = "0"` çifti 3 kez (şerit, panel alanı, tam genişlik sekme). `grow` / `shrink` var ama `flexBasis: 0` ve `minWidth: 0` yok. Öneri: bir ad (ör. `fill: 1`) ya da `grow: 1`'in bu ikisini de yapması (davranış değişikliği: dikkat).
@@ -218,7 +218,7 @@ Sonuçlar burada not edilir; değişiklik ancak fark görülürse yapılır.
 
 ## Bir değişiklik yapılırsa
 
-- `basic/basic.js` sürümü ve header'ı, `basic/basic-v26.09.18.md` (ya da yeni sürümün md'si), `__handbook/*/00-what-is-new.md`.
+- `basic/basic.js` sürümü ve header'ı, `basic/basic-what-is-new.md` (yeni sürümün bölümü), `__handbook/*/00-what-is-new.md`.
 - `basic.min.js` terser ile yeniden yapılmalı (komut md'de).
 - `test/basic-test.htm` ve `test/components-test.htm` → sekme başlığı ALL PASS.
 - Şablonlardaki basic.js kopyaları (`04-template-*`, `03-webpage-m2/webpage-handbook/basic/` → `_update-copies.sh`) kendiliğinden güncellenmez.
