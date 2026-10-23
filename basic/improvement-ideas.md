@@ -187,6 +187,17 @@ basic.white = White;
 - Testler: `test/basic-test.htm` 123/123 (kaynak ve `.min.js`), `test/components-test.htm` 63/63.
 - Şablon (`_component-template.js`) bunlarla yazıldı. **comp-m4 2026-10-23'te çevrildi:** 31 bileşenden 20'sinin kendi `remove()`'u kalmadı (önce 29'unda vardı); `remove()`'u kalan 11'i yalnızca basic.js'in bilemeyeceğini temizliyor (Chart.js, statik listeler, hedeften ayrılma, iframe). 13 bileşende 7. maddedeki kısa stil birleştirmesi, 23'ünde `basic.isOn`, 10 `escapeHtml` kopyası → `basic.escapeHtml`, 6 `<style>` → `basic.addCss`. Testler: `components-test` 63/63, comp-m4 31/31, ayrıca davranış testi (zamanlayıcılar, pencere olayları, own) 22/22, 32 örnek sayfa hatasız. comp-m2 / comp-m3 dokunuldukça geçirilir.
 
+## 11. Okunurluk için eklemeler (Tabs sadeleştirmesinden, 2026-10-23, AÇIK)
+
+`comp-m4/tabs.js`, `bugra-rules.md`'ye göre yeniden yazıldı (79 `elem.style` satırı → 0; davranış aynı: 404 eleman × 26 stil, 4 durumda fark yok). Bu sırada basic.js'te eksikliği görülen, tekrar eden çiftler:
+
+1. **Bir grubun props'undaki `css.alignItems` sessizce eziliyor (bir tuzak, önce bu).** `startFlexBox` önce props'u uyguluyor, sonra `FLEX_STYLES` (`alignItems`, `justifyContent`, `flexGrow`, `flexShrink`...) döngüsüyle elem'e yeniden yazıyor. Bu yüzden `VGroup({ align: "left top", css: { alignItems: "stretch" } })` çalışmıyor, ardından `group.css.alignItems = "stretch"` yazmak gerekiyor (Tabs'te 4 kez). Öneri: `css`'i FLEX_STYLES döngüsünden sonra uygulamak, ya da `align`'a bir "uzat" değeri (`align: "left stretch"`).
+2. **`role` / `aria`:** Tabs'te 17 `elem.setAttribute("role" | "aria-…")` satırı var. Öneri: `obj.role = "tab"` ve `obj.aria = { label: "Close", selected: true }` (değer `false` → `"false"`, `null` → kaldır). Not: `ariaLabel` Tabs'in bir varsayılanı; yeni adlar bir bileşen varsayılanıyla çakışmamalı (`role`, `aria` için repoda arama yapılmalı).
+3. **`id` ve `tabIndex`:** `elem.id = ...`, `elem.tabIndex = 0` sık. Öneri: `obj.tabIndex` özelliği (`id` adı bir bileşen varsayılanıyla çakışabilir: önce bakılmalı).
+4. **Esnek "kalan yeri doldur":** `css.flex = "1 1 0"` + `css.minWidth = "0"` çifti 3 kez (şerit, panel alanı, tam genişlik sekme). `grow` / `shrink` var ama `flexBasis: 0` ve `minWidth: 0` yok. Öneri: bir ad (ör. `fill: 1`) ya da `grow: 1`'in bu ikisini de yapması (davranış değişikliği: dikkat).
+5. **Anında geçiş:** `css: { transition: "color 0.15s" }` 5 kez. `setMotion()` bilerek gecikmeli (ilk boyama animasyonsuz), `setMotionNow()` bir metot. Props'ta yazılabilen bir ad (ör. `motionNow`) okunurluğu artırır; gerekli mi, tartışılır.
+6. **Belgelenecek desen (kod değil):** SVG ikonlarında `stroke="currentColor"`: Label'ın `textColor`'ı ikonu boyuyor, hover yalnızca `textColor`'ı değiştiriyor (Tabs: kapat, ekle, oklar). Handbook'a ve `context/basic-js-core.md`'ye bir örnek olarak eklenebilir.
+
 ---
 
 ## Sorun olmayanlar (değiştirmeye gerek yok)

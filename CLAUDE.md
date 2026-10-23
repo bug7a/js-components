@@ -12,7 +12,7 @@ There is **no build system, package.json, bundler, linter or test runner**. Ever
 
 | Path | Contents |
 |---|---|
-| `basic/` | The core library: `basic.js` (v26.10.23), `basic.css` (the Button and TextBox shades are CSS gradients: there is no `img/` folder any more), fonts (Open Sans), `scroll-bar.js`. **All other code depends on it.** v26.09.18 added fixes and features on top of v26.09.17 (`css`, `bold`, `ellipsis`, `grow`, `plainText`, `show()/hide()`, `animate()`, `once()`, Input `placeholder/inputType/onEnter()`, group `wrap/justify`, `page.on()`, `basic.sleep()`, Label `clipContent` (0: the text is not cut; `ellipsis: 1` still cuts)...): reference in `basic/basic-v26.10.23.md` (the additions of v26.10.23) and `basic/basic-v26.09.18.md` (the version before it), self-checking test in `test/basic-test.htm` (open it, the tab title must say ALL PASS). `basic.min.js` is built with terser (command in that md). `basic-bugra.js` / `basic-bugra.min.js` is the frozen previous version (v26.09.17): don't edit or load it in new pages. Rules for library additions: no new globals; don't add properties named like existing component defaults (`scale`, `hint`, `parent`, `shadow`, `image`), because every component default becomes a property on its box. |
+| `basic/` | The core library: `basic.js` (v26.10.23), `basic.css` (the Button and TextBox shades are CSS gradients: there is no `img/` folder any more), fonts (Open Sans), `scroll-bar.js`. **All other code depends on it.** v26.09.18 added fixes and features on top of v26.09.17 (`css`, `bold`, `ellipsis`, `grow`, `plainText`, `show()/hide()`, `animate()`, `once()`, Input `placeholder/inputType/onEnter()`, group `wrap/justify`, `page.on()`, `basic.sleep()`, Label `clipContent` (0: the text is not cut; `ellipsis: 1` still cuts)...): reference in `basic/basic-v26.10.23.md` (the additions of v26.10.23) and `basic/basic-v26.09.18.md` (the version before it), self-checking test in `test/basic-test.htm` (open it, the tab title must say ALL PASS). `basic.min.js` is built with terser (command in that md). `backup/v26.09.17/basic-bugra.js` (+ `.min.js`) is the frozen previous version (v26.09.17): don't edit or load it in new pages. Rules for library additions: no new globals; don't add properties named like existing component defaults (`scale`, `hint`, `parent`, `shadow`, `image`), because every component default becomes a property on its box. |
 | `comp-m1/` | Generation 1 components (legacy). They use the `UICore.createDefaultValues(Comp, {...})` namespace-object pattern from `ui-core.js`. |
 | `comp-m2/` | Generation 2 components that use `startObject`/`endObject`. Includes `ui-standards.js`/`.css`, which provide design tokens (`UI.COLOR_*`, `UI.TEXT_*`, `UI.ROUND_*`), CSS variables and `UI.applyTheme(isDark)` for dark mode. |
 | `comp-m3/` | Generation 3 components (newest, 2026). They follow the same pattern as m2 and group styles in a nested `style: {...}` default. Some were AI-generated. |
@@ -58,6 +58,10 @@ Files and folders prefixed with `delete-` are marked obsolete. Don't use them as
 - **Motion**: `obj.setMotion("left 0.3s, opacity 0.2s")`, then change the properties.
 - **Helpers**: `Black(a)`, `White(a)` (rgba strings), `println`, `num`, `str`, `random`, `basic.storage.save/load` (the global `storage` alias is commented out in basic.js), `waitAndRun(timer, fn, ms)` (debounce), `withPageZoom`, `isMobile`, `go(url)`.
 
+## How the code reads: `bugra-rules.md` (the user, 2026-10-23)
+
+Code written with basic.js reads like plain prose, without needing comments to be understood. **Read `bugra-rules.md` before writing basic.js code and follow it**: names that say what they do, the props of basic.js instead of `elem.style`, short functions with early returns, one thought per line (no long one-liners, no nested ternaries), comments for WHY only, named numbers, global things through the box. Correctness wins over a rule, with a `// WHY:` line.
+
 ## Writing a component (m2/m3 pattern)
 
 Follow `_component-template.js` or a `comp-m3/*.js` file such as `button-with-icon.js`:
@@ -92,10 +96,28 @@ const MyComp = function (params = {}) {
 
 The user opened the Codex CLI in the terminal as a helper. **Every picture that must be drawn is made with it** (Claude can not draw images). It may also take a share of other work when it helps (things the user did not think of), give a second look, debug, and write a debug report. Pick the model and the effort that fit the job.
 
-- `codex exec [-m MODEL] -c model_reasoning_effort="low|medium|high" -C <dir> -s workspace-write -o <last-message-file> "<prompt>"` (non-interactive); `-i <img>` attaches reference images; `--skip-git-repo-check` outside a git repository. The feature `image_generation` is on. The defaults are in `~/.codex/config.toml` (2026-10-11: model `gpt-6-astra`, effort `high`).
+- `codex exec [-m MODEL] -c model_reasoning_effort="low|medium|high" -C <dir> -s workspace-write -o <last-message-file> "<prompt>"` (non-interactive); `-i <img>` attaches reference images; `--skip-git-repo-check` outside a git repository. The feature `image_generation` is on. The defaults are in `~/.codex/config.toml`: model `gpt-6.1-sol`, effort `medium` (the user, 2026-10-12); `gpt-6-astra` only after offering the user the choice.
 - Effort: low / medium for one image or a small check, high for debugging and reports.
 - Give it the exact output path, the size and the look; open the result (read the image) before it is used. It writes files: keep it in the folder it is given and review what it changed.
 - Fishing Company Tycoon: its own CLAUDE.md and `docs/drawings.md` ("THE CODEX CLI") say how its pictures go into the game.
+
+## Blender for 3D, realistic shots and video (the user, 2026-10-13)
+
+Blender is installed on this Mac (Homebrew cask, 5.2.2; `blender` on the PATH; Cycles can use the Metal GPU). **The work that needs it is done with Blender**: 3D scenes, realistic shots, the Steam trailer of Fishing Company Tycoon, video renders. A browser recording of the 2D game can not give a realistic shot.
+
+- Drive it from the terminal with Python: `blender -b -P script.py` (`--python-expr` for a quick check). Keep the scripts next to their output, so a shot can be made again.
+- The Mac is an Apple M1 with 8 GB RAM: EEVEE or low-sample Cycles with denoising, a small test render first, light scenes.
+- A picture that must be DRAWN (2D art) still goes to the Codex CLI (above).
+- Free models: Poly Haven (CC0, `https://api.polyhaven.com`); write their source next to them.
+
+## Voices with emotion (the user, 2026-10-13)
+
+The narration of a video (Shorts, the trailer, any voice-over) **carries emotion and intonation**: tension, relief, warmth, the stress on the right words, pauses that breathe. A flat reading of the text is not enough (a plain `say` or a default edge-tts read).
+
+- **The default narrator (the user, 2026-10-14): Kokoro-82M `af_heart`** (female, American English), speed 0.80, the voice of the Storm Watch Short and the ship panel Short. The setup is `__video/fishing-company-tycoon-shorts/ship-panel-short/voice-kokoro/` (`LINES` = index, start, deadline, text; `./make-voice.sh`). Its stress and pauses come from the text (commas, short sentences), and each line gets a deadline long enough for speed 0.80. Chatterbox (the narrator of the Steam trailers) or another tool is used only when the user asks.
+- With another tool, choose one that takes direction (style or emotion prompts, SSML emphasis and pauses, an expressive model) and write the direction for each line (the mood, the stressed words).
+- Nobody in a session can listen to audio: say so, deliver 2-3 takes of the key line, and let the user choose by ear.
+- Voice work can be given to the Codex CLI with this rule in its brief.
 
 ## Conventions and gotchas
 
@@ -109,5 +131,6 @@ The user opened the Codex CLI in the terminal as a helper. **Every picture that 
 - `basic.css` gives every basic.js box `pointer-events: none` and the page `user-select: none`, and both are inherited. A raw HTML element added into a box (for example a `<textarea>`) needs `pointer-events: auto; user-select: text` or it can not be clicked.
 - A Box with `height: "auto"` does not grow with basic.js children (they are absolutely positioned). Use a group (`VGroup`/`HGroup`), or set the child wrapper to `position = "relative"`.
 - `setDefaultContainerBox(box)` is not part of the start/end stack: after the next `endGroup()` the default container is the stacked parent again, not `box`. To create objects in an existing box (a component's list after creation), use `createIn(box, function () { ... })` (basic.js v26.09.18): it sets the container, runs the function and restores the previous container, also on error. Otherwise set it again before each object you create directly in `box` (see `comp-m4/tag-input.js` chips), or create one wrapper group in it. Children created while a group is hidden (`visible: 0` at create time) are absolutely positioned, not flex items: hide the group after its children are created. Also, `visible: 0` in the props is undone if you set `elem.style.display` afterwards: set the display first, then `obj.visible = 0`. A flex group with `width: "auto"` inside a scrolling Box does not grow with its children (extra children are clipped): give it `width: max-content`.
+- **A group clips its content** (every Box and group is `clipContent: 1`, `overflow: hidden`, by default). An object that moves out of its box under the mouse (a button that lifts with `translateY`, a picture that grows with `scale`, a glow or a focus outline) is cut at the edge of a group as high as its content. Give such groups `clipContent: 0` (the user, 2026-10-21: "we meet this often"); keep `clipContent: 1` only where cutting is the point (a picture with round corners, a background image).
 - Page and component helpers are global. Do not name them like basic.js internals (a page `const createButton` broke `Button()` with infinite recursion). Prefer `MyPage.createButton`.
 - Every default value of a component becomes a property on its box, so a default must not be named like a basic.js setter: `html` sets `innerHTML` (it wiped a component's children), `zoom` belongs to the page, `text`, `color`, `title`, `visible`... Use names like `htmlText` or `scale`.
