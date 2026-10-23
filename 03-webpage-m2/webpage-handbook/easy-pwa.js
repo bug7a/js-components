@@ -118,8 +118,6 @@ Webpage: https://bug7a.github.io/js-components/
             "basic/basic.min.js",
             "basic/font/open-sans/OpenSans-Bold.ttf",
             "basic/font/open-sans/OpenSans-Regular.ttf",
-            "basic/img/button-background.png",
-            "basic/img/textbox-background.png",
             "basic/scroll-bar.min.js",
             "comp/search-results.min.js",
             "comp/toast.min.js",

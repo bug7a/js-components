@@ -13,7 +13,7 @@ This document contains new features, updates, and changes added to the basic.js 
 *   **Input:** `value`, `placeholder`, `inputType`, `maxLength`, `readOnly`, `focus()`, `blur()`, `select()`, `onEnter()`. **Icon:** `alt`, `imageFit`.
 *   **Groups:** `wrap: 1` and `justify: "space-between" | "left" | "center" | "right" | ...` for `HGroup` / `VGroup` / `AutoLayout`.
 *   **`hug: 1`:** a new, clearer name for the `fit: 1` parameter of the groups (the group wraps its content, `width/height: "auto"`). `fit` keeps working exactly as before, and after creation `group.hug` and `group.fit` both return 1.
-*   **`createIn(container, func)`:** creates objects inside an existing box (for example a component's list box after the component is created) and restores the previous default container afterwards, also when `func` throws. The safe form of `setDefaultContainerBox()`.
+*   **`createIn(container, func)`:** creates objects inside an existing box (for example a component's list box after the component is created) and restores the previous default container afterwards, also when `func` throws. The safe form of `setDefaultContainerBox()`. It has its own start/end stack, so groups started inside it stay in that box even when it is called while another box is still open (fixed on 2026-10-05).
 *   **page:** `on()`, `off()`, `onKeyDown()`, `title`. **basic:** `version`, `isReady`, `sleep()`, `nextFrame()`, `clamp()`, `lerp()`, `objectOf()`, `escapeHtml()`, `storage.loadOr()`.
 
 ---
