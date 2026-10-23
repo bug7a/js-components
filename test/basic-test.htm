@@ -470,6 +470,25 @@
             check("basic.addCss: replace", css1.textContent.indexOf("blue") > 0);
             css1.remove();
 
+            // role, aria, tabIndex (accessibility)
+            const a11yLabel = Label({ text: "x", role: "tab", aria: { label: "Orders", selected: true, level: 2 }, tabIndex: 0 });
+            const a11yElem = a11yLabel.elem;
+            check("role prop", a11yElem.getAttribute("role") === "tab" && a11yLabel.role === "tab");
+            check("aria prop: true -> \"true\", number -> string", a11yElem.getAttribute("aria-label") === "Orders" && a11yElem.getAttribute("aria-selected") === "true" && a11yElem.getAttribute("aria-level") === "2");
+            a11yLabel.aria = { selected: false, label: null };
+            check("aria: only the given keys change; false -> \"false\", null removes", a11yElem.getAttribute("aria-selected") === "false" && !a11yElem.hasAttribute("aria-label") && a11yElem.getAttribute("aria-level") === "2");
+            check("aria getter", a11yLabel.aria.level === "2" && a11yLabel.aria.selected === "false");
+            check("tabIndex prop", a11yElem.tabIndex === 0 && a11yLabel.tabIndex === 0);
+            a11yLabel.tabIndex = null;
+            a11yLabel.role = "";
+            check("tabIndex null and role \"\" remove the attributes", !a11yElem.hasAttribute("tabindex") && !a11yElem.hasAttribute("role"));
+            const a11yInput = Input({ aria: { label: "Name" }, tabIndex: -1 });
+            const a11yField = a11yInput._textElem;
+            check("Input: aria and tabIndex on the <input>", a11yField.tagName === "INPUT" && a11yField.getAttribute("aria-label") === "Name" && a11yField.tabIndex === -1);
+            check("no new global for the helper", typeof window.setOrRemoveAttribute === "undefined");
+            a11yLabel.remove();
+            a11yInput.remove();
+
             await wait(150);
             check("no uncaught errors", uncaught.length === 0, uncaught.join(" | "));
 

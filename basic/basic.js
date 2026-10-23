@@ -13,6 +13,7 @@ WHAT IS NEW IN v26.10.23 (for simpler components; see basic/basic-what-is-new.md
 - Methods:    onHoverChange(func), setFocusRing(color)
 - Global:     createIn() returns the result of its function
 - basic:      isOn(), addCss()
+- Props:      role, aria ({ label: "Close", selected: true }), tabIndex (accessibility)
 - Fix:        grow, shrink and css in the props of a group are not written over by its flex styles
 
 WHAT IS NEW IN v26.09.18 (see basic/basic-what-is-new.md for examples):
@@ -450,6 +451,15 @@ const isFlexContainer = function ($box) {
 };
 
 // Common methods and properties of basic objects.
+// role / aria: true / false -> "true" / "false"; null, undefined or "" -> the attribute is removed.
+const setOrRemoveAttribute = function ($elem, $name, $value) {
+    if ($value === null || $value === undefined || $value === "") {
+        $elem.removeAttribute($name);
+        return;
+    }
+    $elem.setAttribute($name, String($value));
+};
+
 class Basic_UIComponent {
 
     /*
@@ -967,6 +977,49 @@ class Basic_UIComponent {
 
     set plainText($value) {
         this._textElem.textContent = ($value === null || $value === undefined) ? "" : String($value);
+    }
+
+    // *** v26.10.23 ADDITIONS: ACCESSIBILITY ***
+    // On the element that takes the focus (the <input> of an Input).
+
+    // role: "button", "tab", "tree"... "" or null removes it.
+    get role() {
+        return this._textElem.getAttribute("role") || "";
+    }
+
+    set role($value) {
+        setOrRemoveAttribute(this._textElem, "role", $value);
+    }
+
+    // aria: { label: "Close", selected: true, level: 2 } -> aria-label, aria-selected, aria-level.
+    // Only the given keys change. true / false -> "true" / "false". null, undefined or "" removes the attribute.
+    // The keys are the ARIA names without "aria-" (activedescendant, labelledby: one word, as in ARIA).
+    get aria() {
+        const out = {};
+        for (const attribute of this._textElem.attributes) {
+            if (attribute.name.indexOf("aria-") === 0) out[attribute.name.slice(5)] = attribute.value;
+        }
+        return out;
+    }
+
+    set aria($value) {
+        if (!$value) return;
+        for (let key in $value) {
+            setOrRemoveAttribute(this._textElem, "aria-" + key.toLowerCase(), $value[key]);
+        }
+    }
+
+    // tabIndex: 0 -> the Tab key reaches it, -1 -> only focus() of the code. null or "" -> the default of the element.
+    get tabIndex() {
+        return this._textElem.tabIndex;
+    }
+
+    set tabIndex($value) {
+        if ($value === null || $value === undefined || $value === "") {
+            this._textElem.removeAttribute("tabindex");
+            return;
+        }
+        this._textElem.tabIndex = Number($value);
     }
 
     // 1 after remove().
