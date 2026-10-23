@@ -15,6 +15,7 @@ WHAT IS NEW IN v26.10.23 (for simpler components; see basic/basic-what-is-new.md
 - basic:      isOn(), addCss()
 - Props:      role, aria ({ label: "Close", selected: true }), tabIndex (accessibility)
 - Fix:        grow, shrink and css in the props of a group are not written over by its flex styles
+- Fix:        rotate changes only the rotate() part of the transform (a translate or scale stays)
 
 WHAT IS NEW IN v26.09.18 (see basic/basic-what-is-new.md for examples):
 - Fixes:      "100" and "50%" work for left/top/right/bottom/width/height. Children created in a hidden
@@ -451,6 +452,18 @@ const isFlexContainer = function ($box) {
 };
 
 // Common methods and properties of basic objects.
+// "translateY(4px) rotate(10deg)" + ("rotate", "45deg") -> "translateY(4px) rotate(45deg)"
+// The part is changed in its place (the order of a transform matters); a new part is added at the end.
+const setTransformPart = function ($transform, $name, $value) {
+    const part = $name + "(" + $value + ")";
+    const current = ($transform === "none") ? "" : ($transform || "");
+    const pattern = new RegExp("(^|\\s|\\))" + $name + "\\([^)]*\\)"); // WHY: Not "rotateX(": the name must start a part.
+    if (pattern.test(current)) {
+        return current.replace(pattern, function (found, space) { return space + part; });
+    }
+    return (current.trim()) ? current.trim() + " " + part : part;
+};
+
 // role / aria: true / false -> "true" / "false"; null, undefined or "" -> the attribute is removed.
 const setOrRemoveAttribute = function ($elem, $name, $value) {
     if ($value === null || $value === undefined || $value === "") {
@@ -627,7 +640,8 @@ class Basic_UIComponent {
 
     set rotate($value) {
         this._rotate = parseInt($value);
-        this.elem.style.transform = "rotate(" + $value + "deg)";
+        // WHY: Only the rotate() part changes; a translate() or scale() in the transform stays (v26.10.23).
+        this.elem.style.transform = setTransformPart(this.elem.style.transform, "rotate", $value + "deg");
     }
 
     // -- Hizalama ve boyutlandırma SONU

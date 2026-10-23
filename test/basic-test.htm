@@ -470,6 +470,18 @@
             check("basic.addCss: replace", css1.textContent.indexOf("blue") > 0);
             css1.remove();
 
+            // rotate changes only its own part of the transform
+            const turnBox = Box({ width: 20, height: 20 });
+            turnBox.rotate = 30;
+            check("rotate alone (as before)", turnBox.elem.style.transform === "rotate(30deg)" && turnBox.rotate === 30);
+            turnBox.elem.style.transform = "translateY(4px) rotate(30deg) scale(1.1)";
+            turnBox.rotate = 90;
+            check("rotate keeps translate and scale, in their order", turnBox.elem.style.transform === "translateY(4px) rotate(90deg) scale(1.1)");
+            turnBox.elem.style.transform = "rotateX(20deg)";
+            turnBox.rotate = 45;
+            check("rotate is added after another part (rotateX is not rotate)", turnBox.elem.style.transform === "rotateX(20deg) rotate(45deg)");
+            turnBox.remove();
+
             // role, aria, tabIndex (accessibility)
             const a11yLabel = Label({ text: "x", role: "tab", aria: { label: "Orders", selected: true, level: 2 }, tabIndex: 0 });
             const a11yElem = a11yLabel.elem;
