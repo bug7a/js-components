@@ -30,6 +30,8 @@ Aşağıdaki maddeler önem sırasına göre dizildi. **Önce ölçmek** doğru 
 
 ## 2. Hareket `left / top / width` üzerinden yapılıyor
 
+**Bağlı hata DÜZELTİLDİ (2026-10-23):** `rotate` artık yalnızca transform'un kendi `rotate()` kısmını, yerinde değiştiriyor (`setTransformPart`, IIFE içinde, global değil). CSS'in ayrı `rotate` özelliği seçilmedi: `TinySelect`, `SmartTable`, `comp-m1` ActionButton dönüşü `setMotion("transform 0.3s")` ile hareket ettiriyor, ayrı özellik bu hareketi sessizce durdururdu. `basic-test` 137/137, `components-test` 63/63. **`x` / `y` eklenmedi:** bileşen varsayılanlarında yok ama `obj.x = ...` nesneye veri koymanın çok yaygın yolu (özellikle oyunlarda); bir setter nesneleri birden kaydırırdı. Translate için bir ad gerekirse daha az genel bir ad (`moveX` / `moveY`, ya da `shift = [x, y]`) seçilmeli; `setTransformPart(…, "translate", …)` hazır.
+
 **Nerede:** `setMotion("left 0.3s, top 0.3s")`, `animate({ left: 100 })`, handbook örnekleri.
 
 **Sorun:** `left`, `top`, `width`, `height` animasyonu her frame'de layout çalıştırır. `transform` ve `opacity` ise yalnızca GPU'da birleştirilir (compositing). Birkaç nesnede fark edilmez, onlarca kayan kartta ya da zayıf telefonda takılma yapar.

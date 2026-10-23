@@ -25,12 +25,18 @@ HGroup({ width: "auto", grow: 1 });                             // before: flexG
 
 Now `grow`, `shrink` and `css` are applied after the flex styles. A page that gave them to a group gets what it wrote: in this repository only `comp-m4/time-line.js` (`grow: 1` on the texts) changed, its texts now take the rest of the row (the same place on the screen). `group.css.alignItems = "stretch"` after the group still works.
 
+### Fix: `rotate` keeps the other parts of the transform
+
+`obj.rotate = 45` wrote `transform: rotate(45deg)` and threw away a `translateY()` or `scale()` that was in the transform. Now only the `rotate()` part changes, in its place (the order of a transform matters); it is added at the end when it is not there. Alone, the value is the same as before (`rotate(45deg)`), so an animation with `setMotion("transform 0.3s")` still works (the arrows of `TinySelect`, `SmartTable`).
+
+A component that writes `elem.style.transform = "..."` itself still replaces the whole value, the rotation too: write the rotation after it, or put both in that string.
+
 ### The additions
 
 
 
 For simpler components: the global things of an object are cleaned by its `remove()`, so most components do not
-override `remove()` any more (42 of 63 components did it only for this). `test/basic-test.htm`: 134 checks.
+override `remove()` any more (42 of 63 components did it only for this). `test/basic-test.htm`: 137 checks.
 
 | What | Use |
 |---|---|

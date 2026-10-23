@@ -64,7 +64,7 @@ Pek çok nesne `width: "auto"` parametresini destekler. Ayrıca `width: "100%"` 
 - `border` (Integer) — İç alan sınırları çizen kenarlık kalınlığı (`0` ise gizlenir, `1` ise ince siyah çizgi). Objeyi dışarıya taşırmaz. İçeriden çizer.
 - `borderColor` (String) — Kenarlık (border) atandıysa çizginin rengini belirler.
 - `fontSize` / `textColor` / `textAlign` — Nesne metin taşıyorsa onun stili değiştirilir. Standart yazı büyüklüğü `20` px boyutundadır. Hizalama (textAlign) `"center"`, `"right"` vb. olabilir.
-- `rotate` (Integer) — CSS rotate özelliğiyle objeyi çevirir (Derece olarak alır: `90`, `360` vb.).
+- `rotate` (Integer) — Objeyi çevirir (derece olarak: `90`, `360` vb.). CSS `transform` değerinin yalnızca `rotate()` kısmını değiştirir: oradaki bir `translateY()` ya da `scale()` kalır. `setMotion("transform 0.3s")` ile hareketli olur.
 
 ---
 

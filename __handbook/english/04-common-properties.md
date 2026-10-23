@@ -64,7 +64,7 @@ Many objects support the `width: "auto"` parameter. Furthermore, it supports per
 - `border` (Integer) — The border thickness defining the inner area boundaries (if `0` it's hidden, if `1` it's a thin black line). It does not overflow the object outward. It draws inwardly.
 - `borderColor` (String) — Determines the color of the line if a border is assigned.
 - `fontSize` / `textColor` / `textAlign` — If the object contains text, its style is modified. The standard font size is `20` px. Alignment (textAlign) can be `"center"`, `"right"`, etc.
-- `rotate` (Integer) — Rotates the object using the CSS rotate property (Takes value in degrees: `90`, `360`, etc.).
+- `rotate` (Integer) — Rotates the object (in degrees: `90`, `360`, etc.). It changes only the `rotate()` part of the CSS `transform`: a `translateY()` or `scale()` there stays. Animate it with `setMotion("transform 0.3s")`.
 
 ---
 
