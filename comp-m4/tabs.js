@@ -838,8 +838,8 @@ const Tabs = function (params = {}) {
             align: "left top",
             gap: 0,
             position: "relative",
+            css: { alignItems: "stretch" },
         });
-        panel.wrapper.css.alignItems = "stretch"; // WHY: Not in the props: a group sets alignItems from align after them.
         return panel.wrapper;
     };
     // USAGE: tabs.startPanel("Details"); Label({ text: "..." }); tabs.endPanel();
@@ -870,19 +870,34 @@ const Tabs = function (params = {}) {
     const dividerLine = _s.bar.dividerWidth + "px solid " + _s.bar.dividerColor;
 
     // GROUP: Root (vertical: bar | panels, horizontal: bar / panels)
-    const rootProps = { width: "100%", height: "auto", align: "left top", gap: 0, position: "relative" };
+    const rootProps = {
+        width: "100%",
+        height: "auto",
+        align: "left top",
+        gap: 0,
+        position: "relative",
+        css: { alignItems: "stretch" },
+    };
     box.contentBox = (isVertical) ? HGroup(rootProps) : VGroup(rootProps);
-    box.contentBox.css.alignItems = "stretch";
 
         // GROUP: Bar row (arrow, strip, arrow, add)
         if (isVertical) {
-            box.barRow = VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
-            box.barRow.css.alignItems = "stretch";
-            box.barRow.css.width = (box.panels == 1) ? box.barWidth + "px" : "100%";
+            box.barRow = VGroup({
+                width: (box.panels == 1) ? box.barWidth : "100%",
+                height: "auto",
+                align: "left top",
+                gap: 0,
+                css: { alignItems: "stretch", minWidth: "0" },
+            });
         } else {
-            box.barRow = HGroup({ width: "100%", height: "auto", align: "left center", gap: 0 });
+            box.barRow = HGroup({
+                width: "100%",
+                height: "auto",
+                align: "left center",
+                gap: 0,
+                css: { minWidth: "0" },
+            });
         }
-        box.barRow.css.minWidth = "0";
 
             // LABEL: Left arrow
             box.leftArrow = makeIconButton(
@@ -914,18 +929,25 @@ const Tabs = function (params = {}) {
                     gap: barStyle.gap,
                     padding: barStyle.padding,
                     position: "relative",
-                    css: { boxSizing: "border-box" },
                 };
                 if (isVertical) {
-                    box.stripInner = VGroup({ ...stripInnerProps, width: "100%", align: "left top" });
-                    box.stripInner.css.alignItems = "stretch";
+                    box.stripInner = VGroup({
+                        ...stripInnerProps,
+                        width: "100%",
+                        align: "left top",
+                        css: { boxSizing: "border-box", alignItems: "stretch" },
+                    });
                     box.stripInner.elem.setAttribute("aria-orientation", "vertical");
                 } else {
-                    box.stripInner = HGroup({ ...stripInnerProps, width: (box.fullWidth == 1) ? "100%" : "auto", align: "left center" });
+                    // WHY: With width: auto the inner group stays as wide as the strip and the extra tabs are clipped.
+                    //      max-content grows with the tabs, so the strip can scroll.
+                    box.stripInner = HGroup({
+                        ...stripInnerProps,
+                        width: (box.fullWidth == 1) ? "100%" : "auto",
+                        align: "left center",
+                        css: { boxSizing: "border-box", width: (box.fullWidth == 1) ? "100%" : "max-content" },
+                    });
                 }
-                // WHY: With width: auto the inner group stays as wide as the strip and the extra tabs are clipped.
-                //      max-content grows with the tabs, so the strip can scroll.
-                if (!isVertical && box.fullWidth != 1) box.stripInner.css.width = "max-content";
                 box.stripInner.elem.setAttribute("role", "tablist");
                 box.stripInner.elem.setAttribute("aria-label", box.ariaLabel);
 
