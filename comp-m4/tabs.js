@@ -265,9 +265,8 @@ const Tabs = function (params = {}) {
         item.group.cursor = (tab.disabled) ? "default" : "pointer";
         item.label.textColor = getTabTextColor(tab, isActive, isHover);
 
-        item.group.elem.setAttribute("aria-selected", (isActive) ? "true" : "false");
-        item.group.elem.setAttribute("aria-disabled", (tab.disabled) ? "true" : "false");
-        item.group.elem.tabIndex = (isActive) ? 0 : -1;
+        item.group.aria = { selected: isActive, disabled: (tab.disabled) ? true : false };
+        item.group.tabIndex = (isActive) ? 0 : -1;
 
         item.countLabel.color = (isActive) ? _s.count.activeColor : _s.count.color;
         item.countLabel.textColor = (isActive) ? _s.count.activeTextColor : _s.count.textColor;
@@ -396,7 +395,7 @@ const Tabs = function (params = {}) {
 
     const focusItem = function (item) {
         if (!item) return;
-        items.forEach(function (i) { i.group.elem.tabIndex = (i === item) ? 0 : -1; });
+        items.forEach(function (other) { other.group.tabIndex = (other === item) ? 0 : -1; });
         item.group.elem.focus({ preventScroll: true });
         item.group.elem.scrollIntoView({ block: "nearest", inline: "nearest" });
     };
@@ -442,7 +441,7 @@ const Tabs = function (params = {}) {
         const active = findItem(box.value);
         const first = getEnabledItems()[0];
         const tabbable = active || first;
-        items.forEach(function (item) { item.group.elem.tabIndex = (item === tabbable) ? 0 : -1; });
+        items.forEach(function (item) { item.group.tabIndex = (item === tabbable) ? 0 : -1; });
     };
 
     // A small button with an SVG icon: the arrows and the add button. The icon takes the textColor.
@@ -458,8 +457,8 @@ const Tabs = function (params = {}) {
             shrink: 0,
             lineHeight: "0",
             css: { display: "flex", alignItems: "center", justifyContent: "center" },
+            aria: { label: ariaLabel },
         });
-        button.elem.setAttribute("aria-label", ariaLabel);
         return button;
     };
 
@@ -492,8 +491,8 @@ const Tabs = function (params = {}) {
                 },
             });
             group.elem.id = id + "-tab-" + Tabs.toId(tab.key);
-            group.elem.setAttribute("role", "tab");
-            if (box.panels == 1) group.elem.setAttribute("aria-controls", id + "-panel-" + Tabs.toId(tab.key));
+            group.role = "tab";
+            if (box.panels == 1) group.aria = { controls: id + "-panel-" + Tabs.toId(tab.key) };
             if (box.fullWidth == 1 && !isVertical) group.css.flex = "1 1 0";
 
                 // ICON:
@@ -505,7 +504,7 @@ const Tabs = function (params = {}) {
                         shrink: 0,
                         css: { transition: "opacity 0.15s" },
                     });
-                    icon.elem.setAttribute("aria-hidden", "true");
+                    icon.aria = { hidden: true };
                     // WHY: The selected icon is loaded before the first click, so it does not flash in.
                     if (tab.selectedIconFile) (new Image()).src = tab.selectedIconFile;
                 }
@@ -541,9 +540,9 @@ const Tabs = function (params = {}) {
                     color: _s.badge.color,
                     round: _s.badge.size,
                     shrink: 0,
+                    aria: { label: "New" },
                     visible: 0,
                 });
-                badgeDot.elem.setAttribute("aria-label", "New");
 
                 // LABEL: Close (x)
                 closeButton = Label({
@@ -558,9 +557,8 @@ const Tabs = function (params = {}) {
                     lineHeight: "0",
                     visible: 0,
                 });
-                closeButton.elem.setAttribute("role", "button");
-                closeButton.elem.setAttribute("aria-label", "Close " + tab.text);
-                closeButton.elem.setAttribute("tabindex", "-1");
+                closeButton.role = "button";
+                closeButton.tabIndex = -1; // WHY: Delete closes the focused tab; the x is for the mouse.
                 if (isVertical) closeButton.css.marginLeft = "auto";
 
             endGroup();
@@ -624,8 +622,8 @@ const Tabs = function (params = {}) {
                     position: "relative",
                 });
                 item.panel.elem.id = id + "-panel-" + Tabs.toId(tab.key);
-                item.panel.elem.setAttribute("role", "tabpanel");
-                item.panel.elem.setAttribute("aria-labelledby", group.elem.id);
+                item.panel.role = "tabpanel";
+                item.panel.aria = { labelledby: group.elem.id };
                 item.panel.css = {
                     boxSizing: "border-box",
                     padding: _s.panel.padding[1] + "px " + _s.panel.padding[0] + "px",
@@ -648,13 +646,13 @@ const Tabs = function (params = {}) {
         item.label.text = Tabs.escapeHtml(tab.text);
         // WHY: An empty label still takes a gap, so the icon of an icon only tab would not be in the middle.
         item.label.visible = (tab.text !== "") ? 1 : 0;
-        item.group.elem.setAttribute("aria-label", tab.text);
+        item.group.aria = { label: tab.text };
         const hasCount = (tab.count !== undefined && tab.count !== null && tab.count !== "");
         item.countLabel.text = (hasCount) ? Tabs.escapeHtml(tab.count) : "";
         item.countLabel.visible = (hasCount) ? 1 : 0;
         item.badgeDot.visible = basic.isOn(tab.badge) ? 1 : 0;
         item.closeButton.visible = (isClosable(tab)) ? 1 : 0;
-        item.closeButton.elem.setAttribute("aria-label", "Close " + tab.text);
+        item.closeButton.aria = { label: "Close " + tab.text };
         paintItem(item); // NOTE: It also loads the icon. (iconFile or selectedIconFile)
     };
 
@@ -937,7 +935,7 @@ const Tabs = function (params = {}) {
                         align: "left top",
                         css: { boxSizing: "border-box", alignItems: "stretch" },
                     });
-                    box.stripInner.elem.setAttribute("aria-orientation", "vertical");
+                    box.stripInner.aria = { orientation: "vertical" };
                 } else {
                     // WHY: With width: auto the inner group stays as wide as the strip and the extra tabs are clipped.
                     //      max-content grows with the tabs, so the strip can scroll.
@@ -948,8 +946,8 @@ const Tabs = function (params = {}) {
                         css: { boxSizing: "border-box", width: (box.fullWidth == 1) ? "100%" : "max-content" },
                     });
                 }
-                box.stripInner.elem.setAttribute("role", "tablist");
-                box.stripInner.elem.setAttribute("aria-label", box.ariaLabel);
+                box.stripInner.role = "tablist";
+                box.stripInner.aria = { label: box.ariaLabel };
 
                     // BOX: Indicator (under the active tab)
                     box.indicator = Box({
@@ -981,8 +979,8 @@ const Tabs = function (params = {}) {
                 marginLeft: (isVertical) ? "0px" : "4px",
                 transition: "background-color 0.15s",
             };
-            box.addTabButton.elem.setAttribute("role", "button");
-            box.addTabButton.elem.tabIndex = 0;
+            box.addTabButton.role = "button";
+            box.addTabButton.tabIndex = 0;
 
         endGroup();
 

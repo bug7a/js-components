@@ -313,10 +313,11 @@ const TreeView = function (params = {}) {
         row.opacity = (node.disabled) ? _s.disabled.opacity : 1;
         row.boxShadow = (isSelected && hasFocus) ? "inset 0 0 0 1px " + _s.rowFocus.outlineColor : "none";
 
-        row.elem.setAttribute("aria-selected", (isSelected) ? "true" : "false");
-        row.elem.setAttribute("aria-disabled", (node.disabled) ? "true" : "false");
-        if (canExpand(rec)) row.elem.setAttribute("aria-expanded", isOpen(rec) ? "true" : "false");
-        else row.elem.removeAttribute("aria-expanded");
+        row.aria = {
+            selected: isSelected,
+            disabled: (node.disabled) ? true : false,
+            expanded: (canExpand(rec)) ? isOpen(rec) : null, // null: a leaf has no aria-expanded
+        };
 
     };
 
@@ -356,10 +357,10 @@ const TreeView = function (params = {}) {
                 paddingLeft: (rowStyle.paddingLeft + level * rowStyle.indent) + "px",
                 paddingRight: rowStyle.paddingRight + "px",
             },
+            role: "treeitem",
+            aria: { level: level + 1 },
         });
         rec.row.elem.id = getRowId(rec);
-        rec.row.elem.setAttribute("role", "treeitem");
-        rec.row.elem.setAttribute("aria-level", String(level + 1));
         rec.row.elem._treeRec = rec; // WHY: One click listener for all the rows finds the rec of a row with it.
         rec.row.clickable = 1;
         drawRow(rec);
@@ -387,7 +388,7 @@ const TreeView = function (params = {}) {
                 position: "relative",
                 css: { alignItems: "stretch" },
             });
-            rec.group.elem.setAttribute("role", "group");
+            rec.group.role = "group";
                 rec.children = rec.node.children.map(function (child) { return buildRec(child, rec, rec.level + 1); });
             endGroup();
         });
@@ -435,7 +436,7 @@ const TreeView = function (params = {}) {
         if (box.value === null || index.get(box.value)) return;
         box.previousValue = box.value;
         box.value = null;
-        box.listArea.elem.removeAttribute("aria-activedescendant");
+        box.listArea.aria = { activedescendant: null };
     };
 
     const removeRecView = function (rec) {
@@ -551,7 +552,7 @@ const TreeView = function (params = {}) {
         box.value = rec.node.key;
         if (oldRec) paintRow(oldRec);
         paintRow(rec);
-        box.listArea.elem.setAttribute("aria-activedescendant", getRowId(rec));
+        box.listArea.aria = { activedescendant: getRowId(rec) };
         scrollRowIntoView(rec);
         if (fromUser) box.onSelect(box, rec.node);
     };
@@ -780,7 +781,7 @@ const TreeView = function (params = {}) {
             box.previousValue = box.value;
             box.value = null;
             if (oldRec) paintRow(oldRec);
-            box.listArea.elem.removeAttribute("aria-activedescendant");
+            box.listArea.aria = { activedescendant: null };
             return;
         }
         const rec = ensureRec(key);
@@ -916,7 +917,7 @@ const TreeView = function (params = {}) {
 
     box.setEnabled = function (enabled) {
         box.enabled = (enabled) ? 1 : 0;
-        box.listArea.elem.tabIndex = (box.enabled == 1) ? 0 : -1;
+        box.listArea.tabIndex = (box.enabled == 1) ? 0 : -1;
         box.opacity = (box.enabled == 1) ? 1 : _s.disabled.opacity;
         box.listArea.css.pointerEvents = (box.enabled == 1) ? "" : "none";
     };
@@ -946,12 +947,12 @@ const TreeView = function (params = {}) {
         scrollY: (isAutoHeight) ? 0 : 1,
         clickable: 1,
         css: { outline: "none" },
+        tabIndex: 0,
+        role: "tree",
+        aria: { label: box.ariaLabel },
     });
     // WHY: With height "auto" the area must be in the flow, so the tree grows with its rows.
     if (isAutoHeight) box.listArea.css.position = "relative";
-    box.listArea.elem.tabIndex = 0;
-    box.listArea.elem.setAttribute("role", "tree");
-    box.listArea.elem.setAttribute("aria-label", box.ariaLabel);
 
         // GROUP: Rows
         box.list = VGroup({
