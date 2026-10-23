@@ -13,6 +13,17 @@
 - `page.fit(width, [maxWidth])`: Scales the page content to fit a specific width.
 - `page.autoFit(width, height)`: Scales the page to fit within a specific aspect ratio.
 
+### Clipping Rule (clipContent)
+- **Every Box and every group (`HGroup`, `VGroup`, `AutoLayout`) cuts what goes past its edges** by default (`clipContent: 1`, CSS `overflow: hidden`).
+- So anything that moves, grows or shines past the edge is cut: a button that lifts under the mouse (`translateY`), a picture or card that grows (`scale`), a `boxShadow`, a glow, a focus outline, an object that slides in with motion. A group whose height is its content (`height: "auto"`, `hug: 1`) cuts a lifted button at once.
+- **Give the groups / boxes around such objects `clipContent: 0`** when you create them, and check every box between the object and the page (one that cuts is enough). Keep `clipContent: 1` only where cutting is wanted (a picture with round corners, a background picture, a scrolling list).
+```javascript
+// GROUP: Buttons that lift under the mouse
+HGroup({ width: "auto", height: "auto", gap: 12, clipContent: 0 }); // WHY: their lift and shadow must not be cut
+    Button({ text: "Play", width: 120, height: 44 });
+endGroup();
+```
+
 ### Scrolling Rule
 - **`page` does not scroll.** `basic.css` sets `body { overflow: hidden }`, and `page` only represents the visible area of the screen.
 - If content can be taller or wider than the screen, place it inside a **full-screen `Box`** and enable that Box's `scrollY` (or `scrollX`) property.
