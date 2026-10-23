@@ -94,6 +94,7 @@ const resizeDetection = {};
 let removeCascadeDepth = 0; // remove(): 0 -> Children of the object are removed too. (Only in the first remove() call)
 
 const motionController = {};
+// WHY: WITH_MOTION_TIME must stay longer than DONT_MOTION_TIME: withMotion() runs after the transition of setMotion() is on.
 motionController.WITH_MOTION_TIME = 50;
 motionController.DONT_MOTION_TIME = 40;
 
