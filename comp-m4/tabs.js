@@ -207,6 +207,10 @@ const Tabs = function (params = {}) {
     let items = []; // [{ tab, group, label, countLabel, badgeDot, closeButton, icon, panel }]
     let panelStack = []; // startPanel() / endPanel()
     let indicatorReady = 0;
+    const SCROLL_SPACE_X = 24; // Space next to the active tab when the strip scrolls to it.
+    const SCROLL_SPACE_Y = 8;
+    const ARROW_PASSIVE_OPACITY = 0.3; // An arrow that can not scroll more.
+    const MIN_SCROLL_STEP = 80; // An arrow click scrolls 60% of the strip, at least this.
 
     // *** PUBLIC VARIABLES:
     box.previousValue = null;
@@ -226,30 +230,49 @@ const Tabs = function (params = {}) {
         return basic.isOn(tab.closable) || (basic.isOn(box.closable) && tab.closable !== 0 && tab.closable !== false);
     };
 
+    const getTabColor = function (isActive, isHover) {
+        if (isActive && isPill) return "transparent"; // WHY: The pill indicator is the background.
+        if (isActive) return _s.tabActive.color;
+        if (isHover) return _s.tabHover.color;
+        return "transparent";
+    };
+
+    const getTabTextColor = function (tab, isActive, isHover) {
+        const activeStyle = (isPill) ? _s.pillActive : _s.tabActive;
+        if (isActive) return tab.selectedTextColor || activeStyle.textColor;
+        if (isHover) return _s.tabHover.textColor;
+        return _s.tab.textColor;
+    };
+
+    const paintIcon = function (item, isActive, isHover) {
+        const tab = item.tab;
+        const iconFile = (isActive && tab.selectedIconFile) ? tab.selectedIconFile : tab.iconFile;
+        item.icon.opacity = (isActive || isHover) ? 1 : _s.icon.passiveOpacity;
+        item.icon.visible = (iconFile) ? 1 : 0;
+        if (!iconFile || item.icon._loadedFile === iconFile) return;
+        item.icon.load(iconFile);
+        item.icon._loadedFile = iconFile;
+    };
+
     const paintItem = function (item) {
 
-        const active = (item.tab.key === box.value);
-        const hover = item.hover && !active && !item.tab.disabled;
-        const activeStyle = (isPill) ? _s.pillActive : _s.tabActive;
+        const tab = item.tab;
+        const isActive = (tab.key === box.value);
+        const isHover = item.hover && !isActive && !tab.disabled;
 
-        item.group.color = (active) ? ((isPill) ? "transparent" : _s.tabActive.color) : ((hover) ? _s.tabHover.color : "transparent");
-        item.label.textColor = (active) ? (item.tab.selectedTextColor || activeStyle.textColor) : ((hover) ? _s.tabHover.textColor : _s.tab.textColor);
-        item.group.elem.style.opacity = (item.tab.disabled) ? String(_s.tabDisabled.opacity) : "1";
-        item.group.elem.style.cursor = (item.tab.disabled) ? "default" : "pointer";
-        item.group.elem.setAttribute("aria-selected", (active) ? "true" : "false");
-        item.group.elem.setAttribute("aria-disabled", (item.tab.disabled) ? "true" : "false");
-        item.group.elem.tabIndex = (active) ? 0 : -1;
+        item.group.color = getTabColor(isActive, isHover);
+        item.group.opacity = (tab.disabled) ? _s.tabDisabled.opacity : 1;
+        item.group.cursor = (tab.disabled) ? "default" : "pointer";
+        item.label.textColor = getTabTextColor(tab, isActive, isHover);
 
-        if (item.countLabel) {
-            item.countLabel.color = (active) ? _s.count.activeColor : _s.count.color;
-            item.countLabel.textColor = (active) ? _s.count.activeTextColor : _s.count.textColor;
-        }
-        if (item.icon) {
-            item.icon.elem.style.opacity = (active || hover) ? "1" : String(_s.icon.passiveOpacity);
-            const iconFile = (active && item.tab.selectedIconFile) ? item.tab.selectedIconFile : item.tab.iconFile;
-            item.icon.visible = (iconFile) ? 1 : 0;
-            if (iconFile && item.icon._loadedFile !== iconFile) { item.icon.load(iconFile); item.icon._loadedFile = iconFile; }
-        }
+        item.group.elem.setAttribute("aria-selected", (isActive) ? "true" : "false");
+        item.group.elem.setAttribute("aria-disabled", (tab.disabled) ? "true" : "false");
+        item.group.elem.tabIndex = (isActive) ? 0 : -1;
+
+        item.countLabel.color = (isActive) ? _s.count.activeColor : _s.count.color;
+        item.countLabel.textColor = (isActive) ? _s.count.activeTextColor : _s.count.textColor;
+
+        if (item.icon) paintIcon(item, isActive, isHover);
 
     };
 
@@ -303,33 +326,52 @@ const Tabs = function (params = {}) {
     const getIndicatorMotion = function () {
         const seconds = (isPill) ? _s.pillIndicator.motion : _s.indicator.motion;
         if (!seconds) return "none";
-        return "left " + seconds + "s, top " + seconds + "s, width " + seconds + "s, height " + seconds + "s, background-color " + seconds + "s, opacity 0.15s";
+        const moving = ["left", "top", "width", "height", "background-color"];
+        return moving.map(function (name) { return name + " " + seconds + "s"; }).join(", ") + ", opacity 0.15s";
     };
 
+    // Scrolls the strip only as much as needed to show the active tab, with a little space next to it.
     const scrollToActive = function () {
+
         const item = findItem(box.value);
         if (!item) return;
+
         const strip = box.strip.elem;
-        const el = item.group.elem;
+        const tabElem = item.group.elem;
+
         if (isVertical) {
-            if (el.offsetTop < strip.scrollTop) strip.scrollTop = el.offsetTop - 8;
-            else if (el.offsetTop + el.offsetHeight > strip.scrollTop + strip.clientHeight) strip.scrollTop = el.offsetTop + el.offsetHeight - strip.clientHeight + 8;
-        } else {
-            if (el.offsetLeft < strip.scrollLeft) strip.scrollLeft = el.offsetLeft - 24;
-            else if (el.offsetLeft + el.offsetWidth > strip.scrollLeft + strip.clientWidth) strip.scrollLeft = el.offsetLeft + el.offsetWidth - strip.clientWidth + 24;
+            const tabTop = tabElem.offsetTop;
+            const tabBottom = tabTop + tabElem.offsetHeight;
+            const viewBottom = strip.scrollTop + strip.clientHeight;
+            if (tabTop < strip.scrollTop) strip.scrollTop = tabTop - SCROLL_SPACE_Y;
+            else if (tabBottom > viewBottom) strip.scrollTop = tabBottom - strip.clientHeight + SCROLL_SPACE_Y;
+            return;
         }
+
+        const tabLeft = tabElem.offsetLeft;
+        const tabRight = tabLeft + tabElem.offsetWidth;
+        const viewRight = strip.scrollLeft + strip.clientWidth;
+        if (tabLeft < strip.scrollLeft) strip.scrollLeft = tabLeft - SCROLL_SPACE_X;
+        else if (tabRight > viewRight) strip.scrollLeft = tabRight - strip.clientWidth + SCROLL_SPACE_X;
+
     };
 
     const updateArrows = function () {
+
         if (isVertical || box.showArrows === 0 || box.showArrows === "0") return;
+
         const strip = box.strip.elem;
-        const overflow = (strip.scrollWidth > strip.clientWidth + 1);
-        box.leftArrow.visible = (overflow) ? 1 : 0;
-        box.rightArrow.visible = (overflow) ? 1 : 0;
-        if (overflow) {
-            box.leftArrow.elem.style.opacity = (strip.scrollLeft > 1) ? "1" : "0.3";
-            box.rightArrow.elem.style.opacity = (strip.scrollLeft + strip.clientWidth < strip.scrollWidth - 1) ? "1" : "0.3";
-        }
+        const hasOverflow = (strip.scrollWidth > strip.clientWidth + 1);
+        box.leftArrow.visible = (hasOverflow) ? 1 : 0;
+        box.rightArrow.visible = (hasOverflow) ? 1 : 0;
+        if (!hasOverflow) return;
+
+        // WHY: + 1 / - 1: the scroll position can be a fraction of a pixel at the ends.
+        const canScrollLeft = (strip.scrollLeft > 1);
+        const canScrollRight = (strip.scrollLeft + strip.clientWidth < strip.scrollWidth - 1);
+        box.leftArrow.opacity = (canScrollLeft) ? 1 : ARROW_PASSIVE_OPACITY;
+        box.rightArrow.opacity = (canScrollRight) ? 1 : ARROW_PASSIVE_OPACITY;
+
     };
 
     const updatePanels = function () {
@@ -347,7 +389,7 @@ const Tabs = function (params = {}) {
 
     const scrollStrip = function (direction) {
         const strip = box.strip.elem;
-        const amount = Math.max(80, Math.round(strip.clientWidth * 0.6)) * direction;
+        const amount = Math.max(MIN_SCROLL_STEP, Math.round(strip.clientWidth * 0.6)) * direction;
         if (strip.scrollBy) strip.scrollBy({ left: amount, behavior: "smooth" });
         else strip.scrollLeft += amount;
     };
@@ -371,8 +413,9 @@ const Tabs = function (params = {}) {
         if (key === prevKey || key === nextKey) {
             event.preventDefault();
             if (!enabled.length) return;
-            const next = (key === nextKey) ? (index + 1) % enabled.length : (index - 1 + enabled.length) % enabled.length;
-            focusItem(enabled[next]);
+            const step = (key === nextKey) ? 1 : -1;
+            const nextIndex = (index + step + enabled.length) % enabled.length; // WHY: % wraps around at both ends.
+            focusItem(enabled[nextIndex]);
         } else if (key === "Home" || key === "End") {
             event.preventDefault();
             focusItem((key === "Home") ? enabled[0] : enabled[enabled.length - 1]);
@@ -381,10 +424,9 @@ const Tabs = function (params = {}) {
             box.setValue(item.tab.key);
         } else if (key === "Delete" && isClosable(item.tab)) {
             event.preventDefault();
-            const enabledIndex = index;
             closeItem(item);
             const rest = getEnabledItems();
-            if (rest.length) focusItem(rest[Math.min(enabledIndex, rest.length - 1)]);
+            if (rest.length) focusItem(rest[Math.min(index, rest.length - 1)]);
         }
 
     };
@@ -399,7 +441,26 @@ const Tabs = function (params = {}) {
         // Roving tabindex: only the active tab (or the first enabled) is in the Tab order.
         const active = findItem(box.value);
         const first = getEnabledItems()[0];
-        items.forEach(function (item) { item.group.elem.tabIndex = (item === (active || first)) ? 0 : -1; });
+        const tabbable = active || first;
+        items.forEach(function (item) { item.group.elem.tabIndex = (item === tabbable) ? 0 : -1; });
+    };
+
+    // A small button with an SVG icon: the arrows and the add button. The icon takes the textColor.
+    const makeIconButton = function (svg, size, round, color, ariaLabel) {
+        const button = Label({
+            text: svg,
+            width: size,
+            height: size,
+            round: round,
+            textColor: color,
+            clickable: 1,
+            cursor: "pointer",
+            shrink: 0,
+            lineHeight: "0",
+            css: { display: "flex", alignItems: "center", justifyContent: "center" },
+        });
+        button.elem.setAttribute("aria-label", ariaLabel);
+        return button;
     };
 
     // Creates the objects of one tab in the strip.
@@ -421,59 +482,86 @@ const Tabs = function (params = {}) {
                 round: _s.tab.round,
                 color: "transparent",
                 clickable: 1,
+                shrink: 0,
+                css: {
+                    minHeight: _s.tab.minHeight + "px",
+                    transition: "background-color 0.15s",
+                    outline: "none",
+                    boxSizing: "border-box",
+                    whiteSpace: "nowrap",
+                },
             });
             group.elem.id = id + "-tab-" + Tabs.toId(tab.key);
-            group.elem.style.minHeight = _s.tab.minHeight + "px";
-            group.elem.style.flexShrink = "0";
-            group.elem.style.transition = "background-color 0.15s";
-            group.elem.style.outline = "none";
-            group.elem.style.boxSizing = "border-box";
-            group.elem.style.whiteSpace = "nowrap";
             group.elem.setAttribute("role", "tab");
             if (box.panels == 1) group.elem.setAttribute("aria-controls", id + "-panel-" + Tabs.toId(tab.key));
-            if (box.fullWidth == 1 && !isVertical) group.elem.style.flex = "1 1 0";
+            if (box.fullWidth == 1 && !isVertical) group.css.flex = "1 1 0";
 
                 // ICON:
                 if (tab.iconFile || tab.selectedIconFile) {
-                    icon = Icon({ width: _s.icon.size, height: _s.icon.size });
-                    icon.elem.alt = "";
-                    icon.elem.style.flexShrink = "0";
-                    icon.elem.style.transition = "opacity 0.15s";
+                    icon = Icon({
+                        width: _s.icon.size,
+                        height: _s.icon.size,
+                        alt: "",
+                        shrink: 0,
+                        css: { transition: "opacity 0.15s" },
+                    });
                     icon.elem.setAttribute("aria-hidden", "true");
                     // WHY: The selected icon is loaded before the first click, so it does not flash in.
                     if (tab.selectedIconFile) (new Image()).src = tab.selectedIconFile;
                 }
 
                 // LABEL: Text
-                label = Label({ text: Tabs.escapeHtml(tab.text), fontSize: _s.tab.fontSize, textColor: _s.tab.textColor });
-                label.elem.style.transition = "color 0.15s";
-                label.elem.style.whiteSpace = "nowrap";
-                label.elem.style.overflow = "hidden";
-                label.elem.style.textOverflow = "ellipsis";
-                label.elem.style.minWidth = "0";
-                if (isVertical) label.elem.style.flex = "1 1 auto";
+                label = Label({
+                    text: Tabs.escapeHtml(tab.text),
+                    fontSize: _s.tab.fontSize,
+                    textColor: _s.tab.textColor,
+                    ellipsis: 1,
+                    css: { transition: "color 0.15s", minWidth: "0" },
+                });
+                if (isVertical) label.css.flex = "1 1 auto";
 
                 // LABEL: Count
-                countLabel = Label({ text: "", fontSize: _s.count.fontSize, textColor: _s.count.textColor, color: _s.count.color, round: _s.count.round, padding: _s.count.padding, visible: 0 });
-                countLabel.elem.style.flexShrink = "0";
-                countLabel.elem.style.lineHeight = "1.4";
-                countLabel.elem.style.transition = "background-color 0.15s, color 0.15s";
+                countLabel = Label({
+                    text: "",
+                    fontSize: _s.count.fontSize,
+                    textColor: _s.count.textColor,
+                    color: _s.count.color,
+                    round: _s.count.round,
+                    padding: _s.count.padding,
+                    lineHeight: "1.4",
+                    shrink: 0,
+                    css: { transition: "background-color 0.15s, color 0.15s" },
+                    visible: 0,
+                });
 
                 // BOX: Badge dot
-                badgeDot = Box({ width: _s.badge.size, height: _s.badge.size, color: _s.badge.color, round: _s.badge.size, visible: 0 });
-                badgeDot.elem.style.flexShrink = "0";
+                badgeDot = Box({
+                    width: _s.badge.size,
+                    height: _s.badge.size,
+                    color: _s.badge.color,
+                    round: _s.badge.size,
+                    shrink: 0,
+                    visible: 0,
+                });
                 badgeDot.elem.setAttribute("aria-label", "New");
 
                 // LABEL: Close (x)
-                closeButton = Label({ text: Tabs.getCloseSvg(_s.close.color, _s.close.size), width: _s.close.size, height: _s.close.size, clickable: 1, visible: 0 });
-                closeButton.elem.style.flexShrink = "0";
-                closeButton.elem.style.lineHeight = "0";
-                closeButton.elem.style.cursor = "pointer";
-                closeButton.elem.style.borderRadius = "3px";
+                closeButton = Label({
+                    text: Tabs.getCloseSvg("currentColor", _s.close.size),
+                    width: _s.close.size,
+                    height: _s.close.size,
+                    round: 3,
+                    textColor: _s.close.color,
+                    clickable: 1,
+                    cursor: "pointer",
+                    shrink: 0,
+                    lineHeight: "0",
+                    visible: 0,
+                });
                 closeButton.elem.setAttribute("role", "button");
                 closeButton.elem.setAttribute("aria-label", "Close " + tab.text);
                 closeButton.elem.setAttribute("tabindex", "-1");
-                if (isVertical) closeButton.elem.style.marginLeft = "auto";
+                if (isVertical) closeButton.css.marginLeft = "auto";
 
             endGroup();
 
@@ -481,22 +569,35 @@ const Tabs = function (params = {}) {
 
         // WHY: The indicator must stay under the tabs. It was created first, so the tabs are painted over it.
 
-        const item = { tab: tab, group: group, label: label, countLabel: countLabel, badgeDot: badgeDot, closeButton: closeButton, icon: icon, hover: 0, panel: null };
+        const item = {
+            tab: tab,
+            group: group,
+            label: label,
+            countLabel: countLabel,
+            badgeDot: badgeDot,
+            closeButton: closeButton,
+            icon: icon,
+            hover: 0,
+            panel: null,
+        };
 
         group.on("click", function () {
             if (box.enabled != 1 || tab.disabled) return;
             box.setValue(tab.key);
             focusItem(item);
         });
-        group.on("mouseenter", function () { item.hover = 1; paintItem(item); });
-        group.on("mouseleave", function () { item.hover = 0; paintItem(item); });
+        group.onHoverChange(function (self, isOver) {
+            item.hover = isOver;
+            paintItem(item);
+        });
         group.on("keydown", function (self, event) { onTabKeyDown(item, event); });
-        group.on("focus", function () { group.elem.style.boxShadow = "inset 0 0 0 2px " + _s.focus.outlineColor; });
-        group.on("blur", function () { group.elem.style.boxShadow = "none"; });
-        group.on("mousedown", function () { group.elem.style.boxShadow = "none"; }); // WHY: No focus ring for mouse clicks.
+        group.on("focus", function () { group.boxShadow = "inset 0 0 0 2px " + _s.focus.outlineColor; });
+        group.on("blur", function () { group.boxShadow = "none"; });
+        group.on("mousedown", function () { group.boxShadow = "none"; }); // WHY: No focus ring for mouse clicks.
 
-        closeButton.on("mouseenter", function () { closeButton.text = Tabs.getCloseSvg(_s.close.hoverColor, _s.close.size); });
-        closeButton.on("mouseleave", function () { closeButton.text = Tabs.getCloseSvg(_s.close.color, _s.close.size); });
+        closeButton.onHoverChange(function (self, isOver) {
+            closeButton.textColor = (isOver) ? _s.close.hoverColor : _s.close.color;
+        });
         closeButton.on("click", function (self, event) {
             event.stopPropagation();
             if (box.enabled != 1) return;
@@ -504,7 +605,9 @@ const Tabs = function (params = {}) {
         });
         // Middle mouse button closes a closable tab (like a browser).
         group.on("auxclick", function (self, event) {
-            if (event.button === 1 && isClosable(tab) && box.enabled == 1) { event.preventDefault(); closeItem(item); }
+            if (event.button !== 1 || !isClosable(tab) || box.enabled != 1) return;
+            event.preventDefault();
+            closeItem(item);
         });
 
         // PANEL:
@@ -523,9 +626,14 @@ const Tabs = function (params = {}) {
                 item.panel.elem.id = id + "-panel-" + Tabs.toId(tab.key);
                 item.panel.elem.setAttribute("role", "tabpanel");
                 item.panel.elem.setAttribute("aria-labelledby", group.elem.id);
-                item.panel.elem.style.boxSizing = "border-box";
-                item.panel.elem.style.padding = _s.panel.padding[1] + "px " + _s.panel.padding[0] + "px";
-                if (box.panelHeight !== "auto") { item.panel.elem.style.position = "absolute"; item.panel.elem.style.left = "0px"; item.panel.elem.style.top = "0px"; item.panel.elem.style.overflow = "auto"; }
+                item.panel.css = {
+                    boxSizing: "border-box",
+                    padding: _s.panel.padding[1] + "px " + _s.panel.padding[0] + "px",
+                };
+                // WHY: A fixed height: the panels lie on top of each other and each one scrolls its own content.
+                if (box.panelHeight !== "auto") {
+                    item.panel.css = { position: "absolute", left: "0px", top: "0px", overflow: "auto" };
+                }
             });
         }
 
@@ -673,9 +781,15 @@ const Tabs = function (params = {}) {
         if (!item) return 0;
         Object.assign(item.tab, changes || {});
         item.tab.disabled = basic.isOn(item.tab.disabled) ? 1 : 0;
-        if (changes && (changes.iconFile !== undefined || changes.selectedIconFile !== undefined) && !item.icon) console.warn("Tabs: An icon can only be changed on a tab that was created with an iconFile.");
+        const changesIcon = changes && (changes.iconFile !== undefined || changes.selectedIconFile !== undefined);
+        if (changesIcon && !item.icon) {
+            console.warn("Tabs: An icon can only be changed on a tab that was created with an iconFile.");
+        }
         applyItemContent(item);
-        if (item.tab.disabled && box.value === key) { box.value = pickValue(null); updatePanels(); }
+        if (item.tab.disabled && box.value === key) {
+            box.value = pickValue(null);
+            updatePanels();
+        }
         update();
         applyTabIndex();
         return 1;
@@ -697,8 +811,8 @@ const Tabs = function (params = {}) {
 
     box.setEnabled = function (enabled) {
         box.enabled = basic.isOn(enabled) ? 1 : 0;
-        box.elem.style.opacity = (box.enabled == 1) ? "1" : String(_s.disabled.opacity);
-        box.elem.style.pointerEvents = (box.enabled == 1) ? "" : "none";
+        box.opacity = (box.enabled == 1) ? 1 : _s.disabled.opacity;
+        box.css.pointerEvents = (box.enabled == 1) ? "" : "none";
     };
     // USAGE: get: tabs.enabled, set: tabs.setEnabled(0)
 
@@ -711,12 +825,21 @@ const Tabs = function (params = {}) {
     // Objects created between startPanel(key) and endPanel() go into the panel of that tab.
     box.startPanel = function (key) {
         const panel = box.getPanel(key);
-        if (!panel) { console.error("Tabs: startPanel(): No panel for the key: " + key + ". (panels: 1 is needed.)"); return null; }
+        if (!panel) {
+            console.error("Tabs: startPanel(): No panel for the key: " + key + ". (panels: 1 is needed.)");
+            return null;
+        }
         panelStack.push(getDefaultContainerBox());
         if (panel.wrapper) panel.wrapper.remove();
         setDefaultContainerBox(panel);
-        panel.wrapper = VGroup({ width: "100%", height: "auto", align: "left top", gap: 0, position: "relative" });
-        panel.wrapper.elem.style.alignItems = "stretch";
+        panel.wrapper = VGroup({
+            width: "100%",
+            height: "auto",
+            align: "left top",
+            gap: 0,
+            position: "relative",
+        });
+        panel.wrapper.css.alignItems = "stretch"; // WHY: Not in the props: a group sets alignItems from align after them.
         return panel.wrapper;
     };
     // USAGE: tabs.startPanel("Details"); Label({ text: "..." }); tabs.endPanel();
@@ -741,30 +864,30 @@ const Tabs = function (params = {}) {
     // *** OBJECT VIEW:
     Tabs.injectCss();
     // WHY: In a column group with "stretch", width: auto would fill the row. fit-content keeps the bar as wide as its tabs.
-    if (box.width === "auto") box.elem.style.width = "fit-content";
+    if (box.width === "auto") box.css.width = "fit-content";
 
     const barStyle = (isPill) ? _s.pillBar : _s.bar;
+    const dividerLine = _s.bar.dividerWidth + "px solid " + _s.bar.dividerColor;
 
     // GROUP: Root (vertical: bar | panels, horizontal: bar / panels)
-    box.contentBox = (isVertical) ? HGroup({ width: "100%", height: "auto", align: "left top", gap: 0, position: "relative" }) : VGroup({ width: "100%", height: "auto", align: "left top", gap: 0, position: "relative" });
-    box.contentBox.elem.style.alignItems = "stretch";
+    const rootProps = { width: "100%", height: "auto", align: "left top", gap: 0, position: "relative" };
+    box.contentBox = (isVertical) ? HGroup(rootProps) : VGroup(rootProps);
+    box.contentBox.css.alignItems = "stretch";
 
         // GROUP: Bar row (arrow, strip, arrow, add)
-        box.barRow = (isVertical) ? VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 }) : HGroup({ width: "100%", height: "auto", align: "left center", gap: 0 });
-        box.barRow.elem.style.alignItems = (isVertical) ? "stretch" : "center";
-        box.barRow.elem.style.flexShrink = "0";
-        if (isVertical) box.barRow.elem.style.width = (box.panels == 1) ? box.barWidth + "px" : "100%";
-        box.barRow.elem.style.minWidth = "0";
+        if (isVertical) {
+            box.barRow = VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
+            box.barRow.css.alignItems = "stretch";
+            box.barRow.css.width = (box.panels == 1) ? box.barWidth + "px" : "100%";
+        } else {
+            box.barRow = HGroup({ width: "100%", height: "auto", align: "left center", gap: 0 });
+        }
+        box.barRow.css.minWidth = "0";
 
             // LABEL: Left arrow
-            box.leftArrow = Label({ text: Tabs.getArrowSvg("left", _s.arrow.color, _s.arrow.size), width: _s.arrow.size + 8, height: _s.arrow.size + 8, clickable: 1, round: 4 });
-            box.leftArrow.elem.style.lineHeight = "0";
-            box.leftArrow.elem.style.display = "flex";
-            box.leftArrow.elem.style.alignItems = "center";
-            box.leftArrow.elem.style.justifyContent = "center";
-            box.leftArrow.elem.style.flexShrink = "0";
-            box.leftArrow.elem.style.cursor = "pointer";
-            box.leftArrow.elem.setAttribute("aria-label", "Scroll left");
+            box.leftArrow = makeIconButton(
+                Tabs.getArrowSvg("left", "currentColor", _s.arrow.size),
+                _s.arrow.size + 8, 4, _s.arrow.color, "Scroll left");
 
             // BOX: Strip (scrolls)
             box.strip = startBox({
@@ -774,29 +897,37 @@ const Tabs = function (params = {}) {
                 round: barStyle.round,
                 border: (isPill) ? barStyle.border : 0,
                 borderColor: (isPill) ? barStyle.borderColor : "transparent",
+                css: { boxSizing: "border-box" },
             });
             box.strip.elem.classList.add("tabs-strip");
-            box.strip.elem.style.boxSizing = "border-box";
             if (isVertical) {
-                box.strip.elem.style.overflowY = "auto";
-                if (!isPill) box.strip.elem.style.borderLeft = _s.bar.dividerWidth + "px solid " + _s.bar.dividerColor;
+                box.strip.css.overflowY = "auto";
+                if (!isPill) box.strip.css.borderLeft = dividerLine;
             } else {
-                box.strip.elem.style.flex = "1 1 0";
-                box.strip.elem.style.minWidth = "0";
-                box.strip.elem.style.overflowX = "auto";
-                box.strip.elem.style.overflowY = "hidden";
-                if (!isPill) box.strip.elem.style.borderBottom = _s.bar.dividerWidth + "px solid " + _s.bar.dividerColor;
+                box.strip.css = { flex: "1 1 0", minWidth: "0", overflowX: "auto", overflowY: "hidden" };
+                if (!isPill) box.strip.css.borderBottom = dividerLine;
             }
 
                 // GROUP: Strip inner (indicator + tabs)
-                box.stripInner = (isVertical) ? VGroup({ width: "100%", height: "auto", align: "left top", gap: barStyle.gap, padding: barStyle.padding, position: "relative" }) : HGroup({ width: (box.fullWidth == 1) ? "100%" : "auto", height: "auto", align: "left center", gap: barStyle.gap, padding: barStyle.padding, position: "relative" });
-                box.stripInner.elem.style.boxSizing = "border-box";
-                if (isVertical) box.stripInner.elem.style.alignItems = "stretch";
-                // WHY: With width: auto the inner group stays as wide as the strip and the extra tabs are clipped. max-content grows with the tabs, so the strip can scroll.
-                if (!isVertical && box.fullWidth != 1) box.stripInner.elem.style.width = "max-content";
+                const stripInnerProps = {
+                    height: "auto",
+                    gap: barStyle.gap,
+                    padding: barStyle.padding,
+                    position: "relative",
+                    css: { boxSizing: "border-box" },
+                };
+                if (isVertical) {
+                    box.stripInner = VGroup({ ...stripInnerProps, width: "100%", align: "left top" });
+                    box.stripInner.css.alignItems = "stretch";
+                    box.stripInner.elem.setAttribute("aria-orientation", "vertical");
+                } else {
+                    box.stripInner = HGroup({ ...stripInnerProps, width: (box.fullWidth == 1) ? "100%" : "auto", align: "left center" });
+                }
+                // WHY: With width: auto the inner group stays as wide as the strip and the extra tabs are clipped.
+                //      max-content grows with the tabs, so the strip can scroll.
+                if (!isVertical && box.fullWidth != 1) box.stripInner.css.width = "max-content";
                 box.stripInner.elem.setAttribute("role", "tablist");
                 box.stripInner.elem.setAttribute("aria-label", box.ariaLabel);
-                if (isVertical) box.stripInner.elem.setAttribute("aria-orientation", "vertical");
 
                     // BOX: Indicator (under the active tab)
                     box.indicator = Box({
@@ -807,37 +938,28 @@ const Tabs = function (params = {}) {
                         color: (isPill) ? _s.pillIndicator.color : _s.indicator.color,
                         round: (isPill) ? _s.pillIndicator.round : _s.indicator.round,
                         opacity: 0,
+                        css: { position: "absolute", pointerEvents: "none" },
                     });
-                    box.indicator.elem.style.position = "absolute";
-                    box.indicator.elem.style.pointerEvents = "none";
-                    if (isPill) box.indicator.elem.style.boxShadow = _s.pillIndicator.shadow;
+                    if (isPill) box.indicator.boxShadow = _s.pillIndicator.shadow;
 
                 endGroup();
 
             endBox();
 
             // LABEL: Right arrow
-            box.rightArrow = Label({ text: Tabs.getArrowSvg("right", _s.arrow.color, _s.arrow.size), width: _s.arrow.size + 8, height: _s.arrow.size + 8, clickable: 1, round: 4 });
-            box.rightArrow.elem.style.lineHeight = "0";
-            box.rightArrow.elem.style.display = "flex";
-            box.rightArrow.elem.style.alignItems = "center";
-            box.rightArrow.elem.style.justifyContent = "center";
-            box.rightArrow.elem.style.flexShrink = "0";
-            box.rightArrow.elem.style.cursor = "pointer";
-            box.rightArrow.elem.setAttribute("aria-label", "Scroll right");
+            box.rightArrow = makeIconButton(
+                Tabs.getArrowSvg("right", "currentColor", _s.arrow.size),
+                _s.arrow.size + 8, 4, _s.arrow.color, "Scroll right");
 
             // LABEL: Add (+)
-            box.addTabButton = Label({ text: Tabs.getPlusSvg(_s.addButton.color, _s.addButton.size), width: _s.addButton.size + 12, height: _s.addButton.size + 12, clickable: 1, round: 6 });
-            box.addTabButton.elem.style.lineHeight = "0";
-            box.addTabButton.elem.style.display = "flex";
-            box.addTabButton.elem.style.alignItems = "center";
-            box.addTabButton.elem.style.justifyContent = "center";
-            box.addTabButton.elem.style.flexShrink = "0";
-            box.addTabButton.elem.style.cursor = "pointer";
-            box.addTabButton.elem.style.marginLeft = (isVertical) ? "0px" : "4px";
-            box.addTabButton.elem.style.transition = "background-color 0.15s";
+            box.addTabButton = makeIconButton(
+                Tabs.getPlusSvg("currentColor", _s.addButton.size),
+                _s.addButton.size + 12, 6, _s.addButton.color, "Add");
+            box.addTabButton.css = {
+                marginLeft: (isVertical) ? "0px" : "4px",
+                transition: "background-color 0.15s",
+            };
             box.addTabButton.elem.setAttribute("role", "button");
-            box.addTabButton.elem.setAttribute("aria-label", "Add");
             box.addTabButton.elem.tabIndex = 0;
 
         endGroup();
@@ -850,7 +972,7 @@ const Tabs = function (params = {}) {
                 color: "transparent",
                 position: "relative",
             });
-            if (isVertical) { box.panelsBox.elem.style.flex = "1 1 0"; box.panelsBox.elem.style.minWidth = "0"; }
+            if (isVertical) box.panelsBox.css = { flex: "1 1 0", minWidth: "0" };
         }
 
     endGroup();
@@ -861,6 +983,16 @@ const Tabs = function (params = {}) {
     box.addTabButton.visible = (box.addButton == 1) ? 1 : 0;
 
     // *** OBJECT INIT CODE:
+
+    const addTab = function () {
+        if (box.enabled == 1) box.onAdd(box);
+    };
+
+    // The indicator follows size changes (texts, fonts, window).
+    const followSize = function () {
+        moveIndicator();
+        updateArrows();
+    };
 
     box.leftArrow.on("click", function () { scrollStrip(-1); });
     box.rightArrow.on("click", function () { scrollStrip(1); });
@@ -875,16 +1007,23 @@ const Tabs = function (params = {}) {
         strip.scrollLeft += event.deltaY;
     });
 
-    box.addTabButton.on("mouseenter", function () { box.addTabButton.color = _s.addButton.hoverBackground; box.addTabButton.text = Tabs.getPlusSvg(_s.addButton.hoverColor, _s.addButton.size); });
-    box.addTabButton.on("mouseleave", function () { box.addTabButton.color = "transparent"; box.addTabButton.text = Tabs.getPlusSvg(_s.addButton.color, _s.addButton.size); });
-    box.addTabButton.on("click", function () { if (box.enabled == 1) box.onAdd(box); });
-    box.addTabButton.on("keydown", function (self, event) { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); if (box.enabled == 1) box.onAdd(box); } });
+    box.addTabButton.onHoverChange(function (self, isOver) {
+        box.addTabButton.color = (isOver) ? _s.addButton.hoverBackground : "transparent";
+        box.addTabButton.textColor = (isOver) ? _s.addButton.hoverColor : _s.addButton.color;
+    });
+    box.addTabButton.on("click", addTab);
+    box.addTabButton.on("keydown", function (self, event) {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        addTab();
+    });
 
-    // The indicator follows size changes (texts, fonts, window).
-    box.stripInner.onResize(function () { moveIndicator(); updateArrows(); });
-    box.onResize(function () { moveIndicator(); updateArrows(); });
+    box.stripInner.onResize(followSize);
+    box.onResize(followSize);
     if (document.fonts && document.fonts.ready) {
-        document.fonts.ready.then(function () { if (!box.isRemoved) { moveIndicator(); updateArrows(); } });
+        document.fonts.ready.then(function () {
+            if (!box.isRemoved) followSize();
+        });
     }
 
     Tabs.normalizeTabs(startTabs).forEach(function (tab) { items.push(createItem(tab)); });
@@ -928,17 +1067,24 @@ Tabs.toId = function (key) {
 // WHY: Label.text uses innerHTML. Texts must not be read as HTML.
 Tabs.escapeHtml = basic.escapeHtml; // (the name is kept: other code may use it)
 
+// SVG icons. color: "currentColor" -> the icon takes the textColor of its Label (a hover changes only textColor).
+Tabs.getLineSvg = function (path, color, size, strokeWidth) {
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 0 24 24"' +
+        ' fill="none" stroke="' + color + '" stroke-width="' + strokeWidth + '" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="' + path + '"/></svg>';
+};
+
 Tabs.getCloseSvg = function (color, size) {
-    return '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+    return Tabs.getLineSvg("M6 6l12 12M18 6 6 18", color, size, 2.4);
 };
 
 Tabs.getPlusSvg = function (color, size) {
-    return '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
+    return Tabs.getLineSvg("M12 5v14M5 12h14", color, size, 2.2);
 };
 
 Tabs.getArrowSvg = function (direction, color, size) {
     const path = (direction === "left") ? "m15 6-6 6 6 6" : "m9 6 6 6-6 6";
-    return '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="' + path + '"/></svg>';
+    return Tabs.getLineSvg(path, color, size, 2.2);
 };
 
 // The scroll bar of the strip can not be hidden with inline styles.
