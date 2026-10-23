@@ -2,7 +2,7 @@
 
 > The next version: **v26.10.23**, see `basic/basic-v26.10.23.md`.
 
-`basic/basic.js` (v26.09.18) is the previous `basic.js` (v26.09.17, now kept as `basic/basic-bugra.js` and `basic-bugra.min.js`) plus the fixes and additions below. Every page and component written for the previous versions runs unchanged, with the same globals, the same defaults and the same DOM output. Nothing to change in pages: they already load `basic/basic.js` or `basic/basic.min.js`.
+`basic/basic.js` (v26.09.18) is the previous `basic.js` (v26.09.17, now kept as `basic/backup/v26.09.17/basic-bugra.js` and `basic-bugra.min.js`) plus the fixes and additions below. Every page and component written for the previous versions runs unchanged, with the same globals, the same defaults and the same DOM output. Nothing to change in pages: they already load `basic/basic.js` or `basic/basic.min.js`.
 
 Files: `basic/basic.js` (source), `basic/basic.min.js` (minified with terser), `test/basic-test.htm` (self-checking test page: every feature below has a green/red line; the tab title says `ALL PASS`).
 
@@ -117,6 +117,8 @@ that.clipContent = 1;          // default: the text is cut at the edges of the l
 `clipContent: 0` also shows a text that does not fit (it goes out of the label). `ellipsis: 1` always cuts, `"..."` needs it.
 Only Label (and Box, as before) has it: a Button's lift or shadow is cut by the Box it is in, so give that Box `clipContent: 0`.
 
+**Every Box and every group (HGroup / VGroup / AutoLayout) cuts by default** (`clipContent: 1`, `overflow: hidden`). Anything that goes past the edge is cut: a button or a picture that lifts / grows under the mouse (`translateY`, `scale`), a `boxShadow`, a glow, a focus outline, an object that slides in. A group as high as its content (`height: "auto"`, `hug: 1`) cuts a lifted button at once. Give the groups around moving objects `clipContent: 0`, and check every box up to the page (one that cuts is enough). Keep `1` only where cutting is the point (round picture frames, a background picture, a scrolling list).
+
 ## Icon
 
 ```js
@@ -191,6 +193,6 @@ basic.storage.loadOr("settings", { theme: "light" });
   npx terser basic/basic.js --compress --mangle --comments "/Bismillah|basic\.js \(v/" -o basic/basic.min.js
   ```
   then open `test/basic-test.htm` in a browser (or with Live Server): the tab title must say `ALL PASS`.
-- `basic/basic-bugra.js` is frozen at v26.09.17 for reference; do not edit it.
+- `basic/backup/v26.09.17/basic-bugra.js` is frozen at v26.09.17 for reference; do not edit it.
 - `experimental/_make_basic_ai.py` is the script that derived v26.09.18 from v26.09.17 (anchored text edits). It is kept as a record of the changes; it writes to `basic/basic-regenerated.js` by default and must not overwrite `basic.js`.
 - Template folders that keep their own copy of the library (`04-template-m1/todo-app/library/`) still have the old version until you copy the new files there.
