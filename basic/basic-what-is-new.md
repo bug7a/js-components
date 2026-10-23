@@ -30,7 +30,7 @@ Now `grow`, `shrink` and `css` are applied after the flex styles. A page that ga
 
 
 For simpler components: the global things of an object are cleaned by its `remove()`, so most components do not
-override `remove()` any more (42 of 63 components did it only for this). `test/basic-test.htm`: 126 checks.
+override `remove()` any more (42 of 63 components did it only for this). `test/basic-test.htm`: 134 checks.
 
 | What | Use |
 |---|---|
@@ -44,6 +44,9 @@ override `remove()` any more (42 of 63 components did it only for this). `test/b
 | `basic.isOn(value)` | `1`, `"1"`, `true` -> true. (the `v == 1 \|\| v === true` of the components) |
 | `basic.addCss(id, css, replace)` | a `<style>` once (the same id: nothing, unless `replace`). For `:hover`, `::-webkit-scrollbar`, `@keyframes`... |
 | `createIn(container, func)` | now returns the result of `func`: `const menu = obj.own(createIn(page, function () { return Box(...); }));` |
+| `obj.role` | `"button"`, `"tab"`, `"tree"`... (`""` removes it). On the element that takes the focus (the `<input>` of an Input). |
+| `obj.aria` | `{ label: "Close", selected: true, level: 2 }` -> `aria-label`, `aria-selected`, `aria-level`. Only the given keys change; `true` / `false` -> `"true"` / `"false"`; `null` removes. The getter returns the `aria-*` attributes as an object. |
+| `obj.tabIndex` | `0`: the Tab key reaches it, `-1`: only `focus()` of the code, `null`: the default of the element. |
 
 ```js
 const MyComp = function (params = {}) {

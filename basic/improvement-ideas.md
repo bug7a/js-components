@@ -14,6 +14,8 @@ Aşağıdaki maddeler önem sırasına göre dizildi. **Önce ölçmek** doğru 
 
 ## 1. Okuyan getter'lar gizli reflow yapıyor (en önemlisi)
 
+**Not YAZILDI (2026-10-23):** handbook "Common Properties" > Dimensioning (iki dil). `basic.measure()` yardımcısı eklenmedi: önce bench (aşağıda) ile ölçülmeli.
+
 **Nerede:** `Basic_UIComponent`:
 - `get width()` / `get height()` (~satır 599 / 624): değer string ise (`"100%"`, `"auto"`, `"calc(...)"`) `elem.offsetWidth` / `offsetHeight` okuyor.
 - `get left()` / `get top()` (~satır 505 / 518): nesne absolute değilse (flex grup içinde) `offsetLeft` / `offsetTop` okuyor.
@@ -50,6 +52,8 @@ Aşağıdaki maddeler önem sırasına göre dizildi. **Önce ölçmek** doğru 
 **Dikkat:** Bu bir davranış değişikliği: eski sayfalar 40-50 ms'lik gecikmeye güvenmiş olabilir. `test/basic-test.htm` ve hareketli bileşenlerin örnek sayfalarıyla denenmeli.
 
 ## 4. `text` = `innerHTML`
+
+**Not YAZILDI (2026-10-23):** handbook "Common Properties" > "Text: `text` and `plainText`" (iki dil), `context/basic-js-core.md`.
 
 **Nerede:** `Label`, `Box`, `Button` `text` setter'ları (`innerHTML`).
 
@@ -192,11 +196,11 @@ basic.white = White;
 `comp-m4/tabs.js`, `bugra-rules.md`'ye göre yeniden yazıldı (79 `elem.style` satırı → 0; davranış aynı: 404 eleman × 26 stil, 4 durumda fark yok). Bu sırada basic.js'te eksikliği görülen, tekrar eden çiftler:
 
 1. **(YAPILDI, 2026-10-23: `grow`, `shrink`, `css` artık flex stillerinden ve `VGroup`'un flow'undan sonra uygulanıyor; `basic-test` 126/126, kaynak ve min; repoda değişen tek yer `comp-m4/time-line.js` metinleri, ekranda aynı yerde.) Bir grubun props'undaki `css.alignItems` sessizce eziliyor (bir tuzak, önce bu).** `startFlexBox` önce props'u uyguluyor, sonra `FLEX_STYLES` (`alignItems`, `justifyContent`, `flexGrow`, `flexShrink`...) döngüsüyle elem'e yeniden yazıyor. Bu yüzden `VGroup({ align: "left top", css: { alignItems: "stretch" } })` çalışmıyor, ardından `group.css.alignItems = "stretch"` yazmak gerekiyor (Tabs'te 4 kez). Öneri: `css`'i FLEX_STYLES döngüsünden sonra uygulamak, ya da `align`'a bir "uzat" değeri (`align: "left stretch"`).
-2. **`role` / `aria`:** Tabs'te 17 `elem.setAttribute("role" | "aria-…")` satırı var. Öneri: `obj.role = "tab"` ve `obj.aria = { label: "Close", selected: true }` (değer `false` → `"false"`, `null` → kaldır). Not: `ariaLabel` Tabs'in bir varsayılanı; yeni adlar bir bileşen varsayılanıyla çakışmamalı (`role`, `aria` için repoda arama yapılmalı).
-3. **`id` ve `tabIndex`:** `elem.id = ...`, `elem.tabIndex = 0` sık. Öneri: `obj.tabIndex` özelliği (`id` adı bir bileşen varsayılanıyla çakışabilir: önce bakılmalı).
+2. **(YAPILDI, 2026-10-23: `obj.role`, `obj.aria = { ... }` (yalnızca verilen anahtarlar, `null` kaldırır), odağı alan elemana; çakışan bir bileşen varsayılanı yok (repoda arandı); `basic-test` 134/134; Tabs ve TreeView'da 0 `setAttribute` kaldı, şablon da çevrildi.) `role` / `aria`:** Tabs'te 17 `elem.setAttribute("role" | "aria-…")` satırı var. Öneri: `obj.role = "tab"` ve `obj.aria = { label: "Close", selected: true }` (değer `false` → `"false"`, `null` → kaldır). Not: `ariaLabel` Tabs'in bir varsayılanı; yeni adlar bir bileşen varsayılanıyla çakışmamalı (`role`, `aria` için repoda arama yapılmalı).
+3. **(`tabIndex` YAPILDI, 2026-10-23. `id` eklenmedi: bileşenlerde `key`/`id` adları veri için çok kullanılıyor, `elem.id` yeterince açık.) `id` ve `tabIndex`:** `elem.id = ...`, `elem.tabIndex = 0` sık. Öneri: `obj.tabIndex` özelliği (`id` adı bir bileşen varsayılanıyla çakışabilir: önce bakılmalı).
 4. **Esnek "kalan yeri doldur":** `css.flex = "1 1 0"` + `css.minWidth = "0"` çifti 3 kez (şerit, panel alanı, tam genişlik sekme). `grow` / `shrink` var ama `flexBasis: 0` ve `minWidth: 0` yok. Öneri: bir ad (ör. `fill: 1`) ya da `grow: 1`'in bu ikisini de yapması (davranış değişikliği: dikkat).
 5. **Anında geçiş:** `css: { transition: "color 0.15s" }` 5 kez. `setMotion()` bilerek gecikmeli (ilk boyama animasyonsuz), `setMotionNow()` bir metot. Props'ta yazılabilen bir ad (ör. `motionNow`) okunurluğu artırır; gerekli mi, tartışılır.
-6. **Belgelenecek desen (kod değil):** SVG ikonlarında `stroke="currentColor"`: Label'ın `textColor`'ı ikonu boyuyor, hover yalnızca `textColor`'ı değiştiriyor (Tabs: kapat, ekle, oklar). Handbook'a ve `context/basic-js-core.md`'ye bir örnek olarak eklenebilir.
+6. **(YAZILDI, 2026-10-23: handbook "Common Properties" > "An icon that follows the text color", `context/basic-js-core.md`.) Belgelenecek desen (kod değil):** SVG ikonlarında `stroke="currentColor"`: Label'ın `textColor`'ı ikonu boyuyor, hover yalnızca `textColor`'ı değiştiriyor (Tabs: kapat, ekle, oklar). Handbook'a ve `context/basic-js-core.md`'ye bir örnek olarak eklenebilir.
 
 ---
 

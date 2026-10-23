@@ -138,6 +138,8 @@ Groups can be nested (a `VGroup` with `HGroup` rows). Every `HGroup` / `VGroup` 
 - `opacity`: 0.0 to 1.0.
 - `visible`: 1 (visible) or 0 (hidden).
 - `padding`: Inner spacing (for Box, Label).
+- `role`, `aria`, `tabIndex` (v26.10.23): `obj.role = "button"; obj.aria = { label: "Close", selected: true }; obj.tabIndex = 0;` (`aria`: only the given keys change, `null` removes one). Use them instead of `elem.setAttribute("aria-...")`.
+- `text` is HTML; use `plainText` for every text from a user or a server. An SVG with `stroke="currentColor"` in a Label takes its `textColor` (a hover changes only `textColor`).
 
 ## Event Handling
 

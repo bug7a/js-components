@@ -17,7 +17,7 @@ Bu kurallar `comp-m*`, sayfalar, şablonlar ve projeler (oyun, designer...) içi
 ## 2. basic.js'in kendi dili kullanılır
 
 - Özellikler props nesnesinde: `Label({ text: "Save", fontSize: 14, bold: 1 })`. Ardından gelen beş satır `elem.style` yerine.
-- basic.js'te karşılığı olan şey `elem.style` ile yazılmaz: `css`, `cursor`, `shrink`, `grow`, `ellipsis`, `lineHeight`, `boxShadow`, `zIndex`, `plainText`, `show()` / `hide()`.
+- basic.js'te karşılığı olan şey `elem.style` ile yazılmaz: `css`, `cursor`, `shrink`, `grow`, `ellipsis`, `lineHeight`, `boxShadow`, `zIndex`, `plainText`, `role`, `aria`, `tabIndex`, `show()` / `hide()`.
 - Global kayıtlar kutunun üzerinden: `box.listenTo(window, ...)`, `box.onPageResize(...)`, `box.after(...)`, `box.every(...)`, `box.own(menu)`. Böylece `remove()` yazmak gerekmez.
 - Sonradan nesne eklemek `createIn(box, function () { ... })` ile.
 - "Açık mı?" sorusu `basic.isOn(value)` ile; `(v == 1 || v === true)` yazılmaz.

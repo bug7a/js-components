@@ -17,7 +17,8 @@ UI COMPONENT TEMPLATE
   - SETTERS: a value is changed after create with a setX() function that asks for the refresh level it needs.
   - EVENTS: onClick, onChange (onChange is NOT called at create time or with silent: 1).
   - OBJECTS ADDED LATER: createIn(container, fn) (it puts the container back, also on an error).
-  - KEYBOARD AND ACCESSIBILITY: role, aria-*, tabIndex, Enter / Space, setFocusRing() (only for the keyboard).
+  - KEYBOARD AND ACCESSIBILITY: box.role, box.aria = { label, pressed... }, box.tabIndex, Enter / Space,
+    setFocusRing() (only for the keyboard).
   - GLOBAL THINGS ARE CLEANED BY basic.js: box.listenTo(window, ...), box.onPageResize(), box.after(), box.every(),
     box.own(obj) are removed / stopped by remove(). So most components do not override remove() any more.
   - basic.isOn(v): an "on" value of a param (1, "1", true).
@@ -204,7 +205,7 @@ const CompName = function (params = {}) {
             box.icon.load(box.iconFile);
             box.icon.loadedFile = box.iconFile;
         }
-        box.elem.setAttribute("aria-label", box.ariaLabel || box.labelText);
+        box.aria = { label: box.ariaLabel || box.labelText };
     };
 
     // PAINT: the look of the state
@@ -215,9 +216,8 @@ const CompName = function (params = {}) {
         box.borderColor = look.borderColor || _s.box.borderColor;
         box.opacity = (box.state === "disabled") ? _s.disabled.opacity : 1;
         box.cursor = (box.state === "disabled") ? "default" : "pointer";
-        box.elem.tabIndex = (box.enabled == 1) ? 0 : -1;
-        box.elem.setAttribute("aria-pressed", (box.selected == 1) ? "true" : "false");
-        box.elem.setAttribute("aria-disabled", (box.enabled == 1) ? "false" : "true");
+        box.tabIndex = (box.enabled == 1) ? 0 : -1;
+        box.aria = { pressed: (box.selected == 1), disabled: (box.enabled != 1) };
     };
 
     // A GLOBAL EVENT: a narrow page makes the card smaller. (box.onPageResize: basic.js removes it with the box)
@@ -303,7 +303,7 @@ const CompName = function (params = {}) {
     box.clickable = 1;
     box.clipContent = 0; // WHY: The badge stands out of the top right corner.
     box.setMotion("background-color 0.2s, border-color 0.2s, opacity 0.2s");
-    box.elem.setAttribute("role", "button");
+    box.role = "button";
 
     // GROUP: Layout (icon, texts)
     // NOTE: box.layout is the group that places the parts of the component. (Ex: HGroup or VGroup by a param)
