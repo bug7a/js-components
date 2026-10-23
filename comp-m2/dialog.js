@@ -19,7 +19,7 @@ Webpage: https://bug7a.github.io/js-components/
 
 // Default values:
 const DialogDefaults = {
-    icon: "dialog/key.png",
+    icon: "../comp-m2/dialog/key.png",
     title: "?",
     desc: "?",
     confirmButtonText: "Send",

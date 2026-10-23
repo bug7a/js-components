@@ -25,7 +25,7 @@ const ButtonWithIconDefaults = {
     width: "auto",
     height: "auto",
     labelText: "Button",
-    iconFile: "assets/icons/alert-black.png", // Default icon
+    iconFile: "../comp-m3/button-with-icon/alert-black.png", // Default icon
     iconPosition: "left", // "left", "top"
     onClick: function (self) { },
     style: {
