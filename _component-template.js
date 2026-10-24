@@ -70,7 +70,7 @@ Webpage: https://bug7a.github.io/js-components/
 
 // Default values:
 const CompNameDefaults = {
-    key: "0",
+    key: "0", // Your name for this object: read it in a callback (self.key)
     width: 240, // Standard box features are added automatically.
     height: "auto", // Grows with box.layout.
     labelText: "Label",

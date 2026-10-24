@@ -62,7 +62,7 @@ Webpage: https://bug7a.github.io/js-components/
 
 // Default values:
 const TabsDefaults = {
-    key: "0",
+    key: "0", // Your name for this object: read it in a callback (self.key)
     width: "auto",
     height: "auto",
     tabs: [], // [{ key, text, iconFile, count, badge, disabled, closable, selectedColor, selectedTextColor, selectedIconFile }] or ["A", "B"]
