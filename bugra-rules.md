@@ -41,7 +41,7 @@ Bu kurallar `comp-m*`, sayfalar, şablonlar ve projeler (oyun, designer...) içi
       box.lblTitle = Label({ text: "Orders", bold: 1 });
   endGroup();
   ```
-- Bileşen bir değeri sonradan değiştirince bunu `setX()` ile yapar; kademeli bir yeniden çizim (`refresh("data" | "content" | "paint")`) şablondaki gibi.
+- Bileşen bir değeri sonradan değiştirince bunu `setX()` ile yapar; setter yalnızca gereken çizim fonksiyonunu çağırır (`createItems()`, `applyContent()`, `paint()`; hepsi: `drawAll()`), şablondaki gibi.
 
 ## 5. Yorumlar NEDEN'i anlatır
 

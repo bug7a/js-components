@@ -2,7 +2,7 @@
 
 /*
 
-Tabs - v26.09
+Tabs - v26.10
 
 UI COMPONENT TEMPLATE
 - A tab bar: one tab is active, the others can be clicked. An animated indicator moves to the active tab.
@@ -14,7 +14,7 @@ UI COMPONENT TEMPLATE
 - fullWidth: 1 -> the tabs share the bar width equally.
 - vertical: 1 -> the tabs are stacked (Ex: settings sections). The indicator is on the left side.
 - panels: 1 -> a content Box for every tab under the bar. Only the active one is shown.
-  Fill a panel with startPanel(key) ... endPanel(), or get it with getPanel(key).
+  Fill a panel with setPanelContent(key, fn) or startPanel(key) ... endPanel(), or get it with getPanel(key).
 - Keyboard: ArrowLeft / ArrowRight (ArrowUp / ArrowDown when vertical), Home, End move between the tabs. Enter / Space
   activates, Delete closes a closable tab. Tab key moves the focus out of the bar (roving tabindex).
 - Accessibility: tablist / tab / tabpanel roles, aria-selected, aria-controls.
@@ -44,6 +44,9 @@ const pages = Tabs({ width: "100%", panels: 1, panelHeight: 300, tabs: ["Details
 pages.startPanel("Details");
     Label({ text: "Details content" });
 pages.endPanel();
+pages.setPanelContent("History", function () {
+    Label({ text: "History content" });
+});
 
 Tabs({ variant: "pill", tabs: ["Day", "Week", "Month"] });
 Tabs({ vertical: 1, width: 200, tabs: ["General", "Security", "Billing"] });
@@ -151,20 +154,26 @@ const TabsDefaults = {
             color: Black(0.4),
             hoverColor: "#D64545",
             size: 14,
+            round: 3,
         },
         addButton: {
             color: Black(0.5),
             hoverColor: "#141414",
             hoverBackground: Black(0.05),
             size: 16,
+            padding: 6, // Around the icon. (The button: size + 2 * padding)
+            round: 6,
         },
         arrow: {
             color: Black(0.5),
             background: White(1),
             size: 16,
+            padding: 4,
+            round: 4,
         },
         focus: {
             outlineColor: Black(0), // Ring around the focused tab (keyboard). Hidden by default. Ex: Black(0.1)
+            ringWidth: 2,
         },
         panel: {
             color: "transparent",
@@ -182,17 +191,15 @@ const TabsDefaults = {
 const Tabs = function (params = {}) {
 
     // Merge style package: params.style > Tabs.styles[styleName] > TabsDefaults.style (classic)
-    const _stylePackage = Tabs.styles[params.styleName || TabsDefaults.styleName];
-    if (!_stylePackage) console.warn("Tabs: Style package not found: " + params.styleName);
-    mergeIntoIfMissing(params, { style: _stylePackage || {} });
+    basic.applyStylePackage(params, Tabs.styles, TabsDefaults);
 
     // Merge params:
     mergeIntoIfMissing(params, TabsDefaults);
 
     // Edit params, if needed:
     params.color = "transparent";
-    const startTabs = params.tabs;
-    const startValue = params.value;
+    const initialTabs = params.tabs;
+    const initialValue = params.value;
     params.tabs = [];
     params.value = null;
 
@@ -204,19 +211,22 @@ const Tabs = function (params = {}) {
     const id = "tabs-" + (Tabs._counter++);
     const isPill = (box.variant === "pill");
     const isVertical = basic.isOn(box.vertical);
-    let items = []; // [{ tab, group, label, countLabel, badgeDot, closeButton, icon, panel }]
+    let items = []; // [{ tab, group, label, countLabel, badgeDot, closeButton, icon, panel, isHovered }]
     let panelStack = []; // startPanel() / endPanel()
-    let indicatorReady = 0;
+    let isIndicatorReady = 0;
     const SCROLL_SPACE_X = 24; // Space next to the active tab when the strip scrolls to it.
     const SCROLL_SPACE_Y = 8;
     const ARROW_PASSIVE_OPACITY = 0.3; // An arrow that can not scroll more.
-    const MIN_SCROLL_STEP = 80; // An arrow click scrolls 60% of the strip, at least this.
+    const SCROLL_STEP_RATIO = 0.6; // An arrow click scrolls 60% of the strip,
+    const MIN_SCROLL_STEP = 80; // but at least this.
+    const FADE_TIME = "0.15s"; // The color and opacity changes of hover and active.
 
     // *** PUBLIC VARIABLES:
     box.previousValue = null;
     // NOTE: Default values are also public variables. (box.tabs, box.value, box.enabled)
 
     // *** PRIVATE FUNCTIONS:
+    // NOTE: An "item" holds the objects of one tab (group, label...), item.tab is its data.
 
     const findItem = function (key) {
         return items.find(function (item) { return item.tab.key === key; }) || null;
@@ -227,97 +237,112 @@ const Tabs = function (params = {}) {
     };
 
     const isClosable = function (tab) {
-        return basic.isOn(tab.closable) || (basic.isOn(box.closable) && tab.closable !== 0 && tab.closable !== false);
+        if (basic.isOn(tab.closable)) return true;
+        const closedByTab = (tab.closable === 0 || tab.closable === false);
+        return basic.isOn(box.closable) && !closedByTab;
     };
 
-    const getTabColor = function (isActive, isHover) {
+    // The key of a tab that can be active: the given one, or the first enabled tab.
+    const resolveActiveKey = function (key) {
+        const item = (key !== null && key !== undefined) ? findItem(key) : null;
+        if (item && !item.tab.disabled) return item.tab.key;
+        const firstItem = getEnabledItems()[0];
+        return (firstItem) ? firstItem.tab.key : null;
+    };
+
+    // PAINT: the look of one tab (active, hover, disabled)
+
+    const getTabColor = function (isActive, isHovered) {
         if (isActive && isPill) return "transparent"; // WHY: The pill indicator is the background.
         if (isActive) return _s.tabActive.color;
-        if (isHover) return _s.tabHover.color;
+        if (isHovered) return _s.tabHover.color;
         return "transparent";
     };
 
-    const getTabTextColor = function (tab, isActive, isHover) {
+    const getTabTextColor = function (tab, isActive, isHovered) {
         const activeStyle = (isPill) ? _s.pillActive : _s.tabActive;
         if (isActive) return tab.selectedTextColor || activeStyle.textColor;
-        if (isHover) return _s.tabHover.textColor;
+        if (isHovered) return _s.tabHover.textColor;
         return _s.tab.textColor;
     };
 
-    const paintIcon = function (item, isActive, isHover) {
+    const paintIcon = function (item, isActive, isHovered) {
         const tab = item.tab;
         const iconFile = (isActive && tab.selectedIconFile) ? tab.selectedIconFile : tab.iconFile;
-        item.icon.opacity = (isActive || isHover) ? 1 : _s.icon.passiveOpacity;
+        item.icon.opacity = (isActive || isHovered) ? 1 : _s.icon.passiveOpacity;
         item.icon.visible = (iconFile) ? 1 : 0;
         if (!iconFile || item.icon._loadedFile === iconFile) return;
         item.icon.load(iconFile);
         item.icon._loadedFile = iconFile;
     };
 
-    const paintItem = function (item) {
+    const paintTab = function (item) {
 
         const tab = item.tab;
         const isActive = (tab.key === box.value);
-        const isHover = item.hover && !isActive && !tab.disabled;
+        const isHovered = item.isHovered && !isActive && !tab.disabled;
 
-        item.group.color = getTabColor(isActive, isHover);
+        item.group.color = getTabColor(isActive, isHovered);
         item.group.opacity = (tab.disabled) ? _s.tabDisabled.opacity : 1;
         item.group.cursor = (tab.disabled) ? "default" : "pointer";
-        item.label.textColor = getTabTextColor(tab, isActive, isHover);
+        item.label.textColor = getTabTextColor(tab, isActive, isHovered);
 
-        item.group.aria = { selected: isActive, disabled: (tab.disabled) ? true : false };
+        item.group.aria = { selected: isActive, disabled: basic.isOn(tab.disabled) };
         item.group.tabIndex = (isActive) ? 0 : -1;
 
         item.countLabel.color = (isActive) ? _s.count.activeColor : _s.count.color;
         item.countLabel.textColor = (isActive) ? _s.count.activeTextColor : _s.count.textColor;
 
-        if (item.icon) paintIcon(item, isActive, isHover);
+        if (item.icon) paintIcon(item, isActive, isHovered);
 
     };
 
-    const paintItems = function () {
-        items.forEach(paintItem);
+    const paintTabs = function () {
+        items.forEach(paintTab);
     };
+
+    // LAYOUT: the indicator and the arrows follow the sizes of the tabs.
 
     // Moves the indicator to the active tab.
     const moveIndicator = function () {
 
         const item = findItem(box.value);
-        const ind = box.indicator;
+        const indicator = box.indicator;
 
         if (!item || item.group.visible != 1) {
-            ind.opacity = 0;
+            indicator.opacity = 0;
             return;
         }
 
-        const el = item.group.elem;
+        const tabElement = item.group.elem;
         const thickness = _s.indicator.thickness;
 
         if (isPill) {
-            ind.left = el.offsetLeft;
-            ind.top = el.offsetTop;
-            ind.width = el.offsetWidth;
-            ind.height = el.offsetHeight;
+            indicator.left = tabElement.offsetLeft;
+            indicator.top = tabElement.offsetTop;
+            indicator.width = tabElement.offsetWidth;
+            indicator.height = tabElement.offsetHeight;
         } else if (isVertical) {
-            ind.left = 0;
-            ind.top = el.offsetTop;
-            ind.width = thickness;
-            ind.height = el.offsetHeight;
+            indicator.left = 0;
+            indicator.top = tabElement.offsetTop;
+            indicator.width = thickness;
+            indicator.height = tabElement.offsetHeight;
         } else {
-            ind.left = el.offsetLeft;
-            ind.top = box.stripInner.elem.offsetHeight - thickness;
-            ind.width = el.offsetWidth;
-            ind.height = thickness;
+            indicator.left = tabElement.offsetLeft;
+            indicator.top = box.stripInner.elem.offsetHeight - thickness;
+            indicator.width = tabElement.offsetWidth;
+            indicator.height = thickness;
         }
 
-        ind.color = item.tab.selectedColor || ((isPill) ? _s.pillIndicator.color : _s.indicator.color);
-        ind.opacity = 1;
+        const indicatorColor = (isPill) ? _s.pillIndicator.color : _s.indicator.color;
+        indicator.color = item.tab.selectedColor || indicatorColor;
+        indicator.opacity = 1;
 
         // WHY: The first position must not be animated. (The indicator would fly in from the corner.)
-        if (!indicatorReady) {
-            indicatorReady = 1;
-            ind.elem.offsetWidth;
-            ind.setMotionNow(getIndicatorMotion());
+        if (!isIndicatorReady) {
+            isIndicatorReady = 1;
+            indicator.elem.offsetWidth;
+            indicator.setMotionNow(getIndicatorMotion());
         }
 
     };
@@ -326,33 +351,8 @@ const Tabs = function (params = {}) {
         const seconds = (isPill) ? _s.pillIndicator.motion : _s.indicator.motion;
         if (!seconds) return "none";
         const moving = ["left", "top", "width", "height", "background-color"];
-        return moving.map(function (name) { return name + " " + seconds + "s"; }).join(", ") + ", opacity 0.15s";
-    };
-
-    // Scrolls the strip only as much as needed to show the active tab, with a little space next to it.
-    const scrollToActive = function () {
-
-        const item = findItem(box.value);
-        if (!item) return;
-
-        const strip = box.strip.elem;
-        const tabElem = item.group.elem;
-
-        if (isVertical) {
-            const tabTop = tabElem.offsetTop;
-            const tabBottom = tabTop + tabElem.offsetHeight;
-            const viewBottom = strip.scrollTop + strip.clientHeight;
-            if (tabTop < strip.scrollTop) strip.scrollTop = tabTop - SCROLL_SPACE_Y;
-            else if (tabBottom > viewBottom) strip.scrollTop = tabBottom - strip.clientHeight + SCROLL_SPACE_Y;
-            return;
-        }
-
-        const tabLeft = tabElem.offsetLeft;
-        const tabRight = tabLeft + tabElem.offsetWidth;
-        const viewRight = strip.scrollLeft + strip.clientWidth;
-        if (tabLeft < strip.scrollLeft) strip.scrollLeft = tabLeft - SCROLL_SPACE_X;
-        else if (tabRight > viewRight) strip.scrollLeft = tabRight - strip.clientWidth + SCROLL_SPACE_X;
-
+        const motions = moving.map(function (name) { return name + " " + seconds + "s"; });
+        return motions.join(", ") + ", opacity " + FADE_TIME;
     };
 
     const updateArrows = function () {
@@ -373,6 +373,12 @@ const Tabs = function (params = {}) {
 
     };
 
+    // The indicator and the arrows after a size change (texts, fonts, window).
+    const refreshLayout = function () {
+        moveIndicator();
+        updateArrows();
+    };
+
     const updatePanels = function () {
         if (box.panels != 1) return;
         items.forEach(function (item) {
@@ -380,22 +386,64 @@ const Tabs = function (params = {}) {
         });
     };
 
-    const update = function () {
-        paintItems();
-        moveIndicator();
-        updateArrows();
+    // Roving tabindex: only the active tab (or the first enabled) is in the Tab order.
+    const applyTabIndex = function () {
+        const activeItem = findItem(box.value);
+        const firstItem = getEnabledItems()[0];
+        const tabbableItem = activeItem || firstItem;
+        items.forEach(function (item) { item.group.tabIndex = (item === tabbableItem) ? 0 : -1; });
+    };
+
+    // THE ACTIVE TAB IS SHOWN: after box.value or the list of the tabs changed.
+    // WHY: One place, so a change can not forget its panel or its place in the Tab order.
+    const showActiveTab = function () {
+        paintTabs();
+        refreshLayout();
+        updatePanels();
+        applyTabIndex();
+    };
+
+    // SCROLL:
+
+    // Scrolls the strip only as much as needed to show the active tab, with a little space next to it.
+    const scrollToActiveTab = function () {
+
+        const item = findItem(box.value);
+        if (!item) return;
+
+        const strip = box.strip.elem;
+        const tabElement = item.group.elem;
+
+        if (isVertical) {
+            const tabTop = tabElement.offsetTop;
+            const tabBottom = tabTop + tabElement.offsetHeight;
+            const viewBottom = strip.scrollTop + strip.clientHeight;
+            if (tabTop < strip.scrollTop) strip.scrollTop = tabTop - SCROLL_SPACE_Y;
+            else if (tabBottom > viewBottom) strip.scrollTop = tabBottom - strip.clientHeight + SCROLL_SPACE_Y;
+            return;
+        }
+
+        const tabLeft = tabElement.offsetLeft;
+        const tabRight = tabLeft + tabElement.offsetWidth;
+        const viewRight = strip.scrollLeft + strip.clientWidth;
+        if (tabLeft < strip.scrollLeft) strip.scrollLeft = tabLeft - SCROLL_SPACE_X;
+        else if (tabRight > viewRight) strip.scrollLeft = tabRight - strip.clientWidth + SCROLL_SPACE_X;
+
     };
 
     const scrollStrip = function (direction) {
         const strip = box.strip.elem;
-        const amount = Math.max(MIN_SCROLL_STEP, Math.round(strip.clientWidth * 0.6)) * direction;
+        const step = Math.max(MIN_SCROLL_STEP, Math.round(strip.clientWidth * SCROLL_STEP_RATIO));
+        const amount = step * direction;
         if (strip.scrollBy) strip.scrollBy({ left: amount, behavior: "smooth" });
         else strip.scrollLeft += amount;
     };
 
-    const focusItem = function (item) {
+    // KEYBOARD AND ACTIONS:
+
+    const focusTab = function (item) {
         if (!item) return;
-        items.forEach(function (other) { other.group.tabIndex = (other === item) ? 0 : -1; });
+        items.forEach(function (otherItem) { otherItem.group.tabIndex = (otherItem === item) ? 0 : -1; });
         item.group.elem.focus({ preventScroll: true });
         item.group.elem.scrollIntoView({ block: "nearest", inline: "nearest" });
     };
@@ -404,75 +452,73 @@ const Tabs = function (params = {}) {
 
         if (box.enabled != 1) return;
         const key = event.key;
-        const enabled = getEnabledItems();
-        const index = enabled.indexOf(item);
+        const enabledItems = getEnabledItems();
+        const index = enabledItems.indexOf(item);
         const prevKey = (isVertical) ? "ArrowUp" : "ArrowLeft";
         const nextKey = (isVertical) ? "ArrowDown" : "ArrowRight";
 
         if (key === prevKey || key === nextKey) {
             event.preventDefault();
-            if (!enabled.length) return;
+            if (!enabledItems.length) return;
             const step = (key === nextKey) ? 1 : -1;
-            const nextIndex = (index + step + enabled.length) % enabled.length; // WHY: % wraps around at both ends.
-            focusItem(enabled[nextIndex]);
+            const nextIndex = (index + step + enabledItems.length) % enabledItems.length; // WHY: % wraps around at both ends.
+            focusTab(enabledItems[nextIndex]);
         } else if (key === "Home" || key === "End") {
             event.preventDefault();
-            focusItem((key === "Home") ? enabled[0] : enabled[enabled.length - 1]);
+            focusTab((key === "Home") ? enabledItems[0] : enabledItems[enabledItems.length - 1]);
         } else if (key === "Enter" || key === " ") {
             event.preventDefault();
             box.setValue(item.tab.key);
         } else if (key === "Delete" && isClosable(item.tab)) {
             event.preventDefault();
-            closeItem(item);
-            const rest = getEnabledItems();
-            if (rest.length) focusItem(rest[Math.min(index, rest.length - 1)]);
+            closeTab(item);
+            const remainingItems = getEnabledItems();
+            if (remainingItems.length) focusTab(remainingItems[Math.min(index, remainingItems.length - 1)]);
         }
 
     };
 
     // Close (x): onClose can return false to keep the tab.
-    const closeItem = function (item) {
+    const closeTab = function (item) {
         if (box.onClose(box, item.tab) === false) return;
         box.removeTab(item.tab.key);
     };
 
-    const applyTabIndex = function () {
-        // Roving tabindex: only the active tab (or the first enabled) is in the Tab order.
-        const active = findItem(box.value);
-        const first = getEnabledItems()[0];
-        const tabbable = active || first;
-        items.forEach(function (item) { item.group.tabIndex = (item === tabbable) ? 0 : -1; });
+    // The add button (+) does not add a tab: it asks the page with onAdd.
+    const requestAddTab = function () {
+        if (box.enabled == 1) box.onAdd(box);
     };
 
     // A small button with an SVG icon: the arrows and the add button. The icon takes the textColor.
-    const makeIconButton = function (svg, size, round, color, ariaLabel) {
-        const button = Label({
-            text: svg,
-            width: size,
-            height: size,
-            round: round,
-            textColor: color,
+    const createIconButton = function (props) {
+        return Label({
+            text: props.svg,
+            width: props.size,
+            height: props.size,
+            round: props.round,
+            textColor: props.color,
             clickable: 1,
             cursor: "pointer",
             shrink: 0,
             lineHeight: "0",
             css: { display: "flex", alignItems: "center", justifyContent: "center" },
-            aria: { label: ariaLabel },
+            aria: { label: props.ariaLabel },
         });
-        return button;
     };
 
-    // Creates the objects of one tab in the strip.
-    const createItem = function (tab) {
+    // ONE TAB: createTab() = createTabView() + bindTabEvents() + createTabPanel() + applyTabContent()
 
-        let group, icon = null, label, countLabel, badgeDot, closeButton;
+    // The objects of one tab in the strip. Returns the item.
+    const createTabView = function (tab) {
+
+        const item = { tab: tab, icon: null, panel: null, isHovered: 0 };
 
         // WHY: createIn() puts the container back after it (also on an error). setDefaultContainerBox() did not:
         //      after addTab() / setTabs() of the page, its next objects went into the strip of the tabs.
         createIn(box.stripInner, function () {
 
             // GROUP: Tab
-            group = HGroup({
+            item.group = HGroup({
                 width: (isVertical || box.fullWidth == 1) ? "100%" : "auto",
                 height: "auto",
                 align: (isVertical) ? "left center" : "center center",
@@ -484,44 +530,42 @@ const Tabs = function (params = {}) {
                 shrink: 0,
                 css: {
                     minHeight: _s.tab.minHeight + "px",
-                    transition: "background-color 0.15s",
+                    transition: "background-color " + FADE_TIME,
                     outline: "none",
                     boxSizing: "border-box",
                     whiteSpace: "nowrap",
                 },
             });
-            group.elem.id = id + "-tab-" + Tabs.toId(tab.key);
-            group.role = "tab";
-            if (box.panels == 1) group.aria = { controls: id + "-panel-" + Tabs.toId(tab.key) };
-            if (box.fullWidth == 1 && !isVertical) group.css.flex = "1 1 0";
+            item.group.elem.id = id + "-tab-" + Tabs.toId(tab.key);
+            item.group.role = "tab";
+            if (box.panels == 1) item.group.aria = { controls: id + "-panel-" + Tabs.toId(tab.key) };
+            if (box.fullWidth == 1 && !isVertical) item.group.css.flex = "1 1 0";
 
                 // ICON:
                 if (tab.iconFile || tab.selectedIconFile) {
-                    icon = Icon({
+                    item.icon = Icon({
                         width: _s.icon.size,
                         height: _s.icon.size,
                         alt: "",
                         shrink: 0,
-                        css: { transition: "opacity 0.15s" },
+                        css: { transition: "opacity " + FADE_TIME },
                     });
-                    icon.aria = { hidden: true };
+                    item.icon.aria = { hidden: true };
                     // WHY: The selected icon is loaded before the first click, so it does not flash in.
                     if (tab.selectedIconFile) (new Image()).src = tab.selectedIconFile;
                 }
 
                 // LABEL: Text
-                label = Label({
-                    text: Tabs.escapeHtml(tab.text),
+                item.label = Label({
                     fontSize: _s.tab.fontSize,
                     textColor: _s.tab.textColor,
                     ellipsis: 1,
-                    css: { transition: "color 0.15s", minWidth: "0" },
+                    css: { transition: "color " + FADE_TIME, minWidth: "0" },
                 });
-                if (isVertical) label.css.flex = "1 1 auto";
+                if (isVertical) item.label.css.flex = "1 1 auto";
 
                 // LABEL: Count
-                countLabel = Label({
-                    text: "",
+                item.countLabel = Label({
                     fontSize: _s.count.fontSize,
                     textColor: _s.count.textColor,
                     color: _s.count.color,
@@ -529,12 +573,12 @@ const Tabs = function (params = {}) {
                     padding: _s.count.padding,
                     lineHeight: "1.4",
                     shrink: 0,
-                    css: { transition: "background-color 0.15s, color 0.15s" },
+                    css: { transition: "background-color " + FADE_TIME + ", color " + FADE_TIME },
                     visible: 0,
                 });
 
                 // BOX: Badge dot
-                badgeDot = Box({
+                item.badgeDot = Box({
                     width: _s.badge.size,
                     height: _s.badge.size,
                     color: _s.badge.color,
@@ -545,11 +589,11 @@ const Tabs = function (params = {}) {
                 });
 
                 // LABEL: Close (x)
-                closeButton = Label({
+                item.closeButton = Label({
                     text: Tabs.getCloseSvg("currentColor", _s.close.size),
                     width: _s.close.size,
                     height: _s.close.size,
-                    round: 3,
+                    round: _s.close.round,
                     textColor: _s.close.color,
                     clickable: 1,
                     cursor: "pointer",
@@ -557,115 +601,126 @@ const Tabs = function (params = {}) {
                     lineHeight: "0",
                     visible: 0,
                 });
-                closeButton.role = "button";
-                closeButton.tabIndex = -1; // WHY: Delete closes the focused tab; the x is for the mouse.
-                if (isVertical) closeButton.css.marginLeft = "auto";
+                item.closeButton.role = "button";
+                item.closeButton.tabIndex = -1; // WHY: Delete closes the focused tab; the x is for the mouse.
+                if (isVertical) item.closeButton.css.marginLeft = "auto";
 
             endGroup();
 
         });
 
-        // WHY: The indicator must stay under the tabs. It was created first, so the tabs are painted over it.
-
-        const item = {
-            tab: tab,
-            group: group,
-            label: label,
-            countLabel: countLabel,
-            badgeDot: badgeDot,
-            closeButton: closeButton,
-            icon: icon,
-            hover: 0,
-            panel: null,
-        };
-
-        group.on("click", function () {
-            if (box.enabled != 1 || tab.disabled) return;
-            box.setValue(tab.key);
-            focusItem(item);
-        });
-        group.onHoverChange(function (self, isOver) {
-            item.hover = isOver;
-            paintItem(item);
-        });
-        group.on("keydown", function (self, event) { onTabKeyDown(item, event); });
-        group.on("focus", function () { group.boxShadow = "inset 0 0 0 2px " + _s.focus.outlineColor; });
-        group.on("blur", function () { group.boxShadow = "none"; });
-        group.on("mousedown", function () { group.boxShadow = "none"; }); // WHY: No focus ring for mouse clicks.
-
-        closeButton.onHoverChange(function (self, isOver) {
-            closeButton.textColor = (isOver) ? _s.close.hoverColor : _s.close.color;
-        });
-        closeButton.on("click", function (self, event) {
-            event.stopPropagation();
-            if (box.enabled != 1) return;
-            closeItem(item);
-        });
-        // Middle mouse button closes a closable tab (like a browser).
-        group.on("auxclick", function (self, event) {
-            if (event.button !== 1 || !isClosable(tab) || box.enabled != 1) return;
-            event.preventDefault();
-            closeItem(item);
-        });
-
-        // PANEL:
-        if (box.panels == 1) {
-            createIn(box.panelsBox, function () {
-                item.panel = Box({
-                    width: "100%",
-                    height: (box.panelHeight === "auto") ? "auto" : "100%",
-                    color: _s.panel.color,
-                    round: _s.panel.round,
-                    border: _s.panel.border,
-                    borderColor: _s.panel.borderColor,
-                    visible: 0,
-                    position: "relative",
-                });
-                item.panel.elem.id = id + "-panel-" + Tabs.toId(tab.key);
-                item.panel.role = "tabpanel";
-                item.panel.aria = { labelledby: group.elem.id };
-                item.panel.css = {
-                    boxSizing: "border-box",
-                    padding: _s.panel.padding[1] + "px " + _s.panel.padding[0] + "px",
-                };
-                // WHY: A fixed height: the panels lie on top of each other and each one scrolls its own content.
-                if (box.panelHeight !== "auto") {
-                    item.panel.css = { position: "absolute", left: "0px", top: "0px", overflow: "auto" };
-                }
-            });
-        }
-
-        applyItemContent(item);
+        // NOTE: The indicator stays under the tabs: it was created first, so the tabs are painted over it.
         return item;
 
     };
 
-    // Applies text, count, badge, close and disabled of the tab data to the objects.
-    const applyItemContent = function (item) {
+    const bindTabEvents = function (item) {
+
         const tab = item.tab;
-        item.label.text = Tabs.escapeHtml(tab.text);
+        const group = item.group;
+        const focusRing = "inset 0 0 0 " + _s.focus.ringWidth + "px " + _s.focus.outlineColor;
+
+        group.on("click", function () {
+            if (box.enabled != 1 || tab.disabled) return;
+            box.setValue(tab.key);
+            focusTab(item);
+        });
+        group.onHoverChange(function (self, isOver) {
+            item.isHovered = isOver;
+            paintTab(item);
+        });
+        group.on("keydown", function (self, event) { onTabKeyDown(item, event); });
+        group.on("focus", function () { group.boxShadow = focusRing; });
+        group.on("blur", function () { group.boxShadow = "none"; });
+        group.on("mousedown", function () { group.boxShadow = "none"; }); // WHY: No focus ring for mouse clicks.
+
+        // Middle mouse button closes a closable tab (like a browser).
+        group.on("auxclick", function (self, event) {
+            if (event.button !== 1 || !isClosable(tab) || box.enabled != 1) return;
+            event.preventDefault();
+            closeTab(item);
+        });
+
+        item.closeButton.onHoverChange(function (self, isOver) {
+            item.closeButton.textColor = (isOver) ? _s.close.hoverColor : _s.close.color;
+        });
+        item.closeButton.on("click", function (self, event) {
+            event.stopPropagation();
+            if (box.enabled != 1) return;
+            closeTab(item);
+        });
+
+    };
+
+    // The content Box of one tab. (panels: 1)
+    const createTabPanel = function (item) {
+
+        if (box.panels != 1) return;
+
+        createIn(box.panelsBox, function () {
+            item.panel = Box({
+                width: "100%",
+                height: (box.panelHeight === "auto") ? "auto" : "100%",
+                color: _s.panel.color,
+                round: _s.panel.round,
+                border: _s.panel.border,
+                borderColor: _s.panel.borderColor,
+                visible: 0,
+                position: "relative",
+            });
+        });
+
+        const panel = item.panel;
+        panel.elem.id = id + "-panel-" + Tabs.toId(item.tab.key);
+        panel.role = "tabpanel";
+        panel.aria = { labelledby: item.group.elem.id };
+        panel.css = {
+            boxSizing: "border-box",
+            padding: _s.panel.padding[1] + "px " + _s.panel.padding[0] + "px",
+        };
+        // WHY: A fixed height: the panels lie on top of each other and each one scrolls its own content.
+        if (box.panelHeight !== "auto") {
+            panel.css = { position: "absolute", left: "0px", top: "0px", overflow: "auto" };
+        }
+
+    };
+
+    // Applies text, count, badge, close and disabled of the tab data to the objects.
+    const applyTabContent = function (item) {
+        const tab = item.tab;
+        item.label.plainText = tab.text;
         // WHY: An empty label still takes a gap, so the icon of an icon only tab would not be in the middle.
         item.label.visible = (tab.text !== "") ? 1 : 0;
         item.group.aria = { label: tab.text };
         const hasCount = (tab.count !== undefined && tab.count !== null && tab.count !== "");
-        item.countLabel.text = (hasCount) ? Tabs.escapeHtml(tab.count) : "";
+        item.countLabel.plainText = (hasCount) ? tab.count : "";
         item.countLabel.visible = (hasCount) ? 1 : 0;
         item.badgeDot.visible = basic.isOn(tab.badge) ? 1 : 0;
         item.closeButton.visible = (isClosable(tab)) ? 1 : 0;
         item.closeButton.aria = { label: "Close " + tab.text };
-        paintItem(item); // NOTE: It also loads the icon. (iconFile or selectedIconFile)
+        paintTab(item); // NOTE: It also loads the icon. (iconFile or selectedIconFile)
     };
 
-    const removeItemObjects = function (item) {
+    const createTab = function (tab) {
+        const item = createTabView(tab);
+        bindTabEvents(item);
+        createTabPanel(item);
+        applyTabContent(item);
+        return item;
+    };
+
+    const removeTabObjects = function (item) {
         item.group.remove();
         if (item.panel) item.panel.remove();
     };
 
-    const pickValue = function (value) {
-        const item = (value !== null && value !== undefined) ? findItem(value) : null;
-        if (item && !item.tab.disabled) return item.tab.key;
-        const first = getEnabledItems()[0];
-        return (first) ? first.tab.key : null;
+    // The tab to activate when the active one is removed: the next enabled tab, or the previous one.
+    // index: where the removed tab was. (items does not have it any more)
+    const findReplacementItem = function (index) {
+        const isEnabled = function (item) { return !item.tab.disabled; };
+        const nextEnabledItem = items.slice(index).find(isEnabled);
+        const previousEnabledItem = items.slice(0, index).reverse().find(isEnabled);
+        return nextEnabledItem || previousEnabledItem || null;
     };
 
     // *** PUBLIC FUNCTIONS:
@@ -677,10 +732,8 @@ const Tabs = function (params = {}) {
         if (box.value === value) return 1;
         box.previousValue = box.value;
         box.value = value;
-        update();
-        updatePanels();
-        applyTabIndex();
-        scrollToActive();
+        showActiveTab();
+        scrollToActiveTab();
         if (!silent) box.onChange(box);
         return 1;
     };
@@ -712,85 +765,100 @@ const Tabs = function (params = {}) {
 
     // Replaces all tabs. The active tab is kept when it still exists.
     box.setTabs = function (tabs, silent = 1) {
+
         const oldValue = box.value;
-        items.forEach(removeItemObjects);
-        items = [];
-        Tabs.normalizeTabs(tabs).forEach(function (tab) { items.push(createItem(tab)); });
+        items.forEach(removeTabObjects);
+        items = Tabs.normalizeTabs(tabs).map(createTab);
         box.tabs = box.getTabs();
-        box.value = pickValue(oldValue);
-        indicatorReady = 0;
+        box.value = resolveActiveKey(oldValue);
+
+        // WHY: The tabs are new, so the indicator jumps to its first place (no flight from the old one).
+        isIndicatorReady = 0;
         box.indicator.setMotionNow("none");
-        update();
-        updatePanels();
-        applyTabIndex();
-        if (!silent && box.value !== oldValue) { box.previousValue = oldValue; box.onChange(box); }
+        showActiveTab();
+
+        if (silent || box.value === oldValue) return;
+        box.previousValue = oldValue;
+        box.onChange(box);
+
     };
     // USAGE: tabs.setTabs(["A", "B", { key: "c", text: "C", count: 3 }])
 
     // index: Position of the new tab. (Default: the end)
     box.addTab = function (tab, index = -1, silent = 1) {
+
         tab = Tabs.normalizeTabs([tab])[0];
-        if (findItem(tab.key)) { console.warn("Tabs: A tab with this key exists: " + tab.key); return null; }
-        const item = createItem(tab);
-        if (index >= 0 && index < items.length) {
-            box.stripInner.elem.insertBefore(item.group.elem, items[index].group.elem);
-            if (item.panel) box.panelsBox.elem.insertBefore(item.panel.elem, items[index].panel.elem);
+        if (findItem(tab.key)) {
+            console.warn("Tabs: A tab with this key exists: " + tab.key);
+            return null;
+        }
+
+        const item = createTab(tab);
+        const isInside = (index >= 0 && index < items.length);
+        if (isInside) {
+            const itemAfter = items[index];
+            box.stripInner.elem.insertBefore(item.group.elem, itemAfter.group.elem);
+            if (item.panel) box.panelsBox.elem.insertBefore(item.panel.elem, itemAfter.panel.elem);
             items.splice(index, 0, item);
         } else {
             items.push(item);
         }
+
         box.tabs = box.getTabs();
-        if (box.value === null) box.value = pickValue(null);
-        update();
-        updatePanels();
-        applyTabIndex();
+        if (box.value === null) box.value = resolveActiveKey(null);
+        showActiveTab();
+
         if (!silent && box.value === tab.key) box.onChange(box);
         return tab;
+
     };
     // USAGE: tabs.addTab({ key: "new", text: "New", closable: 1 }) // Returns the tab data.
 
     // When the active tab is removed, the next tab (or the previous one) becomes active.
     box.removeTab = function (key, silent = 0) {
+
         const index = box.getIndex(key);
         if (index < 0) return 0;
+
         const wasActive = (box.value === key);
-        removeItemObjects(items[index]);
+        removeTabObjects(items[index]);
         items.splice(index, 1);
         box.tabs = box.getTabs();
+
         if (wasActive) {
-            const enabled = getEnabledItems();
-            const after = items.slice(index).find(function (item) { return !item.tab.disabled; });
-            const before = items.slice(0, index).reverse().find(function (item) { return !item.tab.disabled; });
-            const next = after || before || enabled[0] || null;
+            const replacementItem = findReplacementItem(index);
             box.previousValue = key;
-            box.value = (next) ? next.tab.key : null;
+            box.value = (replacementItem) ? replacementItem.tab.key : null;
         }
-        update();
-        updatePanels();
-        applyTabIndex();
+        showActiveTab();
+
         if (wasActive && !silent) box.onChange(box);
         return 1;
+
     };
     // USAGE: tabs.removeTab("new")
 
     // Changes some fields of a tab. USAGE: tabs.updateTab("open", { text: "Open orders", count: 5 })
     box.updateTab = function (key, changes) {
+
         const item = findItem(key);
         if (!item) return 0;
-        Object.assign(item.tab, changes || {});
+
+        const fields = changes || {};
+        Object.assign(item.tab, fields);
         item.tab.disabled = basic.isOn(item.tab.disabled) ? 1 : 0;
-        const changesIcon = changes && (changes.iconFile !== undefined || changes.selectedIconFile !== undefined);
+
+        const changesIcon = (fields.iconFile !== undefined || fields.selectedIconFile !== undefined);
         if (changesIcon && !item.icon) {
             console.warn("Tabs: An icon can only be changed on a tab that was created with an iconFile.");
         }
-        applyItemContent(item);
-        if (item.tab.disabled && box.value === key) {
-            box.value = pickValue(null);
-            updatePanels();
-        }
-        update();
-        applyTabIndex();
+
+        applyTabContent(item);
+        // NOTE: A disabled tab can not stay active. (No onChange: the page disabled it.)
+        if (item.tab.disabled && box.value === key) box.value = resolveActiveKey(null);
+        showActiveTab();
         return 1;
+
     };
 
     box.setCount = function (key, count) {
@@ -821,6 +889,7 @@ const Tabs = function (params = {}) {
     // USAGE: const panel = tabs.getPanel("Details") // A Box. (panels: 1)
 
     // Objects created between startPanel(key) and endPanel() go into the panel of that tab.
+    // NOTE: The old content of the panel is removed. (The same as setPanelContent)
     box.startPanel = function (key) {
         const panel = box.getPanel(key);
         if (!panel) {
@@ -848,14 +917,29 @@ const Tabs = function (params = {}) {
         if (previous) setDefaultContainerBox(previous);
     };
 
-    // Updates the indicator and the arrows. (Ex: after the texts or the width changed by code)
+    // Replaces the content of a panel with the objects created in createContent(wrapper).
+    // WHY: finally: endPanel() runs also on an error, so the next objects of the page do not go into the panel.
+    box.setPanelContent = function (key, createContent) {
+        const wrapper = box.startPanel(key);
+        if (!wrapper) return null;
+        try {
+            createContent(wrapper);
+        } finally {
+            box.endPanel();
+        }
+        return wrapper;
+    };
+    // USAGE: tabs.setPanelContent("Details", function () { Label({ text: "..." }); });
+
+    // Paints the tabs again and moves the indicator. (Ex: after the texts or the width changed by code)
     box.refresh = function () {
-        update();
+        paintTabs();
+        refreshLayout();
     };
 
     box.focus = function () {
         const item = findItem(box.value) || getEnabledItems()[0];
-        if (item) focusItem(item);
+        if (item) focusTab(item);
     };
 
 
@@ -898,9 +982,13 @@ const Tabs = function (params = {}) {
         }
 
             // LABEL: Left arrow
-            box.leftArrow = makeIconButton(
-                Tabs.getArrowSvg("left", "currentColor", _s.arrow.size),
-                _s.arrow.size + 8, 4, _s.arrow.color, "Scroll left");
+            box.leftArrow = createIconButton({
+                svg: Tabs.getArrowSvg("left", "currentColor", _s.arrow.size),
+                size: _s.arrow.size + _s.arrow.padding * 2,
+                round: _s.arrow.round,
+                color: _s.arrow.color,
+                ariaLabel: "Scroll left",
+            });
 
             // BOX: Strip (scrolls)
             box.strip = startBox({
@@ -967,17 +1055,25 @@ const Tabs = function (params = {}) {
             endBox();
 
             // LABEL: Right arrow
-            box.rightArrow = makeIconButton(
-                Tabs.getArrowSvg("right", "currentColor", _s.arrow.size),
-                _s.arrow.size + 8, 4, _s.arrow.color, "Scroll right");
+            box.rightArrow = createIconButton({
+                svg: Tabs.getArrowSvg("right", "currentColor", _s.arrow.size),
+                size: _s.arrow.size + _s.arrow.padding * 2,
+                round: _s.arrow.round,
+                color: _s.arrow.color,
+                ariaLabel: "Scroll right",
+            });
 
             // LABEL: Add (+)
-            box.addTabButton = makeIconButton(
-                Tabs.getPlusSvg("currentColor", _s.addButton.size),
-                _s.addButton.size + 12, 6, _s.addButton.color, "Add");
+            box.addTabButton = createIconButton({
+                svg: Tabs.getPlusSvg("currentColor", _s.addButton.size),
+                size: _s.addButton.size + _s.addButton.padding * 2,
+                round: _s.addButton.round,
+                color: _s.addButton.color,
+                ariaLabel: "Add",
+            });
             box.addTabButton.css = {
                 marginLeft: (isVertical) ? "0px" : "4px",
-                transition: "background-color 0.15s",
+                transition: "background-color " + FADE_TIME,
             };
             box.addTabButton.role = "button";
             box.addTabButton.tabIndex = 0;
@@ -1004,16 +1100,6 @@ const Tabs = function (params = {}) {
 
     // *** OBJECT INIT CODE:
 
-    const addTab = function () {
-        if (box.enabled == 1) box.onAdd(box);
-    };
-
-    // The indicator follows size changes (texts, fonts, window).
-    const followSize = function () {
-        moveIndicator();
-        updateArrows();
-    };
-
     box.leftArrow.on("click", function () { scrollStrip(-1); });
     box.rightArrow.on("click", function () { scrollStrip(1); });
     box.strip.on("scroll", updateArrows);
@@ -1031,28 +1117,27 @@ const Tabs = function (params = {}) {
         box.addTabButton.color = (isOver) ? _s.addButton.hoverBackground : "transparent";
         box.addTabButton.textColor = (isOver) ? _s.addButton.hoverColor : _s.addButton.color;
     });
-    box.addTabButton.on("click", addTab);
+    box.addTabButton.on("click", requestAddTab);
     box.addTabButton.on("keydown", function (self, event) {
         if (event.key !== "Enter" && event.key !== " ") return;
         event.preventDefault();
-        addTab();
+        requestAddTab();
     });
 
-    box.stripInner.onResize(followSize);
-    box.onResize(followSize);
+    // The indicator follows size changes (texts, fonts, window).
+    box.stripInner.onResize(refreshLayout);
+    box.onResize(refreshLayout);
     if (document.fonts && document.fonts.ready) {
         document.fonts.ready.then(function () {
-            if (!box.isRemoved) followSize();
+            if (!box.isRemoved) refreshLayout();
         });
     }
 
-    Tabs.normalizeTabs(startTabs).forEach(function (tab) { items.push(createItem(tab)); });
+    items = Tabs.normalizeTabs(initialTabs).map(createTab);
     box.tabs = box.getTabs();
-    box.value = pickValue(startValue);
+    box.value = resolveActiveKey(initialValue);
     box.setEnabled(box.enabled);
-    update();
-    updatePanels();
-    applyTabIndex();
+    showActiveTab();
 
     return endObject(box);
 
@@ -1117,6 +1202,7 @@ Tabs.injectCss = function () {
 // *** STYLE PACKAGES:
 // USAGE: Tabs({ styleName: "modern" })
 // USAGE: Tabs({ styleName: "dark", style: { indicator: { color: "tomato" } } }) // Change only some keys.
+// USAGE: Tabs({ style: Tabs.styles.dark }) // The same as styleName: "dark". (The package is copied, never changed.)
 // NOTE: A new package needs only the keys that differ from the default (classic) style.
 // USAGE: Tabs.styles.myStyle = { indicator: { color: "red" } };
 Tabs.styles = {

@@ -13,8 +13,9 @@ UI COMPONENT TEMPLATE
   - STYLE PACKAGES: styleName "light" / "dark" (CompName.styles). params.style > the package > CompNameDefaults.style.
   - LAYOUT: box.layout is the group that places the parts of the component.
   - STATE: box.state ("normal", "hover", "pressed", "selected", "disabled") is decided in one place (getState).
-  - REFRESH: one place that draws the component again, by levels: "data" > "content" > "paint".
-  - SETTERS: a value is changed after create with a setX() function that asks for the refresh level it needs.
+  - DRAWING: three functions, each named by its one job: createItems() (the objects made from the data),
+    applyContent() (the texts, the icon, the badge), paint() (the look of the state). drawAll() calls the three.
+  - SETTERS: a value is changed after create with a setX() function that calls only the drawing function it needs.
   - EVENTS: onClick, onChange (onChange is NOT called at create time or with silent: 1).
   - OBJECTS ADDED LATER: createIn(container, fn) (it puts the container back, also on an error).
   - KEYBOARD AND ACCESSIBILITY: box.role, box.aria = { label, pressed... }, box.tabIndex, Enter / Space,
@@ -41,6 +42,7 @@ card.setSelected(1, 1);         // silent: onChange is not called
 card.setEnabled(0);
 CompName({ styleName: "dark", labelText: "On a dark page" });
 CompName({ styleName: "dark", style: { box: { round: 16 } } }); // Change only some keys of a package.
+CompName({ style: CompName.styles.dark }); // The same as styleName: "dark". (The package is copied, never changed.)
 
 GOTCHAS (CLAUDE.md):
 - A default must not be named like a basic.js setter: text, color, title, html, visible, zoom... (use labelText, htmlText).
@@ -111,16 +113,13 @@ const CompNameDefaults = {
 const CompName = function (params = {}) {
 
     // Merge style package: params.style > CompName.styles[styleName] > CompNameDefaults.style (light)
-    const _stylePackage = CompName.styles[params.styleName || CompNameDefaults.styleName];
-    if (!_stylePackage) console.warn("CompName: Style package not found: " + params.styleName);
-    mergeIntoIfMissing(params, { style: _stylePackage || {} });
+    basic.applyStylePackage(params, CompName.styles, CompNameDefaults);
 
     // Merge params:
     mergeIntoIfMissing(params, CompNameDefaults);
 
     // Edit params, if needed:
-    const startItems = params.items;
-    params.items = []; // WHY: The items are made by setItems() after the view is made.
+    params.items = (Array.isArray(params.items)) ? params.items.slice() : []; // WHY: A copy: the array of the caller does not change.
 
     // BOX: Component container
     let box = startObject(params);
@@ -132,6 +131,8 @@ const CompName = function (params = {}) {
     let isHover = 0;
     let isPressed = 0;
     let cancelRefresh = null; // The cancel function of the waiting box.refresh() (box.after)
+    const NARROW_PAGE_WIDTH = 480; // A page narrower than this gets a smaller gap.
+    const NARROW_GAP = 6;
 
     // *** PUBLIC VARIABLES:
     box.state = "normal"; // "normal", "hover", "pressed", "selected", "disabled" (read only: it comes from getState)
@@ -149,31 +150,14 @@ const CompName = function (params = {}) {
         return "normal";
     };
 
-    // REFRESH: the one place that draws the component again. A level does its own work, then the levels under it:
-    // "data"    -> the objects made from the data are made again       (setItems)
-    // "content" -> the texts, the icon, the badge                       (setText, setBadge, setIcon)
-    // "paint"   -> the colors and the look of the state                 (hover, pressed, selected, enabled)
-    // WHY: A cheap change (the mouse on it) asks only for "paint"; nothing is made again for it.
-    const refresh = function (level = "data") {
-
-        if (level === "data") {
-            buildItems();
-            level = "content";
-        }
-
-        if (level === "content") {
-            applyContent();
-            level = "paint";
-        }
-
-        if (level === "paint") {
-            paint();
-        }
-
-    };
+    // DRAWING: each function does one job, and a change calls only the one it needs:
+    // createItems()  -> the objects made from the data are made again   (setItems)
+    // applyContent() -> the texts, the icon, the badge                    (setText, setBadge, setIcon)
+    // paint()        -> the colors and the look of the state              (hover, pressed, selected, enabled)
+    // WHY: A cheap change (the mouse on it) only paints; nothing is made again for it.
 
     // DATA: the items (made again in their own group)
-    const buildItems = function () {
+    const createItems = function () {
         if (box.itemsGroup) box.itemsGroup.remove();
         box.itemList = [];
         // WHY: createIn() puts the container back after it (also on an error). setDefaultContainerBox() does not:
@@ -220,36 +204,43 @@ const CompName = function (params = {}) {
         box.aria = { pressed: (box.selected == 1), disabled: (box.enabled != 1) };
     };
 
+    // Everything: the first drawing and box.refresh().
+    const drawAll = function () {
+        createItems();
+        applyContent();
+        paint();
+    };
+
     // A GLOBAL EVENT: a narrow page makes the card smaller. (box.onPageResize: basic.js removes it with the box)
     const onPageResize = function () {
         if (!box) return;
-        box.layout.gap = (page.width < 480) ? 6 : _s.layout.gap;
+        box.layout.gap = (page.width < NARROW_PAGE_WIDTH) ? NARROW_GAP : _s.layout.gap;
     };
 
     // *** PUBLIC FUNCTIONS:
-    // A param that can change after create gets a setter. It saves the value, then asks for the level it needs.
+    // A param that can change after create gets a setter. It saves the value, then calls the drawing it needs.
 
     box.setText = function (labelText, descText = box.descText) {
         box.labelText = labelText;
         box.descText = descText;
-        refresh("content");
+        applyContent();
     };
     // USAGE: get: card.labelText, set: card.setText("Orders", "12 new")
 
     box.setBadge = function (text) {
         box.badgeText = text;
-        refresh("content");
+        applyContent();
     };
     // USAGE: card.setBadge("3") / card.setBadge("") // no badge
 
     box.setIcon = function (file) {
         box.iconFile = file;
-        refresh("content");
+        applyContent();
     };
 
     box.setItems = function (items) {
         box.items = (Array.isArray(items)) ? items.slice() : [];
-        refresh("data");
+        createItems();
     };
     // USAGE: card.setItems(["Today", "Paid"])
 
@@ -258,7 +249,7 @@ const CompName = function (params = {}) {
         value = basic.isOn(value) ? 1 : 0;
         if (box.selected == value) return;
         box.selected = value;
-        refresh("paint");
+        paint();
         if (!silent) box.onChange(box);
     };
     // USAGE: get: card.selected, set: card.setSelected(1)
@@ -266,7 +257,7 @@ const CompName = function (params = {}) {
     box.setEnabled = function (value) {
         box.enabled = basic.isOn(value) ? 1 : 0;
         if (box.enabled != 1) { isHover = 0; isPressed = 0; }
-        refresh("paint");
+        paint();
     };
     // USAGE: get: card.enabled, set: card.setEnabled(0)
 
@@ -274,7 +265,7 @@ const CompName = function (params = {}) {
     // NOTE: box.after() is a timer of the box: it can not run after remove().
     box.refresh = function (delay = 0) {
         if (cancelRefresh) cancelRefresh();
-        cancelRefresh = box.after(delay, function () { cancelRefresh = null; refresh("data"); });
+        cancelRefresh = box.after(delay, function () { cancelRefresh = null; drawAll(); });
     };
     // USAGE: card.labelText = "A"; card.items = ["B"]; card.refresh();
 
@@ -328,7 +319,7 @@ const CompName = function (params = {}) {
             // LABEL: Description
             box.lblDesc = Label({ ..._s.desc, ellipsis: 1, css: { maxWidth: "100%" } });
 
-            // NOTE: The items group is made by buildItems() (refresh "data").
+            // NOTE: The items group is made by createItems().
 
         endGroup();
 
@@ -343,14 +334,14 @@ const CompName = function (params = {}) {
     box.onHoverChange(function (self, isOver) {
         isHover = isOver;
         if (!isOver) isPressed = 0;
-        refresh("paint");
+        paint();
     });
     box.on("mousedown", function () {
         if (box.enabled != 1) return;
         isPressed = 1;
-        refresh("paint");
+        paint();
     });
-    box.on("mouseup", function () { isPressed = 0; refresh("paint"); });
+    box.on("mouseup", function () { isPressed = 0; paint(); });
     box.on("click", function (self, event) {
         if (box.enabled != 1) return;
         box.onClick(box, event);
@@ -369,7 +360,7 @@ const CompName = function (params = {}) {
     box.onPageResize(onPageResize);
     onPageResize();
 
-    box.setItems(startItems); // NOTE: refresh("data"): everything is drawn the first time.
+    drawAll(); // NOTE: The first drawing: the items, the content and the look.
 
     return endObject(box);
 
