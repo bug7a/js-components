@@ -14,7 +14,7 @@
         <script>
         "use strict";
 
-        // NOTE: Self-checking test page for basic.js v26.10.23+ (also checks the features of v26.09.18). Open it in a browser:
+        // NOTE: Self-checking test page for basic.js v26.10.24+ (also checks the features of v26.09.18). Open it in a browser:
         //       green lines = passed, red lines = failed. The summary is also in the console and in the tab title.
 
         // A page variable named like a library helper must not break the library. (basic.js: infinite recursion)
@@ -53,7 +53,7 @@
         const runTests = async function () {
 
             // *** LIBRARY INFO
-            check("basic.version", basic.version === "26.10.23", basic.version);
+            check("basic.version", basic.version === "26.10.24", basic.version);
             check("basic.library", basic.library === "basic.js", basic.library);
             check("basic.isReady", basic.isReady === 1);
 
@@ -469,6 +469,23 @@
             basic.addCss("basic-test-css", ".x { color: blue; }", 1);
             check("basic.addCss: replace", css1.textContent.indexOf("blue") > 0);
             css1.remove();
+
+            // *** v26.10.24: basic.applyStylePackage
+            const testStyles = {
+                light: { box: { color: "white", round: 4 }, label: { size: 14 } },
+                dark: { box: { color: "black", round: 4 }, label: { size: 14 } },
+            };
+            const testDefaults = { styleName: "light", style: testStyles.light };
+            const byName = basic.applyStylePackage({ styleName: "dark", style: { box: { round: 9 } } }, testStyles, testDefaults);
+            check("basic.applyStylePackage: params.style > the package of styleName",
+                byName.style.box.round === 9 && byName.style.box.color === "black" && byName.style.label.size === 14);
+            const byDefault = basic.applyStylePackage({}, testStyles, testDefaults);
+            check("basic.applyStylePackage: no styleName -> the package of the defaults", byDefault.style.box.color === "white");
+            const givenPackage = basic.applyStylePackage({ style: testStyles.dark }, testStyles, testDefaults);
+            mergeIntoIfMissing(givenPackage, { style: { box: { border: 1 } } });
+            givenPackage.style.box.color = "red";
+            check("basic.applyStylePackage: a package given as style is copied, never changed",
+                givenPackage.style !== testStyles.dark && testStyles.dark.box.color === "black" && !("border" in testStyles.dark.box));
 
             // rotate changes only its own part of the transform
             const turnBox = Box({ width: 20, height: 20 });

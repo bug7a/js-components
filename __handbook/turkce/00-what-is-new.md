@@ -4,6 +4,12 @@ Bu belgede basic.js kütüphanesine eklenen yeni özellikler, güncellemeler ve 
 
 ---
 
+## Versiyon 26.10.24
+
+*   **`basic.applyStylePackage(params, Comp.styles, CompDefaults)`:** Bir bileşenin stil paketleri (`styleName: "dark"`) tek satırda; her bileşenin yazdığı üç satırın yerine. Sıra aynı: `params.style` > `styleName` paketi > `Defaults.style`. Bir paket olduğu gibi de verilebilir, `Tabs({ style: Tabs.styles.dark })`: kopyalanır, paketin kendisi hiç değişmez. Tam uyumlu. `comp-m4/tabs.js` ve `_component-template.js` bunu kullanır (v26.10.24 gerekir). Örnekli başvuru: `basic/basic-what-is-new.md`.
+
+---
+
 ## Versiyon 26.10.23
 
 *   **Daha sade bileşenler, tam uyumlu:** Önceki sürümler için yazılmış bütün sayfalar ve bileşenler değişiklik gerekmeden çalışır. Bir nesnenin global kayıtları artık kendi `remove()`'u ile temizlenir; bu yüzden bir bileşenin bunlar için kendi `remove()`'unu yazmasına gerek kalmaz (önceden 63 bileşenden 42'si `remove()`'u yalnızca bunları temizlemek için eziyordu ve unutulan bir temizlik bellek sızıntısına yol açıyordu). Örnekli başvuru: `basic/basic-what-is-new.md`. Kendi kendini kontrol eden test sayfası: `test/basic-test.htm` (137 kontrol).

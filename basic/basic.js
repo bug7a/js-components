@@ -2,11 +2,14 @@
 
 /*
 
-basic.js (v26.10.23) A lightweight JavaScript library for building web-based applications with simple code. No need to write HTML or CSS — just use basic JavaScript.
+basic.js (v26.10.24) A lightweight JavaScript library for building web-based applications with simple code. No need to write HTML or CSS — just use basic JavaScript.
 - Project Site: https://bug7a.github.io/basic.js/
 
-v26.10.23 is v26.09.18 plus the additions below. Every page and component written for the
+v26.10.24 is v26.09.18 plus the additions below. Every page and component written for the
 previous versions works unchanged (same globals, same defaults, same DOM).
+
+WHAT IS NEW IN v26.10.24 (see basic/basic-what-is-new.md):
+- basic:      applyStylePackage(params, Comp.styles, CompDefaults) - the style packages of a component in one line
 
 WHAT IS NEW IN v26.10.23 (for simpler components; see basic/basic-what-is-new.md):
 - Cleaned in remove(): listenTo(target, event, func), onPageResize(func), after(ms, func), every(ms, func), own(obj)
@@ -47,7 +50,7 @@ Licensed under the Apache License, Version 2.0
 "use strict";
 const basic = {};
 
-basic.version = "26.10.23";
+basic.version = "26.10.24";
 basic.library = "basic.js";
 basic.isReady = 0; // 1 after the page object is created (before start() runs).
 
@@ -418,6 +421,22 @@ basic.addCss = function ($id, $cssText, $replace = 0) {
     }
     style.textContent = $cssText;
     return style;
+};
+
+// v26.10.24: The style of a component from its style packages. The first line of a component, before
+// mergeIntoIfMissing(params, Defaults): params.style > $packages[params.styleName] > Defaults.style (by that merge).
+// WHY: params.style becomes a new object, so a package given as it is (style: Tabs.styles.dark) is never changed:
+//      the merges after it would write into the package of every object of the page.
+// basic.applyStylePackage(params, Tabs.styles, TabsDefaults)
+basic.applyStylePackage = function ($params, $packages, $defaults) {
+    const name = $params.styleName || $defaults.styleName;
+    const stylePackage = $packages[name];
+    if (!stylePackage) console.warn("Style package not found: " + name);
+    const ownStyle = {};
+    mergeIntoIfMissing(ownStyle, $params.style || {});
+    mergeIntoIfMissing(ownStyle, stylePackage || {});
+    $params.style = ownStyle;
+    return $params;
 };
 
 // basic.storage.loadOr("settings", { theme: "light" })

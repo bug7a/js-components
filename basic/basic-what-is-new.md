@@ -10,6 +10,31 @@ Naming rule for the additions: no new globals. New things are properties/methods
 
 ---
 
+## v26.10.24 (2026-10-24)
+
+### `basic.applyStylePackage(params, packages, defaults)`
+
+Every component with style packages (`styleName: "dark"`) began with the same three lines. Now one line does it:
+
+```js
+// before
+const _stylePackage = Tabs.styles[params.styleName || TabsDefaults.styleName];
+if (!_stylePackage) console.warn("Tabs: Style package not found: " + params.styleName);
+mergeIntoIfMissing(params, { style: _stylePackage || {} });
+
+// now
+basic.applyStylePackage(params, Tabs.styles, TabsDefaults);
+mergeIntoIfMissing(params, TabsDefaults); // as before: the rest of the defaults (and Defaults.style)
+```
+
+The order is the same: `params.style` > `packages[params.styleName]` (or `defaults.styleName`) > `defaults.style`. A name that is not in `packages` still writes a warning.
+
+One thing is new: `params.style` becomes a new object. A package can be given as it is, `Tabs({ style: Tabs.styles.dark })`, and the package is never changed. Before, the merges wrote the missing keys into that object (the package of every Tabs on the page), and a page that changed it (`const myStyle = Tabs.styles.dark; myStyle.indicator.color = "red"`) changed every dark Tabs. To change a few keys of a package, keep writing `styleName: "dark", style: { indicator: { color: "red" } }`.
+
+Moved to it: `comp-m4/tabs.js` and `_component-template.js`. The other components keep their three lines (they work the same) and are moved when they are touched. A component that uses it needs basic.js v26.10.24.
+
+---
+
 ## v26.10.23 (2026-10-23)
 
 For simpler components: the global things of an object are cleaned by its `remove()`, so most components do not override `remove()` any more (42 of 63 components did it only for this). `listen` (the `box.listen` of `PropertyPanel`) and `onHover` (a parameter of `TreeView`) are used by components, so the new methods are `listenTo` and `onHoverChange`.

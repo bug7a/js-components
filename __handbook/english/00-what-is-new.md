@@ -4,6 +4,12 @@ This document contains new features, updates, and changes added to the basic.js 
 
 ---
 
+## Version 26.10.24
+
+*   **`basic.applyStylePackage(params, Comp.styles, CompDefaults)`:** the style packages of a component (`styleName: "dark"`) in one line, in place of the three lines every component wrote. The order is the same: `params.style` > the package of `styleName` > `Defaults.style`. A package can also be given as it is, `Tabs({ style: Tabs.styles.dark })`: it is copied, so the package itself is never changed. Fully compatible. `comp-m4/tabs.js` and `_component-template.js` use it (they need v26.10.24). Reference: `basic/basic-what-is-new.md`.
+
+---
+
 ## Version 26.10.23
 
 *   **Simpler components, fully compatible:** every page and component written for the previous versions works unchanged. The global things of an object are now cleaned by its `remove()`, so a component does not need its own `remove()` for them (before, 42 of the 63 components overrode `remove()` only to clean them, and a forgotten one leaked). Reference with examples: `basic/basic-what-is-new.md`. Self-checking test page: `test/basic-test.htm` (137 checks).
