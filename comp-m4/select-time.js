@@ -13,6 +13,7 @@ UI COMPONENT TEMPLATE
   language (en, tr), Now/Clear buttons, enabled, keyboard navigation.
 - Everything is drawn with code (no image files needed).
 - Value: "HH:mm" text. (Ex: "19:30")
+- Style packages: "classic" (default), "dark". Select with styleName. (SelectTime.styles)
 
 Keyboard (when the panel is focused):
 - ArrowUp/ArrowDown: change the value of the active column, ArrowLeft/ArrowRight: change the column,
@@ -48,7 +49,8 @@ const SelectTimeDefaults = {
     onChange: function (self) { }, // self.value ("19:30" or ""), self.hours, self.minutes (number or null), self.timeText
     onOpen: function (self) { },
     onClose: function (self) { },
-    style: {
+    styleName: "classic", // "classic", "dark" or a name added to SelectTime.styles
+    style: { // Classic style package (default)
         field: {
             color: White(1),
             border: 1,
@@ -119,6 +121,9 @@ const SelectTimeDefaults = {
             fontSize: 13,
             textColor: "#3871E0",
         },
+        divider: {
+            color: Black(0.08), // The line above the footer buttons
+        },
         disabled: {
             opacity: 0.4,
         },
@@ -126,6 +131,9 @@ const SelectTimeDefaults = {
 };
 
 const SelectTime = function (params = {}) {
+
+    // Merge style package: params.style > SelectTime.styles[styleName] > SelectTimeDefaults.style (classic)
+    basic.applyStylePackage(params, SelectTime.styles, SelectTimeDefaults);
 
     // Merge params:
     mergeIntoIfMissing(params, SelectTimeDefaults);
@@ -156,6 +164,10 @@ const SelectTime = function (params = {}) {
     let minuteList = []; // [0, 5, 10, ...]
     // WHY: The component works without basic/scroll-bar.js too, the file is not loaded on every page.
     const useScrollBar = (box.useScrollBar == 1 && typeof ScrollBar !== "undefined");
+    const PANEL_GAP = 6; // px between the field and the panel
+    const SCREEN_MARGIN = 8; // px: the panel stays this far from the edges of the page
+    const OVERLAY_Z_INDEX = 1000;
+    const PANEL_Z_INDEX = 1001;
 
     // *** PUBLIC VARIABLES:
     // [var] Selected time: minutes from 00:00 (0 - 1439) or null
@@ -170,7 +182,7 @@ const SelectTime = function (params = {}) {
 
     box.minTime = SelectTime.parse(box.minTime);
     box.maxTime = SelectTime.parse(box.maxTime);
-    box.minuteStep = Math.max(1, Math.min(60, Math.floor(num(box.minuteStep) || 1)));
+    box.minuteStep = Math.max(1, Math.min(60, Math.floor(basic.num(box.minuteStep) || 1)));
 
     // *** PRIVATE FUNCTIONS:
 
@@ -194,20 +206,12 @@ const SelectTime = function (params = {}) {
         return (minute === undefined) ? null : minute;
     };
 
-    // Create objects inside a container, after the component is created.
-    const createIn = function (container, func) {
-        const previous = getDefaultContainerBox();
-        setDefaultContainerBox(container);
-        func();
-        setDefaultContainerBox(previous);
-    };
-
     const updateValue = function () {
-        const t = box.minutesOfDay;
-        box.hours = (t === null) ? null : Math.floor(t / 60);
-        box.minutes = (t === null) ? null : t % 60;
-        box.value = (t === null) ? "" : SelectTime.format(t, "HH:mm");
-        box.timeText = (t === null) ? "" : SelectTime.format(t, box.format);
+        const time = box.minutesOfDay;
+        box.hours = (time === null) ? null : Math.floor(time / 60);
+        box.minutes = (time === null) ? null : time % 60;
+        box.value = (time === null) ? "" : SelectTime.format(time, "HH:mm");
+        box.timeText = (time === null) ? "" : SelectTime.format(time, box.format);
     };
 
     const updateField = function () {
@@ -228,10 +232,12 @@ const SelectTime = function (params = {}) {
         box.field.borderColor = borderColor;
 
         box.opacity = (box.enabled == 1) ? 1 : _s.disabled.opacity;
-        box.elem.style.cursor = (box.enabled == 1) ? "pointer" : "default";
-        box.elem.tabIndex = (box.enabled == 1) ? 0 : -1;
-        box.elem.setAttribute("aria-expanded", (isOpen) ? "true" : "false");
-        box.elem.setAttribute("aria-disabled", (box.enabled == 1) ? "false" : "true");
+        box.cursor = (box.enabled == 1) ? "pointer" : "default";
+        box.tabIndex = (box.enabled == 1) ? 0 : -1;
+        box.aria = {
+            expanded: (isOpen) ? "true" : "false",
+            disabled: (box.enabled == 1) ? "false" : "true",
+        };
 
     };
 
@@ -247,8 +253,8 @@ const SelectTime = function (params = {}) {
             textColor: _s.cell.textColor,
             color: "transparent",
         });
-        cell.elem.style.lineHeight = cellHeight + "px";
-        cell.elem.style.flexShrink = "0";
+        cell.lineHeight = cellHeight + "px";
+        cell.shrink = 0;
         cell.setMotion("background-color 0.15s");
         cell.isEnabled = 1;
         cell.isSelected = 0;
@@ -267,12 +273,18 @@ const SelectTime = function (params = {}) {
 
     };
 
+    const getCellTextColor = function (selected, enabled) {
+        if (selected) return _s.selectedCell.textColor;
+        if (enabled) return _s.cell.textColor;
+        return _s.disabledCell.textColor;
+    };
+
     const paintCell = function (cell, selected, enabled) {
         cell.isSelected = selected ? 1 : 0;
         cell.isEnabled = enabled ? 1 : 0;
         cell.color = (selected) ? _s.selectedCell.color : "transparent";
-        cell.textColor = (selected) ? _s.selectedCell.textColor : (enabled) ? _s.cell.textColor : _s.disabledCell.textColor;
-        cell.elem.style.cursor = (enabled && box.enabled == 1) ? "pointer" : "default";
+        cell.textColor = getCellTextColor(selected, enabled);
+        cell.cursor = (enabled && box.enabled == 1) ? "pointer" : "default";
     };
 
     // A scrollable column with a title. Returns the column box.
@@ -308,9 +320,9 @@ const SelectTime = function (params = {}) {
                     color: "transparent",
                     scrollY: 1,
                 });
-                group.scrollBox.elem.style.position = "relative";
+                group.scrollBox.css.position = "relative";
                 // WHY: Narrow column. Mouse wheel and touch still scroll.
-                if (useScrollBar) group.scrollBox.elem.style.scrollbarWidth = "none";
+                if (useScrollBar) group.scrollBox.css.scrollbarWidth = "none";
 
                     group.list = VGroup({
                         width: "100%",
@@ -343,7 +355,7 @@ const SelectTime = function (params = {}) {
     const createHourCells = function () {
         createIn(box.hoursColumn.list, function () {
             for (let hour = 0; hour < 24; hour++) {
-                hourCells.push(createCell(twoDigitFormat(hour), function () { selectHour(hour); }));
+                hourCells.push(createCell(basic.twoDigitFormat(hour), function () { selectHour(hour); }));
             }
         });
     };
@@ -355,7 +367,7 @@ const SelectTime = function (params = {}) {
         for (let minute = 0; minute < 60; minute += box.minuteStep) minuteList.push(minute);
         createIn(box.minutesColumn.list, function () {
             minuteList.forEach(function (minute) {
-                minuteCells.push(createCell(twoDigitFormat(minute), function () { selectMinute(minute); }));
+                minuteCells.push(createCell(basic.twoDigitFormat(minute), function () { selectMinute(minute); }));
             });
         });
     };
@@ -382,6 +394,12 @@ const SelectTime = function (params = {}) {
         if (box.minutesColumn && box.minutesColumn.scrollBar) box.minutesColumn.scrollBar.refreshScroll();
     };
 
+    const isMinuteEnabled = function (minute) {
+        if (box.hours !== null) return isInRange(box.hours * 60 + minute);
+        // WHY: No hour selected yet: a minute is enabled if it is valid for any hour.
+        return hourCells.some(function (c, hour) { return isInRange(hour * 60 + minute); });
+    };
+
     const renderPanel = function () {
 
         hourCells.forEach(function (cell, hour) {
@@ -390,11 +408,7 @@ const SelectTime = function (params = {}) {
 
         minuteCells.forEach(function (cell, index) {
             const minute = minuteList[index];
-            // WHY: No hour selected yet: a minute is enabled if it is valid for any hour.
-            const enabled = (box.hours !== null)
-                ? isInRange(box.hours * 60 + minute)
-                : hourCells.some(function (c, hour) { return isInRange(hour * 60 + minute); });
-            paintCell(cell, box.minutes === minute, enabled);
+            paintCell(cell, box.minutes === minute, isMinuteEnabled(minute));
         });
 
         const isKeyboardHours = (activeColumn == "hours");
@@ -434,14 +448,20 @@ const SelectTime = function (params = {}) {
 
     };
 
+    // WHY: No (valid) hour selected yet: use the current hour, or the first hour that is valid with this minute.
+    // Returns -1 if no hour is valid.
+    const findHourForMinute = function (minute) {
+        const nowHour = new Date().getHours();
+        if (isInRange(nowHour * 60 + minute)) return nowHour;
+        return hourCells.findIndex(function (c, h) { return isInRange(h * 60 + minute); });
+    };
+
     // User clicked a minute: the time is complete.
     const selectMinute = function (minute) {
 
         let hour = box.hours;
         if (hour === null || !isInRange(hour * 60 + minute)) {
-            // WHY: No hour selected yet: use the current hour, or the first hour that is valid with this minute.
-            const nowHour = new Date().getHours();
-            hour = (isInRange(nowHour * 60 + minute)) ? nowHour : hourCells.findIndex(function (c, h) { return isInRange(h * 60 + minute); });
+            hour = findHourForMinute(minute);
             if (hour < 0) return;
             scrollToCell(box.hoursColumn, hourCells[hour], 1);
         }
@@ -464,16 +484,15 @@ const SelectTime = function (params = {}) {
         const rect = box.elem.getBoundingClientRect();
         const panelWidth = box.panel.elem.offsetWidth;
         const panelHeight = box.panel.elem.offsetHeight;
-        const space = 6;
 
         let left = withPageZoom(rect.left);
-        let top = withPageZoom(rect.bottom) + space;
+        let top = withPageZoom(rect.bottom) + PANEL_GAP;
 
-        if (top + panelHeight > page.height - 8) {
-            top = withPageZoom(rect.top) - panelHeight - space; // Open above
+        if (top + panelHeight > page.height - SCREEN_MARGIN) {
+            top = withPageZoom(rect.top) - panelHeight - PANEL_GAP; // Open above
         }
-        top = Math.max(8, top);
-        left = Math.max(8, Math.min(left, page.width - panelWidth - 8));
+        top = Math.max(SCREEN_MARGIN, top);
+        left = Math.max(SCREEN_MARGIN, Math.min(left, page.width - panelWidth - SCREEN_MARGIN));
 
         box.panel.left = left;
         box.panel.top = top;
@@ -484,38 +503,42 @@ const SelectTime = function (params = {}) {
         if (isOpen) box.close();
     };
 
+    // Hours column: the next enabled hour. The minutes are kept if they are valid for it.
+    const moveHour = function (direction) {
+        let hour = (box.hours !== null) ? box.hours : new Date().getHours() - direction;
+        for (let i = 0; i < 24; i++) {
+            hour = (hour + direction + 24) % 24;
+            if (isHourEnabled(hour)) break;
+        }
+        let minute = (box.minutes !== null) ? box.minutes : 0;
+        if (!isInRange(hour * 60 + minute)) minute = firstEnabledMinute(hour);
+        if (minute === null) return;
+        box.setTime(hour * 60 + minute);
+        scrollToCell(box.hoursColumn, hourCells[hour], 1);
+    };
+
+    // Minutes column: the next minute that is valid for the hour.
+    const moveMinute = function (direction) {
+        const hour = (box.hours !== null) ? box.hours : new Date().getHours();
+        const current = (box.minutes !== null) ? minuteList.indexOf(box.minutes - (box.minutes % box.minuteStep)) : -1;
+        let index = (current < 0 && direction < 0) ? minuteList.length : current;
+        for (let i = 0; i < minuteList.length; i++) {
+            index = (index + direction + minuteList.length) % minuteList.length;
+            if (isInRange(hour * 60 + minuteList[index])) {
+                box.setTime(hour * 60 + minuteList[index]);
+                scrollToCell(box.minutesColumn, minuteCells[index], 1);
+                return;
+            }
+        }
+    };
+
     // Move the value of the active column one step. (Skips disabled values.)
     const moveValue = function (direction) {
-
         if (activeColumn == "hours") {
-
-            let hour = (box.hours !== null) ? box.hours : new Date().getHours() - direction;
-            for (let i = 0; i < 24; i++) {
-                hour = (hour + direction + 24) % 24;
-                if (isHourEnabled(hour)) break;
-            }
-            let minute = (box.minutes !== null) ? box.minutes : 0;
-            if (!isInRange(hour * 60 + minute)) minute = firstEnabledMinute(hour);
-            if (minute === null) return;
-            box.setTime(hour * 60 + minute);
-            scrollToCell(box.hoursColumn, hourCells[hour], 1);
-
-        } else {
-
-            const hour = (box.hours !== null) ? box.hours : new Date().getHours();
-            const current = (box.minutes !== null) ? minuteList.indexOf(box.minutes - (box.minutes % box.minuteStep)) : -1;
-            let index = (current < 0 && direction < 0) ? minuteList.length : current;
-            for (let i = 0; i < minuteList.length; i++) {
-                index = (index + direction + minuteList.length) % minuteList.length;
-                if (isInRange(hour * 60 + minuteList[index])) {
-                    box.setTime(hour * 60 + minuteList[index]);
-                    scrollToCell(box.minutesColumn, minuteCells[index], 1);
-                    return;
-                }
-            }
-
+            moveHour(direction);
+            return;
         }
-
+        moveMinute(direction);
     };
 
     const onKeyDown = function (self, event) {
@@ -633,7 +656,7 @@ const SelectTime = function (params = {}) {
     };
 
     box.setMinuteStep = function (minuteStep) {
-        box.minuteStep = Math.max(1, Math.min(60, Math.floor(num(minuteStep) || 1)));
+        box.minuteStep = Math.max(1, Math.min(60, Math.floor(basic.num(minuteStep) || 1)));
         createMinuteCells();
         renderPanel();
         if (isOpen || box.inline == 1) scrollToSelected();
@@ -649,14 +672,13 @@ const SelectTime = function (params = {}) {
 
 
     // *** OBJECT VIEW:
-    box.elem.style.outline = "none";
-    box.elem.style.userSelect = "none";
+    box.css = { outline: "none", userSelect: "none" };
 
     // FIELD: (only popup mode)
     if (box.inline != 1) {
 
         box.clickable = 1;
-        box.elem.setAttribute("role", "combobox");
+        box.role = "combobox";
 
         box.field = HGroup({
             width: "100%",
@@ -673,9 +695,8 @@ const SelectTime = function (params = {}) {
             fontSize: _s.fieldText.fontSize,
             textColor: _s.fieldText.textColor,
         });
-        that.elem.style.whiteSpace = "nowrap";
-        that.elem.style.textOverflow = "ellipsis";
-        that.elem.style.flexGrow = "1";
+        that.css = { whiteSpace: "nowrap", textOverflow: "ellipsis" };
+        that.grow = 1;
 
         // BOX: Clock icon (drawn)
         box.icon = startBox({
@@ -689,7 +710,7 @@ const SelectTime = function (params = {}) {
         Box({ left: 6, top: 2, width: 2, height: 6, color: _s.icon.color, round: 1 }); // Hour hand
         Box({ left: 6, top: 6, width: 5, height: 2, color: _s.icon.color, round: 1 }); // Minute hand
         endBox();
-        box.icon.elem.style.flexShrink = "0";
+        box.icon.shrink = 0;
 
         endGroup();
 
@@ -704,8 +725,8 @@ const SelectTime = function (params = {}) {
 
         // BOX: Transparent overlay (click outside: close)
         box.overlay = Box(0, 0, "100%", "100%", { color: "transparent" });
-        box.overlay.elem.style.position = "fixed";
-        box.overlay.elem.style.zIndex = "1000";
+        box.overlay.css.position = "fixed";
+        box.overlay.zIndex = OVERLAY_Z_INDEX;
         box.overlay.on("click", function () { box.close(); });
 
     }
@@ -722,11 +743,11 @@ const SelectTime = function (params = {}) {
         round: _s.panel.round,
         padding: _s.panel.padding,
     });
-    box.panel.elem.style.boxShadow = _s.panel.shadow;
-    box.panel.elem.style.outline = "none";
-    box.panel.elem.tabIndex = -1;
+    box.panel.boxShadow = _s.panel.shadow;
+    box.panel.css.outline = "none";
+    box.panel.tabIndex = -1;
     box.panel.clickable = 1;
-    box.panel.elem.setAttribute("role", "dialog");
+    box.panel.role = "dialog";
 
         // GROUP: Columns (hours, minutes)
         HGroup({
@@ -748,8 +769,10 @@ const SelectTime = function (params = {}) {
             justifyContent: "space-between",
             alignItems: "center",
         });
-        box.footer.elem.style.borderTop = "1px solid " + Black(0.08);
-        box.footer.elem.style.paddingTop = "6px";
+        box.footer.css = {
+            borderTop: "1px solid " + _s.divider.color,
+            paddingTop: "6px",
+        };
 
             box.nowButton = Label({
                 text: texts.now,
@@ -757,7 +780,7 @@ const SelectTime = function (params = {}) {
                 round: 4,
                 ..._s.footerButton,
             });
-            box.nowButton.elem.style.cursor = "pointer";
+            box.nowButton.cursor = "pointer";
             box.nowButton.on("click", function () {
                 if (box.enabled != 1) return;
                 box.setTime(getNow());
@@ -771,8 +794,8 @@ const SelectTime = function (params = {}) {
                 round: 4,
                 ..._s.footerButton,
             });
-            box.clearButton.elem.style.cursor = "pointer";
-            box.clearButton.elem.style.marginLeft = "auto";
+            box.clearButton.cursor = "pointer";
+            box.clearButton.css.marginLeft = "auto";
             box.clearButton.on("click", function () {
                 if (box.enabled != 1) return;
                 box.setTime(null);
@@ -792,7 +815,7 @@ const SelectTime = function (params = {}) {
     createMinuteCells();
 
     if (box.inline != 1) {
-        box.panel.elem.style.zIndex = "1001";
+        box.panel.zIndex = PANEL_Z_INDEX;
         box.overlay.visible = 0;
         box.panel.visible = 0;
     }
@@ -820,7 +843,7 @@ const SelectTime = function (params = {}) {
         box.own(box.panel);
 
     } else {
-        box.panel.elem.tabIndex = 0;
+        box.panel.tabIndex = 0;
         // WHY: Component size is "auto". A relative panel makes the container wrap it.
         box.panel.position = "relative";
     }
@@ -839,7 +862,10 @@ const SelectTime = function (params = {}) {
 
     if (box.inline == 1) {
         // WHY: Layout is not ready while the page is being created. Scroll after it.
-        box.after(0, function () { scrollToSelected(); refreshScrollBars(); });
+        box.after(0, function () {
+            scrollToSelected();
+            refreshScrollBars();
+        });
     }
 
     return endObject(box);
@@ -882,8 +908,8 @@ SelectTime.parse = function (value) {
     const match = /^(\d{1,2}):(\d{2})(:\d{2})?$/.exec(String(value).trim());
     if (!match) return null;
 
-    const hours = num(match[1]);
-    const minutes = num(match[2]);
+    const hours = basic.num(match[1]);
+    const minutes = basic.num(match[2]);
     if (hours > 23 || minutes > 59) return null;
 
     return hours * 60 + minutes;
@@ -901,11 +927,11 @@ SelectTime.format = function (minutesOfDay, format = "HH:mm") {
     const hours12 = (hours % 12) || 12;
 
     const tokens = {
-        HH: String(twoDigitFormat(hours)),
+        HH: String(basic.twoDigitFormat(hours)),
         H: String(hours),
-        hh: String(twoDigitFormat(hours12)),
+        hh: String(basic.twoDigitFormat(hours12)),
         h: String(hours12),
-        mm: String(twoDigitFormat(minutes)),
+        mm: String(basic.twoDigitFormat(minutes)),
         A: (hours < 12) ? "AM" : "PM",
         a: (hours < 12) ? "am" : "pm",
     };
@@ -916,3 +942,34 @@ SelectTime.format = function (minutesOfDay, format = "HH:mm") {
 
 };
 // USAGE: SelectTime.format(1170, "h:mm A") -> "7:30 PM"
+
+// *** STYLE PACKAGES:
+// USAGE: SelectTime({ styleName: "dark" })
+// USAGE: SelectTime({ styleName: "dark", style: { field: { round: 4 } } }) // Change only some keys.
+// USAGE: SelectTime({ style: SelectTime.styles.dark }) // The same as styleName: "dark". (The package is copied, never changed.)
+// NOTE: A new package needs only the keys that differ from the default (classic) style.
+// USAGE: SelectTime.styles.myStyle = { field: { round: 4 } };
+SelectTime.styles = {
+
+    // White, dark text, a soft line.
+    classic: SelectTimeDefaults.style,
+
+    // Dark theme, same colors as SelectBox "dark".
+    dark: {
+        field: { color: "#232322", borderColor: "rgba(255, 255, 255, 0.10)", round: 8 },
+        fieldHover: { borderColor: "rgba(255, 255, 255, 0.30)" },
+        fieldFocus: { borderColor: "#65A293" },
+        fieldText: { fontSize: 15, textColor: "rgba(255, 255, 255, 0.90)" },
+        placeholder: { textColor: "rgba(255, 255, 255, 0.40)" },
+        icon: { color: "rgba(255, 255, 255, 0.55)" },
+        panel: { color: "#232322", borderColor: "rgba(255, 255, 255, 0.12)", shadow: "0 8px 24px rgba(0, 0, 0, 0.5)" },
+        columnTitle: { textColor: "rgba(255, 255, 255, 0.45)", activeTextColor: "rgba(255, 255, 255, 0.90)" },
+        scrollBar: { bar_color: "#FFFFFF", bar_mouseOverColor: "#FFFFFF" },
+        cell: { textColor: "rgba(255, 255, 255, 0.85)", hoverColor: "rgba(255, 255, 255, 0.08)" },
+        selectedCell: { color: "#3D7A6B", textColor: "#FFFFFF" },
+        disabledCell: { textColor: "rgba(255, 255, 255, 0.20)" },
+        footerButton: { textColor: "#65A293" },
+        divider: { color: "rgba(255, 255, 255, 0.08)" },
+    },
+
+};

@@ -12,6 +12,7 @@ UI COMPONENT TEMPLATE
 - "-" in the item list adds a separator line.
 - Closes on: item click, click outside, Escape, mouse wheel outside, page resize, window blur.
 - Keyboard: ArrowUp/ArrowDown to move, Enter or Space to click, Escape to close.
+- Style packages: "classic" (default), "dark". Select with styleName. (ContextMenu.styles)
 
 ITEM: { text, key, iconFile, enabled, data, onClick }
 - A string is also accepted: "Copy" -> { text: "Copy" }
@@ -47,7 +48,8 @@ const ContextMenuDefaults = {
     onClick: function (self, item, index) { }, // self.source: The object that opened the menu.
     onOpen: function (self) { },
     onClose: function (self) { },
-    style: {
+    styleName: "classic", // "classic", "dark" or a name added to ContextMenu.styles
+    style: { // Classic style package (default)
         menu: {
             color: "white",
             border: 1,
@@ -87,6 +89,9 @@ const ContextMenuDefaults = {
 
 const ContextMenu = function (params = {}) {
 
+    // Merge style package: params.style > ContextMenu.styles[styleName] > ContextMenuDefaults.style (classic)
+    basic.applyStylePackage(params, ContextMenu.styles, ContextMenuDefaults);
+
     // Merge params:
     mergeIntoIfMissing(params, ContextMenuDefaults);
 
@@ -119,6 +124,9 @@ const ContextMenu = function (params = {}) {
     let skipOpenFor = null; // WHY: A click on the opener button (while open) must close the menu, not open it again.
     let skipOpenTime = 0;
     let openPageSize = ""; // Page size when the menu was opened.
+    const PAGE_SIDE_SPACE = 8; // Minimum space between the menu and the page sides
+    const OPENER_CLICK_TIME_LIMIT = 1000; // ms
+    const OPEN_MOTION = "opacity 0.12s, transform 0.12s";
 
     // *** PUBLIC VARIABLES:
     // [var] Items: [{ text, key, iconFile, enabled, data, onClick } or { type: "separator" }]
@@ -178,7 +186,7 @@ const ContextMenu = function (params = {}) {
     const updateRowEnabled = function (row) {
         const enabled = (row.item.enabled == 1);
         row.cursor = (enabled) ? "pointer" : "default";
-        row.elem.setAttribute("aria-disabled", (enabled) ? "false" : "true");
+        row.aria = { disabled: (enabled) ? "false" : "true" };
         if (row.icon) row.icon.opacity = (enabled || !row.item.iconFile) ? 1 : _s.disabled.opacity;
         setRowHover(row, 0);
     };
@@ -210,8 +218,8 @@ const ContextMenu = function (params = {}) {
             color: _s.separator.color,
             shrink: 0,
         });
-        line.elem.style.margin = _s.separator.space + "px " + _s.item.padding + "px";
-        line.elem.setAttribute("role", "separator");
+        line.css.margin = _s.separator.space + "px " + _s.item.padding + "px";
+        line.role = "separator";
 
         return line;
 
@@ -228,7 +236,7 @@ const ContextMenu = function (params = {}) {
             padding: [_s.item.padding, 0],
             round: _s.item.round,
         });
-        row.elem.setAttribute("role", "menuitem");
+        row.role = "menuitem";
         row.item = item;
 
             // ICON: Only if one of the items has an icon.
@@ -260,7 +268,7 @@ const ContextMenu = function (params = {}) {
                 ellipsis: 1,
                 shrink: 1,
             });
-            row.label.elem.style.minWidth = "0";
+            row.label.css.minWidth = "0";
 
         endGroup();
 
@@ -300,28 +308,27 @@ const ContextMenu = function (params = {}) {
 
         const menuWidth = box.elem.offsetWidth;
         const menuHeight = box.elem.offsetHeight;
-        const space = 8; // Minimum space to the page sides
 
         let left = x;
         let top = y;
         let originX = "left";
         let originY = "top";
 
-        if (left + menuWidth > page.width - space) {
+        if (left + menuWidth > page.width - PAGE_SIDE_SPACE) {
             left = x - menuWidth;
             originX = "right";
         }
-        if (top + menuHeight > page.height - space) {
+        if (top + menuHeight > page.height - PAGE_SIDE_SPACE) {
             top = y - menuHeight;
             originY = "bottom";
         }
 
-        left = Math.max(space, Math.min(left, page.width - menuWidth - space));
-        top = Math.max(space, Math.min(top, page.height - menuHeight - space));
+        left = Math.max(PAGE_SIDE_SPACE, Math.min(left, page.width - menuWidth - PAGE_SIDE_SPACE));
+        top = Math.max(PAGE_SIDE_SPACE, Math.min(top, page.height - menuHeight - PAGE_SIDE_SPACE));
 
         box.left = left;
         box.top = top;
-        box.elem.style.transformOrigin = originX + " " + originY;
+        box.css.transformOrigin = originX + " " + originY;
 
     };
 
@@ -430,7 +437,7 @@ const ContextMenu = function (params = {}) {
         // Show hidden (opacity 0) first, so the size can be measured.
         box.setMotion("none");
         box.opacity = 0;
-        box.elem.style.transform = "scale(0.97)";
+        box.css.transform = "scale(0.97)";
         box.visible = 1;
 
         positionMenu(withPageZoom(x), withPageZoom(y));
@@ -438,9 +445,9 @@ const ContextMenu = function (params = {}) {
         // Small open animation
         requestAnimationFrame(function () {
             if (!box || !isOpen) return;
-            box.setMotion("opacity 0.12s, transform 0.12s");
+            box.setMotion(OPEN_MOTION);
             box.opacity = 1;
-            box.elem.style.transform = "scale(1)";
+            box.css.transform = "scale(1)";
         });
 
         box.elem.focus({ preventScroll: true });
@@ -498,7 +505,7 @@ const ContextMenu = function (params = {}) {
             event.preventDefault(); // WHY: Do not show the browser menu.
 
             // WHY: Time limit: If the mouse was released outside the button, there was no click to skip.
-            const skip = (skipOpenFor == obj && Date.now() - skipOpenTime < 1000);
+            const skip = (skipOpenFor == obj && Date.now() - skipOpenTime < OPENER_CLICK_TIME_LIMIT);
             skipOpenFor = null;
             if (skip) return;
 
@@ -549,15 +556,17 @@ const ContextMenu = function (params = {}) {
 
     // *** OBJECT VIEW:
 
-    box.elem.style.position = "fixed";
-    box.elem.style.boxSizing = "border-box";
-    box.elem.style.minWidth = box.minWidth + "px";
-    if (box.maxWidth > 0) box.elem.style.maxWidth = box.maxWidth + "px";
-    box.elem.style.outline = "none";
-    box.elem.style.userSelect = "none";
-    box.elem.tabIndex = -1;
-    box.elem.setAttribute("role", "menu");
-    box.elem.setAttribute("aria-label", box.ariaLabel);
+    box.css = {
+        position: "fixed",
+        boxSizing: "border-box",
+        minWidth: box.minWidth + "px",
+        outline: "none",
+        userSelect: "none",
+    };
+    if (box.maxWidth > 0) box.css.maxWidth = box.maxWidth + "px";
+    box.tabIndex = -1;
+    box.role = "menu";
+    box.aria = { label: box.ariaLabel };
 
     // GROUP: Rows (created by render)
     box.content = VGroup({
@@ -568,7 +577,7 @@ const ContextMenu = function (params = {}) {
         position: "relative", // WHY: Component size is "auto". A relative group makes the container wrap it.
     });
     // WHY: Rows fill the menu width, so the hover color is as wide as the menu.
-    box.content.elem.style.alignItems = "stretch";
+    box.content.css.alignItems = "stretch";
 
     endGroup();
 
@@ -600,3 +609,26 @@ const ContextMenu = function (params = {}) {
 
 // For user data in your own Label.text. (Kept for old code: same as basic.escapeHtml.)
 ContextMenu.escapeHtml = basic.escapeHtml;
+
+// *** STYLE PACKAGES:
+// USAGE: ContextMenu({ styleName: "dark" })
+// USAGE: ContextMenu({ styleName: "dark", style: { menu: { round: 4 } } }) // Change only some keys.
+// USAGE: ContextMenu({ style: ContextMenu.styles.dark }) // The same as styleName: "dark". (The package is copied, never changed.)
+// NOTE: A new package needs only the keys that differ from the default (classic) style.
+// NOTE: The icons are image files: give light icons (iconFile) to the items of a dark menu.
+// USAGE: ContextMenu.styles.myStyle = { menu: { round: 4 } };
+ContextMenu.styles = {
+
+    // White, dark text, a soft line.
+    classic: ContextMenuDefaults.style,
+
+    // Dark theme, same colors as SelectBox "dark".
+    dark: {
+        menu: { color: "#232322", borderColor: "rgba(255, 255, 255, 0.12)", shadow: "0px 8px 24px rgba(0, 0, 0, 0.5)" },
+        item: { textColor: "rgba(255, 255, 255, 0.85)" },
+        itemHover: { textColor: "rgba(255, 255, 255, 0.95)", color: "rgba(255, 255, 255, 0.08)" },
+        disabled: { textColor: "rgba(255, 255, 255, 0.35)" },
+        separator: { color: "rgba(255, 255, 255, 0.10)" },
+    },
+
+};

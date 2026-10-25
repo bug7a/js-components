@@ -10,6 +10,7 @@ UI COMPONENT TEMPLATE
 - The selected color has a mark (a dot) in a color that can be seen on it (light or dark).
 - Everything is drawn with code (no image files needed).
 - Value: the color text. (Ex: "#3871E0")
+- Style packages: "classic" (default), "dark". Select with styleName. (SelectColor.styles)
 
 Keyboard:
 - Field: Enter, Space or ArrowDown opens the panel.
@@ -54,7 +55,8 @@ const SelectColorDefaults = {
     onChange: function (self) { }, // self.value ("#3871E0" or "")
     onOpen: function (self) { },
     onClose: function (self) { },
-    style: {
+    styleName: "classic", // "classic", "dark" or a name added to SelectColor.styles
+    style: { // Classic style package (default)
         field: {
             color: White(1),
             border: 1,
@@ -109,6 +111,9 @@ const SelectColorDefaults = {
 
 const SelectColor = function (params = {}) {
 
+    // Merge style package: params.style > SelectColor.styles[styleName] > SelectColorDefaults.style (classic)
+    basic.applyStylePackage(params, SelectColor.styles, SelectColorDefaults);
+
     // Merge params:
     mergeIntoIfMissing(params, SelectColorDefaults);
 
@@ -125,12 +130,16 @@ const SelectColor = function (params = {}) {
     // *** PRIVATE VARIABLES:
     const _s = box.style;
     const swatchSize = _s.swatch.size;
-    const columns = Math.max(1, num(box.columns) || 1);
+    const columns = Math.max(1, basic.num(box.columns) || 1);
     const gridWidth = (swatchSize * columns) + (_s.swatch.gap * (columns - 1));
 
     let isOpen = 0;
     let isMouseOver = 0;
     let swatches = []; // Created swatch boxes, in the order of box.colors
+    const PANEL_SPACE = 6; // Between the field and the panel
+    const PAGE_MARGIN = 8; // The panel stays this far from the edges of the page
+    const OVERLAY_Z_INDEX = 1000;
+    const PANEL_Z_INDEX = 1001; // Over the overlay
 
     // *** PUBLIC VARIABLES:
     // [var] Selected color: "#3871E0" or ""
@@ -142,12 +151,13 @@ const SelectColor = function (params = {}) {
 
         if (box.inline == 1) return;
 
-        box.fieldSwatch.visible = (box.value !== "") ? 1 : 0;
-        box.fieldSwatch.color = (box.value !== "") ? box.value : "transparent";
+        const hasValue = (box.value !== "");
+        box.fieldSwatch.visible = (hasValue) ? 1 : 0;
+        box.fieldSwatch.color = (hasValue) ? box.value : "transparent";
 
         box.fieldText.visible = (box.showText == 1) ? 1 : 0;
-        box.fieldText.plainText = (box.value !== "") ? box.value : box.placeholder;
-        box.fieldText.textColor = (box.value !== "") ? _s.fieldText.textColor : _s.placeholder.textColor;
+        box.fieldText.plainText = (hasValue) ? box.value : box.placeholder;
+        box.fieldText.textColor = (hasValue) ? _s.fieldText.textColor : _s.placeholder.textColor;
 
         let borderColor = _s.field.borderColor;
         if (isMouseOver && box.enabled == 1) borderColor = _s.fieldHover.borderColor;
@@ -156,9 +166,11 @@ const SelectColor = function (params = {}) {
 
         box.opacity = (box.enabled == 1) ? 1 : _s.disabled.opacity;
         box.cursor = (box.enabled == 1) ? "pointer" : "default";
-        box.elem.tabIndex = (box.enabled == 1) ? 0 : -1;
-        box.elem.setAttribute("aria-expanded", (isOpen) ? "true" : "false");
-        box.elem.setAttribute("aria-disabled", (box.enabled == 1) ? "false" : "true");
+        box.tabIndex = (box.enabled == 1) ? 0 : -1;
+        box.aria = {
+            expanded: (isOpen) ? "true" : "false",
+            disabled: (box.enabled == 1) ? "false" : "true",
+        };
 
     };
 
@@ -192,7 +204,7 @@ const SelectColor = function (params = {}) {
         });
         swatch.colorText = colorText;
         swatch.elem.title = colorText;
-        swatch.elem.setAttribute("role", "option");
+        swatch.role = "option";
 
             // BOX: Selected mark
             swatch.mark = Box({
@@ -224,11 +236,9 @@ const SelectColor = function (params = {}) {
         swatches.forEach(function (swatch) { swatch.remove(); });
         swatches = [];
 
-        createIn(box.grid, function () {
-            box.colors.forEach(function (colorText) {
-                setDefaultContainerBox(box.grid); // WHY: The mark inside the swatch changes the default container.
-                swatches.push(createSwatch(SelectColor.normalize(colorText)));
-            });
+        // WHY: One createIn() for each swatch: the mark inside a swatch changes the default container.
+        swatches = box.colors.map(function (colorText) {
+            return createIn(box.grid, function () { return createSwatch(SelectColor.normalize(colorText)); });
         });
 
         renderPanel();
@@ -241,17 +251,16 @@ const SelectColor = function (params = {}) {
         const rect = box.elem.getBoundingClientRect();
         const panelWidth = box.panel.elem.offsetWidth;
         const panelHeight = box.panel.elem.offsetHeight;
-        const space = 6;
 
         let left = withPageZoom(rect.left);
-        let top = withPageZoom(rect.bottom) + space;
+        let top = withPageZoom(rect.bottom) + PANEL_SPACE;
 
-        if (top + panelHeight > page.height - 8) {
-            top = withPageZoom(rect.top) - panelHeight - space; // Open above
+        if (top + panelHeight > page.height - PAGE_MARGIN) {
+            top = withPageZoom(rect.top) - panelHeight - PANEL_SPACE; // Open above
         }
 
-        box.panel.left = Math.max(8, Math.min(left, page.width - panelWidth - 8));
-        box.panel.top = Math.max(8, top);
+        box.panel.left = Math.max(PAGE_MARGIN, Math.min(left, page.width - panelWidth - PAGE_MARGIN));
+        box.panel.top = Math.max(PAGE_MARGIN, top);
 
     };
 
@@ -357,7 +366,11 @@ const SelectColor = function (params = {}) {
     };
 
     box.toggle = function () {
-        (isOpen) ? box.close() : box.open();
+        if (isOpen) {
+            box.close();
+        } else {
+            box.open();
+        }
     };
 
     box.isOpen = function () {
@@ -379,13 +392,13 @@ const SelectColor = function (params = {}) {
 
 
     // *** OBJECT VIEW:
-    box.elem.style.outline = "none";
+    box.css.outline = "none";
 
     // FIELD: (only popup mode)
     if (box.inline != 1) {
 
         box.clickable = 1;
-        box.elem.setAttribute("role", "combobox");
+        box.role = "combobox";
 
         // GROUP: Field (swatch + text)
         box.field = HGroup({
@@ -433,8 +446,8 @@ const SelectColor = function (params = {}) {
 
         // BOX: Transparent overlay (click outside: close)
         box.overlay = Box(0, 0, "100%", "100%", { color: "transparent" });
-        box.overlay.elem.style.position = "fixed";
-        box.overlay.elem.style.zIndex = "1000";
+        box.overlay.css.position = "fixed";
+        box.overlay.zIndex = OVERLAY_Z_INDEX;
         box.overlay.on("click", function () { box.close(); });
 
     }
@@ -451,10 +464,10 @@ const SelectColor = function (params = {}) {
         padding: _s.panel.padding,
         boxShadow: _s.panel.shadow,
     });
-    box.panel.elem.style.outline = "none";
-    box.panel.elem.tabIndex = -1;
+    box.panel.css.outline = "none";
+    box.panel.tabIndex = -1;
     box.panel.clickable = 1;
-    box.panel.elem.setAttribute("role", "listbox");
+    box.panel.role = "listbox";
 
         // GROUP: Color grid (the swatches are created by renderSwatches)
         box.grid = HGroup({
@@ -470,7 +483,7 @@ const SelectColor = function (params = {}) {
     endGroup();
 
     if (box.inline != 1) {
-        box.panel.elem.style.zIndex = "1001";
+        box.panel.zIndex = PANEL_Z_INDEX;
         box.overlay.visible = 0;
         box.panel.visible = 0;
     }
@@ -498,7 +511,7 @@ const SelectColor = function (params = {}) {
         box.own(box.panel);
 
     } else {
-        box.panel.elem.tabIndex = 0;
+        box.panel.tabIndex = 0;
         // WHY: Component size is "auto". A relative panel makes the container wrap it.
         box.panel.position = "relative";
     }
@@ -555,7 +568,32 @@ SelectColor.toRgb = function (colorText) {
     document.body.removeChild(elem);
 
     const parts = /(\d+)[^\d]+(\d+)[^\d]+(\d+)/.exec(computed);
-    return (parts) ? { r: num(parts[1]), g: num(parts[2]), b: num(parts[3]) } : { r: 0, g: 0, b: 0 };
+    if (!parts) return { r: 0, g: 0, b: 0 };
+    return { r: basic.num(parts[1]), g: basic.num(parts[2]), b: basic.num(parts[3]) };
 
 };
 // USAGE: SelectColor.toRgb("gold") -> { r: 255, g: 215, b: 0 }
+
+// *** STYLE PACKAGES:
+// USAGE: SelectColor({ styleName: "dark" })
+// USAGE: SelectColor({ styleName: "dark", style: { swatch: { round: 14 } } }) // Change only some keys.
+// USAGE: SelectColor({ style: SelectColor.styles.dark }) // The same as styleName: "dark". (The package is copied, never changed.)
+// NOTE: A new package needs only the keys that differ from the default (classic) style.
+// USAGE: SelectColor.styles.myStyle = { swatch: { round: 14 } };
+SelectColor.styles = {
+
+    // White, dark text, a soft line.
+    classic: SelectColorDefaults.style,
+
+    // Dark theme, same colors as SelectBox "dark".
+    dark: {
+        field: { color: "#232322", borderColor: "rgba(255, 255, 255, 0.10)", round: 8 },
+        fieldHover: { borderColor: "rgba(255, 255, 255, 0.30)" },
+        fieldFocus: { borderColor: "#65A293" },
+        fieldText: { fontSize: 15, textColor: "rgba(255, 255, 255, 0.90)" },
+        placeholder: { textColor: "rgba(255, 255, 255, 0.40)" },
+        panel: { color: "#232322", borderColor: "rgba(255, 255, 255, 0.12)", shadow: "0 8px 24px rgba(0, 0, 0, 0.5)" },
+        swatch: { borderColor: "rgba(255, 255, 255, 0.15)" }, // WHY: A dark swatch is not visible on a dark panel.
+    },
+
+};

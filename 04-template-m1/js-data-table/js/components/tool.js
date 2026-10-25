@@ -13,12 +13,12 @@ tool.useImageAsText = function(parameters = {}, editCreatedImage) {
     htmText.style.marginRight = parameters.outerSpaceRight + "px";
     htmText.style.marginLeft = parameters.outerSpaceLeft + "px";
 
-    const box = createBox(0, 0, parameters.fontSize, parameters.fontSize);
+    const box = Box(0, 0, parameters.fontSize, parameters.fontSize);
     that.color = "transparent";
     that.element.style.position = "relative";
     that.element.style.overflow = "visible";
 
-    createImage(0, 0);
+    Icon(0, 0);
     box.add(that);
     editCreatedImage(that);
     that.center();

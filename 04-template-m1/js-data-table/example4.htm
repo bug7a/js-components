@@ -290,7 +290,7 @@
         const createSmallChart = function(itemCell, itemCellData) {
 
             // BOX: Graph container
-            const boxGraphBackground = createBox();
+            const boxGraphBackground = Box();
             itemCell.box.add(that);
             boxGraphBackground.element.style.width = "calc(100% - 8px)";
             boxGraphBackground.element.style.height = "8px";
@@ -311,20 +311,20 @@
             //const partValue = (100 / 10);
 
             // BOX: Graph value
-            boxGraphBackground.boxValue = createBox();
+            boxGraphBackground.boxValue = Box();
             boxGraphBackground.add(that);
             //that.color = "rgba(0, 0, 0, 0.2)";
             that.opacity = 0.6;
-            that.width = partValue * num(itemCellData); //.value;
+            that.width = partValue * basic.num(itemCellData); //.value;
             that.height = 6;
             that.element.style.borderRight = "2px solid rgba(0, 0, 0, 1)";
             that.left = 0;
             that.top = 0;
-            if (num(itemCellData) < 40) {
+            if (basic.num(itemCellData) < 40) {
                 that.color = "orangered";
-            } else if (num(itemCellData) < 80) {
+            } else if (basic.num(itemCellData) < 80) {
                 that.color = "#689BD2";
-            } else if (num(itemCellData) >= 80) {
+            } else if (basic.num(itemCellData) >= 80) {
                 that.color = "seagreen";
             }
 
@@ -337,7 +337,7 @@
         const createTrashButton = function(itemCell, itemCellData) {
 
             // BOX: Image button background and container.
-            const boxButton = createBox();
+            const boxButton = Box();
             itemCell.box.add(that);
             boxButton.width = 40;
             boxButton.height = 40;
@@ -346,7 +346,7 @@
             //boxButton.setMotion("background-color 0.2s");
 
             // BOX: Button background.
-            boxButton.background = createBox();
+            boxButton.background = Box();
             boxButton.add(that);
             that.width = boxButton.width;
             that.height = boxButton.height;
@@ -356,7 +356,7 @@
             that.left = 0;
 
             // BOX: Trash icon.
-            boxButton.imgTrash = createImage();
+            boxButton.imgTrash = Icon();
             boxButton.add(that);
             boxButton.imgTrash.width = 18;
             boxButton.imgTrash.height = 18;

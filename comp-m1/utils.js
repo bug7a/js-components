@@ -16,12 +16,12 @@ Utils.useImageAsText = function(parameters = {}, editCreatedImage) {
     htmText.style.marginRight = parameters.outerSpaceRight + "px";
     htmText.style.marginLeft = parameters.outerSpaceLeft + "px";
 
-    const box = createBox(0, 0, parameters.fontSpace, parameters.fontSpace);
+    const box = Box(0, 0, parameters.fontSpace, parameters.fontSpace);
     that.color = "transparent";
     that.element.style.position = "relative";
     that.element.style.overflow = "visible";
 
-    createImage(0, 0);
+    Icon(0, 0);
     box.add(that);
     editCreatedImage(that);
     that.center();

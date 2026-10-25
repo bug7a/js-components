@@ -4,6 +4,15 @@ This document contains new features, updates, and changes added to the basic.js 
 
 ---
 
+## Version 26.10.25
+
+*   **NOT COMPATIBLE: helpers under `basic.*`:** `num`, `str`, `isMobile`, `go` and `twoDigitFormat` are now `basic.num()`, `basic.str()`, `basic.isMobile()`, `basic.go()` and `basic.twoDigitFormat()`; they are not globals any more.
+*   **NOT COMPATIBLE: the old `create*` globals are removed:** `createBox`, `createLabel`, `createButton`, `createImage` / `createIcon`, `createTextBox` / `createInput`. Use `Box()`, `Label()`, `Button()`, `Icon()`, `Input()` (the same, with props). The functions stay as `basic.createBox()`... A page written for an older version that uses them needs only the new name.
+*   **`basic.resolveTheme(themes, name)`:** the colors of a theme (`"auto"`: the system setting) with the missing keys from the light one. `Modal`, `Toast` and `ChartBox` use it, so a new theme needs only the keys that differ: `Toast.THEMES.ocean = { background: "#0B2239" }`.
+*   **`Alpha(color, percent)`:** like `Black(0.5)` / `White(0.5)`, for any color: `Alpha("#456789", 0.5)` gives `"rgba(69,103,137,0.5)"`. Hex colors become `rgba`; a name, `rgb()` or a `var(--token)` goes through `color-mix`. Fully compatible. Reference: `basic/basic-what-is-new.md`.
+
+---
+
 ## Version 26.10.24
 
 *   **`basic.applyStylePackage(params, Comp.styles, CompDefaults)`:** the style packages of a component (`styleName: "dark"`) in one line, in place of the three lines every component wrote. The order is the same: `params.style` > the package of `styleName` > `Defaults.style`. A package can also be given as it is, `Tabs({ style: Tabs.styles.dark })`: it is copied, so the package itself is never changed. Fully compatible. `comp-m4/tabs.js` and `_component-template.js` use it (they need v26.10.24). Reference: `basic/basic-what-is-new.md`.

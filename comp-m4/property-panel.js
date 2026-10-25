@@ -8,6 +8,7 @@ UI COMPONENT TEMPLATE
 - A property inspector at the right side of the screen, like the "Design" panel of design tools.
   Full height, 240 px wide (width), one dark style.
 - Built from a JSON (data): header tabs, a title with action icons, and sections of items.
+  footer: one more section, fixed at the bottom (out of the scrolling part). Ex: a note field.
   Each item has a type, a key, a value and its own settings. Every item type is a small object
   built by its own function (see *** ITEM TYPES):
     number     -> [X  396]  prefix text or icon (drag the prefix to change the value), unit, min, max, step, autoText
@@ -17,6 +18,10 @@ UI COMPONENT TEMPLATE
     segmented  -> [≡|≡|≡]  icon or text buttons. With a value: one is selected. Without: action buttons.
     iconButton -> [◎]  an action, or a toggle (toggle: 1, value true/false)
     constraints-> Horizontal and vertical selects and the constraints diagram. value: { horizontal, vertical }
+    alignGrid  -> a 3x3 grid of the places of the content (the align of a group). value: "left top", "center"...
+    color      -> [■ #3871E0]  a swatch and the color text. A click on the swatch opens the color picker.
+                  presets: ["#FFFFFF", { value: "var(--color-primary)", color: "#3871E0", hint: "Primary" }, "|", ...]
+                  -> small squares under the field, a click gives that value ("|" starts a new row).
 - Items of a row: put them in an array. span: 1 (one column), 2 (two columns). An iconButton takes the
   small last column. label: the caption above the item.
 - Listen to every change from outside: onChange(change, panel) or panel.listen(fn) (returns a remover).
@@ -115,6 +120,28 @@ const PropertyPanelDefaults = {
             round: 8,
             rowHeight: 26,
             maxHeight: 320,
+            shadow: "0 8px 24px rgba(0, 0, 0, 0.45)",
+        },
+        constraints: {
+            frameColor: "#555555", // The inner frame of the constraints picture
+        },
+        alignGrid: {
+            cellColor: "#6E6E6E", // The empty square of a place
+            hoverColor: "#A5A5A5",
+            selectedColor: "#0C8CE9", // The filled square of the chosen place (the accent)
+        },
+        swatch: {
+            size: 14,
+            borderColor: "rgba(255, 255, 255, 0.25)",
+            emptyColor: "#555555", // The line of an empty (transparent) color
+        },
+        scrollBar: { // basic/scroll-bar.js (ScrollBar) parameters of the panel
+            bar_color: "#FFFFFF",
+            bar_mouseOverColor: "#FFFFFF",
+            bar_opacity: 0.25,
+            bar_mouseOverOpacity: 0.5,
+            neverHide: 0,
+            showDots: 0,
         },
     }
 };
@@ -151,6 +178,11 @@ const PropertyPanel = function (params = {}) {
     let tabLabels = {};
     let titleLabel = null;
     let menu = null; // { obj, opener }
+    const MENU_MIN_WIDTH = 140;
+    const MENU_Z_INDEX = 2147482000; // WHY: Over everything of the page (the panel, modals).
+    const MENU_OFFSET = 4; // Space between the field and its menu.
+    const SCREEN_MARGIN = 8; // The menu stays this far from the window edges.
+    const SHIFT_STEP_FACTOR = 10; // Shift + arrow / scrub: 10 steps.
 
     // *** PUBLIC VARIABLES:
     // NOTE: Default values are also public variables. (box.data: the JSON with the current values)
@@ -199,7 +231,7 @@ const PropertyPanel = function (params = {}) {
             lbl.css = { display: "flex", alignItems: "center", whiteSpace: "nowrap" };
             if (props.width !== undefined) {
                 lbl.width = props.width;
-                lbl.elem.style.justifyContent = "center";
+                lbl.css.justifyContent = "center";
             }
         }
         if (props.plainText !== undefined) lbl.plainText = props.plainText;
@@ -208,7 +240,7 @@ const PropertyPanel = function (params = {}) {
 
     // Inner border that does not change the size.
     const setBorder = function (obj, color) {
-        obj.elem.style.boxShadow = (color) ? "inset 0 0 0 1px " + color : "none";
+        obj.boxShadow = (color) ? "inset 0 0 0 1px " + color : "none";
     };
 
     // fn(1) on mouseenter, fn(0) on mouseleave.
@@ -220,7 +252,10 @@ const PropertyPanel = function (params = {}) {
     // Enter and Space (and extraKeys) run fn, like a click.
     const onActivateKey = function (obj, fn, extraKeys = []) {
         obj.on("keydown", function (self, event) {
-            if (event.key === "Enter" || event.key === " " || extraKeys.indexOf(event.key) > -1) { event.preventDefault(); fn(); }
+            const isActivateKey = (event.key === "Enter" || event.key === " " || extraKeys.indexOf(event.key) > -1);
+            if (!isActivateKey) return;
+            event.preventDefault();
+            fn();
         });
     };
 
@@ -232,15 +267,22 @@ const PropertyPanel = function (params = {}) {
     };
 
     const precisionOf = function (item) {
-        if (item.precision !== undefined && item.precision !== "auto") return Math.max(0, Number(item.precision) || 0);
+        const hasPrecision = (item.precision !== undefined && item.precision !== "auto");
+        if (hasPrecision) return Math.max(0, Number(item.precision) || 0);
         const text = String(item.step || 1);
         return (text.indexOf(".") > -1) ? text.split(".")[1].length : 0;
     };
 
     const normalizeOptions = function (options) {
         return (options || []).map(function (option) {
-            if (option !== null && typeof option === "object") return { value: option.value, text: (option.text !== undefined) ? option.text : String(option.value), icon: option.icon, hint: option.hint };
-            return { value: option, text: String(option) };
+            const isObject = (option !== null && typeof option === "object");
+            if (!isObject) return { value: option, text: String(option) };
+            return {
+                value: option.value,
+                text: (option.text !== undefined) ? option.text : String(option.value),
+                icon: option.icon,
+                hint: option.hint,
+            };
         });
     };
 
@@ -272,7 +314,15 @@ const PropertyPanel = function (params = {}) {
         const oldValue = ctrl.item.value;
         if (PropertyPanel.isSameValue(oldValue, value)) return 0;
         ctrl.item.value = value;
-        if (!silent) dispatch({ kind: "value", key: ctrl.item.key, value: PropertyPanel.copyValue(value), oldValue: oldValue, item: ctrl.item, sectionKey: ctrl.sectionKey });
+        if (silent) return 1;
+        dispatch({
+            kind: "value",
+            key: ctrl.item.key,
+            value: PropertyPanel.copyValue(value),
+            oldValue: oldValue,
+            item: ctrl.item,
+            sectionKey: ctrl.sectionKey,
+        });
         return 1;
     };
 
@@ -289,23 +339,39 @@ const PropertyPanel = function (params = {}) {
         menu = null;
     };
 
+    // Under the field; above it when there is no space below.
+    const placeMenu = function (obj, rect, width) {
+        const height = obj.elem.offsetHeight;
+        let top = rect.bottom + MENU_OFFSET;
+        if (top + height > window.innerHeight - SCREEN_MARGIN) top = Math.max(SCREEN_MARGIN, rect.top - height - MENU_OFFSET);
+        obj.left = Math.max(SCREEN_MARGIN, Math.min(rect.left, window.innerWidth - width - SCREEN_MARGIN));
+        obj.top = top;
+    };
+
     // anchor: the menu is placed under it. opener: the object that opens it; a click on it again closes the menu.
     const openMenu = function (anchor, opener, options, currentValue, onPick) {
-        if (menu && menu.opener === opener) { closeMenu(); return; }
+        const isOpenByThisOpener = (menu && menu.opener === opener);
         closeMenu();
+        if (isOpenByThisOpener) return;
         if (!options.length) return;
         const rect = anchor.elem.getBoundingClientRect();
-        const width = Math.max(rect.width, 140);
+        const width = Math.max(rect.width, MENU_MIN_WIDTH);
         const ms = _s.menu;
 
         createIn(page, function () {
 
             // GROUP: Menu
             const obj = VGroup({ left: 0, top: 0, width: width, height: "auto", align: "left top", gap: 0, color: ms.color, round: ms.round });
-            obj.boxShadow = "0 0 0 1px " + ms.borderColor + ", 0 8px 24px rgba(0, 0, 0, 0.45)";
-            obj.zIndex = 2147482000;
-            obj.css = { padding: "6px 0px", boxSizing: "border-box", maxHeight: ms.maxHeight + "px", overflowY: "auto", alignItems: "stretch" };
-            obj.elem.setAttribute("role", "listbox");
+            obj.boxShadow = "0 0 0 1px " + ms.borderColor + ", " + ms.shadow;
+            obj.zIndex = MENU_Z_INDEX;
+            obj.css = {
+                padding: "6px 0px",
+                boxSizing: "border-box",
+                maxHeight: ms.maxHeight + "px",
+                overflowY: "auto",
+                alignItems: "stretch",
+            };
+            obj.role = "listbox";
             obj.clickable = 1;
 
                 options.forEach(function (option) {
@@ -316,8 +382,8 @@ const PropertyPanel = function (params = {}) {
                     const row = HGroup({ width: "100%", height: ms.rowHeight, align: "left center", gap: 0, color: "transparent" });
                     row.shrink = 0;
                     row.cursor = "pointer";
-                    row.elem.setAttribute("role", "option");
-                    row.elem.setAttribute("aria-selected", (isSelected) ? "true" : "false");
+                    row.role = "option";
+                    row.aria = { selected: (isSelected) ? "true" : "false" };
                     row.clickable = 1;
 
                         textLabel((isSelected) ? getIcon("check", 14) : "", { width: 28, height: ms.rowHeight, textColor: ms.textColor });
@@ -327,18 +393,16 @@ const PropertyPanel = function (params = {}) {
                     endGroup();
 
                     onHover(row, function (isHover) { row.color = (isHover) ? ms.hoverColor : "transparent"; });
-                    row.on("click", function () { closeMenu(); onPick(option.value); });
+                    row.on("click", function () {
+                        closeMenu();
+                        onPick(option.value);
+                    });
 
                 });
 
             endGroup();
 
-            // Under the field; above it when there is no space below.
-            const height = obj.elem.offsetHeight;
-            let top = rect.bottom + 4;
-            if (top + height > window.innerHeight - 8) top = Math.max(8, rect.top - height - 4);
-            obj.left = Math.max(8, Math.min(rect.left, window.innerWidth - width - 8));
-            obj.top = top;
+            placeMenu(obj, rect, width);
 
             menu = { obj: obj, opener: opener };
 
@@ -347,7 +411,10 @@ const PropertyPanel = function (params = {}) {
 
     // WHY: A pointerdown on the opener is left to its click, which closes the menu (a toggle).
     const onDocumentPointerDown = function (self, event) {
-        if (menu && !menu.obj.elem.contains(event.target) && !menu.opener.elem.contains(event.target)) closeMenu();
+        if (!menu) return;
+        if (menu.obj.elem.contains(event.target)) return;
+        if (menu.opener.elem.contains(event.target)) return;
+        closeMenu();
     };
 
     const onDocumentKeyDown = function (self, event) {
@@ -370,13 +437,13 @@ const PropertyPanel = function (params = {}) {
 
             // LABEL: Prefix ("X" or an icon)
             const prefix = (prefixValue) ? textLabel(getIcon(prefixValue, 16), { width: 26, height: _g.itemHeight, textColor: _t.softColor }) : null;
-            if (prefix) prefix.elem.style.paddingLeft = "2px";
+            if (prefix) prefix.css.paddingLeft = "2px";
 
             // INPUT: Value
             const input = Input({ width: 10, height: _g.itemHeight, minimal: 1, fontSize: _t.fontSize, textColor: _t.color });
             input.grow = 1;
             input.shrink = 1;
-            input.elem.style.minWidth = "0px";
+            input.css.minWidth = "0px";
             const el = input.inputElement;
             Object.assign(el.style, {
                 width: "100%",
@@ -393,9 +460,18 @@ const PropertyPanel = function (params = {}) {
 
         endGroup();
 
-        onHover(field, function (isHover) { state.isHover = isHover; paint(); });
-        el.addEventListener("focus", function () { state.isFocus = 1; paint(); });
-        el.addEventListener("blur", function () { state.isFocus = 0; paint(); });
+        onHover(field, function (isHover) {
+            state.isHover = isHover;
+            paint();
+        });
+        el.addEventListener("focus", function () {
+            state.isFocus = 1;
+            paint();
+        });
+        el.addEventListener("blur", function () {
+            state.isFocus = 0;
+            paint();
+        });
 
         const setEnabled = function (enabled) {
             state.enabled = !!enabled;
@@ -451,33 +527,49 @@ const PropertyPanel = function (params = {}) {
 
         el.addEventListener("focus", function () { input.select(); });
         el.addEventListener("blur", function () { commit(parse(input.text)); });
+        const stepFactorOf = function (event) {
+            return (event.shiftKey) ? SHIFT_STEP_FACTOR : 1;
+        };
+
+        const stepByArrow = function (event) {
+            const base = parse(input.text);
+            const start = (base === null || base === undefined) ? (Number(value) || 0) : base;
+            const direction = (event.key === "ArrowUp") ? 1 : -1;
+            commit(clamp(start + direction * step * stepFactorOf(event)));
+            input.select();
+        };
+
         el.addEventListener("keydown", function (event) {
-            if (event.key === "Enter") { event.preventDefault(); el.blur(); }
-            else if (event.key === "Escape") { event.preventDefault(); input.text = format(value); el.blur(); }
-            else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+            if (event.key === "Enter") {
                 event.preventDefault();
-                const base = parse(input.text);
-                const start = (base === null || base === undefined) ? (Number(value) || 0) : base;
-                const direction = (event.key === "ArrowUp") ? 1 : -1;
-                commit(clamp(start + direction * step * (event.shiftKey ? 10 : 1)));
-                input.select();
+                el.blur();
+            } else if (event.key === "Escape") {
+                event.preventDefault();
+                input.text = format(value);
+                el.blur();
+            } else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+                event.preventDefault();
+                stepByArrow(event);
             }
         });
 
         // Scrub: drag the prefix left / right. 1 px = 1 step (Shift: 10 steps)
         if (prefix) {
             prefix.clickable = 1;
-            prefix.elem.style.touchAction = "none";
+            prefix.css.touchAction = "none";
             prefix.on("pointerdown", function (self, event) {
                 if (!state.enabled || event.button !== 0) return;
                 event.preventDefault();
                 if (document.activeElement === el) el.blur();
                 scrub = { id: event.pointerId, x: event.clientX, start: Number(value) || 0 };
-                try { prefix.elem.setPointerCapture(event.pointerId); } catch (e) { }
+                try {
+                    prefix.elem.setPointerCapture(event.pointerId);
+                } catch (e) { } // WHY: It throws when the pointer is not active any more; the scrub still works without it.
             });
             prefix.on("pointermove", function (self, event) {
                 if (!scrub || event.pointerId !== scrub.id) return;
-                const next = clamp(scrub.start + Math.round(event.clientX - scrub.x) * step * (event.shiftKey ? 10 : 1));
+                const movedPixels = Math.round(event.clientX - scrub.x);
+                const next = clamp(scrub.start + movedPixels * step * stepFactorOf(event));
                 if (next !== value) commit(next);
             });
             const endScrub = function () { scrub = null; };
@@ -512,14 +604,20 @@ const PropertyPanel = function (params = {}) {
         let value = config.value;
 
         // GROUP: Field
-        const field = HGroup({ width: (isPlain) ? "auto" : width, height: _g.itemHeight, align: "left center", gap: 0, color: (isPlain) ? "transparent" : _s.field.color, round: _s.field.round });
+        const field = HGroup({
+            width: (isPlain) ? "auto" : width,
+            height: _g.itemHeight,
+            align: "left center",
+            gap: 0,
+            color: (isPlain) ? "transparent" : _s.field.color,
+            round: _s.field.round,
+        });
         field.shrink = 0;
         field.cursor = "pointer";
         field.css = { boxSizing: "border-box", outline: "none", paddingLeft: (config.icon) ? "0px" : "8px" };
-        field.elem.tabIndex = 0;
-        field.elem.setAttribute("role", "button");
-        field.elem.setAttribute("aria-haspopup", "listbox");
-        field.elem.setAttribute("aria-label", config.hint || config.label || config.key || "Select");
+        field.tabIndex = 0;
+        field.role = "button";
+        field.aria = { haspopup: "listbox", label: config.hint || config.label || config.key || "Select" };
         field.clickable = 1;
 
             if (config.icon) textLabel(getIcon(config.icon, 16), { width: 28, height: _g.itemHeight, textColor: _t.softColor });
@@ -543,14 +641,30 @@ const PropertyPanel = function (params = {}) {
         };
         field.on("click", open);
         onActivateKey(field, open, ["ArrowDown"]);
-        onHover(field, function (isHover) { state.isHover = isHover; paint(); });
-        field.on("focus", function () { state.isFocus = !isPlain; paint(); });
-        field.on("blur", function () { state.isFocus = 0; paint(); });
+        onHover(field, function (isHover) {
+            state.isHover = isHover;
+            paint();
+        });
+        field.on("focus", function () {
+            state.isFocus = !isPlain;
+            paint();
+        });
+        field.on("blur", function () {
+            state.isFocus = 0;
+            paint();
+        });
+
+        // The text of the option, or the value itself when it is not an option.
+        const textOfValue = function (v) {
+            const option = findOption(options, v);
+            if (option) return option.text;
+            if (v === undefined || v === null) return "";
+            return String(v);
+        };
 
         const setValue = function (v) {
             value = v;
-            const option = findOption(options, v);
-            lblText.plainText = (option) ? option.text : (v === undefined || v === null) ? "" : String(v);
+            lblText.plainText = textOfValue(v);
         };
 
         const setEnabled = function (enabled) {
@@ -558,7 +672,7 @@ const PropertyPanel = function (params = {}) {
             lblText.textColor = ink(state.enabled, _t.color);
             lblArrow.textColor = ink(state.enabled, _t.softColor);
             field.cursor = (state.enabled) ? "pointer" : "default";
-            field.elem.tabIndex = (state.enabled) ? 0 : -1;
+            field.tabIndex = (state.enabled) ? 0 : -1;
             paint();
         };
 
@@ -574,7 +688,7 @@ const PropertyPanel = function (params = {}) {
     const buildIconButton = function (ctrl) {
 
         const item = ctrl.item;
-        const isToggle = (item.toggle == 1);
+        const isToggle = basic.isOn(item.toggle);
         const useAccent = (item.accent !== 0);
         const state = { value: !!item.value, enabled: item.enabled != 0, isHover: 0 };
 
@@ -584,43 +698,285 @@ const PropertyPanel = function (params = {}) {
         btn.clickable = 1;
         btn.cursor = "pointer";
         btn.css = { outline: "none", transition: "background-color 0.12s" };
-        btn.elem.tabIndex = 0;
-        btn.elem.setAttribute("role", "button");
-        btn.elem.setAttribute("aria-label", item.hint || item.key);
+        btn.tabIndex = 0;
+        btn.role = "button";
+        btn.aria = { label: item.hint || item.key };
         if (item.hint) btn.elem.title = item.hint;
 
         // WHY: The icon (innerHTML) is only written when the value changes, not on every hover.
         const paintIcon = function () {
             btn.text = getIcon((isToggle && state.value && item.iconActive) ? item.iconActive : item.icon, 16);
-            if (isToggle) btn.elem.setAttribute("aria-pressed", (state.value) ? "true" : "false");
+            if (isToggle) btn.aria = { pressed: (state.value) ? "true" : "false" };
         };
 
         const paintColors = function () {
             const isActive = isToggle && state.value && useAccent;
-            btn.color = (isActive) ? _s.button.activeColor : (state.isHover && state.enabled) ? _s.button.hoverColor : "transparent";
+            if (isActive) btn.color = _s.button.activeColor;
+            else if (state.isHover && state.enabled) btn.color = _s.button.hoverColor;
+            else btn.color = "transparent";
             btn.textColor = ink(state.enabled, (isActive) ? _s.button.activeIconColor : _s.button.iconColor);
         };
 
         const press = function () {
             if (!state.enabled) return;
-            if (!isToggle) { sendAction(ctrl, item.value); return; }
+            if (!isToggle) {
+                sendAction(ctrl, item.value);
+                return;
+            }
             state.value = !state.value;
             paintIcon();
             paintColors();
             changeValue(ctrl, state.value);
         };
 
-        onHover(btn, function (isHover) { state.isHover = isHover; paintColors(); });
+        const setValue = function (v) {
+            state.value = !!v;
+            paintIcon();
+            paintColors();
+        };
+
+        const setEnabled = function (enabled) {
+            state.enabled = !!enabled;
+            btn.cursor = (state.enabled) ? "pointer" : "default";
+            paintColors();
+        };
+
+        onHover(btn, function (isHover) {
+            state.isHover = isHover;
+            paintColors();
+        });
         btn.on("click", press);
         onActivateKey(btn, press);
 
         paintIcon();
         paintColors();
 
+        return { field: btn, setValue: setValue, setEnabled: setEnabled };
+
+    };
+
+    // ALIGN GRID: 3 x 3 places of the content. The chosen one is a filled square, the others empty squares.
+    const ALIGN_COLUMNS = ["left", "center", "right"];
+    const ALIGN_ROWS = ["top", "center", "bottom"];
+
+    // "center" -> "center center", "top left" -> "left top" (basic.js takes both orders).
+    const normalizeAlign = function (value) {
+        const words = String(value || "").trim().split(/\s+/);
+        if (words.length === 1) words.push("center");
+        // WHY: "center" is in both lists: only top / bottom and left / right tell the order.
+        const isVerticalFirst = /^(top|bottom)$/.test(words[0]) || /^(left|right)$/.test(words[1]);
+        return (isVerticalFirst) ? words[1] + " " + words[0] : words[0] + " " + words[1];
+    };
+
+    const buildAlignGrid = function (ctrl) {
+
+        const item = ctrl.item;
+        const ga = _s.alignGrid;
+        const SIZE = _g.itemHeight * 2 + _g.rowGap; // As high as two rows
+        const CELL = Math.floor(SIZE / 3); // The click area of one place
+        const MARK = 8; // The square in it
+        let value = normalizeAlign(item.value);
+        let enabled = item.enabled != 0;
+        const cells = []; // { area, mark, align, isHover }
+
+        const paintCell = function (cell) {
+            const isSelected = (cell.align === value);
+            const lineColor = (cell.isHover && enabled) ? ga.hoverColor : ga.cellColor;
+            cell.mark.color = (isSelected) ? ink(enabled, ga.selectedColor) : "transparent";
+            setBorder(cell.mark, (isSelected) ? "" : lineColor);
+            cell.area.aria = { checked: (isSelected) ? "true" : "false" };
+        };
+        const paint = function () { cells.forEach(paintCell); };
+
+        // BOX: Grid
+        const grid = startBox({ width: SIZE, height: SIZE, color: _s.field.color, round: _s.field.round });
+        grid.shrink = 0;
+        grid.role = "radiogroup";
+        grid.aria = { label: item.hint || item.label || item.key };
+        const offset = Math.floor((SIZE - CELL * 3) / 2);
+
+            ALIGN_ROWS.forEach(function (vertical, row) {
+                ALIGN_COLUMNS.forEach(function (horizontal, column) {
+                    const align = horizontal + " " + vertical;
+
+                    // BOX: The click area of a place
+                    const area = startBox({ left: offset + column * CELL, top: offset + row * CELL, width: CELL, height: CELL, color: "transparent" });
+                    area.clickable = 1;
+                    area.cursor = "pointer";
+                    area.tabIndex = 0;
+                    area.role = "radio";
+                    area.aria = { label: align };
+                    area.css = { outline: "none" };
+                    area.elem.title = align;
+
+                        // BOX: The square
+                        const mark = Box({ width: MARK, height: MARK, color: "transparent", round: 2 });
+                        mark.center();
+                        mark.css = { transition: "background-color 0.12s" };
+
+                    endBox();
+
+                    const cell = { area: area, mark: mark, align: align, isHover: 0 };
+                    cells.push(cell);
+
+                    const press = function () {
+                        if (!enabled) return;
+                        value = align;
+                        paint();
+                        changeValue(ctrl, value);
+                    };
+                    onHover(area, function (isHover) {
+                        cell.isHover = isHover;
+                        paintCell(cell);
+                    });
+                    area.on("click", press);
+                    onActivateKey(area, press);
+                });
+            });
+
+        endBox();
+
+        paint();
+
         return {
-            field: btn,
-            setValue: function (v) { state.value = !!v; paintIcon(); paintColors(); },
-            setEnabled: function (e) { state.enabled = !!e; btn.cursor = (state.enabled) ? "pointer" : "default"; paintColors(); },
+            field: grid,
+            setValue: function (v) { value = normalizeAlign(v); paint(); },
+            setEnabled: function (e) { enabled = !!e; paint(); },
+        };
+
+    };
+
+    // COLOR: a swatch and the color text. The picker of the browser is over the swatch (an <input type="color">).
+    // A canvas reads any CSS color: "tomato", "rgba(...)" -> "#rrggbb" (the picker takes only that form).
+    const toHexColor = function (color) {
+        if (!toHexColor.context) toHexColor.context = document.createElement("canvas").getContext("2d");
+        const context = toHexColor.context;
+        context.fillStyle = "#000000";
+        context.fillStyle = String(color || "");
+        const read = context.fillStyle;
+        if (read.charAt(0) === "#") return read;
+        const parts = read.match(/[\d.]+/g) || [0, 0, 0];
+        return "#" + parts.slice(0, 3).map(function (n) { return ("0" + Math.round(Number(n)).toString(16)).slice(-2); }).join("");
+    };
+
+    // PRESETS: rows of small squares under a color field. preset: "#FFF" or { value, color (to paint), hint }.
+    const PRESET_SIZE = 14;
+    const PRESET_GAP = 4;
+
+    const buildPresetRows = function (presets, width, onPick) {
+        const rows = [[]];
+        presets.forEach(function (preset) {
+            if (preset === "|") rows.push([]);
+            else rows[rows.length - 1].push((typeof preset === "object") ? preset : { value: preset, color: preset, hint: preset });
+        });
+        rows.filter(function (row) { return row.length; }).forEach(function (row) {
+            // GROUP: A row of presets
+            HGroup({ width: width, height: "auto", align: "left center", gap: PRESET_GAP, wrap: 1, color: "transparent" });
+                row.forEach(function (preset) {
+                    // BOX: A preset
+                    const square = Box({ width: PRESET_SIZE, height: PRESET_SIZE, round: 3, color: preset.color || preset.value });
+                    square.shrink = 0;
+                    square.clickable = 1;
+                    square.cursor = "pointer";
+                    square.role = "button";
+                    square.tabIndex = 0;
+                    square.aria = { label: preset.hint || preset.value };
+                    square.elem.title = preset.hint || preset.value;
+                    setBorder(square, _s.swatch.borderColor);
+                    square.on("click", function () { onPick(preset.value); });
+                    onActivateKey(square, function () { onPick(preset.value); });
+                });
+            endGroup();
+        });
+    };
+
+    const buildColorField = function (ctrl) {
+
+        const item = ctrl.item;
+        const sw = _s.swatch;
+        const width = getSpanWidth(item.span);
+        const hasPresets = Array.isArray(item.presets) && item.presets.length > 0;
+        // GROUP: The field and its presets (only when there are presets)
+        const holder = (hasPresets) ? VGroup({ width: width, height: "auto", align: "left top", gap: 6, color: "transparent" }) : null;
+        if (holder) holder.shrink = 0;
+        const { field, input, el, setEnabled } = buildInputField(item, width);
+        if (item.placeholder) input.placeholder = item.placeholder;
+        el.style.paddingLeft = "4px";
+
+        // BOX: Swatch (a checkerboard under the color: a transparent color shows it)
+        const swatchArea = createIn(field, function () {
+            const area = startBox({ width: sw.size + 12, height: _g.itemHeight, color: "transparent" });
+            area.shrink = 0;
+                const chess = Box({ width: sw.size, height: sw.size, round: 3, color: "#FFFFFF" });
+                chess.center();
+                chess.css = { backgroundImage: "linear-gradient(45deg, #BBBBBB 25%, transparent 25%, transparent 75%, #BBBBBB 75%), linear-gradient(45deg, #BBBBBB 25%, transparent 25%, transparent 75%, #BBBBBB 75%)", backgroundSize: "6px 6px", backgroundPosition: "0 0, 3px 3px" };
+                area.fill = Box({ width: sw.size, height: sw.size, round: 3, color: "transparent" });
+                area.fill.center();
+            endBox();
+            return area;
+        });
+        field.elem.insertBefore(swatchArea.elem, field.elem.firstChild);
+
+        // The picker: an invisible <input type="color"> over the swatch, so a click opens it.
+        const picker = document.createElement("input");
+        picker.type = "color";
+        picker.setAttribute("aria-label", (item.hint || item.label || item.key) + " picker");
+        Object.assign(picker.style, { position: "absolute", left: "0px", top: "0px", width: "100%", height: "100%", opacity: "0", cursor: "pointer", pointerEvents: "auto", border: "0px", padding: "0px" });
+        swatchArea.elem.appendChild(picker);
+
+        // A token (var(--color-primary)) is painted with the color of its preset: this page does not know the token.
+        const colorOfValue = function (value) {
+            const preset = (item.presets || []).find(function (p) { return p && typeof p === "object" && p.value === value; });
+            return (preset && preset.color) ? preset.color : value;
+        };
+
+        const paintSwatch = function (color) {
+            const isEmpty = !color || color === "transparent";
+            swatchArea.fill.color = (isEmpty) ? "transparent" : colorOfValue(color);
+            setBorder(swatchArea.fill, (isEmpty) ? sw.emptyColor : sw.borderColor);
+            picker.value = toHexColor(color);
+        };
+        const setValue = function (v) {
+            input.text = (v === undefined || v === null) ? "" : String(v);
+            paintSwatch(input.text);
+        };
+
+        picker.addEventListener("input", function () {
+            input.text = picker.value;
+            paintSwatch(picker.value);
+            changeValue(ctrl, picker.value);
+        });
+        el.addEventListener("blur", function () {
+            paintSwatch(input.text);
+            changeValue(ctrl, String(input.text));
+        });
+        el.addEventListener("keydown", function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                el.blur();
+            } else if (event.key === "Escape") {
+                event.preventDefault();
+                setValue(ctrl.item.value);
+                el.blur();
+            }
+        });
+
+        if (holder) {
+            buildPresetRows(item.presets, width, function (value) {
+                setValue(value);
+                changeValue(ctrl, value);
+            });
+            endGroup();
+        }
+
+        setValue(item.value);
+        return {
+            field: holder || field,
+            setValue: setValue,
+            setEnabled: function (enabled) {
+                setEnabled(enabled);
+                picker.disabled = !enabled;
+            },
         };
 
     };
@@ -645,8 +1001,14 @@ const PropertyPanel = function (params = {}) {
             const setValue = function (v) { input.text = (v === undefined || v === null) ? "" : String(v); };
             el.addEventListener("blur", function () { changeValue(ctrl, String(input.text)); });
             el.addEventListener("keydown", function (event) {
-                if (event.key === "Enter") { event.preventDefault(); el.blur(); }
-                else if (event.key === "Escape") { event.preventDefault(); setValue(ctrl.item.value); el.blur(); }
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    el.blur();
+                } else if (event.key === "Escape") {
+                    event.preventDefault();
+                    setValue(ctrl.item.value);
+                    el.blur();
+                }
             });
             setValue(item.value);
             return { field: field, setValue: setValue, setEnabled: setEnabled };
@@ -670,19 +1032,21 @@ const PropertyPanel = function (params = {}) {
             group.shrink = 0;
 
                 const numberInput = buildNumberInput(ctrl, width - arrowWidth - 1);
-                numberInput.field.elem.style.borderRadius = r + " 0px 0px " + r;
+                numberInput.field.css.borderRadius = r + " 0px 0px " + r;
 
                 // LABEL: Menu button
                 const btnArrow = textLabel(getIcon("chevronDown", 12), { width: arrowWidth, height: _g.itemHeight, textColor: _t.softColor });
                 btnArrow.color = _s.field.color;
                 btnArrow.clickable = 1;
                 btnArrow.cursor = "pointer";
-                btnArrow.elem.style.borderRadius = "0px " + r + " " + r + " 0px";
+                btnArrow.css.borderRadius = "0px " + r + " " + r + " 0px";
 
             endGroup();
 
             const options = normalizeOptions(item.options);
-            onHover(btnArrow, function (isHover) { btnArrow.color = (isHover && enabled) ? _s.segmented.hoverColor : _s.field.color; });
+            onHover(btnArrow, function (isHover) {
+                btnArrow.color = (isHover && enabled) ? _s.segmented.hoverColor : _s.field.color;
+            });
             btnArrow.on("click", function () {
                 if (!enabled) return;
                 openMenu(group, btnArrow, options, ctrl.item.value, function (picked) {
@@ -691,11 +1055,13 @@ const PropertyPanel = function (params = {}) {
                 });
             });
 
-            return {
-                field: group,
-                setValue: numberInput.setValue,
-                setEnabled: function (e) { enabled = !!e; numberInput.setEnabled(e); btnArrow.textColor = ink(enabled, _t.softColor); },
+            const setEnabled = function (e) {
+                enabled = !!e;
+                numberInput.setEnabled(e);
+                btnArrow.textColor = ink(enabled, _t.softColor);
             };
+
+            return { field: group, setValue: numberInput.setValue, setEnabled: setEnabled };
         },
 
         // [≡|≡|≡]  options: [{ value, icon, text, hint }]. value !== undefined -> one is selected.
@@ -717,19 +1083,35 @@ const PropertyPanel = function (params = {}) {
                 else seg.color = (isSelect) ? "transparent" : _s.field.color;
                 setBorder(seg, (isSelected) ? _s.segmented.selectedBorderColor : "");
                 seg.textColor = ink(enabled, (isSelect && !isSelected) ? _t.softColor : _s.button.iconColor);
-                if (isSelect) seg.elem.setAttribute("aria-checked", (isSelected) ? "true" : "false");
+                if (isSelect) seg.aria = { checked: (isSelected) ? "true" : "false" };
             };
             const paint = function () { parts.forEach(paintPart); };
 
+            // Select: every segment is round. Actions: only the outer corners of the row.
+            const radiusOf = function (index) {
+                if (isSelect) return r;
+                if (index === 0) return r + " 0 0 " + r;
+                if (index === options.length - 1) return "0 " + r + " " + r + " 0";
+                return "0";
+            };
+
             // GROUP: Segments
-            const group = HGroup({ width: getSpanWidth(item.span), height: _g.itemHeight, align: "left center", gap: (isSelect) ? 0 : 1, color: (isSelect) ? _s.field.color : "transparent", round: _s.field.round });
+            const group = HGroup({
+                width: getSpanWidth(item.span),
+                height: _g.itemHeight,
+                align: "left center",
+                gap: (isSelect) ? 0 : 1,
+                color: (isSelect) ? _s.field.color : "transparent",
+                round: _s.field.round,
+            });
             group.shrink = 0;
-            group.elem.setAttribute("role", (isSelect) ? "radiogroup" : "group");
-            group.elem.setAttribute("aria-label", item.hint || item.label || item.key);
+            group.role = (isSelect) ? "radiogroup" : "group";
+            group.aria = { label: item.hint || item.label || item.key };
 
                 options.forEach(function (option, index) {
                     // LABEL: Segment
-                    const seg = textLabel((option.icon) ? getIcon(option.icon, 16) : basic.escapeHtml(option.text), { width: 10, height: _g.itemHeight, textColor: _s.button.iconColor });
+                    const segHtml = (option.icon) ? getIcon(option.icon, 16) : basic.escapeHtml(option.text);
+                    const seg = textLabel(segHtml, { width: 10, height: _g.itemHeight, textColor: _s.button.iconColor });
                     seg.grow = 1;
                     seg.shrink = 1;
                     seg.cursor = "pointer";
@@ -738,11 +1120,11 @@ const PropertyPanel = function (params = {}) {
                         flexBasis: "0px",
                         outline: "none",
                         transition: "background-color 0.12s",
-                        borderRadius: (isSelect) ? r : (index === 0) ? r + " 0 0 " + r : (index === options.length - 1) ? "0 " + r + " " + r + " 0" : "0",
+                        borderRadius: radiusOf(index),
                     };
-                    seg.elem.tabIndex = 0;
-                    seg.elem.setAttribute("role", (isSelect) ? "radio" : "button");
-                    seg.elem.setAttribute("aria-label", option.hint || option.text);
+                    seg.tabIndex = 0;
+                    seg.role = (isSelect) ? "radio" : "button";
+                    seg.aria = { label: option.hint || option.text };
                     if (option.hint) seg.elem.title = option.hint;
 
                     const part = { seg: seg, option: option, isHover: 0 };
@@ -750,12 +1132,18 @@ const PropertyPanel = function (params = {}) {
 
                     const press = function () {
                         if (!enabled) return;
-                        if (!isSelect) { sendAction(ctrl, option.value); return; }
+                        if (!isSelect) {
+                            sendAction(ctrl, option.value);
+                            return;
+                        }
                         value = option.value;
                         paint();
                         changeValue(ctrl, value);
                     };
-                    onHover(seg, function (isHover) { part.isHover = isHover; paintPart(part); });
+                    onHover(seg, function (isHover) {
+                        part.isHover = isHover;
+                        paintPart(part);
+                    });
                     seg.on("click", press);
                     onActivateKey(seg, press);
                 });
@@ -774,14 +1162,30 @@ const PropertyPanel = function (params = {}) {
         // [◎]  icon, iconActive, toggle: 1 (value true / false), accent: 0 (no blue look when on)
         iconButton: buildIconButton,
 
+        alignGrid: buildAlignGrid,
+
+        color: buildColorField,
+
         // Horizontal / vertical selects at the left and the constraints diagram at the right.
         // value: { horizontal: "left" | "right" | "leftRight" | "center" | "scale", vertical: "top" | "bottom" | "topBottom" | "center" | "scale" }
         constraints: function (ctrl) {
             const item = ctrl.item;
             let value = item.value; // Normalized: always has horizontal and vertical.
             let enabled = item.enabled != 0;
-            const H_OPTIONS = [{ value: "left", text: "Left" }, { value: "right", text: "Right" }, { value: "leftRight", text: "Left and right" }, { value: "center", text: "Center" }, { value: "scale", text: "Scale" }];
-            const V_OPTIONS = [{ value: "top", text: "Top" }, { value: "bottom", text: "Bottom" }, { value: "topBottom", text: "Top and bottom" }, { value: "center", text: "Center" }, { value: "scale", text: "Scale" }];
+            const H_OPTIONS = [
+                { value: "left", text: "Left" },
+                { value: "right", text: "Right" },
+                { value: "leftRight", text: "Left and right" },
+                { value: "center", text: "Center" },
+                { value: "scale", text: "Scale" },
+            ];
+            const V_OPTIONS = [
+                { value: "top", text: "Top" },
+                { value: "bottom", text: "Bottom" },
+                { value: "topBottom", text: "Top and bottom" },
+                { value: "center", text: "Center" },
+                { value: "scale", text: "Scale" },
+            ];
             const W = _g.columnWidth;
             const H = _g.itemHeight * 2 + _g.rowGap;
 
@@ -798,8 +1202,12 @@ const PropertyPanel = function (params = {}) {
                 // GROUP: Selects
                 VGroup({ width: W, height: H, align: "left top", gap: _g.rowGap, color: "transparent" });
                 that.shrink = 0;
-                    const selH = buildSelect({ key: item.key + "-h", hint: "Horizontal constraint", icon: "constraintH", options: H_OPTIONS, value: value.horizontal }, W, function (v) { change({ horizontal: v }); });
-                    const selV = buildSelect({ key: item.key + "-v", hint: "Vertical constraint", icon: "constraintV", options: V_OPTIONS, value: value.vertical }, W, function (v) { change({ vertical: v }); });
+                    const selH = buildSelect(
+                        { key: item.key + "-h", hint: "Horizontal constraint", icon: "constraintH", options: H_OPTIONS, value: value.horizontal },
+                        W, function (v) { change({ horizontal: v }); });
+                    const selV = buildSelect(
+                        { key: item.key + "-v", hint: "Vertical constraint", icon: "constraintV", options: V_OPTIONS, value: value.vertical },
+                        W, function (v) { change({ vertical: v }); });
                 endGroup();
 
                 // BOX: Diagram
@@ -808,12 +1216,15 @@ const PropertyPanel = function (params = {}) {
 
                     const cx = Math.round(W / 2);
                     const cy = Math.round(H / 2);
-                    const iw = 34, ih = 22; // Inner frame
-                    const ix = cx - iw / 2, iy = cy - ih / 2;
+                    // Inner frame
+                    const iw = 34;
+                    const ih = 22;
+                    const ix = cx - iw / 2;
+                    const iy = cy - ih / 2;
 
                     // BOX: Inner frame
                     const frame = Box({ left: ix, top: iy, width: iw, height: ih, color: "transparent", round: 3 });
-                    setBorder(frame, "#555555");
+                    setBorder(frame, _s.constraints.frameColor);
 
                     const line = function (left, top, width, height) {
                         const obj = Box({ left: left, top: top, width: width, height: height, color: _t.disabledColor, round: 1 });
@@ -834,7 +1245,9 @@ const PropertyPanel = function (params = {}) {
                         const obj = Box({ left: left, top: top, width: width, height: height, color: "transparent" });
                         obj.clickable = 1;
                         obj.cursor = "pointer";
-                        obj.on("click", function (self, event) { if (enabled) onClick(event.shiftKey); });
+                        obj.on("click", function (self, event) {
+                            if (enabled) onClick(event.shiftKey);
+                        });
                         return obj;
                     };
                     hitArea(cx - 10, 0, 20, iy - 2, function (shift) { change({ vertical: (shift && value.vertical === "bottom") ? "topBottom" : "top" }); });
@@ -848,7 +1261,8 @@ const PropertyPanel = function (params = {}) {
             endGroup();
 
             const paint = function () {
-                const h = value.horizontal, v = value.vertical;
+                const h = value.horizontal;
+                const v = value.vertical;
                 // Side lines: accent when on, gray when off. Center lines: accent when on, soft when off.
                 const side = function (obj, isOn) { obj.color = (isOn) ? ink(enabled, _s.accent.color) : _t.disabledColor; };
                 side(lines.top, v === "top" || v === "topBottom");
@@ -866,7 +1280,12 @@ const PropertyPanel = function (params = {}) {
             return {
                 field: group,
                 setValue: function (v) { value = v; paint(); },
-                setEnabled: function (e) { enabled = !!e; selH.setEnabled(e); selV.setEnabled(e); paint(); },
+                setEnabled: function (e) {
+                    enabled = !!e;
+                    selH.setEnabled(e);
+                    selV.setEnabled(e);
+                    paint();
+                },
             };
         },
 
@@ -881,7 +1300,10 @@ const PropertyPanel = function (params = {}) {
     // Builds an item with its type and registers it by its key. Returns its controller (or null).
     const registerItem = function (item, sectionKey) {
         const builder = ITEM_TYPES[item.type];
-        if (!builder) { console.warn("PropertyPanel: Unknown item type: " + item.type); return null; }
+        if (!builder) {
+            console.warn("PropertyPanel: Unknown item type: " + item.type);
+            return null;
+        }
         item.value = normalizeValue(item, item.value);
         const ctrl = { item: item, sectionKey: sectionKey };
         Object.assign(ctrl, builder(ctrl));
@@ -894,7 +1316,10 @@ const PropertyPanel = function (params = {}) {
 
     // item.visible: 0 hides the cell of the item (or the object itself when it has no cell).
     const applyVisible = function (ctrl) {
-        if (ctrl) (ctrl.cell || ctrl.field).visible = (ctrl.item.visible === 0 || ctrl.item.visible === false) ? 0 : 1;
+        if (!ctrl) return;
+        const isHidden = (ctrl.item.visible === 0 || ctrl.item.visible === false);
+        const obj = ctrl.cell || ctrl.field;
+        obj.visible = (isHidden) ? 0 : 1;
     };
 
     // One item of a row: the caption (if the row has one) and its object.
@@ -959,6 +1384,7 @@ const PropertyPanel = function (params = {}) {
         endGroup();
 
         if (section.visible === 0 || section.visible === false) group.visible = 0;
+        return group;
 
     };
 
@@ -968,7 +1394,7 @@ const PropertyPanel = function (params = {}) {
         lbl.color = (isActive) ? _s.field.color : "transparent";
         lbl.textColor = (isActive) ? _t.color : _t.softColor;
         lbl.bold = isActive;
-        lbl.elem.setAttribute("aria-selected", (isActive) ? "true" : "false");
+        lbl.aria = { selected: (isActive) ? "true" : "false" };
     };
 
     const paintTabs = function () {
@@ -994,8 +1420,8 @@ const PropertyPanel = function (params = {}) {
                     lbl.clickable = 1;
                     lbl.cursor = "pointer";
                     lbl.css = { padding: "0px 10px", outline: "none" };
-                    lbl.elem.tabIndex = 0;
-                    lbl.elem.setAttribute("role", "tab");
+                    lbl.tabIndex = 0;
+                    lbl.role = "tab";
                     tabLabels[tab.key] = lbl;
                     const select = function () { box.setActiveTab(tab.key); };
                     lbl.on("click", select);
@@ -1042,6 +1468,27 @@ const PropertyPanel = function (params = {}) {
 
     };
 
+    // FOOTER: data.footer, a section fixed at the bottom. The scrolling part ends above it.
+    const buildFooter = function () {
+        if (box.footerContent) box.footerContent.remove();
+        box.footerContent = null;
+        const footer = box.data.footer;
+        box.footerBox.visible = (footer) ? 1 : 0;
+        if (footer) {
+            box.footerContent = createIn(box.footerBox, function () {
+                const group = buildSection(Object.assign({ key: "footer" }, footer), 0);
+                group.css.borderBottom = "none";
+                return group;
+            });
+        }
+        placeScrollBox();
+    };
+
+    const placeScrollBox = function () {
+        const footerHeight = (box.footerContent) ? box.footerBox.elem.offsetHeight : 0;
+        box.scrollBox.height = "calc(100% - " + (_ps.headerHeight + footerHeight) + "px)";
+    };
+
     // *** PUBLIC FUNCTIONS:
 
     // Builds the panel again from a JSON. (The JSON is copied: getData() returns the copy with the current values.)
@@ -1051,6 +1498,7 @@ const PropertyPanel = function (params = {}) {
         box.data = PropertyPanel.copyData(data || {});
         buildHeader();
         buildContent();
+        buildFooter();
     };
     // USAGE: panel.setData({ title: "Rectangle", sections: [...] })
 
@@ -1077,7 +1525,10 @@ const PropertyPanel = function (params = {}) {
     // silent: 1 -> no change event. Returns 1 when the key was found.
     box.setValue = function (key, value, silent = 0) {
         const ctrl = controllers[key];
-        if (!ctrl) { console.warn("PropertyPanel: No item with the key: " + key); return 0; }
+        if (!ctrl) {
+            console.warn("PropertyPanel: No item with the key: " + key);
+            return 0;
+        }
         const next = normalizeValue(ctrl.item, PropertyPanel.copyValue(value));
         if (PropertyPanel.isSameValue(ctrl.item.value, next)) return 1; // WHY: No DOM write for the same value.
         ctrl.setValue(PropertyPanel.copyValue(next));
@@ -1124,7 +1575,8 @@ const PropertyPanel = function (params = {}) {
         const oldValue = box.data.activeTab;
         box.data.activeTab = key;
         paintTabs();
-        if (!silent && oldValue !== key) dispatch({ kind: "tab", key: key, value: key, oldValue: oldValue, item: null, sectionKey: "header" });
+        if (silent || oldValue === key) return;
+        dispatch({ kind: "tab", key: key, value: key, oldValue: oldValue, item: null, sectionKey: "header" });
     };
 
     // Listens to every change. Returns a function that removes the listener.
@@ -1136,19 +1588,23 @@ const PropertyPanel = function (params = {}) {
 
     box.open = function () {
         box.opened = 1;
-        box.elem.style.transform = "translateX(0px)";
-        box.elem.setAttribute("aria-hidden", "false");
+        box.css.transform = "translateX(0px)";
+        box.aria = { hidden: "false" };
     };
 
     box.close = function () {
         closeMenu();
         box.opened = 0;
-        box.elem.style.transform = "translateX(100%)";
-        box.elem.setAttribute("aria-hidden", "true");
+        box.css.transform = "translateX(100%)";
+        box.aria = { hidden: "true" };
     };
 
     box.toggle = function () {
-        if (box.opened == 1) box.close(); else box.open();
+        if (basic.isOn(box.opened)) {
+            box.close();
+            return;
+        }
+        box.open();
     };
 
     // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
@@ -1164,19 +1620,25 @@ const PropertyPanel = function (params = {}) {
     // *** OBJECT VIEW:
 
     box.boxShadow = "inset 1px 0 0 " + _ps.dividerColor;
-    box.elem.style.transition = "transform " + _ps.motion + " ease";
-    box.elem.setAttribute("role", "complementary");
-    box.elem.setAttribute("aria-label", "Properties");
+    box.css.transition = "transform " + _ps.motion + " ease";
+    box.role = "complementary";
+    box.aria = { label: "Properties" };
     box.clickable = 1;
 
     // GROUP: Header (tabs)
     box.header = HGroup({ left: 0, top: 0, width: "100%", height: _ps.headerHeight, align: "left center", gap: 2, color: "transparent" });
     box.header.css = { padding: "0px " + _ps.paddingRight + "px 0px 10px", boxSizing: "border-box", borderBottom: "1px solid " + _ps.dividerColor };
-    box.header.elem.setAttribute("role", "tablist");
+    box.header.role = "tablist";
     endGroup();
 
     // BOX: Scrolling content
     box.scrollBox = Box({ left: 0, top: _ps.headerHeight, width: "100%", height: "calc(100% - " + _ps.headerHeight + "px)", color: "transparent", scrollY: 1 });
+
+    // GROUP: Footer (data.footer, at the bottom)
+    box.footerBox = VGroup({ left: 0, width: "100%", height: "auto", align: "left top", gap: 0, color: _ps.color });
+    box.footerBox.css = { top: "auto", bottom: "0px", borderTop: "1px solid " + _ps.dividerColor, boxSizing: "border-box" };
+    endGroup();
+    box.footerBox.visible = 0;
 
     // *** OBJECT INIT CODE:
 
@@ -1185,14 +1647,16 @@ const PropertyPanel = function (params = {}) {
     box.listenTo(document, "keydown", onDocumentKeyDown);
     box.onPageResize(closeMenu);
     box.scrollBox.elem.addEventListener("scroll", closeMenu);
+    box.footerBox.onResize(placeScrollBox); // WHY: The footer grows with its items (and with the fonts when they load).
 
     box.setData(startData);
 
     if (typeof ScrollBar !== "undefined") {
-        ScrollBar({ scrollableBox: box.scrollBox, bar_color: "#FFFFFF", bar_mouseOverColor: "#FFFFFF", bar_opacity: 0.25, bar_mouseOverOpacity: 0.5, neverHide: 0, showDots: 0 });
+        ScrollBar({ scrollableBox: box.scrollBox, ..._s.scrollBar });
     }
 
-    if (box.opened == 1) box.open(); else box.close();
+    if (basic.isOn(box.opened)) box.open();
+    else box.close();
 
     const panel = endObject(box);
 
@@ -1271,4 +1735,10 @@ PropertyPanel.icons = {
     check: "M3.5 8.5l3 3 6-7",
     plus: "M8 3v10M3 8h10",
     minus: "M3 8h10",
+    bold: "M5 3h3.8a2.4 2.4 0 0 1 0 4.8H5zM5 7.8h4.4a2.6 2.6 0 0 1 0 5.2H5z",
+    italic: "M7 3h5M4 13h5M9.5 3l-3 10",
+    flowHorizontal: "M2.5 8h11M10 4.5L13.5 8 10 11.5",
+    flowVertical: "M8 2.5v11M4.5 10L8 13.5 11.5 10",
+    wrap: "M2.5 4h11M2.5 8h9a2 2 0 0 1 0 4H8M9.5 10.5L8 12l1.5 1.5M2.5 12h3",
+    ellipsis: "M2.5 8h.01M6 8h.01M9.5 8h.01M2.5 4.5h11M2.5 11.5h7",
 };

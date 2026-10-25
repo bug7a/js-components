@@ -270,10 +270,10 @@ const LeftMenu = function(params = {}) {
 
     // Is this a touch device? (No mouse hover.)
     const isTouchDevice = function() {
-        // WHY: "hover: none" is the real question (a tablet, a phone). isMobile() is the fallback for old browsers.
+        // WHY: "hover: none" is the real question (a tablet, a phone). basic.isMobile() is the fallback for old browsers.
         if (window.matchMedia && window.matchMedia("(hover: none)").matches) return 1;
         if (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) return 1;
-        return (typeof isMobile === "function" && isMobile()) ? 1 : 0;
+        return basic.isMobile();
     };
 
     // Tap outside the menu: close it. (Only in tap mode)

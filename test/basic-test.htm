@@ -14,7 +14,7 @@
         <script>
         "use strict";
 
-        // NOTE: Self-checking test page for basic.js v26.10.24+ (also checks the features of v26.09.18). Open it in a browser:
+        // NOTE: Self-checking test page for basic.js v26.10.25+ (also checks the features of v26.09.18). Open it in a browser:
         //       green lines = passed, red lines = failed. The summary is also in the console and in the tab title.
 
         // A page variable named like a library helper must not break the library. (basic.js: infinite recursion)
@@ -53,7 +53,7 @@
         const runTests = async function () {
 
             // *** LIBRARY INFO
-            check("basic.version", basic.version === "26.10.24", basic.version);
+            check("basic.version", basic.version === "26.10.25", basic.version);
             check("basic.library", basic.library === "basic.js", basic.library);
             check("basic.isReady", basic.isReady === 1);
 
@@ -61,8 +61,8 @@
             const work = startBox(0, 0, 400, 300, { color: "transparent" });
                 const oldLabel = Label(10, 20, { text: "old" });
                 check("that is the last object", that === oldLabel);
-                const oldBox = createBox(5, 6, 30, 40);
-                check("createBox() positional args", oldBox.left === 5 && oldBox.top === 6 && oldBox.width === 30 && oldBox.height === 40);
+                const oldBox = basic.createBox(5, 6, 30, 40);
+                check("basic.createBox() positional args", oldBox.left === 5 && oldBox.top === 6 && oldBox.width === 30 && oldBox.height === 40);
                 check("prevThat", prevThat === oldLabel);
                 check("props() returns the object", oldLabel.props({ text: "old2" }) === oldLabel && oldLabel.text === "old2");
                 check("on() returns a remover", typeof oldLabel.on("click", function () {}) === "function");
@@ -70,7 +70,16 @@
             endBox();
             check("page-level const createButton does not break Button()", (function () {
                 try { const b = Button(0, 0, 100, 40, { text: "ok" }); const ok = b.text === "ok"; b.remove(); return ok; } catch (e) { return false; }
-            })() && createButton === "page-level variable" && typeof window.createButton === "function");
+            })() && createButton === "page-level variable" && typeof basic.createButton === "function");
+
+            // *** v26.10.25: the helpers live under basic.*, the old globals are gone
+            const movedNames = ["num", "str", "isMobile", "go", "twoDigitFormat"];
+            check("basic.num, str, isMobile, go, twoDigitFormat", movedNames.every(function (name) { return typeof basic[name] === "function"; }));
+            check("num, str, isMobile, go, twoDigitFormat are not globals", movedNames.every(function (name) { return !(name in window); }));
+            const oldCreateNames = ["createBox", "createButton", "createLabel", "createImage", "createIcon", "createInput", "createTextBox"];
+            check("the old create* globals are gone (basic.createBox... stay)",
+                oldCreateNames.every(function (name) { return !(name in window) && typeof basic[name] === "function"; }));
+            check("basic.num / basic.twoDigitFormat work", basic.num("3.14159") === 3.14 && basic.num("7.9", "int") === 7 && basic.twoDigitFormat(5) === "05");
 
             // *** FIX: numeric strings and CSS strings for position / size
             setDefaultContainerBox(work);
@@ -486,6 +495,25 @@
             givenPackage.style.box.color = "red";
             check("basic.applyStylePackage: a package given as style is copied, never changed",
                 givenPackage.style !== testStyles.dark && testStyles.dark.box.color === "black" && !("border" in testStyles.dark.box));
+
+            // *** v26.10.25: Alpha(color, percent)
+            check("Alpha: #RRGGBB -> rgba", Alpha("#456789", 0.5) === "rgba(69,103,137,0.5)");
+            check("Alpha: #RGB -> rgba", Alpha("#4a7", 0.8) === "rgba(68,170,119,0.8)");
+            check("Alpha: the alpha of #RRGGBBAA is multiplied", Alpha("#00000080", 0.5) === "rgba(0,0,0,0.251)");
+            check("Alpha: 0 -> transparent, 1 -> the color", Alpha("#456789", 0) === "transparent" && Alpha("#456789") === "#456789");
+            check("Alpha: a name -> color-mix", Alpha("tomato", 0.3) === "color-mix(in srgb, tomato 30%, transparent)");
+            const alphaBox = Box({ width: 4, height: 4, color: Alpha("#456789", 0.5) });
+            check("Alpha: the browser reads it as a color", alphaBox.elem.style.backgroundColor === "rgba(69, 103, 137, 0.5)", alphaBox.elem.style.backgroundColor);
+            alphaBox.remove();
+
+            // *** v26.10.25: basic.resolveTheme(themes, name)
+            const testThemes = { light: { text: "black", button: { color: "white", round: 4 } }, dark: { text: "white" }, ocean: { button: { color: "navy" } } };
+            check("basic.resolveTheme: the theme, missing keys from light",
+                basic.resolveTheme(testThemes, "dark").text === "white" && basic.resolveTheme(testThemes, "dark").button.round === 4);
+            const ocean = basic.resolveTheme(testThemes, "ocean");
+            check("basic.resolveTheme: a deep key of a new theme", ocean.button.color === "navy" && ocean.button.round === 4 && ocean.text === "black");
+            check("basic.resolveTheme: auto -> light or dark", ["black", "white"].indexOf(basic.resolveTheme(testThemes, "auto").text) > -1);
+            check("basic.resolveTheme: the themes are not changed", !("round" in testThemes.ocean.button) && !("button" in testThemes.dark));
 
             // rotate changes only its own part of the transform
             const turnBox = Box({ width: 20, height: 20 });

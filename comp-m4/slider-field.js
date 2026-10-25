@@ -117,9 +117,7 @@ const SliderFieldDefaults = {
 const SliderField = function (params = {}) {
 
     // Merge style package: params.style > SliderField.styles[styleName] > SliderFieldDefaults.style (classic)
-    const _stylePackage = SliderField.styles[params.styleName || SliderFieldDefaults.styleName];
-    if (!_stylePackage) console.warn("SliderField: Style package not found: " + params.styleName);
-    mergeIntoIfMissing(params, { style: _stylePackage || {} });
+    basic.applyStylePackage(params, SliderField.styles, SliderFieldDefaults);
 
     // Merge params:
     mergeIntoIfMissing(params, SliderFieldDefaults);
@@ -144,7 +142,19 @@ const SliderField = function (params = {}) {
     let isFocused = 0;
     let isKeyboardFocus = 0; // WHY: The focus border is only for the keyboard, not after a click.
     let isPointerFocusing = 0;
-    let drag = null; // { pointerId, startX, isMoving, onValue }
+    let drag = null; // { pointerId, startX, isMoving, startValue }
+    const SLIDE_TIME = "0.12s"; // The fill and the handle move to a new value (0s while dragging)
+    const FADE_TIME = "0.15s"; // Colors, the border, the dots
+    const DRAG_START_DISTANCE = 4; // px: a smaller move is still a click
+    const PAGE_STEPS = 10; // PageUp / PageDown
+    const LABEL_DOT_SPACE = 8; // px: no dots this close to the label
+    const VALUE_DOT_SPACE = 10; // px: no dots this close to the value text
+    const TEXT_OVERLAP = 4; // px: the handle may touch a text this much before it is hidden
+    const FILL_DOT_SPACE = 4; // px: no dots this close to the end of the fill
+    const VALUE_CLICK_SPACE = 6; // px: a click this close to the value text starts the typing
+    const INPUT_MIN_WIDTH = 64;
+    const INPUT_EXTRA_WIDTH = 28; // The input is wider than the value text
+    const INPUT_SPACE = 6; // px: between the input and the sides of the box
 
     // *** PUBLIC VARIABLES:
     // NOTE: Default values are also public variables. (box.value, box.min, box.max, box.step)
@@ -231,15 +241,17 @@ const SliderField = function (params = {}) {
                     color: _s.tick.color,
                     round: _s.tick.size,
                 });
-                tick.elem.style.top = "calc(50% - " + (_s.tick.size / 2) + "px)";
-                tick.elem.style.transition = "opacity 0.15s";
+                tick.css = {
+                    top: "calc(50% - " + (_s.tick.size / 2) + "px)",
+                    transition: "opacity " + FADE_TIME,
+                };
                 ticks.push(tick);
             }
         });
     };
 
     // Positions: fill, handle, value text, dots.
-    const layout = function () {
+    const refreshLayout = function () {
 
         const width = getWidth();
         const fillWidth = getFillWidth(getRatio());
@@ -249,14 +261,14 @@ const SliderField = function (params = {}) {
         box.handle.left = handleLeft;
 
         // Areas that hide the dots
-        const labelRight = (box.labelText) ? _s.label.padding + box.lblLabel.elem.offsetWidth + 8 : 0;
-        const valueLeft = width - _s.value.padding - box.lblValue.elem.offsetWidth - 10;
+        const labelRight = (box.labelText) ? _s.label.padding + box.lblLabel.elem.offsetWidth + LABEL_DOT_SPACE : 0;
+        const valueLeft = width - _s.value.padding - box.lblValue.elem.offsetWidth - VALUE_DOT_SPACE;
 
         // WHY: At the ends the handle would be drawn on the label or the value text.
         const handleRight = handleLeft + _s.handle.width;
-        const isOnLabel = (box.labelText && handleRight > _s.label.padding - 4 && handleLeft < labelRight - 4);
-        const isOnValue = (handleRight > valueLeft + 4);
-        box.handle.elem.style.opacity = (isOnLabel || isOnValue) ? "0" : "1";
+        const isOnLabel = (box.labelText && handleRight > _s.label.padding - TEXT_OVERLAP && handleLeft < labelRight - TEXT_OVERLAP);
+        const isOnValue = (handleRight > valueLeft + TEXT_OVERLAP);
+        box.handle.css.opacity = (isOnLabel || isOnValue) ? "0" : "1";
 
         if (tickCount > 0) {
             const space = (width - _s.fill.minWidth) / tickCount;
@@ -265,35 +277,43 @@ const SliderField = function (params = {}) {
                 const x = getFillWidth(i / tickCount) - _s.handle.inset - _s.handle.width / 2;
                 const tick = ticks[i];
                 tick.left = x - _s.tick.size / 2;
-                const isVisible = !isTooClose && x > fillWidth + 4 && x > labelRight && x < valueLeft;
-                tick.elem.style.opacity = (isVisible) ? "1" : "0";
+                const isVisible = !isTooClose && x > fillWidth + FILL_DOT_SPACE && x > labelRight && x < valueLeft;
+                tick.css.opacity = (isVisible) ? "1" : "0";
             }
         }
 
     };
 
+    // partStyle: _s.fill or _s.handle (color, hoverColor, activeColor)
+    const getStateColor = function (partStyle) {
+        if (drag && drag.isMoving) return partStyle.activeColor;
+        if (isHover && box.enabled == 1) return partStyle.hoverColor;
+        return partStyle.color;
+    };
+
     const paintState = function () {
-        const isDragging = (drag && drag.isMoving);
-        box.fill.color = (isDragging) ? _s.fill.activeColor : (isHover && box.enabled == 1) ? _s.fill.hoverColor : _s.fill.color;
-        box.handle.color = (isDragging) ? _s.handle.activeColor : (isHover && box.enabled == 1) ? _s.handle.hoverColor : _s.handle.color;
+        box.fill.color = getStateColor(_s.fill);
+        box.handle.color = getStateColor(_s.handle);
         box.borderColor = ((isFocused && isKeyboardFocus) || isEditing) ? _s.boxFocus.borderColor : _s.box.borderColor;
     };
 
     const updateView = function () {
         const text = box.valueFormat(box.value, box);
-        box.lblValue.text = SliderField.escapeHtml(text);
-        box.elem.setAttribute("aria-valuenow", String(box.value));
-        box.elem.setAttribute("aria-valuemin", String(box.min));
-        box.elem.setAttribute("aria-valuemax", String(box.max));
-        box.elem.setAttribute("aria-valuetext", text);
-        layout();
+        box.lblValue.plainText = text;
+        box.aria = {
+            valuenow: String(box.value),
+            valuemin: String(box.min),
+            valuemax: String(box.max),
+            valuetext: text,
+        };
+        refreshLayout();
     };
 
     // Motion is off while dragging, so the fill follows the pointer.
-    const setMotion = function (isOn) {
-        const motion = (isOn) ? "0.12s" : "0s";
-        box.fill.elem.style.transition = "width " + motion + ", background-color 0.15s";
-        box.handle.elem.style.transition = "left " + motion + ", background-color 0.15s, opacity 0.15s";
+    const setSlideMotion = function (isOn) {
+        const slideTime = (isOn) ? SLIDE_TIME : "0s";
+        box.fill.css.transition = "width " + slideTime + ", background-color " + FADE_TIME;
+        box.handle.css.transition = "left " + slideTime + ", background-color " + FADE_TIME + ", opacity " + FADE_TIME;
     };
 
     // Changes the value; onChange if it changed. Returns 1 when the value changed.
@@ -316,9 +336,9 @@ const SliderField = function (params = {}) {
     const startEdit = function (firstText) {
         if (box.editable != 1 || box.enabled != 1 || isEditing) return;
         isEditing = 1;
-        const inputWidth = Math.max(64, box.lblValue.elem.offsetWidth + 28);
+        const inputWidth = Math.max(INPUT_MIN_WIDTH, box.lblValue.elem.offsetWidth + INPUT_EXTRA_WIDTH);
         box.input.width = inputWidth;
-        box.input.left = getWidth() - inputWidth - 6;
+        box.input.left = getWidth() - inputWidth - INPUT_SPACE;
         box.input.text = (firstText !== undefined) ? firstText : box.formatNumber(box.value);
         box.lblValue.visible = 0;
         box.input.visible = 1;
@@ -342,31 +362,62 @@ const SliderField = function (params = {}) {
         updateView();
     };
 
+    // While typing: Enter applies, Escape cancels.
+    const onEditKeyDown = function (event) {
+        const isEnter = (event.key === "Enter");
+        if (!isEnter && event.key !== "Escape") return;
+        event.preventDefault();
+        endEdit(isEnter ? 1 : 0);
+        box.focus();
+    };
+
+    // The keys that change the value.
+    const valueKeyActions = {
+        ArrowUp: function () { stepValue(1); },
+        ArrowRight: function () { stepValue(1); },
+        ArrowDown: function () { stepValue(-1); },
+        ArrowLeft: function () { stepValue(-1); },
+        PageUp: function () { stepValue(PAGE_STEPS); },
+        PageDown: function () { stepValue(-PAGE_STEPS); },
+        Home: function () { changeValue(box.min, 1); },
+        End: function () { changeValue(box.max, 1); },
+    };
+
+    const isTypingKey = function (key) {
+        return key.length === 1 && /[\d\-.,]/.test(key);
+    };
+
     const onKeyDown = function (event) {
 
         if (box.enabled != 1) return;
-        const key = event.key;
 
         if (isEditing) {
-            if (key === "Enter") { event.preventDefault(); endEdit(1); box.focus(); }
-            else if (key === "Escape") { event.preventDefault(); endEdit(0); box.focus(); }
+            onEditKeyDown(event);
             return;
         }
 
         isKeyboardFocus = 1;
         paintState();
 
-        switch (key) {
-            case "ArrowUp": case "ArrowRight": event.preventDefault(); stepValue(1); break;
-            case "ArrowDown": case "ArrowLeft": event.preventDefault(); stepValue(-1); break;
-            case "PageUp": event.preventDefault(); stepValue(10); break;
-            case "PageDown": event.preventDefault(); stepValue(-10); break;
-            case "Home": event.preventDefault(); changeValue(box.min, 1); break;
-            case "End": event.preventDefault(); changeValue(box.max, 1); break;
-            case "Enter": if (box.editable == 1) { event.preventDefault(); startEdit(); } break;
-            default:
-                // Typing a digit starts the edit with that digit.
-                if (box.editable == 1 && key.length === 1 && /[\d\-.,]/.test(key)) { event.preventDefault(); startEdit(key); }
+        const key = event.key;
+        if (Object.prototype.hasOwnProperty.call(valueKeyActions, key)) {
+            event.preventDefault();
+            valueKeyActions[key]();
+            return;
+        }
+
+        if (box.editable != 1) return;
+
+        if (key === "Enter") {
+            event.preventDefault();
+            startEdit();
+            return;
+        }
+
+        // A digit starts the typing with that digit.
+        if (isTypingKey(key)) {
+            event.preventDefault();
+            startEdit(key);
         }
 
     };
@@ -389,10 +440,10 @@ const SliderField = function (params = {}) {
         if (!drag || event.pointerId !== drag.pointerId) return;
         const x = getPointerX(event);
         if (!drag.isMoving) {
-            if (Math.abs(x - drag.startX) < 4) return; // WHY: A small move is still a click.
+            if (Math.abs(x - drag.startX) < DRAG_START_DISTANCE) return; // WHY: A small move is still a click.
             drag.isMoving = 1;
             drag.startValue = box.value;
-            setMotion(0);
+            setSlideMotion(0);
             paintState();
         }
         changeValue(getValueAt(x), 0);
@@ -405,16 +456,19 @@ const SliderField = function (params = {}) {
         const x = getPointerX(event);
         drag = null;
         try { box.elem.releasePointerCapture(event.pointerId); } catch (e) { }
-        setMotion(1);
+        setSlideMotion(1);
         paintState();
         if (wasMoving) {
             if (box.value !== startValueOfDrag) box.onChangeEnd(box);
             return;
         }
         // A click: on the value text -> typing, anywhere else -> jump there.
-        const valueLeft = getWidth() - _s.value.padding - box.lblValue.elem.offsetWidth - 6;
-        if (box.editable == 1 && x >= valueLeft) startEdit();
-        else changeValue(getValueAt(x), 1);
+        const valueLeft = getWidth() - _s.value.padding - box.lblValue.elem.offsetWidth - VALUE_CLICK_SPACE;
+        if (box.editable == 1 && x >= valueLeft) {
+            startEdit();
+            return;
+        }
+        changeValue(getValueAt(x), 1);
     };
 
     const onPointerCancel = function (self, event) {
@@ -422,7 +476,7 @@ const SliderField = function (params = {}) {
         const wasMoving = drag.isMoving;
         const startValueOfDrag = drag.startValue;
         drag = null;
-        setMotion(1);
+        setSlideMotion(1);
         paintState();
         if (wasMoving && box.value !== startValueOfDrag) box.onChangeEnd(box);
     };
@@ -485,9 +539,9 @@ const SliderField = function (params = {}) {
 
     box.setLabelText = function (text) {
         box.labelText = text || "";
-        box.lblLabel.text = SliderField.escapeHtml(box.labelText);
-        box.elem.setAttribute("aria-label", box.labelText || box.ariaLabel);
-        layout();
+        box.lblLabel.plainText = box.labelText;
+        box.aria = { label: box.labelText || box.ariaLabel };
+        refreshLayout();
     };
     // USAGE: slider.setLabelText("Height")
 
@@ -500,16 +554,21 @@ const SliderField = function (params = {}) {
     box.setShowTicks = function (showTicks) {
         box.showTicks = basic.isOn(showTicks) ? 1 : 0;
         buildTicks();
-        layout();
+        refreshLayout();
     };
 
     box.setEnabled = function (enabled) {
         box.enabled = basic.isOn(enabled) ? 1 : 0;
-        if (box.enabled != 1) { endEdit(0); drag = null; setMotion(1); }
-        box.elem.style.opacity = (box.enabled == 1) ? "1" : String(_s.disabled.opacity);
-        box.elem.style.cursor = (box.enabled == 1) ? "pointer" : "default";
-        box.elem.tabIndex = (box.enabled == 1) ? 0 : -1;
-        box.elem.setAttribute("aria-disabled", (box.enabled == 1) ? "false" : "true");
+        const isEnabled = (box.enabled == 1);
+        if (!isEnabled) {
+            endEdit(0);
+            drag = null;
+            setSlideMotion(1);
+        }
+        box.css.opacity = (isEnabled) ? "1" : String(_s.disabled.opacity);
+        box.cursor = (isEnabled) ? "pointer" : "default";
+        box.tabIndex = (isEnabled) ? 0 : -1;
+        box.aria = { disabled: (isEnabled) ? "false" : "true" };
         paintState();
     };
     // USAGE: get: slider.enabled, set: slider.setEnabled(0)
@@ -531,13 +590,15 @@ const SliderField = function (params = {}) {
 
     // *** OBJECT VIEW:
 
-    box.elem.setAttribute("role", "slider");
-    box.elem.setAttribute("aria-label", box.labelText || box.ariaLabel);
-    box.elem.style.outline = "none";
-    box.elem.style.boxSizing = "border-box";
-    box.elem.style.transition = "border-color 0.15s";
-    box.elem.style.touchAction = "pan-y"; // WHY: A horizontal drag moves the slider, a vertical one still scrolls the page.
-    box.elem.style.userSelect = "none";
+    box.role = "slider";
+    box.aria = { label: box.labelText || box.ariaLabel };
+    box.css = {
+        outline: "none",
+        boxSizing: "border-box",
+        transition: "border-color " + FADE_TIME,
+        touchAction: "pan-y", // WHY: A horizontal drag moves the slider, a vertical one still scrolls the page.
+        userSelect: "none",
+    };
     box.clipContent = 1;
 
     // BOX: Filled part
@@ -562,7 +623,7 @@ const SliderField = function (params = {}) {
         color: _s.handle.color,
         round: _s.handle.round,
     });
-    box.handle.elem.style.top = "calc(50% - " + (_s.handle.height / 2) + "px)";
+    box.handle.css.top = "calc(50% - " + (_s.handle.height / 2) + "px)";
 
     // LABEL: Name at the left
     box.lblLabel = Label({
@@ -581,20 +642,31 @@ const SliderField = function (params = {}) {
         fontSize: _s.value.fontSize,
         textColor: _s.value.textColor,
     });
-    box.lblValue.elem.style.left = "auto";
-    box.lblValue.elem.style.right = _s.value.padding + "px";
+    box.lblValue.css = { left: "auto", right: _s.value.padding + "px" };
 
-    [box.lblLabel, box.lblValue].forEach(function (lbl, i) {
-        const textStyle = (i === 0) ? _s.label : _s.value;
+    // One line, centered vertically. (fontFamily with css: the fontFamily setter of basic.js also sets fontWeight)
+    const styleTextLabel = function (lbl, textStyle) {
         lbl.clickable = 0;
         lbl.elem.style.display = "flex";
-        lbl.elem.style.alignItems = "center";
-        lbl.elem.style.whiteSpace = "nowrap";
-        if (textStyle.fontFamily) lbl.elem.style.fontFamily = textStyle.fontFamily;
-    });
+        lbl.css = { alignItems: "center", whiteSpace: "nowrap" };
+        if (textStyle.fontFamily) lbl.css.fontFamily = textStyle.fontFamily;
+    };
+    styleTextLabel(box.lblLabel, _s.label);
+    styleTextLabel(box.lblValue, _s.value);
 
     // INPUT: Typing the value (hidden until the edit starts)
-    box.input = Input({ left: 0, top: 6, width: 64, height: "calc(100% - 12px)", minimal: 1, color: _s.input.color, fontSize: _s.value.fontSize, textColor: _s.input.textColor, textAlign: "right", round: _s.input.round });
+    box.input = Input({
+        left: 0,
+        top: INPUT_SPACE,
+        width: INPUT_MIN_WIDTH,
+        height: "calc(100% - " + (INPUT_SPACE * 2) + "px)",
+        minimal: 1,
+        color: _s.input.color,
+        fontSize: _s.value.fontSize,
+        textColor: _s.input.textColor,
+        textAlign: "right",
+        round: _s.input.round,
+    });
     box.input.inputElement.style.padding = "0px 10px";
     box.input.inputElement.style.width = "100%";
     box.input.inputElement.style.height = "100%";
@@ -616,25 +688,42 @@ const SliderField = function (params = {}) {
     box.on("pointerup", onPointerUp);
     box.on("pointercancel", onPointerCancel);
     box.on("lostpointercapture", onPointerCancel);
-    box.on("mouseenter", function () { isHover = 1; paintState(); });
-    box.on("mouseleave", function () { isHover = 0; paintState(); });
-    box.on("keydown", function (self, event) { if (event.target !== box.input.inputElement) onKeyDown(event); });
-    box.on("focus", function () { isFocused = 1; if (!isPointerFocusing) isKeyboardFocus = 1; paintState(); });
-    box.on("blur", function () { isFocused = 0; isKeyboardFocus = 0; paintState(); });
+    box.on("mouseenter", function () {
+        isHover = 1;
+        paintState();
+    });
+    box.on("mouseleave", function () {
+        isHover = 0;
+        paintState();
+    });
+    box.on("keydown", function (self, event) {
+        if (event.target === box.input.inputElement) return; // WHY: The input has its own keydown (below).
+        onKeyDown(event);
+    });
+    box.on("focus", function () {
+        isFocused = 1;
+        if (!isPointerFocusing) isKeyboardFocus = 1;
+        paintState();
+    });
+    box.on("blur", function () {
+        isFocused = 0;
+        isKeyboardFocus = 0;
+        paintState();
+    });
     box.input.inputElement.addEventListener("blur", function () { endEdit(1); });
     box.input.inputElement.addEventListener("keydown", onKeyDown);
 
-    box.onResize(function () { layout(); }); // (removed with the box)
+    box.onResize(function () { refreshLayout(); });
 
     box.min = Number(box.min) || 0;
     box.max = Number(box.max);
     if (isNaN(box.max)) box.max = box.min;
     if (box.max < box.min) box.max = box.min;
     box.step = Math.abs(Number(box.step)) || 1;
-    box.maxTicks = Math.max(2, Number(box.maxTicks) || 30);
+    box.maxTicks = Math.max(2, Number(box.maxTicks) || SliderFieldDefaults.maxTicks);
     box.value = clampValue(startValue);
     buildTicks();
-    setMotion(1);
+    setSlideMotion(1);
     box.setEnabled(box.enabled);
     updateView();
 
@@ -650,6 +739,7 @@ SliderField.escapeHtml = basic.escapeHtml; // (the name is kept: other code may 
 // *** STYLE PACKAGES:
 // USAGE: SliderField({ styleName: "modern" })
 // USAGE: SliderField({ styleName: "dark", style: { fill: { color: "#3D7A6B" } } }) // Change only some keys.
+// USAGE: SliderField({ style: SliderField.styles.dark }) // The same as styleName: "dark". (The package is copied, never changed.)
 // NOTE: A new package needs only the keys that differ from the default (classic) style.
 // USAGE: SliderField.styles.myStyle = { fill: { color: "gold" } };
 SliderField.styles = {
@@ -670,7 +760,7 @@ SliderField.styles = {
         disabled: { opacity: 0.5 },
     },
 
-    // Dark theme, same colors as SelectBox.DARK_STYLE, TagInput, Tabs and Stepper "dark".
+    // Dark theme, same colors as SelectBox, TagInput, Tabs and Stepper "dark".
     dark: {
         box: { color: "#232322", border: 1, borderColor: "rgba(255, 255, 255, 0.08)", round: 12 },
         boxFocus: { borderColor: "#65A293" },

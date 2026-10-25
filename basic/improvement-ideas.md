@@ -151,7 +151,9 @@ basic.white = White;
 - Bileşen yazım kuralı (CLAUDE.md, `_component-template.js`) buna göre güncellenmeli: "bileşen içinde basic.js yardımcılarını `basic.` ile çağır".
 - Tamamlayıcı bir fikir (ayrı karar): basic.js `start()` öncesinde sayfanın `random`, `Black`, `Button` gibi bir adı yeniden tanımlayıp tanımlamadığına bakıp konsolda uyarabilir. Hiçbir şeyi değiştirmez, çakışmayı görünür kılar.
 
-## 9. Eski `create*` global adlarını kaldırmak (`createButton` → `Button`)
+## 9. Eski `create*` global adlarını kaldırmak (`createButton` → `Button`) (YAPILDI, 2026-10-25)
+
+2026-10-25: v26.10.25'te tek adımda yapıldı (uyarı sürümü olmadan, Bugra'nın kararı): `window.create*` silindi, `basic.createBox()`... kaldı, repodaki bütün kullanımlar `Box()`... oldu. Aynı sürümde `num`, `str`, `isMobile`, `go`, `twoDigitFormat` de `basic.*` altına taşındı (8. maddenin bir parçası; `random`, `Black`, `White`, `println`, `waitAndRun` global kaldı). Ayrıntı: `basic/basic-what-is-new.md`.
 
 2026-10-22: Bugra'nın kararı: standart artık `Box`, `Label`, `Button`, `Input`, `Icon`; `create*` kullanımı uzun zaman önce bırakıldı, yalnızca geriye dönük destek için duruyor ve **değiştirilebilir**. Sebep: `createButton` gibi adlar sayfaların ve bileşenlerin kendi yardımcıları için çok seçilen adlar.
 

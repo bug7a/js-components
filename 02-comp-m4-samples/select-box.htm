@@ -142,7 +142,7 @@
                     endCard();
 
                     // SAMPLE 5: Dark
-                    startDarkCard("5. Dark style (SelectBox.DARK_STYLE)");
+                    startDarkCard("5. Dark style (styleName: \"dark\")");
 
                         selectDark = SelectBox({
                             width: 300,
@@ -152,7 +152,7 @@
                                 { value: "archived", label: "Archived", description: "Old product" },
                             ],
                             value: "draft",
-                            style: SelectBox.DARK_STYLE,
+                            styleName: "dark",
                             onChange: function (self) {
                                 lblDark.text = "Status: <b>" + self.value + "</b>";
                             },

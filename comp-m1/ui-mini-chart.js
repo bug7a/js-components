@@ -40,7 +40,7 @@ UICore.createDefaultValues(UIMiniChart, {
 UIMiniChart.create = function(parameters = {}) {
 
     // BOX: UI Object container.
-    const box = createBox();
+    const box = Box();
 
     // Default values.
     box.default = UICore.cloneDefaultValues(UIMiniChart);

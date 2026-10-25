@@ -2,11 +2,21 @@
 
 /*
 
-basic.js (v26.10.24) A lightweight JavaScript library for building web-based applications with simple code. No need to write HTML or CSS — just use basic JavaScript.
+basic.js (v26.10.25) A lightweight JavaScript library for building web-based applications with simple code. No need to write HTML or CSS — just use basic JavaScript.
 - Project Site: https://bug7a.github.io/basic.js/
 
-v26.10.24 is v26.09.18 plus the additions below. Every page and component written for the
-previous versions works unchanged (same globals, same defaults, same DOM).
+v26.10.25 is v26.09.18 plus the additions below. Every page and component written for the
+previous versions works unchanged (same defaults, same DOM), except the global names moved under
+basic.* in v26.10.25 (see below).
+
+WHAT IS NEW IN v26.10.25 (see basic/basic-what-is-new.md):
+- Global:     Alpha(color, percent) - any color made transparent, like Black(0.5) / White(0.5)
+- basic:      resolveTheme(themes, name) - the colors of a theme ("auto": the system setting), filled from themes.light
+- MOVED:      num, str, isMobile, go, twoDigitFormat -> basic.num(), basic.str(), basic.isMobile(), basic.go(),
+              basic.twoDigitFormat(). They are not globals any more.
+- REMOVED:    the old globals createBox, createButton, createLabel, createImage, createIcon, createInput,
+              createTextBox. Use Box(), Button(), Label(), Icon(), Input() (the same, with props).
+              (They are still there as basic.createBox()...)
 
 WHAT IS NEW IN v26.10.24 (see basic/basic-what-is-new.md):
 - basic:      applyStylePackage(params, Comp.styles, CompDefaults) - the style packages of a component in one line
@@ -50,7 +60,7 @@ Licensed under the Apache License, Version 2.0
 "use strict";
 const basic = {};
 
-basic.version = "26.10.24";
+basic.version = "26.10.25";
 basic.library = "basic.js";
 basic.isReady = 0; // 1 after the page object is created (before start() runs).
 
@@ -188,7 +198,7 @@ window.random = function ($first, $second) {
 };
 //window.random = basic.random;
 
-window.num = function ($str, $type = "float") {
+basic.num = function ($str, $type = "float") {
 
     if ($type == "float") {
         const i = parseFloat($str);
@@ -199,14 +209,12 @@ window.num = function ($str, $type = "float") {
     }
 
 };
-//window.num = basic.num;
 
-window.str = function ($num) {
+basic.str = function ($num) {
     return String($num);
 };
-//window.str = basic.str;
 
-window.isMobile = function () {
+basic.isMobile = function () {
 
     let answer = 0;
 
@@ -218,9 +226,8 @@ window.isMobile = function () {
     return answer;
 
 };
-//window.isMobile = basic.isMobile;
 
-window.go = function ($url, $windowType = "_self") {
+basic.go = function ($url, $windowType = "_self") {
 
     // window.location.href = $url;
     const openedWindow = window.open($url, $windowType);
@@ -229,10 +236,9 @@ window.go = function ($url, $windowType = "_self") {
     return openedWindow;
 
 };
-//window.go = basic.go;
 
 // Tek haneli sayıyı, başına "0" ekleyerek iki haneli yapar. 03:10:05
-window.twoDigitFormat = function($number) {
+basic.twoDigitFormat = function($number) {
 
     if ($number <= 9) {
         $number = "0" + $number;
@@ -241,7 +247,6 @@ window.twoDigitFormat = function($number) {
     return $number;
 
 };
-//window.twoDigitFormat = basic.twoDigitFormat;
 
 // WHY: localStorage throws when it can not be used (a sandboxed iframe, blocked site data, a full quota).
 //      An error here stopped the code that called it (a theme change, saving a setting). save() returns 1 or 0.
@@ -428,6 +433,23 @@ basic.addCss = function ($id, $cssText, $replace = 0) {
 // WHY: params.style becomes a new object, so a package given as it is (style: Tabs.styles.dark) is never changed:
 //      the merges after it would write into the package of every object of the page.
 // basic.applyStylePackage(params, Tabs.styles, TabsDefaults)
+// The colors of a theme: $themes[name], the missing keys filled from $themes.light (a new theme needs only the keys
+// that differ). "auto": the system setting (light or dark). Used by the components with a theme param (Modal, Toast).
+// USAGE: const colors = basic.resolveTheme(Modal.THEMES, "auto");
+basic.resolveTheme = function ($themes, $name = "light") {
+    let name = $name || "light";
+    if (name === "auto") {
+        const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+        name = (prefersDark) ? "dark" : "light";
+    }
+    const theme = $themes[name];
+    if (!theme) console.warn("Theme not found: " + name);
+    const colors = {};
+    mergeIntoIfMissing(colors, theme || {});
+    mergeIntoIfMissing(colors, $themes.light || {});
+    return colors;
+};
+
 basic.applyStylePackage = function ($params, $packages, $defaults) {
     const name = $params.styleName || $defaults.styleName;
     const stylePackage = $packages[name];
@@ -1842,7 +1864,7 @@ class BBox extends Basic_UIComponent {
 const createBox = function ($left, $top, $width, $height) {
     return new BBox($left, $top, $width, $height);
 };
-window.createBox = createBox;
+basic.createBox = createBox;
 
 // Alternatif kullanım
 /*
@@ -1978,7 +2000,7 @@ class BButton extends Basic_UIComponent {
 const createButton = function ($left, $top, $width, $height) {
     return new BButton($left, $top, $width, $height);
 };
-window.createButton = createButton;
+basic.createButton = createButton;
 
 // Alternatif kullanım 2
 /*
@@ -2229,8 +2251,8 @@ class BTextBox extends Basic_UIComponent {
 const createTextBox = function ($left, $top, $width, $height) {
     return new BTextBox($left, $top, $width, $height);
 };
-window.createTextBox = createTextBox;
-window.createInput = createTextBox;
+basic.createTextBox = createTextBox;
+basic.createInput = createTextBox;
 
 // Alternatif kullanım
 /*
@@ -2363,7 +2385,7 @@ class BLabel extends Basic_UIComponent {
 const createLabel = function ($left, $top, $width, $height) {
     return new BLabel($left, $top, $width, $height);
 };
-window.createLabel = createLabel;
+basic.createLabel = createLabel;
 
 // Alternatif kullanım
 /*
@@ -2585,8 +2607,8 @@ class BImage extends Basic_UIComponent {
 const createImage = function ($left, $top, $width, $height) {
     return new BImage($left, $top, $width, $height);
 };
-window.createImage = createImage;
-window.createIcon = createImage;
+basic.createImage = createImage;
+basic.createIcon = createImage;
 
 // Alternatif kullanım
 /*
@@ -3615,6 +3637,34 @@ window.White = function(percent = 1) {
     if (percent == 0) return "transparent";
     if (percent == 1) return "white";
     return `rgba(255,255,255,${percent})`;
+};
+
+// Any color made transparent, like Black() / White(): Alpha("#456789", 0.5) -> "rgba(69,103,137,0.5)"
+// A hex color (#RGB, #RGBA, #RRGGBB, #RRGGBBAA) becomes rgba. Any other color (a name, rgb(), var(--token))
+// goes through color-mix. An alpha the color already has is multiplied: Alpha("#00000080", 0.5) is 25%.
+window.Alpha = function(color, percent = 1) {
+
+    if (percent == 0) return "transparent";
+    if (percent == 1) return color;
+
+    const text = String(color).trim();
+    const isHex = /^#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(text);
+    if (!isHex) {
+        const mixPercent = Math.round(percent * 1000) / 10;
+        return "color-mix(in srgb, " + color + " " + mixPercent + "%, transparent)";
+    }
+
+    // WHY: #RGB is the short form of #RRGGBB: every digit is doubled.
+    const hex = text.slice(1);
+    const fullHex = (hex.length <= 4) ? hex.split("").map(function (digit) { return digit + digit; }).join("") : hex;
+    const red = parseInt(fullHex.slice(0, 2), 16);
+    const green = parseInt(fullHex.slice(2, 4), 16);
+    const blue = parseInt(fullHex.slice(4, 6), 16);
+    const ownAlpha = (fullHex.length === 8) ? parseInt(fullHex.slice(6, 8), 16) / 255 : 1;
+    const alpha = Math.round(ownAlpha * percent * 1000) / 1000;
+
+    return `rgba(${red},${green},${blue},${alpha})`;
+
 };
 
 // Çok fazla arka arkaya çağırılan fonksiyonların daha verimli çalışmasını sağlar. 

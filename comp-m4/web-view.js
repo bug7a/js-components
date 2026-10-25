@@ -26,7 +26,7 @@ view.load("https://example.com");
 view.loadHtml("<h1>Hello</h1>");
 view.postMessage({ type: "theme", value: "dark" });
 WebView({ url: "page.htm", onMessage: (self, data) => println(data.type) });
-WebView({ url: "page.htm", scale: 0.5, interactive: 0, onClick: (self) => go("page.htm") });
+WebView({ url: "page.htm", scale: 0.5, interactive: 0, onClick: (self) => basic.go("page.htm") });
 
 Started Date: September 2026
 Developer: Bugra Ozden
@@ -71,6 +71,7 @@ const WebViewDefaults = {
         loading: {
             color: White(0.85), // Cover color while loading
             spinnerColor: "#141414",
+            trackColor: Black(0.1), // The rest of the spinner ring
             spinnerSize: 28,
         },
         placeholder: {
@@ -91,6 +92,7 @@ const WebViewDefaults = {
             textColor: Black(0.55),
             iconColor: Black(0.55),
             iconHoverColor: "#141414",
+            buttonHoverColor: Black(0.06), // The background of a button under the mouse
         },
     }
 };
@@ -122,6 +124,7 @@ const WebView = function (params = {}) {
     let heightObserver = null;
     let heightTimer = null;
     let toolbarHeight = 0;
+    const HEIGHT_WAIT = 30; // ms: a burst of page resizes is measured once
 
     // *** PUBLIC VARIABLES:
     box.isLoaded = 0; // [var] 1 after the current page is loaded
@@ -139,9 +142,10 @@ const WebView = function (params = {}) {
     };
 
     const applyInteractive = function () {
-        box.cover.visible = (box.interactive == 1) ? 0 : 1;
-        iframe.style.pointerEvents = (box.interactive == 1) ? "auto" : "none";
-        iframe.setAttribute("tabindex", (box.interactive == 1) ? "0" : "-1");
+        const isInteractive = (box.interactive == 1);
+        box.cover.visible = (isInteractive) ? 0 : 1;
+        iframe.style.pointerEvents = (isInteractive) ? "auto" : "none";
+        iframe.setAttribute("tabindex", (isInteractive) ? "0" : "-1");
     };
 
     const setLoading = function (loading) {
@@ -165,7 +169,7 @@ const WebView = function (params = {}) {
 
     const updateToolbar = function () {
         if (!box.toolbarBox) return;
-        box.lblUrl.text = WebView.escapeHtml((box.htmlText) ? "(HTML)" : (box.url || ""));
+        box.lblUrl.plainText = (box.htmlText) ? "(HTML)" : (box.url || "");
         box.lblUrl.elem.title = box.url || "";
         box.btnOpen.visible = (box.url) ? 1 : 0;
         box.btnReload.visible = (box.url || box.htmlText) ? 1 : 0;
@@ -220,9 +224,12 @@ const WebView = function (params = {}) {
         stopHeightObserver();
         if (box.autoHeight != 1) return;
         const doc = box.getDocument();
-        if (!doc || !doc.documentElement || typeof ResizeObserver === "undefined") { updateHeight(); return; }
+        if (!doc || !doc.documentElement || typeof ResizeObserver === "undefined") {
+            updateHeight();
+            return;
+        }
         heightObserver = new ResizeObserver(function () {
-            heightTimer = waitAndRun(heightTimer, updateHeight, 30);
+            heightTimer = waitAndRun(heightTimer, updateHeight, HEIGHT_WAIT);
         });
         heightObserver.observe(doc.documentElement);
         if (doc.body) heightObserver.observe(doc.body);
@@ -332,7 +339,7 @@ const WebView = function (params = {}) {
 
     box.showError = function (text) {
         setLoading(0);
-        box.lblError.text = WebView.escapeHtml(text || "The page could not be loaded.");
+        box.lblError.plainText = text || "The page could not be loaded.";
         box.errorBox.visible = 1;
     };
     // USAGE: view.showError("The module is not available.")
@@ -364,26 +371,34 @@ const WebView = function (params = {}) {
 
     // GROUP: Toolbar (optional) and page area
     box.contentBox = VGroup({ width: "100%", height: "100%", align: "left top", gap: 0, position: "relative" });
-    box.contentBox.elem.style.alignItems = "stretch";
+    box.contentBox.css.alignItems = "stretch";
 
         if (box.toolbar == 1) {
             toolbarHeight = _s.toolbar.height;
 
             // GROUP: Toolbar
-            box.toolbarBox = HGroup({ width: "100%", height: toolbarHeight, align: "left center", gap: 6, padding: [10, 0], color: _s.toolbar.color });
-            box.toolbarBox.elem.style.flexShrink = "0";
-            box.toolbarBox.elem.style.borderBottom = "1px solid " + _s.toolbar.borderColor;
-            box.toolbarBox.elem.style.boxSizing = "border-box";
+            box.toolbarBox = HGroup({
+                width: "100%",
+                height: toolbarHeight,
+                align: "left center",
+                gap: 6,
+                padding: [10, 0],
+                color: _s.toolbar.color,
+            });
+            box.toolbarBox.shrink = 0;
+            box.toolbarBox.css = {
+                borderBottom: "1px solid " + _s.toolbar.borderColor,
+                boxSizing: "border-box",
+            };
 
                 // LABEL: URL
                 box.lblUrl = Label({ text: "", fontSize: _s.toolbar.fontSize, textColor: _s.toolbar.textColor });
-                box.lblUrl.elem.style.flex = "1 1 0";
-                box.lblUrl.elem.style.minWidth = "0";
-                box.lblUrl.elem.style.whiteSpace = "nowrap";
-                box.lblUrl.elem.style.overflow = "hidden";
-                box.lblUrl.elem.style.textOverflow = "ellipsis";
-                box.lblUrl.elem.style.direction = "rtl"; // WHY: The end of a long URL is more useful than its start.
-                box.lblUrl.elem.style.textAlign = "left";
+                box.lblUrl.css = { flex: "1 1 0", minWidth: "0" };
+                box.lblUrl.ellipsis = 1;
+                box.lblUrl.css = {
+                    direction: "rtl", // WHY: The end of a long URL is more useful than its start.
+                    textAlign: "left",
+                };
 
                 // LABEL: Reload
                 box.btnReload = WebView.createIconButton(WebView.getReloadSvg(_s.toolbar.iconColor), "Reload", _s.toolbar);
@@ -395,9 +410,7 @@ const WebView = function (params = {}) {
 
         // BOX: Page area (iframe, cover, overlays)
         box.pageBox = Box({ width: "100%", height: "auto", color: "transparent", position: "relative" });
-        box.pageBox.elem.style.flex = "1 1 0";
-        box.pageBox.elem.style.minHeight = "0";
-        box.pageBox.elem.style.overflow = "hidden";
+        box.pageBox.css = { flex: "1 1 0", minHeight: "0", overflow: "hidden" };
 
         // IFRAME:
         iframe = document.createElement("iframe");
@@ -419,33 +432,31 @@ const WebView = function (params = {}) {
 
         // BOX: Cover (interactive: 0)
         box.cover = Box(0, 0, "100%", "100%", { color: "transparent", clickable: 1, visible: 0 });
-        box.cover.elem.style.cursor = "pointer";
+        box.cover.cursor = "pointer";
 
         // GROUP: Placeholder
         box.placeholderBox = VGroup({ width: "100%", height: "100%", align: "center center", color: _s.placeholder.color, position: "absolute" });
-        box.placeholderBox.elem.style.left = "0px";
-        box.placeholderBox.elem.style.top = "0px";
+        box.placeholderBox.css = { left: "0px", top: "0px" };
             box.lblPlaceholder = Label({ text: WebView.escapeHtml(box.placeholderText), fontSize: _s.placeholder.fontSize, textColor: _s.placeholder.textColor });
         endGroup();
 
         // GROUP: Loading (spinner)
         setDefaultContainerBox(box.pageBox);
         box.loadingBox = VGroup({ width: "100%", height: "100%", align: "center center", color: _s.loading.color, position: "absolute" });
-        box.loadingBox.elem.style.left = "0px";
-        box.loadingBox.elem.style.top = "0px";
-        box.loadingBox.elem.style.pointerEvents = "none";
+        box.loadingBox.css = { left: "0px", top: "0px", pointerEvents: "none" };
             box.spinner = Box({ width: _s.loading.spinnerSize, height: _s.loading.spinnerSize, color: "transparent", round: 100 });
-            box.spinner.elem.style.border = "3px solid " + Black(0.1);
-            box.spinner.elem.style.borderTopColor = _s.loading.spinnerColor;
-            box.spinner.elem.style.boxSizing = "border-box";
-            box.spinner.elem.style.animation = "webViewSpin 0.8s linear infinite";
+            box.spinner.css = {
+                border: "3px solid " + _s.loading.trackColor,
+                borderTopColor: _s.loading.spinnerColor,
+                boxSizing: "border-box",
+                animation: "webViewSpin 0.8s linear infinite",
+            };
         endGroup();
 
         // GROUP: Error
         setDefaultContainerBox(box.pageBox);
         box.errorBox = VGroup({ width: "100%", height: "100%", align: "center center", padding: 20, color: _s.error.color, position: "absolute" });
-        box.errorBox.elem.style.left = "0px";
-        box.errorBox.elem.style.top = "0px";
+        box.errorBox.css = { left: "0px", top: "0px" };
             box.lblError = Label({ text: "", fontSize: _s.error.fontSize, textColor: _s.error.textColor, textAlign: "center" });
         endGroup();
 
@@ -464,7 +475,10 @@ const WebView = function (params = {}) {
     box.cover.on("click", function () { box.onClick(box); });
     if (box.toolbarBox) {
         box.btnReload.on("click", function () { box.reload(); });
-        box.btnOpen.on("click", function () { if (box.url) window.open(box.url, "_blank", "noopener"); });
+        box.btnOpen.on("click", function () {
+            if (!box.url) return;
+            window.open(box.url, "_blank", "noopener");
+        });
     }
 
     applyScale();
@@ -488,17 +502,21 @@ WebView.escapeHtml = basic.escapeHtml; // (the name is kept: other code may use 
 WebView.createIconButton = function (svg, ariaLabel, style) {
     const btn = Label({ text: svg, width: 26, height: 26, round: 5, clickable: 1 });
     btn.elem.style.display = "flex";
-    btn.elem.style.alignItems = "center";
-    btn.elem.style.justifyContent = "center";
-    btn.elem.style.lineHeight = "0";
-    btn.elem.style.flexShrink = "0";
-    btn.elem.style.cursor = "pointer";
-    btn.elem.style.transition = "background-color 0.15s";
-    btn.elem.setAttribute("role", "button");
-    btn.elem.setAttribute("aria-label", ariaLabel);
+    btn.css = { alignItems: "center", justifyContent: "center", transition: "background-color 0.15s" };
+    btn.lineHeight = "0";
+    btn.shrink = 0;
+    btn.cursor = "pointer";
+    btn.role = "button";
+    btn.aria = { label: ariaLabel };
     btn.elem.title = ariaLabel;
-    btn.on("mouseenter", function () { btn.color = Black(0.06); btn.text = svg.replace(style.iconColor, style.iconHoverColor); });
-    btn.on("mouseleave", function () { btn.color = "transparent"; btn.text = svg; });
+    btn.on("mouseenter", function () {
+        btn.color = style.buttonHoverColor;
+        btn.text = svg.replace(style.iconColor, style.iconHoverColor);
+    });
+    btn.on("mouseleave", function () {
+        btn.color = "transparent";
+        btn.text = svg;
+    });
     return btn;
 };
 

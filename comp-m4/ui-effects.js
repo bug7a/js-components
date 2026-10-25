@@ -91,6 +91,8 @@ UIEffects.focusGroup = function (list, options = {}) {
     const scale = options.scale ?? 1;
     const blur = options.blur ?? 0;
     const grayscale = options.grayscale ?? 0;
+    const duration = options.duration ?? 0.3;
+    const LEAVE_WAIT_MS = 80;
     let leaveTimer = null;
 
     const filterOf = function (isDim) {
@@ -102,9 +104,10 @@ UIEffects.focusGroup = function (list, options = {}) {
 
     const apply = function (active) {
         list.forEach(function (item) {
-            UIEffects._addMotion(item, ["filter", "transform"], options.duration ?? 0.3);
+            const isActive = (active && item === active);
+            UIEffects._addMotion(item, ["filter", "transform"], duration);
             UIEffects._setPart(item, "filter", id, filterOf(active && item !== active));
-            UIEffects._setPart(item, "transform", id, "scale(" + ((active && item === active) ? scale : 1) + ")");
+            UIEffects._setPart(item, "transform", id, "scale(" + (isActive ? scale : 1) + ")");
         });
     };
 
@@ -117,7 +120,7 @@ UIEffects.focusGroup = function (list, options = {}) {
         removers.push(item.on("pointerleave", function () {
             clearTimeout(leaveTimer);
             // WHY: Moving to the next item fires leave and then enter. Without the wait, all items flash.
-            leaveTimer = setTimeout(function () { apply(null); }, 80);
+            leaveTimer = setTimeout(function () { apply(null); }, LEAVE_WAIT_MS);
         }));
     });
 
@@ -135,13 +138,13 @@ UIEffects.focusGroup = function (list, options = {}) {
 UIEffects.play = function (obj, name = "pop", options = {}) {
 
     if (UIEffects.reduceMotion) return null;
-    const def = UIEffects._getAnimation(obj, name, options);
-    if (!def) return null;
+    const definition = UIEffects._getAnimation(obj, name, options);
+    if (!definition) return null;
 
-    return obj.elem.animate(def.keyframes, {
-        duration: (options.duration ?? def.duration) * 1000,
-        easing: def.easing || "ease",
-        composite: def.composite || "add",
+    return obj.elem.animate(definition.keyframes, {
+        duration: (options.duration ?? definition.duration) * 1000,
+        easing: definition.easing || "ease",
+        composite: definition.composite || "add",
     });
 
 };
@@ -151,17 +154,20 @@ UIEffects.play = function (obj, name = "pop", options = {}) {
 UIEffects.loop = function (obj, name = "pulse", options = {}) {
 
     if (UIEffects.reduceMotion) return function stop() {};
-    const def = UIEffects._getAnimation(obj, name, options);
-    if (!def) return function stop() {};
+    const definition = UIEffects._getAnimation(obj, name, options);
+    if (!definition) return function stop() {};
 
-    const duration = options.duration ?? def.duration;
-    const pause = options.pause ?? def.pause ?? 1;
-    const keyframes = (pause > 0) ? UIEffects._withPause(def.keyframes, duration, pause, def.easing || "ease") : def.keyframes;
+    const duration = options.duration ?? definition.duration;
+    const pause = options.pause ?? definition.pause ?? 1;
+    const hasPause = (pause > 0);
+    const easing = definition.easing || "ease";
+    const keyframes = (hasPause) ? UIEffects._withPause(definition.keyframes, duration, pause, easing) : definition.keyframes;
 
+    // WHY: With a pause, the easing is in each keyframe (_withPause), so the whole loop runs linear.
     const animation = obj.elem.animate(keyframes, {
         duration: (duration + Math.max(0, pause)) * 1000,
-        easing: (pause > 0) ? "linear" : (def.easing || "ease"),
-        composite: def.composite || "add",
+        easing: (hasPause) ? "linear" : easing,
+        composite: definition.composite || "add",
         iterations: Infinity,
     });
 
@@ -187,7 +193,7 @@ UIEffects.types.default = function (obj, o, fx) {
         motion: ["filter", "transform"],
         pressTime: 200,
         render: function (st) {
-            fx.set("filter", "brightness(" + (st.down ? 0.8 : (st.over ? 1.2 : 1)) + ")");
+            fx.set("filter", "brightness(" + UIEffects._byState(st, { down: 0.8, over: 1.2, normal: 1 }) + ")");
             fx.set("transform", "scale(" + (st.down ? (o.scale ?? 0.95) : 1) + ")");
         },
     };
@@ -199,7 +205,7 @@ UIEffects.types.press = function (obj, o, fx) {
         motion: ["filter", "transform"],
         duration: 0.15,
         render: function (st) {
-            fx.set("filter", "brightness(" + (st.down ? 0.92 : (st.over ? 1.08 : 1)) + ")");
+            fx.set("filter", "brightness(" + UIEffects._byState(st, { down: 0.92, over: 1.08, normal: 1 }) + ")");
             fx.set("transform", "scale(" + (st.down ? (o.scale ?? 0.94) : 1) + ")");
         },
     };
@@ -209,15 +215,16 @@ UIEffects.types.press = function (obj, o, fx) {
 UIEffects.types.lift = function (obj, o, fx) {
     const distance = o.distance ?? 4;
     const shadowColor = o.shadowColor || Black(0.22);
+    const pressedShadow = "0px 2px 6px 0px " + shadowColor;
+    const liftedShadow = "0px " + (distance * 2 + 2) + "px " + (distance * 4 + 6) + "px 0px " + shadowColor;
+    const noShadow = "0px 0px 0px 0px transparent";
     return {
         motion: ["transform", "box-shadow"],
         duration: 0.25,
         render: function (st) {
-            const y = st.down ? -1 : (st.over ? -distance : 0);
+            const y = UIEffects._byState(st, { down: -1, over: -distance, normal: 0 });
             fx.set("transform", "translateY(" + y + "px)");
-            if (st.down) fx.set("boxShadow", "0px 2px 6px 0px " + shadowColor);
-            else if (st.over) fx.set("boxShadow", "0px " + (distance * 2 + 2) + "px " + (distance * 4 + 6) + "px 0px " + shadowColor);
-            else fx.set("boxShadow", "0px 0px 0px 0px transparent");
+            fx.set("boxShadow", UIEffects._byState(st, { down: pressedShadow, over: liftedShadow, normal: noShadow }));
         },
     };
 };
@@ -273,8 +280,8 @@ UIEffects.types.push = function (obj, o, fx) {
         motion: ["transform", "box-shadow", "filter"],
         duration: 0.08,
         render: function (st) {
-            const y = st.down ? depth - 1 : (st.over ? -1 : 0);
-            const shadowY = st.down ? 1 : (st.over ? depth + 1 : depth);
+            const y = UIEffects._byState(st, { down: depth - 1, over: -1, normal: 0 });
+            const shadowY = UIEffects._byState(st, { down: 1, over: depth + 1, normal: depth });
             fx.set("transform", "translateY(" + y + "px)");
             fx.set("boxShadow", "0px " + shadowY + "px 0px 0px " + shadowColor);
             fx.set("filter", "brightness(" + (st.over ? 1.04 : 1) + ")");
@@ -288,31 +295,33 @@ UIEffects.types.fill = function (obj, o, fx) {
     const color = o.color || Black(0.15);
     const direction = o.direction || "left";
     let savedTextColor = null;
+    const setFilledTextColor = function (isOn) {
+        if (isOn && savedTextColor === null) {
+            savedTextColor = obj.elem.style.color;
+            obj.elem.style.color = o.textColor;
+        } else if (!isOn && savedTextColor !== null) {
+            obj.elem.style.color = savedTextColor;
+            savedTextColor = null;
+        }
+    };
     return {
         motion: ["box-shadow", "color", "transform"],
         duration: 0.35,
         render: function (st) {
             const isOn = st.over || st.down;
-            const w = obj.elem.offsetWidth;
-            const h = obj.elem.offsetHeight;
-            let x = 0, y = 0;
+            const width = obj.elem.offsetWidth;
+            const height = obj.elem.offsetHeight;
+            let x = 0;
+            let y = 0;
             if (isOn) {
-                if (direction === "right") x = -w;
-                else if (direction === "up") y = -h;
-                else if (direction === "down") y = h;
-                else x = w;
+                if (direction === "right") x = -width;
+                else if (direction === "up") y = -height;
+                else if (direction === "down") y = height;
+                else x = width;
             }
             fx.set("boxShadow", "inset " + x + "px " + y + "px 0px 0px " + color);
             fx.set("transform", "scale(" + (st.down ? 0.97 : 1) + ")");
-            if (o.textColor) {
-                if (isOn && savedTextColor === null) {
-                    savedTextColor = obj.elem.style.color;
-                    obj.elem.style.color = o.textColor;
-                } else if (!isOn && savedTextColor !== null) {
-                    obj.elem.style.color = savedTextColor;
-                    savedTextColor = null;
-                }
-            }
+            if (o.textColor) setFilledTextColor(isOn);
         },
         off: function () {
             if (savedTextColor !== null) obj.elem.style.color = savedTextColor;
@@ -334,7 +343,7 @@ UIEffects.types.ring = function (obj, o, fx) {
         render: function (st) {
             const isOn = st.over || st.down;
             elem.style.outlineColor = isOn ? color : "transparent";
-            elem.style.outlineOffset = (isOn ? (st.down ? 1 : offset) : 0) + "px";
+            elem.style.outlineOffset = UIEffects._byState(st, { down: 1, over: offset, normal: 0 }) + "px";
             fx.set("transform", "scale(" + (st.down ? 0.98 : 1) + ")");
         },
         off: function () {
@@ -353,7 +362,7 @@ UIEffects.types.jelly = function (obj, o, fx) {
         render: function (st) {
             if (wasDown && !st.down) UIEffects.play(obj, "jelly");
             wasDown = st.down;
-            fx.set("filter", "brightness(" + (st.down ? 0.95 : (st.over ? 1.06 : 1)) + ")");
+            fx.set("filter", "brightness(" + UIEffects._byState(st, { down: 0.95, over: 1.06, normal: 1 }) + ")");
         },
     };
 };
@@ -403,7 +412,7 @@ UIEffects.types.grow = function (obj, o, fx) {
         motion: ["transform"],
         duration: 0.25,
         render: function (st) {
-            fx.set("transform", "scale(" + (st.down ? 0.98 : (st.over ? (o.scale ?? 1.05) : 1)) + ")");
+            fx.set("transform", "scale(" + UIEffects._byState(st, { down: 0.98, over: o.scale ?? 1.05, normal: 1 }) + ")");
         },
     };
 };
@@ -438,7 +447,8 @@ UIEffects.types.color = function (obj, o, fx) {
                 }
             } else {
                 // WHY: Without a color, a thin dark layer (inset shadow) works on every background color.
-                fx.set("boxShadow", "inset 0px 0px 0px 2000px " + (isOn ? Black(st.down ? 0.1 : 0.06) : "transparent"));
+                const layerColor = UIEffects._byState(st, { down: Black(0.1), over: Black(0.06), normal: "transparent" });
+                fx.set("boxShadow", "inset 0px 0px 0px 2000px " + layerColor);
             }
         },
         off: function () {
@@ -508,9 +518,22 @@ UIEffects.types.tilt = function (obj, o, fx) {
     const scale = o.scale ?? 1.03;
     const perspective = o.perspective ?? 700;
     const useGlare = (o.glare ?? 1) && !UIEffects.reduceMotion;
+    const GLARE_FADE_MS = 300;
     let glare = null;
-    const setTilt = function (rx, ry, s) {
-        fx.set("transform", "perspective(" + perspective + "px) rotateX(" + rx + "deg) rotateY(" + ry + "deg) scale(" + s + ")");
+    const setTilt = function (rotateX, rotateY, tiltScale) {
+        const transform = "perspective(" + perspective + "px) rotateX(" + rotateX + "deg) rotateY(" + rotateY + "deg)";
+        fx.set("transform", transform + " scale(" + tiltScale + ")");
+    };
+    // px, py: the pointer in the object, from -0.5 to 0.5.
+    const showGlare = function (px, py) {
+        if (!glare || glare.parentNode !== obj.elem) {
+            glare = UIEffects._overlay(obj);
+            if (glare) glare.style.transition = "opacity " + (GLARE_FADE_MS / 1000) + "s";
+        }
+        if (!glare) return;
+        const center = ((px + 0.5) * 100) + "% " + ((py + 0.5) * 100) + "%";
+        glare.style.opacity = 1;
+        glare.style.background = "radial-gradient(circle at " + center + ", " + White(0.25) + ", transparent 60%)";
     };
     return {
         motion: ["transform"],
@@ -521,7 +544,7 @@ UIEffects.types.tilt = function (obj, o, fx) {
                 const oldGlare = glare;
                 glare = null;
                 oldGlare.style.opacity = 0;
-                setTimeout(function () { oldGlare.remove(); }, 300);
+                setTimeout(function () { oldGlare.remove(); }, GLARE_FADE_MS);
             }
         },
         move: function (event) {
@@ -531,16 +554,7 @@ UIEffects.types.tilt = function (obj, o, fx) {
             const px = (event.clientX - rect.left) / rect.width - 0.5;
             const py = (event.clientY - rect.top) / rect.height - 0.5;
             setTilt((-py * 2 * angle).toFixed(2), (px * 2 * angle).toFixed(2), scale);
-            if (useGlare) {
-                if (!glare || glare.parentNode !== obj.elem) {
-                    glare = UIEffects._overlay(obj);
-                    if (glare) glare.style.transition = "opacity 0.3s";
-                }
-                if (glare) {
-                    glare.style.opacity = 1;
-                    glare.style.background = "radial-gradient(circle at " + ((px + 0.5) * 100) + "% " + ((py + 0.5) * 100) + "%, " + White(0.25) + ", transparent 60%)";
-                }
-            }
+            if (useGlare) showGlare(px, py);
         },
         off: function () {
             if (glare) glare.remove();
@@ -552,6 +566,7 @@ UIEffects.types.tilt = function (obj, o, fx) {
 UIEffects.types.spotlight = function (obj, o, fx) {
     const color = o.color || White(0.25);
     const size = o.size ?? 180;
+    const LIGHT_FADE_MS = 300;
     let light = null;
     let removeTimer = null;
     return {
@@ -564,7 +579,7 @@ UIEffects.types.spotlight = function (obj, o, fx) {
             if (!st.over) {
                 const oldLight = light;
                 light = null;
-                removeTimer = setTimeout(function () { oldLight.remove(); }, 300);
+                removeTimer = setTimeout(function () { oldLight.remove(); }, LIGHT_FADE_MS);
             }
         },
         move: function (event) {
@@ -573,11 +588,12 @@ UIEffects.types.spotlight = function (obj, o, fx) {
             if (!light || light.parentNode !== obj.elem) {
                 light = UIEffects._overlay(obj);
                 if (!light) return;
-                light.style.transition = "opacity 0.3s";
+                light.style.transition = "opacity " + (LIGHT_FADE_MS / 1000) + "s";
             }
-            const p = UIEffects._localPoint(obj, event);
+            const point = UIEffects._localPoint(obj, event);
+            const center = point.x + "px " + point.y + "px";
             light.style.opacity = 1;
-            light.style.background = "radial-gradient(circle " + size + "px at " + p.x + "px " + p.y + "px, " + color + ", transparent)";
+            light.style.background = "radial-gradient(circle " + size + "px at " + center + ", " + color + ", transparent)";
         },
         off: function () {
             clearTimeout(removeTimer);
@@ -805,7 +821,8 @@ UIEffects._add = function (obj, type, options, usePress) {
     // PRESS:
     if (usePress) {
 
-        const pressTime = options.pressTime ?? effect.pressTime ?? 120;
+        const DEFAULT_PRESS_TIME_MS = 120;
+        const pressTime = options.pressTime ?? effect.pressTime ?? DEFAULT_PRESS_TIME_MS;
         let downTime = 0;
 
         removers.push(obj.on("pointerdown", function (self, event) {
@@ -843,6 +860,13 @@ UIEffects._add = function (obj, type, options, usePress) {
 
 };
 
+// The value for the state of an effect: values.down while pressed, values.over while hovered, else values.normal.
+UIEffects._byState = function (st, values) {
+    if (st.down) return values.down;
+    if (st.over) return values.over;
+    return values.normal;
+};
+
 UIEffects._isDisabled = function (obj) {
     return obj.elem.disabled === true || obj.enabled === 0;
 };
@@ -852,12 +876,13 @@ UIEffects._state = function (obj) {
     if (!obj._uiEffects) {
         const elem = obj.elem;
         const computedShadow = getComputedStyle(elem).boxShadow;
+        const hasComputedShadow = (computedShadow && computedShadow !== "none");
         obj._uiEffects = {
             base: {
                 transform: elem.style.transform || "",
                 filter: elem.style.filter || "",
                 // WHY: A Button has an inset shadow in basic.css. The effects must keep it.
-                boxShadow: elem.style.boxShadow || ((computedShadow && computedShadow !== "none") ? computedShadow : ""),
+                boxShadow: elem.style.boxShadow || ((hasComputedShadow) ? computedShadow : ""),
             },
             parts: { transform: {}, filter: {}, boxShadow: {} },
         };
@@ -869,7 +894,8 @@ UIEffects._setPart = function (obj, prop, key, value) {
     const state = UIEffects._state(obj);
     // WHY: A transform or filter (even scale(1)) makes the object the container of its position: fixed children
     //      (popups, menus). So a value that changes nothing is not written.
-    if (value && (prop === "boxShadow" || !UIEffects._isNeutral(value))) state.parts[prop][key] = value;
+    const isKept = value && (prop === "boxShadow" || !UIEffects._isNeutral(value));
+    if (isKept) state.parts[prop][key] = value;
     else delete state.parts[prop][key];
     const list = [];
     if (state.base[prop]) list.push(state.base[prop]);
@@ -885,7 +911,8 @@ UIEffects._isNeutral = function (value) {
         const name = func.substr(0, func.indexOf("("));
         const args = func.slice(name.length + 1, -1).split(",").map(function (arg) { return parseFloat(arg); });
         if (name === "perspective") return true;
-        if (/^(scale|brightness|opacity|contrast|saturate)/.test(name)) return args.every(function (arg) { return arg === 1; });
+        const isOneNeutral = /^(scale|brightness|opacity|contrast|saturate)/.test(name);
+        if (isOneNeutral) return args.every(function (arg) { return arg === 1; });
         return args.every(function (arg) { return arg === 0; }); // translate, rotate, skew, blur, grayscale...
     });
 };
@@ -912,8 +939,9 @@ UIEffects._addMotion = function (obj, props, duration) {
     const current = elem.style.transition || "";
     if (/(^|,)\s*all(\s|,|$)/.test(current)) return;
     // WHY: Split by the commas that are not in parentheses: cubic-bezier(0.25, 0.8, 0.25, 1)
-    const items = current ? current.split(/,(?![^(]*\))/).map(function (s) { return s.trim(); }).filter(Boolean) : [];
-    const names = items.map(function (s) { return s.split(/\s+/)[0]; });
+    const parts = (current) ? current.split(/,(?![^(]*\))/) : [];
+    const items = parts.map(function (item) { return item.trim(); }).filter(Boolean);
+    const names = items.map(function (item) { return item.split(/\s+/)[0]; });
     let isChanged = 0;
     props.forEach(function (prop) {
         if (names.indexOf(prop) === -1) {
@@ -953,14 +981,16 @@ UIEffects._ripple = function (obj, event, color, time) {
     const layer = UIEffects._overlay(obj);
     if (!layer) return;
     const elem = obj.elem;
-    const p = UIEffects._localPoint(obj, event);
-    const w = elem.clientWidth;
-    const h = elem.clientHeight;
-    const radius = Math.sqrt(Math.pow(Math.max(p.x, w - p.x), 2) + Math.pow(Math.max(p.y, h - p.y), 2));
+    const point = UIEffects._localPoint(obj, event);
+    // WHY: The radius reaches the farthest corner, so the wave covers the whole object.
+    const farthestX = Math.max(point.x, elem.clientWidth - point.x);
+    const farthestY = Math.max(point.y, elem.clientHeight - point.y);
+    const radius = Math.sqrt(Math.pow(farthestX, 2) + Math.pow(farthestY, 2));
 
     const dot = document.createElement("span");
     dot.style.cssText = "position: absolute; border-radius: 50%; pointer-events: none;"
-        + "left: " + (p.x - radius) + "px; top: " + (p.y - radius) + "px; width: " + (radius * 2) + "px; height: " + (radius * 2) + "px; background: " + color + ";";
+        + "left: " + (point.x - radius) + "px; top: " + (point.y - radius) + "px;"
+        + " width: " + (radius * 2) + "px; height: " + (radius * 2) + "px; background: " + color + ";";
     layer.appendChild(dot);
 
     const animation = dot.animate([
@@ -975,8 +1005,8 @@ UIEffects._shine = function (obj, color, time) {
     if (UIEffects.reduceMotion) return;
     const layer = UIEffects._overlay(obj);
     if (!layer) return;
-    const w = obj.elem.offsetWidth;
-    const streakWidth = Math.max(30, w * 0.4);
+    const width = obj.elem.offsetWidth;
+    const streakWidth = Math.max(30, width * 0.4);
 
     const streak = document.createElement("span");
     streak.style.cssText = "position: absolute; top: -20%; bottom: -20%; left: 0px; pointer-events: none;"
@@ -985,7 +1015,7 @@ UIEffects._shine = function (obj, color, time) {
 
     const animation = streak.animate([
         { transform: "translateX(" + (-streakWidth * 1.5) + "px) skewX(-20deg)" },
-        { transform: "translateX(" + (w + streakWidth * 0.5) + "px) skewX(-20deg)" },
+        { transform: "translateX(" + (width + streakWidth * 0.5) + "px) skewX(-20deg)" },
     ], { duration: time * 1000, easing: "ease-in-out" });
     UIEffects._removeAfter(layer, animation, time);
 };
@@ -1011,11 +1041,16 @@ UIEffects._getAnimation = function (obj, name, options) {
 UIEffects._withPause = function (keyframes, duration, pause, easing) {
     const ratio = duration / (duration + pause);
     const count = keyframes.length;
+    // The offset of a keyframe in the animation without the pause (0-1). Without an offset: evenly spaced.
+    const getOffset = function (frame, index) {
+        if (frame.offset !== undefined) return frame.offset;
+        if (count > 1) return index / (count - 1);
+        return 0;
+    };
     const result = keyframes.map(function (frame, index) {
         const copy = Object.assign({}, frame);
         if (!copy.easing) copy.easing = easing;
-        const offset = (frame.offset !== undefined) ? frame.offset : ((count > 1) ? index / (count - 1) : 0);
-        copy.offset = offset * ratio;
+        copy.offset = getOffset(frame, index) * ratio;
         return copy;
     });
     const last = Object.assign({}, keyframes[count - 1]);
@@ -1039,14 +1074,18 @@ UIEffects._alpha = function (color, alpha) {
     ctx.fillStyle = "#000000";
     ctx.fillStyle = color;
     const value = ctx.fillStyle; // "#rrggbb" or "rgba(r, g, b, a)"
-    let r = 0, g = 0, b = 0;
+    let r = 0;
+    let g = 0;
+    let b = 0;
     if (value.charAt(0) === "#") {
         r = parseInt(value.substr(1, 2), 16);
         g = parseInt(value.substr(3, 2), 16);
         b = parseInt(value.substr(5, 2), 16);
     } else {
         const numbers = value.match(/[\d.]+/g) || [0, 0, 0];
-        r = numbers[0]; g = numbers[1]; b = numbers[2];
+        r = numbers[0];
+        g = numbers[1];
+        b = numbers[2];
     }
     return "rgba(" + r + ", " + g + ", " + b + ", " + alpha + ")";
 };

@@ -4,6 +4,15 @@ Bu belgede basic.js kütüphanesine eklenen yeni özellikler, güncellemeler ve 
 
 ---
 
+## Versiyon 26.10.25
+
+*   **UYUMSUZ: yardımcılar `basic.*` altında:** `num`, `str`, `isMobile`, `go` ve `twoDigitFormat` artık `basic.num()`, `basic.str()`, `basic.isMobile()`, `basic.go()` ve `basic.twoDigitFormat()`; global değiller.
+*   **UYUMSUZ: eski `create*` globalleri kaldırıldı:** `createBox`, `createLabel`, `createButton`, `createImage` / `createIcon`, `createTextBox` / `createInput`. Yerine `Box()`, `Label()`, `Button()`, `Icon()`, `Input()` (aynısı, props ile). Fonksiyonlar `basic.createBox()`... olarak duruyor. Eski bir sürüme göre yazılmış sayfada yalnızca adı değiştirmek yeter.
+*   **`basic.resolveTheme(temalar, ad)`:** bir temanın renkleri (`"auto"`: sistem ayarı), eksik anahtarlar açık temadan. `Modal`, `Toast` ve `ChartBox` bunu kullanır; yeni bir tema yalnızca farklı anahtarları içerir: `Toast.THEMES.ocean = { background: "#0B2239" }`.
+*   **`Alpha(renk, oran)`:** `Black(0.5)` / `White(0.5)` gibi, ama her renk için: `Alpha("#456789", 0.5)` sonucu `"rgba(69,103,137,0.5)"`. Hex renkler `rgba` olur; bir ad, `rgb()` ya da bir `var(--token)` `color-mix` ile şeffaflaşır. Tam uyumlu. Örnekli başvuru: `basic/basic-what-is-new.md`.
+
+---
+
 ## Versiyon 26.10.24
 
 *   **`basic.applyStylePackage(params, Comp.styles, CompDefaults)`:** Bir bileşenin stil paketleri (`styleName: "dark"`) tek satırda; her bileşenin yazdığı üç satırın yerine. Sıra aynı: `params.style` > `styleName` paketi > `Defaults.style`. Bir paket olduğu gibi de verilebilir, `Tabs({ style: Tabs.styles.dark })`: kopyalanır, paketin kendisi hiç değişmez. Tam uyumlu. `comp-m4/tabs.js` ve `_component-template.js` bunu kullanır (v26.10.24 gerekir). Örnekli başvuru: `basic/basic-what-is-new.md`.

@@ -87,10 +87,10 @@ const TextTabs = function(params = {}) {
         that.elem.style.cursor = "pointer";
 
         // Fixed height: the tab is as high as the objects next to it (buttons, inputs) and the text stays centered.
-        if (num(box.tabHeight) > 0) {
-            const _tabPaddingY = (Array.isArray(box.tabPadding)) ? num(box.tabPadding[1] ?? box.tabPadding[0]) : num(box.tabPadding);
-            const _labelPaddingY = (Array.isArray(box.labelStyle.padding)) ? num(box.labelStyle.padding[1] ?? box.labelStyle.padding[0]) : num(box.labelStyle.padding);
-            that.height = num(box.tabHeight) - _tabPaddingY * 2;
+        if (basic.num(box.tabHeight) > 0) {
+            const _tabPaddingY = (Array.isArray(box.tabPadding)) ? basic.num(box.tabPadding[1] ?? box.tabPadding[0]) : basic.num(box.tabPadding);
+            const _labelPaddingY = (Array.isArray(box.labelStyle.padding)) ? basic.num(box.labelStyle.padding[1] ?? box.labelStyle.padding[0]) : basic.num(box.labelStyle.padding);
+            that.height = basic.num(box.tabHeight) - _tabPaddingY * 2;
             // WHY: Label is border-box; its height holds the padding. One line of text is centered with the line height.
             that.elem.style.lineHeight = (that.height - _labelPaddingY * 2) + "px";
         }

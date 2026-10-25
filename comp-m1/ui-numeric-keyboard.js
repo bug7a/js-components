@@ -24,7 +24,7 @@ UINumericKeyboard.create = function($left = 0, $top = 0, $width = 600, $height =
     var createNumericButton = function($text) {
 
         // BOX: Container.
-        var _boxBtn = createBox(0, 0, 80, 80);
+        var _boxBtn = Box(0, 0, 80, 80);
         // that.color = "#9B9B9B33";
         that.color = "white";
         that.round = 14;
@@ -39,7 +39,7 @@ UINumericKeyboard.create = function($left = 0, $top = 0, $width = 600, $height =
         if ($text != -1) {
     
             // LABEL: Text.
-            _boxBtn.lblText = createLabel(0, 0, "auto", "auto");
+            _boxBtn.lblText = Label(0, 0, "auto", "auto");
             _boxBtn.add(that);
             that.text = $text;
             that.textColor = "#141414";
@@ -53,7 +53,7 @@ UINumericKeyboard.create = function($left = 0, $top = 0, $width = 600, $height =
         } else {
     
             // IMAGE: Backspace icon.
-            _boxBtn.imgIcon = createImage(0, 0, 42, 42);
+            _boxBtn.imgIcon = Icon(0, 0, 42, 42);
             _boxBtn.add(that);
             that.load("../comp-m1/ui-numeric-keyboard/backspace.png");
             //that.opacity = 0.7;
@@ -69,7 +69,7 @@ UINumericKeyboard.create = function($left = 0, $top = 0, $width = 600, $height =
     }
 
     // BOX: UI object container.
-    var _box = createBox($left, $top, $width, $height);
+    var _box = Box($left, $top, $width, $height);
     that.color = "transparent";
     /*
     that.opacity = 0;
@@ -82,7 +82,7 @@ UINumericKeyboard.create = function($left = 0, $top = 0, $width = 600, $height =
     _box.onChangeFunc = function() { };
 
     // BOX: Background.
-    _box.boxBack = createBox(20, 10, $width - 40, $height - 20);
+    _box.boxBack = Box(20, 10, $width - 40, $height - 20);
     _box.add(that);
     that.color = "transparent";
     //that.border = 1;
@@ -92,7 +92,7 @@ UINumericKeyboard.create = function($left = 0, $top = 0, $width = 600, $height =
     //that.borderColor = "rgba(0, 0, 0, 0.15)";
 
     // LABEL: Title text.
-    _box.lblTitle = createLabel(0, 33, _box.width, "auto");
+    _box.lblTitle = Label(0, 33, _box.width, "auto");
     _box.add(that);
     that.textColor = "#141414";
     that.opacity = 0.5;
@@ -104,7 +104,7 @@ UINumericKeyboard.create = function($left = 0, $top = 0, $width = 600, $height =
     that.opacity = 0;
 
     // LABEL: Value text.
-    _box.lblValue = createLabel(0, 50, _box.width, "auto");
+    _box.lblValue = Label(0, 50, _box.width, "auto");
     _box.add(that);
     that.textColor = "#141414";
     that.element.style.fontFamily = "opensans-bold";

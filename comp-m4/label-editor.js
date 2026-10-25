@@ -156,9 +156,7 @@ const LabelEditor = function (params = {}) {
     if (_missing.length) console.error("LabelEditor: Load these components before label-editor.js: " + _missing.join(", "));
 
     // Merge style package: params.style > LabelEditor.styles[styleName] > LabelEditorDefaults.style (classic)
-    const _stylePackage = LabelEditor.styles[params.styleName || LabelEditorDefaults.styleName];
-    if (!_stylePackage) console.warn("LabelEditor: Style package not found: " + params.styleName);
-    mergeIntoIfMissing(params, { style: _stylePackage || {} });
+    basic.applyStylePackage(params, LabelEditor.styles, LabelEditorDefaults);
 
     // Merge params:
     mergeIntoIfMissing(params, LabelEditorDefaults);
@@ -179,7 +177,10 @@ const LabelEditor = function (params = {}) {
 
     // *** PRIVATE VARIABLES:
     const _s = box.style;
-    const copyStyle = function (style) { return JSON.parse(JSON.stringify(style || {})); }; // Every component gets its own copy.
+    // Every component gets its own copy.
+    const copyStyle = function (style) {
+        return JSON.parse(JSON.stringify(style || {}));
+    };
     const PROP_KEYS = ["text", "fontSize", "textColor", "color", "bold", "italic", "textAlign", "fullWidth", "padding", "round", "border", "borderColor"];
     const STYLE_KEYS = PROP_KEYS.filter(function (k) { return k !== "text"; }); // A style has everything but the text.
     let items = []; // { props, styleName, styleChanged, label }
@@ -188,6 +189,16 @@ const LabelEditor = function (params = {}) {
     let labelCount = 0; // For "Label {n}"
     let isClosingPanel = 0; // WHY: selectItem(null) closes the panel, and the panel's onClose calls selectItem(null).
     const controls = {}; // Panel controls
+    const LIMITS = {
+        fontSize: { min: 8, max: 120 },
+        padding: { min: 0, max: 80 },
+        round: { min: 0, max: 100 },
+        border: { min: 0, max: 20 },
+    };
+    const DEFAULT_BACKGROUND = "#FFF3C4"; // The first background color, when "Color" is chosen
+    const CHIP_FONT_MIN = 11; // The name in a chip is drawn with the style, between these sizes
+    const CHIP_FONT_MAX = 15;
+    const BUTTON_MOTION = "background-color 0.12s";
 
     // *** PRIVATE FUNCTIONS:
 
@@ -202,16 +213,16 @@ const LabelEditor = function (params = {}) {
         const p = Object.assign({}, base || box.newLabel, source || {});
         return {
             text: String(p.text ?? ""),
-            fontSize: toNumber(p.fontSize, 8, 120, 16),
+            fontSize: toNumber(p.fontSize, LIMITS.fontSize.min, LIMITS.fontSize.max, 16),
             textColor: String(p.textColor || "#1F2328"),
             color: String(p.color || ""),
             bold: p.bold ? 1 : 0,
             italic: p.italic ? 1 : 0,
             textAlign: (["left", "center", "right"].indexOf(p.textAlign) > -1) ? p.textAlign : "left",
             fullWidth: p.fullWidth ? 1 : 0,
-            padding: toNumber(p.padding, 0, 80, 0),
-            round: toNumber(p.round, 0, 100, 0),
-            border: toNumber(p.border, 0, 20, 0),
+            padding: toNumber(p.padding, LIMITS.padding.min, LIMITS.padding.max, 0),
+            round: toNumber(p.round, LIMITS.round.min, LIMITS.round.max, 0),
+            border: toNumber(p.border, LIMITS.border.min, LIMITS.border.max, 0),
             borderColor: String(p.borderColor || "#1F2328"),
         };
     };
@@ -232,7 +243,11 @@ const LabelEditor = function (params = {}) {
 
     const saveStylesToStorage = function () {
         if (!box.storageKey) return;
-        try { basic.storage.save(box.storageKey, styles); } catch (e) { console.warn("LabelEditor: The styles could not be saved."); }
+        try {
+            basic.storage.save(box.storageKey, styles);
+        } catch (e) {
+            console.warn("LabelEditor: The styles could not be saved.");
+        }
     };
 
     const stylesChanged = function () {
@@ -252,59 +267,94 @@ const LabelEditor = function (params = {}) {
 
     // Properties -> the view of the label.
     const applyProps = function (item) {
-        const l = item.label, p = item.props;
-        l.plainText = p.text;
-        l.fontSize = p.fontSize;
-        l.textColor = p.textColor;
-        l.color = p.color || "transparent";
-        l.bold = p.bold;
-        l.italic = p.italic;
-        l.textAlign = p.textAlign;
-        l.width = p.fullWidth ? "100%" : "auto";
-        l.padding = p.padding;
-        l.round = p.round;
-        l.border = p.border;
-        l.borderColor = p.borderColor;
-        l.elem.style.borderStyle = "solid";
-        l.elem.setAttribute("aria-label", p.text || "Label");
-        l.elem.title = item.styleName ? box.texts.currentStyle.replace("{name}", item.styleName) : "";
+        const lbl = item.label;
+        const props = item.props;
+        lbl.plainText = props.text;
+        lbl.fontSize = props.fontSize;
+        lbl.textColor = props.textColor;
+        lbl.color = props.color || "transparent";
+        lbl.bold = props.bold;
+        lbl.italic = props.italic;
+        lbl.textAlign = props.textAlign;
+        lbl.width = props.fullWidth ? "100%" : "auto";
+        lbl.padding = props.padding;
+        lbl.round = props.round;
+        lbl.border = props.border;
+        lbl.borderColor = props.borderColor;
+        lbl.css.borderStyle = "solid";
+        lbl.aria = { label: props.text || "Label" };
+        lbl.elem.title = item.styleName ? box.texts.currentStyle.replace("{name}", item.styleName) : "";
+    };
+
+    const getOutline = function (item, isSelected) {
+        if (isSelected) return "2px solid " + _s.selection.color;
+        if (item.isHover) return "1px dashed " + _s.selection.hoverColor;
+        return "none";
     };
 
     const paintSelection = function (item) {
         const isSelected = (item === selected);
-        item.label.elem.style.outline = isSelected ? "2px solid " + _s.selection.color : (item.isHover ? "1px dashed " + _s.selection.hoverColor : "none");
-        item.label.elem.style.outlineOffset = isSelected ? "3px" : "2px";
-        item.label.elem.setAttribute("aria-selected", isSelected ? "true" : "false");
+        item.label.css = {
+            outline: getOutline(item, isSelected),
+            outlineOffset: isSelected ? "3px" : "2px",
+        };
+        item.label.aria = { selected: isSelected ? "true" : "false" };
+    };
+
+    const focusNextItem = function (item, step) {
+        const next = items[indexOfItem(item) + step];
+        if (next) next.label.elem.focus();
+    };
+
+    const onItemKeyDown = function (item, event) {
+        if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            selectItem(item);
+            return;
+        }
+        if ((event.key === "Delete" || event.key === "Backspace") && item === selected) {
+            event.preventDefault();
+            box.removeLabel(indexOfItem(item));
+            return;
+        }
+        if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+            event.preventDefault();
+            focusNextItem(item, (event.key === "ArrowDown") ? 1 : -1);
+        }
     };
 
     const createItemView = function (item) {
         createIn(box.listWrapper, function () {
             // LABEL: The label that is edited
             item.label = Label({ plainText: "", clickable: 1 });
-            const el = item.label.elem;
-            el.style.maxWidth = "100%";
-            el.style.boxSizing = "border-box";
-            el.style.whiteSpace = "pre-wrap";
-            el.style.overflowWrap = "break-word";
-            el.style.cursor = "pointer";
-            el.style.flexShrink = "0";
-            el.style.minHeight = "1em";
-            el.tabIndex = 0;
-            el.setAttribute("role", "option");
+            item.label.css = {
+                maxWidth: "100%",
+                boxSizing: "border-box",
+                whiteSpace: "pre-wrap",
+                overflowWrap: "break-word",
+                minHeight: "1em",
+            };
+            item.label.cursor = "pointer";
+            item.label.shrink = 0;
+            item.label.tabIndex = 0;
+            item.label.role = "option";
         });
         applyProps(item);
         paintSelection(item);
-        item.label.on("click", function (self, event) { event.stopPropagation(); selectItem(item); });
-        item.label.on("mouseenter", function () { item.isHover = 1; paintSelection(item); });
-        item.label.on("mouseleave", function () { item.isHover = 0; paintSelection(item); });
+        item.label.on("click", function (self, event) {
+            event.stopPropagation();
+            selectItem(item);
+        });
+        item.label.on("mouseenter", function () {
+            item.isHover = 1;
+            paintSelection(item);
+        });
+        item.label.on("mouseleave", function () {
+            item.isHover = 0;
+            paintSelection(item);
+        });
         item.label.on("keydown", function (self, event) {
-            if (event.key === "Enter" || event.key === " ") { event.preventDefault(); selectItem(item); }
-            else if ((event.key === "Delete" || event.key === "Backspace") && item === selected) { event.preventDefault(); box.removeLabel(indexOfItem(item)); }
-            else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-                event.preventDefault();
-                const next = items[indexOfItem(item) + ((event.key === "ArrowDown") ? 1 : -1)];
-                if (next) next.label.elem.focus();
-            }
+            onItemKeyDown(item, event);
         });
     };
 
@@ -317,10 +367,16 @@ const LabelEditor = function (params = {}) {
         if (box.listWrapper) box.listWrapper.remove();
         createIn(box.listArea, function () {
             // GROUP: Labels, one under the other
-            box.listWrapper = VGroup({ width: "100%", height: "auto", align: "left top", gap: _s.list.gap, padding: _s.list.padding });
+            box.listWrapper = VGroup({
+                width: "100%",
+                height: "auto",
+                align: "left top",
+                gap: _s.list.gap,
+                padding: _s.list.padding,
+            });
             box.listWrapper.position = "relative"; // WHY: The scroll box grows with it.
-            box.listWrapper.elem.setAttribute("role", "listbox");
-            box.listWrapper.elem.setAttribute("aria-label", box.texts.title);
+            box.listWrapper.role = "listbox";
+            box.listWrapper.aria = { label: box.texts.title };
             endGroup();
         });
         items.forEach(createItemView);
@@ -370,7 +426,7 @@ const LabelEditor = function (params = {}) {
         controls.width.setValue(p.fullWidth ? "full" : "auto", 1);
         controls.textColor.setColor(p.textColor, 1);
         controls.background.setValue(p.color ? "color" : "none", 1);
-        controls.bgColor.setColor(p.color || "#FFF3C4", 1);
+        controls.bgColor.setColor(p.color || DEFAULT_BACKGROUND, 1);
         controls.bgField.visible = p.color ? 1 : 0;
         controls.padding.setValue(p.padding, 1);
         controls.round.setValue(p.round, 1);
@@ -383,11 +439,79 @@ const LabelEditor = function (params = {}) {
     const updatePanelStyleInfo = function () {
         if (!box.lblStyleInfo) return;
         if (selected && selected.styleName) {
-            box.lblStyleInfo.plainText = box.texts.currentStyle.replace("{name}", selected.styleName) + (selected.styleChanged ? " " + box.texts.changed : "");
+            const changedText = (selected.styleChanged) ? " " + box.texts.changed : "";
+            box.lblStyleInfo.plainText = box.texts.currentStyle.replace("{name}", selected.styleName) + changedText;
         } else {
             box.lblStyleInfo.plainText = box.texts.noStyle;
         }
         renderChips();
+    };
+
+    const applyStyleToSelected = function (name) {
+        if (!selected) return;
+        box.applyStyle(name, indexOfItem(selected));
+    };
+
+    // GROUP: Chip of a saved style (name drawn with the style, delete button)
+    const createChip = function (st) {
+
+        const isCurrent = (selected && selected.styleName === st.name);
+        const chip = HGroup({
+            width: "auto",
+            height: "auto",
+            align: "left center",
+            gap: 4,
+            padding: [10, 4],
+            color: _s.chip.color,
+            round: _s.chip.round,
+            border: isCurrent ? 2 : 1,
+            borderColor: isCurrent ? _s.chip.activeBorderColor : _s.chip.borderColor,
+        });
+        chip.cursor = "pointer";
+        chip.css.maxWidth = "100%";
+        chip.role = "button";
+        chip.elem.setAttribute("title", box.texts.applyHint);
+        chip.tabIndex = 0;
+        chip.clickable = 1;
+
+            // LABEL: Name, drawn with the style (preview)
+            const props = st.props;
+            const lblPreview = Label({
+                plainText: st.name,
+                fontSize: Math.min(CHIP_FONT_MAX, Math.max(CHIP_FONT_MIN, props.fontSize)),
+                textColor: props.textColor,
+                color: props.color || "transparent",
+                bold: props.bold,
+                italic: props.italic,
+                padding: props.color ? [6, 1] : 0,
+                round: 4,
+                ellipsis: 1,
+            });
+            lblPreview.css.maxWidth = "160px";
+
+            // LABEL: Delete the style
+            const btnX = Label({ text: LabelEditor.getCloseSvg(_s.chip.closeColor, 12), width: 18, height: 18, round: 9, clickable: 1 });
+            btnX.elem.style.display = "flex";
+            btnX.css = { alignItems: "center", justifyContent: "center" };
+            btnX.lineHeight = "0";
+            btnX.role = "button";
+            btnX.aria = { label: box.texts.removeStyle + ": " + st.name };
+            btnX.on("click", function (self, event) {
+                event.stopPropagation();
+                box.removeStyle(st.name);
+            });
+
+        endGroup();
+
+        chip.on("click", function () {
+            applyStyleToSelected(st.name);
+        });
+        chip.on("keydown", function (self, event) {
+            if (event.key !== "Enter" && event.key !== " ") return;
+            event.preventDefault();
+            applyStyleToSelected(st.name);
+        });
+
     };
 
     // Chips of the saved styles (with a small preview of each style).
@@ -400,33 +524,7 @@ const LabelEditor = function (params = {}) {
             if (styles.length == 0) {
                 Label({ plainText: box.texts.noStyles, width: "100%", fontSize: 12, textColor: _s.panel.hintColor });
             }
-            styles.forEach(function (st) {
-                const isCurrent = (selected && selected.styleName === st.name);
-                // GROUP: Chip
-                const chip = HGroup({ width: "auto", height: "auto", align: "left center", gap: 4, padding: [10, 4], color: _s.chip.color, round: _s.chip.round, border: isCurrent ? 2 : 1, borderColor: isCurrent ? _s.chip.activeBorderColor : _s.chip.borderColor });
-                chip.elem.style.cursor = "pointer";
-                chip.elem.style.maxWidth = "100%";
-                chip.elem.setAttribute("role", "button");
-                chip.elem.setAttribute("title", box.texts.applyHint);
-                chip.elem.tabIndex = 0;
-                chip.clickable = 1;
-                    // LABEL: Name, drawn with the style (preview)
-                    const p = st.props;
-                    Label({ plainText: st.name, fontSize: Math.min(15, Math.max(11, p.fontSize)), textColor: p.textColor, color: p.color || "transparent", bold: p.bold, italic: p.italic, padding: p.color ? [6, 1] : 0, round: 4, ellipsis: 1 });
-                    that.elem.style.maxWidth = "160px";
-                    // LABEL: Delete the style
-                    const btnX = Label({ text: LabelEditor.getCloseSvg(_s.chip.closeColor, 12), width: 18, height: 18, round: 9, clickable: 1 });
-                    btnX.elem.style.display = "flex";
-                    btnX.elem.style.alignItems = "center";
-                    btnX.elem.style.justifyContent = "center";
-                    btnX.elem.style.lineHeight = "0";
-                    btnX.elem.setAttribute("role", "button");
-                    btnX.elem.setAttribute("aria-label", box.texts.removeStyle + ": " + st.name);
-                    btnX.on("click", function (self, event) { event.stopPropagation(); box.removeStyle(st.name); });
-                endGroup();
-                chip.on("click", function () { if (selected) box.applyStyle(st.name, indexOfItem(selected)); });
-                chip.on("keydown", function (self, event) { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); if (selected) box.applyStyle(st.name, indexOfItem(selected)); } });
-            });
+            styles.forEach(createChip);
             endGroup();
         });
     };
@@ -436,7 +534,7 @@ const LabelEditor = function (params = {}) {
     // GROUP: A caption and its control(s). Close it with endGroup().
     const startField = function (caption) {
         const group = VGroup({ width: "100%", height: "auto", align: "left top", gap: 6 });
-        group.elem.style.alignItems = "stretch";
+        group.css.alignItems = "stretch";
         Label({ plainText: caption, fontSize: 12, textColor: _s.panel.captionColor });
         return group;
     };
@@ -444,7 +542,7 @@ const LabelEditor = function (params = {}) {
     // GROUP: Two fields side by side
     const startRow = function () {
         const row = HGroup({ width: "100%", height: "auto", align: "left top", gap: 12 });
-        row.elem.style.alignItems = "flex-start";
+        row.css.alignItems = "flex-start";
         return row;
     };
 
@@ -452,14 +550,23 @@ const LabelEditor = function (params = {}) {
     const startHalfField = function (caption) {
         const group = startField(caption);
         group.width = "auto";
-        group.elem.style.flex = "1 1 0";
-        group.elem.style.minWidth = "0";
+        group.css = { flex: "1 1 0", minWidth: "0" };
         return group;
     };
 
     // INPUT: basic.js Input
-    const createInput = function (onInput) {
-        const input = Input({ width: "100%", height: _s.input.height, minimal: 1, fontSize: 14, color: _s.input.color, textColor: _s.input.textColor, round: _s.input.round, border: 1, borderColor: _s.input.borderColor });
+    const createTextInput = function (onInput) {
+        const input = Input({
+            width: "100%",
+            height: _s.input.height,
+            minimal: 1,
+            fontSize: 14,
+            color: _s.input.color,
+            textColor: _s.input.textColor,
+            round: _s.input.round,
+            border: 1,
+            borderColor: _s.input.borderColor,
+        });
         const el = input.inputElement;
         el.style.width = "100%";
         el.style.height = "100%";
@@ -467,10 +574,16 @@ const LabelEditor = function (params = {}) {
         el.style.padding = "0px 10px";
         el.style.backgroundColor = "transparent";
         el.style.color = _s.input.textColor;
-        input.elem.style.flexShrink = "0";
-        el.addEventListener("focus", function () { input.borderColor = _s.input.focusColor; });
-        el.addEventListener("blur", function () { input.borderColor = _s.input.borderColor; });
-        el.addEventListener("input", function () { onInput(input.text); });
+        input.shrink = 0;
+        el.addEventListener("focus", function () {
+            input.borderColor = _s.input.focusColor;
+        });
+        el.addEventListener("blur", function () {
+            input.borderColor = _s.input.borderColor;
+        });
+        el.addEventListener("input", function () {
+            onInput(input.text);
+        });
         return input;
     };
 
@@ -488,7 +601,14 @@ const LabelEditor = function (params = {}) {
         const picker = SelectColor({
             width: "100%", height: _s.input.height, colors: box.colorPalette.slice(),
             style: copyStyle(_s.selectColorStyle),
-            onChange: function (self) { if (self.value) { if (onPick) onPick(self.value); else setProp(key, self.value); } },
+            onChange: function (self) {
+                if (!self.value) return;
+                if (onPick) {
+                    onPick(self.value);
+                    return;
+                }
+                setProp(key, self.value);
+            },
         });
         return picker;
     };
@@ -511,18 +631,33 @@ const LabelEditor = function (params = {}) {
     };
 
     // BUTTON: basic.js Button in the colors of the editor
-    const createButton = function (text, isPrimary, onClick) {
-        const c = isPrimary ? _s.button : _s.secondaryButton;
-        const btn = Button({ text: text, width: "auto", height: _s.button.height, fontSize: _s.button.fontSize, color: c.color, textColor: c.textColor, round: _s.button.round });
-        btn.elem.style.backgroundImage = "none"; // WHY: basic.css gives a Button an image and an inner shadow.
-        btn.elem.style.boxShadow = "none";
-        btn.elem.style.border = "0";
-        btn.elem.style.padding = "0px 16px";
-        btn.elem.style.whiteSpace = "nowrap";
-        btn.elem.style.flexShrink = "0";
-        btn.elem.style.transition = "background-color 0.12s";
-        btn.on("mouseenter", function () { btn.color = c.hoverColor; });
-        btn.on("mouseleave", function () { btn.color = c.color; });
+    const createEditorButton = function (text, isPrimary, onClick) {
+        const colors = isPrimary ? _s.button : _s.secondaryButton;
+        const btn = Button({
+            text: text,
+            width: "auto",
+            height: _s.button.height,
+            fontSize: _s.button.fontSize,
+            color: colors.color,
+            textColor: colors.textColor,
+            round: _s.button.round,
+        });
+        // WHY: basic.css gives a Button an image and an inner shadow.
+        btn.css = {
+            backgroundImage: "none",
+            boxShadow: "none",
+            border: "0",
+            padding: "0px 16px",
+            whiteSpace: "nowrap",
+            transition: BUTTON_MOTION,
+        };
+        btn.shrink = 0;
+        btn.on("mouseenter", function () {
+            btn.color = colors.hoverColor;
+        });
+        btn.on("mouseleave", function () {
+            btn.color = colors.color;
+        });
         btn.on("click", onClick);
         return btn;
     };
@@ -660,7 +795,12 @@ const LabelEditor = function (params = {}) {
         const index = styles.findIndex(function (st) { return st.name === name; });
         if (index < 0) return;
         styles.splice(index, 1);
-        items.forEach(function (item) { if (item.styleName === name) { item.styleName = ""; item.styleChanged = 0; applyProps(item); } });
+        items.forEach(function (item) {
+            if (item.styleName !== name) return;
+            item.styleName = "";
+            item.styleChanged = 0;
+            applyProps(item);
+        });
         stylesChanged();
         labelsChanged();
     };
@@ -695,39 +835,62 @@ const LabelEditor = function (params = {}) {
 
     // GROUP: Header and list
     box.layout = VGroup({ width: "100%", height: "100%", align: "left top", gap: 0 });
-    box.layout.elem.style.alignItems = "stretch";
+    box.layout.css.alignItems = "stretch";
 
         // GROUP: Header (title, add button)
-        box.header = HGroup({ width: "100%", height: "auto", align: "left center", gap: 8, padding: [16, 10], color: _s.header.color });
-        box.header.elem.style.flexShrink = "0";
-        box.header.elem.style.borderBottom = "1px solid " + _s.header.dividerColor;
+        box.header = HGroup({
+            width: "100%",
+            height: "auto",
+            align: "left center",
+            gap: 8,
+            padding: [16, 10],
+            color: _s.header.color,
+        });
+        box.header.shrink = 0;
+        box.header.css.borderBottom = "1px solid " + _s.header.dividerColor;
 
             box.lblTitle = Label({ plainText: box.texts.title, fontSize: _s.header.titleSize, textColor: _s.header.titleColor, bold: 1 });
-            box.lblTitle.elem.style.flex = "1 1 0";
+            box.lblTitle.css.flex = "1 1 0";
 
-            box.btnAdd = createButton(box.texts.addButton, 1, function () { box.addLabel({}, 1); });
+            box.btnAdd = createEditorButton(box.texts.addButton, 1, function () { box.addLabel({}, 1); });
 
         endGroup();
 
         // BOX: Holder of the list (and its ScrollBar)
         box.listHolder = startBox({ width: "100%", height: "auto", color: _s.list.color });
-        box.listHolder.elem.style.flex = "1 1 0";
-        box.listHolder.elem.style.minHeight = "0";
+        box.listHolder.css = { flex: "1 1 0", minHeight: "0" };
 
             // BOX: Scrolling list area
             box.listArea = Box(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
             box.listArea.clickable = 1;
 
             // LABEL: Empty text
-            box.lblEmpty = Label({ plainText: box.texts.empty, width: "100%", top: 40, fontSize: 14, textColor: _s.list.emptyColor, textAlign: "center", padding: [24, 0], visible: 0 });
+            box.lblEmpty = Label({
+                plainText: box.texts.empty,
+                width: "100%",
+                top: 40,
+                fontSize: 14,
+                textColor: _s.list.emptyColor,
+                textAlign: "center",
+                padding: [24, 0],
+                visible: 0,
+            });
 
             if (box.useScrollBar == 1 && typeof ScrollBar !== "undefined") {
-                box.listScrollBar = ScrollBar(Object.assign({ scrollableBox: box.listArea, neverHide: 0, showDots: 0 }, _s.scrollBar));
+                const scrollBarParams = { scrollableBox: box.listArea, neverHide: 0, showDots: 0 };
+                box.listScrollBar = ScrollBar(Object.assign(scrollBarParams, _s.scrollBar));
             }
 
         endBox();
 
     endGroup();
+
+    // The focus is in the panel, or nowhere: it can go back to the label.
+    const isFocusInPanelOrNowhere = function () {
+        const active = document.activeElement;
+        if (!active || active === document.body) return true;
+        return !!(box.sidePanel && box.sidePanel.elem.contains(active));
+    };
 
     // SIDE PANEL: Properties. Created on the page (SidePanel does it), at the right side of the screen.
     box.sidePanel = SidePanel({
@@ -743,9 +906,7 @@ const LabelEditor = function (params = {}) {
             if (isClosingPanel || !box || !selected) return;
             const item = selected;
             selectItem(null);
-            // The focus goes back to the label when it was in the panel (or nowhere).
-            const active = document.activeElement;
-            if (item.label && (!active || active === document.body || (box.sidePanel && box.sidePanel.elem.contains(active)))) item.label.elem.focus({ preventScroll: true });
+            if (item.label && isFocusInPanelOrNowhere()) item.label.elem.focus({ preventScroll: true });
         },
     });
     box.own(box.sidePanel); // WHY: It is on the page, not in the box: removed with the box.
@@ -754,16 +915,16 @@ const LabelEditor = function (params = {}) {
 
         // GROUP: Panel content
         box.panelContent = VGroup({ width: "100%", height: "auto", align: "left top", gap: _s.panel.gap });
-        box.panelContent.elem.style.alignItems = "stretch";
+        box.panelContent.css.alignItems = "stretch";
 
             startField(box.texts.text);
-                controls.text = createInput(function (value) { setProp("text", value); });
+                controls.text = createTextInput(function (value) { setProp("text", value); });
                 controls.text.inputElement.setAttribute("aria-label", box.texts.text);
             endGroup();
 
             startRow();
                 startHalfField(box.texts.fontSize);
-                    controls.fontSize = createStepper(8, 120, box.texts.fontSize, "fontSize");
+                    controls.fontSize = createStepper(LIMITS.fontSize.min, LIMITS.fontSize.max, box.texts.fontSize, "fontSize");
                 endGroup();
                 startHalfField(box.texts.fontStyle);
                     // GROUP: Bold, italic
@@ -775,11 +936,24 @@ const LabelEditor = function (params = {}) {
             endGroup();
 
             startField(box.texts.align);
-                controls.align = createPills([{ key: "left", text: box.texts.left }, { key: "center", text: box.texts.center }, { key: "right", text: box.texts.right }], function (value) { setProp("textAlign", value); });
+                const alignTabs = [
+                    { key: "left", text: box.texts.left },
+                    { key: "center", text: box.texts.center },
+                    { key: "right", text: box.texts.right },
+                ];
+                controls.align = createPills(alignTabs, function (value) {
+                    setProp("textAlign", value);
+                });
             endGroup();
 
             startField(box.texts.width);
-                controls.width = createPills([{ key: "auto", text: box.texts.widthAuto }, { key: "full", text: box.texts.widthFull }], function (value) { setProp("fullWidth", (value === "full") ? 1 : 0); });
+                const widthTabs = [
+                    { key: "auto", text: box.texts.widthAuto },
+                    { key: "full", text: box.texts.widthFull },
+                ];
+                controls.width = createPills(widthTabs, function (value) {
+                    setProp("fullWidth", (value === "full") ? 1 : 0);
+                });
             endGroup();
 
             startField(box.texts.textColor);
@@ -788,7 +962,7 @@ const LabelEditor = function (params = {}) {
 
             startField(box.texts.background);
                 controls.background = createPills([{ key: "none", text: box.texts.none }, { key: "color", text: box.texts.colorOn }], function (value) {
-                    setProp("color", (value === "color") ? controls.bgColor.value || "#FFF3C4" : "");
+                    setProp("color", (value === "color") ? controls.bgColor.value || DEFAULT_BACKGROUND : "");
                     controls.bgField.visible = (value === "color") ? 1 : 0;
                 });
             endGroup();
@@ -799,16 +973,16 @@ const LabelEditor = function (params = {}) {
 
             startRow();
                 startHalfField(box.texts.padding);
-                    controls.padding = createStepper(0, 80, box.texts.padding, "padding");
+                    controls.padding = createStepper(LIMITS.padding.min, LIMITS.padding.max, box.texts.padding, "padding");
                 endGroup();
                 startHalfField(box.texts.round);
-                    controls.round = createStepper(0, 100, box.texts.round, "round");
+                    controls.round = createStepper(LIMITS.round.min, LIMITS.round.max, box.texts.round, "round");
                 endGroup();
             endGroup();
 
             startRow();
                 startHalfField(box.texts.border);
-                    controls.border = createStepper(0, 20, box.texts.border, "border");
+                    controls.border = createStepper(LIMITS.border.min, LIMITS.border.max, box.texts.border, "border");
                 endGroup();
                 startHalfField(box.texts.borderColor);
                     controls.borderColor = createColor("borderColor");
@@ -817,28 +991,36 @@ const LabelEditor = function (params = {}) {
 
             // GROUP: Duplicate, delete
             HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
-                box.btnDuplicate = createButton(box.texts.duplicate, 0, function () { if (selected) box.duplicateLabel(indexOfItem(selected)); });
-                box.btnRemove = createButton(box.texts.remove, 0, function () { if (selected) box.removeLabel(indexOfItem(selected)); });
+                box.btnDuplicate = createEditorButton(box.texts.duplicate, 0, function () {
+                    if (!selected) return;
+                    box.duplicateLabel(indexOfItem(selected));
+                });
+                box.btnRemove = createEditorButton(box.texts.remove, 0, function () {
+                    if (!selected) return;
+                    box.removeLabel(indexOfItem(selected));
+                });
                 box.btnRemove.textColor = _s.secondaryButton.dangerTextColor;
             endGroup();
 
             // BOX: Divider
             Box({ width: "100%", height: 1, color: _s.panel.dividerColor });
-            that.elem.style.flexShrink = "0";
+            that.shrink = 0;
 
             // GROUP: Saved styles
             startField(box.texts.savedStyles);
                 box.lblStyleInfo = Label({ plainText: "", width: "100%", fontSize: 12, textColor: _s.panel.textColor });
                 HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
-                    controls.styleName = createInput(function () { controls.styleName.borderColor = _s.input.focusColor; });
+                    controls.styleName = createTextInput(function () { controls.styleName.borderColor = _s.input.focusColor; });
                     controls.styleName.width = "auto";
-                    controls.styleName.elem.style.flex = "1 1 0";
-                    controls.styleName.elem.style.minWidth = "0";
+                    controls.styleName.css = { flex: "1 1 0", minWidth: "0" };
                     controls.styleName.inputElement.placeholder = box.texts.styleNamePlaceholder;
                     controls.styleName.inputElement.setAttribute("aria-label", box.texts.styleNamePlaceholder);
-                    box.btnSaveStyle = createButton(box.texts.save, 1, function () {
+                    box.btnSaveStyle = createEditorButton(box.texts.save, 1, function () {
                         const name = String(controls.styleName.text || "").trim();
-                        if (!name) { controls.styleName.inputElement.focus(); return; }
+                        if (!name) {
+                            controls.styleName.inputElement.focus();
+                            return;
+                        }
                         box.saveStyle(name);
                     });
                 endGroup();
@@ -855,23 +1037,38 @@ const LabelEditor = function (params = {}) {
     // *** OBJECT INIT CODE:
 
     controls.styleName.inputElement.addEventListener("keydown", function (event) {
-        if (event.key === "Enter") { event.preventDefault(); box.btnSaveStyle.elem.click(); }
+        if (event.key !== "Enter") return;
+        event.preventDefault();
+        box.btnSaveStyle.elem.click();
     });
 
+    const isClickOnEmptyList = function (event) {
+        if (!box.listWrapper) return true;
+        if (!box.listWrapper.elem.contains(event.target)) return true;
+        return event.target === box.listWrapper.elem;
+    };
+
     // A click on the empty part of the list closes the panel.
-    box.listArea.on("click", function (self, event) { if (!box.listWrapper || !box.listWrapper.elem.contains(event.target) || event.target === box.listWrapper.elem) selectItem(null); });
+    box.listArea.on("click", function (self, event) {
+        if (isClickOnEmptyList(event)) selectItem(null);
+    });
     box.on("keydown", function (self, event) {
-        if (event.key === "Escape" && selected) {
-            event.preventDefault();
-            const item = selected;
-            selectItem(null);
-            item.label.elem.focus({ preventScroll: true });
-        }
+        if (event.key !== "Escape" || !selected) return;
+        event.preventDefault();
+        const item = selected;
+        selectItem(null);
+        item.label.elem.focus({ preventScroll: true });
     });
 
     // Saved styles: storage first, then the savedStyles parameter.
     let storedStyles = null;
-    if (box.storageKey) { try { storedStyles = basic.storage.load(box.storageKey); } catch (e) { storedStyles = null; } }
+    if (box.storageKey) {
+        try {
+            storedStyles = basic.storage.load(box.storageKey);
+        } catch (e) {
+            storedStyles = null;
+        }
+    }
     box.setSavedStyles(Array.isArray(storedStyles) ? storedStyles : startStyles);
     box.setLabels(startLabels);
 
@@ -888,6 +1085,7 @@ LabelEditor.getCloseSvg = function (color, size) {
 // *** STYLE PACKAGES:
 // USAGE: LabelEditor({ styleName: "dark" })
 // USAGE: LabelEditor({ style: { selection: { color: "tomato" } } }) // Change only some keys.
+// USAGE: LabelEditor({ style: LabelEditor.styles.dark }) // The same as styleName: "dark". (The package is copied, never changed.)
 // NOTE: A new package needs only the keys that differ from the default (classic) style.
 // NOTE: xxxStyleName / xxxStyle: the style package and the style changes of the components in the panel.
 LabelEditor.styles = {

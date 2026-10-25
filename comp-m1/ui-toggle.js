@@ -62,7 +62,7 @@ UICore.createDefaultValues(UIToggle, {
 UIToggle.create = function(parameters = {}) {
 
     // BOX: UI Object container.
-    const box = createBox();
+    const box = Box();
 
     // Default values.
     box.default = UICore.cloneDefaultValues(UIToggle);
@@ -84,7 +84,7 @@ UIToggle.create = function(parameters = {}) {
     box.element.style.overflow = "visible";
     
     // BOX: Background.
-    box.boxBackground = createBox(0, 0);
+    box.boxBackground = Box(0, 0);
     box.add(that);
     that.width = box.default.backgroundWidth;
     that.height = box.default.backgroundHeight;
@@ -96,7 +96,7 @@ UIToggle.create = function(parameters = {}) {
     box.setMotion(box.default.backgroundMotionString);
 
     // BOX: Action button.
-    box.btnAction = createBox(box.default.buttonSpace, 0);
+    box.btnAction = Box(box.default.buttonSpace, 0);
     box.add(that);
     that.width = box.default.buttonWidth;
     that.height = box.default.buttonHeight;

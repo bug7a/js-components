@@ -124,6 +124,13 @@ const Toast = function (params = {}) {
     let startedAt = 0;
     let isHovered = 0;
     let isFocused = 0;
+    const SLIDE_X = 16; // px: a toast at the left or right side comes from (and goes to) that side
+    const SLIDE_Y = 12; // px: a centered toast comes from the top or the bottom
+    const ENTER_TIME = "0.2s";
+    const LEAVE_TIME = "0.16s"; // The fade out, then the closing of the space in the stack
+    const LEAVE_WAIT = 150; // ms: the space starts to close a little before the fade ends
+    const COLLAPSE_WAIT = 170; // ms: a little after the space is closed
+    const BUMP_TIME = 120; // ms
 
     // *** PUBLIC VARIABLES:
     // [var] "top-right", ...
@@ -138,11 +145,7 @@ const Toast = function (params = {}) {
     // *** PRIVATE FUNCTIONS:
 
     const getTheme = function () {
-        let theme = box.theme || options.theme;
-        if (theme == "auto") {
-            theme = (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
-        }
-        return Toast.THEMES[theme] || Toast.THEMES.light;
+        return basic.resolveTheme(Toast.THEMES, box.theme || options.theme);
     };
 
     const getDuration = function () {
@@ -150,43 +153,51 @@ const Toast = function (params = {}) {
         return options.durations[box.type] ?? 4000;
     };
 
-    const text = function (value) {
+    const getViewText = function (value) {
         return (box.allowHtml == 1) ? String(value) : Toast.escapeHtml(value);
+    };
+
+    // The move of the enter and the close animations: { x, y } in px
+    const getSlideOffset = function () {
+        if (box.toastPosition.endsWith("left")) return { x: -SLIDE_X, y: 0 };
+        if (box.toastPosition.endsWith("right")) return { x: SLIDE_X, y: 0 };
+        return { x: 0, y: (isBottom) ? SLIDE_Y : -SLIDE_Y };
     };
 
     // Writes the values to the view. (On create and update)
     const render = function () {
 
-        const t = getTheme();
-        const color = t.colors[box.type] || t.colors.info;
+        const theme = getTheme();
+        const color = theme.colors[box.type] || theme.colors.info;
+        const isError = (box.type == "error");
 
-        box.card.color = t.background;
-        box.card.borderColor = t.border;
-        box.card.elem.style.boxShadow = t.shadow;
-        box.card.elem.setAttribute("role", (box.type == "error") ? "alert" : "status");
-        box.card.elem.setAttribute("aria-live", (box.type == "error") ? "assertive" : "polite");
-        box.card.elem.style.cursor = (box.onClick) ? "pointer" : "default";
+        box.card.color = theme.background;
+        box.card.borderColor = theme.border;
+        box.card.boxShadow = theme.shadow;
+        box.card.role = (isError) ? "alert" : "status";
+        box.card.aria = { live: (isError) ? "assertive" : "polite" };
+        box.card.cursor = (box.onClick) ? "pointer" : "default";
 
         box.icon.text = Toast.getIconSvg(box.type, color, _s.icon.size);
 
         box.lblTitle.visible = (box.title) ? 1 : 0;
-        box.lblTitle.text = text(box.title);
-        box.lblTitle.textColor = t.title;
+        box.lblTitle.text = getViewText(box.title);
+        box.lblTitle.textColor = theme.title;
 
         box.lblMessage.visible = (box.message) ? 1 : 0;
-        box.lblMessage.text = text(box.message);
-        box.lblMessage.textColor = (box.title) ? t.message : t.title; // WHY: Without a title, the message is the main text.
+        box.lblMessage.text = getViewText(box.message);
+        box.lblMessage.textColor = (box.title) ? theme.message : theme.title; // WHY: Without a title, the message is the main text.
 
         const hasAction = !!(box.action && box.action.text);
         box.btnAction.visible = (hasAction) ? 1 : 0;
         if (hasAction) {
-            box.btnAction.text = Toast.escapeHtml(box.action.text);
+            box.btnAction.plainText = box.action.text;
             box.btnAction.textColor = color;
             box.btnAction.color = Toast.alpha(color, 0.12);
         }
 
         box.btnClose.visible = (box.closable == 1) ? 1 : 0;
-        box.btnClose.text = Toast.getCloseSvg(t.close);
+        box.btnClose.text = Toast.getCloseSvg(theme.close);
 
         box.progress.color = color;
 
@@ -194,21 +205,30 @@ const Toast = function (params = {}) {
 
     // Time bar: from full to empty in ms.
     const animateProgress = function (ms, fromFull) {
-        const style = box.progress.elem.style;
+        const style = box.progress.css;
         if (fromFull) {
             style.transition = "none";
             style.width = "100%";
-            void box.progress.elem.offsetWidth; // Apply 100% before the transition starts.
+            void box.progress.elem.offsetWidth; // WHY: Apply 100% before the transition starts.
         }
         style.transition = "width " + ms + "ms linear";
         style.width = "0%";
     };
 
     const freezeProgress = function () {
-        const style = box.progress.elem.style;
+        const style = box.progress.css;
         const width = window.getComputedStyle(box.progress.elem).width;
         style.transition = "none";
         style.width = width;
+    };
+
+    // Closes the toast after the remaining time.
+    const waitAndClose = function () {
+        startedAt = Date.now();
+        timer = box.after(remaining, function () {
+            timer = null;
+            box.close("timeout");
+        });
     };
 
     const stopTimer = function () {
@@ -232,13 +252,11 @@ const Toast = function (params = {}) {
         remaining = duration;
         if (isPaused()) {
             // Starts when the pause ends.
-            box.progress.elem.style.transition = "none";
-            box.progress.elem.style.width = "100%";
+            box.progress.css = { transition: "none", width: "100%" };
             return;
         }
 
-        startedAt = Date.now();
-        timer = box.after(remaining, function () { timer = null; box.close("timeout"); });
+        waitAndClose();
         if (showProgress) animateProgress(remaining, true);
 
     };
@@ -256,8 +274,7 @@ const Toast = function (params = {}) {
 
     const resume = function () {
         if (timer || !(remaining > 0) || isPaused() || box.isClosing) return;
-        startedAt = Date.now();
-        timer = box.after(remaining, function () { timer = null; box.close("timeout"); });
+        waitAndClose();
         if (box.progress.visible) animateProgress(remaining, false);
     };
 
@@ -289,10 +306,12 @@ const Toast = function (params = {}) {
     // A small move to show that the toast is updated.
     box.bump = function () {
         if (!box) return;
-        const style = box.card.elem.style;
-        style.transition = "transform 0.12s";
-        style.transform = "scale(1.03)";
-        box.after(120, function () { style.transform = "scale(1)"; });
+        const cardStyle = box.card.css;
+        cardStyle.transition = "transform " + (BUMP_TIME / 1000) + "s";
+        cardStyle.transform = "scale(1.03)";
+        box.after(BUMP_TIME, function () {
+            cardStyle.transform = "scale(1)";
+        });
     };
 
     box.close = function (reason = "api") {
@@ -305,33 +324,32 @@ const Toast = function (params = {}) {
         Toast.list = Toast.list.filter(function (toast) { return toast !== box; });
 
         const self = box;
-        const card = self.card.elem.style;
-        const moveX = (self.toastPosition.endsWith("left")) ? -16 : (self.toastPosition.endsWith("right")) ? 16 : 0;
-        const moveY = (moveX) ? 0 : (isBottom ? 12 : -12);
+        const cardStyle = self.card.css;
+        const move = getSlideOffset();
 
         // 1. Fade and move out
-        card.transition = "opacity 0.16s, transform 0.16s";
-        card.opacity = "0";
-        card.transform = "translate(" + moveX + "px, " + moveY + "px) scale(0.98)";
+        cardStyle.transition = "opacity " + LEAVE_TIME + ", transform " + LEAVE_TIME;
+        cardStyle.opacity = "0";
+        cardStyle.transform = "translate(" + move.x + "px, " + move.y + "px) scale(0.98)";
 
         setTimeout(function () {
 
             // 2. Close the space in the stack
-            const slot = self.elem.style;
-            slot.height = self.elem.offsetHeight + "px";
-            void self.elem.offsetHeight;
-            slot.transition = "height 0.16s, padding 0.16s";
-            slot.height = "0px";
-            slot.paddingTop = "0px";
-            slot.paddingBottom = "0px";
+            const slotStyle = self.css;
+            slotStyle.height = self.elem.offsetHeight + "px";
+            void self.elem.offsetHeight; // WHY: Apply the fixed height before the transition starts.
+            slotStyle.transition = "height " + LEAVE_TIME + ", padding " + LEAVE_TIME;
+            slotStyle.height = "0px";
+            slotStyle.paddingTop = "0px";
+            slotStyle.paddingBottom = "0px";
 
             setTimeout(function () {
                 self.onClose(self, reason);
-                self.remove(); // NOTE: It will clean all events like box.on("click"
+                self.remove();
                 if (box === self) box = null;
-            }, 170);
+            }, COLLAPSE_WAIT);
 
-        }, 150);
+        }, LEAVE_WAIT);
 
     };
     // reason: "timeout", "close", "action", "limit", "api"
@@ -348,9 +366,8 @@ const Toast = function (params = {}) {
 
     // *** OBJECT VIEW:
 
-    box.elem.style.overflow = "visible";
-    box.elem.style.boxSizing = "border-box";
-    box.elem.style[(isBottom) ? "paddingTop" : "paddingBottom"] = options.gap + "px";
+    box.css = { overflow: "visible", boxSizing: "border-box" };
+    box.css[(isBottom) ? "paddingTop" : "paddingBottom"] = options.gap + "px";
 
     // GROUP: Card
     box.card = HGroup({
@@ -364,10 +381,8 @@ const Toast = function (params = {}) {
         clickable: 1,
         position: "relative",
     });
-    box.card.elem.style.overflow = "hidden";
-    box.card.elem.style.boxSizing = "border-box";
-    box.card.elem.style.outline = "none";
-    box.card.elem.tabIndex = -1;
+    box.card.css = { overflow: "hidden", boxSizing: "border-box", outline: "none" };
+    box.card.tabIndex = -1;
 
         // LABEL: Icon (SVG)
         box.icon = Label({
@@ -375,10 +390,10 @@ const Toast = function (params = {}) {
             width: _s.icon.size,
             height: _s.icon.size,
         });
-        box.icon.elem.style.flexShrink = "0";
-        box.icon.elem.style.lineHeight = "0";
-        box.icon.elem.style.marginTop = "1px";
-        box.icon.elem.setAttribute("aria-hidden", "true");
+        box.icon.shrink = 0;
+        box.icon.lineHeight = "0";
+        box.icon.css.marginTop = "1px";
+        box.icon.aria = { hidden: "true" };
 
         // GROUP: Texts and action
         box.textGroup = VGroup({
@@ -387,16 +402,14 @@ const Toast = function (params = {}) {
             align: "left top",
             gap: 2,
         });
-        box.textGroup.elem.style.flex = "1 1 auto";
-        box.textGroup.elem.style.minWidth = "0";
+        box.textGroup.css = { flex: "1 1 auto", minWidth: "0" };
 
             box.lblTitle = Label({ text: "", width: "100%", fontSize: _s.title.fontSize });
-            box.lblTitle.elem.style.fontFamily = "opensans-bold";
-            box.lblTitle.elem.style.overflowWrap = "anywhere";
+            box.lblTitle.css = { fontFamily: "opensans-bold", overflowWrap: "anywhere" };
 
             box.lblMessage = Label({ text: "", width: "100%", fontSize: _s.message.fontSize });
-            box.lblMessage.elem.style.overflowWrap = "anywhere";
-            box.lblMessage.elem.style.lineHeight = "1.45";
+            box.lblMessage.css.overflowWrap = "anywhere";
+            box.lblMessage.lineHeight = "1.45";
 
             // LABEL: Action button
             box.btnAction = Label({
@@ -406,11 +419,10 @@ const Toast = function (params = {}) {
                 round: 6,
                 clickable: 1,
             });
-            box.btnAction.elem.style.fontFamily = "opensans-bold";
-            box.btnAction.elem.style.cursor = "pointer";
-            box.btnAction.elem.style.marginTop = "6px";
-            box.btnAction.elem.tabIndex = 0;
-            box.btnAction.elem.setAttribute("role", "button");
+            box.btnAction.css = { fontFamily: "opensans-bold", marginTop: "6px" };
+            box.btnAction.cursor = "pointer";
+            box.btnAction.tabIndex = 0;
+            box.btnAction.role = "button";
 
         endGroup();
 
@@ -422,16 +434,14 @@ const Toast = function (params = {}) {
             round: 6,
             clickable: 1,
         });
-        box.btnClose.elem.style.flexShrink = "0";
-        box.btnClose.elem.style.lineHeight = "0";
-        box.btnClose.elem.style.cursor = "pointer";
+        box.btnClose.shrink = 0;
+        box.btnClose.lineHeight = "0";
+        box.btnClose.cursor = "pointer";
         box.btnClose.elem.style.display = "flex";
-        box.btnClose.elem.style.alignItems = "center";
-        box.btnClose.elem.style.justifyContent = "center";
-        box.btnClose.elem.style.margin = "-2px -4px 0 0";
-        box.btnClose.elem.tabIndex = 0;
-        box.btnClose.elem.setAttribute("role", "button");
-        box.btnClose.elem.setAttribute("aria-label", "Close");
+        box.btnClose.css = { alignItems: "center", justifyContent: "center", margin: "-2px -4px 0 0" };
+        box.btnClose.tabIndex = 0;
+        box.btnClose.role = "button";
+        box.btnClose.aria = { label: "Close" };
 
         // BOX: Time bar
         box.progress = Box({
@@ -469,12 +479,24 @@ const Toast = function (params = {}) {
     };
 
     box.btnAction.on("click", runAction);
-    box.btnAction.on("keydown", function (self, event) { pressKey(event, runAction); });
+    box.btnAction.on("keydown", function (self, event) {
+        pressKey(event, runAction);
+    });
 
-    box.btnClose.on("click", function () { box.close("close"); });
-    box.btnClose.on("keydown", function (self, event) { pressKey(event, function () { box.close("close"); }); });
-    box.btnClose.on("mouseover", function () { box.btnClose.color = getTheme().closeHover; });
-    box.btnClose.on("mouseout", function () { box.btnClose.color = "transparent"; });
+    const closeByButton = function () {
+        box.close("close");
+    };
+
+    box.btnClose.on("click", closeByButton);
+    box.btnClose.on("keydown", function (self, event) {
+        pressKey(event, closeByButton);
+    });
+    box.btnClose.on("mouseover", function () {
+        box.btnClose.color = getTheme().closeHover;
+    });
+    box.btnClose.on("mouseout", function () {
+        box.btnClose.color = "transparent";
+    });
 
     box.card.on("click", function (self, event) {
         if (!box || !box.onClick) return;
@@ -487,22 +509,33 @@ const Toast = function (params = {}) {
     });
 
     // Pause the time
-    box.card.on("mouseenter", function () { isHovered = 1; updatePause(); });
-    box.card.on("mouseleave", function () { isHovered = 0; updatePause(); });
-    box.card.on("focusin", function () { isFocused = 1; updatePause(); });
-    box.card.on("focusout", function () { isFocused = 0; updatePause(); });
-    removeVisibilityEvent = box.listenTo(document, "visibilitychange", onVisibilityChange); // (removed with the box)
+    box.card.on("mouseenter", function () {
+        isHovered = 1;
+        updatePause();
+    });
+    box.card.on("mouseleave", function () {
+        isHovered = 0;
+        updatePause();
+    });
+    box.card.on("focusin", function () {
+        isFocused = 1;
+        updatePause();
+    });
+    box.card.on("focusout", function () {
+        isFocused = 0;
+        updatePause();
+    });
+    removeVisibilityEvent = box.listenTo(document, "visibilitychange", onVisibilityChange);
 
     render();
 
     // Enter animation
-    const cardStyle = box.card.elem.style;
-    const enterX = (position.endsWith("left")) ? -16 : (position.endsWith("right")) ? 16 : 0;
-    const enterY = (enterX) ? 0 : (isBottom ? 12 : -12);
+    const cardStyle = box.card.css;
+    const enterMove = getSlideOffset();
     cardStyle.opacity = "0";
-    cardStyle.transform = "translate(" + enterX + "px, " + enterY + "px) scale(0.98)";
-    void box.card.elem.offsetWidth;
-    cardStyle.transition = "opacity 0.2s, transform 0.2s";
+    cardStyle.transform = "translate(" + enterMove.x + "px, " + enterMove.y + "px) scale(0.98)";
+    void box.card.elem.offsetWidth; // WHY: Apply the start position before the transition starts.
+    cardStyle.transition = "opacity " + ENTER_TIME + ", transform " + ENTER_TIME;
     cardStyle.opacity = "1";
     cardStyle.transform = "translate(0px, 0px) scale(1)";
 
@@ -540,6 +573,11 @@ Toast.options = {
     durations: { success: 3000, info: 4000, warning: 5000, error: 7000, loading: 0 },
 };
 
+// *** THEMES: the colors. (The style param has the shapes and the sizes.)
+// USAGE: Toast.success("Saved", { theme: "dark" })
+// USAGE: Toast.setOptions({ theme: "auto" }) // Every toast: "light", "dark", "auto" (the system setting)
+// NOTE: A new theme needs only the keys that differ from the light theme.
+// USAGE: Toast.THEMES.ocean = { background: "#0B2239", title: "#FFFFFF" };
 Toast.THEMES = {
     light: {
         background: "#FFFFFF",
@@ -595,7 +633,12 @@ Toast.info = function (message, params = {}) {
 // texts: { loading, success, error } success and error can be functions: (value) => text
 Toast.promise = function (promise, texts = {}, params = {}) {
 
-    const toast = Toast(Object.assign({}, params, { type: "loading", message: texts.loading || "Loading...", duration: 0, closable: 0 }));
+    const toast = Toast(Object.assign({}, params, {
+        type: "loading",
+        message: texts.loading || "Loading...",
+        duration: 0,
+        closable: 0,
+    }));
 
     const getText = function (value, data) {
         return (typeof value === "function") ? value(data) : value;
@@ -631,19 +674,27 @@ Toast.getContainer = function (position) {
     let container = Toast._containers[position];
     if (container && container.elem.isConnected) return container;
 
+    const getAlign = function () {
+        if (position.endsWith("left")) return "left top";
+        if (position.endsWith("right")) return "right top";
+        return "center top";
+    };
+
     const previous = getDefaultContainerBox();
     setDefaultContainerBox(page);
 
         container = VGroup({
             width: Toast.options.width,
             height: "auto",
-            align: (position.endsWith("left")) ? "left top" : (position.endsWith("right")) ? "right top" : "center top",
+            align: getAlign(),
             gap: 0,
         });
-        container.elem.style.alignItems = "stretch";
-        container.elem.style.overflow = "visible"; // WHY: Groups hide overflow. The card shadows were cut at the edges.
-        container.elem.setAttribute("role", "region");
-        container.elem.setAttribute("aria-label", "Notifications");
+        container.css = {
+            alignItems: "stretch",
+            overflow: "visible", // WHY: Groups hide overflow. The card shadows were cut at the edges.
+        };
+        container.role = "region";
+        container.aria = { label: "Notifications" };
 
     endGroup();
     setDefaultContainerBox(previous);
@@ -670,11 +721,14 @@ Toast.layoutContainers = function () {
     Object.keys(Toast._containers).forEach(function (position) {
 
         const container = Toast._containers[position];
-        const style = container.elem.style;
+        const style = container.css;
 
         style.position = "fixed";
         style.zIndex = String(options.zIndex);
-        style.top = style.bottom = style.left = style.right = "";
+        style.top = "";
+        style.bottom = "";
+        style.left = "";
+        style.right = "";
         style.transform = "none";
         style.maxWidth = "calc(100% - " + (options.offset * 2) + "px)";
 

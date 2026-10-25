@@ -2,11 +2,70 @@
 
 All the changes of `basic/basic.js`, the newest version first. A version is the date of its release: **vYY.MM.DD** (v26.10.23 = 2026-10-23). A change is added under a new version with the date of that day (or under today's version, when it already exists). The version is also in the header of `basic/basic.js` and in `basic.version`. The release notes for the users of the library are in `__handbook/english/00-what-is-new.md` (and `turkce/`).
 
-Every version is compatible with the ones before it: every page and component written for an older version runs unchanged, with the same globals, the same defaults and the same DOM output (a fix of something that did not work is noted in its version).
+Every version is compatible with the ones before it (one exception: **v26.10.25** moved 5 helpers under `basic.*` and removed the 7 old `create*` globals, the user's choice): every page and component written for an older version runs unchanged, with the same globals, the same defaults and the same DOM output (a fix of something that did not work is noted in its version).
 
 Files: `basic/basic.js` (source), `basic/basic.min.js` (minified with terser), `test/basic-test.htm` (self-checking test page: every feature below has a green/red line; the tab title says `ALL PASS`).
 
-Naming rule for the additions: no new globals. New things are properties/methods on the objects, or live under `basic.*`. Names that existing components already use for their own values (`scale`, `hint`, `parent`, `shadow`, `image`, `listen`, `onHover`) are deliberately **not** added, so component defaults keep their meaning.
+Naming rule for the additions: no new globals (one exception, the user's choice on 2026-10-25: the color helper `Alpha()`, next to `Black()` and `White()`). New things are properties/methods on the objects, or live under `basic.*`. Names that existing components already use for their own values (`scale`, `hint`, `parent`, `shadow`, `image`, `listen`, `onHover`) are deliberately **not** added, so component defaults keep their meaning.
+
+---
+
+## v26.10.25 (2026-10-25)
+
+### NOT COMPATIBLE: the helpers under `basic.*`, the old `create*` globals removed
+
+The user's choice (2026-10-25), the plan of `basic/improvement-ideas.md` §9 done in one step (without a warning version): fewer global names, and names like `createButton` are free for the helpers of pages and components.
+
+| Before (global) | Now |
+|---|---|
+| `num(value, "int")` | `basic.num(value, "int")` |
+| `str(value)` | `basic.str(value)` |
+| `isMobile()` | `basic.isMobile()` |
+| `go(url, "_blank")` | `basic.go(url, "_blank")` |
+| `twoDigitFormat(5)` | `basic.twoDigitFormat(5)` |
+| `createBox(l, t, w, h)` | `Box(l, t, w, h)` |
+| `createLabel(...)` | `Label(...)` |
+| `createButton(...)` | `Button(...)` |
+| `createTextBox(...)`, `createInput(...)` | `Input(...)` |
+| `createImage(...)`, `createIcon(...)` | `Icon(...)` |
+
+- `Box = withProps(createBox)`: without a props object the two are the same, so the change of a page is only the name.
+- The old functions are kept as `basic.createBox()`, `basic.createLabel()`... (no props).
+- Every page, component and template of the repository was moved (comp-m1 to comp-m4, the samples, `js-data-table`, `js-admin-panel`, the handbook). Not moved: the places with their own basic.js copy (`04-template-m1/todo-app/library/`, the standalone sites, `__projects/`): their copy is the old one, so they keep working.
+- A file that defines its own `createButton` / `createInput` / `createLabel` (the admin panel modules and pages, `stepper.js`, `label-editor.js`, `check-box.js`, `radio-button.js`, `bottom-bar.js`, `modal.js`) was not changed: those calls are its own helper.
+- A component copied out of the repository that calls `basic.num()`... needs this basic.js (v26.10.25).
+
+### `basic.resolveTheme(themes, name)`
+
+The colors of a theme for the components with a `theme` param ("light", "dark", "auto"): `Modal`, `Toast`, `ChartBox`. The same five lines were in four places.
+
+```js
+const colors = basic.resolveTheme(Modal.THEMES, "auto"); // "auto": the system setting (light or dark)
+Modal.THEMES.ocean = { background: "#0B2239", title: "#FFFFFF" }; // only the keys that differ
+Modal.alert({ title: "Hi", theme: "ocean" });                 // the other keys come from the light theme
+```
+
+- The result is a new object: `themes[name]`, then the missing keys from `themes.light` (like a style package).
+- A name that is not in `themes` writes a warning and gives the light theme (before: the light theme without a warning).
+- `ChartBox` now takes any name in `ChartBox.THEMES` (before: only "light" and "dark").
+
+### `Alpha(color, percent)`
+
+`Black(0.5)` and `White(0.5)` for any color:
+
+```js
+Box({ color: Alpha("#456789", 0.5) });            // "rgba(69,103,137,0.5)"
+Label({ textColor: Alpha("#4A7", 0.8) });         // #RGB works too: "rgba(68,170,119,0.8)"
+Box({ border: 1, borderColor: Alpha("tomato", 0.3) });
+Box({ color: Alpha(UI.COLOR_PRIMARY, 0.15) });    // a var(--token) follows the theme (color-mix)
+```
+
+- A hex color (`#RGB`, `#RGBA`, `#RRGGBB`, `#RRGGBBAA`) becomes `rgba(...)`, which works in every browser.
+- Any other color (a name, `rgb()`, `hsl()`, `var(--token)`) becomes `color-mix(in srgb, <color> 50%, transparent)`.
+- An alpha the color already has is multiplied: `Alpha("#00000080", 0.5)` is about 25%.
+- `percent` is 0 to 1, like `Black()`: `0` gives `"transparent"`, `1` (the default) gives the color as it is.
+
+`UI.alpha()` of `comp-m4/ui-standards.js` stays (it always writes `color-mix`). It is a new global, so a page that has its own `Alpha` gets the library's one written over by its own (a `function Alpha` or `window.Alpha`) or a SyntaxError (a `const Alpha` / `let Alpha` at the top of a page script); no page of the repository has one.
 
 ---
 

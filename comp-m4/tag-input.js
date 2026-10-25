@@ -170,9 +170,7 @@ const TagInputDefaults = {
 const TagInput = function (params = {}) {
 
     // Merge style package: params.style > TagInput.styles[styleName] > TagInputDefaults.style (classic)
-    const _stylePackage = TagInput.styles[params.styleName || TagInputDefaults.styleName];
-    if (!_stylePackage) console.warn("TagInput: Style package not found: " + params.styleName);
-    mergeIntoIfMissing(params, { style: _stylePackage || {} });
+    basic.applyStylePackage(params, TagInput.styles, TagInputDefaults);
 
     // Merge params:
     mergeIntoIfMissing(params, TagInputDefaults);
@@ -198,6 +196,12 @@ const TagInput = function (params = {}) {
     let cancelMessage = null; // (box.after: the timers are stopped by remove())
     let cancelError = null;
     let isRendering = 0;
+    const MESSAGE_DURATION = 2500; // ms: the reject message is shown
+    const SHAKE_END_DELAY = 350; // ms: a little longer than the "tagInputShake 0.3s" animation
+    const PANEL_SPACE = 4; // Between the field and the panel
+    const PAGE_MARGIN = 8; // The panel stays this far from the edges of the page
+    const MIN_PANEL_WIDTH = 160;
+    const MIN_LIST_HEIGHT = 60; // When the list is made shorter to fit the page
 
     // *** PUBLIC VARIABLES:
     // NOTE: Default values are also public variables. (box.tags, box.suggestions, box.maxTags)
@@ -218,15 +222,26 @@ const TagInput = function (params = {}) {
         return box.tags.some(function (t) { return isSame(t, tag); });
     };
 
+    // "{tag} is added" + { tag: "audio" } -> "audio is added". (An unknown {key} stays as it is.)
     const format = function (text, values) {
-        return String(text).replace(/\{(\w+)\}/g, function (match, key) { return (values[key] !== undefined) ? values[key] : match; });
+        return String(text).replace(/\{(\w+)\}/g, function (match, key) {
+            return (values[key] !== undefined) ? values[key] : match;
+        });
     };
 
     // Splits a text with the separators. "a, b;c" -> ["a", "b", "c"]
     const split = function (text) {
         const chars = String(box.separators || "");
-        const parts = (chars) ? text.split(new RegExp("[" + chars.replace(/[\]\\^-]/g, "\\$&") + "\\n\\r]")) : [text];
+        let parts = [text];
+        if (chars) {
+            const escapedChars = chars.replace(/[\]\\^-]/g, "\\$&");
+            parts = text.split(new RegExp("[" + escapedChars + "\\n\\r]"));
+        }
         return parts.map(normalize).filter(Boolean);
+    };
+
+    const isSuggestion = function (tag) {
+        return box.suggestions.some(function (suggestion) { return isSame(suggestion, tag); });
     };
 
     // Returns "" when the tag can be added, or the reject reason.
@@ -235,7 +250,7 @@ const TagInput = function (params = {}) {
         if (tag.length < box.minLength) return "short";
         if (box.maxLength > 0 && tag.length > box.maxLength) return "long";
         if (hasTag(tag)) return "duplicate";
-        if (box.allowCustom != 1 && !box.suggestions.some(function (s) { return isSame(s, tag); })) return "notAllowed";
+        if (box.allowCustom != 1 && !isSuggestion(tag)) return "notAllowed";
         const custom = box.validate(tag, box);
         if (custom) return String(custom);
         return "";
@@ -243,20 +258,24 @@ const TagInput = function (params = {}) {
 
     const getMessage = function (reason, tag) {
         const text = box.messages[reason] || reason; // A custom validate() text is shown as it is.
-        return format(text, { tag: tag, max: (reason == "long") ? box.maxLength : box.maxTags, min: box.minLength });
+        return format(text, {
+            tag: tag,
+            max: (reason == "long") ? box.maxLength : box.maxTags,
+            min: box.minLength,
+        });
     };
 
-    // Creates objects in a container again. (One group is started and ended in it.)
-    // WHY: setDefaultContainerBox() is not in the start/end list of basic.js. With one top-level group, all objects stay in the container.
+    // Creates objects in a container again, in one wrapper group.
+    // WHY: createIn() puts the default container back after it (also on an error).
     const renderInto = function (container, buildContent) {
         if (container.wrapper) container.wrapper.remove();
-        const previous = getDefaultContainerBox();
-        setDefaultContainerBox(container);
-            container.wrapper = VGroup({ width: "100%", height: "auto", align: "left top", gap: 0, position: "relative" });
-            container.wrapper.elem.style.alignItems = "stretch";
+        container.wrapper = createIn(container, function () {
+            const wrapper = VGroup({ width: "100%", height: "auto", align: "left top", gap: 0, position: "relative" });
+            wrapper.css.alignItems = "stretch";
                 buildContent();
             endGroup();
-        setDefaultContainerBox(previous);
+            return wrapper;
+        });
     };
 
     const updateFieldBorder = function () {
@@ -282,16 +301,22 @@ const TagInput = function (params = {}) {
     const showMessage = function (text) {
         if (cancelMessage) cancelMessage();
         if (cancelError) cancelError();
-        box.messageLabel.text = TagInput.escapeHtml(text);
+        box.messageLabel.plainText = text;
         box.messageLabel.visible = 1;
         updateCounter();
         updateFieldBorder();
-        // Shake
-        box.field.elem.style.animation = "none";
+        shakeField();
+        cancelMessage = box.after(MESSAGE_DURATION, hideMessage);
+    };
+
+    const shakeField = function () {
+        box.field.css.animation = "none";
         box.field.elem.offsetWidth; // WHY: Restart the animation.
-        box.field.elem.style.animation = "tagInputShake 0.3s";
-        cancelError = box.after(350, function () { cancelError = null; box.field.elem.style.animation = "none"; });
-        cancelMessage = box.after(2500, hideMessage);
+        box.field.css.animation = "tagInputShake 0.3s";
+        cancelError = box.after(SHAKE_END_DELAY, function () {
+            cancelError = null;
+            box.field.css.animation = "none";
+        });
     };
 
     const hideMessage = function () {
@@ -304,11 +329,13 @@ const TagInput = function (params = {}) {
 
     const updateInputPlaceholder = function () {
         const full = (box.maxTags > 0 && box.tags.length >= box.maxTags);
-        box.input.inputElement.placeholder = (full) ? "" : ((box.tags.length) ? "" : box.placeholder);
+        box.input.inputElement.placeholder = (full || box.tags.length) ? "" : box.placeholder;
         box.input.inputElement.setAttribute("aria-label", box.placeholder || box.ariaLabel);
         // WHY: A hidden input can not be focused. It is only small when the field is full.
-        box.input.elem.style.flex = (full) ? "0 0 10px" : "1 1 " + _s.input.minWidth + "px";
-        box.input.elem.style.minWidth = (full) ? "10px" : _s.input.minWidth + "px";
+        box.input.css = {
+            flex: (full) ? "0 0 10px" : "1 1 " + _s.input.minWidth + "px",
+            minWidth: (full) ? "10px" : _s.input.minWidth + "px",
+        };
     };
 
     const paintChip = function (item, index) {
@@ -317,11 +344,75 @@ const TagInput = function (params = {}) {
         item.chip.borderColor = (selected) ? _s.tagSelected.color : _s.tag.borderColor;
         item.label.textColor = (selected) ? _s.tagSelected.textColor : _s.tagText.textColor;
         item.remove.text = TagInput.getCloseSvg((selected) ? _s.tagSelected.removeColor : _s.tagRemove.color);
-        item.chip.elem.setAttribute("aria-selected", (selected) ? "true" : "false");
+        item.chip.aria = { selected: (selected) ? "true" : "false" };
     };
 
     const paintChips = function () {
         chips.forEach(paintChip);
+    };
+
+    // One chip: a tag text and a remove (x) button. Its container must be set. (createIn)
+    const createChip = function (tag) {
+
+        // GROUP: Chip
+        const chip = HGroup({
+            width: "auto",
+            height: _s.tag.height,
+            align: "left center",
+            gap: _s.tag.gap,
+            padding: _s.tag.padding,
+            color: _s.tag.color,
+            border: _s.tag.border,
+            borderColor: _s.tag.borderColor,
+            round: _s.tag.round,
+            clickable: 1,
+        });
+        chip.shrink = 0;
+        chip.css = { maxWidth: "100%", transition: "background-color 0.15s" };
+        chip.role = "listitem";
+        chip.aria = { label: tag };
+        chip.elem.title = tag;
+
+            // LABEL: Tag text
+            const label = Label({ plainText: tag, fontSize: _s.tagText.fontSize, textColor: _s.tagText.textColor });
+            label.ellipsis = 1;
+            label.css.minWidth = "0";
+
+            // LABEL: Remove (x)
+            const remove = Label({ text: TagInput.getCloseSvg(_s.tagRemove.color), width: 14, height: 14, clickable: 1 });
+            remove.lineHeight = "0";
+            remove.shrink = 0;
+            remove.cursor = "pointer";
+            remove.css.borderRadius = "3px";
+            remove.role = "button";
+            remove.aria = { label: "Remove " + tag };
+
+        endGroup();
+
+        return { tag: tag, chip: chip, label: label, remove: remove };
+    };
+
+    const bindChipEvents = function (item, index) {
+        item.chip.on("mouseenter", function () {
+            if (index !== selectedIndex) item.chip.color = _s.tagHover.color;
+        });
+        item.chip.on("mouseleave", function () { paintChip(item, index); });
+        item.chip.on("click", function (self, event) {
+            event.stopPropagation();
+            selectedIndex = index;
+            paintChips();
+            box.input.inputElement.focus({ preventScroll: true });
+        });
+        item.remove.on("mouseenter", function () {
+            item.remove.text = TagInput.getCloseSvg(_s.tagRemove.hoverColor);
+        });
+        item.remove.on("mouseleave", function () { paintChip(item, index); });
+        item.remove.on("click", function (self, event) {
+            event.stopPropagation();
+            if (box.enabled != 1) return;
+            box.removeTag(item.tag);
+            box.input.inputElement.focus({ preventScroll: true });
+        });
     };
 
     // Draws the chips in the field. (The input stays at the end.)
@@ -333,78 +424,14 @@ const TagInput = function (params = {}) {
         chips.forEach(function (item) { item.chip.remove(); });
         chips = [];
 
-        const previous = getDefaultContainerBox();
-
         box.tags.forEach(function (tag, index) {
-
-            // WHY: setDefaultContainerBox() is not in the start/end list of basic.js. After endGroup() of a chip, the
-            //      default container is not the field any more. So it is set again for every chip.
-            setDefaultContainerBox(box.field);
-
-            // GROUP: Chip
-            const chip = HGroup({
-                width: "auto",
-                height: _s.tag.height,
-                align: "left center",
-                gap: _s.tag.gap,
-                padding: _s.tag.padding,
-                color: _s.tag.color,
-                border: _s.tag.border,
-                borderColor: _s.tag.borderColor,
-                round: _s.tag.round,
-                clickable: 1,
-            });
-            chip.elem.style.flexShrink = "0";
-            chip.elem.style.maxWidth = "100%";
-            chip.elem.style.transition = "background-color 0.15s";
-            chip.elem.setAttribute("role", "listitem");
-            chip.elem.setAttribute("aria-label", tag);
-            chip.elem.title = tag;
-
-                // LABEL: Tag text
-                const label = Label({ text: TagInput.escapeHtml(tag), fontSize: _s.tagText.fontSize, textColor: _s.tagText.textColor });
-                label.elem.style.whiteSpace = "nowrap";
-                label.elem.style.overflow = "hidden";
-                label.elem.style.textOverflow = "ellipsis";
-                label.elem.style.minWidth = "0";
-
-                // LABEL: Remove (x)
-                const remove = Label({ text: TagInput.getCloseSvg(_s.tagRemove.color), width: 14, height: 14, clickable: 1 });
-                remove.elem.style.lineHeight = "0";
-                remove.elem.style.flexShrink = "0";
-                remove.elem.style.cursor = "pointer";
-                remove.elem.style.borderRadius = "3px";
-                remove.elem.setAttribute("role", "button");
-                remove.elem.setAttribute("aria-label", "Remove " + tag);
-
-            endGroup();
-
-            const item = { tag: tag, chip: chip, label: label, remove: remove };
+            const item = createIn(box.field, function () { return createChip(tag); });
             chips.push(item);
-
             // WHY: The order of the chips is fixed, but the input must stay as the last child of the field.
-            box.field.elem.insertBefore(chip.elem, box.input.elem);
-
-            chip.on("mouseenter", function () { if (index !== selectedIndex) chip.color = _s.tagHover.color; });
-            chip.on("mouseleave", function () { paintChip(item, index); });
-            chip.on("click", function (self, event) {
-                event.stopPropagation();
-                selectedIndex = index;
-                paintChips();
-                box.input.inputElement.focus({ preventScroll: true });
-            });
-            remove.on("mouseenter", function () { remove.text = TagInput.getCloseSvg(_s.tagRemove.hoverColor); });
-            remove.on("mouseleave", function () { paintChip(item, index); });
-            remove.on("click", function (self, event) {
-                event.stopPropagation();
-                if (box.enabled != 1) return;
-                box.removeTag(tag);
-                box.input.inputElement.focus({ preventScroll: true });
-            });
-
+            box.field.elem.insertBefore(item.chip.elem, box.input.elem);
+            bindChipEvents(item, index);
         });
 
-        setDefaultContainerBox(previous);
         isRendering = 0;
 
         paintChips();
@@ -419,8 +446,11 @@ const TagInput = function (params = {}) {
             if (hasTag(s)) return false;
             return (!text) || s.toLocaleLowerCase().includes(text);
         });
+        const startsWithText = function (suggestion) {
+            return Number(suggestion.toLocaleLowerCase().startsWith(text));
+        };
         // Suggestions that start with the text come first.
-        if (text) list.sort(function (a, b) { return Number(b.toLocaleLowerCase().startsWith(text)) - Number(a.toLocaleLowerCase().startsWith(text)); });
+        if (text) list.sort(function (a, b) { return startsWithText(b) - startsWithText(a); });
         return list.slice(0, box.maxSuggestions);
     };
 
@@ -431,15 +461,17 @@ const TagInput = function (params = {}) {
         if (!text) return escaped;
         const index = label.toLocaleLowerCase().indexOf(text.toLocaleLowerCase());
         if (index < 0) return escaped;
-        return TagInput.escapeHtml(label.slice(0, index)) +
-            "<mark style='background:" + _s.highlight.color + "; color: inherit; border-radius: 3px'>" + TagInput.escapeHtml(label.slice(index, index + text.length)) + "</mark>" +
-            TagInput.escapeHtml(label.slice(index + text.length));
+        const before = TagInput.escapeHtml(label.slice(0, index));
+        const match = TagInput.escapeHtml(label.slice(index, index + text.length));
+        const after = TagInput.escapeHtml(label.slice(index + text.length));
+        const markStyle = "background:" + _s.highlight.color + "; color: inherit; border-radius: 3px";
+        return before + "<mark style='" + markStyle + "'>" + match + "</mark>" + after;
     };
 
     const paintRows = function () {
         rows.forEach(function (row, index) {
             row.color = (index === activeIndex) ? _s.optionActive.color : "transparent";
-            row.elem.setAttribute("aria-selected", (index === activeIndex) ? "true" : "false");
+            row.aria = { selected: (index === activeIndex) ? "true" : "false" };
         });
         const active = rows[activeIndex];
         if (active) {
@@ -460,24 +492,32 @@ const TagInput = function (params = {}) {
         renderInto(box.list, function () {
 
             if (!filtered.length) {
-                Label({ text: TagInput.escapeHtml(box.emptyText), fontSize: _s.empty.fontSize, textColor: _s.empty.textColor, padding: [10, 8] });
+                Label({ plainText: box.emptyText, fontSize: _s.empty.fontSize, textColor: _s.empty.textColor, padding: [10, 8] });
                 return;
             }
 
             filtered.forEach(function (suggestion, index) {
-                const row = HGroup({ width: "100%", height: "auto", align: "left center", padding: _s.option.padding, round: _s.option.round, clickable: 1 });
+                const row = HGroup({
+                    width: "100%",
+                    height: "auto",
+                    align: "left center",
+                    padding: _s.option.padding,
+                    round: _s.option.round,
+                    clickable: 1,
+                });
                 row.elem.id = id + "-option-" + index;
-                row.elem.setAttribute("role", "option");
-                row.elem.style.cursor = "pointer";
-                row.elem.style.flexShrink = "0";
-                    Label({ text: highlight(suggestion), fontSize: _s.option.fontSize, textColor: _s.option.textColor });
-                    that.elem.style.whiteSpace = "nowrap";
-                    that.elem.style.overflow = "hidden";
-                    that.elem.style.textOverflow = "ellipsis";
-                    that.elem.style.maxWidth = "100%";
+                row.role = "option";
+                row.cursor = "pointer";
+                row.shrink = 0;
+                    const lblOption = Label({ text: highlight(suggestion), fontSize: _s.option.fontSize, textColor: _s.option.textColor });
+                    lblOption.ellipsis = 1;
+                    lblOption.css.maxWidth = "100%";
                 endGroup();
                 rows.push(row);
-                row.on("mouseenter", function () { activeIndex = index; paintRows(); });
+                row.on("mouseenter", function () {
+                    activeIndex = index;
+                    paintRows();
+                });
                 row.on("click", function () {
                     addFromInput(suggestion);
                     box.input.inputElement.focus({ preventScroll: true });
@@ -493,31 +533,32 @@ const TagInput = function (params = {}) {
     const positionPanel = function () {
 
         const rect = box.field.elem.getBoundingClientRect();
-        const space = 4;
-        const width = Math.max(withPageZoom(rect.width), 160);
+        const width = Math.max(withPageZoom(rect.width), MIN_PANEL_WIDTH);
 
         box.panel.width = width;
-        box.list.elem.style.maxHeight = _s.panel.maxHeight + "px";
+        box.list.css.maxHeight = _s.panel.maxHeight + "px";
 
         const panelHeight = box.panel.elem.offsetHeight;
-        const below = page.height - withPageZoom(rect.bottom) - space - 8;
-        const above = withPageZoom(rect.top) - space - 8;
+        const below = page.height - withPageZoom(rect.bottom) - PANEL_SPACE - PAGE_MARGIN;
+        const above = withPageZoom(rect.top) - PANEL_SPACE - PAGE_MARGIN;
+        const shortenList = function (extra) {
+            box.list.css.maxHeight = Math.max(MIN_LIST_HEIGHT, _s.panel.maxHeight - extra) + "px";
+        };
 
-        let top = withPageZoom(rect.bottom) + space;
+        let top = withPageZoom(rect.bottom) + PANEL_SPACE;
         if (panelHeight > below && above > below) {
             const extra = panelHeight - above;
-            if (extra > 0) box.list.elem.style.maxHeight = Math.max(60, _s.panel.maxHeight - extra) + "px";
-            top = withPageZoom(rect.top) - box.panel.elem.offsetHeight - space;
+            if (extra > 0) shortenList(extra);
+            top = withPageZoom(rect.top) - box.panel.elem.offsetHeight - PANEL_SPACE;
         } else if (panelHeight > below) {
-            const extra = panelHeight - below;
-            box.list.elem.style.maxHeight = Math.max(60, _s.panel.maxHeight - extra) + "px";
+            shortenList(panelHeight - below);
         }
 
         let left = withPageZoom(rect.left);
-        left = Math.max(8, Math.min(left, page.width - width - 8));
+        left = Math.max(PAGE_MARGIN, Math.min(left, page.width - width - PAGE_MARGIN));
 
         box.panel.left = left;
-        box.panel.top = Math.max(8, top);
+        box.panel.top = Math.max(PAGE_MARGIN, top);
 
     };
 
@@ -556,7 +597,9 @@ const TagInput = function (params = {}) {
             return;
         }
         let added = 0;
-        parts.forEach(function (part) { if (addOne(part, 0, 1)) added++; });
+        parts.forEach(function (part) {
+            if (addOne(part, 0, 1)) added++;
+        });
         box.input.text = "";
         if (added) box.onChange(box);
         closePanel();
@@ -586,6 +629,19 @@ const TagInput = function (params = {}) {
         return 1;
     };
 
+    // ArrowDown on a closed list: it opens with the first suggestion active.
+    const openPanelWithFirstActive = function () {
+        openPanel();
+        if (!isOpen || activeIndex >= 0 || !rows.length) return;
+        activeIndex = 0;
+        paintRows();
+    };
+
+    const unselectChip = function () {
+        selectedIndex = -1;
+        paintChips();
+    };
+
     const onKeyDown = function (self, event) {
 
         if (box.enabled != 1) return;
@@ -612,7 +668,11 @@ const TagInput = function (params = {}) {
                 }
                 break;
             case "ArrowDown":
-                if (!isOpen) { openPanel(); if (isOpen && activeIndex < 0 && rows.length) { activeIndex = 0; paintRows(); } event.preventDefault(); break; }
+                if (!isOpen) {
+                    openPanelWithFirstActive();
+                    event.preventDefault();
+                    break;
+                }
                 event.preventDefault();
                 activeIndex = (rows.length) ? (activeIndex + 1) % rows.length : -1;
                 paintRows();
@@ -624,8 +684,12 @@ const TagInput = function (params = {}) {
                 paintRows();
                 break;
             case "Escape":
-                if (isOpen) { event.preventDefault(); closePanel(); }
-                else if (selectedIndex >= 0) { selectedIndex = -1; paintChips(); }
+                if (isOpen) {
+                    event.preventDefault();
+                    closePanel();
+                } else if (selectedIndex >= 0) {
+                    unselectChip();
+                }
                 break;
             case "Backspace":
                 if (text) break;
@@ -660,7 +724,7 @@ const TagInput = function (params = {}) {
                 closePanel();
                 break;
             default:
-                if (selectedIndex >= 0 && key.length === 1) { selectedIndex = -1; paintChips(); }
+                if (selectedIndex >= 0 && key.length === 1) unselectChip();
         }
 
     };
@@ -741,8 +805,10 @@ const TagInput = function (params = {}) {
     box.setEnabled = function (enabled) {
         box.enabled = basic.isOn(enabled) ? 1 : 0;
         box.input.inputElement.disabled = (box.enabled != 1);
-        box.elem.style.opacity = (box.enabled == 1) ? "1" : String(_s.disabled.opacity);
-        box.elem.style.pointerEvents = (box.enabled == 1) ? "" : "none";
+        box.css = {
+            opacity: (box.enabled == 1) ? "1" : String(_s.disabled.opacity),
+            pointerEvents: (box.enabled == 1) ? "" : "none",
+        };
         if (box.enabled != 1) closePanel();
     };
     // USAGE: get: tagInput.enabled, set: tagInput.setEnabled(0)
@@ -793,15 +859,24 @@ const TagInput = function (params = {}) {
             round: _s.field.round,
             clickable: 1,
         });
-        box.field.elem.style.flexWrap = "wrap";
-        box.field.elem.style.minHeight = _s.field.minHeight + "px";
-        box.field.elem.style.cursor = "text";
-        box.field.elem.style.transition = "border-color 0.15s";
-        box.field.elem.setAttribute("role", "list");
-        box.field.elem.setAttribute("aria-label", box.ariaLabel);
+        box.field.css = {
+            flexWrap: "wrap",
+            minHeight: _s.field.minHeight + "px",
+            transition: "border-color 0.15s",
+        };
+        box.field.cursor = "text";
+        box.field.role = "list";
+        box.field.aria = { label: box.ariaLabel };
 
             // INPUT: Typing area. (The chips are inserted before it.)
-            box.input = Input({ width: "auto", height: _s.input.height, minimal: 1, color: "transparent", fontSize: _s.input.fontSize, textColor: _s.input.textColor });
+            box.input = Input({
+                width: "auto",
+                height: _s.input.height,
+                minimal: 1,
+                color: "transparent",
+                fontSize: _s.input.fontSize,
+                textColor: _s.input.textColor,
+            });
             box.input.elem.classList.add("tag-input-input");
             box.input.inputElement.style.padding = "0px";
             box.input.inputElement.style.height = "100%";
@@ -820,14 +895,12 @@ const TagInput = function (params = {}) {
 
             // LABEL: Message (reject reason)
             box.messageLabel = Label({ text: "", fontSize: _s.message.fontSize, textColor: _s.message.textColor, visible: 0 });
-            box.messageLabel.elem.style.flex = "1 1 auto";
-            box.messageLabel.elem.style.minWidth = "0";
-            box.messageLabel.elem.setAttribute("role", "alert");
+            box.messageLabel.css = { flex: "1 1 auto", minWidth: "0" };
+            box.messageLabel.role = "alert";
 
             // LABEL: Counter "3 / 5"
             box.counterLabel = Label({ text: "", fontSize: _s.counter.fontSize, textColor: _s.counter.textColor, visible: 0 });
-            box.counterLabel.elem.style.marginLeft = "auto";
-            box.counterLabel.elem.style.whiteSpace = "nowrap";
+            box.counterLabel.css = { marginLeft: "auto", whiteSpace: "nowrap" };
 
         endGroup();
 
@@ -851,15 +924,15 @@ const TagInput = function (params = {}) {
         clickable: 1,
     });
     // WHY: visible: 0 at create time makes the children absolute (not flex items). Hide it after the children are added.
-    box.panel.elem.style.alignItems = "stretch";
-    box.panel.elem.style.boxShadow = _s.panel.shadow;
-    box.panel.elem.style.zIndex = "1001";
+    box.panel.css.alignItems = "stretch";
+    box.panel.boxShadow = _s.panel.shadow;
+    box.panel.zIndex = 1001;
 
         // BOX: List (scrolls)
         box.list = Box({ width: "100%", height: "auto", color: "transparent", scrollY: 1, position: "relative" });
         box.list.elem.id = id + "-list";
-        box.list.elem.setAttribute("role", "listbox");
-        box.list.elem.style.overscrollBehavior = "contain";
+        box.list.role = "listbox";
+        box.list.css.overscrollBehavior = "contain";
 
     endGroup();
     box.panel.visible = 0;
@@ -872,7 +945,10 @@ const TagInput = function (params = {}) {
         paintChips();
         box.input.inputElement.focus({ preventScroll: true });
     });
-    box.field.on("mouseenter", function () { if (!isFocused && box.messageLabel.visible != 1) box.field.borderColor = _s.fieldHover.borderColor; });
+    box.field.on("mouseenter", function () {
+        if (isFocused || box.messageLabel.visible == 1) return;
+        box.field.borderColor = _s.fieldHover.borderColor;
+    });
     box.field.on("mouseleave", function () { updateFieldBorder(); });
 
     box.input.inputElement.addEventListener("focus", function () {
@@ -887,7 +963,7 @@ const TagInput = function (params = {}) {
         updateFieldBorder();
     });
     box.input.inputElement.addEventListener("input", function () {
-        if (selectedIndex >= 0) { selectedIndex = -1; paintChips(); }
+        if (selectedIndex >= 0) unselectChip();
         openPanel();
     });
     box.input.inputElement.addEventListener("keydown", function (event) { onKeyDown(box, event); });
@@ -934,6 +1010,7 @@ TagInput.injectCss = function () {
 // *** STYLE PACKAGES:
 // USAGE: TagInput({ styleName: "modern" })
 // USAGE: TagInput({ styleName: "dark", style: { tag: { color: "#3D7A6B" } } }) // Change only some keys.
+// USAGE: TagInput({ style: TagInput.styles.dark }) // The same as styleName: "dark". (The package is copied, never changed.)
 // NOTE: A new package needs only the keys that differ from the default (classic) style.
 // USAGE: TagInput.styles.myStyle = { tag: { color: "gold" } };
 TagInput.styles = {
@@ -964,7 +1041,7 @@ TagInput.styles = {
         disabled: { opacity: 0.5 },
     },
 
-    // Dark theme, same colors as SelectBox.DARK_STYLE.
+    // Dark theme, same colors as SelectBox "dark".
     dark: {
         field: { color: "#232322", border: 1, borderColor: "rgba(255, 255, 255, 0.10)", round: 8, padding: [8, 6], gap: 6, minHeight: 44 },
         fieldHover: { borderColor: "rgba(255, 255, 255, 0.30)" },

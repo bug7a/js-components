@@ -42,7 +42,7 @@ UITabs.resetDefault();
 UITabs.create = function(parameters = {}) {
 
     // BOX: UI object container.
-    const box = createBox();
+    const box = Box();
 
     // Default values.
 	box.default = {};
@@ -85,7 +85,7 @@ UITabs.create = function(parameters = {}) {
         box.color =  box.default.backgroundColor;
 
         // BOX: Selected container box.
-        box.boxSelected = createBox(-1000, 0, box.height, box.height);
+        box.boxSelected = Box(-1000, 0, box.height, box.height);
         box.add(that);
         that.color = "transparent";
         //that.left = -1 * box.boxSelected.width;
@@ -95,7 +95,7 @@ UITabs.create = function(parameters = {}) {
         that.setMotion("left 0.2s, opacity 0.2s"); // width 0.2s, 
 
         // BOX: Selected background box.
-        box.boxSelected.boxBack = createBox(box.default.itemOuterSpace, box.default.itemOuterSpace);
+        box.boxSelected.boxBack = Box(box.default.itemOuterSpace, box.default.itemOuterSpace);
         box.boxSelected.add(that);
         that.round = box.default.round;
         that.color = box.default.selectedItemColor;
@@ -132,7 +132,7 @@ UITabs.create = function(parameters = {}) {
     box.createItem = function(dataList, index) {
 
         // BOX: Item container box.
-        const item = createBox();
+        const item = Box();
         that.color = "transparent";
         that.width = box.height;
         that.height = box.height;
@@ -146,14 +146,14 @@ UITabs.create = function(parameters = {}) {
         that.setMotion("left 0.1s, width 0.1s, opacity 0.1s");
         
         // BOX: Item background box.
-        item.boxBack = createBox(0, box.default.itemOuterSpace, box.height, item.height - box.default.itemOuterSpace - box.default.itemOuterSpace);
+        item.boxBack = Box(0, box.default.itemOuterSpace, box.height, item.height - box.default.itemOuterSpace - box.default.itemOuterSpace);
         item.add(that);
         that.color = "transparent";
         that.round = box.default.round;
         that.setMotion("width 0.1s");
         
         // LABEL: Item text.
-        item.lblTitle = createLabel(0, 0, "auto", "auto");
+        item.lblTitle = Label(0, 0, "auto", "auto");
         item.add(that);
         that.text = dataList.text;
         that.fontSize = box.default.itemFontSize;
@@ -161,7 +161,7 @@ UITabs.create = function(parameters = {}) {
         that.setMotion("color 0.2s");
 
         // IMAGE: item icon image.
-        item.imgIcon = createImage(0, 0, box.default.itemIconSize, box.default.itemIconSize);
+        item.imgIcon = Icon(0, 0, box.default.itemIconSize, box.default.itemIconSize);
         item.add(that);
         that.space = 0;
         if (dataList.iconFile) {

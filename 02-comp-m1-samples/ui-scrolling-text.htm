@@ -33,7 +33,7 @@
             page.color = "white";
 
             // BOX: Button container.
-            const box = createBox(0, 0, 220, 50);
+            const box = Box(0, 0, 220, 50);
             that.color = "white";
             that.round = 8;
             that.border = 1;
@@ -41,12 +41,12 @@
             that.center();
 
             // BOX: Scrolling text.
-            box.boxScrollingText = createBox(10, 11, 200, 26);
+            box.boxScrollingText = Box(10, 11, 200, 26);
             box.add(that);
             that.color = "transparent";
 
             // LABEL: Vegetables are healthy text.
-            createLabel(0, 0, "auto", 26);
+            Label(0, 0, "auto", 26);
             box.boxScrollingText.add(that);
             that.text = "Start. Vegetables are healthy. End.";
             that.color = "transparent";
@@ -55,14 +55,14 @@
             that.element.style.animation = "scrolling-item 15s linear 0s infinite";
 
             // BOX: Right mask for box.boxScrollingText.
-            box.boxRightMask = createBox(0, 0, 10, box.boxScrollingText.height);
+            box.boxRightMask = Box(0, 0, 10, box.boxScrollingText.height);
             box.add(that);
             that.element.style.background = "linear-gradient(to right, #FFFFFF00, white, white)";
             that.aline(box.boxScrollingText, "right", -9);
             that.border = 0;
 
             // BOX: Top left for box.boxScrollingText.
-            box.boxLeftMask = createBox(0, 0, 10, box.boxScrollingText.height);
+            box.boxLeftMask = Box(0, 0, 10, box.boxScrollingText.height);
             box.add(that);
             that.element.style.background = "linear-gradient(to left, #FFFFFF00, white, white)";
             that.aline(box.boxScrollingText, "left", -9);

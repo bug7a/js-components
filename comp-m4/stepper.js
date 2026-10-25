@@ -97,9 +97,7 @@ const StepperDefaults = {
 const Stepper = function (params = {}) {
 
     // Merge style package: params.style > Stepper.styles[styleName] > StepperDefaults.style (classic)
-    const _stylePackage = Stepper.styles[params.styleName || StepperDefaults.styleName];
-    if (!_stylePackage) console.warn("Stepper: Style package not found: " + params.styleName);
-    mergeIntoIfMissing(params, { style: _stylePackage || {} });
+    basic.applyStylePackage(params, Stepper.styles, StepperDefaults);
 
     // Merge params:
     mergeIntoIfMissing(params, StepperDefaults);
@@ -122,6 +120,15 @@ const Stepper = function (params = {}) {
     let cancelHold = null; // (box.after: stopped by remove())
     let holdCount = 0;
     let isFocused = 0;
+    const PAGE_STEPS = 10; // PageUp / PageDown
+    // Hold to repeat: the first repeat waits (a normal click does not repeat), then it gets faster.
+    const HOLD_FIRST_DELAY = 400;
+    const HOLD_SLOW_DELAY = 400;
+    const HOLD_MEDIUM_DELAY = 120;
+    const HOLD_FAST_DELAY = 50;
+    const HOLD_SLOW_COUNT = 3; // Repeats before the medium speed
+    const HOLD_MEDIUM_COUNT = 12; // Repeats before the fast speed
+    const STACK_GAP = 2; // Between the stacked buttons (compact)
 
     // *** PUBLIC VARIABLES:
     // NOTE: Default values are also public variables. (box.value, box.min, box.max, box.step)
@@ -156,20 +163,23 @@ const Stepper = function (params = {}) {
     };
 
     const paintButton = function (button, isEnabled) {
-        button.elem.style.opacity = (isEnabled) ? "1" : String(_s.button.disabledOpacity);
-        button.elem.style.cursor = (isEnabled) ? "pointer" : "default";
-        button.elem.setAttribute("aria-disabled", (isEnabled) ? "false" : "true");
+        button.css.opacity = (isEnabled) ? "1" : String(_s.button.disabledOpacity);
+        button.cursor = (isEnabled) ? "pointer" : "default";
+        button.aria = { disabled: (isEnabled) ? "false" : "true" };
         if (!isEnabled) button.color = _s.button.color;
     };
 
     const updateView = function () {
-        box.lblValue.text = Stepper.escapeHtml(box.valueFormat(box.value, box));
+        const valueText = box.valueFormat(box.value, box);
+        box.lblValue.plainText = valueText;
         paintButton(box.btnMinus, canDecrease());
         paintButton(box.btnPlus, canIncrease());
-        box.elem.setAttribute("aria-valuenow", String(box.value));
-        box.elem.setAttribute("aria-valuemin", String(box.min));
-        box.elem.setAttribute("aria-valuemax", String(box.max));
-        box.elem.setAttribute("aria-valuetext", box.valueFormat(box.value, box));
+        box.aria = {
+            valuenow: String(box.value),
+            valuemin: String(box.min),
+            valuemax: String(box.max),
+            valuetext: valueText,
+        };
     };
 
     const updateBorder = function () {
@@ -187,18 +197,26 @@ const Stepper = function (params = {}) {
 
     // *** HOLD TO REPEAT:
 
+    const getHoldDelay = function () {
+        if (holdCount < HOLD_SLOW_COUNT) return HOLD_SLOW_DELAY;
+        if (holdCount < HOLD_MEDIUM_COUNT) return HOLD_MEDIUM_DELAY;
+        return HOLD_FAST_DELAY;
+    };
+
     const startHold = function (direction) {
         stopHold();
         if (box.holdToRepeat != 1) return;
         holdCount = 0;
         const tick = function () {
             holdCount++;
-            // Faster after a while: 400 ms, then 120 ms, then 50 ms
-            const delay = (holdCount < 3) ? 400 : (holdCount < 12) ? 120 : 50;
-            if (!stepValue(direction)) { stopHold(); return; }
+            const delay = getHoldDelay();
+            if (!stepValue(direction)) {
+                stopHold();
+                return;
+            }
             cancelHold = box.after(delay, tick);
         };
-        cancelHold = box.after(400, tick); // First repeat after a short wait (a normal click does not repeat)
+        cancelHold = box.after(HOLD_FIRST_DELAY, tick);
     };
 
     const stopHold = function () {
@@ -234,30 +252,76 @@ const Stepper = function (params = {}) {
         updateView();
     };
 
+    // While editing: Enter applies, Escape cancels, the arrows apply and step.
+    const onEditKeyDown = function (event) {
+        const key = event.key;
+        if (key === "Enter" || key === "Escape") {
+            event.preventDefault();
+            endEdit((key === "Enter") ? 1 : 0);
+            box.focus();
+            return;
+        }
+        if (key === "ArrowUp" || key === "ArrowDown") {
+            event.preventDefault();
+            endEdit(1);
+            stepValue((key === "ArrowUp") ? 1 : -1);
+            startEdit();
+        }
+    };
+
+    const isNumberKey = function (key) {
+        return key.length === 1 && /[\d\-.,]/.test(key);
+    };
+
     const onKeyDown = function (self, event) {
 
         if (box.enabled != 1) return;
         const key = event.key;
 
         if (isEditing) {
-            if (key === "Enter") { event.preventDefault(); endEdit(1); box.elem.focus({ preventScroll: true }); }
-            else if (key === "Escape") { event.preventDefault(); endEdit(0); box.elem.focus({ preventScroll: true }); }
-            else if (key === "ArrowUp") { event.preventDefault(); endEdit(1); stepValue(1); startEdit(); }
-            else if (key === "ArrowDown") { event.preventDefault(); endEdit(1); stepValue(-1); startEdit(); }
+            onEditKeyDown(event);
             return;
         }
 
         switch (key) {
-            case "ArrowUp": case "ArrowRight": event.preventDefault(); stepValue(1); break;
-            case "ArrowDown": case "ArrowLeft": event.preventDefault(); stepValue(-1); break;
-            case "PageUp": event.preventDefault(); stepValue(10); break;
-            case "PageDown": event.preventDefault(); stepValue(-10); break;
-            case "Home": event.preventDefault(); box.setValue(box.min); break;
-            case "End": event.preventDefault(); box.setValue(box.max); break;
-            case "Enter": case " ": if (box.editable == 1) { event.preventDefault(); startEdit(); } break;
+            case "ArrowUp":
+            case "ArrowRight":
+                event.preventDefault();
+                stepValue(1);
+                break;
+            case "ArrowDown":
+            case "ArrowLeft":
+                event.preventDefault();
+                stepValue(-1);
+                break;
+            case "PageUp":
+                event.preventDefault();
+                stepValue(PAGE_STEPS);
+                break;
+            case "PageDown":
+                event.preventDefault();
+                stepValue(-PAGE_STEPS);
+                break;
+            case "Home":
+                event.preventDefault();
+                box.setValue(box.min);
+                break;
+            case "End":
+                event.preventDefault();
+                box.setValue(box.max);
+                break;
+            case "Enter":
+            case " ":
+                if (box.editable != 1) break;
+                event.preventDefault();
+                startEdit();
+                break;
             default:
                 // Typing a digit starts the edit with that digit.
-                if (box.editable == 1 && key.length === 1 && /[\d\-.,]/.test(key)) { event.preventDefault(); startEdit(); box.input.text = key; }
+                if (box.editable != 1 || !isNumberKey(key)) break;
+                event.preventDefault();
+                startEdit();
+                box.input.text = key;
         }
 
     };
@@ -329,10 +393,14 @@ const Stepper = function (params = {}) {
 
     box.setEnabled = function (enabled) {
         box.enabled = basic.isOn(enabled) ? 1 : 0;
-        if (box.enabled != 1) { endEdit(0); stopHold(); }
-        box.elem.style.opacity = (box.enabled == 1) ? "1" : String(_s.disabled.opacity);
-        box.elem.tabIndex = (box.enabled == 1) ? 0 : -1;
-        box.elem.setAttribute("aria-disabled", (box.enabled == 1) ? "false" : "true");
+        const isEnabled = (box.enabled == 1);
+        if (!isEnabled) {
+            endEdit(0);
+            stopHold();
+        }
+        box.css.opacity = (isEnabled) ? "1" : String(_s.disabled.opacity);
+        box.tabIndex = (isEnabled) ? 0 : -1;
+        box.aria = { disabled: (isEnabled) ? "false" : "true" };
         updateView();
     };
     // USAGE: get: stepper.enabled, set: stepper.setEnabled(0)
@@ -353,17 +421,24 @@ const Stepper = function (params = {}) {
 
     // *** OBJECT VIEW:
 
-    box.elem.setAttribute("role", "spinbutton");
-    box.elem.setAttribute("aria-label", box.ariaLabel);
-    box.elem.style.outline = "none";
-    box.elem.style.boxSizing = "border-box";
-    box.elem.style.transition = "border-color 0.15s";
+    box.role = "spinbutton";
+    box.aria = { label: box.ariaLabel };
+    box.css = {
+        outline: "none",
+        boxSizing: "border-box",
+        transition: "border-color 0.15s",
+    };
     box.clickable = 1;
 
+    const getButtonSvg = function (icon) {
+        if (icon === "plus") return Stepper.getPlusSvg(_s.button.iconColor, _s.button.iconSize);
+        return Stepper.getMinusSvg(_s.button.iconColor, _s.button.iconSize);
+    };
+
     // LABEL: Button (- or +), drawn with SVG
-    const createButton = function (icon, ariaLabel, isStacked) {
+    const createStepButton = function (icon, ariaLabel, isStacked) {
         const btn = Label({
-            text: (icon === "plus") ? Stepper.getPlusSvg(_s.button.iconColor, _s.button.iconSize) : Stepper.getMinusSvg(_s.button.iconColor, _s.button.iconSize),
+            text: getButtonSvg(icon),
             width: (isStacked) ? "100%" : _s.button.width,
             height: (isStacked) ? "auto" : "100%",
             color: _s.button.color,
@@ -371,16 +446,14 @@ const Stepper = function (params = {}) {
             clickable: 1,
         });
         btn.elem.style.display = "flex";
-        btn.elem.style.alignItems = "center";
-        btn.elem.style.justifyContent = "center";
-        btn.elem.style.lineHeight = "0";
-        btn.elem.style.flexShrink = "0";
-        btn.elem.style.cursor = "pointer";
-        btn.elem.style.userSelect = "none";
-        btn.elem.style.transition = "background-color 0.15s";
-        if (isStacked) btn.elem.style.flex = "1 1 0";
-        btn.elem.setAttribute("role", "button");
-        btn.elem.setAttribute("aria-label", ariaLabel);
+        btn.css = { alignItems: "center", justifyContent: "center" };
+        btn.lineHeight = "0";
+        btn.shrink = 0;
+        btn.cursor = "pointer";
+        btn.css = { userSelect: "none", transition: "background-color 0.15s" };
+        if (isStacked) btn.css.flex = "1 1 0"; // WHY: After shrink (flex sets it again): the stacked buttons share the height.
+        btn.role = "button";
+        btn.aria = { label: ariaLabel };
         return btn;
     };
 
@@ -393,15 +466,14 @@ const Stepper = function (params = {}) {
         padding: _s.box.padding,
         position: "relative",
     });
-    box.row.elem.style.boxSizing = "border-box";
+    box.row.css.boxSizing = "border-box";
 
-        if (!isCompact) box.btnMinus = createButton("minus", "Decrease", 0);
+        if (!isCompact) box.btnMinus = createStepButton("minus", "Decrease", 0);
 
         // BOX: Value area (label, and the input while editing)
         box.valueBox = startBox({ width: "auto", height: "100%", color: "transparent" });
-        box.valueBox.elem.style.flex = "1 1 0";
-        box.valueBox.elem.style.minWidth = "0";
-        box.valueBox.elem.style.cursor = (box.editable == 1) ? "text" : "default";
+        box.valueBox.css = { flex: "1 1 0", minWidth: "0" };
+        box.valueBox.cursor = (box.editable == 1) ? "text" : "default";
         box.valueBox.clickable = 1;
 
             // LABEL: Value text
@@ -415,16 +487,24 @@ const Stepper = function (params = {}) {
                 textAlign: "center",
             });
             box.lblValue.elem.style.display = "flex";
-            box.lblValue.elem.style.alignItems = "center";
-            box.lblValue.elem.style.justifyContent = "center";
-            box.lblValue.elem.style.whiteSpace = "nowrap";
-            box.lblValue.elem.style.overflow = "hidden";
-            box.lblValue.elem.style.textOverflow = "ellipsis";
-            box.lblValue.elem.style.userSelect = "none";
-            if (_s.value.fontFamily) box.lblValue.elem.style.fontFamily = _s.value.fontFamily;
+            box.lblValue.css = { alignItems: "center", justifyContent: "center" };
+            box.lblValue.ellipsis = 1;
+            box.lblValue.css.userSelect = "none";
+            if (_s.value.fontFamily) box.lblValue.css.fontFamily = _s.value.fontFamily;
 
             // INPUT: Typing the value (hidden until the edit starts)
-            box.input = Input({ left: 0, top: 0, width: "100%", height: "100%", minimal: 1, color: _s.input.color, fontSize: _s.value.fontSize, textColor: _s.input.textColor, textAlign: "center", round: _s.input.round });
+            box.input = Input({
+                left: 0,
+                top: 0,
+                width: "100%",
+                height: "100%",
+                minimal: 1,
+                color: _s.input.color,
+                fontSize: _s.value.fontSize,
+                textColor: _s.input.textColor,
+                textAlign: "center",
+                round: _s.input.round,
+            });
             box.input.inputElement.style.padding = "0px 4px";
             box.input.inputElement.style.width = "100%";
             box.input.inputElement.style.height = "100%";
@@ -440,14 +520,14 @@ const Stepper = function (params = {}) {
 
         if (isCompact) {
             // GROUP: Stacked buttons (+ over -)
-            box.stack = VGroup({ width: _s.button.width, height: "100%", align: "center top", gap: 2 });
-            box.stack.elem.style.flexShrink = "0";
-            box.stack.elem.style.alignItems = "stretch";
-                box.btnPlus = createButton("plus", "Increase", 1);
-                box.btnMinus = createButton("minus", "Decrease", 1);
+            box.stack = VGroup({ width: _s.button.width, height: "100%", align: "center top", gap: STACK_GAP });
+            box.stack.shrink = 0;
+            box.stack.css.alignItems = "stretch";
+                box.btnPlus = createStepButton("plus", "Increase", 1);
+                box.btnMinus = createStepButton("minus", "Decrease", 1);
             endGroup();
         } else {
-            box.btnPlus = createButton("plus", "Increase", 0);
+            box.btnPlus = createStepButton("plus", "Increase", 0);
         }
 
     endGroup();
@@ -457,7 +537,10 @@ const Stepper = function (params = {}) {
     const bindButton = function (btn, direction) {
         const isEnabled = function () { return (direction > 0) ? canIncrease() : canDecrease(); };
         btn.on("mouseenter", function () { if (isEnabled()) btn.color = _s.button.hoverColor; });
-        btn.on("mouseleave", function () { btn.color = _s.button.color; stopHold(); });
+        btn.on("mouseleave", function () {
+            btn.color = _s.button.color;
+            stopHold();
+        });
         btn.on("mousedown", function (self, event) {
             if (event.button !== 0 || !isEnabled()) return;
             event.preventDefault(); // WHY: Keeps the focus on the stepper, no text selection.
@@ -466,7 +549,10 @@ const Stepper = function (params = {}) {
             stepValue(direction);
             startHold(direction);
         });
-        btn.on("mouseup", function () { btn.color = (isEnabled()) ? _s.button.hoverColor : _s.button.color; stopHold(); });
+        btn.on("mouseup", function () {
+            btn.color = (isEnabled()) ? _s.button.hoverColor : _s.button.color;
+            stopHold();
+        });
         btn.on("touchstart", function (self, event) {
             if (!isEnabled()) return;
             event.preventDefault();
@@ -476,7 +562,10 @@ const Stepper = function (params = {}) {
         });
         btn.on("touchend", stopHold);
         btn.on("touchcancel", stopHold);
-        btn.on("click", function (self, event) { event.stopPropagation(); box.elem.focus({ preventScroll: true }); });
+        btn.on("click", function (self, event) {
+            event.stopPropagation();
+            box.focus();
+        });
     };
 
     bindButton(box.btnMinus, -1);
@@ -488,9 +577,18 @@ const Stepper = function (params = {}) {
     box.input.inputElement.addEventListener("blur", function () { endEdit(1); });
     box.input.inputElement.addEventListener("keydown", function (event) { onKeyDown(box, event); });
 
-    box.on("keydown", function (self, event) { if (event.target !== box.input.inputElement) onKeyDown(self, event); });
-    box.on("focus", function () { isFocused = 1; updateBorder(); });
-    box.on("blur", function () { isFocused = 0; updateBorder(); });
+    box.on("keydown", function (self, event) {
+        if (event.target === box.input.inputElement) return; // WHY: The input has its own keydown (above).
+        onKeyDown(self, event);
+    });
+    box.on("focus", function () {
+        isFocused = 1;
+        updateBorder();
+    });
+    box.on("blur", function () {
+        isFocused = 0;
+        updateBorder();
+    });
     // WHY: A click on the buttons must not open the edit. It is handled in bindButton with stopPropagation.
 
     box.min = Number(box.min) || 0;
@@ -523,6 +621,7 @@ Stepper.getMinusSvg = function (color, size) {
 // *** STYLE PACKAGES:
 // USAGE: Stepper({ styleName: "modern" })
 // USAGE: Stepper({ styleName: "dark", style: { button: { iconColor: "tomato" } } }) // Change only some keys.
+// USAGE: Stepper({ style: Stepper.styles.dark }) // The same as styleName: "dark". (The package is copied, never changed.)
 // NOTE: A new package needs only the keys that differ from the default (classic) style.
 // USAGE: Stepper.styles.myStyle = { button: { color: "gold" } };
 Stepper.styles = {
@@ -540,7 +639,7 @@ Stepper.styles = {
         disabled: { opacity: 0.5 },
     },
 
-    // Dark theme, same colors as SelectBox.DARK_STYLE, TagInput and Tabs "dark".
+    // Dark theme, same colors as SelectBox, TagInput and Tabs "dark".
     dark: {
         box: { color: "#232322", border: 1, borderColor: "rgba(255, 255, 255, 0.10)", round: 8, padding: 3 },
         boxFocus: { borderColor: "#65A293" },

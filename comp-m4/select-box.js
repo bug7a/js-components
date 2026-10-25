@@ -15,7 +15,7 @@ UI COMPONENT TEMPLATE
 - Accessibility: combobox + listbox roles, aria-expanded, aria-selected, aria-activedescendant.
 - onChange is NOT called when the component is created or when the value is set with silent: 1.
 - Big lists: Only the first "maxRenderCount" matches are drawn. (Search shows the others.)
-- Dark theme: style: SelectBox.DARK_STYLE
+- Style packages: "classic" (default), "dark". Select with styleName. (SelectBox.styles)
 
 OPTION: { value, label, description, iconFile, group, disabled }
 - A string or a number is also accepted: "Apple" -> { value: "Apple", label: "Apple" }
@@ -70,7 +70,8 @@ const SelectBoxDefaults = {
     onChange: function (self) { }, // self.value, self.getSelectedOptions()
     onOpen: function (self) { },
     onClose: function (self) { },
-    style: {
+    styleName: "classic", // "classic", "dark" or a name added to SelectBox.styles
+    style: { // Classic style package (default)
         field: {
             color: White(1),
             border: 1,
@@ -157,6 +158,9 @@ const SelectBoxDefaults = {
 
 const SelectBox = function (params = {}) {
 
+    // Merge style package: params.style > SelectBox.styles[styleName] > SelectBoxDefaults.style (classic)
+    basic.applyStylePackage(params, SelectBox.styles, SelectBoxDefaults);
+
     // Merge params:
     mergeIntoIfMissing(params, SelectBoxDefaults);
 
@@ -178,6 +182,11 @@ const SelectBox = function (params = {}) {
     let searchText = "";
     let rows = []; // Drawn option rows: [{ row, option }]
     let activeIndex = -1; // Index in rows
+    const PANEL_GAP = 6; // px between the field and the panel
+    const SCREEN_MARGIN = 8; // px: the panel stays this far from the edges of the page
+    const MIN_LIST_HEIGHT = 80; // px: the list is not made shorter than this when the space is small
+    const OVERLAY_Z_INDEX = 1000;
+    const PANEL_Z_INDEX = 1001;
 
     // *** PUBLIC VARIABLES:
     // [var] Normalized options
@@ -209,11 +218,21 @@ const SelectBox = function (params = {}) {
         return box.options.find(function (option) { return sameValue(option.value, value); });
     };
 
+    // Multiple: a value, an array or nothing -> an array
+    const toValueList = function (value) {
+        if (Array.isArray(value)) return value;
+        if (value === null || value === undefined || value === "") return [];
+        return [value];
+    };
+
     const normalizeValue = function (value) {
         if (isMultiple()) {
-            const list = (Array.isArray(value)) ? value : (value === null || value === undefined || value === "") ? [] : [value];
+            const list = toValueList(value);
             // WHY: Only values that are in the options. The order of the options is used.
-            return box.options.filter(function (option) { return list.some(function (v) { return sameValue(v, option.value); }); }).map(function (option) { return option.value; });
+            const selectedOptions = box.options.filter(function (option) {
+                return list.some(function (v) { return sameValue(v, option.value); });
+            });
+            return selectedOptions.map(function (option) { return option.value; });
         }
         const option = findOption(value);
         return (option) ? option.value : null;
@@ -234,22 +253,36 @@ const SelectBox = function (params = {}) {
         if (!text) return escaped;
         const index = label.toLocaleLowerCase().indexOf(text.toLocaleLowerCase());
         if (index < 0) return escaped;
-        return SelectBox.escapeHtml(label.slice(0, index)) +
-            "<mark style='background:" + _s.highlight.color + "; color: inherit; border-radius: 3px'>" + SelectBox.escapeHtml(label.slice(index, index + text.length)) + "</mark>" +
-            SelectBox.escapeHtml(label.slice(index + text.length));
+        const before = SelectBox.escapeHtml(label.slice(0, index));
+        const match = SelectBox.escapeHtml(label.slice(index, index + text.length));
+        const after = SelectBox.escapeHtml(label.slice(index + text.length));
+        const markStyle = "background:" + _s.highlight.color + "; color: inherit; border-radius: 3px";
+        return before + "<mark style='" + markStyle + "'>" + match + "</mark>" + after;
     };
 
-    // Creates objects in a container again. (One group is started and ended in it.)
-    // WHY: setDefaultContainerBox() is not in the start/end list of basic.js. With one top-level group, all objects stay in the container.
+    // Creates the objects of a container again, in one group (container.wrapper).
     const renderInto = function (container, buildContent) {
         if (container.wrapper) container.wrapper.remove();
-        const previous = getDefaultContainerBox();
-        setDefaultContainerBox(container);
+        createIn(container, function () {
             container.wrapper = VGroup({ width: "100%", height: "auto", align: "left top", gap: 0, position: "relative" });
-            container.wrapper.elem.style.alignItems = "stretch";
+            container.wrapper.css.alignItems = "stretch";
                 buildContent();
             endGroup();
-        setDefaultContainerBox(previous);
+        });
+    };
+
+    const getFieldBorderColor = function () {
+        if (isOpen || isFocused) return _s.fieldFocus.borderColor;
+        if (isMouseOver) return _s.fieldHover.borderColor;
+        return _s.field.borderColor;
+    };
+
+    // A small SVG picture in a Label that does not shrink in a group.
+    const createSvgLabel = function (svg, size) {
+        const label = Label({ text: svg, width: size, height: size });
+        label.shrink = 0;
+        label.lineHeight = "0";
+        return label;
     };
 
     const updateField = function () {
@@ -270,13 +303,15 @@ const SelectBox = function (params = {}) {
 
         box.clearButton.visible = (box.clearable == 1 && selected.length > 0 && box.enabled == 1) ? 1 : 0;
 
-        box.field.borderColor = (isOpen || isFocused) ? _s.fieldFocus.borderColor : (isMouseOver ? _s.fieldHover.borderColor : _s.field.borderColor);
-        box.arrow.elem.style.transform = (isOpen) ? "rotate(180deg)" : "rotate(0deg)";
+        box.field.borderColor = getFieldBorderColor();
+        box.arrow.css.transform = (isOpen) ? "rotate(180deg)" : "rotate(0deg)";
 
-        box.elem.setAttribute("aria-expanded", (isOpen) ? "true" : "false");
         box.opacity = (box.enabled == 1) ? 1 : _s.disabled.opacity;
-        box.elem.tabIndex = (box.enabled == 1) ? 0 : -1;
-        box.elem.setAttribute("aria-disabled", (box.enabled == 1) ? "false" : "true");
+        box.tabIndex = (box.enabled == 1) ? 0 : -1;
+        box.aria = {
+            expanded: (isOpen) ? "true" : "false",
+            disabled: (box.enabled == 1) ? "false" : "true",
+        };
 
     };
 
@@ -301,8 +336,10 @@ const SelectBox = function (params = {}) {
                 if (option.group && option.group != lastGroup) {
                     lastGroup = option.group;
                     Label({ text: SelectBox.escapeHtml(option.group.toUpperCase()), padding: [8, 4], ..._s.group });
-                    that.elem.style.letterSpacing = "1px";
-                    that.elem.style.marginTop = (rows.length) ? "6px" : "0px";
+                    that.css = {
+                        letterSpacing: "1px",
+                        marginTop: (rows.length) ? "6px" : "0px",
+                    };
                 }
 
                 rows.push({ row: createOptionRow(option, rows.length), option: option });
@@ -310,17 +347,23 @@ const SelectBox = function (params = {}) {
             });
 
             if (list.length > shown.length) {
-                Label({ text: "Showing " + shown.length + " of " + list.length + ". Type to search.", width: "100%", textAlign: "center", padding: [8, 8], ..._s.empty });
+                const moreText = "Showing " + shown.length + " of " + list.length + ". Type to search.";
+                Label({ text: moreText, width: "100%", textAlign: "center", padding: [8, 8], ..._s.empty });
             }
 
         });
 
-        // Active row: the first selected one, or the first enabled one
+        setActive(getStartActiveIndex(), 0);
+
+        box.list.aria = { multiselectable: (isMultiple()) ? "true" : "false" };
+
+    };
+
+    // Active row after the list is drawn: the first selected one, or the first enabled one
+    const getStartActiveIndex = function () {
         const selectedIndex = rows.findIndex(function (item) { return isSelected(item.option) && !item.option.disabled; });
-        setActive((selectedIndex >= 0) ? selectedIndex : rows.findIndex(function (item) { return !item.option.disabled; }), 0);
-
-        box.list.elem.setAttribute("aria-multiselectable", (isMultiple()) ? "true" : "false");
-
+        if (selectedIndex >= 0) return selectedIndex;
+        return rows.findIndex(function (item) { return !item.option.disabled; });
     };
 
     const createOptionRow = function (option, index) {
@@ -338,35 +381,33 @@ const SelectBox = function (params = {}) {
             clickable: 1,
         });
         row.elem.id = id + "-option-" + index;
-        row.elem.setAttribute("role", "option");
-        row.elem.setAttribute("aria-selected", (selected) ? "true" : "false");
-        row.elem.style.cursor = (option.disabled) ? "default" : "pointer";
+        row.role = "option";
+        row.aria = { selected: (selected) ? "true" : "false" };
+        row.cursor = (option.disabled) ? "default" : "pointer";
         if (option.disabled) {
-            row.elem.setAttribute("aria-disabled", "true");
+            row.aria = { disabled: "true" };
             row.opacity = _s.optionDisabled.opacity;
         }
 
             // Multiple: check box
             if (isMultiple()) {
-                Label({ text: SelectBox.getCheckSvg(selected, _s), width: 18, height: 18 });
-                that.elem.style.flexShrink = "0";
-                that.elem.style.lineHeight = "0";
+                createSvgLabel(SelectBox.getCheckSvg(selected, _s), 18);
             }
 
             if (option.iconFile) {
                 Icon({ width: 22, height: 22 });
                 that.load(option.iconFile);
-                that.elem.style.flexShrink = "0";
+                that.shrink = 0;
                 that.elem.alt = "";
             }
 
             VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
-            that.elem.style.flex = "1 1 auto";
-            that.elem.style.minWidth = "0";
+            that.css = { flex: "1 1 auto", minWidth: "0" };
 
-                Label({ text: highlight(option.label), fontSize: _s.option.fontSize, textColor: (selected) ? _s.optionSelected.textColor : _s.option.textColor, width: "100%" });
-                if (selected && !isMultiple()) that.elem.style.fontFamily = "opensans-bold";
-                that.elem.style.overflowWrap = "anywhere";
+                const labelColor = (selected) ? _s.optionSelected.textColor : _s.option.textColor;
+                Label({ text: highlight(option.label), fontSize: _s.option.fontSize, textColor: labelColor, width: "100%" });
+                if (selected && !isMultiple()) that.css.fontFamily = "opensans-bold";
+                that.css.overflowWrap = "anywhere";
 
                 if (option.description) {
                     Label({ text: highlight(option.description), width: "100%", ..._s.description });
@@ -376,9 +417,7 @@ const SelectBox = function (params = {}) {
 
             // Single: tick on the right
             if (!isMultiple() && selected) {
-                Label({ text: SelectBox.getTickSvg(_s.optionSelected.checkColor), width: 16, height: 16 });
-                that.elem.style.flexShrink = "0";
-                that.elem.style.lineHeight = "0";
+                createSvgLabel(SelectBox.getTickSvg(_s.optionSelected.checkColor), 16);
             }
 
         endGroup();
@@ -403,13 +442,13 @@ const SelectBox = function (params = {}) {
 
         const item = rows[activeIndex];
         if (!item) {
-            box.panel.elem.removeAttribute("aria-activedescendant");
-            box.elem.removeAttribute("aria-activedescendant");
+            box.panel.aria = { activedescendant: null };
+            box.aria = { activedescendant: null };
             return;
         }
 
         item.row.color = _s.optionActive.color;
-        box.elem.setAttribute("aria-activedescendant", item.row.elem.id);
+        box.aria = { activedescendant: item.row.elem.id };
         if (box.searchInput) box.searchInput.inputElement.setAttribute("aria-activedescendant", item.row.elem.id);
         if (scroll) item.row.elem.scrollIntoView({ block: "nearest" });
 
@@ -425,11 +464,24 @@ const SelectBox = function (params = {}) {
         }
     };
 
+    // closeOnSelect: null -> close for single, stay open for multiple
+    const shouldCloseOnSelect = function () {
+        if (box.closeOnSelect === null) return !isMultiple();
+        return box.closeOnSelect == 1;
+    };
+
+    const toggleInValue = function (option) {
+        if (isSelected(option)) {
+            box.value = box.value.filter(function (v) { return !sameValue(v, option.value); });
+            return;
+        }
+        box.value = normalizeValue(box.value.concat([option.value]));
+    };
+
     const selectOption = function (option) {
 
         if (isMultiple()) {
-            if (isSelected(option)) box.value = box.value.filter(function (v) { return !sameValue(v, option.value); });
-            else box.value = normalizeValue(box.value.concat([option.value]));
+            toggleInValue(option);
         } else {
             box.value = option.value;
         }
@@ -437,8 +489,7 @@ const SelectBox = function (params = {}) {
         const keepActive = activeIndex;
         updateField();
 
-        const closeOnSelect = (box.closeOnSelect === null) ? !isMultiple() : box.closeOnSelect == 1;
-        if (closeOnSelect) {
+        if (shouldCloseOnSelect()) {
             box.close();
             box.elem.focus();
         } else {
@@ -453,36 +504,50 @@ const SelectBox = function (params = {}) {
     };
 
     // Position the popup panel under (or above) the field.
+    // Makes the list shorter by "extra" px. (Not shorter than MIN_LIST_HEIGHT.)
+    const shortenList = function (extra) {
+        box.list.css.maxHeight = Math.max(MIN_LIST_HEIGHT, box.panelMaxHeight - extra) + "px";
+    };
+
     const positionPanel = function () {
 
         const rect = box.elem.getBoundingClientRect();
-        const space = 6;
         const width = Math.max(withPageZoom(rect.width), box.panelMinWidth);
 
         box.panel.width = width;
-        box.list.elem.style.maxHeight = box.panelMaxHeight + "px";
+        box.list.css.maxHeight = box.panelMaxHeight + "px";
 
         const panelHeight = box.panel.elem.offsetHeight;
-        const below = page.height - withPageZoom(rect.bottom) - space - 8;
-        const above = withPageZoom(rect.top) - space - 8;
+        const below = page.height - withPageZoom(rect.bottom) - PANEL_GAP - SCREEN_MARGIN;
+        const above = withPageZoom(rect.top) - PANEL_GAP - SCREEN_MARGIN;
 
-        let top = withPageZoom(rect.bottom) + space;
+        let top = withPageZoom(rect.bottom) + PANEL_GAP;
         if (panelHeight > below && above > below) {
             // Open above. Make the list shorter if there is not enough space.
             const extra = panelHeight - above;
-            if (extra > 0) box.list.elem.style.maxHeight = Math.max(80, box.panelMaxHeight - extra) + "px";
-            top = withPageZoom(rect.top) - box.panel.elem.offsetHeight - space;
+            if (extra > 0) shortenList(extra);
+            top = withPageZoom(rect.top) - box.panel.elem.offsetHeight - PANEL_GAP;
         } else if (panelHeight > below) {
-            const extra = panelHeight - below;
-            box.list.elem.style.maxHeight = Math.max(80, box.panelMaxHeight - extra) + "px";
+            shortenList(panelHeight - below);
         }
 
         let left = withPageZoom(rect.left);
-        left = Math.max(8, Math.min(left, page.width - width - 8));
+        left = Math.max(SCREEN_MARGIN, Math.min(left, page.width - width - SCREEN_MARGIN));
 
         box.panel.left = left;
-        box.panel.top = Math.max(8, top);
+        box.panel.top = Math.max(SCREEN_MARGIN, top);
 
+    };
+
+    const selectActiveRow = function () {
+        const item = rows[activeIndex];
+        if (item && !item.option.disabled) selectOption(item.option);
+    };
+
+    // A letter typed without Ctrl / Cmd / Alt
+    const isTypedLetter = function (event) {
+        if (event.key.length != 1) return false;
+        return !event.ctrlKey && !event.metaKey && !event.altKey;
     };
 
     const onKeyDown = function (self, event) {
@@ -495,7 +560,7 @@ const SelectBox = function (params = {}) {
             if (key == "Enter" || key == " " || key == "ArrowDown" || key == "ArrowUp") {
                 event.preventDefault();
                 box.open();
-            } else if (key.length == 1 && !event.ctrlKey && !event.metaKey && !event.altKey && isSearchable()) {
+            } else if (isTypedLetter(event) && isSearchable()) {
                 // Typing on the field starts a search.
                 event.preventDefault();
                 box.open(key);
@@ -526,12 +591,12 @@ const SelectBox = function (params = {}) {
                 break;
             case "Enter":
                 event.preventDefault();
-                if (rows[activeIndex] && !rows[activeIndex].option.disabled) selectOption(rows[activeIndex].option);
+                selectActiveRow();
                 break;
             case " ":
                 if (inSearch) return; // WHY: Space is a letter in the search.
                 event.preventDefault();
-                if (rows[activeIndex] && !rows[activeIndex].option.disabled) selectOption(rows[activeIndex].option);
+                selectActiveRow();
                 break;
             case "Escape":
                 event.preventDefault();
@@ -653,12 +718,10 @@ const SelectBox = function (params = {}) {
 
     box.color = "transparent";
     box.clickable = 1;
-    box.elem.style.outline = "none";
-    box.elem.style.userSelect = "none";
-    box.elem.setAttribute("role", "combobox");
-    box.elem.setAttribute("aria-haspopup", "listbox");
-    box.elem.setAttribute("aria-controls", id + "-list");
-    if (box.ariaLabel) box.elem.setAttribute("aria-label", box.ariaLabel);
+    box.css = { outline: "none", userSelect: "none" };
+    box.role = "combobox";
+    box.aria = { haspopup: "listbox", controls: id + "-list" };
+    if (box.ariaLabel) box.aria = { label: box.ariaLabel };
 
     // GROUP: Field
     box.field = HGroup({
@@ -676,27 +739,21 @@ const SelectBox = function (params = {}) {
             fontSize: _s.fieldText.fontSize,
             textColor: _s.fieldText.textColor,
         });
-        box.fieldText.elem.style.whiteSpace = "nowrap";
-        box.fieldText.elem.style.overflow = "hidden";
-        box.fieldText.elem.style.textOverflow = "ellipsis";
-        box.fieldText.elem.style.flex = "1 1 auto";
-        box.fieldText.elem.style.minWidth = "0";
+        box.fieldText.ellipsis = 1;
+        box.fieldText.css = { flex: "1 1 auto", minWidth: "0" };
 
         // LABEL: Clear button
         box.clearButton = Label({ text: SelectBox.getClearSvg(_s.arrow.color), width: 20, height: 20, round: 4, clickable: 1 });
-        box.clearButton.elem.style.flexShrink = "0";
-        box.clearButton.elem.style.lineHeight = "0";
+        box.clearButton.shrink = 0;
+        box.clearButton.lineHeight = "0";
         box.clearButton.elem.style.display = "flex";
-        box.clearButton.elem.style.alignItems = "center";
-        box.clearButton.elem.style.justifyContent = "center";
-        box.clearButton.elem.style.cursor = "pointer";
-        box.clearButton.elem.setAttribute("aria-label", "Clear");
+        box.clearButton.css = { alignItems: "center", justifyContent: "center" };
+        box.clearButton.cursor = "pointer";
+        box.clearButton.aria = { label: "Clear" };
 
         // LABEL: Arrow
-        box.arrow = Label({ text: SelectBox.getArrowSvg(_s.arrow.color), width: 16, height: 16 });
-        box.arrow.elem.style.flexShrink = "0";
-        box.arrow.elem.style.lineHeight = "0";
-        box.arrow.elem.style.transition = "transform 0.15s";
+        box.arrow = createSvgLabel(SelectBox.getArrowSvg(_s.arrow.color), 16);
+        box.arrow.css.transition = "transform 0.15s";
 
     endGroup();
 
@@ -711,8 +768,8 @@ const SelectBox = function (params = {}) {
     // screen in every case.
     const OVERLAY_SIZE = 20000; // px
     box.overlay = Box(-OVERLAY_SIZE, -OVERLAY_SIZE, OVERLAY_SIZE * 2, OVERLAY_SIZE * 2, { color: "transparent", clickable: 1 });
-    box.overlay.elem.style.position = "fixed";
-    box.overlay.elem.style.zIndex = "1000";
+    box.overlay.css.position = "fixed";
+    box.overlay.zIndex = OVERLAY_Z_INDEX;
 
     // GROUP: Panel
     box.panel = VGroup({
@@ -727,19 +784,26 @@ const SelectBox = function (params = {}) {
         padding: _s.panel.padding,
         clickable: 1,
     });
-    box.panel.elem.style.alignItems = "stretch";
-    box.panel.elem.style.boxShadow = _s.panel.shadow;
-    box.panel.elem.style.outline = "none";
-    box.panel.elem.style.zIndex = "1001";
-    box.panel.elem.tabIndex = -1;
+    box.panel.css = { alignItems: "stretch", outline: "none" };
+    box.panel.boxShadow = _s.panel.shadow;
+    box.panel.zIndex = PANEL_Z_INDEX;
+    box.panel.tabIndex = -1;
 
         // GROUP: Search
-        box.searchGroup = HGroup({ width: "100%", height: 38, align: "left center", gap: 8, padding: [10, 0], color: _s.search.color, border: _s.search.border, borderColor: _s.search.borderColor, round: _s.search.round });
-        box.searchGroup.elem.style.flexShrink = "0";
+        box.searchGroup = HGroup({
+            width: "100%",
+            height: 38,
+            align: "left center",
+            gap: 8,
+            padding: [10, 0],
+            color: _s.search.color,
+            border: _s.search.border,
+            borderColor: _s.search.borderColor,
+            round: _s.search.round,
+        });
+        box.searchGroup.shrink = 0;
 
-            Label({ text: SelectBox.getSearchSvg(_s.arrow.color), width: 16, height: 16 });
-            that.elem.style.flexShrink = "0";
-            that.elem.style.lineHeight = "0";
+            createSvgLabel(SelectBox.getSearchSvg(_s.arrow.color), 16);
 
             box.searchInput = Input({ width: "100%", height: 34, minimal: 1, color: "transparent", fontSize: _s.search.fontSize, textColor: _s.search.textColor });
             box.searchInput.inputElement.style.padding = "0px";
@@ -747,28 +811,29 @@ const SelectBox = function (params = {}) {
             box.searchInput.inputElement.setAttribute("aria-label", box.searchPlaceholder);
             box.searchInput.inputElement.setAttribute("aria-controls", id + "-list");
             box.searchInput.inputElement.setAttribute("autocomplete", "off");
-            box.searchInput.elem.style.flex = "1 1 auto";
-            box.searchInput.elem.style.minWidth = "0";
+            box.searchInput.css = { flex: "1 1 auto", minWidth: "0" };
 
         endGroup();
 
         // BOX: List
         box.list = Box({ width: "100%", height: "auto", color: "transparent", scrollY: 1, position: "relative" });
         box.list.elem.id = id + "-list";
-        box.list.elem.setAttribute("role", "listbox");
-        box.list.elem.style.overscrollBehavior = "contain";
+        box.list.role = "listbox";
+        box.list.css.overscrollBehavior = "contain";
 
         // GROUP: Footer (multiple)
         box.footer = HGroup({ width: "100%", height: "auto", align: "left center", padding: [4, 6] });
-        box.footer.elem.style.justifyContent = "space-between";
-        box.footer.elem.style.borderTop = "1px solid " + _s.divider.color;
-        box.footer.elem.style.flexShrink = "0";
+        box.footer.css = {
+            justifyContent: "space-between",
+            borderTop: "1px solid " + _s.divider.color,
+        };
+        box.footer.shrink = 0;
 
             box.selectAllButton = Label({ text: SelectBox.escapeHtml(box.selectAllText), padding: [6, 2], round: 4, clickable: 1, ..._s.footerButton });
-            box.selectAllButton.elem.style.cursor = "pointer";
+            box.selectAllButton.cursor = "pointer";
 
             box.clearAllButton = Label({ text: SelectBox.escapeHtml(box.clearText), padding: [6, 2], round: 4, clickable: 1, ..._s.footerButton });
-            box.clearAllButton.elem.style.cursor = "pointer";
+            box.clearAllButton.cursor = "pointer";
 
         endGroup();
 
@@ -785,10 +850,22 @@ const SelectBox = function (params = {}) {
         box.toggle();
     });
     box.on("keydown", onKeyDown);
-    box.on("focus", function () { isFocused = 1; updateField(); });
-    box.on("blur", function () { isFocused = 0; updateField(); });
-    box.on("mouseover", function () { isMouseOver = 1; updateField(); });
-    box.on("mouseout", function () { isMouseOver = 0; updateField(); });
+    box.on("focus", function () {
+        isFocused = 1;
+        updateField();
+    });
+    box.on("blur", function () {
+        isFocused = 0;
+        updateField();
+    });
+    box.on("mouseover", function () {
+        isMouseOver = 1;
+        updateField();
+    });
+    box.on("mouseout", function () {
+        isMouseOver = 0;
+        updateField();
+    });
 
     box.clearButton.on("click", function () {
         box.clear();
@@ -811,8 +888,9 @@ const SelectBox = function (params = {}) {
 
     box.selectAllButton.on("click", function () {
         // Only the options in the search result
-        const add = getFilteredOptions().filter(function (option) { return !option.disabled; }).map(function (option) { return option.value; });
-        box.setValue(box.value.concat(add));
+        const enabledOptions = getFilteredOptions().filter(function (option) { return !option.disabled; });
+        const valuesToAdd = enabledOptions.map(function (option) { return option.value; });
+        box.setValue(box.value.concat(valuesToAdd));
     });
 
     box.clearAllButton.on("click", function () {
@@ -885,25 +963,41 @@ SelectBox.getCheckSvg = function (checked, style) {
         '<path d="m4.5 9.3 3 3 6-6.3" fill="none" stroke="' + s.checkTickColor + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 };
 
-// Dark theme. USAGE: SelectBox({ ..., style: SelectBox.DARK_STYLE })
-SelectBox.DARK_STYLE = {
-    field: { color: "#232322", border: 1, borderColor: "rgba(255, 255, 255, 0.10)", round: 8, padding: [12, 0] },
-    fieldHover: { borderColor: "rgba(255, 255, 255, 0.30)" },
-    fieldFocus: { borderColor: "#65A293" },
-    fieldText: { fontSize: 15, textColor: "rgba(255, 255, 255, 0.90)" },
-    placeholder: { textColor: "rgba(255, 255, 255, 0.40)" },
-    arrow: { color: "rgba(255, 255, 255, 0.55)" },
-    panel: { color: "#232322", border: 1, borderColor: "rgba(255, 255, 255, 0.12)", round: 10, padding: 6, shadow: "0 8px 24px rgba(0, 0, 0, 0.5)" },
-    search: { color: "rgba(255, 255, 255, 0.05)", border: 1, borderColor: "rgba(255, 255, 255, 0.10)", round: 6, fontSize: 14, textColor: "rgba(255, 255, 255, 0.90)" },
-    option: { fontSize: 14, textColor: "rgba(255, 255, 255, 0.85)", round: 6, padding: [10, 8] },
-    optionActive: { color: "rgba(255, 255, 255, 0.08)" },
-    optionSelected: { textColor: "#FFFFFF", checkColor: "#3D7A6B", checkTickColor: "#FFFFFF" },
-    optionDisabled: { opacity: 0.4 },
-    description: { fontSize: 12, textColor: "rgba(255, 255, 255, 0.45)" },
-    group: { fontSize: 11, textColor: "rgba(255, 255, 255, 0.45)" },
-    highlight: { color: "rgba(101, 162, 147, 0.45)" },
-    empty: { fontSize: 14, textColor: "rgba(255, 255, 255, 0.45)" },
-    footerButton: { fontSize: 13, textColor: "#65A293" },
-    divider: { color: "rgba(255, 255, 255, 0.08)" },
-    disabled: { opacity: 0.4 },
+// *** STYLE PACKAGES:
+// USAGE: SelectBox({ styleName: "dark" })
+// USAGE: SelectBox({ styleName: "dark", style: { field: { round: 4 } } }) // Change only some keys.
+// USAGE: SelectBox({ style: SelectBox.styles.dark }) // The same as styleName: "dark". (The package is copied, never changed.)
+// NOTE: A new package needs only the keys that differ from the default (classic) style.
+// USAGE: SelectBox.styles.myStyle = { field: { color: "ivory" } };
+SelectBox.styles = {
+
+    // White field, dark text, a soft line.
+    classic: SelectBoxDefaults.style,
+
+    // Dark theme. (The other dark packages of comp-m4 use these colors.)
+    dark: {
+        field: { color: "#232322", border: 1, borderColor: "rgba(255, 255, 255, 0.10)", round: 8, padding: [12, 0] },
+        fieldHover: { borderColor: "rgba(255, 255, 255, 0.30)" },
+        fieldFocus: { borderColor: "#65A293" },
+        fieldText: { fontSize: 15, textColor: "rgba(255, 255, 255, 0.90)" },
+        placeholder: { textColor: "rgba(255, 255, 255, 0.40)" },
+        arrow: { color: "rgba(255, 255, 255, 0.55)" },
+        panel: { color: "#232322", border: 1, borderColor: "rgba(255, 255, 255, 0.12)", round: 10, padding: 6, shadow: "0 8px 24px rgba(0, 0, 0, 0.5)" },
+        search: { color: "rgba(255, 255, 255, 0.05)", border: 1, borderColor: "rgba(255, 255, 255, 0.10)", round: 6, fontSize: 14, textColor: "rgba(255, 255, 255, 0.90)" },
+        option: { fontSize: 14, textColor: "rgba(255, 255, 255, 0.85)", round: 6, padding: [10, 8] },
+        optionActive: { color: "rgba(255, 255, 255, 0.08)" },
+        optionSelected: { textColor: "#FFFFFF", checkColor: "#3D7A6B", checkTickColor: "#FFFFFF" },
+        optionDisabled: { opacity: 0.4 },
+        description: { fontSize: 12, textColor: "rgba(255, 255, 255, 0.45)" },
+        group: { fontSize: 11, textColor: "rgba(255, 255, 255, 0.45)" },
+        highlight: { color: "rgba(101, 162, 147, 0.45)" },
+        empty: { fontSize: 14, textColor: "rgba(255, 255, 255, 0.45)" },
+        footerButton: { fontSize: 13, textColor: "#65A293" },
+        divider: { color: "rgba(255, 255, 255, 0.08)" },
+        disabled: { opacity: 0.4 },
+    },
+
 };
+
+// The old name of the dark package. (Kept: pages may use it.)
+SelectBox.DARK_STYLE = SelectBox.styles.dark;

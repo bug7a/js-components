@@ -94,7 +94,7 @@ UIStepper.resetDefault();
 UIStepper.create = function(parameters = {}) {
 
 	// BOX: UI Object container.
-	const box = createBox();
+	const box = Box();
 
 	// Default values.
 	box.default = {};
@@ -119,7 +119,7 @@ UIStepper.create = function(parameters = {}) {
 	box.height = box.default.height;
 
 	// BOX: Background.
-	box.boxBackground = createBox(0, 0, box.width, box.height);
+	box.boxBackground = Box(0, 0, box.width, box.height);
 	box.add(that);
 	that.round = box.default.backgroundRound;
 	that.color = box.default.backgroundColor;
@@ -127,7 +127,7 @@ UIStepper.create = function(parameters = {}) {
 	that.borderColor = box.default.backgroundBorderColor;
 
 	// LABEL: Number text.
-	box.lblNumber = createLabel(0, 0);
+	box.lblNumber = Label(0, 0);
 	box.add(that);
 	that.fontSize = box.default.fontSize;
 	that.textAlign = "center";
@@ -141,7 +141,7 @@ UIStepper.create = function(parameters = {}) {
 	});
 
 	// BOX: Decrease button. (-)
-	box.boxDecrease = createBox(box.default.buttonOuterSpace, 0, box.default.buttonWidth, box.default.buttonHeight);
+	box.boxDecrease = Box(box.default.buttonOuterSpace, 0, box.default.buttonWidth, box.default.buttonHeight);
 	box.add(that);
 	that.border = box.default.buttonBorder;
 	that.borderColor = box.default.buttonBorderColor;
@@ -153,7 +153,7 @@ UIStepper.create = function(parameters = {}) {
 	that.center("top");
 
 	// IMAGE: Decrease icon. (-)
-	box.imgDecrease = createImage(0, 0, box.default.iconWidth, box.default.iconHeight);
+	box.imgDecrease = Icon(0, 0, box.default.iconWidth, box.default.iconHeight);
 	box.boxDecrease.add(that);
 	that.load(box.default.iconFileDecrease);
 	that.border = 0;
@@ -163,7 +163,7 @@ UIStepper.create = function(parameters = {}) {
 	that.center();
 
 	// BOX: Increase button. (+)
-	box.boxIncrease = createBox(0, 0, box.default.buttonWidth, box.default.buttonHeight);
+	box.boxIncrease = Box(0, 0, box.default.buttonWidth, box.default.buttonHeight);
 	box.add(that);
 	that.right = box.default.buttonOuterSpace;
 	that.border = box.default.buttonBorder;
@@ -176,7 +176,7 @@ UIStepper.create = function(parameters = {}) {
 	that.center("top");
 	
 	// Image: Increase icon. (+)
-	box.imgIncrease = createImage(0, 0, box.default.iconWidth, box.default.iconHeight)
+	box.imgIncrease = Icon(0, 0, box.default.iconWidth, box.default.iconHeight)
 	box.boxIncrease.add(that);
 	that.load(box.default.iconFileIncrease);
 	that.border = 0;
@@ -194,8 +194,8 @@ UIStepper.create = function(parameters = {}) {
 
 		event.stopPropagation();
 
-		if (num(currentValue) != maximumNumber) {
-			box.setValue(num(currentValue) + 1);
+		if (basic.num(currentValue) != maximumNumber) {
+			box.setValue(basic.num(currentValue) + 1);
 			box.refreshButtonsOpacity();
 		}
 
@@ -205,8 +205,8 @@ UIStepper.create = function(parameters = {}) {
 
 		event.stopPropagation();
 
-		if (num(currentValue) != minimumNumber) {
-			box.setValue(num(currentValue) - 1);
+		if (basic.num(currentValue) != minimumNumber) {
+			box.setValue(basic.num(currentValue) - 1);
 			box.refreshButtonsOpacity();
 		}
 
@@ -220,12 +220,12 @@ UIStepper.create = function(parameters = {}) {
 		box.boxIncrease.element.style.cursor = "pointer";
 		box.boxDecrease.element.style.cursor = "pointer";
 
-		if (num(currentValue) == maximumNumber) {
+		if (basic.num(currentValue) == maximumNumber) {
 			box.boxIncrease.opacity = box.default.buttonDisableOpacity;
 			box.boxIncrease.element.style.cursor = "default";
 		}
 
-		if (num(currentValue) == minimumNumber) {
+		if (basic.num(currentValue) == minimumNumber) {
 			box.boxDecrease.opacity = box.default.buttonDisableOpacity;
 			box.boxDecrease.element.style.cursor = "default";
 		}
@@ -234,7 +234,7 @@ UIStepper.create = function(parameters = {}) {
 	box.setMinimumNumber = function(number) {
 
 		minimumNumber = number;
-		if (num(currentValue) < number) {
+		if (basic.num(currentValue) < number) {
 			box.setValue(number);
 		}
 
@@ -249,7 +249,7 @@ UIStepper.create = function(parameters = {}) {
 	box.setMaximumNumber = function(number) {
 		
 		maximumNumber = number;
-		if (num(currentValue) > number) {
+		if (basic.num(currentValue) > number) {
 			box.setValue(number);
 		}
 
@@ -289,14 +289,14 @@ UIStepper.create = function(parameters = {}) {
 		}
 
 		currentValue = number;
-		box.lblNumber.text = str(number) + unitText;
+		box.lblNumber.text = basic.str(number) + unitText;
 		box.refreshButtonsOpacity();
 		onChangeFunc(box);
 
 	}
 	
 	box.getValue = function() {
-		return num(currentValue);
+		return basic.num(currentValue);
 	}
 
 	box.onChange = function(func) {
@@ -306,7 +306,7 @@ UIStepper.create = function(parameters = {}) {
 	// *** FIRST RUN CODE:
 	box.boxDecrease.onClick(decreaseNumber);
 	box.boxIncrease.onClick(increaseNumber);
-	box.setValue(num(currentValue));
+	box.setValue(basic.num(currentValue));
 	box.refreshButtonsOpacity();
 	
 	makeBasicObject(box);

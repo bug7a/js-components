@@ -41,7 +41,7 @@ UICells.create = function(box, align, sizes) {
 
     for (let i = 0; i < sizes.length; i++) {
 
-        createBox();
+        Box();
         box.add(that);
         that.left = 0;
         that.top = 0;

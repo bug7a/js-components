@@ -19,7 +19,7 @@ const UICloseButton = {};
 UICloseButton.create = function() {
 
     // BOX: UI object container.
-    const box = createBox(20, 30, 40, 40);
+    const box = Box(20, 30, 40, 40);
     that.right = 20;
     that.border = 0;
     that.color = "transparent";
@@ -28,7 +28,7 @@ UICloseButton.create = function() {
     that.opacity = 1;
 
     // BOX: Background.
-    box.background = createBox(0, 0, box.width, box.height);
+    box.background = Box(0, 0, box.width, box.height);
     box.add(that);
     that.color = "white";
     that.border = 1;
@@ -36,7 +36,7 @@ UICloseButton.create = function() {
     that.round = 8;
 
     // IMAGE: Close button image.
-    box.imgClose = createImage(0, 0, box.width, box.height);
+    box.imgClose = Icon(0, 0, box.width, box.height);
     box.add(that);
     that.load("components/ui-close-button/close-button.svg");
     that.space = 25;

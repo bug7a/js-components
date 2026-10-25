@@ -23,7 +23,7 @@ const UIWebView = {};
 
 UIWebView.create = function(left = -1000, top = -1000, width = 250, height = 250) {
 
-    const box = createBox(left, top, width, height);
+    const box = Box(left, top, width, height);
     box.color = "transparent";
     box.clickable = 1;
     box.border = 0;

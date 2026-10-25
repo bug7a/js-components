@@ -78,9 +78,7 @@ const ProgressBarDefaults = {
 const ProgressBar = function (params = {}) {
 
     // Merge style package: params.style > ProgressBar.styles[styleName] > ProgressBarDefaults.style (classic)
-    const _stylePackage = ProgressBar.styles[params.styleName || ProgressBarDefaults.styleName];
-    if (!_stylePackage) console.warn("ProgressBar: Style package not found: " + params.styleName);
-    mergeIntoIfMissing(params, { style: _stylePackage || {} });
+    basic.applyStylePackage(params, ProgressBar.styles, ProgressBarDefaults);
 
     // Merge params:
     mergeIntoIfMissing(params, ProgressBarDefaults);
@@ -93,6 +91,8 @@ const ProgressBar = function (params = {}) {
 
     // *** PRIVATE VARIABLES:
     let moveAnimation = null; // Indeterminate animation (Web Animations API)
+    const ROW_GAP = 10; // Space between the title and the value text, the track and the value text
+    const COLOR_MOTION = "background-color 0.2s";
 
     // *** PUBLIC VARIABLES:
     // NOTE: Default values are also public variables. (box.value, box.max, box.status)
@@ -106,7 +106,7 @@ const ProgressBar = function (params = {}) {
     };
 
     const getBarMotion = function () {
-        return "width " + box.style.bar.motion + "s, background-color 0.2s";
+        return "width " + box.style.bar.motion + "s, " + COLOR_MOTION;
     };
 
     // Change the bar size without animation. (Ex: from the moving bar to the value)
@@ -151,18 +151,18 @@ const ProgressBar = function (params = {}) {
         if (box.indeterminate == 1) {
             box.bar.width = box.style.indeterminate.barWidth + "%";
             startMoveAnimation();
-            box.elem.removeAttribute("aria-valuenow");
+            box.aria = { valuenow: null };
         } else {
             stopMoveAnimation();
             box.bar.width = box.getPercent() + "%";
-            box.elem.setAttribute("aria-valuenow", String(box.value));
+            box.aria = { valuenow: String(box.value) };
         }
 
         if (box.valueLabel) {
             box.valueLabel.text = (box.indeterminate == 1) ? "" : box.valueFormat(box);
         }
 
-        box.elem.setAttribute("aria-valuemax", String(box.max));
+        box.aria = { valuemax: String(box.max) };
 
     };
 
@@ -244,8 +244,8 @@ const ProgressBar = function (params = {}) {
 
 
     // *** OBJECT VIEW:
-    box.elem.setAttribute("role", "progressbar");
-    box.elem.setAttribute("aria-valuemin", "0");
+    box.role = "progressbar";
+    box.aria = { valuemin: "0" };
 
     // GROUP: Top row, bar row
     box.contentBox = VGroup({
@@ -261,24 +261,23 @@ const ProgressBar = function (params = {}) {
             width: "100%",
             height: "auto",
             align: "left center",
-            gap: 10,
+            gap: ROW_GAP,
         });
 
             // LABEL: Title
             box.titleLabel = Label(box.style.title);
             box.titleLabel.text = box.titleText;
-            box.titleLabel.elem.style.flex = "1 1 auto";
-            box.titleLabel.elem.style.minWidth = "0";
-            box.titleLabel.elem.style.overflow = "hidden";
-            box.titleLabel.elem.style.textOverflow = "ellipsis";
-            box.titleLabel.elem.style.whiteSpace = "nowrap";
+            box.titleLabel.css = { flex: "1 1 auto", minWidth: "0" };
+            box.titleLabel.ellipsis = 1;
             if (!box.titleText) box.titleLabel.visible = 0;
 
             // LABEL: Value text (top)
             if (box.valuePosition === "top") {
                 box.valueLabel = Label(box.style.valueText);
-                box.valueLabel.elem.style.marginLeft = "auto"; // Right side, also without a title.
-                box.valueLabel.elem.style.whiteSpace = "nowrap";
+                box.valueLabel.css = {
+                    marginLeft: "auto", // WHY: At the right side, also without a title.
+                    whiteSpace: "nowrap",
+                };
             }
 
         endGroup();
@@ -288,7 +287,7 @@ const ProgressBar = function (params = {}) {
             width: "100%",
             height: "auto",
             align: "left center",
-            gap: 10,
+            gap: ROW_GAP,
         });
 
             // BOX: Track
@@ -299,8 +298,7 @@ const ProgressBar = function (params = {}) {
                 round: box.style.track.round,
             });
             box.track.clipContent = 1;
-            box.track.elem.style.flex = "1 1 0";
-            box.track.elem.style.minWidth = "0";
+            box.track.css = { flex: "1 1 0", minWidth: "0" };
 
                 // BOX: Bar
                 box.bar = Box({
@@ -317,8 +315,10 @@ const ProgressBar = function (params = {}) {
             // LABEL: Value text (right)
             if (box.valuePosition === "right") {
                 box.valueLabel = Label(box.style.valueText);
-                box.valueLabel.elem.style.whiteSpace = "nowrap";
-                box.valueLabel.elem.style.minWidth = "3em"; // WHY: The bar width does not jump when the text changes. (9% -> 10%)
+                box.valueLabel.css = {
+                    whiteSpace: "nowrap",
+                    minWidth: "3em", // WHY: The bar width does not jump when the text changes. (9% -> 10%)
+                };
                 box.valueLabel.textAlign = "right";
             }
 
@@ -351,6 +351,7 @@ const ProgressBar = function (params = {}) {
 // *** STYLE PACKAGES:
 // USAGE: ProgressBar({ styleName: "modern" })
 // USAGE: ProgressBar({ styleName: "modern", style: { bar: { color: "tomato" } } }) // Change only some keys.
+// USAGE: ProgressBar({ style: ProgressBar.styles.modern }) // The same as styleName: "modern". (The package is copied, never changed.)
 // NOTE: A new package needs only the keys that differ from the default (classic) style.
 // USAGE: ProgressBar.styles.myStyle = { bar: { color: "red" } };
 ProgressBar.styles = {

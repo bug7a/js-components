@@ -48,7 +48,7 @@ UIActionButton.resetDefault()
 UIActionButton.create = function(parameters = {}) {
 
     // BOX: UI object container.
-    const box = createBox()
+    const box = Box()
 
     // Default values.
     box.default = {}
@@ -71,7 +71,7 @@ UIActionButton.create = function(parameters = {}) {
     box.right = 0
     
     // BOX: UI background.
-    box.boxCover = createBox(0, 0, box.width, box.height)
+    box.boxCover = Box(0, 0, box.width, box.height)
     box.add(that)
     //that.color = "transparent"
     that.color = box.default.coverBackgroundColor
@@ -79,7 +79,7 @@ UIActionButton.create = function(parameters = {}) {
     that.visible = 0
     
     // BOX: Action button container box.
-    box.boxButton = createBox(0, 0, 90, 90)
+    box.boxButton = Box(0, 0, 90, 90)
     box.add(that)
     that.right = box.default.rightOuterSpace
     that.bottom = box.default.bottomOuterSpace
@@ -91,7 +91,7 @@ UIActionButton.create = function(parameters = {}) {
     //that.element.style.boxShadow = "0px 6px 8px rgba(0, 0, 0, 0.1)"
     
     // IMAGE: Action button icon.
-    box.boxButton.imgIcon = createImage(0, 0, box.default.iconSize, box.default.iconSize)
+    box.boxButton.imgIcon = Icon(0, 0, box.default.iconSize, box.default.iconSize)
     box.boxButton.add(that)
     that.load(box.default.actionButtonIconFile)
     that.opacity = 0.4
@@ -101,7 +101,7 @@ UIActionButton.create = function(parameters = {}) {
 
     /*
     // BOX: Action button 2 container box.
-    box.boxButton2 = createBox(0, 0, 50, 50)
+    box.boxButton2 = Box(0, 0, 50, 50)
     box.add(that)
     that.color = "#FFD541"
     that.round = 50
@@ -114,7 +114,7 @@ UIActionButton.create = function(parameters = {}) {
     box.boxButton2.aline(box.boxButton, "top", 10, "center")
     
     // IMAGE: Action button icon.
-    box.boxButton2.imgIcon = createImage(0, 0, 20, 20)
+    box.boxButton2.imgIcon = Icon(0, 0, 20, 20)
     box.boxButton2.add(that)
     that.load("components/ui-action-button/search.svg")
     that.opacity = 0.4
@@ -124,7 +124,7 @@ UIActionButton.create = function(parameters = {}) {
     */
 
     // BOX: Menu buttons container.
-    box.boxMenu = createBox(0, 0, box.default.menuWidth, 158)
+    box.boxMenu = Box(0, 0, box.default.menuWidth, 158)
     box.add(that)
     that.right = box.boxButton.right + box.boxButton.width + box.default.menuRightOuterSpace  //140
     that.bottom = box.default.bottomOuterSpace
@@ -219,7 +219,7 @@ UIActionButton.create = function(parameters = {}) {
 
         for (let i = 0; i < dataList.length; i++) {
 
-            box.boxMenu["btn" + i] = createButton(0, itemTop, box.boxMenu.width, 50)
+            box.boxMenu["btn" + i] = Button(0, itemTop, box.boxMenu.width, 50)
             box.boxMenu.add(that)
             that.minimal = 1
             that.color = "white"

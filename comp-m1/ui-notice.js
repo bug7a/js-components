@@ -90,7 +90,7 @@ notice.show = function(parameters = {}) {
     if (!notice.isShown) {
 
         // BOX: UI Object container.
-        const box = createBox();
+        const box = Box();
 
         // Default values.
         box.default = {};
@@ -110,7 +110,7 @@ notice.show = function(parameters = {}) {
         box.color = "transparent";
 
         // BOX: Cover background.
-        box.boxBack = createBox(0, 0, box.width, box.height);
+        box.boxBack = Box(0, 0, box.width, box.height);
         box.add(that);
         that.opacity = 0;
         that.clickable = 1;
@@ -118,7 +118,7 @@ notice.show = function(parameters = {}) {
         box.boxBack.setMotion(box.default.coverMotionString);
 
         // LABEL: Message text.
-        box.lblMessage = createLabel(0, 0, "auto", "auto");
+        box.lblMessage = Label(0, 0, "auto", "auto");
         box.add(that);
         that.opacity = 0;
         that.onResize(function(self) {

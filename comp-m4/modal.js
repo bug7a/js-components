@@ -116,6 +116,14 @@ const Modal = function (params = {}) {
     let isBusy = 0;
     let openerElement = null; // Focus goes back here on close.
     let buttonObjects = []; // [{ data, label }]
+    const NARROW_PAGE_WIDTH = 520; // A page narrower than this gets a smaller margin.
+    const NARROW_MARGIN = 12;
+    const BODY_GAP = 14;
+    const BUTTON_MOTION = "filter 0.15s, transform 0.1s, opacity 0.15s";
+    const OPEN_FADE = "opacity 0.18s";
+    const OPEN_MOVE = "transform 0.2s";
+    const CLOSE_FADE = "opacity 0.15s";
+    const CLOSE_DURATION = 160; // ms: a little longer than the fade (CLOSE_FADE).
 
     // *** PUBLIC VARIABLES:
     // [var] Buttons: [{ text, type, key, onClick }]
@@ -124,15 +132,11 @@ const Modal = function (params = {}) {
     // *** PRIVATE FUNCTIONS:
 
     const getTheme = function () {
-        let theme = box.theme || options.theme;
-        if (theme == "auto") {
-            theme = (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
-        }
-        return Modal.THEMES[theme] || Modal.THEMES.light;
+        return basic.resolveTheme(Modal.THEMES, box.theme || options.theme);
     };
 
-    const text = function (value) {
-        return (box.allowHtml == 1) ? String(value) : Modal.escapeHtml(value);
+    const toLabelText = function (value) {
+        return basic.isOn(box.allowHtml) ? String(value) : Modal.escapeHtml(value);
     };
 
     const getPanelWidth = function () {
@@ -143,15 +147,13 @@ const Modal = function (params = {}) {
     // Size of the panel for the page width.
     const layout = function () {
         if (!box) return;
-        const margin = (page.width < 520) ? 12 : options.margin;
-        box.layoutGroup.elem.style.padding = margin + "px";
+        const margin = (page.width < NARROW_PAGE_WIDTH) ? NARROW_MARGIN : options.margin;
+        box.layoutGroup.css.padding = margin + "px";
         if (box.size == "full") {
-            box.panel.elem.style.width = "100%";
-            box.panel.elem.style.height = "100%";
-        } else {
-            box.panel.elem.style.width = getPanelWidth() + "px";
-            box.panel.elem.style.height = "auto";
+            box.panel.css = { width: "100%", height: "100%" };
+            return;
         }
+        box.panel.css = { width: getPanelWidth() + "px", height: "auto" };
     };
 
     const applyTheme = function () {
@@ -161,11 +163,11 @@ const Modal = function (params = {}) {
         box.color = t.overlay;
         box.panel.color = t.background;
         box.panel.borderColor = t.border;
-        box.panel.elem.style.boxShadow = t.shadow;
+        box.panel.boxShadow = t.shadow;
         box.lblTitle.textColor = t.title;
         box.lblDescription.textColor = t.description;
         box.btnClose.text = Modal.getCloseSvg(t.description);
-        box.footer.elem.style.borderTop = "1px solid " + t.divider;
+        box.footer.css.borderTop = "1px solid " + t.divider;
 
         buttonObjects.forEach(function (item) { styleButton(item); });
 
@@ -189,7 +191,9 @@ const Modal = function (params = {}) {
 
     const focusFirst = function () {
         // The first input in the body, then the primary button, then the panel.
-        const inBody = getFocusableElements().find(function (elem) { return box.body.elem.contains(elem) && /INPUT|TEXTAREA|SELECT/.test(elem.tagName); });
+        const inBody = getFocusableElements().find(function (elem) {
+            return box.body.elem.contains(elem) && /INPUT|TEXTAREA|SELECT/.test(elem.tagName);
+        });
         const primary = buttonObjects.find(function (item) { return item.data.type != "secondary"; });
         const target = inBody || (primary && primary.label.elem) || box.panel.elem;
         target.focus({ preventScroll: true });
@@ -205,24 +209,26 @@ const Modal = function (params = {}) {
             border: 1,
             clickable: 1,
         });
-        label.elem.style.padding = "0px " + _s.button.padding + "px";
-        label.elem.style.lineHeight = (_s.button.height - 2) + "px";
-        label.elem.style.whiteSpace = "nowrap";
-        label.elem.style.cursor = "pointer";
-        label.elem.style.fontFamily = (data.type == "secondary") ? "opensans" : "opensans-bold";
+        label.css = {
+            padding: "0px " + _s.button.padding + "px",
+            lineHeight: (_s.button.height - 2) + "px", // WHY: - 2: the top and bottom border.
+            whiteSpace: "nowrap",
+            fontFamily: (data.type == "secondary") ? "opensans" : "opensans-bold",
+            alignItems: "center",
+            gap: "8px",
+            transition: BUTTON_MOTION,
+        };
         label.elem.style.display = "flex";
-        label.elem.style.alignItems = "center";
-        label.elem.style.gap = "8px";
-        label.elem.style.transition = "filter 0.15s, transform 0.1s, opacity 0.15s";
-        label.elem.tabIndex = 0;
-        label.elem.setAttribute("role", "button");
+        label.cursor = "pointer";
+        label.tabIndex = 0;
+        label.role = "button";
 
         const item = { data: data, label: label };
 
-        label.on("mouseover", function () { label.elem.style.filter = "brightness(1.08)"; });
-        label.on("mouseout", function () { label.elem.style.filter = "none"; });
-        label.on("mousedown", function () { label.elem.style.transform = "scale(0.97)"; });
-        label.on("mouseup", function () { label.elem.style.transform = "scale(1)"; });
+        label.on("mouseover", function () { label.css.filter = "brightness(1.08)"; });
+        label.on("mouseout", function () { label.css.filter = "none"; });
+        label.on("mousedown", function () { label.css.transform = "scale(0.97)"; });
+        label.on("mouseup", function () { label.css.transform = "scale(1)"; });
         label.on("click", function () { pressButton(item); });
         label.on("keydown", function (self, event) {
             if (event.key == "Enter" || event.key == " ") {
@@ -240,7 +246,8 @@ const Modal = function (params = {}) {
 
         if (!box || isBusy) return;
 
-        const result = (typeof item.data.onClick === "function") ? item.data.onClick(box, item.data) : undefined;
+        let result = undefined;
+        if (typeof item.data.onClick === "function") result = item.data.onClick(box, item.data);
 
         // Promise: busy until it ends
         if (result && typeof result.then === "function") {
@@ -265,23 +272,24 @@ const Modal = function (params = {}) {
 
         if (!box || !isOpen || Modal.getTop() !== box) return;
 
-        if (event.key == "Tab") {
-            // Keep the focus in the modal.
-            const list = getFocusableElements();
-            if (list.length == 0) {
-                event.preventDefault();
-                box.panel.elem.focus();
-                return;
-            }
-            const first = list[0];
-            const last = list[list.length - 1];
-            if (event.shiftKey && (document.activeElement === first || !box.panel.elem.contains(document.activeElement))) {
-                event.preventDefault();
-                last.focus();
-            } else if (!event.shiftKey && (document.activeElement === last || !box.panel.elem.contains(document.activeElement))) {
-                event.preventDefault();
-                first.focus();
-            }
+        if (event.key != "Tab") return;
+
+        // Keep the focus in the modal.
+        const list = getFocusableElements();
+        if (list.length == 0) {
+            event.preventDefault();
+            box.panel.elem.focus();
+            return;
+        }
+        const first = list[0];
+        const last = list[list.length - 1];
+        const isFocusOutside = !box.panel.elem.contains(document.activeElement);
+        if (event.shiftKey && (document.activeElement === first || isFocusOutside)) {
+            event.preventDefault();
+            last.focus();
+        } else if (!event.shiftKey && (document.activeElement === last || isFocusOutside)) {
+            event.preventDefault();
+            first.focus();
         }
 
     };
@@ -295,23 +303,18 @@ const Modal = function (params = {}) {
 
         openerElement = document.activeElement;
         Modal.stack.push(box);
-        box.elem.style.zIndex = String(options.zIndex + Modal.stack.length * 2);
+        box.zIndex = options.zIndex + Modal.stack.length * 2;
 
         applyTheme();
         layout();
         box.visible = 1;
 
         // Enter animation
-        const panel = box.panel.elem.style;
-        box.elem.style.transition = "none";
-        box.elem.style.opacity = "0";
-        panel.transition = "none";
-        panel.transform = "translateY(12px) scale(0.97)";
-        void box.elem.offsetWidth;
-        box.elem.style.transition = "opacity 0.18s";
-        box.elem.style.opacity = "1";
-        panel.transition = "transform 0.2s";
-        panel.transform = "translateY(0px) scale(1)";
+        box.css = { transition: "none", opacity: "0" };
+        box.panel.css = { transition: "none", transform: "translateY(12px) scale(0.97)" };
+        void box.elem.offsetWidth; // WHY: A reflow, so the start values above are drawn before the transition.
+        box.css = { transition: OPEN_FADE, opacity: "1" };
+        box.panel.css = { transition: OPEN_MOVE, transform: "translateY(0px) scale(1)" };
 
         focusFirst();
         box.onOpen(box);
@@ -328,9 +331,8 @@ const Modal = function (params = {}) {
         Modal.stack = Modal.stack.filter(function (modal) { return modal !== box; });
 
         const self = box;
-        self.elem.style.transition = "opacity 0.15s";
-        self.elem.style.opacity = "0";
-        self.panel.elem.style.transform = "translateY(8px) scale(0.98)";
+        self.css = { transition: CLOSE_FADE, opacity: "0" };
+        self.panel.css.transform = "translateY(8px) scale(0.98)";
 
         // WHY: The focus goes back to the object that opened the modal (keyboard users do not lose their place).
         if (openerElement && openerElement.isConnected && typeof openerElement.focus === "function") {
@@ -341,8 +343,8 @@ const Modal = function (params = {}) {
             if (box !== self || isOpen) return; // Opened again
             self.visible = 0;
             self.onClose(self, reason, buttonKey);
-            if (self.removeOnClose == 1) self.remove();
-        }, 160);
+            if (basic.isOn(self.removeOnClose)) self.remove();
+        }, CLOSE_DURATION);
 
     };
 
@@ -361,7 +363,7 @@ const Modal = function (params = {}) {
             item.label.text = ((isTarget) ? Modal.getSpinnerSvg(item.label.textColor) : "") + Modal.escapeHtml(item.data.text);
         });
         box.btnClose.elem.inert = !!isBusy;
-        box.panel.elem.setAttribute("aria-busy", (isBusy) ? "true" : "false");
+        box.panel.aria = { busy: (isBusy) ? "true" : "false" };
     };
     // USAGE: modal.setBusy(1, "save") ... modal.setBusy(0)
 
@@ -371,13 +373,13 @@ const Modal = function (params = {}) {
 
     box.setTitle = function (title) {
         box.title = title;
-        box.lblTitle.text = text(title);
+        box.lblTitle.text = toLabelText(title);
         box.lblTitle.visible = (title) ? 1 : 0;
     };
 
     box.setDescription = function (description) {
         box.description = description;
-        box.lblDescription.text = text(description);
+        box.lblDescription.text = toLabelText(description);
         box.lblDescription.visible = (description) ? 1 : 0;
     };
 
@@ -385,7 +387,7 @@ const Modal = function (params = {}) {
         const item = buttonObjects.find(function (b) { return b.data.key == buttonKey; });
         if (!item) return;
         item.data.text = buttonText;
-        item.label.text = Modal.escapeHtml(buttonText);
+        item.label.plainText = buttonText;
     };
 
     // Creates the body content again. (One group is started and ended in the body.)
@@ -395,8 +397,8 @@ const Modal = function (params = {}) {
         Array.from(box.body.elem.children).forEach(function (elem) { elem.remove(); });
         const previous = getDefaultContainerBox();
         setDefaultContainerBox(box.body);
-            box.body.wrapper = VGroup({ width: "100%", height: "auto", align: "left top", gap: 14, position: "relative" });
-            box.body.wrapper.elem.style.alignItems = "stretch";
+            box.body.wrapper = VGroup({ width: "100%", height: "auto", align: "left top", gap: BODY_GAP, position: "relative" });
+            box.body.wrapper.css.alignItems = "stretch";
                 func(box);
             endGroup();
         setDefaultContainerBox(previous);
@@ -419,7 +421,7 @@ const Modal = function (params = {}) {
 
     // *** OBJECT VIEW:
 
-    box.elem.style.position = "fixed";
+    box.css.position = "fixed";
     box.elem.style.display = "block"; // WHY: "visible" keeps the display type when it hides. Without it, visible: 1 does not show the box again.
     box.clickable = 1;
 
@@ -429,7 +431,7 @@ const Modal = function (params = {}) {
         height: "100%",
         align: "center center",
     });
-    box.layoutGroup.elem.style.boxSizing = "border-box";
+    box.layoutGroup.css.boxSizing = "border-box";
 
         // GROUP: Panel
         box.panel = VGroup({
@@ -441,61 +443,64 @@ const Modal = function (params = {}) {
             border: 1,
             clickable: 1,
         });
-        box.panel.elem.style.alignItems = "stretch";
-        box.panel.elem.style.maxWidth = "100%";
-        box.panel.elem.style.maxHeight = "100%";
-        box.panel.elem.style.outline = "none";
-        box.panel.elem.style.boxSizing = "border-box";
-        box.panel.elem.tabIndex = -1;
-        box.panel.elem.setAttribute("role", "dialog");
-        box.panel.elem.setAttribute("aria-modal", "true");
+        box.panel.css = {
+            alignItems: "stretch",
+            maxWidth: "100%",
+            maxHeight: "100%",
+            outline: "none",
+            boxSizing: "border-box",
+        };
+        box.panel.tabIndex = -1;
+        box.panel.role = "dialog";
+        box.panel.aria = { modal: "true" };
 
             // GROUP: Header
             box.header = HGroup({ width: "100%", height: "auto", align: "left top", gap: 12, padding: [_s.panel.padding, _s.panel.padding, _s.panel.padding, 6] });
-            box.header.elem.style.flexShrink = "0";
+            box.header.shrink = 0;
 
                 VGroup({ width: "auto", height: "auto", align: "left top", gap: 4 });
-                that.elem.style.flex = "1 1 auto";
-                that.elem.style.minWidth = "0";
+                that.css = { flex: "1 1 auto", minWidth: "0" };
 
                     box.lblTitle = Label({ text: "", width: "100%", fontSize: _s.title.fontSize });
                     box.lblTitle.elem.id = id + "-title";
-                    box.lblTitle.elem.style.fontFamily = "opensans-bold";
-                    box.lblTitle.elem.style.overflowWrap = "anywhere";
+                    box.lblTitle.css = { fontFamily: "opensans-bold", overflowWrap: "anywhere" };
 
                     box.lblDescription = Label({ text: "", width: "100%", fontSize: _s.description.fontSize });
                     box.lblDescription.elem.id = id + "-description";
-                    box.lblDescription.elem.style.lineHeight = "1.5";
-                    box.lblDescription.elem.style.overflowWrap = "anywhere";
+                    box.lblDescription.css = { lineHeight: "1.5", overflowWrap: "anywhere" };
 
                 endGroup();
 
                 // LABEL: Close button (SVG)
                 box.btnClose = Label({ text: "", width: 32, height: 32, round: 8, clickable: 1 });
-                box.btnClose.elem.style.flexShrink = "0";
+                box.btnClose.shrink = 0;
                 box.btnClose.elem.style.display = "flex";
-                box.btnClose.elem.style.alignItems = "center";
-                box.btnClose.elem.style.justifyContent = "center";
-                box.btnClose.elem.style.cursor = "pointer";
-                box.btnClose.elem.style.margin = "-4px -8px 0 0";
-                box.btnClose.elem.tabIndex = 0;
-                box.btnClose.elem.setAttribute("role", "button");
-                box.btnClose.elem.setAttribute("aria-label", "Close");
+                box.btnClose.css = {
+                    alignItems: "center",
+                    justifyContent: "center",
+                    margin: "-4px -8px 0 0",
+                };
+                box.btnClose.cursor = "pointer";
+                box.btnClose.tabIndex = 0;
+                box.btnClose.role = "button";
+                box.btnClose.aria = { label: "Close" };
 
             endGroup();
 
             // GROUP: Body (scrolls when the content is long)
             box.scrollArea = VGroup({ width: "100%", height: "auto", align: "left top", gap: 0, padding: [_s.panel.padding, 10, _s.panel.padding, _s.panel.padding] });
-            box.scrollArea.elem.style.alignItems = "stretch";
-            box.scrollArea.elem.style.flex = "1 1 auto";
-            box.scrollArea.elem.style.minHeight = "0";
-            box.scrollArea.elem.style.overflowY = "auto";
-            box.scrollArea.elem.style.overscrollBehavior = "contain";
+            box.scrollArea.css = {
+                alignItems: "stretch",
+                flex: "1 1 auto",
+                minHeight: "0",
+                overflowY: "auto",
+                overscrollBehavior: "contain",
+            };
 
                 // WHY: In a flex column, items get smaller to fit. The content group does not shrink, so the area scrolls.
-                box.body = VGroup({ width: "100%", height: "auto", align: "left top", gap: 14 });
-                box.body.elem.style.alignItems = "stretch";
-                box.body.elem.style.flexShrink = "0";
+                box.body = VGroup({ width: "100%", height: "auto", align: "left top", gap: BODY_GAP });
+                box.body.css.alignItems = "stretch";
+                box.body.shrink = 0;
 
                     if (typeof contentFunc === "function") contentFunc(box);
 
@@ -505,8 +510,8 @@ const Modal = function (params = {}) {
 
             // GROUP: Footer (buttons)
             box.footer = HGroup({ width: "100%", height: "auto", align: "right center", gap: 8, padding: [_s.panel.padding, 16] });
-            box.footer.elem.style.flexShrink = "0";
-            box.footer.elem.style.flexWrap = "wrap";
+            box.footer.shrink = 0;
+            box.footer.css.flexWrap = "wrap";
 
                 buttonList.forEach(createButton);
 
@@ -521,11 +526,11 @@ const Modal = function (params = {}) {
     box.setTitle(box.title);
     box.setDescription(box.description);
     box.footer.visible = (buttonList.length) ? 1 : 0;
-    box.btnClose.visible = (box.showCloseButton == 1) ? 1 : 0;
+    box.btnClose.visible = basic.isOn(box.showCloseButton) ? 1 : 0;
 
-    if (box.title) box.panel.elem.setAttribute("aria-labelledby", box.lblTitle.elem.id);
-    else if (box.ariaLabel) box.panel.elem.setAttribute("aria-label", box.ariaLabel);
-    if (box.description) box.panel.elem.setAttribute("aria-describedby", box.lblDescription.elem.id);
+    if (box.title) box.panel.aria = { labelledby: box.lblTitle.elem.id };
+    else if (box.ariaLabel) box.panel.aria = { label: box.ariaLabel };
+    if (box.description) box.panel.aria = { describedby: box.lblDescription.elem.id };
 
     box.btnClose.on("click", function () { box.close("close"); });
     box.btnClose.on("keydown", function (self, event) {
@@ -539,7 +544,8 @@ const Modal = function (params = {}) {
 
     // Click outside the panel
     box.layoutGroup.on("click", function (self, event) {
-        if (event.target === box.layoutGroup.elem && box.closeOnOverlay == 1 && !isBusy) box.close("overlay");
+        const isOutsideThePanel = (event.target === box.layoutGroup.elem);
+        if (isOutsideThePanel && basic.isOn(box.closeOnOverlay) && !isBusy) box.close("overlay");
     });
     box.layoutGroup.clickable = 1;
 
@@ -551,7 +557,7 @@ const Modal = function (params = {}) {
     endObject(box);
     setDefaultContainerBox(previousContainer);
 
-    if (box.autoOpen == 1) box.open();
+    if (basic.isOn(box.autoOpen)) box.open();
 
     return box;
 
@@ -567,6 +573,11 @@ Modal.options = {
 
 Modal.SIZES = { small: 400, medium: 560, large: 820 };
 
+// *** THEMES: the colors. (The style param has the shapes and the sizes.)
+// USAGE: Modal.alert({ title: "Saved", theme: "dark" })
+// USAGE: Modal.options.theme = "dark"; // Every modal: "light", "dark", "auto" (the system setting, the default)
+// NOTE: A new theme needs only the keys that differ from the light theme.
+// USAGE: Modal.THEMES.ocean = { background: "#0B2239", title: "#FFFFFF" };
 Modal.THEMES = {
     light: {
         overlay: "rgba(15, 15, 14, 0.45)",
@@ -622,20 +633,17 @@ Modal.closeAll = function () {
 
 // Current theme colors (for content created by the helpers)
 Modal.getThemeColors = function (theme) {
-    let name = theme || Modal.options.theme;
-    if (name == "auto") name = (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
-    return Modal.THEMES[name] || Modal.THEMES.light;
+    return basic.resolveTheme(Modal.THEMES, theme || Modal.options.theme);
 };
 
 // WHY: One listener for all modals. Escape closes only the top modal, wherever the focus is.
 document.addEventListener("keydown", function (event) {
     if (event.key != "Escape") return;
     const top = Modal.getTop();
-    if (top && top.closeOnEscape == 1 && !top.isBusy()) {
-        event.preventDefault();
-        event.stopPropagation();
-        top.close("escape");
-    }
+    if (!top || !basic.isOn(top.closeOnEscape) || top.isBusy()) return;
+    event.preventDefault();
+    event.stopPropagation();
+    top.close("escape");
 }, true);
 
 // LABEL: Message text for the helpers
@@ -643,13 +651,12 @@ Modal.createMessage = function (message, params) {
     if (!message) return null;
     const colors = Modal.getThemeColors(params.theme);
     const label = Label({
-        text: (params.allowHtml == 1) ? String(message) : Modal.escapeHtml(message).replace(/\n/g, "<br>"),
+        text: basic.isOn(params.allowHtml) ? String(message) : Modal.escapeHtml(message).replace(/\n/g, "<br>"),
         width: "100%",
         fontSize: 15,
         textColor: colors.text,
     });
-    label.elem.style.lineHeight = "1.55";
-    label.elem.style.overflowWrap = "anywhere";
+    label.css = { lineHeight: "1.55", overflowWrap: "anywhere" };
     return label;
 };
 
@@ -675,9 +682,15 @@ Modal.confirm = function (params = {}) {
                         if (typeof params.onConfirm === "function") {
                             const value = params.onConfirm(modal);
                             if (value && typeof value.then === "function") {
-                                return value.catch(function (error) { result = false; throw error; });
+                                return value.catch(function (error) {
+                                    result = false;
+                                    throw error;
+                                });
                             }
-                            if (value === false) { result = false; return false; }
+                            if (value === false) {
+                                result = false;
+                                return false;
+                            }
                         }
                     },
                 },
@@ -713,9 +726,9 @@ Modal.prompt = function (params = {}) {
         const submit = function (modal) {
             const value = input.text;
             const error = (typeof params.validate === "function") ? (params.validate(value) || "") : "";
-            lblError.text = Modal.escapeHtml(error);
+            lblError.plainText = error;
             lblError.visible = (error) ? 1 : 0;
-            input.elem.style.borderColor = (error) ? colors.error : colors.input.border;
+            input.css.borderColor = (error) ? colors.error : colors.input.border;
             if (error) {
                 input.inputElement.focus();
                 return false;
@@ -732,15 +745,25 @@ Modal.prompt = function (params = {}) {
 
                 Modal.createMessage(params.message, params);
 
-                input = Input({ width: "100%", height: 42, minimal: 1, fontSize: 15, text: params.value || "", color: colors.input.background, textColor: colors.input.text });
-                input.elem.style.border = "1px solid " + colors.input.border;
-                input.elem.style.borderRadius = "8px";
-                input.elem.style.boxSizing = "border-box";
+                input = Input({
+                    width: "100%",
+                    height: 42,
+                    minimal: 1,
+                    fontSize: 15,
+                    text: params.value || "",
+                    color: colors.input.background,
+                    textColor: colors.input.text,
+                });
+                input.css = {
+                    border: "1px solid " + colors.input.border,
+                    borderRadius: "8px",
+                    boxSizing: "border-box",
+                };
                 input.inputElement.style.padding = "0px 12px";
                 input.inputElement.placeholder = params.placeholder || "";
                 input.inputElement.setAttribute("aria-label", params.title || params.placeholder || "Value");
-                input.inputElement.addEventListener("focus", function () { input.elem.style.borderColor = colors.input.focus; });
-                input.inputElement.addEventListener("blur", function () { input.elem.style.borderColor = colors.input.border; });
+                input.inputElement.addEventListener("focus", function () { input.css.borderColor = colors.input.focus; });
+                input.inputElement.addEventListener("blur", function () { input.css.borderColor = colors.input.border; });
                 input.inputElement.addEventListener("keydown", function (event) {
                     if (event.key == "Enter") {
                         event.preventDefault();
@@ -750,8 +773,8 @@ Modal.prompt = function (params = {}) {
                 if (params.maxLength) input.inputElement.maxLength = params.maxLength;
 
                 lblError = Label({ text: "", width: "100%", fontSize: 13, textColor: colors.error, visible: 0 });
-                lblError.elem.setAttribute("role", "alert");
-                lblError.elem.style.marginTop = "-6px";
+                lblError.role = "alert";
+                lblError.css.marginTop = "-6px";
 
                 // Select the text (easy to change)
                 setTimeout(function () { input.inputElement.select(); }, 0);

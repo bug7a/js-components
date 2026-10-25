@@ -4,9 +4,37 @@ This document contains new features, updates, and changes added to the basic.js 
 
 ---
 
+## Version 26.10.25
+
+*   **NOT COMPATIBLE: helpers under `basic.*`:** `num`, `str`, `isMobile`, `go` and `twoDigitFormat` are now `basic.num()`, `basic.str()`, `basic.isMobile()`, `basic.go()` and `basic.twoDigitFormat()`; they are not globals any more.
+*   **NOT COMPATIBLE: the old `create*` globals are removed:** `createBox`, `createLabel`, `createButton`, `createImage` / `createIcon`, `createTextBox` / `createInput`. Use `Box()`, `Label()`, `Button()`, `Icon()`, `Input()` (the same, with props). The functions stay as `basic.createBox()`... A page written for an older version that uses them needs only the new name.
+*   **`Alpha(color, percent)`:** like `Black(0.5)` / `White(0.5)`, for any color: `Alpha("#456789", 0.5)` gives `"rgba(69,103,137,0.5)"`. Hex colors become `rgba`; a name, `rgb()` or a `var(--token)` goes through `color-mix`. Fully compatible. Reference: `basic/basic-what-is-new.md`.
+
+---
+
+## Version 26.10.24
+
+*   **`basic.applyStylePackage(params, Comp.styles, CompDefaults)`:** the style packages of a component (`styleName: "dark"`) in one line, in place of the three lines every component wrote. The order is the same: `params.style` > the package of `styleName` > `Defaults.style`. A package can also be given as it is, `Tabs({ style: Tabs.styles.dark })`: it is copied, so the package itself is never changed. Fully compatible. `comp-m4/tabs.js` and `_component-template.js` use it (they need v26.10.24). Reference: `basic/basic-what-is-new.md`.
+
+---
+
+## Version 26.10.23
+
+*   **Simpler components, fully compatible:** every page and component written for the previous versions works unchanged. The global things of an object are now cleaned by its `remove()`, so a component does not need its own `remove()` for them (before, 42 of the 63 components overrode `remove()` only to clean them, and a forgotten one leaked). Reference with examples: `basic/basic-what-is-new.md`. Self-checking test page: `test/basic-test.htm` (137 checks).
+*   **Cleaned by `remove()`:** `obj.listenTo(window, "keydown", func)` (an event of another element; returns the remover), `obj.onPageResize(func)`, `obj.after(ms, func)` (once; returns the cancel function), `obj.every(ms, func)` (again and again; returns the stop function), `obj.own(otherObject)` (an object made somewhere else, for example a menu on `page`, is removed with it).
+*   **New methods (every object):** `onHoverChange(func)` (`func(self, isOver)`), `setFocusRing(color)` (a focus ring only for the keyboard, CSS `:focus-visible`).
+*   **basic:** `isOn(value)` (`1`, `"1"`, `true`), `addCss(id, css, replace)` (a `<style>` once: for `:hover`, `::-webkit-scrollbar`, `@keyframes`...).
+*   **`createIn(container, func)`** returns the result of `func`: `const menu = box.own(createIn(page, function () { return Box(...); }));`
+*   **Fix (groups):** `grow`, `shrink` and `css` given in the props of a group (`HGroup`, `VGroup`, `AutoLayout`) were written over by its flex styles and lost. Now `VGroup({ align: "left top", css: { alignItems: "stretch" } })` and `HGroup({ grow: 1 })` work as written.
+*   **Fix (`rotate`):** `obj.rotate = 45` threw away the rest of the transform (a `translateY()`, a `scale()`). Now it changes only its own `rotate()` part.
+*   **Accessibility props (every object):** `role` (`"button"`, `"tab"`...), `aria` (`{ label: "Close", selected: true }`: only the given keys change, `null` removes one) and `tabIndex`. They replace `elem.setAttribute("aria-...")` lines. See "Common Properties".
+*   **The component template** (`_component-template.js`) is written with them; `comp-m4/tree-view.js` is the first component without its own `remove()`.
+
+---
+
 ## Version 26.09.18
 
-*   **Fixes and additions, fully compatible:** every page and component written for the previous versions works unchanged (137 sample and template pages were compared in headless Chrome: identical DOM). Nothing to change in pages. The previous version (26.09.17) is kept as `basic/basic-bugra.js` / `basic-bugra.min.js` for reference. Full reference with examples: `basic/basic-v26.09.18.md`. Self-checking test page: `test/basic-test.htm`.
+*   **Fixes and additions, fully compatible:** every page and component written for the previous versions works unchanged (137 sample and template pages were compared in headless Chrome: identical DOM). Nothing to change in pages. The previous version (26.09.17) is kept as `basic/backup/v26.09.17/basic-bugra.js` / `basic-bugra.min.js` for reference. Full reference with examples: `basic/basic-what-is-new.md`. Self-checking test page: `test/basic-test.htm`.
 *   **Fixes:** `"100"` and `"50%"` / `"calc()"` work for `left`, `top`, `right`, `bottom`, `width`, `height`. Children created in a hidden group (`VGroup({ visible: 0 })`) are real flex items. Creating an object before the page is ready throws a clear error. A page variable named like a library helper (`const createButton`) can not break `Button()`. `remove()` clears the pending motion timers. `props()` returns the object.
 *   **New properties (every object):** `css`, `cursor`, `zIndex`, `boxShadow`, `fontFamily`, `bold`, `italic`, `lineHeight`, `ellipsis`, `selectable`, `grow`, `shrink`, `plainText`, `isRemoved`, `children`.
 *   **New methods (every object):** `show()`, `hide()`, `toggle()`, `setSize()`, `setPosition()`, `bringToFront()`, `contains()`, `once()`, `animate()` (returns a Promise).

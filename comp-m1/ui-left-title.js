@@ -47,7 +47,7 @@ UILeftTitle.resetDefault();
 UILeftTitle.create = function(parameters = {}) {
 
     // BOX: UI object container.
-    const box = createBox();
+    const box = Box();
 
     // Default values.
     box.default = {};
@@ -70,7 +70,7 @@ UILeftTitle.create = function(parameters = {}) {
     box.round = box.default.round;
     
     // LABEL: Title text.
-    box.lblTitle = createLabel(box.default.leftInnerSpace, 0, "auto", "auto");
+    box.lblTitle = Label(box.default.leftInnerSpace, 0, "auto", "auto");
     box.add(that);
     that.text = parameters.title;
     that.fontSize = box.default.titleFontSize;
@@ -82,7 +82,7 @@ UILeftTitle.create = function(parameters = {}) {
     });
 
     // LABEL: Description text.
-    box.lblDescription = createLabel(box.default.leftInnerSpace, 0, "auto", "auto");
+    box.lblDescription = Label(box.default.leftInnerSpace, 0, "auto", "auto");
     box.add(that);
     that.text = parameters.description;
     that.fontSize = box.default.descriptionFontSize;

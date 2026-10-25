@@ -116,12 +116,8 @@ const SearchResultsDefaults = {
 
 const SearchResults = function (params = {}) {
 
-    // Merge style package: params.style > SearchResults.styles[styleName] > Defaults.style (classic)
-    // WHY: Before the defaults. mergeIntoIfMissing() only fills what is missing, so the classic
-    //      style of the defaults would win over the chosen package.
-    const _stylePackage = SearchResults.styles[params.styleName || SearchResultsDefaults.styleName];
-    if (!_stylePackage) console.warn("SearchResults: Style package not found: " + params.styleName);
-    mergeIntoIfMissing(params, { style: _stylePackage || {} });
+    // Merge style package: params.style > SearchResults.styles[styleName] > SearchResultsDefaults.style (classic)
+    basic.applyStylePackage(params, SearchResults.styles, SearchResultsDefaults);
 
     // Merge params:
     mergeIntoIfMissing(params, SearchResultsDefaults);
@@ -146,6 +142,7 @@ const SearchResults = function (params = {}) {
     let rows = [];                  // The row objects, in the order of items.
     let inputElem = null;           // attachTo()
     let inputRemovers = [];         // The removers of the events of that input.
+    const SECTION_SPACE = "4px";    // Above a group header and the hint
 
     // *** PRIVATE FUNCTIONS:
 
@@ -159,7 +156,7 @@ const SearchResults = function (params = {}) {
         createIn(box.scrollBox, function () {
 
             box.wrapper = VGroup({ width: "100%", height: "auto", align: "left top", gap: 0 });
-            box.wrapper.elem.style.alignItems = "stretch";
+            box.wrapper.css.alignItems = "stretch";
             // WHY: A box grows with its content only when the content is in the flow.
             box.wrapper.position = "relative";
 
@@ -196,8 +193,10 @@ const SearchResults = function (params = {}) {
                     textColor: _s.group.textColor,
                     padding: _s.group.padding,
                 });
-                that.elem.style.letterSpacing = _s.group.letterSpacing;
-                that.elem.style.marginTop = (index > 0) ? "4px" : "0px";
+                that.css = {
+                    letterSpacing: _s.group.letterSpacing,
+                    marginTop: (index > 0) ? SECTION_SPACE : "0px",
+                };
             }
 
             // GROUP: One row
@@ -210,7 +209,7 @@ const SearchResults = function (params = {}) {
                 round: _s.item.round,
                 color: _s.item.color,
             });
-            row.elem.style.cursor = "pointer";
+            row.cursor = "pointer";
 
             // WHY: mousedown, not click. The input loses the focus on mousedown and the list would
             //      already be closed before the click arrives.
@@ -224,14 +223,20 @@ const SearchResults = function (params = {}) {
                     box.createItemView(item, index, box);
                 } else {
 
-                    Label({ plainText: item.text, fontSize: _s.itemText.fontSize, textColor: _s.itemText.textColor });
-                    that.elem.style.whiteSpace = "nowrap";
-                    that.ellipsis = 1;
+                    Label({
+                        plainText: item.text,
+                        fontSize: _s.itemText.fontSize,
+                        textColor: _s.itemText.textColor,
+                        ellipsis: 1,
+                    });
 
                     if (item.desc) {
-                        Label({ plainText: item.desc, fontSize: _s.itemDesc.fontSize, textColor: _s.itemDesc.textColor });
-                        that.elem.style.whiteSpace = "nowrap";
-                        that.ellipsis = 1;
+                        Label({
+                            plainText: item.desc,
+                            fontSize: _s.itemDesc.fontSize,
+                            textColor: _s.itemDesc.textColor,
+                            ellipsis: 1,
+                        });
                     }
 
                 }
@@ -255,8 +260,10 @@ const SearchResults = function (params = {}) {
             textColor: _s.hint.textColor,
             padding: _s.hint.padding,
         });
-        that.elem.style.borderTop = "1px solid " + _s.hint.dividerColor;
-        that.elem.style.marginTop = "4px";
+        that.css = {
+            borderTop: "1px solid " + _s.hint.dividerColor,
+            marginTop: SECTION_SPACE,
+        };
 
     };
 
@@ -301,8 +308,11 @@ const SearchResults = function (params = {}) {
         items = newItems || [];
         query = searchedText;
 
-        if (!String(query).trim()) { box.close(); return; }
-        if (items.length == 0 && box.showEmpty != 1) { box.close(); return; }
+        const hasNothingToShow = (items.length == 0 && box.showEmpty != 1);
+        if (!String(query).trim() || hasNothingToShow) {
+            box.close();
+            return;
+        }
 
         render();
         box.open();
@@ -375,7 +385,10 @@ const SearchResults = function (params = {}) {
     // Does the whole keyboard work of a search input. Returns the function that undoes it.
     box.attachTo = function (element) {
 
-        if (!element) { console.error("SearchResults: attachTo() needs the input element."); return function () { }; }
+        if (!element) {
+            console.error("SearchResults: attachTo() needs the input element.");
+            return function () { };
+        }
 
         box.detach();
         inputElem = element;
@@ -387,10 +400,19 @@ const SearchResults = function (params = {}) {
                 return;
             }
 
-            if (event.key === "ArrowDown") { event.preventDefault(); box.moveActive(1); }
-            else if (event.key === "ArrowUp") { event.preventDefault(); box.moveActive(-1); }
-            else if (event.key === "Enter") { event.preventDefault(); box.selectActive(); }
-            else if (event.key === "Escape") { event.preventDefault(); box.close(); }
+            if (event.key === "ArrowDown") {
+                event.preventDefault();
+                box.moveActive(1);
+            } else if (event.key === "ArrowUp") {
+                event.preventDefault();
+                box.moveActive(-1);
+            } else if (event.key === "Enter") {
+                event.preventDefault();
+                box.selectActive();
+            } else if (event.key === "Escape") {
+                event.preventDefault();
+                box.close();
+            }
 
         };
 
@@ -455,18 +477,20 @@ const SearchResults = function (params = {}) {
         clipContent: 1,
         visible: 0,
     });
-    box.elem.style.position = "fixed";
-    box.elem.style.zIndex = String(box.zIndexValue);
-    box.elem.setAttribute("role", "listbox");
-    box.elem.setAttribute("aria-label", box.ariaLabel);
+    box.css.position = "fixed";
+    box.zIndex = box.zIndexValue;
+    box.role = "listbox";
+    box.aria = { label: box.ariaLabel };
 
     // BOX: The part that scrolls. The content is created in it.
     box.scrollBox = Box(_s.box.padding, _s.box.padding, "100%", "100%", {
         color: "transparent",
         scrollY: 1,
     });
-    box.scrollBox.elem.style.width = "calc(100% - " + (_s.box.padding * 2) + "px)";
-    box.scrollBox.elem.style.height = "calc(100% - " + (_s.box.padding * 2) + "px)";
+    box.scrollBox.css = {
+        width: "calc(100% - " + (_s.box.padding * 2) + "px)",
+        height: "calc(100% - " + (_s.box.padding * 2) + "px)",
+    };
 
     // SCROLL BAR: basic/scroll-bar.js instead of the scrollbar of the browser.
     if (box.useScrollBar == 1 && typeof ScrollBar !== "undefined") {
@@ -487,6 +511,11 @@ const SearchResults = function (params = {}) {
 };
 
 // *** STYLE PACKAGES:
+// USAGE: SearchResults({ styleName: "dark" })
+// USAGE: SearchResults({ styleName: "dark", style: { box: { color: "tomato" } } }) // Change only some keys.
+// USAGE: SearchResults({ style: SearchResults.styles.dark }) // The same as styleName: "dark". (The package is copied, never changed.)
+// NOTE: A new package needs only the keys that differ from the default (classic) style.
+// USAGE: SearchResults.styles.myStyle = { box: { color: "red" } };
 
 SearchResults.styles = {
 

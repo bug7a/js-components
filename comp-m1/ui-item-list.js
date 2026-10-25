@@ -47,18 +47,18 @@ var createItem = function(itemData) {
     var ITEM_WIDTH = USED_WIDTH
 
     // BOX: Object container box.
-    var box = createBox(0, 0, ITEM_WIDTH, 94)
+    var box = Box(0, 0, ITEM_WIDTH, 94)
     that.color = "transparent"
 
     // BOX: Item background box.
-    box.boxBack = createBox(10, 2, ITEM_WIDTH - 20, 90)
+    box.boxBack = Box(10, 2, ITEM_WIDTH - 20, 90)
     box.add(that)
     that.color = "transparent"
     that.round = 13
     that.setMotion("background-color 0.3s")
 
     // IMAGE: Item icon image.
-    box.imgLogo = createImage(30, 12, 70, 70)
+    box.imgLogo = Icon(30, 12, 70, 70)
     box.add(that)
     that.load(itemData.iconFile)
     that.round = 4
@@ -66,12 +66,12 @@ var createItem = function(itemData) {
     that.border = 0
 
     // LABEL: Item title text.
-    box.lblTitle = createLabel(120, 25, 280, "auto")
+    box.lblTitle = Label(120, 25, 280, "auto")
     box.add(that)
     that.text = itemData.titleText
 
     // LABEL: Item description text.
-    box.lblDesc = createLabel(120, 49, 280, "auto")
+    box.lblDesc = Label(120, 49, 280, "auto")
     box.add(that)
     that.text = itemData.descriptionText
     that.textColor = "gray"
@@ -203,7 +203,7 @@ UIItemList.create = function(parameters = {}) {
     if (!parameters.height) parameters.height = getDefaultContainerBox().height;
 
     // BOX: UI object container.
-    const box = createBox();
+    const box = Box();
 
     // *** PRIVATE VARIABLES:
     let displayType = "block";

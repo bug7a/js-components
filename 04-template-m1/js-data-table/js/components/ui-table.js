@@ -84,7 +84,7 @@ UITable.resetDefault();
 UITable.create = function(parameters = {}) {
 
     // BOX: UI Table container.
-	const box = createBox();
+	const box = Box();
 
 	// Default values.
 	box.default = {};
@@ -125,7 +125,7 @@ UITable.create = function(parameters = {}) {
     // .top ve .left nesne dışında belirlenmeli.
 
     // LABEL: No item found alert.
-    box.alert = createLabel();
+    box.alert = Label();
     box.add(that);
     that.width = "auto";
     that.height = "auto";
@@ -143,7 +143,7 @@ UITable.create = function(parameters = {}) {
     });
 
     // BOX: Items container.
-    box.boxItems = createBox();
+    box.boxItems = Box();
     box.add(that);
     that.color = "transparent";
     that.width = "100%";
@@ -160,7 +160,7 @@ UITable.create = function(parameters = {}) {
     // .top ve .left: resizeTable da veriliyor.
 
     // BOX: Titles container.
-    box.boxTitles = createBox();
+    box.boxTitles = Box();
     box.add(that);
     that.color = "transparent";
     that.width = "100%";
@@ -172,7 +172,7 @@ UITable.create = function(parameters = {}) {
     that.top = box.default.topBarHeight;
 
     // BOX: Titles background box.
-    box.boxTitles.background = createBox();
+    box.boxTitles.background = Box();
     box.boxTitles.add(that);
     that.width = "100%";
     that.height = "100%";
@@ -184,7 +184,7 @@ UITable.create = function(parameters = {}) {
     that.element.setAttribute("id", "titles-background")
 
     // BOX: Top bar.
-    box.topBar = createBox();
+    box.topBar = Box();
     box.add(that);
     that.color = box.default.topBarBackgroundColor;
     that.element.style.borderBottom = box.default.topBarBottomBorderString;
@@ -197,7 +197,7 @@ UITable.create = function(parameters = {}) {
     }
 
     // BOX: Bottom bar.
-    box.bottomBar = createBox();
+    box.bottomBar = Box();
     box.add(that);
     that.color = box.default.bottomBarBackgroundColor;
     that.element.style.borderTop = box.default.bottomBarTopBorderString;
@@ -210,7 +210,7 @@ UITable.create = function(parameters = {}) {
     // .top, resizeTable da veriliyor.
 
     // BOX: Table border.
-    box.boxBorder = createBox();
+    box.boxBorder = Box();
     box.add(that);
     that.width = "100%";
     that.height = "100%";
@@ -280,7 +280,7 @@ UITable.create = function(parameters = {}) {
     const createTitleCell = (titleCellData, titleCellIndex) => {
         
         // BOX: Title cell container
-        const titleCell = createBox();
+        const titleCell = Box();
         titleCell.data = titleCellData;
         titleCell.index = titleCellIndex;
         titleCell.color = "transparent";
@@ -290,7 +290,7 @@ UITable.create = function(parameters = {}) {
         if (box.default.createTitleCellBackground == 1) {
 
             // BOX: Title background container
-            titleCell.background = createBox();
+            titleCell.background = Box();
             titleCell.add(that);
             that.width = "100%";
             that.height = "100%";
@@ -305,7 +305,7 @@ UITable.create = function(parameters = {}) {
         }
 
         // LABEL: Title text
-        titleCell.label = createLabel();
+        titleCell.label = Label();
         titleCell.add(that);
         that.color = "transparent";    
         that.width = "auto";
@@ -321,7 +321,7 @@ UITable.create = function(parameters = {}) {
         if (titleCellData.enableSorting == 1) {
 
             // BOX: Title background container
-            titleCell.boxArrows = createBox();
+            titleCell.boxArrows = Box();
             titleCell.add(that);
             that.width = box.default.sortingWidth;
             that.height = box.default.sortingHeight;
@@ -337,7 +337,7 @@ UITable.create = function(parameters = {}) {
             //that.center("top");
 
             // IMAGE: ASC DESC arrow icon
-            titleCell.boxArrows.imgArrow = createImage();
+            titleCell.boxArrows.imgArrow = Icon();
             titleCell.boxArrows.add(that);
             that.width = box.default.sortingIconSize;
             that.height = box.default.sortingIconSize;
@@ -446,7 +446,7 @@ UITable.create = function(parameters = {}) {
         if (box.default.createTitleCellContentBox == 1) {
 
             // BOX: title content container.
-            titleCell.box = createBox();
+            titleCell.box = Box();
             titleCell.add(that);
             that.width = "100%";
             that.height = "100%";
@@ -467,7 +467,7 @@ UITable.create = function(parameters = {}) {
     const createItemRow = function(itemData, itemIndex) {
 
         // BOX: Item row container
-        const itemRow = createBox();
+        const itemRow = Box();
         itemRow.color = "transparent";
         itemRow.width = "100%";
         itemRow.height = box.default.itemHeight;
@@ -477,7 +477,7 @@ UITable.create = function(parameters = {}) {
         //itemRow.element.style.verticalAlign = "middle";
 
         // BOX: Item row background container
-        itemRow.background = createBox();
+        itemRow.background = Box();
         itemRow.add(that);
         that.width = "100%";
         that.height = "100%";
@@ -520,7 +520,7 @@ UITable.create = function(parameters = {}) {
     const createItemCell = function(itemCellData, titleCellData, itemRow, itemCellIndex) {
 
         // BOX: Item cell container
-        const itemCell = createBox();
+        const itemCell = Box();
         itemCell.color = "transparent";
         // if auto width than use calculatedAutoTitleCellWidth
         itemCell.width = box.titleCellList[itemCellIndex].width;
@@ -530,7 +530,7 @@ UITable.create = function(parameters = {}) {
         if (box.default.createItemCellBackground) {
 
             // BOX: Title background container
-            itemCell.background = createBox();
+            itemCell.background = Box();
             itemCell.add(that);
             that.width = "100%";
             //that.height = itemCell.height;
@@ -545,7 +545,7 @@ UITable.create = function(parameters = {}) {
         }
 
         // LABEL: Text
-        itemCell.label = createLabel();
+        itemCell.label = Label();
         itemCell.add(that);
         that.color = "transparent";
         that.width = itemCell.width - (box.default.leftRightInnerSpace * 2);
@@ -561,7 +561,7 @@ UITable.create = function(parameters = {}) {
         }
         that.element.style.textOverflow = "ellipsis";
         that.fontSize = box.default.itemFontSize;
-        that.text = str(itemCellData);
+        that.text = basic.str(itemCellData);
         that.left = box.default.leftRightInnerSpace;
 
         if(itemCellData != undefined) {
@@ -573,7 +573,7 @@ UITable.create = function(parameters = {}) {
         if (box.default.createItemCellContentBox == 1) {
 
             // BOX: Item content container.
-            itemCell.box = createBox();
+            itemCell.box = Box();
             itemCell.add(that);
             that.width = "100%";
             that.height = "100%";
@@ -646,7 +646,7 @@ UITable.create = function(parameters = {}) {
 
         const itemRow  = createItemRow(itemData, itemRowIndex);
 
-        itemRow.element.style.order = str(itemRowIndex);
+        itemRow.element.style.order = basic.str(itemRowIndex);
         itemRow.element.style.whiteSpace = "nowrap";
         itemRow.cellList = [];
 
@@ -835,7 +835,7 @@ UITable.create = function(parameters = {}) {
             }
 
             // Yeni ve eski itemleri sırala
-            item.element.style.order = str(i);
+            item.element.style.order = basic.str(i);
 
             // Yeni listelere ekle
             newItemList.push(item);
@@ -1162,7 +1162,7 @@ UITable.create = function(parameters = {}) {
     box.getBiggestId = function(itemDataList = box.itemDataList) {
         let biggestId = 0;
         for(var i = 0; i < itemDataList.length; i++) {
-            const currentId = num(itemDataList[i][0]);
+            const currentId = basic.num(itemDataList[i][0]);
             if (currentId > biggestId) {
                 biggestId = currentId;
             }

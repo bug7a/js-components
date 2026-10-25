@@ -98,7 +98,7 @@
             page.color = "whitesmoke";
 
             // BOX: Plant items container box. Parameters: left, top, width, height
-            page.boxItems = createBox(0, 0, 300, "100%");
+            page.boxItems = Box(0, 0, 300, "100%");
             that.color = "transparent";
             that.scrollY = 1;
             that.right = 0;
@@ -142,7 +142,7 @@
         const createPlantItem = function(data, index) {
 
             // BOX: Object container box
-            const box = createBox();
+            const box = Box();
             box.width = "100%";
             box.height = 94;
             box.color = "transparent";

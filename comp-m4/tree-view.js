@@ -137,9 +137,7 @@ const TreeViewDefaults = {
 const TreeView = function (params = {}) {
 
     // Merge style package: params.style > TreeView.styles[styleName] > TreeViewDefaults.style (classic)
-    const _stylePackage = TreeView.styles[params.styleName || TreeViewDefaults.styleName];
-    if (!_stylePackage) console.warn("TreeView: Style package not found: " + params.styleName);
-    mergeIntoIfMissing(params, { style: _stylePackage || {} });
+    basic.applyStylePackage(params, TreeView.styles, TreeViewDefaults);
 
     // Merge params:
     mergeIntoIfMissing(params, TreeViewDefaults);
@@ -160,7 +158,7 @@ const TreeView = function (params = {}) {
     const isAutoHeight = (box.height === "auto");
     let roots = []; // [rec]
     let recs = new Map(); // key -> rec { node, parent, level, row, group, built } (only the rows that were created)
-    let index = new Map(); // key -> { node, parent } (every node, also inside closed branches)
+    let nodeIndex = new Map(); // key -> { node, parent } (every node, also inside closed branches)
     let hoverRec = null;
     let hasFocus = 0;
     let typeBuffer = "";
@@ -169,6 +167,9 @@ const TreeView = function (params = {}) {
     const TYPE_AHEAD_RESET_MS = 600; // The typed letters are forgotten after this pause.
     const SCROLL_SPACE = 4; // Space above / below a row that is scrolled into view.
     const AUTO_HEIGHT_PAGE_SIZE = 10; // PageUp / PageDown step when the tree does not scroll.
+    const ARROW_BOX_EXTRA = 4; // The box of the arrow is this much wider than the arrow.
+    const TEXT_SPACE_WITHOUT_ICON = 2; // Space between the arrow and the text when there is no icon.
+    const EMPTY_TEXT_TOP = 16;
 
     // *** PUBLIC VARIABLES:
     box.previousValue = null;
@@ -224,7 +225,7 @@ const TreeView = function (params = {}) {
             "display:inline-flex",
             "align-items:center",
             "justify-content:center",
-            "flex:0 0 " + (arrow.size + 4) + "px",
+            "flex:0 0 " + (arrow.size + ARROW_BOX_EXTRA) + "px",
             "height:100%",
             "transform:rotate(" + (isOpen(rec) ? 90 : 0) + "deg)",
         ];
@@ -247,7 +248,7 @@ const TreeView = function (params = {}) {
 
     const getTextHtml = function (node) {
         const styles = [
-            "margin-left:" + ((node.iconFile) ? _s.row.gap : 2) + "px",
+            "margin-left:" + ((node.iconFile) ? _s.row.gap : TEXT_SPACE_WITHOUT_ICON) + "px",
             "flex:0 1 auto",
             "min-width:0",
             "overflow:hidden",
@@ -387,9 +388,11 @@ const TreeView = function (params = {}) {
                 color: "transparent",
                 position: "relative",
                 css: { alignItems: "stretch" },
+                role: "group",
             });
-            rec.group.role = "group";
-                rec.children = rec.node.children.map(function (child) { return buildRec(child, rec, rec.level + 1); });
+                rec.children = rec.node.children.map(function (child) {
+                    return buildRec(child, rec, rec.level + 1);
+                });
             endGroup();
         });
 
@@ -407,13 +410,13 @@ const TreeView = function (params = {}) {
 
     const indexNodes = function (list, parentNode) {
         (list || []).forEach(function (node) {
-            index.set(node.key, { node: node, parent: parentNode });
+            nodeIndex.set(node.key, { node: node, parent: parentNode });
             if (node.children) indexNodes(node.children, node);
         });
     };
 
     const unindexNode = function (node) {
-        index.delete(node.key);
+        nodeIndex.delete(node.key);
         (node.children || []).forEach(unindexNode);
     };
 
@@ -421,7 +424,7 @@ const TreeView = function (params = {}) {
     const ensureRec = function (key) {
         key = String(key);
         if (recs.get(key)) return recs.get(key);
-        if (!index.get(key)) return null;
+        if (!nodeIndex.get(key)) return null;
         const path = box.getPath(key);
         for (let i = 0; i < path.length - 1; i++) {
             const rec = recs.get(path[i].key);
@@ -433,7 +436,7 @@ const TreeView = function (params = {}) {
 
     // The selection was removed (it is not in the tree any more).
     const dropLostValue = function () {
-        if (box.value === null || index.get(box.value)) return;
+        if (box.value === null || nodeIndex.get(box.value)) return;
         box.previousValue = box.value;
         box.value = null;
         box.listArea.aria = { activedescendant: null };
@@ -663,9 +666,9 @@ const TreeView = function (params = {}) {
 
     };
 
-    const recOfEvent = function (event) {
-        for (let el = event.target; el && el !== box.listArea.elem; el = el.parentElement) {
-            if (el._treeRec) return el._treeRec;
+    const getRecOfEvent = function (event) {
+        for (let element = event.target; element && element !== box.listArea.elem; element = element.parentElement) {
+            if (element._treeRec) return element._treeRec;
         }
         return null;
     };
@@ -723,7 +726,7 @@ const TreeView = function (params = {}) {
         roots.forEach(removeRecView);
         roots = [];
         recs = new Map();
-        index = new Map();
+        nodeIndex = new Map();
         hoverRec = null;
         const list = (Array.isArray(items) ? items : []).map(normalize);
         indexNodes(list, null);
@@ -750,22 +753,22 @@ const TreeView = function (params = {}) {
     };
 
     box.getNode = function (key) {
-        const entry = index.get(String(key));
+        const entry = nodeIndex.get(String(key));
         return (entry) ? entry.node : null;
     };
 
     box.getParent = function (key) {
-        const entry = index.get(String(key));
+        const entry = nodeIndex.get(String(key));
         return (entry) ? entry.parent : null;
     };
 
     // [root, ..., node]
     box.getPath = function (key) {
         const out = [];
-        let entry = index.get(String(key));
+        let entry = nodeIndex.get(String(key));
         while (entry) {
             out.unshift(entry.node);
-            entry = (entry.parent) ? index.get(entry.parent.key) : null;
+            entry = (entry.parent) ? nodeIndex.get(entry.parent.key) : null;
         }
         return out;
     };
@@ -797,7 +800,7 @@ const TreeView = function (params = {}) {
             setExpanded(rec, expanded);
             return;
         }
-        const entry = index.get(String(key));
+        const entry = nodeIndex.get(String(key));
         if (entry) entry.node.expanded = (expanded) ? 1 : 0;
     };
 
@@ -828,7 +831,7 @@ const TreeView = function (params = {}) {
 
     box.collapseAll = function () {
         recs.forEach(function (rec) { setExpanded(rec, 0); });
-        index.forEach(function (entry, key) {
+        nodeIndex.forEach(function (entry, key) {
             if (!recs.get(key)) entry.node.expanded = 0;
         });
     };
@@ -840,7 +843,7 @@ const TreeView = function (params = {}) {
 
     // Changes some fields of a node and paints only its row. ("children" -> use setChildren)
     box.updateNode = function (key, props = {}) {
-        const entry = index.get(String(key));
+        const entry = nodeIndex.get(String(key));
         if (!entry) return;
         Object.keys(props).forEach(function (name) {
             if (name === "children" || name === "key" || name === "expanded") return;
@@ -853,7 +856,7 @@ const TreeView = function (params = {}) {
 
     // New children for a node (lazy loading, a refresh). Only that branch is drawn again.
     box.setChildren = function (key, children) {
-        const entry = index.get(String(key));
+        const entry = nodeIndex.get(String(key));
         if (!entry) return;
         (entry.node.children || []).forEach(unindexNode);
         entry.node.children = (Array.isArray(children) ? children : []).map(normalize);
@@ -868,11 +871,11 @@ const TreeView = function (params = {}) {
     box.addNode = function (parentKey, node, position = -1) {
 
         const isRoot = (parentKey === null || parentKey === undefined);
-        const parentEntry = (isRoot) ? null : index.get(String(parentKey));
+        const parentEntry = (isRoot) ? null : nodeIndex.get(String(parentKey));
         if (!isRoot && !parentEntry) return null;
 
         const newNode = normalize(node);
-        if (index.get(newNode.key)) {
+        if (nodeIndex.get(newNode.key)) {
             console.warn("TreeView: The key is used: " + newNode.key);
             return null;
         }
@@ -888,7 +891,7 @@ const TreeView = function (params = {}) {
 
     box.removeNode = function (key) {
 
-        const entry = index.get(String(key));
+        const entry = nodeIndex.get(String(key));
         if (!entry) return;
 
         if (entry.parent) {
@@ -916,10 +919,11 @@ const TreeView = function (params = {}) {
     };
 
     box.setEnabled = function (enabled) {
-        box.enabled = (enabled) ? 1 : 0;
-        box.listArea.tabIndex = (box.enabled == 1) ? 0 : -1;
-        box.opacity = (box.enabled == 1) ? 1 : _s.disabled.opacity;
-        box.listArea.css.pointerEvents = (box.enabled == 1) ? "" : "none";
+        const isEnabled = (enabled) ? 1 : 0;
+        box.enabled = isEnabled;
+        box.listArea.tabIndex = (isEnabled) ? 0 : -1;
+        box.opacity = (isEnabled) ? 1 : _s.disabled.opacity;
+        box.listArea.css.pointerEvents = (isEnabled) ? "" : "none";
     };
 
     box.focus = function () {
@@ -971,7 +975,7 @@ const TreeView = function (params = {}) {
         box.lblEmpty = Label({
             plainText: box.emptyText,
             width: "100%",
-            top: 16,
+            top: EMPTY_TEXT_TOP,
             fontSize: _s.empty.fontSize,
             textColor: _s.empty.textColor,
             textAlign: "center",
@@ -995,7 +999,7 @@ const TreeView = function (params = {}) {
     // EVENTS: One listener for all the rows (the rows are drawn again often).
     box.listArea.on("click", function (self, event) {
         if (box.enabled != 1) return;
-        const rec = recOfEvent(event);
+        const rec = getRecOfEvent(event);
         if (!rec) return;
         if (isArrowEvent(event) && canExpand(rec)) {
             setExpanded(rec, !isOpen(rec), 1);
@@ -1005,14 +1009,14 @@ const TreeView = function (params = {}) {
     });
     box.listArea.on("dblclick", function (self, event) {
         if (box.enabled != 1) return;
-        const rec = recOfEvent(event);
+        const rec = getRecOfEvent(event);
         if (!rec || isArrowEvent(event) || rec.node.disabled) return;
         if (canExpand(rec)) setExpanded(rec, !isOpen(rec), 1);
         activateRec(rec);
     });
     box.listArea.on("mousemove", function (self, event) {
         if (box.enabled != 1) return;
-        setHover(recOfEvent(event));
+        setHover(getRecOfEvent(event));
     });
     box.listArea.on("mouseleave", function () { setHover(null); });
     box.listArea.on("keydown", function (self, event) { onKeyDown(event); });
@@ -1049,6 +1053,7 @@ TreeView.getChevronSvg = function (color, size) {
 // *** STYLE PACKAGES:
 // USAGE: TreeView({ styleName: "modern" })
 // USAGE: TreeView({ styleName: "dark", style: { rowSelected: { color: "#3D3D3D" } } }) // Change only some keys.
+// USAGE: TreeView({ style: TreeView.styles.dark }) // The same as styleName: "dark". (The package is copied, never changed.)
 // NOTE: A new package needs only the keys that differ from the default (classic) style.
 // USAGE: TreeView.styles.myStyle = { tag: { textColor: "red" } };
 TreeView.styles = {

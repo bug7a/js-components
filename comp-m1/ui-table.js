@@ -72,7 +72,7 @@ UITable.resetDefault();
 UITable.create = function(parameters = {}) {
 
     // BOX: UI Object container.
-	const box = createBox();
+	const box = Box();
 
 	// Default values.
 	box.default = {};
@@ -95,7 +95,7 @@ UITable.create = function(parameters = {}) {
     //box.element.style.whiteSpace = "nowrap";
 
     // BOX: Titles container.
-    box.boxTitles = createBox();
+    box.boxTitles = Box();
     box.add(that);
     that.color = "transparent";
     that.width = box.width;
@@ -105,7 +105,7 @@ UITable.create = function(parameters = {}) {
     that.top = 0;
 
     // BOX: Titles background container
-    box.boxTitles.boxBackground = createBox();
+    box.boxTitles.boxBackground = Box();
     box.boxTitles.add(that);
     that.width = box.width;
     that.element.style.height = "100%";
@@ -117,7 +117,7 @@ UITable.create = function(parameters = {}) {
     that.top = 0;
 
     // BOX: Items container.
-    box.boxItems = createBox();
+    box.boxItems = Box();
     box.add(that);
     that.color = "transparent";
     that.width = box.width;
@@ -152,13 +152,13 @@ UITable.create = function(parameters = {}) {
     const createTitleCell = (titleData, titleIndex) => {
         
         // BOX: Title container
-        const titleCell = createBox();
+        const titleCell = Box();
         titleCell.color = "transparent";
         titleCell.width = titleData.width || 100;
         titleCell.height = box.default.titleHeight;
 
         // BOX: Title background container
-        titleCell.boxBackground = createBox();
+        titleCell.boxBackground = Box();
         titleCell.add(that);
         that.width = titleCell.width;
         that.height = titleCell.height;
@@ -172,7 +172,7 @@ UITable.create = function(parameters = {}) {
         that.top = 0;
 
         // LABEL: Title text
-        titleCell.lblValue = createLabel();
+        titleCell.lblValue = Label();
         titleCell.add(that);
         that.width = titleCell.width - (UITable.default.leftRightInnerSpace * 2);
         //that.widht = "auto";
@@ -190,7 +190,7 @@ UITable.create = function(parameters = {}) {
         });
 
         // BOX: Title background container
-        titleCell.boxArrows = createBox();
+        titleCell.boxArrows = Box();
         titleCell.add(that);
         that.width = 12;
         that.height = UITable.default.sortingHeight;
@@ -202,7 +202,7 @@ UITable.create = function(parameters = {}) {
         that.center("top");
 
         // IMAGE: ASC arrow icon
-        titleCell.boxArrows.imgUp = createImage();
+        titleCell.boxArrows.imgUp = Icon();
         titleCell.boxArrows.add(that);
         that.width = 12;
         that.height = 12;
@@ -211,7 +211,7 @@ UITable.create = function(parameters = {}) {
         that.top -= 3;
 
         // IMAGE: DESC arrow icon
-        titleCell.boxArrows.imgUp = createImage();
+        titleCell.boxArrows.imgUp = Icon();
         titleCell.boxArrows.add(that);
         that.width = 12;
         that.height = 12;
@@ -232,14 +232,14 @@ UITable.create = function(parameters = {}) {
     const createItemRow = (itemData, itemIndex) => {
 
         // BOX: Item row container
-        const itemRow = createBox();
+        const itemRow = Box();
         itemRow.color = "transparent";
         itemRow.width = box.width;
         itemRow.height = 50;
         //itemRow.element.style.verticalAlign = "top";
 
         // BOX: Item row background container
-        itemRow.boxBackground = createBox();
+        itemRow.boxBackground = Box();
         itemRow.add(that);
         that.width = box.width;
         that.element.style.height = "100%";
@@ -265,13 +265,13 @@ UITable.create = function(parameters = {}) {
     const createItemCell = (cellData, titleData, itemRow, itemCellIndex) => {
 
         // BOX: Item cell container
-        const itemCell = createBox();
+        const itemCell = Box();
         itemCell.color = "transparent";
         itemCell.width = titleData.width || 100;
         itemCell.element.style.height = "100%";
 
         // BOX: Title background container
-        itemCell.boxBackground = createBox();
+        itemCell.boxBackground = Box();
         itemCell.add(that);
         that.width = itemCell.width;
         //that.height = itemCell.height;
@@ -284,7 +284,7 @@ UITable.create = function(parameters = {}) {
         that.top = 0;
 
         // LABEL: Title
-        itemCell.lblValue = createLabel();
+        itemCell.lblValue = Label();
         itemCell.add(that);
         //that.textAlign = titleData.itemTextAlign;
         that.width = itemCell.width - (UITable.default.leftRightInnerSpace * 2);
@@ -307,7 +307,7 @@ UITable.create = function(parameters = {}) {
         });
 
         // BOX: Title background container
-        itemCell.boxFront = createBox();
+        itemCell.boxFront = Box();
         itemCell.add(that);
         that.width = itemCell.width;
         //that.height = itemCell.height;
@@ -371,7 +371,7 @@ UITable.create = function(parameters = {}) {
     /*
 	box.boxDecrease.onClick(decreaseNumber);
 	box.boxIncrease.onClick(increaseNumber);
-	box.setValue(num(currentValue));
+	box.setValue(basic.num(currentValue));
 	box.refreshButtonsOpacity();
     */
 	

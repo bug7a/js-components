@@ -96,6 +96,8 @@ const MiniGraphBox = function (params = {}) {
     let barList = []; // Bar objects (created one time for the bar count)
     let cancelResize = null; // (box.after: stopped by remove())
     const BAR_MOTION = "height 0.2s, background-color 0.2s";
+    const NEW_BAR_MOTION = "height 0.2s";
+    const RESIZE_WAIT = 30; // ms
 
     // *** PUBLIC VARIABLES:
     // [var] Visible values, from left to right: [{ value, color }]
@@ -107,9 +109,9 @@ const MiniGraphBox = function (params = {}) {
 
     const normalizeValue = function (item) {
         if (item !== null && typeof item == "object") {
-            return { value: num(item.value) || 0, color: item.color || "" };
+            return { value: basic.num(item.value) || 0, color: item.color || "" };
         }
-        return { value: num(item) || 0, color: "" };
+        return { value: basic.num(item) || 0, color: "" };
     };
 
     // How many bars fit in the inner width of the box.
@@ -142,25 +144,24 @@ const MiniGraphBox = function (params = {}) {
         barList.forEach(function (bar) { bar.remove(); });
         barList = [];
 
-        const previous = getDefaultContainerBox();
-        setDefaultContainerBox(box.barGroup);
+        createIn(box.barGroup, function () {
 
-        for (let i = 0; i < box.barCount; i++) {
+            for (let i = 0; i < box.barCount; i++) {
 
-            // BOX: Bar
-            const bar = Box({
-                width: _s.bars.barWidth,
-                height: 0,
-                color: box.barColor,
-                round: _s.bars.round,
-            });
-            bar.elem.style.flexShrink = "0";
-            bar.motion = "";
-            barList.push(bar);
+                // BOX: Bar
+                const bar = Box({
+                    width: _s.bars.barWidth,
+                    height: 0,
+                    color: box.barColor,
+                    round: _s.bars.round,
+                });
+                bar.shrink = 0;
+                bar.motion = "";
+                barList.push(bar);
 
-        }
+            }
 
-        setDefaultContainerBox(previous);
+        });
 
     };
 
@@ -171,13 +172,18 @@ const MiniGraphBox = function (params = {}) {
         bar.setMotionNow(motion); // WHY: setMotion() waits a little (timeout); the motion must change before the height.
     };
 
+    const getBarHeight = function (item, max) {
+        if (item.value <= 0 || max <= 0) return 0;
+        const height = Math.round(Math.min(item.value, max) / max * _s.bars.height);
+        return Math.max(_s.bars.minHeight, height);
+    };
+
     // Write the values to the bars. (Bars are not moved; only their height and color change.)
     // newBarIndex: The bar of the new value (addValue). Only this bar is animated.
     // WHY: When the graph is full, every bar gets its right neighbour's value. If all of them are animated, the graph looks like a wave, not like moving to the left.
     const updateBars = function (newBarIndex = -1) {
 
         const max = getMaxValue();
-        const graphHeight = _s.bars.height;
 
         barList.forEach(function (bar, index) {
 
@@ -196,19 +202,15 @@ const MiniGraphBox = function (params = {}) {
                 return;
             }
 
-            let height = 0;
-            if (item.value > 0 && max > 0) {
-                height = Math.round(Math.min(item.value, max) / max * graphHeight);
-                height = Math.max(_s.bars.minHeight, height);
-            }
+            const height = getBarHeight(item, max);
 
             if (isNewBar && box.animated == 1) {
                 // WHY: This bar showed another value before (graph is full). Start from 0, so it rises like a new bar.
                 setBarMotion(bar, "none");
                 bar.height = 0;
                 bar.color = item.color || box.barColor;
-                void bar.elem.offsetHeight; // Apply height 0 now, before the motion starts.
-                setBarMotion(bar, "height 0.2s");
+                void bar.elem.offsetHeight; // WHY: Apply height 0 now, before the motion starts.
+                setBarMotion(bar, NEW_BAR_MOTION);
             }
 
             bar.height = height;
@@ -297,7 +299,7 @@ const MiniGraphBox = function (params = {}) {
 
     // 0: Auto
     box.setMaxValue = function (maxValue) {
-        box.maxValue = num(maxValue) || 0;
+        box.maxValue = basic.num(maxValue) || 0;
         updateBars();
     };
 
@@ -329,15 +331,15 @@ const MiniGraphBox = function (params = {}) {
             fontSize: _s.title.fontSize,
             textColor: _s.title.textColor,
         });
-        box.lblTitle.elem.style.whiteSpace = "nowrap";
-        box.lblTitle.elem.style.marginBottom = "-6px"; // WHY: Line heights of the two texts leave a big space between them.
+        // WHY: marginBottom: Line heights of the two texts leave a big space between them.
+        box.lblTitle.css = { whiteSpace: "nowrap", marginBottom: "-6px" };
 
         box.lblValueText = Label({
             text: box.valueText,
             fontSize: _s.valueText.fontSize,
             textColor: _s.valueText.textColor,
         });
-        box.lblValueText.elem.style.whiteSpace = "nowrap";
+        box.lblValueText.css.whiteSpace = "nowrap";
 
     endGroup();
 
@@ -359,7 +361,7 @@ const MiniGraphBox = function (params = {}) {
     // *** OBJECT INIT CODE:
 
     box.on("click", function () { box.onClick(box); });
-    box.elem.style.cursor = "default";
+    box.cursor = "default";
 
     box.setIcon(box.iconFile);
 
@@ -371,7 +373,10 @@ const MiniGraphBox = function (params = {}) {
 
     box.onResize(function () {
         if (cancelResize) cancelResize();
-        cancelResize = box.after(30, function () { cancelResize = null; refreshSize(); });
+        cancelResize = box.after(RESIZE_WAIT, function () {
+            cancelResize = null;
+            refreshSize();
+        });
     });
 
     return endObject(box);

@@ -127,6 +127,10 @@ const SelectFile = function (params = {}) {
     let isMouseOver = 0;
     let rows = [];
     let previewUrls = [];
+    const ZONE_MOTION = "background-color 0.15s, border-color 0.15s";
+    const ROW_GAP = 10; // Space between the thumbnail, the texts and the remove button
+    const THUMB_INSET = 16; // The thumbnail is this much smaller than the row height
+    const BADGE_MAX_LETTERS = 4; // "JPEG", "DOCX"
 
     // *** PUBLIC VARIABLES:
     // [var] Selected files: [{ file, name, path, size, sizeText, type, extension, lastModified }]
@@ -135,14 +139,6 @@ const SelectFile = function (params = {}) {
     box.state = "normal";
 
     // *** PRIVATE FUNCTIONS:
-
-    // Create objects inside a container, after the component is created.
-    const createIn = function (container, func) {
-        const previous = getDefaultContainerBox();
-        setDefaultContainerBox(container);
-        func();
-        setDefaultContainerBox(previous);
-    };
 
     const getExtension = function (name) {
         const index = name.lastIndexOf(".");
@@ -188,7 +184,10 @@ const SelectFile = function (params = {}) {
     const createHintText = function () {
         if (box.hintText) return box.hintText;
         const parts = [];
-        if (box.accept) parts.push(box.accept.split(",").map(function (r) { return r.trim(); }).join(", "));
+        if (box.accept) {
+            const rules = box.accept.split(",").map(function (rule) { return rule.trim(); });
+            parts.push(rules.join(", "));
+        }
         if (box.maxSize) parts.push("max " + SelectFile.formatSize(box.maxSize));
         if (box.multiple == 1 && box.maxFiles) parts.push(box.maxFiles + " files");
         return parts.join(" • ");
@@ -207,19 +206,20 @@ const SelectFile = function (params = {}) {
 
         const iconColor = (state == "dragover") ? _s.icon.dragOverColor : _s.icon.color;
         box.iconArrow.color = iconColor;
-        box.iconHead.elem.style.borderColor = iconColor;
-        box.iconTray.elem.style.borderColor = iconColor;
+        box.iconHead.css.borderColor = iconColor;
+        box.iconTray.css.borderColor = iconColor;
 
         box.title.text = (state == "dragover") ? box.dropText : box.titleText;
 
     };
 
-    const updateView = function () {
-        box.opacity = (box.enabled == 1) ? 1 : _s.disabled.opacity;
-        box.zone.elem.style.cursor = (box.enabled == 1) ? "pointer" : "default";
-        box.zone.elem.tabIndex = (box.enabled == 1) ? 0 : -1;
-        box.zone.elem.setAttribute("aria-disabled", (box.enabled == 1) ? "false" : "true");
-        box.input.disabled = (box.enabled != 1);
+    const paintEnabled = function () {
+        const isEnabled = (box.enabled == 1);
+        box.opacity = (isEnabled) ? 1 : _s.disabled.opacity;
+        box.zone.cursor = (isEnabled) ? "pointer" : "default";
+        box.zone.tabIndex = (isEnabled) ? 0 : -1;
+        box.zone.aria = { disabled: (isEnabled) ? "false" : "true" };
+        box.input.disabled = !isEnabled;
     };
 
     const revokePreviews = function () {
@@ -227,109 +227,180 @@ const SelectFile = function (params = {}) {
         previewUrls = [];
     };
 
-    const renderList = function () {
-
+    const removeRows = function () {
         rows.forEach(function (row) { row.remove(); });
         rows = [];
         revokePreviews();
+    };
+
+    // ICON: Image preview, or LABEL: extension badge
+    const createThumbnail = function (info) {
+
+        const thumbSize = _s.item.height - THUMB_INSET;
+
+        if (box.showPreview == 1 && info.type.startsWith("image/")) {
+            const url = URL.createObjectURL(info.file);
+            previewUrls.push(url);
+            const icoPreview = Icon({ width: thumbSize, height: thumbSize, round: _s.badge.round });
+            icoPreview.css.objectFit = "cover";
+            icoPreview.shrink = 0;
+            icoPreview.load(url);
+            return;
+        }
+
+        const lblBadge = Label({
+            width: thumbSize,
+            height: thumbSize,
+            text: (info.extension || "file").slice(0, BADGE_MAX_LETTERS).toUpperCase(),
+            textAlign: "center",
+            fontSize: 10,
+            fontFamily: "opensans-bold",
+            color: _s.badge.color,
+            textColor: _s.badge.textColor,
+            round: _s.badge.round,
+        });
+        lblBadge.lineHeight = thumbSize; // WHY: The text in the middle (a number is px).
+        lblBadge.shrink = 0;
+
+    };
+
+    const createRemoveButton = function (index) {
+
+        const btnRemove = Label({
+            width: 28,
+            height: 28,
+            text: "×",
+            textAlign: "center",
+            fontSize: 20,
+            round: 100,
+            textColor: _s.removeButton.textColor,
+        });
+        btnRemove.lineHeight = "26px";
+        btnRemove.cursor = "pointer";
+        btnRemove.shrink = 0;
+        btnRemove.elem.title = "Remove";
+
+        btnRemove.on("mouseover", function () {
+            btnRemove.textColor = _s.removeButton.hoverColor;
+        });
+        btnRemove.on("mouseout", function () {
+            btnRemove.textColor = _s.removeButton.textColor;
+        });
+        btnRemove.on("click", function () {
+            if (box.enabled != 1) return;
+            box.removeFile(index);
+        });
+
+    };
+
+    const createRow = function (info, index) {
+
+        // GROUP: Row
+        const row = HGroup({
+            width: "100%",
+            height: _s.item.height,
+            align: "left center",
+            gap: ROW_GAP,
+            padding: [ROW_GAP, 0],
+            color: _s.item.color,
+            border: _s.item.border,
+            borderColor: _s.item.borderColor,
+            round: _s.item.round,
+        });
+        row.clickable = 1;
+        row.elem.title = info.path; // Full name on mouse over
+
+            createThumbnail(info);
+
+            // GROUP: Name, size
+            const grpTexts = VGroup({
+                width: "auto",
+                height: "auto",
+                align: "left center",
+            });
+            grpTexts.css = { flex: "1 1 0", minWidth: "0" };
+
+                // LABEL: Name
+                const lblName = Label({
+                    width: "100%",
+                    plainText: info.path,
+                    ..._s.itemName,
+                });
+                lblName.css = { whiteSpace: "nowrap", textOverflow: "ellipsis" };
+
+                // LABEL: Size and type
+                const typeText = (info.type) ? " • " + info.type : "";
+                const lblSize = Label({
+                    plainText: info.sizeText + typeText,
+                    ..._s.itemSize,
+                });
+                lblSize.css.whiteSpace = "nowrap";
+
+            endGroup();
+
+            createRemoveButton(index);
+
+        endGroup();
+
+        return row;
+
+    };
+
+    const renderList = function () {
+
+        removeRows();
 
         box.list.visible = (box.showList == 1 && box.files.length > 0) ? 1 : 0;
         if (box.showList != 1) return;
 
         createIn(box.list, function () {
-
             box.files.forEach(function (info, index) {
-
-                // GROUP: Row
-                const row = HGroup({
-                    width: "100%",
-                    height: _s.item.height,
-                    align: "left center",
-                    gap: 10,
-                    padding: [10, 0],
-                    color: _s.item.color,
-                    border: _s.item.border,
-                    borderColor: _s.item.borderColor,
-                    round: _s.item.round,
-                });
-                row.clickable = 1;
-                row.elem.title = info.path; // Full name on mouse over
-
-                    // ICON: Image preview or extension badge
-                    const thumbSize = _s.item.height - 16;
-                    if (box.showPreview == 1 && info.type.startsWith("image/")) {
-                        const url = URL.createObjectURL(info.file);
-                        previewUrls.push(url);
-                        Icon({ width: thumbSize, height: thumbSize, round: _s.badge.round });
-                        that.elem.style.objectFit = "cover";
-                        that.elem.style.flexShrink = "0";
-                        that.load(url);
-                    } else {
-                        Label({
-                            width: thumbSize,
-                            height: thumbSize,
-                            text: (info.extension || "file").slice(0, 4).toUpperCase(),
-                            textAlign: "center",
-                            fontSize: 10,
-                            fontFamily: "opensans-bold",
-                            color: _s.badge.color,
-                            textColor: _s.badge.textColor,
-                            round: _s.badge.round,
-                        });
-                        that.elem.style.lineHeight = thumbSize + "px";
-                        that.elem.style.flexShrink = "0";
-                    }
-
-                    // GROUP: Name, size
-                    VGroup({
-                        width: "auto",
-                        height: "auto",
-                        align: "left center",
-                    });
-                    that.elem.style.flex = "1 1 0";
-                    that.elem.style.minWidth = "0";
-
-                        Label({
-                            width: "100%",
-                            text: SelectFile.escapeHtml(info.path),
-                            ..._s.itemName,
-                        });
-                        that.elem.style.whiteSpace = "nowrap";
-                        that.elem.style.textOverflow = "ellipsis";
-
-                        Label({
-                            text: info.sizeText + ((info.type) ? " • " + SelectFile.escapeHtml(info.type) : ""),
-                            ..._s.itemSize,
-                        });
-                        that.elem.style.whiteSpace = "nowrap";
-
-                    endGroup();
-
-                    // LABEL: Remove button
-                    const btnRemove = Label({
-                        width: 28,
-                        height: 28,
-                        text: "×",
-                        textAlign: "center",
-                        fontSize: 20,
-                        round: 100,
-                        textColor: _s.removeButton.textColor,
-                    });
-                    btnRemove.elem.style.lineHeight = "26px";
-                    btnRemove.elem.style.cursor = "pointer";
-                    btnRemove.elem.style.flexShrink = "0";
-                    btnRemove.elem.title = "Remove";
-                    btnRemove.on("mouseover", function () { btnRemove.textColor = _s.removeButton.hoverColor; });
-                    btnRemove.on("mouseout", function () { btnRemove.textColor = _s.removeButton.textColor; });
-                    btnRemove.on("click", function () {
-                        if (box.enabled == 1) box.removeFile(index);
-                    });
-
-                endGroup();
-
-                rows.push(row);
-
+                rows.push(createRow(info, index));
             });
+        });
+
+    };
+
+    const createError = function (type, name, message) {
+        return { type: type, name: name, message: message };
+    };
+
+    // The files that pass accept and maxSize. The others go to errors.
+    const readValidFiles = function (fileList, errors) {
+
+        const validFiles = [];
+
+        Array.from(fileList).forEach(function (file) {
+
+            if (!isAccepted(file)) {
+                errors.push(createError("accept", file.name, file.name + ": file type is not allowed."));
+                return;
+            }
+            if (box.maxSize && file.size > box.maxSize) {
+                const message = file.name + ": larger than " + SelectFile.formatSize(box.maxSize) + ".";
+                errors.push(createError("maxSize", file.name, message));
+                return;
+            }
+            validFiles.push(createFileInfo(file));
+
+        });
+
+        return validFiles;
+
+    };
+
+    const addToList = function (newFiles, errors) {
+
+        newFiles.forEach(function (info) {
+
+            const isInList = box.files.some(function (listed) { return isSameFile(listed, info); });
+            if (isInList) return;
+
+            if (box.maxFiles && box.files.length >= box.maxFiles) {
+                errors.push(createError("maxFiles", info.name, info.name + ": maximum " + box.maxFiles + " files."));
+                return;
+            }
+            box.files.push(info);
 
         });
 
@@ -341,37 +412,16 @@ const SelectFile = function (params = {}) {
         if (box.enabled != 1) return;
 
         const errors = [];
-        let newFiles = [];
-
-        Array.from(fileList).forEach(function (file) {
-
-            if (!isAccepted(file)) {
-                errors.push({ type: "accept", name: file.name, message: file.name + ": file type is not allowed." });
-                return;
-            }
-            if (box.maxSize && file.size > box.maxSize) {
-                errors.push({ type: "maxSize", name: file.name, message: file.name + ": larger than " + SelectFile.formatSize(box.maxSize) + "." });
-                return;
-            }
-            newFiles.push(createFileInfo(file));
-
-        });
+        let newFiles = readValidFiles(fileList, errors);
 
         if (box.multiple != 1) {
             if (newFiles.length > 1) {
-                errors.push({ type: "maxFiles", name: "", message: "Only one file can be selected." });
+                errors.push(createError("maxFiles", "", "Only one file can be selected."));
             }
             newFiles = newFiles.slice(0, 1);
             if (newFiles.length) box.files = newFiles;
         } else {
-            newFiles.forEach(function (info) {
-                if (box.files.some(function (f) { return isSameFile(f, info); })) return; // Already in the list
-                if (box.maxFiles && box.files.length >= box.maxFiles) {
-                    errors.push({ type: "maxFiles", name: info.name, message: info.name + ": maximum " + box.maxFiles + " files." });
-                    return;
-                }
-                box.files.push(info);
-            });
+            addToList(newFiles, errors);
         }
 
         if (newFiles.length) {
@@ -422,7 +472,7 @@ const SelectFile = function (params = {}) {
 
     box.setEnabled = function (enabled) {
         box.enabled = basic.isOn(enabled) ? 1 : 0;
-        updateView();
+        paintEnabled();
     };
     // USAGE: get: selectFile.enabled, set: selectFile.setEnabled(0)
 
@@ -437,7 +487,7 @@ const SelectFile = function (params = {}) {
     };
 
     box.refresh = function () {
-        updateView();
+        paintEnabled();
         renderList();
     };
 
@@ -477,10 +527,9 @@ const SelectFile = function (params = {}) {
             borderColor: _s.zone.borderColor,
             round: _s.zone.round,
         });
-        box.zone.elem.style.borderStyle = "dashed";
-        box.zone.elem.style.outline = "none";
-        box.zone.elem.setAttribute("role", "button");
-        box.zone.setMotion("background-color 0.15s, border-color 0.15s");
+        box.zone.css = { borderStyle: "dashed", outline: "none" };
+        box.zone.role = "button";
+        box.zone.setMotion(ZONE_MOTION);
 
             // BOX: Upload icon (tray + arrow, drawn)
             box.icon = startBox({
@@ -488,23 +537,20 @@ const SelectFile = function (params = {}) {
                 height: 40,
                 color: "transparent",
             });
-            box.icon.elem.style.marginBottom = "6px";
+            box.icon.css.marginBottom = "6px";
             box.icon.clipContent = 0;
 
                 // Arrow head
                 box.iconHead = Box({ left: 12, top: 4, width: 16, height: 16, color: "transparent" });
-                that.elem.style.borderLeft = "3px solid";
-                that.elem.style.borderTop = "3px solid";
-                that.elem.style.transform = "rotate(45deg)";
+                that.css = { borderLeft: "3px solid", borderTop: "3px solid", transform: "rotate(45deg)" };
 
                 // Arrow body
                 box.iconArrow = Box({ left: 18.5, top: 6, width: 3, height: 22, color: _s.icon.color, round: 2 });
 
                 // Tray
                 box.iconTray = Box({ left: 2, top: 22, width: 36, height: 14, color: "transparent" });
-                that.elem.style.border = "3px solid";
-                that.elem.style.borderTop = "none";
-                that.elem.style.borderRadius = "0 0 6px 6px";
+                // WHY: border first, then borderTop: the order of the keys is the order they are written.
+                that.css = { border: "3px solid", borderTop: "none", borderRadius: "0 0 6px 6px" };
 
             endBox();
             if (box.showIcon != 1) box.icon.visible = 0;
@@ -525,11 +571,11 @@ const SelectFile = function (params = {}) {
 
             // LABEL: Hint (accept, max size)
             box.hint = Label({
-                text: SelectFile.escapeHtml(createHintText()),
+                plainText: createHintText(),
                 textAlign: "center",
                 ..._s.hint,
             });
-            box.hint.elem.style.marginTop = "4px";
+            box.hint.css.marginTop = "4px";
             if (!box.hint.text) box.hint.visible = 0;
 
         endGroup();
@@ -568,15 +614,15 @@ const SelectFile = function (params = {}) {
     });
 
     box.zone.on("keydown", function (self, event) {
-        if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            box.open();
-        }
+        if (event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        box.open();
     });
 
     box.zone.on("mouseover", function () {
         isMouseOver = 1;
-        if (box.enabled == 1 && box.state != "dragover") setState("hover");
+        if (box.enabled != 1 || box.state == "dragover") return;
+        setState("hover");
     });
 
     box.zone.on("mouseout", function () {
@@ -617,7 +663,7 @@ const SelectFile = function (params = {}) {
 
     box.enabled = basic.isOn(box.enabled) ? 1 : 0;
     setState("normal");
-    updateView();
+    paintEnabled();
     renderList();
 
     return endObject(box);
@@ -632,7 +678,9 @@ SelectFile.formatSize = function (bytes) {
     const units = ["B", "KB", "MB", "GB", "TB"];
     const index = Math.min(units.length - 1, Math.floor(Math.log(bytes) / Math.log(1024)));
     const value = bytes / Math.pow(1024, index);
-    return ((index == 0) ? value : value.toFixed((value < 10) ? 1 : 0)) + " " + units[index];
+    if (index == 0) return value + " " + units[index];
+    const decimals = (value < 10) ? 1 : 0;
+    return value.toFixed(decimals) + " " + units[index];
 };
 // USAGE: SelectFile.formatSize(5 * 1024 * 1024) -> "5.0 MB"
 

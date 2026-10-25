@@ -263,9 +263,9 @@ UI.setTheme = function (themeName = "light") {
     }
     UI.theme = themeName;
     UI._applyActiveTheme();
-    if (UI._isSaving) {
-        try { basic.storage.save(UI.storageKey, themeName); } catch (e) {}
-    }
+    if (!UI._isSaving) return;
+    // WHY: The storage can throw (a private window, blocked site data). The theme still changes.
+    try { basic.storage.save(UI.storageKey, themeName); } catch (e) {}
 };
 
 // Selects the saved theme (or defaultThemeName), and saves the next theme changes.
@@ -363,8 +363,10 @@ UI._writeThemeCss = function () {
     let css = "";
     for (const themeName in UI.themes) {
         const theme = Object.assign({}, UI.linkedColors, UI.themes[themeName]);
+        let selector = ":root[data-theme=\"" + themeName + "\"]";
         // WHY: The light colors are also the default, before a theme is selected.
-        css += (themeName === "light") ? ":root, :root[data-theme=\"light\"] {\n" : ":root[data-theme=\"" + themeName + "\"] {\n";
+        if (themeName === "light") selector = ":root, " + selector;
+        css += selector + " {\n";
         for (const key in theme) {
             if (key === "scheme") continue;
             css += "    --color-" + key + ": " + theme[key] + ";\n";
@@ -376,7 +378,10 @@ UI._writeThemeCss = function () {
 
 UI._applyActiveTheme = function () {
     let themeName = UI.theme;
-    if (themeName === "auto") themeName = (UI._darkQuery && UI._darkQuery.matches) ? "dark" : "light";
+    if (themeName === "auto") {
+        const isSystemDark = UI._darkQuery && UI._darkQuery.matches;
+        themeName = (isSystemDark) ? "dark" : "light";
+    }
     const isChanged = (themeName !== UI.activeTheme);
     UI.activeTheme = themeName;
     document.documentElement.setAttribute("data-theme", themeName);

@@ -34,7 +34,7 @@ UISelectText.create = function(left = 0,
     height = UISelectText.DEFAULT_HEIGHT) {
 
     // BOX: Component background box
-    const ui = createBox(left, top, width, height);
+    const ui = Box(left, top, width, height);
     that.color = UISelectText.uiBackgroundColor;
     that.round = 4;
     that.border = 0;
@@ -56,7 +56,7 @@ UISelectText.create = function(left = 0,
     ui.onChangeFunc = function() {};
 
     // LABEL: Component name label
-    ui.txtName = createLabel(10, 0, "auto");
+    ui.txtName = Label(10, 0, "auto");
     ui.add(that);
     that.left = 10;
     that.top = 0;
@@ -72,14 +72,14 @@ UISelectText.create = function(left = 0,
     })
 
     // BOX: Mask of txtName
-    ui.boxMask = createBox(0, 0, 40, ui.height);
+    ui.boxMask = Box(0, 0, 40, ui.height);
     ui.add(that);
     that.top = 0;
     that.right = 0;
     that.element.style.background = "linear-gradient(to right, #FFFFFF00, " + UISelectText.uiBackgroundColor + ")";
 
     // IMAGE: Up arrow image
-    ui.imgArrow1 = createImage(0, 0, 16, 16);
+    ui.imgArrow1 = Icon(0, 0, 16, 16);
     ui.add(that);
     that.left = 0;
     that.top = 0;
@@ -93,7 +93,7 @@ UISelectText.create = function(left = 0,
     })
 
     // IMAGE: Down arrow image
-    ui.imgArrow2 = createImage(0, 0, 16, 16);
+    ui.imgArrow2 = Icon(0, 0, 16, 16);
     ui.add(that);
     that.left = 0;
     that.top = 0;
@@ -235,7 +235,7 @@ UISelectText.setUIBackgroundColor = function(color) {
 const createItemSelection = function(connectedUI) {
 
     // BOX: Item selection box
-    UISelectText.itemSelection = createBox(0, 0, getDefaultContainerBox().width, getDefaultContainerBox().height);
+    UISelectText.itemSelection = Box(0, 0, getDefaultContainerBox().width, getDefaultContainerBox().height);
     that.color = "white";
     that.setMotion("top 0.3s, opacity 0.3s");
     that.opacity = 0;
@@ -246,7 +246,7 @@ const createItemSelection = function(connectedUI) {
     })
 
     // BOX: Search box
-    UISelectText.itemSelection.boxSearch = createBox(20, 40);
+    UISelectText.itemSelection.boxSearch = Box(20, 40);
     UISelectText.itemSelection.add(that);
     that.width = getDefaultContainerBox().width - 40 - 30 - 10;
     that.height = 50;
@@ -255,14 +255,14 @@ const createItemSelection = function(connectedUI) {
     that.border = 0;
 
     // IMAGE: Search icon
-    UISelectText.itemSelection.boxSearch.imgIcon = createImage(5, 0, 50, 50);
+    UISelectText.itemSelection.boxSearch.imgIcon = Icon(5, 0, 50, 50);
     UISelectText.itemSelection.boxSearch.add(that);
     that.load("../comp-m1/ui-select-text/search.svg");
     that.opacity = 0.4;
     that.space = 27;
 
     // TEXTBOX: Search textbox
-    UISelectText.itemSelection.boxSearch.txtSearch = createTextBox(45, 0);
+    UISelectText.itemSelection.boxSearch.txtSearch = Input(45, 0);
     UISelectText.itemSelection.boxSearch.add(that);
     that.width = UISelectText.itemSelection.boxSearch.width - 80;
     that.border = 0;
@@ -272,7 +272,7 @@ const createItemSelection = function(connectedUI) {
     that.inputElement.setAttribute("placeholder", UISelectText.placeholder);
 
     // BOX: Cancel button box
-    UISelectText.itemSelection.boxCancel = createBox(0, 50, 30, 30);
+    UISelectText.itemSelection.boxCancel = Box(0, 50, 30, 30);
     UISelectText.itemSelection.add(that);
     that.right = 20;
     that.color = "#D8D8D8";
@@ -282,13 +282,13 @@ const createItemSelection = function(connectedUI) {
     })
 
     // IMAGE: Cancel button icon
-    UISelectText.itemSelection.boxCancel.imgCancel = createImage(8, 8, 14, 14);
+    UISelectText.itemSelection.boxCancel.imgCancel = Icon(8, 8, 14, 14);
     UISelectText.itemSelection.boxCancel.add(that);
     that.load("../comp-m1/ui-select-text/cancel.svg");
     that.opacity = 0.5;
 
     // BOX: Scrollable box for items
-    UISelectText.itemSelection.boxItems = createBox();
+    UISelectText.itemSelection.boxItems = Box();
     UISelectText.itemSelection.add(that);
     that.left = 10;
     that.bottom = 0;
@@ -301,12 +301,12 @@ const createItemSelection = function(connectedUI) {
 
     /*
     // BOX: Items mask box (Top)
-    UISelectText.itemSelection.boxMaskTop = createBox(0, 109, getDefaultContainerBox().width - 10 , 10);
+    UISelectText.itemSelection.boxMaskTop = Box(0, 109, getDefaultContainerBox().width - 10 , 10);
     UISelectText.itemSelection.add(that);
     that.element.style.background = "linear-gradient(to bottom, #FFFFFF, #FFFFFF00)";
 
     // BOX: Items mask box (Bottom)
-    UISelectText.itemSelection.boxMaskBottom = createBox(0, 189, getDefaultContainerBox().width - 10 , 10);
+    UISelectText.itemSelection.boxMaskBottom = Box(0, 189, getDefaultContainerBox().width - 10 , 10);
     UISelectText.itemSelection.add(that);
     that.element.style.background = "linear-gradient(to bottom, #FFFFFF00, #FFFFFF)";
     that.bottom = -1;
@@ -318,7 +318,7 @@ const createItemSelection = function(connectedUI) {
         // You can create your own custom item:
 
         // BOX: One of item box
-        const boxItem = createBox(10, 0, getDefaultContainerBox().width - 40, 60);
+        const boxItem = Box(10, 0, getDefaultContainerBox().width - 40, 60);
         that.index = index;
         that.round = 4;
         that.border = 0;
@@ -329,7 +329,7 @@ const createItemSelection = function(connectedUI) {
         that.onClick(UISelectText.itemSelection.itemClicked);
 
         // LABEL: Item name
-        boxItem.lblName = createLabel(30, 17, getDefaultContainerBox().width - 70, "auto");
+        boxItem.lblName = Label(30, 17, getDefaultContainerBox().width - 70, "auto");
         boxItem.add(that);
         that.text = connectedUI.itemList[index].name;
         that.textAlign = "left";

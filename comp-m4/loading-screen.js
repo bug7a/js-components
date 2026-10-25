@@ -99,9 +99,7 @@ const LoadingScreenDefaults = {
 const LoadingScreen = function (params = {}) {
 
     // Merge style package: params.style > LoadingScreen.styles[styleName] > LoadingScreenDefaults.style (light)
-    const _stylePackage = LoadingScreen.styles[params.styleName || LoadingScreenDefaults.styleName];
-    if (!_stylePackage) console.warn("LoadingScreen: Style package not found: " + params.styleName);
-    mergeIntoIfMissing(params, { style: _stylePackage || {} });
+    basic.applyStylePackage(params, LoadingScreen.styles, LoadingScreenDefaults);
 
     // Merge params:
     mergeIntoIfMissing(params, LoadingScreenDefaults);
@@ -119,6 +117,10 @@ const LoadingScreen = function (params = {}) {
     let openedTime = 0;
     let cancelClose = null; // (box.after: the timers are stopped by remove())
     let cancelFade = null;
+    const DOT_COUNT = 3;
+    const DOT_DURATION = 1.2; // seconds for one bounce of a dot
+    const DOT_DELAY = 0.16; // seconds between two dots
+    const PROGRESS_MOTION = "width 0.25s";
 
     // *** PUBLIC VARIABLES:
     // NOTE: Default values are also public variables. (box.opened, box.progress, box.titleText)
@@ -135,7 +137,7 @@ const LoadingScreen = function (params = {}) {
     const updateProgressView = function () {
         const hasProgress = (box.progress >= 0);
         box.progressTrack.visible = hasProgress ? 1 : 0;
-        if (hasProgress) box.progressBar.elem.style.width = (box.progress * 100) + "%";
+        if (hasProgress) box.progressBar.css.width = (box.progress * 100) + "%";
     };
 
     const fadeOut = function () {
@@ -144,7 +146,7 @@ const LoadingScreen = function (params = {}) {
         cancelFade = box.after(box.fadeDuration * 1000, function () {
             cancelFade = null;
             box.visible = 0;
-            box.elem.style.pointerEvents = "none";
+            box.css.pointerEvents = "none";
             box.onClose(box);
             if (box.removeOnClose) box.remove();
         });
@@ -160,7 +162,7 @@ const LoadingScreen = function (params = {}) {
         box.setMotionNow("none");
         box.opacity = 1;
         box.visible = 1;
-        box.elem.style.pointerEvents = "auto"; // WHY: The cover takes the clicks. (basic.css: none)
+        box.css.pointerEvents = "auto"; // WHY: The cover takes the clicks. (basic.css: none)
         box.bringToFront();
     };
 
@@ -212,8 +214,8 @@ const LoadingScreen = function (params = {}) {
             box.icon.elem.innerHTML = box.iconSvg;
         }
         if (box.icon) {
-            box.icon.elem.style.marginBottom = _s.icon.marginBottom + "px";
-            box.icon.elem.style.flexShrink = "0";
+            box.icon.css.marginBottom = _s.icon.marginBottom + "px";
+            box.icon.shrink = 0;
         }
 
         // LABEL: Title
@@ -222,8 +224,8 @@ const LoadingScreen = function (params = {}) {
             fontSize: _s.title.fontSize,
             textColor: _s.title.textColor,
         });
-        if (_s.title.bold) box.titleLabel.elem.style.fontFamily = "opensans-bold";
-        box.titleLabel.elem.style.textAlign = "center";
+        if (_s.title.bold) box.titleLabel.css.fontFamily = "opensans-bold";
+        box.titleLabel.css.textAlign = "center";
 
         // LABEL: Message
         box.messageLabel = Label({
@@ -232,8 +234,10 @@ const LoadingScreen = function (params = {}) {
             fontSize: _s.message.fontSize,
             textColor: _s.message.textColor,
         });
-        box.messageLabel.elem.style.textAlign = "center";
-        box.messageLabel.elem.style.lineHeight = "1.45";
+        box.messageLabel.css = {
+            textAlign: "center",
+            lineHeight: "1.45",
+        };
 
         // BOX: Spinner (ring)
         box.spinner = Box({
@@ -242,19 +246,21 @@ const LoadingScreen = function (params = {}) {
             color: "transparent",
             round: 100,
         });
-        box.spinner.elem.style.border = _s.spinner.thickness + "px solid " + _s.spinner.trackColor;
-        box.spinner.elem.style.borderTopColor = _s.spinner.color;
-        box.spinner.elem.style.boxSizing = "border-box";
-        box.spinner.elem.style.animation = "loadingScreenSpin " + _s.spinner.speed + "s linear infinite";
-        box.spinner.elem.style.marginTop = _s.spinner.marginTop + "px";
-        box.spinner.elem.style.flexShrink = "0";
+        box.spinner.css = {
+            border: _s.spinner.thickness + "px solid " + _s.spinner.trackColor,
+            borderTopColor: _s.spinner.color,
+            boxSizing: "border-box",
+            animation: "loadingScreenSpin " + _s.spinner.speed + "s linear infinite",
+            marginTop: _s.spinner.marginTop + "px",
+        };
+        box.spinner.shrink = 0;
 
         // GROUP: Spinner (dots)
         box.dots = HGroup({ hug: 1, gap: _s.dots.gap });
-        box.dots.elem.style.marginTop = _s.spinner.marginTop + "px";
-            for (let i = 0; i < 3; i++) {
+        box.dots.css.marginTop = _s.spinner.marginTop + "px";
+            for (let i = 0; i < DOT_COUNT; i++) {
                 Box({ width: _s.dots.size, height: _s.dots.size, color: _s.dots.color, round: 100 });
-                that.elem.style.animation = "loadingScreenDot 1.2s ease-in-out " + (i * 0.16) + "s infinite";
+                that.css.animation = "loadingScreenDot " + DOT_DURATION + "s ease-in-out " + (i * DOT_DELAY) + "s infinite";
             }
         endGroup();
 
@@ -265,14 +271,14 @@ const LoadingScreen = function (params = {}) {
             color: _s.progress.trackColor,
             round: _s.progress.round,
         });
-        box.progressTrack.elem.style.overflow = "hidden";
-        box.progressTrack.elem.style.flexShrink = "0";
+        box.progressTrack.css.overflow = "hidden";
+        box.progressTrack.shrink = 0;
 
             box.progressBar = Box(0, 0, 0, "100%", {
                 color: _s.progress.color,
                 round: _s.progress.round,
             });
-            box.progressBar.setMotion("width 0.25s");
+            box.progressBar.setMotion(PROGRESS_MOTION);
 
         endBox();
 
@@ -292,7 +298,7 @@ const LoadingScreen = function (params = {}) {
         box.open();
     } else {
         box.visible = 0;
-        box.elem.style.pointerEvents = "none";
+        box.css.pointerEvents = "none";
     }
 
     return endObject(box);
@@ -302,6 +308,7 @@ const LoadingScreen = function (params = {}) {
 // *** STYLE PACKAGES:
 // USAGE: LoadingScreen({ styleName: "dark" })
 // USAGE: LoadingScreen({ styleName: "dark", style: { spinner: { color: "tomato" } } }) // Change only some keys.
+// USAGE: LoadingScreen({ style: LoadingScreen.styles.dark }) // The same as styleName: "dark". (The package is copied, never changed.)
 // NOTE: A new package needs only the keys that differ from the default (light) style.
 // USAGE: LoadingScreen.styles.myStyle = { box: { color: "#0B2239" } };
 LoadingScreen.styles = {

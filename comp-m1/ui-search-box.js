@@ -35,7 +35,7 @@ UICore.createDefaultValues(UISearchBox, {
 UISearchBox.create = function(parameters = {}) {
 
     // BOX: UI object container.
-    const box = createBox();
+    const box = Box();
 
     // Default values.
     box.default = UICore.cloneDefaultValues(UISearchBox);
@@ -57,7 +57,7 @@ UISearchBox.create = function(parameters = {}) {
     box.element.style.borderBottom = box.default.borderBottomStyle;
 
     // IMAGE: Search icon
-    box.imgIcon = createImage(16, 0, 25, 25);
+    box.imgIcon = Icon(16, 0, 25, 25);
     box.add(that);
     that.load(box.default.searchIconFile);
     that.opacity = 0.4;
@@ -65,7 +65,7 @@ UISearchBox.create = function(parameters = {}) {
     that.center("top");
 
     // TEXTBOX: Search textbox
-    box.txtSearch = createTextBox(40, 0);
+    box.txtSearch = Input(40, 0);
     box.add(that);
     that.width = box.width - 80;
     that.height = box.default.height;
@@ -77,7 +77,7 @@ UISearchBox.create = function(parameters = {}) {
     that.inputElement.setAttribute("placeholder", box.default.placeholderText);
 
     // IMAGE: Clear icon
-    box.imgClearIcon = createImage(5, 0, 20, 20);
+    box.imgClearIcon = Icon(5, 0, 20, 20);
     box.add(that);
     that.load(box.default.clearIconFile);
     that.opacity = 0;

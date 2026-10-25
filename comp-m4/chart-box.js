@@ -126,18 +126,9 @@ const ChartBox = function (params = {}) {
         return PIE_TYPES.includes(type);
     };
 
-    // Active theme name: "light" or "dark"
-    const getThemeName = function () {
-        if (box.theme == "auto") {
-            return (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
-        }
-        return (box.theme == "dark") ? "dark" : "light";
-    };
-
     // Theme colors + style.chart overrides
     const getTokens = function () {
-        const base = ChartBox.THEMES[getThemeName()] || ChartBox.THEMES.light;
-        return Object.assign({}, base, _s.chart);
+        return Object.assign(basic.resolveTheme(ChartBox.THEMES, box.theme), _s.chart);
     };
 
     const createData = function () {
@@ -239,18 +230,79 @@ const ChartBox = function (params = {}) {
         return isPieType(box.type) || box.data.datasets.length >= 2;
     };
 
+    const getLegendPosition = function (type) {
+        if (["top", "bottom", "left", "right"].includes(box.legend)) return box.legend;
+        return (isPieType(type)) ? "right" : "top";
+    };
+
+    // Axes of the chart types that have them (not pie). t: theme tokens
+    const addScales = function (options, t, font, type) {
+
+        const createAxis = function (showGrid) {
+            return {
+                grid: { display: showGrid, color: t.gridColor, drawTicks: false },
+                border: { display: true, color: t.axisColor },
+                ticks: { color: t.mutedTextColor, font: font, padding: 8 },
+            };
+        };
+
+        if (RADIAL_TYPES.includes(type)) {
+
+            options.scales = {
+                r: {
+                    beginAtZero: box.beginAtZero == 1,
+                    angleLines: { color: t.gridColor },
+                    grid: { color: t.gridColor },
+                    pointLabels: { color: t.textColor, font: font },
+                    ticks: { color: t.mutedTextColor, font: font, backdropColor: "transparent", showLabelBackdrop: false },
+                },
+            };
+            if (box.formatValue) {
+                options.scales.r.ticks.callback = function (value) { return box.formatValue(value); };
+            }
+            return;
+
+        }
+
+        if (isPieType(type)) return;
+
+        const isHorizontal = (box.horizontal == 1 && type != "scatter" && type != "bubble");
+        const isXY = (type == "scatter" || type == "bubble");
+        const valueAxis = (isHorizontal) ? "x" : "y";
+        const indexAxis = (isHorizontal) ? "y" : "x";
+
+        options.indexAxis = indexAxis;
+        options.scales = {};
+        // NOTE: Only the value axis has grid lines. (Both, for scatter and bubble)
+        options.scales[indexAxis] = createAxis(isXY);
+        options.scales[valueAxis] = createAxis(true);
+        options.scales[valueAxis].beginAtZero = box.beginAtZero == 1;
+        options.scales[valueAxis].border.display = false;
+
+        if (box.stacked == 1) {
+            options.scales.x.stacked = true;
+            options.scales.y.stacked = true;
+        }
+
+        if (box.formatValue) {
+            options.scales[valueAxis].ticks.callback = function (value) { return box.formatValue(value); };
+        }
+
+    };
+
     const createOptions = function () {
 
         const t = getTokens();
         const font = { family: t.fontFamily, size: t.fontSize };
         const type = box.type;
+        const isXYType = (type == "scatter" || type == "bubble");
 
         // The axis of the "index" interaction mode.
         // WHY: Chart.js uses "x" for that mode, whatever indexAxis is. With horizontal bars the index
         //      runs on the y axis, so the tooltip showed the bar that was nearest on the x axis
         //      (the one with a similar length), not the one under the pointer.
-        const hoverAxis = (box.horizontal == 1 && !isPieType(type) && !RADIAL_TYPES.includes(type)
-            && type != "scatter" && type != "bubble") ? "y" : "x";
+        const isIndexOnY = (box.horizontal == 1 && !isPieType(type) && !RADIAL_TYPES.includes(type) && !isXYType);
+        const hoverAxis = (isIndexOnY) ? "y" : "x";
 
         const options = {
             responsive: true,
@@ -258,7 +310,7 @@ const ChartBox = function (params = {}) {
             color: t.textColor,
             font: font,
             animation: (box.animated == 1) ? {} : false,
-            interaction: (isPieType(type) || type == "scatter" || type == "bubble")
+            interaction: (isPieType(type) || isXYType)
                 ? { mode: "nearest", intersect: true }
                 : { mode: "index", intersect: false, axis: hoverAxis },
             elements: {
@@ -289,7 +341,7 @@ const ChartBox = function (params = {}) {
                 },
                 legend: {
                     display: isLegendVisible(),
-                    position: (["top", "bottom", "left", "right"].includes(box.legend)) ? box.legend : (isPieType(type) ? "right" : "top"),
+                    position: getLegendPosition(type),
                     align: (isPieType(type)) ? "center" : "start",
                     labels: {
                         color: t.textColor,
@@ -326,52 +378,7 @@ const ChartBox = function (params = {}) {
             };
         }
 
-        const createAxis = function (showGrid) {
-            return {
-                grid: { display: showGrid, color: t.gridColor, drawTicks: false },
-                border: { display: true, color: t.axisColor },
-                ticks: { color: t.mutedTextColor, font: font, padding: 8 },
-            };
-        };
-
-        if (RADIAL_TYPES.includes(type)) {
-
-            options.scales = {
-                r: {
-                    beginAtZero: box.beginAtZero == 1,
-                    angleLines: { color: t.gridColor },
-                    grid: { color: t.gridColor },
-                    pointLabels: { color: t.textColor, font: font },
-                    ticks: { color: t.mutedTextColor, font: font, backdropColor: "transparent", showLabelBackdrop: false },
-                },
-            };
-            if (box.formatValue) options.scales.r.ticks.callback = function (value) { return box.formatValue(value); };
-
-        } else if (!isPieType(type)) {
-
-            const isHorizontal = (box.horizontal == 1 && type != "scatter" && type != "bubble");
-            const isXY = (type == "scatter" || type == "bubble");
-            const valueAxis = (isHorizontal) ? "x" : "y";
-            const indexAxis = (isHorizontal) ? "y" : "x";
-
-            options.indexAxis = indexAxis;
-            options.scales = {};
-            // NOTE: Only the value axis has grid lines. (Both, for scatter and bubble)
-            options.scales[indexAxis] = createAxis(isXY);
-            options.scales[valueAxis] = createAxis(true);
-            options.scales[valueAxis].beginAtZero = box.beginAtZero == 1;
-            options.scales[valueAxis].border.display = false;
-
-            if (box.stacked == 1) {
-                options.scales.x.stacked = true;
-                options.scales.y.stacked = true;
-            }
-
-            if (box.formatValue) {
-                options.scales[valueAxis].ticks.callback = function (value) { return box.formatValue(value); };
-            }
-
-        }
+        addScales(options, t, font, type);
 
         // User options are stronger.
         return ChartBox.merge({}, options, box.options);
@@ -384,7 +391,7 @@ const ChartBox = function (params = {}) {
         box.border = _s.box.border;
         box.borderColor = _s.box.borderColor || t.borderColor;
         box.round = _s.box.round;
-        box.chartArea.elem.style.inset = (_s.box.padding || 0) + "px";
+        box.chartArea.css.inset = (_s.box.padding || 0) + "px";
     };
 
     // Clicked item: { datasetIndex, index, label, value, datasetLabel, dataset }
@@ -437,8 +444,11 @@ const ChartBox = function (params = {}) {
 
     // Run a function when the chart is ready. (Runs now, if it is ready.)
     box.whenReady = function (func) {
-        if (box.isReady) func(box);
-        else readyFunctions.push(func);
+        if (box.isReady) {
+            func(box);
+            return;
+        }
+        readyFunctions.push(func);
     };
     // USAGE: chartBox.whenReady(function (self) { self.chart.... });
 
@@ -640,8 +650,7 @@ const ChartBox = function (params = {}) {
         color: "transparent",
     });
     // WHY: inset (set in applyBoxStyle) sizes the area with the padding. width/height must be auto.
-    box.chartArea.elem.style.width = "auto";
-    box.chartArea.elem.style.height = "auto";
+    box.chartArea.css = { width: "auto", height: "auto" };
 
     // CANVAS: Chart.js draws here.
     box.canvas = document.createElement("canvas");
@@ -655,10 +664,9 @@ const ChartBox = function (params = {}) {
         width: "100%",
         textAlign: "center",
         fontSize: 13,
-        textColor: "#E34948",
         visible: 0,
     });
-    box.lblError.elem.style.top = "calc(50% - 10px)";
+    box.lblError.css.top = "calc(50% - 10px)";
 
     // *** OBJECT INIT CODE:
 
@@ -688,7 +696,8 @@ const ChartBox = function (params = {}) {
             createChart();
         } else {
             const message = "Chart.js could not be loaded.";
-            box.lblError.text = message;
+            box.lblError.plainText = message;
+            box.lblError.textColor = getTokens().errorColor;
             box.lblError.visible = 1;
             box.onError(box, message);
         }
@@ -714,6 +723,10 @@ ChartBox.libraryUrl = (function () {
 })();
 
 // Theme colors. Categorical colors are in a fixed order, tested for color blindness. (First 3 are the safest.)
+// *** THEMES: the colors. (The style param has the shapes; style.chart changes some colors of one chart.)
+// USAGE: ChartBox({ theme: "dark", ... }) // "light", "dark", "auto" (the system setting)
+// NOTE: A new theme needs only the keys that differ from the light theme.
+// USAGE: ChartBox.THEMES.ocean = { backgroundColor: "#0B2239", textColor: "#C9D6E3" };
 ChartBox.THEMES = {
     light: {
         backgroundColor: "#FCFCFB",
@@ -725,6 +738,7 @@ ChartBox.THEMES = {
         axisColor: "#C3C2B7",
         tooltipColor: "#0B0B0B",
         tooltipTextColor: "#FFFFFF",
+        errorColor: "#E34948", // The message when Chart.js could not be loaded
         fontFamily: "opensans, system-ui, -apple-system, 'Segoe UI', sans-serif",
         fontSize: 12,
         colors: ["#2A78D6", "#EB6834", "#1BAF7A", "#EDA100", "#E87BA4", "#008300", "#4A3AA7", "#E34948"],
@@ -739,6 +753,7 @@ ChartBox.THEMES = {
         axisColor: "#383835",
         tooltipColor: "#2C2C2A",
         tooltipTextColor: "#FFFFFF",
+        errorColor: "#E66767",
         fontFamily: "opensans, system-ui, -apple-system, 'Segoe UI', sans-serif",
         fontSize: 12,
         colors: ["#3987E5", "#D95926", "#199E70", "#C98500", "#D55181", "#008300", "#9085E9", "#E66767"],

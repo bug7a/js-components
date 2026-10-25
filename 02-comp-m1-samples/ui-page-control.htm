@@ -51,7 +51,7 @@
             //var pageIndex = uiPageControl1.getPageIndexById("home");
 
             // LABEL: Description text
-            uiPageControl1.home.lblDescription = createLabel(0, 0, "auto", "auto");
+            uiPageControl1.home.lblDescription = Label(0, 0, "auto", "auto");
             uiPageControl1.home.add(that);
             that.text = "Lavender";
             that.textColor = "#734f96";
@@ -64,7 +64,7 @@
             uiPageControl1.tasks.color = "PaleTurquoise"
 
             // LABEL: Description text
-            uiPageControl1.tasks.lblDescription = createLabel(0, 0, "auto", "auto")
+            uiPageControl1.tasks.lblDescription = Label(0, 0, "auto", "auto")
             uiPageControl1.tasks.add(that)
             that.text = "Pale Turquoise";
             that.textColor = "#0F4E4E";
@@ -77,7 +77,7 @@
             uiPageControl1.settings.color = "Bisque"
 
             // LABEL: Description text
-            uiPageControl1.settings.lblDescription = createLabel(0, 0, "auto", "auto");
+            uiPageControl1.settings.lblDescription = Label(0, 0, "auto", "auto");
             uiPageControl1.settings.add(that);
             that.text = "Bisque";
             that.textColor = "#B86500";
@@ -96,7 +96,7 @@
             //uiPageControl1.setSizes(500, 500);
 
             /* border
-            var boxBorder = createBox();
+            var boxBorder = Box();
             that.color = "transparent";
             that.border = 2;
             that.top = uiPageControl1.top;

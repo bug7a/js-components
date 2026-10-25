@@ -98,13 +98,9 @@ const SidePanelDefaults = {
 const SidePanel = function (params = {}) {
 
     // Merge style package: params.style > SidePanel.styles[styleName] > SidePanelDefaults.style (classic)
-    // WHY: This is done BEFORE the defaults. mergeIntoIfMissing() only fills the keys that are
-    //      missing, so the classic style of the defaults would win over the chosen package.
-    const _stylePackage = SidePanel.styles[params.styleName || SidePanelDefaults.styleName];
-    if (!_stylePackage) console.warn("SidePanel: Style package not found: " + params.styleName);
-    mergeIntoIfMissing(params, { style: _stylePackage || {} });
+    basic.applyStylePackage(params, SidePanel.styles, SidePanelDefaults);
 
-    // Marge params:
+    // Merge params:
     mergeIntoIfMissing(params, SidePanelDefaults);
 
     let box = null;
@@ -140,6 +136,8 @@ const SidePanel = function (params = {}) {
     let size = box.panelSize;       // The size that is really used. (See layout().)
     let cancelClose = null;         // (box.after: stopped by remove())
     const bodyStack = [];           // For startBody() / endBody()
+    const MIN_PANEL_SIZE = 120;
+    const OPEN_TRANSFORM = "translate(0px, 0px)";
 
     // *** PRIVATE FUNCTIONS:
 
@@ -153,14 +151,14 @@ const SidePanel = function (params = {}) {
         const screen = (isVertical()) ? window.innerHeight : window.innerWidth;
 
         // WHY: A 420 px panel does not fit on a phone. It never covers the whole screen.
-        size = Math.max(120, Math.min(box.panelSize, screen - box.screenMargin));
+        size = Math.max(MIN_PANEL_SIZE, Math.min(box.panelSize, screen - box.screenMargin));
 
         if (box.side === "bottom") box.props({ left: 0, bottom: 0, width: "100%", height: size });
         else if (box.side === "top") box.props({ left: 0, top: 0, width: "100%", height: size });
         else if (box.side === "left") box.props({ left: 0, top: 0, width: size, height: "100%" });
         else box.props({ right: 0, top: 0, width: size, height: "100%" });
 
-        if (box.isOpened === 0) box.elem.style.transform = getHiddenTransform();
+        if (box.isOpened === 0) box.css.transform = getHiddenTransform();
 
     };
 
@@ -206,24 +204,27 @@ const SidePanel = function (params = {}) {
             SidePanel.openedPanel.close();
         }
 
-        if (cancelClose) { cancelClose(); cancelClose = null; }
+        if (cancelClose) {
+            cancelClose();
+            cancelClose = null;
+        }
 
         box.isOpened = 1;
         SidePanel.openedPanel = box;
 
         box.visible = 1;
-        box.elem.style.transform = getHiddenTransform();   // Start from outside...
+        box.css.transform = getHiddenTransform();   // Start from outside...
         showBackdrop(1);
 
         // WHY: The browser has to see the closed state before the open one, or there is no
         //      transition between them. One frame is enough.
         basic.nextFrame().then(function () {
             if (!box || box.isOpened === 0) return;
-            box.elem.style.transform = "translate(0px, 0px)";
+            box.css.transform = OPEN_TRANSFORM;
             box.opacity = 1;
         });
 
-        box.elem.setAttribute("aria-hidden", "false");
+        box.aria = { hidden: "false" };
         box.onOpen(box);
 
     };
@@ -238,7 +239,7 @@ const SidePanel = function (params = {}) {
         box.isOpened = 0;
         if (SidePanel.openedPanel === box) SidePanel.openedPanel = null;
 
-        box.elem.style.transform = getHiddenTransform();
+        box.css.transform = getHiddenTransform();
         box.opacity = 0;
         showBackdrop(0);
 
@@ -252,13 +253,17 @@ const SidePanel = function (params = {}) {
             if (backdrop) backdrop.visible = 0;
         });
 
-        box.elem.setAttribute("aria-hidden", "true");
+        box.aria = { hidden: "true" };
         box.onClose(box);
 
     };
 
     box.toggle = function () {
-        if (box.isOpened === 1) box.close(); else box.open();
+        if (box.isOpened === 1) {
+            box.close();
+            return;
+        }
+        box.open();
     };
 
     box.setTitleText = function (text) {
@@ -312,13 +317,15 @@ const SidePanel = function (params = {}) {
         zIndex: SidePanel.Z_INDEX + 1,
         clipContent: 1,
     });
-    box.elem.setAttribute("role", "dialog");
-    box.elem.setAttribute("aria-modal", (box.showBackdrop == 1) ? "true" : "false");
-    box.elem.setAttribute("aria-label", box.ariaLabel);
+    box.role = "dialog";
+    box.aria = {
+        modal: (box.showBackdrop == 1) ? "true" : "false",
+        label: box.ariaLabel,
+    };
 
     // GROUP: header + body, one under the other
     VGroup({ width: "100%", height: "100%", align: "left top", gap: 0, color: "transparent" });
-    that.elem.style.alignItems = "stretch";
+    that.css.alignItems = "stretch";
 
         // GROUP: Header
         if (box.showHeader == 1) {
@@ -331,8 +338,8 @@ const SidePanel = function (params = {}) {
                 gap: 10,
                 color: _s.header.color,
             });
-            that.elem.style.flexShrink = "0";
-            that.elem.style.borderBottom = _s.header.dividerColor ? ("1px solid " + _s.header.dividerColor) : "";
+            that.shrink = 0;
+            that.css.borderBottom = _s.header.dividerColor ? ("1px solid " + _s.header.dividerColor) : "";
 
                 // LABEL: Title
                 box.lblTitle = Label({
@@ -342,7 +349,6 @@ const SidePanel = function (params = {}) {
                     fontFamily: _s.title.fontFamily,
                     grow: 1,
                 });
-                that.elem.style.whiteSpace = "nowrap";
                 that.ellipsis = 1;
 
                 // BOX: Close button (the X is drawn with two lines, no image file)
@@ -355,17 +361,17 @@ const SidePanel = function (params = {}) {
                         round: _s.closeButton.round,
                         clickable: 1,
                     });
-                    that.elem.style.flexShrink = "0";
-                    that.elem.style.cursor = "pointer";
+                    that.shrink = 0;
+                    that.cursor = "pointer";
                     that.setMotion("background-color 0.2s");
-                    that.elem.setAttribute("role", "button");
-                    that.elem.setAttribute("aria-label", "Close");
+                    that.role = "button";
+                    that.aria = { label: "Close" };
 
                     createIn(box.btnClose, function () {
                         [45, -45].forEach(function (angle) {
                             const line = Box(0, 0, 15, 2, { color: _s.closeButton.iconColor, round: 1 });
                             line.center();
-                            line.elem.style.transform = "rotate(" + angle + "deg)";
+                            line.css.transform = "rotate(" + angle + "deg)";
                         });
                     });
 
@@ -394,7 +400,7 @@ const SidePanel = function (params = {}) {
                     gap: _s.body.gap,
                     color: "transparent",
                 });
-                that.elem.style.alignItems = "stretch";
+                that.css.alignItems = "stretch";
                 endGroup();
             });
 
@@ -404,16 +410,17 @@ const SidePanel = function (params = {}) {
 
     box.setMotion("transform " + box.duration + "ms, opacity " + box.duration + "ms");
 
-    if (box.btnClose) box.btnClose.on("click", function () { box.close(); });
-
     if (box.btnClose) {
+        box.btnClose.on("click", function () { box.close(); });
         box.btnClose.on("mouseenter", function (self) { self.color = _s.closeButton.hoverColor; });
         box.btnClose.on("mouseleave", function (self) { self.color = _s.closeButton.color; });
     }
 
     if (backdrop) {
         backdrop.setMotion("opacity " + box.duration + "ms");
-        backdrop.on("click", function () { if (box.closeOnBackdrop == 1) box.close(); });
+        backdrop.on("click", function () {
+            if (box.closeOnBackdrop == 1) box.close();
+        });
     }
 
     // (listenTo / onPageResize / own: removed with the box)
@@ -426,16 +433,19 @@ const SidePanel = function (params = {}) {
     // WHY: The groups above are created first. A group that is created inside a hidden box is not
     //      laid out as a flex group, so the panel is hidden only now.
     box.visible = 0;
-    box.elem.setAttribute("aria-hidden", "true");
+    box.aria = { hidden: "true" };
 
     if (box.opened == 1) {
         box.isOpened = 1;
         SidePanel.openedPanel = box;
         box.visible = 1;
         box.opacity = 1;
-        box.elem.style.transform = "translate(0px, 0px)";
-        box.elem.setAttribute("aria-hidden", "false");
-        if (backdrop) { backdrop.visible = 1; backdrop.opacity = 1; }
+        box.css.transform = OPEN_TRANSFORM;
+        box.aria = { hidden: "false" };
+        if (backdrop) {
+            backdrop.visible = 1;
+            backdrop.opacity = 1;
+        }
     }
 
     const panel = endObject(box);
@@ -454,6 +464,11 @@ SidePanel.openedPanel = null;
 SidePanel.Z_INDEX = 1000;
 
 // *** STYLE PACKAGES:
+// USAGE: SidePanel({ styleName: "dark" })
+// USAGE: SidePanel({ styleName: "dark", style: { panel: { color: "tomato" } } }) // Change only some keys.
+// USAGE: SidePanel({ style: SidePanel.styles.dark }) // The same as styleName: "dark". (The package is copied, never changed.)
+// NOTE: A new package needs only the keys that differ from the default (classic) style.
+// USAGE: SidePanel.styles.myStyle = { panel: { color: "red" } };
 
 SidePanel.styles = {
 

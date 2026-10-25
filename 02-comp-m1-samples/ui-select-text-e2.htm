@@ -91,7 +91,7 @@
             page.color = "black"
 
             // BOX: Usable screen on a mobile device
-            boxView = createBox(0, 0, 600, page.height)
+            boxView = Box(0, 0, 600, page.height)
             that.color = "white"
             
             // OBJECT: Fruits select text
@@ -133,7 +133,7 @@
 
         var createTitleForUI = function(ui, title) {
 
-            var lblTitle = createLabel()
+            var lblTitle = Label()
             that.text = title
             that.fontSize = 16
             that.aline(ui, "top", 10)

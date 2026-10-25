@@ -157,9 +157,7 @@ const RichTextEditorDefaults = {
 const RichTextEditor = function (params = {}) {
 
     // Merge style package: params.style > RichTextEditor.styles[styleName] > RichTextEditorDefaults.style (classic)
-    const _stylePackage = RichTextEditor.styles[params.styleName || RichTextEditorDefaults.styleName];
-    if (!_stylePackage) console.warn("RichTextEditor: Style package not found: " + params.styleName);
-    mergeIntoIfMissing(params, { style: _stylePackage || {} });
+    basic.applyStylePackage(params, RichTextEditor.styles, RichTextEditorDefaults);
 
     // Merge params:
     mergeIntoIfMissing(params, RichTextEditorDefaults);
@@ -182,6 +180,10 @@ const RichTextEditor = function (params = {}) {
     let savedRange = null; // The selection before the link bar took the focus
     let isFocused = 0;
     let lastHtml = "";
+    const BORDER_MOTION = "border-color 0.15s";
+    const BUTTON_MOTION = "background-color 0.12s";
+    const SEPARATOR_HEIGHT_RATIO = 0.6; // Of the button size
+    const TOOLBAR_DISABLED_OPACITY = "0.45";
 
     // *** PUBLIC VARIABLES:
     // box.editor: the contenteditable element (a raw <div>, not a basic.js object)
@@ -193,34 +195,49 @@ const RichTextEditor = function (params = {}) {
         return box.enabled == 1 && box.readOnly != 1;
     };
 
-    const textLength = function () {
+    const getTextLength = function () {
         return box.editor.textContent.length;
     };
 
-    const selectionIsInside = function () {
+    const isSelectionInside = function () {
         const sel = window.getSelection();
-        return sel && sel.rangeCount > 0 && box.editor.contains(sel.getRangeAt(0).commonAncestorContainer);
+        if (!sel || sel.rangeCount == 0) return false;
+        return box.editor.contains(sel.getRangeAt(0).commonAncestorContainer);
+    };
+
+    const selectRange = function (range) {
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+    };
+
+    const selectContentsOf = function (node) {
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        selectRange(range);
     };
 
     const saveSelection = function () {
-        if (selectionIsInside()) savedRange = window.getSelection().getRangeAt(0).cloneRange();
+        if (isSelectionInside()) savedRange = window.getSelection().getRangeAt(0).cloneRange();
     };
 
     const restoreSelection = function () {
         box.editor.focus({ preventScroll: true });
         if (!savedRange) return;
-        const sel = window.getSelection();
-        sel.removeAllRanges();
-        sel.addRange(savedRange);
+        selectRange(savedRange);
     };
 
     // The nearest block tag at the cursor: "h2", "h3", "blockquote", "p"...
-    const currentBlock = function () {
-        if (!selectionIsInside()) return "";
+    const getCurrentBlock = function () {
+        if (!isSelectionInside()) return "";
         let node = window.getSelection().getRangeAt(0).startContainer;
         while (node && node !== box.editor) {
             if (node.nodeType === 1 && /^(H2|H3|BLOCKQUOTE|P|DIV|LI)$/.test(node.nodeName)) {
-                if (node.nodeName === "LI") { node = node.parentNode; continue; } // WHY: A list item inside a quote is still a quote.
+                // WHY: A list item inside a quote is still a quote.
+                if (node.nodeName === "LI") {
+                    node = node.parentNode;
+                    continue;
+                }
                 return node.nodeName.toLowerCase();
             }
             node = node.parentNode;
@@ -228,8 +245,8 @@ const RichTextEditor = function (params = {}) {
         return "";
     };
 
-    const currentLink = function () {
-        if (!selectionIsInside()) return null;
+    const getCurrentLink = function () {
+        if (!isSelectionInside()) return null;
         let node = window.getSelection().getRangeAt(0).startContainer;
         while (node && node !== box.editor) {
             if (node.nodeName === "A") return node;
@@ -244,35 +261,62 @@ const RichTextEditor = function (params = {}) {
 
     // Toggles a block format: <h2> on a heading makes it a paragraph again.
     const toggleBlock = function (tag) {
-        exec("formatBlock", (currentBlock() === tag) ? "<p>" : "<" + tag + ">");
+        exec("formatBlock", (getCurrentBlock() === tag) ? "<p>" : "<" + tag + ">");
+    };
+
+    // A tool of one execCommand: it is pressed when the browser says the format is on.
+    const createCommandTool = function (command, keys) {
+        return {
+            run: function () { exec(command); },
+            state: function () { return document.queryCommandState(command); },
+            keys: keys,
+        };
+    };
+
+    // A tool of one block tag (h2, h3, blockquote): it is pressed inside that block.
+    const createBlockTool = function (tag) {
+        return {
+            run: function () { toggleBlock(tag); },
+            state: function () { return getCurrentBlock() === tag; },
+        };
+    };
+
+    const isNeverPressed = function () {
+        return false;
+    };
+
+    const clearFormatting = function () {
+        exec("removeFormat");
+        exec("unlink");
+        exec("formatBlock", "<p>");
     };
 
     const TOOLS = {
-        bold: { run: function () { exec("bold"); }, state: function () { return document.queryCommandState("bold"); }, keys: "B" },
-        italic: { run: function () { exec("italic"); }, state: function () { return document.queryCommandState("italic"); }, keys: "I" },
-        underline: { run: function () { exec("underline"); }, state: function () { return document.queryCommandState("underline"); }, keys: "U" },
-        strike: { run: function () { exec("strikeThrough"); }, state: function () { return document.queryCommandState("strikeThrough"); } },
-        h2: { run: function () { toggleBlock("h2"); }, state: function () { return currentBlock() === "h2"; } },
-        h3: { run: function () { toggleBlock("h3"); }, state: function () { return currentBlock() === "h3"; } },
-        ul: { run: function () { exec("insertUnorderedList"); }, state: function () { return document.queryCommandState("insertUnorderedList"); } },
-        ol: { run: function () { exec("insertOrderedList"); }, state: function () { return document.queryCommandState("insertOrderedList"); } },
-        quote: { run: function () { toggleBlock("blockquote"); }, state: function () { return currentBlock() === "blockquote"; } },
-        link: { run: function () { openLinkBar(); }, state: function () { return !!currentLink(); }, keys: "K" },
-        clear: { run: function () { exec("removeFormat"); exec("unlink"); exec("formatBlock", "<p>"); }, state: function () { return false; } },
-        undo: { run: function () { exec("undo"); }, state: function () { return false; }, keys: "Z" },
-        redo: { run: function () { exec("redo"); }, state: function () { return false; } },
+        bold: createCommandTool("bold", "B"),
+        italic: createCommandTool("italic", "I"),
+        underline: createCommandTool("underline", "U"),
+        strike: createCommandTool("strikeThrough"),
+        h2: createBlockTool("h2"),
+        h3: createBlockTool("h3"),
+        ul: createCommandTool("insertUnorderedList"),
+        ol: createCommandTool("insertOrderedList"),
+        quote: createBlockTool("blockquote"),
+        link: { run: function () { openLinkBar(); }, state: function () { return !!getCurrentLink(); }, keys: "K" },
+        clear: { run: clearFormatting, state: isNeverPressed },
+        undo: { run: function () { exec("undo"); }, state: isNeverPressed, keys: "Z" },
+        redo: { run: function () { exec("redo"); }, state: isNeverPressed },
     };
 
     const updateToolbar = function () {
         if (!box) return;
-        const inside = selectionIsInside();
+        const inside = isSelectionInside();
         Object.keys(buttons).forEach(function (name) {
             const btn = buttons[name];
             const active = inside && isEditable() && TOOLS[name].state() ? 1 : 0;
             btn.isActive = active;
             btn.color = active ? _s.button.activeColor : "transparent";
             btn.textColor = active ? _s.button.activeIconColor : _s.button.iconColor;
-            btn.elem.setAttribute("aria-pressed", active ? "true" : "false");
+            btn.aria = { pressed: active ? "true" : "false" };
         });
     };
 
@@ -282,10 +326,14 @@ const RichTextEditor = function (params = {}) {
 
     const updateCounter = function () {
         if (!box.lblCounter) return;
-        const count = textLength();
-        const template = (box.maxLength > 0) ? box.texts.counter : box.texts.counterNoLimit;
-        box.lblCounter.plainText = template.replace("{count}", String(count)).replace("{max}", String(box.maxLength));
-        box.lblCounter.textColor = (box.maxLength > 0 && count >= box.maxLength) ? _s.counter.limitColor : _s.counter.textColor;
+        const count = getTextLength();
+        const hasLimit = (box.maxLength > 0);
+        const template = (hasLimit) ? box.texts.counter : box.texts.counterNoLimit;
+        box.lblCounter.plainText = template
+            .replace("{count}", String(count))
+            .replace("{max}", String(box.maxLength));
+        const isAtLimit = (hasLimit && count >= box.maxLength);
+        box.lblCounter.textColor = (isAtLimit) ? _s.counter.limitColor : _s.counter.textColor;
     };
 
     const updateBorder = function () {
@@ -298,7 +346,10 @@ const RichTextEditor = function (params = {}) {
         updateCounter();
         updateToolbar();
         if (box.scrollBar) box.scrollBar.refreshScroll();
-        if (!fireChange) { lastHtml = box.getHtml(); return; }
+        if (!fireChange) {
+            lastHtml = box.getHtml();
+            return;
+        }
         const html = box.getHtml();
         if (html === lastHtml) return;
         lastHtml = html;
@@ -306,15 +357,15 @@ const RichTextEditor = function (params = {}) {
     };
 
     // Characters that can still be written (Infinity: no limit).
-    const remaining = function () {
+    const getRemainingLength = function () {
         if (!(box.maxLength > 0)) return Infinity;
         let selected = 0;
-        if (selectionIsInside()) selected = window.getSelection().toString().length;
-        return Math.max(0, box.maxLength - textLength() + selected);
+        if (isSelectionInside()) selected = window.getSelection().toString().length;
+        return Math.max(0, box.maxLength - getTextLength() + selected);
     };
 
     const insertPlainText = function (text) {
-        const room = remaining();
+        const room = getRemainingLength();
         if (text.length > room) text = text.slice(0, room);
         if (text) exec("insertText", text);
     };
@@ -324,7 +375,7 @@ const RichTextEditor = function (params = {}) {
     const openLinkBar = function () {
         if (!isEditable()) return;
         saveSelection();
-        const link = currentLink();
+        const link = getCurrentLink();
         box.linkInput.text = link ? link.getAttribute("href") || "" : "";
         box.btnLinkRemove.visible = link ? 1 : 0;
         box.linkBar.visible = 1;
@@ -339,48 +390,62 @@ const RichTextEditor = function (params = {}) {
         savedRange = null;
     };
 
+    // "example.com" -> "https://example.com", "name@site.com" -> "mailto:name@site.com"
+    const completeHref = function (href) {
+        if (/^[^\s@\/]+@[^\s@\/]+\.[^\s@\/]+$/.test(href)) return "mailto:" + href;
+        if (!/^([a-z][a-z0-9+.-]*:|\/|#|\.)/i.test(href)) return "https://" + href;
+        return href;
+    };
+
+    // Returns 0 when the link could not be written (the bar is already closed then).
+    const writeLink = function (href) {
+
+        const sel = window.getSelection();
+
+        if (sel.isCollapsed && !getCurrentLink()) {
+            // No selected text: the address becomes the text of the link.
+            if (href.length > getRemainingLength()) {
+                closeLinkBar(1);
+                return 0;
+            }
+            const safeHref = RichTextEditor.escapeHtml(href);
+            exec("insertHTML", '<a href="' + safeHref + '">' + safeHref + "</a>&nbsp;");
+            return 1;
+        }
+
+        // Inside a link: change the whole link.
+        if (sel.isCollapsed) selectContentsOf(getCurrentLink());
+        exec("createLink", href);
+        return 1;
+
+    };
+
     const applyLink = function () {
-        let href = String(box.linkInput.text || "").trim();
+
+        const href = String(box.linkInput.text || "").trim();
         restoreSelection();
+
         if (!href) {
             exec("unlink");
         } else {
-            // "example.com" -> "https://example.com", "name@site.com" -> "mailto:name@site.com"
-            if (/^[^\s@\/]+@[^\s@\/]+\.[^\s@\/]+$/.test(href)) href = "mailto:" + href;
-            else if (!/^([a-z][a-z0-9+.-]*:|\/|#|\.)/i.test(href)) href = "https://" + href;
-            if (!RichTextEditor.isSafeHref(href)) { box.linkInput.inputElement.focus(); return; }
-            const sel = window.getSelection();
-            if (sel.isCollapsed && !currentLink()) {
-                // No selected text: the address becomes the text of the link.
-                const room = remaining();
-                if (href.length > room) { closeLinkBar(1); return; }
-                exec("insertHTML", '<a href="' + RichTextEditor.escapeHtml(href) + '">' + RichTextEditor.escapeHtml(href) + "</a>&nbsp;");
-            } else {
-                if (sel.isCollapsed) {
-                    // Inside a link: change the whole link.
-                    const range = document.createRange();
-                    range.selectNodeContents(currentLink());
-                    sel.removeAllRanges();
-                    sel.addRange(range);
-                }
-                exec("createLink", href);
+            const fullHref = completeHref(href);
+            if (!RichTextEditor.isSafeHref(fullHref)) {
+                box.linkInput.inputElement.focus();
+                return;
             }
+            if (!writeLink(fullHref)) return;
         }
+
         box.linkBar.visible = 0;
         savedRange = null;
         contentChanged(1);
+
     };
 
     const removeLink = function () {
         restoreSelection();
-        const link = currentLink();
-        if (link) {
-            const range = document.createRange();
-            range.selectNodeContents(link);
-            const sel = window.getSelection();
-            sel.removeAllRanges();
-            sel.addRange(range);
-        }
+        const link = getCurrentLink();
+        if (link) selectContentsOf(link);
         exec("unlink");
         box.linkBar.visible = 0;
         savedRange = null;
@@ -390,14 +455,18 @@ const RichTextEditor = function (params = {}) {
     // *** EDITOR EVENTS:
 
     const onBeforeInput = function (event) {
-        if (!isEditable()) { event.preventDefault(); return; }
+        if (!isEditable()) {
+            event.preventDefault();
+            return;
+        }
         if (!(box.maxLength > 0)) return;
         const type = event.inputType || "";
         // WHY: Typing, Enter and drop add characters. Paste is handled in onPaste.
-        if ((type.indexOf("insert") === 0 && type !== "insertFromPaste" && type !== "insertLink") && remaining() <= 0) {
-            if (type === "insertParagraph" || type === "insertLineBreak") return; // A new line adds no character to the text.
-            event.preventDefault();
-        }
+        const isInsert = (type.indexOf("insert") === 0 && type !== "insertFromPaste" && type !== "insertLink");
+        if (!isInsert) return;
+        if (getRemainingLength() > 0) return;
+        if (type === "insertParagraph" || type === "insertLineBreak") return; // A new line adds no character to the text.
+        event.preventDefault();
     };
 
     const onPaste = function (event) {
@@ -410,26 +479,48 @@ const RichTextEditor = function (params = {}) {
         if (html) {
             const clean = RichTextEditor.cleanHtml(html);
             const cleanText = RichTextEditor.htmlToText(clean);
-            if (cleanText.length <= remaining()) { exec("insertHTML", clean); return; }
+            if (cleanText.length <= getRemainingLength()) {
+                exec("insertHTML", clean);
+                return;
+            }
         }
         insertPlainText(text);
     };
 
     const onDrop = function (event) {
         // WHY: Files and images from outside are not part of this editor.
-        if (event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files.length) event.preventDefault();
+        const files = event.dataTransfer && event.dataTransfer.files;
+        if (files && files.length) event.preventDefault();
     };
 
     const onKeyDown = function (event) {
-        const mod = event.ctrlKey || event.metaKey;
-        if (mod && !event.altKey && (event.key === "k" || event.key === "K")) {
-            event.preventDefault();
-            if (buttons.link) openLinkBar();
-        }
+        const hasModifier = event.ctrlKey || event.metaKey;
+        if (!hasModifier || event.altKey) return;
+        if (event.key !== "k" && event.key !== "K") return;
+        event.preventDefault();
+        if (buttons.link) openLinkBar();
+    };
+
+    const onEditorFocus = function () {
+        isFocused = 1;
+        updateBorder();
+        updateToolbar();
+        box.onFocus(box);
+    };
+
+    const onEditorBlur = function () {
+        isFocused = 0;
+        updateBorder();
+        box.onBlur(box);
+    };
+
+    // WHY: mousedown takes the focus and the selection from the editor. preventDefault keeps them.
+    const keepEditorFocus = function (self, event) {
+        event.preventDefault();
     };
 
     const onSelectionChange = function () {
-        if (selectionIsInside()) updateToolbar();
+        if (isSelectionInside()) updateToolbar();
     };
 
     // *** PUBLIC FUNCTIONS:
@@ -454,7 +545,7 @@ const RichTextEditor = function (params = {}) {
     // USAGE: editor.getText() // Plain text, lines separated by "\n"
 
     box.getLength = function () {
-        return textLength();
+        return getTextLength();
     };
 
     box.isEmpty = function () {
@@ -468,21 +559,21 @@ const RichTextEditor = function (params = {}) {
     // Inserts text at the cursor (at the end, when the editor does not have the focus). onChange is called.
     box.insertText = function (text) {
         if (!isEditable()) return;
-        if (!selectionIsInside()) box.focusEnd();
+        if (!isSelectionInside()) box.focusEnd();
         insertPlainText(String(text ?? ""));
     };
 
     box.insertHtml = function (html) {
         if (!isEditable()) return;
-        if (!selectionIsInside()) box.focusEnd();
+        if (!isSelectionInside()) box.focusEnd();
         const clean = RichTextEditor.cleanHtml(html || "");
-        if (RichTextEditor.htmlToText(clean).length <= remaining()) exec("insertHTML", clean);
+        if (RichTextEditor.htmlToText(clean).length <= getRemainingLength()) exec("insertHTML", clean);
     };
 
     // Runs a tool like a click on its button: "bold", "h2", "ul", "link"...
     box.runTool = function (name) {
         if (!isEditable() || !TOOLS[name]) return;
-        if (!selectionIsInside()) restoreSelection();
+        if (!isSelectionInside()) restoreSelection();
         TOOLS[name].run();
         if (name !== "link") contentChanged(1);
     };
@@ -496,9 +587,7 @@ const RichTextEditor = function (params = {}) {
         const range = document.createRange();
         range.selectNodeContents(box.editor);
         range.collapse(false);
-        const sel = window.getSelection();
-        sel.removeAllRanges();
-        sel.addRange(range);
+        selectRange(range);
     };
 
     box.setPlaceholderText = function (text) {
@@ -530,9 +619,11 @@ const RichTextEditor = function (params = {}) {
         box.editor.setAttribute("aria-readonly", (box.readOnly == 1) ? "true" : "false");
         box.editor.setAttribute("aria-disabled", (box.enabled == 1) ? "false" : "true");
         box.editor.style.userSelect = (box.enabled == 1) ? "text" : "none";
-        box.elem.style.opacity = (box.enabled == 1) ? "1" : String(_s.disabled.opacity);
-        box.toolbar.elem.style.opacity = editable ? "1" : "0.45";
-        box.toolbar.elem.style.pointerEvents = editable ? "" : "none";
+        box.css.opacity = (box.enabled == 1) ? "1" : String(_s.disabled.opacity);
+        box.toolbar.css = {
+            opacity: editable ? "1" : TOOLBAR_DISABLED_OPACITY,
+            pointerEvents: editable ? "" : "none",
+        };
         if (!editable && box.linkBar.visible == 1) closeLinkBar(0);
         updateBorder();
         updateToolbar();
@@ -546,11 +637,19 @@ const RichTextEditor = function (params = {}) {
     // *** OBJECT VIEW:
 
     box.clipContent = 1;
-    box.elem.style.transition = "border-color 0.15s";
+    box.css.transition = BORDER_MOTION;
+
+    // " (⌘B)" or " (Ctrl+B)", "" for a tool without a shortcut
+    const getShortcutText = function (name) {
+        const keys = TOOLS[name].keys;
+        if (!keys) return "";
+        const modifier = (/Mac|iPhone|iPad/.test(navigator.platform)) ? "⌘" : "Ctrl+";
+        return " (" + modifier + keys + ")";
+    };
 
     // LABEL: A toolbar button, the icon is an SVG with currentColor
     const createToolButton = function (name) {
-        const shortcut = TOOLS[name].keys ? " (" + (/Mac|iPhone|iPad/.test(navigator.platform) ? "⌘" : "Ctrl+") + TOOLS[name].keys + ")" : "";
+        const toolText = box.texts[name] || name;
         const btn = Label({
             text: RichTextEditor.getIconSvg(name, _s.button.iconSize),
             width: _s.button.size,
@@ -561,20 +660,22 @@ const RichTextEditor = function (params = {}) {
             clickable: 1,
         });
         btn.elem.style.display = "flex";
-        btn.elem.style.alignItems = "center";
-        btn.elem.style.justifyContent = "center";
-        btn.elem.style.lineHeight = "0";
-        btn.elem.style.flexShrink = "0";
-        btn.elem.style.cursor = "pointer";
-        btn.elem.style.transition = "background-color 0.12s";
-        btn.elem.setAttribute("role", "button");
-        btn.elem.setAttribute("aria-label", box.texts[name] || name);
-        btn.elem.setAttribute("title", (box.texts[name] || name) + shortcut);
+        btn.css = { alignItems: "center", justifyContent: "center", transition: BUTTON_MOTION };
+        btn.lineHeight = "0";
+        btn.shrink = 0;
+        btn.cursor = "pointer";
+        btn.role = "button";
+        btn.aria = { label: toolText };
+        btn.elem.setAttribute("title", toolText + getShortcutText(name));
         btn.isActive = 0;
-        btn.on("mouseenter", function () { if (!btn.isActive) btn.color = _s.button.hoverColor; });
-        btn.on("mouseleave", function () { btn.color = btn.isActive ? _s.button.activeColor : "transparent"; });
-        // WHY: mousedown takes the focus and the selection from the editor. preventDefault keeps them.
-        btn.on("mousedown", function (self, event) { event.preventDefault(); });
+        btn.on("mouseenter", function () {
+            if (btn.isActive) return;
+            btn.color = _s.button.hoverColor;
+        });
+        btn.on("mouseleave", function () {
+            btn.color = btn.isActive ? _s.button.activeColor : "transparent";
+        });
+        btn.on("mousedown", keepEditorFocus);
         btn.on("click", function () { box.runTool(name); });
         buttons[name] = btn;
         return btn;
@@ -582,7 +683,7 @@ const RichTextEditor = function (params = {}) {
 
     // GROUP: Layout (toolbar, link bar, writing area, counter)
     box.layout = VGroup({ width: "100%", height: "100%", align: "left top", gap: 0 });
-    box.layout.elem.style.alignItems = "stretch";
+    box.layout.css.alignItems = "stretch";
 
         // GROUP: Toolbar
         box.toolbar = HGroup({
@@ -594,17 +695,17 @@ const RichTextEditor = function (params = {}) {
             color: _s.toolbar.color,
             wrap: 1,
         });
-        box.toolbar.elem.style.flexShrink = "0";
-        box.toolbar.elem.style.borderBottom = "1px solid " + _s.toolbar.dividerColor;
-        box.toolbar.elem.setAttribute("role", "toolbar");
-        box.toolbar.elem.setAttribute("aria-label", box.ariaLabel);
+        box.toolbar.shrink = 0;
+        box.toolbar.css.borderBottom = "1px solid " + _s.toolbar.dividerColor;
+        box.toolbar.role = "toolbar";
+        box.toolbar.aria = { label: box.ariaLabel };
 
             box.tools.forEach(function (name) {
                 if (name === "|") {
                     // BOX: Separator
-                    Box({ width: 1, height: Math.round(_s.button.size * 0.6), color: _s.separator.color });
-                    that.elem.style.margin = "0px 4px";
-                    that.elem.style.flexShrink = "0";
+                    Box({ width: 1, height: Math.round(_s.button.size * SEPARATOR_HEIGHT_RATIO), color: _s.separator.color });
+                    that.css.margin = "0px 4px";
+                    that.shrink = 0;
                 } else if (TOOLS[name]) {
                     createToolButton(name);
                 } else {
@@ -623,8 +724,8 @@ const RichTextEditor = function (params = {}) {
             padding: [_s.toolbar.padding + 2, _s.toolbar.padding],
             color: _s.linkBar.color,
         });
-        box.linkBar.elem.style.flexShrink = "0";
-        box.linkBar.elem.style.borderBottom = "1px solid " + _s.toolbar.dividerColor;
+        box.linkBar.shrink = 0;
+        box.linkBar.css.borderBottom = "1px solid " + _s.toolbar.dividerColor;
 
             // INPUT: Address
             box.linkInput = Input({
@@ -638,8 +739,7 @@ const RichTextEditor = function (params = {}) {
                 border: 1,
                 borderColor: _s.linkBar.inputBorderColor,
             });
-            box.linkInput.elem.style.flex = "1 1 0";
-            box.linkInput.elem.style.minWidth = "0";
+            box.linkInput.css = { flex: "1 1 0", minWidth: "0" };
             box.linkInput.inputElement.style.padding = "0px 10px";
             box.linkInput.inputElement.style.width = "100%";
             box.linkInput.inputElement.style.height = "100%";
@@ -661,10 +761,10 @@ const RichTextEditor = function (params = {}) {
                 clickable: 1,
             });
             box.btnLinkApply.elem.style.display = "flex";
-            box.btnLinkApply.elem.style.alignItems = "center";
-            box.btnLinkApply.elem.style.flexShrink = "0";
-            box.btnLinkApply.elem.style.cursor = "pointer";
-            box.btnLinkApply.elem.setAttribute("role", "button");
+            box.btnLinkApply.css.alignItems = "center";
+            box.btnLinkApply.shrink = 0;
+            box.btnLinkApply.cursor = "pointer";
+            box.btnLinkApply.role = "button";
 
             // LABEL: Remove the link
             box.btnLinkRemove = Label({
@@ -677,22 +777,21 @@ const RichTextEditor = function (params = {}) {
                 clickable: 1,
             });
             box.btnLinkRemove.elem.style.display = "flex";
-            box.btnLinkRemove.elem.style.alignItems = "center";
-            box.btnLinkRemove.elem.style.flexShrink = "0";
-            box.btnLinkRemove.elem.style.cursor = "pointer";
-            box.btnLinkRemove.elem.setAttribute("role", "button");
+            box.btnLinkRemove.css.alignItems = "center";
+            box.btnLinkRemove.shrink = 0;
+            box.btnLinkRemove.cursor = "pointer";
+            box.btnLinkRemove.role = "button";
 
         endGroup();
         box.linkBar.visible = 0; // WHY: Hidden after its children are created (they stay flex items).
 
         // BOX: Holder of the writing area (and its ScrollBar)
         box.editHolder = startBox({ width: "100%", height: "auto", color: "transparent" });
-        box.editHolder.elem.style.flex = "1 1 0";
-        box.editHolder.elem.style.minHeight = "0";
+        box.editHolder.css = { flex: "1 1 0", minHeight: "0" };
 
             // BOX: Scrolling area
             box.editArea = Box(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
-            box.editArea.elem.style.cursor = "text";
+            box.editArea.cursor = "text";
             box.editArea.clickable = 1;
 
             // The writing area: a raw contenteditable <div>
@@ -719,7 +818,8 @@ const RichTextEditor = function (params = {}) {
             box.editArea.elem.appendChild(box.editor);
 
             if (box.useScrollBar == 1 && typeof ScrollBar !== "undefined") {
-                box.scrollBar = ScrollBar(Object.assign({ scrollableBox: box.editArea, neverHide: 0, showDots: 0 }, _s.scrollBar));
+                const scrollBarParams = { scrollableBox: box.editArea, neverHide: 0, showDots: 0 };
+                box.scrollBar = ScrollBar(Object.assign(scrollBarParams, _s.scrollBar));
             }
 
         endBox();
@@ -734,37 +834,51 @@ const RichTextEditor = function (params = {}) {
                 textAlign: "right",
                 padding: [_s.content.padding[0], 6],
             });
-            box.lblCounter.elem.style.flexShrink = "0";
-            box.lblCounter.elem.style.fontVariantNumeric = "tabular-nums";
+            box.lblCounter.shrink = 0;
+            box.lblCounter.css.fontVariantNumeric = "tabular-nums";
         }
 
     endGroup();
 
     // *** OBJECT INIT CODE:
 
-    try { document.execCommand("styleWithCSS", false, false); } catch (e) { } // WHY: <b>, <i> instead of <span style>.
-    try { document.execCommand("defaultParagraphSeparator", false, "p"); } catch (e) { }
+    // WHY: <b>, <i> instead of <span style>. (try: an old browser may not know the command)
+    try {
+        document.execCommand("styleWithCSS", false, false);
+    } catch (e) { }
+    try {
+        document.execCommand("defaultParagraphSeparator", false, "p");
+    } catch (e) { }
 
     box.editor.addEventListener("input", function () { contentChanged(1); });
     box.editor.addEventListener("beforeinput", onBeforeInput);
     box.editor.addEventListener("paste", onPaste);
     box.editor.addEventListener("drop", onDrop);
     box.editor.addEventListener("keydown", onKeyDown);
-    box.editor.addEventListener("focus", function () { isFocused = 1; updateBorder(); updateToolbar(); box.onFocus(box); });
-    box.editor.addEventListener("blur", function () { isFocused = 0; updateBorder(); box.onBlur(box); });
+    box.editor.addEventListener("focus", onEditorFocus);
+    box.editor.addEventListener("blur", onEditorBlur);
     // WHY: A click under the text (in the empty part of the area) puts the cursor at the end.
     box.editArea.on("mousedown", function (self, event) {
-        if (event.target === box.editArea.elem && isEditable()) { event.preventDefault(); box.focusEnd(); }
+        if (event.target !== box.editArea.elem || !isEditable()) return;
+        event.preventDefault();
+        box.focusEnd();
     });
     box.listenTo(document, "selectionchange", onSelectionChange); // (removed with the box)
 
     box.linkInput.inputElement.addEventListener("keydown", function (event) {
-        if (event.key === "Enter") { event.preventDefault(); applyLink(); }
-        else if (event.key === "Escape") { event.preventDefault(); closeLinkBar(1); }
+        if (event.key === "Enter") {
+            event.preventDefault();
+            applyLink();
+            return;
+        }
+        if (event.key === "Escape") {
+            event.preventDefault();
+            closeLinkBar(1);
+        }
     });
-    box.btnLinkApply.on("mousedown", function (self, event) { event.preventDefault(); });
+    box.btnLinkApply.on("mousedown", keepEditorFocus);
     box.btnLinkApply.on("click", applyLink);
-    box.btnLinkRemove.on("mousedown", function (self, event) { event.preventDefault(); });
+    box.btnLinkRemove.on("mousedown", keepEditorFocus);
     box.btnLinkRemove.on("click", removeLink);
 
     box.setPlaceholderText(box.placeholderText);
@@ -785,7 +899,9 @@ RichTextEditor.isSafeHref = function (href) {
     const value = String(href || "").trim();
     if (!value) return false;
     if (/^(https?:|mailto:|tel:)/i.test(value)) return true;
-    return !/^[a-z][a-z0-9+.-]*:/i.test(value.replace(/[\s\u0000-\u001F]/g, "")); // Relative addresses (no other scheme like javascript:)
+    // Relative addresses (no other scheme like javascript:)
+    const compactValue = value.replace(/[\s\u0000-\u001F]/g, "");
+    return !/^[a-z][a-z0-9+.-]*:/i.test(compactValue);
 };
 
 // Keeps only the allowed tags, without attributes (a: only a safe href). Unknown tags are unwrapped.
@@ -810,7 +926,10 @@ RichTextEditor.cleanHtml = function (html) {
             const el = document.createElement(tag.toLowerCase());
             if (tag === "A") {
                 const href = node.getAttribute("href");
-                if (!RichTextEditor.isSafeHref(href)) { copy(node, target); return; }
+                if (!RichTextEditor.isSafeHref(href)) {
+                    copy(node, target);
+                    return;
+                }
                 el.setAttribute("href", href.trim());
             }
             copy(node, el);
@@ -828,17 +947,27 @@ RichTextEditor.htmlToText = function (html) {
     const doc = new DOMParser().parseFromString("<body>" + String(html || "") + "</body>", "text/html");
     const lines = [];
     let line = "";
+    const endLine = function () {
+        lines.push(line);
+        line = "";
+    };
     const walk = function (node) {
         node.childNodes.forEach(function (child) {
-            if (child.nodeType === 3) { line += child.nodeValue.replace(/\s+/g, " "); return; }
+            if (child.nodeType === 3) {
+                line += child.nodeValue.replace(/\s+/g, " ");
+                return;
+            }
             if (child.nodeType !== 1) return;
             const tag = child.nodeName;
-            if (tag === "BR") { lines.push(line); line = ""; return; }
+            if (tag === "BR") {
+                endLine();
+                return;
+            }
             const isBlock = /^(P|DIV|H[1-6]|LI|BLOCKQUOTE|UL|OL)$/.test(tag);
-            if (isBlock && line.trim()) { lines.push(line); line = ""; }
+            if (isBlock && line.trim()) endLine();
             if (tag === "LI") line = "- ";
             walk(child);
-            if (isBlock && line.trim()) { lines.push(line); line = ""; }
+            if (isBlock && line.trim()) endLine();
         });
     };
     walk(doc.body);
@@ -894,6 +1023,7 @@ RichTextEditor.injectCss = function () {
 // *** STYLE PACKAGES:
 // USAGE: RichTextEditor({ styleName: "modern" })
 // USAGE: RichTextEditor({ styleName: "dark", style: { content: { fontSize: 16 } } }) // Change only some keys.
+// USAGE: RichTextEditor({ style: RichTextEditor.styles.dark }) // The same as styleName: "dark". (The package is copied, never changed.)
 // NOTE: A new package needs only the keys that differ from the default (classic) style.
 // USAGE: RichTextEditor.styles.myStyle = { toolbar: { color: "ivory" } };
 RichTextEditor.styles = {
@@ -914,7 +1044,7 @@ RichTextEditor.styles = {
         scrollBar: { bar_color: "#CFE2E2", bar_mouseOverColor: "cadetblue", bar_width: 4, bar_round: 3, bar_opacity: 0.6, bar_mouseOverOpacity: 1, bar_padding: 2 },
     },
 
-    // Dark theme, same colors as SelectBox.DARK_STYLE, TagInput, Tabs and Stepper "dark".
+    // Dark theme, same colors as SelectBox, TagInput, Tabs and Stepper "dark".
     dark: {
         box: { color: "#232322", border: 1, borderColor: "rgba(255, 255, 255, 0.10)", round: 8 },
         boxFocus: { borderColor: "#65A293" },

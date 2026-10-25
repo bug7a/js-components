@@ -66,7 +66,7 @@ UIPageControl.resetDefault();
 UIPageControl.create = function(parameters = {}) {
 
     // BOX: UI object container.
-    const box = createBox();
+    const box = Box();
 
     // Default values.
     box.default = {};
@@ -92,7 +92,7 @@ UIPageControl.create = function(parameters = {}) {
     box.border = 0;
 
     // BOX: Group of pages.
-    box.boxPageGroup = createBox(0, 0, box.width, box.height);
+    box.boxPageGroup = Box(0, 0, box.width, box.height);
     box.add(that);
     if (box.default.changePageWithMotion) {
         that.setMotion(box.default.changePageMotionString);
@@ -113,7 +113,7 @@ UIPageControl.create = function(parameters = {}) {
     box.createNewPageWithId = function(pageId) {
 
         // BOX: Page container box.
-        const boxPage = createBox(0, 0, box.width, box.height);
+        const boxPage = Box(0, 0, box.width, box.height);
         box.boxPageGroup.add(that);
         that.color = "transparent";
         that.pageId = pageId;

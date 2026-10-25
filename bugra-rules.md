@@ -41,7 +41,14 @@ Bu kurallar `comp-m*`, sayfalar, şablonlar ve projeler (oyun, designer...) içi
       box.lblTitle = Label({ text: "Orders", bold: 1 });
   endGroup();
   ```
-- Bileşen bir değeri sonradan değiştirince bunu `setX()` ile yapar; setter yalnızca gereken çizim fonksiyonunu çağırır (`createItems()`, `applyContent()`, `paint()`; hepsi: `drawAll()`), şablondaki gibi.
+- Bileşen bir değeri sonradan değiştirince bunu `setX()` ile yapar; setter yalnızca gereken çizim fonksiyonunu çağırır, şablondaki gibi. Çizim fonksiyonlarının adları işlerini söyler:
+  - `createItems()`: veriden yapılan nesneler baştan yapılır; tek bir nesne `createItem()` ile, böylece `addItem()` ötekileri yeniden yapmaz.
+  - `applyContent()`: metinler, ikon, rozet.
+  - `paint()`: durumun görünüşü (hover, seçili, pasif). Ölçüm yapmaz.
+  - `refreshLayout()`: boyuta bağlı olanlar (ölçülür; `onResize` / `onPageResize` çağırır, `paint()` değil).
+  - `drawAll()`: hepsi (ilk çizim ve `box.refresh()`).
+  - Bir değişiklik görünüşten fazlasını değiştiriyorsa (Tabs: gösterge, panel, Tab sırası) hepsini tek bir fonksiyon gösterir (`showActiveTab()`), böylece hiçbir setter bir parçayı unutamaz.
+  - Bir özelliği (Ör: `tabIndex`) yalnızca bir fonksiyon yazar.
 
 ## 5. Yorumlar NEDEN'i anlatır
 

@@ -51,7 +51,7 @@ UITitle.resetDefault();
 UITitle.create = function(parameters = {}) {
 
     // BOX: UI object container.
-    const box = createBox();
+    const box = Box();
 
     // Default values.
     box.default = {};
@@ -81,7 +81,7 @@ UITitle.create = function(parameters = {}) {
     box.round = box.default.round;
     
     // LABEL: title text.
-    box.lblTitle = createLabel();
+    box.lblTitle = Label();
     box.add(that);
     that.width = 540;
     that.height = 40;
@@ -94,7 +94,7 @@ UITitle.create = function(parameters = {}) {
     that.bottom = box.default.bottomInnerSpace;
 
     // BOX: Back button container.
-    box.boxBackButton = createBox();
+    box.boxBackButton = Box();
     box.add(that)
     that.left = box.default.leftInnerSpace;
     that.height = box.default.backButtonHeight;
@@ -105,7 +105,7 @@ UITitle.create = function(parameters = {}) {
     });
 
     // IMAGE: Back icon.
-    box.boxBackButton.imgIcon = createImage();
+    box.boxBackButton.imgIcon = Icon();
     box.boxBackButton.add(that);
     that.width = 20;
     that.height = 20;
@@ -116,7 +116,7 @@ UITitle.create = function(parameters = {}) {
     that.top = 0;
 
     // LABEL: Back text.
-    box.boxBackButton.lblBack = createLabel();
+    box.boxBackButton.lblBack = Label();
     box.boxBackButton.add(that);
     that.width = "auto";
     that.height = "auto";

@@ -101,6 +101,8 @@ const TimeLine = function (params = {}) {
 
     // *** PRIVATE VARIABLES:
     const _s = box.style;
+    const TEXT_GAP = 2; // Space between the time, the title and the text
+    const HOVER_MOTION = "opacity 0.15s";
     let rows = []; // Created item rows
 
     // *** PUBLIC VARIABLES:
@@ -137,7 +139,8 @@ const TimeLine = function (params = {}) {
                 height: "auto",
                 align: "center top",
                 gap: 0,
-                css: { alignSelf: "stretch", flexShrink: "0" },
+                shrink: 0,
+                css: { alignSelf: "stretch" },
             });
 
                 // BOX: Dot
@@ -148,7 +151,8 @@ const TimeLine = function (params = {}) {
                     color: item.color || _s.dot.color,
                     border: _s.dot.border,
                     borderColor: _s.dot.borderColor,
-                    css: { flexShrink: "0", marginTop: _s.dot.topSpace + "px" },
+                    shrink: 0,
+                    css: { marginTop: _s.dot.topSpace + "px" },
                 });
 
                 // BOX: Line to the next dot. (grow: 1 = the rest of the row)
@@ -170,7 +174,7 @@ const TimeLine = function (params = {}) {
                 width: "auto",
                 height: "auto",
                 align: "left top",
-                gap: 2,
+                gap: TEXT_GAP,
                 grow: 1,
                 css: { minWidth: "0", marginBottom: (isLast) ? "0px" : box.itemGap + "px" },
             });
@@ -211,32 +215,40 @@ const TimeLine = function (params = {}) {
 
         endGroup();
 
-        if (box.clickableItems == 1) {
-
-            row.clickable = 1;
-            row.cursor = "pointer";
-            row.setMotion("opacity 0.15s");
-
-            row.on("click", function (self, event) {
-                if (box.enabled == 1) box.onClick(box, item, index, event);
-            });
-            row.on("mouseover", function () {
-                if (box.enabled == 1) row.opacity = _s.hover.opacity;
-            });
-            row.on("mouseout", function () {
-                row.opacity = 1;
-            });
-
-        }
+        if (box.clickableItems == 1) makeRowClickable(row, item, index);
 
         return row;
 
     };
 
-    const render = function () {
+    const makeRowClickable = function (row, item, index) {
 
+        row.clickable = 1;
+        row.cursor = "pointer";
+        row.setMotion(HOVER_MOTION);
+
+        row.on("click", function (self, event) {
+            if (box.enabled != 1) return;
+            box.onClick(box, item, index, event);
+        });
+        row.on("mouseover", function () {
+            if (box.enabled != 1) return;
+            row.opacity = _s.hover.opacity;
+        });
+        row.on("mouseout", function () {
+            row.opacity = 1;
+        });
+
+    };
+
+    const removeRows = function () {
         rows.forEach(function (row) { row.remove(); });
         rows = [];
+    };
+
+    const drawAll = function () {
+
+        removeRows();
 
         createIn(box.content, function () {
 
@@ -257,7 +269,7 @@ const TimeLine = function (params = {}) {
 
     box.setItems = function (items) {
         box.items = (items || []).map(normalizeItem);
-        render();
+        drawAll();
     };
     // USAGE: timeLine.setItems([{ time: "09:30", title: "Order created" }, "Packed"])
 
@@ -268,7 +280,7 @@ const TimeLine = function (params = {}) {
     // Add a new item to the end of the line.
     box.addItem = function (item) {
         box.items.push(normalizeItem(item));
-        render();
+        drawAll();
     };
     // USAGE: timeLine.addItem({ time: "14:20", title: "Sent" })
 
@@ -278,20 +290,20 @@ const TimeLine = function (params = {}) {
 
     box.setEnabled = function (enabled) {
         box.enabled = basic.isOn(enabled) ? 1 : 0;
-        render(); // WHY: The cursor and the click of every row change.
+        drawAll(); // WHY: The cursor and the click of every row change.
     };
     // USAGE: get: timeLine.enabled, set: timeLine.setEnabled(0)
 
     box.refresh = function () {
-        render();
+        drawAll();
     };
 
 
     // *** OBJECT VIEW:
 
-    box.elem.setAttribute("role", "list");
+    box.role = "list";
 
-    // GROUP: The item rows (created by render)
+    // GROUP: The item rows (created by drawAll)
     box.content = VGroup({
         width: "100%",
         height: "auto",

@@ -160,9 +160,7 @@ const SortableListDefaults = {
 const SortableList = function (params = {}) {
 
     // Merge style package: params.style > SortableList.styles[styleName] > SortableListDefaults.style (classic)
-    const _stylePackage = SortableList.styles[params.styleName || SortableListDefaults.styleName];
-    if (!_stylePackage) console.warn("SortableList: Style package not found: " + params.styleName);
-    mergeIntoIfMissing(params, { style: _stylePackage || {} });
+    basic.applyStylePackage(params, SortableList.styles, SortableListDefaults);
 
     // Merge params:
     mergeIntoIfMissing(params, SortableListDefaults);
@@ -183,6 +181,14 @@ const SortableList = function (params = {}) {
     // *** PRIVATE VARIABLES:
     const _s = box.style;
     const ROW_TRANSITION = "background-color 0.15s, border-color 0.15s, box-shadow 0.15s";
+    const SHIFT_TRANSITION = ROW_TRANSITION + ", transform 0.18s ease"; // The other rows slide out of the way.
+    const SETTLE_TRANSITION = ROW_TRANSITION + ", transform 0.16s ease"; // The dropped row slides to its place.
+    const SETTLE_DURATION = 170; // ms: a little longer than the transform of SETTLE_TRANSITION
+    const DRAG_THRESHOLD = 4; // px: a smaller move is still a click
+    const DRAGGED_Z_INDEX = 10;
+    const AUTO_SCROLL_EDGE = 48; // px: the edge (top / bottom) where the list scrolls by itself
+    const AUTO_SCROLL_SLOWDOWN = 3; // The speed is the depth into the edge divided by this.
+    const AUTO_SCROLL_MAX_SPEED = 18; // px per frame
     let entries = []; // { item, key, text, desc, locked, row, ... } in the current order
     let drag = null; // Pointer drag state
     let grab = null; // Keyboard grab state: { entry, startIndex }
@@ -238,26 +244,33 @@ const SortableList = function (params = {}) {
         return (!entries[index].locked && !entries[target].locked) ? 1 : 0;
     };
 
+    const getRowBorderColor = function (isDragged, isFocused) {
+        if (isDragged) return _s.rowDragging.borderColor;
+        if (isFocused) return _s.rowFocus.borderColor;
+        return _s.row.borderColor;
+    };
+
     const paintRow = function (entry) {
         const row = entry.row;
         if (!row) return;
-        const isDragged = (drag && drag.active && drag.entry === entry) || (grab && grab.entry === entry);
+        const isGrabbed = (grab && grab.entry === entry);
+        const isDragged = (drag && drag.active && drag.entry === entry) || isGrabbed;
         const isFocused = (document.activeElement === row.elem);
         let color = entry.locked ? _s.rowLocked.color : _s.row.color;
         if (entry.isHover && !entry.locked && box.enabled == 1) color = _s.row.hoverColor;
         if (isDragged) color = _s.rowDragging.color;
         row.color = color;
-        row.borderColor = isDragged ? _s.rowDragging.borderColor : (isFocused ? _s.rowFocus.borderColor : _s.row.borderColor);
-        row.elem.style.boxShadow = isDragged ? _s.rowDragging.boxShadow : "none";
-        row.elem.style.zIndex = isDragged ? "10" : "";
-        row.elem.setAttribute("aria-grabbed", (grab && grab.entry === entry) ? "true" : "false");
+        row.borderColor = getRowBorderColor(isDragged, isFocused);
+        row.boxShadow = isDragged ? _s.rowDragging.boxShadow : "none";
+        row.zIndex = isDragged ? DRAGGED_Z_INDEX : "";
+        row.aria = { grabbed: isGrabbed ? "true" : "false" };
     };
 
     const paintButton = function (btn, isEnabled) {
         if (!btn) return;
-        btn.elem.style.opacity = isEnabled ? "1" : String(_s.button.disabledOpacity);
-        btn.elem.style.cursor = isEnabled ? "pointer" : "default";
-        btn.elem.setAttribute("aria-disabled", isEnabled ? "false" : "true");
+        btn.css.opacity = isEnabled ? "1" : String(_s.button.disabledOpacity);
+        btn.cursor = isEnabled ? "pointer" : "default";
+        btn.aria = { disabled: isEnabled ? "false" : "true" };
         if (!isEnabled) btn.color = "transparent";
     };
 
@@ -267,8 +280,7 @@ const SortableList = function (params = {}) {
             const row = entry.row;
             if (!row) return;
             if (row.lblNumber) row.lblNumber.plainText = String(index + 1);
-            row.elem.setAttribute("aria-posinset", String(index + 1));
-            row.elem.setAttribute("aria-setsize", String(entries.length));
+            row.aria = { posinset: String(index + 1), setsize: String(entries.length) };
             paintButton(row.btnUp, canMove(index, -1));
             paintButton(row.btnDown, canMove(index, 1));
             paintRow(entry);
@@ -279,8 +291,12 @@ const SortableList = function (params = {}) {
     };
 
     // Changes the order of the data and the DOM. (No onChange)
+    const isInList = function (index) {
+        return (index >= 0 && index < entries.length);
+    };
+
     const moveEntry = function (from, to) {
-        if (from === to || from < 0 || to < 0 || from >= entries.length || to >= entries.length) return 0;
+        if (from === to || !isInList(from) || !isInList(to)) return 0;
         const entry = entries.splice(from, 1)[0];
         entries.splice(to, 0, entry);
         const elem = entry.row.elem;
@@ -335,6 +351,29 @@ const SortableList = function (params = {}) {
         if (apply && finalIndex !== g.startIndex) box.onChange(box, g.entry.item, g.startIndex, finalIndex);
     };
 
+    // ArrowUp -> -1, ArrowDown -> 1
+    const getArrowDirection = function (key) {
+        return (key === "ArrowUp") ? -1 : 1;
+    };
+
+    // The keys of a grabbed row: the arrows move it, Space / Enter / Tab drop it, Escape puts it back.
+    const onGrabKeyDown = function (entry, event) {
+        const key = event.key;
+        if (key === "ArrowUp" || key === "ArrowDown") {
+            event.preventDefault();
+            if (moveBy(entry, getArrowDirection(key), 0)) announce(box.texts.moved, entry);
+        } else if (key === " " || key === "Enter") {
+            event.preventDefault();
+            endGrab(1);
+        } else if (key === "Escape") {
+            event.preventDefault();
+            endGrab(0);
+            entry.row.elem.scrollIntoView({ block: "nearest" });
+        } else if (key === "Tab") {
+            endGrab(1);
+        }
+    };
+
     const onRowKeyDown = function (entry, event) {
 
         if (box.enabled != 1 || isSettling) return;
@@ -342,19 +381,7 @@ const SortableList = function (params = {}) {
         const index = indexOf(entry);
 
         if (grab && grab.entry === entry) {
-            if (key === "ArrowUp" || key === "ArrowDown") {
-                event.preventDefault();
-                if (moveBy(entry, (key === "ArrowUp") ? -1 : 1, 0)) announce(box.texts.moved, entry);
-            } else if (key === " " || key === "Enter") {
-                event.preventDefault();
-                endGrab(1);
-            } else if (key === "Escape") {
-                event.preventDefault();
-                endGrab(0);
-                entry.row.elem.scrollIntoView({ block: "nearest" });
-            } else if (key === "Tab") {
-                endGrab(1);
-            }
+            onGrabKeyDown(entry, event);
             return;
         }
 
@@ -363,13 +390,19 @@ const SortableList = function (params = {}) {
             case "ArrowDown":
                 event.preventDefault();
                 if (event.altKey || event.ctrlKey || event.metaKey) {
-                    if (moveBy(entry, (key === "ArrowUp") ? -1 : 1, 1)) announce(box.texts.moved, entry);
+                    if (moveBy(entry, getArrowDirection(key), 1)) announce(box.texts.moved, entry);
                 } else {
-                    focusRow(index + ((key === "ArrowUp") ? -1 : 1));
+                    focusRow(index + getArrowDirection(key));
                 }
                 break;
-            case "Home": event.preventDefault(); focusRow(0); break;
-            case "End": event.preventDefault(); focusRow(entries.length - 1); break;
+            case "Home":
+                event.preventDefault();
+                focusRow(0);
+                break;
+            case "End":
+                event.preventDefault();
+                focusRow(entries.length - 1);
+                break;
             case " ":
             case "Enter":
                 event.preventDefault();
@@ -377,7 +410,9 @@ const SortableList = function (params = {}) {
                 break;
             case "Delete":
             case "Backspace":
-                if (box.removable == 1) { event.preventDefault(); removeEntry(entry, 0, 1); }
+                if (box.removable != 1) break;
+                event.preventDefault();
+                removeEntry(entry, 0, 1);
                 break;
         }
 
@@ -395,8 +430,21 @@ const SortableList = function (params = {}) {
         event.preventDefault(); // WHY: No text selection, no native drag.
         entry.row.elem.focus({ preventScroll: true });
         const y = withPageZoom(event.clientY);
-        drag = { entry: entry, source: self, pointerId: event.pointerId, startY: y, lastY: y, lastClientY: event.clientY, startScroll: getScrollTop(), active: 0 };
-        try { self.elem.setPointerCapture(event.pointerId); } catch (e) { }
+        drag = {
+            entry: entry,
+            source: self,
+            pointerId: event.pointerId,
+            startY: y,
+            lastY: y,
+            lastClientY: event.clientY,
+            startScroll: getScrollTop(),
+            active: 0,
+        };
+        try {
+            self.elem.setPointerCapture(event.pointerId);
+        } catch (error) {
+            // WHY: It throws when the pointer is already gone. The drag still works without the capture.
+        }
     };
 
     const onPointerMove = function (self, event) {
@@ -404,7 +452,7 @@ const SortableList = function (params = {}) {
         drag.lastY = withPageZoom(event.clientY);
         drag.lastClientY = event.clientY;
         if (!drag.active) {
-            if (Math.abs(drag.lastY - drag.startY) < 4) return; // WHY: A small move is still a click.
+            if (Math.abs(drag.lastY - drag.startY) < DRAG_THRESHOLD) return; // WHY: A small move is still a click.
             beginDrag();
         }
         updateDrag();
@@ -423,7 +471,11 @@ const SortableList = function (params = {}) {
 
     const onPointerCancel = function (self, event) {
         if (!drag || event.pointerId !== drag.pointerId) return;
-        if (drag.active) finishDrag(0); else drag = null;
+        if (drag.active) {
+            finishDrag(0);
+        } else {
+            drag = null;
+        }
     };
 
     const beginDrag = function () {
@@ -436,64 +488,96 @@ const SortableList = function (params = {}) {
         // The locked rows are walls: the dragged row stays between them.
         drag.minIndex = 0;
         drag.maxIndex = entries.length - 1;
-        for (let i = index - 1; i >= 0; i--) { if (entries[i].locked) { drag.minIndex = i + 1; break; } }
-        for (let i = index + 1; i < entries.length; i++) { if (entries[i].locked) { drag.maxIndex = i - 1; break; } }
+        for (let i = index - 1; i >= 0; i--) {
+            if (!entries[i].locked) continue;
+            drag.minIndex = i + 1;
+            break;
+        }
+        for (let i = index + 1; i < entries.length; i++) {
+            if (!entries[i].locked) continue;
+            drag.maxIndex = i - 1;
+            break;
+        }
         entries.forEach(function (e, i) {
-            e.row.elem.style.transition = (i === index) ? ROW_TRANSITION : ROW_TRANSITION + ", transform 0.18s ease";
+            e.row.css.transition = (i === index) ? ROW_TRANSITION : SHIFT_TRANSITION;
         });
-        drag.source.elem.style.cursor = "grabbing";
+        drag.source.cursor = "grabbing";
         paintRow(drag.entry);
         box.onDragStart(box, drag.entry.item, index);
     };
 
+    // Target: the dragged row passes a row when its center passes the center of that row.
+    const findDragTarget = function (center) {
+        const index = drag.index;
+        const tops = drag.tops;
+        const heights = drag.heights;
+        for (let k = drag.minIndex; k < index; k++) {
+            if (center < tops[k] + heights[k] / 2) return k;
+        }
+        for (let k = drag.maxIndex; k > index; k--) {
+            if (center > tops[k] + heights[k] / 2) return k;
+        }
+        return index;
+    };
+
+    // A row moved up shows the number above it, a row moved down the number below it.
+    const getNumberChange = function (shift) {
+        if (shift < 0) return -1;
+        if (shift > 0) return 1;
+        return 0;
+    };
+
     const updateDrag = function () {
         if (!drag || !drag.active) return;
-        const i = drag.index, t = drag.tops, h = drag.heights;
+        const index = drag.index;
+        const tops = drag.tops;
+        const heights = drag.heights;
         let dy = (drag.lastY - drag.startY) + (getScrollTop() - drag.startScroll);
-        const minDy = t[drag.minIndex] - t[i];
-        const maxDy = (t[drag.maxIndex] + h[drag.maxIndex]) - (t[i] + h[i]);
+        const minDy = tops[drag.minIndex] - tops[index];
+        const maxDy = (tops[drag.maxIndex] + heights[drag.maxIndex]) - (tops[index] + heights[index]);
         dy = Math.max(minDy, Math.min(dy, maxDy));
 
-        // Target: the dragged row passes a row when its center passes the center of that row.
-        const center = t[i] + h[i] / 2 + dy;
-        let target = i;
-        for (let k = drag.minIndex; k < i; k++) { if (center < t[k] + h[k] / 2) { target = k; break; } }
-        for (let k = drag.maxIndex; k > i; k--) { if (center > t[k] + h[k] / 2) { target = k; break; } }
+        const center = tops[index] + heights[index] / 2 + dy;
+        const target = findDragTarget(center);
         drag.target = target;
 
-        const slot = h[i] + box.rowGap;
+        const slot = heights[index] + box.rowGap;
         entries.forEach(function (e, k) {
-            if (k === i) return;
+            if (k === index) return;
             let shift = 0;
-            if (i < target && k > i && k <= target) shift = -slot;
-            else if (target < i && k >= target && k < i) shift = slot;
-            e.row.elem.style.transform = shift ? "translateY(" + shift + "px)" : "";
-            if (e.row.lblNumber) e.row.lblNumber.plainText = String(k + 1 + ((shift < 0) ? -1 : (shift > 0) ? 1 : 0));
+            if (index < target && k > index && k <= target) shift = -slot;
+            else if (target < index && k >= target && k < index) shift = slot;
+            e.row.css.transform = shift ? "translateY(" + shift + "px)" : "";
+            if (e.row.lblNumber) e.row.lblNumber.plainText = String(k + 1 + getNumberChange(shift));
         });
-        entries[i].row.elem.style.transform = "translateY(" + dy + "px) scale(" + _s.rowDragging.scale + ")";
-        if (entries[i].row.lblNumber) entries[i].row.lblNumber.plainText = String(target + 1); // The numbers show the new order while dragging.
+        const draggedRow = entries[index].row;
+        draggedRow.css.transform = "translateY(" + dy + "px) scale(" + _s.rowDragging.scale + ")";
+        if (draggedRow.lblNumber) draggedRow.lblNumber.plainText = String(target + 1); // The numbers show the new order while dragging.
     };
 
     // Scrolls the list while the pointer is near its top or bottom edge.
     const updateAutoScroll = function () {
         if (isAutoHeight || !drag || !drag.active) return;
         const rect = box.scrollBox.elem.getBoundingClientRect();
-        const edge = Math.min(48, rect.height / 4);
+        const edge = Math.min(AUTO_SCROLL_EDGE, rect.height / 4);
         const y = drag.lastClientY;
         let speed = 0;
-        if (y < rect.top + edge) speed = -(rect.top + edge - y) / 3;
-        else if (y > rect.bottom - edge) speed = (y - (rect.bottom - edge)) / 3;
-        drag.scrollSpeed = Math.max(-18, Math.min(18, Math.round(speed)));
+        if (y < rect.top + edge) {
+            speed = -(rect.top + edge - y) / AUTO_SCROLL_SLOWDOWN;
+        } else if (y > rect.bottom - edge) {
+            speed = (y - (rect.bottom - edge)) / AUTO_SCROLL_SLOWDOWN;
+        }
+        drag.scrollSpeed = Math.max(-AUTO_SCROLL_MAX_SPEED, Math.min(AUTO_SCROLL_MAX_SPEED, Math.round(speed)));
         if (drag.scrollSpeed && !autoScrollFrame) autoScrollFrame = requestAnimationFrame(autoScrollTick);
     };
 
     const autoScrollTick = function () {
         autoScrollFrame = null;
         if (!box || !drag || !drag.active || !drag.scrollSpeed) return;
-        const el = box.scrollBox.elem;
-        const before = el.scrollTop;
-        el.scrollTop = before + drag.scrollSpeed;
-        if (el.scrollTop === before) return; // At the end: stop the loop.
+        const scrollElem = box.scrollBox.elem;
+        const before = scrollElem.scrollTop;
+        scrollElem.scrollTop = before + drag.scrollSpeed;
+        if (scrollElem.scrollTop === before) return; // At the end: stop the loop.
         updateDrag();
         autoScrollFrame = requestAnimationFrame(autoScrollTick);
     };
@@ -506,40 +590,48 @@ const SortableList = function (params = {}) {
     // apply: 1 -> Drop at the target. 0 -> Back to the start.
     const finishDrag = function (apply) {
         stopAutoScroll();
-        const d = drag;
-        const i = d.index, t = d.tops, h = d.heights;
-        const target = apply ? d.target : i;
+        const finished = drag;
+        const from = finished.index;
+        const tops = finished.tops;
+        const heights = finished.heights;
+        const target = apply ? finished.target : from;
         let finalDy = 0;
-        if (target > i) finalDy = (t[target] + h[target]) - (t[i] + h[i]);
-        else if (target < i) finalDy = t[target] - t[i];
-        if (!apply) entries.forEach(function (e, k) { if (k !== i) e.row.elem.style.transform = ""; });
+        if (target > from) finalDy = (tops[target] + heights[target]) - (tops[from] + heights[from]);
+        else if (target < from) finalDy = tops[target] - tops[from];
+        if (!apply) {
+            entries.forEach(function (e, k) {
+                if (k !== from) e.row.css.transform = "";
+            });
+        }
 
         // The dropped row slides to its place, then the order changes.
-        const elem = d.entry.row.elem;
-        elem.style.transition = ROW_TRANSITION + ", transform 0.16s ease";
-        elem.style.transform = "translateY(" + finalDy + "px)";
-        d.source.elem.style.cursor = "";
+        const droppedRow = finished.entry.row;
+        droppedRow.css = { transition: SETTLE_TRANSITION, transform: "translateY(" + finalDy + "px)" };
+        finished.source.cursor = "";
         drag = null;
         isSettling = 1;
-        paintRow(d.entry);
+        paintRow(finished.entry);
 
-        cancelSettle = box.after(170, function () {
+        cancelSettle = box.after(SETTLE_DURATION, function () {
             cancelSettle = null;
             isSettling = 0;
-            entries.forEach(function (e) {
-                e.row.elem.style.transition = "none";
-                e.row.elem.style.transform = "";
-            });
-            if (!moveEntry(i, target)) updateRows(); // WHY: Puts back the numbers changed while dragging.
-            void box.wrapper.elem.offsetHeight; // WHY: Applies the "none" transition before it is set back.
-            entries.forEach(function (e) { e.row.elem.style.transition = ROW_TRANSITION; });
-            const finalIndex = indexOf(d.entry);
-            box.onDragEnd(box, d.entry.item, finalIndex);
-            if (target !== i) {
-                announce(box.texts.dropped, d.entry);
-                box.onChange(box, d.entry.item, i, finalIndex);
-            }
+            placeDroppedRow(finished.entry, from, target);
         });
+    };
+
+    // After the slide: the order of the data and the DOM changes, without an animation.
+    const placeDroppedRow = function (entry, from, target) {
+        entries.forEach(function (e) {
+            e.row.css = { transition: "none", transform: "" };
+        });
+        if (!moveEntry(from, target)) updateRows(); // WHY: Puts back the numbers changed while dragging.
+        void box.wrapper.elem.offsetHeight; // WHY: Applies the "none" transition before it is set back.
+        entries.forEach(function (e) { e.row.css.transition = ROW_TRANSITION; });
+        const finalIndex = indexOf(entry);
+        box.onDragEnd(box, entry.item, finalIndex);
+        if (target === from) return;
+        announce(box.texts.dropped, entry);
+        box.onChange(box, entry.item, from, finalIndex);
     };
 
     // *** VIEW:
@@ -554,20 +646,118 @@ const SortableList = function (params = {}) {
             clickable: 1,
         });
         btn.elem.style.display = "flex";
-        btn.elem.style.alignItems = "center";
-        btn.elem.style.justifyContent = "center";
-        btn.elem.style.lineHeight = "0";
-        btn.elem.style.flexShrink = "0";
-        btn.elem.style.cursor = "pointer";
-        btn.elem.style.transition = "background-color 0.15s";
-        btn.elem.setAttribute("role", "button");
-        btn.elem.setAttribute("aria-label", ariaLabel);
+        btn.css = { alignItems: "center", justifyContent: "center", transition: "background-color 0.15s" };
+        btn.lineHeight = "0";
+        btn.shrink = 0;
+        btn.cursor = "pointer";
+        btn.role = "button";
+        btn.aria = { label: ariaLabel };
         btn.elem.setAttribute("title", ariaLabel);
-        btn.on("mouseenter", function () { if (btn.elem.getAttribute("aria-disabled") !== "true") btn.color = _s.button.hoverColor; });
+        btn.on("mouseenter", function () {
+            if (btn.aria.disabled === "true") return;
+            btn.color = _s.button.hoverColor;
+        });
         btn.on("mouseleave", function () { btn.color = "transparent"; });
         // WHY: A press on a button must not start a drag of the row (dragBy: "row").
-        btn.on("pointerdown", function (self, event) { event.stopPropagation(); event.preventDefault(); });
+        btn.on("pointerdown", function (self, event) {
+            event.stopPropagation();
+            event.preventDefault();
+        });
         return btn;
+    };
+
+    // "Sales, Monthly totals, Locked"
+    const getRowLabel = function (entry) {
+        let label = entry.text;
+        if (entry.desc) label += ", " + entry.desc;
+        if (entry.locked) label += ", " + box.texts.locked;
+        return label;
+    };
+
+    const getHandleSvg = function (entry, color) {
+        if (entry.locked) return SortableList.getLockSvg(color, _s.handle.size - 2);
+        return SortableList.getGripSvg(color, _s.handle.size);
+    };
+
+    // LABEL: Handle (grip, or a lock for a locked row)
+    const createHandle = function (entry) {
+        const handle = Label({
+            text: getHandleSvg(entry, _s.handle.iconColor),
+            width: _s.handle.size + 6,
+            height: _s.handle.size + 10,
+            clickable: 1,
+        });
+        handle.elem.style.display = "flex";
+        handle.css = { alignItems: "center", justifyContent: "center", marginLeft: "-4px" };
+        handle.lineHeight = "0";
+        handle.shrink = 0;
+        handle.aria = { hidden: "true" };
+        handle.elem.setAttribute("title", entry.locked ? box.texts.locked : box.texts.handle);
+        if (entry.locked) return handle;
+        handle.cursor = "grab";
+        handle.css.touchAction = "none";
+        handle.on("mouseenter", function () {
+            if (box.enabled == 1) handle.text = getHandleSvg(entry, _s.handle.hoverColor);
+        });
+        handle.on("mouseleave", function () {
+            handle.text = getHandleSvg(entry, _s.handle.iconColor);
+        });
+        return handle;
+    };
+
+    // LABEL: Position number
+    const createNumberLabel = function () {
+        const lblNumber = Label({
+            plainText: "",
+            width: _s.number.width,
+            fontSize: _s.number.fontSize,
+            textColor: _s.number.textColor,
+            textAlign: "center",
+        });
+        lblNumber.shrink = 0;
+        lblNumber.css.fontVariantNumeric = "tabular-nums";
+        if (_s.number.fontFamily) lblNumber.css.fontFamily = _s.number.fontFamily;
+        return lblNumber;
+    };
+
+    // The up / down buttons: move the row one step and keep the focus on it.
+    const moveByButton = function (entry, direction, event) {
+        event.stopPropagation();
+        if (!moveBy(entry, direction, 1)) return;
+        announce(box.texts.moved, entry);
+        entry.row.elem.focus({ preventScroll: true });
+    };
+
+    const bindRowEvents = function (row, entry, isRowDrag) {
+        const dragSource = (isRowDrag || !row.handle) ? row : row.handle;
+        if (!entry.locked && (isRowDrag || row.handle)) {
+            dragSource.on("pointerdown", function (self, event) { onPointerDown(entry, self, event); });
+            dragSource.on("pointermove", onPointerMove);
+            dragSource.on("pointerup", onPointerUp);
+            dragSource.on("pointercancel", onPointerCancel);
+        }
+        row.on("keydown", function (self, event) { onRowKeyDown(entry, event); });
+        row.on("focus", function () { paintRow(entry); });
+        row.on("blur", function () {
+            if (isReordering) return;
+            if (grab && grab.entry === entry) endGrab(1);
+            paintRow(entry);
+        });
+        row.on("mouseenter", function () {
+            entry.isHover = 1;
+            if (!drag) paintRow(entry);
+        });
+        row.on("mouseleave", function () {
+            entry.isHover = 0;
+            if (!drag) paintRow(entry);
+        });
+        row.on("click", function () {
+            if (suppressClick) {
+                suppressClick = 0;
+                return;
+            }
+            if (box.enabled == 1) box.onItemClick(box, entry.item, indexOf(entry));
+        });
     };
 
     const createRow = function (entry) {
@@ -587,64 +777,29 @@ const SortableList = function (params = {}) {
             round: _s.row.round,
         });
         entry.row = row;
-        row.elem.style.minHeight = _s.row.minHeight + "px";
-        row.elem.style.boxSizing = "border-box";
-        row.elem.style.flexShrink = "0";
-        row.elem.style.outline = "none";
-        row.elem.style.transition = ROW_TRANSITION;
-        row.elem.style.transformOrigin = "center center";
-        row.elem.setAttribute("role", "option");
-        row.elem.setAttribute("aria-roledescription", "sortable item");
-        row.elem.setAttribute("aria-label", entry.text + (entry.desc ? ", " + entry.desc : "") + (entry.locked ? ", " + box.texts.locked : ""));
+        row.css = {
+            minHeight: _s.row.minHeight + "px",
+            boxSizing: "border-box",
+            outline: "none",
+            transition: ROW_TRANSITION,
+            transformOrigin: "center center",
+        };
+        row.shrink = 0;
+        row.role = "option";
+        row.aria = { roledescription: "sortable item", label: getRowLabel(entry) };
         row.clickable = 1;
-        row.elem.tabIndex = (box.enabled == 1) ? 0 : -1;
+        row.tabIndex = (box.enabled == 1) ? 0 : -1;
         if (isRowDrag && !entry.locked) {
-            row.elem.style.cursor = "grab";
-            row.elem.style.touchAction = "none";
+            row.cursor = "grab";
+            row.css.touchAction = "none";
         }
 
-            // LABEL: Handle (grip, or a lock for a locked row)
-            if (box.showHandle == 1) {
-                row.handle = Label({
-                    text: entry.locked ? SortableList.getLockSvg(_s.handle.iconColor, _s.handle.size - 2) : SortableList.getGripSvg(_s.handle.iconColor, _s.handle.size),
-                    width: _s.handle.size + 6,
-                    height: _s.handle.size + 10,
-                    clickable: 1,
-                });
-                row.handle.elem.style.display = "flex";
-                row.handle.elem.style.alignItems = "center";
-                row.handle.elem.style.justifyContent = "center";
-                row.handle.elem.style.lineHeight = "0";
-                row.handle.elem.style.flexShrink = "0";
-                row.handle.elem.style.marginLeft = "-4px";
-                row.handle.elem.setAttribute("aria-hidden", "true");
-                row.handle.elem.setAttribute("title", entry.locked ? box.texts.locked : box.texts.handle);
-                if (!entry.locked) {
-                    row.handle.elem.style.cursor = "grab";
-                    row.handle.elem.style.touchAction = "none";
-                    row.handle.on("mouseenter", function () { if (box.enabled == 1) row.handle.text = SortableList.getGripSvg(_s.handle.hoverColor, _s.handle.size); });
-                    row.handle.on("mouseleave", function () { row.handle.text = SortableList.getGripSvg(_s.handle.iconColor, _s.handle.size); });
-                }
-            }
-
-            // LABEL: Position number
-            if (box.showNumbers == 1) {
-                row.lblNumber = Label({
-                    plainText: "",
-                    width: _s.number.width,
-                    fontSize: _s.number.fontSize,
-                    textColor: _s.number.textColor,
-                    textAlign: "center",
-                });
-                row.lblNumber.elem.style.flexShrink = "0";
-                row.lblNumber.elem.style.fontVariantNumeric = "tabular-nums";
-                if (_s.number.fontFamily) row.lblNumber.elem.style.fontFamily = _s.number.fontFamily;
-            }
+            if (box.showHandle == 1) row.handle = createHandle(entry);
+            if (box.showNumbers == 1) row.lblNumber = createNumberLabel();
 
             // GROUP: Content (text, description or your own view)
             row.content = VGroup({ width: "auto", height: "auto", align: "left center", gap: 2 });
-            row.content.elem.style.flex = "1 1 0";
-            row.content.elem.style.minWidth = "0";
+            row.content.css = { flex: "1 1 0", minWidth: "0" };
 
                 if (typeof box.createItemView === "function") {
                     box.createItemView(entry.item, indexOf(entry), box);
@@ -656,7 +811,7 @@ const SortableList = function (params = {}) {
                         textColor: _s.text.textColor,
                         ellipsis: 1,
                     });
-                    if (_s.text.fontFamily) row.lblText.elem.style.fontFamily = _s.text.fontFamily;
+                    if (_s.text.fontFamily) row.lblText.css.fontFamily = _s.text.fontFamily;
                     if (entry.desc) {
                         row.lblDesc = Label({
                             plainText: entry.desc,
@@ -672,41 +827,27 @@ const SortableList = function (params = {}) {
 
             // LABEL: Up / down buttons
             if (box.showButtons == 1) {
-                row.btnUp = createIconButton(SortableList.getChevronSvg("up", _s.button.iconColor, _s.button.iconSize), box.texts.moveUp);
-                row.btnUp.on("click", function (self, event) { event.stopPropagation(); if (moveBy(entry, -1, 1)) { announce(box.texts.moved, entry); entry.row.elem.focus({ preventScroll: true }); } });
-                row.btnDown = createIconButton(SortableList.getChevronSvg("down", _s.button.iconColor, _s.button.iconSize), box.texts.moveDown);
-                row.btnDown.on("click", function (self, event) { event.stopPropagation(); if (moveBy(entry, 1, 1)) { announce(box.texts.moved, entry); entry.row.elem.focus({ preventScroll: true }); } });
+                const upSvg = SortableList.getChevronSvg("up", _s.button.iconColor, _s.button.iconSize);
+                const downSvg = SortableList.getChevronSvg("down", _s.button.iconColor, _s.button.iconSize);
+                row.btnUp = createIconButton(upSvg, box.texts.moveUp);
+                row.btnUp.on("click", function (self, event) { moveByButton(entry, -1, event); });
+                row.btnDown = createIconButton(downSvg, box.texts.moveDown);
+                row.btnDown.on("click", function (self, event) { moveByButton(entry, 1, event); });
             }
 
             // LABEL: Remove button
             if (box.removable == 1) {
-                row.btnRemove = createIconButton(SortableList.getCloseSvg(_s.button.iconColor, _s.button.iconSize), box.texts.remove);
-                row.btnRemove.on("click", function (self, event) { event.stopPropagation(); if (box.enabled == 1) removeEntry(entry, 0, 1); });
+                const closeSvg = SortableList.getCloseSvg(_s.button.iconColor, _s.button.iconSize);
+                row.btnRemove = createIconButton(closeSvg, box.texts.remove);
+                row.btnRemove.on("click", function (self, event) {
+                    event.stopPropagation();
+                    if (box.enabled == 1) removeEntry(entry, 0, 1);
+                });
             }
 
         endGroup();
 
-        // Events of the row
-        const dragSource = (isRowDrag || !row.handle) ? row : row.handle;
-        if (!entry.locked && (isRowDrag || row.handle)) {
-            dragSource.on("pointerdown", function (self, event) { onPointerDown(entry, self, event); });
-            dragSource.on("pointermove", onPointerMove);
-            dragSource.on("pointerup", onPointerUp);
-            dragSource.on("pointercancel", onPointerCancel);
-        }
-        row.on("keydown", function (self, event) { onRowKeyDown(entry, event); });
-        row.on("focus", function () { paintRow(entry); });
-        row.on("blur", function () {
-            if (isReordering) return;
-            if (grab && grab.entry === entry) endGrab(1);
-            paintRow(entry);
-        });
-        row.on("mouseenter", function () { entry.isHover = 1; if (!drag) paintRow(entry); });
-        row.on("mouseleave", function () { entry.isHover = 0; if (!drag) paintRow(entry); });
-        row.on("click", function () {
-            if (suppressClick) { suppressClick = 0; return; }
-            if (box.enabled == 1) box.onItemClick(box, entry.item, indexOf(entry));
-        });
+        bindRowEvents(row, entry, isRowDrag);
 
         return row;
     };
@@ -725,11 +866,10 @@ const SortableList = function (params = {}) {
                 gap: box.rowGap,
                 padding: _s.box.padding,
             });
-            box.wrapper.elem.style.alignItems = "stretch";
-            box.wrapper.elem.style.boxSizing = "border-box";
+            box.wrapper.css = { alignItems: "stretch", boxSizing: "border-box" };
             box.wrapper.position = "relative"; // WHY: The scroll box (or the auto height box) grows with it.
-            box.wrapper.elem.setAttribute("role", "listbox");
-            box.wrapper.elem.setAttribute("aria-label", box.ariaLabel);
+            box.wrapper.role = "listbox";
+            box.wrapper.aria = { label: box.ariaLabel };
                 entries.forEach(createRow);
             endGroup();
         });
@@ -827,9 +967,11 @@ const SortableList = function (params = {}) {
     box.setEnabled = function (enabled) {
         box.enabled = basic.isOn(enabled) ? 1 : 0;
         if (box.enabled != 1 && grab) endGrab(0);
-        box.elem.style.opacity = (box.enabled == 1) ? "1" : String(_s.disabled.opacity);
-        box.elem.setAttribute("aria-disabled", (box.enabled == 1) ? "false" : "true");
-        entries.forEach(function (e) { if (e.row) e.row.elem.tabIndex = (box.enabled == 1) ? 0 : -1; });
+        box.css.opacity = (box.enabled == 1) ? "1" : String(_s.disabled.opacity);
+        box.aria = { disabled: (box.enabled == 1) ? "false" : "true" };
+        entries.forEach(function (e) {
+            if (e.row) e.row.tabIndex = (box.enabled == 1) ? 0 : -1;
+        });
         updateRows();
     };
     // USAGE: get: list.enabled, set: list.setEnabled(0)
@@ -845,7 +987,7 @@ const SortableList = function (params = {}) {
 
     // *** OBJECT VIEW:
 
-    box.elem.style.boxSizing = "border-box";
+    box.css.boxSizing = "border-box";
 
     if (!isAutoHeight) {
         // BOX: Scrolling area
@@ -867,8 +1009,8 @@ const SortableList = function (params = {}) {
 
     // LABEL: Screen reader messages (not visible)
     box.lblLive = Label({ left: 0, top: 0, width: 1, height: 1, opacity: 0, plainText: "" });
-    box.lblLive.elem.setAttribute("aria-live", "polite");
-    box.lblLive.elem.style.overflow = "hidden";
+    box.lblLive.aria = { live: "polite" };
+    box.lblLive.css.overflow = "hidden";
 
     if (!isAutoHeight && box.useScrollBar == 1 && typeof ScrollBar !== "undefined") {
         box.scrollBar = ScrollBar(Object.assign({ scrollableBox: box.scrollBox, neverHide: 0, showDots: 0 }, _s.scrollBar));
@@ -878,7 +1020,9 @@ const SortableList = function (params = {}) {
 
     if (!isAutoHeight) {
         // WHY: A wheel scroll during a drag moves the list under the dragged row.
-        box.scrollBox.on("scroll", function () { if (drag && drag.active) updateDrag(); });
+        box.scrollBox.on("scroll", function () {
+            if (drag && drag.active) updateDrag();
+        });
     }
 
     entries = (Array.isArray(startItems) ? startItems : []).map(toEntry);
@@ -911,6 +1055,7 @@ SortableList.getCloseSvg = function (color, size) {
 // *** STYLE PACKAGES:
 // USAGE: SortableList({ styleName: "modern" })
 // USAGE: SortableList({ styleName: "dark", style: { row: { round: 4 } } }) // Change only some keys.
+// USAGE: SortableList({ style: SortableList.styles.dark }) // The same as styleName: "dark". (The package is copied, never changed.)
 // NOTE: A new package needs only the keys that differ from the default (classic) style.
 // USAGE: SortableList.styles.myStyle = { row: { color: "ivory" } };
 SortableList.styles = {
@@ -933,7 +1078,7 @@ SortableList.styles = {
         scrollBar: { bar_color: "#CFE2E2", bar_mouseOverColor: "cadetblue", bar_width: 4, bar_round: 3, bar_opacity: 0.6, bar_mouseOverOpacity: 1, bar_padding: 2 },
     },
 
-    // Dark theme, same colors as SelectBox.DARK_STYLE, TagInput, Tabs and Stepper "dark".
+    // Dark theme, same colors as SelectBox, TagInput, Tabs and Stepper "dark".
     dark: {
         row: { color: "#232322", hoverColor: "#2A2A29", border: 1, borderColor: "rgba(255, 255, 255, 0.10)", round: 8, padding: [12, 10], gap: 10, minHeight: 48 },
         rowFocus: { borderColor: "#65A293" },

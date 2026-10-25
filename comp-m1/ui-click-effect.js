@@ -54,7 +54,7 @@ clickEffect.showClick = function() {
             posX = withPageZoom(posX);
             posY = withPageZoom(posY);
 
-            clickEffect.boxClick = createBox(posX - 40, posY - 40, 80, 80);
+            clickEffect.boxClick = Box(posX - 40, posY - 40, 80, 80);
             //that.color = "#40A5AF"
             that.color = "#000000";
             that.round = 50;

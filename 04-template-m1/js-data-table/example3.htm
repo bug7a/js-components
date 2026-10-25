@@ -163,7 +163,7 @@
 
         const createColorPalette = function(colorList) {
 
-            const box = createBox();
+            const box = Box();
 
             box.width = 30;
             box.height = 30;
@@ -171,7 +171,7 @@
 
             for(var i = 0; i < colorList.length; i++) {
 
-                box["color" + i] = createBox();
+                box["color" + i] = Box();
                 box.add(that);
                 that.width = 30;
                 that.height = 30;
@@ -203,27 +203,27 @@
             }
 
             // BUTTON: Add new
-            window.btnAddNew = createButton();
+            window.btnAddNew = Button();
             that.text = "Add Items";
             buttonStyle(that);
             that.bottom = 10;
             that.left = 10;
 
             // BUTTON: Update
-            window.btnUpdate = createButton();
+            window.btnUpdate = Button();
             buttonStyle(that);
             that.text = "Update Items";
             that.aline(previousThat, "right", 4);
 
             // BUTTON: Delete
-            window.btnDelete = createButton();
+            window.btnDelete = Button();
             buttonStyle(that);
             that.text = "Delete Items";
             that.color = "indianred";
             that.aline(previousThat, "right", 4);
 
             // BUTTON: Clear All
-            window.btnClear = createButton();
+            window.btnClear = Button();
             buttonStyle(that);
             that.text = "Clear All";
             that.color = "indianred";

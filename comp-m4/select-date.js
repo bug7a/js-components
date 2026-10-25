@@ -10,6 +10,7 @@ UI COMPONENT TEMPLATE
 - Supports: minDate, maxDate, first day of week, date format, language (en, tr),
   Today/Clear buttons, enabled, keyboard navigation.
 - Everything is drawn with code (no image files needed).
+- Style packages: "classic" (default), "dark". Select with styleName. (SelectDate.styles)
 
 Keyboard (when the calendar is focused):
 - Arrow keys: move day, PageUp/PageDown: move month, Enter/Space: select, Escape: close.
@@ -43,7 +44,8 @@ const SelectDateDefaults = {
     onChange: function (self) { }, // self.date (Date or null), self.value ("YYYY-MM-DD"), self.dateText
     onOpen: function (self) { },
     onClose: function (self) { },
-    style: {
+    styleName: "classic", // "classic", "dark" or a name added to SelectDate.styles
+    style: { // Classic style package (default)
         field: {
             color: White(1),
             border: 1,
@@ -109,6 +111,9 @@ const SelectDateDefaults = {
             fontSize: 13,
             textColor: "#3871E0",
         },
+        divider: {
+            color: Black(0.08), // The line above the footer buttons
+        },
         disabled: {
             opacity: 0.4,
         },
@@ -116,6 +121,9 @@ const SelectDateDefaults = {
 };
 
 const SelectDate = function (params = {}) {
+
+    // Merge style package: params.style > SelectDate.styles[styleName] > SelectDateDefaults.style (classic)
+    basic.applyStylePackage(params, SelectDate.styles, SelectDateDefaults);
 
     // Merge params:
     mergeIntoIfMissing(params, SelectDateDefaults);
@@ -143,6 +151,13 @@ const SelectDate = function (params = {}) {
     let isMouseOver = 0;
     let dayCells = [];
     let monthCells = [];
+    const PANEL_GAP = 6; // px between the field and the panel
+    const SCREEN_MARGIN = 8; // px: the panel stays this far from the edges of the page
+    const ARROW_BUTTON_SIZE = 32;
+    const TITLE_HEIGHT = 32;
+    const MONTH_CELL_HEIGHT = 48;
+    const OVERLAY_Z_INDEX = 1000;
+    const PANEL_Z_INDEX = 1001;
 
     // *** PUBLIC VARIABLES:
     // [var] Selected date (Date or null)
@@ -176,14 +191,6 @@ const SelectDate = function (params = {}) {
         viewMonth = d.getMonth();
     };
 
-    // Create objects inside a container, after the component is created.
-    const createIn = function (container, func) {
-        const previous = getDefaultContainerBox();
-        setDefaultContainerBox(container);
-        func();
-        setDefaultContainerBox(previous);
-    };
-
     const updateValue = function () {
         box.value = (box.date) ? SelectDate.format(box.date, "YYYY-MM-DD") : "";
         box.dateText = (box.date) ? SelectDate.format(box.date, box.format, box.language) : "";
@@ -207,10 +214,12 @@ const SelectDate = function (params = {}) {
         box.field.borderColor = borderColor;
 
         box.opacity = (box.enabled == 1) ? 1 : _s.disabled.opacity;
-        box.elem.style.cursor = (box.enabled == 1) ? "pointer" : "default";
-        box.elem.tabIndex = (box.enabled == 1) ? 0 : -1;
-        box.elem.setAttribute("aria-expanded", (isOpen) ? "true" : "false");
-        box.elem.setAttribute("aria-disabled", (box.enabled == 1) ? "false" : "true");
+        box.cursor = (box.enabled == 1) ? "pointer" : "default";
+        box.tabIndex = (box.enabled == 1) ? 0 : -1;
+        box.aria = {
+            expanded: (isOpen) ? "true" : "false",
+            disabled: (box.enabled == 1) ? "false" : "true",
+        };
 
     };
 
@@ -222,13 +231,15 @@ const SelectDate = function (params = {}) {
     // Draw an arrow with borders. (direction: -1 left, 1 right)
     const createArrowButton = function (direction) {
 
+        const isLeft = (direction < 0);
+
         const btn = HGroup({
-            width: 32,
-            height: 32,
+            width: ARROW_BUTTON_SIZE,
+            height: ARROW_BUTTON_SIZE,
             round: 100,
             color: "transparent",
         });
-        btn.elem.style.cursor = "pointer";
+        btn.cursor = "pointer";
         btn.setMotion("background-color 0.15s");
 
         Box({
@@ -236,10 +247,12 @@ const SelectDate = function (params = {}) {
             height: 8,
             color: "transparent",
         });
-        that.elem.style.borderLeft = "2px solid " + _s.arrow.color;
-        that.elem.style.borderBottom = "2px solid " + _s.arrow.color;
-        that.elem.style.transform = "rotate(" + ((direction < 0) ? 45 : 225) + "deg)";
-        that.elem.style.marginLeft = ((direction < 0) ? 3 : -3) + "px";
+        that.css = {
+            borderLeft: "2px solid " + _s.arrow.color,
+            borderBottom: "2px solid " + _s.arrow.color,
+            transform: "rotate(" + ((isLeft) ? 45 : 225) + "deg)",
+            marginLeft: ((isLeft) ? 3 : -3) + "px",
+        };
 
         endGroup();
 
@@ -262,6 +275,57 @@ const SelectDate = function (params = {}) {
         renderPanel();
     };
 
+    // A day of the visible month: selected, today, out of the range, keyboard focus.
+    const createDayCell = function (date, today) {
+
+        const selected = isSameDay(date, box.date);
+        const enabled = isInRange(date);
+        const focused = isSameDay(date, focusDate);
+
+        const cell = Label({
+            width: daySize,
+            height: daySize,
+            text: String(date.getDate()),
+            textAlign: "center",
+            fontSize: _s.day.fontSize,
+            round: _s.day.round,
+            textColor: _s.day.textColor,
+            color: "transparent",
+        });
+        cell.lineHeight = daySize + "px";
+        cell.setMotion("background-color 0.15s");
+
+        if (isSameDay(date, today)) {
+            cell.border = 1;
+            cell.borderColor = _s.today.borderColor;
+            cell.lineHeight = (daySize - 2) + "px"; // WHY: The border (1 px at the top and the bottom) is inside the cell.
+        }
+
+        if (selected) {
+            cell.color = _s.selectedDay.color;
+            cell.textColor = _s.selectedDay.textColor;
+        } else if (focused) {
+            cell.color = _s.day.hoverColor;
+        }
+
+        if (!enabled) {
+            cell.textColor = _s.disabledDay.textColor;
+            return cell;
+        }
+
+        cell.cursor = "pointer";
+        cell.on("click", function () { selectDate(date); });
+        if (!selected) {
+            cell.on("mouseover", function () { cell.color = _s.day.hoverColor; });
+            cell.on("mouseout", function () {
+                cell.color = (isSameDay(date, focusDate)) ? _s.day.hoverColor : "transparent";
+            });
+        }
+
+        return cell;
+
+    };
+
     const renderDays = function () {
 
         dayCells = clearCells(dayCells);
@@ -279,56 +343,55 @@ const SelectDate = function (params = {}) {
             }
 
             for (let d = 1; d <= daysInMonth; d++) {
-
-                const date = new Date(viewYear, viewMonth, d);
-                const selected = isSameDay(date, box.date);
-                const enabled = isInRange(date);
-                const focused = isSameDay(date, focusDate);
-
-                const cell = Label({
-                    width: daySize,
-                    height: daySize,
-                    text: String(d),
-                    textAlign: "center",
-                    fontSize: _s.day.fontSize,
-                    round: _s.day.round,
-                    textColor: _s.day.textColor,
-                    color: "transparent",
-                });
-                cell.elem.style.lineHeight = daySize + "px";
-                cell.setMotion("background-color 0.15s");
-
-                if (isSameDay(date, today)) {
-                    cell.border = 1;
-                    cell.borderColor = _s.today.borderColor;
-                    cell.elem.style.lineHeight = (daySize - 2) + "px";
-                }
-
-                if (selected) {
-                    cell.color = _s.selectedDay.color;
-                    cell.textColor = _s.selectedDay.textColor;
-                } else if (focused) {
-                    cell.color = _s.day.hoverColor;
-                }
-
-                if (!enabled) {
-                    cell.textColor = _s.disabledDay.textColor;
-                } else {
-                    cell.elem.style.cursor = "pointer";
-                    cell.on("click", function () { selectDate(date); });
-                    if (!selected) {
-                        cell.on("mouseover", function () { cell.color = _s.day.hoverColor; });
-                        cell.on("mouseout", function () {
-                            cell.color = (isSameDay(date, focusDate)) ? _s.day.hoverColor : "transparent";
-                        });
-                    }
-                }
-
-                dayCells.push(cell);
-
+                dayCells.push(createDayCell(new Date(viewYear, viewMonth, d), today));
             }
 
         });
+
+    };
+
+    // A month can be selected if one of its days is in the range.
+    const isMonthEnabled = function (month) {
+        const first = new Date(viewYear, month, 1);
+        const last = new Date(viewYear, month + 1, 0);
+        if (isInRange(first) || isInRange(last)) return true;
+        // WHY: The whole range can be inside the month (its first and last days are out of it).
+        return box.minDate && box.maxDate && dayNumber(first) <= dayNumber(box.minDate) && dayNumber(last) >= dayNumber(box.maxDate);
+    };
+
+    const createMonthCell = function (name, month) {
+
+        const enabled = isMonthEnabled(month);
+        const selected = box.date && box.date.getFullYear() == viewYear && box.date.getMonth() == month;
+
+        const cell = Label({
+            width: Math.floor(innerWidth / 3),
+            height: MONTH_CELL_HEIGHT,
+            text: name,
+            textAlign: "center",
+            fontSize: _s.day.fontSize,
+            round: 8,
+            textColor: (enabled) ? _s.day.textColor : _s.disabledDay.textColor,
+            color: (selected) ? _s.selectedDay.color : "transparent",
+        });
+        cell.lineHeight = MONTH_CELL_HEIGHT + "px";
+        if (selected) cell.textColor = _s.selectedDay.textColor;
+
+        if (!enabled) return cell;
+
+        cell.cursor = "pointer";
+        cell.setMotion("background-color 0.15s");
+        cell.on("click", function () {
+            setView(viewYear, month);
+            view = "days";
+            renderPanel();
+        });
+        if (!selected) {
+            cell.on("mouseover", function () { cell.color = _s.day.hoverColor; });
+            cell.on("mouseout", function () { cell.color = "transparent"; });
+        }
+
+        return cell;
 
     };
 
@@ -337,46 +400,9 @@ const SelectDate = function (params = {}) {
         monthCells = clearCells(monthCells);
 
         createIn(box.monthsBox, function () {
-
             texts.monthsShort.forEach(function (name, month) {
-
-                const first = new Date(viewYear, month, 1);
-                const last = new Date(viewYear, month + 1, 0);
-                const enabled = isInRange(first) || isInRange(last)
-                    || (box.minDate && box.maxDate && dayNumber(first) <= dayNumber(box.minDate) && dayNumber(last) >= dayNumber(box.maxDate));
-                const selected = box.date && box.date.getFullYear() == viewYear && box.date.getMonth() == month;
-
-                const cell = Label({
-                    width: Math.floor(innerWidth / 3),
-                    height: 48,
-                    text: name,
-                    textAlign: "center",
-                    fontSize: _s.day.fontSize,
-                    round: 8,
-                    textColor: (enabled) ? _s.day.textColor : _s.disabledDay.textColor,
-                    color: (selected) ? _s.selectedDay.color : "transparent",
-                });
-                cell.elem.style.lineHeight = "48px";
-                if (selected) cell.textColor = _s.selectedDay.textColor;
-
-                if (enabled) {
-                    cell.elem.style.cursor = "pointer";
-                    cell.setMotion("background-color 0.15s");
-                    cell.on("click", function () {
-                        setView(viewYear, month);
-                        view = "days";
-                        renderPanel();
-                    });
-                    if (!selected) {
-                        cell.on("mouseover", function () { cell.color = _s.day.hoverColor; });
-                        cell.on("mouseout", function () { cell.color = "transparent"; });
-                    }
-                }
-
-                monthCells.push(cell);
-
+                monthCells.push(createMonthCell(name, month));
             });
-
         });
 
     };
@@ -424,16 +450,15 @@ const SelectDate = function (params = {}) {
         const rect = box.elem.getBoundingClientRect();
         const panelWidth = box.panel.elem.offsetWidth;
         const panelHeight = box.panel.elem.offsetHeight;
-        const space = 6;
 
         let left = withPageZoom(rect.left);
-        let top = withPageZoom(rect.bottom) + space;
+        let top = withPageZoom(rect.bottom) + PANEL_GAP;
 
-        if (top + panelHeight > page.height - 8) {
-            top = withPageZoom(rect.top) - panelHeight - space; // Open above
+        if (top + panelHeight > page.height - SCREEN_MARGIN) {
+            top = withPageZoom(rect.top) - panelHeight - PANEL_GAP; // Open above
         }
-        top = Math.max(8, top);
-        left = Math.max(8, Math.min(left, page.width - panelWidth - 8));
+        top = Math.max(SCREEN_MARGIN, top);
+        left = Math.max(SCREEN_MARGIN, Math.min(left, page.width - panelWidth - SCREEN_MARGIN));
 
         box.panel.left = left;
         box.panel.top = top;
@@ -590,14 +615,13 @@ const SelectDate = function (params = {}) {
 
 
     // *** OBJECT VIEW:
-    box.elem.style.outline = "none";
-    box.elem.style.userSelect = "none";
+    box.css = { outline: "none", userSelect: "none" };
 
     // FIELD: (only popup mode)
     if (box.inline != 1) {
 
         box.clickable = 1;
-        box.elem.setAttribute("role", "combobox");
+        box.role = "combobox";
 
         box.field = HGroup({
             width: "100%",
@@ -614,9 +638,8 @@ const SelectDate = function (params = {}) {
             fontSize: _s.fieldText.fontSize,
             textColor: _s.fieldText.textColor,
         });
-        that.elem.style.whiteSpace = "nowrap";
-        that.elem.style.textOverflow = "ellipsis";
-        that.elem.style.flexGrow = "1";
+        that.css = { whiteSpace: "nowrap", textOverflow: "ellipsis" };
+        that.grow = 1;
 
         // BOX: Calendar icon (drawn)
         box.icon = startBox({
@@ -631,7 +654,7 @@ const SelectDate = function (params = {}) {
         Box({ left: 3, top: 8, width: 3, height: 3, color: _s.icon.color });
         Box({ left: 8, top: 8, width: 3, height: 3, color: _s.icon.color });
         endBox();
-        box.icon.elem.style.flexShrink = "0";
+        box.icon.shrink = 0;
 
         endGroup();
 
@@ -646,8 +669,8 @@ const SelectDate = function (params = {}) {
 
         // BOX: Transparent overlay (click outside: close)
         box.overlay = Box(0, 0, "100%", "100%", { color: "transparent" });
-        box.overlay.elem.style.position = "fixed";
-        box.overlay.elem.style.zIndex = "1000";
+        box.overlay.css.position = "fixed";
+        box.overlay.zIndex = OVERLAY_Z_INDEX;
         box.overlay.on("click", function () { box.close(); });
 
     }
@@ -664,11 +687,11 @@ const SelectDate = function (params = {}) {
         round: _s.panel.round,
         padding: _s.panel.padding,
     });
-    box.panel.elem.style.boxShadow = _s.panel.shadow;
-    box.panel.elem.style.outline = "none";
-    box.panel.elem.tabIndex = -1;
+    box.panel.boxShadow = _s.panel.shadow;
+    box.panel.css.outline = "none";
+    box.panel.tabIndex = -1;
     box.panel.clickable = 1;
-    box.panel.elem.setAttribute("role", "dialog");
+    box.panel.role = "dialog";
 
         // GROUP: Header (prev, title, next)
         HGroup({
@@ -681,14 +704,14 @@ const SelectDate = function (params = {}) {
 
             // LABEL: Month and year (click: months view)
             box.title = Label({
-                width: innerWidth - 64,
-                height: 32,
+                width: innerWidth - (ARROW_BUTTON_SIZE * 2),
+                height: TITLE_HEIGHT,
                 textAlign: "center",
                 round: 6,
                 ..._s.title,
             });
-            box.title.elem.style.lineHeight = "32px";
-            box.title.elem.style.cursor = "pointer";
+            box.title.lineHeight = TITLE_HEIGHT + "px";
+            box.title.cursor = "pointer";
             box.title.setMotion("background-color 0.15s");
             box.title.on("click", function () {
                 if (box.enabled != 1) return;
@@ -745,8 +768,10 @@ const SelectDate = function (params = {}) {
             justifyContent: "space-between",
             alignItems: "center",
         });
-        box.footer.elem.style.borderTop = "1px solid " + Black(0.08);
-        box.footer.elem.style.paddingTop = "6px";
+        box.footer.css = {
+            borderTop: "1px solid " + _s.divider.color,
+            paddingTop: "6px",
+        };
 
             box.todayButton = Label({
                 text: texts.today,
@@ -754,7 +779,7 @@ const SelectDate = function (params = {}) {
                 round: 4,
                 ..._s.footerButton,
             });
-            box.todayButton.elem.style.cursor = "pointer";
+            box.todayButton.cursor = "pointer";
             box.todayButton.on("click", function () { selectDate(new Date()); });
 
             box.clearButton = Label({
@@ -763,8 +788,8 @@ const SelectDate = function (params = {}) {
                 round: 4,
                 ..._s.footerButton,
             });
-            box.clearButton.elem.style.cursor = "pointer";
-            box.clearButton.elem.style.marginLeft = "auto";
+            box.clearButton.cursor = "pointer";
+            box.clearButton.css.marginLeft = "auto";
             box.clearButton.on("click", function () {
                 box.setDate(null);
                 if (box.inline != 1) {
@@ -778,7 +803,7 @@ const SelectDate = function (params = {}) {
     endGroup();
 
     if (box.inline != 1) {
-        box.panel.elem.style.zIndex = "1001";
+        box.panel.zIndex = PANEL_Z_INDEX;
         box.overlay.visible = 0;
         box.panel.visible = 0;
     }
@@ -806,7 +831,7 @@ const SelectDate = function (params = {}) {
         box.own(box.panel);
 
     } else {
-        box.panel.elem.tabIndex = 0;
+        box.panel.tabIndex = 0;
         // WHY: Component size is "auto". A relative panel makes the container wrap it.
         box.panel.position = "relative";
     }
@@ -815,9 +840,9 @@ const SelectDate = function (params = {}) {
     // WHY: Keep the keyboard focus on the panel when a day is clicked.
     box.panel.on("mousedown", function (self, event) { event.preventDefault(); });
 
-    const _start = box.date || new Date();
-    focusDate = new Date(_start);
-    setView(_start.getFullYear(), _start.getMonth());
+    const startDate = box.date || new Date();
+    focusDate = new Date(startDate);
+    setView(startDate.getFullYear(), startDate.getMonth());
     box.enabled = basic.isOn(box.enabled) ? 1 : 0;
 
     updateValue();
@@ -864,9 +889,9 @@ SelectDate.parse = function (value) {
     const match = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(String(value).trim());
     if (!match) return null;
 
-    const date = new Date(num(match[1]), num(match[2]) - 1, num(match[3]));
+    const date = new Date(basic.num(match[1]), basic.num(match[2]) - 1, basic.num(match[3]));
     // WHY: new Date(2026, 1, 31) becomes March 3. Invalid dates are not accepted.
-    if (date.getMonth() != num(match[2]) - 1) return null;
+    if (date.getMonth() != basic.num(match[2]) - 1) return null;
 
     return date;
 
@@ -883,9 +908,9 @@ SelectDate.format = function (date, format = "DD.MM.YYYY", language = "en") {
         YYYY: String(date.getFullYear()),
         MMMM: texts.months[date.getMonth()],
         MMM: texts.monthsShort[date.getMonth()],
-        MM: String(twoDigitFormat(date.getMonth() + 1)),
+        MM: String(basic.twoDigitFormat(date.getMonth() + 1)),
         M: String(date.getMonth() + 1),
-        DD: String(twoDigitFormat(date.getDate())),
+        DD: String(basic.twoDigitFormat(date.getDate())),
         D: String(date.getDate()),
         dddd: texts.weekDays[date.getDay()],
         ddd: texts.weekDaysShort[date.getDay()],
@@ -897,3 +922,36 @@ SelectDate.format = function (date, format = "DD.MM.YYYY", language = "en") {
 
 };
 // USAGE: SelectDate.format(new Date(), "D MMMM YYYY, dddd", "tr")
+
+// *** STYLE PACKAGES:
+// USAGE: SelectDate({ styleName: "dark" })
+// USAGE: SelectDate({ styleName: "dark", style: { field: { round: 4 } } }) // Change only some keys.
+// USAGE: SelectDate({ style: SelectDate.styles.dark }) // The same as styleName: "dark". (The package is copied, never changed.)
+// NOTE: A new package needs only the keys that differ from the default (classic) style.
+// USAGE: SelectDate.styles.myStyle = { field: { round: 4 } };
+SelectDate.styles = {
+
+    // White, dark text, a soft line.
+    classic: SelectDateDefaults.style,
+
+    // Dark theme, same colors as SelectBox "dark".
+    dark: {
+        field: { color: "#232322", borderColor: "rgba(255, 255, 255, 0.10)", round: 8 },
+        fieldHover: { borderColor: "rgba(255, 255, 255, 0.30)" },
+        fieldFocus: { borderColor: "#65A293" },
+        fieldText: { fontSize: 15, textColor: "rgba(255, 255, 255, 0.90)" },
+        placeholder: { textColor: "rgba(255, 255, 255, 0.40)" },
+        icon: { color: "rgba(255, 255, 255, 0.55)" },
+        panel: { color: "#232322", borderColor: "rgba(255, 255, 255, 0.12)", shadow: "0 8px 24px rgba(0, 0, 0, 0.5)" },
+        title: { textColor: "rgba(255, 255, 255, 0.90)" },
+        arrow: { color: "rgba(255, 255, 255, 0.60)", hoverColor: "rgba(255, 255, 255, 0.08)" },
+        weekDay: { textColor: "rgba(255, 255, 255, 0.45)" },
+        day: { textColor: "rgba(255, 255, 255, 0.85)", hoverColor: "rgba(255, 255, 255, 0.08)" },
+        today: { borderColor: "rgba(255, 255, 255, 0.35)" },
+        selectedDay: { color: "#3D7A6B", textColor: "#FFFFFF" },
+        disabledDay: { textColor: "rgba(255, 255, 255, 0.20)" },
+        footerButton: { textColor: "#65A293" },
+        divider: { color: "rgba(255, 255, 255, 0.08)" },
+    },
+
+};

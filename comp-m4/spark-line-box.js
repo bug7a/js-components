@@ -96,6 +96,7 @@ const SparkLineBoxDefaults = {
             dotRadius: 3,
             minMaxDotRadius: 2.5,
             minMaxColor: Black(0.45),
+            dotRingColor: White(1), // The ring around the dots: the color of the box (a dark box: its dark color)
             motion: 0.2, // Seconds. 0: No animation
         },
         tooltip: {
@@ -133,6 +134,9 @@ const SparkLineBox = function (params = {}) {
     let cancelResize = null; // (box.after: stopped by remove())
     let graphWidth = 0;
     let hoverIndex = -1;
+    const RESIZE_WAIT = 30; // ms
+    const TOOLTIP_EDGE_SPACE = 2; // Between the tooltip and the box sides
+    const TOOLTIP_GAP = 8; // Between the tooltip and the point
 
     // *** PUBLIC VARIABLES:
     // [var] Visible values, from left to right: [{ value, color }]
@@ -142,14 +146,19 @@ const SparkLineBox = function (params = {}) {
 
     const normalizeValue = function (item) {
         if (item !== null && typeof item == "object") {
-            return { value: num(item.value) || 0, color: item.color || "" };
+            return { value: basic.num(item.value) || 0, color: item.color || "" };
         }
-        return { value: num(item) || 0, color: "" };
+        return { value: basic.num(item) || 0, color: "" };
+    };
+
+    // How many points the graph has room for (maxPoints, at least 2).
+    const getSlotCount = function () {
+        return Math.max(2, basic.num(box.maxPoints) || 2);
     };
 
     // Keep only the last values that fit in the graph.
     const trimValues = function () {
-        const max = Math.max(2, num(box.maxPoints) || 2);
+        const max = getSlotCount();
         if (box.values.length > max) {
             box.values = box.values.slice(box.values.length - max);
         }
@@ -163,16 +172,30 @@ const SparkLineBox = function (params = {}) {
             if (item.value < min) min = item.value;
             if (item.value > max) max = item.value;
         });
-        if (box.values.length == 0) { min = 0; max = 0; }
-        if (box.minValue !== null && box.minValue !== undefined && box.minValue !== "") min = Math.min(num(box.minValue) || 0, min);
+        if (box.values.length == 0) {
+            min = 0;
+            max = 0;
+        }
+        const hasMinValue = (box.minValue !== null && box.minValue !== undefined && box.minValue !== "");
+        if (hasMinValue) min = Math.min(basic.num(box.minValue) || 0, min);
         if (box.maxValue > 0) max = Math.max(box.maxValue, min);
         return { min: min, max: max };
     };
 
     const createSvgElement = function (name, attributes) {
-        const el = document.createElementNS(SVG_NS, name);
-        Object.keys(attributes).forEach(function (key) { el.setAttribute(key, attributes[key]); });
-        return el;
+        const element = document.createElementNS(SVG_NS, name);
+        Object.keys(attributes).forEach(function (key) { element.setAttribute(key, attributes[key]); });
+        return element;
+    };
+
+    // SVG elements are not basic.js objects: they are shown with style.display.
+    const setShown = function (element, isShown) {
+        element.style.display = (isShown) ? "" : "none";
+    };
+
+    const placeDot = function (dot, point) {
+        dot.setAttribute("cx", point.x);
+        dot.setAttribute("cy", point.y);
     };
 
     // Path data of the line: "M x y C ..." (smooth) or "M x y L x y ..." (linear)
@@ -214,7 +237,7 @@ const SparkLineBox = function (params = {}) {
         if (SparkLineBox.supportsCssPath) path.style.d = (data) ? 'path("' + data + '")' : "";
     };
 
-    const setMotion = function (enabled) {
+    const setLineMotion = function (enabled) {
         const seconds = (enabled && box.animated == 1) ? _s.graph.motion : 0;
         const motion = (seconds > 0) ? "d " + seconds + "s" : "none";
         const dotMotion = (seconds > 0) ? "cx " + seconds + "s, cy " + seconds + "s" : "none";
@@ -235,6 +258,83 @@ const SparkLineBox = function (params = {}) {
         return { line: lineData, area: areaData };
     };
 
+    // { x, y, item } of every value. range: { min, max } of the scale
+    const getPoints = function (range) {
+
+        const padding = _s.graph.padding;
+        const lineWidth = _s.graph.lineWidth;
+        const innerWidth = Math.max(0, graphWidth - padding * 2);
+        const top = lineWidth + _s.graph.dotRadius; // Space for the line width and the dots
+        const bottom = _s.graph.height - lineWidth - _s.graph.dotRadius;
+        const span = range.max - range.min;
+
+        // WHY: The x positions come from maxPoints, not from the value count. So the line grows from the left and does not stretch.
+        const slots = getSlotCount();
+        const step = (slots > 1) ? innerWidth / (slots - 1) : 0;
+
+        return box.values.map(function (item, index) {
+            const x = r1(padding + index * step);
+            let y = r1((top + bottom) / 2);
+            if (span > 0) y = r1(bottom - (item.value - range.min) / span * (bottom - top));
+            return { x: x, y: y, item: item };
+        });
+
+    };
+
+    // START SHAPE: The old points at their new places (no motion) and the new point on the previous point.
+    // Same number of segments as the final shape, so the "d" transition moves only the last segment.
+    const drawStartShape = function () {
+        const last = points[points.length - 1];
+        const previous = points[points.length - 2];
+        const startPoints = points.slice(0, -1).concat([{ x: previous.x, y: previous.y, item: last.item }]);
+        const startData = getPathDataSet(startPoints);
+        setLineMotion(0);
+        setPathData(linePath, startData.line);
+        if (startData.area) setPathData(areaPath, startData.area);
+        placeDot(lastDot, previous);
+        void svg.getBoundingClientRect(); // WHY: Apply the start shape now, before the motion is turned on.
+        setLineMotion(1);
+    };
+
+    const drawMinMaxDots = function (span) {
+
+        const isShown = (box.showMinMax == 1 && points.length > 1 && span > 0);
+        setShown(minDot, isShown);
+        setShown(maxDot, isShown);
+        if (!isShown) return;
+
+        let minPoint = points[0];
+        let maxPoint = points[0];
+        points.forEach(function (p) {
+            if (p.item.value < minPoint.item.value) minPoint = p;
+            if (p.item.value > maxPoint.item.value) maxPoint = p;
+        });
+        placeDot(minDot, minPoint);
+        placeDot(maxDot, maxPoint);
+
+    };
+
+    // Marked values (own color)
+    const drawMarkDots = function () {
+
+        const marked = points.filter(function (p) { return p.item.color; });
+
+        while (markDots.length < marked.length) {
+            const dot = createSvgElement("circle", { r: _s.graph.dotRadius, stroke: _s.graph.dotRingColor, "stroke-width": 1 });
+            svg.appendChild(dot);
+            markDots.push(dot);
+        }
+
+        markDots.forEach(function (dot, index) {
+            const p = marked[index];
+            setShown(dot, !!p);
+            if (!p) return;
+            placeDot(dot, p);
+            dot.setAttribute("fill", p.item.color);
+        });
+
+    };
+
     // Draw the line for the current values.
     // animated: 1 -> Only the new (last) point moves: it starts at the previous point and moves to its place.
     //          0 -> The line jumps to the new shape. (setValues, resize)
@@ -244,96 +344,31 @@ const SparkLineBox = function (params = {}) {
 
         if (!box || !svg) return;
 
-        const height = _s.graph.height;
-        const padding = _s.graph.padding;
-        const lineWidth = _s.graph.lineWidth;
-        const innerWidth = Math.max(0, graphWidth - padding * 2);
-        const top = lineWidth + _s.graph.dotRadius; // Space for the line width and the dots
-        const bottom = height - lineWidth - _s.graph.dotRadius;
-        const count = box.values.length;
         const range = getRange();
-        const span = range.max - range.min;
-
-        // WHY: The x positions come from maxPoints, not from the value count. So the line grows from the left and does not stretch.
-        const slots = Math.max(2, num(box.maxPoints) || 2);
-        const step = (slots > 1) ? innerWidth / (slots - 1) : 0;
-
-        points = box.values.map(function (item, index) {
-            const x = r1(padding + index * step);
-            const y = (span > 0) ? r1(bottom - (item.value - range.min) / span * (bottom - top)) : r1((top + bottom) / 2);
-            return { x: x, y: y, item: item };
-        });
+        points = getPoints(range);
 
         const last = points[points.length - 1];
         const canAnimate = (animated && box.animated == 1 && _s.graph.motion > 0 && points.length > 1);
 
         if (canAnimate) {
-            // START SHAPE: The old points at their new places (no motion) and the new point on the previous point.
-            // Same number of segments as the final shape, so the "d" transition moves only the last segment.
-            const previous = points[points.length - 2];
-            const startPoints = points.slice(0, -1).concat([{ x: previous.x, y: previous.y, item: last.item }]);
-            const startData = getPathDataSet(startPoints);
-            setMotion(0);
-            setPathData(linePath, startData.line);
-            if (startData.area) setPathData(areaPath, startData.area);
-            lastDot.setAttribute("cx", previous.x);
-            lastDot.setAttribute("cy", previous.y);
-            void svg.getBoundingClientRect(); // WHY: Apply the start shape now, before the motion is turned on.
-            setMotion(1);
+            drawStartShape();
         } else {
-            setMotion(0);
+            setLineMotion(0);
         }
 
         // FINAL SHAPE:
         const data = getPathDataSet(points);
         setPathData(linePath, data.line);
 
-        if (data.area) {
-            setPathData(areaPath, data.area);
-            areaPath.style.display = "";
-        } else {
-            areaPath.style.display = "none";
-        }
+        if (data.area) setPathData(areaPath, data.area);
+        setShown(areaPath, !!data.area);
 
-        // Last dot
-        if (box.showLastDot == 1 && last) {
-            lastDot.setAttribute("cx", last.x);
-            lastDot.setAttribute("cy", last.y);
-            lastDot.style.display = "";
-        } else {
-            lastDot.style.display = "none";
-        }
+        const isLastDotShown = (box.showLastDot == 1 && !!last);
+        if (isLastDotShown) placeDot(lastDot, last);
+        setShown(lastDot, isLastDotShown);
 
-        // Min / max dots
-        if (box.showMinMax == 1 && points.length > 1 && span > 0) {
-            let minPoint = points[0];
-            let maxPoint = points[0];
-            points.forEach(function (p) {
-                if (p.item.value < minPoint.item.value) minPoint = p;
-                if (p.item.value > maxPoint.item.value) maxPoint = p;
-            });
-            minDot.setAttribute("cx", minPoint.x); minDot.setAttribute("cy", minPoint.y); minDot.style.display = "";
-            maxDot.setAttribute("cx", maxPoint.x); maxDot.setAttribute("cy", maxPoint.y); maxDot.style.display = "";
-        } else {
-            minDot.style.display = "none";
-            maxDot.style.display = "none";
-        }
-
-        // Marked values (own color)
-        const marked = points.filter(function (p) { return p.item.color; });
-        while (markDots.length < marked.length) {
-            const dot = createSvgElement("circle", { r: _s.graph.dotRadius, stroke: "white", "stroke-width": 1 });
-            svg.appendChild(dot);
-            markDots.push(dot);
-        }
-        markDots.forEach(function (dot, index) {
-            const p = marked[index];
-            if (!p) { dot.style.display = "none"; return; }
-            dot.setAttribute("cx", p.x);
-            dot.setAttribute("cy", p.y);
-            dot.setAttribute("fill", p.item.color);
-            dot.style.display = "";
-        });
+        drawMinMaxDots(range.max - range.min);
+        drawMarkDots();
 
         updateTrend();
         if (hoverIndex >= 0) showHover(hoverIndex);
@@ -358,25 +393,39 @@ const SparkLineBox = function (params = {}) {
         const first = box.values[0].value;
         const last = box.values[box.values.length - 1].value;
         const diff = last - first;
+        const direction = Math.sign(diff);
         let text;
 
         if (first == 0) {
             text = (diff > 0 ? "+" : "") + r1(diff);
         } else {
             const percent = Math.round(Math.abs(diff) / Math.abs(first) * 100);
-            text = ((diff > 0) ? "▲ " : (diff < 0) ? "▼ " : "") + percent + "%";
+            text = getTrendArrow(direction) + percent + "%";
         }
 
         box.lblTrend.text = text;
-        paintTrend((diff > 0) ? 1 : (diff < 0) ? -1 : 0);
+        paintTrend(direction);
         box.lblTrend.visible = 1;
 
     };
 
+    // direction: 1 up, -1 down, 0 flat
+    const getTrendArrow = function (direction) {
+        if (direction > 0) return "▲ ";
+        if (direction < 0) return "▼ ";
+        return "";
+    };
+
+    const getTrendColor = function (direction) {
+        if (direction > 0) return _s.trend.upColor;
+        if (direction < 0) return _s.trend.downColor;
+        return _s.trend.flatColor;
+    };
+
     const paintTrend = function (direction) {
-        const color = (direction > 0) ? _s.trend.upColor : (direction < 0) ? _s.trend.downColor : _s.trend.flatColor;
+        const color = getTrendColor(direction);
         box.lblTrend.textColor = color;
-        box.lblTrend.elem.style.backgroundColor = SparkLineBox.withAlpha(color, _s.trend.backgroundOpacity);
+        box.lblTrend.css.backgroundColor = SparkLineBox.withAlpha(color, _s.trend.backgroundOpacity);
     };
 
     // *** HOVER (tooltip):
@@ -387,12 +436,14 @@ const SparkLineBox = function (params = {}) {
         if (!p) return hideHover();
         hoverIndex = index;
 
-        hoverLine.setAttribute("x1", p.x); hoverLine.setAttribute("x2", p.x);
-        hoverLine.setAttribute("y1", 0); hoverLine.setAttribute("y2", _s.graph.height);
-        hoverLine.style.display = "";
-        hoverDot.setAttribute("cx", p.x); hoverDot.setAttribute("cy", p.y);
+        hoverLine.setAttribute("x1", p.x);
+        hoverLine.setAttribute("x2", p.x);
+        hoverLine.setAttribute("y1", 0);
+        hoverLine.setAttribute("y2", _s.graph.height);
+        setShown(hoverLine, 1);
+        placeDot(hoverDot, p);
         hoverDot.setAttribute("fill", p.item.color || box.lineColor);
-        hoverDot.style.display = "";
+        setShown(hoverDot, 1);
 
         box.lblTooltip.text = box.valueFormat(p.item.value, p.item);
         box.lblTooltip.visible = 1;
@@ -400,16 +451,17 @@ const SparkLineBox = function (params = {}) {
         const tipWidth = box.lblTooltip.elem.offsetWidth;
         const graphTop = box.elem.clientHeight - _s.graph.height;
         let left = p.x - tipWidth / 2;
-        left = Math.max(2, Math.min(left, box.elem.clientWidth - tipWidth - 2));
+        left = Math.max(TOOLTIP_EDGE_SPACE, Math.min(left, box.elem.clientWidth - tipWidth - TOOLTIP_EDGE_SPACE));
         box.lblTooltip.left = Math.round(left);
-        box.lblTooltip.top = Math.max(2, Math.round(graphTop + p.y - box.lblTooltip.elem.offsetHeight - 8));
+        const top = Math.round(graphTop + p.y - box.lblTooltip.elem.offsetHeight - TOOLTIP_GAP);
+        box.lblTooltip.top = Math.max(TOOLTIP_EDGE_SPACE, top);
 
     };
 
     const hideHover = function () {
         hoverIndex = -1;
-        hoverLine.style.display = "none";
-        hoverDot.style.display = "none";
+        setShown(hoverLine, 0);
+        setShown(hoverDot, 0);
         box.lblTooltip.visible = 0;
     };
 
@@ -417,7 +469,7 @@ const SparkLineBox = function (params = {}) {
         if (box.hover != 1 || points.length == 0) return;
         const rect = box.elem.getBoundingClientRect();
         const x = withPageZoom(event.clientX - rect.left) - _s.graph.padding;
-        const slots = Math.max(2, num(box.maxPoints) || 2);
+        const slots = getSlotCount();
         const step = Math.max(1, (graphWidth - _s.graph.padding * 2) / (slots - 1));
         const index = Math.max(0, Math.min(points.length - 1, Math.round(x / step)));
         if (index !== hoverIndex) showHover(index);
@@ -493,13 +545,14 @@ const SparkLineBox = function (params = {}) {
 
     // 0: Auto
     box.setMaxValue = function (maxValue) {
-        box.maxValue = num(maxValue) || 0;
+        box.maxValue = basic.num(maxValue) || 0;
         draw(0);
     };
 
     // null: Auto
     box.setMinValue = function (minValue) {
-        box.minValue = (minValue === null || minValue === undefined || minValue === "") ? null : num(minValue) || 0;
+        const isAuto = (minValue === null || minValue === undefined || minValue === "");
+        box.minValue = (isAuto) ? null : basic.num(minValue) || 0;
         draw(0);
     };
 
@@ -510,7 +563,7 @@ const SparkLineBox = function (params = {}) {
     };
 
     box.setMaxPoints = function (maxPoints) {
-        box.maxPoints = Math.max(2, num(maxPoints) || 2);
+        box.maxPoints = Math.max(2, basic.num(maxPoints) || 2);
         trimValues();
         draw(0);
     };
@@ -530,28 +583,37 @@ const SparkLineBox = function (params = {}) {
         height: _s.graph.height,
         color: "transparent",
     });
-    box.graphBox.elem.style.top = "auto";
-    box.graphBox.elem.style.bottom = "0px";
-    box.graphBox.elem.style.lineHeight = "0";
+    box.graphBox.css = { top: "auto", bottom: "0px", lineHeight: "0" };
 
     // SVG: line, area, dots
-    svg = createSvgElement("svg", { width: "100%", height: _s.graph.height, viewBox: "0 0 200 " + _s.graph.height, preserveAspectRatio: "none" });
+    svg = createSvgElement("svg", {
+        width: "100%",
+        height: _s.graph.height,
+        viewBox: "0 0 200 " + _s.graph.height,
+        preserveAspectRatio: "none",
+    });
     svg.style.display = "block";
     svg.style.overflow = "visible";
     svg.setAttribute("aria-hidden", "true");
 
     areaPath = createSvgElement("path", { fill: box.lineColor, "fill-opacity": _s.graph.areaOpacity, stroke: "none" });
-    linePath = createSvgElement("path", { fill: "none", stroke: box.lineColor, "stroke-width": _s.graph.lineWidth, "stroke-linecap": "round", "stroke-linejoin": "round" });
+    linePath = createSvgElement("path", {
+        fill: "none",
+        stroke: box.lineColor,
+        "stroke-width": _s.graph.lineWidth,
+        "stroke-linecap": "round",
+        "stroke-linejoin": "round",
+    });
     linePath.setAttribute("vector-effect", "non-scaling-stroke");
     hoverLine = createSvgElement("line", { stroke: _s.tooltip.lineColor, "stroke-width": 1, "stroke-dasharray": "2 2" });
     hoverLine.style.display = "none";
-    minDot = createSvgElement("circle", { r: _s.graph.minMaxDotRadius, fill: _s.graph.minMaxColor, stroke: "white", "stroke-width": 1 });
-    maxDot = createSvgElement("circle", { r: _s.graph.minMaxDotRadius, fill: _s.graph.minMaxColor, stroke: "white", "stroke-width": 1 });
-    lastDot = createSvgElement("circle", { r: _s.graph.dotRadius, fill: box.lineColor, stroke: "white", "stroke-width": 1.5 });
-    hoverDot = createSvgElement("circle", { r: _s.graph.dotRadius + 1, fill: box.lineColor, stroke: "white", "stroke-width": 1.5 });
+    minDot = createSvgElement("circle", { r: _s.graph.minMaxDotRadius, fill: _s.graph.minMaxColor, stroke: _s.graph.dotRingColor, "stroke-width": 1 });
+    maxDot = createSvgElement("circle", { r: _s.graph.minMaxDotRadius, fill: _s.graph.minMaxColor, stroke: _s.graph.dotRingColor, "stroke-width": 1 });
+    lastDot = createSvgElement("circle", { r: _s.graph.dotRadius, fill: box.lineColor, stroke: _s.graph.dotRingColor, "stroke-width": 1.5 });
+    hoverDot = createSvgElement("circle", { r: _s.graph.dotRadius + 1, fill: box.lineColor, stroke: _s.graph.dotRingColor, "stroke-width": 1.5 });
     hoverDot.style.display = "none";
 
-    [areaPath, linePath, hoverLine, minDot, maxDot, lastDot, hoverDot].forEach(function (el) { svg.appendChild(el); });
+    [areaPath, linePath, hoverLine, minDot, maxDot, lastDot, hoverDot].forEach(function (element) { svg.appendChild(element); });
     box.graphBox.elem.appendChild(svg);
 
     // GROUP: Title and value text (left top)
@@ -566,8 +628,8 @@ const SparkLineBox = function (params = {}) {
             fontSize: _s.title.fontSize,
             textColor: _s.title.textColor,
         });
-        box.lblTitle.elem.style.whiteSpace = "nowrap";
-        box.lblTitle.elem.style.marginBottom = "-6px"; // WHY: Line heights of the two texts leave a big space between them.
+        // WHY: marginBottom: Line heights of the two texts leave a big space between them.
+        box.lblTitle.css = { whiteSpace: "nowrap", marginBottom: "-6px" };
 
         // GROUP: Value text and trend badge
         HGroup({ width: "auto", height: "auto", align: "left center", gap: 6 });
@@ -577,7 +639,7 @@ const SparkLineBox = function (params = {}) {
                 fontSize: _s.valueText.fontSize,
                 textColor: _s.valueText.textColor,
             });
-            box.lblValueText.elem.style.whiteSpace = "nowrap";
+            box.lblValueText.css.whiteSpace = "nowrap";
 
             box.lblTrend = Label({
                 text: "",
@@ -586,9 +648,8 @@ const SparkLineBox = function (params = {}) {
                 round: _s.trend.round,
                 padding: _s.trend.padding,
             });
-            box.lblTrend.elem.style.whiteSpace = "nowrap";
-            box.lblTrend.elem.style.lineHeight = "1.5";
-            box.lblTrend.elem.style.marginTop = "4px"; // WHY: Lines up with the middle of the big value text.
+            // WHY: marginTop: Lines up with the middle of the big value text.
+            box.lblTrend.css = { whiteSpace: "nowrap", lineHeight: "1.5", marginTop: "4px" };
 
         endGroup();
 
@@ -618,9 +679,7 @@ const SparkLineBox = function (params = {}) {
         round: _s.tooltip.round,
         padding: _s.tooltip.padding,
     });
-    box.lblTooltip.elem.style.whiteSpace = "nowrap";
-    box.lblTooltip.elem.style.lineHeight = "1.4";
-    box.lblTooltip.elem.style.pointerEvents = "none";
+    box.lblTooltip.css = { whiteSpace: "nowrap", lineHeight: "1.4", pointerEvents: "none" };
     box.lblTooltip.visible = 0;
 
     // *** OBJECT INIT CODE:
@@ -628,7 +687,7 @@ const SparkLineBox = function (params = {}) {
     box.on("click", function () { box.onClick(box); });
     box.on("mousemove", onMouseMove);
     box.on("mouseleave", function () { hideHover(); });
-    box.elem.style.cursor = "default";
+    box.cursor = "default";
     box.clickable = 1; // WHY: mousemove needs pointer events.
 
     box.setIcon(box.iconFile);
@@ -639,7 +698,10 @@ const SparkLineBox = function (params = {}) {
 
     box.onResize(function () {
         if (cancelResize) cancelResize();
-        cancelResize = box.after(30, function () { cancelResize = null; refreshSize(); });
+        cancelResize = box.after(RESIZE_WAIT, function () {
+            cancelResize = null;
+            refreshSize();
+        });
     });
 
     return endObject(box);
@@ -653,11 +715,11 @@ SparkLineBox._alphaCache = {};
 SparkLineBox.withAlpha = function (color, alpha) {
     const key = color + "|" + alpha;
     if (SparkLineBox._alphaCache[key]) return SparkLineBox._alphaCache[key];
-    const el = document.createElement("div");
-    el.style.color = color;
-    document.body.appendChild(el);
-    const rgb = getComputedStyle(el).color; // "rgb(r, g, b)" or "rgba(r, g, b, a)"
-    el.remove();
+    const probe = document.createElement("div");
+    probe.style.color = color;
+    document.body.appendChild(probe);
+    const rgb = getComputedStyle(probe).color; // "rgb(r, g, b)" or "rgba(r, g, b, a)"
+    probe.remove();
     const parts = rgb.match(/[\d.]+/g) || [0, 0, 0];
     SparkLineBox._alphaCache[key] = "rgba(" + parts[0] + ", " + parts[1] + ", " + parts[2] + ", " + alpha + ")";
     return SparkLineBox._alphaCache[key];

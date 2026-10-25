@@ -76,7 +76,7 @@ const TextareaB = function(params = {}) {
     // Auto height
     const autoGrow = function(elem) {
         elem.style.height = "auto";                // önce sıfırla
-        //elem.style.height = (num(elem.scrollHeight) - 4) + "px"; // sonra içeriğe göre ayarla
+        //elem.style.height = (basic.num(elem.scrollHeight) - 4) + "px"; // sonra içeriğe göre ayarla
         elem.style.height = elem.scrollHeight + "px";
         elem.style.minHeight = "";
         //box.inputBox.scrollBar.refreshScroll();

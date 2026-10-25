@@ -175,10 +175,10 @@ btn.on("click", function(self, event) {
 ### Global Functions
 - `println(message, type)`: Safe console logging.
 - `random(min, max)`: Random integer.
-- `num(str)`: Parse float/int.
-- `str(num)`: Convert to string.
-- `isMobile()`: Returns 1 if mobile device.
-- `go(url)`: Navigate to URL.
+- `basic.num(str)`: Parse float/int.
+- `basic.str(num)`: Convert to string.
+- `basic.isMobile()`: Returns 1 if mobile device.
+- `basic.go(url)`: Navigate to URL.
 - `wait(ms, func)`: (Implied from common patterns, though not explicitly in snippet, standard JS `setTimeout` is often used, but `loop` is preferred for game loops).
 
 ### Global Objects

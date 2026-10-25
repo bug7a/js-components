@@ -96,11 +96,7 @@ const GaugeDefaults = {
 const Gauge = function (params = {}) {
 
     // Merge style package: params.style > Gauge.styles[styleName] > GaugeDefaults.style (classic)
-    // WHY: Before the defaults. mergeIntoIfMissing() only fills what is missing, so the classic
-    //      style of the defaults would win over the chosen package.
-    const _stylePackage = Gauge.styles[params.styleName || GaugeDefaults.styleName];
-    if (!_stylePackage) console.warn("Gauge: Style package not found: " + params.styleName);
-    mergeIntoIfMissing(params, { style: _stylePackage || {} });
+    basic.applyStylePackage(params, Gauge.styles, GaugeDefaults);
 
     // Merge params:
     mergeIntoIfMissing(params, GaugeDefaults);
@@ -115,6 +111,15 @@ const Gauge = function (params = {}) {
 
     let svg = null;             // The <svg> element
     let elements = {};          // bar, marker, value, sub, title
+    const FULL_RING_SWEEP = 359.9; // WHY: A sweep this big is drawn as a full ring (rounding of the angles).
+    const VIEW_PADDING = 2; // Extra room around the arc in the viewBox.
+    const TEXT_BOTTOM_ROOM = 4; // Room under the baseline of a text.
+    const SUB_GAP = 8; // Space between the value and the line under it.
+    const RING_VALUE_SHIFT = 0.35; // x the font size: down, to the middle of a ring.
+    const ARC_VALUE_SHIFT = 0.25; // x the font size: up, over the chord of an arc.
+    const TITLE_BOTTOM_ROOM = 0.4; // x the font size of the title.
+    const MARKER_DURATION_RATIO = 0.7; // x duration: the marker turns a bit faster than the bar.
+    const COLOR_DURATION_RATIO = 0.6; // x duration: the color change of the bar.
 
     // *** PRIVATE FUNCTIONS:
 
@@ -124,12 +129,14 @@ const Gauge = function (params = {}) {
         return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
     };
 
+    const isFullRing = function (sweep) {
+        return Math.abs(sweep) >= FULL_RING_SWEEP;
+    };
+
     // The path of the arc. A full circle can not be drawn with one A command, it takes two.
     const arcPath = function (cx, cy, r, start, sweep) {
 
-        const isFull = Math.abs(sweep) >= 359.9;
-
-        if (isFull) {
+        if (isFullRing(sweep)) {
             const a = pointOf(cx, cy, r, start);
             const b = pointOf(cx, cy, r, start + 180);
             return "M" + a.x.toFixed(2) + " " + a.y.toFixed(2) +
@@ -184,66 +191,102 @@ const Gauge = function (params = {}) {
         return Number(box.value).toFixed(box.decimals) + box.valueSuffix;
     };
 
-    // Writes the whole SVG again. (Only when a size or a style changed.)
-    const build = function () {
+    // The y of the value text, from the middle of the arc.
+    const valueOffsetOf = function () {
+        if (_s.value.offsetY !== null) return _s.value.offsetY;
+        if (isFullRing(box.sweepAngle)) return _s.value.fontSize * RING_VALUE_SHIFT;
+        return -_s.value.fontSize * ARC_VALUE_SHIFT;
+    };
+
+    const subOffsetOf = function (valueOffset) {
+        if (_s.sub.offsetY !== null) return _s.sub.offsetY;
+        return valueOffset + _s.sub.fontSize + SUB_GAP;
+    };
+
+    // The viewBox and the places of the texts.
+    const measureView = function (cx, cy) {
 
         const r = box.radius;
         const strokeMax = Math.max(_s.track.width, _s.bar.width);
-        const pad = strokeMax / 2 + ((box.markerValue === null) ? 0 : _s.marker.length / 2) + 2;
+        const markerRoom = (box.markerValue === null) ? 0 : _s.marker.length / 2;
+        const pad = strokeMax / 2 + markerRoom + VIEW_PADDING;
 
-        const cx = 0, cy = 0;
         const bounds = arcBounds(cx, cy, r, box.startAngle, box.sweepAngle);
 
-        const minX = bounds.minX - pad;
-        const maxX = bounds.maxX + pad;
-        const minY = bounds.minY - pad;
-        let maxY = bounds.maxY + pad;
+        const view = {
+            minX: bounds.minX - pad,
+            maxX: bounds.maxX + pad,
+            minY: bounds.minY - pad,
+            maxY: bounds.maxY + pad,
+            valueOffset: valueOffsetOf(),
+            subOffset: 0,
+            titleY: 0,
+        };
+        view.subOffset = subOffsetOf(view.valueOffset);
 
         // The texts live around the middle of the arc, they can be lower than the arc itself.
-        const valueOffset = (_s.value.offsetY !== null) ? _s.value.offsetY
-            : (Math.abs(box.sweepAngle) >= 359.9) ? _s.value.fontSize * 0.35 : -_s.value.fontSize * 0.25;
-        const subOffset = (_s.sub.offsetY !== null) ? _s.sub.offsetY : valueOffset + _s.sub.fontSize + 8;
+        if (box.subText) view.maxY = Math.max(view.maxY, cy + view.subOffset + TEXT_BOTTOM_ROOM);
+        if (box.valueText !== "" || box.value !== null) view.maxY = Math.max(view.maxY, cy + view.valueOffset + TEXT_BOTTOM_ROOM);
 
-        if (box.subText) maxY = Math.max(maxY, cy + subOffset + 4);
-        if (box.valueText !== "" || box.value !== null) maxY = Math.max(maxY, cy + valueOffset + 4);
-
-        let titleY = 0;
         if (box.titleText) {
-            titleY = maxY + _s.title.gap;
-            maxY = titleY + _s.title.fontSize * 0.4;
+            view.titleY = view.maxY + _s.title.gap;
+            view.maxY = view.titleY + _s.title.fontSize * TITLE_BOTTOM_ROOM;
         }
 
-        const path = arcPath(cx, cy, r, box.startAngle, box.sweepAngle);
-        const cap = (_s.bar.roundCap) ? "round" : "butt";
-        const titleColor = _s.title.textColor || _s.bar.color;
+        return view;
 
-        // The marker is drawn at the top and turned to its own angle.
-        const markerHtml = (box.markerValue === null) ? "" :
-            "<line class='gauge-marker' x1='" + cx + "' y1='" + (cy - r - _s.marker.length / 2) + "' x2='" + cx + "' y2='" + (cy - r + _s.marker.length / 2) + "'" +
+    };
+
+    // The marker is drawn at the top and turned to its own angle.
+    const markerHtmlOf = function (cx, cy) {
+
+        if (box.markerValue === null) return "";
+
+        const r = box.radius;
+        return "<line class='gauge-marker' x1='" + cx + "' y1='" + (cy - r - _s.marker.length / 2) + "' x2='" + cx + "' y2='" + (cy - r + _s.marker.length / 2) + "'" +
             " stroke='" + _s.marker.color + "' stroke-width='" + _s.marker.width + "' stroke-linecap='round'" +
-            " style='transition: transform " + (box.duration * 0.7) + "ms'/>";
+            " style='transition: transform " + (box.duration * MARKER_DURATION_RATIO) + "ms'/>";
+
+    };
+
+    const titleHtmlOf = function (cx, titleY) {
+
+        if (!box.titleText) return "";
+
+        const titleColor = _s.title.textColor || _s.bar.color;
+        return "<text class='gauge-title' x='" + cx + "' y='" + titleY + "' text-anchor='middle'" +
+            " style='fill:" + titleColor + "; font-size:" + _s.title.fontSize + "px'></text>";
+
+    };
+
+    // Writes the whole SVG again. (Only when a size or a style changed.)
+    const build = function () {
+
+        const cx = 0, cy = 0;
+        const view = measureView(cx, cy);
+
+        const path = arcPath(cx, cy, box.radius, box.startAngle, box.sweepAngle);
+        const cap = (_s.bar.roundCap) ? "round" : "butt";
 
         box.elem.innerHTML =
-            "<svg viewBox='" + minX.toFixed(2) + " " + minY.toFixed(2) + " " + (maxX - minX).toFixed(2) + " " + (maxY - minY).toFixed(2) + "'" +
+            "<svg viewBox='" + view.minX.toFixed(2) + " " + view.minY.toFixed(2) + " " + (view.maxX - view.minX).toFixed(2) + " " + (view.maxY - view.minY).toFixed(2) + "'" +
             " style='display:block; width:100%; height:100%; overflow:visible' role='img' aria-label='" + box.ariaLabel + "'>" +
 
                 "<path d='" + path + "' fill='none' stroke='" + _s.track.color + "' stroke-width='" + _s.track.width + "' stroke-linecap='" + cap + "'/>" +
 
                 "<path class='gauge-bar' d='" + path + "' fill='none' stroke='" + _s.bar.color + "' stroke-width='" + _s.bar.width + "'" +
                 " stroke-linecap='" + cap + "' pathLength='100' stroke-dasharray='0 100'" +
-                " style='transition: stroke-dasharray " + box.duration + "ms, stroke " + (box.duration * 0.6) + "ms'/>" +
+                " style='transition: stroke-dasharray " + box.duration + "ms, stroke " + (box.duration * COLOR_DURATION_RATIO) + "ms'/>" +
 
-                markerHtml +
+                markerHtmlOf(cx, cy) +
 
-                "<text class='gauge-value' x='" + cx + "' y='" + (cy + valueOffset) + "' text-anchor='middle'" +
+                "<text class='gauge-value' x='" + cx + "' y='" + (cy + view.valueOffset) + "' text-anchor='middle'" +
                 " style='fill:" + _s.value.textColor + "; font-size:" + _s.value.fontSize + "px;" + ((_s.value.bold) ? " font-weight:bold;" : "") + "'></text>" +
 
-                "<text class='gauge-sub' x='" + cx + "' y='" + (cy + subOffset) + "' text-anchor='middle'" +
+                "<text class='gauge-sub' x='" + cx + "' y='" + (cy + view.subOffset) + "' text-anchor='middle'" +
                 " style='fill:" + _s.sub.textColor + "; font-size:" + _s.sub.fontSize + "px'></text>" +
 
-                ((box.titleText) ?
-                    "<text class='gauge-title' x='" + cx + "' y='" + titleY + "' text-anchor='middle'" +
-                    " style='fill:" + titleColor + "; font-size:" + _s.title.fontSize + "px'></text>" : "") +
+                titleHtmlOf(cx, view.titleY) +
 
             "</svg>";
 
@@ -289,7 +332,11 @@ const Gauge = function (params = {}) {
     box.setMarkerValue = function (value) {
         const wasOff = (box.markerValue === null);
         box.markerValue = value;
-        if (wasOff !== (value === null)) { build(); return; } // The marker appeared or went away.
+        const isOff = (value === null);
+        if (wasOff !== isOff) {
+            build(); // The marker appeared or went away.
+            return;
+        }
         paint();
     };
 
@@ -312,14 +359,20 @@ const Gauge = function (params = {}) {
     box.setSubText = function (text) {
         const wasEmpty = !box.subText;
         box.subText = text;
-        if (wasEmpty !== !text) { build(); return; } // The drawing area changes with it.
+        if (wasEmpty !== !text) {
+            build(); // The drawing area changes with it.
+            return;
+        }
         paint();
     };
 
     box.setTitleText = function (text) {
         const wasEmpty = !box.titleText;
         box.titleText = text;
-        if (wasEmpty !== !text) { build(); return; }
+        if (wasEmpty !== !text) {
+            build();
+            return;
+        }
         paint();
     };
 
@@ -348,6 +401,11 @@ const Gauge = function (params = {}) {
 };
 
 // *** STYLE PACKAGES:
+// USAGE: Gauge({ styleName: "dark" })
+// USAGE: Gauge({ styleName: "dark", style: { track: { color: "tomato" } } }) // Change only some keys.
+// USAGE: Gauge({ style: Gauge.styles.dark }) // The same as styleName: "dark". (The package is copied, never changed.)
+// NOTE: A new package needs only the keys that differ from the default (classic) style.
+// USAGE: Gauge.styles.myStyle = { track: { color: "red" } };
 
 Gauge.styles = {
 

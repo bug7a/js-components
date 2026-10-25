@@ -30,11 +30,11 @@
         window.onload = function() {
 
             // BOX: Container for uiSearchBox1
-            box1 = createBox(0, 0, getDefaultContainerBox().width, getDefaultContainerBox().height / 2);
+            box1 = Box(0, 0, getDefaultContainerBox().width, getDefaultContainerBox().height / 2);
             that.color = "#5ABB9F";
 
             // BOX: Container for uiSearchBox2
-            box2 = createBox(0, 0, box1.width, box1.height);
+            box2 = Box(0, 0, box1.width, box1.height);
             that.color = "white";
             that.top = box1.height;
 

@@ -13,8 +13,9 @@ UI COMPONENT TEMPLATE
   - STYLE PACKAGES: styleName "light" / "dark" (CompName.styles). params.style > the package > CompNameDefaults.style.
   - LAYOUT: box.layout is the group that places the parts of the component.
   - STATE: box.state ("normal", "hover", "pressed", "selected", "disabled") is decided in one place (getState).
-  - DRAWING: three functions, each named by its one job: createItems() (the objects made from the data),
-    applyContent() (the texts, the icon, the badge), paint() (the look of the state). drawAll() calls the three.
+  - DRAWING: functions named by their one job: createItems() (the objects made from the data; one object:
+    createItem(), so addItem() adds one without making the others again), applyContent() (the texts, the icon,
+    the badge), paint() (the look of the state), refreshLayout() (what depends on the sizes). drawAll() calls them.
   - SETTERS: a value is changed after create with a setX() function that calls only the drawing function it needs.
   - EVENTS: onClick, onChange (onChange is NOT called at create time or with silent: 1).
   - OBJECTS ADDED LATER: createIn(container, fn) (it puts the container back, also on an error).
@@ -38,6 +39,7 @@ const card = CompName({
 card.setText("Orders", "15 new orders today");
 card.setBadge("");              // no badge
 card.setItems(["A", "B", "C"]);
+card.addItem("D");
 card.setSelected(1, 1);         // silent: onChange is not called
 card.setEnabled(0);
 CompName({ styleName: "dark", labelText: "On a dark page" });
@@ -151,29 +153,39 @@ const CompName = function (params = {}) {
     };
 
     // DRAWING: each function does one job, and a change calls only the one it needs:
-    // createItems()  -> the objects made from the data are made again   (setItems)
-    // applyContent() -> the texts, the icon, the badge                    (setText, setBadge, setIcon)
-    // paint()        -> the colors and the look of the state              (hover, pressed, selected, enabled)
+    // createItems()   -> the objects made from the data are made again    (setItems)
+    // createItem()    -> one object of the data (createItems, addItem)     (addItem: the others are kept)
+    // applyContent()  -> the texts, the icon, the badge                     (setText, setBadge, setIcon)
+    // paint()         -> the colors and the look of the state               (hover, pressed, selected, enabled)
+    // refreshLayout() -> what depends on the sizes (measured, after the objects are placed)   (resize)
+    // drawAll()       -> all of them                                        (the first drawing, box.refresh)
     // WHY: A cheap change (the mouse on it) only paints; nothing is made again for it.
+    // NOTE: When a change must update more than the look (Ex: Tabs: the indicator, the panel, the Tab order),
+    //       one function shows it everywhere (Tabs: showActiveTab), so no setter can forget a part.
+
+    // DATA: one item. Its container must be set. (createIn)
+    const createItem = function (text) {
+        const lbl = Label({ plainText: String(text), ..._s.item });
+        lbl.css = { padding: "1px 7px", whiteSpace: "nowrap" };
+        lbl.shrink = 0;
+        return lbl;
+    };
 
     // DATA: the items (made again in their own group)
     const createItems = function () {
         if (box.itemsGroup) box.itemsGroup.remove();
-        box.itemList = [];
         // WHY: createIn() puts the container back after it (also on an error). setDefaultContainerBox() does not:
         //      the next objects of the page would go into this component.
-        createIn(box.texts, function () {
-            box.itemsGroup = HGroup({ width: "100%", height: "auto", gap: 4, align: "left center", wrap: 1, position: "relative" });
-                box.items.forEach(function (text) {
-                    const lbl = Label({ plainText: String(text), ..._s.item });
-                    lbl.css = { padding: "1px 7px", whiteSpace: "nowrap" };
-                    lbl.shrink = 0;
-                    box.itemList.push(lbl);
-                });
+        box.itemsGroup = createIn(box.texts, function () {
+            const group = HGroup({ width: "100%", height: "auto", gap: 4, align: "left center", wrap: 1, position: "relative" });
             endGroup();
-            box.itemsGroup.css.marginTop = "4px";
-            box.itemsGroup.visible = (box.items.length) ? 1 : 0; // WHY: Hidden after its children are created.
+            return group;
         });
+        box.itemsGroup.css.marginTop = "4px";
+        box.itemList = box.items.map(function (text) {
+            return createIn(box.itemsGroup, function () { return createItem(text); });
+        });
+        box.itemsGroup.visible = (box.items.length) ? 1 : 0; // WHY: Hidden after its children are created.
     };
 
     // CONTENT: the texts, the icon, the badge
@@ -209,10 +221,12 @@ const CompName = function (params = {}) {
         createItems();
         applyContent();
         paint();
+        refreshLayout();
     };
 
-    // A GLOBAL EVENT: a narrow page makes the card smaller. (box.onPageResize: basic.js removes it with the box)
-    const onPageResize = function () {
+    // LAYOUT: what depends on the sizes. Here: a narrow page makes the gap smaller.
+    // NOTE: Called by a size change (box.onPageResize, box.onResize), not by paint(): a hover must not measure.
+    const refreshLayout = function () {
         if (!box) return;
         box.layout.gap = (page.width < NARROW_PAGE_WIDTH) ? NARROW_GAP : _s.layout.gap;
     };
@@ -243,6 +257,14 @@ const CompName = function (params = {}) {
         createItems();
     };
     // USAGE: card.setItems(["Today", "Paid"])
+
+    // One more item at the end. The other items are not made again.
+    box.addItem = function (text) {
+        box.items.push(text);
+        box.itemsGroup.visible = 1; // WHY: Before the new item: an object made in a hidden group is not a flex item.
+        box.itemList.push(createIn(box.itemsGroup, function () { return createItem(text); }));
+    };
+    // USAGE: card.addItem("New")
 
     // silent: 1 -> onChange is not called.
     box.setSelected = function (value, silent = 0) {
@@ -357,10 +379,10 @@ const CompName = function (params = {}) {
         }
     });
 
-    box.onPageResize(onPageResize);
-    onPageResize();
+    // A GLOBAL EVENT: box.onPageResize() is removed by basic.js with the box.
+    box.onPageResize(refreshLayout);
 
-    drawAll(); // NOTE: The first drawing: the items, the content and the look.
+    drawAll(); // NOTE: The first drawing: the items, the content, the look and the layout.
 
     return endObject(box);
 

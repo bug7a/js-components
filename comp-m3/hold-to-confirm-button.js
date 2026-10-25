@@ -267,7 +267,7 @@ const HoldToConfirmButton = function (params = {}) {
         // Because, we cant use box.maskBox.width for an animated object.
         const stil = window.getComputedStyle(box.maskBox.elem);
         const genislik = stil.getPropertyValue('width');
-        box.redBorder.left = num(genislik) - 2;
+        box.redBorder.left = basic.num(genislik) - 2;
     });
 
     const _syncLayout = function (self = box.contentBox) {

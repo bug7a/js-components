@@ -413,7 +413,7 @@ const TopBar = function(params = {}) {
         that.onSelect = function(index, id) {
             if (isRendering) return;
             const panel = PANELS[index];
-            if (panel && panel.url) go(panel.url); // USAGE: go(url, "_blank") opens it in a new tab.
+            if (panel && panel.url) basic.go(panel.url); // USAGE: basic.go(url, "_blank") opens it in a new tab.
         };
 
         // EXAMPLE: How to use a Dialog

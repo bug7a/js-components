@@ -49,7 +49,7 @@ const UIProgressBar = {};
 UIProgressBar.create = function(left = -1000, top = -1000, width = 300, height = 40) {
 
     // BOX: UI object container.
-    const box = createBox(left, top, width, height);
+    const box = Box(left, top, width, height);
 
     box.color = "transparent";
     box.element.style.overflow = "visible";
@@ -57,7 +57,7 @@ UIProgressBar.create = function(left = -1000, top = -1000, width = 300, height =
     box.height = height;
 
     // BOX: Background box.
-    box.boxBack = createBox(0, 0, width, height);
+    box.boxBack = Box(0, 0, width, height);
     box.add(that);
     that.color = "white";
     that.border = 3;
@@ -65,14 +65,14 @@ UIProgressBar.create = function(left = -1000, top = -1000, width = 300, height =
     that.round = 14;
 
     // BOX: Progress container.
-    box.boxMask = createBox(0, 0, width, height);
+    box.boxMask = Box(0, 0, width, height);
     box.add(that);
     that.color = "transparent";
     that.border = 0;
     that.round = 14;
 
     // BOX: Progress inside color box.
-    box.boxMask.boxProgress = createBox(0, 0, width, height);
+    box.boxMask.boxProgress = Box(0, 0, width, height);
     box.boxMask.add(that);
     that.color = "#40A5AF";
     that.round = 14;
@@ -81,7 +81,7 @@ UIProgressBar.create = function(left = -1000, top = -1000, width = 300, height =
     // that.setMotion("width 0.3s, opacity 0.3s, background-color 0.3s");
 
     // BOX: Progress border color box.
-    box.boxMask.boxProgressBorder = createBox(0, 0, width, height);
+    box.boxMask.boxProgressBorder = Box(0, 0, width, height);
     box.boxMask.add(that);
     that.color = "transparent";
     that.border = 3;
@@ -91,7 +91,7 @@ UIProgressBar.create = function(left = -1000, top = -1000, width = 300, height =
     // that.setMotion("width 0.3s, opacity 0.3s, background-color 0.3s");
 
     // BOX: Limit line box.
-    box.boxLimitLine = createBox(0, -4, 4, height + 8);
+    box.boxLimitLine = Box(0, -4, 4, height + 8);
     box.add(that);
     that.color = "rgba(0, 0, 0, 0.7)";
     that.round = 2;
@@ -100,7 +100,7 @@ UIProgressBar.create = function(left = -1000, top = -1000, width = 300, height =
     // that.setMotion("left 0.3s, opacity 0.3s");
 
     // LABEL: Limit line label.
-    box.lblLimitLine = createLabel(0, 0, "auto", "auto");
+    box.lblLimitLine = Label(0, 0, "auto", "auto");
     box.add(that);
     that.text = "0";
     that.textColor = "rgba(0, 0, 0, 0.7)";

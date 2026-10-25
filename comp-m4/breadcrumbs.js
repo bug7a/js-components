@@ -103,8 +103,8 @@ const Breadcrumbs = function (params = {}) {
 
     // *** PRIVATE FUNCTIONS:
 
-    // Create objects inside a container, after the component is created.
-    const createIn = function (container, func) {
+    // WHY: Not the createIn() of basic.js: render() needs the start stack of the caller (see its WHY line).
+    const createPartsIn = function (container, func) {
         const previous = getDefaultContainerBox();
         setDefaultContainerBox(container);
         func();
@@ -141,8 +141,19 @@ const Breadcrumbs = function (params = {}) {
 
     // style.item.padding: 4 or [x, y] -> [x, y]
     const getPadding = function () {
-        const p = _s.item.padding;
-        return (Array.isArray(p)) ? [p[0], (p.length > 1) ? p[1] : p[0]] : [num(p) || 0, num(p) || 0];
+        const padding = _s.item.padding;
+        if (!Array.isArray(padding)) {
+            const size = basic.num(padding) || 0;
+            return [size, size];
+        }
+        const paddingY = (padding.length > 1) ? padding[1] : padding[0];
+        return [padding[0], paddingY];
+    };
+
+    // CSS padding text: "3px 6px"
+    const getPaddingCss = function () {
+        const padding = getPadding();
+        return padding[1] + "px " + padding[0] + "px";
     };
 
     const setItemHover = function (itemBox, isOver) {
@@ -155,21 +166,21 @@ const Breadcrumbs = function (params = {}) {
     const addFocusRing = function (obj) {
         obj.on("focus", function () {
             if (obj.elem.matches(":focus-visible")) {
-                obj.elem.style.boxShadow = "0 0 0 2px " + _s.focus.color;
+                obj.boxShadow = "0 0 0 2px " + _s.focus.color;
             }
         });
         obj.on("blur", function () {
-            obj.elem.style.boxShadow = "none";
+            obj.boxShadow = "none";
         });
     };
 
     // Makes an object work like a link: role, tab, Enter/Space.
     const makeClickable = function (obj, func) {
 
-        obj.elem.setAttribute("role", "link");
-        obj.elem.tabIndex = (box.enabled == 1) ? 0 : -1;
-        obj.elem.style.cursor = (box.enabled == 1) ? "pointer" : "default";
-        obj.elem.style.outline = "none";
+        obj.role = "link";
+        obj.tabIndex = (box.enabled == 1) ? 0 : -1;
+        obj.cursor = (box.enabled == 1) ? "pointer" : "default";
+        obj.css.outline = "none";
         obj.clickable = 1;
 
         obj.on("click", function (self, event) {
@@ -201,26 +212,27 @@ const Breadcrumbs = function (params = {}) {
                 height: size,
                 color: "transparent",
             });
-            sep.elem.style.borderTop = "1.5px solid " + _s.separator.textColor;
-            sep.elem.style.borderRight = "1.5px solid " + _s.separator.textColor;
-            sep.elem.style.transform = "rotate(45deg)";
-            sep.elem.style.margin = "0 " + Math.round(size / 2 + 2) + "px 0 " + Math.round(size / 2) + "px";
+            sep.css = {
+                borderTop: "1.5px solid " + _s.separator.textColor,
+                borderRight: "1.5px solid " + _s.separator.textColor,
+                transform: "rotate(45deg)",
+                margin: "0 " + Math.round(size / 2 + 2) + "px 0 " + Math.round(size / 2) + "px",
+            };
 
         } else {
 
             // LABEL: Text separator
             sep = Label({
-                text: Breadcrumbs.escapeHtml(box.separator),
+                plainText: box.separator,
                 fontSize: _s.separator.fontSize,
                 textColor: _s.separator.textColor,
             });
-            sep.elem.style.whiteSpace = "nowrap";
-            sep.elem.style.padding = "0 2px";
+            sep.css = { whiteSpace: "nowrap", padding: "0 2px" };
 
         }
 
-        sep.elem.style.flexShrink = "0";
-        sep.elem.setAttribute("aria-hidden", "true"); // WHY: Screen readers should not read "/" between items.
+        sep.shrink = 0;
+        sep.aria = { hidden: "true" }; // WHY: Screen readers should not read "/" between items.
         return sep;
 
     };
@@ -234,10 +246,10 @@ const Breadcrumbs = function (params = {}) {
             color: _s.item.color,
             round: _s.item.round,
         });
-        btn.elem.style.padding = getPadding()[1] + "px " + getPadding()[0] + "px";
-        btn.elem.style.flexShrink = "0";
+        btn.css.padding = getPaddingCss();
+        btn.shrink = 0;
         btn.elem.title = "Show all";
-        btn.elem.setAttribute("aria-label", "Show all items");
+        btn.aria = { label: "Show all items" };
 
         makeClickable(btn, function () {
             box.expand();
@@ -271,9 +283,8 @@ const Breadcrumbs = function (params = {}) {
             color: _s.item.color,
             round: _s.item.round,
         });
-        itemBox.elem.style.padding = getPadding()[1] + "px " + getPadding()[0] + "px";
-        itemBox.elem.style.minWidth = "0";
-        itemBox.elem.style.flexShrink = (isCurrent) ? "1" : "0";
+        itemBox.css = { padding: getPaddingCss(), minWidth: "0" };
+        itemBox.shrink = (isCurrent) ? 1 : 0;
         itemBox.setMotion("background-color 0.15s");
         itemBox.item = item;
         itemBox.index = index;
@@ -284,29 +295,26 @@ const Breadcrumbs = function (params = {}) {
                     width: _s.icon.width,
                     height: _s.icon.height,
                 });
-                itemBox.icon.elem.style.flexShrink = "0";
+                itemBox.icon.shrink = 0;
                 itemBox.icon.elem.alt = "";
                 itemBox.icon.load(item.iconFile);
             }
 
             // LABEL: Text
             itemBox.label = Label({
-                text: Breadcrumbs.escapeHtml(item.text),
+                plainText: item.text,
                 fontSize: _s.item.fontSize,
                 textColor: (isCurrent) ? _s.current.textColor : _s.item.textColor,
             });
-            // NOTE: basic.js has no fontFamily setter. Set it on the element.
-            if (isCurrent && _s.current.fontFamily) itemBox.label.elem.style.fontFamily = _s.current.fontFamily;
-            itemBox.label.elem.style.whiteSpace = "nowrap";
-            itemBox.label.elem.style.overflow = "hidden";
-            itemBox.label.elem.style.textOverflow = "ellipsis";
-            if (box.maxItemWidth > 0) itemBox.label.elem.style.maxWidth = box.maxItemWidth + "px";
+            if (isCurrent && _s.current.fontFamily) itemBox.label.css.fontFamily = _s.current.fontFamily;
+            itemBox.label.ellipsis = 1;
+            if (box.maxItemWidth > 0) itemBox.label.css.maxWidth = box.maxItemWidth + "px";
             if (item.text) itemBox.elem.title = item.text; // Full text on mouse over
 
         endGroup();
 
         if (isCurrent) {
-            itemBox.elem.setAttribute("aria-current", "page");
+            itemBox.aria = { current: "page" };
         }
 
         if (isClickable) {
@@ -334,7 +342,7 @@ const Breadcrumbs = function (params = {}) {
         parts.forEach(function (obj) { obj.remove(); });
         parts = [];
 
-        createIn(box.content, function () {
+        createPartsIn(box.content, function () {
 
             getVisibleEntries().forEach(function (entry, i) {
 
@@ -360,8 +368,8 @@ const Breadcrumbs = function (params = {}) {
 
     const updateView = function () {
         box.opacity = (box.enabled == 1) ? 1 : _s.disabled.opacity;
-        box.content.elem.style.flexWrap = (box.wrap == 1) ? "wrap" : "nowrap";
-        box.elem.setAttribute("aria-disabled", (box.enabled == 1) ? "false" : "true");
+        box.content.css.flexWrap = (box.wrap == 1) ? "wrap" : "nowrap";
+        box.aria = { disabled: (box.enabled == 1) ? "false" : "true" };
     };
 
     const setItemsSilent = function (items) {
@@ -418,7 +426,7 @@ const Breadcrumbs = function (params = {}) {
         if (box.trimOnClick == 1) box.goTo(index);
 
         if (item.url && result !== false) {
-            go(item.url);
+            basic.go(item.url);
         }
 
     };
@@ -446,7 +454,7 @@ const Breadcrumbs = function (params = {}) {
     // USAGE: breadcrumbs.setSeparator("/") or breadcrumbs.setSeparator("chevron")
 
     box.setMaxItems = function (maxItems) {
-        box.maxItems = num(maxItems);
+        box.maxItems = basic.num(maxItems);
         isExpanded = 0;
         render();
     };
@@ -464,8 +472,8 @@ const Breadcrumbs = function (params = {}) {
 
     // *** OBJECT VIEW:
 
-    box.elem.setAttribute("role", "navigation");
-    box.elem.setAttribute("aria-label", box.ariaLabel);
+    box.role = "navigation";
+    box.aria = { label: box.ariaLabel };
 
     // GROUP: Items row (created by render)
     box.content = HGroup({

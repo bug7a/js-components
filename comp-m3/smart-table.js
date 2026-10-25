@@ -1064,12 +1064,12 @@ const SmartTable = function (params = {}) {
 
         if (titleDataList.length == 0) return 0;
 
-        // WHY: createTitleCell/createItemCell width yoksa 100 kullanıyor; burada da aynısı olmalı, yoksa num(undefined) NaN olur.
+        // WHY: createTitleCell/createItemCell width yoksa 100 kullanıyor; burada da aynısı olmalı, yoksa basic.num(undefined) NaN olur.
         titleDataList.forEach(function (titleData, titleDataIndex) {
-            totalWidth += num(titleData.width || 100);
+            totalWidth += basic.num(titleData.width || 100);
         });
 
-        const lastCellWidth = num(titleDataList[titleDataList.length - 1].width || 100);
+        const lastCellWidth = basic.num(titleDataList[titleDataList.length - 1].width || 100);
 
         if (originalWidth > totalWidth) {
             newLastCellWidth = originalWidth - totalWidth + lastCellWidth;

@@ -252,7 +252,7 @@
 
             const total = MODES[Timer.mode].minutes * 60 * 1000;
             const seconds = Math.ceil(Timer.remaining / 1000);
-            const text = twoDigitFormat(Math.floor(seconds / 60)) + ":" + twoDigitFormat(seconds % 60);
+            const text = basic.twoDigitFormat(Math.floor(seconds / 60)) + ":" + basic.twoDigitFormat(seconds % 60);
 
             // WHY: loop() calls this 4 times a second. Only a changed text is written to the page.
             if (timeLabel.text !== text) timeLabel.text = text;
