@@ -1,4 +1,4 @@
-# Bugra'nın kuralları: basic.js ile kod yazmak
+# basic.js ile kod yazma kuralları
 
 basic.js ile yazılan kod **düz yazı gibi okunmalı**: açıklamaya ihtiyaç duymadan, yukarıdan aşağı okununca ne yaptığı anlaşılmalı. Onunla kod yazmak keyifli olmalı. (Bugra, 2026-10-23)
 

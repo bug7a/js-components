@@ -25,7 +25,7 @@ UI COMPONENT TEMPLATE
     box.own(obj) are removed / stopped by remove(). So most components do not override remove() any more.
   - basic.isOn(v): an "on" value of a param (1, "1", true).
 - THE CODE READS LIKE PROSE: basic.js props instead of elem.style, short functions with early returns, one thought
-  per line, no nested ternaries, comments only for WHY. The rules: bugra-rules.md (at the root of the repository).
+  per line, no nested ternaries, comments only for WHY. The rules: context/basic-js-code-rules.md.
 
 USAGE:
 const card = CompName({
