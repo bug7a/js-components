@@ -21,7 +21,7 @@ Webpage: https://bug7a.github.io/js-components/
 const TinySelectDefaults = {
     title: "",
     list: [], // [{ id: "1", label: "(none)" },]
-    onSelect: function(index, id, label, title) {},
+    onSelect: function(index, id, label, title) {}, // Not called at create time. setSelectedIndex(index) calls it, setSelectedIndex(index, 1) does not.
     selectedIndex: 0,
     fontSize: 20,
     border: 0,
@@ -83,14 +83,14 @@ const TinySelect = function(params = {}) {
 
     };
 
-    // Seçili olanı değiştir.
-    box.setSelectedIndex = function(index) {
+    // Seçili olanı değiştir. silent: 1 -> onSelect is not called.
+    box.setSelectedIndex = function(index, silent = 0) {
 
         box.selectedIndex = index;
 
         if (box.list.length > box.selectedIndex) {
             box.lblLabel.text = box.list[box.selectedIndex].label;
-            box.onSelect(index, box.list[index].id, box.list[index].label, box.title);
+            if (!silent) box.onSelect(index, box.list[index].id, box.list[index].label, box.title);
         } else {
             box.lblLabel.text = box.emptyText;
         }
@@ -162,12 +162,25 @@ const TinySelect = function(params = {}) {
 
     endFlexBox();
 
+    // WHY: The open list is on the page (TinySelect.createList). A remove() while it was open left it there.
+    const superRemove = box.remove;
+    box.superRemove = superRemove;
+    let isRemoved = 0;
+    box.remove = function() {
+        if (isRemoved) return;
+        isRemoved = 1;
+        if (box.closeListBox) box.closeListBox();
+        superRemove.call(box);
+    };
+
     // *** OBJECT INIT CODE:
     box.on("click", function() {
         TinySelect.createList(box);
     });
     box.setTitle(box.title);
-    box.setSelectedIndex(box.selectedIndex);
+    // WHY: Silent: onSelect is a choice of the user, not the start value (2026-10-26; the pages that use it
+    //      guarded against this first call with isReady / isRendering).
+    box.setSelectedIndex(box.selectedIndex, 1);
     box.setDisabled(box.disabled);
     
     restoreThatFromSaved();
