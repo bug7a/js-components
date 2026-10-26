@@ -90,7 +90,7 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "select-box", name: "SelectBox", gen: 4, cat: "selection",
-        source: "comp-m4/select-box.js", samples: ["02-comp-m4-samples/select-box.htm"],
+        source: "comp-m4/select-box.js", samples: ["02-comp-m4-samples/select-box.htm", "02-comp-m4-samples/select-box-legacy-item.htm", "02-comp-m4-samples/select-box-legacy-text.htm"],
         en: "Dropdown select for single or multiple selection, with select all and clear.",
         tr: "Tekli veya çoklu seçim için açılır liste; tümünü seç ve temizle düğmeleri.",
     },

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>SelectBox - legacy (SelectItem)</title>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+
+    <script src="../comp-m4/select-box.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+    /* Bismillah */
+
+    // SelectBox with styleName: "legacy": the same look as 02-comp-m1-samples/select-item.htm (SelectItem).
+    // Icon, title and description rows: height 94.
+
+    const FRUITS_PATH = "../assets/fruids/";
+
+    const FRUITS = [
+        { value: "Broccoli", label: "Broccoli", description: "Vegetable", iconFile: FRUITS_PATH + "brokoli.png" },
+        { value: "Strawberry", label: "Strawberry", description: "Fruit", iconFile: FRUITS_PATH + "cilek.png" },
+        { value: "Tomato", label: "Tomato", description: "Vegetable", iconFile: FRUITS_PATH + "domates.png" },
+        { value: "Apple", label: "Apple", description: "Fruit", iconFile: FRUITS_PATH + "elma.png" },
+        { value: "Carrot", label: "Carrot", description: "Vegetable", iconFile: FRUITS_PATH + "havuc.png" },
+        { value: "Watermelon", label: "Watermelon", description: "Fruit", iconFile: FRUITS_PATH + "karpuz.png" },
+        { value: "Lemon", label: "Lemon", description: "Fruit", iconFile: FRUITS_PATH + "limon.png" },
+        { value: "Banana", label: "Banana", description: "Fruit", iconFile: FRUITS_PATH + "muz.png" },
+        { value: "Pomegranate", label: "Pomegranate", description: "Fruit", iconFile: FRUITS_PATH + "nar.png" },
+        { value: "Eggplant", label: "Eggplant", description: "Vegetable", iconFile: FRUITS_PATH + "patlican.png" },
+        { value: "Blueberry", label: "Blueberry", description: "Fruit", iconFile: FRUITS_PATH + "yabanmersini.png" },
+        { value: "Green Pepper", label: "Green Pepper", description: "Vegetable", iconFile: FRUITS_PATH + "yesilbiber.png" },
+    ];
+
+    const FIELD_WIDTH = 350;
+    const FIELD_HEIGHT = 94;
+    const PANEL_MAX_HEIGHT = 2000; // WHY: The old list went down to the bottom of the page.
+
+    let fruitSelect = null;
+
+    const start = function () {
+
+        fruitSelect = SelectBox({
+            styleName: "legacy",
+            width: FIELD_WIDTH,
+            height: FIELD_HEIGHT,
+            options: FRUITS,
+            value: "Tomato",
+            searchable: 1,
+            searchPlaceholder: "Search",
+            panelMaxHeight: PANEL_MAX_HEIGHT,
+            onChange: function (self) { println(self.value); },
+        });
+        fruitSelect.center();
+
+    };
+
+    </script>
+
+</head>
+<body>
+</body>
+</html>

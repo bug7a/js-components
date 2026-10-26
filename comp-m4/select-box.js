@@ -15,7 +15,9 @@ UI COMPONENT TEMPLATE
 - Accessibility: combobox + listbox roles, aria-expanded, aria-selected, aria-activedescendant.
 - onChange is NOT called when the component is created or when the value is set with silent: 1.
 - Big lists: Only the first "maxRenderCount" matches are drawn. (Search shows the others.)
-- Style packages: "classic" (default), "dark". Select with styleName. (SelectBox.styles)
+- The list scrolls with basic/scroll-bar.js (useScrollBar: 1, style.scrollBar) when it is loaded before.
+- Style packages: "classic" (default), "dark", "legacy" (the look of comp-m1 SelectItem / SelectText).
+  Select with styleName. (SelectBox.styles)
 
 OPTION: { value, label, description, iconFile, group, disabled }
 - A string or a number is also accepted: "Apple" -> { value: "Apple", label: "Apple" }
@@ -66,11 +68,12 @@ const SelectBoxDefaults = {
     panelMaxHeight: 320,
     maxRenderCount: 300,
     enabled: 1,
+    useScrollBar: 1, // basic/scroll-bar.js on the list (load it first). 0: the scrollbar of the browser (hidden by basic.css in Chrome).
     ariaLabel: "",
     onChange: function (self) { }, // self.value, self.getSelectedOptions()
     onOpen: function (self) { },
     onClose: function (self) { },
-    styleName: "classic", // "classic", "dark" or a name added to SelectBox.styles
+    styleName: "classic", // "classic", "dark", "legacy" or a name added to SelectBox.styles
     style: { // Classic style package (default)
         field: {
             color: White(1),
@@ -89,11 +92,24 @@ const SelectBoxDefaults = {
             fontSize: 16,
             textColor: Black(0.85),
         },
+        // The icon and the description of the selected option in the field (single selection)
+        fieldOption: {
+            iconSize: 0, // 0: no icon in the field
+            iconRound: 0,
+            iconMarginLeft: 0,
+            gap: 8,
+            showDescription: 0,
+            emptyIconColor: "", // A box in the place of the icon when nothing is selected. "": no box
+        },
         placeholder: {
             textColor: Black(0.4),
         },
         arrow: {
             color: Black(0.55),
+            icon: "chevron", // "chevron" (rotates when open), "unfold" (up and down)
+            size: 16,
+            opacity: 1,
+            marginRight: 0, // A negative value moves it into the padding of the field
         },
         panel: {
             color: White(1),
@@ -102,6 +118,11 @@ const SelectBoxDefaults = {
             round: 10,
             padding: 6,
             shadow: "0 8px 24px rgba(0, 0, 0, 0.12)",
+            gap: 6,
+            coverField: 0, // 1: the panel opens over the field (at its top, as wide as it)
+            motion: "", // Ex: "opacity 0.2s, transform 0.2s": the panel fades and grows in (and out)
+            motionDuration: 200, // ms of the motion (the close waits for it)
+            startScale: 0.9,
         },
         search: {
             color: Black(0.04),
@@ -110,20 +131,33 @@ const SelectBoxDefaults = {
             round: 6,
             fontSize: 14,
             textColor: Black(0.85),
+            height: 38,
+            padding: [10, 0],
+            iconSize: 16,
+            borderBottom: "", // Ex: "2px solid rgba(0, 0, 0, 0.06)"
         },
         option: {
             fontSize: 15,
             textColor: Black(0.85),
             round: 6,
             padding: [10, 8],
+            gap: 10,
+            minHeight: 0,
+            iconSize: 22,
+            iconRound: 0,
+            iconMargin: [0, 0], // [left, top and bottom]
         },
         optionActive: {
             color: Black(0.06),
+            showAtOpen: 1, // 0: no row is marked when the list opens (only under the mouse / the keyboard)
         },
         optionSelected: {
             textColor: "#141414",
             checkColor: "#141414",
             checkTickColor: White(1),
+            fontFamily: "opensans-bold", // Single selection. "": the font does not change
+            showTick: 1, // Single selection: a tick on the right
+            opacity: 1,
         },
         optionDisabled: {
             opacity: 0.4,
@@ -131,6 +165,7 @@ const SelectBoxDefaults = {
         description: {
             fontSize: 12,
             textColor: Black(0.5),
+            marginTop: 0,
         },
         group: {
             fontSize: 11,
@@ -152,6 +187,17 @@ const SelectBoxDefaults = {
         },
         disabled: {
             opacity: 0.4,
+        },
+        scrollBar: { // The params of ScrollBar (basic/scroll-bar.js)
+            bar_color: "#9A9A98",
+            bar_mouseOverColor: "#6A6A68",
+            bar_width: 4,
+            bar_round: 3,
+            bar_opacity: 0.4,
+            bar_mouseOverOpacity: 0.9,
+            bar_padding: 2,
+            neverHide: 0,
+            showDots: 0,
         },
     }
 };
@@ -285,6 +331,23 @@ const SelectBox = function (params = {}) {
         return label;
     };
 
+    // The icon and the description of the selected option in the field (style.fieldOption).
+    const updateFieldOption = function (option) {
+        const hasIcon = _s.fieldOption.iconSize > 0 && option && option.iconFile;
+        // WHY: An empty box keeps the place of the icon: the placeholder text starts where a selected label starts.
+        const hasIconOptions = box.options.some(function (o) { return o.iconFile; }); // WHY: Text options have no icon place.
+        const hasEmptyIcon = _s.fieldOption.iconSize > 0 && !option && _s.fieldOption.emptyIconColor && hasIconOptions;
+        box.fieldIcon.visible = (hasIcon || hasEmptyIcon) ? 1 : 0;
+        box.fieldIcon.color = hasEmptyIcon ? _s.fieldOption.emptyIconColor : "transparent";
+        box.fieldIcon.imageElement.style.visibility = hasEmptyIcon ? "hidden" : "visible";
+        // WHY: Loaded again only when it changed, so the icon does not flicker.
+        if (hasIcon && box.fieldIcon.imageElement.getAttribute("src") != option.iconFile) box.fieldIcon.load(option.iconFile);
+
+        const hasDescription = basic.isOn(_s.fieldOption.showDescription) && option && option.description;
+        box.fieldDescription.visible = hasDescription ? 1 : 0;
+        box.fieldDescription.text = hasDescription ? SelectBox.escapeHtml(option.description) : "";
+    };
+
     const updateField = function () {
 
         const selected = box.getSelectedOptions();
@@ -300,11 +363,12 @@ const SelectBox = function (params = {}) {
 
         box.fieldText.text = text || SelectBox.escapeHtml(box.placeholder);
         box.fieldText.textColor = (text) ? _s.fieldText.textColor : _s.placeholder.textColor;
+        updateFieldOption(isMultiple() ? null : selected[0]);
 
         box.clearButton.visible = (box.clearable == 1 && selected.length > 0 && box.enabled == 1) ? 1 : 0;
 
         box.field.borderColor = getFieldBorderColor();
-        box.arrow.css.transform = (isOpen) ? "rotate(180deg)" : "rotate(0deg)";
+        if (_s.arrow.icon === "chevron") box.arrow.css.transform = (isOpen) ? "rotate(180deg)" : "rotate(0deg)";
 
         box.opacity = (box.enabled == 1) ? 1 : _s.disabled.opacity;
         box.tabIndex = (box.enabled == 1) ? 0 : -1;
@@ -356,14 +420,26 @@ const SelectBox = function (params = {}) {
         setActive(getStartActiveIndex(), 0);
 
         box.list.aria = { multiselectable: (isMultiple()) ? "true" : "false" };
+        refreshScrollBar();
 
+    };
+
+    const refreshScrollBar = function () {
+        if (box.scrollBar) box.scrollBar.refreshScroll();
     };
 
     // Active row after the list is drawn: the first selected one, or the first enabled one
     const getStartActiveIndex = function () {
+        if (_s.optionActive.showAtOpen == 0) return -1;
         const selectedIndex = rows.findIndex(function (item) { return isSelected(item.option) && !item.option.disabled; });
         if (selectedIndex >= 0) return selectedIndex;
         return rows.findIndex(function (item) { return !item.option.disabled; });
+    };
+
+    const createDescription = function (html) {
+        const label = Label({ text: html, width: "100%", fontSize: _s.description.fontSize, textColor: _s.description.textColor });
+        if (_s.description.marginTop) label.css.marginTop = _s.description.marginTop + "px";
+        return label;
     };
 
     const createOptionRow = function (option, index) {
@@ -374,12 +450,14 @@ const SelectBox = function (params = {}) {
             width: "100%",
             height: "auto",
             align: "left center",
-            gap: 10,
+            gap: _s.option.gap,
             padding: _s.option.padding,
             round: _s.option.round,
             color: "transparent",
             clickable: 1,
         });
+        if (_s.option.minHeight) row.css.minHeight = _s.option.minHeight + "px";
+        if (selected && _s.optionSelected.opacity != 1) row.opacity = _s.optionSelected.opacity;
         row.elem.id = id + "-option-" + index;
         row.role = "option";
         row.aria = { selected: (selected) ? "true" : "false" };
@@ -395,10 +473,12 @@ const SelectBox = function (params = {}) {
             }
 
             if (option.iconFile) {
-                Icon({ width: 22, height: 22 });
+                const iconMargin = _s.option.iconMargin;
+                Icon({ width: _s.option.iconSize, height: _s.option.iconSize, round: _s.option.iconRound });
                 that.load(option.iconFile);
                 that.shrink = 0;
                 that.elem.alt = "";
+                that.css.margin = iconMargin[1] + "px 0px " + iconMargin[1] + "px " + iconMargin[0] + "px";
             }
 
             VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
@@ -406,17 +486,17 @@ const SelectBox = function (params = {}) {
 
                 const labelColor = (selected) ? _s.optionSelected.textColor : _s.option.textColor;
                 Label({ text: highlight(option.label), fontSize: _s.option.fontSize, textColor: labelColor, width: "100%" });
-                if (selected && !isMultiple()) that.css.fontFamily = "opensans-bold";
+                if (selected && !isMultiple() && _s.optionSelected.fontFamily) that.css.fontFamily = _s.optionSelected.fontFamily;
                 that.css.overflowWrap = "anywhere";
 
                 if (option.description) {
-                    Label({ text: highlight(option.description), width: "100%", ..._s.description });
+                    createDescription(highlight(option.description));
                 }
 
             endGroup();
 
             // Single: tick on the right
-            if (!isMultiple() && selected) {
+            if (!isMultiple() && selected && _s.optionSelected.showTick == 1) {
                 createSvgLabel(SelectBox.getTickSvg(_s.optionSelected.checkColor), 16);
             }
 
@@ -457,7 +537,8 @@ const SelectBox = function (params = {}) {
     // step: +1 or -1. Skips disabled options.
     const moveActive = function (step) {
         if (rows.length == 0) return;
-        let index = activeIndex;
+        // WHY: With no active row (-1), ArrowUp starts from the end: (-1 - 1) % length was the row before the last one.
+        let index = (activeIndex < 0 && step < 0) ? rows.length : activeIndex;
         for (let i = 0; i < rows.length; i++) {
             index = (index + step + rows.length) % rows.length;
             if (!rows[index].option.disabled) return setActive(index);
@@ -480,11 +561,13 @@ const SelectBox = function (params = {}) {
 
     const selectOption = function (option) {
 
+        const oldValue = JSON.stringify(box.value);
         if (isMultiple()) {
             toggleInValue(option);
         } else {
             box.value = option.value;
         }
+        const isChanged = (JSON.stringify(box.value) !== oldValue);
 
         const keepActive = activeIndex;
         updateField();
@@ -499,14 +582,16 @@ const SelectBox = function (params = {}) {
             setActive(keepActive, 0);
         }
 
-        box.onChange(box);
+        // WHY: The selected option clicked again is not a change.
+        if (isChanged) box.onChange(box);
 
     };
 
     // Position the popup panel under (or above) the field.
     // Makes the list shorter by "extra" px. (Not shorter than MIN_LIST_HEIGHT.)
+    // WHY: From the height of the list now, not from panelMaxHeight: a list shorter than panelMaxHeight was not made shorter.
     const shortenList = function (extra) {
-        box.list.css.maxHeight = Math.max(MIN_LIST_HEIGHT, box.panelMaxHeight - extra) + "px";
+        box.list.css.maxHeight = Math.max(MIN_LIST_HEIGHT, box.list.elem.offsetHeight - extra) + "px";
     };
 
     const positionPanel = function () {
@@ -516,6 +601,11 @@ const SelectBox = function (params = {}) {
 
         box.panel.width = width;
         box.list.css.maxHeight = box.panelMaxHeight + "px";
+
+        if (_s.panel.coverField == 1) {
+            placePanelOverField(rect, width);
+            return;
+        }
 
         const panelHeight = box.panel.elem.offsetHeight;
         const below = page.height - withPageZoom(rect.bottom) - PANEL_GAP - SCREEN_MARGIN;
@@ -537,6 +627,52 @@ const SelectBox = function (params = {}) {
         box.panel.left = left;
         box.panel.top = Math.max(SCREEN_MARGIN, top);
 
+    };
+
+    // style.panel.coverField: the panel opens over the field: from its top down to the bottom of the page, or
+    // (when there is more space above) from its bottom up to the top of the page.
+    const placePanelOverField = function (rect, width) {
+        // WHY: A panel shorter than the field (a search with few results) showed the bottom of the field under it.
+        box.panel.css.minHeight = withPageZoom(rect.height) + "px";
+        const fieldTop = withPageZoom(rect.top);
+        const fieldBottom = withPageZoom(rect.bottom);
+        const spaceDown = page.height - fieldTop - SCREEN_MARGIN;
+        const spaceUp = fieldBottom - SCREEN_MARGIN;
+        const panelHeight = box.panel.elem.offsetHeight;
+        const isUp = (panelHeight > spaceDown && spaceUp > spaceDown);
+        const space = isUp ? spaceUp : spaceDown;
+        if (panelHeight > space) shortenList(panelHeight - space);
+
+        let left = withPageZoom(rect.left);
+        left = Math.max(SCREEN_MARGIN, Math.min(left, page.width - width - SCREEN_MARGIN));
+        box.panel.left = left;
+        box.panel.top = isUp ? fieldBottom - box.panel.elem.offsetHeight : fieldTop;
+    };
+
+    // style.panel.motion: the panel fades and grows in.
+    const showPanelWithMotion = function () {
+        if (!_s.panel.motion) return;
+        box.panel.clickable = 1;
+        box.panel.css.transition = "none";
+        box.panel.css.opacity = "0";
+        box.panel.css.transform = "scale(" + _s.panel.startScale + ")";
+        // WHY: Read a size, so the browser draws the start state before the transition is turned on.
+        void box.panel.elem.offsetHeight;
+        box.panel.css.transition = _s.panel.motion;
+        box.panel.css.opacity = "1";
+        box.panel.css.transform = "scale(1)";
+    };
+
+    // Returns 1 when the panel is hidden later (after its motion).
+    const hidePanelWithMotion = function () {
+        if (!_s.panel.motion) return 0;
+        box.panel.clickable = 0; // WHY: A fading panel must not take a click.
+        box.panel.css.opacity = "0";
+        box.panel.css.transform = "scale(" + _s.panel.startScale + ")";
+        box.after(_s.panel.motionDuration, function () {
+            if (!isOpen) box.panel.visible = 0;
+        });
+        return 1;
     };
 
     const selectActiveRow = function () {
@@ -631,6 +767,8 @@ const SelectBox = function (params = {}) {
         box.panel.visible = 1;
         renderList();
         positionPanel();
+        refreshScrollBar(); // WHY: positionPanel may make the list shorter.
+        showPanelWithMotion();
         if (rows[activeIndex]) rows[activeIndex].row.elem.scrollIntoView({ block: "nearest" });
 
         if (isSearchable()) {
@@ -652,7 +790,7 @@ const SelectBox = function (params = {}) {
         isOpen = 0;
 
         box.overlay.visible = 0;
-        box.panel.visible = 0;
+        if (!hidePanelWithMotion()) box.panel.visible = 0;
 
         updateField();
         box.onClose(box);
@@ -728,19 +866,38 @@ const SelectBox = function (params = {}) {
         width: "100%",
         height: "100%",
         align: "left center",
-        gap: 8,
+        gap: _s.fieldOption.gap,
         ..._s.field,
     });
     box.field.setMotion("border-color 0.15s");
 
-        // LABEL: Selected text
-        box.fieldText = Label({
-            text: "",
-            fontSize: _s.fieldText.fontSize,
-            textColor: _s.fieldText.textColor,
-        });
-        box.fieldText.ellipsis = 1;
-        box.fieldText.css = { flex: "1 1 auto", minWidth: "0" };
+        // ICON: The icon of the selected option (style.fieldOption.iconSize)
+        box.fieldIcon = Icon({ width: _s.fieldOption.iconSize, height: _s.fieldOption.iconSize, round: _s.fieldOption.iconRound });
+        box.fieldIcon.shrink = 0;
+        box.fieldIcon.elem.alt = "";
+        box.fieldIcon.css.marginLeft = _s.fieldOption.iconMarginLeft + "px";
+
+        // GROUP: Selected text and its description
+        box.fieldTexts = VGroup({ width: "auto", height: "auto", align: "left center", gap: 0 });
+        box.fieldTexts.css = { flex: "1 1 auto", minWidth: "0", alignItems: "stretch" };
+
+            // LABEL: Selected text
+            box.fieldText = Label({
+                text: "",
+                width: "100%",
+                fontSize: _s.fieldText.fontSize,
+                textColor: _s.fieldText.textColor,
+            });
+            box.fieldText.ellipsis = 1;
+
+            // LABEL: Description of the selected option
+            box.fieldDescription = createDescription("");
+            box.fieldDescription.ellipsis = 1;
+
+        endGroup();
+        // WHY: Hidden after they are created: children created in a hidden group are not flex items.
+        box.fieldIcon.visible = 0;
+        box.fieldDescription.visible = 0;
 
         // LABEL: Clear button
         box.clearButton = Label({ text: SelectBox.getClearSvg(_s.arrow.color), width: 20, height: 20, round: 4, clickable: 1 });
@@ -752,8 +909,11 @@ const SelectBox = function (params = {}) {
         box.clearButton.aria = { label: "Clear" };
 
         // LABEL: Arrow
-        box.arrow = createSvgLabel(SelectBox.getArrowSvg(_s.arrow.color), 16);
+        const arrowSvg = (_s.arrow.icon === "unfold") ? SelectBox.getUnfoldSvg(_s.arrow.color, _s.arrow.size) : SelectBox.getArrowSvg(_s.arrow.color, _s.arrow.size);
+        box.arrow = createSvgLabel(arrowSvg, _s.arrow.size);
         box.arrow.css.transition = "transform 0.15s";
+        box.arrow.opacity = _s.arrow.opacity;
+        if (_s.arrow.marginRight) box.arrow.css.marginRight = _s.arrow.marginRight + "px";
 
     endGroup();
 
@@ -776,7 +936,7 @@ const SelectBox = function (params = {}) {
         width: box.panelMinWidth,
         height: "auto",
         align: "left top",
-        gap: 6,
+        gap: _s.panel.gap,
         color: _s.panel.color,
         border: _s.panel.border,
         borderColor: _s.panel.borderColor,
@@ -792,20 +952,21 @@ const SelectBox = function (params = {}) {
         // GROUP: Search
         box.searchGroup = HGroup({
             width: "100%",
-            height: 38,
+            height: _s.search.height,
             align: "left center",
             gap: 8,
-            padding: [10, 0],
+            padding: _s.search.padding,
             color: _s.search.color,
             border: _s.search.border,
             borderColor: _s.search.borderColor,
             round: _s.search.round,
         });
         box.searchGroup.shrink = 0;
+        if (_s.search.borderBottom) box.searchGroup.css.borderBottom = _s.search.borderBottom;
 
-            createSvgLabel(SelectBox.getSearchSvg(_s.arrow.color), 16);
+            createSvgLabel(SelectBox.getSearchSvg(_s.arrow.color, _s.search.iconSize), _s.search.iconSize);
 
-            box.searchInput = Input({ width: "100%", height: 34, minimal: 1, color: "transparent", fontSize: _s.search.fontSize, textColor: _s.search.textColor });
+            box.searchInput = Input({ width: "100%", height: _s.search.height - 4, minimal: 1, color: "transparent", fontSize: _s.search.fontSize, textColor: _s.search.textColor });
             box.searchInput.inputElement.style.padding = "0px";
             box.searchInput.inputElement.placeholder = box.searchPlaceholder;
             box.searchInput.inputElement.setAttribute("aria-label", box.searchPlaceholder);
@@ -842,6 +1003,12 @@ const SelectBox = function (params = {}) {
     box.overlay.visible = 0;
     box.panel.visible = 0;
 
+    // SCROLL BAR: on the list. It moves itself into the panel (the parent of the list) and sits over the list.
+    // WHY: Created here, not in the panel: an object created in the panel (a group) would be a part of its layout.
+    if (box.useScrollBar == 1 && typeof ScrollBar !== "undefined") {
+        box.scrollBar = ScrollBar(Object.assign({ scrollableBox: box.list }, _s.scrollBar));
+    }
+
     // *** OBJECT INIT CODE:
 
     box.on("click", function (self, event) {
@@ -875,6 +1042,10 @@ const SelectBox = function (params = {}) {
     box.overlay.on("click", function () { box.close(); });
 
     box.panel.on("keydown", onKeyDown);
+    // style.optionActive.showAtOpen: 0 -> the active row is only the row under the mouse (or of the keyboard).
+    box.list.on("mouseleave", function () {
+        if (_s.optionActive.showAtOpen == 0) setActive(-1, 0);
+    });
     // WHY: Keep the keyboard focus (field or search) when a row is pressed.
     box.panel.on("mousedown", function (self, event) {
         if (event.target !== box.searchInput.inputElement) event.preventDefault();
@@ -937,16 +1108,21 @@ SelectBox.normalizeOptions = function (options) {
 // WHY: Label.text uses innerHTML. Texts must not be read as HTML.
 SelectBox.escapeHtml = basic.escapeHtml; // (the name is kept: other code may use it)
 
-SelectBox.getArrowSvg = function (color) {
-    return '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
+SelectBox.getArrowSvg = function (color, size = 16) {
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
+};
+
+// Up and down arrows (the "unfold more" icon of the comp-m1 SelectItem)
+SelectBox.getUnfoldSvg = function (color, size = 20) {
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 -960 960 960" fill="' + color + '"><path d="M480-80 240-320l57-57 183 183 183-183 57 57L480-80ZM298-584l-58-56 240-240 240 240-58 56-182-182-182 182Z"/></svg>';
 };
 
 SelectBox.getClearSvg = function (color) {
     return '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>';
 };
 
-SelectBox.getSearchSvg = function (color) {
-    return '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>';
+SelectBox.getSearchSvg = function (color, size = 16) {
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>';
 };
 
 SelectBox.getTickSvg = function (color) {
@@ -995,8 +1171,67 @@ SelectBox.styles = {
         footerButton: { fontSize: 13, textColor: "#65A293" },
         divider: { color: "rgba(255, 255, 255, 0.08)" },
         disabled: { opacity: 0.4 },
+        scrollBar: { bar_color: "#8A8A88", bar_mouseOverColor: "#BFBFBD" },
     },
 
+};
+
+// The look of the comp-m1 SelectItem and SelectText (02-comp-m1-samples/select-item.htm, select-text.htm):
+// a whitesmoke box with a thin border, the list opens over the field with a fade, a yellow search box,
+// rows that get white under the mouse, the selected one half transparent. Big rows with an icon and a
+// description (height: 94) or text rows (height: 50).
+SelectBox.styles.legacy = {
+    // WHY: padding 19 (not 20): the border is inside the box. The old border was drawn over the content.
+    field: { color: "whitesmoke", border: 1, borderColor: "rgba(0, 0, 0, 0.3)", round: 4, padding: [19, 0] },
+    fieldHover: { borderColor: "rgba(0, 0, 0, 0.3)" },
+    fieldFocus: { borderColor: "rgba(0, 0, 0, 0.3)" },
+    fieldText: { fontSize: 20, textColor: "rgba(0, 0, 0, 0.8)" },
+    fieldOption: { iconSize: 70, iconRound: 4, iconMarginLeft: 10, gap: 20, showDescription: 1, emptyIconColor: Black(0.06) },
+    placeholder: { textColor: Black(0.4) },
+    arrow: { color: "black", icon: "unfold", size: 20, opacity: 0.8, marginRight: -16 },
+    panel: {
+        color: "whitesmoke",
+        border: 1,
+        borderColor: "rgba(0, 0, 0, 0.3)",
+        round: 4,
+        padding: 0,
+        shadow: "none",
+        gap: 0,
+        coverField: 1,
+        motion: "opacity 0.2s, transform 0.2s",
+        motionDuration: 200,
+        startScale: 0.9,
+    },
+    search: {
+        color: "#FFFCD6",
+        border: 0,
+        borderColor: "transparent",
+        round: 2,
+        fontSize: 18,
+        textColor: "rgba(0, 0, 0, 0.8)",
+        height: 40,
+        padding: [16, 0],
+        iconSize: 22,
+        borderBottom: "2px solid rgba(0, 0, 0, 0.06)",
+    },
+    option: {
+        fontSize: 20,
+        textColor: "rgba(0, 0, 0, 0.8)",
+        round: 0,
+        padding: [19, 0], // WHY: 19: the border of the panel is inside it (see field)
+        gap: 20,
+        minHeight: 50,
+        iconSize: 70,
+        iconRound: 4,
+        iconMargin: [10, 12],
+    },
+    optionActive: { color: "white", showAtOpen: 0 },
+    optionSelected: { textColor: "rgba(0, 0, 0, 0.8)", checkColor: "#373836", checkTickColor: "white", fontFamily: "", showTick: 0, opacity: 0.5 },
+    description: { fontSize: 14, textColor: "gray", marginTop: -4 }, // WHY: -4: the old title (top 25) and description (top 49) overlap a little.
+    highlight: { color: "transparent" },
+    empty: { fontSize: 16, textColor: Black(0.45) },
+    // The scroll bar of the comp-m1 ItemList: always shown, with the dots at its ends.
+    scrollBar: { bar_color: "#373836", bar_mouseOverColor: "#373836", bar_opacity: 0.4, bar_mouseOverOpacity: 0.9, neverHide: 1, showDots: 1 },
 };
 
 // The old name of the dark package. (Kept: pages may use it.)
