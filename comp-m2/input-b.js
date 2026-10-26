@@ -50,6 +50,14 @@ WebSite: https://bug7a.github.io/js-components
 - tooltipStyle: { color, textColor, border, borderColor, round, fontSize }
 -- The tooltip of the warning ball. color "": requiredColor / warningColor (the old look).
 
+- styleName: "classic" (default) | "dark"  (InputB.styles)
+-- The look of InputB is in flat params (backgroundColor, lineColor, titleTextColor...), not in one
+   "style" object. So a style package here is a package of params: any param can be in it, also
+   an image (requiredIcon, warningIcon). Order: your params > the package > InputBDefaults.
+-- InputB({ styleName: "dark" })
+-- InputB({ styleName: "dark", selectedLineColor: "#588ABE" })   // one param of the package changed
+-- InputB.styles.myStyle = { backgroundColor: "#FFF8E8", requiredIcon: "icons/star.svg" };
+
 */
 
 "use strict";
@@ -58,6 +66,7 @@ WebSite: https://bug7a.github.io/js-components
 const InputBDefaults = {
 
     key: "0",
+    styleName: "classic", // "classic", "dark" or a name added to InputB.styles
     type: "text",
     width: 350,
     height: "auto",
@@ -78,6 +87,12 @@ const InputBDefaults = {
     selectedBackBorderColor: Black(0),
     backBorderTopRound: 2,
     backBorderBottomRound: 0,
+
+    titleTextColor: "#555555",
+    inputTextColor: "#373836",
+    placeholderColor: "", // "": the color of the browser
+    descriptionTextColor: "#999999",
+    warningBallBorderColor: "#373836",
 
     isRequired: 0,
     requiredText: "Required",
@@ -122,6 +137,8 @@ const InputBDefaults = {
 };
 
 const InputB = function(params = {}) {
+
+    InputB.applyStylePackage(params);
 
     // BOX: Component container
     const box = startObject(InputBDefaults, params);
@@ -403,7 +420,7 @@ const InputB = function(params = {}) {
             box.title = Label({
                 text: box.titleText,
                 fontSize: 16,
-                textColor: "#555555",
+                textColor: box.titleTextColor,
             });
 
             // INPUT: Main object
@@ -415,10 +432,11 @@ const InputB = function(params = {}) {
                     height: 40,
                     color: "transparent",
                     width: "100%",
-                    textColor: "#373836",
+                    textColor: box.inputTextColor,
                 });
                 that.inputElement.style.padding = "0px 0px";
                 that.inputElement.placeholder = box.placeholder;
+                if (box.placeholderColor) InputB.setPlaceholderColor(that.inputElement, box.placeholderColor);
                 that.inputElement.maxLength = box.maxChar;
                 that.inputElement.setAttribute("aria-label", box.titleText);
             } else {
@@ -434,7 +452,7 @@ const InputB = function(params = {}) {
                 box.description = Label({
                     text: box.descriptionText,
                     fontSize: 14,
-                    textColor: "#999999",
+                    textColor: box.descriptionTextColor,
                 });
                 box.description.css.fontStyle = "italic";
             }
@@ -481,7 +499,7 @@ const InputB = function(params = {}) {
             height: ballSize,
             border: isIconBall ? 0 : 2,
             color: isIconBall ? "transparent" : box.requiredColor,
-            borderColor: "#373836",
+            borderColor: box.warningBallBorderColor,
             round: 100,
             opacity: 0,
         });
@@ -550,5 +568,66 @@ const InputB = function(params = {}) {
     }
 
     return endObject(box);
+
+};
+
+// *** STYLE PACKAGES:
+
+// WHY: The packages are packages of params (not of a "style" object, see the notes at the top), so
+//      basic.applyStylePackage (it fills params.style) is not used. The package fills only the params
+//      that were not given; mergeIntoIfMissing copies its objects, so the package itself never changes.
+// USAGE: InputB.applyStylePackage(params) // the first line of InputB (and of a component that extends it)
+InputB.applyStylePackage = function(params) {
+    const name = params.styleName || InputBDefaults.styleName;
+    const stylePackage = InputB.styles[name];
+    if (!stylePackage) console.warn("InputB style package not found: " + name);
+    mergeIntoIfMissing(params, stylePackage || {});
+    return params;
+};
+
+// The color of the placeholder text: a CSS variable on the <input>, read by one CSS rule.
+InputB.setPlaceholderColor = function(inputElement, color) {
+    basic.addCss("input-b-placeholder", ".input-b-placeholder::placeholder { color: var(--input-b-placeholder); opacity: 1; }");
+    inputElement.classList.add("input-b-placeholder");
+    inputElement.style.setProperty("--input-b-placeholder", color);
+};
+
+InputB.styles = {
+
+    // The default look (InputBDefaults): a light field with a line under it.
+    classic: {},
+
+    // The dark fields of the Ozden Panel (webpage-admin-panel, theme "dark"): a rounded field on a
+    // dark card, a thin border, the accent color on focus, no line.
+    dark: {
+        backgroundColor: "#232322", // surface2: a field
+        selectedBackgroundColor: "#2C2C2A", // surface3
+        lineColor: "transparent",
+        selectedLineColor: "transparent",
+        backBorderColor: White(0.1), // the border of a card
+        selectedBackBorderColor: "#65A293", // accent
+        backBorderTopRound: 8,
+        backBorderBottomRound: 8,
+
+        titleTextColor: White(0.45),
+        inputTextColor: White(0.9),
+        placeholderColor: White(0.3),
+        descriptionTextColor: White(0.4),
+        warningBallBorderColor: "#1A1A19", // surface: the card under the field
+
+        requiredColor: "#E66767", // danger
+        warningColor: "#E66767",
+        requiredIconColor: White(0.45),
+
+        tooltipStyle: {
+            textColor: "#141414",
+            borderColor: "#141414",
+        },
+
+        unitStyle: {
+            color: "#2C2C2A", // surface3
+            textColor: White(0.85),
+        },
+    },
 
 };

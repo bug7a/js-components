@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>InputB - Dark Style</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- LIBRARY FILES -->
+        <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+        <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+
+        <script src="../comp-m2/tooltip.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m2/input-b.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+
+        /* Bismillah */
+
+        // InputB with styleName: "dark" (the colors of the Ozden Panel, webpage-admin-panel)
+
+        const PAGE_COLOR = "black";
+        const CARD_COLOR = "#1A1A19";
+        const CARD_BORDER_COLOR = White(0.1);
+        const CARD_WIDTH = 420;
+
+        const addCaption = function (text) {
+            Label({ text: text, fontSize: 12, textColor: White(0.45), css: { letterSpacing: "1px" } });
+        };
+
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            const pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+
+                VGroup({ width: "100%", height: "auto", align: "center top", padding: 40, gap: 20 });
+
+                    Label({ text: "InputB · styleName: \"dark\"", fontSize: 22, textColor: White(0.9) });
+
+                    // GROUP: A dark card (Ozden Panel)
+                    VGroup({ width: CARD_WIDTH, height: "auto", align: "left top", gap: 14, padding: 20, color: CARD_COLOR, round: 12, border: 1, borderColor: CARD_BORDER_COLOR });
+                    that.css.alignItems = "stretch";
+
+                        addCaption("REQUIRED");
+                        InputB({
+                            styleName: "dark",
+                            width: "100%",
+                            titleText: "FULL NAME",
+                            placeholder: "Your name",
+                            isRequired: 1,
+                        });
+
+                        addCaption("UNIT AND DESCRIPTION");
+                        InputB({
+                            styleName: "dark",
+                            width: "100%",
+                            titleText: "WEIGHT",
+                            placeholder: "0",
+                            unitText: "KG",
+                            descriptionText: "The weight of the package",
+                        });
+
+                        addCaption("WARNING ICON (warningBallType: \"icon\")");
+                        const codeInput = InputB({
+                            styleName: "dark",
+                            width: "100%",
+                            titleText: "CODE",
+                            placeholder: "4 digits",
+                            inputValue: "12a",
+                            warningText: "Only digits",
+                            warningBallType: "icon",
+                            maxChar: 4,
+                        });
+                        codeInput.isValid = function () {
+                            return /^\d*$/.test(codeInput.getInputValue());
+                        };
+                        codeInput.showWarningIfNotValid(codeInput.isValid());
+
+                        addCaption("ONE PARAM OF THE PACKAGE CHANGED (selectedBackBorderColor)");
+                        InputB({
+                            styleName: "dark",
+                            width: "100%",
+                            titleText: "E-MAIL",
+                            placeholder: "name@example.com",
+                            selectedBackBorderColor: "#3987E5",
+                        });
+
+                    endGroup();
+
+                endGroup();
+
+            endBox();
+
+            if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: pageBox });
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+    </body>
+</html>
