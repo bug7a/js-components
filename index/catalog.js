@@ -83,6 +83,12 @@ CATALOG.COMPONENTS = [
         tr: "Farenin olduğu yerde açılan sade menü; yazılı veya ikonlu öğeler.",
     },
     {
+        key: "item-list", name: "ItemList", gen: 4, cat: "selection",
+        source: "comp-m4/item-list.js", samples: ["02-comp-m4-samples/item-list.htm"],
+        en: "A list of items with an icon, a title and a description (or your own rows): vertical, horizontal or grid, single or multiple selection, search and keyboard.",
+        tr: "İkon, başlık ve açıklamalı öğe listesi (ya da kendi satırlarınız): dikey, yatay veya ızgara; tekli veya çoklu seçim, arama ve klavye.",
+    },
+    {
         key: "select-box", name: "SelectBox", gen: 4, cat: "selection",
         source: "comp-m4/select-box.js", samples: ["02-comp-m4-samples/select-box.htm"],
         en: "Dropdown select for single or multiple selection, with select all and clear.",

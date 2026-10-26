@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>ItemList</title>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+
+    <script src="../comp-m2/search-input-v2.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp-m4/item-list.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+    /* Bismillah */
+
+    // ItemList (comp-m4): the three style packages, the layouts, multiple selection, search and your own rows.
+
+    const FRUITS_PATH = "../assets/fruids/";
+    const DRINKS_PATH = "../assets/categories/";
+    const STYLE_CARD_WIDTH = 380;
+    const STYLE_LIST_HEIGHT = 420;
+
+    const FRUITS = [
+        { key: "broccoli", title: "Broccoli", desc: "Vegetable", iconFile: FRUITS_PATH + "brokoli.png" },
+        { key: "strawberry", title: "Strawberry", desc: "Fruit", iconFile: FRUITS_PATH + "cilek.png" },
+        { key: "tomato", title: "Tomato", desc: "Vegetable", iconFile: FRUITS_PATH + "domates.png" },
+        { key: "apple", title: "Apple", desc: "Fruit", iconFile: FRUITS_PATH + "elma.png" },
+        { key: "carrot", title: "Carrot", desc: "Vegetable", iconFile: FRUITS_PATH + "havuc.png" },
+        { key: "watermelon", title: "Watermelon", desc: "Fruit", iconFile: FRUITS_PATH + "karpuz.png" },
+        { key: "lemon", title: "Lemon", desc: "Fruit", iconFile: FRUITS_PATH + "limon.png" },
+        { key: "banana", title: "Banana", desc: "Fruit", iconFile: FRUITS_PATH + "muz.png" },
+        { key: "pomegranate", title: "Pomegranate", desc: "Fruit", iconFile: FRUITS_PATH + "nar.png" },
+        { key: "eggplant", title: "Eggplant", desc: "Vegetable", iconFile: FRUITS_PATH + "patlican.png" },
+        { key: "blueberry", title: "Blueberry", desc: "Fruit", iconFile: FRUITS_PATH + "yabanmersini.png" },
+        { key: "pepper", title: "Green pepper", desc: "Vegetable", iconFile: FRUITS_PATH + "yesilbiber.png" },
+    ];
+
+    const DRINKS = [
+        { key: "cappuccino", title: "Cappuccino", desc: "Hot", iconFile: DRINKS_PATH + "cappuccino.png" },
+        { key: "chocolate", title: "Chocolate milk", desc: "Cold", iconFile: DRINKS_PATH + "chocolate-milk.png" },
+        { key: "coffee", title: "Coffee", desc: "Hot", iconFile: DRINKS_PATH + "coffee.png" },
+        { key: "frappe", title: "Frappe", desc: "Cold", iconFile: DRINKS_PATH + "frappe.png" },
+        { key: "iced", title: "Iced coffee", desc: "Cold", iconFile: DRINKS_PATH + "iced-caffee.png" },
+        { key: "milkshake", title: "Milkshake", desc: "Cold", iconFile: DRINKS_PATH + "milkshake.png" },
+        { key: "orange", title: "Orange juice", desc: "Cold", iconFile: DRINKS_PATH + "orange-juice.png" },
+        { key: "tea", title: "Tea", desc: "Hot", iconFile: DRINKS_PATH + "tea.png" },
+    ];
+
+    // The page look of each style package (the list sits on it)
+    const STYLE_PAGES = {
+        classic: { color: "whitesmoke", textColor: Black(0.5) }, // The box of the comp-m1 SelectItem list
+        classicTiles: { color: "white", textColor: Black(0.5) }, // The category list of javascript-mobile-app-template
+        modern: { color: "#F4F5F2", textColor: Black(0.5) },
+        dark: { color: "#141414", textColor: White(0.5) },
+    };
+
+    // GROUP: A card with a title and a short description.
+    const startCard = function (title, description, look) {
+        const card = VGroup({ width: STYLE_CARD_WIDTH, height: "auto", align: "left top", gap: 12, padding: 16, color: look.color, round: 12, border: 1, borderColor: Black(0.1) });
+        that.css = { alignItems: "stretch", maxWidth: "100%" };
+        Label({ plainText: title, fontSize: 14, textColor: look.textColor, bold: 1 });
+        if (description) Label({ plainText: description, fontSize: 13, textColor: look.textColor, width: "100%", css: { lineHeight: "1.4" } });
+        return card;
+    };
+
+    const endCard = function () {
+        endGroup();
+    };
+
+    const createInfoLabel = function (look) {
+        return Label({ plainText: "", width: "100%", fontSize: 13, textColor: look.textColor });
+    };
+
+    const withoutDesc = function (item) {
+        return { key: item.key, title: item.title, iconFile: item.iconFile };
+    };
+
+    const showSelection = function (label, list) {
+        const keys = list.getSelectedKeys();
+        label.plainText = "Selected: " + (keys.length ? keys.join(", ") : "-");
+    };
+
+    // One style package: the list with its search box (showSearch: 1) and the selection under it.
+    const createStyleSample = function (styleName, selection, description) {
+        const look = STYLE_PAGES[styleName];
+        startCard("styleName: \"" + styleName + "\" · selection: \"" + selection + "\"", description, look);
+            const list = ItemList({
+                width: "100%",
+                height: STYLE_LIST_HEIGHT,
+                styleName: styleName,
+                selection: selection,
+                showSearch: 1,
+                items: FRUITS,
+                selectedKeys: ["strawberry"],
+                onChange: function (self) { showSelection(info, self); },
+            });
+            const info = createInfoLabel(look);
+            showSelection(info, list);
+        endCard();
+    };
+
+    const start = function () {
+
+        page.color = "#E9EAE6";
+
+        const pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+
+            VGroup({ width: "100%", height: "auto", align: "center top", gap: 24, padding: 32 });
+
+                Label({ text: "ItemList", fontSize: 26, bold: 1, textColor: Black(0.8) });
+                Label({ plainText: "comp-m4 · the new version of comp-m1/item-list.js", fontSize: 14, textColor: Black(0.45) });
+
+                // GROUP: The three style packages
+                HGroup({ width: "100%", height: "auto", align: "center top", gap: 20, wrap: 1 });
+                    createStyleSample("classic", "single", "The list of comp-m1 SelectItem: rows as wide as the list, white under the mouse, the selected one half transparent.");
+                    createStyleSample("modern", "multiple", "Light cards; a check mark on the selected rows.");
+                    createStyleSample("dark", "multiple", "The dark cards of the Ozden Panel (webpage-admin-panel).");
+                endGroup();
+
+                // GROUP: The other layouts
+                HGroup({ width: "100%", height: "auto", align: "center top", gap: 20, wrap: 1 });
+
+                    const classicLook = STYLE_PAGES.classicTiles;
+                    const horizontalCard = startCard("layout: \"horizontal\" · classic", "One row of tiles, like the categories of the template: a grey icon in a circle; the selected one grows, gets its colors and a bold title.", classicLook);
+                    horizontalCard.width = 2 * STYLE_CARD_WIDTH + 20;
+                        ItemList({ width: "100%", height: 216, layout: "horizontal", items: DRINKS.map(withoutDesc), selectedKeys: ["coffee"] });
+                    endCard();
+
+                    const darkLook = STYLE_PAGES.dark;
+                    startCard("layout: \"grid\"", "Tiles that wrap (files, icons, pictures). Arrow keys move in all four ways.", darkLook);
+                        ItemList({ width: "100%", height: 420, layout: "grid", styleName: "dark", selection: "multiple", items: DRINKS });
+                    endCard();
+
+                    // Your own rows: createItemView
+                    startCard("createItemView", "Your own row: a title and a price. style.row.height: \"auto\".", classicLook);
+                        ItemList({
+                            width: "100%",
+                            height: "auto",
+                            style: { row: { height: "auto", padding: [16, 12] } },
+                            items: [
+                                { key: "1", title: "Cappuccino", price: "4.50" },
+                                { key: "2", title: "Tea", price: "2.00" },
+                                { key: "3", title: "Orange juice", price: "3.75" },
+                            ],
+                            createItemView: function (item, row) {
+                                Label({ plainText: item.title, fontSize: 17, textColor: Black(0.8) });
+                                that.grow = 1;
+                                Label({ plainText: "$ " + item.price, fontSize: 17, textColor: "#3D7A6B", bold: 1 });
+                            },
+                        });
+                    endCard();
+
+                endGroup();
+
+            endGroup();
+
+        endBox();
+
+        if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: pageBox });
+
+    };
+
+    </script>
+
+</head>
+<body>
+</body>
+</html>
