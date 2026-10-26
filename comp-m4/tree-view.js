@@ -148,6 +148,7 @@ const TreeView = function (params = {}) {
     const startValue = params.value;
     params.items = [];
     params.value = null;
+    const isAutoHeight = (String(params.height) === "auto"); // WHY: Read before startObject: box.height gives the measured height (0), never "auto".
 
     // BOX: Component container
     let box = startObject(params);
@@ -155,7 +156,6 @@ const TreeView = function (params = {}) {
     // *** PRIVATE VARIABLES:
     const _s = box.style;
     const id = "tree-view-" + (TreeView._counter++);
-    const isAutoHeight = (box.height === "auto");
     let roots = []; // [rec]
     let recs = new Map(); // key -> rec { node, parent, level, row, group, built } (only the rows that were created)
     let nodeIndex = new Map(); // key -> { node, parent } (every node, also inside closed branches)

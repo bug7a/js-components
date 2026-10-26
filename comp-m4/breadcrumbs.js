@@ -88,6 +88,7 @@ const Breadcrumbs = function (params = {}) {
     // Edit params, if needed:
     params.color = "transparent";
     params.height = "auto";
+    const isAutoWidth = (String(params.width) === "auto"); // WHY: Read before startObject: box.width gives the measured width, never "auto".
 
     // BOX: Component container
     let box = startObject(params);
@@ -477,7 +478,7 @@ const Breadcrumbs = function (params = {}) {
 
     // GROUP: Items row (created by render)
     box.content = HGroup({
-        width: (box.width == "auto") ? "auto" : "100%",
+        width: isAutoWidth ? "auto" : "100%",
         height: "auto",
         align: "left center",
         gap: _s.layout.gap,

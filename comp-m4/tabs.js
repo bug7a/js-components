@@ -980,8 +980,6 @@ const Tabs = function (params = {}) {
 
     // *** OBJECT VIEW:
     Tabs.injectCss();
-    // WHY: In a column group with "stretch", width: auto would fill the row. fit-content keeps the bar as wide as its tabs.
-    if (box.width === "auto") box.css.width = "fit-content";
 
     const barStyle = (isPill) ? _s.pillBar : _s.bar;
     const dividerLine = _s.bar.dividerWidth + "px solid " + _s.bar.dividerColor;
