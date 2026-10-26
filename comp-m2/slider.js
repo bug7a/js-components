@@ -23,12 +23,11 @@ const SliderDefaults = {
     width: 250,
 
     currentValue: 0, // Current selected value
-    //valueFormat: "{value}",
     
     minThumbHeight: 44,
     thumbColor: "rgba(0,0,0,0.7)", // Color of the draggable button
     
-    trackHeight: 16, //16, 50
+    trackHeight: 16, // Ex: 16, 50
     trackColor: "cadetblue", // Color of the filled part
     trackBackgroundColor: "rgba(0,0,0,0.05)", // Color of the unfilled part
 
@@ -56,40 +55,52 @@ const Slider = function(params = {}) {
 
     // *** PRIVATE VARIABLES:
     let isDragging = false;
-    //let trackLength = 0;
-    //let thumbPosition = 0;
 
     const minValue = 0; // Minimum slider value
     const maxValue = 100; // Maximum slider value
-    
+    const valueRange = maxValue - minValue;
+
     let startX = 0;
     let startLeft = 0;
-    let diff = maxValue - minValue;
+
+    const TRACK_SPACE = 6; // Between the thumb line and the tracks
+    const DRAG_TRACK_SPACE = 3; // The same while dragging (the line is thinner)
+    const THUMB_LINE_WIDTH = 4;
+    const DRAG_THUMB_LINE_WIDTH = 2;
+    const VALUE_BUBBLE_SPACE = 6; // Between the value bubble and the thumb
+    const VALUE_SHOW_DURATION = 1200; // ms: the value bubble is hidden after it (showValue)
+
+    let trackSpace = TRACK_SPACE;
+    let isFirstRun = 1;
+
+    // *** PRIVATE FUNCTIONS:
 
     // Maximum left position of the thumb (px).
-    // WHY: It was read once at create time (box.width - 20). With width: "100%" the real width comes
-    //      after the layout and changes with the page, so the old value stayed too big and the thumb
-    //      could be dragged out of the slider (and out of the screen). Now it is read every time.
+    // WHY: Read every time: with width: "100%" the real width comes after the layout and changes with the page.
+    //      (A value read at create time let the thumb be dragged out of the slider.)
     const getMaxLeft = function() {
         const max = box.width - thumbBox.width;
         return (max > 0) ? max : 0;
     };
 
-
-    let normalSpace = 6;
-    let isFirstRun = 1;
-    //const draggingSpace = 2;
-
-    // *** PUBLIC VARIABLES:
-    //box.value = box.currentValue;
-
-    // *** PRIVATE FUNCTIONS:
     const updateTrack = function(animated = 0) {
         if (animated == 0) trackBox.dontMotion();
-        trackBox.width = thumbBox.left + thumbLineBox.left - normalSpace;
+        trackBox.width = thumbBox.left + thumbLineBox.left - trackSpace;
         if (animated == 0) emptyTrackBox.dontMotion();
-        emptyTrackBox.width = box.width - (thumbBox.left + thumbBox.width) + thumbLineBox.left - normalSpace;
+        emptyTrackBox.width = box.width - (thumbBox.left + thumbBox.width) + thumbLineBox.left - trackSpace;
     };
+
+    // The value bubble over the thumb: it grows out of the thumb and shrinks back into it.
+    const showValueBubble = function() {
+        valueBox.css.transform = "translateY(0px) scale(1)";
+        valueBox.opacity = 1;
+    };
+
+    const hideValueBubble = function() {
+        valueBox.css.transform = "translateY(25px) scale(0.1)";
+        valueBox.opacity = 0;
+    };
+
     const updateThumbPosition = function(newLeft, animated = 0) {
         const maxLeft = getMaxLeft();
         if (newLeft < 0 || !isFinite(newLeft)) newLeft = 0;
@@ -97,40 +108,28 @@ const Slider = function(params = {}) {
         if (animated == 0) thumbBox.dontMotion();
         thumbBox.left = newLeft;
         updateTrack(animated);
-        //box.currentValue = parseInt((newLeft/maxLeft)*100);
-        box.currentValue = (maxLeft > 0) ? parseInt(((newLeft/maxLeft)*diff) + minValue) : minValue;
+        box.currentValue = (maxLeft > 0) ? parseInt(((newLeft / maxLeft) * valueRange) + minValue) : minValue;
         if (animated == 0) valueBox.dontMotion();
         valueBox.text = box.currentValue;
-        valueBox.aline(thumbBox, "top", 6, "center");
+        valueBox.aline(thumbBox, "top", VALUE_BUBBLE_SPACE, "center");
     };
-    const clampValue = function(val) {};
 
+    // While dragging: a thinner thumb line, closer tracks and the value bubble (showValueOnDrag).
     const setIsDragging = function($isDragging) {
         isDragging = $isDragging;
-        if (isDragging) {
-            normalSpace = 3;
-            thumbLineBox.withMotion(function(){
-                thumbLineBox.width = 2;
-                thumbLineBox.center("left");
-                updateTrack(1);
-                box.showValueClean();
-                if (box.showValueOnDrag) {
-                    valueBox.elem.style.transform = "translateY(0px) scale(1)";
-                    valueBox.opacity = 1;
-                }
-            });
-            
-        } else {
-            normalSpace = 6;
-            thumbLineBox.withMotion(function(){
-                thumbLineBox.width = 4;
-                thumbLineBox.center("left");
-                updateTrack(1);
-                box.showValueClean();
-                valueBox.elem.style.transform = "translateY(25px) scale(0.1)";
-                valueBox.opacity = 0;
-            });
-        }
+        trackSpace = (isDragging) ? DRAG_TRACK_SPACE : TRACK_SPACE;
+        // NOTE: withMotion() runs later: the callback reads the value of this call ($isDragging).
+        thumbLineBox.withMotion(function(){
+            thumbLineBox.width = ($isDragging) ? DRAG_THUMB_LINE_WIDTH : THUMB_LINE_WIDTH;
+            thumbLineBox.center("left");
+            updateTrack(1);
+            box.showValueClean();
+            if (!$isDragging) {
+                hideValueBubble();
+                return;
+            }
+            if (box.showValueOnDrag) showValueBubble();
+        });
     };
 
     const showHideTracks = function($currentLeft, animated) {
@@ -148,18 +147,17 @@ const Slider = function(params = {}) {
         if (val < minValue) val = minValue;
         if (val > maxValue) val = maxValue;
 
-        //const sabit = maxLeft / 100;
-        const sabit = getMaxLeft() / diff;
-        const newLeft = (val - minValue) * sabit;
+        const pixelsPerValue = getMaxLeft() / valueRange;
+        const newLeft = (val - minValue) * pixelsPerValue;
         showHideTracks(val, 1);
         updateThumbPosition(newLeft, 1);
 
-        if(isFirstRun == 0) {
-            if(box.showValueOnSet) box.showValue();
-        } else {
+        if (isFirstRun) {
             isFirstRun = 0;
-            if(box.showValueAtStart && box.showValueOnSet) box.showValue();
+            if (box.showValueAtStart && box.showValueOnSet) box.showValue();
+            return;
         }
+        if (box.showValueOnSet) box.showValue();
 
     };
     // Sets the current slider value and updates UI
@@ -169,21 +167,15 @@ const Slider = function(params = {}) {
     };
     // Returns the current slider value
 
+    // Shows the value bubble for a while.
     box.showValue = function() {
-        //if (box.showValueTimer1) clearTimeout(box.showValueTimer1);
         if (box.showValueTimer) clearTimeout(box.showValueTimer);
-        //box.showValueTimer1 = setTimeout(function() {
-            valueBox.elem.style.transform = "translateY(0px) scale(1)";
-            valueBox.opacity = 1;
-            box.showValueTimer = setTimeout(function() {
-                valueBox.elem.style.transform = "translateY(25px) scale(0.1)";
-                valueBox.opacity = 0;
-            }, 1200);
-        //}, 1);
+        showValueBubble();
+        box.showValueTimer = setTimeout(hideValueBubble, VALUE_SHOW_DURATION);
     };
 
+    // Stops the timer of showValue() (the bubble is not hidden by it).
     box.showValueClean = function() {
-        //if (box.showValueTimer1) clearTimeout(box.showValueTimer1);
         if (box.showValueTimer) clearTimeout(box.showValueTimer);
     }
 
@@ -215,8 +207,7 @@ const Slider = function(params = {}) {
     };
 
     // *** OBJECT VIEW:
-    // view code here
-        
+
         // BOX: Track
         const trackBox = Box({
             height: box.trackHeight,
@@ -224,13 +215,14 @@ const Slider = function(params = {}) {
             left: 0,
             top: 0,
             color: box.trackColor,
-            //border: 1,
             borderColor: "rgba(0, 0, 0, 0.4)",
         });
-        that.elem.style.borderTopRightRadius = "4px";
-        that.elem.style.borderTopLeftRadius = "16px";
-        that.elem.style.borderBottomRightRadius = "4px";
-        that.elem.style.borderBottomLeftRadius = "16px";
+        that.css = {
+            borderTopRightRadius: "4px",
+            borderTopLeftRadius: "16px",
+            borderBottomRightRadius: "4px",
+            borderBottomLeftRadius: "16px",
+        };
         that.setMotion("width 0.2s, opacity 0.2s");
         that.center("top");
 
@@ -242,10 +234,12 @@ const Slider = function(params = {}) {
             top: 0,
             color: box.trackBackgroundColor,
         });
-        that.elem.style.borderTopRightRadius = "16px";
-        that.elem.style.borderTopLeftRadius = "4px";
-        that.elem.style.borderBottomRightRadius = "16px";
-        that.elem.style.borderBottomLeftRadius = "4px";
+        that.css = {
+            borderTopRightRadius: "16px",
+            borderTopLeftRadius: "4px",
+            borderBottomRightRadius: "16px",
+            borderBottomLeftRadius: "4px",
+        };
         that.setMotion("width 0.2s, opacity 0.2s");
         that.center("top");
 
@@ -260,6 +254,7 @@ const Slider = function(params = {}) {
         that.center("top");
         that.right = 4;
 
+        // BOX: Thumb (the draggable part)
         const thumbBox = startBox({
             width: 20,
             height: thumbHeight,
@@ -267,18 +262,17 @@ const Slider = function(params = {}) {
             left: 0,
             color: "transparent",
             clickable: 1,
-            //border: 1,
         });
-        that.elem.style.cursor = "pointer";
+        that.cursor = "pointer";
         that.setMotion("left 0.2s");
 
+            // BOX: Thumb line
             const thumbLineBox = Box({
                 top: 0,
-                width: 4,
+                width: THUMB_LINE_WIDTH,
                 height: thumbHeight,
                 color: box.thumbColor,
                 round: 2,
-                //border: 1,
                 borderColor: "rgba(0, 0, 0, 0.4)",
             });
             that.setMotion("width 0.2s, left 0.2s");
@@ -295,16 +289,14 @@ const Slider = function(params = {}) {
             padding: [11, 9],
             round: 16,
         });
-        valueBox.aline(thumbBox, "top", 6, "center");
-        valueBox.elem.style.transform = "translateY(25px) scale(0.1)";
-        valueBox.opacity = 0;
+        valueBox.aline(thumbBox, "top", VALUE_BUBBLE_SPACE, "center");
+        hideValueBubble();
         valueBox.setMotion("transform 0.2s, opacity 0.2s, left 0.2s");
 
     // *** OBJECT INIT CODE:
 
     // Mouse Events
     const onMouseDown = (self, e) => {
-        //isDragging = true;
         setIsDragging(true);
         startX = e.clientX || e.touches[0].clientX;
         startLeft = parseInt(thumbBox.left, 10) || 0;
@@ -327,17 +319,12 @@ const Slider = function(params = {}) {
         if (newLeft < 0) newLeft = 0;
         if (newLeft > maxLeft) newLeft = maxLeft;
 
-        //trackBox.opacity = (newLeft == 0) ? 0 : 1;
-        //emptyTrackBox.opacity = (newLeft == maxLeft) ? 0 : 1;
         updateThumbPosition(newLeft);
         showHideTracks(box.currentValue, 0);
         box.onDragMove(box.currentValue);
-        //updateTrack();
     };
 
     const onMouseUp = () => {
-        
-        //isDragging = false;
         document.removeEventListener("mousemove", onMouseMove);
         document.removeEventListener("mouseup", onMouseUp);
         document.removeEventListener("touchmove", onMouseMove);
@@ -354,15 +341,13 @@ const Slider = function(params = {}) {
     box.onResize(function() {
         if (isDragging) return;
         const value = box.currentValue;
-        updateThumbPosition((value - minValue) * (getMaxLeft() / diff));
+        updateThumbPosition((value - minValue) * (getMaxLeft() / valueRange));
         box.currentValue = value; // WHY: updateThumbPosition() reads the value back from the position.
         valueBox.text = value;
         showHideTracks(value, 0);
     });
 
     box.setValue(box.currentValue);
-    //updateThumbPosition(0);
-    //showHideTracks(box.currentValue, 1);
 
     return endObject(box);
 

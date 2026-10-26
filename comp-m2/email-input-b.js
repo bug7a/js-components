@@ -30,25 +30,22 @@ const EmailInputBDefaults = {
 
 const EmailInputB = function(params = {}) {
 
-    // Marge params first
+    // Merge params first
     mergeIntoIfMissing(params, EmailInputBDefaults);
-
-    // Edit params:
-    // params.width = getDefaultContainerBox().width;
 
     // BOX: Component container
     const box = startExtendedObject(InputB, params);
 
     // *** PRIVATE VARIABLES:
+    const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // name@domain.ext
 
     // *** PUBLIC VARIABLES:
 
     // *** PRIVATE FUNCTIONS:
 
     // *** PUBLIC FUNCTIONS:
-    box.isValid = function() { //OVERRIDE
-        // Check email format
-        return (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(box.getInputValue())) ? 1 : 0;
+    box.isValid = function() { // OVERRIDE
+        return EMAIL_PATTERN.test(box.getInputValue()) ? 1 : 0;
     };
     
     // *** OBJECT VIEW:

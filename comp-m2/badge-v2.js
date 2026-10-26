@@ -49,48 +49,38 @@ const Badge = function (params = {}) {
     let box = startObject(params);
 
     // *** PRIVATE VARIABLES:
-    //
+    const DOT_OFFSET = 4; // px from the top right corner
 
     // *** PUBLIC VARIABLES:
-    // "hidden", "dot", "number" [var]
-    box.state = "hidden";
+    box.state = "hidden"; // "hidden", "dot", "number"
 
     // *** PRIVATE FUNCTIONS:
+
+    // The text of a number: over maxValue -> "99+" (showPlus: 1)
+    const getNumberText = function () {
+        if (box.value > box.maxValue && box.showPlus) return box.maxValue + "+";
+        return box.value.toString();
+    };
+
+    // 0 -> hidden, 1 -> a dot, more -> the number
     const updateBadgeDisplay = function () {
 
-        if (box.value === undefined || box.value === null || box.value === 0) {
-
-            // Hide badge
-            box.setState("hidden");
-
-        } else if (box.value === 1) {
-
-            // Show as dot
+        if (box.value === 1) {
             box.dot.width = box.dotSize;
             box.dot.height = box.dotSize;
             box.dot.color = box.badgeStyle.color;
             box.setState("dot");
-
-        } else if (typeof box.value === "number" && box.value > 1) {
-
-            // Show as number
-            box.label.color = box.badgeStyle.color;
-
-            // Format number display
-            let displayText = box.value.toString();
-            if (box.value > box.maxValue && box.showPlus) {
-                displayText = box.maxValue + "+";
-            }
-            box.label.text = displayText;
-
-            box.setState("number");
-
-        } else {
-
-            // Hide for any other case
-            box.setState("hidden");
-
+            return;
         }
+
+        if (typeof box.value === "number" && box.value > 1) {
+            box.label.color = box.badgeStyle.color;
+            box.label.text = getNumberText();
+            box.setState("number");
+            return;
+        }
+
+        box.setState("hidden"); // 0, empty or not a number
 
     };
 
@@ -99,8 +89,8 @@ const Badge = function (params = {}) {
         if (value === undefined || value === null) return 0;
 
         if (typeof value === "string") {
-            const num = parseInt(value);
-            return isNaN(num) ? 0 : num;
+            const parsedNumber = parseInt(value);
+            return isNaN(parsedNumber) ? 0 : parsedNumber;
         }
 
         if (typeof value === "number") {
@@ -163,7 +153,7 @@ const Badge = function (params = {}) {
                 box.label.opacity = 0;
                 break;
 
-            default:
+            default: // An unknown state is hidden.
                 box.state = "hidden";
                 box.dot.opacity = 0;
                 box.label.opacity = 0;
@@ -175,18 +165,19 @@ const Badge = function (params = {}) {
 
     // *** OBJECT VIEW:
 
+    // BOX: Dot (value: 1)
     box.dot = Box({
         width: box.dotSize,
         height: box.dotSize,
-        top: 4,
-        right: 4,
+        top: DOT_OFFSET,
+        right: DOT_OFFSET,
         round: 100,
         opacity: 0,
     });
     box.dot.props(box.badgeStyle);
     box.dot.setMotion("opacity 0.2s");
 
-    // Badge label for number display
+    // LABEL: Number (value: 2 or more)
     box.label = Label({
         text: "0",
         fontSize: 12,
@@ -201,7 +192,6 @@ const Badge = function (params = {}) {
 
     // *** OBJECT INIT CODE:
 
-    // Initialize badge display
     box.value = validateValue(box.value);
     updateBadgeDisplay();
 

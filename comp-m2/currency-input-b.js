@@ -43,24 +43,21 @@ const CurrencyInputB = function(params = {}) {
     const box = startExtendedObject(InputB, CurrencyInputBDefaults, params);
 
     // *** PRIVATE VARIABLES:
-    let previousCursorPos = 0;
+    const inputElem = box.input.inputElement;
+    let charsAfterCursor = 0; // WHY: Counted from the end, because the separators added by the format are before the cursor.
 
     // *** PRIVATE FUNCTIONS:
     const rememberCursorPosition = function() {
-        const totalLength = inputElem.value.length;
-        const cursorPos = inputElem.selectionStart;
-        previousCursorPos = totalLength - cursorPos;
+        charsAfterCursor = inputElem.value.length - inputElem.selectionStart;
     }
 
-    // 2. Call after formatting to restore adjusted position
+    // Call after formatting
     const restoreCursorPosition = function() {
-        const totalLength = inputElem.value.length;
-        const cursorPos = totalLength - previousCursorPos;
-        // input'a uygula
+        const cursorPos = inputElem.value.length - charsAfterCursor;
         inputElem.setSelectionRange(cursorPos, cursorPos);
     }
 
-    const makeExamamplePlaceholder = function() {
+    const makeExamplePlaceholder = function() {
         let value = "";
 
         if (box.allowNegative) {
@@ -76,14 +73,13 @@ const CurrencyInputB = function(params = {}) {
         return value;
     }
 
-    const regexEscape = function(str) {
-        return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const escapeForRegex = function(text) {
+        return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
 
     const clearGroupFormat = function(value) {
-        let escaped = regexEscape(box.groupSeparator);
-        let cleanValue = value.replace(new RegExp(escaped, "g"), "");
-        return cleanValue;
+        const escapedSeparator = escapeForRegex(box.groupSeparator);
+        return value.replace(new RegExp(escapedSeparator, "g"), "");
     }
 
     const formatWithGrouping = function(value) {
@@ -91,40 +87,32 @@ const CurrencyInputB = function(params = {}) {
         value = value.toString();
 
         let newValue = "";
-        let numberCount = 0;
-        let readyToCount = 0; // to group
-
+        let digitCount = 0;
         // Eğer küsüratsız bir sayı ise, direk gruplamaya başla.
-        if (!value.includes(box.decimalSeparator)) {
-            readyToCount = 1;
-        }
-
-        let finishBeforeEnd = 1;
-
-        if (value[0] == "-") {
-            finishBeforeEnd = 2;
-        }
+        let isGrouping = !value.includes(box.decimalSeparator);
+        // WHY: No separator before the first digit (index 0, or 1 after a "-").
+        const firstDigitIndex = (value[0] == "-") ? 1 : 0;
 
         for (let i = (value.length - 1); i >= 0; i--) {
 
             newValue = value[i] + newValue;
 
-            if (readyToCount == 1 && i >= finishBeforeEnd) {
+            if (isGrouping && i > firstDigitIndex) {
 
                 if (!isNaN(value[i])) {
-                    numberCount++;
+                    digitCount++;
                 }
 
-                if (numberCount == 3) {
-                    numberCount = 0;
+                if (digitCount == 3) {
+                    digitCount = 0;
                     newValue = box.groupSeparator + newValue;
                 }
 
             }
             
             // Eğer küsürat kısmı geçmiş ise, gruplamaya başla.
-            if (readyToCount == 0 && value[i] == box.decimalSeparator) {
-                readyToCount = 1;
+            if (!isGrouping && value[i] == box.decimalSeparator) {
+                isGrouping = true;
             }
 
         }
@@ -133,7 +121,7 @@ const CurrencyInputB = function(params = {}) {
 
     }
 
-    // *** PUBLIC FONCTIONS:
+    // *** PUBLIC FUNCTIONS:
     box.getInputValueAsNumber = function() {
         return clearGroupFormat(box.getInputValue());
     }
@@ -159,14 +147,14 @@ const CurrencyInputB = function(params = {}) {
 
         // 3. Ondalık ayraç sadece bir kez geçmeli
         if (box.allowDecimal) {
-            const sep = box.decimalSeparator;
-            const parts = value.split(sep);
+            const separator = box.decimalSeparator;
+            const parts = value.split(separator);
             if (parts.length > 2) {
-                value = parts.pop() + sep + parts.join("");
+                value = parts.pop() + separator + parts.join("");
             }
             if (parts.length === 2 && box.maxDecimalDigits >= 0) {
                 parts[1] = parts[1].substring(0, box.maxDecimalDigits);
-                value = parts[0] + sep + parts[1];
+                value = parts[0] + separator + parts[1];
             }
         }
 
@@ -192,12 +180,10 @@ const CurrencyInputB = function(params = {}) {
     };
 
     // *** OBJECT INIT CODE:
-    const inputElem = box.input.inputElement;
 
     // Show example placeholder
     if (box.placeholder == "(auto)") {
-        box.placeholder = makeExamamplePlaceholder();
-        box.setPlaceholder(box.placeholder);
+        box.setPlaceholder(makeExamplePlaceholder());
     }
 
     return endExtendedObject(box);

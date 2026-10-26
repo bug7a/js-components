@@ -42,9 +42,7 @@ const LeftMenuDefaults = {
 
 const LeftMenu = function(params = {}) {
 
-    //console.time("LeftMenu");
-
-    // Marge params:
+    // Merge params:
     mergeIntoIfMissing(params, LeftMenuDefaults);
 
     // BOX: Component container
@@ -53,17 +51,31 @@ const LeftMenu = function(params = {}) {
     // *** PRIVATE VARIABLES:
     let isExpanded = 0;           // Menu expansion state
     let selectedItemKey = null;   // Currently selected item
-    let hoverTimeout = null;      // Hover delay timer
     let useTapMode = 0;           // 1: The menu opens with a tap (touch device), not with hover.
     const itemList = [];          // Array to store menu items
     const itemElements = [];      // Array to store item UI elements
-    const WIDTH = 40;
+    const WIDTH = 40;             // Collapsed width (only the icons)
+    const ICON_OPACITY = 0.6;     // The icon of an item that is not hovered or selected
 
     // *** PUBLIC VARIABLES:
     box.publicVar = 1;
     box.state = "collapsed";      // "collapsed", "expanded"
 
     // *** PRIVATE FUNCTIONS:
+
+    // The look of a button item: "normal", "hover" or "selected" (a gradient from the left)
+    const paintButtonItem = function(buttonBox, look) {
+        if (look === "normal") {
+            buttonBox.css.background = "transparent";
+            buttonBox.icon.opacity = ICON_OPACITY;
+            buttonBox.textLabel.textColor = box.textColor;
+            return;
+        }
+        const backColor = (look === "selected") ? box.selectedColor : box.hoverColor;
+        buttonBox.css.background = `linear-gradient(to right, ${backColor} 0%, rgba(0,0,0,0) 100%)`;
+        buttonBox.icon.opacity = 1;
+        buttonBox.textLabel.textColor = box.selectedTextColor;
+    };
 
     // Create a menu button item
     const createButtonItem = function(item) {
@@ -76,12 +88,12 @@ const LeftMenu = function(params = {}) {
             position: "relative",
         });
         buttonBox.setMotion("background-color 0.2s");
-        buttonBox.elem.style.cursor = "pointer";
+        buttonBox.cursor = "pointer";
         buttonBox.data = item;
 
             HGroup({
                 align: "left center",
-                gap: 20, //12
+                gap: 20,
                 padding: [8, 0],
             });
 
@@ -90,12 +102,12 @@ const LeftMenu = function(params = {}) {
                     width: 24,
                     height: 24,
                     color: "transparent",
-                    opacity: 0.6,
+                    opacity: ICON_OPACITY,
                 });
                 buttonBox.icon.load(item.icon);
 
                 if (box.invertIconColor == 1) {
-                    that.elem.style.filter = "invert(100%)";
+                    that.css.filter = "invert(100%)";
                 }
 
                 // Text label (hidden when collapsed)
@@ -137,30 +149,12 @@ const LeftMenu = function(params = {}) {
         // Hover effects
         buttonBox.on("mouseover", function() {
             if (useTapMode) return; // WHY: A touch also fires mouseover; the color would stay on the item.
-            //buttonBox.color = box.hoverColor;
-            // INSERT_YOUR_CODE
-            // Create a left-to-right fading gradient effect on hover
-            if (selectedItemKey != item.key) {
-                buttonBox.elem.style.background = `linear-gradient(to right, ${box.hoverColor} 0%, rgba(0,0,0,0) 100%)`;
-                buttonBox.icon.opacity = 1;
-                buttonBox.textLabel.textColor = box.selectedTextColor;
-            }
-            //if (!isExpanded) {
-            //    buttonBox.color = box.hoverColor;
-            //}
+            if (selectedItemKey != item.key) paintButtonItem(buttonBox, "hover");
         });
 
         buttonBox.on("mouseout", function() {
             if (useTapMode) return;
-            if (selectedItemKey != item.key) {
-                buttonBox.elem.style.background = `transparent`;
-                buttonBox.icon.opacity = 0.6;
-                buttonBox.textLabel.textColor = box.textColor;
-            }
-            //buttonBox.color = "transparent";
-            //if (!isExpanded) {
-            //    buttonBox.color = "transparent";
-            //}
+            if (selectedItemKey != item.key) paintButtonItem(buttonBox, "normal");
         });
 
         return buttonBox;
@@ -178,8 +172,8 @@ const LeftMenu = function(params = {}) {
         });
         headerBox.data = item;
 
+            // BOX: Line
             Box(0, 0, 100, 1, {
-                //color: "#EBEBEB",
                 color: box.titleColor,
             });
             that.top = 14;
@@ -193,14 +187,12 @@ const LeftMenu = function(params = {}) {
                 // Header text
                 const headerText = Label({
                     text: item.text,
-                    //textColor: "rgba(255,255,255,0.4)",
                     textColor: box.titleColor,
                     fontSize: 12,
                     color: box.backgroundColor,
                     padding: [12, 0],
                 });
-                headerText.elem.style.fontWeight = "bold";
-                headerText.elem.style.textTransform = "uppercase";
+                headerText.css = { fontWeight: "bold", textTransform: "uppercase" };
 
             endAutoLayout();
 
@@ -216,10 +208,8 @@ const LeftMenu = function(params = {}) {
         if (selectedItemKey) {
             const prev = itemElements.find(el => el.data.key === selectedItemKey);
             if (prev && prev.data.type === "button") {
-                prev.elem.style.background = `transparent`;
-                prev.icon.opacity = 0.6;
-                prev.textLabel.textColor = box.textColor;
-                prev.elem.style.cursor = "pointer";
+                paintButtonItem(prev, "normal");
+                prev.cursor = "pointer";
             }
 
             selectedItemKey = null;
@@ -236,10 +226,8 @@ const LeftMenu = function(params = {}) {
         // Yeni öğeyi seç
         const current = itemElements.find(el => el.data.key === itemKey);
         if (current && current.data.type === "button") {
-            current.elem.style.background = `linear-gradient(to right, ${box.selectedColor} 0%, rgba(0,0,0,0) 100%)`;
-            current.icon.opacity = 1;
-            current.textLabel.textColor = box.selectedTextColor;
-            current.elem.style.cursor = "default";
+            paintButtonItem(current, "selected");
+            current.cursor = "default";
 
             selectedItemKey = itemKey;
         }
@@ -277,7 +265,7 @@ const LeftMenu = function(params = {}) {
     };
 
     // Tap outside the menu: close it. (Only in tap mode)
-    const onDocumentPointerDown = function(event) {
+    const onDocumentPointerDown = function(self, event) {
         if (!box || !useTapMode || !isExpanded) return;
         if (box.elem.contains(event.target)) return;
         collapseMenu();
@@ -288,7 +276,11 @@ const LeftMenu = function(params = {}) {
     // "auto": Tap on a touch device, hover with a mouse. 1: Always tap, 0: Always hover.
     box.setOpenOnClick = function(openOnClick) {
         box.openOnClick = openOnClick;
-        useTapMode = (openOnClick === "auto") ? isTouchDevice() : ((openOnClick == 1 || openOnClick === true) ? 1 : 0);
+        if (openOnClick === "auto") {
+            useTapMode = isTouchDevice();
+        } else {
+            useTapMode = basic.isOn(openOnClick) ? 1 : 0;
+        }
         if (!useTapMode) collapseMenu(); // WHY: Hover mode starts closed; the mouse decides.
         return useTapMode;
     };
@@ -304,10 +296,8 @@ const LeftMenu = function(params = {}) {
     box.remove = function () {
 
         if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
-        // WHY: document and page events are not cleaned by box.remove().
-        document.removeEventListener("pointerdown", onDocumentPointerDown, true);
+        // WHY: page.onResize() is not cleaned by box.remove(). (box.onPageResize() is a window resize: not the same time.)
         page.remove_onResize(resizeScrollableBox);
-        clearTimeout(hoverTimeout);
 
         superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
         box = null;
@@ -386,14 +376,13 @@ const LeftMenu = function(params = {}) {
     };
 
     // *** OBJECT VIEW:
-    box.elem.style.cursor = "default";
+    box.cursor = "default";
     box.color = box.backgroundColor;
     box.height = `calc(100% - ${box.topBarHeight}px)`;
     box.width = WIDTH;
     box.bottom = 0;
     box.left = 0;
     box.round = 0;
-    //box.elem.style.borderRight = "solid 1px black";
 
         const SPACE_BETWEEN = 30;
     
@@ -415,10 +404,6 @@ const LeftMenu = function(params = {}) {
                 box.addItemToTop(item);
             });
 
-            //createHeaderItem({ key: "divider1", type: "header", text: "Araçlar" });
-            //createButtonItem({ key: "home", type: "button", text: "Ana Sayfa", icon: "../assets/icons/alert.png" });
-            //createButtonItem({ key: "home", type: "button", text: "Ana Sayfa", icon: "../assets/icons/alert.png" });        
-
             endGroup();
 
         endBox();
@@ -430,7 +415,7 @@ const LeftMenu = function(params = {}) {
             bar_round: 3,
             bar_borderColor: "rgba(0, 0, 0, 1)",
             bar_width: 4,
-            bar_mouseOverWidth: 4, //8
+            bar_mouseOverWidth: 4,
             bar_mouseOverColor: "#FFFFFF",
             bar_opacity: 0.4,
             bar_mouseOverOpacity: 0.9,
@@ -461,9 +446,6 @@ const LeftMenu = function(params = {}) {
 
         page.onResize(resizeScrollableBox);
 
-        //createButtonItem({ key: "home", type: "button", text: "Ana Sayfa", icon: "../assets/icons/alert.png" });
-        //createButtonItem({ key: "home", type: "button", text: "Ana Sayfa", icon: "../assets/icons/alert.png" });
-
     endGroup();
 
     // *** OBJECT INIT CODE:
@@ -474,15 +456,11 @@ const LeftMenu = function(params = {}) {
     box.on("mouseenter", function() {
         if (useTapMode) return;
         expandMenu();
-        //clearTimeout(hoverTimeout);
-        //hoverTimeout = setTimeout(expandMenu, 200); // 200ms delay
     });
 
     box.on("mouseleave", function() {
         if (useTapMode) return;
         collapseMenu();
-        //clearTimeout(hoverTimeout);
-        //hoverTimeout = setTimeout(collapseMenu, 500); // 500ms delay before collapse
     });
 
     // Tap on the menu (also on an empty place of it): open it. (Touch device)
@@ -491,10 +469,8 @@ const LeftMenu = function(params = {}) {
     });
 
     // WHY: Capture, so it also works when the tap is stopped by another object. (Ex: a page that closes its own menu)
-    document.addEventListener("pointerdown", onDocumentPointerDown, true);
+    box.listenTo(document, "pointerdown", onDocumentPointerDown, true); // NOTE: Removed by remove().
 
-    //console.timeEnd("LeftMenu");
-    
     return endObject(box);
 
 };

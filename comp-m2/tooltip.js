@@ -41,44 +41,49 @@ const Tooltip = function(params = {}) {
     box.props(defaults, params);
 
     // *** Private variables:
-    let _removeMouseOver = null;
-    let _removeMouseMove = null;
-    let _removeMouseOut = null;
-
-    // *** Public variables:
-    //box.publicVar = "";
+    let removeMouseOver = null;
+    let removeMouseMove = null;
+    let removeMouseOut = null;
+    const SPACE_ABOVE_MOUSE = 12;
+    const SPACE_BELOW_MOUSE = 8;
+    const SPACE_BESIDE_MOUSE = 25;
 
     // *** Private functions:
 
-    const refreshPosition = function() {
+    // WHY: One hint label (window.lblHint) is shared by every Tooltip: only the one under the mouse is open.
+    const removeHintLabel = function() {
+        if (!window.lblHint) return;
+        window.lblHint.remove();
+        window.lblHint = null;
+    };
 
-        const e = window.event;
-        const posX = e.clientX;
-        const posY = e.clientY;
+    const refreshPosition = function(event) {
 
-        box.mouseX = withPageZoom(posX);
-        box.mouseY = withPageZoom(posY);
+        box.mouseX = withPageZoom(event.clientX);
+        box.mouseY = withPageZoom(event.clientY);
+
+        const hint = window.lblHint;
 
         switch (box.hintPosition) {
 
             case "top":
-            window.lblHint.top = box.mouseY - window.lblHint.height - 12;
-            window.lblHint.left = box.mouseX - (window.lblHint.width / 2);
+            hint.top = box.mouseY - hint.height - SPACE_ABOVE_MOUSE;
+            hint.left = box.mouseX - (hint.width / 2);
             break;
 
             case "bottom":
-            window.lblHint.top = box.mouseY + window.lblHint.height + 8;
-            window.lblHint.left = box.mouseX - (window.lblHint.width / 2);
+            hint.top = box.mouseY + hint.height + SPACE_BELOW_MOUSE;
+            hint.left = box.mouseX - (hint.width / 2);
             break;
 
             case "left":
-            window.lblHint.top = box.mouseY - (window.lblHint.height / 2);
-            window.lblHint.left = box.mouseX - window.lblHint.width - 25;
+            hint.top = box.mouseY - (hint.height / 2);
+            hint.left = box.mouseX - hint.width - SPACE_BESIDE_MOUSE;
             break;
              
             case "right":
-            window.lblHint.top = box.mouseY - (window.lblHint.height / 2);
-            window.lblHint.left = box.mouseX + 25;
+            hint.top = box.mouseY - (hint.height / 2);
+            hint.left = box.mouseX + SPACE_BESIDE_MOUSE;
             break;
 
         }
@@ -86,7 +91,6 @@ const Tooltip = function(params = {}) {
     };
 
     // *** Public functions:
-    //box.publicFunc = () => {};
 
     // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
     const superRemove = box.remove;
@@ -96,14 +100,11 @@ const Tooltip = function(params = {}) {
         if (box._isRemoved) return; // WHY: remove() can be called twice (also by the parent's remove()).
 
         // WHY: The mouse events are on the target object, box.remove() does not clean them.
-        _removeMouseOver();
-        _removeMouseMove();
-        _removeMouseOut();
+        removeMouseOver();
+        removeMouseMove();
+        removeMouseOut();
 
-        if (window.lblHint) {
-            window.lblHint.remove();
-            window.lblHint = null;
-        };
+        removeHintLabel();
 
         superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
 
@@ -123,58 +124,47 @@ const Tooltip = function(params = {}) {
         }
     }
 
-    // Set a param after created.
-    //box.setColor = function(color) {
-    //    box.color = color;
-    //};
-    // USAGE: get: componentName.color, set: componentName.setColor("red")
-
     // *** OBJECT TEMPLATE:
 
-    _removeMouseOver = box.target.on("mouseover", function() {
-        if (!window.lblHint) {
-            window.lblHint = Label({
-                fontSize: box.lbl_fontSize,
-                spaceX: box.lbl_spaceX,
-                spaceY: box.lbl_spaceY,
-                color: box.lbl_color,
-                textColor: box.lbl_textColor,
-                round: box.lbl_round,
-                border: box.lbl_border,
-                borderColor: box.lbl_borderColor,
-            });
-            page.add(that);
-            that.text = box.hintText;
-        }
+    removeMouseOver = box.target.on("mouseover", function() {
+        if (window.lblHint) return;
+
+        window.lblHint = Label({
+            fontSize: box.lbl_fontSize,
+            spaceX: box.lbl_spaceX,
+            spaceY: box.lbl_spaceY,
+            color: box.lbl_color,
+            textColor: box.lbl_textColor,
+            round: box.lbl_round,
+            border: box.lbl_border,
+            borderColor: box.lbl_borderColor,
+        });
+        page.add(that);
+        that.text = box.hintText;
     });
 
-    _removeMouseMove = box.target.on("mousemove", function() {
-        if (window.lblHint) {
-            
-            // WHY: Eğer mouse tooltip tetikleyen bir object üzerinde bırakılırsa ve
-            // başka bir olay, tooltip in text ve rengini değiştirirse; objeye giriş yapmadan hareket ettirilen mouse,
-            // diğer olayın metnini gösterebilir. O yüzden, metin kontrol ediliyor.
-            if (window.lblHint.text != box.hintText) {
-                window.lblHint.text = box.hintText;
-            }
-            if (window.lblHint.color != box.lbl_color) {
-                window.lblHint.color = box.lbl_color;
-            }
+    removeMouseMove = box.target.on("mousemove", function(self, event) {
+        if (!window.lblHint) return;
 
-            refreshPosition(box.hintPosition);
+        // WHY: Eğer mouse tooltip tetikleyen bir object üzerinde bırakılırsa ve
+        // başka bir olay, tooltip in text ve rengini değiştirirse; objeye giriş yapmadan hareket ettirilen mouse,
+        // diğer olayın metnini gösterebilir. O yüzden, metin kontrol ediliyor.
+        if (window.lblHint.text != box.hintText) {
+            window.lblHint.text = box.hintText;
         }
+        if (window.lblHint.color != box.lbl_color) {
+            window.lblHint.color = box.lbl_color;
+        }
+
+        refreshPosition(event);
     });
 
-    _removeMouseOut = box.target.on("mouseout", function() {
-        if (window.lblHint) {
-            window.lblHint.remove();
-            window.lblHint = null;
-        }
+    removeMouseOut = box.target.on("mouseout", function() {
+        removeHintLabel();
     });
 
     // *** OBJECT INIT CODE:
     box.target.clickable = 1;
-    //box.target.elem.style.cursor = "pointer";
     
     return endObject(box);
 

@@ -2,7 +2,7 @@
 
 /*
 
-Component Template - v25.07
+PhoneInputB - v25.07
 
 UI COMPONENT TEMPLATE
 - You can customize, this template code as you need:
@@ -43,14 +43,13 @@ const PhoneInputBDefaults = {
 
 const PhoneInputB = function(params = {}) {
 
-    // Marge params:
+    // Merge params:
     mergeIntoIfMissing(params, PhoneInputBDefaults);
 
     // Edit params, if needed:
     if (params.createInput == 0) {
         params.createInput = 1;
     }
-    // params.width = getDefaultContainerBox().width;
 
     // BOX: Component container
     const box = startExtendedObject(InputB, params);
@@ -62,28 +61,77 @@ const PhoneInputB = function(params = {}) {
 
     // *** PRIVATE FUNCTIONS:
 
-    // NOTE: Default values are also public variables.
+    const getFullMask = function() {
+        return box.countryCode + box.phoneMask;
+    };
 
-
-
-    // *** PRIVATE FUNCTIONS:
-
-    // Input'a focus olduğunda countryCode + phoneMask göster ve cursor'u ayarla
+    // The cursor goes to the first empty digit (the first "_"), or to the end when the number is full.
     const setCursorToFirstUnderscore = function() {
         if (!inputElem) return;
         const firstUnderscore = inputElem.value.indexOf("_");
-        if (inputElem.selectionStart !== firstUnderscore) {
-            let cursorPos = firstUnderscore !== -1 ? firstUnderscore : inputElem.value.length;
-            inputElem.setSelectionRange(cursorPos, cursorPos); // WHY: Cursorda önce sona gitmesin.
-            setTimeout(() => {
-                inputElem.setSelectionRange(cursorPos, cursorPos); // WHY: Asıl cursoru taşıma kodu.
-            }, 0);
-        }
+        if (inputElem.selectionStart === firstUnderscore) return;
+
+        const cursorPos = (firstUnderscore !== -1) ? firstUnderscore : inputElem.value.length;
+        inputElem.setSelectionRange(cursorPos, cursorPos); // WHY: Cursorda önce sona gitmesin.
+        setTimeout(() => {
+            inputElem.setSelectionRange(cursorPos, cursorPos); // WHY: Asıl cursoru taşıma kodu (after the browser moved it).
+        }, 0);
     };
 
-    const randomPhone = function() {
-        const mask = box.phoneMask;
-        return mask.replace(/_/g, () => Math.floor(Math.random() * 10));
+    const makeRandomPhoneNumber = function() {
+        return box.phoneMask.replace(/_/g, () => Math.floor(Math.random() * 10));
+    };
+
+    // Every "_" of the mask gets the next digit; a "_" stays when there is no digit left.
+    const fillMaskWithDigits = function(mask, digits) {
+        let digitIndex = 0;
+        let result = "";
+        for (let i = 0; i < mask.length; i++) {
+            if (mask[i] !== "_") {
+                result += mask[i];
+                continue;
+            }
+            if (digitIndex < digits.length) {
+                result += digits[digitIndex];
+                digitIndex++;
+            } else {
+                result += "_";
+            }
+        }
+        return result;
+    };
+
+    // Backspace ile sadece rakam silinsin, countryCode ve sabit karakterler silinmesin
+    const deleteDigitBeforeCursor = function(event) {
+        const cursorPos = inputElem.selectionStart;
+        const value = inputElem.value;
+        const mask = getFullMask();
+        const firstDigitIndex = mask.indexOf("_");
+
+        // Eğer cursor countryCode veya sabit karakterlerin başındaysa silmeye izin verme
+        if (cursorPos <= firstDigitIndex) {
+            event.preventDefault();
+            setCursorToFirstUnderscore();
+            return;
+        }
+
+        // Sola doğru ilk rakamı bul
+        const left = value.slice(0, cursorPos);
+        const right = value.slice(cursorPos);
+        let i = left.length - 1;
+        while (i >= 0 && mask[i] !== "_") i--;
+
+        if (i >= 0) {
+            inputElem.value = left.substring(0, i) + "_" + left.substring(i + 1) + right;
+        }
+        // WHY: The browser does not delete: the digit became "_" above (or there was no digit to delete).
+        event.preventDefault();
+        setCursorToFirstUnderscore();
+
+        // WHY: Backspace e bastığında da, güncellesin.
+        box.checkIfInputIsRequiredAndEmpty();
+        box.showWarningIfNotValid(box.isValid());
+        box.onEdit(); // WHY: Silme işleminde edit tetiklenmeli.
     };
 
     // *** PUBLIC FUNCTIONS:
@@ -98,63 +146,16 @@ const PhoneInputB = function(params = {}) {
             value = value.substring(box.countryCode.length);
         }
 
-        // 2. phoneMask içindeki tüm karakterleri value'dan temizle
-        let maskChars = box.phoneMask.replace(/[_\d]/g, ""); // mask içindeki rakam ve _ hariç karakterler
-        let uniqueMaskChars = Array.from(new Set(maskChars.split("").filter(c => c !== " "))).join("");
-        let regex = new RegExp("[" + uniqueMaskChars.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&') + "]", "g");
-        let cleanNumber = value.replace(regex, "").replace(/\s/g, "").replace(/[^0-9]/g, "");
+        // 2. Yalnızca rakamlar kalsın (the characters of the mask go too)
+        let digits = value.replace(/[^0-9]/g, "");
+
+        // Fazla girilen rakamları yoksay
+        const maxDigits = (box.phoneMask.match(/_/g) || []).length;
+        digits = digits.substring(0, maxDigits);
 
         // 3. Şimdi countryCode + phoneMask formatına uygun şekilde doldur
-        let formatted = box.countryCode + box.phoneMask;
-        let digitIndex = 0;
-        let result = "";
-        for (let i = 0; i < formatted.length; i++) {
-            if (formatted[i] === "_") {
-                if (digitIndex < cleanNumber.length) {
-                    result += cleanNumber[digitIndex];
-                    digitIndex++;
-                } else {
-                    result += "_";
-                }
-            } else {
-                result += formatted[i];
-            }
-        }
-        
-        // Eğer tüm _ alanları dolduysa, fazlasını alma
-        let maxDigits = (box.phoneMask.match(/_/g) || []).length;
-        if (cleanNumber.length > maxDigits) {
-            // Fazla girilen rakamları yoksay
-            let trimmedNumber = cleanNumber.substring(0, maxDigits);
-            digitIndex = 0;
-            result = "";
-            for (let i = 0; i < formatted.length; i++) {
-                if (formatted[i] === "_") {
-                    result += trimmedNumber[digitIndex];
-                    digitIndex++;
-                } else {
-                    result += formatted[i];
-                }
-            }
-        }
-
-        // Sonucu input'a geri yaz
-        box.setInputValue(result);
-        
-        // Cursor'ı ilk _ karakterinin başına konumla
+        box.setInputValue(fillMaskWithDigits(getFullMask(), digits));
         setCursorToFirstUnderscore();
-        /*
-        const inputElem = box.input.inputElement;
-        if (inputElem && typeof inputElem.setSelectionRange === "function") {
-            const firstUnderscore = result.indexOf("_");
-            let cursorPos = firstUnderscore !== -1 ? firstUnderscore : result.length;
-            // setTimeout ile, değer güncellendikten sonra cursor'u ayarla
-            inputElem.setSelectionRange(cursorPos, cursorPos);
-            setTimeout(() => {
-                inputElem.setSelectionRange(cursorPos, cursorPos);
-            }, 0);
-        }
-        */
 
     };
 
@@ -173,12 +174,12 @@ const PhoneInputB = function(params = {}) {
     //      was in it, a required one showed "Invalid" instead of "Required", and the mask could be sent.
     box.getInputValue = function() { // OVERRIDE
         const value = box.input.text;
-        return (value === box.countryCode + box.phoneMask) ? "" : value;
+        return (value === getFullMask()) ? "" : value;
     };
 
-    box.isValid = function() {
-        const val = box.getInputValue();
-        if (!val || val.indexOf("_") !== -1) {
+    box.isValid = function() { // OVERRIDE
+        const value = box.getInputValue();
+        if (!value || value.indexOf("_") !== -1) {
             return 0;
         }
         return 1;
@@ -196,15 +197,8 @@ const PhoneInputB = function(params = {}) {
     };
 
     box.fillAutoPlaceholder = function() {
-        box.placeholder = box.countryCode + randomPhone();
-        box.setPlaceholder(box.placeholder);
-        
+        box.setPlaceholder(box.countryCode + makeRandomPhoneNumber());
     }
-
-    // *** OBJECT VIEW:
-    // 
-
-
 
     // *** OBJECT INIT CODE:
 
@@ -219,12 +213,9 @@ const PhoneInputB = function(params = {}) {
         box.focusFunc = function () {
             box.background.color = box.selectedBackgroundColor;
             box.line.color = box.selectedLineColor;
-            let val = inputElem.value;
             // Eğer input boşsa countryCode + phoneMask yaz
-            console.log(val);
-            if (!val || val.trim() === "") {
-                let formatted = box.countryCode + box.phoneMask;
-                inputElem.value = formatted;
+            if (inputElem.value.trim() === "") {
+                inputElem.value = getFullMask();
             }
             setCursorToFirstUnderscore();
             // WHY: İlk seçimde güncellesin, çünkü maske gösteriyor. ve artık input boş olmuyor.
@@ -237,12 +228,8 @@ const PhoneInputB = function(params = {}) {
             box.background.color = box.backgroundColor;
             box.line.color = box.lineColor;
 
-            let formatted = box.countryCode + box.phoneMask;
-            if (inputElem.value == formatted) { // WHY: The field itself. (getInputValue() is "" for the mask.)
+            if (inputElem.value == getFullMask()) { // WHY: The field itself. (getInputValue() is "" for the mask.)
                 box.setInputValue("");
-            } else {
-                //box.checkIfInputIsRequiredAndEmpty();
-                //box.showWarningIfNotValid(box.isValid());
             }
 
             box.onBlur();
@@ -251,50 +238,14 @@ const PhoneInputB = function(params = {}) {
         // Kullanıcı input içinde herhangi bir yere tıklasa veya seçim yapsa da cursor'u ilk _'a al
         const eventNameList = ["mousedown", "mouseup", "click", "select"];
         eventNameList.forEach(function(eventName) {
-            inputElem.addEventListener(eventName, function(e) {
+            inputElem.addEventListener(eventName, function() {
                 setCursorToFirstUnderscore();
             });
         });
 
-        // Backspace ile sadece rakam silinsin, countryCode ve sabit karakterler silinmesin
-        inputElem.addEventListener("keydown", function(e) {
-            if (e.key === "Backspace") {
-                const cursorPos = inputElem.selectionStart;
-                const value = inputElem.value;
-                // countryCode ve maskenin sabit karakterleri
-                const mask = box.countryCode + box.phoneMask;
-                // İlk rakamın index'ini bul (ilk _ karakterinin index'i)
-                const firstDigitIndex = mask.indexOf("_");
-                // Eğer cursor countryCode veya sabit karakterlerin başındaysa silmeye izin verme
-                if (cursorPos <= firstDigitIndex) {
-                    e.preventDefault();
-                    setCursorToFirstUnderscore();
-                    return;
-                }
-                // Cursor bir rakamın üzerindeyse, o rakamı sil
-                // Önceki rakamı bul
-                let left = value.slice(0, cursorPos);
-                let right = value.slice(cursorPos);
-                // Sola doğru ilk rakamı bul
-                let i = left.length - 1;
-                while (i >= 0 && mask[i] !== "_") i--;
-                if (i >= 0) {
-                    // O rakamı sil
-                    let newLeft = left.substring(0, i) + "_" + left.substring(i + 1);
-                    let newValue = newLeft + right;
-                    inputElem.value = newValue;
-                    // Cursor'u yine ilk _'a al
-                    setCursorToFirstUnderscore();
-                    e.preventDefault();
-                } else {
-                    // Silinecek rakam yoksa engelle
-                    e.preventDefault();
-                    setCursorToFirstUnderscore();
-                }
-                // WHY: Backspace e bastığında da, güncellesin.
-                box.checkIfInputIsRequiredAndEmpty();
-                box.showWarningIfNotValid(box.isValid());
-                box.onEdit(); // WHY: Silme işleminde edit tetiklenmeli.
+        inputElem.addEventListener("keydown", function(event) {
+            if (event.key === "Backspace") {
+                deleteDigitBeforeCursor(event);
             }
         });
 

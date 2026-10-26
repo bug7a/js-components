@@ -136,7 +136,6 @@ const SmartTableDefaults = {
 
 const SmartTable = function (params = {}) {
 
-    // Marge params:
     mergeIntoIfMissing(params, SmartTableDefaults);
 
     // BOX: Component container
@@ -145,6 +144,36 @@ const SmartTable = function (params = {}) {
     // WHY: mergeIntoIfMissing dizileri referansla kopyalıyor. Kopyalanmaz ise setTitleCellWidth, SmartTableDefaults (ve diğer tabloları) değiştirir.
     box.titleDataList = box.titleDataList.map(titleData => ({ ...titleData }));
     box.itemDataList = [...box.itemDataList];
+
+    // *** PRIVATE VARIABLES:
+    const DEFAULT_CELL_WIDTH = 100;
+    const SORT_ICON_SIZE = 22;
+    const SCROLL_CENTER_HEIGHT = 50;
+    const LOADING_ICON_SIZE = 32;
+    const SEARCH_TITLE_MAX_WIDTH = "160px";
+    const FILTER_DELAY = 50; // ms
+    const RESIZE_DELAY = 3; // ms
+    const LOADING_MIN_ITEM_COUNT = 1000; // WHY: Küçük listelerde loading bir an yanıp sönmesin.
+    const TEST_DATA_REPEAT_COUNT = 100000;
+
+    // *** PRIVATE FUNCTIONS:
+
+    // The last top index: the last page of rows ends with the last record.
+    const getMaxScrollIndex = function () {
+        return Math.max(0, box.visibleItemDataList.length - box.itemLineCount);
+    };
+
+    const clampScrollIndex = function (index) {
+        if (index < 0) return 0;
+        return Math.min(index, getMaxScrollIndex());
+    };
+
+    // WHY: isNaN("") false döndüğü için boş değerler sayı sanılıyor, parseFloat("") NaN verip sıralamayı bozuyordu.
+    const toSortNumber = function (value) {
+        if (typeof value === "number") return value;
+        if (typeof value === "string" && value.trim() !== "") return Number(value);
+        return NaN;
+    };
 
     // *** PUBLIC VARIABLES:
     // State of component [var]
@@ -170,34 +199,9 @@ const SmartTable = function (params = {}) {
 
     // *** PUBLIC FUNCTIONS:
 
-    // setView
+    // The states have no look yet; the value is kept for the page.
     box.setState = function (state) {
-
         box.state = state;
-
-        switch (state) {
-
-            case "normal":
-                //box.background.color = box.backgroundStyle.color;
-                //box.lblBadget.color = badgetCurrentColor;
-                //box.background.border = 1;
-                break;
-
-            case "mouseover":
-                //box.background.color = box.backgroundStyle.overColor;
-                //box.lblBadget.color = "white";
-                //box.background.border = 3;
-                break;
-
-            case "selected":
-
-                break;
-
-            case "disabled":
-
-                break;
-
-        }
     };
 
     const refresh = function () {
@@ -217,108 +221,96 @@ const SmartTable = function (params = {}) {
     box.remove = function () {
 
         if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
-        //page.remove_onResize(functionName); // on page resized.
 
-        // WHY: window eventleri box.remove() ile temizlenmiyor. Kalırsa box = null olduktan sonra mousemove hata verir.
-        window.removeEventListener("mousemove", onWindowMouseMove);
-        window.removeEventListener("mouseup", onWindowMouseUp);
+        // WHY: waitAndRun timers are not box.after() timers; remove() does not know them.
         clearTimeout(box.resizeTimer);
         clearTimeout(box.refreshTimer);
         clearTimeout(box.filterTimer);
 
-        // WHY: Menü page üzerinde oluşturuluyor; box.remove() onu silmez.
+        // WHY: Menü page üzerinde oluşturuluyor; box.remove() onu silmez. (Before the cascade: it detaches from its target label.)
         if (box.searchTitleMenu) box.searchTitleMenu.remove();
 
-        // Remove basic objects
-        //box.background.remove(); // NOTE: If you add event (box.background.on("click") to other objects.
-        //box.icon.remove();
-
-        superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
+        superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events (listenTo too) and the objects inside.
         box = null;
 
     };
 
-    box.refreshData = function () { // [GOOD]
+    // A row without data stays in its place, empty and not clickable.
+    const hideItemLine = function (itemLine) {
+        itemLine.opacity = 0;
+        itemLine.clickable = 0;
+    };
 
-        const _startIndex = box.startedItemIndexForScrolling;
-        const _dataList = box.visibleItemDataList;
-        const _titleDataList = box.titleDataList;
-        const _titleCount = box.titleCellCount;
-        const _lineCount = box.itemLineCount;
+    const fillItemLine = function (itemLine, rowData) {
 
-        // Sadece ekranda görünen satır sayısı kadar dönüyoruz
-        for (let i = 0; i < _lineCount; i++) {
+        itemLine.opacity = 1;
+        itemLine.clickable = 1;
+        itemLine.itemData = rowData; // WHY: Line a basıldığında bu bilgi kullanılacak.
 
-            const _itemLine = box.itemLineList[i];
-            const _dataIndex = _startIndex + i;
-            const _rowData = _dataList[_dataIndex];
+        // TODO: If selected itemData == this item data then make colored.
 
-            // Eğer veri varsa satırı güncelle, yoksa temizle/gizle
-            if (_rowData) {
+        for (let j = 0; j < box.titleCellCount; j++) {
 
-                _itemLine.opacity = 1; // Veya opacity: 1
-                _itemLine.clickable = 1;
+            const titleData = box.titleDataList[j];
+            const cell = itemLine["itemCell" + j];
+            const newValue = rowData[titleData.dataTitle] ?? "";
 
-                // DATA IN OBJECT (itemLine)
-                _itemLine.itemData = _rowData; // WHY: Line a basıldığında bu bilgi kullanılacak.
-
-                // TODO: If selected itemData == this item data then make colored.
-
-                // Her bir itemCell için;
-                for (let j = 0; j < _titleCount; j++) {
-
-                    const titleData = _titleDataList[j];
-                    const cell = _itemLine["itemCell" + j];
-                    const newValue = _rowData[titleData.dataTitle] ?? "";
-
-                    // Sadece değer değişmişse DOM'a dokun
-                    // WHY: label.text innerHTML (string) döndürüyor; sayı veya "&" içeren değerlerle karşılaştırma hep farklı çıkıyordu. Son yazılan değer hücrede tutuluyor.
-                    if (!("lastValue" in cell) || cell.lastValue !== newValue) { // WHY: eğer !== olmaz ise, 0 ile "" aynı sayılıyor.
-                        cell.lastValue = newValue;
-                        cell.label.text = newValue;
-                    }
-
-                    // Özel cell tasarımını güncelle.
-                    box.updateCustomItemCell(cell, j, newValue); 
-
-                }
-
-            } else {
-
-                // Veri bitmişse satırı boş göster veya gizle
-                _itemLine.opacity = 0;
-                _itemLine.clickable = 0;
-                
+            // Sadece değer değişmişse DOM'a dokun
+            // WHY: label.text innerHTML (string) döndürüyor; sayı veya "&" içeren değerlerle karşılaştırma hep farklı çıkıyordu. Son yazılan değer hücrede tutuluyor.
+            if (!("lastValue" in cell) || cell.lastValue !== newValue) { // WHY: eğer !== olmaz ise, 0 ile "" aynı sayılıyor.
+                cell.lastValue = newValue;
+                cell.label.text = newValue;
             }
+
+            box.updateCustomItemCell(cell, j, newValue);
+
         }
 
-        // Scroll buttonlarını göster/gizle.
-        box.setVerticalScrollEnabled((_dataList.length > _lineCount) ? true : false);
+    };
+
+    box.refreshData = function () {
+
+        const startIndex = box.startedItemIndexForScrolling;
+        const dataList = box.visibleItemDataList;
+        const lineCount = box.itemLineCount;
+
+        // WHY: Virtual scroll; only the rows on the screen exist, they show the records from startIndex.
+        for (let i = 0; i < lineCount; i++) {
+
+            const itemLine = box.itemLineList[i];
+            const rowData = dataList[startIndex + i];
+
+            if (rowData) {
+                fillItemLine(itemLine, rowData);
+            } else {
+                hideItemLine(itemLine);
+            }
+
+        }
+
+        box.setVerticalScrollEnabled(dataList.length > lineCount);
         box.updateInfoLabel();
 
     };
 
-    box.setVerticalScrollEnabled = function (enabled) { // [GOOD]
+    const setScrollButtonState = function (button, opacity, clickable) {
+        button.opacity = opacity;
+        button.clickable = clickable;
+    };
+
+    box.setVerticalScrollEnabled = function (enabled) {
 
         // Sadece kullanılabilir durumda ise enabled yapılabilir.
         if (enabled && box.visibleItemDataList.length > box.itemLineCount) {
-            // Scroll buttonlarını göster.
-            box.btnScrollCenter.opacity = 1;
-            box.btnScrollCenter.clickable = 1;
-            box.btnScrollUp.opacity = 1;
-            box.btnScrollUp.clickable = 1;
-            box.btnScrollDown.opacity = 1;
-            box.btnScrollDown.clickable = 1;
-
-        } else {
-            // Scroll butonlarını gizle.
-            box.btnScrollCenter.opacity = 0;
-            box.btnScrollCenter.clickable = 0;
-            box.btnScrollUp.opacity = 0.5;
-            box.btnScrollUp.clickable = 0;
-            box.btnScrollDown.opacity = 0.5;
-            box.btnScrollDown.clickable = 0;
+            setScrollButtonState(box.btnScrollCenter, 1, 1);
+            setScrollButtonState(box.btnScrollUp, 1, 1);
+            setScrollButtonState(box.btnScrollDown, 1, 1);
+            return;
         }
+
+        setScrollButtonState(box.btnScrollCenter, 0, 0);
+        setScrollButtonState(box.btnScrollUp, 0.5, 0);
+        setScrollButtonState(box.btnScrollDown, 0.5, 0);
 
     }
 
@@ -368,35 +360,34 @@ const SmartTable = function (params = {}) {
 
     }
 
-    box.createSortIcon = function (titleCell) { // [NOT BAD]
+    box.createSortIcon = function (titleCell) {
 
         startBox({
             align: "right center",
-            color: box.style.boxSort.color, // "#65A293",
+            color: box.style.boxSort.color,
             round: 100,
-            border: 0, // 1
+            border: 0,
             borderColor: "rgba(0,0,0,0.1)",
-            width: 22,
-            height: 22,
+            width: SORT_ICON_SIZE,
+            height: SORT_ICON_SIZE,
             right: 2,
             padding: [4, 0],
             position: "absolute",
-            //top: 15,
         });
         if (titleCell.shortable == 0) that.opacity = 0;
         titleCell.add(that);
         that.center("top");
 
         titleCell.icon = Icon({
-            width: 22,
-            height: 22,
+            width: SORT_ICON_SIZE,
+            height: SORT_ICON_SIZE,
             left: 0,
             top: 0,
             opacity: 0.5,
         });
         that.setMotion("opacity 0.3s, transform 0.3s");
         that.load(box.style.sortIconFile);
-        if (box.style.invertIconColor == 1) that.elem.style.filter = "invert(100%)";
+        if (box.style.invertIconColor == 1) that.css.filter = "invert(100%)";
         that.center();
 
         endBox();
@@ -422,16 +413,18 @@ const SmartTable = function (params = {}) {
         const titleCell = AutoLayout({
             flow: "horizontal",
             align: "center left",
-            width: titleData.width || 100,
+            width: titleData.width || DEFAULT_CELL_WIDTH,
             padding: box.style.boxTitleCell.padding,
             height: box.titleHeight,
             color: "transparent",
             border: 0,
             position: "relative",
         });
-        that.elem.style.borderRight = box.style.boxTitleCell.borderRight;
-        that.elem.style.borderBottom = box.style.boxTitleCell.borderBottom;
-        that.elem.style.cursor = "pointer";
+        that.css = {
+            borderRight: box.style.boxTitleCell.borderRight,
+            borderBottom: box.style.boxTitleCell.borderBottom,
+        };
+        that.cursor = "pointer";
 
         // DATA IN OBJECT (titleCell)
         that.titleCellIndex = titleCellIndex;
@@ -442,7 +435,7 @@ const SmartTable = function (params = {}) {
             text: titleData.name,
             ...box.style.lblTitleCell,
         });
-        that.elem.style.fontFamily = box.style.lblTitleCell.fontFamily;
+        that.css.fontFamily = box.style.lblTitleCell.fontFamily;
 
         endAutoLayout();
 
@@ -450,37 +443,14 @@ const SmartTable = function (params = {}) {
 
         titleCell.on("click", function (self, event) {
 
-            if (self.shortable == 1) {
+            if (self.shortable != 1) return;
 
-                // Clear All
-                box.resetSortIcons(self);
-                /*
-                box.titleCellList.forEach(function (titleCell, titleCellIndex) {
-                    if (titleCellIndex != self.titleCellIndex) {
-                        titleCell.icon.rotate = 0;
-                        titleCell.icon.opacity = 0.5;
-                        titleCell.sortDirection = "";
-                    }
-                });
-                */
-
-                box.sortByTitleIndex = self.titleCellIndex;
-
-                if (self.sortDirection != "A-Z") {
-                    box.sortDirection = "A-Z";
-                    //titleCell.icon.rotate = 0;
-
-                } else {
-                    box.sortDirection = "Z-A";
-                    //titleCell.icon.rotate = 180;
-
-                }
-                //titleCell.icon.opacity = 1;
-                //self.sortDirection = box.sortDirection;
-                box.updateSortIcon();
-                box.filterAndSortData();
-
-            }
+            box.resetSortIcons(self);
+            box.sortByTitleIndex = self.titleCellIndex;
+            // WHY: The first click sorts A-Z; a click on the column that is already A-Z turns it.
+            box.sortDirection = (self.sortDirection != "A-Z") ? "A-Z" : "Z-A";
+            box.updateSortIcon();
+            box.filterAndSortData();
 
         });
 
@@ -513,26 +483,21 @@ const SmartTable = function (params = {}) {
 
     };
 
+    const paintColumn = function (titleCell, titleColor, cellColor) {
+        titleCell.color = titleColor;
+        box.itemLineList.forEach(function (itemLine) {
+            itemLine["itemCell" + titleCell.titleCellIndex].color = cellColor;
+        });
+    };
+
     box.clearColumnHighlight = function (titleCell) {
-
-        if (box.highlightTitle) {
-            titleCell.color = "transparent";
-            box.itemLineList.forEach(function (itemLine, itemLineIndex) {
-                itemLine["itemCell" + titleCell.titleCellIndex].color = "transparent";
-            });
-        }
-
+        if (!box.highlightTitle) return;
+        paintColumn(titleCell, "transparent", "transparent");
     };
 
     box.applyColumnHighlight = function (titleCell) {
-
-        if (box.highlightTitle) {
-            titleCell.color = box.style.highlightTitleCellColor;
-            box.itemLineList.forEach(function (itemLine, itemLineIndex) {
-                itemLine["itemCell" + titleCell.titleCellIndex].color = box.style.highlightItemCellColor;
-            });
-        }
-
+        if (!box.highlightTitle) return;
+        paintColumn(titleCell, box.style.highlightTitleCellColor, box.style.highlightItemCellColor);
     };
 
     // Tüm bilgi satırlarını oluştur.
@@ -554,7 +519,7 @@ const SmartTable = function (params = {}) {
     // Bir bilgi satırı oluştur
     box.createItemLine = function (itemData, itemLineIndex) {
 
-        // ItemLine
+        // GROUP: ItemLine
         const itemLine = HGroup({
             height: box.itemHeight || 100,
             width: "auto",
@@ -563,14 +528,9 @@ const SmartTable = function (params = {}) {
             gap: 0,
             color: (itemLineIndex % 2) ? box.style.line2Color : box.style.line1Color,
             position: "relative",
-            //opacity: 0.5,
-            // NOTE: this width, height: "100%" as default.
         });
-        //that.itemData = itemData;
-        //that.itemLineIndex = itemLineIndex;
 
         box.titleDataList.forEach(function (titleData, titleDataIndex) {
-            // Item Cell
             itemLine["itemCell" + titleDataIndex] = box.createItemCell(titleData.width, titleDataIndex, itemLine);
         });
 
@@ -585,48 +545,50 @@ const SmartTable = function (params = {}) {
 
     };
 
+    const paintItemLineCells = function (itemLine, color) {
+        for (let i = 0; i < box.titleCellCount; i++) {
+            itemLine["itemCell" + i].color = color;
+        }
+    };
+
     // Hücre oluştur.
     box.createItemCell = function (cellWidth, titleDataIndex, itemLine) {
 
-        // ItemCell
+        // GROUP: ItemCell
         let itemCell = AutoLayout({
             align: "center left",
-            width: cellWidth || 100,
+            width: cellWidth || DEFAULT_CELL_WIDTH,
             padding: box.style.boxItemCell.padding,
             height: "100%",
             color: "transparent",
             border: 0,
         });
-        that.elem.style.borderBottom = box.style.boxItemCell.borderBottom;
-        that.elem.style.borderRight = box.style.boxItemCell.borderRight;
-        that.elem.style.cursor = "pointer";
+        that.css = {
+            borderBottom: box.style.boxItemCell.borderBottom,
+            borderRight: box.style.boxItemCell.borderRight,
+        };
+        that.cursor = "pointer";
 
         itemCell.label = Label({
             text: "",
             ...box.style.lblItemCell,
         });
-        that.elem.style.whiteSpace = "nowrap";
-        that.elem.style.textOverflow = "ellipsis";
-        that.elem.style.fontFamily = box.style.lblItemCell.fontFamily;
+        that.css = {
+            whiteSpace: "nowrap",
+            textOverflow: "ellipsis",
+            fontFamily: box.style.lblItemCell.fontFamily,
+        };
 
         endAutoLayout();
 
-        // Highlight vertical
         itemCell.on("mouseover", function (self, event) {
-            if (box.highlightLine) {
-                for (let i = 0; i < box.titleCellCount; i++) {
-                    itemLine["itemCell" + i].color = box.style.highlightItemCellColor;
-                }
-            }
+            if (!box.highlightLine) return;
+            paintItemLineCells(itemLine, box.style.highlightItemCellColor);
         });
 
-        // Clean highlight vertical
         itemCell.on("mouseout", function (self, event) {
-            if (box.highlightLine) {
-                for (let i = 0; i < box.titleCellCount; i++) {
-                    itemLine["itemCell" + i].color = "transparent";
-                }
-            }
+            if (!box.highlightLine) return;
+            paintItemLineCells(itemLine, "transparent");
         });
 
         itemCell = box.createCustomItemCell(itemCell, titleDataIndex);
@@ -653,9 +615,7 @@ const SmartTable = function (params = {}) {
 
     box.syncScrollPosition = function () {
 
-        const dataLength = box.visibleItemDataList.length;
-        const maxScrollIndex = Math.max(0, dataLength - box.itemLineCount);
-
+        const maxScrollIndex = getMaxScrollIndex();
         if (maxScrollIndex === 0) return;
 
         const percent = box.startedItemIndexForScrolling / maxScrollIndex;
@@ -665,65 +625,54 @@ const SmartTable = function (params = {}) {
 
     box.createScrollEvents = function () {
 
-        // Sürükleme ayarları
         box.btnScrollCenter.clickable = 1;
         box.btnScrollCenter.elem.setAttribute("draggable", "false");
-        box.btnScrollCenter.elem.style.cursor = "grab";
+        box.btnScrollCenter.cursor = "grab";
 
-        // Değişkenler
         box.initScrollMetrics();
 
-        // 1. MOUSE WHEEL DESTEĞİ (Her kaydı görmeyi sağlar)
+        // WHEEL: one row for each wheel step.
         box.on("wheel", function (self, event) {
 
             // WHY: Varsayılan olarak tekerlek sayfaya bırakılır; tablo sayfanın kaymasını engellemesin. (wheelScroll: 1 ile açılır)
             if (box.wheelScroll != 1) return;
 
-            // ÖNEMLİ: Eğer yatayda bir hareket varsa (deltaX), 
-            // dikey scroll kodunu çalıştırma ve tarayıcının yatay kaydırmasına izin ver.
-            if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
-                return; // Fonksiyondan çık, preventDefault çalışma-sın.
-            }
+            // WHY: A mostly horizontal move is left to the browser (the horizontal scroll of the columns).
+            if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
 
-            // Sadece dikey hareket baskınsa dikey scrollu yönet ve sayfa kaymasını engelle
             event.preventDefault();
 
-            const dataLength = box.visibleItemDataList.length;
-            const maxScrollIndex = Math.max(0, dataLength - box.itemLineCount);
-
-            // Tekerlek yönüne göre 1'er 1'er veya 3'er 3'er kaydır
             const step = event.deltaY > 0 ? 1 : -1;
-            let newIndex = box.startedItemIndexForScrolling + step;
+            const newIndex = clampScrollIndex(box.startedItemIndexForScrolling + step);
+            if (newIndex === box.startedItemIndexForScrolling) return;
 
-            if (newIndex < 0) newIndex = 0;
-            if (newIndex > maxScrollIndex) newIndex = maxScrollIndex;
+            box.startedItemIndexForScrolling = newIndex;
+            box.syncScrollPosition();
+            box.refreshData();
 
-            if (newIndex !== box.startedItemIndexForScrolling) {
-                box.startedItemIndexForScrolling = newIndex;
-                box.syncScrollPosition(); // İkonu yeni indekse taşı
-                box.refreshData();
-
-            }
         }, { passive: false });
 
-        // 2. MOUSE DRAG (Sürükleme)
+        // DRAG: the center button of the vertical scroll.
         box.btnScrollCenter.on("mousedown", function (self, event) {
 
             box.scrollVars.isDragging = true;
             box.scrollVars.startY = event.clientY;
             box.scrollVars.startTop = box.btnScrollCenter.top;
-            box.btnScrollCenter.elem.style.cursor = "grabbing";
+            box.btnScrollCenter.cursor = "grabbing";
             document.body.style.userSelect = "none";
 
         });
 
-        window.addEventListener("mousemove", onWindowMouseMove);
-        window.addEventListener("mouseup", onWindowMouseUp);
+        box.listenTo(window, "mousemove", function (self, event) {
+            dragScrollButton(event);
+        });
+        box.listenTo(window, "mouseup", function () {
+            stopScrollButtonDrag();
+        });
 
     };
 
-    // WHY: remove() içinde kaldırılabilmesi için isimli fonksiyon.
-    const onWindowMouseMove = function (event) {
+    const dragScrollButton = function (event) {
 
         if (!box || !box.scrollVars.isDragging) return;
 
@@ -739,49 +688,33 @@ const SmartTable = function (params = {}) {
         if (box.scrollVars.totalPath <= 0) return;
 
         const currentProgress = (newTop - box.scrollVars.minY) / box.scrollVars.totalPath;
-        const dataLength = box.visibleItemDataList.length;
-        const maxScrollIndex = Math.max(0, dataLength - box.itemLineCount);
+        const newIndex = Math.round(currentProgress * getMaxScrollIndex());
+        if (newIndex === box.startedItemIndexForScrolling) return;
 
-        const newIndex = Math.round(currentProgress * maxScrollIndex);
-
-        if (newIndex !== box.startedItemIndexForScrolling) {
-            box.startedItemIndexForScrolling = newIndex;
-            box.refreshData();
-        }
+        box.startedItemIndexForScrolling = newIndex;
+        box.refreshData();
 
     };
 
-    const onWindowMouseUp = function () {
+    const stopScrollButtonDrag = function () {
 
-        if (box && box.scrollVars.isDragging) {
-            box.scrollVars.isDragging = false;
-            box.btnScrollCenter.elem.style.cursor = "grab";
-            document.body.style.userSelect = "auto";
-        }
+        if (!box || !box.scrollVars.isDragging) return;
+
+        box.scrollVars.isDragging = false;
+        box.btnScrollCenter.cursor = "grab";
+        document.body.style.userSelect = "auto";
 
     };
 
     box.scrollPage = function (direction) { // +1 ise aşağı (bir sayfa boyu), -1 ise yukarı
 
-        const dataLength = box.visibleItemDataList.length;
-        const maxScrollIndex = Math.max(0, dataLength - box.itemLineCount);
+        const newIndex = clampScrollIndex(box.startedItemIndexForScrolling + (direction * box.itemLineCount));
+        if (newIndex === box.startedItemIndexForScrolling) return;
 
-        // Yön +1 ise aşağı (bir sayfa boyu), -1 ise yukarı
-        let newIndex = box.startedItemIndexForScrolling + (direction * box.itemLineCount);
+        box.startedItemIndexForScrolling = newIndex;
+        box.refreshData();
+        box.syncScrollPosition();
 
-        // Sınırları kontrol et
-        if (newIndex < 0) newIndex = 0;
-        if (newIndex > maxScrollIndex) newIndex = maxScrollIndex;
-
-        // Eğer indeks değiştiyse güncelle
-        if (newIndex !== box.startedItemIndexForScrolling) {
-            box.startedItemIndexForScrolling = newIndex;
-
-            // 1. Veriyi tazele
-            box.refreshData();
-            // 2. Scroll ikonunun yerini güncelle (Görsel senkronizasyon)
-            box.syncScrollPosition();
-        }
     };
 
     box.updateInfoLabel = function () {
@@ -805,9 +738,9 @@ const SmartTable = function (params = {}) {
         if (end > totalData) end = totalData;
 
         // Sayıları binlik ayırıcı ile formatlamak (12499 -> 12.499)
-        const format = (num) => num.toLocaleString('tr-TR');
+        const formatNumber = (number) => number.toLocaleString('tr-TR');
 
-        box.boxInfoLine.label.text = `${format(start)} - ${format(end)} / ${format(totalData)}`;
+        box.boxInfoLine.label.text = `${formatNumber(start)} - ${formatNumber(end)} / ${formatNumber(totalData)}`;
 
     };
 
@@ -821,80 +754,81 @@ const SmartTable = function (params = {}) {
         box.filterAndSortData();
     };
 
+    // WHY: "value ?" kontrolü 0 ve false değerlerini aranamaz yapıyordu.
+    const hasKeyword = function (value, searchKeyword) {
+        if (value === undefined || value === null) return false;
+        return String(value).toLowerCase().includes(searchKeyword);
+    };
+
+    const filterItems = function (itemList, searchKeyword) {
+
+        if (searchKeyword === "") return itemList;
+
+        // Sütun seçili ise sadece o sütunda, değil ise (ALL) tüm sütunlarda ara.
+        const searchTitleData = box.titleDataList[box.searchTitleIndex];
+        const searchTitleList = (searchTitleData) ? [searchTitleData] : box.titleDataList;
+
+        return itemList.filter(item => {
+            return searchTitleList.some(title => hasKeyword(item[title.dataTitle], searchKeyword));
+        });
+
+    };
+
+    const compareValues = function (valueA, valueB) {
+
+        const numberA = toSortNumber(valueA);
+        const numberB = toSortNumber(valueB);
+
+        if (Number.isFinite(numberA) && Number.isFinite(numberB)) return numberA - numberB;
+        return String(valueA).localeCompare(String(valueB), 'tr');
+
+    };
+
+    // Sorts the list in place.
+    const sortItems = function (itemList, sortByTitleIndex, sortDirection) {
+
+        const titleData = box.titleDataList[sortByTitleIndex];
+        if (!titleData || titleData.shortable === 0) return;
+
+        const key = titleData.dataTitle;
+
+        itemList.sort((a, b) => {
+            const comparison = compareValues(a[key] ?? "", b[key] ?? "");
+            return sortDirection === "A-Z" ? comparison : -comparison;
+        });
+
+    };
+
     box.filterAndSortData = function () {
 
-        if (box.itemDataList.length > 1000) box.showLoading(1);
+        if (box.itemDataList.length > LOADING_MIN_ITEM_COUNT) box.showLoading(1);
 
         // WHY: Arka arkaya çağrılırsa (ör. hızlı arama) sadece son çağrı çalışsın; eski sonuç yenisinin üzerine yazılmasın.
         box.filterTimer = waitAndRun(box.filterTimer, function () {
 
             box.filterTimer = null;
             const searchKeyword = String(box.searchKeyword ?? "").toLowerCase().trim();
-            const sortByTitleIndex = box.sortByTitleIndex;
-            const sortDirection = box.sortDirection; // "A-Z" or "Z-A"
 
-            // 1. ADIM: FİLTRELEME (SEARCH)
-            let filteredList = [...box.itemDataList];
+            // WHY: A copy; sort() must not change the order of box.itemDataList.
+            const filteredList = filterItems([...box.itemDataList], searchKeyword);
+            sortItems(filteredList, box.sortByTitleIndex, box.sortDirection);
 
-            if (searchKeyword !== "") {
-                // Sütun seçili ise sadece o sütunda, değil ise (ALL) tüm sütunlarda ara.
-                const searchTitleData = box.titleDataList[box.searchTitleIndex];
-                const searchTitleList = (searchTitleData) ? [searchTitleData] : box.titleDataList;
-                filteredList = filteredList.filter(item => {
-                    return searchTitleList.some(title => {
-                        const val = item[title.dataTitle];
-                        // WHY: "val ?" kontrolü 0 ve false değerlerini aranamaz yapıyordu.
-                        return (val !== undefined && val !== null) ? String(val).toLowerCase().includes(searchKeyword) : false;
-                    });
-                });
-            }
-
-            // 2. ADIM: SIRALAMA (SORTING)
-            const titleData = box.titleDataList[sortByTitleIndex];
-            if (titleData && titleData.shortable !== 0) {
-                const key = titleData.dataTitle;
-
-                filteredList.sort((a, b) => {
-                    let valA = a[key] ?? "";
-                    let valB = b[key] ?? "";
-
-                    // Eğer sayısal veriyse ona göre karşılaştır
-                    // WHY: isNaN("") false döndüğü için boş değerler sayı sanılıyor, parseFloat("") NaN verip sıralamayı bozuyordu.
-                    const numA = (typeof valA === "number") ? valA : (typeof valA === "string" && valA.trim() !== "") ? Number(valA) : NaN;
-                    const numB = (typeof valB === "number") ? valB : (typeof valB === "string" && valB.trim() !== "") ? Number(valB) : NaN;
-                    const isNumeric = Number.isFinite(numA) && Number.isFinite(numB);
-
-                    let comparison = 0;
-                    if (isNumeric) {
-                        comparison = numA - numB;
-                    } else {
-                        comparison = String(valA).localeCompare(String(valB), 'tr');
-                    }
-
-                    return sortDirection === "A-Z" ? comparison : -comparison;
-                });
-            }
-
-            // 3. ADIM: SONUCU YAZ VE RESETLE
             box.visibleItemDataList = filteredList;
 
             box.setScrollToTop();
             box.refreshData();
-            //box.updateInfoLabel(); // Toplam sayı değiştiği için bilgiyi tazele
 
             box.showLoading(0);
 
-        }, 50);
+        }, FILTER_DELAY);
 
     };
 
     box.generateTestData = function () {
 
-        // Test için veriyi 1000 katına çıkaralım:
-        const repeatCount = 100000;
         let bigData = [];
 
-        for (let i = 0; i < repeatCount; i++) {
+        for (let i = 0; i < TEST_DATA_REPEAT_COUNT; i++) {
             // Nesneleri klonlayarak ekliyoruz ki ID'leri çakışmasın veya referans karışmasın
             const clonedBatch = box.itemDataList.map(item => ({
                 ...item,
@@ -917,7 +851,7 @@ const SmartTable = function (params = {}) {
         const leftMargin = box.style.verticalScrollMargin;
         const scrollRight = (scrollWidth + leftMargin) * -1;
 
-        box.btnScrollCenter = startBox(0, 0, scrollWidth, 50, {
+        box.btnScrollCenter = startBox(0, 0, scrollWidth, SCROLL_CENTER_HEIGHT, {
             right: scrollRight,
             top: box.titleHeight,
             opacity: 0,
@@ -927,7 +861,6 @@ const SmartTable = function (params = {}) {
 
         Icon(0, 0, "100%", "100%");
         that.load(box.style.btnScrollCenterIconFile);
-        //if (box.style.invertIconColor == 1) that.elem.style.filter = "invert(100%)";
 
         endBox();
 
@@ -935,7 +868,7 @@ const SmartTable = function (params = {}) {
             right: scrollRight,
             ...box.style.btnScrollUp,
         });
-        that.elem.style.cursor = "pointer";
+        that.cursor = "pointer";
         that.on("click", function (self, event) {
             box.scrollPage(-1);
         });
@@ -943,14 +876,14 @@ const SmartTable = function (params = {}) {
         Icon(0, 0, "100%", "100%");
         box.btnScrollUp.add(that);
         that.load(box.style.btnScrollUpIconFile);
-        if (box.style.invertIconColor == 1) that.elem.style.filter = "invert(100%)";
+        if (box.style.invertIconColor == 1) that.css.filter = "invert(100%)";
 
         box.btnScrollDown = Box(0, 0, scrollWidth, box.infoHeight, {
             right: scrollRight,
             bottom: 0,
             ...box.style.btnScrollDown,
         });
-        that.elem.style.cursor = "pointer";
+        that.cursor = "pointer";
         that.on("click", function (self, event) {
             box.scrollPage(1);
         });
@@ -958,7 +891,7 @@ const SmartTable = function (params = {}) {
         Icon(0, 0, "100%", "100%");
         box.btnScrollDown.add(that);
         that.load(box.style.btnScrollDownIconFile);
-        if (box.style.invertIconColor == 1) that.elem.style.filter = "invert(100%)";
+        if (box.style.invertIconColor == 1) that.css.filter = "invert(100%)";
 
     };
 
@@ -988,7 +921,7 @@ const SmartTable = function (params = {}) {
         box.boxInfoLine.label = Label({
             text: "0 - 0 / 0",
             ...box.style.lblBoxInfoLine,
-        })
+        });
 
         endGroup();
 
@@ -1008,12 +941,10 @@ const SmartTable = function (params = {}) {
             ...box.style.lblNoDataFound,
             ...box.style.lblSearchTitle, // WHY: Etiket filtre kutusunun içinde duruyor; "no data" etiketinden ayrı stil verilebilsin.
         });
-        that.elem.style.cursor = "pointer";
-        that.elem.style.whiteSpace = "nowrap";
-        that.elem.style.overflow = "hidden";
-        that.elem.style.textOverflow = "ellipsis";
-        that.elem.style.maxWidth = "160px";
-        that.setMotion("opacity 0.2s")
+        that.cursor = "pointer";
+        that.ellipsis = 1;
+        that.css.maxWidth = SEARCH_TITLE_MAX_WIDTH;
+        that.setMotion("opacity 0.2s");
 
         endGroup();
 
@@ -1042,43 +973,38 @@ const SmartTable = function (params = {}) {
 
     box.stretchLastCell = function (width) {
 
-        if (width > 0 && box.titleCellCount > 0) {
-            const _itemCellIndex = box.titleCellCount - 1;
+        const hasWidth = width > 0; // WHY: Not "width <= 0": a NaN width must also stop here.
+        if (!hasWidth || box.titleCellCount == 0) return;
 
-            box.itemLineList.forEach(function (itemLine, itemLineIndex) {
-                itemLine["itemCell" + _itemCellIndex].width = width;
-            });
+        const lastCellIndex = box.titleCellCount - 1;
 
-            box.titleCellList[_itemCellIndex].width = width;
-        }
+        box.itemLineList.forEach(function (itemLine) {
+            itemLine["itemCell" + lastCellIndex].width = width;
+        });
+
+        box.titleCellList[lastCellIndex].width = width;
 
     };
 
     box.calcLastCellWidth = function () {
 
-        let totalWidth = 0;
-        let newLastCellWidth = 0;
-
         const titleDataList = box.titleDataList;
-        const originalWidth = box.width;
+        const tableWidth = box.width;
 
         if (titleDataList.length == 0) return 0;
 
-        // WHY: createTitleCell/createItemCell width yoksa 100 kullanıyor; burada da aynısı olmalı, yoksa basic.num(undefined) NaN olur.
-        titleDataList.forEach(function (titleData, titleDataIndex) {
-            totalWidth += basic.num(titleData.width || 100);
+        // WHY: createTitleCell/createItemCell width yoksa DEFAULT_CELL_WIDTH kullanıyor; burada da aynısı olmalı, yoksa basic.num(undefined) NaN olur.
+        let totalWidth = 0;
+        titleDataList.forEach(function (titleData) {
+            totalWidth += basic.num(titleData.width || DEFAULT_CELL_WIDTH);
         });
 
-        const lastCellWidth = basic.num(titleDataList[titleDataList.length - 1].width || 100);
+        const lastCellWidth = basic.num(titleDataList[titleDataList.length - 1].width || DEFAULT_CELL_WIDTH);
 
-        if (originalWidth > totalWidth) {
-            newLastCellWidth = originalWidth - totalWidth + lastCellWidth;
-        } else {
-            // WHY: Tablo daraldığında son hücre, önceki genişletilmiş boyutunda kalıyordu. Orijinal genişliğe dön.
-            newLastCellWidth = lastCellWidth;
-        }
+        if (tableWidth > totalWidth) return tableWidth - totalWidth + lastCellWidth;
 
-        return newLastCellWidth;
+        // WHY: Tablo daraldığında son hücre, önceki genişletilmiş boyutunda kalıyordu. Orijinal genişliğe dön.
+        return lastCellWidth;
 
     };
 
@@ -1086,7 +1012,7 @@ const SmartTable = function (params = {}) {
 
         box.itemHeight = itemHeight;
 
-        box.itemLineList.forEach(function (itemLine, itemLineIndex) {
+        box.itemLineList.forEach(function (itemLine) {
             itemLine.height = box.itemHeight;
             itemLine.visible = 1; // WHY: Yükseklik hesaplandıktan sonra göster.
         });
@@ -1095,36 +1021,29 @@ const SmartTable = function (params = {}) {
 
     box.setHeight = function (height) {
 
-        // Yükseklik otomatik değil ise, ItemCell yüksekliğini otomatik hesapla.
-        if (height != "auto") {
-            box.recalcItemHeight = 1;
-        } else {
-            box.recalcItemHeight = 0;
-        }
-
-        // Item yüksekliği otomatik hesaplanacak.
-        if (box.recalcItemHeight) {
-            //box.itemHeight = (box.height - box.titleHeight - box.infoHeight) / box.itemLineCount;
-        }
-
+        // Yükseklik otomatik değil ise, ItemCell yüksekliği resize sırasında hesaplanır.
+        box.recalcItemHeight = (height != "auto") ? 1 : 0;
         box.height = height;
 
     };
 
     box.setWidth = function (width) {
 
-        // Eğer genişlik tam olacak ise, scroll için boş alan ekle.
-        //if (width == "100%") {
-        if (typeof width === "string" && width.includes("%")) { // WHY: Sayı verilirse (width: 800) .includes hata veriyordu.
-            box.width = "calc(" + width + " - " + (box.style.verticalScrollWidth + box.style.verticalScrollMargin) + "px)";
-        } else {
+        // WHY: Sayı verilirse (width: 800) .includes hata veriyordu.
+        const isPercent = typeof width === "string" && width.includes("%");
+
+        if (!isPercent) {
             box.width = width;
+            return;
         }
+
+        // A percent width leaves room for the vertical scroll at the right side.
+        box.width = "calc(" + width + " - " + box.getVerticalScrollWidth() + "px)";
 
     };
 
     box.getTotalWidth = function () {
-        return box.width + box.style.verticalScrollWidth + box.style.verticalScrollMargin;
+        return box.width + box.getVerticalScrollWidth();
     }
 
     box.getVerticalScrollWidth = function () {
@@ -1141,8 +1060,8 @@ const SmartTable = function (params = {}) {
         box.add(box.boxLoading);
 
         Icon({
-            width: 32,
-            height: 32,
+            width: LOADING_ICON_SIZE,
+            height: LOADING_ICON_SIZE,
         });
         that.load(box.style.loadingIconFile);
 
@@ -1171,7 +1090,7 @@ const SmartTable = function (params = {}) {
             opacity: 0,
             ...box.style.lblNoDataFound,
         });
-        that.setMotion("opacity 0.2s")
+        that.setMotion("opacity 0.2s");
 
         endGroup();
 
@@ -1192,23 +1111,24 @@ const SmartTable = function (params = {}) {
         box.lblSelectedSortKey.text = (selectedTitleData) ? getTitleText(selectedTitleData) : box.allTitlesText;
         box.lblSelectedSortKey.visible = (box.showSearchTitleSelect == 1) ? 1 : 0;
 
-        if (box.searchTitleMenu) {
+        if (!box.searchTitleMenu) return;
 
-            const checkIcon = box.style.searchTitleCheckIconFile;
-            // WHY: Sadece seçili olanda ikon var; ContextMenu diğerlerine boş ikon alanı verir, metinler aynı hizada durur.
-            const items = [
-                { text: box.allTitlesText, data: -1, iconFile: (box.searchTitleIndex == -1) ? checkIcon : "" },
-                "-",
-            ];
+        // WHY: Sadece seçili olanda ikon var; ContextMenu diğerlerine boş ikon alanı verir, metinler aynı hizada durur.
+        const getCheckIcon = function (titleIndex) {
+            return (box.searchTitleIndex == titleIndex) ? box.style.searchTitleCheckIconFile : "";
+        };
 
-            box.titleDataList.forEach(function (titleData, titleIndex) {
-                items.push({ text: getTitleText(titleData), data: titleIndex, iconFile: (box.searchTitleIndex == titleIndex) ? checkIcon : "" });
-            });
+        const items = [
+            { text: box.allTitlesText, data: -1, iconFile: getCheckIcon(-1) },
+            "-",
+        ];
 
-            box.searchTitleMenu.setItems(items);
-            if (box.showSearchTitleSelect != 1) box.searchTitleMenu.close();
+        box.titleDataList.forEach(function (titleData, titleIndex) {
+            items.push({ text: getTitleText(titleData), data: titleIndex, iconFile: getCheckIcon(titleIndex) });
+        });
 
-        }
+        box.searchTitleMenu.setItems(items);
+        if (box.showSearchTitleSelect != 1) box.searchTitleMenu.close();
 
     };
 
@@ -1231,22 +1151,21 @@ const SmartTable = function (params = {}) {
     };
 
     box.setShowSearchTitleSelect = function (show) {
-        box.showSearchTitleSelect = (show == 1 || show === true) ? 1 : 0;
+        box.showSearchTitleSelect = basic.isOn(show) ? 1 : 0;
         box.updateSearchTitleSelect();
     };
     // USAGE: smartTable.setShowSearchTitleSelect(0)
 
     // Fare tekerleği ile satır kaydırma. 0: Tekerlek sayfaya bırakılır.
     box.setWheelScroll = function (enabled) {
-        box.wheelScroll = (enabled == 1 || enabled === true) ? 1 : 0;
+        box.wheelScroll = basic.isOn(enabled) ? 1 : 0;
     };
     // USAGE: smartTable.setWheelScroll(1)
 
     box.createResizeEvent = function () {
 
-        const _resizeUI = function () {
+        const resizeUI = function () {
 
-            // Item yüksekliği otomatik hesaplanacak.
             if (box.recalcItemHeight) {
 
                 const itemHeight = (box.height - box.titleHeight - box.infoHeight) / box.itemLineCount;
@@ -1264,24 +1183,11 @@ const SmartTable = function (params = {}) {
             box.scrollBar.refreshScroll(); // Ekranı daraltırken, scroll gereksiz görünmesin diye.
 
             box.refreshData();
-            //box.showScrollTimer = waitAndRun(box.showScrollTimer,  box.showScrollX, 300);
 
         };
 
-        /*
-        box.showScrollTimer = null;
-        box.showScrollX = function() {
-            box.scrollBar.opacity = 1;
-        }
-        */
-
         box.onResize(function (self) {
-
-            //box.scrollBar.opacity = 0;
-
-            // Item yüksekliği otomatik hesaplanacak.
-            box.resizeTimer = waitAndRun(box.resizeTimer, _resizeUI, 3);
-
+            box.resizeTimer = waitAndRun(box.resizeTimer, resizeUI, RESIZE_DELAY);
         });
 
     };
@@ -1294,7 +1200,7 @@ const SmartTable = function (params = {}) {
         box.clipContent = 0;
         box.color = box.style.box.color;
         box.round = box.style.round;
-        if (box.invertColor == 1) box.elem.style.filter = "invert(100%)";
+        if (box.invertColor == 1) box.css.filter = "invert(100%)";
         box.setWidth(box.style.width);
         box.setHeight(box.style.height);
 
@@ -1312,11 +1218,14 @@ const SmartTable = function (params = {}) {
             clipContent: 0,
             scrollX: 1,
         });
-        that.elem.style.borderTopLeftRadius = box.style.round + "px";     // Üst Sol Köşe
-        that.elem.style.borderTopRightRadius = box.style.round + "px";    // Üst Sağ Köşe
-        that.elem.style.borderBottomRightRadius = "0px"; // Alt Sağ Köşe
-        that.elem.style.borderBottomLeftRadius = "0px";   // Alt Sol Köşe
-        that.elem.style.marginBottom = box.infoHeight + "px";
+        // WHY: Only the top corners are round; the info line under it has the bottom ones.
+        that.css = {
+            borderTopLeftRadius: box.style.round + "px",
+            borderTopRightRadius: box.style.round + "px",
+            borderBottomRightRadius: "0px",
+            borderBottomLeftRadius: "0px",
+            marginBottom: box.infoHeight + "px",
+        };
 
         // Title Line
         box.boxTitleLine = HGroup({
@@ -1357,12 +1266,15 @@ const SmartTable = function (params = {}) {
             padding: [0, 0],
             gap: 0,
             ...box.style.boxInfoLine,
-        }); endGroup();
-        that.elem.style.borderTopLeftRadius = "0px";     // Üst Sol Köşe
-        that.elem.style.borderTopRightRadius = "0px";    // Üst Sağ Köşe
-        that.elem.style.borderBottomRightRadius = box.style.round + "px"; // Alt Sağ Köşe
-        that.elem.style.borderBottomLeftRadius = box.style.round + "px";   // Alt Sol Köşe
-        that.elem.style.borderTop = box.style.boxInfoLine.borderTop;
+        });
+        endGroup();
+        that.css = {
+            borderTopLeftRadius: "0px",
+            borderTopRightRadius: "0px",
+            borderBottomRightRadius: box.style.round + "px",
+            borderBottomLeftRadius: box.style.round + "px",
+            borderTop: box.style.boxInfoLine.borderTop,
+        };
         that.clickable = 0;
 
         box.createToolbar();

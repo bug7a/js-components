@@ -112,10 +112,6 @@ const InputBDefaults = {
         color: "#373836",
         textColor: "white",
         round: 40,
-        //color: "white",
-        //border: 1,
-        //borderColor: "#999999",
-        //round: 2,
         fontSize: 14,
     },
 
@@ -141,7 +137,11 @@ const InputB = function(params = {}) {
     }
 
     // *** PRIVATE VARIABLES:
-    /* */
+    const WARNING_BALL_SIZE = 16; // The size of the colored ball (warningBallType: "color")
+    const SHOWN_BALL_SCALE = "scale(1)";
+    const HIDDEN_BALL_SCALE = "scale(0.3)"; // WHY: The ball grows from small when it is shown.
+    const WARNING_BALL_MOTION = "opacity 0.2s, transform 0.2s";
+    const OUT_OF_SCREEN_TOP = -1000;
 
     // *** PUBLIC VARIABLES:
     
@@ -150,27 +150,27 @@ const InputB = function(params = {}) {
 
     // *** PRIVATE FUNCTIONS:
 
-    const showWarningBall = function() {
-        // just animate on show
-        const _showWarningBall = () => {
-            box.warningBall.opacity = 1;
-            box.warningBall.clickable = 1;
-            box.warningBall.elem.style.transform = "scale(1)";
-        };
+    const makeWarningBallVisible = function() {
+        box.warningBall.opacity = 1;
+        box.warningBall.clickable = 1;
+        box.warningBall.css.transform = SHOWN_BALL_SCALE;
+    };
 
+    // WHY: Only the showing is animated (hideWarningBall() turns the motion off).
+    const showWarningBall = function() {
         if (box.animatedWarningBall == 1) {
-            box.warningBall.withMotion(_showWarningBall);
-        } else {
-            _showWarningBall();
+            box.warningBall.withMotion(makeWarningBallVisible);
+            return;
         }
-    }
+        makeWarningBallVisible();
+    };
 
     const hideWarningBall = function() {
         if (box.animatedWarningBall == 1) box.warningBall.dontMotion();
         box.warningBall.opacity = 0;
         box.warningBall.clickable = 0;
-        box.warningBall.elem.style.transform = "scale(0.3)";
-    }
+        box.warningBall.css.transform = HIDDEN_BALL_SCALE;
+    };
 
     // Built-in icons (SVG data URI): "required" (asterisk), "warning" (exclamation)
     const createBuiltInIcon = function(kind, color) {
@@ -181,46 +181,45 @@ const InputB = function(params = {}) {
         return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
     };
 
+    const getWarningIconFile = function(kind) {
+        if (kind == "required") {
+            return box.requiredIcon || createBuiltInIcon("required", box.requiredIconColor);
+        }
+        return box.warningIcon || createBuiltInIcon("warning", box.warningColor);
+    };
+
     // kind: "required" or "warning"
     const applyWarningBallStyle = function(kind) {
-        if (box.warningBallType == "icon") {
-            let src;
-            if (kind == "required") {
-                src = box.requiredIcon || createBuiltInIcon("required", box.requiredIconColor);
-            } else {
-                src = box.warningIcon || createBuiltInIcon("warning", box.warningColor);
-            }
-            // Reload only if changed (prevents flicker)
-            if (box.warningBall.icon.imageElement.getAttribute("src") != src) {
-                box.warningBall.icon.load(src);
-            }
-        } else {
+        if (box.warningBallType != "icon") {
             box.warningBall.color = (kind == "required") ? box.requiredColor : box.warningColor;
+            return;
+        }
+        const iconFile = getWarningIconFile(kind);
+        // WHY: Loaded again only when it changed, so the icon does not flicker.
+        if (box.warningBall.icon.imageElement.getAttribute("src") != iconFile) {
+            box.warningBall.icon.load(iconFile);
         }
     };
 
-    // Shows a warning manually (used externally)
+    // kind: "required" or "warning"
+    const showWarningBallOf = function(kind, hintText, ballColor) {
+        hideWarningBall();
+        applyWarningBallStyle(kind);
+        box.warningBall.tooltip.setHintText(hintText);
+        box.warningBall.tooltip.setLbl_color(box.tooltipStyle.color || ballColor);
+        showWarningBall();
+    };
+
     const showWarning = function() {
         if (box.isRequired && box.getInputValue().length === 0) {
-            // If required and empty, show required tooltip
-            hideWarningBall();
-            applyWarningBallStyle("required");
-            box.warningBall.tooltip.setHintText(box.requiredText);
-            box.warningBall.tooltip.setLbl_color(box.tooltipStyle.color || box.requiredColor);
-            showWarningBall();
+            showWarningBallOf("required", box.requiredText, box.requiredColor);
             box.status = 1;
-        } else {
-            // Otherwise, show warning
-            hideWarningBall();
-            applyWarningBallStyle("warning");
-            box.warningBall.tooltip.setHintText(box.warningText);
-            box.warningBall.tooltip.setLbl_color(box.tooltipStyle.color || box.warningColor);
-            showWarningBall();
-            box.status = 2;
+            return;
         }
+        showWarningBallOf("warning", box.warningText, box.warningColor);
+        box.status = 2;
     };
 
-    // Hides the warning icon and tooltip manually
     const hideWarning = function() {
         hideWarningBall();
         box.status = 0;
@@ -228,76 +227,53 @@ const InputB = function(params = {}) {
 
     // *** PUBLIC FUNCTIONS:
 
+    // A child component formats the value here: it reads getInputValue() and puts it back with setInputValue().
     box.applyFormattedValueToInput = function(value) {
-        //let value = box.getInputValue();
-        // format the value
-        //box.setInputValue(value); // Put back formatted value.
     }
 
     box.checkIfInputIsRequiredAndEmpty = function() {
-        if (box.isRequired) {
-            if (box.getInputValue().length === 0) {
-                showWarning();
-                /*
-                hideWarningBall();
-                box.warningBall.tooltip.setHintText(box.requiredText);
-                box.warningBall.tooltip.setLbl_color(box.requiredColor);
-                box.warningBall.color = box.requiredColor;
-                showWarningBall();
-                */
-            } else {
-                hideWarning();
-                //hideWarningBall();
-            }
-        } else {
-            hideWarning();
-            //hideWarningBall();
+        if (box.isRequired && box.getInputValue().length === 0) {
+            showWarning();
+            return;
         }
+        hideWarning();
     };
 
     box.isValid = function() {
-        //box.inputValue
         return 1;
     };
 
     box.showWarningIfNotValid = function(isValid) {
-        if (box.getInputValue().length !== 0) {
+        if (box.getInputValue().length === 0) return;
 
-            if (isValid) {
-                hideWarning();
-            } else {
-                if(window.lblHint) {
-                    window.lblHint.top = -1000;
-                }
-                showWarning();
-            }
-
+        if (isValid) {
+            hideWarning();
+            return;
         }
+        // WHY: The open hint (window.lblHint of Tooltip) goes out of the screen; the next mousemove places it again.
+        if (window.lblHint) {
+            window.lblHint.top = OUT_OF_SCREEN_TOP;
+        }
+        showWarning();
     };
-
-    /*
-    .isNotEmpty = function() {
-        return (box.getInputValue() == "") ? 0 : 1;
-    }
-    */
 
     // Sets the title text for the input component
     box.setTitle = function(titleText) {
         box.titleText = titleText;
-        if (box.title && typeof box.title.text !== "undefined") {
-            box.title.text = titleText;
-            if (box.input) {
-                box.input.inputElement.setAttribute("aria-label", box.titleText);
-            }
+        if (!box.title || typeof box.title.text === "undefined") return;
+
+        box.title.text = titleText;
+        if (box.input) {
+            box.input.inputElement.setAttribute("aria-label", box.titleText);
         }
     };
     
     // Sets the description below or next to the input field
     box.setDescription = function(descriptionText) {
         box.descriptionText = descriptionText;
-        if (box.description && typeof box.description.text !== "undefined") {
-            box.description.text = descriptionText;
-        }
+        if (!box.description || typeof box.description.text === "undefined") return;
+
+        box.description.text = descriptionText;
     };
     
     // Sets the maximum number of characters allowed in the input
@@ -325,15 +301,7 @@ const InputB = function(params = {}) {
     // Returns the current value inside the input field
     box.getInputValue = function() {
         return box.input.text;
-        //return box.inputValue;
     };
-
-    /*
-    .getInputValueFromObject = function() {
-        // If you change the input object, you can override this function.
-        return box.input.text;
-    };
-    */
 
     // Sets the background color of the input element itself
     box.setBackgroundColor = function(color) {
@@ -392,10 +360,9 @@ const InputB = function(params = {}) {
     // Sets the unit label (e.g., KG) displayed near the input field
     box.setUnitText = function(text) {
         box.unitText = text;
-        
-        if (box.unit && typeof box.unit.text !== "undefined") {
-            box.unit.text = text;
-        }
+        if (!box.unit || typeof box.unit.text === "undefined") return;
+
+        box.unit.text = text;
     };
 
     // *** OBJECT VIEW:
@@ -406,17 +373,12 @@ const InputB = function(params = {}) {
             border: 1,
             borderColor: box.backBorderColor,
         });
-        // Corner Radius
-        that.elem.style.borderTopRightRadius = box.backBorderTopRound + "px";
-        that.elem.style.borderTopLeftRadius = box.backBorderTopRound + "px";
-        that.elem.style.borderBottomRightRadius = box.backBorderBottomRound + "px";
-        that.elem.style.borderBottomLeftRadius = box.backBorderBottomRound + "px";
-        /*
-        that.clickable = 1;
-        if(box.createInput == 1) {
-            that.elem.style.cursor = "text";
-        }
-        */
+        box.background.css = {
+            borderTopRightRadius: box.backBorderTopRound + "px",
+            borderTopLeftRadius: box.backBorderTopRound + "px",
+            borderBottomRightRadius: box.backBorderBottomRound + "px",
+            borderBottomLeftRadius: box.backBorderBottomRound + "px",
+        };
 
         // BOX: Bottom Line
         box.line = Box({
@@ -474,7 +436,7 @@ const InputB = function(params = {}) {
                     fontSize: 14,
                     textColor: "#999999",
                 });
-                that.elem.style.fontStyle = "italic";
+                box.description.css.fontStyle = "italic";
             }
             
         endAutoLayout();
@@ -492,17 +454,6 @@ const InputB = function(params = {}) {
             if (box.createUnit == 1) {
             box.unit = Label(box.unitStyle);
             box.unit.text = box.unitText;
-            /*
-            box.unit = abel({
-                text: box.unitText,
-                padding: [6, 0],
-                color: "white",
-                border: 1,
-                borderColor: "#999999",
-                round: 2,
-                fontSize: 16,
-            });
-            */
             }
 
         endAutoLayout();
@@ -522,11 +473,12 @@ const InputB = function(params = {}) {
 
         // BOX: Warning Ball:
         const isIconBall = (box.warningBallType == "icon");
+        const ballSize = isIconBall ? box.warningIconSize : WARNING_BALL_SIZE;
         box.warningBall = Box({
             right: 5,
             top: 5,
-            width: isIconBall ? box.warningIconSize : 16,
-            height: isIconBall ? box.warningIconSize : 16,
+            width: ballSize,
+            height: ballSize,
             border: isIconBall ? 0 : 2,
             color: isIconBall ? "transparent" : box.requiredColor,
             borderColor: "#373836",
@@ -544,9 +496,9 @@ const InputB = function(params = {}) {
             });
             box.warningBall.add(that);
         }
-        box.warningBall.elem.style.transform = "scale(0.3)";
+        box.warningBall.css.transform = HIDDEN_BALL_SCALE;
         if (box.animatedWarningBall == 1) {
-            box.warningBall.setMotion("opacity 0.2s, transform 0.2s");
+            box.warningBall.setMotion(WARNING_BALL_MOTION);
         }
 
         // TOOLTIP: warningBall
@@ -585,7 +537,7 @@ const InputB = function(params = {}) {
         }
         inputElem.addEventListener("blur", function(){ box.blurFunc() });
 
-        box.inputFunc = function () { // If needed, you can override function on ExtendedObject.
+        box.inputFunc = function () { // A child component can override it.
             box.applyFormattedValueToInput();
             box.checkIfInputIsRequiredAndEmpty();
             box.showWarningIfNotValid(box.isValid());

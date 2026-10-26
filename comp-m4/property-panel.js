@@ -9,23 +9,33 @@ UI COMPONENT TEMPLATE
   Full height, 240 px wide (width), one dark style.
 - Built from a JSON (data): header tabs, a title with action icons, and sections of items.
   footer: one more section, fixed at the bottom (out of the scrolling part). Ex: a note field.
+  headerTitle: a name at the left of the header; the tabs and the headerItem come next to it.
+  empty: { icon, title, text, hints: [{ keys, text }] } -> a page in the middle in place of the sections
+  (Ex: nothing is selected).
   Each item has a type, a key, a value and its own settings. Every item type is a small object
   built by its own function (see *** ITEM TYPES):
     number     -> [X  396]  prefix text or icon (drag the prefix to change the value), unit, min, max, step, autoText
     text       -> [ name ]  a text field
+    textarea   -> a text of more lines (rows: 2). caption: the first line of the placeholder (it goes while writing). Saved on blur or Cmd/Ctrl+Enter.
     select     -> [ Left ⌄]  a menu of options, optional icon, look: "plain" (no background)
     combo      -> [16  | ⌄]  a number field and a menu of preset values
     segmented  -> [≡|≡|≡]  icon or text buttons. With a value: one is selected. Without: action buttons.
     iconButton -> [◎]  an action, or a toggle (toggle: 1, value true/false)
     constraints-> Horizontal and vertical selects and the constraints diagram. value: { horizontal, vertical }
     alignGrid  -> a 3x3 grid of the places of the content (the align of a group). value: "left top", "center"...
-    color      -> [■ #3871E0]  a swatch and the color text. A click on the swatch opens the color picker.
-                  presets: ["#FFFFFF", { value: "var(--color-primary)", color: "#3871E0", hint: "Primary" }, "|", ...]
-                  -> small squares under the field, a click gives that value ("|" starts a new row).
+    color      -> [■ #3871E0 | 100%]  a swatch, the color text and its opacity. A click on the swatch opens the
+                  color picker (at the left of the panel): saturation / brightness, hue, opacity, the eyedropper
+                  (Chrome), the color text, and the color groups (palettes) under them.
+                  palettes (a param of the panel): [{ key, name, colors, canAdd, emptyText }] or function (panel) -> that.
+                  colors: ["#FFFFFF", { value: "var(--color-primary)", color: "#3871E0", hint: "Primary" }, ...]
+                  canAdd: 1 -> a + button adds the current color: change { kind: "addColor", key: palette key, value }.
+                  presets (of the item, old): shown as the first palette, "Presets".
+                  Also: the color before / now (a click on "before" goes back), HEX / RGB / HSL text, and the
+                  recent colors (recentColorsKey: kept in basic.storage).
 - Items of a row: put them in an array. span: 1 (one column), 2 (two columns). An iconButton takes the
   small last column. label: the caption above the item.
 - Listen to every change from outside: onChange(change, panel) or panel.listen(fn) (returns a remover).
-  change = { kind: "value" | "action" | "tab", key, value, oldValue, item, sectionKey }
+  change = { kind: "value" | "action" | "tab" | "addColor", key, value, oldValue, item, sectionKey }
   The panel keeps the values: getValues(), getValue(key), getData() (the JSON with the current values).
 - setValue(key, value, silent) changes an item from outside (Ex: another object was selected).
 - It is always created on the page (whatever container is open) and opened at the right side.
@@ -64,9 +74,11 @@ Webpage: https://bug7a.github.io/js-components/
 const PropertyPanelDefaults = {
     key: "0",
     width: 240,
-    data: {}, // tabs, activeTab, headerItem, title, titleActions, sections (See the USAGE above)
+    data: {}, // tabs, activeTab, headerTitle, headerItem, title, titleActions, sections, footer, empty (See the USAGE above)
     opened: 1, // 1: Open at create time.
     onChange: function (change, self) { }, // Every change: { kind, key, value, oldValue, item, sectionKey }
+    palettes: null, // The color groups of the color picker: [{ key, name, colors, canAdd, emptyText }] or function (panel) -> that
+    recentColorsKey: "", // The recent colors of the color picker are kept in basic.storage with this key. "": only until the page closes.
     style: {
         panel: {
             color: "#2C2C2C",
@@ -129,6 +141,26 @@ const PropertyPanelDefaults = {
             cellColor: "#6E6E6E", // The empty square of a place
             hoverColor: "#A5A5A5",
             selectedColor: "#0C8CE9", // The filled square of the chosen place (the accent)
+        },
+        textarea: {
+            lineHeight: 17,
+            fontFamily: "opensans, sans-serif",
+        },
+        colorPicker: {
+            width: 240,
+            padding: 12,
+            areaHeight: 150, // Saturation / brightness area
+            handleSize: 12,
+            sliderHeight: 12,
+            swatchSize: 18,
+            swatchGap: 6,
+            swatchesMaxHeight: 126, // More colors scroll
+        },
+        empty: { // data.empty: the page in the middle (Ex: nothing is selected)
+            iconSize: 26,
+            iconColor: "#A5A5A5",
+            iconBoxColor: "#383838",
+            iconBoxRound: 16,
         },
         swatch: {
             size: 14,
@@ -335,8 +367,10 @@ const PropertyPanel = function (params = {}) {
 
     const closeMenu = function () {
         if (!menu) return;
-        menu.obj.remove();
+        const closed = menu;
         menu = null;
+        closed.obj.remove();
+        if (closed.onClose) closed.onClose();
     };
 
     // Under the field; above it when there is no space below.
@@ -417,8 +451,15 @@ const PropertyPanel = function (params = {}) {
         closeMenu();
     };
 
+    // WHY: stopImmediatePropagation: this Escape closes the menu only (a page listener after it would also
+    //      clear its selection). The focus goes back to the opener when it was in the menu.
     const onDocumentKeyDown = function (self, event) {
-        if (menu && event.key === "Escape") closeMenu();
+        if (!menu || event.key !== "Escape") return;
+        event.stopImmediatePropagation();
+        const opener = menu.opener;
+        const hadFocus = menu.obj.elem.contains(document.activeElement);
+        closeMenu();
+        if (hadFocus && opener.elem.tabIndex >= 0) opener.elem.focus();
     };
 
     // *** SMALL OBJECTS USED BY THE ITEM TYPES:
@@ -846,136 +887,889 @@ const PropertyPanel = function (params = {}) {
 
     };
 
-    // COLOR: a swatch and the color text. The picker of the browser is over the swatch (an <input type="color">).
-    // A canvas reads any CSS color: "tomato", "rgba(...)" -> "#rrggbb" (the picker takes only that form).
-    const toHexColor = function (color) {
-        if (!toHexColor.context) toHexColor.context = document.createElement("canvas").getContext("2d");
-        const context = toHexColor.context;
+    // *** COLOR (the color item and its picker):
+    // A value is a CSS color text: "#3871E0", "rgba(56, 113, 224, 0.5)", "transparent", "var(--color-primary)".
+    // The field shows it as a base (the color without its opacity) and an opacity: [■ #3871E0 | 50%].
+
+    const HEX_TEXT = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i;
+    const WRITTEN_AS_NUMBERS = /^(#|rgb|hsl)/i;
+    const ALPHA_MIX = /^color-mix\(in srgb,\s*(.+)\s+([\d.]+)%,\s*transparent\)$/i; // What Alpha() makes of a token
+    const CHECKER = "repeating-conic-gradient(#BBBBBB 0% 25%, #FFFFFF 0% 50%) 0 0 / 6px 6px";
+    const ALPHA_INPUT_WIDTH = 46;
+    const PICKER_SPACE = 8; // Between the panel and the color picker
+
+    // A CSS color -> { r, g, b, a }, read by a canvas. null: this page can not read it (Ex: an unknown token).
+    const readColor = function (color) {
+        if (!readColor.context) readColor.context = document.createElement("canvas").getContext("2d");
+        const context = readColor.context;
+        // WHY: A wrong color leaves the old fillStyle: two different starts tell a wrong color apart.
         context.fillStyle = "#000000";
         context.fillStyle = String(color || "");
         const read = context.fillStyle;
-        if (read.charAt(0) === "#") return read;
-        const parts = read.match(/[\d.]+/g) || [0, 0, 0];
-        return "#" + parts.slice(0, 3).map(function (n) { return ("0" + Math.round(Number(n)).toString(16)).slice(-2); }).join("");
+        context.fillStyle = "#FFFFFF";
+        context.fillStyle = String(color || "");
+        if (read !== context.fillStyle) return null;
+        if (read.charAt(0) === "#") {
+            return { r: parseInt(read.slice(1, 3), 16), g: parseInt(read.slice(3, 5), 16), b: parseInt(read.slice(5, 7), 16), a: 1 };
+        }
+        const parts = read.match(/[\d.]+/g);
+        return { r: Number(parts[0]), g: Number(parts[1]), b: Number(parts[2]), a: (parts[3] !== undefined) ? Number(parts[3]) : 1 };
     };
 
-    // PRESETS: rows of small squares under a color field. preset: "#FFF" or { value, color (to paint), hint }.
-    const PRESET_SIZE = 14;
-    const PRESET_GAP = 4;
-
-    const buildPresetRows = function (presets, width, onPick) {
-        const rows = [[]];
-        presets.forEach(function (preset) {
-            if (preset === "|") rows.push([]);
-            else rows[rows.length - 1].push((typeof preset === "object") ? preset : { value: preset, color: preset, hint: preset });
+    const toHex = function (rgb) {
+        const digits = [rgb.r, rgb.g, rgb.b].map(function (n) {
+            return ("0" + Math.round(n).toString(16)).slice(-2);
         });
-        rows.filter(function (row) { return row.length; }).forEach(function (row) {
-            // GROUP: A row of presets
-            HGroup({ width: width, height: "auto", align: "left center", gap: PRESET_GAP, wrap: 1, color: "transparent" });
-                row.forEach(function (preset) {
-                    // BOX: A preset
-                    const square = Box({ width: PRESET_SIZE, height: PRESET_SIZE, round: 3, color: preset.color || preset.value });
-                    square.shrink = 0;
-                    square.clickable = 1;
-                    square.cursor = "pointer";
-                    square.role = "button";
-                    square.tabIndex = 0;
-                    square.aria = { label: preset.hint || preset.value };
-                    square.elem.title = preset.hint || preset.value;
-                    setBorder(square, _s.swatch.borderColor);
-                    square.on("click", function () { onPick(preset.value); });
-                    onActivateKey(square, function () { onPick(preset.value); });
-                });
-            endGroup();
+        return "#" + digits.join("").toUpperCase();
+    };
+
+    const roundAlpha = function (alpha) {
+        return Math.round(basic.clamp(alpha, 0, 1) * 100) / 100;
+    };
+
+    // A value -> { base, alpha }. "rgba(0, 0, 0, 0.5)" -> "#000000", 0.5. Alpha("var(--x)", 0.5) -> "var(--x)", 0.5
+    const splitAlpha = function (value) {
+        const text = String((value === undefined || value === null) ? "" : value).trim();
+        if (!text) return { base: "", alpha: 1 };
+        const mix = text.match(ALPHA_MIX);
+        if (mix) return { base: mix[1].trim(), alpha: Number(mix[2]) / 100 };
+        const rgb = readColor(text);
+        if (rgb && WRITTEN_AS_NUMBERS.test(text)) return { base: toHex(rgb), alpha: rgb.a };
+        return { base: text, alpha: (rgb) ? rgb.a : 1 };
+    };
+
+    // The opposite of splitAlpha: a base and an opacity -> one value.
+    const joinAlpha = function (base, alpha) {
+        alpha = roundAlpha(alpha);
+        if (alpha >= 1) return base;
+        const rgb = readColor(base);
+        if (!rgb) return Alpha(base, alpha); // A token: color-mix() keeps it a token
+        return "rgba(" + rgb.r + ", " + rgb.g + ", " + rgb.b + ", " + alpha + ")";
+    };
+
+    // A typed text -> a value. Hex digits keep the opacity of the color ("3871e0" -> "#3871E0"); any other text is used as it is.
+    const colorOfText = function (typed, alpha) {
+        if (!HEX_TEXT.test(typed)) return typed;
+        return joinAlpha("#" + typed.replace("#", "").toUpperCase(), alpha);
+    };
+
+    const rgbToHsv = function (rgb) {
+        const r = rgb.r / 255;
+        const g = rgb.g / 255;
+        const b = rgb.b / 255;
+        const max = Math.max(r, g, b);
+        const range = max - Math.min(r, g, b);
+        let hue = 0;
+        if (range && max === r) hue = ((g - b) / range) % 6;
+        else if (range && max === g) hue = (b - r) / range + 2;
+        else if (range) hue = (r - g) / range + 4;
+        return { h: (hue * 60 + 360) % 360, s: (max) ? range / max : 0, v: max };
+    };
+
+    const hsvToRgb = function (hsv) {
+        const part = function (n) {
+            const k = (n + hsv.h / 60) % 6;
+            return Math.round((hsv.v - hsv.v * hsv.s * Math.max(0, Math.min(k, 4 - k, 1))) * 255);
+        };
+        return { r: part(5), g: part(3), b: part(1) };
+    };
+
+    // *** COLOR PALETTES: the color groups of the picker (the palettes param, and the presets of an item).
+
+    let paletteCache = null; // WHY: palettes may be a function (the colors of a page): read once per setData / picker.
+    let lastPaletteKey = "";
+    let colorFormat = "hex"; // The text of the color picker: "hex", "rgb", "hsl"
+    const COLOR_FORMATS = ["hex", "rgb", "hsl"];
+    const RECENT_COLOR_COUNT = 9; // One row of the picker
+
+    const loadRecentColors = function () {
+        if (!box.recentColorsKey) return [];
+        const saved = basic.storage.load(box.recentColorsKey);
+        return (Array.isArray(saved)) ? saved : [];
+    };
+    let recentColors = loadRecentColors();
+
+    const rememberColor = function (value) {
+        if (!value) return;
+        recentColors = [value].concat(recentColors.filter(function (v) { return v !== value; })).slice(0, RECENT_COLOR_COUNT);
+        if (box.recentColorsKey) basic.storage.save(box.recentColorsKey, recentColors);
+    };
+
+    const toPreset = function (preset) {
+        if (preset && typeof preset === "object") return preset;
+        return { value: preset, color: preset, hint: preset };
+    };
+
+    const readPalettes = function () {
+        const source = (typeof box.palettes === "function") ? box.palettes(box) : box.palettes;
+        paletteCache = (Array.isArray(source)) ? source : [];
+        return paletteCache;
+    };
+
+    // The palettes of an item: its presets (old item setting) first, then the palettes of the panel.
+    const palettesOf = function (item, isFresh) {
+        const shared = (isFresh || !paletteCache) ? readPalettes() : paletteCache;
+        const list = shared.map(function (palette) {
+            return Object.assign({}, palette, { colors: (palette.colors || []).map(toPreset) });
+        });
+        const presets = (Array.isArray(item.presets)) ? item.presets.filter(function (p) { return p !== "|"; }) : [];
+        if (presets.length) list.unshift({ key: "__presets", name: "Presets", colors: presets.map(toPreset) });
+        return list;
+    };
+
+    // The color to paint for a base: a token (var(--color-primary)) is painted with the color of its preset.
+    const paintColorOf = function (item, value) {
+        const parts = splitAlpha(value);
+        if (!parts.base) return "transparent";
+        let color = parts.base;
+        palettesOf(item).forEach(function (palette) {
+            palette.colors.forEach(function (preset) {
+                if (preset.value === parts.base && preset.color) color = preset.color;
+            });
+        });
+        return joinAlpha(color, parts.alpha);
+    };
+
+    // A square that shows a color over a checkerboard (a transparent color shows the checkerboard).
+    const paintChecker = function (obj, color) {
+        obj.css.background = "linear-gradient(" + color + ", " + color + "), " + CHECKER;
+    };
+
+    // *** COLOR INPUTS: the color text and its opacity (%). Used by the color field and by the picker.
+
+    // INPUT: Opacity (%), at the end of a field made by buildInputField.
+    const addAlphaInput = function (field, state, hint) {
+        return createIn(field, function () {
+            // BOX: Line between the color and its opacity
+            const line = Box({ width: 1, height: 14, color: _ps.dividerColor });
+            line.shrink = 0;
+            line.clickable = 0;
+            const alphaInput = Input({ width: ALPHA_INPUT_WIDTH, height: _g.itemHeight, minimal: 1, fontSize: _t.fontSize, textColor: _t.color });
+            alphaInput.shrink = 0;
+            const alphaEl = alphaInput.inputElement;
+            Object.assign(alphaEl.style, {
+                width: "100%",
+                height: "100%",
+                boxSizing: "border-box",
+                padding: "0px 8px 0px 6px",
+                backgroundColor: "transparent",
+                border: "0px",
+                color: _t.color,
+                fontSize: _t.fontSize + "px",
+            });
+            alphaEl.setAttribute("spellcheck", "false");
+            alphaEl.setAttribute("aria-label", hint + " opacity (%)");
+            alphaEl.addEventListener("focus", function () {
+                state.isFocus = 1;
+                paintField(field, state);
+                alphaInput.select();
+            });
+            alphaEl.addEventListener("blur", function () {
+                state.isFocus = 0;
+                paintField(field, state);
+            });
+            return alphaInput;
         });
     };
 
-    const buildColorField = function (ctrl) {
+    const rgbToHsl = function (rgb) {
+        const r = rgb.r / 255;
+        const g = rgb.g / 255;
+        const b = rgb.b / 255;
+        const max = Math.max(r, g, b);
+        const min = Math.min(r, g, b);
+        const lightness = (max + min) / 2;
+        const range = max - min;
+        const saturation = (range) ? range / (1 - Math.abs(2 * lightness - 1)) : 0;
+        return { h: Math.round(rgbToHsv(rgb).h), s: Math.round(saturation * 100), l: Math.round(lightness * 100) };
+    };
 
-        const item = ctrl.item;
-        const sw = _s.swatch;
-        const width = getSpanWidth(item.span);
-        const hasPresets = Array.isArray(item.presets) && item.presets.length > 0;
-        // GROUP: The field and its presets (only when there are presets)
-        const holder = (hasPresets) ? VGroup({ width: width, height: "auto", align: "left top", gap: 6, color: "transparent" }) : null;
-        if (holder) holder.shrink = 0;
-        const { field, input, el, setEnabled } = buildInputField(item, width);
-        if (item.placeholder) input.placeholder = item.placeholder;
-        el.style.paddingLeft = "4px";
+    // The text of a base in a format: "#3871E0" -> "56, 113, 224" (rgb) or "220, 74%, 55%" (hsl). A token stays as it is.
+    const formatBase = function (base, format) {
+        if (format === "hex" || base.charAt(0) !== "#") return base;
+        const rgb = readColor(base);
+        if (format === "rgb") return rgb.r + ", " + rgb.g + ", " + rgb.b;
+        const hsl = rgbToHsl(rgb);
+        return hsl.h + ", " + hsl.s + "%, " + hsl.l + "%";
+    };
 
-        // BOX: Swatch (a checkerboard under the color: a transparent color shows it)
-        const swatchArea = createIn(field, function () {
-            const area = startBox({ width: sw.size + 12, height: _g.itemHeight, color: "transparent" });
-            area.shrink = 0;
-                const chess = Box({ width: sw.size, height: sw.size, round: 3, color: "#FFFFFF" });
-                chess.center();
-                chess.css = { backgroundImage: "linear-gradient(45deg, #BBBBBB 25%, transparent 25%, transparent 75%, #BBBBBB 75%), linear-gradient(45deg, #BBBBBB 25%, transparent 25%, transparent 75%, #BBBBBB 75%)", backgroundSize: "6px 6px", backgroundPosition: "0 0, 3px 3px" };
-                area.fill = Box({ width: sw.size, height: sw.size, round: 3, color: "transparent" });
-                area.fill.center();
-            endBox();
-            return area;
-        });
-        field.elem.insertBefore(swatchArea.elem, field.elem.firstChild);
+    const NUMBERS_OF_THREE = /^\s*([\d.]+)%?\s*[, ]\s*([\d.]+)%?\s*[, ]\s*([\d.]+)%?\s*$/;
 
-        // The picker: an invisible <input type="color"> over the swatch, so a click opens it.
-        const picker = document.createElement("input");
-        picker.type = "color";
-        picker.setAttribute("aria-label", (item.hint || item.label || item.key) + " picker");
-        Object.assign(picker.style, { position: "absolute", left: "0px", top: "0px", width: "100%", height: "100%", opacity: "0", cursor: "pointer", pointerEvents: "auto", border: "0px", padding: "0px" });
-        swatchArea.elem.appendChild(picker);
+    // "56, 113, 224" (rgb) or "220, 74, 55" (hsl) -> "#3871E0". null: it is not three numbers.
+    const hexOfNumbers = function (typed, format) {
+        const match = typed.match(NUMBERS_OF_THREE);
+        if (!match || format === "hex") return null;
+        const text = (format === "rgb") ? "rgb(" + match[1] + ", " + match[2] + ", " + match[3] + ")" : "hsl(" + match[1] + ", " + match[2] + "%, " + match[3] + "%)";
+        const rgb = readColor(text);
+        return (rgb) ? toHex(rgb) : null;
+    };
 
-        // A token (var(--color-primary)) is painted with the color of its preset: this page does not know the token.
-        const colorOfValue = function (value) {
-            const preset = (item.presets || []).find(function (p) { return p && typeof p === "object" && p.value === value; });
-            return (preset && preset.color) ? preset.color : value;
+    const showColorInputs = function (input, alphaInput, value, format = "hex") {
+        const parts = splitAlpha(value);
+        input.text = formatBase(parts.base, format);
+        alphaInput.text = (parts.base) ? Math.round(parts.alpha * 100) + "%" : "";
+    };
+
+    // api: { getValue(), commit(value), refresh(), getFormat() (optional, "hex" when not given) }
+    // (refresh: show the current value again)
+    const connectColorInputs = function (input, alphaInput, api) {
+
+        const el = input.inputElement;
+        const alphaEl = alphaInput.inputElement;
+        const formatOf = function () {
+            return (api.getFormat) ? api.getFormat() : "hex";
         };
 
-        const paintSwatch = function (color) {
-            const isEmpty = !color || color === "transparent";
-            swatchArea.fill.color = (isEmpty) ? "transparent" : colorOfValue(color);
-            setBorder(swatchArea.fill, (isEmpty) ? sw.emptyColor : sw.borderColor);
-            picker.value = toHexColor(color);
-        };
-        const setValue = function (v) {
-            input.text = (v === undefined || v === null) ? "" : String(v);
-            paintSwatch(input.text);
+        const commitText = function () {
+            const parts = splitAlpha(api.getValue());
+            const typed = String(input.text).trim();
+            if (typed === formatBase(parts.base, formatOf())) return;
+            const hex = hexOfNumbers(typed, formatOf());
+            api.commit((hex) ? joinAlpha(hex, parts.alpha) : colorOfText(typed, parts.alpha));
         };
 
-        picker.addEventListener("input", function () {
-            input.text = picker.value;
-            paintSwatch(picker.value);
-            changeValue(ctrl, picker.value);
-        });
-        el.addEventListener("blur", function () {
-            paintSwatch(input.text);
-            changeValue(ctrl, String(input.text));
-        });
+        const commitAlpha = function (percent) {
+            const parts = splitAlpha(api.getValue());
+            if (!parts.base || isNaN(percent)) {
+                api.refresh();
+                return;
+            }
+            api.commit(joinAlpha(parts.base, basic.clamp(percent, 0, 100) / 100));
+        };
+
+        const percentOfInput = function () {
+            return parseFloat(String(alphaInput.text).replace(",", "."));
+        };
+
+        el.addEventListener("blur", commitText);
         el.addEventListener("keydown", function (event) {
             if (event.key === "Enter") {
                 event.preventDefault();
                 el.blur();
             } else if (event.key === "Escape") {
                 event.preventDefault();
-                setValue(ctrl.item.value);
+                api.refresh();
                 el.blur();
             }
         });
 
-        if (holder) {
-            buildPresetRows(item.presets, width, function (value) {
-                setValue(value);
-                changeValue(ctrl, value);
+        alphaEl.addEventListener("blur", function () { commitAlpha(percentOfInput()); });
+        alphaEl.addEventListener("keydown", function (event) {
+            const isArrow = (event.key === "ArrowUp" || event.key === "ArrowDown");
+            if (isArrow) {
+                event.preventDefault();
+                const direction = (event.key === "ArrowUp") ? 1 : -1;
+                const step = (event.shiftKey) ? SHIFT_STEP_FACTOR : 1;
+                commitAlpha(Math.round(Math.round(splitAlpha(api.getValue()).alpha * 100) + direction * step));
+                alphaInput.select();
+            } else if (event.key === "Enter") {
+                event.preventDefault();
+                alphaEl.blur();
+            } else if (event.key === "Escape") {
+                event.preventDefault();
+                api.refresh();
+                alphaEl.blur();
+            }
+        });
+
+    };
+
+    // *** COLOR PICKER: a popup at the left of the panel (it uses the menu slot: one popup at a time).
+    // [ saturation / brightness area ]
+    // [eyedropper] [hue      ]
+    //              [opacity  ]
+    // [ #3871E0          | 100% ]
+    // [ Used on this page ⌄    + ]  the palette list, then its colors
+
+    const openColorPicker = function (ctrl, colorField) {
+
+        const isOpenByThisOpener = (menu && menu.opener === colorField.opener);
+        closeMenu();
+        if (isOpenByThisOpener) return;
+
+        const cp = _s.colorPicker;
+        const ms = _s.menu;
+        const item = ctrl.item;
+        const hint = item.hint || item.label || item.key;
+        const contentWidth = cp.width - cp.padding * 2;
+        const hasEyeDropper = (typeof window.EyeDropper === "function");
+        const sliderWidth = contentWidth - ((hasEyeDropper) ? _g.itemHeight + _g.gap : 0);
+        let palettes = palettesOf(item, 1);
+        let isPaletteListOpen = 0;
+        let paletteArea = null;
+        let swatchViews = [];
+        let hsv = { h: 0, s: 0, v: 0 };
+        let alpha = 1;
+        let obj = null;
+        let area = null;
+        let areaHandle = null;
+        let hueSlider = null;
+        let alphaSlider = null;
+        let hexInput = null;
+        let alphaInput = null;
+        let formatButton = null;
+        let previewNow = null;
+        let recentViews = [];
+        const valueAtOpen = colorField.getValue();
+
+        // STATE <-> VALUE
+
+        const rgbOfState = function () {
+            return hsvToRgb(hsv);
+        };
+
+        const valueOfState = function () {
+            return joinAlpha(toHex(rgbOfState()), alpha);
+        };
+
+        // WHY: The hue of a gray (or black) can not be read from its color: the old hue stays.
+        const readState = function () {
+            const parts = splitAlpha(colorField.getValue());
+            const rgb = readColor(paintColorOf(item, parts.base)) || { r: 0, g: 0, b: 0 };
+            const next = rgbToHsv(rgb);
+            if (next.s === 0 || next.v === 0) next.h = hsv.h;
+            hsv = next;
+            alpha = (parts.base) ? parts.alpha : 1;
+        };
+
+        const commitState = function () {
+            colorField.commit(valueOfState());
+            paintPicker();
+        };
+
+        const commitValue = function (value) {
+            colorField.commit(value);
+            readState();
+            paintPicker();
+        };
+
+        // PAINT
+
+        const placeThumb = function (slider, ratio) {
+            slider.thumb.css.left = Math.round(ratio * (slider.width - cp.sliderHeight)) + "px";
+        };
+
+        const paintPicker = function () {
+            const rgb = rgbOfState();
+            const solid = "rgb(" + rgb.r + ", " + rgb.g + ", " + rgb.b + ")";
+            area.color = "hsl(" + Math.round(hsv.h) + ", 100%, 50%)";
+            areaHandle.css.left = Math.round(hsv.s * contentWidth - cp.handleSize / 2) + "px";
+            areaHandle.css.top = Math.round((1 - hsv.v) * cp.areaHeight - cp.handleSize / 2) + "px";
+            areaHandle.color = solid;
+            placeThumb(hueSlider, hsv.h / 360);
+            hueSlider.thumb.color = "hsl(" + Math.round(hsv.h) + ", 100%, 50%)";
+            alphaSlider.css.background = "linear-gradient(to right, rgba(" + rgb.r + ", " + rgb.g + ", " + rgb.b + ", 0), " + solid + "), " + CHECKER;
+            placeThumb(alphaSlider, alpha);
+            paintChecker(alphaSlider.thumb, "rgba(" + rgb.r + ", " + rgb.g + ", " + rgb.b + ", " + alpha + ")");
+            hueSlider.aria = { valuenow: Math.round(hsv.h) };
+            alphaSlider.aria = { valuenow: Math.round(alpha * 100) };
+            area.aria = { valuetext: "Saturation " + Math.round(hsv.s * 100) + "%, brightness " + Math.round(hsv.v * 100) + "%" };
+            showColorInputs(hexInput, alphaInput, colorField.getValue(), colorFormat);
+            formatButton.text = colorFormat.toUpperCase();
+            paintChecker(previewNow, paintColorOf(item, colorField.getValue()));
+            paintSelectedSwatch();
+        };
+
+        const paintSelectedSwatch = function () {
+            const value = colorField.getValue();
+            swatchViews.concat(recentViews).forEach(function (view) {
+                const isSelected = PropertyPanel.isSameValue(view.value, value);
+                view.obj.boxShadow = (isSelected) ? "0 0 0 2px " + ms.color + ", 0 0 0 3px " + _s.accent.color : "inset 0 0 0 1px " + _s.swatch.borderColor;
             });
+        };
+
+        // DRAG: pointer down on a target, then moves until it is up. fn(ratioX, ratioY)
+        const dragOn = function (target, fn) {
+            const moveTo = function (event) {
+                const rect = target.elem.getBoundingClientRect();
+                fn(basic.clamp((event.clientX - rect.left) / rect.width, 0, 1), basic.clamp((event.clientY - rect.top) / rect.height, 0, 1));
+            };
+            target.elem.addEventListener("pointerdown", function (event) {
+                event.preventDefault();
+                target.elem.focus();
+                target.elem.setPointerCapture(event.pointerId);
+                moveTo(event);
+                const onMove = function (moveEvent) { moveTo(moveEvent); };
+                const onUp = function () {
+                    target.elem.removeEventListener("pointermove", onMove);
+                    target.elem.removeEventListener("pointerup", onUp);
+                    target.elem.removeEventListener("pointercancel", onUp);
+                };
+                target.elem.addEventListener("pointermove", onMove);
+                target.elem.addEventListener("pointerup", onUp);
+                target.elem.addEventListener("pointercancel", onUp);
+            });
+        };
+
+        // keys: { ArrowLeft: fn(step), ... } step is 1, or 10 with Shift.
+        const onArrowKeys = function (target, keys) {
+            target.on("keydown", function (self, event) {
+                const fn = keys[event.key];
+                if (!fn) return;
+                event.preventDefault();
+                fn((event.shiftKey) ? SHIFT_STEP_FACTOR : 1);
+                commitState();
+            });
+        };
+
+        // VIEW
+
+        // BOX: A slider (hue or opacity) with a round thumb. ariaMax: the range a screen reader reads.
+        const buildSlider = function (label, ariaMax) {
+            const slider = startBox({ width: sliderWidth, height: cp.sliderHeight, round: cp.sliderHeight / 2, color: "transparent" });
+            slider.css = { position: "relative", left: "0px", top: "0px" };
+            slider.clipContent = 0;
+            slider.clickable = 1;
+            slider.cursor = "pointer";
+            slider.tabIndex = 0;
+            slider.role = "slider";
+            slider.aria = { label: hint + " " + label, valuemin: 0, valuemax: ariaMax };
+            slider.setFocusRing(_s.accent.color);
+                slider.thumb = Box({ left: 0, top: 0, width: cp.sliderHeight, height: cp.sliderHeight, round: cp.sliderHeight / 2, color: "transparent" });
+                slider.thumb.boxShadow = "0 0 0 2px #FFFFFF, 0 0 0 3px rgba(0, 0, 0, 0.35)";
+                slider.thumb.clickable = 0;
+            endBox();
+            slider.shrink = 0;
+            return slider;
+        };
+
+        const buildPaletteHeader = function (palette) {
+            // GROUP: The name of the palette (opens the list of palettes) and the add button
+            HGroup({ width: contentWidth, height: _g.itemHeight, align: "left center", gap: 4, color: "transparent" });
+                const btnList = HGroup({ width: 10, height: _g.itemHeight, align: "left center", gap: 2, padding: [6, 0], round: _s.field.round, color: "transparent" });
+                btnList.grow = 1;
+                btnList.css = { minWidth: "0px" };
+                btnList.clickable = 1;
+                btnList.cursor = "pointer";
+                btnList.tabIndex = 0;
+                btnList.role = "button";
+                btnList.aria = { label: "Color group: " + ((palette) ? palette.name : "none"), expanded: (isPaletteListOpen) ? "true" : "false" };
+                btnList.elem.title = "Choose a color group";
+                    textLabel("", { flex: 1, height: _g.itemHeight, bold: 1, plainText: (palette) ? palette.name : "No colors" });
+                    textLabel(getIcon((isPaletteListOpen) ? "chevronUp" : "chevronDown", 14), { width: 16, height: _g.itemHeight, textColor: _t.softColor });
+                endGroup();
+                onHover(btnList, function (isHover) { btnList.color = (isHover) ? _s.button.hoverColor : "transparent"; });
+                const togglePaletteList = function () {
+                    isPaletteListOpen = (isPaletteListOpen) ? 0 : 1;
+                    drawPaletteArea();
+                };
+                btnList.on("click", togglePaletteList);
+                onActivateKey(btnList, togglePaletteList);
+
+                if (palette && palette.canAdd && !isPaletteListOpen) {
+                    const btnAdd = textLabel(getIcon("plus", 14), { width: _g.itemHeight, height: _g.itemHeight, textColor: _s.button.iconColor });
+                    btnAdd.round = _s.field.round;
+                    btnAdd.clickable = 1;
+                    btnAdd.cursor = "pointer";
+                    btnAdd.tabIndex = 0;
+                    btnAdd.role = "button";
+                    btnAdd.aria = { label: "Add this color to " + palette.name };
+                    btnAdd.elem.title = "Add this color to " + palette.name;
+                    onHover(btnAdd, function (isHover) { btnAdd.color = (isHover) ? _s.button.hoverColor : "transparent"; });
+                    btnAdd.on("click", function () { addColorTo(palette); });
+                    onActivateKey(btnAdd, function () { addColorTo(palette); });
+                }
             endGroup();
-        }
+        };
+
+        const buildPaletteList = function (current) {
+            palettes.forEach(function (palette) {
+                const isSelected = (palette === current);
+                // GROUP: A palette in the list
+                const row = HGroup({ width: contentWidth, height: ms.rowHeight, align: "left center", gap: 0, round: _s.field.round, color: "transparent" });
+                row.shrink = 0;
+                row.clickable = 1;
+                row.cursor = "pointer";
+                row.tabIndex = 0;
+                row.role = "option";
+                row.aria = { selected: (isSelected) ? "true" : "false" };
+                    textLabel((isSelected) ? getIcon("check", 14) : "", { width: 24, height: ms.rowHeight });
+                    textLabel("", { flex: 1, height: ms.rowHeight, plainText: palette.name });
+                    textLabel("", { height: ms.rowHeight, textColor: _t.softColor, plainText: String(palette.colors.length) });
+                endGroup();
+                row.css.paddingRight = "6px";
+                const choose = function () {
+                    lastPaletteKey = palette.key;
+                    isPaletteListOpen = 0;
+                    drawPaletteArea();
+                };
+                onHover(row, function (isHover) { row.color = (isHover) ? _s.button.hoverColor : "transparent"; });
+                row.on("click", choose);
+                onActivateKey(row, choose);
+            });
+        };
+
+        // BOX: A color of a palette. A click gives its value. Returns { obj, value } (for the selected ring).
+        const buildSwatch = function (preset) {
+            const square = Box({ width: cp.swatchSize, height: cp.swatchSize, round: 4, color: "transparent" });
+            square.shrink = 0;
+            paintChecker(square, preset.color || preset.value);
+            square.clickable = 1;
+            square.cursor = "pointer";
+            square.role = "button";
+            square.tabIndex = 0;
+            square.aria = { label: preset.hint || preset.value };
+            square.elem.title = preset.hint || preset.value;
+            square.css.transition = "transform 0.1s";
+            onHover(square, function (isHover) { square.css.transform = (isHover) ? "scale(1.12)" : ""; });
+            square.on("click", function () { commitValue(preset.value); });
+            onActivateKey(square, function () { commitValue(preset.value); });
+            return { obj: square, value: preset.value };
+        };
+
+        // GROUP: The recent colors (only when there are some)
+        const buildRecentColors = function () {
+            if (!recentColors.length) return;
+            const caption = textLabel("", { fontSize: _t.captionSize, textColor: _t.softColor, plainText: "Recent" });
+            caption.css.paddingLeft = "6px";
+            const row = HGroup({ width: contentWidth, height: "auto", align: "left center", gap: cp.swatchGap, color: "transparent" });
+            row.css = { padding: "3px", boxSizing: "border-box" };
+            row.clipContent = 0;
+                recentViews = recentColors.map(function (value) {
+                    return buildSwatch({ value: value, color: paintColorOf(item, value), hint: value });
+                });
+            endGroup();
+        };
+
+        const buildSwatches = function (palette) {
+            swatchViews = [];
+            if (!palette.colors.length) {
+                const lblEmpty = textLabel("", { textColor: _t.softColor, plainText: palette.emptyText || "No colors yet." });
+                lblEmpty.css = { whiteSpace: "normal", lineHeight: "16px", padding: "2px 6px" };
+                return;
+            }
+            // GROUP: The colors of the palette (scrolls when there are many)
+            const grid = HGroup({ width: contentWidth, height: "auto", align: "left top", gap: cp.swatchGap, wrap: 1, color: "transparent" });
+            grid.css = { maxHeight: cp.swatchesMaxHeight + "px", overflowY: "auto", padding: "3px", boxSizing: "border-box" };
+            grid.clickable = 1;
+                palette.colors.forEach(function (preset) {
+                    swatchViews.push(buildSwatch(preset));
+                });
+            endGroup();
+        };
+
+        // The palette part is drawn again when an other palette is chosen or a color is added.
+        const drawPaletteArea = function () {
+            if (paletteArea) paletteArea.remove();
+            const current = palettes.find(function (p) { return p.key === lastPaletteKey; }) || palettes[0];
+            paletteArea = createIn(obj, function () {
+                // GROUP: Palettes
+                const group = VGroup({ width: contentWidth, height: "auto", align: "left top", gap: 6, color: "transparent" });
+                group.shrink = 0;
+                    buildPaletteHeader(current);
+                    if (isPaletteListOpen) buildPaletteList(current);
+                    else if (current) buildSwatches(current);
+                endGroup();
+                return group;
+            });
+            paintSelectedSwatch();
+            placePicker();
+        };
+
+        const addColorTo = function (palette) {
+            const value = colorField.getValue();
+            if (!value) return;
+            const isThere = palette.colors.some(function (preset) { return PropertyPanel.isSameValue(preset.value, value); });
+            if (!isThere) {
+                dispatch({ kind: "addColor", key: palette.key, value: value, oldValue: undefined, item: item, sectionKey: ctrl.sectionKey });
+            }
+            palettes = palettesOf(item, 1);
+            const fresh = palettes.find(function (p) { return p.key === palette.key; });
+            // WHY: A static palette (not a function) is not changed by the listener: the panel adds it.
+            if (fresh && !fresh.colors.some(function (preset) { return PropertyPanel.isSameValue(preset.value, value); })) {
+                const shared = (paletteCache || []).find(function (p) { return p.key === palette.key; });
+                if (shared) {
+                    shared.colors = (shared.colors || []).concat([value]);
+                    palettes = palettesOf(item);
+                }
+            }
+            drawPaletteArea();
+        };
+
+        // GROUP: The color before the picker opened (a click goes back to it) and the color now.
+        const PREVIEW_WIDTH = 32;
+        const buildPreview = function () {
+            const preview = HGroup({ width: PREVIEW_WIDTH, height: _g.itemHeight, align: "left top", gap: 0, round: _s.field.round, color: "transparent" });
+            preview.shrink = 0;
+            preview.boxShadow = "inset 0 0 0 1px " + _s.swatch.borderColor;
+                const before = Box({ width: PREVIEW_WIDTH / 2, height: _g.itemHeight, color: "transparent" });
+                paintChecker(before, paintColorOf(item, valueAtOpen));
+                before.clickable = 1;
+                before.cursor = "pointer";
+                before.role = "button";
+                before.tabIndex = 0;
+                before.aria = { label: "Back to the color before: " + (valueAtOpen || "none") };
+                before.elem.title = "Before: " + (valueAtOpen || "none") + " (click to go back)";
+                before.on("click", function () { commitValue(valueAtOpen); });
+                onActivateKey(before, function () { commitValue(valueAtOpen); });
+                previewNow = Box({ width: PREVIEW_WIDTH / 2, height: _g.itemHeight, color: "transparent" });
+                previewNow.clickable = 0;
+            endGroup();
+        };
+
+        // LABEL: The format of the color text (a click: HEX -> RGB -> HSL)
+        const buildFormatButton = function () {
+            const btn = textLabel("HEX", { width: 34, height: _g.itemHeight, fontSize: 10, textColor: _t.softColor });
+            btn.clickable = 1;
+            btn.cursor = "pointer";
+            btn.tabIndex = 0;
+            btn.role = "button";
+            btn.aria = { label: "Color format (HEX, RGB, HSL)" };
+            btn.elem.title = "Change the format: HEX, RGB, HSL";
+            const nextFormat = function () {
+                colorFormat = COLOR_FORMATS[(COLOR_FORMATS.indexOf(colorFormat) + 1) % COLOR_FORMATS.length];
+                paintPicker();
+            };
+            onHover(btn, function (isHover) { btn.textColor = (isHover) ? _t.color : _t.softColor; });
+            btn.on("click", nextFormat);
+            onActivateKey(btn, nextFormat);
+            return btn;
+        };
+
+        // At the left of the panel, at the height of the field. Under the field when there is no space at the left.
+        const placePicker = function () {
+            const fieldRect = colorField.anchor.elem.getBoundingClientRect();
+            const panelRect = box.elem.getBoundingClientRect();
+            const height = obj.elem.offsetHeight;
+            let left = panelRect.left - cp.width - PICKER_SPACE;
+            let top = fieldRect.top;
+            if (left < SCREEN_MARGIN) {
+                left = Math.min(fieldRect.left, window.innerWidth - cp.width - SCREEN_MARGIN);
+                top = fieldRect.bottom + MENU_OFFSET;
+            }
+            obj.left = Math.max(SCREEN_MARGIN, left);
+            obj.top = Math.max(SCREEN_MARGIN, Math.min(top, window.innerHeight - height - SCREEN_MARGIN));
+        };
+
+        createIn(page, function () {
+
+            // GROUP: Color picker
+            obj = VGroup({ left: 0, top: 0, width: cp.width, height: "auto", align: "left top", gap: 10, padding: cp.padding, color: ms.color, round: ms.round });
+            obj.boxShadow = "0 0 0 1px " + ms.borderColor + ", " + ms.shadow;
+            obj.zIndex = MENU_Z_INDEX;
+            obj.css = { boxSizing: "border-box" };
+            obj.clipContent = 0;
+            obj.clickable = 1;
+            obj.role = "dialog";
+            obj.aria = { label: hint + " color" };
+
+                // GROUP: Title and close
+                HGroup({ width: contentWidth, height: _g.itemHeight, align: "left center", gap: 4, color: "transparent" });
+                    textLabel("", { flex: 1, bold: 1, plainText: hint });
+                    const btnClose = textLabel(getIcon("close", 14), { width: _g.itemHeight, height: _g.itemHeight, textColor: _t.softColor });
+                    btnClose.round = _s.field.round;
+                    btnClose.clickable = 1;
+                    btnClose.cursor = "pointer";
+                    btnClose.tabIndex = 0;
+                    btnClose.role = "button";
+                    btnClose.aria = { label: "Close (Escape)" };
+                    btnClose.elem.title = "Close (Escape)";
+                    onHover(btnClose, function (isHover) { btnClose.color = (isHover) ? _s.button.hoverColor : "transparent"; });
+                    btnClose.on("click", closeMenu);
+                    onActivateKey(btnClose, closeMenu);
+                endGroup();
+
+                // BOX: Saturation (left to right) and brightness (bottom to top) of the hue
+                area = startBox({ width: contentWidth, height: cp.areaHeight, round: 4, color: "transparent" });
+                area.css = { position: "relative", left: "0px", top: "0px", backgroundImage: "linear-gradient(to top, #000000, transparent), linear-gradient(to right, #FFFFFF, transparent)" };
+                area.shrink = 0;
+                area.clipContent = 0;
+                area.clickable = 1;
+                area.cursor = "crosshair";
+                area.tabIndex = 0;
+                area.role = "slider";
+                area.aria = { label: hint + " saturation and brightness" };
+                area.setFocusRing(_s.accent.color);
+                    areaHandle = Box({ left: 0, top: 0, width: cp.handleSize, height: cp.handleSize, round: cp.handleSize / 2, color: "transparent" });
+                    areaHandle.boxShadow = "0 0 0 2px #FFFFFF, 0 0 0 3px rgba(0, 0, 0, 0.35)";
+                    areaHandle.clickable = 0;
+                endBox();
+
+                // GROUP: The eyedropper and the hue and opacity sliders
+                // WHY: clipContent 0: the rings of the thumbs are bigger than the sliders.
+                const sliderRow = HGroup({ width: contentWidth, height: "auto", align: "left center", gap: _g.gap, color: "transparent" });
+                sliderRow.clipContent = 0;
+                    if (hasEyeDropper) {
+                        const btnDropper = textLabel(getIcon("eyedropper", 16), { width: _g.itemHeight, height: _g.itemHeight, textColor: _s.button.iconColor });
+                        btnDropper.round = _s.field.round;
+                        btnDropper.clickable = 1;
+                        btnDropper.cursor = "pointer";
+                        btnDropper.tabIndex = 0;
+                        btnDropper.role = "button";
+                        btnDropper.aria = { label: "Pick a color from the screen" };
+                        btnDropper.elem.title = "Pick a color from the screen";
+                        onHover(btnDropper, function (isHover) { btnDropper.color = (isHover) ? _s.button.hoverColor : "transparent"; });
+                        const pickFromScreen = function () {
+                            new window.EyeDropper().open().then(function (result) {
+                                if (!obj || obj._isRemoved) return;
+                                commitValue(joinAlpha(result.sRGBHex.toUpperCase(), alpha));
+                            }).catch(function () { }); // Escape: nothing was picked
+                        };
+                        btnDropper.on("click", pickFromScreen);
+                        onActivateKey(btnDropper, pickFromScreen);
+                    }
+                    // GROUP: Sliders
+                    const sliders = VGroup({ width: sliderWidth, height: "auto", align: "left top", gap: 10, color: "transparent" });
+                    sliders.clipContent = 0;
+                        hueSlider = buildSlider("hue", 360);
+                        hueSlider.css.background = "linear-gradient(to right, #FF0000, #FFFF00, #00FF00, #00FFFF, #0000FF, #FF00FF, #FF0000)";
+                        alphaSlider = buildSlider("opacity", 100);
+                    endGroup();
+                endGroup();
+
+                // GROUP: Before / now, the format, the color text and its opacity
+                HGroup({ width: contentWidth, height: _g.itemHeight, align: "left center", gap: 6, color: "transparent" });
+                    buildPreview();
+                    const inputs = buildInputField({ key: "hex", hint: hint }, contentWidth - PREVIEW_WIDTH - 6);
+                    inputs.el.style.paddingLeft = "4px";
+                    hexInput = inputs.input;
+                    alphaInput = addAlphaInput(inputs.field, inputs.state, hint);
+                    formatButton = createIn(inputs.field, buildFormatButton);
+                    inputs.field.elem.insertBefore(formatButton.elem, inputs.field.elem.firstChild);
+                endGroup();
+
+                buildRecentColors();
+
+                // BOX: Line
+                const line = Box({ width: contentWidth, height: 1, color: ms.borderColor });
+                line.shrink = 0;
+
+            endGroup();
+
+        });
+
+        menu = {
+            obj: obj,
+            opener: colorField.opener,
+            ctrl: ctrl,
+            sync: function () {
+                readState();
+                paintPicker();
+            },
+            onClose: function () {
+                const value = colorField.getValue();
+                if (value !== valueAtOpen) rememberColor(value);
+            },
+        };
+
+        dragOn(area, function (x, y) {
+            hsv.s = x;
+            hsv.v = 1 - y;
+            commitState();
+        });
+        dragOn(hueSlider, function (x) {
+            hsv.h = Math.min(x * 360, 359.9);
+            commitState();
+        });
+        dragOn(alphaSlider, function (x) {
+            alpha = roundAlpha(x);
+            commitState();
+        });
+        onArrowKeys(area, {
+            ArrowLeft: function (step) { hsv.s = basic.clamp(hsv.s - step / 100, 0, 1); },
+            ArrowRight: function (step) { hsv.s = basic.clamp(hsv.s + step / 100, 0, 1); },
+            ArrowUp: function (step) { hsv.v = basic.clamp(hsv.v + step / 100, 0, 1); },
+            ArrowDown: function (step) { hsv.v = basic.clamp(hsv.v - step / 100, 0, 1); },
+        });
+        onArrowKeys(hueSlider, {
+            ArrowLeft: function (step) { hsv.h = basic.clamp(hsv.h - step, 0, 359.9); },
+            ArrowRight: function (step) { hsv.h = basic.clamp(hsv.h + step, 0, 359.9); },
+        });
+        onArrowKeys(alphaSlider, {
+            ArrowLeft: function (step) { alpha = roundAlpha(alpha - step / 100); },
+            ArrowRight: function (step) { alpha = roundAlpha(alpha + step / 100); },
+        });
+        connectColorInputs(hexInput, alphaInput, {
+            getValue: colorField.getValue,
+            commit: commitValue,
+            refresh: paintPicker,
+            getFormat: function () { return colorFormat; },
+        });
+
+        readState();
+        paintPicker();
+        drawPaletteArea();
+        area.elem.focus({ preventScroll: true });
+
+    };
+
+    // FIELD: color. [■ #3871E0 | 100%] A click on the swatch opens the color picker.
+    const buildColorField = function (ctrl) {
+
+        const item = ctrl.item;
+        const sw = _s.swatch;
+        const hint = item.hint || item.label || item.key;
+        const { field, input, el, state, setEnabled } = buildInputField(item, getSpanWidth(item.span));
+        if (item.placeholder) input.placeholder = item.placeholder;
+        el.style.paddingLeft = "4px";
+        let value = "";
+
+        // BOX: Swatch (a checkerboard under the color: a transparent color shows it). A button: it opens the picker.
+        const swatchArea = createIn(field, function () {
+            const area = startBox({ width: sw.size + 12, height: _g.itemHeight, color: "transparent" });
+            area.shrink = 0;
+            area.clickable = 1;
+            area.cursor = "pointer";
+            area.role = "button";
+            area.tabIndex = 0;
+            area.aria = { label: "Open the color picker of " + hint, haspopup: "dialog" };
+            area.elem.title = "Open the color picker";
+                area.fill = Box({ width: sw.size, height: sw.size, round: 3, color: "transparent" });
+                area.fill.center();
+                area.fill.clickable = 0;
+            endBox();
+            return area;
+        });
+        field.elem.insertBefore(swatchArea.elem, field.elem.firstChild);
+        const alphaInput = addAlphaInput(field, state, hint);
+
+        const paint = function () {
+            const isEmpty = (splitAlpha(value).base === "");
+            paintChecker(swatchArea.fill, paintColorOf(item, value));
+            setBorder(swatchArea.fill, (isEmpty) ? sw.emptyColor : sw.borderColor);
+            showColorInputs(input, alphaInput, value);
+        };
+
+        const setValue = function (v) {
+            value = (v === undefined || v === null) ? "" : String(v);
+            paint();
+            if (menu && menu.ctrl === ctrl) menu.sync();
+        };
+
+        const commit = function (next) {
+            value = String(next);
+            paint();
+            changeValue(ctrl, value);
+        };
+
+        const colorField = {
+            anchor: field,
+            opener: swatchArea,
+            getValue: function () { return value; },
+            commit: commit,
+        };
+        const openPicker = function () {
+            if (!state.enabled) return;
+            openColorPicker(ctrl, colorField);
+        };
+        swatchArea.on("click", openPicker);
+        onActivateKey(swatchArea, openPicker);
+
+        connectColorInputs(input, alphaInput, {
+            getValue: colorField.getValue,
+            commit: commit,
+            refresh: paint,
+        });
 
         setValue(item.value);
         return {
-            field: holder || field,
+            field: field,
             setValue: setValue,
             setEnabled: function (enabled) {
                 setEnabled(enabled);
-                picker.disabled = !enabled;
+                alphaInput.inputElement.disabled = !enabled;
+                alphaInput.inputElement.style.color = ink(enabled, _t.color);
+                swatchArea.opacity = (enabled) ? 1 : 0.5;
             },
         };
 
@@ -994,6 +1788,85 @@ const PropertyPanel = function (params = {}) {
         },
 
         // [ text ]  placeholder
+        // A text of more lines. caption: the first line of the placeholder, so it goes away while writing. rows: the lines (2).
+        textarea: function (ctrl) {
+            const item = ctrl.item;
+            const ta = _s.textarea;
+            const rows = item.rows || 2;
+            const state = { isHover: 0, isFocus: 0, enabled: item.enabled != 0 };
+
+            // GROUP: Field (the caption, the text)
+            const field = VGroup({ width: getSpanWidth(item.span || "full"), height: "auto", align: "left top", gap: 2, padding: [8, 6], color: _s.field.color, round: _s.field.round });
+            field.shrink = 0;
+            field.css = { boxSizing: "border-box", transition: "box-shadow 0.12s", alignItems: "stretch" };
+            const paint = function () { paintField(field, state); };
+
+            endGroup();
+
+            // TEXTAREA: a raw element (a basic.js Input is one line)
+            const area = document.createElement("textarea");
+            area.rows = rows;
+            area.spellcheck = false;
+            const placeholderLines = [item.caption, item.placeholder].filter(Boolean);
+            area.placeholder = placeholderLines.join("\n");
+            area.setAttribute("aria-label", item.caption || item.hint || item.label || item.key);
+            Object.assign(area.style, {
+                width: "100%",
+                boxSizing: "border-box",
+                padding: "0px",
+                border: "0px",
+                outline: "none",
+                resize: "none",
+                background: "transparent",
+                color: _t.color,
+                font: _t.fontSize + "px " + ta.fontFamily,
+                lineHeight: ta.lineHeight + "px",
+                pointerEvents: "auto",
+                userSelect: "text",
+            });
+            field.elem.appendChild(area);
+
+            const setValue = function (v) { area.value = (v === undefined || v === null) ? "" : String(v); };
+            const save = function () { changeValue(ctrl, area.value); };
+            onHover(field, function (isHover) {
+                state.isHover = isHover;
+                paint();
+            });
+            area.addEventListener("focus", function () {
+                state.isFocus = 1;
+                paint();
+            });
+            area.addEventListener("blur", function () {
+                state.isFocus = 0;
+                paint();
+                save();
+            });
+            area.addEventListener("keydown", function (event) {
+                event.stopPropagation(); // WHY: The keys of a text are not shortcuts of the page.
+                const isSave = event.key === "Enter" && (event.metaKey || event.ctrlKey);
+                if (isSave) {
+                    event.preventDefault();
+                    area.blur();
+                } else if (event.key === "Escape") {
+                    event.preventDefault();
+                    setValue(ctrl.item.value);
+                    area.blur();
+                }
+            });
+
+            setValue(item.value);
+            paint();
+            return {
+                field: field,
+                setValue: setValue,
+                setEnabled: function (enabled) {
+                    state.enabled = !!enabled;
+                    area.disabled = !state.enabled;
+                    paint();
+                },
+            };
+        },
+
         text: function (ctrl) {
             const item = ctrl.item;
             const { field, input, el, setEnabled } = buildInputField(item, getSpanWidth(item.span));
@@ -1369,7 +2242,9 @@ const PropertyPanel = function (params = {}) {
             borderBottom: "1px solid " + _ps.dividerColor,
         };
 
-            const lbl = buildTitleRow(section.title, section.actions, section.key, isTitleBlock);
+            // WHY: A section without a title and actions (Ex: a footer with a note) gets no empty title row.
+            const hasTitleRow = isTitleBlock || !!section.title || (section.actions && section.actions.length > 0);
+            const lbl = (hasTitleRow) ? buildTitleRow(section.title, section.actions, section.key, isTitleBlock) : null;
             if (isTitleBlock) titleLabel = lbl;
 
             (section.items || []).forEach(function (row) {
@@ -1413,6 +2288,12 @@ const PropertyPanel = function (params = {}) {
             // GROUP: Tabs row (created again by setData)
             box.headerRow = HGroup({ width: "100%", height: "100%", align: "left center", gap: 2, color: "transparent" });
 
+                // LABEL: The name (headerTitle). It takes the free room and ends with "..." when it is long.
+                if (data.headerTitle !== undefined) {
+                    box.lblHeaderTitle = textLabel("", { flex: 1, bold: 1, fontSize: _t.titleSize, plainText: data.headerTitle });
+                    box.lblHeaderTitle.css.paddingLeft = "6px";
+                }
+
                 (data.tabs || []).forEach(function (tab) {
                     // LABEL: Tab
                     const lbl = textLabel("", { height: 28, plainText: tab.text || tab.key });
@@ -1432,9 +2313,11 @@ const PropertyPanel = function (params = {}) {
                     });
                 });
 
-                // BOX: Space
-                const space = Box({ width: 10, height: 1, color: "transparent" });
-                space.grow = 1;
+                // BOX: Space (the name takes the free room when there is one)
+                if (data.headerTitle === undefined) {
+                    const space = Box({ width: 10, height: 1, color: "transparent" });
+                    space.grow = 1;
+                }
 
                 if (data.headerItem) {
                     data.headerItem = Object.assign({ type: "select", look: "plain" }, data.headerItem);
@@ -1456,6 +2339,11 @@ const PropertyPanel = function (params = {}) {
         titleLabel = null;
         const data = box.data;
 
+        if (data.empty) {
+            box.content = createIn(box.scrollBox, function () { return buildEmptyPage(data.empty); });
+            return;
+        }
+
         createIn(box.scrollBox, function () {
             // GROUP: Content
             box.content = VGroup({ left: 0, top: 0, width: "100%", height: "auto", align: "left top", gap: 0, color: "transparent" });
@@ -1468,7 +2356,62 @@ const PropertyPanel = function (params = {}) {
 
     };
 
+    // EMPTY PAGE: data.empty = { icon, title, text, hints: [{ keys, text }] }, in the middle of the panel.
+    // (Ex: nothing is selected.) It takes the place of the sections.
+    const EMPTY_TEXT_WIDTH = 184;
+    const EMPTY_ICON_BOX = 56;
+    const EMPTY_LIFT = 48; // WHY: A little above the middle looks centered (the optical middle).
+
+    const buildEmptyPage = function (empty) {
+        const es = _s.empty;
+        // GROUP: Empty page
+        const emptyPage = VGroup({ left: 0, top: 0, width: "100%", height: "100%", align: "center center", gap: 0, color: "transparent" });
+        emptyPage.css = { padding: "24px " + _ps.paddingRight + "px " + (24 + EMPTY_LIFT) + "px " + _ps.paddingLeft + "px", boxSizing: "border-box" };
+
+            if (empty.icon) {
+                // LABEL: Icon in a soft square
+                const icon = textLabel(getIcon(empty.icon, es.iconSize), { width: EMPTY_ICON_BOX, height: EMPTY_ICON_BOX, textColor: es.iconColor });
+                icon.color = es.iconBoxColor;
+                icon.round = es.iconBoxRound;
+                icon.css.marginBottom = "16px";
+            }
+
+            if (empty.title) {
+                const lblTitle = textLabel("", { bold: 1, fontSize: _t.titleSize + 1, plainText: empty.title });
+                lblTitle.role = "heading";
+                lblTitle.aria = { level: 2 };
+                lblTitle.css.marginBottom = "6px";
+            }
+
+            if (empty.text) {
+                const lblText = textLabel("", { textColor: _t.softColor, plainText: empty.text });
+                lblText.width = EMPTY_TEXT_WIDTH;
+                lblText.css = { display: "block", whiteSpace: "normal", textAlign: "center", lineHeight: "18px" };
+            }
+
+            if (empty.hints && empty.hints.length) {
+                // GROUP: Hints (what it does at the left, its key at the right: like the shortcuts of a menu)
+                const hints = VGroup({ width: getSpanWidth("full"), height: "auto", align: "left top", gap: 8, color: "transparent" });
+                hints.css = { marginTop: "20px", paddingTop: "16px", borderTop: "1px solid " + _ps.dividerColor };
+                    empty.hints.forEach(function (hint) {
+                        // GROUP: A hint
+                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 8, color: "transparent" });
+                            textLabel("", { flex: 1, height: 20, fontSize: _t.captionSize, textColor: _t.softColor, plainText: hint.text });
+                            const keys = textLabel("", { height: 20, fontSize: _t.captionSize, plainText: hint.keys });
+                            keys.color = _s.field.color;
+                            keys.round = 4;
+                            keys.css = { padding: "0px 6px", minWidth: "20px", justifyContent: "center", boxSizing: "border-box" };
+                        endGroup();
+                    });
+                endGroup();
+            }
+
+        endGroup();
+        return emptyPage;
+    };
+
     // FOOTER: data.footer, a section fixed at the bottom. The scrolling part ends above it.
+    const FOOTER_SPACE = 10; // the space above and under the footer (the same: it fits its content)
     const buildFooter = function () {
         if (box.footerContent) box.footerContent.remove();
         box.footerContent = null;
@@ -1478,6 +2421,7 @@ const PropertyPanel = function (params = {}) {
             box.footerContent = createIn(box.footerBox, function () {
                 const group = buildSection(Object.assign({ key: "footer" }, footer), 0);
                 group.css.borderBottom = "none";
+                group.css.padding = FOOTER_SPACE + "px " + _ps.paddingRight + "px " + FOOTER_SPACE + "px " + _ps.paddingLeft + "px";
                 return group;
             });
         }
@@ -1494,6 +2438,7 @@ const PropertyPanel = function (params = {}) {
     // Builds the panel again from a JSON. (The JSON is copied: getData() returns the copy with the current values.)
     box.setData = function (data) {
         closeMenu();
+        paletteCache = null;
         controllers = {};
         box.data = PropertyPanel.copyData(data || {});
         buildHeader();
@@ -1732,6 +2677,10 @@ PropertyPanel.icons = {
     letterSpacing: "M2.5 3v10M13.5 3v10M5.5 11L8 5l2.5 6M6.4 9h3.2",
     sliders: "M4 2.5v11M12 2.5v11M8 2.5v11M2.5 5.5h3M6.5 10.5h3M10.5 7h3",
     chevronDown: "M4.5 6.5L8 10l3.5-3.5",
+    chevronUp: "M4.5 9.5L8 6l3.5 3.5",
+    close: "M4 4l8 8M12 4l-8 8",
+    pointer: "M4 2.5l8.5 5.2-3.7 1 2.1 3.9-1.7.9-2.1-3.9L4.3 12.2zM12 1.5v2M14.5 4h-2M13.8 2.2l-1.3 1.3",
+    eyedropper: "M10.2 2.8a1.7 1.7 0 012.4 2.4l-1.4 1.4.7.7-1.1 1.1-3.3-3.3 1.1-1.1.7.7zM7.4 5.9L3 10.3V13h2.7l4.4-4.4",
     check: "M3.5 8.5l3 3 6-7",
     plus: "M8 3v10M3 8h10",
     minus: "M3 8h10",

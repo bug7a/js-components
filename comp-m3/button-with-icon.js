@@ -4,9 +4,16 @@
 
 Button With Icon - v26.01
 
-UI COMPONENT TEMPLATE
 - A customizable button with an icon and text.
 - Supports icon positioning (left/top).
+
+USAGE:
+ButtonWithIcon({
+    labelText: "Alert",
+    iconFile: "../comp-m3/button-with-icon/alert-black.png",
+    iconPosition: "top",
+    onClick: function (self) { self.setText("Clicked"); },
+});
 
 Started Date: January 2026
 Developer: Bugra Ozden
@@ -65,9 +72,7 @@ const ButtonWithIcon = function (params = {}) {
     mergeIntoIfMissing(params, ButtonWithIconDefaults);
 
     // BOX: Component container
-    let box = startObject(params);
-
-    // *** PUBLIC VARIABLES:
+    const box = startObject(params);
 
     // *** PUBLIC FUNCTIONS:
 
@@ -75,57 +80,51 @@ const ButtonWithIcon = function (params = {}) {
         box.labelText = text;
         if (box.label) box.label.text = text;
     };
+    // USAGE: button.setText("Save")
 
     box.setIcon = function (file) {
         box.iconFile = file;
         if (box.icon) box.icon.load(file);
     };
+    // USAGE: button.setIcon("../comp-m3/button-with-icon/alert-black.png")
 
     box.refresh = function () {
-        // Refresh logic if needed
+        // NOTE: Nothing to draw again: setText() and setIcon() change the view at once.
     };
 
-    // box.superRemove = box.remove;
-    // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
-    const superRemove = box.remove;
-    box.superRemove = superRemove;
-    box.remove = function () {
-        if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
-        superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
-        box = null;
-    };
+    // NOTE: No remove() of its own: basic.js remove() cleans the events and the objects inside.
 
     // *** OBJECT VIEW:
 
-    // Apply container styles
+    // BOX: Container look
     box.props(box.style.box);
-    box.elem.style.cursor = "pointer";
+    box.cursor = "pointer";
     box.clickable = 1;
     box.setMotion("background-color 0.2s");
 
-    // Layout Container
+    // GROUP: Layout (icon, label). iconPosition "top" puts the icon above the label.
     AutoLayout({
         flow: (box.iconPosition === "top") ? "vertical" : "horizontal",
         width: params.width,
         height: params.height,
-        position: "relative",
+        position: "relative", // WHY: The box (width / height "auto") grows with it.
         ...box.style.layout,
     });
 
-    // ICON
-    if (box.iconFile) {
-        box.icon = Icon(0, 0, box.style.icon);
-        box.icon.load(box.iconFile);
-    }
+        // ICON: only when there is an icon file
+        if (box.iconFile) {
+            box.icon = Icon(0, 0, box.style.icon);
+            box.icon.load(box.iconFile);
+        }
 
-    // LABEL
-    if (box.labelText) {
-        box.label = Label(0, 0, box.style.label);
-        box.label.text = box.labelText;
-        box.label.elem.style.whiteSpace = "nowrap";
-    }
+        // LABEL: only when there is a text
+        if (box.labelText) {
+            box.label = Label(0, 0, box.style.label);
+            box.label.text = box.labelText;
+            box.label.css.whiteSpace = "nowrap";
+        }
 
-    endAutoLayout(); // End HGroup or VGroup
+    endAutoLayout();
 
     // *** OBJECT INIT CODE:
 
@@ -133,20 +132,18 @@ const ButtonWithIcon = function (params = {}) {
         if (box.onClick) box.onClick(box, event);
     });
 
-    box.on("mouseover", function (self, event) {
+    // THE LOOK OF THE MOUSE: hover, pressed, back to normal.
+    box.on("mouseover", function () {
         box.color = box.style.hover.color;
     });
-
-    box.on("mouseout", function (self, event) {
+    box.on("mouseout", function () {
         box.color = box.style.box.color;
     });
-
-    box.on("mousedown", function (self, event) {
+    box.on("mousedown", function () {
         box.color = box.style.active.color;
     });
-
-    box.on("mouseup", function (self, event) {
-        box.color = box.style.hover.color;
+    box.on("mouseup", function () {
+        box.color = box.style.hover.color; // WHY: The mouse is still on the button.
     });
 
     return endObject(box);

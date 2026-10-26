@@ -45,6 +45,10 @@ const TinyTable = function(params = {}) {
     // Apply default settings and override with user parameters
     box.props(TinyTableDefaults, params);
 
+    // *** PRIVATE VARIABLES:
+    const CELL_SPACE_X = 8;
+    const BODY_PADDING_Y = "10px"; // Space above the first row and under the last row
+
     // Container configuration
     box.round = box.borderRadius;
     box.color = "transparent";
@@ -64,15 +68,14 @@ const TinyTable = function(params = {}) {
         Label({
             text: box.columnHeaders[i],
             width: box.columnWidths[i],
-            spaceX: 8,
+            spaceX: CELL_SPACE_X,
             spaceY: 8,
             color: box.headerBackgroundColor,
             textColor: box.headerTextColor,
             round: 0,
             fontSize: box.headerFontSize,
         });
-        that.elem.style.whiteSpace = "nowrap";
-        that.elem.style.textOverflow = "ellipsis";
+        that.css = { whiteSpace: "nowrap", textOverflow: "ellipsis" };
     }
     endFlexBox();
 
@@ -83,15 +86,14 @@ const TinyTable = function(params = {}) {
         color: box.bodyBackgroundColor,
     });
     that.position = "relative";
-    that.elem.style.paddingTop = "10px";
-    that.elem.style.paddingBottom = "10px";
+    that.css = { paddingTop: BODY_PADDING_Y, paddingBottom: BODY_PADDING_Y };
 
     if (box.bodyHeight !== "auto") {
         box.contentGroup.scrollY = 1;
     }
 
     // HIGHLIGHT BOX for hover effect
-    const selectedBackgroundBox = Box(0, 0, {
+    const rowHoverBox = Box(0, 0, {
         color: box.rowHoverBackgroundColor,
         border: box.rowHoverBorderWidth,
         borderColor: box.rowHoverBorderColor,
@@ -107,20 +109,20 @@ const TinyTable = function(params = {}) {
             gap: "1px",
         });
         that.position = "relative";
-        that.elem.style.cursor = "pointer";
+        that.cursor = "pointer";
 
-        const rowElem = that;
+        const row = that;
 
         // Hover interaction
-        rowElem.on("mouseover", function() {
-            selectedBackgroundBox.opacity = 1;
-            selectedBackgroundBox.width = rowElem.width;
-            selectedBackgroundBox.height = rowElem.height;
-            selectedBackgroundBox.top = rowElem.top;
-            selectedBackgroundBox.left = 0;
+        row.on("mouseover", function() {
+            rowHoverBox.opacity = 1;
+            rowHoverBox.width = row.width;
+            rowHoverBox.height = row.height;
+            rowHoverBox.top = row.top;
+            rowHoverBox.left = 0;
         });
-        rowElem.on("mouseout", function() {
-            selectedBackgroundBox.opacity = 0;
+        row.on("mouseout", function() {
+            rowHoverBox.opacity = 0;
         });
 
         // ROW CELLS
@@ -128,15 +130,14 @@ const TinyTable = function(params = {}) {
             Label({
                 text: box.dataRows[r][c],
                 width: box.columnWidths[c],
-                spaceX: 8,
+                spaceX: CELL_SPACE_X,
                 spaceY: 4,
                 color: "transparent",
                 fontSize: box.cellFontSize,
                 round: 0,
                 textColor: box.cellTextColor,
             });
-            that.elem.style.whiteSpace = "nowrap";
-            that.elem.style.textOverflow = "ellipsis";
+            that.css = { whiteSpace: "nowrap", textOverflow: "ellipsis" };
 
             // Metadata
             that.lineCount = r;

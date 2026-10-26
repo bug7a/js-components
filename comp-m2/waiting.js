@@ -27,7 +27,7 @@ const WaitingDefaults = {
 
 const Waiting = function(params = {}) {
 
-    // Marge params first
+    // Merge params first
     mergeIntoIfMissing(params, WaitingDefaults);
 
     params.opacity = 0;
@@ -42,7 +42,14 @@ const Waiting = function(params = {}) {
     page.add(box); // Always create in page
 
     // *** PRIVATE VARIABLES:
-    let animationFrame = 1;
+    let isIconFull = 1; // The pulse animation: the icon is at its full size (1) or smaller (0).
+    const FADE_OUT_TIME = 250; // ms: a little longer than the opacity motion (0.2s), then it is hidden.
+    const PULSE_STEP_TIME = 400; // ms: the same as the transform motion of the icon.
+    const ICON_FULL_SCALE = "scale(1)";
+    const ICON_SMALL_SCALE = "scale(0.8)";
+
+    // *** PUBLIC FUNCTIONS:
+    // NOTE: show() and hide() replace the show() / hide() of basic.js: they fade the cover in and out.
 
     box.show = function() {
 
@@ -51,16 +58,15 @@ const Waiting = function(params = {}) {
             box.opacity = 1;
         });
         if (box.animated == 1) box.startAnimation();
-        
-    }
-    
+
+    };
+
     // - timer: şu kadar süre sonra kapat.
     // - remove: eğer 1 ise görünmez yaptıktan sonra nesneyi siler.
     box.hide = function(timer = 0, $remove = 0) {
-    
-        // Hide layer
+
         setTimeout(function() {
-            
+
             box.withMotion(function(self) {
                 box.opacity = 0;
             });
@@ -72,40 +78,35 @@ const Waiting = function(params = {}) {
                     box.remove();
                 }
                 if (box.animated == 1) box.stopAnimation();
-            }, 250);
+            }, FADE_OUT_TIME);
 
         }, timer);
-    
+
     };
 
     box.setLabel = function(label) {
         box.lbl.text = label;
         box.lbl.visible = 1;
-    }
+    };
 
     box.startAnimation = function() {
         if (box.animationTimer) clearTimeout(box.animationTimer);
         box.animationTimer = setTimeout(function() {
-            if (animationFrame == 1) {
-                box.icon.elem.style.transform = "scale(0.8)";
-                animationFrame = 0;
-            } else {
-                box.icon.elem.style.transform = "scale(1)";
-                animationFrame = 1;
-            }
+            isIconFull = isIconFull ? 0 : 1;
+            box.icon.css.transform = isIconFull ? ICON_FULL_SCALE : ICON_SMALL_SCALE;
             box.startAnimation();
-        }, 400);
-    }
+        }, PULSE_STEP_TIME);
+    };
 
     box.stopAnimation = function() {
         if (box.animationTimer) clearTimeout(box.animationTimer);
-        box.icon.elem.style.transform = "scale(1)";
-        animationFrame = 1;
-    }
+        box.icon.css.transform = ICON_FULL_SCALE;
+        isIconFull = 1;
+    };
 
     // *** OBJECT VIEW:
         box.setMotion("opacity 0.2s");
-        
+
         // BOX: Cover.
         box.coverBox = startFlexBox({
             flexDirection: "column",
@@ -122,9 +123,8 @@ const Waiting = function(params = {}) {
             });
             that.load(box.waitingIcon);
             if (box.animated) {
-                box.icon.setMotion("transform 0.4s"); // opacity 0.2s, 
+                box.icon.setMotion("transform 0.4s");
             }
-            //box.warningBall.elem.style.transform = "scale(0.3)";
 
             // LABEL: Some text.
             box.lbl = Label({

@@ -2,11 +2,18 @@
 
 /*
 
-Component Template - v25.07
+Hold To Confirm Button - v26.01
 
-UI COMPONENT TEMPLATE
-- You can customize, this template code as you need:
+- A button that runs its action only after it is held down (holdDuration ms): a red layer fills it from the left.
+- Released early: the layer goes back. Done: the completed text is shown, resetDelay ms later the button is ready again.
 
+USAGE:
+HoldToConfirmButton({
+    labelText: "Hold to Delete",
+    completedText: "DELETED",
+    onConfirm: function (self) { println("deleted"); },
+    onReset: function (self) { println("ready again"); },
+});
 
 Started Date: January 2026
 Developer: Bugra Ozden
@@ -32,9 +39,9 @@ const HoldToConfirmButtonDefaults = {
     holdingIconFile: "../comp-m3/hold-to-confirm-button/trash-red.png",
     onConfirm: function (self) { },
     onReset: function (self) {},
-    holdDuration: 3000,
-    resetDelay: 3000,
-    style: { // Test
+    holdDuration: 3000, // ms
+    resetDelay: 3000, // ms: the completed text stays this long
+    style: {
         layout: {
             gap: 4,
             padding: [18, 5],
@@ -43,7 +50,7 @@ const HoldToConfirmButtonDefaults = {
             width: 32,
             height: 32,
         },
-        label: { //normalLabel
+        label: {
             fontSize: 20,
             textColor: Black(0.7),
         },
@@ -55,13 +62,13 @@ const HoldToConfirmButtonDefaults = {
             fontSize: 20,
             textColor: "#5DB182",
         },
-        box: { // normalBox, box
+        box: {
             color: Black(0.05),
             border: 1,
             borderColor: Black(0.3),
             round: 8,
         },
-        holdingBox: { // holdingBox
+        holdingBox: {
             color: "#FFD1CB",
             border: 1,
             borderColor: "#FE5D49",
@@ -80,135 +87,101 @@ const HoldToConfirmButtonDefaults = {
 
 const HoldToConfirmButton = function (params = {}) {
 
-    // Marge params:
+    // Merge params:
     mergeIntoIfMissing(params, HoldToConfirmButtonDefaults);
 
     // Edit params, if needed:
-    // params.width = getDefaultContainerBox().width;
-    params.color = "transparent";
+    params.color = "transparent"; // WHY: The look is on box.contentBox (style.box), the box only holds the layers.
 
     // BOX: Component container
-    let box = startObject(params);
-    //box.setMotion("opacity 2s");
+    const box = startObject(params);
 
     // NOTE: Parent container is box.containerBox
 
     // *** PRIVATE VARIABLES:
-    
+    const COLOR_MOTION = "background-color 0.2s";
+    const CANCEL_MOTION_DURATION = "0.3s"; // The red layer goes back faster than it fills.
+    const RED_BORDER_INSET = 2; // px: the red line stands this much inside the right end of the red layer.
+
     // *** PUBLIC VARIABLES:
-    // [var]
     box.holdDurationString = (box.holdDuration / 1000) + "s";
-    // [var] key for show this public var in navigator.
     box.publicVar = 1;
+    box.holdTimer = null; // The cancel function of the waiting hold (box.after), null: not holding.
+    box.resetTimer = null; // The cancel function of the waiting reset (box.after)
 
     // *** PRIVATE FUNCTIONS:
-    const privateFunc = function () { };
-    /*
-    const boxResized = function(self) {
-        box.iconBackground.left = box.icon.left;
-        box.iconBackground.top = box.icon.top;
+
+    // The red layer keeps its icon and label exactly over the ones of the normal button.
+    const syncHoldingLayer = function () {
+        box.iconRed.aline(box.icon);
+        box.labelRed.aline(box.label);
+        box.holdingBox.width = box.contentBox.width;
     };
-    */
+
+    const moveRedBorderToMaskEnd = function () {
+        // WHY: box.maskBox.width is the end value of its motion; the computed style is the width on the screen now.
+        const widthNow = window.getComputedStyle(box.maskBox.elem).getPropertyValue("width");
+        box.redBorder.left = basic.num(widthNow) - RED_BORDER_INSET;
+    };
 
     // *** PUBLIC FUNCTIONS:
 
     box.startHold = function () {
         if (box.holdTimer) return;
 
-        box.maskBox.setMotion("background-color 0.2s, width " + box.holdDurationString);
-
+        box.maskBox.setMotion(COLOR_MOTION + ", width " + box.holdDurationString);
         box.maskBox.withMotion(function () {
             box.maskBox.width = box.contentBox.width;
         });
-        
 
-        //if (box.onHolding) box.onHolding(box);
-
-        box.holdTimer = setTimeout(function () {
+        // NOTE: box.after() is a timer of the box: it can not run after remove().
+        box.holdTimer = box.after(box.holdDuration, function () {
             box.onHoldComplete();
-        }, box.holdDuration);
+        });
     };
 
     box.cancelHold = function () {
         if (box.holdTimer) {
-            clearTimeout(box.holdTimer);
+            box.holdTimer();
             box.holdTimer = null;
         }
 
-        //box.maskBox.dontMotion();
-        //box.maskBox.setMotion("background-color 0.2s, width 0.5s");
-        box.maskBox.setMotion("background-color 0.2s, width 0.3s");
+        box.maskBox.setMotion(COLOR_MOTION + ", width " + CANCEL_MOTION_DURATION);
         box.maskBox.withMotion(function () {
             box.maskBox.width = 0;
         });
-        //box.maskBox.opacity = 0;
     };
 
     box.onHoldComplete = function () {
         box.holdTimer = null;
         box.maskBox.dontMotion();
         box.maskBox.width = 0;
-        //box.maskBox.opacity = 0;
-        //box.opacity = 0.3;
-        //box.elem.style.filter = "grayscale(100%)";
         box.clickable = 0;
-        //box.label.text = box.completedText;
-        //box.labelRed.text = box.completedText;
 
         box.completedBox.dontMotion();
         box.completedBox.opacity = 1;
 
-        box.resetTimer = setTimeout(function () {
+        box.resetTimer = box.after(box.resetDelay, function () {
             box.resetTimer = null;
-            //box.elem.style.filter = "none";
-            //box.opacity = 1;
             box.clickable = 1;
             box.completedBox.opacity = 0;
             box.onReset(box);
-        }, box.resetDelay);
+        });
 
         if (box.onConfirm) box.onConfirm(box);
     };
 
     box.refresh = function () {
-
-        // NOTE: Check the child objects and make sure their states are appropriate.
-
+        // NOTE: Nothing to draw again: the view follows the hold by itself.
     };
 
-    // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
-    const superRemove = box.remove;
-    box.superRemove = superRemove;
-    box.remove = function () {
-
-        if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
-        //page.remove_onResize(functionName); // on page resized.
-
-        // WHY: A timer that fires after the removal used box (null): "Cannot read properties of null".
-        clearTimeout(box.holdTimer);
-        clearTimeout(box.resetTimer);
-        box.holdTimer = null;
-        box.resetTimer = null;
-
-        // Remove basic objects
-        //box.background.remove(); // NOTE: If you add event (box.background.on("click") to other objects.
-        //box.icon.remove();
-
-        superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
-        box = null;
-
-    };
+    // NOTE: No remove() of its own: the timers are box.after() timers, remove() stops them.
 
     // *** OBJECT VIEW:
-    box.elem.style.cursor = "pointer";
+    box.cursor = "pointer";
     box.clickable = 1;
-    //if (box.invertColor == 1) box.elem.style.filter = "invert(100%)";
 
-    // BOX: background
-    //box.background = Box(0, 0, "100%", "100%", box.style.background);
-    //box.background.setMotion("background-color 0.2s");
-    // WHY: Different background boxes are more useful in components.
-
+    // GROUP: The normal button (icon, label). Its size is the size of the component.
     box.contentBox = HGroup({
         width: "auto",
         height: "100%",
@@ -218,87 +191,73 @@ const HoldToConfirmButton = function (params = {}) {
         ...box.style.box,
     });
 
-    // BOX: icon
-    box.icon = Icon(0, 0, box.style.icon);
-    box.icon.setMotion("opacity 0.2s");
-    box.icon.load(box.iconFile);
+        // ICON
+        box.icon = Icon(0, 0, box.style.icon);
+        box.icon.setMotion("opacity 0.2s");
+        box.icon.load(box.iconFile);
 
-    // BOX: label
-    box.label = Label(0, 0, box.style.label);
-    box.label.setMotion("opacity 0.2s");
-    box.label.text = box.labelText;
-    box.label.elem.style.whiteSpace = "nowrap";
+        // LABEL
+        box.label = Label(0, 0, box.style.label);
+        box.label.setMotion("opacity 0.2s");
+        box.label.text = box.labelText;
+        box.label.css.whiteSpace = "nowrap";
 
     endGroup();
 
-    // effectBox
+    // BOX: The mask grows from the left while the button is held. It shows that much of the red layer.
     box.maskBox = startBox(0, 0, 0, "100%", {
         color: "transparent",
-        //border: 1,
     });
-    //box.maskBox.elem.style.borderRadius = "0 100px 100px 0";
 
-    // BOX: holding box
-    box.holdingBox = startBox(0, 0, 0, "100%", box.style.holdingBox);
-    //box.holdingBox.setMotion("background-color 0.2s, width 3s, opacity 3s");
+        // BOX: The red layer (as wide as the normal button)
+        box.holdingBox = startBox(0, 0, 0, "100%", box.style.holdingBox);
 
-    // BOX: icon
-    box.iconRed = Icon(0, 0, box.style.icon);
-    box.iconRed.load(box.holdingIconFile);
+            // ICON: red
+            box.iconRed = Icon(0, 0, box.style.icon);
+            box.iconRed.load(box.holdingIconFile);
 
-    // BOX: label
-    box.labelRed = Label(0, 0, box.style.holdingLabel);
-    box.labelRed.text = box.labelText;
-    box.labelRed.elem.style.whiteSpace = "nowrap";
+            // LABEL: red
+            box.labelRed = Label(0, 0, box.style.holdingLabel);
+            box.labelRed.text = box.labelText;
+            box.labelRed.css.whiteSpace = "nowrap";
 
-    box.redBorder = Box({
-        left: 0,
-        top: 0,
-        width: 1,
-        height: "100%",
-        color: box.style.holdingBox.rightBorderColor,
-    });
+            // BOX: The line at the moving end of the red layer
+            box.redBorder = Box({
+                left: 0,
+                top: 0,
+                width: 1,
+                height: "100%",
+                color: box.style.holdingBox.rightBorderColor,
+            });
+
+        endBox();
 
     endBox();
 
-    endBox();
+    box.maskBox.onResize(moveRedBorderToMaskEnd);
 
-    box.maskBox.onResize(function (self) {
-        // Because, we cant use box.maskBox.width for an animated object.
-        const stil = window.getComputedStyle(box.maskBox.elem);
-        const genislik = stil.getPropertyValue('width');
-        box.redBorder.left = basic.num(genislik) - 2;
-    });
+    syncHoldingLayer();
+    box.contentBox.onResize(syncHoldingLayer);
 
-    const _syncLayout = function (self = box.contentBox) {
-        box.iconRed.aline(box.icon);
-        box.labelRed.aline(box.label);
-        box.holdingBox.width = box.contentBox.width;
-    };
-
-    _syncLayout();
-    box.contentBox.onResize(_syncLayout);
-
+    // BOX: The completed layer (shown after a full hold)
     box.completedBox = startBox(0, 0, "100%", "100%", box.style.completedBox);
     box.completedBox.setMotion("opacity 0.3s");
 
-    HGroup();
+        HGroup();
 
-    Label(box.style.completedLabel);
-    that.text = box.completedText;
-    that.elem.style.whiteSpace = "nowrap";
-    //that.elem.style.textTransform = "uppercase";
+            // LABEL: Completed text
+            Label(box.style.completedLabel);
+            that.text = box.completedText;
+            that.css.whiteSpace = "nowrap";
 
-    endGroup();
+        endGroup();
 
     endBox();
 
-    //endBox();
-
     // *** OBJECT INIT CODE:
 
-    ["mousedown", "touchstart"].forEach(evt => box.on(evt, box.startHold));
-    ["mouseup", "touchend", "mouseleave"].forEach(evt => box.on(evt, box.cancelHold));
+    ["mousedown", "touchstart"].forEach(eventName => box.on(eventName, box.startHold));
+    ["mouseup", "touchend", "mouseleave"].forEach(eventName => box.on(eventName, box.cancelHold));
 
     return endObject(box);
 

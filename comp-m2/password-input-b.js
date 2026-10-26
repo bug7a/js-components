@@ -102,17 +102,12 @@ const PasswordInputB = function(params = {}) {
     };
 
     box.setShowPassword = function(show) {
-        if (show == 0) {
-            box.showPassword = 0;
-            box.input.inputElement.type = "password";
-            box.btnShowPassword.tooltip.setHintText(box.showTooltipMessage);
-            box.btnShowPassword.load(box.showPasswordIconFile);
-        } else {
-            box.showPassword = 1;
-            box.input.inputElement.type = "text";
-            box.btnShowPassword.tooltip.setHintText(box.hideTooltipMessage);
-            box.btnShowPassword.load(box.hidePasswordIconFile);
-        }
+        const isShown = (show != 0);
+        box.showPassword = isShown ? 1 : 0;
+        box.input.inputElement.type = isShown ? "text" : "password";
+        // The button shows what a click does:
+        box.btnShowPassword.tooltip.setHintText(isShown ? box.hideTooltipMessage : box.showTooltipMessage);
+        box.btnShowPassword.load(isShown ? box.hidePasswordIconFile : box.showPasswordIconFile);
     };
     
     // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
@@ -134,25 +129,23 @@ const PasswordInputB = function(params = {}) {
     // *** OBJECT VIEW:
     box.input.inputElement.type = "password";
 
-    // btnShowPassword
+    // GROUP: btnShowPassword (in the left box of InputB)
     AutoLayout({
         align: "right center",
         padding: [10, 0],
     });
     box.leftBox.add(that);
 
+        // ICON: Show / hide password button
         box.btnShowPassword = Icon({
             width: 32,
             height: 32,
             visible: box.showShowPasswordButton,
         });
-        //that.position = "absolute";
         that.clickable = 1;
-        that.elem.style.cursor = "pointer";
-        //that.right = 30;
-        //that.center("top");
+        that.cursor = "pointer";
         if (box.showPasswordIconInvert == 1) {
-            box.btnShowPassword.elem.style.filter = "invert(100%)";
+            box.btnShowPassword.css.filter = "invert(100%)";
         }
 
     endAutoLayout();

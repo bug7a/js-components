@@ -50,7 +50,7 @@ const TextTabsDefaults = {
 
 const TextTabs = function(params = {}) {
 
-    // Marge params:
+    // Merge params:
     mergeIntoIfMissing(params, TextTabsDefaults);
 
     // Edit params, if needed:
@@ -61,10 +61,19 @@ const TextTabs = function(params = {}) {
     // BOX: Component container
     let box = startObject(params);
 
-    // [var]
-    box.tabItemList = [];
+    // *** PUBLIC VARIABLES:
+    box.tabItemList = []; // The Labels of the tabs
 
-    // box.superRemove = box.remove;
+    // *** PRIVATE FUNCTIONS:
+
+    // The vertical padding of a padding param: 4 or [12, 4] (an array without y uses x)
+    const getPaddingY = function (padding) {
+        if (Array.isArray(padding)) return basic.num(padding[1] ?? padding[0]);
+        return basic.num(padding);
+    };
+
+    // *** PUBLIC FUNCTIONS:
+
     // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
     const superRemove = box.remove;
     box.superRemove = superRemove;
@@ -78,45 +87,42 @@ const TextTabs = function(params = {}) {
 
     box.makeTab = function(text) {
 
-        Label({
+        const tab = Label({
             text: text, 
             clickable: 1,
             position: "relative",
             ...box.labelStyle,
         });
-        that.elem.style.cursor = "pointer";
+        tab.cursor = "pointer";
 
         // Fixed height: the tab is as high as the objects next to it (buttons, inputs) and the text stays centered.
         if (basic.num(box.tabHeight) > 0) {
-            const _tabPaddingY = (Array.isArray(box.tabPadding)) ? basic.num(box.tabPadding[1] ?? box.tabPadding[0]) : basic.num(box.tabPadding);
-            const _labelPaddingY = (Array.isArray(box.labelStyle.padding)) ? basic.num(box.labelStyle.padding[1] ?? box.labelStyle.padding[0]) : basic.num(box.labelStyle.padding);
-            that.height = basic.num(box.tabHeight) - _tabPaddingY * 2;
+            const tabPaddingY = getPaddingY(box.tabPadding);
+            const labelPaddingY = getPaddingY(box.labelStyle.padding);
+            tab.height = basic.num(box.tabHeight) - tabPaddingY * 2;
             // WHY: Label is border-box; its height holds the padding. One line of text is centered with the line height.
-            that.elem.style.lineHeight = (that.height - _labelPaddingY * 2) + "px";
+            tab.lineHeight = (tab.height - labelPaddingY * 2) + "px";
         }
 
-        that.index = box.tabItemList.length;
-        box.tabItemList.push(that);
-        box.tabGroup.add(that);
+        tab.index = box.tabItemList.length;
+        box.tabItemList.push(tab);
+        box.tabGroup.add(tab);
 
-        that.on("click", (self, event) => {
+        tab.on("click", (self, event) => {
             box.selectByIndex(self.index);
             box.onClick(self);
         });
 
         // Eğer metin uzunluğu değişirse, seçili nesnenin boyutunu güncelle.
-        that.onResize(function(self) {
-            if (self.index == box.selectedIndex) {
+        tab.onResize(function(self) {
+            if (self.index != box.selectedIndex) return;
 
-                    const _back = box.selectedLabelBack;
-
-                    _back.left = self.left;
-                    _back.top = self.top;
-                    _back.width = self.width;
-                    _back.height = self.height;
-                    _back.opacity = 1;
-
-            }
+            const _back = box.selectedLabelBack;
+            _back.left = self.left;
+            _back.top = self.top;
+            _back.width = self.width;
+            _back.height = self.height;
+            _back.opacity = 1;
         });
         
     };
@@ -152,12 +158,14 @@ const TextTabs = function(params = {}) {
 
     // *** OBJECT VIEW:
 
-    if(box.invertColor) box.elem.style.filter = "invert(100%)";
+    if(box.invertColor) box.css.filter = "invert(100%)";
 
+    // BOX: Background (a gradient from colorBottom to colorTop)
     box.background = Box(0, 0, "100%", "100%", box.backgroundStyle);
-    that.elem.style.background = `linear-gradient(to bottom,  ${box.backgroundStyle.colorBottom},  ${box.backgroundStyle.colorTop})`;
+    const _bgs = box.backgroundStyle;
+    box.background.css.background = `linear-gradient(to bottom,  ${_bgs.colorBottom},  ${_bgs.colorTop})`;
 
-    // Tab Bar
+    // GROUP: Tab bar
     box.tabGroup = HGroup({
         flow: "horizontal", 
         align: "center top", 
@@ -169,6 +177,7 @@ const TextTabs = function(params = {}) {
         position: "relative",
     });
 
+        // BOX: The back of the selected tab (it slides to the selected one)
         box.selectedLabelBack = Box({
             position: "absolute",
             opacity: 1,

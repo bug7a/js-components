@@ -38,7 +38,7 @@ const FormDefaults = {
 
 const Form = function(params = {}) {
 
-    // Marge params:
+    // Merge params:
     mergeIntoIfMissing(params, FormDefaults);
 
     // Edit params, if needed:
@@ -54,7 +54,9 @@ const Form = function(params = {}) {
     // NOTE: Parent container is box.containerBox
 
     // *** PRIVATE VARIABLES:
-    //let privateVar = "";
+    const PRESS_TIME = 200; // ms: the send button stays pressed this long (the same as its motion).
+    const MESSAGE_FADE_TIME = 200; // ms: the motion of the message box, then it is removed.
+    const NARROW_EXTRA_WIDTH = 50; // A page narrower than minWidth + this puts the double inputs under each other.
 
     // *** PUBLIC VARIABLES:
     // Input Objects list [var]
@@ -66,7 +68,6 @@ const Form = function(params = {}) {
 
 
     // *** PRIVATE FUNCTIONS:
-    const privateFunc = function() {};
 
     // Give effects to a button
     const actionButtonEffect = function(btn) {
@@ -74,21 +75,19 @@ const Form = function(params = {}) {
         btn.setMotion("filter 0.2s, transform 0.2s");
 
         btn.on("mouseover", function() {
-            btn.elem.style.filter = "brightness(120%)";
+            btn.css.filter = "brightness(120%)";
         });
 
         btn.on("mouseout", function() {
-            btn.elem.style.filter = "brightness(100%)";
+            btn.css.filter = "brightness(100%)";
         });
 
         btn.on("mousedown", function() {
-            btn.elem.style.transform = "scale(0.95)";
-            btn.elem.style.filter = "brightness(80%)";
-            
+            btn.css = { transform: "scale(0.95)", filter: "brightness(80%)" };
+
             setTimeout(function(){
-                btn.elem.style.transform = "scale(1)";
-                btn.elem.style.filter = "brightness(120%)";
-            }, 200);
+                btn.css = { transform: "scale(1)", filter: "brightness(120%)" };
+            }, PRESS_TIME);
         });
 
     };
@@ -114,13 +113,14 @@ const Form = function(params = {}) {
 
         // Animated message
         that.opacity = 0;
-        that.elem.style.transform = "scale(0.8) translateY(40px)";
+        that.css.transform = "scale(0.8) translateY(40px)";
         that.setMotion("transform 0.2s, opacity 0.2s");
         that.withMotion((self) => {
-            self.elem.style.transform = "scale(1) translateY(0px)";
+            self.css.transform = "scale(1) translateY(0px)";
             self.opacity = 1;
         });
 
+            // GROUP: Round icon background
             VGroup({
                 width: "auto",
                 height: "auto",
@@ -128,21 +128,22 @@ const Form = function(params = {}) {
                 round: 100,
             });
 
+                // ICON: Message icon
                 Icon({
                     width: 32,
                     height: 32,
                 });
                 that.load(messageData.iconFile);
-                that.elem.style.filter = "invert(100%)";
+                that.css.filter = "invert(100%)";
 
             endGroup();
 
-            // message
+            // LABEL: Message
             Label({
                 text: messageData.messageText,
             });
 
-            // button
+            // LABEL: Close button
             Label({
                 text: messageData.buttonText,
                 padding: [12, 4],
@@ -152,15 +153,15 @@ const Form = function(params = {}) {
                 fontSize: 14,
                 clickable: 1,
             });
-            that.elem.style.cursor = "pointer";
+            that.cursor = "pointer";
             that.on("click", function(self) {
                 messageData.onClose();
                 self.clickable = 0;
                 messageBox.opacity = 0;
-                messageBox.elem.style.transform = "scale(0.8) translateY(0px)";
+                messageBox.css.transform = "scale(0.8) translateY(0px)";
                 setTimeout(() => {
                     messageBox.remove();
-                }, 200);
+                }, MESSAGE_FADE_TIME);
             });
 
         endGroup();
@@ -184,6 +185,18 @@ const Form = function(params = {}) {
         if (!isOn && box.btnSendCover.tooltip) box.btnSendCover.tooltip.visible = 0;
     };
 
+    // The detail line of one input. status: 1 empty, 2 not valid ("" for any other status)
+    const getWarningLine = function(item) {
+        if (item.status == 1) return box.warningText.replace("{{name}}", item.titleText) + "<br>";
+        if (item.status == 2) return box.errorText.replace("{{name}}", item.titleText) + "<br>";
+        return "";
+    };
+
+    const getMissingText = function(warningCount) {
+        const text = (warningCount == 1) ? box.missingEntryText : box.missingEntriesText;
+        return text.replace("{{count}}", warningCount);
+    };
+
     // Check the form and create warnings, active the send button
     const checkForm = function() {
 
@@ -191,28 +204,18 @@ const Form = function(params = {}) {
         let warningDetailMessage = "";
 
         box.inputList.forEach((item) => {
-            //console.log(item.status);
-            if (item.status !== 0) {
-                if (item.status == 1) {
-                    warningDetailMessage += box.warningText.replace("{{name}}", item.titleText) + "<br>";
-                } else if (item.status == 2) {
-                    warningDetailMessage += box.errorText.replace("{{name}}", item.titleText) + "<br>";
-                }
-                warningCount++;
-            }
+            if (item.status === 0) return;
+            warningDetailMessage += getWarningLine(item);
+            warningCount++;
         });
 
         box.lblWarningDetail.text = warningDetailMessage;
 
         if (warningCount > 0) {
             box.btnSend.clickable = 0;
-            box.btnSend.elem.style.filter = "grayscale(100%)";
+            box.btnSend.css.filter = "grayscale(100%)";
             setPassiveButtonCover(1);
-            if (warningCount == 1) {
-                box.lblWarning.text = box.missingEntryText.replace("{{count}}", warningCount);
-            } else {
-                box.lblWarning.text = box.missingEntriesText.replace("{{count}}", warningCount);
-            }
+            box.lblWarning.text = getMissingText(warningCount);
             box.lblWarning.opacity = 1;
             box.lblWarning.clickable = 1;
 
@@ -220,25 +223,11 @@ const Form = function(params = {}) {
             box.lblWarning.opacity = 0;
             box.lblWarning.clickable = 0;
             box.btnSend.clickable = 1;
-            box.btnSend.elem.style.filter = "grayscale(0%)";
+            box.btnSend.css.filter = "grayscale(0%)";
             setPassiveButtonCover(0);
         }
 
     };
-
-    /*
-    const sendData = function(formJSON, success, fail) {
-
-        postJSON(SERVICE_URL, formJSON, function (err, response) {
-            if (err) {
-                fail(err);
-            } else {
-                success(response);
-            }
-        });
-
-    };
-    */
 
     const createJSON = function() {
 
@@ -285,7 +274,7 @@ const Form = function(params = {}) {
         };
 
         xhr.send(JSON.stringify(data));
-        
+
     };
 
     // On page resized call
@@ -294,11 +283,12 @@ const Form = function(params = {}) {
         page.fit(box.minWidth);
         // NOTE: Page width will not be smaller than box.minWidth but page.zoom (1) will start get smaller
 
-        // (page.width < 550), (page.zoom < 1)
-        const _flow = (page.width < (box.minWidth + 50) && box.doubleInputAlwaysHorizontal != 1 ) ? "vertical" : "horizontal"; 
+        const isNarrow = (page.width < (box.minWidth + NARROW_EXTRA_WIDTH));
+        const isVertical = (isNarrow && box.doubleInputAlwaysHorizontal != 1);
+        const flow = isVertical ? "vertical" : "horizontal";
 
         box.groupList.forEach(group => {
-            group.flow = _flow;
+            group.flow = flow;
         });
 
         // Center form onResize
@@ -314,8 +304,6 @@ const Form = function(params = {}) {
     box.remove = function () {
 
         if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
-        // WHY: page events are not cleaned by box.remove().
-        page.remove_onResize(pageResized);
         // WHY: The form itself scrolls, so its scroll bar is on the parent (page), not in the box.
         if (box.scrollBar) box.scrollBar.remove();
 
@@ -339,7 +327,7 @@ const Form = function(params = {}) {
 
         box.inputList.push(input);
 
-        checkFormOnEdit(input);
+        watchInput(input);
         box.refresh();
 
     };
@@ -347,10 +335,9 @@ const Form = function(params = {}) {
     box.addTitle = function(obj) {
 
         box.titleGroup.add(obj);
-        //obj.width = "100%";
         obj.position = "relative";
 
-    }
+    };
 
     box.addDoubleInput = function(input, input2) {
 
@@ -361,17 +348,12 @@ const Form = function(params = {}) {
             width: "100%",
             height: "auto",
         });
-
-            // input1
-
-            // input2
-
-        endAutoLayout(); // GROUP: First Name, Last Name
+        endAutoLayout(); // GROUP: First Name, Last Name (the inputs are added below)
 
         nameGroup.add(input);
         input.width = "100%";
         input.position = "relative";
-        
+
         nameGroup.add(input2);
         input2.width = "100%";
         input2.position = "relative";
@@ -384,45 +366,45 @@ const Form = function(params = {}) {
         box.inputList.push(input);
         box.inputList.push(input2);
 
-        checkFormOnEdit(input);
-        checkFormOnEdit(input2);
+        watchInput(input);
+        watchInput(input2);
         box.refresh();
 
     };
-    
+
     box.refresh = function() {
 
         checkForm();
 
     };
 
-    const checkFormOnEdit = function(input) {
+    // The form is checked again on every edit, focus and blur of the input.
+    const watchInput = function(input) {
 
         input.onEdit = function() {
             checkForm();
             box.onEdit(input);
-        }
-        
+        };
+
         input.onFocus = function() {
             checkForm();
-        }
+        };
         input.onBlur = function() {
             checkForm();
-        }
+        };
 
     };
 
     // *** OBJECT VIEW:
     box.scrollY = 1;
 
-        // Form container 
+        // Form container
         box.formContainer = startBox(0, 0, {
             height: "auto",
             width: "100%",
             color: "transparent",
         });
-        that.elem.style.minWidth = box.minWidth + "px";
-        that.elem.style.maxWidth = box.maxWidth + "px";
+        that.css = { minWidth: box.minWidth + "px", maxWidth: box.maxWidth + "px" };
 
             // GROUP: Form Items
             AutoLayout({
@@ -443,26 +425,10 @@ const Form = function(params = {}) {
                     height: "auto",
                 });
 
-                /*
-                    // LABEL: Title
-                    Label({
-                        text: FORM_TITLE,
-                        textColor: "#373836",
-                        fontSize: 26,
-                    });
-                    that.elem.style.fontFamily = "opensans-bold";
-
-                    // LABEL: Description
-                    Label({
-                        text: FORM_DESCRIPTION,
-                        fontSize: 16,
-                        textColor: "#999999",
-                    });
-                    that.elem.style.fontStyle = "italic";
-                    */
+                    // NOTE: The titles are added with box.addTitle().
 
                 endAutoLayout(); // GROUP: Title, Description
-                box.titleGroup.elem.style.marginBottom = "20px";
+                box.titleGroup.css.marginBottom = "20px";
 
                 // GROUP: Input Items
                 box.inputGroup = AutoLayout({
@@ -475,17 +441,17 @@ const Form = function(params = {}) {
                     position: "relative", // Because box.formContainer.height = "auto"
                 });
 
-                    // input items
-                
+                    // NOTE: The inputs are added with box.addInput() and box.addDoubleInput().
+
                 endAutoLayout();
-                
+
                 // GROUP: Form send button
                 AutoLayout({
                     width: "100%",
                     height: "auto",
                     clipContent: 0,
                 });
-                that.elem.style.marginTop = "20px";
+                that.css.marginTop = "20px";
 
                     // BUTTON: Send Button
                     box.btnSend = Button({
@@ -496,17 +462,12 @@ const Form = function(params = {}) {
                     });
                     actionButtonEffect(that);
                     that.on("mousedown", function() {
-                        
-                        // FORM CHECKED AND READY:
-
-                        // create json
+                        // NOTE: The button is clickable only when the form is checked and ready (checkForm).
                         const formJSON = createJSON();
-                        //console.table(formJSON);
                         box.onSendClick(formJSON);
-
                     });
-                    box.btnSend.clickable = 0; // that.on("mousedown" set box.btnSend.clickable = 1
-                    box.btnSend.elem.style.filter = "grayscale(100%)";
+                    box.btnSend.clickable = 0; // NOTE: checkForm() makes it clickable when the form is ready.
+                    box.btnSend.css.filter = "grayscale(100%)";
 
                     // BOX: Catches the mouse while the send button is passive.
                     // WHY: clickable: 0 puts "pointer-events: none" on the button, so the button
@@ -523,7 +484,6 @@ const Form = function(params = {}) {
                             color: "transparent",
                             clickable: 1,
                         });
-                        //box.btnSendCover.elem.style.cursor = "not-allowed";
 
                         box.btnSendCover.tooltip = Tooltip({
                             target: box.btnSendCover,
@@ -570,29 +530,28 @@ const Form = function(params = {}) {
                         border: 1,
                         opacity: 0,
                     });
-                    that.elem.style.transform = "scale(0.7)";
+                    that.css.transform = "scale(0.7)";
                     that.setMotion("opacity 0.2s, transform 0.2s");
 
                     // Show box.lblWarningDetail
                     box.lblWarning.on("mouseover", function() {
-                        if(box.showDetailWarning == 1) {
-                            box.lblWarningDetail.opacity = 1;
-                            box.lblWarningDetail.aline(box.lblWarning, "top", 8, "left");
-                            box.lblWarningDetail.elem.style.transform = "scale(1)";
-                        }
+                        if (box.showDetailWarning != 1) return;
+                        box.lblWarningDetail.opacity = 1;
+                        box.lblWarningDetail.aline(box.lblWarning, "top", 8, "left");
+                        box.lblWarningDetail.css.transform = "scale(1)";
                     });
 
                     // Hide box.lblWarningDetail
                     box.lblWarning.on("mouseout", function() {
                         box.lblWarningDetail.opacity = 0;
-                        box.lblWarningDetail.elem.style.transform = "scale(0.7)";
+                        box.lblWarningDetail.css.transform = "scale(0.7)";
                     });
 
                 endAutoLayout(); // GROUP: Form send button
 
             endAutoLayout(); // GROUP: Form Items
 
-        endBox(); // Form container 
+        endBox(); // Form container
 
         // SCROLL BAR: Scrollable page container (only if basic/scroll-bar.js is loaded)
         if (typeof ScrollBar === "function") box.scrollBar = ScrollBar({
@@ -601,7 +560,7 @@ const Form = function(params = {}) {
             bar_round: 2,
             bar_borderColor: "rgba(0, 0, 0, 1)",
             bar_width: 4,
-            bar_mouseOverWidth: 4, //8
+            bar_mouseOverWidth: 4,
             bar_mouseOverColor: "#373836",
             bar_opacity: 0.4,
             bar_mouseOverOpacity: 0.9,
@@ -615,8 +574,8 @@ const Form = function(params = {}) {
     box.refresh();
 
     pageResized();
-    page.onResize(pageResized);
-    
+    box.onPageResize(pageResized);
+
     return endObject(box);
 
 };

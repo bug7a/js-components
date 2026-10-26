@@ -65,9 +65,7 @@ const LoginPageDefaults = {
 };
 
 const LoginPageLightStyle = {
-    primaryColor: "#2C5A38",
     panelName: "MY PANEL v25.08.11",
-    //autoFit: 1, // add page.fit() function onResize
     primaryColor: "#65A293", // "#2C5A38", "#65A293"
     tab_backgroundColorBottom: "whitesmoke", // "#242424", "whitesmoke"
     tab_backgroundColorTop: "#DBDDDC", // "#242424", "#DBDDDC",
@@ -78,7 +76,6 @@ const LoginPageLightStyle = {
     input_backgroundColor: "#F6F6F6", // "#141414", "#F6F6F6",
     input_lineColor: "transparent",
     input_selectedBackgroundColor: "#F3F4E0", // "#202020", "#F3F4E0",
-    // waiting_invertIconColor: 1,
     input_textColor: Black(0.85), // Black(0.85), White(0.85)
     input_border: 1, // 1, 0
     input_borderColor: Black(0.1), // White(0.1), Black(0.1)
@@ -92,7 +89,7 @@ const LoginPageLightStyle = {
 
 const LoginPage = function(params = {}) {
 
-    // Marge params:
+    // Merge params:
     mergeIntoIfMissing(params, LoginPageDefaults);
 
     // Edit params, if needed:
@@ -103,8 +100,9 @@ const LoginPage = function(params = {}) {
 
     // BOX: Component container
     let box = startObject(params);
-    //box.elem.style.filter = "invert(100%)";
-    //page.color = "white";
+
+    // *** PRIVATE VARIABLES:
+    const ALERT_TIME = 1000; // ms: the alert closes itself after this.
 
     box.customButtonCount = 0;
 
@@ -122,14 +120,13 @@ const LoginPage = function(params = {}) {
 
             // Title
             box.title = Label({
-                text: box.panelName, 
+                text: box.panelName,
                 right: 30,
                 bottom: 30,
-                fontSize: 20, 
-                textColor: White(0.4), 
-                position: "absolute", 
+                fontSize: 20,
+                textColor: White(0.4),
+                position: "absolute",
             });
-            //that.elem.style.fontFamily = "opensans-bold";
 
             // Tab Bar
             box.tabBar = TextTabs({
@@ -145,7 +142,7 @@ const LoginPage = function(params = {}) {
                     borderColor: box.tab_borderColor,
                 },
                 labelStyle: {
-                    fontSize: 14, 
+                    fontSize: 14,
                     textColor: box.tab_textColor, //"#373836",
                     padding: [12, 4],
                     round: 0,
@@ -160,48 +157,46 @@ const LoginPage = function(params = {}) {
             });
             that.onClick = function(self) {
                 box.setActiveTab(self.index);
-                //println(`Clicked Tab ${self.index}`);
             };
 
             // Views wrapper
             box.contentContainer = startBox({
-                width: box.panelWidth, 
-                height: "auto", 
-                color: "transparent", 
+                width: box.panelWidth,
+                height: "auto",
+                color: "transparent",
                 clipContent: 0,
             });
 
                 box.viewGroup = HGroup({
                     align: "left top",
                     height: "auto",
-                    //position: "relative",
                     color: "transparent",
                     width: box.panelWidth * 2,
                 });
                 box.viewGroup.setMotion("left 0.2s");
 
                     // LOGIN VIEW
-                    box.loginBox = AutoLayout({ 
-                        flow: "vertical", 
-                        align: "left top", 
-                        gap: 10, 
-                        height: "auto", 
-                        width: box.panelWidth, 
+                    box.loginBox = AutoLayout({
+                        flow: "vertical",
+                        align: "left top",
+                        gap: 10,
+                        height: "auto",
+                        width: box.panelWidth,
                         color:"transparent",
                         opacity: 0,
                     });
                     that.setMotion("opacity 0.2s");
 
-                        const common = { 
-                            width: "100%", 
-                            leftPadding: 16, 
-                            rightPadding: 16, 
+                        const common = {
+                            width: "100%",
+                            leftPadding: 16,
+                            rightPadding: 16,
                             backgroundColor: box.input_backgroundColor,
                             lineColor: box.input_lineColor,
                             selectedBackgroundColor: box.input_selectedBackgroundColor,
                             selectedLineColor: box.primaryColor,
                         };
-                        
+
                         box.loginEmail = EmailInputB({
                             ...common,
                             titleText: "EMAIL",
@@ -213,7 +208,7 @@ const LoginPage = function(params = {}) {
                         styleInput(that);
                         that.onEdit = function() {
                             checkLoginForm();
-                        }
+                        };
 
                         box.loginPassword = PasswordInputB({
                             ...common,
@@ -234,24 +229,23 @@ const LoginPage = function(params = {}) {
                             showPasswordIconInvert: box.showPasswordIconInvert,
                         });
                         styleInput(that);
-                        //that.btnShowPassword.elem.style.filter = "invert(100%)";
                         that.onEdit = function() {
                             checkLoginForm();
-                        }
+                        };
 
                         // Login button
-                        box.loginBtn = Button({ 
-                            text: "LOGIN", 
-                            textColor: White(0.75), 
-                            fontSize: 20, 
-                            width: "100%", 
-                            height: 50, 
-                            round: 4, 
-                            color: box.primaryColor, 
-                            minimal: 1  
+                        box.loginBtn = Button({
+                            text: "LOGIN",
+                            textColor: White(0.75),
+                            fontSize: 20,
+                            width: "100%",
+                            height: 50,
+                            round: 4,
+                            color: box.primaryColor,
+                            minimal: 1
                         });
                         box.loginBtn.clickable = 1;
-                        box.loginBtn.elem.style.cursor = "pointer";
+                        box.loginBtn.cursor = "pointer";
                         UIEffects.press(that);
 
                         // or group
@@ -262,41 +256,40 @@ const LoginPage = function(params = {}) {
                         });
                         that.opacity = 0;
 
-                            // line
+                            // BOX: Line
                             Box(0,0,"100%",1, {
                                 color: box.orLineColor,
                             });
                             that.center("top");
                             that.top += 2;
 
-                            // or
+                            // LABEL: or
                             Label({
                                 text: "or",
                                 textColor: box.orTextColor,
-                                color: box.parentBox.color, // "#000000",
+                                color: box.parentBox.color, // WHY: It covers the line behind it.
                                 padding: [12,6],
                             });
                             that.center();
 
                         endBox();
 
-                        //box.createButtonWithIcon("Sign in with Google", box.googleLogo, onLoginWithGoogle);
-                        //box.createButtonWithIcon("Sign in with Apple", box.appleLogo, onLoginWithApple);
+                        // NOTE: The page adds its own login buttons with box.createButtonWithIcon().
 
                     endAutoLayout(); // end login view
 
                     // SIGN UP VIEW
                     box.signupBox = AutoLayout({
-                        flow: "vertical", 
-                        align: "left top", 
-                        gap: 10, 
-                        height: "auto", 
-                        width: box.panelWidth, 
+                        flow: "vertical",
+                        align: "left top",
+                        gap: 10,
+                        height: "auto",
+                        width: box.panelWidth,
                         color: "transparent",
                     });
                     that.opacity = 0;
                     that.setMotion("opacity 0.2s");
-                    
+
                         box.signupEmail = EmailInputB({
                             ...common,
                             titleText: "EMAIL",
@@ -307,7 +300,7 @@ const LoginPage = function(params = {}) {
                         styleInput(that);
                         that.onEdit = function() {
                             checkSignupForm();
-                        }
+                        };
 
                         box.signupPassword = PasswordInputB({
                             ...common,
@@ -321,10 +314,9 @@ const LoginPage = function(params = {}) {
                             showPasswordIconInvert: box.showPasswordIconInvert,
                         });
                         styleInput(that);
-                        //that.btnShowPassword.elem.style.filter = "invert(100%)";
                         that.onEdit = function() {
                             checkSignupForm();
-                        }
+                        };
 
                         box.signupPassword2 = PasswordInputB({
                             ...common,
@@ -338,25 +330,23 @@ const LoginPage = function(params = {}) {
                             showPasswordIconInvert: box.showPasswordIconInvert,
                         });
                         styleInput(that);
-                        //that.btnShowPassword.elem.style.filter = "invert(100%)";
                         that.onEdit = function() {
                             checkSignupForm();
-                        }
+                        };
 
-                        box.signupBtn =  Button({ 
-                            text: "SIGN UP", 
-                            textColor: White(0.75), 
-                            fontSize: 20, 
-                            width: "100%", 
-                            height: 50, 
-                            round: 4, 
-                            color: box.primaryColor, 
+                        box.signupBtn =  Button({
+                            text: "SIGN UP",
+                            textColor: White(0.75),
+                            fontSize: 20,
+                            width: "100%",
+                            height: 50,
+                            round: 4,
+                            color: box.primaryColor,
                             minimal: 1
                         });
                         UIEffects.press(that);
                         box.signupBtn.clickable = 1;
-                        box.signupBtn.elem.style.cursor = "pointer";
-                        //box.signupBtn = box.signupBtn;
+                        box.signupBtn.cursor = "pointer";
 
                     endAutoLayout(); // END SIGN UP VIEW
 
@@ -373,20 +363,16 @@ const LoginPage = function(params = {}) {
         });
         box.alertBox.setMotion("opacity 0.2s");
 
-            //AutoLayout();
-
-                box.lblAlert = Label({
-                    left: 40,
-                    top: 40,
-                    text: "",
-                    textColor: "indianred",
-                    padding: [12, 4],
-                    round: 4,
-                    border: 1,
-                    borderColor: White(0.2),
-                });
-
-            //endAutoLayout();
+            box.lblAlert = Label({
+                left: 40,
+                top: 40,
+                text: "",
+                textColor: "indianred",
+                padding: [12, 4],
+                round: 4,
+                border: 1,
+                borderColor: White(0.2),
+            });
 
         endBox();
 
@@ -399,20 +385,19 @@ const LoginPage = function(params = {}) {
 
             if (box.alertBox.timer) clearTimeout(box.alertBox.timer);
             box.alertBox.timer = setTimeout(function() {
-                // close alert
                 box.alertBox.opacity = 0;
                 box.alertBox.clickable = 0;
-            }, 1000);
+            }, ALERT_TIME);
 
         };
 
         // Waiting
         box.waiting = Waiting({
-            animated: 1, 
+            animated: 1,
             coverBackgroundColor: "rgba(0,0,0,0.6)",
             waitingIcon: box.waitingIcon,
-        });         
-        if (box.waitingIconInvert == 1) box.waiting.icon.elem.style.filter = "invert(100%)";
+        });
+        if (box.waitingIconInvert == 1) box.waiting.icon.css.filter = "invert(100%)";
 
         // events:
         box.loginBtn.on("click", box.onLoginClick);
@@ -425,7 +410,7 @@ const LoginPage = function(params = {}) {
         // Default tab
         box.setActiveTab(0);
 
-    };        
+    };
 
     // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
     const superRemove = box.remove;
@@ -461,16 +446,18 @@ const LoginPage = function(params = {}) {
 
     box.createButtonWithIcon = function(text, iconFile, onClick) {
 
+        // WHY: The "or" line is shown only when there is a button under it.
         box.customButtonCount++;
-        if (box.customButtonCount > 0) {
-            box.boxOR.opacity = 1;
-        }
-    
+        box.boxOR.opacity = 1;
+
+        // GROUP: Button (icon, text)
         HGroup({
-            width: "100%", position: "relative", ...box.style.customLoginButton,
+            width: "100%",
+            position: "relative",
+            ...box.style.customLoginButton,
         });
         box.loginBox.add(that);
-        that.elem.style.cursor = "pointer";
+        that.cursor = "pointer";
         that.on("click", onClick);
         UIEffects.press(that);
 
@@ -479,8 +466,8 @@ const LoginPage = function(params = {}) {
 
             Label({
                 text: text,
-                textColor: box.style.customLoginButton.textColor, 
-                fontSize: 20, 
+                textColor: box.style.customLoginButton.textColor,
+                fontSize: 20,
             });
 
         endBox();
@@ -494,59 +481,40 @@ const LoginPage = function(params = {}) {
         obj.background.border = box.input_border;
         obj.background.borderColor = box.input_borderColor;
         obj.warningBall.borderColor = Black(1);
-        
-        //obj.background.setMotion("background-color 0.2s");
-        if (obj.type === "textarea") {
-            // Onlt for textarea
-        } else {
-            //obj.inputGroup.gap = 4;
-            obj.input.textColor = box.input_textColor;
-            
-            //obj.input.color = "whitesmoke";
-            //obj.input.border = 1;
-            //obj.input.borderColor = "lightgray";
-            //obj.input.inputElement.style.padding = "0px 6px";
-            //obj.input.inputElement.style.marginLeft = "-6px";
-        }
-        
 
+        // NOTE: Only for a text input (a textarea keeps its own text color).
+        if (obj.type !== "textarea") obj.input.textColor = box.input_textColor;
+
+    };
+
+    // The send buttons are passive (gray, not clickable) until their form is ready.
+    const setButtonActive = function(btn, isActive) {
+        btn.clickable = isActive ? 1 : 0;
+        btn.css.filter = isActive ? "grayscale(0%)" : "grayscale(100%)";
     };
 
     const checkLoginForm = function() {
 
-        const _count1 = box.loginEmail.getInputValue().length;
-        const _count2 = box.loginPassword.getInputValue().length;
+        const hasEmail = box.loginEmail.getInputValue().length > 0;
+        const hasPassword = box.loginPassword.getInputValue().length > 0;
+        const isEmailValid = (box.loginEmail.status === 0);
 
-        if (_count1 > 0 && _count2 > 0 && box.loginEmail.status === 0) {
-            box.loginBtn.clickable = 1;
-            box.loginBtn.elem.style.filter = "grayscale(0%)";
-            //box.loginBtn.color = box.primaryColor;
-        } else {
-            box.loginBtn.clickable = 0;
-            box.loginBtn.elem.style.filter = "grayscale(100%)";
-            //box.loginBtn.color = "gray";
-        }
+        setButtonActive(box.loginBtn, hasEmail && hasPassword && isEmailValid);
 
     };
 
     const checkSignupForm = function() {
 
-        const _status1 = box.signupEmail.status;
-        const _status2 = box.signupPassword.status;
-        const _status3 = box.signupPassword2.status;
+        const isEmailValid = (box.signupEmail.status === 0);
+        const isPasswordValid = (box.signupPassword.status === 0);
+        const isPassword2Valid = (box.signupPassword2.status === 0);
 
-        if (_status1 === 0 && _status2 === 0 && _status3 === 0) {
-            box.signupBtn.clickable = 1;
-            box.signupBtn.elem.style.filter = "grayscale(0%)";
-        } else {
-            box.signupBtn.clickable = 0;
-            box.signupBtn.elem.style.filter = "grayscale(100%)";
-        }
+        setButtonActive(box.signupBtn, isEmailValid && isPasswordValid && isPassword2Valid);
 
     };
 
     initView();
-    
+
     return endObject(box);
 
 };

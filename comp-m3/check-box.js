@@ -82,11 +82,7 @@ const CheckBoxDefaults = {
 const CheckBox = function (params = {}) {
 
     // Merge style package: params.style > CheckBox.styles[styleName] > CheckBoxDefaults.style (classic)
-    const _styleName = params.styleName || CheckBoxDefaults.styleName;
-    const _stylePackage = CheckBox.styles[_styleName];
-    if (!_stylePackage) console.warn("CheckBox: Style package not found: " + _styleName);
-    params.style = params.style || {};
-    mergeIntoIfMissing(params.style, _stylePackage || {});
+    basic.applyStylePackage(params, CheckBox.styles, CheckBoxDefaults);
 
     // Merge params:
     mergeIntoIfMissing(params, CheckBoxDefaults);
@@ -100,57 +96,67 @@ const CheckBox = function (params = {}) {
 
     // *** PRIVATE VARIABLES:
     let isMouseOver = 0;
+    const MOTION_DURATION = "0.15s";
+    // The tick is a rotated corner (right and bottom borders), sized as a part of the inner square.
+    const TICK_WIDTH_RATIO = 0.3;
+    const TICK_HEIGHT_RATIO = 0.58;
+    const TICK_RAISE_RATIO = 0.06; // The tick is lifted a little above the center.
+    const TICK_HIDDEN_SCALE = 0.4; // The tick grows from this size when checked.
 
     // *** PUBLIC VARIABLES:
     // NOTE: Default values are also public variables. (box.checked, box.enabled, box.labelText)
 
     // *** PRIVATE FUNCTIONS:
 
-    // Update the view according to the current state.
-    const updateView = function () {
-
-        const _mark = box.style.mark;
-        const _checked = box.style.checkedMark;
-        const _hover = (isMouseOver && box.enabled == 1);
-
-        // Whole object background colors:
-        const _boxColor = box.style.box.color;
-        const _hoverBoxColor = box.style.hoverBox.color || _boxColor;
-        const _checkedBoxColor = box.style.checkedBox.color || _boxColor;
-        const _hoverCheckedBoxColor = box.style.hoverCheckedBox.color || _checkedBoxColor;
-
+    // The whole object background. A null color uses the color of the state below it.
+    const getBoxColor = function (isHover) {
+        const boxColor = box.style.box.color;
+        const checkedBoxColor = box.style.checkedBox.color || boxColor;
         if (box.checked == 1) {
-            box.color = (_hover) ? _hoverCheckedBoxColor : _checkedBoxColor;
-            box.mark.color = _checked.color;
-            box.mark.borderColor = _checked.borderColor;
-            box.tick.elem.style.opacity = "1";
-            box.tick.elem.style.transform = "rotate(45deg) scale(1)";
-        } else {
-            box.color = (_hover) ? _hoverBoxColor : _boxColor;
-            box.mark.color = _mark.color;
-            box.mark.borderColor = (_hover) ? box.style.hoverMark.borderColor : _mark.borderColor;
-            box.tick.elem.style.opacity = "0";
-            box.tick.elem.style.transform = "rotate(45deg) scale(0.4)";
+            if (isHover) return box.style.hoverCheckedBox.color || checkedBoxColor;
+            return checkedBoxColor;
         }
+        if (isHover) return box.style.hoverBox.color || boxColor;
+        return boxColor;
+    };
 
-        box.opacity = (box.enabled == 1) ? 1 : box.style.disabled.opacity;
-        box.elem.style.cursor = (box.enabled == 1) ? "pointer" : "default";
-        box.elem.tabIndex = (box.enabled == 1) ? 0 : -1;
+    const paintMark = function (isHover) {
+        if (box.checked == 1) {
+            box.mark.color = box.style.checkedMark.color;
+            box.mark.borderColor = box.style.checkedMark.borderColor;
+            box.tick.css = { opacity: "1", transform: "rotate(45deg) scale(1)" };
+            return;
+        }
+        box.mark.color = box.style.mark.color;
+        box.mark.borderColor = (isHover) ? box.style.hoverMark.borderColor : box.style.mark.borderColor;
+        box.tick.css = { opacity: "0", transform: "rotate(45deg) scale(" + TICK_HIDDEN_SCALE + ")" };
+    };
 
-        box.elem.setAttribute("aria-checked", (box.checked == 1) ? "true" : "false");
-        box.elem.setAttribute("aria-disabled", (box.enabled == 1) ? "false" : "true");
+    const paintEnabled = function () {
+        const isEnabled = (box.enabled == 1);
+        box.opacity = (isEnabled) ? 1 : box.style.disabled.opacity;
+        box.cursor = (isEnabled) ? "pointer" : "default";
+        box.tabIndex = (isEnabled) ? 0 : -1;
+    };
 
+    // The look of the current state (checked, mouse over, enabled).
+    const paint = function () {
+        const isHover = (isMouseOver && box.enabled == 1);
+        box.color = getBoxColor(isHover);
+        paintMark(isHover);
+        paintEnabled();
+        box.aria = { checked: (box.checked == 1), disabled: (box.enabled != 1) };
     };
 
     // *** PUBLIC FUNCTIONS:
 
     box.setChecked = function (checked, silent = 0) {
 
-        checked = (checked == 1 || checked === true) ? 1 : 0;
+        checked = basic.isOn(checked) ? 1 : 0;
         if (box.checked == checked) return;
 
         box.checked = checked;
-        updateView();
+        paint();
 
         if (!silent) box.onChange(box);
 
@@ -164,8 +170,8 @@ const CheckBox = function (params = {}) {
     };
 
     box.setEnabled = function (enabled) {
-        box.enabled = (enabled == 1 || enabled === true) ? 1 : 0;
-        updateView();
+        box.enabled = basic.isOn(enabled) ? 1 : 0;
+        paint();
     };
     // USAGE: get: checkBox.enabled, set: checkBox.setEnabled(0)
 
@@ -177,24 +183,14 @@ const CheckBox = function (params = {}) {
     // USAGE: get: checkBox.labelText, set: checkBox.setLabelText("Remember me")
 
     box.refresh = function () {
-        updateView();
-    };
-
-    // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
-    const superRemove = box.remove;
-    box.superRemove = superRemove;
-    box.remove = function () {
-        if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
-        superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
-        box = null;
+        paint();
     };
 
     // *** OBJECT VIEW:
     box.clickable = 1;
-    box.elem.setAttribute("role", "checkbox");
-    box.elem.style.outline = "none";
-    box.elem.style.userSelect = "none";
-    box.setMotion("background-color 0.15s");
+    box.role = "checkbox";
+    box.css = { outline: "none", userSelect: "none" };
+    box.setMotion("background-color " + MOTION_DURATION);
 
     // GROUP: mark, label
     box.contentBox = HGroup({
@@ -204,11 +200,11 @@ const CheckBox = function (params = {}) {
         ...box.style.layout,
     });
 
-    // LABEL: label (left)
+    // LABEL: label (left or right of the mark)
     const createLabel = function () {
         box.label = Label(box.style.label);
         box.label.text = box.labelText;
-        box.label.elem.style.whiteSpace = "nowrap";
+        box.label.css.whiteSpace = "nowrap";
         if (!box.labelText) box.label.visible = 0;
     };
 
@@ -223,30 +219,32 @@ const CheckBox = function (params = {}) {
         borderColor: box.style.mark.borderColor,
         round: box.style.mark.round,
     });
-    box.mark.setMotion("background-color 0.15s, border-color 0.15s");
-    box.mark.elem.style.boxSizing = "border-box";
+    box.mark.setMotion("background-color " + MOTION_DURATION + ", border-color " + MOTION_DURATION);
+    box.mark.css.boxSizing = "border-box";
 
     // BOX: tick (drawn with right and bottom borders, rotated 45deg)
-    const _innerW = box.style.mark.width - (box.style.mark.border * 2);
-    const _innerH = box.style.mark.height - (box.style.mark.border * 2);
-    const _tickW = Math.round(_innerW * 0.3);
-    const _tickH = Math.round(_innerH * 0.58);
+    const innerWidth = box.style.mark.width - (box.style.mark.border * 2);
+    const innerHeight = box.style.mark.height - (box.style.mark.border * 2);
+    const tickWidth = Math.round(innerWidth * TICK_WIDTH_RATIO);
+    const tickHeight = Math.round(innerHeight * TICK_HEIGHT_RATIO);
+    const tickBorder = box.style.tick.thickness + "px solid " + box.style.tick.color;
 
     box.tick = Box({
-        left: Math.round((_innerW - _tickW) / 2),
-        top: Math.round((_innerH - _tickH) / 2) - Math.round(_innerH * 0.06),
-        width: _tickW,
-        height: _tickH,
+        left: Math.round((innerWidth - tickWidth) / 2),
+        top: Math.round((innerHeight - tickHeight) / 2) - Math.round(innerHeight * TICK_RAISE_RATIO),
+        width: tickWidth,
+        height: tickHeight,
         color: "transparent",
     });
-    box.tick.elem.style.boxSizing = "border-box";
-    box.tick.elem.style.borderRight = box.style.tick.thickness + "px solid " + box.style.tick.color;
-    box.tick.elem.style.borderBottom = box.style.tick.thickness + "px solid " + box.style.tick.color;
-    box.tick.elem.style.transition = "transform 0.15s, opacity 0.15s";
+    box.tick.css = {
+        boxSizing: "border-box",
+        borderRight: tickBorder,
+        borderBottom: tickBorder,
+        transition: "transform " + MOTION_DURATION + ", opacity " + MOTION_DURATION,
+    };
 
     endBox();
 
-    // LABEL: label (right)
     if (box.labelPosition !== "left") createLabel();
 
     endGroup();
@@ -258,25 +256,24 @@ const CheckBox = function (params = {}) {
     });
 
     box.on("keydown", function (self, event) {
-        if (event.key === " " || event.key === "Enter") {
-            event.preventDefault();
-            box.toggle();
-        }
+        if (event.key !== " " && event.key !== "Enter") return;
+        event.preventDefault();
+        box.toggle();
     });
 
     box.on("mouseover", function () {
         isMouseOver = 1;
-        if (box.enabled == 1) updateView();
+        if (box.enabled == 1) paint();
     });
 
     box.on("mouseout", function () {
         isMouseOver = 0;
-        updateView();
+        paint();
     });
 
-    box.checked = (box.checked == 1 || box.checked === true) ? 1 : 0;
-    box.enabled = (box.enabled == 1 || box.enabled === true) ? 1 : 0;
-    updateView();
+    box.checked = basic.isOn(box.checked) ? 1 : 0;
+    box.enabled = basic.isOn(box.enabled) ? 1 : 0;
+    paint();
 
     return endObject(box);
 
@@ -285,6 +282,7 @@ const CheckBox = function (params = {}) {
 // *** STYLE PACKAGES:
 // USAGE: CheckBox({ styleName: "modern" })
 // USAGE: CheckBox({ styleName: "modern", style: { tick: { color: "tomato" } } }) // Change only some keys.
+// USAGE: CheckBox({ style: CheckBox.styles.modern }) // The same as styleName: "modern". (The package is copied, never changed.)
 // NOTE: A new package needs only the keys that differ from the default (classic) style.
 // USAGE: CheckBox.styles.myStyle = { tick: { color: "red" } };
 CheckBox.styles = {

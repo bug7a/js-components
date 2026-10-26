@@ -46,7 +46,7 @@ const URLInputBDefaults = {
 
 const URLInputB = function(params = {}) {
 
-    params.createInput = 0;
+    params.createInput = 0; // WHY: The input is made here, after the TinySelect of the protocol.
 
     // BOX: Component container
     const box = startExtendedObject(InputB, URLInputBDefaults, params);
@@ -56,7 +56,9 @@ const URLInputB = function(params = {}) {
     // *** PUBLIC VARIABLES:
 
     // *** PRIVATE FUNCTIONS:
-    box.isValid = function() {
+
+    // *** PUBLIC FUNCTIONS:
+    box.isValid = function() { // OVERRIDE
 
         const regex = new RegExp(
             "^" +
@@ -65,12 +67,11 @@ const URLInputB = function(params = {}) {
             "(\/[^\s]*)?$"                              // /path?query=1 gibi opsiyonel path ve query
         );
 
-        return (regex.test(box.input.text)) ? 1 : 0;
         // WHY: box.getInputValue() verisi "http..." li olduğu için direk input (box.input.text) verisini kullanıyorum.
+        return (regex.test(box.input.text)) ? 1 : 0;
 
     };
 
-    // *** PUBLIC FUNCTIONS:
     box.getInputValue = function() { // *** OVERRIDE ***
         return box.tinySelect.list[box.tinySelect.selectedIndex].label + box.input.text;
     };
@@ -82,8 +83,8 @@ const URLInputB = function(params = {}) {
         box.inputBox.add(that);
 
             box.tinySelect = TinySelect(box.tinySelectParams);
-            that.lblLabel.elem.style.fontFamily = "opensans";
-            that.lblLabel.textColor = "#373836";
+            box.tinySelect.lblLabel.css.fontFamily = "opensans";
+            box.tinySelect.lblLabel.textColor = "#373836";
 
             box.input = Input({
                 text: box.inputValue,
@@ -96,11 +97,11 @@ const URLInputB = function(params = {}) {
             that.inputElement.style.padding = "0px 4px";
             that.inputElement.placeholder = box.placeholder;
             that.inputElement.maxLength = box.maxChar;
-            that.inputElement.setAttribute("aria-label", box.titleText);    
+            that.inputElement.setAttribute("aria-label", box.titleText);
 
         endAutoLayout();
 
-    // *** INIT CODE:
+    // *** OBJECT INIT CODE:
     const inputElem = box.input.inputElement;
 
     box.focusFunc = function () {
@@ -117,7 +118,7 @@ const URLInputB = function(params = {}) {
     }
     inputElem.addEventListener("blur", function(){ box.blurFunc() });
 
-    box.inputFunc = function () { // If needed, you can override function on ExtendedObject.
+    box.inputFunc = function () { // A child component can override it.
         box.applyFormattedValueToInput();
         box.checkIfInputIsRequiredAndEmpty();
         box.showWarningIfNotValid(box.isValid());

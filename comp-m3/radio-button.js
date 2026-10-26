@@ -87,11 +87,7 @@ const RadioButtonDefaults = {
 const RadioButton = function (params = {}) {
 
     // Merge style package: params.style > RadioButton.styles[styleName] > RadioButtonDefaults.style (classic)
-    const _styleName = params.styleName || RadioButtonDefaults.styleName;
-    const _stylePackage = RadioButton.styles[_styleName];
-    if (!_stylePackage) console.warn("RadioButton: Style package not found: " + _styleName);
-    params.style = params.style || {};
-    mergeIntoIfMissing(params.style, _stylePackage || {});
+    basic.applyStylePackage(params, RadioButton.styles, RadioButtonDefaults);
 
     // Merge params:
     mergeIntoIfMissing(params, RadioButtonDefaults);
@@ -105,6 +101,8 @@ const RadioButton = function (params = {}) {
 
     // *** PRIVATE VARIABLES:
     let isMouseOver = 0;
+    const MOTION_DURATION = "0.15s";
+    const DOT_HIDDEN_SCALE = 0.3; // The dot grows from this size when checked.
 
     // *** PUBLIC VARIABLES:
     // NOTE: Default values are also public variables. (box.checked, box.value, box.group)
@@ -115,40 +113,44 @@ const RadioButton = function (params = {}) {
         return RadioButton.getGroup(box.group);
     };
 
-    // Update the view according to the current state.
-    const updateView = function () {
-
-        const _mark = box.style.mark;
-        const _checked = box.style.checkedMark;
-        const _hover = (isMouseOver && box.enabled == 1);
-
-        // Whole object background colors:
-        const _boxColor = box.style.box.color;
-        const _hoverBoxColor = box.style.hoverBox.color || _boxColor;
-        const _checkedBoxColor = box.style.checkedBox.color || _boxColor;
-        const _hoverCheckedBoxColor = box.style.hoverCheckedBox.color || _checkedBoxColor;
-
+    // The whole object background. A null color uses the color of the state below it.
+    const getBoxColor = function (isHover) {
+        const boxColor = box.style.box.color;
+        const checkedBoxColor = box.style.checkedBox.color || boxColor;
         if (box.checked == 1) {
-            box.color = (_hover) ? _hoverCheckedBoxColor : _checkedBoxColor;
-            box.mark.color = _checked.color;
-            box.mark.borderColor = _checked.borderColor;
-            box.dot.elem.style.opacity = "1";
-            box.dot.elem.style.transform = "scale(1)";
-        } else {
-            box.color = (_hover) ? _hoverBoxColor : _boxColor;
-            box.mark.color = _mark.color;
-            box.mark.borderColor = (_hover) ? box.style.hoverMark.borderColor : _mark.borderColor;
-            box.dot.elem.style.opacity = "0";
-            box.dot.elem.style.transform = "scale(0.3)";
+            if (isHover) return box.style.hoverCheckedBox.color || checkedBoxColor;
+            return checkedBoxColor;
         }
+        if (isHover) return box.style.hoverBox.color || boxColor;
+        return boxColor;
+    };
 
-        box.opacity = (box.enabled == 1) ? 1 : box.style.disabled.opacity;
-        box.elem.style.cursor = (box.enabled == 1) ? "pointer" : "default";
-        box.elem.tabIndex = (box.enabled == 1) ? 0 : -1;
+    const paintMark = function (isHover) {
+        if (box.checked == 1) {
+            box.mark.color = box.style.checkedMark.color;
+            box.mark.borderColor = box.style.checkedMark.borderColor;
+            box.dot.css = { opacity: "1", transform: "scale(1)" };
+            return;
+        }
+        box.mark.color = box.style.mark.color;
+        box.mark.borderColor = (isHover) ? box.style.hoverMark.borderColor : box.style.mark.borderColor;
+        box.dot.css = { opacity: "0", transform: "scale(" + DOT_HIDDEN_SCALE + ")" };
+    };
 
-        box.elem.setAttribute("aria-checked", (box.checked == 1) ? "true" : "false");
-        box.elem.setAttribute("aria-disabled", (box.enabled == 1) ? "false" : "true");
+    const paintEnabled = function () {
+        const isEnabled = (box.enabled == 1);
+        box.opacity = (isEnabled) ? 1 : box.style.disabled.opacity;
+        box.cursor = (isEnabled) ? "pointer" : "default";
+        box.tabIndex = (isEnabled) ? 0 : -1;
+    };
 
+    // The look of the current state (checked, mouse over, enabled).
+    const paint = function () {
+        const isHover = (isMouseOver && box.enabled == 1);
+        box.color = getBoxColor(isHover);
+        paintMark(isHover);
+        paintEnabled();
+        box.aria = { checked: (box.checked == 1), disabled: (box.enabled != 1) };
     };
 
     // Move selection to the next/previous enabled radio button in the group.
@@ -166,6 +168,12 @@ const RadioButton = function (params = {}) {
 
     };
 
+    const removeFromGroup = function () {
+        const list = getGroupList();
+        const index = list.indexOf(box);
+        if (index > -1) list.splice(index, 1);
+    };
+
     // *** PUBLIC FUNCTIONS:
 
     // Select this radio button and unselect the others in the same group.
@@ -176,18 +184,17 @@ const RadioButton = function (params = {}) {
 
     box.setChecked = function (checked, silent = 0) {
 
-        checked = (checked == 1 || checked === true) ? 1 : 0;
+        checked = basic.isOn(checked) ? 1 : 0;
         if (box.checked == checked) return;
 
         if (checked == 1) {
-            // Unselect the others in the group.
             getGroupList().forEach(function (radio) {
                 if (radio !== box && radio.checked == 1) radio._uncheck();
             });
         }
 
         box.checked = checked;
-        updateView();
+        paint();
 
         if (checked == 1 && !silent) box.onChange(box);
 
@@ -199,12 +206,12 @@ const RadioButton = function (params = {}) {
     // Used by the group. (No event)
     box._uncheck = function () {
         box.checked = 0;
-        updateView();
+        paint();
     };
 
     box.setEnabled = function (enabled) {
-        box.enabled = (enabled == 1 || enabled === true) ? 1 : 0;
-        updateView();
+        box.enabled = basic.isOn(enabled) ? 1 : 0;
+        paint();
     };
     // USAGE: get: radio.enabled, set: radio.setEnabled(0)
 
@@ -216,31 +223,25 @@ const RadioButton = function (params = {}) {
     // USAGE: get: radio.labelText, set: radio.setLabelText("Option A")
 
     box.refresh = function () {
-        updateView();
+        paint();
     };
 
-    // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
+    // WHY: remove() can not know the static group list (RadioButton.groups).
+    // box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
     const superRemove = box.remove;
     box.superRemove = superRemove;
     box.remove = function () {
-
         if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
-        // Remove from the group.
-        const list = getGroupList();
-        const index = list.indexOf(box);
-        if (index > -1) list.splice(index, 1);
-
-        superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
+        removeFromGroup();
+        superRemove.call(box);
         box = null;
-
     };
 
     // *** OBJECT VIEW:
     box.clickable = 1;
-    box.elem.setAttribute("role", "radio");
-    box.elem.style.outline = "none";
-    box.elem.style.userSelect = "none";
-    box.setMotion("background-color 0.15s");
+    box.role = "radio";
+    box.css = { outline: "none", userSelect: "none" };
+    box.setMotion("background-color " + MOTION_DURATION);
 
     // GROUP: mark, label
     box.contentBox = HGroup({
@@ -250,11 +251,11 @@ const RadioButton = function (params = {}) {
         ...box.style.layout,
     });
 
-    // LABEL: label
+    // LABEL: label (left or right of the mark)
     const createLabel = function () {
         box.label = Label(box.style.label);
         box.label.text = box.labelText;
-        box.label.elem.style.whiteSpace = "nowrap";
+        box.label.css.whiteSpace = "nowrap";
         if (!box.labelText) box.label.visible = 0;
     };
 
@@ -269,28 +270,26 @@ const RadioButton = function (params = {}) {
         borderColor: box.style.mark.borderColor,
         round: box.style.mark.round,
     });
-    box.mark.setMotion("background-color 0.15s, border-color 0.15s");
-    box.mark.elem.style.boxSizing = "border-box";
+    box.mark.setMotion("background-color " + MOTION_DURATION + ", border-color " + MOTION_DURATION);
+    box.mark.css.boxSizing = "border-box";
 
     // BOX: dot (inner circle)
-    const _innerW = box.style.mark.width - (box.style.mark.border * 2);
-    const _innerH = box.style.mark.height - (box.style.mark.border * 2);
-    // NOTE: Round the space first, then calculate the dot size from it.
-    // So the space is the same on both sides and the dot stays in the exact center.
-    const _spaceX = Math.round((_innerW - (_innerW * box.style.dot.size)) / 2);
-    const _spaceY = Math.round((_innerH - (_innerH * box.style.dot.size)) / 2);
-    const _dotW = _innerW - (_spaceX * 2);
-    const _dotH = _innerH - (_spaceY * 2);
+    const innerWidth = box.style.mark.width - (box.style.mark.border * 2);
+    const innerHeight = box.style.mark.height - (box.style.mark.border * 2);
+    // WHY: The space is rounded first and the dot size comes from it,
+    // so the space is the same on both sides and the dot stays in the exact center.
+    const spaceX = Math.round((innerWidth - (innerWidth * box.style.dot.size)) / 2);
+    const spaceY = Math.round((innerHeight - (innerHeight * box.style.dot.size)) / 2);
 
     box.dot = Box({
-        left: _spaceX,
-        top: _spaceY,
-        width: _dotW,
-        height: _dotH,
+        left: spaceX,
+        top: spaceY,
+        width: innerWidth - (spaceX * 2),
+        height: innerHeight - (spaceY * 2),
         color: box.style.dot.color,
         round: box.style.dot.round,
     });
-    box.dot.elem.style.transition = "transform 0.15s, opacity 0.15s";
+    box.dot.css.transition = "transform " + MOTION_DURATION + ", opacity " + MOTION_DURATION;
 
     endBox();
 
@@ -327,22 +326,22 @@ const RadioButton = function (params = {}) {
 
     box.on("mouseover", function () {
         isMouseOver = 1;
-        updateView();
+        paint();
     });
 
     box.on("mouseout", function () {
         isMouseOver = 0;
-        updateView();
+        paint();
     });
 
-    // Add to the group.
     getGroupList().push(box);
 
-    box.enabled = (box.enabled == 1 || box.enabled === true) ? 1 : 0;
-    const _startChecked = (box.checked == 1 || box.checked === true) ? 1 : 0;
+    box.enabled = basic.isOn(box.enabled) ? 1 : 0;
+    const isCheckedAtStart = basic.isOn(box.checked);
+    // WHY: setChecked() below must see a change, so it unchecks the others (the last checked one in the group wins).
     box.checked = 0;
-    updateView();
-    if (_startChecked) box.setChecked(1, 1); // The last checked one in the group wins.
+    paint();
+    if (isCheckedAtStart) box.setChecked(1, 1);
 
     return endObject(box);
 
@@ -386,6 +385,7 @@ RadioButton.clear = function (group = "default") {
 // *** STYLE PACKAGES:
 // USAGE: RadioButton({ styleName: "modern" })
 // USAGE: RadioButton({ styleName: "modern", style: { dot: { color: "tomato" } } }) // Change only some keys.
+// USAGE: RadioButton({ style: RadioButton.styles.modern }) // The same as styleName: "modern". (The package is copied, never changed.)
 // NOTE: A new package needs only the keys that differ from the default (classic) style.
 // USAGE: RadioButton.styles.myStyle = { dot: { color: "red" } };
 RadioButton.styles = {

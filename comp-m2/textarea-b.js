@@ -40,13 +40,13 @@ const TextareaBDefaults = {
 
 const TextareaB = function(params = {}) {
 
-    // Marge params first
+    // Merge params first
     mergeIntoIfMissing(params, TextareaBDefaults);
 
     // Control params
-    params.createInput = 0; // dont create input
+    params.createInput = 0; // WHY: A <textarea> is made here instead of the Input of InputB.
     params.createDescription = 0;
-    params.descriptionText = ""; // dont create desc
+    params.descriptionText = "";
 
     if (params.showCount != 0) {
         params.createUnit = 1;
@@ -61,25 +61,21 @@ const TextareaB = function(params = {}) {
     // *** PUBLIC VARIABLES:
 
     // *** PRIVATE FUNCTIONS:
+    // The count is hidden when the text is long enough.
     const refreshCount = function() {
-        if (box.showCount) {
-            const currentLength = box.getInputValue().length;
-            box.setUnitText(`${box.lengthText}${currentLength}`); // /${box.minCharCount}
-            if (currentLength > box.minCharCount) {
-                box.unit.opacity = 0;
-            } else {
-                box.unit.opacity = 1;
-            }
-        }
+        if (!box.showCount) return;
+
+        const currentLength = box.getInputValue().length;
+        box.setUnitText(`${box.lengthText}${currentLength}`);
+        box.unit.opacity = (currentLength > box.minCharCount) ? 0 : 1;
     }
 
-    // Auto height
+    // The textarea grows with its text (the inputBox scrolls).
     const autoGrow = function(elem) {
-        elem.style.height = "auto";                // önce sıfırla
-        //elem.style.height = (basic.num(elem.scrollHeight) - 4) + "px"; // sonra içeriğe göre ayarla
+        elem.style.height = "auto"; // WHY: First reset, so scrollHeight is the height of the text (also when it got shorter).
         elem.style.height = elem.scrollHeight + "px";
         elem.style.minHeight = "";
-        //box.inputBox.scrollBar.refreshScroll();
+        // WHY: After the browser drew the new height.
         setTimeout(() => box.inputBox.scrollBar.refreshScroll(), 0);
     };
 
@@ -107,24 +103,21 @@ const TextareaB = function(params = {}) {
     // *** OBJECT VIEW:
         box.inputGroup.gap = 8;
         box.inputGroup.height = "100%";
-        box.inputBox.color = "transparent"; //transparent
+        box.inputBox.color = "transparent";
         box.inputBox.height = "calc(100% - 20px)";
-        //box.inputBox.elem.style.margin = "10px 0px 10px 0px";
         
+        // WHY: A raw <textarea> (not a basic.js object): its style is written directly.
         textareaElem.classList.add("basic_textbox");
         textareaElem.classList.add("minimal");
-        //element.setAttribute("type", "text");
         textareaElem.style.cssText = "background-color:transparent;font-size:20px;resize:none;width:100%;padding:0px 0px;box-sizing:border-box";
         textareaElem.style.overflow = "hidden";
         textareaElem.style.minHeight = box.inputBox.height + "px";
         textareaElem.style.height = "auto";
-        //textareaElem.style.boxSizing = "border-box";
         
         textareaElem.placeholder = box.placeholder;
         textareaElem.maxLength = box.maxChar;
         box.inputBox.elem.appendChild(textareaElem);
         box.inputBox.clickable = 1;
-        //box.inputBox.color = "yellow";
         textareaElem.value = box.inputValue;
         box.inputBox.scrollY = 1;
 
@@ -182,16 +175,7 @@ const TextareaB = function(params = {}) {
 
     box.checkIfInputIsRequiredAndEmpty();
 
-    /*
-    textareaElem.addEventListener("keydown", function (e) {
-        if (e.key === "Enter") {
-            setTimeout(() => box.inputBox.scrollBar.refreshScroll(), 0);
-        }
-    });
-    */
-    
     refreshCount();
-    //autoGrow(textareaElem);
     
     textareaElem.style.minHeight = (box.inputBox.height - 4) + "px";
 

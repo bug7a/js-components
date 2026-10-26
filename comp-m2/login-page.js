@@ -48,7 +48,7 @@ const LoginPageDefaults = {
 
 const LoginPage = function(params = {}) {
 
-    // Marge params:
+    // Merge params:
     mergeIntoIfMissing(params, LoginPageDefaults);
 
     // Edit params, if needed:
@@ -59,8 +59,9 @@ const LoginPage = function(params = {}) {
 
     // BOX: Component container
     let box = startObject(params);
-    //box.elem.style.filter = "invert(100%)";
-    //page.color = "white";
+
+    // *** PRIVATE VARIABLES:
+    const ALERT_TIME = 1000; // ms: the alert closes itself after this.
 
     const createView = function() {
 
@@ -76,14 +77,13 @@ const LoginPage = function(params = {}) {
 
             // Title
             box.title = Label({
-                text: box.panelName, 
+                text: box.panelName,
                 right: 30,
                 bottom: 30,
-                fontSize: 20, 
-                textColor: White(0.4), 
-                position: "absolute", 
+                fontSize: 20,
+                textColor: White(0.4),
+                position: "absolute",
             });
-            //that.elem.style.fontFamily = "opensans-bold";
 
             // Tab Bar
             box.tabBar = TextTabs({
@@ -99,7 +99,7 @@ const LoginPage = function(params = {}) {
                     borderColor: box.tab_borderColor,
                 },
                 labelStyle: {
-                    fontSize: 14, 
+                    fontSize: 14,
                     textColor: box.tab_textColor, //"#373836",
                     padding: [12, 4],
                     round: 0,
@@ -114,48 +114,46 @@ const LoginPage = function(params = {}) {
             });
             that.onClick = function(self) {
                 box.setActiveTab(self.index);
-                //println(`Clicked Tab ${self.index}`);
             };
 
             // Views wrapper
             box.contentContainer = startBox({
-                width: box.panelWidth, 
-                height: "auto", 
-                color: "transparent", 
+                width: box.panelWidth,
+                height: "auto",
+                color: "transparent",
                 clipContent: 0,
             });
 
                 box.viewGroup = HGroup({
                     align: "left top",
                     height: "auto",
-                    //position: "relative",
                     color: "transparent",
                     width: box.panelWidth * 2,
                 });
                 box.viewGroup.setMotion("left 0.2s");
 
                     // LOGIN VIEW
-                    box.loginBox = AutoLayout({ 
-                        flow: "vertical", 
-                        align: "left top", 
-                        gap: 10, 
-                        height: "auto", 
-                        width: box.panelWidth, 
+                    box.loginBox = AutoLayout({
+                        flow: "vertical",
+                        align: "left top",
+                        gap: 10,
+                        height: "auto",
+                        width: box.panelWidth,
                         color:"transparent",
                         opacity: 0,
                     });
                     that.setMotion("opacity 0.2s");
 
-                        const common = { 
-                            width: "100%", 
-                            leftPadding: 16, 
-                            rightPadding: 16, 
+                        const common = {
+                            width: "100%",
+                            leftPadding: 16,
+                            rightPadding: 16,
                             backgroundColor: box.input_backgroundColor,
                             lineColor: box.input_lineColor,
                             selectedBackgroundColor: box.input_selectedBackgroundColor,
                             selectedLineColor: box.primaryColor,
                         };
-                        
+
                         box.loginEmail = EmailInputB({
                             ...common,
                             titleText: "EMAIL",
@@ -167,7 +165,7 @@ const LoginPage = function(params = {}) {
                         styleInput(that);
                         that.onEdit = function() {
                             checkLoginForm();
-                        }
+                        };
 
                         box.loginPassword = PasswordInputB({
                             ...common,
@@ -188,24 +186,24 @@ const LoginPage = function(params = {}) {
 
                         });
                         styleInput(that);
-                        that.btnShowPassword.elem.style.filter = "invert(100%)";
+                        that.btnShowPassword.css.filter = "invert(100%)";
                         that.onEdit = function() {
                             checkLoginForm();
-                        }
+                        };
 
                         // Login button
-                        box.loginBtn = Button({ 
-                            text: "LOGIN", 
-                            textColor: White(0.75), 
-                            fontSize: 20, 
-                            width: "100%", 
-                            height: 50, 
-                            round: 4, 
-                            color: box.primaryColor, 
-                            minimal: 1  
+                        box.loginBtn = Button({
+                            text: "LOGIN",
+                            textColor: White(0.75),
+                            fontSize: 20,
+                            width: "100%",
+                            height: 50,
+                            round: 4,
+                            color: box.primaryColor,
+                            minimal: 1
                         });
                         box.loginBtn.clickable = 1;
-                        box.loginBtn.elem.style.cursor = "pointer";
+                        box.loginBtn.cursor = "pointer";
                         UIEffects.press(that);
 
                         // or group
@@ -215,14 +213,14 @@ const LoginPage = function(params = {}) {
                             color: "transparent",
                         });
 
-                            // line
+                            // BOX: Line
                             Box(0,0,"100%",1, {
                                 color: White(0.1),
                             });
                             that.center("top");
                             that.top += 2;
 
-                            // or
+                            // LABEL: or
                             Label({
                                 text: "or",
                                 textColor: White(0.75),
@@ -240,16 +238,16 @@ const LoginPage = function(params = {}) {
 
                     // SIGN UP VIEW
                     box.signupBox = AutoLayout({
-                        flow: "vertical", 
-                        align: "left top", 
-                        gap: 10, 
-                        height: "auto", 
-                        width: box.panelWidth, 
+                        flow: "vertical",
+                        align: "left top",
+                        gap: 10,
+                        height: "auto",
+                        width: box.panelWidth,
                         color: "transparent",
                     });
                     that.opacity = 0;
                     that.setMotion("opacity 0.2s");
-                    
+
                         box.signupEmail = EmailInputB({
                             ...common,
                             titleText: "EMAIL",
@@ -260,7 +258,7 @@ const LoginPage = function(params = {}) {
                         styleInput(that);
                         that.onEdit = function() {
                             checkSignupForm();
-                        }
+                        };
 
                         box.signupPassword = PasswordInputB({
                             ...common,
@@ -279,10 +277,10 @@ const LoginPage = function(params = {}) {
                             mustUseSpecialChar: 0,
                         });
                         styleInput(that);
-                        that.btnShowPassword.elem.style.filter = "invert(100%)";
+                        that.btnShowPassword.css.filter = "invert(100%)";
                         that.onEdit = function() {
                             checkSignupForm();
-                        }
+                        };
 
                         box.signupPassword2 = PasswordInputB({
                             ...common,
@@ -301,25 +299,24 @@ const LoginPage = function(params = {}) {
                             mustUseSpecialChar: 0,
                         });
                         styleInput(that);
-                        that.btnShowPassword.elem.style.filter = "invert(100%)";
+                        that.btnShowPassword.css.filter = "invert(100%)";
                         that.onEdit = function() {
                             checkSignupForm();
-                        }
+                        };
 
-                        box.signupBtn =  Button({ 
-                            text: "SIGN UP", 
-                            textColor: White(0.75), 
-                            fontSize: 20, 
-                            width: "100%", 
-                            height: 50, 
-                            round: 4, 
-                            color: box.primaryColor, 
+                        box.signupBtn =  Button({
+                            text: "SIGN UP",
+                            textColor: White(0.75),
+                            fontSize: 20,
+                            width: "100%",
+                            height: 50,
+                            round: 4,
+                            color: box.primaryColor,
                             minimal: 1
                         });
                         UIEffects.press(that);
                         box.signupBtn.clickable = 1;
-                        box.signupBtn.elem.style.cursor = "pointer";
-                        //box.signupBtn = box.signupBtn;
+                        box.signupBtn.cursor = "pointer";
 
                     endAutoLayout(); // END SIGN UP VIEW
 
@@ -336,20 +333,16 @@ const LoginPage = function(params = {}) {
         });
         box.alertBox.setMotion("opacity 0.2s");
 
-            //AutoLayout();
-
-                box.lblAlert = Label({
-                    left: 40,
-                    top: 40,
-                    text: "",
-                    textColor: "indianred",
-                    padding: [12, 4],
-                    round: 4,
-                    border: 1,
-                    borderColor: White(0.2),
-                });
-
-            //endAutoLayout();
+            box.lblAlert = Label({
+                left: 40,
+                top: 40,
+                text: "",
+                textColor: "indianred",
+                padding: [12, 4],
+                round: 4,
+                border: 1,
+                borderColor: White(0.2),
+            });
 
         endBox();
 
@@ -362,20 +355,19 @@ const LoginPage = function(params = {}) {
 
             if (box.alertBox.timer) clearTimeout(box.alertBox.timer);
             box.alertBox.timer = setTimeout(function() {
-                // close alert
                 box.alertBox.opacity = 0;
                 box.alertBox.clickable = 0;
-            }, 1000);
+            }, ALERT_TIME);
 
         };
 
         // Waiting
         box.waiting = Waiting({
-            animated: 1, 
+            animated: 1,
             coverBackgroundColor: "rgba(0,0,0,0.6)",
             waitingIcon: "../../comp-m2/waiting/clock3.png",
-        });         
-        box.waiting.icon.elem.style.filter = "invert(100%)";
+        });
+        box.waiting.icon.css.filter = "invert(100%)";
 
         // events:
         box.loginBtn.on("click", onLoginClick);
@@ -388,7 +380,7 @@ const LoginPage = function(params = {}) {
         // Default tab
         box.setActiveTab(0);
 
-    };        
+    };
 
     // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
     const superRemove = box.remove;
@@ -423,11 +415,18 @@ const LoginPage = function(params = {}) {
     };
 
     box.createButtonWithIcon = function(text, iconFile, onClick) {
-    
+
+        // GROUP: Button (icon, text)
         HGroup({
-            width: "100%", height: 50, round: 4, color: "#141414", gap: 12, border: 1, borderColor: White(0.1),
+            width: "100%",
+            height: 50,
+            round: 4,
+            color: "#141414",
+            gap: 12,
+            border: 1,
+            borderColor: White(0.1),
         });
-        that.elem.style.cursor = "pointer";
+        that.cursor = "pointer";
         that.on("click", onClick);
         UIEffects.press(that);
 
@@ -436,8 +435,8 @@ const LoginPage = function(params = {}) {
 
             Label({
                 text: text,
-                textColor: White(0.75), 
-                fontSize: 20, 
+                textColor: White(0.75),
+                fontSize: 20,
             });
 
         endBox();
@@ -451,54 +450,35 @@ const LoginPage = function(params = {}) {
         obj.background.border = box.input_border;
         obj.background.borderColor = box.input_borderColor;
         obj.warningBall.borderColor = Black(1);
-        
-        //obj.background.setMotion("background-color 0.2s");
-        if (obj.type === "textarea") {
-            // Onlt for textarea
-        } else {
-            //obj.inputGroup.gap = 4;
-            obj.input.textColor = box.input_textColor;
-            
-            //obj.input.color = "whitesmoke";
-            //obj.input.border = 1;
-            //obj.input.borderColor = "lightgray";
-            //obj.input.inputElement.style.padding = "0px 6px";
-            //obj.input.inputElement.style.marginLeft = "-6px";
-        }
-        
 
+        // NOTE: Only for a text input (a textarea keeps its own text color).
+        if (obj.type !== "textarea") obj.input.textColor = box.input_textColor;
+
+    };
+
+    // The send buttons are passive (gray, not clickable) until their form is ready.
+    const setButtonActive = function(btn, isActive) {
+        btn.clickable = isActive ? 1 : 0;
+        btn.css.filter = isActive ? "grayscale(0%)" : "grayscale(100%)";
     };
 
     const checkLoginForm = function() {
 
-        const _count1 = box.loginEmail.getInputValue().length;
-        const _count2 = box.loginPassword.getInputValue().length;
+        const hasEmail = box.loginEmail.getInputValue().length > 0;
+        const hasPassword = box.loginPassword.getInputValue().length > 0;
+        const isEmailValid = (box.loginEmail.status === 0);
 
-        if (_count1 > 0 && _count2 > 0 && box.loginEmail.status === 0) {
-            box.loginBtn.clickable = 1;
-            box.loginBtn.elem.style.filter = "grayscale(0%)";
-            //box.loginBtn.color = box.primaryColor;
-        } else {
-            box.loginBtn.clickable = 0;
-            box.loginBtn.elem.style.filter = "grayscale(100%)";
-            //box.loginBtn.color = "gray";
-        }
+        setButtonActive(box.loginBtn, hasEmail && hasPassword && isEmailValid);
 
     };
 
     const checkSignupForm = function() {
 
-        const _status1 = box.signupEmail.status;
-        const _status2 = box.signupPassword.status;
-        const _status3 = box.signupPassword2.status;
+        const isEmailValid = (box.signupEmail.status === 0);
+        const isPasswordValid = (box.signupPassword.status === 0);
+        const isPassword2Valid = (box.signupPassword2.status === 0);
 
-        if (_status1 === 0 && _status2 === 0 && _status3 === 0) {
-            box.signupBtn.clickable = 1;
-            box.signupBtn.elem.style.filter = "grayscale(0%)";
-        } else {
-            box.signupBtn.clickable = 0;
-            box.signupBtn.elem.style.filter = "grayscale(100%)";
-        }
+        setButtonActive(box.signupBtn, isEmailValid && isPasswordValid && isPassword2Valid);
 
     };
 
@@ -530,7 +510,10 @@ const LoginPage = function(params = {}) {
         const email = box.loginEmail.getInputValue();
         const password = box.loginPassword.getInputValue();
 
-        if (!email || !password) { box.showAlert("Please enter email and password"); return; }
+        if (!email || !password) {
+            box.showAlert("Please enter email and password");
+            return;
+        }
 
         box.waiting.show();
 
@@ -539,12 +522,7 @@ const LoginPage = function(params = {}) {
             if (error) {
                 box.showAlert("Login failed: " + error.message);
             } else {
-                
-                // Login successful
-                //console.table(data);
                 box.onSuccess();
-                //window.location.reload();
-
             }
         } catch (e) {
             box.showAlert("Login error");
@@ -560,8 +538,14 @@ const LoginPage = function(params = {}) {
         const p1 = box.signupPassword.getInputValue();
         const p2 = box.signupPassword2.getInputValue();
 
-        if (!email || !p1 || !p2) { box.showAlert("Please fill all fields"); return; }
-        if (p1 !== p2) { box.showAlert("Passwords do not match"); return; }
+        if (!email || !p1 || !p2) {
+            box.showAlert("Please fill all fields");
+            return;
+        }
+        if (p1 !== p2) {
+            box.showAlert("Passwords do not match");
+            return;
+        }
 
         box.waiting.show();
 
@@ -585,7 +569,7 @@ const LoginPage = function(params = {}) {
     };
 
     createView();
-    
+
     return endObject(box);
 
 };

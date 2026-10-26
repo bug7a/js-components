@@ -7,6 +7,10 @@ Version: 1.1
 Created: November 2025
 Description: A progress bar component composed of vertical lines.
 
+USAGE:
+const bar = LineProgressBar({ width: 300, height: 40, showValueLabel: true });
+bar.setProgress(45); // 0 to 100
+
 NOTE (September 2026): Renamed from "ProgressBar" to "LineProgressBar".
 WHY: comp-m4/progress-bar.js is the standard "ProgressBar". Two "const ProgressBar" on the same page
      is an error. "ProgressBar()" still works on pages that load only this file (see the end of the file).
@@ -34,26 +38,31 @@ const LineProgressBar = function (params = {}) {
 
     // BOX: Component container
     const box = startObject(params);
-    box.clipContent = 0; // Allow lines to extend outside
+    box.clipContent = 0; // WHY: The head of the progress and the value label stand out of the box.
 
     // *** PRIVATE VARIABLES:
+    const LINE_WIDTH = 1;
+    const LINE_GAP = 3;
+    const UNIT_WIDTH = LINE_WIDTH + LINE_GAP;
+    const LINE_ROUND = 3;
+    // The line at the progress (the head) and its two neighbors are wider and longer (overhang: px at the top and the bottom).
+    const HEAD_LOOK = { width: 3, overhang: 2, zIndex: 10, color: "black" };
+    const NEIGHBOR_LOOK = { width: 2, overhang: 1, zIndex: 5 };
+    const VALUE_LABEL_TOP = -25; // Above the lines
+    const VALUE_LABEL_SHOW_TIME = 1000; // ms after the last change
+
+    const totalLines = Math.floor(box.width / UNIT_WIDTH);
     const lines = [];
-    const gap = 3;
-    const lineWidth = 1;
-    const unitWidth = lineWidth + gap;
-    const totalLines = Math.floor(box.width / unitWidth);
 
     let valueLabel = null;
-    let labelTimer = null;
+    let cancelValueLabelHide = null; // The cancel function of the waiting hide (box.after)
 
     // *** PUBLIC VARIABLES:
     box.currentProgress = box.progress;
 
     // *** PRIVATE FUNCTIONS:
     const createLines = function () {
-        // Clear existing lines if any (though usually called once on init)
 
-        // We will create a container for lines to keep them organized
         const lineContainer = Box({
             width: box.width,
             height: box.height,
@@ -65,9 +74,9 @@ const LineProgressBar = function (params = {}) {
 
         for (let i = 0; i < totalLines; i++) {
             const line = Box({
-                width: lineWidth,
+                width: LINE_WIDTH,
                 height: box.height,
-                left: i * unitWidth,
+                left: i * UNIT_WIDTH,
                 top: 0,
                 color: box.secondaryColor,
                 position: "absolute",
@@ -77,121 +86,89 @@ const LineProgressBar = function (params = {}) {
 
         lineContainer.add(...lines);
 
-        // Create Value Label if enabled
-        if (box.showValueLabel) {
-            valueLabel = Label({
-                text: "0%",
-                fontSize: 12,
-                color: box.primaryColor,
-                textColor: "white",
-                position: "absolute",
-                opacity: 0, // Hidden by default
-                width: "auto",
-                height: "auto",
-                padding: [6, 2],
-                round: 100,
-            });
-            // We want the label to be above the lines, so add it to box directly or lineContainer?
-            // Adding to box ensures it's on top if z-index is managed.
-            // But lineContainer is where lines are. 
-            // Let's add to box to be safe and independent of line container clipping if we had any.
-            box.add(valueLabel);
-            valueLabel.setMotion("opacity 0.3s");
+        if (box.showValueLabel) createValueLabel();
+    };
+
+    const createValueLabel = function () {
+        valueLabel = Label({
+            text: "0%",
+            fontSize: 12,
+            color: box.primaryColor,
+            textColor: "white",
+            position: "absolute",
+            opacity: 0, // Shown only while the progress changes
+            width: "auto",
+            height: "auto",
+            padding: [6, 2],
+            round: 100,
+        });
+        box.add(valueLabel); // WHY: In the box, not in the line container: it stays over the lines.
+        valueLabel.setMotion("opacity 0.3s");
+    };
+
+    // The index of the head line. (100% would be one past the last line.)
+    const getHeadIndex = function () {
+        const headIndex = Math.floor((box.currentProgress / 100) * totalLines);
+        if (headIndex >= totalLines) return totalLines - 1;
+        return headIndex;
+    };
+
+    // A wider line keeps the center of a normal line: it moves left by half of the extra width.
+    const getLineLook = function (index, headIndex) {
+        const normalLeft = index * UNIT_WIDTH;
+        const look = {
+            color: (index <= headIndex) ? box.primaryColor : box.secondaryColor,
+            width: LINE_WIDTH,
+            overhang: 0,
+            zIndex: 0,
+        };
+        if (index === headIndex) Object.assign(look, HEAD_LOOK);
+        if (index === headIndex - 1 || index === headIndex + 1) Object.assign(look, NEIGHBOR_LOOK);
+        look.left = normalLeft - (look.width - LINE_WIDTH) / 2;
+        return look;
+    };
+
+    const paintLines = function (headIndex) {
+        for (let i = 0; i < totalLines; i++) {
+            const look = getLineLook(i, headIndex);
+            const line = lines[i];
+            line.color = look.color;
+            line.width = look.width;
+            line.height = box.height + (look.overhang * 2);
+            line.top = -look.overhang;
+            line.left = look.left;
+            line.round = LINE_ROUND;
+            line.opacity = 1;
+            line.zIndex = look.zIndex;
         }
     };
 
+    // The center of the head line. No head line (a negative progress, no lines): 0.
+    const getHeadCenter = function (headIndex) {
+        if (headIndex < 0) return 0;
+        const headLeft = getLineLook(headIndex, headIndex).left;
+        return headLeft + (HEAD_LOOK.width / 2);
+    };
+
+    // The label shows the value over the head line for a short time.
+    const showValueLabel = function (headIndex) {
+        valueLabel.text = Math.round(box.currentProgress) + "%";
+        valueLabel.top = VALUE_LABEL_TOP;
+        valueLabel.left = getHeadCenter(headIndex);
+        valueLabel.css.transform = "translateX(-50%)"; // WHY: Its center (not its left side) is over the head line.
+        valueLabel.opacity = 1;
+        valueLabel.color = box.primaryColor;
+
+        if (cancelValueLabelHide) cancelValueLabelHide();
+        cancelValueLabelHide = box.after(VALUE_LABEL_SHOW_TIME, function () {
+            valueLabel.opacity = 0;
+        });
+    };
+
     const updateVisuals = function () {
-        const p = box.currentProgress;
-        // Clamp index to be valid (0 to totalLines - 1)
-        // If p is 100, floor gives totalLines which is out of bounds.
-        let targetIndex = Math.floor((p / 100) * totalLines);
-        if (targetIndex >= totalLines) targetIndex = totalLines - 1;
-
-        let activeLineLeft = 0;
-
-        // We need to iterate all lines to set their state
-        for (let i = 0; i < totalLines; i++) {
-            const line = lines[i];
-
-            // Default state
-            let color = (i <= targetIndex) ? box.primaryColor : box.secondaryColor;
-            let height = box.height;
-            let top = 0;
-            let width = lineWidth;
-            let zIndex = 0;
-            let left = i * unitWidth;
-            let opacity = 1;
-
-            // Special handling for the "head" of the progress
-            if (i === targetIndex) {
-                // Current line: 3px wide, extends 2px top/bottom
-                width = 3;
-                height = box.height + 4;
-                top = -2;
-                zIndex = 10;
-                // Center the 3px line on the current index
-                // Original center is at left + 0.5 (since width is 1)
-                // New center should be same. New width is 3. 
-                // New left = Original Center - 1.5 = (left + 0.5) - 1.5 = left - 1
-                left = (i * unitWidth) - 1;
-                activeLineLeft = left + (width / 2); // Center of the active line
-                color = "black";
-                opacity = 1;
-
-
-            } else if (i === targetIndex - 1 || i === targetIndex + 1) {
-                // Neighbors: 2px wide, extends 1px top/bottom
-                width = 2;
-                height = box.height + 2;
-                top = -1;
-                zIndex = 5;
-                // Center 2px line
-                // Original center is at left + 0.5
-                // New left = (left + 0.5) - 1 = left - 0.5
-                left = (i * unitWidth) - 0.5;
-            }
-
-            // Apply styles
-            line.color = color;
-            line.width = width;
-            line.height = height;
-            line.top = top;
-            line.left = left;
-            line.round = 3;
-            line.opacity = opacity;
-            line.elem.style.zIndex = zIndex;
-        }
-
-        // Update Value Label
-        if (box.showValueLabel && valueLabel) {
-            valueLabel.text = Math.round(p) + "%";
-            // Center label above the active line
-            // We need to wait for render to know label width? 
-            // Or assume a width? basic.js labels usually auto-size.
-            // Let's center it roughly. 
-            // We can use transform translate -50% if basic.js supports it easily or just estimate.
-            // For now, let's try to center based on assumed width or just left align to center.
-            // Better: use `center` method if available on label relative to a point? No.
-            // Let's just set left.
-            // To center properly we need the label width. 
-            // `valueLabel.width` might be "auto".
-            // Let's assume it's small.
-
-            // Position above: top should be negative.
-            valueLabel.top = -25; // Moved up slightly to clear the line better
-            valueLabel.left = activeLineLeft;
-            valueLabel.elem.style.transform = "translateX(-50%)";
-
-            // Show label
-            valueLabel.opacity = 1;
-            valueLabel.color = box.primaryColor;
-
-            // Reset timer
-            if (labelTimer) clearTimeout(labelTimer);
-            labelTimer = setTimeout(function () {
-                valueLabel.opacity = 0;
-            }, 1000);
-        }
+        const headIndex = getHeadIndex();
+        paintLines(headIndex);
+        if (box.showValueLabel && valueLabel) showValueLabel(headIndex);
     };
 
     // *** PUBLIC FUNCTIONS:
@@ -201,6 +178,7 @@ const LineProgressBar = function (params = {}) {
         box.currentProgress = val;
         updateVisuals();
     };
+    // USAGE: get: bar.currentProgress, set: bar.setProgress(60)
 
     // *** OBJECT INIT CODE:
     createLines();

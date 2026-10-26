@@ -32,10 +32,8 @@ const NumberInputBDefaults = {
 
 const NumberInputB = function(params = {}) {
 
-    // Marge params first
+    // Merge params first
     mergeIntoIfMissing(params, NumberInputBDefaults);
-
-    // Edit params:
 
     // BOX: Component container
     const box = startExtendedObject(InputB, params);
@@ -45,14 +43,13 @@ const NumberInputB = function(params = {}) {
     // *** PUBLIC VARIABLES:
 
     // *** PRIVATE FUNCTIONS:
-    const makeExamamplePlaceholder = function() {
+    const makeExamplePlaceholder = function() {
 
         let value = "";
         if (box.allowNegative) {
-            value = "-"
+            value = "-";
         }
         value = value + "100";
-        // 3. Ondalık ayraç sadece bir kez geçmeli
         if (box.allowDecimal) {
             value = value + box.decimalSeparator + "0".repeat(box.maxDecimalDigits);
         }
@@ -61,7 +58,7 @@ const NumberInputB = function(params = {}) {
     };
 
     // *** PUBLIC FUNCTIONS:
-    box.applyFormattedValueToInput = function() {
+    box.applyFormattedValueToInput = function() { // OVERRIDE
 
         let value = box.getInputValue();
 
@@ -80,15 +77,14 @@ const NumberInputB = function(params = {}) {
 
         // 3. Ondalık ayraç sadece bir kez geçmeli
         if (box.allowDecimal) {
-            const sep = box.decimalSeparator;
-            const parts = value.split(sep);
-            //console.table(parts)
+            const separator = box.decimalSeparator;
+            const parts = value.split(separator);
             if (parts.length > 2) {
-                value = parts.pop() + sep + parts.join("");
+                value = parts.pop() + separator + parts.join("");
             }
             if (parts.length == 2 && box.maxDecimalDigits >= 0) {
                 parts[1] = parts[1].substring(0, box.maxDecimalDigits);
-                value = parts[0] + sep + parts[1];
+                value = parts[0] + separator + parts[1];
             }
         }
 
@@ -117,7 +113,7 @@ const NumberInputB = function(params = {}) {
 
     // Show example placeholder
     if (box.placeholder == "(auto)") {
-        box.setPlaceholder(makeExamamplePlaceholder());
+        box.setPlaceholder(makeExamplePlaceholder());
     }
 
     return endExtendedObject(box);

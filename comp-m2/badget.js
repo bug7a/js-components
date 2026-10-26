@@ -33,30 +33,15 @@ const Badget = function(params = {}) {
     // BOX: Component container
     const box = startObject();
 
-    // after box created
-    //defaults.width = box.containerBox.width;
-    //defaults.height = box.containerBox.height;
-
     // Values ready to use
     box.props(defaults, params);
 
-    // *** Private variables:
-    //let privateVar = "";
+    // *** PRIVATE VARIABLES:
+    const CORNER_OFFSET = 12; // px out of the target's top right corner
 
-    // *** Public variables:
-    //box.publicVar = "";
+    // *** PUBLIC FUNCTIONS:
 
-    // *** Private functions:
-    //const privateFunc = function() {};
-
-    // *** Public functions:
-    //box.publicFunc = function() {};
-
-    // Set a param after created.
-    //box.setColor = function(color) {
-    //    box.color = color;
-    //};
-    // USAGE: get: componentName.color, set: componentName.setColor("red")
+    // NOTE: box.icoLogo is not made yet (the logo icon is not part of the view): do not call it.
     box.setIconFile = function(iconFile) {
         box.iconFile = iconFile;
         box.icoLogo.load(iconFile);
@@ -65,9 +50,9 @@ const Badget = function(params = {}) {
     // OBJECT VIEW:
     box.setMotion("opacity 0.2s");
     box.target.containerBox.add(box);
-    box.elem.style.overflow = "visible";
+    box.css.overflow = "visible"; // WHY: The circle stands out of the target's corner.
 
-    // BOX: Cover.
+    // BOX: Circle (with the number)
     box.circleBox = startFlexBox(0, 0, 40, 40, {
         color: "gold",
         position: "relative",
@@ -75,7 +60,7 @@ const Badget = function(params = {}) {
         borderColor: "rgba(0, 0, 0, 0.9)",
     });
     that.round = that.width;
-    that.elem.style.overflow = "visible";
+    that.css.overflow = "visible";
 
         box.lblText = Label({
             text: "42",
@@ -84,32 +69,14 @@ const Badget = function(params = {}) {
         });
 
     endFlexBox();
-    
-    // BOX: Cover.
-    /*
-    box.coverBox = Box(0, 0, "100%", "100%", {
-        color: "transparent",
-    });
-    */
-
-    /*
-    // ICON: Logo image.
-    box.icoLogo = Icon({
-        width: 50,
-        height: 50,
-        opacity: 1,
-    });
-    //that.load(box.waitingIconFile);
-    that.center();
-    */
 
     // OBJECT INIT CODE:
     box.on("click", function() {
         console.log("clicked")
     });
-    //box.setIconFile(box.iconFile);
-    box.top = box.target.top - 12; //(box.circleBox.height / 3);
-    box.left = box.target.left + box.target.width - box.circleBox.width + 12; //(box.circleBox.width / 1.5);
+    // The circle sits on the top right corner of the target, a little out of it.
+    box.top = box.target.top - CORNER_OFFSET;
+    box.left = box.target.left + box.target.width - box.circleBox.width + CORNER_OFFSET;
     
     return endObject(box);
 

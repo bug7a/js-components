@@ -41,11 +41,10 @@ const ToggleDefaults = {
 
 const Toggle = function(params = {}) {
 
-    // Marge params:
+    // Merge params:
     mergeIntoIfMissing(params, ToggleDefaults);
 
     // Edit params, if needed:
-    // params.width = getDefaultContainerBox().width;
     params.color = "transparent";
     params.clickable = 1;
     params.clipContent = 0;
@@ -56,16 +55,17 @@ const Toggle = function(params = {}) {
     // NOTE: Parent container is box.containerBox
 
     // *** PRIVATE VARIABLES:
-    let buttonSize = 0; //box.height - (box.spacing * 2);
-    let distance = 0; //box.width - (box.spacing * 2) - buttonSize;
+    let buttonSize = 0; // Set by box.refresh() from the size of the box.
+    let distance = 0; // How far the button moves when it is on.
+    const OFF_BUTTON_SCALE = 0.6; // The button is smaller when the toggle is off.
+    const ON_BUTTON_SHADOW = "-1px 0px 4px rgba(0, 0, 0, 0.15)";
+    const HOVER_BRIGHTNESS = "103%";
+    const DISABLED_BRIGHTNESS = "90%";
+    const DISABLED_OPACITY = 0.75;
 
     // *** PUBLIC VARIABLES:
-    // [var] selected
-    box.state = "";
-    // [var] mouseover, disabled
-    box.secondState = "";
-
-    // *** PRIVATE FUNCTIONS:
+    box.state = ""; // "normal", "selected"
+    box.secondState = ""; // "normal", "mouseover", "disabled"
 
     // *** PUBLIC FUNCTIONS:
     box.switch = function() {
@@ -74,7 +74,6 @@ const Toggle = function(params = {}) {
     
     box.setValue = function(value) {
 
-        //value = (value == true || value == 1) ? 1 : 0;
         box.value = value;
 
         box.setState((value === 1) ? "selected" : "normal");
@@ -95,18 +94,18 @@ const Toggle = function(params = {}) {
 
             case "normal":
 
-                box.button.elem.style.transform = "scale(0.6) translateX(0px)";
+                box.button.css.transform = `scale(${OFF_BUTTON_SCALE}) translateX(0px)`;
                 box.button.color = box.buttonStyle.color;
-                box.button.elem.style.boxShadow = "none";
+                box.button.boxShadow = "none";
                 box.background.color = box.backgroundStyle.color;
 
                 break;
 
             case "selected":
 
-                box.button.elem.style.transform = `scale(1) translateX(${distance}px)`;
+                box.button.css.transform = `scale(1) translateX(${distance}px)`;
                 box.button.color = box.buttonStyle.selectedColor;
-                box.button.elem.style.boxShadow = "-1px 0px 4px rgba(0, 0, 0, 0.15)";
+                box.button.boxShadow = ON_BUTTON_SHADOW;
                 box.background.color = box.backgroundStyle.selectedColor;
                 
                 break;
@@ -122,24 +121,24 @@ const Toggle = function(params = {}) {
 
             case "normal":
 
-                box.background.elem.style.filter = "brightness(100%)";
-				box.opacity = 1;
+                box.background.css.filter = "brightness(100%)";
+                box.opacity = 1;
                 box.clickable = 1;
 
                 break;
 
             case "mouseover":
                 
-                box.background.elem.style.filter = "brightness(103%)";
-				box.opacity = 1;
+                box.background.css.filter = `brightness(${HOVER_BRIGHTNESS})`;
+                box.opacity = 1;
                 box.clickable = 1;
             
                 break;
 
             case "disabled":
 
-                box.background.elem.style.filter = "brightness(90%)";
-				box.opacity = 0.75;
+                box.background.css.filter = `brightness(${DISABLED_BRIGHTNESS})`;
+                box.opacity = DISABLED_OPACITY;
                 box.clickable = 0;
 
                 break;
@@ -164,7 +163,6 @@ const Toggle = function(params = {}) {
 
     };
 
-    // box.superRemove = box.remove;
     // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
     const superRemove = box.remove;
     box.superRemove = superRemove;
@@ -176,20 +174,17 @@ const Toggle = function(params = {}) {
 
     };
 
-
-
     // *** OBJECT VIEW:
-    box.elem.style.cursor = "pointer";
-    if(box.invertColor === 1) box.elem.style.filter = "invert(100%)";
+    box.cursor = "pointer";
+    if(box.invertColor === 1) box.css.filter = "invert(100%)";
 
         // BOX: background
         box.background = Box(0, 0, "100%", "100%", box.backgroundStyle);
         box.background.setMotion("background-color 0.2s");
 
+        // BOX: The round button (it slides to the right when on)
         box.button = Box(box.buttonStyle);
         that.setMotion("transform 0.2s");
-
-
 
     // *** OBJECT INIT CODE:
     box.on("click", function(self, event) {

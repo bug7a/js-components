@@ -42,7 +42,7 @@ const SearchInputDefaults = {
 
 const SearchInput = function(params = {}) {
 
-    // Marge params:
+    // Merge params:
     mergeIntoIfMissing(params, SearchInputDefaults);
 
     // BOX: Component container
@@ -51,21 +51,33 @@ const SearchInput = function(params = {}) {
     box.props(params);
     
     // *** Private variables:
-    let privateVar = "";
+    const ICON_LEFT = 16; // The search icon from the left side
+    const ICON_GAP = 8; // Between the search icon and the text
+    const ICONS_SPACE = 80; // The width of the box that is not for the text (the two icons and their spaces)
+    const CLEAR_ICON_OPACITY = 0.6;
 
     // *** Public variables:
     box.publicVar = "";
 
     // *** Private functions:
-    const privateFunc = () => {};
 
-    const uiResized = function(self) {
+    const refreshLayout = function(self) {
 
-        self.txtSearch.width = self.width - 80;
+        self.txtSearch.width = self.width - ICONS_SPACE;
         self.txtSearch.center("top");
         self.imgClearIcon.center("top");
         self.imgIcon.center("top");
 
+    };
+
+    // The text given to onSearch and onSubmit
+    const getSearchedText = function() {
+        return box.txtSearch.text.toLowerCase();
+    };
+
+    const setClearIconVisible = function(isVisible) {
+        box.imgClearIcon.opacity = (isVisible) ? CLEAR_ICON_OPACITY : 0;
+        box.imgClearIcon.clickable = (isVisible) ? 1 : 0;
     };
 
     // *** Public functions:
@@ -89,20 +101,20 @@ const SearchInput = function(params = {}) {
     }
 
         // *** OBJECT TEMPLATE:
-        box.element.style.borderBottom = box.borderBottomStyle;
+        box.css.borderBottom = box.borderBottomStyle;
 
         // ICON: Search icon
-        box.imgIcon = Icon(16, 0, box.searchIconSize, box.searchIconSize, {
+        box.imgIcon = Icon(ICON_LEFT, 0, box.searchIconSize, box.searchIconSize, {
             opacity: box.searchIconOpacity,
             space: 0,
         });
         that.load(box.searchIconFile);
-        if (box.invertIconColor == 1) that.elem.style.filter = "invert(100%)";
+        if (box.invertIconColor == 1) that.css.filter = "invert(100%)";
         that.center("top");
 
         // INPUT: Search textbox
-        box.txtSearch = Input(16 + box.searchIconSize + 8, 0, {
-            width: box.width - 80,
+        box.txtSearch = Input(ICON_LEFT + box.searchIconSize + ICON_GAP, 0, {
+            width: box.width - ICONS_SPACE,
             height: box.height,
             border: 0,
             minimal: 1,
@@ -126,43 +138,34 @@ const SearchInput = function(params = {}) {
             space: 0,
         });
         that.load(box.clearIconFile);
-        if (box.invertIconColor == 1) that.elem.style.filter = "invert(100%)";
+        if (box.invertIconColor == 1) that.css.filter = "invert(100%)";
         that.center("top");
-        that.elem.style.cursor = "pointer";
-        that.setMotion("opacity 0.3s");    
+        that.cursor = "pointer";
+        that.setMotion("opacity 0.3s");
 
     endBox();
 
-     // *** CODE:
-     box.txtSearch.inputElement.addEventListener("keyup", function(event) {
+    // *** OBJECT INIT CODE:
+    box.txtSearch.inputElement.addEventListener("keyup", function(event) {
 
         // Her tuşa basınca
-        box.onSearch(box.txtSearch.text.toLowerCase(), box);
+        box.onSearch(getSearchedText(), box);
 
         // Sadece enter a basınca.
         if (event.key === "Enter") {
-            box.onSubmit(box.txtSearch.text.toLowerCase(), box);
+            box.onSubmit(getSearchedText(), box);
         }
 
-        if (box.isCancelEnabled) {
-            if (box.txtSearch.text.length > 0) {
-                box.imgClearIcon.opacity = 0.6;
-                box.imgClearIcon.clickable = 1;
-            } else {
-                box.imgClearIcon.opacity = 0;
-                box.imgClearIcon.clickable = 0;
-            }
-        }
+        if (box.isCancelEnabled) setClearIconVisible(box.txtSearch.text.length > 0);
 
     });
-    box.onResize(uiResized);
+    box.onResize(refreshLayout);
     box.imgClearIcon.onClick(function(self) {
 
-        self.opacity = 0;
-        self.clickable = 0;
+        setClearIconVisible(0);
         box.txtSearch.text = "";
-        box.onSearch(box.txtSearch.text.toLowerCase(), box);
-        box.onSubmit(box.txtSearch.text.toLowerCase(), box);
+        box.onSearch(getSearchedText(), box);
+        box.onSubmit(getSearchedText(), box);
 
     });
     box.imgClearIcon.clickable = 0;
