@@ -296,9 +296,19 @@ const Slider = function(params = {}) {
     // *** OBJECT INIT CODE:
 
     // Mouse Events
+    // WHY: "e.clientX || e.touches[0]" threw at the left edge of the screen: clientX 0 is falsy, a mouse event has no touches.
+    const getClientX = (e) => (e.touches && e.touches.length) ? e.touches[0].clientX : e.clientX;
+
+    const removeDragEvents = () => {
+        document.removeEventListener("mousemove", onMouseMove);
+        document.removeEventListener("mouseup", onMouseUp);
+        document.removeEventListener("touchmove", onMouseMove);
+        document.removeEventListener("touchend", onMouseUp);
+    };
+
     const onMouseDown = (self, e) => {
         setIsDragging(true);
-        startX = e.clientX || e.touches[0].clientX;
+        startX = getClientX(e);
         startLeft = parseInt(thumbBox.left, 10) || 0;
         
         document.addEventListener("mousemove", onMouseMove);
@@ -311,7 +321,7 @@ const Slider = function(params = {}) {
     const onMouseMove = (e) => {
         if (!isDragging) return;
         e.preventDefault();
-        const clientX = e.clientX || e.touches[0].clientX;
+        const clientX = getClientX(e);
         const maxLeft = getMaxLeft();
         let dx = clientX - startX;
         let newLeft = startLeft + dx;
@@ -325,10 +335,7 @@ const Slider = function(params = {}) {
     };
 
     const onMouseUp = () => {
-        document.removeEventListener("mousemove", onMouseMove);
-        document.removeEventListener("mouseup", onMouseUp);
-        document.removeEventListener("touchmove", onMouseMove);
-        document.removeEventListener("touchend", onMouseUp);
+        removeDragEvents();
         setIsDragging(false);
         box.onDragEnd();
     };
@@ -346,6 +353,17 @@ const Slider = function(params = {}) {
         valueBox.text = value;
         showHideTracks(value, 0);
     });
+
+    // WHY: The document events of a drag stay after a remove() during the drag. (basic.js does not know them.)
+    const superRemove = box.remove;
+    box.superRemove = superRemove;
+    let isRemoved = 0;
+    box.remove = function () {
+        if (isRemoved) return;
+        isRemoved = 1;
+        removeDragEvents();
+        superRemove.call(box);
+    };
 
     box.setValue(box.currentValue);
 

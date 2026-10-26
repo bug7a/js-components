@@ -39,6 +39,8 @@ const Waiting = function(params = {}) {
 
     // BOX: Component container
     const box = startObject(params);
+
+    let isRemoved = 0; // WHY: Declared first: startAnimation() (a timer) and remove() read it.
     page.add(box); // Always create in page
 
     // *** PRIVATE VARIABLES:
@@ -91,6 +93,7 @@ const Waiting = function(params = {}) {
 
     box.startAnimation = function() {
         if (box.animationTimer) clearTimeout(box.animationTimer);
+        if (isRemoved) return;
         box.animationTimer = setTimeout(function() {
             isIconFull = isIconFull ? 0 : 1;
             box.icon.css.transform = isIconFull ? ICON_FULL_SCALE : ICON_SMALL_SCALE;
@@ -102,6 +105,17 @@ const Waiting = function(params = {}) {
         if (box.animationTimer) clearTimeout(box.animationTimer);
         box.icon.css.transform = ICON_FULL_SCALE;
         isIconFull = 1;
+    };
+
+    // WHY: The pulse is a setTimeout loop (startAnimation). basic.js does not know it: after a remove() it ran forever.
+    const superRemove = box.remove;
+    box.superRemove = superRemove;
+    box.remove = function() {
+        if (isRemoved) return;
+        isRemoved = 1;
+        if (box.animationTimer) clearTimeout(box.animationTimer);
+        box.animationTimer = null;
+        superRemove.call(box);
     };
 
     // *** OBJECT VIEW:
