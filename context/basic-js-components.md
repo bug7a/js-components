@@ -1,207 +1,134 @@
-# basic.js Component Creation Guide
+# basic.js Components
 
-This guide outlines the standard pattern for creating reusable UI components using `basic.js`, based on the modern standards (v25+).
+How a component of this repository is written (comp-m4, basic.js v26.10.25). The full starting point is `_component-template.js` at the root: copy it. How the code reads: `context/basic-js-code-rules.md`. The core library: `context/basic-js-core.md`.
 
-## Standard Component Structure
-
-A standard component consists of:
-1.  **Defaults Object**: Defines default property values.
-2.  **Constructor Function**: The main function that creates the component.
-3.  **`startObject`**: Initializes the component container and merges parameters.
-4.  **Logic & State**: Private/Public variables and functions.
-5.  **UI Construction**: Creating the visual elements inside the component.
-6.  **Event Binding**: Attaching event listeners.
-7.  **`endObject`**: Finalizes and returns the component.
-
-## Step-by-Step Implementation
-
-### 1. Define Defaults
-Create a constant object with the suffix `Defaults`. This should include all configurable properties.
-
-```javascript
-const MyComponentDefaults = {
-    width: 200,
-    height: 50,
-    color: "white",
-    text: "Default Text",
-    // Event callbacks
-    onClick: function(ui) {},
-    // Style objects
-    textStyle: {
-        fontSize: 16,
-        color: "black"
-    }
-};
-```
-
-### 2. Create Constructor
-The constructor function takes a `params` object.
-
-```javascript
-const MyComponent = function(params = {}) {
-    // ... implementation
-};
-```
-
-### 3. Initialize Component
-Use `startObject` to create the main container (`box`) and merge `params` with `Defaults`.
-
-```javascript
-    // BOX: Component container
-    const box = startObject(MyComponentDefaults, params);
-```
-
-### 4. Define Variables & Functions
-
-**Private Variables/Functions**: Visible only within the constructor.
-```javascript
-    let internalState = 0;
-
-    const updateView = function() {
-        // Internal logic
-    };
-```
-
-**Public Variables/Functions**: Accessible from outside (attached to `box`).
-```javascript
-    // Public property
-    box.value = 0;
-
-    // Public method
-    box.setValue = function(newValue) {
-        box.value = newValue;
-        updateView();
-    };
-```
-
-**Cleaning up** (basic.js v26.10.23): register the global things through the box, then `remove()` of basic.js cleans them. Most components need no `remove()` of their own.
-```javascript
-    box.listenTo(window, "keydown", function (self, event) { /* ... */ }); // window / document events
-    box.onPageResize(function () { /* ... */ });                          // instead of page.onResize
-    const cancel = box.after(300, function () { /* ... */ });            // instead of setTimeout
-    const stop = box.every(1000, function () { /* ... */ });             // instead of setInterval
-    box.menu = box.own(createIn(page, function () { return Box(/* ... */); })); // an object on the page
-```
-Also: `box.onHoverChange(fn(self, isOver))`, `box.setFocusRing(color)` (keyboard only), `basic.isOn(v)` (1, "1", true), `basic.addCss(id, css)` (a `<style>` once), `basic.escapeHtml(text)`.
-
-Override `remove()` only for what basic.js can not know: a static list of the component, an instance of another library (Chart.js), an observer of a document in an iframe. Keep this shape:
-```javascript
-    // WHY: the local const is called below, because an extending component overwrites box.superRemove.
-    const superRemove = box.remove;
-    box.superRemove = superRemove;
-    box.remove = function () {
-        if (!box) return;                 // WHY: remove() can be called twice.
-        // Only what basic.js does not know. (Ex: MyComp.list = MyComp.list.filter(c => c !== box);)
-        superRemove.call(box);            // basic.js remove(): cleans the events and the objects inside.
-        box = null;
-    };
-```
-
-### 5. Build UI
-Create child components inside the `box`. You can use `HGroup` / `VGroup` ... `endGroup()` or absolute positioning.
-
-```javascript
-    // Example: Adding a label
-    box.label = Label({
-        text: box.text,
-        ...box.textStyle // Spread style properties
-    });
-    
-    // Important: Use 'that' to refer to the last created object for quick styling
-    that.center("top left"); 
-```
-
-### 6. Bind Events
-Attach events to the component or its children.
-
-```javascript
-    box.on("click", function(self, event) {
-        box.onClick(box); // Trigger the callback defined in defaults
-    });
-```
-
-### 7. Finalize
-Return the component using `endObject`.
-
-```javascript
-    return endObject(box);
-```
-
-## Full Example Template
+## The shape
 
 ```javascript
 "use strict";
 
-const ToggleButtonDefaults = {
-    width: 60,
-    height: 30,
-    activeColor: "#4CD964",
-    inactiveColor: "#E5E5EA",
-    isOn: false,
-    onToggle: function(ui) {}
+// Default values:
+const MyCompDefaults = {
+    key: "0", // Your name for this object: read it in a callback (self.key)
+    width: 240,
+    height: "auto",
+    labelText: "",
+    value: 0,
+    enabled: 1,
+    onChange: function (self) { }, // Not at create time, not with silent: 1
+    styleName: "classic", // "classic", "dark" or a name added to MyComp.styles
+    style: { // Classic style package (default)
+        box: { color: "white", border: 1, borderColor: Black(0.15), round: 8 },
+        label: { fontSize: 15, textColor: Black(0.85) },
+        hover: { color: "#F5F6F4" },
+        focus: { ringColor: "rgba(95, 158, 160, 0.6)" },
+    },
 };
 
-const ToggleButton = function(params = {}) {
+const MyComp = function (params = {}) {
 
-    // 1. Initialize
-    const box = startObject(ToggleButtonDefaults, params);
+    // Merge style package: params.style > MyComp.styles[styleName] > MyCompDefaults.style
+    basic.applyStylePackage(params, MyComp.styles, MyCompDefaults);
 
-    // 2. Private State
-    let _isOn = box.isOn;
+    // Merge params:
+    mergeIntoIfMissing(params, MyCompDefaults);
 
-    // 3. Public Methods
-    box.toggle = function() {
-        box.setValue(!_isOn);
+    // Edit params, if needed:
+    const isAutoHeight = (String(params.height) === "auto"); // WHY: box.height reads the measured size after startObject
+
+    // BOX: Component container
+    let box = startObject(params);
+
+    // *** PRIVATE VARIABLES:
+    const _s = box.style;
+
+    // *** PRIVATE FUNCTIONS:
+    const paint = function () { /* the look of the state */ };
+
+    // *** PUBLIC FUNCTIONS:
+    box.setValue = function (value, silent = 0) {
+        if (value === box.value) return;
+        box.value = value;
+        paint();
+        if (!silent) box.onChange(box);
     };
+    // USAGE: comp.setValue(5) or comp.setValue(5, 1) // silent
 
-    box.setValue = function(value) {
-        _isOn = value;
-        box.circle.left = _isOn ? 32 : 2;
-        box.color = _isOn ? box.activeColor : box.inactiveColor;
-        
-        // Trigger callback
-        box.onToggle(box);
-    };
+    // *** OBJECT VIEW:
+    box.props({ color: _s.box.color, border: _s.box.border, borderColor: _s.box.borderColor, round: _s.box.round });
+    box.lblText = Label({ plainText: box.labelText, fontSize: _s.label.fontSize, textColor: _s.label.textColor });
 
-    // 4. UI Construction
-    // Set initial background
-    box.color = _isOn ? box.activeColor : box.inactiveColor;
-    box.round = 15;
-    box.setMotion("background-color 0.2s");
+    // *** OBJECT INIT CODE:
+    box.on("click", function () { box.setValue(box.value + 1); });
+    paint();
 
-    // Circle indicator
-    box.circle = Box({
-        top: 2,
-        left: _isOn ? 32 : 2,
-        width: 26,
-        height: 26,
-        color: "white",
-        round: 13
-    });
-    that.setMotion("left 0.2s");
-
-    // 5. Events
-    box.on("click", function() {
-        box.toggle();
-    });
-
-    // 6. Finalize
     return endObject(box);
+};
 
+// *** STYLE PACKAGES:
+MyComp.styles = {
+    classic: MyCompDefaults.style,
+    dark: { box: { color: "#1A1A19", borderColor: White(0.1) }, label: { textColor: White(0.9) } }, // only the keys that differ
 };
 ```
 
-## Best Practices
-- **Removing**: Never write a `destroy()` function for a new component. Override `remove()` as shown above, so the component is removed like any other basic.js object and a parent's `remove()` cleans it automatically.
-- **Naming**: Use PascalCase for Component names (e.g., `MyComponent`) and `ComponentDefaults` for defaults.
-- **Getters/Setters**: For properties that need to update the UI when changed, create explicit `setPropName` methods (e.g., `setValue`, `setText`) instead of JS setters, or use the `box.prop` pattern if simple.
-- **`that` usage**: Use `that` immediately after creating an object to apply styles or layout properties without creating a variable if you don't need to reference it later.
-- **`HGroup` / `VGroup`**: Prefer `HGroup` / `VGroup` ... `endGroup()` (flexbox) for internal layout when possible for responsiveness. (`AutoLayout` and `startFlexBox` are old names: do not use them in new code.)
-- **Visibility & Layout**: Components created with `basic.js` (using `Box`, `Label`, etc.) are often absolute positioned by default. To ensure they are visible:
-    - Place them inside an `HGroup`/`VGroup`.
-    - OR explicitly set `left`, `top`, `width`, and `height`.
-    - If a component seems "invisible", check if it has dimensions and a position, or if it's inside a container that handles layout.
-- **Gradients**: The `color` property typically handles solid colors. For gradients, set the style directly on the element:
-    ```javascript
-    myBox.elem.style.background = "linear-gradient(...)";
-    ```
+- `startObject(params)` makes the container box and puts the objects created until `endObject(box)` into it. `endObject` makes `that` the component. (`startObject(defaults, params)`, the two argument form, merges too.)
+- **Every default becomes a public property on the box** (`box.labelText`). Change it later with a `setX()` function, never with a JS getter / setter.
+- **A default must not be named like a basic.js setter**: `text`, `color` (only the background of the box), `title`, `html` (it wipes the children), `visible`, `zoom`... Use `labelText`, `htmlText`, `scale`.
+- PascalCase name, an `XxxDefaults` object, assets in a sibling folder with the same name (`comp-m4/tabs/`).
+- The house header (`/* Bismillah */`, name - version, what it does, `USAGE:`, developer) and the section markers (`// *** PRIVATE VARIABLES:`, `// *** OBJECT VIEW:`, `// BOX:`, `// LABEL:`...).
+
+## Style packages
+- `basic.applyStylePackage(params, Comp.styles, CompDefaults)` is the first line: `params.style` > the package of `styleName` > the defaults. The package is copied, never changed.
+- A package has only the keys that differ from the default style. A new key in the default style is filled into every package: when the old look of a package must stay, give it that key (Ex: `opacity: 1` in `selected`).
+- `mergeIntoIfMissing` copies 4 levels; deeper objects are kept by reference. Keep the style flat.
+- A component whose look is in flat params (comp-m2 `InputB`) uses a package of params instead: `mergeIntoIfMissing(params, Comp.styles[name])` before the defaults.
+- Colors of themes the user picks at run time (`Modal`, `Toast`, `ChartBox`): `X.THEMES` + `basic.resolveTheme(X.THEMES, name)`; `style` keeps only the shapes.
+
+## Events and state
+- **`onChange` is not called at create time, by `setItems()` / `setOptions()`, or with `silent: 1`**, and not when the value did not change.
+- The state is decided in one place (`getState()` or `getLook()`): normal, hover, selected, disabled. `paint()` draws it, without measuring.
+- Drawing functions named by their job: `createItems()` (from the data; one item: `createItem()`), `applyContent()`, `paint()`, `refreshLayout()` (what depends on the sizes), `drawAll()`. A setter calls only the one it needs.
+- Keyboard: `box.role`, `box.aria = {...}`, `box.tabIndex`, Enter / Space like a click, `box.setFocusRing(color)` (only for the keyboard). In a list only one row is in the Tab order.
+- A text of the user is written with `plainText`.
+
+## Sizes
+- **Read `"auto"` / `"100%"` from `params` before `startObject()`.** After it `box.width` / `box.height` are the measured numbers, so `box.height === "auto"` is never true (a TreeView with `height: "auto"` was 0 px high because of it).
+- `height: "auto"`: the content is a group (or `position: "relative"`), so the box grows with it. Otherwise a scrolling box with a `ScrollBar` (`if (typeof ScrollBar !== "undefined")`).
+- A group clips its content: `clipContent: 0` on the groups around rows that lift, grow or have a focus ring.
+
+## Objects on the page (menus, popups, lists)
+- Create them on `page` so they are over everything: `box.menu = box.own(createIn(page, function () { return Box(...); }))`. `own` removes them with the component.
+- Close an open popup in `remove()` (a remove while it is open must not leave it on the page).
+- Created outside a group but shown inside one (a `ScrollBar` for a list in a panel group): create it outside, it moves itself; created inside a group it becomes a part of the group's layout.
+
+## Cleaning up
+Register global things through the box; `remove()` of basic.js cleans them, so most components need no `remove()` of their own:
+
+```javascript
+box.listenTo(document, "keydown", function (self, event) { ... });  // not document.addEventListener
+box.onPageResize(function () { ... });                             // not page.onResize
+box.after(300, fn); box.every(1000, fn);                           // not setTimeout / setInterval
+```
+
+Override `remove()` only for what basic.js can not know (a static list, a Chart.js instance, a `setTimeout` loop, document events of a drag, a popup not owned):
+
+```javascript
+// WHY: the local copy is called, because a component that extends this one overwrites box.superRemove.
+const superRemove = box.remove;
+box.superRemove = superRemove;
+box.remove = function () {
+    if (!box) return;            // WHY: remove() can be called twice (also by the parent's remove()).
+    MyComp.list = MyComp.list.filter(function (c) { return c !== box; });
+    superRemove.call(box);       // basic.js remove(): the events and the objects inside
+    box = null;                  // so the box is declared with let
+};
+```
+
+Never write a `destroy()` for a component: everything is removed with `remove()`. To extend a component: `startExtendedObject(ParentComp, params)` ... `endExtendedObject(box)` (see `comp-m2/email-input-b.js`).
+
+## When the component is ready
+1. A sample page `02-comp-mX-samples/<name>.htm`: a scrolling Box, cards, every style package; it loads the source files (`../basic/basic.js`, `../comp-m4/<name>.js`), not `.min.js`.
+2. `test/components-test.htm`: add it to `COMPONENTS` (`{ file, name, deps, setup }`), open `?only=<name>`: the title must say ALL PASS.
+3. The `.min.js` twin: create an empty `<name>.min.js` once, then `./_make-min-js.sh --build comp-mX/<name>.js` (after every change too).
+4. The catalog: `index/catalog.js` (+ the `<noscript>` list in `index.htm`) and its line in CLAUDE.md.

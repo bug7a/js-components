@@ -1,203 +1,130 @@
-# basic.js Core Documentation
+# basic.js Core
 
-## Introduction
-`basic.js` is a lightweight JavaScript library designed for building web-based applications using simple JavaScript code, without the need to write HTML or CSS directly. It provides a set of high-level components and utilities to streamline development.
+For **basic.js v26.10.25** (`basic.version`). The changes of every version: `basic/basic-what-is-new.md`. How the code is written: `context/basic-js-code-rules.md`. Components: `context/basic-js-components.md`.
 
-## Core Concepts
+basic.js builds the whole UI in plain JavaScript: it creates DOM objects directly. No HTML markup, no CSS authoring, no virtual DOM.
 
-### The `page` Object
-- `page`: Represents the main container of the application (the body).
-- `page.width`: Returns the width of the page.
-- `page.height`: Returns the height of the page.
-- `page.color`: Sets the background color of the page.
-- `page.fit(width, [maxWidth])`: Scales the page content to fit a specific width.
-- `page.autoFit(width, height)`: Scales the page to fit within a specific aspect ratio.
+## Start
 
-### Clipping Rule (clipContent)
-- **Every Box and every group (`HGroup`, `VGroup`, `AutoLayout`) cuts what goes past its edges** by default (`clipContent: 1`, CSS `overflow: hidden`).
-- So anything that moves, grows or shines past the edge is cut: a button that lifts under the mouse (`translateY`), a picture or card that grows (`scale`), a `boxShadow`, a glow, a focus outline, an object that slides in with motion. A group whose height is its content (`height: "auto"`, `hug: 1`) cuts a lifted button at once.
-- **Give the groups / boxes around such objects `clipContent: 0`** when you create them, and check every box between the object and the page (one that cuts is enough). Keep `clipContent: 1` only where cutting is wanted (a picture with round corners, a background picture, a scrolling list).
+basic.js creates the global `page` and then calls the global `start()` (older pages use `window.onload`). A global `loop()` runs every 1000 ms (`setLoopTimer(ms)`).
+
 ```javascript
-// GROUP: Buttons that lift under the mouse
-HGroup({ width: "auto", height: "auto", gap: 12, clipContent: 0 }); // WHY: their lift and shadow must not be cut
-    Button({ text: "Play", width: 120, height: 44 });
-endGroup();
+const start = function () {
+    page.color = "whitesmoke";
+    Label({ text: "Hello", fontSize: 24 });
+    that.center();
+};
 ```
 
-### Scrolling Rule
-- **`page` does not scroll.** `basic.css` sets `body { overflow: hidden }`, and `page` only represents the visible area of the screen.
-- If content can be taller or wider than the screen, place it inside a **full-screen `Box`** and enable that Box's `scrollY` (or `scrollX`) property.
-- Give the inner layout group `height: "auto"` (or `width: "auto"` for horizontal scrolling) so the content can grow beyond the Box.
+### The `page` object
+- `page.width`, `page.height` (the visible area), `page.color`, `page.title`.
+- `page.fit(width, maxWidth)`: zooms the page so `width` fits. `page.autoFit(width, height)`.
+- `page.onResize(fn)` / `page.remove_onResize(fn)`, `page.on(event, fn)`, `page.onKeyDown(fn)`.
+
+## Objects
+
+Positional arguments `(left, top, width, height)`, and an optional props object **last**:
+
 ```javascript
-// BOX: Full screen scrollable container
+Box(10, 10, 100, 100, { color: "red" });
+Label({ text: "Hi", fontSize: 16 });
+Button({ text: "Save", width: 120, height: 40 });
+Input({ width: 240, height: 40, placeholder: "Name" });   // a text field
+Icon({ width: 32, height: 32 }); that.load("icon.png");    // a picture
+obj.props({ color: "white" });                             // props after creation
+```
+
+- `Box`, `Label`, `Button`, `Input`, `Icon`. The DOM element is `obj.elem` (Input: `obj.inputElement`).
+- `that` is the last object created, `prevThat` the one before. `makeBasicObject(obj)` makes a custom object `that`.
+- `TextBox`, `Image` and the `create*` functions (`createBox`...) are not globals any more (v26.10.25): use `Input`, `Icon`, `Box`...
+
+### Common props
+`left`, `top`, `right`, `bottom`, `width`, `height` (a number is px; `"100%"`, `"auto"`, `"calc(...)"`), `color` (background), `textColor`, `fontSize`, `fontFamily`, `bold`, `italic`, `lineHeight`, `textAlign`, `opacity`, `visible`, `border`, `borderColor`, `round`, `padding` (a number, `[x, y]` or `[left, top, right, bottom]`), `position`, `zIndex`, `clickable`, `cursor`, `boxShadow`, `rotate`, `scrollX` / `scrollY`, `clipContent`, `grow` / `shrink`, `css` (`{ ... }` or a CSS string), `role`, `aria` (`{ label: "Close" }`), `tabIndex`.
+
+- **`text` is HTML.** Every text from a user or a server goes in with `plainText`.
+- Label: `ellipsis: 1` (one line, "..."), `selectable: 1`, `clipContent: 0` (the text may go out of the label).
+- Input: `value`, `placeholder`, `inputType`, `maxLength`, `readOnly`, `focus()`, `blur()`, `select()`, `onEnter(fn)`, `onChange(fn)`.
+- An SVG with `stroke="currentColor"` in a Label takes the label's `textColor`.
+
+### Methods
+`show()`, `hide()`, `toggle()`, `setSize()`, `setPosition()`, `bringToFront()`, `contains(obj)`, `animate(props, ms, easing)` (a Promise), `center(axis)` (`"left"`, `"top"` or both), `centerBy(obj)`, `aline(obj, "right", space, "center")`.
+
+### Reading sizes
+**`obj.width` / `obj.height` never read `"auto"` or `"100%"`**: for a text value they give the measured size (a number; 0 for an `"auto"` box that is not drawn yet). Read such a value from the params before the object is created.
+
+## Containers and layout
+
+New objects go into the current default container.
+
+```javascript
 startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
-
-    // GROUP: Page layout
     VGroup({ width: "100%", height: "auto", align: "center top", gap: 20, padding: 40 });
-        // ... page content
+        Label({ text: "Title" });
+        HGroup({ hug: 1, gap: 8 });
+            Button({ text: "OK" });
+            Button({ text: "Cancel" });
+        endGroup();
     endGroup();
-
 endBox();
 ```
 
-### The `that` Object
-- `that`: Refers to the most recently created object. This is a central pattern in `basic.js` to avoid repetitive variable assignments for quick prototyping.
-- `makeBasicObject(obj)`: Registers a custom object to be accessible via `that`.
+- **Every start call needs its end call** (`startBox` / `endBox`, `HGroup` / `VGroup` / `endGroup`). basic.js warns about the ones not ended.
+- Group props: `align` (`"left top"`, `"center"`...), `gap`, `padding`, `wrap: 1`, `justify` (`"space-between"`...), `hug: 1` (width and height `"auto"`: the group wraps its content; `fit: 1` is its old name). A group is 100% x 100% by default.
+- `AutoLayout` / `endAutoLayout` and `startFlexBox` / `endFlexBox` are old names of the groups: do not use them in new code.
+- **Only a Box holds other objects** (the groups are boxes). An object inside a `Button`, `Label`, `Input` or `Icon` sends its mouse events to it: put an overlay next to it in the same box, `position: "absolute"`.
+- **Objects into an existing box later:** `createIn(box, function () { ... })` (it puts the previous container back, also on an error; it returns the result of the function). `setDefaultContainerBox()` is not part of the start / end stack.
+- A Box with `height: "auto"` does not grow with basic.js children (they are absolute): use a group, or `position: "relative"` children.
+- Children created in a hidden group (`visible: 0` at create time) are not flex items: hide the group after its children are created.
 
-### Container System
-- Objects are automatically added to the `defaultContainerBox`.
-- `startBox()` / `endBox()`: Used to create nested structures. Objects created between these calls are added to the started box.
-- `HGroup({...})` / `VGroup({...})` ... `endGroup()`: Start a flexbox group (a Box) with a horizontal / vertical flow.
-  Objects created until `endGroup()` are its children and are arranged automatically.
-- NOTE: `AutoLayout()` / `endAutoLayout()` and `startFlexBox()` / `endFlexBox()` are old names of the same group.
-  They still work in old pages, but do not use them in new code: write `HGroup` / `VGroup` and `endGroup()`.
-- **Only a Box can hold other objects.** The groups above are Box objects too. A `Button`, `Label`,
-  `Input` or `Icon` can NOT hold children: an object created inside a button also sends its mouse
-  events up to the button (its hover effect then fires). To put something over a button, create it
-  as a brother of the button in the same box and place it with `position: "absolute"`.
+### Scrolling
+**`page` never scrolls** (`body { overflow: hidden }`). Long content goes into a full screen Box with `scrollY: 1` (or `scrollX`) and an inner group with `height: "auto"`, as above. A scrolling Box gets a `ScrollBar` (`basic/scroll-bar.js`): `if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: box });` after `endBox()`.
 
-## UI Components
+### Clipping
+**Every Box and every group cuts what goes past its edges** (`clipContent: 1`). A button that lifts under the mouse, a card that grows, a shadow, a glow or a focus ring is cut. Give the groups around such objects `clipContent: 0` (every box up to the page); keep `1` only where cutting is wanted (round picture frames, a scrolling list).
 
-All components inherit from `Basic_UIComponent` and share common properties like `width`, `height`, `left`, `top`, `visible`, `opacity`, `color` (background), `border`, `round` (border-radius).
+## Events
 
-### Box
-A generic container.
 ```javascript
-// Usage
-Box(left, top, width, height);
-// Or with properties object as the last argument
-Box(10, 10, 100, 100, { color: "red" });
+const removeClick = btn.on("click", function (self, event) { println("clicked"); });
+btn.once("click", fn);
+obj.onResize(fn);                      // the size of the object changed
+obj.onHoverChange(function (self, isOver) { ... });
 ```
 
-### Button
-A clickable button.
+`obj.off(event, fn)`, or the remover returned by `on()`.
+
+## Removing
+
+`obj.remove()` removes the object, its events and **every basic.js object inside it** (parents first; a child's `destroy()` is called first when it has one). A removed object has `isRemoved` / `_isRemoved = 1` and must not be added again.
+
+These are cleaned by `remove()` too, so use them instead of the raw browser functions:
+
 ```javascript
-Button(left, top, width, height, { text: "Click Me" });
-// Properties: text, value, enabled, minimal
+obj.listenTo(window, "keydown", function (self, event) { ... });   // window / document events
+obj.onPageResize(function () { ... });                              // instead of page.onResize
+const cancel = obj.after(300, function () { ... });                 // instead of setTimeout
+const stop = obj.every(1000, function () { ... });                  // instead of setInterval
+obj.menu = obj.own(createIn(page, function () { return Box(...); }));   // an object on the page
 ```
 
-### Label
-A text label.
-```javascript
-Label(left, top, { text: "Hello World", fontSize: 20 });
-// Properties: text, fontSize, textColor, textAlign, space (padding)
-```
+Objects created directly on `page` from inside another object (without `own`) are not its children: remove them yourself.
 
-### TextBox (Input)
-An input field.
-```javascript
-TextBox(left, top, width, height, { text: "Initial Text" });
-// Alias: Input()
-// Properties: text, title, enabled, onChange(func)
-```
+## Motion
+- `obj.setMotion("left 0.3s, opacity 0.2s")`, then change the props.
+- `obj.withMotion(function (self) { ... })`: the changes inside are animated. `obj.dontMotion()`: the next changes are not.
+- `obj.animate({ left: 100, opacity: 0 }, 300)`: a Promise.
 
-### Image / Icon
-Displays an image.
-```javascript
-Image(left, top, width, height);
-// Alias: Icon()
-// Properties: autoSize (1, 2, 3...), load(path)
-```
+## Helpers
+- `println(text)`, `random(min, max)`.
+- `Black(a)`, `White(a)`: rgba texts. `Alpha(color, a)`: any color made transparent (`a` from 0 to 1).
+- `basic.num(text)`, `basic.str(value)`, `basic.isMobile()`, `basic.go(url, target)`, `basic.twoDigitFormat(n)`, `basic.escapeHtml(text)`, `basic.isOn(v)` (1, "1", true), `basic.clamp()`, `basic.lerp()`.
+- `basic.storage.save(key, value)`, `.load(key)`, `.loadOr(key, fallback)`, `.has(key)`, `.remove(key)`, `.clear()` (localStorage, JSON; the global `storage` is not defined).
+- `basic.clock`, `basic.date` (not globals).
+- `waitAndRun(timer, fn, ms)`: a debounce (`timer = waitAndRun(timer, fn, 120)`). `await basic.sleep(ms)`, `await basic.nextFrame()`.
+- `basic.addCss(id, css)`: a `<style>` once (for `:hover`, `::placeholder`, `@keyframes`).
+- `withPageZoom(px)`: a mouse position in page units when the page is zoomed.
 
-## Layout & Positioning
-
-### Direct Positioning
-- `left`, `top`, `right`, `bottom`: Set position in pixels.
-- `width`, `height`: Set size (number for px, string for %, "auto", etc.).
-
-### Alignment Methods
-- `center(axis)`: Centers the object in its container. `axis`: "left", "top", or undefined (both).
-- `centerBy(obj, axis)`: Centers the object relative to another object.
-- `aline(obj, position, space, secondPosition)`: Aligns the object relative to another.
-    - `position`: "left", "right", "top", "bottom" (e.g., put *this* to the right of *obj*).
-    - `secondPosition`: "top", "bottom", "left", "right", "center" (secondary alignment).
-
-### Flexbox (HGroup / VGroup)
-```javascript
-HGroup({                 // a row; VGroup({...}) is a column
-    align: "left center", // "center", "center top", "right bottom"... (horizontal word + vertical word)
-    gap: 10,              // space between the children (px)
-    padding: [16, 8],     // a number or [x, y]
-    // wrap: 1,           // continue on the next line when there is no space
-    // justify: "space-between",
-    // hug: 1,            // width and height "auto": the group wraps its content (default: 100% x 100%)
-});
-    // Children created here are arranged automatically
-    Label({ text: "Name" });
-    Button({ text: "Save" });
-endGroup();
-```
-Groups can be nested (a `VGroup` with `HGroup` rows). Every `HGroup` / `VGroup` needs its `endGroup()`.
-(`AutoLayout` and `startFlexBox` are old names of the same function: do not use them in new code.)
-
-## Styling
-- `color`: Background color.
-- `border`: Border width (px).
-- `borderColor`: Border color.
-- `round`: Border radius (px).
-- `opacity`: 0.0 to 1.0.
-- `visible`: 1 (visible) or 0 (hidden).
-- `padding`: Inner spacing (for Box, Label).
-- `role`, `aria`, `tabIndex` (v26.10.23): `obj.role = "button"; obj.aria = { label: "Close", selected: true }; obj.tabIndex = 0;` (`aria`: only the given keys change, `null` removes one). Use them instead of `elem.setAttribute("aria-...")`.
-- `text` is HTML; use `plainText` for every text from a user or a server. An SVG with `stroke="currentColor"` in a Label takes its `textColor` (a hover changes only `textColor`).
-
-## Event Handling
-
-### The `on` Method
-The standard way to add events.
-```javascript
-btn.on("click", function(self, event) {
-    println("Clicked!");
-});
-```
-
-### Specific Methods
-- `onClick(func)`
-- `onResize(func)`
-- `onChange(func)` (for TextBox)
-
-### Removing Objects
-- `obj.remove()` removes the object, its events and `onResize` registrations, and **all basic.js objects inside it** (parents first). A child with a `destroy()` function gets that call first (older objects such as `ScrollBar`).
-- **Components are removed with `remove()` too.** A component overrides `remove()` (`const superRemove = box.remove;` … `superRemove.call(box);`) and cleans its global events there (`window` / `document` events, timers, `page.onResize`, static lists), so `myComponent.remove();` is enough.
-- A removed object has `_isRemoved = 1` and must not be added to the screen again. Create a new one.
-- Objects created on `page` from inside another object (for example a `ContextMenu`) are not its children. Remove them yourself.
-
-### Things cleaned by `remove()` (v26.10.23)
-`obj.listenTo(window, "keydown", fn)`, `obj.onPageResize(fn)`, `obj.after(ms, fn)`, `obj.every(ms, fn)` and `obj.own(otherObj)` are removed / stopped by `obj.remove()`. A component uses them instead of `window.addEventListener`, `page.onResize`, `setTimeout` / `setInterval`, so it does not need its own `remove()`. Also: `obj.onHoverChange(fn(self, isOver))`, `obj.setFocusRing(color)` (keyboard only), `basic.isOn(v)`, `basic.addCss(id, css)`, and `createIn()` returns the result of its function.
-
-## Motion (Animations)
-- `setMotion(string)`: Defines the transition (e.g., "left 0.5s, opacity 1s").
-- `withMotion(func)`: Executes changes within the defined motion.
-- `dontMotion()`: Temporarily disables motion.
-
-## Utilities
-
-### Global Functions
-- `println(message, type)`: Safe console logging.
-- `random(min, max)`: Random integer.
-- `basic.num(str)`: Parse float/int.
-- `basic.str(num)`: Convert to string.
-- `basic.isMobile()`: Returns 1 if mobile device.
-- `basic.go(url)`: Navigate to URL.
-- `wait(ms, func)`: (Implied from common patterns, though not explicitly in snippet, standard JS `setTimeout` is often used, but `loop` is preferred for game loops).
-
-### Global Objects
-- `storage`: `save(key, val)`, `load(key)`, `remove(key)`.
-- `clock`: `hour`, `minute`, `second`, `milisecond`.
-- `date`: `year`, `monthNumber`, `dayNumber`, `today`, `now`.
-
-## Standard Patterns
-
-### Initialization
-```javascript
-window.onload = function() {
-    // Your setup code
-}
-```
-
-### Game Loop
-```javascript
-const loop = function() {
-    // Code to run every frame/second (controlled by setLoopTimer)
-}
-```
+## Gotchas
+- A global helper of a page must not be named like a basic.js global (`Box`, `Label`, `random`, `println`...). Prefer `MyPage.createButton`.
+- An inline `<script>` must not contain a closing tag as plain text, even `</body>` in a string: write `<\/body>` (Live Server puts its script before the first `</body>` of the file).
+- `basic.css` gives every box `pointer-events: none` and the page `user-select: none`: a raw HTML element (a `<textarea>`) needs `pointer-events: auto; user-select: text`.
