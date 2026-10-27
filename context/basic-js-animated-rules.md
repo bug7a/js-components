@@ -1,8 +1,7 @@
 # basic.js animated rules
 
-How a component gets an `animated` param (the user, 2026-10-27). The models: `comp-m2/search-input-v2.js`
-(`SearchInput`: icons, a pulse) and `comp-m2/input-b.js` (`InputB`: a field with a title, a focus line that grows,
-and its children PhoneInputB, URLInputB, TextareaB...). Read the closer one before adding `animated`.
+How a component gets an `animated` param (the user, 2026-10-27). The model is `comp-m2/search-input-v2.js`
+(`SearchInput`, `animated: 1`): read it before adding `animated` to another component.
 
 ## What the param is
 
@@ -78,9 +77,9 @@ without an icon has no icon motion and no pulse). Values are the "feel" sizes ab
   `clickable = 0` (a hidden icon must not catch clicks). For the box itself: keep its clickable before the
   listeners (`stillClickable`) and write it back, so `animated: 0` changes nothing; `applyAnimated()` makes it
   clickable (the hover is felt on the whole field, not only over the text) and `removeMotion()` puts it back.
-- A part that only the motion needs (the focus line of InputB) is made the first time `animated` is on
+- A part that only the motion needs (Ex: a focus line that grows over a line) is made the first time `animated` is on
   (`createIn(box, ...)`), so an `animated: 0` object has no extra object.
-- A color that changed at once before (the line under InputB) is not given a color transition: an overlay that
+- A color that changed at once before (Ex: the line under a field on focus) is not given a color transition: an overlay that
   moves (`scaleX`) or fades does the motion, and the old color stays still under it.
 - Check in the browser: the state values (transform, opacity, box-shadow) after hover / focus / typing / hiding,
   `animated: 0` unchanged, `setAnimated(0)` back to still, and `test/components-test.htm?only=<name>`.
