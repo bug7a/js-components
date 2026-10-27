@@ -379,7 +379,7 @@ SearchInput.styles = {
         borderColor: "rgba(0, 0, 0, 0.1)",
         borderBottomStyle: "3px solid rgba(0, 0, 0, 0.06)",
         round: 50,
-        animated: 1,
+        animated: 0, // 1: small hover / focus motions
         hoverRingColor: "rgba(0, 0, 0, 0.08)",
         focusRingColor: "rgba(0, 0, 0, 0.16)",
     },
@@ -404,7 +404,7 @@ SearchInput.styles = {
         borderColor: "rgba(255, 255, 255, 0.1)",
         borderBottomStyle: "3px solid rgba(255, 255, 255, 0.06)",
         round: 50,
-        animated: 1,
+        animated: 0, // 1: small hover / focus motions
         hoverRingColor: "rgba(255, 255, 255, 0.08)",
         focusRingColor: "rgba(255, 255, 255, 0.18)",
     },
