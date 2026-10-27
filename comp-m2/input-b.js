@@ -639,6 +639,7 @@ InputB.styles = {
 
         requiredColor: "#141414", // classic white: the ball takes the color of the page under it
         requiredIconColor: White(0.75), // classic #373836
+        warningColor: "indianred", // classic #E5885E (the user's choice, 2026-10-27)
 
         tooltipStyle: {
             textColor: White(0.9), // classic #141414 on a white ball
