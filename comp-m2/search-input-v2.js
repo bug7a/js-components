@@ -6,7 +6,7 @@ Search Input - v24.04
 
 UI COMPONENT TEMPLATE
 - You can customize, this template code as you need:
-- Style packages: "classic" (default), "bugra". Select with styleName. (SearchInput.styles)
+- Style packages: "classic" (default), "bugra", "bugraDark". Select with styleName. (SearchInput.styles)
 -- A package is a package of params (basic.js v26.10.27): its keys fill the params you did not give.
 -- SearchInput.styles.myStyle = { style: {}, color: "white", textColor: "#222", ... };
 
@@ -42,7 +42,7 @@ const SearchInputDefaults = {
     invertIconColor: 0,
     onSearch: function(searchedText, self) {},
     onSubmit: function(searchedText, self) {},
-    styleName: "classic", // "classic", "bugra" or a name added to SearchInput.styles
+    styleName: "classic", // "classic", "bugra", "bugraDark" or a name added to SearchInput.styles
     style: {}, // WHY: the look is in the flat params above; the packages are packages of params (see SearchInput.styles).
 };
 
@@ -215,7 +215,7 @@ SearchInput.styles = {
         clearIconFile: "../comp-m2/search-input-v2/clear-round.svg",
         searchIconSize: 24,
         searchIconOpacity: 0.4,
-        clearIconOpacity: 1, // WHY: at 0.6 the white circle faded into the field (the user, 2026-10-27).
+        clearIconOpacity: 0.6, // WHY: at 0.6 the white circle faded into the field (the user, 2026-10-27).
         invertIconColor: 0,
         color: "whitesmoke",
         textColor: "rgba(0, 0, 0, 0.8)",
@@ -223,7 +223,27 @@ SearchInput.styles = {
         fontSize: 20,
         border: 1,
         borderColor: "rgba(0, 0, 0, 0.1)",
-        borderBottomStyle: "2px solid rgba(0, 0, 0, 0.06)",
+        borderBottomStyle: "3px solid rgba(0, 0, 0, 0.06)",
+        round: 50,
+    },
+
+    // The dark theme of bugra: the same shape on a dark field, light text and icons.
+    // WHY: invertIconColor also inverts clear-round.svg, so the clear button is a dark circle with a light cross.
+    bugraDark: {
+        style: {},
+        searchIconFile: "../comp-m2/search-input-v2/search.svg",
+        clearIconFile: "../comp-m2/search-input-v2/clear-round.svg",
+        searchIconSize: 24,
+        searchIconOpacity: 0.5,
+        clearIconOpacity: 1,
+        invertIconColor: 1,
+        color: "#2B2D31",
+        textColor: "rgba(255, 255, 255, 0.88)",
+        placeholderColor: "rgba(255, 255, 255, 0.35)",
+        fontSize: 20,
+        border: 1,
+        borderColor: "rgba(255, 255, 255, 0.1)",
+        borderBottomStyle: "3px solid rgba(0, 0, 0, 0.3)",
         round: 50,
     },
 

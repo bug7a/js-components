@@ -24,7 +24,7 @@
         // http://127.0.0.1:5505/__projects/basic-designer/index.htm?page=02-comp-m2-samples/search-input-v2-bugra.htm
 
         // *** VARIABLES:
-        let scrollBox, searchEmpty, searchWithText, searchWide, searchClassic, lblSearched;
+        let scrollBox, searchEmpty, searchWithText, searchWide, searchDark, searchClassic, lblSearched;
 
         const start = function () {
 
@@ -55,11 +55,27 @@
                     searchWide = SearchInput({
                         styleName: "bugra",
                         width: 480,
+                        height: 40,
+                        fontSize: 18,
+                        searchIconSize: 20,
                         placeholderText: "Search in all pages",
                         onSearch: showSearched,
                     });
 
                     lblSearched = Label({ text: "Searched: -", fontSize: 13, textColor: Black(0.5) });
+
+                    // BUGRA DARK
+                    VGroup({ hug: 1, align: "left top", gap: 12, padding: 24, color: "#1E1F22", round: 16 });
+
+                        Label({ text: "bugraDark · on a dark page", fontSize: 12, textColor: White(0.45) });
+                        searchDark = SearchInput({
+                            styleName: "bugraDark",
+                            placeholderText: "Search products",
+                            onSearch: showSearched,
+                        });
+                        searchDark.setText("fishing boat");
+
+                    endGroup();
 
                     // CLASSIC (to compare)
                     caption("classic · to compare");
