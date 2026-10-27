@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Search Input: bugra style</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp-m2/search-input-v2.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // DESIGN PAGE: SearchInput with styleName "bugra", to edit SearchInput.styles.bugra (comp-m2/search-input-v2.js).
+        // The look comes only from the package: the samples give no look params.
+        // basic-designer:
+        // http://127.0.0.1:5505/__projects/basic-designer/index.htm?page=02-comp-m2-samples/search-input-v2-bugra.htm
+
+        // *** VARIABLES:
+        let scrollBox, searchEmpty, searchWithText, searchWide, searchClassic, lblSearched;
+
+        const start = function () {
+
+            page.color = "#F4F5F2";
+
+            // BOX: Scrolling page
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            scrollBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+
+                VGroup({ width: "100%", height: "auto", align: "left top", gap: 28, padding: 40 });
+
+                    // BUGRA
+                    caption("bugra · empty");
+                    searchEmpty = SearchInput({
+                        styleName: "bugra",
+                        onSearch: showSearched,
+                    });
+
+                    caption("bugra · with text (the clear icon is shown when you type)");
+                    searchWithText = SearchInput({
+                        styleName: "bugra",
+                        placeholderText: "Search products",
+                        onSearch: showSearched,
+                    });
+                    searchWithText.setText("fishing boat");
+
+                    caption("bugra · wide (480)");
+                    searchWide = SearchInput({
+                        styleName: "bugra",
+                        width: 480,
+                        placeholderText: "Search in all pages",
+                        onSearch: showSearched,
+                    });
+
+                    lblSearched = Label({ text: "Searched: -", fontSize: 13, textColor: Black(0.5) });
+
+                    // CLASSIC (to compare)
+                    caption("classic · to compare");
+                    searchClassic = SearchInput({
+                        onSearch: showSearched,
+                    });
+
+                endGroup();
+
+            endBox();
+
+            if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: scrollBox });
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        const showSearched = function (searchedText) {
+            lblSearched.text = "Searched: " + (searchedText || "-");
+        };
+
+        const caption = function (text) {
+            return Label({ text: text, fontSize: 12, textColor: Black(0.4) });
+        };
+
+    </script>
+
+</head>
+
+<body>
+</body>
+
+</html>

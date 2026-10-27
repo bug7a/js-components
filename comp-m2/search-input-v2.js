@@ -6,6 +6,9 @@ Search Input - v24.04
 
 UI COMPONENT TEMPLATE
 - You can customize, this template code as you need:
+- Style packages: "classic" (default), "bugra". Select with styleName. (SearchInput.styles)
+-- A package is a package of params (basic.js v26.10.27): its keys fill the params you did not give.
+-- SearchInput.styles.myStyle = { style: {}, color: "white", textColor: "#222", ... };
 
 Started Date: December 2025
 Developer: Bugra Ozden
@@ -38,17 +41,20 @@ const SearchInputDefaults = {
     invertIconColor: 0,
     onSearch: function(searchedText, self) {},
     onSubmit: function(searchedText, self) {},
+    styleName: "classic", // "classic", "bugra" or a name added to SearchInput.styles
+    style: {}, // WHY: the look is in the flat params above; the packages are packages of params (see SearchInput.styles).
 };
 
 const SearchInput = function(params = {}) {
+
+    // Merge style package: your params > SearchInput.styles[styleName] (a package of params) > SearchInputDefaults
+    basic.applyStylePackage(params, SearchInput.styles, SearchInputDefaults);
 
     // Merge params:
     mergeIntoIfMissing(params, SearchInputDefaults);
 
     // BOX: Component container
-    const box = startBox();
-
-    box.props(params);
+    const box = startObject(params);
     
     // *** Private variables:
     const ICON_LEFT = 16; // The search icon from the left side
@@ -143,8 +149,6 @@ const SearchInput = function(params = {}) {
         that.cursor = "pointer";
         that.setMotion("opacity 0.3s");
 
-    endBox();
-
     // *** OBJECT INIT CODE:
     box.txtSearch.inputElement.addEventListener("keyup", function(event) {
 
@@ -170,8 +174,7 @@ const SearchInput = function(params = {}) {
     });
     box.imgClearIcon.clickable = 0;
 
-    makeBasicObject(box);
-    return box;
+    return endObject(box);
 
 };
 
@@ -184,5 +187,36 @@ SearchInput.addPlaceholderStyle = function() {
     styleElement.id = "searchInputPlaceholderStyle";
     styleElement.textContent = "input[data-placeholder-color]::placeholder { color: var(--placeholder-color); opacity: 1; }";
     document.head.appendChild(styleElement);
+
+};
+
+// *** STYLE PACKAGES:
+// USAGE: SearchInput({ styleName: "bugra" })
+// USAGE: SearchInput({ styleName: "bugra", fontSize: 16 }) // A param you give wins over the package.
+// NOTE: Every package has "style: {}": that is the mark of a package of params (basic.js v26.10.27).
+//       Without it the keys would go into params.style and change nothing.
+// NOTE: A package needs only the params that differ from SearchInputDefaults.
+SearchInput.styles = {
+
+    // The look of SearchInputDefaults (whitesmoke, a soft bottom line).
+    classic: { style: {} },
+
+    // Bugra's style: the values of classic for now, to be changed. (Change, add or remove any look param.)
+    bugra: {
+        style: {},
+        searchIconFile: "../comp-m2/search-input-v2/search.svg",
+        clearIconFile: "../comp-m2/search-input-v2/clear.svg",
+        searchIconSize: 24,
+        searchIconOpacity: 1,
+        invertIconColor: 0,
+        color: "whitesmoke",
+        textColor: "rgba(0, 0, 0, 0.8)",
+        placeholderColor: "",
+        fontSize: 20,
+        border: 0,
+        borderColor: "rgba(0, 0, 0, 0.1)",
+        borderBottomStyle: "2px solid rgba(0, 0, 0, 0.06)",
+        round: 6,
+    },
 
 };
