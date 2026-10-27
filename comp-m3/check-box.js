@@ -9,7 +9,7 @@ UI COMPONENT TEMPLATE
 - Checkmark is drawn with code (no image files needed).
 - Supports: checked, enabled, label position (left/right), keyboard (Space/Enter).
 - Whole object background can change on hover and checked states (style.hoverBox, style.checkedBox).
-- Style packages: "classic" (default), "modern". Select with styleName. (CheckBox.styles)
+- Style packages: "classic" (default), "modern", "dark". Select with styleName. (CheckBox.styles)
 
 Started Date: September 2026
 Developer: Bugra Ozden
@@ -30,7 +30,7 @@ const CheckBoxDefaults = {
     labelText: "",
     labelPosition: "right", // "right", "left"
     onChange: function (self) { }, // self.checked
-    styleName: "classic", // "classic", "modern" or a name added to CheckBox.styles
+    styleName: "classic", // "classic", "modern", "dark" or a name added to CheckBox.styles
     style: { // Classic style package (default)
         box: { // Whole object background
             color: "transparent",
@@ -335,6 +335,25 @@ CheckBox.styles = {
         },
         disabled: {
             opacity: 0.4,
+        },
+    },
+
+    // Dark theme (the Ozden Panel colors, same as SidePanel, Stepper and Tabs "dark"): the classic shape on a dark page.
+    // NOTE: Only the keys that differ from classic.
+    dark: {
+        mark: { // Unchecked square
+            color: "#2A2A29",
+            borderColor: White(0.3),
+        },
+        checkedMark: { // Checked square
+            color: "#3D7A6B",
+            borderColor: "#3D7A6B",
+        },
+        hoverMark: { // Mouse over (only border)
+            borderColor: White(0.6),
+        },
+        label: {
+            textColor: White(0.85),
         },
     },
 

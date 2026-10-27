@@ -1112,15 +1112,8 @@ LabelEditor.styles = {
             sidePanelStyleName: "dark",
             stepperStyleName: "dark",
             tabsStyleName: "dark",
-            checkBoxStyleName: "classic",
+            checkBoxStyleName: "dark",
             selectColorStyleName: "dark",
-            // WHY: CheckBox has no dark package. Its colors are given here.
-            checkBoxStyle: {
-                mark: { color: "#2A2A29", borderColor: "rgba(255, 255, 255, 0.3)" },
-                checkedMark: { color: "#3D7A6B", borderColor: "#3D7A6B" },
-                hoverMark: { borderColor: "rgba(255, 255, 255, 0.6)" },
-                label: { fontSize: 14, textColor: "rgba(255, 255, 255, 0.85)" },
-            },
             // WHY: the field is like the other inputs of the panel (input: #2A2A29, round 6).
             selectColorStyle: {
                 field: { color: "#2A2A29", borderColor: "rgba(255, 255, 255, 0.12)", round: 6 },

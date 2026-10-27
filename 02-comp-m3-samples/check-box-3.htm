@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Check Box 3</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp-m3/check-box.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // *** VARIABLES:
+        let lblTasks, chkDisabled, scrollBox;
+        const taskList = [];
+
+        // The colors of the page (Ozden Panel dark theme)
+        const PAGE_COLOR = "#000000";
+        const CARD_COLOR = "#1A1A19";
+
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            // BOX: Full screen scrollable container
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            scrollBox = startBox(0, 0, "100%", "100%", {
+                color: "transparent",
+                scrollY: 1,
+            });
+
+                // GROUP: Page layout
+                VGroup({
+                    width: "100%",
+                    height: "auto", // Grows with content, so the Box can scroll.
+                    align: "center top",
+                    gap: 30,
+                    padding: 50,
+                });
+
+                    // LABEL: Title
+                    Label({
+                        text: "Check Box 3",
+                        fontSize: 26,
+                        fontFamily: "opensans-bold",
+                        textColor: White(0.9),
+                    });
+
+                    Label({
+                        text: "styleName: \"dark\": the classic shape on a dark page.",
+                        fontSize: 14,
+                        textColor: White(0.5),
+                    });
+
+                    // SAMPLE 1: Task list
+                    startCard("1. Task List");
+
+                        ["Buy groceries", "Call the dentist", "Finish the report", "Go for a walk"].forEach(function (name, index) {
+                            CheckBox({
+                                key: String(index),
+                                labelText: name,
+                                checked: (index == 1) ? 1 : 0,
+                                onChange: refreshTasks,
+                                styleName: "dark",
+                            });
+                            taskList.push(that);
+                        });
+
+                        lblTasks = Label({
+                            text: "",
+                            fontSize: 14,
+                            textColor: White(0.5),
+                            padding: [0, 8],
+                        });
+
+                    endCard();
+
+                    // SAMPLE 2: States
+                    startCard("2. States");
+
+                        chkDisabled = CheckBox({
+                            labelText: "Disabled (checked)",
+                            checked: 1,
+                            enabled: 0,
+                            styleName: "dark",
+                        });
+
+                        CheckBox({
+                            labelText: "Enable the check box above",
+                            onChange: function (self) {
+                                chkDisabled.setEnabled(self.checked);
+                            },
+                            styleName: "dark",
+                        });
+
+                        CheckBox({
+                            labelText: "Label on the left",
+                            labelPosition: "left",
+                            styleName: "dark",
+                        });
+
+                        // Without label (auto width)
+                        HGroup({ width: "auto", height: "auto", gap: 4 });
+                            CheckBox({ styleName: "dark" });
+                            CheckBox({ checked: 1, styleName: "dark" });
+                        endGroup();
+
+                    endCard();
+
+                    // SAMPLE 3: Another accent color
+                    startCard("3. Only the accent changed");
+
+                        CheckBox({
+                            labelText: "Purple when checked",
+                            checked: 1,
+                            styleName: "dark",
+                            style: { checkedMark: { color: "#8B5CF6", borderColor: "#8B5CF6" } },
+                        });
+
+                    endCard();
+
+                endGroup();
+
+            endBox();
+
+            if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: scrollBox });
+
+            refreshTasks();
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        // GROUP: A dark card with a title.
+        const startCard = function (title) {
+            VGroup({
+                width: 360,
+                height: "auto",
+                align: "left top",
+                gap: 8,
+                padding: 20,
+                color: CARD_COLOR,
+                round: 12,
+                border: 1,
+                borderColor: White(0.08),
+            });
+            Label({
+                text: title,
+                fontSize: 14,
+                textColor: White(0.45),
+                padding: [0, 4],
+            });
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+        const refreshTasks = function () {
+            const doneCount = taskList.filter(function (chk) { return chk.checked == 1; }).length;
+            lblTasks.text = "Done: " + doneCount + " / " + taskList.length;
+        };
+
+    </script>
+</head>
+
+<body></body>
+
+</html>

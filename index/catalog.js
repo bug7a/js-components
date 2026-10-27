@@ -258,9 +258,10 @@ CATALOG.COMPONENTS = [
         samples: [
             { file: "02-comp-m3-samples/check-box-1.htm", title: "Example 1" },
             { file: "02-comp-m3-samples/check-box-2.htm", title: "Example 2" },
+            { file: "02-comp-m3-samples/check-box-3.htm", title: "Example 3 (dark)" },
         ],
-        en: "Check box with a label, drawn with code; classic and modern style packages.",
-        tr: "Kodla çizilen etiketli onay kutusu; classic ve modern stil paketleri.",
+        en: "Check box with a label, drawn with code; classic, modern and dark style packages.",
+        tr: "Kodla çizilen etiketli onay kutusu; classic, modern ve dark stil paketleri.",
     },
     {
         key: "radio-button", name: "RadioButton", gen: 3, cat: "selection",
