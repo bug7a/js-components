@@ -84,7 +84,7 @@ const URLInputB = function(params = {}) {
 
             box.tinySelect = TinySelect(box.tinySelectParams);
             box.tinySelect.lblLabel.css.fontFamily = "opensans";
-            box.tinySelect.lblLabel.textColor = "#373836";
+            box.tinySelect.lblLabel.textColor = box.inputTextColor; // WHY: not "#373836": dark on a dark package
 
             box.input = Input({
                 text: box.inputValue,
@@ -96,6 +96,7 @@ const URLInputB = function(params = {}) {
             });
             that.inputElement.style.padding = "0px 4px";
             that.inputElement.placeholder = box.placeholder;
+            box.applyTextColors(that.inputElement);
             that.inputElement.maxLength = box.maxChar;
             that.inputElement.setAttribute("aria-label", box.titleText);
 
@@ -104,16 +105,15 @@ const URLInputB = function(params = {}) {
     // *** OBJECT INIT CODE:
     const inputElem = box.input.inputElement;
 
+    // WHY: box.paintFocus() of InputB: this copy did not change the border on focus.
     box.focusFunc = function () {
-        box.background.color = box.selectedBackgroundColor;
-        box.line.color = box.selectedLineColor;
+        box.paintFocus(1);
         box.onFocus();
     }
     inputElem.addEventListener("focus", function(){ box.focusFunc() });
 
     box.blurFunc = function () {
-        box.background.color = box.backgroundColor;
-        box.line.color = box.lineColor;
+        box.paintFocus(0);
         box.onBlur();
     }
     inputElem.addEventListener("blur", function(){ box.blurFunc() });

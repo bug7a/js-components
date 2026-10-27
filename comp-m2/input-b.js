@@ -329,6 +329,22 @@ const InputB = function(params = {}) {
         return box.input.text;
     };
 
+    // The colors of the field while it is focused (1) or not (0): background, border and line.
+    // NOTE: A component made from InputB (PhoneInputB, UrlInputB, TextareaB) calls this in its own focusFunc / blurFunc.
+    box.paintFocus = function(isFocused) {
+        box.background.color = (isFocused) ? box.selectedBackgroundColor : box.backgroundColor;
+        box.background.borderColor = (isFocused) ? box.selectedBackBorderColor : box.backBorderColor;
+        box.line.color = (isFocused) ? box.selectedLineColor : box.lineColor;
+    };
+
+    // The text colors of a field element (<input> or <textarea>): inputTextColor, placeholderColor, inputColorScheme.
+    // NOTE: A component that makes its own field element (UrlInputB, TextareaB) calls this for it.
+    box.applyTextColors = function(fieldElement) {
+        fieldElement.style.color = box.inputTextColor;
+        if (box.placeholderColor) InputB.setPlaceholderColor(fieldElement, box.placeholderColor);
+        if (box.inputColorScheme) fieldElement.style.colorScheme = box.inputColorScheme;
+    };
+
     // Sets the background color of the input element itself
     box.setBackgroundColor = function(color) {
         box.backgroundColor = color;
@@ -447,8 +463,7 @@ const InputB = function(params = {}) {
                 });
                 that.inputElement.style.padding = "0px 0px";
                 that.inputElement.placeholder = box.placeholder;
-                if (box.placeholderColor) InputB.setPlaceholderColor(that.inputElement, box.placeholderColor);
-                if (box.inputColorScheme) that.inputElement.style.colorScheme = box.inputColorScheme;
+                box.applyTextColors(that.inputElement);
                 that.inputElement.maxLength = box.maxChar;
                 that.inputElement.setAttribute("aria-label", box.titleText);
             } else {
@@ -552,17 +567,13 @@ const InputB = function(params = {}) {
         const inputElem = box.input.inputElement;
 
         box.focusFunc = function () {
-            box.background.color = box.selectedBackgroundColor;
-            box.background.borderColor = box.selectedBackBorderColor;
-            box.line.color = box.selectedLineColor;
+            box.paintFocus(1);
             box.onFocus();
         }
         inputElem.addEventListener("focus", function(){ box.focusFunc() });
 
         box.blurFunc = function () {
-            box.background.color = box.backgroundColor;
-            box.background.borderColor = box.backBorderColor;
-            box.line.color = box.lineColor;
+            box.paintFocus(0);
             box.onBlur();
         }
         inputElem.addEventListener("blur", function(){ box.blurFunc() });

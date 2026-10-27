@@ -210,9 +210,10 @@ const PhoneInputB = function(params = {}) {
 
     if(box.createInput == 1) { // Always will be 1
         
+        // WHY: box.paintFocus() of InputB: this copy painted only the background and the line, so the
+        //      border of a package (ozden, ozdenDark, dark) did not change on focus.
         box.focusFunc = function () {
-            box.background.color = box.selectedBackgroundColor;
-            box.line.color = box.selectedLineColor;
+            box.paintFocus(1);
             // Eğer input boşsa countryCode + phoneMask yaz
             if (inputElem.value.trim() === "") {
                 inputElem.value = getFullMask();
@@ -225,8 +226,7 @@ const PhoneInputB = function(params = {}) {
         };
 
         box.blurFunc = function() {
-            box.background.color = box.backgroundColor;
-            box.line.color = box.lineColor;
+            box.paintFocus(0);
 
             if (inputElem.value == getFullMask()) { // WHY: The field itself. (getInputValue() is "" for the mask.)
                 box.setInputValue("");

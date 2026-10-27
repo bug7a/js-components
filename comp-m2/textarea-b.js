@@ -117,9 +117,7 @@ const TextareaB = function(params = {}) {
         textareaElem.placeholder = box.placeholder;
         // WHY: The <textarea> is made here, not by InputB, so the text colors of InputB were never given to it:
         //      on a dark package (dark, ozdenDark) the typed text was dark on a dark field.
-        textareaElem.style.color = box.inputTextColor;
-        if (box.placeholderColor) InputB.setPlaceholderColor(textareaElem, box.placeholderColor);
-        if (box.inputColorScheme) textareaElem.style.colorScheme = box.inputColorScheme;
+        box.applyTextColors(textareaElem);
         textareaElem.maxLength = box.maxChar;
         box.inputBox.elem.appendChild(textareaElem);
         box.inputBox.clickable = 1;
@@ -148,17 +146,13 @@ const TextareaB = function(params = {}) {
     
     // Event bindings
     box.focusFunc = function () {
-        box.background.color = box.selectedBackgroundColor;
-        box.background.borderColor = box.selectedBackBorderColor;
-        box.line.color = box.selectedLineColor;
+        box.paintFocus(1);
         box.onFocus();
     }
     textareaElem.addEventListener("focus", function(){ box.focusFunc() });
     
     box.blurFunc = function () {
-        box.background.color = box.backgroundColor;
-        box.background.borderColor = box.backBorderColor;
-        box.line.color = box.lineColor;
+        box.paintFocus(0);
         box.onBlur();
     }
     textareaElem.addEventListener("blur", function(){ box.blurFunc() });
