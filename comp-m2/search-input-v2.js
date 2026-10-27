@@ -201,11 +201,11 @@ SearchInput.styles = {
     // The look of SearchInputDefaults (whitesmoke, a soft bottom line).
     classic: { style: {} },
 
-    // Bugra's style: the values of classic for now, to be changed. (Change, add or remove any look param.)
+    // Bugra's style: a round field with a thin line, a soft search icon and a white round clear button. (Change, add or remove any look param.)
     bugra: {
         style: {},
         searchIconFile: "../comp-m2/search-input-v2/search.svg",
-        clearIconFile: "../comp-m2/search-input-v2/clear.svg",
+        clearIconFile: "../comp-m2/search-input-v2/clear-round.svg",
         searchIconSize: 24,
         searchIconOpacity: 0.4,
         invertIconColor: 0,
@@ -213,10 +213,10 @@ SearchInput.styles = {
         textColor: "rgba(0, 0, 0, 0.8)",
         placeholderColor: "",
         fontSize: 20,
-        border: 0,
+        border: 1,
         borderColor: "rgba(0, 0, 0, 0.1)",
         borderBottomStyle: "2px solid rgba(0, 0, 0, 0.06)",
-        round: 6,
+        round: 50,
     },
 
 };
