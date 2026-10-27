@@ -45,7 +45,9 @@ WebSite: https://bug7a.github.io/js-components
 
 - hoverEffect: "" | "tilt" | any hover type of UIEffects (comp-m4/ui-effects.js, load it first)
 -- InputB({ hoverEffect: "tilt" })                                   // the field turns in 3D to the mouse
+-- InputB({ hoverEffect: "lift" })                                   // the field rises a little, with a shadow
 -- InputB({ hoverEffect: "tilt", hoverEffectOptions: { angle: 6 } })
+-- The options of a field are softer than the ones of a card: InputB.hoverEffectDefaults (yours win).
 -- "" or no UIEffects on the page: no effect.
 
 - warningBallType: "color" | "icon"
@@ -112,7 +114,7 @@ const InputBDefaults = {
     animatedWarningBall: 1,
 
     hoverEffect: "", // "": none. "tilt", "lift", "grow"...: UIEffects.hover(box, hoverEffect) (needs comp-m4/ui-effects.js)
-    hoverEffectOptions: { angle: 4, scale: 1.01, glare: 0 }, // WHY: a field is wide: the 8° of a card turned it too much.
+    hoverEffectOptions: {}, // over InputB.hoverEffectDefaults[hoverEffect]
 
     warningBallType: "color", // "color": colored ball, "icon": icon image
     warningIconSize: 20,
@@ -609,7 +611,13 @@ const InputB = function(params = {}) {
     }
 
     if (box.hoverEffect && typeof UIEffects !== "undefined") {
-        box.removeHoverEffect = UIEffects.hover(box, box.hoverEffect, box.hoverEffectOptions);
+        // WHY: The shadow of an effect (lift) is drawn by the box: with square corners around a round field.
+        box.css.borderTopLeftRadius = box.backBorderTopRound + "px";
+        box.css.borderTopRightRadius = box.backBorderTopRound + "px";
+        box.css.borderBottomLeftRadius = box.backBorderBottomRound + "px";
+        box.css.borderBottomRightRadius = box.backBorderBottomRound + "px";
+        const effectOptions = Object.assign({}, InputB.hoverEffectDefaults[box.hoverEffect], box.hoverEffectOptions);
+        box.removeHoverEffect = UIEffects.hover(box, box.hoverEffect, effectOptions);
     }
 
     return endObject(box);
@@ -621,6 +629,12 @@ InputB.setPlaceholderColor = function(inputElement, color) {
     basic.addCss("input-b-placeholder", ".input-b-placeholder::placeholder { color: var(--input-b-placeholder); opacity: 1; }");
     inputElement.classList.add("input-b-placeholder");
     inputElement.style.setProperty("--input-b-placeholder", color);
+};
+
+// The options of UIEffects for a field (hoverEffect). A field is wide and holds text: softer than a card.
+InputB.hoverEffectDefaults = {
+    tilt: { angle: 4, scale: 1.01, glare: 0 }, // a card: 8°, 1.03
+    lift: { distance: 2, shadowColor: Black(0.12) }, // a card: 4 px, Black(0.22)
 };
 
 // *** STYLE PACKAGES:
