@@ -269,6 +269,7 @@ CATALOG.COMPONENTS = [
         samples: [
             { file: "02-comp-m3-samples/radio-button-1.htm", title: "Example 1" },
             { file: "02-comp-m3-samples/radio-button-2.htm", title: "Example 2" },
+            { file: "02-comp-m3-samples/radio-button-3.htm", title: "Example 3 (dark)" },
         ],
         en: "Radio buttons that work in groups, with keyboard support and style packages.",
         tr: "Gruplar halinde çalışan, klavye destekli ve stil paketli seçenek düğmeleri.",

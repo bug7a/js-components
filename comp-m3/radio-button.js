@@ -11,7 +11,7 @@ UI COMPONENT TEMPLATE
 - Supports: checked, enabled, value, label position (left/right),
   keyboard (Space/Enter to select, Arrow keys to move in the group).
 - Whole object background can change on hover and checked states (style.hoverBox, style.checkedBox).
-- Style packages: "classic" (default), "modern". Select with styleName. (RadioButton.styles)
+- Style packages: "classic" (default), "modern", "dark". Select with styleName. (RadioButton.styles)
 
 Started Date: September 2026
 Developer: Bugra Ozden
@@ -34,7 +34,7 @@ const RadioButtonDefaults = {
     labelText: "",
     labelPosition: "right", // "right", "left"
     onChange: function (self) { }, // Called when this radio button is selected.
-    styleName: "classic", // "classic", "modern" or a name added to RadioButton.styles
+    styleName: "classic", // "classic", "modern", "dark" or a name added to RadioButton.styles
     style: { // Classic style package (default)
         box: { // Whole object background
             color: "transparent",
@@ -439,6 +439,28 @@ RadioButton.styles = {
         },
         disabled: {
             opacity: 0.4,
+        },
+    },
+
+    // Dark theme (the Ozden Panel colors, same as CheckBox "dark"): the classic shape on a dark page.
+    // NOTE: Only the keys that differ from classic.
+    dark: {
+        mark: { // Unchecked circle
+            color: "#2A2A29",
+            borderColor: White(0.3),
+        },
+        checkedMark: { // Checked circle
+            color: "#2A2A29",
+            borderColor: "#65A293", // WHY: lighter than the CheckBox fill (#3D7A6B): a thin line and a small dot need it.
+        },
+        hoverMark: { // Mouse over (only border)
+            borderColor: White(0.6),
+        },
+        dot: {
+            color: "#65A293",
+        },
+        label: {
+            textColor: White(0.85),
         },
     },
 

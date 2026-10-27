@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Radio Button 3</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp-m3/radio-button.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // *** VARIABLES:
+        let lblSize, lblPlan, rdoPremium, scrollBox;
+
+        // The colors of the page (Ozden Panel dark theme)
+        const PAGE_COLOR = "#000000";
+        const CARD_COLOR = "#1A1A19";
+
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            // BOX: Full screen scrollable container
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            scrollBox = startBox(0, 0, "100%", "100%", {
+                color: "transparent",
+                scrollY: 1,
+            });
+
+                // GROUP: Page layout
+                VGroup({
+                    width: "100%",
+                    height: "auto", // Grows with content, so the Box can scroll.
+                    align: "center top",
+                    gap: 30,
+                    padding: 50,
+                });
+
+                    // LABEL: Title
+                    Label({
+                        text: "Radio Button 3",
+                        fontSize: 26,
+                        fontFamily: "opensans-bold",
+                        textColor: White(0.9),
+                    });
+
+                    Label({
+                        text: "styleName: \"dark\": the classic shape on a dark page.",
+                        fontSize: 14,
+                        textColor: White(0.5),
+                    });
+
+                    // SAMPLE 1: A group
+                    startCard("1. Size");
+
+                        ["Small", "Medium", "Large"].forEach(function (name) {
+                            RadioButton({
+                                group: "size",
+                                value: name.charAt(0), // S, M, L
+                                labelText: name,
+                                checked: (name == "Medium") ? 1 : 0,
+                                onChange: refreshSize,
+                                styleName: "dark",
+                            });
+                        });
+
+                        lblSize = Label({
+                            text: "",
+                            fontSize: 14,
+                            textColor: White(0.5),
+                            padding: [0, 8],
+                        });
+
+                    endCard();
+
+                    // SAMPLE 2: States
+                    startCard("2. States");
+
+                        RadioButton({ group: "plan", value: "free", labelText: "Free", checked: 1, onChange: refreshPlan, styleName: "dark" });
+                        RadioButton({ group: "plan", value: "pro", labelText: "Pro", onChange: refreshPlan, styleName: "dark" });
+                        rdoPremium = RadioButton({ group: "plan", value: "premium", labelText: "Premium (disabled)", enabled: 0, onChange: refreshPlan, styleName: "dark" });
+                        RadioButton({ group: "plan", value: "team", labelText: "Label on the left", labelPosition: "left", onChange: refreshPlan, styleName: "dark" });
+
+                        lblPlan = Label({
+                            text: "",
+                            fontSize: 14,
+                            textColor: White(0.5),
+                            padding: [0, 8],
+                        });
+
+                    endCard();
+
+                    // SAMPLE 3: Another accent color
+                    startCard("3. Only the accent changed");
+
+                        RadioButton({
+                            group: "accent",
+                            labelText: "Purple when checked",
+                            checked: 1,
+                            styleName: "dark",
+                            style: { checkedMark: { borderColor: "#A78BFA" }, dot: { color: "#A78BFA" } },
+                        });
+
+                    endCard();
+
+                endGroup();
+
+            endBox();
+
+            if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: scrollBox });
+
+            refreshSize();
+            refreshPlan();
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        // GROUP: A dark card with a title.
+        const startCard = function (title) {
+            VGroup({
+                width: 360,
+                height: "auto",
+                align: "left top",
+                gap: 8,
+                padding: 20,
+                color: CARD_COLOR,
+                round: 12,
+                border: 1,
+                borderColor: White(0.08),
+            });
+            Label({
+                text: title,
+                fontSize: 14,
+                textColor: White(0.45),
+                padding: [0, 4],
+            });
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+        const refreshSize = function () {
+            lblSize.text = "Size: " + RadioButton.getValue("size");
+        };
+
+        const refreshPlan = function () {
+            lblPlan.text = "Plan: " + RadioButton.getValue("plan");
+        };
+
+    </script>
+</head>
+
+<body></body>
+
+</html>
