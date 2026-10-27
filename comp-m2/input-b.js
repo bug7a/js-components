@@ -46,6 +46,7 @@ WebSite: https://bug7a.github.io/js-components
 - hoverEffect: "" | "tilt" | any hover type of UIEffects (comp-m4/ui-effects.js, load it first)
 -- InputB({ hoverEffect: "tilt" })                                   // the field turns in 3D to the mouse
 -- InputB({ hoverEffect: "lift" })                                   // the field rises a little, with a shadow
+-- InputB({ hoverEffect: "grow" })                                   // the field grows a little
 -- InputB({ hoverEffect: "tilt", hoverEffectOptions: { angle: 6 } })
 -- The options of a field are softer than the ones of a card: InputB.hoverEffectDefaults (yours win).
 -- "" or no UIEffects on the page: no effect.
@@ -635,6 +636,7 @@ InputB.setPlaceholderColor = function(inputElement, color) {
 InputB.hoverEffectDefaults = {
     tilt: { angle: 4, scale: 1.01, glare: 0 }, // a card: 8°, 1.03
     lift: { distance: 2, shadowColor: Black(0.12) }, // a card: 4 px, Black(0.22)
+    grow: { scale: 1.02 }, // a card: 1.05 (a 380 px field was 19 px wider)
 };
 
 // *** STYLE PACKAGES:
