@@ -20,7 +20,7 @@
 
         /* Bismillah */
 
-        // InputB with styleName: "dark" (the colors of the Ozden Panel, webpage-admin-panel)
+        // InputB with styleName: "dark": the dark theme of classic (the same shape: a line under the field, no border).
 
         const PAGE_COLOR = "black";
         const CARD_COLOR = "#1A1A19";
@@ -80,13 +80,13 @@
                         };
                         codeInput.showWarningIfNotValid(codeInput.isValid());
 
-                        addCaption("ONE PARAM OF THE PACKAGE CHANGED (selectedBackBorderColor)");
+                        addCaption("ONE PARAM OF THE PACKAGE CHANGED (selectedLineColor)");
                         InputB({
                             styleName: "dark",
                             width: "100%",
                             titleText: "E-MAIL",
                             placeholder: "name@example.com",
-                            selectedBackBorderColor: "#3987E5",
+                            selectedLineColor: "#3987E5",
                         });
 
                     endGroup();

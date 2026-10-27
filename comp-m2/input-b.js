@@ -620,43 +620,40 @@ InputB.styles = {
     // The default look (InputBDefaults): a light field with a line under it.
     classic: { style: {} },
 
-    // The dark fields of the Ozden Panel (webpage-admin-panel, theme "dark"): a rounded field on a
-    // dark card, a thin border, the accent color on focus, no line.
+    // The dark theme of classic: the same shape (a line under the field, no border, the warning as a colored
+    // ball), each color of classic turned to its dark side. (The rounded, bordered dark fields are ozdenDark.)
     dark: {
         style: {},
-        backgroundColor: "#232322", // surface2: a field
-        selectedBackgroundColor: "#2C2C2A", // surface3
-        lineColor: "transparent",
-        selectedLineColor: "transparent",
-        backBorderColor: White(0.1), // the border of a card
-        selectedBackBorderColor: "#65A293", // accent
-        backBorderTopRound: 8,
-        backBorderBottomRound: 8,
+        backgroundColor: "#232322", // classic #F6F6F6
+        selectedBackgroundColor: "#2A2C27", // classic #F3F4E0: the same soft green tint, on dark
+        lineColor: White(0.75), // classic #373836: the strong line under the field
+        selectedLineColor: "#65A293", // the same accent
+        backBorderColor: Black(0),
+        selectedBackBorderColor: Black(0),
 
-        titleTextColor: White(0.45),
-        inputTextColor: White(0.9),
+        titleTextColor: White(0.6), // classic #555555
+        inputTextColor: White(0.9), // classic #373836
         placeholderColor: White(0.3),
-        descriptionTextColor: White(0.4),
-        warningBallBorderColor: "#1A1A19", // surface: the card under the field
+        descriptionTextColor: White(0.4), // classic #999999
+        warningBallBorderColor: White(0.75), // classic #373836: the color of the line
 
-        requiredColor: "#E66767", // danger
-        warningColor: "#E66767",
-        requiredIconColor: White(0.45),
+        requiredColor: "#141414", // classic white: the ball takes the color of the page under it
+        requiredIconColor: White(0.75), // classic #373836
 
         tooltipStyle: {
-            textColor: "#141414",
-            borderColor: "#141414",
+            textColor: White(0.9), // classic #141414 on a white ball
+            borderColor: White(0.75), // classic #141414
         },
 
         unitStyle: {
-            color: "#2C2C2A", // surface3
-            textColor: White(0.85),
+            color: White(0.85), // classic #373836: a light pill on the dark field
+            textColor: "#1A1A19", // classic white
         },
 
         selectStyle: {
-            color: "#2C2C2A", // surface3
+            color: White(0.06), // classic rgba(0,0,0,0.05)
             invertIconColor: 1,
-            listBackgroundColor: "#232322", // surface2
+            listBackgroundColor: "#232322",
             listTextColor: White(0.85),
             listBorderColor: White(0.12),
         },
