@@ -15,6 +15,9 @@ UI COMPONENT TEMPLATE
   Each item has a type, a key, a value and its own settings. Every item type is a small object
   built by its own function (see *** ITEM TYPES):
     number     -> [X  396]  prefix text or icon (drag the prefix to change the value), unit, min, max, step, autoText
+                  parseText(text): a text that is not a plain number goes to it; it returns the value ("100%", "auto")
+                  or undefined (the old value comes back). A text value is shown as it is.
+                  textToNumber(value): the number of a text value, to drag or step it (Ex: "100%" -> its width in px).
     text       -> [ name ]  a text field
     textarea   -> a text of more lines (rows: 2). caption: the first line of the placeholder (it goes while writing). Saved on blur or Cmd/Ctrl+Enter.
     select     -> [ Left ⌄]  a menu of options, optional icon, look: "plain" (no background)
@@ -543,7 +546,17 @@ const PropertyPanel = function (params = {}) {
 
         const format = function (v) {
             if (v === null || v === undefined || v === "") return item.autoText || "";
+            if (typeof v === "string") return v; // A text value of parseText ("100%", "auto")
             return Number(v).toFixed(precision) + (item.unit || "");
+        };
+
+        // The number of a value: a number, or the number of a text value from textToNumber ("100%" -> 412 px).
+        // null: no number (a text value without textToNumber is not scrubbed or stepped).
+        const numberOf = function (v) {
+            if (typeof v === "number") return v;
+            if (typeof v !== "string" || !item.textToNumber) return null;
+            const n = Number(item.textToNumber(v));
+            return (isNaN(n)) ? null : n;
         };
 
         const clamp = function (v) {
@@ -552,9 +565,12 @@ const PropertyPanel = function (params = {}) {
         };
 
         // Text -> value. undefined: not a number (the old value comes back).
+        // parseText (item): a text that is not a plain number goes to it, and its answer is the value ("100%").
         const parse = function (text) {
             text = String(text).trim();
             if (item.autoText && (text === "" || text.toLowerCase() === String(item.autoText).toLowerCase())) return null;
+            const isPlainNumber = /^-?\d*[.,]?\d+(px)?$/i.test(text);
+            if (item.parseText && !isPlainNumber) return item.parseText(text);
             const match = text.replace(",", ".").match(/-?\d*\.?\d+/);
             if (!match) return undefined;
             return clamp(parseFloat(match[0]));
@@ -563,6 +579,7 @@ const PropertyPanel = function (params = {}) {
         const commit = function (next) {
             if (next !== undefined) value = next;
             input.text = format(value);
+            el.title = (typeof value === "string") ? value : "";
             if (next !== undefined) changeValue(ctrl, value);
         };
 
@@ -573,10 +590,11 @@ const PropertyPanel = function (params = {}) {
         };
 
         const stepByArrow = function (event) {
-            const base = parse(input.text);
-            const start = (base === null || base === undefined) ? (Number(value) || 0) : base;
+            const base = numberOf(parse(input.text));
+            const start = (base === null) ? numberOf(value) : base;
+            if (start === null && typeof value === "string") return; // WHY: A text value with no number: nothing to step.
             const direction = (event.key === "ArrowUp") ? 1 : -1;
-            commit(clamp(start + direction * step * stepFactorOf(event)));
+            commit(clamp((start || 0) + direction * step * stepFactorOf(event)));
             input.select();
         };
 
@@ -602,7 +620,9 @@ const PropertyPanel = function (params = {}) {
                 if (!state.enabled || event.button !== 0) return;
                 event.preventDefault();
                 if (document.activeElement === el) el.blur();
-                scrub = { id: event.pointerId, x: event.clientX, start: Number(value) || 0 };
+                const start = numberOf(value);
+                if (start === null && typeof value === "string") return; // WHY: A text value with no number: no scrub.
+                scrub = { id: event.pointerId, x: event.clientX, start: start || 0 };
                 try {
                     prefix.elem.setPointerCapture(event.pointerId);
                 } catch (e) { } // WHY: It throws when the pointer is not active any more; the scrub still works without it.
@@ -621,6 +641,7 @@ const PropertyPanel = function (params = {}) {
         const setValue = function (v) {
             value = v;
             input.text = format(v);
+            el.title = (typeof v === "string") ? v : ""; // WHY: A long text value ("calc(100% - 40px)") is cut in the field.
         };
 
         const setEnabled = function (enabled) {
