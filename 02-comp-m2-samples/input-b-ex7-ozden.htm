@@ -20,6 +20,7 @@
         <script src="../comp-m2/textarea-b.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp-m2/tiny-select.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp-m2/url-input-b.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m4/ui-effects.js" type="text/javascript" charset="utf-8"></script>
 
         <script>
 
@@ -63,6 +64,13 @@
                             that.css.alignItems = "stretch";
                                 addFields("ozdenDark");
                             endGroup();
+                        endCard();
+
+                        // CARD: hoverEffect "tilt" (UIEffects): the field turns to the mouse
+                        startCard("hoverEffect: \"tilt\"", LIGHT_PAGE_COLOR, Black(0.08), Black(0.45));
+                            InputB({ styleName: "ozden", width: "100%", titleText: "OZDEN · TILT", placeholder: "Jack", hoverEffect: "tilt" });
+                            InputB({ width: "100%", titleText: "CLASSIC · TILT", placeholder: "Jack", hoverEffect: "tilt" });
+                            TextareaB({ styleName: "ozden", width: "100%", height: 150, titleText: "MESSAGE · TILT", placeholder: "How can we help you?", hoverEffect: "tilt" });
                         endCard();
 
                     endGroup();

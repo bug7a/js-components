@@ -43,6 +43,11 @@ WebSite: https://bug7a.github.io/js-components
 
 - input.setWarningIcon("icons/warning.svg");   // Icon for invalid state (warningBallType: "icon")
 
+- hoverEffect: "" | "tilt" | any hover type of UIEffects (comp-m4/ui-effects.js, load it first)
+-- InputB({ hoverEffect: "tilt" })                                   // the field turns in 3D to the mouse
+-- InputB({ hoverEffect: "tilt", hoverEffectOptions: { angle: 6 } })
+-- "" or no UIEffects on the page: no effect.
+
 - warningBallType: "color" | "icon"
 -- "color": Top-right colored ball (requiredColor / warningColor).
 -- "icon": Top-right icon (requiredIcon / warningIcon). Empty path uses the built-in icon.
@@ -105,6 +110,9 @@ const InputBDefaults = {
     warningText: "Invalid value format",
     warningColor: "#E5885E", // "#F1BF3C"
     animatedWarningBall: 1,
+
+    hoverEffect: "", // "": none. "tilt", "lift", "grow"...: UIEffects.hover(box, hoverEffect) (needs comp-m4/ui-effects.js)
+    hoverEffectOptions: { angle: 4, scale: 1.01, glare: 0 }, // WHY: a field is wide: the 8° of a card turned it too much.
 
     warningBallType: "color", // "color": colored ball, "icon": icon image
     warningIconSize: 20,
@@ -598,6 +606,10 @@ const InputB = function(params = {}) {
         inputElem.addEventListener("input", function(){ box.inputFunc() });
 
         box.checkIfInputIsRequiredAndEmpty();
+    }
+
+    if (box.hoverEffect && typeof UIEffects !== "undefined") {
+        box.removeHoverEffect = UIEffects.hover(box, box.hoverEffect, box.hoverEffectOptions);
     }
 
     return endObject(box);
