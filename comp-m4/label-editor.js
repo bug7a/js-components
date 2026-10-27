@@ -138,6 +138,7 @@ const LabelEditorDefaults = {
         stepperStyleName: "classic",
         tabsStyleName: "classic",
         checkBoxStyleName: "classic",
+        selectColorStyleName: "classic",
         sidePanelStyle: {},
         stepperStyle: {},
         tabsStyle: {},
@@ -601,7 +602,7 @@ const LabelEditor = function (params = {}) {
     const createColor = function (key, onPick) {
         const picker = SelectColor({
             width: "100%", height: _s.input.height, colors: box.colorPalette.slice(),
-            style: copyStyle(_s.selectColorStyle),
+            styleName: _s.selectColorStyleName, style: copyStyle(_s.selectColorStyle),
             onChange: function (self) {
                 if (!self.value) return;
                 if (onPick) {
@@ -1112,21 +1113,18 @@ LabelEditor.styles = {
             stepperStyleName: "dark",
             tabsStyleName: "dark",
             checkBoxStyleName: "classic",
-            // WHY: CheckBox and SelectColor have no dark package. Their colors are given here.
+            selectColorStyleName: "dark",
+            // WHY: CheckBox has no dark package. Its colors are given here.
             checkBoxStyle: {
                 mark: { color: "#2A2A29", borderColor: "rgba(255, 255, 255, 0.3)" },
                 checkedMark: { color: "#3D7A6B", borderColor: "#3D7A6B" },
                 hoverMark: { borderColor: "rgba(255, 255, 255, 0.6)" },
                 label: { fontSize: 14, textColor: "rgba(255, 255, 255, 0.85)" },
             },
+            // WHY: the field is like the other inputs of the panel (input: #2A2A29, round 6).
             selectColorStyle: {
-                field: { color: "#2A2A29", borderColor: "rgba(255, 255, 255, 0.12)" },
-                fieldHover: { borderColor: "rgba(255, 255, 255, 0.3)" },
-                fieldFocus: { borderColor: "#65A293" },
-                fieldText: { fontSize: 13, textColor: "rgba(255, 255, 255, 0.9)" },
-                placeholder: { textColor: "rgba(255, 255, 255, 0.4)" },
-                panel: { color: "#232322", borderColor: "rgba(255, 255, 255, 0.12)" },
-                swatch: { borderColor: "rgba(255, 255, 255, 0.15)" },
+                field: { color: "#2A2A29", borderColor: "rgba(255, 255, 255, 0.12)", round: 6 },
+                fieldText: { fontSize: 13 },
             },
             scrollBar: { bar_color: "#8A8A88", bar_mouseOverColor: "#BFBFBD", bar_width: 4, bar_round: 3, bar_opacity: 0.4, bar_mouseOverOpacity: 0.9, bar_padding: 2 },
         },
