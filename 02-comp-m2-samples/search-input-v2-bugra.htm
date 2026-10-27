@@ -32,7 +32,7 @@
 
             // BOX: Scrolling page
             // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
-            scrollBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+            scrollBox = startBox(0, 0, "100%", "100%", { color: "#FFFFFF", scrollY: 1 });
 
                 VGroup({ width: "100%", height: "auto", align: "left top", gap: 28, padding: 40 });
 
@@ -40,6 +40,8 @@
                     caption("bugra · empty");
                     searchEmpty = SearchInput({
                         styleName: "bugra",
+                        border: 1,
+                        round: 50,
                         onSearch: showSearched,
                     });
 

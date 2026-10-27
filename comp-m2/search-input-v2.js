@@ -207,7 +207,7 @@ SearchInput.styles = {
         searchIconFile: "../comp-m2/search-input-v2/search.svg",
         clearIconFile: "../comp-m2/search-input-v2/clear.svg",
         searchIconSize: 24,
-        searchIconOpacity: 1,
+        searchIconOpacity: 0.4,
         invertIconColor: 0,
         color: "whitesmoke",
         textColor: "rgba(0, 0, 0, 0.8)",
