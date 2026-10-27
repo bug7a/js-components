@@ -10,6 +10,27 @@ Naming rule for the additions: no new globals (one exception, the user's choice 
 
 ---
 
+## v26.10.27 (2026-10-27)
+
+### `basic.applyStylePackage`: a package of params
+
+A style package can now change a param outside the style too (an icon file, a size, a text). The user's idea (2026-10-27): a package with its own `style` key is a **package of params**: its `style` goes into `params.style` as before, its other keys fill the params that were not given. A package without a `style` key is the style itself, as before, so every existing package works unchanged. Fully compatible.
+
+```javascript
+Tabs.styles.dark = {
+    style: { tab: { textColor: "white" } },   // into params.style
+    closeIconFile: "tabs/close-white.svg",    // into params (when the page did not give it)
+};
+```
+
+- The order is the same on both levels: the params of the page > the package > the defaults; `params.style` > the package's `style` > `Defaults.style`.
+- The package is copied (`mergeIntoIfMissing`), so it is never changed.
+- A component whose look is all in flat params (comp-m2 `InputB`) marks its packages with `style: {}`: `InputB.styles.dark = { style: {}, backgroundColor: "#232322", ... }`. Without the mark the keys would go into `params.style`.
+- `comp-m2/input-b.js` uses it now (its own `InputB.applyStylePackage` of 2026-10-26 is gone): it needs v26.10.27.
+- `test/basic-test.htm`: three checks (the keys fill the params / the style; given params win; the package is not changed), 157/157.
+
+---
+
 ## v26.10.25 (2026-10-25)
 
 ### NOT COMPATIBLE: the helpers under `basic.*`, the old `create*` globals removed

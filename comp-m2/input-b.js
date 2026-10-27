@@ -52,11 +52,13 @@ WebSite: https://bug7a.github.io/js-components
 
 - styleName: "classic" (default) | "dark"  (InputB.styles)
 -- The look of InputB is in flat params (backgroundColor, lineColor, titleTextColor...), not in one
-   "style" object. So a style package here is a package of params: any param can be in it, also
-   an image (requiredIcon, warningIcon). Order: your params > the package > InputBDefaults.
+   "style" object. So its packages are packages of params (basic.js v26.10.27: a package with a
+   "style" key): any param can be in it, also an image (requiredIcon, warningIcon).
+   Order: your params > the package > InputBDefaults.
 -- InputB({ styleName: "dark" })
 -- InputB({ styleName: "dark", selectedLineColor: "#588ABE" })   // one param of the package changed
--- InputB.styles.myStyle = { backgroundColor: "#FFF8E8", requiredIcon: "icons/star.svg" };
+-- InputB.styles.myStyle = { style: {}, backgroundColor: "#FFF8E8", requiredIcon: "icons/star.svg" };
+   (style: {} marks a package of params; without it the keys would go into params.style)
 
 */
 
@@ -138,10 +140,14 @@ const InputBDefaults = {
 
 const InputB = function(params = {}) {
 
-    InputB.applyStylePackage(params);
+    // Merge style package: your params > InputB.styles[styleName] (a package of params) > InputBDefaults
+    basic.applyStylePackage(params, InputB.styles, InputBDefaults);
+
+    // Merge params:
+    mergeIntoIfMissing(params, InputBDefaults);
 
     // BOX: Component container
-    const box = startObject(InputBDefaults, params);
+    const box = startObject(params);
 
     // *** DATA CONTROL:
     if (box.descriptionText != "") {
@@ -571,20 +577,6 @@ const InputB = function(params = {}) {
 
 };
 
-// *** STYLE PACKAGES:
-
-// WHY: The packages are packages of params (not of a "style" object, see the notes at the top), so
-//      basic.applyStylePackage (it fills params.style) is not used. The package fills only the params
-//      that were not given; mergeIntoIfMissing copies its objects, so the package itself never changes.
-// USAGE: InputB.applyStylePackage(params) // the first line of InputB (and of a component that extends it)
-InputB.applyStylePackage = function(params) {
-    const name = params.styleName || InputBDefaults.styleName;
-    const stylePackage = InputB.styles[name];
-    if (!stylePackage) console.warn("InputB style package not found: " + name);
-    mergeIntoIfMissing(params, stylePackage || {});
-    return params;
-};
-
 // The color of the placeholder text: a CSS variable on the <input>, read by one CSS rule.
 InputB.setPlaceholderColor = function(inputElement, color) {
     basic.addCss("input-b-placeholder", ".input-b-placeholder::placeholder { color: var(--input-b-placeholder); opacity: 1; }");
@@ -592,14 +584,19 @@ InputB.setPlaceholderColor = function(inputElement, color) {
     inputElement.style.setProperty("--input-b-placeholder", color);
 };
 
+// *** STYLE PACKAGES:
+// WHY style: {} in every package: InputB has no "style" object, its look is in flat params. A package with
+//      a "style" key is a package of params (basic.applyStylePackage, v26.10.27): its keys fill the params
+//      that were not given. Without the key they would go into params.style and change nothing.
 InputB.styles = {
 
     // The default look (InputBDefaults): a light field with a line under it.
-    classic: {},
+    classic: { style: {} },
 
     // The dark fields of the Ozden Panel (webpage-admin-panel, theme "dark"): a rounded field on a
     // dark card, a thin border, the accent color on focus, no line.
     dark: {
+        style: {},
         backgroundColor: "#232322", // surface2: a field
         selectedBackgroundColor: "#2C2C2A", // surface3
         lineColor: "transparent",

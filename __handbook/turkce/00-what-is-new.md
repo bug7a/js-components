@@ -4,6 +4,12 @@ Bu belgede basic.js kütüphanesine eklenen yeni özellikler, güncellemeler ve 
 
 ---
 
+## Versiyon 26.10.27
+
+*   **Stil paketleri parametreleri de değiştirebilir:** kendi `style` anahtarı olan bir paket bir parametre paketidir. `style`'ı bileşenin stiline, diğer anahtarları sayfanın vermediği parametrelere gider: `Tabs.styles.dark = { style: { tab: { textColor: "white" } }, closeIconFile: "tabs/close-white.svg" }`. `style` anahtarı olmayan paket eskisi gibi çalışır. Tam uyumlu. `InputB` (comp-m2) koyu stili için bunu kullanır. Örnekli başvuru: `basic/basic-what-is-new.md`.
+
+---
+
 ## Versiyon 26.10.25
 
 *   **UYUMSUZ: yardımcılar `basic.*` altında:** `num`, `str`, `isMobile`, `go` ve `twoDigitFormat` artık `basic.num()`, `basic.str()`, `basic.isMobile()`, `basic.go()` ve `basic.twoDigitFormat()`; global değiller.

@@ -53,7 +53,7 @@
         const runTests = async function () {
 
             // *** LIBRARY INFO
-            check("basic.version", basic.version === "26.10.25", basic.version);
+            check("basic.version", basic.version === "26.10.27", basic.version);
             check("basic.library", basic.library === "basic.js", basic.library);
             check("basic.isReady", basic.isReady === 1);
 
@@ -495,6 +495,24 @@
             givenPackage.style.box.color = "red";
             check("basic.applyStylePackage: a package given as style is copied, never changed",
                 givenPackage.style !== testStyles.dark && testStyles.dark.box.color === "black" && !("border" in testStyles.dark.box));
+
+            // *** v26.10.27: a package with a "style" key is a package of params
+            const paramStyles = {
+                light: { style: { box: { color: "white" } }, iconFile: "light.svg" },
+                dark: { style: { box: { color: "black" } }, iconFile: "dark.svg", options: { size: 2 } },
+            };
+            const paramDefaults = { styleName: "light", iconFile: "", style: { box: { color: "white", round: 4 } } };
+            const byParams = basic.applyStylePackage({ styleName: "dark" }, paramStyles, paramDefaults);
+            mergeIntoIfMissing(byParams, paramDefaults);
+            check("basic.applyStylePackage: the keys of a package of params fill the params, its style the style",
+                byParams.iconFile === "dark.svg" && byParams.style.box.color === "black" && byParams.style.box.round === 4 && !("style" in byParams.style));
+            const givenWins = basic.applyStylePackage({ styleName: "dark", iconFile: "mine.svg", style: { box: { color: "red" } } }, paramStyles, paramDefaults);
+            check("basic.applyStylePackage: given params and given style win over a package of params",
+                givenWins.iconFile === "mine.svg" && givenWins.style.box.color === "red");
+            byParams.options.size = 9;
+            byParams.style.box.color = "blue";
+            check("basic.applyStylePackage: a package of params is copied, never changed",
+                paramStyles.dark.options.size === 2 && paramStyles.dark.style.box.color === "black");
 
             // *** v26.10.25: Alpha(color, percent)
             check("Alpha: #RRGGBB -> rgba", Alpha("#456789", 0.5) === "rgba(69,103,137,0.5)");

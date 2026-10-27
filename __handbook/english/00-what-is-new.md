@@ -4,6 +4,12 @@ This document contains new features, updates, and changes added to the basic.js 
 
 ---
 
+## Version 26.10.27
+
+*   **Style packages can change params too:** a package with its own `style` key is a package of params. Its `style` goes into the style of the component, its other keys into the params the page did not give: `Tabs.styles.dark = { style: { tab: { textColor: "white" } }, closeIconFile: "tabs/close-white.svg" }`. A package without a `style` key works as before. Fully compatible. `InputB` (comp-m2) uses it for its dark style. Reference: `basic/basic-what-is-new.md`.
+
+---
+
 ## Version 26.10.25
 
 *   **NOT COMPATIBLE: helpers under `basic.*`:** `num`, `str`, `isMobile`, `go` and `twoDigitFormat` are now `basic.num()`, `basic.str()`, `basic.isMobile()`, `basic.go()` and `basic.twoDigitFormat()`; they are not globals any more.

@@ -2,12 +2,16 @@
 
 /*
 
-basic.js (v26.10.25) A lightweight JavaScript library for building web-based applications with simple code. No need to write HTML or CSS — just use basic JavaScript.
+basic.js (v26.10.27) A lightweight JavaScript library for building web-based applications with simple code. No need to write HTML or CSS — just use basic JavaScript.
 - Project Site: https://bug7a.github.io/basic.js/
 
-v26.10.25 is v26.09.18 plus the additions below. Every page and component written for the
+v26.10.27 is v26.09.18 plus the additions below. Every page and component written for the
 previous versions works unchanged (same defaults, same DOM), except the global names moved under
 basic.* in v26.10.25 (see below).
+
+WHAT IS NEW IN v26.10.27 (see basic/basic-what-is-new.md):
+- basic:      applyStylePackage: a package with its own "style" key is a package of params (its other keys
+              fill the params: an icon file outside the style can be in a package too)
 
 WHAT IS NEW IN v26.10.25 (see basic/basic-what-is-new.md):
 - Global:     Alpha(color, percent) - any color made transparent, like Black(0.5) / White(0.5)
@@ -60,7 +64,7 @@ Licensed under the Apache License, Version 2.0
 "use strict";
 const basic = {};
 
-basic.version = "26.10.25";
+basic.version = "26.10.27";
 basic.library = "basic.js";
 basic.isReady = 0; // 1 after the page object is created (before start() runs).
 
@@ -428,11 +432,6 @@ basic.addCss = function ($id, $cssText, $replace = 0) {
     return style;
 };
 
-// v26.10.24: The style of a component from its style packages. The first line of a component, before
-// mergeIntoIfMissing(params, Defaults): params.style > $packages[params.styleName] > Defaults.style (by that merge).
-// WHY: params.style becomes a new object, so a package given as it is (style: Tabs.styles.dark) is never changed:
-//      the merges after it would write into the package of every object of the page.
-// basic.applyStylePackage(params, Tabs.styles, TabsDefaults)
 // The colors of a theme: $themes[name], the missing keys filled from $themes.light (a new theme needs only the keys
 // that differ). "auto": the system setting (light or dark). Used by the components with a theme param (Modal, Toast).
 // USAGE: const colors = basic.resolveTheme(Modal.THEMES, "auto");
@@ -450,14 +449,34 @@ basic.resolveTheme = function ($themes, $name = "light") {
     return colors;
 };
 
+// v26.10.24: The style of a component from its style packages. The first line of a component, before
+// mergeIntoIfMissing(params, Defaults): params.style > $packages[params.styleName] > Defaults.style (by that merge).
+// WHY: params.style becomes a new object, so a package given as it is (style: Tabs.styles.dark) is never changed:
+//      the merges after it would write into the package of every object of the page.
+// v26.10.27: A package with its own "style" key is a package of params: its "style" goes into params.style as
+// above, its other keys go into the params that were not given (Ex: an icon file outside the style).
+// A package without a "style" key is the style itself, as before.
+// basic.applyStylePackage(params, Tabs.styles, TabsDefaults)
+// Tabs.styles.dark = { style: { tab: { textColor: "white" } }, closeIconFile: "tabs/close-white.svg" }
 basic.applyStylePackage = function ($params, $packages, $defaults) {
     const name = $params.styleName || $defaults.styleName;
     const stylePackage = $packages[name];
     if (!stylePackage) console.warn("Style package not found: " + name);
+
+    const isParamsPackage = !!stylePackage && Object.prototype.hasOwnProperty.call(stylePackage, "style");
+    const packageStyle = isParamsPackage ? stylePackage.style : stylePackage;
+
     const ownStyle = {};
     mergeIntoIfMissing(ownStyle, $params.style || {});
-    mergeIntoIfMissing(ownStyle, stylePackage || {});
+    mergeIntoIfMissing(ownStyle, packageStyle || {});
     $params.style = ownStyle;
+
+    if (isParamsPackage) {
+        // WHY: mergeIntoIfMissing copies the objects of the package, so the package is never changed.
+        const packageParams = Object.assign({}, stylePackage);
+        delete packageParams.style;
+        mergeIntoIfMissing($params, packageParams);
+    }
     return $params;
 };
 

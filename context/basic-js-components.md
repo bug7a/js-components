@@ -1,6 +1,6 @@
 # basic.js Components
 
-How a component of this repository is written (comp-m4, basic.js v26.10.25). The full starting point is `_component-template.js` at the root: copy it. How the code reads: `context/basic-js-code-rules.md`. The core library: `context/basic-js-core.md`.
+How a component of this repository is written (comp-m4, basic.js v26.10.27). The full starting point is `_component-template.js` at the root: copy it. How the code reads: `context/basic-js-code-rules.md`. The core library: `context/basic-js-core.md`.
 
 ## The shape
 
@@ -82,7 +82,7 @@ MyComp.styles = {
 - `basic.applyStylePackage(params, Comp.styles, CompDefaults)` is the first line: `params.style` > the package of `styleName` > the defaults. The package is copied, never changed.
 - A package has only the keys that differ from the default style. A new key in the default style is filled into every package: when the old look of a package must stay, give it that key (Ex: `opacity: 1` in `selected`).
 - `mergeIntoIfMissing` copies 4 levels; deeper objects are kept by reference. Keep the style flat.
-- A component whose look is in flat params (comp-m2 `InputB`) uses a package of params instead: `mergeIntoIfMissing(params, Comp.styles[name])` before the defaults.
+- **A package of params** (v26.10.27): a package with its own `style` key. Its `style` goes into the style, its other keys fill the params that were not given, so a package can also change a param outside the style (an icon file, a size): `MyComp.styles.dark = { style: { box: { color: "#1A1A19" } }, iconFile: "my-comp/icon-white.svg" }`. A component whose look is all in flat params (comp-m2 `InputB`) marks its packages with `style: {}`. Such a package can not be given as `style: Comp.styles.dark`: use `styleName`. (Ex: the `LabelEditor` `dark` package also gives `newLabel` a light text color.)
 - Colors of themes the user picks at run time (`Modal`, `Toast`, `ChartBox`): `X.THEMES` + `basic.resolveTheme(X.THEMES, name)`; `style` keeps only the shapes.
 
 ## Events and state
