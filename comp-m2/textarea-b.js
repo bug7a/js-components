@@ -115,6 +115,11 @@ const TextareaB = function(params = {}) {
         textareaElem.style.height = "auto";
         
         textareaElem.placeholder = box.placeholder;
+        // WHY: The <textarea> is made here, not by InputB, so the text colors of InputB were never given to it:
+        //      on a dark package (dark, ozdenDark) the typed text was dark on a dark field.
+        textareaElem.style.color = box.inputTextColor;
+        if (box.placeholderColor) InputB.setPlaceholderColor(textareaElem, box.placeholderColor);
+        if (box.inputColorScheme) textareaElem.style.colorScheme = box.inputColorScheme;
         textareaElem.maxLength = box.maxChar;
         box.inputBox.elem.appendChild(textareaElem);
         box.inputBox.clickable = 1;

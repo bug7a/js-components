@@ -91,7 +91,10 @@ const InputBDefaults = {
     backBorderBottomRound: 0,
 
     titleTextColor: "#555555",
+    titleBold: 0, // 1: the title in bold (opensans-bold)
+    titleLetterSpacing: "", // "": normal. Ex: "0.06em"
     inputTextColor: "#373836",
+    inputColorScheme: "", // "": the page's. "dark": the autofill colors of the browser stay dark (on a dark field)
     placeholderColor: "", // "": the color of the browser
     descriptionTextColor: "#999999",
     warningBallBorderColor: "#373836",
@@ -427,7 +430,9 @@ const InputB = function(params = {}) {
                 text: box.titleText,
                 fontSize: 16,
                 textColor: box.titleTextColor,
+                bold: box.titleBold,
             });
+            if (box.titleLetterSpacing) that.css.letterSpacing = box.titleLetterSpacing;
 
             // INPUT: Main object
             if(box.createInput == 1) {
@@ -443,6 +448,7 @@ const InputB = function(params = {}) {
                 that.inputElement.style.padding = "0px 0px";
                 that.inputElement.placeholder = box.placeholder;
                 if (box.placeholderColor) InputB.setPlaceholderColor(that.inputElement, box.placeholderColor);
+                if (box.inputColorScheme) that.inputElement.style.colorScheme = box.inputColorScheme;
                 that.inputElement.maxLength = box.maxChar;
                 that.inputElement.setAttribute("aria-label", box.titleText);
             } else {
@@ -650,7 +656,6 @@ InputB.styles = {
 
     // The fields of the contact form of __projects/webpage-admin-panel (js/sections/contact.js, inputStyle and
     // styleInput): a see-through field on the dark green page (#0E1A14), a green border on focus.
-    // NOTE: The site also writes the title in bold with letter spacing; that is not a param of InputB.
     ozdenDark: {
         style: {},
         backgroundColor: "rgba(255, 255, 255, 0.04)", // FIELD_BG
@@ -663,7 +668,10 @@ InputB.styles = {
         backBorderBottomRound: 10,
 
         titleTextColor: "rgba(255, 255, 255, 0.62)", // SITE.ON_DARK_SOFT
+        titleBold: 1, // SITE.BOLD
+        titleLetterSpacing: "0.06em",
         inputTextColor: "rgba(255, 255, 255, 0.94)", // SITE.ON_DARK
+        inputColorScheme: "dark",
         placeholderColor: "rgba(255, 255, 255, 0.35)", // SITE.ON_DARK_FAINT (the site leaves it to the browser)
         descriptionTextColor: "rgba(255, 255, 255, 0.35)", // SITE.ON_DARK_FAINT
         warningBallBorderColor: "#0E1A14", // SITE.INK: the page under the field
