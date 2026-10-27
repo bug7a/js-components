@@ -50,7 +50,7 @@ WebSite: https://bug7a.github.io/js-components
 - tooltipStyle: { color, textColor, border, borderColor, round, fontSize }
 -- The tooltip of the warning ball. color "": requiredColor / warningColor (the old look).
 
-- styleName: "classic" (default) | "dark"  (InputB.styles)
+- styleName: "classic" (default) | "dark" | "ozden" | "ozdenDark"  (InputB.styles)
 -- The look of InputB is in flat params (backgroundColor, lineColor, titleTextColor...), not in one
    "style" object. So its packages are packages of params (basic.js v26.10.27: a package with a
    "style" key): any param can be in it, also an image (requiredIcon, warningIcon).
@@ -68,7 +68,7 @@ WebSite: https://bug7a.github.io/js-components
 const InputBDefaults = {
 
     key: "0",
-    styleName: "classic", // "classic", "dark" or a name added to InputB.styles
+    styleName: "classic", // "classic", "dark", "ozden", "ozdenDark" or a name added to InputB.styles
     type: "text",
     width: 350,
     height: "auto",
@@ -624,6 +624,64 @@ InputB.styles = {
         unitStyle: {
             color: "#2C2C2A", // surface3
             textColor: White(0.85),
+        },
+    },
+
+    // The fields of __projects/contact-form (contact-form.htm, inputStyle): a gray rounded field,
+    // no line, a soft dark border on focus, the warning shown as an icon.
+    ozden: {
+        style: {},
+        backgroundColor: "#F6F6F6",
+        selectedBackgroundColor: "#F6F6F6",
+        lineColor: Black(0),
+        selectedLineColor: Black(0),
+        backBorderColor: Black(0),
+        selectedBackBorderColor: Black(0.4),
+        backBorderTopRound: 8,
+        backBorderBottomRound: 8,
+        warningBallType: "icon",
+        warningColor: "#E5885E",
+
+        unitStyle: {
+            color: "#373836EE", // the count of the message (TextareaB)
+            textColor: "white",
+        },
+    },
+
+    // The fields of the contact form of __projects/webpage-admin-panel (js/sections/contact.js, inputStyle and
+    // styleInput): a see-through field on the dark green page (#0E1A14), a green border on focus.
+    // NOTE: The site also writes the title in bold with letter spacing; that is not a param of InputB.
+    ozdenDark: {
+        style: {},
+        backgroundColor: "rgba(255, 255, 255, 0.04)", // FIELD_BG
+        selectedBackgroundColor: "rgba(255, 255, 255, 0.07)", // FIELD_BG_SELECTED
+        lineColor: Black(0),
+        selectedLineColor: Black(0),
+        backBorderColor: "rgba(255, 255, 255, 0.10)", // FIELD_LINE
+        selectedBackBorderColor: "rgba(101, 162, 147, 0.75)", // FIELD_LINE_SELECTED (SITE.PRIMARY_LIGHT)
+        backBorderTopRound: 10,
+        backBorderBottomRound: 10,
+
+        titleTextColor: "rgba(255, 255, 255, 0.62)", // SITE.ON_DARK_SOFT
+        inputTextColor: "rgba(255, 255, 255, 0.94)", // SITE.ON_DARK
+        placeholderColor: "rgba(255, 255, 255, 0.35)", // SITE.ON_DARK_FAINT (the site leaves it to the browser)
+        descriptionTextColor: "rgba(255, 255, 255, 0.35)", // SITE.ON_DARK_FAINT
+        warningBallBorderColor: "#0E1A14", // SITE.INK: the page under the field
+
+        warningBallType: "icon",
+        warningColor: "#E5885E", // SITE.ACCENT
+        requiredIconColor: "rgba(255, 255, 255, 0.28)",
+
+        tooltipStyle: {
+            color: "#16261D", // POPUP_BG (SITE.INK_SOFT)
+            textColor: "rgba(255, 255, 255, 0.94)", // SITE.ON_DARK
+            borderColor: "rgba(255, 255, 255, 0.22)", // FIELD_LINE_HOVER
+            round: 6,
+        },
+
+        unitStyle: {
+            color: "rgba(255, 255, 255, 0.07)", // FIELD_BG_SELECTED
+            textColor: "rgba(255, 255, 255, 0.94)", // SITE.ON_DARK
         },
     },
 

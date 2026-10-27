@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>InputB: ozden, ozdenDark</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- LIBRARY FILES -->
+        <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+        <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- COMPONENT FILES -->
+        <script src="../comp-m2/tooltip.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m2/input-b.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m2/email-input-b.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m2/phone-input-b.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m2/textarea-b.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+
+        /* Bismillah */
+
+        // InputB with styleName: "ozden" (the fields of __projects/contact-form)
+        // and "ozdenDark" (the contact form of __projects/webpage-admin-panel).
+        // EmailInputB, PhoneInputB and TextareaB are made from InputB, so they take the same packages.
+
+        // The pages of the two projects
+        const LIGHT_PAGE_COLOR = "white";
+        const DARK_PAGE_COLOR = "#0E1A14"; // SITE.INK of webpage-admin-panel
+        const DARK_CARD_COLOR = "rgba(255, 255, 255, 0.03)";
+        const DARK_CARD_BORDER_COLOR = "rgba(255, 255, 255, 0.10)";
+        const CARD_WIDTH = 420;
+
+        // *** VARIABLES:
+        let pageBox;
+
+        const start = function () {
+
+            page.color = "#F4F5F2";
+
+            pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+
+                VGroup({ width: "100%", height: "auto", align: "center top", padding: 40, gap: 24 });
+
+                    Label({ text: "InputB · ozden, ozdenDark", fontSize: 22, fontFamily: "opensans-bold", textColor: Black(0.8) });
+
+                    // GROUP: The two cards side by side (one under the other on a narrow screen)
+                    HGroup({ width: "100%", height: "auto", align: "center top", gap: 24, wrap: 1 });
+
+                        // CARD: ozden on a white page
+                        startCard("styleName: \"ozden\"", LIGHT_PAGE_COLOR, Black(0.08), Black(0.45));
+                            addFields("ozden");
+                        endCard();
+
+                        // CARD: ozdenDark on the dark green page of the site
+                        startCard("styleName: \"ozdenDark\"", DARK_PAGE_COLOR, DARK_CARD_BORDER_COLOR, White(0.45));
+                            VGroup({ width: "100%", height: "auto", align: "left top", gap: 14, padding: 20, color: DARK_CARD_COLOR, round: 14, border: 1, borderColor: DARK_CARD_BORDER_COLOR });
+                            that.css.alignItems = "stretch";
+                                addFields("ozdenDark");
+                            endGroup();
+                        endCard();
+
+                    endGroup();
+
+                endGroup();
+
+            endBox();
+
+            if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: pageBox });
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        // The fields of the contact form, all with the same package.
+        const addFields = function (styleName) {
+
+            InputB({
+                styleName: styleName,
+                width: "100%",
+                titleText: "FIRST NAME",
+                placeholder: "Jack",
+                isRequired: 1,
+            });
+
+            const emailInput = EmailInputB({
+                styleName: styleName,
+                width: "100%",
+                titleText: "YOUR EMAIL",
+                placeholder: "example@site.com",
+                inputValue: "jack@",
+                warningText: "Invalid email format",
+                maxChar: 35,
+            });
+            emailInput.showWarningIfNotValid(emailInput.isValid());
+
+            PhoneInputB({
+                styleName: styleName,
+                width: "100%",
+                titleText: "PHONE NUMBER",
+                placeholder: "(auto)",
+                isRequired: 0,
+                countryCode: "+90",
+                phoneMask: " (___) ___-____",
+                unitText: "TR",
+            });
+
+            TextareaB({
+                styleName: styleName,
+                width: "100%",
+                height: 170,
+                titleText: "MESSAGE",
+                placeholder: "How can we help you?",
+                isRequired: 1,
+                minCharCount: 80,
+                showCount: 1,
+                lengthText: "length: ",
+                maxChar: 255,
+                rightPadding: 5,
+            });
+
+        };
+
+        // GROUP: A card with a caption, in the color of its page.
+        const startCard = function (caption, color, borderColor, captionColor) {
+            VGroup({ width: CARD_WIDTH, height: "auto", align: "left top", gap: 14, padding: 24, color: color, round: 16, border: 1, borderColor: borderColor });
+            that.css.alignItems = "stretch";
+            Label({ text: caption, fontSize: 12, textColor: captionColor, css: { letterSpacing: "1px" } });
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+        </script>
+
+    </head>
+    <body>
+    </body>
+</html>
