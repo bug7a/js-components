@@ -714,6 +714,8 @@ const Tabs = function (params = {}) {
         // WHY: A fixed height: the panels lie on top of each other and each one scrolls its own content.
         if (box.panelHeight !== "auto") {
             panel.css = { position: "absolute", left: "0px", top: "0px", overflow: "auto" };
+            // WHY: A basic.js box lets the mouse through (pointer-events: none): the wheel did not scroll a long panel.
+            panel.clickable = 1;
         }
 
     };
