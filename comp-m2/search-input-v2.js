@@ -246,9 +246,9 @@ SearchInput.styles = {
         searchIconSize: 24,
         searchIconOpacity: 0.4,
         clearIconOpacity: 0.4,
-        invertIconColor: 1,
-        invertSearchIconColor: null, // null: invertIconColor
-        invertClearIconColor: null, // null: invertIconColor
+        invertIconColor: null,
+        invertSearchIconColor: 1, // null: invertIconColor
+        invertClearIconColor: 1, // null: invertIconColor
         color: "#2B2D31",
         textColor: "rgba(255, 255, 255, 0.88)",
         placeholderColor: "rgba(255, 255, 255, 0.35)",
