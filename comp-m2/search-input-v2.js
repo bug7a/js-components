@@ -86,11 +86,18 @@ const SearchInput = function(params = {}) {
         box.imgClearIcon.clickable = (isVisible) ? 1 : 0;
     };
 
+    // The clear icon is shown while there is a text
+    const refreshClearIcon = function() {
+        if (!box.isCancelEnabled) return;
+        setClearIconVisible(box.txtSearch.text.length > 0);
+    };
+
     // *** Public functions:
     box.publicFunc = () => {};
 
     box.setText = function(text) {
         box.txtSearch.text = text;
+        refreshClearIcon();
     }
 
     box.getText = function() {
@@ -160,7 +167,7 @@ const SearchInput = function(params = {}) {
             box.onSubmit(getSearchedText(), box);
         }
 
-        if (box.isCancelEnabled) setClearIconVisible(box.txtSearch.text.length > 0);
+        refreshClearIcon();
 
     });
     box.onResize(refreshLayout);
