@@ -102,6 +102,7 @@ const HoldToConfirmButton = function (params = {}) {
     const COLOR_MOTION = "background-color 0.2s";
     const CANCEL_MOTION_DURATION = "0.3s"; // The red layer goes back faster than it fills.
     const RED_BORDER_INSET = 2; // px: the red line stands this much inside the right end of the red layer.
+    const CONTENT_ALIGN = "left center"; // The normal button and the red layer place their icon and label the same way.
 
     // *** PUBLIC VARIABLES:
     box.holdDurationString = (box.holdDuration / 1000) + "s";
@@ -111,11 +112,13 @@ const HoldToConfirmButton = function (params = {}) {
 
     // *** PRIVATE FUNCTIONS:
 
-    // The red layer keeps its icon and label exactly over the ones of the normal button.
+    // The red layer is as wide as the normal button. Its icon and label are placed by the same group layout.
+    // WHY: aline() copied whole pixels (offsetTop), but the flex layout puts the label at 10.25 px:
+    //      the red label stood 0.25 px higher and the text moved a little under the moving edge of the mask.
+    // WHY: box.contentBox.width is rounded; the computed style keeps the part after the point (208.047px).
     const syncHoldingLayer = function () {
-        box.iconRed.aline(box.icon);
-        box.labelRed.aline(box.label);
-        box.holdingBox.width = box.contentBox.width;
+        const widthNow = window.getComputedStyle(box.contentBox.elem).getPropertyValue("width");
+        box.holdingBox.width = basic.num(widthNow);
     };
 
     const moveRedBorderToMaskEnd = function () {
@@ -188,6 +191,7 @@ const HoldToConfirmButton = function (params = {}) {
         gap: box.style.layout.gap,
         position: "relative",
         padding: box.style.layout.padding,
+        align: CONTENT_ALIGN,
         ...box.style.box,
     });
 
@@ -209,8 +213,15 @@ const HoldToConfirmButton = function (params = {}) {
         color: "transparent",
     });
 
-        // BOX: The red layer (as wide as the normal button)
-        box.holdingBox = startBox(0, 0, 0, "100%", box.style.holdingBox);
+        // GROUP: The red layer (as wide as the normal button, with the same layout)
+        box.holdingBox = HGroup({
+            width: 0,
+            height: "100%",
+            gap: box.style.layout.gap,
+            padding: box.style.layout.padding,
+            align: CONTENT_ALIGN,
+            ...box.style.holdingBox,
+        });
 
             // ICON: red
             box.iconRed = Icon(0, 0, box.style.icon);
@@ -221,8 +232,9 @@ const HoldToConfirmButton = function (params = {}) {
             box.labelRed.text = box.labelText;
             box.labelRed.css.whiteSpace = "nowrap";
 
-            // BOX: The line at the moving end of the red layer
+            // BOX: The line at the moving end of the red layer (not a part of the layout)
             box.redBorder = Box({
+                position: "absolute",
                 left: 0,
                 top: 0,
                 width: 1,
@@ -230,7 +242,7 @@ const HoldToConfirmButton = function (params = {}) {
                 color: box.style.holdingBox.rightBorderColor,
             });
 
-        endBox();
+        endGroup();
 
     endBox();
 
