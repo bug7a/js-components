@@ -39,7 +39,9 @@ const SearchInputDefaults = {
     borderBottomStyle: "2px solid rgba(0, 0, 0, 0.06)",
     round: 6,
     fontSize: 20,
-    invertIconColor: 0,
+    invertIconColor: 0, // 1: both icons are inverted (white icons for a dark field)
+    invertSearchIconColor: null, // null: invertIconColor. 0 / 1: only the search icon
+    invertClearIconColor: null, // null: invertIconColor. 0 / 1: only the clear icon
     onSearch: function(searchedText, self) {},
     onSubmit: function(searchedText, self) {},
     styleName: "classic", // "classic", "ozden", "ozdenDark" or a name added to SearchInput.styles
@@ -79,6 +81,12 @@ const SearchInput = function(params = {}) {
     // The text given to onSearch and onSubmit
     const getSearchedText = function() {
         return box.txtSearch.text.toLowerCase();
+    };
+
+    // An icon's own invert param (0 / 1), or invertIconColor when it is null.
+    const isIconInverted = function(iconInvert) {
+        if (iconInvert === null || iconInvert === undefined) return (box.invertIconColor == 1);
+        return (iconInvert == 1);
     };
 
     const setClearIconVisible = function(isVisible) {
@@ -122,7 +130,7 @@ const SearchInput = function(params = {}) {
             space: 0,
         });
         that.load(box.searchIconFile);
-        if (box.invertIconColor == 1) that.css.filter = "invert(100%)";
+        if (isIconInverted(box.invertSearchIconColor)) that.css.filter = "invert(100%)";
         that.center("top");
 
         // INPUT: Search textbox
@@ -151,7 +159,7 @@ const SearchInput = function(params = {}) {
             space: 0,
         });
         that.load(box.clearIconFile);
-        if (box.invertIconColor == 1) that.css.filter = "invert(100%)";
+        if (isIconInverted(box.invertClearIconColor)) that.css.filter = "invert(100%)";
         that.center("top");
         that.cursor = "pointer";
         that.setMotion("opacity 0.3s");
@@ -217,6 +225,8 @@ SearchInput.styles = {
         searchIconOpacity: 0.4,
         clearIconOpacity: 0.6, // WHY: at 0.6 the white circle faded into the field (the user, 2026-10-27).
         invertIconColor: 0,
+        invertSearchIconColor: null, // null: invertIconColor
+        invertClearIconColor: null, // null: invertIconColor
         color: "whitesmoke",
         textColor: "rgba(0, 0, 0, 0.8)",
         placeholderColor: "",
@@ -237,6 +247,8 @@ SearchInput.styles = {
         searchIconOpacity: 0.4,
         clearIconOpacity: 0.4,
         invertIconColor: 1,
+        invertSearchIconColor: null, // null: invertIconColor
+        invertClearIconColor: null, // null: invertIconColor
         color: "#2B2D31",
         textColor: "rgba(255, 255, 255, 0.88)",
         placeholderColor: "rgba(255, 255, 255, 0.35)",
