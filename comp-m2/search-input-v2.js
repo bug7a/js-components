@@ -10,7 +10,8 @@ UI COMPONENT TEMPLATE
 -- A package is a package of params (basic.js v26.10.27): its keys fill the params you did not give.
 -- SearchInput.styles.myStyle = { style: {}, color: "white", textColor: "#222", ... };
 - animated: 1 adds small motions (not at the first view): under the mouse a thin line and a bigger search icon,
-  while typing a stronger line and a tilted search icon, the clear icon grows in and turns under the mouse.
+  while typing a stronger line and a tilted search icon (a small pulse at every letter), the clear icon grows in
+  and turns under the mouse. The "ozden" and "ozdenDark" packages are animated (animated: 0 makes them still).
   Only transform, opacity and box-shadow change (smooth, cheap). Off when the system asks for reduced motion.
 
 Started Date: December 2025
@@ -81,10 +82,14 @@ const SearchInput = function(params = {}) {
     const ICON_OPACITY_GAIN = 0.25; // the search icon is clearer under the mouse (x2 while typing)
     const HIDDEN_CLEAR_ICON_SIZE = 0.6; // the clear icon grows in from this size
     const CLEAR_ICON_TURN = 90; // deg, under the mouse
+    const PULSE_GROW = 1.14; // the search icon at a typed letter
+    const PULSE_TIME = 150; // ms
     let isHovered = 0;
     let isFocused = 0;
     let isClearHovered = 0;
     let wasAnimated = 0;
+    let isPulsing = 0;
+    let cancelPulse = null;
 
     // *** Public variables:
     box.publicVar = "";
@@ -131,6 +136,7 @@ const SearchInput = function(params = {}) {
     };
 
     const getSearchIconTransform = function() {
+        if (isPulsing) return "scale(" + PULSE_GROW + ") rotate(" + FOCUS_ICON_TILT + "deg)";
         if (isFocused) return "scale(" + FOCUS_ICON_GROW + ") rotate(" + FOCUS_ICON_TILT + "deg)";
         if (isHovered) return "scale(" + HOVER_ICON_GROW + ")";
         return "none";
@@ -156,6 +162,19 @@ const SearchInput = function(params = {}) {
         box.imgIcon.css.transform = getSearchIconTransform();
         box.imgIcon.opacity = getSearchIconOpacity();
         box.imgClearIcon.css.transform = getClearIconTransform();
+    };
+
+    // A letter is typed: the search icon grows a little and goes back. (Many letters: one longer pulse.)
+    const pulseSearchIcon = function() {
+        if (!isMotionOn()) return;
+        if (cancelPulse) cancelPulse();
+        isPulsing = 1;
+        paintMotion();
+        cancelPulse = box.after(PULSE_TIME, function() {
+            isPulsing = 0;
+            cancelPulse = null;
+            paintMotion();
+        });
     };
 
     // Back to the still look, after setAnimated(0).
@@ -299,6 +318,8 @@ const SearchInput = function(params = {}) {
         isFocused = 1;
         paintMotion();
     });
+    // WHY: "input" and not keyup: arrows, Shift and Enter do not change the text, they must not pulse.
+    box.listenTo(box.txtSearch.inputElement, "input", pulseSearchIcon);
     box.listenTo(box.txtSearch.inputElement, "blur", function() {
         isFocused = 0;
         paintMotion();
@@ -358,6 +379,7 @@ SearchInput.styles = {
         borderColor: "rgba(0, 0, 0, 0.1)",
         borderBottomStyle: "3px solid rgba(0, 0, 0, 0.06)",
         round: 50,
+        animated: 1,
         hoverRingColor: "rgba(0, 0, 0, 0.08)",
         focusRingColor: "rgba(0, 0, 0, 0.16)",
     },
@@ -382,6 +404,7 @@ SearchInput.styles = {
         borderColor: "rgba(255, 255, 255, 0.1)",
         borderBottomStyle: "3px solid rgba(255, 255, 255, 0.06)",
         round: 50,
+        animated: 1,
         hoverRingColor: "rgba(255, 255, 255, 0.08)",
         focusRingColor: "rgba(255, 255, 255, 0.18)",
     },
