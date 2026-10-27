@@ -66,7 +66,7 @@ Code written with basic.js reads like plain prose, without needing comments to b
 
 ## Writing a component (m2/m3 pattern)
 
-**An `animated` param (the user, 2026-10-27):** when a component gets `animated`, its motions follow `context/basic-js-animated-rules.md` (the model: `comp-m2/search-input-v2.js`): `animated: 0` changes nothing, no motion at the first view, one duration and curve (0.25s, `cubic-bezier(0.2, 0.8, 0.2, 1)`), only `transform` / `opacity` / inset `box-shadow`, CSS transitions, off with `prefers-reduced-motion`, one state + `paintMotion()`.
+**An `animated` param (the user, 2026-10-27):** when a component gets `animated`, its motions follow `context/basic-js-animated-rules.md` (the models: `comp-m2/search-input-v2.js`, `comp-m2/input-b.js` (`ozden` / `ozdenDark` animated, the children take it through `paintFocus`); a table by kind of component): `animated: 0` changes nothing, no motion at the first view, one duration and curve (0.25s, `cubic-bezier(0.2, 0.8, 0.2, 1)`), only `transform` / `opacity` / inset `box-shadow`, CSS transitions, off with `prefers-reduced-motion`, one state + `paintMotion()`.
 
 Follow `_component-template.js` or a `comp-m3/*.js` file such as `button-with-icon.js`:
 

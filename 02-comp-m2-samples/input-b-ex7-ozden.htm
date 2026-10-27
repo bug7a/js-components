@@ -28,6 +28,7 @@
         // InputB with styleName: "ozden" (the fields of __projects/contact-form)
         // and "ozdenDark" (the contact form of __projects/webpage-admin-panel).
         // EmailInputB, PhoneInputB, URLInputB and TextareaB are made from InputB, so they take the same packages.
+        // The ozden packages are animated: 1 (context/basic-js-animated-rules.md): hover and focus the fields.
 
         // The pages of the two projects
         const LIGHT_PAGE_COLOR = "white";
@@ -63,6 +64,12 @@
                             that.css.alignItems = "stretch";
                                 addFields("ozdenDark");
                             endGroup();
+                        endCard();
+
+                        // CARD: animated (the ozden packages are animated: 1; move the mouse over the fields, click)
+                        startCard("animated: 1 (classic) / animated: 0 (ozden)", LIGHT_PAGE_COLOR, Black(0.08), Black(0.45));
+                            InputB({ width: "100%", titleText: "CLASSIC · ANIMATED: 1", placeholder: "Jack", animated: 1 });
+                            InputB({ styleName: "ozden", width: "100%", titleText: "OZDEN · ANIMATED: 0", placeholder: "Jack", animated: 0 });
                         endCard();
 
                     endGroup();

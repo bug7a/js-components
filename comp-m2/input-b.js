@@ -43,6 +43,12 @@ WebSite: https://bug7a.github.io/js-components
 
 - input.setWarningIcon("icons/warning.svg");   // Icon for invalid state (warningBallType: "icon")
 
+- animated: 1 (context/basic-js-animated-rules.md): a thin line inside the field under the mouse, a stronger one
+  while it is focused, and the focus line under the field grows from its middle. Only box-shadow and transform
+  change; nothing at the first view; off when the system asks for reduced motion. ("ozden", "ozdenDark": on)
+-- input.setAnimated(0 / 1)
+-- hoverRingColor, focusRingColor: the colors of the line inside the field
+
 - warningBallType: "color" | "icon"
 -- "color": Top-right colored ball (requiredColor / warningColor).
 -- "icon": Top-right icon (requiredIcon / warningIcon). Empty path uses the built-in icon.
@@ -105,6 +111,10 @@ const InputBDefaults = {
     warningText: "Invalid value format",
     warningColor: "#E5885E", // "#F1BF3C"
     animatedWarningBall: 1,
+
+    animated: 0, // 1: small hover / focus motions (context/basic-js-animated-rules.md). (box.setAnimated(0/1))
+    hoverRingColor: "rgba(0, 0, 0, 0.06)", // animated: the thin line inside the field under the mouse
+    focusRingColor: "rgba(0, 0, 0, 0.1)", // animated: the line inside the field while it is focused
 
     warningBallType: "color", // "color": colored ball, "icon": icon image
     warningIconSize: 20,
@@ -178,6 +188,17 @@ const InputB = function(params = {}) {
     const HIDDEN_BALL_SCALE = "scale(0.3)"; // WHY: The ball grows from small when it is shown.
     const WARNING_BALL_MOTION = "opacity 0.2s, transform 0.2s";
     const OUT_OF_SCREEN_TOP = -1000;
+
+    // animated: 1
+    const MOTION_TIME = "0.25s";
+    const MOTION_EASE = "cubic-bezier(0.2, 0.8, 0.2, 1)"; // a fast start and a soft stop
+    const HOVER_RING_WIDTH = 1;
+    const FOCUS_RING_WIDTH = 2;
+    const LINE_HEIGHT = 2;
+    let isHovered = 0;
+    let isFocused = 0;
+    let wasAnimated = 0;
+    let stillClickable = 0; // the clickable of the box when it is not animated
 
     // *** PUBLIC VARIABLES:
     
@@ -261,6 +282,74 @@ const InputB = function(params = {}) {
         box.status = 0;
     };
 
+    // WHY: A user who asked the system for less motion gets the still field.
+    const isMotionOn = function() {
+        if (box.animated != 1) return false;
+        const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        return !reduceMotion;
+    };
+
+    const motionOf = function(properties) {
+        return properties.map(function(property) { return property + " " + MOTION_TIME + " " + MOTION_EASE; }).join(", ");
+    };
+
+    const getRing = function() {
+        if (isFocused) return "inset 0 0 0 " + FOCUS_RING_WIDTH + "px " + box.focusRingColor;
+        if (isHovered) return "inset 0 0 0 " + HOVER_RING_WIDTH + "px " + box.hoverRingColor;
+        return "inset 0 0 0 0 transparent";
+    };
+
+    // BOX: the focus line, over the bottom line: it grows from its middle. (Made the first time animated is on.)
+    const createFocusLine = function() {
+        if (box.focusLine) return;
+        createIn(box, function() {
+            box.focusLine = Box({ left: 0, bottom: 0, width: "100%", height: LINE_HEIGHT, color: box.selectedLineColor });
+        });
+        box.focusLine.css.transform = "scaleX(0)";
+    };
+
+    // The look of the hover / focus state. (Nothing when animated is off.)
+    const paintMotion = function() {
+        if (!isMotionOn() || !box.focusLine) return;
+        box.background.boxShadow = getRing();
+        box.line.color = box.lineColor; // WHY: The focus line covers it; it changed color at once before.
+        box.focusLine.color = box.selectedLineColor;
+        box.focusLine.css.transform = (isFocused) ? "scaleX(1)" : "scaleX(0)";
+    };
+
+    // Back to the still look, after setAnimated(0).
+    const removeMotion = function() {
+        wasAnimated = 0;
+        box.clickable = stillClickable;
+        box.background.setMotion("");
+        box.background.boxShadow = "";
+        box.focusLine.visible = 0;
+        box.line.color = (isFocused) ? box.selectedLineColor : box.lineColor;
+    };
+
+    // The transitions of animated: 1 (or the still look back).
+    const applyAnimated = function() {
+        if (!isMotionOn()) {
+            if (wasAnimated) removeMotion();
+            return;
+        }
+        wasAnimated = 1;
+        // WHY: A basic.js box lets the mouse through: without it the hover was felt only over the text.
+        box.clickable = 1;
+        createFocusLine();
+        box.focusLine.visible = 1;
+        box.background.setMotion(motionOf(["box-shadow"]));
+        box.focusLine.setMotion(motionOf(["transform"]));
+        paintMotion();
+    };
+
+    // A click on the field around the text (the title, the padding) puts the cursor in the text.
+    const focusOnFieldClick = function(self, event) {
+        if (!isMotionOn() || event.target !== box.elem) return;
+        const fieldElement = box.elem.querySelector("input, textarea");
+        if (fieldElement) fieldElement.focus();
+    };
+
     // *** PUBLIC FUNCTIONS:
 
     // A child component formats the value here: it reads getInputValue() and puts it back with setInputValue().
@@ -341,10 +430,17 @@ const InputB = function(params = {}) {
 
     // The colors of the field while it is focused (1) or not (0): background, border and line.
     // NOTE: A component made from InputB (PhoneInputB, UrlInputB, TextareaB) calls this in its own focusFunc / blurFunc.
-    box.paintFocus = function(isFocused) {
+    box.paintFocus = function(isFocusedNow) {
+        isFocused = (isFocusedNow) ? 1 : 0;
         box.background.color = (isFocused) ? box.selectedBackgroundColor : box.backgroundColor;
         box.background.borderColor = (isFocused) ? box.selectedBackBorderColor : box.backBorderColor;
         box.line.color = (isFocused) ? box.selectedLineColor : box.lineColor;
+        paintMotion();
+    };
+
+    box.setAnimated = function(value) {
+        box.animated = (value == 1) ? 1 : 0;
+        applyAnimated();
     };
 
     // The text colors of a field element (<input> or <textarea>): inputTextColor, placeholderColor, inputColorScheme.
@@ -600,6 +696,17 @@ const InputB = function(params = {}) {
         box.checkIfInputIsRequiredAndEmpty();
     }
 
+    // animated: the mouse over the field (painted only when animated is on)
+    stillClickable = box.clickable;
+    box.onHoverChange(function(self, isOver) {
+        isHovered = isOver;
+        paintMotion();
+    });
+    box.on("click", focusOnFieldClick);
+    box.clickable = stillClickable; // WHY: on() makes the box clickable; animated: 0 must change nothing.
+    // WHY: setMotion waits a moment before it starts: the first view does not move.
+    applyAnimated();
+
     return endObject(box);
 
 };
@@ -641,6 +748,9 @@ InputB.styles = {
         requiredIconColor: White(0.75), // classic #373836
         warningColor: "indianred", // classic #E5885E (the user's choice, 2026-10-27)
 
+        hoverRingColor: White(0.06), // animated
+        focusRingColor: White(0.1),
+
         tooltipStyle: {
             textColor: White(0.9), // classic #141414 on a white ball
             borderColor: White(0.75), // classic #141414
@@ -675,6 +785,10 @@ InputB.styles = {
         warningBallType: "icon",
         warningColor: "#E5885E",
 
+        animated: 1,
+        hoverRingColor: Black(0.12), // a soft border before the dark one of the focus
+        focusRingColor: Black(0.06),
+
         unitStyle: {
             color: "#373836EE", // the count of the message (TextareaB)
             textColor: "white",
@@ -706,6 +820,10 @@ InputB.styles = {
         warningBallType: "icon",
         warningColor: "#E5885E", // SITE.ACCENT
         requiredIconColor: "rgba(255, 255, 255, 0.28)",
+
+        animated: 1,
+        hoverRingColor: "rgba(255, 255, 255, 0.12)", // FIELD_LINE_HOVER is 0.22, over the 0.10 border
+        focusRingColor: "rgba(101, 162, 147, 0.25)", // the green of the focus border, soft
 
         tooltipStyle: {
             color: "#16261D", // POPUP_BG (SITE.INK_SOFT)
