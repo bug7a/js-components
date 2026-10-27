@@ -51,13 +51,11 @@ const TinySelectDefaults = {
 
 const TinySelect = function(params = {}) {
 
-    saveCurrentThat();
+    // Merge params:
+    mergeIntoIfMissing(params, TinySelectDefaults);
 
     // BOX: Component container
-    const box = startFlexBox();
-
-    // Values ready to use
-    box.props(TinySelectDefaults, params);
+    const box = startObject(params);
 
     // *** PRIVATE VARIABLES:
     const DISABLED_OPACITY = 0.6;
@@ -131,6 +129,14 @@ const TinySelect = function(params = {}) {
     box.cursor = "pointer";
     box.clickable = 1;
 
+    // GROUP: title, label, arrow
+    // WHY: A box with width "auto" does not grow with its children; a relative group inside it does (as CheckBox).
+    box.contentBox = HGroup({
+        width: "auto",
+        height: "100%",
+        position: "relative",
+    });
+
     // LABEL: Title
     box.lblTitle = Label({
         fontSize: box.fontSize,
@@ -160,7 +166,7 @@ const TinySelect = function(params = {}) {
     that.css = { marginTop: "2px", marginRight: box.paddingX + "px" };
     if (box.invertIconColor == 1) that.css.filter = "invert(100%)";
 
-    endFlexBox();
+    endGroup();
 
     // WHY: The open list is on the page (TinySelect.createList). A remove() while it was open left it there.
     const superRemove = box.remove;
@@ -182,10 +188,8 @@ const TinySelect = function(params = {}) {
     //      guarded against this first call with isReady / isRendering).
     box.setSelectedIndex(box.selectedIndex, 1);
     box.setDisabled(box.disabled);
-    
-    restoreThatFromSaved();
-    makeBasicObject(box);
-    return box;
+
+    return endObject(box);
 
 };
 
