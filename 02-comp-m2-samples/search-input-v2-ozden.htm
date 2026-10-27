@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-    <title>Search Input: bugra style</title>
+    <title>Search Input: ozden style</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -18,10 +18,10 @@
 
         /* Bismillah */
 
-        // DESIGN PAGE: SearchInput with styleName "bugra", to edit SearchInput.styles.bugra (comp-m2/search-input-v2.js).
+        // DESIGN PAGE: SearchInput with styleName "ozden", to edit SearchInput.styles.ozden (comp-m2/search-input-v2.js).
         // The look comes only from the package: the samples give no look params.
         // basic-designer:
-        // http://127.0.0.1:5505/__projects/basic-designer/index.htm?page=02-comp-m2-samples/search-input-v2-bugra.htm
+        // http://127.0.0.1:5505/__projects/basic-designer/index.htm?page=02-comp-m2-samples/search-input-v2-ozden.htm
 
         // *** VARIABLES:
         let scrollBox, searchEmpty, searchWithText, searchWide, searchDark, searchClassic, lblSearched;
@@ -37,23 +37,23 @@
                 VGroup({ width: "100%", height: "auto", align: "left top", gap: 28, padding: 40 });
 
                     // BUGRA
-                    caption("bugra · empty");
+                    caption("ozden · empty");
                     searchEmpty = SearchInput({
-                        styleName: "bugra",
+                        styleName: "ozden",
                         onSearch: showSearched,
                     });
 
-                    caption("bugra · with text (setText shows the clear icon)");
+                    caption("ozden · with text (setText shows the clear icon)");
                     searchWithText = SearchInput({
-                        styleName: "bugra",
+                        styleName: "ozden",
                         placeholderText: "Search products",
                         onSearch: showSearched,
                     });
                     searchWithText.setText("fishing boat");
 
-                    caption("bugra · wide (480)");
+                    caption("ozden · wide (480)");
                     searchWide = SearchInput({
-                        styleName: "bugra",
+                        styleName: "ozden",
                         width: 480,
                         height: 40,
                         fontSize: 18,
@@ -67,9 +67,9 @@
                     // BUGRA DARK
                     VGroup({ hug: 1, align: "left top", gap: 12, padding: 24, color: "#1E1F22", round: 16 });
 
-                        Label({ text: "bugraDark · on a dark page", fontSize: 12, textColor: White(0.45) });
+                        Label({ text: "ozdenDark · on a dark page", fontSize: 12, textColor: White(0.45) });
                         searchDark = SearchInput({
-                            styleName: "bugraDark",
+                            styleName: "ozdenDark",
                             placeholderText: "Search products",
                             onSearch: showSearched,
                         });

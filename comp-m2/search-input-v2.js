@@ -6,7 +6,7 @@ Search Input - v24.04
 
 UI COMPONENT TEMPLATE
 - You can customize, this template code as you need:
-- Style packages: "classic" (default), "bugra", "bugraDark". Select with styleName. (SearchInput.styles)
+- Style packages: "classic" (default), "ozden", "ozdenDark". Select with styleName. (SearchInput.styles)
 -- A package is a package of params (basic.js v26.10.27): its keys fill the params you did not give.
 -- SearchInput.styles.myStyle = { style: {}, color: "white", textColor: "#222", ... };
 
@@ -42,7 +42,7 @@ const SearchInputDefaults = {
     invertIconColor: 0,
     onSearch: function(searchedText, self) {},
     onSubmit: function(searchedText, self) {},
-    styleName: "classic", // "classic", "bugra", "bugraDark" or a name added to SearchInput.styles
+    styleName: "classic", // "classic", "ozden", "ozdenDark" or a name added to SearchInput.styles
     style: {}, // WHY: the look is in the flat params above; the packages are packages of params (see SearchInput.styles).
 };
 
@@ -198,8 +198,8 @@ SearchInput.addPlaceholderStyle = function() {
 };
 
 // *** STYLE PACKAGES:
-// USAGE: SearchInput({ styleName: "bugra" })
-// USAGE: SearchInput({ styleName: "bugra", fontSize: 16 }) // A param you give wins over the package.
+// USAGE: SearchInput({ styleName: "ozden" })
+// USAGE: SearchInput({ styleName: "ozden", fontSize: 16 }) // A param you give wins over the package.
 // NOTE: Every package has "style: {}": that is the mark of a package of params (basic.js v26.10.27).
 //       Without it the keys would go into params.style and change nothing.
 // NOTE: A package needs only the params that differ from SearchInputDefaults.
@@ -209,7 +209,7 @@ SearchInput.styles = {
     classic: { style: {} },
 
     // Bugra's style: a round field with a thin line, a soft search icon and a white round clear button. (Change, add or remove any look param.)
-    bugra: {
+    ozden: {
         style: {},
         searchIconFile: "../comp-m2/search-input-v2/search.svg",
         clearIconFile: "../comp-m2/search-input-v2/clear-round.svg",
@@ -227,15 +227,15 @@ SearchInput.styles = {
         round: 50,
     },
 
-    // The dark theme of bugra: the same shape on a dark field, light text and icons.
+    // The dark theme of ozden: the same shape on a dark field, light text and icons.
     // WHY: invertIconColor also inverts clear-round.svg, so the clear button is a dark circle with a light cross.
-    bugraDark: {
+    ozdenDark: {
         style: {},
         searchIconFile: "../comp-m2/search-input-v2/search.svg",
         clearIconFile: "../comp-m2/search-input-v2/clear-round.svg",
         searchIconSize: 24,
-        searchIconOpacity: 0.5,
-        clearIconOpacity: 1,
+        searchIconOpacity: 0.4,
+        clearIconOpacity: 0.4,
         invertIconColor: 1,
         color: "#2B2D31",
         textColor: "rgba(255, 255, 255, 0.88)",
@@ -243,7 +243,7 @@ SearchInput.styles = {
         fontSize: 20,
         border: 1,
         borderColor: "rgba(255, 255, 255, 0.1)",
-        borderBottomStyle: "3px solid rgba(0, 0, 0, 0.3)",
+        borderBottomStyle: "3px solid rgba(255, 255, 255, 0.06)",
         round: 50,
     },
 
