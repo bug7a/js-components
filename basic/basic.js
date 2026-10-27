@@ -1992,6 +1992,9 @@ class BButton extends Basic_UIComponent {
         } else {
             this.buttonElement.classList.remove("minimal");
         }
+        // WHY (v26.10.27): basic.css gives a minimal one no border (0) and the others 1: border reads it (it read 1
+        //      with minimal). A border written on it (border: 2) is stronger than the CSS: it stays.
+        if (this.buttonElement.style.borderWidth === "") this._border = ($value) ? 0 : 1;
     }
 
     get spaceX() {
@@ -2159,6 +2162,9 @@ class BTextBox extends Basic_UIComponent {
         } else {
             this.inputElement.classList.remove("minimal");
         }
+        // WHY (v26.10.27): basic.css gives a minimal one no border (0) and the others 1: border reads it (it read 1
+        //      with minimal). A border written on it (border: 2) is stronger than the CSS: it stays.
+        if (this.inputElement.style.borderWidth === "") this._border = ($value) ? 0 : 1;
     }
 
     // *** v26.09.18 ADDITIONS (Input / TextBox) ***

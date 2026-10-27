@@ -7,6 +7,7 @@ This document contains new features, updates, and changes added to the basic.js 
 ## Version 26.10.27
 
 *   **Style packages can change params too:** a package with its own `style` key is a package of params. Its `style` goes into the style of the component, its other keys into the params the page did not give: `Tabs.styles.dark = { style: { tab: { textColor: "white" } }, closeIconFile: "tabs/close-white.svg" }`. A package without a `style` key works as before. Fully compatible. `InputB` (comp-m2) uses it for its dark style. Reference: `basic/basic-what-is-new.md`.
+*   **`minimal` and `border`:** a `minimal` Button / Input has no border (basic.css), and now `border` reads 0 too (it read 1). A border you give (`border: 2`) stays. Nothing changes on the screen.
 
 ---
 

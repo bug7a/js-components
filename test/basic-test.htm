@@ -518,6 +518,23 @@
                 paramStyles.dark.colors.length === 2 && byParams.colors.length === 3);
 
             // *** v26.10.25: Alpha(color, percent)
+            // *** v26.10.27: minimal: border reads the border of basic.css (0), a given border stays
+            const minButton = Button({ minimal: 1 });
+            check("minimal Button: border reads 0 (the border of basic.css)", minButton.border === 0, minButton.border);
+            minButton.minimal = 0;
+            check("not minimal any more: border reads 1 again", minButton.border === 1, minButton.border);
+            minButton.remove();
+            const minInput = Input({ minimal: 1 });
+            check("minimal Input: border reads 0", minInput.border === 0, minInput.border);
+            minInput.remove();
+            const minGiven = Button({ border: 2 });
+            minGiven.minimal = 1;
+            check("minimal after border: 2 keeps 2 (it is on the element)", minGiven.border === 2 && minGiven.buttonElement.style.borderWidth === "2px", minGiven.border);
+            minGiven.remove();
+            const minThenBorder = Button({ minimal: 1, border: 1 });
+            check("minimal, then border: 1 writes a 1px border on it", minThenBorder.border === 1 && minThenBorder.buttonElement.style.borderWidth === "1px", minThenBorder.buttonElement.style.borderWidth);
+            minThenBorder.remove();
+
             check("Alpha: #RRGGBB -> rgba", Alpha("#456789", 0.5) === "rgba(69,103,137,0.5)");
             check("Alpha: #RGB -> rgba", Alpha("#4a7", 0.8) === "rgba(68,170,119,0.8)");
             check("Alpha: the alpha of #RRGGBBAA is multiplied", Alpha("#00000080", 0.5) === "rgba(0,0,0,0.251)");

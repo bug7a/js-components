@@ -34,6 +34,12 @@ Tabs.styles.dark = {
 
 ## v26.10.25 (2026-10-25)
 
+### `minimal`: `border` reads 0
+
+basic.css gives a `minimal` Button / Input no border, but `border` still read 1 (the value of a normal one). Now `minimal` sets it to the border of basic.css: 0 when on, 1 when off. A border written on the object (`border: 2`, also before `minimal`) is stronger than the CSS: it stays. Nothing changes on the screen; only the value that is read (found in basic-designer: its panel showed 1, and a change to 1 was "no change").
+
+- `test/basic-test.htm`: five checks (minimal Button / Input read 0, off again reads 1, a given border stays, minimal then border 1 writes 1px), 163/163.
+
 ### NOT COMPATIBLE: the helpers under `basic.*`, the old `create*` globals removed
 
 The user's choice (2026-10-25), the plan of `basic/improvement-ideas.md` §9 done in one step (without a warning version): fewer global names, and names like `createButton` are free for the helpers of pages and components.

@@ -7,6 +7,7 @@ Bu belgede basic.js kütüphanesine eklenen yeni özellikler, güncellemeler ve 
 ## Versiyon 26.10.27
 
 *   **Stil paketleri parametreleri de değiştirebilir:** kendi `style` anahtarı olan bir paket bir parametre paketidir. `style`'ı bileşenin stiline, diğer anahtarları sayfanın vermediği parametrelere gider: `Tabs.styles.dark = { style: { tab: { textColor: "white" } }, closeIconFile: "tabs/close-white.svg" }`. `style` anahtarı olmayan paket eskisi gibi çalışır. Tam uyumlu. `InputB` (comp-m2) koyu stili için bunu kullanır. Örnekli başvuru: `basic/basic-what-is-new.md`.
+*   **`minimal` ve `border`:** `minimal` bir Button / Input'un kenarı yoktur (basic.css), artık `border` da 0 okunur (1 okunuyordu). Verdiğiniz bir kenar (`border: 2`) kalır. Ekranda bir şey değişmez.
 
 ---
 
