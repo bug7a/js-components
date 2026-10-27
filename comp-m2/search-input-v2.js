@@ -33,6 +33,7 @@ const SearchInputDefaults = {
     textColor: "rgba(0, 0, 0, 0.8)",
     placeholderColor: "", // "": Tarayıcının kendi rengi. Koyu zeminde White(0.35) gibi bir renk verin.
     searchIconOpacity: 1,
+    clearIconOpacity: 0.6, // The clear icon while it is shown
     border: 0,
     borderColor: "rgba(0, 0, 0, 0.1)",
     borderBottomStyle: "2px solid rgba(0, 0, 0, 0.06)",
@@ -60,7 +61,6 @@ const SearchInput = function(params = {}) {
     const ICON_LEFT = 16; // The search icon from the left side
     const ICON_GAP = 8; // Between the search icon and the text
     const ICONS_SPACE = 80; // The width of the box that is not for the text (the two icons and their spaces)
-    const CLEAR_ICON_OPACITY = 0.6;
 
     // *** Public variables:
     box.publicVar = "";
@@ -82,7 +82,7 @@ const SearchInput = function(params = {}) {
     };
 
     const setClearIconVisible = function(isVisible) {
-        box.imgClearIcon.opacity = (isVisible) ? CLEAR_ICON_OPACITY : 0;
+        box.imgClearIcon.opacity = (isVisible) ? box.clearIconOpacity : 0;
         box.imgClearIcon.clickable = (isVisible) ? 1 : 0;
     };
 
@@ -208,6 +208,7 @@ SearchInput.styles = {
         clearIconFile: "../comp-m2/search-input-v2/clear-round.svg",
         searchIconSize: 24,
         searchIconOpacity: 0.4,
+        clearIconOpacity: 1, // WHY: at 0.6 the white circle faded into the field (the user, 2026-10-27).
         invertIconColor: 0,
         color: "whitesmoke",
         textColor: "rgba(0, 0, 0, 0.8)",
