@@ -24,10 +24,11 @@ Tabs.styles.dark = {
 ```
 
 - The order is the same on both levels: the params of the page > the package > the defaults; `params.style` > the package's `style` > `Defaults.style`.
-- The package is copied (`mergeIntoIfMissing`), so it is never changed.
+- The package is copied (`mergeIntoIfMissing`; its arrays with `slice()`, because the merge gives an array as it is), so it is never changed.
 - A component whose look is all in flat params (comp-m2 `InputB`) marks its packages with `style: {}`: `InputB.styles.dark = { style: {}, backgroundColor: "#232322", ... }`. Without the mark the keys would go into `params.style`.
 - `comp-m2/input-b.js` uses it now (its own `InputB.applyStylePackage` of 2026-10-26 is gone): it needs v26.10.27.
-- `test/basic-test.htm`: three checks (the keys fill the params / the style; given params win; the package is not changed), 157/157.
+- `comp-m4/label-editor.js`: its `dark` package gives `newLabel` a light text color and its own `colorPalette` (a new label was not seen on the dark list): it needs v26.10.27.
+- `test/basic-test.htm`: four checks (the keys fill the params / the style; given params win; the package is not changed; its arrays are copied), 158/158.
 
 ---
 

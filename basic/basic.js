@@ -472,9 +472,13 @@ basic.applyStylePackage = function ($params, $packages, $defaults) {
     $params.style = ownStyle;
 
     if (isParamsPackage) {
-        // WHY: mergeIntoIfMissing copies the objects of the package, so the package is never changed.
+        // WHY: mergeIntoIfMissing copies the objects of the package, but it gives an array as it is:
+        //      the arrays are copied here, so the package is never changed (editor.colorPalette.push()).
         const packageParams = Object.assign({}, stylePackage);
         delete packageParams.style;
+        for (const key in packageParams) {
+            if (Array.isArray(packageParams[key])) packageParams[key] = packageParams[key].slice();
+        }
         mergeIntoIfMissing($params, packageParams);
     }
     return $params;

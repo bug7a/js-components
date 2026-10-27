@@ -499,7 +499,7 @@
             // *** v26.10.27: a package with a "style" key is a package of params
             const paramStyles = {
                 light: { style: { box: { color: "white" } }, iconFile: "light.svg" },
-                dark: { style: { box: { color: "black" } }, iconFile: "dark.svg", options: { size: 2 } },
+                dark: { style: { box: { color: "black" } }, iconFile: "dark.svg", options: { size: 2 }, colors: ["#111", "#222"] },
             };
             const paramDefaults = { styleName: "light", iconFile: "", style: { box: { color: "white", round: 4 } } };
             const byParams = basic.applyStylePackage({ styleName: "dark" }, paramStyles, paramDefaults);
@@ -513,6 +513,9 @@
             byParams.style.box.color = "blue";
             check("basic.applyStylePackage: a package of params is copied, never changed",
                 paramStyles.dark.options.size === 2 && paramStyles.dark.style.box.color === "black");
+            byParams.colors.push("#333");
+            check("basic.applyStylePackage: an array of a package of params is copied too",
+                paramStyles.dark.colors.length === 2 && byParams.colors.length === 3);
 
             // *** v26.10.25: Alpha(color, percent)
             check("Alpha: #RRGGBB -> rgba", Alpha("#456789", 0.5) === "rgba(69,103,137,0.5)");

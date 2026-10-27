@@ -1087,7 +1087,7 @@ LabelEditor.getCloseSvg = function (color, size) {
 // USAGE: LabelEditor({ styleName: "dark" })
 // USAGE: LabelEditor({ style: { selection: { color: "tomato" } } }) // Change only some keys.
 // USAGE: LabelEditor({ style: LabelEditor.styles.classic }) // The same as styleName: "classic". (The package is copied, never changed.)
-// NOTE: "dark" is a package of params (it has a "style" key): it also gives new labels a light text color. Use it with styleName: "dark".
+// NOTE: "dark" is a package of params (it has a "style" key): it also gives new labels a light text color and a palette for the dark list. Use it with styleName: "dark".
 // NOTE: A new package needs only the keys that differ from the default (classic) style.
 // NOTE: xxxStyleName / xxxStyle: the style package and the style changes of the components in the panel.
 LabelEditor.styles = {
@@ -1096,7 +1096,7 @@ LabelEditor.styles = {
     classic: LabelEditorDefaults.style,
 
     // Dark theme, same colors as SidePanel, Stepper and Tabs "dark".
-    // A package of params (basic.js v26.10.27): "style" is the look, "newLabel" the new labels.
+    // A package of params (basic.js v26.10.27): "style" is the look, "newLabel" the new labels, "colorPalette" the color pickers.
     dark: {
         style: {
             box: { color: "#1C1C1B", border: 1, borderColor: "rgba(255, 255, 255, 0.10)", round: 10 },
@@ -1132,6 +1132,14 @@ LabelEditor.styles = {
         },
         // WHY: the default text color of a new label (#1F2328) is not seen on the dark list.
         newLabel: { textColor: "#E8E8E6", borderColor: "#E8E8E6" },
+        // WHY: the first colors of the default palette are dark: a text in them is not seen on the dark list.
+        // Light grays and bright colors for the text, dark tints for the backgrounds.
+        colorPalette: [
+            "#FFFFFF", "#E8E8E6", "#B5B5B3", "#7A7A78", "#2A2A29",
+            "#E57B6B", "#F2B45A", "#D9C36A", "#7CC49A", "#65A293",
+            "#6FA8DC", "#8CC8F0", "#A38BEA", "#C98AD6", "#F08DB8",
+            "#3A2523", "#3A3220", "#233528", "#1F2E3A", "#2E2840",
+        ],
     },
 
 };
