@@ -23,6 +23,7 @@ UI COMPONENT TEMPLATE
 - The label texts are shown as plain text (not HTML).
 - Style packages: "classic" (default), "dark". Select with styleName. (LabelEditor.styles)
 
+NEEDS: basic.js v26.10.27 (its "dark" package is a package of params).
 NEEDS (load them before this file):
 comp-m4/side-panel.js, comp-m4/stepper.js, comp-m4/select-color.js, comp-m4/tabs.js, comp-m3/check-box.js
 
@@ -155,7 +156,7 @@ const LabelEditor = function (params = {}) {
     ].filter(function (pair) { return pair[1] === "undefined"; }).map(function (pair) { return pair[0]; });
     if (_missing.length) console.error("LabelEditor: Load these components before label-editor.js: " + _missing.join(", "));
 
-    // Merge style package: params.style > LabelEditor.styles[styleName] > LabelEditorDefaults.style (classic)
+    // Merge style package: your params > LabelEditor.styles[styleName] > LabelEditorDefaults (classic)
     basic.applyStylePackage(params, LabelEditor.styles, LabelEditorDefaults);
 
     // Merge params:
@@ -1085,7 +1086,8 @@ LabelEditor.getCloseSvg = function (color, size) {
 // *** STYLE PACKAGES:
 // USAGE: LabelEditor({ styleName: "dark" })
 // USAGE: LabelEditor({ style: { selection: { color: "tomato" } } }) // Change only some keys.
-// USAGE: LabelEditor({ style: LabelEditor.styles.dark }) // The same as styleName: "dark". (The package is copied, never changed.)
+// USAGE: LabelEditor({ style: LabelEditor.styles.classic }) // The same as styleName: "classic". (The package is copied, never changed.)
+// NOTE: "dark" is a package of params (it has a "style" key): it also gives new labels a light text color. Use it with styleName: "dark".
 // NOTE: A new package needs only the keys that differ from the default (classic) style.
 // NOTE: xxxStyleName / xxxStyle: the style package and the style changes of the components in the panel.
 LabelEditor.styles = {
@@ -1094,37 +1096,42 @@ LabelEditor.styles = {
     classic: LabelEditorDefaults.style,
 
     // Dark theme, same colors as SidePanel, Stepper and Tabs "dark".
+    // A package of params (basic.js v26.10.27): "style" is the look, "newLabel" the new labels.
     dark: {
-        box: { color: "#1C1C1B", border: 1, borderColor: "rgba(255, 255, 255, 0.10)", round: 10 },
-        header: { color: "#232322", dividerColor: "rgba(255, 255, 255, 0.08)", titleColor: "rgba(255, 255, 255, 0.9)", titleSize: 15 },
-        list: { color: "#1C1C1B", padding: 24, gap: 12, emptyColor: "rgba(255, 255, 255, 0.4)" },
-        selection: { color: "#65A293", hoverColor: "rgba(101, 162, 147, 0.45)" },
-        button: { color: "#3D7A6B", textColor: White(1), hoverColor: "#4A8A7A", round: 6, fontSize: 13, height: 36 },
-        secondaryButton: { color: "rgba(255, 255, 255, 0.08)", textColor: "rgba(255, 255, 255, 0.85)", hoverColor: "rgba(255, 255, 255, 0.14)", dangerTextColor: "#E57B6B" },
-        panel: { dividerColor: "rgba(255, 255, 255, 0.08)", gap: 18, captionColor: "rgba(255, 255, 255, 0.5)", textColor: "rgba(255, 255, 255, 0.9)", hintColor: "rgba(255, 255, 255, 0.4)" },
-        input: { color: "#2A2A29", borderColor: "rgba(255, 255, 255, 0.12)", focusColor: "#65A293", textColor: "rgba(255, 255, 255, 0.9)", round: 6, height: 38 },
-        chip: { color: "#2A2A29", borderColor: "rgba(255, 255, 255, 0.12)", activeBorderColor: "#65A293", round: 16, closeColor: "rgba(255, 255, 255, 0.5)" },
-        sidePanelStyleName: "dark",
-        stepperStyleName: "dark",
-        tabsStyleName: "dark",
-        checkBoxStyleName: "classic",
-        // WHY: CheckBox and SelectColor have no dark package. Their colors are given here.
-        checkBoxStyle: {
-            mark: { color: "#2A2A29", borderColor: "rgba(255, 255, 255, 0.3)" },
-            checkedMark: { color: "#3D7A6B", borderColor: "#3D7A6B" },
-            hoverMark: { borderColor: "rgba(255, 255, 255, 0.6)" },
-            label: { fontSize: 14, textColor: "rgba(255, 255, 255, 0.85)" },
+        style: {
+            box: { color: "#1C1C1B", border: 1, borderColor: "rgba(255, 255, 255, 0.10)", round: 10 },
+            header: { color: "#232322", dividerColor: "rgba(255, 255, 255, 0.08)", titleColor: "rgba(255, 255, 255, 0.9)", titleSize: 15 },
+            list: { color: "#1C1C1B", padding: 24, gap: 12, emptyColor: "rgba(255, 255, 255, 0.4)" },
+            selection: { color: "#65A293", hoverColor: "rgba(101, 162, 147, 0.45)" },
+            button: { color: "#3D7A6B", textColor: White(1), hoverColor: "#4A8A7A", round: 6, fontSize: 13, height: 36 },
+            secondaryButton: { color: "rgba(255, 255, 255, 0.08)", textColor: "rgba(255, 255, 255, 0.85)", hoverColor: "rgba(255, 255, 255, 0.14)", dangerTextColor: "#E57B6B" },
+            panel: { dividerColor: "rgba(255, 255, 255, 0.08)", gap: 18, captionColor: "rgba(255, 255, 255, 0.5)", textColor: "rgba(255, 255, 255, 0.9)", hintColor: "rgba(255, 255, 255, 0.4)" },
+            input: { color: "#2A2A29", borderColor: "rgba(255, 255, 255, 0.12)", focusColor: "#65A293", textColor: "rgba(255, 255, 255, 0.9)", round: 6, height: 38 },
+            chip: { color: "#2A2A29", borderColor: "rgba(255, 255, 255, 0.12)", activeBorderColor: "#65A293", round: 16, closeColor: "rgba(255, 255, 255, 0.5)" },
+            sidePanelStyleName: "dark",
+            stepperStyleName: "dark",
+            tabsStyleName: "dark",
+            checkBoxStyleName: "classic",
+            // WHY: CheckBox and SelectColor have no dark package. Their colors are given here.
+            checkBoxStyle: {
+                mark: { color: "#2A2A29", borderColor: "rgba(255, 255, 255, 0.3)" },
+                checkedMark: { color: "#3D7A6B", borderColor: "#3D7A6B" },
+                hoverMark: { borderColor: "rgba(255, 255, 255, 0.6)" },
+                label: { fontSize: 14, textColor: "rgba(255, 255, 255, 0.85)" },
+            },
+            selectColorStyle: {
+                field: { color: "#2A2A29", borderColor: "rgba(255, 255, 255, 0.12)" },
+                fieldHover: { borderColor: "rgba(255, 255, 255, 0.3)" },
+                fieldFocus: { borderColor: "#65A293" },
+                fieldText: { fontSize: 13, textColor: "rgba(255, 255, 255, 0.9)" },
+                placeholder: { textColor: "rgba(255, 255, 255, 0.4)" },
+                panel: { color: "#232322", borderColor: "rgba(255, 255, 255, 0.12)" },
+                swatch: { borderColor: "rgba(255, 255, 255, 0.15)" },
+            },
+            scrollBar: { bar_color: "#8A8A88", bar_mouseOverColor: "#BFBFBD", bar_width: 4, bar_round: 3, bar_opacity: 0.4, bar_mouseOverOpacity: 0.9, bar_padding: 2 },
         },
-        selectColorStyle: {
-            field: { color: "#2A2A29", borderColor: "rgba(255, 255, 255, 0.12)" },
-            fieldHover: { borderColor: "rgba(255, 255, 255, 0.3)" },
-            fieldFocus: { borderColor: "#65A293" },
-            fieldText: { fontSize: 13, textColor: "rgba(255, 255, 255, 0.9)" },
-            placeholder: { textColor: "rgba(255, 255, 255, 0.4)" },
-            panel: { color: "#232322", borderColor: "rgba(255, 255, 255, 0.12)" },
-            swatch: { borderColor: "rgba(255, 255, 255, 0.15)" },
-        },
-        scrollBar: { bar_color: "#8A8A88", bar_mouseOverColor: "#BFBFBD", bar_width: 4, bar_round: 3, bar_opacity: 0.4, bar_mouseOverOpacity: 0.9, bar_padding: 2 },
+        // WHY: the default text color of a new label (#1F2328) is not seen on the dark list.
+        newLabel: { textColor: "#E8E8E6", borderColor: "#E8E8E6" },
     },
 
 };
