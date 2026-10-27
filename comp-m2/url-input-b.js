@@ -38,9 +38,8 @@ const URLInputBDefaults = {
         paddingX: 0,
         arrowSize: 20,
         fontSize: 20,
-        color: "rgba(0,0,0,0.05)", // "whitesmoke"
         round: 3,
-        listOverTextColor: "#65A293",
+        // NOTE: The colors come from selectStyle of InputB (its style packages); a color given here wins.
     },
 };
 
@@ -56,6 +55,22 @@ const URLInputB = function(params = {}) {
     // *** PUBLIC VARIABLES:
 
     // *** PRIVATE FUNCTIONS:
+
+    // The params of the protocol select: the colors of selectStyle (InputB) and the text color of the field,
+    // then the tinySelectParams of the page over them.
+    const getTinySelectParams = function() {
+        const selectStyle = box.selectStyle;
+        const colorParams = {
+            color: selectStyle.color,
+            invertIconColor: selectStyle.invertIconColor,
+            labelTextColor: box.inputTextColor, // WHY: not "#373836": dark on a dark package
+            listBackgroundColor: selectStyle.listBackgroundColor,
+            listTextColor: selectStyle.listTextColor,
+            listOverTextColor: selectStyle.listOverTextColor,
+            listBorderColor: selectStyle.listBorderColor,
+        };
+        return Object.assign(colorParams, box.tinySelectParams);
+    };
 
     // *** PUBLIC FUNCTIONS:
     box.isValid = function() { // OVERRIDE
@@ -82,9 +97,8 @@ const URLInputB = function(params = {}) {
         });
         box.inputBox.add(that);
 
-            box.tinySelect = TinySelect(box.tinySelectParams);
+            box.tinySelect = TinySelect(getTinySelectParams());
             box.tinySelect.lblLabel.css.fontFamily = "opensans";
-            box.tinySelect.lblLabel.textColor = box.inputTextColor; // WHY: not "#373836": dark on a dark package
 
             box.input = Input({
                 text: box.inputValue,

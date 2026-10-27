@@ -122,6 +122,16 @@ const InputBDefaults = {
         fontSize: 14,
     },
 
+    // The select inside the field (the protocol of URLInputB, a TinySelect) and its open list
+    selectStyle: {
+        color: "rgba(0,0,0,0.05)",
+        invertIconColor: 0, // 1: a white arrow (on a dark field)
+        listBackgroundColor: "whitesmoke",
+        listTextColor: "rgba(0, 0, 0, 0.8)",
+        listOverTextColor: "#65A293",
+        listBorderColor: "rgba(0, 0, 0, 0.6)",
+    },
+
     createLeftBox: 0,
     createRightBox: 0,
     createUnit: 0,
@@ -642,6 +652,14 @@ InputB.styles = {
             color: "#2C2C2A", // surface3
             textColor: White(0.85),
         },
+
+        selectStyle: {
+            color: "#2C2C2A", // surface3
+            invertIconColor: 1,
+            listBackgroundColor: "#232322", // surface2
+            listTextColor: White(0.85),
+            listBorderColor: White(0.12),
+        },
     },
 
     // The fields of __projects/contact-form (contact-form.htm, inputStyle): a gray rounded field,
@@ -701,6 +719,14 @@ InputB.styles = {
         unitStyle: {
             color: "rgba(255, 255, 255, 0.07)", // FIELD_BG_SELECTED
             textColor: "rgba(255, 255, 255, 0.94)", // SITE.ON_DARK
+        },
+
+        selectStyle: {
+            color: "rgba(255, 255, 255, 0.07)", // FIELD_BG_SELECTED
+            invertIconColor: 1,
+            listBackgroundColor: "#16261D", // POPUP_BG (SITE.INK_SOFT)
+            listTextColor: "rgba(255, 255, 255, 0.94)", // SITE.ON_DARK
+            listBorderColor: "rgba(255, 255, 255, 0.22)", // FIELD_LINE_HOVER
         },
     },
 

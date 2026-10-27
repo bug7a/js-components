@@ -18,6 +18,8 @@
         <script src="../comp-m2/email-input-b.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp-m2/phone-input-b.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp-m2/textarea-b.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m2/tiny-select.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m2/url-input-b.js" type="text/javascript" charset="utf-8"></script>
 
         <script>
 
@@ -25,7 +27,7 @@
 
         // InputB with styleName: "ozden" (the fields of __projects/contact-form)
         // and "ozdenDark" (the contact form of __projects/webpage-admin-panel).
-        // EmailInputB, PhoneInputB and TextareaB are made from InputB, so they take the same packages.
+        // EmailInputB, PhoneInputB, URLInputB and TextareaB are made from InputB, so they take the same packages.
 
         // The pages of the two projects
         const LIGHT_PAGE_COLOR = "white";
@@ -106,6 +108,13 @@
                 countryCode: "+90",
                 phoneMask: " (___) ___-____",
                 unitText: "TR",
+            });
+
+            URLInputB({
+                styleName: styleName,
+                width: "100%",
+                titleText: "WEBSITE",
+                isRequired: 0,
             });
 
             TextareaB({
