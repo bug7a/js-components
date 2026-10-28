@@ -228,7 +228,14 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "data-table", name: "DataTable", gen: 4, cat: "data",
-        source: "comp-m4/data-table.js", samples: ["02-comp-m4-samples/data-table.htm"],
+        source: "comp-m4/data-table.js",
+        samples: [
+            { file: "02-comp-m4-samples/data-table.htm", title: "Styles" },
+            { file: "02-comp-m4-samples/data-table-2.htm", title: "Basic" },
+            { file: "02-comp-m4-samples/data-table-3.htm", title: "Search & sort" },
+            { file: "02-comp-m4-samples/data-table-4.htm", title: "Add & delete" },
+            { file: "02-comp-m4-samples/data-table-5.htm", title: "Custom cells" },
+        ],
         en: "A table for short and middle lists: sorting, search, keyboard selection, your own cells and row updates by id. For very many rows: SmartTable.",
         tr: "Kısa ve orta uzunlukta listeler için tablo: sıralama, arama, klavyeyle seçim, kendi hücreleriniz ve id ile satır güncelleme. Çok fazla satır için: SmartTable.",
     },

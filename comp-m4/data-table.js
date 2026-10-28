@@ -5,7 +5,8 @@
 Data Table - v26.10
 
 A table made from data: the columns from a list of objects, the rows from a list of arrays (or objects).
-(The new version of UITable of 04-template-m1/js-data-table, 2022: the m2 / m3 component pattern.)
+(The new version of UITable, 2022 (its template 04-template-m1/js-data-table is gone): the m2 / m3 component pattern.)
+- Samples: 02-comp-m4-samples/data-table.htm, data-table-2.htm ... data-table-5.htm (data: assets/data-table/).
 - FOR SHORT AND MIDDLE LISTS (up to some hundreds of rows): every row is a basic.js object. For very many rows
   (thousands, millions) use comp-m3/smart-table.js (SmartTable): it makes only the rows that are seen.
 - Sorting: a click on a sortable title (again: the other direction), the keyboard (Enter / Space on a title), sortBy().

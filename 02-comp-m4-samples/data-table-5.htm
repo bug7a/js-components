@@ -2,28 +2,28 @@
 <html lang="en">
     <head>
 
-        <title>Data Table - Custom Cells</title>
+        <title>DataTable - Custom Cells</title>
 
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
         <!-- LIBRARY FILES -->
-        <link rel="stylesheet" type="text/css" href="../../basic/basic.css">
-        <script src="../../basic/basic.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+        <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+        <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- COMPONENTS -->
-        <script src="../../comp-m2/search-input-v2.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../comp-m4/data-table.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m2/search-input-v2.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m4/data-table.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- DATA -->
-        <script src="js/table-data.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../assets/data-table/people.js" type="text/javascript" charset="utf-8"></script>
 
         <script>
 
         /* Bismillah */
 
-        // SAMPLE: Your own cells: a colored ID column, a gray city badge, a small chart and a trash button that deletes
+        // SAMPLE (DataTable, comp-m4/data-table.js): Your own cells: a colored ID column, a gray city badge, a small chart and a trash button that deletes
         // the row. Search in the header; the rows have one height (rowHeight).
 
         const TABLE_WIDTH = 760;
@@ -39,9 +39,6 @@
         const TRASH_BUTTON_SIZE = 34;
         const TRASH_ICON_SIZE = 18;
 
-        // The sort arrow of DataTable seen from this folder (its default path is for 02-comp-m4-samples)
-        const SORT_ICON_FILE = "../../comp-m4/data-table/arrow.svg";
-
         let table;
 
         const start = function () {
@@ -53,7 +50,6 @@
 
                 // TABLE: People
                 table = DataTable({
-                    sortIconFile: SORT_ICON_FILE,
                     width: TABLE_WIDTH,
                     height: TABLE_HEIGHT,
                     rowHeight: ROW_HEIGHT,
@@ -125,7 +121,7 @@
 
                 // ICON: Trash
                 Icon({ width: TRASH_ICON_SIZE, height: TRASH_ICON_SIZE, opacity: 0.6 });
-                that.load("assets/trash.svg");
+                that.load("../assets/data-table/trash.svg");
                 that.center();
 
             endBox();

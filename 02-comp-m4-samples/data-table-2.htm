@@ -2,34 +2,31 @@
 <html lang="en">
     <head>
 
-        <title>Data Table - Basic Example</title>
+        <title>DataTable - Basic</title>
 
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
         <!-- LIBRARY FILES -->
-        <link rel="stylesheet" type="text/css" href="../../basic/basic.css">
-        <script src="../../basic/basic.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+        <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+        <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- COMPONENTS -->
-        <script src="../../comp-m4/data-table.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m4/data-table.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- DATA -->
-        <script src="js/table-data.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../assets/data-table/people.js" type="text/javascript" charset="utf-8"></script>
 
         <script>
 
         /* Bismillah */
 
-        // SAMPLE: The simplest table: four columns, a sortable name, a click on a row writes it to the console.
+        // SAMPLE (DataTable, comp-m4/data-table.js): The simplest table: four columns, a sortable name, a click on a row writes it to the console.
 
         const TABLE_WIDTH = 600;
         const TABLE_HEIGHT = 432;
         const PAGE_SPACE = 20;
-
-        // The sort arrow of DataTable seen from this folder (its default path is for 02-comp-m4-samples)
-        const SORT_ICON_FILE = "../../comp-m4/data-table/arrow.svg";
 
         let table;
 
@@ -42,7 +39,6 @@
 
                 // TABLE: People
                 table = DataTable({
-                    sortIconFile: SORT_ICON_FILE,
                     width: TABLE_WIDTH,
                     height: TABLE_HEIGHT,
                     styleName: "minimal",

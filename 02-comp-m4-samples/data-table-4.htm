@@ -2,24 +2,24 @@
 <html lang="en">
     <head>
 
-        <title>Data Table - Add, Edit, Delete Example</title>
+        <title>DataTable - Add, Edit, Delete</title>
 
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
         <!-- LIBRARY FILES -->
-        <link rel="stylesheet" type="text/css" href="../../basic/basic.css">
-        <script src="../../basic/basic.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+        <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+        <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- COMPONENTS -->
-        <script src="../../comp-m4/data-table.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m4/data-table.js" type="text/javascript" charset="utf-8"></script>
 
         <script>
 
         /* Bismillah */
 
-        // SAMPLE: A column with your own cells (circles of colors), and the rows changed with updateRows():
+        // SAMPLE (DataTable, comp-m4/data-table.js): A column with your own cells (circles of colors), and the rows changed with updateRows():
         // the buttons add, change and delete rows; the sorting stays.
 
         const PAGE_WIDTH = 700;
@@ -40,9 +40,6 @@
             [4, "Square", ["#FEC108", "#FE5D49", "#4577C1", "#5ABB9F"]],
         ];
 
-        // The sort arrow of DataTable seen from this folder (its default path is for 02-comp-m4-samples)
-        const SORT_ICON_FILE = "../../comp-m4/data-table/arrow.svg";
-
         let table;
 
         const start = function () {
@@ -55,7 +52,6 @@
 
             // TABLE: Palettes
             table = DataTable({
-                sortIconFile: SORT_ICON_FILE,
                 left: 0,
                 top: 0,
                 width: "100%",
@@ -65,7 +61,7 @@
                 columns: [
                     { key: "id", title: "#", valueIndex: 0, type: "number", width: 60, sortable: 1 },
                     { key: "name", title: "Palette Name", valueIndex: 1, sortable: 1 },
-                    { key: "colors", title: "Colors", valueIndex: 2, align: "center", iconFile: "assets/palette.svg", createView: createColorPalette },
+                    { key: "colors", title: "Colors", valueIndex: 2, align: "center", iconFile: "../assets/data-table/palette.svg", createView: createColorPalette },
                 ],
                 rows: palettes,
             });

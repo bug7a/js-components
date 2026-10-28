@@ -2,34 +2,31 @@
 <html lang="en">
     <head>
 
-        <title>Data Table - Search and Sort</title>
+        <title>DataTable - Search and Sort</title>
 
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
         <!-- LIBRARY FILES -->
-        <link rel="stylesheet" type="text/css" href="../../basic/basic.css">
-        <script src="../../basic/basic.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+        <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+        <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- COMPONENTS -->
-        <script src="../../comp-m2/search-input-v2.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../comp-m4/data-table.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m2/search-input-v2.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m4/data-table.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- DATA -->
-        <script src="js/table-data.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../assets/data-table/people.js" type="text/javascript" charset="utf-8"></script>
 
         <script>
 
         /* Bismillah */
 
-        // SAMPLE: A table that fills the page: a title, a search box, three sortable columns (the ID sorted down
+        // SAMPLE (DataTable, comp-m4/data-table.js): A table that fills the page: a title, a search box, three sortable columns (the ID sorted down
         // at the start). The keyboard: Tab to the table, the arrow keys select, Enter.
 
         const PAGE_SPACE = 20;
-
-        // The sort arrow of DataTable seen from this folder (its default path is for 02-comp-m4-samples)
-        const SORT_ICON_FILE = "../../comp-m4/data-table/arrow.svg";
 
         let table;
 
@@ -39,7 +36,6 @@
 
             // TABLE: Information
             table = DataTable({
-                sortIconFile: SORT_ICON_FILE,
                 left: PAGE_SPACE,
                 top: PAGE_SPACE,
                 width: "calc(100% - " + (PAGE_SPACE * 2) + "px)",

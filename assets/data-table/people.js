@@ -1,3 +1,4 @@
+// The data of the DataTable samples (02-comp-m4-samples/data-table-2 ... 5.htm).
 // 100 people: [id, name, city, age, hobby, hobby, job, education]
 const testData = [
     [1, "John Smith", "New York", 30, "photography", "hiking", "Software Engineer", "Bachelor's degree in Computer Science"],
