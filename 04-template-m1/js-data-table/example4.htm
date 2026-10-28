@@ -1,387 +1,151 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
     <head>
-        
-        <title>UI Table - Custom Cells</title>
-        
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 
+        <title>Data Table - Custom Cells</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- LIBRARY FILES -->
         <link rel="stylesheet" type="text/css" href="../../basic/basic.css">
         <script src="../../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
 
+        <!-- COMPONENTS -->
+        <script src="../../comp-m2/search-input-v2.js" type="text/javascript" charset="utf-8"></script>
+        <script src="js/components/data-table.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- DATA -->
         <script src="js/table-data.js" type="text/javascript" charset="utf-8"></script>
-        <script src="js/components/ui-search-box.js" type="text/javascript" charset="utf-8"></script>
-        <script src="js/components/ui-table.js" type="text/javascript" charset="utf-8"></script>
-
-
-        <style>
-
-            body {
-                margin: 0px !important;
-                overflow: auto !important;
-            }
-
-            #my-table-div {
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                width: 700px;
-                height: 500px;
-                transform:translateX(-50%) translateY(-50%);
-            }
-
-            /* Customize mouse over and click effects with css */
-            .table-title-cell {
-                cursor: pointer;
-            }
-
-            .table-title-cell:hover {
-                background-color: rgba(211, 207, 193, 0.3) !important;
-                /* border: 1px solid rgba(0, 0, 0, 0.2) !important; */
-                border-bottom: 1px solid rgba(0, 0, 0, 0.2) !important;
-            }
-
-            .table-item-row {
-                cursor: pointer;
-            }
-
-            .table-item-row:hover {
-                background-color: rgba(211, 207, 193, 0.2) !important;
-                /* border: 1px solid rgba(0, 0, 0, 0.2) !important; */
-                opacity: 1;
-                border-radius: 2px !important;
-            }
-
-            .table-item-row:active {
-                background-color: rgba(211, 207, 193, 0.4) !important;
-                /* border: 1px solid rgba(0, 0, 0, 0.2) !important; */
-                opacity: 1;
-                border-radius: 2px !important;
-            }
-
-            .table-item-row.selected {
-                background-color: rgba(211, 207, 193, 0.2) !important;
-                /* border: 1px solid rgba(0, 0, 0, 0.2) !important; */
-                opacity: 1;
-                border-radius: 2px !important;
-            }
-
-            .table-item-cell {
-                cursor: pointer;
-            }
-
-            .table-item-cell:hover {
-                background-color: whitesmoke !important;
-                border: 1px solid black !important;
-            }
-
-            .icon-button {
-                cursor: pointer;
-                background-color: transparent !important;
-                transform: scale(0.8) !important;
-                transform-origin: center !important;
-                transition: transform 0.3s, background-color 0.3s !important;
-            }
-            
-            .icon-button:hover {
-                background-color: rgba(0, 0, 0, 0.05) !important;
-                transform: scale(1) !important;
-            }
-
-            .icon-button:hover ~ .table-item-row {
-                background-color: rgba(254, 193, 8, 0.1) !important;
-                /* border: 1px solid rgba(0, 0, 0, 0.2) !important; */
-                opacity: 1 !important;
-                border-radius: 2px !important;
-            }
-
-            .icon-button:active {
-                background-color: rgba(0, 0, 0, 0.1) !important;
-                transform: scale(1) !important;
-            }
-
-        </style>
 
         <script>
 
-        // The colors and sizes of the design
-        const ID_COLOR = "#FFF0C2";
-        const CHART_LOW_COLOR = "orangered";
-        const CHART_MIDDLE_COLOR = "#689BD2";
-        const CHART_HIGH_COLOR = "seagreen";
+        /* Bismillah */
+
+        // SAMPLE: Your own cells: a colored ID column, a gray city badge, a small chart and a trash button that deletes
+        // the row. Search in the header; the rows have one height (rowHeight).
+
+        const TABLE_WIDTH = 760;
+        const TABLE_HEIGHT = 520;
+        const ROW_HEIGHT = 46;
+        const ID_COLOR = "#FFF5D6";
+        const BADGE_COLOR = Black(0.04);
+        const CHART_WIDTH = 100;
+        const CHART_HEIGHT = 8;
         const CHART_LOW_LIMIT = 40;
         const CHART_HIGH_LIMIT = 80;
-        const CHART_HEIGHT = 8;
-        const CHART_SIDE_SPACE = 4;
-        const TRASH_BUTTON_SIZE = 40;
+        const CHART_COLORS = { low: "orangered", middle: "#689BD2", high: "seagreen" };
+        const TRASH_BUTTON_SIZE = 34;
         const TRASH_ICON_SIZE = 18;
-        const TRASH_BUTTON_LEFT = 20;
 
-        window.onload = function() {
+        let table;
 
-            const tableOptions = {
-                titleHeight: 50,
-                createItemCellContentBox: 1,
-                createItemCellBackground: 1,
-                titleRowBackgroundColor: "whitesmoke",
-                itemSelectedBackgroundColor: "rgba(211, 207, 193, 0.2)",
-                itemRowBottomBorderString: "1px solid rgba(0, 0, 0, 0.1)",
-                itemEvenBackgroundColor: "white",
-                itemCellRightBorderString: "0px solid rgba(0, 0, 0, 0.08)",
-            };
+        const start = function () {
 
-            // UI TABLE: Create table (it fades in: showWithMotion).
-            window.myTable = UITable.create(tableOptions);
-            // Add table into the div element.
-            myTable.moveIntoDiv("my-table-div");
+            page.color = "#F2F2F2";
 
-            // Customize title and item style:
-            myTable.setTitleCellStyle(titleCellStyle);
-            myTable.setItemRowStyle(itemRowStyle);
-            myTable.setItemCellStyle(itemCellStyle);
+            // GROUP: The page (the table in the middle)
+            VGroup({ align: "center" });
 
-            // (the graph shows the ID as a value from 0 to 100: a sample)
-            const titleDataList = [
-                { id: "id", name: "ID", itemDataIndex: 0, itemDataType: "integer", width: 60, itemTextAlign: "center", enableSorting: 1 },
-                { id: "name", name: "First And Last Name", itemDataIndex: 1, itemDataType: "string", width: 210, enableSorting: 1, sortBy: "asc" },
-                { id: "city", name: "City", itemDataIndex: 2, itemDataType: "string", width: 100, enableSorting: 1 },
-                { id: "graph", name: "GRAPH", itemDataIndex: 0, itemDataType: "integer", width: 120, enableSorting: 1 },
-                { id: "action", name: "", itemDataIndex: 4, width: "auto" }
-            ];
-            // NOTE: For multi line title, use <br> tag.
+                // TABLE: People
+                table = DataTable({
+                    width: TABLE_WIDTH,
+                    height: TABLE_HEIGHT,
+                    rowHeight: ROW_HEIGHT,
+                    titleText: "People",
+                    showSearch: 1,
+                    searchParams: { placeholderText: "Name or city" },
+                    columns: [
+                        { key: "id", title: "ID", valueIndex: 0, type: "number", width: 64, align: "center", sortable: 1, cellColor: ID_COLOR, cellStyle: { bold: 1 } },
+                        { key: "name", title: "First And Last Name", valueIndex: 1, width: 230, sortable: 1, cellStyle: { fontSize: 13 } },
+                        { key: "city", title: "City", valueIndex: 2, width: 130, align: "center", sortable: 1, createView: createCityBadge },
+                        { key: "graph", title: "Graph", valueIndex: 0, type: "number", width: 150, sortable: 1, createView: createSmallChart },
+                        { key: "action", title: "", valueIndex: 0, align: "center", createView: createTrashButton },
+                    ],
+                    rows: testData,
+                    sortKey: "name",
+                });
 
-            myTable.createTitles(titleDataList);
-            myTable.createItems(testData);
-
-            createSearchBox();
-
-            // Filter data: title id "city" and search text is "Istanbul"
-            // myTable.filterByText("Istanbul", "city");
-
-            // Sort data: title id "graph" and sort type is "desc"
-            // myTable.sort("graph", "desc");
+            endGroup();
 
         };
 
-        const createSearchBox = function() {
-
-            // UI SEARCH BOX:
-            const uiSearchBox = UISearchBox.create({
-                width: 180,
-                height: 40,
-                fontSize: 16,
-                color: "white",
-                border: 1,
-                searchIconSpace: 15,
-            });
-            document.getElementById("my-table-div").append(uiSearchBox.elem);
-            uiSearchBox.right = 10;
-            uiSearchBox.top = 5;
-
-            uiSearchBox.onSearch(function(searchText) {
-                myTable.filterByText(searchText);
-            });
-
-        };
-
-        // The trash button of a row: the record goes from the data and from the table.
-        const deleteItem = function(itemId) {
-
-            const itemIndex = testData.findIndex(function(itemData) { return itemData[0] == itemId; });
-            if (itemIndex == -1) return;
-
-            testData.splice(itemIndex, 1);
-            myTable.updateItems(testData);
-
-        };
-
-        const titleCellStyle = function(titleCell, titleCellData) {
-
-            titleCell.label.css = { textTransform: "uppercase" };
-
-            if (titleCellData.id == "id") {
-                titleCell.background.color = ID_COLOR;
-                titleCell.background.css = {
-                    borderTopLeftRadius: "6px",
-                    borderRight: "1px solid rgba(0, 0, 0, 0.2)",
-                    borderBottom: "1px solid rgba(0, 0, 0, 0.2)",
-                };
-            } else if (titleCellData.id == "action") {
-                titleCell.background.css = { borderTopRightRadius: "6px" };
-            }
-
-            // Clickable titles for sorting.
-            if (titleCellData.enableSorting) {
-                titleCell.background.elem.classList.add("table-title-cell");
-            }
-
-        };
-
-        const itemRowStyle = function(itemRow) {
-
-            itemRow.background.elem.classList.add("table-item-row");
-
-        };
-
-        // (updateItems() styles a cell again: the objects made here are made only once)
-        const itemCellStyle = function(itemCell, itemCellData, titleCellData, itemRow) {
-
-            if (titleCellData.id == "id") {
-
-                itemCell.background.color = ID_COLOR;
-                itemCell.background.opacity = 0.5;
-                itemCell.background.css = {
-                    borderRight: "1px solid rgba(0, 0, 0, 0.2)",
-                    borderBottom: "1px solid rgba(0, 0, 0, 0.1)",
-                };
-                itemCell.label.fontFamily = "opensans-bold";
-
-            } else if (titleCellData.id == "name") {
-                itemCell.label.fontSize = 12;
-
-            } else if (titleCellData.id == "city") {
-                grayItemCellStyle(itemCell);
-
-            } else if (titleCellData.id == "graph") {
-                itemCell.label.visible = 0;
-                if (!itemCell.box.chart) createSmallChart(itemCell);
-                paintSmallChart(itemCell.box.chart, basic.num(itemCellData));
-
-            } else if (titleCellData.id == "action") {
-                itemCell.label.visible = 0;
-                if (!itemCell.box.trashButton) createTrashButton(itemCell, itemRow);
-
-            }
-
-        };
-
-        const grayItemCellStyle = function(itemCell) {
-
-            itemCell.background.props({
-                left: 2,
-                top: 5,
-                color: "rgba(0, 0, 0, 0.03)",
+        // LABEL: A gray badge with the city
+        const createCityBadge = function (cell, city) {
+            Label({
+                plainText: city,
+                fontSize: 14,
+                textColor: Black(0.5),
+                color: BADGE_COLOR,
                 round: 8,
-                border: 1,
-                borderColor: "transparent",
-                css: { width: "calc(100% - 4px)", height: "calc(100% - 11px)" },
+                padding: [12, 3],
             });
-            itemCell.label.textAlign = "center";
-            itemCell.label.textColor = "rgba(0, 0, 0, 0.5)";
-
         };
 
-        // A small bar in the middle of the cell; its value fills a part of it (0 - 100).
-        const createSmallChart = function(itemCell) {
+        // BOX: A small bar; the value (0 - 100) fills a part of it
+        const createSmallChart = function (cell, value) {
 
-            itemCell.box.clickable = 0;
+            startBox({ width: CHART_WIDTH, height: CHART_HEIGHT, color: "white", border: 1, borderColor: Black(0.8), round: 2 });
 
-            itemCell.box.chart = createIn(itemCell.box, function() {
-
-                // BOX: Chart background
-                const chart = startBox({
-                    left: CHART_SIDE_SPACE,
-                    height: CHART_HEIGHT,
-                    color: "white",
-                    border: 1,
-                    borderColor: "rgba(0, 0, 0, 0.8)",
-                    round: 2,
-                    clickable: 0,
-                    css: { width: "calc(100% - " + (CHART_SIDE_SPACE * 2) + "px)" },
+                // BOX: Value
+                Box(0, 0, Math.max(0, Math.min(100, value)) + "%", "100%", {
+                    color: getChartColor(value),
+                    opacity: 0.6,
+                    css: { borderRight: "2px solid black" },
                 });
 
-                    // BOX: Chart value
-                    chart.boxValue = Box(0, 0, 0, "100%", {
-                        opacity: 0.6,
-                        clickable: 0,
-                        css: { borderRight: "2px solid black" },
-                    });
+            endBox();
 
-                endBox();
+        };
 
-                return chart;
+        const getChartColor = function (value) {
+            if (value < CHART_LOW_LIMIT) return CHART_COLORS.low;
+            if (value < CHART_HIGH_LIMIT) return CHART_COLORS.middle;
+            return CHART_COLORS.high;
+        };
 
+        // BOX: The trash button of a row: the record goes from the data and from the table
+        const createTrashButton = function (cell, id, row) {
+
+            const button = startBox({
+                width: TRASH_BUTTON_SIZE,
+                height: TRASH_BUTTON_SIZE,
+                round: TRASH_BUTTON_SIZE / 2,
+                color: "transparent",
+                clickable: 1,
+                cursor: "pointer",
+                role: "button",
+                aria: { label: "Delete " + row.data[1] },
             });
 
-            itemCell.box.onResize(function() {
-                itemCell.box.chart.top = (itemCell.box.elem.offsetHeight - itemCell.box.chart.elem.offsetHeight) / 2;
+                // ICON: Trash
+                Icon({ width: TRASH_ICON_SIZE, height: TRASH_ICON_SIZE, opacity: 0.6 });
+                that.load("assets/trash.svg");
+                that.center();
+
+            endBox();
+
+            button.onHoverChange(function (self, isOver) {
+                button.color = isOver ? Black(0.06) : "transparent";
+            });
+            button.on("click", function (self, event) {
+                event.stopPropagation(); // WHY: the click must not select the row that is deleted
+                deleteRow(id);
             });
 
         };
 
-        const paintSmallChart = function(chart, value) {
-
-            const percent = Math.max(0, Math.min(100, value));
-            chart.boxValue.width = percent + "%";
-
-            if (value < CHART_LOW_LIMIT) {
-                chart.boxValue.color = CHART_LOW_COLOR;
-            } else if (value < CHART_HIGH_LIMIT) {
-                chart.boxValue.color = CHART_MIDDLE_COLOR;
-            } else {
-                chart.boxValue.color = CHART_HIGH_COLOR;
-            }
-
-        };
-
-        const createTrashButton = function(itemCell, itemRow) {
-
-            itemCell.box.clickable = 0;
-
-            itemCell.box.trashButton = createIn(itemCell.box, function() {
-
-                // BOX: Image button container
-                const trashButton = startBox({
-                    left: TRASH_BUTTON_LEFT,
-                    width: TRASH_BUTTON_SIZE,
-                    height: TRASH_BUTTON_SIZE,
-                    color: "transparent",
-                });
-
-                    // BOX: Button background (it takes the click)
-                    trashButton.background = Box(0, 0, TRASH_BUTTON_SIZE, TRASH_BUTTON_SIZE, {
-                        color: "transparent",
-                        round: TRASH_BUTTON_SIZE / 2,
-                        clickable: 1,
-                        role: "button",
-                        aria: { label: "Delete the record" },
-                    });
-                    that.elem.classList.add("icon-button");
-
-                    // ICON: Trash
-                    trashButton.imgTrash = Icon({
-                        width: TRASH_ICON_SIZE,
-                        height: TRASH_ICON_SIZE,
-                        opacity: 0.6,
-                    });
-                    that.load("assets/trash.svg");
-                    that.center();
-
-                endBox();
-
-                return trashButton;
-
-            });
-
-            // (itemRow.data: the record of the row now, also after updateItems())
-            itemCell.box.trashButton.background.on("click", function() {
-                deleteItem(itemRow.data[0]);
-            });
-
-            itemCell.box.onResize(function() {
-                itemCell.box.trashButton.top = (itemCell.box.elem.offsetHeight - TRASH_BUTTON_SIZE) / 2;
-            });
-
+        const deleteRow = function (id) {
+            const index = testData.findIndex(function (data) { return data[0] == id; });
+            if (index == -1) return;
+            testData.splice(index, 1);
+            table.removeRow(id);
         };
 
         </script>
 
     </head>
     <body>
-        
-        <!-- HTML content -->
-        <div id="my-table-div"></div>
-        
     </body>
 </html>

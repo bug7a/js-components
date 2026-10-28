@@ -1,4 +1,5 @@
-var testData = [
+// 100 people: [id, name, city, age, hobby, hobby, job, education]
+const testData = [
     [1, "John Smith", "New York", 30, "photography", "hiking", "Software Engineer", "Bachelor's degree in Computer Science"],
     [2, "Jane Doe", "Paris", 25, "travel", "piano", "Interior Designer", "Associate's degree in Interior Design"],
     [3, "Ali Ahmed", "Istanbul", 32, "history", "cooking", "Teacher", "Master's degree in Education"],

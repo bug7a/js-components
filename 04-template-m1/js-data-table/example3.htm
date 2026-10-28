@@ -1,169 +1,79 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
     <head>
-        
-        <title>UI Table - Add, Edit, Delete Example</title>
-        
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 
+        <title>Data Table - Add, Edit, Delete Example</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- LIBRARY FILES -->
         <link rel="stylesheet" type="text/css" href="../../basic/basic.css">
         <script src="../../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
 
-        <script src="js/table-data.js" type="text/javascript" charset="utf-8"></script>
-        <script src="js/components/tool.js" type="text/javascript" charset="utf-8"></script>
-        <script src="js/components/ui-table.js" type="text/javascript" charset="utf-8"></script>
-
-        <style>
-
-            body {
-                margin: 0px !important;
-                overflow: auto !important;
-            }
-
-            /* Customize mouse over and click effects with css */
-            .table-title-cell {
-                cursor: pointer;
-            }
-
-            .table-title-cell:hover {
-                background-color: whitesmoke !important;
-                /* border: 1px solid rgba(0, 0, 0, 0.2) !important; */
-                border-bottom: 1px solid rgba(0, 0, 0, 0.2) !important;
-            }
-
-            /* Custom scroll bar */
-            .table-scrollbar::-webkit-scrollbar {
-
-                width: 10px;
-                height: 10px;
-
-            }
-
-        </style>
+        <!-- COMPONENTS -->
+        <script src="js/components/data-table.js" type="text/javascript" charset="utf-8"></script>
 
         <script>
 
-        // Table titles options:
-        const titleDataList = [
-            { id: "id", name: "#", itemDataIndex: 0, width: 60, enableSorting: 1 },
-            { id: "name", name: "Palette Name", itemDataIndex: 1, width: "auto", enableSorting: 1 },
-            { id: "color", name: "Colors", itemDataIndex: 2, width: "auto" }
-        ];
+        /* Bismillah */
 
-        // Table items:
-        let itemDataList = [
+        // SAMPLE: A column with your own cells (circles of colors), and the rows changed with updateRows():
+        // the buttons add, change and delete rows; the sorting stays.
+
+        const PAGE_WIDTH = 700;
+        const PAGE_SPACE = 10;
+        const BUTTON_WIDTH = 140;
+        const BUTTON_HEIGHT = 50;
+        const BUTTON_GAP = 4;
+        const COLOR_SIZE = 30;
+        const COLOR_GAP = 6;
+        const ADD_COLOR = "#5ABB9F";
+        const DELETE_COLOR = "indianred";
+
+        // The data: [id, name, colors]
+        let palettes = [
             [1, "Complementary", ["#689BD2", "#BE94CA", "#FE5D49"]],
             [2, "Split Complementary", ["#CC75AA", "#FEC108", "#4577C1"]],
             [3, "Triadic", ["#63B964", "#9F60BD"]],
-            [4, "Square", ["#FEC108", "#FE5D49", "#4577C1", "#5ABB9F"]]
+            [4, "Square", ["#FEC108", "#FE5D49", "#4577C1", "#5ABB9F"]],
         ];
 
-        // Run on load:
-        window.onload = function() {
+        let table;
 
-            page.fit(700);
+        const start = function () {
 
-            // UI TABLE: Options.
-            const tableOptions = {
-                borderString: "0px solid lightgray",
-                borderRadius: "4px 4px 4px 4px",
-                boxShadow: "none",
-                backgroundColor: "white",
-                titleRowBackgroundColor: "transparent",
-                titleRowBottomBorderString: "1px solid rgba(0, 0, 0, 0.2)",
-                titleCellBackgroundColor: "white",
-                titleCellRightBorderString: "1px solid rgba(0, 0, 0, 0.08)",
-                titleCellBottomBorderString: "1px solid rgba(0, 0, 0, 0.2)",
-                itemRowBottomBorderString: "1px solid rgba(0, 0, 0, 0.1)",
-                itemCellRightBorderString: "0px solid rgba(0, 0, 0, 0.03)",
-                itemEvenBackgroundColor: "white",
-                itemsCanSelectable: 0,
-                itemSelectedBackgroundColor: "rgba(0, 0, 0, 0.03)", 
-                titleBoxShadow: "none",
-                createItemCellContentBox: 1,
-            };
-
-            // UI TABLE: Create table.
-            window.myTable = UITable.create(tableOptions);
-            // Set position:
-            myTable.left = 0;
-            myTable.top = 0;
-            // Custom scrollbar
-            myTable.addScrollBarCssClass("table-scrollbar");
-
-            // Customize title and item style:
-            myTable.setTitleCellStyle(titleCellStyle);
-            myTable.setItemCellStyle(itemCellStyle);
-
-            // Add icon to the title text.
-            titleDataList[2].name = tool.useImageAsText({
-                fontSize: 12,
-                outerSpaceRight: 6,
-                outerSpaceLeft: 4,
-            }, function editCreatedImage(image) {
-                image.width = 16;
-                image.height = 16;
-                image.load("assets/palette.svg");
-            }) + "Colors";
-
-            // Create titles.
-            myTable.createTitles(titleDataList);
-
-            // Fill data.
-            myTable_fillData();
-
-            // Test buttons.
-            addTestButtons();
-
-            page.onResize(function(self) {
-                page.fit(700);
+            page.fit(PAGE_WIDTH);
+            page.onResize(function () {
+                page.fit(PAGE_WIDTH);
             });
-            
-        };
+            page.color = "white";
 
-        const myTable_fillData = function() {
-
-            // Take data from service with AJAX:
-            myTable.createItems(itemDataList);
-
-        };
-
-        const titleCellStyle = function(titleCell, titleCellData, titleIndex) {
-
-            titleCell.label.fontFamily = "opensans-bold";
-            titleCell.label.css = { textTransform: "uppercase" };
-
-            // Clickable titles for sorting.
-            if (titleCellData.enableSorting) {
-                titleCell.background.elem.classList.add("table-title-cell");
-            }
-
-        };
-
-        const itemCellStyle = function(itemCell, itemCellData, titleCellData, itemRow, itemCellIndex) {
-
-            if (titleCellData.id != "color") return;
-
-            itemCell.label.visible = 0;
-            // The content is always in the middle
-            itemCell.box.css = { display: "flex", alignItems: "center", justifyContent: "center" };
-
-            // (updateItems() styles a cell again: its old palette goes)
-            if (itemCell.box.colorBox) itemCell.box.colorBox.remove();
-            itemCell.box.colorBox = createIn(itemCell.box, function () {
-                return createColorPalette(itemCellData);
+            // TABLE: Palettes
+            table = DataTable({
+                left: 0,
+                top: 0,
+                width: "100%",
+                height: "calc(100% - " + (BUTTON_HEIGHT + PAGE_SPACE * 2) + "px)",
+                styleName: "minimal",
+                canSelect: 0,
+                columns: [
+                    { key: "id", title: "#", valueIndex: 0, type: "number", width: 60, sortable: 1 },
+                    { key: "name", title: "Palette Name", valueIndex: 1, sortable: 1 },
+                    { key: "colors", title: "Colors", valueIndex: 2, align: "center", iconFile: "assets/palette.svg", createView: createColorPalette },
+                ],
+                rows: palettes,
             });
 
+            createButtons();
+
         };
 
-        const COLOR_SIZE = 30;
-        const COLOR_GAP = 6;
+        // GROUP: A row of color circles (column.createView: made in the cell)
+        const createColorPalette = function (cell, colorList) {
 
-        // GROUP: A row of color circles
-        const createColorPalette = function(colorList) {
-
-            const palette = HGroup({ hug: 1, gap: COLOR_GAP, position: "relative" });
+            HGroup({ hug: 1, gap: COLOR_GAP });
 
                 colorList.forEach(function (color) {
                     Box({
@@ -171,109 +81,63 @@
                         height: COLOR_SIZE,
                         round: COLOR_SIZE / 2,
                         border: 1,
-                        borderColor: "rgba(0, 0, 0, 0.8)",
+                        borderColor: Black(0.8),
                         color: color,
-                        position: "relative",
                     });
                 });
 
             endGroup();
 
-            return palette;
+        };
+
+        const createButtons = function () {
+
+            // GROUP: Test buttons
+            HGroup({ left: PAGE_SPACE, bottom: PAGE_SPACE, hug: 1, gap: BUTTON_GAP, position: "absolute" });
+
+                createButton("Add Items", ADD_COLOR, addPalettes);
+                createButton("Update Items", ADD_COLOR, renameFirstPalette);
+                createButton("Delete Items", DELETE_COLOR, deleteTwoPalettes);
+                createButton("Clear All", DELETE_COLOR, clearPalettes);
+
+            endGroup();
 
         };
 
-        const addTestButtons = function() {
-
-            // Shared style
-            const buttonStyle = function(btn) {
-                btn.color = "lightgray";
-                btn.minimal = 1;
-                btn.fontSize = 18;
-                btn.width = 140;
-                btn.color = "#5ABB9F";
-            }
-
-            // BUTTON: Add new
-            window.btnAddNew = Button();
-            that.text = "Add Items";
-            buttonStyle(that);
-            that.bottom = 10;
-            that.left = 10;
-
-            // BUTTON: Update
-            window.btnUpdate = Button();
-            buttonStyle(that);
-            that.text = "Update Items";
-            that.aline(prevThat, "right", 4);
-
-            // BUTTON: Delete
-            window.btnDelete = Button();
-            buttonStyle(that);
-            that.text = "Delete Items";
-            that.color = "indianred";
-            that.aline(prevThat, "right", 4);
-
-            // BUTTON: Clear All
-            window.btnClear = Button();
-            buttonStyle(that);
-            that.text = "Clear All";
-            that.color = "indianred";
-            that.aline(prevThat, "right", 4);
-
-            // Events
-            btnAddNew.on("click", test1_add);
-            btnUpdate.on("click", test2_update);
-            btnDelete.on("click", test3_delete);
-            btnClear.on("click", test4_clearAll);
-
+        const createButton = function (text, color, onClick) {
+            const button = Button({ text: text, width: BUTTON_WIDTH, height: BUTTON_HEIGHT, fontSize: 18, minimal: 1, color: color });
+            button.on("click", onClick);
+            return button;
         };
 
-        // Add 2 items.
-        const test1_add = function() {
-
-            const biggestId = myTable.getBiggestId(itemDataList);
-
-            const newItem1 = [biggestId + 1, "Rectangle", ["#9F60BD", "#FE5D49", "#FE5D49", "#5ABB9F"]];
-            const newItem2 = [biggestId + 2, "Natural", ["#5ABB9F", "#9F60BD", "#FE5D49"]];
-            
-            itemDataList.push(newItem1);
-            itemDataList.push(newItem2);
-
-            myTable.updateItems(itemDataList);
-
+        // Two new palettes after the biggest id
+        const addPalettes = function () {
+            const biggestId = table.getBiggestId();
+            palettes.push([biggestId + 1, "Rectangle", ["#9F60BD", "#FE5D49", "#FE5D49", "#5ABB9F"]]);
+            palettes.push([biggestId + 2, "Natural", ["#5ABB9F", "#9F60BD", "#FE5D49"]]);
+            table.updateRows(palettes);
         };
 
-        // Edit item index 0 name and colors.
-        const test2_update = function() {
-
-            if (itemDataList.length == 0) return;
-
-            itemDataList[0][1] = "Edited Name";
-            itemDataList[0][2] = ["#000000", "#FFFFFF"];
-
-            myTable.updateItems(itemDataList);
-
+        const renameFirstPalette = function () {
+            if (palettes.length == 0) return;
+            palettes[0] = [palettes[0][0], "Edited Name", ["#000000", "#FFFFFF"]];
+            table.updateRows(palettes);
         };
 
-        // Delete two items, start from index 1
-        const test3_delete = function() {
-
-            itemDataList.splice(1, 2);
-            myTable.updateItems(itemDataList);
-
+        // Two palettes from the second one
+        const deleteTwoPalettes = function () {
+            palettes.splice(1, 2);
+            table.updateRows(palettes);
         };
 
-        // The list is emptied too: "Add Items" starts a new list
-        const test4_clearAll = function() {
-
-            itemDataList = [];
-            myTable.clearItems();
-
+        const clearPalettes = function () {
+            palettes = [];
+            table.clearRows();
         };
 
         </script>
 
     </head>
-    <body></body>
+    <body>
+    </body>
 </html>

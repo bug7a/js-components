@@ -1,256 +1,65 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
     <head>
-        
-        <title>UI Table - Full Custom </title>
-        
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 
+        <title>Data Table - Search and Sort</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- LIBRARY FILES -->
         <link rel="stylesheet" type="text/css" href="../../basic/basic.css">
         <script src="../../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
 
+        <!-- COMPONENTS -->
+        <script src="../../comp-m2/search-input-v2.js" type="text/javascript" charset="utf-8"></script>
+        <script src="js/components/data-table.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- DATA -->
         <script src="js/table-data.js" type="text/javascript" charset="utf-8"></script>
-        <script src="js/components/ui-table.js" type="text/javascript" charset="utf-8"></script>
-        <script src="js/components/ui-search-box.js" type="text/javascript" charset="utf-8"></script>
-
-        <style>
-
-            body {
-                margin: 0px !important;
-                overflow: auto !important;
-            }
-
-            #my-table-div {
-                position: absolute;
-                top: 20px;
-                left: 20px;
-                width: calc(100% - 40px);
-                height: calc(100% - 40px);
-            }
-
-            /* Customize mouse over and click effects with css */
-            .table-title-cell {
-                cursor: pointer;
-            }
-
-            .table-title-cell:hover {
-                background-color: white !important;
-                /* border: 1px solid rgba(0, 0, 0, 0.2) !important; */
-                border-bottom: 1px solid rgba(0, 0, 0, 0.2) !important;
-            }
-
-            .table-item-row {
-                cursor: pointer;
-            }
-
-            .table-item-row:hover {
-                background-color: rgba(254, 193, 8, 0.1) !important;
-                /* border: 1px solid rgba(0, 0, 0, 0.2) !important; */
-                opacity: 1;
-                border-radius: 2px !important;
-            }
-
-            .table-item-row:active {
-                background-color: rgba(254, 193, 8, 0.2) !important;
-                /* border: 1px solid rgba(0, 0, 0, 0.2) !important; */
-                opacity: 1;
-                border-radius: 2px !important;
-            }
-
-            .table-item-cell {
-                cursor: pointer;
-            }
-
-            .table-item-cell:hover {
-                background-color: whitesmoke !important;
-                border: 1px solid black !important;
-            }
-
-            /* Custom scroll bar */
-            .table-scrollbar::-webkit-scrollbar {
-                width: 10px;
-                height: 10px;
-            }
-
-            .table-scrollbar::-webkit-scrollbar-thumb {
-                background: lightgray;
-                border-radius: 6px;
-                border: 2px solid rgba(0, 0, 0, 0);
-                background-clip: padding-box;
-            }
-
-            .table-scrollbar::-webkit-scrollbar-thumb:hover {
-                background: gray;
-                border-radius: 6px;
-                border: 2px solid rgba(0, 0, 0, 0);
-                background-clip: padding-box;
-            }
-
-            .table-scrollbar::-webkit-scrollbar-thumb:active {
-                background: gray;
-                border-radius: 6px;
-                border: 2px solid rgba(0, 0, 0, 0);
-                background-clip: padding-box;
-            }
-
-            .table-scrollbar::-webkit-scrollbar-track {
-                background: white;
-                border-left: 1px solid rgba(0, 0, 0, 0.2);
-                background-clip: padding-box;
-            }
-
-            .table-scrollbar::-webkit-scrollbar-corner {
-                background-color: transparent;
-            }
-
-
-        </style>
 
         <script>
-        
-        // Run on load:
-        window.onload = function() {
 
-            const startTime = performance.now();
+        /* Bismillah */
 
-            // UI TABLE: Options.
-            const tableOptions = {
-                width: "100%",
-                height: "calc(100% - 50px)",
-                borderString: "1px solid rgba(0, 0, 0, 0.2)",
-                boxShadow: "none",
-                titleBoxShadow: "none",
-            };
+        // SAMPLE: A table that fills the page: a title, a search box, three sortable columns (the ID sorted down
+        // at the start). The keyboard: Tab to the table, the arrow keys select, Enter.
 
-            // UI TABLE: Create table.
-            window.myTable = UITable.create(tableOptions);
+        const PAGE_SPACE = 20;
 
-            // Move object into "my-table-div"
-            myTable.moveIntoDiv("my-table-div");
-            // Set position:
-            myTable.left = 0;
-            myTable.top = 50;
+        let table;
 
-            // Customize title and item style:
-            myTable.setTitleRowStyle(titleRowStyle);
-            myTable.setTitleCellStyle(titleCellStyle);
-            myTable.setItemRowStyle(itemRowStyle);
-            myTable.setItemCellStyle(itemCellStyle);
+        const start = function () {
 
-            // Custom scrollbar:
-            myTable.addScrollBarCssClass("table-scrollbar");
+            page.color = "white";
 
-            // A title: id, name, itemDataIndex (no value: the index of the title), itemDataType ("string",
-            // "integer", "float"), width (no value: "auto"), itemTextAlign, enableSorting: 1, sortBy: "asc" / "desc"
-            const titleDataList = [
-                { id:"id", name: "ID", itemDataIndex: 0, itemDataType: "integer", width: 60, itemTextAlign: "left", enableSorting: 1, sortBy: "desc" },
-                { id:"name", name: "Name", itemDataIndex: 1, itemDataType: "string", width: "auto", itemTextAlign: "left", enableSorting: 1 },
-                { id:"age", name: "Age", itemDataIndex: 3, itemDataType: "integer", width: 100, itemTextAlign: "center", enableSorting: 1 },
-                { id:"city", name: "City", itemDataIndex: 2, itemDataType: "string", width: "auto", itemTextAlign: "left" }
-            ];
-            // NOTE: For multi line title, use <br> tag.
-
-            myTable.createTitles(titleDataList);
-
-            myTable_fillData();
-            myTable_createTableTitle();
-            myTable_setTableTitle("Information Table");
-            myTable_createSearchBox();
-
-            myTable.on("click", function(itemRow) {
-                println(itemRow.index);
-                println(itemRow.data);
+            // TABLE: Information
+            table = DataTable({
+                left: PAGE_SPACE,
+                top: PAGE_SPACE,
+                width: "calc(100% - " + (PAGE_SPACE * 2) + "px)",
+                height: "calc(100% - " + (PAGE_SPACE * 2) + "px)",
+                titleText: "Information Table",
+                showSearch: 1,
+                columns: [
+                    { key: "id", title: "ID", valueIndex: 0, type: "number", width: 70, sortable: 1 },
+                    { key: "name", title: "Name", valueIndex: 1, sortable: 1 },
+                    { key: "age", title: "Age", valueIndex: 3, type: "number", width: 100, align: "center", sortable: 1 },
+                    { key: "city", title: "City", valueIndex: 2 },
+                ],
+                rows: testData,
+                sortKey: "id",
+                sortDirection: "desc",
+                onRowClick: function (self, row) {
+                    println(row.data);
+                },
+                onSelect: function (self, row) {
+                    if (row) self.setTitleText("Information Table: " + row.data[1]);
+                },
             });
 
-            // More: myTable.getTitleCellWidthById("id"), myTable.setTitleCellWidthById("id", 300),
-            // myTable.selectItemById(5), myTable.getSelectedItemData(), myTable.getSelectedItemRow().cellList,
-            // myTable.getTitleIndexById("name"), myTable.getTitleCellById("name"), myTable.boxTitles (guide.js)
-
-            println("The table is ready in " + Math.round(performance.now() - startTime) + " ms");
-            
-        }
-
-        const myTable_fillData = function() {
-            /* TEST:
-            for(var i = 101; i <= 1000; i++) {
-                testData.push([i, "John Smith", "New York", 30, "photography", "hiking", "Software Engineer", "Bachelor's degree in Computer Science"]);
-            }
-            */
-            myTable.createItems(testData);
-        }
-
-        const myTable_createTableTitle = function() {
-
-            // LABEL: Table title.
-            myTable.title = Label();
-            // Move object into "my-table-div"
-            document.getElementById("my-table-div").append(myTable.title.elem);
-
-            that.text = "";
-            that.fontSize = 20;
-            that.textColor = "rgba(0, 0, 0, 0.7)";
-            that.fontFamily = "opensans-bold";
-            // Set object position:
-            that.left = 0;
-            that.top = 6;
-
-        }
-
-        const myTable_setTableTitle = function(titleText) {
-            myTable.title.text = titleText;
-        }
-
-        const myTable_createSearchBox = function() {
-
-            // UI SEARCH BOX:
-            const searchBoxOptions = {
-                width: 180,
-                height: 40,
-                fontSize: 16,
-                border: 1,
-                color: "white",
-                searchIconSpace: 15,
-            };
-            // NOTE: For more options, look into js/components/ui-search-box.js
-            
-            // UI SEARCH BOX: Create search box.
-            myTable.uiSearchBox = UISearchBox.create(searchBoxOptions);
-            // Move object into "my-table-div"
-            document.getElementById("my-table-div").append(myTable.uiSearchBox.elem);
-
-            // Set object position:
-            that.right = 0;
-            that.top = 0;
-
-            myTable.uiSearchBox.onSearch(function(searchText, uiSearchBox) {
-                myTable.filterByText(searchText);
-            });
-            
-        }
-
-        const titleRowStyle = function(titleRow) {
-
-        };
-
-        const titleCellStyle = function(titleCell, titleCellData, titleCellIndex) {
-
-            titleCell.label.css = { textTransform: "uppercase" };
-
-            // Clickable titles for sorting.
-            if (titleCellData.enableSorting) {
-                titleCell.background.elem.classList.add("table-title-cell");
-            }
-
-        };
-
-        const itemRowStyle = function(itemRow, itemData, itemIndex) {
-
-            itemRow.background.elem.classList.add("table-item-row");
-
-        };
-
-        const itemCellStyle = function(itemCell, itemCellData, titleCellData, itemRow, itemCellIndex) {
+            // More: table.sortBy("age", "desc"), table.search("paris", "city"), table.select(5), table.getSelectedData()
 
         };
 
@@ -258,9 +67,5 @@
 
     </head>
     <body>
-        
-        <!-- HTML content -->
-        <div id="my-table-div"></div>
-        
     </body>
 </html>
