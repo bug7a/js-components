@@ -28,7 +28,7 @@
         ];
 
         // *** VARIABLES:
-        let fab, lblAction;
+        let fab, lblAction, btnAnimated;
 
         const start = function () {
 
@@ -37,9 +37,14 @@
             // LABEL: What onAction gives
             lblAction = Label({ left: 40, top: 40, text: "Click the yellow button at the bottom right.", fontSize: 16, textColor: Black(0.5) });
 
+            // BUTTON: animated on / off (context/basic-js-animated-rules.md)
+            btnAnimated = Button({ left: 40, top: 80, width: 160, height: 40, fontSize: 15, text: "animated: 1" });
+            btnAnimated.on("click", toggleAnimated);
+
             // ACTION BUTTON
             fab = ActionButton({
                 items: ACTIONS,
+                animated: 1,
                 onAction: showAction,
             });
 
@@ -49,6 +54,11 @@
 
         const showAction = function (key) {
             lblAction.text = "onAction: " + key;
+        };
+
+        const toggleAnimated = function () {
+            fab.setAnimated(fab.animated ? 0 : 1);
+            btnAnimated.text = "animated: " + fab.animated;
         };
 
         </script>

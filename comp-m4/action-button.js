@@ -13,6 +13,10 @@ UI COMPONENT
 - The component covers its container (100% x 100%) but lets the mouse through: only the button, the open menu
   and its cover (to close it) catch clicks.
 - Style packages: "classic" (default, the look of UIActionButton). Select with styleName. (ActionButton.styles)
+- animated: 1 (context/basic-js-animated-rules.md): the button grows a little with a soft shadow under the mouse
+  and gets smaller when pressed, the menu grows out of the button and closes faster, its actions come in one
+  after the other and get a soft tint under the mouse. Only transform, opacity and box-shadow change; nothing at
+  the first view; off when the system asks for reduced motion. (box.setAnimated(0 / 1))
 
 USAGE:
 const fab = ActionButton({
@@ -26,6 +30,8 @@ const fab = ActionButton({
 fab.setItems([...]);
 fab.openMenu(); fab.closeMenu(); fab.toggleMenu();
 fab.setButtonColor("#8BC34A");
+fab.setAnimated(1);
+ActionButton({ animated: 1, items: [...] }); // small, smooth motions
 ActionButton({ onAction: function () { addNewNote(); } }); // no items: a direct button
 ActionButton({ style: { button: { color: "#8BC34A" } } }); // Change only some keys of the style.
 
@@ -55,6 +61,7 @@ const ActionButtonDefaults = {
     bottomSpace: 40, // The button from the bottom of the container
     menuWidth: 280,
     menuGap: 20, // Between the menu and the button
+    animated: 0, // 1: small hover / press / open motions (context/basic-js-animated-rules.md). (box.setAnimated(0/1))
     onAction: function (key, self) { }, // An action was chosen (no items: key is "", one item: its key)
     onMenuToggle: function (self) { }, // The menu opened / closed: self.menuOpened
     styleName: "classic", // "classic" or a name added to ActionButton.styles
@@ -66,6 +73,7 @@ const ActionButtonDefaults = {
             border: 4,
             borderColor: "rgba(0, 0, 0, 0.2)",
             iconOpacity: 0.4,
+            hoverShadow: "0px 6px 16px rgba(0, 0, 0, 0.15)", // animated: under the mouse
         },
         menu: {
             color: "whitesmoke", // The lines between the actions
@@ -80,6 +88,7 @@ const ActionButtonDefaults = {
             color: "white",
             textColor: "", // "": the color of a basic.js Button
             fontSize: 0, // 0: the size of a basic.js Button
+            hoverTint: "rgba(0, 0, 0, 0.04)", // animated: over an action under the mouse
         },
         cover: {
             color: "rgba(0, 0, 0, 0)", // Behind the open menu (a click on it closes the menu)
@@ -108,6 +117,21 @@ const ActionButton = function (params = {}) {
     const MENU_MOTION_MS = 200;
     const MENU_MOTION = "opacity 0.2s, transform 0.2s";
     let cancelHide = null;
+
+    // animated: 1
+    const MOTION_TIME = 0.25; // s
+    const MOTION_EASE = "cubic-bezier(0.2, 0.8, 0.2, 1)"; // a fast start and a soft stop
+    const CLOSE_TIME = 0.15; // s: the menu closes faster than it opens
+    const HOVER_GROW = 1.05;
+    const PRESS_SCALE = 0.95;
+    const ICON_OPACITY_GAIN = 0.25;
+    const MENU_HIDDEN_SCALE = 0.96;
+    const MENU_HIDDEN_SHIFT = 8; // px, toward the button
+    const ITEM_HIDDEN_SHIFT = 6; // px, from under
+    const ITEM_DELAY = 0.03; // s, between the actions coming in
+    let isHovered = 0;
+    let isPressed = 0;
+    let wasAnimated = 0;
 
     // *** PUBLIC VARIABLES:
     box.menuOpened = 0;
@@ -138,6 +162,7 @@ const ActionButton = function (params = {}) {
         if (_s.item.textColor) btn.textColor = _s.item.textColor;
         if (_s.item.fontSize) btn.fontSize = _s.item.fontSize;
         btn.on("click", function () { chooseAction(item.key); });
+        btn.onHoverChange(function (self, isOver) { paintItemHover(btn, isOver); });
         return btn;
     };
 
@@ -147,6 +172,7 @@ const ActionButton = function (params = {}) {
         box.itemButtons = createIn(box.menu, function () {
             return box.items.map(createItemButton);
         });
+        prepareItems();
     };
 
     const chooseAction = function (key) {
@@ -154,25 +180,131 @@ const ActionButton = function (params = {}) {
         box.onAction(key, box);
     };
 
+    // WHY: A user who asked the system for less motion gets the still menu and button.
+    const isMotionOn = function () {
+        if (box.animated != 1) return false;
+        const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        return !reduceMotion;
+    };
+
+    const motionOf = function (properties, seconds, delay = 0) {
+        return properties.map(function (property) {
+            return property + " " + seconds + "s " + MOTION_EASE + " " + delay + "s";
+        }).join(", ");
+    };
+
+    // The menu while it is closed: small and see-through. (animated: a little smaller, beside the button)
+    const getHiddenMenuTransform = function () {
+        if (!isMotionOn()) return "scale(" + _s.menu.hiddenScale + ")";
+        return "translateX(" + MENU_HIDDEN_SHIFT + "px) scale(" + MENU_HIDDEN_SCALE + ")";
+    };
+
+    const getButtonTransform = function () {
+        if (isPressed) return "scale(" + PRESS_SCALE + ")";
+        if (isHovered) return "scale(" + HOVER_GROW + ")";
+        return "none";
+    };
+
+    // The look of the hover / press state of the button. (Nothing when animated is off.)
+    const paintMotion = function () {
+        if (!isMotionOn()) return;
+        box.btnAction.css.transform = getButtonTransform();
+        box.btnAction.boxShadow = (isHovered && !isPressed) ? _s.button.hoverShadow : "0px 0px 0px 0px transparent";
+        box.imgIcon.opacity = Math.min(1, _s.button.iconOpacity + ((isHovered) ? ICON_OPACITY_GAIN : 0));
+    };
+
+    // animated: the actions wait under their place, see-through, until the menu opens.
+    const hideItems = function () {
+        if (!isMotionOn()) return;
+        box.itemButtons.forEach(function (btn) {
+            btn.css = { transition: "none", opacity: "0", transform: "translateY(" + ITEM_HIDDEN_SHIFT + "px)" };
+        });
+    };
+
+    // animated: the actions come in one after the other, the one next to the button first.
+    const showItems = function () {
+        if (!isMotionOn()) return;
+        const count = box.itemButtons.length;
+        box.itemButtons.forEach(function (btn, index) {
+            const delay = (count - 1 - index) * ITEM_DELAY;
+            btn.css = { transition: motionOf(["opacity", "transform"], MOTION_TIME, delay), opacity: "1", transform: "none" };
+        });
+    };
+
     // The menu: from small and see-through to its size (and back).
     const showMenu = function () {
         if (cancelHide) cancelHide();
         cancelHide = null;
+        if (isMotionOn()) box.menu.setMotionNow(motionOf(["opacity", "transform"], MOTION_TIME));
         box.menu.visible = 1;
         box.menu.withMotion(function () {
             box.menu.opacity = 1;
             box.menu.css.transform = "scale(1)";
+            showItems();
         });
     };
 
     const hideMenu = function () {
+        const isMotion = isMotionOn();
+        if (isMotion) box.menu.setMotionNow(motionOf(["opacity", "transform"], CLOSE_TIME));
         box.menu.opacity = 0;
-        box.menu.css.transform = "scale(" + _s.menu.hiddenScale + ")";
+        box.menu.css.transform = getHiddenMenuTransform();
         if (cancelHide) cancelHide();
-        cancelHide = box.after(MENU_MOTION_MS, function () {
+        const hideTime = (isMotion) ? CLOSE_TIME * 1000 : MENU_MOTION_MS;
+        cancelHide = box.after(hideTime, function () {
             cancelHide = null;
             box.menu.visible = 0;
+            hideItems();
         });
+    };
+
+    // animated: a soft tint over an action under the mouse.
+    // WHY: on the <button> of the Button: its white background covers a shadow of the outer box.
+    const paintItemHover = function (btn, isOver) {
+        if (!isMotionOn()) return;
+        btn.buttonElement.style.boxShadow = (isOver) ? "inset 0 0 0 100px " + _s.item.hoverTint : "inset 0 0 0 100px transparent";
+    };
+
+    // Back to the still look, after setAnimated(0).
+    const removeMotion = function () {
+        wasAnimated = 0;
+        box.btnAction.setMotion(BUTTON_MOTION);
+        box.btnAction.css.transform = "";
+        box.btnAction.boxShadow = "";
+        box.imgIcon.setMotion(ICON_MOTION);
+        box.imgIcon.opacity = _s.button.iconOpacity;
+        box.menu.setMotion(MENU_MOTION);
+        box.menu.css.transformOrigin = "";
+        if (!box.menuOpened) box.menu.css.transform = getHiddenMenuTransform();
+        box.itemButtons.forEach(function (btn) {
+            btn.css = { transition: "", opacity: "", transform: "" };
+            btn.buttonElement.style.transition = "";
+            btn.buttonElement.style.boxShadow = "";
+        });
+    };
+
+    // The transitions of animated: 1 (or the still look back).
+    const applyAnimated = function () {
+        if (!isMotionOn()) {
+            if (wasAnimated) removeMotion();
+            return;
+        }
+        wasAnimated = 1;
+        box.btnAction.setMotion(motionOf(["background-color", "transform", "box-shadow"], MOTION_TIME));
+        box.imgIcon.setMotion(motionOf(["transform", "opacity"], MOTION_TIME));
+        box.menu.css.transformOrigin = "right bottom"; // WHY: The menu grows out of the button.
+        if (!box.menuOpened) box.menu.css.transform = getHiddenMenuTransform();
+        prepareItems();
+        paintMotion();
+    };
+
+    // animated: the transition of the tint of each action, and the closed look of the actions.
+    const prepareItems = function () {
+        if (!isMotionOn()) return;
+        box.itemButtons.forEach(function (btn) {
+            btn.buttonElement.style.transition = motionOf(["box-shadow"], MOTION_TIME);
+        });
+        if (!box.menuOpened) hideItems();
     };
 
     const setMenuOpened = function (isOpened) {
@@ -207,6 +339,11 @@ const ActionButton = function (params = {}) {
         box.items = ActionButton.normalizeItems(items);
         if (box.items.length < 2) box.closeMenu();
         createItems();
+    };
+
+    box.setAnimated = function (value) {
+        box.animated = (value == 1) ? 1 : 0;
+        applyAnimated();
     };
 
     box.setButtonColor = function (color) {
@@ -283,11 +420,30 @@ const ActionButton = function (params = {}) {
         box.press();
     });
     box.cover.on("click", box.closeMenu);
+
+    // animated: the mouse over the button and the press (painted only when animated is on)
+    box.btnAction.onHoverChange(function (self, isOver) {
+        isHovered = isOver;
+        if (!isOver) isPressed = 0;
+        paintMotion();
+    });
+    box.btnAction.on("pointerdown", function () {
+        isPressed = 1;
+        paintMotion();
+    });
+    box.listenTo(document, "pointerup", function () {
+        if (!isPressed) return;
+        isPressed = 0;
+        paintMotion();
+    });
     box.listenTo(document, "keydown", function (self, event) {
         if (event.key !== "Escape" || !box.menuOpened) return;
         box.closeMenu();
         box.btnAction.elem.focus();
     });
+
+    // WHY: setMotion waits a moment before it starts: the first view does not move.
+    applyAnimated();
 
     return endObject(box);
 
