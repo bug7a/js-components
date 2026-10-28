@@ -493,9 +493,9 @@ const Modal = function (params = {}) {
                 alignItems: "stretch",
                 flex: "1 1 auto",
                 minHeight: "0",
-                overflowY: "auto",
                 overscrollBehavior: "contain",
             };
+            box.scrollArea.scrollY = 1; // WHY: not overflowY in css: scrollY also makes it clickable, or the wheel did not scroll it.
 
                 // WHY: In a flex column, items get smaller to fit. The content group does not shrink, so the area scrolls.
                 box.body = VGroup({ width: "100%", height: "auto", align: "left top", gap: BODY_GAP });

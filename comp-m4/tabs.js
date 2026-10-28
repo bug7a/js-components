@@ -1037,10 +1037,11 @@ const Tabs = function (params = {}) {
             });
             box.strip.elem.classList.add("tabs-strip");
             if (isVertical) {
-                box.strip.css.overflowY = "auto";
+                box.strip.scrollY = 1;
                 if (!isPill) box.strip.css.borderLeft = dividerLine;
             } else {
-                box.strip.css = { flex: "1 1 0", minWidth: "0", overflowX: "auto", overflowY: "hidden" };
+                box.strip.css = { flex: "1 1 0", minWidth: "0", overflowY: "hidden" };
+                box.strip.scrollX = 1;
                 if (!isPill) box.strip.css.borderBottom = dividerLine;
             }
 

@@ -405,11 +405,10 @@ const PropertyPanel = function (params = {}) {
                 padding: "6px 0px",
                 boxSizing: "border-box",
                 maxHeight: ms.maxHeight + "px",
-                overflowY: "auto",
                 alignItems: "stretch",
             };
+            obj.scrollY = 1; // (also clickable)
             obj.role = "listbox";
-            obj.clickable = 1;
 
                 options.forEach(function (option) {
 
@@ -1461,8 +1460,8 @@ const PropertyPanel = function (params = {}) {
             }
             // GROUP: The colors of the palette (scrolls when there are many)
             const grid = HGroup({ width: contentWidth, height: "auto", align: "left top", gap: cp.swatchGap, wrap: 1, color: "transparent" });
-            grid.css = { maxHeight: cp.swatchesMaxHeight + "px", overflowY: "auto", padding: "3px", boxSizing: "border-box" };
-            grid.clickable = 1;
+            grid.css = { maxHeight: cp.swatchesMaxHeight + "px", padding: "3px", boxSizing: "border-box" };
+            grid.scrollY = 1; // (also clickable)
                 palette.colors.forEach(function (preset) {
                     swatchViews.push(buildSwatch(preset));
                 });
