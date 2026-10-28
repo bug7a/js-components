@@ -101,6 +101,12 @@ CATALOG.COMPONENTS = [
         tr: "Tekli veya çoklu seçim için açılır liste; tümünü seç ve temizle düğmeleri.",
     },
     {
+        key: "full-screen-select", name: "FullScreenSelect", gen: 4, cat: "selection",
+        source: "comp-m4/full-screen-select.js", samples: ["02-comp-m4-samples/full-screen-select.htm"],
+        en: "A select field whose list opens on the whole screen, with a search box: for phones and long lists. The new version of UISelectText.",
+        tr: "Listesi tüm ekranda açılan, arama kutulu seçim alanı: telefonlar ve uzun listeler için. UISelectText'in yeni sürümü.",
+    },
+    {
         key: "select-date", name: "SelectDate", gen: 4, cat: "selection",
         source: "comp-m4/select-date.js", samples: ["02-comp-m4-samples/select-date.htm"],
         en: "Date picker as a popup or an always visible calendar, with a month and year view.",
@@ -479,16 +485,6 @@ CATALOG.COMPONENTS = [
         source: "comp-m1/select-text.js", samples: ["02-comp-m1-samples/select-text.htm"],
         en: "A field that opens a searchable text list.",
         tr: "Aranabilir bir yazı listesi açan alan.",
-    },
-    {
-        key: "ui-select-text", name: "UISelectText", gen: 1, cat: "selection",
-        source: "comp-m1/ui-select-text.js",
-        samples: [
-            { file: "02-comp-m1-samples/ui-select-text-e1.htm", title: "Example 1" },
-            { file: "02-comp-m1-samples/ui-select-text-e2.htm", title: "Example 2" },
-        ],
-        en: "A select field that opens a searchable list of texts.",
-        tr: "Aranabilir bir yazı listesi açan seçim alanı.",
     },
     {
         key: "ui-stepper", name: "UIStepper", gen: 1, cat: "inputs",
