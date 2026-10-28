@@ -13,7 +13,7 @@
         <script src="../../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- COMPONENTS -->
-        <script src="js/components/data-table.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../comp-m4/data-table.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- DATA -->
         <script src="js/table-data.js" type="text/javascript" charset="utf-8"></script>
@@ -28,6 +28,9 @@
         const TABLE_HEIGHT = 432;
         const PAGE_SPACE = 20;
 
+        // The sort arrow of DataTable seen from this folder (its default path is for 02-comp-m4-samples)
+        const SORT_ICON_FILE = "../../comp-m4/data-table/arrow.svg";
+
         let table;
 
         const start = function () {
@@ -39,6 +42,7 @@
 
                 // TABLE: People
                 table = DataTable({
+                    sortIconFile: SORT_ICON_FILE,
                     width: TABLE_WIDTH,
                     height: TABLE_HEIGHT,
                     styleName: "minimal",

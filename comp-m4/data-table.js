@@ -5,7 +5,9 @@
 Data Table - v26.10
 
 A table made from data: the columns from a list of objects, the rows from a list of arrays (or objects).
-(The new version of UITable of this template, 2022: the m2 / m3 component pattern.)
+(The new version of UITable of 04-template-m1/js-data-table, 2022: the m2 / m3 component pattern.)
+- FOR SHORT AND MIDDLE LISTS (up to some hundreds of rows): every row is a basic.js object. For very many rows
+  (thousands, millions) use comp-m3/smart-table.js (SmartTable): it makes only the rows that are seen.
 - Sorting: a click on a sortable title (again: the other direction), the keyboard (Enter / Space on a title), sortBy().
 - Search: showSearch: 1 puts a SearchInput (comp-m2/search-input-v2.js, load it first) in the header; search().
 - Selection: a click, the arrow keys (Home / End), Enter runs onRowClick. select(id), getSelectedData().
@@ -79,7 +81,7 @@ const DataTableDefaults = {
     searchParams: {}, // More params of the SearchInput. Ex: { placeholderText: "Ara" }
     emptyText: "There are no records.",
     noResultText: "No records found.",
-    sortIconFile: "js/components/data-table/arrow.svg",
+    sortIconFile: "../comp-m4/data-table/arrow.svg", // (a page of another folder gives its own path)
     useScrollBar: 1, // basic/scroll-bar.js ScrollBar
     onRowClick: function (self, row) {}, // A click on a row, or Enter on the selected row
     onSelect: function (self, row) {}, // The selected row changed (row: null when nothing is selected). Not with silent: 1

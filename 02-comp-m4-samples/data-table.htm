@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>DataTable</title>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+
+    <script src="../comp-m2/search-input-v2.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp-m4/data-table.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+    /* Bismillah */
+
+    // DataTable (comp-m4): the three style packages, the search, the selection, updateRows() and your own cells.
+    // For very many rows: comp-m3/smart-table.js (02-comp-m3-samples/smart-table-1.htm, 2M rows).
+
+    const CARD_WIDTH = 560;
+    const WIDE_CARD_WIDTH = 2 * CARD_WIDTH + 20;
+    const TABLE_HEIGHT = 380;
+    const STATUS_COLORS = { Paid: "seagreen", Waiting: "#C98A00", Late: "indianred" };
+
+    const NAMES = ["Ayşe Yılmaz", "John Smith", "İlker Şahin", "Jane Doe", "Emre Çelik", "Sofia Rodriguez", "Peter Johnson",
+        "Zeynep Öztürk", "Ahmed Ali", "Olivia Brown", "Can Doğan", "Emma Williams"];
+    const CITIES = ["İstanbul", "London", "İzmir", "Paris", "Ankara", "Madrid", "Berlin", "Tokyo"];
+    const STATUSES = ["Paid", "Waiting", "Late"];
+
+    // 40 orders: [id, customer, city, amount, status]
+    const ORDERS = [];
+    for (let i = 1; i <= 40; i++) {
+        ORDERS.push([i, NAMES[i % NAMES.length], CITIES[(i * 3) % CITIES.length], (i * 37) % 500 + 20, STATUSES[(i * 7) % STATUSES.length]]);
+    }
+
+    const ORDER_COLUMNS = [
+        { key: "id", title: "#", valueIndex: 0, type: "number", width: 60, sortable: 1 },
+        { key: "customer", title: "Customer", valueIndex: 1, sortable: 1 },
+        { key: "city", title: "City", valueIndex: 2, width: 120, sortable: 1 },
+        { key: "amount", title: "Amount", valueIndex: 3, type: "number", width: 130, align: "right", sortable: 1 },
+    ];
+
+    // The page look of each style package (the table sits on it)
+    const LOOKS = {
+        light: { color: "white", textColor: Black(0.5) },
+        dark: { color: "#141414", textColor: White(0.5) },
+    };
+
+    // GROUP: A card with a title and a short description.
+    const startCard = function (title, description, look, width = CARD_WIDTH) {
+        const card = VGroup({ width: width, height: "auto", align: "left top", gap: 12, padding: 16, color: look.color, round: 12, border: 1, borderColor: Black(0.1) });
+        that.css = { alignItems: "stretch", maxWidth: "100%" };
+        Label({ plainText: title, fontSize: 14, textColor: look.textColor, bold: 1 });
+        if (description) Label({ plainText: description, fontSize: 13, textColor: look.textColor, width: "100%", css: { lineHeight: "1.4" } });
+        return card;
+    };
+
+    const endCard = function () {
+        endGroup();
+    };
+
+    const createInfoLabel = function (look) {
+        return Label({ plainText: "Click a row (or Tab to the table, then the arrow keys).", width: "100%", fontSize: 13, textColor: look.textColor });
+    };
+
+    const showRow = function (label, row) {
+        label.plainText = row ? "Selected: " + row.data.join(" · ") : "Nothing is selected.";
+    };
+
+    const createStyleSample = function (styleName, description, look) {
+        startCard("styleName: \"" + styleName + "\"", description, look);
+            DataTable({
+                width: "100%",
+                height: TABLE_HEIGHT,
+                styleName: styleName,
+                titleText: "Orders",
+                showSearch: 1,
+                columns: ORDER_COLUMNS,
+                rows: ORDERS,
+                sortKey: "id",
+                onSelect: function (self, row) { showRow(info, row); },
+            });
+            const info = createInfoLabel(look);
+        endCard();
+    };
+
+    // LABEL: A colored status badge (column.createView)
+    const createStatusBadge = function (cell, status) {
+        Label({ plainText: status, fontSize: 12, bold: 1, textColor: "white", color: STATUS_COLORS[status], round: 10, padding: [10, 2] });
+    };
+
+    // The rows change with updateRows(): the sorting, the search and the selection stay.
+    const createUpdateSample = function () {
+
+        const look = LOOKS.light;
+        const rows = ORDERS.slice(0, 8).map(function (data) { return data.slice(); });
+
+        startCard("updateRows() · your own cells (column.createView)", "Add, change and remove rows: only the changed rows are drawn again. The status is a badge made by the column.", look, WIDE_CARD_WIDTH);
+
+            const table = DataTable({
+                width: "100%",
+                height: TABLE_HEIGHT,
+                styleName: "minimal",
+                rowHeight: 48,
+                columns: ORDER_COLUMNS.concat([{ key: "status", title: "Status", valueIndex: 4, width: 120, align: "center", sortable: 1, createView: createStatusBadge }]),
+                rows: rows,
+                sortKey: "amount",
+                sortDirection: "desc",
+            });
+
+            HGroup({ hug: 1, gap: 8 });
+                createButton("Add a row", function () {
+                    rows.push([table.getBiggestId() + 1, "New Customer", "İstanbul", 999, "Waiting"]);
+                    table.updateRows(rows);
+                });
+                createButton("Pay the first", function () {
+                    if (rows.length) rows[0][4] = "Paid";
+                    table.updateRows(rows);
+                });
+                createButton("Remove the selected", function () {
+                    const id = table.getSelectedId();
+                    const index = rows.findIndex(function (data) { return data[0] == id; });
+                    if (index != -1) rows.splice(index, 1);
+                    table.updateRows(rows);
+                });
+            endGroup();
+
+        endCard();
+
+    };
+
+    const createButton = function (text, onClick) {
+        const button = Button({ text: text, width: "auto", height: 36, fontSize: 14, minimal: 1, padding: [14, 0] });
+        button.on("click", onClick);
+        return button;
+    };
+
+    const start = function () {
+
+        page.color = "#E9EAE6";
+
+        const pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+
+            VGroup({ width: "100%", height: "auto", align: "center top", gap: 24, padding: 32 });
+
+                Label({ text: "DataTable", fontSize: 26, bold: 1, textColor: Black(0.8) });
+                Label({ plainText: "comp-m4 · the new version of the UITable of 04-template-m1/js-data-table · for very many rows: SmartTable (comp-m3)", fontSize: 14, textColor: Black(0.45) });
+
+                // GROUP: The style packages
+                HGroup({ width: "100%", height: "auto", align: "center top", gap: 20, wrap: 1 });
+                    createStyleSample("classic", "A gray title row, striped rows, a soft yellow selection. Search: try \"istanbul\" (the Turkish letters are found without their marks).", LOOKS.light);
+                    createStyleSample("minimal", "White, only lines: a table inside a page.", LOOKS.light);
+                    createStyleSample("dark", "For a dark page; the search box is ozdenDark.", LOOKS.dark);
+                endGroup();
+
+                createUpdateSample();
+
+            endGroup();
+
+        endBox();
+
+        if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: pageBox });
+
+    };
+
+    </script>
+
+</head>
+<body>
+</body>
+</html>

@@ -14,7 +14,7 @@
 
         <!-- COMPONENTS -->
         <script src="../../comp-m2/search-input-v2.js" type="text/javascript" charset="utf-8"></script>
-        <script src="js/components/data-table.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../comp-m4/data-table.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- DATA -->
         <script src="js/table-data.js" type="text/javascript" charset="utf-8"></script>
@@ -28,6 +28,9 @@
 
         const PAGE_SPACE = 20;
 
+        // The sort arrow of DataTable seen from this folder (its default path is for 02-comp-m4-samples)
+        const SORT_ICON_FILE = "../../comp-m4/data-table/arrow.svg";
+
         let table;
 
         const start = function () {
@@ -36,6 +39,7 @@
 
             // TABLE: Information
             table = DataTable({
+                sortIconFile: SORT_ICON_FILE,
                 left: PAGE_SPACE,
                 top: PAGE_SPACE,
                 width: "calc(100% - " + (PAGE_SPACE * 2) + "px)",

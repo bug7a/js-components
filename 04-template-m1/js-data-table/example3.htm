@@ -13,7 +13,7 @@
         <script src="../../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- COMPONENTS -->
-        <script src="js/components/data-table.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../comp-m4/data-table.js" type="text/javascript" charset="utf-8"></script>
 
         <script>
 
@@ -40,6 +40,9 @@
             [4, "Square", ["#FEC108", "#FE5D49", "#4577C1", "#5ABB9F"]],
         ];
 
+        // The sort arrow of DataTable seen from this folder (its default path is for 02-comp-m4-samples)
+        const SORT_ICON_FILE = "../../comp-m4/data-table/arrow.svg";
+
         let table;
 
         const start = function () {
@@ -52,6 +55,7 @@
 
             // TABLE: Palettes
             table = DataTable({
+                sortIconFile: SORT_ICON_FILE,
                 left: 0,
                 top: 0,
                 width: "100%",

@@ -227,6 +227,12 @@ CATALOG.COMPONENTS = [
         tr: "Dikey zaman çizelgesi: her öğe için bir nokta ve noktaların arasında bir çizgi.",
     },
     {
+        key: "data-table", name: "DataTable", gen: 4, cat: "data",
+        source: "comp-m4/data-table.js", samples: ["02-comp-m4-samples/data-table.htm"],
+        en: "A table for short and middle lists: sorting, search, keyboard selection, your own cells and row updates by id. For very many rows: SmartTable.",
+        tr: "Kısa ve orta uzunlukta listeler için tablo: sıralama, arama, klavyeyle seçim, kendi hücreleriniz ve id ile satır güncelleme. Çok fazla satır için: SmartTable.",
+    },
+    {
         key: "web-view", name: "WebView", gen: 4, cat: "pages",
         source: "comp-m4/web-view.js", samples: ["02-comp-m4-samples/web-view.htm"],
         en: "An iframe box with a loading spinner, errors, messages, scaled previews and a toolbar. The previews on this site use it.",
