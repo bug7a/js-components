@@ -2,7 +2,9 @@
 
 /*
 
-SortableList - v26.09
+SortableList - v26.10
+
+2026-10-28: Drag preview escapes scroll clipping; document pointer events prevent stuck rows.
 
 UI COMPONENT TEMPLATE
 - A list whose order can be changed. (Sıralama nesnesi: verilen itemlerin sırasını düzenleyebildiğin liste.)
@@ -197,6 +199,7 @@ const SortableList = function (params = {}) {
     let autoScrollFrame = null;
     let isReordering = 0; // WHY: Moving a focused row in the DOM fires blur. It must not drop the grabbed row.
     let suppressClick = 0; // WHY: The pointerup of a drag also fires a click on the row.
+    let dragPreview = null;
 
     // *** PUBLIC VARIABLES:
     // NOTE: Default values are also public variables. (box.items is the current order, the same as getItems())
@@ -449,6 +452,10 @@ const SortableList = function (params = {}) {
 
     const onPointerMove = function (self, event) {
         if (!drag || event.pointerId !== drag.pointerId) return;
+        if (event.pointerType === "mouse" && event.buttons === 0) {
+            onPointerUp(self, event); // WHY: Recover if the mouse was released outside the browser.
+            return;
+        }
         drag.lastY = withPageZoom(event.clientY);
         drag.lastClientY = event.clientY;
         if (!drag.active) {
@@ -503,6 +510,19 @@ const SortableList = function (params = {}) {
         });
         drag.source.cursor = "grabbing";
         paintRow(drag.entry);
+        // WHY: A scroll container clips even a row with a higher z-index. Draw a non-interactive
+        // copy above the page; the real row keeps its place, focus and pointer capture.
+        dragPreview = drag.entry.row.elem.cloneNode(true);
+        dragPreview.removeAttribute("id");
+        dragPreview.querySelectorAll("[id]").forEach(function (elem) { elem.removeAttribute("id"); });
+        dragPreview.setAttribute("aria-hidden", "true");
+        dragPreview.inert = true;
+        Object.assign(dragPreview.style, {
+            position: "fixed", margin: "0", pointerEvents: "none", zIndex: "2147483647",
+            transition: "none", transformOrigin: "center",
+        });
+        document.documentElement.appendChild(dragPreview);
+        drag.entry.row.css.opacity = "0";
         box.onDragStart(box, drag.entry.item, index);
     };
 
@@ -536,6 +556,7 @@ const SortableList = function (params = {}) {
         const minDy = tops[drag.minIndex] - tops[index];
         const maxDy = (tops[drag.maxIndex] + heights[drag.maxIndex]) - (tops[index] + heights[index]);
         dy = Math.max(minDy, Math.min(dy, maxDy));
+        drag.dy = dy;
 
         const center = tops[index] + heights[index] / 2 + dy;
         const target = findDragTarget(center);
@@ -551,8 +572,25 @@ const SortableList = function (params = {}) {
             if (e.row.lblNumber) e.row.lblNumber.plainText = String(k + 1 + getNumberChange(shift));
         });
         const draggedRow = entries[index].row;
-        draggedRow.css.transform = "translateY(" + dy + "px) scale(" + _s.rowDragging.scale + ")";
+        const rect = draggedRow.elem.getBoundingClientRect();
+        const width = draggedRow.elem.offsetWidth;
+        const height = draggedRow.elem.offsetHeight;
+        const zoom = rect.width / width;
+        // WHY: Scaled from its center (like the row at the drop): the drop does not jump sideways.
+        // The unscaled preview is placed so that its center is the center of the row (zoom: a zoomed page).
+        Object.assign(dragPreview.style, {
+            left: (rect.left + (rect.width - width) / 2) + "px",
+            top: (rect.top + dy * zoom + (rect.height - height) / 2) + "px",
+            width: width + "px",
+            height: height + "px",
+            transform: "scale(" + (zoom * _s.rowDragging.scale) + ")",
+        });
         if (draggedRow.lblNumber) draggedRow.lblNumber.plainText = String(target + 1); // The numbers show the new order while dragging.
+        if (draggedRow.lblNumber) {
+            // The preview is visual only; keep its position number in sync with the real row.
+            const numberIndex = Array.from(draggedRow.elem.children).indexOf(draggedRow.lblNumber.elem);
+            if (numberIndex >= 0) dragPreview.children[numberIndex].textContent = String(target + 1);
+        }
     };
 
     // Scrolls the list while the pointer is near its top or bottom edge.
@@ -606,6 +644,14 @@ const SortableList = function (params = {}) {
 
         // The dropped row slides to its place, then the order changes.
         const droppedRow = finished.entry.row;
+        droppedRow.css = {
+            transition: "none",
+            transform: "translateY(" + finished.dy + "px) scale(" + _s.rowDragging.scale + ")",
+        };
+        if (dragPreview) dragPreview.remove();
+        dragPreview = null;
+        droppedRow.css.opacity = "";
+        void droppedRow.elem.offsetHeight; // WHY: Start the settling animation at the last dragged position.
         droppedRow.css = { transition: SETTLE_TRANSITION, transform: "translateY(" + finalDy + "px)" };
         finished.source.cursor = "";
         drag = null;
@@ -732,9 +778,7 @@ const SortableList = function (params = {}) {
         const dragSource = (isRowDrag || !row.handle) ? row : row.handle;
         if (!entry.locked && (isRowDrag || row.handle)) {
             dragSource.on("pointerdown", function (self, event) { onPointerDown(entry, self, event); });
-            dragSource.on("pointermove", onPointerMove);
-            dragSource.on("pointerup", onPointerUp);
-            dragSource.on("pointercancel", onPointerCancel);
+            dragSource.listenTo(dragSource.elem, "lostpointercapture", onPointerCancel);
         }
         row.on("keydown", function (self, event) { onRowKeyDown(entry, event); });
         row.on("focus", function () { paintRow(entry); });
@@ -967,6 +1011,10 @@ const SortableList = function (params = {}) {
     box.setEnabled = function (enabled) {
         box.enabled = basic.isOn(enabled) ? 1 : 0;
         if (box.enabled != 1 && grab) endGrab(0);
+        if (box.enabled != 1 && drag) {
+            if (drag.active) finishDrag(0);
+            else drag = null;
+        }
         box.css.opacity = (box.enabled == 1) ? "1" : String(_s.disabled.opacity);
         box.aria = { disabled: (box.enabled == 1) ? "false" : "true" };
         entries.forEach(function (e) {
@@ -1017,6 +1065,30 @@ const SortableList = function (params = {}) {
     }
 
     // *** OBJECT INIT CODE:
+
+    // WHY: On the document (capture), not on the row: the move and the release are also caught outside the list
+    //      and when the pointer capture failed (a row stayed grabbed after a release outside of it).
+    box.listenTo(document, "pointermove", onPointerMove, true);
+    box.listenTo(document, "pointerup", onPointerUp, true);
+    box.listenTo(document, "pointercancel", onPointerCancel, true);
+    box.listenTo(window, "blur", function () {
+        if (!drag) return;
+        if (drag.active) finishDrag(0);
+        else drag = null;
+    });
+
+    // The drag preview is a raw element on <html> and the auto scroll a rAF loop: basic.js can not clean them.
+    const superRemove = box.remove;
+    box.superRemove = superRemove;
+    box.remove = function () {
+        if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
+        stopAutoScroll();
+        if (dragPreview) dragPreview.remove();
+        dragPreview = null;
+        drag = null;
+        superRemove.call(box);
+        box = null;
+    };
 
     if (!isAutoHeight) {
         // WHY: A wheel scroll during a drag moves the list under the dragged row.
