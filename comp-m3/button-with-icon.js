@@ -6,8 +6,8 @@ Button With Icon - v26.01
 
 - A customizable button with an icon and text.
 - Supports icon positioning (left/top).
-- WAITING (2026-10-28, from comp-m1/object-waiting.js ObjectWaiting): setWaiting(1) puts a dark cover with a clock
-  over the button while a job runs (a download, a save); the button can not be clicked then. setWaiting(0) takes it
+- WAITING (2026-10-28, from comp-m1/object-waiting.js ObjectWaiting): setWaiting(1) puts a dark cover with a slowly
+  turning ring (or the icon of waitingIconFile, Ex: the clock of ObjectWaiting) over the button while a job runs (a download, a save); the button can not be clicked then. setWaiting(0) takes it
   away (after delay ms, if given). The cover is inside the button: it moves and grows with it (ObjectWaiting was a
   sibling and needed reposition() after a resize).
 
@@ -44,7 +44,7 @@ const ButtonWithIconDefaults = {
     iconFile: "../comp-m3/button-with-icon/alert-black.png", // Default icon
     iconPosition: "left", // "left", "top"
     waiting: 0, // 1: the waiting cover is over the button (set later with setWaiting)
-    waitingIconFile: "../comp-m3/button-with-icon/clock.png",
+    waitingIconFile: "", // "": a turning ring (it shows the wait better and covers less of the text). The clock: "../comp-m3/button-with-icon/clock.png"
     onClick: function (self) { }, // Not called while waiting
     onWaitingEnd: function (self) { }, // The waiting cover went away (setWaiting(0))
     style: {
@@ -77,9 +77,14 @@ const ButtonWithIconDefaults = {
         },
         waiting: {
             color: "rgba(0, 0, 0, 0.4)",
-            iconSize: 50, // at most; a small button gets a smaller icon
-            iconSpace: 14, // the room around the icon in a small button
-            invertIcon: 0, // 1: the clock is drawn light (on a light cover)
+            ringSize: 22, // at most; a small button gets a smaller ring
+            ringWidth: 3,
+            ringColor: White(0.95),
+            ringTrackColor: White(0.3), // the rest of the circle
+            ringTurnTime: 0.9, // s: one turn (slow and even)
+            iconSize: 50, // waitingIconFile: at most; a small button gets a smaller icon
+            iconSpace: 14, // the room around the ring / icon in a small button
+            invertIcon: 0, // 1: the icon is drawn light (on a light cover)
         },
     }
 };
@@ -98,12 +103,32 @@ const ButtonWithIcon = function (params = {}) {
 
     // *** PRIVATE FUNCTIONS:
 
-    // The clock fits the button: at most style.waiting.iconSize, smaller in a small button.
+    // The ring (or the icon) fits the button: at most its size, smaller in a small button.
     const fitWaitingIcon = function () {
+        const _w = box.style.waiting;
         const shortSide = Math.min(box.width, box.height);
-        const size = Math.max(0, Math.min(box.style.waiting.iconSize, shortSide - box.style.waiting.iconSpace));
+        const maxSize = box.waitingIconFile ? _w.iconSize : _w.ringSize;
+        const size = Math.max(0, Math.min(maxSize, shortSide - _w.iconSpace));
         box.waitingCover.icon.setSize(size, size);
         box.waitingCover.icon.center();
+    };
+
+    // BOX: The turning ring (CSS: a circle line with one light part)
+    const createWaitingRing = function () {
+        const _w = box.style.waiting;
+        ButtonWithIcon.injectCss();
+        const ring = Box(0, 0, 0, 0, {
+            color: "transparent",
+            css: {
+                border: _w.ringWidth + "px solid " + _w.ringTrackColor,
+                borderTopColor: _w.ringColor,
+                borderRadius: "50%",
+                boxSizing: "border-box",
+                animation: "button-with-icon-turn " + _w.ringTurnTime + "s linear infinite",
+            },
+        });
+        ring.elem.classList.add("button-with-icon-ring");
+        return ring;
     };
 
     const showWaitingCover = function () {
@@ -207,9 +232,13 @@ const ButtonWithIcon = function (params = {}) {
         cursor: "progress",
         css: { borderRadius: "inherit" },
     });
-        box.waitingCover.icon = Icon(0, 0, 0, 0);
-        box.waitingCover.icon.load(box.waitingIconFile);
-        if (box.style.waiting.invertIcon) box.waitingCover.icon.css = { filter: "invert(1)" };
+        if (box.waitingIconFile) {
+            box.waitingCover.icon = Icon(0, 0, 0, 0);
+            box.waitingCover.icon.load(box.waitingIconFile);
+            if (box.style.waiting.invertIcon) box.waitingCover.icon.css = { filter: "invert(1)" };
+        } else {
+            box.waitingCover.icon = createWaitingRing();
+        }
     endBox();
     box.waitingCover.visible = 0;
 
@@ -246,4 +275,13 @@ const ButtonWithIcon = function (params = {}) {
 
     return endObject(box);
 
+};
+
+// *** STATIC FUNCTIONS:
+
+// The turn of the waiting ring (once for the page). No turn when the system asks for reduced motion: the ring stays.
+ButtonWithIcon.injectCss = function () {
+    basic.addCss("button-with-icon-css",
+        "@keyframes button-with-icon-turn { to { transform: rotate(360deg); } }" +
+        "@media (prefers-reduced-motion: reduce) { .button-with-icon-ring { animation: none !important; } }");
 };
