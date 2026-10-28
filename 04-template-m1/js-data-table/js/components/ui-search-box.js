@@ -2,18 +2,15 @@
 
 /*
 
-UI COMPONENT TEMPLATE
-- You can customize, this template code as you need:
+UI SEARCH BOX v1.1
 
+A search field with an icon and a clear (x) button: box.onSearch(function (searchText, uiSearchBox) {}) runs at every
+change of the text (typed, pasted, cleared), with the text in lower case. Escape clears it.
 
 Started Date: 15 March 2022
 Developer: Bugra Ozden
 Email: bugra.ozden@gmail.com
 Site: https://bug7a.github.io/cordova-mobile-app-ui-template/
-
-
-
-
 
 */
 
@@ -22,148 +19,157 @@ window.UISearchBox = {};
 
 // SHARED VARIABLES:
 UISearchBox.default = {};
-UISearchBox.resetDefault = function() {
+UISearchBox.resetDefault = function () {
 
-    UISearchBox.default.width = 300;
-    UISearchBox.default.height = 50;
-    UISearchBox.default.searchIconFile = "js/components/ui-search-box/search.svg";
-    UISearchBox.default.clearIconFile = "js/components/ui-search-box/clear.svg";
-    UISearchBox.default.isCancelEnabled = 1;
-    UISearchBox.default.placeholderText = "Search";
-    UISearchBox.default.color = "whitesmoke";
-    UISearchBox.default.textColor = "rgba(0, 0, 0, 0.8)";
-    UISearchBox.default.border = 0;
-    UISearchBox.default.borderColor = "rgba(0, 0, 0, 0.1)";
-    UISearchBox.default.borderBottomStyle = "2px solid rgba(0, 0, 0, 0.06)";
-    UISearchBox.default.round = 6;
-    UISearchBox.default.fontSize = 20;
-    UISearchBox.default.searchIconSpace = 0;
+    Object.assign(UISearchBox.default, {
+        width: 300,
+        height: 50,
+        searchIconFile: "js/components/ui-search-box/search.svg",
+        clearIconFile: "js/components/ui-search-box/clear.svg",
+        isCancelEnabled: 1,
+        placeholderText: "Search",
+        color: "whitesmoke",
+        textColor: "rgba(0, 0, 0, 0.8)",
+        border: 0,
+        borderColor: "rgba(0, 0, 0, 0.1)",
+        borderBottomStyle: "2px solid rgba(0, 0, 0, 0.06)",
+        round: 6,
+        fontSize: 20,
+        searchIconSpace: 0, // the inner space of the search icon (it gets smaller)
+    });
 
-}
+};
 UISearchBox.resetDefault();
 
-UISearchBox.create = function(parameters = {}) {
+// The sizes of the parts
+UISearchBox.SEARCH_ICON_LEFT = 16;
+UISearchBox.SEARCH_ICON_SIZE = 25;
+UISearchBox.CLEAR_ICON_RIGHT = 16;
+UISearchBox.CLEAR_ICON_SIZE = 20;
+UISearchBox.TEXT_LEFT = 40;
+UISearchBox.ICONS_WIDTH = 80; // the width of the field without the text: the two icons
+UISearchBox.ICON_OPACITY = 0.4;
+UISearchBox.CLEAR_ICON_OPACITY = 0.5;
 
-    // BOX: UI object container.
-    const box = Box();
+UISearchBox.create = function (params = {}) {
 
-    // Default values.
+    // BOX: UI object container
+    const box = Box({ left: 0, top: 0 });
+
+    // Default values (the params of this box over UISearchBox.default)
     box.default = {};
-    for (let parameterName in UISearchBox.default) {
-        box.default[parameterName] = (parameters[parameterName] != undefined) ? parameters[parameterName] : UISearchBox.default[parameterName];
-    }
-    
+    Object.keys(UISearchBox.default).forEach(function (name) {
+        box.default[name] = (params[name] !== undefined) ? params[name] : UISearchBox.default[name];
+    });
+    const settings = box.default;
+
     // *** PRIVATE VARIABLES:
-    let onSearchFunc = function() {};
+    let onSearchFunc = function () {};
 
-    // *** PUBLIC VARIABLES:
-    box.publicVariable = "publicVariable";
+    // *** PRIVATE FUNCTIONS:
 
-    // *** OBJECT MODEL:
-    box.width = box.default.width;
-    box.height = box.default.height;
-    box.color = box.default.color;
-    box.round = box.default.round;
-    box.border = box.default.border;
-    box.borderColor = box.default.borderColor;
-    box.element.style.borderBottom = box.default.borderBottomStyle;
+    const layoutParts = function () {
+        box.txtSearch.width = box.width - UISearchBox.ICONS_WIDTH;
+        box.txtSearch.center("top");
+        box.imgClearIcon.center("top");
+        box.imgIcon.center("top");
+    };
 
-    // IMAGE: Search icon
-    box.imgIcon = Icon(16, 0, 25, 25);
-    box.add(that);
-    that.load(box.default.searchIconFile);
-    that.opacity = 0.4;
-    that.space = box.default.searchIconSpace;
-    that.center("top");
+    // The clear button is seen (and clickable) only while there is a text.
+    const paintClearButton = function () {
+        const isShown = (settings.isCancelEnabled && box.txtSearch.value.length > 0) ? 1 : 0;
+        box.imgClearIcon.opacity = isShown ? UISearchBox.CLEAR_ICON_OPACITY : 0;
+        box.imgClearIcon.clickable = isShown;
+    };
 
-    // TEXTBOX: Search textbox
-    box.txtSearch = Input(40, 0);
-    box.add(that);
-    that.width = box.width - 80;
-    that.height = box.default.height;
-    that.border = 0;
-    that.minimal = 1;
-    that.fontSize = box.default.fontSize;
-    that.textColor = box.default.textColor;
-    that.color = "transparent";
-    that.inputElement.setAttribute("placeholder", box.default.placeholderText);
+    const search = function () {
+        paintClearButton();
+        onSearchFunc(box.txtSearch.value.toLowerCase(), box);
+    };
 
-    // IMAGE: Clear icon
-    box.imgClearIcon = Icon(5, 0, 20, 20);
-    box.add(that);
-    that.load(box.default.clearIconFile);
-    that.opacity = 0;
-    that.space = 0;
-    that.right = 16;
-    that.center("top");
-    that.setMotion("opacity 0.3s");
+    // *** PUBLIC FUNCTIONS:
 
-    /*
-    box.onResize = function(self) {
-        self.txtSearch.width = self.width - 80
-        self.txtSearch.center("top")
-    }
-    */
-
-    // *** PRIVATE METHODS:
-    const uiResized = function(self) {
-
-        self.txtSearch.width = self.width - 80;
-        self.txtSearch.center("top");
-        self.imgClearIcon.center("top");
-        self.imgIcon.center("top");
-
-    }
-
-    // *** PUBLIC METHODS:
-    box.onSearch = function(func) {
+    // USAGE: uiSearchBox.onSearch(function (searchText, uiSearchBox) { myTable.filterByText(searchText); })
+    box.onSearch = function (func) {
         onSearchFunc = func;
-    }
+    };
 
-    /*
-    box.setWidth = function(width) {
-        box.width = width
-    }
-    */
+    box.setText = function (text) {
+        box.txtSearch.value = text;
+        paintClearButton();
+    };
 
-    box.setText = function(text) {
-        box.txtSearch.text = text;
-    }
+    box.getText = function () {
+        return box.txtSearch.value;
+    };
 
-    box.getText = function() {
-        return box.txtSearch.text;
-    }
+    box.clear = function () {
+        box.txtSearch.value = "";
+        search();
+    };
 
-    box.setPlaceholderText = function(text) {
+    box.setPlaceholderText = function (text) {
         box.default.placeholderText = text;
-        box.txtSearch.inputElement.setAttribute("placeholder", text);
-    }
+        box.txtSearch.placeholder = text;
+    };
 
-    box.txtSearch.inputElement.addEventListener("keyup", function() {
+    // *** OBJECT VIEW:
+    box.props({
+        width: settings.width,
+        height: settings.height,
+        color: settings.color,
+        round: settings.round,
+        border: settings.border,
+        borderColor: settings.borderColor,
+        css: { borderBottom: settings.borderBottomStyle },
+    });
 
-        onSearchFunc(box.txtSearch.text.toLowerCase(), box);
+    createIn(box, function () {
 
-        if (box.default.isCancelEnabled) {
-            if (box.txtSearch.text.length > 0) {
-                box.imgClearIcon.opacity = 0.5;
-            } else {
-                box.imgClearIcon.opacity = 0;
-            }
-        }
+        // ICON: Search
+        box.imgIcon = Icon(UISearchBox.SEARCH_ICON_LEFT, 0, UISearchBox.SEARCH_ICON_SIZE, UISearchBox.SEARCH_ICON_SIZE, {
+            opacity: UISearchBox.ICON_OPACITY,
+            space: settings.searchIconSpace,
+        });
+        that.load(settings.searchIconFile);
+
+        // INPUT: Search text
+        box.txtSearch = Input(UISearchBox.TEXT_LEFT, 0, settings.width - UISearchBox.ICONS_WIDTH, settings.height, {
+            border: 0,
+            minimal: 1,
+            fontSize: settings.fontSize,
+            color: "transparent",
+            textColor: settings.textColor,
+            placeholder: settings.placeholderText,
+        });
+
+        // ICON: Clear
+        box.imgClearIcon = Icon({
+            right: UISearchBox.CLEAR_ICON_RIGHT,
+            width: UISearchBox.CLEAR_ICON_SIZE,
+            height: UISearchBox.CLEAR_ICON_SIZE,
+            opacity: 0,
+            cursor: "pointer",
+            role: "button",
+            aria: { label: "Clear the search" },
+        });
+        that.load(settings.clearIconFile);
+        that.setMotion("opacity 0.3s");
 
     });
 
-     // *** CODE:
-    box.onResize(uiResized);
-    box.imgClearIcon.onClick(function(self) {
-
-        self.opacity = 0;
-        box.txtSearch.text = "";
-        onSearchFunc(box.txtSearch.text.toLowerCase(), box);
-
+    // *** OBJECT INIT CODE:
+    // WHY "input", not "keyup": a paste with the mouse and the clear button of the browser change the text without a key
+    box.txtSearch.inputElement.addEventListener("input", search);
+    box.txtSearch.inputElement.addEventListener("keydown", function (event) {
+        if (event.key == "Escape") box.clear();
     });
+    box.imgClearIcon.on("click", box.clear);
+    box.onResize(layoutParts);
+    layoutParts();
+    paintClearButton();
 
     makeBasicObject(box);
     return box;
 
-}
+};

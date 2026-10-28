@@ -90,7 +90,7 @@
             myTable.left = 0;
             myTable.top = 0;
             // Custom scrollbar
-            myTable.boxItems.element.classList.add("table-scrollbar");
+            myTable.addScrollBarCssClass("table-scrollbar");
 
             // Customize title and item style:
             myTable.setTitleCellStyle(titleCellStyle);
@@ -131,63 +131,55 @@
 
         const titleCellStyle = function(titleCell, titleCellData, titleIndex) {
 
-            titleCell.label.element.style.fontFamily = "opensans-bold";
-            titleCell.label.element.style.textTransform = "uppercase";
+            titleCell.label.fontFamily = "opensans-bold";
+            titleCell.label.css = { textTransform: "uppercase" };
 
             // Clickable titles for sorting.
-            if (titleCellData.id == "name" || titleCellData.id == "id") {
-                titleCell.background.element.classList.add("table-title-cell");
+            if (titleCellData.enableSorting) {
+                titleCell.background.elem.classList.add("table-title-cell");
             }
 
         };
 
         const itemCellStyle = function(itemCell, itemCellData, titleCellData, itemRow, itemCellIndex) {
 
-            if (titleCellData.id == "color") {
+            if (titleCellData.id != "color") return;
 
-                itemCell.label.visible = 0;
+            itemCell.label.visible = 0;
+            // The content is always in the middle
+            itemCell.box.css = { display: "flex", alignItems: "center", justifyContent: "center" };
 
-                itemCell.box.html = "";
-                // Content will be centered always;
-                itemCell.box.element.style.display = "flex";
-                itemCell.box.element.style.alignItems = "center";
-                itemCell.box.element.style.justifyContent = "center";
-
-                itemCell.box.colorBox = createColorPalette(itemCellData);
-                itemCell.box.add(that);
-                that.position = "relative";
-
-            }
+            // (updateItems() styles a cell again: its old palette goes)
+            if (itemCell.box.colorBox) itemCell.box.colorBox.remove();
+            itemCell.box.colorBox = createIn(itemCell.box, function () {
+                return createColorPalette(itemCellData);
+            });
 
         };
 
+        const COLOR_SIZE = 30;
+        const COLOR_GAP = 6;
+
+        // GROUP: A row of color circles
         const createColorPalette = function(colorList) {
 
-            const box = Box();
+            const palette = HGroup({ hug: 1, gap: COLOR_GAP, position: "relative" });
 
-            box.width = 30;
-            box.height = 30;
-            box.color = "transparent";
+                colorList.forEach(function (color) {
+                    Box({
+                        width: COLOR_SIZE,
+                        height: COLOR_SIZE,
+                        round: COLOR_SIZE / 2,
+                        border: 1,
+                        borderColor: "rgba(0, 0, 0, 0.8)",
+                        color: color,
+                        position: "relative",
+                    });
+                });
 
-            for(var i = 0; i < colorList.length; i++) {
+            endGroup();
 
-                box["color" + i] = Box();
-                box.add(that);
-                that.width = 30;
-                that.height = 30;
-                that.round = 15;
-                that.border = 1;
-                that.borderColor = "rgba(0, 0, 0, 0.8)";
-                that.color = colorList[i];
-
-                that.top = 0;
-                that.left = ((that.width) * 1.2) * i;
-                box.width = that.left + that.width;
-
-            }
-
-            makeBasicObject(box);
-            return box;
+            return palette;
 
         };
 
@@ -213,27 +205,27 @@
             window.btnUpdate = Button();
             buttonStyle(that);
             that.text = "Update Items";
-            that.aline(previousThat, "right", 4);
+            that.aline(prevThat, "right", 4);
 
             // BUTTON: Delete
             window.btnDelete = Button();
             buttonStyle(that);
             that.text = "Delete Items";
             that.color = "indianred";
-            that.aline(previousThat, "right", 4);
+            that.aline(prevThat, "right", 4);
 
             // BUTTON: Clear All
             window.btnClear = Button();
             buttonStyle(that);
             that.text = "Clear All";
             that.color = "indianred";
-            that.aline(previousThat, "right", 4);
+            that.aline(prevThat, "right", 4);
 
             // Events
-            btnAddNew.onClick(test1_add);
-            btnUpdate.onClick(test2_update);
-            btnDelete.onClick(test3_delete);
-            btnClear.onClick(test4_clearAll);
+            btnAddNew.on("click", test1_add);
+            btnUpdate.on("click", test2_update);
+            btnDelete.on("click", test3_delete);
+            btnClear.on("click", test4_clearAll);
 
         };
 
@@ -255,6 +247,8 @@
         // Edit item index 0 name and colors.
         const test2_update = function() {
 
+            if (itemDataList.length == 0) return;
+
             itemDataList[0][1] = "Edited Name";
             itemDataList[0][2] = ["#000000", "#FFFFFF"];
 
@@ -270,8 +264,10 @@
 
         };
 
+        // The list is emptied too: "Add Items" starts a new list
         const test4_clearAll = function() {
 
+            itemDataList = [];
             myTable.clearItems();
 
         };

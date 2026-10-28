@@ -1,7 +1,18 @@
+/* Bismillah */
 
 /*
 
-UI TABLE v1.2
+UI TABLE v1.3
+
+A table made from a JSON list: the titles from a list of objects, the rows from a list of arrays.
+- Sorting by a title (a click on the title, or sort()), searching (filterByText()), selection.
+- updateItems() adds, changes and removes rows by their id and keeps the sorting, the search and the selection.
+- Every part can be styled: setTitleRowStyle(), setTitleCellStyle(), setItemRowStyle(), setItemCellStyle().
+  A cell can hold its own objects (createItemCellContentBox: 1, itemCell.box).
+- The texts of the cells are plain text (a value can not inject HTML); a title can be HTML (an icon in it).
+- The table can be moved into an HTML element of the page (moveIntoDiv()): it works in a normal web page too.
+
+The options and the methods: guide.js
 
 Started Date: 1 October 2022
 Developer: Bugra Ozden
@@ -15,448 +26,386 @@ window.UITable = {};
 
 // SHARED VARIABLES:
 UITable.default = {};
-UITable.resetDefault = function() {
+UITable.resetDefault = function () {
 
-    // Table Options
+    Object.assign(UITable.default, {
 
-    UITable.default.width = "100%"; // "100%", "calc(100% - 20px)" or number.
-    UITable.default.height = "100%"; // "100%", "calc(100% - 20px)", "auto" or number.
-    UITable.default.showWithMotion = 1; // 1 or 0
-    UITable.default.borderString = "1px solid lightgray";
-    UITable.default.borderRadius = "6px 6px 6px 6px";
-    UITable.default.boxShadow = "0px 0px 6px 2px rgba(0, 0, 0, 0.1)"; // "none"
-    UITable.default.backgroundColor = "white";
+        // Table
+        width: "100%", // "100%", "calc(100% - 20px)" or number.
+        height: "100%", // "100%", "calc(100% - 20px)" or number.
+        showWithMotion: 1, // 1 or 0
+        borderString: "1px solid lightgray",
+        borderRadius: "6px 6px 6px 6px",
+        boxShadow: "0px 0px 6px 2px rgba(0, 0, 0, 0.1)", // "none"
+        backgroundColor: "white",
 
-    UITable.default.titleHeight = 50; // only number
-    UITable.default.titleTopInnerSpace = "auto"; // "auto" or number
-    UITable.default.titleRowBackgroundColor = "whitesmoke";
-    UITable.default.titleRowBottomBorderString = "1px solid rgba(0, 0, 0, 0.2)"; // "none"
-    UITable.default.titleCellBackgroundColor = "whitesmoke";
-    UITable.default.titleCellRightBorderString = "1px solid rgba(0, 0, 0, 0.08)";
-    UITable.default.titleCellBottomBorderString = "1px solid rgba(0, 0, 0, 0.2)";
-    UITable.default.titleFontSize = 16;
-    UITable.default.titleFontFamily = "opensans-bold";
-    UITable.default.titleTextColor = "rgba(0, 0, 0, 0.8)";
-    UITable.default.titleBoxShadow = "-2px 0px 8px 2px rgba(0, 0, 0, 0.15)";
-    UITable.default.createTitleCellContentBox = 0; // for special cell content.
-    UITable.default.createTitleCellBackground = 1; // for special cell background.
+        // Titles
+        titleHeight: 50, // only number
+        titleTopInnerSpace: "auto", // "auto" or number
+        titleRowBackgroundColor: "whitesmoke",
+        titleRowBottomBorderString: "1px solid rgba(0, 0, 0, 0.2)", // "none"
+        titleCellBackgroundColor: "whitesmoke",
+        titleCellRightBorderString: "1px solid rgba(0, 0, 0, 0.08)",
+        titleCellBottomBorderString: "1px solid rgba(0, 0, 0, 0.2)",
+        titleFontSize: 16,
+        titleFontFamily: "opensans-bold",
+        titleTextColor: "rgba(0, 0, 0, 0.8)",
+        titleBoxShadow: "-2px 0px 8px 2px rgba(0, 0, 0, 0.15)",
+        createTitleCellContentBox: 0, // for special cell content.
+        createTitleCellBackground: 1, // for special cell background.
 
-    UITable.default.itemsCanSelectable = 1; // 1 or 0
-    UITable.default.noItemAddedAlert = "There are no records.";
-    UITable.default.noItemFoundAlert = "No records found.";
-    UITable.default.itemHeight = "auto"; // "auto" or number like 80
-    UITable.default.itemRowBottomBorderString = "1px solid rgba(0, 0, 0, 0.1)";
-    UITable.default.itemCellRightBorderString = "1px solid rgba(0, 0, 0, 0.03)";
-    UITable.default.itemOddBackgroundColor = "white";
-    UITable.default.itemEvenBackgroundColor = "whitesmoke";
-    UITable.default.itemSelectedBackgroundColor = "rgba(254, 193, 8, 0.1)";
-    UITable.default.itemFontSize = 16;
-    UITable.default.itemFontFamily = "opensans";
-    UITable.default.itemTextColor = "rgba(0, 0, 0, 0.7)";
-    UITable.default.leftRightInnerSpace = 10;
-    UITable.default.topBottomInnerSpace = 12;
-    UITable.default.createItemCellContentBox = 0; // for special cell content.
-    UITable.default.createItemCellBackground = 0; // for special cell background.
-    UITable.default.itemIdValueIndex = 0;
+        // Items
+        itemsCanSelectable: 1, // 1 or 0
+        noItemAddedAlert: "There are no records.",
+        noItemFoundAlert: "No records found.",
+        itemHeight: "auto", // "auto" or number like 80
+        itemRowBottomBorderString: "1px solid rgba(0, 0, 0, 0.1)",
+        itemCellRightBorderString: "1px solid rgba(0, 0, 0, 0.03)",
+        itemOddBackgroundColor: "white",
+        itemEvenBackgroundColor: "whitesmoke",
+        itemSelectedBackgroundColor: "rgba(254, 193, 8, 0.1)",
+        itemFontSize: 16,
+        itemFontFamily: "opensans",
+        itemTextColor: "rgba(0, 0, 0, 0.7)",
+        leftRightInnerSpace: 10,
+        topBottomInnerSpace: 12,
+        createItemCellContentBox: 0, // for special cell content.
+        createItemCellBackground: 0, // for special cell background.
+        itemIdValueIndex: 0, // the index of the id in the array of an item
 
-    UITable.default.sortingWidth = 14;
-    UITable.default.sortingHeight = 20;
-    UITable.default.sortingBackgroundColor = "transparent";
-    UITable.default.sortingBorderRadius = "2px 2px 2px 2px";
-    UITable.default.sortingOuterPosition = "left"; // "left" or "right"
-    UITable.default.sortingOuterSpace = 4;
-    UITable.default.sortingIconSize = 18;
-    UITable.default.sortingIconFile = "js/components/ui-table/arrow.svg";
-    UITable.default.sortingIconOpacity = 0.2;
-    UITable.default.sortingIconSelectedOpacity = 1;
-   
-    UITable.default.topBarHeight = 0;
-    UITable.default.topBarBackgroundColor = "whitesmoke";
-    UITable.default.topBarBottomBorderString = "0px solid rgba(0, 0, 0, 0.2)";
+        // Sorting arrow
+        sortingWidth: 14,
+        sortingHeight: 20,
+        sortingBackgroundColor: "transparent",
+        sortingBorderRadius: "2px 2px 2px 2px",
+        sortingOuterPosition: "left", // "left" or "right"
+        sortingOuterSpace: 4,
+        sortingIconSize: 18,
+        sortingIconFile: "js/components/ui-table/arrow.svg",
+        sortingIconOpacity: 0.2,
+        sortingIconSelectedOpacity: 1,
 
-    UITable.default.bottomBarHeight = 0;
-    UITable.default.bottomBarBackgroundColor = "whitesmoke";
-    UITable.default.bottomBarTopBorderString = "1px solid rgba(0, 0, 0, 0.2)";
+        // Bars
+        topBarHeight: 0,
+        topBarBackgroundColor: "whitesmoke",
+        topBarBottomBorderString: "0px solid rgba(0, 0, 0, 0.2)",
 
-}
+        bottomBarHeight: 0,
+        bottomBarBackgroundColor: "whitesmoke",
+        bottomBarTopBorderString: "1px solid rgba(0, 0, 0, 0.2)",
+
+    });
+
+};
 UITable.resetDefault();
 
-UITable.create = function(parameters = {}) {
+// The layout waits for the last of many resize events.
+UITable.RESIZE_DELAY = 5;
 
-    // BOX: UI Table container.
-	const box = Box();
+UITable.create = function (params = {}) {
 
-	// Default values.
-	box.default = {};
-	for (let parameterName in UITable.default) {
-		box.default[parameterName] = (parameters[parameterName] != undefined) ? parameters[parameterName] : UITable.default[parameterName];
-	}
-	
-	// *** PRIVATE VARIABLES:
-    let selectedTitleCellIndex = null;
-    let selectedSortingType = null;
-    let defaulTitleCellIdForSorting = null;
-    let defaultSortingType = null;
+    // BOX: UI Table container
+    const box = Box({ left: 0, top: 0 });
+
+    // Default values (the params of this table over UITable.default)
+    box.default = {};
+    Object.keys(UITable.default).forEach(function (name) {
+        box.default[name] = (params[name] !== undefined) ? params[name] : UITable.default[name];
+    });
+    const settings = box.default;
+
+    // *** PRIVATE VARIABLES:
+    let sortedTitleIndex = -1; // -1: the rows are in the order of the data
+    let sortType = ""; // "asc" or "desc"
+    let defaultSortTitleId = "";
+    let defaultSortType = "";
     let shownItemCount = 0;
+    let filter = { text: "", titleId: undefined };
+    let cancelLayout = null;
 
-	// *** PUBLIC VARIABLES:
+    let titleRowStyle = function () {};
+    let titleCellStyle = function () {};
+    let itemRowStyle = function () {};
+    let itemCellStyle = function () {};
+
+    // *** PUBLIC VARIABLES:
     box.titleCellDataList = [];
     box.itemDataList = [];
     box.titleCellList = [];
     box.itemList = [];
     box.selectedItem = null;
     box.selectedItemIndex = -1;
-    box.sortedItemIndexList = [];
-    box.onClickFunc = function() {};
-    box.onEditFunc = function() {};
+    box.sortedItemIndexList = []; // the indexes of box.itemList in the shown order
+    box.onClickFunc = function () {};
+    box.onEditFunc = function () {};
     box.calculatedAutoTitleCellWidth = 0;
-	
-	// *** OBJECT MODEL:
-	box.border = 0;
-	box.color = box.default.backgroundColor;
-    box.width = box.default.width;
-    box.height = box.default.height;
-    box.element.style.borderRadius = box.default.borderRadius;
-    box.element.style.boxShadow = box.default.boxShadow;
-    if (box.default.showWithMotion) {
-        box.opacity = 0;
-        box.setMotion("opacity 0.3s");
-    }
-    // .top ve .left nesne dışında belirlenmeli.
 
-    // LABEL: No item found alert.
-    box.alert = Label();
-    box.add(that);
-    that.width = "auto";
-    that.height = "auto";
-    that.spaceX = 16;
-    that.spaceY = 8;
-    that.round = 6;
-    that.fontSize = 16;
-    //that.color = "rgba(0, 0, 0, 0.05)";
-    that.text = "";
-    // .center() iki yerde çalıştırılıyor.
-    // onResize ve resizeTable da.
+    // *** PRIVATE FUNCTIONS:
 
-    box.alert.onResize(function(self) {
+    const getItemId = function (itemData) {
+        return itemData[settings.itemIdValueIndex];
+    };
+
+    // The text of a value in a cell (undefined: empty)
+    const toCellText = function (value) {
+        if (value === undefined || value === null) return "";
+        return String(value);
+    };
+
+    const getTitleCellWidth = function (width) {
+        if (width == "auto") return box.calculatedAutoTitleCellWidth;
+        return width;
+    };
+
+    // The "auto" titles share the width that the fixed titles leave.
+    const calcTitleCellWidths = function () {
+
+        let autoWidthCount = 0;
+        let fixedWidth = 0;
+
+        box.titleCellDataList.forEach(function (titleCellData) {
+            if (titleCellData.width == "auto") autoWidthCount++;
+            else fixedWidth += titleCellData.width;
+        });
+
+        if (autoWidthCount == 0) return;
+        box.calculatedAutoTitleCellWidth = Math.max(0, (box.width - fixedWidth) / autoWidthCount);
+
+    };
+
+    // Every cell gets the width of its title (the "auto" ones change with the table).
+    const applyColumnWidths = function () {
+
+        calcTitleCellWidths();
+
+        box.titleCellDataList.forEach(function (titleCellData, i) {
+            const width = getTitleCellWidth(titleCellData.width);
+            box.titleCellList[i].width = width;
+            box.itemList.forEach(function (itemRow) {
+                itemRow.cellList[i].width = width;
+            });
+        });
+
+    };
+
+    const layoutTable = function () {
+
+        box.boxItems.top = settings.topBarHeight + settings.titleHeight;
+        box.boxItems.height = box.height - settings.titleHeight - settings.bottomBarHeight - settings.topBarHeight;
+        box.bottomBar.top = box.boxItems.top + box.boxItems.height;
+
+        applyColumnWidths();
         box.alert.center();
-    });
 
-    // BOX: Items container.
-    box.boxItems = Box();
-    box.add(that);
-    that.color = "transparent";
-    that.width = "100%";
-    //that.height = box.height - box.default.titleHeight - box.default.bottomBarHeight - box.default.topBarHeight;
-    that.border = 0;
-    that.scrollY = 1;
-    that.element.style.overflowY = "auto";
-    //that.left = 0;
-    //that.top = box.default.topBarHeight + box.default.titleHeight;
-    that.element.style.display = "flex";
-    that.element.style.flexDirection = "row";
-    that.element.style.flexWrap = "wrap";
-    that.element.style.alignContent = "flex-start";
-    // .top ve .left: resizeTable da veriliyor.
-
-    // BOX: Titles container.
-    box.boxTitles = Box();
-    box.add(that);
-    that.color = "transparent";
-    that.width = "100%";
-    that.height = box.default.titleHeight;
-    that.border = 0;
-    that.element.style.boxShadow = box.default.titleBoxShadow;
-    that.element.style.whiteSpace = "nowrap";
-    that.left = 0;
-    that.top = box.default.topBarHeight;
-
-    // BOX: Titles background box.
-    box.boxTitles.background = Box();
-    box.boxTitles.add(that);
-    that.width = "100%";
-    that.height = "100%";
-    that.element.style.borderBottom = box.default.titleRowBottomBorderString;
-    that.color = box.default.titleRowBackgroundColor;
-    that.round = 0;
-    that.left = 0;
-    that.top = 0;
-    that.element.setAttribute("id", "titles-background")
-
-    // BOX: Top bar.
-    box.topBar = Box();
-    box.add(that);
-    that.color = box.default.topBarBackgroundColor;
-    that.element.style.borderBottom = box.default.topBarBottomBorderString;
-    that.height = box.default.topBarHeight;
-    that.width = "100%";
-    that.left = 0;
-    that.top = 0;
-    if (box.default.topBarHeight == 0) {
-        box.topBar.visible = 0;
-    }
-
-    // BOX: Bottom bar.
-    box.bottomBar = Box();
-    box.add(that);
-    that.color = box.default.bottomBarBackgroundColor;
-    that.element.style.borderTop = box.default.bottomBarTopBorderString;
-    that.height = box.default.bottomBarHeight;
-    that.width = "100%";
-    that.left = 0;
-    if (box.default.bottomBarHeight == 0) {
-        box.bottomBar.visible = 0;
-    }
-    // .top, resizeTable da veriliyor.
-
-    // BOX: Table border.
-    box.boxBorder = Box();
-    box.add(that);
-    that.width = "100%";
-    that.height = "100%";
-    that.element.style.border = box.default.borderString;
-    that.color = "transparent";
-    that.element.style.borderRadius = "inherit";
-    that.left = 0;
-    that.top = 0;
-    
-    let titleRowStyle = function() {};
-    let titleCellStyle = function() {};
-    let itemRowStyle = function() {};
-    let itemCellStyle = function() {};
-
-    box.setTitleRowStyle = function(func) {
-        titleRowStyle = func;
-        titleRowStyle(box.boxTitles);
     };
 
-    box.setTitleCellStyle = function(func) {
-        titleCellStyle = func;
+    const resizeTable = function () {
+        if (cancelLayout) cancelLayout();
+        cancelLayout = box.after(UITable.RESIZE_DELAY, layoutTable);
     };
 
-    box.setItemRowStyle = function(func) {
-        itemRowStyle = func;
-    };
+    const checkAlert = function () {
 
-    box.setItemCellStyle = function(func) {
-        itemCellStyle = func;
-    };
-
-    const resizeTable = function() {
-
-        if(box.resizeTimer) {
-            clearTimeout(box.resizeTimer);
+        if (shownItemCount > 0) {
+            box.alert.visible = 0;
+            box.alert.text = "";
+            return;
         }
 
-        box.resizeTimer = setTimeout(function() {
+        box.alert.visible = 1;
+        box.alert.text = (box.itemDataList.length > 0) ? settings.noItemFoundAlert : settings.noItemAddedAlert;
 
-            box.boxItems.height = box.height - box.default.titleHeight - box.default.bottomBarHeight - box.default.topBarHeight;
-            box.boxItems.left = 0;
-            box.boxItems.top = box.default.topBarHeight + box.default.titleHeight;
+    };
 
-            calcTitleCellWidths();
+    // The rows in the shown order get their odd / even colors; the selected one its own.
+    const refreshItemBackgrounds = function () {
 
-            for(var i = 0; i < box.titleCellDataList.length; i++) {
-                if (box.titleCellDataList[i].width == "auto") {
+        let isOdd = 1;
 
-                    box.titleCellList[i].width = checkTitleCellWidth(box.titleCellList[i], "auto");
+        box.sortedItemIndexList.forEach(function (itemIndex) {
+            const itemRow = box.itemList[itemIndex];
+            if (itemRow.visible != 1) return;
+            itemRow.background.originalColor = isOdd ? settings.itemOddBackgroundColor : settings.itemEvenBackgroundColor;
+            itemRow.background.color = itemRow.background.originalColor;
+            isOdd = isOdd ? 0 : 1;
+        });
 
-                    // Tüm item cell lerin genişliğini title cell ile aynı yap.
-                    const width = box.titleCellList[i].width;
-                    for(var j = 0; j < box.itemList.length; j++) {
-                        box.itemList[j].cellList[i].width = width;
-                    }
-                }
-            }
+        if (box.selectedItem) {
+            box.selectedItem.background.color = settings.itemSelectedBackgroundColor;
+        }
 
-            box.bottomBar.top = box.boxItems.top + box.boxItems.height;
+    };
 
-            box.alert.center();
+    const paintSelection = function (itemRow, isSelected) {
+        itemRow.background.color = isSelected ? settings.itemSelectedBackgroundColor : itemRow.background.originalColor;
+        // (a class for the CSS of the page: .table-item-row.selected)
+        itemRow.background.elem.classList.toggle("selected", !!isSelected);
+    };
 
-        }, 5); // Don't run this function twice in less than 5ms.
+    // *** SORTING:
 
-    }
+    const showSortingAtTitle = function (titleCell) {
+        if (!titleCell.boxArrows) return;
+        titleCell.boxArrows.imgArrow.opacity = settings.sortingIconSelectedOpacity;
+        titleCell.boxArrows.imgArrow.rotate = (sortType == "desc") ? 180 : 0;
+    };
 
-    const createTitleCell = (titleCellData, titleCellIndex) => {
-        
+    const clearSortingAtAllTitles = function () {
+        box.titleCellList.forEach(function (titleCell) {
+            if (!titleCell.boxArrows) return;
+            titleCell.boxArrows.imgArrow.opacity = settings.sortingIconOpacity;
+            titleCell.boxArrows.imgArrow.rotate = 0;
+        });
+    };
+
+    const compareValues = function (a, b, itemDataType) {
+        if (itemDataType == "integer" || itemDataType == "float") {
+            return (parseFloat(a) || 0) - (parseFloat(b) || 0);
+        }
+        // WHY numeric: "10" comes after "9"; sensitivity base: "a" and "A" are sorted together
+        return toCellText(a).localeCompare(toCellText(b), undefined, { numeric: true, sensitivity: "base" });
+    };
+
+    // The rows are ordered with the CSS order of the flex box: no row is created again.
+    const showRowsInOrder = function (orderedRows) {
+
+        box.sortedItemIndexList = [];
+
+        orderedRows.forEach(function (itemRow, i) {
+            itemRow.elem.style.order = i;
+            box.sortedItemIndexList.push(itemRow.index);
+        });
+
+        refreshItemBackgrounds();
+
+    };
+
+    const sortItems = function () {
+
+        if (sortedTitleIndex == -1) {
+            showRowsInOrder(box.itemList);
+            return;
+        }
+
+        const titleCellData = box.titleCellDataList[sortedTitleIndex];
+        const direction = (sortType == "desc") ? -1 : 1;
+        const orderedRows = [...box.itemList].sort(function (rowA, rowB) {
+            const a = rowA.data[titleCellData.itemDataIndex];
+            const b = rowB.data[titleCellData.itemDataIndex];
+            return compareValues(a, b, titleCellData.itemDataType) * direction;
+        });
+
+        showRowsInOrder(orderedRows);
+
+    };
+
+    // *** SEARCH:
+
+    const isRowMatching = function (itemRow) {
+
+        if (filter.text == "") return 1;
+        const searchText = filter.text.toLowerCase();
+
+        return box.titleCellDataList.some(function (titleCellData) {
+            if (filter.titleId !== undefined && filter.titleId != titleCellData.id) return false;
+            const cellText = toCellText(itemRow.data[titleCellData.itemDataIndex]).toLowerCase();
+            return cellText.includes(searchText);
+        });
+
+    };
+
+    const applyFilter = function () {
+
+        shownItemCount = 0;
+
+        box.itemList.forEach(function (itemRow) {
+            const isShown = isRowMatching(itemRow);
+            itemRow.visible = isShown ? 1 : 0;
+            if (isShown) shownItemCount++;
+        });
+
+        checkAlert();
+        refreshItemBackgrounds();
+
+    };
+
+    // *** TITLES:
+
+    const createTitleCell = function (titleCellData, titleCellIndex) {
+
         // BOX: Title cell container
-        const titleCell = Box();
+        const titleCell = Box({
+            width: getTitleCellWidth(titleCellData.width),
+            height: settings.titleHeight,
+            color: "transparent",
+            position: "relative",
+            css: { display: "inline-block" },
+        });
         titleCell.data = titleCellData;
         titleCell.index = titleCellIndex;
-        titleCell.color = "transparent";
-        titleCell.height = box.default.titleHeight;
-        titleCell.width = checkTitleCellWidth(titleCell, titleCellData.width);
 
-        if (box.default.createTitleCellBackground == 1) {
+        createIn(titleCell, function () {
 
-            // BOX: Title background container
-            titleCell.background = Box();
-            titleCell.add(that);
-            that.width = "100%";
-            that.height = "100%";
-            that.color = box.default.titleCellBackgroundColor;
-            that.element.style.borderRight = box.default.titleCellRightBorderString;
-            that.element.style.borderBottom = box.default.titleCellBottomBorderString;
-            that.clickable = 1;
-            that.round = 0;
-            that.left = 0;
-            that.top = 0;
+            if (settings.createTitleCellBackground == 1) {
 
-        }
+                // BOX: Title cell background
+                titleCell.background = Box(0, 0, "100%", "100%", {
+                    color: settings.titleCellBackgroundColor,
+                    round: 0,
+                    clickable: 1,
+                    css: {
+                        borderRight: settings.titleCellRightBorderString,
+                        borderBottom: settings.titleCellBottomBorderString,
+                    },
+                });
 
-        // LABEL: Title text
-        titleCell.label = Label();
-        titleCell.add(that);
-        that.color = "transparent";    
-        that.width = "auto";
-        that.height = "auto";
-        //that.textAlign = titleCellData.titleTextAlign;
-        that.element.style.whiteSpace = "nowrap";
-        that.element.style.textOverflow = "ellipsis";
-        that.left = box.default.leftRightInnerSpace;
-        that.fontSize = box.default.titleFontSize;
-        that.element.style.fontFamily = box.default.titleFontFamily;
-        that.text = titleCellData.name;
-
-        if (titleCellData.enableSorting == 1) {
-
-            // BOX: Title background container
-            titleCell.boxArrows = Box();
-            titleCell.add(that);
-            that.width = box.default.sortingWidth;
-            that.height = box.default.sortingHeight;
-            that.color = box.default.sortingBackgroundColor;
-            that.borderColor = "rgba(0, 0, 0, 0.1)";
-            that.border = 0;
-            that.element.style.borderRadius = box.default.sortingBorderRadius;
-            if (box.default.sortingOuterPosition == "right") {
-                that.right = box.default.sortingOuterSpace;
-            }
-            //that.right = box.default.sortingOuterSpace;
-            that.element.style.overflow = "visible";
-            //that.center("top");
-
-            // IMAGE: ASC DESC arrow icon
-            titleCell.boxArrows.imgArrow = Icon();
-            titleCell.boxArrows.add(that);
-            that.width = box.default.sortingIconSize;
-            that.height = box.default.sortingIconSize;
-            that.opacity = box.default.sortingIconOpacity;
-            //that.load("js/components/ui-table/asc.svg");
-            that.load(box.default.sortingIconFile);
-            //that.center("left");
-            that.center();
-            //that.bottom = arrowSpace;
-            that.setMotion("opacity 0.3s, transform 0.3s");
-
-            titleCell.boxArrows.clickable = 0;
-
-            if(titleCellData.sortBy) {
-                defaulTitleCellIdForSorting = titleCellData.id;
-                defaultSortingType = titleCellData.sortBy;
             }
 
-        }
+            // LABEL: Title text (HTML: a title can have an icon)
+            titleCell.label = Label({
+                left: settings.leftRightInnerSpace,
+                width: "auto",
+                height: "auto",
+                text: titleCellData.name,
+                color: "transparent",
+                textColor: settings.titleTextColor,
+                fontSize: settings.titleFontSize,
+                fontFamily: settings.titleFontFamily,
+                ellipsis: 1,
+            });
 
-        const resetLabelWidth = function(self) {
-
-            // label ın alabileceği maksimum genişliği hesapla.
-            let maxLabelWidth = null;
-            if (titleCellData.enableSorting) {
-                maxLabelWidth = titleCell.width - (box.default.leftRightInnerSpace * 2) - box.default.sortingWidth - box.default.sortingOuterSpace;
-            } else {
-                maxLabelWidth = titleCell.width - (box.default.leftRightInnerSpace * 2);
+            if (titleCellData.enableSorting == 1) {
+                createSortingArrow(titleCell);
             }
 
-            // değer sıfırın altında olamaz.
-            if(maxLabelWidth < 0) {
-                maxLabelWidth = 0;
+            if (settings.createTitleCellContentBox == 1) {
+                // BOX: Title content container
+                titleCell.box = Box(0, 0, "100%", "100%", { color: "transparent", round: 0, border: 0 });
             }
-
-            const currentLabelWidth = self.width;
-
-            // label ın maksimum genişliğini ver.
-            if (currentLabelWidth > maxLabelWidth) {
-                self.width = maxLabelWidth;
-            } 
-
-            // label a göre sorting i x düzleminde konumlandır.
-            if (titleCell.boxArrows) {
-                if (box.default.sortingOuterPosition == "left") {
-                        titleCell.boxArrows.left = self.left + self.width + box.default.sortingOuterSpace;
-                        
-                } else if(box.default.sortingOuterPosition == "right") {
-                    titleCell.boxArrows.right = box.default.sortingOuterSpace;
-                }
-            }
-
-        }
-
-        titleCell.label.onResize(function titleCellLabelResized(self) {
-
-            // label ı ortala veya yukarı sabitle
-            if (box.default.titleTopInnerSpace == "auto") {
-                self.center("top");
-            } else {
-                self.top = box.default.titleTopInnerSpace;
-            }
-            
-            // sorting var ise label a göre y konumunu ayarla.
-            if (titleCellData.enableSorting) {
-                const boxArrowTop = (((box.default.sortingHeight - self.height) / 2) * -1) + self.top;
-                titleCell.boxArrows.top = boxArrowTop;
-            }
-
-            resetLabelWidth(self);
 
         });
 
-        
-        titleCell.onResize(function(self) {
+        // The default sorting of the table (titleCellData.sortBy)
+        if (titleCellData.enableSorting == 1 && titleCellData.sortBy) {
+            defaultSortTitleId = titleCellData.id;
+            defaultSortType = titleCellData.sortBy;
+        }
 
+        titleCell.label.onResize(function (self) {
+            placeTitleLabel(titleCell, self);
+        });
+
+        titleCell.onResize(function () {
             titleCell.label.width = "auto";
-            resetLabelWidth(titleCell.label);
-
+            fitTitleLabel(titleCell);
         });
 
-        titleCell.position = "relative";
-        titleCell.element.style.display = "inline-block";
-
-        titleCell.background.onClick(function titleCellClicked(self) {
-
-            if (titleCellData.enableSorting) {
-
-                if (selectedTitleCellIndex == titleCellIndex) {
-
-                    if (selectedSortingType == "desc") {
-                        box.sort(titleCell.data.id ,"asc");
-
-                    } else {
-                        box.sort(titleCell.data.id ,"desc");
-                    }
-
-                } else {
-                    box.sort(titleCell.data.id ,"asc");
-                }
-
-            }
-
+        // (no background: the cell itself takes the click)
+        const clickTarget = titleCell.background || titleCell;
+        if (titleCellData.enableSorting == 1) clickTarget.clickable = 1;
+        clickTarget.on("click", function () {
+            toggleSorting(titleCell);
         });
-
-        if (box.default.createTitleCellContentBox == 1) {
-
-            // BOX: title content container.
-            titleCell.box = Box();
-            titleCell.add(that);
-            that.width = "100%";
-            that.height = "100%";
-            that.round = 0;
-            that.border = 0;
-            that.color = "transparent";
-            that.left = 0;
-            that.top = 0;
-
-        }
 
         titleCellStyle(titleCell, titleCellData, titleCellIndex);
 
@@ -464,824 +413,591 @@ UITable.create = function(parameters = {}) {
 
     };
 
-    const createItemRow = function(itemData, itemIndex) {
+    const createSortingArrow = function (titleCell) {
+
+        // BOX: Sorting arrow container
+        titleCell.boxArrows = startBox({
+            width: settings.sortingWidth,
+            height: settings.sortingHeight,
+            color: settings.sortingBackgroundColor,
+            border: 0,
+            clickable: 0,
+            clipContent: 0,
+            css: { borderRadius: settings.sortingBorderRadius },
+        });
+        if (settings.sortingOuterPosition == "right") {
+            titleCell.boxArrows.right = settings.sortingOuterSpace;
+        }
+
+            // ICON: ASC / DESC arrow
+            titleCell.boxArrows.imgArrow = Icon({
+                width: settings.sortingIconSize,
+                height: settings.sortingIconSize,
+                opacity: settings.sortingIconOpacity,
+            });
+            that.load(settings.sortingIconFile);
+            that.center();
+            that.setMotion("opacity 0.3s, transform 0.3s");
+
+        endBox();
+
+    };
+
+    // The label in the middle (or at titleTopInnerSpace), the arrow next to it.
+    const placeTitleLabel = function (titleCell, label) {
+
+        if (settings.titleTopInnerSpace == "auto") {
+            label.center("top");
+        } else {
+            label.top = settings.titleTopInnerSpace;
+        }
+
+        if (titleCell.boxArrows) {
+            titleCell.boxArrows.top = label.top - ((settings.sortingHeight - label.height) / 2);
+        }
+
+        fitTitleLabel(titleCell);
+
+    };
+
+    // A long title is cut ("...") so the arrow stays in the cell.
+    const fitTitleLabel = function (titleCell) {
+
+        const label = titleCell.label;
+        let maxLabelWidth = titleCell.width - (settings.leftRightInnerSpace * 2);
+        if (titleCell.boxArrows) {
+            maxLabelWidth -= settings.sortingWidth + settings.sortingOuterSpace;
+        }
+        maxLabelWidth = Math.max(0, maxLabelWidth);
+
+        if (label.width > maxLabelWidth) {
+            label.width = maxLabelWidth;
+        }
+
+        if (titleCell.boxArrows && settings.sortingOuterPosition == "left") {
+            titleCell.boxArrows.left = label.left + label.width + settings.sortingOuterSpace;
+        }
+
+    };
+
+    // The same title again changes the direction; another title starts with "asc".
+    const toggleSorting = function (titleCell) {
+
+        if (titleCell.data.enableSorting != 1) return;
+
+        const isSameTitle = (sortedTitleIndex == titleCell.index);
+        const nextType = (isSameTitle && sortType == "asc") ? "desc" : "asc";
+        box.sort(titleCell.data.id, nextType);
+
+    };
+
+    // *** ITEMS:
+
+    const createItemRow = function (itemData, itemIndex) {
 
         // BOX: Item row container
-        const itemRow = Box();
-        itemRow.color = "transparent";
-        itemRow.width = "100%";
-        itemRow.height = box.default.itemHeight;
+        const itemRow = Box({
+            width: "100%",
+            height: settings.itemHeight,
+            color: "transparent",
+            position: "relative",
+            css: { order: String(itemIndex), whiteSpace: "nowrap" },
+        });
         itemRow.data = itemData;
         itemRow.index = itemIndex;
-        //itemRow.highestLabelHeight = 0;
-        //itemRow.element.style.verticalAlign = "middle";
+        itemRow.cellList = [];
 
-        // BOX: Item row background container
-        itemRow.background = Box();
-        itemRow.add(that);
-        that.width = "100%";
-        that.height = "100%";
-        that.borderColor = "rgba(0, 0, 0, 0.5)";
-        that.color = "transparent";
-        that.round = 0;
-        that.element.style.borderBottom = box.default.itemRowBottomBorderString;
-        that.left = 0;
-        that.top = 0;
-        that.clickable = 1;
-        that.onClick(function(self) {
+        createIn(itemRow, function () {
 
-            const result = box.selectItemById(itemRow.data[0]);
-            if (result == 1) {
-                box.onClickFunc(itemRow);
-            }
-            /*
-            if (box.default.itemsCanSelectable) {
+            // BOX: Item row background (it takes the click of the row)
+            itemRow.background = Box(0, 0, "100%", "100%", {
+                color: "transparent",
+                round: 0,
+                clickable: 1,
+                css: { borderBottom: settings.itemRowBottomBorderString },
+            });
+            itemRow.background.on("click", function () {
+                clickRow(itemRow);
+            });
 
-                if (box.selectedItem) {
-                    box.selectedItem.background.color = box.selectedItem.background.originalColor;
-                }
-    
-                box.selectedItem = itemRow;
-                box.selectedItemIndex = itemIndex;
-                itemRow.background.color = box.default.itemSelectedBackgroundColor;
-
-                box.onClickFunc(itemRow);
-            
-            }
-            */
+            box.titleCellDataList.forEach(function (titleCellData, i) {
+                const itemCell = createItemCell(itemData[titleCellData.itemDataIndex], titleCellData, itemRow, i);
+                itemRow.cellList.push(itemCell);
+            });
 
         });
 
         itemRowStyle(itemRow, itemData, itemIndex);
+        itemRow.cellList.forEach(function (itemCell, i) {
+            itemCellStyle(itemCell, itemData[box.titleCellDataList[i].itemDataIndex], box.titleCellDataList[i], itemRow, i);
+        });
+
         return itemRow;
 
-    }
+    };
 
-    const createItemCell = function(itemCellData, titleCellData, itemRow, itemCellIndex) {
+    const createItemCell = function (itemCellData, titleCellData, itemRow, itemCellIndex) {
+
+        const cellWidth = box.titleCellList[itemCellIndex].width;
+        const isOneLine = (settings.itemHeight != "auto");
 
         // BOX: Item cell container
-        const itemCell = Box();
-        itemCell.color = "transparent";
-        // if auto width than use calculatedAutoTitleCellWidth
-        itemCell.width = box.titleCellList[itemCellIndex].width;
-
-        itemCell.height = "100%";
-        
-        if (box.default.createItemCellBackground) {
-
-            // BOX: Title background container
-            itemCell.background = Box();
-            itemCell.add(that);
-            that.width = "100%";
-            //that.height = itemCell.height;
-            that.height = "100%";
-            that.round = 0;
-            that.border = 0;
-            that.element.style.borderRight = box.default.itemCellRightBorderString
-            that.color = "transparent";
-            that.left = 0;
-            that.top = 0;
-
-        }
-
-        // LABEL: Text
-        itemCell.label = Label();
-        itemCell.add(that);
-        that.color = "transparent";
-        that.width = itemCell.width - (box.default.leftRightInnerSpace * 2);
-        that.element.style.fontFamily = box.default.itemFontFamily;
-        that.textColor = box.default.itemTextColor;
-        that.textAlign = titleCellData.itemTextAlign || "left";
-
-        // Otomatik yükseklik değil ise tek satır metin olsun.
-        if (box.default.itemHeight == "auto") {
-            that.element.style.whiteSpace = "normal";
-        } else {
-            that.element.style.whiteSpace = "nowrap";
-        }
-        that.element.style.textOverflow = "ellipsis";
-        that.fontSize = box.default.itemFontSize;
-        that.text = basic.str(itemCellData);
-        that.left = box.default.leftRightInnerSpace;
-
-        if(itemCellData != undefined) {
-            itemCell.label.text = itemCellData;
-        } else {
-            itemCell.label.text = "";
-        }
-
-        if (box.default.createItemCellContentBox == 1) {
-
-            // BOX: Item content container.
-            itemCell.box = Box();
-            itemCell.add(that);
-            that.width = "100%";
-            that.height = "100%";
-            that.round = 0;
-            that.border = 0;
-            that.color = "transparent";
-            that.left = 0;
-            that.top = 0;
-
-        }
-        
-        itemCell.label.onResize(function(self) {
-
-            // itemRow yüksekliği otomatik hesaplanır.
-            if (box.default.itemHeight == "auto") {
-
-                // En yüksek label nesnesinin yüksekliğini bul.
-                let highestLabelHeight = 0;
-
-                for(var i = 0; i < itemRow.cellList.length; i++) {
-                    if (itemRow.cellList[i].label.height > highestLabelHeight) {
-                        highestLabelHeight = itemRow.cellList[i].label.height
-                    }
-                }
-
-                // itemRow un yüksekliğini, en yüksek label e göre ayarla.
-                if (itemCell.label.height >= highestLabelHeight) {
-                    itemRow.height = itemCell.label.height + (box.default.topBottomInnerSpace * 2);
-                }
-                
-            // itemRow yüksekliği sabit.
-            } else {
-                itemRow.height = box.default.itemHeight;
-            }
-
-            //itemCell.label.top = (itemCell.element.offsetHeight - itemCell.label.height) / 2;
-
+        const itemCell = startBox({
+            width: cellWidth,
+            height: "100%",
+            color: "transparent",
+            clickable: 0,
+            position: "relative",
+            css: { display: "inline-block", verticalAlign: "top" },
         });
 
-        itemCell.onResizeCallback = function() {};
-        
-        itemCell.onResize((self) => {
+            if (settings.createItemCellBackground) {
+                // BOX: Item cell background
+                itemCell.background = Box(0, 0, "100%", "100%", {
+                    color: "transparent",
+                    round: 0,
+                    border: 0,
+                    css: { borderRight: settings.itemCellRightBorderString },
+                });
+            }
 
-            // itemCell boyutu değiştiğinde, label i sığdır.
-            itemCell.label.width = itemCell.width - (box.default.leftRightInnerSpace * 2);
-            itemCell.label.top = (itemCell.element.offsetHeight - itemCell.label.height) / 2;
+            // LABEL: Text
+            itemCell.label = Label({
+                left: settings.leftRightInnerSpace,
+                width: cellWidth - (settings.leftRightInnerSpace * 2),
+                plainText: toCellText(itemCellData),
+                color: "transparent",
+                textColor: settings.itemTextColor,
+                textAlign: titleCellData.itemTextAlign,
+                fontSize: settings.itemFontSize,
+                fontFamily: settings.itemFontFamily,
+                ellipsis: isOneLine ? 1 : 0,
+                css: isOneLine ? {} : { whiteSpace: "normal" },
+            });
 
+            if (settings.createItemCellContentBox == 1) {
+                // BOX: Item content container
+                itemCell.box = Box(0, 0, "100%", "100%", { color: "transparent", round: 0, border: 0 });
+            }
+
+        endBox();
+
+        itemCell.label.onResize(function () {
+            fitRowHeight(itemRow);
+        });
+
+        // (itemCell.on("resize_override", fn): a function of the page that runs after the cell is fitted)
+        itemCell.onResizeCallback = function () {};
+        itemCell.onResize(function (self) {
+            itemCell.label.width = itemCell.width - (settings.leftRightInnerSpace * 2);
+            itemCell.label.top = (itemCell.elem.offsetHeight - itemCell.label.height) / 2;
             itemCell.onResizeCallback(self);
-
         });
 
-        itemCell.on = function(event, callback) {
-            switch (event) {
-                case "resize_override":
-                    itemCell.onResizeCallback = callback;
-                    break;
+        const superOn = itemCell.on;
+        itemCell.on = function (eventName, func) {
+            if (eventName == "resize_override") {
+                itemCell.onResizeCallback = func;
+                return;
             }
-        }
+            return superOn.apply(itemCell, arguments);
+        };
 
-        itemCell.clickable = 0;
-
-        // itemCell i özelleştir.
-        itemCellStyle(itemCell, itemCellData, titleCellData, itemRow, itemCellIndex);
-        
         return itemCell;
-        
-    }
 
-    const createItemRowWithCells = (itemData, itemRowIndex) => {
+    };
 
-        const itemRow  = createItemRow(itemData, itemRowIndex);
+    // "auto": the row is as high as its highest text; a number: every row is that high.
+    const fitRowHeight = function (itemRow) {
 
-        itemRow.element.style.order = basic.str(itemRowIndex);
-        itemRow.element.style.whiteSpace = "nowrap";
-        itemRow.cellList = [];
-
-        for(var i = 0; i < box.titleCellDataList.length; i++) {
-
-            const itemCell = createItemCell(itemData[box.titleCellDataList[i].itemDataIndex], box.titleCellDataList[i], itemRow, i);
-            itemRow.add(itemCell);
-            itemCell.position = "relative";
-            itemCell.element.style.display = "inline-block";
-            itemCell.element.style.verticalAlign = "top";
-            itemRow.cellList.push(itemCell);
-
+        if (settings.itemHeight != "auto") {
+            itemRow.height = settings.itemHeight;
+            return;
         }
 
-        return itemRow;
+        let highestLabelHeight = 0;
+        itemRow.cellList.forEach(function (itemCell) {
+            highestLabelHeight = Math.max(highestLabelHeight, itemCell.label.height);
+        });
+        itemRow.height = highestLabelHeight + (settings.topBottomInnerSpace * 2);
 
-    }
+    };
 
-    box.createTitles = function(titleDataList) {
+    // A row that exists already gets its new data (its objects stay).
+    const refreshItemRow = function (itemRow, itemData, itemIndex) {
+
+        itemRow.index = itemIndex;
+        itemRow.data = itemData;
+
+        box.titleCellDataList.forEach(function (titleCellData, i) {
+            const itemCellData = itemData[titleCellData.itemDataIndex];
+            itemRow.cellList[i].label.plainText = toCellText(itemCellData);
+            itemCellStyle(itemRow.cellList[i], itemCellData, titleCellData, itemRow, i);
+        });
+
+    };
+
+    const addItemRow = function (itemData, itemIndex) {
+        return createIn(box.boxItems, function () {
+            return createItemRow(itemData, itemIndex);
+        });
+    };
+
+    const clickRow = function (itemRow) {
+        box.selectItemById(getItemId(itemRow.data));
+        box.onClickFunc(itemRow);
+    };
+
+    // *** PUBLIC FUNCTIONS:
+
+    box.setTitleRowStyle = function (func) {
+        titleRowStyle = func;
+        titleRowStyle(box.boxTitles);
+    };
+
+    box.setTitleCellStyle = function (func) {
+        titleCellStyle = func;
+    };
+
+    box.setItemRowStyle = function (func) {
+        itemRowStyle = func;
+    };
+
+    box.setItemCellStyle = function (func) {
+        itemCellStyle = func;
+    };
+
+    // titleDataList: [{ id, name, itemDataIndex, itemDataType, width, itemTextAlign, enableSorting, sortBy }]
+    box.createTitles = function (titleDataList) {
 
         box.clearTitles();
 
-        box.titleCellDataList = [...titleDataList];
-
-        for(var i = 0; i < box.titleCellDataList.length; i++) {
-
-            if (!box.titleCellDataList[i].width) {
-                box.titleCellDataList[i].width = "auto";
-            }
-
-            if (!box.titleCellDataList[i].itemDataType) {
-                box.titleCellDataList[i].itemDataType = "string";
-            }
-
-            if (!box.titleCellDataList[i].itemTextAlign) {
-                box.titleCellDataList[i].itemTextAlign = "left";
-            }
-
-        }
+        box.titleCellDataList = titleDataList.map(function (titleData, i) {
+            const titleCellData = Object.assign({}, titleData);
+            if (!titleCellData.width) titleCellData.width = "auto";
+            if (!titleCellData.itemDataType) titleCellData.itemDataType = "string";
+            if (!titleCellData.itemTextAlign) titleCellData.itemTextAlign = "left";
+            if (titleCellData.itemDataIndex === undefined) titleCellData.itemDataIndex = i;
+            return titleCellData;
+        });
 
         calcTitleCellWidths();
 
-        box.titleCellList = [];
-        for(var i = 0; i < box.titleCellDataList.length; i++) {
-            const titleCell = createTitleCell(box.titleCellDataList[i], i);
-            box.boxTitles.add(titleCell);
-            box.titleCellList.push(titleCell);
-        }
+        createIn(box.boxTitles, function () {
+            box.titleCellDataList.forEach(function (titleCellData, i) {
+                box.titleCellList.push(createTitleCell(titleCellData, i));
+            });
+        });
+
         makeBasicObject(box);
+
     };
 
-    box.clearTitles = function() {
+    box.clearTitles = function () {
 
         box.clearItems();
-        
-        for(var i = 0; i < box.titleCellList.length; i++) {
-            box.titleCellList[i].remove();
-        }
+
+        box.titleCellList.forEach(function (titleCell) {
+            titleCell.remove();
+        });
         box.titleCellDataList = [];
-        //box.boxTitles.html = "";
         box.titleCellList = [];
+        sortedTitleIndex = -1;
+        defaultSortTitleId = "";
+        defaultSortType = "";
 
-    }
+    };
 
-    const calcTitleCellWidths = function() {
-
-        let autoWidthCount = 0;
-        let totalWidth = 0;
-
-        for(var i = 0; i < box.titleCellDataList.length; i++) {
-            if(box.titleCellDataList[i].width == "auto") {
-                autoWidthCount++;
-            } else {
-                totalWidth += box.titleCellDataList[i].width;
-            }
-        }
-
-        let tableWidth = box.width;
-
-        box.calculatedAutoTitleCellWidth = (tableWidth - totalWidth) / autoWidthCount;
-        
-    }
-
-    box.createItems = function(itemDataList) {
+    // itemDataList: [[id, value, value...], ...]
+    box.createItems = function (itemDataList) {
 
         box.clearItems();
 
         box.itemDataList = [...itemDataList];
-        box.itemList = [];
+        box.itemDataList.forEach(function (itemData, i) {
+            box.itemList.push(addItemRow(itemData, i));
+        });
 
-        for(var i = 0; i < itemDataList.length; i++) {
-
-            box.itemDataList[i].originalIndex = i;
-            const item = createItemRowWithCells(itemDataList[i], i);
-            box.boxItems.add(item);
-            item.position = "relative";
-            box.itemList.push(item);
-            box.sortedItemIndexList.push(i);
-
+        if (defaultSortTitleId) {
+            box.sort(defaultSortTitleId, defaultSortType);
+        } else {
+            sortItems();
         }
-
-        // Görünen item sayısı.
-        shownItemCount = box.itemDataList.length;
-        checkAlert();
-
-        refreshItemBackgrounds();
-        
-        // itemleri, ilk eklendiğinde; belirlenen standarta göre diz.
-        if (defaulTitleCellIdForSorting) {
-            box.sort(defaulTitleCellIdForSorting ,defaultSortingType);
-        }
+        applyFilter();
 
         makeBasicObject(box);
 
-    }
+    };
 
-    box.clearItems = function() {
+    box.clearItems = function () {
 
-        //box.boxItems.html = "";
-        for(var i = 0; i < box.itemList.length; i++) {
-            box.itemList[i].remove();
-        }
+        box.itemList.forEach(function (itemRow) {
+            itemRow.remove();
+        });
 
         box.itemDataList = [];
         box.itemList = [];
         box.sortedItemIndexList = [];
+        box.clearSelection();
         shownItemCount = 0;
         checkAlert();
 
-    }
+    };
 
-    box.updateItems = function(itemDataList) {
+    // Adds, changes and removes rows by their id. The sorting, the search and the selection stay.
+    box.updateItems = function (itemDataList) {
 
-        let newItemDataList = [...itemDataList];
-        let newItemList = [];
-        box.sortedItemIndexList = [];
+        const oldRowsById = new Map();
+        box.itemList.forEach(function (itemRow) {
+            oldRowsById.set(getItemId(itemRow.data), itemRow);
+        });
 
-        for(var i = 0; i < newItemDataList.length; i++) {
+        box.itemDataList = [...itemDataList];
+        box.itemList = box.itemDataList.map(function (itemData, i) {
+            const itemRow = oldRowsById.get(getItemId(itemData));
+            if (!itemRow) return addItemRow(itemData, i);
+            oldRowsById.delete(getItemId(itemData));
+            refreshItemRow(itemRow, itemData, i);
+            return itemRow;
+        });
 
-            let oldItemIndex = -1;
+        // The rows that are not in the new list
+        oldRowsById.forEach(function (itemRow) {
+            if (itemRow == box.selectedItem) box.clearSelection();
+            itemRow.remove();
+        });
+        box.selectedItemIndex = box.itemList.indexOf(box.selectedItem);
 
-            // Eğer bu id yi kullanan eski bir kayıt var ise onun index ini bul.
-            for(var j = 0; j < box.itemDataList.length; j++) {
-                if(newItemDataList[i][0] == box.itemDataList[j][0]) {
-                    oldItemIndex = j;
-                    break;
-                }
-            }
-
-            let item = null;
-            newItemDataList[i].originalIndex = i;
-
-            // Refresh item:
-            if (oldItemIndex != -1) {
-
-                item = box.itemList[j];
-
-                // Eski item i bul ve düzenle.
-                for(var k = 0; k < box.titleCellDataList.length; k++) {
-
-                    const label = item.cellList[k].label;
-                    const newDataText = newItemDataList[i][box.titleCellDataList[k].itemDataIndex];
-
-                    if (label.text != newDataText && typeof newDataText == "string") {
-                        label.text = newDataText;
-                    }
-
-                    // item in data sını güncelle.
-                    item.index = i;
-                    item.data = newItemDataList[i];
-
-                    // itemCell i özelleştir.
-                    itemCellStyle(item.cellList[k], newDataText, box.titleCellDataList[k], item, k);
-
-                }
-
-            // Add new item:
-            } else {
-
-                // Yeni item oluştur ve düzenle
-                item = createItemRowWithCells(newItemDataList[i], i);
-    
-                box.boxItems.add(item);
-                item.position = "relative";
-
-            }
-
-            // Yeni ve eski itemleri sırala
-            item.element.style.order = basic.str(i);
-
-            // Yeni listelere ekle
-            newItemList.push(item);
-            box.sortedItemIndexList.push(i);
-
-        }
-
-        for (var i = 0; i < box.itemList.length; i++) {
-
-            let itemFoundAt = -1;
-            
-            for(var j = 0; j < newItemList.length; j++) {
-                if (box.itemList[i].data[0] == newItemList[j].data[0]) {
-                    itemFoundAt = j;
-                    break;
-                }
-            }
-            
-            if (itemFoundAt == -1) {
-                // TODO: can remove in box.boxItems object too.
-                box.itemList[i].remove();
-            }
-
-        }
-
-        // Eski listeleri güncelle
-        box.itemDataList = newItemDataList;
-        box.itemList = newItemList;
-
-        // Görünen item sayısı.
-        shownItemCount = box.itemDataList.length;
-        checkAlert();
-
-        // Seçili item i güncelle veya silinmişse seçimi temizle
-        let selectedItemFoundAt = -1;
-            
-        for(var j = 0; j < box.itemList.length; j++) {
-            if (box.itemList[j] == box.selectedItem) {
-                selectedItemFoundAt = j;
-                break;
-            }
-        }
-        
-        if (selectedItemFoundAt == -1) {
-            box.selectedItem = null;
-            box.selectedItemIndex = -1;
-
-        } else {
-            box.selectedItemIndex = selectedItemFoundAt;
-        }
-
-        refreshItemBackgrounds();
-
-        //print(selectedTitleCellIndex);
-        //print(selectedSortingType);
-        //print(box.getTitleCellById(selectedTitleCellIndex));
-        box.sort(box.titleCellList[selectedTitleCellIndex || 0].data.id, selectedSortingType);
+        sortItems();
+        applyFilter();
 
         makeBasicObject(box);
 
-    }
+    };
 
-    box.getEditedItemDataList = function() {
+    box.getEditedItemDataList = function () {
         return [...box.itemDataList];
-    }
+    };
 
-    box.filterByText = function(filterText, titleCellId) {
+    // Shows only the rows with the text (in the title titleId, or in every title). An empty text shows all.
+    box.filterByText = function (filterText, titleId) {
+        filter = { text: toCellText(filterText), titleId: titleId };
+        applyFilter();
+    };
 
-        let itemCount = 0;
+    // titleId: the id of a title (the first one when it is not given); sortingType: "asc" or "desc"
+    box.sort = function (titleId, sortingType = "asc") {
 
-        for ( var i = 0; i < box.itemDataList.length; i++) {
+        if (box.titleCellList.length == 0) return;
+        const titleCell = (titleId === undefined) ? box.titleCellList[0] : box.getTitleCellById(titleId);
+        if (!titleCell) return;
 
-            let result = -1;
-            let visible = 0;
+        box.boxItems.elem.scrollTo({ top: 0, left: 0 });
 
-            for ( var j = 0; j < box.titleCellDataList.length; j++) {
+        sortedTitleIndex = titleCell.index;
+        sortType = (sortingType == "desc") ? "desc" : "asc";
 
-                if (titleCellId == undefined || titleCellId == box.titleCellDataList[j].id) {
-
-                    let fullText = box.itemDataList[i][box.titleCellDataList[j].itemDataIndex];
-                    
-                    if (typeof fullText !== "string") {
-                        fullText = JSON.stringify(fullText);
-                    }
-
-                    fullText = fullText.toLowerCase();
-                    result = fullText.search(filterText.toLowerCase());
-
-                    if (result > -1) {
-                        visible = 1;
-                        itemCount++;
-                        break;
-                    }
-
-                }
-
-            }
-
-            box.itemList[i].visible = visible;
-
-        }
-
-        // Görünen item sayısı.
-        shownItemCount = itemCount;
-        checkAlert();
-
-        refreshItemBackgrounds();
+        clearSortingAtAllTitles();
+        showSortingAtTitle(titleCell);
+        sortItems();
 
     };
 
-    const showSortingAtTitle = function(titleCell, sortingType) {
-        
-        if (sortingType == "asc") {
-
-            selectedSortingType = "asc";
-            titleCell.boxArrows.imgArrow.opacity = box.default.sortingIconSelectedOpacity;
-            titleCell.boxArrows.imgArrow.rotate = 0;
-
-        } else if (sortingType == "desc") {
-
-            selectedSortingType = "desc";
-            titleCell.boxArrows.imgArrow.opacity = box.default.sortingIconSelectedOpacity;
-            titleCell.boxArrows.imgArrow.rotate = 180;
-
-        }
-
-    }
-
-    const clearSortingAtAllTitles = function() {
-
-        for(var i = 0; i < box.titleCellList.length; i++) {
-            if (box.titleCellDataList[i].enableSorting == 1) {
-                box.titleCellList[i].boxArrows.imgArrow.load(box.default.sortingIconFile);
-                box.titleCellList[i].boxArrows.imgArrow.opacity = box.default.sortingIconOpacity;
-                box.titleCellList[i].boxArrows.imgArrow.rotate = 0;
-            }
-        }
-
-    }
-
-    box.sort = function(titleId = box.titleCellList[0].data.id, sortingType = "asc") {
-
-        box.boxItems.element.scrollTo({
-            top: 0,
-            left: 0,
-            //behavior: 'smooth'
-          });
-
-        const titleCell = box.getTitleCellById(titleId);
-        const titleCellIndex = titleCell.index;
-        const itemDataIndex = titleCell.data.itemDataIndex;
-        const itemDataType = titleCell.data.itemDataType || "string";
-
+    // The rows go back to the order of the data.
+    box.clearSorting = function () {
+        sortedTitleIndex = -1;
+        sortType = "";
         clearSortingAtAllTitles();
-
-        selectedTitleCellIndex = titleCellIndex;
-        selectedSortingType = sortingType;
-        
-        showSortingAtTitle(titleCell, sortingType);
-        sortItems(itemDataIndex, sortingType, itemDataType);
-
-    }
-
-    box.clearSorting = function() {
-
-        clearSortingAtAllTitles();
-        // sort items with original index.
-
-    }
-
-    box.getTitleCellById = function(titleId) {
-
-        for(var i = 0; i < box.titleCellList.length; i++) {
-            if(box.titleCellList[i].data.id == titleId) {
-                return box.titleCellList[i];
-            }
-        }
-        
-        return null;
-
-    }
-
-    box.getTitleIndexById = function(titleId) {
-
-        for(var i = 0; i < titleDataList.length; i++) {
-            if(titleDataList[i].id == titleId) {
-                return i;
-            }
-        }
-
-        return -1;
-
-    }
-
-    const sortItems = function(itemDataIndex = 0, sortingType = "asc", itemDataType = "string") {
-
-        const itemDataList = [...box.itemDataList];
-
-        if (itemDataType == "integer" || itemDataType == "float") {
-            if (sortingType === "asc") {
-
-                itemDataList.sort((a, b) => {
-                    if (parseFloat(a[itemDataIndex]) < parseFloat(b[itemDataIndex])) return -1;
-                    if (parseFloat(a[itemDataIndex]) > parseFloat(b[itemDataIndex])) return 1;
-                    return 0;
-                });
-
-            } else if (sortingType === "desc") {
-
-                itemDataList.sort((a, b) => {
-                    if (parseFloat(a[itemDataIndex]) < parseFloat(b[itemDataIndex])) return 1;
-                    if (parseFloat(a[itemDataIndex]) > parseFloat(b[itemDataIndex])) return -1;
-                    return 0;
-                });
-
-            }
-        } else if (itemDataType == "string") {
-            if (sortingType === "asc") {
-
-                itemDataList.sort((a, b) => {
-                    if (a[itemDataIndex] < b[itemDataIndex]) return -1;
-                    if (a[itemDataIndex] > b[itemDataIndex]) return 1;
-                    return 0;
-                });
-
-            } else if (sortingType === "desc") {
-
-                itemDataList.sort((a, b) => {
-                    if (a[itemDataIndex] < b[itemDataIndex]) return 1;
-                    if (a[itemDataIndex] > b[itemDataIndex]) return -1;
-                    return 0;
-                });
-
-            }
-        }
-
-        box.sortedItemIndexList = [];
-
-        for(var i = 0; i < itemDataList.length; i++) {
-
-            const item = box.itemList[itemDataList[i].originalIndex];
-            //const item = box.itemList[i];
-            item.element.style.order = i;
-
-            box.sortedItemIndexList.push(itemDataList[i].originalIndex);
-            //box.sortedItemIndexList.push(i);
-
-        }
-
-        refreshItemBackgrounds();
-
-    }
-
-    const refreshItemBackgrounds = function() {
-
-        let typeNumber = 1;
-
-        for (var i = 0; i < box.sortedItemIndexList.length; i++) {
-
-            const item = box.itemList[box.sortedItemIndexList[i]];
-
-            if (item.visible == 1) {
-                if (typeNumber == 1) {
-                    // Item odd background.
-                    item.background.originalColor = box.default.itemOddBackgroundColor;
-                    item.background.color = box.default.itemOddBackgroundColor;
-                    typeNumber = 2;
-                
-                } else {
-                    // Item even backround.
-                    item.background.originalColor = box.default.itemEvenBackgroundColor;
-                    item.background.color = box.default.itemEvenBackgroundColor;
-                    typeNumber = 1;
-                }
-            }
-
-        } // end for
-
-        // Item selected background.
-        if (box.selectedItem) {
-            box.selectedItem.background.color = box.default.itemSelectedBackgroundColor;
-        }
-        
+        sortItems();
     };
 
-    box.getTitleCellWidthById = function(id) {
-        
-        let titleCellWidth = 0;
-        
-        for(var i = 0; i < box.titleCellDataList.length; i++) {
-            if(box.titleCellDataList[i].id == id) {
-                titleCellWidth = checkTitleCellWidth(box.titleCellList[i], box.titleCellDataList[i].width);
-                break;
-            }
-        }
+    box.getTitleCellById = function (titleId) {
+        return box.titleCellList.find(function (titleCell) { return titleCell.data.id == titleId; }) || null;
+    };
 
-        return titleCellWidth;
+    box.getTitleIndexById = function (titleId) {
+        return box.titleCellDataList.findIndex(function (titleCellData) { return titleCellData.id == titleId; });
+    };
 
-    }
+    box.getTitleCellWidthById = function (titleId) {
+        const titleIndex = box.getTitleIndexById(titleId);
+        if (titleIndex == -1) return 0;
+        return getTitleCellWidth(box.titleCellDataList[titleIndex].width);
+    };
 
-    box.setTitleCellWidthById = function(id, width) {
+    // width: a number or "auto"
+    box.setTitleCellWidthById = function (titleId, width) {
+        const titleIndex = box.getTitleIndexById(titleId);
+        if (titleIndex == -1) return;
+        box.titleCellDataList[titleIndex].width = width;
+        applyColumnWidths();
+    };
 
-        for(var i = 0; i < box.titleCellDataList.length; i++) {
-            if(box.titleCellDataList[i].id == id) {
-                box.titleCellDataList[i].width = width;
-                break;
-            }
-        }
-
-        calcTitleCellWidths();
-
-        for(var i = 0; i < box.titleCellDataList.length; i++) {
-
-            box.titleCellList[i].width = checkTitleCellWidth(box.titleCellList[i], box.titleCellDataList[i].width);
-
-            for(var j = 0; j < box.itemList.length; j++) {
-                box.itemList[j].cellList[i].width = box.titleCellList[i].width;
-            }
-
-        }
-
-    }
-
-    box.getBiggestId = function(itemDataList = box.itemDataList) {
+    box.getBiggestId = function (itemDataList = box.itemDataList) {
         let biggestId = 0;
-        for(var i = 0; i < itemDataList.length; i++) {
-            const currentId = basic.num(itemDataList[i][0]);
-            if (currentId > biggestId) {
-                biggestId = currentId;
-            }
-        }
+        itemDataList.forEach(function (itemData) {
+            biggestId = Math.max(biggestId, basic.num(getItemId(itemData)));
+        });
         return biggestId;
-    }
+    };
 
-    const checkTitleCellWidth = function(titleCell, width) {
+    // Returns 1 when the row was selected.
+    box.selectItemById = function (itemId) {
 
-        if (width == "auto") {
-            width = box.calculatedAutoTitleCellWidth;
-        }
+        if (!settings.itemsCanSelectable) return 0;
 
-        return width;
+        const itemIndex = box.getItemIndexById(itemId);
+        if (itemIndex == -1) return 0;
 
-    }
+        box.clearSelection();
+        box.selectedItem = box.itemList[itemIndex];
+        box.selectedItemIndex = itemIndex;
+        paintSelection(box.selectedItem, 1);
 
-    const checkAlert = function() {
-
-        if (shownItemCount > 0) {
-            box.alert.visible = 0;
-            box.alert.text = "";
-        } else {
-            box.alert.visible = 1;
-            if (box.itemDataList.length > 0) {
-                box.alert.text = box.default.noItemFoundAlert;
-            } else {
-                box.alert.text = box.default.noItemAddedAlert;
-            }
-        }
+        return 1;
 
     };
 
-    box.selectItemById = function(itemId) {
-
-        if (box.default.itemsCanSelectable) {
-
-            const itemIndex = box.getItemIndexById(itemId);
-
-            if (itemIndex != -1) {
-
-                if (box.selectedItem) {
-                    box.selectedItem.background.color = box.selectedItem.background.originalColor;
-                }
-    
-                box.selectedItem = box.itemList[itemIndex];
-                box.selectedItemIndex = itemIndex;
-                box.itemList[itemIndex].background.color = box.default.itemSelectedBackgroundColor;
-    
-                return 1;
-
-            }
-        
-        }
-
-        return 0;
-
+    box.clearSelection = function () {
+        if (box.selectedItem) paintSelection(box.selectedItem, 0);
+        box.selectedItem = null;
+        box.selectedItemIndex = -1;
     };
 
-    box.getItemIndexById = function(itemId) {
-        for(var i = 0; i < box.itemDataList.length; i++) {
-            if(box.itemDataList[i][0] == itemId) {
-                return i;
-            }
-        }
-        return -1;
-    }
+    box.getItemIndexById = function (itemId) {
+        return box.itemDataList.findIndex(function (itemData) { return getItemId(itemData) == itemId; });
+    };
 
-    box.getSelectedItemIndex = function() {
+    box.getSelectedItemIndex = function () {
         return box.selectedItemIndex;
     };
 
-    box.getSelectedItem = function() {
+    // The selected row (itemRow.data, itemRow.cellList), or null
+    box.getSelectedItem = function () {
         return box.selectedItem;
     };
+    box.getSelectedItemRow = box.getSelectedItem;
 
-    box.getSelectedItemId = function() {
-        return box.selectedItem.data[0];
+    box.getSelectedItemData = function () {
+        return box.selectedItem ? box.selectedItem.data : null;
     };
 
-    box.on = function(event, callback) {
-        switch (event) {
-            case "click":
-                box.onClickFunc = callback;
-                break;
-            case "edit":
-                // no editing option.
-                box.onEditFunc = callback;
-                break;
+    box.getSelectedItemId = function () {
+        return box.selectedItem ? getItemId(box.selectedItem.data) : null;
+    };
+
+    // USAGE: myTable.on("click", function (itemRow) {}). Other events go to the box (basic.js on()).
+    const superOn = box.on;
+    box.on = function (eventName, func) {
+        if (eventName == "click") {
+            box.onClickFunc = func;
+            return;
         }
-    }
+        if (eventName == "edit") {
+            box.onEditFunc = func; // (no editing in the table yet)
+            return;
+        }
+        return superOn.apply(box, arguments);
+    };
 
-    box.moveIntoDiv = function(divElementId) {
-        document.getElementById(divElementId).append(box.element);
-    }
+    box.moveIntoDiv = function (divElementId) {
+        const div = document.getElementById(divElementId);
+        if (!div) return;
+        div.append(box.elem);
+    };
 
-    box.addScrollBarCssClass = function(cssClass) {
-        myTable.boxItems.element.classList.add(cssClass);
-    }
+    box.addScrollBarCssClass = function (cssClass) {
+        box.boxItems.elem.classList.add(cssClass);
+    };
 
-	// *** FIRST RUN CODE:
-    box.top = 0;
-    box.left = 0;
+    // *** OBJECT VIEW:
+    box.props({
+        width: settings.width,
+        height: settings.height,
+        color: settings.backgroundColor,
+        border: 0,
+        boxShadow: settings.boxShadow,
+        css: { borderRadius: settings.borderRadius },
+    });
+
+    createIn(box, function () {
+
+        // LABEL: No item / no item found
+        box.alert = Label({ width: "auto", height: "auto", padding: [16, 8], round: 6, fontSize: 16, text: "" });
+        box.alert.onResize(function (self) {
+            self.center();
+        });
+
+        // BOX: Items container (the rows are flex items: sorted with their CSS order)
+        box.boxItems = Box({
+            left: 0,
+            width: "100%",
+            color: "transparent",
+            border: 0,
+            css: { display: "flex", flexDirection: "row", flexWrap: "wrap", alignContent: "flex-start" },
+            scrollY: 1,
+        });
+
+        // BOX: Titles container
+        box.boxTitles = startBox({
+            left: 0,
+            top: settings.topBarHeight,
+            width: "100%",
+            height: settings.titleHeight,
+            color: "transparent",
+            border: 0,
+            boxShadow: settings.titleBoxShadow,
+            css: { whiteSpace: "nowrap" },
+        });
+
+            // BOX: Titles background
+            box.boxTitles.background = Box(0, 0, "100%", "100%", {
+                color: settings.titleRowBackgroundColor,
+                round: 0,
+                css: { borderBottom: settings.titleRowBottomBorderString },
+            });
+            that.elem.classList.add("table-titles-background");
+
+        endBox();
+
+        // BOX: Top bar
+        box.topBar = Box(0, 0, "100%", settings.topBarHeight, {
+            color: settings.topBarBackgroundColor,
+            css: { borderBottom: settings.topBarBottomBorderString },
+        });
+        box.topBar.visible = (settings.topBarHeight > 0) ? 1 : 0;
+
+        // BOX: Bottom bar
+        box.bottomBar = Box({
+            left: 0,
+            width: "100%",
+            height: settings.bottomBarHeight,
+            color: settings.bottomBarBackgroundColor,
+            css: { borderTop: settings.bottomBarTopBorderString },
+        });
+        box.bottomBar.visible = (settings.bottomBarHeight > 0) ? 1 : 0;
+
+        // BOX: Table border (over everything, the mouse goes through it)
+        box.boxBorder = Box(0, 0, "100%", "100%", {
+            color: "transparent",
+            css: { border: settings.borderString, borderRadius: "inherit" },
+        });
+
+    });
+
+    // *** OBJECT INIT CODE:
     checkAlert();
     box.onResize(resizeTable);
-    // Show the table:
-    if (box.default.showWithMotion) {
-        box.withMotion(function(self) {
+
+    if (settings.showWithMotion) {
+        box.opacity = 0;
+        box.setMotion("opacity 0.3s");
+        box.withMotion(function (self) {
             self.opacity = 1;
         });
     }
 
-	makeBasicObject(box);
-	return box;
-    
-}
+    makeBasicObject(box);
+    return box;
 
-
-// SHARED METHODS:
-UITable.sharedMethod = function() {
-	return "sharedMethod";
-}
+};

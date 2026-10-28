@@ -16,7 +16,7 @@ in a more understandable and user-friendly way.
 
 const tableOptions = {
     width: "100%", // "100%", "calc(100% - 20px)" or number.
-    height: "100%", // "100%", "calc(100% - 20px)", "auto" or number.
+    height: "100%", // "100%", "calc(100% - 20px)" or number.
     showWithMotion: 1, // 1 or 0
     borderString: "1px solid lightgray",
     borderRadius: "6px 6px 6px 6px",
@@ -75,38 +75,55 @@ const tableOptions = {
     bottomBarTopBorderString: "1px solid rgba(0, 0, 0, 0.2)",
 };
 
-// The code "window.myTable = UITable.create(tableOptions);" is used to create the JavaScript JSON Data Table component. The "tableOptions" parameter is an object used to define the appearance and properties of the component.
-
-// - Mouse ile üzerine gelme ve tıklama effectleri css ile düzenleniyor.
-// - ScrollBar özelleştirme css ile düzenleniyor.
+// Create the table: window.myTable = UITable.create(tableOptions);
+// - The mouse over and click effects and the scroll bar are styled with CSS (the samples: example2.htm, example4.htm).
+// - In a normal web page: myTable.moveIntoDiv("my-table-div"); (the table fills the div)
 
 window.titleDataList = [
-    { id:"id", name: "ID", itemDataIndex: 0, itemDataType: "integer", width: 60, itemTextAlign: "left", enableSorting: 1, sortBy: "desc" },
-    { id:"name", name: "Name", itemDataIndex: 1, itemDataType: "string", width: "auto", itemTextAlign: "left", enableSorting: 1 },
-    { id:"age", name: "Age", itemDataIndex: 3, itemDataType: "integer", width: 100, itemTextAlign: "center", enableSorting: 1 },
-    { id:"city", name: "City", itemDataIndex: 2, itemDataType: "string", width: "auto", itemTextAlign: "left" }
+    { id: "id", name: "ID", itemDataIndex: 0, itemDataType: "integer", width: 60, itemTextAlign: "left", enableSorting: 1, sortBy: "desc" },
+    { id: "name", name: "Name", itemDataIndex: 1, itemDataType: "string", width: "auto", itemTextAlign: "left", enableSorting: 1 },
+    { id: "age", name: "Age", itemDataIndex: 3, itemDataType: "integer", width: 100, itemTextAlign: "center", enableSorting: 1 },
+    { id: "city", name: "City", itemDataIndex: 2, itemDataType: "string", width: "auto", itemTextAlign: "left" }
 ];
-// NOTE: For multi line title, use <br> tag.
+// - id is needed. itemDataIndex: the index of the value in the array of an item (no value: the index of the title).
+// - itemDataType: "string" (the default), "integer" or "float": how the column is sorted.
+// - width: a number or "auto" (the default): the "auto" titles share the width that is left.
+// - sortBy: "asc" or "desc": the table is sorted by this title when the items are created.
+// - name is HTML: for a multi line title, use the <br> tag; an icon: tool.useImageAsText() (example3.htm).
+// - The values of the items are shown as plain text.
 
 myTable.createTitles(titleDataList);
-// - Title id olmak zorunda. itemDataIndex, o title altına eklenecek itemDataList in index i.
+myTable.createItems(itemDataList); // [[1, "John Smith", "New York", 30], ...]
+myTable.updateItems(itemDataList); // adds, changes and removes rows by their id; the sorting, the search and the selection stay
+myTable.clearItems();
 
-// Tablonun başlangıç posisyonu:
-tableObject.position = "absolute";
-tableObject.left = 0;
-tableObject.top = 0;
+myTable.sort("age", "desc"); // "asc" or "desc"
+myTable.clearSorting(); // the order of the data
+myTable.filterByText("searchText", "title-id"); // without title-id: in every title. "": every row.
 
-// myTable.sort("title-id", "asc"); // "asc" or "desc"
-// myTable.filterByText("searchText", "title-id") // title-id boş bırakılır ise, hepsinde arama yapılır.
+// Customize title and item style (run for every title / row / cell when it is created, and for a cell again in updateItems()):
+myTable.setTitleRowStyle(function (titleRow) {});
+myTable.setTitleCellStyle(function (titleCell, titleCellData, titleCellIndex) {}); // titleCell.background, .label, .box
+myTable.setItemRowStyle(function (itemRow, itemData, itemIndex) {}); // itemRow.background, .cellList
+myTable.setItemCellStyle(function (itemCell, itemCellData, titleCellData, itemRow, itemCellIndex) {}); // itemCell.background, .label, .box
 
-// Customize title and item style:
-myTable.setTitleRowStyle(titleRowStyle);
-myTable.setTitleCellStyle(titleCellStyle);
-myTable.setItemRowStyle(itemRowStyle);
-myTable.setItemCellStyle(itemCellStyle);
-// - Tablonun her bir alanı özelleştirilebilir.
+// Events:
+myTable.on("click", function (itemRow) {}); // a click on a row (also when itemsCanSelectable is 0)
 
+// Selection:
+myTable.selectItemById(5);
+myTable.clearSelection();
+myTable.getSelectedItemId(); // null: nothing is selected
+myTable.getSelectedItemData();
+myTable.getSelectedItemRow(); // (the same as getSelectedItem())
+myTable.getSelectedItemIndex();
 
-myTable.selectItemById("item-id");
-myTable.getSelectedItemId();
-const itemRow = myTable.getSelectedItemRow();
+// Titles:
+myTable.getTitleCellById("name");
+myTable.getTitleIndexById("name");
+myTable.getTitleCellWidthById("name");
+myTable.setTitleCellWidthById("name", 300); // a number or "auto"
+
+// Others:
+myTable.getBiggestId(); // the biggest id: for a new item
+myTable.addScrollBarCssClass("table-scrollbar");

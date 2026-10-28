@@ -112,7 +112,7 @@
         // Run on load:
         window.onload = function() {
 
-            window.startTime = date.now;
+            const startTime = performance.now();
 
             // UI TABLE: Options.
             const tableOptions = {
@@ -141,12 +141,8 @@
             // Custom scrollbar:
             myTable.addScrollBarCssClass("table-scrollbar");
 
-            // itemDataIndex, itemDataType
-            // if width == undefined { width = "auto" } 
-            // if itemDataIndex == undefined use index of titleData
-            // use itemTextAlign
-            // canSortable = 1
-            // sortBy = "asc"
+            // A title: id, name, itemDataIndex (no value: the index of the title), itemDataType ("string",
+            // "integer", "float"), width (no value: "auto"), itemTextAlign, enableSorting: 1, sortBy: "asc" / "desc"
             const titleDataList = [
                 { id:"id", name: "ID", itemDataIndex: 0, itemDataType: "integer", width: 60, itemTextAlign: "left", enableSorting: 1, sortBy: "desc" },
                 { id:"name", name: "Name", itemDataIndex: 1, itemDataType: "string", width: "auto", itemTextAlign: "left", enableSorting: 1 },
@@ -167,19 +163,11 @@
                 println(itemRow.data);
             });
 
-            // .getTitleCellWidthById("id");
-            // .setTitleCellWidthById("id", 300);
+            // More: myTable.getTitleCellWidthById("id"), myTable.setTitleCellWidthById("id", 300),
+            // myTable.selectItemById(5), myTable.getSelectedItemData(), myTable.getSelectedItemRow().cellList,
+            // myTable.getTitleIndexById("name"), myTable.getTitleCellById("name"), myTable.boxTitles (guide.js)
 
-            // .getSelectedItemData()
-            // .getSelectedItemRow
-            // .getSelectedItemRow.forEach(itemCell)
-            // .setSelectedItemById()
-            // .setSelectedItemById
-            // myTable.getTitleIndexById("title");
-            // myTable.getTitleCellById("title");
-            // myTable.getTitleRow();
-
-            println(date.now - window.startTime);
+            println("The table is ready in " + Math.round(performance.now() - startTime) + " ms");
             
         }
 
@@ -197,12 +185,12 @@
             // LABEL: Table title.
             myTable.title = Label();
             // Move object into "my-table-div"
-            document.getElementById("my-table-div").append(myTable.title.element);
+            document.getElementById("my-table-div").append(myTable.title.elem);
 
             that.text = "";
             that.fontSize = 20;
             that.textColor = "rgba(0, 0, 0, 0.7)";
-            that.element.style.fontFamily = "opensans-bold";
+            that.fontFamily = "opensans-bold";
             // Set object position:
             that.left = 0;
             that.top = 6;
@@ -221,22 +209,21 @@
                 height: 40,
                 fontSize: 16,
                 border: 1,
-                color: "white"
+                color: "white",
+                searchIconSpace: 15,
             };
             // NOTE: For more options, look into js/components/ui-search-box.js
             
             // UI SEARCH BOX: Create search box.
             myTable.uiSearchBox = UISearchBox.create(searchBoxOptions);
             // Move object into "my-table-div"
-            document.getElementById("my-table-div").append(myTable.uiSearchBox.element);
+            document.getElementById("my-table-div").append(myTable.uiSearchBox.elem);
 
             // Set object position:
             that.right = 0;
             that.top = 0;
-            that.imgIcon.space = 15;
 
             myTable.uiSearchBox.onSearch(function(searchText, uiSearchBox) {
-                println("uiSearchBox2 text: " + searchText);
                 myTable.filterByText(searchText);
             });
             
@@ -248,26 +235,22 @@
 
         const titleCellStyle = function(titleCell, titleCellData, titleCellIndex) {
 
-            titleCell.label.element.style.textTransform = "uppercase";
+            titleCell.label.css = { textTransform: "uppercase" };
 
             // Clickable titles for sorting.
-            if (titleCellData.id == "id" || titleCellData.id == "name" || titleCellData.id == "age") {
-                titleCell.background.element.classList.add("table-title-cell");
+            if (titleCellData.enableSorting) {
+                titleCell.background.elem.classList.add("table-title-cell");
             }
 
         };
 
         const itemRowStyle = function(itemRow, itemData, itemIndex) {
 
-            itemRow.background.element.classList.add("table-item-row");
+            itemRow.background.elem.classList.add("table-item-row");
 
         };
 
         const itemCellStyle = function(itemCell, itemCellData, titleCellData, itemRow, itemCellIndex) {
-
-            if (titleCellData.id == "id") {
-                
-            }
 
         };
 

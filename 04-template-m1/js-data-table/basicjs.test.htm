@@ -7,8 +7,8 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 
-        <link rel="stylesheet" type="text/css" href="basic/basic.css">
-        <script src="basic/basic.js" type="text/javascript" charset="utf-8"></script>
+        <link rel="stylesheet" type="text/css" href="../../basic/basic.css">
+        <script src="../../basic/basic.js" type="text/javascript" charset="utf-8"></script>
 
         <script>
         
@@ -21,7 +21,7 @@
             that.load("lock.png");
             that.left = 10
             that.top = 10
-            print(that.height)
+            println(that.height)
             */
 
             /*
@@ -34,9 +34,9 @@
             that.color = "red";
             that.border = 10;
             that.html = "a<br>b<br>c<br>d<br>e<br>f<br>";
-            print(box.element.clientHeight);
-            print(box.element.offsetHeight);
-            print(box.element.scrollHeight);
+            println(box.elem.clientHeight);
+            println(box.elem.offsetHeight);
+            println(box.elem.scrollHeight);
             */
 
             var startTime = performance.now();
@@ -47,11 +47,11 @@
             that.text = "Some Text";
             that.left = 0;
             that.top = 0;
-            print(box.element.clientWidth);
-            print(box.element.offsetWidth);
-            print(box.element.scrollWidth);
+            println(box.elem.clientWidth);
+            println(box.elem.offsetWidth);
+            println(box.elem.scrollWidth);
             that.onResize(function(self) {
-                print("auto: " + self.width);
+                println("auto: " + self.width);
             });
 
             var endTime = performance.now();
