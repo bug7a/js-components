@@ -77,6 +77,12 @@ CATALOG.COMPONENTS = [
         tr: "Arama kutusunun altında açılan sonuç listesi; otomatik tamamlama veya komut paleti gibi.",
     },
     {
+        key: "action-button", name: "ActionButton", gen: 4, cat: "actions",
+        source: "comp-m4/action-button.js", samples: ["02-comp-m4-samples/action-button.htm"],
+        en: "Round floating action button in the corner of the screen; it opens a menu of actions. The new version of UIActionButton.",
+        tr: "Ekranın köşesinde duran yuvarlak eylem düğmesi; eylem menüsünü açar. UIActionButton'ın yeni sürümü.",
+    },
+    {
         key: "context-menu", name: "ContextMenu", gen: 4, cat: "actions",
         source: "comp-m4/context-menu.js", samples: ["02-comp-m4-samples/context-menu.htm"],
         en: "A simple menu that opens at the mouse point, with text or icon items.",

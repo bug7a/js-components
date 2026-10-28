@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>ActionButton</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- LIBRARY FILES -->
+        <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+        <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- COMPONENT -->
+        <script src="../comp-m4/action-button.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+
+        /* Bismillah */
+
+        // SAMPLE: ActionButton (comp-m4/action-button.js), the new version of comp-m1/ui-action-button.js
+        // (02-comp-m1-samples/ui-action-button.htm) with the same look.
+
+        const ACTIONS = [
+            { key: "photo", labelText: "Take a Photo" },
+            { key: "gallery", labelText: "Add from Gallery" },
+            { key: "url", labelText: "Add from URL" },
+        ];
+
+        // *** VARIABLES:
+        let fab, lblAction;
+
+        const start = function () {
+
+            page.color = "whitesmoke";
+
+            // LABEL: What onAction gives
+            lblAction = Label({ left: 40, top: 40, text: "Click the yellow button at the bottom right.", fontSize: 16, textColor: Black(0.5) });
+
+            // ACTION BUTTON
+            fab = ActionButton({
+                items: ACTIONS,
+                onAction: showAction,
+            });
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        const showAction = function (key) {
+            lblAction.text = "onAction: " + key;
+        };
+
+        </script>
+
+    </head>
+    <body>
+    </body>
+</html>
