@@ -63,9 +63,9 @@
 
     const start = function () {
 
-        page.fit(SCREEN_WIDTH, MAX_SCREEN_WIDTH);
+        //page.fit(SCREEN_WIDTH, MAX_SCREEN_WIDTH);
         page.onResize(function () {
-            page.fit(SCREEN_WIDTH, MAX_SCREEN_WIDTH);
+            //page.fit(SCREEN_WIDTH, MAX_SCREEN_WIDTH);
         });
         page.color = "white";
 
@@ -83,7 +83,7 @@
                 endField();
 
                 startField("Connection status:");
-                    FullScreenSelect({ width: FIELD_WIDTH, items: STATUSES, selectedKey: "auto", showSearch: 0 });
+                    FullScreenSelect({ width: FIELD_WIDTH, items: STATUSES, selectedKey: "auto" });
                 endField();
 
                 // autoWidth and Turkish letters in the search
