@@ -175,6 +175,21 @@ const FullScreenSelect = function (params = {}) {
 
     };
 
+    // Only the list scrolls to the row: "center" (in the middle) or "nearest" (just into sight).
+    // WHY not elem.scrollIntoView(): it scrolls every box around the row too. While the list was still 150 px
+    //     down (the slide), it scrolled the main box of the page: the page behind jumped and the list did not slide.
+    const scrollToRow = function (row, place) {
+        const listElem = box.panel.listBox.elem;
+        const rowTop = row.elem.offsetTop;
+        const rowBottom = rowTop + row.elem.offsetHeight;
+        if (place == "center") {
+            listElem.scrollTop = rowTop - (listElem.clientHeight - row.elem.offsetHeight) / 2;
+            return;
+        }
+        if (rowTop < listElem.scrollTop) listElem.scrollTop = rowTop;
+        else if (rowBottom > listElem.scrollTop + listElem.clientHeight) listElem.scrollTop = rowBottom - listElem.clientHeight;
+    };
+
     // Every open starts with an empty search and the selected item in sight.
     const resetPanel = function () {
         if (box.panel.searchInput) box.panel.searchInput.setText("");
@@ -182,7 +197,7 @@ const FullScreenSelect = function (params = {}) {
         filterRows("");
         box.panel.listBox.elem.scrollTop = 0;
         const selectedRow = box.panel.rows.find(function (row) { return row.item.key == box.selectedKey; });
-        if (selectedRow) selectedRow.elem.scrollIntoView({ block: "center" });
+        if (selectedRow) scrollToRow(selectedRow, "center");
     };
 
     const removePanel = function () {
@@ -378,7 +393,7 @@ const FullScreenSelect = function (params = {}) {
         index = (index == -1) ? 0 : Math.max(0, Math.min(rows.length - 1, index + step));
         focusedKey = rows[index].item.key;
         paintRows();
-        rows[index].elem.scrollIntoView({ block: "nearest" });
+        scrollToRow(rows[index], "nearest");
     };
 
     const onPanelKeyDown = function (self, event) {
