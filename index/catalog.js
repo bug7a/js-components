@@ -302,8 +302,8 @@ CATALOG.COMPONENTS = [
     {
         key: "button-with-icon", name: "ButtonWithIcon", gen: 3, cat: "actions",
         source: "comp-m3/button-with-icon.js", samples: ["02-comp-m3-samples/button-with-icon.htm"],
-        en: "A button with an icon and a text; the icon on the left or on top.",
-        tr: "İkon ve yazı içeren düğme; ikon solda veya üstte.",
+        en: "A button with an icon and a text; the icon on the left or on top. A waiting cover with a clock while a job runs.",
+        tr: "İkon ve yazı içeren düğme; ikon solda veya üstte. Bir iş sürerken saatli bekleme örtüsü.",
     },
     {
         key: "hold-to-confirm-button", name: "HoldToConfirmButton", gen: 3, cat: "actions",

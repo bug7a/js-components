@@ -8,8 +8,8 @@
 
     <!-- STANDARD -->
     <!-- LIBRARY FILES -->
-    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
-    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp-m3/button-with-icon.js"></script>
 
 </head>
@@ -19,6 +19,30 @@
     <script>
 
         /* Bismillah */
+
+        const DOWNLOAD_TIME = 2000; // ms: a job that takes time (the sample)
+
+        // 4. Waiting: the cover with the clock while the job runs; then the button opens the file.
+        const createWaitingSample = function () {
+            Label({ text: "Waiting (setWaiting):", fontSize: 14, textColor: "#666", marginTop: 20 });
+            ButtonWithIcon({
+                width: 200,
+                height: 50,
+                labelText: "Download",
+                iconFile: "../comp-m3/button-with-icon/alert-black.png",
+                onClick: function (self) {
+                    if (self.labelText == "Open") {
+                        self.setText("Download");
+                        return;
+                    }
+                    self.setWaiting(1);
+                    self.after(DOWNLOAD_TIME, function () { self.setWaiting(0); });
+                },
+                onWaitingEnd: function (self) {
+                    self.setText("Open");
+                },
+            });
+        };
 
         const start = function () {
 
@@ -104,6 +128,8 @@
                     active: { color: Black(0.2), }
                 }
             });
+
+            createWaitingSample();
 
             endGroup();
 
