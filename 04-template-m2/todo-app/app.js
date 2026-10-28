@@ -17,8 +17,9 @@ How to make an iOS application? (Language: Turkish)
 https://www.youtube.com/watch?v=WZZwiI_5WQA
 
 FOR YOUR CORDOVA PROJECT:
-- Make a copy that works outside this repository first (it copies basic.js next to the app):
-    ./_make-standalone.sh 04-template-m1/todo-app
+- The folder works on its own: basic/ is a copy of the library (min files). Copy the whole folder.
+  To refresh basic/ after basic.js changes (from the root of the repository):
+    ./_make-standalone.sh 04-template-m2/todo-app
 - Add these settings to your cordova project config.xml file:
     <preference name="DisallowOverscroll" value="true" />
     <preference name="StatusBarOverlaysWebView" value="false" />
