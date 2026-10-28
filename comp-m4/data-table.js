@@ -475,15 +475,24 @@ const DataTable = function (params = {}) {
     // The arrow keys move the selection over the rows that are seen.
     const moveSelection = function (step) {
         if (box.shownRows.length == 0) return;
-        const index = box.shownRows.indexOf(box.selectedRow);
-        let next = (index == -1) ? 0 : index + step;
-        next = Math.max(0, Math.min(box.shownRows.length - 1, next));
+        let index = box.shownRows.indexOf(box.selectedRow);
+        // Nothing selected: a step down (Home) starts before the first row, a step up (End) after the last one
+        if (index == -1) index = (step > 0) ? -1 : box.shownRows.length;
+        const next = Math.max(0, Math.min(box.shownRows.length - 1, index + step));
         setSelectedRow(box.shownRows[next], 0);
         scrollToRow(box.shownRows[next]);
     };
 
+    // Scrolls only the rows (not the page around the table) to show a row.
+    // WHY not elem.scrollIntoView(): it scrolls every box around the row too; a table half out of a scrolling page
+    //     moved the page at a selection (the same fault was found in FullScreenSelect and ItemList).
+    // NOTE: offsetTop is the place on the screen, also after a sort (the rows are ordered with their CSS order).
     const scrollToRow = function (row) {
-        row.elem.scrollIntoView({ block: "nearest" });
+        const area = box.scrollBox.elem;
+        const rowTop = row.elem.offsetTop + box.rowsGroup.elem.offsetTop;
+        const rowBottom = rowTop + row.elem.offsetHeight;
+        if (rowTop < area.scrollTop) area.scrollTop = rowTop;
+        else if (rowBottom > area.scrollTop + area.clientHeight) area.scrollTop = rowBottom - area.clientHeight;
     };
 
     const onKeyDown = function (self, event) {
