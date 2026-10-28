@@ -380,8 +380,8 @@ SearchInput.styles = {
         borderBottomStyle: "3px solid rgba(0, 0, 0, 0.06)",
         round: 50,
         animated: 0, // 1: small hover / focus motions
-        hoverRingColor: "rgba(0, 0, 0, 0.08)",
-        focusRingColor: "rgba(0, 0, 0, 0.16)",
+        hoverRingColor: "rgba(0, 0, 0, 0.08)", // Alpha("#141414", 0.2), // 
+        focusRingColor: "rgba(0, 0, 0, 0.16)", // Alpha("#23BCC1", 0.6), //
     },
 
     // The dark theme of ozden: the same shape on a dark field, light text and icons.
@@ -405,8 +405,8 @@ SearchInput.styles = {
         borderBottomStyle: "3px solid rgba(255, 255, 255, 0.06)",
         round: 50,
         animated: 0, // 1: small hover / focus motions
-        hoverRingColor: "rgba(255, 255, 255, 0.08)",
-        focusRingColor: "rgba(255, 255, 255, 0.18)",
+        hoverRingColor: "rgba(255, 255, 255, 0.08)", // Alpha("#FFFFFF", 0.2), //
+        focusRingColor: "rgba(255, 255, 255, 0.18)", // Alpha("#23BCC1", 0.6), //
     },
 
 };
