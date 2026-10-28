@@ -15,7 +15,8 @@ A select field that opens its list on the whole screen: a search box at the top,
   the field when the list closes.
 - Only one list is open at a time (FullScreenSelect.openedSelect). The list is made on page when it first opens,
   hidden when it closes and removed with the field (box.own); setItems() makes it again at the next open.
-- Motion: only transform and opacity; none when the system asks for reduced motion.
+- Motion: the list comes in from below with a fade in 0.2 s (transform and opacity) and goes out at once
+  (the user, 2026-10-28); no motion when the system asks for reduced motion.
 - Style packages: "classic" (default, the look of UISelectText), "dark". (FullScreenSelect.styles)
 
 USAGE:
@@ -92,15 +93,13 @@ const FullScreenSelect = function (params = {}) {
 
     // *** PRIVATE VARIABLES:
     const _s = box.style;
-    const MOTION_TIME = 300; // ms: the list comes in / goes out
-    const PANEL_MOTION = "transform 0.3s, opacity 0.3s";
+    const PANEL_MOTION = "transform 0.2s, opacity 0.2s"; // the list comes in (it goes out at once)
     const ARROW_UP = 180; // deg
     const ARROWS_ROOM = 30; // the text ends before the arrows (it fades out there)
     const TEXT_FADE = 40; // px
     const AUTO_WIDTH_SPACE = 50; // autoWidth: 1 -> the field is the text + this (the left space and the arrows)
     let focusedKey = null; // the item of the arrow keys in the open list
     let searchText = null; // the search of the open list (null: not filtered yet)
-    let cancelHidePanel = null;
 
     // *** PUBLIC VARIABLES:
     box.isOpen = 0;
@@ -147,31 +146,31 @@ const FullScreenSelect = function (params = {}) {
         return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     };
 
-    // The list comes in from below with a fade, and goes out the same way.
+    // The list comes in from below with a fade (0.2 s, at once: no timer of basic.js); it goes out at once.
     const showPanel = function (isShown) {
 
         const panel = box.panel;
-        if (cancelHidePanel) cancelHidePanel();
-        panel.setMotion(isReducedMotion() ? "" : PANEL_MOTION);
+        panel.setMotionNow("");
 
-        if (isShown) {
-            panel.dontMotion();
-            panel.visible = 1;
-            panel.opacity = 0;
-            panel.css = { transform: "translateY(" + _s.panel.slide + "px)" };
-            panel.withMotion(function () {
-                panel.opacity = 1;
-                panel.css = { transform: "none" };
-            });
+        if (!isShown) {
+            panel.visible = 0;
             return;
         }
 
         panel.opacity = 0;
         panel.css = { transform: "translateY(" + _s.panel.slide + "px)" };
-        cancelHidePanel = box.after(isReducedMotion() ? 0 : MOTION_TIME, function () {
-            cancelHidePanel = null;
-            panel.visible = 0;
-        });
+        panel.visible = 1;
+        if (isReducedMotion()) {
+            panel.opacity = 1;
+            panel.css = { transform: "none" };
+            return;
+        }
+
+        // WHY: the start look must be drawn before the motion is turned on, or the browser shows the end at once
+        void panel.elem.offsetHeight;
+        panel.setMotionNow(PANEL_MOTION);
+        panel.opacity = 1;
+        panel.css = { transform: "none" };
 
     };
 
@@ -202,7 +201,6 @@ const FullScreenSelect = function (params = {}) {
 
     const removePanel = function () {
         if (!box.panel) return;
-        if (cancelHidePanel) cancelHidePanel();
         box.panel.remove();
         box.panel = null;
     };
