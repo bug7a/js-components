@@ -19,7 +19,7 @@
         /* Bismillah */
 
         // SAMPLE: ActionButton (comp-m4/action-button.js), the new version of comp-m1/ui-action-button.js
-        // (02-comp-m1-samples/ui-action-button.htm) with the same look.
+        // (02-comp-m1-samples/ui-action-button.htm) with the same look. Above it: styleName "ozden".
 
         const ACTIONS = [
             { key: "photo", labelText: "Take a Photo" },
@@ -28,7 +28,7 @@
         ];
 
         // *** VARIABLES:
-        let fab, lblAction, btnAnimated;
+        let fab, fabOzden, lblAction, btnAnimated;
 
         const start = function () {
 
@@ -48,6 +48,15 @@
                 onAction: showAction,
             });
 
+            // ACTION BUTTON: styleName "ozden" (animated: 1 is in the package), above the yellow one
+            fabOzden = ActionButton({
+                styleName: "ozden",
+                bottomSpace: 160,
+                rightSpace: 53, // WHY: 64 px button: its middle in one line with the 90 px yellow one.
+                items: ACTIONS,
+                onAction: showAction,
+            });
+
         };
 
         // *** OTHER FUNCTIONS:
@@ -57,8 +66,10 @@
         };
 
         const toggleAnimated = function () {
-            fab.setAnimated(fab.animated ? 0 : 1);
-            btnAnimated.text = "animated: " + fab.animated;
+            const value = (fab.animated) ? 0 : 1;
+            fab.setAnimated(value);
+            fabOzden.setAnimated(value);
+            btnAnimated.text = "animated: " + value;
         };
 
         </script>

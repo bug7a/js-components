@@ -12,11 +12,13 @@ UI COMPONENT
   02-comp-m1-samples/ui-action-button.htm)
 - The component covers its container (100% x 100%) but lets the mouse through: only the button, the open menu
   and its cover (to close it) catch clicks.
-- Style packages: "classic" (default, the look of UIActionButton). Select with styleName. (ActionButton.styles)
+- Style packages: "classic" (default, the look of UIActionButton), "ozden" (an ink button with a white icon, a
+  white menu with a shadow, animated: 1). Select with styleName. (ActionButton.styles)
 - animated: 1 (context/basic-js-animated-rules.md): the button grows a little with a soft shadow under the mouse
   and gets smaller when pressed, the menu grows out of the button and closes faster, its actions come in one
   after the other and get a soft tint under the mouse. Only transform, opacity and box-shadow change; nothing at
-  the first view; off when the system asks for reduced motion. (box.setAnimated(0 / 1))
+  the first view; off when the system asks for reduced motion. (box.setAnimated(0 / 1)) The turn of the icon ends
+  with a small spring (the rules: a toggle icon).
 
 USAGE:
 const fab = ActionButton({
@@ -64,7 +66,7 @@ const ActionButtonDefaults = {
     animated: 0, // 1: small hover / press / open motions (context/basic-js-animated-rules.md). (box.setAnimated(0/1))
     onAction: function (key, self) { }, // An action was chosen (no items: key is "", one item: its key)
     onMenuToggle: function (self) { }, // The menu opened / closed: self.menuOpened
-    styleName: "classic", // "classic" or a name added to ActionButton.styles
+    styleName: "classic", // "classic", "ozden" or a name added to ActionButton.styles
     style: { // Classic style package (default): the look of UIActionButton
         button: {
             size: 90,
@@ -73,6 +75,8 @@ const ActionButtonDefaults = {
             border: 4,
             borderColor: "rgba(0, 0, 0, 0.2)",
             iconOpacity: 0.4,
+            invertIcon: 0, // 1: a white icon (from the black add.png) on a dark button
+            shadow: "", // "": none. Ex: "0px 4px 12px rgba(0, 0, 0, 0.18)"
             hoverShadow: "0px 6px 16px rgba(0, 0, 0, 0.15)", // animated: under the mouse
         },
         menu: {
@@ -81,6 +85,7 @@ const ActionButtonDefaults = {
             border: 2,
             borderColor: "rgba(0, 0, 0, 0.2)",
             hiddenScale: 0.4, // The menu grows from this size
+            shadow: "", // "": none
         },
         item: {
             height: 50,
@@ -121,6 +126,8 @@ const ActionButton = function (params = {}) {
     // animated: 1
     const MOTION_TIME = 0.25; // s
     const MOTION_EASE = "cubic-bezier(0.2, 0.8, 0.2, 1)"; // a fast start and a soft stop
+    const SPRING_TIME = 0.35; // s: the turn of the icon
+    const SPRING_EASE = "cubic-bezier(0.34, 1.56, 0.64, 1)"; // a small overshoot, then back (the rules: a toggle icon)
     const CLOSE_TIME = 0.15; // s: the menu closes faster than it opens
     const HOVER_GROW = 1.05;
     const PRESS_SCALE = 0.95;
@@ -199,6 +206,11 @@ const ActionButton = function (params = {}) {
         return "translateX(" + MENU_HIDDEN_SHIFT + "px) scale(" + MENU_HIDDEN_SCALE + ")";
     };
 
+    // The shadow of the button when the mouse is not over it. (A transparent one: the hover shadow fades from it.)
+    const getStillShadow = function () {
+        return _s.button.shadow || "0px 0px 0px 0px transparent";
+    };
+
     const getButtonTransform = function () {
         if (isPressed) return "scale(" + PRESS_SCALE + ")";
         if (isHovered) return "scale(" + HOVER_GROW + ")";
@@ -209,7 +221,7 @@ const ActionButton = function (params = {}) {
     const paintMotion = function () {
         if (!isMotionOn()) return;
         box.btnAction.css.transform = getButtonTransform();
-        box.btnAction.boxShadow = (isHovered && !isPressed) ? _s.button.hoverShadow : "0px 0px 0px 0px transparent";
+        box.btnAction.boxShadow = (isHovered && !isPressed) ? _s.button.hoverShadow : getStillShadow();
         box.imgIcon.opacity = Math.min(1, _s.button.iconOpacity + ((isHovered) ? ICON_OPACITY_GAIN : 0));
     };
 
@@ -270,7 +282,7 @@ const ActionButton = function (params = {}) {
         wasAnimated = 0;
         box.btnAction.setMotion(BUTTON_MOTION);
         box.btnAction.css.transform = "";
-        box.btnAction.boxShadow = "";
+        box.btnAction.boxShadow = _s.button.shadow;
         box.imgIcon.setMotion(ICON_MOTION);
         box.imgIcon.opacity = _s.button.iconOpacity;
         box.menu.setMotion(MENU_MOTION);
@@ -291,7 +303,7 @@ const ActionButton = function (params = {}) {
         }
         wasAnimated = 1;
         box.btnAction.setMotion(motionOf(["background-color", "transform", "box-shadow"], MOTION_TIME));
-        box.imgIcon.setMotion(motionOf(["transform", "opacity"], MOTION_TIME));
+        box.imgIcon.setMotion("transform " + SPRING_TIME + "s " + SPRING_EASE + ", " + motionOf(["opacity"], MOTION_TIME));
         box.menu.css.transformOrigin = "right bottom"; // WHY: The menu grows out of the button.
         if (!box.menuOpened) box.menu.css.transform = getHiddenMenuTransform();
         prepareItems();
@@ -369,6 +381,7 @@ const ActionButton = function (params = {}) {
         border: _s.button.border,
         borderColor: _s.button.borderColor,
     });
+    if (_s.button.shadow) box.btnAction.boxShadow = _s.button.shadow;
     box.btnAction.setMotion(BUTTON_MOTION);
     box.btnAction.clickable = 1;
     box.btnAction.cursor = "pointer";
@@ -382,6 +395,7 @@ const ActionButton = function (params = {}) {
         });
         box.imgIcon.load(box.iconFile);
         box.imgIcon.opacity = _s.button.iconOpacity;
+        if (_s.button.invertIcon == 1) box.imgIcon.css.filter = "invert(100%)";
         box.imgIcon.setMotion(ICON_MOTION);
         box.imgIcon.center();
 
@@ -400,6 +414,7 @@ const ActionButton = function (params = {}) {
         borderColor: _s.menu.borderColor,
     });
     box.menu.role = "menu";
+    if (_s.menu.shadow) box.menu.boxShadow = _s.menu.shadow;
     endGroup();
 
     // *** OBJECT INIT CODE:
@@ -468,5 +483,38 @@ ActionButton.styles = {
 
     // The look of UIActionButton (comp-m1): a yellow round button, a white menu with thin lines.
     classic: ActionButtonDefaults.style,
+
+    // Bugra's style: an ink round button with a white +, a white rounded menu with a soft shadow, animated.
+    // A package of params (it has "style"): animated and the icon size are params, not style keys.
+    ozden: {
+        animated: 1,
+        iconSize: 24,
+        menuGap: 16,
+        style: {
+            button: {
+                size: 64,
+                color: "#232323", // ink
+                openColor: "#3C4043", // slate
+                border: 0,
+                iconOpacity: 0.9,
+                invertIcon: 1,
+                shadow: "0px 4px 12px rgba(0, 0, 0, 0.18)",
+                hoverShadow: "0px 10px 24px rgba(0, 0, 0, 0.24)",
+            },
+            menu: {
+                color: "#F0F0F0", // the lines between the actions
+                round: 16,
+                border: 1,
+                borderColor: "rgba(0, 0, 0, 0.08)",
+                shadow: "0px 10px 30px rgba(0, 0, 0, 0.12)",
+            },
+            item: {
+                height: 48,
+                textColor: "#232323",
+                fontSize: 17,
+                hoverTint: "rgba(0, 0, 0, 0.04)",
+            },
+        },
+    },
 
 };

@@ -19,6 +19,10 @@ How a component gets an `animated` param (the user, 2026-10-27). The model is `c
   create time and the first paint does not move. No intro animation, no loop.
 - One duration and one curve for the whole component: `0.25s`, `cubic-bezier(0.2, 0.8, 0.2, 1)` (a fast start,
   a soft stop). Named constants at the top (`MOTION_TIME`, `MOTION_EASE`).
+- **One exception, the spring of a toggle icon (the user, 2026-10-28):** an icon that turns to show a new state
+  (+ → ×, a chevron that opens a menu) may end with a small overshoot: `transform 0.35s cubic-bezier(0.34, 1.56,
+  0.64, 1)` (`SPRING_TIME`, `SPRING_EASE`). Only that turn springs; the rest of the component keeps the one curve.
+  The model: `comp-m4/action-button.js`.
 - Small sizes: grow 1.05-1.08 under the mouse, about 1.06 while focused, a short pulse 1.14 for 150 ms; a tilt of
   about 10-12 deg; a turn of 90 deg for an icon like ×. Check that a grown or tilted icon does not touch its text.
 
