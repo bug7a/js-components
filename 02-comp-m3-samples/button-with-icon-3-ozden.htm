@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>ButtonWithIcon - Dialogs (ozden)</title>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+
+    <script src="../comp-m3/button-with-icon.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+    /* Bismillah */
+
+    // ButtonWithIcon (comp-m3): the button standards in the ozden look (a white card, a thin line, a line at the
+    // bottom): Primary (the colored action, it waits with the ring of setWaiting()), Secondary (Cancel, gray and white)
+    // and Alternatif (the trash, only an icon: it asks again, two clicks). The buttons of the ozden fields: square
+    // corners, a bigger text, a darker bottom line.
+
+    // *** THE COLORS AND SIZES OF THE PAGE
+    const PAGE_COLOR = "#F0F1EE";
+    const CARD_COLOR = "white";
+    const LINE = Black(0.1);
+    const BUTTON_LINE = Black(0.2); // the thin line of the white buttons and the action
+    const BOTTOM_LINE = "inset 0 -3px 0 rgba(0, 0, 0, 0.06)"; // the soft line at the bottom of the ozden fields
+    const ACTION_LINE = "rgba(35, 35, 35, 0.4)";
+    const ACTION_BOTTOM_LINE = "inset 0 -2px 0 rgba(0, 0, 0, 0.25)";
+    const OZDEN_ROUND = 4; // the buttons of the first dialog
+    const GRAY_BUTTON = "#E3E3E3"; // its Cancel
+    const GRAY_BUTTON_HOVER = "#D9D9D9";
+    const GRAY_LINE = Black(0.35);
+    const GRAY_BOTTOM_LINE = "inset 0 -2px 0 rgba(0, 0, 0, 0.25)";
+    const TEAL = "#9DC7B5"; // the Publish button
+    const TEAL_HOVER = "#91BCA9"; // a little darker than TEAL
+    // The other colors of the action (basic-designer, 2026-10-29); the hover a little darker
+    const CYAN = "#5BBAC1";
+    const CYAN_HOVER = "#50AFB6";
+    const SKY = "#52A8D0";
+    const SKY_HOVER = "#479DC5";
+    const ACTION_INK = "rgba(0, 0, 0, 0.7)"; // the text on the action buttons (basic-designer, 2026-10-29: was rgba(35, 35, 35, 0.8))
+    const BLUE = "#3871E0";
+    const RED = "#E8796D"; // danger (design.md)
+    const DIALOG_WIDTH = 460;
+    const COVER_COLOR = Black(0.8); // behind the dialogs (the cover of a Dialog component later)
+    const BUTTON_HEIGHT = 40;
+    const TEXT_SIZE = 14;
+    const CARD_ROUND = 14;
+    const STANDARDS_CARD_HEIGHT = 524; // the card of the button standards
+    const STANDARDS_INK = "#232323"; // its texts
+    const PRIMARY_ROW_COLOR = "#FFFBDB"; // the row of the Primary button
+    // The first dialog (ozden): bigger texts and buttons
+    const OZDEN_SIZES = { titleSize: 20, textSize: 16, buttonHeight: 40, trashWidth: 50, cardRound: 8, cardBorder: 2, cardBorderColor: "#232323" };
+    const OZDEN_TRASH_COLOR = "white";
+    const OZDEN_TRASH_LINE = Black(0.35);
+    const ROUND = 8;
+    const JOB_TIME = 1200; // ms: the action takes time (the sample)
+    const ASK_TIME = 5000; // ms: the trash forgets its question
+    const BUBBLE_GAP = 6; // px: between the triangle of the warning and the button
+    const BUBBLE_EDGE = 8; // px: the warning stays this far inside the card
+    const BUBBLE_ARROW = 12; // px: the side of the square that makes the triangle
+    const BUBBLE_START_SCALE = 0.6; // it grows from this size
+    const BUBBLE_MOTION = "transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s"; // a little spring at the end
+
+    // *** THE ICONS: simple SVG (the color is in the file: ButtonWithIcon loads an image)
+    const svgIcon = function (color, paths) {
+        return "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + paths + "<\/svg>");
+    };
+    // A filled pen with two lines of writing at its left top (publish)
+    const penIcon = function (color) {
+        return "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">' +
+            '<path d="M3.5 6h7M3.5 10h4" stroke="' + color + '" stroke-width="2.2" stroke-linecap="round"/>' +
+            '<path d="M16.6 5.2a2.3 2.3 0 0 1 3.3 3.3l-9.6 9.6-4.8 1.5 1.5-4.8z" fill="' + color + '" stroke="' + color + '" stroke-width="1.6" stroke-linejoin="round"/>' +
+            "<\/svg>");
+    };
+    // A soft bin (the user's drawing, 2026-10-29): curves only, the rim and the cross are holes (the button shows through)
+    const TRASH_PATH = "M 4 6 Q 4 2 12 2 Q 20 2 20 6 L 18.5 18 Q 18 22 12 22 Q 6 22 5.5 18 Z " +
+        "M 6.7 5.9 C 6.7 3.7 17.3 3.7 17.3 5.9 C 17.3 8.1 6.7 8.1 6.7 5.9 Z " +
+        "M 9 11 Q 9.7 10.3 10.4 11 L 12 12.6 L 13.6 11 Q 14.3 10.3 15 11 Q 15.7 11.7 15 12.4 L 13.4 14 L 15 15.6 " +
+        "Q 15.7 16.3 15 17 Q 14.3 17.7 13.6 17 L 12 15.4 L 10.4 17 Q 9.7 17.7 9 17 Q 8.3 16.3 9 15.6 L 10.6 14 L 9 12.4 Q 8.3 11.7 9 11 Z";
+    const binIcon = function (color) {
+        return "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">' +
+            '<path fill-rule="evenodd" fill="' + color + '" d="' + TRASH_PATH + '"/>' +
+            "<\/svg>");
+    };
+    const ICONS = {
+        publish: penIcon("black"),
+        save: svgIcon("white", '<path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4M8 20v-6h8v6"/>'),
+        trash: binIcon("#6B6F73"),
+        trashAsk: binIcon("white"),
+    };
+
+    // *** THE BUTTON LOOKS (style of ButtonWithIcon)
+    const buttonLook = function (color, hoverColor, textColor, borderColor) {
+        return {
+            layout: { gap: 8, padding: [16, 0], align: "center center" },
+            box: { color: color, border: borderColor ? 1 : 0, borderColor: borderColor || "transparent", round: ROUND, boxShadow: BOTTOM_LINE },
+            hover: { color: hoverColor },
+            active: { color: hoverColor },
+            icon: { width: 18, height: 18 },
+            label: { fontSize: 15, textColor: textColor, fontFamily: "opensans-bold" },
+        };
+    };
+    const LOOKS = {
+        publish: buttonLook(TEAL, TEAL_HOVER, ACTION_INK, BUTTON_LINE),
+        blue: buttonLook(BLUE, "#2F62C7", "white"),
+        cancel: buttonLook("white", "whitesmoke", Black(0.7), BUTTON_LINE),
+        trash: buttonLook("white", "#FDF1EF", Black(0.7), BUTTON_LINE),
+        trashAsk: buttonLook(RED, RED, "white"),
+    };
+    // WHY: a button of only an icon has no side room (with 16 px at each side the icon of a 40 px button was 8 px)
+    LOOKS.trash.layout.padding = [0, 0];
+    LOOKS.trash.icon = { width: 24, height: 24 };
+
+    // The buttons of the first dialog (the ozden fields): square corners, a 20 px text, a darker bottom line
+    const ozdenLook = function (look, borderColor, bottomLine) {
+        look.box.round = OZDEN_ROUND;
+        if (borderColor) look.box.borderColor = borderColor;
+        if (bottomLine) look.box.boxShadow = bottomLine;
+        look.label = Object.assign({}, look.label, { fontSize: 20, fontFamily: "opensans" });
+        return look;
+    };
+    // The teal action: a bigger black icon (soft like its text)
+    ozdenLook(LOOKS.publish, ACTION_LINE, ACTION_BOTTOM_LINE);
+    LOOKS.publish.icon = { width: 24, height: 24, opacity: 0.8 };
+    // The same action in another color
+    const actionColorLook = function (color, hoverColor) {
+        const look = JSON.parse(JSON.stringify(LOOKS.publish));
+        look.box.color = color;
+        look.hover.color = hoverColor;
+        look.active.color = hoverColor;
+        return look;
+    };
+    LOOKS.publishCyan = actionColorLook(CYAN, CYAN_HOVER);
+    LOOKS.publishSky = actionColorLook(SKY, SKY_HOVER);
+    LOOKS.ozdenCancel = ozdenLook(buttonLook(GRAY_BUTTON, GRAY_BUTTON_HOVER, Black(0.7), GRAY_LINE), null, GRAY_BOTTOM_LINE);
+    LOOKS.ozdenTrash = ozdenLook(JSON.parse(JSON.stringify(LOOKS.trash)), OZDEN_TRASH_LINE);
+    // A white square with no bottom line, a bigger bin
+    LOOKS.ozdenTrash.box.color = OZDEN_TRASH_COLOR;
+    LOOKS.ozdenTrash.box.boxShadow = "none";
+    LOOKS.ozdenTrash.icon = { width: 30, height: 30 };
+    LOOKS.ozdenTrashAsk = ozdenLook(buttonLook(RED, RED, "white"));
+    // The white Cancel of the button standards: the gray Cancel on white (its hover stays gray)
+    LOOKS.ozdenWhiteCancel = JSON.parse(JSON.stringify(LOOKS.ozdenCancel));
+    LOOKS.ozdenWhiteCancel.box.color = "white";
+    // A plain white button: the white Cancel without the line at the bottom
+    LOOKS.ozdenWhitePlain = JSON.parse(JSON.stringify(LOOKS.ozdenWhiteCancel));
+    LOOKS.ozdenWhitePlain.box.boxShadow = "none";
+
+    // GROUP: A card of the button standards: a title text, then a row of buttons for each kind (Primary, Secondary,
+    // Alternatif). Returns the card.
+    // dialog: { text, actionText, actionIcon, looks: { actions: [], cancel, whiteCancel, plain, trash, trashAsk }, trashLabel, textSize, buttonHeight, trashWidth, cardRound, cardBorder, cardBorderColor }
+    // (the sizes and the frame: the first look of the page when they are not given)
+    const createDialog = function (dialog) {
+
+        const buttonHeight = dialog.buttonHeight || BUTTON_HEIGHT;
+        const cardRound = dialog.cardRound || CARD_ROUND;
+
+        const card = VGroup({
+            width: DIALOG_WIDTH,
+            height: STANDARDS_CARD_HEIGHT,
+            align: "left top",
+            gap: 0,
+            color: CARD_COLOR,
+            round: cardRound,
+            border: dialog.cardBorder || 1,
+            borderColor: dialog.cardBorderColor || LINE,
+            boxShadow: "0 10px 30px rgba(0, 0, 0, 0.08), " + BOTTOM_LINE,
+            clipContent: 0,
+        });
+        that.css = { maxWidth: "calc(100vw - 40px)" };
+
+            // GROUP: Content
+            VGroup({ width: "100%", height: "auto", align: "left top", gap: 8, padding: [24, 22] });
+                Label({ plainText: dialog.text, width: "100%", fontSize: dialog.textSize || TEXT_SIZE, textColor: STANDARDS_INK, css: { whiteSpace: "normal", lineHeight: "1.5", textWrap: "balance" } });
+
+                // PRIMARY: the action, in each of its colors
+                createSectionTitle("Primary", dialog);
+                HGroup({ width: "100%", height: "auto", align: "left center", gap: 10, color: PRIMARY_ROW_COLOR, clipContent: 0 });
+                    dialog.looks.actions.forEach(function (look) {
+                        ButtonWithIcon({
+                            height: buttonHeight,
+                            labelText: dialog.actionText,
+                            iconFile: dialog.actionIcon,
+                            style: look,
+                            onClick: function (self) {
+                                self.setWaiting(1);
+                                self.after(JOB_TIME, function () { self.setWaiting(0); });
+                            },
+                        });
+                    });
+                endGroup();
+
+                // SECONDARY: Cancel, gray and white
+                createSectionTitle("Secondary", dialog);
+                HGroup({ width: "100%", height: "auto", align: "left center", gap: 10, clipContent: 0 });
+                    ButtonWithIcon({ height: buttonHeight, labelText: "Cancel", style: dialog.looks.cancel });
+                    ButtonWithIcon({ height: buttonHeight, labelText: "Cancel", style: dialog.looks.whiteCancel });
+                endGroup();
+
+                // ALTERNATIF: a plain white button and the trash (it asks before it deletes)
+                createSectionTitle("Alternatif", dialog);
+                HGroup({ height: "auto", align: "left center", gap: 10, clipContent: 0 });
+                    ButtonWithIcon({ height: buttonHeight, labelText: "Button", style: dialog.looks.plain });
+                    card.btnTrash = createTrashButton(card, dialog, dialog.trashWidth || buttonHeight, buttonHeight);
+                endGroup();
+            endGroup();
+
+        endGroup();
+
+        return card;
+
+    };
+
+    // LABEL: The name of a kind of button over its row
+    const createSectionTitle = function (text, dialog) {
+        return Label({ plainText: text, width: "100%", fontSize: dialog.textSize || TEXT_SIZE, textColor: STANDARDS_INK });
+    };
+
+    // The trash: the first click asks (the button turns red), the second one deletes. It forgets after ASK_TIME.
+    const createTrashButton = function (card, dialog, width, height) {
+
+        let cancelAsk = null;
+
+        const button = ButtonWithIcon({
+            width: width,
+            height: height,
+            labelText: "",
+            ariaLabel: dialog.trashLabel,
+            iconFile: ICONS.trash,
+            style: dialog.looks.trash,
+            onClick: function (self) {
+                if (!cancelAsk) {
+                    setTrashAsking(self, 1, dialog.looks);
+                    showBubble(card, self, "Click again to " + dialog.trashLabel.toLowerCase() + ".");
+                    cancelAsk = self.after(ASK_TIME, function () {
+                        cancelAsk = null;
+                        setTrashAsking(self, 0, dialog.looks);
+                        hideBubble(card);
+                    });
+                    return;
+                }
+                cancelAsk();
+                cancelAsk = null;
+                setTrashAsking(self, 0, dialog.looks);
+                hideBubble(card);
+            },
+        });
+
+        return button;
+
+    };
+
+    // The red "Sure?" look of the trash, and back
+    const setTrashAsking = function (button, isAsking, looks) {
+        const look = isAsking ? looks.trashAsk : looks.trash;
+        button.setStyle({ box: look.box, hover: look.hover, active: look.active });
+        button.setIcon(isAsking ? ICONS.trashAsk : ICONS.trash);
+    };
+
+    // GROUP: A warning over a button: a red bubble with a triangle under it that points at the button. It grows up out
+    // of the point of the triangle like a mushroom. It stays inside the card; the triangle stays over the button.
+    const showBubble = function (card, button, text) {
+
+        hideBubble(card);
+
+        card.bubble = createIn(card, function () {
+            const bubble = VGroup({ hug: 1, align: "center top", gap: 0, position: "absolute", clipContent: 0, zIndex: 10, role: "status" });
+                // LABEL: Warning
+                Label({ plainText: text, fontSize: 13, bold: 1, textColor: "white", color: RED, round: 8, padding: [12, 7], boxShadow: "0 6px 16px rgba(0, 0, 0, 0.18)", css: { whiteSpace: "nowrap" } });
+                // BOX: Triangle (a turned square under the label)
+                bubble.arrow = Box({ width: BUBBLE_ARROW, height: BUBBLE_ARROW, color: RED });
+            endGroup();
+            return bubble;
+        });
+
+        placeBubble(card, card.bubble, button);
+        growBubble(card.bubble);
+
+    };
+
+    // Over the middle of the button; moved inside the card when it is too wide there (the triangle does not move)
+    // WHY the scale: page.fit() zooms the page with a transform; getBoundingClientRect() is in screen pixels
+    const placeBubble = function (card, bubble, button) {
+        const cardRect = card.elem.getBoundingClientRect();
+        const buttonRect = button.elem.getBoundingClientRect();
+        const scale = cardRect.width / card.elem.offsetWidth;
+        // (clientLeft / clientTop: the place of an absolute object starts inside the border of the card)
+        const buttonCenter = (buttonRect.left + buttonRect.width / 2 - cardRect.left) / scale - card.elem.clientLeft;
+        const buttonTop = (buttonRect.top - cardRect.top) / scale - card.elem.clientTop;
+        const width = bubble.elem.offsetWidth;
+        // (rounded first: the triangle is shifted from the place the bubble really gets)
+        const left = Math.round(Math.max(BUBBLE_EDGE, Math.min(card.elem.offsetWidth - width - BUBBLE_EDGE, buttonCenter - width / 2)));
+        const arrowShift = buttonCenter - (left + width / 2);
+        bubble.left = left;
+        bubble.top = Math.round(buttonTop - bubble.elem.offsetHeight + BUBBLE_ARROW / 2 - BUBBLE_GAP);
+        bubble.arrow.css = { transform: "translate(" + arrowShift + "px, -" + (BUBBLE_ARROW / 2) + "px) rotate(45deg)" };
+        bubble.css = { transformOrigin: (width / 2 + arrowShift) + "px 100%" };
+    };
+
+    // It grows from the point of the triangle (no motion when the system asks for reduced motion)
+    const growBubble = function (bubble) {
+        if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        bubble.opacity = 0;
+        bubble.css = { transform: "scale(" + BUBBLE_START_SCALE + ")" };
+        // WHY: the start look must be drawn before the motion is turned on, or it is seen at once
+        void bubble.elem.offsetHeight;
+        bubble.setMotionNow(BUBBLE_MOTION);
+        bubble.opacity = 1;
+        bubble.css = { transform: "none" };
+    };
+
+    // It goes at once
+    const hideBubble = function (card) {
+        if (!card.bubble) return;
+        card.bubble.remove();
+        card.bubble = null;
+    };
+
+    const start = function () {
+
+        page.color = PAGE_COLOR;
+
+        // BOX: Cover (behind the dialogs; a Dialog component made from this page will use it as its cover)
+        Box(0, 0, "100%", "100%", { color: COVER_COLOR });
+
+        const pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+
+            VGroup({ width: "100%", height: "auto", align: "center top", gap: 30, padding: [20, 50], clipContent: 0 });
+
+                createDialog({
+                    text: "Button standarts",
+                    actionText: "Edit",
+                    actionIcon: ICONS.publish,
+                    looks: { actions: [LOOKS.publish, LOOKS.publishCyan, LOOKS.publishSky], cancel: LOOKS.ozdenCancel, whiteCancel: LOOKS.ozdenWhiteCancel, plain: LOOKS.ozdenWhitePlain, trash: LOOKS.ozdenTrash, trashAsk: LOOKS.ozdenTrashAsk },
+                    ...OZDEN_SIZES,
+                    trashLabel: "Delete the draft",
+                });
+
+            endGroup();
+
+        endBox();
+
+        if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: pageBox });
+
+    };
+
+    </script>
+
+</head>
+<body>
+</body>
+</html>
