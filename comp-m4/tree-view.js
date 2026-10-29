@@ -423,8 +423,8 @@ const TreeView = function (params = {}) {
     // The rec of a key: the closed parents are opened (their rows are created) first.
     const ensureRec = function (key) {
         key = String(key);
-        if (recs.get(key)) return recs.get(key);
-        if (!nodeIndex.get(key)) return null;
+        // WHY no early return for a made row: its parent may have been closed since (the row is there but hidden)
+        if (!nodeIndex.get(key)) return recs.get(key) || null;
         const path = box.getPath(key);
         for (let i = 0; i < path.length - 1; i++) {
             const rec = recs.get(path[i].key);

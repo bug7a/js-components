@@ -12,6 +12,9 @@ UI COMPONENT TEMPLATE
   and all the bars move one step to the left.
 - WHY: Bar objects are created one time. Only their heights and colors change. (Fast for live data)
 - Bar count: As many bars as fit in the width. It is calculated again when the size changes.
+- TOOLTIP (2026-10-28, the user: "at once, no delay"): the mouse over the bars shows the value of the bar under it in a
+  small box over the bar. The bar is found from the mouse x (the bars are thin), the box follows live values.
+  valueFormat(value, index, self) makes its text; showTooltip: 0 turns it off.
 
 VALUE: A number, or { value, color }
 
@@ -20,6 +23,7 @@ const graph = MiniGraphBox({ title: "Sold Items", valueText: "1.3K", iconFile: "
 graph.addValue(24);
 graph.addValue(30, "orange");
 graph.setValues([10, 20, 15]);
+MiniGraphBox({ valueFormat: function (value) { return value + " items"; } });
 
 Started Date: September 2026
 Developer: Bugra Ozden
@@ -42,6 +46,8 @@ const MiniGraphBoxDefaults = {
     values: [], // [10, 20, { value: 15, color: "orange" }]
     maxValue: 0, // 0: Auto (the biggest visible value is the top of the graph)
     animated: 1, // 1: Bar heights change with a short motion.
+    showTooltip: 1, // 1: the value of the bar under the mouse, in a small box (at once)
+    valueFormat: function (value, index, self) { return String(value); }, // The text of the tooltip
     onClick: function (self) { },
     style: {
         box: {
@@ -73,6 +79,15 @@ const MiniGraphBoxDefaults = {
             padding: 2, // Left and right space
             round: 1,
         },
+        tooltip: {
+            color: Black(0.8),
+            textColor: "white",
+            fontSize: 11,
+            padding: [6, 2],
+            round: 4,
+            gap: 3, // between the tooltip and the top of the bar
+            barOpacity: 0.55, // the other bars while one is under the mouse
+        },
     }
 };
 
@@ -98,6 +113,7 @@ const MiniGraphBox = function (params = {}) {
     const BAR_MOTION = "height 0.2s, background-color 0.2s";
     const NEW_BAR_MOTION = "height 0.2s";
     const RESIZE_WAIT = 30; // ms
+    let hoverIndex = -1; // The bar under the mouse (-1: none)
 
     // *** PUBLIC VARIABLES:
     // [var] Visible values, from left to right: [{ value, color }]
@@ -124,6 +140,7 @@ const MiniGraphBox = function (params = {}) {
 
     // Keep only the last values that fit in the graph.
     const trimValues = function () {
+        if (box.barCount <= 0) return; // WHY: made at width 0 (in a hidden group): the values wait for the bars
         if (box.values.length > box.barCount) {
             box.values = box.values.slice(box.values.length - box.barCount);
         }
@@ -215,10 +232,68 @@ const MiniGraphBox = function (params = {}) {
 
             bar.height = height;
             bar.color = item.color || box.barColor;
-            bar.elem.title = String(item.value); // Value on mouse over
 
         });
 
+        showTooltip(); // WHY: a live value under the mouse changes its text and its place too
+
+    };
+
+    // *** TOOLTIP:
+
+    // The bar under the mouse: from its x over the bar group (the bars are too thin to point at).
+    // WHY the scale: page.fit() zooms the page with a transform; clientX is in screen pixels.
+    const findBarIndex = function (event) {
+        const rect = box.barGroup.elem.getBoundingClientRect();
+        const scale = rect.width / (box.barGroup.elem.offsetWidth || 1);
+        const x = (event.clientX - rect.left) / scale - _s.bars.padding;
+        const step = _s.bars.barWidth + _s.bars.gap;
+        const index = Math.floor((x + _s.bars.gap / 2) / step);
+        if (index < 0 || index >= box.values.length) return -1;
+        return index;
+    };
+
+    // The other bars are fainter while one is under the mouse.
+    const paintBars = function () {
+        barList.forEach(function (bar, index) {
+            const isFaint = (hoverIndex >= 0 && index != hoverIndex);
+            bar.opacity = isFaint ? _s.tooltip.barOpacity : 1;
+        });
+    };
+
+    // The box over the bar of hoverIndex, inside the graph (it is not cut at the sides).
+    const showTooltip = function () {
+
+        const item = box.values[hoverIndex];
+        const bar = barList[hoverIndex];
+        if (!item || !bar || box.showTooltip != 1) {
+            // WHY: fewer values under a still mouse: the other bars must not stay faint
+            if (hoverIndex >= 0 && (!item || !bar)) {
+                hoverIndex = -1;
+                paintBars();
+            }
+            box.lblTooltip.visible = 0;
+            return;
+        }
+
+        box.lblTooltip.plainText = box.valueFormat(item.value, hoverIndex, box);
+        box.lblTooltip.visible = 1;
+
+        const barCenter = box.barGroup.elem.offsetLeft + bar.elem.offsetLeft + bar.elem.offsetWidth / 2;
+        const tipWidth = box.lblTooltip.elem.offsetWidth;
+        const tipHeight = box.lblTooltip.elem.offsetHeight;
+        const maxLeft = box.elem.clientWidth - tipWidth;
+        const barTop = box.barGroup.elem.offsetTop + box.barGroup.elem.offsetHeight - getBarHeight(item, getMaxValue());
+        box.lblTooltip.left = Math.round(Math.max(0, Math.min(maxLeft, barCenter - tipWidth / 2)));
+        box.lblTooltip.top = Math.round(Math.max(0, barTop - tipHeight - _s.tooltip.gap));
+
+    };
+
+    const setHoverIndex = function (index) {
+        if (index == hoverIndex) return;
+        hoverIndex = index;
+        paintBars();
+        showTooltip();
     };
 
     // Check the bar count again. (The box size can change: width "100%")
@@ -232,6 +307,8 @@ const MiniGraphBox = function (params = {}) {
             box.barCount = barCount;
             createBars();
             trimValues();
+            hoverIndex = -1;
+            paintBars();
         }
 
         updateBars();
@@ -358,10 +435,32 @@ const MiniGraphBox = function (params = {}) {
 
     endGroup();
 
+    // LABEL: Tooltip (the value of the bar under the mouse; no motion: it is seen at once)
+    box.lblTooltip = Label({
+        left: 0,
+        top: 0,
+        width: "auto",
+        height: "auto",
+        color: _s.tooltip.color,
+        textColor: _s.tooltip.textColor,
+        fontSize: _s.tooltip.fontSize,
+        padding: _s.tooltip.padding,
+        round: _s.tooltip.round,
+        visible: 0,
+        css: { whiteSpace: "nowrap", pointerEvents: "none" },
+    });
+
     // *** OBJECT INIT CODE:
 
     box.on("click", function () { box.onClick(box); });
     box.cursor = "default";
+    box.clickable = 1; // WHY: the mouse events of the tooltip (a basic.js box gets none by default)
+    box.on("mousemove", function (self, event) {
+        setHoverIndex(findBarIndex(event));
+    });
+    box.on("mouseleave", function () {
+        setHoverIndex(-1);
+    });
 
     box.setIcon(box.iconFile);
 

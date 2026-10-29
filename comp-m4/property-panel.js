@@ -27,7 +27,7 @@ UI COMPONENT TEMPLATE
     constraints-> Horizontal and vertical selects and the constraints diagram. value: { horizontal, vertical }
     alignGrid  -> a 3x3 grid of the places of the content (the align of a group). value: "left top", "center"...
     color      -> [■ #3871E0 | 100%]  a swatch, the color text and its opacity. A click on the swatch opens the
-                  color picker (at the left of the panel): saturation / brightness, hue, opacity, the eyedropper
+                  color picker (at the left of the panel): saturation / brightness, hue, opacity, the eyedropper (the browser's, or pickColor of the page)
                   (Chrome), the color text, and the color groups (palettes) under them.
                   palettes (a param of the panel): [{ key, name, colors, canAdd, emptyText }] or function (panel) -> that.
                   colors: ["#FFFFFF", { value: "var(--color-primary)", color: "#3871E0", hint: "Primary" }, ...]
@@ -82,6 +82,8 @@ const PropertyPanelDefaults = {
     onChange: function (change, self) { }, // Every change: { kind, key, value, oldValue, item, sectionKey }
     palettes: null, // The color groups of the color picker: [{ key, name, colors, canAdd, emptyText }] or function (panel) -> that
     recentColorsKey: "", // The recent colors of the color picker are kept in basic.storage with this key. "": only until the page closes.
+    pickColor: null, // function (panel, done): the eyedropper where the browser has none (VS Code, Safari, Firefox): the page
+                     // lets the user pick a color itself and calls done("#RRGGBB") (done("") : nothing was picked)
     style: {
         panel: {
             color: "#2C2C2C",
@@ -583,7 +585,12 @@ const PropertyPanel = function (params = {}) {
         };
 
         el.addEventListener("focus", function () { input.select(); });
-        el.addEventListener("blur", function () { commit(parse(input.text)); });
+        el.addEventListener("blur", function () {
+            // WHY: the text shows the value rounded to the step (12.4 -> "12"); leaving it (or Escape) without a change
+            //      saved the rounded value and sent onChange
+            if (input.text === format(value)) return;
+            commit(parse(input.text));
+        });
         const stepFactorOf = function (event) {
             return (event.shiftKey) ? SHIFT_STEP_FACTOR : 1;
         };
@@ -1212,7 +1219,8 @@ const PropertyPanel = function (params = {}) {
         const item = ctrl.item;
         const hint = item.hint || item.label || item.key;
         const contentWidth = cp.width - cp.padding * 2;
-        const hasEyeDropper = (typeof window.EyeDropper === "function");
+        const hasScreenDropper = (typeof window.EyeDropper === "function");
+        const hasEyeDropper = hasScreenDropper || (typeof box.pickColor === "function");
         const sliderWidth = contentWidth - ((hasEyeDropper) ? _g.itemHeight + _g.gap : 0);
         let palettes = palettesOf(item, 1);
         let isPaletteListOpen = 0;
@@ -1616,10 +1624,27 @@ const PropertyPanel = function (params = {}) {
                         btnDropper.cursor = "pointer";
                         btnDropper.tabIndex = 0;
                         btnDropper.role = "button";
-                        btnDropper.aria = { label: "Pick a color from the screen" };
-                        btnDropper.elem.title = "Pick a color from the screen";
+                        const dropperHint = (hasScreenDropper) ? "Pick a color from the screen" : "Pick a color from the page";
+                        btnDropper.aria = { label: dropperHint };
+                        btnDropper.elem.title = dropperHint;
                         onHover(btnDropper, function (isHover) { btnDropper.color = (isHover) ? _s.button.hoverColor : "transparent"; });
+                        // WHY closed first: the page is clicked to pick; the value comes back through setValue (onChange)
+                        const pickFromPage = function () {
+                            const key = item.key;
+                            const keptAlpha = alpha;
+                            const ctrlAtPick = controllers[key];
+                            closeMenu();
+                            box.pickColor(box, function (color) {
+                                // WHY the same ctrl: setData() while picking (another selection) makes new items with the same keys
+                                if (!box || !color || controllers[key] !== ctrlAtPick) return;
+                                box.setValue(key, joinAlpha(String(color).toUpperCase(), keptAlpha));
+                            });
+                        };
                         const pickFromScreen = function () {
+                            if (!hasScreenDropper) {
+                                pickFromPage();
+                                return;
+                            }
                             new window.EyeDropper().open().then(function (result) {
                                 if (!obj || obj._isRemoved) return;
                                 commitValue(joinAlpha(result.sRGBHex.toUpperCase(), alpha));

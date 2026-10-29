@@ -83,6 +83,7 @@ const InputBDefaults = {
 
     backgroundColor: "#F6F6F6",
     selectedBackgroundColor: "#F3F4E0", // "#F1E2C4", "#F4FAFF",
+    hoverBackgroundColor: "", // the field under the mouse (not while it is selected). "": no change
     lineColor: "#373836",
     selectedLineColor: "#65A293", // "#F1E2C4", "#588ABE",
     backBorderColor: Black(0),
@@ -339,10 +340,21 @@ const InputB = function(params = {}) {
         return box.input.text;
     };
 
+    let isFieldFocused = 0;
+    let isFieldHover = 0;
+
+    // A selected field keeps its own color; under the mouse it takes hoverBackgroundColor
+    const getBackgroundColor = function() {
+        if (isFieldFocused) return box.selectedBackgroundColor;
+        if (isFieldHover && box.hoverBackgroundColor) return box.hoverBackgroundColor;
+        return box.backgroundColor;
+    };
+
     // The colors of the field while it is focused (1) or not (0): background, border and line.
     // NOTE: A component made from InputB (PhoneInputB, UrlInputB, TextareaB) calls this in its own focusFunc / blurFunc.
     box.paintFocus = function(isFocused) {
-        box.background.color = (isFocused) ? box.selectedBackgroundColor : box.backgroundColor;
+        isFieldFocused = isFocused ? 1 : 0;
+        box.background.color = getBackgroundColor();
         box.background.borderColor = (isFocused) ? box.selectedBackBorderColor : box.backBorderColor;
         box.line.color = (isFocused) ? box.selectedLineColor : box.lineColor;
     };
@@ -358,7 +370,7 @@ const InputB = function(params = {}) {
     // Sets the background color of the input element itself
     box.setBackgroundColor = function(color) {
         box.backgroundColor = color;
-        box.background.color = color;
+        box.background.color = getBackgroundColor();
     };
 
     // Sets the background color of the input when selected/focused
@@ -600,6 +612,12 @@ const InputB = function(params = {}) {
         box.checkIfInputIsRequiredAndEmpty();
     }
 
+    // WHY on box: the field and the warning ball are one field for the user (the title gets no mouse: pointer-events none)
+    box.onHoverChange(function(self, isHover) {
+        isFieldHover = isHover ? 1 : 0;
+        box.background.color = getBackgroundColor();
+    });
+
     return endObject(box);
 
 };
@@ -666,14 +684,20 @@ InputB.styles = {
         style: {},
         backgroundColor: "#F6F6F6",
         selectedBackgroundColor: "#F6F6F6",
+        hoverBackgroundColor: "#EFEFEF", // a little darker under the mouse
         lineColor: Black(0),
         selectedLineColor: Black(0),
-        backBorderColor: Black(0),
+        backBorderColor: Black(0.05), // a faint edge (it was none)
         selectedBackBorderColor: Black(0.4),
         backBorderTopRound: 8,
         backBorderBottomRound: 8,
+        titleBold: 1, // as ozdenDark
         warningBallType: "icon",
         warningColor: "#E5885E",
+
+        tooltipStyle: {
+            round: 6, // as ozdenDark
+        },
 
         unitStyle: {
             color: "#373836EE", // the count of the message (TextareaB)
@@ -687,6 +711,7 @@ InputB.styles = {
         style: {},
         backgroundColor: "rgba(255, 255, 255, 0.04)", // FIELD_BG
         selectedBackgroundColor: "rgba(255, 255, 255, 0.07)", // FIELD_BG_SELECTED
+        hoverBackgroundColor: "rgba(255, 255, 255, 0.06)", // a little lighter under the mouse
         lineColor: Black(0),
         selectedLineColor: Black(0),
         backBorderColor: "rgba(255, 255, 255, 0.10)", // FIELD_LINE
