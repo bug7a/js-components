@@ -415,6 +415,11 @@ const LoginPage = function(params = {}) {
             box.signupBox.opacity = 1;
         }
 
+        // WHY inert: the hidden view is only transparent and not clipped; its LOGIN button (or its fields) next
+        //     to the panel took clicks and the focus (a click on the empty side signed in)
+        box.loginBox.elem.inert = (index !== 0);
+        box.signupBox.elem.inert = (index === 0);
+
     };
 
     box.createButtonWithIcon = function(text, iconFile, onClick) {

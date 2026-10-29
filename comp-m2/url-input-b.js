@@ -75,12 +75,9 @@ const URLInputB = function(params = {}) {
     // *** PUBLIC FUNCTIONS:
     box.isValid = function() { // OVERRIDE
 
-        const regex = new RegExp(
-            "^" +
-            "((([a-zA-Z0-9\-]+)\\.)+[a-zA-Z]{2,})" +  // domain.com veya sub.domain.com
-            "(\:\\d{2,5})?" +                          // :3000 gibi opsiyonel port
-            "(\/[^\s]*)?$"                              // /path?query=1 gibi opsiyonel path ve query
-        );
+        // WHY a regex literal: in the old text form "\s" was only "s" (a JS text drops the "\"), so every path with
+        //     an "s" was not valid ("/news") and a path with a space was
+        const regex = /^(([a-zA-Z0-9-]+)\.)+[a-zA-Z]{2,}(:\d{2,5})?(\/\S*)?$/; // domain.com, :3000, /path?query=1
 
         // WHY: box.getInputValue() verisi "http..." li olduğu için direk input (box.input.text) verisini kullanıyorum.
         return (regex.test(box.input.text)) ? 1 : 0;
@@ -88,6 +85,8 @@ const URLInputB = function(params = {}) {
     };
 
     box.getInputValue = function() { // *** OVERRIDE ***
+        // WHY "": an empty field was "https://www." (the protocol alone): never "Required", and a form sent it
+        if (box.input.text === "") return "";
         return box.tinySelect.list[box.tinySelect.selectedIndex].label + box.input.text;
     };
 

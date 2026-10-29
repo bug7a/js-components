@@ -258,6 +258,7 @@ const CheckBox = function (params = {}) {
     box.on("keydown", function (self, event) {
         if (event.key !== " " && event.key !== "Enter") return;
         event.preventDefault();
+        if (event.repeat) return; // WHY: a held key flipped it again and again (its end state was a matter of luck)
         box.toggle();
     });
 

@@ -101,6 +101,18 @@ const PhoneInputB = function(params = {}) {
         return result;
     };
 
+    // The digits of a pasted number for the mask: "555 123 45 67", "(555) 123-4567", "0555 123 45 67",
+    // "+90 555 123 45 67" and "0090 555..." all give "5551234567". (The country code and a leading 0 go.)
+    const getPastedDigits = function(text) {
+        let digits = String(text).replace(/[^0-9]/g, "");
+        const maxDigits = (box.phoneMask.match(/_/g) || []).length;
+        const codeDigits = String(box.countryCode || "").replace(/[^0-9]/g, "");
+        if (digits.length > maxDigits && codeDigits && digits.indexOf("00" + codeDigits) === 0) digits = digits.substring(2 + codeDigits.length);
+        if (digits.length > maxDigits && codeDigits && digits.indexOf(codeDigits) === 0) digits = digits.substring(codeDigits.length);
+        if (digits.length > maxDigits && digits[0] === "0") digits = digits.substring(1);
+        return digits.substring(0, maxDigits);
+    };
+
     // Backspace ile sadece rakam silinsin, countryCode ve sabit karakterler silinmesin
     const deleteDigitBeforeCursor = function(event) {
         const cursorPos = inputElem.selectionStart;
@@ -247,6 +259,19 @@ const PhoneInputB = function(params = {}) {
             if (event.key === "Backspace") {
                 deleteDigitBeforeCursor(event);
             }
+        });
+
+        // WHY: a pasted number went next to the mask: maxLength cut it, and its 0 or country code became digits
+        //      ("555 123 45 67" -> "+90 (555) 123-456_"). The paste now takes the place of the whole number.
+        inputElem.addEventListener("paste", function(event) {
+            const text = (event.clipboardData) ? event.clipboardData.getData("text") : "";
+            if (!text) return;
+            event.preventDefault();
+            box.setInputValue(fillMaskWithDigits(getFullMask(), getPastedDigits(text)));
+            setCursorToFirstUnderscore();
+            box.checkIfInputIsRequiredAndEmpty();
+            box.showWarningIfNotValid(box.isValid());
+            box.onEdit();
         });
 
         // input event'inde, cursor yanlış yerdeyse düzelt

@@ -16,6 +16,19 @@
         <script src="../comp-m2/tooltip.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp-m2/input-b.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp-m2/search-input-v2.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m2/email-input-b.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m2/password-input-b.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m2/phone-input-b.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m2/tiny-select.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m2/url-input-b.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m2/waiting.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m2/form.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m2/text-tabs.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m4/ui-effects.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m2/login-page-v2.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m2/slider.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m3/check-box.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m3/hold-to-confirm-button.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp-m3/button-with-icon.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp-m3/smart-table.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp-m4/dialog.js" type="text/javascript" charset="utf-8"></script>
@@ -301,6 +314,143 @@
             await wait(100);
             check("SmartTable: a value is written as text, not as HTML", window.__injected === 0 && table.elem.querySelectorAll("img[src='x']").length === 0);
             table.remove();
+        });
+
+        // *** FORM (comp-m2/form.js)
+
+        test("Form: a press that is not a click does not send; a click sends once", async function () {
+            let sends = 0;
+            const form = Form({ onSendClick: function () { sends++; } });
+            const input = InputB({ titleText: "Name", isRequired: 1 });
+            form.addInput(input);
+            input.setInputValue("Ali");
+            input.input.inputElement.dispatchEvent(new Event("input", { bubbles: true }));
+            await wait(50);
+            const button = form.btnSend.elem;
+            button.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, button: 2 })); // a right click
+            button.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, button: 0 })); // a press dragged away
+            const sendsBeforeClick = sends;
+            button.dispatchEvent(new MouseEvent("click", { bubbles: true, detail: 1 }));
+            button.dispatchEvent(new MouseEvent("click", { bubbles: true, detail: 2 })); // the second click of a double click
+            check("Form: a press that is not a click does not send; a click sends once", sendsBeforeClick === 0 && sends === 1, "before the click: " + sendsBeforeClick + ", after: " + sends);
+            form.remove();
+        });
+
+        // *** PHONE INPUT (comp-m2/phone-input-b.js)
+
+        test("PhoneInputB: a pasted number keeps all its digits", async function () {
+            const phone = PhoneInputB({ titleText: "Phone" });
+            const el = phone.input.inputElement;
+            const results = [];
+            ["555 123 45 67", "(555) 123-4567", "0555 123 45 67", "+90 555 123 45 67"].forEach(function (text) {
+                el.focus();
+                const transfer = new DataTransfer();
+                transfer.setData("text", text);
+                el.dispatchEvent(new ClipboardEvent("paste", { bubbles: true, cancelable: true, clipboardData: transfer }));
+                results.push(el.value);
+                phone.setInputValue("");
+            });
+            const isAllRight = results.every(function (value) { return value === "+90 (555) 123-4567"; });
+            check("PhoneInputB: a pasted number keeps all its digits", isAllRight, results.join(" | "));
+            phone.remove();
+        });
+
+        // *** URL INPUT (comp-m2/url-input-b.js)
+
+        test("URLInputB: a path with an 's' is valid, an empty required field is not sent", async function () {
+            const url = URLInputB({ titleText: "Site", isRequired: 1 });
+            const results = [];
+            ["example.com/news", "example.com/a b"].forEach(function (text) {
+                url.input.text = text;
+                results.push(url.isValid());
+            });
+            url.input.text = "";
+            check("URLInputB: a path with an 's' is valid and a path with a space is not", results[0] === 1 && results[1] === 0, results.join(", "));
+            check("URLInputB: an empty field gives an empty value (not the protocol alone)", url.getInputValue() === "", "\"" + url.getInputValue() + "\"");
+            url.remove();
+        });
+
+        // *** LOGIN PAGE (comp-m2/login-page-v2.js)
+
+        test("LoginPage: the hidden tab can not be clicked", async function () {
+            let logins = 0;
+            const login = LoginPage({ onLoginClick: function () { logins++; } });
+            await wait(50);
+            login.setActiveTab(1);
+            await wait(400);
+            const button = findByText("LOGIN", login.loginBox.elem);
+            const rect = button.getBoundingClientRect();
+            const hit = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+            check("LoginPage: the hidden tab can not be clicked", !login.loginBox.elem.contains(hit) && login.loginBox.elem.inert === true);
+            login.remove();
+        });
+
+        // *** WAITING (comp-m2/waiting.js)
+
+        test("Waiting: show() right after hide() stays", async function () {
+            const waiting = Waiting();
+            waiting.show();
+            await wait(50);
+            waiting.hide();
+            waiting.show();
+            await wait(600);
+            check("Waiting: show() right after hide() stays", waiting.visible == 1);
+            waiting.remove();
+        });
+
+        // *** SLIDER (comp-m2/slider.js)
+
+        test("Slider: setValue(v) gives v back", async function () {
+            const slider = Slider({ width: 250 });
+            await wait(50);
+            const wrong = [];
+            for (let v = 0; v <= 100; v++) {
+                slider.setValue(v);
+                if (slider.getValue() !== v) wrong.push(v + "->" + slider.getValue());
+            }
+            check("Slider: setValue(v) gives v back", wrong.length === 0, wrong.slice(0, 6).join(", "));
+            slider.remove();
+        });
+
+        // *** SEARCH INPUT (comp-m2/search-input-v2.js)
+
+        test("SearchInput: a pasted text is searched", async function () {
+            const texts = [];
+            const search = SearchInput({ onSearch: function (text) { texts.push(text); } });
+            const el = search.txtSearch.inputElement;
+            el.focus();
+            document.execCommand("insertText", false, "abc"); // the same input event as a paste or an autofill
+            check("SearchInput: a pasted text is searched", texts[texts.length - 1] === "abc", "onSearch: " + texts.join(", "));
+            search.remove();
+        });
+
+        // *** CHECK BOX (comp-m3/check-box.js)
+
+        test("CheckBox: a held Space changes it once", async function () {
+            let changes = 0;
+            const checkBox = CheckBox({ labelText: "I agree", onChange: function () { changes++; } });
+            key(checkBox.elem, "keydown", " ");
+            key(checkBox.elem, "keydown", " ", { repeat: true });
+            key(checkBox.elem, "keydown", " ", { repeat: true });
+            key(checkBox.elem, "keydown", " ", { repeat: true });
+            check("CheckBox: a held Space changes it once", changes === 1 && checkBox.checked == 1, "onChange: " + changes + ", checked: " + checkBox.checked);
+            checkBox.remove();
+        });
+
+        // *** HOLD TO CONFIRM (comp-m3/hold-to-confirm-button.js)
+
+        test("HoldToConfirmButton: a right click or a cancelled touch does not confirm", async function () {
+            let confirms = 0;
+            const button = HoldToConfirmButton({ holdDuration: 300, onConfirm: function () { confirms++; } });
+            button.elem.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, button: 2 }));
+            await wait(450);
+            const afterRightClick = confirms;
+            button.elem.dispatchEvent(new Event("touchstart", { bubbles: true }));
+            await wait(50);
+            button.elem.dispatchEvent(new Event("touchcancel", { bubbles: true }));
+            await wait(450);
+            check("HoldToConfirmButton: a right click or a cancelled touch does not confirm", afterRightClick === 0 && confirms === 0, "right click: " + afterRightClick + ", touch: " + (confirms - afterRightClick));
+            button.remove();
         });
 
         // *** RUN

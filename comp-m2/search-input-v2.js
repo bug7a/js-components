@@ -280,18 +280,17 @@ const SearchInput = function(params = {}) {
         that.cursor = "pointer";
 
     // *** OBJECT INIT CODE:
-    box.txtSearch.inputElement.addEventListener("keyup", function(event) {
-
-        // Her tuşa basınca
+    // Every change of the text: typed, pasted, dropped or filled by the browser.
+    // WHY "input" (it was keyup): a text pasted with the mouse, dropped or filled by the browser was never searched
+    //     (the list kept the old text); and the arrows, Enter, Escape, which change nothing, searched again.
+    box.listenTo(box.txtSearch.inputElement, "input", function() {
         box.onSearch(getSearchedText(), box);
-
-        // Sadece enter a basınca.
-        if (event.key === "Enter") {
-            box.onSubmit(getSearchedText(), box);
-        }
-
         refreshClearIcon();
+    });
 
+    // Sadece enter a basınca.
+    box.listenTo(box.txtSearch.inputElement, "keyup", function(self, event) {
+        if (event.key === "Enter") box.onSubmit(getSearchedText(), box);
     });
     box.onResize(refreshLayout);
     box.imgClearIcon.onClick(function(self) {

@@ -129,8 +129,10 @@ const HoldToConfirmButton = function (params = {}) {
 
     // *** PUBLIC FUNCTIONS:
 
-    box.startHold = function () {
+    box.startHold = function (self, event) {
         if (box.holdTimer) return;
+        // WHY: a right click (or Ctrl+click on a Mac) started the hold, and its menu took the mouseup: it deleted
+        if (event && event.type === "mousedown" && (event.button !== 0 || event.ctrlKey)) return;
 
         box.maskBox.setMotion(COLOR_MOTION + ", width " + box.holdDurationString);
         box.maskBox.withMotion(function () {
@@ -269,7 +271,9 @@ const HoldToConfirmButton = function (params = {}) {
     // *** OBJECT INIT CODE:
 
     ["mousedown", "touchstart"].forEach(eventName => box.on(eventName, box.startHold));
-    ["mouseup", "touchend", "mouseleave"].forEach(eventName => box.on(eventName, box.cancelHold));
+    // WHY touchcancel / contextmenu: a touch the browser cancelled (a long press) and a menu gave no touchend /
+    //     mouseup, so the timer went on and the delete was confirmed after the user let go
+    ["mouseup", "touchend", "touchcancel", "mouseleave", "contextmenu"].forEach(eventName => box.on(eventName, box.cancelHold));
 
     return endObject(box);
 

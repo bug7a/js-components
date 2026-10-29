@@ -461,10 +461,19 @@ const Form = function(params = {}) {
                         minimal: box.minimalButton,
                     });
                     actionButtonEffect(that);
-                    that.on("mousedown", function() {
-                        // NOTE: The button is clickable only when the form is checked and ready (checkForm).
+                    // WHY click (it was mousedown): a right click, or a press dragged away from the button, sent the
+                    //     form; and Enter / Space on the focused button (a <button>: they give a click) did nothing
+                    that.on("click", function(self, event) {
+                        // NOTE: The button is ready only when the form is checked (checkForm). The keyboard reaches
+                        //       a passive button too, so it is checked here.
+                        if (box.btnSend.clickable != 1) return;
+                        if (event.detail > 1) return; // (the second click of a double click)
                         const formJSON = createJSON();
                         box.onSendClick(formJSON);
+                    });
+                    that.on("keydown", function(self, event) {
+                        // WHY: a held Enter repeats the click of a <button>
+                        if (event.repeat && (event.key == "Enter" || event.key == " ")) event.preventDefault();
                     });
                     box.btnSend.clickable = 0; // NOTE: checkForm() makes it clickable when the form is ready.
                     box.btnSend.css.filter = "grayscale(100%)";

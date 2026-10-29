@@ -108,7 +108,8 @@ const Slider = function(params = {}) {
         if (animated == 0) thumbBox.dontMotion();
         thumbBox.left = newLeft;
         updateTrack(animated);
-        box.currentValue = (maxLeft > 0) ? parseInt(((newLeft / maxLeft) * valueRange) + minValue) : minValue;
+        // WHY round: parseInt cut the fraction of the position, so setValue(50) gave 49 (46 of 101 values were one less)
+        box.currentValue = (maxLeft > 0) ? Math.round(((newLeft / maxLeft) * valueRange) + minValue) : minValue;
         if (animated == 0) valueBox.dontMotion();
         valueBox.text = box.currentValue;
         valueBox.aline(thumbBox, "top", VALUE_BUBBLE_SPACE, "center");
@@ -309,7 +310,7 @@ const Slider = function(params = {}) {
     const onMouseDown = (self, e) => {
         setIsDragging(true);
         startX = getClientX(e);
-        startLeft = parseInt(thumbBox.left, 10) || 0;
+        startLeft = parseFloat(thumbBox.left) || 0; // (not parseInt: a click on the thumb moved it a part of a pixel)
         
         document.addEventListener("mousemove", onMouseMove);
         document.addEventListener("mouseup", onMouseUp);

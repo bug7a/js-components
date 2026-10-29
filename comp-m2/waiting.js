@@ -53,8 +53,17 @@ const Waiting = function(params = {}) {
     // *** PUBLIC FUNCTIONS:
     // NOTE: show() and hide() replace the show() / hide() of basic.js: they fade the cover in and out.
 
+    // The timers of the last hide(): a show() after it cancels them.
+    // WHY: show() right after hide() (a job that starts another one) was undone: the old timers hid the cover.
+    let cancelHide = null;
+    const cancelHideTimers = function() {
+        if (cancelHide) cancelHide();
+        cancelHide = null;
+    };
+
     box.show = function() {
 
+        cancelHideTimers();
         box.visible = 1;
         box.withMotion(function(self) {
             box.opacity = 1;
@@ -67,22 +76,31 @@ const Waiting = function(params = {}) {
     // - remove: eğer 1 ise görünmez yaptıktan sonra nesneyi siler.
     box.hide = function(timer = 0, $remove = 0) {
 
-        setTimeout(function() {
+        cancelHideTimers();
+        let cancelFade = null;
+
+        // NOTE: box.after(): the timers are cleaned by remove() too.
+        const cancelWait = box.after(timer, function() {
 
             box.withMotion(function(self) {
                 box.opacity = 0;
             });
 
-            setTimeout(function() {
+            cancelFade = box.after(FADE_OUT_TIME, function() {
+                cancelHide = null;
                 box.visible = 0;
                 box.onHide();
                 if ($remove == 1) {
                     box.remove();
                 }
                 if (box.animated == 1) box.stopAnimation();
-            }, FADE_OUT_TIME);
+            });
 
-        }, timer);
+        });
+        cancelHide = function() {
+            cancelWait();
+            if (cancelFade) cancelFade();
+        };
 
     };
 
