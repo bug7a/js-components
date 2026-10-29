@@ -47,6 +47,7 @@ const Tooltip = function(params = {}) {
     const SPACE_ABOVE_MOUSE = 12;
     const SPACE_BELOW_MOUSE = 8;
     const SPACE_BESIDE_MOUSE = 25;
+    const HINT_Z_INDEX = 100000; // WHY: the hint is on page; it must stay over the popups (Dialog cover 4000, Modal...).
 
     // *** Private functions:
 
@@ -138,6 +139,7 @@ const Tooltip = function(params = {}) {
             round: box.lbl_round,
             border: box.lbl_border,
             borderColor: box.lbl_borderColor,
+            zIndex: HINT_Z_INDEX,
         });
         page.add(that);
         that.text = box.hintText;

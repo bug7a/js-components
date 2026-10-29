@@ -2,6 +2,9 @@
 
 /*
 
+NOT FOR NEW PROJECTS (the user, 2026-10-29): use comp-m3/check-box.js (CheckBox). Both define CheckBox: never load
+the two on one page. This file stays only for the pages that still use it.
+
 Check Box - v24.06
 
 UI COMPONENT TEMPLATE

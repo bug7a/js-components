@@ -2,6 +2,10 @@
 
 /*
 
+NOT FOR NEW PROJECTS (the user, 2026-10-29): use comp-m2/search-input-v2.js (SearchInput, styleName "ozden" /
+"ozdenDark"). Both define SearchInput: never load the two on one page. This file stays only for the pages that still
+use it.
+
 Search Input - v24.04
 
 UI COMPONENT TEMPLATE

@@ -1,3 +1,8 @@
+/*
+NOT FOR NEW PROJECTS (the user, 2026-10-29): use comp-m4/ui-standards.js (UI, its themes are written as CSS variables, no CSS file).
+This file stays only for the pages that still use it.
+*/
+
 /* LIGHT MODE */
 
 :root {

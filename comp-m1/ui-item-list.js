@@ -2,6 +2,9 @@
 
 /*
 
+NOT FOR NEW PROJECTS (the user, 2026-10-29): use comp-m4/item-list.js (ItemList). This file stays only for the pages
+that still use it.
+
 UI ITEM LIST COMPONENT:
 - Makes searchable, custom item lists.
 

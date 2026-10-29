@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>NumericKeyboard</title>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+
+    <script src="../comp-m4/numeric-keyboard.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+    /* Bismillah */
+
+    // NumericKeyboard (comp-m4): number keys on the screen. The new version of comp-m1/ui-numeric-keyboard.js
+    // (the first one is its sample). Click a keyboard (or Tab to it) and type with the keys of the computer too.
+
+    const AMOUNT_LENGTH = 8;
+
+    // GROUP: A title over a sample
+    const startSample = function (title, look = {}) {
+        VGroup({ hug: 1, align: "center top", gap: 8, padding: look.padding || 0, color: look.color || "transparent", round: 12, clipContent: 0 });
+        Label({ plainText: title, fontSize: 14, bold: 1, textColor: look.textColor || Black(0.5) });
+    };
+
+    const endSample = function () {
+        endGroup();
+    };
+
+    const createInfo = function (textColor = Black(0.5)) {
+        return Label({ plainText: "-", fontSize: 14, textColor: textColor });
+    };
+
+    const start = function () {
+
+        page.color = "white";
+
+        const pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1, scrollX: 1 });
+
+            VGroup({ width: "100%", height: "auto", align: "center top", gap: 40, padding: 30, clipContent: 0 });
+            // WHY: on a phone the samples are wider than the screen: the group grows, the page scrolls sideways (centered, the left side was cut)
+            that.css = { width: "max-content", minWidth: "100%" };
+
+                Label({ text: "NumericKeyboard", fontSize: 26, bold: 1, textColor: Black(0.8) });
+
+                startSample("keyLayout: \"wide\" · PIN (maxLength: 4, mask: 1)");
+                    const pin = NumericKeyboard({
+                        titleText: "PIN",
+                        maxLength: 4,
+                        mask: 1,
+                        onChange: function (self) {
+                            pinInfo.plainText = "value: \"" + self.value + "\"";
+                        },
+                    });
+                    const pinInfo = createInfo();
+                endSample();
+
+                HGroup({ hug: 1, align: "center top", gap: 40, wrap: 1, clipContent: 0 });
+
+                    startSample("keyLayout: \"phone\" · onEnter");
+                        NumericKeyboard({
+                            keyLayout: "phone",
+                            titleText: "AMOUNT",
+                            maxLength: AMOUNT_LENGTH,
+                            onEnter: function (self) {
+                                phoneInfo.plainText = self.value ? "Entered: " + self.value : "Type an amount first";
+                                self.clear();
+                            },
+                        });
+                        const phoneInfo = createInfo();
+                    endSample();
+
+                    startSample("styleName: \"dark\"", { color: "#141414", textColor: White(0.6), padding: [20, 16] });
+                        NumericKeyboard({ keyLayout: "phone", styleName: "dark", titleText: "CODE", maxLength: 6 });
+                    endSample();
+
+                endGroup();
+
+            endGroup();
+
+        endBox();
+
+        if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: pageBox });
+
+    };
+
+    </script>
+
+</head>
+<body>
+</body>
+</html>

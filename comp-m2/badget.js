@@ -2,6 +2,9 @@
 
 /*
 
+NOT FOR NEW PROJECTS (the user, 2026-10-29): use comp-m2/badge-v2.js (Badge). This file stays only for the pages
+that still use it.
+
 Component Template - v24.06
 
 UI COMPONENT TEMPLATE

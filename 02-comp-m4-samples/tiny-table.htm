@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>TinyTable</title>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+
+    <script src="../comp-m4/scrolling-text.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp-m4/tiny-table.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+    /* Bismillah */
+
+    // TinyTable (comp-m4): a light table for short lists. The new version of comp-m1/tiny-table.js with the same look
+    // (the first table is its sample: 02-comp-m1-samples/tiny-table.htm).
+
+    const COLUMNS = [
+        { title: "ID", width: 50, align: "center" },
+        { title: "VALUE", width: 80 },
+        { title: "DESCRIPTION", width: 380 },
+    ];
+
+    // (HTML in the texts: allowHtml: 1, only for texts of your own code)
+    const ROWS = [
+        ["1", "404", 'HTTP status code for <b>"Not Found"</b>'],
+        ["2", "null", "Represents the absence of a value in many programming languages"],
+        ["3", "true", 'Boolean value representing <b>"true"</b>'],
+        ["4", "int", "Data type for <b>integers</b> in many programming languages"],
+        ["5", "printf", "Function in <b>C</b> used to <b>print</b> formatted output"],
+        ["6", "JSON", "Lightweight data-interchange format"],
+    ];
+
+    const PLAIN_ROWS = ROWS.map(function (row) {
+        return row.map(function (text) { return text.replace(/<\/?b>/g, ""); });
+    });
+
+    const SCROLL_HEIGHT = 150;
+
+    // The second column is bold (onCellCreate)
+    const boldValue = function (cell) {
+        if (cell.columnIndex == 1) cell.label.bold = 1;
+    };
+
+    // GROUP: A title over a sample
+    // WHY clipContent: 0: a group cuts its content at its round corners; the corner of the table was cut there
+    const startSample = function (title, look = {}) {
+        VGroup({ hug: 1, align: "left top", gap: 10, padding: look.padding || 0, color: look.color || "transparent", round: 12, clipContent: 0 });
+        Label({ plainText: title, fontSize: 14, bold: 1, textColor: look.textColor || Black(0.5) });
+    };
+
+    const endSample = function () {
+        endGroup();
+    };
+
+    const start = function () {
+
+        page.color = "#F0F1EE";
+
+        const pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1, scrollX: 1 });
+
+            VGroup({ width: "100%", height: "auto", align: "center top", gap: 30, padding: 40 });
+            // WHY: on a phone the samples are wider than the screen: the group grows, the page scrolls sideways (centered, the left side was cut)
+            that.css = { width: "max-content", minWidth: "100%" };
+
+                Label({ text: "TinyTable", fontSize: 26, bold: 1, textColor: Black(0.8) });
+
+                startSample("classic · the comp-m1 sample (allowHtml: 1, onCellCreate, header indianred)");
+                    TinyTable({
+                        columns: COLUMNS,
+                        rows: ROWS,
+                        allowHtml: 1,
+                        style: { header: { color: "indianred", textColor: White(0.8) } },
+                        onCellCreate: boldValue,
+                        onRowClick: function (self, rowIndex) { println("Row: " + rowIndex); },
+                    });
+                endSample();
+
+                startSample("styleName: \"light\" · bodyHeight: " + SCROLL_HEIGHT + " (the rows scroll)");
+                    TinyTable({ styleName: "light", columns: COLUMNS, rows: PLAIN_ROWS.concat(PLAIN_ROWS), bodyHeight: SCROLL_HEIGHT, onCellCreate: boldValue });
+                endSample();
+
+                startSample("styleName: \"dark\"", { color: "#141414", textColor: White(0.6), padding: 20 });
+                    TinyTable({ styleName: "dark", columns: COLUMNS, rows: PLAIN_ROWS, onCellCreate: boldValue });
+                endSample();
+
+            endGroup();
+
+        endBox();
+
+        if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: pageBox });
+
+    };
+
+    </script>
+
+</head>
+<body>
+</body>
+</html>

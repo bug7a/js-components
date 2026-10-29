@@ -1,3 +1,8 @@
+/*
+NOT FOR NEW PROJECTS (the user, 2026-10-29): use comp-m4/ui-effects.js (UIEffects). Both define UIEffects: never load the two on one page.
+This file stays only for the pages that still use it.
+*/
+
 const UIEffects = function() {};
 
 UIEffects.button = function(btn, type = "default") {

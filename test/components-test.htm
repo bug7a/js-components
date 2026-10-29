@@ -103,6 +103,7 @@
             { file: "comp-m4/chart-box.js", name: "ChartBox" },
             { file: "comp-m4/context-menu.js", name: "ContextMenu" },
             { file: "comp-m4/data-table.js", name: "DataTable", deps: ["comp-m2/search-input-v2.js"] },
+            { file: "comp-m4/dialog.js", name: "Dialog", deps: ["comp-m2/tooltip.js", "comp-m2/input-b.js", "comp-m3/button-with-icon.js"] },
             { file: "comp-m4/full-screen-select.js", name: "FullScreenSelect", deps: ["comp-m2/search-input-v2.js"] },
             { file: "comp-m4/gauge.js", name: "Gauge" },
             { file: "comp-m4/item-list.js", name: "ItemList" },
@@ -110,10 +111,13 @@
             { file: "comp-m4/loading-screen.js", name: "LoadingScreen" },
             { file: "comp-m4/mini-graph-box.js", name: "MiniGraphBox" },
             { file: "comp-m4/modal.js", name: "Modal" },
+            { file: "comp-m4/notice.js", name: "Notice" },
+            { file: "comp-m4/numeric-keyboard.js", name: "NumericKeyboard" },
             { file: "comp-m4/page-control.js", name: "PageControl" },
             { file: "comp-m4/progress-bar.js", name: "ProgressBar" },
             { file: "comp-m4/property-panel.js", name: "PropertyPanel" },
             { file: "comp-m4/rich-text-editor.js", name: "RichTextEditor" },
+            { file: "comp-m4/scrolling-text.js", name: "ScrollingText" },
             { file: "comp-m4/search-results.js", name: "SearchResults", deps: ["comp-m2/search-input-v2.js"] },
             { file: "comp-m4/select-box.js", name: "SelectBox" },
             { file: "comp-m4/select-color.js", name: "SelectColor" },
@@ -128,6 +132,7 @@
             { file: "comp-m4/tabs.js", name: "Tabs" },
             { file: "comp-m4/tag-input.js", name: "TagInput" },
             { file: "comp-m4/time-line.js", name: "TimeLine" },
+            { file: "comp-m4/tiny-table.js", name: "TinyTable", deps: ["comp-m4/scrolling-text.js"] },
             { file: "comp-m4/toast.js", name: "Toast" },
             { file: "comp-m4/tree-view.js", name: "TreeView" },
             { file: "comp-m4/ui-effects.js", name: "UIEffects", kind: "object" },
@@ -275,7 +280,8 @@
             const isContainerSame = getDefaultContainerBox() === containerBefore;
 
             await sleep(test.wait || 400);
-            const keys = Object.keys(box).sort();
+            // WHY no "_" keys: basic.js makes its own ones lazily (_timerList at the first after()), so the twins differed by timing
+            const keys = Object.keys(box).filter(function (key) { return key.charAt(0) !== "_"; }).sort();
             // basic.js writes this warning 100 ms after a start call that was never ended.
             const newWarnings = newItems(probe.warnings, warningsBefore);
             const notEnded = newWarnings.filter(function (w) { return /not ended/.test(w); });

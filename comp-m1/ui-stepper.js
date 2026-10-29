@@ -2,6 +2,9 @@
 
 /*
 
+NOT FOR NEW PROJECTS (the user, 2026-10-29): use comp-m4/stepper.js (Stepper). This file stays only for the pages
+that still use it.
+
 UI COMPONENT TEMPLATE
 - You can customize, this template code as you need:
 

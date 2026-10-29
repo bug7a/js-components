@@ -2,6 +2,9 @@
 
 /*
 
+NOT FOR NEW PROJECTS (the user, 2026-10-29): use comp-m4/tabs.js (Tabs). This file stays only for the pages that
+still use it.
+
 Component Template - v25.07
 
 UI COMPONENT TEMPLATE

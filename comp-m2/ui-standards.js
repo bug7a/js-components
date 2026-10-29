@@ -1,3 +1,8 @@
+/*
+NOT FOR NEW PROJECTS (the user, 2026-10-29): use comp-m4/ui-standards.js (UI, no CSS file). Both define UI: never load the two on one page.
+This file stays only for the pages that still use it.
+*/
+
 const UI = {
 
   COLOR_PAGE: "var(--color-page)",

@@ -2,6 +2,9 @@
 
 /*
 
+NOT FOR NEW PROJECTS (the user, 2026-10-29): use comp-m4/select-box.js (SelectBox; styleName "legacy" has this
+look). This file stays only for the pages that still use it.
+
 Select Item - v24.04
 
 UI COMPONENT TEMPLATE

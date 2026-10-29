@@ -2,6 +2,9 @@
 
 /*
 
+NOT FOR NEW PROJECTS (the user, 2026-10-29): use comp-m2/login-page-v2.js (LoginPage). Both define LoginPage: never
+load the two on one page. This file stays only for the pages that still use it.
+
 Component Template - v25.07
 
 UI COMPONENT TEMPLATE

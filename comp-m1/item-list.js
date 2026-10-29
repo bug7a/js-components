@@ -2,6 +2,9 @@
 
 /*
 
+NOT FOR NEW PROJECTS (the user, 2026-10-29): use comp-m4/item-list.js (ItemList; styleName "classic" has this look).
+Both define ItemList: never load the two on one page. This file stays only for the pages that still use it.
+
 Item List - v24.04
 
 UI ITEM LIST COMPONENT:
