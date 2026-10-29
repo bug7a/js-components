@@ -246,7 +246,8 @@
             c.status = "doors";
 
             // Passengers board / alight.
-            const delta = random(-350, 420);
+            // WHY even: random(-350, 420) gave +35 kg a stop on average; in minutes every car was overloaded and stuck open
+            const delta = random(-400, 400);
             c.load = Math.max(0, Math.min(c.capacity * 1.35, c.load + delta));
             c.overloaded = (c.load > c.capacity) ? 1 : 0;
 
@@ -262,12 +263,21 @@
 
         };
 
+        const OFF_STEP_MIN = 60; // kg a tick that step off an overloaded car
+        const OFF_STEP_MAX = 120;
+
         const handleDoors = function (c) {
 
             if (c.doorState === "opening") {
                 c.doorState = "open";
             } else if (c.doorState === "open") {
-                if (c.overloaded) return; // Stuck open until "Force Close" or the load goes down.
+                if (c.overloaded) {
+                    // Open until "Force Close" or the load goes down: some passengers step off
+                    // WHY: nothing lowered the load before, so the car stayed open for ever
+                    c.load = Math.max(0, c.load - random(OFF_STEP_MIN, OFF_STEP_MAX));
+                    c.overloaded = (c.load > c.capacity) ? 1 : 0;
+                    return;
+                }
                 if (c.doorTimer < 0) return; // Held open (Independent / emergency). Manual close only.
                 c.doorTimer--;
                 if (c.doorTimer <= 0) c.doorState = "closing";

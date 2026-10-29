@@ -244,7 +244,7 @@ const MediaPage = function(params = {}) {
     };
 
     const confirmDelete = function(ids) {
-        const text = (ids.length == 1) ? "<b>" + findItem(ids[0]).name + "</b>" : "<b>" + ids.length + " files</b>";
+        const text = (ids.length == 1) ? "<b>" + ContentsPage.escapeHtml(findItem(ids[0]).name) + "</b>" : "<b>" + ids.length + " files</b>";
         Dialog({
             icon: ASSETS + "warning.png",
             title: "Delete Files",
@@ -449,7 +449,7 @@ const MediaPage = function(params = {}) {
                 that.elem.style.flex = "1 1 auto";
                 that.elem.style.minWidth = "0";
 
-                    Label({ text: item.name, fontSize: 14, textColor: Ink(0.9), width: "100%" });
+                    Label({ plainText: item.name, fontSize: 14, textColor: Ink(0.9), width: "100%" }); // (a file name from the disk)
                     that.elem.style.whiteSpace = "nowrap";
                     that.elem.style.overflow = "hidden";
                     that.elem.style.textOverflow = "ellipsis";

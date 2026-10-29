@@ -502,7 +502,8 @@
                             container: rightView,
                         });
                         rightView.setWidth(450);
-                        rightView.page.elem.style.filter = "invert(100%)";
+                        // WHY only dark: the page is light; inverted it fits a dark theme (on the light theme it was black)
+                        if (T.isDark) rightView.page.elem.style.filter = "invert(100%)";
                         rightView.page.elem.style.borderLeft = "1px solid rgba(0,0,0,0.15)";
                     }
                     break;
@@ -532,6 +533,7 @@
 
             // TEST LOGIN:
             userData = null;
+            UserActionsPage.clearSession(); // (only the Sign Out of the profile cleared it: an old "Signed in" time was shown)
             basic.storage.save("appid_login", userData);
 
             // Try to logout with your service
@@ -541,8 +543,6 @@
 
         // Actions
         const onLoginClick = function() {
-
-            loginPage.showAlert("login");
 
             const email = loginPage.loginEmail.getInputValue();
             const password = loginPage.loginPassword.getInputValue();

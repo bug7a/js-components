@@ -579,7 +579,7 @@ const HomePage = function(params = {}) {
                 const buttonParams = { width: "100%", align: "left center" };
 
                 createButton("Manage Users", "left-menu/data-table.png", function() {
-                    openPage(UsersPage.KEY);
+                    openPage(UserListPage.KEY); // (UsersPage is the old page, out of the menu)
                 }, buttonParams);
 
                 createButton("Edit Contents", "left-menu/data-table.png", function() {

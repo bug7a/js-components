@@ -144,7 +144,9 @@ const ContentsPage = function(params = {}) {
         link.href = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/csv" }));
         link.download = "contents-" + ContentsPage.formatDateTime(Date.now()).slice(0, 10) + ".csv";
         link.click();
-        URL.revokeObjectURL(link.href);
+        // WHY later: some browsers start the download after click() returns
+        const url = link.href;
+        setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
 
     };
 
@@ -928,7 +930,8 @@ const ContentEditor = function(params = {}) {
                             style: darkRadioStyle,
                             onChange: function(self) {
                                 draft.status = self.value;
-                                if (draft.status == "scheduled" && !draft.publishAt) updateScheduleTime();
+                                // WHY "in the future": a published item has a past time; the time on the screen must be used
+                                if (draft.status == "scheduled" && !(draft.publishAt > Date.now())) updateScheduleTime();
                                 updateScheduleView();
                             },
                         });

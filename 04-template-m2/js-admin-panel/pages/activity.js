@@ -735,10 +735,10 @@ const ActivityDetails = function(params = {}) {
                     rowHoverBorderColor: Ink(0.1),
                     onCellRender: function(cell) {
                         if (cell.index == 1) {
-                            cell.textColor = "#E6A0A0";
+                            cell.textColor = Theme.readable("#E6A0A0"); // (the light theme: it was pale on white)
                             cell.elem.style.textDecoration = "line-through";
                         }
-                        if (cell.index == 2) cell.textColor = "#9FD3C4";
+                        if (cell.index == 2) cell.textColor = Theme.readable("#9FD3C4");
                     },
                 });
                 table.width = "100%";

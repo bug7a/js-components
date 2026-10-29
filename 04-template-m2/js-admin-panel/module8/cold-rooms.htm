@@ -205,7 +205,8 @@
                 simulateDevice(d, getTimeText(new Date()));
             });
 
-            if (device.online) {
+            // WHY not while restarting: simulateDevice adds no point then, the last one was added again (3 times a restart)
+            if (device.online && !device.restarting) {
                 const h = device.history;
                 const last = h.labels.length - 1;
                 chartTemp.addValue(h.labels[last], [h.temp[last], h.target[last]]);
@@ -246,6 +247,9 @@
         };
 
         // One second of the device. silent: 1 -> No events.
+        const TEMP_MIN = -35; // °C: the coldest a compressor can make a room
+        const TEMP_MAX = 30; // °C: the air outside
+
         const simulateDevice = function (d, timeText, silent = 0) {
 
             if (!d.online || d.restarting) return;
@@ -263,7 +267,8 @@
             if (d.relays.compressor) change -= (d.relays.fan) ? 0.35 : 0.22;
             if (d.relays.defrost) change += 0.25;
             if (d.relays.light) change += 0.01;
-            d.temp = round1(d.temp + change + (Math.random() - 0.5) * 0.08);
+            // WHY the limits: in Manual mode the room went to +250 °C, or under absolute zero with the compressor on
+            d.temp = round1(Math.min(TEMP_MAX, Math.max(TEMP_MIN, d.temp + change + (Math.random() - 0.5) * 0.08)));
 
             d.humidity = Math.min(98, Math.max(70, d.humidity + (Math.random() - 0.5) * 1.2 + (d.relays.defrost ? 0.3 : 0)));
             d.signal = Math.min(100, Math.max(40, d.signal + random(-3, 3)));
@@ -320,7 +325,7 @@
         // Test: Restart takes 3 seconds.
         const restartDevice = function (d, reason = "Restarted by user") {
 
-            if (!d.online) return;
+            if (!d.online || d.restarting) return; // (a second click started a second timer that ended the first restart early)
 
             d.restarting = 1;
             addEvent(d, "Warning", reason);

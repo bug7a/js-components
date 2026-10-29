@@ -1,5 +1,5 @@
 UsersPageDefaults = {
-    color: "black",
+    color: T.page, // (it was "black": the light theme had a black page with black titles)
 };
 
 const UsersPage = function(params = {}) {
@@ -43,6 +43,11 @@ const UsersPage = function(params = {}) {
     ];
 
     box.destroy = function() {
+        // WHY: the Edit User panel is in the right view: it stayed open on the next page and its Save crashed (box null)
+        if (rightView.isShown(EditUser.KEY)) {
+            rightView.hide();
+            rightView.clean();
+        }
         box.remove();
         box = null;
     };
@@ -118,12 +123,14 @@ const UsersPage = function(params = {}) {
         EditUser({
             itemData: itemData,
             onSave: function(itemData) {
+                if (!box) return;
                 box.saveItem(itemData);
                 rightView.hide();
                 rightView.clean();
 
             },
             onDelete: function(itemData) {
+                if (!box) return;
                 box.deleteItem(itemData);
                 rightView.hide();
                 rightView.clean();

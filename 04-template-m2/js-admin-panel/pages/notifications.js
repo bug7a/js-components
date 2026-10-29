@@ -493,7 +493,7 @@ NotificationsPage.getItems = function() {
         ["stock", "Low stock: Cable Organizer (Green)", "Only 1 left. Low stock limit is 5.", "Products", 38 * MIN, false],
         ["comment", "New comment on \"Summer sale\"", "Selin Koc: \"Is free shipping included?\"", "Contents", 1.5 * HOUR, false],
         ["order", "New order ORD-103545", "Tarik Yilmaz · 6 items · $860.00", "Orders", 3 * HOUR, false],
-        ["user", "New user signed up", "Mert Aksoy (mert.aksoy@mail.com)", "Users", 5 * HOUR, true],
+        ["user", "New user signed up", "Mert Aksoy (mert.aksoy@mail.com)", UserListPage.KEY, 5 * HOUR, true],
         ["refund", "Refund requested for ORD-102871", "Reason: The product arrived broken.", "Orders", 7 * HOUR, true],
         ["stock", "Out of stock: Smart Ring (Blue)", "Customers can not buy it now.", "Products", 20 * HOUR, true],
         ["report", "Weekly sales report is ready", "Revenue $48,210 · 12% more than last week", "Reports", 1.2 * DAY, true],
@@ -525,7 +525,7 @@ NotificationsPage.startTestFeed = function(interval = 45000) {
     const SAMPLES = [
         { type: "order", title: "New order ORD-10{n}", text: "Deniz Arslan · 2 items · $142.40", pageKey: "Orders" },
         { type: "stock", title: "Low stock: Wireless Headphones (Black)", text: "Only 3 left. Low stock limit is 5.", pageKey: "Products" },
-        { type: "user", title: "New user signed up", text: "Ece Yurt (ece.yurt@mail.com)", pageKey: "Users" },
+        { type: "user", title: "New user signed up", text: "Ece Yurt (ece.yurt@mail.com)", pageKey: UserListPage.KEY },
         { type: "comment", title: "New comment on \"About us\"", text: "Anna Schmidt: \"Where is your office?\"", pageKey: "Contents" },
     ];
 

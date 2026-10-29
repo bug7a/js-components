@@ -19,6 +19,9 @@ Webpage: https://bug7a.github.io/js-components/
 - Eğer itemHeight 20px den küçük ise otomatik itemLineCount düşür ve eğer itemHeight büyükse 100px den itemLineCount arttır.
 - wheelScroll: 1 ise fare tekerleği tablonun satırlarını kaydırır (sayfa kaymaz). Varsayılan 0: tekerlek sayfayı kaydırır, satırlar scroll çubuğu ve butonlar ile kaydırılır.
 -- smartTable.setWheelScroll(1) ile sonradan açılabilir.
+- allowHtml (2026-10-29): 0 (varsayılan): hücre değerleri düz metin yazılır (kullanıcının yazdığı bir ad veya başlık
+  HTML olarak çalışmaz). 1: değerler HTML olarak yazılır (Ex: "<b>12</b>"). createCustomItemCell / updateCustomItemCell
+  içinde cell.label.text ile yazılan kendi değerleriniz etkilenmez.
 
 
 */
@@ -41,6 +44,7 @@ const SmartTableDefaults = {
     searchTitleIndex: -1, // -1: Search in all columns (ALL). 0, 1...: Search only in this column.
     showSearchTitleSelect: 1, // 0: Hide the column select box (ALL) next to the search input.
     wheelScroll: 0, // 1: The mouse wheel scrolls the rows (and the page does not scroll). 0: The wheel is left to the page.
+    allowHtml: 0, // 1: The cell values are written as HTML. 0: As plain text (safe for the text of the users)
     allTitlesText: "ALL",
     sortByTitleIndex: 0,
     sortDirection: "A-Z", // "A-Z" or "Z-A"
@@ -259,7 +263,9 @@ const SmartTable = function (params = {}) {
             // WHY: label.text innerHTML (string) döndürüyor; sayı veya "&" içeren değerlerle karşılaştırma hep farklı çıkıyordu. Son yazılan değer hücrede tutuluyor.
             if (!("lastValue" in cell) || cell.lastValue !== newValue) { // WHY: eğer !== olmaz ise, 0 ile "" aynı sayılıyor.
                 cell.lastValue = newValue;
-                cell.label.text = newValue;
+                // WHY plainText: a value from a user (a name, a title) ran as HTML in the cell
+                if (box.allowHtml == 1) cell.label.text = newValue;
+                else cell.label.plainText = newValue;
             }
 
             box.updateCustomItemCell(cell, j, newValue);

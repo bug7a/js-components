@@ -211,7 +211,7 @@
             simSecond++;
 
             boards.forEach(function (b) {
-                readSensors(b);
+                if (b.isOnline) readSensors(b); // WHY: an offline board sends nothing (its serial lines and charts went on)
                 stepUpload(b);
             });
 
@@ -333,6 +333,11 @@
 
         const startUpload = function (b) {
             if (b.upload.isRunning) return;
+            if (!b.isOnline) {
+                addEvent(b, "Error", "Upload failed: the board is offline");
+                renderLive();
+                return;
+            }
             b.upload = { isRunning: 1, percent: 0, step: "Compiling" };
             addSerial(b, "--- Upload started ---");
             addEvent(b, "Info", "Upload started: " + b.sketch);
@@ -415,7 +420,7 @@
                             { type: "separator" },
                             { text: "Clear the serial monitor", key: "clear" },
                         ],
-                        styleName: T.compStyle,
+                        styleName: (T.isDark) ? "dark" : "classic", // WHY: ContextMenu has no "modern" (T.compStyle of the light theme)
                         onSelect: function (self, item) { runTestAction(item.key); },
                     });
                     moreMenu.attachTo(btnMore, "click");
@@ -911,7 +916,7 @@
             const command = String(text || "").trim();
             if (!command) return;
             addSerial(board, "> " + command);
-            addSerial(board, "OK");
+            addSerial(board, (board.isOnline) ? "OK" : "No answer: the board is offline");
             serialInput.text = "";
             renderLive();
         };

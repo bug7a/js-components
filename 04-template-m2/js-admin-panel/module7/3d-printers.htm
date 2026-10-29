@@ -293,6 +293,8 @@
                 return;
             }
             p.nozzle.target = p.pausedNozzleTarget || 215;
+            if (p.pausedBedTarget) p.bed.target = p.pausedBedTarget; // (the bed was cooled with "Cool down")
+            p.pausedBedTarget = 0;
             p.status = "heating";
             p.pauseReason = "";
             addEvent(p, "Info", "Resuming the print");
@@ -587,6 +589,12 @@
                     createSmallTitle("Preset");
                     presetSelect = createSelect(PRESETS.map(function (preset) { return { id: preset.id, label: preset.label }; }), function (index) {
                         const preset = PRESETS[index];
+                        // WHY: "Cool down" during a print went on printing with a cold nozzle: the print is paused first
+                        const isPrinting = (printer.status == "printing" || printer.status == "heating");
+                        if (!preset.nozzle && isPrinting) {
+                            printer.pausedBedTarget = printer.bed.target;
+                            pausePrint(printer, "Heaters turned off");
+                        }
                         printer.nozzle.target = preset.nozzle;
                         printer.bed.target = preset.bed;
                         addEvent(printer, "Info", (preset.nozzle) ? "Targets set: " + preset.nozzle + " / " + preset.bed + " °C (" + preset.id.toUpperCase() + ")" : "Heaters turned off (cool down)");

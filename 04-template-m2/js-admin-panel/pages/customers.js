@@ -94,6 +94,7 @@ const CustomersPage = function(params = {}) {
     const render = function() {
 
         const all = CustomersPage.getCustomers();
+        all.forEach(CustomersPage.recompute);
         all.forEach(function(c) { c.segment = CustomersPage.getSegment(c); });
         const list = all.filter(matchesFilters);
 
@@ -310,7 +311,15 @@ const CustomersPage = function(params = {}) {
                 });
                 that.position = "relative";
 
-                CustomersPage.createTinySelect(SORTS, function(id) { filter.sortId = id; render(); });
+                CustomersPage.createTinySelect(SORTS, function(id) {
+                    filter.sortId = id;
+                    // WHY: the toolbar sort works through the "order" column; after a click on another title it did nothing
+                    smartTable.resetSortIcons(smartTable.titleCellList[0]);
+                    smartTable.sortByTitleIndex = 0;
+                    smartTable.sortDirection = "A-Z";
+                    smartTable.updateSortIcon();
+                    render();
+                });
 
                 CustomersPage.createTinySelect(
                     [{ id: "", label: "Everyone" }, { id: "yes", label: "Marketing: opted in" }, { id: "no", label: "Marketing: opted out" }, { id: "blocked", label: "Blocked" }],
@@ -434,7 +443,12 @@ const CustomerDetails = function(params = {}) {
     const escape = OrdersPage.escapeHtml;
 
     const customer = CustomersPage.getCustomers().find(function(c) { return c.id == box.customerId; });
-    if (!customer) { box.remove(); return box; }
+    if (!customer) {
+        endObject(box); // WHY: the start of the object must be closed (a stale search result opens a removed customer)
+        box.remove();
+        return box;
+    }
+    CustomersPage.recompute(customer);
     customer.segment = CustomersPage.getSegment(customer);
     const segment = CustomersPage.SEGMENTS[customer.segment];
 
@@ -555,7 +569,7 @@ const CustomerDetails = function(params = {}) {
 
                 HGroup({ width: 48, height: 48, align: "center center", round: 100, color: CustomersPage.getAvatarColor(customer.id) });
                 that.elem.style.flexShrink = "0";
-                    Label({ text: CustomersPage.getInitials(customer.name), fontSize: 17, textColor: Ink(0.95) });
+                    Label({ text: CustomersPage.getInitials(customer.name), fontSize: 17, textColor: Theme.textOn(CustomersPage.getAvatarColor(customer.id)) });
                 endGroup();
 
                 VGroup({ width: "auto", height: "auto", align: "left top", gap: 2 });
@@ -1070,6 +1084,16 @@ CustomersPage.getSmartTableStyle = function(libPath) {
 
 CustomersPage._customers = null;
 
+// The totals of a customer from its orders (the same order objects as the Orders page)
+// WHY at every render too: an order cancelled or refunded on the Orders page changes the spent total
+CustomersPage.recompute = function(c) {
+    c.orders.sort(function(a, b) { return b.time - a.time; }); // Newest first
+    c.orderCount = c.orders.length;
+    c.totalSpent = Math.round(c.orders.filter(function(o) { return !["cancelled", "refunded"].includes(o.status); }).reduce(function(sum, o) { return sum + o.total; }, 0) * 100) / 100;
+    c.firstOrderAt = (c.orders.length) ? c.orders[c.orders.length - 1].time : 0;
+    c.lastOrderAt = (c.orders.length) ? c.orders[0].time : 0;
+};
+
 // Customers of the store. The ones with orders are built from the Orders page, so the totals match the orders.
 // Created one time and kept while the panel is open.
 // TODO: Load the customers from your service (with paging and filters).
@@ -1113,13 +1137,7 @@ CustomersPage.getCustomers = function() {
         if (order.time < c.firstOrderAt) c.firstOrderAt = order.time;
         if (order.time > c.lastOrderAt) c.lastOrderAt = order.time;
     });
-    const recompute = function(c) {
-        c.orders.sort(function(a, b) { return b.time - a.time; }); // Newest first
-        c.orderCount = c.orders.length;
-        c.totalSpent = Math.round(c.orders.filter(function(o) { return !["cancelled", "refunded"].includes(o.status); }).reduce(function(sum, o) { return sum + o.total; }, 0) * 100) / 100;
-        c.firstOrderAt = (c.orders.length) ? c.orders[c.orders.length - 1].time : 0;
-        c.lastOrderAt = (c.orders.length) ? c.orders[0].time : 0;
-    };
+    const recompute = CustomersPage.recompute;
     list.forEach(recompute);
 
     // WHY: The test orders are only from the last 60 days and every customer has many. For the segments to be

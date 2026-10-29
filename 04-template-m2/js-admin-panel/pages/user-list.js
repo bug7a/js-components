@@ -141,7 +141,9 @@ const UserListPage = function(params = {}) {
         link.href = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/csv" }));
         link.download = "users-" + UserListPage.formatDateTime(Date.now()).slice(0, 10) + ".csv";
         link.click();
-        URL.revokeObjectURL(link.href);
+        // WHY later: some browsers start the download after click() returns
+        const url = link.href;
+        setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
 
     };
 
@@ -415,7 +417,8 @@ const UserListDetails = function(params = {}) {
     const escape = UserListPage.escapeHtml;
 
     const data = UserListPage.load();
-    const user = (box.userId === null) ? null : data.users.find(function(u) { return u.id == box.userId; });
+    // WHY "|| null": a user that is not there any more (find gives undefined) must not break the panel
+    const user = (box.userId === null) ? null : (data.users.find(function(u) { return u.id == box.userId; }) || null);
     const isInvite = (user === null);
 
     let saveTimer = null;
@@ -559,7 +562,7 @@ const UserListDetails = function(params = {}) {
                 // Avatar
                 HGroup({ width: 48, height: 48, align: "center center", round: 100, color: (isInvite) ? S.FIELD_COLOR : RolesPage.getAvatarColor(user.id) });
                 that.elem.style.flexShrink = "0";
-                    Label({ text: (isInvite) ? "+" : UserListPage.getInitials(user.name), fontSize: 17, textColor: Ink(0.95) });
+                    Label({ text: (isInvite) ? "+" : UserListPage.getInitials(user.name), fontSize: 17, textColor: (isInvite) ? Ink(0.95) : Theme.textOn(RolesPage.getAvatarColor(user.id)) });
                 endGroup();
 
                 VGroup({ width: "auto", height: "auto", align: "left top", gap: 2 });

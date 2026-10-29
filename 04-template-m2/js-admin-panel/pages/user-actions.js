@@ -162,7 +162,7 @@ const UserActionsPage = function(params = {}) {
                     that.clipContent = 0;
 
                         HGroup({ left: 0, top: 0, width: 52, height: 52, align: "center center", round: 100, color: user.avatarColor });
-                            Label({ text: UserActionsPage.getInitials(user.name), fontSize: 18, textColor: Ink(0.95) });
+                            Label({ text: UserActionsPage.getInitials(user.name), fontSize: 18, textColor: Theme.textOn(user.avatarColor) });
                         endGroup();
 
                         avatarDot = Box({ left: 38, top: 38, width: 14, height: 14, round: 100, border: 2, borderColor: S.CARD_COLOR });

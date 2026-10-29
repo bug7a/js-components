@@ -199,7 +199,7 @@ const SettingsPage = function(params = {}) {
         RadioButton.setValue("settingsPanelColor", values.panelColor, 1);
         lblDatePreview.text = "Preview: " + formatDateBy(values.dateFormat, new Date());
 
-        lblLogo.text = (values.logoName) ? "Current logo: <b>" + values.logoName + "</b>" : "No logo. The default panel icon is used.";
+        lblLogo.text = (values.logoName) ? "Current logo: <b>" + ContentsPage.escapeHtml(values.logoName) + "</b>" : "No logo. The default panel icon is used.";
         selectFiles.forEach(function(selectFile) { selectFile.clear(1); });
 
         NOTIFY_EVENTS.forEach(function(event) {
@@ -301,6 +301,7 @@ const SettingsPage = function(params = {}) {
 
         if (dirty) {
             clearTimeout(messageTimer);
+            messageTimer = null; // WHY: else "!messageTimer" below never hid the bar again
             lblFooter.text = "You have unsaved changes.";
             lblFooter.textColor = Ink(0.85);
             btnDiscard.visible = 1;

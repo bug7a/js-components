@@ -22,6 +22,7 @@ const EditUser = function(params = {}) {
 
     let inputId, inputName, inputEmail, inputActive, toggleActive;
     let btnEdit, btnDelete;
+    let selectedId = null; // (it was not declared: it became window.selectedId)
 
     // Fill input fields from selected data
     const fillForm = function (itemData) {
@@ -245,8 +246,15 @@ const EditUser = function(params = {}) {
         UI.effectButton(that);
         that.on("click", function () {
 
-            box.itemData.name = inputName.getInputValue();
-            box.itemData.email = inputEmail.getInputValue();
+            // WHY: an empty name or a wrong e-mail was saved
+            const name = String(inputName.getInputValue() || "").trim();
+            const email = String(inputEmail.getInputValue() || "").trim();
+            const isEmailValid = UserListPage.isEmail(email);
+            inputEmail.showWarningIfNotValid(isEmailValid);
+            if (!name || !isEmailValid) return;
+
+            box.itemData.name = name;
+            box.itemData.email = email;
             //box.itemData.active = parseInt(inputActive.getInputValue()) || 0;
             box.itemData.active = toggleActive.value || 0;
             box.onSave(box.itemData);

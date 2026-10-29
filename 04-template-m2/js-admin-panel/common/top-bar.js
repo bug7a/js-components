@@ -299,7 +299,7 @@ const TopBar = function(params = {}) {
 
     box.setPanelName = function(name) {
         box.panelName = name;
-        box.lblPanelName.text = name;
+        box.lblPanelName.text = escapeHtml(name); // (a name from Settings, also from an imported file)
     };
 
     // Pages for the search. (The menu items of the left menu)

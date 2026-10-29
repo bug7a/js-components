@@ -205,12 +205,19 @@ const RolesPage = function(params = {}) {
 
     };
 
+    // An active user (a user without a status is active; User List can suspend one)
+    const isActiveUser = function(userId) {
+        const user = data.users.find(function(u) { return u.id == userId; });
+        return !!user && (user.status || "active") == "active";
+    };
+
     // Returns an error text, or "".
     const validate = function() {
         const name = draft.name.trim();
         if (!name) return "Role name is required.";
         if (data.roles.some(function(role) { return role.id != draft.id && role.name.toLowerCase() == name.toLowerCase(); })) return "Another role has the name \"" + escapeHtml(name) + "\".";
-        if (draft.id == "admin" && draft.memberIds.length == 0) return "Admin must have at least one member.";
+        // WHY active: a suspended admin can not sign in (the same rule as User List)
+        if (draft.id == "admin" && !draft.memberIds.some(isActiveUser)) return "Admin must have at least one active member.";
         return "";
     };
 
@@ -491,7 +498,7 @@ const RolesPage = function(params = {}) {
                         height: 38,
                         fontSize: 14,
                         textAlign: "center",
-                        textColor: Ink(0.95),
+                        textColor: Theme.textOn(RolesPage.getAvatarColor(user.id)), // (Ink() was black on the dark avatars of the light theme)
                         color: RolesPage.getAvatarColor(user.id),
                         round: 100,
                     });
@@ -507,14 +514,14 @@ const RolesPage = function(params = {}) {
 
                     // WHY: Everybody must have a role. Members of the default role can only move to another role.
                     if (!isDefaultRole) {
-                        const isLastAdmin = draft.id == "admin" && draft.memberIds.length == 1;
+                        const isLastAdmin = draft.id == "admin" && isActiveUser(user.id) && draft.memberIds.filter(isActiveUser).length == 1;
                         const btn = createButton("Remove", "", function() {
                             draft.memberIds = draft.memberIds.filter(function(id) { return id != user.id; });
                             renderMembers();
                             updateFooter();
                         });
                         if (isLastAdmin) setInteractive(btn, false);
-                        btn.elem.title = (isLastAdmin) ? "Admin must have at least one member" : "The user gets the Viewer role";
+                        btn.elem.title = (isLastAdmin) ? "Admin must have at least one active member" : "The user gets the Viewer role";
                     }
 
                 endGroup();
