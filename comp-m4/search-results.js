@@ -139,6 +139,7 @@ const SearchResults = function (params = {}) {
     let items = [];                 // The items that are shown now.
     let query = "";                 // The text they were found with.
     let activeIndex = -1;
+    let isClosedByUser = 0;         // 1: Escape closed the list (it stays closed for the same text)
     let rows = [];                  // The row objects, in the order of items.
     let inputElem = null;           // attachTo()
     let inputRemovers = [];         // The removers of the events of that input.
@@ -305,6 +306,12 @@ const SearchResults = function (params = {}) {
     // items: [{ text, desc, group, ... }]. The list opens by itself when there is something to show.
     box.setItems = function (newItems, searchedText = "") {
 
+        // WHY: a SearchInput calls onSearch at every keyup (the arrows, Enter, Escape too), with the same text.
+        //      The active row went back to the first one after each arrow, and a list closed with Escape opened again.
+        const isSameQuery = (String(searchedText) === String(query));
+        const keptIndex = (isSameQuery && box.isOpened === 1) ? activeIndex : 0;
+        if (!isSameQuery) isClosedByUser = 0;
+
         items = newItems || [];
         query = searchedText;
 
@@ -314,9 +321,11 @@ const SearchResults = function (params = {}) {
             return;
         }
 
+        if (isClosedByUser) return; // (Escape closed it: the same text keeps it closed, the focus opens it again)
+
         render();
         box.open();
-        box.setActiveIndex((items.length) ? 0 : -1);
+        box.setActiveIndex((items.length) ? Math.min(Math.max(keptIndex, 0), items.length - 1) : -1);
 
     };
 
@@ -412,11 +421,13 @@ const SearchResults = function (params = {}) {
             } else if (event.key === "Escape") {
                 event.preventDefault();
                 box.close();
+                isClosedByUser = 1;
             }
 
         };
 
         const onFocus = function () {
+            isClosedByUser = 0;
             if (box.openOnFocus == 1 && String(query).trim() && items.length) box.open();
         };
 

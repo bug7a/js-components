@@ -389,8 +389,10 @@ const SelectFile = function (params = {}) {
 
     };
 
+    // Returns how many files were added.
     const addToList = function (newFiles, errors) {
 
+        let addedCount = 0;
         newFiles.forEach(function (info) {
 
             const isInList = box.files.some(function (listed) { return isSameFile(listed, info); });
@@ -401,8 +403,10 @@ const SelectFile = function (params = {}) {
                 return;
             }
             box.files.push(info);
+            addedCount++;
 
         });
+        return addedCount;
 
     };
 
@@ -414,17 +418,20 @@ const SelectFile = function (params = {}) {
         const errors = [];
         let newFiles = readValidFiles(fileList, errors);
 
+        let addedCount = 0;
         if (box.multiple != 1) {
             if (newFiles.length > 1) {
                 errors.push(createError("maxFiles", "", "Only one file can be selected."));
             }
             newFiles = newFiles.slice(0, 1);
             if (newFiles.length) box.files = newFiles;
+            addedCount = newFiles.length;
         } else {
-            addToList(newFiles, errors);
+            // WHY the count: a file that was already in the list (or over maxFiles) called onChange with the same list
+            addedCount = addToList(newFiles, errors);
         }
 
-        if (newFiles.length) {
+        if (addedCount) {
             renderList();
             box.onChange(box);
         }

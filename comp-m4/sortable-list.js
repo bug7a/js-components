@@ -470,6 +470,9 @@ const SortableList = function (params = {}) {
         if (!drag || event.pointerId !== drag.pointerId) return;
         if (drag.active) {
             suppressClick = 1;
+            // WHY: a touch drag makes no click, so the flag swallowed the next real tap. The click of a mouse
+            //      drag comes in this same input turn, before the timer.
+            box.after(0, function () { suppressClick = 0; });
             finishDrag(1);
         } else {
             drag = null;

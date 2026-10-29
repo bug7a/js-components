@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>behavior test</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- LIBRARY FILES -->
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- COMPONENTS (comp-m4/dialog.js: not with comp-m2/dialog.js, both define Dialog) -->
+        <script src="../comp-m2/tooltip.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m2/input-b.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m2/search-input-v2.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m3/button-with-icon.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m3/smart-table.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m4/dialog.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m4/notice.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m4/modal.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m4/toast.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m4/action-button.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m4/search-results.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m4/sortable-list.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m4/select-file.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m4/property-panel.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m4/numeric-keyboard.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m4/mini-graph-box.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m4/scrolling-text.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+        "use strict";
+
+        // NOTE: Self-checking BEHAVIOR test (2026-10-29): every check is a bug that was found and fixed, written as
+        //       its repro, so it can not come back silently. Open it in a browser: green = passed, red = failed.
+        //       The summary is also in the console and in the tab title ("ALL PASS").
+        //       (test/components-test.htm checks the life cycle of every component; this page checks what they do.)
+        //       A new fixed bug: add a test() with its repro below.
+
+        const results = [];
+        const uncaught = [];
+        window.addEventListener("error", function (e) { uncaught.push(e.message); });
+        window.addEventListener("unhandledrejection", function (e) { uncaught.push(String(e.reason)); });
+
+        const check = function (name, ok, info) {
+            results.push({ name: name, ok: !!ok, info: (info === undefined) ? "" : String(info) });
+        };
+
+        const wait = function (ms) { return basic.sleep(ms); };
+
+        // The visible element with exactly this text (a leaf), or null
+        const findByText = function (text, root) {
+            const all = (root || document).querySelectorAll("*");
+            for (const el of all) {
+                if (el.childElementCount === 0 && el.textContent.trim() === text && el.offsetParent !== null) return el;
+            }
+            return null;
+        };
+
+        const key = function (target, type, keyName, extra) {
+            target.dispatchEvent(new KeyboardEvent(type, Object.assign({ key: keyName, bubbles: true, cancelable: true }, extra || {})));
+        };
+
+        const pointer = function (target, type, x, y, pointerType) {
+            target.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, pointerId: 7, pointerType: pointerType, isPrimary: true, button: 0 }));
+        };
+
+        // Every test runs alone; an error is a failed check, the next test still runs.
+        const tests = [];
+        const test = function (name, func) { tests.push({ name: name, func: func }); };
+
+        // *** DIALOG (comp-m4/dialog.js)
+
+        test("Dialog: onClick that closes the dialog does not crash", async function () {
+            const dialog = Dialog({ removeOnClose: 1, buttons: [{ key: "a", text: "A", type: "primary", onClick: function (d) { d.close(); } }] });
+            dialog.getButton("a").elem.click();
+            await wait(30);
+            check("Dialog: onClick that closes the dialog does not crash", Dialog.stack.length == 0);
+        });
+
+        test("Dialog.confirm: Promise(false), then Cancel gives false", async function () {
+            const promise = Dialog.confirm({ onConfirm: function () { return Promise.resolve(false); } });
+            await wait(30);
+            Dialog.getTop().getButton("confirm").elem.click();
+            await wait(30);
+            Dialog.getTop().getButton("cancel").elem.click();
+            check("Dialog.confirm: Promise(false), then Cancel gives false", (await promise) === false);
+        });
+
+        test("Dialog: a held Enter in a field does not pass the ask", async function () {
+            let deleted = 0;
+            const dialog = Dialog({ fields: [{ key: "n", titleText: "N" }], buttons: [{ key: "del", text: "Delete", type: "primary", ask: "Sure?", onClick: function () { deleted = 1; } }] });
+            const input = dialog.elem.querySelector("input");
+            input.focus();
+            key(input, "keydown", "Enter");
+            key(input, "keydown", "Enter", { repeat: true });
+            check("Dialog: a held Enter in a field does not pass the ask", deleted === 0);
+            dialog.remove();
+        });
+
+        test("Dialog: the ask is forgotten when the dialog closes", async function () {
+            let deleted = 0;
+            const dialog = Dialog({ removeOnClose: 0, buttons: [{ key: "del", text: "Delete", type: "danger", ask: "Sure?", onClick: function () { deleted = 1; } }] });
+            dialog.getButton("del").elem.click(); // asks
+            dialog.close();
+            dialog.open();
+            dialog.getButton("del").elem.click(); // must ask again
+            check("Dialog: the ask is forgotten when the dialog closes", deleted === 0);
+            dialog.remove();
+        });
+
+        // *** NOTICE (comp-m4/notice.js)
+
+        test("Notice over a Dialog: it is on top, Escape closes only the notice", async function () {
+            const dialog = Dialog({ titleText: "D", removeOnClose: 0 });
+            Notice.show({ messageText: "Saved", displayTime: 0 });
+            await wait(30);
+            const rect = Notice.current.elem.getBoundingClientRect();
+            const isOnTop = Notice.current.elem.contains(document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2));
+            key(document.activeElement || document.body, "keydown", "Escape");
+            check("Notice over a Dialog: it is on top, Escape closes only the notice", isOnTop && !Notice.current && dialog.isOpen());
+            dialog.remove();
+        });
+
+        // *** MODAL (comp-m4/modal.js)
+
+        test("Modal: a double click on Confirm runs onConfirm once", async function () {
+            let count = 0;
+            Modal.confirm({ onConfirm: function () { count++; } });
+            await wait(30);
+            const button = findByText("Confirm");
+            button.click();
+            button.click();
+            await wait(300);
+            check("Modal: a double click on Confirm runs onConfirm once", count === 1, "onConfirm ran " + count + " times");
+        });
+
+        test("Modal.confirm: Promise(false), then Cancel gives false", async function () {
+            const promise = Modal.confirm({ onConfirm: function () { return Promise.resolve(false); } });
+            await wait(30);
+            findByText("Confirm").click();
+            await wait(30);
+            findByText("Cancel").click();
+            check("Modal.confirm: Promise(false), then Cancel gives false", (await promise) === false);
+            await wait(300);
+        });
+
+        // *** TOAST (comp-m4/toast.js)
+
+        test("Toast: a double click on the action runs it once", async function () {
+            let count = 0;
+            const toast = Toast.info("File deleted", { action: { text: "Undo", onClick: function () { count++; } } });
+            await wait(30);
+            toast.btnAction.elem.click();
+            toast.btnAction.elem.click();
+            await wait(400);
+            check("Toast: a double click on the action runs it once", count === 1, "the action ran " + count + " times");
+        });
+
+        // *** ACTION BUTTON (comp-m4/action-button.js)
+
+        test("ActionButton: a double click on an action calls onAction once", async function () {
+            const calls = [];
+            const button = ActionButton({ items: ["New file", "New folder"], onAction: function (k) { calls.push(k); } });
+            button.openMenu();
+            await wait(30);
+            button.itemButtons[0].elem.click();
+            button.itemButtons[0].elem.click();
+            check("ActionButton: a double click on an action calls onAction once", calls.length === 1, "onAction: " + calls.join(", "));
+            await wait(300);
+            button.remove();
+        });
+
+        // *** SEARCH RESULTS (comp-m4/search-results.js)
+
+        test("SearchResults: the arrows choose a row and Escape keeps the list closed", async function () {
+            const ITEMS = [{ text: "Dashboard" }, { text: "Orders" }, { text: "Reports" }];
+            let selected = "";
+            const input = document.createElement("input");
+            page.elem.appendChild(input);
+            input.style.cssText = "position: absolute; left: 10px; top: 10px; pointer-events: auto;";
+            const results = SearchResults({ onSelect: function (self, item) { selected = item.text; } });
+            results.attachTo(input);
+            input.focus();
+            // WHY setItems at every key: a SearchInput calls onSearch at every keyup, with the same text
+            results.setItems(ITEMS, "a");
+            key(input, "keydown", "ArrowDown");
+            results.setItems(ITEMS, "a");
+            key(input, "keydown", "ArrowDown");
+            results.setItems(ITEMS, "a");
+            key(input, "keydown", "Enter");
+            check("SearchResults: the arrows choose a row (Enter opens the third one)", selected === "Reports", "opened: " + selected);
+            results.setItems(ITEMS, "a");
+            key(input, "keydown", "Escape");
+            results.setItems(ITEMS, "a");
+            check("SearchResults: Escape keeps the list closed for the same text", results.isOpened === 0);
+            results.setItems(ITEMS, "ab");
+            check("SearchResults: a new text opens it again", results.isOpened === 1);
+            results.remove();
+            input.remove();
+        });
+
+        // *** SORTABLE LIST (comp-m4/sortable-list.js)
+
+        test("SortableList: after a touch drag the next tap works", async function () {
+            const clicks = [];
+            const list = SortableList({ width: 300, height: 300, dragBy: "row", items: ["One", "Two", "Three"], onItemClick: function (self, item) { clicks.push(item); } });
+            await wait(50);
+            const label = findByText("One", list.elem);
+            const rect = label.getBoundingClientRect();
+            const x = rect.left + 5;
+            const y = rect.top + rect.height / 2;
+            pointer(label, "pointerdown", x, y, "touch");
+            for (let i = 1; i <= 8; i++) {
+                pointer(document, "pointermove", x, y + i * 10, "touch");
+                await wait(16);
+            }
+            pointer(document, "pointerup", x, y + 80, "touch");
+            await wait(400);
+            findByText("Three", list.elem).click(); // the next real tap
+            check("SortableList: after a touch drag the next tap works", clicks.length === 1, "clicks: " + clicks.length);
+            list.remove();
+        });
+
+        // *** SELECT FILE (comp-m4/select-file.js)
+
+        test("SelectFile: the same file again does not call onChange", async function () {
+            let changes = 0;
+            const select = SelectFile({ multiple: 1, onChange: function () { changes++; } });
+            const drop = function (names) {
+                const transfer = new DataTransfer();
+                names.forEach(function (name) { transfer.items.add(new File(["x"], name, { type: "text/plain", lastModified: 1 })); });
+                select.zone.elem.dispatchEvent(new DragEvent("drop", { bubbles: true, cancelable: true, dataTransfer: transfer }));
+            };
+            drop(["a.txt"]);
+            drop(["a.txt"]);
+            check("SelectFile: the same file again does not call onChange", changes === 1, "onChange: " + changes);
+            select.remove();
+        });
+
+        // *** PROPERTY PANEL (comp-m4/property-panel.js)
+
+        test("PropertyPanel: leaving a number field without a change keeps the value", async function () {
+            const changes = [];
+            const panel = PropertyPanel({
+                data: { sections: [{ key: "s", title: "S", items: [{ key: "x", type: "number", prefix: "X", value: 12.4 }] }] },
+                onChange: function (change) { changes.push(change); },
+            });
+            await wait(30);
+            const field = Array.from(panel.elem.querySelectorAll("input")).find(function (el) { return el.value === "12"; });
+            field.focus();
+            field.blur();
+            key(field, "keydown", "Escape");
+            check("PropertyPanel: leaving a number field without a change keeps the value", changes.length === 0 && panel.getValue("x") === 12.4, "changes: " + changes.length + ", value: " + panel.getValue("x"));
+            panel.remove();
+        });
+
+        // *** BUTTON WITH ICON (comp-m3/button-with-icon.js)
+
+        test("ButtonWithIcon: a held Enter presses once", async function () {
+            let count = 0;
+            const button = ButtonWithIcon({ labelText: "Go", onClick: function () { count++; } });
+            key(button.elem, "keydown", "Enter");
+            key(button.elem, "keydown", "Enter", { repeat: true });
+            key(button.elem, "keydown", "Enter", { repeat: true });
+            check("ButtonWithIcon: a held Enter presses once", count === 1, "onClick: " + count);
+            button.remove();
+        });
+
+        // *** NUMERIC KEYBOARD (comp-m4/numeric-keyboard.js)
+
+        test("NumericKeyboard: a held Enter calls onEnter once", async function () {
+            let count = 0;
+            const keyboard = NumericKeyboard({ onEnter: function () { count++; } });
+            key(keyboard.elem, "keydown", "Enter");
+            key(keyboard.elem, "keydown", "Enter", { repeat: true });
+            check("NumericKeyboard: a held Enter calls onEnter once", count === 1, "onEnter: " + count);
+            keyboard.remove();
+        });
+
+        // *** MINI GRAPH BOX (comp-m4/mini-graph-box.js)
+
+        test("MiniGraphBox: made in a hidden group, it keeps its values", async function () {
+            const group = VGroup({ width: 300, height: 120, visible: 0 });
+                const graph = MiniGraphBox({ values: [1, 2, 3, 4] });
+            endGroup();
+            group.visible = 1;
+            await wait(100);
+            check("MiniGraphBox: made in a hidden group, it keeps its values", graph.values.length === 4, "values: " + graph.values.length);
+            group.remove();
+        });
+
+        // *** SMART TABLE (comp-m3/smart-table.js)
+
+        test("SmartTable: a value is written as text, not as HTML", async function () {
+            window.__injected = 0;
+            const table = SmartTable({ width: 500, height: 200, itemDataList: [{ id: 1, name: "A <img src=x onerror=window.__injected=1>", email: "a@b.co", active: 1 }] });
+            await wait(100);
+            check("SmartTable: a value is written as text, not as HTML", window.__injected === 0 && table.elem.querySelectorAll("img[src='x']").length === 0);
+            table.remove();
+        });
+
+        // *** RUN
+
+        const runTests = async function () {
+
+            for (const item of tests) {
+                try {
+                    await item.func();
+                } catch (error) {
+                    check(item.name, false, "error: " + error.message);
+                }
+                // WHY: a test that failed half way must not leave its windows over the next one
+                Dialog.stack.slice().forEach(function (dialog) { dialog.remove(); });
+                if (Notice.current) Notice.current.remove();
+            }
+
+            check("no uncaught errors", uncaught.length === 0, uncaught.join(" | "));
+
+        };
+
+        const showResults = function () {
+
+            startBox(0, 0, "100%", "100%", { color: "white", scrollY: 1 });
+                VGroup({ width: "100%", height: "auto", align: "left top", gap: 6, padding: 20 });
+
+                    const failed = results.filter(function (r) { return !r.ok; });
+                    Label({ plainText: "behavior test: " + (results.length - failed.length) + "/" + results.length + " passed", fontSize: 20, bold: 1 });
+
+                    results.forEach(function (r) {
+                        Label({ plainText: ((r.ok) ? "✓ " : "✗ ") + r.name + ((r.info && !r.ok) ? "  (" + r.info + ")" : ""), fontSize: 14, textColor: (r.ok) ? "seagreen" : "crimson" });
+                    });
+
+                endGroup();
+            endBox();
+
+        };
+
+        const start = async function () {
+
+            page.color = "white";
+            await wait(100);
+            await runTests();
+
+            // WHY: the tests leave toasts, menus and layers on page; the results are drawn over a clean page
+            Array.from(page.elem.children).forEach(function (el) { el.remove(); });
+            showResults();
+
+            const failed = results.filter(function (r) { return !r.ok; });
+            const summary = "behavior test: " + (results.length - failed.length) + "/" + results.length + " passed" + ((failed.length) ? " - " + failed.length + " FAILED" : " - ALL PASS");
+            document.title = summary;
+            console.log(summary);
+            failed.forEach(function (r) { console.error("FAIL: " + r.name + " " + r.info); });
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+    </body>
+</html>

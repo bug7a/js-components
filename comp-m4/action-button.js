@@ -183,6 +183,8 @@ const ActionButton = function (params = {}) {
     };
 
     const chooseAction = function (key) {
+        // WHY: the menu fades for a moment after it closes; a double click ran onAction twice
+        if (!box.menuOpened) return;
         box.closeMenu();
         box.onAction(key, box);
     };

@@ -4,6 +4,9 @@
 
 Modal - v26.09
 
+NOT FOR NEW PROJECTS (the user, 2026-10-29): use comp-m4/dialog.js (Dialog) instead. This file stays only for the
+pages that still use it.
+
 UI COMPONENT TEMPLATE
 - A dialog window over the page: title, description, any content (forms, lists...) and buttons.
 - Sizes: "small" (400), "medium" (560), "large" (820), "full" or a number. Small screens: full width.
@@ -244,7 +247,8 @@ const Modal = function (params = {}) {
 
     const pressButton = function (item) {
 
-        if (!box || isBusy) return;
+        // WHY isOpen: the panel fades for a moment after close(); a double click ran onClick (onConfirm) twice
+        if (!box || isBusy || !isOpen) return;
 
         let result = undefined;
         if (typeof item.data.onClick === "function") result = item.data.onClick(box, item.data);
@@ -641,6 +645,9 @@ document.addEventListener("keydown", function (event) {
     if (event.key != "Escape") return;
     const top = Modal.getTop();
     if (!top || !basic.isOn(top.closeOnEscape) || top.isBusy()) return;
+    // WHY: a Dialog (comp-m4/dialog.js) over the modal gets the Escape (this listener runs first: capture)
+    const topDialog = (typeof Dialog !== "undefined" && Dialog.getTop) ? Dialog.getTop() : null;
+    if (topDialog && Number(topDialog.elem.style.zIndex) > Number(top.elem.style.zIndex)) return;
     event.preventDefault();
     event.stopPropagation();
     top.close("escape");
@@ -680,9 +687,15 @@ Modal.confirm = function (params = {}) {
                     onClick: function (modal) {
                         result = true;
                         if (typeof params.onConfirm === "function") {
+                            result = false; // WHY: true only after onConfirm (it may throw)
                             const value = params.onConfirm(modal);
+                            result = true;
                             if (value && typeof value.then === "function") {
-                                return value.catch(function (error) {
+                                // WHY: a Promise of false keeps the modal open; a later Cancel must give false
+                                return value.then(function (done) {
+                                    if (done === false) result = false;
+                                    return done;
+                                }, function (error) {
                                     result = false;
                                     throw error;
                                 });

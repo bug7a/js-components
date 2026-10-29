@@ -473,7 +473,8 @@ const Toast = function (params = {}) {
     };
 
     const runAction = function () {
-        if (!box || !box.action) return;
+        // WHY isClosing: the card fades for a moment after close(); a double click ran the action (Undo) twice
+        if (!box || !box.action || box.isClosing) return;
         const result = (typeof box.action.onClick === "function") ? box.action.onClick(box) : undefined;
         if (result !== false) box.close("action");
     };
