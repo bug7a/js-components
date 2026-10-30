@@ -16,7 +16,9 @@ UI COMPONENT
   style.clock. The hands stand still with prefers-reduced-motion.
   THE DEFAULT WAIT (the user, 2026-10-29): spinnerType is "clock" by default. Its two looks are LoadingScreen.clocks
   "ozden" (a white face, dark lines: the default) and "ozdenDark" (a dark face, light lines, a yellow minute hand); the style packages
-  "ozden" and "ozdenDark" are the screens made for them. (comp-m4 SmartButton has the same clock: keep them alike)
+  "ozden" and "ozdenDark" are the screens made for them.
+- NEEDS comp-m4/smart-button.js, loaded first (2026-10-30): the clock and the dots are the drawings of SmartButton
+  (SmartButton.clocks, createClockSvg, createDots): one drawing for the whole suite.
 - minDuration: the screen stays at least this long, so a fast load does not show a short flash.
 - The cover takes the clicks, so nothing under it can be clicked while it is open.
 - Style packages: "light" (default), "dark", "ozden", "ozdenDark". Select with styleName. (LoadingScreen.styles)
@@ -95,20 +97,7 @@ const LoadingScreenDefaults = {
             gap: 7,
             color: "#3D7A6B",
         },
-        clock: { // The ozden clock (the user, 2026-10-29); LoadingScreen.clocks. The sizes are px on a 30 px clock.
-            faceColor: "#FFFFFF",
-            lineColor: "#141414", // the edge (and the hour hand, when there is no hourColor)
-            edgeWidth: 2,
-            hourWidth: 2, // the short hand
-            hourLength: 7.5, // from the middle
-            minuteWidth: 2, // the long hand
-            minuteLength: 10,
-            minuteColor: "indianred",
-            centerColor: "indianred", // the dot in the middle: it hides where the hands meet
-            centerSize: 4,
-            minuteTurn: 1.6, // seconds for one turn of the minute hand
-            hourTurn: 19.2, // seconds for one turn of the hour hand (12 x minuteTurn: a real clock)
-        },
+        clock: SmartButton.clocks.ozden, // the ozden clock of SmartButton (LoadingScreen.clocks)
         progress: {
             width: 180,
             height: 4,
@@ -140,9 +129,6 @@ const LoadingScreen = function (params = {}) {
     let openedTime = 0;
     let cancelClose = null; // (box.after: the timers are stopped by remove())
     let cancelFade = null;
-    const DOT_COUNT = 3;
-    const DOT_DURATION = 1.2; // seconds for one bounce of a dot
-    const DOT_DELAY = 0.16; // seconds between two dots
     const PROGRESS_MOTION = "width 0.25s";
 
     // *** PUBLIC VARIABLES:
@@ -278,18 +264,13 @@ const LoadingScreen = function (params = {}) {
         };
         box.spinner.shrink = 0;
 
-        // GROUP: Spinner (dots)
-        box.dots = HGroup({ hug: 1, gap: _s.dots.gap });
+        // GROUP: Spinner (dots: the drawing of SmartButton)
+        box.dots = SmartButton.createDots(_s.dots);
         box.dots.css.marginTop = _s.spinner.marginTop + "px";
-            for (let i = 0; i < DOT_COUNT; i++) {
-                Box({ width: _s.dots.size, height: _s.dots.size, color: _s.dots.color, round: 100 });
-                that.css.animation = "loadingScreenDot " + DOT_DURATION + "s ease-in-out " + (i * DOT_DELAY) + "s infinite";
-            }
-        endGroup();
 
-        // BOX: Spinner (clock)
-        box.clock = Box({ width: LoadingScreen.CLOCK_SIZE, height: LoadingScreen.CLOCK_SIZE, color: "transparent" });
-        box.clock.elem.innerHTML = LoadingScreen.createClockSvg(_s.clock);
+        // BOX: Spinner (clock: the drawing of SmartButton)
+        box.clock = Box({ width: SmartButton.CLOCK_SIZE, height: SmartButton.CLOCK_SIZE, color: "transparent" });
+        box.clock.elem.innerHTML = SmartButton.createClockSvg(_s.clock);
         box.clock.css.marginTop = _s.spinner.marginTop + "px";
         box.clock.shrink = 0;
 
@@ -335,20 +316,8 @@ const LoadingScreen = function (params = {}) {
 
 };
 
-// *** THE CLOCKS: the two looks of the waiting clock (the user, 2026-10-29)
-// NOTE: comp-m4/smart-button.js has the same clocks (SmartButton.clocks): keep them alike.
-LoadingScreen.clocks = {
-    ozden: LoadingScreenDefaults.style.clock, // a white face, dark lines
-    // a dark face, light lines; WHY yellow (the user, 2026-10-29): indianred was weak on the dark face (contrast 3.6,
-    // #F1C74A 8.9); the hour hand is dimmer, so the yellow minute hand leads (as the red one on the light clock)
-    ozdenDark: Object.assign({}, LoadingScreenDefaults.style.clock, {
-        faceColor: "#2A2A2A",
-        lineColor: "rgba(255, 255, 255, 0.9)",
-        hourColor: "rgba(255, 255, 255, 0.6)",
-        minuteColor: "#F1C74A",
-        centerColor: "#F1C74A",
-    }),
-};
+// *** THE CLOCKS: the two looks of the waiting clock (the user, 2026-10-29): the clocks of SmartButton
+LoadingScreen.clocks = SmartButton.clocks;
 
 // *** STYLE PACKAGES:
 // USAGE: LoadingScreen({ styleName: "dark" })
@@ -406,37 +375,8 @@ LoadingScreen.styles = {
 
 };
 
-// The animations can not be set with inline styles.
+// The animations can not be set with inline styles. (the clock and the dots: SmartButton.injectCss)
 LoadingScreen.injectCss = function () {
     basic.addCss("loading-screen-css",
-        "@keyframes loadingScreenSpin { to { transform: rotate(360deg); } }" +
-        "@keyframes loadingScreenDot { 0%, 80%, 100% { transform: scale(0.6); opacity: 0.35; } 40% { transform: scale(1); opacity: 1; } }" +
-        // WHY view-box: a hand of the SVG turns around the middle of the clock, not around its own box
-        ".loading-screen-hand { transform-box: view-box; transform-origin: 50% 50%; animation-name: loadingScreenSpin;" +
-        " animation-timing-function: linear; animation-iteration-count: infinite; }" +
-        "@media (prefers-reduced-motion: reduce) { .loading-screen-hand { animation: none; } }");
-};
-
-// The clock is always this big (px). (the user, 2026-10-29)
-LoadingScreen.CLOCK_SIZE = 30;
-
-// The clock of the waiting views as an SVG text: a white face, a dark edge, the minute hand up (long) and the
-// hour hand to the right (short), like comp-m1/ui-waiting-view/clock.png; the hands turn with CSS.
-// WHY a viewBox in px: the widths and the lengths of the hands are real pixels.
-// clockStyle: style.clock
-LoadingScreen.createClockSvg = function (clockStyle) {
-    const c = clockStyle;
-    const size = LoadingScreen.CLOCK_SIZE;
-    const middle = size / 2;
-    const faceRadius = middle - c.edgeWidth / 2; // WHY: the edge is drawn on the circle line: it stays inside
-    const hand = function (x2, y2, width, color, turnTime) {
-        return '<line class="loading-screen-hand" x1="' + middle + '" y1="' + middle + '" x2="' + x2 + '" y2="' + y2 + '" stroke="' + color +
-            '" stroke-width="' + width + '" stroke-linecap="round" style="animation-duration: ' + turnTime + 's"/>';
-    };
-    return '<svg viewBox="0 0 ' + size + ' ' + size + '" width="' + size + '" height="' + size + '" aria-hidden="true">' +
-        '<circle cx="' + middle + '" cy="' + middle + '" r="' + faceRadius + '" fill="' + c.faceColor + '" stroke="' + c.lineColor + '" stroke-width="' + c.edgeWidth + '"/>' +
-        hand(middle + c.hourLength, middle, c.hourWidth, c.hourColor || c.lineColor, c.hourTurn) + // the hour hand (under)
-        hand(middle, middle - c.minuteLength, c.minuteWidth, c.minuteColor, c.minuteTurn) + // the minute hand
-        '<circle cx="' + middle + '" cy="' + middle + '" r="' + (c.centerSize / 2) + '" fill="' + c.centerColor + '"/>' +
-        "</svg>";
+        "@keyframes loadingScreenSpin { to { transform: rotate(360deg); } }");
 };

@@ -17,9 +17,11 @@ UI COMPONENT TEMPLATE
 - LIMITS: limits: [80] or [{ value: 30, color: "#7BA7D9" }, { value: 80, text: "80" }]: vertical lines over the bar
   at these values (in the units of value / max), a little longer than the bar, a text under a line (style.limit);
   setLimits().
-- Style packages: "classic" (default), "modern", "ozden" (the lines of comp-m1 UIProgressBar: a white round track
-  with a light gray edge, the bar its main color at 50% with an edge of it, a dark limit line with a text; the user
-  2026-10-29). Select with styleName. (ProgressBar.styles)
+- Style packages: "classic" (default), "modern", "ozden" (the lines of comp-m1 UIProgressBar: the track of the
+  default, the bar its main color at 50% with an edge of it, a dark limit line with a text; the user 2026-10-29).
+  Select with styleName. (ProgressBar.styles)
+- THE TRACK of every bar (basic-designer, 2026-10-30): 16 px, #F2F2F2, a 2 px light gray edge, round 4 (the default;
+  "modern" keeps its own: 10 px, no edge, round ends).
 - Everything is drawn with code (no image files needed).
 
 NOTE: comp-m3/progress-bar.js (vertical lines style) is named LineProgressBar, so both can be loaded on the same page.
@@ -58,12 +60,12 @@ const ProgressBarDefaults = {
         layout: {
             gap: 6, // Space between the title row and the bar
         },
-        track: { // Background of the bar
-            height: 8,
-            color: Black(0.1),
+        track: { // Background of the bar (basic-designer, 2026-10-30: the default of every bar; was 8 px, Black(0.1), no edge)
+            height: 16,
+            color: "#F2F2F2",
             round: 4,
-            border: 0,
-            borderColor: "transparent",
+            border: 2,
+            borderColor: "rgba(0, 0, 0, 0.1)",
             css: {}, // Ex: { backgroundImage: "linear-gradient(#EEE, #D0D0D0)" }
         },
         bar: {
@@ -572,26 +574,19 @@ ProgressBar.styles = {
     // Thin dark bar on a light gray track.
     classic: ProgressBarDefaults.style,
 
-    // The ozden bar (the user, 2026-10-29): the lines of comp-m1/ui-progress-bar.js (UIProgressBar): a white track
-    // with a 3 px light gray edge, round ends; the bar is its main color at 50% with a 3 px edge of the main color,
-    // over the edge of the track; a 4 px dark limit line with its text under it. The main color can change
-    // (style.bar.color: the inside, the edge and the second part follow it); yellow for now (UIProgressBar "yellow").
+    // The ozden bar (the user, 2026-10-29): the lines of comp-m1/ui-progress-bar.js (UIProgressBar): the track of the
+    // default (16 px, a 2 px light gray edge, round 4; 2026-10-30, was 20 px, white, a 3 px edge, round ends); the
+    // bar is its main color at 50% with a 2 px edge of the main color, over the edge of the track; a 4 px dark limit
+    // line with its text under it. The main color can change (style.bar.color: the inside, the edge and the second
+    // part follow it); yellow for now (UIProgressBar "yellow").
     ozden: {
         layout: {
             gap: 8,
         },
-        track: {
-            height: 20,
-            color: "white",
-            round: 100,
-            border: 3,
-            borderColor: "rgba(0, 0, 0, 0.15)",
-            css: {},
-        },
         bar: {
             color: "#F1C74A",
             fillOpacity: 0.5,
-            border: 3,
+            border: 2, // (as wide as the edge of the track: the bar covers it)
             borderColor: "", // the main color
             motion: 0.3,
         },
@@ -639,6 +634,8 @@ ProgressBar.styles = {
             height: 10,
             color: "#DFECEC", // 20% of bar color on white
             round: 100,
+            border: 0, // WHY: no edge (the default has one since 2026-10-30)
+            borderColor: "transparent",
         },
         bar: {
             color: "cadetblue", // #5F9EA0

@@ -121,7 +121,7 @@
                     });
                 endCard();
 
-                startCard("Waiting: setWaiting()", "The waiting clock over the button while a job runs (the default wait); it can not be clicked then. setWaiting(0, delay) ends it later. waitingClock: \"ozdenDark\" is the dark clock, waitingType: \"ring\" the turning ring, waitingIconFile an image.");
+                startCard("Waiting: setWaiting()", "The waiting clock over the button while a job runs (the default wait); it can not be clicked then. setWaiting(0, delay) ends it later. waitingClock: \"ozdenDark\" is the dark clock, waitingType: \"dots\" three dots.");
                     SmartButton({ styleName: "classic", labelText: "Save", iconFile: "", style: LOOKS.primary, onClick: saveWithWaiting });
                     SmartButton({
                         styleName: "classic",
@@ -156,19 +156,9 @@
                     });
                     SmartButton({
                         styleName: "classic",
-                        labelText: "Ring",
+                        labelText: "Dots",
                         iconFile: "",
-                        waitingType: "ring",
-                        onClick: function (self) {
-                            self.setWaiting(1);
-                            self.after(JOB_TIME, function () { self.setWaiting(0); });
-                        },
-                    });
-                    SmartButton({
-                        styleName: "classic",
-                        labelText: "Image",
-                        iconFile: "",
-                        waitingIconFile: "../comp-m4/smart-button/clock.png",
+                        waitingType: "dots",
                         onClick: function (self) {
                             self.setWaiting(1);
                             self.after(JOB_TIME, function () { self.setWaiting(0); });
@@ -176,7 +166,7 @@
                     });
                 endCard();
 
-                startCard("Motion: animated and ripple", "Both on by default (for now): brighter under the mouse, smaller while pressed, and a wave from the pressed point (its color fits the button). Each one can be turned off.");
+                startCard("Motion: animated and ripple", "Both on by default (for now): smaller and a little darker while pressed, and a wave from the pressed point (its color fits the button). Each one can be turned off.");
                     SmartButton({ styleName: "classic", labelText: "Both", style: LOOKS.primary });
                     SmartButton({ styleName: "classic", labelText: "Both", iconFile: ICONS + "plant.png" });
                     SmartButton({ styleName: "classic", labelText: "Only press", style: LOOKS.primary, ripple: 0 });

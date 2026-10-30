@@ -12,6 +12,7 @@
     <link rel="stylesheet" type="text/css" href="../basic/basic.css">
     <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
 
+    <script src="../comp-m2/tooltip.js" type="text/javascript" charset="utf-8"></script> <!-- the bubble of ask -->
     <script src="../comp-m4/smart-button.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
@@ -110,7 +111,7 @@
         return packageLook(styleName, Object.assign({ layout: { padding: [0, 0] }, icon: { width: 30, height: 30, opacity: 1 } }, changes));
     };
     // The red "Sure?" of every trash (style.ask.button: on its own package; the bin turns white)
-    const TRASH_ASK = { box: { color: RED, border: 0, boxShadow: BOTTOM_LINE }, hover: { color: RED }, active: { color: RED } };
+    const TRASH_ASK = { color: RED, border: 0, borderColor: RED, boxShadow: BOTTOM_LINE };
 
     const LOOKS = {
         // Primary (ozdenType1): the actions in their colors, a little lighter edge
@@ -253,7 +254,6 @@
             styleName: looks.trash.styleName,
             style: Object.assign({ ask: { button: TRASH_ASK } }, looks.trash.style),
             ask: "Click again to " + dialog.trashLabel.toLowerCase() + ".",
-            askIn: card,
         });
     };
 

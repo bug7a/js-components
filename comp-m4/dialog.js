@@ -138,8 +138,9 @@ const DialogDefaults = {
                 },
             },
         },
-        // A button that asks again (ask): its red look and its bubble are the style.ask of SmartButton (its
-        // default, the user 2026-10-30). A page or a package may give its own here: ask: { button, bubble, time }
+        // A button that asks again (ask): its red look and its bubble (comp-m2/tooltip.js) are the style.ask of
+        // SmartButton (its default, the user 2026-10-30). A page or a package may give its own here:
+        // ask: { button: { color, border, borderColor, boxShadow, textColor, iconFilter }, bubble, time }
     },
 };
 
@@ -296,7 +297,6 @@ const Dialog = function (params = {}) {
             iconFile: data.iconFile || "",
             style: getButtonStyle(look),
             ask: data.ask || "",
-            askIn: box.card,
             onBeforeClick: function () { return canPressButton(item); },
             onClick: function () { runButton(item); },
         });
