@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>ProgressBar draft</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES (a draft: no component, only basic.js objects) -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // DRAFT DESIGN of comp-m4/progress-bar.js (ProgressBar), 2026-10-30.
+        // Every state of every style package side by side, drawn with plain basic.js objects (no ProgressBar here).
+        // Change a color, a size, an edge in basic-designer; then the change is carried to the component by hand
+        // (ProgressBarDefaults.style / ProgressBar.styles). The values below are copies of the packages: keep them
+        // in step with progress-bar.js when the component changes.
+        // http://127.0.0.1:5505/__projects/basic-designer/index.htm?page=_designs/progress-bar.htm
+
+        const BAR_WIDTH = 300;
+        const ROW_GAP = 10; // the component: between the title and the value text, the track and the value text
+        const STATE_COLUMN_WIDTH = 190;
+        const SOFT_BLUE = "#7BA7D9"; // a limit with its own color (the ozden sample)
+
+        // THE STYLE PACKAGES (copies of ProgressBar.styles)
+        const LOOKS = {
+            classic: {
+                gap: 6,
+                track: { height: 16, color: "#F2F2F2", round: 4, border: 2, borderColor: "rgba(0, 0, 0, 0.1)" },
+                bar: { color: "#141414", fillOpacity: 1, border: 0, borderColor: "" },
+                secondBar: { color: Black(0.35), fillOpacity: 0.2, borderOpacity: 0.45 },
+                stripes: { color: "rgba(255, 255, 255, 0.35)", size: 14 },
+                limit: { color: "indianred", width: 1, round: 0, overhang: 6, textSize: 13, textColor: Black(0.7), textSpace: 6 },
+                successColor: "#2E9E5B",
+                errorColor: "#D64545",
+                title: { fontSize: 14, textColor: Black(0.8) },
+                valueText: { fontSize: 14, textColor: Black(0.55) },
+            },
+            modern: {
+                gap: 8,
+                track: { height: 10, color: "#DFECEC", round: 100, border: 0, borderColor: "transparent" },
+                bar: { color: "cadetblue", fillOpacity: 1, border: 0, borderColor: "" },
+                secondBar: { color: Black(0.35), fillOpacity: 0.2, borderOpacity: 0.45 },
+                stripes: { color: "rgba(255, 255, 255, 0.35)", size: 14 },
+                limit: { color: "indianred", width: 1, round: 0, overhang: 6, textSize: 13, textColor: Black(0.7), textSpace: 6 },
+                successColor: "#6FCF97",
+                errorColor: "tomato",
+                title: { fontSize: 16, textColor: Black(0.85) },
+                valueText: { fontSize: 14, textColor: "cadetblue" },
+            },
+            ozden: {
+                gap: 8,
+                track: { height: 16, color: "#F2F2F2", round: 4, border: 2, borderColor: "rgba(0, 0, 0, 0.1)" },
+                bar: { color: "#F1C74A", fillOpacity: 0.5, border: 2, borderColor: "" },
+                secondBar: { color: "", fillOpacity: 0.2, borderOpacity: 0.45 },
+                stripes: { color: "rgba(255, 255, 255, 0.55)", size: 14 },
+                limit: { color: "rgba(0, 0, 0, 0.7)", width: 4, round: 2, overhang: 4, textSize: 14, textColor: "rgba(0, 0, 0, 0.7)", textSpace: 8 },
+                successColor: "#40A5AF",
+                errorColor: "#FE5D49",
+                title: { fontSize: 15, textColor: "#232323" },
+                valueText: { fontSize: 14, textColor: "rgba(35, 35, 35, 0.6)" },
+            },
+        };
+
+        // THE STATES (one row each). valuePosition: "top", "right", "none"
+        const STATES = [
+            { name: "Title and value (top)", titleText: "Uploading", value: 40, valuePosition: "top" },
+            { name: "Value at the right", value: 65, valuePosition: "right" },
+            { name: "No value text", value: 25, valuePosition: "none" },
+            { name: "Empty (0)", titleText: "Waiting", value: 0, valuePosition: "top" },
+            { name: "Complete (100)", titleText: "Done", value: 100, valuePosition: "top" },
+            { name: "Two parts (70 + 5)", titleText: "Storage", value: 70, secondValue: 5, valuePosition: "top", valueText: "70% + 5%" },
+            { name: "Stripes on the value", value: 55, valuePosition: "right", stripes: 1 },
+            { name: "Stripes on both parts", value: 45, secondValue: 20, valuePosition: "right", stripes: 1, secondStripes: 1, valueText: "45% + 20%" },
+            { name: "Limit lines", value: 60, valuePosition: "none", limits: [{ value: 30, color: SOFT_BLUE }, { value: 80 }] },
+            { name: "A limit with its text", titleText: "Speed", value: 85, valuePosition: "top", limits: [{ value: 80, text: "limit 80" }] },
+            { name: "Status: success", titleText: "Saved", value: 100, valuePosition: "top", status: "success" },
+            { name: "Status: error", titleText: "Failed", value: 35, valuePosition: "top", status: "error" },
+            { name: "Indeterminate (a still frame)", titleText: "Connecting...", valuePosition: "top", indeterminate: 1 },
+            { name: "Another main color", value: 50, secondValue: 10, valuePosition: "right", barColor: "#40A5AF", valueText: "50% + 10%" },
+        ];
+        const INDETERMINATE_WIDTH = 35; // % of the track (the moving bar)
+        const INDETERMINATE_LEFT = 30; // % (where the still frame shows it)
+
+        const start = function () {
+
+            page.color = "#F4F5F2";
+
+            // BOX: Scrolling page
+            startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1, scrollX: 1 });
+
+                VGroup({ width: "max-content", height: "auto", align: "left top", gap: 22, padding: 40, clipContent: 0 });
+
+                    Label({ text: "ProgressBar · draft (comp-m4/progress-bar.js)", fontSize: 20, bold: 1, textColor: Black(0.8) });
+
+                    // GROUP: The names of the packages over their column
+                    HGroup({ width: "auto", height: "auto", align: "left top", gap: 40 });
+                        Label({ width: STATE_COLUMN_WIDTH, text: "state", fontSize: 12, textColor: Black(0.4) });
+                        Object.keys(LOOKS).forEach(function (name) {
+                            Label({ width: BAR_WIDTH, text: name + (name == "classic" ? " (default)" : ""), fontSize: 13, bold: 1, textColor: Black(0.6) });
+                        });
+                    endGroup();
+
+                    STATES.forEach(function (state) {
+                        // GROUP: A state in every package
+                        HGroup({ width: "auto", height: "auto", align: "left center", gap: 40, clipContent: 0 });
+                            Label({ width: STATE_COLUMN_WIDTH, text: state.name, fontSize: 12, textColor: Black(0.45) });
+                            Object.keys(LOOKS).forEach(function (name) {
+                                drawBar(LOOKS[name], state);
+                            });
+                        endGroup();
+                    });
+
+                endGroup();
+
+            endBox();
+
+        };
+
+        // GROUP: One bar as the component draws it: the top row (title, value), the track with the bars over it,
+        // the limit lines, the value at the right
+        const drawBar = function (look, state) {
+
+            const valuePosition = state.valuePosition || "top";
+            const valueText = state.valueText || (state.value + "%");
+
+            const bar = VGroup({ width: BAR_WIDTH, height: "auto", align: "left top", gap: look.gap, clipContent: 0 });
+
+                // GROUP: Top row (title, value text)
+                if (state.titleText || valuePosition == "top") {
+                    HGroup({ width: "100%", height: "auto", align: "left center", gap: ROW_GAP });
+                        if (state.titleText) Label({ ...look.title, text: state.titleText, css: { flex: "1 1 auto" } });
+                        if (valuePosition == "top" && !state.indeterminate) Label({ ...look.valueText, text: valueText, css: { marginLeft: "auto", whiteSpace: "nowrap" } });
+                    endGroup();
+                }
+
+                // GROUP: Bar row (track, value text)
+                HGroup({ width: "100%", height: "auto", align: "left center", gap: ROW_GAP, clipContent: 0 });
+                    drawTrackArea(look, state);
+                    if (valuePosition == "right") Label({ ...look.valueText, text: valueText, textAlign: "right", css: { whiteSpace: "nowrap", minWidth: "3em" } });
+                endGroup();
+
+            endGroup();
+
+            return bar;
+
+        };
+
+        // BOX: The track, the two parts over it and the limit lines (the lines are longer than the track)
+        const drawTrackArea = function (look, state) {
+
+            const _t = look.track;
+            const _l = look.limit;
+            const limits = state.limits || [];
+            const hasText = limits.some(function (limit) { return limit.text; });
+            const overhang = limits.length ? _l.overhang : 0;
+            const textRoom = hasText ? _l.textSpace + Math.ceil(_l.textSize * 1.4) : 0;
+
+            const area = startBox({ width: "auto", height: _t.height + overhang * 2 + textRoom, color: "transparent", clipContent: 0 });
+            area.css = { flex: "1 1 0", minWidth: "0", position: "relative" };
+
+                // BOX: Track
+                Box({ left: 0, top: overhang, width: "100%", height: _t.height, color: _t.color, round: _t.round, border: _t.border, borderColor: _t.borderColor });
+
+                // BOX: Bar layer (as big as the track; it clips the bars)
+                startBox({ left: 0, top: overhang, width: "100%", height: _t.height, color: "transparent", round: _t.round });
+
+                    drawParts(look, state);
+
+                endBox();
+
+                limits.forEach(function (limit) {
+                    drawLimit(look, limit);
+                });
+
+            endBox();
+
+            return area;
+
+        };
+
+        // The second part (under) and the bar: their colors from the main color, as the component paints them
+        const drawParts = function (look, state) {
+
+            const _b = look.bar;
+            const _sb = look.secondBar;
+            const mainColor = getMainColor(look, state);
+            const edgeColor = _b.borderColor || mainColor;
+
+            if (state.indeterminate) {
+                const moving = Box({ top: 0, width: INDETERMINATE_WIDTH + "%", height: "100%", color: getFill(mainColor, _b.fillOpacity), round: look.track.round, border: _b.border, borderColor: edgeColor });
+                moving.css = { left: INDETERMINATE_LEFT + "%" };
+                return;
+            }
+
+            // BOX: Second part (from 0 to value + secondValue)
+            if (state.secondValue) {
+                const secondColor = _sb.color ? _sb.color : getFill(mainColor, _sb.fillOpacity);
+                const secondEdge = _sb.color ? edgeColor : (_b.borderColor || Alpha(mainColor, _sb.borderOpacity));
+                const second = Box({ left: 0, top: 0, width: (state.value + state.secondValue) + "%", height: "100%", color: secondColor, round: look.track.round, border: _b.border, borderColor: secondEdge });
+                if (state.secondStripes) paintStripes(second, look);
+            }
+
+            // BOX: Bar (the value)
+            if (state.value > 0) {
+                const valueBar = Box({ left: 0, top: 0, width: state.value + "%", height: "100%", color: getFill(mainColor, _b.fillOpacity), round: look.track.round, border: _b.border, borderColor: edgeColor });
+                if (state.stripes) paintStripes(valueBar, look);
+            }
+
+        };
+
+        // BOX: A limit line (over and under the track) and its text under it
+        const drawLimit = function (look, limit) {
+            const _l = look.limit;
+            const lineHeight = look.track.height + _l.overhang * 2;
+            const line = Box({ top: 0, width: _l.width, height: lineHeight, color: limit.color || _l.color, round: _l.round });
+            line.css = { left: "calc(" + limit.value + "% - " + (_l.width / 2) + "px)" };
+            if (!limit.text) return;
+            const text = Label({ top: lineHeight + _l.textSpace, text: limit.text, fontSize: _l.textSize, textColor: limit.color || _l.textColor });
+            text.css = { left: limit.value + "%", transform: "translateX(-50%)", whiteSpace: "nowrap" };
+        };
+
+        // The stripes, still (the component moves them)
+        const paintStripes = function (part, look) {
+            const _st = look.stripes;
+            part.css = {
+                backgroundImage: "linear-gradient(45deg, " + _st.color + " 25%, transparent 25%, transparent 50%, " + _st.color + " 50%, " + _st.color + " 75%, transparent 75%, transparent)",
+                backgroundSize: _st.size + "px " + _st.size + "px",
+            };
+        };
+
+        const getMainColor = function (look, state) {
+            if (state.status == "success") return look.successColor;
+            if (state.status == "error") return look.errorColor;
+            return state.barColor || look.bar.color;
+        };
+
+        const getFill = function (color, opacity) {
+            return (opacity < 1) ? Alpha(color, opacity) : color;
+        };
+
+    </script>
+
+</head>
+
+<body>
+</body>
+
+</html>
