@@ -41,6 +41,14 @@
     // 'Q 15.7 16.3 15 17 Q 14.3 17.7 13.6 17 L 12 15.4 L 10.4 17 Q 9.7 17.7 9 17 Q 8.3 16.3 9 15.6 L 10.6 14 L 9 12.4 Q 8.3 11.7 9 11 Z"/>');
     const TRASH_ICON = "../04-template-m2/todo-app-example/images/trash.svg";
 
+    // The Delete of confirm: yellow (the hover a little darker), the text of the package (not the white of danger)
+    const DELETE_BUTTON_STYLE = {
+        box: { color: "#F8E57A" },
+        hover: { color: "#EFDA62" },
+        active: { color: "#EFDA62" },
+        label: { textColor: SmartButton.styles.ozdenType1.label.textColor },
+    };
+
     let lblResult;
 
     const showResult = function (text) {
@@ -80,7 +88,14 @@
     };
 
     const openConfirm = async function () {
-        const isSure = await Dialog.confirm({ titleText: "Delete the file?", messageText: "report.pdf will be deleted. It can not be undone.", confirmText: "Delete", danger: 1 });
+        const isSure = await Dialog.confirm({
+            titleText: "Delete the file?",
+            messageText: "report.pdf will be deleted. It can not be undone.",
+            confirmText: "Delete",
+            danger: 1,
+            ask: "Click again to delete the file.",
+            style: { buttons: { danger: { style: DELETE_BUTTON_STYLE } } },
+        });
         showResult("confirm: " + isSure);
     };
 
@@ -100,7 +115,7 @@
     };
 
     const createButton = function (text, onClick) {
-        const button = SmartButton({ labelText: text, height: 40, style: { label: { fontSize: 15, textColor: Black(0.75), fontFamily: "opensans-bold" } }, onClick: onClick });
+        const button = SmartButton({ styleName: "ozdenType1", labelText: text, height: 40, style: { box: { color: "white" } }, onClick: onClick }); // white inside (its hover stays gray)
         return button;
     };
 

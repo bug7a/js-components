@@ -13,8 +13,8 @@ NOTE: still in development (the user, 2026-10-29): more style packages come; the
   - type: "primary" (the main action), "secondary" (Cancel), "danger" (a red action), "icon" (only an icon: a square).
   - align: "left": at the left side of the footer (Ex: the trash); the others stay at the right side.
   - ask: "Click again to delete." -> two clicks: the first one turns the button red and shows the text in a bubble
-    over it; the second one runs onClick. It forgets after 5 s.
-  - onClick(dialog, button) returns false: the dialog stays open. A Promise: the button waits (its ring), the
+    over it; the second one runs onClick. It forgets after 5 s. (The ask of SmartButton, 2026-10-30.)
+  - onClick(dialog, button) returns false: the dialog stays open. A Promise: the button waits (its clock), the
     others are disabled, and the dialog closes when it ends (a rejected one keeps it open).
 - Fields: fields: [{ key, titleText, placeholder, value, required, validate(value) -> error text }] make InputB
   fields (comp-m2/input-b.js, load it with comp-m2/tooltip.js; without it a plain Input). A "primary" button checks
@@ -25,10 +25,12 @@ NOTE: still in development (the user, 2026-10-29): more style packages come; the
   the opener when it closes. More than one dialog: Escape closes the top one.
 - Dialog.confirm(), Dialog.alert(), Dialog.prompt(): Promises.
 - variant: "centered" (the user, 2026-10-29): the title and the message in the middle, the buttons one under the other
-  (as wide as the card; the primary / danger one first) and an icon at the top (topIconFile: a file or an "<svg" text:
-  white in a dark circle on a gray area). The look: style.centered.
+  (as wide as the card; the primary / danger one first, on the gray band of the footer) and an icon at the top
+  (topIconFile: a file or an "<svg" text: dark in a light gray circle). The look: style.centered.
 - Motion: the cover comes from nothing and the card rises 50 px while it comes (0.2 s); it goes at once; none with reduced motion.
 - Style packages: "ozden" (default). (Dialog.styles)
+- The buttons (the user, 2026-10-30): style.buttons[type] = { styleName, style }: a style package of SmartButton
+  (primary / secondary / danger: "ozdenType1", icon: "ozdenType2") and only the keys that differ (the colors).
 
 USAGE:
 Dialog({
@@ -93,55 +95,51 @@ const DialogDefaults = {
         fieldStyleName: "ozden", // the styleName of the InputB fields
         // variant: "centered" (the layout of __projects/basic-designer/designs/dialog.htm, the colors of ozden)
         centered: {
-            iconArea: { height: 116, color: "#F4F4F4", round: 6 }, // the gray area at the top
-            iconCircle: { size: 100, color: "#232323" },
-            icon: { size: 56, color: "white" },
+            // (2026-10-30, the user: a light gray circle on white, a dark icon; was a dark circle on a gray area)
+            iconArea: { height: 116, color: "white", round: 6 }, // the area at the top
+            iconCircle: { size: 100, color: "#EEEEEE" },
+            icon: { size: 56, color: "#232323" },
             buttonHeight: 48,
             buttonGap: 10,
-            footerPadding: [24, 22], // no line and no band under the buttons; no space over them
+            // The buttons are on the band of the footer (its color and line, the user 2026-10-30), one under the other
+            footerPadding: [22, 18],
         },
-        // The looks of the buttons (style of SmartButton)
+        // The looks of the buttons: a style package of SmartButton (ozdenType1...4, the user, 2026-10-30) and only
+        // what differs from it (the colors)
         buttons: {
             primary: {
-                layout: { gap: 8, padding: [16, 0], align: "center center" },
-                box: { color: "#9DC7B5", border: 1, borderColor: "rgba(35, 35, 35, 0.4)", round: 4, boxShadow: "inset 0 -2px 0 rgba(0, 0, 0, 0.25)" },
-                hover: { color: "#91BCA9" },
-                active: { color: "#91BCA9" },
-                icon: { width: 24, height: 24, opacity: 0.8 },
-                label: { fontSize: 20, textColor: "rgba(35, 35, 35, 0.8)", fontFamily: "opensans" },
+                styleName: "ozdenType1",
+                style: {
+                    box: { color: "#9DC7B5", borderColor: "rgba(35, 35, 35, 0.4)" },
+                    hover: { color: "#91BCA9" },
+                    active: { color: "#91BCA9" },
+                    label: { textColor: "rgba(35, 35, 35, 0.8)" },
+                },
             },
-            secondary: {
-                layout: { gap: 8, padding: [16, 0], align: "center center" },
-                box: { color: "#E3E3E3", border: 1, borderColor: Black(0.35), round: 4, boxShadow: "inset 0 -2px 0 rgba(0, 0, 0, 0.25)" },
-                hover: { color: "#D9D9D9" },
-                active: { color: "#D9D9D9" },
-                icon: { width: 24, height: 24 },
-                label: { fontSize: 20, textColor: Black(0.7), fontFamily: "opensans" },
-            },
+            secondary: { styleName: "ozdenType1", style: {} }, // the gray of the package
             danger: {
-                layout: { gap: 8, padding: [16, 0], align: "center center" },
-                box: { color: "#E8796D", border: 1, borderColor: "rgba(35, 35, 35, 0.4)", round: 4, boxShadow: "inset 0 -2px 0 rgba(0, 0, 0, 0.3)" },
-                hover: { color: "#E0695C" },
-                active: { color: "#E0695C" },
-                icon: { width: 24, height: 24 },
-                label: { fontSize: 20, textColor: "white", fontFamily: "opensans" },
+                styleName: "ozdenType1",
+                style: {
+                    box: { color: "#E8796D", borderColor: "rgba(35, 35, 35, 0.4)", boxShadow: "inset 0 -2px 0 rgba(0, 0, 0, 0.3)" },
+                    hover: { color: "#E0695C" },
+                    active: { color: "#E0695C" },
+                    icon: { opacity: 1 },
+                    label: { textColor: "white" },
+                },
             },
             icon: {
-                layout: { gap: 0, padding: [0, 0], align: "center center" },
-                box: { color: "white", border: 1, borderColor: Black(0.35), round: 4, boxShadow: "none" },
-                hover: { color: "#FDF1EF" },
-                active: { color: "#FDF1EF" },
-                icon: { width: 24, height: 24 }, // (30 until 2026-10-29)
-                label: { fontSize: 20, textColor: Black(0.7), fontFamily: "opensans" },
+                styleName: "ozdenType2",
+                style: {
+                    layout: { gap: 0, padding: [0, 0] },
+                    box: { color: "white" },
+                    hover: { color: "#FDF1EF" },
+                    active: { color: "#FDF1EF" },
+                    icon: { opacity: 1 }, // (30 px until 2026-10-29)
+                },
             },
         },
-        // A button that asks again (ask): its red look, and the bubble over it
-        ask: {
-            // (the icon turns white on the red button, whatever color its file has)
-            button: { box: { color: "#E8796D", border: 1, borderColor: "#E8796D", round: 4, boxShadow: "none" }, hover: { color: "#E8796D" }, active: { color: "#E8796D" }, icon: { css: { filter: "brightness(0) invert(1)" } } },
-            bubble: { color: "#E8796D", textColor: "white", fontSize: 13, round: 8, padding: [12, 7], arrow: 12, gap: 6, edge: 8 },
-            time: 5000, // ms: it forgets the question
-        },
+        // A button that asks again (ask): its red look and its bubble are the style.ask of SmartButton (its
+        // default, the user 2026-10-30). A page or a package may give its own here: ask: { button, bubble, time }
     },
 };
 
@@ -195,7 +193,6 @@ const Dialog = function (params = {}) {
     // *** PUBLIC VARIABLES:
     box.buttonList = []; // { data, button } (button: the SmartButton)
     box.fieldList = []; // { data, input } (input: InputB or Input)
-    box.bubble = null;
 
     // *** PRIVATE FUNCTIONS:
 
@@ -278,70 +275,54 @@ const Dialog = function (params = {}) {
         return firstOnes.concat(otherOnes);
     };
 
+    // The style of a button: its look, and the ask of the dialog when it has one (else the default of SmartButton)
+    const getButtonStyle = function (look) {
+        const style = JSON.parse(JSON.stringify(look.style));
+        if (_s.ask) style.ask = _s.ask;
+        return style;
+    };
+
     const createButton = function (data) {
 
         const isIcon = (data.type == "icon");
-        const look = JSON.parse(JSON.stringify(_s.buttons[data.type] || _s.buttons.secondary));
+        const look = _s.buttons[data.type] || _s.buttons.secondary;
 
         const button = SmartButton({
+            styleName: look.styleName,
             width: getButtonWidth(isIcon),
             height: isCentered ? _s.centered.buttonHeight : _s.footer.buttonHeight,
             labelText: isIcon ? "" : data.text,
             ariaLabel: data.ariaLabel || data.text,
             iconFile: data.iconFile || "",
-            style: look,
-            onClick: function (self) { pressButton(item, self); },
+            style: getButtonStyle(look),
+            ask: data.ask || "",
+            askIn: box.card,
+            onBeforeClick: function () { return canPressButton(item); },
+            onClick: function () { runButton(item); },
         });
         // WHY margin auto: the free room goes after the buttons of the left side, the others stay at the right side
         if (data.align == "left" && !isCentered) button.css = { marginRight: "auto" };
 
-        const item = { data: data, button: button, look: look, cancelAsk: null };
+        const item = { data: data, button: button };
         box.buttonList.push(item);
         return item;
 
     };
 
-    // ask: the first click asks (a red button, a bubble), the second one goes on
-    const askFirst = function (item) {
-        if (!item.data.ask) return 0;
-        if (item.cancelAsk) {
-            item.cancelAsk();
-            setAsking(item, 0);
-            return 0;
-        }
-        // WHY: only one bubble; the timer of another asking button would hide this one
-        box.buttonList.forEach(function (other) {
-            if (other === item || !other.cancelAsk) return;
-            other.cancelAsk();
-            setAsking(other, 0);
-        });
-        setAsking(item, 1);
-        item.cancelAsk = box.after(_s.ask.time, function () { setAsking(item, 0); });
-        return 1;
-    };
-
-    const setAsking = function (item, isAsking) {
-        if (!isAsking) {
-            item.cancelAsk = null;
-            item.button.setStyle({ box: item.look.box, hover: item.look.hover, active: item.look.active, icon: Object.assign({}, item.look.icon, { css: { filter: "none" } }) });
-            hideBubble();
-            return;
-        }
-        item.button.setStyle(_s.ask.button);
-        showBubble(item.button, item.data.ask);
-    };
-
-    const pressButton = function (item) {
-
-        if (!box || isBusy) return;
-        if (item.button.enabled != 1) return; // WHY: Enter in a field reaches a disabled primary button too
+    // Before the press of a button (and before its ask: the button asks "Sure?" itself, SmartButton ask)
+    const canPressButton = function (item) {
+        if (!box || isBusy) return false;
         // WHY the fields first (the user, 2026-10-29): a form with an error must not ask "Sure?" first
         if (item.data.type == "primary" && box.fieldList.length) {
             const error = checkFields();
             box.setStatus(error, "error");
-            if (error) return;
+            if (error) return false;
         }
-        if (askFirst(item)) return;
+        return true;
+    };
+
+    // The press went through (its ask too)
+    const runButton = function (item) {
 
         let result;
         if (typeof item.data.onClick === "function") result = item.data.onClick(box, item.data);
@@ -366,63 +347,6 @@ const Dialog = function (params = {}) {
 
         if (result !== false) box.close("button", item.data.key);
 
-    };
-
-    // *** THE BUBBLE OF A BUTTON THAT ASKS: a red bubble with a triangle that points at the button; it grows out of
-    // the point of the triangle. It stays inside the card; the triangle stays over the button.
-
-    const showBubble = function (button, text) {
-
-        const _b = _s.ask.bubble;
-        hideBubble();
-
-        box.bubble = createIn(box.card, function () {
-            const bubble = VGroup({ hug: 1, align: "center top", gap: 0, position: "absolute", clipContent: 0, zIndex: 10, role: "status" });
-                Label({ plainText: text, fontSize: _b.fontSize, bold: 1, textColor: _b.textColor, color: _b.color, round: _b.round, padding: _b.padding, boxShadow: "0 6px 16px rgba(0, 0, 0, 0.18)", css: { whiteSpace: "nowrap" } });
-                bubble.arrow = Box({ width: _b.arrow, height: _b.arrow, color: _b.color });
-            endGroup();
-            return bubble;
-        });
-
-        placeBubble(box.bubble, button);
-        growBubble(box.bubble);
-
-    };
-
-    // WHY the scale: page.fit() zooms the page with a transform; getBoundingClientRect() is in screen pixels.
-    // WHY clientLeft / clientTop: an absolute object starts inside the border of the card.
-    const placeBubble = function (bubble, button) {
-        const _b = _s.ask.bubble;
-        const card = box.card.elem;
-        const cardRect = card.getBoundingClientRect();
-        const buttonRect = button.elem.getBoundingClientRect();
-        const scale = cardRect.width / card.offsetWidth;
-        const buttonCenter = (buttonRect.left + buttonRect.width / 2 - cardRect.left) / scale - card.clientLeft;
-        const buttonTop = (buttonRect.top - cardRect.top) / scale - card.clientTop;
-        const width = bubble.elem.offsetWidth;
-        const left = Math.round(Math.max(_b.edge, Math.min(card.clientWidth - width - _b.edge, buttonCenter - width / 2)));
-        const arrowShift = buttonCenter - (left + width / 2);
-        bubble.left = left;
-        bubble.top = Math.round(buttonTop - bubble.elem.offsetHeight + _b.arrow / 2 - _b.gap);
-        bubble.arrow.css = { transform: "translate(" + arrowShift + "px, -" + (_b.arrow / 2) + "px) rotate(45deg)" };
-        bubble.css = { transformOrigin: (width / 2 + arrowShift) + "px 100%" };
-    };
-
-    const growBubble = function (bubble) {
-        if (isReducedMotion()) return;
-        bubble.opacity = 0;
-        bubble.css = { transform: "scale(0.6)" };
-        // WHY: the start look must be drawn before the motion is turned on, or it is seen at once
-        void bubble.elem.offsetHeight;
-        bubble.setMotionNow("transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s");
-        bubble.opacity = 1;
-        bubble.css = { transform: "none" };
-    };
-
-    const hideBubble = function () {
-        if (!box || !box.bubble) return;
-        box.bubble.remove();
-        box.bubble = null;
     };
 
     // *** KEYBOARD AND SIZE
@@ -515,11 +439,8 @@ const Dialog = function (params = {}) {
         if (isBusy) box.setBusy(0);
         // WHY: an asking button must not stay red (and need one click) when the dialog is opened again
         box.buttonList.forEach(function (item) {
-            if (!item.cancelAsk) return;
-            item.cancelAsk();
-            setAsking(item, 0);
+            item.button.cancelAsk();
         });
-        hideBubble();
         const hadFocus = box.elem.contains(document.activeElement) || document.activeElement === document.body;
         box.visible = 0;
 
@@ -539,7 +460,7 @@ const Dialog = function (params = {}) {
         return isOpen;
     };
 
-    // Busy: the button of buttonKey waits (its ring), the others are disabled
+    // Busy: the button of buttonKey waits (its clock), the others are disabled
     box.setBusy = function (busy, buttonKey = "") {
         if (!box) return;
         const wasBusy = isBusy;
@@ -621,13 +542,13 @@ const Dialog = function (params = {}) {
         box.footer.css = { borderTop: "1px solid " + _s.footer.lineColor, borderRadius: "0 0 " + _s.card.round + "px " + _s.card.round + "px", flexShrink: "0" };
     };
 
-    // One under the other, as wide as the card (the body is over it, with its own space)
+    // One under the other, as wide as the card, on the band of the footer (a line over it)
     const createCenteredFooter = function () {
-        box.footer = VGroup({ width: "100%", height: "auto", align: "center top", gap: _s.centered.buttonGap, padding: _s.centered.footerPadding, clipContent: 0 });
-        box.footer.css = { alignItems: "stretch", paddingTop: "0px", flexShrink: "0" };
+        box.footer = VGroup({ width: "100%", height: "auto", align: "center top", gap: _s.centered.buttonGap, padding: _s.centered.footerPadding, color: _s.footer.color, clipContent: 0 });
+        box.footer.css = { alignItems: "stretch", borderTop: "1px solid " + _s.footer.lineColor, borderRadius: "0 0 " + _s.card.round + "px " + _s.card.round + "px", flexShrink: "0" };
     };
 
-    // The icon at the top: a dark circle on a gray area
+    // The icon at the top: a dark icon in a light gray circle
     const createTopIcon = function () {
         const _c = _s.centered;
         box.iconArea = HGroup({ width: "100%", height: _c.iconArea.height, align: "center center", color: _c.iconArea.color, round: _c.iconArea.round });
@@ -750,7 +671,7 @@ const Dialog = function (params = {}) {
         const primary = box.buttonList.find(function (item) { return item.data.type == "primary"; });
         if (!primary) return;
         event.preventDefault();
-        pressButton(primary);
+        primary.button.press(); // WHY the press of the button: its ask and its enabled state count too
     });
 
     // WHY on document: after a click on the cover the focus is on body, the box gets no keys
@@ -804,6 +725,7 @@ Dialog.confirm = function (params = {}) {
             titleText: params.titleText || "Are you sure?",
             messageText: params.messageText || "",
             styleName: params.styleName,
+            style: params.style || {},
             variant: params.variant || "",
             topIconFile: params.topIconFile || "",
             buttons: [
@@ -813,6 +735,7 @@ Dialog.confirm = function (params = {}) {
                     text: params.confirmText || "Confirm",
                     type: params.danger ? "danger" : "primary",
                     iconFile: params.iconFile || "",
+                    ask: params.ask || "",
                     onClick: function (dialog) {
                         if (typeof params.onConfirm !== "function") {
                             result = true;
@@ -837,6 +760,8 @@ Dialog.confirm = function (params = {}) {
     });
 };
 // USAGE: if (await Dialog.confirm({ titleText: "Delete?", messageText: "It can not be undone.", confirmText: "Delete", danger: 1 })) { }
+// ask: "Click again to delete." (two clicks on the confirm button), style: the style of the Dialog (Ex: the color of
+// its button: { buttons: { danger: { style: { box: { color: "#F8E57A" } } } } })
 
 // Returns a Promise (it ends when the dialog closes).
 Dialog.alert = function (params = {}) {

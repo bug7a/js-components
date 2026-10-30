@@ -34,6 +34,15 @@
     const LOGOUT_ICON = svgLines('<path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/><path d="M10 16l-4-4 4-4"/><path d="M6 12h10"/>');
     const CHECK_ICON = svgLines('<path d="M5 12.5l4.5 4.5L19 7.5"/>');
 
+    // The yellow button (Delete, Log out): the hover a little darker, the text of the package (not the white of
+    // danger); the same as the Delete of dialog.htm
+    const YELLOW_BUTTON_STYLE = {
+        box: { color: "#F8E57A" },
+        hover: { color: "#EFDA62" },
+        active: { color: "#EFDA62" },
+        label: { textColor: SmartButton.styles.ozdenType1.label.textColor },
+    };
+
     let lblResult;
 
     const showResult = function (text) {
@@ -44,11 +53,12 @@
         return new Promise(function (resolve) { setTimeout(resolve, ms); });
     };
 
-    // The dialog of the design: Delete (it waits) and Cancel
+    // The dialog of the design: Delete (yellow, it asks again, then it waits) and Cancel
     const openDeleteDialog = function () {
         Dialog({
             variant: "centered",
             width: 420,
+            style: { buttons: { primary: { style: YELLOW_BUTTON_STYLE } } },
             topIconFile: TRASH_ICON,
             titleText: "Delete Account?",
             messageText: "Are you sure you want to delete your account?",
@@ -56,6 +66,7 @@
                 { key: "cancel", text: "Cancel", type: "secondary" },
                 {
                     key: "delete", text: "Delete", type: "primary",
+                    ask: "Click again to delete your account.",
                     onClick: function () {
                         return wait(WORK_TIME).then(function () { showResult("The account is deleted."); });
                     },
@@ -76,6 +87,7 @@
             messageText: "You can log in again with your e-mail address.",
             confirmText: "Log out",
             danger: 1,
+            style: { buttons: { danger: { style: YELLOW_BUTTON_STYLE } } },
         });
         showResult("confirm: " + isSure);
     };
@@ -86,7 +98,7 @@
     };
 
     const createButton = function (text, onClick) {
-        return SmartButton({ labelText: text, height: 40, style: { label: { fontSize: 15, textColor: Black(0.75), fontFamily: "opensans-bold" } }, onClick: onClick });
+        return SmartButton({ styleName: "ozdenType1", labelText: text, height: 40, style: { box: { color: "white" } }, onClick: onClick }); // white inside (its hover stays gray)
     };
 
     const start = function () {
