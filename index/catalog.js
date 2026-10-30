@@ -180,9 +180,13 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "progress-bar", name: "ProgressBar", gen: 4, cat: "feedback",
-        source: "comp-m4/progress-bar.js", samples: ["02-comp-m4-samples/progress-bar.htm"],
-        en: "Horizontal progress bar with a title and a value text; determinate or indeterminate.",
-        tr: "Başlık ve değer yazılı yatay ilerleme çubuğu; belirli veya belirsiz ilerleme.",
+        source: "comp-m4/progress-bar.js",
+        samples: [
+            { file: "02-comp-m4-samples/progress-bar.htm", title: "Basic" },
+            { file: "02-comp-m4-samples/progress-bar-ozden.htm", title: "ozden, two parts, stripes, limits" },
+        ],
+        en: "Horizontal progress bar with a title and a value text; determinate or indeterminate. Two parts (70 + 5) in their own colors, moving stripes and limit lines.",
+        tr: "Başlık ve değer yazılı yatay ilerleme çubuğu; belirli veya belirsiz ilerleme. Kendi renklerinde iki parça (70 + 5), kayan çizgiler ve limit çizgileri.",
     },
     {
         key: "dialog", name: "Dialog", gen: 4, cat: "feedback",
