@@ -163,7 +163,7 @@ basic.white = White;
 - `comp-m2/m3/m4` bileşenlerinin **hiçbiri** bu global adları çağırmıyor.
 - Buna karşılık **26 yer kendi `createButton`'ını tanımlıyor** (admin panel modülleri `module7/9/10/11`, `comp-m4/stepper.js`, `comp-m4/label-editor.js`, `comp-m3/bottom-bar.js`...). `createLabel` 5, `createInput` 5 yerde aynı şekilde yeniden tanımlanıyor. Yani bu adlar gerçekten çok seçiliyor.
 - Bugün zararsız, çünkü basic.js kendi içinde bunları kapsamındaki kopyalarıyla çağırıyor ve hiçbir bileşen global adı kullanmıyor. Ama ad `window`'da durdukça, bir sayfanın kendi `createButton`'ı o adı arayan herhangi bir kodu (eski bir sayfa, bir eklenti) sessizce bozabilir.
-- Eski adları çağıran sayfalar var: çoğu `01-basic-samples-m1` (öğretici sayfalar), `comp-m1` ve eski şablonlar. Sayım yaklaşık: `createBox` 40, `createButton` 35, `createLabel` 28, `createImage` 25 dosyada geçiyor; bunların bir kısmı yukarıdaki kendi tanımları ve dokümanlar.
+- Eski adları çağıran sayfalar var: çoğu `01-basic-js-by-example` (öğretici sayfalar), `comp-m1` ve eski şablonlar. Sayım yaklaşık: `createBox` 40, `createButton` 35, `createLabel` 28, `createImage` 25 dosyada geçiyor; bunların bir kısmı yukarıdaki kendi tanımları ve dokümanlar.
 
 **Öneri: iki adımda**
 1. **Bir sonraki sürüm: kullanımdan kalktı uyarısı.** `window.createButton` ve diğerleri durur, ama ilk çağrıldıklarında konsola bir kez uyarı yazar: `basic.js: createButton() is old, use Button() (the same, with props).` Eski sayfalar çalışmaya devam eder. Aynı fonksiyonlar istenirse `basic.createButton` gibi `basic.` altında da tutulabilir (bileşen yazarları için açık bir yol).

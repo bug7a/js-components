@@ -20,7 +20,7 @@
         /*
 
         Basic Samples Test - v26.09
-        Self-checking test: every page in 01-basic-samples-m1 runs without errors.
+        Self-checking test: every page in 01-basic-js-by-example runs without errors.
 
         Open it in a browser with a web server (Live Server), not file:// (the pages are read with fetch).
         Green = passed, orange = passed with a warning, red = failed.
@@ -50,7 +50,7 @@
 
         // *** SETTINGS:
 
-        const SAMPLE_FOLDER = "../01-basic-samples-m1/";
+        const SAMPLE_FOLDER = "../01-basic-js-by-example/";
         const RUN_TIME = 2500;          // ms after the load: timers, loop() (every 1000 ms) and animations run
         const RESIZE_TIME = 400;        // ms after each size change
         const TIME_LIMIT = 15000;       // ms: an iframe that does not answer fails
@@ -311,7 +311,7 @@
             const scrollBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
                 VGroup({ width: "100%", height: "auto", align: "left top", gap: 4, padding: 24 });
                     Label({ text: "Basic samples test", fontSize: 24, bold: 1 });
-                    Label({ text: "01-basic-samples-m1: each page in its own iframe. Files found, no errors while it runs, page drawn, start/end balance, resize.", fontSize: 13, textColor: Black(0.5) });
+                    Label({ text: "01-basic-js-by-example: each page in its own iframe. Files found, no errors while it runs, page drawn, start/end balance, resize.", fontSize: 13, textColor: Black(0.5) });
                     lblStatus = Label({ text: "Running...", fontSize: 16, textColor: Black(0.6) });
                     that.css = { margin: "8px 0" };
                     resultList = VGroup({ width: "100%", height: "auto", align: "left top", gap: 6 });
