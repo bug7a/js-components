@@ -281,7 +281,6 @@ HomeView.createToolbar = function () {
                         { key: "4", text: "M4" },
                         { key: "3", text: "M3" },
                         { key: "2", text: "M2" },
-                        { key: "1", text: "M1" },
                     ],
                     value: HomeView.generation,
                     ariaLabel: "Generation",

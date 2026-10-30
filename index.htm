@@ -79,8 +79,8 @@
     <script src="basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
 
     <!-- COMPONENT FILES -->
-    <script src="comp-m4/web-view.min.js" type="text/javascript" charset="utf-8"></script>
-    <script src="comp-m4/tabs.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="comp-m4/web-view.js" type="text/javascript" charset="utf-8"></script>
+    <script src="comp-m4/tabs.js" type="text/javascript" charset="utf-8"></script>
     <script src="comp-m4/toast.js" type="text/javascript" charset="utf-8"></script>
 
     <!-- SITE FILES -->
@@ -157,10 +157,7 @@
                     <li><a href="#/textarea-b" style="color: inherit;">TextareaB</a>: Multi-line text field in the InputB style, with a character counter.</li>
                     <li><a href="#/search-input" style="color: inherit;">SearchInput</a>: Search field with a search icon and a clear button.</li>
                     <li><a href="#/slider" style="color: inherit;">Slider</a>: Slider for choosing a value in a range, inspired by Material 3.</li>
-                    <li><a href="#/ui-stepper" style="color: inherit;">UIStepper</a>: The first number stepper. Not for new pages: use Stepper (M4).</li>
-                    <li><a href="#/ui-search-box" style="color: inherit;">UISearchBox</a>: Search and filter boxes for light and colored backgrounds. Not for new pages: use SearchInput (M2, search-input-v2).</li>
                     <li><a href="#/numeric-keyboard" style="color: inherit;">NumericKeyboard</a>: Number keys on the screen for a PIN, an amount or a kiosk: two layouts, a hidden PIN, the keyboard of the computer too. The new version of UINumericKeyboard.</li>
-                    <li><a href="#/ui-numeric-keyboard" style="color: inherit;">UINumericKeyboard</a>: On-screen number keyboard for touch screens and kiosks. Not for new pages: use NumericKeyboard (M4).</li>
                 </ul>
                 <h2>Selection</h2>
                 <ul>
@@ -174,18 +171,13 @@
                     <li><a href="#/radio-button" style="color: inherit;">RadioButton</a>: Radio buttons that work in groups, with keyboard support and style packages.</li>
                     <li><a href="#/toggle" style="color: inherit;">Toggle</a>: On and off switch for light and dark pages.</li>
                     <li><a href="#/tiny-select" style="color: inherit;">TinySelect</a>: Small inline select that fits into a sentence: Theme: Supernova.</li>
-                    <li><a href="#/ui-toggle" style="color: inherit;">UIToggle</a>: On and off switch with style presets like Google and Apple. Not for new pages: use Toggle (M2).</li>
-                    <li><a href="#/check-box-m1" style="color: inherit;">CheckBox (M1)</a>: The first check box. Not for new pages: use CheckBox (M3).</li>
-                    <li><a href="#/select-item" style="color: inherit;">SelectItem</a>: A field that opens a searchable list of items with images. Not for new pages: use SelectBox (M4).</li>
-                    <li><a href="#/select-text" style="color: inherit;">SelectText</a>: A field that opens a searchable text list. Not for new pages: use SelectBox (M4).</li>
                 </ul>
                 <h2>Buttons &amp; Menus</h2>
                 <ul>
                     <li><a href="#/action-button" style="color: inherit;">ActionButton</a>: Round floating action button in the corner of the screen; it opens a menu of actions. The new version of UIActionButton.</li>
                     <li><a href="#/context-menu" style="color: inherit;">ContextMenu</a>: A simple menu that opens at the mouse point, with text or icon items.</li>
-                    <li><a href="#/smart-button" style="color: inherit;">SmartButton</a>: A button with an icon and a text; the icon on the left or on top. A waiting cover with a turning ring while a job runs.</li>
+                    <li><a href="#/smart-button" style="color: inherit;">SmartButton</a>: The default button: an icon and a text (or one of them), ozden style packages, a waiting clock or dots while a job runs, and a two-click ask with a bubble.</li>
                     <li><a href="#/hold-to-confirm-button" style="color: inherit;">HoldToConfirmButton</a>: A button that runs only after it is pressed and held; for risky actions like delete.</li>
-                    <li><a href="#/ui-action-button" style="color: inherit;">UIActionButton</a>: Round floating action button in the corner of the screen. Not for new pages: use ActionButton (M4).</li>
                 </ul>
                 <h2>Navigation</h2>
                 <ul>
@@ -197,8 +189,6 @@
                     <li><a href="#/bottom-bar" style="color: inherit;">BottomBar</a>: Mobile app bottom bar built from a JSON list of buttons, with badges.</li>
                     <li><a href="#/text-tabs" style="color: inherit;">TextTabs</a>: Small text tab bar. Not for new pages: use Tabs (M4).</li>
                     <li><a href="#/left-menu" style="color: inherit;">LeftMenu</a>: Icon side menu that opens on hover, or with a tap on touch screens.</li>
-                    <li><a href="#/ui-tabs" style="color: inherit;">UITabs</a>: The first tab bar, with icon and text tabs. Not for new pages: use Tabs (M4).</li>
-                    <li><a href="#/ui-page-control" style="color: inherit;">UIPageControl</a>: The first sliding page container. Not for new pages: use PageControl (M4).</li>
                 </ul>
                 <h2>Data &amp; Charts</h2>
                 <ul>
@@ -212,8 +202,6 @@
                     <li><a href="#/scrolling-text" style="color: inherit;">ScrollingText</a>: A one line text that slides to show its end when it does not fit: always, or only under the mouse.</li>
                     <li><a href="#/tiny-table-m4" style="color: inherit;">TinyTable</a>: A light table for short lists: a colored title row, one line rows, a soft color under the mouse; scrolling rows. The new version of TinyTable (M1).</li>
                     <li><a href="#/tiny-table" style="color: inherit;">TinyTable (M2)</a>: A light table for short data lists. Not for new pages: use TinyTable (M4).</li>
-                    <li><a href="#/ui-cells" style="color: inherit;">UICells</a>: Splits a box into rows and columns of cells to place objects in them.</li>
-                    <li><a href="#/tiny-table-m1" style="color: inherit;">TinyTable (M1)</a>: The first version of the light table. Not for new pages: use TinyTable (M4).</li>
                 </ul>
                 <h2>Overlays &amp; Feedback</h2>
                 <ul>
@@ -226,21 +214,14 @@
                     <li><a href="#/loading-screen" style="color: inherit;">LoadingScreen</a>: Full cover splash and loading screen with an icon, a title, a spinner and progress.</li>
                     <li><a href="#/line-progress-bar" style="color: inherit;">LineProgressBar</a>: A progress bar drawn with thin vertical lines.</li>
                     <li><a href="#/dialog-m2" style="color: inherit;">Dialog (M2)</a>: A simple dialog window. The first version: new pages use Dialog (M4).</li>
-                    <li><a href="#/tooltip" style="color: inherit;">Tooltip</a>: A small hint box that appears over an object.</li>
+                    <li><a href="#/tooltip" style="color: inherit;">Tooltip</a>: A hint bubble over an object: it follows the mouse or stays at the object, with an optional bordered arrow, always inside the screen; your own content in it, or a popover that stays and can be clicked.</li>
                     <li><a href="#/waiting" style="color: inherit;">Waiting</a>: A waiting animation over the page while something loads.</li>
                     <li><a href="#/badge" style="color: inherit;">BadgeV2</a>: Notification badge on an object: a dot, a number or custom content.</li>
-                    <li><a href="#/ui-progress-bar" style="color: inherit;">UIProgressBar</a>: The first progress bar. Not for new pages: use ProgressBar (M4).</li>
-                    <li><a href="#/ui-notice" style="color: inherit;">UINotice</a>: Info, alert and error messages shown over the page. Not for new pages: use Notice (M4).</li>
-                    <li><a href="#/object-waiting" style="color: inherit;">ObjectWaiting</a>: Waiting animation over a single object, like a button that downloads. Not for new pages: use Waiting (M2).</li>
                 </ul>
                 <h2>Pages &amp; Views</h2>
                 <ul>
                     <li><a href="#/web-view" style="color: inherit;">WebView</a>: An iframe box with a loading spinner, errors, messages, scaled previews and a toolbar. The previews on this site use it.</li>
                     <li><a href="#/login-page" style="color: inherit;">LoginPage</a>: A ready login and sign up page with e-mail, password and social buttons.</li>
-                    <li><a href="#/ui-title" style="color: inherit;">UITitle</a>: Mobile page title bar with a back button.</li>
-                    <li><a href="#/ui-left-title" style="color: inherit;">UILeftTitle</a>: A settings row with a title, a subtitle and an arrow.</li>
-                    <li><a href="#/ui-scrolling-text" style="color: inherit;">UIScrollingText</a>: A line of text that scrolls back and forth inside a small box. Not for new pages: use ScrollingText (M4).</li>
-                    <li><a href="#/ui-web-view" style="color: inherit;">UIWebView</a>: The first iframe box. Not for new pages: use WebView (M4).</li>
                 </ul>
                 <h2>Effects &amp; Styles</h2>
                 <ul>

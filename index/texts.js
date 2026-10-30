@@ -42,7 +42,7 @@ const TEXTS = {
         searchPlaceholder: "Search components",
         allCategories: "All",
         allGenerations: "All",
-        generationHint: "M4 is the newest generation, M1 is the first (legacy) one.",
+        generationHint: "M4 is the newest generation, M2 is the oldest one here (M1 was archived).",
         noResult: "No component matches your search.",
         clearSearch: "Clear the search",
 
@@ -99,7 +99,7 @@ const TEXTS = {
         searchPlaceholder: "Bileşen ara",
         allCategories: "Tümü",
         allGenerations: "Tümü",
-        generationHint: "M4 en yeni kuşak, M1 ilk (eski) kuşaktır.",
+        generationHint: "M4 en yeni kuşak, M2 buradaki en eski kuşaktır (M1 arşivlendi).",
         noResult: "Aramanıza uyan bir bileşen yok.",
         clearSearch: "Aramayı temizle",
 

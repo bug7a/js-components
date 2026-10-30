@@ -341,8 +341,8 @@ CATALOG.COMPONENTS = [
             { file: "02-comp-m4-samples/smart-button-2.htm", title: "All features" },
             { file: "02-comp-m4-samples/smart-button-3-ozden.htm", title: "Dialogs (ozden)" },
         ],
-        en: "A button with an icon and a text; the icon on the left or on top. A waiting cover with a turning ring while a job runs.",
-        tr: "İkon ve yazı içeren düğme; ikon solda veya üstte. Bir iş sürerken dönen halkalı bekleme örtüsü.",
+        en: "The default button: an icon and a text (or one of them), ozden style packages, a waiting clock or dots while a job runs, and a two-click ask with a bubble.",
+        tr: "Varsayılan düğme: ikon ve yazı (ya da biri), ozden stil paketleri, bir iş sürerken bekleme saati ya da noktaları ve balonlu iki tıklamalı onay.",
     },
     {
         key: "hold-to-confirm-button", name: "HoldToConfirmButton", gen: 3, cat: "actions",
@@ -467,9 +467,14 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "tooltip", name: "Tooltip", gen: 2, cat: "feedback",
-        source: "comp-m2/tooltip.js", samples: ["02-comp-m2-samples/tooltip.htm"],
-        en: "A small hint box that appears over an object.",
-        tr: "Bir nesnenin üzerinde beliren küçük ipucu kutusu.",
+        source: "comp-m2/tooltip.js",
+        samples: [
+            { file: "02-comp-m2-samples/tooltip.htm", title: "Basic" },
+            { file: "02-comp-m2-samples/tooltip-2.htm", title: "The bubble: arrow, show(), screen edges" },
+            { file: "02-comp-m2-samples/tooltip-3.htm", title: "Content and popover" },
+        ],
+        en: "A hint bubble over an object: it follows the mouse or stays at the object, with an optional bordered arrow, always inside the screen; your own content in it, or a popover that stays and can be clicked.",
+        tr: "Bir nesnenin üzerinde ipucu balonu: fareyi izler ya da nesnenin yanında durur; isteğe bağlı kenarlıklı ok, hep ekranın içinde; içinde kendi içeriğin ya da açık kalan, tıklanabilen bir popover.",
     },
     {
         key: "waiting", name: "Waiting", gen: 2, cat: "feedback",
@@ -499,123 +504,6 @@ CATALOG.COMPONENTS = [
         en: "A ready login and sign up page with e-mail, password and social buttons.",
         tr: "E-posta, şifre ve sosyal giriş düğmeleriyle hazır giriş ve kayıt sayfası.",
     },
-
-    // --- comp-m1 ---
-    {
-        key: "ui-toggle", name: "UIToggle", gen: 1, cat: "selection",
-        source: "comp-m1/ui-toggle.js", samples: ["02-comp-m1-samples/ui-toggle.htm"],
-        en: "On and off switch with style presets like Google and Apple. Not for new pages: use Toggle (M2).",
-        tr: "Google ve Apple gibi hazır stilleri olan aç/kapat anahtarı. Yeni sayfalarda değil: Toggle (M2) kullanılır.",
-    },
-    {
-        key: "check-box-m1", name: "CheckBox (M1)", gen: 1, cat: "selection",
-        source: "comp-m1/check-box.js", samples: ["02-comp-m1-samples/ui-check-box.htm"],
-        en: "The first check box. Not for new pages: use CheckBox (M3).",
-        tr: "İlk onay kutusu. Yeni sayfalarda değil: CheckBox (M3) kullanılır.",
-    },
-    {
-        key: "select-item", name: "SelectItem", gen: 1, cat: "selection",
-        source: "comp-m1/select-item.js", samples: ["02-comp-m1-samples/select-item.htm"],
-        en: "A field that opens a searchable list of items with images. Not for new pages: use SelectBox (M4).",
-        tr: "Resimli öğelerden oluşan, aranabilir bir liste açan alan. Yeni sayfalarda değil: SelectBox (M4) kullanılır.",
-    },
-    {
-        key: "select-text", name: "SelectText", gen: 1, cat: "selection",
-        source: "comp-m1/select-text.js", samples: ["02-comp-m1-samples/select-text.htm"],
-        en: "A field that opens a searchable text list. Not for new pages: use SelectBox (M4).",
-        tr: "Aranabilir bir yazı listesi açan alan. Yeni sayfalarda değil: SelectBox (M4) kullanılır.",
-    },
-    {
-        key: "ui-stepper", name: "UIStepper", gen: 1, cat: "inputs",
-        source: "comp-m1/ui-stepper.js", samples: ["02-comp-m1-samples/ui-stepper.htm"],
-        en: "The first number stepper. Not for new pages: use Stepper (M4).",
-        tr: "İlk sayı seçici. Yeni sayfalarda değil: Stepper (M4) kullanılır.",
-    },
-    {
-        key: "ui-search-box", name: "UISearchBox", gen: 1, cat: "inputs",
-        source: "comp-m1/ui-search-box.js", samples: ["02-comp-m1-samples/ui-search-box.htm"],
-        en: "Search and filter boxes for light and colored backgrounds. Not for new pages: use SearchInput (M2, search-input-v2).",
-        tr: "Açık ve renkli zeminler için arama ve filtre kutuları. Yeni sayfalarda değil: SearchInput (M2, search-input-v2) kullanılır.",
-    },
-    {
-        key: "ui-numeric-keyboard", name: "UINumericKeyboard", gen: 1, cat: "inputs",
-        source: "comp-m1/ui-numeric-keyboard.js", samples: ["02-comp-m1-samples/ui-numeric-keyboard.htm"],
-        en: "On-screen number keyboard for touch screens and kiosks. Not for new pages: use NumericKeyboard (M4).",
-        tr: "Dokunmatik ekranlar ve kiosklar için ekran üstü sayı klavyesi. Yeni sayfalarda değil: NumericKeyboard (M4) kullanılır.",
-    },
-    {
-        key: "ui-action-button", name: "UIActionButton", gen: 1, cat: "actions",
-        source: "comp-m1/ui-action-button.js", samples: ["02-comp-m1-samples/ui-action-button.htm"],
-        en: "Round floating action button in the corner of the screen. Not for new pages: use ActionButton (M4).",
-        tr: "Ekranın köşesinde duran yuvarlak eylem düğmesi. Yeni sayfalarda değil: ActionButton (M4) kullanılır.",
-    },
-    {
-        key: "ui-tabs", name: "UITabs", gen: 1, cat: "navigation",
-        source: "comp-m1/ui-tabs.js", samples: ["02-comp-m1-samples/ui-tabs.htm"],
-        en: "The first tab bar, with icon and text tabs. Not for new pages: use Tabs (M4).",
-        tr: "İkonlu ve yazılı sekmeleriyle ilk sekme çubuğu. Yeni sayfalarda değil: Tabs (M4) kullanılır.",
-    },
-    {
-        key: "ui-page-control", name: "UIPageControl", gen: 1, cat: "navigation",
-        source: "comp-m1/ui-page-control.js", samples: ["02-comp-m1-samples/ui-page-control.htm"],
-        en: "The first sliding page container. Not for new pages: use PageControl (M4).",
-        tr: "İlk kayan sayfa kutusu. Yeni sayfalarda değil: PageControl (M4) kullanılır.",
-    },
-    {
-        key: "ui-title", name: "UITitle", gen: 1, cat: "pages",
-        source: "comp-m1/ui-title.js", samples: ["02-comp-m1-samples/ui-title.htm"],
-        en: "Mobile page title bar with a back button.",
-        tr: "Geri düğmeli mobil sayfa başlık çubuğu.",
-    },
-    {
-        key: "ui-left-title", name: "UILeftTitle", gen: 1, cat: "pages",
-        source: "comp-m1/ui-left-title.js", samples: ["02-comp-m1-samples/ui-left-title.htm"],
-        en: "A settings row with a title, a subtitle and an arrow.",
-        tr: "Başlık, alt başlık ve ok içeren ayar satırı.",
-    },
-    {
-        key: "ui-cells", name: "UICells", gen: 1, cat: "data",
-        source: "comp-m1/ui-cells.js", samples: ["02-comp-m1-samples/ui-cells.htm"],
-        en: "Splits a box into rows and columns of cells to place objects in them.",
-        tr: "Bir kutuyu, içine nesne yerleştirilecek satır ve sütun hücrelerine böler.",
-    },
-    {
-        key: "tiny-table-m1", name: "TinyTable (M1)", gen: 1, cat: "data",
-        source: "comp-m1/tiny-table.js", samples: ["02-comp-m1-samples/tiny-table.htm"],
-        en: "The first version of the light table. Not for new pages: use TinyTable (M4).",
-        tr: "Hafif tablonun ilk sürümü. Yeni sayfalarda değil: TinyTable (M4) kullanılır.",
-    },
-    {
-        key: "ui-progress-bar", name: "UIProgressBar", gen: 1, cat: "feedback",
-        source: "comp-m1/ui-progress-bar.js", samples: ["02-comp-m1-samples/ui-progress-bar.htm"],
-        en: "The first progress bar. Not for new pages: use ProgressBar (M4).",
-        tr: "İlk ilerleme çubuğu. Yeni sayfalarda değil: ProgressBar (M4) kullanılır.",
-    },
-    {
-        key: "ui-notice", name: "UINotice", gen: 1, cat: "feedback",
-        source: "comp-m1/ui-notice.js", samples: ["02-comp-m1-samples/ui-notice.htm"],
-        en: "Info, alert and error messages shown over the page. Not for new pages: use Notice (M4).",
-        tr: "Sayfanın üzerinde gösterilen bilgi, uyarı ve hata mesajları. Yeni sayfalarda değil: Notice (M4) kullanılır.",
-    },
-    {
-        key: "object-waiting", name: "ObjectWaiting", gen: 1, cat: "feedback",
-        source: "comp-m1/object-waiting.js", samples: ["02-comp-m1-samples/object-waiting.htm"],
-        en: "Waiting animation over a single object, like a button that downloads. Not for new pages: use Waiting (M2).",
-        tr: "Tek bir nesnenin üzerinde bekleme animasyonu; indirme yapan bir düğme gibi. Yeni sayfalarda değil: Waiting (M2) kullanılır.",
-    },
-    {
-        key: "ui-scrolling-text", name: "UIScrollingText", gen: 1, cat: "pages",
-        source: "comp-m1/ui-scrolling-text.js", samples: ["02-comp-m1-samples/ui-scrolling-text.htm"],
-        en: "A line of text that scrolls back and forth inside a small box. Not for new pages: use ScrollingText (M4).",
-        tr: "Küçük bir kutunun içinde ileri geri kayan tek satırlık yazı. Yeni sayfalarda değil: ScrollingText (M4) kullanılır.",
-    },
-    {
-        key: "ui-web-view", name: "UIWebView", gen: 1, cat: "pages",
-        source: "comp-m1/ui-web-view.js", samples: ["02-comp-m1-samples/ui-web-view.htm"],
-        en: "The first iframe box. Not for new pages: use WebView (M4).",
-        tr: "İlk iframe kutusu. Yeni sayfalarda değil: WebView (M4) kullanılır.",
-    },
-
 ];
 
 // *** HELPERS:

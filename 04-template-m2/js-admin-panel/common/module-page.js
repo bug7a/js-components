@@ -25,10 +25,19 @@ const ModulePage = function(params = {}) {
     box.container.add(box);
     box.container.page = box;
 
-        box.htmPage = UIWebView.create(0, 0);
-        that.width = "100%";
-        that.height = "100%";
-        that.loadHTMLFile(box.moduleURL);
+        // BOX: The page of the module in an iframe (comp-m4 WebView; the comp-m1 UIWebView until 2026-10-30)
+        // WHY no surface, edge, round and loading cover: the module fills the view; a white cover flashed on the
+        //     dark themes (UIWebView had none of them)
+        box.htmPage = WebView({
+            left: 0,
+            top: 0,
+            width: "100%",
+            height: "100%",
+            url: box.moduleURL,
+            title: box.pageKey || "Module",
+            showLoading: 0,
+            style: { box: { color: "transparent", border: 0, round: 0 } },
+        });
 
         box.container.show();
 
