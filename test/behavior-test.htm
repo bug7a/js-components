@@ -125,6 +125,22 @@
             dialog.remove();
         });
 
+        // *** TOOLTIP (comp-m2/tooltip.js)
+
+        test("Tooltip: the color of look stays while the mouse moves", async function () {
+            // WHY: a hint left by an earlier test would be the one moved here
+            if (window.lblHint) window.lblHint.remove();
+            window.lblHint = null;
+            const target = Button({ text: "Hint" });
+            const tip = Tooltip({ target: target, look: { color: "rgb(35, 35, 35)" }, content: function () { Label({ text: "A", textColor: "white" }); } });
+            target.elem.dispatchEvent(new MouseEvent("mouseover", { bubbles: true, clientX: 10, clientY: 10 }));
+            target.elem.dispatchEvent(new MouseEvent("mousemove", { bubbles: true, clientX: 12, clientY: 12 }));
+            const color = window.lblHint ? window.lblHint.elem.style.backgroundColor : "";
+            check("Tooltip: the color of look stays while the mouse moves", color == "rgb(35, 35, 35)", "color: " + color);
+            tip.remove();
+            target.remove();
+        });
+
         // *** NOTICE (comp-m4/notice.js)
 
         test("Notice over a Dialog: it is on top, Escape closes only the notice", async function () {
