@@ -5,7 +5,8 @@
 # v26.09 - Bugra Ozden
 #
 # The pages in this repo load the library and the components from the repo root:
-#   <script src="../../basic/basic.min.js">   <script src="../../comp-m4/tabs.min.js">
+#   <script src="../../basic/basic.min.js">   <script src="../../comp-m4/tabs.js">
+# (the components have no .min twins in the repo: their .min files are made here, from the sources)
 # This script copies what the pages of a project load into the project folder, and
 # rewrites those paths:
 #
@@ -15,6 +16,11 @@
 #                       with terser), and its icon folder (comp-m2/waiting/ -> comp/waiting/;
 #                       the icon paths in the code are rewritten to "comp/<folder>/")
 #   my-project/comp/_sources.txt   where every file of comp/ comes from
+#
+#   --one-file (2026-10-30): every component in ONE file, comp/components.min.js (in the order the
+#   pages load them; the icon folders stay in comp/<folder>/; basic/ stays apart). The pages get
+#   one <script> for it, in the place of their first component. A project made so stays so
+#   at the next runs (comp/_sources.txt tells it).
 #
 # Run it again after the library or a component changes: it reads the pages (and
 # comp/_sources.txt) again and refreshes basic/ and comp/. Both folders are made again from
@@ -27,6 +33,7 @@
 # USAGE:
 #   ./_make-standalone.sh 03-webpage-m2/webpage-basicjs          Copies and rewrites.
 #   ./_make-standalone.sh 03-webpage-m2/webpage-basicjs --list   Only shows what it would do.
+#   ./_make-standalone.sh my-project --one-file                    The components in one file.
 #
 # It only needs node (npx downloads terser).
 
@@ -36,17 +43,19 @@ cd "$(dirname "$0")" || exit 1   # the repo root
 # *** SETTINGS:
 
 export BASIC_ALWAYS="basic.min.js basic.min.css LICENSE font"   # basic/ files every copy gets
-export COMP_DIRS="comp-m1 comp-m2 comp-m3 comp-m4"
+export COMP_DIRS="comp-m2 comp-m3 comp-m4"   # (comp-m1 was archived on 2026-10-30)
 export KEEP_COMMENTS="Bismillah"                                    # the house header stays in the min file
 
 # *** MAIN:
 
 PROJECT=""
 export IS_LIST=0
+export ONE_FILE=0
 for argument in "$@"; do
     case "$argument" in
         --list) IS_LIST=1 ;;
-        -h | --help) sed -n '3,31p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        --one-file) ONE_FILE=1 ;;
+        -h | --help) sed -n '3,38p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
         -*) echo "Unknown option: $argument (try --help)"; exit 1 ;;
         *) PROJECT="$argument" ;;
     esac
@@ -79,6 +88,7 @@ const terser = require(process.env.TERSER_DIR);
 const REPO = process.env.REPO;
 const PROJECT = process.env.PROJECT_DIR;
 const isList = process.env.IS_LIST === "1";
+const ONE_FILE_NAME = "components.min.js";
 const list = (text) => text.split(/\s+/).filter(Boolean);
 const basicAlways = list(process.env.BASIC_ALWAYS);
 const compDirs = list(process.env.COMP_DIRS);
@@ -88,7 +98,7 @@ const BASIC_OUT = path.join(PROJECT, "basic");
 const COMP_OUT = path.join(PROJECT, "comp");
 const SOURCES_FILE = path.join(COMP_OUT, "_sources.txt");
 
-// "../comp-m2/waiting/", "../../comp-m2/waiting/", "comp-m1/ui-action-button/"
+// "../comp-m2/waiting/", "../../comp-m2/waiting/", "comp-m4/action-button/"
 const ICON_FOLDER_PATH = /(["'`])(?:\.\.\/)*(comp-m[1-4])\/([\w.-]+)\//g;
 const SKIPPED_ASSET = /^\.|\.webloc$/; // .DS_Store, links to web pages
 const TAG_PATH = /(<(?:script|link)\b[^>]*?\b(?:src|href)\s*=\s*)(["'])([^"']+)\2/gi;
@@ -119,20 +129,26 @@ const baseDirOf = function (page, html) {
     return path.dirname(page);
 };
 
-// Where a comp/ file came from in the last run
+// Where a comp/ file came from in the last run (components.min.js: one line for each of its sources)
 const oldSources = {};
+const oldOneFile = [];
 if (fs.existsSync(SOURCES_FILE)) {
     fs.readFileSync(SOURCES_FILE, "utf8").split("\n").forEach(function (line) {
         const match = /^(\S+)\s+<-\s+(\S+)/.exec(line);
-        if (match) oldSources[match[1]] = match[2];
+        if (!match) return;
+        if (match[1] === ONE_FILE_NAME) oldOneFile.push(match[2]);
+        else oldSources[match[1]] = match[2];
     });
 }
+// WHY: a project made with --one-file stays so (its pages load only comp/components.min.js)
+const isOneFile = process.env.ONE_FILE === "1" || oldOneFile.length > 0;
 
 // *** FIND WHAT THE PAGES LOAD:
 
 const basicFiles = {};   // "scroll-bar.min.js" -> repo source file
 const compFiles = {};    // "tabs.min.js" -> "comp-m4/tabs.js"
-const rewrites = [];     // { page, from, to }
+const rewrites = [];     // { page, from, to } (to: "" = the <script> is removed: --one-file)
+const pageComps = {};    // --one-file: page -> its component sources, in their order
 
 // The .min file of a basic/ file ("scroll-bar.js" -> "scroll-bar.min.js")
 const minName = function (name) {
@@ -164,6 +180,8 @@ pages.forEach(function (page) {
             if (inside[0] === "basic" && inside.length > 1) {
                 const name = inside.slice(1).join("/");
                 if (inside.length === 2 && fs.existsSync(path.join(REPO, "basic", name))) basicFiles[name] = path.join(REPO, "basic", name);
+            } else if (inside[0] === "comp" && inside.length === 2 && inside[1] === ONE_FILE_NAME) {
+                (pageComps[page] = pageComps[page] || []).push.apply(pageComps[page], oldOneFile);
             } else if (inside[0] === "comp" && inside.length === 2) {
                 const source = oldSources[inside[1]];
                 if (source) compFiles[inside[1]] = source;
@@ -200,18 +218,43 @@ pages.forEach(function (page) {
             }
             compFiles[outName] = source;
             newTarget = path.join(COMP_OUT, outName);
+            if (isOneFile) {
+                const list = (pageComps[page] = pageComps[page] || []);
+                // WHY "": the first component of the page becomes the one file, the others go
+                if (list.length) newTarget = "";
+                else newTarget = path.join(COMP_OUT, ONE_FILE_NAME);
+                list.push(source);
+            }
 
         } else {
             warnings.push(rel(page) + ": " + value + " is outside the project and is not in basic/ or comp-m*/ (not copied)");
             continue;
         }
 
-        let to = path.relative(baseDir, newTarget).split(path.sep).join("/");
-        if (value !== clean) to += value.slice(clean.length);   // keeps ?v=2 or #hash
+        let to = "";
+        if (newTarget) {
+            to = path.relative(baseDir, newTarget).split(path.sep).join("/");
+            if (value !== clean) to += value.slice(clean.length);   // keeps ?v=2 or #hash
+        }
         rewrites.push({ page: page, from: value, to: to });
 
     }
 
+});
+
+// --one-file: the components of every page in one list; a component comes after the ones a page loads before it
+const oneFileOrder = [];
+Object.keys(pageComps).forEach(function (page) {
+    let place = 0;
+    pageComps[page].forEach(function (source) {
+        const index = oneFileOrder.indexOf(source);
+        if (index > -1) {
+            place = Math.max(place, index + 1);
+            return;
+        }
+        oneFileOrder.splice(place, 0, source);
+        place++;
+    });
 });
 
 basicAlways.forEach(function (name) {
@@ -222,9 +265,10 @@ basicAlways.forEach(function (name) {
 
 console.log("Project: " + rel(PROJECT) + "  (" + pages.length + " page" + (pages.length == 1 ? "" : "s") + ")");
 console.log("  basic/  " + Object.keys(basicFiles).sort().join(", "));
-console.log("  comp/   " + (Object.keys(compFiles).length ? Object.keys(compFiles).sort().map((name) => name + " <- " + compFiles[name]).join(", ") : "(none)"));
+if (isOneFile) console.log("  comp/   " + (oneFileOrder.length ? ONE_FILE_NAME + " <- " + oneFileOrder.join(", ") : "(none)"));
+else console.log("  comp/   " + (Object.keys(compFiles).length ? Object.keys(compFiles).sort().map((name) => name + " <- " + compFiles[name]).join(", ") : "(none)"));
 rewrites.forEach(function (item) {
-    console.log("  " + rel(item.page) + ": " + item.from + " -> " + item.to);
+    console.log("  " + rel(item.page) + ": " + item.from + " -> " + (item.to || "(removed: it is in " + ONE_FILE_NAME + ")"));
 });
 
 // The basic/ twins that are older than their source
@@ -302,25 +346,38 @@ const copyFolder = function (from, to) {
 
     // COMP
     fs.rmSync(COMP_OUT, { recursive: true, force: true });
-    const names = Object.keys(compFiles).sort();
+
+    // A source as a .min code; its icon folders are copied into comp/ and the paths in the code point there
+    const minifyComponent = async function (source) {
+        const result = await terser.minify(fs.readFileSync(path.join(REPO, source), "utf8"), {
+            compress: true,
+            mangle: true,
+            format: { comments: keepComments },
+        });
+        return result.code.replace(ICON_FOLDER_PATH, function (all, quote, gen, folder) {
+            const from = path.join(REPO, gen, folder);
+            if (!fs.existsSync(from) || !fs.statSync(from).isDirectory()) return all;
+            copyFolder(from, path.join(COMP_OUT, folder));
+            return quote + "comp/" + folder + "/";
+        });
+    };
+
+    const names = isOneFile ? (oneFileOrder.length ? [ONE_FILE_NAME] : []) : Object.keys(compFiles).sort();
     const sourcesLines = [];
     if (names.length) {
         fs.mkdirSync(COMP_OUT, { recursive: true });
-        for (const name of names) {
+        if (isOneFile) {
+            const codes = [];
+            for (const source of oneFileOrder) {
+                codes.push(await minifyComponent(source));
+                sourcesLines.push(ONE_FILE_NAME + " <- " + source);
+            }
+            // WHY ";": a file that ends without one must not run into the next
+            fs.writeFileSync(path.join(COMP_OUT, ONE_FILE_NAME), codes.join("\n;\n") + "\n");
+        }
+        for (const name of (isOneFile ? [] : names)) {
             const source = compFiles[name];
-            const result = await terser.minify(fs.readFileSync(path.join(REPO, source), "utf8"), {
-                compress: true,
-                mangle: true,
-                format: { comments: keepComments },
-            });
-            // Icon folders: copied next to the file, and the paths in the code point there
-            const code = result.code.replace(ICON_FOLDER_PATH, function (all, quote, gen, folder) {
-                const from = path.join(REPO, gen, folder);
-                if (!fs.existsSync(from) || !fs.statSync(from).isDirectory()) return all;
-                copyFolder(from, path.join(COMP_OUT, folder));
-                return quote + "comp/" + folder + "/";
-            });
-            fs.writeFileSync(path.join(COMP_OUT, name), code + "\n");
+            fs.writeFileSync(path.join(COMP_OUT, name), (await minifyComponent(source)) + "\n");
             sourcesLines.push(name + " <- " + source);
         }
         fs.writeFileSync(SOURCES_FILE,
@@ -334,14 +391,20 @@ const copyFolder = function (from, to) {
     rewrites.forEach(function (item) { (byPage[item.page] = byPage[item.page] || []).push(item); });
     Object.keys(byPage).forEach(function (page) {
         let html = fs.readFileSync(page, "utf8");
+        // --one-file: the <script> lines of the components that are in comp/components.min.js now
+        byPage[page].filter((rewrite) => rewrite.to === "").forEach(function (rewrite) {
+            const escaped = rewrite.from.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+            html = html.replace(new RegExp("[ \\t]*<script\\b[^>]*\\bsrc\\s*=\\s*([\"'])" + escaped + "\\1[^>]*>\\s*<\\/script>[^\\S\\n]*\\n?"), "");
+        });
         html = html.replace(TAG_PATH, function (all, start, quote, value) {
-            const item = byPage[page].find((rewrite) => rewrite.from === value);
+            const item = byPage[page].find((rewrite) => rewrite.from === value && rewrite.to);
             return item ? start + quote + item.to + quote : all;
         });
         fs.writeFileSync(page, html);
     });
 
-    console.log("\nDone: basic/ (" + Object.keys(basicFiles).length + "), comp/ (" + names.length + "), " + Object.keys(byPage).length + " page(s) rewritten.");
+    const compCount = isOneFile ? ONE_FILE_NAME + " (" + oneFileOrder.length + " components)" : names.length;
+    console.log("\nDone: basic/ (" + Object.keys(basicFiles).length + "), comp/ (" + compCount + "), " + Object.keys(byPage).length + " page(s) rewritten.");
     finish();
 
 })().catch(function (error) {

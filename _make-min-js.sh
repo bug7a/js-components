@@ -1,13 +1,16 @@
 #!/bin/bash
 # Bismillah
 #
-# Make the .min.js twins of the library and the components.
-# v26.09 - Bugra Ozden
+# Make the .min twins of the library (basic/: basic.min.js, basic.min.css, scroll-bar.min.js).
+# v26.10 - Bugra Ozden
 #
-# There is no build system in this repo: every page loads its scripts with <script src>,
-# and most sources have a hand-made "name.min.js" next to them that the samples and the
-# templates load. When a source is edited and its twin is not, those pages keep running
-# the old code. This script finds and rebuilds those twins. Nothing else is touched.
+# There is no build system in this repo: every page loads its scripts with <script src>.
+# The library keeps its .min files (they are what people download, and _make-standalone.sh
+# copies them). When a source is edited and its twin is not, a page that loads the twin keeps
+# running the old code. This script finds and rebuilds those twins. Nothing else is touched.
+#
+# The components have NO .min twins (removed on 2026-10-30): the pages load the sources, and
+# _make-standalone.sh makes the .min files of a project's components from the sources.
 #
 # USAGE:
 #   ./_make-min-js.sh                    Lists the stale twins. Writes nothing. (default)
@@ -27,7 +30,7 @@ cd "$(dirname "$0")" || exit 1
 
 # *** SETTINGS:
 
-SOURCE_DIRS="basic comp-m1 comp-m2 comp-m3 comp-m4"
+SOURCE_DIRS="basic"
 KEEP_COMMENTS="/Bismillah/"                       # the house header stays in the min file
 KEEP_COMMENTS_BASIC="/Bismillah|basic\.js \(v/"   # basic.js also keeps its version line
 

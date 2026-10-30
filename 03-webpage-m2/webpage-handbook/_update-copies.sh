@@ -32,9 +32,11 @@ echo "  basic/     ok"
 # COMP
 rm -rf "$SITE/comp"
 mkdir -p "$SITE/comp"
-cp "$REPO/comp-m4/web-view.min.js" "$REPO/comp-m4/search-results.min.js" "$SITE/comp/"
-npx --yes terser "$REPO/comp-m4/toast.js" --compress --mangle --comments "/Bismillah/" -o "$SITE/comp/toast.min.js"
-node --check "$SITE/comp/toast.min.js"
+# WHY from the source: the components have no .min twins in the repository (2026-10-30)
+for name in web-view search-results toast; do
+    npx --yes terser "$REPO/comp-m4/$name.js" --compress --mangle --comments "/Bismillah/" -o "$SITE/comp/$name.min.js"
+    node --check "$SITE/comp/$name.min.js"
+done
 echo "  comp/      ok"
 
 # HANDBOOK

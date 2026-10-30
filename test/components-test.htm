@@ -41,8 +41,6 @@
           the objects it created on the page, window/document listeners (page.onResize, page.on...),
           setInterval timers, requestAnimationFrame loops, ResizeObserver (onResize) watches.
           (The first instance may make one shared thing for all instances, like the Toast container.)
-        - The .min.js twin (if there is one) is created with the same public properties and
-          functions as the source. (A different list = the twin is stale: ./_make-min-js.sh --build)
 
         NEW COMPONENT: add a line to COMPONENTS.
         - deps: the files it needs, loaded before it.
@@ -108,7 +106,7 @@
             { file: "comp-m4/gauge.js", name: "Gauge" },
             { file: "comp-m4/item-list.js", name: "ItemList" },
             { file: "comp-m4/label-editor.js", name: "LabelEditor", deps: ["comp-m4/side-panel.js", "comp-m4/stepper.js", "comp-m4/select-color.js", "comp-m4/tabs.js", "comp-m3/check-box.js"] },
-            { file: "comp-m4/loading-screen.js", name: "LoadingScreen" },
+            { file: "comp-m4/loading-screen.js", name: "LoadingScreen", deps: ["comp-m4/smart-button.js"] },
             { file: "comp-m4/mini-graph-box.js", name: "MiniGraphBox" },
             { file: "comp-m4/modal.js", name: "Modal" },
             { file: "comp-m4/notice.js", name: "Notice" },
@@ -386,29 +384,9 @@
             });
         };
 
-        // Source test, then the .min.js twin (created only, to compare the public keys).
+        // WHY only the source: the components have no .min.js twins in the repository any more (2026-10-30)
         const testComponent = async function (test) {
-            const result = await runInFrame(test, test.file);
-
-            if (test.kind !== "object" && result.keys) {
-                const minFile = test.file.replace(/\.js$/, ".min.js");
-                const minResult = await runInFrame(Object.assign({}, test, { keysOnly: 1 }), minFile);
-
-                if (minResult.missingFile) {
-                    result.steps.push({ name: "no .min.js twin", ok: true, info: "", level: "info" });
-                } else if (!minResult.keys) {
-                    const failedStep = minResult.steps.find(function (s) { return !s.ok; });
-                    result.steps.push({ name: ".min.js twin works", ok: false, info: failedStep ? failedStep.name + ": " + failedStep.info : "", level: "fail" });
-                } else {
-                    const missing = result.keys.filter(function (k) { return minResult.keys.indexOf(k) < 0; });
-                    const extra = minResult.keys.filter(function (k) { return result.keys.indexOf(k) < 0; });
-                    result.steps.push({
-                        name: ".min.js twin has the same API", ok: !missing.length && !extra.length, level: "fail",
-                        info: (missing.length ? "missing in .min: " + missing.join(", ") : "") + (extra.length ? (missing.length ? " / " : "") + "only in .min: " + extra.join(", ") : "") + " (stale? ./_make-min-js.sh --build " + test.file + ")",
-                    });
-                }
-            }
-            return result;
+            return await runInFrame(test, test.file);
         };
 
         const showRow = function (test, result) {
@@ -420,8 +398,7 @@
 
             setDefaultContainerBox(resultList);
             const row = VGroup({ width: "100%", height: "auto", align: "left top", gap: 2 });
-                const title = state + "  " + test.file + "  (" + test.name + ")  " + passedCount + "/" + result.steps.filter(function (s) { return s.level !== "info"; }).length +
-                    (result.steps.some(function (s) { return s.level === "info"; }) ? "  - no .min.js twin" : "");
+                const title = state + "  " + test.file + "  (" + test.name + ")  " + passedCount + "/" + result.steps.filter(function (s) { return s.level !== "info"; }).length;
                 Label({ text: title, plainText: title, fontSize: 14, bold: state !== "PASS", textColor: color });
                 failed.concat(warned).forEach(function (s) {
                     const text = "      " + (s.level === "fail" ? "✗ " : "! ") + s.name + (s.info ? ":  " + s.info : "");
@@ -477,7 +454,7 @@
             const scrollBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
                 VGroup({ width: "100%", height: "auto", align: "left top", gap: 4, padding: 24 });
                     Label({ text: "Components test", fontSize: 24, bold: 1 });
-                    Label({ text: "comp-m2, comp-m3, comp-m4: each file in its own iframe. Create with default values, remove() cleanup, icons, .min.js twin.", fontSize: 13, textColor: Black(0.5) });
+                    Label({ text: "comp-m2, comp-m3, comp-m4: each file in its own iframe. Create with default values, remove() cleanup, icons.", fontSize: 13, textColor: Black(0.5) });
                     lblStatus = Label({ text: "Running...", fontSize: 16, textColor: Black(0.6) });
                     that.css = { margin: "8px 0" };
                     resultList = VGroup({ width: "100%", height: "auto", align: "left top", gap: 6 });
