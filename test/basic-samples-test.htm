@@ -20,7 +20,7 @@
         /*
 
         Basic Samples Test - v26.09
-        Self-checking test: every page in 01-basic-js-by-example runs without errors.
+        Self-checking test: every page in 01-basic-js-by-example (and its _first-coding-projects/) runs without errors.
 
         Open it in a browser with a web server (Live Server), not file:// (the pages are read with fetch).
         Green = passed, orange = passed with a warning, red = failed.
@@ -96,6 +96,56 @@
             "custom-scrollbar-usage-1.htm",
             "custom-scrollbar-usage-2.htm",
             "custom-scrollbar-usage-3.htm",
+            // The beginner projects (subfolder): the same checks.
+            { file: "_first-coding-projects/00C-empty-project-template.htm", isEmpty: 1 }, // start() is empty: nothing is drawn
+            "_first-coding-projects/01-hello-world.htm",
+            "_first-coding-projects/02-multiplication-table.htm",
+            "_first-coding-projects/03-basic-calculator.htm",
+            "_first-coding-projects/04-dice.htm",
+            "_first-coding-projects/05-xox-game.htm",
+            "_first-coding-projects/06-counter.htm",
+            "_first-coding-projects/07-wall-clock.htm",
+            "_first-coding-projects/08-stopwatch.htm",
+            "_first-coding-projects/09-math-game.htm",
+            "_first-coding-projects/10-color-dictionary.htm",
+            "_first-coding-projects/11-snake-game.htm",
+            "_first-coding-projects/12-calculator-v2.htm",
+            "_first-coding-projects/13-move-the-rocket.htm",
+            "_first-coding-projects/14-move-the-rocket-v2.htm",
+            "_first-coding-projects/15-password-generator.htm",
+            "_first-coding-projects/16-chess.htm",
+            "_first-coding-projects/17-increase-decrease.htm",
+            "_first-coding-projects/18-open-the-box.htm",
+            "_first-coding-projects/19-objects-align.htm",
+            "_first-coding-projects/23-dice-v2.htm",
+            "_first-coding-projects/25-rocket-control-panel.htm",
+            "_first-coding-projects/26-drawing-a-complex-shape.htm",
+            "_first-coding-projects/27-color-maker.htm",
+            "_first-coding-projects/32-keyboard-keys.htm",
+            "_first-coding-projects/33-simple-color-picker.htm",
+            "_first-coding-projects/34-grade-average.htm",
+            "_first-coding-projects/36-character-counter.htm",
+            "_first-coding-projects/37-searchable-list.htm",
+            "_first-coding-projects/41-date-and-time.htm",
+            "_first-coding-projects/42-mini-message-area.htm",
+            "_first-coding-projects/43-mouse-position.htm",
+            "_first-coding-projects/44-mobile-horizontal-cards.htm",
+            "_first-coding-projects/45-rocket-to-the-target.htm",
+            "_first-coding-projects/46-rocket-to-the-target-v2.htm",
+            "_first-coding-projects/47-creating-a-table.htm",
+            "_first-coding-projects/48-creating-a-dynamic-table.htm",
+            "_first-coding-projects/50-moving-objects-with-css.htm",
+            "_first-coding-projects/51-tab-bar.htm",
+            "_first-coding-projects/52-collapsible-content.htm",
+            "_first-coding-projects/54-circle-radius-app.htm",
+            "_first-coding-projects/55-basic-css-animation.htm",
+            "_first-coding-projects/57-motion-one-after-another.htm",
+            "_first-coding-projects/59-managing-object-groups-basic.htm",
+            "_first-coding-projects/60-managing-object-groups.htm",
+            "_first-coding-projects/64-messaging-app-interface.htm",
+            "_first-coding-projects/65-length-measure-conversion-application.htm",
+            "_first-coding-projects/66-keyword-box.htm",
+            "_first-coding-projects/67-minesweeper-mechanics.htm",
         ];
 
         // *** PRIVATE VARIABLES:
@@ -311,7 +361,7 @@
             const scrollBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
                 VGroup({ width: "100%", height: "auto", align: "left top", gap: 4, padding: 24 });
                     Label({ text: "Basic samples test", fontSize: 24, bold: 1 });
-                    Label({ text: "01-basic-js-by-example: each page in its own iframe. Files found, no errors while it runs, page drawn, start/end balance, resize.", fontSize: 13, textColor: Black(0.5) });
+                    Label({ text: "01-basic-js-by-example and _first-coding-projects: each page in its own iframe. Files found, no errors while it runs, page drawn, start/end balance, resize.", fontSize: 13, textColor: Black(0.5) });
                     lblStatus = Label({ text: "Running...", fontSize: 16, textColor: Black(0.6) });
                     that.css = { margin: "8px 0" };
                     resultList = VGroup({ width: "100%", height: "auto", align: "left top", gap: 6 });
