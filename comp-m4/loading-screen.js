@@ -8,10 +8,18 @@ UI COMPONENT
 - A full cover that is shown while an app or a page is getting ready (a splash / loading screen).
   It covers its container (the page by default) and fades out when close() is called.
 - Parts (all optional): an icon (an image file or an SVG text), a title, a message, a spinner
-  ("ring" or "dots") and a progress bar (setProgress(0 - 1)).
+  ("ring", "dots" or "clock") and a progress bar (setProgress(0 - 1)).
+- spinnerType "clock" (2026-10-29, the user): the clock of the waiting views (comp-m1/ui-waiting-view/clock.png:
+  a white face, a dark edge and dark hands) with moving hands: the minute hand turns fast, the hour hand 12 times
+  slower. Always 30 px (the user): the hour hand 2 px, the minute hand (the long one) 2 px in indianred, and an
+  indianred dot (4 px) in the middle over the place where the hands meet. Drawn as SVG in px (no file);
+  style.clock. The hands stand still with prefers-reduced-motion.
+  THE DEFAULT WAIT (the user, 2026-10-29): spinnerType is "clock" by default. Its two looks are LoadingScreen.clocks
+  "ozden" (a white face, dark lines: the default) and "ozdenDark" (a dark face, light lines, a yellow minute hand); the style packages
+  "ozden" and "ozdenDark" are the screens made for them. (comp-m3 ButtonWithIcon has the same clock: keep them alike)
 - minDuration: the screen stays at least this long, so a fast load does not show a short flash.
 - The cover takes the clicks, so nothing under it can be clicked while it is open.
-- Style packages: "light" (default), "dark". Select with styleName. (LoadingScreen.styles)
+- Style packages: "light" (default), "dark", "ozden", "ozdenDark". Select with styleName. (LoadingScreen.styles)
 - NOTE: The methods are open() / close(), not show() / hide(): those are basic.js methods of every
   object (they only change "visible").
 
@@ -22,6 +30,7 @@ loading.open();                                    // Shows it again.
 loading.setMessage("Loading the data...");
 loading.setProgress(0.4);                          // A progress bar under the spinner. -1 hides it.
 LoadingScreen({ spinnerType: "dots", removeOnClose: 1, onClose: (self) => println("ready") });
+LoadingScreen({ spinnerType: "clock", messageText: "Saving..." });   // The moving clock
 
 Started Date: September 2026
 Developer: Bugra Ozden
@@ -38,12 +47,12 @@ const LoadingScreenDefaults = {
     top: 0,
     width: "100%",
     height: "100%",
-    styleName: "light", // "light", "dark" or a name added to LoadingScreen.styles
+    styleName: "light", // "light", "dark", "ozden", "ozdenDark" or a name added to LoadingScreen.styles
     iconFile: "", // An image file (Ex: the app icon)
     iconSvg: "", // Or an SVG text (works with no file, also offline)
     titleText: "",
     messageText: "", // HTML can be used (Ex: "Please wait.<br>It takes a few seconds.")
-    spinnerType: "ring", // "ring", "dots", "none"
+    spinnerType: "clock", // "clock" (the default wait, the user), "ring", "dots", "none"
     progress: -1, // 0 - 1: a progress bar is shown. -1: no progress bar
     opened: 1, // 0: created closed, open() shows it
     minDuration: 600, // ms. A close() before this time waits. (No short flash on a fast load)
@@ -85,6 +94,20 @@ const LoadingScreenDefaults = {
             size: 9,
             gap: 7,
             color: "#3D7A6B",
+        },
+        clock: { // The ozden clock (the user, 2026-10-29); LoadingScreen.clocks. The sizes are px on a 30 px clock.
+            faceColor: "#FFFFFF",
+            lineColor: "#141414", // the edge (and the hour hand, when there is no hourColor)
+            edgeWidth: 2,
+            hourWidth: 2, // the short hand
+            hourLength: 7.5, // from the middle
+            minuteWidth: 2, // the long hand
+            minuteLength: 10,
+            minuteColor: "indianred",
+            centerColor: "indianred", // the dot in the middle: it hides where the hands meet
+            centerSize: 4,
+            minuteTurn: 1.6, // seconds for one turn of the minute hand
+            hourTurn: 19.2, // seconds for one turn of the hour hand (12 x minuteTurn: a real clock)
         },
         progress: {
             width: 180,
@@ -264,6 +287,12 @@ const LoadingScreen = function (params = {}) {
             }
         endGroup();
 
+        // BOX: Spinner (clock)
+        box.clock = Box({ width: LoadingScreen.CLOCK_SIZE, height: LoadingScreen.CLOCK_SIZE, color: "transparent" });
+        box.clock.elem.innerHTML = LoadingScreen.createClockSvg(_s.clock);
+        box.clock.css.marginTop = _s.spinner.marginTop + "px";
+        box.clock.shrink = 0;
+
         // BOX: Progress bar
         box.progressTrack = startBox({
             width: _s.progress.width,
@@ -291,6 +320,7 @@ const LoadingScreen = function (params = {}) {
     box.messageLabel.visible = box.messageText ? 1 : 0;
     box.spinner.visible = (box.spinnerType === "ring") ? 1 : 0;
     box.dots.visible = (box.spinnerType === "dots") ? 1 : 0;
+    box.clock.visible = (box.spinnerType === "clock") ? 1 : 0;
     box.setProgress(box.progress);
 
     if (box.opened) {
@@ -305,6 +335,21 @@ const LoadingScreen = function (params = {}) {
 
 };
 
+// *** THE CLOCKS: the two looks of the waiting clock (the user, 2026-10-29)
+// NOTE: comp-m3/button-with-icon.js has the same clocks (ButtonWithIcon.clocks): keep them alike.
+LoadingScreen.clocks = {
+    ozden: LoadingScreenDefaults.style.clock, // a white face, dark lines
+    // a dark face, light lines; WHY yellow (the user, 2026-10-29): indianred was weak on the dark face (contrast 3.6,
+    // #F1C74A 8.9); the hour hand is dimmer, so the yellow minute hand leads (as the red one on the light clock)
+    ozdenDark: Object.assign({}, LoadingScreenDefaults.style.clock, {
+        faceColor: "#2A2A2A",
+        lineColor: "rgba(255, 255, 255, 0.9)",
+        hourColor: "rgba(255, 255, 255, 0.6)",
+        minuteColor: "#F1C74A",
+        centerColor: "#F1C74A",
+    }),
+};
+
 // *** STYLE PACKAGES:
 // USAGE: LoadingScreen({ styleName: "dark" })
 // USAGE: LoadingScreen({ styleName: "dark", style: { spinner: { color: "tomato" } } }) // Change only some keys.
@@ -314,6 +359,27 @@ const LoadingScreen = function (params = {}) {
 LoadingScreen.styles = {
 
     light: LoadingScreenDefaults.style,
+
+    // The screens of the ozden clock: the colors of the ozden pages (#F0F1EE, #232323) and indianred
+    ozden: {
+        box: { color: "#F0F1EE" },
+        title: { textColor: "#232323" },
+        message: { textColor: "rgba(35, 35, 35, 0.6)" },
+        spinner: { color: "indianred" },
+        dots: { color: "indianred" },
+        progress: { color: "indianred", trackColor: Black(0.08) },
+        clock: LoadingScreen.clocks.ozden,
+    },
+
+    ozdenDark: { // (its accent is the yellow of the dark clock)
+        box: { color: "#1B1B1B" },
+        title: { textColor: White(0.9) },
+        message: { textColor: White(0.55) },
+        spinner: { color: "#F1C74A", trackColor: White(0.12) },
+        dots: { color: "#F1C74A" },
+        progress: { color: "#F1C74A", trackColor: White(0.12) },
+        clock: LoadingScreen.clocks.ozdenDark,
+    },
 
     dark: {
         box: {
@@ -344,5 +410,33 @@ LoadingScreen.styles = {
 LoadingScreen.injectCss = function () {
     basic.addCss("loading-screen-css",
         "@keyframes loadingScreenSpin { to { transform: rotate(360deg); } }" +
-        "@keyframes loadingScreenDot { 0%, 80%, 100% { transform: scale(0.6); opacity: 0.35; } 40% { transform: scale(1); opacity: 1; } }");
+        "@keyframes loadingScreenDot { 0%, 80%, 100% { transform: scale(0.6); opacity: 0.35; } 40% { transform: scale(1); opacity: 1; } }" +
+        // WHY view-box: a hand of the SVG turns around the middle of the clock, not around its own box
+        ".loading-screen-hand { transform-box: view-box; transform-origin: 50% 50%; animation-name: loadingScreenSpin;" +
+        " animation-timing-function: linear; animation-iteration-count: infinite; }" +
+        "@media (prefers-reduced-motion: reduce) { .loading-screen-hand { animation: none; } }");
+};
+
+// The clock is always this big (px). (the user, 2026-10-29)
+LoadingScreen.CLOCK_SIZE = 30;
+
+// The clock of the waiting views as an SVG text: a white face, a dark edge, the minute hand up (long) and the
+// hour hand to the right (short), like comp-m1/ui-waiting-view/clock.png; the hands turn with CSS.
+// WHY a viewBox in px: the widths and the lengths of the hands are real pixels.
+// clockStyle: style.clock
+LoadingScreen.createClockSvg = function (clockStyle) {
+    const c = clockStyle;
+    const size = LoadingScreen.CLOCK_SIZE;
+    const middle = size / 2;
+    const faceRadius = middle - c.edgeWidth / 2; // WHY: the edge is drawn on the circle line: it stays inside
+    const hand = function (x2, y2, width, color, turnTime) {
+        return '<line class="loading-screen-hand" x1="' + middle + '" y1="' + middle + '" x2="' + x2 + '" y2="' + y2 + '" stroke="' + color +
+            '" stroke-width="' + width + '" stroke-linecap="round" style="animation-duration: ' + turnTime + 's"/>';
+    };
+    return '<svg viewBox="0 0 ' + size + ' ' + size + '" width="' + size + '" height="' + size + '" aria-hidden="true">' +
+        '<circle cx="' + middle + '" cy="' + middle + '" r="' + faceRadius + '" fill="' + c.faceColor + '" stroke="' + c.lineColor + '" stroke-width="' + c.edgeWidth + '"/>' +
+        hand(middle + c.hourLength, middle, c.hourWidth, c.hourColor || c.lineColor, c.hourTurn) + // the hour hand (under)
+        hand(middle, middle - c.minuteLength, c.minuteWidth, c.minuteColor, c.minuteTurn) + // the minute hand
+        '<circle cx="' + middle + '" cy="' + middle + '" r="' + (c.centerSize / 2) + '" fill="' + c.centerColor + '"/>' +
+        "</svg>";
 };

@@ -10,7 +10,7 @@
     <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
     <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
     <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
-    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
 
     <!-- COMPONENT FILES -->
     <script src="../comp-m4/loading-screen.js" type="text/javascript" charset="utf-8"></script>
@@ -20,7 +20,7 @@
         /* Bismillah */
 
         // *** VARIABLES:
-        let cardLoading, splash;
+        let cardLoading, clockLoading, splash;
 
         // App icon of the samples (SVG: no file needed)
         const APP_ICON_SVG =
@@ -83,8 +83,68 @@
 
                     endCard();
 
-                    // SAMPLE 2: Inside a box
-                    startCard("2. Inside a box", "It covers only its container. open() and close() can be called again and again.");
+                    // SAMPLE 2: The clock (spinnerType: "clock")
+                    startCard("2. The clock", "The default wait: the clock of the waiting views with moving hands (the minute hand fast, the hour hand 12 times slower), always 30 px. Its looks: LoadingScreen.clocks \"ozden\" and \"ozdenDark\"; the style packages \"ozden\" and \"ozdenDark\" are the screens made for them.");
+
+                        startBox({ width: "100%", height: 200, color: "white", round: 8, border: 1, borderColor: Black(0.1) });
+                        that.elem.style.overflow = "hidden";
+
+                            clockLoading = LoadingScreen({
+                                spinnerType: "clock",
+                                messageText: "Saving your changes...",
+                                minDuration: 0,
+                                style: { message: { fontSize: 14 } },
+                            });
+
+                        endBox();
+
+                        HGroup({ hug: 1, gap: 8, wrap: 1 });
+                            addButton("Full page", function () {
+                                const loading = LoadingScreen({
+                                    spinnerType: "clock",
+                                    titleText: "Please wait",
+                                    messageText: "Preparing your report.",
+                                    removeOnClose: 1,
+                                });
+                                setTimeout(loading.close, 3000);
+                            });
+                            addButton("ozden", function () {
+                                const loading = LoadingScreen({
+                                    styleName: "ozden",
+                                    titleText: "Please wait",
+                                    messageText: "Saving your changes.",
+                                    removeOnClose: 1,
+                                });
+                                setTimeout(loading.close, 3000);
+                            });
+                            addButton("ozdenDark", function () {
+                                const loading = LoadingScreen({
+                                    styleName: "ozdenDark",
+                                    titleText: "Please wait",
+                                    messageText: "Saving your changes.",
+                                    removeOnClose: 1,
+                                });
+                                setTimeout(loading.close, 3000);
+                            });
+                            addButton("Slow", function () {
+                                const loading = LoadingScreen({
+                                    spinnerType: "clock",
+                                    messageText: "A slow clock: style.clock { minuteTurn: 4, hourTurn: 48 }",
+                                    style: { clock: { minuteTurn: 4, hourTurn: 48 } },
+                                    removeOnClose: 1,
+                                });
+                                setTimeout(loading.close, 4000);
+                            });
+                            addButton("open() / close()", function () {
+                                if (clockLoading.opened) clockLoading.close();
+                                else clockLoading.open();
+                            });
+                        endGroup();
+
+                    endCard();
+
+                    // SAMPLE 3: Inside a box
+                    startCard("3. Inside a box", "It covers only its container. open() and close() can be called again and again.");
 
                         startBox({ width: "100%", height: 260, color: "white", round: 8, border: 1, borderColor: Black(0.1) });
                         that.elem.style.overflow = "hidden";
