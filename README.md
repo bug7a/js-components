@@ -16,7 +16,7 @@ JS-Component Suite is built on [**basic.js**](https://bug7a.github.io/basic.js/)
 ```html
 <link rel="stylesheet" href="basic/basic.min.css">
 <script src="basic/basic.min.js"></script>
-<script src="comp-m3/button-with-icon.js"></script>
+<script src="comp-m4/smart-button.js"></script>
 
 <script>
 const start = function () {
@@ -25,7 +25,7 @@ const start = function () {
 
         Label({ text: "Hello!", fontSize: 24 });
 
-        ButtonWithIcon({
+        SmartButton({
             width: 200,
             height: 50,
             labelText: "Click Me",
@@ -50,7 +50,7 @@ More than 70 components. Every one has a live example with its code in the [comp
 | :--- | :--- |
 | **Forms and inputs** | `InputB` and its email, password, phone, number, currency and URL versions, `TextareaB`, `TagInput`, `Stepper`, `SliderField`, `RichTextEditor`, `Form` |
 | **Selection** | `SelectBox`, `SelectDate`, `SelectTime`, `SelectColor`, `SelectFile`, `CheckBox`, `RadioButton`, `Toggle` |
-| **Buttons and menus** | `ButtonWithIcon`, `HoldToConfirmButton`, `ContextMenu` |
+| **Buttons and menus** | `SmartButton`, `HoldToConfirmButton`, `ContextMenu` |
 | **Navigation** | `Tabs`, `Breadcrumbs`, `LeftMenu`, `BottomBar`, `PageControl` |
 | **Data and charts** | `SmartTable`, `ChartBox`, `Gauge`, `SparkLineBox`, `ProgressBar`, `TimeLine`, `SortableList` |
 | **Overlays and feedback** | `Modal`, `Dialog`, `SidePanel`, `Toast`, `Tooltip`, `LoadingScreen` |

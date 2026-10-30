@@ -6,10 +6,10 @@ Dialog - v26.10
 
 A dialog window over the page: a title, a message, your fields (inputs) or any content, and buttons. The page under
 it waits (a modal dialog: a dark cover, the keyboard stays in the dialog). The new version of comp-m2/dialog.js with
-the features of comp-m4/modal.js and the look of 02-comp-m3-samples/button-with-icon-3-ozden.htm (the first dialog).
+the features of comp-m4/modal.js and the look of 02-comp-m4-samples/smart-button-3-ozden.htm (the first dialog).
 NOTE: still in development (the user, 2026-10-29): more style packages come; their buttons may be animated.
 
-- Buttons (ButtonWithIcon of comp-m3, load it first): [{ text, type, key, iconFile, align, ask, ariaLabel, onClick }]
+- Buttons (SmartButton of comp-m4, load it first): [{ text, type, key, iconFile, align, ask, ariaLabel, onClick }]
   - type: "primary" (the main action), "secondary" (Cancel), "danger" (a red action), "icon" (only an icon: a square).
   - align: "left": at the left side of the footer (Ex: the trash); the others stay at the right side.
   - ask: "Click again to delete." -> two clicks: the first one turns the button red and shows the text in a bubble
@@ -74,7 +74,7 @@ const DialogDefaults = {
     onOpen: function (dialog) { },
     onClose: function (dialog, reason, buttonKey) { }, // reason: "button", "escape", "cover", "api"
     styleName: "ozden", // "ozden" or a name added to Dialog.styles
-    style: { // The ozden style package (default): the first dialog of button-with-icon-3-ozden.htm
+    style: { // The ozden style package (default): the first dialog of smart-button-3-ozden.htm
         cover: { color: Black(0.8), zIndex: 4000 },
         card: {
             color: "white",
@@ -100,7 +100,7 @@ const DialogDefaults = {
             buttonGap: 10,
             footerPadding: [24, 22], // no line and no band under the buttons; no space over them
         },
-        // The looks of the buttons (style of ButtonWithIcon)
+        // The looks of the buttons (style of SmartButton)
         buttons: {
             primary: {
                 layout: { gap: 8, padding: [16, 0], align: "center center" },
@@ -193,7 +193,7 @@ const Dialog = function (params = {}) {
     let openerElement = null; // the focus goes back here
 
     // *** PUBLIC VARIABLES:
-    box.buttonList = []; // { data, button } (button: the ButtonWithIcon)
+    box.buttonList = []; // { data, button } (button: the SmartButton)
     box.fieldList = []; // { data, input } (input: InputB or Input)
     box.bubble = null;
 
@@ -283,7 +283,7 @@ const Dialog = function (params = {}) {
         const isIcon = (data.type == "icon");
         const look = JSON.parse(JSON.stringify(_s.buttons[data.type] || _s.buttons.secondary));
 
-        const button = ButtonWithIcon({
+        const button = SmartButton({
             width: getButtonWidth(isIcon),
             height: isCentered ? _s.centered.buttonHeight : _s.footer.buttonHeight,
             labelText: isIcon ? "" : data.text,
@@ -715,7 +715,7 @@ const Dialog = function (params = {}) {
             if (isCentered) createCenteredFooter();
             else createFooter();
 
-                if (typeof ButtonWithIcon === "undefined") console.warn("Dialog: its buttons need comp-m3/button-with-icon.js (ButtonWithIcon).");
+                if (typeof SmartButton === "undefined") console.warn("Dialog: its buttons need comp-m4/smart-button.js (SmartButton).");
                 else getButtonOrder(buttonList).forEach(createButton);
 
             endGroup();

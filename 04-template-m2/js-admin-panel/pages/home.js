@@ -9,7 +9,7 @@ Home Page (Dashboard Template) - v26.09
 
 COMPONENTS:
 - TextTabs (comp-m2): Period select
-- ButtonWithIcon (comp-m3): Header and quick action buttons
+- SmartButton (comp-m4): Header and quick action buttons
 - MiniGraphBox / SparkLineBox (comp-m4): KPI boxes (bars for counts, a line for money and live values)
 - ChartBox (comp-m4): Line, doughnut and bar charts (Chart.js is loaded from comp-m4/chart-box)
 - TinyTable (comp-m2): Recent orders
@@ -209,12 +209,13 @@ const HomePage = function(params = {}) {
 
     };
 
-    // Button style for ButtonWithIcon
+    // Button style for SmartButton
     const createButton = function(text, iconFile, onClick, params = {}) {
 
         const color = params.color || BUTTON_COLOR;
 
-        const btn = ButtonWithIcon({
+        const btn = SmartButton({
+            styleName: "classic",
             width: params.width || "auto",
             labelText: text,
             iconFile: ASSETS + iconFile,

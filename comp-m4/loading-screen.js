@@ -16,7 +16,7 @@ UI COMPONENT
   style.clock. The hands stand still with prefers-reduced-motion.
   THE DEFAULT WAIT (the user, 2026-10-29): spinnerType is "clock" by default. Its two looks are LoadingScreen.clocks
   "ozden" (a white face, dark lines: the default) and "ozdenDark" (a dark face, light lines, a yellow minute hand); the style packages
-  "ozden" and "ozdenDark" are the screens made for them. (comp-m3 ButtonWithIcon has the same clock: keep them alike)
+  "ozden" and "ozdenDark" are the screens made for them. (comp-m4 SmartButton has the same clock: keep them alike)
 - minDuration: the screen stays at least this long, so a fast load does not show a short flash.
 - The cover takes the clicks, so nothing under it can be clicked while it is open.
 - Style packages: "light" (default), "dark", "ozden", "ozdenDark". Select with styleName. (LoadingScreen.styles)
@@ -336,7 +336,7 @@ const LoadingScreen = function (params = {}) {
 };
 
 // *** THE CLOCKS: the two looks of the waiting clock (the user, 2026-10-29)
-// NOTE: comp-m3/button-with-icon.js has the same clocks (ButtonWithIcon.clocks): keep them alike.
+// NOTE: comp-m4/smart-button.js has the same clocks (SmartButton.clocks): keep them alike.
 LoadingScreen.clocks = {
     ozden: LoadingScreenDefaults.style.clock, // a white face, dark lines
     // a dark face, light lines; WHY yellow (the user, 2026-10-29): indianred was weak on the dark face (contrast 3.6,

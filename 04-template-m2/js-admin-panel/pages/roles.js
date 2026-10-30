@@ -15,7 +15,7 @@ Roles & Permissions Page (Template) - v26.09
   with your service calls. NOTE: Always check the permissions on the server too.
 
 COMPONENTS:
-- ButtonWithIcon (comp-m3): Role list, actions
+- SmartButton (comp-m4): Role list, actions
 - InputB (comp-m2): Role name and description
 - TextTabs (comp-m2): Permissions / Members
 - CheckBox (comp-m3): Permission matrix
@@ -293,7 +293,8 @@ const RolesPage = function(params = {}) {
                 const memberCount = getMemberIds(role.id).length;
                 const tag = (role.isSystem) ? " <span style='font-size:11px; padding:1px 6px; border-radius:6px; background:" + Ink(0.08) + "; color:" + Ink(0.55) + "'>SYSTEM</span>" : "";
 
-                ButtonWithIcon({
+                SmartButton({
+                    styleName: "classic",
                     width: "100%",
                     labelText: escapeHtml(role.name) + tag + "<br><span style='font-size:12px; color:" + Ink(0.45) + "'>" + memberCount + " member" + ((memberCount == 1) ? "" : "s") + " · " + role.permissions.length + " permissions</span>",
                     iconFile: "",
@@ -627,7 +628,8 @@ const RolesPage = function(params = {}) {
     };
 
     const createButton = function(text, iconFile, onClick, params = {}) {
-        const btn = ButtonWithIcon({
+        const btn = SmartButton({
+            styleName: "classic",
             width: params.width || "auto",
             labelText: text,
             iconFile: (iconFile) ? ASSETS + iconFile : "",

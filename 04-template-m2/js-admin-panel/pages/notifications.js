@@ -15,7 +15,7 @@ Notifications Page (Right View Template) - v26.09
 
 COMPONENTS:
 - TextTabs (comp-m2): Filters
-- ButtonWithIcon (comp-m3): Actions
+- SmartButton (comp-m4): Actions
 - ContextMenu (comp-m4): Actions of a notification
 
 */
@@ -375,7 +375,8 @@ NotificationsPage.CONTEXT_MENU_STYLE = {
 
 NotificationsPage.createButton = function(text, onClick) {
     const S = NotificationsPage.STYLE;
-    return ButtonWithIcon({
+    return SmartButton({
+        styleName: "classic",
         labelText: text,
         iconFile: "",
         onClick: onClick,

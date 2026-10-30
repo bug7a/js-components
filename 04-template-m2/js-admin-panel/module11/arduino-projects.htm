@@ -20,7 +20,7 @@
         <script src="../../../comp-m2/toggle.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m2/slider.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m2/dialog.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m3/button-with-icon.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m4/smart-button.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m3/radio-button.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m3/hold-to-confirm-button.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m4/progress-bar.js" type="text/javascript" charset="utf-8"></script>
@@ -42,7 +42,7 @@
           libraries of the sketch and the outputs of the board.
         - Everything is built from the components of the suite: Gauge, SparkLineBox, ChartBox, Tabs,
           TinyTable, ProgressBar, Stepper, Slider, Toggle, RadioButton, TinySelect, ContextMenu,
-          ButtonWithIcon, HoldToConfirmButton, Dialog and ScrollBar.
+          SmartButton, HoldToConfirmButton, Dialog and ScrollBar.
         - Runs inside the admin panel (iframe), but it can work alone too.
         - Simulation: 1 second = 1 second of the board. Replace the "BOARD SERVICE" functions with
           your own link to the boards (serial, MQTT, HTTP, WebSocket...).
@@ -989,7 +989,8 @@
         };
 
         const createButton = function (text, iconFile, onClick, params = {}) {
-            const btn = ButtonWithIcon({
+            const btn = SmartButton({
+                styleName: "classic",
                 width: params.width || "auto",
                 labelText: text,
                 iconFile: (iconFile) ? ASSETS + iconFile : "",

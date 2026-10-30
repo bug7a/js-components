@@ -2,7 +2,7 @@
 
 /*
 
-NOT FOR NEW PROJECTS (the user, 2026-10-29): use comp-m2/waiting.js (Waiting); on a ButtonWithIcon: its
+NOT FOR NEW PROJECTS (the user, 2026-10-29): use comp-m2/waiting.js (Waiting); on a SmartButton: its
 setWaiting(). This file stays only for the pages that still use it.
 
 ObjectWaiting - v24.06

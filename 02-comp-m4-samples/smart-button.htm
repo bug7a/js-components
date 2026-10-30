@@ -10,7 +10,7 @@
     <!-- LIBRARY FILES -->
     <link rel="stylesheet" type="text/css" href="../basic/basic.css">
     <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
-    <script src="../comp-m3/button-with-icon.js"></script>
+    <script src="../comp-m4/smart-button.js"></script>
 
 </head>
 
@@ -25,11 +25,12 @@
         // 4. Waiting: the cover with the clock while the job runs; then the button opens the file.
         const createWaitingSample = function () {
             Label({ text: "Waiting (setWaiting):", fontSize: 14, textColor: "#666", marginTop: 20 });
-            ButtonWithIcon({
+            SmartButton({
+                styleName: "classic",
                 width: 200,
                 height: 50,
                 labelText: "Download",
-                iconFile: "../comp-m3/button-with-icon/alert-black.png",
+                iconFile: "../comp-m4/smart-button/alert-black.png",
                 onClick: function (self) {
                     if (self.labelText == "Open") {
                         self.setText("Download");
@@ -69,7 +70,8 @@
 
             // 1. Default Button (Icon Left)
             Label({ text: "Default (Icon Left):", fontSize: 14, textColor: "#666" });
-            ButtonWithIcon({
+            SmartButton({
+                styleName: "classic",
                 width: 200,
                 height: 50,
                 labelText: "Click Me",
@@ -82,7 +84,8 @@
 
             // 2. Icon Top
             Label({ text: "Icon Top:", fontSize: 14, textColor: "#666", marginTop: 20 });
-            ButtonWithIcon({
+            SmartButton({
+                styleName: "classic",
                 labelText: "",
                 ariaLabel: "Icon top", // a button with only an icon needs a name for the screen readers
                 iconPosition: "top",
@@ -115,7 +118,8 @@
 
             // 3. Custom Style
             Label({ text: "Custom Style:", fontSize: 14, textColor: "#666", marginTop: 20 });
-            ButtonWithIcon({
+            SmartButton({
+                styleName: "classic",
                 width: "auto",
                 height: 26,
                 labelText: "SETTINGS",

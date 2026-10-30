@@ -19,7 +19,7 @@ COMPONENTS:
 - InputB, NumberInputB (comp-m2): Editor fields
 - RadioButton, CheckBox (comp-m3): Status, stock settings
 - SelectFile (comp-m4): Images
-- ButtonWithIcon, HoldToConfirmButton (comp-m3): Actions
+- SmartButton (comp-m4), HoldToConfirmButton (comp-m3): Actions
 - Waiting (comp-m2): Saving
 
 */
@@ -1069,7 +1069,8 @@ ProductsPage.createEmptyProduct = function() {
 // params: { primary: 1, width }
 ProductsPage.createButton = function(text, iconFile, onClick, params = {}) {
     const S = ProductsPage.STYLE;
-    const btn = ButtonWithIcon({
+    const btn = SmartButton({
+        styleName: "classic",
         width: params.width || "auto",
         labelText: text,
         iconFile: iconFile || "",

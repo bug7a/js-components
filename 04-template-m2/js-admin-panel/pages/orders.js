@@ -19,7 +19,7 @@ COMPONENTS:
 - SmartTable (comp-m3): Order list
 - TinyTable (comp-m2): Order items
 - InputB (comp-m2): Tracking number, note
-- ButtonWithIcon, HoldToConfirmButton (comp-m3): Actions
+- SmartButton (comp-m4), HoldToConfirmButton (comp-m3): Actions
 - Dialog, Waiting (comp-m2): Cancel confirm, saving
 
 */
@@ -897,7 +897,8 @@ OrdersPage.alpha = function(hex, alpha) {
 // params: { primary: 1, width }
 OrdersPage.createButton = function(text, iconFile, onClick, params = {}) {
     const S = OrdersPage.STYLE;
-    const btn = ButtonWithIcon({
+    const btn = SmartButton({
+        styleName: "classic",
         width: params.width || "auto",
         labelText: text,
         iconFile: iconFile || "",

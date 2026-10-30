@@ -334,12 +334,12 @@ CATALOG.COMPONENTS = [
         tr: "Gruplar halinde çalışan, klavye destekli ve stil paketli seçenek düğmeleri.",
     },
     {
-        key: "button-with-icon", name: "ButtonWithIcon", gen: 3, cat: "actions",
-        source: "comp-m3/button-with-icon.js",
+        key: "smart-button", name: "SmartButton", gen: 4, cat: "actions",
+        source: "comp-m4/smart-button.js",
         samples: [
-            { file: "02-comp-m3-samples/button-with-icon.htm", title: "Basic" },
-            { file: "02-comp-m3-samples/button-with-icon-2.htm", title: "All features" },
-            { file: "02-comp-m3-samples/button-with-icon-3-ozden.htm", title: "Dialogs (ozden)" },
+            { file: "02-comp-m4-samples/smart-button.htm", title: "Basic" },
+            { file: "02-comp-m4-samples/smart-button-2.htm", title: "All features" },
+            { file: "02-comp-m4-samples/smart-button-3-ozden.htm", title: "Dialogs (ozden)" },
         ],
         en: "A button with an icon and a text; the icon on the left or on top. A waiting cover with a turning ring while a job runs.",
         tr: "İkon ve yazı içeren düğme; ikon solda veya üstte. Bir iş sürerken dönen halkalı bekleme örtüsü.",

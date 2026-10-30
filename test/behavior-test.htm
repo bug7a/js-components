@@ -29,7 +29,7 @@
         <script src="../comp-m2/slider.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp-m3/check-box.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp-m3/hold-to-confirm-button.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp-m3/button-with-icon.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m4/smart-button.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp-m3/smart-table.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp-m4/dialog.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp-m4/notice.js" type="text/javascript" charset="utf-8"></script>
@@ -271,15 +271,15 @@
             panel.remove();
         });
 
-        // *** BUTTON WITH ICON (comp-m3/button-with-icon.js)
+        // *** SMART BUTTON (comp-m4/smart-button.js)
 
-        test("ButtonWithIcon: a held Enter presses once", async function () {
+        test("SmartButton: a held Enter presses once", async function () {
             let count = 0;
-            const button = ButtonWithIcon({ labelText: "Go", onClick: function () { count++; } });
+            const button = SmartButton({ styleName: "classic", labelText: "Go", onClick: function () { count++; } });
             key(button.elem, "keydown", "Enter");
             key(button.elem, "keydown", "Enter", { repeat: true });
             key(button.elem, "keydown", "Enter", { repeat: true });
-            check("ButtonWithIcon: a held Enter presses once", count === 1, "onClick: " + count);
+            check("SmartButton: a held Enter presses once", count === 1, "onClick: " + count);
             button.remove();
         });
 

@@ -15,7 +15,7 @@ User Actions Page (Right View Template) - v26.09
 - Replace UserActionsPage.getCurrentUser(), getStatus() and setStatus() with your service.
 
 COMPONENTS:
-- ButtonWithIcon (comp-m3): Sign out
+- SmartButton (comp-m4): Sign out
 - UIEffects (comp-m4): Click effect of the menu items
 
 */
@@ -309,7 +309,8 @@ const UserActionsPage = function(params = {}) {
     HGroup({ left: 0, bottom: 0, width: "100%", height: 72, align: "left center", gap: 10, padding: [18, 0] });
     that.elem.style.borderTop = "1px solid " + Ink(0.08);
 
-        const btnSignOut = ButtonWithIcon({
+        const btnSignOut = SmartButton({
+            styleName: "classic",
             width: "auto",
             labelText: "Sign Out",
             iconFile: "",

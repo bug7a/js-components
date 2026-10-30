@@ -21,7 +21,7 @@ COMPONENTS:
 - Slider (comp-m2): Session timeout
 - SelectFile (comp-m4): Logo, settings import
 - TinyTable (comp-m2): Active sessions
-- ButtonWithIcon, HoldToConfirmButton (comp-m3): Actions
+- SmartButton (comp-m4), HoldToConfirmButton (comp-m3): Actions
 - Dialog, Waiting (comp-m2): Confirm, save
 
 */
@@ -524,7 +524,8 @@ const SettingsPage = function(params = {}) {
     };
 
     const createButton = function(text, iconFile, onClick, params = {}) {
-        const btn = ButtonWithIcon({
+        const btn = SmartButton({
+            styleName: "classic",
             labelText: text,
             iconFile: (iconFile) ? ASSETS + iconFile : "",
             onClick: onClick,

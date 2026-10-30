@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 
-    <title>ButtonWithIcon - All Features</title>
+    <title>SmartButton - All Features</title>
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,20 +13,20 @@
     <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
     <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
 
-    <script src="../comp-m3/button-with-icon.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp-m4/smart-button.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
     /* Bismillah */
 
-    // ButtonWithIcon (comp-m3): the places of the icon, styles, setText / setIcon and the waiting cover.
-    // (The first sample: button-with-icon.htm)
+    // SmartButton (comp-m4): the places of the icon, styles, setText / setIcon and the waiting cover.
+    // (The first sample: smart-button.htm)
 
     const ICONS = "../assets/icons/";
     const JOB_TIME = 1500; // ms: a job that takes time (the sample)
     const DONE_TIME = 1200; // ms: "Saved" is seen this long
 
-    // The looks of this page (style of ButtonWithIcon)
+    // The looks of this page (style of SmartButton)
     const LOOKS = {
         primary: {
             box: { color: "#3871E0", border: 0, round: 8 },
@@ -70,7 +70,7 @@
         endGroup();
     };
 
-    // A save that takes time: the ring, then "Saved" for a moment, then the button as before
+    // A save that takes time: the waiting clock, then "Saved" for a moment, then the button as before
     let cancelSavedText = null;
     const saveWithWaiting = function (button) {
         // WHY: a second save while "Saved" is seen: the old timer must not write "Save" during the new wait
@@ -91,24 +91,25 @@
 
             VGroup({ width: "100%", height: "auto", align: "center top", gap: 24, padding: 40, clipContent: 0 });
 
-                Label({ text: "ButtonWithIcon", fontSize: 26, bold: 1, textColor: Black(0.8) });
+                Label({ text: "SmartButton", fontSize: 26, bold: 1, textColor: Black(0.8) });
 
                 startCard("The place of the icon", "iconPosition: \"left\" (default) or \"top\". labelText: \"\" -> only the icon (give it an ariaLabel); no iconFile -> only the text.");
-                    ButtonWithIcon({ labelText: "Lock", iconFile: ICONS + "lock.png" });
-                    ButtonWithIcon({ labelText: "Plant", iconFile: ICONS + "plant.png", iconPosition: "top", style: LOOKS.square });
-                    ButtonWithIcon({ labelText: "", ariaLabel: "Delete", iconFile: ICONS + "trash.svg", style: { layout: { padding: [10, 10] } } });
-                    ButtonWithIcon({ labelText: "Only text", iconFile: "" });
+                    SmartButton({ styleName: "classic", labelText: "Lock", iconFile: ICONS + "lock.png" });
+                    SmartButton({ styleName: "classic", labelText: "Plant", iconFile: ICONS + "plant.png", iconPosition: "top", style: LOOKS.square });
+                    SmartButton({ styleName: "classic", labelText: "", ariaLabel: "Delete", iconFile: ICONS + "trash.svg", style: { layout: { padding: [10, 10] } } });
+                    SmartButton({ styleName: "classic", labelText: "Only text", iconFile: "" });
                 endCard();
 
                 startCard("Styles", "The look is in style: box, hover, active, layout, icon and label. Change only the keys you need.");
-                    ButtonWithIcon({ labelText: "Continue", iconFile: "", style: LOOKS.primary });
-                    ButtonWithIcon({ labelText: "Delete", iconFile: ICONS + "trash.svg", style: LOOKS.danger });
-                    ButtonWithIcon({ labelText: "Filter", iconFile: ICONS + "panel.png", style: LOOKS.pill });
-                    ButtonWithIcon({ labelText: "Alert", iconFile: ICONS + "alert-black.png", style: LOOKS.pill });
+                    SmartButton({ styleName: "classic", labelText: "Continue", iconFile: "", style: LOOKS.primary });
+                    SmartButton({ styleName: "classic", labelText: "Delete", iconFile: ICONS + "trash.svg", style: LOOKS.danger });
+                    SmartButton({ styleName: "classic", labelText: "Filter", iconFile: ICONS + "panel.png", style: LOOKS.pill });
+                    SmartButton({ styleName: "classic", labelText: "Alert", iconFile: ICONS + "alert-black.png", style: LOOKS.pill });
                 endCard();
 
                 startCard("setText() and setIcon()", "A button that changes itself: the lamp is turned on and off.");
-                    ButtonWithIcon({
+                    SmartButton({
+                        styleName: "classic",
                         labelText: "Lamp is off",
                         iconFile: ICONS + "lamp.png",
                         style: { layout: { padding: [14, 8], gap: 8 } },
@@ -120,9 +121,10 @@
                     });
                 endCard();
 
-                startCard("Waiting: setWaiting()", "A turning ring over the button while a job runs; it can not be clicked then. setWaiting(0, delay) ends it later; waitingIconFile shows an icon instead of the ring (the clock of the old ObjectWaiting).");
-                    ButtonWithIcon({ labelText: "Save", iconFile: "", style: LOOKS.primary, onClick: saveWithWaiting });
-                    ButtonWithIcon({
+                startCard("Waiting: setWaiting()", "The waiting clock over the button while a job runs (the default wait); it can not be clicked then. setWaiting(0, delay) ends it later. waitingClock: \"ozdenDark\" is the dark clock, waitingType: \"ring\" the turning ring, waitingIconFile an image.");
+                    SmartButton({ styleName: "classic", labelText: "Save", iconFile: "", style: LOOKS.primary, onClick: saveWithWaiting });
+                    SmartButton({
+                        styleName: "classic",
                         labelText: "Delete",
                         iconFile: ICONS + "trash.svg",
                         style: LOOKS.danger,
@@ -131,7 +133,8 @@
                             self.setWaiting(0, JOB_TIME); // the end is given at once, it comes later
                         },
                     });
-                    ButtonWithIcon({
+                    SmartButton({
+                        styleName: "classic",
                         labelText: "",
                         ariaLabel: "Lock",
                         iconFile: ICONS + "lock.png",
@@ -141,10 +144,31 @@
                             self.after(JOB_TIME, function () { self.setWaiting(0); });
                         },
                     });
-                    ButtonWithIcon({
-                        labelText: "With a clock",
+                    SmartButton({
+                        styleName: "classic",
+                        labelText: "ozdenDark clock",
                         iconFile: "",
-                        waitingIconFile: "../comp-m3/button-with-icon/clock.png",
+                        waitingClock: "ozdenDark",
+                        onClick: function (self) {
+                            self.setWaiting(1);
+                            self.after(JOB_TIME, function () { self.setWaiting(0); });
+                        },
+                    });
+                    SmartButton({
+                        styleName: "classic",
+                        labelText: "Ring",
+                        iconFile: "",
+                        waitingType: "ring",
+                        onClick: function (self) {
+                            self.setWaiting(1);
+                            self.after(JOB_TIME, function () { self.setWaiting(0); });
+                        },
+                    });
+                    SmartButton({
+                        styleName: "classic",
+                        labelText: "Image",
+                        iconFile: "",
+                        waitingIconFile: "../comp-m4/smart-button/clock.png",
                         onClick: function (self) {
                             self.setWaiting(1);
                             self.after(JOB_TIME, function () { self.setWaiting(0); });
@@ -153,16 +177,17 @@
                 endCard();
 
                 startCard("Motion: animated and ripple", "Both on by default (for now): brighter under the mouse, smaller while pressed, and a wave from the pressed point (its color fits the button). Each one can be turned off.");
-                    ButtonWithIcon({ labelText: "Both", style: LOOKS.primary });
-                    ButtonWithIcon({ labelText: "Both", iconFile: ICONS + "plant.png" });
-                    ButtonWithIcon({ labelText: "Only press", style: LOOKS.primary, ripple: 0 });
-                    ButtonWithIcon({ labelText: "Only ripple", animated: 0 });
-                    ButtonWithIcon({ labelText: "Still", animated: 0, ripple: 0 });
+                    SmartButton({ styleName: "classic", labelText: "Both", style: LOOKS.primary });
+                    SmartButton({ styleName: "classic", labelText: "Both", iconFile: ICONS + "plant.png" });
+                    SmartButton({ styleName: "classic", labelText: "Only press", style: LOOKS.primary, ripple: 0 });
+                    SmartButton({ styleName: "classic", labelText: "Only ripple", animated: 0 });
+                    SmartButton({ styleName: "classic", labelText: "Still", animated: 0, ripple: 0 });
                 endCard();
 
                 startCard("Keyboard and setEnabled()", "Tab reaches every button (a ring only for the keyboard), Enter or Space presses it. A disabled button is gray, can not be pressed and is out of the Tab order.");
-                    const btnSend = ButtonWithIcon({ labelText: "Send", style: LOOKS.primary, enabled: 0 });
-                    ButtonWithIcon({
+                    const btnSend = SmartButton({ styleName: "classic", labelText: "Send", style: LOOKS.primary, enabled: 0 });
+                    SmartButton({
+                        styleName: "classic",
                         labelText: "Enable Send",
                         onClick: function (self) {
                             const isOn = (btnSend.enabled == 1);

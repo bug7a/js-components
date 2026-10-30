@@ -20,7 +20,7 @@ COMPONENTS:
 - SearchInput, TinySelect (comp-m2): Filters, role select
 - SmartTable (comp-m3): User list
 - InputB (comp-m2): Name, e-mail
-- ButtonWithIcon (comp-m3): Actions
+- SmartButton (comp-m4): Actions
 - Dialog, Waiting (comp-m2): Confirm, saving
 
 */
@@ -944,7 +944,8 @@ UserListPage.alpha = function(hex, alpha) {
 // params: { primary: 1, width }
 UserListPage.createButton = function(text, iconFile, onClick, params = {}) {
     const S = UserListPage.STYLE;
-    const btn = ButtonWithIcon({
+    const btn = SmartButton({
+        styleName: "classic",
         width: params.width || "auto",
         labelText: text,
         iconFile: iconFile || "",

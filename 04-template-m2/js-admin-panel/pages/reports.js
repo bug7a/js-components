@@ -14,7 +14,7 @@ COMPONENTS:
 - SelectDate (comp-m4): Date range
 - TinySelect (comp-m2): Region and group by
 - CheckBox (comp-m3): Compare with the previous period
-- ButtonWithIcon (comp-m3) + ContextMenu (comp-m4): Export menu
+- SmartButton (comp-m4) + ContextMenu (comp-m4): Export menu
 - MiniGraphBox / SparkLineBox (comp-m4): Summary boxes (bars for counts, a line for money and rates)
 - ChartBox (comp-m4): Revenue, regions, orders by category, refund rates
 - SmartTable (comp-m3): Report details (sort, filter)
@@ -545,7 +545,8 @@ const ReportsPage = function(params = {}) {
 
             HGroup({ width: "auto", height: "auto", align: "right center", gap: 10 });
 
-                const btnExport = ButtonWithIcon({
+                const btnExport = SmartButton({
+                    styleName: "classic",
                     labelText: "Export",
                     iconFile: ASSETS + "arrow_down.png",
                     style: {

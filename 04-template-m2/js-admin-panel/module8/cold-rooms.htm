@@ -21,7 +21,7 @@
         <script src="../../../comp-m2/slider.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m2/dialog.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m2/waiting.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m3/button-with-icon.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m4/smart-button.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m3/check-box.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m3/radio-button.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m3/hold-to-confirm-button.js" type="text/javascript" charset="utf-8"></script>
@@ -522,7 +522,8 @@
 
         const createButton = function (text, iconFile, onClick, params = {}) {
 
-            const btn = ButtonWithIcon({
+            const btn = SmartButton({
+                styleName: "classic",
                 width: params.width || "auto",
                 labelText: text,
                 iconFile: (iconFile) ? ASSETS + iconFile : "",

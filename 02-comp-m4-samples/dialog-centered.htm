@@ -14,7 +14,7 @@
 
     <script src="../comp-m2/tooltip.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp-m2/input-b.js" type="text/javascript" charset="utf-8"></script>
-    <script src="../comp-m3/button-with-icon.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp-m4/smart-button.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp-m4/dialog.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
@@ -86,7 +86,7 @@
     };
 
     const createButton = function (text, onClick) {
-        return ButtonWithIcon({ labelText: text, height: 40, style: { label: { fontSize: 15, textColor: Black(0.75), fontFamily: "opensans-bold" } }, onClick: onClick });
+        return SmartButton({ labelText: text, height: 40, style: { label: { fontSize: 15, textColor: Black(0.75), fontFamily: "opensans-bold" } }, onClick: onClick });
     };
 
     const start = function () {

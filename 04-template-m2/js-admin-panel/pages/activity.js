@@ -20,7 +20,7 @@ COMPONENTS:
 - SparkLineBox (comp-m4): Summary graphs
 - SmartTable (comp-m3): Event list
 - TinyTable (comp-m2): Changes (details panel)
-- ButtonWithIcon (comp-m3): Actions
+- SmartButton (comp-m4): Actions
 
 */
 
@@ -517,7 +517,7 @@ const ActivityPage = function(params = {}) {
 
                 lblResultCount = Label({ text: "", fontSize: 14, textColor: Ink(0.6) });
 
-                // WHY: ButtonWithIcon does not create its label when the text is empty. setText() needs the label.
+                // WHY: SmartButton does not create its label when the text is empty. setText() needs the label.
                 btnNewEvents = ActivityPage.createButton("New events", "", renderTable, { primary: 1 });
 
             endGroup();
@@ -841,7 +841,8 @@ ActivityPage.formatRelative = function(time) {
 // params: { primary: 1, width }
 ActivityPage.createButton = function(text, iconFile, onClick, params = {}) {
     const S = ActivityPage.STYLE;
-    const btn = ButtonWithIcon({
+    const btn = SmartButton({
+        styleName: "classic",
         width: params.width || "auto",
         labelText: text,
         iconFile: iconFile || "",

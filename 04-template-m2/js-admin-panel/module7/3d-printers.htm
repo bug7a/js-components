@@ -18,7 +18,7 @@
         <script src="../../../comp-m2/toggle.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m2/slider.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m2/dialog.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m3/button-with-icon.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m4/smart-button.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m3/hold-to-confirm-button.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m4/progress-bar.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m4/gauge.js" type="text/javascript" charset="utf-8"></script>
@@ -414,7 +414,8 @@
         };
 
         const createButton = function (text, onClick, params = {}) {
-            return ButtonWithIcon({
+            return SmartButton({
+                styleName: "classic",
                 width: params.width || "auto",
                 labelText: text,
                 iconFile: "",

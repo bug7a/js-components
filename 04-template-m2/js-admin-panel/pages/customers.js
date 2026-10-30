@@ -20,7 +20,7 @@ COMPONENTS:
 - InputB (comp-m2): Contact details, tag and note inputs
 - Toggle (comp-m2): Marketing consent
 - TinyTable (comp-m2): Order history
-- ButtonWithIcon, HoldToConfirmButton (comp-m3): Actions
+- SmartButton (comp-m4), HoldToConfirmButton (comp-m3): Actions
 - Dialog, Waiting (comp-m2): Confirm, saving
 
 */
@@ -963,7 +963,8 @@ CustomersPage.getCurrentUserName = function() {
 // params: { primary: 1, width }
 CustomersPage.createButton = function(text, iconFile, onClick, params = {}) {
     const S = CustomersPage.STYLE;
-    const btn = ButtonWithIcon({
+    const btn = SmartButton({
+        styleName: "classic",
         width: params.width || "auto",
         labelText: text,
         iconFile: iconFile || "",

@@ -19,7 +19,7 @@ COMPONENTS:
 - CheckBox (comp-m3): Select files
 - ContextMenu (comp-m4): File actions (right click or "•••")
 - SmartTable (comp-m3): List view
-- ButtonWithIcon, HoldToConfirmButton (comp-m3): Actions
+- SmartButton (comp-m4), HoldToConfirmButton (comp-m3): Actions
 - LineProgressBar (comp-m3): Storage usage
 - InputB (comp-m2), Dialog, Waiting (comp-m2): Details panel, delete confirm, upload
 
@@ -317,7 +317,7 @@ const MediaPage = function(params = {}) {
             const isSelected = (view.folder == folder);
 
             btn.setText((folder || "All files") + " <span style='opacity:0.45'>" + count + "</span>");
-            // WHY: ButtonWithIcon uses style.box.color on mouse out. Change it too, so the selection stays.
+            // WHY: SmartButton uses style.box.color on mouse out. Change it too, so the selection stays.
             btn.style.box.color = (isSelected) ? S.SELECTED_COLOR : "transparent";
             btn.color = btn.style.box.color;
 
@@ -649,7 +649,8 @@ const MediaPage = function(params = {}) {
                 endGroup();
 
                 [""].concat(MediaPage.FOLDERS).forEach(function(folder) {
-                    folderButtons[folder] = ButtonWithIcon({
+                    folderButtons[folder] = SmartButton({
+                        styleName: "classic",
                         width: "100%",
                         labelText: folder || "All files",
                         iconFile: "",
@@ -1250,7 +1251,8 @@ MediaPage.SELECT_FILE_STYLE = {
 // params: { primary: 1, width }
 MediaPage.createButton = function(text, iconFile, onClick, params = {}) {
     const S = MediaPage.STYLE;
-    const btn = ButtonWithIcon({
+    const btn = SmartButton({
+        styleName: "classic",
         width: params.width || "auto",
         labelText: text,
         iconFile: iconFile || "",

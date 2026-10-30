@@ -23,7 +23,7 @@ COMPONENTS:
 - InputB (comp-m2): Editor fields
 - RadioButton, CheckBox (comp-m3): Status, options
 - SelectDate, SelectTime (comp-m4): Schedule
-- ButtonWithIcon, HoldToConfirmButton (comp-m3): Actions
+- SmartButton (comp-m4), HoldToConfirmButton (comp-m3): Actions
 - Dialog, Waiting (comp-m2): Confirm, saving
 
 */
@@ -1259,7 +1259,8 @@ ContentsPage.getCurrentUserName = function() {
 // params: { primary: 1, width }
 ContentsPage.createButton = function(text, iconFile, onClick, params = {}) {
     const S = ContentsPage.STYLE;
-    const btn = ButtonWithIcon({
+    const btn = SmartButton({
+        styleName: "classic",
         width: params.width || "auto",
         labelText: text,
         iconFile: iconFile || "",
