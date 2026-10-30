@@ -125,6 +125,7 @@ Both scripts use [terser](https://terser.org/) through `npx`, so they need Node.
 | `comp-m1/` … `comp-m4/` | Components, grouped by generation. `m1` is legacy and `m4` is the newest. |
 | `index.htm`, `index/` | The component catalog site |
 | `01-basic-js-by-example/` | Step-by-step tutorial pages for the core library, written for beginners |
+| `01-basic-js-by-example/_first-coding-projects/` | Small projects for people who write their first programs (calculator, dice, XOX, snake, chess…), each with notes on its algorithm |
 | `02-comp-m*-samples/` | One demo page per component |
 | `03-webpage-m2/` | Web sites drawn with basic.js: the library site and the handbook site |
 | `04-template-m1/` | App templates: to-do app, data table |
