@@ -142,7 +142,7 @@ basic.white = White;
 // num, str, println, waitAndRun...
 ```
 - **Sayfalar** kısa adları kullanmaya devam eder, hiçbir şey değişmez.
-- **Bileşenler** (`comp-m2/m3/m4`) güvenli olanı kullanır: `basic.black(0.4)`. Böylece bir sayfanın tanımladığı ad hiçbir bileşeni bozamaz.
+- **Bileşenler** (`comp/m3/m4`) güvenli olanı kullanır: `basic.black(0.4)`. Böylece bir sayfanın tanımladığı ad hiçbir bileşeni bozamaz.
 - Kısa adlar kaldırılmaz, yeni global eklenmez.
 
 **Dikkat:**
@@ -160,7 +160,7 @@ basic.white = White;
 **Nerede:** basic.js'in `window` üzerine koyduğu 7 eski ad: `createBox` (1653), `createLabel` (2174), `createButton` (1789), `createTextBox` (2040), `createInput` (2041), `createImage` (2396), `createIcon` (2397). (Satırlar v26.09.18.)
 
 **Ölçüm (2026-10-22):**
-- `comp-m2/m3/m4` bileşenlerinin **hiçbiri** bu global adları çağırmıyor.
+- `comp/m3/m4` bileşenlerinin **hiçbiri** bu global adları çağırmıyor.
 - Buna karşılık **26 yer kendi `createButton`'ını tanımlıyor** (admin panel modülleri `module7/9/10/11`, `comp-m4/stepper.js`, `comp-m4/label-editor.js`, `comp-m3/bottom-bar.js`...). `createLabel` 5, `createInput` 5 yerde aynı şekilde yeniden tanımlanıyor. Yani bu adlar gerçekten çok seçiliyor.
 - Bugün zararsız, çünkü basic.js kendi içinde bunları kapsamındaki kopyalarıyla çağırıyor ve hiçbir bileşen global adı kullanmıyor. Ama ad `window`'da durdukça, bir sayfanın kendi `createButton`'ı o adı arayan herhangi bir kodu (eski bir sayfa, bir eklenti) sessizce bozabilir.
 - Eski adları çağıran sayfalar var: çoğu `01-basic-js-by-example` (öğretici sayfalar), `comp-m1` ve eski şablonlar. Sayım yaklaşık: `createBox` 40, `createButton` 35, `createLabel` 28, `createImage` 25 dosyada geçiyor; bunların bir kısmı yukarıdaki kendi tanımları ve dokümanlar.

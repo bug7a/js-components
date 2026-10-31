@@ -21,7 +21,8 @@
         <script src="../../comp-m2/phone-input-b.js" type="text/javascript" charset="utf-8" defer></script>
         <script src="../../comp-m2/textarea-b.js" type="text/javascript" charset="utf-8" defer></script>
 
-        <script src="../../comp-m2/waiting.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m4/smart-button.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m4/loading-screen.js" type="text/javascript" charset="utf-8" defer></script>
         <script src="../../comp-m2/form.js" type="text/javascript" charset="utf-8" defer></script>
 
         <!-- ALL COMPONENTS IN ONE FILE -->
@@ -228,23 +229,24 @@
             styleInput(that);
             form.addInput(messageTextarea);
 
-            // WAITING: Create object 1 time.
-            waiting = Waiting({
-                animated: 1,
-                waitingIcon: "assets/mail.png",
-                coverBackgroundColor: "rgba(0, 0, 0, 0.85)",
-                //label: "Data Sending...<br><span style='font-size:16px'>Please a litle bit.</span>",
+            // WAITING: Create object 1 time. A cover on the page while the form is sent: the moving clock.
+            //          (LoadingScreen: open() / close())
+            waiting = createIn(page, function() {
+                return LoadingScreen({
+                    opened: 0,
+                    minDuration: 0,
+                    fadeDuration: 0.2,
+                    style: {
+                        box: { color: "rgba(0, 0, 0, 0.85)" },
+                    },
+                });
             });
-            waiting.icon.elem.style.filter = "invert(100%)";
-            //waiting.icon.color = "white";
-            //waiting.icon.round = 4;
-            //waiting.icon.border = 0;
 
         };
 
         const sendFormToSupabase = async function() {
 
-            waiting.show();
+            waiting.open();
 
             // Load supabase client on send:
             //const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
@@ -263,7 +265,7 @@
                 },
             ]);
 
-            waiting.hide();
+            waiting.close();
 
             if (error) {
 
@@ -307,7 +309,7 @@
         // Sends the form as an e-mail with service/send-form-mail.php. (json: the JSON of the Form)
         const sendFormToMailService = async function(json) {
 
-            waiting.show();
+            waiting.open();
 
             let isSent = false;
 
@@ -323,7 +325,7 @@
                 isSent = false;
             }
 
-            waiting.hide();
+            waiting.close();
 
             if (isSent) {
 

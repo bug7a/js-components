@@ -15,10 +15,10 @@
 
         <!-- COMPONENTS -->
         <script src="../../../comp-m2/tiny-select.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m2/tiny-table.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m4/tiny-table.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m2/slider.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m2/dialog.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m4/smart-button.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m4/dialog.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m3/check-box.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m3/radio-button.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m3/hold-to-confirm-button.js" type="text/javascript" charset="utf-8"></script>
@@ -1071,13 +1071,11 @@
 
             if (value === "outOfService") {
                 const previousMode = car.mode;
-                Dialog({
-                    icon: ASSETS + "warning.png",
-                    title: "Take Out of Service",
-                    desc: "<b>" + car.name + "</b> will stop answering calls. Any of its pending stops go back to the fleet.",
-                    confirmButtonText: "Take Out of Service",
-                    confirmButtonColor: ERROR_COLOR,
-                    callback: function (isConfirmed) {
+                Theme.confirm({
+                    titleText: "Take Out of Service",
+                    messageText: "<b>" + car.name + "</b> will stop answering calls. Any of its pending stops go back to the fleet.",
+                    confirmText: "Take Out of Service",
+                    onAnswer: function (isConfirmed) {
                         if (!car) return;
                         if (isConfirmed) {
                             setCarMode(car, "outOfService");
@@ -1139,13 +1137,11 @@
         const onMoreMenuClick = function (key) {
             switch (key) {
                 case "recall":
-                    Dialog({
-                        icon: ASSETS + "warning.png",
-                        title: "Test an Emergency Recall",
-                        desc: "All cars head to the Lobby and hold their doors open. Hall calls are ignored until it is reset.",
-                        confirmButtonText: "Start Recall",
-                        confirmButtonColor: ERROR_COLOR,
-                        callback: function (isConfirmed) { if (isConfirmed) setGridEmergency(1); },
+                    Theme.confirm({
+                        titleText: "Test an Emergency Recall",
+                        messageText: "All cars head to the Lobby and hold their doors open. Hall calls are ignored until it is reset.",
+                        confirmText: "Start Recall",
+                        onAnswer: function (isConfirmed) { if (isConfirmed) setGridEmergency(1); },
                     });
                     break;
                 case "reset":
@@ -1467,27 +1463,16 @@
             const previous = getDefaultContainerBox();
             setDefaultContainerBox(grpEventHost);
                 grpEventHost.table = TinyTable({
-                    columnHeaders: ["TIME", "LEVEL", "MESSAGE"],
-                    columnWidths: ["18%", "18%", "63%"],
-                    dataRows: car.events.slice(0, 10).map(function (e) { return [e.time, e.level, e.message]; }),
-                    headerBackgroundColor: FIELD_COLOR,
-                    headerTextColor: Ink(0.6),
-                    headerBorderColor: FIELD_COLOR,
-                    headerFontSize: 12,
-                    borderWidth: 1,
-                    borderRadius: 8,
-                    borderColor: CARD_BORDER_COLOR,
-                    bodyBackgroundColor: CARD_COLOR,
-                    cellFontSize: 13,
-                    cellTextColor: Ink(0.8),
-                    rowHoverBackgroundColor: Ink(0.05),
-                    rowHoverBorderColor: Ink(0.1),
-                    onCellRender: function (cell) {
-                        if (cell.index === 0) cell.textColor = Ink(0.5);
-                        if (cell.index === 1) cell.textColor = LEVEL_COLORS[cell.text] || Ink(0.8);
+                    columns: Theme.tableColumns(["TIME", "LEVEL", "MESSAGE"], ["18%", "18%", "63%"]),
+                    rows: car.events.slice(0, 10).map(function (e) { return [e.time, e.level, e.message]; }),
+                    allowHtml: 1, // (the texts are made by the panel, user texts are escaped)
+                    style: Theme.tableStyle({ headerColor: FIELD_COLOR, bodyColor: CARD_COLOR, borderColor: CARD_BORDER_COLOR, fontSize: 13 }),
+                    onCellCreate: function (cell) {
+                        if (cell.columnIndex === 0) cell.label.textColor = Ink(0.5);
+                        if (cell.columnIndex === 1) cell.label.textColor = LEVEL_COLORS[cell.value] || Ink(0.8);
                     },
                 });
-                grpEventHost.table.width = "100%";
+                Theme.fillTableWidth(grpEventHost.table);
                 grpEventHost.table.elem.style.minWidth = "420px";
             setDefaultContainerBox(previous);
         };

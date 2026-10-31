@@ -17,12 +17,12 @@ Roles & Permissions Page (Template) - v26.09
 COMPONENTS:
 - SmartButton (comp-m4): Role list, actions
 - InputB (comp-m2): Role name and description
-- TextTabs (comp-m2): Permissions / Members
+- Tabs (comp-m4): Permissions / Members
 - CheckBox (comp-m3): Permission matrix
 - TinySelect (comp-m2): Add a member
 - SearchInput (comp-m2): Filter members
 - ContextMenu (comp-m4): Role actions
-- Dialog, Waiting (comp-m2): Confirm, save
+- Dialog, LoadingScreen (comp-m4; Theme.confirm, waiting): Confirm, save
 
 */
 
@@ -138,13 +138,11 @@ const RolesPage = function(params = {}) {
     // Asks before losing unsaved changes.
     const confirmDiscard = function(onConfirm) {
         if (!isDirty()) return onConfirm();
-        Dialog({
-            icon: ASSETS + "warning.png",
-            title: "Discard Changes?",
-            desc: "You have unsaved changes in <b>" + escapeHtml(saved.name) + "</b>.",
-            confirmButtonText: "Discard",
-            confirmButtonColor: ERROR_COLOR,
-            callback: function(isConfirmed) {
+        Theme.confirm({
+            titleText: "Discard Changes?",
+            messageText: "You have unsaved changes in <b>" + escapeHtml(saved.name) + "</b>.",
+            confirmText: "Discard",
+            onAnswer: function(isConfirmed) {
                 if (isConfirmed && box) onConfirm();
             },
         });
@@ -187,13 +185,11 @@ const RolesPage = function(params = {}) {
 
         const memberCount = getMemberIds(role.id).length;
 
-        Dialog({
-            icon: ASSETS + "warning.png",
-            title: "Delete Role",
-            desc: "<b>" + escapeHtml(role.name) + "</b> will be deleted." + ((memberCount) ? " Its " + memberCount + " member" + ((memberCount > 1) ? "s" : "") + " will get the <b>Viewer</b> role." : ""),
-            confirmButtonText: "Delete",
-            confirmButtonColor: ERROR_COLOR,
-            callback: function(isConfirmed) {
+        Theme.confirm({
+            titleText: "Delete Role",
+            messageText: "<b>" + escapeHtml(role.name) + "</b> will be deleted." + ((memberCount) ? " Its " + memberCount + " member" + ((memberCount > 1) ? "s" : "") + " will get the <b>Viewer</b> role." : ""),
+            confirmText: "Delete",
+            onAnswer: function(isConfirmed) {
                 if (!isConfirmed || !box) return;
                 // TODO: Delete the role with your service.
                 data.users.forEach(function(user) { if (user.roleId == role.id) user.roleId = RolesPage.DEFAULT_ROLE_ID; });
@@ -227,7 +223,7 @@ const RolesPage = function(params = {}) {
         if (error) return showFooterMessage(error, ERROR_COLOR);
 
         btnSave.elem.inert = true;
-        if (typeof waiting !== "undefined") waiting.show();
+        if (typeof waiting !== "undefined") waiting.open();
 
         // TEST: Like a server request
         saveTimer = setTimeout(function() {
@@ -248,7 +244,7 @@ const RolesPage = function(params = {}) {
 
             RolesPage.save(data);
 
-            if (typeof waiting !== "undefined") waiting.hide();
+            if (typeof waiting !== "undefined") waiting.close();
             btnSave.elem.inert = false;
 
             selectRole(role.id);
@@ -460,7 +456,7 @@ const RolesPage = function(params = {}) {
             return !search || user.name.toLowerCase().includes(search) || user.email.toLowerCase().includes(search);
         });
 
-        tabs.tabItemList[1].text = "Members (" + members.length + ")";
+        tabs.updateTab(1, { text: "Members (" + members.length + ")" });
 
         // Add member: users that are not in the draft
         const others = data.users.filter(function(user) { return !draft.memberIds.includes(user.id); });
@@ -682,7 +678,7 @@ const RolesPage = function(params = {}) {
 
         clearTimeout(saveTimer);
         if (footer) clearTimeout(footer.messageTimer);
-        if (saveTimer && typeof waiting !== "undefined") waiting.hide();
+        if (saveTimer && typeof waiting !== "undefined") waiting.close();
 
         // WHY: The menu is created on the page. box.remove() does not remove it.
         if (roleMenu) roleMenu.remove();
@@ -802,16 +798,15 @@ const RolesPage = function(params = {}) {
 
     const initTabs = function() {
 
-        tabs = TextTabs({
-            tabList: ["Permissions", "Members (0)"],
-            onClick: function(self) {
-                grpPermissionsCard.visible = (self.index == 0) ? 1 : 0;
-                grpMembersCard.visible = (self.index == 1) ? 1 : 0;
+        tabs = Tabs({
+            variant: "pill",
+            styleName: T.compStyle,
+            tabs: Theme.indexTabs(["Permissions", "Members (0)"]), // (the key of a tab is its index: self.value)
+            onChange: function(self) {
+                grpPermissionsCard.visible = (self.value == 0) ? 1 : 0;
+                grpMembersCard.visible = (self.value == 1) ? 1 : 0;
             },
-            backgroundStyle: { colorBottom: CARD_COLOR, colorTop: CARD_COLOR, round: 10, border: 1, borderColor: CARD_BORDER_COLOR },
-            tabPadding: [4, 4],
-            labelStyle: { fontSize: 14, textColor: Ink(0.85), padding: [16, 7] },
-            selectedStyle: { color: PRIMARY_COLOR, round: 7 },
+            style: Theme.tabsStyle({ barColor: CARD_COLOR, borderColor: CARD_BORDER_COLOR, barPadding: 4, barRound: 10, tabRound: 7, padding: [16, 7], activeColor: PRIMARY_COLOR }),
         });
 
     };

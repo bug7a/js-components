@@ -15,6 +15,7 @@ USAGE (in a page or a component):
     Label({ text: "Saved", textColor: Theme.textOn(T.primary) });       // Text on a colored box
     icon.elem.style.filter = T.iconFilter;                              // Panel icons are black files
     Tabs({ styleName: T.compStyle });                                   // Style package of a component
+    Theme.confirm({ titleText: "Delete?", onAnswer: fn });            // Dialog, also Theme.tabsStyle(), tableStyle(), createWaiting()
 
 NOTE: Ink(alpha) is white on the dark themes and black on the light one. It is the ink of texts,
       borders and hover layers over the page and the cards.
@@ -321,6 +322,168 @@ Theme.getList = function() {
     const list = [];
     for (let name in Theme.list) list.push(Theme.list[name]);
     return list;
+};
+
+// *** THE LOOKS OF THE COMPONENTS: comp-m4 Tabs, TinyTable, Dialog and LoadingScreen in the colors of T
+// NOTE: They are functions: they read T when a page creates its objects. (The components are loaded after this file.)
+
+// The pill Tabs of the panel (the look of the old comp-m2 TextTabs): a bar with an edge, the active tab
+// in the primary color, a count after the text in a softer ink.
+// look: { barColor, borderColor, barPadding, barRound, tabRound, fontSize, padding: [x, y], height (0: by the text) }
+// USAGE: Tabs({ variant: "pill", styleName: T.compStyle, tabs: [...], style: Theme.tabsStyle({ height: 40 }) })
+Theme.tabsStyle = function(look = {}) {
+
+    const barPadding = (look.barPadding !== undefined) ? look.barPadding : 3;
+    const barBorder = 1;
+    const height = look.height || 0;
+    const fontSize = look.fontSize || 14;
+    const activeColor = look.activeColor || T.primary;
+    const barColor = look.barColor || T.surface2;
+    // WHY: The height of the bar is the height of the buttons and the inputs next to it. Its padding and edge are in it.
+    const tabHeight = (height) ? height - (barPadding + barBorder) * 2 : 0;
+
+    return {
+        pillBar: { color: barColor, padding: [barPadding, barPadding], gap: 3, round: look.barRound || 8, border: barBorder, borderColor: look.borderColor || Ink(0.1) },
+        tab: { fontSize: fontSize, textColor: Ink(0.85), padding: look.padding || [12, 6], round: look.tabRound || 6, gap: 5, minHeight: tabHeight },
+        tabHover: { color: Ink(0.05), textColor: Ink(0.95) },
+        pillActive: { textColor: Theme.textOn(activeColor) },
+        pillIndicator: { color: activeColor, round: look.tabRound || 6, shadow: "none", motion: 0.2 },
+        count: { fontSize: fontSize, color: "transparent", textColor: Ink(0.45), activeColor: "transparent", activeTextColor: Theme.textOn(activeColor, 0.6), round: 0, padding: [0, 0] },
+        arrow: { color: Ink(0.6), background: barColor },
+    };
+
+};
+
+// ["All", "Open"] -> [{ key: 0, text: "All" }, { key: 1, text: "Open" }]: the key of a tab is its index (tabs.value).
+Theme.indexTabs = function(texts) {
+    return texts.map(function(text, index) {
+        return { key: index, text: text };
+    });
+};
+
+// The TinyTable of the panel: a soft title row, a thin edge, round 8.
+// look: { headerColor, bodyColor, borderColor, fontSize, textColor }
+// USAGE: TinyTable({ columns: Theme.tableColumns(["NAME", "CITY"], ["60%", "39%"]), rows: rows, style: Theme.tableStyle() })
+Theme.tableStyle = function(look = {}) {
+
+    const headerColor = look.headerColor || T.surface2;
+    const bodyColor = look.bodyColor || T.surface;
+
+    return {
+        box: { color: bodyColor, border: 1, borderColor: look.borderColor || Ink(0.1), round: 8 },
+        header: { color: headerColor, lineColor: headerColor, textColor: Ink(0.6), fontSize: 12, padding: [8, 8] },
+        body: { color: bodyColor, paddingY: 10 },
+        cell: { textColor: look.textColor || Ink(0.8), fontSize: look.fontSize || 14, padding: [8, 4] },
+        rowHover: { color: Ink(0.05), lineColor: Ink(0.1) },
+        scrollBar: { neverHide: 0, showDots: 0, bar_color: T.scrollBar },
+    };
+
+};
+
+// ["NAME", "CITY"], ["60%", "39%"], ["left", "right"] -> the columns of TinyTable
+Theme.tableColumns = function(titles, widths = [], aligns = []) {
+    return titles.map(function(title, index) {
+        return { title: title, width: widths[index], align: aligns[index] || "left" };
+    });
+};
+
+// comp-m4 TinyTable is as wide as its columns. In the panel it fills its card, its columns are in % of it.
+// USAGE: Theme.fillTableWidth(table)
+Theme.fillTableWidth = function(table) {
+    table.width = "100%";
+    // WHY: The title row of TinyTable is "max-content" wide: its % columns had no width to be measured on.
+    table.header.css = { width: "100%" };
+};
+
+// The Dialog of the panel: a card in the surface color; the main button is a SmartButton ozdenType1 with only its
+// color changed (the user, 2026-10-31): the same orange in every dialog and theme.
+const DIALOG_ACTION_COLOR = "#DE815B";
+const DIALOG_ACTION_HOVER_COLOR = "#D0724D"; // a little darker under the mouse
+
+Theme.dialogStyle = function() {
+
+    const BUTTON_FONT_SIZE = 16;
+    const createButtonLook = function(color, textColor) {
+        return {
+            styleName: "ozdenType1",
+            style: {
+                box: { color: color, borderColor: Ink(0.2), boxShadow: "inset 0 -2px 0 rgba(0, 0, 0, 0.2)" },
+                hover: { color: "color-mix(in srgb, " + color + " 85%, white)" },
+                active: { color: "color-mix(in srgb, " + color + " 85%, white)" },
+                label: { textColor: textColor, fontSize: BUTTON_FONT_SIZE },
+            },
+        };
+    };
+
+    return {
+        cover: { color: (T.isDark) ? Black(0.7) : Black(0.5) },
+        card: { color: T.surface, border: 1, borderColor: Ink(0.15), boxShadow: "0 10px 30px rgba(0, 0, 0, 0.3)" },
+        title: { textColor: Ink(0.95) },
+        message: { textColor: Ink(0.7) },
+        status: { errorColor: T.danger, infoColor: Ink(0.55) },
+        footer: { color: T.surface2, lineColor: Ink(0.1) },
+        buttons: {
+            primary: {
+                styleName: "ozdenType1",
+                style: {
+                    box: { color: DIALOG_ACTION_COLOR },
+                    hover: { color: DIALOG_ACTION_HOVER_COLOR },
+                    active: { color: DIALOG_ACTION_HOVER_COLOR },
+                    label: { textColor: SmartButton.styles.ozdenType1.label.textColor, fontSize: BUTTON_FONT_SIZE },
+                },
+            },
+            secondary: createButtonLook(T.surface3, Ink(0.85)),
+        },
+    };
+
+};
+
+// Asks before an action: a Dialog (comp-m4) with a cancel and a confirm button.
+// onAnswer(isConfirmed): 1 (the confirm button) or 0 (cancel, Escape, a click on the cover).
+// messageText can be HTML: only the texts of the panel (escape a name of a user).
+// USAGE: Theme.confirm({ titleText: "Delete Role", messageText: "...", confirmText: "Delete", onAnswer: function(isConfirmed) {} })
+Theme.confirm = function(params = {}) {
+
+    const onAnswer = params.onAnswer || function() {};
+
+    const dialog = Dialog({
+        titleText: params.titleText || "",
+        messageText: params.messageText || "",
+        allowHtml: 1,
+        style: Theme.dialogStyle(),
+        buttons: [
+            { key: "cancel", text: params.cancelText || "Cancel", type: "secondary" },
+            { key: "confirm", text: params.confirmText || "OK", type: "primary" },
+        ],
+        onClose: function(dialog, reason, buttonKey) {
+            onAnswer((buttonKey === "confirm") ? 1 : 0);
+        },
+    });
+
+    return dialog;
+
+};
+
+// The waiting cover of the panel: a LoadingScreen (comp-m4) over a dark cover, with the moving clock.
+// USAGE: waiting.setMessage("Saving..."); waiting.open(); ... waiting.close();
+Theme.createWaiting = function() {
+
+    const waiting = LoadingScreen({
+        opened: 0,
+        minDuration: 0,
+        fadeDuration: 0.2,
+        spinnerType: "clock",
+        style: {
+            box: { color: (T.isDark) ? Black(0.6) : Black(0.35) },
+            message: { fontSize: 16, textColor: White(0.9) },
+            clock: LoadingScreen.clocks.ozden,
+        },
+    });
+
+    // WHY: The clock comes before the text, like the waiting cover of the panel before (LoadingScreen: after it).
+    waiting.clock.css = { order: "-1", marginTop: "0px" };
+    return waiting;
+
 };
 
 // The colors are ready before the pages are loaded.

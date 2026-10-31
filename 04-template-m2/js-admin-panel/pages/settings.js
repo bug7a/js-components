@@ -11,7 +11,7 @@ Settings Page (Template) - v26.09
 - Panel name, panel color and the start page are used by the panel (index.htm: SettingsPage.applyToPanel).
 
 COMPONENTS:
-- TextTabs (comp-m2): Sections
+- Tabs (comp-m4): Sections
 - InputB, EmailInputB, PasswordInputB (comp-m2): Text fields
 - TinySelect (comp-m2): Language, time zone, start page, report day
 - RadioButton (comp-m3): Date format, panel color
@@ -20,9 +20,9 @@ COMPONENTS:
 - SelectTime (comp-m4): Quiet hours
 - Slider (comp-m2): Session timeout
 - SelectFile (comp-m4): Logo, settings import
-- TinyTable (comp-m2): Active sessions
+- TinyTable (comp-m4): Active sessions
 - SmartButton (comp-m4), HoldToConfirmButton (comp-m3): Actions
-- Dialog, Waiting (comp-m2): Confirm, save
+- Dialog, LoadingScreen (comp-m4; Theme.confirm, waiting): Confirm, save
 
 */
 
@@ -177,7 +177,7 @@ const SettingsPage = function(params = {}) {
         sectionList.forEach(function(section, i) {
             section.visible = (i == index) ? 1 : 0;
         });
-        if (sectionTabs.selectedIndex != index) sectionTabs.selectByIndex(index);
+        sectionTabs.setValue(index, 1); // (silent: no onChange)
     };
 
     // Writes the values to the components. (Used on start, Discard, Import and Reset.)
@@ -255,7 +255,7 @@ const SettingsPage = function(params = {}) {
         if (validate() >= 0) return;
 
         btnSave.elem.inert = true;
-        if (typeof waiting !== "undefined") waiting.show();
+        if (typeof waiting !== "undefined") waiting.open();
 
         // TEST: Like a server request
         saveTimer = setTimeout(function() {
@@ -266,7 +266,7 @@ const SettingsPage = function(params = {}) {
             saved = SettingsPage.clone(draft);
             SettingsPage.applyToPanel(saved);
 
-            if (typeof waiting !== "undefined") waiting.hide();
+            if (typeof waiting !== "undefined") waiting.close();
             btnSave.elem.inert = false;
             showFooterMessage("All changes are saved.", ACCENT_COLOR, 1);
 
@@ -796,13 +796,11 @@ const SettingsPage = function(params = {}) {
                     startSettingLine("Active sessions", "Devices that are signed in to this account");
                         createButton("Sign Out Other Sessions", "", function() {
                             if (sessionList.length < 2) return;
-                            Dialog({
-                                icon: ASSETS + "warning.png",
-                                title: "Sign Out Other Sessions",
-                                desc: "All devices except this one will be signed out.",
-                                confirmButtonText: "Sign Out",
-                                confirmButtonColor: PRIMARY_COLOR,
-                                callback: function(isConfirmed) {
+                            Theme.confirm({
+                                titleText: "Sign Out Other Sessions",
+                                messageText: "All devices except this one will be signed out.",
+                                confirmText: "Sign Out",
+                                onAnswer: function(isConfirmed) {
                                     if (!isConfirmed || !box) return;
                                     // TODO: Sign out other sessions with your service.
                                     sessionList = sessionList.slice(0, 1);
@@ -832,26 +830,15 @@ const SettingsPage = function(params = {}) {
         setDefaultContainerBox(grpSessionTable);
 
             sessionTable = TinyTable({
-                columnHeaders: ["DEVICE", "LOCATION", "LAST ACTIVE"],
-                columnWidths: ["44%", "30%", "25%"], // 99%: 1px gaps between cells
-                dataRows: sessionList,
-                headerBackgroundColor: FIELD_COLOR,
-                headerTextColor: Ink(0.6),
-                headerBorderColor: FIELD_COLOR,
-                headerFontSize: 12,
-                borderWidth: 1,
-                borderRadius: 8,
-                borderColor: CARD_BORDER_COLOR,
-                bodyBackgroundColor: CARD_COLOR,
-                cellFontSize: 14,
-                cellTextColor: Ink(0.8),
-                rowHoverBackgroundColor: Ink(0.05),
-                rowHoverBorderColor: Ink(0.1),
-                onCellRender: function(cell) {
-                    if (cell.index == 2 && cell.text == "Active now") cell.textColor = ACCENT_COLOR;
+                columns: Theme.tableColumns(["DEVICE", "LOCATION", "LAST ACTIVE"], ["44%", "30%", "25%"]),
+                rows: sessionList,
+                allowHtml: 1, // (the texts are made by the panel, user texts are escaped)
+                style: Theme.tableStyle({ headerColor: FIELD_COLOR, bodyColor: CARD_COLOR, borderColor: CARD_BORDER_COLOR }),
+                onCellCreate: function(cell) {
+                    if (cell.columnIndex == 2 && cell.value == "Active now") cell.label.textColor = ACCENT_COLOR;
                 },
             });
-            sessionTable.width = "100%";
+            Theme.fillTableWidth(sessionTable);
             sessionTable.elem.style.minWidth = "480px";
 
         setDefaultContainerBox(previous);
@@ -1010,13 +997,11 @@ const SettingsPage = function(params = {}) {
 
         // WHY: The page is loaded again, so the draft of this page is lost.
         if (isDirty()) {
-            Dialog({
-                icon: ASSETS + "warning.png",
-                title: "Change Theme",
-                desc: "The panel opens again with the new colors. The changes you did not save are lost.",
-                confirmButtonText: "Change Theme",
-                confirmButtonColor: PRIMARY_COLOR,
-                callback: function(isConfirmed) { if (isConfirmed) applyTheme(name); },
+            Theme.confirm({
+                titleText: "Change Theme",
+                messageText: "The panel opens again with the new colors. The changes you did not save are lost.",
+                confirmText: "Change Theme",
+                onAnswer: function(isConfirmed) { if (isConfirmed) applyTheme(name); },
             });
             return;
         }
@@ -1110,13 +1095,11 @@ const SettingsPage = function(params = {}) {
                     });
 
                     createButton("Regenerate", "", function() {
-                        Dialog({
-                            icon: ASSETS + "warning.png",
-                            title: "Regenerate API Key",
-                            desc: "The current key stops working now. Apps that use it must be updated.",
-                            confirmButtonText: "Regenerate",
-                            confirmButtonColor: ERROR_COLOR,
-                            callback: function(isConfirmed) {
+                        Theme.confirm({
+                            titleText: "Regenerate API Key",
+                            messageText: "The current key stops working now. Apps that use it must be updated.",
+                            confirmText: "Regenerate",
+                            onAnswer: function(isConfirmed) {
                                 if (!isConfirmed || !box) return;
                                 // WHY: A new key is an action on the server. It is saved now, not with the Save button.
                                 const key = createApiKey();
@@ -1140,13 +1123,11 @@ const SettingsPage = function(params = {}) {
                         if (isRendering) return;
                         if (self.value !== 1) return setDraft("maintenance", 0);
                         // Ask before turning on.
-                        Dialog({
-                            icon: ASSETS + "warning.png",
-                            title: "Maintenance Mode",
-                            desc: "Your users will not be able to use the app until it is turned off. (After Save)",
-                            confirmButtonText: "Turn On",
-                            confirmButtonColor: ERROR_COLOR,
-                            callback: function(isConfirmed) {
+                        Theme.confirm({
+                            titleText: "Maintenance Mode",
+                            messageText: "Your users will not be able to use the app until it is turned off. (After Save)",
+                            confirmText: "Turn On",
+                            onAnswer: function(isConfirmed) {
                                 if (!box) return;
                                 if (isConfirmed) {
                                     setDraft("maintenance", 1);
@@ -1268,7 +1249,7 @@ const SettingsPage = function(params = {}) {
 
         clearTimeout(saveTimer);
         clearTimeout(messageTimer);
-        if (saveTimer && typeof waiting !== "undefined") waiting.hide();
+        if (saveTimer && typeof waiting !== "undefined") waiting.close();
 
         // WHY: Unsaved preview (panel name, color) must not stay after leaving the page.
         SettingsPage.applyToPanel(saved);
@@ -1314,28 +1295,14 @@ const SettingsPage = function(params = {}) {
 
                 endGroup();
 
-                sectionTabs = TextTabs({
-                    tabList: SECTIONS,
-                    onClick: function(self) {
-                        showSection(self.index);
+                sectionTabs = Tabs({
+                    variant: "pill",
+                    styleName: T.compStyle,
+                    tabs: Theme.indexTabs(SECTIONS), // (the key of a tab is its index: self.value)
+                    onChange: function(self) {
+                        showSection(self.value);
                     },
-                    backgroundStyle: {
-                        colorBottom: CARD_COLOR,
-                        colorTop: CARD_COLOR,
-                        round: 10,
-                        border: 1,
-                        borderColor: CARD_BORDER_COLOR,
-                    },
-                    tabPadding: [4, 4],
-                    labelStyle: {
-                        fontSize: 14,
-                        textColor: Ink(0.85),
-                        padding: [16, 7],
-                    },
-                    selectedStyle: {
-                        color: PRIMARY_COLOR,
-                        round: 7,
-                    },
+                    style: Theme.tabsStyle({ barColor: CARD_COLOR, borderColor: CARD_BORDER_COLOR, barPadding: 4, barRound: 10, tabRound: 7, padding: [16, 7], activeColor: PRIMARY_COLOR }),
                 });
 
                 initGeneral();

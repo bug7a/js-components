@@ -17,8 +17,9 @@
         <script src="../comp-m2/input-b.js" charset="utf-8" ></script>
         <script src="../comp-m2/email-input-b.js" charset="utf-8" ></script>
         <script src="../comp-m2/password-input-b.js" charset="utf-8" ></script>
-        <script src="../comp-m2/waiting.js" charset="utf-8" ></script>
-        <script src="../comp-m2/text-tabs.js" type="text/javascript" charset="utf-8" ></script>
+        <script src="../comp-m4/tabs.js" charset="utf-8" ></script>
+        <script src="../comp-m4/smart-button.js" charset="utf-8" ></script>
+        <script src="../comp-m4/loading-screen.js" charset="utf-8" ></script>
         <script src="../comp-m2/login-page-v2.js" type="text/javascript" charset="utf-8" ></script>
 
         <script>
@@ -56,13 +57,13 @@
             // Show Login Page
             loginPage = LoginPage({
                 panelWidth: 420,
+                inputStyleName: "ozden", // the fields: the InputB package "ozden"
                 primaryColor: "#2C5A38",
                 panelName: "MY PANEL v25.08.11",
                 onLoginClick: onLoginClick,
                 onSignupClick: onSignupClick,
                 showPasswordIconFile: "../comp-m2/password-input-b/show-btn.png",
                 hidePasswordIconFile: "../comp-m2/password-input-b/hide-btn.png",
-                waitingIcon: "../comp-m2/waiting/clock3.png",
                 signupPasswordParams: {
                     minChar: 8,
                     minCharWarningText: "Password must be at least 8 characters",
@@ -221,8 +222,7 @@
                 loginPage.signupPassword.setInputValue("");
                 loginPage.signupPassword2.setInputValue("");
                 loginPage.loginEmail.setInputValue(loginPage.signupEmail.getInputValue());
-                loginPage.setActiveTab(0);
-                loginPage.tabBar.selectByIndex(0);
+                loginPage.setActiveTab(0); // (the tab bar follows it)
 
             };
 

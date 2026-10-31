@@ -16,12 +16,12 @@ User List Page (Template) - v26.09
 - NOTE: The old "Users" page (pages/users.js) is kept.
 
 COMPONENTS:
-- TextTabs (comp-m2): Status tabs
+- Tabs (comp-m4): Status tabs
 - SearchInput, TinySelect (comp-m2): Filters, role select
 - SmartTable (comp-m3): User list
 - InputB (comp-m2): Name, e-mail
 - SmartButton (comp-m4): Actions
-- Dialog, Waiting (comp-m2): Confirm, saving
+- Dialog, LoadingScreen (comp-m4; Theme.confirm, waiting): Confirm, saving
 
 */
 
@@ -81,8 +81,7 @@ const UserListPage = function(params = {}) {
         // Tab counts
         TABS.forEach(function(status, index) {
             const count = (status) ? list.filter(function(user) { return user.status == status; }).length : list.length;
-            const label = (status) ? STATUSES[status].label : "All";
-            statusTabs.tabItemList[index].text = label + " <span style='opacity:0.55'>" + count + "</span>";
+            statusTabs.setCount(index, count);
         });
 
         const shown = (filter.status) ? list.filter(function(user) { return user.status == filter.status; }) : list;
@@ -250,17 +249,15 @@ const UserListPage = function(params = {}) {
             HGroup({ width: "100%", height: "auto", align: "left top" });
             that.elem.style.overflowX = "auto";
 
-                statusTabs = TextTabs({
-                    tabHeight: 40, // The same height as the buttons / inputs next to it
-                    tabList: TABS.map(function(status) { return (status) ? STATUSES[status].label : "All"; }),
-                    onClick: function(self) {
-                        filter.status = TABS[self.index];
+                statusTabs = Tabs({
+                    variant: "pill",
+                    styleName: T.compStyle,
+                    tabs: Theme.indexTabs(TABS.map(function(status) { return (status) ? STATUSES[status].label : "All"; })), // (the key of a tab is its index: self.value)
+                    onChange: function(self) {
+                        filter.status = TABS[self.value];
                         render();
                     },
-                    backgroundStyle: { colorBottom: S.FIELD_COLOR, colorTop: S.FIELD_COLOR, round: 8, border: 1, borderColor: S.CARD_BORDER_COLOR },
-                    tabPadding: [3, 3],
-                    labelStyle: { fontSize: 14, textColor: Ink(0.85), padding: [12, 6] },
-                    selectedStyle: { color: S.PRIMARY_COLOR, round: 6 },
+                    style: Theme.tabsStyle({ height: 40, barColor: S.FIELD_COLOR, borderColor: S.CARD_BORDER_COLOR, padding: [12, 6], activeColor: S.PRIMARY_COLOR }),
                 });
 
             endGroup();
@@ -429,7 +426,7 @@ const UserListDetails = function(params = {}) {
     // change: function(data, user) - returns an error text, or "" when it is OK.
     const saveChange = function(change, notice, openUserId) {
 
-        if (typeof waiting !== "undefined") waiting.show();
+        if (typeof waiting !== "undefined") waiting.open();
 
         saveTimer = setTimeout(function() {
 
@@ -438,7 +435,7 @@ const UserListDetails = function(params = {}) {
             const freshUser = (user) ? fresh.users.find(function(u) { return u.id == user.id; }) : null;
             const error = change(fresh, freshUser);
 
-            if (typeof waiting !== "undefined") waiting.hide();
+            if (typeof waiting !== "undefined") waiting.close();
 
             if (error) {
                 showNotice(error, true);
@@ -795,14 +792,12 @@ const UserListDetails = function(params = {}) {
 
             if (user.status == "active") {
                 const btnSuspend = UserListPage.createButton("Suspend User", "", function() {
-                    Dialog({
-                        icon: "assets/warning.png",
-                        title: "Suspend User",
-                        desc: "<b>" + escape(user.name) + "</b> will be logged out and can not use the panel until you reactivate the account.",
-                        confirmButtonText: "Suspend",
-                        confirmButtonColor: S.ERROR_COLOR,
-                        cancelButtonText: "Cancel",
-                        callback: function(isConfirmed) {
+                    Theme.confirm({
+                        titleText: "Suspend User",
+                        messageText: "<b>" + escape(user.name) + "</b> will be logged out and can not use the panel until you reactivate the account.",
+                        confirmText: "Suspend",
+                        cancelText: "Cancel",
+                        onAnswer: function(isConfirmed) {
                             if (!isConfirmed || !box) return;
                             saveChange(function(fresh, freshUser) {
                                 if (!freshUser) return "User is not found.";
@@ -827,16 +822,14 @@ const UserListDetails = function(params = {}) {
             }
 
             const btnRemove = UserListPage.createButton((user.status == "invited") ? "Cancel Invite" : "Remove User", "", function() {
-                Dialog({
-                    icon: "assets/warning.png",
-                    title: (user.status == "invited") ? "Cancel Invite" : "Remove User",
-                    desc: (user.status == "invited")
+                Theme.confirm({
+                    titleText: (user.status == "invited") ? "Cancel Invite" : "Remove User",
+                    messageText: (user.status == "invited")
                         ? "The invite link sent to <b>" + escape(user.email) + "</b> will not work anymore."
                         : "<b>" + escape(user.name) + "</b> will be removed from the panel. This can not be undone.",
-                    confirmButtonText: (user.status == "invited") ? "Cancel Invite" : "Remove",
-                    confirmButtonColor: S.ERROR_COLOR,
-                    cancelButtonText: "Keep",
-                    callback: function(isConfirmed) {
+                    confirmText: (user.status == "invited") ? "Cancel Invite" : "Remove",
+                    cancelText: "Keep",
+                    onAnswer: function(isConfirmed) {
                         if (!isConfirmed || !box) return;
                         saveChange(function(fresh, freshUser) {
                             if (!freshUser) return "User is not found.";

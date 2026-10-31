@@ -207,12 +207,6 @@ CATALOG.COMPONENTS = [
         tr: "Gelip giden kısa mesajlar: başarılı, hata, yükleniyor ve Geri Al gibi eylemler.",
     },
     {
-        key: "modal", name: "Modal", gen: 4, cat: "feedback",
-        source: "comp-m4/modal.js", samples: ["02-comp-m4-samples/modal.htm"],
-        en: "A dialog window over the page for any content; Modal.confirm() and Modal.alert() return a Promise. Not for new pages: use Dialog (M4).",
-        tr: "Sayfanın üzerinde her türlü içerik için pencere; Modal.confirm() ve Modal.alert() Promise döndürür. Yeni sayfalarda değil: Dialog (M4) kullanılır.",
-    },
-    {
         key: "side-panel", name: "SidePanel", gen: 4, cat: "feedback",
         source: "comp-m4/side-panel.js", samples: ["02-comp-m4-samples/side-panel.htm"],
         en: "A drawer that slides in from a side of the screen, over the page.",
@@ -358,7 +352,7 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "line-progress-bar", name: "LineProgressBar", gen: 3, cat: "feedback",
-        source: "comp-m3/progress-bar.js", samples: ["02-comp-m3-samples/progress-bar.htm"],
+        source: "comp-m3/line-progress-bar.js", samples: ["02-comp-m3-samples/line-progress-bar.htm"],
         en: "A progress bar drawn with thin vertical lines.",
         tr: "İnce dikey çizgilerle çizilen ilerleme çubuğu.",
     },
@@ -448,22 +442,10 @@ CATALOG.COMPONENTS = [
         tr: "Bir cümlenin içine sığan küçük seçim kutusu: Tema: Supernova.",
     },
     {
-        key: "text-tabs", name: "TextTabs", gen: 2, cat: "navigation",
-        source: "comp-m2/text-tabs.js", samples: ["02-comp-m2-samples/text-tabs.htm"],
-        en: "Small text tab bar. Not for new pages: use Tabs (M4).",
-        tr: "Küçük yazılı sekme çubuğu. Yeni sayfalarda değil: Tabs (M4) kullanılır.",
-    },
-    {
         key: "left-menu", name: "LeftMenu", gen: 2, cat: "navigation",
         source: "comp-m2/left-menu.js", samples: ["02-comp-m2-samples/left-menu.htm"],
         en: "Icon side menu that opens on hover, or with a tap on touch screens.",
         tr: "Fareyle üzerine gelince, dokunmatik ekranda dokununca açılan ikonlu yan menü.",
-    },
-    {
-        key: "dialog-m2", name: "Dialog (M2)", gen: 2, cat: "feedback",
-        source: "comp-m2/dialog.js", samples: ["02-comp-m2-samples/dialog.htm"],
-        en: "A simple dialog window. The first version: new pages use Dialog (M4).",
-        tr: "Sade bir diyalog penceresi. İlk sürüm: yeni sayfalarda Dialog (M4) kullanılır.",
     },
     {
         key: "tooltip", name: "Tooltip", gen: 2, cat: "feedback",
@@ -477,22 +459,10 @@ CATALOG.COMPONENTS = [
         tr: "Bir nesnenin üzerinde ipucu balonu: fareyi izler ya da nesnenin yanında durur; isteğe bağlı kenarlıklı ok, hep ekranın içinde; içinde kendi içeriğin ya da açık kalan, tıklanabilen bir popover.",
     },
     {
-        key: "waiting", name: "Waiting", gen: 2, cat: "feedback",
-        source: "comp-m2/waiting.js", samples: ["02-comp-m2-samples/waiting.htm"],
-        en: "A waiting animation over the page while something loads.",
-        tr: "Bir şey yüklenirken sayfanın üzerinde gösterilen bekleme animasyonu.",
-    },
-    {
         key: "badge", name: "BadgeV2", gen: 2, cat: "feedback",
         source: "comp-m2/badge-v2.js", samples: ["02-comp-m2-samples/badgeV2.htm"],
         en: "Notification badge on an object: a dot, a number or custom content.",
         tr: "Bir nesnenin üzerinde bildirim rozeti: nokta, sayı veya özel içerik.",
-    },
-    {
-        key: "tiny-table", name: "TinyTable (M2)", gen: 2, cat: "data",
-        source: "comp-m2/tiny-table.js", samples: ["02-comp-m2-samples/tiny-table.htm"],
-        en: "A light table for short data lists. Not for new pages: use TinyTable (M4).",
-        tr: "Kısa veri listeleri için hafif tablo. Yeni sayfalarda değil: TinyTable (M4) kullanılır.",
     },
     {
         key: "login-page", name: "LoginPage", gen: 2, cat: "pages",

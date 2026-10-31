@@ -240,18 +240,15 @@ const TopBar = function(params = {}) {
         const line = function(keys, text) {
             return "<div style='display:flex; justify-content:space-between; gap:24px; padding:4px 0'><b>" + keys + "</b><span>" + text + "</span></div>";
         };
-        Dialog({
-            icon: "assets/maybe.png",
-            title: "Keyboard Shortcuts",
-            desc: line("Ctrl K  /  ⌘ K  /  /", "Search")
+        Theme.confirm({
+            titleText: "Keyboard Shortcuts",
+            messageText: line("Ctrl K  /  ⌘ K  /  /", "Search")
                 + line("↑  ↓", "Move in the results")
                 + line("Enter", "Open the result")
                 + line("Esc", "Close the results or the right panel"),
-            confirmButtonText: "OK",
-            cancelButtonText: "Close",
-            confirmButtonColor: "#3D7A6B",
-            color: Black(0.7),
-            callback: function() {},
+            confirmText: "OK",
+            cancelText: "Close",
+            onAnswer: function() {},
         });
     };
 
@@ -503,15 +500,12 @@ const TopBar = function(params = {}) {
             }
 
             // WHY: Users can not use the site. Ask before turning it on.
-            Dialog({
-                icon: "assets/warning.png",
-                title: "Maintenance Mode",
-                desc: "Users will see a maintenance page and can not use the site. Admins can still use the panel.",
-                confirmButtonText: "Turn On",
-                cancelButtonText: "Cancel",
-                confirmButtonColor: "#B87A1A",
-                color: Black(0.7),
-                callback: function(isConfirmed) {
+            Theme.confirm({
+                titleText: "Maintenance Mode",
+                messageText: "Users will see a maintenance page and can not use the site. Admins can still use the panel.",
+                confirmText: "Turn On",
+                cancelText: "Cancel",
+                onAnswer: function(isConfirmed) {
                     if (isConfirmed) {
                         saveSetting("maintenance", 1);
                     } else {

@@ -13,13 +13,13 @@ Activity Log Page (Template) - v26.09
 - Replace ActivityPage.getEvents() with your service (API with paging and filters for big logs).
 
 COMPONENTS:
-- TextTabs (comp-m2): Time range
+- Tabs (comp-m4): Time range
 - SearchInput (comp-m2): Search
 - TinySelect (comp-m2): User, action and module filters
 - Toggle (comp-m2): Live updates
 - SparkLineBox (comp-m4): Summary graphs
 - SmartTable (comp-m3): Event list
-- TinyTable (comp-m2): Changes (details panel)
+- TinyTable (comp-m4): Changes (details panel)
 - SmartButton (comp-m4): Actions
 
 */
@@ -405,17 +405,15 @@ const ActivityPage = function(params = {}) {
             HGroup({ width: "100%", height: "auto", align: "left center", gap: 10 });
             that.elem.style.flexWrap = "wrap";
 
-                rangeTabs = TextTabs({
-                    tabHeight: 40, // The same height as the buttons / inputs next to it
-                    tabList: RANGES.map(function(range) { return range.text; }),
-                    onClick: function(self) {
-                        filter.rangeIndex = self.index;
+                rangeTabs = Tabs({
+                    variant: "pill",
+                    styleName: T.compStyle,
+                    tabs: Theme.indexTabs(RANGES.map(function(range) { return range.text; })), // (the key of a tab is its index: self.value)
+                    onChange: function(self) {
+                        filter.rangeIndex = self.value;
                         renderTable();
                     },
-                    backgroundStyle: { colorBottom: S.FIELD_COLOR, colorTop: S.FIELD_COLOR, round: 8, border: 1, borderColor: S.CARD_BORDER_COLOR },
-                    tabPadding: [3, 3],
-                    labelStyle: { fontSize: 14, textColor: Ink(0.85), padding: [12, 6] },
-                    selectedStyle: { color: S.PRIMARY_COLOR, round: 6 },
+                    style: Theme.tabsStyle({ height: 40, barColor: S.FIELD_COLOR, borderColor: S.CARD_BORDER_COLOR, padding: [12, 6], activeColor: S.PRIMARY_COLOR }),
                 });
 
                 searchInput = SearchInput({
@@ -585,7 +583,7 @@ const ActivityPage = function(params = {}) {
 
     endBox();
 
-    rangeTabs.selectByIndex(filter.rangeIndex);
+    rangeTabs.setValue(filter.rangeIndex, 1);
     setLive(0);
     renderSummary();
     renderTable();
@@ -716,32 +714,21 @@ const ActivityDetails = function(params = {}) {
                 that.elem.style.letterSpacing = "1px";
 
                 const table = TinyTable({
-                    columnHeaders: ["FIELD", "BEFORE", "AFTER"],
-                    columnWidths: ["28%", "35%", "36%"], // 99%: 1px gaps between cells
-                    dataRows: event.changes.map(function(change) {
+                    columns: Theme.tableColumns(["FIELD", "BEFORE", "AFTER"], ["28%", "35%", "36%"]),
+                    rows: event.changes.map(function(change) {
                         return [escape(change.field), escape(change.before), escape(change.after)];
                     }),
-                    headerBackgroundColor: S.FIELD_COLOR,
-                    headerTextColor: Ink(0.6),
-                    headerBorderColor: S.FIELD_COLOR,
-                    headerFontSize: 12,
-                    borderWidth: 1,
-                    borderRadius: 8,
-                    borderColor: S.CARD_BORDER_COLOR,
-                    bodyBackgroundColor: S.CARD_COLOR,
-                    cellFontSize: 14,
-                    cellTextColor: Ink(0.8),
-                    rowHoverBackgroundColor: Ink(0.05),
-                    rowHoverBorderColor: Ink(0.1),
-                    onCellRender: function(cell) {
-                        if (cell.index == 1) {
-                            cell.textColor = Theme.readable("#E6A0A0"); // (the light theme: it was pale on white)
-                            cell.elem.style.textDecoration = "line-through";
+                    allowHtml: 1, // (the texts are made by the panel, user texts are escaped)
+                    style: Theme.tableStyle({ headerColor: S.FIELD_COLOR, bodyColor: S.CARD_COLOR, borderColor: S.CARD_BORDER_COLOR }),
+                    onCellCreate: function(cell) {
+                        if (cell.columnIndex == 1) {
+                            cell.label.textColor = Theme.readable("#E6A0A0"); // (the light theme: it was pale on white)
+                            cell.label.elem.style.textDecoration = "line-through";
                         }
-                        if (cell.index == 2) cell.textColor = Theme.readable("#9FD3C4");
+                        if (cell.columnIndex == 2) cell.label.textColor = Theme.readable("#9FD3C4");
                     },
                 });
-                table.width = "100%";
+                Theme.fillTableWidth(table);
 
             }
 

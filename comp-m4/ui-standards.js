@@ -14,7 +14,7 @@ And the themes (light, dark, your own) of those colors.
 - Themes: "light" (default), "dark", "auto" (follows the operating system) and the themes you define.
 - Style presets: prop lists for labels, buttons and cards. Use them when you create an object or later.
 - Effects (hover, press, animations) are not here: use comp-m4/ui-effects.js (UIEffects).
-- comp-m2/ui-standards.js is the old version (other token names: COLOR_FIRST, WHITE, GRAY_300, TEXT_L...).
+- comp-m4/ui-standards.js is the old version (other token names: COLOR_FIRST, WHITE, GRAY_300, TEXT_L...).
 
 LOAD ORDER: basic.css, basic.js, ui-standards.js, components, page code.
 Load it in <head>: the theme is set before the page is drawn, so there is no white flash in the dark theme.

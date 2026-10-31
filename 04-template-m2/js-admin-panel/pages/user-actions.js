@@ -316,7 +316,7 @@ const UserActionsPage = function(params = {}) {
             iconFile: "",
             onClick: function() {
                 UserActionsPage.clearSession();
-                if (typeof waiting !== "undefined") waiting.show();
+                if (typeof waiting !== "undefined") waiting.open();
                 logout();
             },
             style: {

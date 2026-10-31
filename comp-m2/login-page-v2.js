@@ -2,10 +2,18 @@
 
 /*
 
-Component Template - v25.07
+LoginPage - v26.10
 
-UI COMPONENT TEMPLATE
-- You can customize, this template code as you need:
+UI COMPONENT
+- A full page with two views: LOGIN and SIGN UP (a tab bar switches them). The page does the service work in
+  onLoginClick / onSignupClick and calls box.waiting.show() / hide() and box.showAlert() around it.
+- The tab bar is comp-m4 Tabs (the pill variant, colored by the tab_ params), the waiting cover is comp-m4
+  LoadingScreen with the moving clock (box.waiting.show() / hide(); waitingCoverColor, waitingClock).
+
+LOAD FIRST (in this order):
+    basic.js, comp-m4/ui-effects.js, comp-m2/tooltip.js, comp-m2/input-b.js, comp-m2/email-input-b.js,
+    comp-m2/password-input-b.js, comp-m4/tabs.js, comp-m4/smart-button.js, comp-m4/loading-screen.js
+    (LoadingScreen needs smart-button.js: the clock drawing)
 
 
 Started Date: June 2024
@@ -34,6 +42,7 @@ const LoginPageDefaults = {
     tab_border: 1, // 1, 0
     tab_textColor: White(0.75), // White(0.75), "#373836",
     tab_selectedColor: "#000000", // "#000000", "white",
+    inputStyleName: "", // "": the fields take the input_ colors below. An InputB package ("ozden", "ozdenDark"...): the fields take its look.
     input_backgroundColor: "#141414",
     input_lineColor: "transparent",
     input_selectedBackgroundColor: "#202020",
@@ -46,10 +55,10 @@ const LoginPageDefaults = {
     onLoginClick: function() {},
     onSignupClick: function() {},
     showPasswordIconInvert: 1,
-    waitingIconInvert: 1,
     showPasswordIconFile: "../../comp-m2/password-input-b/show-btn.png",
     hidePasswordIconFile: "../../comp-m2/password-input-b/hide-btn.png",
-    waitingIcon: "../../comp-m2/waiting/clock3.png",
+    waitingCoverColor: "rgba(0, 0, 0, 0.6)", // The cover of box.waiting (LoadingScreen)
+    waitingClock: "ozden", // The clock of box.waiting: "ozden" (a white face) or "ozdenDark" (LoadingScreen.clocks)
     signupPasswordParams: {
         minChar: 8,
         minCharWarningText: "Password must be at least 8 characters",
@@ -103,6 +112,10 @@ const LoginPage = function(params = {}) {
 
     // *** PRIVATE VARIABLES:
     const ALERT_TIME = 1000; // ms: the alert closes itself after this.
+    const TAB_KEYS = ["login", "signup"]; // The keys of the tabs, by the index of setActiveTab()
+    const TAB_MOTION = 0.2; // seconds: the selected tab slides
+    const TAB_BAR_PADDING = 2; // px around the tabs, in the bar
+    const WAITING_FADE_TIME = 0.2; // seconds
 
     box.customButtonCount = 0;
 
@@ -129,35 +142,7 @@ const LoginPage = function(params = {}) {
             });
 
             // Tab Bar
-            box.tabBar = TextTabs({
-                key: "0",
-                selectedIndex: 0,
-                tabList: ["LOGIN", "SIGN UP"],
-                invertColor: 0,
-                backgroundStyle: {
-                    colorBottom: box.tab_backgroundColorBottom, // "whitesmoke",
-                    colorTop: box.tab_backgroundColorTop, // "#DBDDDC",
-                    round: 8,
-                    border: box.tab_border,
-                    borderColor: box.tab_borderColor,
-                },
-                labelStyle: {
-                    fontSize: 14,
-                    textColor: box.tab_textColor, //"#373836",
-                    padding: [12, 4],
-                    round: 0,
-                    color: "transparent",
-                },
-                selectedStyle: {
-                    color: box.tab_selectedColor, // "#000000", "white"
-                    round: 6,
-                    border: 0,
-                    borderColor: Black(0.2),
-                },
-            });
-            that.onClick = function(self) {
-                box.setActiveTab(self.index);
-            };
+            createTabBar();
 
             // Views wrapper
             box.contentContainer = startBox({
@@ -187,7 +172,13 @@ const LoginPage = function(params = {}) {
                     });
                     that.setMotion("opacity 0.2s");
 
-                        const common = {
+                        // The params of every field: an InputB package (inputStyleName), or the input_ colors.
+                        const common = (box.inputStyleName) ? {
+                            width: "100%",
+                            leftPadding: 16,
+                            rightPadding: 16,
+                            styleName: box.inputStyleName,
+                        } : {
                             width: "100%",
                             leftPadding: 16,
                             rightPadding: 16,
@@ -392,12 +383,7 @@ const LoginPage = function(params = {}) {
         };
 
         // Waiting
-        box.waiting = Waiting({
-            animated: 1,
-            coverBackgroundColor: "rgba(0,0,0,0.6)",
-            waitingIcon: box.waitingIcon,
-        });
-        if (box.waitingIconInvert == 1) box.waiting.icon.css.filter = "invert(100%)";
+        createWaiting();
 
         // events:
         box.loginBtn.on("click", box.onLoginClick);
@@ -418,18 +404,20 @@ const LoginPage = function(params = {}) {
     box.remove = function () {
 
         // NOTE: box is not set to null. WHY: The page's login code (onLoginClick) may remove it when the login
-        //       is done, and still call box.waiting.hide() after that.
+        //       is done, and still call box.waiting.hide() after that (box.waiting checks box._isRemoved).
         if (box._isRemoved) return; // WHY: remove() can be called twice (also by the parent's remove()).
         clearTimeout(box.alertBox.timer);
-        // WHY: Waiting is always created on the page (page.add), not in the box.
-        box.waiting.remove();
+        // NOTE: The LoadingScreen of box.waiting is inside the box: basic.js removes it with the box.
 
         superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
 
     };
 
     // Helpers
+    // Shows the LOGIN (0) or the SIGN UP (1) view. The tab bar follows it.
     box.setActiveTab = function(index) {
+
+        box.tabBar.setValue(TAB_KEYS[index], 1); // silent: a click on the bar is already here
 
         if (index === 0) {
             box.viewGroup.left = 0;
@@ -479,8 +467,80 @@ const LoginPage = function(params = {}) {
 
     };
 
+    // The LOGIN / SIGN UP bar: a pill Tabs in the colors of the tab_ params.
+    const createTabBar = function() {
+
+        // WHY: the edge of the bar is drawn inside its padding (as the old bar did), so the bar is not bigger with it.
+        const barPadding = Math.max(0, TAB_BAR_PADDING - basic.num(box.tab_border));
+
+        box.tabBar = Tabs({
+            variant: "pill",
+            tabs: [
+                { key: TAB_KEYS[0], text: "LOGIN" },
+                { key: TAB_KEYS[1], text: "SIGN UP" },
+            ],
+            value: TAB_KEYS[0],
+            showArrows: 0,
+            ariaLabel: "Login or sign up",
+            style: {
+                pillBar: {
+                    color: box.tab_backgroundColorBottom,
+                    padding: [barPadding, barPadding],
+                    gap: 3,
+                    round: 8,
+                    border: box.tab_border,
+                    borderColor: box.tab_borderColor,
+                },
+                tab: { fontSize: 14, textColor: box.tab_textColor, padding: [12, 4], round: 6, minHeight: 0 },
+                tabHover: { color: "transparent", textColor: box.tab_textColor },
+                pillActive: { textColor: box.tab_textColor },
+                pillIndicator: { color: box.tab_selectedColor, round: 6, shadow: "none", motion: TAB_MOTION },
+            },
+            onChange: function(self) {
+                box.setActiveTab(self.getIndex());
+            },
+        });
+
+        // WHY: Tabs has one bar color; this bar is a gradient from the bottom color (at the top) to the top color.
+        const gradient = `linear-gradient(to bottom, ${box.tab_backgroundColorBottom}, ${box.tab_backgroundColorTop})`;
+        box.tabBar.strip.css.background = gradient;
+
+    };
+
+    // The waiting cover of the login and sign up jobs: a LoadingScreen with the moving clock.
+    // WHY a wrapper: the pages call box.waiting.show() / hide(); LoadingScreen opens with open() / close()
+    //     (its show() / hide() are the basic.js ones, they only change "visible").
+    const createWaiting = function() {
+
+        const loadingScreen = LoadingScreen({
+            opened: 0,
+            minDuration: 0,
+            fadeDuration: WAITING_FADE_TIME,
+            style: {
+                box: { color: box.waitingCoverColor },
+                clock: LoadingScreen.clocks[box.waitingClock] || LoadingScreen.clocks.ozden,
+            },
+        });
+
+        box.waiting = {
+            screen: loadingScreen,
+            show: function() {
+                if (box._isRemoved) return;
+                loadingScreen.open();
+            },
+            hide: function() {
+                if (box._isRemoved) return;
+                loadingScreen.close();
+            },
+        };
+
+    };
+
     // Style
     const styleInput = function(obj) {
+
+        // WHY: an InputB package gives the whole look of the field (its round, border and text color).
+        if (box.inputStyleName) return;
 
         obj.background.round = 4;
         obj.background.border = box.input_border;

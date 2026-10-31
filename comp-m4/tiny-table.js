@@ -5,7 +5,7 @@
 Tiny Table - v26.10
 
 A light table for short lists: a colored title row, one line rows (a long text ends with "..."), a soft color under
-the mouse. The new version of comp-m1/tiny-table.js with the same look. (comp-m2/tiny-table.js and
+the mouse. The new version of comp-m1/tiny-table.js with the same look. (comp-m4/tiny-table.js and
 comp-m1/tiny-table.js have the same global name TinyTable: a page loads only one of them.)
 - columns: [{ title, width, align }]; rows: [["1", "404", "Not found"], ...]. The texts are plain text;
   allowHtml: 1 lets them be HTML (Ex: <b>bold</b>), only for texts of your own code, never for user input.

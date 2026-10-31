@@ -16,12 +16,12 @@
 
         <!-- COMPONENTS -->
         <script src="../../../comp-m2/tiny-select.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m2/tiny-table.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m4/tiny-table.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m2/toggle.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m2/slider.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m2/dialog.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m2/waiting.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m4/smart-button.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m4/loading-screen.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m4/dialog.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m3/check-box.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m3/radio-button.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m3/hold-to-confirm-button.js" type="text/javascript" charset="utf-8"></script>
@@ -180,13 +180,8 @@
 
             endBox();
 
-            // WAITING: Restart, firmware update, connection
-            waiting = Waiting({
-                animated: 1,
-                coverBackgroundColor: "rgba(0, 0, 0, 0.6)",
-                waitingIcon: LIB_PATH + "comp-m2/waiting/clock3.png",
-            });
-            waiting.icon.elem.style.filter = T.iconFilter;
+            // WAITING: Restart, firmware update, connection (comp-m4 LoadingScreen, common/theme.js)
+            waiting = Theme.createWaiting();
 
             // WHY: Bar count was calculated with the default width (before flex).
             kpiBoxList.forEach(function (kpiBox) { kpiBox.refresh(); });
@@ -331,14 +326,14 @@
             addEvent(d, "Warning", reason);
             renderAll();
 
-            waiting.setLabel("Restarting " + d.name + "...");
-            waiting.show();
+            waiting.setMessage("Restarting " + d.name + "...");
+            waiting.open();
 
             setTimeout(function () {
                 d.restarting = 0;
                 d.uptime = 0;
                 addEvent(d, "Success", "Device is online again");
-                waiting.hide();
+                waiting.close();
                 renderAll();
             }, 3000);
 
@@ -347,11 +342,11 @@
         // Test: Connection always fails for offline devices.
         const reconnectDevice = function (d) {
 
-            waiting.setLabel("Connecting to " + d.name + " (" + d.ip + ")...");
-            waiting.show();
+            waiting.setMessage("Connecting to " + d.name + " (" + d.ip + ")...");
+            waiting.open();
 
             setTimeout(function () {
-                waiting.hide();
+                waiting.close();
                 if (d.online) {
                     addEvent(d, "Info", "Device data refreshed");
                 } else {
@@ -365,13 +360,13 @@
 
             if (!d.online || d.firmware == LATEST_FIRMWARE) return;
 
-            waiting.setLabel("Installing firmware " + LATEST_FIRMWARE + "...");
-            waiting.show();
+            waiting.setMessage("Installing firmware " + LATEST_FIRMWARE + "...");
+            waiting.open();
 
             setTimeout(function () {
                 addEvent(d, "Success", "Firmware updated: " + d.firmware + " → " + LATEST_FIRMWARE);
                 d.firmware = LATEST_FIRMWARE;
-                waiting.hide();
+                waiting.close();
                 restartDevice(d, "Restarting after the firmware update");
             }, 2500);
 
@@ -1188,28 +1183,17 @@
             setDefaultContainerBox(grpEventTable);
 
                 eventTable = TinyTable({
-                    columnHeaders: ["TIME", "LEVEL", "MESSAGE"],
-                    columnWidths: ["15%", "14%", "70%"], // 99%: 1px gaps between cells
-                    dataRows: device.events.slice(0, 10).map(function (e) { return [e.time, e.level, e.message]; }),
-                    headerBackgroundColor: FIELD_COLOR,
-                    headerTextColor: Ink(0.6),
-                    headerBorderColor: FIELD_COLOR,
-                    headerFontSize: 12,
-                    borderWidth: 1,
-                    borderRadius: 8,
-                    borderColor: CARD_BORDER_COLOR,
-                    bodyBackgroundColor: CARD_COLOR,
-                    cellFontSize: 14,
-                    cellTextColor: Ink(0.8),
-                    rowHoverBackgroundColor: Ink(0.05),
-                    rowHoverBorderColor: Ink(0.1),
-                    onCellRender: function (cell) {
-                        if (cell.index == 0) cell.textColor = Ink(0.5);
-                        if (cell.index == 1) cell.textColor = LEVEL_COLORS[cell.text] || Ink(0.8);
+                    columns: Theme.tableColumns(["TIME", "LEVEL", "MESSAGE"], ["15%", "14%", "70%"]),
+                    rows: device.events.slice(0, 10).map(function (e) { return [e.time, e.level, e.message]; }),
+                    allowHtml: 1, // (the texts are made by the panel, user texts are escaped)
+                    style: Theme.tableStyle({ headerColor: FIELD_COLOR, bodyColor: CARD_COLOR, borderColor: CARD_BORDER_COLOR }),
+                    onCellCreate: function (cell) {
+                        if (cell.columnIndex == 0) cell.label.textColor = Ink(0.5);
+                        if (cell.columnIndex == 1) cell.label.textColor = LEVEL_COLORS[cell.value] || Ink(0.8);
                     },
                 });
                 // Fill the card. (Scrolls under the min width.)
-                eventTable.width = "100%";
+                Theme.fillTableWidth(eventTable);
                 eventTable.elem.style.minWidth = "560px";
 
             setDefaultContainerBox(previous);
@@ -1240,13 +1224,11 @@
 
                 case "reset": {
                     const d = device;
-                    Dialog({
-                        icon: ASSETS + "warning.png",
-                        title: "Factory Reset",
-                        desc: "All settings of <b>" + d.name + "</b> will be deleted and the device will restart.",
-                        confirmButtonText: "Reset Device",
-                        confirmButtonColor: ERROR_COLOR,
-                        callback: function (isConfirmed) {
+                    Theme.confirm({
+                        titleText: "Factory Reset",
+                        messageText: "All settings of <b>" + d.name + "</b> will be deleted and the device will restart.",
+                        confirmText: "Reset Device",
+                        onAnswer: function (isConfirmed) {
                             if (isConfirmed) factoryReset(d);
                         },
                     });

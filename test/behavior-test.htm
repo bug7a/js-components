@@ -12,7 +12,7 @@
         <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
         <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
 
-        <!-- COMPONENTS (comp-m4/dialog.js: not with comp-m2/dialog.js, both define Dialog) -->
+        <!-- COMPONENTS (comp-m4/dialog.js: not with comp-m4/dialog.js, both define Dialog) -->
         <script src="../comp-m2/tooltip.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp-m2/input-b.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp-m2/search-input-v2.js" type="text/javascript" charset="utf-8"></script>
@@ -21,19 +21,18 @@
         <script src="../comp-m2/phone-input-b.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp-m2/tiny-select.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp-m2/url-input-b.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp-m2/waiting.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp-m2/form.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp-m2/text-tabs.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m4/tabs.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m4/smart-button.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m4/loading-screen.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp-m4/ui-effects.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp-m2/login-page-v2.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp-m2/slider.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp-m3/check-box.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp-m3/hold-to-confirm-button.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp-m4/smart-button.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp-m3/smart-table.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp-m4/dialog.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp-m4/notice.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp-m4/modal.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp-m4/toast.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp-m4/action-button.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp-m4/search-results.js" type="text/javascript" charset="utf-8"></script>
@@ -125,6 +124,26 @@
             dialog.remove();
         });
 
+        test("Dialog.prompt and Dialog.alert use the style they are given", async function () {
+            const CARD_COLOR = "rgb(35, 35, 34)";
+            const style = { card: { color: CARD_COLOR } };
+            const promptPromise = Dialog.prompt({ titleText: "Name", style: style });
+            await wait(30);
+            const promptCard = Dialog.stack[Dialog.stack.length - 1].card;
+            const promptOk = getComputedStyle(promptCard.elem).backgroundColor === CARD_COLOR;
+            findByText("Cancel").click();
+            await promptPromise;
+            await wait(300);
+            const alertPromise = Dialog.alert({ titleText: "Done", style: style });
+            await wait(30);
+            const alertCard = Dialog.stack[Dialog.stack.length - 1].card;
+            const alertOk = getComputedStyle(alertCard.elem).backgroundColor === CARD_COLOR;
+            findByText("OK").click();
+            await alertPromise;
+            await wait(300);
+            check("Dialog.prompt and Dialog.alert use the style they are given", promptOk && alertOk, "prompt " + promptOk + ", alert " + alertOk);
+        });
+
         // *** TOOLTIP (comp-m2/tooltip.js)
 
         test("Tooltip: the color of look stays while the mouse moves", async function () {
@@ -152,29 +171,6 @@
             key(document.activeElement || document.body, "keydown", "Escape");
             check("Notice over a Dialog: it is on top, Escape closes only the notice", isOnTop && !Notice.current && dialog.isOpen());
             dialog.remove();
-        });
-
-        // *** MODAL (comp-m4/modal.js)
-
-        test("Modal: a double click on Confirm runs onConfirm once", async function () {
-            let count = 0;
-            Modal.confirm({ onConfirm: function () { count++; } });
-            await wait(30);
-            const button = findByText("Confirm");
-            button.click();
-            button.click();
-            await wait(300);
-            check("Modal: a double click on Confirm runs onConfirm once", count === 1, "onConfirm ran " + count + " times");
-        });
-
-        test("Modal.confirm: Promise(false), then Cancel gives false", async function () {
-            const promise = Modal.confirm({ onConfirm: function () { return Promise.resolve(false); } });
-            await wait(30);
-            findByText("Confirm").click();
-            await wait(30);
-            findByText("Cancel").click();
-            check("Modal.confirm: Promise(false), then Cancel gives false", (await promise) === false);
-            await wait(300);
         });
 
         // *** TOAST (comp-m4/toast.js)
@@ -401,17 +397,17 @@
             login.remove();
         });
 
-        // *** WAITING (comp-m2/waiting.js)
+        // *** LOADING SCREEN (comp-m4/loading-screen.js; it took the place of comp-m2/waiting.js, 2026-10-31)
 
-        test("Waiting: show() right after hide() stays", async function () {
-            const waiting = Waiting();
-            waiting.show();
+        test("LoadingScreen: open() right after close() stays", async function () {
+            const loading = LoadingScreen({ opened: 0, minDuration: 0, fadeDuration: 0.2 });
+            loading.open();
             await wait(50);
-            waiting.hide();
-            waiting.show();
+            loading.close();
+            loading.open();
             await wait(600);
-            check("Waiting: show() right after hide() stays", waiting.visible == 1);
-            waiting.remove();
+            check("LoadingScreen: open() right after close() stays", loading.visible == 1 && loading.opacity == 1);
+            loading.remove();
         });
 
         // *** SLIDER (comp-m2/slider.js)

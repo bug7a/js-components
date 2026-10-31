@@ -14,13 +14,13 @@ Products Page (Template) - v26.09
 
 COMPONENTS:
 - MiniGraphBox (comp-m4): Summary (bars: one value per category, not a time series)
-- TextTabs, SearchInput, TinySelect (comp-m2): Filters
+- Tabs (comp-m4), SearchInput, TinySelect (comp-m2): Filters
 - SmartTable (comp-m3): Product list (custom thumbnail cell)
 - InputB, NumberInputB (comp-m2): Editor fields
 - RadioButton, CheckBox (comp-m3): Status, stock settings
 - SelectFile (comp-m4): Images
 - SmartButton (comp-m4), HoldToConfirmButton (comp-m3): Actions
-- Waiting (comp-m2): Saving
+- LoadingScreen (comp-m4; waiting): Saving
 
 */
 
@@ -87,8 +87,7 @@ const ProductsPage = function(params = {}) {
 
         STATUS_TABS.forEach(function(status, index) {
             const count = (status) ? list.filter(function(product) { return product.status == status; }).length : list.length;
-            const label = (status) ? ProductsPage.STATUSES[status].label : "All";
-            statusTabs.tabItemList[index].text = label + " <span style='opacity:0.55'>" + count + "</span>";
+            statusTabs.setCount(index, count);
         });
 
         const shown = (filter.status) ? list.filter(function(product) { return product.status == filter.status; }) : list;
@@ -312,17 +311,15 @@ const ProductsPage = function(params = {}) {
             HGroup({ width: "100%", height: "auto", align: "left center", gap: 10 });
             that.elem.style.flexWrap = "wrap";
 
-                statusTabs = TextTabs({
-                    tabHeight: 40, // The same height as the buttons / inputs next to it
-                    tabList: STATUS_TABS.map(function(status) { return (status) ? ProductsPage.STATUSES[status].label : "All"; }),
-                    onClick: function(self) {
-                        filter.status = STATUS_TABS[self.index];
+                statusTabs = Tabs({
+                    variant: "pill",
+                    styleName: T.compStyle,
+                    tabs: Theme.indexTabs(STATUS_TABS.map(function(status) { return (status) ? ProductsPage.STATUSES[status].label : "All"; })), // (the key of a tab is its index: self.value)
+                    onChange: function(self) {
+                        filter.status = STATUS_TABS[self.value];
                         render();
                     },
-                    backgroundStyle: { colorBottom: S.FIELD_COLOR, colorTop: S.FIELD_COLOR, round: 8, border: 1, borderColor: S.CARD_BORDER_COLOR },
-                    tabPadding: [3, 3],
-                    labelStyle: { fontSize: 14, textColor: Ink(0.85), padding: [12, 6] },
-                    selectedStyle: { color: S.PRIMARY_COLOR, round: 6 },
+                    style: Theme.tabsStyle({ height: 40, barColor: S.FIELD_COLOR, borderColor: S.CARD_BORDER_COLOR, padding: [12, 6], activeColor: S.PRIMARY_COLOR }),
                 });
 
                 SearchInput({
@@ -528,7 +525,7 @@ const ProductEditor = function(params = {}) {
         if (error) return;
 
         btnSave.elem.inert = true;
-        if (typeof waiting !== "undefined") waiting.show();
+        if (typeof waiting !== "undefined") waiting.open();
 
         saveTimer = setTimeout(function() {
 
@@ -546,7 +543,7 @@ const ProductEditor = function(params = {}) {
                 Object.assign(product, draft);
             }
 
-            if (typeof waiting !== "undefined") waiting.hide();
+            if (typeof waiting !== "undefined") waiting.close();
 
             box.onChange();
             rightView.hide();

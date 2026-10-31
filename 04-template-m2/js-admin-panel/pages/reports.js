@@ -10,7 +10,7 @@ Reports Page (Sales Report Template) - v26.09
 - Replace ReportsPage.getTestData() and buildReport() with your service (Supabase, SQL view, API...) calls.
 
 COMPONENTS:
-- TextTabs (comp-m2): Quick date ranges
+- Tabs (comp-m4): Quick date ranges
 - SelectDate (comp-m4): Date range
 - TinySelect (comp-m2): Region and group by
 - CheckBox (comp-m3): Compare with the previous period
@@ -339,11 +339,10 @@ const ReportsPage = function(params = {}) {
 
     // Dates are changed by hand: no quick range is selected.
     const clearQuickRange = function() {
-        const index = quickTabs.selectedIndex;
-        if (index < 0) return;
-        quickTabs.tabItemList[index].clickable = 1;
-        quickTabs.selectedIndex = -1;
-        quickTabs.selectedLabelBack.opacity = 0;
+        if (quickTabs.value === null) return;
+        // WHY: Tabs always has an active tab; with no value it shows none (and every tab can be clicked).
+        quickTabs.value = null;
+        quickTabs.refresh();
     };
 
     const downloadTableAsCSV = function() {
@@ -611,29 +610,14 @@ const ReportsPage = function(params = {}) {
 
                 startField("Range");
 
-                    quickTabs = TextTabs({
-                        tabHeight: 40, // The same height as the buttons / inputs next to it
-                        tabList: QUICK_RANGES.map(function(range) { return range.text; }),
-                        onClick: function(self) {
-                            selectQuickRange(self.index);
+                    quickTabs = Tabs({
+                        variant: "pill",
+                        styleName: T.compStyle,
+                        tabs: Theme.indexTabs(QUICK_RANGES.map(function(range) { return range.text; })), // (the key of a tab is its index: self.value)
+                        onChange: function(self) {
+                            selectQuickRange(self.value);
                         },
-                        backgroundStyle: {
-                            colorBottom: FIELD_COLOR,
-                            colorTop: FIELD_COLOR,
-                            round: 8,
-                            border: 1,
-                            borderColor: CARD_BORDER_COLOR,
-                        },
-                        tabPadding: [3, 3],
-                        labelStyle: {
-                            fontSize: 14,
-                            textColor: Ink(0.85),
-                            padding: [12, 6],
-                        },
-                        selectedStyle: {
-                            color: PRIMARY_COLOR,
-                            round: 6,
-                        },
+                        style: Theme.tabsStyle({ height: 40, barColor: FIELD_COLOR, borderColor: CARD_BORDER_COLOR, padding: [12, 6], activeColor: PRIMARY_COLOR }),
                     });
 
                 endField();
@@ -1055,7 +1039,7 @@ const ReportsPage = function(params = {}) {
 
     isReady = 1;
 
-    quickTabs.selectByIndex(DEFAULT_RANGE_INDEX);
+    quickTabs.setValue(DEFAULT_RANGE_INDEX, 1);
     selectQuickRange(DEFAULT_RANGE_INDEX);
 
     // WHY: The first report is not waited for (scheduleReport() runs it 50 ms later). The subtitle under

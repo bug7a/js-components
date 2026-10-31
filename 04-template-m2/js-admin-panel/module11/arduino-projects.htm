@@ -16,11 +16,11 @@
 
         <!-- COMPONENTS -->
         <script src="../../../comp-m2/tiny-select.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m2/tiny-table.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m4/tiny-table.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m2/toggle.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m2/slider.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m2/dialog.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m4/smart-button.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m4/dialog.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m3/radio-button.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m3/hold-to-confirm-button.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m4/progress-bar.js" type="text/javascript" charset="utf-8"></script>
@@ -1046,7 +1046,7 @@
         };
 
         // A place for a table. The table itself is made again on every render.
-        // WHY: TinyTable has no setter for its rows; the panel modules remove it and create it again.
+        // NOTE: Like the other panel modules, the table is removed and made again. (comp-m4 TinyTable also has setRows().)
         const createTableHost = function (headers, widths, minWidth) {
             const host = VGroup({ width: "100%", height: "auto", align: "left top", gap: 0, color: "transparent", scrollX: 1 });
             endGroup();
@@ -1063,25 +1063,14 @@
 
             createIn(host, function () {
                 host.table = TinyTable({
-                    columnHeaders: host.tableHeaders,
-                    columnWidths: host.tableWidths,
-                    dataRows: rows,
-                    headerBackgroundColor: FIELD_COLOR,
-                    headerTextColor: Ink(0.6),
-                    headerBorderColor: FIELD_COLOR,
-                    headerFontSize: 12,
-                    borderWidth: 1,
-                    borderRadius: 8,
-                    borderColor: CARD_BORDER_COLOR,
-                    bodyBackgroundColor: CARD_COLOR,
-                    cellFontSize: 14,
-                    cellTextColor: Ink(0.8),
-                    rowHoverBackgroundColor: Ink(0.05),
-                    rowHoverBorderColor: Ink(0.1),
+                    columns: Theme.tableColumns(host.tableHeaders, host.tableWidths),
+                    rows: rows,
+                    allowHtml: 1, // (the texts are made by the panel, user texts are escaped)
+                    style: Theme.tableStyle({ headerColor: FIELD_COLOR, bodyColor: CARD_COLOR, borderColor: CARD_BORDER_COLOR }),
                 });
             });
 
-            host.table.width = "100%";
+            Theme.fillTableWidth(host.table);
             if (host.tableMinWidth) host.table.elem.style.minWidth = host.tableMinWidth + "px";
 
         };

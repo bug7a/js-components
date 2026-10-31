@@ -18,13 +18,13 @@ Contents Page (Template) - v26.09
   Replace the "CONTENT SERVICE" functions with your service.
 
 COMPONENTS:
-- TextTabs, SearchInput, TinySelect (comp-m2): Filters
+- Tabs (comp-m4), SearchInput, TinySelect (comp-m2): Filters
 - SmartTable (comp-m3): Content list
 - InputB (comp-m2): Editor fields
 - RadioButton, CheckBox (comp-m3): Status, options
 - SelectDate, SelectTime (comp-m4): Schedule
 - SmartButton (comp-m4), HoldToConfirmButton (comp-m3): Actions
-- Dialog, Waiting (comp-m2): Confirm, saving
+- Dialog, LoadingScreen (comp-m4; Theme.confirm, waiting): Confirm, saving
 
 */
 
@@ -83,8 +83,7 @@ const ContentsPage = function(params = {}) {
 
         TYPE_TABS.forEach(function(type, index) {
             const count = (type) ? list.filter(function(content) { return content.type == type; }).length : list.length;
-            const label = (type) ? TYPES[type].plural : "All";
-            typeTabs.tabItemList[index].text = label + " <span style='opacity:0.55'>" + count + "</span>";
+            typeTabs.setCount(index, count);
         });
 
         const shown = (filter.type) ? list.filter(function(content) { return content.type == filter.type; }) : list;
@@ -265,17 +264,15 @@ const ContentsPage = function(params = {}) {
             HGroup({ width: "100%", height: "auto", align: "left center", gap: 10 });
             that.elem.style.flexWrap = "wrap";
 
-                typeTabs = TextTabs({
-                    tabHeight: 40, // The same height as the buttons / inputs next to it
-                    tabList: TYPE_TABS.map(function(type) { return (type) ? TYPES[type].plural : "All"; }),
-                    onClick: function(self) {
-                        filter.type = TYPE_TABS[self.index];
+                typeTabs = Tabs({
+                    variant: "pill",
+                    styleName: T.compStyle,
+                    tabs: Theme.indexTabs(TYPE_TABS.map(function(type) { return (type) ? TYPES[type].plural : "All"; })), // (the key of a tab is its index: self.value)
+                    onChange: function(self) {
+                        filter.type = TYPE_TABS[self.value];
                         render();
                     },
-                    backgroundStyle: { colorBottom: S.FIELD_COLOR, colorTop: S.FIELD_COLOR, round: 8, border: 1, borderColor: S.CARD_BORDER_COLOR },
-                    tabPadding: [3, 3],
-                    labelStyle: { fontSize: 14, textColor: Ink(0.85), padding: [12, 6] },
-                    selectedStyle: { color: S.PRIMARY_COLOR, round: 6 },
+                    style: Theme.tabsStyle({ height: 40, barColor: S.FIELD_COLOR, borderColor: S.CARD_BORDER_COLOR, padding: [12, 6], activeColor: S.PRIMARY_COLOR }),
                 });
 
                 SearchInput({
@@ -466,7 +463,7 @@ const ContentEditor = function(params = {}) {
         if (error) return;
 
         btnSave.elem.inert = true;
-        if (typeof waiting !== "undefined") waiting.show();
+        if (typeof waiting !== "undefined") waiting.open();
 
         saveTimer = setTimeout(function() {
 
@@ -482,7 +479,7 @@ const ContentEditor = function(params = {}) {
                 Object.assign(content, draft);
             }
 
-            if (typeof waiting !== "undefined") waiting.hide();
+            if (typeof waiting !== "undefined") waiting.close();
 
             box.onChange();
             rightView.hide();
@@ -524,14 +521,12 @@ const ContentEditor = function(params = {}) {
             rightView.clean();
             return;
         }
-        Dialog({
-            icon: "assets/warning.png",
-            title: "Unsaved Changes",
-            desc: "Your changes to <b>" + escape(draft.title || "this content") + "</b> will be lost.",
-            confirmButtonText: "Discard",
-            cancelButtonText: "Keep Editing",
-            confirmButtonColor: S.ERROR_COLOR,
-            callback: function(isConfirmed) {
+        Theme.confirm({
+            titleText: "Unsaved Changes",
+            messageText: "Your changes to <b>" + escape(draft.title || "this content") + "</b> will be lost.",
+            confirmText: "Discard",
+            cancelText: "Keep Editing",
+            onAnswer: function(isConfirmed) {
                 if (!isConfirmed || !box) return;
                 rightView.hide();
                 rightView.clean();

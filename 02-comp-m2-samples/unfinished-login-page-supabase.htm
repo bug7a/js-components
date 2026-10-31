@@ -17,15 +17,20 @@
         <script src="../comp-m2/input-b.js" charset="utf-8" defer></script>
         <script src="../comp-m2/email-input-b.js" charset="utf-8" defer></script>
         <script src="../comp-m2/password-input-b.js" charset="utf-8" defer></script>
-        <script src="../comp-m2/waiting.js" charset="utf-8" defer></script>
-        <script src="../comp-m2/text-tabs.js" type="text/javascript" charset="utf-8" defer></script>
-        <script src="../comp-m2/login-page.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../comp-m4/tabs.js" charset="utf-8" defer></script>
+        <script src="../comp-m4/smart-button.js" charset="utf-8" defer></script>
+        <script src="../comp-m4/loading-screen.js" charset="utf-8" defer></script>
+        <script src="../comp-m2/login-page-v2.js" type="text/javascript" charset="utf-8" defer></script>
 
         <script type="module">
 
         // Supabase constants
         const SUPABASE_PROJECT_URL = "https://xhzzgxhjyoqcsftamtyz.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhoenpneGhqeW9xY3NmdGFtdHl6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUzMTg2MDAsImV4cCI6MjA2MDg5NDYwMH0.XptujcYMNgl9XIzIQ2_CUig9JzkYOCKONfYAmMPd_wc";
+
+        // The logos of the login buttons
+        const GOOGLE_LOGO = "https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg";
+        const APPLE_LOGO = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSRsP-EH-Fc-gjQMFgxj4g1pkFGVCK8Y2deHA&s";
 
         // First running function.
         window.onload = async function() {
@@ -39,38 +44,29 @@
 
             if (!userData) {
 
-                // Show Login Page
-                LoginPage({
-                    supabase: supabase,
+                // Show Login Page (the Supabase work is in onLoginClick / onSignupClick below)
+                window.loginPage = LoginPage({
                     panelWidth: 420,
-                    primaryColor: "#2C5A38",
                     panelName: "MY PANEL v25.08.11",
-                    //autoFit: 1, // add page.fit() function onResize
-                    primaryColor: "#65A293", // "#2C5A38", "#65A293"
-                    tab_backgroundColorBottom: "whitesmoke", // "#242424", "whitesmoke"
-                    tab_backgroundColorTop: "#DBDDDC", // "#242424", "#DBDDDC",
-                    tab_border: 0, // 1, 0
-                    tab_borderColor: Black(0), // White(0.1), Black(0.2),
-                    tab_textColor: "#373836", // White(0.75), "#373836",
-                    tab_selectedColor: "white", // "#000000", "white",
-                    input_backgroundColor: "#F6F6F6", // "#141414", "#F6F6F6",
-                    input_lineColor: "transparent",
-                    input_selectedBackgroundColor: "#F3F4E0", // "#202020", "#F3F4E0",
-                    // waiting_invertIconColor: 1,
-                    input_textColor: Black(0.85), // Black(0.85), White(0.85)
-                    input_border: 1, // 1, 0
-                    input_borderColor: Black(0.1), // White(0.1), Black(0.1)
-                    onSuccess: function() {
-                        // If loggedIn then
-                        window.location.reload();
-                    },
+                    showPasswordIconFile: "../comp-m2/password-input-b/show-btn.png",
+                    hidePasswordIconFile: "../comp-m2/password-input-b/hide-btn.png",
+                    onLoginClick: onLoginClick,
+                    onSignupClick: onSignupClick,
+                    ...LoginPageLightStyle,
+                });
+
+                loginPage.createButtonWithIcon("Sign in with Google", GOOGLE_LOGO, function() {
+                    loginWithProvider("google");
+                });
+                loginPage.createButtonWithIcon("Sign in with Apple", APPLE_LOGO, function() {
+                    loginWithProvider("apple");
                 });
 
                 // TEST DATA: Fill the user data
-                that.loginEmail.setInputValue("bugra.ozden@gmail.com");
-                that.loginPassword.setInputValue("123456");
+                loginPage.loginEmail.setInputValue("bugra.ozden@gmail.com");
+                loginPage.loginPassword.setInputValue("123456");
                 // Call manuel to check form with out edit
-                that.loginEmail.onEdit();
+                loginPage.loginEmail.onEdit();
 
             } else {
 
@@ -138,6 +134,82 @@
 
             await supabase.auth.signOut();
             window.location.reload();
+
+        };
+
+        // Actions (the login page shows the waiting cover and the alerts)
+        const onLoginClick = async function() {
+
+            const email = loginPage.loginEmail.getInputValue();
+            const password = loginPage.loginPassword.getInputValue();
+
+            if (!email || !password) {
+                loginPage.showAlert("Please enter email and password");
+                return;
+            }
+
+            loginPage.waiting.show();
+
+            try {
+                const { error } = await supabase.auth.signInWithPassword({ email, password });
+                if (error) {
+                    loginPage.showAlert("Login failed: " + error.message);
+                } else {
+                    window.location.reload(); // Logged in
+                }
+            } catch (e) {
+                loginPage.showAlert("Login error");
+            } finally {
+                loginPage.waiting.hide();
+            }
+
+        };
+
+        const onSignupClick = async function() {
+
+            const email = loginPage.signupEmail.getInputValue();
+            const p1 = loginPage.signupPassword.getInputValue();
+            const p2 = loginPage.signupPassword2.getInputValue();
+
+            if (!email || !p1 || !p2) {
+                loginPage.showAlert("Please fill all fields");
+                return;
+            }
+            if (p1 !== p2) {
+                loginPage.showAlert("Passwords do not match");
+                return;
+            }
+
+            loginPage.waiting.show();
+
+            try {
+                const { error } = await supabase.auth.signUp({ email, password: p1 });
+                if (error) {
+                    loginPage.showAlert("Sign up failed: " + error.message);
+                } else {
+                    loginPage.showAlert("Sign up successful. Check your email to confirm.", "#5DB182");
+                    loginPage.signupPassword.setInputValue("");
+                    loginPage.signupPassword2.setInputValue("");
+                    loginPage.loginEmail.setInputValue(email);
+                    loginPage.setActiveTab(0);
+                }
+            } catch (e) {
+                loginPage.showAlert("Sign up error");
+            } finally {
+                loginPage.waiting.hide();
+            }
+
+        };
+
+        // provider: "google", "apple"
+        const loginWithProvider = async function(provider) {
+
+            await supabase.auth.signInWithOAuth({
+                provider: provider,
+                options: {
+                    redirectTo: `http://example.com/auth/callback`,
+                },
+            });
 
         };
 

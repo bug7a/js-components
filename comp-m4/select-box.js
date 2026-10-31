@@ -157,7 +157,7 @@ const SelectBoxDefaults = {
             startScale: 0.9,
         },
         // The search box when it is a SearchInput: its params (a styleName of SearchInput.styles and its look params).
-        // An icon file without a folder ("search.svg") is taken from the folder of comp-m2/search-input-v2.js.
+        // An icon file without a folder ("search.svg") is taken from the folder of comp/search-input-v2.js.
         searchInput: {
             styleName: "classic",
             height: 38,
@@ -1449,7 +1449,7 @@ const SelectBox = function (params = {}) {
 
 SelectBox._counter = 1;
 
-// createItemView needs comp-m4/item-list.js. Without it: one warning, and the normal rows.
+// createItemView needs comp/item-list.js. Without it: one warning, and the normal rows.
 SelectBox.canUseItemList = function () {
     if (typeof ItemList !== "undefined") return true;
     if (!SelectBox._hasWarnedItemList) {
@@ -1466,7 +1466,7 @@ SelectBox.canUseSearchInput = function () {
 };
 
 // An icon file of style.searchInput: a name without a folder ("search.svg") is taken from the folder of the
-// loaded comp-m2/search-input-v2.js. WHY: SearchInput gives paths from a page in a samples folder ("../comp-m2/");
+// loaded comp/search-input-v2.js. WHY: SearchInput gives paths from a page in a samples folder ("../comp/");
 // a page of another folder did not find them. A path ("../my/search.svg") or a data: URL is used as it is.
 SelectBox.getSearchIconFile = function (file) {
     if (!file || file.includes("/")) return file;

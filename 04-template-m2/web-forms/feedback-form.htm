@@ -20,7 +20,8 @@
         <script src="../../comp-m2/email-input-b.js" type="text/javascript" charset="utf-8" defer></script>
         <script src="../../comp-m2/textarea-b.js" type="text/javascript" charset="utf-8" defer></script>
 
-        <script src="../../comp-m2/waiting.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m4/smart-button.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m4/loading-screen.js" type="text/javascript" charset="utf-8" defer></script>
         <script src="../../comp-m2/form.js" type="text/javascript" charset="utf-8" defer></script>
 
         <script src="../../comp-m3/check-box.js" type="text/javascript" charset="utf-8" defer></script>
@@ -35,9 +36,9 @@
         /* Bismillah */
 
         - A customer feedback (satisfaction survey) form.
-        - InputB, EmailInputB, TextareaB, Form, Waiting (comp-m2)
+        - InputB, EmailInputB, TextareaB, Form (comp-m2)
         - CheckBox, RadioButton (comp-m3)
-        - SelectFile (comp-m4)
+        - SelectFile, SmartButton, LoadingScreen (comp-m4)
 
         - Star rating (1-5) and NPS score (0-10) are drawn with labels in an InputB field.
           They work with the keyboard too (Tab, arrow keys).
@@ -413,13 +414,18 @@
             form.addDoubleInput(nameInput, emailInput);
             contactGroup = form.groupList[form.groupList.length - 1];
 
-            // WAITING: Create object 1 time.
-            waiting = Waiting({
-                animated: 1,
-                waitingIcon: "assets/mail.png",
-                coverBackgroundColor: "rgba(0, 0, 0, 0.85)",
+            // WAITING: Create object 1 time. A cover on the page while the form is sent: the moving clock.
+            //          (LoadingScreen: open() / close())
+            waiting = createIn(page, function() {
+                return LoadingScreen({
+                    opened: 0,
+                    minDuration: 0,
+                    fadeDuration: 0.2,
+                    style: {
+                        box: { color: "rgba(0, 0, 0, 0.85)" },
+                    },
+                });
             });
-            waiting.icon.elem.style.filter = "invert(100%)";
 
             updateQuestions();
 
@@ -717,7 +723,7 @@
 
             const nps = Number(npsField.getInputValue());
 
-            waiting.show();
+            waiting.open();
 
             let isSent = false;
 
@@ -740,7 +746,7 @@
                 isSent = false;
             }
 
-            waiting.hide();
+            waiting.close();
 
             if (isSent) {
 

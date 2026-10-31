@@ -24,7 +24,7 @@ UI COMPONENT TEMPLATE
   "modern" keeps its own: 10 px, no edge, round ends).
 - Everything is drawn with code (no image files needed).
 
-NOTE: comp-m3/progress-bar.js (vertical lines style) is named LineProgressBar, so both can be loaded on the same page.
+NOTE: comp-m3/line-progress-bar.js (vertical lines style) is named LineProgressBar, so both can be loaded on the same page.
 
 Started Date: September 2026
 Developer: Bugra Ozden

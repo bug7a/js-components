@@ -814,7 +814,7 @@ DataTable.toAriaSort = function (direction) {
 };
 
 // The icons of the search box next to comp-m2/search-input-v2.js, wherever the page is.
-// WHY: SearchInput gives paths from a page in a samples folder ("../comp-m2/..."); a page of another folder did not
+// WHY: SearchInput gives paths from a page in a samples folder ("../comp/..."); a page of another folder did not
 //      find them. The folder of the loaded script is the same from every page.
 DataTable.getSearchIconFiles = function () {
     const script = document.querySelector('script[src*="search-input-v2"]');

@@ -38,7 +38,7 @@ const CONFIG = {
     // *** FACTS: (Tanıtımdaki sayılar. basic.min.js değişince güncelleyin.)
     // basic/basic.min.js: 39.6 KB, gzip: 11.8 KB (v26.09.18)
     sizeGzip: "12 KB",
-    componentCount: 67,
+    componentCount: 62,
     chapterCount: 16,
     license: "Apache 2.0",
 

@@ -14,7 +14,7 @@ Button, hover and attention effects for basic.js objects (Button, Box, groups, L
 - play(obj, name) plays an animation one time, loop(obj, name) repeats it until stop().
 - press(), hover(), focusGroup() and loop() return a function that removes the effect: off() / stop().
 - button() is the same function as press() and attention() is the same as loop(). They stay for the old code
-  (comp-m2/ui-effects.js had only UIEffects.button(btn)).
+  (comp-m4/ui-effects.js had only UIEffects.button(btn)).
 - Hover effects do not run for touch (no sticky hover on phones). Press effects do.
 - A disabled button (btn.enabled = 0) has no effects.
 - play() and loop() do nothing when the user prefers reduced motion (UIEffects.reduceMotion).
@@ -73,7 +73,7 @@ UIEffects.press = function (obj, type = "default", options = {}) {
     return UIEffects._add(obj, type, options, 1);
 };
 
-// The old name of press() (comp-m2/ui-effects.js). The old code keeps working.
+// The old name of press() (comp-m4/ui-effects.js). The old code keeps working.
 UIEffects.button = UIEffects.press;
 
 // Hover effect only (no press state).

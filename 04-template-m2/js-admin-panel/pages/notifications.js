@@ -14,7 +14,7 @@ Notifications Page (Right View Template) - v26.09
   (polling, SSE, WebSocket or push notifications).
 
 COMPONENTS:
-- TextTabs (comp-m2): Filters
+- Tabs (comp-m4): Filters
 - SmartButton (comp-m4): Actions
 - ContextMenu (comp-m4): Actions of a notification
 
@@ -92,7 +92,7 @@ const NotificationsPage = function(params = {}) {
         lblTitle.text = "Notifications" + ((unread) ? " <span style='font-size:14px; color:" + S.ACCENT_COLOR + "'>" + unread + " new</span>" : "");
         btnMarkAll.elem.inert = (unread == 0);
         btnMarkAll.opacity = (unread) ? 1 : 0.4;
-        tabs.tabItemList[1].text = "Unread" + ((unread) ? " " + unread : "");
+        tabs.setCount(1, (unread) ? unread : "");
 
         const list = getFilteredItems();
 
@@ -282,18 +282,17 @@ const NotificationsPage = function(params = {}) {
 
         endGroup();
 
-        tabs = TextTabs({
-            tabList: TABS.map(function(tab) { return tab.text; }),
-            onClick: function(self) {
-                tabId = TABS[self.index].id;
+        tabs = Tabs({
+            variant: "pill",
+            styleName: T.compStyle,
+            tabs: Theme.indexTabs(TABS.map(function(tab) { return tab.text; })), // (the key of a tab is its index: self.value)
+            onChange: function(self) {
+                tabId = TABS[self.value].id;
                 shownCount = PAGE_SIZE;
                 grpListHost.containerBox.elem.scrollTop = 0;
                 render();
             },
-            backgroundStyle: { colorBottom: S.FIELD_COLOR, colorTop: S.FIELD_COLOR, round: 8, border: 1, borderColor: S.CARD_BORDER_COLOR },
-            tabPadding: [3, 3],
-            labelStyle: { fontSize: 13, textColor: Ink(0.85), padding: [10, 5] },
-            selectedStyle: { color: S.PRIMARY_COLOR, round: 6 },
+            style: Theme.tabsStyle({ barColor: S.FIELD_COLOR, borderColor: S.CARD_BORDER_COLOR, fontSize: 13, padding: [10, 5], activeColor: S.PRIMARY_COLOR }),
         });
 
     endGroup();

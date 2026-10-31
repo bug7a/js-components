@@ -5,7 +5,7 @@
 Smart Button - v26.10
 
 THE DEFAULT BUTTON of new pages and projects (the user, 2026-10-30). It was ButtonWithIcon
-(comp-m3/button-with-icon.js) until 2026-10-30: renamed and moved to comp-m4.
+(comp/button-with-icon.js) until 2026-10-30: renamed and moved to comp-m4.
 
 - A button with an icon and a text (or only one of them); the icon on the left or on top (iconPosition).
 - STYLE PACKAGES (SmartButton.styles; sample 02-comp-m4-samples/smart-button-3-ozden.htm; the draft
@@ -627,7 +627,7 @@ SmartButton.injectCss = function () {
         "@media (prefers-reduced-motion: reduce) { .smart-button-hand, .smart-button-dot { animation: none !important; } }");
 };
 
-// *** THE STYLE PACKAGES (the user, 2026-10-30): the buttons of 02-comp-m4-samples/smart-button-3-ozden.htm.
+// *** THE STYLE PACKAGES (the user, 2026-10-30): the buttons of 02-comp-examples/smart-button-3-ozden.htm.
 // A package needs only the keys that differ from the default (ozdenType1).
 SmartButton.styles = {
     ozdenType1: SmartButtonDefaults.style, // an edge and a bottom line

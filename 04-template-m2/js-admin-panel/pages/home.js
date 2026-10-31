@@ -8,11 +8,11 @@ Home Page (Dashboard Template) - v26.09
 - Replace the DATA functions with your service (Supabase, etc.) calls.
 
 COMPONENTS:
-- TextTabs (comp-m2): Period select
+- Tabs (comp-m4): Period select
 - SmartButton (comp-m4): Header and quick action buttons
 - MiniGraphBox / SparkLineBox (comp-m4): KPI boxes (bars for counts, a line for money and live values)
 - ChartBox (comp-m4): Line, doughnut and bar charts (Chart.js is loaded from comp-m4/chart-box)
-- TinyTable (comp-m2): Recent orders
+- TinyTable (comp-m4): Recent orders
 - LineProgressBar (comp-m3): Monthly goals
 - Badge (comp-m2): Notification count
 
@@ -310,28 +310,14 @@ const HomePage = function(params = {}) {
             HGroup({ width: "auto", height: "auto", align: "right center", gap: 10 });
             that.elem.style.flexWrap = "wrap";
 
-                box.periodTabs = TextTabs({
-                    tabHeight: 38, // The same height as the buttons / inputs next to it
-                    tabList: PERIODS.map(function(period) { return period.name; }),
-                    onClick: function(self) {
-                        box.setPeriod(self.index);
+                box.periodTabs = Tabs({
+                    variant: "pill",
+                    styleName: T.compStyle,
+                    tabs: Theme.indexTabs(PERIODS.map(function(period) { return period.name; })), // (the key of a tab is its index: self.value)
+                    onChange: function(self) {
+                        box.setPeriod(self.value);
                     },
-                    backgroundStyle: {
-                        colorBottom: CARD_COLOR,
-                        colorTop: CARD_COLOR,
-                        round: 8,
-                        border: 1,
-                        borderColor: CARD_BORDER_COLOR,
-                    },
-                    labelStyle: {
-                        fontSize: 14,
-                        textColor: Ink(0.85),
-                        padding: [14, 5],
-                    },
-                    selectedStyle: {
-                        color: PRIMARY_COLOR,
-                        round: 6,
-                    },
+                    style: Theme.tabsStyle({ height: 38, barColor: CARD_COLOR, borderColor: CARD_BORDER_COLOR, barPadding: 2, padding: [14, 5], activeColor: PRIMARY_COLOR }),
                 });
 
                 box.btnExport = createButton("Export Chart", "top-bar/bookmark.png", function() {
@@ -472,37 +458,26 @@ const HomePage = function(params = {}) {
                 that.elem.style.overflowX = "auto";
 
                     const table = TinyTable({
-                        columnHeaders: ["ORDER", "CUSTOMER", "DATE", "AMOUNT", "STATUS"],
-                        columnWidths: ["16%", "29%", "18%", "18%", "18%"], // 99%: 1px gaps between cells
-                        dataRows: RECENT_ORDERS,
-                        headerBackgroundColor: T.surface2,
-                        headerTextColor: Ink(0.6),
-                        headerBorderColor: T.surface2,
-                        headerFontSize: 12,
-                        borderWidth: 1,
-                        borderRadius: 8,
-                        borderColor: CARD_BORDER_COLOR,
-                        bodyBackgroundColor: CARD_COLOR,
-                        cellFontSize: 14,
-                        cellTextColor: Ink(0.8),
-                        rowHoverBackgroundColor: Ink(0.05),
-                        rowHoverBorderColor: Ink(0.1),
-                        onCellRender: function(cell) {
+                        columns: Theme.tableColumns(["ORDER", "CUSTOMER", "DATE", "AMOUNT", "STATUS"], ["16%", "29%", "18%", "18%", "18%"]),
+                        rows: RECENT_ORDERS,
+                        allowHtml: 1, // (the texts are made by the panel, user texts are escaped)
+                        style: Theme.tableStyle({ headerColor: T.surface2, bodyColor: CARD_COLOR, borderColor: CARD_BORDER_COLOR }),
+                        onCellCreate: function(cell) {
 
                             // AMOUNT
-                            if (cell.index == 3) {
-                                cell.elem.style.fontFamily = "opensans-bold";
+                            if (cell.columnIndex == 3) {
+                                cell.label.elem.style.fontFamily = "opensans-bold";
                             }
 
                             // STATUS
-                            if (cell.index == 4) {
-                                cell.textColor = STATUS_COLORS[cell.text] || Ink(0.8);
+                            if (cell.columnIndex == 4) {
+                                cell.label.textColor = STATUS_COLORS[cell.value] || Ink(0.8);
                             }
 
                         },
                     });
                     // Fill the card. (Scrolls under the min width.)
-                    table.width = "100%";
+                    Theme.fillTableWidth(table);
                     table.elem.style.minWidth = "560px";
 
                 endGroup();

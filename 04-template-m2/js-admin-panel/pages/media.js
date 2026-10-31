@@ -14,14 +14,14 @@ COMPONENTS:
 - Breadcrumbs (comp-m4): Folder path
 - SearchInput (comp-m2): Search by name
 - TinySelect (comp-m2): Type filter, sort, move to folder
-- TextTabs (comp-m2): Grid / list view
+- Tabs (comp-m4): Grid / list view
 - SelectFile (comp-m4): Upload
 - CheckBox (comp-m3): Select files
 - ContextMenu (comp-m4): File actions (right click or "•••")
 - SmartTable (comp-m3): List view
 - SmartButton (comp-m4), HoldToConfirmButton (comp-m3): Actions
 - LineProgressBar (comp-m3): Storage usage
-- InputB (comp-m2), Dialog, Waiting (comp-m2): Details panel, delete confirm, upload
+- InputB (comp-m2), Dialog, LoadingScreen (comp-m4; Theme.confirm, waiting): Details panel, delete confirm, upload
 
 */
 
@@ -117,8 +117,8 @@ const MediaPage = function(params = {}) {
 
         // TEST: Like an upload request
         if (typeof waiting !== "undefined") {
-            waiting.setLabel("Uploading " + files.length + " file" + ((files.length > 1) ? "s" : "") + "...");
-            waiting.show();
+            waiting.setMessage("Uploading " + files.length + " file" + ((files.length > 1) ? "s" : "") + "...");
+            waiting.open();
         }
 
         setTimeout(function() {
@@ -146,9 +146,8 @@ const MediaPage = function(params = {}) {
             });
 
             if (typeof waiting !== "undefined") {
-                waiting.hide();
-                waiting.setLabel("");
-                waiting.lbl.visible = 0;
+                waiting.close();
+                waiting.setMessage("");
             }
 
             onDone();
@@ -245,13 +244,11 @@ const MediaPage = function(params = {}) {
 
     const confirmDelete = function(ids) {
         const text = (ids.length == 1) ? "<b>" + ContentsPage.escapeHtml(findItem(ids[0]).name) + "</b>" : "<b>" + ids.length + " files</b>";
-        Dialog({
-            icon: ASSETS + "warning.png",
-            title: "Delete Files",
-            desc: text + " will be deleted. Pages that use them will show a broken image.",
-            confirmButtonText: "Delete",
-            confirmButtonColor: S.ERROR_COLOR,
-            callback: function(isConfirmed) {
+        Theme.confirm({
+            titleText: "Delete Files",
+            messageText: text + " will be deleted. Pages that use them will show a broken image.",
+            confirmText: "Delete",
+            onAnswer: function(isConfirmed) {
                 if (!isConfirmed || !box) return;
                 deleteItems(ids);
                 render();
@@ -756,17 +753,15 @@ const MediaPage = function(params = {}) {
                 that.elem.style.flex = "1 1 auto";
                 endGroup();
 
-                viewTabs = TextTabs({
-                    tabHeight: 40, // The same height as the buttons / inputs next to it
-                    tabList: ["Grid", "List"],
-                    onClick: function(self) {
-                        view.mode = (self.index == 0) ? "grid" : "list";
+                viewTabs = Tabs({
+                    variant: "pill",
+                    styleName: T.compStyle,
+                    tabs: Theme.indexTabs(["Grid", "List"]), // (the key of a tab is its index: self.value)
+                    onChange: function(self) {
+                        view.mode = (self.value == 0) ? "grid" : "list";
                         render();
                     },
-                    backgroundStyle: { colorBottom: S.FIELD_COLOR, colorTop: S.FIELD_COLOR, round: 8, border: 1, borderColor: S.CARD_BORDER_COLOR },
-                    tabPadding: [3, 3],
-                    labelStyle: { fontSize: 14, textColor: Ink(0.85), padding: [14, 6] },
-                    selectedStyle: { color: S.PRIMARY_COLOR, round: 6 },
+                    style: Theme.tabsStyle({ height: 40, barColor: S.FIELD_COLOR, borderColor: S.CARD_BORDER_COLOR, padding: [14, 6], activeColor: S.PRIMARY_COLOR }),
                 });
 
             endGroup();

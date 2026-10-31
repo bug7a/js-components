@@ -20,7 +20,8 @@
         <script src="../../comp-m2/phone-input-b.js" type="text/javascript" charset="utf-8" defer></script>
         <script src="../../comp-m2/textarea-b.js" type="text/javascript" charset="utf-8" defer></script>
 
-        <script src="../../comp-m2/waiting.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m4/smart-button.js" type="text/javascript" charset="utf-8" defer></script>
+        <script src="../../comp-m4/loading-screen.js" type="text/javascript" charset="utf-8" defer></script>
         <script src="../../comp-m2/form.js" type="text/javascript" charset="utf-8" defer></script>
 
         <script src="../../comp-m3/check-box.js" type="text/javascript" charset="utf-8" defer></script>
@@ -35,9 +36,9 @@
         /* Bismillah */
 
         - An order form for a small shop. (Bakery, coffee roaster, florist, farm shop, restaurant...)
-        - InputB, EmailInputB, PhoneInputB, TextareaB, Form, Waiting (comp-m2)
+        - InputB, EmailInputB, PhoneInputB, TextareaB, Form (comp-m2)
         - CheckBox, RadioButton (comp-m3)
-        - SelectDate (comp-m4)
+        - SelectDate, SmartButton, LoadingScreen (comp-m4)
 
         - Products with quantity steppers (- 1 +). The order summary (subtotal, discount, delivery, total) is
           updated on every change.
@@ -588,13 +589,18 @@
             form.inputGroup.add(summaryLabel);
             summaryLabel.position = "relative";
 
-            // WAITING: Create object 1 time.
-            waiting = Waiting({
-                animated: 1,
-                waitingIcon: "assets/mail.png",
-                coverBackgroundColor: "rgba(0, 0, 0, 0.85)",
+            // WAITING: Create object 1 time. A cover on the page while the form is sent: the moving clock.
+            //          (LoadingScreen: open() / close())
+            waiting = createIn(page, function() {
+                return LoadingScreen({
+                    opened: 0,
+                    minDuration: 0,
+                    fadeDuration: 0.2,
+                    style: {
+                        box: { color: "rgba(0, 0, 0, 0.85)" },
+                    },
+                });
             });
-            waiting.icon.elem.style.filter = "invert(100%)";
 
             updateFulfillment();
             updateGift();
@@ -1052,7 +1058,7 @@
             json.push({ key: "orderNumber", type: "text", titleText: "ORDER NUMBER", inputValue: order.number });
             json.push({ key: "totals", type: "totals", titleText: "TOTALS", inputValue: { subtotal: order.totals.subtotal, discount: order.totals.discount, deliveryFee: order.totals.deliveryFee, total: order.totals.total, coupon: (order.totals.coupon) ? order.totals.coupon.code : "" } });
 
-            waiting.show();
+            waiting.open();
 
             let result = "error"; // "sent", "error"
 
@@ -1079,7 +1085,7 @@
                 result = "error";
             }
 
-            waiting.hide();
+            waiting.close();
 
             if (result == "sent") {
 

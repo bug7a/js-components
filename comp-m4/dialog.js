@@ -5,7 +5,7 @@
 Dialog - v26.10
 
 A dialog window over the page: a title, a message, your fields (inputs) or any content, and buttons. The page under
-it waits (a modal dialog: a dark cover, the keyboard stays in the dialog). The new version of comp-m2/dialog.js with
+it waits (a modal dialog: a dark cover, the keyboard stays in the dialog). The new version of comp-m4/dialog.js with
 the features of comp-m4/modal.js and the look of 02-comp-m4-samples/smart-button-3-ozden.htm (the first dialog).
 NOTE: still in development (the user, 2026-10-29): more style packages come; their buttons may be animated.
 
@@ -576,7 +576,10 @@ const Dialog = function (params = {}) {
     };
 
     box.color = _s.cover.color;
-    box.css = { position: "fixed" };
+    // WHY: "absolute", not "fixed": the cover is on page, as big as page (page never scrolls). page.fit() / page.zoom give
+    //      <body> a transform, and a fixed box inside a transformed one is measured on it (a 0 px high body: the
+    //      dialog was not seen; the admin panel, 2026-10-31).
+    box.css = { position: "absolute" };
     box.elem.style.display = "block"; // WHY: visible keeps the display type: without it, visible: 1 does not show it again
     box.clickable = 1;
 
@@ -770,6 +773,7 @@ Dialog.alert = function (params = {}) {
             titleText: params.titleText || "",
             messageText: params.messageText || "",
             styleName: params.styleName,
+            style: params.style || {},
             variant: params.variant || "",
             topIconFile: params.topIconFile || "",
             buttons: [{ key: "ok", text: params.buttonText || "OK", type: "primary" }],
@@ -786,6 +790,7 @@ Dialog.prompt = function (params = {}) {
             titleText: params.titleText || "",
             messageText: params.messageText || "",
             styleName: params.styleName,
+            style: params.style || {},
             variant: params.variant || "",
             topIconFile: params.topIconFile || "",
             fields: [{ key: "value", titleText: params.fieldText || "", placeholder: params.placeholder || "", value: params.value || "", required: params.required ? 1 : 0, validate: params.validate }],

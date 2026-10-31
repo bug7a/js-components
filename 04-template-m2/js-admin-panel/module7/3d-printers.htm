@@ -17,8 +17,8 @@
         <script src="../../../comp-m2/tiny-select.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m2/toggle.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m2/slider.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m2/dialog.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m4/smart-button.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp-m4/dialog.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m3/hold-to-confirm-button.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m4/progress-bar.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp-m4/gauge.js" type="text/javascript" charset="utf-8"></script>
@@ -777,13 +777,11 @@
 
                     btnLoad = createButton("Load New Spool", function () {
                         const p = printer;
-                        Dialog({
-                            icon: ASSETS + "maybe.png",
-                            title: "Load New Spool",
-                            desc: "Put a new 1 kg spool of <b>" + p.filament.material + "</b> on the holder. The printer heats the nozzle and pulls the filament in.",
-                            confirmButtonText: "Filament Is Loaded",
-                            confirmButtonColor: PRIMARY_COLOR,
-                            callback: function (isConfirmed) {
+                        Theme.confirm({
+                            titleText: "Load New Spool",
+                            messageText: "Put a new 1 kg spool of <b>" + p.filament.material + "</b> on the holder. The printer heats the nozzle and pulls the filament in.",
+                            confirmText: "Filament Is Loaded",
+                            onAnswer: function (isConfirmed) {
                                 if (!isConfirmed) return;
                                 p.filament.leftG = p.filament.spoolG;
                                 addEvent(p, "Success", "New " + p.filament.material + " spool loaded (" + p.filament.spoolG + " g)");
@@ -977,13 +975,11 @@
                 return;
             }
             if (p.filament.leftG < job.grams) {
-                Dialog({
-                    icon: ASSETS + "warning.png",
-                    title: "Not Enough Filament",
-                    desc: "<b>" + escapeHtml(job.file) + "</b> needs " + job.grams + " g, but " + Math.round(p.filament.leftG) + " g is left. The print will pause when the filament ends.",
-                    confirmButtonText: "Start Anyway",
-                    confirmButtonColor: WARNING_COLOR,
-                    callback: function (isConfirmed) {
+                Theme.confirm({
+                    titleText: "Not Enough Filament",
+                    messageText: "<b>" + escapeHtml(job.file) + "</b> needs " + job.grams + " g, but " + Math.round(p.filament.leftG) + " g is left. The print will pause when the filament ends.",
+                    confirmText: "Start Anyway",
+                    onAnswer: function (isConfirmed) {
                         if (!isConfirmed) return;
                         p.queue.shift();
                         startJob(p, job);

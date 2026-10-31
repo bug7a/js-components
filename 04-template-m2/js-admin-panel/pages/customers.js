@@ -15,13 +15,13 @@ Customers Page (Template) - v26.09
   functions with your service.
 
 COMPONENTS:
-- TextTabs, SearchInput, TinySelect (comp-m2): Filters
+- Tabs (comp-m4), SearchInput, TinySelect (comp-m2): Filters
 - SmartTable (comp-m3): Customer list
 - InputB (comp-m2): Contact details, tag and note inputs
 - Toggle (comp-m2): Marketing consent
-- TinyTable (comp-m2): Order history
+- TinyTable (comp-m4): Order history
 - SmartButton (comp-m4), HoldToConfirmButton (comp-m3): Actions
-- Dialog, Waiting (comp-m2): Confirm, saving
+- Dialog, LoadingScreen (comp-m4; Theme.confirm, waiting): Confirm, saving
 
 */
 
@@ -100,8 +100,7 @@ const CustomersPage = function(params = {}) {
 
         TABS.forEach(function(segment, index) {
             const count = (segment) ? list.filter(function(c) { return c.segment == segment; }).length : list.length;
-            const label = (segment) ? SEGMENTS[segment].label : "All";
-            segmentTabs.tabItemList[index].text = label + " <span style='opacity:0.55'>" + count + "</span>";
+            segmentTabs.setCount(index, count);
         });
 
         const shown = sortList((filter.segment) ? list.filter(function(c) { return c.segment == filter.segment; }) : list);
@@ -271,17 +270,15 @@ const CustomersPage = function(params = {}) {
             HGroup({ width: "100%", height: "auto", align: "left top" });
             that.elem.style.overflowX = "auto";
 
-                segmentTabs = TextTabs({
-                    tabHeight: 40, // The same height as the buttons / inputs next to it
-                    tabList: TABS.map(function(segment) { return (segment) ? SEGMENTS[segment].label : "All"; }),
-                    onClick: function(self) {
-                        filter.segment = TABS[self.index];
+                segmentTabs = Tabs({
+                    variant: "pill",
+                    styleName: T.compStyle,
+                    tabs: Theme.indexTabs(TABS.map(function(segment) { return (segment) ? SEGMENTS[segment].label : "All"; })), // (the key of a tab is its index: self.value)
+                    onChange: function(self) {
+                        filter.segment = TABS[self.value];
                         render();
                     },
-                    backgroundStyle: { colorBottom: S.FIELD_COLOR, colorTop: S.FIELD_COLOR, round: 8, border: 1, borderColor: S.CARD_BORDER_COLOR },
-                    tabPadding: [3, 3],
-                    labelStyle: { fontSize: 14, textColor: Ink(0.85), padding: [12, 6] },
-                    selectedStyle: { color: S.PRIMARY_COLOR, round: 6 },
+                    style: Theme.tabsStyle({ height: 40, barColor: S.FIELD_COLOR, borderColor: S.CARD_BORDER_COLOR, padding: [12, 6], activeColor: S.PRIMARY_COLOR }),
                 });
 
             endGroup();
@@ -459,14 +456,14 @@ const CustomerDetails = function(params = {}) {
     // Changes the customer like a server request, then opens the panel again with the new data.
     const saveChange = function(change, notice, closeAfter) {
 
-        if (typeof waiting !== "undefined") waiting.show();
+        if (typeof waiting !== "undefined") waiting.open();
 
         saveTimer = setTimeout(function() {
 
             // TODO: Send the change to your service.
             const error = change(customer);
 
-            if (typeof waiting !== "undefined") waiting.hide();
+            if (typeof waiting !== "undefined") waiting.close();
 
             if (error) { showNotice(error, true); return; }
 
@@ -737,40 +734,26 @@ const CustomerDetails = function(params = {}) {
                     Label({ text: "No orders yet. This customer registered but did not buy anything.", fontSize: 13, textColor: Ink(0.5), width: "100%" });
                 } else {
                     const table = TinyTable({
-                        columnHeaders: ["ORDER", "DATE", "TOTAL", "STATUS"],
-                        columnWidths: ["30%", "30%", "18%", "20%"], // 98%: 1px gaps between cells
-                        dataRows: orders.map(function(order) {
+                        columns: Theme.tableColumns(["ORDER", "DATE", "TOTAL", "STATUS"], ["30%", "30%", "18%", "20%"], ["left", "left", "right", "left"]),
+                        rows: orders.map(function(order) {
                             return [escape(order.id), OrdersPage.formatDateTime(order.time).slice(0, 10), OrdersPage.formatMoney(order.total), OrdersPage.STATUSES[order.status].label];
                         }),
-                        headerBackgroundColor: S.FIELD_COLOR,
-                        headerTextColor: Ink(0.6),
-                        headerBorderColor: S.FIELD_COLOR,
-                        headerFontSize: 12,
-                        borderWidth: 1,
-                        borderRadius: 8,
-                        borderColor: S.CARD_BORDER_COLOR,
-                        bodyBackgroundColor: S.CARD_COLOR,
-                        cellFontSize: 14,
-                        cellTextColor: Ink(0.85),
-                        rowHoverBackgroundColor: Ink(0.05),
-                        rowHoverBorderColor: Ink(0.1),
-                        // WHY: TinyTable has no row click. cell.lineCount is the row, so every cell opens its order.
-                        onCellRender: function(cell) {
-                            const order = orders[cell.lineCount];
-                            if (cell.index == 2) cell.textAlign = "right";
-                            if (cell.index == 3) cell.textColor = OrdersPage.STATUSES[order.status].color;
-                            if (cell.index == 0) cell.textColor = S.ACCENT_COLOR;
-                            cell.clickable = 1;
-                            cell.on("click", function() {
-                                // Open the order on the Orders page
-                                rightView.hide();
-                                rightView.clean();
-                                leftMenu.setSelectedItem(OrdersPage.KEY);
-                                OrdersPage({ openOrderId: order.id });
-                            });
+                        allowHtml: 1, // (the texts are made by the panel, user texts are escaped)
+                        style: Theme.tableStyle({ headerColor: S.FIELD_COLOR, bodyColor: S.CARD_COLOR, borderColor: S.CARD_BORDER_COLOR, textColor: Ink(0.85) }),
+                        onCellCreate: function(cell) {
+                            const order = orders[cell.rowIndex];
+                            if (cell.columnIndex == 3) cell.label.textColor = OrdersPage.STATUSES[order.status].color;
+                            if (cell.columnIndex == 0) cell.label.textColor = S.ACCENT_COLOR;
+                        },
+                        // Open the order on the Orders page
+                        onRowClick: function(self, rowIndex) {
+                            rightView.hide();
+                            rightView.clean();
+                            leftMenu.setSelectedItem(OrdersPage.KEY);
+                            OrdersPage({ openOrderId: orders[rowIndex].id });
                         },
                     });
-                    table.width = "100%";
+                    Theme.fillTableWidth(table);
                     Label({ text: "Click an order to open it on the Orders page.", fontSize: 12, textColor: Ink(0.4) });
                 }
 
@@ -830,14 +813,12 @@ const CustomerDetails = function(params = {}) {
                 saveChange(function(c) { c.blocked = 0; return ""; }, "Customer is unblocked.");
                 return;
             }
-            Dialog({
-                icon: "assets/warning.png",
-                title: "Block Customer",
-                desc: "<b>" + escape(customer.name) + "</b> will not be able to sign in or place orders. Open orders are not changed.",
-                confirmButtonText: "Block",
-                confirmButtonColor: S.ERROR_COLOR,
-                cancelButtonText: "Cancel",
-                callback: function(isConfirmed) {
+            Theme.confirm({
+                titleText: "Block Customer",
+                messageText: "<b>" + escape(customer.name) + "</b> will not be able to sign in or place orders. Open orders are not changed.",
+                confirmText: "Block",
+                cancelText: "Cancel",
+                onAnswer: function(isConfirmed) {
                     if (isConfirmed && box) saveChange(function(c) { c.blocked = 1; return ""; }, "Customer is blocked.");
                 },
             });

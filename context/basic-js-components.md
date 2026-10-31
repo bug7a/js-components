@@ -75,7 +75,7 @@ MyComp.styles = {
 - `startObject(params)` makes the container box and puts the objects created until `endObject(box)` into it. `endObject` makes `that` the component. (`startObject(defaults, params)`, the two argument form, merges too.)
 - **Every default becomes a public property on the box** (`box.labelText`). Change it later with a `setX()` function, never with a JS getter / setter.
 - **A default must not be named like a basic.js setter**: `text`, `color` (only the background of the box), `title`, `html` (it wipes the children), `visible`, `zoom`... Use `labelText`, `htmlText`, `scale`.
-- PascalCase name, an `XxxDefaults` object, assets in a sibling folder with the same name (`comp-m4/tabs/`).
+- PascalCase name, an `XxxDefaults` object, assets in a sibling folder with the same name (`comp/tabs/`).
 - The house header (`/* Bismillah */`, name - version, what it does, `USAGE:`, developer) and the section markers (`// *** PRIVATE VARIABLES:`, `// *** OBJECT VIEW:`, `// BOX:`, `// LABEL:`...).
 
 ## Style packages
@@ -128,7 +128,7 @@ box.remove = function () {
 Never write a `destroy()` for a component: everything is removed with `remove()`. To extend a component: `startExtendedObject(ParentComp, params)` ... `endExtendedObject(box)` (see `comp-m2/email-input-b.js`).
 
 ## When the component is ready
-1. A sample page `02-comp-mX-samples/<name>.htm`: a scrolling Box, cards, every style package; it loads the source files (`../basic/basic.js`, `../comp-m4/<name>.js`), not `.min.js`.
+1. A sample page `02-comp-mX-samples/<name>.htm`: a scrolling Box, cards, every style package; it loads the source files (`../basic/basic.js`, `../comp/<name>.js`), not `.min.js`.
 2. `test/components-test.htm`: add it to `COMPONENTS` (`{ file, name, deps, setup }`), open `?only=<name>`: the title must say ALL PASS.
 3. The `.min.js` twin: create an empty `<name>.min.js` once, then `./_make-min-js.sh --build comp-mX/<name>.js` (after every change too).
 4. The catalog: `index/catalog.js` (+ the `<noscript>` list in `index.htm`) and its line in CLAUDE.md.

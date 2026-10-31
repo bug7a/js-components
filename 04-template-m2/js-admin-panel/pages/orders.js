@@ -13,14 +13,14 @@ Orders Page (Template) - v26.09
   Changes are kept while the panel is open. Replace the "ORDER SERVICE" functions with your service.
 
 COMPONENTS:
-- TextTabs (comp-m2): Status tabs
+- Tabs (comp-m4): Status tabs
 - SparkLineBox (comp-m4): Summary graphs
 - SearchInput, TinySelect (comp-m2): Filters
 - SmartTable (comp-m3): Order list
-- TinyTable (comp-m2): Order items
+- TinyTable (comp-m4): Order items
 - InputB (comp-m2): Tracking number, note
 - SmartButton (comp-m4), HoldToConfirmButton (comp-m3): Actions
-- Dialog, Waiting (comp-m2): Cancel confirm, saving
+- Dialog, LoadingScreen (comp-m4; Theme.confirm, waiting): Cancel confirm, saving
 
 */
 
@@ -98,8 +98,7 @@ const OrdersPage = function(params = {}) {
         // Tab counts
         TABS.forEach(function(status, index) {
             const count = (status) ? list.filter(function(order) { return order.status == status; }).length : list.length;
-            const label = (status) ? STATUSES[status].label : "All";
-            statusTabs.tabItemList[index].text = label + " <span style='opacity:0.55'>" + count + "</span>";
+            statusTabs.setCount(index, count);
         });
 
         const shown = (filter.status) ? list.filter(function(order) { return order.status == filter.status; }) : list;
@@ -292,17 +291,15 @@ const OrdersPage = function(params = {}) {
             HGroup({ width: "100%", height: "auto", align: "left top" });
             that.elem.style.overflowX = "auto";
 
-                statusTabs = TextTabs({
-                    tabHeight: 40, // The same height as the buttons / inputs next to it
-                    tabList: TABS.map(function(status) { return (status) ? STATUSES[status].label : "All"; }),
-                    onClick: function(self) {
-                        filter.status = TABS[self.index];
+                statusTabs = Tabs({
+                    variant: "pill",
+                    styleName: T.compStyle,
+                    tabs: Theme.indexTabs(TABS.map(function(status) { return (status) ? STATUSES[status].label : "All"; })), // (the key of a tab is its index: self.value)
+                    onChange: function(self) {
+                        filter.status = TABS[self.value];
                         render();
                     },
-                    backgroundStyle: { colorBottom: S.FIELD_COLOR, colorTop: S.FIELD_COLOR, round: 8, border: 1, borderColor: S.CARD_BORDER_COLOR },
-                    tabPadding: [3, 3],
-                    labelStyle: { fontSize: 14, textColor: Ink(0.85), padding: [12, 6] },
-                    selectedStyle: { color: S.PRIMARY_COLOR, round: 6 },
+                    style: Theme.tabsStyle({ height: 40, barColor: S.FIELD_COLOR, borderColor: S.CARD_BORDER_COLOR, padding: [12, 6], activeColor: S.PRIMARY_COLOR }),
                 });
 
             endGroup();
@@ -466,7 +463,7 @@ const OrderDetails = function(params = {}) {
     // Changes the order like a server request, then opens the panel again with the new data.
     const updateOrder = function(change, historyText, historyType) {
 
-        if (typeof waiting !== "undefined") waiting.show();
+        if (typeof waiting !== "undefined") waiting.open();
 
         saveTimer = setTimeout(function() {
 
@@ -474,7 +471,7 @@ const OrderDetails = function(params = {}) {
             Object.assign(order, change);
             order.history.push({ time: Date.now(), text: historyText, type: historyType, by: "You" });
 
-            if (typeof waiting !== "undefined") waiting.hide();
+            if (typeof waiting !== "undefined") waiting.close();
 
             box.onChange(order);
             OrderDetails({ order: order, onChange: box.onChange }); // Render again
@@ -653,32 +650,20 @@ const OrderDetails = function(params = {}) {
             startSection("Items");
 
                 const table = TinyTable({
-                    columnHeaders: ["PRODUCT", "QTY", "PRICE", "TOTAL"],
-                    columnWidths: ["46%", "12%", "20%", "20%"], // 98%: 1px gaps between cells
-                    dataRows: order.items.map(function(item) {
+                    columns: Theme.tableColumns(["PRODUCT", "QTY", "PRICE", "TOTAL"], ["46%", "12%", "20%", "20%"], ["left", "right", "right", "right"]),
+                    rows: order.items.map(function(item) {
                         return [escape(item.name) + "<br><span style='font-size:12px; color:" + Ink(0.4) + "'>" + escape(item.sku) + "</span>", String(item.qty), OrdersPage.formatMoney(item.price), OrdersPage.formatMoney(item.qty * item.price)];
                     }),
-                    headerBackgroundColor: S.FIELD_COLOR,
-                    headerTextColor: Ink(0.6),
-                    headerBorderColor: S.FIELD_COLOR,
-                    headerFontSize: 12,
-                    borderWidth: 1,
-                    borderRadius: 8,
-                    borderColor: S.CARD_BORDER_COLOR,
-                    bodyBackgroundColor: S.CARD_COLOR,
-                    cellFontSize: 14,
-                    cellTextColor: Ink(0.85),
-                    rowHoverBackgroundColor: Ink(0.05),
-                    rowHoverBorderColor: Ink(0.1),
-                    onCellRender: function(cell) {
-                        if (cell.index == 0) cell.elem.style.whiteSpace = "normal";
-                        if (cell.index > 0) cell.textAlign = "right";
+                    allowHtml: 1, // (the texts are made by the panel, user texts are escaped)
+                    style: Theme.tableStyle({ headerColor: S.FIELD_COLOR, bodyColor: S.CARD_COLOR, borderColor: S.CARD_BORDER_COLOR, textColor: Ink(0.85) }),
+                    onCellCreate: function(cell) {
+                        if (cell.columnIndex == 0) cell.label.elem.style.whiteSpace = "normal"; // (the SKU under the name)
                     },
                 });
-                table.width = "100%";
-                // WHY: TinyTable has no setting for the header cells. Number columns are right aligned like their cells.
-                [...table.titleBox.elem.children].forEach(function(cell, index) {
-                    if (index > 0) cell.style.textAlign = "right";
+                Theme.fillTableWidth(table);
+                // WHY: The align of a column is only for its cells. Number columns get right aligned titles too.
+                table.titleList.forEach(function(title, index) {
+                    if (index > 0) title.label.textAlign = "right";
                 });
 
                 VGroup({ width: "100%", height: "auto", align: "left top", gap: 4 });
@@ -781,14 +766,12 @@ const OrderDetails = function(params = {}) {
 
         if (canCancel) {
             OrdersPage.createButton("Cancel Order", "", function() {
-                Dialog({
-                    icon: "assets/warning.png",
-                    title: "Cancel Order",
-                    desc: "<b>" + order.id + "</b> will be cancelled and the payment of <b>" + OrdersPage.formatMoney(order.total) + "</b> will be returned to the customer.",
-                    confirmButtonText: "Cancel Order",
-                    confirmButtonColor: S.ERROR_COLOR,
-                    cancelButtonText: "Keep",
-                    callback: function(isConfirmed) {
+                Theme.confirm({
+                    titleText: "Cancel Order",
+                    messageText: "<b>" + order.id + "</b> will be cancelled and the payment of <b>" + OrdersPage.formatMoney(order.total) + "</b> will be returned to the customer.",
+                    confirmText: "Cancel Order",
+                    cancelText: "Keep",
+                    onAnswer: function(isConfirmed) {
                         if (isConfirmed && box) updateOrder({ status: "cancelled" }, "Order is cancelled, payment is returned", "cancelled");
                     },
                 });
