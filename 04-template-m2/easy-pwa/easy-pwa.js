@@ -120,7 +120,7 @@ Webpage: https://bug7a.github.io/js-components/
         // no service worker (one left from an earlier visit is removed) and no install banner. Phones and tablets
         // are not changed. NOTE: Then do not write <link rel="manifest"> in the page: this file adds it where needed.
         // (A computer with a touch screen can be taken as a tablet.)
-        desktopApp: false, // The demo shop: an app on phones and tablets only.
+        desktopApp: false, // The default (2026-10-31): an app on phones and tablets only. true: computers too.
 
         // The install banner at the bottom. (EasyPWA.install() works without it too.)
         installBanner: true,
