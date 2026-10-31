@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>SelectBox - bench: createItemView / createValueView</title>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+
+    <script src="../comp-m4/smart-button.js" type="text/javascript" charset="utf-8"></script>
+    <!-- createItemView needs the ItemList: loaded before the SelectBox -->
+    <script src="../comp-m4/item-list.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp-m2/search-input-v2.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp-m4/select-box.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+    /* Bismillah */
+
+    // BENCH (2026-10-31): SelectBox with the rows and the field drawn by the page (createItemView, createValueView),
+    // on the new "ozden" package (and classic / dark for a look at the other packages).
+    // 1. Countries: single, ozden, own rows and field, a search (also the other names: "Turkey"), a disabled option.
+    // 2. Fruits: multiple, ozden, own rows (an icon, the name and a tag).
+    // 3. Fruits: single, classic, own rows and field.
+    // 4. Fruits: single, dark, own rows.
+    // The buttons set a value (onChange, silent), clear, change the options and turn a select off.
+
+    // *** VARIABLES:
+    const FRUITS_PATH = "../assets/fruids/";
+    const COLUMN_WIDTH = 350;
+    const COUNTRY_FIELD_HEIGHT = 60;
+    const COUNTRY_ROW_HEIGHT = 60;
+    const ROW_LINE = "inset 0px -1px 0px rgba(0, 0, 0, 0.05)";
+
+    const COUNTRIES = [
+        { value: "US", label: "United States", code: "+1" },
+        { value: "CA", label: "Canada", code: "+1" },
+        { value: "GB", label: "United Kingdom", code: "+44" },
+        { value: "DE", label: "Germany", code: "+49" },
+        { value: "FR", label: "France", code: "+33" },
+        { value: "TR", label: "Türkiye", code: "+90", searchText: "Turkey Turkiye" },
+        { value: "RU", label: "Russia", code: "+7" },
+        { value: "IT", label: "Italy", code: "+39" },
+        { value: "VA", label: "Vatican City", code: "+39", disabled: 1 },
+        { value: "ES", label: "Spain", code: "+34" },
+        { value: "BR", label: "Brazil", code: "+55" },
+        { value: "IN", label: "India", code: "+91" },
+        { value: "CN", label: "China", code: "+86" },
+        { value: "JP", label: "Japan", code: "+81" },
+        { value: "DZ", label: "Algeria", code: "+213" },
+        { value: "NG", label: "Nigeria", code: "+234" },
+    ];
+
+    const FRUITS = [
+        { value: "Broccoli", label: "Broccoli", description: "Vegetable", iconFile: FRUITS_PATH + "brokoli.png" },
+        { value: "Strawberry", label: "Strawberry", description: "Fruit", iconFile: FRUITS_PATH + "cilek.png" },
+        { value: "Tomato", label: "Tomato", description: "Vegetable", iconFile: FRUITS_PATH + "domates.png" },
+        { value: "Apple", label: "Apple", description: "Fruit", iconFile: FRUITS_PATH + "elma.png" },
+        { value: "Carrot", label: "Carrot", description: "Vegetable", iconFile: FRUITS_PATH + "havuc.png", disabled: 1 },
+        { value: "Watermelon", label: "Watermelon", description: "Fruit", iconFile: FRUITS_PATH + "karpuz.png" },
+        { value: "Lemon", label: "Lemon", description: "Fruit", iconFile: FRUITS_PATH + "limon.png" },
+        { value: "Banana", label: "Banana", description: "Fruit", iconFile: FRUITS_PATH + "muz.png" },
+        { value: "Pomegranate", label: "Pomegranate", description: "Fruit", iconFile: FRUITS_PATH + "nar.png" },
+        { value: "Eggplant", label: "Eggplant", description: "Vegetable", iconFile: FRUITS_PATH + "patlican.png" },
+    ];
+
+    // The selects and the log (read by the checks of the bench too)
+    const Bench = { changes: [] };
+
+    // *** START:
+    const start = function () {
+
+        page.color = "white";
+
+        // BOX: The page scrolls
+        startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+
+            VGroup({ width: "100%", height: "auto", align: "center top", gap: 24, padding: 30 });
+
+                Label({ text: "SelectBox: createItemView / createValueView (bench)", fontSize: 22 });
+                Bench.log = Label({ plainText: "onChange: -", fontSize: 14, textColor: Black(0.6) });
+
+                HGroup({ width: "auto", height: "auto", align: "left top", gap: 40, wrap: 1 });
+                that.clipContent = 0;
+
+                    Bench.country = createColumn("1. Countries (single, ozden)", function () {
+                        return SelectBox({
+                            styleName: "ozden",
+                            width: "100%",
+                            height: COUNTRY_FIELD_HEIGHT,
+                            options: COUNTRIES,
+                            value: "US",
+                            searchPlaceholder: "Search a country or a code",
+                            style: { itemList: { row: { gap: 12 } } },
+                            createItemView: createCountryRow,
+                            createValueView: createCountryValue,
+                            onChange: logChange,
+                        });
+                    }, [
+                        ["setValue(\"DE\")", function () { Bench.country.setValue("DE"); }],
+                        ["setValue(\"TR\", silent)", function () { Bench.country.setValue("TR", 1); }],
+                        ["clear()", function () { Bench.country.clear(); }],
+                        ["setOptions(5)", function () { Bench.country.setOptions(COUNTRIES.slice(0, 5)); }],
+                        ["setOptions(all)", function () { Bench.country.setOptions(COUNTRIES); }],
+                        ["setEnabled(on / off)", function () { Bench.country.setEnabled(!Bench.country.enabled); }],
+                    ]);
+
+                    Bench.fruits = createColumn("2. Fruits (multiple, ozden)", function () {
+                        return SelectBox({
+                            styleName: "ozden",
+                            width: "100%",
+                            multiple: 1,
+                            options: FRUITS,
+                            value: ["Apple", "Lemon"],
+                            placeholder: "Select fruits",
+                            createItemView: createFruitRow,
+                            onChange: logChange,
+                        });
+                    }, [
+                        ["setValue([Tomato, Banana])", function () { Bench.fruits.setValue(["Tomato", "Banana"]); }],
+                        ["clear()", function () { Bench.fruits.clear(); }],
+                    ]);
+
+                    Bench.classic = createColumn("3. Fruits (single, classic)", function () {
+                        return SelectBox({
+                            width: 300,
+                            options: FRUITS,
+                            value: "Tomato",
+                            searchable: 1,
+                            createItemView: createFruitRow,
+                            createValueView: createFruitValue,
+                            onChange: logChange,
+                        });
+                    }, [
+                        ["setValue(\"Banana\")", function () { Bench.classic.setValue("Banana"); }],
+                    ]);
+
+                    Bench.dark = createColumn("4. Fruits (single, dark)", function () {
+                        return SelectBox({
+                            styleName: "dark",
+                            width: 300,
+                            options: FRUITS,
+                            value: "Lemon",
+                            createItemView: createDarkFruitRow,
+                            onChange: logChange,
+                        });
+                    }, []);
+
+                endGroup();
+
+            endGroup();
+
+        endBox();
+
+    };
+
+    // *** FUNCTIONS:
+
+    // A column: a title, the select and its buttons. Returns the select.
+    const createColumn = function (titleText, createSelect, buttons) {
+        let select = null;
+        VGroup({ width: COLUMN_WIDTH, height: "auto", align: "left top", gap: 12 });
+        that.clipContent = 0;
+            Label({ plainText: titleText, fontSize: 16, textColor: "#555555" });
+            select = createSelect();
+            HGroup({ width: "100%", height: "auto", align: "left top", gap: 8, wrap: 1 });
+            that.clipContent = 0;
+                buttons.forEach(function (button) {
+                    SmartButton({ labelText: button[0], style: { label: { fontSize: 14 } }, onClick: button[1] });
+                });
+            endGroup();
+        endGroup();
+        return select;
+    };
+
+    const logChange = function (self) {
+        Bench.changes.push(JSON.stringify(self.value));
+        Bench.log.plainText = "onChange: " + JSON.stringify(self.value) + "  (" + Bench.changes.length + " calls)";
+    };
+
+    // The dial code in a gray round pill (the CountryItem of the old page)
+    const createCodePill = function (code) {
+        return Label({ plainText: code, fontSize: 16, padding: [6, 2], color: "rgba(0, 0, 0, 0.05)", textColor: "#373836", round: 8 });
+    };
+
+    const createCountryRow = function (option, row) {
+        row.height = COUNTRY_ROW_HEIGHT;
+        row.boxShadow = ROW_LINE;
+        createCodePill(option.code);
+        Label({ plainText: option.label, fontSize: 20 });
+    };
+
+    const createCountryValue = function (option) {
+        createCodePill(option.code);
+        Label({ plainText: option.label, fontSize: 20 });
+        that.ellipsis = 1;
+    };
+
+    const createFruitRow = function (option, row) {
+        Icon({ width: 36, height: 36, round: 4 });
+        that.load(option.iconFile);
+        Label({ plainText: option.label, fontSize: 18 });
+        that.grow = 1;
+        Label({ plainText: option.description, fontSize: 12, padding: [8, 2], round: 10, color: Black(0.06), textColor: Black(0.6) });
+    };
+
+    const createFruitValue = function (option) {
+        Icon({ width: 24, height: 24, round: 4 });
+        that.load(option.iconFile);
+        Label({ plainText: option.label, fontSize: 16 });
+    };
+
+    const createDarkFruitRow = function (option) {
+        Icon({ width: 28, height: 28, round: 4 });
+        that.load(option.iconFile);
+        Label({ plainText: option.label, fontSize: 15, textColor: White(0.9) });
+    };
+
+    </script>
+
+</head>
+<body>
+</body>
+</html>

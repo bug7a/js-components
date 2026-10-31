@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>SelectBox - ozden, your own rows</title>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- item-list.js before select-box.js: with createItemView, the list of SelectBox is an ItemList -->
+    <script src="../comp-m4/item-list.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp-m2/search-input-v2.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp-m4/select-box.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+    /* Bismillah */
+
+    /*
+
+    SelectBox with styleName: "ozden" and YOUR OWN ROWS (the look of the old comp-m1 SelectItem sample).
+
+    - createItemView(option, row, self) -> draws one row of the list. The objects created in it go into the row
+                                           (an HGroup: side by side). The row's hover / selected looks come from the package.
+    - createValueView(option, field, self) -> draws the selected option in the field, with the same objects.
+    - Every key of an option is yours: here iconFile and description are read by createFruitView().
+
+    TRY: put a price under the name, or a colored dot for "Fruit" / "Vegetable".
+
+    */
+
+    const FRUITS_PATH = "../assets/fruids/";
+
+    const FRUITS = [
+        { value: "Broccoli", label: "Broccoli", description: "Vegetable", iconFile: FRUITS_PATH + "brokoli.png" },
+        { value: "Strawberry", label: "Strawberry", description: "Fruit", iconFile: FRUITS_PATH + "cilek.png" },
+        { value: "Tomato", label: "Tomato", description: "Vegetable", iconFile: FRUITS_PATH + "domates.png" },
+        { value: "Apple", label: "Apple", description: "Fruit", iconFile: FRUITS_PATH + "elma.png" },
+        { value: "Carrot", label: "Carrot", description: "Vegetable", iconFile: FRUITS_PATH + "havuc.png" },
+        { value: "Watermelon", label: "Watermelon", description: "Fruit", iconFile: FRUITS_PATH + "karpuz.png" },
+        { value: "Lemon", label: "Lemon", description: "Fruit", iconFile: FRUITS_PATH + "limon.png" },
+        { value: "Banana", label: "Banana", description: "Fruit", iconFile: FRUITS_PATH + "muz.png" },
+        { value: "Pomegranate", label: "Pomegranate", description: "Fruit", iconFile: FRUITS_PATH + "nar.png" },
+        { value: "Eggplant", label: "Eggplant", description: "Vegetable", iconFile: FRUITS_PATH + "patlican.png" },
+        { value: "Blueberry", label: "Blueberry", description: "Fruit", iconFile: FRUITS_PATH + "yabanmersini.png" },
+        { value: "Green Pepper", label: "Green Pepper", description: "Vegetable", iconFile: FRUITS_PATH + "yesilbiber.png" },
+    ];
+
+    const ROW_HEIGHT = 94;          // the field and every row
+    const PICTURE_SIZE = 70;
+    const PICTURE_SPACE = 10;       // px left of the picture
+    const TEXT_SPACE = 20;          // px between the picture and the texts (the rows get it from the package)
+
+    let fruitSelect = null;
+
+    const start = function () {
+
+        fruitSelect = SelectBox({
+            styleName: "ozden",         // 350 px wide, a search box, the list down to the page bottom
+            height: ROW_HEIGHT,
+            options: FRUITS,
+            value: "Tomato",
+            style: { fieldOption: { gap: TEXT_SPACE } }, // the field: the same space as the rows
+            createItemView: createFruitRow,
+            createValueView: createFruitView,
+            onChange: function (self) { println(self.value); },
+        });
+        fruitSelect.center();
+
+    };
+
+    // A row of the list: as high as the field, with the fruit view in it.
+    const createFruitRow = function (option, row) {
+        row.height = ROW_HEIGHT;
+        createFruitView(option);
+    };
+
+    // The picture, and the name with its description under it.
+    // It draws the field too (createValueView), so the field and the rows look the same.
+    const createFruitView = function (option) {
+
+        // ICON: The picture of the fruit
+        Icon({
+            width: PICTURE_SIZE,
+            height: PICTURE_SIZE,
+            round: 4,
+            css: { marginLeft: PICTURE_SPACE + "px" },
+        });
+        that.load(option.iconFile);
+
+        // GROUP: The name and the description, one under the other
+        VGroup({ hug: 1, align: "left center" });
+
+            Label({ plainText: option.label, fontSize: 20, textColor: Black(0.8) });
+
+            Label({ plainText: option.description, fontSize: 14, textColor: "gray" });
+            that.css = { marginTop: "-4px" };   // WHY: the old title and description were this close
+
+        endGroup();
+
+    };
+
+    </script>
+
+</head>
+<body>
+</body>
+</html>

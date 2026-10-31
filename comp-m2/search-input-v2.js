@@ -31,6 +31,8 @@ const SearchInputDefaults = {
     searchIconFile: "../comp-m2/search-input-v2/search.svg",
     clearIconFile: "../comp-m2/search-input-v2/clear.svg",
     searchIconSize: 24,
+    searchIconLeft: 16, // px: the search icon from the left side of the box
+    searchIconGap: 8, // px: between the search icon and the text
     isCancelEnabled: 1,
     placeholderText: "Search",
     color: "whitesmoke",
@@ -67,9 +69,7 @@ const SearchInput = function(params = {}) {
     const box = startObject(params);
     
     // *** Private variables:
-    const ICON_LEFT = 16; // The search icon from the left side
-    const ICON_GAP = 8; // Between the search icon and the text
-    const ICONS_SPACE = 80; // The width of the box that is not for the text (the two icons and their spaces)
+    const ICONS_SPACE = 80; // The width of the box that is not for the text, with the default icon place (16 + 8)
 
     // animated: 1
     const MOTION_TIME = "0.25s";
@@ -96,9 +96,15 @@ const SearchInput = function(params = {}) {
 
     // *** Private functions:
 
+    // The width of the text: the box without the icons. A search icon moved from its default place (16 + 8) moves the text too.
+    const getTextWidth = function() {
+        const iconMove = (box.searchIconLeft - SearchInputDefaults.searchIconLeft) + (box.searchIconGap - SearchInputDefaults.searchIconGap);
+        return box.width - ICONS_SPACE - iconMove;
+    };
+
     const refreshLayout = function(self) {
 
-        self.txtSearch.width = self.width - ICONS_SPACE;
+        self.txtSearch.width = getTextWidth();
         self.txtSearch.center("top");
         self.imgClearIcon.center("top");
         self.imgIcon.center("top");
@@ -241,7 +247,7 @@ const SearchInput = function(params = {}) {
         box.css.borderBottom = box.borderBottomStyle;
 
         // ICON: Search icon
-        box.imgIcon = Icon(ICON_LEFT, 0, box.searchIconSize, box.searchIconSize, {
+        box.imgIcon = Icon(box.searchIconLeft, 0, box.searchIconSize, box.searchIconSize, {
             opacity: box.searchIconOpacity,
             space: 0,
         });
@@ -250,8 +256,8 @@ const SearchInput = function(params = {}) {
         that.center("top");
 
         // INPUT: Search textbox
-        box.txtSearch = Input(ICON_LEFT + box.searchIconSize + ICON_GAP, 0, {
-            width: box.width - ICONS_SPACE,
+        box.txtSearch = Input(box.searchIconLeft + box.searchIconSize + box.searchIconGap, 0, {
+            width: getTextWidth(),
             height: box.height,
             border: 0,
             minimal: 1,

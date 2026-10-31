@@ -18,7 +18,10 @@
         <script src="../comp-m2/input-b.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp-m2/phone-input-b.js" type="text/javascript" charset="utf-8"></script>
         
-        <!-- The country list: comp-m4 SelectBox (the comp-m1 SelectItem, ItemList and SearchInput until 2026-10-30) -->
+        <!-- The country list: comp-m4 SelectBox with its own rows (createItemView) in a comp-m4 ItemList (load it first).
+             (The comp-m1 SelectItem with a CountryItem, ItemList and SearchInput until 2026-10-30) -->
+        <script src="../comp-m4/item-list.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp-m2/search-input-v2.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp-m4/select-box.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- ALL COMPONENTS IN ONE FILE -->
@@ -183,16 +186,18 @@
                         });
                         //that.elem.style.marginBottom = "-10px";
 
-                        // SELECT: Country ("legacy": the look of the comp-m1 SelectItem of before; its own search box)
+                        // SELECT: Country ("ozden": the look of the comp-m1 SelectItem of before, with a search box).
+                        // The rows and the field are drawn by this page: the code in a gray pill and the name.
                         countrySelect = SelectBox({
-                            styleName: "legacy",
+                            styleName: "ozden",
+                            fullHeightList: 1, // the list from the top of the page to its bottom (as the old SelectItem)
                             width: "100%",
                             height: COUNTRY_FIELD_HEIGHT,
                             options: countryList.map(toCountryOption),
                             value: countryList[0].shortName,
-                            searchable: 1,
-                            searchPlaceholder: "Search a country or a code",
-                            panelMaxHeight: COUNTRY_LIST_HEIGHT,
+                            style: { itemList: { row: { gap: COUNTRY_GAP } } },
+                            createItemView: createCountryRow,
+                            createValueView: createCountryView,
                             onChange: function (self) {
                                 selectCountry(self.value);
                             },
@@ -228,15 +233,46 @@
         };
 
         const COUNTRY_FIELD_HEIGHT = 60;
-        const COUNTRY_LIST_HEIGHT = 360;
+        const COUNTRY_ROW_HEIGHT = 60;
+        const COUNTRY_GAP = 12; // Between the code and the name
+        const ROW_LINE = "inset 0px -1px 0px rgba(0, 0, 0, 0.05)"; // The light line under a row
 
-        // An option of the country list: the name, and the code as its description. The other names of a country
-        // (in its searchText: "Turkey" for "Türkiye") are written next to the code, so the search finds them too.
+        // An option of the country list. The search finds the name, the code (the description, not shown) and
+        // the other names of a country (searchText: "Turkey" for "Türkiye").
         const toCountryOption = function (country) {
-            const nameWords = country.name.split(" ");
-            const otherNames = country.searchText.split(" ").filter(function (word) { return nameWords.indexOf(word) < 0; });
-            const description = otherNames.length ? country.code + " · " + otherNames.join(", ") : country.code;
-            return { value: country.shortName, label: country.name, description: description };
+            return {
+                value: country.shortName,
+                label: country.name,
+                description: country.code,
+                code: country.code,
+                searchText: country.searchText,
+            };
+        };
+
+        // The code of a country in a gray round pill
+        const createCodePill = function (code) {
+            return Label({
+                plainText: code,
+                fontSize: 16,
+                padding: [6, 2],
+                color: "rgba(0, 0, 0, 0.05)",
+                textColor: "#373836",
+                round: 8,
+            });
+        };
+
+        // A row of the list: the code and the name, a light line under it (white under the mouse: the package).
+        const createCountryRow = function (option, row) {
+            row.height = COUNTRY_ROW_HEIGHT;
+            row.boxShadow = ROW_LINE;
+            createCountryView(option);
+        };
+
+        // The chosen country in the field: the same as its row.
+        const createCountryView = function (option) {
+            createCodePill(option.code);
+            Label({ plainText: option.label, fontSize: 20 });
+            that.ellipsis = 1;
         };
 
         // The phone field takes the code, the mask and the short name of the chosen country
