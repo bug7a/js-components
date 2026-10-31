@@ -19,7 +19,7 @@ https://www.youtube.com/watch?v=WZZwiI_5WQA
 FOR YOUR CORDOVA PROJECT:
 - The folder works on its own: basic/ is a copy of the library (min files). Copy the whole folder.
   To refresh basic/ after basic.js changes (from the root of the repository):
-    ./_make-standalone.sh 04-template-m2/todo-app-example
+    ./_make-standalone.sh 04-template-m2/todo-app-example --in-place
 - Add these settings to your cordova project config.xml file:
     <preference name="DisallowOverscroll" value="true" />
     <preference name="StatusBarOverlaysWebView" value="false" />

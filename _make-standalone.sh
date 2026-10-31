@@ -2,38 +2,44 @@
 # Bismillah
 #
 # Make a project folder work on its own (outside this repository).
-# v26.09 - Bugra Ozden
+# v26.10 - Bugra Ozden
+#
+# By default the project folder is NOT changed: a ready copy is made in _dist/<project name>/ (gitignored),
+# so you keep working (and debugging) on the project with the sources of the repository. (2026-10-31)
 #
 # The pages in this repo load the library and the components from the repo root:
 #   <script src="../../basic/basic.min.js">   <script src="../../comp/tabs.js">
 # (the components have no .min twins in the repo: their .min files are made here, from the sources)
-# This script copies what the pages of a project load into the project folder, and
-# rewrites those paths:
+# This script copies the project, with what its pages load, into the output folder, and
+# rewrites those paths there:
 #
 #   my-project/basic/   basic.min.js, basic.min.css, LICENSE, font/
 #                       + the other files of basic/ the pages load, as .min (scroll-bar.min.js)
-#   my-project/comp/    every component the pages load, as name.min.js (made from its source
-#                       with terser), and its icon folder (comp/waiting/ -> comp/waiting/;
-#                       the icon paths in the code are rewritten to "comp/<folder>/")
+#   my-project/comp/    every component in ONE file, comp/components.min.js (the default since 2026-10-31;
+#                       made from the sources with terser, in the order the pages load them). The pages
+#                       get one <script> for it, in the place of their first component. The icon folders
+#                       of the components are copied into comp/<folder>/ and the paths in the code point there.
+#                       --separate: one name.min.js file for each component instead.
 #   my-project/comp/_sources.txt   where every file of comp/ comes from
 #
-#   --one-file (2026-10-30): every component in ONE file, comp/components.min.js (in the order the
-#   pages load them; the icon folders stay in comp/<folder>/; basic/ stays apart). The pages get
-#   one <script> for it, in the place of their first component. A project made so stays so
-#   at the next runs (comp/_sources.txt tells it).
+# Run it again after the project, the library or a component changes: the output folder is made
+# again from scratch every time (do not edit files in it; it has a _standalone.txt note).
 #
-# Run it again after the library or a component changes: it reads the pages (and
-# comp/_sources.txt) again and refreshes basic/ and comp/. Both folders are made again from
-# scratch every time: do not edit files in them.
+# --in-place: the project folder itself becomes standalone (its pages are rewritten, basic/ and comp/
+#   are made in it). For sites that live so in the repository (03-webpage/webpage-basicjs,
+#   04-template-m2/todo-app-example, __projects/webpage-ozden-panel). A project made in place with one
+#   file per component keeps that layout at the next runs (comp/_sources.txt tells it).
 #
 # It only fixes the <script src> / <link href> of the .htm / .html pages. Paths that leave
 # the folder in the project's own code ("../../" in a config.js) are listed at the end:
 # change those by hand.
 #
 # USAGE:
-#   ./_make-standalone.sh 03-webpage/webpage-basicjs          Copies and rewrites.
-#   ./_make-standalone.sh 03-webpage/webpage-basicjs --list   Only shows what it would do.
-#   ./_make-standalone.sh my-project --one-file                    The components in one file.
+#   ./_make-standalone.sh _projects/my-first-project              -> _dist/my-first-project/
+#   ./_make-standalone.sh _projects/my-first-project --out ~/site  -> the given folder
+#   ./_make-standalone.sh _projects/my-first-project --list       Only shows what it would do.
+#   ./_make-standalone.sh _projects/my-first-project --separate   One .min.js for each component.
+#   ./_make-standalone.sh 03-webpage/webpage-basicjs --in-place   The project folder itself.
 #
 # It only needs node (npx downloads terser).
 
@@ -50,18 +56,30 @@ export KEEP_COMMENTS="Bismillah"                                    # the house 
 
 PROJECT=""
 export IS_LIST=0
-export ONE_FILE=0
+export ONE_FILE=0       # 1: --one-file given (one file is also the default for a new output)
+export SEPARATE=0       # 1: --separate (one file for each component)
+export IN_PLACE=0
+export OUT_DIR=""
+isOutNext=0
 for argument in "$@"; do
+    if [ "$isOutNext" = "1" ]; then OUT_DIR="$argument"; isOutNext=0; continue; fi
     case "$argument" in
         --list) IS_LIST=1 ;;
         --one-file) ONE_FILE=1 ;;
-        -h | --help) sed -n '3,38p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        --separate) SEPARATE=1 ;;
+        --in-place) IN_PLACE=1 ;;
+        --out) isOutNext=1 ;;
+        -h | --help) sed -n '3,48p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
         -*) echo "Unknown option: $argument (try --help)"; exit 1 ;;
         *) PROJECT="$argument" ;;
     esac
 done
 
-if [ -z "$PROJECT" ]; then echo "Give a project folder: ./_make-standalone.sh 03-webpage/webpage-basicjs"; exit 1; fi
+if [ -z "$PROJECT" ]; then echo "Give a project folder: ./_make-standalone.sh _projects/my-first-project"; exit 1; fi
+if [ "$isOutNext" = "1" ]; then echo "--out needs a folder."; exit 1; fi
+if [ "$IN_PLACE" = "1" ] && [ -n "$OUT_DIR" ]; then echo "--in-place and --out can not go together."; exit 1; fi
+if [ "$ONE_FILE" = "1" ] && [ "$SEPARATE" = "1" ]; then echo "--one-file and --separate can not go together."; exit 1; fi
+if [ -n "$OUT_DIR" ]; then mkdir -p "$OUT_DIR" && OUT_DIR="$(cd "$OUT_DIR" && pwd)" || exit 1; fi
 if [ ! -d "$PROJECT" ]; then echo "Not a folder: $PROJECT"; exit 1; fi
 
 export REPO="$(pwd)"
@@ -94,9 +112,23 @@ const basicAlways = list(process.env.BASIC_ALWAYS);
 const compDirs = list(process.env.COMP_DIRS);
 const keepComments = new RegExp(process.env.KEEP_COMMENTS);
 
-const BASIC_OUT = path.join(PROJECT, "basic");
-const COMP_OUT = path.join(PROJECT, "comp");
+const IN_PLACE = process.env.IN_PLACE === "1";
+// The folder the standalone project is made in: the project itself (--in-place), --out, or _dist/<name>
+const OUT = IN_PLACE ? PROJECT : (process.env.OUT_DIR || path.join(REPO, "_dist", path.basename(PROJECT)));
+const MARKER_FILE = path.join(OUT, "_standalone.txt");
+const isInside = (folder, parent) => (folder + path.sep).startsWith(parent + path.sep);
+if (!IN_PLACE && (OUT === REPO || isInside(OUT, PROJECT) || isInside(PROJECT, OUT))) {
+    console.log("The output folder can not be the repository, or be inside the project (or hold it): " + OUT);
+    process.exit(1);
+}
+// The place in the output of a file of the project
+const toOut = (file) => IN_PLACE ? file : path.join(OUT, path.relative(PROJECT, file));
+
+const BASIC_OUT = path.join(OUT, "basic");
+const COMP_OUT = path.join(OUT, "comp");
 const SOURCES_FILE = path.join(COMP_OUT, "_sources.txt");
+const OWN_BASIC = path.join(PROJECT, "basic");   // --in-place: the copies of an earlier run (not pages)
+const OWN_COMP = path.join(PROJECT, "comp");
 
 // "../comp/waiting/", "../../comp/waiting/", "comp/action-button/"
 const ICON_FOLDER_PATH = /(["'`])(?:\.\.\/)*(comp)\/([\w.-]+)\//g;
@@ -113,7 +145,7 @@ const walk = function (dir) {
     fs.readdirSync(dir, { withFileTypes: true }).forEach(function (entry) {
         const full = path.join(dir, entry.name);
         if (entry.isDirectory()) {
-            if (full === BASIC_OUT || full === COMP_OUT || entry.name === "node_modules" || entry.name.startsWith(".")) return;
+            if ((IN_PLACE && (full === OWN_BASIC || full === OWN_COMP)) || entry.name === "node_modules" || entry.name.startsWith(".")) return;
             walk(full);
         } else if (/\.html?$/i.test(entry.name)) {
             pages.push(full);
@@ -132,7 +164,7 @@ const baseDirOf = function (page, html) {
 // Where a comp/ file came from in the last run (components.min.js: one line for each of its sources)
 const oldSources = {};
 const oldOneFile = [];
-if (fs.existsSync(SOURCES_FILE)) {
+if (IN_PLACE && fs.existsSync(SOURCES_FILE)) {
     fs.readFileSync(SOURCES_FILE, "utf8").split("\n").forEach(function (line) {
         const match = /^(\S+)\s+<-\s+(\S+)/.exec(line);
         if (!match) return;
@@ -140,8 +172,10 @@ if (fs.existsSync(SOURCES_FILE)) {
         else oldSources[match[1]] = match[2];
     });
 }
-// WHY: a project made with --one-file stays so (its pages load only comp/components.min.js)
-const isOneFile = process.env.ONE_FILE === "1" || oldOneFile.length > 0;
+// One file is the default. --separate: one file each. WHY: a project made in place with one file for each
+// component keeps that layout (its pages load those files) unless --one-file is given.
+const madeSeparate = Object.keys(oldSources).length > 0 && oldOneFile.length === 0;
+const isOneFile = process.env.ONE_FILE === "1" || (process.env.SEPARATE !== "1" && !madeSeparate);
 
 // *** FIND WHAT THE PAGES LOAD:
 
@@ -172,6 +206,8 @@ pages.forEach(function (page) {
         const target = path.resolve(baseDir, clean);
         const inProject = (target + path.sep).startsWith(PROJECT + path.sep);
         let newTarget = null;
+
+        if (inProject && !IN_PLACE) continue;   // a file of the project: it is copied with the project
 
         if (inProject) {
 
@@ -233,7 +269,7 @@ pages.forEach(function (page) {
 
         let to = "";
         if (newTarget) {
-            to = path.relative(baseDir, newTarget).split(path.sep).join("/");
+            to = path.relative(toOut(baseDir), newTarget).split(path.sep).join("/");
             if (value !== clean) to += value.slice(clean.length);   // keeps ?v=2 or #hash
         }
         rewrites.push({ page: page, from: value, to: to });
@@ -264,6 +300,7 @@ basicAlways.forEach(function (name) {
 // *** REPORT:
 
 console.log("Project: " + rel(PROJECT) + "  (" + pages.length + " page" + (pages.length == 1 ? "" : "s") + ")");
+console.log("  out:    " + (IN_PLACE ? "the project folder itself (--in-place)" : (isInside(OUT, REPO) ? rel(OUT) : OUT)));
 console.log("  basic/  " + Object.keys(basicFiles).sort().join(", "));
 if (isOneFile) console.log("  comp/   " + (oneFileOrder.length ? ONE_FILE_NAME + " <- " + oneFileOrder.join(", ") : "(none)"));
 else console.log("  comp/   " + (Object.keys(compFiles).length ? Object.keys(compFiles).sort().map((name) => name + " <- " + compFiles[name]).join(", ") : "(none)"));
@@ -285,7 +322,7 @@ const scan = function (dir) {
     fs.readdirSync(dir, { withFileTypes: true }).forEach(function (entry) {
         const full = path.join(dir, entry.name);
         if (entry.isDirectory()) {
-            if (full === BASIC_OUT || full === COMP_OUT || entry.name === "node_modules" || entry.name.startsWith(".")) return;
+            if ((IN_PLACE && (full === OWN_BASIC || full === OWN_COMP)) || entry.name === "node_modules" || entry.name.startsWith(".")) return;
             scan(full);
         } else if (/\.(js|css|json|webmanifest)$/i.test(entry.name)) {
             fs.readFileSync(full, "utf8").split("\n").forEach(function (line, index) {
@@ -334,6 +371,25 @@ const copyFolder = function (from, to) {
 };
 
 (async function () {
+
+    // OUTPUT FOLDER: made again from scratch (only a folder this script made, or an empty one, is cleared)
+    if (!IN_PLACE) {
+        if (fs.existsSync(OUT) && fs.readdirSync(OUT).length && !fs.existsSync(MARKER_FILE)) {
+            console.log("\nThe output folder is not empty and was not made by this script: " + OUT + " (nothing was written)");
+            process.exit(1);
+        }
+        fs.rmSync(OUT, { recursive: true, force: true });
+        fs.mkdirSync(OUT, { recursive: true });
+        fs.readdirSync(PROJECT, { withFileTypes: true }).forEach(function (entry) {
+            if (entry.name === "node_modules" || entry.name.startsWith(".")) return;
+            const source = path.join(PROJECT, entry.name);
+            if (entry.isDirectory()) copyFolder(source, path.join(OUT, entry.name));
+            else fs.copyFileSync(source, path.join(OUT, entry.name));
+        });
+        fs.writeFileSync(MARKER_FILE,
+            "Made by _make-standalone.sh (repository root) from " + rel(PROJECT) + ".\n"
+            + "Do not edit the files here: change the project, then run the script again (this folder is made again from scratch).\n");
+    }
 
     // BASIC
     fs.rmSync(BASIC_OUT, { recursive: true, force: true });
@@ -390,7 +446,7 @@ const copyFolder = function (from, to) {
     const byPage = {};
     rewrites.forEach(function (item) { (byPage[item.page] = byPage[item.page] || []).push(item); });
     Object.keys(byPage).forEach(function (page) {
-        let html = fs.readFileSync(page, "utf8");
+        let html = fs.readFileSync(toOut(page), "utf8");
         // --one-file: the <script> lines of the components that are in comp/components.min.js now
         byPage[page].filter((rewrite) => rewrite.to === "").forEach(function (rewrite) {
             const escaped = rewrite.from.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -400,11 +456,12 @@ const copyFolder = function (from, to) {
             const item = byPage[page].find((rewrite) => rewrite.from === value && rewrite.to);
             return item ? start + quote + item.to + quote : all;
         });
-        fs.writeFileSync(page, html);
+        fs.writeFileSync(toOut(page), html);
     });
 
     const compCount = isOneFile ? ONE_FILE_NAME + " (" + oneFileOrder.length + " components)" : names.length;
-    console.log("\nDone: basic/ (" + Object.keys(basicFiles).length + "), comp/ (" + compCount + "), " + Object.keys(byPage).length + " page(s) rewritten.");
+    console.log("\nDone: basic/ (" + Object.keys(basicFiles).length + "), comp/ (" + compCount + "), " + Object.keys(byPage).length + " page(s) rewritten, in "
+        + (IN_PLACE ? "the project folder" : (isInside(OUT, REPO) ? rel(OUT) : OUT)) + ".");
     finish();
 
 })().catch(function (error) {

@@ -97,13 +97,13 @@ Load scripts in this order: `basic.css` and `basic.js` first, then `ui-standards
 
 ### Using the components in your own project
 
-Create your project folder in the repository and load what you need with relative paths (`../basic/…`, `../comp/…`). When it is ready to leave the repository, run:
+Create your project folder in `_projects/` (copy `_projects/my-first-project/`) and load what you need with relative paths (`../../basic/…`, `../../comp/…`). When it is ready to leave the repository, run:
 
 ```sh
-./_make-standalone.sh my-project
+./_make-standalone.sh _projects/my-project
 ```
 
-It copies the library and component files your pages load into `my-project/basic/` and `my-project/comp/` and rewrites the paths, so the folder works on its own. Run it again to refresh the copies.
+Your project folder is not changed: a ready copy is made in `_dist/my-project/`, with the library (`basic/`) and every component your pages load in one file (`comp/components.min.js`), and its paths rewritten, so that folder works on its own. Run it again after a change to make the copy again. `--out <folder>` puts it somewhere else, `--separate` makes one `.min.js` for each component.
 
 ### `.min.js` twins
 
