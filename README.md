@@ -130,6 +130,7 @@ Both scripts use [terser](https://terser.org/) through `npx`, so they need Node.
 | `03-webpage/` | Web sites drawn with basic.js: the library site and the handbook site |
 | `04-template-m1/` | Links to the mobile app template, made with an older basic.js |
 | `04-template-m2/` | App templates: admin panel, web forms (contact, appointment, order…), a to-do app, and `easy-pwa`, a script that turns a site into an installable app |
+| `_projects/` | Your own projects: copy `my-first-project/` and use `basic/` and `comp/` from the repository (see its readme) |
 | `05-showcase/` | Links to live apps made with basic.js |
 | `__handbook/` | The basic.js handbook in [English](__handbook/english/) and [Turkish](__handbook/turkce/) |
 | `context/` | Short reference docs for the core library and components, written for AI assistants |

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>My First Project</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- LIBRARY FILES: basic.css and basic.js come first (two folders up: the basic/ folder of the repository) -->
+        <link rel="preload" href="../../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../../basic/basic.css">
+        <script src="../../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- COMPONENTS: from the comp/ folder of the repository. Load a component after the ones it needs. -->
+        <script src="../../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>       <!-- InputB needs it -->
+        <script src="../../comp/input-b.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../comp/notice.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+
+        /*
+
+        MY FIRST PROJECT
+
+        A name field and a button: the button says hello with a message in the middle of the screen.
+        Copy this folder to start your own project (see ../readme.md).
+
+        - InputB({ styleName: "ozden" })        -> a text field with a title (02-comp-examples/input-b*.htm)
+        - SmartButton({ labelText, onClick })   -> the default button of the components (02-comp-examples/smart-button*.htm)
+        - Notice.show({ messageText, type })    -> a short message in the middle of the screen (02-comp-examples/notice.htm)
+
+        TRY: change the text of the button, give it an icon (iconFile: "../../comp/smart-button/alert-black.png"),
+        add a second field (Ex: your city) and write both in the message.
+
+        */
+
+        // *** VARIABLES:
+
+        const CARD_WIDTH = 360;
+        const BUTTON_HEIGHT = 48;
+
+        let txtName;
+        let btnHello;
+
+        // *** START:
+
+        // basic.js runs start() by itself, when the page is ready.
+        const start = function () {
+
+            page.color = "#F2F2F2";
+
+            // GROUP: Fills the page and keeps the card in the middle
+            AutoLayout();
+
+                // GROUP: The card: the objects one under the other
+                VGroup({
+                    width: CARD_WIDTH,
+                    height: "auto",
+                    align: "left top",
+                    gap: 16,
+                    padding: 24,
+                    color: "white",
+                    round: 12,
+                });
+
+                    Label({ text: "My First Project", fontSize: 24, bold: 1 });
+
+                    // INPUTB: The name field
+                    txtName = InputB({
+                        styleName: "ozden",
+                        width: "100%",
+                        titleText: "YOUR NAME",
+                        placeholder: "Write your name",
+                    });
+
+                    // SMARTBUTTON: Says hello
+                    btnHello = SmartButton({
+                        labelText: "Say hello",
+                        width: "100%",
+                        height: BUTTON_HEIGHT,
+                        onClick: sayHello,
+                    });
+
+                endGroup();
+
+            endAutoLayout();
+
+        };
+
+        // *** FUNCTIONS:
+
+        // Shows a message with the name in the field.
+        const sayHello = function () {
+            const name = txtName.getInputValue().trim();
+            if (name === "") {
+                Notice.show({ messageText: "Write your name first.", type: "warning" });
+                return;
+            }
+            Notice.show({ messageText: "Hello, " + name + "!", type: "success" });
+        };
+
+        </script>
+
+    </head>
+    <body>
+    </body>
+</html>
