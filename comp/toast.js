@@ -724,7 +724,9 @@ Toast.layoutContainers = function () {
         const container = Toast._containers[position];
         const style = container.css;
 
-        style.position = "fixed";
+        // WHY: "absolute", not "fixed": the container is on page (page never scrolls). page.fit() / page.zoom give
+        //      <body> a transform, and a fixed box is placed on the scaled <body> (a toast in the middle of a phone screen).
+        style.position = "absolute";
         style.zIndex = String(options.zIndex);
         style.top = "";
         style.bottom = "";
