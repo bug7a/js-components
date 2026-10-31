@@ -21,10 +21,10 @@ bileşene aktarılır. Amaç: tasarım yüzeyi basit ve kolay değişir kalsın,
 
 ## Açmak
 
-- VS Code: dosyaya sağ tık → **Open in basic designer** (eklenti: `__projects/basic-designer/vscode-extension/basic-designer-0.0.6.vsix`,
+- VS Code: dosyaya sağ tık → **Open in basic designer** (eklenti: `_basic-designer/vscode-extension/basic-designer-0.0.6.vsix`,
   alfa, depoda değil).
 - Tarayıcı (Live Server, port 5505):
-  `http://127.0.0.1:5505/__projects/basic-designer/index.htm?page=_designs/smart-button.htm`
+  `http://127.0.0.1:5505/_basic-designer/index.htm?page=_designs/smart-button.htm`
 
 ## Değişiklikleri bileşene aktarmak
 

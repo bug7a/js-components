@@ -25,3 +25,7 @@ __video/
 
 # Arsiv: kullanilmayan klasorler ve dosyalar. GitHub'a gonderilmez.
 __archive/
+
+# Private tools of the user (2026-10-31): never to GitHub
+_basic-designer/
+_ozden-manager/
