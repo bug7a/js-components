@@ -262,7 +262,7 @@ const EditUser = function(params = {}) {
         });
 
         // Delete Button (Hold to Confirm)
-        const _assetsPath = "../../comp-m3/hold-to-confirm-button/";
+        const _assetsPath = "../../comp/hold-to-confirm-button/";
         btnDelete = HoldToConfirmButton({
             width: "auto",
             labelText: "Hold to Delete",

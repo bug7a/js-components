@@ -14,7 +14,7 @@ Bu belgede basic.js kütüphanesine eklenen yeni özellikler, güncellemeler ve 
 
 ## Versiyon 26.10.24
 
-*   **`basic.applyStylePackage(params, Comp.styles, CompDefaults)`:** Bir bileşenin stil paketleri (`styleName: "dark"`) tek satırda; her bileşenin yazdığı üç satırın yerine. Sıra aynı: `params.style` > `styleName` paketi > `Defaults.style`. Bir paket olduğu gibi de verilebilir, `Tabs({ style: Tabs.styles.dark })`: kopyalanır, paketin kendisi hiç değişmez. Tam uyumlu. `comp-m4/tabs.js` ve `_component-template.js` bunu kullanır (v26.10.24 gerekir). Örnekli başvuru: `basic/basic-what-is-new.md`.
+*   **`basic.applyStylePackage(params, Comp.styles, CompDefaults)`:** Bir bileşenin stil paketleri (`styleName: "dark"`) tek satırda; her bileşenin yazdığı üç satırın yerine. Sıra aynı: `params.style` > `styleName` paketi > `Defaults.style`. Bir paket olduğu gibi de verilebilir, `Tabs({ style: Tabs.styles.dark })`: kopyalanır, paketin kendisi hiç değişmez. Tam uyumlu. `comp/tabs.js` ve `_component-template.js` bunu kullanır (v26.10.24 gerekir). Örnekli başvuru: `basic/basic-what-is-new.md`.
 
 ---
 
@@ -28,7 +28,7 @@ Bu belgede basic.js kütüphanesine eklenen yeni özellikler, güncellemeler ve 
 *   **Düzeltme (gruplar):** Bir grubun (`HGroup`, `VGroup`, `AutoLayout`) props'una verilen `grow`, `shrink` ve `css`, grubun flex stilleri tarafından eziliyor ve kayboluyordu. Artık `VGroup({ align: "left top", css: { alignItems: "stretch" } })` ve `HGroup({ grow: 1 })` yazıldığı gibi çalışır.
 *   **Düzeltme (`rotate`):** `obj.rotate = 45` transform'un geri kalanını (bir `translateY()`, bir `scale()`) siliyordu. Artık yalnızca kendi `rotate()` kısmını değiştirir.
 *   **Erişilebilirlik özellikleri (her nesne):** `role` (`"button"`, `"tab"`...), `aria` (`{ label: "Kapat", selected: true }`: yalnızca verilen anahtarlar değişir, `null` birini kaldırır) ve `tabIndex`. `elem.setAttribute("aria-...")` satırlarının yerine geçer. Bkz. "Ortak Özellikler".
-*   **Bileşen şablonu** (`_component-template.js`) bunlarla yazıldı; `comp-m4/tree-view.js` kendi `remove()`'u olmayan ilk bileşen.
+*   **Bileşen şablonu** (`_component-template.js`) bunlarla yazıldı; `comp/tree-view.js` kendi `remove()`'u olmayan ilk bileşen.
 
 ---
 

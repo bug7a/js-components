@@ -10,7 +10,7 @@
 # Run it after the library, a component or a chapter of the handbook is changed:
 #   ./03-webpage-m2/webpage-handbook/_update-copies.sh      (from anywhere)
 #
-# comp-m4/toast.js has no .min.js twin, so comp/toast.min.js is made here with terser (npx, like _make-min-js.sh).
+# comp/toast.js has no .min.js twin, so comp/toast.min.js is made here with terser (npx, like _make-min-js.sh).
 #
 # Then it writes offlineFiles in easy-pwa.js (between "OFFLINE FILES START" and "END"): every file of the site,
 # so the app (PWA, offline mode) saves all the chapters and the files of the examples at the first visit.

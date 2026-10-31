@@ -173,8 +173,8 @@ const LoginPage = function(params = {}) {
                             maxChar: 60,
                             showShowPasswordButton: 1,
                             isRequired: 0,
-                            showPasswordIconFile: "../../comp-m2/password-input-b/show-btn.png",
-                            hidePasswordIconFile: "../../comp-m2/password-input-b/hide-btn.png",
+                            showPasswordIconFile: "../../comp/password-input-b/show-btn.png",
+                            hidePasswordIconFile: "../../comp/password-input-b/hide-btn.png",
                             inputValue: "",
                             minChar: 0,
                             mustUseNumber: 0,
@@ -265,8 +265,8 @@ const LoginPage = function(params = {}) {
                             placeholder: "Create a password",
                             maxChar: 60,
                             showShowPasswordButton: 1,
-                            showPasswordIconFile: "../../comp-m2/password-input-b/show-btn.png",
-                            hidePasswordIconFile: "../../comp-m2/password-input-b/hide-btn.png",
+                            showPasswordIconFile: "../../comp/password-input-b/show-btn.png",
+                            hidePasswordIconFile: "../../comp/password-input-b/hide-btn.png",
                             minChar: 8,
                             minCharWarningText: "Password must be at least 8 characters",
                             mustUseNumber: 1,
@@ -287,8 +287,8 @@ const LoginPage = function(params = {}) {
                             placeholder: "Re-enter password",
                             maxChar: 60,
                             showShowPasswordButton: 1,
-                            showPasswordIconFile: "../../comp-m2/password-input-b/show-btn.png",
-                            hidePasswordIconFile: "../../comp-m2/password-input-b/hide-btn.png",
+                            showPasswordIconFile: "../../comp/password-input-b/show-btn.png",
+                            hidePasswordIconFile: "../../comp/password-input-b/hide-btn.png",
                             minChar: 8,
                             minCharWarningText: "Password must be at least 8 characters",
                             mustUseNumber: 1,
@@ -370,7 +370,7 @@ const LoginPage = function(params = {}) {
         box.waiting = Waiting({
             animated: 1, 
             coverBackgroundColor: "rgba(0,0,0,0.6)",
-            waitingIcon: "../../comp-m2/waiting/clock3.png",
+            waitingIcon: "../../comp/waiting/clock3.png",
         });         
         box.waiting.icon.elem.style.filter = "invert(100%)";
 

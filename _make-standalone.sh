@@ -5,7 +5,7 @@
 # v26.09 - Bugra Ozden
 #
 # The pages in this repo load the library and the components from the repo root:
-#   <script src="../../basic/basic.min.js">   <script src="../../comp-m4/tabs.js">
+#   <script src="../../basic/basic.min.js">   <script src="../../comp/tabs.js">
 # (the components have no .min twins in the repo: their .min files are made here, from the sources)
 # This script copies what the pages of a project load into the project folder, and
 # rewrites those paths:
@@ -13,7 +13,7 @@
 #   my-project/basic/   basic.min.js, basic.min.css, LICENSE, font/
 #                       + the other files of basic/ the pages load, as .min (scroll-bar.min.js)
 #   my-project/comp/    every component the pages load, as name.min.js (made from its source
-#                       with terser), and its icon folder (comp-m2/waiting/ -> comp/waiting/;
+#                       with terser), and its icon folder (comp/waiting/ -> comp/waiting/;
 #                       the icon paths in the code are rewritten to "comp/<folder>/")
 #   my-project/comp/_sources.txt   where every file of comp/ comes from
 #
@@ -43,7 +43,7 @@ cd "$(dirname "$0")" || exit 1   # the repo root
 # *** SETTINGS:
 
 export BASIC_ALWAYS="basic.min.js basic.min.css LICENSE font"   # basic/ files every copy gets
-export COMP_DIRS="comp-m2 comp-m3 comp-m4"   # (comp-m1 was archived on 2026-10-30)
+export COMP_DIRS="comp"   # (comp-m2 / comp-m3 / comp-m4 were put together in comp/ on 2026-10-31)
 export KEEP_COMMENTS="Bismillah"                                    # the house header stays in the min file
 
 # *** MAIN:
@@ -98,8 +98,8 @@ const BASIC_OUT = path.join(PROJECT, "basic");
 const COMP_OUT = path.join(PROJECT, "comp");
 const SOURCES_FILE = path.join(COMP_OUT, "_sources.txt");
 
-// "../comp-m2/waiting/", "../../comp-m2/waiting/", "comp-m4/action-button/"
-const ICON_FOLDER_PATH = /(["'`])(?:\.\.\/)*(comp-m[1-4])\/([\w.-]+)\//g;
+// "../comp/waiting/", "../../comp/waiting/", "comp/action-button/"
+const ICON_FOLDER_PATH = /(["'`])(?:\.\.\/)*(comp)\/([\w.-]+)\//g;
 const SKIPPED_ASSET = /^\.|\.webloc$/; // .DS_Store, links to web pages
 const TAG_PATH = /(<(?:script|link)\b[^>]*?\b(?:src|href)\s*=\s*)(["'])([^"']+)\2/gi;
 
@@ -146,7 +146,7 @@ const isOneFile = process.env.ONE_FILE === "1" || oldOneFile.length > 0;
 // *** FIND WHAT THE PAGES LOAD:
 
 const basicFiles = {};   // "scroll-bar.min.js" -> repo source file
-const compFiles = {};    // "tabs.min.js" -> "comp-m4/tabs.js"
+const compFiles = {};    // "tabs.min.js" -> "comp/tabs.js"
 const rewrites = [];     // { page, from, to } (to: "" = the <script> is removed: --one-file)
 const pageComps = {};    // --one-file: page -> its component sources, in their order
 
@@ -227,7 +227,7 @@ pages.forEach(function (page) {
             }
 
         } else {
-            warnings.push(rel(page) + ": " + value + " is outside the project and is not in basic/ or comp-m*/ (not copied)");
+            warnings.push(rel(page) + ": " + value + " is outside the project and is not in basic/ or comp/ (not copied)");
             continue;
         }
 

@@ -16,7 +16,7 @@ bileşene aktarılır. Amaç: tasarım yüzeyi basit ve kolay değişir kalsın,
   bir görüntüsü olarak çizilir.
 - **Değerler sayfanın başında:** paketlerin renkleri ve ölçüleri düz nesnelerde (`LOOKS`, `STATES`...). Bunlar
   bileşenin paketlerinden kopyadır.
-- **Adı bileşenin dosyasının adıdır:** `comp-m4/smart-button.js` → `_designs/smart-button.htm`.
+- **Adı bileşenin dosyasının adıdır:** `comp/smart-button.js` → `_designs/smart-button.htm`.
 - Sayfa kaynağı yükler: `../basic/basic.css`, `../basic/basic.js` (bileşen yok).
 
 ## Açmak
@@ -43,8 +43,8 @@ Bu klasör ara sıra kullanılır: taslaklar **her bileşen değişikliğinde g�
 
 | Dosya | Bileşen | İçinde |
 |---|---|---|
-| `progress-bar.htm` | `comp-m4/progress-bar.js` (ProgressBar) | classic, modern, ozden; 14 durum |
-| `smart-button.htm` | `comp-m4/smart-button.js` (SmartButton) | ozdenType1–4, classic; dört içerik, hover, basılı, odak, kapalı, bekliyor (saat, noktalar), "Sure?" balonu, "Sure?" yazılı düğme |
+| `progress-bar.htm` | `comp/progress-bar.js` (ProgressBar) | classic, modern, ozden; 14 durum |
+| `smart-button.htm` | `comp/smart-button.js` (SmartButton) | ozdenType1–4, classic; dört içerik, hover, basılı, odak, kapalı, bekliyor (saat, noktalar), "Sure?" balonu, "Sure?" yazılı düğme |
 
 ## Yeni bir taslak
 

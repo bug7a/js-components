@@ -1,6 +1,6 @@
 # basic.js animated rules
 
-How a component gets an `animated` param (the user, 2026-10-27). The model is `comp-m2/search-input-v2.js`
+How a component gets an `animated` param (the user, 2026-10-27). The model is `comp/search-input-v2.js`
 (`SearchInput`, `animated: 1`): read it before adding `animated` to another component.
 
 ## What the param is
@@ -22,7 +22,7 @@ How a component gets an `animated` param (the user, 2026-10-27). The model is `c
 - **One exception, the spring of a toggle icon (the user, 2026-10-28):** an icon that turns to show a new state
   (+ → ×, a chevron that opens a menu) may end with a small overshoot: `transform 0.35s cubic-bezier(0.34, 1.56,
   0.64, 1)` (`SPRING_TIME`, `SPRING_EASE`). Only that turn springs; the rest of the component keeps the one curve.
-  The model: `comp-m4/action-button.js`.
+  The model: `comp/action-button.js`.
 - Small sizes: grow 1.05-1.08 under the mouse, about 1.06 while focused, a short pulse 1.14 for 150 ms; a tilt of
   about 10-12 deg; a turn of 90 deg for an icon like ×. Check that a grown or tilted icon does not touch its text.
 

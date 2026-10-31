@@ -16,7 +16,7 @@ JS-Component Suite is built on [**basic.js**](https://bug7a.github.io/basic.js/)
 ```html
 <link rel="stylesheet" href="basic/basic.min.css">
 <script src="basic/basic.min.js"></script>
-<script src="comp-m4/smart-button.js"></script>
+<script src="comp/smart-button.js"></script>
 
 <script>
 const start = function () {
@@ -83,7 +83,7 @@ To animate an object, declare its transitions once with `obj.setMotion("left 0.3
 The newer components come with ready-made looks. Pick one with `styleName` (`Tabs({ styleName: "modern" })`; most have `classic`, `modern` and `dark`), and change single values with the `style` prop.
 
 ### Theming (optional)
-`comp-m4/ui-standards.js` adds the global `UI`: color and size tokens (`UI.COLOR_SURFACE`, `UI.COLOR_PRIMARY`, `UI.ROUND_*`…) that keep the same name in every theme, and `UI.setTheme("light" | "dark" | "auto")` to switch. The components don't need it; use it for the colors of your own pages.
+`comp/ui-standards.js` adds the global `UI`: color and size tokens (`UI.COLOR_SURFACE`, `UI.COLOR_PRIMARY`, `UI.ROUND_*`…) that keep the same name in every theme, and `UI.setTheme("light" | "dark" | "auto")` to switch. The components don't need it; use it for the colors of your own pages.
 
 ---
 
@@ -97,7 +97,7 @@ Load scripts in this order: `basic.css` and `basic.js` first, then `ui-standards
 
 ### Using the components in your own project
 
-Create your project folder in the repository and load what you need with relative paths (`../basic/…`, `../comp-m4/…`). When it is ready to leave the repository, run:
+Create your project folder in the repository and load what you need with relative paths (`../basic/…`, `../comp/…`). When it is ready to leave the repository, run:
 
 ```sh
 ./_make-standalone.sh my-project
@@ -110,7 +110,7 @@ It copies the library and component files your pages load into `my-project/basic
 Most components have a `.min.js` twin next to them, and sample pages often load that version. After you edit a source file, rebuild its twin:
 
 ```sh
-./_make-min-js.sh --build comp-m4/tabs.js
+./_make-min-js.sh --build comp/tabs.js
 ```
 
 Both scripts use [terser](https://terser.org/) through `npx`, so they need Node.js. Nothing else in the repository does.
@@ -122,11 +122,11 @@ Both scripts use [terser](https://terser.org/) through `npx`, so they need Node.
 | Path | Contents |
 | :--- | :--- |
 | `basic/` | The core library (`basic.js`, `basic.css`, fonts) |
-| `comp-m2/` … `comp-m4/` | Components, grouped by generation. `m4` is the newest. (The first generation, `m1`, was archived on 2026-10-30.) |
+| `comp/` | All the components (generations 2, 3 and 4 in one folder since 2026-10-31; the catalog still shows the generation) |
 | `index.htm`, `index/` | The component catalog site |
 | `01-basic-js-by-example/` | Step-by-step tutorial pages for the core library, written for beginners |
 | `01-basic-js-by-example/_first-coding-projects/` | Small projects for people who write their first programs (calculator, dice, XOX, snake, chess…), each with notes on its algorithm |
-| `02-comp-m*-samples/` | One demo page per component |
+| `02-comp-examples/` | One demo page per component |
 | `03-webpage-m2/` | Web sites drawn with basic.js: the library site and the handbook site |
 | `04-template-m1/` | Links to the mobile app template, made with an older basic.js |
 | `04-template-m2/` | App templates: admin panel, web forms (contact, appointment, order…), a to-do app, and `easy-pwa`, a script that turns a site into an installable app |

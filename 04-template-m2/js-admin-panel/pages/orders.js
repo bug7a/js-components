@@ -320,8 +320,8 @@ const OrdersPage = function(params = {}) {
                     searchIconSize: 16,
                     placeholderText: "Search orders",
                     invertIconColor: T.invertIcon,
-                    searchIconFile: LIB_PATH + "comp-m2/search-input-v2/search.svg",
-                    clearIconFile: LIB_PATH + "comp-m2/search-input-v2/clear.svg",
+                    searchIconFile: LIB_PATH + "comp/search-input-v2/search.svg",
+                    clearIconFile: LIB_PATH + "comp/search-input-v2/clear.svg",
                     onSearch: function(text) {
                         filter.search = text;
                         searchTimer = waitAndRun(searchTimer, render, 200); // WHY: Do not filter on every key.
@@ -784,8 +784,8 @@ const OrderDetails = function(params = {}) {
                 height: 40,
                 labelText: "Hold to Refund " + OrdersPage.formatMoney(order.total),
                 completedText: "REFUNDED",
-                iconFile: "../../comp-m3/hold-to-confirm-button/trash.png",
-                holdingIconFile: "../../comp-m3/hold-to-confirm-button/trash-red.png",
+                iconFile: "../../comp/hold-to-confirm-button/trash.png",
+                holdingIconFile: "../../comp/hold-to-confirm-button/trash-red.png",
                 holdDuration: 1500,
                 resetDelay: 600,
                 style: {
@@ -914,7 +914,7 @@ OrdersPage.createTinySelect = function(list, onSelect, selectedIndex = 0) {
         round: 8,
         labelBoldFont: 0,
         labelTextColor: Ink(0.9),
-        arrowIcon: "../../comp-m2/tiny-select/arrow.svg",
+        arrowIcon: "../../comp/tiny-select/arrow.svg",
         arrowSize: 18,
         invertIconColor: T.invertIcon,
         listFontSize: 14,
@@ -945,8 +945,8 @@ OrdersPage.getSmartTableStyle = function(libPath) {
             textColor: Ink(0.9), placeholderColor: Ink(0.4), fontSize: 14,
             placeholderText: "Filter the table",
             searchIconSize: 15, searchIconOpacity: 0.55, invertIconColor: T.invertIcon,
-            searchIconFile: libPath + "comp-m2/search-input-v2/filter.png",
-            clearIconFile: libPath + "comp-m2/search-input-v2/clear.svg",
+            searchIconFile: libPath + "comp/search-input-v2/filter.png",
+            clearIconFile: libPath + "comp/search-input-v2/clear.svg",
         },
         // Filtre kutusundaki sütun seçim listesi (ALL) de koyu tema ile açılsın.
         searchTitleMenuParams: {
@@ -970,13 +970,13 @@ OrdersPage.getSmartTableStyle = function(libPath) {
             highlightTitleCellColor: Ink(0.08),
             verticalScrollWidth: 20,
             verticalScrollMargin: 2,
-            btnScrollDownIconFile: libPath + "comp-m3/smart-table/down.png",
-            btnScrollUpIconFile: libPath + "comp-m3/smart-table/up.png",
-            btnScrollCenterIconFile: libPath + "comp-m3/smart-table/scroll.png",
-            sortIconFile: libPath + "comp-m3/smart-table/sort.png",
+            btnScrollDownIconFile: libPath + "comp/smart-table/down.png",
+            btnScrollUpIconFile: libPath + "comp/smart-table/up.png",
+            btnScrollCenterIconFile: libPath + "comp/smart-table/scroll.png",
+            sortIconFile: libPath + "comp/smart-table/sort.png",
             // WHY: Varsayılan tik ikonu koyu renkli; koyu menüde görünmüyordu.
             searchTitleCheckIconFile: "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + S.ACCENT_COLOR + '" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17.5 19 7"/></svg>'),
-            loadingIconFile: libPath + "comp-m3/smart-table/clock.png",
+            loadingIconFile: libPath + "comp/smart-table/clock.png",
             invertIconColor: T.invertIcon,
             box: { color: S.CARD_COLOR },
             boxBorder: { border: 1, borderColor: S.CARD_BORDER_COLOR },

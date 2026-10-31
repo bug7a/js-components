@@ -26,8 +26,8 @@ Tabs.styles.dark = {
 - The order is the same on both levels: the params of the page > the package > the defaults; `params.style` > the package's `style` > `Defaults.style`.
 - The package is copied (`mergeIntoIfMissing`; its arrays with `slice()`, because the merge gives an array as it is), so it is never changed.
 - A component whose look is all in flat params (comp-m2 `InputB`) marks its packages with `style: {}`: `InputB.styles.dark = { style: {}, backgroundColor: "#232322", ... }`. Without the mark the keys would go into `params.style`.
-- `comp-m2/input-b.js` uses it now (its own `InputB.applyStylePackage` of 2026-10-26 is gone): it needs v26.10.27.
-- `comp-m4/label-editor.js`: its `dark` package gives `newLabel` a light text color and its own `colorPalette` (a new label was not seen on the dark list): it needs v26.10.27.
+- `comp/input-b.js` uses it now (its own `InputB.applyStylePackage` of 2026-10-26 is gone): it needs v26.10.27.
+- `comp/label-editor.js`: its `dark` package gives `newLabel` a light text color and its own `colorPalette` (a new label was not seen on the dark list): it needs v26.10.27.
 - `test/basic-test.htm`: four checks (the keys fill the params / the style; given params win; the package is not changed; its arrays are copied), 158/158.
 
 ---
@@ -93,7 +93,7 @@ Box({ color: Alpha(UI.COLOR_PRIMARY, 0.15) });    // a var(--token) follows the 
 - An alpha the color already has is multiplied: `Alpha("#00000080", 0.5)` is about 25%.
 - `percent` is 0 to 1, like `Black()`: `0` gives `"transparent"`, `1` (the default) gives the color as it is.
 
-`UI.alpha()` of `comp-m4/ui-standards.js` stays (it always writes `color-mix`). It is a new global, so a page that has its own `Alpha` gets the library's one written over by its own (a `function Alpha` or `window.Alpha`) or a SyntaxError (a `const Alpha` / `let Alpha` at the top of a page script); no page of the repository has one.
+`UI.alpha()` of `comp/ui-standards.js` stays (it always writes `color-mix`). It is a new global, so a page that has its own `Alpha` gets the library's one written over by its own (a `function Alpha` or `window.Alpha`) or a SyntaxError (a `const Alpha` / `let Alpha` at the top of a page script); no page of the repository has one.
 
 ---
 
@@ -118,7 +118,7 @@ The order is the same: `params.style` > `packages[params.styleName]` (or `defaul
 
 One thing is new: `params.style` becomes a new object. A package can be given as it is, `Tabs({ style: Tabs.styles.dark })`, and the package is never changed. Before, the merges wrote the missing keys into that object (the package of every Tabs on the page), and a page that changed it (`const myStyle = Tabs.styles.dark; myStyle.indicator.color = "red"`) changed every dark Tabs. To change a few keys of a package, keep writing `styleName: "dark", style: { indicator: { color: "red" } }`.
 
-Moved to it: `comp-m4/tabs.js` and `_component-template.js`. The other components keep their three lines (they work the same) and are moved when they are touched. A component that uses it needs basic.js v26.10.24.
+Moved to it: `comp/tabs.js` and `_component-template.js`. The other components keep their three lines (they work the same) and are moved when they are touched. A component that uses it needs basic.js v26.10.24.
 
 ---
 
@@ -135,7 +135,7 @@ VGroup({ align: "left top", css: { alignItems: "stretch" } }); // before: alignI
 HGroup({ width: "auto", grow: 1 });                             // before: flexGrow stayed 0
 ```
 
-Now `grow`, `shrink` and `css` are applied after the flex styles. A page that gave them to a group gets what it wrote: in this repository only `comp-m4/time-line.js` (`grow: 1` on the texts) changed, its texts now take the rest of the row (the same place on the screen). `group.css.alignItems = "stretch"` after the group still works.
+Now `grow`, `shrink` and `css` are applied after the flex styles. A page that gave them to a group gets what it wrote: in this repository only `comp/time-line.js` (`grow: 1` on the texts) changed, its texts now take the rest of the row (the same place on the screen). `group.css.alignItems = "stretch"` after the group still works.
 
 ### Fix: `rotate` keeps the other parts of the transform
 

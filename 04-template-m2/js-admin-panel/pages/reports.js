@@ -480,7 +480,7 @@ const ReportsPage = function(params = {}) {
             round: 8,
             labelBoldFont: 0,
             labelTextColor: Ink(0.9),
-            arrowIcon: LIB_PATH + "comp-m2/tiny-select/arrow.svg",
+            arrowIcon: LIB_PATH + "comp/tiny-select/arrow.svg",
             arrowSize: 18,
             invertIconColor: T.invertIcon,
             listFontSize: 14,
@@ -948,8 +948,8 @@ const ReportsPage = function(params = {}) {
                         placeholderText: "Filter (Ex: Books, 2026-09)",
                         fontSize: 14,
                         invertIconColor: T.invertIcon,
-                        searchIconFile: LIB_PATH + "comp-m2/search-input-v2/filter.png",
-                        clearIconFile: LIB_PATH + "comp-m2/search-input-v2/clear.svg",
+                        searchIconFile: LIB_PATH + "comp/search-input-v2/filter.png",
+                        clearIconFile: LIB_PATH + "comp/search-input-v2/clear.svg",
                     },
                     // Filtre kutusundaki sütun seçim listesi (ALL) de koyu tema ile açılsın.
                     searchTitleMenuParams: {
@@ -973,13 +973,13 @@ const ReportsPage = function(params = {}) {
                         highlightTitleCellColor: Ink(0.08),
                         verticalScrollWidth: 20,
                         verticalScrollMargin: 2,
-                        btnScrollDownIconFile: LIB_PATH + "comp-m3/smart-table/down.png",
-                        btnScrollUpIconFile: LIB_PATH + "comp-m3/smart-table/up.png",
-                        btnScrollCenterIconFile: LIB_PATH + "comp-m3/smart-table/scroll.png",
-                        sortIconFile: LIB_PATH + "comp-m3/smart-table/sort.png",
+                        btnScrollDownIconFile: LIB_PATH + "comp/smart-table/down.png",
+                        btnScrollUpIconFile: LIB_PATH + "comp/smart-table/up.png",
+                        btnScrollCenterIconFile: LIB_PATH + "comp/smart-table/scroll.png",
+                        sortIconFile: LIB_PATH + "comp/smart-table/sort.png",
                         // WHY: Varsayılan tik ikonu koyu renkli; koyu menüde görünmüyordu.
                         searchTitleCheckIconFile: "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + ACCENT_COLOR + '" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17.5 19 7"/></svg>'),
-                        loadingIconFile: LIB_PATH + "comp-m3/smart-table/clock.png",
+                        loadingIconFile: LIB_PATH + "comp/smart-table/clock.png",
                         invertIconColor: T.invertIcon,
 
                         box: { color: CARD_COLOR },

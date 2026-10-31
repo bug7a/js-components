@@ -103,7 +103,7 @@ SITE.rootUrl = function (path) {
     return CONFIG.rootPath + path;
 };
 
-// Dosya adresinden sadece adı. ("comp-m4/tabs.js" -> "tabs.js")
+// Dosya adresinden sadece adı. ("comp/tabs.js" -> "tabs.js")
 SITE.fileName = function (path) {
     return String(path).split("/").pop();
 };

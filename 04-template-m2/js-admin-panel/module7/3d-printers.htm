@@ -14,15 +14,15 @@
         <script src="../common/theme.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- COMPONENTS -->
-        <script src="../../../comp-m2/tiny-select.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m2/toggle.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m2/slider.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m4/smart-button.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m4/dialog.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m3/hold-to-confirm-button.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m4/progress-bar.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m4/gauge.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m4/chart-box.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/tiny-select.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/toggle.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/slider.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/dialog.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/hold-to-confirm-button.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/progress-bar.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/gauge.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/chart-box.js" type="text/javascript" charset="utf-8"></script>
 
         <!--
 
@@ -457,7 +457,7 @@
                 round: 8,
                 labelBoldFont: 0,
                 labelTextColor: Ink(0.9),
-                arrowIcon: LIB_PATH + "comp-m2/tiny-select/arrow.svg",
+                arrowIcon: LIB_PATH + "comp/tiny-select/arrow.svg",
                 arrowSize: 18,
                 invertIconColor: T.invertIcon,
                 listFontSize: 14,
@@ -550,8 +550,8 @@
                         height: 38,
                         labelText: "Hold to Cancel",
                         completedText: "CANCELLED",
-                        iconFile: LIB_PATH + "comp-m3/hold-to-confirm-button/trash.png",
-                        holdingIconFile: LIB_PATH + "comp-m3/hold-to-confirm-button/trash-red.png",
+                        iconFile: LIB_PATH + "comp/hold-to-confirm-button/trash.png",
+                        holdingIconFile: LIB_PATH + "comp/hold-to-confirm-button/trash-red.png",
                         holdDuration: 1500,
                         resetDelay: 800,
                         style: {
@@ -580,7 +580,7 @@
 
             startCard("Temperatures", "Nozzle and heated bed");
 
-                // GAUGES: comp-m4/gauge.js (half arc). One for the nozzle, one for the bed.
+                // GAUGES: comp/gauge.js (half arc). One for the nozzle, one for the bed.
                 HGroup({ width: "100%", height: "auto", align: "center center", gap: 40, wrap: 1 });
                     gaugeNozzle = createHeaterGauge("Nozzle", NOZZLE_COLOR);
                     gaugeBed = createHeaterGauge("Bed", BED_COLOR);

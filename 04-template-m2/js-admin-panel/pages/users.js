@@ -265,8 +265,8 @@ const UsersPage = function(params = {}) {
                 placeholderText: "Filter the table",
                 fontSize: 15,
                 invertIconColor: T.invertIcon,
-                searchIconFile: "../../comp-m2/search-input-v2/filter.png",
-                clearIconFile: "../../comp-m2/search-input-v2/clear.svg",
+                searchIconFile: "../../comp/search-input-v2/filter.png",
+                clearIconFile: "../../comp/search-input-v2/clear.svg",
 
             },
             // Filtre kutusundaki sütun seçim listesi (ALL) de koyu tema ile açılsın.
@@ -291,13 +291,13 @@ const UsersPage = function(params = {}) {
                 highlightTitleCellColor: Ink(0.08),
                 verticalScrollWidth: 20,
                 verticalScrollMargin: 2,
-                btnScrollDownIconFile: "../../comp-m3/smart-table/down.png",
-                btnScrollUpIconFile: "../../comp-m3/smart-table/up.png",
-                btnScrollCenterIconFile: "../../comp-m3/smart-table/scroll.png",
-                sortIconFile: "../../comp-m3/smart-table/sort.png",
+                btnScrollDownIconFile: "../../comp/smart-table/down.png",
+                btnScrollUpIconFile: "../../comp/smart-table/up.png",
+                btnScrollCenterIconFile: "../../comp/smart-table/scroll.png",
+                sortIconFile: "../../comp/smart-table/sort.png",
                 // WHY: Varsayılan tik ikonu koyu renkli; koyu menüde görünmüyordu.
                 searchTitleCheckIconFile: "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke=T.accent stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17.5 19 7"/></svg>'),
-                loadingIconFile: "../../comp-m3/smart-table/clock.png",
+                loadingIconFile: "../../comp/smart-table/clock.png",
                 invertIconColor: T.invertIcon,
 
                 box: { color: T.tableRow1 },

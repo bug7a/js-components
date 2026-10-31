@@ -12,36 +12,36 @@
         <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
         <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
 
-        <!-- COMPONENTS (comp-m4/dialog.js: not with comp-m4/dialog.js, both define Dialog) -->
-        <script src="../comp-m2/tooltip.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp-m2/input-b.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp-m2/search-input-v2.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp-m2/email-input-b.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp-m2/password-input-b.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp-m2/phone-input-b.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp-m2/tiny-select.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp-m2/url-input-b.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp-m2/form.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp-m4/tabs.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp-m4/smart-button.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp-m4/loading-screen.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp-m4/ui-effects.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp-m2/login-page-v2.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp-m2/slider.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp-m3/check-box.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp-m3/hold-to-confirm-button.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp-m3/smart-table.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp-m4/dialog.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp-m4/notice.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp-m4/toast.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp-m4/action-button.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp-m4/search-results.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp-m4/sortable-list.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp-m4/select-file.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp-m4/property-panel.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp-m4/numeric-keyboard.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp-m4/mini-graph-box.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp-m4/scrolling-text.js" type="text/javascript" charset="utf-8"></script>
+        <!-- COMPONENTS (comp/dialog.js: not with comp/dialog.js, both define Dialog) -->
+        <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/input-b.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/search-input-v2.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/email-input-b.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/password-input-b.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/phone-input-b.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/tiny-select.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/url-input-b.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/form.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/tabs.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/loading-screen.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/ui-effects.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/login-page-v2.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/slider.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/check-box.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/hold-to-confirm-button.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/smart-table.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/dialog.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/notice.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/toast.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/action-button.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/search-results.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/sortable-list.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/select-file.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/property-panel.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/numeric-keyboard.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/mini-graph-box.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/scrolling-text.js" type="text/javascript" charset="utf-8"></script>
 
         <script>
         "use strict";
@@ -84,7 +84,7 @@
         const tests = [];
         const test = function (name, func) { tests.push({ name: name, func: func }); };
 
-        // *** DIALOG (comp-m4/dialog.js)
+        // *** DIALOG (comp/dialog.js)
 
         test("Dialog: onClick that closes the dialog does not crash", async function () {
             const dialog = Dialog({ removeOnClose: 1, buttons: [{ key: "a", text: "A", type: "primary", onClick: function (d) { d.close(); } }] });
@@ -144,7 +144,7 @@
             check("Dialog.prompt and Dialog.alert use the style they are given", promptOk && alertOk, "prompt " + promptOk + ", alert " + alertOk);
         });
 
-        // *** TOOLTIP (comp-m2/tooltip.js)
+        // *** TOOLTIP (comp/tooltip.js)
 
         test("Tooltip: the color of look stays while the mouse moves", async function () {
             // WHY: a hint left by an earlier test would be the one moved here
@@ -160,7 +160,7 @@
             target.remove();
         });
 
-        // *** NOTICE (comp-m4/notice.js)
+        // *** NOTICE (comp/notice.js)
 
         test("Notice over a Dialog: it is on top, Escape closes only the notice", async function () {
             const dialog = Dialog({ titleText: "D", removeOnClose: 0 });
@@ -173,7 +173,7 @@
             dialog.remove();
         });
 
-        // *** TOAST (comp-m4/toast.js)
+        // *** TOAST (comp/toast.js)
 
         test("Toast: a double click on the action runs it once", async function () {
             let count = 0;
@@ -185,7 +185,7 @@
             check("Toast: a double click on the action runs it once", count === 1, "the action ran " + count + " times");
         });
 
-        // *** ACTION BUTTON (comp-m4/action-button.js)
+        // *** ACTION BUTTON (comp/action-button.js)
 
         test("ActionButton: a double click on an action calls onAction once", async function () {
             const calls = [];
@@ -199,7 +199,7 @@
             button.remove();
         });
 
-        // *** SEARCH RESULTS (comp-m4/search-results.js)
+        // *** SEARCH RESULTS (comp/search-results.js)
 
         test("SearchResults: the arrows choose a row and Escape keeps the list closed", async function () {
             const ITEMS = [{ text: "Dashboard" }, { text: "Orders" }, { text: "Reports" }];
@@ -228,7 +228,7 @@
             input.remove();
         });
 
-        // *** SORTABLE LIST (comp-m4/sortable-list.js)
+        // *** SORTABLE LIST (comp/sortable-list.js)
 
         test("SortableList: after a touch drag the next tap works", async function () {
             const clicks = [];
@@ -250,7 +250,7 @@
             list.remove();
         });
 
-        // *** SELECT FILE (comp-m4/select-file.js)
+        // *** SELECT FILE (comp/select-file.js)
 
         test("SelectFile: the same file again does not call onChange", async function () {
             let changes = 0;
@@ -266,7 +266,7 @@
             select.remove();
         });
 
-        // *** PROPERTY PANEL (comp-m4/property-panel.js)
+        // *** PROPERTY PANEL (comp/property-panel.js)
 
         test("PropertyPanel: leaving a number field without a change keeps the value", async function () {
             const changes = [];
@@ -283,7 +283,7 @@
             panel.remove();
         });
 
-        // *** SMART BUTTON (comp-m4/smart-button.js)
+        // *** SMART BUTTON (comp/smart-button.js)
 
         test("SmartButton: a held Enter presses once", async function () {
             let count = 0;
@@ -295,7 +295,7 @@
             button.remove();
         });
 
-        // *** NUMERIC KEYBOARD (comp-m4/numeric-keyboard.js)
+        // *** NUMERIC KEYBOARD (comp/numeric-keyboard.js)
 
         test("NumericKeyboard: a held Enter calls onEnter once", async function () {
             let count = 0;
@@ -306,7 +306,7 @@
             keyboard.remove();
         });
 
-        // *** MINI GRAPH BOX (comp-m4/mini-graph-box.js)
+        // *** MINI GRAPH BOX (comp/mini-graph-box.js)
 
         test("MiniGraphBox: made in a hidden group, it keeps its values", async function () {
             const group = VGroup({ width: 300, height: 120, visible: 0 });
@@ -318,7 +318,7 @@
             group.remove();
         });
 
-        // *** SMART TABLE (comp-m3/smart-table.js)
+        // *** SMART TABLE (comp/smart-table.js)
 
         test("SmartTable: a value is written as text, not as HTML", async function () {
             window.__injected = 0;
@@ -328,7 +328,7 @@
             table.remove();
         });
 
-        // *** FORM (comp-m2/form.js)
+        // *** FORM (comp/form.js)
 
         test("Form: a press that is not a click does not send; a click sends once", async function () {
             let sends = 0;
@@ -348,7 +348,7 @@
             form.remove();
         });
 
-        // *** PHONE INPUT (comp-m2/phone-input-b.js)
+        // *** PHONE INPUT (comp/phone-input-b.js)
 
         test("PhoneInputB: a pasted number keeps all its digits", async function () {
             const phone = PhoneInputB({ titleText: "Phone" });
@@ -367,7 +367,7 @@
             phone.remove();
         });
 
-        // *** URL INPUT (comp-m2/url-input-b.js)
+        // *** URL INPUT (comp/url-input-b.js)
 
         test("URLInputB: a path with an 's' is valid, an empty required field is not sent", async function () {
             const url = URLInputB({ titleText: "Site", isRequired: 1 });
@@ -382,7 +382,7 @@
             url.remove();
         });
 
-        // *** LOGIN PAGE (comp-m2/login-page-v2.js)
+        // *** LOGIN PAGE (comp/login-page-v2.js)
 
         test("LoginPage: the hidden tab can not be clicked", async function () {
             let logins = 0;
@@ -397,7 +397,7 @@
             login.remove();
         });
 
-        // *** LOADING SCREEN (comp-m4/loading-screen.js; it took the place of comp-m2/waiting.js, 2026-10-31)
+        // *** LOADING SCREEN (comp/loading-screen.js; it took the place of comp/waiting.js, 2026-10-31)
 
         test("LoadingScreen: open() right after close() stays", async function () {
             const loading = LoadingScreen({ opened: 0, minDuration: 0, fadeDuration: 0.2 });
@@ -410,7 +410,7 @@
             loading.remove();
         });
 
-        // *** SLIDER (comp-m2/slider.js)
+        // *** SLIDER (comp/slider.js)
 
         test("Slider: setValue(v) gives v back", async function () {
             const slider = Slider({ width: 250 });
@@ -424,7 +424,7 @@
             slider.remove();
         });
 
-        // *** SEARCH INPUT (comp-m2/search-input-v2.js)
+        // *** SEARCH INPUT (comp/search-input-v2.js)
 
         test("SearchInput: a pasted text is searched", async function () {
             const texts = [];
@@ -436,7 +436,7 @@
             search.remove();
         });
 
-        // *** CHECK BOX (comp-m3/check-box.js)
+        // *** CHECK BOX (comp/check-box.js)
 
         test("CheckBox: a held Space changes it once", async function () {
             let changes = 0;
@@ -449,7 +449,7 @@
             checkBox.remove();
         });
 
-        // *** HOLD TO CONFIRM (comp-m3/hold-to-confirm-button.js)
+        // *** HOLD TO CONFIRM (comp/hold-to-confirm-button.js)
 
         test("HoldToConfirmButton: a right click or a cancelled touch does not confirm", async function () {
             let confirms = 0;

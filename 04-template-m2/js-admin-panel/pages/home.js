@@ -11,7 +11,7 @@ COMPONENTS:
 - Tabs (comp-m4): Period select
 - SmartButton (comp-m4): Header and quick action buttons
 - MiniGraphBox / SparkLineBox (comp-m4): KPI boxes (bars for counts, a line for money and live values)
-- ChartBox (comp-m4): Line, doughnut and bar charts (Chart.js is loaded from comp-m4/chart-box)
+- ChartBox (comp-m4): Line, doughnut and bar charts (Chart.js is loaded from comp/chart-box)
 - TinyTable (comp-m4): Recent orders
 - LineProgressBar (comp-m3): Monthly goals
 - Badge (comp-m2): Notification count

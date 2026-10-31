@@ -125,7 +125,7 @@ box.remove = function () {
 };
 ```
 
-Never write a `destroy()` for a component: everything is removed with `remove()`. To extend a component: `startExtendedObject(ParentComp, params)` ... `endExtendedObject(box)` (see `comp-m2/email-input-b.js`).
+Never write a `destroy()` for a component: everything is removed with `remove()`. To extend a component: `startExtendedObject(ParentComp, params)` ... `endExtendedObject(box)` (see `comp/email-input-b.js`).
 
 ## When the component is ready
 1. A sample page `02-comp-mX-samples/<name>.htm`: a scrolling Box, cards, every style package; it loads the source files (`../basic/basic.js`, `../comp/<name>.js`), not `.min.js`.

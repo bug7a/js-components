@@ -863,8 +863,8 @@ const RolesPage = function(params = {}) {
                     searchIconSize: 16,
                     placeholderText: "Search members",
                     invertIconColor: T.invertIcon,
-                    searchIconFile: LIB_PATH + "comp-m2/search-input-v2/search.svg",
-                    clearIconFile: LIB_PATH + "comp-m2/search-input-v2/clear.svg",
+                    searchIconFile: LIB_PATH + "comp/search-input-v2/search.svg",
+                    clearIconFile: LIB_PATH + "comp/search-input-v2/clear.svg",
                     onSearch: function(text) {
                         memberSearch = text;
                         renderMembers();
@@ -887,7 +887,7 @@ const RolesPage = function(params = {}) {
                     round: 8,
                     labelBoldFont: 0,
                     labelTextColor: Ink(0.9),
-                    arrowIcon: LIB_PATH + "comp-m2/tiny-select/arrow.svg",
+                    arrowIcon: LIB_PATH + "comp/tiny-select/arrow.svg",
                     arrowSize: 18,
                     invertIconColor: T.invertIcon,
                     listFontSize: 14,

@@ -467,7 +467,7 @@ const SettingsPage = function(params = {}) {
             round: 8,
             labelBoldFont: 0,
             labelTextColor: Ink(0.9),
-            arrowIcon: LIB_PATH + "comp-m2/tiny-select/arrow.svg",
+            arrowIcon: LIB_PATH + "comp/tiny-select/arrow.svg",
             arrowSize: 18,
             invertIconColor: T.invertIcon,
             listFontSize: 14,
@@ -709,8 +709,8 @@ const SettingsPage = function(params = {}) {
                     isRequired: 0, // WHY: Required balls are shown on empty fields at start. Checked on the button click.
                     minChar: 8,
                     minCharWarningText: "At least 8 characters",
-                    showPasswordIconFile: LIB_PATH + "comp-m2/password-input-b/show-btn.png",
-                    hidePasswordIconFile: LIB_PATH + "comp-m2/password-input-b/hide-btn.png",
+                    showPasswordIconFile: LIB_PATH + "comp/password-input-b/show-btn.png",
+                    hidePasswordIconFile: LIB_PATH + "comp/password-input-b/hide-btn.png",
                     showPasswordIconInvert: 1,
                     rightPadding: 50,
                 };
@@ -1212,8 +1212,8 @@ const SettingsPage = function(params = {}) {
                         height: 40,
                         labelText: "Hold to Reset",
                         completedText: "RESET",
-                        iconFile: LIB_PATH + "comp-m3/hold-to-confirm-button/trash.png",
-                        holdingIconFile: LIB_PATH + "comp-m3/hold-to-confirm-button/trash-red.png",
+                        iconFile: LIB_PATH + "comp/hold-to-confirm-button/trash.png",
+                        holdingIconFile: LIB_PATH + "comp/hold-to-confirm-button/trash-red.png",
                         holdDuration: 1500,
                         resetDelay: 1500,
                         style: {

@@ -218,7 +218,7 @@ const TopBar = function(params = {}) {
     };
 
     // Shows the results of the current text in the SearchResults component.
-    // WHY: The list itself (rows, groups, keyboard, scrolling) is comp-m4/search-results.js now.
+    // WHY: The list itself (rows, groups, keyboard, scrolling) is comp/search-results.js now.
     //      Only what is searched and what happens when a result is opened stays here.
     const showResults = function() {
         box.searchResults.setItems(findResults(searchText), searchText);
@@ -641,7 +641,7 @@ const TopBar = function(params = {}) {
     });
     box.createMenu.attachTo(box.btnCreate, "click");
 
-    // SEARCH RESULTS: comp-m4/search-results.js
+    // SEARCH RESULTS: comp/search-results.js
     // NOTE: The component puts itself on the page and is placed under the search input, so the
     //       top bar can not clip it. It scrolls with basic/scroll-bar.js.
     box.searchResults = SearchResults({

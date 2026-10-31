@@ -15,21 +15,21 @@
         <script src="../../../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- COMPONENTS -->
-        <script src="../../../comp-m2/tiny-select.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m4/tiny-table.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m2/toggle.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m2/slider.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m4/smart-button.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m4/dialog.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m3/radio-button.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m3/hold-to-confirm-button.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m4/progress-bar.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m4/spark-line-box.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m4/chart-box.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m4/context-menu.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m4/gauge.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m4/tabs.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m4/stepper.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/tiny-select.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/tiny-table.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/toggle.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/slider.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/dialog.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/radio-button.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/hold-to-confirm-button.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/progress-bar.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/spark-line-box.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/chart-box.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/context-menu.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/gauge.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/tabs.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/stepper.js" type="text/javascript" charset="utf-8"></script>
 
         <!--
 
@@ -390,7 +390,7 @@
                         list: BOARDS.map(function (b) { return { id: b.id, label: b.name }; }),
                         height: 40, fontSize: 15, color: CARD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8,
                         labelTextColor: Ink(0.95),
-                        arrowIcon: LIB_PATH + "comp-m2/tiny-select/arrow.svg", arrowSize: 20, invertIconColor: T.invertIcon,
+                        arrowIcon: LIB_PATH + "comp/tiny-select/arrow.svg", arrowSize: 20, invertIconColor: T.invertIcon,
                         listFontSize: 15, listTextColor: Ink(0.85), listOverTextColor: ACCENT_COLOR,
                         listBackgroundColor: FIELD_COLOR, listBorderColor: Ink(0.15),
                         onSelect: function (index) { if (isReady) selectBoard(index); },
@@ -459,7 +459,7 @@
                 // CARD: The board
                 startCard("Board", "Live telemetry", "2 1 460px");
 
-                    // GAUGES: comp-m4/gauge.js (half arc)
+                    // GAUGES: comp/gauge.js (half arc)
                     HGroup({ width: "100%", height: "auto", align: "center center", gap: 30, wrap: 1 });
                     that.clipContent = 0;
 
@@ -613,7 +613,7 @@
 
                 startCard("Sketch", "Pins, serial monitor and libraries", "1 1 100%");
 
-                    // TABS: comp-m4/tabs.js
+                    // TABS: comp/tabs.js
                     tabs = Tabs({
                         width: "100%",
                         styleName: T.compStyle,
@@ -731,7 +731,7 @@
 
                         createSmallTitle("Sampling interval");
 
-                        // STEPPER: comp-m4/stepper.js
+                        // STEPPER: comp/stepper.js
                         intervalStepper = Stepper({
                             width: 170, height: 40, styleName: T.compStyle,
                             value: 1000, min: 100, max: 5000, step: 100,

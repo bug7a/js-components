@@ -43,7 +43,7 @@ Aşağıdaki maddeler önem sırasına göre dizildi. **Önce ölçmek** doğru 
 - **Bağlı bir hata:** `set rotate()` (~satır 621) `elem.style.transform`'un tamamını eziyor (`"rotate(...)"`). Bu yüzden rotate ile başka bir transform (translate, scale) birlikte kullanılamıyor. Yeni özelliklerle birlikte tek bir **transform birleştiricisi** gerekir: `_rotate`, `_tx`, `_ty`, ... saklanır, her değişiklikte tek bir `transform` string'i yazılır.
 - Handbook'ta hareket örneklerini mümkün olduğunca `opacity` / transform tabanlı göstermek.
 
-**Dikkat:** `transform` kullanan bileşenler yeni özellikle çakışabilir (`comp-m4/ui-effects.js` `press` lift / push, `hover` tilt; `comp-m4/page-control.js`; CSS animasyonlu bileşenler). Değişiklikten sonra `test/components-test.htm` de çalıştırılmalı.
+**Dikkat:** `transform` kullanan bileşenler yeni özellikle çakışabilir (`comp/ui-effects.js` `press` lift / push, `hover` tilt; `comp/page-control.js`; CSS animasyonlu bileşenler). Değişiklikten sonra `test/components-test.htm` de çalıştırılmalı.
 
 ## 3. `setMotion` / `withMotion` / `dontMotion` sabit `setTimeout` ile çalışıyor
 
@@ -79,13 +79,13 @@ Aşağıdaki maddeler önem sırasına göre dizildi. **Önce ölçmek** doğru 
 
 ## Bileşenleri sadeleştirecek eklemeler
 
-2026-10-22'de `comp-m4/tabs.js` incelenirken çıktı. Bu ikisi hız sorunu değil: bileşen kodundaki tekrarı azaltmak için.
+2026-10-22'de `comp/tabs.js` incelenirken çıktı. Bu ikisi hız sorunu değil: bileşen kodundaki tekrarı azaltmak için.
 
 ## 6. `basic.addCss(id, cssText)`: CSS'i bir kez ekleyen ortak yardımcı
 
 **YAPILDI (2026-10-23):** `basic.addCss(id, css, replace)` basic.js'te (bkz. 10. madde). Bileşenlerin kendi kopyaları dokunuldukça buna geçecek.
 
-**Nerede:** Bileşenlerin kendi kopyaları: `Tabs.injectCss`, `RichTextEditor.injectCss` ve `comp-m4/tag-input.js`, `loading-screen.js`, `web-view.js`, `ui-standards.js`, `comp-m2/search-input-v2.js` içinde `document.createElement("style")` kodu (7 dosya).
+**Nerede:** Bileşenlerin kendi kopyaları: `Tabs.injectCss`, `RichTextEditor.injectCss` ve `comp/tag-input.js`, `loading-screen.js`, `web-view.js`, `ui-standards.js`, `comp/search-input-v2.js` içinde `document.createElement("style")` kodu (7 dosya).
 
 **Sorun:** Her bileşen aynı 6-8 satırı yazıyor: id ile "zaten var mı?" kontrolü, `<style>` oluşturma, `head`'e ekleme. basic.js'in `css` özelliği yalnızca satır içi (inline) stil yazar. Sözde elemanlar (`::-webkit-scrollbar`, `::placeholder`), `@keyframes`, `:hover` ve `contenteditable` içeriğinin stilleri satır içi yazılamaz, bu yüzden bu kopyalar gerekiyor.
 
@@ -161,7 +161,7 @@ basic.white = White;
 
 **Ölçüm (2026-10-22):**
 - `comp/m3/m4` bileşenlerinin **hiçbiri** bu global adları çağırmıyor.
-- Buna karşılık **26 yer kendi `createButton`'ını tanımlıyor** (admin panel modülleri `module7/9/10/11`, `comp-m4/stepper.js`, `comp-m4/label-editor.js`, `comp-m3/bottom-bar.js`...). `createLabel` 5, `createInput` 5 yerde aynı şekilde yeniden tanımlanıyor. Yani bu adlar gerçekten çok seçiliyor.
+- Buna karşılık **26 yer kendi `createButton`'ını tanımlıyor** (admin panel modülleri `module7/9/10/11`, `comp/stepper.js`, `comp/label-editor.js`, `comp/bottom-bar.js`...). `createLabel` 5, `createInput` 5 yerde aynı şekilde yeniden tanımlanıyor. Yani bu adlar gerçekten çok seçiliyor.
 - Bugün zararsız, çünkü basic.js kendi içinde bunları kapsamındaki kopyalarıyla çağırıyor ve hiçbir bileşen global adı kullanmıyor. Ama ad `window`'da durdukça, bir sayfanın kendi `createButton`'ı o adı arayan herhangi bir kodu (eski bir sayfa, bir eklenti) sessizce bozabilir.
 - Eski adları çağıran sayfalar var: çoğu `01-basic-js-by-example` (öğretici sayfalar), `comp-m1` ve eski şablonlar. Sayım yaklaşık: `createBox` 40, `createButton` 35, `createLabel` 28, `createImage` 25 dosyada geçiyor; bunların bir kısmı yukarıdaki kendi tanımları ve dokümanlar.
 
@@ -201,9 +201,9 @@ basic.white = White;
 
 ## 11. Okunurluk için eklemeler (Tabs sadeleştirmesinden, 2026-10-23, AÇIK)
 
-`comp-m4/tabs.js`, `bugra-rules.md`'ye (bugün `context/basic-js-code-rules.md`) göre yeniden yazıldı (79 `elem.style` satırı → 0; davranış aynı: 404 eleman × 26 stil, 4 durumda fark yok). Bu sırada basic.js'te eksikliği görülen, tekrar eden çiftler:
+`comp/tabs.js`, `bugra-rules.md`'ye (bugün `context/basic-js-code-rules.md`) göre yeniden yazıldı (79 `elem.style` satırı → 0; davranış aynı: 404 eleman × 26 stil, 4 durumda fark yok). Bu sırada basic.js'te eksikliği görülen, tekrar eden çiftler:
 
-1. **(YAPILDI, 2026-10-23: `grow`, `shrink`, `css` artık flex stillerinden ve `VGroup`'un flow'undan sonra uygulanıyor; `basic-test` 126/126, kaynak ve min; repoda değişen tek yer `comp-m4/time-line.js` metinleri, ekranda aynı yerde.) Bir grubun props'undaki `css.alignItems` sessizce eziliyor (bir tuzak, önce bu).** `startFlexBox` önce props'u uyguluyor, sonra `FLEX_STYLES` (`alignItems`, `justifyContent`, `flexGrow`, `flexShrink`...) döngüsüyle elem'e yeniden yazıyor. Bu yüzden `VGroup({ align: "left top", css: { alignItems: "stretch" } })` çalışmıyor, ardından `group.css.alignItems = "stretch"` yazmak gerekiyor (Tabs'te 4 kez). Öneri: `css`'i FLEX_STYLES döngüsünden sonra uygulamak, ya da `align`'a bir "uzat" değeri (`align: "left stretch"`).
+1. **(YAPILDI, 2026-10-23: `grow`, `shrink`, `css` artık flex stillerinden ve `VGroup`'un flow'undan sonra uygulanıyor; `basic-test` 126/126, kaynak ve min; repoda değişen tek yer `comp/time-line.js` metinleri, ekranda aynı yerde.) Bir grubun props'undaki `css.alignItems` sessizce eziliyor (bir tuzak, önce bu).** `startFlexBox` önce props'u uyguluyor, sonra `FLEX_STYLES` (`alignItems`, `justifyContent`, `flexGrow`, `flexShrink`...) döngüsüyle elem'e yeniden yazıyor. Bu yüzden `VGroup({ align: "left top", css: { alignItems: "stretch" } })` çalışmıyor, ardından `group.css.alignItems = "stretch"` yazmak gerekiyor (Tabs'te 4 kez). Öneri: `css`'i FLEX_STYLES döngüsünden sonra uygulamak, ya da `align`'a bir "uzat" değeri (`align: "left stretch"`).
 2. **(YAPILDI, 2026-10-23: `obj.role`, `obj.aria = { ... }` (yalnızca verilen anahtarlar, `null` kaldırır), odağı alan elemana; çakışan bir bileşen varsayılanı yok (repoda arandı); `basic-test` 134/134; Tabs ve TreeView'da 0 `setAttribute` kaldı, şablon da çevrildi.) `role` / `aria`:** Tabs'te 17 `elem.setAttribute("role" | "aria-…")` satırı var. Öneri: `obj.role = "tab"` ve `obj.aria = { label: "Close", selected: true }` (değer `false` → `"false"`, `null` → kaldır). Not: `ariaLabel` Tabs'in bir varsayılanı; yeni adlar bir bileşen varsayılanıyla çakışmamalı (`role`, `aria` için repoda arama yapılmalı).
 3. **(`tabIndex` YAPILDI, 2026-10-23. `id` eklenmedi: bileşenlerde `key`/`id` adları veri için çok kullanılıyor, `elem.id` yeterince açık.) `id` ve `tabIndex`:** `elem.id = ...`, `elem.tabIndex = 0` sık. Öneri: `obj.tabIndex` özelliği (`id` adı bir bileşen varsayılanıyla çakışabilir: önce bakılmalı).
 4. **Esnek "kalan yeri doldur":** `css.flex = "1 1 0"` + `css.minWidth = "0"` çifti 3 kez (şerit, panel alanı, tam genişlik sekme). `grow` / `shrink` var ama `flexBasis: 0` ve `minWidth: 0` yok. Öneri: bir ad (ör. `fill: 1`) ya da `grow: 1`'in bu ikisini de yapması (davranış değişikliği: dikkat).

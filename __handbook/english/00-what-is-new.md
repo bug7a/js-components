@@ -22,7 +22,7 @@ This document contains new features, updates, and changes added to the basic.js 
 
 ## Version 26.10.24
 
-*   **`basic.applyStylePackage(params, Comp.styles, CompDefaults)`:** the style packages of a component (`styleName: "dark"`) in one line, in place of the three lines every component wrote. The order is the same: `params.style` > the package of `styleName` > `Defaults.style`. A package can also be given as it is, `Tabs({ style: Tabs.styles.dark })`: it is copied, so the package itself is never changed. Fully compatible. `comp-m4/tabs.js` and `_component-template.js` use it (they need v26.10.24). Reference: `basic/basic-what-is-new.md`.
+*   **`basic.applyStylePackage(params, Comp.styles, CompDefaults)`:** the style packages of a component (`styleName: "dark"`) in one line, in place of the three lines every component wrote. The order is the same: `params.style` > the package of `styleName` > `Defaults.style`. A package can also be given as it is, `Tabs({ style: Tabs.styles.dark })`: it is copied, so the package itself is never changed. Fully compatible. `comp/tabs.js` and `_component-template.js` use it (they need v26.10.24). Reference: `basic/basic-what-is-new.md`.
 
 ---
 
@@ -36,7 +36,7 @@ This document contains new features, updates, and changes added to the basic.js 
 *   **Fix (groups):** `grow`, `shrink` and `css` given in the props of a group (`HGroup`, `VGroup`, `AutoLayout`) were written over by its flex styles and lost. Now `VGroup({ align: "left top", css: { alignItems: "stretch" } })` and `HGroup({ grow: 1 })` work as written.
 *   **Fix (`rotate`):** `obj.rotate = 45` threw away the rest of the transform (a `translateY()`, a `scale()`). Now it changes only its own `rotate()` part.
 *   **Accessibility props (every object):** `role` (`"button"`, `"tab"`...), `aria` (`{ label: "Close", selected: true }`: only the given keys change, `null` removes one) and `tabIndex`. They replace `elem.setAttribute("aria-...")` lines. See "Common Properties".
-*   **The component template** (`_component-template.js`) is written with them; `comp-m4/tree-view.js` is the first component without its own `remove()`.
+*   **The component template** (`_component-template.js`) is written with them; `comp/tree-view.js` is the first component without its own `remove()`.
 
 ---
 

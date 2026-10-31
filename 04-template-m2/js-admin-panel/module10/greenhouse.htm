@@ -15,21 +15,21 @@
         <script src="../common/theme.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- COMPONENTS -->
-        <script src="../../../comp-m2/tiny-select.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m4/tiny-table.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m2/toggle.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m2/slider.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m4/smart-button.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m4/dialog.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m3/check-box.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m3/radio-button.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m3/hold-to-confirm-button.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m4/progress-bar.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m4/spark-line-box.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m4/chart-box.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m4/context-menu.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m4/select-time.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp-m4/select-date.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/tiny-select.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/tiny-table.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/toggle.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/slider.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/dialog.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/check-box.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/radio-button.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/hold-to-confirm-button.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/progress-bar.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/spark-line-box.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/chart-box.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/context-menu.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/select-time.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/select-date.js" type="text/javascript" charset="utf-8"></script>
 
         <!--
 
@@ -611,7 +611,7 @@
                         list: ZONES.map(function (z) { return { id: z.id, label: z.name }; }),
                         height: 40, fontSize: 15, color: CARD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8,
                         labelTextColor: Ink(0.95),
-                        arrowIcon: LIB_PATH + "comp-m2/tiny-select/arrow.svg", arrowSize: 20, invertIconColor: T.invertIcon,
+                        arrowIcon: LIB_PATH + "comp/tiny-select/arrow.svg", arrowSize: 20, invertIconColor: T.invertIcon,
                         listFontSize: 15, listTextColor: Ink(0.85), listOverTextColor: ACCENT_COLOR, listBackgroundColor: FIELD_COLOR, listBorderColor: Ink(0.15),
                         onSelect: function (index) { if (isReady) selectZone(index); },
                     });
