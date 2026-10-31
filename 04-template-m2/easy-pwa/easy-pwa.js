@@ -65,7 +65,7 @@ Webpage: https://bug7a.github.io/js-components/
     const SETTINGS = {
 
         // The name under the icon on iPhone and in the install banner.
-        appName: "Demo Shop",
+        appName: "My App",
 
         // Files. Relative to this file (Ex: "icon/icon-192.png" -> site.com/icon/icon-192.png).
         manifestUrl: "manifest.webmanifest",
@@ -120,7 +120,7 @@ Webpage: https://bug7a.github.io/js-components/
         // no service worker (one left from an earlier visit is removed) and no install banner. Phones and tablets
         // are not changed. NOTE: Then do not write <link rel="manifest"> in the page: this file adds it where needed.
         // (A computer with a touch screen can be taken as a tablet.)
-        desktopApp: true,
+        desktopApp: false, // The demo shop: an app on phones and tablets only.
 
         // The install banner at the bottom. (EasyPWA.install() works without it too.)
         installBanner: true,

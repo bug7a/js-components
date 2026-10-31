@@ -67,7 +67,7 @@ All of them are in `SETTINGS` at the top of `easy-pwa.js`.
 
 | Setting | Default | |
 |---|---|---|
-| `appName` | `"Demo Shop"` | The name under the icon on iPhone and in the install banner |
+| `appName` | `"My App"` | The name under the icon on iPhone and in the install banner |
 | `manifestUrl`, `iconUrl`, `appleTouchIconUrl` | `manifest.webmanifest`, `icon/...` | Relative to `easy-pwa.js`. `iconUrl: ""`: no icon in the banner |
 | `themeColor` | `"#141414"` | The color of the browser bar (only when the page has no `<meta name="theme-color">`) |
 | `language` | `"auto"` | Texts: `"auto"` (Turkish for a Turkish browser, English for the others), `"tr"`, `"en"` |
@@ -81,7 +81,7 @@ All of them are in `SETTINGS` at the top of `easy-pwa.js`.
 | `offlineExcludePaths` | `[]` | Never saved (offline mode). Ex: `["/cart", "/account", "/api/"]` |
 | `offlineNetworkTimeout` | `4000` | ms. On a slow network the saved copy is shown after this time (offline mode). `0`: always wait |
 | `offlineCacheVersion` | `1` | Change it (2, 3...) to delete all the saved files of the app one time |
-| `desktopApp` | `true` | `false`: on a computer no manifest link (the browser offers no install), no service worker (an old one is removed) and no banner; phones and tablets are not changed. Then do not write `<link rel="manifest">` in the page. A computer with a touch screen can be taken as a tablet |
+| `desktopApp` | `false` in this demo (`true`: computers may install too) | `false`: on a computer no manifest link (the browser offers no install), no service worker (an old one is removed) and no banner; phones and tablets are not changed. Then do not write `<link rel="manifest">` in the page. A computer with a touch screen can be taken as a tablet |
 | `installBanner` | `true` | The install banner |
 | `installBannerOnDesktop` | `false` | Also on a computer (Chrome / Edge) |
 | `installBannerDelay` | `3000` | ms after the page is opened |
@@ -287,7 +287,7 @@ Hepsi `easy-pwa.js` dosyasının en üstündeki `SETTINGS` içinde.
 
 | Ayar | Varsayılan | |
 |---|---|---|
-| `appName` | `"Demo Shop"` | iPhone'da ikonun altındaki ve yükleme banner'ındaki ad |
+| `appName` | `"My App"` | iPhone'da ikonun altındaki ve yükleme banner'ındaki ad |
 | `manifestUrl`, `iconUrl`, `appleTouchIconUrl` | `manifest.webmanifest`, `icon/...` | `easy-pwa.js`'e göre. `iconUrl: ""`: banner'da ikon yok |
 | `themeColor` | `"#141414"` | Tarayıcı çubuğunun rengi (sadece sayfada `<meta name="theme-color">` yoksa) |
 | `language` | `"auto"` | Yazılar: `"auto"` (Türkçe tarayıcıda Türkçe, diğerlerinde İngilizce), `"tr"`, `"en"` |
@@ -301,7 +301,7 @@ Hepsi `easy-pwa.js` dosyasının en üstündeki `SETTINGS` içinde.
 | `offlineExcludePaths` | `[]` | Asla kaydedilmez (çevrimdışı mod). Ör: `["/sepet", "/hesap", "/api/"]` |
 | `offlineNetworkTimeout` | `4000` | ms. Yavaş ağda bu süreden sonra kaydedilmiş kopya gösterilir (çevrimdışı mod). `0`: hep bekle |
 | `offlineCacheVersion` | `1` | Bir kez değiştirilince (2, 3...) uygulamanın bütün kayıtları silinir |
-| `desktopApp` | `true` | `false`: bilgisayarda manifest bağlantısı yok (tarayıcı yükleme önermez), service worker yok (eskisi silinir), banner yok; telefon ve tablet değişmez. O zaman sayfaya `<link rel="manifest">` yazma. Dokunmatik ekranlı bir bilgisayar tablet sayılabilir |
+| `desktopApp` | `false` in this demo (`true`: computers may install too) | `false`: bilgisayarda manifest bağlantısı yok (tarayıcı yükleme önermez), service worker yok (eskisi silinir), banner yok; telefon ve tablet değişmez. O zaman sayfaya `<link rel="manifest">` yazma. Dokunmatik ekranlı bir bilgisayar tablet sayılabilir |
 | `installBanner` | `true` | Yükleme banner'ı |
 | `installBannerOnDesktop` | `false` | Bilgisayarda da (Chrome / Edge) |
 | `installBannerDelay` | `3000` | Sayfa açıldıktan kaç ms sonra |

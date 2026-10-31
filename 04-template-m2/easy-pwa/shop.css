@@ -25,7 +25,6 @@ header {
 
 header a { color: white; text-decoration: none; font-weight: 700; font-size: 18px; }
 header .space { flex: 1; }
-header .install { display: none; font-size: 14px; padding: 8px 14px; background: #3D7A6B; border-radius: 8px; cursor: pointer; }
 header .cart { font-size: 14px; opacity: 0.8; }
 
 main { max-width: 960px; margin: 0 auto; padding: 24px 20px 120px; }

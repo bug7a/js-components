@@ -13,8 +13,6 @@
     <header>
         <a href="index.htm">Demo Shop</a>
         <span class="space"></span>
-        <!-- The site's own install button (optional). It is shown when the app can be installed. -->
-        <button class="install" id="btnInstall" type="button">Uygulamayı yükle</button>
         <span class="cart">Sepet (0)</span>
     </header>
 
@@ -28,25 +26,15 @@
 
         <div class="note">
             This is a demo shop for <b>easy-pwa.js</b>. Open it with <b>https://</b> or <b>localhost</b>
-            (Live Server), not by double clicking the file. Then: Chrome DevTools &gt; Application &gt; Manifest / Service workers.
+            (Live Server), not by double clicking the file. It is an app on phones and tablets only: on a computer, turn on the
+            phone view (Chrome DevTools &gt; Toggle device toolbar) and reload. Then: DevTools &gt; Application &gt; Manifest / Service workers.
             Turn off the network (DevTools &gt; Network &gt; Offline) and open a product: the "No internet connection" page is shown.
         </div>
     </main>
 
-    <script>
-        // Optional: the site's own install button. (easy-pwa.js also shows its own banner.)
-        document.getElementById("btnInstall").addEventListener("click", function () {
-            if (window.EasyPWA) EasyPWA.install();
-        });
-        window.addEventListener("easypwa:installable", function () {
-            document.getElementById("btnInstall").style.display = "inline-block";
-        });
-        window.addEventListener("easypwa:installed", function () {
-            document.getElementById("btnInstall").style.display = "none";
-        });
-    </script>
-
-    <!-- EASY PWA: The only line that makes the site an app. On a real site: <script src="/easy-pwa.js" defer></script> -->
+    <!-- EASY PWA: The only line that makes the site an app. On a real site: <script src="/easy-pwa.js" defer></script>
+         The install interface is the banner of easy-pwa.js. This demo is an app on phones and tablets only
+         (desktopApp: false in easy-pwa.js): on a computer it stays a plain web page, with no install offer. -->
     <script src="easy-pwa.js" defer></script>
 
 </body>
