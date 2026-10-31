@@ -12,7 +12,7 @@ UI COMPONENT TEMPLATE
   checked by the browser; loadTimeout -> onTimeout helps for pages that never load. Only the page opened by load() is
   checked: a link in the page that opens another site in the iframe (Ex: a payment page) calls onLoad, not onError.
 - Messages: postMessage(data) sends to the page, onMessage(self, data, event) gets the messages of the page.
-  Only the messages of this iframe are delivered. (Ex: modules in js-admin-panel)
+  Only the messages of this iframe are delivered. (Ex: modules in ozden-panel)
 - Same origin pages: getWindow(), getDocument(), autoHeight: 1 (the box grows with the page).
 - scale: 0.5 -> A scaled preview of the page (Ex: a desktop page in a small card).
 - interactive: 0 -> A transparent cover over the page: the visitor can not click it, the box gets the clicks. (Previews)

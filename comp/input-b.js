@@ -705,7 +705,7 @@ InputB.styles = {
         },
     },
 
-    // The fields of the contact form of __projects/webpage-admin-panel (js/sections/contact.js, inputStyle and
+    // The fields of the contact form of __projects/webpage-ozden-panel (js/sections/contact.js, inputStyle and
     // styleInput): a see-through field on the dark green page (#0E1A14), a green border on focus.
     ozdenDark: {
         style: {},

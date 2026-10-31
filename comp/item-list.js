@@ -938,7 +938,7 @@ ItemList.styles = {
         scrollBar: { bar_color: "#A0A0A0", bar_mouseOverColor: "#6E6E6C", neverHide: 0, showDots: 0 },
     },
 
-    // The dark cards of the Ozden Panel (webpage-admin-panel, theme "dark").
+    // The dark cards of the Ozden Panel (webpage-ozden-panel, theme "dark").
     dark: {
         box: { padding: 8 },
         list: { gap: 8 },
