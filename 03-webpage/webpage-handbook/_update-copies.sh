@@ -8,7 +8,7 @@
 #   handbook/  <- ../../__handbook (english/, turkce/: the chapters and the files of their examples)
 #
 # Run it after the library, a component or a chapter of the handbook is changed:
-#   ./03-webpage-m2/webpage-handbook/_update-copies.sh      (from anywhere)
+#   ./03-webpage/webpage-handbook/_update-copies.sh      (from anywhere)
 #
 # comp/toast.js has no .min.js twin, so comp/toast.min.js is made here with terser (npx, like _make-min-js.sh).
 #

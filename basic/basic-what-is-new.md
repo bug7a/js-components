@@ -182,7 +182,7 @@ const MyComp = function (params = {}) {
 
 - `_component-template.js` is written with them (`onPageResize`, `after`, `onHoverChange`, `setFocusRing`, `basic.isOn`; its `remove()` block stays only for what basic.js does not know).
 - comp-m4 was converted on 2026-10-23: 20 of its 31 components have no `remove()` of their own any more. comp-m2 / comp-m3 are converted when they are touched, not all at once.
-- The copies of basic.js in the other folders (`03-webpage-m2/webpage-handbook/basic/` (`_update-copies.sh`), `03-webpage-m2/webpage-basicjs/basic/`, the game, the admin panel demo) do not get these until they are copied again: a component that uses them needs the new basic.js.
+- The copies of basic.js in the other folders (`03-webpage/webpage-handbook/basic/` (`_update-copies.sh`), `03-webpage/webpage-basicjs/basic/`, the game, the admin panel demo) do not get these until they are copied again: a component that uses them needs the new basic.js.
 
 ---
 

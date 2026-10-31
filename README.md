@@ -127,10 +127,10 @@ Both scripts use [terser](https://terser.org/) through `npx`, so they need Node.
 | `01-basic-js-by-example/` | Step-by-step tutorial pages for the core library, written for beginners |
 | `01-basic-js-by-example/_first-coding-projects/` | Small projects for people who write their first programs (calculator, dice, XOX, snake, chess…), each with notes on its algorithm |
 | `02-comp-examples/` | One demo page per component |
-| `03-webpage-m2/` | Web sites drawn with basic.js: the library site and the handbook site |
+| `03-webpage/` | Web sites drawn with basic.js: the library site and the handbook site |
 | `04-template-m1/` | Links to the mobile app template, made with an older basic.js |
 | `04-template-m2/` | App templates: admin panel, web forms (contact, appointment, order…), a to-do app, and `easy-pwa`, a script that turns a site into an installable app |
-| `05-showcase-m2/` | Links to live apps made with basic.js |
+| `05-showcase/` | Links to live apps made with basic.js |
 | `__handbook/` | The basic.js handbook in [English](__handbook/english/) and [Turkish](__handbook/turkce/) |
 | `context/` | Short reference docs for the core library and components, written for AI assistants |
 | `__developer-toolkit/` | VS Code extensions for basic.js: completer, object navigator, view inspector |

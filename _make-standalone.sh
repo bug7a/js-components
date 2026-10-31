@@ -31,8 +31,8 @@
 # change those by hand.
 #
 # USAGE:
-#   ./_make-standalone.sh 03-webpage-m2/webpage-basicjs          Copies and rewrites.
-#   ./_make-standalone.sh 03-webpage-m2/webpage-basicjs --list   Only shows what it would do.
+#   ./_make-standalone.sh 03-webpage/webpage-basicjs          Copies and rewrites.
+#   ./_make-standalone.sh 03-webpage/webpage-basicjs --list   Only shows what it would do.
 #   ./_make-standalone.sh my-project --one-file                    The components in one file.
 #
 # It only needs node (npx downloads terser).
@@ -61,7 +61,7 @@ for argument in "$@"; do
     esac
 done
 
-if [ -z "$PROJECT" ]; then echo "Give a project folder: ./_make-standalone.sh 03-webpage-m2/webpage-basicjs"; exit 1; fi
+if [ -z "$PROJECT" ]; then echo "Give a project folder: ./_make-standalone.sh 03-webpage/webpage-basicjs"; exit 1; fi
 if [ ! -d "$PROJECT" ]; then echo "Not a folder: $PROJECT"; exit 1; fi
 
 export REPO="$(pwd)"
