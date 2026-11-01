@@ -32,3 +32,6 @@ _ozden-manager/
 
 # The standalone copies made by _make-standalone.sh (2026-10-31)
 _dist/
+
+# The screenshots of Claude's reports (2026-10-31): inside the repository so VS Code opens their links; never in git
+_screenshots/
