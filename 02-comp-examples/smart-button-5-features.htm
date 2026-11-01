@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>SmartButton - All Features</title>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+    /* Bismillah */
+
+    // SmartButton (comp-m4): the places of the icon, styles, setText / setIcon and the waiting cover.
+    // (Named smart-button-2.htm until 2026-10-31. The other samples: smart-button.htm status buttons, smart-button-2.htm
+    // badges, smart-button-3-ozden.htm the packages, smart-button-4-dark.htm the dark packages.)
+
+    const ICONS = "../assets/icons/";
+    const JOB_TIME = 1500; // ms: a job that takes time (the sample)
+    const DONE_TIME = 1200; // ms: "Saved" is seen this long
+
+    // The looks of this page (style of SmartButton)
+    const LOOKS = {
+        primary: {
+            box: { color: "#3871E0", border: 0, round: 8 },
+            hover: { color: "#2F62C7" },
+            active: { color: "#2654AE" },
+            label: { fontSize: 16, textColor: "white", fontFamily: "opensans-bold" },
+        },
+        danger: {
+            box: { color: "white", border: 1, borderColor: "rgba(205, 92, 92, 0.6)", round: 8 },
+            hover: { color: "#FDF2F2" },
+            active: { color: "#F9E0E0" },
+            label: { fontSize: 16, textColor: "indianred", fontFamily: "opensans-bold" },
+        },
+        pill: {
+            layout: { gap: 6, padding: [16, 8], align: "center center" },
+            box: { color: Black(0.05), border: 0, round: 30 },
+            hover: { color: Black(0.09) },
+            active: { color: Black(0.14) },
+            icon: { width: 18, height: 18 },
+            label: { fontSize: 14, textColor: Black(0.75), fontFamily: "opensans-bold" },
+        },
+        square: {
+            layout: { gap: 4, padding: [12, 10], align: "center center" },
+            box: { color: "white", border: 1, borderColor: Black(0.15), round: 10 },
+            icon: { width: 28, height: 28 },
+            label: { fontSize: 12, textColor: Black(0.6), fontFamily: "opensans" },
+        },
+    };
+
+    // GROUP: A card with a title and a short description
+    const startCard = function (title, description) {
+        VGroup({ width: 640, height: "auto", align: "left top", gap: 14, padding: 20, color: "white", round: 12, border: 1, borderColor: Black(0.08), clipContent: 0 });
+        that.css = { maxWidth: "100%" };
+        Label({ plainText: title, fontSize: 15, bold: 1, textColor: Black(0.8) });
+        Label({ plainText: description, width: "100%", fontSize: 13, textColor: Black(0.5), css: { lineHeight: "1.4", whiteSpace: "normal" } });
+        HGroup({ width: "100%", height: "auto", align: "left center", gap: 12, wrap: 1, clipContent: 0 });
+    };
+
+    const endCard = function () {
+        endGroup();
+        endGroup();
+    };
+
+    // A save that takes time: the waiting clock, then "Saved" for a moment, then the button as before
+    let cancelSavedText = null;
+    const saveWithWaiting = function (button) {
+        // WHY: a second save while "Saved" is seen: the old timer must not write "Save" during the new wait
+        if (cancelSavedText) cancelSavedText();
+        button.setWaiting(1);
+        button.after(JOB_TIME, function () {
+            button.setWaiting(0);
+            button.setText("Saved");
+            cancelSavedText = button.after(DONE_TIME, function () { button.setText("Save"); });
+        });
+    };
+
+    const start = function () {
+
+        page.color = "#F0F2F5";
+
+        const pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+
+            VGroup({ width: "100%", height: "auto", align: "center top", gap: 24, padding: 40, clipContent: 0 });
+
+                Label({ text: "SmartButton", fontSize: 26, bold: 1, textColor: Black(0.8) });
+
+                startCard("The place of the icon", "iconPosition: \"left\" (default) or \"top\". labelText: \"\" -> only the icon (give it an ariaLabel); no iconFile -> only the text.");
+                    SmartButton({ styleName: "classic", labelText: "Lock", iconFile: ICONS + "lock.png" });
+                    SmartButton({ styleName: "classic", labelText: "Plant", iconFile: ICONS + "plant.png", iconPosition: "top", style: LOOKS.square });
+                    SmartButton({ styleName: "classic", labelText: "", ariaLabel: "Delete", iconFile: ICONS + "trash.svg", style: { layout: { padding: [10, 10] } } });
+                    SmartButton({ styleName: "classic", labelText: "Only text", iconFile: "" });
+                endCard();
+
+                startCard("Styles", "The look is in style: box, hover, active, layout, icon and label. Change only the keys you need.");
+                    SmartButton({ styleName: "classic", labelText: "Continue", iconFile: "", style: LOOKS.primary });
+                    SmartButton({ styleName: "classic", labelText: "Delete", iconFile: ICONS + "trash.svg", style: LOOKS.danger });
+                    SmartButton({ styleName: "classic", labelText: "Filter", iconFile: ICONS + "panel.png", style: LOOKS.pill });
+                    SmartButton({ styleName: "classic", labelText: "Alert", iconFile: ICONS + "alert-black.png", style: LOOKS.pill });
+                endCard();
+
+                startCard("setText() and setIcon()", "A button that changes itself: the lamp is turned on and off.");
+                    SmartButton({
+                        styleName: "classic",
+                        labelText: "Lamp is off",
+                        iconFile: ICONS + "lamp.png",
+                        style: { layout: { padding: [14, 8], gap: 8 } },
+                        onClick: function (self) {
+                            const isOn = (self.labelText == "Lamp is on");
+                            self.setText(isOn ? "Lamp is off" : "Lamp is on");
+                            self.setIcon(ICONS + (isOn ? "lamp.png" : "lamp-on.png"));
+                        },
+                    });
+                endCard();
+
+                startCard("Waiting: setWaiting()", "The waiting clock over the button while a job runs (the default wait); it can not be clicked then. setWaiting(0, delay) ends it later. waitingClock: \"ozdenDark\" is the dark clock, waitingType: \"dots\" three dots.");
+                    SmartButton({ styleName: "classic", labelText: "Save", iconFile: "", style: LOOKS.primary, onClick: saveWithWaiting });
+                    SmartButton({
+                        styleName: "classic",
+                        labelText: "Delete",
+                        iconFile: ICONS + "trash.svg",
+                        style: LOOKS.danger,
+                        onClick: function (self) {
+                            self.setWaiting(1);
+                            self.setWaiting(0, JOB_TIME); // the end is given at once, it comes later
+                        },
+                    });
+                    SmartButton({
+                        styleName: "classic",
+                        labelText: "",
+                        ariaLabel: "Lock",
+                        iconFile: ICONS + "lock.png",
+                        style: { layout: { padding: [10, 10] } },
+                        onClick: function (self) {
+                            self.setWaiting(1);
+                            self.after(JOB_TIME, function () { self.setWaiting(0); });
+                        },
+                    });
+                    SmartButton({
+                        styleName: "classic",
+                        labelText: "ozdenDark clock",
+                        iconFile: "",
+                        waitingClock: "ozdenDark",
+                        onClick: function (self) {
+                            self.setWaiting(1);
+                            self.after(JOB_TIME, function () { self.setWaiting(0); });
+                        },
+                    });
+                    SmartButton({
+                        styleName: "classic",
+                        labelText: "Dots",
+                        iconFile: "",
+                        waitingType: "dots",
+                        onClick: function (self) {
+                            self.setWaiting(1);
+                            self.after(JOB_TIME, function () { self.setWaiting(0); });
+                        },
+                    });
+                endCard();
+
+                startCard("Motion: animated and ripple", "Both on by default (for now): smaller and a little darker while pressed, and a wave from the pressed point (its color fits the button). Each one can be turned off.");
+                    SmartButton({ styleName: "classic", labelText: "Both", style: LOOKS.primary });
+                    SmartButton({ styleName: "classic", labelText: "Both", iconFile: ICONS + "plant.png" });
+                    SmartButton({ styleName: "classic", labelText: "Only press", style: LOOKS.primary, ripple: 0 });
+                    SmartButton({ styleName: "classic", labelText: "Only ripple", animated: 0 });
+                    SmartButton({ styleName: "classic", labelText: "Still", animated: 0, ripple: 0 });
+                endCard();
+
+                startCard("Keyboard and setEnabled()", "Tab reaches every button (a ring only for the keyboard), Enter or Space presses it. A disabled button is gray, can not be pressed and is out of the Tab order.");
+                    const btnSend = SmartButton({ styleName: "classic", labelText: "Send", style: LOOKS.primary, enabled: 0 });
+                    SmartButton({
+                        styleName: "classic",
+                        labelText: "Enable Send",
+                        onClick: function (self) {
+                            const isOn = (btnSend.enabled == 1);
+                            btnSend.setEnabled(isOn ? 0 : 1);
+                            self.setText(isOn ? "Enable Send" : "Disable Send");
+                        },
+                    });
+                endCard();
+
+            endGroup();
+
+        endBox();
+
+        if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: pageBox });
+
+    };
+
+    </script>
+
+</head>
+<body>
+</body>
+</html>

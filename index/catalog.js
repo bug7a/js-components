@@ -14,6 +14,8 @@ COMPONENT:
     gen: 4,                                 // Kuşak: 1 (comp-m1) ... 4 (comp-m4)
     cat: "navigation",                      // CATEGORIES anahtarı
     source: "comp/tabs.js",              // Bileşenin kaynak dosyası (deponun köküne göre)
+    deps: ["comp/tooltip.js"],              // (isteğe bağlı) Önce yüklenmesi gereken dosyalar; basic-designer'ın Components paneli
+                                            // bunları da yükler. Aynı liste test/components-test.htm'de de var.
     samples: ["02-comp-examples/tabs.htm"], // Örnek sayfalar. Başlık için: { file: "...", title: "..." }
     en: "...", tr: "...",                   // Kısa açıklama
 }
@@ -72,7 +74,7 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "search-results", name: "SearchResults", gen: 4, cat: "navigation",
-        source: "comp/search-results.js", samples: ["02-comp-examples/search-results.htm"],
+        source: "comp/search-results.js", deps: ["comp/search-input-v2.js"], samples: ["02-comp-examples/search-results.htm"],
         en: "The result list that opens under a search input, like an autocomplete or a command palette.",
         tr: "Arama kutusunun altında açılan sonuç listesi; otomatik tamamlama veya komut paleti gibi.",
     },
@@ -96,7 +98,7 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "select-box", name: "SelectBox", gen: 4, cat: "selection",
-        source: "comp/select-box.js", samples: ["02-comp-examples/select-box.htm", "02-comp-examples/select-box-ozden-item.htm", "02-comp-examples/select-box-ozden-text.htm"],
+        source: "comp/select-box.js", deps: ["comp/search-input-v2.js"], samples: ["02-comp-examples/select-box.htm", "02-comp-examples/select-box-ozden-item.htm", "02-comp-examples/select-box-ozden-text.htm"],
         en: "Dropdown select for single or multiple selection, with select all and clear.",
         tr: "Tekli veya çoklu seçim için açılır liste; tümünü seç ve temizle düğmeleri.",
     },
@@ -108,7 +110,7 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "full-screen-select", name: "FullScreenSelect", gen: 4, cat: "selection",
-        source: "comp/full-screen-select.js", samples: ["02-comp-examples/full-screen-select.htm"],
+        source: "comp/full-screen-select.js", deps: ["comp/search-input-v2.js"], samples: ["02-comp-examples/full-screen-select.htm"],
         en: "A select field whose list opens on the whole screen, with a search box: for phones and long lists. The new version of UISelectText.",
         tr: "Listesi tüm ekranda açılan, arama kutulu seçim alanı: telefonlar ve uzun listeler için. UISelectText'in yeni sürümü.",
     },
@@ -162,7 +164,7 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "label-editor", name: "LabelEditor", gen: 4, cat: "inputs",
-        source: "comp/label-editor.js", samples: ["02-comp-examples/label-editor.htm"],
+        source: "comp/label-editor.js", deps: ["comp/side-panel.js", "comp/stepper.js", "comp/select-color.js", "comp/tabs.js", "comp/check-box.js"], samples: ["02-comp-examples/label-editor.htm"],
         en: "An object based editor: add labels, change their properties in a side panel, save the styles with a name and apply them to other labels.",
         tr: "Nesne tabanlı editör: label ekleyin, özelliklerini yan panelden değiştirin, stilleri bir adla kaydedip başka label'lara uygulayın.",
     },
@@ -190,7 +192,7 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "dialog", name: "Dialog", gen: 4, cat: "feedback",
-        source: "comp/dialog.js", samples: ["02-comp-examples/dialog.htm", "02-comp-examples/dialog-centered.htm"],
+        source: "comp/dialog.js", deps: ["comp/tooltip.js", "comp/input-b.js", "comp/smart-button.js"], samples: ["02-comp-examples/dialog.htm", "02-comp-examples/dialog-centered.htm"],
         en: "A dialog over the page with fields and buttons: a button that asks again, a waiting button, keyboard; Dialog.confirm, alert and prompt. In development.",
         tr: "Sayfanın üstünde alanlı ve düğmeli diyalog: tekrar soran düğme, bekleyen düğme, klavye; Dialog.confirm, alert ve prompt. Geliştiriliyor.",
     },
@@ -214,7 +216,7 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "loading-screen", name: "LoadingScreen", gen: 4, cat: "feedback",
-        source: "comp/loading-screen.js", samples: ["02-comp-examples/loading-screen.htm"],
+        source: "comp/loading-screen.js", deps: ["comp/smart-button.js"], samples: ["02-comp-examples/loading-screen.htm"],
         en: "Full cover splash and loading screen with an icon, a title, a spinner and progress.",
         tr: "İkon, başlık, dönen gösterge ve ilerleme içeren tam ekran açılış ve yükleme ekranı.",
     },
@@ -256,13 +258,13 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "tiny-table-m4", name: "TinyTable", gen: 4, cat: "data",
-        source: "comp/tiny-table.js", samples: ["02-comp-examples/tiny-table.htm"],
+        source: "comp/tiny-table.js", deps: ["comp/scrolling-text.js"], samples: ["02-comp-examples/tiny-table.htm"],
         en: "A light table for short lists: a colored title row, one line rows (a long text slides under the mouse), a soft color under the mouse; scrolling rows. The new version of TinyTable (M1).",
         tr: "Kısa listeler için hafif tablo: renkli başlık satırı, tek satırlık hücreler, fareyle gelinen satırda yumuşak renk; kayan satırlar. TinyTable'ın (M1) yeni sürümü.",
     },
     {
         key: "data-table", name: "DataTable", gen: 4, cat: "data",
-        source: "comp/data-table.js",
+        source: "comp/data-table.js", deps: ["comp/search-input-v2.js"],
         samples: [
             { file: "02-comp-examples/data-table.htm", title: "Styles" },
             { file: "02-comp-examples/data-table-2.htm", title: "Basic" },
@@ -295,7 +297,7 @@ CATALOG.COMPONENTS = [
     // --- comp-m3 ---
     {
         key: "smart-table", name: "SmartTable", gen: 3, cat: "data",
-        source: "comp/smart-table.js",
+        source: "comp/smart-table.js", deps: ["comp/search-input-v2.js", "comp/context-menu.js"],
         samples: [
             { file: "02-comp-examples/smart-table-1.htm", title: "2M rows" },
             { file: "02-comp-examples/smart-table-2.htm", title: "Actions" },
@@ -331,9 +333,11 @@ CATALOG.COMPONENTS = [
         key: "smart-button", name: "SmartButton", gen: 4, cat: "actions",
         source: "comp/smart-button.js",
         samples: [
-            { file: "02-comp-examples/smart-button.htm", title: "Basic" },
-            { file: "02-comp-examples/smart-button-2.htm", title: "All features" },
+            { file: "02-comp-examples/smart-button.htm", title: "Status buttons" },
+            { file: "02-comp-examples/smart-button-2.htm", title: "Situations" },
             { file: "02-comp-examples/smart-button-3-ozden.htm", title: "Dialogs (ozden)" },
+            { file: "02-comp-examples/smart-button-4-dark.htm", title: "Dark packages" },
+            { file: "02-comp-examples/smart-button-5-features.htm", title: "All features" },
         ],
         en: "The default button: an icon and a text (or one of them), ozden style packages, a waiting clock or dots while a job runs, and a two-click ask with a bubble.",
         tr: "Varsayılan düğme: ikon ve yazı (ya da biri), ozden stil paketleri, bir iş sürerken bekleme saati ya da noktaları ve balonlu iki tıklamalı onay.",
@@ -360,7 +364,7 @@ CATALOG.COMPONENTS = [
     // --- comp-m2 ---
     {
         key: "input-b", name: "InputB", gen: 2, cat: "inputs",
-        source: "comp/input-b.js",
+        source: "comp/input-b.js", deps: ["comp/tooltip.js"],
         samples: [
             { file: "02-comp-examples/input-b-ex1.htm", title: "Basic" },
             { file: "02-comp-examples/input-b-ex2.htm", title: "Units & hints" },
@@ -373,25 +377,25 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "email-input-b", name: "EmailInputB", gen: 2, cat: "inputs",
-        source: "comp/email-input-b.js", samples: ["02-comp-examples/email-input-b.htm"],
+        source: "comp/email-input-b.js", deps: ["comp/tooltip.js", "comp/input-b.js"], samples: ["02-comp-examples/email-input-b.htm"],
         en: "An InputB that checks e-mail addresses.",
         tr: "E-posta adresini denetleyen InputB.",
     },
     {
         key: "password-input-b", name: "PasswordInputB", gen: 2, cat: "inputs",
-        source: "comp/password-input-b.js", samples: ["02-comp-examples/password-input-b.htm"],
+        source: "comp/password-input-b.js", deps: ["comp/tooltip.js", "comp/input-b.js"], samples: ["02-comp-examples/password-input-b.htm"],
         en: "Password field with a show and hide button.",
         tr: "Göster ve gizle düğmeli şifre alanı.",
     },
     {
         key: "number-input-b", name: "NumberInputB", gen: 2, cat: "inputs",
-        source: "comp/number-input-b.js", samples: ["02-comp-examples/number-input-b.htm"],
+        source: "comp/number-input-b.js", deps: ["comp/tooltip.js", "comp/input-b.js"], samples: ["02-comp-examples/number-input-b.htm"],
         en: "An InputB that accepts only numbers.",
         tr: "Yalnızca sayı kabul eden InputB.",
     },
     {
         key: "phone-input-b", name: "PhoneInputB", gen: 2, cat: "inputs",
-        source: "comp/phone-input-b.js",
+        source: "comp/phone-input-b.js", deps: ["comp/tooltip.js", "comp/input-b.js"],
         samples: [
             { file: "02-comp-examples/phone-input-b.htm", title: "Basic" },
             { file: "02-comp-examples/phone-input-b-select-country.htm", title: "Select country" },
@@ -401,19 +405,19 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "currency-input-b", name: "CurrencyInputB", gen: 2, cat: "inputs",
-        source: "comp/currency-input-b.js", samples: ["02-comp-examples/currency-input-b.htm"],
+        source: "comp/currency-input-b.js", deps: ["comp/tooltip.js", "comp/input-b.js"], samples: ["02-comp-examples/currency-input-b.htm"],
         en: "Money field that formats the amount and shows its currency.",
         tr: "Tutarı biçimlendiren ve para birimini gösteren alan.",
     },
     {
         key: "url-input-b", name: "URLInputB", gen: 2, cat: "inputs",
-        source: "comp/url-input-b.js", samples: ["02-comp-examples/url-input-b.htm"],
+        source: "comp/url-input-b.js", deps: ["comp/tooltip.js", "comp/input-b.js", "comp/tiny-select.js"], samples: ["02-comp-examples/url-input-b.htm"],
         en: "Web address field with a protocol selector.",
         tr: "Protokol seçicili web adresi alanı.",
     },
     {
         key: "textarea-b", name: "TextareaB", gen: 2, cat: "inputs",
-        source: "comp/textarea-b.js", samples: ["02-comp-examples/textarea-b.htm"],
+        source: "comp/textarea-b.js", deps: ["comp/tooltip.js", "comp/input-b.js"], samples: ["02-comp-examples/textarea-b.htm"],
         en: "Multi-line text field in the InputB style, with a character counter.",
         tr: "InputB görünümünde, karakter sayaçlı çok satırlı metin alanı.",
     },
@@ -466,7 +470,7 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "login-page", name: "LoginPage", gen: 2, cat: "pages",
-        source: "comp/login-page-v2.js",
+        source: "comp/login-page-v2.js", deps: ["comp/ui-effects.js", "comp/tooltip.js", "comp/input-b.js", "comp/email-input-b.js", "comp/password-input-b.js", "comp/tabs.js", "comp/smart-button.js", "comp/loading-screen.js"],
         samples: [
             { file: "02-comp-examples/login-page-v2.htm", title: "Light" },
             { file: "02-comp-examples/login-page-dark-v2.htm", title: "Dark" },

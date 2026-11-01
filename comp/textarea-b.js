@@ -59,6 +59,7 @@ const TextareaB = function(params = {}) {
     const textareaElem = document.createElement("textarea");
 
     // *** PUBLIC VARIABLES:
+    box.textareaElem = textareaElem; // the raw <textarea>: a page can listen to its paste / drop / keydown
 
     // *** PRIVATE FUNCTIONS:
     // The count is hidden when the text is long enough.

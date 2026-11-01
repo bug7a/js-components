@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Ozden design system draft</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES (a draft: no component, only basic.js objects) -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // DRAFT DESIGN: the "ozden" style as one design system, 2026-11-01.
+        // The colors, the type, the shapes and the ozden look of the components on one page, drawn with plain
+        // basic.js objects (no component here). The values below are copies of the ozden packages of comp/
+        // (SmartButton, InputB, SearchInput, SelectBox, ProgressBar, Dialog, ActionButton, ItemList, LoadingScreen,
+        // Tooltip, Tabs of login-page-v2); CheckBox, RadioButton and Notice have no ozden package: their classic
+        // look is shown. Change a value in basic-designer; then it is carried to the packages by hand.
+        // http://127.0.0.1:5505/_basic-designer/index.htm?page=_designs/ozden-design-system.htm
+
+        // *** THE TOKENS
+
+        const COLORS = {
+            neutral: [
+                { name: "Ink", value: "#232323", use: "dialog edge, action button, titles" },
+                { name: "Ink deep", value: "#141414", use: "check mark, clock lines" },
+                { name: "Text", value: "#373836", use: "field text, scroll bar" },
+                { name: "Text title", value: "#555555", use: "field titles" },
+                { name: "Button", value: "#E3E3E3", use: "ozdenType1-3" },
+                { name: "Button hover", value: "#D9D9D9", use: "hover / pressed" },
+                { name: "Disabled", value: "#EBEBEA", use: "a disabled button" },
+                { name: "Track", value: "#F2F2F2", use: "progress track" },
+                { name: "Field", value: "#F6F6F6", use: "InputB field" },
+                { name: "Whitesmoke", value: "#F5F5F5", use: "search, select field" },
+                { name: "Footer", value: "#FAFAF9", use: "dialog footer band" },
+                { name: "Page", value: "#F4F5F2", use: "the page under the cards" },
+                { name: "Surface", value: "#FFFFFF", use: "cards, dialog, rows under the mouse" },
+            ],
+            situation: [
+                { name: "Primary", value: "#5BBAC1", hover: "#50AEB5", use: "the main action" },
+                { name: "Danger", value: "#E8796D", hover: "#E0695C", use: "delete, the ask (white text)" },
+                { name: "Warning", value: "#F1C74A", hover: "#E6BB3C", use: "warning, progress bar" },
+                { name: "Success", value: "#7BC362", hover: "#70B756", use: "done" },
+                { name: "Info", value: "#52A8D0", hover: "#479CC4", use: "information" },
+            ],
+            accent: [
+                { name: "Indianred", value: "#CD5C5C", use: "clock hand, waiting dots" },
+                { name: "Field warning", value: "#E5885E", use: "InputB error ball" },
+                { name: "Search yellow", value: "#FFFCD6", use: "SelectBox search" },
+                { name: "Focus ring", value: "rgba(95, 158, 160, 0.6)", use: "keyboard focus" },
+            ],
+            dark: [
+                { name: "Black", value: "#000000", use: "dark page" },
+                { name: "Dark menu", value: "#141414", use: "side menu" },
+                { name: "Dark card", value: "#1A1A19", use: "cards" },
+                { name: "Dark disabled", value: "#232322", use: "a disabled button" },
+                { name: "Dark search", value: "#2B2D31", use: "SearchInput ozdenDark" },
+                { name: "Dark button", value: "#2E2E2C", use: "ozdenType1Dark" },
+                { name: "Dark hover", value: "#383835", use: "hover / pressed" },
+                { name: "Dark focus", value: "rgba(101, 162, 147, 0.75)", use: "focus ring, field edge" },
+            ],
+        };
+
+        const FONT = { regular: "opensans", bold: "opensans-bold" };
+
+        const TYPE_SCALE = [
+            { name: "Title", size: 20, family: FONT.bold, color: "#1B1F23", sample: "Delete the project?", use: "dialog title" },
+            { name: "Control", size: 20, family: FONT.regular, color: Black(0.7), sample: "Send the message", use: "buttons, fields, rows" },
+            { name: "Body", size: 16, family: FONT.regular, color: Black(0.55), sample: "This can not be undone. The files stay in the archive.", use: "dialog message" },
+            { name: "Field title", size: 16, family: FONT.bold, color: "#555555", sample: "E-mail address", use: "InputB title" },
+            { name: "Label", size: 15, family: FONT.regular, color: "#232323", sample: "Uploading files", use: "progress title" },
+            { name: "Small", size: 14, family: FONT.regular, color: Black(0.6), sample: "62 of 100 files", use: "values, descriptions" },
+            { name: "Bubble", size: 13, family: FONT.bold, color: "#E8796D", sample: "Click again to delete.", use: "the ask bubble" },
+        ];
+
+        const RADII = [
+            { name: "4", value: 4, use: "button, select" },
+            { name: "6", value: 6, use: "tooltip, tab" },
+            { name: "8", value: 8, use: "field, dialog, bubble" },
+            { name: "16", value: 16, use: "action menu" },
+            { name: "full", value: 50, use: "search, round button" },
+        ];
+
+        const EDGES = [
+            { name: "Strong", border: 1, color: Black(0.35), use: "ozdenType1-2" },
+            { name: "Select", border: 1, color: Black(0.3), use: "SelectBox" },
+            { name: "Faint", border: 1, color: Black(0.1), use: "ozdenType3, search" },
+            { name: "Field", border: 1, color: Black(0.05), use: "InputB" },
+            { name: "Dialog", border: 2, color: "#232323", use: "dialog card" },
+        ];
+
+        const SHADOWS = [
+            { name: "Bottom line", value: "inset 0 -2px 0 rgba(0, 0, 0, 0.25)", use: "ozdenType1" },
+            { name: "Dialog", value: "0 10px 30px rgba(0, 0, 0, 0.08), inset 0 -3px 0 rgba(0, 0, 0, 0.06)", use: "dialog card" },
+            { name: "Bubble", value: "0 6px 16px rgba(0, 0, 0, 0.18)", use: "the ask bubble" },
+            { name: "Floating", value: "0px 4px 12px rgba(0, 0, 0, 0.18)", use: "action button" },
+        ];
+
+        const SPACES = [4, 8, 10, 14, 16, 20, 24];
+
+        // *** THE LOOKS OF THE COMPONENTS (copies of their ozden packages)
+
+        const BUTTON = {
+            height: 40, padding: [16, 0], gap: 8, iconSize: 24, iconOpacity: 0.8,
+            fontSize: 20, textColor: Black(0.7), round: 4, color: "#E3E3E3", hoverColor: "#D9D9D9",
+            press: { scale: 0.94, brightness: 0.92 },
+            focusRing: "rgba(95, 158, 160, 0.6)",
+            disabled: { color: "#EBEBEA", borderColor: Black(0.1), textColor: Black(0.3), iconOpacity: 0.25 },
+            waitingOpacity: 0.18,
+        };
+        const BUTTON_TYPES = {
+            ozdenType1: { color: "#E3E3E3", border: 1, borderColor: Black(0.35), shadow: "inset 0 -2px 0 rgba(0, 0, 0, 0.25)" },
+            ozdenType2: { color: "#E3E3E3", border: 1, borderColor: Black(0.35), shadow: "none" },
+            ozdenType3: { color: "#E3E3E3", border: 1, borderColor: Black(0.1), shadow: "none" },
+            ozdenType4: { color: White(0), border: 0, borderColor: "transparent", shadow: "none" },
+        };
+        const SITUATION_TEXT_COLOR = Black(0.75);
+        const ASK = { color: "#E8796D", textColor: "white", bubbleFontSize: 13, bubbleRound: 8, bubblePadding: [12, 7], arrow: 12, gap: 6, bubbleShadow: "0 6px 16px rgba(0, 0, 0, 0.18)", text: "Click again to delete." };
+
+        const FIELD = {
+            width: 350, color: "#F6F6F6", hoverColor: "#EFEFEF", border: 1, borderColor: Black(0.05), focusBorderColor: Black(0.4),
+            round: 8, padding: [20, 14], titleSize: 16, titleColor: "#555555", inputSize: 20, inputHeight: 40, inputColor: "#373836",
+            placeholderColor: Black(0.35), warningColor: "#E5885E", warningSize: 20, descriptionSize: 14,
+        };
+        const SEARCH = { width: 300, height: 50, color: "whitesmoke", border: 1, borderColor: Black(0.1), bottomLine: "3px solid rgba(0, 0, 0, 0.06)", round: 50, fontSize: 20, iconSize: 24, iconOpacity: 0.4, focusRing: "rgba(0, 0, 0, 0.16)" };
+        const SELECT = { width: 350, height: 50, color: "whitesmoke", border: 1, borderColor: Black(0.3), round: 4, padding: 19, fontSize: 20, textColor: Black(0.8), arrowSize: 20 };
+        const CHECK = { size: 22, border: 2, borderColor: Black(0.35), checkedColor: "#141414", round: 5, labelSize: 16, labelColor: Black(0.8), gap: 10 };
+        const PILL_TABS = { color: "whitesmoke", padding: 2, gap: 3, round: 8, tabPadding: [12, 4], tabRound: 6, fontSize: 14, textColor: "#373836", selectedColor: "white", height: 32 };
+
+        const PROGRESS = { width: 350, trackHeight: 16, trackColor: "#F2F2F2", trackBorder: 2, trackBorderColor: Black(0.1), round: 4, barColor: "#F1C74A", fillOpacity: 0.5, barBorder: 2, limitColor: Black(0.7), limitWidth: 4, overhang: 4, titleSize: 15, titleColor: "#232323", valueSize: 14, valueColor: "rgba(35, 35, 35, 0.6)" };
+        const TOOLTIP = { color: White(0.95), textColor: Black(0.85), fontSize: 13, padding: [10, 6], round: 6, arrow: 10, shadow: "0 2px 10px rgba(0, 0, 0, 0.12)" };
+        const NOTICE = { round: 8, border: 2, borderColor: Black(0.2), padding: [24, 18], gap: 20, fontSize: 20, descSize: 17, shadow: "0px 0px 12px rgba(0, 0, 0, 0.1)", warningColor: "#FFD541", textColor: "#141414" };
+        const CLOCK = { size: 30, faceColor: "#FFFFFF", lineColor: "#141414", hourColor: "#141414", edgeWidth: 2, handWidth: 2, hourLength: 7.5, minuteLength: 10, minuteColor: "indianred", centerColor: "indianred", centerSize: 4 };
+        const CLOCK_DARK = { size: 30, faceColor: "#2A2A2A", lineColor: White(0.9), hourColor: White(0.6), edgeWidth: 2, handWidth: 2, hourLength: 7.5, minuteLength: 10, minuteColor: "#F1C74A", centerColor: "#F1C74A", centerSize: 4 };
+
+        const DIALOG = {
+            width: 460, color: "white", round: 8, border: 2, borderColor: "#232323",
+            shadow: "0 10px 30px rgba(0, 0, 0, 0.08), inset 0 -3px 0 rgba(0, 0, 0, 0.06)", padding: [24, 22], gap: 8,
+            titleSize: 20, titleColor: "#1B1F23", messageSize: 16, messageColor: Black(0.55), messageLineHeight: "1.5",
+            footerColor: "#FAFAF9", footerLine: Black(0.1), footerPadding: [16, 14], footerGap: 10, cover: Black(0.8),
+        };
+        const ACTION = { size: 64, color: "#232323", shadow: "0px 4px 12px rgba(0, 0, 0, 0.18)", menuWidth: 280, menuColor: "#F0F0F0", menuRound: 16, menuBorderColor: Black(0.08), menuShadow: "0px 10px 30px rgba(0, 0, 0, 0.12)", itemHeight: 48, itemSize: 17, itemColor: "#232323", menuGap: 16 };
+        const LIST = { width: 350, border: 1, borderColor: "rgba(20, 20, 20, 0.45)", round: 8, rowHeight: 80, padding: [20, 12], gap: 15, iconSize: 50, iconRound: 4, titleSize: 20, titleColor: Black(0.8), descSize: 14, descColor: "gray", hoverColor: "white", selectedOpacity: 0.5 };
+
+        const DARK = {
+            card: "#1A1A19", button: "#2E2E2C", hover: "#383835", buttonEdge: White(0.16), buttonShadow: "inset 0 -2px 0 rgba(0, 0, 0, 0.45)",
+            buttonText: White(0.85), fieldColor: White(0.04), fieldEdge: White(0.10), fieldFocusEdge: "rgba(101, 162, 147, 0.75)", fieldRound: 10,
+            titleColor: White(0.62), inputColor: White(0.94), placeholderColor: White(0.35),
+            searchColor: "#2B2D31", searchEdge: White(0.1), searchBottom: "3px solid rgba(255, 255, 255, 0.06)", searchText: White(0.88),
+        };
+
+        // *** THE PAGE
+
+        const PAGE_COLOR = "#F4F5F2";
+        const CARD_GAP = 22;
+        const CAPTION_COLOR = Black(0.45);
+        const SWATCH = { width: 128, height: 64 };
+
+        // THE ICONS (the color is in the file)
+        const svgIcon = function (color, paths) {
+            return "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + paths + "<\/svg>");
+        };
+        const SEND_PATHS = '<path d="M21 3 3 10.5l7.5 3L13.5 21z"/><path d="M21 3 10.5 13.5"/>';
+        const ICON_SEND = svgIcon("black", SEND_PATHS);
+        const ICON_SEND_WHITE = svgIcon("white", SEND_PATHS);
+        const ICON_TRASH = svgIcon("black", '<path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/>');
+        const ICON_SEARCH = svgIcon("black", '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>');
+        const ICON_SEARCH_WHITE = svgIcon("white", '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>');
+        const ICON_UNFOLD = svgIcon("black", '<path d="m7 9 5-5 5 5"/><path d="m7 15 5 5 5-5"/>');
+        const ICON_PLUS_WHITE = svgIcon("white", '<path d="M12 5v14M5 12h14"/>');
+        const ICON_FOLDER = svgIcon("#373836", '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>');
+        const ICON_TICK_WHITE = svgIcon("white", '<path d="m5 12 5 5 9-10"/>');
+
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            // BOX: Scrolling page
+            startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1, scrollX: 1 });
+
+                VGroup({ width: "max-content", height: "auto", align: "left top", gap: CARD_GAP, padding: 40, clipContent: 0 });
+
+                    Label({ text: "Ozden design system · draft", fontSize: 26, fontFamily: FONT.bold, textColor: "#232323" });
+                    Label({ text: "The values of the ozden packages in comp/, side by side. No component on this page.", fontSize: 14, textColor: CAPTION_COLOR });
+
+                    drawSection("1. Colors", "Neutrals, situations, accents (the dark ones are in section 8).", drawColors);
+                    drawSection("2. Type", "Open Sans: opensans and opensans-bold. The sizes the components use.", drawType);
+                    drawSection("3. Shape", "Corners, edges, shadows and the spaces between things.", drawShape);
+                    drawSection("4. Buttons", "SmartButton: ozdenType1 is the default. Hover, pressed and focus are still frames.", drawButtons);
+                    drawSection("5. Fields and choices", "InputB ozden, SearchInput ozden, SelectBox ozden, CheckBox / RadioButton (classic), pill Tabs.", drawFields);
+                    drawSection("6. Feedback", "ProgressBar ozden, the waiting clock, Tooltip, the ask bubble, Notice.", drawFeedback);
+                    drawSection("7. Surfaces", "Dialog ozden, ActionButton ozden, ItemList classic.", drawSurfaces);
+                    drawDarkSection();
+
+                endGroup();
+
+            endBox();
+
+        };
+
+        // *** THE SECTIONS
+
+        // GROUP: A white card with a title and a note
+        const drawSection = function (title, note, drawContent) {
+            const card = VGroup({ width: "auto", height: "auto", align: "left top", gap: 20, padding: [30, 28], color: "white", round: 10, border: 1, borderColor: Black(0.08), clipContent: 0 });
+                VGroup({ hug: 1, align: "left top", gap: 2 });
+                    Label({ text: title, fontSize: 18, fontFamily: FONT.bold, textColor: "#232323" });
+                    Label({ text: note, fontSize: 13, textColor: CAPTION_COLOR });
+                endGroup();
+                drawContent();
+            endGroup();
+            return card;
+        };
+
+        // GROUP: A small row title and the things of the row
+        const drawRow = function (title, drawContent) {
+            const row = VGroup({ width: "auto", height: "auto", align: "left top", gap: 10, clipContent: 0 });
+                drawCaption(title);
+                HGroup({ width: "auto", height: "auto", align: "left top", gap: 20, clipContent: 0 });
+                    drawContent();
+                endGroup();
+            endGroup();
+            return row;
+        };
+
+        const drawCaption = function (text) {
+            return Label({ text: text.toUpperCase(), fontSize: 11, fontFamily: FONT.bold, textColor: CAPTION_COLOR, css: { letterSpacing: "0.3px", whiteSpace: "nowrap" } });
+        };
+
+        // GROUP: An object with its name under it
+        const drawNamed = function (name, drawObject) {
+            const group = VGroup({ hug: 1, align: "left top", gap: 8, clipContent: 0 });
+                drawObject();
+                drawCaption(name);
+            endGroup();
+            return group;
+        };
+
+        // *** 1. COLORS
+
+        const drawColors = function () {
+            drawRow("Neutrals", function () { drawSwatches(COLORS.neutral.slice(0, 7)); });
+            drawRow("", function () { drawSwatches(COLORS.neutral.slice(7)); });
+            drawRow("Situations (color / hover)", function () { drawSwatches(COLORS.situation); });
+            drawRow("Accents", function () { drawSwatches(COLORS.accent); });
+        };
+
+        const drawSwatches = function (list) {
+            list.forEach(drawSwatch);
+        };
+
+        // GROUP: A color tile, its name, its value and where it is used
+        const drawSwatch = function (token) {
+            const group = VGroup({ width: SWATCH.width, height: "auto", align: "left top", gap: 3 });
+                HGroup({ width: SWATCH.width, height: SWATCH.height, align: "left top", round: 8, border: 1, borderColor: Black(0.08) });
+                    Box({ width: "100%", height: "100%", color: token.value, position: "relative" });
+                    if (token.hover) Box({ width: "35%", height: "100%", color: token.hover, position: "relative" });
+                endGroup();
+                Label({ text: token.name, fontSize: 13, fontFamily: FONT.bold, textColor: "#232323" });
+                Label({ text: token.value + (token.hover ? " / " + token.hover : ""), fontSize: 11, textColor: Black(0.6) });
+                Label({ width: SWATCH.width, text: token.use, fontSize: 11, textColor: CAPTION_COLOR });
+            endGroup();
+            return group;
+        };
+
+        // *** 2. TYPE
+
+        const drawType = function () {
+            const list = VGroup({ width: "auto", height: "auto", align: "left top", gap: 14 });
+                TYPE_SCALE.forEach(drawTypeRow);
+            endGroup();
+            return list;
+        };
+
+        // GROUP: The name and size of a text style, then a sample of it
+        const drawTypeRow = function (type) {
+            const row = HGroup({ width: "auto", height: "auto", align: "left center", gap: 20 });
+                VGroup({ width: 170, height: "auto", align: "left top", gap: 0 });
+                    Label({ text: type.name, fontSize: 13, fontFamily: FONT.bold, textColor: "#232323" });
+                    Label({ text: type.size + " px · " + type.family + " · " + type.use, fontSize: 11, textColor: CAPTION_COLOR });
+                endGroup();
+                Label({ text: type.sample, fontSize: type.size, fontFamily: type.family, textColor: type.color, css: { whiteSpace: "nowrap" } });
+            endGroup();
+            return row;
+        };
+
+        // *** 3. SHAPE
+
+        const drawShape = function () {
+            drawRow("Corners", function () {
+                RADII.forEach(function (radius) {
+                    drawNamed(radius.name + " · " + radius.use, function () {
+                        Box({ width: 96, height: 56, color: "#E3E3E3", round: radius.value, border: 1, borderColor: Black(0.35), position: "relative" });
+                    });
+                });
+            });
+            drawRow("Edges", function () {
+                EDGES.forEach(function (edge) {
+                    drawNamed(edge.name + " · " + edge.use, function () {
+                        Box({ width: 96, height: 56, color: "white", round: 6, border: edge.border, borderColor: edge.color, position: "relative" });
+                    });
+                });
+            });
+            drawRow("Shadows", function () {
+                SHADOWS.forEach(function (shadow) {
+                    drawNamed(shadow.name + " · " + shadow.use, function () {
+                        Box({ width: 120, height: 56, color: "white", round: 8, border: 1, borderColor: Black(0.06), boxShadow: shadow.value, position: "relative" });
+                    });
+                });
+            });
+            drawRow("Spaces (gap / padding)", function () {
+                HGroup({ hug: 1, align: "left bottom", gap: 20 });
+                    SPACES.forEach(drawSpace);
+                endGroup();
+            });
+        };
+
+        // GROUP: A space as a bar of its size
+        const drawSpace = function (space) {
+            const group = VGroup({ hug: 1, align: "center top", gap: 6 });
+                Box({ width: space, height: 32, color: "#5BBAC1", round: 1, position: "relative" });
+                Label({ text: space, fontSize: 11, textColor: CAPTION_COLOR });
+            endGroup();
+            return group;
+        };
+
+        // *** 4. BUTTONS
+
+        const drawButtons = function () {
+            drawRow("The four types", function () {
+                Object.keys(BUTTON_TYPES).forEach(function (name) {
+                    drawNamed(name + (name == "ozdenType1" ? " (default)" : ""), function () {
+                        drawButton({ type: BUTTON_TYPES[name] });
+                    });
+                });
+            });
+            drawRow("Situations (ozdenType1 in a color)", function () {
+                COLORS.situation.forEach(function (token) {
+                    drawNamed(token.name, function () {
+                        drawButton({ type: getSituationType(token), text: token.name, isWhite: (token.name == "Danger") });
+                    });
+                });
+            });
+            drawRow("States (ozdenType1)", function () {
+                drawNamed("hover", function () { drawButton({ type: BUTTON_TYPES.ozdenType1, hover: 1 }); });
+                drawNamed("pressed", function () { drawButton({ type: BUTTON_TYPES.ozdenType1, pressed: 1 }); });
+                drawNamed("keyboard focus", function () { drawButton({ type: BUTTON_TYPES.ozdenType1, focus: 1 }); });
+                drawNamed("disabled", function () { drawButton({ type: BUTTON_TYPES.ozdenType1, disabled: 1 }); });
+                drawNamed("waiting", function () { drawButton({ type: BUTTON_TYPES.ozdenType1, waiting: 1 }); });
+            });
+            drawRow("The ask (two clicks to delete)", function () {
+                drawNamed("first click", drawAskingButton);
+                drawNamed("only an icon", function () { drawButton({ type: BUTTON_TYPES.ozdenType2, iconOnly: 1 }); });
+            });
+        };
+
+        const getSituationType = function (token) {
+            return { color: token.value, border: 1, borderColor: Black(0.35), shadow: BUTTON_TYPES.ozdenType1.shadow };
+        };
+
+        // GROUP: A SmartButton in one state
+        const drawButton = function (state) {
+            const button = HGroup({
+                width: state.iconOnly ? 50 : "auto",
+                height: BUTTON.height,
+                align: "center center",
+                gap: BUTTON.gap,
+                padding: state.iconOnly ? 0 : BUTTON.padding,
+                color: getButtonColor(state),
+                round: BUTTON.round,
+                border: state.type.border,
+                borderColor: state.disabled ? BUTTON.disabled.borderColor : state.type.borderColor,
+                boxShadow: state.disabled ? "none" : state.type.shadow,
+                clipContent: 0,
+            });
+            button.css = { position: "relative" };
+            if (state.pressed) button.css = { transform: "scale(" + BUTTON.press.scale + ")", filter: "brightness(" + BUTTON.press.brightness + ")" };
+            if (state.focus) button.css = { outline: "2px solid " + BUTTON.focusRing, outlineOffset: "-2px" };
+
+                if (!state.noIcon) drawButtonIcon(state);
+                if (!state.iconOnly) {
+                    const label = Label({ text: state.text || "Send", fontSize: BUTTON.fontSize, textColor: getButtonTextColor(state), css: { whiteSpace: "nowrap" } });
+                    if (state.waiting) label.opacity = BUTTON.waitingOpacity;
+                }
+                if (state.waiting) drawWaitingClock();
+
+            endGroup();
+            return button;
+        };
+
+        const drawButtonIcon = function (state) {
+            const icon = Icon({ width: BUTTON.iconSize, height: BUTTON.iconSize });
+            icon.load(getButtonIcon(state));
+            icon.opacity = getButtonIconOpacity(state);
+            return icon;
+        };
+
+        const getButtonColor = function (state) {
+            if (state.asking) return ASK.color;
+            if (state.disabled) return BUTTON.disabled.color;
+            if (state.hover || state.pressed) return BUTTON.hoverColor;
+            return state.type.color;
+        };
+
+        const getButtonTextColor = function (state) {
+            if (state.asking || state.isWhite) return ASK.textColor;
+            if (state.disabled) return BUTTON.disabled.textColor;
+            if (state.type.color != BUTTON.color) return SITUATION_TEXT_COLOR;
+            return BUTTON.textColor;
+        };
+
+        const getButtonIcon = function (state) {
+            if (state.iconOnly) return ICON_TRASH;
+            if (state.asking || state.isWhite) return ICON_SEND_WHITE;
+            return ICON_SEND;
+        };
+
+        const getButtonIconOpacity = function (state) {
+            if (state.disabled) return BUTTON.disabled.iconOpacity;
+            if (state.waiting) return BUTTON.waitingOpacity;
+            if (state.asking || state.isWhite) return 1;
+            return BUTTON.iconOpacity;
+        };
+
+        // LABEL: The clock over the faded content (the button keeps its size while it waits)
+        const drawWaitingClock = function () {
+            const clock = Label({ width: 26, height: 26, text: getClockSvg(CLOCK), css: { lineHeight: "0" } });
+            clock.css = { position: "absolute", left: "50%", top: "50%", transform: "translate(-50%, -50%)" };
+            return clock;
+        };
+
+        // GROUP: The asking button with its red bubble over it
+        const drawAskingButton = function () {
+            const group = VGroup({ hug: 1, align: "center bottom", gap: ASK.gap, clipContent: 0 });
+                drawBubble(ASK.text, { color: ASK.color, textColor: ASK.textColor, fontSize: ASK.bubbleFontSize, bold: 1, round: ASK.bubbleRound, padding: ASK.bubblePadding, arrow: ASK.arrow, shadow: ASK.bubbleShadow });
+                drawButton({ type: BUTTON_TYPES.ozdenType1, asking: 1, text: "Delete" });
+            endGroup();
+            return group;
+        };
+
+        // GROUP: A bubble with a triangle under it
+        const drawBubble = function (text, look) {
+            const bubble = VGroup({ hug: 1, align: "center top", gap: 0, clipContent: 0 });
+                Label({ text: text, fontSize: look.fontSize, fontFamily: look.bold ? FONT.bold : FONT.regular, textColor: look.textColor, color: look.color, round: look.round, padding: look.padding, boxShadow: look.shadow, css: { whiteSpace: "nowrap" } });
+                // BOX: Triangle (a turned square under the label)
+                const arrow = Box({ width: look.arrow, height: look.arrow, color: look.color });
+                arrow.css = { transform: "translateY(-" + (look.arrow / 2) + "px) rotate(45deg)", marginBottom: "-" + (look.arrow / 2) + "px" };
+            endGroup();
+            return bubble;
+        };
+
+        // *** 5. FIELDS AND CHOICES
+
+        const drawFields = function () {
+            drawRow("InputB ozden", function () {
+                drawNamed("normal", function () { drawField({ value: "" }); });
+                drawNamed("hover", function () { drawField({ value: "", hover: 1 }); });
+                drawNamed("focus, filled", function () { drawField({ value: "bugra@ozden.com", focus: 1 }); });
+                drawNamed("error", function () { drawField({ value: "bugra@", error: 1 }); });
+            });
+            drawRow("SearchInput ozden · SelectBox ozden", function () {
+                drawNamed("search, empty", function () { drawSearch({}); });
+                drawNamed("search, focus", function () { drawSearch({ focus: 1, value: "fruit" }); });
+                drawNamed("select field", drawSelectField);
+            });
+            drawRow("Choices", function () {
+                drawNamed("CheckBox", function () {
+                    VGroup({ hug: 1, align: "left top", gap: 10 });
+                        drawCheck("Send me the news", 1, 0);
+                        drawCheck("Remember me", 0, 0);
+                    endGroup();
+                });
+                drawNamed("RadioButton", function () {
+                    VGroup({ hug: 1, align: "left top", gap: 10 });
+                        drawCheck("Monthly", 1, 1);
+                        drawCheck("Yearly", 0, 1);
+                    endGroup();
+                });
+                drawNamed("pill Tabs (login-page-v2)", function () { drawPillTabs(["Sign in", "Sign up"], 0); });
+            });
+        };
+
+        // GROUP: An InputB field: the title over the text, an error ball at the top right
+        const drawField = function (state) {
+            const field = VGroup({
+                width: FIELD.width, height: "auto", align: "left top", gap: 0, padding: FIELD.padding,
+                color: state.hover ? FIELD.hoverColor : FIELD.color,
+                round: FIELD.round, border: FIELD.border,
+                borderColor: state.focus ? FIELD.focusBorderColor : FIELD.borderColor,
+                clipContent: 0,
+            });
+            field.css = { position: "relative" };
+                Label({ text: "E-mail", fontSize: FIELD.titleSize, fontFamily: FONT.bold, textColor: FIELD.titleColor });
+                HGroup({ width: "100%", height: FIELD.inputHeight, align: "left center" });
+                    Label({ text: state.value || "name@mail.com", fontSize: FIELD.inputSize, textColor: state.value ? FIELD.inputColor : FIELD.placeholderColor, css: { whiteSpace: "nowrap" } });
+                    if (state.focus) Box({ width: 2, height: 24, color: FIELD.inputColor, position: "relative" });
+                endGroup();
+                if (state.error) drawWarningBall();
+            endGroup();
+            return field;
+        };
+
+        // LABEL: The round warning icon of an InputB with an error
+        const drawWarningBall = function () {
+            const ball = Label({ width: FIELD.warningSize, height: FIELD.warningSize, text: "!", fontSize: 13, fontFamily: FONT.bold, textColor: "white", color: FIELD.warningColor, round: 100, textAlign: "center" });
+            ball.css = { position: "absolute", left: "auto", right: "5px", top: "5px", lineHeight: FIELD.warningSize + "px" };
+            return ball;
+        };
+
+        // GROUP: A SearchInput: the icon, the text and a thick bottom line
+        const drawSearch = function (state) {
+            const search = HGroup({
+                width: SEARCH.width, height: SEARCH.height, align: "left center", gap: 8, padding: [16, 0],
+                color: SEARCH.color, round: SEARCH.round, border: SEARCH.border, borderColor: SEARCH.borderColor, clipContent: 0,
+            });
+            search.css = { borderBottom: SEARCH.bottomLine };
+            if (state.focus) search.boxShadow = "inset 0 0 0 2px " + SEARCH.focusRing;
+                const icon = Icon({ width: SEARCH.iconSize, height: SEARCH.iconSize, opacity: SEARCH.iconOpacity });
+                icon.load(ICON_SEARCH);
+                Label({ text: state.value || "Search", fontSize: SEARCH.fontSize, textColor: state.value ? Black(0.8) : Black(0.35) });
+            endGroup();
+            return search;
+        };
+
+        // GROUP: The field of a SelectBox with its up / down arrow
+        const drawSelectField = function () {
+            const field = HGroup({
+                width: SELECT.width, height: SELECT.height, align: "left center", padding: [SELECT.padding, 0],
+                color: SELECT.color, round: SELECT.round, border: SELECT.border, borderColor: SELECT.borderColor,
+            });
+                Label({ text: "Apple", fontSize: SELECT.fontSize, textColor: SELECT.textColor, grow: 1 });
+                const arrow = Icon({ width: SELECT.arrowSize, height: SELECT.arrowSize, opacity: 0.8 });
+                arrow.load(ICON_UNFOLD);
+            endGroup();
+            return field;
+        };
+
+        // GROUP: A CheckBox (or a RadioButton) with its text
+        const drawCheck = function (text, isChecked, isRadio) {
+            const row = HGroup({ hug: 1, align: "left center", gap: CHECK.gap });
+                const mark = HGroup({
+                    width: CHECK.size, height: CHECK.size, align: "center center",
+                    color: (isChecked && !isRadio) ? CHECK.checkedColor : "white",
+                    round: isRadio ? 100 : CHECK.round, border: CHECK.border,
+                    borderColor: isChecked ? CHECK.checkedColor : CHECK.borderColor,
+                });
+                    if (isChecked && isRadio) Box({ width: CHECK.size / 2 - 1, height: CHECK.size / 2 - 1, color: CHECK.checkedColor, round: 100, position: "relative" });
+                    if (isChecked && !isRadio) {
+                        const tick = Icon({ width: 14, height: 14 });
+                        tick.load(ICON_TICK_WHITE);
+                    }
+                endGroup();
+                Label({ text: text, fontSize: CHECK.labelSize, textColor: CHECK.labelColor });
+            endGroup();
+            return row;
+        };
+
+        // GROUP: The pill bar of Tabs, the selected tab white
+        const drawPillTabs = function (names, selectedIndex) {
+            const bar = HGroup({ hug: 1, align: "left center", gap: PILL_TABS.gap, padding: PILL_TABS.padding, color: PILL_TABS.color, round: PILL_TABS.round });
+                names.forEach(function (name, index) {
+                    const isSelected = (index == selectedIndex);
+                    Label({ text: name, fontSize: PILL_TABS.fontSize, textColor: PILL_TABS.textColor, padding: PILL_TABS.tabPadding, round: PILL_TABS.tabRound, color: isSelected ? PILL_TABS.selectedColor : "transparent" });
+                });
+            endGroup();
+            return bar;
+        };
+
+        // *** 6. FEEDBACK
+
+        const drawFeedback = function () {
+            drawRow("ProgressBar ozden", function () {
+                drawNamed("62 % with a limit at 80", function () { drawProgress(0.62, 0.8); });
+                drawNamed("full", function () { drawProgress(1, 0); });
+            });
+            drawRow("Waiting · bubbles · notice", function () {
+                drawNamed("clock (ozden)", function () {
+                    Label({ width: CLOCK.size, height: CLOCK.size, text: getClockSvg(CLOCK), css: { lineHeight: "0" } });
+                });
+                drawNamed("Tooltip", function () {
+                    drawBubble("Saved 2 minutes ago", { color: TOOLTIP.color, textColor: TOOLTIP.textColor, fontSize: TOOLTIP.fontSize, bold: 0, round: TOOLTIP.round, padding: TOOLTIP.padding, arrow: TOOLTIP.arrow, shadow: TOOLTIP.shadow });
+                });
+                drawNamed("the ask bubble", function () {
+                    drawBubble(ASK.text, { color: ASK.color, textColor: ASK.textColor, fontSize: ASK.bubbleFontSize, bold: 1, round: ASK.bubbleRound, padding: ASK.bubblePadding, arrow: ASK.arrow, shadow: ASK.bubbleShadow });
+                });
+                drawNamed("Notice warning (classic)", drawNotice);
+            });
+        };
+
+        // GROUP: A ProgressBar: the title and value, the track, the half-colored bar, the limit line
+        const drawProgress = function (value, limit) {
+            const group = VGroup({ width: PROGRESS.width, height: "auto", align: "left top", gap: 10, clipContent: 0 });
+                HGroup({ width: "100%", height: "auto", align: "left center" });
+                    Label({ text: "Uploading files", fontSize: PROGRESS.titleSize, textColor: PROGRESS.titleColor, grow: 1 });
+                    Label({ text: Math.round(value * 100) + " %", fontSize: PROGRESS.valueSize, textColor: PROGRESS.valueColor });
+                endGroup();
+                const track = Box({ width: "100%", height: PROGRESS.trackHeight, color: PROGRESS.trackColor, round: PROGRESS.round, border: PROGRESS.trackBorder, borderColor: PROGRESS.trackBorderColor, position: "relative", clipContent: 0 });
+                createIn(track, function () {
+                    drawProgressFill(value);
+                    if (limit) drawLimitLine(limit);
+                });
+            endGroup();
+            return group;
+        };
+
+        // BOX: The bar (its color at half, a full edge of it, over the edge of the track)
+        const drawProgressFill = function (value) {
+            const fill = Box({ color: Alpha(PROGRESS.barColor, PROGRESS.fillOpacity), round: PROGRESS.round, border: PROGRESS.barBorder, borderColor: PROGRESS.barColor });
+            fill.css = { left: -PROGRESS.trackBorder + "px", top: -PROGRESS.trackBorder + "px", width: "calc(" + (value * 100) + "% + " + (PROGRESS.trackBorder * 2) + "px)", height: "calc(100% + " + (PROGRESS.trackBorder * 2) + "px)", boxSizing: "border-box" };
+            return fill;
+        };
+
+        // BOX: A dark limit line, longer than the track
+        const drawLimitLine = function (limit) {
+            const line = Box({ width: PROGRESS.limitWidth, color: PROGRESS.limitColor, round: 2 });
+            line.css = { left: "calc(" + (limit * 100) + "% - " + (PROGRESS.limitWidth / 2) + "px)", top: -(PROGRESS.overhang + PROGRESS.trackBorder) + "px", height: "calc(100% + " + ((PROGRESS.overhang + PROGRESS.trackBorder) * 2) + "px)" };
+            return line;
+        };
+
+        // GROUP: A Notice message (a card in the middle of the screen)
+        const drawNotice = function () {
+            const notice = VGroup({ width: 320, height: "auto", align: "left top", gap: 2, padding: NOTICE.padding, color: NOTICE.warningColor, round: NOTICE.round, border: NOTICE.border, borderColor: NOTICE.borderColor, boxShadow: NOTICE.shadow });
+                Label({ text: "No connection", fontSize: NOTICE.fontSize, textColor: NOTICE.textColor });
+                Label({ width: "100%", text: "The changes are kept here.", fontSize: NOTICE.descSize, textColor: NOTICE.textColor, opacity: 0.8 });
+            endGroup();
+            return notice;
+        };
+
+        // *** 7. SURFACES
+
+        const drawSurfaces = function () {
+            drawRow("Dialog ozden · ActionButton ozden · ItemList classic", function () {
+                drawNamed("dialog card (its cover: black 80 %)", drawDialog);
+                drawNamed("action button, menu open", drawActionMenu);
+                drawNamed("list rows: normal · hover · selected", drawList);
+            });
+        };
+
+        // GROUP: A Dialog card: the texts, then the footer band with the buttons
+        const drawDialog = function () {
+            const card = VGroup({ width: DIALOG.width, height: "auto", align: "left top", gap: 0, color: DIALOG.color, round: DIALOG.round, border: DIALOG.border, borderColor: DIALOG.borderColor, boxShadow: DIALOG.shadow });
+                VGroup({ width: "100%", height: "auto", align: "left top", gap: DIALOG.gap, padding: DIALOG.padding });
+                    Label({ text: "Delete the project?", fontSize: DIALOG.titleSize, fontFamily: FONT.bold, textColor: DIALOG.titleColor });
+                    Label({ width: getDialogTextWidth(), text: "This can not be undone. The files of the project stay in the archive for 30 days.", fontSize: DIALOG.messageSize, textColor: DIALOG.messageColor, lineHeight: DIALOG.messageLineHeight });
+                endGroup();
+                const footer = HGroup({ width: "100%", height: "auto", align: "right center", gap: DIALOG.footerGap, padding: DIALOG.footerPadding, color: DIALOG.footerColor, clipContent: 0 });
+                footer.css = { borderTop: "1px solid " + DIALOG.footerLine };
+                    drawButton({ type: BUTTON_TYPES.ozdenType1, text: "Cancel", noIcon: 1 });
+                    drawButton({ type: getSituationType(COLORS.situation[1]), text: "Delete", isWhite: 1, noIcon: 1 });
+                endGroup();
+            endGroup();
+            return card;
+        };
+
+        const getDialogTextWidth = function () {
+            return DIALOG.width - DIALOG.padding[0] * 2 - DIALOG.border * 2;
+        };
+
+        // GROUP: The menu of an ActionButton over the round button
+        const drawActionMenu = function () {
+            const group = VGroup({ hug: 1, align: "right top", gap: ACTION.menuGap, clipContent: 0 });
+                VGroup({ width: ACTION.menuWidth, height: "auto", align: "left top", gap: 1, color: ACTION.menuColor, round: ACTION.menuRound, border: 1, borderColor: ACTION.menuBorderColor, boxShadow: ACTION.menuShadow });
+                    ["New file", "New folder", "Upload"].forEach(function (text, index) {
+                        HGroup({ width: "100%", height: ACTION.itemHeight, align: "left center", padding: [20, 0], color: (index == 1) ? "#F6F6F6" : "white" });
+                            Label({ text: text, fontSize: ACTION.itemSize, textColor: ACTION.itemColor });
+                        endGroup();
+                    });
+                endGroup();
+                HGroup({ width: ACTION.size, height: ACTION.size, align: "center center", color: ACTION.color, round: 100, boxShadow: ACTION.shadow });
+                    const plus = Icon({ width: 24, height: 24, opacity: 0.9 });
+                    plus.load(ICON_PLUS_WHITE);
+                    plus.css = { transform: "rotate(45deg)" };
+                endGroup();
+            endGroup();
+            return group;
+        };
+
+        // GROUP: Three ItemList rows in a frame
+        const drawList = function () {
+            const list = VGroup({ width: LIST.width, height: "auto", align: "left top", gap: 0, round: LIST.round, border: LIST.border, borderColor: LIST.borderColor });
+                drawListRow("Projects", "12 folders", "transparent", 1);
+                drawListRow("Designs", "under the mouse", LIST.hoverColor, 1);
+                drawListRow("Archive", "selected", "transparent", LIST.selectedOpacity);
+            endGroup();
+            return list;
+        };
+
+        const drawListRow = function (title, desc, color, opacity) {
+            const row = HGroup({ width: "100%", height: LIST.rowHeight, align: "left center", gap: LIST.gap, padding: LIST.padding, color: color, opacity: opacity });
+                HGroup({ width: LIST.iconSize, height: LIST.iconSize, align: "center center", color: "#EEEEEE", round: LIST.iconRound });
+                    const icon = Icon({ width: 28, height: 28 });
+                    icon.load(ICON_FOLDER);
+                endGroup();
+                VGroup({ hug: 1, align: "left center", gap: 0 });
+                    Label({ text: title, fontSize: LIST.titleSize, textColor: LIST.titleColor });
+                    Label({ text: desc, fontSize: LIST.descSize, textColor: LIST.descColor });
+                endGroup();
+            endGroup();
+            return row;
+        };
+
+        // *** 8. DARK
+
+        // GROUP: The dark card: the dark colors and the ozdenDark looks
+        const drawDarkSection = function () {
+            const card = VGroup({ width: "auto", height: "auto", align: "left top", gap: 20, padding: [30, 28], color: DARK.card, round: 10, border: 1, borderColor: White(0.08), clipContent: 0 });
+                VGroup({ hug: 1, align: "left top", gap: 2 });
+                    Label({ text: "8. Dark (ozdenDark)", fontSize: 18, fontFamily: FONT.bold, textColor: White(0.9) });
+                    Label({ text: "On the #1A1A19 card: the dark colors, ozdenType1Dark, InputB ozdenDark, SearchInput ozdenDark, the dark clock.", fontSize: 13, textColor: White(0.5) });
+                endGroup();
+                drawDarkRow("Colors", function () { COLORS.dark.forEach(drawDarkSwatch); });
+                drawDarkRow("Button · field · search · clock", function () {
+                    drawDarkButton(0);
+                    drawDarkButton(1);
+                    drawDarkField();
+                    drawDarkSearch();
+                    Label({ width: CLOCK_DARK.size, height: CLOCK_DARK.size, text: getClockSvg(CLOCK_DARK), css: { lineHeight: "0" } });
+                });
+            endGroup();
+            return card;
+        };
+
+        const drawDarkRow = function (title, drawContent) {
+            const row = VGroup({ width: "auto", height: "auto", align: "left top", gap: 10, clipContent: 0 });
+                Label({ text: title.toUpperCase(), fontSize: 11, fontFamily: FONT.bold, textColor: White(0.45), css: { letterSpacing: "0.3px" } });
+                HGroup({ width: "auto", height: "auto", align: "left center", gap: 20, clipContent: 0 });
+                    drawContent();
+                endGroup();
+            endGroup();
+            return row;
+        };
+
+        const drawDarkSwatch = function (token) {
+            const group = VGroup({ width: SWATCH.width, height: "auto", align: "left top", gap: 3 });
+                Box({ width: SWATCH.width, height: SWATCH.height, color: token.value, round: 8, border: 1, borderColor: White(0.12), position: "relative" });
+                Label({ text: token.name, fontSize: 13, fontFamily: FONT.bold, textColor: White(0.9) });
+                Label({ text: token.value, fontSize: 11, textColor: White(0.6) });
+                Label({ width: SWATCH.width, text: token.use, fontSize: 11, textColor: White(0.45) });
+            endGroup();
+            return group;
+        };
+
+        // GROUP: ozdenType1Dark (normal, or under the mouse)
+        const drawDarkButton = function (isHover) {
+            const button = HGroup({ hug: 1, align: "center center", gap: BUTTON.gap, padding: BUTTON.padding, color: isHover ? DARK.hover : DARK.button, round: BUTTON.round, border: 1, borderColor: DARK.buttonEdge, boxShadow: DARK.buttonShadow });
+            button.height = BUTTON.height;
+                const icon = Icon({ width: BUTTON.iconSize, height: BUTTON.iconSize, opacity: 0.85 });
+                icon.load(ICON_SEND_WHITE);
+                Label({ text: isHover ? "Hover" : "Send", fontSize: BUTTON.fontSize, textColor: DARK.buttonText });
+            endGroup();
+            return button;
+        };
+
+        // GROUP: InputB ozdenDark with the focus edge
+        const drawDarkField = function () {
+            const field = VGroup({ width: 300, height: "auto", align: "left top", gap: 0, padding: FIELD.padding, color: DARK.fieldColor, round: DARK.fieldRound, border: 1, borderColor: DARK.fieldFocusEdge });
+                Label({ text: "E-MAIL", fontSize: FIELD.titleSize, fontFamily: FONT.bold, textColor: DARK.titleColor, css: { letterSpacing: "0.06em" } });
+                HGroup({ width: "100%", height: FIELD.inputHeight, align: "left center" });
+                    Label({ text: "name@mail.com", fontSize: FIELD.inputSize, textColor: DARK.placeholderColor });
+                endGroup();
+            endGroup();
+            return field;
+        };
+
+        const drawDarkSearch = function () {
+            const search = HGroup({ width: SEARCH.width, height: SEARCH.height, align: "left center", gap: 8, padding: [16, 0], color: DARK.searchColor, round: SEARCH.round, border: 1, borderColor: DARK.searchEdge });
+            search.css = { borderBottom: DARK.searchBottom };
+                const icon = Icon({ width: SEARCH.iconSize, height: SEARCH.iconSize, opacity: SEARCH.iconOpacity });
+                icon.load(ICON_SEARCH_WHITE);
+                Label({ text: "Search", fontSize: SEARCH.fontSize, textColor: DARK.placeholderColor });
+            endGroup();
+            return search;
+        };
+
+        // *** THE CLOCK (the drawing of SmartButton.createClockSvg, still: the minute hand up, the hour hand right)
+
+        const getClockSvg = function (look) {
+            const size = look.size;
+            const middle = size / 2;
+            const faceRadius = middle - look.edgeWidth / 2;
+            const hand = function (x2, y2, color) {
+                return '<line x1="' + middle + '" y1="' + middle + '" x2="' + x2 + '" y2="' + y2 + '" stroke="' + color + '" stroke-width="' + look.handWidth + '" stroke-linecap="round"/>';
+            };
+            return '<svg viewBox="0 0 ' + size + ' ' + size + '" width="100%" height="100%" style="display: block">' +
+                '<circle cx="' + middle + '" cy="' + middle + '" r="' + faceRadius + '" fill="' + look.faceColor + '" stroke="' + look.lineColor + '" stroke-width="' + look.edgeWidth + '"/>' +
+                hand(middle + look.hourLength, middle, look.hourColor) +
+                hand(middle, middle - look.minuteLength, look.minuteColor) +
+                '<circle cx="' + middle + '" cy="' + middle + '" r="' + (look.centerSize / 2) + '" fill="' + look.centerColor + '"/>' +
+                "<\/svg>";
+        };
+
+    </script>
+
+</head>
+
+<body>
+</body>
+
+</html>

@@ -1,147 +1,119 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Button with Icon</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartButton</title>
 
-    <!-- STANDARD -->
     <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
     <link rel="stylesheet" type="text/css" href="../basic/basic.css">
     <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
-    <script src="../comp/smart-button.js"></script>
 
-</head>
-
-<body>
+    <!-- COMPONENTS -->
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
         /* Bismillah */
 
-        const DOWNLOAD_TIME = 2000; // ms: a job that takes time (the sample)
+        // SMARTBUTTON · STATUS BUTTONS
+        // Round (pill) buttons that show a state: an icon in a filled circle and a bold text, each state in its own
+        // color on a soft tint of it. Every look is a style given to SmartButton (no package).
+        // - SmartButton({ labelText, iconFile, style: { box, hover, active, label, icon, layout } })
+        // - button.setStyle(style), button.setText(text), button.setIcon(file) -> change the look after create
+        // TRY: click "Add": it becomes "Added" (click again: back to "Add").
 
-        // 4. Waiting: the cover with the clock while the job runs; then the button opens the file.
-        const createWaitingSample = function () {
-            Label({ text: "Waiting (setWaiting):", fontSize: 14, textColor: "#666", marginTop: 20 });
-            SmartButton({
-                styleName: "classic",
-                width: 200,
-                height: 50,
-                labelText: "Download",
-                iconFile: "../comp/smart-button/alert-black.png",
-                onClick: function (self) {
-                    if (self.labelText == "Open") {
-                        self.setText("Download");
-                        return;
-                    }
-                    self.setWaiting(1);
-                    self.after(DOWNLOAD_TIME, function () { self.setWaiting(0); });
-                },
-                onWaitingEnd: function (self) {
-                    self.setText("Open");
-                },
-            });
+        // *** VARIABLES:
+
+        const BUTTON_HEIGHT = 52;
+        const ICON_SIZE = 30;
+        const FONT_SIZE = 20;
+
+        // The icons: a filled circle and a white mark in it (circleColor, markColor)
+        const MARKS = {
+            plus: '<path d="M12 7.5v9M7.5 12h9" stroke="MARK" stroke-width="2.4" stroke-linecap="round"/>',
+            check: '<path d="M7.6 12.4l3 3 5.8-6.4" fill="none" stroke="MARK" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>',
+            clock: '<path d="M12 7v5.2l3 2.6" fill="none" stroke="MARK" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>',
+            cross: '<path d="M8.6 8.6l6.8 6.8M15.4 8.6l-6.8 6.8" stroke="MARK" stroke-width="2.4" stroke-linecap="round"/>',
         };
+
+        const circleIcon = function (mark, circleColor, markColor) {
+            const body = '<circle cx="12" cy="12" r="11" fill="' + circleColor + '"/>' + MARKS[mark].split("MARK").join(markColor);
+            return "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">' + body + "<\/svg>");
+        };
+
+        // THE STATES: the color of the button, its text, its icon
+        const STATES = {
+            add: { text: "Add", color: "#F0F0F0", hoverColor: "#E6E6E6", textColor: "#3A3A3A", icon: circleIcon("plus", "#A9A9A9", "white") },
+            added: { text: "Added", color: "#0A7AFF", hoverColor: "#006FED", textColor: "white", icon: circleIcon("check", "white", "#0A7AFF") },
+            waiting: { text: "Waiting", color: "#FFF2E8", hoverColor: "#FFE8D6", textColor: "#F5923E", icon: circleIcon("clock", "#F5923E", "white") },
+            accepted: { text: "Accepted", color: "#EAF6EE", hoverColor: "#DDF0E3", textColor: "#3FB45F", icon: circleIcon("check", "#3FB45F", "white") },
+            declined: { text: "Declined", color: "#FDECEA", hoverColor: "#FBDFDC", textColor: "#E5564A", icon: circleIcon("cross", "#E5564A", "white") },
+        };
+
+        // *** START:
 
         const start = function () {
 
-            // Page Settings
-            page.color = "#F0F2F5";
+            page.color = "white";
 
-            const mainBox = VGroup({
-                width: 600,
-                height: "auto",
-                align: "center top",
-                gap: 20,
-                padding: 50,
-                style: {
-                    marginTop: 50
-                }
+            // BOX: Scrolling page
+            startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+
+                VGroup({ width: "100%", height: "auto", align: "center top", gap: 26, padding: 60, clipContent: 0 });
+
+                    createStatusButton(STATES.add, toggleAdd);
+                    createStatusButton(STATES.added);
+                    createStatusButton(STATES.waiting);
+                    createStatusButton(STATES.accepted);
+                    createStatusButton(STATES.declined);
+
+                endGroup();
+
+            endBox();
+
+        };
+
+        // *** FUNCTIONS:
+
+        // The look of a state as a SmartButton style: a pill without an edge, a bold text in the color of the state
+        const getStatusStyle = function (state) {
+            return {
+                box: { color: state.color, border: 0, borderColor: "transparent", round: BUTTON_HEIGHT / 2, boxShadow: "none" },
+                hover: { color: state.hoverColor },
+                active: { color: state.hoverColor },
+                layout: { gap: 12, padding: [22, 0] },
+                icon: { width: ICON_SIZE, height: ICON_SIZE, opacity: 1 },
+                label: { fontSize: FONT_SIZE, fontFamily: "opensans-bold", textColor: state.textColor },
+            };
+        };
+
+        // SMARTBUTTON: A status button
+        const createStatusButton = function (state, onClick) {
+            return SmartButton({
+                height: BUTTON_HEIGHT,
+                labelText: state.text,
+                iconFile: state.icon,
+                style: getStatusStyle(state),
+                onClick: onClick || function () {},
             });
+        };
 
-            Label({
-                text: "Button with Icon",
-                fontSize: 24,
-                fontFamily: "opensans-bold",
-                marginBottom: 20
-            });
-
-            // 1. Default Button (Icon Left)
-            Label({ text: "Default (Icon Left):", fontSize: 14, textColor: "#666" });
-            SmartButton({
-                styleName: "classic",
-                width: 200,
-                height: 50,
-                labelText: "Click Me",
-                iconFile: "https://cdn-icons-png.flaticon.com/512/709/709699.png", // Example Icon
-                onClick: function () {
-                    console.log("Button 1 Clicked");
-                    alert("Button 1 Clicked");
-                }
-            });
-
-            // 2. Icon Top
-            Label({ text: "Icon Top:", fontSize: 14, textColor: "#666", marginTop: 20 });
-            SmartButton({
-                styleName: "classic",
-                labelText: "",
-                ariaLabel: "Icon top", // a button with only an icon needs a name for the screen readers
-                iconPosition: "top",
-                iconFile: "https://cdn-icons-png.flaticon.com/512/2874/2874091.png", // Example Icon
-                style: {
-                    box: {
-                        color: "white",
-                        border: 1,
-                        borderColor: "#ddd",
-                        round: 8,
-                        cursor: "pointer",
-                    },
-                    layout: {
-                        gap: 0,
-                        padding: [10, 10],
-                        align: "center center"
-                    },
-                    icon: {
-                        width: 32,
-                        height: 32
-                    },
-                    hover: {
-                        color: "#eef"
-                    },
-                    active: {
-                        color: "#dde"
-                    }
-                }
-            });
-
-            // 3. Custom Style
-            Label({ text: "Custom Style:", fontSize: 14, textColor: "#666", marginTop: 20 });
-            SmartButton({
-                styleName: "classic",
-                width: "auto",
-                height: 26,
-                labelText: "SETTINGS",
-                iconFile: "https://cdn-icons-png.flaticon.com/512/4584/4584914.png",
-                style: {
-                    layout: { gap: 3, padding: [5, 0] },
-                    box: { color: Black(0.05), border: 0, borderColor: "#ffcdd2", round: 4, cursor: "pointer" },
-                    icon: { width: 20, height: 20 },
-                    label: { fontSize: 12, textColor: "#141414", fontFamily: "opensans-bold" },
-                    hover: { color: Black(0.1), },
-                    active: { color: Black(0.2), }
-                }
-            });
-
-            createWaitingSample();
-
-            endGroup();
-
+        // "Add" <-> "Added"
+        const toggleAdd = function (self) {
+            const state = (self.labelText == STATES.add.text) ? STATES.added : STATES.add;
+            self.setText(state.text);
+            self.setIcon(state.icon);
+            self.setStyle(getStatusStyle(state));
         };
 
     </script>
 
+</head>
+
+<body>
 </body>
 
 </html>

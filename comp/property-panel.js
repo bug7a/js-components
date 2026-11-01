@@ -14,7 +14,7 @@ UI COMPONENT TEMPLATE
   (Ex: nothing is selected).
   Each item has a type, a key, a value and its own settings. Every item type is a small object
   built by its own function (see *** ITEM TYPES):
-    number     -> [X  396]  prefix text or icon (drag the prefix to change the value), unit, min, max, step, autoText
+    number     -> [X  396]  prefix text or icon (drag the prefix to change the value; prefixWidth for a word), unit, min, max, step, autoText
                   parseText(text): a text that is not a plain number goes to it; it returns the value ("100%", "auto")
                   or undefined (the old value comes back). A text value is shown as it is.
                   textToNumber(value): the number of a text value, to drag or step it (Ex: "100%" -> its width in px).
@@ -470,6 +470,7 @@ const PropertyPanel = function (params = {}) {
 
     // FIELD: A text input in a field, with an optional prefix (a text or an icon). Used by "number" and "text".
     // Returns { field, input, el, prefix, setEnabled() }. The caller adds its own commit code.
+    const PREFIX_WIDTH = 26;
     const buildInputField = function (item, width, prefixValue) {
 
         const state = { isHover: 0, isFocus: 0, enabled: item.enabled != 0 };
@@ -481,7 +482,8 @@ const PropertyPanel = function (params = {}) {
         field.css = { boxSizing: "border-box", transition: "box-shadow 0.12s" };
 
             // LABEL: Prefix ("X" or an icon)
-            const prefix = (prefixValue) ? textLabel(getIcon(prefixValue, 16), { width: 26, height: _g.itemHeight, textColor: _t.softColor }) : null;
+            // item.prefixWidth: a wider prefix for a word (Ex: "Bottom"); 26: a letter or an icon
+            const prefix = (prefixValue) ? textLabel(getIcon(prefixValue, 16), { width: item.prefixWidth || PREFIX_WIDTH, height: _g.itemHeight, textColor: _t.softColor }) : null;
             if (prefix) prefix.css.paddingLeft = "2px";
 
             // INPUT: Value

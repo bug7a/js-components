@@ -45,6 +45,9 @@ Bu klasör ara sıra kullanılır: taslaklar **her bileşen değişikliğinde g�
 |---|---|---|
 | `progress-bar.htm` | `comp/progress-bar.js` (ProgressBar) | classic, modern, ozden; 14 durum |
 | `smart-button.htm` | `comp/smart-button.js` (SmartButton) | ozdenType1–4, classic; dört içerik, hover, basılı, odak, kapalı, bekliyor (saat, noktalar), "Sure?" balonu, "Sure?" yazılı düğme |
+| `smart-button-colors.htm` | `comp/smart-button.js` (SmartButton) | durumların renkleri (2026-10-31; seçilenler bileşende: `SmartButton.styles.ozdenPrimary` / `ozdenDanger` / `ozdenWarning` / `ozdenSuccess` / `ozdenInfo`): silme, ana işlem, uyarı, başarı, vazgeç, bilgi; her satırda düzenlenecek SEÇİLEN düğme (normal, hover, basılı, kapalı) ve depoda bugün kullanılan aday renkler (nereden geldikleriyle) |
+| `smart-button-dark.htm` | `comp/smart-button.js` (SmartButton) | `ozdenType1Dark` – `ozdenType4Dark` (2026-10-31; bileşende `SmartButton.styles`, `SmartButton.createDarkPackage`); smart-button.htm'nin bütün durumları, iki koyu zeminde (#1A1A19 kart, #000 sayfa) |
+| `ozden-design-system.htm` | (bileşen değil: ozden stili bir bütün olarak) | 2026-11-01: renkler (nötr, durum, vurgu, koyu), yazı ölçüleri, köşe / kenar / gölge / boşluk, SmartButton ozdenType1-4 ve durum renkleri (hover, basılı, odak, kapalı, bekliyor, ask), InputB / SearchInput / SelectBox ozden, CheckBox / RadioButton (classic), pill Tabs, ProgressBar ozden, saat, Tooltip, ask balonu, Notice, Dialog ozden, ActionButton ozden, ItemList classic, ozdenDark parçaları; değerler sayfanın başında (`COLORS`, `TYPE_SCALE`, `BUTTON`...), bileşenlerin ozden paketlerinden kopya |
 
 ## Yeni bir taslak
 

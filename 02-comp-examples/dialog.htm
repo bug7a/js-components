@@ -23,6 +23,12 @@
 
     // Dialog (comp-m4): a dialog over the page with fields and buttons. The look of the first dialog of
     // 02-comp-examples/smart-button-3-ozden.htm; the features of comp/modal.js.
+    // A dialog for every situation (2026-10-31): the button types primary, danger, warning, success, info take the
+    // situation packages of SmartButton (ozdenPrimary, ozdenDanger...: chosen on _designs/smart-button-colors.htm).
+    // - Dialog({ buttons: [{ text, type: "primary" | "secondary" | "danger" | "warning" | "success" | "info" | "icon" }] })
+    // - Dialog.confirm({ ..., danger: 1 }) / Dialog.confirm({ ..., confirmType: "warning" })
+    // - Dialog.alert({ ..., buttonType: "success" })
+    // TRY: open each dialog; on Delete click twice (the first click asks); in Publish leave the title empty.
 
     const WORK_TIME = 1200; // ms: a job that takes time (the sample)
 
@@ -41,13 +47,16 @@
     // 'Q 15.7 16.3 15 17 Q 14.3 17.7 13.6 17 L 12 15.4 L 10.4 17 Q 9.7 17.7 9 17 Q 8.3 16.3 9 15.6 L 10.6 14 L 9 12.4 Q 8.3 11.7 9 11 Z"/>');
     const TRASH_ICON = "../04-template-m2/todo-app-example/images/trash.svg";
 
-    // The Delete of confirm: yellow (the hover a little darker), the text of the package (not the white of danger)
-    const DELETE_BUTTON_STYLE = {
-        box: { color: "#F8E57A" },
-        hover: { color: "#EFDA62" },
-        active: { color: "#EFDA62" },
-        label: { textColor: SmartButton.styles.ozdenType1.label.textColor },
-    };
+    const LAUNCH_BUTTON_HEIGHT = 40;
+
+    // The situations: the button type of a dialog, the SmartButton package of its color, the dialog it opens
+    const SITUATIONS = [
+        { type: "primary", text: "Publish", open: function () { openPublishDialog(); } },
+        { type: "danger", text: "Delete", open: function () { openDeleteConfirm(); } },
+        { type: "warning", text: "Leave", open: function () { openWarningConfirm(); } },
+        { type: "success", text: "Done", open: function () { openSuccessAlert(); } },
+        { type: "info", text: "Details", open: function () { openInfoAlert(); } },
+    ];
 
     let lblResult;
 
@@ -87,21 +96,58 @@
         });
     };
 
-    const openConfirm = async function () {
+    // DANGER: a delete, it asks again (two clicks)
+    const openDeleteConfirm = async function () {
         const isSure = await Dialog.confirm({
             titleText: "Delete the file?",
             messageText: "report.pdf will be deleted. It can not be undone.",
             confirmText: "Delete",
             danger: 1,
             ask: "Click again to delete the file.",
-            style: { buttons: { danger: { style: DELETE_BUTTON_STYLE } } },
         });
-        showResult("confirm: " + isSure);
+        showResult("danger confirm: " + isSure);
     };
 
-    const openAlert = async function () {
-        await Dialog.alert({ titleText: "Done", messageText: "All the files are uploaded." });
-        showResult("alert: closed");
+    // WARNING: it can go on, but look first
+    const openWarningConfirm = async function () {
+        const isSure = await Dialog.confirm({
+            titleText: "Leave without saving?",
+            messageText: "Your last changes are not saved. They will be lost if you leave now.",
+            confirmText: "Leave",
+            cancelText: "Stay",
+            confirmType: "warning",
+        });
+        showResult("warning confirm: " + isSure);
+    };
+
+    // SUCCESS: after a good result
+    const openSuccessAlert = async function () {
+        await Dialog.alert({ titleText: "Uploaded", messageText: "All the 12 files are uploaded.", buttonText: "Done", buttonType: "success" });
+        showResult("success alert: closed");
+    };
+
+    // INFO: nothing changes
+    const openInfoAlert = async function () {
+        await Dialog.alert({ titleText: "What is new", messageText: "The buttons of the dialogs take the color of their situation now.", buttonText: "Got it", buttonType: "info" });
+        showResult("info alert: closed");
+    };
+
+    // Every button type side by side in one dialog
+    const openAllTypes = function () {
+        Dialog({
+            titleText: "Every button type",
+            messageText: "The situation packages of SmartButton, as the Dialog uses them.",
+            width: 680, // the card (a number)
+            buttons: [
+                { key: "secondary", text: "Cancel", type: "secondary" },
+                { key: "info", text: "Info", type: "info" },
+                { key: "success", text: "Done", type: "success" },
+                { key: "warning", text: "Leave", type: "warning" },
+                { key: "danger", text: "Delete", type: "danger" },
+                { key: "primary", text: "Save", type: "primary" },
+            ],
+            onClose: function (dialog, reason, buttonKey) { showResult("every type: " + (buttonKey || reason)); },
+        });
     };
 
     const openPrompt = async function () {
@@ -115,8 +161,18 @@
     };
 
     const createButton = function (text, onClick) {
-        const button = SmartButton({ styleName: "ozdenType1", labelText: text, height: 40, style: { box: { color: "white" } }, onClick: onClick }); // white inside (its hover stays gray)
+        const button = SmartButton({ styleName: "ozdenType1", labelText: text, height: LAUNCH_BUTTON_HEIGHT, style: { box: { color: "white" } }, onClick: onClick }); // white inside (its hover stays gray)
         return button;
+    };
+
+    // A button in the color of a situation: it opens the dialog of that situation
+    const createSituationButton = function (situation) {
+        const styleName = DialogDefaults.style.buttons[situation.type].styleName;
+        const group = VGroup({ hug: 1, align: "center top", gap: 6, clipContent: 0 });
+            SmartButton({ styleName: styleName, labelText: situation.text, height: LAUNCH_BUTTON_HEIGHT, onClick: situation.open });
+            Label({ text: situation.type + " · " + styleName, fontSize: 11, textColor: Black(0.45) });
+        endGroup();
+        return group;
     };
 
     const start = function () {
@@ -127,10 +183,14 @@
 
             Label({ text: "Dialog", fontSize: 26, bold: 1, textColor: Black(0.8) });
 
+            Label({ text: "A dialog for every situation (the button type of the dialog · the SmartButton package)", fontSize: 13, textColor: Black(0.5) });
+
+            HGroup({ hug: 1, gap: 12, wrap: 1, align: "center top", clipContent: 0 });
+                SITUATIONS.forEach(createSituationButton);
+            endGroup();
+
             HGroup({ hug: 1, gap: 10, wrap: 1, clipContent: 0 });
-                createButton("Publish dialog", openPublishDialog);
-                createButton("Dialog.confirm", openConfirm);
-                createButton("Dialog.alert", openAlert);
+                createButton("Every button type", openAllTypes);
                 createButton("Dialog.prompt", openPrompt);
             endGroup();
 

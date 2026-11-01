@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>renk-secim-kutusu</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- LIBRARY FILES -->
+        <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+        <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- COMPONENT FILES -->
+
+        <script>
+
+        /* Bismillah */
+
+        // DESIGN FILE (made by basic designer): the look of the page only.
+        // It is designed in basic designer; the notes given there tell the AI which parts become components
+        // and what logic the page needs. Then the AI turns it into working code.
+
+        // *** VARIABLES:
+        let pageBox;
+
+        // First running function. (basic.js calls it when the page is ready: page is created before it)
+        const start = function () {
+
+            page.color = "#F4F5F2";
+
+            // BOX: Full screen scrollable container
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            pageBox = startBox(0, 0, "100%", "100%", {
+                color: "transparent",
+                scrollY: 1,
+            });
+
+                // GROUP: Page layout
+                VGroup({
+                    width: "100%",
+                    height: "auto", // Grows with content, so the Box can scroll.
+                    align: "center top",
+                    gap: 20,
+                    padding: 40,
+                });
+
+                    // LABEL: Title
+                    Label({
+                        text: "renk-secim-kutusu",
+                        fontSize: 26,
+                        fontFamily: "opensans-bold",
+                        textColor: Black(0.85),
+                    });
+
+                endGroup();
+
+            endBox();
+
+            if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: pageBox });
+
+            // BOX: Color select box
+            Box(283, 237, 218, 34, {
+                border: 1,
+            });
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+    </body>
+</html>

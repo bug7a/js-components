@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>SmartButton colors draft</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES (a draft: no component, only basic.js objects) -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // DRAFT DESIGN: the colors of SmartButton for the situations of a page, 2026-10-31.
+        // A delete, the main action, a warning, a success, a cancel, an info: every row shows the colors that the
+        // repository uses today for that situation (the candidates, with where they come from), and at its left the
+        // CHOSEN button in its states (normal, under the mouse, pressed, disabled).
+        // HOW TO CHOOSE: in basic-designer, give the CHOSEN button of a row the color you like (copy the hex of a
+        // candidate, or any other), then Copy prompt / Send to AI with a note ("carry to SmartButton"). The chosen
+        // colors become packages of SmartButton (Ex: SmartButton.styles.ozdenDanger) and the Dialog uses them.
+        // The shape is ozdenType1 (an edge and a bottom line). The dark packages: _designs/smart-button-dark.htm.
+        // http://127.0.0.1:5505/_basic-designer/index.htm?page=_designs/smart-button-colors.htm
+
+        const BUTTON_HEIGHT = 40;
+        const SITUATION_COLUMN_WIDTH = 190;
+        const CANDIDATE_WIDTH = 150;
+        const DARK_TEXT = Black(0.75);
+        const LIGHT_TEXT = "white";
+
+        // THE SHAPE (ozdenType1 of SmartButton.styles)
+        const SHAPE = {
+            round: 4,
+            border: 1,
+            borderColor: Black(0.35),
+            bottomLine: "inset 0 -2px 0 rgba(0, 0, 0, 0.25)",
+            padding: [16, 0],
+            gap: 8,
+            fontSize: 20,
+            iconSize: 22,
+        };
+        const PRESS = { scale: 0.94, brightness: 0.92 };
+        const DISABLED = { color: "#EBEBEA", borderColor: "rgba(0, 0, 0, 0.1)", textColor: "rgba(0, 0, 0, 0.3)" };
+
+        // THE SITUATIONS (one row each). chosen: the button to edit (the first candidate, until the user chooses a color:
+        // Main action, Success and Info were chosen on 2026-10-31; the icon takes the textColor).
+        // candidates: { color, textColor, from } (from: where the repository uses it today)
+        const SITUATIONS = [
+            {
+                name: "Delete / dangerous",
+                note: "a delete, a reject: can not be undone",
+                text: "Delete",
+                icon: "trash",
+                chosen: { color: "#E8796D", hover: "#E0695C", textColor: LIGHT_TEXT },
+                candidates: [
+                    { color: "#E8796D", textColor: LIGHT_TEXT, from: "SmartButton ask, Dialog danger" },
+                    { color: "#E66767", textColor: LIGHT_TEXT, from: "Ozden Manager, Ozden Panel (dark)" },
+                    { color: "#DE815B", textColor: LIGHT_TEXT, from: "Ozden Panel: its confirm button" },
+                    { color: "#CD5C5C", textColor: LIGHT_TEXT, from: "indianred: the clock, the dots" },
+                    { color: "#C6413F", textColor: LIGHT_TEXT, from: "Ozden Panel (light theme)" },
+                ],
+            },
+            {
+                name: "Main action",
+                note: "Save, Send, Confirm: one on a page",
+                text: "Save",
+                icon: "check",
+                chosen: { color: "#5BBAC1", hover: "#50AEB5", textColor: DARK_TEXT },
+                candidates: [
+                    { color: "#9DC7B5", textColor: DARK_TEXT, from: "Dialog primary" },
+                    { color: "#65A293", textColor: LIGHT_TEXT, from: "InputB: the focus line" },
+                    { color: "#3D7A6B", textColor: LIGHT_TEXT, from: "Ozden Manager primary" },
+                    { color: "#689BD2", textColor: LIGHT_TEXT, from: "UI standards (light)" },
+                    { color: "#232323", textColor: LIGHT_TEXT, from: "ink: ActionButton ozden" },
+                ],
+            },
+            {
+                name: "Warning",
+                note: "go on, but look first",
+                text: "Continue",
+                icon: "alert",
+                chosen: { color: "#F1C74A", hover: "#E6BB3C", textColor: DARK_TEXT },
+                candidates: [
+                    { color: "#F1C74A", textColor: DARK_TEXT, from: "ProgressBar ozden, the dark clock" },
+                    { color: "#F2B24C", textColor: DARK_TEXT, from: "Ozden Manager warning" },
+                    { color: "#E5885E", textColor: LIGHT_TEXT, from: "TextareaB: its warning" },
+                    { color: "#D69324", textColor: LIGHT_TEXT, from: "Ozden Panel (slate)" },
+                ],
+            },
+            {
+                name: "Success / done",
+                note: "after a good result: Done, Continue",
+                text: "Done",
+                icon: "check",
+                chosen: { color: "#7BC362", hover: "#70B756", textColor: DARK_TEXT },
+                candidates: [
+                    { color: "#5DB182", textColor: LIGHT_TEXT, from: "Ozden Manager, Ozden Panel" },
+                    { color: "#65A293", textColor: LIGHT_TEXT, from: "InputB: the focus line" },
+                    { color: "#9DC7B5", textColor: DARK_TEXT, from: "Dialog primary" },
+                    { color: "#2F7D53", textColor: LIGHT_TEXT, from: "Ozden Panel (light theme)" },
+                ],
+            },
+            {
+                name: "Second / cancel",
+                note: "Cancel, Back: next to a main action",
+                text: "Cancel",
+                icon: "",
+                chosen: { color: "#E3E3E3", hover: "#D9D9D9", textColor: DARK_TEXT },
+                candidates: [
+                    { color: "#E3E3E3", textColor: DARK_TEXT, from: "ozdenType1: the gray of the package" },
+                    { color: "#FFFFFF", textColor: DARK_TEXT, from: "white (the icon button of Dialog)" },
+                    { color: "#F2F2F2", textColor: DARK_TEXT, from: "ProgressBar: the track" },
+                    { color: "transparent", textColor: DARK_TEXT, from: "ozdenType4: the ghost" },
+                ],
+            },
+            {
+                name: "Info",
+                note: "Details, Help: nothing changes",
+                text: "Details",
+                icon: "info",
+                chosen: { color: "#52A8D0", hover: "#479CC4", textColor: DARK_TEXT },
+                candidates: [
+                    { color: "#3987E5", textColor: LIGHT_TEXT, from: "Ozden Manager info" },
+                    { color: "#588ABE", textColor: LIGHT_TEXT, from: "InputB (a line color)" },
+                    { color: "#689BD2", textColor: LIGHT_TEXT, from: "UI standards (light)" },
+                    { color: "#3871E0", textColor: LIGHT_TEXT, from: "PropertyPanel: its sample blue" },
+                ],
+            },
+        ];
+
+        // THE STATES of the CHOSEN button (still frames)
+        const CHOSEN_STATES = [
+            { name: "normal" },
+            { name: "under the mouse", hover: 1 },
+            { name: "pressed", pressed: 1 },
+            { name: "disabled", disabled: 1 },
+        ];
+
+        // THE ICONS (24 px lines; the color is in the file)
+        const ICON_PATHS = {
+            trash: '<path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12"/><path d="M9 7V4h6v3"/>',
+            check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+            alert: '<path d="M12 4 2.8 19.5h18.4z"/><path d="M12 10v4.5M12 17.2v.3"/>',
+            info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.3"/>',
+        };
+
+        const getIconFile = function (name, color) {
+            return "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + ICON_PATHS[name] + "<\/svg>");
+        };
+
+        const start = function () {
+
+            page.color = "#F4F5F2";
+
+            // BOX: Scrolling page
+            startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1, scrollX: 1 });
+
+                VGroup({ width: "max-content", height: "auto", align: "left top", gap: 22, padding: 40, clipContent: 0 });
+
+                    Label({ text: "SmartButton · the colors of the situations · draft", fontSize: 20, bold: 1, textColor: Black(0.8) });
+                    Label({ text: "Edit the CHOSEN button of a row (its color, its text color). The candidates at its right are the colors the repository uses today.", fontSize: 13, textColor: Black(0.5) });
+
+                    // GROUP: A white card (the buttons are seen on white, like in a dialog)
+                    VGroup({ width: "auto", height: "auto", align: "left top", gap: 30, padding: [30, 28], color: "white", round: 10, border: 1, borderColor: Black(0.08), clipContent: 0 });
+                        SITUATIONS.forEach(drawSituation);
+                    endGroup();
+
+                    // GROUP: The chosen buttons together, as a page would show them
+                    Label({ text: "The chosen ones together", fontSize: 13, bold: 1, textColor: Black(0.6) });
+                    HGroup({ width: "auto", height: "auto", align: "left center", gap: 12, padding: [30, 28], color: "white", round: 10, border: 1, borderColor: Black(0.08), clipContent: 0 });
+                        SITUATIONS.forEach(function (situation) {
+                            drawButton(situation, situation.chosen, {});
+                        });
+                    endGroup();
+
+                endGroup();
+
+            endBox();
+
+        };
+
+        // GROUP: A situation: its name, the CHOSEN button in its states, the candidates
+        const drawSituation = function (situation) {
+
+            const row = VGroup({ width: "auto", height: "auto", align: "left top", gap: 12, clipContent: 0 });
+
+                // GROUP: The name and the chosen button
+                HGroup({ width: "auto", height: "auto", align: "left center", gap: 20, clipContent: 0 });
+
+                    VGroup({ width: SITUATION_COLUMN_WIDTH, height: "auto", align: "left top", gap: 2 });
+                        Label({ text: situation.name, fontSize: 15, bold: 1, textColor: Black(0.75) });
+                        Label({ text: situation.note, fontSize: 12, textColor: Black(0.45), css: { whiteSpace: "normal" } });
+                    endGroup();
+
+                    Label({ text: "CHOSEN", fontSize: 11, bold: 1, textColor: Black(0.4), css: { letterSpacing: "1px" } });
+
+                    CHOSEN_STATES.forEach(function (state) {
+                        drawStateCell(situation, state);
+                    });
+
+                endGroup();
+
+                // GROUP: The candidates
+                HGroup({ width: "auto", height: "auto", align: "left top", gap: 14, padding: [SITUATION_COLUMN_WIDTH + 20, 0, 0, 0], clipContent: 0 });
+                    situation.candidates.forEach(function (candidate) {
+                        drawCandidate(situation, candidate);
+                    });
+                endGroup();
+
+            endGroup();
+
+            return row;
+
+        };
+
+        // GROUP: The chosen button in one state, its name under it
+        const drawStateCell = function (situation, state) {
+            const cell = VGroup({ width: "auto", height: "auto", align: "center top", gap: 6, clipContent: 0 });
+                drawButton(situation, situation.chosen, state);
+                Label({ text: state.name, fontSize: 11, textColor: Black(0.4) });
+            endGroup();
+            return cell;
+        };
+
+        // GROUP: A candidate: the button in its color, the hex and where it comes from
+        const drawCandidate = function (situation, candidate) {
+            const cell = VGroup({ width: CANDIDATE_WIDTH, height: "auto", align: "left top", gap: 5, clipContent: 0 });
+                drawButton(situation, candidate, {});
+                Label({ text: candidate.color, fontSize: 12, bold: 1, textColor: Black(0.6) });
+                Label({ width: "100%", text: candidate.from, fontSize: 11, textColor: Black(0.45), css: { whiteSpace: "normal" } });
+            endGroup();
+            return cell;
+        };
+
+        // GROUP: A button (ozdenType1 shape) in a color and a state
+        const drawButton = function (situation, look, state) {
+
+            const button = HGroup({
+                width: "auto",
+                height: BUTTON_HEIGHT,
+                align: "center center",
+                gap: SHAPE.gap,
+                padding: SHAPE.padding,
+                color: getBoxColor(look, state),
+                round: SHAPE.round,
+                border: getBorder(look, state),
+                borderColor: state.disabled ? DISABLED.borderColor : SHAPE.borderColor,
+                clipContent: 0,
+            });
+            button.css = { boxShadow: getBoxShadow(look, state), filter: getPressFilter(state), transform: state.pressed ? "scale(" + PRESS.scale + ")" : "none" };
+
+                const textColor = state.disabled ? DISABLED.textColor : look.textColor;
+                if (situation.icon) {
+                    const icon = Icon({ width: SHAPE.iconSize, height: SHAPE.iconSize });
+                    icon.load(getIconFile(situation.icon, textColor));
+                }
+                Label({ text: situation.text, fontSize: SHAPE.fontSize, textColor: textColor, css: { whiteSpace: "nowrap" } });
+
+            endGroup();
+
+            return button;
+
+        };
+
+        // *** THE COLORS OF A STATE (as SmartButton paints them)
+
+        const getBoxColor = function (look, state) {
+            if (state.disabled) return DISABLED.color;
+            if (state.hover || state.pressed) return look.hover;
+            return look.color;
+        };
+
+        // WHY 0 for the ghost: ozdenType4 has no edge
+        const getBorder = function (look, state) {
+            if (look.color == "transparent" && !state.disabled) return 0;
+            return SHAPE.border;
+        };
+
+        // WHY none when disabled or a ghost: a flat button is not one that can be pressed in
+        const getBoxShadow = function (look, state) {
+            if (state.disabled || look.color == "transparent") return "none";
+            return SHAPE.bottomLine;
+        };
+
+        const getPressFilter = function (state) {
+            if (state.pressed) return "brightness(" + PRESS.brightness + ")";
+            return "none";
+        };
+
+    </script>
+
+</head>
+
+<body>
+</body>
+
+</html>

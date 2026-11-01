@@ -10,7 +10,8 @@ the features of comp/modal.js and the look of 02-comp-examples/smart-button-3-oz
 NOTE: still in development (the user, 2026-10-29): more style packages come; their buttons may be animated.
 
 - Buttons (SmartButton of comp-m4, load it first): [{ text, type, key, iconFile, align, ask, ariaLabel, onClick }]
-  - type: "primary" (the main action), "secondary" (Cancel), "danger" (a red action), "icon" (only an icon: a square).
+  - type: "primary" (the main action), "secondary" (Cancel), "danger" (a delete), "warning", "success", "info"
+    (the situation packages of SmartButton: ozdenPrimary, ozdenDanger...), "icon" (only an icon: a square).
   - align: "left": at the left side of the footer (Ex: the trash); the others stay at the right side.
   - ask: "Click again to delete." -> two clicks: the first one turns the button red and shows the text in a bubble
     over it; the second one runs onClick. It forgets after 5 s. (The ask of SmartButton, 2026-10-30.)
@@ -104,29 +105,15 @@ const DialogDefaults = {
             // The buttons are on the band of the footer (its color and line, the user 2026-10-30), one under the other
             footerPadding: [22, 18],
         },
-        // The looks of the buttons: a style package of SmartButton (ozdenType1...4, the user, 2026-10-30) and only
-        // what differs from it (the colors)
+        // The looks of the buttons: a style package of SmartButton and only what differs from it. The colors of the
+        // situations are the situation packages of SmartButton (2026-10-31, the draft _designs/smart-button-colors.htm)
         buttons: {
-            primary: {
-                styleName: "ozdenType1",
-                style: {
-                    box: { color: "#9DC7B5", borderColor: "rgba(35, 35, 35, 0.4)" },
-                    hover: { color: "#91BCA9" },
-                    active: { color: "#91BCA9" },
-                    label: { textColor: "rgba(35, 35, 35, 0.8)" },
-                },
-            },
+            primary: { styleName: "ozdenPrimary", style: {} },
             secondary: { styleName: "ozdenType1", style: {} }, // the gray of the package
-            danger: {
-                styleName: "ozdenType1",
-                style: {
-                    box: { color: "#E8796D", borderColor: "rgba(35, 35, 35, 0.4)", boxShadow: "inset 0 -2px 0 rgba(0, 0, 0, 0.3)" },
-                    hover: { color: "#E0695C" },
-                    active: { color: "#E0695C" },
-                    icon: { opacity: 1 },
-                    label: { textColor: "white" },
-                },
-            },
+            danger: { styleName: "ozdenDanger", style: {} },
+            warning: { styleName: "ozdenWarning", style: {} },
+            success: { styleName: "ozdenSuccess", style: {} },
+            info: { styleName: "ozdenInfo", style: {} },
             icon: {
                 styleName: "ozdenType2",
                 style: {
@@ -267,7 +254,7 @@ const Dialog = function (params = {}) {
     // The order of the buttons: in a row, the left ones first (their margin pushes the others to the right side);
     // one under the other, the main action first
     const isMainButton = function (data) {
-        return data.type == "primary" || data.type == "danger";
+        return Dialog.MAIN_TYPES.includes(data.type);
     };
 
     const getButtonOrder = function (list) {
@@ -720,6 +707,9 @@ document.addEventListener("keydown", function (event) {
     top.close("escape");
 });
 
+// The buttons of an action (not Cancel): placed first in the centered variant
+Dialog.MAIN_TYPES = ["primary", "danger", "warning", "success", "info"];
+
 // Returns a Promise<boolean>. onConfirm (optional) may return false (it stays) or a Promise (the button waits).
 Dialog.confirm = function (params = {}) {
     return new Promise(function (resolve) {
@@ -736,7 +726,7 @@ Dialog.confirm = function (params = {}) {
                 {
                     key: "confirm",
                     text: params.confirmText || "Confirm",
-                    type: params.danger ? "danger" : "primary",
+                    type: params.danger ? "danger" : (params.confirmType || "primary"),
                     iconFile: params.iconFile || "",
                     ask: params.ask || "",
                     onClick: function (dialog) {
@@ -765,8 +755,10 @@ Dialog.confirm = function (params = {}) {
 // USAGE: if (await Dialog.confirm({ titleText: "Delete?", messageText: "It can not be undone.", confirmText: "Delete", danger: 1 })) { }
 // ask: "Click again to delete." (two clicks on the confirm button), style: the style of the Dialog (Ex: the color of
 // its button: { buttons: { danger: { style: { box: { color: "#F8E57A" } } } } })
+// confirmType: "warning" | "success" | "info" (the confirm button in the color of a situation; danger: 1 = "danger")
 
 // Returns a Promise (it ends when the dialog closes).
+// USAGE: await Dialog.alert({ titleText: "Done", messageText: "All the files are uploaded.", buttonType: "success" })
 Dialog.alert = function (params = {}) {
     return new Promise(function (resolve) {
         Dialog({
@@ -776,7 +768,7 @@ Dialog.alert = function (params = {}) {
             style: params.style || {},
             variant: params.variant || "",
             topIconFile: params.topIconFile || "",
-            buttons: [{ key: "ok", text: params.buttonText || "OK", type: "primary" }],
+            buttons: [{ key: "ok", text: params.buttonText || "OK", type: params.buttonType || "primary" }],
             onClose: function () { resolve(); },
         });
     });
@@ -805,7 +797,7 @@ Dialog.prompt = function (params = {}) {
 // USAGE: const name = await Dialog.prompt({ titleText: "Rename", value: "a.pdf", validate: (t) => (t.trim()) ? "" : "A name is needed." })
 
 // *** STYLE PACKAGES:
-// USAGE: Dialog({ style: { card: { width: 520 } } }) // Change only some keys.
+// USAGE: Dialog({ style: { card: { round: 12 } } }) // Change only some keys. (The width of the card is the param width.)
 // NOTE: more packages come (the user, 2026-10-29); a new one needs only the keys that differ from ozden.
 Dialog.styles = {
     ozden: DialogDefaults.style,

@@ -13,6 +13,11 @@ THE DEFAULT BUTTON of new pages and projects (the user, 2026-10-30). It was Butt
   a darker line at the bottom; "ozdenType2": no bottom line; "ozdenType3": a faint edge; "ozdenType4": a ghost (no
   surface, no edge, only its hover is gray); "classic": the look of before 2026-10-30 (a white button, a bold 16 px
   text). A page gives its own color in style.box / hover / active.
+  DARK (2026-10-31, the draft _designs/smart-button-dark.htm): "ozdenType1Dark" ... "ozdenType4Dark": the same shapes
+  for a dark page (#2E2E2C, a light edge, a white text and icon, the dark waiting clock, yellow dots).
+  SITUATIONS (2026-10-31, the draft _designs/smart-button-colors.htm): ozdenType1 in the color of a situation:
+  "ozdenPrimary" #5BBAC1, "ozdenDanger" #E8796D (a white text), "ozdenWarning" #F1C74A, "ozdenSuccess" #7BC362,
+  "ozdenInfo" #52A8D0. The Dialog uses them for its button types.
 - KEYBOARD AND ACCESSIBILITY: role "button", Tab reaches it, Enter / Space press it (Space when it goes up), a focus
   ring only for the keyboard; ariaLabel for a button with only an icon (else labelText is read).
 - setEnabled(0): no click, no hover, out of the Tab order (aria-disabled): a flat light gray button, a faint edge, no
@@ -83,6 +88,7 @@ const SmartButtonDefaults = {
             width: 24,
             height: 24,
             opacity: 0.8,
+            filter: "none", // a CSS filter: the dark packages turn the icon white ("brightness(0) invert(1)")
         },
         label: {
             fontSize: 20,
@@ -225,6 +231,11 @@ const SmartButton = function (params = {}) {
         };
     };
 
+    const getIconFilter = function () {
+        if (box.isAsking == 1 && box.enabled == 1) return box.style.ask.button.iconFilter;
+        return box.style.icon.filter || "none";
+    };
+
     // Everything that changes with the state: the box, the content, the press, the keyboard and the screen reader
     const render = function () {
         const isEnabled = (box.enabled == 1);
@@ -235,7 +246,7 @@ const SmartButton = function (params = {}) {
         if (box.label) box.label.textColor = getTextColor();
         if (box.icon) {
             box.icon.opacity = getIconOpacity();
-            box.icon.css = { filter: (box.isAsking == 1 && isEnabled) ? box.style.ask.button.iconFilter : "none" };
+            box.icon.css = { filter: getIconFilter() };
         }
         box.layout.css = { filter: isEnabled ? "none" : "grayscale(1)" };
         box.layout.opacity = (box.waiting == 1) ? box.style.waiting.contentOpacity : 1;
@@ -643,6 +654,49 @@ SmartButton.styles = {
         active: { color: "#e0e0e0" },
     },
 };
+
+// THE DARK PACKAGES (2026-10-31, the draft _designs/smart-button-dark.htm): the shapes of ozdenType1-4 with the
+// colors of a dark page (the cards of Ozden Panel / Ozden Manager, #1A1A19). The icon turns white, the waiting clock
+// is the dark one, the dots yellow; the ask stays red. Packages of params (a "style" key): waitingClock is a param.
+SmartButton.createDarkPackage = function (box, hoverColor) {
+    return {
+        style: {
+            box: box,
+            hover: { color: hoverColor },
+            active: { color: hoverColor },
+            label: { textColor: White(0.85) },
+            icon: { opacity: 0.85, filter: "brightness(0) invert(1)" },
+            focus: { ringColor: "rgba(101, 162, 147, 0.75)" },
+            disabled: { color: "#232322", borderColor: White(0.06), textColor: White(0.28), iconOpacity: 0.25 },
+            press: { brightness: 0.88 },
+            waiting: { dots: { color: "#F1C74A" } },
+        },
+        waitingClock: "ozdenDark",
+    };
+};
+SmartButton.styles.ozdenType1Dark = SmartButton.createDarkPackage({ color: "#2E2E2C", borderColor: White(0.16), boxShadow: "inset 0 -2px 0 rgba(0, 0, 0, 0.45)" }, "#383835"); // an edge and a bottom line
+SmartButton.styles.ozdenType2Dark = SmartButton.createDarkPackage({ color: "#2E2E2C", borderColor: White(0.16), boxShadow: "none" }, "#383835"); // only the edge
+SmartButton.styles.ozdenType3Dark = SmartButton.createDarkPackage({ color: "#2E2E2C", borderColor: White(0.06), boxShadow: "none" }, "#383835"); // a faint edge
+SmartButton.styles.ozdenType4Dark = SmartButton.createDarkPackage({ color: White(0), border: 0, borderColor: "transparent", boxShadow: "none" }, White(0.08)); // a ghost
+
+// THE SITUATION PACKAGES (2026-10-31, chosen by the user on the draft _designs/smart-button-colors.htm): ozdenType1
+// (an edge and a bottom line) in the color of a situation. textColor: the icon follows it (a white text: a white icon).
+SmartButton.SITUATION_TEXT_COLOR = Black(0.75);
+SmartButton.createSituationPackage = function (color, hoverColor, textColor) {
+    const isWhiteText = (textColor == "white");
+    return {
+        box: { color: color },
+        hover: { color: hoverColor },
+        active: { color: hoverColor },
+        label: { textColor: textColor },
+        icon: { opacity: isWhiteText ? 1 : 0.8, filter: isWhiteText ? "brightness(0) invert(1)" : "none" },
+    };
+};
+SmartButton.styles.ozdenPrimary = SmartButton.createSituationPackage("#5BBAC1", "#50AEB5", SmartButton.SITUATION_TEXT_COLOR); // the main action: Save, Send
+SmartButton.styles.ozdenDanger = SmartButton.createSituationPackage("#E8796D", "#E0695C", "white"); // a delete, a reject
+SmartButton.styles.ozdenWarning = SmartButton.createSituationPackage("#F1C74A", "#E6BB3C", SmartButton.SITUATION_TEXT_COLOR); // go on, but look first
+SmartButton.styles.ozdenSuccess = SmartButton.createSituationPackage("#7BC362", "#70B756", SmartButton.SITUATION_TEXT_COLOR); // after a good result: Done
+SmartButton.styles.ozdenInfo = SmartButton.createSituationPackage("#52A8D0", "#479CC4", SmartButton.SITUATION_TEXT_COLOR); // Details, Help
 
 // *** THE WAITING DRAWINGS: the clock and the dots (comp/loading-screen.js uses them too)
 

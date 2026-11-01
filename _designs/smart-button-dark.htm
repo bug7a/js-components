@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>SmartButton dark draft</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES (a draft: no component, only basic.js objects) -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // DRAFT DESIGN of the DARK packages of comp/smart-button.js (SmartButton), 2026-10-31.
+        // The values below are copies of SmartButton.styles.ozdenType1Dark ... ozdenType4Dark (added 2026-10-31 from
+        // this draft; SmartButton.createDarkPackage): keep them in step with smart-button.js when it changes. Every package (a column) in every state (a row), drawn with plain basic.js objects (no
+        // SmartButton here), on two dark grounds: a card (#1A1A19) and the page (#000000).
+        // The light packages: _designs/smart-button.htm.
+        // http://127.0.0.1:5505/_basic-designer/index.htm?page=_designs/smart-button-dark.htm
+
+        const BUTTON_HEIGHT = 40;
+        const TOP_BUTTON_HEIGHT = 70; // the icon on top
+        const ICON_BUTTON_WIDTH = 50; // only an icon (the trash of a dialog)
+        const COLUMN_WIDTH = 240;
+        const STATE_COLUMN_WIDTH = 170;
+
+        // THE DARK STYLE PACKAGES (copies of SmartButton.styles.ozdenType1Dark...: the shapes of the light packages, dark colors)
+        const OZDEN_LAYOUT = { gap: 8, padding: [16, 0] };
+        const OZDEN_ICON = { size: 24, opacity: 0.85 };
+        const OZDEN_LABEL = { fontSize: 20, textColor: White(0.85), fontFamily: "opensans" };
+        const LOOKS = {
+            ozdenType1Dark: { // edge + bottom line (the default)
+                layout: OZDEN_LAYOUT, icon: OZDEN_ICON, label: OZDEN_LABEL,
+                box: { color: "#2E2E2C", border: 1, borderColor: White(0.16), round: 4, boxShadow: "inset 0 -2px 0 rgba(0, 0, 0, 0.45)" },
+                hoverColor: "#383835", activeColor: "#383835",
+            },
+            ozdenType2Dark: { // edge
+                layout: OZDEN_LAYOUT, icon: OZDEN_ICON, label: OZDEN_LABEL,
+                box: { color: "#2E2E2C", border: 1, borderColor: White(0.16), round: 4, boxShadow: "none" },
+                hoverColor: "#383835", activeColor: "#383835",
+            },
+            ozdenType3Dark: { // faint edge
+                layout: OZDEN_LAYOUT, icon: OZDEN_ICON, label: OZDEN_LABEL,
+                box: { color: "#2E2E2C", border: 1, borderColor: White(0.06), round: 4, boxShadow: "none" },
+                hoverColor: "#383835", activeColor: "#383835",
+            },
+            ozdenType4Dark: { // the ghost
+                layout: OZDEN_LAYOUT, icon: OZDEN_ICON, label: OZDEN_LABEL,
+                box: { color: White(0), border: 0, borderColor: "transparent", round: 4, boxShadow: "none" },
+                hoverColor: White(0.08), activeColor: White(0.08),
+            },
+        };
+
+        // The same in every dark package
+        const PRESS = { scale: 0.94, brightness: 0.88 }; // while pressed (under the mouse: only the hover color)
+        const FOCUS_RING = "rgba(101, 162, 147, 0.75)"; // a 2 px line inside the edge (only for the keyboard)
+        const DISABLED = { color: "#232322", borderColor: White(0.06), textColor: White(0.28), iconOpacity: 0.25 };
+        const WAITING = { contentOpacity: 0.18, clockSize: 26, dots: { size: 6, gap: 4, color: "#F1C74A" } }; // (the clock: 30 at most; a 40 px button: 40 - 14)
+        const DOT_OPACITIES = [1, 0.6, 0.35]; // a still frame of the dots (they grow one after the other)
+        const CLOCK = { faceColor: "#2A2A2A", lineColor: "rgba(255, 255, 255, 0.9)", hourColor: "rgba(255, 255, 255, 0.6)", edgeWidth: 2, hourWidth: 2, hourLength: 7.5, minuteWidth: 2, minuteLength: 10, minuteColor: "#F1C74A", centerColor: "#F1C74A", centerSize: 4 }; // SmartButton.clocks.ozdenDark
+        const ASK_BUTTON = { color: "#E8796D", border: 1, borderColor: "#E8796D", boxShadow: "none", textColor: "white" }; // the icon turns white
+        const ASK_BUBBLE = { color: "#E8796D", textColor: "white", fontSize: 13, round: 8, padding: [12, 7], arrow: 12, gap: 6 };
+        const ASK_TEXT = "Click again to delete.";
+
+        // THE GROUNDS the buttons are seen on
+        const GROUNDS = [
+            { name: "On a card (#1A1A19: the cards of Ozden Panel / Ozden Manager)", color: "#1A1A19" },
+            { name: "On the page (#000000)", color: "#000000" },
+        ];
+
+        // THE ICONS (the color is in the file)
+        const svgIcon = function (color, paths) {
+            return "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + paths + "<\/svg>");
+        };
+        const TRASH_PATH = "M 4 6 Q 4 2 12 2 Q 20 2 20 6 L 18.5 18 Q 18 22 12 22 Q 6 22 5.5 18 Z " +
+            "M 6.7 5.9 C 6.7 3.7 17.3 3.7 17.3 5.9 C 17.3 8.1 6.7 8.1 6.7 5.9 Z " +
+            "M 9 11 Q 9.7 10.3 10.4 11 L 12 12.6 L 13.6 11 Q 14.3 10.3 15 11 Q 15.7 11.7 15 12.4 L 13.4 14 L 15 15.6 " +
+            "Q 15.7 16.3 15 17 Q 14.3 17.7 13.6 17 L 12 15.4 L 10.4 17 Q 9.7 17.7 9 17 Q 8.3 16.3 9 15.6 L 10.6 14 L 9 12.4 Q 8.3 11.7 9 11 Z";
+        const ICON_SEND = svgIcon("white", '<path d="M21 3 3 10.5l7.5 3L13.5 21z"/><path d="M21 3 10.5 13.5"/>');
+        const ICON_TRASH = "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill-rule="evenodd" fill="#A8ACB0" d="' + TRASH_PATH + '"/><\/svg>');
+
+        // THE STATES (one row each). content: "iconText", "text", "icon", "top"
+        const STATES = [
+            { name: "Normal: icon + text", content: "iconText" },
+            { name: "Only a text", content: "text" },
+            { name: "Only an icon", content: "icon" },
+            { name: "The icon on top", content: "top" },
+            { name: "Under the mouse (hover)", content: "iconText", hover: 1 },
+            { name: "Pressed", content: "iconText", pressed: 1 },
+            { name: "Keyboard focus", content: "iconText", focus: 1 },
+            { name: "Disabled", content: "iconText", disabled: 1 },
+            { name: "Waiting (the clock)", content: "iconText", waiting: "clock" },
+            { name: "Waiting (the dots)", content: "iconText", waiting: "dots" },
+            { name: "Asking (ask: the first click), with its bubble", content: "askIcon" },
+            { name: "Asking: a text button", content: "iconText", text: "Delete", asking: 1 },
+        ];
+
+        const start = function () {
+
+            page.color = "#111110";
+
+            // BOX: Scrolling page
+            startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1, scrollX: 1 });
+
+                VGroup({ width: "max-content", height: "auto", align: "left top", gap: 22, padding: 40, clipContent: 0 });
+
+                    Label({ text: "SmartButton · dark packages · draft (a proposal, comp/smart-button.js)", fontSize: 20, bold: 1, textColor: White(0.85) });
+
+                    GROUNDS.forEach(drawGround);
+
+                endGroup();
+
+            endBox();
+
+        };
+
+        // GROUP: The grid of the packages and the states on one dark ground
+        const drawGround = function (ground) {
+
+            Label({ text: ground.name, fontSize: 13, textColor: White(0.5) });
+
+            const card = VGroup({ width: "auto", height: "auto", align: "left top", gap: 26, padding: [30, 28], color: ground.color, round: 10, border: 1, borderColor: White(0.08), clipContent: 0 });
+
+                // GROUP: The names of the packages over their column
+                HGroup({ width: "auto", height: "auto", align: "left top", gap: 20 });
+                    Label({ width: STATE_COLUMN_WIDTH, text: "state", fontSize: 12, textColor: White(0.35) });
+                    Object.keys(LOOKS).forEach(function (name) {
+                        Label({ width: COLUMN_WIDTH, text: name + (name == "ozdenType1Dark" ? " (default)" : ""), fontSize: 13, bold: 1, textColor: White(0.6) });
+                    });
+                endGroup();
+
+                STATES.forEach(function (state) {
+                    // GROUP: A state in every package
+                    HGroup({ width: "auto", height: "auto", align: "left center", gap: 20, clipContent: 0 });
+                        Label({ width: STATE_COLUMN_WIDTH, text: state.name, fontSize: 12, textColor: White(0.45) });
+                        Object.keys(LOOKS).forEach(function (name) {
+                            drawCell(LOOKS[name], state);
+                        });
+                    endGroup();
+                });
+
+            endGroup();
+
+            return card;
+
+        };
+
+        // GROUP: One cell of the grid
+        const drawCell = function (look, state) {
+            const cell = HGroup({ width: COLUMN_WIDTH, height: "auto", align: "left bottom", gap: 10, clipContent: 0 });
+                if (state.content == "askIcon") drawAskingTrash(look);
+                else drawButton(look, state);
+            endGroup();
+            return cell;
+        };
+
+        // GROUP: The trash asking, its bubble over it
+        const drawAskingTrash = function (look) {
+            const group = VGroup({ width: "auto", height: "auto", align: "center bottom", gap: ASK_BUBBLE.gap, clipContent: 0 });
+                drawBubble();
+                drawButton(look, { content: "icon", asking: 1 });
+            endGroup();
+            return group;
+        };
+
+        // GROUP: The red bubble with a triangle under it
+        const drawBubble = function () {
+            const bubble = VGroup({ width: "auto", height: "auto", align: "center top", gap: 0, clipContent: 0 });
+                Label({ text: ASK_TEXT, fontSize: ASK_BUBBLE.fontSize, bold: 1, textColor: ASK_BUBBLE.textColor, color: ASK_BUBBLE.color, round: ASK_BUBBLE.round, padding: ASK_BUBBLE.padding, boxShadow: "0 6px 16px rgba(0, 0, 0, 0.18)", css: { whiteSpace: "nowrap" } });
+                // BOX: Triangle (a turned square under the label)
+                const arrow = Box({ width: ASK_BUBBLE.arrow, height: ASK_BUBBLE.arrow, color: ASK_BUBBLE.color });
+                arrow.css = { transform: "translateY(-" + (ASK_BUBBLE.arrow / 2) + "px) rotate(45deg)", marginBottom: "-" + (ASK_BUBBLE.arrow / 2) + "px" };
+            endGroup();
+            return bubble;
+        };
+
+        // GROUP: A button in one state: the box (color, edge, bottom line), the content (icon, text), the clock
+        const drawButton = function (look, state) {
+
+            const isIconOnly = (state.content == "icon");
+            const isTop = (state.content == "top");
+
+            const button = HGroup({
+                width: isIconOnly ? ICON_BUTTON_WIDTH : "auto",
+                height: isTop ? TOP_BUTTON_HEIGHT : BUTTON_HEIGHT,
+                align: "center center",
+                color: getBoxColor(look, state),
+                round: look.box.round,
+                border: state.asking ? ASK_BUTTON.border : look.box.border,
+                borderColor: getBorderColor(look, state),
+                clipContent: 0,
+            });
+            button.css = { boxShadow: getBoxShadow(look, state), filter: getPressFilter(state), transform: state.pressed ? "scale(" + PRESS.scale + ")" : "none", position: "relative" };
+            if (state.focus) button.css = { outline: "2px solid " + FOCUS_RING, outlineOffset: "-2px" };
+
+                drawContent(look, state);
+                if (state.waiting == "clock") drawClock();
+                if (state.waiting == "dots") drawDots();
+
+            endGroup();
+
+            return button;
+
+        };
+
+        // GROUP: The icon and the text (faded while waiting, gray when disabled)
+        const drawContent = function (look, state) {
+
+            const isIconOnly = (state.content == "icon");
+            const hasIcon = (state.content != "text");
+            const hasText = !isIconOnly;
+            const padding = isIconOnly ? [0, 0] : look.layout.padding;
+            const flow = (state.content == "top") ? "vertical" : "horizontal";
+
+            const content = AutoLayout({ flow: flow, width: "auto", height: "100%", align: "center center", gap: look.layout.gap, padding: padding, clipContent: 0 });
+            content.opacity = state.waiting ? WAITING.contentOpacity : 1;
+            if (state.disabled) content.css = { filter: "grayscale(1)" };
+
+                if (hasIcon) {
+                    const icon = Icon({ width: look.icon.size, height: look.icon.size });
+                    icon.load(isIconOnly ? ICON_TRASH : ICON_SEND);
+                    icon.opacity = getIconOpacity(look, state, isIconOnly);
+                    if (state.asking) icon.css = { filter: "brightness(0) invert(1)" };
+                }
+
+                if (hasText) Label({ text: state.text || "Send", fontSize: look.label.fontSize, fontFamily: look.label.fontFamily, textColor: getTextColor(look, state), css: { whiteSpace: "nowrap" } });
+
+            endGroup();
+
+            return content;
+
+        };
+
+        // LABEL: The waiting clock in the middle of the button (still)
+        const drawClock = function () {
+            const clock = Label({ width: WAITING.clockSize, height: WAITING.clockSize, text: getClockSvg(), css: { lineHeight: "0" } });
+            clock.css = { position: "absolute", left: "50%", top: "50%", transform: "translate(-50%, -50%)" };
+            return clock;
+        };
+
+        // GROUP: The three waiting dots in the middle of the button (a still frame)
+        const drawDots = function () {
+            const _d = WAITING.dots;
+            const dots = HGroup({ hug: 1, align: "center center", gap: _d.gap });
+            dots.css = { position: "absolute", left: "50%", top: "50%", transform: "translate(-50%, -50%)" };
+                DOT_OPACITIES.forEach(function (opacity) {
+                    Box({ width: _d.size, height: _d.size, color: _d.color, round: 100, opacity: opacity });
+                });
+            endGroup();
+            return dots;
+        };
+
+        // The clock of SmartButton.createClockSvg (30 px drawing): the minute hand up, the hour hand to the right
+        const getClockSvg = function () {
+            const c = CLOCK;
+            const size = 30;
+            const middle = size / 2;
+            const faceRadius = middle - c.edgeWidth / 2;
+            const hand = function (x2, y2, width, color) {
+                return '<line x1="' + middle + '" y1="' + middle + '" x2="' + x2 + '" y2="' + y2 + '" stroke="' + color + '" stroke-width="' + width + '" stroke-linecap="round"/>';
+            };
+            return '<svg viewBox="0 0 ' + size + ' ' + size + '" width="100%" height="100%" style="display: block">' +
+                '<circle cx="' + middle + '" cy="' + middle + '" r="' + faceRadius + '" fill="' + c.faceColor + '" stroke="' + c.lineColor + '" stroke-width="' + c.edgeWidth + '"/>' +
+                hand(middle + c.hourLength, middle, c.hourWidth, c.hourColor || c.lineColor) +
+                hand(middle, middle - c.minuteLength, c.minuteWidth, c.minuteColor) +
+                '<circle cx="' + middle + '" cy="' + middle + '" r="' + (c.centerSize / 2) + '" fill="' + c.centerColor + '"/>' +
+                "<\/svg>";
+        };
+
+        // *** THE COLORS OF A STATE (as the component paints them)
+
+        const getBoxColor = function (look, state) {
+            if (state.asking) return ASK_BUTTON.color;
+            if (state.disabled) return DISABLED.color;
+            if (state.pressed) return look.activeColor;
+            if (state.hover) return look.hoverColor;
+            return look.box.color;
+        };
+
+        const getBorderColor = function (look, state) {
+            if (state.asking) return ASK_BUTTON.borderColor;
+            if (state.disabled) return DISABLED.borderColor;
+            return look.box.borderColor;
+        };
+
+        // WHY none when disabled: a flat button is not one that can be pressed in
+        const getBoxShadow = function (look, state) {
+            if (state.asking) return ASK_BUTTON.boxShadow;
+            if (state.disabled) return "none";
+            return look.box.boxShadow;
+        };
+
+        const getPressFilter = function (state) {
+            if (state.pressed) return "brightness(" + PRESS.brightness + ")";
+            return "none";
+        };
+
+        const getTextColor = function (look, state) {
+            if (state.asking) return ASK_BUTTON.textColor;
+            if (state.disabled) return DISABLED.textColor;
+            return look.label.textColor;
+        };
+
+        // (the trash of a dialog has its icon at 1: its color is in the file)
+        const getIconOpacity = function (look, state, isIconOnly) {
+            if (state.disabled) return DISABLED.iconOpacity;
+            if (state.asking || isIconOnly) return 1;
+            return look.icon.opacity;
+        };
+
+    </script>
+
+</head>
+
+<body>
+</body>
+
+</html>
