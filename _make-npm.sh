@@ -71,15 +71,6 @@ TEMPLATES.forEach(function (template) {
     });
 });
 
-// WHY: A module page is shown in a frame of the panel, as high as its content: alone, the check would report its height.
-const panelFolder = path.join(out, "payload", "templates", "panel");
-fs.readdirSync(panelFolder).filter((name) => /^module\d+$/.test(name)).forEach(function (folder) {
-    fs.readdirSync(path.join(panelFolder, folder)).filter((name) => name.endsWith(".htm")).forEach(function (name) {
-        const file = path.join(panelFolder, folder, name);
-        fs.writeFileSync(file, fs.readFileSync(file, "utf8").replace(/<head>/, '<head>\n    <meta name="basic-check" content="skip">'));
-    });
-});
-
 // The forms are separate pages: the start page lists them
 const formsFolder = path.join(out, "payload", "templates", "forms");
 const formPages = fs.readdirSync(formsFolder).filter((name) => name.endsWith(".htm"));

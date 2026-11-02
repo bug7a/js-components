@@ -10,8 +10,8 @@
 // An app with more than one view tells it how to open them (the name of the file is the name of the view):
 //   window.checkViews = { orders: function () { App.showPage("orders"); }, settings: function () { App.showPage("settings"); } };
 //
-// Every page is checked, also the ones in folders. A page shown only inside another one (in a frame as high as its
-// content) does not work alone: it says so, and the report counts it as skipped:
+// Every page is checked, also the ones in folders. A page that can not be checked alone says so, and the report counts
+// it as skipped:
 //   <meta name="basic-check" content="skip">
 //
 // Exit code: 0 no problem, 1 problems found, 2 could not run.

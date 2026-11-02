@@ -79,6 +79,6 @@ window.checkViews = {
 };
 ```
 
-It checks every page, also the ones in folders. A page shown only inside another page can say `<meta name="basic-check" content="skip">`.
+It checks every page, also the ones in folders. A page that can not be checked alone can say `<meta name="basic-check" content="skip">`.
 
 The tool needs Chrome or Edge. When it can not run, run `node --check` on the files you changed, and tell the user that the page was not opened.
