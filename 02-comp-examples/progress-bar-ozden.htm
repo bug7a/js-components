@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>ProgressBar - ozden, two parts, stripes, limits</title>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp/progress-bar.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+    /* Bismillah */
+
+    // ProgressBar (comp-m4) with styleName "ozden" (2026-10-29): the lines of comp-m1 UIProgressBar (a white round track
+    // with a light gray edge, the bar its main color at 50% with an edge of it, a dark limit line with a text);
+    // a second part (value + secondValue), moving stripes on each part (stripes / secondStripes) and limit lines.
+
+    // *** THE COLORS AND SIZES OF THE PAGE
+    const PAGE_COLOR = "#F0F1EE";
+    const INK = "#232323";
+    const CARD_WIDTH = 560;
+    const BAR_WIDTH = 400;
+    const SOFT_BLUE = "#7BA7D9"; // a limit in another color (the picture)
+    const UPLOAD_STEP_TIME = 300; // ms
+
+    let uploadBar = null;
+    let uploadTimer = null;
+
+    const start = function () {
+
+        page.color = PAGE_COLOR;
+
+        startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+
+            VGroup({ width: "100%", height: "auto", align: "center top", gap: 24, padding: [30, 20] });
+
+                Label({ plainText: "ProgressBar: ozden", fontSize: 26, bold: 1, textColor: INK });
+
+                // 1. The look
+                startCard("1. The ozden look", "styleName: \"ozden\" (the lines of comp-m1 UIProgressBar). limits: [{ value: 60, text: \"60\" }]: a line a little longer than the bar, its text under it.");
+                    ProgressBar({
+                        width: BAR_WIDTH,
+                        styleName: "ozden",
+                        titleText: "Progress Title:",
+                        value: 40,
+                        valuePosition: "none",
+                        limits: [{ value: 60, text: "60" }],
+                    });
+                    ProgressBar({
+                        width: BAR_WIDTH,
+                        styleName: "ozden",
+                        value: 60,
+                        valuePosition: "none",
+                        limits: [{ value: 30, color: SOFT_BLUE }, 80],
+                    });
+                endCard();
+
+                // 2. Two parts
+                startCard("2. Two parts: value + secondValue", "70 done and 5 on the way. The second part is the main color, lighter (or its own: style.secondBar.color); the value text and onComplete are of the value only.");
+                    const twoParts = ProgressBar({
+                        width: BAR_WIDTH,
+                        styleName: "ozden",
+                        titleText: "Storage",
+                        value: 70,
+                        secondValue: 5,
+                        limits: [80],
+                        valueFormat: function (self) { return self.value + "% + " + self.secondValue + "%"; },
+                    });
+                    HGroup({ hug: 1, gap: 8, wrap: 1 });
+                        addButton("value +5", function () { twoParts.setValue(twoParts.value + 5); });
+                        addButton("second +5", function () { twoParts.setSecondValue(twoParts.secondValue + 5); });
+                        addButton("setValues(40, 20)", function () { twoParts.setValues(40, 20); });
+                        addButton("reset()", function () { twoParts.reset(); });
+                    endGroup();
+                endCard();
+
+                // 3. Stripes
+                startCard("3. Moving stripes", "stripes: 1 on the value, secondStripes: 1 on the second part; setStripes() / setSecondStripes() turn them on and off. (Still with reduced motion.)");
+                    const striped = ProgressBar({
+                        width: BAR_WIDTH,
+                        styleName: "ozden",
+                        value: 55,
+                        secondValue: 15,
+                        stripes: 1,
+                        secondStripes: 1,
+                        limits: [80],
+                        valuePosition: "right",
+                    });
+                    HGroup({ hug: 1, gap: 8, wrap: 1 });
+                        addButton("stripes on / off", function () { striped.setStripes(!striped.stripes); });
+                        addButton("second on / off", function () { striped.setSecondStripes(!striped.secondStripes); });
+                    endGroup();
+                endCard();
+
+                // 4. A job: the done part grows, the part on the way has stripes
+                startCard("4. An upload", "The value is what is saved, the second part what is being sent (with stripes). The limit is the quota.");
+                    uploadBar = ProgressBar({
+                        width: BAR_WIDTH,
+                        styleName: "ozden",
+                        titleText: "Uploading 12 files",
+                        secondStripes: 1,
+                        limits: [{ value: 90, color: "indianred" }],
+                        valueFormat: function (self) { return Math.round(self.getPercent()) + "%"; },
+                        onComplete: function (self) { self.setTitleText("Done"); },
+                    });
+                    HGroup({ hug: 1, gap: 8 });
+                        addButton("start", startUpload);
+                    endGroup();
+                endCard();
+
+                // 5. Another main color
+                startCard("5. Another main color", "Only style: { bar: { color } }: the inside (50%), the edge and the second part follow it. The colors of UIProgressBar, and status: \"error\".");
+                    ProgressBar({ width: BAR_WIDTH, styleName: "ozden", value: 45, secondValue: 10, valuePosition: "right", style: { bar: { color: "#40A5AF" } } });
+                    ProgressBar({ width: BAR_WIDTH, styleName: "ozden", value: 65, secondValue: 10, stripes: 1, valuePosition: "right", style: { bar: { color: "#588ABE" } } });
+                    ProgressBar({ width: BAR_WIDTH, styleName: "ozden", value: 30, valuePosition: "right", style: { bar: { color: "#CC75AA" } } });
+                    ProgressBar({ width: BAR_WIDTH, styleName: "ozden", value: 85, limits: [{ value: 80, text: "limit 80" }], status: "error", valuePosition: "right" });
+                endCard();
+
+            endGroup();
+
+        endBox();
+
+    };
+
+    // *** OTHER FUNCTIONS
+
+    const startUpload = function () {
+        clearInterval(uploadTimer);
+        uploadBar.reset();
+        uploadBar.setTitleText("Uploading 12 files");
+        uploadTimer = setInterval(function () {
+            const done = Math.min(100, uploadBar.value + 6);
+            uploadBar.setValues(done, Math.min(12, 100 - done));
+            if (done >= 100) clearInterval(uploadTimer);
+        }, UPLOAD_STEP_TIME);
+    };
+
+    const startCard = function (title, description) {
+        VGroup({ width: CARD_WIDTH, height: "auto", align: "left top", gap: 16, padding: [20, 22], color: "white", round: 8, border: 1, borderColor: Black(0.1) });
+        that.css = { maxWidth: "calc(100vw - 40px)" };
+        Label({ plainText: title, fontSize: 15, bold: 1, textColor: INK });
+        Label({ plainText: description, fontSize: 13, textColor: Black(0.5), width: "100%", css: { whiteSpace: "normal", marginTop: "-8px" } });
+    };
+
+    const endCard = function () { endGroup(); };
+
+    const addButton = function (text, onClick) {
+        const button = Button({ text: text, height: 32, fontSize: 13 });
+        button.on("click", onClick);
+        return button;
+    };
+
+    </script>
+
+</head>
+<body>
+</body>
+</html>

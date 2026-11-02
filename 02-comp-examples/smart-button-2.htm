@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartButton situations</title>
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENTS: tooltip.js for the bubble of ask -->
+    <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // SMARTBUTTON · THE SITUATIONS IN A PAGE
+        // The situation packages (primary, danger, warning, success, info) in two real cards:
+        // a save that waits and says "Saved", a delete that asks again, a replace that warns, a download with dots.
+        // - SmartButton({ styleName: "primary", labelText, onClick })   -> a button in the color of a situation
+        // - button.setWaiting(1) / setWaiting(0)                            -> it waits while a job runs
+        // - button.setStyle(SmartButton.styles.success)               -> another situation after create
+        // - ask: "Click again to delete."                                  -> two clicks (load tooltip.js for the bubble)
+        // TRY: press Save, then Delete twice, then Replace twice.
+
+        // *** VARIABLES:
+
+        const BUTTON_HEIGHT = 44;
+        const CARD_WIDTH = 520;
+        const SAVE_TIME = 1500; // ms: a job that takes time (the sample)
+        const SAVED_TIME = 1500; // ms: "Saved" is seen this long
+        const DOWNLOAD_TIME = 2000;
+
+        // The icons (24 x 24 lines; the color is in the drawing)
+        const lineIcon = function (color, paths) {
+            return "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + paths + "<\/svg>");
+        };
+        const ICONS = {
+            save: lineIcon("#1F1F1F", '<path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4M8 20v-6h8v6"/>'),
+            check: lineIcon("#1F1F1F", '<path d="M5 12.5l4.5 4.5L19 7.5"/>'),
+            trash: lineIcon("#1F1F1F", '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/>'),
+            info: lineIcon("#1F1F1F", '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.3"/>'),
+            replace: lineIcon("#1F1F1F", '<path d="M4 9h13l-3-3M20 15H7l3 3"/>'),
+            download: lineIcon("#1F1F1F", '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>'),
+        };
+
+        const SITUATIONS = [
+            { styleName: "primary", text: "Save", note: "the main action" },
+            { styleName: "danger", text: "Delete", note: "a delete, a reject" },
+            { styleName: "warning", text: "Replace", note: "go on, but look first" },
+            { styleName: "success", text: "Done", note: "after a good result" },
+            { styleName: "info", text: "Details", note: "nothing changes" },
+        ];
+
+        let lblResult;
+
+        // *** START:
+
+        const start = function () {
+
+            page.color = "#F4F5F2";
+
+            // BOX: Scrolling page
+            startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+
+                VGroup({ width: "100%", height: "auto", align: "center top", gap: 24, padding: 40, clipContent: 0 });
+
+                    Label({ text: "SmartButton · situations", fontSize: 24, bold: 1, textColor: Black(0.8) });
+
+                    createPackagesRow();
+                    createProfileCard();
+                    createFileCard();
+
+                    lblResult = Label({ text: "-", fontSize: 14, textColor: Black(0.5) });
+
+                endGroup();
+
+            endBox();
+
+        };
+
+        // *** FUNCTIONS:
+
+        const showResult = function (text) {
+            lblResult.plainText = text;
+        };
+
+        // GROUP: A white card with a title and a text; returns its footer (the buttons go into it)
+        const startCard = function (title, text) {
+            VGroup({ width: CARD_WIDTH, height: "auto", align: "left top", gap: 0, color: "white", round: 10, border: 1, borderColor: Black(0.08), clipContent: 0 });
+            that.css = { maxWidth: "100%" };
+                VGroup({ width: "100%", height: "auto", align: "left top", gap: 6, padding: [24, 20] });
+                    Label({ text: title, fontSize: 18, bold: 1, textColor: Black(0.8) });
+                    Label({ width: "100%", text: text, fontSize: 14, textColor: Black(0.55), css: { whiteSpace: "normal" } });
+                endGroup();
+                // GROUP: Footer
+                HGroup({ width: "100%", height: "auto", align: "left center", gap: 10, padding: [20, 16], color: "#F7F7F5", wrap: 1, clipContent: 0 });
+                that.css = { borderTop: "1px solid " + Black(0.06), borderRadius: "0 0 10px 10px" };
+        };
+
+        const endCard = function () {
+                endGroup();
+            endGroup();
+        };
+
+        // BOX: The free room of a footer (pushes the next buttons to the right)
+        const createSpace = function () {
+            const space = Box({ width: 1, height: 1, color: "transparent" });
+            space.grow = 1;
+            return space;
+        };
+
+        // GROUP: The five packages side by side, with their names
+        const createPackagesRow = function () {
+            HGroup({ hug: 1, align: "center top", gap: 14, wrap: 1, clipContent: 0 });
+                SITUATIONS.forEach(function (situation) {
+                    VGroup({ hug: 1, align: "center top", gap: 6, clipContent: 0 });
+                        SmartButton({ styleName: situation.styleName, height: BUTTON_HEIGHT, labelText: situation.text });
+                        Label({ text: situation.styleName, fontSize: 12, bold: 1, textColor: Black(0.6) });
+                        Label({ text: situation.note, fontSize: 11, textColor: Black(0.45) });
+                    endGroup();
+                });
+            endGroup();
+        };
+
+        // A profile: Delete asks again, Save waits and says "Saved" in the success color
+        const createProfileCard = function () {
+            startCard("Profile", "Ayşe Yılmaz · ayse@example.com. Save waits while the job runs, then it says \"Saved\" in the color of a success for a moment.");
+
+                SmartButton({
+                    styleName: "danger",
+                    height: BUTTON_HEIGHT,
+                    labelText: "Delete",
+                    iconFile: ICONS.trash,
+                    ask: "Click again to delete the profile.",
+                    onClick: function () { showResult("The profile is deleted."); },
+                });
+
+                createSpace();
+
+                SmartButton({ styleName: "ozdenType1", height: BUTTON_HEIGHT, labelText: "Cancel", onClick: function () { showResult("Canceled."); } });
+
+                SmartButton({
+                    styleName: "primary",
+                    height: BUTTON_HEIGHT,
+                    labelText: "Save",
+                    iconFile: ICONS.save,
+                    onClick: save,
+                });
+
+            endCard();
+        };
+
+        // Save -> it waits -> "Saved" (success) -> back to Save (primary)
+        const save = function (self) {
+            self.setWaiting(1);
+            self.after(SAVE_TIME, function () {
+                self.setWaiting(0);
+                self.setStyle(SmartButton.styles.success);
+                self.setText("Saved");
+                self.setIcon(ICONS.check);
+                showResult("Saved.");
+                self.after(SAVED_TIME, function () {
+                    self.setStyle(SmartButton.styles.primary);
+                    self.setText("Save");
+                    self.setIcon(ICONS.save);
+                });
+            });
+        };
+
+        // A file: Details (info), Replace (a warning that asks), Download (waits with the dots)
+        const createFileCard = function () {
+            startCard("report.pdf", "2.4 MB · changed today. Replace asks again: the old file will be lost.");
+
+                SmartButton({ styleName: "info", height: BUTTON_HEIGHT, labelText: "Details", iconFile: ICONS.info, onClick: function () { showResult("Details: 12 pages, PDF 1.7."); } });
+
+                createSpace();
+
+                SmartButton({
+                    styleName: "warning",
+                    height: BUTTON_HEIGHT,
+                    labelText: "Replace",
+                    iconFile: ICONS.replace,
+                    ask: "The old file will be lost. Click again.",
+                    onClick: function () { showResult("The file is replaced."); },
+                });
+
+                SmartButton({
+                    styleName: "ozdenType2",
+                    height: BUTTON_HEIGHT,
+                    labelText: "Download",
+                    iconFile: ICONS.download,
+                    waitingType: "dots",
+                    onClick: function (self) {
+                        self.setWaiting(1);
+                        self.after(DOWNLOAD_TIME, function () {
+                            self.setWaiting(0);
+                            showResult("Downloaded.");
+                        });
+                    },
+                });
+
+            endCard();
+        };
+
+    </script>
+
+</head>
+
+<body>
+</body>
+
+</html>

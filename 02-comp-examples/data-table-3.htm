@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>DataTable - Search and Sort</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- LIBRARY FILES -->
+        <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+        <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- COMPONENTS -->
+        <script src="../comp/search-input-v2.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/data-table.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- DATA -->
+        <script src="../assets/data-table/people.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+
+        /* Bismillah */
+
+        // SAMPLE (DataTable, comp/data-table.js): A table that fills the page: a title, a search box, three sortable columns (the ID sorted down
+        // at the start). The keyboard: Tab to the table, the arrow keys select, Enter.
+
+        const PAGE_SPACE = 20;
+
+        let table;
+
+        const start = function () {
+
+            page.color = "white";
+
+            // TABLE: Information
+            table = DataTable({
+                left: PAGE_SPACE,
+                top: PAGE_SPACE,
+                width: "calc(100% - " + (PAGE_SPACE * 2) + "px)",
+                height: "calc(100% - " + (PAGE_SPACE * 2) + "px)",
+                titleText: "Information Table",
+                showSearch: 1,
+                columns: [
+                    { key: "id", title: "ID", valueIndex: 0, type: "number", width: 70, sortable: 1 },
+                    { key: "name", title: "Name", valueIndex: 1, sortable: 1 },
+                    { key: "age", title: "Age", valueIndex: 3, type: "number", width: 100, align: "center", sortable: 1 },
+                    { key: "city", title: "City", valueIndex: 2 },
+                ],
+                rows: testData,
+                sortKey: "id",
+                sortDirection: "desc",
+                onRowClick: function (self, row) {
+                    println(row.data);
+                },
+                onSelect: function (self, row) {
+                    if (row) self.setTitleText("Information Table: " + row.data[1]);
+                },
+            });
+
+            // More: table.sortBy("age", "desc"), table.search("paris", "city"), table.select(5), table.getSelectedData()
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+    </body>
+</html>

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>Dialog</title>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+
+    <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/input-b.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/dialog.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+    /* Bismillah */
+
+    // Dialog (comp-m4): a dialog over the page with fields and buttons. The look of the first dialog of
+    // 02-comp-examples/smart-button-3-ozden.htm; the features of comp/modal.js.
+    // A dialog for every situation (2026-10-31): the button types primary, danger, warning, success, info take the
+    // situation packages of SmartButton (primary, danger...: chosen on _designs/smart-button-colors.htm).
+    // - Dialog({ buttons: [{ text, type: "primary" | "secondary" | "danger" | "warning" | "success" | "info" | "icon" }] })
+    // - Dialog.confirm({ ..., danger: 1 }) / Dialog.confirm({ ..., confirmType: "warning" })
+    // - Dialog.alert({ ..., buttonType: "success" })
+    // TRY: open each dialog; on Delete click twice (the first click asks); in Publish leave the title empty.
+
+    const WORK_TIME = 1200; // ms: a job that takes time (the sample)
+
+    // The icons of the buttons (the drawings of the ozden sample)
+    const svgIcon = function (color, body) {
+        return "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">' + body.split("COLOR").join(color) + "</svg>");
+    };
+    const PEN_ICON = svgIcon("black",
+        '<path d="M3.5 6h7M3.5 10h4" stroke="COLOR" stroke-width="2.2" stroke-linecap="round"/>' +
+        '<path d="M16.6 5.2a2.3 2.3 0 0 1 3.3 3.3l-9.6 9.6-4.8 1.5 1.5-4.8z" fill="COLOR" stroke="COLOR" stroke-width="1.6" stroke-linejoin="round"/>');
+    // A TRIAL (2026-10-29): the trash of the todo app. The soft bin of the ozden sample was:
+    // const TRASH_ICON = svgIcon("#6B6F73",
+    // '<path fill-rule="evenodd" fill="COLOR" d="M 4 6 Q 4 2 12 2 Q 20 2 20 6 L 18.5 18 Q 18 22 12 22 Q 6 22 5.5 18 Z ' +
+    // 'M 6.7 5.9 C 6.7 3.7 17.3 3.7 17.3 5.9 C 17.3 8.1 6.7 8.1 6.7 5.9 Z ' +
+    // 'M 9 11 Q 9.7 10.3 10.4 11 L 12 12.6 L 13.6 11 Q 14.3 10.3 15 11 Q 15.7 11.7 15 12.4 L 13.4 14 L 15 15.6 ' +
+    // 'Q 15.7 16.3 15 17 Q 14.3 17.7 13.6 17 L 12 15.4 L 10.4 17 Q 9.7 17.7 9 17 Q 8.3 16.3 9 15.6 L 10.6 14 L 9 12.4 Q 8.3 11.7 9 11 Z"/>');
+    const TRASH_ICON = "../04-templates/todo-app-example/images/trash.svg";
+
+    const LAUNCH_BUTTON_HEIGHT = 40;
+
+    // The situations: the button type of a dialog, the SmartButton package of its color, the dialog it opens
+    const SITUATIONS = [
+        { type: "primary", text: "Publish", open: function () { openPublishDialog(); } },
+        { type: "danger", text: "Delete", open: function () { openDeleteConfirm(); } },
+        { type: "warning", text: "Leave", open: function () { openWarningConfirm(); } },
+        { type: "success", text: "Done", open: function () { openSuccessAlert(); } },
+        { type: "info", text: "Details", open: function () { openInfoAlert(); } },
+    ];
+
+    let lblResult;
+
+    const showResult = function (text) {
+        lblResult.plainText = text;
+    };
+
+    const wait = function (ms) {
+        return new Promise(function (resolve) { setTimeout(resolve, ms); });
+    };
+
+    // The dialog of the design: a field, the trash (asks again), Cancel and Publish (it waits)
+    const openPublishDialog = function () {
+        Dialog({
+            titleText: "Publish the article?",
+            messageText: "Your article will be seen by everyone on the blog. You can still change it after it is published.",
+            fields: [{ key: "title", titleText: "ARTICLE TITLE", placeholder: "How I started to garden", required: 1 }],
+            buttons: [
+                {
+                    key: "delete", type: "icon", align: "left", iconFile: TRASH_ICON, ariaLabel: "Delete the draft",
+                    ask: "Click again to delete the draft.",
+                    onClick: function () { showResult("The draft is deleted."); },
+                },
+                { key: "cancel", text: "Cancel", type: "secondary" },
+                {
+                    key: "publish", text: "Publish", type: "primary", iconFile: PEN_ICON,
+                    onClick: function (dialog) {
+                        const values = dialog.getValues();
+                        return wait(WORK_TIME).then(function () { showResult("Published: " + values.title); });
+                    },
+                },
+            ],
+            onClose: function (dialog, reason, buttonKey) {
+                if (reason != "button") showResult("Closed: " + reason);
+                else if (buttonKey == "cancel") showResult("Canceled.");
+            },
+        });
+    };
+
+    // DANGER: a delete, it asks again (two clicks)
+    const openDeleteConfirm = async function () {
+        const isSure = await Dialog.confirm({
+            titleText: "Delete the file?",
+            messageText: "report.pdf will be deleted. It can not be undone.",
+            confirmText: "Delete",
+            danger: 1,
+            ask: "Click again to delete the file.",
+        });
+        showResult("danger confirm: " + isSure);
+    };
+
+    // WARNING: it can go on, but look first
+    const openWarningConfirm = async function () {
+        const isSure = await Dialog.confirm({
+            titleText: "Leave without saving?",
+            messageText: "Your last changes are not saved. They will be lost if you leave now.",
+            confirmText: "Leave",
+            cancelText: "Stay",
+            confirmType: "warning",
+        });
+        showResult("warning confirm: " + isSure);
+    };
+
+    // SUCCESS: after a good result
+    const openSuccessAlert = async function () {
+        await Dialog.alert({ titleText: "Uploaded", messageText: "All the 12 files are uploaded.", buttonText: "Done", buttonType: "success" });
+        showResult("success alert: closed");
+    };
+
+    // INFO: nothing changes
+    const openInfoAlert = async function () {
+        await Dialog.alert({ titleText: "What is new", messageText: "The buttons of the dialogs take the color of their situation now.", buttonText: "Got it", buttonType: "info" });
+        showResult("info alert: closed");
+    };
+
+    // Every button type side by side in one dialog
+    const openAllTypes = function () {
+        Dialog({
+            titleText: "Every button type",
+            messageText: "The situation packages of SmartButton, as the Dialog uses them.",
+            width: 680, // the card (a number)
+            buttons: [
+                { key: "secondary", text: "Cancel", type: "secondary" },
+                { key: "info", text: "Info", type: "info" },
+                { key: "success", text: "Done", type: "success" },
+                { key: "warning", text: "Leave", type: "warning" },
+                { key: "danger", text: "Delete", type: "danger" },
+                { key: "primary", text: "Save", type: "primary" },
+            ],
+            onClose: function (dialog, reason, buttonKey) { showResult("every type: " + (buttonKey || reason)); },
+        });
+    };
+
+    const openPrompt = async function () {
+        const name = await Dialog.prompt({
+            titleText: "Rename the file",
+            fieldText: "FILE NAME",
+            value: "report.pdf",
+            validate: function (text) { return text.trim().endsWith(".pdf") ? "" : "The name must end with .pdf"; },
+        });
+        showResult("prompt: " + name);
+    };
+
+    const createButton = function (text, onClick) {
+        const button = SmartButton({ styleName: "ozdenType1", labelText: text, height: LAUNCH_BUTTON_HEIGHT, style: { box: { color: "white" } }, onClick: onClick }); // white inside (its hover stays gray)
+        return button;
+    };
+
+    // A button in the color of a situation: it opens the dialog of that situation
+    const createSituationButton = function (situation) {
+        const styleName = DialogDefaults.style.buttons[situation.type].styleName;
+        const group = VGroup({ hug: 1, align: "center top", gap: 6, clipContent: 0 });
+            SmartButton({ styleName: styleName, labelText: situation.text, height: LAUNCH_BUTTON_HEIGHT, onClick: situation.open });
+            Label({ text: situation.type + " · " + styleName, fontSize: 11, textColor: Black(0.45) });
+        endGroup();
+        return group;
+    };
+
+    const start = function () {
+
+        page.color = "#F0F1EE";
+
+        VGroup({ align: "center", gap: 14 });
+
+            Label({ text: "Dialog", fontSize: 26, bold: 1, textColor: Black(0.8) });
+
+            Label({ text: "A dialog for every situation (the button type of the dialog · the SmartButton package)", fontSize: 13, textColor: Black(0.5) });
+
+            HGroup({ hug: 1, gap: 12, wrap: 1, align: "center top", clipContent: 0 });
+                SITUATIONS.forEach(createSituationButton);
+            endGroup();
+
+            HGroup({ hug: 1, gap: 10, wrap: 1, clipContent: 0 });
+                createButton("Every button type", openAllTypes);
+                createButton("Dialog.prompt", openPrompt);
+            endGroup();
+
+            lblResult = Label({ plainText: "-", fontSize: 14, textColor: Black(0.5) });
+
+        endGroup();
+
+    };
+
+    </script>
+
+</head>
+<body>
+</body>
+</html>

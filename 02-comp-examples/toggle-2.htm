@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Toggle: modern and classic</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp/toggle.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // The style packages of Toggle: "modern" (the default) and "classic" (the look of the old UIToggle of
+        // javascript-mobile-app-template), each off and on, and the classic package with your own colors.
+        // The other packages: toggle-3.htm.
+
+        // *** VARIABLES:
+        const toggleList = []; // Every toggle of the page ("Switch all")
+        const GREEN = "#6AC966";
+        const CORAL = "#FE5D49";
+        const INK = "#141414";
+        const CARD_MAX_WIDTH = 560;
+
+        const start = function () {
+
+            page.color = "#F4F5F2";
+
+            // BOX: Full screen scrollable container
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            startBox(0, 0, "100%", "100%", {
+                color: "transparent",
+                scrollY: 1,
+            });
+
+                // GROUP: Page layout
+                VGroup({
+                    width: "100%",
+                    height: "auto", // Grows with content, so the Box can scroll.
+                    align: "center top",
+                    gap: 24,
+                    padding: [16, 40],
+                });
+
+                    // LABEL: Title
+                    Label({
+                        text: "Toggle",
+                        fontSize: 26,
+                        fontFamily: "opensans-bold",
+                    });
+
+                    // SAMPLE 1: modern
+                    startCard("1. styleName: \"modern\" (the default)", "70 x 40: the knob is smaller when off (offButtonScale: 0.6).");
+                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 24, wrap: 1, clipContent: 0 });
+                            addToggle("", { value: 0 });
+                            addToggle("", { value: 1 });
+                        endGroup();
+                    endCard();
+
+                    // SAMPLE 2: classic
+                    startCard("2. styleName: \"classic\"", "The look of the old UIToggle (a 600 px design): 60 x 40, a white knob of the same size on and off, with a shadow.");
+                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 24, wrap: 1, clipContent: 0 });
+                            addToggle("", { styleName: "classic", value: 0 });
+                            addToggle("", { styleName: "classic", value: 1 });
+                        endGroup();
+                    endCard();
+
+                    // SAMPLE 3: classic with your own color
+                    startCard("3. classic with your own color", "backgroundStyle: { selectedColor } wins over the package; its other keys stay.");
+                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 24, wrap: 1, clipContent: 0 });
+                            addToggle("Green", { styleName: "classic", value: 1, backgroundStyle: { selectedColor: GREEN } });
+                            addToggle("Coral", { styleName: "classic", value: 1, backgroundStyle: { selectedColor: CORAL } });
+                            addToggle("Ink", { styleName: "classic", value: 1, backgroundStyle: { selectedColor: INK } });
+                        endGroup();
+                    endCard();
+
+                    // SAMPLE 4: API
+                    startCard("4. API", "switch(), setValue(0 / 1), onChange: the text under each toggle shows self.value.");
+                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 8, wrap: 1 });
+                            addSampleButton("Switch all", function (toggle) { toggle.switch(); });
+                            addSampleButton("All off", function (toggle) { toggle.setValue(0); });
+                        endGroup();
+                    endCard();
+
+                endGroup();
+
+            endBox();
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        // A toggle with its state under it ("on", "Green: off"). name: "" -> only the state.
+        const addToggle = function (name, params) {
+            let toggle, lblState;
+            VGroup({ hug: 1, align: "center top", gap: 8, clipContent: 0 }); // WHY: the shadow of the classic knob goes a little out of the toggle.
+                toggle = Toggle(params);
+                lblState = Label({ text: "", fontSize: 13, textColor: Black(0.45) });
+            endGroup();
+            const showState = function () {
+                const stateText = (toggle.value === 1) ? "on" : "off";
+                lblState.text = (name) ? name + ": " + stateText : stateText;
+            };
+            toggle.onChange = showState;
+            showState();
+            toggleList.push(toggle);
+            return toggle;
+        };
+
+        // A button that runs action(toggle) for every toggle of the page.
+        const addSampleButton = function (text, action) {
+            const btn = Button({ text: text, width: 120, height: 40, fontSize: 15 });
+            btn.on("click", function () { toggleList.forEach(action); });
+            return btn;
+        };
+
+        // GROUP: A card with a title and a short description.
+        const startCard = function (title, description = "") {
+            VGroup({
+                width: "100%",
+                height: "auto",
+                align: "left top",
+                gap: 16,
+                padding: 20,
+                color: "white",
+                round: 10,
+                border: 1,
+                borderColor: Black(0.1),
+                css: { maxWidth: CARD_MAX_WIDTH + "px", alignItems: "stretch" },
+            });
+            Label({
+                text: title,
+                fontSize: 14,
+                textColor: Black(0.45),
+            });
+            if (description) {
+                Label({
+                    text: description,
+                    fontSize: 13,
+                    textColor: Black(0.35),
+                    css: { marginTop: "-10px" },
+                });
+            }
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+    </script>
+</head>
+
+<body></body>
+
+</html>

@@ -37,14 +37,6 @@ const SITE = {
     CODE_TEXT: "#D6DAE0",
     CODE_SOFT: "rgba(255, 255, 255, 0.5)",
 
-    // Kuşak (generation) rozetleri: [zemin, yazı]
-    GENERATION_COLORS: {
-        4: ["#E2F3E7", "#1F7A3D"],
-        3: ["#ECE7FB", "#5B3FC4"],
-        2: ["#E3EDFB", "#2459B5"],
-        1: ["#ECECE7", "#6B6B66"],
-    },
-
     BOLD: "opensans-bold",
     MONO: "ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace",
 
@@ -103,7 +95,7 @@ SITE.rootUrl = function (path) {
     return CONFIG.rootPath + path;
 };
 
-// Dosya adresinden sadece adı. ("comp-m4/tabs.js" -> "tabs.js")
+// Dosya adresinden sadece adı. ("comp/tabs.js" -> "tabs.js")
 SITE.fileName = function (path) {
     return String(path).split("/").pop();
 };
@@ -252,30 +244,6 @@ SITE.button = function (params = {}) {
 };
 
 // *** SMALL PIECES:
-
-// LABEL: Kuşak rozeti (M1...M4)
-SITE.generationChip = function (generation, small = 0) {
-
-    const colors = SITE.GENERATION_COLORS[generation];
-
-    Label({
-        text: "M" + generation,
-        width: "auto",
-        height: "auto",
-        fontSize: small ? 10 : 11,
-        textColor: colors[1],
-        color: colors[0],
-        round: 100,
-    });
-    that.elem.style.fontFamily = SITE.BOLD;
-    that.elem.style.padding = small ? "2px 7px" : "3px 9px";
-    that.elem.style.letterSpacing = "0.5px";
-    that.elem.style.whiteSpace = "nowrap";
-    that.elem.style.flexShrink = "0";
-
-    return that;
-
-};
 
 // LABEL: Kod gibi görünen küçük yazı (dosya adı)
 SITE.mono = function (text, color = SITE.TEXT_FAINT, size = 12) {

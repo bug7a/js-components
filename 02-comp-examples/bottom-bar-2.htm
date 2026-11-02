@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>BottomBar: The Old Template Look</title>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/badge-v2.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/bottom-bar.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+    /* Bismillah */
+
+    // BottomBar (comp-m3) drawn like the tab bar of the old javascript-mobile-app-template: a white bar, a circle in
+    // the color of the selected item behind its icon (it slides to the item), the name of the item over it for a
+    // moment (labelMode: "float") and a number badge with a white ring. The page is a 600 px design fitted to the
+    // screen (page.fit), like 04-templates/mobile-app-template/classic: every size is a px of that design.
+
+    const DESIGN_WIDTH = 600;
+    const MAX_ZOOM_WIDTH = 800; // A wider screen does not make the design bigger: the column is in the middle.
+    const BAR_HEIGHT = 80;
+    const TASKS_INDEX = 3;
+    const TASKS_FIRST_BADGE = 3;
+    const BADGE_VALUES = [0, 1, 3, 120, ""]; // "": no badge
+    const ICON_FOLDER = "bottom-bar/";
+
+    // The tabs of the old template. color: the circle behind the selected icon (none: style.selectedBox.color)
+    const TABS = [
+        { icon: ICON_FOLDER + "home.png", text: "Home", color: "#5ABB9F" },
+        { icon: ICON_FOLDER + "search.png", text: "Search" },
+        { icon: ICON_FOLDER + "grid.png", text: "Usage Examples", color: "indianred" },
+        { icon: ICON_FOLDER + "tasks.png", text: "Tasks" },
+        { icon: ICON_FOLDER + "settings.png", text: "Settings" },
+    ];
+
+    let column;
+    let floatBar;
+    let noneBar;
+    let lblSelected;
+    let lblBadge;
+
+    // The look of the old template (a new object for every bar: a bar fills its defaults into its style)
+    const getOldTemplateStyle = function () {
+        return {
+            // WHY gradient: it is the CSS background of the bar box, written over its color.
+            container: { color: "white", gradient: "white", border: 0 },
+            background: { gradient: "none", round: 0, border: 0 },
+            layout: { barHeight: BAR_HEIGHT, iconBoxSize: 40, padding: 20, itemSpacing: 40, iconGap: 0, selectionPadding: 8 },
+            icon: { width: 40, height: 40 },
+            selectedBox: { color: "#141414", border: 0, round: 100, height: 56 },
+            floatLabel: { space: 25, css: { textTransform: "uppercase" } },
+        };
+    };
+
+    // The number badge of the old template: indianred with a white ring, also "0" and "1"
+    const getOldTemplateBadge = function () {
+        return {
+            showZero: 1,
+            dotForOne: 0,
+            style: { color: "indianred", border: 3, borderColor: "white", textColor: "white" },
+            numberStyle: { fontSize: 14, bold: 1, padding: [8, 3], round: 20, top: -10, right: -14 },
+        };
+    };
+
+    // The column of the app: 600 design px, in the middle of a wide screen
+    const placeColumn = function () {
+        page.fit(DESIGN_WIDTH, MAX_ZOOM_WIDTH);
+        column.left = Math.max(0, (page.width - DESIGN_WIDTH) / 2);
+    };
+
+    const showSelected = function (item, index) {
+        lblSelected.plainText = "Selected: " + item.data.text + " (index " + index + ")";
+    };
+
+    const setTasksBadge = function (value) {
+        floatBar.setBadge(TASKS_INDEX, value);
+        noneBar.setBadge(TASKS_INDEX, value);
+        const valueText = (value === "") ? "\"\" (no badge)" : value;
+        lblBadge.plainText = "bar.setBadge(" + TASKS_INDEX + ", " + valueText + ")";
+    };
+
+    const createBadgeButton = function (value) {
+        SmartButton({
+            labelText: (value === "") ? "No badge" : String(value),
+            onClick: function () { setTasksBadge(value); },
+        });
+    };
+
+    const createText = function (text) {
+        Label({ text: text, fontSize: 19, textColor: Black(0.6), width: "100%" });
+    };
+
+    // A card: a title and its content (endCard closes it)
+    const startCard = function (title) {
+        VGroup({ width: "100%", height: "auto", align: "left top", gap: 16, padding: 24, color: "#E8E8E4", round: 16, clipContent: 0 });
+            Label({ text: title, fontSize: 22, bold: 1, textColor: Black(0.8) });
+    };
+
+    const endCard = function () {
+        endGroup();
+    };
+
+    const createContent = function () {
+
+        // BOX: The page over the bar (it scrolls)
+        startBox(0, 0, "100%", "calc(100% - " + BAR_HEIGHT + "px)", { color: "transparent", scrollY: 1 });
+            VGroup({ width: "100%", height: "auto", align: "left top", gap: 24, padding: 30 });
+
+                Label({ text: "BottomBar", fontSize: 34, bold: 1, textColor: Black(0.85) });
+                createText("The tab bar of the old mobile app template, made with the options of BottomBar.");
+
+                startCard("labelMode: \"float\" (the bar at the bottom)");
+                    createText("Tap an item: the circle slides to it and takes its color; its name shows over it for a moment.");
+                    lblSelected = Label({ text: "", fontSize: 19, textColor: Black(0.8) });
+                    createText("The badge of Tasks shows \"0\" (showZero: 1) and the number 1 (dotForOne: 0):");
+                    HGroup({ width: "100%", height: "auto", align: "left center", gap: 10, wrap: 1, clipContent: 0 });
+                        BADGE_VALUES.forEach(createBadgeButton);
+                    endGroup();
+                    lblBadge = Label({ text: "", fontSize: 17, textColor: Black(0.5) });
+                endCard();
+
+                startCard("labelMode: \"none\"");
+                    createText("No names: only the circle and the icons.");
+                    noneBar = BottomBar({
+                        height: BAR_HEIGHT,
+                        labelMode: "none",
+                        items: TABS,
+                        badge: getOldTemplateBadge(),
+                        style: getOldTemplateStyle(),
+                    });
+                endCard();
+
+            endGroup();
+        endBox();
+
+    };
+
+    const createFloatBar = function () {
+        floatBar = BottomBar({
+            bottom: 0,
+            height: BAR_HEIGHT,
+            labelMode: "float",
+            hoverEffect: false,
+            items: TABS,
+            badge: getOldTemplateBadge(),
+            onItemClick: showSelected,
+            style: getOldTemplateStyle(),
+        });
+        floatBar.boxShadow = "0 -1px 0 " + Black(0.08); // A thin line over the bar
+    };
+
+    const start = function () {
+
+        page.color = "#D9D9D5";
+        page.fit(DESIGN_WIDTH, MAX_ZOOM_WIDTH); // WHY: Before the objects: they are made in the px of the design.
+
+        // BOX: The app column
+        column = Box(0, 0, DESIGN_WIDTH, "100%", { color: "#F4F4F1" });
+        createIn(column, function () {
+            createContent();
+            createFloatBar();
+        });
+
+        placeColumn();
+        page.onResize(placeColumn);
+
+        showSelected(floatBar.itemObjList[0], 0);
+        setTasksBadge(TASKS_FIRST_BADGE);
+
+    };
+
+    </script>
+
+</head>
+<body>
+</body>
+</html>

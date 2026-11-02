@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>PageHeader</title>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/page-header.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+    /* Bismillah */
+
+    // PageHeader (comp-m4), 2026-11-01: the header of a page that slides in over the tabs of a mobile app (a small
+    // back link over a big title), with the look of the old javascript-mobile-app-template. The page is a 600 px
+    // design fitted to the screen (page.fit(600, 800)), like the mobile template.
+    // The back link: a click, or Tab and Enter / Space.
+
+    const DESIGN_WIDTH = 600;
+    const MAX_ZOOM_WIDTH = 800; // A wider screen shows the design at most this wide
+    const PAGE_COLOR = "#F4F4F4";
+    const SPACE = 20;
+    const TEXT_SIZE = 20; // The captions (13 px on a 390 px phone)
+    const BOTTOM_SPACE = 60; // Under the last line (padding: [left, top, right, bottom])
+    const GREEN = "#5ABB9F";
+    const TITLES = ["My Documents", "A very long title of a page that does not fit", "Security"];
+    const BACK_TEXTS = ["Back", "Settings", "Home"];
+
+    let lblResult;
+    let titleIndex = 0;
+    let backTextIndex = 0;
+
+    const fitPage = function () {
+        page.fit(DESIGN_WIDTH, MAX_ZOOM_WIDTH);
+    };
+
+    const onBack = function (header) {
+        lblResult.plainText = "onBack: " + header.titleText;
+    };
+
+    // LABEL: What the header under it shows
+    const createCaption = function (text) {
+        Label({ plainText: text, width: "100%", fontSize: TEXT_SIZE, textColor: Black(0.5), padding: [SPACE, 0] });
+        that.css = { margin: "28px 0 10px" };
+    };
+
+    // The buttons that change the last header
+    const createSetterButtons = function (header) {
+        HGroup({ width: "100%", height: "auto", align: "left center", gap: 10, wrap: 1, padding: [SPACE, 14], clipContent: 0 });
+
+            SmartButton({ labelText: "Title", height: 50, onClick: function () {
+                titleIndex = (titleIndex + 1) % TITLES.length;
+                header.setTitleText(TITLES[titleIndex]);
+            } });
+
+            SmartButton({ labelText: "Back text", height: 50, onClick: function () {
+                backTextIndex = (backTextIndex + 1) % BACK_TEXTS.length;
+                header.setBackText(BACK_TEXTS[backTextIndex]);
+            } });
+
+            SmartButton({ labelText: "Back link", height: 50, onClick: function () {
+                header.setBackVisible(!header.showBack);
+            } });
+
+        endGroup();
+    };
+
+    const start = function () {
+
+        fitPage();
+        page.onResize(fitPage);
+        page.color = PAGE_COLOR;
+
+        startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+
+            VGroup({ width: "100%", height: "auto", align: "left top", gap: 0, padding: [0, 0, 0, BOTTOM_SPACE] });
+
+                // The header of a page over the tabs (the old "Security" page): the back link goes back to Settings
+                PageHeader({ titleText: "Security", backText: "Settings", onBack: onBack });
+
+                createCaption("A long title ends with \"...\"");
+                PageHeader({ titleText: "Privacy Policy and Terms of Use of This Application", backText: "Settings", onBack: onBack });
+
+                createCaption("showBack: 0");
+                PageHeader({ titleText: "Welcome", showBack: 0 });
+
+                createCaption("Your own colors: color, backColor");
+                PageHeader({ titleText: "Coffee", backText: "Categories", color: "whitesmoke", backColor: "indianred", onBack: onBack });
+
+                createCaption("The setters: setTitleText, setBackText, setBackVisible");
+                const header = PageHeader({ titleText: TITLES[0], onBack: onBack });
+                createSetterButtons(header);
+
+                // LABEL: The last onBack
+                lblResult = Label({ plainText: "Click a back link (or Tab to it and press Enter).", width: "100%", fontSize: TEXT_SIZE, textColor: GREEN, padding: [SPACE, 0] });
+
+            endGroup();
+
+        endBox();
+
+    };
+
+    </script>
+
+</head>
+<body>
+</body>
+</html>

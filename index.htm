@@ -56,7 +56,7 @@
             "en",
             "tr"
         ],
-        "keywords": "JavaScript UI components, vanilla JS, basic.js, component library, Tabs, Breadcrumbs, PageControl, SearchResults, ContextMenu, SelectBox, SelectDate, SelectTime, SelectColor, SelectFile, TagInput, Stepper",
+        "keywords": "JavaScript UI components, vanilla JS, basic.js, component library, Tabs, Breadcrumbs, PageControl, SearchResults, ContextMenu, SelectBox, SelectDate, SelectTime, SelectColor, SelectFile, TagInput, Stepper, SortableList, RichTextEditor, LabelEditor",
         "author": {
             "@type": "Person",
             "name": "Buğra Özden",
@@ -79,9 +79,9 @@
     <script src="basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
 
     <!-- COMPONENT FILES -->
-    <script src="comp-m4/web-view.min.js" type="text/javascript" charset="utf-8"></script>
-    <script src="comp-m4/tabs.min.js" type="text/javascript" charset="utf-8"></script>
-    <script src="comp-m4/toast.js" type="text/javascript" charset="utf-8"></script>
+    <script src="comp/web-view.js" type="text/javascript" charset="utf-8"></script>
+    <script src="comp/tabs.js" type="text/javascript" charset="utf-8"></script>
+    <script src="comp/toast.js" type="text/javascript" charset="utf-8"></script>
 
     <!-- SITE FILES -->
     <script src="index/config.js" type="text/javascript" charset="utf-8"></script>
@@ -141,7 +141,12 @@
                 <ul>
                     <li><a href="#/select-file" style="color: inherit;">SelectFile</a>: Drop zone and file dialog that lists the chosen files with image previews and sizes.</li>
                     <li><a href="#/tag-input" style="color: inherit;">TagInput</a>: A field of chips for tags, keywords or e-mails, with suggestions, validation and paste splitting.</li>
-                    <li><a href="#/stepper" style="color: inherit;">Stepper</a>: Number stepper with decimals, a unit, typed editing and hold-to-repeat buttons.</li>
+                    <li><a href="#/stepper" style="color: inherit;">Stepper</a>: Number stepper with decimals, a unit, typed editing and hold-to-repeat buttons. A line around the buttons and a round look (ozden).</li>
+                    <li><a href="#/slider-field" style="color: inherit;">SliderField</a>: A slider in the shape of a field: the label at the left, the value at the right, step dots, drag, click to jump and typed editing.</li>
+                    <li><a href="#/label-editor" style="color: inherit;">LabelEditor</a>: An object based editor: add labels, change their properties in a side panel, save the styles with a name and apply them to other labels.</li>
+                    <li><a href="#/property-panel" style="color: inherit;">PropertyPanel</a>: A design tool style property inspector at the right side, built from a JSON: numbers, selects, segmented buttons, toggles and constraints, with change events.</li>
+                    <li><a href="#/rich-text-editor" style="color: inherit;">RichTextEditor</a>: A simple rich text editor with a toolbar (bold, headings, lists, quote, link, undo), cleaned HTML output and a character limit.</li>
+                    <li><a href="#/sortable-list" style="color: inherit;">SortableList</a>: A list whose order is changed by drag and drop, the keyboard or up / down buttons, with locked rows.</li>
                     <li><a href="#/input-b" style="color: inherit;">InputB</a>: Labeled text field with an icon, a unit, hints and validation; the base of the other *InputB fields.</li>
                     <li><a href="#/email-input-b" style="color: inherit;">EmailInputB</a>: An InputB that checks e-mail addresses.</li>
                     <li><a href="#/password-input-b" style="color: inherit;">PasswordInputB</a>: Password field with a show and hide button.</li>
@@ -152,44 +157,42 @@
                     <li><a href="#/textarea-b" style="color: inherit;">TextareaB</a>: Multi-line text field in the InputB style, with a character counter.</li>
                     <li><a href="#/search-input" style="color: inherit;">SearchInput</a>: Search field with a search icon and a clear button.</li>
                     <li><a href="#/slider" style="color: inherit;">Slider</a>: Slider for choosing a value in a range, inspired by Material 3.</li>
-                    <li><a href="#/ui-stepper" style="color: inherit;">UIStepper</a>: The first number stepper. New pages use Stepper.</li>
-                    <li><a href="#/ui-search-box" style="color: inherit;">UISearchBox</a>: Search and filter boxes for light and colored backgrounds.</li>
-                    <li><a href="#/ui-numeric-keyboard" style="color: inherit;">UINumericKeyboard</a>: On-screen number keyboard for touch screens and kiosks.</li>
+                    <li><a href="#/numeric-keyboard" style="color: inherit;">NumericKeyboard</a>: Number keys on the screen for a PIN, an amount or a kiosk: two layouts, a hidden PIN, the keyboard of the computer too. The new version of UINumericKeyboard.</li>
                 </ul>
                 <h2>Selection</h2>
                 <ul>
+                    <li><a href="#/item-list" style="color: inherit;">ItemList</a>: A list of items with an icon, a title and a description (or your own rows): vertical, horizontal or grid, single or multiple selection, section titles, search and keyboard; a pressed flash and animated add / remove.</li>
+                    <li><a href="#/filters" style="color: inherit;">Filters</a>: A filter menu: a button and a panel with a search field, groups of check boxes, the number of the selected options and Clear all. In the page or as a popup.</li>
                     <li><a href="#/select-box" style="color: inherit;">SelectBox</a>: Dropdown select for single or multiple selection, with select all and clear.</li>
+                    <li><a href="#/full-screen-select" style="color: inherit;">FullScreenSelect</a>: A select field whose list opens on the whole screen, with a search box: for phones and long lists. The new version of UISelectText.</li>
                     <li><a href="#/select-date" style="color: inherit;">SelectDate</a>: Date picker as a popup or an always visible calendar, with a month and year view.</li>
                     <li><a href="#/select-time" style="color: inherit;">SelectTime</a>: Time picker with scrollable hour and minute columns, as a popup or inline.</li>
                     <li><a href="#/select-color" style="color: inherit;">SelectColor</a>: Color picker: a field that opens a palette, or an always visible palette.</li>
-                    <li><a href="#/check-box" style="color: inherit;">CheckBox</a>: Check box with a label, drawn with code; classic and modern style packages.</li>
+                    <li><a href="#/period-bar" style="color: inherit;">PeriodBar</a>: A month switcher: this month and the months before it in a white capsule, with round buttons and sliding months. For a mobile app with a 600 px design (page.fit(600, 800)): on a normal page its sizes are too big.</li>
+                    <li><a href="#/check-box" style="color: inherit;">CheckBox</a>: Check box with a label, drawn with code; classic, modern and dark style packages.</li>
                     <li><a href="#/radio-button" style="color: inherit;">RadioButton</a>: Radio buttons that work in groups, with keyboard support and style packages.</li>
-                    <li><a href="#/toggle" style="color: inherit;">Toggle</a>: On and off switch for light and dark pages.</li>
+                    <li><a href="#/toggle" style="color: inherit;">Toggle</a>: On and off switch for light and dark pages. Many looks: modern, classic, the shapes float, round, slim, outline and square, and tick, badge and label with a check, a cross or a text.</li>
                     <li><a href="#/tiny-select" style="color: inherit;">TinySelect</a>: Small inline select that fits into a sentence: Theme: Supernova.</li>
-                    <li><a href="#/ui-toggle" style="color: inherit;">UIToggle</a>: On and off switch with style presets like Google and Apple.</li>
-                    <li><a href="#/check-box-m1" style="color: inherit;">CheckBox (M1)</a>: The first check box. New pages use the M3 CheckBox.</li>
-                    <li><a href="#/select-item" style="color: inherit;">SelectItem</a>: A field that opens a searchable list of items with images.</li>
-                    <li><a href="#/select-text" style="color: inherit;">SelectText</a>: A field that opens a searchable text list.</li>
-                    <li><a href="#/ui-select-text" style="color: inherit;">UISelectText</a>: A select field that opens a searchable list of texts.</li>
                 </ul>
                 <h2>Buttons &amp; Menus</h2>
                 <ul>
+                    <li><a href="#/action-button" style="color: inherit;">ActionButton</a>: Round floating action button in the corner of the screen; it opens a menu of actions. The new version of UIActionButton.</li>
                     <li><a href="#/context-menu" style="color: inherit;">ContextMenu</a>: A simple menu that opens at the mouse point, with text or icon items.</li>
-                    <li><a href="#/button-with-icon" style="color: inherit;">ButtonWithIcon</a>: A button with an icon and a text; the icon on the left or on top.</li>
+                    <li><a href="#/smart-button" style="color: inherit;">SmartButton</a>: The default button: an icon and a text (or one of them), ozden style packages, a waiting clock or dots while a job runs, and a two-click ask with a bubble.</li>
                     <li><a href="#/hold-to-confirm-button" style="color: inherit;">HoldToConfirmButton</a>: A button that runs only after it is pressed and held; for risky actions like delete.</li>
-                    <li><a href="#/ui-action-button" style="color: inherit;">UIActionButton</a>: Round floating action button in the corner of the screen.</li>
                 </ul>
                 <h2>Navigation</h2>
                 <ul>
                     <li><a href="#/tabs" style="color: inherit;">Tabs</a>: Tab bar with underline and pill variants, counts, badges, closable tabs, a vertical mode and optional panels.</li>
+                    <li><a href="#/tree-view" style="color: inherit;">TreeView</a>: A tree of nested items with lazy branches, keyboard and type-ahead: a file explorer, a category tree, a menu or design tool layers.</li>
                     <li><a href="#/breadcrumbs" style="color: inherit;">Breadcrumbs</a>: Shows where the current page is in a hierarchy: Home / Products / Laptops.</li>
                     <li><a href="#/page-control" style="color: inherit;">PageControl</a>: Sliding or fading pages for wizards, carousels and app screens, with swipe, dots, arrows and auto play.</li>
                     <li><a href="#/search-results" style="color: inherit;">SearchResults</a>: The result list that opens under a search input, like an autocomplete or a command palette.</li>
-                    <li><a href="#/bottom-bar" style="color: inherit;">BottomBar</a>: Mobile app bottom bar built from a JSON list of buttons, with badges.</li>
-                    <li><a href="#/text-tabs" style="color: inherit;">TextTabs</a>: Small text tab bar. New pages use Tabs.</li>
+                    <li><a href="#/action-tab-bar" style="color: inherit;">ActionTabBar</a>: A bottom tab bar with a big round + button for the main action of the app; a line slides under the selected tab. For a mobile app with a 600 px design (page.fit(600, 800)): on a normal page its sizes are too big.</li>
+                    <li><a href="#/bottom-bar" style="color: inherit;">BottomBar</a>: Mobile app bottom bar built from a JSON list of buttons, with badges; the name of the selected item next to it, over it for a moment or hidden, a color per item, keyboard ready.</li>
+                    <li><a href="#/app-bar" style="color: inherit;">AppBar</a>: The top bar of a tab page of a mobile app: a title in the middle or at the left, a back and a menu button. For a mobile app with a 600 px design (page.fit(600, 800)): on a normal page its sizes are too big.</li>
+                    <li><a href="#/page-header" style="color: inherit;">PageHeader</a>: The header of a page that slides in over the tabs of a mobile app: a small back link over a big title. For a mobile app with a 600 px design (page.fit(600, 800)): on a normal page its sizes are too big.</li>
                     <li><a href="#/left-menu" style="color: inherit;">LeftMenu</a>: Icon side menu that opens on hover, or with a tap on touch screens.</li>
-                    <li><a href="#/ui-tabs" style="color: inherit;">UITabs</a>: The first tab bar, with icon and text tabs. New pages use Tabs.</li>
-                    <li><a href="#/ui-page-control" style="color: inherit;">UIPageControl</a>: The first sliding page container. New pages use PageControl.</li>
                 </ul>
                 <h2>Data &amp; Charts</h2>
                 <ul>
@@ -198,40 +201,34 @@
                     <li><a href="#/mini-graph-box" style="color: inherit;">MiniGraphBox</a>: Small KPI box with a title, a value, an icon and a live bar graph.</li>
                     <li><a href="#/spark-line-box" style="color: inherit;">SparkLineBox</a>: KPI box with a line graph, a trend badge, min/max dots and a hover tooltip.</li>
                     <li><a href="#/time-line" style="color: inherit;">TimeLine</a>: A vertical time line: a dot for every item and a line between the dots.</li>
+                    <li><a href="#/data-table" style="color: inherit;">DataTable</a>: A table for short and middle lists: sorting, search, keyboard selection, your own cells and row updates by id. For very many rows: SmartTable.</li>
                     <li><a href="#/smart-table" style="color: inherit;">SmartTable</a>: Virtual-scroll table for millions of rows, with filtering, sorting, custom cells and editing.</li>
-                    <li><a href="#/tiny-table" style="color: inherit;">TinyTable</a>: A light table for short data lists.</li>
-                    <li><a href="#/ui-cells" style="color: inherit;">UICells</a>: Splits a box into rows and columns of cells to place objects in them.</li>
-                    <li><a href="#/tiny-table-m1" style="color: inherit;">TinyTable (M1)</a>: The first version of the light table.</li>
+                    <li><a href="#/scrolling-text" style="color: inherit;">ScrollingText</a>: A one line text that slides to show its end when it does not fit: always, or only under the mouse.</li>
+                    <li><a href="#/tiny-table-m4" style="color: inherit;">TinyTable</a>: A light table for short lists: a colored title row, one line rows, a soft color under the mouse; scrolling rows. The new version of TinyTable (M1).</li>
                 </ul>
                 <h2>Overlays &amp; Feedback</h2>
                 <ul>
                     <li><a href="#/progress-bar" style="color: inherit;">ProgressBar</a>: Horizontal progress bar with a title and a value text; determinate or indeterminate.</li>
                     <li><a href="#/toast" style="color: inherit;">Toast</a>: Short messages that come and go: success, error, loading, and actions like Undo.</li>
-                    <li><a href="#/modal" style="color: inherit;">Modal</a>: A dialog window over the page for any content; Modal.confirm() and Modal.alert() return a Promise.</li>
-                    <li><a href="#/side-panel" style="color: inherit;">SidePanel</a>: A drawer that slides in from a side of the screen, over the page.</li>
+                    <li><a href="#/dialog" style="color: inherit;">Dialog</a>: A dialog over the page with fields and buttons: a button that asks again, a waiting button, keyboard; Dialog.confirm, alert and prompt. In development.</li>
+                    <li><a href="#/notice" style="color: inherit;">Notice</a>: A short message in the middle of the screen over a soft cover: five types, an icon, a second line; it goes by itself. The new version of notice (M1).</li>
+                    <li><a href="#/side-panel" style="color: inherit;">SidePanel</a>: A drawer that slides in from a side of the screen, or of a box like an app column, over the page.</li>
                     <li><a href="#/loading-screen" style="color: inherit;">LoadingScreen</a>: Full cover splash and loading screen with an icon, a title, a spinner and progress.</li>
                     <li><a href="#/line-progress-bar" style="color: inherit;">LineProgressBar</a>: A progress bar drawn with thin vertical lines.</li>
-                    <li><a href="#/dialog" style="color: inherit;">Dialog</a>: A simple dialog window.</li>
-                    <li><a href="#/tooltip" style="color: inherit;">Tooltip</a>: A small hint box that appears over an object.</li>
-                    <li><a href="#/waiting" style="color: inherit;">Waiting</a>: A waiting animation over the page while something loads.</li>
+                    <li><a href="#/tooltip" style="color: inherit;">Tooltip</a>: A hint bubble over an object: it follows the mouse or stays at the object, with an optional bordered arrow, always inside the screen; your own content in it, or a popover that stays and can be clicked.</li>
                     <li><a href="#/badge" style="color: inherit;">BadgeV2</a>: Notification badge on an object: a dot, a number or custom content.</li>
-                    <li><a href="#/ui-progress-bar" style="color: inherit;">UIProgressBar</a>: The first progress bar. New pages use ProgressBar.</li>
-                    <li><a href="#/ui-notice" style="color: inherit;">UINotice</a>: Info, alert and error messages shown over the page.</li>
-                    <li><a href="#/object-waiting" style="color: inherit;">ObjectWaiting</a>: Waiting animation over a single object, like a button that downloads.</li>
                 </ul>
                 <h2>Pages &amp; Views</h2>
                 <ul>
                     <li><a href="#/web-view" style="color: inherit;">WebView</a>: An iframe box with a loading spinner, errors, messages, scaled previews and a toolbar. The previews on this site use it.</li>
                     <li><a href="#/login-page" style="color: inherit;">LoginPage</a>: A ready login and sign up page with e-mail, password and social buttons.</li>
-                    <li><a href="#/ui-title" style="color: inherit;">UITitle</a>: Mobile page title bar with a back button.</li>
-                    <li><a href="#/ui-left-title" style="color: inherit;">UILeftTitle</a>: A settings row with a title, a subtitle and an arrow.</li>
-                    <li><a href="#/ui-scrolling-text" style="color: inherit;">UIScrollingText</a>: A line of text that scrolls back and forth inside a small box.</li>
-                    <li><a href="#/ui-web-view" style="color: inherit;">UIWebView</a>: The first iframe box. New pages use WebView.</li>
+                    <li><a href="#/settings-row" style="color: inherit;">SettingsRow</a>: A row of a settings page: a title, a small text that fades in and out, and a control (a switch, a stepper) or an arrow at the right; bands between the groups. For a mobile app with a 600 px design (page.fit(600, 800)): on a normal page its sizes are too big.</li>
                 </ul>
                 <h2>Effects &amp; Styles</h2>
                 <ul>
                     <li><a href="#/ui-effects" style="color: inherit;">UIEffects</a>: Press, hover and attention effects for any basic.js object: ripple, lift, tilt, spotlight and more.</li>
                     <li><a href="#/ui-standards" style="color: inherit;">UI Standards</a>: Design tokens and themes: colors, font sizes, corner radius and a light, dark or automatic theme.</li>
+                    <li><a href="#/tap-effect" style="color: inherit;">TapEffect</a>: A soft circle where the screen is tapped, over everything; it never catches the tap. TapEffect.start() / stop(), also on a page fitted with page.fit().</li>
                 </ul>
                 <p><a href="https://github.com/bug7a/js-components" style="color: inherit;">github.com/bug7a/js-components</a></p>
             </div>

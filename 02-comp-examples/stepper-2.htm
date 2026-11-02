@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Stepper: ozden and the button line</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp/stepper.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // The "ozden" package of Stepper (the look of the old UIStepper of javascript-mobile-app-template) and
+        // style.button.border / borderColor (a line around the buttons) on the other packages.
+
+        // *** VARIABLES:
+        let stpAtMin, stpMiddle, stpAtMax, lblOzden;
+        const CARD_MAX_WIDTH = 560;
+
+        const start = function () {
+
+            page.color = "#F4F5F2";
+
+            // BOX: Full screen scrollable container
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            startBox(0, 0, "100%", "100%", {
+                color: "transparent",
+                scrollY: 1,
+            });
+
+                // GROUP: Page layout
+                VGroup({
+                    width: "100%",
+                    height: "auto", // Grows with content, so the Box can scroll.
+                    align: "center top",
+                    gap: 24,
+                    padding: [16, 40],
+                });
+
+                    // LABEL: Title
+                    Label({
+                        text: "Stepper",
+                        fontSize: 26,
+                        fontFamily: "opensans-bold",
+                    });
+
+                    // SAMPLE 1: ozden
+                    startCard("1. styleName: \"ozden\"", "The look of the old UIStepper (a 600 px design): 150 x 50, round white buttons with a dark line. At min / max a button fades to 0.4.");
+
+                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 16, wrap: 1 });
+
+                            stpAtMin = Stepper({ styleName: "ozden", value: 1, min: 1, max: 10, onChange: showOzdenValue });
+                            stpMiddle = Stepper({ styleName: "ozden", value: 5, min: 1, max: 10, onChange: showOzdenValue });
+                            stpAtMax = Stepper({ styleName: "ozden", value: 10, min: 1, max: 10, onChange: showOzdenValue });
+
+                        endGroup();
+
+                        lblOzden = addInfoLabel("Value: -");
+
+                    endCard();
+
+                    // SAMPLE 2: ozden with your params
+                    startCard("2. ozden with your own params", "A param you give wins over the package: width: 180 and a unit; a gray pill behind the buttons (style.box.color).");
+
+                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 16, wrap: 1 });
+
+                            Stepper({ styleName: "ozden", width: 180, value: 18, min: 18, max: 24, unitText: "px" });
+                            Stepper({ styleName: "ozden", value: 3, min: 1, max: 15, style: { box: { color: Black(0.08) } } });
+
+                        endGroup();
+
+                    endCard();
+
+                    // SAMPLE 3: The line around the buttons
+                    startCard("3. style.button.border and borderColor", "A line around the buttons, on any package. (0 and \"transparent\" by default: no line)");
+
+                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 16, wrap: 1 });
+
+                            Stepper({ value: 2, min: 0, max: 9, style: { button: { border: 1, borderColor: Black(0.25) } } });
+                            Stepper({ styleName: "modern", value: 4, min: 1, max: 12, style: { button: { border: 1, borderColor: "cadetblue" } } });
+
+                            // GROUP: Dark background
+                            HGroup({ hug: 1, align: "left center", padding: 16, color: "#1C1C1B", round: 10 });
+                                Stepper({ styleName: "dark", value: 2, min: 0, max: 5, style: { button: { border: 1, borderColor: White(0.25) } } });
+                            endGroup();
+
+                        endGroup();
+
+                    endCard();
+
+                    // SAMPLE 4: classic, to compare
+                    startCard("4. classic (the default), to compare", "No line around the buttons, no fade.");
+
+                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 16, wrap: 1 });
+                            Stepper({ value: 1, min: 1, max: 10 });
+                            Stepper({ value: 10, min: 1, max: 10 });
+                        endGroup();
+
+                    endCard();
+
+                endGroup();
+
+            endBox();
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        const showOzdenValue = function (self) {
+            let limitText = "";
+            if (self.value === self.min) limitText = " (min)";
+            if (self.value === self.max) limitText = " (max)";
+            lblOzden.text = "Value: " + self.value + limitText;
+        };
+
+        // GROUP: A card with a title and a short description.
+        const startCard = function (title, description = "") {
+            VGroup({
+                width: "100%",
+                height: "auto",
+                align: "left top",
+                gap: 16,
+                padding: 20,
+                color: "white",
+                round: 10,
+                border: 1,
+                borderColor: Black(0.1),
+                css: { maxWidth: CARD_MAX_WIDTH + "px", alignItems: "stretch" },
+            });
+            Label({
+                text: title,
+                fontSize: 14,
+                textColor: Black(0.45),
+            });
+            if (description) {
+                Label({
+                    text: description,
+                    fontSize: 13,
+                    textColor: Black(0.35),
+                    css: { marginTop: "-10px" },
+                });
+            }
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+        const addInfoLabel = function (text) {
+            return Label({
+                text: text,
+                fontSize: 14,
+                textColor: Black(0.5),
+            });
+        };
+
+    </script>
+</head>
+
+<body></body>
+
+</html>

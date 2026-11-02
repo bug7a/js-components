@@ -152,8 +152,6 @@ DetailView.createTopBar = function () {
         that.elem.style.overflow = "hidden";
         that.elem.style.textOverflow = "ellipsis";
 
-        SITE.generationChip(comp.gen);
-
         // LABEL: Kategori ve kaynak dosya
         DetailView.lblMeta = SITE.label(category[SITE.lang] + "  ·  " + basic.escapeHtml(comp.source), { fontSize: 13, textColor: SITE.TEXT_FAINT });
         DetailView.lblMeta.elem.style.overflow = "hidden";
@@ -568,7 +566,7 @@ DetailView.setFiles = function (paths) {
 
 };
 
-// Sayfanın <script src> etiketlerinden, bileşen klasörlerindeki dosyalar. ("comp-m4/tabs.js")
+// Sayfanın <script src> etiketlerinden, bileşen klasörlerindeki dosyalar. ("comp/tabs.js")
 // NOTE: Yorum satırı içindeki etiketler ve alt klasördeki kütüphaneler (chart-box/chart.umd.min.js) alınmaz.
 DetailView.findComponentScripts = function (html, samplePath) {
 
@@ -595,7 +593,7 @@ DetailView.findComponentScripts = function (html, samplePath) {
         if (fullPath.indexOf(rootPath) !== 0) continue;
 
         const path = fullPath.slice(rootPath.length);
-        if (/^comp-m\d\/[^\/]+\.js$/.test(path) && paths.indexOf(path) == -1) {
+        if (/^comp\/[^\/]+\.js$/.test(path) && paths.indexOf(path) == -1) {
             paths.push(path);
         }
 

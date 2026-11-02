@@ -1,0 +1,634 @@
+/* Bismillah */
+
+/*
+
+ContextMenu - v26.09
+
+UI COMPONENT TEMPLATE
+- A simple menu that opens at the mouse point. (Like the right click menu of Windows, but simpler.)
+- Items can be only text, or icon + text.
+- If at least one item has an icon, all texts start at the same place. (Items without icon get an empty icon space.)
+- If no item has an icon, texts start near the left side.
+- "-" in the item list adds a separator line.
+- Closes on: item click, click outside, Escape, mouse wheel outside, page resize, window blur.
+- Keyboard: ArrowUp/ArrowDown to move, Enter or Space to click, Escape to close.
+- Style packages: "classic" (default), "dark". Select with styleName. (ContextMenu.styles)
+
+ITEM: { text, key, iconFile, enabled, data, onClick }
+- A string is also accepted: "Copy" -> { text: "Copy" }
+- "-" or { type: "separator" }: Separator line
+- enabled: 0 -> Shown, but can not be clicked.
+- onClick: function (self, item, index) {} -> Optional, only for this item.
+
+USAGE:
+const menu = ContextMenu({ items: ["Open", "-", { text: "Delete", key: "delete", iconFile: "delete.png" }] });
+menu.attachTo(myBox);                 // Right click on myBox opens the menu.
+menu.attachTo(myButton, "click");     // Left click on myButton opens the menu.
+menu.openAt(event.clientX, event.clientY);
+
+Started Date: September 2026
+Developer: Bugra Ozden
+Email: bugra.ozden@gmail.com
+Webpage: https://bug7a.github.io/js-components/
+
+*/
+
+"use strict";
+
+// Default values:
+const ContextMenuDefaults = {
+    key: "0",
+    items: [], // [{ text, key, iconFile, enabled, data, onClick }, "-", "Text"]
+    target: null, // An object (or a list of objects). The menu opens on it with the trigger.
+    trigger: "contextmenu", // "contextmenu": Right click, "click": Left click
+    minWidth: 180,
+    maxWidth: 320, // Long texts are cut with "...". 0: No limit.
+    enabled: 1,
+    ariaLabel: "Menu",
+    onClick: function (self, item, index) { }, // self.source: The object that opened the menu.
+    onOpen: function (self) { },
+    onClose: function (self) { },
+    styleName: "classic", // "classic", "dark" or a name added to ContextMenu.styles
+    style: { // Classic style package (default)
+        menu: {
+            color: "white",
+            border: 1,
+            borderColor: Black(0.12),
+            round: 8,
+            padding: 4,
+            shadow: "0px 8px 24px " + Black(0.14),
+            zIndex: 1000,
+        },
+        item: {
+            height: 32,
+            fontSize: 14,
+            textColor: Black(0.85),
+            color: "transparent",
+            round: 5,
+            padding: 10, // Left and right space
+            gap: 10, // Space between icon and text
+        },
+        itemHover: {
+            textColor: Black(0.9),
+            color: Black(0.06),
+        },
+        disabled: {
+            textColor: Black(0.35),
+            opacity: 0.4, // Icon opacity
+        },
+        icon: {
+            width: 16,
+            height: 16,
+        },
+        separator: {
+            color: Black(0.1),
+            space: 4, // Space above and below the line
+        },
+    }
+};
+
+const ContextMenu = function (params = {}) {
+
+    // Merge style package: params.style > ContextMenu.styles[styleName] > ContextMenuDefaults.style (classic)
+    basic.applyStylePackage(params, ContextMenu.styles, ContextMenuDefaults);
+
+    // Merge params:
+    mergeIntoIfMissing(params, ContextMenuDefaults);
+
+    // Edit params, if needed:
+    const _ms = params.style.menu;
+    params.width = "auto";
+    params.height = "auto";
+    params.color = _ms.color;
+    params.border = _ms.border;
+    params.borderColor = _ms.borderColor;
+    params.round = _ms.round;
+    params.padding = _ms.padding;
+    params.zIndex = _ms.zIndex;
+    params.boxShadow = _ms.shadow;
+
+    // WHY: The menu must be over everything. Create it directly on the page,
+    // even if ContextMenu() is called inside a group.
+    const _previousContainer = getDefaultContainerBox();
+    setDefaultContainerBox(page);
+
+    // BOX: Component container (the menu panel)
+    let box = startObject(params);
+
+    // *** PRIVATE VARIABLES:
+    const _s = box.style;
+    let rows = []; // Created row objects (items and separators)
+    let attachedList = []; // [{ obj, trigger, removeEvent }]
+    let isOpen = 0;
+    let activeIndex = -1;
+    let skipOpenFor = null; // WHY: A click on the opener button (while open) must close the menu, not open it again.
+    let skipOpenTime = 0;
+    let openPageSize = ""; // Page size when the menu was opened.
+    const PAGE_SIDE_SPACE = 8; // Minimum space between the menu and the page sides
+    const OPENER_CLICK_TIME_LIMIT = 1000; // ms
+    const OPEN_MOTION = "opacity 0.12s, transform 0.12s";
+
+    // *** PUBLIC VARIABLES:
+    // [var] Items: [{ text, key, iconFile, enabled, data, onClick } or { type: "separator" }]
+    box.items = [];
+    // [var] The object that opened the menu. (attachTo) null: Opened with openAt().
+    box.source = null;
+
+    // *** PRIVATE FUNCTIONS:
+
+    const toFlag = function (value) {
+        return basic.isOn(value) ? 1 : 0;
+    };
+
+    const normalizeItem = function (item) {
+        if (item === "-" || (item && item.type == "separator")) {
+            return { type: "separator" };
+        }
+        if (typeof item == "string" || typeof item == "number") {
+            return { type: "item", text: String(item), enabled: 1 };
+        }
+        const result = Object.assign({ text: "", enabled: 1 }, item);
+        result.type = "item";
+        result.enabled = toFlag(result.enabled);
+        return result;
+    };
+
+    const isInsideMenu = function (element) {
+        return !!(box && element && box.elem.contains(element));
+    };
+
+    const isClickableIndex = function (index) {
+        const item = box.items[index];
+        return !!(item && item.type == "item" && item.enabled == 1);
+    };
+
+    const setActive = function (index) {
+
+        if (activeIndex == index) return;
+
+        const oldRow = rows[activeIndex];
+        if (oldRow && oldRow.label) setRowHover(oldRow, 0);
+
+        activeIndex = index;
+
+        const newRow = rows[activeIndex];
+        if (newRow && newRow.label) setRowHover(newRow, 1);
+
+    };
+
+    const setRowHover = function (row, isOver) {
+        const style = (isOver) ? _s.itemHover : _s.item;
+        row.color = style.color;
+        row.label.textColor = (row.item.enabled == 1) ? style.textColor : _s.disabled.textColor;
+    };
+
+    // Enabled/disabled view of a row. (Colors, cursor, icon opacity)
+    const updateRowEnabled = function (row) {
+        const enabled = (row.item.enabled == 1);
+        row.cursor = (enabled) ? "pointer" : "default";
+        row.aria = { disabled: (enabled) ? "false" : "true" };
+        if (row.icon) row.icon.opacity = (enabled || !row.item.iconFile) ? 1 : _s.disabled.opacity;
+        setRowHover(row, 0);
+    };
+
+    // Move the active item with the keyboard. Skips separators and disabled items.
+    const moveActive = function (direction) {
+
+        const count = box.items.length;
+        if (count == 0) return;
+
+        // WHY: No active item: ArrowDown starts from the first item, ArrowUp from the last item.
+        let index = (activeIndex < 0 && direction < 0) ? count : activeIndex;
+        for (let i = 0; i < count; i++) {
+            index = (index + direction + count) % count;
+            if (isClickableIndex(index)) {
+                setActive(index);
+                return;
+            }
+        }
+
+    };
+
+    const createSeparator = function () {
+
+        // BOX: Line
+        const line = Box({
+            width: "auto",
+            height: 1,
+            color: _s.separator.color,
+            shrink: 0,
+        });
+        line.css.margin = _s.separator.space + "px " + _s.item.padding + "px";
+        line.role = "separator";
+
+        return line;
+
+    };
+
+    const createItem = function (item, index, hasIcon) {
+
+        // GROUP: Row (icon space + label)
+        const row = HGroup({
+            width: "auto",
+            height: _s.item.height,
+            align: "left center",
+            gap: _s.item.gap,
+            padding: [_s.item.padding, 0],
+            round: _s.item.round,
+        });
+        row.role = "menuitem";
+        row.item = item;
+
+            // ICON: Only if one of the items has an icon.
+            // WHY: Items without an icon get an empty space, so every text starts at the same place.
+            if (hasIcon) {
+                if (item.iconFile) {
+                    row.icon = Icon({
+                        width: _s.icon.width,
+                        height: _s.icon.height,
+                        shrink: 0,
+                    });
+                    row.icon.load(item.iconFile);
+                    row.icon.elem.alt = "";
+                } else {
+                    row.icon = Box({
+                        width: _s.icon.width,
+                        height: _s.icon.height,
+                        color: "transparent",
+                        shrink: 0,
+                    });
+                }
+            }
+
+            // LABEL: Text
+            // WHY: plainText: Item texts must not be read as HTML. (Label.text uses innerHTML.)
+            row.label = Label({
+                plainText: item.text,
+                fontSize: _s.item.fontSize,
+                ellipsis: 1,
+                shrink: 1,
+            });
+            row.label.css.minWidth = "0";
+
+        endGroup();
+
+        updateRowEnabled(row);
+
+        row.on("mouseenter", function () {
+            setActive((item.enabled == 1) ? index : -1);
+        });
+
+        row.on("click", function () {
+            box.clickItem(index);
+        });
+
+        return row;
+
+    };
+
+    const render = function () {
+
+        rows.forEach(function (obj) { obj.remove(); });
+        rows = [];
+        activeIndex = -1;
+
+        const hasIcon = box.items.some(function (item) { return item.type == "item" && item.iconFile; });
+
+        box.items.forEach(function (item, index) {
+            // WHY: One createIn per row: endGroup() (in createItem) sets the container to the last started group, not to box.content.
+            createIn(box.content, function () {
+                rows.push((item.type == "separator") ? createSeparator() : createItem(item, index, hasIcon));
+            });
+        });
+
+    };
+
+    // Put the menu at the point. If there is no space, open it to the left and/or up.
+    const positionMenu = function (x, y) {
+
+        const menuWidth = box.elem.offsetWidth;
+        const menuHeight = box.elem.offsetHeight;
+
+        let left = x;
+        let top = y;
+        let originX = "left";
+        let originY = "top";
+
+        if (left + menuWidth > page.width - PAGE_SIDE_SPACE) {
+            left = x - menuWidth;
+            originX = "right";
+        }
+        if (top + menuHeight > page.height - PAGE_SIDE_SPACE) {
+            top = y - menuHeight;
+            originY = "bottom";
+        }
+
+        left = Math.max(PAGE_SIDE_SPACE, Math.min(left, page.width - menuWidth - PAGE_SIDE_SPACE));
+        top = Math.max(PAGE_SIDE_SPACE, Math.min(top, page.height - menuHeight - PAGE_SIDE_SPACE));
+
+        box.left = left;
+        box.top = top;
+        box.css.transformOrigin = originX + " " + originY;
+
+    };
+
+    const onDocumentPointerDown = function (event) {
+
+        if (isInsideMenu(event.target)) return;
+
+        // Left click on the opener button: close only. (Do not open again with the click event.)
+        if (event.button === 0 && box.source && box.source.elem.contains(event.target)) {
+            const info = attachedList.find(function (a) { return a.obj == box.source; });
+            if (info && info.trigger == "click") {
+                skipOpenFor = box.source;
+                skipOpenTime = Date.now();
+            }
+        }
+
+        box.close();
+
+    };
+
+    const onDocumentKeyDown = function (event) {
+
+        if (event.key === "Escape") {
+            event.preventDefault();
+            box.close();
+        } else if (event.key === "ArrowDown") {
+            event.preventDefault();
+            moveActive(1);
+        } else if (event.key === "ArrowUp") {
+            event.preventDefault();
+            moveActive(-1);
+        } else if (event.key === "Enter" || event.key === " ") {
+            if (activeIndex < 0) return;
+            event.preventDefault();
+            box.clickItem(activeIndex);
+        } else if (event.key === "Tab") {
+            box.close();
+        }
+
+    };
+
+    const onDocumentWheel = function (event) {
+        if (!isInsideMenu(event.target)) box.close();
+    };
+
+    const onWindowBlur = function () {
+        box.close();
+    };
+
+    const onPageResize = function () {
+        // WHY: Close only if the size really changed. (Some browsers call resize without a change.)
+        if (isOpen && page.width + "x" + page.height != openPageSize) box.close();
+    };
+
+    // Events only needed while the menu is open.
+    const setOpenEvents = function (isOn) {
+        const method = (isOn) ? "addEventListener" : "removeEventListener";
+        // WHY: Capture phase: Some objects stop the event. The menu must still close.
+        document[method]("pointerdown", onDocumentPointerDown, true);
+        document[method]("keydown", onDocumentKeyDown, true);
+        document[method]("wheel", onDocumentWheel, true);
+        window[method]("blur", onWindowBlur);
+        if (isOn) page.onResize(onPageResize);
+        else page.remove_onResize(onPageResize);
+    };
+
+    // *** PUBLIC FUNCTIONS:
+
+    box.setItems = function (items) {
+        box.items = (items || []).map(normalizeItem);
+        render();
+        if (isOpen) box.close(); // WHY: The size changes. Open it again at the new point.
+    };
+    // USAGE: menu.setItems(["Open", "-", { text: "Delete", key: "delete" }])
+
+    box.getItems = function () {
+        return box.items.slice();
+    };
+
+    box.getItemByKey = function (key) {
+        return box.items.find(function (item) { return item.key == key; }) || null;
+    };
+
+    box.setItemEnabled = function (key, enabled) {
+        const item = box.getItemByKey(key);
+        if (!item) return;
+        item.enabled = toFlag(enabled);
+        // WHY: Update only this row, not render() all of them.
+        const index = box.items.indexOf(item);
+        if (item.enabled != 1 && activeIndex == index) setActive(-1);
+        updateRowEnabled(rows[index]);
+        if (activeIndex == index) setRowHover(rows[index], 1);
+    };
+    // USAGE: menu.setItemEnabled("paste", 0)
+
+    // x, y: Mouse point on the screen. (event.clientX, event.clientY)
+    box.openAt = function (x, y, source = null) {
+
+        if (box.enabled != 1 || box.items.length == 0) return;
+        if (isOpen) box.close();
+
+        isOpen = 1;
+        box.source = source;
+        openPageSize = page.width + "x" + page.height;
+
+        // Show hidden (opacity 0) first, so the size can be measured.
+        box.setMotion("none");
+        box.opacity = 0;
+        box.css.transform = "scale(0.97)";
+        box.visible = 1;
+
+        positionMenu(withPageZoom(x), withPageZoom(y));
+
+        // Small open animation
+        requestAnimationFrame(function () {
+            if (!box || !isOpen) return;
+            box.setMotion(OPEN_MOTION);
+            box.opacity = 1;
+            box.css.transform = "scale(1)";
+        });
+
+        box.elem.focus({ preventScroll: true });
+        setOpenEvents(1);
+        box.onOpen(box);
+
+    };
+
+    // Open at the mouse point of an event.
+    box.openWithEvent = function (event, source = null) {
+        box.openAt(event.clientX, event.clientY, source);
+    };
+    // USAGE: myBox.on("contextmenu", function (self, event) { event.preventDefault(); menu.openWithEvent(event, self); });
+
+    box.close = function () {
+
+        if (!isOpen) return;
+        isOpen = 0;
+
+        setOpenEvents(0);
+        setActive(-1);
+        box.setMotion("none");
+        box.visible = 0;
+
+        box.onClose(box);
+
+    };
+
+    box.isOpen = function () {
+        return isOpen;
+    };
+
+    // Same as a user click on the item.
+    box.clickItem = function (index) {
+
+        if (!isClickableIndex(index)) return;
+
+        const item = box.items[index];
+
+        // WHY: Close first. onClick can open a dialog or another menu.
+        box.close();
+
+        if (typeof item.onClick === "function") item.onClick(box, item, index);
+        box.onClick(box, item, index);
+
+    };
+
+    // Opens the menu on the object with the trigger. Returns a function to remove it.
+    box.attachTo = function (obj, trigger) {
+
+        trigger = trigger || box.trigger;
+
+        const removeEvent = obj.on(trigger, function (self, event) {
+
+            event.preventDefault(); // WHY: Do not show the browser menu.
+
+            // WHY: Time limit: If the mouse was released outside the button, there was no click to skip.
+            const skip = (skipOpenFor == obj && Date.now() - skipOpenTime < OPENER_CLICK_TIME_LIMIT);
+            skipOpenFor = null;
+            if (skip) return;
+
+            if (box.enabled != 1) return;
+
+            box.openWithEvent(event, obj);
+
+        });
+
+        attachedList.push({ obj: obj, trigger: trigger, removeEvent: removeEvent });
+
+        return function () {
+            box.detach(obj);
+        };
+
+    };
+    // USAGE: menu.attachTo(fileRow) or menu.attachTo(moreButton, "click")
+
+    box.detach = function (obj) {
+        attachedList = attachedList.filter(function (info) {
+            if (info.obj != obj) return true;
+            if (typeof info.removeEvent === "function") info.removeEvent();
+            return false;
+        });
+    };
+
+    box.setEnabled = function (enabled) {
+        box.enabled = toFlag(enabled);
+        if (box.enabled != 1) box.close();
+    };
+    // USAGE: get: menu.enabled, set: menu.setEnabled(0)
+
+    box.refresh = render;
+
+    // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
+    const superRemove = box.remove;
+    box.superRemove = superRemove;
+    box.remove = function () {
+
+        if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
+        box.close();
+        attachedList.slice().forEach(function (info) { box.detach(info.obj); });
+
+        superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
+        box = null;
+
+    };
+
+    // *** OBJECT VIEW:
+
+    box.css = {
+        position: "fixed",
+        boxSizing: "border-box",
+        minWidth: box.minWidth + "px",
+        outline: "none",
+        userSelect: "none",
+    };
+    if (box.maxWidth > 0) box.css.maxWidth = box.maxWidth + "px";
+    box.tabIndex = -1;
+    box.role = "menu";
+    box.aria = { label: box.ariaLabel };
+
+    // GROUP: Rows (created by render)
+    box.content = VGroup({
+        width: "auto",
+        height: "auto",
+        align: "left top",
+        gap: 0,
+        position: "relative", // WHY: Component size is "auto". A relative group makes the container wrap it.
+    });
+    // WHY: Rows fill the menu width, so the hover color is as wide as the menu.
+    box.content.css.alignItems = "stretch";
+
+    endGroup();
+
+    // *** OBJECT INIT CODE:
+
+    // WHY: Keep the focus in the menu when an item is pressed.
+    box.on("mousedown", function (self, event) { event.preventDefault(); });
+    box.on("contextmenu", function (self, event) { event.preventDefault(); });
+    box.on("mouseleave", function () { setActive(-1); });
+
+    box.setEnabled(box.enabled);
+    box.setItems(params.items); // WHY: Copy the array. The default [] must not be shared between components.
+    box.visible = 0;
+
+    if (box.target) {
+        const targets = Array.isArray(box.target) ? box.target : [box.target];
+        targets.forEach(function (obj) { box.attachTo(obj, box.trigger); });
+    }
+
+    endObject(box);
+
+    setDefaultContainerBox(_previousContainer);
+
+    return box;
+
+};
+
+// *** STATIC FUNCTIONS:
+
+// For user data in your own Label.text. (Kept for old code: same as basic.escapeHtml.)
+ContextMenu.escapeHtml = basic.escapeHtml;
+
+// *** STYLE PACKAGES:
+// USAGE: ContextMenu({ styleName: "dark" })
+// USAGE: ContextMenu({ styleName: "dark", style: { menu: { round: 4 } } }) // Change only some keys.
+// USAGE: ContextMenu({ style: ContextMenu.styles.dark }) // The same as styleName: "dark". (The package is copied, never changed.)
+// NOTE: A new package needs only the keys that differ from the default (classic) style.
+// NOTE: The icons are image files: give light icons (iconFile) to the items of a dark menu.
+// USAGE: ContextMenu.styles.myStyle = { menu: { round: 4 } };
+ContextMenu.styles = {
+
+    // White, dark text, a soft line.
+    classic: ContextMenuDefaults.style,
+
+    // Dark theme, same colors as SelectBox "dark".
+    dark: {
+        menu: { color: "#232322", borderColor: "rgba(255, 255, 255, 0.12)", shadow: "0px 8px 24px rgba(0, 0, 0, 0.5)" },
+        item: { textColor: "rgba(255, 255, 255, 0.85)" },
+        itemHover: { textColor: "rgba(255, 255, 255, 0.95)", color: "rgba(255, 255, 255, 0.08)" },
+        disabled: { textColor: "rgba(255, 255, 255, 0.35)" },
+        separator: { color: "rgba(255, 255, 255, 0.10)" },
+    },
+
+};

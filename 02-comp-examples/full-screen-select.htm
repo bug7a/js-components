@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>FullScreenSelect</title>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+
+    <script src="../comp/search-input-v2.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/full-screen-select.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+    /* Bismillah */
+
+    // FullScreenSelect (comp-m4): a select field whose list opens on the whole screen, with a search box.
+    // The new version of comp-m1/ui-select-text.js (UISelectText, removed) with the same look; the page is its old sample.
+    // The keyboard: Tab to a field, Enter opens; in the list: type to search, the arrow keys, Enter, Escape.
+
+    const FRUITS = [
+        { key: "none", title: "(unselected)" }, { key: "banana", title: "Banana" }, { key: "pineapple", title: "Pineapple" },
+        { key: "peach", title: "Peach" }, { key: "avocado", title: "Avocado" }, { key: "melon", title: "Melon" },
+        { key: "lemon", title: "Lemon" }, { key: "orange", title: "Orange" }, { key: "kiwi", title: "Kiwi" },
+        { key: "passion", title: "Passion Fruit" }, { key: "grapefruit", title: "Grapefruit" }, { key: "papaya", title: "Papaya" },
+        { key: "coconut", title: "Coconut" }, { key: "mango", title: "Mango" }, { key: "strawberry", title: "Strawberry" },
+        { key: "watermelon", title: "Watermelon" }, { key: "cherry", title: "Cherry" }, { key: "raspberry", title: "Raspberry" },
+        { key: "blueberry", title: "Blueberry" }, { key: "blackberry", title: "Blackberry" }, { key: "cranberry", title: "Cranberry" },
+        { key: "apple", title: "Apple" },
+    ];
+    const STATUSES = [{ key: "on", title: "On" }, { key: "off", title: "Off" }, { key: "auto", title: "Automatic" }];
+    const CITIES = ["İstanbul", "İzmir", "Ankara", "Çanakkale", "Şanlıurfa", "Muğla", "Ağrı", "Trabzon", "Eskişehir", "Gaziantep"];
+
+    const SCREEN_WIDTH = 600; // The page fits this width (a phone screen)
+    const MAX_SCREEN_WIDTH = 1024;
+    const SPACE = 20;
+    const FIELD_WIDTH = SCREEN_WIDTH - 2 * SPACE;
+
+    // GROUP: A title over a field
+    const startField = function (title, look = {}) {
+        VGroup({ width: "100%", height: "auto", align: "left top", gap: 10 });
+        Label({ plainText: title, fontSize: 16, textColor: look.textColor || Black(0.8) });
+    };
+
+    const endField = function () {
+        endGroup();
+    };
+
+    const createInfo = function (textColor = Black(0.45)) {
+        return Label({ plainText: "", width: "100%", fontSize: 14, textColor: textColor });
+    };
+
+    const showSelected = function (info, select) {
+        const item = select.getSelectedItem();
+        info.plainText = item ? "selectedKey: \"" + item.key + "\"" : "";
+    };
+
+    const start = function () {
+
+        //page.fit(SCREEN_WIDTH, MAX_SCREEN_WIDTH);
+        page.onResize(function () {
+            //page.fit(SCREEN_WIDTH, MAX_SCREEN_WIDTH);
+        });
+        page.color = "white";
+
+        const pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+
+            VGroup({ width: "100%", height: "auto", align: "left top", gap: 30, padding: [SPACE, 40] });
+
+                Label({ text: "FullScreenSelect", fontSize: 26, bold: 1, textColor: Black(0.8) });
+
+                // The two fields of ui-select-text-e2.htm
+                startField("Fruits:");
+                    const fruits = FullScreenSelect({ width: FIELD_WIDTH, items: FRUITS, selectedKey: "banana", onChange: function (self) { showSelected(fruitsInfo, self); } });
+                    const fruitsInfo = createInfo();
+                    showSelected(fruitsInfo, fruits);
+                endField();
+
+                startField("Connection status:");
+                    FullScreenSelect({ width: FIELD_WIDTH, items: STATUSES, selectedKey: "auto" });
+                endField();
+
+                // autoWidth and Turkish letters in the search
+                startField("City (autoWidth: 1; search \"canakkale\" or \"sanli\"):");
+                    FullScreenSelect({ autoWidth: 1, items: CITIES, placeholderText: "Şehir ara", emptyText: "Sonuç yok" });
+                endField();
+
+                // GROUP: The dark package
+                VGroup({ width: "100%", height: "auto", align: "left top", gap: 10, padding: SPACE, color: "#141414", round: 12 });
+                    Label({ plainText: "styleName: \"dark\"", fontSize: 16, textColor: White(0.6) });
+                    FullScreenSelect({ width: FIELD_WIDTH - 2 * SPACE, styleName: "dark", items: FRUITS, selectedKey: "mango" });
+                endGroup();
+
+            endGroup();
+
+        endBox();
+
+        if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: pageBox });
+
+    };
+
+    </script>
+
+</head>
+<body>
+</body>
+</html>

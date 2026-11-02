@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>Search Input: place</title>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+
+    <script src="../comp/search-input-v2.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+    /* Bismillah */
+
+    // SearchInput in a plain box (not a group), placed with left / top or right / bottom. Without a place it is at
+    // the left top corner (the defaults left: 0, top: 0); a right / bottom you give is not overwritten by them.
+
+    const PANEL_HEIGHT = 300;
+    const PANEL_MAX_WIDTH = 640;
+    const SPACE = 20; // px: from the edges of the panel
+    const FIELD_WIDTH = "calc(50% - 30px)"; // two fields in a row, with the spaces between them
+    const FIELD_HEIGHT = 50;
+    const FIELD_FONT_SIZE = 16;
+
+    // A field that says its own place in its placeholder
+    const createField = function (placeText, place) {
+        return SearchInput({
+            styleName: "ozden",
+            width: FIELD_WIDTH,
+            height: FIELD_HEIGHT,
+            fontSize: FIELD_FONT_SIZE,
+            placeholderText: placeText,
+            ...place,
+        });
+    };
+
+    const start = function () {
+
+        page.color = "white";
+
+        startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+            VGroup({ width: "100%", height: "auto", align: "center top", gap: 16, padding: 40 });
+
+                Label({ text: "Search Input: place", fontSize: 26, bold: 1, textColor: Black(0.8) });
+                Label({ text: "In a plain box: left / top, or right / bottom.", fontSize: 16, textColor: Black(0.55) });
+
+                // BOX: A plain box (not a group): its objects are placed by left / top / right / bottom
+                startBox({
+                    width: "100%",
+                    height: PANEL_HEIGHT,
+                    color: "#F4F5F2",
+                    border: 1,
+                    borderColor: Black(0.12),
+                    round: 12,
+                    css: { maxWidth: PANEL_MAX_WIDTH + "px" },
+                });
+                    createField("left, top", { left: SPACE, top: SPACE });
+                    createField("right, top", { right: SPACE, top: SPACE });
+                    createField("left, bottom", { left: SPACE, bottom: SPACE });
+                    createField("right, bottom", { right: SPACE, bottom: SPACE });
+                endBox();
+
+            endGroup();
+        endBox();
+
+    };
+
+    </script>
+
+</head>
+<body>
+</body>
+</html>
