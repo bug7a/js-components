@@ -4,10 +4,24 @@ This document contains new features, updates, and changes added to the basic.js 
 
 ---
 
+## Version 26.11.01
+
+*   **The components keep their size on a fitted page:** on a page fitted with `page.fit(600, 800)` (zoomed to 0.65 on a phone) set `basic.uiScale = 1 / page.zoom` once: Tabs, Dialog, Toast, Tooltip, SelectBox and SelectDate take it as the default of their new `scale` param and stay as big as on a normal page. `basic.scaleStyle(style, factor)`, `basic.scaleSize(value, factor)` and `basic.scaleCssText(text, factor)` (the px of a shadow) multiply the sizes of a style for your own components. With the default 1 nothing changes. Reference: `basic/basic-what-is-new.md`.
+
+---
+
+## Version 26.10.27
+
+*   **Style packages can change params too:** a package with its own `style` key is a package of params. Its `style` goes into the style of the component, its other keys into the params the page did not give: `Tabs.styles.dark = { style: { tab: { textColor: "white" } }, closeIconFile: "tabs/close-white.svg" }`. A package without a `style` key works as before. Fully compatible. `InputB` (comp-m2) uses it for its dark style. Reference: `basic/basic-what-is-new.md`.
+*   **`minimal` and `border`:** a `minimal` Button / Input has no border (basic.css), and now `border` reads 0 too (it read 1). A border you give (`border: 2`) stays. Nothing changes on the screen.
+
+---
+
 ## Version 26.10.25
 
 *   **NOT COMPATIBLE: helpers under `basic.*`:** `num`, `str`, `isMobile`, `go` and `twoDigitFormat` are now `basic.num()`, `basic.str()`, `basic.isMobile()`, `basic.go()` and `basic.twoDigitFormat()`; they are not globals any more.
 *   **NOT COMPATIBLE: the old `create*` globals are removed:** `createBox`, `createLabel`, `createButton`, `createImage` / `createIcon`, `createTextBox` / `createInput`. Use `Box()`, `Label()`, `Button()`, `Icon()`, `Input()` (the same, with props). The functions stay as `basic.createBox()`... A page written for an older version that uses them needs only the new name.
+*   **`basic.resolveTheme(themes, name)`:** the colors of a theme (`"auto"`: the system setting) with the missing keys from the light one. `Modal`, `Toast` and `ChartBox` use it, so a new theme needs only the keys that differ: `Toast.THEMES.ocean = { background: "#0B2239" }`.
 *   **`Alpha(color, percent)`:** like `Black(0.5)` / `White(0.5)`, for any color: `Alpha("#456789", 0.5)` gives `"rgba(69,103,137,0.5)"`. Hex colors become `rgba`; a name, `rgb()` or a `var(--token)` goes through `color-mix`. Fully compatible. Reference: `basic/basic-what-is-new.md`.
 
 ---

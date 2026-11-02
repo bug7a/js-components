@@ -4,10 +4,24 @@ Bu belgede basic.js kütüphanesine eklenen yeni özellikler, güncellemeler ve 
 
 ---
 
+## Versiyon 26.11.01
+
+*   **Bileşenler sığdırılmış bir sayfada boylarını korur:** `page.fit(600, 800)` ile sığdırılan (telefonda 0.65'e küçülen) bir sayfada bir kez `basic.uiScale = 1 / page.zoom` yazın: Tabs, Dialog, Toast, Tooltip, SelectBox ve SelectDate bunu yeni `scale` parametrelerinin varsayılanı olarak alır ve normal bir sayfadaki kadar büyük kalır. `basic.scaleStyle(style, factor)`, `basic.scaleSize(value, factor)` ve `basic.scaleCssText(text, factor)` (bir gölgenin px'leri) kendi bileşenleriniz için bir stilin ölçülerini çarpar. Varsayılan 1 ile hiçbir şey değişmez. Örnekli başvuru: `basic/basic-what-is-new.md`.
+
+---
+
+## Versiyon 26.10.27
+
+*   **Stil paketleri parametreleri de değiştirebilir:** kendi `style` anahtarı olan bir paket bir parametre paketidir. `style`'ı bileşenin stiline, diğer anahtarları sayfanın vermediği parametrelere gider: `Tabs.styles.dark = { style: { tab: { textColor: "white" } }, closeIconFile: "tabs/close-white.svg" }`. `style` anahtarı olmayan paket eskisi gibi çalışır. Tam uyumlu. `InputB` (comp-m2) koyu stili için bunu kullanır. Örnekli başvuru: `basic/basic-what-is-new.md`.
+*   **`minimal` ve `border`:** `minimal` bir Button / Input'un kenarı yoktur (basic.css), artık `border` da 0 okunur (1 okunuyordu). Verdiğiniz bir kenar (`border: 2`) kalır. Ekranda bir şey değişmez.
+
+---
+
 ## Versiyon 26.10.25
 
 *   **UYUMSUZ: yardımcılar `basic.*` altında:** `num`, `str`, `isMobile`, `go` ve `twoDigitFormat` artık `basic.num()`, `basic.str()`, `basic.isMobile()`, `basic.go()` ve `basic.twoDigitFormat()`; global değiller.
 *   **UYUMSUZ: eski `create*` globalleri kaldırıldı:** `createBox`, `createLabel`, `createButton`, `createImage` / `createIcon`, `createTextBox` / `createInput`. Yerine `Box()`, `Label()`, `Button()`, `Icon()`, `Input()` (aynısı, props ile). Fonksiyonlar `basic.createBox()`... olarak duruyor. Eski bir sürüme göre yazılmış sayfada yalnızca adı değiştirmek yeter.
+*   **`basic.resolveTheme(temalar, ad)`:** bir temanın renkleri (`"auto"`: sistem ayarı), eksik anahtarlar açık temadan. `Modal`, `Toast` ve `ChartBox` bunu kullanır; yeni bir tema yalnızca farklı anahtarları içerir: `Toast.THEMES.ocean = { background: "#0B2239" }`.
 *   **`Alpha(renk, oran)`:** `Black(0.5)` / `White(0.5)` gibi, ama her renk için: `Alpha("#456789", 0.5)` sonucu `"rgba(69,103,137,0.5)"`. Hex renkler `rgba` olur; bir ad, `rgb()` ya da bir `var(--token)` `color-mix` ile şeffaflaşır. Tam uyumlu. Örnekli başvuru: `basic/basic-what-is-new.md`.
 
 ---
