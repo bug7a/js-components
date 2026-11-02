@@ -53,8 +53,8 @@ const FullScreenSelectDefaults = {
     emptyText: "No results",
     autoWidth: 0, // 1: the field is as wide as the text of the selected item
     showSearch: 1, // 0: no search box (a short list)
-    arrowIconFile: "../comp/full-screen-select/arrow.svg",
-    closeIconFile: "../comp/full-screen-select/cancel.svg",
+    arrowIconFile: "data:image/svg+xml;utf8," + encodeURIComponent('<?xml version="1.0" encoding="UTF-8"?> <svg xmlns="http://www.w3.org/2000/svg" id="Outline" viewBox="0 0 24 24" width="512" height="512"><path d="M18.71,8.21a1,1,0,0,0-1.42,0l-4.58,4.58a1,1,0,0,1-1.42,0L6.71,8.21a1,1,0,0,0-1.42,0,1,1,0,0,0,0,1.41l4.59,4.59a3,3,0,0,0,4.24,0l4.59-4.59A1,1,0,0,0,18.71,8.21Z"/></svg>'),
+    closeIconFile: "data:image/svg+xml;utf8," + encodeURIComponent('<?xml version="1.0" encoding="UTF-8"?> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="512" height="512"><g id="_01_align_center" data-name="01 align center"><polygon points="24 1.414 22.586 0 12 10.586 1.414 0 0 1.414 10.586 12 0 22.586 1.414 24 12 13.414 22.586 24 24 22.586 13.414 12 24 1.414"/></g></svg>'),
     searchIconFile: "", // The icons of the search box. "": the files of SearchInput (or of its style package)
     clearIconFile: "",
     ariaLabel: "", // "": the text of the selected item is read

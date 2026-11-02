@@ -30,8 +30,8 @@ const SearchInputDefaults = {
     top: 0,
     width: 300,
     height: 50,
-    searchIconFile: "../comp/search-input-v2/search.svg",
-    clearIconFile: "../comp/search-input-v2/clear.svg",
+    searchIconFile: "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M23.707 22.293l-5.969-5.969a10.016 10.016 0 10-1.414 1.414l5.969 5.969a1 1 0 001.414-1.414zM10 18a8 8 0 118-8 8.009 8.009 0 01-8 8z"/></svg>'),
+    clearIconFile: "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="m336-280 144-144 144 144 56-56-144-144 144-144-56-56-144 144-144-144-56 56 144 144-144 144 56 56ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/></svg>'),
     searchIconSize: 24,
     searchIconLeft: 16, // px: the search icon from the left side of the box
     searchIconGap: 8, // px: between the search icon and the text
@@ -378,8 +378,8 @@ SearchInput.styles = {
     // Bugra's style: a round field with a thin line, a soft search icon and a white round clear button. (Change, add or remove any look param.)
     ozden: {
         style: {},
-        searchIconFile: "../comp/search-input-v2/search.svg",
-        clearIconFile: "../comp/search-input-v2/clear-round.svg",
+        searchIconFile: "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M23.707 22.293l-5.969-5.969a10.016 10.016 0 10-1.414 1.414l5.969 5.969a1 1 0 001.414-1.414zM10 18a8 8 0 118-8 8.009 8.009 0 01-8 8z"/></svg>'),
+        clearIconFile: "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#FFFFFF" stroke="rgba(0,0,0,0.12)" stroke-width="1"/><path d="M8 8l8 8M16 8l-8 8" fill="none" stroke="#333333" stroke-width="2" stroke-linecap="round"/></svg>'),
         searchIconSize: 24,
         searchIconOpacity: 0.4,
         clearIconOpacity: 0.6, // WHY: at 0.6 the white circle faded into the field (the user, 2026-10-27).
@@ -403,8 +403,8 @@ SearchInput.styles = {
     // WHY: invertIconColor also inverts clear-round.svg, so the clear button is a dark circle with a light cross.
     ozdenDark: {
         style: {},
-        searchIconFile: "../comp/search-input-v2/search.svg",
-        clearIconFile: "../comp/search-input-v2/clear-round.svg",
+        searchIconFile: "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M23.707 22.293l-5.969-5.969a10.016 10.016 0 10-1.414 1.414l5.969 5.969a1 1 0 001.414-1.414zM10 18a8 8 0 118-8 8.009 8.009 0 01-8 8z"/></svg>'),
+        clearIconFile: "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#FFFFFF" stroke="rgba(0,0,0,0.12)" stroke-width="1"/><path d="M8 8l8 8M16 8l-8 8" fill="none" stroke="#333333" stroke-width="2" stroke-linecap="round"/></svg>'),
         searchIconSize: 24,
         searchIconOpacity: 0.4,
         clearIconOpacity: 0.4,

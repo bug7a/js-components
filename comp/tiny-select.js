@@ -31,7 +31,7 @@ const TinySelectDefaults = {
     height: 50,
     paddingX: 12,
     disabled: 0,
-    arrowIcon: "../comp/tiny-select/arrow.svg",
+    arrowIcon: "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#141414"><path d="M480-344 240-584l56-56 184 184 184-184 56 56-240 240Z"/></svg>'),
     arrowBorder: 0, // 1
     arrowBorderColor: "rgba(0, 0, 0, 0.2)",
     arrowBackgroundColor: "transparent", // "white"
