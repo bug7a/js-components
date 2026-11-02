@@ -32,20 +32,15 @@
     const ACTION_LINE = "rgba(35, 35, 35, 0.4)";
     const TEAL = "#9DC7B5"; // the Publish button
     const TEAL_HOVER = "#91BCA9"; // a little darker than TEAL
-    const TEAL_DEEP = "#4C8F78"; // the mark of its icon
     // The other colors of the action (basic-designer, 2026-10-29); the hover a little darker
     const CYAN = "#5BBAC1";
     const CYAN_HOVER = "#50AFB6";
-    const CYAN_DEEP = "#2F8088";
     const SKY = "#52A8D0";
     const SKY_HOVER = "#479DC5";
-    const SKY_DEEP = "#2F7DA3";
     const ORANGE = "#DE815B";
     const ORANGE_HOVER = "#D4724B";
-    const ORANGE_DEEP = "#B85A36";
     const SLATE = "#8FA6BE";
     const SLATE_HOVER = "#8199B2";
-    const SLATE_DEEP = "#566F89";
     // The colored plain buttons (basic-designer, 2026-10-29); the hover a little darker
     const SOFT_YELLOW = "#F8E57A";
     const SOFT_YELLOW_HOVER = "#EFDA62";
@@ -70,8 +65,10 @@
     const OZDEN_SIZES = { titleSize: 20, textSize: 16, buttonHeight: 40, trashWidth: 50, cardRound: 8, cardBorder: 2, cardBorderColor: "#232323" };
     const JOB_TIME = 1200; // ms: the action takes time (the sample)
 
-    // *** THE ICONS: the circle mark style of smart-button.htm (the user, 2026-11-02): a white circle and one mark in
-    // it, in a deep tone of the button (WHY: the soft colors of these buttons are too pale on white)
+    // *** THE ICONS: the circle mark style of smart-button.htm (the user, 2026-11-02): a circle in the color of the
+    // text, with its transparency, so the button shows a little through it. The mark is a hole in the circle
+    // (WHY: it is the color of the button in every state, the hover too, with no color for each icon)
+    const ICON_CIRCLE_COLOR = SmartButton.styles.ozdenType1.label.textColor;
     const MARKS = {
         pencil: '<path d="M7.6 16.4l.8-3.2 6.1-6.1 2.4 2.4-6.1 6.1z" fill="MARK"/>',
         floppy: '<path fill-rule="evenodd" d="M8.4 7h6.2l2.4 2.4v6.4a1.2 1.2 0 0 1-1.2 1.2H8.4a1.2 1.2 0 0 1-1.2-1.2V8.2A1.2 1.2 0 0 1 8.4 7zM9.4 8.6v2.2h4.2V8.6zM9.8 13v4h4.4v-4z" fill="MARK"/>',
@@ -82,8 +79,9 @@
     const svgIcon = function (body) {
         return "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">' + body + "<\/svg>");
     };
-    const circleIcon = function (mark, circleColor, markColor) {
-        return svgIcon('<circle cx="12" cy="12" r="11" fill="' + circleColor + '"/>' + MARKS[mark].split("MARK").join(markColor));
+    const circleIcon = function (mark) {
+        return svgIcon('<mask id="hole"><rect width="24" height="24" fill="white"/>' + MARKS[mark].split("MARK").join("black") + "<\/mask>" +
+            '<circle cx="12" cy="12" r="11" fill="' + ICON_CIRCLE_COLOR + '" mask="url(#hole)"/>');
     };
     // A soft bin (the user's drawing, 2026-10-29): curves only, the rim and the cross are holes (the button shows through)
     const TRASH_PATH = "M 4 6 Q 4 2 12 2 Q 20 2 20 6 L 18.5 18 Q 18 22 12 22 Q 6 22 5.5 18 Z " +
@@ -94,11 +92,11 @@
         return svgIcon('<path fill-rule="evenodd" fill="' + color + '" d="' + TRASH_PATH + '"/>');
     };
     const ICONS = {
-        edit: circleIcon("pencil", "white", TEAL_DEEP),
-        save: circleIcon("floppy", "white", CYAN_DEEP),
-        send: circleIcon("plane", "white", SKY_DEEP),
-        upload: circleIcon("upload", "white", ORANGE_DEEP),
-        print: circleIcon("printer", "white", SLATE_DEEP),
+        edit: circleIcon("pencil"),
+        save: circleIcon("floppy"),
+        send: circleIcon("plane"),
+        upload: circleIcon("upload"),
+        print: circleIcon("printer"),
         trash: binIcon("#6B6F73"),
     };
 
@@ -120,8 +118,8 @@
 
     const LOOKS = {
         // Primary (ozdenType1): the actions in their colors, a little lighter edge
-        // WHY icon opacity 1: with the 0.8 of the package the white circle takes the color of the button
-        publish: packageLook("ozdenType1", { box: { color: TEAL, borderColor: ACTION_LINE }, hover: { color: TEAL_HOVER }, active: { color: TEAL_HOVER }, icon: { opacity: 1 } }),
+        // WHY icon opacity 1: the circle has the transparency of the text in its color; gap 6: five bigger icons fit the row
+        publish: packageLook("ozdenType1", { box: { color: TEAL, borderColor: ACTION_LINE }, hover: { color: TEAL_HOVER }, active: { color: TEAL_HOVER }, icon: { width: 30, height: 30, opacity: 1 }, layout: { gap: 6 } }),
         // Secondary (ozdenType1): Cancel, gray (the package itself) and white (its hover stays gray)
         cancel: packageLook("ozdenType1"),
         whiteCancel: packageLook("ozdenType1", { box: { color: "white" } }),
