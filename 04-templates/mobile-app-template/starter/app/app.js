@@ -338,7 +338,7 @@ App.createButton = function (params = {}) {
         ...params,
     });
 };
-// USAGE: App.createButton({ labelText: "Save", styleName: "ozdenPrimary", onClick: save });
+// USAGE: App.createButton({ labelText: "Save", styleName: "primary", onClick: save });
 
 // A button with only an icon (the header, a row of a list)
 App.createIconButton = function (iconPath, ariaLabel, onClick) {

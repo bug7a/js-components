@@ -340,14 +340,14 @@ CATALOG.COMPONENTS = [
         key: "smart-button", name: "SmartButton", cat: "actions",
         source: "comp/smart-button.js",
         samples: [
-            { file: "02-comp-examples/smart-button.htm", title: "Status buttons" },
+            { file: "02-comp-examples/smart-button.htm", title: "Pill and outlined" },
             { file: "02-comp-examples/smart-button-2.htm", title: "Situations" },
             { file: "02-comp-examples/smart-button-3-ozden.htm", title: "Dialogs (ozden)" },
             { file: "02-comp-examples/smart-button-4-dark.htm", title: "Dark packages" },
             { file: "02-comp-examples/smart-button-5-features.htm", title: "All features" },
         ],
-        en: "The default button: an icon and a text (or one of them), ozden style packages, a waiting clock or dots while a job runs, and a two-click ask with a bubble.",
-        tr: "Varsayılan düğme: ikon ve yazı (ya da biri), ozden stil paketleri, bir iş sürerken bekleme saati ya da noktaları ve balonlu iki tıklamalı onay.",
+        en: "The default button: an icon and a text (or one of them), ozden, pill and outlined style packages, a waiting clock or dots while a job runs, and a two-click ask with a bubble.",
+        tr: "Varsayılan düğme: ikon ve yazı (ya da biri), ozden, pill ve outlined stil paketleri, bir iş sürerken bekleme saati ya da noktaları ve balonlu iki tıklamalı onay.",
     },
     {
         key: "smart-table", name: "SmartTable", cat: "data",

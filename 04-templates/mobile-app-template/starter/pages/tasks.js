@@ -60,7 +60,7 @@ App.addPage({
                 });
 
                 SmartButton({
-                    styleName: "ozdenPrimary",
+                    styleName: "primary",
                     labelText: "Add",
                     width: 80,
                     height: FIELD_HEIGHT,

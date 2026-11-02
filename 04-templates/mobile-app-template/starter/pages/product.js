@@ -32,7 +32,7 @@ App.addPage({
         App.endCard();
 
         App.createButton({
-            styleName: "ozdenPrimary",
+            styleName: "primary",
             labelText: "Add to my tasks",
             onClick: function () {
                 TaskList.add("Buy " + product.title.toLowerCase());

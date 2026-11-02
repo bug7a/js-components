@@ -16,8 +16,13 @@ THE DEFAULT BUTTON of new pages and projects (the user, 2026-10-30). It was Butt
   DARK (2026-10-31, the draft _designs/smart-button-dark.htm): "ozdenType1Dark" ... "ozdenType4Dark": the same shapes
   for a dark page (#2E2E2C, a light edge, a white text and icon, the dark waiting clock, yellow dots).
   SITUATIONS (2026-10-31, the draft _designs/smart-button-colors.htm): ozdenType1 in the color of a situation:
-  "ozdenPrimary" #5BBAC1, "ozdenDanger" #E8796D (a white text), "ozdenWarning" #F1C74A, "ozdenSuccess" #7BC362,
-  "ozdenInfo" #52A8D0. The Dialog uses them for its button types.
+  "primary" #5BBAC1, "danger" #E8796D (a white text), "warning" #F1C74A, "success" #7BC362,
+  "info" #52A8D0. The Dialog uses them for its button types.
+  PILL AND OUTLINED (2026-11-02, the user; sample 02-comp-examples/smart-button.htm): two looks, 52 px high with a
+  30 px icon, in the colors of SmartButton.TONES (gray, blue, green, purple, orange, red, yellow, teal, sky, navy,
+  pink). "pillOrange": a round button without an edge, a bold text in the color on a soft tint of it;
+  "pillOrangeSolid": the full color with a white text; "outlinedOrange": a colored edge with a thicker line at the
+  bottom. "pill" and "outlined" alone are gray. Your own colors: createPillPackage(), createOutlinedPackage().
 - KEYBOARD AND ACCESSIBILITY: role "button", Tab reaches it, Enter / Space press it (Space when it goes up), a focus
   ring only for the keyboard; ariaLabel for a button with only an icon (else labelText is read).
 - setEnabled(0): no click, no hover, out of the Tab order (aria-disabled): a flat light gray button, a faint edge, no
@@ -44,6 +49,8 @@ const btnDownload = SmartButton({ labelText: "Download", onClick: function (self
     download().then(function () { self.setWaiting(0); });
 } });
 SmartButton({ styleName: "ozdenType4", labelText: "Delete", ask: "Click again to delete.", onClick: deleteFile });
+SmartButton({ styleName: "pillGreen", labelText: "Accepted", iconFile: "check.svg" });
+button.setStyle(SmartButton.styles.pillBlueSolid); // another look after create
 btnSave.setStyle({ box: { color: "#9DC7B5" }, hover: { color: "#91BCA9" }, active: { color: "#91BCA9" } });
 
 Started Date: January 2026
@@ -58,7 +65,7 @@ Webpage: https://bug7a.github.io/js-components/
 // Default values:
 const SmartButtonDefaults = {
     key: "0",
-    styleName: "ozdenType1", // SmartButton.styles: "ozdenType1" (the default), "ozdenType2", "ozdenType3", "ozdenType4", "classic"
+    styleName: "ozdenType1", // SmartButton.styles: "ozdenType1" (the default), "ozdenType2", "ozdenType3", "ozdenType4", "classic", "pill...", "outlined..."
     width: "auto",
     height: "auto",
     labelText: "Button",
@@ -692,11 +699,65 @@ SmartButton.createSituationPackage = function (color, hoverColor, textColor) {
         icon: { opacity: isWhiteText ? 1 : 0.8, filter: isWhiteText ? "brightness(0) invert(1)" : "none" },
     };
 };
-SmartButton.styles.ozdenPrimary = SmartButton.createSituationPackage("#5BBAC1", "#50AEB5", SmartButton.SITUATION_TEXT_COLOR); // the main action: Save, Send
-SmartButton.styles.ozdenDanger = SmartButton.createSituationPackage("#E8796D", "#E0695C", "white"); // a delete, a reject
-SmartButton.styles.ozdenWarning = SmartButton.createSituationPackage("#F1C74A", "#E6BB3C", SmartButton.SITUATION_TEXT_COLOR); // go on, but look first
-SmartButton.styles.ozdenSuccess = SmartButton.createSituationPackage("#7BC362", "#70B756", SmartButton.SITUATION_TEXT_COLOR); // after a good result: Done
-SmartButton.styles.ozdenInfo = SmartButton.createSituationPackage("#52A8D0", "#479CC4", SmartButton.SITUATION_TEXT_COLOR); // Details, Help
+SmartButton.styles.primary = SmartButton.createSituationPackage("#5BBAC1", "#50AEB5", SmartButton.SITUATION_TEXT_COLOR); // the main action: Save, Send
+SmartButton.styles.danger = SmartButton.createSituationPackage("#E8796D", "#E0695C", "white"); // a delete, a reject
+SmartButton.styles.warning = SmartButton.createSituationPackage("#F1C74A", "#E6BB3C", SmartButton.SITUATION_TEXT_COLOR); // go on, but look first
+SmartButton.styles.success = SmartButton.createSituationPackage("#7BC362", "#70B756", SmartButton.SITUATION_TEXT_COLOR); // after a good result: Done
+SmartButton.styles.info = SmartButton.createSituationPackage("#52A8D0", "#479CC4", SmartButton.SITUATION_TEXT_COLOR); // Details, Help
+
+// THE PILL AND OUTLINED PACKAGES (2026-11-02, the user: the buttons of 02-comp-examples/smart-button.htm).
+// One table of colors gives three packages for each tone. color: the strong color; deep: the text of outlined;
+// tint / hover: the soft surface; solidHover: the hover of the full color; light: the light part of a two-tone icon;
+// pillText: the text of pill, when color is too weak on the tint (else color).
+SmartButton.TONES = {
+    gray: { color: "#6E6F74", deep: "#3A3A3A", tint: "#F0F0F0", hover: "#E6E6E6", solidHover: "#5F6065", light: "#C4C5C9", pillText: "#3A3A3A" },
+    blue: { color: "#2F6FED", deep: "#2563D8", tint: "#E4EDFD", hover: "#D8E5FC", solidHover: "#2563D8", light: "#93B7F7" },
+    green: { color: "#3F9A6C", deep: "#2F8259", tint: "#E6F5EE", hover: "#D9EFE4", solidHover: "#358A5E", light: "#9FD6BC" },
+    purple: { color: "#8B5CF0", deep: "#7C4FE0", tint: "#EFE9FD", hover: "#E6DDFC", solidHover: "#7C4FE0", light: "#C9B4F7" },
+    orange: { color: "#F28C33", deep: "#B8651E", tint: "#FDF1E3", hover: "#FCE8D2", solidHover: "#E57E25", light: "#F7C393" },
+    red: { color: "#E5564A", deep: "#C8443A", tint: "#FDECEA", hover: "#FBDFDC", solidHover: "#D84A3E", light: "#F4B1AB" },
+    yellow: { color: "#D9A400", deep: "#8F6B00", tint: "#FFF7DB", hover: "#FFF0C2", solidHover: "#C99700", light: "#F5DC8A", pillText: "#B88A00" },
+    teal: { color: "#0E9A9A", deep: "#0B7F7F", tint: "#E4F5F5", hover: "#D6EEEE", solidHover: "#0B8C8C", light: "#92D6D6" },
+    sky: { color: "#4FB5D4", deep: "#2A7C93", tint: "#E3F7FB", hover: "#D5F2F8", solidHover: "#3FA6C6", light: "#A5DEEC", pillText: "#2E8BC0" },
+    navy: { color: "#2A3A8C", deep: "#1C2A78", tint: "#DFE3EF", hover: "#D3D8E9", solidHover: "#1C2A78", light: "#8F9AC6" },
+    pink: { color: "#E8457C", deep: "#C93668", tint: "#FDE8EF", hover: "#FBDBE6", solidHover: "#DC3A70", light: "#F5AFC7" },
+};
+SmartButton.PILL_ROUND = 100; // always round, at any height
+SmartButton.EDGE_WIDTH = 2; // outlined: the edge and the bottom line on it
+
+SmartButton.createPillPackage = function (color, hoverColor, textColor) {
+    return {
+        layout: { gap: 12, padding: [22, 11] },
+        icon: { width: 30, height: 30, opacity: 1 },
+        label: { fontFamily: "opensans-bold", textColor: textColor },
+        box: { color: color, border: 0, borderColor: "transparent", round: SmartButton.PILL_ROUND, boxShadow: "none" },
+        hover: { color: hoverColor },
+        active: { color: hoverColor },
+    };
+};
+
+// tone: { color, deep, tint, hover }, like a row of SmartButton.TONES
+SmartButton.createOutlinedPackage = function (tone) {
+    const bottomLine = "inset 0 -" + SmartButton.EDGE_WIDTH + "px 0 " + tone.color;
+    return {
+        layout: { gap: 8, padding: [16, 9] },
+        icon: { width: 30, height: 30, opacity: 1 },
+        label: { fontFamily: "opensans", textColor: tone.deep },
+        box: { color: tone.tint, border: SmartButton.EDGE_WIDTH, borderColor: tone.color, round: SmartButton.PILL_ROUND, boxShadow: bottomLine },
+        hover: { color: tone.hover },
+        active: { color: tone.hover },
+    };
+};
+
+Object.keys(SmartButton.TONES).forEach(function (toneName) {
+    const tone = SmartButton.TONES[toneName];
+    const nameEnd = toneName[0].toUpperCase() + toneName.slice(1);
+    SmartButton.styles["pill" + nameEnd] = SmartButton.createPillPackage(tone.tint, tone.hover, tone.pillText || tone.color);
+    SmartButton.styles["pill" + nameEnd + "Solid"] = SmartButton.createPillPackage(tone.color, tone.solidHover, "white");
+    SmartButton.styles["outlined" + nameEnd] = SmartButton.createOutlinedPackage(tone);
+});
+SmartButton.styles.pill = SmartButton.styles.pillGray;
+SmartButton.styles.outlined = SmartButton.styles.outlinedGray;
 
 // *** THE WAITING DRAWINGS: the clock and the dots (comp/loading-screen.js uses them too)
 

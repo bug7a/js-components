@@ -11,7 +11,7 @@ NOTE: still in development (the user, 2026-10-29): more style packages come; the
 
 - Buttons (SmartButton of comp-m4, load it first): [{ text, type, key, iconFile, align, ask, ariaLabel, onClick }]
   - type: "primary" (the main action), "secondary" (Cancel), "danger" (a delete), "warning", "success", "info"
-    (the situation packages of SmartButton: ozdenPrimary, ozdenDanger...), "icon" (only an icon: a square).
+    (the situation packages of SmartButton: primary, danger...), "icon" (only an icon: a square).
   - align: "left": at the left side of the footer (Ex: the trash); the others stay at the right side.
   - ask: "Click again to delete." -> two clicks: the first one turns the button red and shows the text in a bubble
     over it; the second one runs onClick. It forgets after 5 s. (The ask of SmartButton, 2026-10-30.)
@@ -114,12 +114,12 @@ const DialogDefaults = {
         // The looks of the buttons: a style package of SmartButton and only what differs from it. The colors of the
         // situations are the situation packages of SmartButton (2026-10-31, the draft _designs/smart-button-colors.htm)
         buttons: {
-            primary: { styleName: "ozdenPrimary", style: {} },
+            primary: { styleName: "primary", style: {} },
             secondary: { styleName: "ozdenType1", style: {} }, // the gray of the package
-            danger: { styleName: "ozdenDanger", style: {} },
-            warning: { styleName: "ozdenWarning", style: {} },
-            success: { styleName: "ozdenSuccess", style: {} },
-            info: { styleName: "ozdenInfo", style: {} },
+            danger: { styleName: "danger", style: {} },
+            warning: { styleName: "warning", style: {} },
+            success: { styleName: "success", style: {} },
+            info: { styleName: "info", style: {} },
             icon: {
                 styleName: "ozdenType2",
                 style: {

@@ -21,11 +21,11 @@
         /* Bismillah */
 
         // SMARTBUTTON · THE SITUATIONS IN A PAGE
-        // The situation packages (ozdenPrimary, ozdenDanger, ozdenWarning, ozdenSuccess, ozdenInfo) in two real cards:
+        // The situation packages (primary, danger, warning, success, info) in two real cards:
         // a save that waits and says "Saved", a delete that asks again, a replace that warns, a download with dots.
-        // - SmartButton({ styleName: "ozdenPrimary", labelText, onClick })   -> a button in the color of a situation
+        // - SmartButton({ styleName: "primary", labelText, onClick })   -> a button in the color of a situation
         // - button.setWaiting(1) / setWaiting(0)                            -> it waits while a job runs
-        // - button.setStyle(SmartButton.styles.ozdenSuccess)               -> another situation after create
+        // - button.setStyle(SmartButton.styles.success)               -> another situation after create
         // - ask: "Click again to delete."                                  -> two clicks (load tooltip.js for the bubble)
         // TRY: press Save, then Delete twice, then Replace twice.
 
@@ -51,11 +51,11 @@
         };
 
         const SITUATIONS = [
-            { styleName: "ozdenPrimary", text: "Save", note: "the main action" },
-            { styleName: "ozdenDanger", text: "Delete", note: "a delete, a reject" },
-            { styleName: "ozdenWarning", text: "Replace", note: "go on, but look first" },
-            { styleName: "ozdenSuccess", text: "Done", note: "after a good result" },
-            { styleName: "ozdenInfo", text: "Details", note: "nothing changes" },
+            { styleName: "primary", text: "Save", note: "the main action" },
+            { styleName: "danger", text: "Delete", note: "a delete, a reject" },
+            { styleName: "warning", text: "Replace", note: "go on, but look first" },
+            { styleName: "success", text: "Done", note: "after a good result" },
+            { styleName: "info", text: "Details", note: "nothing changes" },
         ];
 
         let lblResult;
@@ -134,7 +134,7 @@
             startCard("Profile", "Ayşe Yılmaz · ayse@example.com. Save waits while the job runs, then it says \"Saved\" in the color of a success for a moment.");
 
                 SmartButton({
-                    styleName: "ozdenDanger",
+                    styleName: "danger",
                     height: BUTTON_HEIGHT,
                     labelText: "Delete",
                     iconFile: ICONS.trash,
@@ -147,7 +147,7 @@
                 SmartButton({ styleName: "ozdenType1", height: BUTTON_HEIGHT, labelText: "Cancel", onClick: function () { showResult("Canceled."); } });
 
                 SmartButton({
-                    styleName: "ozdenPrimary",
+                    styleName: "primary",
                     height: BUTTON_HEIGHT,
                     labelText: "Save",
                     iconFile: ICONS.save,
@@ -157,17 +157,17 @@
             endCard();
         };
 
-        // Save -> it waits -> "Saved" (ozdenSuccess) -> back to Save (ozdenPrimary)
+        // Save -> it waits -> "Saved" (success) -> back to Save (primary)
         const save = function (self) {
             self.setWaiting(1);
             self.after(SAVE_TIME, function () {
                 self.setWaiting(0);
-                self.setStyle(SmartButton.styles.ozdenSuccess);
+                self.setStyle(SmartButton.styles.success);
                 self.setText("Saved");
                 self.setIcon(ICONS.check);
                 showResult("Saved.");
                 self.after(SAVED_TIME, function () {
-                    self.setStyle(SmartButton.styles.ozdenPrimary);
+                    self.setStyle(SmartButton.styles.primary);
                     self.setText("Save");
                     self.setIcon(ICONS.save);
                 });
@@ -178,12 +178,12 @@
         const createFileCard = function () {
             startCard("report.pdf", "2.4 MB · changed today. Replace asks again: the old file will be lost.");
 
-                SmartButton({ styleName: "ozdenInfo", height: BUTTON_HEIGHT, labelText: "Details", iconFile: ICONS.info, onClick: function () { showResult("Details: 12 pages, PDF 1.7."); } });
+                SmartButton({ styleName: "info", height: BUTTON_HEIGHT, labelText: "Details", iconFile: ICONS.info, onClick: function () { showResult("Details: 12 pages, PDF 1.7."); } });
 
                 createSpace();
 
                 SmartButton({
-                    styleName: "ozdenWarning",
+                    styleName: "warning",
                     height: BUTTON_HEIGHT,
                     labelText: "Replace",
                     iconFile: ICONS.replace,
