@@ -116,6 +116,7 @@ Webpage: https://bug7a.github.io/js-components/
             "basic/LICENSE",
             "basic/basic.min.css",
             "basic/basic.min.js",
+            "basic/font/open-sans/LICENSE.txt",
             "basic/font/open-sans/OpenSans-Bold.ttf",
             "basic/font/open-sans/OpenSans-Regular.ttf",
             "basic/scroll-bar.min.js",
