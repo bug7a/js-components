@@ -619,9 +619,11 @@
             that.elem.style.flexWrap = "wrap";
 
                 HGroup({ width: "auto", height: "auto", align: "left center", gap: 20 });
+                that.css = { maxWidth: "100%", minWidth: "0px", flexShrink: "1" }; // WHY: "auto" grows with its content, out of the screen of a phone
                 that.elem.style.flexWrap = "wrap";
 
                     VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
+                    that.css = { maxWidth: "100%", minWidth: "0px", flexShrink: "1" }; // WHY: "auto" grows with its content, out of the screen of a phone
                         Label({ text: "Elevator Fleet", fontSize: 26, textColor: Ink(0.95) });
                         that.elem.style.fontFamily = "opensans-bold";
                         lblBuilding = Label({ text: "", fontSize: 14, textColor: Ink(0.5) });
@@ -655,8 +657,10 @@
                 endGroup();
 
                 HGroup({ width: "auto", height: "auto", align: "right center", gap: 10 });
+                that.css = { maxWidth: "100%", minWidth: "0px", flexShrink: "1" }; // WHY: "auto" grows with its content, out of the screen of a phone
 
                     const btnMore = createButton("More", "top-bar/apps.png", function () { });
+                    btnMore.css = { flexShrink: "0" }; // WHY: The texts wrap on a phone, not this button
 
                     moreMenu = ContextMenu({
                         items: [
@@ -839,12 +843,15 @@
 
                     VGroup({ width: "100%", height: "auto", align: "left top", gap: 10 });
                         MODES.forEach(function (mode) {
-                            RadioButton({
+                            const radio = RadioButton({
                                 group: "carMode", value: mode.value,
                                 labelText: mode.text + "<br><span style='color:" + Ink(0.4) + "; font-size: 12px'>" + mode.desc + "</span>",
                                 style: DARK_RADIO_STYLE,
                                 onChange: function (self) { onModeChange(self.value); },
                             });
+                            // WHY: A long description was cut by the card, on a desktop too
+                            radio.css = { maxWidth: "100%" };
+                            radio.label.css.whiteSpace = "normal";
                         });
                     endGroup();
 
@@ -1474,6 +1481,7 @@
                 });
                 Theme.fillTableWidth(grpEventHost.table);
                 grpEventHost.table.elem.style.minWidth = "420px";
+                grpEventHost.scrollX = 1; // WHY: a phone is narrower than the table
             setDefaultContainerBox(previous);
         };
 

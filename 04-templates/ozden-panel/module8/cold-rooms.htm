@@ -560,9 +560,11 @@
 
                 // Title and device select
                 HGroup({ width: "auto", height: "auto", align: "left center", gap: 20 });
+                that.css = { maxWidth: "100%", minWidth: "0px", flexShrink: "1" }; // WHY: "auto" grows with its content, out of the screen of a phone
                 that.elem.style.flexWrap = "wrap";
 
                     VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
+                    that.css = { maxWidth: "100%", minWidth: "0px", flexShrink: "1" }; // WHY: "auto" grows with its content, out of the screen of a phone
 
                         Label({
                             text: "Cold Rooms",
@@ -616,12 +618,14 @@
 
                 // Buttons
                 HGroup({ width: "auto", height: "auto", align: "right center", gap: 10 });
+                that.css = { maxWidth: "100%", minWidth: "0px", flexShrink: "1" }; // WHY: "auto" grows with its content, out of the screen of a phone
 
                     createButton("Refresh", "", function () {
                         reconnectDevice(device);
                     });
 
                     btnMore = createButton("More", "top-bar/apps.png", function () { });
+                    btnMore.css = { flexShrink: "0" }; // WHY: The texts wrap on a phone, not this button
 
                     // MENU: More actions
                     moreMenu = ContextMenu({

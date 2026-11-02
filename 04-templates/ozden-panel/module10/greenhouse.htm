@@ -598,9 +598,11 @@
             that.elem.style.flexWrap = "wrap";
 
                 HGroup({ width: "auto", height: "auto", align: "left center", gap: 20 });
+                that.css = { maxWidth: "100%", minWidth: "0px", flexShrink: "1" }; // WHY: "auto" grows with its content, out of the screen of a phone
                 that.elem.style.flexWrap = "wrap";
 
                     VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
+                    that.css = { maxWidth: "100%", minWidth: "0px", flexShrink: "1" }; // WHY: "auto" grows with its content, out of the screen of a phone
                         Label({ text: "Greenhouse", fontSize: 26, textColor: Ink(0.95) });
                         that.elem.style.fontFamily = "opensans-bold";
                         lblHouse = Label({ text: "", fontSize: 14, textColor: Ink(0.5) });
@@ -623,15 +625,18 @@
                 endGroup();
 
                 HGroup({ width: "auto", height: "auto", align: "right center", gap: 16 });
+                that.css = { maxWidth: "100%", minWidth: "0px", flexShrink: "1" }; // WHY: "auto" grows with its content, out of the screen of a phone
 
                     VGroup({ width: "auto", height: "auto", align: "right center", gap: 0 });
+                    that.css = { maxWidth: "100%", minWidth: "0px", flexShrink: "1" }; // WHY: "auto" grows with its content, out of the screen of a phone
                         lblClock = Label({ text: "", fontSize: 22, textColor: Ink(0.95) });
                         that.elem.style.fontVariantNumeric = "tabular-nums";
-                        lblWeather = Label({ text: "", fontSize: 12, textColor: Ink(0.5) });
-                        that.elem.style.whiteSpace = "nowrap";
+                        lblWeather = Label({ text: "", width: "100%", fontSize: 12, textColor: Ink(0.5) });
+                        that.css = { whiteSpace: "normal", textAlign: "right", width: "max-content", maxWidth: "100%" }; // WHY: On one line when it fits, wraps on a phone
                     endGroup();
 
                     const btnMore = createButton("More", "top-bar/apps.png", function () { });
+                    btnMore.css = { flexShrink: "0" }; // WHY: The texts wrap on a phone, not this button
                     moreMenu = ContextMenu({
                         items: [
                             { text: "Test: Heatwave outside", key: "heatwave" },
@@ -1347,6 +1352,7 @@
                 });
                 Theme.fillTableWidth(grpEventHost.table);
                 grpEventHost.table.elem.style.minWidth = "420px";
+                grpEventHost.scrollX = 1; // WHY: a phone is narrower than the table
             setDefaultContainerBox(previous);
         };
 

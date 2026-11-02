@@ -377,9 +377,11 @@
             that.elem.style.flexWrap = "wrap";
 
                 HGroup({ width: "auto", height: "auto", align: "left center", gap: 20 });
+                that.css = { maxWidth: "100%", minWidth: "0px", flexShrink: "1" }; // WHY: "auto" grows with its content, out of the screen of a phone
                 that.elem.style.flexWrap = "wrap";
 
                     VGroup({ width: "auto", height: "auto", align: "left top", gap: 0 });
+                    that.css = { maxWidth: "100%", minWidth: "0px", flexShrink: "1" }; // WHY: "auto" grows with its content, out of the screen of a phone
                         Label({ text: "Arduino Projects", fontSize: 26, textColor: Ink(0.95) });
                         that.elem.style.fontFamily = "opensans-bold";
                         lblSubtitle = Label({ text: "", fontSize: 14, textColor: Ink(0.5) });
@@ -403,8 +405,10 @@
                 endGroup();
 
                 HGroup({ width: "auto", height: "auto", align: "right center", gap: 16 });
+                that.css = { maxWidth: "100%", minWidth: "0px", flexShrink: "1" }; // WHY: "auto" grows with its content, out of the screen of a phone
 
                     VGroup({ width: "auto", height: "auto", align: "right center", gap: 0 });
+                    that.css = { maxWidth: "100%", minWidth: "0px", flexShrink: "1" }; // WHY: "auto" grows with its content, out of the screen of a phone
                         lblClock = Label({ text: "", fontSize: 22, textColor: Ink(0.95) });
                         that.elem.style.fontVariantNumeric = "tabular-nums";
                         lblUptime = Label({ text: "", fontSize: 12, textColor: Ink(0.5) });
@@ -412,6 +416,7 @@
                     endGroup();
 
                     const btnMore = createButton("More", "top-bar/apps.png", function () { });
+                    btnMore.css = { flexShrink: "0" }; // WHY: The texts wrap on a phone, not this button
                     moreMenu = ContextMenu({
                         items: [
                             { text: "Send a test line to the serial port", key: "serial" },
