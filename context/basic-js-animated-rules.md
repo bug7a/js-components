@@ -5,7 +5,8 @@ How a component gets an `animated` param (the user, 2026-10-27). The model is `c
 
 ## What the param is
 
-- `animated: 0` (default) / `1`, and `box.setAnimated(0/1)`.
+- `animated: 0` (default) / `1`, and `box.setAnimated(0/1)`. (`Toggle`: 1 by default, the user, 2026-11-02: only a
+  toggle with marks moves, a toggle without marks does not change.)
 - `animated: 0` changes nothing: the component looks and works exactly as before (no transition, no transform,
   no box-shadow written). Only after `setAnimated(0)` on an animated object is the still look written back.
 - A style package that is the user's own look (`ozden`, `ozdenDark`...) may carry `animated: 1`; `classic` stays still.

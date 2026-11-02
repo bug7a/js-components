@@ -26,8 +26,8 @@
 # again from scratch every time (do not edit files in it; it has a _standalone.txt note).
 #
 # --in-place: the project folder itself becomes standalone (its pages are rewritten, basic/ and comp/
-#   are made in it). For sites that live so in the repository (03-webpage/webpage-basicjs,
-#   04-template-m2/todo-app-example, __projects/webpage-ozden-panel). A project made in place with one
+#   are made in it). For sites that live so in the repository (03-webpages/webpage-basicjs,
+#   04-templates/todo-app-example, __projects/webpage-ozden-panel). A project made in place with one
 #   file per component keeps that layout at the next runs (comp/_sources.txt tells it).
 #
 # It only fixes the <script src> / <link href> of the .htm / .html pages. Paths that leave
@@ -39,7 +39,7 @@
 #   ./_make-standalone.sh _projects/my-first-project --out ~/site  -> the given folder
 #   ./_make-standalone.sh _projects/my-first-project --list       Only shows what it would do.
 #   ./_make-standalone.sh _projects/my-first-project --separate   One .min.js for each component.
-#   ./_make-standalone.sh 03-webpage/webpage-basicjs --in-place   The project folder itself.
+#   ./_make-standalone.sh 03-webpages/webpage-basicjs --in-place   The project folder itself.
 #
 # It only needs node (npx downloads terser).
 
