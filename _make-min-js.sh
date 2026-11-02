@@ -125,6 +125,11 @@ fi
 echo "Making the .min.js files..."
 failCount=0
 for src in $targets; do
+    # WHY: only the library has twins; a .min.js next to a component breaks the rule of the repository.
+    case "$src" in
+        basic/*) ;;
+        *) echo "   NOT A LIBRARY FILE: $src (the components have no .min twins)"; failCount=$((failCount + 1)); continue ;;
+    esac
     if [ ! -f "$src" ]; then echo "   NOT FOUND: $src"; failCount=$((failCount + 1)); continue; fi
     buildOne "$src" || failCount=$((failCount + 1))
 done

@@ -6,7 +6,7 @@ This file gives Claude Code guidance for working in this repository.
 
 ## What this is
 
-**JS-Component Suite**: a set of UI components, samples and app templates built on **basic.js** (`basic/basic.js`). basic.js is a small, dependency-free library by Bugra Ozden where the whole UI is built in plain JavaScript. It creates DOM objects directly, so there is no HTML markup, no CSS authoring and no virtual DOM. It is licensed under Apache 2.0.
+**JS-Component Kit**: a set of UI components, samples and app templates built on **basic.js** (`basic/basic.js`). basic.js is a small, dependency-free library by Bugra Ozden where the whole UI is built in plain JavaScript. It creates DOM objects directly, so there is no HTML markup, no CSS authoring and no virtual DOM. It is licensed under Apache 2.0.
 
 There is **no build system, package.json, bundler, linter or test runner**. Every page is a standalone `.htm` file that loads scripts with `<script src>`. To run a page, open it in a browser. The VS Code Live Server extension is configured on port 5505 (`.vscode/settings.json`).
 
@@ -17,7 +17,7 @@ There is **no build system, package.json, bundler, linter or test runner**. Ever
 | Path | Contents |
 |---|---|
 | `basic/` | The core library `basic.js` (version in its header and `basic.version`), `basic.css`, fonts, `scroll-bar.js`, and their `.min` copies. **All other code depends on it.** What changed in each version: `basic/basic-what-is-new.md`. Self-test: `test/basic-test.htm`. Library rules: no new globals; no property named like a component default (`scale`, `hint`, `parent`, `shadow`, `image`). Do not edit or load `backup/`. |
-| `comp/` | **All the components in one folder** (generations M2, M3 and M4; the generation is `gen` in `index/catalog.js`). A new version gets a new name (Ex: `-v2`), or the old one is archived. **SmartButton (`smart-button.js`) is the default button** of new pages: `ozdenType1`, or `classic` for pages made before 2026-10-30. |
+| `comp/` | **All the components in one folder** (the site does not show the old M2 / M3 / M4 generations since 2026-11-02, the user). A new version gets a new name (Ex: `-v2`), or the old one is archived. **SmartButton (`smart-button.js`) is the default button** of new pages: `ozdenType1`, or `classic` for pages made before 2026-10-30. |
 | `01-basic-js-by-example/` | Numbered tutorial pages in one house style (models: `00-empty-project-template.htm`, `01-first-example.htm`, `03-button.htm`). No `comp/` in them. A new page also goes into the `SAMPLES` list of `test/basic-samples-test.htm`. `_first-coding-projects/` holds the beginner projects (their own style: keep the look). |
 | `02-comp-examples/` | One or more demo pages per component; they load `../basic/` and `../comp/`. |
 | `index.htm`, `index/` | The component catalog site (needs a web server). |

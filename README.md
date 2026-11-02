@@ -1,9 +1,9 @@
-# JS-Component Suite
+# JS-Component Kit
 
-> **Design with code. Skip the complexity.**
-> UI components, samples and app templates for building web interfaces in plain JavaScript. You don't write HTML markup or CSS files.
+> **Design with code. See it work right away.**
+> UI components, samples and app templates for building web interfaces in plain JavaScript, with layout, style and behavior in one place.
 
-JS-Component Suite is built on [**basic.js**](https://bug7a.github.io/basic.js/), a small, dependency-free library that creates DOM objects directly from JavaScript. It has no virtual DOM, no build step and no `node_modules`. You add a `<script>` tag, write a few lines and open the page in a browser.
+JS-Component Kit is built on [**basic.js**](https://bug7a.github.io/basic.js/), a small, dependency-free library that creates DOM objects directly from JavaScript. You add a `<script>` tag, write a few lines and open the page in a browser.
 
 **[Browse the components](https://bug7a.github.io/js-components/)** · **[Handbook](https://bug7a.github.io/basic.js-handbook/)** · **[basic.js](https://bug7a.github.io/basic.js/)**
 
@@ -44,26 +44,26 @@ When the page loads, basic.js creates the global `page` and calls `start()`. Eve
 
 ## What Is Inside
 
-More than 70 components. Every one has a live example with its code in the [component catalog](https://bug7a.github.io/js-components/).
+Nearly 70 components. Every one has a live example with its code in the [component catalog](https://bug7a.github.io/js-components/).
 
 | Group | Some of the components |
 | :--- | :--- |
 | **Forms and inputs** | `InputB` and its email, password, phone, number, currency and URL versions, `TextareaB`, `TagInput`, `Stepper`, `SliderField`, `RichTextEditor`, `Form` |
-| **Selection** | `SelectBox`, `SelectDate`, `SelectTime`, `SelectColor`, `SelectFile`, `CheckBox`, `RadioButton`, `Toggle` |
+| **Selection** | `SelectBox`, `Filters`, `SelectDate`, `SelectTime`, `SelectColor`, `SelectFile`, `CheckBox`, `RadioButton`, `Toggle` |
 | **Buttons and menus** | `SmartButton`, `HoldToConfirmButton`, `ContextMenu` |
 | **Navigation** | `Tabs`, `Breadcrumbs`, `LeftMenu`, `BottomBar`, `PageControl` |
 | **Data and charts** | `SmartTable`, `ChartBox`, `Gauge`, `SparkLineBox`, `ProgressBar`, `TimeLine`, `SortableList` |
-| **Overlays and feedback** | `Modal`, `Dialog`, `SidePanel`, `Toast`, `Tooltip`, `LoadingScreen` |
+| **Overlays and feedback** | `Dialog`, `SidePanel`, `Toast`, `Tooltip`, `LoadingScreen` |
 | **Pages and views** | `LoginPage`, `WebView`, `PropertyPanel`, `LabelEditor` |
 
 ---
 
-## Why JS-Component Suite?
+## Why JS-Component Kit?
 
 * **Readable code:** The code for a screen follows the layout of the screen, so you can understand it at a glance.
 * **Small learning curve:** If you know JavaScript, a handful of concepts are enough to start: `Box`, `Label`, `Button`, `AutoLayout` and `that`.
-* **One place for everything:** You define layout, style and behavior together in JavaScript, so you don't have to keep markup, stylesheets and logic in sync across files.
-* **Lightweight:** There are no external dependencies or framework runtime. Components work directly on the DOM.
+* **One place for everything:** You define layout, style and behavior together in JavaScript, so everything about a screen is in one place.
+* **Lightweight:** The library and the components have no dependencies, and they work directly on the DOM.
 * **Fast prototyping:** It suits solo developers and small teams who want to go from idea to working interface quickly.
 
 ---
@@ -105,13 +105,15 @@ Create your project folder in `_projects/` (copy `_projects/my-first-project/`) 
 
 Your project folder is not changed: a ready copy is made in `_dist/my-project/`, with the library (`basic/`) and every component your pages load in one file (`comp/components.min.js`), and its paths rewritten, so that folder works on its own. Run it again after a change to make the copy again. `--out <folder>` puts it somewhere else, `--separate` makes one `.min.js` for each component.
 
-### `.min.js` twins
+### `.min` files
 
-Most components have a `.min.js` twin next to them, and sample pages often load that version. After you edit a source file, rebuild its twin:
+The library has `.min` twins (`basic.min.js`, `basic.min.css`, `scroll-bar.min.js`). After you edit one of their sources, rebuild its twin:
 
 ```sh
-./_make-min-js.sh --build comp/tabs.js
+./_make-min-js.sh --build basic/basic.js
 ```
+
+The components have no twins: pages load their source files, and `_make-standalone.sh` makes the minified file of a copy.
 
 Both scripts use [terser](https://terser.org/) through `npx`, so they need Node.js. Nothing else in the repository does.
 
@@ -122,13 +124,13 @@ Both scripts use [terser](https://terser.org/) through `npx`, so they need Node.
 | Path | Contents |
 | :--- | :--- |
 | `basic/` | The core library (`basic.js`, `basic.css`, fonts) |
-| `comp/` | All the components (generations 2, 3 and 4 in one folder since 2026-10-31; the catalog still shows the generation) |
+| `comp/` | All the components, in one folder |
 | `index.htm`, `index/` | The component catalog site |
 | `01-basic-js-by-example/` | Step-by-step tutorial pages for the core library, written for beginners |
 | `01-basic-js-by-example/_first-coding-projects/` | Small projects for people who write their first programs (calculator, dice, XOX, snake, chess…), each with notes on its algorithm |
-| `02-comp-examples/` | One demo page per component |
+| `02-comp-examples/` | Demo pages of the components |
 | `03-webpages/` | Web sites drawn with basic.js: the library site and the handbook site |
-| `04-templates/` | App templates: mobile app templates (tabs, pages, side menu), admin panel, web forms (contact, appointment, order…), a to-do app, and `easy-pwa`, a script that turns a site into an installable app |
+| `04-templates/` | App templates: [mobile apps](04-templates/mobile-app-template/) (a shop, bookings, a coffee shop and a starter frame), admin panel, web forms (contact, appointment, order…), a to-do app, and `easy-pwa`, a script that turns a site into an installable app |
 | `_projects/` | Your own projects: copy `my-first-project/` and use `basic/` and `comp/` from the repository (see its readme) |
 | `05-showcase/` | Links to live apps made with basic.js |
 | `__handbook/` | The basic.js handbook in [English](__handbook/english/) and [Turkish](__handbook/turkce/) |
@@ -139,27 +141,27 @@ Both scripts use [terser](https://terser.org/) through `npx`, so they need Node.
 
 ---
 
-## Comparison at a Glance
+## How It Works
 
-| | JS-Component Suite | Typical Frameworks |
-| :--- | :--- | :--- |
-| **Learning curve** | Plain JavaScript | Extra syntax (JSX, templates, DSLs) |
-| **Styling** | Defined on the object | Separate CSS / Tailwind / Sass |
-| **Build step** | None | Bundler and toolchain |
-| **Dependencies** | None | Many `node_modules` packages |
-| **Search engines** | The page is drawn by JavaScript; content for crawlers is added by hand | Server-side rendering available |
-| **Ecosystem** | One library and this repository | Large community, many third-party packages |
+| | |
+| :--- | :--- |
+| **Language** | Plain JavaScript |
+| **Styling** | Defined on the object |
+| **Running** | Save the file and open the page in a browser |
+| **Dependencies** | None |
+| **Search engines** | The page is drawn by JavaScript; content for crawlers is added by hand |
+| **Ecosystem** | One library and this repository |
 
-It fits admin panels, dashboards, internal tools, forms and prototypes written by one developer or a small team. For a content site that lives on search traffic, or a large team that needs a framework's conventions, a typical framework is the better choice.
+It fits admin panels, dashboards, internal tools, forms, mobile apps and prototypes written by one developer or a small team. For a content site that lives on search traffic, or a large team that needs a framework's conventions and a wide ecosystem, a framework is the better choice.
 
 ---
 
 ## Built with This Technology
 
 * **UI Components:** [Browse Components](https://bug7a.github.io/js-components/)
-* **Mobile App Template:** [JavaScript Mobile App Template](https://bug7a.github.io/javascript-mobile-app-template/)
+* **Mobile App Templates:** [Shop, booking, coffee shop, starter and classic](04-templates/mobile-app-template/)
 * **Mobile App on Web:** [Expense Showcase App](https://bug7a.github.io/expense/)
-* **PC Game on Steam:** [The Fallen Kingdoms](https://store.steampowered.com/app/2923920/)
+* **PC Games on Steam:** [The Fallen Kingdoms](https://store.steampowered.com/app/2923920/), [Fishing Company Tycoon](https://store.steampowered.com/app/5452400/Fishing_Company_Tycoon_Harbor_to_Market/)
 
 ---
 
