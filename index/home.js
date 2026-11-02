@@ -28,7 +28,6 @@ const HomeView = {
 
     search: "",
     category: "all",
-    generation: "0",
 
     // Önizleme sırası
     // state: 0 boş, 1 sırada, 2 yükleniyor, 3 yüklendi
@@ -118,9 +117,9 @@ HomeView.createHeader = function () {
 
     HomeView.startContent({ flow: "horizontal", height: 76, align: "left center", gap: 12 });
 
-        // ICON: Logo (339 x 85)
+        // ICON: Logo (341 x 81)
         Icon({
-            width: 176,
+            width: 185,
             height: 44,
             color: "transparent",
         });
@@ -242,7 +241,7 @@ HomeView.createStat = function (value, text) {
 
 };
 
-// *** TOOLBAR: (Arama, kuşak ve kategori filtreleri. Kaydırırken üstte kalır.)
+// *** TOOLBAR: (Arama ve kategori filtreleri. Kaydırırken üstte kalır.)
 HomeView.createToolbar = function () {
 
     const L = SITE.L;
@@ -265,36 +264,11 @@ HomeView.createToolbar = function () {
         HomeView.startContent({ gap: 10, padding: [0, 12] });
         that.clipContent = 0;
 
-            // GROUP: Arama + kuşak
+            // GROUP: Arama
             HGroup({ width: "100%", height: "auto", align: "left center", gap: 12, wrap: 1 });
             that.clipContent = 0;
 
                 HomeView.createSearchInput();
-
-                if (!L.mobile) SITE.spacer();
-
-                // TABS: Kuşak filtresi
-                HomeView.tabsGeneration = Tabs({
-                    variant: "pill",
-                    tabs: [
-                        { key: "0", text: T.allGenerations },
-                        { key: "4", text: "M4" },
-                        { key: "3", text: "M3" },
-                        { key: "2", text: "M2" },
-                    ],
-                    value: HomeView.generation,
-                    ariaLabel: "Generation",
-                    style: {
-                        pillBar: { color: SITE.BG_SOFT, padding: [3, 3], round: 10 },
-                        tab: { fontSize: 13, padding: [12, 6], minHeight: 34, round: 8 },
-                        pillIndicator: { round: 8 },
-                    },
-                    onChange: function (self) {
-                        HomeView.generation = self.value;
-                        HomeView.applyFilter();
-                    },
-                });
-                that.elem.title = T.generationHint;
 
             endGroup();
 
@@ -471,7 +445,7 @@ HomeView.createCard = function (comp) {
     const item = { comp: comp, card: null, view: null, state: 0, visible: 0, section: null };
 
     // Aramada kullanılan yazı
-    item.searchText = HomeView.normalize([comp.name, comp.key, comp.source, "m" + comp.gen, comp.en, comp.tr,
+    item.searchText = HomeView.normalize([comp.name, comp.key, comp.source, comp.en, comp.tr,
         CATALOG.getCategory(comp.cat).en, CATALOG.getCategory(comp.cat).tr].join(" "));
 
     // GROUP: Kart
@@ -520,7 +494,7 @@ HomeView.createCard = function (comp) {
         VGroup({ width: "100%", height: "auto", align: "left top", gap: 6, padding: [16, 14] });
         that.elem.style.flex = "1 1 auto";
 
-            // GROUP: Ad + kuşak
+            // GROUP: Ad
             HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
 
                 SITE.label(comp.name, { bold: 1, fontSize: 16, textColor: SITE.INK });
@@ -528,9 +502,6 @@ HomeView.createCard = function (comp) {
                 that.elem.style.minWidth = "0";
                 that.elem.style.overflow = "hidden";
                 that.elem.style.textOverflow = "ellipsis";
-
-                SITE.spacer();
-                SITE.generationChip(comp.gen);
 
             endGroup();
 
@@ -605,7 +576,6 @@ HomeView.createEmptyState = function () {
             kind: "ghost",
             onClick: function () {
                 HomeView.clearSearch();
-                HomeView.tabsGeneration.setValue("0");
                 HomeView.tabsCategory.setValue("all");
             },
         });
@@ -670,8 +640,7 @@ HomeView.applyFilter = function () {
         section.items.forEach(function (item) {
 
             const matchText = words.every(function (word) { return item.searchText.indexOf(word) > -1; });
-            const matchGeneration = (HomeView.generation == "0" || String(item.comp.gen) == HomeView.generation);
-            const match = matchText && matchGeneration;
+            const match = matchText;
             const show = match && (HomeView.category == "all" || HomeView.category == section.cat.key);
 
             if (match) sectionCount++;

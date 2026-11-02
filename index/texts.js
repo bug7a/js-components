@@ -32,7 +32,7 @@ const TEXTS = {
         // HERO
         eyebrow: "BASIC.JS UI COMPONENTS",
         heroTitle: "UI components written in plain JavaScript",
-        heroLead: "No HTML markup, no CSS files, no build step. Every component below is a live example page: open one to use it and read its code side by side.",
+        heroLead: "Every component below is a live example page: open one to use it and read its code side by side. Layout, style and behavior are together, in plain JavaScript.",
         statComponents: "components",
         statSamples: "live examples",
         statDependencies: "dependencies",
@@ -41,8 +41,6 @@ const TEXTS = {
         // TOOLBAR
         searchPlaceholder: "Search components",
         allCategories: "All",
-        allGenerations: "All",
-        generationHint: "M4 is the newest generation, M2 is the oldest one here (M1 was archived).",
         noResult: "No component matches your search.",
         clearSearch: "Clear the search",
 
@@ -89,7 +87,7 @@ const TEXTS = {
         // HERO
         eyebrow: "BASIC.JS ARAYÜZ BİLEŞENLERİ",
         heroTitle: "Saf JavaScript ile yazılmış arayüz bileşenleri",
-        heroLead: "HTML etiketi, CSS dosyası ve derleme adımı yok. Aşağıdaki her bileşen çalışan bir örnek sayfadır: birini açın, kullanın ve kodunu yan tarafta okuyun.",
+        heroLead: "Aşağıdaki her bileşen çalışan bir örnek sayfadır: birini açın, kullanın ve kodunu yan tarafta okuyun. Düzen, stil ve davranış bir arada, saf JavaScript ile.",
         statComponents: "bileşen",
         statSamples: "canlı örnek",
         statDependencies: "bağımlılık",
@@ -98,8 +96,6 @@ const TEXTS = {
         // TOOLBAR
         searchPlaceholder: "Bileşen ara",
         allCategories: "Tümü",
-        allGenerations: "Tümü",
-        generationHint: "M4 en yeni kuşak, M2 buradaki en eski kuşaktır (M1 arşivlendi).",
         noResult: "Aramanıza uyan bir bileşen yok.",
         clearSearch: "Aramayı temizle",
 

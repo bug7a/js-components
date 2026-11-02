@@ -152,8 +152,6 @@ DetailView.createTopBar = function () {
         that.elem.style.overflow = "hidden";
         that.elem.style.textOverflow = "ellipsis";
 
-        SITE.generationChip(comp.gen);
-
         // LABEL: Kategori ve kaynak dosya
         DetailView.lblMeta = SITE.label(category[SITE.lang] + "  ·  " + basic.escapeHtml(comp.source), { fontSize: 13, textColor: SITE.TEXT_FAINT });
         DetailView.lblMeta.elem.style.overflow = "hidden";
