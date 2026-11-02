@@ -102,6 +102,7 @@
         // Ekran bu değerden genişse panel normal boyutta görünür (zoom 1).
         // Daha dar ekranlarda, yerleşim bozulmasın diye panelin tamamı küçülür (zoom out).
         const PAGE_FIT_WIDTH = 650;
+        const FINGER_HEIGHT = 44; // px on the screen: a row of the left menu that a finger can hit
 
         // NOTE: page.fit(650) -> ekran >= 650px ise zoom 1, değilse zoom = ekranGenisligi / 650.
         const fitPageWidth = function() {
@@ -239,7 +240,10 @@
             // Left Menu
             // WHY: The menu keeps its own default look (dark, red selection) in every theme, so
             //      it reads its own ink keys instead of Ink()/T.invertIcon, which follow the page.
+            // WHY: page.fit() zooms the page: on a phone the 40 px rows of the menu were 24 px high on the screen.
+            const isTouchScreen = window.matchMedia("(hover: none)").matches;
             window.leftMenu = LeftMenu({
+                itemHeight: isTouchScreen ? Math.max(40, Math.round(FINGER_HEIGHT / page.zoom)) : 40,
                 backgroundColor: T.menu,
                 selectedColor: T.menuSelected,
                 titleColor: T.menuTitle,

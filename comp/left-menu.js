@@ -10,7 +10,9 @@ UI COMPONENT TEMPLATE
 - The menu opens when the mouse is over it. On a touch device there is no hover, so it opens with a tap:
   the first tap opens the menu (it does not select an item, because the texts are not visible when it is closed),
   the second tap selects the item and closes the menu. A tap outside the menu also closes it.
--- openOnClick: "auto" (touch device: tap, mouse: hover), 1: always tap, 0: always hover.
+-- openOnClick: "auto" (touch device: tap, mouse: hover), 1: always tap, 0: always hover, "direct": a tap selects at
+   once and the menu stays closed (2026-11-02, for a short menu with clear icons).
+-- itemHeight: the height of a button item. A page fitted with page.fit() is zoomed: for a finger give Ex: 44 / page.zoom.
 -- leftMenu.setOpenOnClick(1) changes it later.
 
 Started Date: December 2024
@@ -26,6 +28,7 @@ Webpage: https://bug7a.github.io/js-components/
 const LeftMenuDefaults = {
     key: "0",
     expandedWidth: 250,           // Expanded width on hover
+    itemHeight: 40,               // The height of a button item
     topBarHeight: 40,             // Height of top bar to account for
     backgroundColor: "#141414",   // Menu background color
     hoverColor: "rgba(255, 255, 255, 0.05)", // Hover color for buttons
@@ -82,7 +85,7 @@ const LeftMenu = function(params = {}) {
 
         const buttonBox = startBox({
             width: "100%",
-            height: 40,
+            height: box.itemHeight,
             color: "transparent",
             clickable: 1,
             position: "relative",
@@ -129,7 +132,7 @@ const LeftMenu = function(params = {}) {
             if (event) event.stopPropagation();
 
             // WHY: Touch device, closed menu: only the icons are visible. The first tap opens the menu, it does not select.
-            if (useTapMode && !isExpanded) {
+            if (useTapMode && !isExpanded && box.openOnClick !== "direct") {
                 expandMenu();
                 return;
             }
@@ -278,6 +281,8 @@ const LeftMenu = function(params = {}) {
         box.openOnClick = openOnClick;
         if (openOnClick === "auto") {
             useTapMode = isTouchDevice();
+        } else if (openOnClick === "direct") {
+            useTapMode = 1;
         } else {
             useTapMode = basic.isOn(openOnClick) ? 1 : 0;
         }
@@ -465,7 +470,7 @@ const LeftMenu = function(params = {}) {
 
     // Tap on the menu (also on an empty place of it): open it. (Touch device)
     box.on("click", function() {
-        if (useTapMode && !isExpanded) expandMenu();
+        if (useTapMode && !isExpanded && box.openOnClick !== "direct") expandMenu();
     });
 
     // WHY: Capture, so it also works when the tap is stopped by another object. (Ex: a page that closes its own menu)

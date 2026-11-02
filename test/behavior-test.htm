@@ -29,6 +29,7 @@
         <script src="../comp/select-box.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/select-date.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/left-menu.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/app-bar.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/page-header.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/settings-row.js" type="text/javascript" charset="utf-8"></script>
@@ -384,6 +385,27 @@
             key(toggle.elem, "keydown", "Enter");
             check("Toggle: a disabled one does not change", toggle.value === 1 && toggle.elem.tabIndex === -1, toggle.value);
             toggle.remove();
+        });
+
+        // *** LEFT MENU (comp/left-menu.js)
+
+        test("LeftMenu: a tap opens it first; direct selects at once", async function () {
+            const clicked = [];
+            const items = [{ key: "a", type: "button", text: "A", icon: "" }];
+            const tapMenu = LeftMenu({ items: items, openOnClick: 1, itemHeight: 70, onItemClick: (item) => clicked.push(item.key) });
+            const row = tapMenu.elem.querySelector("[style*='height: 70px']");
+            check("LeftMenu: itemHeight is the height of a row", !!row);
+            row.click();
+            check("LeftMenu: the first tap only opens it", tapMenu.state === "expanded" && clicked.length === 0, tapMenu.state);
+            row.click();
+            check("LeftMenu: the second tap selects", clicked.length === 1 && tapMenu.state === "collapsed", clicked.length);
+            tapMenu.remove();
+
+            clicked.length = 0;
+            const directMenu = LeftMenu({ items: items, openOnClick: "direct", itemHeight: 71, onItemClick: (item) => clicked.push(item.key) });
+            directMenu.elem.querySelector("[style*='height: 71px']").click();
+            check("LeftMenu: direct selects at once and stays closed", clicked.length === 1 && directMenu.state === "collapsed", clicked.length);
+            directMenu.remove();
         });
 
         // *** NUMERIC KEYBOARD (comp/numeric-keyboard.js)

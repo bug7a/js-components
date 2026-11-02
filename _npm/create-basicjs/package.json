@@ -1,6 +1,6 @@
 {
     "name": "create-basicjs",
-    "version": "0.1.3",
+    "version": "0.1.4",
     "description": "Create a project with basic.js and the JS-Component Kit, ready to build with AI tools.",
     "bin": {
         "create-basicjs": "bin/create-basicjs.js"
