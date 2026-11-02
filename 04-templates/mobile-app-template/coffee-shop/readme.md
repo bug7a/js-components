@@ -47,8 +47,6 @@
 
 ## Görsel düzeltmeler (2026-11-02)
 
-Bir önceki hâl: `design-before-2026-11-02.zip`.
-
 - Hatalar: boş "Sepete ekle" butonu, üst üste binen ana sayfa açıklaması, başlıklardaki yok sayılan satır sonu, "Mola Club" sekmesinde ekrandan taşan alt çubuk, dar ekranda iki satıra bölünen damgalar ve başlık.
 - Seçimler: kategori, boyut ve süt seçenekleri artık dolgulu; `•` ve `✓` işaretleri kalktı.
 - Ana eylem: içecek ve sepette sabit alt satırda (içecek: adet + "Sepete ekle"; sepet: toplam + sipariş).

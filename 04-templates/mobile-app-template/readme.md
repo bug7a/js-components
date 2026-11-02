@@ -79,7 +79,7 @@ mv www/index.htm www/index.html
 ```
 
 If you skip the first step, the icons of the search box do not load. You can also delete files the app does not need
-from the copy, such as `www/readme.md` and the `design-before-*.zip` backups of `coffee-shop`.
+from the copy, such as `www/readme.md`.
 
 Before you release, change `appName` and `storageKey` in `app/settings.js`.
 
