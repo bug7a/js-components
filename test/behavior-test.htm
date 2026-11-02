@@ -387,6 +387,34 @@
             toggle.remove();
         });
 
+        // *** TOOLTIP (comp/tooltip.js)
+
+        test("Tooltip: a new text keeps the arrow at the mouse", async function () {
+            const target = Box(100, 100, 120, 40);
+            const other = Box(300, 100, 120, 40);
+            const tooltip = Tooltip({ target: target, hintText: "A long text for a wide bubble", lbl_arrow: 10 });
+            const otherTooltip = Tooltip({ target: other, hintText: "Other" });
+            const mouseX = 160;
+            const mouse = (object, name) => object.elem.dispatchEvent(new MouseEvent(name, { bubbles: true, clientX: mouseX, clientY: 120 }));
+
+            tooltip.setHintText("Before the mouse moves");
+            mouse(target, "mouseover");
+            tooltip.setHintText("No move yet");
+            mouse(target, "mousemove");
+            tooltip.setHintText("Saved");
+            const bubble = window.lblHint.elem.getBoundingClientRect();
+            const arrow = window.lblHint.arrow.elem.getBoundingClientRect();
+            const arrowMiddle = arrow.left + arrow.width / 2;
+            check("Tooltip: the bubble goes to the mouse with its new text", Math.abs(bubble.left + bubble.width / 2 - mouseX) < 2, bubble.left);
+            check("Tooltip: the arrow stays in the bubble", arrowMiddle > bubble.left && arrowMiddle < bubble.right, arrowMiddle);
+
+            otherTooltip.setHintText("Late");
+            check("Tooltip: a late call does not write on another bubble", window.lblHint.label.text === "Saved", window.lblHint.label.text);
+
+            mouse(target, "mouseout");
+            [tooltip, otherTooltip, target, other].forEach((object) => object.remove());
+        });
+
         // *** LEFT MENU (comp/left-menu.js)
 
         test("LeftMenu: a tap opens it first; direct selects at once", async function () {

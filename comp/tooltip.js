@@ -137,9 +137,12 @@ const Tooltip = function(params = {}) {
 
     box.setHintText = function(text) {
         box.hintText = text;
-        if (window.lblHint && window.lblHint.label) {
-            window.lblHint.label.text = text;
-        }
+        // WHY owner: one bubble is shared; a late call must not write on the bubble of another object.
+        if (!window.lblHint || !window.lblHint.label || window.lblHint.owner !== box) return;
+        window.lblHint.label.text = text;
+        if (box.mouseX === undefined) return; // The mouse did not move yet: the first mousemove places it
+        // WHY: A new text changes the width of the bubble: the bubble and its arrow must go to the mouse again.
+        Tooltip.place(window.lblHint, { left: box.mouseX, top: box.mouseY, width: 0, height: 0 }, box.hintPosition);
     }
 
     box.setLbl_color = function(color) {
@@ -159,10 +162,12 @@ const Tooltip = function(params = {}) {
     removeMouseOver = box.target.on("mouseover", function() {
         if (isClick() || window.lblHint) return;
         window.lblHint = Tooltip.createBubble(box.hintText, getLook(), box.content);
+        window.lblHint.owner = box;
     });
 
     removeMouseMove = box.target.on("mousemove", function(self, event) {
         if (isClick() || !window.lblHint) return;
+        window.lblHint.owner = box;
 
         // WHY: Eğer mouse tooltip tetikleyen bir object üzerinde bırakılırsa ve
         // başka bir olay, tooltip in text ve rengini değiştirirse; objeye giriş yapmadan hareket ettirilen mouse,
