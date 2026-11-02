@@ -1,92 +1,173 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        
-        <title>New JS Component</title>
-        
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
 
-        <!-- LIBRARY FILES -->
-        <!-- <link rel="preload" href="image.png" as="image"> -->
-        <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
-        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
-        <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
-        <!--<script src="basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>-->
+<head>
+    <title>Toggle: a settings list</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        <script src="../comp/toggle.js" type="text/javascript" charset="utf-8"></script>
-        <!-- <script src="_component-template.min.js" type="text/javascript" charset="utf-8"></script> -->
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
 
-        <!-- ALL COMPONENTS IN ONE FILE -->
-        <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
+    <!-- COMPONENT FILES -->
+    <script src="../comp/toggle.js" type="text/javascript" charset="utf-8"></script>
 
-        <script>
-        
+    <script>
+
+        /* Bismillah */
+
+        // Toggle in a real list: a row is a text and a switch.
+        // - Toggle({ value, aria: { label }, onChange })   self.value is 0 or 1
+        // - toggle.setValue(0 / 1), toggle.switch()        onChange runs
+        // - toggle.setSecondState("disabled" / "normal")   can not be changed, Tab skips it
+        // TRY: turn "Notifications" off: the two rows under it close. Tab and Space work too.
+        // The shapes and colors: toggle-2.htm, toggle-3.htm.
+
         // *** VARIABLES:
-        //const compList = []; // When multiple objects are created by code, they can be added to an array.
-        let toggle, toggle2;
 
-        // First running function.
-        window.onload = function() {
+        const CARD_MAX_WIDTH = 480;
+        const PAGE_COLOR = "#F4F5F2";
+        const DARK_CARD_COLOR = "#1A1A19";
+        const GREEN_ON_DARK = "#2C5A38";
 
-            // GROUP: Autolayout
-            VGroup();
+        const LIGHT = { card: "white", line: Black(0.1), title: Black(0.85), text: Black(0.5) };
+        const DARK = { card: DARK_CARD_COLOR, line: White(0.12), title: White(0.9), text: White(0.5) };
 
-                AutoLayout({
-                    color: "#141414",
-                    height: "50%",
-                });
-
-                    toggle = Toggle({
-                        key: "0",
-                        width: 70, // Standard box features are added automatically.
-                        height: 40,
-                        spacing: 3,
-                        value: 1,
-                        invertColor: 0,
-                        backgroundStyle: {
-                            color: "black",
-                            selectedColor: "#2C5A38",
-                            border: 1,
-                            borderColor: White(0.25),
-                            round: 100,
-                        },
-                        buttonStyle: {
-                            color: White(0.25),
-                            selectedColor: White(0.75),
-                            border: 0,
-                            round: 100,
-                        }
-                    });
-                    that.onChange = function(self) {
-                        println(`Changed: ${self.value}`);
-                    };
-
-                endAutoLayout();
-
-                AutoLayout({
-                    color: "white",
-                    height: "50%",
-                });
-
-                    toggle2 = Toggle({
-                        value: 1,
-                        //width: 44,
-                        //height: 24,
-                    });
-                
-                endAutoLayout();
-
-            endGroup(); // END GROUP
-            
+        // The switch for a dark page: your own colors over the default look
+        const DARK_TOGGLE = {
+            backgroundStyle: { color: "black", selectedColor: GREEN_ON_DARK, borderColor: White(0.25) },
+            buttonStyle: { color: White(0.25), selectedColor: White(0.75) },
         };
 
-        </script>
+        let lblStatus;
+        let toggleSound, toggleBadge;
 
-    </head>
-    <body>
-        
-        <!-- HTML content -->
-        
-    </body>
+        // *** START:
+
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            // BOX: Full screen scrollable container
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            const scrollBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+
+                VGroup({ width: "100%", height: "auto", align: "center top", gap: 20, padding: [16, 40] });
+
+                    Label({ text: "Settings", fontSize: 26, fontFamily: "opensans-bold" });
+
+                    createNotificationCard();
+                    createDarkCard();
+
+                    lblStatus = Label({ text: "Change a setting", fontSize: 14, textColor: Black(0.5) });
+
+                endGroup();
+
+            endBox();
+
+            ScrollBar({ scrollableBox: scrollBox });
+
+        };
+
+        // *** FUNCTIONS:
+
+        // CARD: "Notifications" opens and closes the two rows under it
+        const createNotificationCard = function () {
+            startCard(LIGHT);
+
+                createRow(LIGHT, "Notifications", "Tell me about new messages", {
+                    value: 1,
+                    onChange: onNotificationsChange,
+                });
+
+                toggleSound = createRow(LIGHT, "Sound", "Play a sound with a notification", {
+                    value: 1,
+                    onChange: showChange,
+                });
+
+                toggleBadge = createRow(LIGHT, "Badge", "Show the number of new messages", {
+                    onChange: showChange,
+                });
+
+            endCard();
+        };
+
+        // CARD: The same rows on a dark page
+        const createDarkCard = function () {
+            startCard(DARK);
+
+                createRow(DARK, "Dark theme", "On a dark page, with your own colors", {
+                    ...DARK_TOGGLE,
+                    value: 1,
+                    onChange: showChange,
+                });
+
+                createRow(DARK, "Automatic updates", "Managed by your company", {
+                    ...DARK_TOGGLE,
+                    value: 1,
+                }).setSecondState("disabled");
+
+            endCard();
+        };
+
+        const onNotificationsChange = function (self) {
+            showChange(self);
+
+            const state = (self.value === 1) ? "normal" : "disabled";
+            toggleSound.setSecondState(state);
+            toggleBadge.setSecondState(state);
+        };
+
+        const showChange = function (self) {
+            const stateText = (self.value === 1) ? "on" : "off";
+            lblStatus.text = self.aria.label + ": " + stateText;
+        };
+
+        // GROUP: A card
+        const startCard = function (colors) {
+            VGroup({
+                width: "100%",
+                height: "auto",
+                align: "left top",
+                padding: [20, 6],
+                color: colors.card,
+                round: 12,
+                border: 1,
+                borderColor: colors.line,
+                css: { maxWidth: CARD_MAX_WIDTH + "px" },
+            });
+        };
+
+        const endCard = function () {
+            endGroup();
+        };
+
+        // GROUP: A row: a title, a line under it, and the switch at the right
+        const createRow = function (colors, title, description, toggleParams) {
+            let toggle;
+
+            HGroup({ width: "100%", height: "auto", align: "left center", gap: 16, padding: [0, 14], clipContent: 0 });
+
+                VGroup({ width: "auto", height: "auto", align: "left top", gap: 2, grow: 1, css: { minWidth: "0px" } });
+                    Label({ plainText: title, fontSize: 16, textColor: colors.title });
+                    Label({ plainText: description, width: "100%", fontSize: 13, textColor: colors.text });
+                endGroup();
+
+                toggle = Toggle({ aria: { label: title }, ...toggleParams });
+
+            endGroup();
+
+            return toggle;
+        };
+
+    </script>
+
+</head>
+
+<body></body>
+
 </html>

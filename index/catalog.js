@@ -477,7 +477,7 @@ CATALOG.COMPONENTS = [
         key: "toggle", name: "Toggle", cat: "selection",
         source: "comp/toggle.js",
         samples: [
-            { file: "02-comp-examples/toggle.htm", title: "Basic" },
+            { file: "02-comp-examples/toggle.htm", title: "A settings list" },
             { file: "02-comp-examples/toggle-2.htm", title: "modern and classic" },
             { file: "02-comp-examples/toggle-3.htm", title: "Shapes and marks" },
         ],
@@ -500,9 +500,10 @@ CATALOG.COMPONENTS = [
         key: "tooltip", name: "Tooltip", cat: "feedback",
         source: "comp/tooltip.js",
         samples: [
-            { file: "02-comp-examples/tooltip.htm", title: "Basic" },
+            { file: "02-comp-examples/tooltip.htm", title: "A toolbar" },
             { file: "02-comp-examples/tooltip-2.htm", title: "The bubble: arrow, show(), screen edges" },
             { file: "02-comp-examples/tooltip-3.htm", title: "Content and popover" },
+            { file: "02-comp-examples/tooltip-4.htm", title: "Pill bubbles with tags" },
         ],
         en: "A hint bubble over an object: it follows the mouse or stays at the object, with an optional bordered arrow, always inside the screen; your own content in it, or a popover that stays and can be clicked.",
         tr: "Bir nesnenin üzerinde ipucu balonu: fareyi izler ya da nesnenin yanında durur; isteğe bağlı kenarlıklı ok, hep ekranın içinde; içinde kendi içeriğin ya da açık kalan, tıklanabilen bir popover.",

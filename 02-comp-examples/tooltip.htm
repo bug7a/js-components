@@ -1,123 +1,204 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        
-        <title>Tooltip</title>
-        
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
 
-        <!-- LIBRARY FILES -->
-        <!-- <link rel="preload" href="image.png" as="image"> -->
-        <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
-        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
-        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
-        <!--<script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>-->
+<head>
+    <title>Tooltip: a toolbar</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
 
-        <style>
+    <!-- COMPONENT FILES -->
+    <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
 
-        /* 
-        body {
-            margin: 0px !important;
-            overflow: hidden !important;
-        }
-        */
+    <script>
 
-        </style>
+        /* Bismillah */
 
-        <script>
-        
-        // VARIABLES            
-        let lblClean = null;
-        let btn1, btn2 = null;
+        // Tooltip where it is needed most: a button with only an icon tells its name under the mouse.
+        // - Tooltip({ target, hintText, hintPosition, lbl_arrow })   the hint follows the mouse
+        // - tooltip.setHintText(text)                                another text after create
+        // - tooltip.remove()                                         no hint any more
+        // The bubble, the arrow: tooltip-2.htm. Your own content, a popover: tooltip-3.htm. Pill bubbles: tooltip-4.htm.
+        // TRY: move the mouse on the buttons, click "Save", then turn the hints off. (A touch screen has no mouse.)
 
-        // First running function.
-        window.onload = function() {
+        // *** VARIABLES:
 
-            // GROUP: Autolayout
-            startFlexBox({
-                gap: "40px",
-            });
+        const CARD_MAX_WIDTH = 520;
+        const PAGE_COLOR = "#F4F5F2";
+        const ICON_COLOR = "#3A3A3A";
+        const ICON_BUTTON_SIZE = 44;
+        const HINT_ARROW = 10;
+        const SAVED_TIME = 2000; // ms: "Saved" stays on the hint
 
-                // BUTTON:
-                btn1 = Button({
-                    text: "Hover with Mouse",
-                    width: 220,
-                    minimal: 1,
-                    color: "whitesmoke",
-                });
-
-                // ICON: Carrot
-                btn2 = Icon({
-                    width: 70,
-                    height: 70,
-                });
-                that.load("../assets/fruids/havuc.png");
-            
-            endFlexBox(); // GROUP End
-
-            // TOOLTIP: btn
-            btn1.tooltip = Tooltip({
-                target: btn1,
-                hintText: "Hint about this button",
-                lbl_color: "rgba(255, 255, 255, 0.80)",
-            });
-
-            // TOOLTIP: btn2
-            btn2.tooltip = Tooltip({
-                target: btn2,
-                hintText: "It's a Carrot",
-                hintPosition: "bottom",
-                lbl_color: "yellow",
-                lbl_border: 1,
-                lbl_textColor: "orangered",
-                lbl_borderColor: "orangered",
-                lbl_fontSize: 20,
-                lbl_round: 6,
-            });
-
-            
-
-            // LABEL: Clean the hints
-            lblClean = Label({
-                left: 30,
-                top: 30,
-                text: "Clean the Hints",
-                width: "auto",
-                fontSize: 14,
-                border: 0,
-                spaceX: 12,
-                spaceY: 4,
-                round: 4,
-                color: "lightgray",
-            });
-            that.elem.style.cursor = "pointer";
-            that.on("click", function() {
-
-                lblClean.visible = 0;
-                
-                if (btn1.tooltip) {
-                    btn1.tooltip.remove();
-                    btn1.tooltip = null;
-                }
-                
-                if (btn2.tooltip) {
-                    btn2.tooltip.remove();
-                    btn2.tooltip = null;
-                }
-            
-            });
-            
+        // The drawings of the icons (24 x 24 lines)
+        const ICON_PATHS = {
+            bold: "M7 5h6a3.5 3.5 0 0 1 0 7H7zM7 12h7a3.5 3.5 0 0 1 0 7H7z",
+            italic: "M10 5h8M6 19h8M14 5l-4 14",
+            link: "M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1",
+            list: "M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01",
+            undo: "M9 7l-4 4 4 4M5 11h9a4.5 4.5 0 0 1 0 9h-3",
         };
 
-        </script>
+        const TOOLS = [
+            { icon: "bold", hint: "Bold  (Ctrl + B)" },
+            { icon: "italic", hint: "Italic  (Ctrl + I)" },
+            { icon: "link", hint: "Add a link" },
+            { icon: "list", hint: "A list" },
+            { icon: "undo", hint: "Undo  (Ctrl + Z)" },
+        ];
 
-    </head>
-    <body>
-        
-        <!-- HTML content -->
-        
-    </body>
+        const hintTargets = []; // The objects with a hint: "Hints off" removes them
+        let btnHints;
+
+        // *** START:
+
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            // BOX: Full screen scrollable container
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            const scrollBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+
+                VGroup({ width: "100%", height: "auto", align: "center top", gap: 20, padding: [16, 40], clipContent: 0 });
+
+                    Label({ text: "Tooltip", fontSize: 26, fontFamily: "opensans-bold" });
+
+                    startCard("A toolbar", "A button with only an icon says its name.");
+                        TOOLS.forEach(createToolButton);
+                    endCard();
+
+                    startCard("A hint that changes", "setHintText(): the text follows the state of the button.");
+                        createSaveButton();
+                    endCard();
+
+                    startCard("Your own colors", "lbl_color, lbl_textColor, lbl_border, lbl_fontSize...");
+                        createCarrot();
+                    endCard();
+
+                    startCard("No hints", "tooltip.remove() takes a hint away from its object.");
+                        btnHints = SmartButton({ labelText: "Hints off", onClick: switchHints });
+                    endCard();
+
+                endGroup();
+
+            endBox();
+
+            ScrollBar({ scrollableBox: scrollBox });
+
+        };
+
+        // *** FUNCTIONS:
+
+        const lineIcon = function (name) {
+            const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="' + ICON_PATHS[name] + '" fill="none" stroke="' + ICON_COLOR + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><\/svg>';
+            return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
+        };
+
+        const addHint = function (target, params) {
+            target.hintParams = params;
+            target.tooltip = Tooltip({ target: target, lbl_arrow: HINT_ARROW, ...params });
+            hintTargets.push(target);
+        };
+
+        // SMARTBUTTON: A button with only an icon. WHY ariaLabel: a screen reader can not read a picture.
+        const createToolButton = function (tool) {
+            const button = SmartButton({
+                styleName: "ozdenType4",
+                labelText: "",
+                ariaLabel: tool.hint,
+                iconFile: lineIcon(tool.icon),
+                width: ICON_BUTTON_SIZE,
+                height: ICON_BUTTON_SIZE,
+                style: { layout: { padding: 0 } },
+            });
+            addHint(button, { hintText: tool.hint, hintPosition: "bottom" });
+        };
+
+        // SMARTBUTTON: "Save": its hint tells what happened
+        const createSaveButton = function () {
+            const HINT_TEXT = "Save the changes";
+            const button = SmartButton({
+                styleName: "primary",
+                labelText: "Save",
+                onClick: function (self) {
+                    if (!self.tooltip) return;
+                    self.tooltip.setHintText("Saved");
+                    self.after(SAVED_TIME, function () {
+                        if (self.tooltip) self.tooltip.setHintText(HINT_TEXT);
+                    });
+                },
+            });
+            addHint(button, { hintText: HINT_TEXT });
+        };
+
+        // ICON: A picture with a hint in your own colors
+        const createCarrot = function () {
+            Icon({ width: 70, height: 70 });
+            that.load("../assets/fruids/havuc.png");
+            addHint(that, {
+                hintText: "It's a carrot",
+                hintPosition: "right",
+                lbl_color: "#FFF4C2",
+                lbl_textColor: "#C2410C",
+                lbl_border: 1,
+                lbl_borderColor: "#C2410C",
+                lbl_fontSize: 18,
+                lbl_round: 6,
+            });
+        };
+
+        // Every hint goes, or comes back
+        const switchHints = function (self) {
+            const isOn = !!hintTargets[0].tooltip;
+            hintTargets.forEach(function (target) {
+                if (isOn) {
+                    target.tooltip.remove();
+                    target.tooltip = null;
+                } else {
+                    target.tooltip = Tooltip({ target: target, lbl_arrow: HINT_ARROW, ...target.hintParams });
+                }
+            });
+            self.setText(isOn ? "Hints on" : "Hints off");
+        };
+
+        // GROUP: A card with a title, a short description and a row
+        // WHY clipContent 0: the shadow of a button stays; the bubbles are on the page.
+        const startCard = function (title, description) {
+            VGroup({
+                width: "100%",
+                height: "auto",
+                align: "left top",
+                gap: 14,
+                padding: 20,
+                color: "white",
+                round: 12,
+                border: 1,
+                borderColor: Black(0.1),
+                clipContent: 0,
+                css: { maxWidth: CARD_MAX_WIDTH + "px" },
+            });
+            Label({ plainText: title, fontSize: 16, bold: 1, textColor: Black(0.8) });
+            Label({ plainText: description, width: "100%", fontSize: 13, textColor: Black(0.5), css: { marginTop: "-8px" } });
+            HGroup({ width: "100%", height: "auto", align: "left center", gap: 4, wrap: 1, clipContent: 0 });
+        };
+
+        const endCard = function () {
+            endGroup();
+            endGroup();
+        };
+
+    </script>
+
+</head>
+
+<body></body>
+
 </html>
