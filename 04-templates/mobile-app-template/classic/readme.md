@@ -2,7 +2,7 @@
 
 The look and the small motions of
 [bug7a/javascript-mobile-app-template](https://github.com/bug7a/javascript-mobile-app-template), rebuilt
-(2026-11-01) with the current basic.js and the components of the suite, on the frame of `../starter`
+(2026-11-01) with the current basic.js and the components of the kit, on the frame of `../starter`
 (pages, the back of Android / the browser / Escape, sheets, the lock screen, saved data).
 
 Open `index.htm` with a web server (Live Server: port 5505).

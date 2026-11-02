@@ -100,7 +100,7 @@ const TEXTS = {
         // ECOSYSTEM
         ecosystemEyebrow: "ECOSYSTEM",
         ecosystemTitle: "More than a library",
-        ecosystemLead: "basic.js comes with a handbook, a component suite and ready app templates, all written with the same few ideas.",
+        ecosystemLead: "basic.js comes with a handbook, a component kit and ready app templates, all written with the same few ideas.",
         ecosystem: [
             { key: "handbook", icon: "book", title: "Handbook", text: "{chapters} chapters, from the first Box to motion and utilities. Every example runs in the page.", link: "Open the handbook" },
             { key: "components", icon: "grid", title: "Components", text: "{components} ready components: tabs, tables, date pickers, charts, toasts, modals… each with a live example and its code.", link: "Browse the components" },
