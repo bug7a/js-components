@@ -356,6 +356,19 @@
             button.remove();
         });
 
+        test("SmartButton: a tone colors any shape, and style wins over it", async function () {
+            const packageBefore = JSON.stringify(SmartButton.styles.primary);
+            const outlined = SmartButton({ styleName: "outlined", tone: "primary", labelText: "Go" });
+            check("SmartButton: outlined takes the edge of the tone", outlined.style.box.borderColor === SmartButton.TONES.primary.color, outlined.style.box.borderColor);
+            const own = SmartButton({ styleName: "pill", tone: "blue", style: { box: { color: "tomato" } }, labelText: "Go" });
+            check("SmartButton: style wins over tone", own.style.box.color === "tomato", own.style.box.color);
+            const shared = SmartButton({ styleName: "pill", tone: "blue", style: SmartButton.styles.primary, labelText: "Go" });
+            check("SmartButton: a package given as style is not changed", JSON.stringify(SmartButton.styles.primary) === packageBefore);
+            outlined.setTone("", "pill");
+            check("SmartButton: setTone goes back to the package", outlined.style.box.color === SmartButton.TONES.gray.tint && outlined.style.box.border === 0, outlined.style.box.color);
+            [outlined, own, shared].forEach(function (button) { button.remove(); });
+        });
+
         // *** NUMERIC KEYBOARD (comp/numeric-keyboard.js)
 
         test("NumericKeyboard: a held Enter calls onEnter once", async function () {

@@ -16,13 +16,16 @@ THE DEFAULT BUTTON of new pages and projects (the user, 2026-10-30). It was Butt
   DARK (2026-10-31, the draft _designs/smart-button-dark.htm): "ozdenType1Dark" ... "ozdenType4Dark": the same shapes
   for a dark page (#2E2E2C, a light edge, a white text and icon, the dark waiting clock, yellow dots).
   SITUATIONS (2026-10-31, the draft _designs/smart-button-colors.htm): ozdenType1 in the color of a situation:
-  "primary" #5BBAC1, "danger" #E8796D (a white text), "warning" #F1C74A, "success" #7BC362,
-  "info" #52A8D0. The Dialog uses them for its button types.
-  PILL AND OUTLINED (2026-11-02, the user; sample 02-comp-examples/smart-button.htm): two looks, 52 px high with a
-  30 px icon, in the colors of SmartButton.TONES (gray, blue, green, purple, orange, red, yellow, teal, sky, navy,
-  pink). "pillOrange": a round button without an edge, a bold text in the color on a soft tint of it;
-  "pillOrangeSolid": the full color with a white text; "outlinedOrange": a colored edge with a thicker line at the
-  bottom. "pill" and "outlined" alone are gray. Your own colors: createPillPackage(), createOutlinedPackage().
+  "primary" #5BBAC1, "danger" #E8796D (a white text), "warning" #F1C74A, "success" #7BC362, "info" #52A8D0. The Dialog
+  uses them for its button types.
+  PILL AND OUTLINED (2026-11-02, the user; sample 02-comp-examples/smart-button.htm): 52 px high with a 30 px icon.
+  "pill": round, no edge, a bold text on a soft tint; "pillSolid": the full color with a white text; "outlined": a
+  colored edge with a thicker line at the bottom. Without a tone they are gray.
+- TONE (2026-11-02, the user): the shape comes from styleName, the color from tone: styleName: "outlined", tone: "blue".
+  Any shape works with any name of SmartButton.TONES: gray, blue, green, purple, orange, red, yellow, teal, sky, navy,
+  pink, primary, danger, warning, success, info. A new color is one new row there. The order: style > tone > package.
+  ozdenType4 stays a ghost: its text and its hover take the color. setTone(name, styleName): after create (the look of
+  the package again, then the tone; style given with params goes).
 - KEYBOARD AND ACCESSIBILITY: role "button", Tab reaches it, Enter / Space press it (Space when it goes up), a focus
   ring only for the keyboard; ariaLabel for a button with only an icon (else labelText is read).
 - setEnabled(0): no click, no hover, out of the Tab order (aria-disabled): a flat light gray button, a faint edge, no
@@ -49,8 +52,8 @@ const btnDownload = SmartButton({ labelText: "Download", onClick: function (self
     download().then(function () { self.setWaiting(0); });
 } });
 SmartButton({ styleName: "ozdenType4", labelText: "Delete", ask: "Click again to delete.", onClick: deleteFile });
-SmartButton({ styleName: "pillGreen", labelText: "Accepted", iconFile: "check.svg" });
-button.setStyle(SmartButton.styles.pillBlueSolid); // another look after create
+SmartButton({ styleName: "pill", tone: "green", labelText: "Accepted", iconFile: "check.svg" });
+button.setTone("blue", "pillSolid"); // another color and shape after create
 btnSave.setStyle({ box: { color: "#9DC7B5" }, hover: { color: "#91BCA9" }, active: { color: "#91BCA9" } });
 
 Started Date: January 2026
@@ -65,7 +68,8 @@ Webpage: https://bug7a.github.io/js-components/
 // Default values:
 const SmartButtonDefaults = {
     key: "0",
-    styleName: "ozdenType1", // SmartButton.styles: "ozdenType1" (the default), "ozdenType2", "ozdenType3", "ozdenType4", "classic", "pill...", "outlined..."
+    styleName: "ozdenType1", // SmartButton.styles: "ozdenType1" (the default), "ozdenType2", "ozdenType3", "ozdenType4", "classic", "pill", "pillSolid", "outlined"...
+    tone: "", // the color: a name of SmartButton.TONES (Ex: "blue", "primary"). "": the colors of the package. setTone()
     width: "auto",
     height: "auto",
     labelText: "Button",
@@ -161,6 +165,7 @@ const SmartButtonDefaults = {
 const SmartButton = function (params = {}) {
 
     // Merge params:
+    SmartButton.applyTone(params);
     basic.applyStylePackage(params, SmartButton.styles, SmartButtonDefaults);
     mergeIntoIfMissing(params, SmartButtonDefaults);
 
@@ -448,6 +453,14 @@ const SmartButton = function (params = {}) {
     };
     // USAGE: button.setStyle({ box: { color: "tomato", borderColor: "red" }, hover: { color: "tomato" } })
 
+    box.setTone = function (toneName, styleName) {
+        box.styleName = styleName || box.styleName;
+        box.setStyle(SmartButton.getPackageStyle(box.styleName));
+        box.tone = toneName;
+        if (toneName) box.setStyle(SmartButton.getToneStyle(toneName, box.styleName));
+    };
+    // USAGE: button.setTone("blue"), button.setTone("blue", "pillSolid"), button.setTone("", "pill") (only the package)
+
     // The style on the objects (box, layout, icon, label, focus ring); render() gives the colors of the state.
     // The side of the icon a little narrower (style.layout.iconSideTrim), only for an icon left of a text
     const paintIconSide = function () {
@@ -686,29 +699,11 @@ SmartButton.styles.ozdenType2Dark = SmartButton.createDarkPackage({ color: "#2E2
 SmartButton.styles.ozdenType3Dark = SmartButton.createDarkPackage({ color: "#2E2E2C", borderColor: White(0.06), boxShadow: "none" }, "#383835"); // a faint edge
 SmartButton.styles.ozdenType4Dark = SmartButton.createDarkPackage({ color: White(0), border: 0, borderColor: "transparent", boxShadow: "none" }, White(0.08)); // a ghost
 
-// THE SITUATION PACKAGES (2026-10-31, chosen by the user on the draft _designs/smart-button-colors.htm): ozdenType1
-// (an edge and a bottom line) in the color of a situation. textColor: the icon follows it (a white text: a white icon).
-SmartButton.SITUATION_TEXT_COLOR = Black(0.75);
-SmartButton.createSituationPackage = function (color, hoverColor, textColor) {
-    const isWhiteText = (textColor == "white");
-    return {
-        box: { color: color },
-        hover: { color: hoverColor },
-        active: { color: hoverColor },
-        label: { textColor: textColor },
-        icon: { opacity: isWhiteText ? 1 : 0.8, filter: isWhiteText ? "brightness(0) invert(1)" : "none" },
-    };
-};
-SmartButton.styles.primary = SmartButton.createSituationPackage("#5BBAC1", "#50AEB5", SmartButton.SITUATION_TEXT_COLOR); // the main action: Save, Send
-SmartButton.styles.danger = SmartButton.createSituationPackage("#E8796D", "#E0695C", "white"); // a delete, a reject
-SmartButton.styles.warning = SmartButton.createSituationPackage("#F1C74A", "#E6BB3C", SmartButton.SITUATION_TEXT_COLOR); // go on, but look first
-SmartButton.styles.success = SmartButton.createSituationPackage("#7BC362", "#70B756", SmartButton.SITUATION_TEXT_COLOR); // after a good result: Done
-SmartButton.styles.info = SmartButton.createSituationPackage("#52A8D0", "#479CC4", SmartButton.SITUATION_TEXT_COLOR); // Details, Help
-
-// THE PILL AND OUTLINED PACKAGES (2026-11-02, the user: the buttons of 02-comp-examples/smart-button.htm).
-// One table of colors gives three packages for each tone. color: the strong color; deep: the text of outlined;
-// tint / hover: the soft surface; solidHover: the hover of the full color; light: the light part of a two-tone icon;
-// pillText: the text of pill, when color is too weak on the tint (else color).
+// *** THE TONES AND THE SHAPES (2026-11-02, the user): the color of a button is apart from its shape.
+// color: the strong color; solidHover: its hover; onColor: the text on it (default white); tint / hover: the soft
+// surface; deep: the text of outlined; pillText: the text of pill (default color); light: the light part of a
+// two-tone icon. A new color is one new row.
+SmartButton.ON_COLOR_TEXT = Black(0.75); // the dark text on a light full color
 SmartButton.TONES = {
     gray: { color: "#6E6F74", deep: "#3A3A3A", tint: "#F0F0F0", hover: "#E6E6E6", solidHover: "#5F6065", light: "#C4C5C9", pillText: "#3A3A3A" },
     blue: { color: "#2F6FED", deep: "#2563D8", tint: "#E4EDFD", hover: "#D8E5FC", solidHover: "#2563D8", light: "#93B7F7" },
@@ -721,43 +716,119 @@ SmartButton.TONES = {
     sky: { color: "#4FB5D4", deep: "#2A7C93", tint: "#E3F7FB", hover: "#D5F2F8", solidHover: "#3FA6C6", light: "#A5DEEC", pillText: "#2E8BC0" },
     navy: { color: "#2A3A8C", deep: "#1C2A78", tint: "#DFE3EF", hover: "#D3D8E9", solidHover: "#1C2A78", light: "#8F9AC6" },
     pink: { color: "#E8457C", deep: "#C93668", tint: "#FDE8EF", hover: "#FBDBE6", solidHover: "#DC3A70", light: "#F5AFC7" },
+    // The situations (2026-10-31, chosen by the user on the draft _designs/smart-button-colors.htm)
+    primary: { color: "#5BBAC1", solidHover: "#50AEB5", onColor: SmartButton.ON_COLOR_TEXT, deep: "#2F8088", tint: "#E6F5F6", hover: "#D9EFF1", light: "#ADDDE0", pillText: "#2F8088" }, // the main action: Save, Send
+    danger: { color: "#E8796D", solidHover: "#E0695C", deep: "#C4574C", tint: "#FDECEA", hover: "#FBDFDC", light: "#F4BDB6", pillText: "#C4574C" }, // a delete, a reject
+    warning: { color: "#F1C74A", solidHover: "#E6BB3C", onColor: SmartButton.ON_COLOR_TEXT, deep: "#8F6B00", tint: "#FFF7DB", hover: "#FFF0C2", light: "#F7E2A0", pillText: "#B88A00" }, // go on, but look first
+    success: { color: "#7BC362", solidHover: "#70B756", onColor: SmartButton.ON_COLOR_TEXT, deep: "#4A8A35", tint: "#EDF7E8", hover: "#E1F1DA", light: "#BDE0AF", pillText: "#4F9A38" }, // after a good result: Done
+    info: { color: "#52A8D0", solidHover: "#479CC4", onColor: SmartButton.ON_COLOR_TEXT, deep: "#2F7DA3", tint: "#E6F3F9", hover: "#D9ECF5", light: "#A6D2E7", pillText: "#2F7DA3" }, // Details, Help
 };
+
+// The colors of a tone on each shape; "filled" is the look of every other shape.
+SmartButton.toneLooks = {
+    filled: function (tone) {
+        const textColor = tone.onColor || "white";
+        const isWhiteText = (textColor == "white");
+        return {
+            box: { color: tone.color },
+            hover: { color: tone.solidHover },
+            active: { color: tone.solidHover },
+            label: { textColor: textColor },
+            icon: { opacity: isWhiteText ? 1 : 0.8, filter: isWhiteText ? "brightness(0) invert(1)" : "none" },
+        };
+    },
+    ozdenType4: function (tone) {
+        return {
+            hover: { color: tone.tint },
+            active: { color: tone.tint },
+            label: { textColor: tone.deep },
+        };
+    },
+    pill: function (tone) {
+        return {
+            box: { color: tone.tint },
+            hover: { color: tone.hover },
+            active: { color: tone.hover },
+            label: { textColor: tone.pillText || tone.color },
+        };
+    },
+    pillSolid: function (tone) {
+        return {
+            box: { color: tone.color },
+            hover: { color: tone.solidHover },
+            active: { color: tone.solidHover },
+            label: { textColor: tone.onColor || "white" },
+        };
+    },
+    outlined: function (tone) {
+        return {
+            box: { color: tone.tint, borderColor: tone.color, boxShadow: "inset 0 -" + SmartButton.EDGE_WIDTH + "px 0 " + tone.color },
+            hover: { color: tone.hover },
+            active: { color: tone.hover },
+            label: { textColor: tone.deep },
+        };
+    },
+};
+
+SmartButton.getToneStyle = function (toneName, styleName) {
+    const tone = SmartButton.TONES[toneName];
+    if (!tone) {
+        console.warn("SmartButton: tone not found: " + toneName);
+        return {};
+    }
+    const createLook = SmartButton.toneLooks[styleName] || SmartButton.toneLooks.filled;
+    return createLook(tone);
+};
+
+// The whole look of a package: its keys, then the defaults (a package has only the keys that differ).
+SmartButton.getPackageStyle = function (styleName) {
+    const stylePackage = SmartButton.styles[styleName] || {};
+    const packageStyle = {};
+    mergeIntoIfMissing(packageStyle, stylePackage.style || stylePackage);
+    mergeIntoIfMissing(packageStyle, SmartButtonDefaults.style);
+    return packageStyle;
+};
+
+// The tone goes under params.style, so a key the page gives still wins. WHY a new object: params.style can be a package.
+SmartButton.applyTone = function (params) {
+    if (!params.tone) return;
+    const styleName = params.styleName || SmartButtonDefaults.styleName;
+    const ownStyle = {};
+    mergeIntoIfMissing(ownStyle, params.style || {});
+    mergeIntoIfMissing(ownStyle, SmartButton.getToneStyle(params.tone, styleName));
+    params.style = ownStyle;
+};
+
+// THE SITUATION PACKAGES: ozdenType1 (an edge and a bottom line) in the color of a situation.
+["primary", "danger", "warning", "success", "info"].forEach(function (toneName) {
+    SmartButton.styles[toneName] = SmartButton.toneLooks.filled(SmartButton.TONES[toneName]);
+});
+
+// THE PILL AND OUTLINED SHAPES (the user: the buttons of 02-comp-examples/smart-button.htm): gray without a tone.
 SmartButton.PILL_ROUND = 100; // always round, at any height
 SmartButton.EDGE_WIDTH = 2; // outlined: the edge and the bottom line on it
 
-SmartButton.createPillPackage = function (color, hoverColor, textColor) {
-    return {
-        layout: { gap: 12, padding: [22, 11] },
-        icon: { width: 30, height: 30, opacity: 1 },
-        label: { fontFamily: "opensans-bold", textColor: textColor },
-        box: { color: color, border: 0, borderColor: "transparent", round: SmartButton.PILL_ROUND, boxShadow: "none" },
-        hover: { color: hoverColor },
-        active: { color: hoverColor },
-    };
+SmartButton.PILL_SHAPE = {
+    layout: { gap: 12, padding: [22, 11] },
+    icon: { width: 30, height: 30, opacity: 1 },
+    label: { fontFamily: "opensans-bold" },
+    box: { border: 0, borderColor: "transparent", round: SmartButton.PILL_ROUND, boxShadow: "none" },
 };
-
-// tone: { color, deep, tint, hover }, like a row of SmartButton.TONES
-SmartButton.createOutlinedPackage = function (tone) {
-    const bottomLine = "inset 0 -" + SmartButton.EDGE_WIDTH + "px 0 " + tone.color;
-    return {
-        layout: { gap: 8, padding: [16, 9] },
-        icon: { width: 30, height: 30, opacity: 1 },
-        label: { fontFamily: "opensans", textColor: tone.deep },
-        box: { color: tone.tint, border: SmartButton.EDGE_WIDTH, borderColor: tone.color, round: SmartButton.PILL_ROUND, boxShadow: bottomLine },
-        hover: { color: tone.hover },
-        active: { color: tone.hover },
-    };
+SmartButton.OUTLINED_SHAPE = {
+    layout: { gap: 8, padding: [16, 9] },
+    icon: { width: 30, height: 30, opacity: 1 },
+    label: { fontFamily: "opensans" },
+    box: { border: SmartButton.EDGE_WIDTH, round: SmartButton.PILL_ROUND },
 };
-
-Object.keys(SmartButton.TONES).forEach(function (toneName) {
-    const tone = SmartButton.TONES[toneName];
-    const nameEnd = toneName[0].toUpperCase() + toneName.slice(1);
-    SmartButton.styles["pill" + nameEnd] = SmartButton.createPillPackage(tone.tint, tone.hover, tone.pillText || tone.color);
-    SmartButton.styles["pill" + nameEnd + "Solid"] = SmartButton.createPillPackage(tone.color, tone.solidHover, "white");
-    SmartButton.styles["outlined" + nameEnd] = SmartButton.createOutlinedPackage(tone);
-});
-SmartButton.styles.pill = SmartButton.styles.pillGray;
-SmartButton.styles.outlined = SmartButton.styles.outlinedGray;
+SmartButton.createShapePackage = function (shape, look) {
+    const shapePackage = {};
+    mergeIntoIfMissing(shapePackage, look);
+    mergeIntoIfMissing(shapePackage, shape);
+    return shapePackage;
+};
+SmartButton.styles.pill = SmartButton.createShapePackage(SmartButton.PILL_SHAPE, SmartButton.toneLooks.pill(SmartButton.TONES.gray));
+SmartButton.styles.pillSolid = SmartButton.createShapePackage(SmartButton.PILL_SHAPE, SmartButton.toneLooks.pillSolid(SmartButton.TONES.gray));
+SmartButton.styles.outlined = SmartButton.createShapePackage(SmartButton.OUTLINED_SHAPE, SmartButton.toneLooks.outlined(SmartButton.TONES.gray));
 
 // *** THE WAITING DRAWINGS: the clock and the dots (comp/loading-screen.js uses them too)
 

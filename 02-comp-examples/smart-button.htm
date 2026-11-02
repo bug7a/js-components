@@ -20,10 +20,10 @@
         /* Bismillah */
 
         // SMARTBUTTON · STATUS BUTTONS
-        // The style packages "pill..." and "outlined...": each state is a package in the colors of SmartButton.TONES.
-        // - SmartButton({ styleName: "pillOrange", labelText, iconFile })
-        // - "pillOrange": a soft tint, "pillOrangeSolid": the full color, "outlinedOrange": a colored edge
-        // - button.setStyle(SmartButton.styles.pillBlueSolid), button.setText(text), button.setIcon(file) -> after create
+        // The shape comes from styleName, the color from tone (a name of SmartButton.TONES).
+        // - SmartButton({ styleName: "pill", tone: "orange", labelText, iconFile })
+        // - "pill": a soft tint, "pillSolid": the full color, "outlined": a colored edge
+        // - button.setTone("blue", "pillSolid"), button.setText(text), button.setIcon(file) -> after create
         // TRY: click the buttons of "Click to change": "Add" becomes "Added" (click again: back to "Add").
 
         // *** VARIABLES:
@@ -76,34 +76,30 @@
             return svgIcon(TWO_TONE_ICONS[name].split("LIGHT").join(lightColor).split("STRONG").join(strongColor));
         };
 
-        const nameEnd = function (toneName) {
-            return toneName[0].toUpperCase() + toneName.slice(1);
-        };
-
         // A state in its own color on a soft tint of it
         const pillState = function (text, mark, toneName) {
             const tone = SmartButton.TONES[toneName];
-            return { text: text, styleName: "pill" + nameEnd(toneName), icon: circleIcon(mark, tone.pillText || tone.color, "white") };
+            return { text: text, styleName: "pill", tone: toneName, icon: circleIcon(mark, tone.pillText || tone.color, "white") };
         };
 
         // A gray state, before it is chosen
         const grayState = function (text, mark, next) {
-            return { text: text, styleName: "pill", icon: circleIcon(mark, LIGHT_GRAY_CIRCLE, "white"), next: next };
+            return { text: text, styleName: "pill", tone: "", icon: circleIcon(mark, LIGHT_GRAY_CIRCLE, "white"), next: next };
         };
 
         // A state in the full color: the circle is white and its mark has the color
         const solidState = function (text, mark, toneName, next) {
             const tone = SmartButton.TONES[toneName];
-            return { text: text, styleName: "pill" + nameEnd(toneName) + "Solid", icon: circleIcon(mark, "white", tone.color), next: next };
+            return { text: text, styleName: "pillSolid", tone: toneName, icon: circleIcon(mark, "white", tone.color), next: next };
         };
 
         // A colored edge and a two-tone icon
         const outlinedState = function (text, iconName, toneName) {
             const tone = SmartButton.TONES[toneName];
-            return { text: text, styleName: "outlined" + nameEnd(toneName), icon: twoToneIcon(iconName, tone.light, tone.color) };
+            return { text: text, styleName: "outlined", tone: toneName, icon: twoToneIcon(iconName, tone.light, tone.color) };
         };
 
-        // THE STATES: the text, the style package, the icon. next: the state a click changes it to
+        // THE STATES: the text, the shape, the color, the icon. next: the state a click changes it to
         const STATES = {
             // Order status
             draft: grayState("Draft", "pencil"),
@@ -211,6 +207,7 @@
         const createIconButton = function (state) {
             return SmartButton({
                 styleName: state.styleName,
+                tone: state.tone,
                 labelText: "",
                 ariaLabel: state.text,
                 iconFile: state.icon,
@@ -226,6 +223,7 @@
 
             return SmartButton({
                 styleName: state.styleName,
+                tone: state.tone,
                 labelText: state.text,
                 iconFile: state.icon,
                 onClick: function (self) {
@@ -240,7 +238,7 @@
         const showState = function (button, state) {
             button.setText(state.text);
             button.setIcon(state.icon);
-            button.setStyle(SmartButton.styles[state.styleName]);
+            button.setTone(state.tone, state.styleName);
         };
 
     </script>
