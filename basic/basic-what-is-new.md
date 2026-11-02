@@ -10,6 +10,25 @@ Naming rule for the additions: no new globals (one exception, the user's choice 
 
 ---
 
+## v26.11.01 (2026-11-01)
+
+### `basic.uiScale`, `basic.scaleStyle()`, `basic.scaleSize()`, `basic.scaleCssText()`: the components keep their size on a fitted page
+
+A page fitted with `page.fit(600, 800)` (a 600 px design, Ex: the mobile template `04-templates/mobile-app-template/classic`) is zoomed: 0.65 on a 390 px phone. A component made for screen px (Tabs, Dialog, Toast, Tooltip, SelectBox, SelectDate) was then 0.65 as big, its texts too small to read. Now:
+
+```javascript
+page.fit(600, 800);
+basic.uiScale = 1 / page.zoom;      // once (and again after a resize that changes the zoom)
+Dialog.confirm({ titleText: "Delete?" });   // as big as on a normal page
+Tabs({ tabs: ["A", "B"], scale: 1 });       // one object can still choose its own scale
+```
+
+- `basic.uiScale` (1 by default): the default of the `scale` param of these components.
+- `basic.scaleStyle(style, factor)`: a copy of a style package with its sizes multiplied (the package is not changed). The size keys end with size, width, height, gap, space, spacing, padding, margin, round, radius, offset, thickness, top, left, right, bottom or border (`basic.isSizeKey()`; `lineHeight` is not one: it is often a ratio). Numbers and arrays of numbers (`[12, 4]`) are multiplied; text values (`"100%"`, `"auto"`) stay.
+- `basic.scaleSize(value, factor)`: one size (a number or an array).
+- `basic.scaleCssText(text, factor)`: the px of a CSS text (a shadow, a border): `"0 8px 24px rgba(0, 0, 0, 0.12)"` x 2 -> `"0 16px 48px rgba(0, 0, 0, 0.12)"`. `basic.scaleStyle()` leaves texts as they are, so a component multiplies its shadows with it.
+- With the default 1 nothing changes: fully compatible.
+
 ## v26.10.27 (2026-10-27)
 
 ### `basic.applyStylePackage`: a package of params
@@ -182,7 +201,7 @@ const MyComp = function (params = {}) {
 
 - `_component-template.js` is written with them (`onPageResize`, `after`, `onHoverChange`, `setFocusRing`, `basic.isOn`; its `remove()` block stays only for what basic.js does not know).
 - comp-m4 was converted on 2026-10-23: 20 of its 31 components have no `remove()` of their own any more. comp-m2 / comp-m3 are converted when they are touched, not all at once.
-- The copies of basic.js in the other folders (`03-webpage/webpage-handbook/basic/` (`_update-copies.sh`), `03-webpage/webpage-basicjs/basic/`, the game, the admin panel demo) do not get these until they are copied again: a component that uses them needs the new basic.js.
+- The copies of basic.js in the other folders (`03-webpages/webpage-handbook/basic/` (`_update-copies.sh`), `03-webpages/webpage-basicjs/basic/`, the game, the admin panel demo) do not get these until they are copied again: a component that uses them needs the new basic.js.
 
 ---
 

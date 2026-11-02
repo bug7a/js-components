@@ -251,4 +251,4 @@ Sonuçlar burada not edilir; değişiklik ancak fark görülürse yapılır.
 - `basic/basic.js` sürümü ve header'ı, `basic/basic-what-is-new.md` (yeni sürümün bölümü), `__handbook/*/00-what-is-new.md`.
 - `basic.min.js` terser ile yeniden yapılmalı (komut md'de).
 - `test/basic-test.htm` ve `test/components-test.htm` → sekme başlığı ALL PASS.
-- Şablonlardaki basic.js kopyaları (`04-template-*`, `03-webpage/webpage-handbook/basic/` → `_update-copies.sh`) kendiliğinden güncellenmez.
+- Şablonlardaki basic.js kopyaları (`04-templates/`, `03-webpages/webpage-handbook/basic/` → `_update-copies.sh`) kendiliğinden güncellenmez.

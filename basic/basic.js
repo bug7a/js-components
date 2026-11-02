@@ -2,12 +2,16 @@
 
 /*
 
-basic.js (v26.10.27) A lightweight JavaScript library for building web-based applications with simple code. No need to write HTML or CSS — just use basic JavaScript.
+basic.js (v26.11.01) A lightweight JavaScript library for building web-based applications with simple code. No need to write HTML or CSS — just use basic JavaScript.
 - Project Site: https://bug7a.github.io/basic.js/
 
-v26.10.27 is v26.09.18 plus the additions below. Every page and component written for the
+v26.11.01 is v26.09.18 plus the additions below. Every page and component written for the
 previous versions works unchanged (same defaults, same DOM), except the global names moved under
 basic.* in v26.10.25 (see below).
+
+WHAT IS NEW IN v26.11.01 (see basic/basic-what-is-new.md):
+- basic:      uiScale, scaleStyle(style, factor), scaleSize(value, factor): the components drawn in screen px keep
+              their size on a page fitted with page.fit() (their "scale" param)
 
 WHAT IS NEW IN v26.10.27 (see basic/basic-what-is-new.md):
 - basic:      applyStylePackage: a package with its own "style" key is a package of params (its other keys
@@ -64,7 +68,7 @@ Licensed under the Apache License, Version 2.0
 "use strict";
 const basic = {};
 
-basic.version = "26.10.27";
+basic.version = "26.11.01";
 basic.library = "basic.js";
 basic.isReady = 0; // 1 after the page object is created (before start() runs).
 
@@ -482,6 +486,57 @@ basic.applyStylePackage = function ($params, $packages, $defaults) {
         mergeIntoIfMissing($params, packageParams);
     }
     return $params;
+};
+
+// v26.11.01: THE SCALE OF THE COMPONENTS ON A FITTED PAGE
+// WHY: page.fit(600) on a 390 px phone zooms the page to 0.65, so a component made for screen px is 0.65 as big
+//      (its texts too small to read). A page sets basic.uiScale = 1 / page.zoom once; such a component takes it as
+//      the default of its "scale" param and multiplies its sizes with basic.scaleStyle(), so it keeps its size.
+// USAGE: page.fit(600, 800); basic.uiScale = 1 / page.zoom;
+basic.uiScale = 1;
+
+// The keys of a style that are sizes: fontSize, width, height, size, gap, padding, margin, round, top, border...
+// (lineHeight is not: it is often a ratio)
+basic.SIZE_KEY_ENDINGS = ["size", "width", "height", "gap", "space", "spacing", "padding", "margin", "round", "radius",
+    "offset", "thickness", "top", "left", "right", "bottom", "border"];
+
+basic.isSizeKey = function ($key) {
+    const key = String($key).toLowerCase();
+    if (key === "lineheight") return false;
+    return basic.SIZE_KEY_ENDINGS.some((ending) => key.endsWith(ending));
+};
+
+// A size multiplied: a number, or an array of numbers ([x, y] padding). Text values ("100%", "auto") stay.
+// USAGE: basic.scaleSize(20, 1.5) -> 30, basic.scaleSize([12, 4], 1.5) -> [18, 6]
+basic.scaleSize = function ($value, $factor) {
+    if (typeof $value === "number") return $value * $factor;
+    if (Array.isArray($value)) return $value.map((item) => (typeof item === "number") ? item * $factor : item);
+    return $value;
+};
+
+// The px of a CSS text multiplied (a shadow, a border). Other texts and values stay.
+// USAGE: basic.scaleCssText("0 8px 24px rgba(0, 0, 0, 0.12)", 2) -> "0 16px 48px rgba(0, 0, 0, 0.12)"
+basic.scaleCssText = function ($text, $factor) {
+    if ($factor === 1 || typeof $text !== "string") return $text;
+    return $text.replace(/(\d*\.?\d+)px/g, (found, number) => (Number(number) * $factor) + "px");
+};
+
+// A copy of a style package with its sizes multiplied (the package is not changed). factor 1: the same object.
+// WHY not the texts: a size key can hold "100%" or "auto"; a page multiplies a shadow with basic.scaleCssText().
+// USAGE: params.style = basic.scaleStyle(params.style, params.scale);
+basic.scaleStyle = function ($style, $factor) {
+    if ($factor === 1 || !$style || typeof $style !== "object") return $style;
+    const scaled = {};
+    for (const key in $style) {
+        const value = $style[key];
+        const isGroup = (value !== null && typeof value === "object" && !Array.isArray(value));
+        if (isGroup) {
+            scaled[key] = basic.scaleStyle(value, $factor);
+            continue;
+        }
+        scaled[key] = basic.isSizeKey(key) ? basic.scaleSize(value, $factor) : value;
+    }
+    return scaled;
 };
 
 // basic.storage.loadOr("settings", { theme: "light" })

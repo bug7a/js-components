@@ -4,6 +4,12 @@ Bu belgede basic.js kütüphanesine eklenen yeni özellikler, güncellemeler ve 
 
 ---
 
+## Versiyon 26.11.01
+
+*   **Bileşenler sığdırılmış bir sayfada boylarını korur:** `page.fit(600, 800)` ile sığdırılan (telefonda 0.65'e küçülen) bir sayfada bir kez `basic.uiScale = 1 / page.zoom` yazın: Tabs, Dialog, Toast, Tooltip, SelectBox ve SelectDate bunu yeni `scale` parametrelerinin varsayılanı olarak alır ve normal bir sayfadaki kadar büyük kalır. `basic.scaleStyle(style, factor)`, `basic.scaleSize(value, factor)` ve `basic.scaleCssText(text, factor)` (bir gölgenin px'leri) kendi bileşenleriniz için bir stilin ölçülerini çarpar. Varsayılan 1 ile hiçbir şey değişmez. Örnekli başvuru: `basic/basic-what-is-new.md`.
+
+---
+
 ## Versiyon 26.10.27
 
 *   **Stil paketleri parametreleri de değiştirebilir:** kendi `style` anahtarı olan bir paket bir parametre paketidir. `style`'ı bileşenin stiline, diğer anahtarları sayfanın vermediği parametrelere gider: `Tabs.styles.dark = { style: { tab: { textColor: "white" } }, closeIconFile: "tabs/close-white.svg" }`. `style` anahtarı olmayan paket eskisi gibi çalışır. Tam uyumlu. `InputB` (comp-m2) koyu stili için bunu kullanır. Örnekli başvuru: `basic/basic-what-is-new.md`.

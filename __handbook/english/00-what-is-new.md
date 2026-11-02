@@ -4,6 +4,12 @@ This document contains new features, updates, and changes added to the basic.js 
 
 ---
 
+## Version 26.11.01
+
+*   **The components keep their size on a fitted page:** on a page fitted with `page.fit(600, 800)` (zoomed to 0.65 on a phone) set `basic.uiScale = 1 / page.zoom` once: Tabs, Dialog, Toast, Tooltip, SelectBox and SelectDate take it as the default of their new `scale` param and stay as big as on a normal page. `basic.scaleStyle(style, factor)`, `basic.scaleSize(value, factor)` and `basic.scaleCssText(text, factor)` (the px of a shadow) multiply the sizes of a style for your own components. With the default 1 nothing changes. Reference: `basic/basic-what-is-new.md`.
+
+---
+
 ## Version 26.10.27
 
 *   **Style packages can change params too:** a package with its own `style` key is a package of params. Its `style` goes into the style of the component, its other keys into the params the page did not give: `Tabs.styles.dark = { style: { tab: { textColor: "white" } }, closeIconFile: "tabs/close-white.svg" }`. A package without a `style` key works as before. Fully compatible. `InputB` (comp-m2) uses it for its dark style. Reference: `basic/basic-what-is-new.md`.

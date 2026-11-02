@@ -53,7 +53,7 @@
         const runTests = async function () {
 
             // *** LIBRARY INFO
-            check("basic.version", basic.version === "26.10.27", basic.version);
+            check("basic.version", basic.version === "26.11.01", basic.version);
             check("basic.library", basic.library === "basic.js", basic.library);
             check("basic.isReady", basic.isReady === 1);
 
@@ -478,6 +478,20 @@
             basic.addCss("basic-test-css", ".x { color: blue; }", 1);
             check("basic.addCss: replace", css1.textContent.indexOf("blue") > 0);
             css1.remove();
+
+            // *** v26.11.01: basic.uiScale, basic.scaleStyle, basic.scaleSize, basic.scaleCssText
+            check("basic.uiScale: 1 by default", basic.uiScale === 1);
+            const sizeStyle = { box: { width: 100, padding: [12, 4], round: 6, color: "red", opacity: 0.5, lineHeight: 1.4 }, label: { fontSize: 14, left: "50%" } };
+            const scaledStyle = basic.scaleStyle(sizeStyle, 1.5);
+            check("basic.scaleStyle: the sizes are multiplied (numbers and [x, y])",
+                scaledStyle.box.width === 150 && scaledStyle.box.padding[0] === 18 && scaledStyle.box.padding[1] === 6 && scaledStyle.box.round === 9 && scaledStyle.label.fontSize === 21);
+            check("basic.scaleStyle: colors, opacity, lineHeight and text sizes stay",
+                scaledStyle.box.color === "red" && scaledStyle.box.opacity === 0.5 && scaledStyle.box.lineHeight === 1.4 && scaledStyle.label.left === "50%");
+            check("basic.scaleStyle: the package is not changed; factor 1 gives it back as it is",
+                sizeStyle.box.width === 100 && basic.scaleStyle(sizeStyle, 1) === sizeStyle);
+            check("basic.scaleSize: a number, an array, a text", basic.scaleSize(20, 2) === 40 && basic.scaleSize([1, 2], 2)[1] === 4 && basic.scaleSize("auto", 2) === "auto");
+            check("basic.scaleCssText: the px of a shadow (also a negative and a .5 one), the rest stays",
+                basic.scaleCssText("0 -2px 0.5px rgba(0, 0, 0, 0.1)", 2) === "0 -4px 1px rgba(0, 0, 0, 0.1)" && basic.scaleCssText(12, 2) === 12 && basic.scaleCssText("1em solid", 2) === "1em solid");
 
             // *** v26.10.24: basic.applyStylePackage
             const testStyles = {
