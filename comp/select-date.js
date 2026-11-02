@@ -11,6 +11,9 @@ UI COMPONENT TEMPLATE
   Today/Clear buttons, enabled, keyboard navigation.
 - Everything is drawn with code (no image files needed).
 - Style packages: "classic" (default), "dark". Select with styleName. (SelectDate.styles)
+- scale: multiplies every size (the style, width / height, the field, the calendar and its cells). Its default is
+  basic.uiScale: on a page fitted with page.fit() (basic.uiScale = 1 / page.zoom) the field and the calendar keep
+  their size on the screen. (Needs basic.js v26.11.01 for a scale other than 1.)
 
 Keyboard (when the calendar is focused):
 - Arrow keys: move day, PageUp/PageDown: move month, Enter/Space: select, Escape: close.
@@ -37,6 +40,7 @@ const SelectDateDefaults = {
     firstDayOfWeek: 1, // 0: Sunday, 1: Monday
     placeholder: "", // Empty: uses the language text
     inline: 0, // 1: Calendar is always visible, no field.
+    scale: null, // Multiplies every size. null: basic.uiScale (1, or 1 / page.zoom on a fitted page). (Only at create time)
     enabled: 1,
     closeOnSelect: 1,
     showTodayButton: 1,
@@ -128,6 +132,9 @@ const SelectDate = function (params = {}) {
     // Merge params:
     mergeIntoIfMissing(params, SelectDateDefaults);
 
+    // Scale: the sizes of the style and of the params are multiplied. (A page fitted with page.fit() sets basic.uiScale.)
+    SelectDate.applyScale(params);
+
     // Edit params, if needed:
     params.color = "transparent";
     if (params.inline == 1) {
@@ -151,11 +158,28 @@ const SelectDate = function (params = {}) {
     let isMouseOver = 0;
     let dayCells = [];
     let monthCells = [];
-    const PANEL_GAP = 6; // px between the field and the panel
-    const SCREEN_MARGIN = 8; // px: the panel stays this far from the edges of the page
-    const ARROW_BUTTON_SIZE = 32;
-    const TITLE_HEIGHT = 32;
-    const MONTH_CELL_HEIGHT = 48;
+    const scale = box.scale; // The px of the code below are multiplied by it, like the style.
+    const PANEL_GAP = 6 * scale; // px between the field and the panel
+    const SCREEN_MARGIN = 8 * scale; // px: the panel stays this far from the edges of the page
+    const FIELD_GAP = 8 * scale; // Between the date text and the calendar icon
+    const PANEL_ROW_GAP = 6 * scale; // Between the header, the week days, the days and the footer
+    const HEADER_HEIGHT = 36 * scale;
+    const ARROW_BUTTON_SIZE = 32 * scale;
+    const ARROW_SIZE = 8 * scale; // The arrow is two borders of a turned square.
+    const ARROW_LINE_WIDTH = 2 * scale;
+    const ARROW_SHIFT = 3 * scale; // WHY: The turned square is moved to the middle of its button.
+    const TITLE_HEIGHT = 32 * scale;
+    const TITLE_ROUND = 6 * scale;
+    const WEEK_ROW_HEIGHT = 24 * scale;
+    const TODAY_BORDER = 1 * scale;
+    const MONTH_CELL_HEIGHT = 48 * scale;
+    const MONTH_CELL_ROUND = 8 * scale;
+    const MONTH_ROW_GAP = 4 * scale;
+    const FOOTER_HEIGHT = 38 * scale;
+    const FOOTER_SPACE_TOP = 6 * scale; // Between the line and the buttons
+    const DIVIDER_WIDTH = 1 * scale; // The line above the footer buttons
+    const FOOTER_BUTTON_PADDING = [8 * scale, 2 * scale];
+    const FOOTER_BUTTON_ROUND = 4 * scale;
     const OVERLAY_Z_INDEX = 1000;
     const PANEL_Z_INDEX = 1001;
 
@@ -243,15 +267,16 @@ const SelectDate = function (params = {}) {
         btn.setMotion("background-color 0.15s");
 
         Box({
-            width: 8,
-            height: 8,
+            width: ARROW_SIZE,
+            height: ARROW_SIZE,
             color: "transparent",
         });
+        const arrowLine = ARROW_LINE_WIDTH + "px solid " + _s.arrow.color;
         that.css = {
-            borderLeft: "2px solid " + _s.arrow.color,
-            borderBottom: "2px solid " + _s.arrow.color,
+            borderLeft: arrowLine,
+            borderBottom: arrowLine,
             transform: "rotate(" + ((isLeft) ? 45 : 225) + "deg)",
-            marginLeft: ((isLeft) ? 3 : -3) + "px",
+            marginLeft: ((isLeft) ? ARROW_SHIFT : -ARROW_SHIFT) + "px",
         };
 
         endGroup();
@@ -296,9 +321,9 @@ const SelectDate = function (params = {}) {
         cell.setMotion("background-color 0.15s");
 
         if (isSameDay(date, today)) {
-            cell.border = 1;
+            cell.border = TODAY_BORDER;
             cell.borderColor = _s.today.borderColor;
-            cell.lineHeight = (daySize - 2) + "px"; // WHY: The border (1 px at the top and the bottom) is inside the cell.
+            cell.lineHeight = (daySize - TODAY_BORDER * 2) + "px"; // WHY: The border (at the top and the bottom) is inside the cell.
         }
 
         if (selected) {
@@ -370,7 +395,7 @@ const SelectDate = function (params = {}) {
             text: name,
             textAlign: "center",
             fontSize: _s.day.fontSize,
-            round: 8,
+            round: MONTH_CELL_ROUND,
             textColor: (enabled) ? _s.day.textColor : _s.disabledDay.textColor,
             color: (selected) ? _s.selectedDay.color : "transparent",
         });
@@ -627,7 +652,7 @@ const SelectDate = function (params = {}) {
             width: "100%",
             height: "100%",
             align: "left center",
-            gap: 8,
+            gap: FIELD_GAP,
             ..._s.field,
         });
         box.field.setMotion("border-color 0.15s");
@@ -641,18 +666,18 @@ const SelectDate = function (params = {}) {
         that.css = { whiteSpace: "nowrap", textOverflow: "ellipsis" };
         that.grow = 1;
 
-        // BOX: Calendar icon (drawn)
+        // BOX: Calendar icon (drawn: a box, a bar at its top and two dots, in the px of an 18 px icon)
         box.icon = startBox({
-            width: 18,
-            height: 18,
+            width: 18 * scale,
+            height: 18 * scale,
             color: "transparent",
-            border: 2,
+            border: 2 * scale,
             borderColor: _s.icon.color,
-            round: 4,
+            round: 4 * scale,
         });
-        Box({ left: 0, top: 3, width: "100%", height: 2, color: _s.icon.color });
-        Box({ left: 3, top: 8, width: 3, height: 3, color: _s.icon.color });
-        Box({ left: 8, top: 8, width: 3, height: 3, color: _s.icon.color });
+        Box({ left: 0, top: 3 * scale, width: "100%", height: 2 * scale, color: _s.icon.color });
+        Box({ left: 3 * scale, top: 8 * scale, width: 3 * scale, height: 3 * scale, color: _s.icon.color });
+        Box({ left: 8 * scale, top: 8 * scale, width: 3 * scale, height: 3 * scale, color: _s.icon.color });
         endBox();
         box.icon.shrink = 0;
 
@@ -668,7 +693,11 @@ const SelectDate = function (params = {}) {
         // NOTE: endGroup() of the panel below returns the default container to the component box.
 
         // BOX: Transparent overlay (click outside: close)
-        box.overlay = Box(0, 0, "100%", "100%", { color: "transparent" });
+        // WHY a very big box and not 100% x 100%: with position "fixed" the "100%" is taken from the nearest parent
+        //     that has a zoom or a transform (page.fit); there the overlay had no height and a click outside the
+        //     panel did not close it (the same fix as SelectBox).
+        const OVERLAY_SIZE = 20000; // px
+        box.overlay = Box(-OVERLAY_SIZE, -OVERLAY_SIZE, OVERLAY_SIZE * 2, OVERLAY_SIZE * 2, { color: "transparent" });
         box.overlay.css.position = "fixed";
         box.overlay.zIndex = OVERLAY_Z_INDEX;
         box.overlay.on("click", function () { box.close(); });
@@ -680,7 +709,7 @@ const SelectDate = function (params = {}) {
         width: innerWidth + (_s.panel.padding * 2) + (_s.panel.border * 2),
         height: "auto",
         align: "left top",
-        gap: 6,
+        gap: PANEL_ROW_GAP,
         color: _s.panel.color,
         border: _s.panel.border,
         borderColor: _s.panel.borderColor,
@@ -696,7 +725,7 @@ const SelectDate = function (params = {}) {
         // GROUP: Header (prev, title, next)
         HGroup({
             width: innerWidth,
-            height: 36,
+            height: HEADER_HEIGHT,
             align: "center",
         });
 
@@ -707,7 +736,7 @@ const SelectDate = function (params = {}) {
                 width: innerWidth - (ARROW_BUTTON_SIZE * 2),
                 height: TITLE_HEIGHT,
                 textAlign: "center",
-                round: 6,
+                round: TITLE_ROUND,
                 ..._s.title,
             });
             box.title.lineHeight = TITLE_HEIGHT + "px";
@@ -728,7 +757,7 @@ const SelectDate = function (params = {}) {
         // GROUP: Week days
         box.weekRow = HGroup({
             width: innerWidth,
-            height: 24,
+            height: WEEK_ROW_HEIGHT,
         });
 
             for (let i = 0; i < 7; i++) {
@@ -757,26 +786,26 @@ const SelectDate = function (params = {}) {
             height: "auto",
             align: "left top",
             flexWrap: "wrap",
-            rowGap: "4px",
+            rowGap: MONTH_ROW_GAP + "px",
         });
         endGroup();
 
         // GROUP: Footer (Today, Clear)
         box.footer = HGroup({
             width: innerWidth,
-            height: 38,
+            height: FOOTER_HEIGHT,
             justifyContent: "space-between",
             alignItems: "center",
         });
         box.footer.css = {
-            borderTop: "1px solid " + _s.divider.color,
-            paddingTop: "6px",
+            borderTop: DIVIDER_WIDTH + "px solid " + _s.divider.color,
+            paddingTop: FOOTER_SPACE_TOP + "px",
         };
 
             box.todayButton = Label({
                 text: texts.today,
-                padding: [8, 2],
-                round: 4,
+                padding: FOOTER_BUTTON_PADDING,
+                round: FOOTER_BUTTON_ROUND,
                 ..._s.footerButton,
             });
             box.todayButton.cursor = "pointer";
@@ -784,8 +813,8 @@ const SelectDate = function (params = {}) {
 
             box.clearButton = Label({
                 text: texts.clear,
-                padding: [8, 2],
-                round: 4,
+                padding: FOOTER_BUTTON_PADDING,
+                round: FOOTER_BUTTON_ROUND,
                 ..._s.footerButton,
             });
             box.clearButton.cursor = "pointer";
@@ -854,6 +883,23 @@ const SelectDate = function (params = {}) {
 };
 
 // *** STATIC FUNCTIONS AND DATA:
+
+// scale: every size of the style and of the size params is multiplied (params is changed). Scale 1 changes nothing.
+// WHY: The default (null) is read when a date picker is made, not when this file is loaded: the page sets
+//      basic.uiScale later (page.fit(600, 800); basic.uiScale = 1 / page.zoom).
+SelectDate.applyScale = function (params) {
+    const givenScale = Number(params.scale);
+    params.scale = (givenScale > 0) ? givenScale : (basic.uiScale || 1);
+    if (params.scale === 1) return;
+    params.style = basic.scaleStyle(params.style, params.scale);
+    params.style.panel.shadow = basic.scaleCssText(params.style.panel.shadow, params.scale);
+    // WHY: Whole px: a browser that rounds the width of every cell could make 7 cells wider than their row (7 x size),
+    //      and the last day of a week would go to the next row.
+    params.style.day.size = Math.round(params.style.day.size);
+    ["width", "height"].forEach(function (name) {
+        params[name] = basic.scaleSize(params[name], params.scale);
+    });
+};
 
 SelectDate.languages = {
     en: {

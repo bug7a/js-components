@@ -32,6 +32,11 @@ UI COMPONENT TEMPLATE
 - Style packages: "classic" (default), "dark", "ozden" (the look of the old comp-m1 SelectItem / SelectText
   as a package of params: 350 x 50, a search box, the list goes down to the bottom of the page).
   Select with styleName. (SelectBox.styles) ("legacy" was merged into "ozden" on 2026-10-31.)
+- scale: multiplies every size (the style, width / height / panelMinWidth / panelMaxHeight, the spaces in the
+  code, the search box, the rows, the checks). Its default is basic.uiScale: on a page fitted with page.fit()
+  (basic.uiScale = 1 / page.zoom) the field and its list keep their size on the screen. The objects of
+  createItemView / createValueView are yours: multiply their sizes with self.scale (Ex: fontSize: 16 * self.scale).
+  (Needs basic.js v26.11.01 for a scale other than 1.)
 
 OPTION: { value, label, description, iconFile, group, disabled }
 - A string or a number is also accepted: "Apple" -> { value: "Apple", label: "Apple" }
@@ -99,6 +104,7 @@ const SelectBoxDefaults = {
     useScrollBar: 1, // basic/scroll-bar.js on the list (load it first). 0: the scrollbar of the browser (hidden by basic.css in Chrome).
     useSearchInput: 1, // 1: the search box is a SearchInput when comp/search-input-v2.js is loaded first (style.searchInput). 0: the own input (style.search)
     fullHeightList: 0, // 1: the list opens from the top of the page to its bottom, as wide as the field, at its left. (box.setFullHeightList())
+    scale: null, // Multiplies every size. null: basic.uiScale (1, or 1 / page.zoom on a fitted page). (Only at create time)
     ariaLabel: "",
     createItemView: null, // function (option, row, self) { ... } Your own rows: the list is an ItemList (load comp/item-list.js first). Its look: style.itemList
     createValueView: null, // function (option, field, self) { ... } Your own view of the selected option in the field (single selection)
@@ -173,6 +179,7 @@ const SelectBoxDefaults = {
             searchIconFile: "search.svg",
             clearIconFile: "clear.svg",
             searchIconSize: 16,
+            searchIconGap: 8, // Between the icon and the text (the default of SearchInput: here, so that scale changes it)
             searchIconOpacity: 0.55,
             clearIconOpacity: 0.45,
             invertIconColor: 0,
@@ -258,6 +265,7 @@ const SelectBoxDefaults = {
             bar_color: "#9A9A98",
             bar_mouseOverColor: "#6A6A68",
             bar_width: 4,
+            bar_mouseOverWidth: 4, // (the default of ScrollBar: here, so that scale changes it)
             bar_round: 3,
             bar_opacity: 0.4,
             bar_mouseOverOpacity: 0.9,
@@ -275,6 +283,9 @@ const SelectBox = function (params = {}) {
 
     // Merge params:
     mergeIntoIfMissing(params, SelectBoxDefaults);
+
+    // Scale: the sizes of the style and of the params are multiplied. (A page fitted with page.fit() sets basic.uiScale.)
+    SelectBox.applyScale(params);
 
     // WHY: startObject() copies params (only 4 levels) and keeps arrays by reference. Options and value are kept out of it.
     const startOptions = params.options;
@@ -294,9 +305,26 @@ const SelectBox = function (params = {}) {
     let searchText = "";
     let rows = []; // Drawn option rows: [{ row, option }]
     let activeIndex = -1; // Index in rows
-    const PANEL_GAP = 6; // px between the field and the panel
-    const SCREEN_MARGIN = 8; // px: the panel stays this far from the edges of the page
-    const MIN_LIST_HEIGHT = 80; // px: the list is not made shorter than this when the space is small
+    const scale = box.scale; // The px of the code below are multiplied by it, like the style.
+    const PANEL_GAP = 6 * scale; // px between the field and the panel
+    const SCREEN_MARGIN = 8 * scale; // px: the panel stays this far from the edges of the page
+    const MIN_LIST_HEIGHT = 80 * scale; // px: the list is not made shorter than this when the space is small
+    const CHECK_SIZE = 18 * scale; // The check box of a row (multiple)
+    const TICK_SIZE = 16 * scale; // The tick of the selected row (single)
+    const CLEAR_BUTTON_SIZE = 20 * scale; // The clear button of the field
+    const CLEAR_ICON_SIZE = 14 * scale;
+    const BUTTON_ROUND = 4 * scale; // The clear button and the footer buttons
+    const MARK_ROUND = 3 * scale; // The highlight of the search
+    const MESSAGE_PADDING = [8 * scale, 14 * scale]; // [x, y] "No results"
+    const MORE_MESSAGE_PADDING = [8 * scale, 8 * scale]; // "Showing 300 of 900. Type to search."
+    const GROUP_PADDING = [8 * scale, 4 * scale]; // The title of a group of options
+    const GROUP_LETTER_SPACING = 1 * scale;
+    const GROUP_SPACE_TOP = 6 * scale; // Above a group title that is not the first row
+    const SEARCH_GAP = 8 * scale; // The own search box: between its icon and its input
+    const SEARCH_INPUT_SPACE = 4 * scale; // The own search box: its input is this much shorter than the box
+    const FOOTER_PADDING = [4 * scale, 6 * scale];
+    const FOOTER_BUTTON_PADDING = [6 * scale, 2 * scale];
+    const DIVIDER_WIDTH = 1 * scale; // The line above the footer
     const OVERLAY_Z_INDEX = 1000;
     const PANEL_Z_INDEX = 1001;
     // createItemView: the list is an ItemList (box.itemList), made at the first open.
@@ -373,7 +401,7 @@ const SelectBox = function (params = {}) {
         const before = SelectBox.escapeHtml(label.slice(0, index));
         const match = SelectBox.escapeHtml(label.slice(index, index + text.length));
         const after = SelectBox.escapeHtml(label.slice(index + text.length));
-        const markStyle = "background:" + _s.highlight.color + "; color: inherit; border-radius: 3px";
+        const markStyle = "background:" + _s.highlight.color + "; color: inherit; border-radius: " + MARK_ROUND + "px";
         return before + "<mark style='" + markStyle + "'>" + match + "</mark>" + after;
     };
 
@@ -500,7 +528,7 @@ const SelectBox = function (params = {}) {
         renderInto(box.list, function () {
 
             if (list.length == 0) {
-                Label({ text: SelectBox.escapeHtml(box.emptyText), width: "100%", textAlign: "center", padding: [8, 14], ..._s.empty });
+                Label({ text: SelectBox.escapeHtml(box.emptyText), width: "100%", textAlign: "center", padding: MESSAGE_PADDING, ..._s.empty });
                 return;
             }
 
@@ -510,10 +538,10 @@ const SelectBox = function (params = {}) {
 
                 if (option.group && option.group != lastGroup) {
                     lastGroup = option.group;
-                    Label({ text: SelectBox.escapeHtml(option.group.toUpperCase()), padding: [8, 4], ..._s.group });
+                    Label({ text: SelectBox.escapeHtml(option.group.toUpperCase()), padding: GROUP_PADDING, ..._s.group });
                     that.css = {
-                        letterSpacing: "1px",
-                        marginTop: (rows.length) ? "6px" : "0px",
+                        letterSpacing: GROUP_LETTER_SPACING + "px",
+                        marginTop: (rows.length) ? GROUP_SPACE_TOP + "px" : "0px",
                     };
                 }
 
@@ -523,7 +551,7 @@ const SelectBox = function (params = {}) {
 
             if (list.length > shown.length) {
                 const moreText = "Showing " + shown.length + " of " + list.length + ". Type to search.";
-                Label({ text: moreText, width: "100%", textAlign: "center", padding: [8, 8], ..._s.empty });
+                Label({ text: moreText, width: "100%", textAlign: "center", padding: MORE_MESSAGE_PADDING, ..._s.empty });
             }
 
         });
@@ -586,6 +614,7 @@ const SelectBox = function (params = {}) {
                 onItemClick: onListItemClick,
                 onChange: onListChange,
                 style: getItemListStyle(),
+                scale: 1, // WHY: style.itemList is scaled already (with the style of SelectBox).
             });
         });
         fillItemList();
@@ -735,7 +764,7 @@ const SelectBox = function (params = {}) {
 
             // Multiple: check box
             if (isMultiple()) {
-                createSvgLabel(SelectBox.getCheckSvg(selected, _s), 18);
+                createSvgLabel(SelectBox.getCheckSvg(selected, _s, CHECK_SIZE), CHECK_SIZE);
             }
 
             if (option.iconFile) {
@@ -763,7 +792,7 @@ const SelectBox = function (params = {}) {
 
             // Single: tick on the right
             if (!isMultiple() && selected && _s.optionSelected.showTick == 1) {
-                createSvgLabel(SelectBox.getTickSvg(_s.optionSelected.checkColor), 16);
+                createSvgLabel(SelectBox.getTickSvg(_s.optionSelected.checkColor, TICK_SIZE), TICK_SIZE);
             }
 
         endGroup();
@@ -1083,6 +1112,7 @@ const SelectBox = function (params = {}) {
         params.searchIconFile = SelectBox.getSearchIconFile(params.searchIconFile);
         params.clearIconFile = SelectBox.getSearchIconFile(params.clearIconFile);
         params.width = "100%";
+        params.scale = 1; // WHY: style.searchInput is scaled already (with the style of SelectBox).
         params.placeholderText = box.searchPlaceholder;
         params.onSearch = onSearchTextChange; // WHY: also after its clear button (that is not an "input" event).
         box.searchGroup = SearchInput(params);
@@ -1096,7 +1126,7 @@ const SelectBox = function (params = {}) {
             width: "100%",
             height: _s.search.height,
             align: "left center",
-            gap: 8,
+            gap: SEARCH_GAP,
             padding: _s.search.padding,
             color: _s.search.color,
             border: _s.search.border,
@@ -1107,7 +1137,7 @@ const SelectBox = function (params = {}) {
 
             createSvgLabel(SelectBox.getSearchSvg(_s.arrow.color, _s.search.iconSize), _s.search.iconSize);
 
-            box.searchInput = Input({ width: "100%", height: _s.search.height - 4, minimal: 1, color: "transparent", fontSize: _s.search.fontSize, textColor: _s.search.textColor });
+            box.searchInput = Input({ width: "100%", height: _s.search.height - SEARCH_INPUT_SPACE, minimal: 1, color: "transparent", fontSize: _s.search.fontSize, textColor: _s.search.textColor });
             box.searchInput.inputElement.style.padding = "0px";
             box.searchInput.inputElement.placeholder = box.searchPlaceholder;
             box.searchInput.css = { flex: "1 1 auto", minWidth: "0" };
@@ -1290,7 +1320,13 @@ const SelectBox = function (params = {}) {
         box.fieldDescription.visible = 0;
 
         // LABEL: Clear button
-        box.clearButton = Label({ text: SelectBox.getClearSvg(_s.arrow.color), width: 20, height: 20, round: 4, clickable: 1 });
+        box.clearButton = Label({
+            text: SelectBox.getClearSvg(_s.arrow.color, CLEAR_ICON_SIZE),
+            width: CLEAR_BUTTON_SIZE,
+            height: CLEAR_BUTTON_SIZE,
+            round: BUTTON_ROUND,
+            clickable: 1,
+        });
         box.clearButton.shrink = 0;
         box.clearButton.lineHeight = "0";
         box.clearButton.elem.style.display = "flex";
@@ -1349,17 +1385,17 @@ const SelectBox = function (params = {}) {
         box.list.css.overscrollBehavior = "contain";
 
         // GROUP: Footer (multiple)
-        box.footer = HGroup({ width: "100%", height: "auto", align: "left center", padding: [4, 6] });
+        box.footer = HGroup({ width: "100%", height: "auto", align: "left center", padding: FOOTER_PADDING });
         box.footer.css = {
             justifyContent: "space-between",
-            borderTop: "1px solid " + _s.divider.color,
+            borderTop: DIVIDER_WIDTH + "px solid " + _s.divider.color,
         };
         box.footer.shrink = 0;
 
-            box.selectAllButton = Label({ text: SelectBox.escapeHtml(box.selectAllText), padding: [6, 2], round: 4, clickable: 1, ..._s.footerButton });
+            box.selectAllButton = Label({ text: SelectBox.escapeHtml(box.selectAllText), padding: FOOTER_BUTTON_PADDING, round: BUTTON_ROUND, clickable: 1, ..._s.footerButton });
             box.selectAllButton.cursor = "pointer";
 
-            box.clearAllButton = Label({ text: SelectBox.escapeHtml(box.clearText), padding: [6, 2], round: 4, clickable: 1, ..._s.footerButton });
+            box.clearAllButton = Label({ text: SelectBox.escapeHtml(box.clearText), padding: FOOTER_BUTTON_PADDING, round: BUTTON_ROUND, clickable: 1, ..._s.footerButton });
             box.clearAllButton.cursor = "pointer";
 
         endGroup();
@@ -1372,7 +1408,8 @@ const SelectBox = function (params = {}) {
     // SCROLL BAR: on the list. It moves itself into the panel (the parent of the list) and sits over the list.
     // WHY: Created here, not in the panel: an object created in the panel (a group) would be a part of its layout.
     if (box.useScrollBar == 1 && typeof ScrollBar !== "undefined") {
-        box.scrollBar = ScrollBar(Object.assign({ scrollableBox: box.list }, _s.scrollBar));
+        // WHY scale 1: style.scrollBar is scaled already (with the style of SelectBox).
+        box.scrollBar = ScrollBar(Object.assign({ scrollableBox: box.list, scale: 1 }, _s.scrollBar));
     }
 
     // *** OBJECT INIT CODE:
@@ -1449,6 +1486,25 @@ const SelectBox = function (params = {}) {
 
 SelectBox._counter = 1;
 
+// scale: every size of the style and of the size params is multiplied (params is changed). Scale 1 changes nothing.
+// WHY: The default (null) is read when a select box is made, not when this file is loaded: the page sets
+//      basic.uiScale later (page.fit(600, 800); basic.uiScale = 1 / page.zoom).
+SelectBox.applyScale = function (params) {
+    const givenScale = Number(params.scale);
+    params.scale = (givenScale > 0) ? givenScale : (basic.uiScale || 1);
+    if (params.scale === 1) return;
+    const scale = params.scale;
+    const style = basic.scaleStyle(params.style, scale);
+    // WHY: Texts with px in them: basic.scaleStyle changes only the numbers.
+    style.panel.shadow = basic.scaleCssText(style.panel.shadow, scale);
+    style.search.borderBottom = basic.scaleCssText(style.search.borderBottom, scale);
+    style.searchInput.borderBottomStyle = basic.scaleCssText(style.searchInput.borderBottomStyle, scale);
+    params.style = style;
+    ["width", "height", "panelMinWidth", "panelMaxHeight"].forEach(function (name) {
+        params[name] = basic.scaleSize(params[name], scale);
+    });
+};
+
 // createItemView needs comp/item-list.js. Without it: one warning, and the normal rows.
 SelectBox.canUseItemList = function () {
     if (typeof ItemList !== "undefined") return true;
@@ -1505,25 +1561,26 @@ SelectBox.getUnfoldSvg = function (color, size = 20) {
     return '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 -960 960 960" fill="' + color + '"><path d="M480-80 240-320l57-57 183 183 183-183 57 57L480-80ZM298-584l-58-56 240-240 240 240-58 56-182-182-182 182Z"/></svg>';
 };
 
-SelectBox.getClearSvg = function (color) {
-    return '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+SelectBox.getClearSvg = function (color, size = 14) {
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>';
 };
 
 SelectBox.getSearchSvg = function (color, size = 16) {
     return '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>';
 };
 
-SelectBox.getTickSvg = function (color) {
-    return '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
+SelectBox.getTickSvg = function (color, size = 16) {
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
 };
 
 // Check box of the multiple mode
-SelectBox.getCheckSvg = function (checked, style) {
+SelectBox.getCheckSvg = function (checked, style, size = 18) {
     const s = style.optionSelected;
+    const svgStart = '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 0 18 18">';
     if (!checked) {
-        return '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18"><rect x="1" y="1" width="16" height="16" rx="4" fill="none" stroke="' + style.arrow.color + '" stroke-width="1.5"/></svg>';
+        return svgStart + '<rect x="1" y="1" width="16" height="16" rx="4" fill="none" stroke="' + style.arrow.color + '" stroke-width="1.5"/></svg>';
     }
-    return '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18"><rect x="0.5" y="0.5" width="17" height="17" rx="4" fill="' + s.checkColor + '"/>' +
+    return svgStart + '<rect x="0.5" y="0.5" width="17" height="17" rx="4" fill="' + s.checkColor + '"/>' +
         '<path d="m4.5 9.3 3 3 6-6.3" fill="none" stroke="' + s.checkTickColor + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 };
 

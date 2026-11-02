@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>SettingsRow</title>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/app-bar.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/toggle.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/stepper.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/settings-row.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+    /* Bismillah */
+
+    // SettingsRow (comp-m4), 2026-11-01: the rows of a settings page of a mobile app, with the look of the old
+    // javascript-mobile-app-template (its Settings tab). A title, a small text and a control at the right
+    // (Toggle, Stepper, your own objects), or an arrow for a row that opens a page; SettingsRow.createSection()
+    // for the bands between the groups. The page is a 600 px design fitted to the screen (page.fit(600, 800)).
+
+    const DESIGN_WIDTH = 600;
+    const MAX_ZOOM_WIDTH = 800; // A wider screen shows the design at most this wide
+    const END_SPACE = 120; // The empty band at the end of the list
+    const BLUE = "#3871E0"; // A switch that is on
+    const RED = "#FE5D49";
+    const COLORS = ["#689BD2", "#5ABB9F", "indianred", "#FFD541"];
+    const THEMES = ["StarWars", "Supernova", "Metro", "Flatty"];
+    const VIDEO_QUALITIES = [
+        { name: "Low", descText: "Current quality: 25%" },
+        { name: "Standard", descText: "" },
+        { name: "High", descText: "Remaining disk space: 2.3GB" },
+    ];
+    const RESULT_TIME = 1600; // ms: the last click shows this long
+
+    let lblResult;
+    let cancelResultHide = null;
+
+    const fitPage = function () {
+        page.fit(DESIGN_WIDTH, MAX_ZOOM_WIDTH);
+    };
+
+    // The last click, for a moment at the bottom of the screen
+    const showResult = function (text) {
+        lblResult.plainText = text;
+        lblResult.visible = 1;
+        if (cancelResultHide) cancelResultHide();
+        cancelResultHide = lblResult.after(RESULT_TIME, function () {
+            lblResult.visible = 0;
+        });
+    };
+
+    const showClick = function (row) {
+        showResult("onClick: " + row.titleText);
+    };
+
+    // *** THE CONTROLS (made in control(row): the row puts them at its right side)
+
+    const createToggle = function (value, onColor = BLUE) {
+        return Toggle({
+            width: 60,
+            height: 40,
+            spacing: 4,
+            value: value,
+            backgroundStyle: { color: "lightgray", selectedColor: onColor },
+            buttonStyle: { color: "white", selectedColor: "white" },
+            onChange: function (self) {
+                showResult("Toggle: " + (self.value ? "on" : "off"));
+            },
+        });
+    };
+
+    const createFontSizeStepper = function () {
+        return Stepper({
+            width: 180,
+            height: 50,
+            value: 18,
+            min: 18,
+            max: 24,
+            unitText: "px",
+            ariaLabel: "Font size",
+            style: {
+                box: { color: "transparent", border: 0, padding: 4 },
+                button: { width: 42, color: "#EFEFEF", hoverColor: "#E6E6E6", activeColor: "#DDDDDD", round: 21, iconColor: "#141414", iconSize: 16 },
+                value: { fontSize: 22, textColor: Black(0.8) },
+            },
+        });
+    };
+
+    // A square of the primary color: a click (or Enter / Space) gives it the next color
+    const createColorSquare = function () {
+        let colorIndex = 0;
+        const square = Box({ width: 40, height: 40, color: COLORS[0], border: 2, borderColor: "#141414", round: 4, cursor: "pointer", role: "button", tabIndex: 0, aria: { label: "Primary color" } });
+        const showNextColor = function () {
+            colorIndex = (colorIndex + 1) % COLORS.length;
+            square.color = COLORS[colorIndex];
+        };
+        square.on("click", showNextColor);
+        square.on("keydown", function (self, event) {
+            if (event.key != "Enter" && event.key != " ") return;
+            event.preventDefault(); // WHY: Space must not scroll the list
+            showNextColor();
+        });
+        return square;
+    };
+
+    // The name of the theme (the row has an arrow and an onClick that changes it)
+    const createThemeText = function () {
+        return Label({ plainText: THEMES[0], fontSize: 20, textColor: Black(0.8) });
+    };
+
+    const showNextTheme = function (row) {
+        const themeIndex = (THEMES.indexOf(row.controlObject.plainText) + 1) % THEMES.length;
+        row.controlObject.plainText = THEMES[themeIndex];
+    };
+
+    // A button that changes the small text of its row
+    const createQualityButton = function (row) {
+        let qualityIndex = VIDEO_QUALITIES.length - 1;
+        return SmartButton({
+            labelText: VIDEO_QUALITIES[qualityIndex].name,
+            width: 130,
+            height: 50,
+            onClick: function (self) {
+                qualityIndex = (qualityIndex + 1) % VIDEO_QUALITIES.length;
+                const quality = VIDEO_QUALITIES[qualityIndex];
+                self.setText(quality.name);
+                row.setDescText(quality.descText); // The small text fades, the title slides
+            },
+        });
+    };
+
+    const start = function () {
+
+        fitPage();
+        page.onResize(fitPage);
+        page.color = "white";
+
+        // APP BAR: The bar of the Settings tab
+        const bar = AppBar({ titleText: "Settings", titleAlign: "left", line: 1, onMenu: function () { showResult("onMenu"); } });
+
+        // BOX: The list under the bar (it scrolls)
+        startBox(0, bar.height, "100%", "calc(100% - " + bar.height + "px)", { color: "white", scrollY: 1 });
+
+            VGroup({ width: "100%", height: "auto", align: "left top", gap: 0 });
+
+                SettingsRow.createSection("APPEARANCE");
+                SettingsRow({ titleText: "Dark Mode", descText: "Use interface colors inverted.", control: function () { return createToggle(1); } });
+                SettingsRow({ titleText: "Theme", control: createThemeText, arrow: 1, onClick: showNextTheme });
+                SettingsRow({ titleText: "Menu Style", descText: "Choose how your navigation menu appears.", arrow: 1, onClick: showClick });
+                SettingsRow({ titleText: "Primary Color", descText: "Choose a color for the colored interface buttons.", control: createColorSquare });
+
+                SettingsRow.createSection("SYSTEM");
+                SettingsRow({ titleText: "Only When Charging", descText: "The app only updates when plugged in.", control: function () { return createToggle(1); } });
+                SettingsRow({ titleText: "Font Size", control: createFontSizeStepper });
+                SettingsRow({ titleText: "Video Quality", descText: VIDEO_QUALITIES[2].descText, control: createQualityButton });
+
+                SettingsRow.createSection("DOWNLOADS");
+                SettingsRow({ titleText: "Download Over Wi-Fi Only", control: function () { return createToggle(1, RED); } });
+                SettingsRow({ titleText: "Delete All Downloads", descText: "Nothing will be deleted. It is a demo.", titleColor: "orangered", arrow: 1, onClick: showClick });
+
+                SettingsRow.createSection("OTHERS");
+                SettingsRow({ titleText: "Security", arrow: 1, onClick: showClick });
+                SettingsRow({ titleText: "Privacy Policy and Terms of Use", arrow: 1, onClick: showClick });
+
+                // BOX: The empty band at the end
+                Box({ width: "100%", height: END_SPACE, color: "whitesmoke" });
+
+            endGroup();
+
+        endBox();
+
+        // LABEL: The last click (over the list, at the bottom)
+        lblResult = Label({ bottom: 40, left: "50%", fontSize: 18, textColor: "white", color: "#141414", round: 22, padding: [22, 10], visible: 0 });
+        lblResult.css = { transform: "translateX(-50%)", whiteSpace: "nowrap" };
+
+    };
+
+    </script>
+
+</head>
+<body>
+</body>
+</html>

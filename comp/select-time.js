@@ -724,7 +724,11 @@ const SelectTime = function (params = {}) {
         // NOTE: endGroup() of the panel below returns the default container to the component box.
 
         // BOX: Transparent overlay (click outside: close)
-        box.overlay = Box(0, 0, "100%", "100%", { color: "transparent" });
+        // WHY a very big box and not 100% x 100%: with position "fixed" the "100%" is taken from the nearest parent
+        //     that has a zoom or a transform (page.fit); there the overlay had no height and a click outside the
+        //     panel did not close it (the same fix as SelectBox).
+        const OVERLAY_SIZE = 20000; // px
+        box.overlay = Box(-OVERLAY_SIZE, -OVERLAY_SIZE, OVERLAY_SIZE * 2, OVERLAY_SIZE * 2, { color: "transparent" });
         box.overlay.css.position = "fixed";
         box.overlay.zIndex = OVERLAY_Z_INDEX;
         box.overlay.on("click", function () { box.close(); });

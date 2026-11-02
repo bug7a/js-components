@@ -618,6 +618,7 @@ const LabelEditor = function (params = {}) {
     // TABS: Pill tabs, one is on (like a segmented control)
     const createPills = function (tabs, onPick) {
         return Tabs({
+            scale: 1, // WHY: the rest of this component is not scaled (basic.uiScale): its tab bar must not be either
             width: "100%", variant: "pill", fullWidth: 1, tabs: tabs, value: tabs[0].key,
             styleName: _s.tabsStyleName, style: copyStyle(_s.tabsStyle),
             onChange: function (self) { onPick(self.value); },

@@ -2,7 +2,7 @@
 
 /*
 
-Full Screen Select - v26.10
+Full Screen Select - v26.11
 
 A select field that opens its list on the whole screen: a search box at the top, a close button, the items under it
 (a phone app, a long list). The new version of comp-m1/ui-select-text.js (UISelectText, removed on 2026-10-28) with the same look.
@@ -11,6 +11,8 @@ A select field that opens its list on the whole screen: a search box at the top,
 - The list: it comes in from below with a fade. The search box (comp/search-input-v2.js SearchInput, load it
   first; without it there is no search box) shows only the items with the typed text (Turkish letters are found
   without their marks); Enter selects the first one. The selected item has a soft yellow color.
+  searchIconFile / clearIconFile: the icons of the search box ("": the default files of SearchInput, which are
+  found from a page one folder under the repository: a page in another place gives its own paths).
 - Keyboard in the list: Escape closes, the arrow keys move over the items, Enter selects. The focus goes back to
   the field when the list closes.
 - Only one list is open at a time (FullScreenSelect.openedSelect). The list is made on page when it first opens,
@@ -53,6 +55,8 @@ const FullScreenSelectDefaults = {
     showSearch: 1, // 0: no search box (a short list)
     arrowIconFile: "../comp/full-screen-select/arrow.svg",
     closeIconFile: "../comp/full-screen-select/cancel.svg",
+    searchIconFile: "", // The icons of the search box. "": the files of SearchInput (or of its style package)
+    clearIconFile: "",
     ariaLabel: "", // "": the text of the selected item is read
     onChange: function (self) {}, // self.selectedKey changed (not at create time, not with silent: 1)
     onOpen: function (self) {},
@@ -252,7 +256,7 @@ const FullScreenSelect = function (params = {}) {
         if (box.showSearch != 1 || typeof SearchInput === "undefined") return;
 
         const search = _s.search;
-        panel.searchInput = SearchInput({
+        const searchParams = {
             styleName: _s.searchStyleName,
             left: search.left,
             top: search.top,
@@ -267,7 +271,11 @@ const FullScreenSelect = function (params = {}) {
             borderBottomStyle: "none",
             placeholderText: box.placeholderText,
             onSearch: function (text) { filterRows(text); },
-        });
+        };
+        // WHY only when given: a file given here would win over the icon of the style package of SearchInput
+        if (box.searchIconFile) searchParams.searchIconFile = box.searchIconFile;
+        if (box.clearIconFile) searchParams.clearIconFile = box.clearIconFile;
+        panel.searchInput = SearchInput(searchParams);
 
     };
 

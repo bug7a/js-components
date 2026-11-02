@@ -17,6 +17,10 @@ UI COMPONENT TEMPLATE
 - maxVisible: Old toasts are closed when there are too many.
 - Small screens: Toasts use the full width.
 - Accessibility: Errors use role="alert", others role="status". Escape closes the focused toast.
+- Scale (2026-11-01): scale multiplies every size of a toast (its style, its shadow, its motion); the scale of
+  Toast.options multiplies the places of the toasts (width, offsets, gap, smallScreenWidth). null (default):
+  Toast.options.scale, else basic.uiScale (1; a page fitted with page.fit() sets 1 / page.zoom: the toasts keep
+  their size on the screen).
 
 USAGE:
 Toast.success("Changes are saved.");
@@ -25,6 +29,7 @@ Toast.show({ type: "info", title: "Item deleted", message: "report.pdf", action:
 Toast.show({ key: "copy", type: "success", message: "Link is copied." }); // Same key: updates the visible toast
 Toast.promise(saveData(), { loading: "Saving...", success: "Saved.", error: (err) => "Failed: " + err.message });
 Toast.setOptions({ position: "bottom-right", theme: "dark" });
+Toast.setOptions({ scale: 1.5 }); // every toast and its place x 1.5 (default: basic.uiScale)
 
 const toast = Toast.show({ type: "loading", message: "Uploading 0%" });
 toast.update({ message: "Uploading 60%" });
@@ -54,22 +59,41 @@ const ToastDefaults = {
     action: null, // { text: "Undo", onClick: function (toast) {} } onClick returns false: the toast stays open.
     position: null, // null: Toast.options.position
     theme: null, // null: Toast.options.theme
+    scale: null, // every size multiplied (Ex: 1.5). null: Toast.options.scale
     onClick: null, // function (toast) {} Click on the toast (not on the buttons)
     onClose: function (toast, reason) { }, // reason: "timeout", "close", "action", "limit", "api"
-    style: {
+    style: { // (its sizes are px, multiplied by scale)
         card: {
             round: 10,
             padding: [14, 12],
             gap: 12,
+            border: 1,
         },
         icon: {
             size: 20,
+            marginTop: 1, // in the line of the title
+        },
+        texts: {
+            gap: 2, // between the title, the message and the action
         },
         title: {
             fontSize: 14,
         },
         message: {
             fontSize: 13,
+        },
+        action: { // the action button (Ex: "Undo")
+            fontSize: 13,
+            padding: [10, 4],
+            round: 6,
+            marginTop: 6,
+        },
+        close: { // the close button
+            size: 24,
+            iconSize: 16,
+            round: 6,
+            marginTop: -2, // a little up and right: its icon in the line of the title, near the corner
+            marginRight: -4,
         },
         progress: {
             height: 3,
@@ -101,6 +125,8 @@ const Toast = function (params = {}) {
     const onClick = params.onClick;
 
     // Edit params, if needed:
+    params.scale = Toast.getScale(params.scale);
+    params.style = basic.scaleStyle(params.style, params.scale);
     params.width = "100%";
     params.height = "auto";
     params.color = "transparent";
@@ -124,8 +150,8 @@ const Toast = function (params = {}) {
     let startedAt = 0;
     let isHovered = 0;
     let isFocused = 0;
-    const SLIDE_X = 16; // px: a toast at the left or right side comes from (and goes to) that side
-    const SLIDE_Y = 12; // px: a centered toast comes from the top or the bottom
+    const SLIDE_X = 16 * box.scale; // px: a toast at the left or right side comes from (and goes to) that side
+    const SLIDE_Y = 12 * box.scale; // px: a centered toast comes from the top or the bottom
     const ENTER_TIME = "0.2s";
     const LEAVE_TIME = "0.16s"; // The fade out, then the closing of the space in the stack
     const LEAVE_WAIT = 150; // ms: the space starts to close a little before the fade ends
@@ -173,7 +199,7 @@ const Toast = function (params = {}) {
 
         box.card.color = theme.background;
         box.card.borderColor = theme.border;
-        box.card.boxShadow = theme.shadow;
+        box.card.boxShadow = basic.scaleCssText(theme.shadow, box.scale);
         box.card.role = (isError) ? "alert" : "status";
         box.card.aria = { live: (isError) ? "assertive" : "polite" };
         box.card.cursor = (box.onClick) ? "pointer" : "default";
@@ -197,7 +223,7 @@ const Toast = function (params = {}) {
         }
 
         box.btnClose.visible = (box.closable == 1) ? 1 : 0;
-        box.btnClose.text = Toast.getCloseSvg(theme.close);
+        box.btnClose.text = Toast.getCloseSvg(theme.close, _s.close.iconSize);
 
         box.progress.color = color;
 
@@ -367,7 +393,8 @@ const Toast = function (params = {}) {
     // *** OBJECT VIEW:
 
     box.css = { overflow: "visible", boxSizing: "border-box" };
-    box.css[(isBottom) ? "paddingTop" : "paddingBottom"] = options.gap + "px";
+    // (the gap between the toasts is a place: the scale of Toast.options, like the offsets)
+    box.css[(isBottom) ? "paddingTop" : "paddingBottom"] = (options.gap * Toast.getScale()) + "px";
 
     // GROUP: Card
     box.card = HGroup({
@@ -376,7 +403,7 @@ const Toast = function (params = {}) {
         align: "left top",
         gap: _s.card.gap,
         padding: _s.card.padding,
-        border: 1,
+        border: _s.card.border,
         round: _s.card.round,
         clickable: 1,
         position: "relative",
@@ -392,7 +419,7 @@ const Toast = function (params = {}) {
         });
         box.icon.shrink = 0;
         box.icon.lineHeight = "0";
-        box.icon.css.marginTop = "1px";
+        box.icon.css.marginTop = _s.icon.marginTop + "px";
         box.icon.aria = { hidden: "true" };
 
         // GROUP: Texts and action
@@ -400,7 +427,7 @@ const Toast = function (params = {}) {
             width: "auto",
             height: "auto",
             align: "left top",
-            gap: 2,
+            gap: _s.texts.gap,
         });
         box.textGroup.css = { flex: "1 1 auto", minWidth: "0" };
 
@@ -414,12 +441,12 @@ const Toast = function (params = {}) {
             // LABEL: Action button
             box.btnAction = Label({
                 text: "",
-                fontSize: 13,
-                padding: [10, 4],
-                round: 6,
+                fontSize: _s.action.fontSize,
+                padding: _s.action.padding,
+                round: _s.action.round,
                 clickable: 1,
             });
-            box.btnAction.css = { fontFamily: "opensans-bold", marginTop: "6px" };
+            box.btnAction.css = { fontFamily: "opensans-bold", marginTop: _s.action.marginTop + "px" };
             box.btnAction.cursor = "pointer";
             box.btnAction.tabIndex = 0;
             box.btnAction.role = "button";
@@ -429,16 +456,17 @@ const Toast = function (params = {}) {
         // LABEL: Close button (SVG)
         box.btnClose = Label({
             text: "",
-            width: 24,
-            height: 24,
-            round: 6,
+            width: _s.close.size,
+            height: _s.close.size,
+            round: _s.close.round,
             clickable: 1,
         });
         box.btnClose.shrink = 0;
         box.btnClose.lineHeight = "0";
         box.btnClose.cursor = "pointer";
         box.btnClose.elem.style.display = "flex";
-        box.btnClose.css = { alignItems: "center", justifyContent: "center", margin: "-2px -4px 0 0" };
+        const closeMargin = _s.close.marginTop + "px " + _s.close.marginRight + "px 0 0";
+        box.btnClose.css = { alignItems: "center", justifyContent: "center", margin: closeMargin };
         box.btnClose.tabIndex = 0;
         box.btnClose.role = "button";
         box.btnClose.aria = { label: "Close" };
@@ -567,11 +595,16 @@ Toast.options = {
     theme: "auto", // "light", "dark", "auto"
     width: 360,
     offset: 16, // Space to the screen edges
+    offsetTop: null, // Space to the top edge (Ex: under the header of an app). null: offset
+    offsetBottom: null, // Space to the bottom edge (Ex: over a tab bar). null: offset
     gap: 10, // Space between toasts
     maxVisible: 5, // In one position
     zIndex: 3000,
     smallScreenWidth: 520, // Page width: toasts use the full width below this.
     durations: { success: 3000, info: 4000, warning: 5000, error: 7000, loading: 0 },
+    // The px above (width, offsets, gap, smallScreenWidth) multiplied, and the scale of a toast without its own.
+    // null: basic.uiScale (1 / page.zoom on a page fitted with page.fit())
+    scale: null,
 };
 
 // *** THEMES: the colors. (The style param has the shapes and the sizes.)
@@ -607,6 +640,7 @@ Toast.list = [];
 
 Toast._containers = {};
 Toast._isResizeListening = 0;
+Toast._layoutScale = 1; // the scale of the last layoutContainers()
 
 // *** STATIC FUNCTIONS:
 
@@ -661,6 +695,7 @@ Toast.closeAll = function () {
 };
 
 // USAGE: Toast.setOptions({ position: "bottom-center", theme: "dark", maxVisible: 3 })
+// USAGE: Toast.setOptions({ position: "top-center", offsetTop: 64 }) // under a 56 px header
 Toast.setOptions = function (values = {}) {
     Object.keys(values).forEach(function (key) {
         if (key == "durations") Object.assign(Toast.options.durations, values.durations);
@@ -673,7 +708,11 @@ Toast.setOptions = function (values = {}) {
 Toast.getContainer = function (position) {
 
     let container = Toast._containers[position];
-    if (container && container.elem.isConnected) return container;
+    if (container && container.elem.isConnected) {
+        // WHY: a page changes basic.uiScale with page.zoom, often without a resize of the window
+        if (Toast.getScale() !== Toast._layoutScale) Toast.layoutContainers();
+        return container;
+    }
 
     const getAlign = function () {
         if (position.endsWith("left")) return "left top";
@@ -713,11 +752,22 @@ Toast.getContainer = function (position) {
 
 };
 
+// The scale of a toast: its own, else Toast.options.scale, else basic.uiScale. Toast.getScale(): of the containers
+Toast.getScale = function (ownScale = null) {
+    return ownScale ?? Toast.options.scale ?? basic.uiScale;
+};
+
 // Places the containers. (Full width on small screens)
 Toast.layoutContainers = function () {
 
     const options = Toast.options;
-    const isSmall = page.width < options.smallScreenWidth;
+    const scale = Toast.getScale();
+    const offset = options.offset * scale;
+    const offsetTop = (options.offsetTop ?? options.offset) * scale;
+    const offsetBottom = (options.offsetBottom ?? options.offset) * scale;
+    // WHY smallScreenWidth x scale: page.width is in the px of the page, a fitted page has more of them
+    const isSmall = page.width < options.smallScreenWidth * scale;
+    Toast._layoutScale = scale;
 
     Object.keys(Toast._containers).forEach(function (position) {
 
@@ -733,20 +783,21 @@ Toast.layoutContainers = function () {
         style.left = "";
         style.right = "";
         style.transform = "none";
-        style.maxWidth = "calc(100% - " + (options.offset * 2) + "px)";
+        style.maxWidth = "calc(100% - " + (offset * 2) + "px)";
 
-        if (position.startsWith("top")) style.top = options.offset + "px";
-        else style.bottom = options.offset + "px";
+        // WHY own top / bottom spaces: a bigger offset for a header also narrowed the toasts at the sides
+        if (position.startsWith("top")) style.top = offsetTop + "px";
+        else style.bottom = offsetBottom + "px";
 
         if (isSmall) {
-            style.left = options.offset + "px";
-            style.width = "calc(100% - " + (options.offset * 2) + "px)";
+            style.left = offset + "px";
+            style.width = "calc(100% - " + (offset * 2) + "px)";
             return;
         }
 
-        style.width = options.width + "px";
-        if (position.endsWith("left")) style.left = options.offset + "px";
-        else if (position.endsWith("right")) style.right = options.offset + "px";
+        style.width = (options.width * scale) + "px";
+        if (position.endsWith("left")) style.left = offset + "px";
+        else if (position.endsWith("right")) style.right = offset + "px";
         else {
             style.left = "50%";
             style.transform = "translateX(-50%)";
@@ -780,7 +831,8 @@ Toast.getIconSvg = function (type, color, size) {
         '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + (Toast.ICON_PATHS[type] || Toast.ICON_PATHS.info) + '</svg>';
 };
 
-Toast.getCloseSvg = function (color) {
-    return '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="' + color +
+Toast.getCloseSvg = function (color, size = 16) {
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="' + color +
         '" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>';
 };
+

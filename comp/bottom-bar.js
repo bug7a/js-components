@@ -2,7 +2,7 @@
 
 /*
 
-Component: BottomBar
+Component: BottomBar - v26.11
 Description: Mobile application bottom bar component that creates buttons from a JSON list.
 Started Date: December 2025
 Developer: Bugra Ozden
@@ -14,6 +14,20 @@ WebPage: https://bug7a.github.io/
 NEEDS: comp/badge-v2.js (Badge), loaded before the first item is created.
 NOTE: Each item needs two icon files: "home.png" (normal) and "homes.png" (selected: the same name + "s").
 
+THE NAME OF THE SELECTED ITEM (labelMode):
+- "inline" (the default): next to its icon, in the selected box.
+- "float": the selected box is only around the icon; the name shows over it in a small pill (style.floatLabel) and
+  fades out after floatLabelTime ms. The pill follows the selected box. (The tab bar of the old
+  javascript-mobile-app-template; sample: 02-comp-examples/bottom-bar-2.htm)
+- "none": no names.
+ITEM COLORS: items[i].color is the color of the selected box behind that item (else style.selectedBox.color).
+BADGES: the badge param goes to the Badge of every item (its style is the badgeStyle of Badge). An item shows its
+  badge after bar.setBadge(index, value); bar.setBadge(index, "") removes it.
+THE SPACE AFTER THE NAME: layout.labelEndSpace (and the empty side of an icon box bigger than its icon) goes after
+  the name, so the selected box looks even at both ends.
+KEYBOARD AND SCREEN READERS: every item is a button named by its text ("Tab 1"... without a text); the Tab key
+  reaches it, Enter / Space choose it like a click.
+
 USAGE:
 const bar = BottomBar({
     top: page.height - 100,
@@ -22,6 +36,28 @@ const bar = BottomBar({
 });
 bar.setBadge(1, 5);
 bar.selectByIndex(0);
+bar.setLabelMode("float");
+
+// The tab bar of the old mobile app template: a white bar, a circle in the color of the item behind the selected
+// icon, its name over it for a moment, a number badge with a white ring (also "0" and "1").
+BottomBar({
+    bottom: 0,
+    height: 80,
+    labelMode: "float",
+    items: [{ icon: "home.png", text: "Home", color: "#5ABB9F" }, { icon: "tasks.png", text: "Tasks" }],
+    badge: {
+        showZero: 1,
+        dotForOne: 0,
+        style: { color: "indianred", border: 3, borderColor: "white", textColor: "white" },
+        numberStyle: { fontSize: 14, bold: 1, padding: [8, 3], round: 20, top: -10, right: -14 },
+    },
+    style: {
+        container: { gradient: "white" }, // NOTE: gradient is the CSS background of the box: it is written over color.
+        background: { gradient: "none", round: 0 },
+        layout: { barHeight: 80, padding: 20, itemSpacing: 40, iconGap: 0, selectionPadding: 8 },
+        selectedBox: { color: "#141414", border: 0 },
+    },
+});
 
 */
 
@@ -33,9 +69,19 @@ const BottomBarDefaults = {
     left: 0,
     width: "100%",
     height: 100,
-    items: [], // JSON list for buttons: [{ icon: "file.png", text: "Home" }]
+    items: [], // JSON list for buttons: [{ icon: "file.png", text: "Home", color: "#5ABB9F" }] (color: optional)
     onItemClick: function (item, index) { },
     hoverEffect: true, // For desktop usage
+    labelMode: "inline", // "inline": the name next to the selected icon, "float": over it for a moment, "none": no names
+    floatLabelTime: 600, // ms: from the moment the name shows over the selected item to its fade out ("float")
+    badge: { // The params of the Badge of every item (comp/badge-v2.js)
+        showZero: 0, // 1: a badge set to 0 shows "0" (0: hidden)
+        dotForOne: 1, // 1: a dot for 1, 0: the number 1
+        maxValue: 99, // More: "99+"
+        dotSize: 12,
+        style: { color: "#FE5D49" }, // The dot and the number: color, border, borderColor, textColor (badgeStyle of Badge)
+        numberStyle: {}, // Only the number, over style: fontSize, bold, padding, round, top, right...
+    },
     style: {
         container: {
             color: "transparent",
@@ -49,10 +95,15 @@ const BottomBarDefaults = {
         },
         // Layout configuration
         layout: {
+            barHeight: 76, // The height of the bar (the background)
+            iconBoxSize: 40, // The box of an icon: the button of the item, with its badge
             padding: 40,
             itemSpacing: 20,
             iconGap: 6,
             selectionPadding: 14,
+            // px more after the name of the selected item: an icon file has an empty edge at its left, a name has none
+            // at its right, so the same padding looked smaller after the name (the user, 2026-11-02). 0: no more space
+            labelEndSpace: 6,
         },
         icon: {
             width: 40,
@@ -62,11 +113,25 @@ const BottomBarDefaults = {
             textColor: "#FE5D49",
         },
         selectedBox: {
-            color: "#EAEAE9",
+            color: "#EAEAE9", // An item with its own color (items[i].color) gives its color instead.
             round: 100,
             border: 1,
             borderColor: "#FFFFFF",
-        }
+            height: 56,
+        },
+        floatLabel: { // labelMode: "float": the pill of the name over the selected item (any prop of a Label)
+            fontSize: 14,
+            textColor: Black(0.8),
+            color: White(0.8),
+            border: 1,
+            borderColor: Black(0.6),
+            round: 6,
+            padding: [8, 3],
+            space: 20, // px between the selected box and the pill
+        },
+        focus: {
+            ringColor: "rgba(95, 158, 160, 0.8)", // The ring of an item that has the keyboard focus
+        },
     }
 };
 
@@ -83,48 +148,181 @@ const BottomBar = function (params = {}) {
 
     // *** PRIVATE VARIABLES:
     const BAR_WIDTH = 350; // The first width of the bar; refresh() gives it the width of its items.
-    const BAR_HEIGHT = 76;
     const SELECTED_BOX_WIDTH = 142; // The first width; refresh() sets it around the selected item.
-    const SELECTED_BOX_HEIGHT = 56;
-    const ITEM_ICON_BOX_SIZE = 40;
     const LABEL_FIRST_LEFT = 12;
     const LABEL_RAISE = 2; // px above the center line: it looks centered next to the icon.
     const HOVER_ICON_OPACITY = 0.5;
     const REFRESH_DELAY = 3; // ms: many changes in a row make one refresh.
+    const stillClipContent = box.clipContent; // WHY: "float" lets the pill stand over the bar; another mode puts it back.
+    let isFloatLabelWaiting = 1; // 1: the next refresh() shows the name over the selected item (the first view, a selection)
+    let isFloatLabelPlaced = 0;
+    let cancelFloatLabelHide = null; // The cancel function of the timer that fades the name out (box.after)
 
     // *** PUBLIC VARIABLES:
     box.itemObjList = [];
     // NOTE: An item object: { icon (box: icon.i1 normal, icon.i2 selected), label, badge, index, data }
+    // NOTE: box.lblFloat is the pill of the name over the selected item (only with labelMode: "float").
 
     // *** PRIVATE FUNCTIONS:
+
+    const isFloatMode = function () {
+        return box.labelMode === "float";
+    };
+
+    // WHY: "inline" is the default: an unknown mode is "inline".
+    const isInlineMode = function () {
+        return box.labelMode !== "float" && box.labelMode !== "none";
+    };
 
     // WHY: The selected icon is a second file: "home.png" -> "homes.png".
     const getSelectedIconFile = function (iconFile) {
         return iconFile.replace(".png", "s.png");
     };
 
-    // PAINT: the selected item shows its label and its selected icon.
-    const paintItem = function (item, isSelected) {
-        if (isSelected) {
-            item.label.opacity = 1;
-            item.icon.i1.opacity = 0;
-            item.icon.i2.opacity = 1;
-            item.icon.clickable = 0;
-            return;
-        }
-        item.label.opacity = 0;
-        item.icon.i1.opacity = 1;
-        item.icon.i2.opacity = 0;
-        item.icon.clickable = 1;
+    // The name of an item for a screen reader
+    const getItemName = function (itemData, index) {
+        return itemData.text || ("Tab " + (index + 1));
     };
 
-    // The selected box is around the icon and the label of the selected item.
+    // The space after the name, to look like the space before the icon.
+    // WHY the icon box: an icon box bigger than its icon has an empty side before the icon, and it counts there too.
+    const getLabelEndSpace = function (item) {
+        const iconEmptySide = (item.icon.width - box.style.icon.width) / 2;
+        return iconEmptySide + box.style.layout.labelEndSpace;
+    };
+
+    // The width of an item in the bar: the selected one shows its name next to its icon ("inline").
+    const getItemWidth = function (item, isSelected) {
+        if (!isSelected || !isInlineMode()) return item.icon.width;
+        return item.icon.width + box.style.layout.iconGap + item.label.width + getLabelEndSpace(item);
+    };
+
+    // The label of the selected item is next to its icon ("inline"); the others wait under their icon.
+    const getLabelLeft = function (item, isSelected) {
+        if (!isSelected || !isInlineMode()) return item.icon.left;
+        return item.icon.left + item.icon.width + box.style.layout.iconGap;
+    };
+
+    // The space at the ends of the bar: layout.padding, or less when the items would not fit on a narrow phone.
+    // WHY selectionPadding: the selected box must stay in the bar.
+    const getBarPadding = function () {
+        const _layout = box.style.layout;
+        const itemsWidth = box.itemObjList.reduce(function (sum, item, index) {
+            return sum + getItemWidth(item, index == box.selectedIndex);
+        }, 0);
+        const spacingWidth = _layout.itemSpacing * (box.itemObjList.length - 1);
+        const spareWidth = box.width - itemsWidth - spacingWidth - (_layout.padding * 2);
+        if (!box.width || spareWidth >= 0) return _layout.padding;
+        return Math.max(_layout.selectionPadding, _layout.padding + (spareWidth / 2));
+    };
+
+    // PAINT: the selected item shows its selected icon (and its label: "inline").
+    const paintItem = function (item, isSelected) {
+        item.label.opacity = (isSelected && isInlineMode()) ? 1 : 0;
+        item.icon.i1.opacity = isSelected ? 0 : 1;
+        item.icon.i2.opacity = isSelected ? 1 : 0;
+        item.icon.clickable = isSelected ? 0 : 1;
+        item.icon.aria = { pressed: isSelected };
+    };
+
+    // The color of the selected box: the color of the selected item, or the color of the style.
+    // WHY: Only when an item has a color: a page that paints the box itself (selectedBox.color = ...) keeps its color.
+    const paintSelectedBoxColor = function (item) {
+        const hasItemColors = box.itemObjList.some((each) => each.data.color);
+        if (!hasItemColors) return;
+        box.selectedBox.color = item.data.color || box.style.selectedBox.color;
+    };
+
+    // The selected box is around the icon (and the label: "inline") of the selected item.
     const placeSelectedBox = function (item) {
         const _layout = box.style.layout;
-        const contentWidth = item.icon.width + _layout.iconGap + item.label.width;
         box.selectedBox.opacity = 1;
         box.selectedBox.left = item.icon.left - _layout.selectionPadding;
-        box.selectedBox.width = contentWidth + (_layout.selectionPadding * 2);
+        box.selectedBox.width = getItemWidth(item, true) + (_layout.selectionPadding * 2);
+        paintSelectedBoxColor(item);
+    };
+
+    // THE NAME OVER THE SELECTED ITEM (labelMode: "float"):
+
+    // The props of the pill: the floatLabel style without space.
+    // WHY: space is a setter of a Label (its padding); here it is the gap over the selected box.
+    const getFloatLabelLook = function () {
+        const look = { ...box.style.floatLabel };
+        delete look.space;
+        return look;
+    };
+
+    // LABEL: The pill. Its container must be set (createIn).
+    const createFloatLabel = function () {
+        const label = Label({ ...getFloatLabelLook(), opacity: 0 });
+        label.css = { whiteSpace: "nowrap" }; // WHY: A long name stays on one line near the edge of the bar.
+        label.aria = { hidden: true }; // WHY: The name is already the name of the item for a screen reader.
+        label.setMotion("left 0.3s, opacity 0.3s");
+        label.onResize(placeFloatLabel); // WHY: The size of its text is known after it is drawn.
+        return label;
+    };
+
+    // Over the middle of the selected box. (In the box of the component: the bar does not cut it.)
+    const placeFloatLabel = function () {
+        if (!box.lblFloat) return;
+        const innerBorder = box.innerBox.border || 0;
+        const selectedBoxCenter = box.innerBox.left + innerBorder + box.selectedBox.left + (box.selectedBox.width / 2);
+        const selectedBoxTop = box.innerBox.top + innerBorder + box.selectedBox.top;
+        if (!isFloatLabelPlaced) box.lblFloat.dontMotion(); // WHY: The first place: it does not fly in from far.
+        isFloatLabelPlaced = 1;
+        box.lblFloat.left = Math.round(selectedBoxCenter - (box.lblFloat.width / 2));
+        box.lblFloat.top = Math.round(selectedBoxTop - box.style.floatLabel.space - box.lblFloat.height);
+    };
+
+    const hideFloatLabel = function () {
+        if (cancelFloatLabelHide) cancelFloatLabelHide();
+        cancelFloatLabelHide = null;
+        box.lblFloat.opacity = 0;
+    };
+
+    // The name fades in over the selected item; floatLabelTime ms later it fades out.
+    const showFloatLabel = function (item) {
+        hideFloatLabel(); // WHY: Its timer starts again.
+        if (!item.data.text) return; // No name: no pill
+        box.lblFloat.text = item.data.text;
+        placeFloatLabel();
+        box.lblFloat.opacity = 1;
+        cancelFloatLabelHide = box.after(box.floatLabelTime, hideFloatLabel);
+    };
+
+    // After refresh(): the name shows after a selection (and at the first view), else the pill only follows.
+    const refreshFloatLabel = function () {
+        if (!box.lblFloat) return;
+        const selectedItem = box.itemObjList[box.selectedIndex];
+        if (!isFloatMode() || !selectedItem) {
+            hideFloatLabel();
+            return;
+        }
+        if (isFloatLabelWaiting) {
+            isFloatLabelWaiting = 0;
+            showFloatLabel(selectedItem);
+            return;
+        }
+        placeFloatLabel();
+    };
+
+    // "float": the pill is made the first time (a bar of another mode has no extra object),
+    // and the box of the component lets it stand over the bar.
+    const applyLabelMode = function () {
+        if (isFloatMode()) {
+            box.clipContent = 0;
+            if (!box.lblFloat) box.lblFloat = createIn(box, createFloatLabel);
+            return;
+        }
+        if (box.lblFloat) box.clipContent = stillClipContent; // "float" was on before
+    };
+
+    // The user chose an item: a click, Enter or Space.
+    const selectByUser = function (itemView, index) {
+        box.selectedIndex = index;
+        isFloatLabelWaiting = 1;
+        box.onItemClick(itemView, index);
+        box.refresh();
     };
 
     const createButtons = function (items) {
@@ -133,24 +331,53 @@ const BottomBar = function (params = {}) {
         });
     };
 
+    // BADGE: The badge param of the bar. Its style is the badgeStyle of Badge.
+    // NOTE: The objects are copied: Badge fills its defaults into them, the param of the bar does not change.
+    const createItemBadge = function () {
+        const { style, numberStyle, ...badgeParams } = box.badge;
+        return Badge({
+            ...badgeParams,
+            value: "", // WHY: No value: hidden until setBadge(), also with showZero: 1.
+            badgeStyle: { ...style },
+            numberStyle: { ...numberStyle },
+        });
+    };
+
+    // KEYBOARD AND SCREEN READERS: the icon box is the button of the item.
+    const makeItemAccessible = function (itemView, itemData, index) {
+        const iconBox = itemView.icon;
+        iconBox.role = "button";
+        iconBox.aria = { label: getItemName(itemData, index) };
+        iconBox.tabIndex = 0;
+        iconBox.setFocusRing(box.style.focus.ringColor);
+        iconBox.on("keydown", function (self, event) {
+            if (event.key !== "Enter" && event.key !== " ") return;
+            event.preventDefault(); // WHY: Space must not scroll the page.
+            if (box.selectedIndex == index) return; // WHY: Like the mouse: the selected item can not be clicked.
+            selectByUser(itemView, index);
+        });
+    };
+
     // ICON BOX: the normal and the selected icon on each other, and the badge.
     const createItemIcon = function (itemView, itemData, index) {
 
+        const _iconBoxSize = box.style.layout.iconBoxSize;
+
         itemView.icon = startBox({
-            width: ITEM_ICON_BOX_SIZE,
-            height: ITEM_ICON_BOX_SIZE,
+            width: _iconBoxSize,
+            height: _iconBoxSize,
             color: "transparent",
             position: "absolute", // WHY: refresh() places the items itself (left), not a flex layout.
+            clipContent: 0, // WHY: A badge can stand out of the corner of the icon (badge.numberStyle top / right).
         });
         box.innerBox.add(itemView.icon);
         itemView.icon.center("top");
         itemView.icon.setMotion("left 0.3s, opacity 0.3s");
         itemView.icon.cursor = "pointer";
         itemView.icon.on("click", function () {
-            box.selectedIndex = index;
-            box.onItemClick(itemView, index);
-            box.refresh();
+            selectByUser(itemView, index);
         });
+        makeItemAccessible(itemView, itemData, index);
 
             // ICON: normal (black)
             itemView.icon.i1 = Icon(0, 0, {
@@ -158,6 +385,7 @@ const BottomBar = function (params = {}) {
                 height: box.style.icon.height,
                 position: "absolute",
             });
+            itemView.icon.i1.center(); // WHY: An icon box bigger than the icon (layout.iconBoxSize).
             itemView.icon.i1.load(itemData.icon);
             itemView.icon.i1.setMotion("opacity 0.3s");
 
@@ -168,6 +396,7 @@ const BottomBar = function (params = {}) {
                 position: "absolute",
                 opacity: 0,
             });
+            itemView.icon.i2.center();
             itemView.icon.i2.load(getSelectedIconFile(itemData.icon));
             itemView.icon.i2.setMotion("opacity 0.3s");
 
@@ -182,19 +411,12 @@ const BottomBar = function (params = {}) {
             }
 
             // Badge with number
-            itemView.badge = Badge({
-                value: 0,
-                maxValue: 99,
-                dotSize: 12,
-                badgeStyle: {
-                    color: "#FE5D49",
-                }
-            });
+            itemView.badge = createItemBadge();
 
         endBox();
     };
 
-    // LABEL: shown only when the item is selected.
+    // LABEL: shown only when the item is selected ("inline").
     const createItemLabel = function (itemView, itemData) {
         itemView.label = Label({
             left: LABEL_FIRST_LEFT,
@@ -206,10 +428,12 @@ const BottomBar = function (params = {}) {
             position: "absolute", // WHY: refresh() places the items itself (left), not a flex layout.
             opacity: 0,
         });
+        itemView.label.css = { whiteSpace: "nowrap" }; // WHY: A name of two words broke while the bar was growing.
         box.innerBox.add(itemView.label);
         itemView.label.center("top");
         itemView.label.top -= LABEL_RAISE;
         itemView.label.setMotion("left 0.3s, opacity 0.3s");
+        itemView.label.aria = { hidden: true }; // WHY: The text is the name of the button of the item (its icon box).
         itemView.label.onResize(box.refreshOneTime); // WHY: The width of the label is known only after it is drawn.
     };
 
@@ -233,6 +457,7 @@ const BottomBar = function (params = {}) {
         box.refreshTimeout = box.after(REFRESH_DELAY, function () { box.refresh(); });
     };
 
+    // value: a number; "" removes the badge.
     box.setBadge = function (index, value) {
         box.itemObjList[index].badge.setValue(value);
     };
@@ -245,40 +470,41 @@ const BottomBar = function (params = {}) {
 
     box.selectByIndex = function (index) {
         box.selectedIndex = index;
+        isFloatLabelWaiting = 1; // The name shows over it ("float").
         box.refreshOneTime();
     };
     // USAGE: get: bar.selectedIndex, set: bar.selectByIndex(2)
 
-    // Places the items from the left: the selected one is wider (icon + label), then the bar takes their width.
+    box.setLabelMode = function (mode) {
+        box.labelMode = mode;
+        applyLabelMode();
+        box.refreshOneTime();
+    };
+    // USAGE: get: bar.labelMode, set: bar.setLabelMode("float") // "inline", "float", "none"
+
+    // Places the items from the left: the selected one is wider ("inline": icon + label), then the bar takes their width.
     box.refresh = function () {
 
         const _layout = box.style.layout;
-        let _currentLeft = _layout.padding;
+        const _barPadding = getBarPadding();
+        let _currentLeft = _barPadding;
 
         if (box.selectedIndex == -1) box.selectedBox.opacity = 0;
 
         box.itemObjList.forEach((item, index) => {
-
+            const isSelected = (index == box.selectedIndex);
             item.icon.left = _currentLeft;
-
-            if (index == box.selectedIndex) {
-                _currentLeft += item.icon.width + _layout.iconGap;
-                paintItem(item, true);
-                item.label.left = _currentLeft;
-                _currentLeft += item.label.width + _layout.itemSpacing;
-                placeSelectedBox(item);
-                return;
-            }
-
-            _currentLeft += item.icon.width + _layout.itemSpacing;
-            item.label.left = item.icon.left;
-            paintItem(item, false);
-
+            item.label.left = getLabelLeft(item, isSelected);
+            paintItem(item, isSelected);
+            if (isSelected) placeSelectedBox(item);
+            _currentLeft += getItemWidth(item, isSelected) + _layout.itemSpacing;
         });
 
-        _currentLeft += _layout.padding - _layout.itemSpacing;
+        _currentLeft += _barPadding - _layout.itemSpacing;
         box.innerBox.width = _currentLeft;
         box.innerBox.center();
+
+        refreshFloatLabel();
 
     };
 
@@ -288,25 +514,32 @@ const BottomBar = function (params = {}) {
     box.innerBox = startBox({
         round: box.style.background.round,
         width: BAR_WIDTH,
-        height: BAR_HEIGHT,
+        height: box.style.layout.barHeight,
         border: box.style.background.border,
     });
     box.innerBox.css.background = box.style.background.gradient;
     box.innerBox.setMotion("width 0.3s, left 0.3s");
 
         // BOX: Behind the selected item
-        box.selectedBox = Box(0, 0, SELECTED_BOX_WIDTH, SELECTED_BOX_HEIGHT, box.style.selectedBox);
+        box.selectedBox = Box(0, 0, SELECTED_BOX_WIDTH, box.style.selectedBox.height, box.style.selectedBox);
         box.selectedBox.opacity = 0;
-        box.selectedBox.setMotion("left 0.3s, width 0.3s, opacity 0.3s");
+        box.selectedBox.setMotion("left 0.3s, width 0.3s, opacity 0.3s, background-color 0.3s");
         box.selectedBox.center("top");
 
     endBox();
 
+    // NOTE: The pill of the name (box.lblFloat, "float") is made by applyLabelMode(), over the bar.
+
     // *** OBJECT INIT CODE:
+    applyLabelMode();
     createButtons(box.items);
     box.onResize(function () {
         box.innerBox.dontMotion();
         box.innerBox.center();
+        box.refreshOneTime(); // WHY: A narrower screen (a phone turned) may need a smaller padding.
+        if (!box.lblFloat) return;
+        box.lblFloat.dontMotion();
+        placeFloatLabel();
     });
 
     return endObject(box);

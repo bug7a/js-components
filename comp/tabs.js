@@ -22,8 +22,12 @@ UI COMPONENT TEMPLATE
 - onChange is NOT called when the component is created or when the value is set with silent: 1.
 - Style packages: "classic" (default), "modern", "dark". Select with styleName. (Tabs.styles)
 - Everything is drawn with code (no image files needed).
+- scale: multiplies every size (the style, width / height / barWidth / panelHeight, the spaces in the code).
+  Its default is basic.uiScale: on a page fitted with page.fit() (basic.uiScale = 1 / page.zoom) the tabs keep
+  their size on the screen. (Needs basic.js v26.11.01 for a scale other than 1.)
 
-TAB: { key, text, iconFile, count, badge, disabled, closable, selectedColor, selectedTextColor, selectedIconFile }
+TAB: { key, text, iconFile, count, badge, disabled, closable, selectedColor, selectedTextColor, selectedIconFile, ariaLabel }
+- text: "": a tab with only an icon. ariaLabel: its name for a screen reader.
 - selectedColor: Indicator color when the tab is active. (pill: the shape, underline: the line)
 - selectedTextColor: Text color when the tab is active.
 - selectedIconFile: Icon when the tab is active. (Ex: a filled version of the icon)
@@ -77,6 +81,7 @@ const TabsDefaults = {
     panels: 0, // 1: A content Box for every tab. (Only at create time)
     panelHeight: "auto", // Height of the panels area. Ex: 300 or "auto" (grows with the content)
     barWidth: 200, // vertical + panels: Width of the tab bar. (The panels take the rest.)
+    scale: null, // Multiplies every size. null: basic.uiScale (1, or 1 / page.zoom on a fitted page). (Only at create time)
     enabled: 1,
     ariaLabel: "Tabs",
     onChange: function (self) { }, // self.value, self.previousValue, self.getActiveTab()
@@ -197,6 +202,9 @@ const Tabs = function (params = {}) {
     // Merge params:
     mergeIntoIfMissing(params, TabsDefaults);
 
+    // Scale: the sizes of the style and of the params are multiplied. (A page fitted with page.fit() sets basic.uiScale.)
+    Tabs.applyScale(params);
+
     // Edit params, if needed:
     params.color = "transparent";
     const initialTabs = params.tabs;
@@ -217,13 +225,14 @@ const Tabs = function (params = {}) {
     let items = []; // [{ tab, group, label, countLabel, badgeDot, closeButton, icon, panel, isHovered }]
     let panelStack = []; // startPanel() / endPanel()
     let isIndicatorReady = 0;
-    const SCROLL_SPACE_X = 24; // Space next to the active tab when the strip scrolls to it.
-    const SCROLL_SPACE_Y = 8;
+    const scale = box.scale; // The px of the code below are multiplied by it, like the style.
+    const SCROLL_SPACE_X = 24 * scale; // Space next to the active tab when the strip scrolls to it.
+    const SCROLL_SPACE_Y = 8 * scale;
     const ARROW_PASSIVE_OPACITY = 0.3; // An arrow that can not scroll more.
     const SCROLL_STEP_RATIO = 0.6; // An arrow click scrolls 60% of the strip,
-    const MIN_SCROLL_STEP = 80; // but at least this.
+    const MIN_SCROLL_STEP = 80 * scale; // but at least this.
     const FADE_TIME = "0.15s"; // The color and opacity changes of hover and active.
-    const ADD_BUTTON_SPACE = 4; // Between the strip and the add button.
+    const ADD_BUTTON_SPACE = 4 * scale; // Between the strip and the add button.
 
     // *** PUBLIC VARIABLES:
     box.previousValue = null;
@@ -726,7 +735,7 @@ const Tabs = function (params = {}) {
         item.label.plainText = tab.text;
         // WHY: An empty label still takes a gap, so the icon of an icon only tab would not be in the middle.
         item.label.visible = (tab.text !== "") ? 1 : 0;
-        item.group.aria = { label: tab.text };
+        item.group.aria = { label: tab.ariaLabel || tab.text || tab.key };
         const hasCount = (tab.count !== undefined && tab.count !== null && tab.count !== "");
         item.countLabel.plainText = (hasCount) ? tab.count : "";
         item.countLabel.visible = (hasCount) ? 1 : 0;
@@ -1182,6 +1191,21 @@ const Tabs = function (params = {}) {
 // *** STATIC VARIABLES AND FUNCTIONS:
 
 Tabs._counter = 1;
+
+// scale: every size of the style and of the size params is multiplied (params is changed). Scale 1 changes nothing.
+// WHY: The default (null) is read when a tab bar is made, not when this file is loaded: the page sets
+//      basic.uiScale later (page.fit(600, 800); basic.uiScale = 1 / page.zoom).
+Tabs.applyScale = function (params) {
+    const givenScale = Number(params.scale);
+    params.scale = (givenScale > 0) ? givenScale : (basic.uiScale || 1);
+    if (params.scale === 1) return;
+    params.style = basic.scaleStyle(params.style, params.scale);
+    const pillIndicatorStyle = params.style.pillIndicator;
+    pillIndicatorStyle.shadow = basic.scaleCssText(pillIndicatorStyle.shadow, params.scale);
+    ["width", "height", "barWidth", "panelHeight"].forEach(function (name) {
+        params[name] = basic.scaleSize(params[name], params.scale);
+    });
+};
 
 // "Orders" -> { key: "Orders", text: "Orders", iconFile: "", count: null, badge: 0, disabled: 0, closable: undefined }
 Tabs.normalizeTabs = function (tabs) {

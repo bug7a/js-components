@@ -110,18 +110,6 @@ const PasswordInputB = function(params = {}) {
         box.btnShowPassword.load(isShown ? box.hidePasswordIconFile : box.showPasswordIconFile);
     };
     
-    // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
-    const superRemove = box.remove;
-    box.superRemove = superRemove;
-    box.remove = function () {
-        if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
-        // WHY: The tooltip is created after the component is closed, so it is on the parent (page), not in the box.
-        box.btnShowPassword.tooltip.remove();
-        box.btnShowPassword.remove();
-        superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
-        box = null;
-    };
-
     box.refresh = function() {
         
     }
@@ -161,6 +149,8 @@ const PasswordInputB = function(params = {}) {
         lbl_fontSize: 14,
         lbl_round: 2,
     });
+    // WHY: The tooltip may be made outside the box (after InputB is closed); box.own() removes it with the box.
+    box.own(box.btnShowPassword.tooltip);
 
     // *** OBJECT INIT CODE:
     box.btnShowPassword.on("click", function() {

@@ -79,6 +79,12 @@ CATALOG.COMPONENTS = [
         tr: "Arama kutusunun altında açılan sonuç listesi; otomatik tamamlama veya komut paleti gibi.",
     },
     {
+        key: "action-tab-bar", name: "ActionTabBar", gen: 4, cat: "navigation",
+        source: "comp/action-tab-bar.js", samples: ["02-comp-examples/action-tab-bar.htm"],
+        en: "A bottom tab bar with a big round + button for the main action of the app; a line slides under the selected tab. From javascript-mobile-app-template. For a mobile app with a 600 px design (page.fit(600, 800)): on a normal page its sizes are too big.",
+        tr: "Uygulamanın ana eylemi için büyük yuvarlak + düğmeli alt sekme çubuğu; seçili sekmenin altında bir çizgi kayar. javascript-mobile-app-template'ten. 600 px tasarımlı mobil uygulama içindir (page.fit(600, 800)): normal bir sayfada boyutları fazla büyük kalır.",
+    },
+    {
         key: "action-button", name: "ActionButton", gen: 4, cat: "actions",
         source: "comp/action-button.js", samples: ["02-comp-examples/action-button.htm"],
         en: "Round floating action button in the corner of the screen; it opens a menu of actions. The new version of UIActionButton.",
@@ -92,9 +98,9 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "item-list", name: "ItemList", gen: 4, cat: "selection",
-        source: "comp/item-list.js", samples: ["02-comp-examples/item-list.htm"],
-        en: "A list of items with an icon, a title and a description (or your own rows): vertical, horizontal or grid, single or multiple selection, search and keyboard.",
-        tr: "İkon, başlık ve açıklamalı öğe listesi (ya da kendi satırlarınız): dikey, yatay veya ızgara; tekli veya çoklu seçim, arama ve klavye.",
+        source: "comp/item-list.js", samples: ["02-comp-examples/item-list.htm", "02-comp-examples/item-list-2.htm"],
+        en: "A list of items with an icon, a title and a description (or your own rows): vertical, horizontal or grid, single or multiple selection, section titles, search and keyboard; a pressed flash and animated add / remove.",
+        tr: "İkon, başlık ve açıklamalı öğe listesi (ya da kendi satırlarınız): dikey, yatay veya ızgara; tekli veya çoklu seçim, bölüm başlıkları, arama ve klavye; tıklanınca bir an koyulaşan satır ve hareketli ekleme / çıkarma.",
     },
     {
         key: "select-box", name: "SelectBox", gen: 4, cat: "selection",
@@ -133,6 +139,12 @@ CATALOG.COMPONENTS = [
         tr: "Renk seçici: palet açan bir alan veya sayfada sabit bir palet.",
     },
     {
+        key: "period-bar", name: "PeriodBar", gen: 4, cat: "selection",
+        source: "comp/period-bar.js", samples: ["02-comp-examples/period-bar.htm"],
+        en: "A month switcher: this month and the months before it in a white capsule, with round buttons and sliding months. From javascript-mobile-app-template. For a mobile app with a 600 px design (page.fit(600, 800)): on a normal page its sizes are too big.",
+        tr: "Ay seçici: bu ay ve önceki aylar beyaz bir kapsülde, yuvarlak düğmeler ve kayan aylarla. javascript-mobile-app-template'ten. 600 px tasarımlı mobil uygulama içindir (page.fit(600, 800)): normal bir sayfada boyutları fazla büyük kalır.",
+    },
+    {
         key: "select-file", name: "SelectFile", gen: 4, cat: "inputs",
         source: "comp/select-file.js", samples: ["02-comp-examples/select-file.htm"],
         en: "Drop zone and file dialog that lists the chosen files with image previews and sizes.",
@@ -146,9 +158,13 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "stepper", name: "Stepper", gen: 4, cat: "inputs",
-        source: "comp/stepper.js", samples: ["02-comp-examples/stepper.htm"],
-        en: "Number stepper with decimals, a unit, typed editing and hold-to-repeat buttons.",
-        tr: "Ondalık, birim, elle yazma ve basılı tutunca tekrarlayan düğmeleriyle sayı seçici.",
+        source: "comp/stepper.js",
+        samples: [
+            { file: "02-comp-examples/stepper.htm", title: "Basic" },
+            { file: "02-comp-examples/stepper-2.htm", title: "ozden, a line around the buttons" },
+        ],
+        en: "Number stepper with decimals, a unit, typed editing and hold-to-repeat buttons. A line around the buttons and the look of the old UIStepper (ozden).",
+        tr: "Ondalık, birim, elle yazma ve basılı tutunca tekrarlayan düğmeleriyle sayı seçici. Düğmelerin çevresinde çizgi ve eski UIStepper görünümü (ozden).",
     },
     {
         key: "slider-field", name: "SliderField", gen: 4, cat: "inputs",
@@ -210,9 +226,9 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "side-panel", name: "SidePanel", gen: 4, cat: "feedback",
-        source: "comp/side-panel.js", samples: ["02-comp-examples/side-panel.htm"],
-        en: "A drawer that slides in from a side of the screen, over the page.",
-        tr: "Ekranın bir kenarından sayfanın üzerine kayarak açılan panel (çekmece).",
+        source: "comp/side-panel.js", samples: ["02-comp-examples/side-panel.htm", "02-comp-examples/side-panel-2.htm"],
+        en: "A drawer that slides in from a side of the screen, or of a box like an app column, over the page.",
+        tr: "Ekranın ya da bir kutunun (Ör: uygulama sütunu) bir kenarından sayfanın üzerine kayarak açılan panel (çekmece).",
     },
     {
         key: "loading-screen", name: "LoadingScreen", gen: 4, cat: "feedback",
@@ -293,6 +309,30 @@ CATALOG.COMPONENTS = [
         en: "Design tokens and themes: colors, font sizes, corner radius and a light, dark or automatic theme.",
         tr: "Tasarım değerleri ve temalar: renkler, yazı boyları, köşe yuvarlaklığı ve açık, koyu veya otomatik tema.",
     },
+    {
+        key: "tap-effect", name: "TapEffect", gen: 4, cat: "styles",
+        source: "comp/tap-effect.js", samples: ["02-comp-examples/tap-effect.htm"],
+        en: "A soft circle where the screen is tapped, over everything; it never catches the tap. TapEffect.start() / stop(), also on a page fitted with page.fit().",
+        tr: "Ekrana dokunulan yerde beliren yumuşak bir daire; her şeyin üstünde, dokunuşu engellemez. TapEffect.start() / stop(), page.fit() ile sığdırılmış sayfada da çalışır.",
+    },
+    {
+        key: "app-bar", name: "AppBar", gen: 4, cat: "navigation",
+        source: "comp/app-bar.js", deps: ["comp/smart-button.js"], samples: ["02-comp-examples/app-bar.htm"],
+        en: "The top bar of a tab page of a mobile app: a title in the middle or at the left, a back and a menu button. The look of the old mobile app template. For a mobile app with a 600 px design (page.fit(600, 800)): on a normal page its sizes are too big.",
+        tr: "Mobil uygulamada bir sekme sayfasının üst çubuğu: ortada ya da solda başlık, geri ve menü düğmesi. Eski mobil uygulama şablonunun görünümü. 600 px tasarımlı mobil uygulama içindir (page.fit(600, 800)): normal bir sayfada boyutları fazla büyük kalır.",
+    },
+    {
+        key: "page-header", name: "PageHeader", gen: 4, cat: "navigation",
+        source: "comp/page-header.js", samples: ["02-comp-examples/page-header.htm"],
+        en: "The header of a page that slides in over the tabs of a mobile app: a small back link over a big title. For a mobile app with a 600 px design (page.fit(600, 800)): on a normal page its sizes are too big.",
+        tr: "Mobil uygulamada sekmelerin üzerine kayarak gelen bir sayfanın başlığı: büyük başlığın üstünde küçük bir geri bağlantısı. 600 px tasarımlı mobil uygulama içindir (page.fit(600, 800)): normal bir sayfada boyutları fazla büyük kalır.",
+    },
+    {
+        key: "settings-row", name: "SettingsRow", gen: 4, cat: "pages",
+        source: "comp/settings-row.js", samples: ["02-comp-examples/settings-row.htm"],
+        en: "A row of a settings page: a title, a small text that fades in and out, and a control (a switch, a stepper) or an arrow at the right; bands between the groups. For a mobile app with a 600 px design (page.fit(600, 800)): on a normal page its sizes are too big.",
+        tr: "Ayarlar sayfasının bir satırı: başlık, yumuşakça görünüp kaybolan küçük bir metin ve sağda bir kontrol (anahtar, sayaç) ya da ok; gruplar arasında bantlar. 600 px tasarımlı mobil uygulama içindir (page.fit(600, 800)): normal bir sayfada boyutları fazla büyük kalır.",
+    },
 
     // --- comp-m3 ---
     {
@@ -350,9 +390,10 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "bottom-bar", name: "BottomBar", gen: 3, cat: "navigation",
-        source: "comp/bottom-bar.js", samples: ["02-comp-examples/bottom-bar.htm"],
-        en: "Mobile app bottom bar built from a JSON list of buttons, with badges.",
-        tr: "JSON listesinden oluşturulan, rozetli mobil uygulama alt çubuğu.",
+        source: "comp/bottom-bar.js", deps: ["comp/badge-v2.js"],
+        samples: ["02-comp-examples/bottom-bar.htm", { file: "02-comp-examples/bottom-bar-2.htm", title: "Old template look" }],
+        en: "Mobile app bottom bar built from a JSON list of buttons, with badges; the name of the selected item next to it, over it for a moment or hidden, a color per item, keyboard ready.",
+        tr: "JSON listesinden oluşturulan, rozetli mobil uygulama alt çubuğu; seçili öğenin adı yanında, bir an üstünde ya da gizli, öğe başına renk, klavyeyle kullanılabilir.",
     },
     {
         key: "line-progress-bar", name: "LineProgressBar", gen: 3, cat: "feedback",
@@ -423,7 +464,7 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "search-input", name: "SearchInput", gen: 2, cat: "inputs",
-        source: "comp/search-input-v2.js", samples: ["02-comp-examples/search-input-v2.htm"],
+        source: "comp/search-input-v2.js", samples: [{ file: "02-comp-examples/search-input-v2.htm", title: "Basic" }, { file: "02-comp-examples/search-input-v2-place.htm", title: "Place: right / bottom" }],
         en: "Search field with a search icon and a clear button.",
         tr: "Arama ikonu ve temizleme düğmeli arama kutusu.",
     },
@@ -435,9 +476,14 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "toggle", name: "Toggle", gen: 2, cat: "selection",
-        source: "comp/toggle.js", samples: ["02-comp-examples/toggle.htm"],
-        en: "On and off switch for light and dark pages.",
-        tr: "Açık ve koyu sayfalar için aç/kapat anahtarı.",
+        source: "comp/toggle.js",
+        samples: [
+            { file: "02-comp-examples/toggle.htm", title: "Basic" },
+            { file: "02-comp-examples/toggle-2.htm", title: "modern and classic" },
+            { file: "02-comp-examples/toggle-3.htm", title: "Shapes and marks" },
+        ],
+        en: "On and off switch for light and dark pages. Style packages modern, classic (the old UIToggle), the shapes float, round, slim, outline and square, and tick, badge and label with a check, a cross or a text.",
+        tr: "Açık ve koyu sayfalar için aç/kapat anahtarı. modern, classic (eski UIToggle), float, round, slim, outline, square şekil paketleri; onay, çarpı ya da yazılı tick, badge ve label.",
     },
     {
         key: "tiny-select", name: "TinySelect", gen: 2, cat: "selection",
@@ -465,8 +511,8 @@ CATALOG.COMPONENTS = [
     {
         key: "badge", name: "BadgeV2", gen: 2, cat: "feedback",
         source: "comp/badge-v2.js", samples: ["02-comp-examples/badgeV2.htm"],
-        en: "Notification badge on an object: a dot, a number or custom content.",
-        tr: "Bir nesnenin üzerinde bildirim rozeti: nokta, sayı veya özel içerik.",
+        en: "Notification badge on an object: a dot or a number; 0 and 1 can be shown as numbers, and the number can have its own look (a white ring).",
+        tr: "Bir nesnenin üzerinde bildirim rozeti: nokta ya da sayı; 0 ve 1 de sayı olarak gösterilebilir, sayının kendi görünüşü olabilir (beyaz halka).",
     },
     {
         key: "login-page", name: "LoginPage", gen: 2, cat: "pages",

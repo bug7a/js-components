@@ -2,7 +2,7 @@
 
 /*
 
-ItemList - v26.10
+ItemList - v26.11
 
 UI COMPONENT TEMPLATE
 - A list of items: an icon, a title and a description on every row, or your own row (createItemView).
@@ -19,6 +19,19 @@ UI COMPONENT TEMPLATE
   Home / End, Enter or Space selects. Only one row is in the Tab order.
 - Items: strings or objects { key, title, desc, iconFile, searchText, disabled }. Any other keys stay on the
   item for your createItemView. An item without a key gets its index as its key.
+- Sections: an item { type: "section", title: "VIEWS" } is a title row between the items (style.section). It is
+  never selected, focused, hovered or clicked, the arrow keys skip it, and getSelected(), search() and the empty
+  text count only the items. It is shown while at least one item under it (until the next section) is shown: in
+  a search, only the sections with a match (a section without items is hidden too).
+  ItemList draws it, also with createItemView: createItemView gets only the items (a function written for your
+  items does not break on a title). Your own section row: createSectionView(item, row, self).
+  getItems() and forEach() give the sections too (item.type === "section").
+- Pressed: style.pressed.color (null: none). A click, Enter or Space paints the row in this color at once, then
+  the row fades back to its look with the row motion (style.row.motion).
+- animated: 1 -> addItem() and removeItem() move the other rows to their new places (FLIP: transform), a new row
+  fades in from a little higher, a removed row fades out and then leaves (its data and the counts change at once).
+  Nothing moves at create time, with setItems() or with a search. Off when the system asks for reduced motion.
+  setAnimated(0/1).
 - height: "auto" -> The list grows with its rows (no scrolling). Otherwise it scrolls with basic/scroll-bar.js
   (if it is loaded).
 - Style packages: "classic" (default: the rows of the comp-m1 SelectItem list, 02-comp-m1-samples/select-item.htm,
@@ -49,6 +62,11 @@ ItemList({
         Label({ plainText: item.title, fontSize: 18 });
     },
 });
+ItemList({ items: [{ type: "section", title: "FRUITS" }, "Apple", "Banana", { type: "section", title: "VEGETABLES" }, "Carrot"] });
+ItemList({ style: { hover: {} } }); // No look under the mouse
+ItemList({ selection: "none", style: { pressed: { color: Black(0.2) }, row: { motion: "background-color 0.3s" } } });
+const animatedList = ItemList({ animated: 1, items: ["A", "B", "C"] });
+animatedList.removeItem("0");               // "A" fades out, then "B" and "C" move up
 
 Started Date: 14 March 2022 (comp-m1), October 2026 (comp-m4)
 Developer: Bugra Ozden
@@ -64,12 +82,14 @@ const ItemListDefaults = {
     key: "0", // Your name for this object: read it in a callback (self.key)
     width: 600,
     height: 400, // "auto": grows with the rows (no scrolling)
-    items: [], // Strings or { key, title, desc, iconFile, searchText, disabled }
+    items: [], // Strings or { key, title, desc, iconFile, searchText, disabled }. A title row: { type: "section", title: "VIEWS" }
     layout: "vertical", // "vertical", "horizontal", "grid"
     selection: "single", // "single", "multiple", "none"
     selectedKeys: [], // The keys selected at create time
     scrollToSelected: 1, // 1: the list scrolls to the selected item at create time and after setSelected() / select()
-    createItemView: null, // function (item, row, self) { ... } Objects created here go into the row (instead of the icon and texts).
+    createItemView: null, // function (item, row, self) { ... } Objects created here go into the row (instead of the icon and texts). Not called for a section.
+    createSectionView: null, // function (item, row, self) { ... } Your own section row (instead of its title)
+    animated: 0, // 1: addItem / removeItem move the rows (a new row fades in, a removed one fades out). setAnimated(0/1)
     showSearch: 0, // 1: a search box over the list (comp/search-input-v2.js SearchInput must be loaded)
     searchParams: {}, // More params of the SearchInput. Ex: { placeholderText: "Ara", searchIconFile: "../comp/search-input-v2/search.svg" }
     emptyText: "No items",
@@ -127,8 +147,17 @@ const ItemListDefaults = {
             selectedIconFilter: "grayscale(30%)",
             selectedFontFamily: "opensans-bold", // "": the font does not change
         },
+        // A section: an item { type: "section", title: "VIEWS" }, a title between the items
+        section: {
+            height: "auto",
+            padding: [20, 8],
+            fontSize: 16,
+            fontFamily: "opensans-bold",
+            textColor: Black(0.4),
+        },
         // A state: only the keys that change
-        hover: { color: "white" },
+        hover: { color: "white" }, // style: { hover: {} }: no look under the mouse
+        pressed: { color: null }, // A click, Enter or Space: this color at once, then it fades back (style.row.motion). null: none
         selected: { color: "transparent", opacity: 0.5 }, // WHY: transparent: a selected row does not get white under the mouse.
         disabled: { opacity: 0.4 },
         focus: { ringColor: "rgba(55, 56, 54, 0.5)" }, // The ring of the keyboard focus
@@ -171,11 +200,16 @@ const ItemListDefaults = {
 
 const ItemList = function (params = {}) {
 
+    // WHY read first: the merges below would fill an empty hover with the color of the package.
+    const givenHover = params.style && params.style.hover;
+    const isHoverOff = !!givenHover && Object.keys(givenHover).length === 0;
+
     // Merge style package: params.style > ItemList.styles[styleName] > ItemListDefaults.style (classic)
     basic.applyStylePackage(params, ItemList.styles, ItemListDefaults);
 
     // Merge params:
     mergeIntoIfMissing(params, ItemListDefaults);
+    if (isHoverOff) params.style.hover = {};
 
     // Edit params, if needed:
     const startItems = Array.isArray(params.items) ? params.items.slice() : []; // WHY: A copy: the array of the caller does not change.
@@ -187,11 +221,22 @@ const ItemList = function (params = {}) {
 
     // *** PRIVATE VARIABLES:
     const _s = box.style;
-    let entries = []; // { key, item, row, isShown, isHover }
+    let entries = []; // { key, item, data, row, isShown, isHover, isSection, isPressed, isLeaving }
+    let removedEntries = []; // animated: the removed items whose rows still fade out (they leave after the motion)
     let selectedKeys = []; // Strings, in the order they were selected
     let focusedKey = null;
     let searchText = "";
+    let wasAnimated = 0;
     const EMPTY_TEXT_TOP = 24; // The "No results" text under the top of the list
+    const PRESS_HOLD_TIME = 50; // ms: the pressed color stays this long, then it fades back with the row motion
+
+    // animated: 1
+    const MOTION_TIME = 0.25; // s
+    const MOTION_MS = MOTION_TIME * 1000;
+    const MOTION_EASE = "cubic-bezier(0.2, 0.8, 0.2, 1)"; // a fast start and a soft stop
+    const FADE_MOTION = "opacity " + MOTION_TIME + "s " + MOTION_EASE;
+    const MOVE_MOTION = "transform " + MOTION_TIME + "s " + MOTION_EASE;
+    const COMING_ROW_SHIFT = 6; // px: a new row comes from a little higher
 
     // *** PUBLIC VARIABLES:
     // NOTE: Default values are also public variables. (box.layout, box.selection, box.enabled...)
@@ -216,10 +261,15 @@ const ItemList = function (params = {}) {
         return item || {};
     };
 
+    // An item { type: "section" } is a title row between the items.
+    const isSectionData = function (data) {
+        return (data.type === "section") ? 1 : 0;
+    };
+
     const toEntry = function (item, index) {
         const object = toItemObject(item);
         const key = (object.key !== undefined && object.key !== null) ? String(object.key) : String(index);
-        return { key: key, item: item, data: object, row: null, isShown: 1, isHover: 0 };
+        return { key: key, item: item, data: object, row: null, isShown: 1, isHover: 0, isSection: isSectionData(object) };
     };
 
     const findEntry = function (key) {
@@ -240,6 +290,11 @@ const ItemList = function (params = {}) {
 
     const getSelectedItems = function () {
         return selectedKeys.map(findEntry).filter(Boolean).map(function (e) { return e.item; });
+    };
+
+    // The items (not the sections)
+    const getItemEntries = function () {
+        return entries.filter(function (e) { return !e.isSection; });
     };
 
     // *** SEARCH
@@ -267,6 +322,20 @@ const ItemList = function (params = {}) {
         return getSearchableText(entry).includes(searchText) ? 1 : 0;
     };
 
+    // Which rows are shown: the items that match the search, and a section while an item under it is shown.
+    const computeShown = function () {
+        let section = null;
+        entries.forEach(function (e) {
+            if (e.isSection) {
+                section = e;
+                e.isShown = 0;
+                return;
+            }
+            e.isShown = isMatch(e);
+            if (e.isShown && section) section.isShown = 1;
+        });
+    };
+
     // *** DRAWING
 
     // The colors of a row in its state. A tile has its own hover and selected color (style.tile).
@@ -276,13 +345,16 @@ const ItemList = function (params = {}) {
         const selectedLook = isTile ? { color: _s.tile.selectedColor || _s.selected.color, borderColor: _s.selected.borderColor } : _s.selected;
         const look = Object.assign({}, _s.row, entry.isHover ? hoverLook : {}, isOn ? selectedLook : {});
         if (look.opacity === undefined) look.opacity = 1;
+        // WHY: In the look, not only in the click: a paint of the selection or of the mouse keeps the pressed color.
+        if (entry.isPressed && _s.pressed.color) look.color = _s.pressed.color;
         return look;
     };
 
-    // The look of the state of one row: normal, hover, selected, disabled.
+    // The look of the state of one row: normal, hover, pressed, selected, disabled.
     const paintRow = function (entry) {
         const row = entry.row;
-        if (!row) return;
+        // WHY: A section has no state; a row that fades out keeps fading.
+        if (!row || entry.isSection || entry.isLeaving) return;
         const isOn = isSelected(entry);
         const look = getLook(entry, isOn);
 
@@ -325,7 +397,8 @@ const ItemList = function (params = {}) {
         const focused = findEntry(focusedKey);
         const tabEntry = (focused && focused.isShown) ? focused : shown[0];
         entries.forEach(function (e) {
-            if (!e.row) return;
+            // WHY: A section gets no tabIndex: even a click does not focus it.
+            if (!e.row || e.isSection) return;
             e.row.tabIndex = (box.enabled == 1 && e === tabEntry) ? 0 : -1;
         });
     };
@@ -409,9 +482,9 @@ const ItemList = function (params = {}) {
         return HGroup({ width: "100%", height: _s.row.height, align: "left center", gap: _s.row.gap, padding: _s.row.padding });
     };
 
-    const createRow = function (entry) {
+    // The row of an item: an icon and its texts, or your own objects (createItemView).
+    const createItemRow = function (entry) {
         const isTile = isTileLayout();
-        entry.isHover = 0; // WHY: A new row is not under the mouse yet (its mouseleave would never come).
 
         // GROUP: Row
         const row = createRowBox(isTile);
@@ -424,7 +497,7 @@ const ItemList = function (params = {}) {
         row.clickable = 1;
         row.clipContent = 0; // WHY: The focus ring is drawn on the edge of the row.
         if (_s.row.boxShadow) row.boxShadow = _s.row.boxShadow;
-        if (_s.row.motion) row.setMotion(_s.row.motion);
+        setStartMotion(row, entry);
         row.role = "option";
         row.aria = { label: entry.data.title || entry.key };
         row.setFocusRing(_s.focus.ringColor);
@@ -433,19 +506,62 @@ const ItemList = function (params = {}) {
             createCheck(row, isTile);
 
         endGroup();
+        return row;
+    };
 
+    // A section: its title (style.section) or your own objects (createSectionView). It has no events: it is never
+    // selected, hovered or clicked.
+    const createSectionRow = function (entry) {
+        const section = _s.section;
+        // WHY: A whole line in a list and in a grid; in one row of tiles (horizontal), a title before its tiles.
+        const width = (box.layout === "horizontal") ? "auto" : "100%";
+
+        // GROUP: Section
+        const row = HGroup({ width: width, height: section.height, align: "left center", padding: section.padding });
+        row.position = "relative";
+        row.shrink = 0;
+        row.role = "presentation";
+        setStartMotion(row, entry);
+
+            if (typeof box.createSectionView === "function") {
+                box.createSectionView(entry.item, row, box);
+            } else {
+                row.lblTitle = Label({ plainText: entry.data.title || "", width: width, fontSize: section.fontSize, textColor: section.textColor, ellipsis: 1 });
+                if (section.fontFamily) row.lblTitle.fontFamily = section.fontFamily;
+            }
+
+        endGroup();
+        return row;
+    };
+
+    // WHY: setMotion() waits a moment: the first paint (a row selected at create time) does not move.
+    //      Before createItemView, so a row motion set there wins.
+    const setStartMotion = function (row, entry) {
+        const motion = getRowMotion(entry, "rest");
+        if (motion) row.setMotion(motion);
+    };
+
+    const createRow = function (entry) {
+        entry.isHover = 0; // WHY: A new row is not under the mouse yet (its mouseleave would never come).
+        if (entry.isSection) {
+            entry.row = createSectionRow(entry);
+            return entry.row;
+        }
+        const row = createItemRow(entry);
         entry.row = row;
         bindRowEvents(entry);
         paintRow(entry);
         // WHY: The motion is set after the first paint: a tile selected at create time does not grow in front of the user.
-        if (isTile && row.icon && _s.tile.iconMotion) row.icon.setMotion(_s.tile.iconMotion);
+        if (row.isTile && row.icon && _s.tile.iconMotion) row.icon.setMotion(_s.tile.iconMotion);
         return row;
     };
 
     const bindRowEvents = function (entry) {
         const row = entry.row;
         row.on("click", function (self, event) {
-            if (!isEntryEnabled(entry)) return;
+            // WHY: A removed row that still fades out is not clicked (a button made in it by createItemView).
+            if (entry.isLeaving || !isEntryEnabled(entry)) return;
+            flashRow(entry);
             focusedKey = entry.key;
             refreshTabOrder();
             box.onItemClick(box, entry.item, indexOf(entry), event);
@@ -474,18 +590,38 @@ const ItemList = function (params = {}) {
         return group;
     };
 
-    // Shows "No items" / "No results" when nothing is shown.
-    const refreshEmptyText = function () {
-        const shownCount = getShownEntries().length;
-        box.lblEmpty.visible = (shownCount === 0) ? 1 : 0;
-        box.lblEmpty.plainText = (entries.length === 0) ? box.emptyText : box.noResultText;
+    const refreshScrollBar = function () {
         if (box.scrollBar) box.scrollBar.refreshScroll();
     };
 
-    const applySearch = function () {
+    // Shows "No items" / "No results" when no item is shown. (The sections are not counted.)
+    const refreshEmptyText = function () {
+        const shownCount = getShownEntries().length;
+        box.lblEmpty.visible = (shownCount === 0) ? 1 : 0;
+        box.lblEmpty.plainText = (getItemEntries().length === 0) ? box.emptyText : box.noResultText;
+        refreshScrollBar();
+    };
+
+    // Shows or hides a row by its isShown. withMotion (an animated addItem / removeItem): a row that goes (a section
+    // without a shown item) fades out first; a row that comes is faded in by playRowMoves().
+    const showRow = function (entry, withMotion) {
+        if (entry.isShown) {
+            if (entry.isLeaving) stopLeave(entry);
+            entry.row.visible = 1;
+            return;
+        }
+        if (withMotion && entry.row.visible == 1) {
+            if (!entry.isLeaving) fadeOutRow(entry, hideFadedRow);
+            return;
+        }
+        if (entry.isLeaving) stopLeave(entry);
+        entry.row.visible = 0;
+    };
+
+    const applySearch = function (withMotion = false) {
+        computeShown();
         entries.forEach(function (e) {
-            e.isShown = isMatch(e);
-            if (e.row) e.row.visible = e.isShown;
+            if (e.row) showRow(e, withMotion);
         });
         refreshTabOrder();
         refreshEmptyText();
@@ -494,6 +630,7 @@ const ItemList = function (params = {}) {
     // Draws all the rows again (setItems, setLayout).
     const createRows = function () {
         if (box.wrapper) box.wrapper.remove();
+        removedEntries = []; // WHY: Their rows go with the old group (their timers find them removed).
         const host = isAutoHeight ? box : box.scrollBox;
         createIn(host, function () {
             // GROUP: Rows
@@ -516,6 +653,210 @@ const ItemList = function (params = {}) {
         box.scrollBox.scrollY = isHorizontal ? 0 : 1;
     };
 
+    // *** PRESSED (style.pressed.color)
+
+    // A click, Enter or Space: the row gets the pressed color at once, then it fades back to its look (the row motion).
+    const flashRow = function (entry) {
+        if (!_s.pressed.color) return;
+        if (entry.cancelFlash) entry.cancelFlash();
+        entry.isPressed = 1;
+        setRowMotion(entry, "rest");
+        paintRow(entry);
+        entry.cancelFlash = box.after(PRESS_HOLD_TIME, function () {
+            entry.cancelFlash = null;
+            entry.isPressed = 0;
+            if (entry.row.isRemoved) return;
+            setRowMotion(entry, "rest");
+            paintRow(entry);
+        });
+    };
+
+    // *** MOTION (animated: 1)
+
+    // WHY: A user who asked the system for less motion gets still rows.
+    const isMotionOn = function () {
+        if (box.animated != 1) return false;
+        const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        return !reduceMotion;
+    };
+
+    // The transition of a row: the motion of its look (style.row.motion) and, when animated, its fade and its move.
+    // mode: "rest" (all of them), "placing" (no move: the row jumps to its start place), "still" (no fade, no move).
+    // WHY: A pressed row has no motion of its look: the pressed color comes at once.
+    const getRowMotion = function (entry, mode) {
+        const parts = [];
+        if (_s.row.motion && !entry.isSection && !entry.isPressed) parts.push(_s.row.motion);
+        if (isMotionOn() && mode !== "still") parts.push(FADE_MOTION);
+        if (isMotionOn() && mode === "rest") parts.push(MOVE_MOTION);
+        return parts.join(", ");
+    };
+
+    const setRowMotion = function (entry, mode) {
+        entry.row.setMotionNow(getRowMotion(entry, mode));
+    };
+
+    // How far the list is scrolled. (An "auto" height list does not scroll in itself.)
+    const getScroll = function () {
+        if (!box.scrollBox) return { left: 0, top: 0 };
+        return { left: box.scrollBox.elem.scrollLeft, top: box.scrollBox.elem.scrollTop };
+    };
+
+    // The place of a row in the list without its move: its place in the layout, minus the scroll.
+    // WHY: Not getBoundingClientRect(): a page zoomed by page.fit() is scaled, the moves would be too short or long.
+    const getLayoutPlace = function (entry) {
+        const scroll = getScroll();
+        return { left: entry.row.elem.offsetLeft - scroll.left, top: entry.row.elem.offsetTop - scroll.top };
+    };
+
+    // Where a row is seen now: its layout place and the part of its move that has not ended yet (transform).
+    const getSeenPlace = function (entry) {
+        const place = getLayoutPlace(entry);
+        const move = new DOMMatrixReadOnly(getComputedStyle(entry.row.elem).transform);
+        return { left: place.left + move.m41, top: place.top + move.m42 };
+    };
+
+    // The transform that puts a row back where it was seen. "": it has not moved.
+    const getMoveBack = function (first, last) {
+        const x = first.left - last.left;
+        const y = first.top - last.top;
+        if (x === 0 && y === 0) return "";
+        return "translate(" + x + "px, " + y + "px)";
+    };
+
+    // The rows on the screen: the shown ones and the ones that still fade out.
+    const getDisplayedEntries = function () {
+        return entries.concat(removedEntries).filter(function (e) {
+            return e.row && !e.row.isRemoved && e.row.visible == 1;
+        });
+    };
+
+    // FLIP, first: where every row on the screen is seen before a change. null: no motion.
+    const measureRows = function () {
+        if (!isMotionOn() || !box.wrapper) return null;
+        const places = new Map();
+        getDisplayedEntries().forEach(function (e) { places.set(e, getSeenPlace(e)); });
+        return places;
+    };
+
+    // The rest look of a row: the opacity of its state (an item) or 1 (a section).
+    const showRowLook = function (entry) {
+        entry.row.css.opacity = "";
+        paintRow(entry);
+    };
+
+    // FLIP, after a change: every row jumps back to where it was seen (no motion), then moves to its new place.
+    // A row that was not on the screen comes: it fades in from a little higher.
+    const playRowMoves = function (firstPlaces) {
+        if (!firstPlaces) return;
+        const displayed = getDisplayedEntries();
+        const moving = displayed.filter(function (e) { return firstPlaces.has(e); });
+        const coming = displayed.filter(function (e) { return !firstPlaces.has(e); });
+        const lastPlaces = moving.map(getLayoutPlace); // WHY: All the places are read before the writes: one layout.
+
+        moving.forEach(function (e, i) {
+            setRowMotion(e, "placing");
+            e.row.css.transform = getMoveBack(firstPlaces.get(e), lastPlaces[i]);
+        });
+        coming.forEach(function (e) {
+            setRowMotion(e, "still");
+            e.row.css.opacity = "0";
+            e.row.css.transform = "translateY(" + (-COMING_ROW_SHIFT) + "px)";
+        });
+
+        void box.wrapper.elem.offsetWidth; // WHY: The start places are drawn first, so the moves start from them.
+
+        displayed.forEach(function (e) {
+            setRowMotion(e, "rest");
+            e.row.css.transform = "";
+        });
+        coming.forEach(showRowLook);
+    };
+
+    // FLIP: change() moves rows in the layout; the rows on the screen move there from where they were seen.
+    const moveRowsAfter = function (change) {
+        const firstPlaces = measureRows();
+        change();
+        playRowMoves(firstPlaces);
+    };
+
+    // A row that goes: it fades out in its place (the rows around it stay), then gone(entry) takes it away (removed or
+    // hidden) and the rows under it move up (FLIP).
+    const fadeOutRow = function (entry, gone) {
+        if (entry.cancelLeave) entry.cancelLeave();
+        entry.isLeaving = 1;
+        entry.row.clickable = 0;
+        entry.row.aria = { hidden: "true" };
+        setRowMotion(entry, "rest");
+        entry.row.css.opacity = "0";
+        entry.cancelLeave = box.after(MOTION_MS, function () {
+            entry.cancelLeave = null;
+            if (entry.row.isRemoved) return; // WHY: setItems() or setLayout() made the rows again in the meantime.
+            moveRowsAfter(function () { gone(entry); });
+            refreshScrollBar();
+        });
+    };
+
+    // A row that faded out (or stopped fading) gets its look back.
+    const endLeaveLook = function (entry) {
+        entry.isLeaving = 0;
+        entry.row.aria = { hidden: null };
+        if (!entry.isSection) entry.row.clickable = 1;
+        showRowLook(entry);
+    };
+
+    // A row that was fading out stays after all: it is shown again, or hidden at once (a search, animated: 0).
+    const stopLeave = function (entry) {
+        if (entry.cancelLeave) entry.cancelLeave();
+        entry.cancelLeave = null;
+        endLeaveLook(entry);
+    };
+
+    // The end of the fade of a hidden row (a section without a shown item): hidden, with its look back for later.
+    const hideFadedRow = function (entry) {
+        entry.row.visible = 0;
+        endLeaveLook(entry);
+    };
+
+    const removeFadedRow = function (entry) {
+        removedEntries = removedEntries.filter(function (e) { return e !== entry; });
+        entry.row.remove();
+    };
+
+    // The row of a removed item: it fades out, then it leaves and the rows under it move up (animated: 1).
+    // Otherwise (or a hidden row) it is removed at once.
+    const takeOutRow = function (entry) {
+        if (!isMotionOn() || entry.row.visible != 1) {
+            entry.row.remove();
+            return;
+        }
+        removedEntries.push(entry);
+        if (!entry.isSection) entry.row.tabIndex = -1;
+        fadeOutRow(entry, removeFadedRow);
+    };
+
+    // The removed rows that still fade out are removed at once.
+    const removeFadingRows = function () {
+        removedEntries.forEach(function (e) {
+            if (e.cancelLeave) e.cancelLeave();
+            e.row.remove();
+        });
+        removedEntries = [];
+    };
+
+    // The transitions of the rows (setAnimated). Off: the rows that fade out go at once, the moves end.
+    const applyAnimated = function () {
+        const isOn = isMotionOn();
+        if (!isOn && !wasAnimated) return; // WHY: animated: 0 writes nothing.
+        wasAnimated = isOn ? 1 : 0;
+        if (!isOn) removeFadingRows();
+        entries.forEach(function (e) {
+            if (!e.row) return;
+            setRowMotion(e, "rest");
+            if (!isOn) e.row.css.transform = "";
+        });
+        if (!isOn) applySearch(); // WHY: A section that was fading out is hidden at once.
+    };
+
     // *** SELECTION
 
     const setSelectedKeys = function (keys, silent) {
@@ -528,7 +869,7 @@ const ItemList = function (params = {}) {
 
     // A click, Enter or Space on a row.
     const toggleEntry = function (entry, silent) {
-        if (box.selection === "none") return;
+        if (box.selection === "none" || entry.isSection) return;
         if (box.selection === "single") {
             setSelectedKeys([entry.key], silent);
             return;
@@ -539,11 +880,17 @@ const ItemList = function (params = {}) {
         setSelectedKeys(keys, silent);
     };
 
+    // A key of an item of the list. WHY: A section is never selected.
+    const isSelectableKey = function (key) {
+        const entry = findEntry(key);
+        return !!entry && !entry.isSection;
+    };
+
     // Only the keys of the list; single selection keeps the last one.
     const cleanKeys = function (keys) {
         const known = (Array.isArray(keys) ? keys : [keys])
             .map(String)
-            .filter(function (key, index, list) { return findEntry(key) && list.indexOf(key) === index; });
+            .filter(function (key, index, list) { return isSelectableKey(key) && list.indexOf(key) === index; });
         if (box.selection === "none") return [];
         if (box.selection === "single") return known.slice(-1);
         return known;
@@ -551,8 +898,15 @@ const ItemList = function (params = {}) {
 
     // *** KEYBOARD
 
+    // The shown items (not the sections): the keyboard, the Tab order and the counts use them.
     const getShownEntries = function () {
-        return entries.filter(function (e) { return e.isShown; });
+        return entries.filter(function (e) { return e.isShown && !e.isSection; });
+    };
+
+    // The shown section right before an item (null: none).
+    const getSectionBefore = function (entry) {
+        const before = entries[indexOf(entry) - 1];
+        return (before && before.isSection && before.isShown) ? before : null;
     };
 
     // Scrolls only the list (not the page around it) to show a row.
@@ -561,14 +915,17 @@ const ItemList = function (params = {}) {
         if (isAutoHeight || !entry || !entry.row || !entry.isShown) return;
         const area = box.scrollBox.elem;
         const row = entry.row.elem;
+        // WHY: The first item of a section is shown with its title (Home, the arrow up).
+        const firstRow = (getSectionBefore(entry) || entry).row.elem;
         const isHorizontal = (box.layout === "horizontal");
-        const start = (isHorizontal ? row.offsetLeft : row.offsetTop) + (isHorizontal ? box.wrapper.elem.offsetLeft : box.wrapper.elem.offsetTop);
-        const size = isHorizontal ? row.offsetWidth : row.offsetHeight;
+        const wrapperStart = isHorizontal ? box.wrapper.elem.offsetLeft : box.wrapper.elem.offsetTop;
+        const start = (isHorizontal ? firstRow.offsetLeft : firstRow.offsetTop) + wrapperStart;
+        const end = (isHorizontal ? row.offsetLeft + row.offsetWidth : row.offsetTop + row.offsetHeight) + wrapperStart;
         const position = isHorizontal ? area.scrollLeft : area.scrollTop;
         const visibleSize = isHorizontal ? area.clientWidth : area.clientHeight;
         let target = position;
         if (start < position) target = start;
-        else if (start + size > position + visibleSize) target = start + size - visibleSize;
+        else if (end > position + visibleSize) target = end - visibleSize;
         if (isHorizontal) area.scrollLeft = target;
         else area.scrollTop = target;
     };
@@ -579,40 +936,65 @@ const ItemList = function (params = {}) {
     };
 
     const focusEntry = function (entry) {
-        if (!entry || !entry.row) return;
+        if (!entry || !entry.row || entry.isSection) return;
         focusedKey = entry.key;
         refreshTabOrder();
         entry.row.elem.focus({ preventScroll: true });
         scrollRowIntoView(entry);
     };
 
-    // The count of tiles on one line of the grid (from their positions).
-    const getGridColumnCount = function (shown) {
-        if (shown.length === 0 || !shown[0].row) return 1;
-        const firstTop = shown[0].row.elem.offsetTop;
-        const count = shown.findIndex(function (e) { return e.row.elem.offsetTop !== firstTop; });
-        return (count === -1) ? shown.length : count;
+    // The nearest tile of a line of the grid to a side (left, in px).
+    const getNearestInLine = function (line, left) {
+        const distanceOf = function (e) { return Math.abs(e.row.elem.offsetLeft - left); };
+        return line.reduce(function (nearest, e) {
+            return (distanceOf(e) < distanceOf(nearest)) ? e : nearest;
+        });
     };
 
-    // How far an arrow key moves the focus, in this layout. 0: the key does nothing here.
-    const getArrowStep = function (key, shown) {
+    // The tile on the next line of the grid (direction 1: down, -1: up), the nearest one to the side of this tile.
+    // No line there: the last (or the first) tile.
+    // WHY: Not a count of columns: a section starts a new line, so the lines of a grid are not all full.
+    const getGridNeighbor = function (entry, shown, direction) {
+        const top = entry.row.elem.offsetTop;
+        const lineTops = shown
+            .map(function (e) { return e.row.elem.offsetTop; })
+            .filter(function (lineTop) { return (direction > 0) ? lineTop > top : lineTop < top; });
+        if (lineTops.length === 0) return (direction > 0) ? shown[shown.length - 1] : shown[0];
+        const nextTop = (direction > 0) ? Math.min(...lineTops) : Math.max(...lineTops);
+        const line = shown.filter(function (e) { return e.row.elem.offsetTop === nextTop; });
+        return getNearestInLine(line, entry.row.elem.offsetLeft);
+    };
+
+    // How an arrow key moves the focus in this layout: 1 (next), -1 (previous), 0 (the key does nothing here).
+    const getArrowStep = function (key) {
         const isVertical = (box.layout === "vertical");
         const isHorizontal = (box.layout === "horizontal");
-        if (key === "ArrowDown") return isHorizontal ? 0 : (isVertical ? 1 : getGridColumnCount(shown));
-        if (key === "ArrowUp") return isHorizontal ? 0 : (isVertical ? -1 : -getGridColumnCount(shown));
+        if (key === "ArrowDown") return isHorizontal ? 0 : 1;
+        if (key === "ArrowUp") return isHorizontal ? 0 : -1;
         if (key === "ArrowRight") return isVertical ? 0 : 1;
         if (key === "ArrowLeft") return isVertical ? 0 : -1;
         return 0;
     };
 
-    const onRowKeyDown = function (entry, event) {
-        if (box.enabled != 1) return;
-        const shown = getShownEntries();
+    // The row an arrow key moves the focus to. null: the key does nothing in this layout.
+    const getArrowTarget = function (entry, key, shown) {
+        const step = getArrowStep(key);
+        if (step === 0) return null;
+        const isLineMove = (key === "ArrowDown" || key === "ArrowUp");
+        if (box.layout === "grid" && isLineMove) return getGridNeighbor(entry, shown, step);
         const position = shown.indexOf(entry);
+        return shown[Math.max(0, Math.min(shown.length - 1, position + step))];
+    };
+
+    const onRowKeyDown = function (entry, event) {
+        if (box.enabled != 1 || entry.isLeaving) return;
+        const shown = getShownEntries();
 
         if (event.key === "Enter" || event.key === " ") {
             event.preventDefault();
-            if (isEntryEnabled(entry)) toggleEntry(entry, 0);
+            if (!isEntryEnabled(entry)) return;
+            flashRow(entry);
+            toggleEntry(entry, 0);
             return;
         }
         if (event.key === "Home" || event.key === "End") {
@@ -621,10 +1003,9 @@ const ItemList = function (params = {}) {
             return;
         }
 
-        const step = getArrowStep(event.key, shown);
-        if (step === 0) return;
+        const target = getArrowTarget(entry, event.key, shown);
+        if (!target) return;
         event.preventDefault();
-        const target = shown[Math.max(0, Math.min(shown.length - 1, position + step))];
         focusEntry(target);
     };
 
@@ -664,7 +1045,7 @@ const ItemList = function (params = {}) {
 
     box.setItems = function (items) {
         entries = (Array.isArray(items) ? items : []).map(toEntry);
-        selectedKeys = selectedKeys.filter(function (key) { return findEntry(key); });
+        selectedKeys = selectedKeys.filter(isSelectableKey);
         if (!findEntry(focusedKey)) focusedKey = null;
         createRows();
     };
@@ -673,7 +1054,7 @@ const ItemList = function (params = {}) {
     box.getItems = function () {
         return entries.map(function (e) { return e.item; });
     };
-    // USAGE: list.getItems() // The same strings / objects you gave
+    // USAGE: list.getItems() // The same strings / objects you gave (the sections too)
 
     box.getItem = function (key) {
         const entry = findEntry(key);
@@ -694,7 +1075,8 @@ const ItemList = function (params = {}) {
         return number;
     };
 
-    // index: -1 or empty -> at the end.
+    // index: the place in getItems() (the sections are counted). -1 or empty -> at the end.
+    // animated: 1 -> the rows under it move down and it fades in.
     box.addItem = function (item, index = -1) {
         const entry = toEntry(item, getFreeIndexKey());
         if (findEntry(entry.key)) {
@@ -702,25 +1084,30 @@ const ItemList = function (params = {}) {
             return;
         }
         const at = (index < 0 || index > entries.length) ? entries.length : index;
-        entries.splice(at, 0, entry);
-        createIn(box.wrapper, function () { createRow(entry); });
-        const next = entries[at + 1];
-        if (next && next.row) box.wrapper.elem.insertBefore(entry.row.elem, next.row.elem);
-        applySearch();
+        moveRowsAfter(function () {
+            entries.splice(at, 0, entry);
+            createIn(box.wrapper, function () { createRow(entry); });
+            const next = entries[at + 1];
+            if (next && next.row) box.wrapper.elem.insertBefore(entry.row.elem, next.row.elem);
+            applySearch(isMotionOn());
+        });
     };
     // USAGE: list.addItem({ key: "x", title: "X" }) or list.addItem({ key: "y", title: "Y" }, 0)
 
     // silent: 1 -> onChange is not called (when the removed item was selected). Returns the removed item.
+    // animated: 1 -> its row fades out, then it leaves and the rows under it move up. (The data changes at once.)
     box.removeItem = function (key, silent = 0) {
         const entry = findEntry(key);
         if (!entry) return null;
-        entries.splice(indexOf(entry), 1);
-        entry.row.remove();
-        if (focusedKey === entry.key) focusedKey = null;
-        if (isSelected(entry)) {
-            setSelectedKeys(selectedKeys.filter(function (k) { return k !== entry.key; }), silent);
-        }
-        applySearch();
+        moveRowsAfter(function () {
+            entries.splice(indexOf(entry), 1);
+            takeOutRow(entry);
+            if (focusedKey === entry.key) focusedKey = null;
+            if (isSelected(entry)) {
+                setSelectedKeys(selectedKeys.filter(function (k) { return k !== entry.key; }), silent);
+            }
+            applySearch(isMotionOn());
+        });
         return entry.item;
     };
     // USAGE: list.removeItem("tomato")
@@ -731,6 +1118,8 @@ const ItemList = function (params = {}) {
         if (!entry || typeof entry.item !== "object") return;
         Object.assign(entry.item, changes, { key: entry.item.key });
         entry.data = entry.item;
+        entry.isSection = isSectionData(entry.data);
+        selectedKeys = selectedKeys.filter(isSelectableKey); // WHY: An item that became a section is not selected any more.
         const oldRow = entry.row;
         createIn(box.wrapper, function () { createRow(entry); });
         box.wrapper.elem.insertBefore(entry.row.elem, oldRow.elem);
@@ -757,7 +1146,7 @@ const ItemList = function (params = {}) {
 
     box.select = function (key, silent = 0) {
         const entry = findEntry(key);
-        if (!entry || isSelected(entry)) return;
+        if (!entry || entry.isSection || isSelected(entry)) return;
         toggleEntry(entry, silent);
         if (box.scrollToSelected == 1) scrollRowIntoView(entry);
     };
@@ -770,7 +1159,7 @@ const ItemList = function (params = {}) {
         setSelectedKeys([], silent);
     };
 
-    // Shows only the matching items. Returns the count of the shown items. "": all of them.
+    // Shows only the matching items (and the sections over them). Returns the count of the shown items. "": all of them.
     box.search = function (text) {
         searchText = normalizeText(text).trim();
         syncSearchInput(text);
@@ -801,6 +1190,12 @@ const ItemList = function (params = {}) {
     };
     // USAGE: get: list.enabled, set: list.setEnabled(0)
 
+    box.setAnimated = function (value) {
+        box.animated = basic.isOn(value) ? 1 : 0;
+        applyAnimated();
+    };
+    // USAGE: get: list.animated, set: list.setAnimated(1)
+
     box.scrollToItem = function (key) {
         scrollRowIntoView(findEntry(key));
     };
@@ -809,7 +1204,7 @@ const ItemList = function (params = {}) {
         focusEntry(key === undefined ? getShownEntries()[0] : findEntry(key));
     };
 
-    // func(item, row, index) for every item (shown or not)
+    // func(item, row, index) for every item (shown or not), the sections too (item.type === "section")
     box.forEach = function (func) {
         entries.forEach(function (e, index) { func(e.item, e.row, index); });
     };
@@ -837,6 +1232,7 @@ const ItemList = function (params = {}) {
     // LABEL: Empty / no result text
     box.lblEmpty = Label({
         plainText: box.emptyText,
+        left: 0, // WHY: only top was set, so the text stayed at the left of basic.js (-1000), out of the list
         width: "100%",
         fontSize: _s.empty.fontSize,
         textColor: _s.empty.textColor,
@@ -859,6 +1255,7 @@ const ItemList = function (params = {}) {
     selectedKeys = cleanKeys(startKeys);
     createRows();
     box.setEnabled(box.enabled);
+    wasAnimated = isMotionOn() ? 1 : 0; // WHY: The rows were made with the transitions of the motion.
     // WHY: After the page has placed the list: the sizes are not known while it is created.
     box.after(0, scrollToFirstSelected);
 
@@ -916,6 +1313,7 @@ ItemList.styles = {
             selectedColor: "",
             hover: { color: "#F7F8F6", borderColor: Black(0.14) },
         },
+        section: { padding: [14, 6], fontSize: 13, textColor: Black(0.45) }, // WHY: 14: over the texts of the cards
         hover: { color: "#F7F8F6", borderColor: Black(0.14) },
         selected: { color: "#EEF6F3", borderColor: "#3D7A6B", opacity: 1 },
         focus: { ringColor: "rgba(61, 122, 107, 0.6)" },
@@ -969,6 +1367,7 @@ ItemList.styles = {
             selectedColor: "",
             hover: { color: "#232322" },
         },
+        section: { padding: [14, 6], fontSize: 13, textColor: White(0.45) }, // WHY: 14: over the texts of the cards
         hover: { color: "#232322" }, // surface2
         selected: { color: "#2C2C2A", borderColor: "#65A293", opacity: 1 }, // surface3, accent
         focus: { ringColor: "#65A293" },

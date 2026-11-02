@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>ActionTabBar</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- LIBRARY FILES -->
+        <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+        <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- COMPONENT -->
+        <script src="../comp/action-tab-bar.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+
+        /* Bismillah */
+
+        // SAMPLE: ActionTabBar (comp/action-tab-bar.js), the tab bar of javascript-mobile-app-template
+        // (custom-tab-bar.htm) with its big round "+": at the bottom of a white page. The labels in the middle
+        // show the selected tab (onChange) and the taps of the "+" (onAction).
+        // The page is drawn 600 px wide and fitted to the screen (page.fit(600, 800)), like the old template.
+
+        // *** VARIABLES:
+        const DESIGN_WIDTH = 600; // px: the width the page is drawn for
+        const MAX_WIDTH = 800; // px: on a wider screen the page stops growing at this width
+        const TAB_BAR_HEIGHT = 150;
+        const TABS = [
+            { key: "status", text: "STATUS", iconFile: "../assets/tab-bar/status.png" },
+            { key: "receipts", text: "RECEIPTS", iconFile: "../assets/tab-bar/transactions.png" },
+            { key: "tools", text: "TOOLS", iconFile: "../assets/tab-bar/settings.png" },
+        ];
+        let tabBar, lblPage, lblAction;
+        let actionCount = 0;
+
+        const start = function () {
+
+            page.color = "whitesmoke";
+            page.fit(DESIGN_WIDTH, MAX_WIDTH);
+            page.onResize(fitToWindow);
+
+            // GROUP: Fills the window and puts the page in its middle
+            AutoLayout({ align: "center top" });
+
+                // BOX: The page (600 px)
+                startBox({ width: DESIGN_WIDTH, height: "100%", color: "white" });
+
+                    // GROUP: The content, over the tab bar
+                    VGroup({ width: "100%", height: "calc(100% - " + TAB_BAR_HEIGHT + "px)", align: "center center", gap: 16 });
+                        // LABEL: The page of the selected tab
+                        lblPage = Label({ fontSize: 40, textColor: "#141414", bold: 1 });
+                        // LABEL: The taps of the "+"
+                        lblAction = Label({ text: "Tap the + button.", fontSize: 22, textColor: Black(0.5) });
+                    endGroup();
+
+                    // ACTION TAB BAR: at the bottom of the page
+                    tabBar = ActionTabBar({
+                        left: 0,
+                        bottom: 0,
+                        items: TABS,
+                        value: "status",
+                        onChange: showPage,
+                        onAction: countAction,
+                    });
+
+                endBox();
+
+            endAutoLayout();
+
+            showPage(tabBar);
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        const fitToWindow = function () {
+            page.fit(DESIGN_WIDTH, MAX_WIDTH);
+        };
+
+        const showPage = function (self) {
+            lblPage.text = "Page " + TABS[self.getIndex()].text;
+        };
+
+        const countAction = function () {
+            actionCount++;
+            lblAction.text = "onAction: the + was tapped " + actionCount + " time" + ((actionCount > 1) ? "s" : "") + ".";
+        };
+
+        </script>
+
+    </head>
+    <body>
+    </body>
+</html>

@@ -8,6 +8,8 @@ UI COMPONENT TEMPLATE
 - A customizable check box with a label.
 - Checkmark is drawn with code (no image files needed).
 - Supports: checked, enabled, label position (left/right), keyboard (Space/Enter).
+- wrapLabel: 1 -> a long label wraps to more lines (give the check box a width, or grow: 1 in an HGroup).
+  The label is HTML: a text of the user goes in with basic.escapeHtml(text).
 - Whole object background can change on hover and checked states (style.hoverBox, style.checkedBox).
 - Style packages: "classic" (default), "modern", "dark". Select with styleName. (CheckBox.styles)
 
@@ -29,6 +31,7 @@ const CheckBoxDefaults = {
     enabled: 1, // 0, 1
     labelText: "",
     labelPosition: "right", // "right", "left"
+    wrapLabel: 0, // 1: a long label wraps (the check box needs a width); 0: one line
     onChange: function (self) { }, // self.checked
     styleName: "classic", // "classic", "modern", "dark" or a name added to CheckBox.styles
     style: { // Classic style package (default)
@@ -192,9 +195,13 @@ const CheckBox = function (params = {}) {
     box.css = { outline: "none", userSelect: "none" };
     box.setMotion("background-color " + MOTION_DURATION);
 
+    const isWrapLabel = basic.isOn(box.wrapLabel);
+    // WHY: a flex item does not get narrower than its content without minWidth 0 (the long label pushed the row out)
+    if (isWrapLabel) box.css = { minWidth: "0px" };
+
     // GROUP: mark, label
     box.contentBox = HGroup({
-        width: "auto",
+        width: isWrapLabel ? "100%" : "auto",
         height: "auto",
         position: "relative",
         ...box.style.layout,
@@ -204,8 +211,13 @@ const CheckBox = function (params = {}) {
     const createLabel = function () {
         box.label = Label(box.style.label);
         box.label.text = box.labelText;
-        box.label.css.whiteSpace = "nowrap";
         if (!box.labelText) box.label.visible = 0;
+        if (!isWrapLabel) {
+            box.label.css.whiteSpace = "nowrap";
+            return;
+        }
+        box.label.grow = 1;
+        box.label.css = { minWidth: "0px", whiteSpace: "normal", overflowWrap: "anywhere" };
     };
 
     if (box.labelPosition === "left") createLabel();
@@ -221,6 +233,7 @@ const CheckBox = function (params = {}) {
     });
     box.mark.setMotion("background-color " + MOTION_DURATION + ", border-color " + MOTION_DURATION);
     box.mark.css.boxSizing = "border-box";
+    box.mark.shrink = 0; // (a wrapping label must not squeeze the mark)
 
     // BOX: tick (drawn with right and bottom borders, rotated 45deg)
     const innerWidth = box.style.mark.width - (box.style.mark.border * 2);

@@ -16,6 +16,9 @@
         <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/input-b.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/search-input-v2.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/full-screen-select.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/item-list.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/side-panel.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/email-input-b.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/password-input-b.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/phone-input-b.js" type="text/javascript" charset="utf-8"></script>
@@ -23,7 +26,12 @@
         <script src="../comp/url-input-b.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/form.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/tabs.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/select-box.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/select-date.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/app-bar.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/page-header.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/settings-row.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/loading-screen.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/ui-effects.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/login-page-v2.js" type="text/javascript" charset="utf-8"></script>
@@ -42,6 +50,13 @@
         <script src="../comp/numeric-keyboard.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/mini-graph-box.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/scrolling-text.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/tap-effect.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/stepper.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/toggle.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/badge-v2.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/bottom-bar.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/period-bar.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/action-tab-bar.js" type="text/javascript" charset="utf-8"></script>
 
         <script>
         "use strict";
@@ -146,6 +161,18 @@
 
         // *** TOOLTIP (comp/tooltip.js)
 
+        test("Tooltip: Escape closes the popover once, and its window events go with it", async function () {
+            const target = Button({ text: "Open" });
+            let closeCount = 0;
+            const bubble = Tooltip.openPopover(target, function () { Label({ text: "A" }); }, {}, "bottom", "", { onClose: function () { closeCount++; } });
+            await wait(30);
+            window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+            window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+            const isClosed = bubble._isRemoved && Tooltip.openedPopover === null;
+            check("Tooltip: Escape closes the popover once, and its window events go with it", isClosed && closeCount === 1, "closed: " + isClosed + ", onClose: " + closeCount);
+            target.remove();
+        });
+
         test("Tooltip: the color of look stays while the mouse moves", async function () {
             // WHY: a hint left by an earlier test would be the one moved here
             if (window.lblHint) window.lblHint.remove();
@@ -183,6 +210,17 @@
             toast.btnAction.elem.click();
             await wait(400);
             check("Toast: a double click on the action runs it once", count === 1, "the action ran " + count + " times");
+        });
+
+        test("Toast: offsetTop moves the toasts down, the sides keep offset", async function () {
+            const toast = Toast.info("Saved");
+            await wait(30);
+            Toast.setOptions({ offsetTop: 80 });
+            const style = Toast.getContainer(Toast.options.position).elem.style;
+            const isRight = style.top === "80px" && style.maxWidth === "calc(100% - " + (Toast.options.offset * 2) + "px)";
+            Toast.setOptions({ offsetTop: null });
+            check("Toast: offsetTop moves the toasts down, the sides keep offset", isRight, "top: " + style.top + ", maxWidth: " + style.maxWidth);
+            toast.close();
         });
 
         // *** ACTION BUTTON (comp/action-button.js)
@@ -348,6 +386,22 @@
             form.remove();
         });
 
+        // *** INPUT B (comp/input-b.js)
+
+        test("EmailInputB: a fast typing that ends valid leaves no warning ball", async function () {
+            const email = EmailInputB({ titleText: "Email", animatedWarningBall: 1 });
+            const inputElement = email.input.inputElement;
+            // WHY: the letters come faster than the delay of withMotion() (a paste or a fast typist)
+            for (const letter of "a@b.co") {
+                inputElement.value += letter;
+                inputElement.dispatchEvent(new Event("input", { bubbles: true }));
+            }
+            await wait(300);
+            const opacity = Number(email.warningBall.opacity);
+            check("EmailInputB: a fast typing that ends valid leaves no warning ball", email.status === 0 && opacity === 0, "status: " + email.status + ", opacity: " + opacity);
+            email.remove();
+        });
+
         // *** PHONE INPUT (comp/phone-input-b.js)
 
         test("PhoneInputB: a pasted number keeps all its digits", async function () {
@@ -424,6 +478,193 @@
             slider.remove();
         });
 
+        test("Slider: a remove() during a drag takes the document events with it", async function () {
+            let moveCount = 0;
+            let isStarted = false;
+            const slider = Slider({ width: 250, onDragStart: function () { isStarted = true; }, onDragMove: function () { moveCount++; } });
+            await wait(50);
+            // WHY: the thumb is private; the one that starts a drag is found by trying every element
+            const elements = [slider.elem].concat(Array.from(slider.elem.querySelectorAll("*")));
+            for (const element of elements) {
+                if (isStarted) break;
+                element.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, clientX: 10 }));
+            }
+            document.dispatchEvent(new MouseEvent("mousemove", { clientX: 60 }));
+            const movesBeforeRemove = moveCount;
+            slider.remove();
+            document.dispatchEvent(new MouseEvent("mousemove", { clientX: 120 }));
+            check("Slider: a remove() during a drag takes the document events with it", isStarted && movesBeforeRemove === 1 && moveCount === 1, "started: " + isStarted + ", moves: " + movesBeforeRemove + " / " + moveCount);
+        });
+
+        // *** SIDE PANEL (comp/side-panel.js)
+
+        test("SidePanel: with a zoomed page (page.fit) it is sized in the px of the page", async function () {
+            const ZOOM = 2.5;
+            page.zoom = ZOOM;
+            const panel = SidePanel({ side: "right", panelSize: 450, screenMargin: 60 });
+            const expectedWidth = Math.min(450, page.width - 60);
+            const width = panel.width;
+            page.zoom = 1;
+            panel.remove();
+            check("SidePanel: with a zoomed page (page.fit) it is sized in the px of the page", Math.abs(width - expectedWidth) < 1, "width: " + width + ", expected: " + expectedWidth);
+        });
+
+        test("SidePanel: a panel opened right after it is made still slides in", async function () {
+            const panel = SidePanel({ side: "right", panelSize: 300, duration: 400 });
+            panel.open(); // WHY: in the same moment as its making (a sheet made by a click)
+            await basic.nextFrame();
+            await basic.nextFrame();
+            const matrix = new DOMMatrix(getComputedStyle(panel.elem).transform);
+            const movedPart = matrix.m41; // translateX: 300 when closed, 0 when open
+            panel.remove();
+            check("SidePanel: a panel opened right after it is made still slides in", movedPart > 1 && movedPart < 300, "translateX two frames after open(): " + movedPart);
+        });
+
+        test("SidePanel: container: it is made in the box, covers only the box and follows its size", async function () {
+            const column = Box(0, 0, 400, 300, { color: "white" });
+            const panel = SidePanel({ container: column, side: "right", panelSize: 300, screenMargin: 60 });
+            panel.open();
+            await wait(50);
+            const backdrop = panel.elem.previousElementSibling;
+            const isInBox = panel.elem.parentElement === column.elem && backdrop.parentElement === column.elem;
+            const backdropRect = backdrop.getBoundingClientRect();
+            const isOverBox = backdropRect.width === 400 && backdropRect.height === 300;
+            const widthBefore = panel.width;
+            column.width = 200; // WHY: not a resize of the window: the panel follows the box itself (300 -> 200 - 60)
+            await wait(100);
+            const widthAfter = panel.width;
+            panel.remove();
+            const isCleaned = column.elem.children.length === 0 && SidePanel.openedPanel === null;
+            column.remove();
+            check("SidePanel: container: it is made in the box, covers only the box and follows its size", isInBox && isOverBox && widthBefore === 300 && widthAfter === 140 && isCleaned, "in the box: " + isInBox + ", backdrop: " + backdropRect.width + " x " + backdropRect.height + ", width: " + widthBefore + " -> " + widthAfter + ", cleaned: " + isCleaned);
+        });
+
+        test("SidePanel: style.panel.round rounds only the corners that face the page", async function () {
+            const corners = {};
+            ["right", "left", "bottom", "top"].forEach(function (side) {
+                const panel = SidePanel({ side: side, style: { panel: { round: 13 } } });
+                corners[side] = getComputedStyle(panel.elem).borderRadius;
+                panel.remove();
+            });
+            const plainPanel = SidePanel({ side: "right" });
+            const plainCorners = getComputedStyle(plainPanel.elem).borderRadius;
+            plainPanel.remove();
+            const isRight = corners.right === "13px 0px 0px 13px" && corners.left === "0px 13px 13px 0px" && corners.bottom === "13px 13px 0px 0px" && corners.top === "0px 0px 13px 13px" && plainCorners === "0px";
+            check("SidePanel: style.panel.round rounds only the corners that face the page", isRight, JSON.stringify(corners) + ", round 0: " + plainCorners);
+        });
+
+        test("SidePanel: fade 0 only slides (its opacity stays 1 while it opens)", async function () {
+            const panel = SidePanel({ side: "right", fade: 0 });
+            const fadingPanel = SidePanel({ side: "left", exclusive: 0 }); // the default: fade 1
+            await wait(60); // WHY: setMotion() puts the transition on after a moment
+            panel.open();
+            fadingPanel.open();
+            const opacities = [getComputedStyle(panel.elem).opacity];
+            const fadingStart = getComputedStyle(fadingPanel.elem).opacity;
+            await basic.nextFrame();
+            await basic.nextFrame();
+            opacities.push(getComputedStyle(panel.elem).opacity);
+            const fadingMiddle = getComputedStyle(fadingPanel.elem).opacity;
+            await wait(100);
+            opacities.push(getComputedStyle(panel.elem).opacity);
+            const transition = getComputedStyle(panel.elem).transitionProperty;
+            panel.remove();
+            fadingPanel.remove();
+            const isSlideOnly = opacities.every(function (opacity) { return opacity === "1"; }) && transition.indexOf("opacity") === -1;
+            check("SidePanel: fade 0 only slides (its opacity stays 1 while it opens)", isSlideOnly && fadingStart === "0" && Number(fadingMiddle) < 1, "fade 0: " + opacities.join(" / ") + " (" + transition + "), fade 1: " + fadingStart + " / " + fadingMiddle);
+        });
+
+        // *** ITEM LIST (comp/item-list.js)
+
+        test("ItemList: style.hover {} means no look under the mouse, the default stays without it", async function () {
+            const listWithoutHover = ItemList({ width: 200, height: 100, items: ["A"], style: { hover: {} } });
+            const modernWithoutHover = ItemList({ width: 200, height: 100, items: ["A"], styleName: "modern", style: { hover: {} } });
+            const defaultList = ItemList({ width: 200, height: 100, items: ["A"] });
+            const colors = [listWithoutHover.style.hover.color, modernWithoutHover.style.hover.color, defaultList.style.hover.color];
+            check("ItemList: style.hover {} means no look under the mouse, the default stays without it",
+                colors[0] === undefined && colors[1] === undefined && colors[2] === "white", colors.join(" / "));
+            listWithoutHover.remove();
+            modernWithoutHover.remove();
+            defaultList.remove();
+        });
+
+        test("ItemList: a search with no result shows its text in the list", async function () {
+            const list = ItemList({ width: 300, height: 300, items: ["Apple", "Banana"] });
+            await wait(30);
+            list.search("zzz");
+            const listRect = list.elem.getBoundingClientRect();
+            const textRect = list.lblEmpty.elem.getBoundingClientRect();
+            const isInList = list.lblEmpty.visible == 1 && textRect.left >= listRect.left && textRect.right <= listRect.right + 1;
+            check("ItemList: a search with no result shows its text in the list", isInList, "list left: " + listRect.left + ", text left: " + textRect.left);
+            list.remove();
+        });
+
+        test("ItemList: a section is shown while one of its items matches", async function () {
+            const list = ItemList({ width: 300, height: 400, items: [
+                { type: "section", key: "fruits", title: "FRUITS" }, "Apple", "Banana",
+                { type: "section", key: "vegetables", title: "VEGETABLES" }, "Carrot",
+            ] });
+            const count = list.search("carr"); // the count of the items (the sections are not counted)
+            const fruits = list.getRow("fruits").visible;
+            const vegetables = list.getRow("vegetables").visible;
+            list.search("");
+            list.setSelected(["fruits", "2"], 1); // a section is never selected
+            const selected = list.getSelectedKeys().join(",");
+            list.focusItem("2"); // Banana
+            key(list.getRow("2").elem, "keydown", "ArrowDown"); // the section is skipped: Carrot
+            const isCarrotFocused = (document.activeElement === list.getRow("4").elem);
+            check("ItemList: a section is shown while one of its items matches", count === 1 && fruits == 0 && vegetables == 1 && selected === "2" && isCarrotFocused, "count: " + count + ", FRUITS: " + fruits + ", VEGETABLES: " + vegetables + ", selected: " + selected + ", Carrot focused: " + isCarrotFocused);
+            list.remove();
+        });
+
+        test("ItemList: a click paints style.pressed.color at once, then the row fades back", async function () {
+            const PRESSED = "rgba(0, 0, 0, 0.2)";
+            const list = ItemList({ width: 300, height: 300, items: ["Apple", "Banana"], style: { pressed: { color: PRESSED }, row: { motion: "background-color 0.1s" } } });
+            await wait(60); // WHY: setMotion() sets the row motion a moment after create
+            const row = list.getRow("0");
+            row.elem.click(); // single selection: the selection paints the row too, the pressed color must stay
+            const atClick = getComputedStyle(row.elem).backgroundColor;
+            await wait(400);
+            const afterMotion = getComputedStyle(row.elem).backgroundColor;
+            check("ItemList: a click paints style.pressed.color at once, then the row fades back", atClick === PRESSED && afterMotion === "rgba(0, 0, 0, 0)", "at the click: " + atClick + ", after the motion: " + afterMotion);
+            list.remove();
+        });
+
+        test("ItemList: animated removeItem: the count changes at once, the row leaves after its motion", async function () {
+            const hasMotion = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+            const list = ItemList({ width: 300, height: 300, animated: 1, items: ["Apple", "Banana", "Cherry"], selectedKeys: ["0"] });
+            await wait(60);
+            const row = list.getRow("0");
+            list.removeItem("0", 1);
+            const countAtOnce = list.getItems().length;
+            const selectedAtOnce = list.getSelectedKeys().length;
+            const isFading = document.body.contains(row.elem);
+            await wait(700); // the fade (0.25 s), then the move of the rows under it (0.25 s)
+            const isGone = !document.body.contains(row.elem);
+            const bananaMove = getComputedStyle(list.getRow("1").elem).transform;
+            check("ItemList: animated removeItem: the count changes at once, the row leaves after its motion", countAtOnce === 2 && selectedAtOnce === 0 && isFading === hasMotion && isGone && bananaMove === "none", "count: " + countAtOnce + ", selected: " + selectedAtOnce + ", fading: " + isFading + " (motion: " + hasMotion + "), gone: " + isGone + ", Banana: " + bananaMove);
+            list.remove();
+        });
+
+        // *** FULL SCREEN SELECT (comp/full-screen-select.js)
+
+        test("FullScreenSelect: searchIconFile / clearIconFile go to the search box of the list (none given: SearchInput's own)", async function () {
+            const SEARCH_FILE = "../comp/search-input-v2/search.svg?given";
+            const CLEAR_FILE = "../comp/search-input-v2/clear.svg?given";
+            const given = FullScreenSelect({ items: ["A", "B"], searchIconFile: SEARCH_FILE, clearIconFile: CLEAR_FILE });
+            given.open();
+            const search = given.panel.searchInput;
+            const isGiven = search.searchIconFile === SEARCH_FILE && search.clearIconFile === CLEAR_FILE;
+            given.close();
+            const plain = FullScreenSelect({ items: ["A", "B"] });
+            plain.open();
+            const isDefault = plain.panel.searchInput.searchIconFile === SearchInputDefaults.searchIconFile;
+            plain.close();
+            check("FullScreenSelect: searchIconFile / clearIconFile go to the search box of the list (none given: SearchInput's own)", isGiven && isDefault, "given: " + isGiven + ", default: " + isDefault);
+            given.remove();
+            plain.remove();
+        });
+
         // *** SEARCH INPUT (comp/search-input-v2.js)
 
         test("SearchInput: a pasted text is searched", async function () {
@@ -434,6 +675,25 @@
             document.execCommand("insertText", false, "abc"); // the same input event as a paste or an autofill
             check("SearchInput: a pasted text is searched", texts[texts.length - 1] === "abc", "onSearch: " + texts.join(", "));
             search.remove();
+        });
+
+        test("SearchInput: right / bottom place it (the default left / top does not win)", async function () {
+            const SPACE = 20;
+            const box = Box(0, 0, 500, 300, { color: "transparent" });
+            const fields = createIn(box, function () {
+                return {
+                    placed: SearchInput({ width: 200, height: 40, right: SPACE, bottom: SPACE }),
+                    plain: SearchInput({ width: 200, height: 40 }),
+                };
+            });
+            const boxRect = box.elem.getBoundingClientRect();
+            const placedRect = fields.placed.elem.getBoundingClientRect();
+            const plainRect = fields.plain.elem.getBoundingClientRect();
+            const rightSpace = Math.round(boxRect.right - placedRect.right);
+            const bottomSpace = Math.round(boxRect.bottom - placedRect.bottom);
+            const isPlainAtLeftTop = Math.round(plainRect.left - boxRect.left) === 0 && Math.round(plainRect.top - boxRect.top) === 0;
+            check("SearchInput: right / bottom place it (the default left / top does not win)", rightSpace === SPACE && bottomSpace === SPACE && isPlainAtLeftTop, "right: " + rightSpace + ", bottom: " + bottomSpace + ", without a place at the left top: " + isPlainAtLeftTop);
+            box.remove();
         });
 
         // *** CHECK BOX (comp/check-box.js)
@@ -447,6 +707,22 @@
             key(checkBox.elem, "keydown", " ", { repeat: true });
             check("CheckBox: a held Space changes it once", changes === 1 && checkBox.checked == 1, "onChange: " + changes + ", checked: " + checkBox.checked);
             checkBox.remove();
+        });
+
+        test("CheckBox: wrapLabel wraps a long label and keeps the row in its width", async function () {
+            const ROW_WIDTH = 300;
+            const row = HGroup({ width: ROW_WIDTH, height: "auto", gap: 8 });
+                const checkBox = CheckBox({ labelText: "A very long label that can not stay on one line in this narrow row", wrapLabel: 1, grow: 1 });
+                const after = Box({ width: 40, height: 40 });
+            endGroup();
+            await wait(50);
+            const rowRight = row.elem.getBoundingClientRect().right;
+            const afterRight = after.elem.getBoundingClientRect().right;
+            const labelHeight = checkBox.label.elem.offsetHeight;
+            const markWidth = checkBox.mark.elem.offsetWidth;
+            const isRight = afterRight <= rowRight + 1 && labelHeight > 30 && markWidth === checkBox.style.mark.width;
+            check("CheckBox: wrapLabel wraps a long label and keeps the row in its width", isRight, "row right: " + rowRight + ", box right: " + afterRight + ", label height: " + labelHeight + ", mark: " + markWidth);
+            row.remove();
         });
 
         // *** HOLD TO CONFIRM (comp/hold-to-confirm-button.js)
@@ -465,6 +741,554 @@
             button.remove();
         });
 
+        // *** STEPPER (comp/stepper.js)
+
+        test("Stepper: style.button.border draws a line around the buttons (none by default)", async function () {
+            const lined = Stepper({ style: { button: { border: 1, borderColor: "rgb(255, 0, 0)" } } });
+            const plain = Stepper();
+            const old = Stepper({ styleName: "ozden" });
+            const linedLine = getComputedStyle(lined.btnPlus.elem);
+            const plainLine = getComputedStyle(plain.btnPlus.elem);
+            const oldLine = getComputedStyle(old.btnPlus.elem);
+            const isLined = linedLine.borderTopWidth === "1px" && linedLine.borderTopColor === "rgb(255, 0, 0)";
+            const isPlain = plainLine.borderTopWidth === "0px";
+            const isOld = oldLine.borderTopWidth === "1px" && old.btnPlus.elem.offsetHeight === 42 && old.width === 150;
+            check("Stepper: style.button.border draws a line around the buttons (none by default)", isLined && isPlain && isOld, "given: " + linedLine.borderTopWidth + " " + linedLine.borderTopColor + ", default: " + plainLine.borderTopWidth + ", ozden: " + oldLine.borderTopWidth + " / " + old.btnPlus.elem.offsetHeight + " px");
+            lined.remove();
+            plain.remove();
+            old.remove();
+        });
+
+        // *** TOGGLE (comp/toggle.js)
+
+        test("Toggle: selectedBorderColor is the line of the track when on, and it goes back when off", async function () {
+            const toggle = Toggle({ value: 1, backgroundStyle: { borderColor: "gray", selectedBorderColor: "tomato" } });
+            const onColor = toggle.background.borderColor;
+            toggle.setValue(0);
+            check("Toggle: selectedBorderColor is the line of the track when on, and it goes back when off",
+                onColor === "tomato" && toggle.background.borderColor === "gray", onColor + " / " + toggle.background.borderColor);
+            toggle.remove();
+        });
+
+        test("Toggle: a mark shows in its state, setMarks changes it, a toggle without marks has empty marks", async function () {
+            const toggle = Toggle({ styleName: "label", value: 0 });
+            const plainToggle = Toggle({ value: 1 });
+            await wait(30);
+            const offState = toggle.onMarkBox.opacity + "/" + toggle.offMarkBox.opacity;
+            const offText = toggle.offMarkBox.children[0].text;
+            toggle.switch();
+            const onState = toggle.onMarkBox.opacity + "/" + toggle.offMarkBox.opacity;
+            toggle.setMarks("A", "B");
+            const onText = toggle.onMarkBox.children[0].text;
+            const emptyCount = plainToggle.onMarkBox.children.length + plainToggle.offMarkBox.children.length;
+            check("Toggle: a mark shows in its state, setMarks changes it, a toggle without marks has empty marks",
+                offState === "0/1" && onState === "1/0" && offText === "OFF" && onText === "A" && emptyCount === 0,
+                [offState, onState, offText, onText, emptyCount].join(" "));
+            toggle.remove();
+            plainToggle.remove();
+        });
+
+        test("Toggle: a mark in the knob is inside the knob, a mark on the track is on the free side", async function () {
+            const inKnob = Toggle({ styleName: "badge", value: 1 });
+            const onTrack = Toggle({ styleName: "tick", value: 1 });
+            await wait(250);
+            const knobRect = inKnob.button.elem.getBoundingClientRect();
+            const markRect = inKnob.onMarkBox.children[0].elem.getBoundingClientRect();
+            const isInKnob = markRect.left >= knobRect.left && markRect.right <= knobRect.right;
+            const trackKnobLeft = onTrack.button.elem.getBoundingClientRect().left;
+            const trackMarkRight = onTrack.onMarkBox.children[0].elem.getBoundingClientRect().right;
+            check("Toggle: a mark in the knob is inside the knob, a mark on the track is on the free side",
+                isInKnob && trackMarkRight <= trackKnobLeft, [isInKnob, trackMarkRight, trackKnobLeft].join(" "));
+            inKnob.remove();
+            onTrack.remove();
+        });
+
+        test("Toggle: animated moves the marks, animated: 0 and a toggle without marks stay still", async function () {
+            const moving = Toggle({ styleName: "badge", value: 1 });
+            const still = Toggle({ styleName: "badge", value: 1, animated: 0 });
+            const plain = Toggle({ value: 1 });
+            await wait(30);
+            const hiddenTransform = moving.offMarkBox.elem.style.transform;
+            const shownTransform = moving.onMarkBox.elem.style.transform;
+            moving.switch();
+            const afterSwitch = moving.onMarkBox.elem.style.transform;
+            still.switch();
+            const stillTransform = still.onMarkBox.elem.style.transform + still.offMarkBox.elem.style.transform;
+            const plainKnob = plain.button.elem.style.transform;
+            moving.setAnimated(0);
+            const afterOff = moving.onMarkBox.elem.style.transform + "/" + moving.offMarkBox.elem.style.transform;
+            check("Toggle: animated moves the marks, animated: 0 and a toggle without marks stay still",
+                hiddenTransform.includes("rotate") && shownTransform === "none" && afterSwitch.includes("rotate")
+                    && stillTransform === "" && plainKnob.startsWith("scale(1)") && afterOff === "none/none",
+                [hiddenTransform, shownTransform, afterSwitch, stillTransform, plainKnob, afterOff].join(" | "));
+            moving.remove();
+            still.remove();
+            plain.remove();
+        });
+
+        test("Toggle: a pressed knob gets flatter, and it comes back", async function () {
+            const toggle = Toggle({ styleName: "tick", value: 1 });
+            await wait(30);
+            pointer(toggle.elem, "pointerdown", 10, 10, "mouse");
+            const pressed = toggle.button.elem.style.transform;
+            pointer(toggle.elem, "pointerup", 10, 10, "mouse");
+            const released = toggle.button.elem.style.transform;
+            check("Toggle: a pressed knob gets flatter, and it comes back",
+                pressed.includes("scale(1.1, 0.92)") && !released.includes("0.92"), pressed + " | " + released);
+            toggle.remove();
+        });
+
+        test("Toggle: float has a knob bigger than its track, a param still wins over the package", async function () {
+            const toggle = Toggle({ styleName: "float", value: 1, backgroundStyle: { selectedColor: "tomato" } });
+            await wait(30);
+            const knobHeight = toggle.button.elem.getBoundingClientRect().height;
+            const trackHeight = toggle.background.elem.getBoundingClientRect().height;
+            check("Toggle: float has a knob bigger than its track, a param still wins over the package",
+                knobHeight === 30 && trackHeight === 26 && toggle.backgroundStyle.selectedColor === "tomato", knobHeight + " / " + trackHeight);
+            toggle.remove();
+        });
+
+        test("Toggle: the classic knob has the same size on and off (the modern one is smaller when off)", async function () {
+            const MOTION_WAIT = 300; // (the knob moves in 0.2 s)
+            const knobWidth = function (toggle) { return toggle.button.elem.getBoundingClientRect().width; };
+            const classicToggle = Toggle({ styleName: "classic", value: 0 });
+            const modernToggle = Toggle({ value: 0 });
+            await wait(MOTION_WAIT);
+            const classicOff = knobWidth(classicToggle);
+            const modernOff = knobWidth(modernToggle);
+            classicToggle.setValue(1);
+            modernToggle.setValue(1);
+            await wait(MOTION_WAIT);
+            const classicOn = knobWidth(classicToggle);
+            const modernOn = knobWidth(modernToggle);
+            const isClassicSame = Math.abs(classicOff - classicOn) < 0.5 && Math.round(classicOn) === 32;
+            const isModernSmaller = modernOff < modernOn * 0.7;
+            check("Toggle: the classic knob has the same size on and off (the modern one is smaller when off)", isClassicSame && isModernSmaller, "classic: " + classicOff + " / " + classicOn + ", modern: " + modernOff + " / " + modernOn);
+            classicToggle.remove();
+            modernToggle.remove();
+        });
+
+        // *** SCALE ON A ZOOMED PAGE (basic.uiScale and the scale param of Tabs, SelectBox, SelectDate, Dialog, Toast, Tooltip)
+
+        // The size of an element on the screen. Two sizes are the same within 1 px.
+        const screenSize = function (elem) {
+            const rect = elem.getBoundingClientRect();
+            return { width: rect.width, height: rect.height };
+        };
+        const isSameScreenSize = function (a, b) {
+            return Math.abs(a.width - b.width) <= 1 && Math.abs(a.height - b.height) <= 1;
+        };
+        const sizeText = function (size) {
+            return size.width.toFixed(1) + " x " + size.height.toFixed(1);
+        };
+
+        // measure() on a page zoomed like page.fit() does it, with basic.uiScale = 1 / zoom. Both are put back after it.
+        const measureOnZoomedPage = function (zoom, measure) {
+            page.zoom = zoom;
+            basic.uiScale = 1 / zoom;
+            try {
+                return measure();
+            } finally {
+                page.zoom = 1;
+                basic.uiScale = 1;
+            }
+        };
+
+        test("Tabs: on a zoomed page (zoom 0.5, basic.uiScale 2) the bar keeps its size on the screen", async function () {
+            await document.fonts.ready;
+            const measureTabs = function () {
+                const tabs = Tabs({ width: 300, tabs: ["All", { key: "open", text: "Open", count: 12 }, "Done"], value: "open" });
+                const sizes = { bar: screenSize(tabs.elem), tabs: screenSize(tabs.stripInner.elem) };
+                tabs.remove();
+                return sizes;
+            };
+            const normal = measureTabs();
+            const zoomed = measureOnZoomedPage(0.5, measureTabs);
+            const isSame = isSameScreenSize(normal.bar, zoomed.bar) && isSameScreenSize(normal.tabs, zoomed.tabs);
+            check("Tabs: on a zoomed page (zoom 0.5, basic.uiScale 2) the bar keeps its size on the screen", isSame,
+                "bar " + sizeText(normal.bar) + " / " + sizeText(zoomed.bar) + ", tabs " + sizeText(normal.tabs) + " / " + sizeText(zoomed.tabs));
+        });
+
+        test("SelectBox: on a zoomed page (zoom 0.5, basic.uiScale 2) the field and its list keep their size on the screen", async function () {
+            await document.fonts.ready;
+            const options = ["Apple", "Banana", "Cherry", "Grape", "Kiwi", "Lemon", "Mango", "Melon", "Orange", "Peach"];
+            const measureSelect = function () {
+                const select = SelectBox({ width: 240, options: options, value: "Banana" });
+                select.open();
+                const sizes = { field: screenSize(select.elem), list: screenSize(select.panel.elem) };
+                select.close();
+                select.remove();
+                return sizes;
+            };
+            const normal = measureSelect();
+            const zoomed = measureOnZoomedPage(0.5, measureSelect);
+            const isSame = isSameScreenSize(normal.field, zoomed.field) && isSameScreenSize(normal.list, zoomed.list);
+            check("SelectBox: on a zoomed page (zoom 0.5, basic.uiScale 2) the field and its list keep their size on the screen", isSame,
+                "field " + sizeText(normal.field) + " / " + sizeText(zoomed.field) + ", list " + sizeText(normal.list) + " / " + sizeText(zoomed.list));
+        });
+
+        test("SelectDate: on a zoomed page (zoom 0.5, basic.uiScale 2) the calendar keeps its size on the screen", async function () {
+            await document.fonts.ready;
+            const measureDate = function () {
+                const picker = SelectDate({ width: 220, date: "2026-11-12" });
+                picker.open();
+                const sizes = { field: screenSize(picker.elem), calendar: screenSize(picker.panel.elem) };
+                picker.close();
+                picker.remove();
+                return sizes;
+            };
+            const normal = measureDate();
+            const zoomed = measureOnZoomedPage(0.5, measureDate);
+            const isSame = isSameScreenSize(normal.field, zoomed.field) && isSameScreenSize(normal.calendar, zoomed.calendar);
+            check("SelectDate: on a zoomed page (zoom 0.5, basic.uiScale 2) the calendar keeps its size on the screen", isSame,
+                "field " + sizeText(normal.field) + " / " + sizeText(zoomed.field) + ", calendar " + sizeText(normal.calendar) + " / " + sizeText(zoomed.calendar));
+        });
+
+        test("SelectDate: on a zoomed page the cover of the calendar covers the screen (a click outside closes it)", async function () {
+            page.zoom = 0.5;
+            const picker = SelectDate({ width: 220 });
+            picker.open();
+            const coverHeight = picker.overlay.elem.getBoundingClientRect().height;
+            picker.close();
+            picker.remove();
+            page.zoom = 1;
+            check("SelectDate: on a zoomed page the cover of the calendar covers the screen (a click outside closes it)", coverHeight >= window.innerHeight, "cover height: " + coverHeight);
+        });
+
+        test("Dialog: on a zoomed page (zoom 0.5, basic.uiScale 2) the card keeps its size on the screen", async function () {
+            await document.fonts.ready;
+            const measureDialog = function () {
+                const dialog = Dialog({ titleText: "Delete the file?", messageText: "It can not be undone.", buttons: [{ key: "cancel", text: "Cancel" }, { key: "delete", text: "Delete", type: "danger" }] });
+                const sizes = { card: screenSize(dialog.card.elem) };
+                dialog.remove();
+                return sizes;
+            };
+            const normal = measureDialog();
+            const zoomed = measureOnZoomedPage(0.5, measureDialog);
+            check("Dialog: on a zoomed page (zoom 0.5, basic.uiScale 2) the card keeps its size on the screen", isSameScreenSize(normal.card, zoomed.card),
+                "card " + sizeText(normal.card) + " / " + sizeText(zoomed.card));
+        });
+
+        test("Toast: on a zoomed page (zoom 0.5, basic.uiScale 2) a toast keeps its size and its place on the screen", async function () {
+            await document.fonts.ready;
+            // WHY the slot of the toast (toast.elem), not its card: the card slides in with a transform
+            const measureToast = function () {
+                const toast = Toast.info("Saved", { title: "File", duration: 0 });
+                const place = toast.elem.parentElement.getBoundingClientRect();
+                const sizes = { toast: screenSize(toast.elem), top: place.top, right: place.right };
+                toast.remove();
+                return sizes;
+            };
+            const normal = measureToast();
+            const zoomed = measureOnZoomedPage(0.5, measureToast);
+            Toast.layoutContainers(); // (the places of the toasts back to scale 1)
+            const isSamePlace = Math.abs(normal.top - zoomed.top) <= 1 && Math.abs(normal.right - zoomed.right) <= 1;
+            check("Toast: on a zoomed page (zoom 0.5, basic.uiScale 2) a toast keeps its size and its place on the screen", isSameScreenSize(normal.toast, zoomed.toast) && isSamePlace,
+                "toast " + sizeText(normal.toast) + " / " + sizeText(zoomed.toast) + ", top right " + normal.top + ", " + normal.right + " / " + zoomed.top + ", " + zoomed.right);
+        });
+
+        test("Tooltip: on a zoomed page (zoom 0.5, basic.uiScale 2) a bubble keeps its size and its gap to the target", async function () {
+            await document.fonts.ready;
+            const measureBubble = function () {
+                const scale = basic.uiScale;
+                const target = Box(100 * scale, 300 * scale, 120 * scale, 40 * scale); // (the same place on the screen)
+                const bubble = Tooltip.show(target, "Click again to delete.", { arrow: 12, border: 1 }, "top");
+                const gap = target.elem.getBoundingClientRect().top - bubble.elem.getBoundingClientRect().bottom;
+                const sizes = { bubble: screenSize(bubble.elem), gap: gap };
+                bubble.remove();
+                target.remove();
+                return sizes;
+            };
+            const normal = measureBubble();
+            const zoomed = measureOnZoomedPage(0.5, measureBubble);
+            const isSameGap = Math.abs(normal.gap - zoomed.gap) <= 1;
+            check("Tooltip: on a zoomed page (zoom 0.5, basic.uiScale 2) a bubble keeps its size and its gap to the target", isSameScreenSize(normal.bubble, zoomed.bubble) && isSameGap,
+                "bubble " + sizeText(normal.bubble) + " / " + sizeText(zoomed.bubble) + ", gap " + normal.gap.toFixed(1) + " / " + zoomed.gap.toFixed(1));
+        });
+
+        // *** BOTTOM BAR (comp/bottom-bar.js) and BADGE (comp/badge-v2.js)
+
+        const BOTTOM_BAR_ITEMS = [
+            { icon: "../02-comp-examples/bottom-bar/icon1.png", text: "Home" },
+            { icon: "../02-comp-examples/bottom-bar/icon2.png", text: "Basket" },
+        ];
+
+        test("BottomBar: the selected box takes the color of the selected item", async function () {
+            const ITEM_COLOR = "rgb(90, 187, 159)";
+            const STYLE_COLOR = "rgb(20, 20, 20)";
+            const items = [Object.assign({ color: ITEM_COLOR }, BOTTOM_BAR_ITEMS[0]), BOTTOM_BAR_ITEMS[1]];
+            const bar = BottomBar({ bottom: 0, items: items, style: { selectedBox: { color: STYLE_COLOR } } });
+            await wait(50);
+            const firstColor = getComputedStyle(bar.selectedBox.elem).backgroundColor;
+            bar.itemObjList[1].icon.elem.click();
+            await wait(400);
+            const secondColor = getComputedStyle(bar.selectedBox.elem).backgroundColor;
+            check("BottomBar: the selected box takes the color of the selected item", firstColor === ITEM_COLOR && secondColor === STYLE_COLOR, "first: " + firstColor + ", second: " + secondColor);
+            bar.remove();
+        });
+
+        test("BottomBar: without item colors, a color the page gives the selected box stays", async function () {
+            const PAGE_COLOR = "rgb(205, 92, 92)";
+            const bar = BottomBar({ bottom: 0, items: BOTTOM_BAR_ITEMS });
+            await wait(50);
+            bar.selectedBox.color = PAGE_COLOR; // the default mobile template paints the circle itself
+            bar.selectByIndex(1);
+            await wait(400);
+            const color = getComputedStyle(bar.selectedBox.elem).backgroundColor;
+            check("BottomBar: without item colors, a color the page gives the selected box stays", color === PAGE_COLOR, "color: " + color);
+            bar.remove();
+        });
+
+        test("BottomBar: a name of two words stays on one line, also while the bar grows", async function () {
+            const items = BOTTOM_BAR_ITEMS.concat([{ icon: BOTTOM_BAR_ITEMS[0].icon, text: "Two Words" }]);
+            const bar = BottomBar({ bottom: 0, items: items });
+            await wait(50);
+            const oneLineHeight = bar.itemObjList[0].label.elem.getBoundingClientRect().height;
+            const lastItem = bar.itemObjList[2];
+            lastItem.icon.elem.click();
+            let highest = lastItem.label.elem.getBoundingClientRect().height;
+            for (let frame = 0; frame < 30; frame++) {
+                await basic.nextFrame();
+                highest = Math.max(highest, lastItem.label.elem.getBoundingClientRect().height);
+            }
+            check("BottomBar: a name of two words stays on one line, also while the bar grows", highest <= oneLineHeight, highest + " / " + oneLineHeight);
+            bar.remove();
+        });
+
+        test("BottomBar: the selected box is as wide after the name as before an icon smaller than its box", async function () {
+            const bar = BottomBar({ bottom: 0, items: BOTTOM_BAR_ITEMS,
+                style: { layout: { iconBoxSize: 40, labelEndSpace: 0 }, icon: { width: 24, height: 24 } } });
+            await wait(450);
+            const item = bar.itemObjList[0];
+            const selectedRect = bar.selectedBox.elem.getBoundingClientRect();
+            const beforeIcon = item.icon.i1.elem.getBoundingClientRect().left - selectedRect.left;
+            const afterName = selectedRect.right - item.label.elem.getBoundingClientRect().right;
+            check("BottomBar: the selected box is as wide after the name as before an icon smaller than its box", Math.abs(beforeIcon - afterName) < 1, beforeIcon + " / " + afterName);
+            bar.remove();
+        });
+
+        test("BottomBar: on a narrow screen the bar stays inside, its ends get smaller", async function () {
+            const items = BOTTOM_BAR_ITEMS.concat(BOTTOM_BAR_ITEMS);
+            const bar = BottomBar({ bottom: 0, width: 340, items: items });
+            await wait(450);
+            const barRect = bar.innerBox.elem.getBoundingClientRect();
+            const boxRect = bar.elem.getBoundingClientRect();
+            check("BottomBar: on a narrow screen the bar stays inside, its ends get smaller", barRect.left >= boxRect.left && barRect.right <= boxRect.right, barRect.width);
+            bar.remove();
+        });
+
+        test("BottomBar: labelMode float shows the name over the selected item, then hides it", async function () {
+            const bar = BottomBar({ bottom: 0, labelMode: "float", items: BOTTOM_BAR_ITEMS });
+            await wait(50);
+            const pill = bar.lblFloat;
+            const isFirstShown = pill.text === "Home" && getComputedStyle(pill.elem).opacity === "1"; // no fade-in at the first view
+            bar.itemObjList[1].icon.elem.click();
+            await wait(450);
+            const pillRect = pill.elem.getBoundingClientRect();
+            const boxRect = bar.selectedBox.elem.getBoundingClientRect();
+            const centerGap = Math.abs((pillRect.left + pillRect.width / 2) - (boxRect.left + boxRect.width / 2));
+            const isNotCut = getComputedStyle(bar.elem).overflowY === "visible";
+            const isOver = pill.text === "Basket" && getComputedStyle(pill.elem).opacity === "1" && pillRect.bottom <= boxRect.top && centerGap < 2;
+            await wait(bar.floatLabelTime + 300);
+            const isHidden = getComputedStyle(pill.elem).opacity === "0";
+            check("BottomBar: labelMode float shows the name over the selected item, then hides it", isFirstShown && isOver && isNotCut && isHidden, "first: " + isFirstShown + ", over: " + isOver + " (center gap " + centerGap + "), not cut: " + isNotCut + ", hidden: " + isHidden);
+            bar.remove();
+        });
+
+        test("BottomBar: the badge param goes to every item; a badge shows after setBadge", async function () {
+            const bar = BottomBar({ bottom: 0, items: BOTTOM_BAR_ITEMS, badge: { showZero: 1, dotForOne: 0 } });
+            await wait(30);
+            const statesBefore = bar.itemObjList.map(function (item) { return item.badge.state; }).join(",");
+            const badge = bar.itemObjList[1].badge;
+            bar.setBadge(1, 0);
+            const zero = badge.state + ":" + badge.label.text;
+            bar.setBadge(1, 1);
+            const one = badge.state + ":" + badge.label.text;
+            bar.setBadge(1, "");
+            const removed = badge.state;
+            check("BottomBar: the badge param goes to every item; a badge shows after setBadge", statesBefore === "hidden,hidden" && zero === "number:0" && one === "number:1" && removed === "hidden", [statesBefore, zero, one, removed].join(" / "));
+            bar.remove();
+        });
+
+        test("BottomBar: an item is a button; Enter chooses it like a click", async function () {
+            let clickedIndex = -1;
+            const bar = BottomBar({ bottom: 0, items: BOTTOM_BAR_ITEMS, onItemClick: function (item, index) { clickedIndex = index; } });
+            await wait(30);
+            const button = bar.itemObjList[1].icon.elem;
+            const isButton = button.getAttribute("role") === "button" && button.getAttribute("aria-label") === "Basket" && button.tabIndex === 0;
+            key(button, "keydown", "Enter");
+            check("BottomBar: an item is a button; Enter chooses it like a click", isButton && clickedIndex === 1 && bar.selectedIndex === 1, "button: " + isButton + ", onItemClick: " + clickedIndex);
+            bar.remove();
+        });
+
+        test("Badge: showZero shows 0, dotForOne: 0 shows 1 as a number; the defaults are as before", async function () {
+            const holder = Box(0, 0, 60, 60);
+            const badge = createIn(holder, function () { return Badge({ value: 0, showZero: 1, dotForOne: 0 }); });
+            const plain = createIn(holder, function () { return Badge({ value: 1 }); });
+            const zero = badge.state + ":" + badge.label.text;
+            badge.setValue(1);
+            const one = badge.state + ":" + badge.label.text;
+            badge.setValue("");
+            const empty = badge.state;
+            const plainOne = plain.state;
+            plain.setValue(0);
+            const plainZero = plain.state;
+            const isRight = zero === "number:0" && one === "number:1" && empty === "hidden" && plainOne === "dot" && plainZero === "hidden";
+            check("Badge: showZero shows 0, dotForOne: 0 shows 1 as a number; the defaults are as before", isRight, [zero, one, empty, plainOne, plainZero].join(" / "));
+            holder.remove();
+        });
+
+        // *** APP BAR, PAGE HEADER, SETTINGS ROW (comp/app-bar.js, comp/page-header.js, comp/settings-row.js)
+
+        test("AppBar: the title stands at the left (after the back button) or in the middle of the bar", async function () {
+            const BAR_WIDTH = 600;
+            const holder = Box(0, 0, BAR_WIDTH, 200, { color: "transparent" });
+            const bar = createIn(holder, function () { return AppBar({ titleText: "Settings", titleAlign: "left" }); });
+            const placeOfTitle = function () {
+                const barRect = bar.elem.getBoundingClientRect();
+                const rect = bar.lblTitle.elem.getBoundingClientRect();
+                return { left: Math.round(rect.left - barRect.left), right: Math.round(barRect.right - rect.right) };
+            };
+            const atLeft = placeOfTitle();
+            bar.setBackVisible(1);
+            const afterBack = placeOfTitle();
+            bar.setTitleAlign("center");
+            const inMiddle = placeOfTitle();
+            const isLeft = atLeft.left === 20 && afterBack.left === 70;
+            const isMiddle = inMiddle.left === inMiddle.right && bar.lblTitle.elem.style.textAlign === "center";
+            check("AppBar: the title stands at the left (after the back button) or in the middle of the bar", isLeft && isMiddle, JSON.stringify({ atLeft: atLeft, afterBack: afterBack, inMiddle: inMiddle }));
+            holder.remove();
+        });
+
+        test("PageHeader: the back link calls onBack (a click, Enter, Space; a held key once)", async function () {
+            let backs = 0;
+            const header = PageHeader({ titleText: "Security", backText: "Settings", onBack: function () { backs++; } });
+            header.btnBack.elem.click();
+            key(header.btnBack.elem, "keydown", "Enter");
+            key(header.btnBack.elem, "keydown", " ");
+            key(header.btnBack.elem, "keydown", " ", { repeat: true });
+            check("PageHeader: the back link calls onBack (a click, Enter, Space; a held key once)", backs === 3, "onBack: " + backs);
+            header.remove();
+        });
+
+        test("SettingsRow: setDescText moves the title up from the middle and back", async function () {
+            const TEXT_SHIFT = 14; // style.layout.textShift
+            const SLIDE_WAIT = 450; // ms: the slide is 0.3 s
+            const row = SettingsRow({ width: 600, titleText: "Video Quality" });
+            await wait(60); // WHY: setMotion() turns the slide on a moment after the creation (no motion at the first view)
+            const middleOfTitle = function () {
+                const rowRect = row.elem.getBoundingClientRect();
+                const rect = row.lblTitle.elem.getBoundingClientRect();
+                return Math.round(rect.top + rect.height / 2 - rowRect.top);
+            };
+            const inMiddle = middleOfTitle();
+            row.setDescText("Remaining disk space: 2.3GB");
+            await wait(SLIDE_WAIT);
+            const withText = middleOfTitle();
+            const textOpacity = getComputedStyle(row.lblDesc.elem).opacity;
+            row.setDescText("");
+            await wait(SLIDE_WAIT);
+            const back = middleOfTitle();
+            const isMoved = Math.abs(inMiddle - withText - TEXT_SHIFT) <= 1 && Math.abs(back - inMiddle) <= 1 && textOpacity === "1";
+            check("SettingsRow: setDescText moves the title up from the middle and back", isMoved, "middle: " + inMiddle + ", with a text: " + withText + ", again: " + back + ", text opacity: " + textOpacity);
+            row.remove();
+        });
+
+        test("SettingsRow: a click on a control in the row is not a click of the row", async function () {
+            let clicks = 0;
+            const row = SettingsRow({
+                titleText: "Theme",
+                onClick: function () { clicks++; },
+                control: function () { return Box({ width: 40, height: 40, clickable: 1 }); },
+            });
+            row.controlObject.elem.click();
+            const afterControl = clicks;
+            row.elem.click();
+            check("SettingsRow: a click on a control in the row is not a click of the row", afterControl === 0 && clicks === 1, "after the control: " + afterControl + ", after the row: " + clicks);
+            row.remove();
+        });
+
+        // *** TAP EFFECT (comp/tap-effect.js)
+
+        test("TapEffect.show: one circle in the middle of the place, removed after its time", async function () {
+            const X = 200;
+            const Y = 150;
+            const FADE_START_TIME = 50; // ms: the circle fades 50 ms after the tap
+            const removeTime = FADE_START_TIME + TapEffect.options.duration * 1000;
+            const circle = TapEffect.show(X, Y);
+            if (TapEffect.isReducedMotion()) {
+                check("TapEffect.show: no circle with reduced motion", circle === null);
+                return;
+            }
+            const second = TapEffect.show(X + 40, Y); // one at a time
+            const rect = circle.elem.getBoundingClientRect();
+            const isInMiddle = Math.abs(rect.left + rect.width / 2 - X) < 1 && Math.abs(rect.top + rect.height / 2 - Y) < 1;
+            const circleCount = Array.from(page.elem.children).filter(function (el) { return el.style.zIndex === circle.elem.style.zIndex; }).length;
+            await wait(removeTime + 60);
+            const isGone = !circle.elem.isConnected && TapEffect.current === null;
+            check("TapEffect.show: one circle in the middle of the place, removed after its time", second === null && circleCount === 1 && isInMiddle && isGone, "second: " + second + ", circles: " + circleCount + ", in the middle: " + isInMiddle + ", gone: " + isGone);
+        });
+
+        test("TapEffect.start: a real tap makes a circle at its place, a code click and a tap after stop() do not", async function () {
+            const X = 120;
+            const Y = 90;
+            const click = function (detail) {
+                document.body.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, clientX: X, clientY: Y, detail: detail }));
+            };
+            const circleCount = function () {
+                return Array.from(page.elem.children).filter(function (el) { return el.style.zIndex === String(TapEffectDefaults.zIndex); }).length;
+            };
+            TapEffect.start();
+            click(0); // the keyboard or the code
+            const afterCodeClick = circleCount();
+            click(1);
+            const circle = TapEffect.current;
+            const isAtTap = !!circle && Math.abs(circle.left + circle.width / 2 - X) < 1 && Math.abs(circle.top + circle.height / 2 - Y) < 1;
+            TapEffect.stop();
+            await wait(400);
+            click(1);
+            const afterStop = circleCount();
+            check("TapEffect.start: a real tap makes a circle at its place, a code click and a tap after stop() do not", TapEffect.isReducedMotion() || (afterCodeClick === 0 && isAtTap && afterStop === 0 && TapEffect.isOn === 0), "code click: " + afterCodeClick + ", at the tap: " + isAtTap + ", after stop: " + afterStop);
+        });
+
+        // *** PERIOD BAR (comp/period-bar.js)
+
+        test("PeriodBar: selectPrevious shows the month before and calls onChange", async function () {
+            let changes = 0;
+            const bar = PeriodBar({ monthCount: 12, onChange: function () { changes++; } });
+            const today = new Date();
+            const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1); // WHY: day 1, so the 31st does not jump over a short month
+            const isMoved = bar.selectPrevious();
+            const date = bar.getSelectedDate();
+            const isLastMonth = date.year === lastMonth.getFullYear() && date.month === lastMonth.getMonth() + 1;
+            bar.setValue(11, 1); // silent: no onChange
+            const isStopped = bar.selectNext() === 0; // this month is the last one
+            check("PeriodBar: selectPrevious shows the month before and calls onChange", isMoved === 1 && isLastMonth && changes === 1 && isStopped, "moved: " + isMoved + ", date: " + date.year + "/" + date.month + ", onChange: " + changes + ", stopped at the end: " + isStopped);
+            bar.remove();
+        });
+
+        // *** ACTION TAB BAR (comp/action-tab-bar.js)
+
+        test("ActionTabBar: setValue moves the line under the tab, the + calls onAction", async function () {
+            let changes = 0;
+            let actions = 0;
+            const bar = ActionTabBar({
+                items: [{ key: "a", text: "A" }, { key: "b", text: "B" }, { key: "c", text: "C" }],
+                onChange: function () { changes++; },
+                onAction: function () { actions++; },
+            });
+            const lineLeft = function () { return new DOMMatrix(getComputedStyle(bar.indicator.elem).transform).m41; };
+            const startLeft = lineLeft();
+            bar.setValue("c");
+            bar.indicator.elem.getAnimations().forEach(function (motion) { motion.finish(); }); // WHY: the end of the slide, without waiting
+            const moved = lineLeft() - startLeft;
+            const expected = 2 * (bar.style.item.width + bar.style.item.gap);
+            const isSelected = bar.tabList.elem.children[2].getAttribute("aria-selected") === "true";
+            bar.btnAction.elem.click();
+            check("ActionTabBar: setValue moves the line under the tab, the + calls onAction", bar.value === "c" && changes === 1 && Math.abs(moved - expected) < 1 && isSelected && actions === 1, "value: " + bar.value + ", onChange: " + changes + ", moved: " + moved + " (" + expected + "), selected: " + isSelected + ", onAction: " + actions);
+            bar.remove();
+        });
+
         // *** RUN
 
         const runTests = async function () {
@@ -478,6 +1302,7 @@
                 // WHY: a test that failed half way must not leave its windows over the next one
                 Dialog.stack.slice().forEach(function (dialog) { dialog.remove(); });
                 if (Notice.current) Notice.current.remove();
+                if (TapEffect.isOn) TapEffect.stop();
             }
 
             check("no uncaught errors", uncaught.length === 0, uncaught.join(" | "));

@@ -77,7 +77,7 @@ const TextareaB = function(params = {}) {
         elem.style.height = elem.scrollHeight + "px";
         elem.style.minHeight = "";
         // WHY: After the browser drew the new height.
-        setTimeout(() => box.inputBox.scrollBar.refreshScroll(), 0);
+        box.after(0, () => box.inputBox.scrollBar.refreshScroll());
     };
 
     // *** PUBLIC FUNCTIONS:

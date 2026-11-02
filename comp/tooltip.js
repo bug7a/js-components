@@ -16,6 +16,10 @@ Tooltip - v26.10
 - POPOVER (2026-10-30): trigger: "click" (or Tooltip.openPopover()): a click on the target opens the bubble and it
   stays; its content can be clicked (buttons, fields). A click outside, Escape or a second click on the target closes
   it. One popover at a time (Tooltip.closePopover()).
+- SCALE (2026-11-01): scale (the param of Tooltip(), look.scale of Tooltip.show() / openPopover()) multiplies every
+  size of the bubble: its text, padding, round corners, edge, shadow, arrow and its gaps. null (default):
+  basic.uiScale when the bubble opens (1; a page fitted with page.fit() sets 1 / page.zoom: the bubble keeps its
+  size on the screen). The objects of content(bubble) are made by the page: bubble.look.scale is their scale.
 
 USAGE:
 btn.tooltip = Tooltip({ target: btn, hintText: "Save the file", hintPosition: "top", lbl_arrow: 10 });
@@ -26,6 +30,7 @@ btnShare.tooltip = Tooltip({ target: btnShare, trigger: "click", lbl_arrow: 12, 
 } });
 const bubble = Tooltip.show(button, "Click again to delete.", { color: "#E8796D", textColor: "white", arrow: 12 });
 bubble.remove();
+Tooltip.show(button, "Saved", { arrow: 10, scale: 1.5 }); // every size x 1.5 (default: basic.uiScale)
 
 Started Date: June 2024
 Developer: Bugra Ozden
@@ -54,6 +59,7 @@ const Tooltip = function(params = {}) {
         content: null, // function (bubble): its own objects in the bubble, in place of hintText
         trigger: "hover", // "hover": it follows the mouse; "click": a popover (it stays, its content can be clicked)
         look: null, // Tooltip.BUBBLE_LOOK keys over the lbl_ ones (Ex: { shadow, padding: [16, 14], contentGap })
+        scale: null, // every size of the bubble multiplied (Ex: 1.5); null: basic.uiScale when the bubble opens
         visible: 0,
     };
 
@@ -91,6 +97,7 @@ const Tooltip = function(params = {}) {
             borderColor: box.lbl_borderColor,
             arrow: box.lbl_arrow,
             gap: MOUSE_GAPS[box.hintPosition] || MOUSE_GAPS.top,
+            scale: box.scale,
         }, box.look || {});
     };
 
@@ -212,12 +219,27 @@ Tooltip.BUBBLE_LOOK = {
     edge: 8, // px: the bubble stays this far inside the screen
     grow: 0, // 1: it grows out of the point of the arrow (not with reduced motion)
     zIndex: 100000, // WHY: on page, over the popups (Dialog cover 4000, Modal...)
+    scale: null, // every size above multiplied (Ex: 1.5); null: basic.uiScale (a page fitted with page.fit())
+};
+
+// The look with its sizes multiplied by its scale (null: basic.uiScale); with scale 1 the same look.
+// WHY arrow, edge and shadow by name: basic.scaleStyle() multiplies only the keys named like a size (gap, round...)
+Tooltip.scaleLook = function(look) {
+    const scale = look.scale ?? basic.uiScale;
+    const scaled = basic.scaleStyle(look, scale);
+    if (scale !== 1) {
+        scaled.arrow = basic.scaleSize(look.arrow, scale);
+        scaled.edge = basic.scaleSize(look.edge, scale);
+        scaled.shadow = basic.scaleCssText(look.shadow, scale);
+    }
+    scaled.scale = scale;
+    return scaled;
 };
 
 // GROUP: A bubble on the page: a text (or the objects of content(bubble)), and an arrow whose edge goes on from
 // the edge of the bubble
 Tooltip.createBubble = function(text, look, content) {
-    const _l = Object.assign({}, Tooltip.BUBBLE_LOOK, look || {});
+    const _l = Tooltip.scaleLook(Object.assign({}, Tooltip.BUBBLE_LOOK, look || {}));
     const hasContent = (typeof content === "function");
     const bubble = createIn(page, function() {
         const group = AutoLayout({
@@ -235,6 +257,7 @@ Tooltip.createBubble = function(text, look, content) {
             role: "status",
         });
         group.css = { position: "absolute", boxShadow: _l.shadow || "none" };
+        group.look = _l; // (before content(): its objects can read look.scale)
             group.label = null;
             if (hasContent) {
                 content(group);
@@ -249,7 +272,6 @@ Tooltip.createBubble = function(text, look, content) {
         endAutoLayout();
         return group;
     });
-    bubble.look = _l;
     return bubble;
 };
 
@@ -396,11 +418,11 @@ Tooltip.openPopover = function(target, content, look, side = "bottom", text = ""
     bubble.clickable = 1;
     bubble.role = "dialog";
     // WHY on window and in the capture phase: the popover is the top layer; its Escape must not reach a Dialog under it
-    const onPointerDown = function(event) {
+    const onPointerDown = function(self, event) {
         if (bubble.elem.contains(event.target) || target.elem.contains(event.target)) return;
         Tooltip.closePopover();
     };
-    const onKeyDown = function(event) {
+    const onKeyDown = function(self, event) {
         if (event.key != "Escape") return;
         event.stopImmediatePropagation();
         Tooltip.closePopover();
@@ -410,16 +432,14 @@ Tooltip.openPopover = function(target, content, look, side = "bottom", text = ""
     const onResize = function() {
         if (!target._isRemoved) Tooltip.place(bubble, Tooltip.toPageRect(target), side);
     };
-    window.addEventListener("pointerdown", onPointerDown, true);
-    window.addEventListener("keydown", onKeyDown, true);
-    window.addEventListener("resize", onResize);
+    // (bubble.remove() cleans these events)
+    bubble.listenTo(window, "pointerdown", onPointerDown, true);
+    bubble.listenTo(window, "keydown", onKeyDown, true);
+    bubble.onPageResize(onResize);
     Tooltip.openedPopover = {
         bubble: bubble,
         target: target,
         close: function() {
-            window.removeEventListener("pointerdown", onPointerDown, true);
-            window.removeEventListener("keydown", onKeyDown, true);
-            window.removeEventListener("resize", onResize);
             bubble.remove();
             if (typeof options.onClose === "function") options.onClose();
         },

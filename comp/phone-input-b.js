@@ -73,9 +73,9 @@ const PhoneInputB = function(params = {}) {
 
         const cursorPos = (firstUnderscore !== -1) ? firstUnderscore : inputElem.value.length;
         inputElem.setSelectionRange(cursorPos, cursorPos); // WHY: Cursorda önce sona gitmesin.
-        setTimeout(() => {
+        box.after(0, () => {
             inputElem.setSelectionRange(cursorPos, cursorPos); // WHY: Asıl cursoru taşıma kodu (after the browser moved it).
-        }, 0);
+        });
     };
 
     const makeRandomPhoneNumber = function() {

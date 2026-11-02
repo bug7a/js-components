@@ -188,6 +188,8 @@ const InputB = function(params = {}) {
     // *** PRIVATE FUNCTIONS:
 
     const makeWarningBallVisible = function() {
+        // WHY: withMotion() shows the ball a moment later; a fast typing or a paste may make the value valid before it
+        if (box.status == 0) return;
         box.warningBall.opacity = 1;
         box.warningBall.clickable = 1;
         box.warningBall.css.transform = SHOWN_BALL_SCALE;
@@ -248,13 +250,14 @@ const InputB = function(params = {}) {
     };
 
     const showWarning = function() {
+        // (the status first: the ball is shown only while there is a warning)
         if (box.isRequired && box.getInputValue().length === 0) {
-            showWarningBallOf("required", box.requiredText, box.requiredColor);
             box.status = 1;
+            showWarningBallOf("required", box.requiredText, box.requiredColor);
             return;
         }
-        showWarningBallOf("warning", box.warningText, box.warningColor);
         box.status = 2;
+        showWarningBallOf("warning", box.warningText, box.warningColor);
     };
 
     const hideWarning = function() {

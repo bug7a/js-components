@@ -474,6 +474,7 @@ const LoginPage = function(params = {}) {
         const barPadding = Math.max(0, TAB_BAR_PADDING - basic.num(box.tab_border));
 
         box.tabBar = Tabs({
+            scale: 1, // WHY: the rest of this component is not scaled (basic.uiScale): its tab bar must not be either
             variant: "pill",
             tabs: [
                 { key: TAB_KEYS[0], text: "LOGIN" },

@@ -62,6 +62,7 @@ const Slider = function(params = {}) {
 
     let startX = 0;
     let startLeft = 0;
+    let cancelHideValue = null; // the timer of showValue() (box.after)
 
     const TRACK_SPACE = 6; // Between the thumb line and the tracks
     const DRAG_TRACK_SPACE = 3; // The same while dragging (the line is thinner)
@@ -170,14 +171,15 @@ const Slider = function(params = {}) {
 
     // Shows the value bubble for a while.
     box.showValue = function() {
-        if (box.showValueTimer) clearTimeout(box.showValueTimer);
+        box.showValueClean();
         showValueBubble();
-        box.showValueTimer = setTimeout(hideValueBubble, VALUE_SHOW_DURATION);
+        cancelHideValue = box.after(VALUE_SHOW_DURATION, hideValueBubble);
     };
 
     // Stops the timer of showValue() (the bubble is not hidden by it).
     box.showValueClean = function() {
-        if (box.showValueTimer) clearTimeout(box.showValueTimer);
+        if (cancelHideValue) cancelHideValue();
+        cancelHideValue = null;
     }
 
     // Sets the minimum selectable value
@@ -300,11 +302,12 @@ const Slider = function(params = {}) {
     // WHY: "e.clientX || e.touches[0]" threw at the left edge of the screen: clientX 0 is falsy, a mouse event has no touches.
     const getClientX = (e) => (e.touches && e.touches.length) ? e.touches[0].clientX : e.clientX;
 
+    // The removers of the document events of a drag (box.listenTo: remove() cleans them too)
+    let dragEventRemovers = [];
+
     const removeDragEvents = () => {
-        document.removeEventListener("mousemove", onMouseMove);
-        document.removeEventListener("mouseup", onMouseUp);
-        document.removeEventListener("touchmove", onMouseMove);
-        document.removeEventListener("touchend", onMouseUp);
+        dragEventRemovers.forEach((removeEvent) => removeEvent());
+        dragEventRemovers = [];
     };
 
     const onMouseDown = (self, e) => {
@@ -312,14 +315,17 @@ const Slider = function(params = {}) {
         startX = getClientX(e);
         startLeft = parseFloat(thumbBox.left) || 0; // (not parseInt: a click on the thumb moved it a part of a pixel)
         
-        document.addEventListener("mousemove", onMouseMove);
-        document.addEventListener("mouseup", onMouseUp);
-        document.addEventListener("touchmove", onMouseMove, { passive: false });
-        document.addEventListener("touchend", onMouseUp);
+        removeDragEvents(); // WHY: a second touch before the end of a drag must not add the events twice
+        dragEventRemovers = [
+            box.listenTo(document, "mousemove", onMouseMove),
+            box.listenTo(document, "mouseup", onMouseUp),
+            box.listenTo(document, "touchmove", onMouseMove, { passive: false }),
+            box.listenTo(document, "touchend", onMouseUp),
+        ];
         box.onDragStart();
     };
 
-    const onMouseMove = (e) => {
+    const onMouseMove = (self, e) => {
         if (!isDragging) return;
         e.preventDefault();
         const clientX = getClientX(e);
@@ -354,17 +360,6 @@ const Slider = function(params = {}) {
         valueBox.text = value;
         showHideTracks(value, 0);
     });
-
-    // WHY: The document events of a drag stay after a remove() during the drag. (basic.js does not know them.)
-    const superRemove = box.remove;
-    box.superRemove = superRemove;
-    let isRemoved = 0;
-    box.remove = function () {
-        if (isRemoved) return;
-        isRemoved = 1;
-        removeDragEvents();
-        superRemove.call(box);
-    };
 
     box.setValue(box.currentValue);
 

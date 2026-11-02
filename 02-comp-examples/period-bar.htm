@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>PeriodBar</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- LIBRARY FILES -->
+        <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+        <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- COMPONENTS -->
+        <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/period-bar.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+
+        /* Bismillah */
+
+        // SAMPLE: PeriodBar (comp/period-bar.js), the month switcher of javascript-mobile-app-template
+        // (ui-period-bar.htm) with the same look and motions: at the top of a white page, with the buttons that
+        // hide and show it. Under them: the same bar in Turkish, with 24 months.
+        // The page is drawn 600 px wide and fitted to the screen (page.fit(600, 800)), like the old template.
+
+        // *** VARIABLES:
+        const DESIGN_WIDTH = 600; // px: the width the page is drawn for
+        const MAX_WIDTH = 800; // px: on a wider screen the page stops growing at this width
+        const BUTTON_WIDTH = 170;
+        const BUTTON_HEIGHT = 60;
+        let periodBar, lblSelected;
+
+        const start = function () {
+
+            page.color = "whitesmoke";
+            page.fit(DESIGN_WIDTH, MAX_WIDTH);
+            page.onResize(fitToWindow);
+
+            // GROUP: Fills the window and puts the page in its middle
+            AutoLayout({ align: "center top" });
+
+                // BOX: The page (600 px), it scrolls when the window is low
+                startBox({ width: DESIGN_WIDTH, height: "100%", color: "white", scrollY: 1 });
+                    VGroup({ width: "100%", height: "auto", align: "center top", gap: 30, padding: [0, 0] });
+
+                        // PERIOD BAR: at the top of the page, like the old one
+                        periodBar = PeriodBar({ key: "en", onChange: showSelected });
+
+                        // LABEL: What onChange gives
+                        lblSelected = Label({ fontSize: 22, textColor: "#141414" });
+
+                        // GROUP: Hide / show (the bar goes up / drops in)
+                        HGroup({ hug: 1, gap: 20 });
+                            SmartButton({ labelText: "Hide", width: BUTTON_WIDTH, height: BUTTON_HEIGHT, onClick: function () { periodBar.setVisible(0); } });
+                            SmartButton({ labelText: "Show", width: BUTTON_WIDTH, height: BUTTON_HEIGHT, onClick: function () { periodBar.setVisible(1); } });
+                        endGroup();
+
+                        // LABEL: The keyboard
+                        Label({ text: "Tab to a bar, then Left / Right arrows.", fontSize: 18, textColor: Black(0.5) });
+
+                        // LABEL: The second bar
+                        Label({ text: 'language: "tr", monthCount: 24', fontSize: 18, textColor: Black(0.5), css: { marginTop: "20px" } });
+
+                        // PERIOD BAR: in Turkish, two years
+                        PeriodBar({ key: "tr", language: "tr", monthCount: 24, onChange: showSelected });
+
+                    endGroup();
+                endBox();
+
+            endAutoLayout();
+
+            showSelected(periodBar);
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        const fitToWindow = function () {
+            page.fit(DESIGN_WIDTH, MAX_WIDTH);
+        };
+
+        const showSelected = function (self) {
+            const date = self.getSelectedDate();
+            lblSelected.text = self.key + ": " + date.year + " / " + basic.twoDigitFormat(date.month) + " (value: " + self.value + ")";
+        };
+
+        </script>
+
+    </head>
+    <body>
+    </body>
+</html>

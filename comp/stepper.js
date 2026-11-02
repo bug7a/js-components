@@ -15,7 +15,12 @@ UI COMPONENT TEMPLATE
 - Layout: "horizontal" (buttons at the sides, default) or "compact" (both buttons at the right, stacked).
 - Everything is drawn with code (no image files needed). Accessibility: role="spinbutton", aria-valuenow...
 - onChange is NOT called when the component is created or when the value is set with silent: 1.
-- Style packages: "classic" (default), "modern", "dark". Select with styleName. (Stepper.styles)
+- A line around the buttons: style.button.border and borderColor (0 and "transparent" by default: no line).
+- style.button.opacity (1) / disabledOpacity: a button that can / can not be clicked (at min / max). fadeDuration:
+  the time of the fade between them (s). 0: at once (the default).
+- Style packages: "classic" (default), "modern", "dark", "ozden". Select with styleName. (Stepper.styles)
+-- "ozden": the look of the old UIStepper (comp-m1/ui-stepper.js, javascript-mobile-app-template, a 600 px design).
+   It is a package of params (basic.js v26.10.27): it also gives the size, 150 x 50.
 
 USAGE:
 const qty = Stepper({ value: 1, min: 1, max: 10, onChange: (self) => println(self.value) });
@@ -25,6 +30,8 @@ Stepper({ value: 2.5, min: 0, max: 20, step: 0.5, precision: 1, unitText: " kg" 
 Stepper({ value: 50, min: 0, max: 100, step: 5, unitText: "%", editable: 0 });
 Stepper({ value: 9, min: 0, max: 23, wrap: 1, valueFormat: (value) => String(value).padStart(2, "0") + ":00" });
 Stepper({ layout: "compact", width: 140 });
+Stepper({ style: { button: { border: 1, borderColor: Black(0.3) } } }); // A line around the buttons
+Stepper({ styleName: "ozden", value: 1, min: 1, max: 10 });
 
 Started Date: September 2026
 Developer: Bugra Ozden
@@ -56,7 +63,7 @@ const StepperDefaults = {
     onChange: function (self) { }, // self.value
     onMinReached: function (self) { }, // Called when the value arrives at min
     onMaxReached: function (self) { }, // Called when the value arrives at max
-    styleName: "classic", // "classic", "modern", "dark" or a name added to Stepper.styles
+    styleName: "classic", // "classic", "modern", "dark", "ozden" or a name added to Stepper.styles
     style: { // Classic style package (default)
         box: {
             color: White(1),
@@ -73,10 +80,14 @@ const StepperDefaults = {
             color: Black(0.05),
             hoverColor: Black(0.1),
             activeColor: Black(0.16),
+            border: 0, // px: a line around the buttons. 0: no line
+            borderColor: "transparent",
             round: 6,
             iconColor: "#141414",
             iconSize: 14,
-            disabledOpacity: 0.3,
+            opacity: 1, // A button that can be clicked
+            disabledOpacity: 0.3, // At min / max (wrap: 0) and when the stepper is disabled
+            fadeDuration: 0, // s: the buttons fade between opacity and disabledOpacity in this time. 0: at once
         },
         value: {
             fontSize: 17,
@@ -129,6 +140,7 @@ const Stepper = function (params = {}) {
     const HOLD_SLOW_COUNT = 3; // Repeats before the medium speed
     const HOLD_MEDIUM_COUNT = 12; // Repeats before the fast speed
     const STACK_GAP = 2; // Between the stacked buttons (compact)
+    const BUTTON_COLOR_MOTION = "background-color 0.15s"; // The hover / press color of the buttons
 
     // *** PUBLIC VARIABLES:
     // NOTE: Default values are also public variables. (box.value, box.min, box.max, box.step)
@@ -163,7 +175,7 @@ const Stepper = function (params = {}) {
     };
 
     const paintButton = function (button, isEnabled) {
-        button.css.opacity = (isEnabled) ? "1" : String(_s.button.disabledOpacity);
+        button.css.opacity = String((isEnabled) ? _s.button.opacity : _s.button.disabledOpacity);
         button.cursor = (isEnabled) ? "pointer" : "default";
         button.aria = { disabled: (isEnabled) ? "false" : "true" };
         if (!isEnabled) button.color = _s.button.color;
@@ -442,6 +454,8 @@ const Stepper = function (params = {}) {
             width: (isStacked) ? "100%" : _s.button.width,
             height: (isStacked) ? "auto" : "100%",
             color: _s.button.color,
+            border: _s.button.border,
+            borderColor: _s.button.borderColor,
             round: _s.button.round,
             clickable: 1,
         });
@@ -450,7 +464,9 @@ const Stepper = function (params = {}) {
         btn.lineHeight = "0";
         btn.shrink = 0;
         btn.cursor = "pointer";
-        btn.css = { userSelect: "none", transition: "background-color 0.15s" };
+        btn.css = { userSelect: "none", transition: BUTTON_COLOR_MOTION };
+        // WHY: setMotion() starts after the first paint: a button that starts at min / max does not fade at the first view.
+        if (_s.button.fadeDuration > 0) btn.setMotion(BUTTON_COLOR_MOTION + ", opacity " + _s.button.fadeDuration + "s");
         if (isStacked) btn.css.flex = "1 1 0"; // WHY: After shrink (flex sets it again): the stacked buttons share the height.
         btn.role = "button";
         btn.aria = { label: ariaLabel };
@@ -624,6 +640,10 @@ Stepper.getMinusSvg = function (color, size) {
 // USAGE: Stepper({ style: Stepper.styles.dark }) // The same as styleName: "dark". (The package is copied, never changed.)
 // NOTE: A new package needs only the keys that differ from the default (classic) style.
 // USAGE: Stepper.styles.myStyle = { button: { color: "gold" } };
+// NOTE: A package with its own "style" key is a package of params (basic.js v26.10.27): its other keys fill the
+//       params you did not give (ozden: the size). Select it with styleName (style: Stepper.styles.ozden.style
+//       gives only its look).
+// USAGE: Stepper({ styleName: "ozden", width: 180 }) // A param you give wins over the package.
 Stepper.styles = {
 
     // Gray buttons in a white box.
@@ -647,6 +667,33 @@ Stepper.styles = {
         value: { fontSize: 17, textColor: "rgba(255, 255, 255, 0.90)", fontFamily: "" },
         input: { color: "rgba(255, 255, 255, 0.06)", textColor: "rgba(255, 255, 255, 0.90)", round: 4 },
         disabled: { opacity: 0.4 },
+    },
+
+    // The look of the old UIStepper (comp-m1/ui-stepper.js, javascript-mobile-app-template, a 600 px design):
+    // round white buttons with a dark line on a transparent box, the value between them; at min / max a button
+    // fades to 0.4. (Its name is not "classic": that is the default look, and LabelEditor asks for it by name.)
+    ozden: {
+        width: 150,
+        height: 50, // WHY: 42 px buttons (50 - 2 x padding)
+        style: {
+            box: { color: "transparent", border: 0, round: 100, padding: 4 },
+            button: {
+                width: 42,
+                color: "white",
+                hoverColor: "#F4F4F4",
+                activeColor: "#E8E8E8",
+                border: 1,
+                borderColor: "rgba(0, 0, 0, 0.8)",
+                round: 21,
+                iconColor: "rgba(0, 0, 0, 0.65)",
+                iconSize: 24, // WHY: the + of the old 32 px icon: 16 px long, a 2.7 px line
+                opacity: 0.9, // (the line and the icon are a little lighter, as in the old one)
+                disabledOpacity: 0.4,
+                fadeDuration: 0.2,
+            },
+            value: { fontSize: 22, textColor: "rgba(0, 0, 0, 0.8)", fontFamily: "" },
+            input: { textColor: "rgba(0, 0, 0, 0.8)" },
+        },
     },
 
 };

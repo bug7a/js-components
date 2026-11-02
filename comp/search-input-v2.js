@@ -13,6 +13,8 @@ UI COMPONENT TEMPLATE
   while typing a stronger line and a tilted search icon (a small pulse at every letter), the clear icon grows in
   and turns under the mouse. The "ozden" and "ozdenDark" packages are animated (animated: 0 makes them still).
   Only transform, opacity and box-shadow change (smooth, cheap). Off when the system asks for reduced motion.
+- Place: left / top (default 0, 0), or right / bottom: SearchInput({ right: 20, bottom: 20 }) is at the right bottom
+  corner of its box (the default left / top is not used then). Sample: 02-comp-examples/search-input-v2-place.htm
 
 Started Date: December 2025
 Developer: Bugra Ozden
@@ -62,8 +64,16 @@ const SearchInput = function(params = {}) {
     // Merge style package: your params > SearchInput.styles[styleName] (a package of params) > SearchInputDefaults
     basic.applyStylePackage(params, SearchInput.styles, SearchInputDefaults);
 
+    // WHY: A box placed with right / bottom does not get the default left / top. In basic.js the setter of left
+    //      clears right (and top clears bottom), so the default left: 0 / top: 0, set after them, put the box back
+    //      at the left top corner.
+    const isPlacedByRight = (params.right !== undefined && params.left === undefined);
+    const isPlacedByBottom = (params.bottom !== undefined && params.top === undefined);
+
     // Merge params:
     mergeIntoIfMissing(params, SearchInputDefaults);
+    if (isPlacedByRight) delete params.left;
+    if (isPlacedByBottom) delete params.top;
 
     // BOX: Component container
     const box = startObject(params);

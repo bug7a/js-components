@@ -32,6 +32,10 @@ NOTE: still in development (the user, 2026-10-29): more style packages come; the
 - Style packages: "ozden" (default). (Dialog.styles)
 - The buttons (the user, 2026-10-30): style.buttons[type] = { styleName, style }: a style package of SmartButton
   (primary / secondary / danger: "ozdenType1", icon: "ozdenType2") and only the keys that differ (the colors).
+- Scale (2026-11-01): scale multiplies every size of the dialog (its style, width, motion, its buttons and the bubble
+  of their ask). null (default): basic.uiScale (1; a page fitted with page.fit() sets 1 / page.zoom: the dialog keeps
+  its size on the screen). Dialog.confirm / alert / prompt take it too. The objects of content(dialog) are made by
+  the page: dialog.scale is their scale. (The InputB fields keep their own px: InputB has no scale param yet.)
 
 USAGE:
 Dialog({
@@ -47,6 +51,7 @@ Dialog({
 });
 if (await Dialog.confirm({ titleText: "Delete the file?", messageText: "It can not be undone.", confirmText: "Delete", danger: 1 })) { }
 const name = await Dialog.prompt({ titleText: "Rename", value: "report.pdf", validate: (text) => (text.trim()) ? "" : "A name is needed." });
+Dialog.alert({ titleText: "Saved", scale: 1.5 }); // every size x 1.5 (default: basic.uiScale)
 
 Started Date: June 2024 (comp-m2 Dialog), October 2026 (comp-m4 Dialog)
 Developer: Bugra Ozden
@@ -74,6 +79,7 @@ const DialogDefaults = {
     ariaLabel: "", // when there is no title
     variant: "", // "": the buttons in a row at the bottom; "centered": the texts in the middle, the buttons one under the other
     topIconFile: "", // "centered": the icon at the top (a file, or an "<svg" text drawn with currentColor)
+    scale: null, // every size multiplied (Ex: 1.5). null: basic.uiScale (1 / page.zoom on a page fitted with page.fit())
     onOpen: function (dialog) { },
     onClose: function (dialog, reason, buttonKey) { }, // reason: "button", "escape", "cover", "api"
     styleName: "ozden", // "ozden" or a name added to Dialog.styles
@@ -139,6 +145,10 @@ const Dialog = function (params = {}) {
     // Merge params:
     mergeIntoIfMissing(params, DialogDefaults);
 
+    // Scale: every size of the dialog multiplied
+    params.scale = params.scale ?? basic.uiScale;
+    params.style = Dialog.scaleStyle(params.style, params.scale);
+
     // WHY: startObject() copies params: the functions and the lists are kept as they are (copies of the lists)
     const contentFunc = params.content;
     const buttonList = (params.buttons || []).map(function (button, index) {
@@ -152,7 +162,8 @@ const Dialog = function (params = {}) {
     delete params.fields;
 
     // (width is the width of the card; the box itself covers the page)
-    const cardWidthPx = (typeof params.width === "number") ? params.width : DialogDefaults.width;
+    const cardWidth = (typeof params.width === "number") ? params.width : DialogDefaults.width;
+    const cardWidthPx = cardWidth * params.scale;
     params.left = 0;
     params.top = 0;
     params.width = "100%";
@@ -170,7 +181,13 @@ const Dialog = function (params = {}) {
     const id = "dialog-" + (Dialog.counter++);
     const OPEN_TIME = "0.2s";
     const OPEN_CURVE = "cubic-bezier(0.2, 0.8, 0.2, 1)"; // fast at first, soft at its place
-    const OPEN_MOVE = 50; // px: the card comes up from here (the user, 2026-10-29)
+    const OPEN_MOVE = 50 * box.scale; // px: the card comes up from here (the user, 2026-10-29)
+    // The px of the view that are not in the style (multiplied by scale, like the style)
+    const LINE_WIDTH = 1 * box.scale; // the line over the footer
+    const SECTION_SPACE = 8 * box.scale; // over the fields, under the icon at the top
+    const FIELD_GAP = 10 * box.scale; // between the fields (and the objects of content)
+    const STATUS_MIN_HEIGHT = 18 * box.scale;
+    const INPUT_HEIGHT = 44 * box.scale; // a plain Input (without InputB)
     const isCentered = (params.variant == "centered");
     let isOpen = 0;
     let isBusy = 0;
@@ -201,6 +218,7 @@ const Dialog = function (params = {}) {
         if (typeof InputB !== "undefined") {
             input = InputB({
                 styleName: _s.fieldStyleName,
+                scale: box.scale, // (taken when InputB has a scale param; its sizes are fixed px today)
                 width: "100%",
                 titleText: field.titleText,
                 placeholder: field.placeholder,
@@ -208,7 +226,7 @@ const Dialog = function (params = {}) {
                 isRequired: field.required ? 1 : 0,
             });
         } else {
-            input = Input({ width: "100%", height: 44, placeholder: field.placeholder || field.titleText, value: field.value });
+            input = Input({ width: "100%", height: INPUT_HEIGHT, placeholder: field.placeholder || field.titleText, value: field.value });
         }
         input.css = { maxWidth: "100%" };
         box.fieldList.push({ data: field, input: input });
@@ -267,7 +285,24 @@ const Dialog = function (params = {}) {
     const getButtonStyle = function (look) {
         const style = JSON.parse(JSON.stringify(look.style));
         if (_s.ask) style.ask = _s.ask;
-        return style;
+        if (box.scale === 1) return style;
+        return scaleButtonStyle(style, look.styleName);
+    };
+
+    // WHY: SmartButton has no scale param: its whole style (the look over its package) is multiplied here, and the
+    //      button gets scale 1 (a SmartButton that has one must not multiply it again)
+    const scaleButtonStyle = function (style, styleName) {
+        const buttonParams = { styleName: styleName, style: style };
+        const fullStyle = basic.applyStylePackage(buttonParams, SmartButton.styles, SmartButtonDefaults).style;
+        mergeIntoIfMissing(fullStyle, SmartButtonDefaults.style);
+        const scaled = basic.scaleStyle(fullStyle, box.scale);
+        // (the sizes that are not named like one)
+        scaled.layout.iconSideTrim = fullStyle.layout.iconSideTrim * box.scale;
+        scaled.box.boxShadow = basic.scaleCssText(fullStyle.box.boxShadow, box.scale);
+        scaled.ask.button.boxShadow = basic.scaleCssText(fullStyle.ask.button.boxShadow, box.scale);
+        // the bubble of the ask: Tooltip.show() multiplies its look itself
+        scaled.ask.bubble = Object.assign({}, fullStyle.ask.bubble, { scale: box.scale });
+        return scaled;
     };
 
     const createButton = function (data) {
@@ -277,6 +312,7 @@ const Dialog = function (params = {}) {
 
         const button = SmartButton({
             styleName: look.styleName,
+            scale: 1, // WHY: its style is in the px of the dialog already (getButtonStyle)
             width: getButtonWidth(isIcon),
             height: isCentered ? _s.centered.buttonHeight : _s.footer.buttonHeight,
             labelText: isIcon ? "" : data.text,
@@ -526,20 +562,20 @@ const Dialog = function (params = {}) {
     // A row at the bottom, on a band with a line over it
     const createFooter = function () {
         box.footer = HGroup({ width: "100%", height: "auto", align: "right center", gap: _s.footer.gap, padding: _s.footer.padding, color: _s.footer.color, clipContent: 0 });
-        box.footer.css = { borderTop: "1px solid " + _s.footer.lineColor, borderRadius: "0 0 " + _s.card.round + "px " + _s.card.round + "px", flexShrink: "0" };
+        box.footer.css = { borderTop: LINE_WIDTH + "px solid " + _s.footer.lineColor, borderRadius: "0 0 " + _s.card.round + "px " + _s.card.round + "px", flexShrink: "0" };
     };
 
     // One under the other, as wide as the card, on the band of the footer (a line over it)
     const createCenteredFooter = function () {
         box.footer = VGroup({ width: "100%", height: "auto", align: "center top", gap: _s.centered.buttonGap, padding: _s.centered.footerPadding, color: _s.footer.color, clipContent: 0 });
-        box.footer.css = { alignItems: "stretch", borderTop: "1px solid " + _s.footer.lineColor, borderRadius: "0 0 " + _s.card.round + "px " + _s.card.round + "px", flexShrink: "0" };
+        box.footer.css = { alignItems: "stretch", borderTop: LINE_WIDTH + "px solid " + _s.footer.lineColor, borderRadius: "0 0 " + _s.card.round + "px " + _s.card.round + "px", flexShrink: "0" };
     };
 
     // The icon at the top: a dark icon in a light gray circle
     const createTopIcon = function () {
         const _c = _s.centered;
         box.iconArea = HGroup({ width: "100%", height: _c.iconArea.height, align: "center center", color: _c.iconArea.color, round: _c.iconArea.round });
-        box.iconArea.css = { flexShrink: "0", marginBottom: "8px" };
+        box.iconArea.css = { flexShrink: "0", marginBottom: SECTION_SPACE + "px" };
             HGroup({ width: _c.iconCircle.size, height: _c.iconCircle.size, align: "center center", color: _c.iconCircle.color, round: _c.iconCircle.size / 2 });
                 box.topIcon = createIconView(box.topIconFile, _c.icon);
             endGroup();
@@ -609,15 +645,15 @@ const Dialog = function (params = {}) {
 
                 // GROUP: Fields and content
                 if (fieldList.length || typeof contentFunc === "function") {
-                    box.content = VGroup({ width: "100%", height: "auto", align: "left top", gap: 10, clipContent: 0 });
-                    box.content.css = { alignItems: "stretch", marginTop: "8px", flexShrink: "0" };
+                    box.content = VGroup({ width: "100%", height: "auto", align: "left top", gap: FIELD_GAP, clipContent: 0 });
+                    box.content.css = { alignItems: "stretch", marginTop: SECTION_SPACE + "px", flexShrink: "0" };
                         fieldList.forEach(createField);
                         if (typeof contentFunc === "function") contentFunc(box);
                     endGroup();
                 }
 
                 // LABEL: Status (an error of a field, a message of the page)
-                box.lblStatus = Label({ fontSize: _s.status.fontSize, bold: 1, width: "100%", textAlign: textAlign, css: { whiteSpace: "normal", minHeight: "18px" } });
+                box.lblStatus = Label({ fontSize: _s.status.fontSize, bold: 1, width: "100%", textAlign: textAlign, css: { whiteSpace: "normal", minHeight: STATUS_MIN_HEIGHT + "px" } });
                 box.lblStatus.role = "status";
 
             endGroup();
@@ -710,6 +746,17 @@ document.addEventListener("keydown", function (event) {
 // The buttons of an action (not Cancel): placed first in the centered variant
 Dialog.MAIN_TYPES = ["primary", "danger", "warning", "success", "info"];
 
+// The style of a dialog with its sizes multiplied (scale 1: the same style).
+// WHY not buttons and ask: they are styles of SmartButton, multiplied with its package when a button is made
+Dialog.scaleStyle = function (style, scale) {
+    if (scale === 1) return style;
+    const scaled = basic.scaleStyle(style, scale);
+    scaled.buttons = style.buttons;
+    if (style.ask) scaled.ask = style.ask;
+    scaled.card.boxShadow = basic.scaleCssText(style.card.boxShadow, scale);
+    return scaled;
+};
+
 // Returns a Promise<boolean>. onConfirm (optional) may return false (it stays) or a Promise (the button waits).
 Dialog.confirm = function (params = {}) {
     return new Promise(function (resolve) {
@@ -721,6 +768,7 @@ Dialog.confirm = function (params = {}) {
             style: params.style || {},
             variant: params.variant || "",
             topIconFile: params.topIconFile || "",
+            scale: params.scale,
             buttons: [
                 { key: "cancel", text: params.cancelText || "Cancel", type: "secondary" },
                 {
@@ -768,6 +816,7 @@ Dialog.alert = function (params = {}) {
             style: params.style || {},
             variant: params.variant || "",
             topIconFile: params.topIconFile || "",
+            scale: params.scale,
             buttons: [{ key: "ok", text: params.buttonText || "OK", type: params.buttonType || "primary" }],
             onClose: function () { resolve(); },
         });
@@ -785,6 +834,7 @@ Dialog.prompt = function (params = {}) {
             style: params.style || {},
             variant: params.variant || "",
             topIconFile: params.topIconFile || "",
+            scale: params.scale,
             fields: [{ key: "value", titleText: params.fieldText || "", placeholder: params.placeholder || "", value: params.value || "", required: params.required ? 1 : 0, validate: params.validate }],
             buttons: [
                 { key: "cancel", text: params.cancelText || "Cancel", type: "secondary" },

@@ -7,12 +7,18 @@ Side Panel - v26.09
 UI COMPONENT
 - A panel (drawer / sheet) that slides in from a side of the screen, over the page.
 - side: "right", "left", "bottom" or "top". The size is the width or the height.
-- It is always created on the page, whatever container is open when it is called, so it is
-  never clipped by a group or by a scrolling box.
-- Its own backdrop darkens the page. A click on it closes the panel. (closeOnBackdrop)
+- It is always created on the page (or in its container), whatever container is open when it is
+  called, so it is never clipped by a group or by a scrolling box.
+- container: a box (Ex: the 600 px column of a mobile app in the middle of a wide screen). The panel
+  and its backdrop are made in it, sized by it instead of the page and they follow its size. Nothing
+  outside it is covered. The box clips its content (the default of a Box) and does not scroll.
+- Its own backdrop darkens the page (or the container). A click on it closes the panel. (closeOnBackdrop)
 - ESC closes the open panel. (closeOnEscape)
 - exclusive: 1 -> Opening a panel closes the one that is already open.
 - The panel never covers the whole screen: it keeps screenMargin pixels free on a small screen.
+- fade: 1 -> The panel fades in / out with its slide. 0 -> It only slides. (The backdrop always fades.)
+- style.panel.round: the corners that face the page are round (a right panel: its left corners,
+  a bottom sheet: its top corners).
 - The content goes into the body with startBody() ... endBody(). The body scrolls when it is tall.
 - onBeforeClose can stop the closing. (Ex: unsaved changes.)
 - Everything is drawn with code (no image files needed). Accessibility: role="dialog", aria-modal.
@@ -28,6 +34,8 @@ button.on("click", panel.open);
 
 SidePanel({ side: "bottom", panelSize: 280, styleName: "dark", titleText: "Share" });
 SidePanel({ side: "left", panelSize: 320, showBackdrop: 0, onClose: (self) => println("closed") });
+SidePanel({ container: appColumn, side: "bottom", panelSize: 300, style: { panel: { round: 13 } } });
+SidePanel({ container: appColumn, side: "right", fade: 0, duration: 200 }); // It only slides.
 panel.setTitleText("Filters (3)");
 panel.remove();    // Also removes its backdrop and its window events.
 
@@ -44,9 +52,11 @@ Webpage: https://bug7a.github.io/js-components/
 const SidePanelDefaults = {
     key: "0",
     side: "right", // "right", "left", "bottom", "top" (Only at create time)
+    container: null, // null: the page. A box: the panel and its backdrop are made in it. (Only at create time)
     panelSize: 420, // Width of a left/right panel, height of a top/bottom panel.
-    screenMargin: 60, // The panel never comes closer than this to the opposite edge.
+    screenMargin: 60, // The panel never comes closer than this to the opposite edge (of the page or the container).
     duration: 300, // Length of the animation, in milliseconds.
+    fade: 1, // 1: The panel fades in / out with its slide. 0: It only slides. (The backdrop always fades.) (Only at create time)
     titleText: "",
     showHeader: 1, // 0: No header. (The close button goes with it.)
     showCloseButton: 1,
@@ -66,6 +76,7 @@ const SidePanelDefaults = {
             border: 1,
             borderColor: Black(0.12),
             boxShadow: "0 0 40px rgba(0, 0, 0, 0.18)",
+            round: 0, // The corners that face the page. (A right panel: top-left and bottom-left) (Only at create time)
         },
         header: {
             height: 62,
@@ -106,14 +117,18 @@ const SidePanel = function (params = {}) {
     let box = null;
     let backdrop = null;
 
-    // WHY: A drawer covers the page. Wherever it is called from, it is created on the page, so a
-    //      group or a scrolling box can never clip it.
+    // The box the panel lives in: its container, or the page.
+    const area = params.container || page;
+    const isOnPage = (area === page);
+
+    // WHY: A drawer covers the page (or its container). Wherever it is called from, it is created
+    //      there, so a group or a scrolling box can never clip it.
     // NOTE: createIn() can NOT be used here: it puts the container back when its function ends, and
     //       startObject() would then be inside it while endObject() is outside. The objects of the
     //       view would be created in the container of the caller. The container is put back by hand
     //       after endObject(), at the end of this function.
     const previousContainer = getDefaultContainerBox();
-    setDefaultContainerBox(page);
+    setDefaultContainerBox(area);
 
     // BOX: The backdrop is created first, so it stays behind the panel.
     if (params.showBackdrop == 1) {
@@ -124,6 +139,8 @@ const SidePanel = function (params = {}) {
             clickable: 1,
             zIndex: SidePanel.Z_INDEX,
         });
+        // WHY: In a group (HGroup / VGroup) a new object is a flex item. The backdrop covers it instead.
+        if (!isOnPage) backdrop.position = "absolute";
     }
 
     // BOX: Component container. This is the box that slides.
@@ -145,13 +162,28 @@ const SidePanel = function (params = {}) {
         return (box.side === "bottom" || box.side === "top");
     };
 
-    // Puts the panel on its side and keeps it inside the screen.
+    // The room of the panel along its side: the page, or the inside of its container.
+    const getAreaSize = function () {
+
+        // WHY page.width / page.height: with page.fit() the page is zoomed; window.innerWidth is not in its px
+        //     (a 450 px menu on a page fitted to 600 px was cut to 330 on a 390 px phone)
+        if (isOnPage) return (isVertical()) ? page.height : page.width;
+
+        // WHY without the border: the panel is placed inside the border of its container.
+        const borderSize = (area.border || 0) * 2;
+        if (isVertical()) return area.height - borderSize;
+        return area.width - borderSize;
+
+    };
+
+    // Puts the panel on its side and keeps it inside the screen (or its container).
     const layout = function () {
 
-        const screen = (isVertical()) ? window.innerHeight : window.innerWidth;
+        // WHY: The size watcher of the container can call it once more in the same round after remove().
+        if (!box) return;
 
         // WHY: A 420 px panel does not fit on a phone. It never covers the whole screen.
-        size = Math.max(MIN_PANEL_SIZE, Math.min(box.panelSize, screen - box.screenMargin));
+        size = Math.max(MIN_PANEL_SIZE, Math.min(box.panelSize, getAreaSize() - box.screenMargin));
 
         if (box.side === "bottom") box.props({ left: 0, bottom: 0, width: "100%", height: size });
         else if (box.side === "top") box.props({ left: 0, top: 0, width: "100%", height: size });
@@ -160,6 +192,37 @@ const SidePanel = function (params = {}) {
 
         if (box.isOpened === 0) box.css.transform = getHiddenTransform();
 
+    };
+
+    // The panel follows the size of the page (a resize of the window) or of its container.
+    const followAreaSize = function () {
+        if (isOnPage) {
+            box.onPageResize(layout);
+            return;
+        }
+        // WHY onResize: a box can change its size without a resize of the window (Ex: a column made narrower).
+        area.onResize(layout);
+    };
+
+    // The corners that face the page. (border-radius: top-left, top-right, bottom-right, bottom-left)
+    const getFacingCorners = function () {
+        const radius = _s.panel.round + "px";
+        if (box.side === "left") return "0 " + radius + " " + radius + " 0";
+        if (box.side === "bottom") return radius + " " + radius + " 0 0";
+        if (box.side === "top") return "0 0 " + radius + " " + radius;
+        return radius + " 0 0 " + radius;
+    };
+
+    // The opacity of the closed panel: it fades out with its slide, or it only slides. (fade)
+    const getClosedOpacity = function () {
+        return (basic.isOn(box.fade)) ? 0 : 1;
+    };
+
+    // The panel slides. It fades too, unless fade is 0.
+    const getPanelMotion = function () {
+        const slide = "transform " + box.duration + "ms";
+        if (!basic.isOn(box.fade)) return slide;
+        return slide + ", opacity " + box.duration + "ms";
     };
 
     // Where the panel waits while it is closed: one size out of the screen.
@@ -212,9 +275,15 @@ const SidePanel = function (params = {}) {
         box.isOpened = 1;
         SidePanel.openedPanel = box;
 
+        // WHY now: a panel opened right after it was made (a sheet made by a click) had no transition yet
+        //      (setMotion() turns it on a moment later), so it showed at once, without its slide.
+        box.setMotionNow(getPanelMotion());
+        if (backdrop) backdrop.setMotionNow("opacity " + box.duration + "ms");
+
         box.visible = 1;
         box.css.transform = getHiddenTransform();   // Start from outside...
         showBackdrop(1);
+        void box.elem.offsetWidth; // WHY: the browser lays out the closed place first (the panel was display: none)
 
         // WHY: The browser has to see the closed state before the open one, or there is no
         //      transition between them. One frame is enough.
@@ -240,7 +309,7 @@ const SidePanel = function (params = {}) {
         if (SidePanel.openedPanel === box) SidePanel.openedPanel = null;
 
         box.css.transform = getHiddenTransform();
-        box.opacity = 0;
+        box.opacity = getClosedOpacity();
         showBackdrop(0);
 
         // WHY: The panel is hidden only after the animation, and the wait is the duration of that
@@ -301,6 +370,9 @@ const SidePanel = function (params = {}) {
         if (!box) return; // WHY: remove() can be called twice (also by the parent's remove()).
         if (SidePanel.openedPanel === box) SidePanel.openedPanel = null;
 
+        // WHY: The size watcher is on the container, not on the box: the remove() of the box does not reach it.
+        if (!isOnPage) area.remove_onResize(layout);
+
         superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events and the objects inside.
         box = null;
 
@@ -313,10 +385,13 @@ const SidePanel = function (params = {}) {
         border: _s.panel.border,
         borderColor: _s.panel.borderColor,
         boxShadow: _s.panel.boxShadow,
-        opacity: 0,
+        opacity: getClosedOpacity(),
         zIndex: SidePanel.Z_INDEX + 1,
         clipContent: 1,
     });
+    if (_s.panel.round > 0) box.css.borderRadius = getFacingCorners();
+    // WHY: In a group (HGroup / VGroup) a new object is a flex item. The panel is placed by layout() instead.
+    if (!isOnPage) box.position = "absolute";
     box.role = "dialog";
     box.aria = {
         modal: (box.showBackdrop == 1) ? "true" : "false",
@@ -408,7 +483,7 @@ const SidePanel = function (params = {}) {
 
     // *** OBJECT INIT CODE:
 
-    box.setMotion("transform " + box.duration + "ms, opacity " + box.duration + "ms");
+    box.setMotion(getPanelMotion());
 
     if (box.btnClose) {
         box.btnClose.on("click", function () { box.close(); });
@@ -425,10 +500,10 @@ const SidePanel = function (params = {}) {
 
     // (listenTo / onPageResize / own: removed with the box)
     box.listenTo(window, "keydown", onKeyDown);
-    if (backdrop) box.own(backdrop); // WHY: It is on the page, not in the box.
+    if (backdrop) box.own(backdrop); // WHY: It is on the page (or in the container), not in the box.
 
     layout();
-    box.onPageResize(layout);
+    followAreaSize();
 
     // WHY: The groups above are created first. A group that is created inside a hidden box is not
     //      laid out as a flex group, so the panel is hidden only now.
