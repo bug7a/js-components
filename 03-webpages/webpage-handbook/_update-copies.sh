@@ -4,7 +4,7 @@
 #
 # Refreshes the copies that make this site work on its own (outside the repository):
 #   basic/     <- ../../basic      (basic.min.js, basic.min.css, scroll-bar.min.js, the font and the pictures)
-#   comp/      <- ../../comp-m4    (web-view.min.js, search-results.min.js, toast.min.js)
+#   comp/      <- ../../comp       (web-view.min.js, search-results.min.js, toast.min.js)
 #   handbook/  <- ../../__handbook (english/, turkce/: the chapters and the files of their examples)
 #
 # Run it after the library, a component or a chapter of the handbook is changed:

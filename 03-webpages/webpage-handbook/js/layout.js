@@ -6,7 +6,7 @@ basic.js Handbook Website - Layout - v26.09
 
 - Sayfanın iskeleti: üst çubuk (logo, arama, bağlantılar, dil), soldaki bölüm listesi ve kaydırılan içerik kutusu.
 - Dar ekranda (CONFIG.drawerBreakpoint altı) bölüm listesi, menü düğmesi ile açılan bir çekmecedir.
-- Arama: comp-m4 SearchResults, üst çubuktaki kutunun altında açılır. "/" veya Ctrl (Cmd) + K arama kutusuna gider.
+- Arama: comp/search-results.js, üst çubuktaki kutunun altında açılır. "/" veya Ctrl (Cmd) + K arama kutusuna gider.
 - The frame of the page: header, chapter list on the left and the scrolling content box.
 
 Developer: Bugra Ozden

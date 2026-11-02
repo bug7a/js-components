@@ -70,7 +70,7 @@ const TEXTS = {
         quickStart: [
             "# Quick Start",
             "",
-            "A basic.js page is a plain `.htm` file. It loads the library, and one function draws the whole screen: there is no HTML markup in the `<body>` and no CSS file to write.",
+            "A basic.js page is a plain `.htm` file. It loads the library, and one function draws the whole screen, and the `<body>` stays empty.",
             "",
             "---",
             "",
@@ -204,7 +204,7 @@ const TEXTS = {
         quickStart: [
             "# Hızlı Başlangıç",
             "",
-            "Bir basic.js sayfası sade bir `.htm` dosyasıdır. Kütüphaneyi yükler ve bütün ekranı tek bir fonksiyon çizer: `<body>` içine HTML etiketi yazılmaz, CSS dosyası yoktur.",
+            "Bir basic.js sayfası sade bir `.htm` dosyasıdır. Kütüphaneyi yükler ve bütün ekranı tek bir fonksiyon çizer; `<body>` boş kalır.",
             "",
             "---",
             "",

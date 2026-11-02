@@ -55,6 +55,15 @@ Ekranın içerisine arayüzün (content) genişlik bazında tam olarak sığmas�
 - `originalWidth`: Ekranda görünmesini hedeflediğiniz orijinal içerik genişliği.
 - `maxWidth`: İçeriğin genişleyebileceği en yüksek mesafe sınırı (Girilmesi zorunlu değildir, girilmezse `originalWidth` ile aynı değer varsayılır). 
 
+**`basic.uiScale`** (Number, v26.11.01)
+`page.fit()` ile sığdırılan sayfa yakınlaştırılır; bu yüzden ekran pikseline göre yapılmış bileşenler (`Tabs`, `Dialog`, `Toast`, `Tooltip`, `SelectBox`, `SelectDate`) onunla birlikte küçülür. `basic.uiScale = 1 / page.zoom` satırını bir kez, yakınlaştırmayı değiştiren bir pencere boyutlandırmasından sonra da yeniden yazarsanız ekrandaki boyutlarını korurlar. Varsayılan değer `1`'dir. Böyle bir bileşenin `scale` parametresi başka bir değer seçebilir.
+
+```javascript
+page.fit(600, 800);
+basic.uiScale = 1 / page.zoom;
+Label({ text: "Zoom: " + page.zoom.toFixed(2), fontSize: 20 });
+```
+
 **`page.autoFit(contentWidth, contentHeight)`**
 Yukarıdaki komutun biraz daha pratik formudur. Belirtilen içerik ölçülerini bozmadan (en boy oranıyla) sayfaya akıllıca sığdırır.
 

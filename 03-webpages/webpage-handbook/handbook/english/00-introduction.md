@@ -1,9 +1,9 @@
 # basic.js — Getting Started and Philosophy (Introduction)
 
-`basic.js` is a lightweight JavaScript library built to make developing web applications as **simple, fast, and understandable** as possible. No need to write HTML or CSS!
+`basic.js` is a lightweight JavaScript library that makes developing web applications **simple, fast, and understandable**. You build the whole interface in plain JavaScript.
 
 Its Goal:
-Not to make coding harder, but **to turn it into an enjoyable and fluent experience**.
+**To make coding an enjoyable and fluent experience.**
 
 - Project Site: https://bug7a.github.io/basic.js/
 
@@ -11,25 +11,24 @@ Not to make coding harder, but **to turn it into an enjoyable and fluent experie
 
 ## Why basic.js?
 
-- **Highly Readable Code:** Instead of getting lost among complex structures, it focuses on offering a fluent, self-explanatory syntax that is immediately understood at a glance, as if you were reading a story. It aims to make software development as simple and enjoyable as putting together lego pieces.
+- **Highly Readable Code:** It offers a fluent, self-explanatory syntax that is understood at a glance, as if you were reading a story. Building an interface feels like putting lego pieces together.
 
 `Code is written not just for the machine, but for humans too.`
 
-- **Zero Learning Curve:** Instead of endless documents or heavy theoretical concepts, it builds a natural and effortless learning path where you can go into production in minutes just by looking at the flow of the code. It aims to help you quickly grasp the core concepts and instantly transform your ideas into working interfaces.
+- **Small Learning Curve:** A few concepts and the flow of the code are enough to start, so you can turn your ideas into working interfaces quickly.
 
 `There are a small number of basic concepts.`
 
-- **Lightweight and High Performance:** With its structure free from unnecessary burdens and external dependencies, it aims to deliver the highest response speed with the lowest resource consumption directly on the DOM. Thanks to its lean structure that prioritizes performance, it offers a fluent experience, especially in projects where speed and flexibility are critical.
+- **Lightweight:** It has no external dependencies and works directly on the DOM, with one small script and one small stylesheet.
 
 `No extra dependencies.`
 
-- **Full Control and Flexibility:** Instead of splitting between HTML and CSS files, it tries to create a limitless space for you to move by transferring all UI processes and layouts to a fully JavaScript-based structure. It provides a development infrastructure where you can manage every detail from a single center with full control.
+- **Full Control and Flexibility:** The interface and its layout are written in JavaScript, so you manage every detail from one place, and a color or a width is a variable you can calculate and change at run time.
 
-`Provides a more flexible structure.`
+`Everything about a screen is in one place.`
 
-- **Rapid Prototyping and Agile Development:** Instead of overly complex structures where tasks are heavily divided, it endeavors to make the process much more efficient for solo developers, especially in small to medium-scale projects where interface flexibility and logic speed are in the foreground.
+- **Rapid Prototyping:** It is especially efficient for solo developers and for small to medium-scale projects, where one person writes both the interface and the logic.
 
-`No over-engineering.`
 `Keeps simple things simple.`
 
 ---

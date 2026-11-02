@@ -1,7 +1,7 @@
 # basic.js Handbook — Website
 
 The handbook that teaches basic.js, as a website: <https://bug7a.github.io/basic.js-handbook/>.
-The whole page is drawn with **basic.js** in plain JavaScript: no framework, no build step, no CSS file.
+The whole page is drawn with **basic.js** in plain JavaScript.
 
 The chapters are ordinary **Markdown** files. The site reads them, draws them, adds a menu, search and live examples,
 and works offline as an installable app. So it is more than the basic.js handbook: **it can be a template for your
@@ -42,7 +42,7 @@ The order and the groups of the chapters in the menu: `js/config.js` → `chapte
 - Short examples without `window.onload` or `start()` are run inside a `start()` function.
   A piece that uses a variable of an earlier example can give an error; the console then shows a note.
 - Relative file paths in the examples (`test.png`) are resolved against the handbook folder.
-- **Search:** Searches the titles and the text of all chapters (comp-m4 `SearchResults`). `/` or Ctrl (Cmd) + K goes to the search box.
+- **Search:** Searches the titles and the text of all chapters (`comp/search-results.js`). `/` or Ctrl (Cmd) + K goes to the search box.
 - **On this page:** On wide screens, the headings of the chapter on the right; the heading being read is marked.
 - **Addresses:** `index.htm#/box` (a chapter), `index.htm#/box/examples` (a heading in a chapter). The browser's back button works.
 - **Language:** The TR/EN button in the top bar. The choice is kept in `basic.storage`; on the first visit the page opens
@@ -67,7 +67,7 @@ The order and the groups of the chapters in the menu: `js/config.js` → `chapte
 | `js/layout.js` | Top bar (logo `assets/basicjs-handbook.svg`), chapter list (drawer), search box. |
 | `js/site.js` | `start()`, reading the files, routing, language, search index. |
 
-Components used: `WebView`, `SearchResults` (comp-m4, `.min.js`), `Toast` (comp-m4, source file) and `ScrollBar` (basic).
+Components used: `WebView`, `SearchResults` and `Toast` (`comp/`, as `.min.js`) and `ScrollBar` (basic).
 
 **The site works on its own:** the folder can be copied as it is to another place (for example to the root of the
 `https://bug7a.github.io/basic.js-handbook/` repository) and published. It uses no other file of the repository; it
@@ -178,7 +178,7 @@ working. To see the launch screen in the browser, set `launchScreenInBrowser: tr
 ## basic.js El Kitabı — Web Sitesi
 
 basic.js'i öğreten el kitabının web sitesi hali: <https://bug7a.github.io/basic.js-handbook/>.
-Sayfanın tamamı **basic.js** ile, saf JavaScript ile çizilir: framework, derleme adımı ve CSS dosyası yoktur.
+Sayfanın tamamı **basic.js** ile, saf JavaScript ile çizilir.
 
 Bölümler sıradan **Markdown** dosyalarıdır. Site onları okur, çizer; menü, arama ve canlı örnekler ekler ve kurulabilir
 bir uygulama olarak internetsiz de çalışır. Yani sadece basic.js el kitabı değildir: **kendi dokümanlarınız için bir
@@ -217,7 +217,7 @@ Bölümlerin menüdeki sırası ve grupları: `js/config.js` → `chapters`.
 - `window.onload` veya `start()` içermeyen kısa örnekler, bir `start()` fonksiyonunun içine konularak çalıştırılır.
   Daha önceki bir örneğin değişkenini kullanan parçalar hata verebilir; bu durumda konsolda bir not çıkar.
 - Örneklerdeki göreli dosya yolları (`test.png`) el kitabı klasörüne göre çözülür.
-- **Arama:** Bütün bölümlerin başlık ve metinlerinde arar (comp-m4 `SearchResults`). `/` veya Ctrl (Cmd) + K arama kutusuna gider.
+- **Arama:** Bütün bölümlerin başlık ve metinlerinde arar (`comp/search-results.js`). `/` veya Ctrl (Cmd) + K arama kutusuna gider.
 - **Bu sayfada:** Geniş ekranda sağda, bölümün başlıkları; okunan başlık işaretlenir.
 - **Adresler:** `index.htm#/box` (bölüm), `index.htm#/box/examples` (bölümdeki başlık). Tarayıcının geri düğmesi çalışır.
 - **Dil:** Üst çubuktaki TR/EN düğmesi. Seçim `basic.storage` içinde saklanır; ilk girişte tarayıcı dili Türkçe ise Türkçe açılır.
@@ -241,7 +241,7 @@ Bölümlerin menüdeki sırası ve grupları: `js/config.js` → `chapters`.
 | `js/layout.js` | Üst çubuk (logo `assets/basicjs-handbook.svg`), bölüm listesi (çekmece), arama kutusu. |
 | `js/site.js` | `start()`, dosyaları okuma, adres yönlendirme, dil, arama dizini. |
 
-Kullanılan bileşenler: `WebView`, `SearchResults` (comp-m4, `.min.js`), `Toast` (comp-m4, kaynak dosya) ve `ScrollBar` (basic).
+Kullanılan bileşenler: `WebView`, `SearchResults`, `Toast` (`comp/`, `.min.js`) ve `ScrollBar` (basic).
 
 **Site kendi içinden çalışır:** Klasör olduğu gibi başka bir yere (ör. `https://bug7a.github.io/basic.js-handbook/`
 reposunun köküne) kopyalanıp yayınlanabilir. Deponun başka hiçbir dosyasını kullanmaz; gereken dosyaların kopyası içindedir:
