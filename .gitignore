@@ -27,8 +27,12 @@ __video/
 __archive/
 
 # Private tools of the user (2026-10-31): never to GitHub
-_basic-designer/
 _ozden-manager/
+
+# basic-designer is public (2026-11-02): only its personal files stay here
+_basic-designer/_notes.md
+_basic-designer/prompts/
+_basic-designer/old-*/
 
 # The standalone copies made by _make-standalone.sh (2026-10-31)
 _dist/

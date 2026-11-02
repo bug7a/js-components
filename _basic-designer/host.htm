@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>basic-designer host</title>
+    <script>
+
+        /* Bismillah */
+
+        // basic-designer HOST: for a page that reads its address (Ex: the game: index.htm?spanel=1&menu=0).
+        // srcdoc has no address (location.search is ""), so the designer opens this file with the query of the
+        // page (host.htm?spanel=1&menu=0) and this file writes the prepared page (BasicDesigner.state.pendingHtml)
+        // over itself after its load. document.open() keeps this address, <base> in the page resolves its files.
+        // location.reload() of the page loads this file again and the same page is written again.
+
+        window.addEventListener("load", function () {
+            setTimeout(function () {
+                const designer = (window.parent !== window) ? window.parent.BasicDesigner : null;
+                const html = designer && designer.state.pendingHtml;
+                if (!html) return;
+                document.open();
+                document.write(html);
+                document.close();
+            }, 0);
+        });
+
+    </script>
+</head>
+
+<body>
+</body>
+
+</html>

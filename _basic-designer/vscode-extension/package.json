@@ -1,0 +1,120 @@
+{
+    "name": "basic-designer",
+    "displayName": "basic designer",
+    "description": "Open a basic.js page in basic designer (right click an .htm file > Open in basic designer) and change it visually. Changes are written to your files by Claude Code or Codex (one of them is needed).",
+    "version": "0.0.8",
+    "publisher": "bugraozden",
+    "license": "Apache-2.0",
+    "engines": {
+        "vscode": "^1.85.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "main": "./extension.js",
+    "activationEvents": [],
+    "contributes": {
+        "commands": [
+            {
+                "command": "basicDesigner.design",
+                "title": "Open in basic designer",
+                "category": "basic designer"
+            },
+            {
+                "command": "basicDesigner.stopServer",
+                "title": "Stop the page server",
+                "category": "basic designer"
+            }
+        ],
+        "menus": {
+            "explorer/context": [
+                {
+                    "command": "basicDesigner.design",
+                    "when": "resourceExtname =~ /^\\.html?$/",
+                    "group": "navigation@90"
+                }
+            ],
+            "editor/title/context": [
+                {
+                    "command": "basicDesigner.design",
+                    "when": "resourceExtname =~ /^\\.html?$/",
+                    "group": "navigation@90"
+                }
+            ],
+            "commandPalette": [
+                {
+                    "command": "basicDesigner.design",
+                    "when": "resourceExtname =~ /^\\.html?$/"
+                }
+            ]
+        },
+        "configuration": {
+            "title": "basic designer",
+            "properties": {
+                "basicDesigner.designerPath": {
+                    "type": "string",
+                    "default": "_basic-designer/index.htm",
+                    "description": "The designer page, from the root of the repository. The root is the first folder above the .htm file that has it."
+                },
+                "basicDesigner.promptsFolder": {
+                    "type": "string",
+                    "default": "_basic-designer/prompts",
+                    "description": "Every prompt sent is kept here (from the root of the repository). Empty: the temp folder of the system."
+                },
+                "basicDesigner.reloadAfterSend": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "After a Send, the designer loads the page again when the AI changes its files."
+                },
+                "basicDesigner.claude.command": {
+                    "type": "string",
+                    "default": "claude",
+                    "description": "The command of the Claude Code CLI."
+                },
+                "basicDesigner.claude.models": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": [
+                        "sonnet",
+                        "opus",
+                        "haiku"
+                    ],
+                    "description": "The models offered for Claude Code (claude --model <model>)."
+                },
+                "basicDesigner.codex.command": {
+                    "type": "string",
+                    "default": "codex",
+                    "description": "The command of the Codex CLI."
+                },
+                "basicDesigner.codex.models": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": [
+                        "gpt-6.1-sol",
+                        "gpt-6-astra"
+                    ],
+                    "description": "The models offered for Codex (codex -m <model>)."
+                },
+                "basicDesigner.openIn": {
+                    "type": "string",
+                    "enum": [
+                        "newWindow",
+                        "maximized",
+                        "tab"
+                    ],
+                    "default": "newWindow",
+                    "enumDescriptions": [
+                        "Its own window, out of the code editor (VS Code 1.85+).",
+                        "A tab, with the editor area maximized and the side bars hidden.",
+                        "A tab among the code files (the old way)."
+                    ],
+                    "description": "Where Open in basic designer opens the designer."
+                }
+            }
+        }
+    }
+}

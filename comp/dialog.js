@@ -100,7 +100,7 @@ const DialogDefaults = {
         status: { fontSize: 13, errorColor: "#E8796D", infoColor: Black(0.55) },
         footer: { color: "#FAFAF9", lineColor: Black(0.1), padding: [16, 14], gap: 10, buttonHeight: 40, iconButtonWidth: 50 },
         fieldStyleName: "ozden", // the styleName of the InputB fields
-        // variant: "centered" (the layout of _basic-designer/designs/dialog.htm, the colors of ozden)
+        // variant: "centered" (a layout the user drew, the colors of ozden)
         centered: {
             // (2026-10-30, the user: a light gray circle on white, a dark icon; was a dark circle on a gray area)
             iconArea: { height: 116, color: "white", round: 6 }, // the area at the top

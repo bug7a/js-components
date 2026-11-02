@@ -1,0 +1,191 @@
+/* Bismillah */
+
+// DEFAULT PALETTES: the color groups that are always in the color picker of basic-designer (after "Used on this
+// page", the UI tokens and your own color groups). Made from the palettes of Bugra (the user, 2026-10-27).
+// A color: [value, name]. The name is the hint of the swatch ("" -> only the value).
+// The order of a group is light to dark or by hue, so a color is found by its place.
+
+BasicDesigner.DEFAULT_PALETTES = [
+
+    // The colors used the most: the first place to look.
+    { key: "favorites", name: "★ Favorites", colors: [
+        ["indianred", "indianred (warnings)"],
+        ["whitesmoke", "whitesmoke (fields, soft backgrounds)"],
+        ["#FFFFFF", "white"],
+        ["#232323", "ink"],
+        ["#E07B5F", "coral"],
+        ["#E8B455", "mustard"],
+        ["#5BBAC1", "teal"],
+        ["#52A8D0", "sky"],
+        ["#6488BE", "steel blue"],
+        ["#C077A6", "orchid"],
+        ["#F8E57A", "lemon"],
+        ["#FFFBDB", "cream"],
+    ] },
+
+    // The jobs of the colors of an app: buttons, messages.
+    { key: "roles", name: "Roles (primary, warning...)", colors: [
+        ["#3F67EB", "primary"],
+        ["#E8EAEE", "secondary"],
+        ["#6BAF83", "confirm"],
+        ["#EAB04E", "warning"],
+        ["#E06A49", "remove"],
+        ["#6253B5", "help"],
+        ["indianred", "error (indianred)"],
+    ] },
+
+    // Black to white.
+    { key: "grays", name: "Grays (black → white)", colors: [
+        ["#000000", "black"],
+        ["#131109", "warm black"],
+        ["#161616", ""],
+        ["#232323", "ink"],
+        ["#2A2D2D", ""],
+        ["#333333", ""],
+        ["#3C4043", "slate"],
+        ["#4A4A4A", ""],
+        ["#576360", "green gray"],
+        ["#808080", "gray"],
+        ["#9E9E9E", ""],
+        ["#BDBDBD", ""],
+        ["#D9D9D9", ""],
+        ["#E3E3E3", ""],
+        ["#F2F2F2", ""],
+        ["whitesmoke", "whitesmoke"],
+        ["#FFFFFF", "white"],
+    ] },
+
+    // Warm grays, sand and stone: backgrounds, cards, soft text.
+    { key: "neutrals", name: "Neutrals (sand, stone)", colors: [
+        ["#FFFCEC", "ivory"],
+        ["#F9FBEF", "paper"],
+        ["#F1EDE5", "linen"],
+        ["#F0E6E6", "blush white"],
+        ["#DFD8CE", "oat"],
+        ["#D3D0C4", "stone"],
+        ["#D2C3BB", "taupe light"],
+        ["#DCB9B6", "dusty rose"],
+        ["#C5B8A7", "sand"],
+        ["#BAB8A6", "sage gray"],
+        ["#A6A48E", "olive gray"],
+        ["#8D847E", "taupe"],
+        ["#5F5A4D", "bark"],
+        ["#5D5753", "mocha"],
+        ["#50545C", "graphite"],
+        ["#393756", "midnight purple"],
+    ] },
+
+    // Five warm and fresh colors that go together (the summer palette).
+    { key: "summer", name: "Summer (Fiesta → Aegean)", colors: [
+        ["#EC6650", "Fiesta"],
+        ["#EEA44C", "Turmeric"],
+        ["#EAC157", "Mango"],
+        ["#55B2A8", "Aruba"],
+        ["#5A8696", "Aegean"],
+    ] },
+
+    // Strong, clean colors of an app (by hue).
+    { key: "flat", name: "Bright (flat UI)", colors: [
+        ["#DE635E", "red"],
+        ["#EE6A52", "tomato"],
+        ["#E89E5A", "orange"],
+        ["#ECCA62", "yellow"],
+        ["#86CD9B", "mint"],
+        ["#56AD6A", "green"],
+        ["#48975D", "dark green"],
+        ["#76C7EE", "light blue"],
+        ["#519ED8", "blue"],
+        ["#4A82E5", "royal blue"],
+        ["#AF73D6", "lilac"],
+        ["#8E57DE", "purple"],
+    ] },
+
+    // Warm sets: the warm reds, yellows, greens and blues, each from light to dark.
+    { key: "best", name: "Warm sets", colors: [
+        ["#DE7466", "salmon"],
+        ["#DD6B5A", "coral red"],
+        ["#C3594A", "brick"],
+        ["#BF2A2A", "red"],
+        ["#EBBE60", "honey"],
+        ["#EBB651", "gold"],
+        ["#CDA24F", "old gold"],
+        ["#7BC362", "leaf"],
+        ["#7BB56D", "moss"],
+        ["#66A549", "grass"],
+        ["#719ACF", "cornflower"],
+        ["#608DEC", "bright blue"],
+        ["#5275C0", "blue"],
+        ["#5A7BC3", "denim"],
+        ["#0E1C5E", "navy"],
+        ["#1B1D2E", "night"],
+        ["#F2F6E2", "pale green"],
+    ] },
+
+    // Soft, calm colors (pastel to deep), by hue.
+    { key: "soft", name: "Soft (pastel → deep)", colors: [
+        ["#FBEAC4", "vanilla"],
+        ["#EBB8B6", "rose"],
+        ["#F0A3BC", "pink"],
+        ["#D97F80", "old rose"],
+        ["#CB3527", "red"],
+        ["#A92A20", "dark red"],
+        ["#AF4D63", "raspberry"],
+        ["#C3DBCE", "mint mist"],
+        ["#9DC7B5", "sage"],
+        ["#68AF8E", "jade"],
+        ["#6FC7BD", "aqua"],
+        ["#60AEAC", "teal"],
+        ["#5CA3AE", "sea"],
+        ["#CEDBE1", "ice"],
+        ["#8FA6BE", "fog blue"],
+        ["#5A6C8C", "dusk blue"],
+        ["#8E8EB3", "periwinkle"],
+        ["#444CA0", "indigo"],
+        ["#4B4079", "deep violet"],
+        ["#DAD7E6", "lavender mist"],
+        ["#CFC3DD", "lavender"],
+        ["#C08BBE", "orchid"],
+        ["#B596A9", "mauve"],
+        ["#7B436E", "plum"],
+    ] },
+
+    // Deep warm colors: spice, wood, gem.
+    { key: "jewel", name: "Spice & jewel", colors: [
+        ["#E07558", "terracotta"],
+        ["#DE815B", "clay"],
+        ["#BC6A47", "copper"],
+        ["#BB5D33", "rust"],
+        ["#873427", "brown red"],
+        ["#BE8A7E", "rosewood"],
+        ["#DEA95E", "caramel"],
+        ["#DBA83C", "saffron"],
+        ["#B37E39", "bronze"],
+        ["#E9C962", "corn"],
+        ["#67A882", "emerald"],
+        ["#B998C8", "wisteria"],
+        ["#9762BB", "amethyst"],
+        ["#6D397E", "grape"],
+        ["#4E51B6", "sapphire"],
+        ["#3A3233", "espresso"],
+    ] },
+
+    // Greens and blues of the sea and the forest.
+    { key: "nature", name: "Sea & forest", colors: [
+        ["#B0D6C3", "seafoam"],
+        ["#72B99E", "green tea"],
+        ["#B7C6B4", "willow"],
+        ["#A4AF87", "olive"],
+        ["#3B412D", "forest"],
+        ["#27413F", "deep sea"],
+        ["#B8C6D0", "mist"],
+        ["#85BFDB", "sky"],
+        ["#75B8CF", "lagoon"],
+        ["#6DB1C3", "ocean"],
+        ["#5D99D0", "harbor"],
+        ["#5A8DCB", "blue"],
+        ["#436EBD", "deep blue"],
+        ["#1A2E7C", "navy"],
+        ["#B98C47", "sand dune"],
+    ] },
+
+];

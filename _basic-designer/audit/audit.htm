@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Designer audit</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" type="text/css" href="../../basic/basic.css">
+    <script src="../../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../../comp/check-box.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // TEST PAGE of basic-designer: one object of every type, made with the defaults of basic.js and with
+        // given values, so the panel, the changes, the prompt and undo can be checked on each of them.
+
+        let loopGroup, checkPlain;
+        let boxPlain, boxGiven, groupPlain, groupGiven, rowPlain, labelPlain, labelGiven, buttonPlain, buttonGiven, inputPlain, inputGiven, iconPlain;
+
+        const start = function () {
+
+            page.color = "#F4F5F2";
+
+            // BOX: defaults (manual place)
+            boxPlain = Box(20, 20);
+
+            // BOX: given values
+            boxGiven = Box(140, 20, 160, 90, { color: "#E8EEF3", round: 8, border: 2, borderColor: "#3871E0", opacity: 0.9, rotate: 5 });
+
+            // GROUP: defaults
+            groupPlain = VGroup({ left: 320, top: 20, width: 300, height: 200 });
+                labelPlain = Label({ text: "Plain label" });
+                buttonPlain = Button();
+                inputPlain = Input();
+            endGroup();
+
+            // GROUP: given values
+            groupGiven = VGroup({ left: 20, top: 240, width: 600, height: "auto", align: "left top", gap: 12, padding: 16, color: "white", round: 10 });
+                labelGiven = Label({ text: "Given label", fontSize: 22, textColor: "#3871E0", bold: 1, textAlign: "center", width: 300 });
+                rowPlain = HGroup({ hug: 1, gap: 8 });
+                    buttonGiven = Button({ text: "Given", width: 100, height: 36, fontSize: 14, color: "tomato", round: 18 });
+                    iconPlain = Icon({ width: 40, height: 40 });
+                endGroup();
+                inputGiven = Input({ width: 260, height: 40, placeholder: "Write", maxLength: 12 });
+            endGroup();
+
+            // GROUP: three labels made by one line (a loop): "All 3 from this line"
+            loopGroup = HGroup({ left: 640, top: 20, width: 300, height: 60, gap: 10 });
+                ["One", "Two", "Three"].forEach(function (text) {
+                    Label({ text: text, fontSize: 16 });
+                });
+            endGroup();
+
+            // COMPONENT: its params can be changed (Parameters tab)
+            checkPlain = CheckBox({ left: 640, top: 100, labelText: "Check me" });
+
+        };
+
+    </script>
+</head>
+
+<body>
+</body>
+
+</html>
