@@ -30,7 +30,7 @@ const CONFIG = {
     handbookURL: "https://bug7a.github.io/basic.js-handbook/",
     componentsURL: "https://bug7a.github.io/js-components/",
     authorURL: "https://bug7a.github.io/", // Alt bilgideki "Bugra Ozden"
-    adminPanelURL: "https://github.com/bug7a/js-components/tree/main/04-template-m2/ozden-panel", // TODO: the page of the admin panel, when it is published
+    adminPanelURL: "https://github.com/bug7a/js-components/tree/main/04-templates/ozden-panel", // TODO: the page of the admin panel, when it is published
     toolkitURL: "https://github.com/bug7a/js-components/tree/main/__developer-toolkit",
     // "basic.js'i görün" düğmesi (kaynak kod GitHub'da; bu klasörde sadece .min dosyası var)
     sourceURL: "https://github.com/bug7a/js-components/blob/main/basic/basic.js",

@@ -130,7 +130,7 @@ Good to know:
 ## App (PWA) and offline use
 
 The handbook is an installable app and **opens without internet too**. The `easy-pwa.js` file of
-`04-template-m2/easy-pwa` does this (one file with no library; it is both the page script and the service worker).
+`04-templates/easy-pwa` does this (one file with no library; it is both the page script and the service worker).
 
 | File | Contents |
 |---|---|
@@ -303,7 +303,7 @@ Bilmekte fayda var:
 
 ## Uygulama (PWA) ve çevrimdışı çalışma
 
-El kitabı kurulabilir bir uygulamadır ve **internet yokken de açılır**. Bunu `04-template-m2/easy-pwa` klasörünün
+El kitabı kurulabilir bir uygulamadır ve **internet yokken de açılır**. Bunu `04-templates/easy-pwa` klasörünün
 `easy-pwa.js` dosyası yapar (kütüphanesiz tek dosya; hem sayfa script'i hem service worker).
 
 | Dosya | İçerik |

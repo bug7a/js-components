@@ -58,7 +58,7 @@ Sayfayı kuran fonksiyon: `js/site.js` → `SiteApp.build()`.
 - **Site kendi içinden çalışır:** Kütüphane `basic/` klasöründe, bileşenler (`web-view`, `tabs`, `toast`) `comp/` klasöründe,
   hepsi `.min` olarak. Klasör olduğu gibi başka bir yere kopyalanıp yayınlanabilir. Canlı örnekler `basic/basic.min.js` ile
   çalışır (`js/config.js` → `rootPath: "./"`). Bu kopyalar deponun ana dizinindeki `_make-standalone.sh` ile yapılır ve
-  kendiliğinden güncellenmez: kütüphane veya bu bileşenler değişince `./_make-standalone.sh 03-webpage/webpage-basicjs --in-place`
+  kendiliğinden güncellenmez: kütüphane veya bu bileşenler değişince `./_make-standalone.sh 03-webpages/webpage-basicjs --in-place`
   çalıştırın. `basic/` ve `comp/` içindeki dosyaları elle düzenlemeyin.
 - `js/code-highlight.js`, ana dizindeki `index/code-highlight.js` dosyasının kopyasıdır; buna CSS renklendirmesi eklendi.
 - Düzenleyicide Chrome satır sonunu `<br>` olarak ekler; `LiveCode` bunları satır sonu metnine çevirir.
