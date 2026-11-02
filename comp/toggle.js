@@ -253,6 +253,7 @@ const Toggle = function(params = {}) {
     box.setState = function(state) {
         
         box.state = state;
+        box.aria = { checked: state === "selected" };
 
         switch(state) {
 
@@ -301,6 +302,10 @@ const Toggle = function(params = {}) {
     box.setSecondState = function(state) {
         
         box.secondState = state;
+        if (state !== "disabled") {
+            box.tabIndex = 0;
+            box.aria = { disabled: null };
+        }
 
         switch(state) {
 
@@ -327,6 +332,8 @@ const Toggle = function(params = {}) {
                 box.background.css.filter = `brightness(${DISABLED_BRIGHTNESS})`;
                 box.opacity = DISABLED_OPACITY;
                 box.clickable = 0;
+                box.tabIndex = -1;
+                box.aria = { disabled: true };
 
                 break;
 
@@ -353,6 +360,8 @@ const Toggle = function(params = {}) {
 
     // *** OBJECT VIEW:
     box.cursor = "pointer";
+    box.role = "switch";
+    box.setFocusRing();
     if(box.invertColor === 1) box.css.filter = "invert(100%)";
 
         // BOX: background
@@ -374,6 +383,12 @@ const Toggle = function(params = {}) {
     box.on("pointerdown", () => setPressed(true));
     ["pointerup", "pointerleave", "pointercancel"].forEach((name) => box.on(name, () => setPressed(false)));
     box.on("click", function(self, event) {
+        box.switch();
+    });
+    box.on("keydown", function(self, event) {
+        const isPressKey = (event.key === " " || event.key === "Enter");
+        if (!isPressKey || event.repeat || box.secondState === "disabled") return;
+        event.preventDefault(); // WHY: Space would scroll the page.
         box.switch();
     });
     box.on("mouseover", function(self, event) {

@@ -369,6 +369,23 @@
             [outlined, own, shared].forEach(function (button) { button.remove(); });
         });
 
+        // *** TOGGLE (comp/toggle.js)
+
+        test("Toggle: the keyboard and screen readers can use it", async function () {
+            const toggle = Toggle({ value: 0 });
+            check("Toggle: it is a switch", toggle.elem.getAttribute("role") === "switch", toggle.elem.getAttribute("role"));
+            check("Toggle: Tab reaches it", toggle.elem.tabIndex === 0, toggle.elem.tabIndex);
+            check("Toggle: off is read", toggle.elem.getAttribute("aria-checked") === "false", toggle.elem.getAttribute("aria-checked"));
+            key(toggle.elem, "keydown", " ");
+            check("Toggle: Space turns it on", toggle.value === 1 && toggle.elem.getAttribute("aria-checked") === "true", toggle.value);
+            key(toggle.elem, "keydown", " ", { repeat: true });
+            check("Toggle: a held key turns it once", toggle.value === 1, toggle.value);
+            toggle.setSecondState("disabled");
+            key(toggle.elem, "keydown", "Enter");
+            check("Toggle: a disabled one does not change", toggle.value === 1 && toggle.elem.tabIndex === -1, toggle.value);
+            toggle.remove();
+        });
+
         // *** NUMERIC KEYBOARD (comp/numeric-keyboard.js)
 
         test("NumericKeyboard: a held Enter calls onEnter once", async function () {
