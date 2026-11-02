@@ -32,15 +32,20 @@
     const ACTION_LINE = "rgba(35, 35, 35, 0.4)";
     const TEAL = "#9DC7B5"; // the Publish button
     const TEAL_HOVER = "#91BCA9"; // a little darker than TEAL
+    const TEAL_DEEP = "#4C8F78"; // the mark of its icon
     // The other colors of the action (basic-designer, 2026-10-29); the hover a little darker
     const CYAN = "#5BBAC1";
     const CYAN_HOVER = "#50AFB6";
+    const CYAN_DEEP = "#2F8088";
     const SKY = "#52A8D0";
     const SKY_HOVER = "#479DC5";
+    const SKY_DEEP = "#2F7DA3";
     const ORANGE = "#DE815B";
     const ORANGE_HOVER = "#D4724B";
+    const ORANGE_DEEP = "#B85A36";
     const SLATE = "#8FA6BE";
     const SLATE_HOVER = "#8199B2";
+    const SLATE_DEEP = "#566F89";
     // The colored plain buttons (basic-designer, 2026-10-29); the hover a little darker
     const SOFT_YELLOW = "#F8E57A";
     const SOFT_YELLOW_HOVER = "#EFDA62";
@@ -65,16 +70,20 @@
     const OZDEN_SIZES = { titleSize: 20, textSize: 16, buttonHeight: 40, trashWidth: 50, cardRound: 8, cardBorder: 2, cardBorderColor: "#232323" };
     const JOB_TIME = 1200; // ms: the action takes time (the sample)
 
-    // *** THE ICONS: simple SVG (the color is in the file: SmartButton loads an image)
-    const svgIcon = function (color, paths) {
-        return "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + paths + "<\/svg>");
+    // *** THE ICONS: the circle mark style of smart-button.htm (the user, 2026-11-02): a white circle and one mark in
+    // it, in a deep tone of the button (WHY: the soft colors of these buttons are too pale on white)
+    const MARKS = {
+        pencil: '<path d="M7.6 16.4l.8-3.2 6.1-6.1 2.4 2.4-6.1 6.1z" fill="MARK"/>',
+        floppy: '<path fill-rule="evenodd" d="M8.4 7h6.2l2.4 2.4v6.4a1.2 1.2 0 0 1-1.2 1.2H8.4a1.2 1.2 0 0 1-1.2-1.2V8.2A1.2 1.2 0 0 1 8.4 7zM9.4 8.6v2.2h4.2V8.6zM9.8 13v4h4.4v-4z" fill="MARK"/>',
+        plane: '<path d="M17 7L6.8 11.2l4.2 1.8 1.8 4.2z" fill="MARK" stroke="MARK" stroke-width="1.4" stroke-linejoin="round"/>',
+        upload: '<path d="M12 13.6V7.2M8.8 10.4L12 7.2l3.2 3.2M8 17h8" fill="none" stroke="MARK" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>',
+        printer: '<rect x="9" y="6.6" width="6" height="2.6" rx="0.6" fill="MARK"/><path fill-rule="evenodd" d="M8.2 10h7.6a1.4 1.4 0 0 1 1.4 1.4v3.2a1.4 1.4 0 0 1-1.4 1.4h-.6v-2.8H8.8V16h-.6a1.4 1.4 0 0 1-1.4-1.4v-3.2A1.4 1.4 0 0 1 8.2 10z" fill="MARK"/><rect x="9.8" y="14.2" width="4.4" height="3.2" rx="0.5" fill="MARK"/>',
     };
-    // A filled pen with two lines of writing at its left top (publish)
-    const penIcon = function (color) {
-        return "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">' +
-            '<path d="M3.5 6h7M3.5 10h4" stroke="' + color + '" stroke-width="2.2" stroke-linecap="round"/>' +
-            '<path d="M16.6 5.2a2.3 2.3 0 0 1 3.3 3.3l-9.6 9.6-4.8 1.5 1.5-4.8z" fill="' + color + '" stroke="' + color + '" stroke-width="1.6" stroke-linejoin="round"/>' +
-            "<\/svg>");
+    const svgIcon = function (body) {
+        return "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">' + body + "<\/svg>");
+    };
+    const circleIcon = function (mark, circleColor, markColor) {
+        return svgIcon('<circle cx="12" cy="12" r="11" fill="' + circleColor + '"/>' + MARKS[mark].split("MARK").join(markColor));
     };
     // A soft bin (the user's drawing, 2026-10-29): curves only, the rim and the cross are holes (the button shows through)
     const TRASH_PATH = "M 4 6 Q 4 2 12 2 Q 20 2 20 6 L 18.5 18 Q 18 22 12 22 Q 6 22 5.5 18 Z " +
@@ -82,18 +91,14 @@
         "M 9 11 Q 9.7 10.3 10.4 11 L 12 12.6 L 13.6 11 Q 14.3 10.3 15 11 Q 15.7 11.7 15 12.4 L 13.4 14 L 15 15.6 " +
         "Q 15.7 16.3 15 17 Q 14.3 17.7 13.6 17 L 12 15.4 L 10.4 17 Q 9.7 17.7 9 17 Q 8.3 16.3 9 15.6 L 10.6 14 L 9 12.4 Q 8.3 11.7 9 11 Z";
     const binIcon = function (color) {
-        return "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">' +
-            '<path fill-rule="evenodd" fill="' + color + '" d="' + TRASH_PATH + '"/>' +
-            "<\/svg>");
+        return svgIcon('<path fill-rule="evenodd" fill="' + color + '" d="' + TRASH_PATH + '"/>');
     };
     const ICONS = {
-        publish: penIcon("black"),
-        // The other actions: lines in black (the look makes them soft: icon opacity 0.8)
-        saveDark: svgIcon("black", '<path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4M8 20v-6h8v6"/>'),
-        send: svgIcon("black", '<path d="M21 3 3 10.5l7.5 3L13.5 21z"/><path d="M21 3 10.5 13.5"/>'),
-        upload: svgIcon("black", '<path d="M12 15V4M7.5 8.5 12 4l4.5 4.5"/><path d="M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"/>'),
-        print: svgIcon("black", '<path d="M7 9V3h10v6"/><rect x="3.5" y="9" width="17" height="8" rx="1.5"/><path d="M7 14h10v7H7z"/>'),
-        save: svgIcon("white", '<path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4M8 20v-6h8v6"/>'),
+        edit: circleIcon("pencil", "white", TEAL_DEEP),
+        save: circleIcon("floppy", "white", CYAN_DEEP),
+        send: circleIcon("plane", "white", SKY_DEEP),
+        upload: circleIcon("upload", "white", ORANGE_DEEP),
+        print: circleIcon("printer", "white", SLATE_DEEP),
         trash: binIcon("#6B6F73"),
     };
 
@@ -115,7 +120,8 @@
 
     const LOOKS = {
         // Primary (ozdenType1): the actions in their colors, a little lighter edge
-        publish: packageLook("ozdenType1", { box: { color: TEAL, borderColor: ACTION_LINE }, hover: { color: TEAL_HOVER }, active: { color: TEAL_HOVER } }),
+        // WHY icon opacity 1: with the 0.8 of the package the white circle takes the color of the button
+        publish: packageLook("ozdenType1", { box: { color: TEAL, borderColor: ACTION_LINE }, hover: { color: TEAL_HOVER }, active: { color: TEAL_HOVER }, icon: { opacity: 1 } }),
         // Secondary (ozdenType1): Cancel, gray (the package itself) and white (its hover stays gray)
         cancel: packageLook("ozdenType1"),
         whiteCancel: packageLook("ozdenType1", { box: { color: "white" } }),
@@ -272,8 +278,8 @@
                     text: "Button styles",
                     // (basic-designer, 2026-10-29: five actions, each with its own icon and text)
                     actions: [
-                        { text: "Edit", icon: ICONS.publish, look: LOOKS.publish },
-                        { text: "Save", icon: ICONS.saveDark, look: LOOKS.publishCyan },
+                        { text: "Edit", icon: ICONS.edit, look: LOOKS.publish },
+                        { text: "Save", icon: ICONS.save, look: LOOKS.publishCyan },
                         { text: "Send", icon: ICONS.send, look: LOOKS.publishSky },
                         { text: "Upload", icon: ICONS.upload, look: LOOKS.publishOrange },
                         { text: "Print", icon: ICONS.print, look: LOOKS.publishSlate },
