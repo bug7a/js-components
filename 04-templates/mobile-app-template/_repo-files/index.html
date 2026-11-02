@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>JavaScript Mobile App Templates</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="Five mobile app templates made with basic.js: a starter frame, a shop, bookings, a coffee shop and a classic app.">
+
+        <!-- LIBRARY FILES -->
+        <link rel="stylesheet" type="text/css" href="starter/basic/basic.min.css">
+        <script src="starter/basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+
+        /* Bismillah */
+
+        // The first page of the repository: a card for each template. Every template is a ready app in its folder.
+
+        const TEMPLATES = [
+            { folder: "shop", title: "Shop", text: "A full store: catalog, cart, checkout, orders." },
+            { folder: "booking", title: "Booking", text: "Appointments: services, people, free times." },
+            { folder: "coffee-shop", title: "Coffee Shop", text: "A small ordering app with a loyalty card." },
+            { folder: "classic", title: "Classic", text: "A complete app with many component examples." },
+            { folder: "starter", title: "Starter", text: "The plain frame: start here for your own app." },
+        ];
+
+        const PAGE_COLOR = "#F4F4F1";
+        const TEXT_COLOR = "#20233A";
+        const SOFT_TEXT_COLOR = "#5F6277";
+        const LINE_COLOR = "#E4E5EE";
+        const COLUMN_WIDTH = 520;
+        const REPOSITORY_URL = "https://github.com/bug7a/javascript-mobile-app-template";
+
+        const createCard = function (template) {
+            const card = VGroup({ width: "100%", height: "auto", align: "left top", gap: 4, padding: [20, 16], color: "white",
+                round: 14, border: 1, borderColor: LINE_COLOR, cursor: "pointer", clickable: 1, role: "link", tabIndex: 0 });
+                Label({ plainText: template.title, fontSize: 18, bold: 1, textColor: TEXT_COLOR });
+                Label({ plainText: template.text, width: "100%", fontSize: 14, textColor: SOFT_TEXT_COLOR });
+            endGroup();
+            const openTemplate = () => basic.go(template.folder + "/index.html");
+            card.on("click", openTemplate);
+            card.on("keydown", function (self, event) {
+                if (event.key === "Enter") openTemplate();
+            });
+        };
+
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            // BOX: The page (it scrolls)
+            startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+
+                VGroup({ width: "100%", height: "auto", align: "center top", padding: [20, 40] });
+
+                    const column = VGroup({ width: "100%", height: "auto", align: "left top", gap: 12 });
+                    column.css = { maxWidth: COLUMN_WIDTH + "px" };
+
+                        Label({ plainText: "JavaScript Mobile App Templates", width: "100%", fontSize: 28, bold: 1, textColor: TEXT_COLOR });
+                        Label({ plainText: "Open a template. Every one is a ready app made with basic.js.", width: "100%", fontSize: 15, textColor: SOFT_TEXT_COLOR });
+
+                        TEMPLATES.forEach(createCard);
+
+                        const lblSource = Label({ plainText: "The code on GitHub", fontSize: 14, textColor: SOFT_TEXT_COLOR, cursor: "pointer", clickable: 1 });
+                        lblSource.on("click", () => basic.go(REPOSITORY_URL));
+
+                    endGroup();
+
+                endGroup();
+
+            endBox();
+
+        };
+
+        </script>
+
+    </head>
+    <body>
+    </body>
+</html>

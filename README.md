@@ -113,7 +113,7 @@ The library has `.min` twins (`basic.min.js`, `basic.min.css`, `scroll-bar.min.j
 ./_make-min-js.sh --build basic/basic.js
 ```
 
-The components have no twins: pages load their source files, and `_make-standalone.sh` makes the minified file of a copy.
+The components have no twins: pages load their source files, and `_make-standalone.sh` makes the minified file of a copy. `_make-template-repo.sh` makes the ready copies of the mobile templates for their own repository.
 
 Both scripts use [terser](https://terser.org/) through `npx`, so they need Node.js. Nothing else in the repository does.
 
