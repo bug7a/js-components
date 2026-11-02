@@ -8,6 +8,7 @@ UI COMPONENT TEMPLATE
 - A drop zone: drag and drop files, or click (Enter/Space) to open the file dialog.
 - Shows the selected files as a list (image preview, name, size, remove button).
 - Supports: multiple, accept (type filter), maxSize, maxFiles, directory selection, enabled.
+- A low zone (zoneHeight): what does not fit is hidden: first the icon, then the hint, then the description. The title stays.
 - Everything is drawn with code (no image files needed).
 
 IMPORTANT: About the file path
@@ -37,7 +38,7 @@ const SelectFileDefaults = {
     maxSize: 0, // Bytes. 0: No limit. Ex: 5 * 1024 * 1024 (5 MB)
     maxFiles: 0, // 0: No limit (only for multiple: 1)
     enabled: 1,
-    showIcon: 1, // 0: Hide the upload icon (for small zones)
+    showIcon: 1, // 0: Hide the upload icon. (A zone too low for it hides it by itself.)
     showList: 1,
     showPreview: 1, // Image thumbnails in the list.
     preventPageDrop: 1, // 1: A file dropped outside the zone does not open in the browser tab.
@@ -128,6 +129,10 @@ const SelectFile = function (params = {}) {
     let rows = [];
     let previewUrls = [];
     const ZONE_MOTION = "background-color 0.15s, border-color 0.15s";
+    const ZONE_GAP = 4; // Between the parts of the zone
+    const ZONE_MIN_SPACE = 4; // At least this much over and under the parts of the zone
+    const ICON_SPACE = 6; // More space under the icon
+    const HINT_SPACE = 4; // More space over the hint
     const ROW_GAP = 10; // Space between the thumbnail, the texts and the remove button
     const THUMB_INSET = 16; // The thumbnail is this much smaller than the row height
     const BADGE_MAX_LETTERS = 4; // "JPEG", "DOCX"
@@ -139,6 +144,30 @@ const SelectFile = function (params = {}) {
     box.state = "normal";
 
     // *** PRIVATE FUNCTIONS:
+
+    // The parts the zone can lose, first the one it needs least. (The title always stays.)
+    const getOptionalParts = function () {
+        const parts = [];
+        if (box.showIcon == 1) parts.push({ object: box.icon, extra: ICON_SPACE });
+        if (box.hint.text) parts.push({ object: box.hint, extra: HINT_SPACE });
+        if (box.descText) parts.push({ object: box.desc, extra: 0 });
+        return parts;
+    };
+
+    // WHY measured: the height of a text depends on its lines, and those on the width of the zone.
+    const fitZoneContent = function () {
+        const parts = getOptionalParts();
+        parts.forEach((part) => { part.object.visible = 1; });
+        const room = box.zone.elem.clientHeight - (ZONE_MIN_SPACE * 2);
+        if (room <= 0) return; // Not drawn yet: box.zone.onResize comes back.
+        let used = box.title.elem.offsetHeight;
+        parts.forEach((part) => { used += part.object.elem.offsetHeight + part.extra + ZONE_GAP; });
+        parts.forEach(function (part) {
+            if (used <= room) return;
+            used -= part.object.elem.offsetHeight + part.extra + ZONE_GAP;
+            part.object.visible = 0;
+        });
+    };
 
     const getExtension = function (name) {
         const index = name.lastIndexOf(".");
@@ -486,11 +515,13 @@ const SelectFile = function (params = {}) {
     box.setTitleText = function (text) {
         box.titleText = text;
         if (box.state != "dragover") box.title.text = text;
+        fitZoneContent();
     };
 
     box.setDescText = function (text) {
         box.descText = text;
         box.desc.text = text;
+        fitZoneContent();
     };
 
     box.refresh = function () {
@@ -527,8 +558,8 @@ const SelectFile = function (params = {}) {
             width: "100%",
             height: box.zoneHeight,
             align: "center",
-            gap: 4,
-            padding: 16,
+            gap: ZONE_GAP,
+            padding: [16, ZONE_MIN_SPACE],
             color: _s.zone.color,
             border: _s.zone.border,
             borderColor: _s.zone.borderColor,
@@ -543,8 +574,9 @@ const SelectFile = function (params = {}) {
                 width: 40,
                 height: 40,
                 color: "transparent",
+                shrink: 0,
             });
-            box.icon.css.marginBottom = "6px";
+            box.icon.css.marginBottom = ICON_SPACE + "px";
             box.icon.clipContent = 0;
 
                 // Arrow head
@@ -566,6 +598,7 @@ const SelectFile = function (params = {}) {
             box.title = Label({
                 text: box.titleText,
                 textAlign: "center",
+                shrink: 0,
                 ..._s.title,
             });
 
@@ -573,6 +606,7 @@ const SelectFile = function (params = {}) {
             box.desc = Label({
                 text: box.descText,
                 textAlign: "center",
+                shrink: 0,
                 ..._s.desc,
             });
 
@@ -580,9 +614,10 @@ const SelectFile = function (params = {}) {
             box.hint = Label({
                 plainText: createHintText(),
                 textAlign: "center",
+                shrink: 0,
                 ..._s.hint,
             });
-            box.hint.css.marginTop = "4px";
+            box.hint.css.marginTop = HINT_SPACE + "px";
             if (!box.hint.text) box.hint.visible = 0;
 
         endGroup();
@@ -609,6 +644,8 @@ const SelectFile = function (params = {}) {
     box.elem.appendChild(box.input);
 
     // *** OBJECT INIT CODE:
+    box.zone.onResize(fitZoneContent);
+    fitZoneContent();
 
     box.input.addEventListener("change", function () {
         addFiles(box.input.files);

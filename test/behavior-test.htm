@@ -290,6 +290,28 @@
 
         // *** SELECT FILE (comp/select-file.js)
 
+        test("SelectFile: a low zone hides what does not fit, first the icon, and no text is squeezed", async function () {
+            const isShown = (object) => object.elem.offsetHeight > 0;
+            const getShown = function (select) {
+                return [select.icon, select.title, select.desc, select.hint].map((object) => (isShown(object) ? 1 : 0)).join("");
+            };
+            const params = { accept: "image/*" };
+            const tall = SelectFile({ ...params, zoneHeight: 170 });
+            const noIcon = SelectFile({ ...params, zoneHeight: 110 });
+            const noHint = SelectFile({ ...params, zoneHeight: 70 });
+            const onlyTitle = SelectFile({ ...params, zoneHeight: 40 });
+            await wait(50);
+            const results = [tall, noIcon, noHint, onlyTitle].map(getShown);
+            const titleHeights = [tall, onlyTitle].map((select) => select.title.elem.offsetHeight);
+            const titleRect = onlyTitle.title.elem.getBoundingClientRect();
+            const zoneRect = onlyTitle.zone.elem.getBoundingClientRect();
+            check("SelectFile: a low zone hides what does not fit, first the icon, and no text is squeezed",
+                results.join() === "1111,0111,0110,0100" && titleHeights[0] === titleHeights[1]
+                    && titleRect.top >= zoneRect.top && titleRect.bottom <= zoneRect.bottom,
+                results.join() + " | " + titleHeights.join());
+            [tall, noIcon, noHint, onlyTitle].forEach((select) => select.remove());
+        });
+
         test("SelectFile: the same file again does not call onChange", async function () {
             let changes = 0;
             const select = SelectFile({ multiple: 1, onChange: function () { changes++; } });
