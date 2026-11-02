@@ -46,7 +46,7 @@ Sayfayı kuran fonksiyon: `js/site.js` → `SiteApp.build()`.
   `js/texts.js` → `playgroundTabs` içine de adını ekleyin.
 - **Sayılar:** `js/config.js` → `sizeGzip`, `componentCount`, `chapterCount`. basic.min.js veya bileşenler değişince güncelleyin.
 - **Renkler:** `js/theme.js` başındaki `SITE` nesnesi. Vurgu rengi `ACCENT` (`#F5B82E`).
-- **Bağlantılar:** `js/config.js` (el kitabı, bileşenler, yönetim paneli, GitHub).
+- **Bağlantılar:** `js/config.js` (el kitabı, bileşenler, şablonlar, GitHub).
 
 ---
 
