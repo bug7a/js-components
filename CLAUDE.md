@@ -29,7 +29,9 @@ There is **no build system, package.json, bundler, linter or test runner**. Ever
 | `_designs/` | Draft designs: plain basic.js drawings of every look and state, edited in basic-designer (`_designs/readme.md`). |
 | `_projects/` | The users' own projects (public). |
 | `experimental/`, `custom-comp/`, `assets/`, `05-showcase/`, `__developer-toolkit/` | Prototypes, free copies, shared images, showcase links, VS Code extensions. |
-| `__archive/`, `__projects/`, `__video/`, `_basic-designer/`, `_ozden-manager/`, `_screenshots/` | **Gitignored: never add, commit or push anything from them.** Archive, personal projects, video recordings, the user's private tools, report screenshots (`YYYY-MM-DD-what.png`). |
+| `_starter/`, `_make-starter.sh`, `_npm/`, `_make-npm.sh` | The starter of a new project (2026-11-02, the user): `./_make-starter.sh` writes `_dist/starter/` from `_starter/` and the repository (`_basic/`: library, components with their paths rewritten, examples, docs, `min/`, `tools/build.js`, `tools/check.js`). `_npm/create-basicjs/` is the npm tool; `./_make-npm.sh` writes its package in `_dist/create-basicjs/` and never publishes. A fault seen in a clean AI session becomes a rule in `_starter/AGENTS.md`. Details: `context/repo-map.md`. |
+| `_basic-designer/` | The visual editor of basic.js pages and its VS Code extension (`vscode-extension/`, alpha). Public since 2026-11-02 (the user). `_notes.md`, `prompts/` and `old-*/` stay gitignored: never add them. |
+| `__archive/`, `__projects/`, `__video/`, `_ozden-manager/`, `_screenshots/` | **Gitignored: never add, commit or push anything from them.** Archive, personal projects, video recordings, the user's private tools, report screenshots (`YYYY-MM-DD-what.png`). |
 | `_component-template.js`, `_empty-project-template.htm` | Starting points for a new component and a new page. |
 
 Do not use or update files prefixed with `delete-` (obsolete). `unfinished-` files are work in progress.

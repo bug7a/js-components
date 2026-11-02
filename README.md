@@ -89,6 +89,14 @@ The newer components come with ready-made looks. Pick one with `styleName` (`Tab
 
 ## Getting Started
 
+A new project, ready to build with AI tools:
+
+```sh
+npm create basicjs@latest my-app
+```
+
+To work in this repository:
+
 1. Clone or download this repository.
 2. Open any `.htm` file in a browser. Many pages load images or other local files, so a local server works best. The VS Code **Live Server** extension is preconfigured on port `5505`.
 3. For a new page, start from `_empty-project-template.htm`. For a new component, start from `_component-template.js`.
@@ -136,6 +144,7 @@ Both scripts use [terser](https://terser.org/) through `npx`, so they need Node.
 | `__handbook/` | The basic.js handbook in [English](__handbook/english/) and [Turkish](__handbook/turkce/) |
 | `context/` | Short reference docs for the core library and components, written for AI assistants |
 | `__developer-toolkit/` | VS Code extensions for basic.js: completer, object navigator, view inspector |
+| `_basic-designer/` | A visual editor for basic.js pages, with a VS Code extension (alpha): `vscode-extension/` |
 | `test/` | Self-checking test pages for basic.js and the components (open one, the tab title says ALL PASS) |
 | `assets/` | Images shared by the samples |
 

@@ -1,0 +1,30 @@
+{
+    "name": "create-basicjs",
+    "version": "0.1.0",
+    "description": "Create a project with basic.js and the JS-Component Kit, ready to build with AI tools.",
+    "bin": {
+        "create-basicjs": "bin/create-basicjs.js"
+    },
+    "files": [
+        "bin",
+        "payload"
+    ],
+    "keywords": [
+        "basic.js",
+        "basicjs",
+        "create",
+        "javascript",
+        "ui",
+        "components"
+    ],
+    "license": "Apache-2.0",
+    "author": "Bugra Ozden (https://bug7a.github.io/)",
+    "homepage": "https://bug7a.github.io/basic.js/",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/bug7a/js-components.git"
+    },
+    "engines": {
+        "node": ">=18"
+    }
+}
