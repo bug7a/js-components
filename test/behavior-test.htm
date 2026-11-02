@@ -52,6 +52,7 @@
         <script src="../comp/scrolling-text.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/tap-effect.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/stepper.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/filters.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/toggle.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/badge-v2.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/bottom-bar.js" type="text/javascript" charset="utf-8"></script>
@@ -782,6 +783,54 @@
         });
 
         // *** TOGGLE (comp/toggle.js)
+
+        const FILTER_SECTIONS = [
+            { key: "type", titleText: "Type", opened: 1, options: [{ key: "car", labelText: "Car" }, { key: "bus", labelText: "Bus", checked: 1 }] },
+            { key: "fleet", titleText: "Fleet", opened: 0, options: ["North", "South"] },
+        ];
+
+        test("Filters: the selection, onChange, silent and Clear all", async function () {
+            let changes = 0;
+            const filters = Filters({ sections: FILTER_SECTIONS, onChange: function () { changes++; } });
+            await wait(30);
+            const first = JSON.stringify(filters.getSelected());
+            filters.setSelected("fleet", ["North"]);
+            filters.setSelected("type", ["car"], 1);
+            const second = JSON.stringify(filters.getSelected());
+            filters.clearAll();
+            check("Filters: the selection, onChange, silent and Clear all",
+                first === '{"type":["bus"],"fleet":[]}' && second === '{"type":["car"],"fleet":["North"]}'
+                    && filters.getSelectedCount() === 0 && changes === 2 && FILTER_SECTIONS[0].options[1].checked === 1,
+                [first, second, changes].join(" | "));
+            filters.remove();
+        });
+
+        test("Filters: the search shows the matches of a closed section, and says when nothing matches", async function () {
+            const filters = Filters({ sections: FILTER_SECTIONS });
+            await wait(30);
+            const closedRow = filters.sectionViews[1].rows[0].row;
+            const hiddenAtFirst = closedRow.elem.offsetHeight === 0;
+            filters.search("nor");
+            const shownBySearch = closedRow.elem.offsetHeight > 0;
+            filters.search("zzz");
+            const noResult = filters.lblNoResult.elem.offsetHeight > 0;
+            check("Filters: the search shows the matches of a closed section, and says when nothing matches",
+                hiddenAtFirst && shownBySearch && noResult, [hiddenAtFirst, shownBySearch, noResult].join(" "));
+            filters.remove();
+        });
+
+        test("Filters: a popup is closed by a click outside, and it goes with the component", async function () {
+            const filters = Filters({ panelMode: "popup", panelOpened: 0, sections: FILTER_SECTIONS });
+            await wait(30);
+            filters.openPanel();
+            const opened = filters.panelOpened;
+            const panel = filters.panel;
+            document.body.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+            const closed = filters.panelOpened;
+            filters.remove();
+            check("Filters: a popup is closed by a click outside, and it goes with the component",
+                opened === 1 && closed === 0 && !document.body.contains(panel.elem), opened + " " + closed);
+        });
 
         test("Toggle: selectedBorderColor is the line of the track when on, and it goes back when off", async function () {
             const toggle = Toggle({ value: 1, backgroundStyle: { borderColor: "gray", selectedBorderColor: "tomato" } });
