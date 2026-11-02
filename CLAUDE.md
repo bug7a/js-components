@@ -4,6 +4,16 @@ This file gives Claude Code guidance for working in this repository.
 
 **At the start of every session, read `/Users/bugraozden/my-computer/prompt/bugra-rules.md`** (outside this repository): the user's general way of working in every project (answer in Turkish, short updates during long work, the final report as a table with colored dots, "Bilmen gerekenler", a few suggestions to choose from, warning about side effects, workbench first). It also says when to read the other files of that folder (`design.md`, `media.md`, `image-styles.md`). This CLAUDE.md wins where it says something more specific. (The basic.js code rules are a different file: `context/basic-js-code-rules.md`, below.)
 
+## Working rules of this project (the user, 2026-11-02)
+
+- **Commit:** finished and checked work goes to `main` on its own, in small logical commits. The user pushes. The clones under `~/Documents/GitHub` are committed by the user.
+- **Tests:** a changed component: `test/behavior-test.htm` and `test/components-test.htm`. A changed sample only: that page and its look at 390 px.
+- **A new sample:** add it to `index/catalog.js` on your own, and order the samples of the component when needed.
+- **Published copies** (the `basic.js`, handbook and `js-components` sites, the mobile template repository, the `create-basicjs` npm package): updated only when the user says so. Do not remind in reports that they are behind.
+- **A side problem found on the way:** small and safe (a line or so, checked by a test): fix it in the same job and report it. Bigger: only suggest it.
+- **Not tested (Windows, a real phone):** write it only when it matters for that job.
+- **Screenshots:** a small sample change gets one result image. Before / after is for a fixed bug.
+
 ## What this is
 
 **JS-Component Kit**: a set of UI components, samples and app templates built on **basic.js** (`basic/basic.js`). basic.js is a small, dependency-free library by Bugra Ozden where the whole UI is built in plain JavaScript. It creates DOM objects directly, so there is no HTML markup, no CSS authoring and no virtual DOM. It is licensed under Apache 2.0.
