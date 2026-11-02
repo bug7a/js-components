@@ -10,6 +10,10 @@
 // An app with more than one view tells it how to open them (the name of the file is the name of the view):
 //   window.checkViews = { orders: function () { App.showPage("orders"); }, settings: function () { App.showPage("settings"); } };
 //
+// Every page is checked, also the ones in folders. A page shown only inside another one (in a frame as high as its
+// content) does not work alone: it says so, and the report counts it as skipped:
+//   <meta name="basic-check" content="skip">
+//
 // Exit code: 0 no problem, 1 problems found, 2 could not run.
 
 const fs = require("fs");
@@ -28,6 +32,7 @@ const SMALLEST_WINDOW = 520; // WHY: headless Chrome does not go under 500 px, s
 const WAIT_FOR_PAGE_MS = 6000;
 const STOP_CHROME_MS = 25000;
 const MAX_PROBLEMS_SHOWN = 8;
+const NOT_PAGE_FOLDERS = new Set(["_basic", "dist", "node_modules", ".git", ".check"]);
 const TYPES = { ".htm": "text/html", ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".gif": "image/gif", ".webp": "image/webp", ".ttf": "font/ttf", ".woff2": "font/woff2" };
 
 // *** THE CODE THAT RUNS IN THE PAGE (before the scripts of the page)
@@ -158,7 +163,7 @@ const PAGE_CHECK = function () {
 };
 
 const frameOf = function (pageName, width, viewName) {
-    const address = "/" + pageName + "?__view=" + encodeURIComponent(viewName);
+    const address = "/" + encodeURI(pageName) + "?__view=" + encodeURIComponent(viewName);
     return '<!DOCTYPE html><html><body style="margin:0;background:#fff"><iframe src="' + address + '" style="display:block;width:' + width + "px;height:" + WINDOW_HEIGHT + 'px;border:0"></iframe></body></html>';
 };
 
@@ -254,7 +259,8 @@ const printList = function (title, list) {
 const checkOne = async function (browser, profile, port, pageName, width, viewName) {
     lastReport = null;
     missingFiles.clear();
-    const picture = path.join(PICTURES, width + "-" + (viewName || "start") + ".png");
+    const pagePart = pageName.replace(/\.html?$/i, "").replace(/[\\/]/g, "-");
+    const picture = path.join(PICTURES, pagePart + "-" + width + "-" + (viewName || "start") + ".png");
     const address = "http://127.0.0.1:" + port + "/__frame?page=" + encodeURIComponent(pageName) + "&width=" + width + "&view=" + encodeURIComponent(viewName);
     await openInBrowser(browser, profile, address, picture, width);
     const report = lastReport || { errors: ["The page did not finish: it may have stopped with an error."], offScreen: [], cut: [], views: [] };
@@ -268,8 +274,17 @@ const checkOne = async function (browser, profile, port, pageName, width, viewNa
     return { count: count, views: report.views };
 };
 
-const findPages = function () {
-    const pages = fs.readdirSync(SERVED_FOLDER).filter((name) => /\.html?$/i.test(name));
+// Every page of the project, also the ones in folders. The start page comes first.
+const findPages = function (folder = "") {
+    const pages = [];
+    fs.readdirSync(path.join(SERVED_FOLDER, folder), { withFileTypes: true }).forEach(function (entry) {
+        const relativePath = folder ? folder + "/" + entry.name : entry.name;
+        if (entry.isDirectory()) {
+            if (!NOT_PAGE_FOLDERS.has(entry.name)) pages.push(...findPages(relativePath));
+        } else if (/\.html?$/i.test(entry.name)) {
+            pages.push(relativePath);
+        }
+    });
     pages.sort((a, b) => Number(/^index\./i.test(b)) - Number(/^index\./i.test(a)));
     return pages;
 };
@@ -284,7 +299,9 @@ const run = async function () {
         console.log("dist/ does not exist. Run: node _basic/tools/build.js");
         return 2;
     }
-    const pages = findPages();
+    const allPages = findPages();
+    const isSkipped = (pageName) => /<meta\s+name=["']basic-check["']\s+content=["']skip["']/i.test(fs.readFileSync(path.join(SERVED_FOLDER, pageName), "utf8"));
+    const pages = allPages.filter((pageName) => !isSkipped(pageName));
     if (!pages.length) {
         console.log("There is no .htm page.");
         return 2;
@@ -297,7 +314,7 @@ const run = async function () {
 
     let problems = 0;
     for (const pageName of pages) {
-        if (pages.length > 1) console.log(pageName);
+        if (pages.length > 1) console.log("\n" + pageName);
         for (const width of WIDTHS) {
             const first = await checkOne(browser, profile, port, pageName, width, "");
             problems += first.count;
@@ -308,6 +325,7 @@ const run = async function () {
     }
     server.close();
     fs.rmSync(profile, { recursive: true, force: true, maxRetries: 3 });
+    if (allPages.length > pages.length) console.log((allPages.length - pages.length) + " page(s) skipped by their basic-check tag.");
     console.log(problems ? problems + " problem(s). Look at the pictures in .check/ too." : "No problem found. Look at the pictures in .check/ too: this check can not judge the design.");
     return problems ? 1 : 0;
 };

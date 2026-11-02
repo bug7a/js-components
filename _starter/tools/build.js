@@ -43,23 +43,24 @@ const clearDist = function () {
     fs.rmSync(DIST, { recursive: true, force: true });
 };
 
-// "_basic/comp/x.js" -> "x", other files -> null
-const componentNameOf = function (src) {
-    const match = src.match(/^_basic\/comp\/([^/]+)\.js$/);
+// "_basic/comp/x.js", "../_basic/comp/x.js" (a page in a folder) -> { up: "../", name: "x" }, other files -> null
+const componentOf = function (src) {
+    const match = src.match(/^((?:\.\.\/)*)_basic\/comp\/([^/]+)\.js$/);
     if (!match) return null;
-    return fs.existsSync(path.join(BASIC, "min", match[1] + ".min.js")) ? match[1] : null;
+    const isMinified = fs.existsSync(path.join(BASIC, "min", match[2] + ".min.js"));
+    return isMinified ? { up: match[1], name: match[2] } : null;
 };
 
 // The script tags of the components become one tag, at the place of the first one
 const usePublishedFiles = function (html, components) {
     let isBundleWritten = false;
     const withScripts = html.replace(SCRIPT_TAG, function (tag, src) {
-        const name = componentNameOf(src);
-        if (!name) return tag;
-        if (!components.includes(name)) components.push(name);
+        const component = componentOf(src);
+        if (!component) return tag;
+        if (!components.includes(component.name)) components.push(component.name);
         if (isBundleWritten) return "";
         isBundleWritten = true;
-        return tag.replace(src, BUNDLE_NAME);
+        return tag.replace(src, component.up + BUNDLE_NAME);
     });
     return Object.keys(LIBRARY_FILES).reduce(function (text, source) {
         return text.split(source).join(LIBRARY_FILES[source]);
@@ -68,11 +69,13 @@ const usePublishedFiles = function (html, components) {
 
 // The paths inside _basic/ that a text names. A path that ends with "/" is a folder.
 const collectBasicPaths = function (text, found) {
+    if (/["'`](?:\.\.\/)*_basic\/["'`]/.test(text)) found.add("_basic/comp/"); // A path made in code: every folder of pictures
     (text.match(/_basic\/(?:basic|comp|assets)\/[^"'`)\s,;?#]*/g) || []).forEach((item) => found.add(item));
 };
 
 const rewriteBasicPaths = function (text) {
     return text
+        .replace(/(["'`])((?:\.\.\/)*)_basic\/(["'`])/g, "$1$2$3") // const LIB_PATH = "../_basic/": the code adds "comp/..."
         .replace(/_basic\/assets\//g, "basic-assets/")
         .replace(/_basic\/(basic|comp)\//g, "$1/")
         .replace(/(["'`/])index\.htm(?=["'`?#])/g, "$1index.html");

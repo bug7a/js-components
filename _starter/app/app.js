@@ -15,8 +15,6 @@ const start = function () {
         const lblCount = Label({ text: "Clicked: 0", fontSize: 18, textColor: Black(0.6) });
 
         SmartButton({
-            styleName: "pill",
-            tone: "blue",
             labelText: "Click me",
             onClick: function () {
                 clickCount++;

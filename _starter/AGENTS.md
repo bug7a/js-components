@@ -51,7 +51,10 @@ Pages load the source files (`name.js`). Components have no `.min.js` files.
 
 ## Default components
 
-- A button: `SmartButton`. Shape with `styleName` (`ozdenType1`, `pill`, `pillSolid`, `outlined`), color with `tone` (`blue`, `primary`, `danger`...).
+- A button: `SmartButton`. **Use the default look: give no `styleName`** (it is `ozdenType1`: a gray surface, a thin edge, a darker line at the bottom).
+  - The main action of a screen: `styleName: "primary"`. A delete: `styleName: "danger"`. Also `warning`, `success`, `info`.
+  - A quiet button in a list or a toolbar: `styleName: "ozdenType4"`. On a dark page: `ozdenType1Dark` ... `ozdenType4Dark`.
+  - `pill`, `pillSolid` and `outlined` are for status labels and for a design the user asks for, not for ordinary buttons. Their color comes from `tone` (`blue`, `primary`, `danger`...).
 - A dialog: `Dialog` (`Dialog.confirm`, `Dialog.alert`, `Dialog.prompt`).
 - A bubble or popover: `Tooltip`.
 - A search box: `SearchInput` with `styleName: "ozden"`, or `"ozdenDark"` on a dark page.
@@ -75,5 +78,7 @@ window.checkViews = {
     settings: function () { App.showPage("settings"); },
 };
 ```
+
+It checks every page, also the ones in folders. A page shown only inside another page can say `<meta name="basic-check" content="skip">`.
 
 The tool needs Chrome or Edge. When it can not run, run `node --check` on the files you changed, and tell the user that the page was not opened.

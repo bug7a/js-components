@@ -57,8 +57,8 @@ const useProjectName = function (target, name) {
 const addTemplate = function (target, name) {
     const from = path.join(TEMPLATES, name);
     if (!fs.existsSync(from)) stop('There is no template "' + name + '". The templates: ' + templateNames().join(", "));
-    fs.rmSync(path.join(target, "app"), { recursive: true, force: true });
-    fs.rmSync(path.join(target, "index.htm"), { force: true });
+    // WHY: Only what the template brings is replaced: the forms have no app/ of their own files to lose.
+    if (fs.existsSync(path.join(from, "app"))) fs.rmSync(path.join(target, "app"), { recursive: true, force: true });
     fs.cpSync(from, target, { recursive: true, force: true });
 };
 

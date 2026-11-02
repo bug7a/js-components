@@ -13,7 +13,7 @@ The project has everything in one folder: `index.htm`, your code in `app/`, and 
 ## Templates
 
 ```sh
-npm create basicjs@latest my-shop -- --template shop
+npm create basicjs@latest my-shop -- --template shop     # shop, booking, coffee-shop, classic, starter (mobile apps), panel, forms
 npm create basicjs@latest -- --list
 ```
 
