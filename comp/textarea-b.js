@@ -97,6 +97,17 @@ const TextareaB = function(params = {}) {
         return textareaElem.value;
     };
 
+    // WHY: The ones of InputB write to box.input, which a TextareaB does not have (createInput: 0): a TypeError.
+    box.setPlaceholder = function(text) { // OVERRIDE
+        box.placeholder = text;
+        textareaElem.placeholder = text;
+    };
+
+    box.setMaxChar = function(count) { // OVERRIDE
+        box.maxChar = count;
+        textareaElem.maxLength = count;
+    };
+
     box.isValid = function() { // OVERRIDE
         return (box.getInputValue().length > box.minCharCount) ? 1 : 0;
     };

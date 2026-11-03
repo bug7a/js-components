@@ -15,6 +15,7 @@
         <!-- COMPONENTS (comp/dialog.js: not with comp/dialog.js, both define Dialog) -->
         <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/input-b.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/textarea-b.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/search-input-v2.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/full-screen-select.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/item-list.js" type="text/javascript" charset="utf-8"></script>
@@ -817,6 +818,23 @@
             check("URLInputB: a path with an 's' is valid and a path with a space is not", results[0] === 1 && results[1] === 0, results.join(", "));
             check("URLInputB: an empty field gives an empty value (not the protocol alone)", url.getInputValue() === "", "\"" + url.getInputValue() + "\"");
             url.remove();
+        });
+
+        // *** TEXTAREA B (comp/textarea-b.js)
+
+        test("TextareaB: setPlaceholder and setMaxChar change its textarea", async function () {
+            const area = TextareaB({ titleText: "Note" });
+            let error = "";
+            try {
+                area.setPlaceholder("Write a note");
+                area.setMaxChar(500);
+            } catch (e) {
+                error = e.message; // WHY: they wrote to box.input, which a TextareaB does not have
+            }
+            const el = area.textareaElem;
+            const isChanged = el.placeholder === "Write a note" && el.maxLength === 500 && area.maxChar === 500;
+            check("TextareaB: setPlaceholder and setMaxChar change its textarea", !error && isChanged, error || ("placeholder: " + el.placeholder + ", maxLength: " + el.maxLength));
+            area.remove();
         });
 
         // *** LOGIN PAGE (comp/login-page-v2.js)
