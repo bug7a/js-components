@@ -15,7 +15,9 @@ UI COMPONENT TEMPLATE
 - Keyboard (the tree takes the focus): ArrowUp / ArrowDown move the selection, ArrowRight opens (or goes to the
   first child), ArrowLeft closes (or goes to the parent), Home, End, PageUp, PageDown, Enter -> onActivate,
   Space opens / closes, typing a letter jumps to the next row that starts with it (typeAhead).
-- Mouse: click selects, a click on the arrow opens / closes, a double click -> onActivate (and opens / closes).
+- Mouse: click selects, a click on the arrow opens / closes, a double click -> onActivate (and opens / closes;
+  toggleOnDoubleClick: 0 -> it only activates). onActivate(self, node, event): event.type "dblclick" or "keydown".
+- getRowElem(key): the element of a row (its text: [data-part=text]), Ex: to put a field over it (2026-11-03).
 - Accessibility: tree / treeitem / group roles, aria-level, aria-expanded, aria-selected, aria-activedescendant.
 - onSelect is NOT called when the component is created or when the value is set with silent: 1.
 - Style packages: "classic" (default), "modern", "dark". Select with styleName. (TreeView.styles)
@@ -74,7 +76,8 @@ const TreeViewDefaults = {
     enabled: 1,
     ariaLabel: "Tree",
     onSelect: function (self, node) { }, // self.value, self.previousValue
-    onActivate: function (self, node) { }, // Double click or Enter
+    onActivate: function (self, node, event) { }, // Double click or Enter (event.type: "dblclick" or "keydown")
+    toggleOnDoubleClick: 1, // 0: a double click does not open / close the row (Ex: it renames it)
     onToggle: function (self, node) { }, // node.expanded: 1 or 0
     onHover: function (self, node) { }, // node: null when the mouse leaves the rows
     onLoadChildren: function (self, node) { }, // hasChildren: 1 and no children. Call self.setChildren(node.key, [...]).
@@ -255,7 +258,7 @@ const TreeView = function (params = {}) {
             "text-overflow:ellipsis",
         ];
         if (node.textColor) styles.push("color:" + escapeText(node.textColor));
-        return span(styles, escapeText(node.text));
+        return span(styles, escapeText(node.text), ' data-part="text"');
     };
 
     const getTagHtml = function (node) {
@@ -560,9 +563,9 @@ const TreeView = function (params = {}) {
         if (fromUser) box.onSelect(box, rec.node);
     };
 
-    const activateRec = function (rec) {
+    const activateRec = function (rec, event) {
         if (!rec || rec.node.disabled) return;
-        box.onActivate(box, rec.node);
+        box.onActivate(box, rec.node, event);
     };
 
     // step: +1 down, -1 up; Infinity / -Infinity: the last / the first row.
@@ -621,7 +624,7 @@ const TreeView = function (params = {}) {
             case "End": moveSelection(Infinity); return 1;
             case "ArrowRight": goRight(current); return 1;
             case "ArrowLeft": goLeft(current); return 1;
-            case "Enter": activateRec(current); return 1;
+            case "Enter": activateRec(current, event); return 1;
             case " ":
                 if (current && canExpand(current)) setExpanded(current, !isOpen(current), 1);
                 return 1;
@@ -771,6 +774,12 @@ const TreeView = function (params = {}) {
             entry = (entry.parent) ? nodeIndex.get(entry.parent.key) : null;
         }
         return out;
+    };
+
+    // The element of a row, or null (a closed parent: the row is not made). Its text: [data-part=text]
+    box.getRowElem = function (key) {
+        const rec = recs.get(key);
+        return (rec && rec.row) ? rec.row.elem : null;
     };
 
     box.getSelectedNode = function () {
@@ -1011,8 +1020,8 @@ const TreeView = function (params = {}) {
         if (box.enabled != 1) return;
         const rec = getRecOfEvent(event);
         if (!rec || isArrowEvent(event) || rec.node.disabled) return;
-        if (canExpand(rec)) setExpanded(rec, !isOpen(rec), 1);
-        activateRec(rec);
+        if (canExpand(rec) && box.toggleOnDoubleClick == 1) setExpanded(rec, !isOpen(rec), 1);
+        activateRec(rec, event);
     });
     box.listArea.on("mousemove", function (self, event) {
         if (box.enabled != 1) return;

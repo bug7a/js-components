@@ -271,6 +271,75 @@ BasicDesigner.renameObject = function (obj, typed) {
     BasicDesigner.showProperties(obj);
 };
 
+// A text field for a name: Enter (or leaving it) renames the object, Escape gives the old name back.
+// WHY stopPropagation: the keys are not shortcuts of the designer (Backspace would delete the object).
+BasicDesigner.connectNameInput = function (input, getObject, onDone) {
+    const el = input.inputElement;
+    let isDone = 0;
+    const finish = function (isSaved) {
+        if (isDone) return;
+        isDone = 1;
+        const obj = getObject();
+        if (isSaved && obj) BasicDesigner.renameObject(obj, input.text);
+        if (onDone) onDone();
+        isDone = 0;
+    };
+    el.setAttribute("spellcheck", "false");
+    el.addEventListener("keydown", function (event) {
+        event.stopPropagation();
+        if (event.key === "Enter") {
+            event.preventDefault();
+            finish(1);
+        } else if (event.key === "Escape") {
+            event.preventDefault();
+            const obj = getObject();
+            input.text = (obj) ? BasicDesigner.nameOf(obj) : "";
+            finish(0);
+        }
+    });
+    el.addEventListener("blur", function () { finish(1); });
+};
+
+// A double click on a row of the layers: a field over its name.
+BasicDesigner.renameInLayers = function (obj) {
+    const C = BasicDesigner.colors;
+    const ui = BasicDesigner.ui;
+    const row = ui.tree.getRowElem(String(obj.__bd.id));
+    if (!row) return;
+    const text = row.querySelector("[data-part=text]") || row;
+    const rowRect = row.getBoundingClientRect();
+    const textRect = text.getBoundingClientRect();
+    if (ui.layerNameInput) ui.layerNameInput.remove();
+    const input = createIn(page, function () {
+        return Input({
+            left: Math.round(textRect.left) - 4,
+            top: Math.round(rowRect.top) + 2,
+            width: Math.round(rowRect.right - textRect.left) - 4,
+            height: Math.round(rowRect.height) - 4,
+            fontSize: 13,
+            color: C.field,
+            textColor: C.text,
+            border: 1,
+            borderColor: C.accent,
+            round: 4,
+        });
+    });
+    input.zIndex = 9000;
+    input.inputElement.style.padding = "0px 3px";
+    input.inputElement.setAttribute("aria-label", "Name of the object");
+    input.text = BasicDesigner.nameOf(obj);
+    ui.layerNameInput = input;
+    const close = function () {
+        if (ui.layerNameInput !== input) return;
+        ui.layerNameInput = null;
+        input.remove();
+        ui.tree.focus();
+    };
+    BasicDesigner.connectNameInput(input, function () { return obj; }, close);
+    input.inputElement.focus();
+    input.inputElement.select();
+};
+
 BasicDesigner.nameItem = function (obj) {
     return {
         key: "__name",
@@ -2149,6 +2218,7 @@ BasicDesigner.showParams = function (obj) {
     const id = obj.__bd.id;
 
     ui.lblParamsTitle.text = BasicDesigner.esc((t.name ? t.name + "  ·  " : "") + t.type);
+    if (document.activeElement !== ui.paramsName.inputElement) ui.paramsName.text = BasicDesigner.nameOf(obj);
     if (ui.paramRows) ui.paramRows.remove();
 
     createIn(ui.paramsList, function () {
@@ -5798,6 +5868,7 @@ BasicDesigner.SHORTCUTS = [
     ["Shift+Arrow keys", "Move a manual object 10 px"],
     ["Alt (hold)", "Distances to the object under the mouse"],
     ["Double click", "Edit the text in its place"],
+    ["Double click in the layers", "Rename the object"],
     ["Alt+double click, Enter", "Open the code in VS Code"],
     ["Escape", "Close a menu / clear the selection"],
     ["Cmd/Ctrl+Enter", "Save the note"],
@@ -7818,7 +7889,7 @@ BasicDesigner.build = function () {
             ui.inpFilter = Input({ height: 24, fontSize: 12, color: C.field, textColor: C.text, border: 1, borderColor: C.fieldBorder, round: 5, placeholder: "Search" });
             ui.inpFilter.grow = 1;
             ui.inpFilter.css = { minWidth: "0px", width: "auto", marginLeft: "4px" };
-            ui.inpFilter.elem.title = "Search in the layers (Escape: clear) · a double click on a row opens its code";
+            ui.inpFilter.elem.title = "Search in the layers (Escape: clear) · a double click on a row renames it, Enter opens its code";
 
             BasicDesigner.iconButton({ path: BasicDesigner.TOP_ICONS.collapseAll, name: "Collapse all", description: "Close every row.", size: 24, iconSize: 14, onClick: BasicDesigner.collapseAll });
             BasicDesigner.iconButton({ path: BasicDesigner.TOP_ICONS.expandAll, name: "Expand all", description: "Open the boxes and the groups (not the insides of the components).", size: 24, iconSize: 14, onClick: BasicDesigner.expandAll });
@@ -7843,12 +7914,16 @@ BasicDesigner.build = function () {
             width: "100%",
             height: "calc(" + BasicDesigner.layersBottom() + " - " + (BasicDesigner.LAYERS_TOP + BasicDesigner.PAGE_ROW_HEIGHT) + "px)",
             typeAhead: 0, // WHY: V and I are the keys of the modes.
+            toggleOnDoubleClick: 0, // WHY: a double click renames the row (a group does not open / close then)
             ariaLabel: "Layers",
             style: BasicDesigner.treeStyle(),
             onSelect: function (self, node) { BasicDesigner.select(BasicDesigner.objectOfKey(node.key), "tree"); },
-            onActivate: function (self, node) {
+            // A double click: its name, in place (the user, 2026-11-03). Enter: the code.
+            onActivate: function (self, node, event) {
                 const obj = BasicDesigner.objectOfKey(node.key);
-                if (obj) BasicDesigner.openInEditor(BasicDesigner.nameFrame(obj));
+                if (!obj) return;
+                if (event && event.type === "dblclick") BasicDesigner.renameInLayers(obj);
+                else BasicDesigner.openInEditor(BasicDesigner.nameFrame(obj));
             },
             onHover: function (self, node) {
                 BasicDesigner.setHover(node ? BasicDesigner.objectOfKey(node.key) : null);
@@ -7963,9 +8038,20 @@ BasicDesigner.build = function () {
         // GROUP: Parameters | Box (as at the top of the Box view)
         BasicDesigner.inspectSwitch(16, cfg.topHeight + 12, cfg.rightWidth - 32);
 
-        Label(16, cfg.topHeight + 46, { text: "Enter: apply (made again) · • not default", fontSize: 11, textColor: C.dim });
+        // GROUP: Name (the same name as the Name of the Box view; 2026-11-03, the user)
+        HGroup(16, cfg.topHeight + 48, cfg.rightWidth - 32, 26, { align: "left center", gap: 8, color: "transparent" });
+            Label({ text: "Name", fontSize: 11, textColor: C.soft });
+            ui.paramsName = Input({ height: 26, fontSize: 12, color: C.field, textColor: C.text, border: 0, round: 5, placeholder: "No name in the code" });
+            ui.paramsName.grow = 1;
+            ui.paramsName.css = { minWidth: "0px", width: "auto" };
+            ui.paramsName.inputElement.style.padding = "0px 8px";
+            ui.paramsName.inputElement.setAttribute("aria-label", "Name of the object");
+        endGroup();
+        BasicDesigner.connectNameInput(ui.paramsName, function () { return BasicDesigner.state.selected; });
 
-        const paramsTop = cfg.topHeight + 70;
+        Label(16, cfg.topHeight + 84, { text: "Enter: apply (made again) · • not default", fontSize: 11, textColor: C.dim });
+
+        const paramsTop = cfg.topHeight + 108;
         const noteHeight = BasicDesigner.NOTE_AREA_HEIGHT;
         ui.paramsList = startBox(0, paramsTop, "100%", "calc(100% - " + paramsTop + "px - " + noteHeight + "px)", { color: "transparent", scrollY: 1 });
         endBox();
