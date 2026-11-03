@@ -345,6 +345,82 @@
             panel.remove();
         });
 
+        // A panel with one color field and an editable group (a static palette), its picker open.
+        const openColorPanel = async function (changes) {
+            const panel = PropertyPanel({
+                data: { sections: [{ key: "s", title: "S", items: [{ key: "fill", type: "color", label: "Fill", value: "#222222" }] }] },
+                palettes: [{ key: "mine", name: "Mine", canAdd: 1, colors: ["#111111", "#222222", "#333333"] }],
+                onChange: function (change) { changes.push(change); },
+            });
+            panel.open();
+            await wait(30);
+            panel.elem.querySelector("[aria-haspopup=dialog]").click();
+            await wait(30);
+            const picker = Array.from(document.querySelectorAll("[role=dialog]")).pop();
+            const swatchOf = function (value) { return picker.querySelector("[aria-label='" + value + "']"); };
+            return { panel: panel, picker: picker, swatchOf: swatchOf };
+        };
+
+        test("PropertyPanel: the ring of a hovered selected color stays inside the scrolling colors of the picker", async function () {
+            const ui = await openColorPanel([]);
+            const square = ui.swatchOf("#222222");
+            const style = PropertyPanelDefaults.style.colorPicker;
+            const grid = square.parentNode;
+            const padding = parseFloat(getComputedStyle(grid).paddingLeft);
+            const ringAndGrowth = 3 + style.swatchSize * 0.05; // the ring (3) and half of the 1.1 growth
+            check("PropertyPanel: the ring of a hovered selected color stays inside the scrolling colors of the picker", padding >= ringAndGrowth, "padding: " + padding + ", needs: " + ringAndGrowth);
+            ui.panel.remove();
+        });
+
+        test("PropertyPanel: Delete in the menu of a color removes it from its editable group", async function () {
+            const changes = [];
+            const ui = await openColorPanel(changes);
+            ui.swatchOf("#111111").dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: 10, clientY: 10 }));
+            await wait(10);
+            const row = ui.picker.querySelector("[aria-label='Delete #111111 from Mine']");
+            if (row) row.click();
+            await wait(10);
+            const removed = changes.find(function (change) { return change.kind === "removeColor"; });
+            const isGone = !ui.swatchOf("#111111");
+            check("PropertyPanel: Delete in the menu of a color removes it from its editable group", !!row && !!removed && removed.value === "#111111" && isGone, "menu row: " + !!row + ", change: " + !!removed + ", gone: " + isGone);
+            ui.panel.remove();
+        });
+
+        // WHY the moves go to window: the dragged color moves in the grid, and the browser stops sending it the pointer
+        test("PropertyPanel: a color dragged in its editable group sends the new order", async function () {
+            const changes = [];
+            const ui = await openColorPanel(changes);
+            const square = ui.swatchOf("#333333");
+            const first = ui.swatchOf("#111111").getBoundingClientRect();
+            const start = square.getBoundingClientRect();
+            const pointer = function (target, type, x, y) {
+                target.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 1, button: 0, clientX: x, clientY: y }));
+            };
+            pointer(square, "pointerdown", start.left + 5, start.top + 5);
+            pointer(window, "pointermove", start.left - 20, start.top + 5);
+            pointer(window, "pointermove", first.left + 2, first.top + 5);
+            pointer(window, "pointerup", first.left + 2, first.top + 5);
+            await wait(10);
+            const order = changes.find(function (change) { return change.kind === "orderColors"; });
+            const text = (order) ? order.value.join(" ") : "none";
+            check("PropertyPanel: a color dragged in its editable group sends the new order", text === "#333333 #111111 #222222", "order: " + text);
+            ui.panel.remove();
+        });
+
+        test("PropertyPanel: the tick of a group shows its colors under the color field, a click gives one", async function () {
+            const changes = [];
+            const ui = await openColorPanel(changes);
+            const tick = ui.picker.querySelector("[role=checkbox]");
+            const wasOn = (tick.getAttribute("aria-checked") === "true");
+            if (!wasOn) tick.click();
+            await wait(10);
+            const quick = ui.panel.elem.querySelector("[aria-label='#333333 (Mine)']");
+            if (quick) quick.click();
+            await wait(10);
+            check("PropertyPanel: the tick of a group shows its colors under the color field, a click gives one", !!quick && ui.panel.getValue("fill") === "#333333", "a color under the field: " + !!quick + ", value: " + ui.panel.getValue("fill"));
+            ui.panel.remove();
+        });
+
         // *** SMART BUTTON (comp/smart-button.js)
 
         test("SmartButton: a held Enter presses once", async function () {

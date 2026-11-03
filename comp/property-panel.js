@@ -31,14 +31,19 @@ UI COMPONENT TEMPLATE
                   (Chrome), the color text, and the color groups (palettes) under them.
                   palettes (a param of the panel): [{ key, name, colors, canAdd, emptyText }] or function (panel) -> that.
                   colors: ["#FFFFFF", { value: "var(--color-primary)", color: "#3871E0", hint: "Primary" }, ...]
-                  canAdd: 1 -> a + button adds the current color: change { kind: "addColor", key: palette key, value }.
+                  canAdd: 1 -> an editable group: a + button adds the current color: change { kind: "addColor", key: palette key, value };
+                  its colors are put in order by dragging: { kind: "orderColors", key, value: [the values in the new order] }.
+                  A right click on a color: "Copy to" an editable group (addColor), "Delete" from an editable group
+                  ({ kind: "removeColor", key, value }) or from Recent. A color with fixed: 1 is not deleted or moved.
                   presets (of the item, old): shown as the first palette, "Presets".
                   Also: the color before / now (a click on "before" goes back), HEX / RGB / HSL text, and the
                   recent colors (recentColorsKey: kept in basic.storage).
+                  The ticks before "Recent" and the group name: their colors are shown under every color field of
+                  the panel (Recent | the selected group); a click on one gives it to the field. Kept with recentColorsKey.
 - Items of a row: put them in an array. span: 1 (one column), 2 (two columns). An iconButton takes the
   small last column. label: the caption above the item.
 - Listen to every change from outside: onChange(change, panel) or panel.listen(fn) (returns a remover).
-  change = { kind: "value" | "action" | "tab" | "addColor", key, value, oldValue, item, sectionKey }
+  change = { kind: "value" | "action" | "tab" | "addColor" | "removeColor" | "orderColors", key, value, oldValue, item, sectionKey }
   The panel keeps the values: getValues(), getValue(key), getData() (the JSON with the current values).
 - setValue(key, value, silent) changes an item from outside (Ex: another object was selected).
 - It is always created on the page (whatever container is open) and opened at the right side.
@@ -158,8 +163,11 @@ const PropertyPanelDefaults = {
             handleSize: 12,
             sliderHeight: 12,
             swatchSize: 18,
-            swatchGap: 6,
+            swatchGap: 5, // WHY 5 (was 6): with the room of the rings (swatchRoom) 9 colors still fit one row
+            swatchRoom: 4, // px around the colors: the selected ring (3) and the hover growth are not cut by the scroll
             swatchesMaxHeight: 126, // More colors scroll
+            quickSwatchSize: 14, // The colors under a color field (the ticks of the picker)
+            quickSwatchGap: 5,
         },
         empty: { // data.empty: the page in the middle (Ex: nothing is selected)
             iconSize: 26,
@@ -1018,10 +1026,41 @@ const PropertyPanel = function (params = {}) {
     };
     let recentColors = loadRecentColors();
 
+    const saveRecentColors = function () {
+        if (box.recentColorsKey) basic.storage.save(box.recentColorsKey, recentColors);
+    };
+
     const rememberColor = function (value) {
         if (!value) return;
         recentColors = [value].concat(recentColors.filter(function (v) { return v !== value; })).slice(0, RECENT_COLOR_COUNT);
-        if (box.recentColorsKey) basic.storage.save(box.recentColorsKey, recentColors);
+        saveRecentColors();
+    };
+
+    const forgetColor = function (value) {
+        recentColors = recentColors.filter(function (v) { return v !== value; });
+        saveRecentColors();
+    };
+
+    // The ticks of the picker: the recent colors and the colors of the selected group under every color field.
+    // (kept with the recent colors, and the selected group with them)
+    const QUICK_COLORS_KEY_END = "-quick";
+    const loadQuickColors = function () {
+        const saved = (box.recentColorsKey) ? basic.storage.load(box.recentColorsKey + QUICK_COLORS_KEY_END) : null;
+        return Object.assign({ recent: 0, group: 0, paletteKey: "" }, saved || {});
+    };
+    const quickColors = loadQuickColors();
+    lastPaletteKey = quickColors.paletteKey;
+
+    const saveQuickColors = function () {
+        quickColors.paletteKey = lastPaletteKey;
+        if (box.recentColorsKey) basic.storage.save(box.recentColorsKey + QUICK_COLORS_KEY_END, quickColors);
+    };
+
+    let quickStrips = []; // The colors under the color fields: { obj, draw(), paint(value) }
+
+    const refreshQuickStrips = function () {
+        quickStrips = quickStrips.filter(function (strip) { return !strip.obj._isRemoved; });
+        quickStrips.forEach(function (strip) { strip.draw(); });
     };
 
     const toPreset = function (preset) {
@@ -1062,6 +1101,123 @@ const PropertyPanel = function (params = {}) {
     // A square that shows a color over a checkerboard (a transparent color shows the checkerboard).
     const paintChecker = function (obj, color) {
         obj.css.background = "linear-gradient(" + color + ", " + color + "), " + CHECKER;
+    };
+
+    const SWATCH_HOVER_SCALE = 1.1; // WHY not more: the ring and the growth must stay in the room around the colors
+
+    // The ring of the selected color (a gap in the color of what is behind it, then the accent), or a thin edge.
+    const paintSwatchRing = function (square, isSelected, backColor) {
+        square.boxShadow = (isSelected) ? "0 0 0 2px " + backColor + ", 0 0 0 3px " + _s.accent.color : "inset 0 0 0 1px " + _s.swatch.borderColor;
+    };
+
+    // The palette of the picker for an item: the selected one, or the first.
+    const currentPaletteOf = function (item) {
+        const list = palettesOf(item);
+        return list.find(function (palette) { return palette.key === lastPaletteKey; }) || list[0] || null;
+    };
+
+    // BOX: A small check box. onToggle(isOn) after a click. Returns it with setOn(isOn).
+    const TICK_SIZE = 14;
+    const buildTick = function (isOn, label, onToggle) {
+        const tick = textLabel("", { width: TICK_SIZE, height: TICK_SIZE, textColor: "#FFFFFF" });
+        tick.round = 3;
+        tick.clickable = 1;
+        tick.cursor = "pointer";
+        tick.tabIndex = 0;
+        tick.role = "checkbox";
+        tick.elem.title = label;
+        tick.setOn = function (on) {
+            isOn = on;
+            tick.text = (on) ? getIcon("check", 12) : "";
+            tick.color = (on) ? _s.accent.color : "transparent";
+            setBorder(tick, (on) ? "" : _t.softColor);
+            tick.aria = { label: label, checked: (on) ? "true" : "false" };
+        };
+        const toggle = function () {
+            tick.setOn((isOn) ? 0 : 1);
+            onToggle(isOn);
+        };
+        tick.on("click", toggle);
+        onActivateKey(tick, toggle);
+        tick.setOn(isOn);
+        return tick;
+    };
+
+    // GROUP: The colors under a color field: the recent colors | the colors of the selected group (the ticks of
+    // the picker). A click gives the color to the field: onPick(value). Hidden when no tick is on.
+    const buildQuickStrip = function (item, width, onPick) {
+        const cp = _s.colorPicker;
+        const room = cp.swatchRoom;
+        const strip = HGroup({ width: width, height: "auto", align: "left center", gap: cp.quickSwatchGap, wrap: 1, color: "transparent" });
+        strip.css = { padding: room + "px", boxSizing: "border-box" };
+        strip.shrink = 0;
+        endGroup();
+
+        const view = { obj: strip, value: "", squares: [], enabled: 1 };
+
+        const buildQuickSwatch = function (preset) {
+            const square = Box({ width: cp.quickSwatchSize, height: cp.quickSwatchSize, round: 3, color: "transparent" });
+            square.shrink = 0;
+            paintChecker(square, preset.color || preset.value);
+            square.clickable = 1;
+            square.cursor = "pointer";
+            square.role = "button";
+            square.tabIndex = 0;
+            square.aria = { label: preset.hint || preset.value };
+            square.elem.title = preset.hint || preset.value;
+            square.css.transition = "transform 0.1s";
+            onHover(square, function (isHover) { square.css.transform = (isHover && view.enabled) ? "scale(" + SWATCH_HOVER_SCALE + ")" : ""; });
+            const pick = function () {
+                if (view.enabled) onPick(preset.value);
+            };
+            square.on("click", pick);
+            onActivateKey(square, pick);
+            square.presetValue = preset.value;
+            return square;
+        };
+
+        view.draw = function () {
+            view.squares.forEach(function (square) { square.remove(); });
+            if (view.line) view.line.remove();
+            view.squares = [];
+            view.line = null;
+            const recent = (quickColors.recent) ? recentColors : [];
+            const palette = (quickColors.group) ? currentPaletteOf(item) : null;
+            const groupColors = (palette) ? palette.colors : [];
+            strip.visible = (recent.length || groupColors.length) ? 1 : 0;
+            createIn(strip, function () {
+                recent.forEach(function (value) {
+                    view.squares.push(buildQuickSwatch({ value: value, color: paintColorOf(item, value), hint: value + " (Recent)" }));
+                });
+                // BOX: The line between the recent colors and the colors of the group
+                if (recent.length && groupColors.length) {
+                    view.line = Box({ width: 1, height: cp.quickSwatchSize, color: _ps.dividerColor });
+                    view.line.shrink = 0;
+                    view.line.clickable = 0;
+                }
+                groupColors.forEach(function (preset) {
+                    const hint = (preset.hint || preset.value) + " (" + palette.name + ")";
+                    view.squares.push(buildQuickSwatch({ value: preset.value, color: preset.color, hint: hint }));
+                });
+            });
+            view.paint(view.value);
+        };
+
+        view.paint = function (value) {
+            view.value = value;
+            view.squares.forEach(function (square) {
+                paintSwatchRing(square, PropertyPanel.isSameValue(square.presetValue, value), _ps.color);
+            });
+        };
+
+        view.setEnabled = function (enabled) {
+            view.enabled = enabled;
+            strip.opacity = (enabled) ? 1 : 0.5;
+        };
+
+        quickStrips.push(view);
+        view.draw();
+        return view;
     };
 
     // *** COLOR INPUTS: the color text and its opacity (%). Used by the color field and by the picker.
@@ -1240,6 +1396,8 @@ const PropertyPanel = function (params = {}) {
         let formatButton = null;
         let previewNow = null;
         let recentViews = [];
+        let recentArea = null;
+        const TICK_MARGIN = cp.swatchRoom; // WHY: the ticks start where the colors start
         const valueAtOpen = colorField.getValue();
 
         // STATE <-> VALUE
@@ -1303,8 +1461,7 @@ const PropertyPanel = function (params = {}) {
         const paintSelectedSwatch = function () {
             const value = colorField.getValue();
             swatchViews.concat(recentViews).forEach(function (view) {
-                const isSelected = PropertyPanel.isSameValue(view.value, value);
-                view.obj.boxShadow = (isSelected) ? "0 0 0 2px " + ms.color + ", 0 0 0 3px " + _s.accent.color : "inset 0 0 0 1px " + _s.swatch.borderColor;
+                paintSwatchRing(view.obj, PropertyPanel.isSameValue(view.value, value), ms.color);
             });
         };
 
@@ -1364,8 +1521,14 @@ const PropertyPanel = function (params = {}) {
         };
 
         const buildPaletteHeader = function (palette) {
-            // GROUP: The name of the palette (opens the list of palettes) and the add button
+            // GROUP: The tick (the colors under the fields), the name of the palette (opens the list of palettes) and the add button
             HGroup({ width: contentWidth, height: _g.itemHeight, align: "left center", gap: 4, color: "transparent" });
+                const tick = buildTick(quickColors.group, "Show the colors of the selected group under the color fields", function (isOn) {
+                    quickColors.group = isOn;
+                    saveQuickColors();
+                    refreshQuickStrips();
+                });
+                tick.css.marginLeft = TICK_MARGIN + "px";
                 const btnList = HGroup({ width: 10, height: _g.itemHeight, align: "left center", gap: 2, padding: [6, 0], round: _s.field.round, color: "transparent" });
                 btnList.grow = 1;
                 btnList.css = { minWidth: "0px" };
@@ -1396,8 +1559,8 @@ const PropertyPanel = function (params = {}) {
                     btnAdd.aria = { label: "Add this color to " + palette.name };
                     btnAdd.elem.title = "Add this color to " + palette.name;
                     onHover(btnAdd, function (isHover) { btnAdd.color = (isHover) ? _s.button.hoverColor : "transparent"; });
-                    btnAdd.on("click", function () { addColorTo(palette); });
-                    onActivateKey(btnAdd, function () { addColorTo(palette); });
+                    btnAdd.on("click", function () { addColorTo(palette, colorField.getValue()); });
+                    onActivateKey(btnAdd, function () { addColorTo(palette, colorField.getValue()); });
                 }
             endGroup();
         };
@@ -1421,7 +1584,9 @@ const PropertyPanel = function (params = {}) {
                 const choose = function () {
                     lastPaletteKey = palette.key;
                     isPaletteListOpen = 0;
+                    saveQuickColors();
                     drawPaletteArea();
+                    if (quickColors.group) refreshQuickStrips(); // WHY: the tick goes with the selected group
                 };
                 onHover(row, function (isHover) { row.color = (isHover) ? _s.button.hoverColor : "transparent"; });
                 row.on("click", choose);
@@ -1429,8 +1594,10 @@ const PropertyPanel = function (params = {}) {
             });
         };
 
-        // BOX: A color of a palette. A click gives its value. Returns { obj, value } (for the selected ring).
-        const buildSwatch = function (preset) {
+        // BOX: A color of a palette. A click gives its value; a right click opens its menu (Copy to, Delete);
+        // in an editable group (canAdd) it is dragged to another place. Returns { obj, value, fixed } (for the selected ring).
+        // palette: its group (RECENT_PALETTE for the recent colors). grid: the group of the colors (to drag in it).
+        const buildSwatch = function (preset, palette, grid) {
             const square = Box({ width: cp.swatchSize, height: cp.swatchSize, round: 4, color: "transparent" });
             square.shrink = 0;
             paintChecker(square, preset.color || preset.value);
@@ -1441,24 +1608,263 @@ const PropertyPanel = function (params = {}) {
             square.aria = { label: preset.hint || preset.value };
             square.elem.title = preset.hint || preset.value;
             square.css.transition = "transform 0.1s";
-            onHover(square, function (isHover) { square.css.transform = (isHover) ? "scale(1.12)" : ""; });
-            square.on("click", function () { commitValue(preset.value); });
+            onHover(square, function (isHover) { square.css.transform = (isHover) ? "scale(" + SWATCH_HOVER_SCALE + ")" : ""; });
+            const view = { obj: square, value: preset.value, fixed: preset.fixed };
+            square.on("click", function () {
+                if (square.wasDragged) return; // WHY: the end of a drag is not a click
+                commitValue(preset.value);
+            });
             onActivateKey(square, function () { commitValue(preset.value); });
-            return { obj: square, value: preset.value };
+            square.elem.addEventListener("contextmenu", function (event) {
+                event.preventDefault();
+                openColorMenu(view, palette, event);
+            });
+            square.on("keydown", function (self, event) {
+                const isMenuKey = (event.key === "ContextMenu" || (event.key === "F10" && event.shiftKey));
+                if (!isMenuKey) return;
+                event.preventDefault();
+                openColorMenu(view, palette, null);
+            });
+            const canMove = (grid && palette.canAdd && !preset.fixed);
+            if (canMove) dragToOrder(view, palette, grid);
+            return view;
         };
 
-        // GROUP: The recent colors (only when there are some)
-        const buildRecentColors = function () {
-            if (!recentColors.length) return;
-            const caption = textLabel("", { fontSize: _t.captionSize, textColor: _t.softColor, plainText: "Recent" });
-            caption.css.paddingLeft = "6px";
-            const row = HGroup({ width: contentWidth, height: "auto", align: "left center", gap: cp.swatchGap, color: "transparent" });
-            row.css = { padding: "3px", boxSizing: "border-box" };
-            row.clipContent = 0;
-                recentViews = recentColors.map(function (value) {
-                    return buildSwatch({ value: value, color: paintColorOf(item, value), hint: value });
-                });
+        // *** THE MENU OF A COLOR (a right click): Copy to an editable group, Delete from its group.
+        // It is in the picker, so a click in it does not close the picker.
+
+        const RECENT_PALETTE = { key: "__recent", name: "Recent", isRecent: 1 };
+        const COLOR_MENU_WIDTH = 160;
+        const COLOR_MENU_MARGIN = 4; // It stays this far from the edges of the picker
+        let colorMenu = null;
+
+        const closeColorMenu = function () {
+            if (!colorMenu) return;
+            colorMenu.remove();
+            colorMenu = null;
+        };
+
+        const canDeleteFrom = function (palette, view) {
+            if (palette.isRecent) return 1;
+            return (palette.canAdd && !view.fixed) ? 1 : 0;
+        };
+
+        // LABEL: A row of the menu of a color
+        const addColorMenuRow = function (text, label, fn) {
+            const row = HGroup({ width: "100%", height: ms.rowHeight, align: "left center", gap: 0, padding: [12, 0], color: "transparent" });
+            row.shrink = 0;
+            row.clickable = 1;
+            row.cursor = "pointer";
+            row.tabIndex = 0;
+            row.role = "menuitem";
+            row.aria = { label: label };
+                textLabel("", { flex: 1, height: ms.rowHeight, textColor: ms.textColor, plainText: text });
             endGroup();
+            const run = function () {
+                closeColorMenu();
+                fn();
+            };
+            onHover(row, function (isHover) { row.color = (isHover) ? ms.hoverColor : "transparent"; });
+            row.on("click", run);
+            onActivateKey(row, run);
+            return row;
+        };
+
+        // event: the right click (the menu at the mouse), or null (at the color: the keyboard)
+        const openColorMenu = function (view, palette, event) {
+            closeColorMenu();
+            const targets = palettes.filter(function (p) { return p.canAdd && p.key !== palette.key; });
+            const canDelete = canDeleteFrom(palette, view);
+            if (!targets.length && !canDelete) return;
+
+            colorMenu = createIn(obj, function () {
+                // GROUP: The menu of a color
+                const menuBox = VGroup({ width: COLOR_MENU_WIDTH, height: "auto", align: "left top", gap: 0, color: ms.color, round: ms.round });
+                menuBox.css = { position: "absolute", padding: "4px 0px", boxSizing: "border-box", alignItems: "stretch" };
+                menuBox.boxShadow = "0 0 0 1px " + ms.borderColor + ", " + ms.shadow;
+                menuBox.zIndex = 1;
+                menuBox.clickable = 1;
+                menuBox.role = "menu";
+                menuBox.aria = { label: view.value };
+                    if (targets.length) {
+                        const caption = textLabel("", { fontSize: _t.captionSize, textColor: _t.softColor, height: 22, plainText: "Copy to" });
+                        caption.css.paddingLeft = "12px";
+                    }
+                    targets.forEach(function (target) {
+                        addColorMenuRow(target.name, "Copy " + view.value + " to " + target.name, function () { addColorTo(target, view.value); });
+                    });
+                    if (targets.length && canDelete) {
+                        // BOX: Line
+                        const line = Box({ width: "100%", height: 1, color: ms.borderColor });
+                        line.shrink = 0;
+                        line.css.margin = "4px 0px";
+                    }
+                    if (canDelete) {
+                        addColorMenuRow("Delete", "Delete " + view.value + " from " + palette.name, function () { deleteColor(view, palette); });
+                    }
+                endGroup();
+                return menuBox;
+            });
+
+            // Escape closes only this menu (not the picker) and the focus goes back to the color.
+            colorMenu.on("keydown", function (self, event) {
+                if (event.key !== "Escape") return;
+                event.stopPropagation();
+                closeColorMenu();
+                view.obj.elem.focus();
+            });
+
+            const pickerRect = obj.elem.getBoundingClientRect();
+            const squareRect = view.obj.elem.getBoundingClientRect();
+            const x = (event) ? event.clientX : squareRect.left;
+            const y = (event) ? event.clientY : squareRect.bottom;
+            const maxLeft = pickerRect.width - COLOR_MENU_WIDTH - COLOR_MENU_MARGIN;
+            const maxTop = pickerRect.height - colorMenu.elem.offsetHeight - COLOR_MENU_MARGIN;
+            colorMenu.left = Math.round(basic.clamp(x - pickerRect.left, COLOR_MENU_MARGIN, maxLeft));
+            colorMenu.top = Math.round(Math.max(COLOR_MENU_MARGIN, Math.min(y - pickerRect.top, maxTop)));
+            const firstRow = colorMenu.elem.querySelector("[role=menuitem]");
+            if (firstRow) firstRow.focus({ preventScroll: true });
+        };
+
+        // *** CHANGES OF THE GROUPS
+
+        const valueOfColor = function (color) {
+            return (color && typeof color === "object") ? color.value : color;
+        };
+
+        const hasColor = function (colors, value) {
+            return colors.some(function (color) { return PropertyPanel.isSameValue(valueOfColor(color), value); });
+        };
+
+        // The change goes to the listener (it keeps the colors of its groups). A static palette (not a function)
+        // is changed here: changeColors(colors) -> the new colors (WHY it must give the same result twice: the
+        // listener may have changed the same array).
+        const changePalette = function (palette, change, changeColors) {
+            dispatch(Object.assign({ key: palette.key, oldValue: undefined, item: item, sectionKey: ctrl.sectionKey }, change));
+            readPalettes();
+            if (typeof box.palettes !== "function") {
+                const shared = paletteCache.find(function (p) { return p.key === palette.key; });
+                if (shared) shared.colors = changeColors((shared.colors || []).slice());
+            }
+            palettes = palettesOf(item);
+            drawPaletteArea();
+            refreshQuickStrips();
+        };
+
+        const addColorTo = function (palette, value) {
+            if (!value || hasColor(palette.colors, value)) return;
+            changePalette(palette, { kind: "addColor", value: value }, function (colors) {
+                return (hasColor(colors, value)) ? colors : colors.concat([value]);
+            });
+        };
+
+        const deleteColor = function (view, palette) {
+            if (palette.isRecent) {
+                forgetColor(view.value);
+                drawRecentArea();
+                refreshQuickStrips();
+                return;
+            }
+            changePalette(palette, { kind: "removeColor", value: view.value }, function (colors) {
+                return colors.filter(function (color) { return !PropertyPanel.isSameValue(valueOfColor(color), view.value); });
+            });
+        };
+
+        // The values of the colors in the order of the grid (after a drag).
+        const sendOrder = function (palette, grid) {
+            const values = [];
+            Array.prototype.forEach.call(grid.elem.children, function (elem) {
+                const view = swatchViews.find(function (v) { return v.obj.elem === elem; });
+                if (view) values.push(view.value);
+            });
+            const isSameOrder = values.every(function (value, index) { return PropertyPanel.isSameValue(value, palette.colors[index].value); });
+            if (isSameOrder) return;
+            changePalette(palette, { kind: "orderColors", value: values }, function (colors) {
+                const ordered = values.map(function (value) {
+                    return colors.find(function (color) { return PropertyPanel.isSameValue(valueOfColor(color), value); });
+                });
+                return ordered.filter(function (color) { return color !== undefined; });
+            });
+        };
+
+        // DRAG: a color of an editable group goes before or after the color under the mouse (not a fixed one).
+        // It starts after a small move, so a click is still a click.
+        const DRAG_START_DISTANCE = 4;
+        const dragToOrder = function (view, palette, grid) {
+            const square = view.obj;
+            const moveTo = function (x, y) {
+                const target = swatchViews.find(function (v) {
+                    if (v === view || v.fixed) return false;
+                    const rect = v.obj.elem.getBoundingClientRect();
+                    return (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom);
+                });
+                if (!target) return;
+                const rect = target.obj.elem.getBoundingClientRect();
+                const isBefore = (x < rect.left + rect.width / 2);
+                grid.elem.insertBefore(square.elem, (isBefore) ? target.obj.elem : target.obj.elem.nextSibling);
+            };
+            // WHY window, not setPointerCapture: moving the square in the grid (insertBefore) loses the capture,
+            //     and its pointerup never came (found with a real drag, 2026-11-03)
+            square.elem.addEventListener("pointerdown", function (event) {
+                if (event.button !== 0) return;
+                const startX = event.clientX;
+                const startY = event.clientY;
+                let isDragging = 0;
+                const onMove = function (moveEvent) {
+                    const distance = Math.abs(moveEvent.clientX - startX) + Math.abs(moveEvent.clientY - startY);
+                    if (!isDragging && distance < DRAG_START_DISTANCE) return;
+                    if (!isDragging) {
+                        isDragging = 1;
+                        square.opacity = 0.5;
+                        square.cursor = "grabbing";
+                        closeColorMenu();
+                    }
+                    moveTo(moveEvent.clientX, moveEvent.clientY);
+                };
+                const onUp = function () {
+                    window.removeEventListener("pointermove", onMove);
+                    window.removeEventListener("pointerup", onUp);
+                    window.removeEventListener("pointercancel", onUp);
+                    if (!isDragging || square._isRemoved) return; // (the picker was closed while dragging)
+                    square.opacity = 1;
+                    square.cursor = "pointer";
+                    square.wasDragged = 1;
+                    square.after(0, function () { square.wasDragged = 0; }); // WHY: after the click of this pointerup
+                    sendOrder(palette, grid);
+                };
+                window.addEventListener("pointermove", onMove);
+                window.addEventListener("pointerup", onUp);
+                window.addEventListener("pointercancel", onUp);
+            });
+        };
+
+        // GROUP: The recent colors with their tick (hidden when there are none). Drawn again after a delete.
+        const drawRecentArea = function () {
+            (recentArea.parts || []).forEach(function (part) { part.remove(); });
+            recentViews = [];
+            recentArea.visible = (recentColors.length) ? 1 : 0;
+            if (!recentColors.length) return;
+            recentArea.parts = createIn(recentArea, function () {
+                // GROUP: The tick and the caption
+                const head = HGroup({ width: contentWidth, height: TICK_SIZE + 2, align: "left center", gap: 6, color: "transparent" });
+                    const tick = buildTick(quickColors.recent, "Show the recent colors under the color fields", function (isOn) {
+                        quickColors.recent = isOn;
+                        saveQuickColors();
+                        refreshQuickStrips();
+                    });
+                    tick.css.marginLeft = TICK_MARGIN + "px";
+                    textLabel("", { fontSize: _t.captionSize, textColor: _t.softColor, plainText: "Recent" });
+                endGroup();
+                const row = HGroup({ width: contentWidth, height: "auto", align: "left center", gap: cp.swatchGap, color: "transparent" });
+                row.css = { padding: cp.swatchRoom + "px", boxSizing: "border-box" };
+                row.clipContent = 0;
+                    recentViews = recentColors.map(function (value) {
+                        return buildSwatch({ value: value, color: paintColorOf(item, value), hint: value }, RECENT_PALETTE, null);
+                    });
+                endGroup();
+                return [head, row];
+            });
+            paintSelectedSwatch();
         };
 
         const buildSwatches = function (palette) {
@@ -1466,54 +1872,42 @@ const PropertyPanel = function (params = {}) {
             if (!palette.colors.length) {
                 const lblEmpty = textLabel("", { textColor: _t.softColor, plainText: palette.emptyText || "No colors yet." });
                 lblEmpty.css = { whiteSpace: "normal", lineHeight: "16px", padding: "2px 6px" };
-                return;
+                return null;
             }
             // GROUP: The colors of the palette (scrolls when there are many)
+            // WHY the padding: the scroll cuts what goes out of the grid (the selected ring, the hover growth).
             const grid = HGroup({ width: contentWidth, height: "auto", align: "left top", gap: cp.swatchGap, wrap: 1, color: "transparent" });
-            grid.css = { maxHeight: cp.swatchesMaxHeight + "px", padding: "3px", boxSizing: "border-box" };
+            grid.css = { maxHeight: cp.swatchesMaxHeight + "px", padding: cp.swatchRoom + "px", boxSizing: "border-box" };
             grid.scrollY = 1; // (also clickable)
                 palette.colors.forEach(function (preset) {
-                    swatchViews.push(buildSwatch(preset));
+                    swatchViews.push(buildSwatch(preset, palette, grid));
                 });
             endGroup();
+            return grid;
         };
 
-        // The palette part is drawn again when an other palette is chosen or a color is added.
+        // The palette part is drawn again when an other palette is chosen or its colors change.
+        // The scroll of the colors stays when it is the same palette (Ex: after a drag or a delete).
         const drawPaletteArea = function () {
-            if (paletteArea) paletteArea.remove();
+            closeColorMenu();
             const current = palettes.find(function (p) { return p.key === lastPaletteKey; }) || palettes[0];
+            const isSamePalette = (paletteArea && current && paletteArea.paletteKey === current.key && paletteArea.grid);
+            const keptScroll = (isSamePalette) ? paletteArea.grid.elem.scrollTop : 0;
+            if (paletteArea) paletteArea.remove();
             paletteArea = createIn(obj, function () {
                 // GROUP: Palettes
                 const group = VGroup({ width: contentWidth, height: "auto", align: "left top", gap: 6, color: "transparent" });
                 group.shrink = 0;
                     buildPaletteHeader(current);
                     if (isPaletteListOpen) buildPaletteList(current);
-                    else if (current) buildSwatches(current);
+                    else if (current) group.grid = buildSwatches(current);
                 endGroup();
                 return group;
             });
+            paletteArea.paletteKey = (current) ? current.key : "";
+            if (paletteArea.grid) paletteArea.grid.elem.scrollTop = keptScroll;
             paintSelectedSwatch();
             placePicker();
-        };
-
-        const addColorTo = function (palette) {
-            const value = colorField.getValue();
-            if (!value) return;
-            const isThere = palette.colors.some(function (preset) { return PropertyPanel.isSameValue(preset.value, value); });
-            if (!isThere) {
-                dispatch({ kind: "addColor", key: palette.key, value: value, oldValue: undefined, item: item, sectionKey: ctrl.sectionKey });
-            }
-            palettes = palettesOf(item, 1);
-            const fresh = palettes.find(function (p) { return p.key === palette.key; });
-            // WHY: A static palette (not a function) is not changed by the listener: the panel adds it.
-            if (fresh && !fresh.colors.some(function (preset) { return PropertyPanel.isSameValue(preset.value, value); })) {
-                const shared = (paletteCache || []).find(function (p) { return p.key === palette.key; });
-                if (shared) {
-                    shared.colors = (shared.colors || []).concat([value]);
-                    palettes = palettesOf(item);
-                }
-            }
-            drawPaletteArea();
         };
 
         // GROUP: The color before the picker opened (a click goes back to it) and the color now.
@@ -1675,7 +2069,11 @@ const PropertyPanel = function (params = {}) {
                     inputs.field.elem.insertBefore(formatButton.elem, inputs.field.elem.firstChild);
                 endGroup();
 
-                buildRecentColors();
+                // GROUP: The recent colors (drawn by drawRecentArea)
+                recentArea = VGroup({ width: contentWidth, height: "auto", align: "left top", gap: 6, color: "transparent" });
+                recentArea.shrink = 0;
+                recentArea.clipContent = 0;
+                endGroup();
 
                 // BOX: Line
                 const line = Box({ width: contentWidth, height: 1, color: ms.borderColor });
@@ -1694,10 +2092,18 @@ const PropertyPanel = function (params = {}) {
                 paintPicker();
             },
             onClose: function () {
+                colorMenu = null; // (removed with the picker)
                 const value = colorField.getValue();
-                if (value !== valueAtOpen) rememberColor(value);
+                if (value === valueAtOpen) return;
+                rememberColor(value);
+                if (quickColors.recent) refreshQuickStrips();
             },
         };
+
+        // WHY capture: a click anywhere else in the picker (a color too) closes the menu of a color first.
+        obj.elem.addEventListener("pointerdown", function (event) {
+            if (colorMenu && !colorMenu.elem.contains(event.target)) closeColorMenu();
+        }, true);
 
         dragOn(area, function (x, y) {
             hsv.s = x;
@@ -1734,6 +2140,7 @@ const PropertyPanel = function (params = {}) {
         });
 
         readState();
+        drawRecentArea();
         paintPicker();
         drawPaletteArea();
         area.elem.focus({ preventScroll: true });
@@ -1775,6 +2182,7 @@ const PropertyPanel = function (params = {}) {
             paintChecker(swatchArea.fill, paintColorOf(item, value));
             setBorder(swatchArea.fill, (isEmpty) ? sw.emptyColor : sw.borderColor);
             showColorInputs(input, alphaInput, value);
+            strip.paint(value);
         };
 
         const setValue = function (v) {
@@ -1788,6 +2196,11 @@ const PropertyPanel = function (params = {}) {
             paint();
             changeValue(ctrl, value);
         };
+
+        // GROUP: The quick colors under the field (the ticks of the picker)
+        const strip = buildQuickStrip(item, getSpanWidth(item.span), function (pickedValue) {
+            if (state.enabled) commit(pickedValue);
+        });
 
         const colorField = {
             anchor: field,
@@ -1817,6 +2230,7 @@ const PropertyPanel = function (params = {}) {
                 alphaInput.inputElement.disabled = !enabled;
                 alphaInput.inputElement.style.color = ink(enabled, _t.color);
                 swatchArea.opacity = (enabled) ? 1 : 0.5;
+                strip.setEnabled(enabled);
             },
         };
 
@@ -2487,6 +2901,7 @@ const PropertyPanel = function (params = {}) {
         closeMenu();
         paletteCache = null;
         controllers = {};
+        quickStrips = [];
         box.data = PropertyPanel.copyData(data || {});
         buildHeader();
         buildContent();

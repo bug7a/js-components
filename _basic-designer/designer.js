@@ -1287,7 +1287,11 @@ BasicDesigner.defaultPaletteColors = function (palette) {
         return { value: value, color: value, hint: value + " (added by you)" };
     });
     const isYours = function (preset) { return BasicDesigner.settings.favoriteColors.indexOf(preset.value) !== -1; };
-    return yours.concat(colors.filter(function (preset) { return !isYours(preset); }));
+    // WHY fixed: the colors of the file are not deleted or moved in the picker (only yours)
+    const fileColors = colors.filter(function (preset) { return !isYours(preset); }).map(function (preset) {
+        return Object.assign(preset, { fixed: 1 });
+    });
+    return yours.concat(fileColors);
 };
 
 // The default palettes (default-palettes.js) in the form of the picker, without the hidden ones.
@@ -1311,6 +1315,37 @@ BasicDesigner.addColorToGroup = function (paletteKey, color) {
     if (group.colors.indexOf(color) === -1) group.colors.push(color);
     BasicDesigner.saveSettings();
     BasicDesigner.setStatus("Added " + color + " to the color group " + group.name + ".");
+};
+
+// The colors of the settings behind an editable palette of the picker: { name, colors } (colors: the list of the
+// settings itself), or null. ★ Favorites: only the colors you added.
+BasicDesigner.editableColorsOf = function (paletteKey) {
+    if (paletteKey === BasicDesigner.DEFAULT_KEY + BasicDesigner.FAVORITES_KEY) {
+        return { name: "★ Favorites", colors: BasicDesigner.settings.favoriteColors };
+    }
+    const group = BasicDesigner.settings.colorGroups.find(function (g) { return BasicDesigner.GROUP_KEY + g.id === paletteKey; });
+    return (group) ? { name: "the color group " + group.name, colors: group.colors } : null;
+};
+
+// Delete in the menu of a color of the picker (a right click).
+BasicDesigner.removeColorFromGroup = function (paletteKey, color) {
+    const target = BasicDesigner.editableColorsOf(paletteKey);
+    if (!target) return;
+    const place = target.colors.indexOf(color);
+    if (place === -1) return;
+    target.colors.splice(place, 1);
+    BasicDesigner.saveSettings();
+    BasicDesigner.setStatus("Removed " + color + " from " + target.name + ".");
+};
+
+// A color dragged to another place in its group. values: every color of the palette in the new order.
+BasicDesigner.orderGroupColors = function (paletteKey, values) {
+    const target = BasicDesigner.editableColorsOf(paletteKey);
+    if (!target) return;
+    const ordered = values.filter(function (value) { return target.colors.indexOf(value) !== -1; });
+    if (ordered.length !== target.colors.length) return; // WHY: a list that does not match the settings changes nothing
+    target.colors.splice.apply(target.colors, [0, target.colors.length].concat(ordered));
+    BasicDesigner.saveSettings();
 };
 
 // The + of ★ Favorites: the color goes to the start of the group (kept in the settings).
@@ -1774,6 +1809,14 @@ BasicDesigner.onPropertyChange = function (change) {
     const obj = s.selected;
     if (change.kind === "addColor") {
         BasicDesigner.addColorToGroup(change.key, change.value);
+        return;
+    }
+    if (change.kind === "removeColor") {
+        BasicDesigner.removeColorFromGroup(change.key, change.value);
+        return;
+    }
+    if (change.kind === "orderColors") {
+        BasicDesigner.orderGroupColors(change.key, change.value);
         return;
     }
     if (s.isPageSelected) {
