@@ -46,7 +46,8 @@ UI COMPONENT TEMPLATE
                   the panel (Recent | the selected group, two rows, "+N" shows the others); a click on one gives it to
                   the field, a right click opens the same menu (Copy to, Delete; a ContextMenu with a submenu when
                   comp/context-menu.js is loaded). Kept with recentColorsKey.
-- Items of a row: put them in an array. span: 1 (one column), 2 (two columns). An iconButton takes the
+- Items of a row: put them in an array. span: 1 (one column), 2 (two columns), "full", or a width in px (a
+  number over 2, 2026-11-03: Ex: a switch of 100 and a field of 108 fill a row with the gap). An iconButton takes the
   small last column. label: the caption above the item.
 - Listen to every change from outside: onChange(change, panel) or panel.listen(fn) (returns a remover).
   change = { kind: "value" | "action" | "tab" | "addColor" | "removeColor" | "orderColors", key, value, oldValue, item, sectionKey }
@@ -252,8 +253,11 @@ const PropertyPanel = function (params = {}) {
         return '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="' + path + '"/></svg>';
     };
 
+    // span: 1, 2, "full", or a width in px (a number over 2: Ex: 100 + 108 + the gap = a full row)
+    const SPAN_PX_FROM = 3;
     const getSpanWidth = function (span) {
         if (span === "full") return panelWidth - _ps.paddingLeft - _ps.paddingRight;
+        if (typeof span === "number" && span >= SPAN_PX_FROM) return span;
         if (span == 2) return _g.columnWidth * 2 + _g.gap;
         return _g.columnWidth;
     };

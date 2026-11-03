@@ -1676,8 +1676,9 @@ BasicDesigner.measuredSize = function (key) {
 // Bottom) and a click on it changes the side ("__side:right"); its menu gives a value (the user, 2026-11-03: only
 // these three); a text value like the sizes (100%, calc...).
 BasicDesigner.SIDE_NAMES = { left: "Left", right: "Right", top: "Top", bottom: "Bottom" };
-BasicDesigner.OTHER_SIDES = { left: "right", right: "left", top: "bottom", bottom: "top" };
-BasicDesigner.SIDE_PREFIX_WIDTH = 56; // "Bottom" fits
+// WHY these widths: the switch and the field fill a full row (100 + the gap 8 + 108); "Bottom" fits the switch
+BasicDesigner.SIDE_SWITCH_WIDTH = 100;
+BasicDesigner.SIDE_FIELD_WIDTH = 108;
 BasicDesigner.SIDE_VALUE_PRESETS = [
     { value: "0", text: "0" },
     { value: "50%", text: "50%" },
@@ -1685,20 +1686,30 @@ BasicDesigner.SIDE_VALUE_PRESETS = [
 ];
 BasicDesigner.SIDE_PREFIX = "__side:";
 
-BasicDesigner.sideItem = function (side, label, value) {
+// A row of an axis (the user, 2026-11-03): a switch of its two sides (both are seen, the chosen one is marked) and the
+// distance; the arrows of the field are dragged to change it. sides: ["left", "right"] or ["top", "bottom"]
+BasicDesigner.sideRow = function (axisKey, label, sides, side, value) {
+    const switchItem = {
+        key: axisKey,
+        type: "segmented",
+        label: label,
+        value: side,
+        span: BasicDesigner.SIDE_SWITCH_WIDTH,
+        options: sides.map(function (s) { return { value: s, text: BasicDesigner.SIDE_NAMES[s], hint: "The distance from the " + s + " side" }; }),
+    };
+    return [switchItem, BasicDesigner.sideItem(side, value)];
+};
+
+BasicDesigner.sideItem = function (side, value) {
     const shown = BasicDesigner.toNumber(value);
-    // WHY the whole word, a row for each (the user, 2026-11-03): a click on it changes the side (Left <-> Right)
-    const otherSide = BasicDesigner.OTHER_SIDES[side];
+    const isHorizontal = (side === "left" || side === "right");
     return {
         key: side,
         type: "combo",
-        label: label,
-        prefix: BasicDesigner.SIDE_NAMES[side],
-        prefixWidth: BasicDesigner.SIDE_PREFIX_WIDTH,
-        prefixClick: BasicDesigner.SIDE_PREFIX + otherSide,
-        prefixHint: "Click: from the " + otherSide + " side. Drag: change the distance.",
-        hint: "The distance from the " + side + " side",
-        span: "full",
+        label: "",
+        prefix: (isHorizontal) ? "constraintH" : "constraintV",
+        hint: "The distance from the " + side + " side (drag the arrows to change it)",
+        span: BasicDesigner.SIDE_FIELD_WIDTH,
         value: (typeof shown === "number") ? Math.round(shown * 100) / 100 : shown,
         options: BasicDesigner.SIDE_VALUE_PRESETS,
         parseText: BasicDesigner.parsePositionText,
@@ -1727,8 +1738,8 @@ BasicDesigner.positionSection = function (p) {
     if (p.isAbsolute) {
         const h = p.hAnchor;
         const v = p.vAnchor;
-        items.push([BasicDesigner.sideItem(h, "Distance", p[h])]);
-        items.push([BasicDesigner.sideItem(v, "", p[v])]);
+        items.push(BasicDesigner.sideRow("__hAnchor", "Horizontal", ["left", "right"], h, p[h]));
+        items.push(BasicDesigner.sideRow("__vAnchor", "Vertical", ["top", "bottom"], v, p[v]));
         items.push([BasicDesigner.snapItem()]);
     }
     items.push([{ key: "rotate", type: "number", label: "Rotate", icon: "angle", value: p.rotate, unit: "°" }]);
