@@ -495,6 +495,9 @@ const ContextMenu = function (params = {}) {
 
         if (event.key === "Escape" || (event.key === "ArrowLeft" && box.parentMenu)) {
             event.preventDefault();
+            // WHY: this Escape closes the menu only (a page listener after it would also clear its selection:
+            //      basic-designer, 2026-11-03)
+            if (event.key === "Escape") event.stopPropagation();
             // A submenu closes only itself; its item in the menu before stays active.
             if (box.parentMenu) box.parentMenu.closeSubmenu();
             else box.close();

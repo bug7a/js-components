@@ -40,7 +40,8 @@ UI COMPONENT TEMPLATE
                   recent colors (recentColorsKey: kept in basic.storage).
                   The ticks before "Recent" and the group name: their colors are shown under every color field of
                   the panel (Recent | the selected group, two rows, "+N" shows the others); a click on one gives it to
-                  the field, a right click opens the same menu (Copy to, Delete). Kept with recentColorsKey.
+                  the field, a right click opens the same menu (Copy to, Delete; a ContextMenu with a submenu when
+                  comp/context-menu.js is loaded). Kept with recentColorsKey.
 - Items of a row: put them in an array. span: 1 (one column), 2 (two columns). An iconButton takes the
   small last column. label: the caption above the item.
 - Listen to every change from outside: onChange(change, panel) or panel.listen(fn) (returns a remover).
@@ -1337,6 +1338,48 @@ const PropertyPanel = function (params = {}) {
         return menuBox;
     };
 
+    // MENU: The menu of a color under a field as a ContextMenu (comp/context-menu.js), in the colors of the panel.
+    // One for the panel, made the first time (box.own: removed with the panel). Its items change at every open.
+    let quickContextMenu = null;
+    let onQuickMenuClick = null;
+
+    // ctrlOfStrip: the ctrl of the color field of the strip
+    const openQuickContextMenu = function (ctrlOfStrip, square, palette, value, event) {
+        const targets = copyTargetsOf(ctrlOfStrip.item, palette, value);
+        const canDelete = canDeleteFrom(palette);
+        if (!targets.length && !canDelete) return;
+        closeMenu(); // (the picker)
+        if (!quickContextMenu) {
+            const ms = _s.menu;
+            quickContextMenu = box.own(ContextMenu({
+                styleName: "dark",
+                minWidth: COLOR_MENU_WIDTH,
+                style: {
+                    menu: { color: ms.color, borderColor: ms.borderColor, shadow: ms.shadow, round: ms.round, zIndex: MENU_Z_INDEX },
+                    item: { height: ms.rowHeight, fontSize: _t.fontSize, textColor: ms.textColor },
+                    itemHover: { color: ms.hoverColor, textColor: ms.textColor },
+                },
+                onClick: function (self, item) { if (onQuickMenuClick) onQuickMenuClick(item); },
+            }));
+        }
+        const items = [];
+        if (targets.length) {
+            items.push({ text: "Copy to", icon: getIcon("copy", 16), items: targets.map(function (target) { return { text: target.name, key: "copy", data: target }; }) });
+        }
+        if (targets.length && canDelete) items.push("-");
+        if (canDelete) items.push({ text: "Delete", key: "delete", icon: getIcon("trash", 16) });
+        onQuickMenuClick = function (item) {
+            if (item.key === "copy") addPaletteColor(ctrlOfStrip, item.data, value);
+            if (item.key === "delete") deletePaletteColor(ctrlOfStrip, palette, value);
+        };
+        quickContextMenu.setItems(items);
+        const rect = square.elem.getBoundingClientRect();
+        const x = (event) ? event.clientX : rect.left;
+        const y = (event) ? event.clientY : rect.bottom;
+        quickContextMenu.openAt(x, y, square);
+        if (!event) quickContextMenu.activateFirst(); // (the keyboard: the first item is active)
+    };
+
     const QUICK_ROWS = 2; // The colors under a field: more rows are behind "+N"
     const MORE_BUTTON_SLOTS = 2; // "+N" takes the place of two colors
     const buildQuickStrip = function (ctrl, width, onPick) {
@@ -1355,8 +1398,13 @@ const PropertyPanel = function (params = {}) {
 
         // The menu of a color (a right click, or the menu key): Copy to an editable group, Delete from its group.
         // (on the page, in the menu slot of the panel: a click outside or Escape closes it)
-        const openQuickMenu = function (square, palette, value) {
+        // With comp/context-menu.js loaded it is a ContextMenu (its submenu), else the menu of the panel.
+        const openQuickMenu = function (square, palette, value, event) {
             if (!view.enabled) return;
+            if (typeof ContextMenu === "function") {
+                openQuickContextMenu(ctrl, square, palette, value, event);
+                return;
+            }
             const isOpenByThisColor = (menu && menu.opener === square);
             closeMenu();
             if (isOpenByThisColor) return;
@@ -1400,13 +1448,13 @@ const PropertyPanel = function (params = {}) {
             onActivateKey(square, pick);
             square.elem.addEventListener("contextmenu", function (event) {
                 event.preventDefault();
-                openQuickMenu(square, palette, preset.value);
+                openQuickMenu(square, palette, preset.value, event);
             });
             square.on("keydown", function (self, event) {
                 const isMenuKey = (event.key === "ContextMenu" || (event.key === "F10" && event.shiftKey));
                 if (!isMenuKey) return;
                 event.preventDefault();
-                openQuickMenu(square, palette, preset.value);
+                openQuickMenu(square, palette, preset.value, null);
             });
             square.presetValue = preset.value;
             view.squares.push(square);

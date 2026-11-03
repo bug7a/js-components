@@ -7561,6 +7561,22 @@ BasicDesigner.stopBrowserMenu = function (event) {
 
 BasicDesigner.TEXT_TYPES = ["label", "button", "textbox"];
 
+// The icons of the menu (16 x 16 lines; ContextMenu draws them in the color of the text)
+BasicDesigner.OBJECT_MENU_ICONS = {
+    duplicate: "M5.5 5.5h7v7h-7zM10.5 5.5v-3h-8v8h3",
+    copy: "M6 6h7v7H6zM10 6V3H3v7h3",
+    paste: "M5.5 3.5h-2v10h9v-10h-2M6 2.5h4v2H6z",
+    editText: "M3 4.5V3h10v1.5M8 3v10M6.5 13h3",
+    moveUp: "M8 13V3M4.5 6.5L8 3l3.5 3.5",
+    moveDown: "M8 3v10M4.5 9.5L8 13l3.5-3.5",
+    openCode: "M5.5 4.5L2 8l3.5 3.5M10.5 4.5L14 8l-3.5 3.5",
+    delete: "M2.5 4.5h11M6.5 4.5V3h3v1.5M4 4.5l.7 8.5h6.6l.7-8.5",
+};
+
+BasicDesigner.objectMenuIcon = function (key) {
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="' + BasicDesigner.OBJECT_MENU_ICONS[key] + '"/></svg>';
+};
+
 BasicDesigner.objectMenuItems = function (obj) {
     const container = obj.containerBox;
     const canReorder = BasicDesigner.isPlainContainer(container);
@@ -7578,7 +7594,13 @@ BasicDesigner.objectMenuItems = function (obj) {
         "-",
         { text: "Open the code · Enter", key: "openCode" },
         { text: "Delete · ⌫", key: "delete" },
-    ];
+    ].map(BasicDesigner.withMenuIcon);
+};
+
+// An item of the menu with its icon ("-" stays a line)
+BasicDesigner.withMenuIcon = function (item) {
+    if (typeof item === "string") return item;
+    return Object.assign({ icon: BasicDesigner.objectMenuIcon(item.key) }, item);
 };
 
 BasicDesigner.onObjectMenu = function (key, obj) {
@@ -7613,7 +7635,7 @@ BasicDesigner.openObjectMenu = function (obj, x, y, from) {
             });
         });
     }
-    ui.objectMenu.setItems((movable) ? BasicDesigner.objectMenuItems(movable) : [{ text: BasicDesigner.pasteMenuText(null), key: "paste" }]);
+    ui.objectMenu.setItems((movable) ? BasicDesigner.objectMenuItems(movable) : [BasicDesigner.withMenuIcon({ text: BasicDesigner.pasteMenuText(null), key: "paste" })]);
     ui.objectMenu.openAt(x, y, movable);
 };
 

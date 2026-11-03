@@ -456,12 +456,35 @@
             const square = ui.panel.elem.querySelector("[aria-label='#333333 (Mine)']");
             square.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true }));
             await wait(10);
-            const row = document.querySelector("[aria-label='Delete #333333 from Mine']");
+            // (a ContextMenu: comp/context-menu.js is loaded in this test)
+            const row = Array.from(document.querySelectorAll("[role=menuitem]")).find(function (el) { return el.textContent === "Delete" && el.offsetParent !== null; });
             if (row) row.click();
             await wait(10);
             const removed = changes.find(function (change) { return change.kind === "removeColor"; });
             const isGone = !ui.panel.elem.querySelector("[aria-label='#333333 (Mine)']");
             check("PropertyPanel: Delete in the menu of a color under a field removes it from its group", !!row && !!removed && removed.value === "#333333" && isGone, "menu row: " + !!row + ", change: " + !!removed + ", gone: " + isGone);
+            ui.panel.remove();
+        });
+
+        test("PropertyPanel: Copy to › in the ContextMenu of a color under a field copies it to the group of its submenu", async function () {
+            const changes = [];
+            const ui = await openColorPanel(changes);
+            await showGroupUnderField(ui);
+            const square = ui.panel.elem.querySelector("[aria-label='#333333 (Mine)']");
+            const rect = square.getBoundingClientRect();
+            square.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: rect.left, clientY: rect.bottom }));
+            await wait(30);
+            const visibleRow = function (text) {
+                return Array.from(document.querySelectorAll("[role=menuitem]")).find(function (el) { return el.textContent === text && el.offsetParent !== null; });
+            };
+            const rowCopy = visibleRow("Copy to");
+            if (rowCopy) rowCopy.dispatchEvent(new MouseEvent("mouseenter"));
+            await wait(30);
+            const rowOther = visibleRow("Other");
+            if (rowOther) rowOther.click();
+            await wait(10);
+            const added = changes.find(function (change) { return change.kind === "addColor"; });
+            check("PropertyPanel: Copy to › in the ContextMenu of a color under a field copies it to the group of its submenu", !!rowCopy && !!rowOther && !!added && added.key === "other" && added.value === "#333333", "Copy to: " + !!rowCopy + ", Other: " + !!rowOther + ", added: " + (added && added.key));
             ui.panel.remove();
         });
 
@@ -534,6 +557,17 @@
             key(document, "keydown", "Enter");
             await wait(10);
             check("ContextMenu: ArrowRight opens a submenu with its first item active, ArrowLeft closes only the submenu", isOpen && isSubmenuClosed && clicks.join() === "other" && !ui.menu.isOpen(), "open: " + isOpen + ", only the submenu closed: " + isSubmenuClosed + ", clicks: " + clicks.join());
+            ui.menu.remove();
+        });
+
+        test("ContextMenu: Escape closes only the menu (a listener of the page after it does not get it)", async function () {
+            const ui = await openSubmenuTestMenu([]);
+            let pageGotIt = 0;
+            const onPageKey = function (event) { if (event.key === "Escape") pageGotIt = 1; };
+            document.addEventListener("keydown", onPageKey);
+            key(document.body, "keydown", "Escape");
+            document.removeEventListener("keydown", onPageKey);
+            check("ContextMenu: Escape closes only the menu (a listener of the page after it does not get it)", !ui.menu.isOpen() && !pageGotIt, "open: " + ui.menu.isOpen() + ", the page got it: " + pageGotIt);
             ui.menu.remove();
         });
 
