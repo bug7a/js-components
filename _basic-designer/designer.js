@@ -514,7 +514,10 @@ BasicDesigner.load = async function (pagePath) {
             html = await BasicDesigner.fetchText(s.pageUrl);
         }
     } catch (error) {
-        BasicDesigner.setStatus("Could not load " + pagePath + ": " + error.message + " (open the designer from a web server, Ex: Live Server)", "error");
+        const isMissing = BasicDesigner.isMissingError(error);
+        if (isMissing) BasicDesigner.forgetPage(pagePath); // (it leaves the recent pages)
+        const hint = (isMissing) ? "the file is not there (moved or deleted); it left the recent pages" : "open the designer from a web server, Ex: Live Server";
+        BasicDesigner.setStatus("Could not load " + pagePath + ": " + error.message + " (" + hint + ")", "error");
         return;
     }
 
@@ -4964,6 +4967,66 @@ BasicDesigner.rememberPage = function (pagePath) {
     basic.storage.save(BasicDesigner.RECENT_KEY, list.slice(0, BasicDesigner.config.recentCount));
 };
 
+// *** PATHS THAT ARE NOT THERE ANY MORE (2026-11-03, the user: an old recent page "did not open"; a folder was moved):
+// they leave the recent pages and folders, and the saved session of a page goes with it. Only a sure answer
+// (404, ENOENT) removes a path: an error of the network or a server that does not list folders keeps it.
+
+BasicDesigner.isMissingError = function (error) {
+    return /404|ENOENT|no such file/i.test(String(error && error.message || error));
+};
+
+BasicDesigner.forgetPage = function (pagePath) {
+    const list = BasicDesigner.recentPages().filter(function (p) { return p !== pagePath; });
+    basic.storage.save(BasicDesigner.RECENT_KEY, list);
+    basic.storage.remove(BasicDesigner.SESSION_KEY + pagePath);
+};
+
+BasicDesigner.forgetFolder = function (folderPath) {
+    const list = BasicDesigner.recentFolders().filter(function (p) { return p !== folderPath; });
+    basic.storage.save(BasicDesigner.RECENT_FOLDERS_KEY, list);
+};
+
+// 1: the page is surely not there (404)
+BasicDesigner.isPageMissing = async function (pagePath) {
+    try {
+        const response = await fetch(new URL(pagePath, BasicDesigner.state.rootUrl).href, { method: "HEAD", cache: "no-store" });
+        return (response.status === 404) ? 1 : 0;
+    } catch (error) {
+        return 0;
+    }
+};
+
+BasicDesigner.isFolderMissing = async function (folderPath) {
+    try {
+        await BasicDesigner.listFolder(folderPath);
+        return 0;
+    } catch (error) {
+        return BasicDesigner.isMissingError(error) ? 1 : 0;
+    }
+};
+
+// Once in a session of the designer (the first time the list of pages opens). Returns 1 when one was removed.
+BasicDesigner.forgetMissingPaths = async function () {
+    if (BasicDesigner.areRecentPathsChecked) return 0;
+    BasicDesigner.areRecentPathsChecked = true;
+    const pages = BasicDesigner.recentPages();
+    const folders = BasicDesigner.recentFolders();
+    const missingPages = await Promise.all(pages.map(BasicDesigner.isPageMissing));
+    const missingFolders = await Promise.all(folders.map(BasicDesigner.isFolderMissing));
+    let count = 0;
+    pages.forEach(function (pagePath, index) {
+        if (!missingPages[index]) return;
+        BasicDesigner.forgetPage(pagePath);
+        count++;
+    });
+    folders.forEach(function (folderPath, index) {
+        if (!missingFolders[index]) return;
+        BasicDesigner.forgetFolder(folderPath);
+        count++;
+    });
+    return (count) ? 1 : 0;
+};
+
 BasicDesigner.buildPagePicker = function () {
 
     const C = BasicDesigner.colors;
@@ -5068,10 +5131,13 @@ BasicDesigner.closePageMenu = function () {
     ui.pageMenuIndex = -1;
 };
 
-// The list under the field, with the typed text in them: "Recent pages", "Recent folders" (a click selects one),
-// then the pages of the selected folder (its name as the title; "Open Folder…" when there is none).
-// WHY: The long list (a folder can have many pages) is the last one, so the two short ones are always seen.
+// The list under the field, with the typed text in them: "Recent pages", the pages of the selected folder (its
+// name as the title; "Open Folder…" when there is none), then "Recent folders" (a click selects one) at the bottom
+// (the user, 2026-11-03). The paths that are not there any more are removed the first time (forgetMissingPaths).
 BasicDesigner.openPageMenu = function (filter) {
+    BasicDesigner.forgetMissingPaths().then(function (isChanged) {
+        if (isChanged && BasicDesigner.ui.pageMenu) BasicDesigner.openPageMenu(filter);
+    });
 
     const C = BasicDesigner.colors;
     const ui = BasicDesigner.ui;
@@ -5137,14 +5203,6 @@ BasicDesigner.openPageMenu = function (filter) {
                     if (recent.length) addTitle("Recent pages");
                     recent.forEach(function (pagePath) { addPageRow(pagePath); });
 
-                    // RECENT FOLDERS: a click selects the folder, and the list shows its pages
-                    if (recentFolders.length) addTitle("Recent folders");
-                    recentFolders.forEach(function (folderPath) {
-                        addRow("▸  " + folderPath + "/", async function () {
-                            if (await BasicDesigner.setFolder(folderPath)) BasicDesigner.openPagePicker();
-                        });
-                    });
-
                     // SELECTED FOLDER: its pages, shown without the folder part of their path
                     if (folder && (folderPages.length || !text)) {
                         addTitle("Selected folder: " + folder.path + "/" + ((folder.pages.length) ? "" : "  (no .htm page)"));
@@ -5153,6 +5211,14 @@ BasicDesigner.openPageMenu = function (filter) {
                         addTitle("Selected folder");
                         addRow("Open Folder…", function () { BasicDesigner.openFolderDialog(); });
                     }
+
+                    // RECENT FOLDERS (at the bottom): a click selects the folder, and the list shows its pages
+                    if (recentFolders.length) addTitle("Recent folders");
+                    recentFolders.forEach(function (folderPath) {
+                        addRow("▸  " + folderPath + "/", async function () {
+                            if (await BasicDesigner.setFolder(folderPath)) BasicDesigner.openPagePicker();
+                        });
+                    });
 
                     if (text && !recent.length && !folderPages.length && !recentFolders.length) addTitle("No page with \"" + text + "\". Enter loads the path as it is.");
 
