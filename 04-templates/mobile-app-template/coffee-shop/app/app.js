@@ -359,6 +359,7 @@ App.createIconButton = function (iconPath, ariaLabel, onClick) {
         labelText: "",
         iconFile: App.makeIcon(iconPath, App.colors.text),
         ariaLabel: ariaLabel,
+        height: "auto", // WHY: as high as it is wide (10 + 24 + 10), not the default 40 of SmartButton
         style: { layout: { padding: [10, 10] } },
         onClick: onClick,
     });

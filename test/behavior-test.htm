@@ -636,6 +636,20 @@
             [outlined, own, shared].forEach(function (button) { button.remove(); });
         });
 
+        // 2026-11-03 (the user): 40 by default; ozdenType1 was 29 px with "auto"
+        test("SmartButton: 40 high by default, the shapes as high as their content", async function () {
+            const plain = SmartButton({ labelText: "Go" });
+            const pill = SmartButton({ styleName: "pill", tone: "blue", labelText: "Go", iconFile: "../comp/smart-button/alert-black.png" });
+            const classic = SmartButton({ styleName: "classic", labelText: "Go" });
+            const iconOnTop = SmartButton({ labelText: "Go", iconFile: "../comp/smart-button/alert-black.png", iconPosition: "top" });
+            await basic.nextFrame();
+            check("SmartButton: the default is 40 high", plain.elem.offsetHeight === 40, plain.elem.offsetHeight);
+            check("SmartButton: pill keeps its 52 px", pill.elem.offsetHeight === 52, pill.elem.offsetHeight);
+            check("SmartButton: classic keeps its height", classic.elem.offsetHeight === 36, classic.elem.offsetHeight);
+            check("SmartButton: an icon on top is not cut at 40", iconOnTop.elem.offsetHeight > 40, iconOnTop.elem.offsetHeight);
+            [plain, pill, classic, iconOnTop].forEach(function (button) { button.remove(); });
+        });
+
         // *** TOGGLE (comp/toggle.js)
 
         test("Toggle: the keyboard and screen readers can use it", async function () {

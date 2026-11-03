@@ -8,6 +8,8 @@ THE DEFAULT BUTTON of new pages and projects (the user, 2026-10-30). It was Butt
 (comp/button-with-icon.js) until 2026-10-30: renamed and moved to comp-m4.
 
 - A button with an icon and a text (or only one of them); the icon on the left or on top (iconPosition).
+- HEIGHT (2026-11-03, the user): 40 by default (ozdenType1 was 29 px with "auto"). "auto" (as high as the padding and
+  the content) stays for classic (36), pill, pillSolid, outlined (52) and an icon on top. width: "auto" by default.
 - STYLE PACKAGES (SmartButton.styles; sample 02-comp-examples/smart-button-3-ozden.htm; the draft
   _designs/smart-button.htm): "ozdenType1" (THE DEFAULT: SmartButtonDefaults.style): #E3E3E3, a thin dark edge and
   a darker line at the bottom; "ozdenType2": no bottom line; "ozdenType3": a faint edge; "ozdenType4": a ghost (no
@@ -71,7 +73,7 @@ const SmartButtonDefaults = {
     styleName: "ozdenType1", // SmartButton.styles: "ozdenType1" (the default), "ozdenType2", "ozdenType3", "ozdenType4", "classic", "pill", "pillSolid", "outlined"...
     tone: "", // the color: a name of SmartButton.TONES (Ex: "blue", "primary"). "": the colors of the package. setTone()
     width: "auto",
-    height: "auto",
+    height: 40, // (the user, 2026-11-03) "auto": as high as its padding and content. classic, pill, pillSolid, outlined and an icon on top are "auto"
     labelText: "Button",
     iconFile: "", // "": no icon (Ex: "../comp/smart-button/alert-black.png")
     iconPosition: "left", // "left", "top"
@@ -167,6 +169,8 @@ const SmartButton = function (params = {}) {
     // Merge params:
     SmartButton.applyTone(params);
     basic.applyStylePackage(params, SmartButton.styles, SmartButtonDefaults);
+    // WHY: 40 is the height of a row; an icon above its text needs more (about 60)
+    if (params.iconPosition === "top" && params.height === undefined) params.height = "auto";
     mergeIntoIfMissing(params, SmartButtonDefaults);
 
     // BOX: Component container
@@ -666,12 +670,15 @@ SmartButton.styles = {
     ozdenType3: { box: { borderColor: Black(0.1), boxShadow: "none" } }, // a faint edge
     ozdenType4: { box: { color: White(0), border: 0, borderColor: "transparent", boxShadow: "none" } }, // a ghost
     classic: { // the look of before 2026-10-30
-        layout: { gap: 8, padding: [12, 6] },
-        icon: { opacity: 1 },
-        label: { fontSize: 16, textColor: Black(0.8), fontFamily: "opensans-bold" },
-        box: { color: White(1), border: 1, borderColor: Black(0.2), round: 6, boxShadow: "none" },
-        hover: { color: "#f5f5f5" },
-        active: { color: "#e0e0e0" },
+        style: {
+            layout: { gap: 8, padding: [12, 6] },
+            icon: { opacity: 1 },
+            label: { fontSize: 16, textColor: Black(0.8), fontFamily: "opensans-bold" },
+            box: { color: White(1), border: 1, borderColor: Black(0.2), round: 6, boxShadow: "none" },
+            hover: { color: "#f5f5f5" },
+            active: { color: "#e0e0e0" },
+        },
+        height: "auto", // WHY: as before 2026-11-03 (36 px; the old pages have buttons of two lines too)
     },
 };
 
@@ -820,11 +827,12 @@ SmartButton.OUTLINED_SHAPE = {
     label: { fontFamily: "opensans" },
     box: { border: SmartButton.EDGE_WIDTH, round: SmartButton.PILL_ROUND },
 };
+// WHY height "auto": a shape is as high as its padding and its 30 px icon (52 px), not the default 40
 SmartButton.createShapePackage = function (shape, look) {
-    const shapePackage = {};
-    mergeIntoIfMissing(shapePackage, look);
-    mergeIntoIfMissing(shapePackage, shape);
-    return shapePackage;
+    const shapeStyle = {};
+    mergeIntoIfMissing(shapeStyle, look);
+    mergeIntoIfMissing(shapeStyle, shape);
+    return { style: shapeStyle, height: "auto" };
 };
 SmartButton.styles.pill = SmartButton.createShapePackage(SmartButton.PILL_SHAPE, SmartButton.toneLooks.pill(SmartButton.TONES.gray));
 SmartButton.styles.pillSolid = SmartButton.createShapePackage(SmartButton.PILL_SHAPE, SmartButton.toneLooks.pillSolid(SmartButton.TONES.gray));
