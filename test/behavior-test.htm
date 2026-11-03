@@ -346,6 +346,31 @@
             panel.remove();
         });
 
+        test("PropertyPanel: a click on a prefix with prefixClick gives its value, a drag of it does not", async function () {
+            const changes = [];
+            const panel = PropertyPanel({
+                data: { sections: [{ key: "s", title: "S", items: [{ key: "left", type: "number", prefix: "Left", prefixWidth: 56, prefixClick: "__side:right", value: 10 }] }] },
+                onChange: function (change) { changes.push(change); },
+            });
+            panel.open();
+            await wait(30);
+            const prefix = Array.from(panel.elem.querySelectorAll("div")).find(function (el) { return el.textContent === "Left" && el.children.length === 0; });
+            const rect = prefix.getBoundingClientRect();
+            const press = function (type, x) {
+                prefix.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 3, button: 0, clientX: x, clientY: rect.top + 5 }));
+            };
+            press("pointerdown", rect.left + 10);
+            press("pointermove", rect.left + 30);
+            press("pointerup", rect.left + 30);
+            const afterDrag = changes.map(function (c) { return c.value; });
+            const isDragOnlyNumbers = afterDrag.length > 0 && afterDrag.every(function (v) { return typeof v === "number"; });
+            press("pointerdown", rect.left + 10);
+            press("pointerup", rect.left + 11);
+            const last = changes[changes.length - 1];
+            check("PropertyPanel: a click on a prefix with prefixClick gives its value, a drag of it does not", isDragOnlyNumbers && last && last.value === "__side:right", "drag: " + afterDrag.join(",") + ", click: " + (last && last.value));
+            panel.remove();
+        });
+
         // A panel with one color field and an editable group (a static palette), its picker open.
         const openColorPanel = async function (changes, colors = ["#111111", "#222222", "#333333"]) {
             const panel = PropertyPanel({

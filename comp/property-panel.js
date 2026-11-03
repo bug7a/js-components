@@ -17,6 +17,8 @@ UI COMPONENT TEMPLATE
   Each item has a type, a key, a value and its own settings. Every item type is a small object
   built by its own function (see *** ITEM TYPES):
     number     -> [X  396]  prefix text or icon (drag the prefix to change the value; prefixWidth for a word), unit, min, max, step, autoText
+                  prefixClick: a click on the prefix (not a drag) gives this value, like a pick of the menu of a combo;
+                  the prefix lights up under the mouse (Ex: "Left" -> the value "__side:right"; 2026-11-03)
                   parseText(text): a text that is not a plain number goes to it; it returns the value ("100%", "auto")
                   or undefined (the old value comes back). A text value is shown as it is.
                   textToNumber(value): the number of a text value, to drag or step it (Ex: "100%" -> its width in px).
@@ -98,6 +100,7 @@ const PropertyPanelDefaults = {
             color: "#2C2C2C",
             dividerColor: "#444444",
             markWidth: 3, // A section with mark: 1: a line in the accent color at its left
+            markOpacity: 0.35, // WHY: mixed with the panel, it stays calm (the user, 2026-11-03: 65% transparent)
             headerHeight: 48,
             paddingLeft: 16,
             paddingRight: 8,
@@ -233,6 +236,7 @@ const PropertyPanel = function (params = {}) {
     const MENU_OFFSET = 4; // Space between the field and its menu.
     const SCREEN_MARGIN = 8; // The menu stays this far from the window edges.
     const SHIFT_STEP_FACTOR = 10; // Shift + arrow / scrub: 10 steps.
+    const PREFIX_CLICK_DISTANCE = 3; // px: a press on a prefix that moves less is a click (prefixClick), not a scrub.
 
     // *** PUBLIC VARIABLES:
     // NOTE: Default values are also public variables. (box.data: the JSON with the current values)
@@ -634,6 +638,8 @@ const PropertyPanel = function (params = {}) {
         });
 
         // Scrub: drag the prefix left / right. 1 px = 1 step (Shift: 10 steps)
+        // prefixClick: a press without a drag gives that value.
+        const hasPrefixClick = (item.prefixClick !== undefined);
         if (prefix) {
             prefix.clickable = 1;
             prefix.css.touchAction = "none";
@@ -642,8 +648,9 @@ const PropertyPanel = function (params = {}) {
                 event.preventDefault();
                 if (document.activeElement === el) el.blur();
                 const start = numberOf(value);
-                if (start === null && typeof value === "string") return; // WHY: A text value with no number: no scrub.
-                scrub = { id: event.pointerId, x: event.clientX, start: start || 0 };
+                // WHY: A text value with no number: no scrub (a click still works)
+                const canScrub = !(start === null && typeof value === "string");
+                scrub = { id: event.pointerId, x: event.clientX, start: start || 0, canScrub: canScrub, isMoved: 0 };
                 try {
                     prefix.elem.setPointerCapture(event.pointerId);
                 } catch (e) { } // WHY: It throws when the pointer is not active any more; the scrub still works without it.
@@ -651,12 +658,25 @@ const PropertyPanel = function (params = {}) {
             prefix.on("pointermove", function (self, event) {
                 if (!scrub || event.pointerId !== scrub.id) return;
                 const movedPixels = Math.round(event.clientX - scrub.x);
+                if (Math.abs(movedPixels) >= PREFIX_CLICK_DISTANCE) scrub.isMoved = 1;
+                if (!scrub.canScrub || !scrub.isMoved) return;
                 const next = clamp(scrub.start + movedPixels * step * stepFactorOf(event));
                 if (next !== value) commit(next);
             });
             const endScrub = function () { scrub = null; };
-            prefix.on("pointerup", endScrub);
+            prefix.on("pointerup", function (self, event) {
+                const isClick = (scrub && !scrub.isMoved && event.pointerId === scrub.id);
+                endScrub();
+                if (!isClick || !hasPrefixClick || !state.enabled) return;
+                setValue(item.prefixClick);
+                changeValue(ctrl, item.prefixClick);
+            });
             prefix.on("pointercancel", endScrub);
+            if (hasPrefixClick) {
+                prefix.aria = { label: item.prefixHint || "" };
+                prefix.elem.title = item.prefixHint || "";
+                onHover(prefix, function (isHover) { prefix.textColor = (isHover && state.enabled) ? _t.color : _t.softColor; });
+            }
         }
 
         const setValue = function (v) {
@@ -667,7 +687,9 @@ const PropertyPanel = function (params = {}) {
 
         const setEnabled = function (enabled) {
             setFieldEnabled(enabled);
-            if (prefix) prefix.cursor = (state.enabled) ? "ew-resize" : "default";
+            if (!prefix) return;
+            const activeCursor = (hasPrefixClick) ? "pointer" : "ew-resize";
+            prefix.cursor = (state.enabled) ? activeCursor : "default";
         };
 
         setValue(value);
@@ -2951,7 +2973,7 @@ const PropertyPanel = function (params = {}) {
             boxSizing: "border-box",
             borderBottom: "1px solid " + _ps.dividerColor,
         };
-        if (section.mark) group.boxShadow = "inset " + _ps.markWidth + "px 0 0 " + _s.accent.color;
+        if (section.mark) group.boxShadow = "inset " + _ps.markWidth + "px 0 0 " + Alpha(_s.accent.color, _ps.markOpacity);
 
             // WHY: A section without a title and actions (Ex: a footer with a note) gets no empty title row.
             const hasTitleRow = isTitleBlock || !!section.title || (section.actions && section.actions.length > 0);

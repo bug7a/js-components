@@ -1523,7 +1523,8 @@ BasicDesigner.measuredSize = function (key) {
 // THE DISTANCE TO A SIDE (G-007, 2026-10-31): one field for an axis. Its prefix says the side (Left / Right, Top /
 // Bottom); its menu changes the side ("__side:right") or gives a value; a text value like the sizes (100%, calc...).
 BasicDesigner.SIDE_NAMES = { left: "Left", right: "Right", top: "Top", bottom: "Bottom" };
-BasicDesigner.SIDE_LETTERS = { left: "L", right: "R", top: "T", bottom: "B" };
+BasicDesigner.OTHER_SIDES = { left: "right", right: "left", top: "bottom", bottom: "top" };
+BasicDesigner.SIDE_PREFIX_WIDTH = 56; // "Bottom" fits
 BasicDesigner.SIDE_VALUE_PRESETS = [
     { value: "0", text: "0" },
     { value: "50%", text: "50%" },
@@ -1538,13 +1539,18 @@ BasicDesigner.sideItem = function (side, label, value, sides) {
         const mark = (other === side) ? "✓ " : "";
         return { value: BasicDesigner.SIDE_PREFIX + other, text: mark + "From the " + other + " side" };
     });
+    // WHY the whole word, a row for each (the user, 2026-11-03): a click on it changes the side (Left <-> Right)
+    const otherSide = BasicDesigner.OTHER_SIDES[side];
     return {
         key: side,
         type: "combo",
         label: label,
-        prefix: BasicDesigner.SIDE_LETTERS[side],
+        prefix: BasicDesigner.SIDE_NAMES[side],
+        prefixWidth: BasicDesigner.SIDE_PREFIX_WIDTH,
+        prefixClick: BasicDesigner.SIDE_PREFIX + otherSide,
+        prefixHint: "Click: from the " + otherSide + " side. Drag: change the distance.",
         hint: "The distance from the " + side + " side",
-        span: 1,
+        span: "full",
         value: (typeof shown === "number") ? Math.round(shown * 100) / 100 : shown,
         options: sideOptions.concat(BasicDesigner.SIDE_VALUE_PRESETS),
         parseText: BasicDesigner.parsePositionText,
@@ -1573,7 +1579,8 @@ BasicDesigner.positionSection = function (p) {
     if (p.isAbsolute) {
         const h = p.hAnchor;
         const v = p.vAnchor;
-        items.push([BasicDesigner.sideItem(h, "Distance", p[h], ["left", "right"]), BasicDesigner.sideItem(v, "", p[v], ["top", "bottom"])]);
+        items.push([BasicDesigner.sideItem(h, "Distance", p[h], ["left", "right"])]);
+        items.push([BasicDesigner.sideItem(v, "", p[v], ["top", "bottom"])]);
         items.push([BasicDesigner.snapItem()]);
     }
     items.push([{ key: "rotate", type: "number", label: "Rotate", icon: "angle", value: p.rotate, unit: "°" }]);
