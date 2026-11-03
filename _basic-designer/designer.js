@@ -1220,10 +1220,32 @@ BasicDesigner.restoreRawValue = function (obj, key, saved) {
 // WHY "if (given)": basic.js reads 0 for a padding that was not given, so 0 must fall through to the screen.
 BasicDesigner.paddingOf = function (obj, cs) {
     const given = obj.padding;
-    if (given) return BasicDesigner.toNumber(given);
-    const sides = [cs.paddingTop, cs.paddingRight, cs.paddingBottom, cs.paddingLeft].map(function (v) { return Math.round(parseFloat(v) || 0); });
-    const isSame = sides.every(function (v) { return v === sides[0]; });
-    return (isSame) ? sides[0] : sides[1] + ", " + sides[0]; // [x, y] as the padding prop of basic.js
+    const sidesGiven = BasicDesigner.paddingSides(given);
+    if (sidesGiven) return BasicDesigner.paddingText(sidesGiven);
+    if (given && !Array.isArray(given)) return BasicDesigner.toNumber(given);
+    const onScreen = [cs.paddingLeft, cs.paddingTop, cs.paddingRight, cs.paddingBottom];
+    return BasicDesigner.paddingText(onScreen.map(function (v) { return Math.round(parseFloat(v) || 0); }));
+};
+
+// A padding array of basic.js -> [left, top, right, bottom], or null (not an array basic.js reads).
+// WHY [x, y, z] -> [x, y, x, y]: basic.js reads three values as two (the third is lost): the panel shows the screen.
+BasicDesigner.paddingSides = function (value) {
+    if (!Array.isArray(value)) return null;
+    const [first, second] = value;
+    if (value.length === 1) return [first, first, first, first];
+    if (value.length === 2 || value.length === 3) return [first, second, first, second];
+    if (value.length === 4) return value.slice();
+    return null;
+};
+
+// [left, top, right, bottom] as the panel shows it, the shortest text basic.js reads the same:
+// 14 (every side), "14, 10" (x, y), "14, 10, 6, 2" (four different sides).
+BasicDesigner.paddingText = function (sides) {
+    const [left, top, right, bottom] = sides;
+    const isSymmetric = (left === right && top === bottom);
+    if (isSymmetric && left === top) return left;
+    if (isSymmetric) return left + ", " + top;
+    return sides.join(", ");
 };
 
 // The turn of the object: the one given to it, or the one on the screen (a part of a component turned with a style,
@@ -1587,6 +1609,10 @@ BasicDesigner.inputSection = function (p) {
 };
 
 BasicDesigner.layoutSection = function (p) {
+    const gapItem = BasicDesigner.numberOrText("gap", "Gap", "G", p.gap, { min: 0 });
+    const paddingItem = BasicDesigner.paddingItem(p.padding);
+    // WHY: four sides do not fit in a half field ("14, 10, 6, 2" was cut): then the padding has a row of its own.
+    const spacingRows = (paddingItem.span) ? [[gapItem], [paddingItem]] : [[gapItem, paddingItem]];
     return { key: "group", title: "Auto layout", items: [
         [{ key: "flow", type: "segmented", label: "Direction", value: p.flow, options: [
             { value: "horizontal", icon: "flowHorizontal", hint: "Horizontal (side by side)" },
@@ -1595,8 +1621,7 @@ BasicDesigner.layoutSection = function (p) {
          BasicDesigner.toggleItem("wrap", "wrap", "Wrap to the next line", p.wrap)],
         [{ key: "align", type: "alignGrid", label: "Align", value: p.align },
          BasicDesigner.selectItem("justify", "Spacing", p.justify, BasicDesigner.JUSTIFY)],
-        [BasicDesigner.numberOrText("gap", "Gap", "G", p.gap, { min: 0 }),
-         BasicDesigner.numberOrText("padding", "Padding", "P", p.padding, { min: 0 })],
+        ...spacingRows,
     ] };
 };
 
@@ -1605,10 +1630,55 @@ BasicDesigner.sizeSection = function (p) {
         [BasicDesigner.sizeItem("width", "Width", "W", p.width),
          BasicDesigner.sizeItem("height", "Height", "H", p.height)],
     ];
-    if (!p.isGroup) items.push([BasicDesigner.numberOrText("padding", "Padding", "P", p.padding, { min: 0 })]);
+    if (!p.isGroup) items.push([BasicDesigner.paddingItem(p.padding)]);
     // WHY mark: a line at the left of Size and Position: the eye finds them, Fill and border comes right after them
     //      (the user, 2026-11-03)
     return { key: "size", title: "Size", mark: 1, items: items };
+};
+
+// PADDING: a number field (dragged and stepped like the others) that also reads a text of sides (parsePaddingText):
+// "14, 10" or "14 10" -> x, y; "14, 10, 6, 2" -> left, top, right, bottom (the order of basic.js). A text value
+// is shown as it is and goes to the object as an array (onPropertyChange). Four sides take two columns.
+BasicDesigner.paddingItem = function (value) {
+    const item = {
+        key: "padding",
+        type: "number",
+        label: "Padding",
+        prefix: "P",
+        hint: "Padding: 14, or x, y (14, 10), or left, top, right, bottom (14, 10, 6, 2)",
+        value: (typeof value === "number") ? Math.round(value * 100) / 100 : value,
+        min: 0,
+        parseText: BasicDesigner.parsePaddingText,
+    };
+    if (BasicDesigner.isFourSides(value)) item.span = 2;
+    return item;
+};
+
+// "14, 10, 6, 2" (a padding of four sides as the panel shows it)
+BasicDesigner.isFourSides = function (value) {
+    return typeof value === "string" && value.split(",").length === 4;
+};
+
+// A typed padding -> a number, a text of two or four values ("14, 10"), or undefined (the old value comes back).
+// WHY three values are refused: basic.js reads [x, y, z] as [x, y] and loses the third without a word.
+BasicDesigner.parsePaddingText = function (typed) {
+    const words = String(typed).toLowerCase().replace(/px/g, " ").trim().split(/[\s,;]+/).filter(Boolean);
+    const values = words.map(Number);
+    const example = "Ex: 14, or 14, 10 (x, y), or 14, 10, 6, 2 (left, top, right, bottom)";
+    if (!words.length || values.some(isNaN)) {
+        BasicDesigner.setStatus("Not a padding: \"" + typed + "\". " + example, "error");
+        return undefined;
+    }
+    if (values.some(function (v) { return v < 0; })) {
+        BasicDesigner.setStatus("A padding can not be less than 0: \"" + typed + "\"", "error");
+        return undefined;
+    }
+    if (values.length === 3 || values.length > 4) {
+        BasicDesigner.setStatus("A padding takes 1, 2 or 4 values, not " + values.length + ". " + example, "error");
+        return undefined;
+    }
+    if (values.length === 1) return values[0];
+    return values.join(", ");
 };
 
 // SIZE: width / height. A number (px), or a text: "100%", "calc(100% - 20px)", "auto", "50vw"...
@@ -2107,6 +2177,8 @@ BasicDesigner.onPropertyChange = function (change) {
 
     if (key === "flow") BasicDesigner.refreshTreeRow(obj); // HGroup <-> VGroup
     BasicDesigner.refreshChanges();
+    // WHY: a padding of four sides has a wider field (paddingItem): the panel is drawn again when it comes or goes.
+    if (key === "padding" && BasicDesigner.isFourSides(change.value) !== BasicDesigner.isFourSides(change.oldValue)) BasicDesigner.showProperties(obj);
     // WHY: minimal changes the border (0 / 1) and the look: the panel shows the new values.
     if (key === "minimal") BasicDesigner.showProperties(obj);
 
@@ -2138,7 +2210,10 @@ BasicDesigner.applyValue = function (obj, key, value, targets = [obj]) {
 
     entry.to = value;
     entry.count = entry.targets.size;
-    if (String(entry.to) === String(entry.from) && entry.count === 1) {
+    // WHY join(", "): the panel reads a padding array as "14, 10"; String([14, 10]) is "14,10", and the same padding
+    //      typed again stayed in Changes as a change.
+    const textOf = function (v) { return (Array.isArray(v)) ? v.join(", ") : String(v); };
+    if (textOf(entry.to) === textOf(entry.from) && entry.count === 1) {
         s.changes.delete(id);
     } else {
         s.changes.set(id, entry);
