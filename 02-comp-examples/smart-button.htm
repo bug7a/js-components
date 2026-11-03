@@ -7,238 +7,213 @@
     <title>SmartButton</title>
 
     <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
     <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
     <link rel="stylesheet" type="text/css" href="../basic/basic.css">
     <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
-    <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
 
-    <!-- COMPONENTS -->
+    <!-- COMPONENTS: tooltip.js for the bubble of ask -->
+    <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
         /* Bismillah */
 
-        // SMARTBUTTON · STATUS BUTTONS
-        // The shape comes from styleName, the color from tone (a name of SmartButton.TONES).
-        // - SmartButton({ styleName: "pill", tone: "orange", labelText, iconFile })
-        // - "pill": a soft tint, "pillSolid": the full color, "outlined": a colored edge
-        // - button.setTone("blue", "pillSolid"), button.setText(text), button.setIcon(file) -> after create
-        // TRY: click the buttons of "Click to change": "Add" becomes "Added" (click again: back to "Add").
+        // SMARTBUTTON · THE MODEL PAGE (the user, 2026-11-03): the colors and packages here are the defaults of
+        // comp/smart-button.js; new pages and projects take their buttons from this page (not from
+        // smart-button-alternatif.htm). Was smart-button-2.htm.
+        // The situation packages (primary, danger, warning, success, info) in two real cards:
+        // a save that waits and says "Saved", a trash that asks again, a replace that warns, a download with dots.
+        // - SmartButton({ styleName: "icon", width: 50, labelText: "", iconFile, ariaLabel })  -> a button of only an icon
+        // - SmartButton({ styleName: "primary", labelText, onClick })   -> a button in the color of a situation
+        // - button.setWaiting(1) / setWaiting(0)                            -> it waits while a job runs
+        // - button.setStyle(SmartButton.styles.success)               -> another situation after create
+        // - ask: "Click again to delete."                                  -> two clicks (load tooltip.js for the bubble)
+        // TRY: press Save, then Delete twice, then Replace twice.
 
         // *** VARIABLES:
 
-        const ROW_MAX_WIDTH = 960;
-        const ICON_BUTTON_SIZE = 52;
-        const LIGHT_GRAY_CIRCLE = "#A9A9A9";
+        const BUTTON_HEIGHT = 44;
+        const ICON_BUTTON_WIDTH = 50; // the trash (as in the footer of a Dialog)
+        const TRASH_ICON = "../04-templates/todo-app-example/images/trash.svg"; // the trash of the Publish dialog (dialog.htm)
+        const CARD_WIDTH = 520;
+        const SAVE_TIME = 1500; // ms: a job that takes time (the sample)
+        const SAVED_TIME = 1500; // ms: "Saved" is seen this long
+        const DOWNLOAD_TIME = 2000;
 
-        // The icons: a filled circle and a white mark in it (circleColor, markColor)
-        const MARKS = {
-            plus: '<path d="M12 7.5v9M7.5 12h9" stroke="MARK" stroke-width="2.4" stroke-linecap="round"/>',
-            check: '<path d="M7.6 12.4l3 3 5.8-6.4" fill="none" stroke="MARK" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>',
-            clock: '<path d="M12 7v5.2l3 2.6" fill="none" stroke="MARK" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>',
-            cross: '<path d="M8.6 8.6l6.8 6.8M15.4 8.6l-6.8 6.8" stroke="MARK" stroke-width="2.4" stroke-linecap="round"/>',
-            pencil: '<path d="M7.6 16.4l.8-3.2 6.1-6.1 2.4 2.4-6.1 6.1z" fill="MARK"/>',
-            dots: '<circle cx="7.6" cy="12" r="1.6" fill="MARK"/><circle cx="12" cy="12" r="1.6" fill="MARK"/><circle cx="16.4" cy="12" r="1.6" fill="MARK"/>',
-            arrow: '<path d="M6.8 12h10M12.8 8l4 4-4 4" fill="none" stroke="MARK" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>',
-            heart: '<path d="M12 17.6s-5.6-3.4-5.6-7.2a3.1 3.1 0 0 1 5.6-1.8 3.1 3.1 0 0 1 5.6 1.8c0 3.8-5.6 7.2-5.6 7.2z" fill="MARK"/>',
-            bookmark: '<path d="M8.4 6.4h7.2v11.2L12 15.1l-3.6 2.5z" fill="MARK"/>',
-            star: '<path d="M12 5.9l1.9 3.9 4.3.6-3.1 3 .7 4.3-3.8-2-3.8 2 .7-4.3-3.1-3 4.3-.6z" fill="MARK"/>',
-            info: '<circle cx="12" cy="7.6" r="1.5" fill="MARK"/><path d="M12 11.2v5.6" stroke="MARK" stroke-width="2.4" stroke-linecap="round"/>',
-            lock: '<rect x="7.8" y="11" width="8.4" height="6.6" rx="1.3" fill="MARK"/><path d="M9.5 11V9.3a2.5 2.5 0 0 1 5 0V11" fill="none" stroke="MARK" stroke-width="1.8"/>',
+        // The icons (24 x 24 lines; the color is in the drawing)
+        const lineIcon = function (color, paths) {
+            return "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + paths + "<\/svg>");
+        };
+        const ICONS = {
+            save: lineIcon("#1F1F1F", '<path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4M8 20v-6h8v6"/>'),
+            check: lineIcon("#1F1F1F", '<path d="M5 12.5l4.5 4.5L19 7.5"/>'),
+            trash: lineIcon("#1F1F1F", '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/>'),
+            info: lineIcon("#1F1F1F", '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.3"/>'),
+            replace: lineIcon("#1F1F1F", '<path d="M4 9h13l-3-3M20 15H7l3 3"/>'),
+            download: lineIcon("#1F1F1F", '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>'),
         };
 
-        // The two-tone icons of "Outlined": a light shape (LIGHT) and a strong detail on it (STRONG)
-        const TWO_TONE_ICONS = {
-            music: '<circle cx="12" cy="12" r="10.5" fill="LIGHT"/><path d="M10.2 16.5V7.6l6.6-1.6v9" fill="none" stroke="STRONG" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="8.2" cy="16.5" r="2.2" fill="STRONG"/><circle cx="14.8" cy="15" r="2.2" fill="STRONG"/>',
-            compass: '<circle cx="12" cy="12" r="10.5" fill="LIGHT"/><path d="M17 7l-3 7-7 3 3-7z" fill="STRONG"/>',
-            photo: '<rect x="2.5" y="4" width="19" height="16" rx="3" fill="LIGHT"/><circle cx="8" cy="9.2" r="2" fill="STRONG"/><path d="M5 18l4-4.5 3 3 4-4.5 3 3.5V18z" fill="STRONG"/>',
-            coffee: '<path d="M8.5 2.5c-1 1.2 1 2 0 3.5M13 2.5c-1 1.2 1 2 0 3.5M17.5 11h1.2a2.8 2.8 0 0 1 0 5.6h-1.5" fill="none" stroke="STRONG" stroke-width="2" stroke-linecap="round"/><path d="M3.5 8.5h14v7a6 6 0 0 1-6 6h-2a6 6 0 0 1-6-6z" fill="LIGHT"/>',
-            gamepad: '<rect x="2" y="6.5" width="20" height="12" rx="6" fill="LIGHT"/><path d="M7.5 10.5v4M5.5 12.5h4" fill="none" stroke="STRONG" stroke-width="2" stroke-linecap="round"/><circle cx="15.5" cy="11" r="1.5" fill="STRONG"/><circle cx="18" cy="14" r="1.5" fill="STRONG"/>',
-            gift: '<rect x="3.5" y="10" width="17" height="11.5" rx="2.5" fill="LIGHT"/><rect x="2.5" y="7.5" width="19" height="5" rx="1.5" fill="LIGHT"/><rect x="10.7" y="7.5" width="2.6" height="14" fill="STRONG"/><path d="M12 7.5C9.5 3 5.5 3.5 6.5 6c.5 1.2 2.5 1.5 5.5 1.5zM12 7.5c2.5-4.5 6.5-4 5.5-1.5-.5 1.2-2.5 1.5-5.5 1.5z" fill="none" stroke="STRONG" stroke-width="1.8" stroke-linejoin="round"/>',
-            display: '<rect x="2.5" y="3" width="19" height="14" rx="3" fill="LIGHT"/><path d="M12 17v3.5M8 21h8" fill="none" stroke="STRONG" stroke-width="2" stroke-linecap="round"/><path d="M6.5 12.5l3.5-3.5 2.5 2.5 4-4" fill="none" stroke="STRONG" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
-            wallet: '<path d="M5 6l10.5-2.8c1.1-.3 2 .5 2 1.5V6" fill="none" stroke="STRONG" stroke-width="2" stroke-linecap="round"/><rect x="2.5" y="6" width="19" height="15" rx="3" fill="LIGHT"/><rect x="14.5" y="11" width="7" height="5" rx="2.5" fill="STRONG"/>',
-            notes: '<rect x="4" y="2.5" width="16" height="19" rx="3" fill="LIGHT"/><path d="M8 8h8M8 12h8M8 16h5" fill="none" stroke="STRONG" stroke-width="2" stroke-linecap="round"/>',
-            rocket: '<path d="M7.8 11L4.5 14.5V19L8.5 16.5zM16.2 11l3.3 3.5V19l-4-2.5zM10 18h4l-2 4.5z" fill="STRONG"/><path d="M12 1.5c3.4 2.4 5 5.8 5 9.5 0 2.2-.4 4.2-1.2 6.5H8.2C7.4 15.2 7 13.2 7 11c0-3.7 1.6-7.1 5-9.5z" fill="LIGHT"/><circle cx="12" cy="9.5" r="2.2" fill="STRONG"/>',
-            lock: '<path d="M7.5 11V7.5a4.5 4.5 0 0 1 9 0V11" fill="none" stroke="STRONG" stroke-width="2.2"/><rect x="3.5" y="10" width="17" height="12" rx="3" fill="LIGHT"/><circle cx="12" cy="15" r="1.9" fill="STRONG"/><path d="M12 15.5v3" stroke="STRONG" stroke-width="2.2" stroke-linecap="round"/>',
-            cloudSun: '<circle cx="16.5" cy="8" r="5" fill="STRONG"/><path d="M6.8 21a4.8 4.8 0 0 1-.6-9.56A5.8 5.8 0 0 1 17.3 13a4 4 0 0 1 .2 8z" fill="LIGHT"/>',
-        };
-
-        const svgIcon = function (body) {
-            return "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">' + body + "<\/svg>");
-        };
-
-        const circleIcon = function (mark, circleColor, markColor) {
-            return svgIcon('<circle cx="12" cy="12" r="11" fill="' + circleColor + '"/>' + MARKS[mark].split("MARK").join(markColor));
-        };
-
-        const twoToneIcon = function (name, lightColor, strongColor) {
-            return svgIcon(TWO_TONE_ICONS[name].split("LIGHT").join(lightColor).split("STRONG").join(strongColor));
-        };
-
-        // A state in its own color on a soft tint of it
-        const pillState = function (text, mark, toneName) {
-            const tone = SmartButton.TONES[toneName];
-            return { text: text, styleName: "pill", tone: toneName, icon: circleIcon(mark, tone.pillText || tone.color, "white") };
-        };
-
-        // A gray state, before it is chosen
-        const grayState = function (text, mark, next) {
-            return { text: text, styleName: "pill", tone: "", icon: circleIcon(mark, LIGHT_GRAY_CIRCLE, "white"), next: next };
-        };
-
-        // A state in the full color: the circle is white and its mark has the color
-        const solidState = function (text, mark, toneName, next) {
-            const tone = SmartButton.TONES[toneName];
-            return { text: text, styleName: "pillSolid", tone: toneName, icon: circleIcon(mark, "white", tone.color), next: next };
-        };
-
-        // A colored edge and a two-tone icon
-        const outlinedState = function (text, iconName, toneName) {
-            const tone = SmartButton.TONES[toneName];
-            return { text: text, styleName: "outlined", tone: toneName, icon: twoToneIcon(iconName, tone.light, tone.color) };
-        };
-
-        // THE STATES: the text, the shape, the color, the icon. next: the state a click changes it to
-        const STATES = {
-            // Order status
-            draft: grayState("Draft", "pencil"),
-            waiting: pillState("Waiting", "clock", "orange"),
-            preparing: pillState("Preparing", "dots", "blue"),
-            onTheWay: pillState("On the way", "arrow", "purple"),
-            accepted: pillState("Accepted", "check", "green"),
-            declined: pillState("Declined", "cross", "red"),
-            // Click to change
-            add: grayState("Add", "plus", "added"),
-            added: solidState("Added", "check", "blue", "add"),
-            follow: grayState("Follow", "plus", "following"),
-            following: solidState("Following", "check", "purple", "follow"),
-            like: grayState("Like", "heart", "liked"),
-            liked: solidState("Liked", "heart", "pink", "like"),
-            save: grayState("Save", "bookmark", "saved"),
-            saved: solidState("Saved", "bookmark", "teal", "save"),
-            // Labels
-            newItem: pillState("New", "star", "yellow"),
-            verified: pillState("Verified", "check", "teal"),
-            info: pillState("Info", "info", "sky"),
-            locked: pillState("Locked", "lock", "gray"),
-            // Outlined
-            music: outlinedState("Music", "music", "blue"),
-            travel: outlinedState("Travel", "compass", "green"),
-            photos: outlinedState("Photos", "photo", "purple"),
-            coffee: outlinedState("Coffee", "coffee", "orange"),
-            games: outlinedState("Games", "gamepad", "navy"),
-            gifts: outlinedState("Gifts", "gift", "pink"),
-        };
-
-        // ICON ONLY: the outlined look without a text. Its name is read by a screen reader (ariaLabel).
-        const ICON_BUTTONS = [
-            outlinedState("Display", "display", "blue"),
-            outlinedState("Wallet", "wallet", "green"),
-            outlinedState("Notes", "notes", "purple"),
-            outlinedState("Boost", "rocket", "orange"),
-            outlinedState("Privacy", "lock", "navy"),
-            outlinedState("Weather", "cloudSun", "sky"),
+        const SITUATIONS = [
+            { styleName: "primary", text: "Save", icon: ICONS.save, note: "the main action" },
+            { styleName: "danger", text: "Delete", icon: ICONS.trash, note: "a delete, a reject" },
+            { styleName: "warning", text: "Replace", icon: ICONS.replace, note: "go on, but look first" },
+            { styleName: "success", text: "Done", icon: ICONS.check, note: "after a good result" },
+            { styleName: "info", text: "Details", icon: ICONS.info, note: "nothing changes" },
         ];
 
-        // THE ROWS: a title and the states side by side
-        const ROWS = [
-            { title: "Order status", states: ["draft", "waiting", "preparing", "onTheWay", "accepted", "declined"] },
-            { title: "Click to change", states: ["add", "follow", "like", "save"] },
-            { title: "Labels", states: ["newItem", "verified", "info", "locked"] },
-            { title: "Outlined", states: ["music", "travel", "photos", "coffee", "games", "gifts"] },
-        ];
+        let lblResult;
 
         // *** START:
 
         const start = function () {
 
-            page.color = "white";
+            page.color = "#F4F5F2";
 
             // BOX: Scrolling page
-            const scrollBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+            startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
 
-                VGroup({ width: "100%", height: "auto", align: "center top", gap: 40, padding: [20, 60], clipContent: 0 });
+                VGroup({ width: "100%", height: "auto", align: "center top", gap: 24, padding: 40, clipContent: 0 });
 
-                    ROWS.forEach(createRow);
-                    createIconRow();
+                    Label({ text: "SmartButton", fontSize: 24, bold: 1, textColor: Black(0.8) });
+
+                    createPackagesRow();
+                    createProfileCard();
+                    createFileCard();
+
+                    lblResult = Label({ text: "-", fontSize: 14, textColor: Black(0.5) });
 
                 endGroup();
 
             endBox();
 
-            if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: scrollBox });
-
         };
 
         // *** FUNCTIONS:
 
-        // GROUP: A title and its buttons, side by side (they wrap on a narrow screen)
-        const createRow = function (row) {
-            VGroup({ width: "100%", height: "auto", align: "center top", gap: 16, clipContent: 0, css: { maxWidth: ROW_MAX_WIDTH + "px" } });
+        const showResult = function (text) {
+            lblResult.plainText = text;
+        };
 
-                Label({ text: row.title, fontSize: 14, textColor: Black(0.45) });
-
-                HGroup({ width: "100%", height: "auto", align: "center center", gap: 14, wrap: 1, clipContent: 0 });
-
-                    row.states.forEach(createStatusButton);
-
+        // GROUP: A white card with a title and a text; returns its footer (the buttons go into it)
+        const startCard = function (title, text) {
+            VGroup({ width: CARD_WIDTH, height: "auto", align: "left top", gap: 0, color: "white", round: 10, border: 1, borderColor: Black(0.08), clipContent: 0 });
+            that.css = { maxWidth: "100%" };
+                VGroup({ width: "100%", height: "auto", align: "left top", gap: 6, padding: [24, 20] });
+                    Label({ text: title, fontSize: 18, bold: 1, textColor: Black(0.8) });
+                    Label({ width: "100%", text: text, fontSize: 14, textColor: Black(0.55), css: { whiteSpace: "normal" } });
                 endGroup();
+                // GROUP: Footer
+                HGroup({ width: "100%", height: "auto", align: "left center", gap: 10, padding: [20, 16], color: "#F7F7F5", wrap: 1, clipContent: 0 });
+                that.css = { borderTop: "1px solid " + Black(0.06), borderRadius: "0 0 10px 10px" };
+        };
 
+        const endCard = function () {
+                endGroup();
             endGroup();
         };
 
-        // GROUP: The buttons with only an icon
-        const createIconRow = function () {
-            VGroup({ width: "100%", height: "auto", align: "center top", gap: 16, clipContent: 0, css: { maxWidth: ROW_MAX_WIDTH + "px" } });
+        // BOX: The free room of a footer (pushes the next buttons to the right)
+        const createSpace = function () {
+            const space = Box({ width: 1, height: 1, color: "transparent" });
+            space.grow = 1;
+            return space;
+        };
 
-                Label({ text: "Outlined, only an icon", fontSize: 14, textColor: Black(0.45) });
-
-                HGroup({ width: "100%", height: "auto", align: "center center", gap: 14, wrap: 1, clipContent: 0 });
-
-                    ICON_BUTTONS.forEach(createIconButton);
-
-                endGroup();
-
+        // GROUP: The five packages side by side, with their names
+        const createPackagesRow = function () {
+            HGroup({ hug: 1, align: "center top", gap: 14, wrap: 1, clipContent: 0 });
+                SITUATIONS.forEach(function (situation) {
+                    VGroup({ hug: 1, align: "center top", gap: 6, clipContent: 0 });
+                        SmartButton({ styleName: situation.styleName, height: BUTTON_HEIGHT, labelText: situation.text, iconFile: situation.icon });
+                        Label({ text: situation.styleName, fontSize: 12, bold: 1, textColor: Black(0.6) });
+                        Label({ text: situation.note, fontSize: 11, textColor: Black(0.45) });
+                    endGroup();
+                });
             endGroup();
         };
 
-        // SMARTBUTTON: A round button with only an icon
-        const createIconButton = function (state) {
-            return SmartButton({
-                styleName: state.styleName,
-                tone: state.tone,
-                labelText: "",
-                ariaLabel: state.text,
-                iconFile: state.icon,
-                width: ICON_BUTTON_SIZE,
-                height: ICON_BUTTON_SIZE,
-                style: { layout: { padding: 0 } },
+        // A profile: the trash asks again, Save waits and says "Saved" in the success color
+        const createProfileCard = function () {
+            startCard("Profile", "Ayşe Yılmaz · ayse@example.com. Save waits while the job runs, then it says \"Saved\" in the color of a success for a moment.");
+
+                SmartButton({
+                    styleName: "icon",
+                    width: ICON_BUTTON_WIDTH,
+                    height: BUTTON_HEIGHT,
+                    labelText: "",
+                    iconFile: TRASH_ICON,
+                    ariaLabel: "Delete the profile",
+                    ask: "Click again to delete the profile.",
+                    onClick: function () { showResult("The profile is deleted."); },
+                });
+
+                createSpace();
+
+                SmartButton({ styleName: "ozdenType1", height: BUTTON_HEIGHT, labelText: "Cancel", onClick: function () { showResult("Canceled."); } });
+
+                SmartButton({
+                    styleName: "primary",
+                    height: BUTTON_HEIGHT,
+                    labelText: "Save",
+                    iconFile: ICONS.save,
+                    onClick: save,
+                });
+
+            endCard();
+        };
+
+        // Save -> it waits -> "Saved" (success) -> back to Save (primary)
+        const save = function (self) {
+            self.setWaiting(1);
+            self.after(SAVE_TIME, function () {
+                self.setWaiting(0);
+                self.setStyle(SmartButton.styles.success);
+                self.setText("Saved");
+                self.setIcon(ICONS.check);
+                showResult("Saved.");
+                self.after(SAVED_TIME, function () {
+                    self.setStyle(SmartButton.styles.primary);
+                    self.setText("Save");
+                    self.setIcon(ICONS.save);
+                });
             });
         };
 
-        // SMARTBUTTON: A status button
-        const createStatusButton = function (stateName) {
-            let state = STATES[stateName];
+        // A file: Details (info), Replace (a warning that asks), Download (waits with the dots)
+        const createFileCard = function () {
+            startCard("report.pdf", "2.4 MB · changed today. Replace asks again: the old file will be lost.");
 
-            return SmartButton({
-                styleName: state.styleName,
-                tone: state.tone,
-                labelText: state.text,
-                iconFile: state.icon,
-                onClick: function (self) {
-                    if (!state.next) return;
-                    state = STATES[state.next];
-                    showState(self, state);
-                },
-            });
-        };
+                SmartButton({ styleName: "info", height: BUTTON_HEIGHT, labelText: "Details", iconFile: ICONS.info, onClick: function () { showResult("Details: 12 pages, PDF 1.7."); } });
 
-        // Changes the look of a button after create
-        const showState = function (button, state) {
-            button.setText(state.text);
-            button.setIcon(state.icon);
-            button.setTone(state.tone, state.styleName);
+                createSpace();
+
+                SmartButton({
+                    styleName: "warning",
+                    height: BUTTON_HEIGHT,
+                    labelText: "Replace",
+                    iconFile: ICONS.replace,
+                    ask: "The old file will be lost. Click again.",
+                    onClick: function () { showResult("The file is replaced."); },
+                });
+
+                SmartButton({
+                    styleName: "ozdenType1",
+                    height: BUTTON_HEIGHT,
+                    labelText: "Download",
+                    iconFile: ICONS.download,
+                    waitingType: "dots",
+                    onClick: function (self) {
+                        self.setWaiting(1);
+                        self.after(DOWNLOAD_TIME, function () {
+                            self.setWaiting(0);
+                            showResult("Downloaded.");
+                        });
+                    },
+                });
+
+            endCard();
         };
 
     </script>

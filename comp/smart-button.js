@@ -7,6 +7,10 @@ Smart Button - v26.10
 THE DEFAULT BUTTON of new pages and projects (the user, 2026-10-30). It was ButtonWithIcon
 (comp/button-with-icon.js) until 2026-10-30: renamed and moved to comp-m4.
 
+THE MODEL PAGE (the user, 2026-11-03): 02-comp-examples/smart-button.htm. Its colors and packages are the defaults of
+this file (the situations, the "icon" package, ozdenType1): new pages and projects take their buttons from it.
+02-comp-examples/smart-button-alternatif.htm (pill, outlined, tones) is an alternative: not used unless asked.
+
 - A button with an icon and a text (or only one of them); the icon on the left or on top (iconPosition).
 - HEIGHT (2026-11-03, the user): 40 by default (ozdenType1 was 29 px with "auto"). "auto" (as high as the padding and
   the content) stays for classic (36), pill, pillSolid, outlined (52) and an icon on top. width: "auto" by default.
@@ -18,9 +22,12 @@ THE DEFAULT BUTTON of new pages and projects (the user, 2026-10-30). It was Butt
   DARK (2026-10-31, the draft _designs/smart-button-dark.htm): "ozdenType1Dark" ... "ozdenType4Dark": the same shapes
   for a dark page (#2E2E2C, a light edge, a white text and icon, the dark waiting clock, yellow dots).
   SITUATIONS (2026-10-31, the draft _designs/smart-button-colors.htm): ozdenType1 in the color of a situation:
-  "primary" #5BBAC1, "danger" #E8796D (a white text), "warning" #F1C74A, "success" #7BC362, "info" #52A8D0. The Dialog
-  uses them for its button types.
-  PILL AND OUTLINED (2026-11-02, the user; sample 02-comp-examples/smart-button.htm): 52 px high with a 30 px icon.
+  "primary" #5BBAC1, "danger" #DE815B (2026-11-03, the user: the Upload of smart-button-3-ozden.htm; a dark text like
+  the others, was #E8796D with a white text), "warning" #F1C74A, "success" #7BC362, "info" #52A8D0. The Dialog uses
+  them for its button types.
+  ICON (2026-11-03, the user: the trash of the Publish dialog, 02-comp-examples/dialog.htm): a white button of only an
+  icon, a pink hover. styleName: "icon", width: 50, labelText: "", ariaLabel: "Delete".
+  PILL AND OUTLINED (2026-11-02, the user; sample 02-comp-examples/smart-button-alternatif.htm): 52 px high with a 30 px icon.
   "pill": round, no edge, a bold text on a soft tint; "pillSolid": the full color with a white text; "outlined": a
   colored edge with a thicker line at the bottom. Without a tone they are gray.
 - TONE (2026-11-02, the user): the shape comes from styleName, the color from tone: styleName: "outlined", tone: "blue".
@@ -43,8 +50,8 @@ THE DEFAULT BUTTON of new pages and projects (the user, 2026-10-30). It was Butt
   with moving hands; waitingClock "ozden" or "ozdenDark") or "dots" (three dots one after the other).
   setWaiting(0) ends it (after delay ms, if given). Nothing turns with prefers-reduced-motion.
   (comp/loading-screen.js draws its clock and its dots with SmartButton.createClockSvg / createDots)
-- MOTION: animated: 1 (default): pressed 0.94 and a little darker. ripple: 1 (default): a wave from the pressed
-  point (from the middle for the keyboard); its color fits the button. setAnimated(0/1), setRipple(0/1).
+- MOTION: animated: 1 (default): pressed 0.94 and a little darker. ripple: 0 (default since 2026-11-03, the user;
+  1 gives a wave from the pressed point, from the middle for the keyboard; its color fits the button). setAnimated(0/1), setRipple(0/1).
 - setStyle(style): changes the look after create with only the keys it gets.
 
 USAGE:
@@ -70,7 +77,7 @@ Webpage: https://bug7a.github.io/js-components/
 // Default values:
 const SmartButtonDefaults = {
     key: "0",
-    styleName: "ozdenType1", // SmartButton.styles: "ozdenType1" (the default), "ozdenType2", "ozdenType3", "ozdenType4", "classic", "pill", "pillSolid", "outlined"...
+    styleName: "ozdenType1", // SmartButton.styles: "ozdenType1" (the default), "ozdenType2", "ozdenType3", "ozdenType4", "classic", "icon", "pill", "pillSolid", "outlined"...
     tone: "", // the color: a name of SmartButton.TONES (Ex: "blue", "primary"). "": the colors of the package. setTone()
     width: "auto",
     height: 40, // (the user, 2026-11-03) "auto": as high as its padding and content. classic, pill, pillSolid, outlined and an icon on top are "auto"
@@ -83,7 +90,7 @@ const SmartButtonDefaults = {
     waitingType: "clock", // "clock" (the default wait) or "dots"
     waitingClock: "ozden", // the look of the clock: "ozden" (a white face, dark lines) or "ozdenDark" (SmartButton.clocks)
     animated: 1, // 1: the press effect (smaller and darker while pressed). setAnimated()
-    ripple: 1, // 1: a wave from the pressed point (it works with animated: 0 too). setRipple()
+    ripple: 0, // 1: a wave from the pressed point (it works with animated: 0 too). setRipple(). 0 since 2026-11-03 (the user)
     ask: "", // "Click again to delete.": two clicks (the first one asks with a red button and this text in a bubble). setAsk()
     onBeforeClick: null, // function (self): false stops the press, with no ask either
     onClick: function (self) { }, // Not called while waiting
@@ -725,7 +732,7 @@ SmartButton.TONES = {
     pink: { color: "#E8457C", deep: "#C93668", tint: "#FDE8EF", hover: "#FBDBE6", solidHover: "#DC3A70", light: "#F5AFC7" },
     // The situations (2026-10-31, chosen by the user on the draft _designs/smart-button-colors.htm)
     primary: { color: "#5BBAC1", solidHover: "#50AEB5", onColor: SmartButton.ON_COLOR_TEXT, deep: "#2F8088", tint: "#E6F5F6", hover: "#D9EFF1", light: "#ADDDE0", pillText: "#2F8088" }, // the main action: Save, Send
-    danger: { color: "#E8796D", solidHover: "#E0695C", deep: "#C4574C", tint: "#FDECEA", hover: "#FBDFDC", light: "#F4BDB6", pillText: "#C4574C" }, // a delete, a reject
+    danger: { color: "#DE815B", solidHover: "#D4724B", onColor: SmartButton.ON_COLOR_TEXT, deep: "#C4574C", tint: "#FDECEA", hover: "#FBDFDC", light: "#F4BDB6", pillText: "#C4574C" }, // a delete, a reject
     warning: { color: "#F1C74A", solidHover: "#E6BB3C", onColor: SmartButton.ON_COLOR_TEXT, deep: "#8F6B00", tint: "#FFF7DB", hover: "#FFF0C2", light: "#F7E2A0", pillText: "#B88A00" }, // go on, but look first
     success: { color: "#7BC362", solidHover: "#70B756", onColor: SmartButton.ON_COLOR_TEXT, deep: "#4A8A35", tint: "#EDF7E8", hover: "#E1F1DA", light: "#BDE0AF", pillText: "#4F9A38" }, // after a good result: Done
     info: { color: "#52A8D0", solidHover: "#479CC4", onColor: SmartButton.ON_COLOR_TEXT, deep: "#2F7DA3", tint: "#E6F3F9", hover: "#D9ECF5", light: "#A6D2E7", pillText: "#2F7DA3" }, // Details, Help
@@ -811,7 +818,17 @@ SmartButton.applyTone = function (params) {
     SmartButton.styles[toneName] = SmartButton.toneLooks.filled(SmartButton.TONES[toneName]);
 });
 
-// THE PILL AND OUTLINED SHAPES (the user: the buttons of 02-comp-examples/smart-button.htm): gray without a tone.
+// THE ICON PACKAGE (2026-11-03, the user): the trash of the Publish dialog of 02-comp-examples/dialog.htm. A white
+// ozdenType2 with no side room (WHY padding 0: with 16 px at each side the icon of a 50 px button was 18 px).
+SmartButton.styles.icon = {
+    layout: { gap: 0, padding: [0, 0] },
+    box: { color: "white", boxShadow: "none" },
+    hover: { color: "#FDF1EF" },
+    active: { color: "#FDF1EF" },
+    icon: { opacity: 1 },
+};
+
+// THE PILL AND OUTLINED SHAPES (the user: the buttons of 02-comp-examples/smart-button-alternatif.htm): gray without a tone.
 SmartButton.PILL_ROUND = 100; // always round, at any height
 SmartButton.EDGE_WIDTH = 2; // outlined: the edge and the bottom line on it
 

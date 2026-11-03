@@ -340,9 +340,9 @@ CATALOG.COMPONENTS = [
         key: "smart-button", name: "SmartButton", cat: "actions",
         source: "comp/smart-button.js",
         samples: [
-            { file: "02-comp-examples/smart-button-2.htm", title: "Situations" },
+            { file: "02-comp-examples/smart-button.htm", title: "The default (the model page)" },
             { file: "02-comp-examples/smart-button-3-ozden.htm", title: "Dialogs (ozden)" },
-            { file: "02-comp-examples/smart-button.htm", title: "Pill and outlined" },
+            { file: "02-comp-examples/smart-button-alternatif.htm", title: "Pill and outlined (an alternative)" },
             { file: "02-comp-examples/smart-button-4-dark.htm", title: "Dark packages" },
             { file: "02-comp-examples/smart-button-5-features.htm", title: "All features" },
         ],

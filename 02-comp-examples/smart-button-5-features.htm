@@ -20,8 +20,9 @@
     /* Bismillah */
 
     // SmartButton (comp-m4): the places of the icon, styles, setText / setIcon and the waiting cover.
-    // (Named smart-button-2.htm until 2026-10-31. The other samples: smart-button.htm status buttons, smart-button-2.htm
-    // badges, smart-button-3-ozden.htm the packages, smart-button-4-dark.htm the dark packages.)
+    // (Named smart-button-2.htm until 2026-10-31. The other samples: smart-button.htm the model page (the situations),
+    // smart-button-alternatif.htm pill and outlined, smart-button-3-ozden.htm the packages, smart-button-4-dark.htm the
+    // dark packages.)
 
     const ICONS = "../assets/icons/";
     const JOB_TIME = 1500; // ms: a job that takes time (the sample)
@@ -167,11 +168,11 @@
                     });
                 endCard();
 
-                startCard("Motion: animated and ripple", "Both on by default (for now): smaller and a little darker while pressed, and a wave from the pressed point (its color fits the button). Each one can be turned off.");
-                    SmartButton({ styleName: "classic", labelText: "Both", style: LOOKS.primary });
-                    SmartButton({ styleName: "classic", labelText: "Both", iconFile: ICONS + "plant.png" });
+                startCard("Motion: animated and ripple", "animated is on by default, ripple is off (since 2026-11-03): smaller and a little darker while pressed, and a wave from the pressed point (its color fits the button). Each one can be turned off.");
+                    SmartButton({ styleName: "classic", labelText: "Both", style: LOOKS.primary, ripple: 1 });
+                    SmartButton({ styleName: "classic", labelText: "Both", iconFile: ICONS + "plant.png", ripple: 1 });
                     SmartButton({ styleName: "classic", labelText: "Only press", style: LOOKS.primary, ripple: 0 });
-                    SmartButton({ styleName: "classic", labelText: "Only ripple", animated: 0 });
+                    SmartButton({ styleName: "classic", labelText: "Only ripple", animated: 0, ripple: 1 });
                     SmartButton({ styleName: "classic", labelText: "Still", animated: 0, ripple: 0 });
                 endCard();
 
