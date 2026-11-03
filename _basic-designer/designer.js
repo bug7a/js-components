@@ -3889,7 +3889,6 @@ BasicDesigner.buildToolbox = function () {
 
     endGroup();
 
-    BasicDesigner.buildTip();
 
 };
 
@@ -4371,56 +4370,46 @@ BasicDesigner.onToolboxKey = function (event) {
     buttons[(index + step + buttons.length) % buttons.length].focus();
 };
 
-BasicDesigner.buildTip = function () {
+// THE TIP of a button (its name and what it does): comp/tooltip.js in the colors of the menus, with an arrow that
+// points at the button (the user, 2026-11-03). Over the button; under it when there is no room (the top bar).
+BasicDesigner.TIP_TEXT_WIDTH = 200; // The text of the tip wraps at this width.
 
+BasicDesigner.tipLook = function () {
     const C = BasicDesigner.colors;
-    const ui = BasicDesigner.ui;
-
-    createIn(page, function () {
-        // GROUP: Tip (the name and what the object is)
-        ui.tip = VGroup({ width: 220, height: "auto", align: "left top", gap: 3, padding: [10, 8], color: C.menu, round: 6, border: 1, borderColor: C.line });
-        ui.tip.boxShadow = "0 6px 18px rgba(0, 0, 0, 0.5)";
-        ui.tip.zIndex = 9000;
-        ui.tip.css = { pointerEvents: "none" };
-        ui.tip.role = "tooltip";
-
-            ui.tipTitle = Label({ text: "", fontSize: 12, textColor: C.text, fontFamily: "opensans-bold" });
-            ui.tipText = Label({ text: "", width: "100%", height: "auto", fontSize: 11, textColor: C.soft, css: { whiteSpace: "normal", lineHeight: "15px" } });
-
-        endGroup();
-    });
-    ui.tip.visible = 0; // WHY: Hidden after its children are made (they are flex items then).
-
+    return {
+        color: C.menu,
+        border: 1,
+        borderColor: C.line,
+        round: 6,
+        padding: [10, 8],
+        shadow: "0 6px 18px rgba(0, 0, 0, 0.5)",
+        arrow: 10,
+        contentGap: 3,
+        gap: BasicDesigner.TIP_SPACE,
+        zIndex: 9000,
+    };
 };
 
+// item: { type (the name), description }
 BasicDesigner.showTip = function (btn, item) {
-    const ui = BasicDesigner.ui;
-    if (BasicDesigner.cancelTip) BasicDesigner.cancelTip();
+    BasicDesigner.hideTip();
     const timer = setTimeout(function () {
-        ui.tipTitle.plainText = item.type;
-        ui.tipText.plainText = item.description;
-        ui.tip.visible = 1;
-        BasicDesigner.placeTip(btn);
+        const C = BasicDesigner.colors;
+        BasicDesigner.tipBubble = Tooltip.show(btn, "", BasicDesigner.tipLook(), "top", function () {
+            Label({ plainText: item.type, fontSize: 12, textColor: C.text, fontFamily: "opensans-bold" });
+            if (!item.description) return;
+            Label({ plainText: item.description, width: BasicDesigner.TIP_TEXT_WIDTH, height: "auto", fontSize: 11, textColor: C.soft, css: { whiteSpace: "normal", lineHeight: "15px" } });
+        });
+        BasicDesigner.tipBubble.role = "tooltip";
     }, BasicDesigner.TIP_DELAY);
     BasicDesigner.cancelTip = function () { clearTimeout(timer); };
 };
 
 BasicDesigner.hideTip = function () {
     if (BasicDesigner.cancelTip) BasicDesigner.cancelTip();
-    BasicDesigner.ui.tip.visible = 0;
-};
-
-// Over the button, in the middle of it; it stays in the window.
-BasicDesigner.placeTip = function (btn) {
-    const tip = BasicDesigner.ui.tip;
-    const rect = btn.elem.getBoundingClientRect();
-    const tipWidth = tip.elem.offsetWidth;
-    const tipHeight = tip.elem.offsetHeight;
-    const centerLeft = rect.left + rect.width / 2 - tipWidth / 2;
-    const maxLeft = window.innerWidth - tipWidth - BasicDesigner.TIP_SPACE;
-    tip.left = Math.max(BasicDesigner.TIP_SPACE, Math.min(centerLeft, maxLeft));
-    const above = rect.top - tipHeight - BasicDesigner.TIP_SPACE;
-    tip.top = (above >= BasicDesigner.TIP_SPACE) ? above : rect.bottom + BasicDesigner.TIP_SPACE; // WHY: The top bar has no room above.
+    if (!BasicDesigner.tipBubble) return;
+    BasicDesigner.tipBubble.remove();
+    BasicDesigner.tipBubble = null;
 };
 
 // *** TOP BAR: the page (picker, reload, open), undo / redo, the device width, the changes and Copy prompt.
