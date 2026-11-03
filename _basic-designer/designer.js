@@ -120,6 +120,7 @@ BasicDesigner.state = {
     paramOriginal: new Map(), // id -> the params of a component before its first change (Revert all)
     paramCollapsed: new Set(), // "id:path" of the closed objects in the parameters
     notes: new Map(), // id -> text
+    names: new Map(), // id -> a name given in the designer (a new name of an object of the code, or of an added one)
     pageChanges: new Map(), // the changes of the page object (page.color...): key -> { from, to }
     scriptChanges: new Map(), // the component files of the page changed in the Components panel: repo path -> "add" | "remove"
     projectNote: "", // the note for the AI about the whole project (the Page panel)
@@ -204,8 +205,86 @@ BasicDesigner.previewText = function (obj) {
     return (t.length > 28) ? t.slice(0, 27) + "…" : t;
 };
 
+// *** NAMES (2026-11-03, the user): an object added in the designer gets a name at once (btn12, box45: its kind and
+// a number), so it has one even when the user gives none. A name can be changed in the panel (Name); the prompt asks
+// the AI to give the automatic ones a name that says what the object is.
+BasicDesigner.NAME_PREFIXES = { Box: "box", VGroup: "group", HGroup: "group", Label: "lbl", Button: "btn", Input: "inp", Icon: "icon" };
+BasicDesigner.NAME_PATTERN = /^[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*$/; // btnSave, box.label
+
+// The name of an object without the designer: the automatic one of an added object, or the one in the code ("": none)
+BasicDesigner.baseNameOf = function (obj) {
+    if (obj.__bd.added) return obj.__bd.added.name || "";
+    return BasicDesigner.varName(obj);
+};
+
+// The name the designer shows: the one given in the designer, or the base name.
+BasicDesigner.nameOf = function (obj) {
+    return BasicDesigner.state.names.get(obj.__bd.id) || BasicDesigner.baseNameOf(obj);
+};
+
+// 1: the automatic name of an added object (the user did not change it)
+BasicDesigner.isAutoName = function (obj) {
+    return (obj.__bd.added && obj.__bd.added.name && !BasicDesigner.state.names.has(obj.__bd.id)) ? 1 : 0;
+};
+
+BasicDesigner.namePrefixOf = function (type) {
+    return BasicDesigner.NAME_PREFIXES[type] || (type.charAt(0).toLowerCase() + type.slice(1));
+};
+
+// The names of the objects on the page now, without the one of except.
+BasicDesigner.usedNames = function (except) {
+    return BasicDesigner.state.rt.getAlive().filter(function (o) { return o !== except && o.__bd; }).map(BasicDesigner.nameOf).filter(Boolean);
+};
+
+// The prefix of the type and one more than the highest number of that prefix on the page (btn1, btn2...).
+BasicDesigner.newNameFor = function (type) {
+    const prefix = BasicDesigner.namePrefixOf(type);
+    const pattern = new RegExp("^" + prefix + "(\\d+)$");
+    let highest = 0;
+    BasicDesigner.usedNames(null).forEach(function (name) {
+        const match = name.match(pattern);
+        if (match) highest = Math.max(highest, Number(match[1]));
+    });
+    return prefix + (highest + 1);
+};
+
+// Name in the panel: a new name, or "" (an added object gets its automatic name back, an object of the code its own).
+BasicDesigner.renameObject = function (obj, typed) {
+    const s = BasicDesigner.state;
+    const name = String(typed || "").trim();
+    const refuse = function (text) {
+        BasicDesigner.setStatus(text, "error");
+        BasicDesigner.showProperties(obj);
+    };
+    if (name && !BasicDesigner.NAME_PATTERN.test(name)) {
+        refuse("Not a name: \"" + name + "\". Letters, digits, _ and $, not a digit first. Ex: btnSave");
+        return;
+    }
+    if (name && BasicDesigner.usedNames(obj).indexOf(name) !== -1) {
+        refuse("Another object is named " + name + ".");
+        return;
+    }
+    if (!name || name === BasicDesigner.baseNameOf(obj)) s.names.delete(obj.__bd.id);
+    else s.names.set(obj.__bd.id, name);
+    BasicDesigner.refreshChanges();
+    BasicDesigner.refreshTreeRow(obj);
+    BasicDesigner.showProperties(obj);
+};
+
+BasicDesigner.nameItem = function (obj) {
+    return {
+        key: "__name",
+        type: "text",
+        label: "Name",
+        value: BasicDesigner.nameOf(obj),
+        placeholder: "No name in the code",
+        hint: "The name of the object in the code. Empty: back to its own name.",
+        span: "full",
+    };
+};
+
 BasicDesigner.title = function (obj) {
-    const name = BasicDesigner.varName(obj);
+    const name = BasicDesigner.nameOf(obj);
     const type = BasicDesigner.typeOf(obj);
     const text = BasicDesigner.previewText(obj);
     return { name: name, type: type, text: text, short: name || (text ? '"' + text + '"' : type) };
@@ -329,6 +408,7 @@ BasicDesigner.load = async function (pagePath) {
     s.hovered = null;
     s.changes.clear();
     s.notes.clear();
+    s.names.clear();
     s.pageChanges.clear();
     s.scriptChanges.clear();
     s.projectNote = "";
@@ -1814,6 +1894,7 @@ BasicDesigner.showProperties = function (obj) {
         ] });
     }
 
+    sections.push({ key: "name", items: [BasicDesigner.nameItem(obj)] });
     BasicDesigner.propertySections(p).forEach(function (section) { sections.push(section); });
 
     const data = { headerTitle: (t.name ? t.name + " · " : "") + t.type, sections: sections };
@@ -1904,6 +1985,11 @@ BasicDesigner.onPropertyChange = function (change) {
         else BasicDesigner.setAnchor(obj, change.value);
         BasicDesigner.refreshChanges();
         BasicDesigner.showProperties(obj);
+        return;
+    }
+
+    if (key === "__name") {
+        BasicDesigner.renameObject(obj, change.value);
         return;
     }
 
@@ -2315,7 +2401,7 @@ BasicDesigner.PAGE_ICON = "M2.5 2.5h11v11h-11zM2.5 5.5h11";
 
 BasicDesigner.changeCount = function () {
     const s = BasicDesigner.state;
-    return s.changes.size + s.notes.size + s.pageChanges.size + s.scriptChanges.size + ((s.projectNote) ? 1 : 0);
+    return s.changes.size + s.notes.size + s.names.size + s.pageChanges.size + s.scriptChanges.size + ((s.projectNote) ? 1 : 0);
 };
 
 BasicDesigner.hasPageChanges = function () {
@@ -2495,6 +2581,10 @@ BasicDesigner.changedObjects = function () {
         const obj = BasicDesigner.objectOfKey(id);
         if (obj) add(obj);
     });
+    s.names.forEach(function (name, id) {
+        const obj = BasicDesigner.objectOfKey(id);
+        if (obj) add(obj);
+    });
     return list;
 };
 
@@ -2556,6 +2646,7 @@ BasicDesigner.changeLinesOf = function (obj) {
             lines.push(BasicDesigner.esc(c.key + ": " + BasicDesigner.fmt(c.from) + " → " + BasicDesigner.fmt(c.to) + times));
         }
     });
+    if (s.names.has(obj.__bd.id)) lines.push(BasicDesigner.esc("name: " + (BasicDesigner.baseNameOf(obj) || "(none)") + " → " + s.names.get(obj.__bd.id)));
     if (s.notes.has(obj.__bd.id)) lines.push(colored("#F5C04A", "✎ " + BasicDesigner.esc(s.notes.get(obj.__bd.id))));
     return lines;
 };
@@ -2635,8 +2726,9 @@ BasicDesigner.revertObject = function (obj) {
     session.params = session.params.filter(function (v) { return !isIt(v.target); });
     session.sides = session.sides.filter(function (v) { return !isIt(v.target); });
     session.notes = session.notes.filter(function (v) { return !isIt(v.target); });
+    session.names = session.names.filter(function (v) { return !isIt(v.target); });
     session.places = session.places.filter(function (op) { return op.kind === "add" || !isIt(op.target); });
-    session.count = session.values.length + session.params.length + session.sides.length + session.notes.length + session.places.length;
+    session.count = session.values.length + session.params.length + session.sides.length + session.notes.length + session.names.length + session.places.length;
     BasicDesigner.goToSession(session);
     BasicDesigner.setStatus(BasicDesigner.title(obj).short + ": its changes are back to the code. (Undo: Cmd/Ctrl+Z)");
 };
@@ -2682,6 +2774,7 @@ BasicDesigner.revertAll = function () {
     s.projectNote = "";
     s.changes.clear();
     s.notes.clear();
+    s.names.clear();
     s.placeLog = [];
     s.addedObjects = [];
     BasicDesigner.refreshChanges();
@@ -2699,13 +2792,17 @@ BasicDesigner.buildPrompt = function () {
     const out = [];
     out.push("Visual changes made in basic-designer on the page " + s.pagePath + ".");
     out.push("Apply them to the source code, in the style of the code around them. When a value comes from an expression, a loop, a helper function, a theme token or a component default, choose the right place (the page code, the component params or its style) and tell me what you changed. The notes are wishes: do what they ask.");
+    const hasAutoNames = objects.some(BasicDesigner.isAutoName);
+    if (hasAutoNames) out.push("Names like btn12 or box45 are automatic (the designer gave them): give each one a name that says what the object is (Ex: btnSave, cardProfile) and use it everywhere.");
     out.push("");
     BasicDesigner.pagePromptLines().forEach(function (line) { out.push(line); });
 
     objects.forEach(function (obj, i) {
         const t = BasicDesigner.title(obj);
         const f = obj.__bd.frames;
-        let head = (i + 1) + ". " + t.type + (t.name ? " " + t.name : "");
+        // WHY the base name for an object of the code: the code knows it by that name (a new name is a change below)
+        const headName = (obj.__bd.added) ? t.name : BasicDesigner.baseNameOf(obj);
+        let head = (i + 1) + ". " + t.type + (headName ? " " + headName : "");
         if (t.text) head += ' (text: "' + t.text + '")';
         if (obj.__bd.added) {
             out.push(head + "   NEW: added in the designer");
@@ -2741,6 +2838,7 @@ BasicDesigner.buildPrompt = function () {
             const name = owner.__bd.component;
             out.push("   inside the component " + name + " (" + BasicDesigner.relPath(f[0].url) + "): a value like this usually comes from " + name + "Defaults.style; change it there and keep the other style packages (" + name + ".styles) consistent, unless only this variant should change.");
         }
+        if (s.names.has(obj.__bd.id)) out.push(BasicDesigner.renamePromptLine(obj));
         const hasParams = Array.from(s.changes.values()).some(function (c) { return c.obj === obj && c.kind === "param"; });
         if (hasParams) out.push("   (param: change it in the params of this call; when every " + t.type + " should change, in " + t.type + "Defaults and the style packages " + t.type + ".styles)");
         s.changes.forEach(function (c) {
@@ -2926,10 +3024,12 @@ BasicDesigner.addObjectAt = function (item, place) {
         BasicDesigner.setStatus("Could not add " + item.type + ": " + error.message, "error");
         return;
     }
-    BasicDesigner.logPlace("add", { type: item.type, place: place, props: item.props, copyOf: item.copyOf, script: item.script });
+    // (before the object is on the page: it does not count its own name)
+    const name = item.name || BasicDesigner.newNameFor(item.type);
+    BasicDesigner.logPlace("add", { type: item.type, place: place, props: item.props, copyOf: item.copyOf, script: item.script, name: name });
     BasicDesigner.putInPlace(obj, { container: place.container, before: place.before });
 
-    obj.__bd.added = { type: item.type, props: props, copyOf: item.copyOf || "", script: missingScript };
+    obj.__bd.added = { type: item.type, props: props, copyOf: item.copyOf || "", script: missingScript, name: name };
     s.addedObjects.push(obj);
     s.changes.set("add:" + obj.__bd.id, { obj: obj, kind: "add", key: "added", targets: new Map(), count: 1 });
     BasicDesigner.afterPlaceChange(obj);
@@ -2957,7 +3057,8 @@ BasicDesigner.describeObject = function (obj) {
     if (obj.__bd.added) return t.type + " " + t.short + " (also added in the designer)";
     const frame = BasicDesigner.nameFrame(obj);
     const text = (t.text) ? ' "' + t.text + '"' : "";
-    return t.type + (t.name ? " " + t.name : "") + text + " (created at " + BasicDesigner.where(frame) + "   " + BasicDesigner.sourceLine(frame).trim() + ")";
+    const codeName = BasicDesigner.baseNameOf(obj);
+    return t.type + (codeName ? " " + codeName : "") + text + " (created at " + BasicDesigner.where(frame) + "   " + BasicDesigner.sourceLine(frame).trim() + ")";
 };
 
 // "inside VGroup ... (created at ...), right after Label ..." : where obj is now.
@@ -2968,8 +3069,17 @@ BasicDesigner.describePlace = function (obj) {
     return text;
 };
 
+// A new name for an object of the code
+BasicDesigner.renamePromptLine = function (obj) {
+    const base = BasicDesigner.baseNameOf(obj);
+    const name = BasicDesigner.state.names.get(obj.__bd.id);
+    if (!base) return "   - name it " + name + " (it has no name in the code: keep it in a const or a property, as the code around it does)";
+    return "   - rename it: " + base + " -> " + name + " (every use of " + base + " too)";
+};
+
 BasicDesigner.addedPromptLines = function (obj) {
     const added = obj.__bd.added;
+    const name = BasicDesigner.nameOf(obj);
     const lines = [];
     lines.push("   add it " + BasicDesigner.describePlace(obj));
     const isComponent = BasicDesigner.BASIC_TYPES.indexOf(added.type) === -1;
@@ -2979,6 +3089,8 @@ BasicDesigner.addedPromptLines = function (obj) {
     if (added.type === "VGroup" || added.type === "HGroup") code += " ... endGroup();";
     if (added.type === "Icon") code += "  then load the picture: that.load(\"...\");";
     lines.push(code);
+    if (BasicDesigner.isAutoName(obj)) lines.push("   - name: " + name + " (automatic: give it a name that says what it is)");
+    else lines.push("   - name: " + name);
     if (added.props.left !== undefined) lines.push("   (left / top: where it was dropped; choose the right place in the code)");
     if (added.script) lines.push("   the page does not load " + added.type + " yet: add <script src=\"" + BasicDesigner.pathFromPage(added.script) + "\" type=\"text/javascript\" charset=\"utf-8\"></script> with the other component scripts (before the page code), and the files it needs (its header says)");
     return lines;
@@ -3065,6 +3177,7 @@ BasicDesigner.buildSession = function () {
         sides: [],
         values: [],
         notes: [],
+        names: [],
         order: entries.map(BasicDesigner.changeName), // the order of Changes and the prompt
         page: { values: BasicDesigner.pageValuesOfSession(), note: s.projectNote },
     };
@@ -3075,6 +3188,9 @@ BasicDesigner.buildSession = function () {
     });
     s.notes.forEach(function (text, id) {
         session.notes.push({ target: BasicDesigner.refOf(BasicDesigner.objectOfKey(id)), text: text });
+    });
+    s.names.forEach(function (name, id) {
+        session.names.push({ target: BasicDesigner.refOf(BasicDesigner.objectOfKey(id)), name: name });
     });
 
     return JSON.parse(JSON.stringify(session));
@@ -3164,6 +3280,7 @@ BasicDesigner.logPlace = function (kind, values) {
         props: values.props || null, // add: the props (a copy has its own)
         copyOf: values.copyOf || null, // add: the description of the copied object
         script: values.script || null, // add: the file of a component that the page may not load (a copy of another page)
+        name: values.name || null, // add: its automatic name (the same after a reload)
     });
 };
 
@@ -3206,8 +3323,11 @@ BasicDesigner.applySession = function (session) {
         const place = { container: container, before: before, point: op.point || undefined };
         if (op.kind === "add") {
             const toolboxItem = BasicDesigner.toolboxItems.find(function (i) { return i.type === op.type; });
-            const item = (op.props) ? { type: op.type, props: op.props, copyOf: op.copyOf, script: op.script } : toolboxItem;
-            if (item && container) BasicDesigner.addObjectAt(item, place);
+            const item = (op.props) ? { type: op.type, props: op.props, copyOf: op.copyOf, script: op.script } : Object.assign({}, toolboxItem);
+            if (op.name) item.name = op.name;
+            if (toolboxItem || op.props) {
+                if (container) BasicDesigner.addObjectAt(item, place);
+            }
             return;
         }
         const obj = find(op.target);
@@ -3231,6 +3351,11 @@ BasicDesigner.applySession = function (session) {
     session.notes.forEach(function (item) {
         const obj = find(item.target);
         if (obj) s.notes.set(obj.__bd.id, item.text);
+    });
+
+    (session.names || []).forEach(function (item) {
+        const obj = find(item.target);
+        if (obj) s.names.set(obj.__bd.id, item.name);
     });
 
     if (session.page) {
