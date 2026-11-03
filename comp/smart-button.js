@@ -128,17 +128,19 @@ const SmartButtonDefaults = {
         active: {
             color: "#D9D9D9",
         },
-        // ask: the red look of the button while it asks, and the bubble over it (Tooltip.BUBBLE_LOOK keys)
+        // ask: the look of the button while it asks, and the bubble over it (Tooltip.BUBBLE_LOOK keys).
+        // #DE815B (2026-11-03, the user: the orange of danger, was #E8796D); its own value, not the danger tone,
+        // so the two can be changed apart.
         ask: {
             button: {
-                color: "#E8796D", // also under the mouse and pressed
+                color: "#DE815B", // also under the mouse and pressed
                 border: 1,
-                borderColor: "#E8796D",
+                borderColor: "#DE815B",
                 boxShadow: "none",
                 textColor: "white",
                 iconFilter: "brightness(0) invert(1)", // the icon turns white, whatever color its file has
             },
-            bubble: { color: "#E8796D", textColor: "white", fontSize: 13, bold: 1, round: 8, padding: [12, 7], border: 0, borderColor: "", shadow: "0 6px 16px rgba(0, 0, 0, 0.18)", arrow: 12, gap: 6, edge: 8, grow: 1 },
+            bubble: { color: "#DE815B", textColor: "white", fontSize: 13, bold: 1, round: 8, padding: [12, 7], border: 0, borderColor: "", shadow: "0 6px 16px rgba(0, 0, 0, 0.18)", arrow: 12, gap: 6, edge: 8, grow: 1 },
             time: 5000, // ms: it forgets the question
         },
         focus: {
