@@ -34,12 +34,13 @@ UI COMPONENT TEMPLATE
                   canAdd: 1 -> an editable group: a + button adds the current color: change { kind: "addColor", key: palette key, value };
                   its colors are put in order by dragging: { kind: "orderColors", key, value: [the values in the new order] }.
                   A right click on a color: "Copy to" an editable group (addColor), "Delete" from an editable group
-                  ({ kind: "removeColor", key, value }) or from Recent. A color with fixed: 1 is not deleted or moved.
+                  ({ kind: "removeColor", key, value }) or from Recent. A color with fixed: 1 is not moved (it can be deleted).
                   presets (of the item, old): shown as the first palette, "Presets".
                   Also: the color before / now (a click on "before" goes back), HEX / RGB / HSL text, and the
                   recent colors (recentColorsKey: kept in basic.storage).
                   The ticks before "Recent" and the group name: their colors are shown under every color field of
-                  the panel (Recent | the selected group); a click on one gives it to the field. Kept with recentColorsKey.
+                  the panel (Recent | the selected group, two rows, "+N" shows the others); a click on one gives it to
+                  the field, a right click opens the same menu (Copy to, Delete). Kept with recentColorsKey.
 - Items of a row: put them in an array. span: 1 (one column), 2 (two columns). An iconButton takes the
   small last column. label: the caption above the item.
 - Listen to every change from outside: onChange(change, panel) or panel.listen(fn) (returns a remover).
@@ -1143,20 +1144,108 @@ const PropertyPanel = function (params = {}) {
         return tick;
     };
 
+    // *** CHANGES OF THE COLOR GROUPS (the menu of a color in the picker and under the fields, a drag)
+
+    const RECENT_PALETTE = { key: "__recent", name: "Recent", isRecent: 1 };
+
+    const valueOfColor = function (color) {
+        return (color && typeof color === "object") ? color.value : color;
+    };
+
+    const hasColor = function (colors, value) {
+        return colors.some(function (color) { return PropertyPanel.isSameValue(valueOfColor(color), value); });
+    };
+
+    // A color is deleted from Recent or from an editable group (canAdd). (fixed: it only stays in its place)
+    const canDeleteFrom = function (palette) {
+        return (palette.isRecent || palette.canAdd) ? 1 : 0;
+    };
+
+    // The editable groups a color of a palette can be copied to (not its own).
+    const copyTargetsOf = function (item, palette) {
+        return palettesOf(item).filter(function (p) { return p.canAdd && p.key !== palette.key; });
+    };
+
+    // The change goes to the listener (it keeps the colors of its groups). A static palette (not a function)
+    // is changed here: changeColors(colors) -> the new colors (WHY it must give the same result twice: the
+    // listener may have changed the same array). origin: the ctrl of the color field.
+    const changePaletteColors = function (origin, palette, change, changeColors) {
+        dispatch(Object.assign({ key: palette.key, oldValue: undefined, item: origin.item, sectionKey: origin.sectionKey }, change));
+        readPalettes();
+        if (typeof box.palettes !== "function") {
+            const shared = paletteCache.find(function (p) { return p.key === palette.key; });
+            if (shared) shared.colors = changeColors((shared.colors || []).slice());
+        }
+        refreshQuickStrips();
+    };
+
+    const addPaletteColor = function (origin, palette, value) {
+        if (!value || hasColor(palette.colors, value)) return;
+        changePaletteColors(origin, palette, { kind: "addColor", value: value }, function (colors) {
+            return (hasColor(colors, value)) ? colors : colors.concat([value]);
+        });
+    };
+
+    const deletePaletteColor = function (origin, palette, value) {
+        if (palette.isRecent) {
+            forgetColor(value);
+            refreshQuickStrips();
+            return;
+        }
+        changePaletteColors(origin, palette, { kind: "removeColor", value: value }, function (colors) {
+            return colors.filter(function (color) { return !PropertyPanel.isSameValue(valueOfColor(color), value); });
+        });
+    };
+
+    // values: every color of the palette in the new order (after a drag)
+    const orderPaletteColors = function (origin, palette, values) {
+        changePaletteColors(origin, palette, { kind: "orderColors", value: values }, function (colors) {
+            const ordered = values.map(function (value) {
+                return colors.find(function (color) { return PropertyPanel.isSameValue(valueOfColor(color), value); });
+            });
+            return ordered.filter(function (color) { return color !== undefined; });
+        });
+    };
+
     // GROUP: The colors under a color field: the recent colors | the colors of the selected group (the ticks of
-    // the picker). A click gives the color to the field: onPick(value). Hidden when no tick is on.
-    const buildQuickStrip = function (item, width, onPick) {
+    // the picker), two rows at most: "+N" shows the others. A click gives the color to the field: onPick(value);
+    // a right click opens its menu (Copy to, Delete). Hidden when no tick is on.
+    const QUICK_ROWS = 2; // The colors under a field: more rows are behind "+N"
+    const MORE_BUTTON_SLOTS = 2; // "+N" takes the place of two colors
+    const buildQuickStrip = function (ctrl, width, onPick) {
+        const item = ctrl.item;
         const cp = _s.colorPicker;
+        const size = cp.quickSwatchSize;
+        const gap = cp.quickSwatchGap;
         const room = cp.swatchRoom;
-        const strip = HGroup({ width: width, height: "auto", align: "left center", gap: cp.quickSwatchGap, wrap: 1, color: "transparent" });
+        const strip = HGroup({ width: width, height: "auto", align: "left center", gap: gap, wrap: 1, color: "transparent" });
         strip.css = { padding: room + "px", boxSizing: "border-box" };
         strip.shrink = 0;
         endGroup();
 
-        const view = { obj: strip, value: "", squares: [], enabled: 1 };
+        const slotsInRow = Math.max(1, Math.floor((width - room * 2 + gap) / (size + gap)));
+        const view = { obj: strip, value: "", squares: [], parts: [], enabled: 1, isOpen: 0 };
 
-        const buildQuickSwatch = function (preset) {
-            const square = Box({ width: cp.quickSwatchSize, height: cp.quickSwatchSize, round: 3, color: "transparent" });
+        // The menu of a color (a right click, or the menu key): Copy to an editable group, Delete from its group.
+        const openQuickMenu = function (square, palette, value) {
+            if (!view.enabled) return;
+            const options = copyTargetsOf(item, palette).map(function (target) {
+                return { value: "copy:" + target.key, text: "Copy to " + target.name, target: target };
+            });
+            if (canDeleteFrom(palette)) options.push({ value: "delete", text: "Delete from " + palette.name });
+            openMenu(square, square, options, undefined, function (choice) {
+                if (choice === "delete") {
+                    deletePaletteColor(ctrl, palette, value);
+                    return;
+                }
+                const option = options.find(function (o) { return o.value === choice; });
+                if (option) addPaletteColor(ctrl, option.target, value);
+            });
+        };
+
+        // BOX: A color under the field
+        const buildQuickSwatch = function (preset, palette) {
+            const square = Box({ width: size, height: size, round: 3, color: "transparent" });
             square.shrink = 0;
             paintChecker(square, preset.color || preset.value);
             square.clickable = 1;
@@ -1172,33 +1261,79 @@ const PropertyPanel = function (params = {}) {
             };
             square.on("click", pick);
             onActivateKey(square, pick);
+            square.elem.addEventListener("contextmenu", function (event) {
+                event.preventDefault();
+                openQuickMenu(square, palette, preset.value);
+            });
+            square.on("keydown", function (self, event) {
+                const isMenuKey = (event.key === "ContextMenu" || (event.key === "F10" && event.shiftKey));
+                if (!isMenuKey) return;
+                event.preventDefault();
+                openQuickMenu(square, palette, preset.value);
+            });
             square.presetValue = preset.value;
+            view.squares.push(square);
             return square;
         };
 
+        // LABEL: "+N" (the hidden colors) or "Less"
+        const buildMoreButton = function (text, label) {
+            const btn = textLabel("", { width: size * MORE_BUTTON_SLOTS + gap, height: size, fontSize: _t.captionSize, textColor: _t.softColor, plainText: text });
+            btn.round = 3;
+            btn.clickable = 1;
+            btn.cursor = "pointer";
+            btn.role = "button";
+            btn.tabIndex = 0;
+            btn.aria = { label: label };
+            btn.elem.title = label;
+            onHover(btn, function (isHover) { btn.textColor = (isHover) ? _t.color : _t.softColor; });
+            const toggle = function () {
+                view.isOpen = (view.isOpen) ? 0 : 1;
+                view.draw();
+            };
+            btn.on("click", toggle);
+            onActivateKey(btn, toggle);
+            return btn;
+        };
+
         view.draw = function () {
-            view.squares.forEach(function (square) { square.remove(); });
-            if (view.line) view.line.remove();
+            view.parts.forEach(function (part) { part.remove(); });
+            view.parts = [];
             view.squares = [];
-            view.line = null;
             const recent = (quickColors.recent) ? recentColors : [];
             const palette = (quickColors.group) ? currentPaletteOf(item) : null;
             const groupColors = (palette) ? palette.colors : [];
+            const hasLine = (recent.length && groupColors.length) ? 1 : 0;
             strip.visible = (recent.length || groupColors.length) ? 1 : 0;
+
+            // WHY the line counts as a color: it is simpler, and only a few px are lost
+            const slotCount = recent.length + hasLine + groupColors.length;
+            const maxSlots = slotsInRow * QUICK_ROWS;
+            const isLong = (slotCount > maxSlots);
+            const isCut = (isLong && !view.isOpen);
+            const freeSlots = (isCut) ? maxSlots - MORE_BUTTON_SLOTS : slotCount;
+            const shownRecent = recent.slice(0, freeSlots);
+            const showLine = (hasLine && freeSlots > shownRecent.length);
+            const shownGroup = groupColors.slice(0, Math.max(0, freeSlots - shownRecent.length - ((showLine) ? 1 : 0)));
+            const hiddenCount = recent.length + groupColors.length - shownRecent.length - shownGroup.length;
+
             createIn(strip, function () {
-                recent.forEach(function (value) {
-                    view.squares.push(buildQuickSwatch({ value: value, color: paintColorOf(item, value), hint: value + " (Recent)" }));
+                shownRecent.forEach(function (value) {
+                    view.parts.push(buildQuickSwatch({ value: value, color: paintColorOf(item, value), hint: value + " (Recent)" }, RECENT_PALETTE));
                 });
                 // BOX: The line between the recent colors and the colors of the group
-                if (recent.length && groupColors.length) {
-                    view.line = Box({ width: 1, height: cp.quickSwatchSize, color: _ps.dividerColor });
-                    view.line.shrink = 0;
-                    view.line.clickable = 0;
+                if (showLine) {
+                    const line = Box({ width: 1, height: size, color: _ps.dividerColor });
+                    line.shrink = 0;
+                    line.clickable = 0;
+                    view.parts.push(line);
                 }
-                groupColors.forEach(function (preset) {
+                shownGroup.forEach(function (preset) {
                     const hint = (preset.hint || preset.value) + " (" + palette.name + ")";
-                    view.squares.push(buildQuickSwatch({ value: preset.value, color: preset.color, hint: hint }));
+                    view.parts.push(buildQuickSwatch({ value: preset.value, color: preset.color, hint: hint }, palette));
                 });
+                if (isCut) view.parts.push(buildMoreButton("+" + hiddenCount, "Show " + hiddenCount + " more colors"));
+                else if (isLong) view.parts.push(buildMoreButton("Less", "Show two rows of colors"));
             });
             view.paint(view.value);
         };
@@ -1633,7 +1768,6 @@ const PropertyPanel = function (params = {}) {
         // *** THE MENU OF A COLOR (a right click): Copy to an editable group, Delete from its group.
         // It is in the picker, so a click in it does not close the picker.
 
-        const RECENT_PALETTE = { key: "__recent", name: "Recent", isRecent: 1 };
         const COLOR_MENU_WIDTH = 160;
         const COLOR_MENU_MARGIN = 4; // It stays this far from the edges of the picker
         let colorMenu = null;
@@ -1642,11 +1776,6 @@ const PropertyPanel = function (params = {}) {
             if (!colorMenu) return;
             colorMenu.remove();
             colorMenu = null;
-        };
-
-        const canDeleteFrom = function (palette, view) {
-            if (palette.isRecent) return 1;
-            return (palette.canAdd && !view.fixed) ? 1 : 0;
         };
 
         // LABEL: A row of the menu of a color
@@ -1673,8 +1802,8 @@ const PropertyPanel = function (params = {}) {
         // event: the right click (the menu at the mouse), or null (at the color: the keyboard)
         const openColorMenu = function (view, palette, event) {
             closeColorMenu();
-            const targets = palettes.filter(function (p) { return p.canAdd && p.key !== palette.key; });
-            const canDelete = canDeleteFrom(palette, view);
+            const targets = copyTargetsOf(item, palette);
+            const canDelete = canDeleteFrom(palette);
             if (!targets.length && !canDelete) return;
 
             colorMenu = createIn(obj, function () {
@@ -1726,48 +1855,22 @@ const PropertyPanel = function (params = {}) {
             if (firstRow) firstRow.focus({ preventScroll: true });
         };
 
-        // *** CHANGES OF THE GROUPS
+        // *** CHANGES OF THE GROUPS (the picker draws its groups again after each one)
 
-        const valueOfColor = function (color) {
-            return (color && typeof color === "object") ? color.value : color;
-        };
-
-        const hasColor = function (colors, value) {
-            return colors.some(function (color) { return PropertyPanel.isSameValue(valueOfColor(color), value); });
-        };
-
-        // The change goes to the listener (it keeps the colors of its groups). A static palette (not a function)
-        // is changed here: changeColors(colors) -> the new colors (WHY it must give the same result twice: the
-        // listener may have changed the same array).
-        const changePalette = function (palette, change, changeColors) {
-            dispatch(Object.assign({ key: palette.key, oldValue: undefined, item: item, sectionKey: ctrl.sectionKey }, change));
-            readPalettes();
-            if (typeof box.palettes !== "function") {
-                const shared = paletteCache.find(function (p) { return p.key === palette.key; });
-                if (shared) shared.colors = changeColors((shared.colors || []).slice());
-            }
+        const afterGroupChange = function () {
             palettes = palettesOf(item);
+            drawRecentArea();
             drawPaletteArea();
-            refreshQuickStrips();
         };
 
         const addColorTo = function (palette, value) {
-            if (!value || hasColor(palette.colors, value)) return;
-            changePalette(palette, { kind: "addColor", value: value }, function (colors) {
-                return (hasColor(colors, value)) ? colors : colors.concat([value]);
-            });
+            addPaletteColor(ctrl, palette, value);
+            afterGroupChange();
         };
 
         const deleteColor = function (view, palette) {
-            if (palette.isRecent) {
-                forgetColor(view.value);
-                drawRecentArea();
-                refreshQuickStrips();
-                return;
-            }
-            changePalette(palette, { kind: "removeColor", value: view.value }, function (colors) {
-                return colors.filter(function (color) { return !PropertyPanel.isSameValue(valueOfColor(color), view.value); });
-            });
+            deletePaletteColor(ctrl, palette, view.value);
+            afterGroupChange();
         };
 
         // The values of the colors in the order of the grid (after a drag).
@@ -1779,12 +1882,8 @@ const PropertyPanel = function (params = {}) {
             });
             const isSameOrder = values.every(function (value, index) { return PropertyPanel.isSameValue(value, palette.colors[index].value); });
             if (isSameOrder) return;
-            changePalette(palette, { kind: "orderColors", value: values }, function (colors) {
-                const ordered = values.map(function (value) {
-                    return colors.find(function (color) { return PropertyPanel.isSameValue(valueOfColor(color), value); });
-                });
-                return ordered.filter(function (color) { return color !== undefined; });
-            });
+            orderPaletteColors(ctrl, palette, values);
+            afterGroupChange();
         };
 
         // DRAG: a color of an editable group goes before or after the color under the mouse (not a fixed one).
@@ -2198,7 +2297,7 @@ const PropertyPanel = function (params = {}) {
         };
 
         // GROUP: The quick colors under the field (the ticks of the picker)
-        const strip = buildQuickStrip(item, getSpanWidth(item.span), function (pickedValue) {
+        const strip = buildQuickStrip(ctrl, getSpanWidth(item.span), function (pickedValue) {
             if (state.enabled) commit(pickedValue);
         });
 

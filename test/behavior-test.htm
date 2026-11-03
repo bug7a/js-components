@@ -346,10 +346,10 @@
         });
 
         // A panel with one color field and an editable group (a static palette), its picker open.
-        const openColorPanel = async function (changes) {
+        const openColorPanel = async function (changes, colors = ["#111111", "#222222", "#333333"]) {
             const panel = PropertyPanel({
                 data: { sections: [{ key: "s", title: "S", items: [{ key: "fill", type: "color", label: "Fill", value: "#222222" }] }] },
-                palettes: [{ key: "mine", name: "Mine", canAdd: 1, colors: ["#111111", "#222222", "#333333"] }],
+                palettes: [{ key: "mine", name: "Mine", canAdd: 1, colors: colors }],
                 onChange: function (change) { changes.push(change); },
             });
             panel.open();
@@ -404,6 +404,45 @@
             const order = changes.find(function (change) { return change.kind === "orderColors"; });
             const text = (order) ? order.value.join(" ") : "none";
             check("PropertyPanel: a color dragged in its editable group sends the new order", text === "#333333 #111111 #222222", "order: " + text);
+            ui.panel.remove();
+        });
+
+        // The tick of the group on: its colors go under the field (the picker stays open)
+        const showGroupUnderField = async function (ui) {
+            const tick = ui.picker.querySelector("[aria-label^='Show the colors of the selected group']");
+            if (tick.getAttribute("aria-checked") !== "true") tick.click();
+            await wait(10);
+        };
+
+        test("PropertyPanel: the colors under a field are two rows, +N shows the others", async function () {
+            const many = [];
+            for (let i = 0; i < 40; i++) many.push("#" + (100000 + i * 1111));
+            const ui = await openColorPanel([], many);
+            await showGroupUnderField(ui);
+            const shown = function () { return ui.panel.elem.querySelectorAll("[aria-label$='(Mine)']").length; };
+            const before = shown();
+            const more = ui.panel.elem.querySelector("[aria-label^='Show '][aria-label$=' more colors']");
+            if (more) more.click();
+            await wait(10);
+            const after = shown();
+            const rows = new Set(Array.from(ui.panel.elem.querySelectorAll("[aria-label$='(Mine)']")).slice(0, before).map(function (el) { return Math.round(el.getBoundingClientRect().top); }));
+            check("PropertyPanel: the colors under a field are two rows, +N shows the others", !!more && before < 40 && rows.size <= 2 && after === 40, "before: " + before + " in " + rows.size + " rows, +N: " + !!more + ", after: " + after);
+            ui.panel.remove();
+        });
+
+        test("PropertyPanel: Delete in the menu of a color under a field removes it from its group", async function () {
+            const changes = [];
+            const ui = await openColorPanel(changes);
+            await showGroupUnderField(ui);
+            const square = ui.panel.elem.querySelector("[aria-label='#333333 (Mine)']");
+            square.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true }));
+            await wait(10);
+            const row = Array.from(document.querySelectorAll("[role=option]")).find(function (el) { return el.textContent === "Delete from Mine"; });
+            if (row) row.click();
+            await wait(10);
+            const removed = changes.find(function (change) { return change.kind === "removeColor"; });
+            const isGone = !ui.panel.elem.querySelector("[aria-label='#333333 (Mine)']");
+            check("PropertyPanel: Delete in the menu of a color under a field removes it from its group", !!row && !!removed && removed.value === "#333333" && isGone, "menu row: " + !!row + ", change: " + !!removed + ", gone: " + isGone);
             ui.panel.remove();
         });
 

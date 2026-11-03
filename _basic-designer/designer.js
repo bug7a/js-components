@@ -1283,12 +1283,14 @@ BasicDesigner.defaultPaletteColors = function (palette) {
         return { value: value, color: value, hint: (name && name !== value) ? name + " · " + value : value };
     });
     if (palette.key !== BasicDesigner.FAVORITES_KEY) return colors;
+    const removed = BasicDesigner.settings.removedFavorites || [];
     const yours = (BasicDesigner.settings.favoriteColors || []).map(function (value) {
         return { value: value, color: value, hint: value + " (added by you)" };
     });
     const isYours = function (preset) { return BasicDesigner.settings.favoriteColors.indexOf(preset.value) !== -1; };
-    // WHY fixed: the colors of the file are not deleted or moved in the picker (only yours)
-    const fileColors = colors.filter(function (preset) { return !isYours(preset); }).map(function (preset) {
+    // WHY fixed: the colors of the file stay after yours (they are not moved in the picker; they can be deleted)
+    const isKept = function (preset) { return !isYours(preset) && removed.indexOf(preset.value) === -1; };
+    const fileColors = colors.filter(isKept).map(function (preset) {
         return Object.assign(preset, { fixed: 1 });
     });
     return yours.concat(fileColors);
@@ -1327,8 +1329,13 @@ BasicDesigner.editableColorsOf = function (paletteKey) {
     return (group) ? { name: "the color group " + group.name, colors: group.colors } : null;
 };
 
-// Delete in the menu of a color of the picker (a right click).
+// Delete in the menu of a color of the picker (a right click). ★ Favorites: a color of the file is kept in
+// removedFavorites (the file is not changed).
 BasicDesigner.removeColorFromGroup = function (paletteKey, color) {
+    if (paletteKey === BasicDesigner.DEFAULT_KEY + BasicDesigner.FAVORITES_KEY) {
+        BasicDesigner.removeFavoriteColor(color);
+        return;
+    }
     const target = BasicDesigner.editableColorsOf(paletteKey);
     if (!target) return;
     const place = target.colors.indexOf(color);
@@ -1336,6 +1343,19 @@ BasicDesigner.removeColorFromGroup = function (paletteKey, color) {
     target.colors.splice(place, 1);
     BasicDesigner.saveSettings();
     BasicDesigner.setStatus("Removed " + color + " from " + target.name + ".");
+};
+
+// ★ Favorites: yours is removed; one of the file too (WHY both: the same color may be in both, and it must go).
+BasicDesigner.removeFavoriteColor = function (color) {
+    const favorites = BasicDesigner.settings.favoriteColors;
+    const place = favorites.indexOf(color);
+    if (place !== -1) favorites.splice(place, 1);
+    const filePalette = (BasicDesigner.DEFAULT_PALETTES || []).find(function (palette) { return palette.key === BasicDesigner.FAVORITES_KEY; });
+    const isInFile = !!filePalette && filePalette.colors.some(function (pair) { return pair[0] === color; });
+    if (isInFile) BasicDesigner.settings.removedFavorites = (BasicDesigner.settings.removedFavorites || []).concat([color]);
+    BasicDesigner.saveSettings();
+    const back = (isInFile) ? " (Settings > Reset order and show all brings it back)" : "";
+    BasicDesigner.setStatus("Removed " + color + " from ★ Favorites" + back + ".");
 };
 
 // A color dragged to another place in its group. values: every color of the palette in the new order.
@@ -1355,6 +1375,7 @@ BasicDesigner.addFavoriteColor = function (color) {
     const place = favorites.indexOf(color);
     if (place !== -1) favorites.splice(place, 1);
     favorites.unshift(color);
+    BasicDesigner.settings.removedFavorites = (BasicDesigner.settings.removedFavorites || []).filter(function (c) { return c !== color; });
     BasicDesigner.saveSettings();
     BasicDesigner.setStatus("Added " + color + " to ★ Favorites.");
 };
@@ -4977,6 +4998,7 @@ BasicDesigner.settings = Object.assign({
     paletteOrder: [], // the keys of the default palettes (default-palettes.js) in your order; [] = their own order
     hiddenPalettes: [], // the keys of the default palettes that are not in the color picker
     favoriteColors: [], // the colors you added to ★ Favorites with + (the newest first)
+    removedFavorites: [], // the colors of the file you deleted from ★ Favorites (Reset order and show all brings them back)
     background: "gray", // a key of BasicDesigner.BACKGROUNDS
     accent: "blue", // a key of BasicDesigner.ACCENTS
 }, basic.storage.load(BasicDesigner.SETTINGS_KEY) || {});
@@ -5956,6 +5978,7 @@ BasicDesigner.buildPaletteResetRow = function (paletteList) {
             BasicDesigner.changeDefaultPalettes(paletteList, function (settings) {
                 settings.paletteOrder = [];
                 settings.hiddenPalettes = [];
+                settings.removedFavorites = [];
             });
         }, { color: C.field });
     endGroup();
