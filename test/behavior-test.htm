@@ -16,6 +16,7 @@
         <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/input-b.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/textarea-b.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/slider-field.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/search-input-v2.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/full-screen-select.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/item-list.js" type="text/javascript" charset="utf-8"></script>
@@ -835,6 +836,30 @@
             const isChanged = el.placeholder === "Write a note" && el.maxLength === 500 && area.maxChar === 500;
             check("TextareaB: setPlaceholder and setMaxChar change its textarea", !error && isChanged, error || ("placeholder: " + el.placeholder + ", maxLength: " + el.maxLength));
             area.remove();
+        });
+
+        // *** SLIDER FIELD (comp/slider-field.js)
+
+        test("SliderField: a click at 80 % gives the same value in a scaled box (a transform)", async function () {
+            const clickAt = function (slider, ratio) {
+                const r = slider.elem.getBoundingClientRect();
+                const x = r.left + r.width * ratio;
+                const y = r.top + r.height / 2;
+                slider.elem.dispatchEvent(new PointerEvent("pointerdown", { pointerId: 7, button: 0, clientX: x, clientY: y, bubbles: true }));
+                slider.elem.dispatchEvent(new PointerEvent("pointerup", { pointerId: 7, button: 0, clientX: x, clientY: y, bubbles: true }));
+                return slider.value;
+            };
+            const plain = SliderField({ left: 0, top: 0, width: 400, min: 0, max: 10, value: 0, editable: 0 });
+            const holder = Box(0, 0, 800, 100, { color: "transparent" });
+            holder.css = { transform: "scale(0.5)", transformOrigin: "0 0" };
+            const scaled = createIn(holder, function () {
+                return SliderField({ left: 0, top: 0, width: 400, min: 0, max: 10, value: 0, editable: 0 });
+            });
+            const plainValue = clickAt(plain, 0.8);
+            const scaledValue = clickAt(scaled, 0.8);
+            check("SliderField: a click at 80 % gives the same value in a scaled box (a transform)", plainValue === scaledValue && plainValue > 5, "plain: " + plainValue + ", scaled: " + scaledValue);
+            plain.remove();
+            holder.remove();
         });
 
         // *** LOGIN PAGE (comp/login-page-v2.js)

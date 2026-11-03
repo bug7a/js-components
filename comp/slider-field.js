@@ -206,9 +206,13 @@ const SliderField = function (params = {}) {
         return clampValue(box.min + ratio * (box.max - box.min));
     };
 
+    // The x of the pointer in the px of the box. WHY the scale (2026-11-03): in a scaled parent (page.fit, a transform,
+    // the layer of a game UI) the rect is in screen px and the width in the own px of the box: a drag to 80 % gave
+    // 60 % (the game Fishing Company Tycoon fixed it in its copy, 2026-10-12).
     const getPointerX = function (event) {
         const rect = box.elem.getBoundingClientRect();
-        return event.clientX - rect.left - box.elem.clientLeft;
+        const scale = (box.elem.offsetWidth > 0) ? rect.width / box.elem.offsetWidth : 1;
+        return (event.clientX - rect.left) / (scale || 1) - box.elem.clientLeft;
     };
 
     // Number of dot spaces: every step, or a divisor of the steps up to maxTicks.
