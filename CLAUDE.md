@@ -13,7 +13,7 @@ This file gives Claude Code guidance for working in this repository.
 - **A side problem found on the way:** small and safe (a line or so, checked by a test): fix it in the same job and report it. Bigger: only suggest it.
 - **Not tested (Windows, a real phone):** write it only when it matters for that job.
 - **Screenshots:** a small sample change gets one result image. Before / after is for a fixed bug.
-- **Old screenshots:** before saving a new image into `_screenshots/`, delete the images there older than 24 hours (`find _screenshots -type f -mmin +1440 ! -name readme.md -delete`). Never `readme.md`.
+- **Old screenshots:** once in a session, before the first new image goes into `_screenshots/`, delete the images there older than 48 hours (`find _screenshots -type f -mmin +2880 ! -name readme.md -delete`; the user, 2026-11-03). Never `readme.md`.
 
 ## What this is
 
