@@ -33,7 +33,7 @@ UI COMPONENT TEMPLATE
                   colors: ["#FFFFFF", { value: "var(--color-primary)", color: "#3871E0", hint: "Primary" }, ...]
                   canAdd: 1 -> an editable group: a + button adds the current color: change { kind: "addColor", key: palette key, value };
                   its colors are put in order by dragging: { kind: "orderColors", key, value: [the values in the new order] }.
-                  A right click on a color: "Copy to" an editable group (addColor), "Delete" from an editable group
+                  A right click on a color: "Copy to ›" an editable group (they open at its side; addColor), "Delete" from an editable group
                   ({ kind: "removeColor", key, value }) or from Recent. A color with fixed: 1 is not moved (it can be deleted).
                   presets (of the item, old): shown as the first palette, "Presets".
                   Also: the color before / now (a click on "before" goes back), HEX / RGB / HSL text, and the
@@ -1161,9 +1161,9 @@ const PropertyPanel = function (params = {}) {
         return (palette.isRecent || palette.canAdd) ? 1 : 0;
     };
 
-    // The editable groups a color of a palette can be copied to (not its own).
-    const copyTargetsOf = function (item, palette) {
-        return palettesOf(item).filter(function (p) { return p.canAdd && p.key !== palette.key; });
+    // The editable groups a color of a palette can be copied to (not its own, not one that has it already).
+    const copyTargetsOf = function (item, palette, value) {
+        return palettesOf(item).filter(function (p) { return p.canAdd && p.key !== palette.key && !hasColor(p.colors, value); });
     };
 
     // The change goes to the listener (it keeps the colors of its groups). A static palette (not a function)
@@ -1210,6 +1210,133 @@ const PropertyPanel = function (params = {}) {
     // GROUP: The colors under a color field: the recent colors | the colors of the selected group (the ticks of
     // the picker), two rows at most: "+N" shows the others. A click gives the color to the field: onPick(value);
     // a right click opens its menu (Copy to, Delete). Hidden when no tick is on.
+    // *** THE MENU OF A COLOR (a right click, in the picker and under a field):
+    // [⧉ Copy to  ›]  its editable groups open at its side (on hover, a click, Enter or →)
+    // [🗑 Delete     ]
+
+    const COLOR_MENU_WIDTH = 150;
+    const SUBMENU_OVERLAP = 4; // The list of groups covers the edge of the menu a little
+
+    // GROUP: A row of the menu of a color: an icon (or none), the text, an icon at the end (or none)
+    const buildColorMenuRow = function (icon, text, label, endIcon) {
+        const ms = _s.menu;
+        const row = HGroup({ width: "100%", height: ms.rowHeight, align: "left center", gap: 0, padding: [8, 0], color: "transparent" });
+        row.shrink = 0;
+        row.clickable = 1;
+        row.cursor = "pointer";
+        row.tabIndex = 0;
+        row.role = "menuitem";
+        row.aria = { label: label };
+            if (icon) textLabel(getIcon(icon, 14), { width: 24, height: ms.rowHeight, textColor: ms.textColor });
+            const lblText = textLabel("", { flex: 1, height: ms.rowHeight, textColor: ms.textColor, plainText: text });
+            if (!icon) lblText.css.paddingLeft = "4px";
+            if (endIcon) textLabel(getIcon(endIcon, 14), { width: 18, height: ms.rowHeight, textColor: _t.softColor });
+        endGroup();
+        // keepHover: the row stays painted (Copy to, while its list is open)
+        onHover(row, function (isHover) { row.color = (isHover || row.keepHover) ? ms.hoverColor : "transparent"; });
+        return row;
+    };
+
+    // GROUP: The menu of a color, in the current container (place it after: left, top).
+    // menu: { value, targets (the editable groups), canDelete, groupName, onCopy(target), onDelete(), close() }
+    const buildColorMenu = function (menu) {
+        const ms = _s.menu;
+        const menuBox = VGroup({ width: COLOR_MENU_WIDTH, height: "auto", align: "left top", gap: 0, color: ms.color, round: ms.round });
+        menuBox.css = { position: "absolute", padding: "4px 0px", boxSizing: "border-box", alignItems: "stretch" };
+        menuBox.boxShadow = "0 0 0 1px " + ms.borderColor + ", " + ms.shadow;
+        menuBox.clickable = 1;
+        menuBox.clipContent = 0; // (the list of groups is at its side)
+        menuBox.role = "menu";
+        menuBox.aria = { label: menu.value };
+        let subMenu = null;
+        let rowCopy = null;
+
+        const closeSubMenu = function () {
+            if (!subMenu) return;
+            subMenu.remove();
+            subMenu = null;
+            rowCopy.keepHover = 0;
+            rowCopy.color = "transparent";
+        };
+
+        // At the right of the menu (at its left when there is no room), its first row at "Copy to"; it goes up
+        // when it would leave the bottom of the window.
+        const placeSubMenu = function () {
+            const menuRect = menuBox.elem.getBoundingClientRect();
+            const width = subMenu.elem.offsetWidth;
+            const height = subMenu.elem.offsetHeight;
+            const fitsRight = (menuRect.right + width - SUBMENU_OVERLAP <= window.innerWidth - SCREEN_MARGIN);
+            subMenu.left = (fitsRight) ? menuRect.width - SUBMENU_OVERLAP : SUBMENU_OVERLAP - width;
+            const top = rowCopy.elem.offsetTop - 4; // WHY 4: the padding of the list, so its first row is at the row
+            const overflow = menuRect.top + top + height - (window.innerHeight - SCREEN_MARGIN);
+            subMenu.top = top - Math.max(0, overflow);
+        };
+
+        const openSubMenu = function (focusFirst) {
+            if (!subMenu) {
+                subMenu = createIn(menuBox, function () {
+                    // GROUP: The editable groups
+                    const list = VGroup({ width: COLOR_MENU_WIDTH, height: "auto", align: "left top", gap: 0, color: ms.color, round: ms.round });
+                    list.css = { position: "absolute", padding: "4px 0px", boxSizing: "border-box", alignItems: "stretch" };
+                    list.boxShadow = "0 0 0 1px " + ms.borderColor + ", " + ms.shadow;
+                    list.clickable = 1;
+                    list.role = "menu";
+                    list.aria = { label: "Copy to" };
+                        menu.targets.forEach(function (target) {
+                            const row = buildColorMenuRow("", target.name, "Copy " + menu.value + " to " + target.name, "");
+                            const copy = function () {
+                                menu.close();
+                                menu.onCopy(target);
+                            };
+                            row.on("click", copy);
+                            onActivateKey(row, copy);
+                        });
+                    endGroup();
+                    // ← or Escape: back to "Copy to" (WHY stopPropagation: not the whole menu)
+                    list.on("keydown", function (self, event) {
+                        if (event.key !== "ArrowLeft" && event.key !== "Escape") return;
+                        event.preventDefault();
+                        event.stopPropagation();
+                        closeSubMenu();
+                        rowCopy.elem.focus();
+                    });
+                    return list;
+                });
+                rowCopy.keepHover = 1;
+                rowCopy.color = ms.hoverColor;
+                rowCopy.aria = { expanded: "true" };
+                placeSubMenu();
+            }
+            if (focusFirst) subMenu.elem.querySelector("[role=menuitem]").focus({ preventScroll: true });
+        };
+
+            if (menu.targets.length) {
+                rowCopy = buildColorMenuRow("copy", "Copy to", "Copy " + menu.value + " to a color group", "chevronRight");
+                rowCopy.aria = { haspopup: "menu", expanded: "false" };
+                rowCopy.on("mouseenter", function () { openSubMenu(0); });
+                rowCopy.on("click", function () { openSubMenu(1); });
+                onActivateKey(rowCopy, function () { openSubMenu(1); }, ["ArrowRight"]);
+            }
+            if (menu.targets.length && menu.canDelete) {
+                // BOX: Line
+                const line = Box({ width: "100%", height: 1, color: ms.borderColor });
+                line.shrink = 0;
+                line.css.margin = "4px 0px";
+            }
+            if (menu.canDelete) {
+                const rowDelete = buildColorMenuRow("trash", "Delete", "Delete " + menu.value + " from " + menu.groupName, "");
+                const remove = function () {
+                    menu.close();
+                    menu.onDelete();
+                };
+                rowDelete.on("mouseenter", closeSubMenu);
+                rowDelete.on("click", remove);
+                onActivateKey(rowDelete, remove);
+            }
+        endGroup();
+        return menuBox;
+    };
+
     const QUICK_ROWS = 2; // The colors under a field: more rows are behind "+N"
     const MORE_BUTTON_SLOTS = 2; // "+N" takes the place of two colors
     const buildQuickStrip = function (ctrl, width, onPick) {
@@ -1227,20 +1354,30 @@ const PropertyPanel = function (params = {}) {
         const view = { obj: strip, value: "", squares: [], parts: [], enabled: 1, isOpen: 0 };
 
         // The menu of a color (a right click, or the menu key): Copy to an editable group, Delete from its group.
+        // (on the page, in the menu slot of the panel: a click outside or Escape closes it)
         const openQuickMenu = function (square, palette, value) {
             if (!view.enabled) return;
-            const options = copyTargetsOf(item, palette).map(function (target) {
-                return { value: "copy:" + target.key, text: "Copy to " + target.name, target: target };
+            const isOpenByThisColor = (menu && menu.opener === square);
+            closeMenu();
+            if (isOpenByThisColor) return;
+            const targets = copyTargetsOf(item, palette, value);
+            const canDelete = canDeleteFrom(palette);
+            if (!targets.length && !canDelete) return;
+            createIn(page, function () {
+                const menuBox = buildColorMenu({
+                    value: value,
+                    targets: targets,
+                    canDelete: canDelete,
+                    groupName: palette.name,
+                    onCopy: function (target) { addPaletteColor(ctrl, target, value); },
+                    onDelete: function () { deletePaletteColor(ctrl, palette, value); },
+                    close: closeMenu,
+                });
+                menuBox.zIndex = MENU_Z_INDEX;
+                placeMenu(menuBox, square.elem.getBoundingClientRect(), COLOR_MENU_WIDTH);
+                menu = { obj: menuBox, opener: square };
             });
-            if (canDeleteFrom(palette)) options.push({ value: "delete", text: "Delete from " + palette.name });
-            openMenu(square, square, options, undefined, function (choice) {
-                if (choice === "delete") {
-                    deletePaletteColor(ctrl, palette, value);
-                    return;
-                }
-                const option = options.find(function (o) { return o.value === choice; });
-                if (option) addPaletteColor(ctrl, option.target, value);
-            });
+            menu.obj.elem.querySelector("[role=menuitem]").focus({ preventScroll: true });
         };
 
         // BOX: A color under the field
@@ -1765,10 +1902,8 @@ const PropertyPanel = function (params = {}) {
             return view;
         };
 
-        // *** THE MENU OF A COLOR (a right click): Copy to an editable group, Delete from its group.
-        // It is in the picker, so a click in it does not close the picker.
+        // *** THE MENU OF A COLOR (a right click): in the picker, so a click in it does not close the picker.
 
-        const COLOR_MENU_WIDTH = 160;
         const COLOR_MENU_MARGIN = 4; // It stays this far from the edges of the picker
         let colorMenu = null;
 
@@ -1778,60 +1913,24 @@ const PropertyPanel = function (params = {}) {
             colorMenu = null;
         };
 
-        // LABEL: A row of the menu of a color
-        const addColorMenuRow = function (text, label, fn) {
-            const row = HGroup({ width: "100%", height: ms.rowHeight, align: "left center", gap: 0, padding: [12, 0], color: "transparent" });
-            row.shrink = 0;
-            row.clickable = 1;
-            row.cursor = "pointer";
-            row.tabIndex = 0;
-            row.role = "menuitem";
-            row.aria = { label: label };
-                textLabel("", { flex: 1, height: ms.rowHeight, textColor: ms.textColor, plainText: text });
-            endGroup();
-            const run = function () {
-                closeColorMenu();
-                fn();
-            };
-            onHover(row, function (isHover) { row.color = (isHover) ? ms.hoverColor : "transparent"; });
-            row.on("click", run);
-            onActivateKey(row, run);
-            return row;
-        };
-
         // event: the right click (the menu at the mouse), or null (at the color: the keyboard)
         const openColorMenu = function (view, palette, event) {
             closeColorMenu();
-            const targets = copyTargetsOf(item, palette);
+            const targets = copyTargetsOf(item, palette, view.value);
             const canDelete = canDeleteFrom(palette);
             if (!targets.length && !canDelete) return;
 
             colorMenu = createIn(obj, function () {
-                // GROUP: The menu of a color
-                const menuBox = VGroup({ width: COLOR_MENU_WIDTH, height: "auto", align: "left top", gap: 0, color: ms.color, round: ms.round });
-                menuBox.css = { position: "absolute", padding: "4px 0px", boxSizing: "border-box", alignItems: "stretch" };
-                menuBox.boxShadow = "0 0 0 1px " + ms.borderColor + ", " + ms.shadow;
+                const menuBox = buildColorMenu({
+                    value: view.value,
+                    targets: targets,
+                    canDelete: canDelete,
+                    groupName: palette.name,
+                    onCopy: function (target) { addColorTo(target, view.value); },
+                    onDelete: function () { deleteColor(view, palette); },
+                    close: closeColorMenu,
+                });
                 menuBox.zIndex = 1;
-                menuBox.clickable = 1;
-                menuBox.role = "menu";
-                menuBox.aria = { label: view.value };
-                    if (targets.length) {
-                        const caption = textLabel("", { fontSize: _t.captionSize, textColor: _t.softColor, height: 22, plainText: "Copy to" });
-                        caption.css.paddingLeft = "12px";
-                    }
-                    targets.forEach(function (target) {
-                        addColorMenuRow(target.name, "Copy " + view.value + " to " + target.name, function () { addColorTo(target, view.value); });
-                    });
-                    if (targets.length && canDelete) {
-                        // BOX: Line
-                        const line = Box({ width: "100%", height: 1, color: ms.borderColor });
-                        line.shrink = 0;
-                        line.css.margin = "4px 0px";
-                    }
-                    if (canDelete) {
-                        addColorMenuRow("Delete", "Delete " + view.value + " from " + palette.name, function () { deleteColor(view, palette); });
-                    }
-                endGroup();
                 return menuBox;
             });
 
@@ -3243,6 +3342,9 @@ PropertyPanel.icons = {
     pointer: "M4 2.5l8.5 5.2-3.7 1 2.1 3.9-1.7.9-2.1-3.9L4.3 12.2zM12 1.5v2M14.5 4h-2M13.8 2.2l-1.3 1.3",
     eyedropper: "M10.2 2.8a1.7 1.7 0 012.4 2.4l-1.4 1.4.7.7-1.1 1.1-3.3-3.3 1.1-1.1.7.7zM7.4 5.9L3 10.3V13h2.7l4.4-4.4",
     check: "M3.5 8.5l3 3 6-7",
+    copy: "M6 6h7v7H6zM10 6V3H3v7h3",
+    trash: "M2.5 4.5h11M6.5 4.5V3h3v1.5M4 4.5l.7 8.5h6.6l.7-8.5M6.8 7v3.5M9.2 7v3.5",
+    chevronRight: "M6.5 4.5L10 8l-3.5 3.5",
     plus: "M8 3v10M3 8h10",
     minus: "M3 8h10",
     bold: "M5 3h3.8a2.4 2.4 0 0 1 0 4.8H5zM5 7.8h4.4a2.6 2.6 0 0 1 0 5.2H5z",

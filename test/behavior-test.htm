@@ -349,7 +349,7 @@
         const openColorPanel = async function (changes, colors = ["#111111", "#222222", "#333333"]) {
             const panel = PropertyPanel({
                 data: { sections: [{ key: "s", title: "S", items: [{ key: "fill", type: "color", label: "Fill", value: "#222222" }] }] },
-                palettes: [{ key: "mine", name: "Mine", canAdd: 1, colors: colors }],
+                palettes: [{ key: "mine", name: "Mine", canAdd: 1, colors: colors }, { key: "other", name: "Other", canAdd: 1, colors: [] }],
                 onChange: function (change) { changes.push(change); },
             });
             panel.open();
@@ -387,6 +387,24 @@
         });
 
         // WHY the moves go to window: the dragged color moves in the grid, and the browser stops sending it the pointer
+        test("PropertyPanel: Copy to in the menu of a color opens its groups at the side, a click copies", async function () {
+            const changes = [];
+            const ui = await openColorPanel(changes);
+            ui.swatchOf("#111111").dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: 10, clientY: 10 }));
+            await wait(10);
+            const rowCopy = ui.picker.querySelector("[aria-label='Copy #111111 to a color group']");
+            const hasListBefore = !!ui.picker.querySelector("[aria-label='Copy #111111 to Other']");
+            if (rowCopy) rowCopy.dispatchEvent(new MouseEvent("mouseenter"));
+            await wait(10);
+            const rowOther = ui.picker.querySelector("[aria-label='Copy #111111 to Other']");
+            const isAtTheSide = !!rowOther && rowOther.getBoundingClientRect().left >= rowCopy.getBoundingClientRect().right - 10;
+            if (rowOther) rowOther.click();
+            await wait(10);
+            const added = changes.find(function (change) { return change.kind === "addColor"; });
+            check("PropertyPanel: Copy to in the menu of a color opens its groups at the side, a click copies", !!rowCopy && !hasListBefore && isAtTheSide && !!added && added.key === "other" && added.value === "#111111", "Copy to: " + !!rowCopy + ", list before hover: " + hasListBefore + ", at the side: " + isAtTheSide + ", added: " + (added && added.key));
+            ui.panel.remove();
+        });
+
         test("PropertyPanel: a color dragged in its editable group sends the new order", async function () {
             const changes = [];
             const ui = await openColorPanel(changes);
@@ -437,7 +455,7 @@
             const square = ui.panel.elem.querySelector("[aria-label='#333333 (Mine)']");
             square.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true }));
             await wait(10);
-            const row = Array.from(document.querySelectorAll("[role=option]")).find(function (el) { return el.textContent === "Delete from Mine"; });
+            const row = document.querySelector("[aria-label='Delete #333333 from Mine']");
             if (row) row.click();
             await wait(10);
             const removed = changes.find(function (change) { return change.kind === "removeColor"; });
