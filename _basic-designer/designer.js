@@ -1454,7 +1454,9 @@ BasicDesigner.sizeSection = function (p) {
          BasicDesigner.sizeItem("height", "Height", "H", p.height)],
     ];
     if (!p.isGroup) items.push([BasicDesigner.numberOrText("padding", "Padding", "P", p.padding, { min: 0 })]);
-    return { key: "size", title: "Size", items: items };
+    // WHY mark: a line at the left of Size and Position: the eye finds them, Fill and border comes right after them
+    //      (the user, 2026-11-03)
+    return { key: "size", title: "Size", mark: 1, items: items };
 };
 
 // SIZE: width / height. A number (px), or a text: "100%", "calc(100% - 20px)", "auto", "50vw"...
@@ -1575,7 +1577,7 @@ BasicDesigner.positionSection = function (p) {
         items.push([BasicDesigner.snapItem()]);
     }
     items.push([{ key: "rotate", type: "number", label: "Rotate", icon: "angle", value: p.rotate, unit: "°" }]);
-    return { key: "position", title: "Position", items: items };
+    return { key: "position", title: "Position", mark: 1, items: items };
 };
 
 // SIDES: position, left, right, top and bottom are one change ("sides"): basic.js clears the opposite side when one

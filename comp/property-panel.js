@@ -9,6 +9,8 @@ UI COMPONENT TEMPLATE
   Full height, 240 px wide (width), one dark style.
 - Built from a JSON (data): header tabs, a title with action icons, and sections of items.
   footer: one more section, fixed at the bottom (out of the scrolling part). Ex: a note field.
+  A section with mark: 1 has a line in the accent color at its left (style.panel.markWidth): a place the eye
+  finds again (Ex: Size and Position; 2026-11-03, the user: a lighter background was too weak, an inverted one too strong).
   headerTitle: a name at the left of the header; the tabs and the headerItem come next to it.
   empty: { icon, title, text, hints: [{ keys, text }] } -> a page in the middle in place of the sections
   (Ex: nothing is selected).
@@ -95,6 +97,7 @@ const PropertyPanelDefaults = {
         panel: {
             color: "#2C2C2C",
             dividerColor: "#444444",
+            markWidth: 3, // A section with mark: 1: a line in the accent color at its left
             headerHeight: 48,
             paddingLeft: 16,
             paddingRight: 8,
@@ -2948,6 +2951,7 @@ const PropertyPanel = function (params = {}) {
             boxSizing: "border-box",
             borderBottom: "1px solid " + _ps.dividerColor,
         };
+        if (section.mark) group.boxShadow = "inset " + _ps.markWidth + "px 0 0 " + _s.accent.color;
 
             // WHY: A section without a title and actions (Ex: a footer with a note) gets no empty title row.
             const hasTitleRow = isTitleBlock || !!section.title || (section.actions && section.actions.length > 0);
