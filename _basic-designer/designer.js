@@ -1521,24 +1521,20 @@ BasicDesigner.measuredSize = function (key) {
 };
 
 // THE DISTANCE TO A SIDE (G-007, 2026-10-31): one field for an axis. Its prefix says the side (Left / Right, Top /
-// Bottom); its menu changes the side ("__side:right") or gives a value; a text value like the sizes (100%, calc...).
+// Bottom) and a click on it changes the side ("__side:right"); its menu gives a value (the user, 2026-11-03: only
+// these three); a text value like the sizes (100%, calc...).
 BasicDesigner.SIDE_NAMES = { left: "Left", right: "Right", top: "Top", bottom: "Bottom" };
 BasicDesigner.OTHER_SIDES = { left: "right", right: "left", top: "bottom", bottom: "top" };
 BasicDesigner.SIDE_PREFIX_WIDTH = 56; // "Bottom" fits
 BasicDesigner.SIDE_VALUE_PRESETS = [
     { value: "0", text: "0" },
     { value: "50%", text: "50%" },
-    { value: "100%", text: "100%" },
     { value: "calc(100% - 20px)", text: "100% − 20px" },
 ];
 BasicDesigner.SIDE_PREFIX = "__side:";
 
-BasicDesigner.sideItem = function (side, label, value, sides) {
+BasicDesigner.sideItem = function (side, label, value) {
     const shown = BasicDesigner.toNumber(value);
-    const sideOptions = sides.map(function (other) {
-        const mark = (other === side) ? "✓ " : "";
-        return { value: BasicDesigner.SIDE_PREFIX + other, text: mark + "From the " + other + " side" };
-    });
     // WHY the whole word, a row for each (the user, 2026-11-03): a click on it changes the side (Left <-> Right)
     const otherSide = BasicDesigner.OTHER_SIDES[side];
     return {
@@ -1552,7 +1548,7 @@ BasicDesigner.sideItem = function (side, label, value, sides) {
         hint: "The distance from the " + side + " side",
         span: "full",
         value: (typeof shown === "number") ? Math.round(shown * 100) / 100 : shown,
-        options: sideOptions.concat(BasicDesigner.SIDE_VALUE_PRESETS),
+        options: BasicDesigner.SIDE_VALUE_PRESETS,
         parseText: BasicDesigner.parsePositionText,
         textToNumber: function () { return BasicDesigner.state.selected ? BasicDesigner.distanceFrom(BasicDesigner.state.selected, side) : null; },
     };
@@ -1579,8 +1575,8 @@ BasicDesigner.positionSection = function (p) {
     if (p.isAbsolute) {
         const h = p.hAnchor;
         const v = p.vAnchor;
-        items.push([BasicDesigner.sideItem(h, "Distance", p[h], ["left", "right"])]);
-        items.push([BasicDesigner.sideItem(v, "", p[v], ["top", "bottom"])]);
+        items.push([BasicDesigner.sideItem(h, "Distance", p[h])]);
+        items.push([BasicDesigner.sideItem(v, "", p[v])]);
         items.push([BasicDesigner.snapItem()]);
     }
     items.push([{ key: "rotate", type: "number", label: "Rotate", icon: "angle", value: p.rotate, unit: "°" }]);

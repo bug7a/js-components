@@ -100,7 +100,7 @@ const PropertyPanelDefaults = {
             color: "#2C2C2C",
             dividerColor: "#444444",
             markWidth: 3, // A section with mark: 1: a line in the accent color at its left
-            markOpacity: 0.35, // WHY: mixed with the panel, it stays calm (the user, 2026-11-03: 65% transparent)
+            markOpacity: 0.65, // WHY: mixed with the panel, it stays calm (the user, 2026-11-03)
             headerHeight: 48,
             paddingLeft: 16,
             paddingRight: 8,
