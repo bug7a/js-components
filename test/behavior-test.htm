@@ -48,6 +48,7 @@
         <script src="../comp/sortable-list.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/select-file.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/property-panel.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/context-menu.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/numeric-keyboard.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/mini-graph-box.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/scrolling-text.js" type="text/javascript" charset="utf-8"></script>
@@ -476,6 +477,79 @@
             await wait(10);
             check("PropertyPanel: the tick of a group shows its colors under the color field, a click gives one", !!quick && ui.panel.getValue("fill") === "#333333", "a color under the field: " + !!quick + ", value: " + ui.panel.getValue("fill"));
             ui.panel.remove();
+        });
+
+        // *** CONTEXT MENU (comp/context-menu.js)
+
+        const MENU_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" stroke="currentColor"><path d="M3 3h10v10H3z"/><\/svg>';
+
+        // A menu: [Open] [Copy to › (Mine, Other)], open at 100, 100
+        const openSubmenuTestMenu = async function (clicks) {
+            const menu = ContextMenu({
+                items: [
+                    { text: "Open", key: "open" },
+                    { text: "Copy to", key: "copyTo", icon: MENU_SVG, items: [{ text: "Mine", key: "mine" }, { text: "Other", key: "other" }] },
+                ],
+                onClick: function (self, item) { clicks.push(item.key); },
+            });
+            menu.openAt(100, 100);
+            await wait(30);
+            const rowOf = function (text) {
+                return Array.from(document.querySelectorAll("[role=menuitem]")).find(function (el) { return el.textContent === text && el.offsetParent !== null; });
+            };
+            return { menu: menu, rowOf: rowOf };
+        };
+
+        test("ContextMenu: hovering an item with items opens its submenu at its side, a click there calls onClick and closes both", async function () {
+            const clicks = [];
+            const ui = await openSubmenuTestMenu(clicks);
+            const rowCopy = ui.rowOf("Copy to");
+            const hadSubmenu = !!ui.rowOf("Mine");
+            rowCopy.dispatchEvent(new MouseEvent("mouseenter"));
+            await wait(30);
+            const rowMine = ui.rowOf("Mine");
+            const isAtTheSide = !!rowMine && rowMine.getBoundingClientRect().left >= rowCopy.getBoundingClientRect().right - 10;
+            if (rowMine) rowMine.click();
+            await wait(10);
+            const isClosed = !ui.menu.isOpen() && !ui.rowOf("Mine");
+            check("ContextMenu: hovering an item with items opens its submenu at its side, a click there calls onClick and closes both", !hadSubmenu && isAtTheSide && clicks.join() === "mine" && isClosed, "before: " + hadSubmenu + ", at the side: " + isAtTheSide + ", clicks: " + clicks.join() + ", closed: " + isClosed);
+            ui.menu.remove();
+        });
+
+        test("ContextMenu: ArrowRight opens a submenu with its first item active, ArrowLeft closes only the submenu", async function () {
+            const clicks = [];
+            const ui = await openSubmenuTestMenu(clicks);
+            key(document, "keydown", "ArrowDown");
+            key(document, "keydown", "ArrowDown");
+            key(document, "keydown", "ArrowRight");
+            await wait(30);
+            const isOpen = !!ui.rowOf("Mine");
+            key(document, "keydown", "ArrowDown");
+            key(document, "keydown", "ArrowLeft");
+            await wait(10);
+            const isSubmenuClosed = !ui.rowOf("Mine") && ui.menu.isOpen();
+            key(document, "keydown", "Enter");
+            await wait(30);
+            key(document, "keydown", "ArrowDown");
+            key(document, "keydown", "Enter");
+            await wait(10);
+            check("ContextMenu: ArrowRight opens a submenu with its first item active, ArrowLeft closes only the submenu", isOpen && isSubmenuClosed && clicks.join() === "other" && !ui.menu.isOpen(), "open: " + isOpen + ", only the submenu closed: " + isSubmenuClosed + ", clicks: " + clicks.join());
+            ui.menu.remove();
+        });
+
+        test("ContextMenu: an SVG icon takes the color of the text of its item", async function () {
+            const ui = await openSubmenuTestMenu([]);
+            const row = ui.rowOf("Copy to");
+            const svg = row.querySelector(".context-menu-svg svg");
+            const text = Array.from(row.children).find(function (el) { return el.textContent === "Copy to"; });
+            const sameColor = function () { return getComputedStyle(svg).color === getComputedStyle(text).color; };
+            const isSame = !!svg && sameColor();
+            row.dispatchEvent(new MouseEvent("mouseenter"));
+            await wait(10);
+            const isSameOnHover = !!svg && sameColor();
+            const size = (svg) ? Math.round(svg.getBoundingClientRect().width) : 0;
+            check("ContextMenu: an SVG icon takes the color of the text of its item", isSame && isSameOnHover && size === ContextMenuDefaults.style.icon.width, "svg: " + !!svg + ", same color: " + isSame + ", on hover: " + isSameOnHover + ", size: " + size);
+            ui.menu.remove();
         });
 
         // *** SMART BUTTON (comp/smart-button.js)

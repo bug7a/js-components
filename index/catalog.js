@@ -90,8 +90,8 @@ CATALOG.COMPONENTS = [
     {
         key: "context-menu", name: "ContextMenu", cat: "actions",
         source: "comp/context-menu.js", samples: ["02-comp-examples/context-menu.htm"],
-        en: "A simple menu that opens at the mouse point, with text or icon items.",
-        tr: "Farenin olduğu yerde açılan sade menü; yazılı veya ikonlu öğeler.",
+        en: "A simple menu that opens at the mouse point, with text or icon items (SVG icons take the text color) and submenus.",
+        tr: "Farenin olduğu yerde açılan sade menü; yazılı veya ikonlu öğeler (SVG ikonlar yazının rengini alır) ve alt menüler.",
     },
     {
         key: "filters", name: "Filters", cat: "selection",
