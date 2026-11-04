@@ -717,10 +717,12 @@ SmartButton.createDarkTemplate = function (box, hoverColor) {
         waiting: { clock: "ozdenDark", dots: { color: "#F1C74A" } },
     };
 };
-// WHY the bottom line in the color of the edge (the user, 2026-11-04): a dark line under a light edge looked strange.
-// A light tone on a dark template keeps this line too, though it is barely seen on it (the user chose so, 2026-11-04)
+// WHY a light bottom line (the user, 2026-11-04): a dark line under a light edge looked strange. It is 3 px and a
+// little lighter than the edge: White(0.24) is the same step as between the edge and the line of ozdenType1 (contrast
+// 1.3; 0.26 was a little more). A light tone on a dark template keeps it too, though it is barely seen on it.
 SmartButton.DARK_EDGE = White(0.16);
-SmartButton.styles.ozdenType1Dark = SmartButton.createDarkTemplate({ color: "#2E2E2C", borderColor: SmartButton.DARK_EDGE, boxShadow: "inset 0 -2px 0 " + SmartButton.DARK_EDGE }, "#383835"); // an edge and a bottom line
+SmartButton.DARK_BOTTOM_LINE = "inset 0 -3px 0 " + White(0.24);
+SmartButton.styles.ozdenType1Dark = SmartButton.createDarkTemplate({ color: "#2E2E2C", borderColor: SmartButton.DARK_EDGE, boxShadow: SmartButton.DARK_BOTTOM_LINE }, "#383835"); // an edge and a bottom line
 SmartButton.styles.ozdenType2Dark = SmartButton.createDarkTemplate({ color: "#2E2E2C", borderColor: SmartButton.DARK_EDGE, boxShadow: "none" }, "#383835"); // only the edge
 SmartButton.styles.ozdenType3Dark = SmartButton.createDarkTemplate({ color: "#2E2E2C", borderColor: White(0.06), boxShadow: "none" }, "#383835"); // a faint edge
 SmartButton.styles.ozdenType4Dark = SmartButton.createDarkTemplate({ color: White(0), border: 0, borderColor: "transparent", boxShadow: "none" }, White(0.08)); // a ghost

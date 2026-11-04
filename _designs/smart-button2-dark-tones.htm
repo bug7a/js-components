@@ -24,7 +24,7 @@
         // HOW TO CHOOSE: in basic-designer, give the CHOSEN button of a row the color you like (copy the hex of a
         // candidate, or any other) and the color of its text, then Copy prompt / Send to AI with a note ("bileşene
         // aktar"). The chosen colors go into SmartButton.tones of comp/smart-button2.js (cyanDark ... blueDark).
-        // The shape is ozdenType1Dark of SmartButton 2: a light edge, the bottom line in the color of the edge.
+        // The shape is ozdenType1Dark of SmartButton 2: a light edge, a 3 px bottom line a little lighter than the edge.
         // The contrast is the one of the text on the color: 4.5 is enough to read it well.
         // http://127.0.0.1:5505/_basic-designer/index.htm?page=_designs/smart-button2-dark-tones.htm
 
@@ -41,7 +41,7 @@
             round: 4,
             border: 1,
             borderColor: White(0.16), // SmartButton.DARK_EDGE
-            bottomLine: "inset 0 -2px 0 " + White(0.16), // in the color of the edge (the user, 2026-11-04)
+            bottomLine: "inset 0 -3px 0 " + White(0.24), // SmartButton.DARK_BOTTOM_LINE: 3 px, a little lighter than the edge (the user, 2026-11-04)
             padding: [16, 0],
             gap: 8,
             fontSize: 20,
