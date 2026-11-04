@@ -75,7 +75,7 @@
                     });
 
                     Label({
-                        text: "Custom style: light box, thin border, only tick when checked.",
+                        text: "Custom style: light box, thin border; checked: the tick on a white square.",
                         fontSize: 14,
                         textColor: Black(0.5),
                     });
@@ -154,7 +154,8 @@
         // *** OTHER FUNCTIONS:
 
         // Returns a new style object for each check box.
-        // NOTE: Layout, sizes and borders come from the "modern" style package. Only the selection colors are set here.
+        // NOTE: Layout, sizes, borders and the white squares come from the "modern" style package. Only the selection
+        //       colors are set here.
         // WHY: CheckBox fills missing keys into the given object, so do not share one object.
         const getCustomStyle = function () {
             return {
@@ -163,9 +164,6 @@
                 },
                 hoverCheckedBox: {
                     color: ACCENT_20, // A bit darker, so mouse over is visible on checked rows too.
-                },
-                checkedMark: { // The square stays without border, behind the tick. Same color as hoverCheckedBox.
-                    color: ACCENT_20,
                 },
                 tick: {
                     color: ACCENT,

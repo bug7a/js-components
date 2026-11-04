@@ -1174,6 +1174,22 @@
             row.remove();
         });
 
+        // 2026-11-04: style.hoverMark gave only a border; its color (the "modern" package: white) was not read
+        test("CheckBox: hoverMark.color colors the empty square under the mouse", async function () {
+            const checkBox = CheckBox({ labelText: "Hover", style: { mark: { color: "rgb(245, 245, 245)" }, hoverMark: { color: "rgb(255, 255, 255)" } } });
+            const plain = CheckBox({ labelText: "Plain" }); // no hoverMark.color: the square keeps its color
+            const colorOf = function (item) { return item.mark.elem.style.backgroundColor; };
+            const plainBefore = colorOf(plain);
+            checkBox.elem.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+            plain.elem.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+            const hoverColor = colorOf(checkBox);
+            const plainHover = colorOf(plain);
+            checkBox.elem.dispatchEvent(new MouseEvent("mouseout", { bubbles: true }));
+            const outColor = colorOf(checkBox);
+            check("CheckBox: hoverMark.color colors the empty square under the mouse", hoverColor === "rgb(255, 255, 255)" && outColor === "rgb(245, 245, 245)" && plainHover === plainBefore, hoverColor + " / " + outColor + " / plain: " + plainBefore + " -> " + plainHover);
+            [checkBox, plain].forEach(function (item) { item.remove(); });
+        });
+
         // *** HOLD TO CONFIRM (comp/hold-to-confirm-button.js)
 
         test("HoldToConfirmButton: a right click or a cancelled touch does not confirm", async function () {

@@ -2,7 +2,7 @@
 
 /*
 
-Check Box - v26.09
+Check Box - v26.11
 
 UI COMPONENT TEMPLATE
 - A customizable check box with a label.
@@ -11,6 +11,7 @@ UI COMPONENT TEMPLATE
 - wrapLabel: 1 -> a long label wraps to more lines (give the check box a width, or grow: 1 in an HGroup).
   The label is HTML: a text of the user goes in with basic.escapeHtml(text).
 - Whole object background can change on hover and checked states (style.hoverBox, style.checkedBox).
+- The empty square under the mouse: style.hoverMark (its borderColor, and its color when given; v26.11).
 - Style packages: "classic" (default), "modern", "dark". Select with styleName. (CheckBox.styles)
 
 Started Date: September 2026
@@ -65,7 +66,8 @@ const CheckBoxDefaults = {
             color: "#141414",
             borderColor: "#141414",
         },
-        hoverMark: { // Mouse over (only border)
+        hoverMark: { // Mouse over (the empty square)
+            color: null, // null: uses mark.color (2026-11-04: a package could not change it)
             borderColor: Black(0.7),
         },
         tick: {
@@ -130,7 +132,8 @@ const CheckBox = function (params = {}) {
             box.tick.css = { opacity: "1", transform: "rotate(45deg) scale(1)" };
             return;
         }
-        box.mark.color = box.style.mark.color;
+        const hoverColor = box.style.hoverMark.color;
+        box.mark.color = (isHover && hoverColor) ? hoverColor : box.style.mark.color;
         box.mark.borderColor = (isHover) ? box.style.hoverMark.borderColor : box.style.mark.borderColor;
         box.tick.css = { opacity: "0", transform: "rotate(45deg) scale(" + TICK_HIDDEN_SCALE + ")" };
     };
@@ -304,7 +307,8 @@ CheckBox.styles = {
     // White box with a border. When checked, dark filled box with a white tick. No background.
     classic: CheckBoxDefaults.style,
 
-    // Light box, thin border. When checked, only the tick is visible on a light background.
+    // Light box, thin border. When checked, the tick on a white square with an edge (the user, 2026-11-04; it was only
+    // the tick: the square had the color of the row and no edge).
     modern: {
         box: { // Whole object background
             color: "transparent",
@@ -332,11 +336,12 @@ CheckBox.styles = {
             borderColor: Black(0.7),
             round: 4,
         },
-        checkedMark: { // Checked square (stays without border, behind the tick)
-            color: "#DFECEC", // Same as hoverCheckedBox.color, so the square is not visible on mouse over.
-            borderColor: "transparent",
+        checkedMark: { // Checked square: white with an edge, behind the tick (was #DFECEC, no edge)
+            color: "white",
+            borderColor: Black(0.7),
         },
-        hoverMark: { // Mouse over (only border)
+        hoverMark: { // Mouse over: the empty square turns white
+            color: "white",
             borderColor: Black(0.7),
         },
         tick: {
