@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartButton 2 dark</title>
+
+    <!-- LIBRARY FILES -->
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENTS: tooltip.js for the bubble of ask -->
+    <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/smart-button2.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // SMARTBUTTON 2 · THE DARK TEMPLATES (the copy of smart-button-4-dark.htm for comp/smart-button2.js, 2026-11-04)
+        // ozdenType1Dark ... ozdenType4Dark: the shapes of ozdenType1-4 for a dark page (the draft
+        // _designs/smart-button-dark.htm). The icon turns white, the waiting clock is the dark one.
+        // - SmartButton({ styleName: "ozdenType1Dark", labelText, iconFile, onClick })
+        // TRY: press "Download" (it waits 2 s), click "Delete" twice, press Tab to see the focus ring.
+
+        // *** VARIABLES:
+
+        const CARD_COLOR = "#1A1A19"; // the cards of Ozden Panel / Ozden Manager
+        const BUTTON_HEIGHT = 44;
+        const DOWNLOAD_TIME = 2000; // ms: a job that takes time (the sample)
+        const ICON_FILE = "../comp/smart-button/alert-black.png"; // a black icon: the dark packages turn it white
+        const PACKAGES = ["ozdenType1Dark", "ozdenType2Dark", "ozdenType3Dark", "ozdenType4Dark"];
+
+        // *** START:
+
+        const start = function () {
+
+            page.color = "#000000";
+
+            // BOX: Scrolling page
+            startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+
+                VGroup({ width: "100%", height: "auto", align: "center top", gap: 20, padding: 40, clipContent: 0 });
+
+                    Label({ text: "SmartButton 2 · dark templates", fontSize: 24, bold: 1, textColor: White(0.9) });
+
+                    PACKAGES.forEach(createPackageRow);
+
+                endGroup();
+
+            endBox();
+
+        };
+
+        // *** FUNCTIONS:
+
+        // GROUP: One template on a dark card: a few buttons side by side
+        const createPackageRow = function (styleName) {
+
+            const card = VGroup({ width: "auto", height: "auto", align: "left top", gap: 14, padding: 24, color: CARD_COLOR, round: 10, border: 1, borderColor: White(0.08), clipContent: 0 });
+
+                Label({ text: styleName + (styleName == "ozdenType1Dark" ? " (the default dark)" : ""), fontSize: 14, bold: 1, textColor: White(0.6) });
+
+                HGroup({ width: "auto", height: "auto", align: "left center", gap: 12, wrap: 1, clipContent: 0 });
+
+                    SmartButton({ styleName: styleName, height: BUTTON_HEIGHT, labelText: "Send", iconFile: ICON_FILE });
+
+                    SmartButton({ styleName: styleName, height: BUTTON_HEIGHT, labelText: "Only a text" });
+
+                    SmartButton({
+                        styleName: styleName,
+                        height: BUTTON_HEIGHT,
+                        labelText: "Download",
+                        iconFile: ICON_FILE,
+                        onClick: function (self) {
+                            self.setWaiting(1);
+                            self.after(DOWNLOAD_TIME, function () { self.setWaiting(0); });
+                        },
+                    });
+
+                    SmartButton({ styleName: styleName, height: BUTTON_HEIGHT, labelText: "Delete", ask: "Click again to delete." });
+
+                    SmartButton({ styleName: styleName, height: BUTTON_HEIGHT, labelText: "Disabled", iconFile: ICON_FILE, enabled: 0 });
+
+                endGroup();
+
+            endGroup();
+
+            return card;
+
+        };
+
+    </script>
+
+</head>
+
+<body>
+</body>
+
+</html>

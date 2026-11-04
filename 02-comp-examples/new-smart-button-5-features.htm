@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>SmartButton 2 - All Features</title>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+
+    <script src="../comp/smart-button2.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+    /* Bismillah */
+
+    // SmartButton 2 (the copy of smart-button-5-features.htm for comp/smart-button2.js, 2026-11-04): the places of the
+    // icon, your own look, setText / setIcon, the waiting cover, the motion and the keyboard. No styleName: the
+    // default template ozdenType1 (classic was removed).
+    // (The other samples: new-smart-button.htm the model page (the tones), new-smart-button-alternatif.htm pill and
+    // outlined, new-smart-button-3-ozden.htm the templates, new-smart-button-4-dark.htm the dark templates.)
+
+    const ICONS = "../assets/icons/";
+    const JOB_TIME = 1500; // ms: a job that takes time (the sample)
+    const DONE_TIME = 1200; // ms: "Saved" is seen this long
+
+    // The looks of this page (style of SmartButton: only the keys that change)
+    const LOOKS = {
+        blue: {
+            box: { color: "#3871E0", border: 0, round: 8 },
+            hover: { color: "#2F62C7" },
+            label: { fontSize: 16, textColor: "white", fontFamily: "opensans-bold" },
+        },
+        redEdge: {
+            box: { color: "white", borderColor: "rgba(205, 92, 92, 0.6)", round: 8 },
+            hover: { color: "#FDF2F2" },
+            label: { fontSize: 16, textColor: "indianred", fontFamily: "opensans-bold" },
+        },
+        // on ozdenType4 (no edge, no bottom line)
+        pill: {
+            layout: { gap: 6, padding: [16, 0] },
+            box: { color: Black(0.05), round: 30 },
+            hover: { color: Black(0.09) },
+            icon: { width: 18, height: 18 },
+            label: { fontSize: 14, textColor: Black(0.75), fontFamily: "opensans-bold" },
+        },
+        square: {
+            layout: { gap: 4, padding: [12, 10] },
+            icon: { width: 28, height: 28 },
+            label: { fontSize: 12 },
+        },
+    };
+
+    // GROUP: A card with a title and a short description
+    const startCard = function (title, description) {
+        VGroup({ width: 640, height: "auto", align: "left top", gap: 14, padding: 20, color: "white", round: 12, border: 1, borderColor: Black(0.08), clipContent: 0 });
+        that.css = { maxWidth: "100%" };
+        Label({ plainText: title, fontSize: 15, bold: 1, textColor: Black(0.8) });
+        Label({ plainText: description, width: "100%", fontSize: 13, textColor: Black(0.5), css: { lineHeight: "1.4", whiteSpace: "normal" } });
+        HGroup({ width: "100%", height: "auto", align: "left center", gap: 12, wrap: 1, clipContent: 0 });
+    };
+
+    const endCard = function () {
+        endGroup();
+        endGroup();
+    };
+
+    // A save that takes time: the waiting clock, then "Saved" for a moment, then the button as before
+    let cancelSavedText = null;
+    const saveWithWaiting = function (button) {
+        // WHY: a second save while "Saved" is seen: the old timer must not write "Save" during the new wait
+        if (cancelSavedText) cancelSavedText();
+        button.setWaiting(1);
+        button.after(JOB_TIME, function () {
+            button.setWaiting(0);
+            button.setText("Saved");
+            cancelSavedText = button.after(DONE_TIME, function () { button.setText("Save"); });
+        });
+    };
+
+    // A job that takes time: the button waits, then it is as before
+    const waitForJob = function (button) {
+        button.setWaiting(1);
+        button.after(JOB_TIME, function () { button.setWaiting(0); });
+    };
+
+    const start = function () {
+
+        page.color = "#F0F2F5";
+
+        const pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+
+            VGroup({ width: "100%", height: "auto", align: "center top", gap: 24, padding: 40, clipContent: 0 });
+
+                Label({ text: "SmartButton 2", fontSize: 26, bold: 1, textColor: Black(0.8) });
+
+                startCard("The place of the icon", "iconPosition: \"left\" (default) or \"top\". labelText: \"\" -> an icon button: a square with the icon in the middle (give it an ariaLabel). No iconFile -> only the text.");
+                    SmartButton({ labelText: "Lock", iconFile: ICONS + "lock.png" });
+                    SmartButton({ labelText: "Plant", iconFile: ICONS + "plant.png", iconPosition: "top", style: LOOKS.square });
+                    SmartButton({ labelText: "", ariaLabel: "Delete", iconFile: ICONS + "trash.svg" });
+                    SmartButton({ labelText: "Only text" });
+                endCard();
+
+                startCard("Your own look: style", "styleName is the template (ozdenType1 - 4), tone a color of the kit (white, primary, danger...), style your own keys: box, hover, layout, icon and label. A color is two colors: box.color and hover.color; pressed, it gets darker by itself.");
+                    SmartButton({ labelText: "Continue", style: LOOKS.blue });
+                    SmartButton({ labelText: "Delete", iconFile: ICONS + "trash.svg", style: LOOKS.redEdge });
+                    SmartButton({ styleName: "ozdenType4", labelText: "Filter", iconFile: ICONS + "panel.png", style: LOOKS.pill });
+                    SmartButton({ styleName: "ozdenType4", labelText: "Alert", iconFile: ICONS + "alert-black.png", style: LOOKS.pill });
+                endCard();
+
+                startCard("setText() and setIcon()", "A button that changes itself: the lamp is turned on and off.");
+                    SmartButton({
+                        labelText: "Lamp is off",
+                        iconFile: ICONS + "lamp.png",
+                        onClick: function (self) {
+                            const isOn = (self.labelText == "Lamp is on");
+                            self.setText(isOn ? "Lamp is off" : "Lamp is on");
+                            self.setIcon(ICONS + (isOn ? "lamp.png" : "lamp-on.png"));
+                        },
+                    });
+                endCard();
+
+                startCard("Waiting: setWaiting()", "The waiting clock over the button while a job runs (the default wait); it can not be clicked then. setWaiting(0, delay) ends it later. waitingClock: \"ozdenDark\" is the dark clock, waitingType: \"dots\" three dots.");
+                    SmartButton({ tone: "primary", labelText: "Save", onClick: saveWithWaiting });
+                    SmartButton({
+                        labelText: "Delete",
+                        iconFile: ICONS + "trash.svg",
+                        style: LOOKS.redEdge, // WHY not tone "danger": the red lines of trash.svg are lost on its orange
+                        onClick: function (self) {
+                            self.setWaiting(1);
+                            self.setWaiting(0, JOB_TIME); // the end is given at once, it comes later
+                        },
+                    });
+                    SmartButton({ labelText: "", ariaLabel: "Lock", iconFile: ICONS + "lock.png", onClick: waitForJob });
+                    SmartButton({ labelText: "ozdenDark clock", waitingClock: "ozdenDark", onClick: waitForJob });
+                    SmartButton({ labelText: "Dots", waitingType: "dots", onClick: waitForJob });
+                endCard();
+
+                startCard("Motion: animated and ripple", "animated is on by default: pressed, a button gets smaller and a little darker (its color under the mouse, darker: a press has no color of its own). ripple is off by default (since 2026-11-03): a wave from the pressed point (its color fits the button). Each one can be turned off.");
+                    SmartButton({ tone: "primary", labelText: "Both", ripple: 1 });
+                    SmartButton({ labelText: "Both", iconFile: ICONS + "plant.png", ripple: 1 });
+                    SmartButton({ tone: "primary", labelText: "Only press", ripple: 0 });
+                    SmartButton({ labelText: "Only ripple", animated: 0, ripple: 1 });
+                    SmartButton({ labelText: "Still", animated: 0, ripple: 0 });
+                endCard();
+
+                startCard("Keyboard and setEnabled()", "Tab reaches every button (a ring only for the keyboard), Enter or Space presses it. A disabled button is gray, can not be pressed and is out of the Tab order.");
+                    const btnSend = SmartButton({ tone: "primary", labelText: "Send", enabled: 0 });
+                    SmartButton({
+                        labelText: "Enable Send",
+                        onClick: function (self) {
+                            const isOn = (btnSend.enabled == 1);
+                            btnSend.setEnabled(isOn ? 0 : 1);
+                            self.setText(isOn ? "Enable Send" : "Disable Send");
+                        },
+                    });
+                endCard();
+
+            endGroup();
+
+        endBox();
+
+        if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: pageBox });
+
+    };
+
+    </script>
+
+</head>
+<body>
+</body>
+</html>
