@@ -13,6 +13,8 @@ UI COMPONENT TEMPLATE
 - Whole object background can change on hover and checked states (style.hoverBox, style.checkedBox).
 - The empty circle under the mouse: style.hoverMark (its borderColor, and its color when given; v26.11).
 - Style packages: "classic" (default), "modern", "dark". Select with styleName. (RadioButton.styles)
+  NEW PROJECTS (the user, 2026-11-04): use "classic" on a light page and "dark" on a dark page, unless the user
+  asks for another one ("modern" only when asked).
 
 Started Date: September 2026
 Developer: Bugra Ozden
