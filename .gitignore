@@ -3,6 +3,8 @@
 .AppleDouble
 .LSOverride
 Icon?
+# WHY: "Icon?" is for the "Icon\r" file of macOS, but git ignores the case here, so it also hid every icons/ folder (2026-11-04)
+!icons
 
 # Windows / Linux
 Thumbs.db
