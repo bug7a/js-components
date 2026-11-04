@@ -717,8 +717,10 @@ SmartButton.createDarkTemplate = function (box, hoverColor) {
         waiting: { clock: "ozdenDark", dots: { color: "#F1C74A" } },
     };
 };
-SmartButton.styles.ozdenType1Dark = SmartButton.createDarkTemplate({ color: "#2E2E2C", borderColor: White(0.16), boxShadow: "inset 0 -2px 0 rgba(0, 0, 0, 0.45)" }, "#383835"); // an edge and a bottom line
-SmartButton.styles.ozdenType2Dark = SmartButton.createDarkTemplate({ color: "#2E2E2C", borderColor: White(0.16), boxShadow: "none" }, "#383835"); // only the edge
+// WHY the bottom line in the color of the edge (the user, 2026-11-04): a dark line under a light edge looked strange
+SmartButton.DARK_EDGE = White(0.16);
+SmartButton.styles.ozdenType1Dark = SmartButton.createDarkTemplate({ color: "#2E2E2C", borderColor: SmartButton.DARK_EDGE, boxShadow: "inset 0 -2px 0 " + SmartButton.DARK_EDGE }, "#383835"); // an edge and a bottom line
+SmartButton.styles.ozdenType2Dark = SmartButton.createDarkTemplate({ color: "#2E2E2C", borderColor: SmartButton.DARK_EDGE, boxShadow: "none" }, "#383835"); // only the edge
 SmartButton.styles.ozdenType3Dark = SmartButton.createDarkTemplate({ color: "#2E2E2C", borderColor: White(0.06), boxShadow: "none" }, "#383835"); // a faint edge
 SmartButton.styles.ozdenType4Dark = SmartButton.createDarkTemplate({ color: White(0), border: 0, borderColor: "transparent", boxShadow: "none" }, White(0.08)); // a ghost
 
