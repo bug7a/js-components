@@ -30,6 +30,10 @@
 #   04-templates/todo-app-example, __projects/webpage-ozden-panel). A project made in place with one
 #   file per component keeps that layout at the next runs (comp/_sources.txt tells it).
 #
+# --gzip: every text file of the output (.htm, .js, .css, .svg, .json, fonts...) is also written as
+#   name.gz (gzip -9), next to it. For a server that sends the packed files itself (Ex: a small board
+#   like an ESP32, which has little room). (2026-11-05)
+#
 # It only fixes the <script src> / <link href> of the .htm / .html pages. Paths that leave
 # the folder in the project's own code ("../../" in a config.js) are listed at the end:
 # change those by hand.
@@ -40,6 +44,7 @@
 #   ./_make-standalone.sh _projects/my-first-project --list       Only shows what it would do.
 #   ./_make-standalone.sh _projects/my-first-project --separate   One .min.js for each component.
 #   ./_make-standalone.sh 03-webpages/webpage-basicjs --in-place   The project folder itself.
+#   ./_make-standalone.sh _projects/my-first-project --gzip       A .gz of every text file too.
 #
 # It only needs node (npx downloads terser).
 
@@ -59,6 +64,7 @@ export IS_LIST=0
 export ONE_FILE=0       # 1: --one-file given (one file is also the default for a new output)
 export SEPARATE=0       # 1: --separate (one file for each component)
 export IN_PLACE=0
+export MAKE_GZIP=0      # 1: --gzip (WHY not GZIP: the gzip command reads its options from a variable named so)
 export OUT_DIR=""
 isOutNext=0
 for argument in "$@"; do
@@ -68,8 +74,9 @@ for argument in "$@"; do
         --one-file) ONE_FILE=1 ;;
         --separate) SEPARATE=1 ;;
         --in-place) IN_PLACE=1 ;;
+        --gzip) MAKE_GZIP=1 ;;
         --out) isOutNext=1 ;;
-        -h | --help) sed -n '3,48p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        -h | --help) sed -n '3,50p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
         -*) echo "Unknown option: $argument (try --help)"; exit 1 ;;
         *) PROJECT="$argument" ;;
     esac
@@ -113,6 +120,8 @@ const compDirs = list(process.env.COMP_DIRS);
 const keepComments = new RegExp(process.env.KEEP_COMMENTS);
 
 const IN_PLACE = process.env.IN_PLACE === "1";
+const MAKE_GZIP = process.env.MAKE_GZIP === "1";
+const GZIP_TYPES = /\.(html?|m?js|css|svg|json|txt|xml|webmanifest|ttf|otf)$/i; // WHY not .png / .woff2: they are packed already
 // The folder the standalone project is made in: the project itself (--in-place), --out, or _dist/<name>
 const OUT = IN_PLACE ? PROJECT : (process.env.OUT_DIR || path.join(REPO, "_dist", path.basename(PROJECT)));
 const MARKER_FILE = path.join(OUT, "_standalone.txt");
@@ -303,6 +312,7 @@ console.log("Project: " + rel(PROJECT) + "  (" + pages.length + " page" + (pages
 console.log("  out:    " + (IN_PLACE ? "the project folder itself (--in-place)" : (isInside(OUT, REPO) ? rel(OUT) : OUT)));
 console.log("  basic/  " + Object.keys(basicFiles).sort().join(", "));
 if (isOneFile) console.log("  comp/   " + (oneFileOrder.length ? ONE_FILE_NAME + " <- " + oneFileOrder.join(", ") : "(none)"));
+if (MAKE_GZIP) console.log("  gzip:   every text file of the output also as name.gz");
 else console.log("  comp/   " + (Object.keys(compFiles).length ? Object.keys(compFiles).sort().map((name) => name + " <- " + compFiles[name]).join(", ") : "(none)"));
 rewrites.forEach(function (item) {
     console.log("  " + rel(item.page) + ": " + item.from + " -> " + (item.to || "(removed: it is in " + ONE_FILE_NAME + ")"));
@@ -368,6 +378,31 @@ const copyFolder = function (from, to) {
         if (entry.isDirectory()) copyFolder(source, target);
         else fs.copyFileSync(source, target);
     });
+};
+
+// --gzip: a .gz next to every text file of the output (not the notes of this script: _standalone.txt, _sources.txt)
+const writeGzipFiles = function () {
+    const zlib = require("zlib");
+    let count = 0;
+    let rawBytes = 0;
+    let gzipBytes = 0;
+    const pack = function (dir) {
+        fs.readdirSync(dir, { withFileTypes: true }).forEach(function (entry) {
+            const full = path.join(dir, entry.name);
+            if (entry.name === "node_modules" || entry.name.startsWith(".")) return;
+            if (entry.isDirectory()) return pack(full);
+            if (!GZIP_TYPES.test(entry.name) || entry.name.startsWith("_")) return;
+            const raw = fs.readFileSync(full);
+            const packed = zlib.gzipSync(raw, { level: 9 });
+            fs.writeFileSync(full + ".gz", packed);
+            count++;
+            rawBytes += raw.length;
+            gzipBytes += packed.length;
+        });
+    };
+    pack(OUT);
+    const kb = (bytes) => (bytes / 1024).toFixed(1) + " KB";
+    console.log("gzip: " + count + " files, " + kb(rawBytes) + " -> " + kb(gzipBytes));
 };
 
 (async function () {
@@ -458,6 +493,8 @@ const copyFolder = function (from, to) {
         });
         fs.writeFileSync(toOut(page), html);
     });
+
+    if (MAKE_GZIP) writeGzipFiles();
 
     const compCount = isOneFile ? ONE_FILE_NAME + " (" + oneFileOrder.length + " components)" : names.length;
     console.log("\nDone: basic/ (" + Object.keys(basicFiles).length + "), comp/ (" + compCount + "), " + Object.keys(byPage).length + " page(s) rewritten, in "
