@@ -496,11 +496,16 @@ const SmartButton = function (params = {}) {
         superRemove.call(box);
     };
 
-    // Only the given keys change; the other keys of the style stay.
+    // Only the given keys change; the other keys of the style stay, inside a part too (ask.button, waiting.dots).
     // WHY a new object for each part: the old one can be shared with other buttons (the same style object of a page)
+    // WHY not Object.assign (until 2026-11-04): it replaced ask.button whole, so { ask: { button: { color } } } lost
+    //     the white text and the white icon of the ask
     box.setStyle = function (style) {
         Object.keys(style || {}).forEach(function (part) {
-            box.style[part] = Object.assign({}, box.style[part], style[part]);
+            const merged = {};
+            mergeIntoIfMissing(merged, style[part]); // the new keys first
+            mergeIntoIfMissing(merged, box.style[part]); // then the old ones under them
+            box.style[part] = merged;
         });
         applyStyle();
     };

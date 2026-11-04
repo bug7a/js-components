@@ -643,6 +643,22 @@
             [outlined, own, shared, dark].forEach(function (button) { button.remove(); });
         });
 
+        // 2026-11-04: setStyle replaced a part's objects whole: { ask: { button: { color } } } lost the white text of the ask
+        test("SmartButton: setStyle keeps the other keys inside a part", async function () {
+            const button = SmartButton({ labelText: "Delete", ask: "Sure?" });
+            const askBefore = Object.assign({}, button.style.ask.button);
+            button.setStyle({ ask: { button: { color: "tomato" } }, waiting: { dots: { color: "teal" } } });
+            const ask = button.style.ask.button;
+            check("SmartButton: setStyle changes the given key", ask.color === "tomato", ask.color);
+            check("SmartButton: setStyle keeps the other keys of ask.button", ask.textColor === askBefore.textColor && ask.iconFilter === askBefore.iconFilter && ask.border === askBefore.border, JSON.stringify(ask));
+            check("SmartButton: setStyle keeps the other keys of waiting.dots", button.style.waiting.dots.color === "teal" && button.style.waiting.dots.size === SmartButtonDefaults.style.waiting.dots.size, JSON.stringify(button.style.waiting.dots));
+            check("SmartButton: setStyle does not change the defaults", SmartButtonDefaults.style.ask.button.color !== "tomato" && SmartButtonDefaults.style.waiting.dots.color !== "teal");
+            button.press();
+            const textColor = getComputedStyle(button.label.elem).color;
+            check("SmartButton: it asks in the color of setStyle with its white text", getComputedStyle(button.elem).backgroundColor === "rgb(255, 99, 71)" && textColor === "rgb(255, 255, 255)", textColor);
+            button.remove();
+        });
+
         // 2026-11-04 (the user): 44 by default and on every template (pill and outlined were 52; classic 36: gone)
         test("SmartButton: 44 high on every template, an icon button is a square", async function () {
             const ICON = "../comp/smart-button/alert-black.png";
