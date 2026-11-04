@@ -298,7 +298,7 @@ const SmartButton = function (params = {}) {
         if (box.onClick) box.onClick(box, event);
     };
 
-    // *** ASK (two clicks): the red look (render) and the bubble (Tooltip.show)
+    // *** ASK (two clicks): the orange look (render) and the bubble (Tooltip.show)
 
     const startAsk = function () {
         // WHY one at a time: the bubble of another button would stay over this one
@@ -341,7 +341,8 @@ const SmartButton = function (params = {}) {
         dot.style.cssText = "position: absolute; border-radius: 50%; pointer-events: none; background: " + getRippleColor() + ";" +
             " left: " + (point.x - radius) + "px; top: " + (point.y - radius) + "px; width: " + (radius * 2) + "px; height: " + (radius * 2) + "px;";
         layer.appendChild(dot);
-        elem.insertBefore(layer, box.waitingCover.elem); // WHY: under the waiting cover (onClick often starts it)
+        // WHY under the waiting cover: onClick often starts it (no cover yet: the layer goes last, the cover comes over it)
+        elem.insertBefore(layer, box.waitingCover ? box.waitingCover.elem : null);
         const wave = dot.animate([
             { transform: "scale(0)", opacity: 1 },
             { transform: "scale(1)", opacity: 0.7, offset: 0.6 },
@@ -374,10 +375,36 @@ const SmartButton = function (params = {}) {
         icon.center();
     };
 
+    // BOX: Waiting cover, made at the first wait: most buttons never wait (it was 2/3 of the objects of a button).
+    // Clear: the content fades under it; it holds the animation and takes the mouse.
+    const createWaitingCover = function () {
+        saveCurrentThat(); // WHY: a wait must not change `that` (Ex: that.setWaiting(1) right after create)
+        box.waitingCover = createIn(box, function () {
+            const cover = startBox(0, 0, "100%", "100%", {
+                color: "transparent",
+                clickable: 1, // WHY: it takes the mouse, so its "progress" cursor shows (the hover color: render())
+                cursor: "progress",
+            });
+                if (box.waitingType == "dots") {
+                    cover.icon = SmartButton.createDots(box.style.waiting.dots);
+                } else {
+                    const clockStyle = SmartButton.clocks[box.style.waiting.clock] || SmartButton.clocks.ozden;
+                    cover.icon = Box(0, 0, 0, 0, { color: "transparent", html: SmartButton.createClockSvg(clockStyle) });
+                }
+            endBox();
+            return cover;
+        });
+        restoreThatFromSaved();
+        box.onResize(function () {
+            if (box.waiting == 1) fitWaitingIcon();
+        });
+    };
+
     const startWaiting = function () {
         box.cancelAsk();
         box.waiting = 1;
         box.aria = { busy: true };
+        if (!box.waitingCover) createWaitingCover();
         box.waitingCover.visible = 1;
         fitWaitingIcon();
         render();
@@ -529,21 +556,7 @@ const SmartButton = function (params = {}) {
         }
 
     endAutoLayout();
-
-    // BOX: Waiting cover (clear: the content fades under it; it holds the animation and takes the mouse)
-    box.waitingCover = startBox(0, 0, "100%", "100%", {
-        color: "transparent",
-        clickable: 1, // WHY: it takes the mouse, so its "progress" cursor shows (the hover color: render())
-        cursor: "progress",
-    });
-        if (box.waitingType == "dots") {
-            box.waitingCover.icon = SmartButton.createDots(box.style.waiting.dots);
-        } else {
-            const clockStyle = SmartButton.clocks[box.style.waiting.clock] || SmartButton.clocks.ozden;
-            box.waitingCover.icon = Box(0, 0, 0, 0, { color: "transparent", html: SmartButton.createClockSvg(clockStyle) });
-        }
-    endBox();
-    box.waitingCover.visible = 0;
+    // (the waiting cover: createWaitingCover(), at the first wait)
 
     // *** OBJECT INIT CODE:
 
@@ -577,10 +590,6 @@ const SmartButton = function (params = {}) {
     });
     box.on("blur", function () {
         isSpaceDown = 0;
-    });
-
-    box.onResize(function () {
-        if (box.waiting == 1) fitWaitingIcon();
     });
 
     // THE MOUSE: hover, pressed, back to normal (render)
