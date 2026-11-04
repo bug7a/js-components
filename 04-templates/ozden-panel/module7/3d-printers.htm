@@ -415,7 +415,7 @@
 
         const createButton = function (text, onClick, params = {}) {
             return SmartButton({
-                styleName: "classic",
+                styleName: "ozdenType2",
                 width: params.width || "auto",
                 labelText: text,
                 iconFile: "",
@@ -426,7 +426,6 @@
                     label: { fontSize: 14, textColor: Ink(0.92) },
                     box: { color: (params.primary) ? PRIMARY_COLOR : FIELD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8 },
                     hover: { color: (params.primary) ? T.primaryHover : T.surface3 },
-                    active: { color: (params.primary) ? T.primaryActive : T.surface4 },
                 },
             });
         };

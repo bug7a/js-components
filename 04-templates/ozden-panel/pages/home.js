@@ -215,21 +215,19 @@ const HomePage = function(params = {}) {
         const color = params.color || BUTTON_COLOR;
 
         const btn = SmartButton({
-            styleName: "classic",
+            styleName: "ozdenType2",
             width: params.width || "auto",
             labelText: text,
             iconFile: ASSETS + iconFile,
             onClick: onClick,
             style: {
                 layout: { gap: 10, padding: [14, 8], align: params.align || "center center" },
-                icon: { width: 20, height: 20 },
+                icon: { width: 20, height: 20, filter: T.iconFilter }, // WHY: Panel icons are black (the theme turns them white)
                 label: { fontSize: 14, textColor: Ink(0.9) },
                 box: { color: color, border: 1, borderColor: CARD_BORDER_COLOR, round: 8 },
                 hover: { color: params.hoverColor || T.surface3 },
-                active: { color: params.activeColor || T.surface4 },
             },
         });
-        btn.icon.elem.style.filter = T.iconFilter; // WHY: Panel icons are black.
 
         return btn;
 

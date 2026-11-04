@@ -375,7 +375,7 @@ NotificationsPage.CONTEXT_MENU_STYLE = {
 NotificationsPage.createButton = function(text, onClick) {
     const S = NotificationsPage.STYLE;
     return SmartButton({
-        styleName: "classic",
+        styleName: "ozdenType2",
         labelText: text,
         iconFile: "",
         onClick: onClick,
@@ -384,7 +384,6 @@ NotificationsPage.createButton = function(text, onClick) {
             label: { fontSize: 13, textColor: Ink(0.9) },
             box: { color: S.FIELD_COLOR, border: 1, borderColor: S.CARD_BORDER_COLOR, round: 8 },
             hover: { color: T.surface3 },
-            active: { color: T.surface4 },
         },
     });
 };

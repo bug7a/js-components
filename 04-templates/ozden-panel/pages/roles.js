@@ -290,8 +290,9 @@ const RolesPage = function(params = {}) {
                 const tag = (role.isSystem) ? " <span style='font-size:11px; padding:1px 6px; border-radius:6px; background:" + Ink(0.08) + "; color:" + Ink(0.55) + "'>SYSTEM</span>" : "";
 
                 SmartButton({
-                    styleName: "classic",
+                    styleName: "ozdenType4",
                     width: "100%",
+                    height: "auto", // WHY: two lines (the name of the role and its counts)
                     labelText: escapeHtml(role.name) + tag + "<br><span style='font-size:12px; color:" + Ink(0.45) + "'>" + memberCount + " member" + ((memberCount == 1) ? "" : "s") + " · " + role.permissions.length + " permissions</span>",
                     iconFile: "",
                     onClick: function() {
@@ -303,7 +304,6 @@ const RolesPage = function(params = {}) {
                         label: { fontSize: 15, textColor: Ink(0.92) },
                         box: { color: (isSelected) ? SELECTED_COLOR : "transparent", border: 0, round: 8 },
                         hover: { color: (isSelected) ? SELECTED_COLOR : Ink(0.06) },
-                        active: { color: Ink(0.1) },
                     },
                 });
                 that.label.elem.style.whiteSpace = "normal";
@@ -625,21 +625,19 @@ const RolesPage = function(params = {}) {
 
     const createButton = function(text, iconFile, onClick, params = {}) {
         const btn = SmartButton({
-            styleName: "classic",
+            styleName: "ozdenType2",
             width: params.width || "auto",
             labelText: text,
             iconFile: (iconFile) ? ASSETS + iconFile : "",
             onClick: onClick,
             style: {
                 layout: { gap: 8, padding: [14, 8] },
-                icon: { width: 18, height: 18 },
+                icon: { width: 18, height: 18, filter: T.iconFilter }, // WHY: Panel icons are black (the theme turns them white)
                 label: { fontSize: 14, textColor: Ink(0.92) },
                 box: { color: (params.primary) ? PRIMARY_COLOR : FIELD_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8 },
                 hover: { color: (params.primary) ? T.primaryHover : T.surface3 },
-                active: { color: (params.primary) ? T.primaryActive : T.surface4 },
             },
         });
-        if (btn.icon) btn.icon.elem.style.filter = T.iconFilter; // WHY: Panel icons are black.
         return btn;
     };
 

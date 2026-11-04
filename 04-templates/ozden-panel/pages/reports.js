@@ -545,19 +545,17 @@ const ReportsPage = function(params = {}) {
             HGroup({ width: "auto", height: "auto", align: "right center", gap: 10 });
 
                 const btnExport = SmartButton({
-                    styleName: "classic",
+                    styleName: "ozdenType2",
                     labelText: "Export",
                     iconFile: ASSETS + "arrow_down.png",
                     style: {
                         layout: { gap: 10, padding: [14, 8] },
-                        icon: { width: 20, height: 20 },
+                        icon: { width: 20, height: 20, filter: T.iconFilter }, // WHY: Panel icons are black (the theme turns them white)
                         label: { fontSize: 14, textColor: Ink(0.95) },
                         box: { color: PRIMARY_COLOR, border: 1, borderColor: CARD_BORDER_COLOR, round: 8 },
                         hover: { color: T.primaryHover },
-                        active: { color: T.primaryActive },
                     },
                 });
-                btnExport.icon.elem.style.filter = T.iconFilter; // WHY: Panel icons are black.
 
                 // MENU: Export
                 exportMenu = ContextMenu({

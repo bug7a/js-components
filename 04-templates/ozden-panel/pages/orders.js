@@ -881,21 +881,19 @@ OrdersPage.alpha = function(hex, alpha) {
 OrdersPage.createButton = function(text, iconFile, onClick, params = {}) {
     const S = OrdersPage.STYLE;
     const btn = SmartButton({
-        styleName: "classic",
+        styleName: "ozdenType2",
         width: params.width || "auto",
         labelText: text,
         iconFile: iconFile || "",
         onClick: onClick,
         style: {
             layout: { gap: 8, padding: [14, 8] },
-            icon: { width: 18, height: 18 },
+            icon: { width: 18, height: 18, filter: T.iconFilter }, // WHY: Panel icons are black (the theme turns them white)
             label: { fontSize: 14, textColor: Ink(0.92) },
             box: { color: (params.primary) ? S.PRIMARY_COLOR : S.FIELD_COLOR, border: 1, borderColor: S.CARD_BORDER_COLOR, round: 8 },
             hover: { color: (params.primary) ? T.primaryHover : T.surface3 },
-            active: { color: (params.primary) ? T.primaryActive : T.surface4 },
         },
     });
-    if (btn.icon) btn.icon.elem.style.filter = T.iconFilter; // WHY: Panel icons are black.
     return btn;
 };
 

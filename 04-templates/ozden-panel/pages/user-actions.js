@@ -310,7 +310,7 @@ const UserActionsPage = function(params = {}) {
     that.elem.style.borderTop = "1px solid " + Ink(0.08);
 
         const btnSignOut = SmartButton({
-            styleName: "classic",
+            styleName: "ozdenType2",
             width: "auto",
             labelText: "Sign Out",
             iconFile: "",
@@ -325,7 +325,6 @@ const UserActionsPage = function(params = {}) {
                 label: { fontSize: 14, textColor: "#F08A8A" },
                 box: { color: S.FIELD_COLOR, border: 1, borderColor: UserActionsPage.alpha(S.ERROR_COLOR, 0.35), round: 8 },
                 hover: { color: UserActionsPage.alpha(S.ERROR_COLOR, 0.15) },
-                active: { color: UserActionsPage.alpha(S.ERROR_COLOR, 0.25) },
             },
         });
         if (btnSignOut.icon) btnSignOut.icon.visible = 0;
