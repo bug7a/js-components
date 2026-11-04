@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>SmartButton 2 dark tones draft</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES (a draft: no component, only basic.js objects) -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // DRAFT DESIGN of comp/smart-button2.js (SmartButton), 2026-11-04: the tones of a dark page.
+        // One row for each color (cyan, orange, yellow, green, blue): at its left the CHOSEN button (the tone in the
+        // button now: SmartButton.tones.cyanDark ...) in its states (normal, under the mouse, pressed, disabled); at
+        // its right the candidates: the color 35 % and 55 % over the dark card (the chosen one is 45 %), the color of
+        // the dark apps of the repository (Ozden Manager, Ozden Panel) and the light tone itself (a dark text).
+        // HOW TO CHOOSE: in basic-designer, give the CHOSEN button of a row the color you like (copy the hex of a
+        // candidate, or any other) and the color of its text, then Copy prompt / Send to AI with a note ("bileşene
+        // aktar"). The chosen colors go into SmartButton.tones of comp/smart-button2.js (cyanDark ... blueDark).
+        // The shape is ozdenType1Dark of SmartButton 2: a light edge, the bottom line in the color of the edge.
+        // The contrast is the one of the text on the color: 4.5 is enough to read it well.
+        // http://127.0.0.1:5505/_basic-designer/index.htm?page=_designs/smart-button2-dark-tones.htm
+
+        const BUTTON_HEIGHT = 44; // the default of SmartButton 2
+        const COLOR_COLUMN_WIDTH = 200;
+        const CANDIDATE_WIDTH = 170;
+        const PAGE_COLOR = "#111110";
+        const CARD_COLOR = "#1A1A19"; // the cards of Ozden Panel / Ozden Manager
+        const DARK_TEXT = Black(0.75); // SmartButton.DARK_TEXT
+        const LIGHT_TEXT = White(0.9); // SmartButton.LIGHT_TEXT (the icon turns white with it)
+
+        // THE SHAPE (ozdenType1Dark of SmartButton.styles in comp/smart-button2.js)
+        const SHAPE = {
+            round: 4,
+            border: 1,
+            borderColor: White(0.16), // SmartButton.DARK_EDGE
+            bottomLine: "inset 0 -2px 0 " + White(0.16), // in the color of the edge (the user, 2026-11-04)
+            padding: [16, 0],
+            gap: 8,
+            fontSize: 20,
+            iconSize: 24,
+        };
+        const PRESS = { scale: 0.94, brightness: 0.88 }; // the press of the dark templates
+        const DISABLED = { color: "#232322", borderColor: White(0.06), textColor: White(0.28) };
+        const GRAY = { color: "#2E2E2C", hover: "#383835", textColor: White(0.85) }; // ozdenType1Dark with no tone (to compare)
+
+        // THE COLORS (one row each). chosen: the tone in the button now (45 % of the color over the card, 53 % under
+        // the mouse). candidates: { color, textColor, from } (from: how it was made, and the contrast of its text)
+        const TONES = [
+            {
+                name: "cyanDark",
+                note: "the main action: Save, Send",
+                text: "Save",
+                icon: "check",
+                chosen: { color: "#376265", hover: "#3C6F72", textColor: LIGHT_TEXT, from: "45 % over the card · contrast 5.9" },
+                candidates: [
+                    { color: "#315254", textColor: LIGHT_TEXT, from: "35 % over the card · contrast 7.3" },
+                    { color: "#3E7275", textColor: LIGHT_TEXT, from: "55 % over the card · contrast 4.8" },
+                    { color: "#3D7A6B", textColor: LIGHT_TEXT, from: "Ozden Manager primary · contrast 4.4" },
+                    { color: "#5BBAC1", textColor: DARK_TEXT, from: "the light tone cyan · contrast 6.3" },
+                ],
+            },
+            {
+                name: "orangeDark",
+                note: "a delete, a reject",
+                text: "Delete",
+                icon: "trash",
+                chosen: { color: "#724837", hover: "#82513C", textColor: LIGHT_TEXT, from: "45 % over the card · contrast 6.7" },
+                candidates: [
+                    { color: "#5F3E30", textColor: LIGHT_TEXT, from: "35 % over the card · contrast 8.0" },
+                    { color: "#86533D", textColor: LIGHT_TEXT, from: "55 % over the card · contrast 5.5" },
+                    { color: "#E66767", textColor: LIGHT_TEXT, from: "Ozden Manager, Ozden Panel (dark) · contrast 2.9" },
+                    { color: "#DE815B", textColor: DARK_TEXT, from: "the light tone orange · contrast 5.3" },
+                ],
+            },
+            {
+                name: "yellowDark",
+                note: "go on, but look first",
+                text: "Continue",
+                icon: "alert",
+                chosen: { color: "#7B682F", hover: "#8C7633", textColor: LIGHT_TEXT, from: "45 % over the card · contrast 4.8" },
+                candidates: [
+                    { color: "#65572A", textColor: LIGHT_TEXT, from: "35 % over the card · contrast 6.2" },
+                    { color: "#907934", textColor: LIGHT_TEXT, from: "55 % over the card · contrast 3.8" },
+                    { color: "#F2B24C", textColor: DARK_TEXT, from: "Ozden Manager warning · contrast 7.2" },
+                    { color: "#F1C74A", textColor: DARK_TEXT, from: "the light tone yellow · contrast 7.9" },
+                ],
+            },
+            {
+                name: "greenDark",
+                note: "after a good result: Done",
+                text: "Done",
+                icon: "check",
+                chosen: { color: "#46663A", hover: "#4D7440", textColor: LIGHT_TEXT, from: "45 % over the card · contrast 5.7" },
+                candidates: [
+                    { color: "#3C5533", textColor: LIGHT_TEXT, from: "35 % over the card · contrast 7.1" },
+                    { color: "#4F7741", textColor: LIGHT_TEXT, from: "55 % over the card · contrast 4.6" },
+                    { color: "#5DB182", textColor: LIGHT_TEXT, from: "Ozden Manager, Ozden Panel · contrast 2.4" },
+                    { color: "#7BC362", textColor: DARK_TEXT, from: "the light tone green · contrast 6.5" },
+                ],
+            },
+            {
+                name: "blueDark",
+                note: "nothing changes: Details, Help",
+                text: "Details",
+                icon: "info",
+                chosen: { color: "#335A6B", hover: "#38657A", textColor: LIGHT_TEXT, from: "45 % over the card · contrast 6.4" },
+                candidates: [
+                    { color: "#2E4C59", textColor: LIGHT_TEXT, from: "35 % over the card · contrast 7.8" },
+                    { color: "#39687E", textColor: LIGHT_TEXT, from: "55 % over the card · contrast 5.3" },
+                    { color: "#3987E5", textColor: LIGHT_TEXT, from: "Ozden Manager info · contrast 3.3" },
+                    { color: "#52A8D0", textColor: DARK_TEXT, from: "the light tone blue · contrast 5.6" },
+                ],
+            },
+        ];
+
+        // THE STATES of the CHOSEN button (still frames)
+        const CHOSEN_STATES = [
+            { name: "normal" },
+            { name: "under the mouse", hover: 1 },
+            { name: "pressed", pressed: 1 },
+            { name: "disabled", disabled: 1 },
+        ];
+
+        // THE ICONS (24 px lines; drawn in the color of the text, as SmartButton shows them)
+        const ICON_PATHS = {
+            trash: '<path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12"/><path d="M9 7V4h6v3"/>',
+            check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+            alert: '<path d="M12 4 2.8 19.5h18.4z"/><path d="M12 10v4.5M12 17.2v.3"/>',
+            info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.3"/>',
+        };
+
+        const getIconFile = function (name, color) {
+            return "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + ICON_PATHS[name] + "<\/svg>");
+        };
+
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            // BOX: Scrolling page
+            startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1, scrollX: 1 });
+
+                VGroup({ width: "max-content", height: "auto", align: "left top", gap: 22, padding: 40, clipContent: 0 });
+
+                    Label({ text: "SmartButton 2 · the tones of a dark page · draft", fontSize: 20, bold: 1, textColor: White(0.85) });
+                    Label({ text: "Edit the CHOSEN button of a row (its color, its text color). The candidates at its right: 35 % and 55 % of the color, the dark apps, the light tone.", fontSize: 13, textColor: White(0.5) });
+
+                    // GROUP: A dark card (the buttons are seen on it, like in a dark panel)
+                    VGroup({ width: "auto", height: "auto", align: "left top", gap: 30, padding: [30, 28], color: CARD_COLOR, round: 10, border: 1, borderColor: White(0.08), clipContent: 0 });
+                        TONES.forEach(drawTone);
+                    endGroup();
+
+                    // GROUP: The chosen ones together, after the gray dark button
+                    Label({ text: "The chosen ones together (the first one: ozdenType1Dark with no tone)", fontSize: 13, bold: 1, textColor: White(0.6) });
+                    HGroup({ width: "auto", height: "auto", align: "left center", gap: 12, padding: [30, 28], color: CARD_COLOR, round: 10, border: 1, borderColor: White(0.08), clipContent: 0 });
+                        drawButton({ text: "Cancel", icon: "" }, GRAY, {});
+                        TONES.forEach(function (tone) {
+                            drawButton(tone, tone.chosen, {});
+                        });
+                    endGroup();
+
+                endGroup();
+
+            endBox();
+
+        };
+
+        // GROUP: A color: its name, the CHOSEN button in its states, the candidates
+        const drawTone = function (tone) {
+
+            const row = VGroup({ width: "auto", height: "auto", align: "left top", gap: 12, clipContent: 0 });
+
+                // GROUP: The name and the chosen button
+                HGroup({ width: "auto", height: "auto", align: "left center", gap: 20, clipContent: 0 });
+
+                    VGroup({ width: COLOR_COLUMN_WIDTH, height: "auto", align: "left top", gap: 2 });
+                        Label({ text: tone.name, fontSize: 15, bold: 1, textColor: White(0.85) });
+                        Label({ text: tone.note, fontSize: 12, textColor: White(0.45), css: { whiteSpace: "normal" } });
+                        Label({ text: tone.chosen.color + " · " + tone.chosen.from, fontSize: 11, textColor: White(0.4), css: { whiteSpace: "normal" } });
+                    endGroup();
+
+                    Label({ text: "CHOSEN", fontSize: 11, bold: 1, textColor: White(0.4), css: { letterSpacing: "1px" } });
+
+                    CHOSEN_STATES.forEach(function (state) {
+                        drawStateCell(tone, state);
+                    });
+
+                endGroup();
+
+                // GROUP: The candidates
+                HGroup({ width: "auto", height: "auto", align: "left top", gap: 14, padding: [COLOR_COLUMN_WIDTH + 20, 0, 0, 0], clipContent: 0 });
+                    tone.candidates.forEach(function (candidate) {
+                        drawCandidate(tone, candidate);
+                    });
+                endGroup();
+
+            endGroup();
+
+            return row;
+
+        };
+
+        // GROUP: The chosen button in one state, its name under it
+        const drawStateCell = function (tone, state) {
+            const cell = VGroup({ width: "auto", height: "auto", align: "center top", gap: 6, clipContent: 0 });
+                drawButton(tone, tone.chosen, state);
+                Label({ text: state.name, fontSize: 11, textColor: White(0.4) });
+            endGroup();
+            return cell;
+        };
+
+        // GROUP: A candidate: the button in its color, the hex, how it was made and its contrast
+        const drawCandidate = function (tone, candidate) {
+            const cell = VGroup({ width: CANDIDATE_WIDTH, height: "auto", align: "left top", gap: 5, clipContent: 0 });
+                drawButton(tone, candidate, {});
+                Label({ text: candidate.color, fontSize: 12, bold: 1, textColor: White(0.6) });
+                Label({ width: "100%", text: candidate.from, fontSize: 11, textColor: White(0.45), css: { whiteSpace: "normal" } });
+            endGroup();
+            return cell;
+        };
+
+        // GROUP: A button (the ozdenType1Dark shape) in a color and a state
+        const drawButton = function (tone, look, state) {
+
+            const button = HGroup({
+                width: "auto",
+                height: BUTTON_HEIGHT,
+                align: "center center",
+                gap: SHAPE.gap,
+                padding: SHAPE.padding,
+                color: getBoxColor(look, state),
+                round: SHAPE.round,
+                border: SHAPE.border,
+                borderColor: state.disabled ? DISABLED.borderColor : SHAPE.borderColor,
+                clipContent: 0,
+            });
+            button.css = { boxShadow: getBoxShadow(state), filter: getPressFilter(state), transform: state.pressed ? "scale(" + PRESS.scale + ")" : "none" };
+
+                const textColor = state.disabled ? DISABLED.textColor : look.textColor;
+                if (tone.icon) {
+                    const icon = Icon({ width: SHAPE.iconSize, height: SHAPE.iconSize });
+                    icon.load(getIconFile(tone.icon, textColor));
+                }
+                Label({ text: tone.text, fontSize: SHAPE.fontSize, textColor: textColor, css: { whiteSpace: "nowrap" } });
+
+            endGroup();
+
+            return button;
+
+        };
+
+        // *** THE COLORS OF A STATE (as SmartButton paints them)
+
+        // (pressed: the color under the mouse, darker)
+        const getBoxColor = function (look, state) {
+            if (state.disabled) return DISABLED.color;
+            if (state.hover || state.pressed) return look.hover || look.color;
+            return look.color;
+        };
+
+        // WHY none when disabled: a flat button is not one that can be pressed in
+        const getBoxShadow = function (state) {
+            if (state.disabled) return "none";
+            return SHAPE.bottomLine;
+        };
+
+        const getPressFilter = function (state) {
+            if (state.pressed) return "brightness(" + PRESS.brightness + ")";
+            return "none";
+        };
+
+    </script>
+
+</head>
+
+<body>
+</body>
+
+</html>
