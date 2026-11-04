@@ -632,6 +632,7 @@ const RolesPage = function(params = {}) {
             width: params.width || "auto",
             height: 40, // WHY: the height of the fields and the selects of the panel (the user, 2026-11-04; SmartButton: 44)
             labelText: text,
+            ariaLabel: params.ariaLabel || "", // "": the text is read
             iconFile: (iconFile) ? ASSETS + iconFile : "",
             onClick: onClick,
             style: {
@@ -753,8 +754,8 @@ const RolesPage = function(params = {}) {
                 setFlex(inputName, "1 1 auto");
 
                 // BUTTON: Role actions
-                btnRoleMenu = createButton("•••", "", function() { });
-                btnRoleMenu.elem.setAttribute("aria-label", "Role actions");
+                // WHY ariaLabel, not the attribute: SmartButton writes aria-label again at every render (it was "•••" under the mouse)
+                btnRoleMenu = createButton("•••", "", function() { }, { ariaLabel: "Role actions" });
                 btnRoleMenu.elem.style.marginTop = "12px";
                 btnRoleMenu.shrink = 0; // WHY: next to the growing name field it got narrower than its text on a narrow screen (the third dot was cut)
 
