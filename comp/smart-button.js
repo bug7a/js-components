@@ -133,7 +133,8 @@ const SmartButtonDefaults = {
         ask: {
             button: {
                 color: "#DE815B", // also under the mouse and pressed
-                border: 1,
+                // WHY no border width: the edge of the template stays, so a pill (0) or an outlined (2) button keeps
+                //     its size while it asks (border: 1 made an "auto" pill 2 px wider)
                 borderColor: "#DE815B",
                 boxShadow: "none",
                 textColor: "white",
@@ -207,7 +208,7 @@ const SmartButton = function (params = {}) {
     };
 
     const isReducedMotion = function () {
-        return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        return SmartButton.isReducedMotion();
     };
 
     const isMotionOn = function () {
@@ -420,7 +421,7 @@ const SmartButton = function (params = {}) {
         box.aria = { busy: false };
         box.waitingCover.visible = 0;
         render();
-        box.onWaitingEnd(box);
+        if (typeof box.onWaitingEnd === "function") box.onWaitingEnd(box);
     };
 
     // *** PUBLIC FUNCTIONS:
@@ -492,6 +493,7 @@ const SmartButton = function (params = {}) {
     const superRemove = box.remove;
     box.superRemove = superRemove;
     box.remove = function () {
+        if (box.isRemoved) return;
         box.cancelAsk();
         superRemove.call(box);
     };
@@ -508,6 +510,7 @@ const SmartButton = function (params = {}) {
             box.style[part] = merged;
         });
         applyStyle();
+        applyAnimated(); // WHY: style.press.time is in the transitions
     };
     // USAGE: button.setStyle({ box: { color: "tomato", borderColor: "red" }, hover: { color: "tomato" } })
 
@@ -628,6 +631,13 @@ const SmartButton = function (params = {}) {
 // *** STATIC FUNCTIONS:
 
 SmartButton.askingButton = null; // the button that asks now (ask: one at a time)
+
+// WHY one query for the page: render() asks it at every hover and press
+SmartButton.isReducedMotion = function () {
+    if (!window.matchMedia) return false;
+    if (!SmartButton.reducedMotionQuery) SmartButton.reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    return SmartButton.reducedMotionQuery.matches;
+};
 
 // 1: a dark color (the ripple is light on it). A color of the browser: "rgb(r, g, b)" or "rgba(r, g, b, a)".
 // A transparent color is not dark (the page under it shows).
