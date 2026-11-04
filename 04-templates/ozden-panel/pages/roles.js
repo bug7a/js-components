@@ -288,12 +288,15 @@ const RolesPage = function(params = {}) {
                 const isSelected = role.id == selectedRoleId;
                 const memberCount = getMemberIds(role.id).length;
                 const tag = (role.isSystem) ? " <span style='font-size:11px; padding:1px 6px; border-radius:6px; background:" + Ink(0.08) + "; color:" + Ink(0.55) + "'>SYSTEM</span>" : "";
+                const countsText = memberCount + " member" + ((memberCount == 1) ? "" : "s") + " · " + role.permissions.length + " permissions";
 
                 SmartButton({
                     styleName: "ozdenType4",
                     width: "100%",
                     height: "auto", // WHY: two lines (the name of the role and its counts)
-                    labelText: escapeHtml(role.name) + tag + "<br><span style='font-size:12px; color:" + Ink(0.45) + "'>" + memberCount + " member" + ((memberCount == 1) ? "" : "s") + " · " + role.permissions.length + " permissions</span>",
+                    // WHY the bold name (the user, 2026-11-04): the new templates have a regular text; the name leads, its counts under it
+                    labelText: "<span style='font-family: opensans-bold'>" + escapeHtml(role.name) + "</span>" + tag + "<br><span style='font-size:12px; color:" + Ink(0.45) + "'>" + countsText + "</span>",
+                    ariaLabel: role.name + ((role.isSystem) ? " (system)" : "") + ", " + countsText, // WHY: the label is HTML (it was read with its tags)
                     iconFile: "",
                     onClick: function() {
                         if (role.id == selectedRoleId) return;
@@ -627,6 +630,7 @@ const RolesPage = function(params = {}) {
         const btn = SmartButton({
             styleName: "ozdenType2",
             width: params.width || "auto",
+            height: 40, // WHY: the height of the fields and the selects of the panel (the user, 2026-11-04; SmartButton: 44)
             labelText: text,
             iconFile: (iconFile) ? ASSETS + iconFile : "",
             onClick: onClick,

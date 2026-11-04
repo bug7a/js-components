@@ -649,6 +649,7 @@ const MediaPage = function(params = {}) {
                     folderButtons[folder] = SmartButton({
                         styleName: "ozdenType4",
                         width: "100%",
+                        height: 40, // WHY: the height of the fields and the selects of the panel (the user, 2026-11-04; SmartButton: 44)
                         labelText: folder || "All files",
                         iconFile: "",
                         onClick: function() { openFolder(folder); },
@@ -1248,6 +1249,7 @@ MediaPage.createButton = function(text, iconFile, onClick, params = {}) {
     const btn = SmartButton({
         styleName: "ozdenType2",
         width: params.width || "auto",
+        height: 40, // WHY: the height of the fields and the selects of the panel (the user, 2026-11-04; SmartButton: 44)
         labelText: text,
         iconFile: iconFile || "",
         onClick: onClick,
