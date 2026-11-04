@@ -55,7 +55,7 @@
     const MIST = { box: { color: "#CEDBE1" }, hover: { color: "#C1D0D7" } };
     const LAVENDER = { box: { color: "#CFC3DD" }, hover: { color: "#C3B6D3" } };
     // The trash: a bigger bin; it asks in red before it deletes (the bin turns white)
-    const TRASH = { icon: { width: 30, height: 30, opacity: 1 }, ask: { button: { color: RED, border: 0, borderColor: RED, boxShadow: BOTTOM_LINE } } };
+    const TRASH = { icon: { width: 30, height: 30, opacity: 1 }, ask: { button: { color: RED, border: 0, boxShadow: BOTTOM_LINE } } };
 
     // *** THE ICONS: minimal lines (the user, 2026-11-02): no circle, no fill. Black lines: the look gives them the
     // transparency of the text (WHY not in the color: two lines that cross would be darker there)
@@ -92,7 +92,7 @@
         // BOX: Cover (behind the dialog)
         Box(0, 0, "100%", "100%", { color: COVER_COLOR });
 
-        const pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+        startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
 
             VGroup({ width: "100%", height: "100%", align: "center top", gap: 30, padding: [20, 50], clipContent: 0 }); // (basic-designer, 2026-10-30: was "auto")
 
@@ -181,8 +181,6 @@
             endGroup();
 
         endBox();
-
-        if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: pageBox });
 
     };
 

@@ -24,17 +24,14 @@
         // The tones of a dark page end with "Dark" (cyanDark ... blueDark: a light text, a white icon); the light tones
         // keep their dark text on a dark template too.
         // - SmartButton({ styleName: "ozdenType1Dark", labelText, iconFile, onClick })
+        // Every button of this page is one SmartButton({ ... }) call: copy it as it is.
         // TRY: press "Download" (it waits 2 s), click "Delete" twice, press Tab to see the focus ring.
 
         // *** VARIABLES:
 
         const CARD_COLOR = "#1A1A19"; // the cards of Ozden Panel / Ozden Manager
-        const BUTTON_HEIGHT = 44;
         const DOWNLOAD_TIME = 2000; // ms: a job that takes time (the sample)
-        const ICON_FILE = "../comp/smart-button/alert-black.png"; // a black icon: the dark packages turn it white
-        const PACKAGES = ["ozdenType1Dark", "ozdenType2Dark", "ozdenType3Dark", "ozdenType4Dark"];
-        const DARK_TONES = ["cyanDark", "orangeDark", "yellowDark", "greenDark", "blueDark"];
-        const LIGHT_TONES = ["white", "cyan", "orange", "yellow", "green", "blue"];
+        const ICON_FILE = "../comp/smart-button/alert-black.png"; // a black icon: the dark templates turn it white
 
         // *** START:
 
@@ -49,9 +46,55 @@
 
                     Label({ text: "SmartButton 2 · dark templates", fontSize: 24, bold: 1, textColor: White(0.9) });
 
-                    PACKAGES.forEach(createPackageRow);
-                    createToneRow("Tones for a dark page (on ozdenType1Dark)", DARK_TONES);
-                    createToneRow("The light tones on a dark page (their text stays dark)", LIGHT_TONES);
+                    startCard("ozdenType1Dark (the default dark)");
+                        SmartButton({ styleName: "ozdenType1Dark", labelText: "Send", iconFile: ICON_FILE });
+                        SmartButton({ styleName: "ozdenType1Dark", labelText: "Only a text" });
+                        SmartButton({ styleName: "ozdenType1Dark", labelText: "Download", iconFile: ICON_FILE, onClick: download });
+                        SmartButton({ styleName: "ozdenType1Dark", labelText: "Delete", ask: "Click again to delete." });
+                        SmartButton({ styleName: "ozdenType1Dark", labelText: "Disabled", iconFile: ICON_FILE, enabled: 0 });
+                    endCard();
+
+                    startCard("ozdenType2Dark");
+                        SmartButton({ styleName: "ozdenType2Dark", labelText: "Send", iconFile: ICON_FILE });
+                        SmartButton({ styleName: "ozdenType2Dark", labelText: "Only a text" });
+                        SmartButton({ styleName: "ozdenType2Dark", labelText: "Download", iconFile: ICON_FILE, onClick: download });
+                        SmartButton({ styleName: "ozdenType2Dark", labelText: "Delete", ask: "Click again to delete." });
+                        SmartButton({ styleName: "ozdenType2Dark", labelText: "Disabled", iconFile: ICON_FILE, enabled: 0 });
+                    endCard();
+
+                    startCard("ozdenType3Dark");
+                        SmartButton({ styleName: "ozdenType3Dark", labelText: "Send", iconFile: ICON_FILE });
+                        SmartButton({ styleName: "ozdenType3Dark", labelText: "Only a text" });
+                        SmartButton({ styleName: "ozdenType3Dark", labelText: "Download", iconFile: ICON_FILE, onClick: download });
+                        SmartButton({ styleName: "ozdenType3Dark", labelText: "Delete", ask: "Click again to delete." });
+                        SmartButton({ styleName: "ozdenType3Dark", labelText: "Disabled", iconFile: ICON_FILE, enabled: 0 });
+                    endCard();
+
+                    startCard("ozdenType4Dark");
+                        SmartButton({ styleName: "ozdenType4Dark", labelText: "Send", iconFile: ICON_FILE });
+                        SmartButton({ styleName: "ozdenType4Dark", labelText: "Only a text" });
+                        SmartButton({ styleName: "ozdenType4Dark", labelText: "Download", iconFile: ICON_FILE, onClick: download });
+                        SmartButton({ styleName: "ozdenType4Dark", labelText: "Delete", ask: "Click again to delete." });
+                        SmartButton({ styleName: "ozdenType4Dark", labelText: "Disabled", iconFile: ICON_FILE, enabled: 0 });
+                    endCard();
+
+                    // The tones of a dark page: a light text, the icon turns white
+                    startCard("Tones for a dark page (on ozdenType1Dark)");
+                        SmartButton({ styleName: "ozdenType1Dark", tone: "cyanDark", labelText: "cyanDark", iconFile: ICON_FILE });
+                        SmartButton({ styleName: "ozdenType1Dark", tone: "orangeDark", labelText: "orangeDark", iconFile: ICON_FILE });
+                        SmartButton({ styleName: "ozdenType1Dark", tone: "yellowDark", labelText: "yellowDark", iconFile: ICON_FILE });
+                        SmartButton({ styleName: "ozdenType1Dark", tone: "greenDark", labelText: "greenDark", iconFile: ICON_FILE });
+                        SmartButton({ styleName: "ozdenType1Dark", tone: "blueDark", labelText: "blueDark", iconFile: ICON_FILE });
+                    endCard();
+
+                    startCard("The light tones on a dark page (their text stays dark)");
+                        SmartButton({ styleName: "ozdenType1Dark", tone: "white", labelText: "white", iconFile: ICON_FILE });
+                        SmartButton({ styleName: "ozdenType1Dark", tone: "cyan", labelText: "cyan", iconFile: ICON_FILE });
+                        SmartButton({ styleName: "ozdenType1Dark", tone: "orange", labelText: "orange", iconFile: ICON_FILE });
+                        SmartButton({ styleName: "ozdenType1Dark", tone: "yellow", labelText: "yellow", iconFile: ICON_FILE });
+                        SmartButton({ styleName: "ozdenType1Dark", tone: "green", labelText: "green", iconFile: ICON_FILE });
+                        SmartButton({ styleName: "ozdenType1Dark", tone: "blue", labelText: "blue", iconFile: ICON_FILE });
+                    endCard();
 
                 endGroup();
 
@@ -61,61 +104,22 @@
 
         // *** FUNCTIONS:
 
-        // GROUP: One template on a dark card: a few buttons side by side
-        const createPackageRow = function (styleName) {
-
-            const card = VGroup({ width: "auto", height: "auto", align: "left top", gap: 14, padding: 24, color: CARD_COLOR, round: 10, border: 1, borderColor: White(0.08), clipContent: 0 });
-
-                Label({ text: styleName + (styleName == "ozdenType1Dark" ? " (the default dark)" : ""), fontSize: 14, bold: 1, textColor: White(0.6) });
-
+        // GROUP: A dark card with a title; the buttons made between startCard() and endCard() go side by side (they wrap)
+        const startCard = function (title) {
+            VGroup({ width: "auto", height: "auto", align: "left top", gap: 14, padding: 24, color: CARD_COLOR, round: 10, border: 1, borderColor: White(0.08), clipContent: 0 });
+                Label({ text: title, fontSize: 14, bold: 1, textColor: White(0.6) });
                 HGroup({ width: "auto", height: "auto", align: "left center", gap: 12, wrap: 1, clipContent: 0 });
-
-                    SmartButton({ styleName: styleName, height: BUTTON_HEIGHT, labelText: "Send", iconFile: ICON_FILE });
-
-                    SmartButton({ styleName: styleName, height: BUTTON_HEIGHT, labelText: "Only a text" });
-
-                    SmartButton({
-                        styleName: styleName,
-                        height: BUTTON_HEIGHT,
-                        labelText: "Download",
-                        iconFile: ICON_FILE,
-                        onClick: function (self) {
-                            self.setWaiting(1);
-                            self.after(DOWNLOAD_TIME, function () { self.setWaiting(0); });
-                        },
-                    });
-
-                    SmartButton({ styleName: styleName, height: BUTTON_HEIGHT, labelText: "Delete", ask: "Click again to delete." });
-
-                    SmartButton({ styleName: styleName, height: BUTTON_HEIGHT, labelText: "Disabled", iconFile: ICON_FILE, enabled: 0 });
-
-                endGroup();
-
-            endGroup();
-
-            return card;
-
         };
 
-        // GROUP: The tones on the default dark template, each with the icon (a light text turns it white)
-        const createToneRow = function (title, tones) {
-
-            const card = VGroup({ width: "auto", height: "auto", align: "left top", gap: 14, padding: 24, color: CARD_COLOR, round: 10, border: 1, borderColor: White(0.08), clipContent: 0 });
-
-                Label({ text: title, fontSize: 14, bold: 1, textColor: White(0.6) });
-
-                HGroup({ width: "auto", height: "auto", align: "left center", gap: 12, wrap: 1, clipContent: 0 });
-
-                    tones.forEach(function (toneName) {
-                        SmartButton({ styleName: "ozdenType1Dark", tone: toneName, height: BUTTON_HEIGHT, labelText: toneName, iconFile: ICON_FILE });
-                    });
-
+        const endCard = function () {
                 endGroup();
-
             endGroup();
+        };
 
-            return card;
-
+        // A job that takes time: the button waits, then it is as before
+        const download = function (button) {
+            button.setWaiting(1);
+            button.after(DOWNLOAD_TIME, function () { button.setWaiting(0); });
         };
 
     </script>

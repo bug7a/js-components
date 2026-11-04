@@ -20,8 +20,8 @@
         /* Bismillah */
 
         // SMARTBUTTON 2 · STATUS BUTTONS (the copy of smart-button-alternatif.htm for comp/smart-button2.js, 2026-11-04)
-        // The shape is a template of SmartButton ("pill", "outlined"); the colors are this page's own (they were
-        // SmartButton.TONES: the button keeps only its own tones). As high as every other button (44).
+        // The shape is a template of SmartButton ("pill", "outlined"); the colors are this page's own (SmartButton
+        // keeps only the tones of the kit). As high as every other button (44).
         // Every button is one SmartButton({ ... }) call; the colors and the icons come from the small helpers below.
         // - SmartButton({ styleName: "pill", labelText, iconFile: pillIcon("clock", COLORS.orange), style: pillColors(COLORS.orange) })
         // - pillColors: a soft tint, pillSolidColors: the full color, outlinedColors: a colored edge
@@ -33,7 +33,7 @@
         const ROW_MAX_WIDTH = 960;
         const LIGHT_GRAY_CIRCLE = "#A9A9A9";
 
-        // THE COLORS OF THIS PAGE (they were SmartButton.TONES): color: the strong color; solidHover: its hover;
+        // THE COLORS OF THIS PAGE (the old SmartButton.TONES): color: the strong color; solidHover: its hover;
         // tint / hover: the soft surface; deep: the text of outlined; pillText: the text of pill (color when not
         // given); light: the light part of a two-tone icon. A new color is one new row.
         const COLORS = {

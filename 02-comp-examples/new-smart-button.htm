@@ -40,16 +40,17 @@
         const DOWNLOAD_TIME = 2000;
 
         // The icons (24 x 24 lines; the color is in the drawing)
-        const lineIcon = function (color, paths) {
-            return "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + paths + "<\/svg>");
+        const ICON_COLOR = "#1F1F1F";
+        const lineIcon = function (paths) {
+            return "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + ICON_COLOR + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + paths + "<\/svg>");
         };
         const ICONS = {
-            save: lineIcon("#1F1F1F", '<path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4M8 20v-6h8v6"/>'),
-            check: lineIcon("#1F1F1F", '<path d="M5 12.5l4.5 4.5L19 7.5"/>'),
-            trash: lineIcon("#1F1F1F", '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/>'),
-            info: lineIcon("#1F1F1F", '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.3"/>'),
-            replace: lineIcon("#1F1F1F", '<path d="M4 9h13l-3-3M20 15H7l3 3"/>'),
-            download: lineIcon("#1F1F1F", '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>'),
+            save: lineIcon('<path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4M8 20v-6h8v6"/>'),
+            check: lineIcon('<path d="M5 12.5l4.5 4.5L19 7.5"/>'),
+            trash: lineIcon('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/>'),
+            info: lineIcon('<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.3"/>'),
+            replace: lineIcon('<path d="M4 9h13l-3-3M20 15H7l3 3"/>'),
+            download: lineIcon('<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>'),
         };
 
         let lblResult;
@@ -85,7 +86,7 @@
             lblResult.plainText = text;
         };
 
-        // GROUP: A white card with a title and a text; returns its footer (the buttons go into it)
+        // GROUP: A white card with a title and a text; its footer stays open: the buttons go into it, endCard() closes it
         const startCard = function (title, text) {
             VGroup({ width: CARD_WIDTH, height: "auto", align: "left top", gap: 0, color: "white", round: 10, border: 1, borderColor: Black(0.08), clipContent: 0 });
             that.css = { maxWidth: "100%" };
@@ -105,9 +106,7 @@
 
         // BOX: The free room of a footer (pushes the next buttons to the right)
         const createSpace = function () {
-            const space = Box({ width: 1, height: 1, color: "transparent" });
-            space.grow = 1;
-            return space;
+            return Box({ width: 1, height: 1, color: "transparent", grow: 1 });
         };
 
         // GROUP: The tones side by side, each with its name and its use under it (no tone: the gray of the template)
@@ -156,7 +155,7 @@
             endGroup();
         };
 
-        // A profile: the trash asks again, Save waits and says "Saved" in the success color
+        // A profile: the trash asks again, Save waits and says "Saved" in green
         const createProfileCard = function () {
             startCard("Profile", "Ayşe Yılmaz · ayse@example.com. Save waits while the job runs, then it says \"Saved\" in the color of a success for a moment.");
 
