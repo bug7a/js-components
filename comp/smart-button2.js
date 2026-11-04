@@ -35,9 +35,9 @@ Its samples: 02-comp-examples/new-smart-button*.htm (the model page: new-smart-b
 - setEnabled(0): no click, no hover, out of the Tab order (aria-disabled): a flat light gray button, a faint edge, no
   bottom line, the text and the icon faint gray (the same for every color; chosen on
   experimental/smart-button-bench.htm).
-- ASK (two clicks): ask: "Click again to delete." -> the first click turns the button red (style.ask.button) and
+- ASK (two clicks): ask: "Click again to delete." -> the first click turns the button orange (style.ask.button) and
   shows the text in a bubble over it (comp/tooltip.js, Tooltip.show(): it stays inside the screen; without
-  tooltip.js only the red button); the second click runs onClick. It forgets after style.ask.time. One button asks
+  tooltip.js only the orange button); the second click runs onClick. It forgets after style.ask.time. One button asks
   at a time. setAsk(text), cancelAsk(), isAsking. onBeforeClick(self) returns false: no ask and no onClick (Ex: a
   form with an error must not ask "Sure?" first). press(): a press like a click (the ask too), Ex: Enter in a field.
 - WAITING: setWaiting(1) while a job runs (a download, a save): the text and the icon fade and a small animation is
@@ -88,7 +88,7 @@ const SmartButtonDefaults = {
     waitingType: "clock", // "clock" (the default wait) or "dots"
     animated: 1, // 1: pressed it gets smaller and darker (style.press). setAnimated()
     ripple: 0, // 1: a wave from the pressed point (it works with animated: 0 too). setRipple()
-    ask: "", // "Click again to delete.": two clicks (the first one asks with a red button and this text in a bubble). setAsk()
+    ask: "", // "Click again to delete.": two clicks (the first one asks with an orange button and this text in a bubble). setAsk()
     onBeforeClick: null, // function (self): false stops the press, with no ask either
     onClick: function (self) { }, // Not called while waiting
     onWaitingEnd: function (self) { }, // The wait ended (setWaiting(0))
@@ -172,8 +172,7 @@ const SmartButtonDefaults = {
 const SmartButton = function (params = {}) {
 
     // Merge params: style > tone > the template (styleName) > the defaults
-    SmartButton.applyTone(params);
-    basic.applyStylePackage(params, SmartButton.styles, SmartButtonDefaults);
+    SmartButton.applyLook(params);
     const hasText = (params.labelText !== "");
     // WHY: 44 is the height of a row; an icon above its text needs more (about 60)
     if (params.iconPosition === "top" && hasText && params.height === undefined) params.height = "auto";
@@ -195,7 +194,6 @@ const SmartButton = function (params = {}) {
     let isHover = 0;
     let isPressed = 0;
     let isSpaceDown = 0; // Space went down on this button (it presses when it goes up, like a real button)
-    let wasAnimated = 0; // the press look was written (setAnimated(0) writes the still look back)
 
     // *** PRIVATE FUNCTIONS:
 
@@ -211,39 +209,26 @@ const SmartButton = function (params = {}) {
         return box.animated == 1 && !isReducedMotion();
     };
 
-    // THE COLOR OF THE STATE: disabled > asking > under the mouse > normal (pressed: getPressCss darkens it)
-    const getBoxColor = function () {
+    // THE LOOK OF THE STATE: the normal look, and over it the keys of the state: disabled > asking > under the mouse.
+    // (style.disabled and style.ask.button have the key names of the look; pressed: getPressCss darkens it)
+    // WHY one order: an ask never meets a disabled or waiting button (setEnabled(0) and setWaiting(1) end it)
+    const getLook = function () {
         const _s = box.style;
-        if (box.enabled != 1) return _s.disabled.color;
-        if (box.isAsking == 1) return _s.ask.button.color;
+        const look = {
+            color: _s.box.color,
+            border: _s.box.border,
+            borderColor: _s.box.borderColor,
+            boxShadow: _s.box.boxShadow,
+            textColor: _s.label.textColor,
+            iconOpacity: _s.icon.opacity,
+            iconFilter: _s.icon.filter,
+        };
+        // WHY no shadow when disabled: a flat button is not one that can be pressed in
+        if (box.enabled != 1) return Object.assign(look, _s.disabled, { boxShadow: "none" });
+        if (box.isAsking == 1) return Object.assign(look, _s.ask.button);
         // WHY not while waiting: the button stays in its own color under the animation
-        if (box.waiting == 1) return _s.box.color;
-        if (isHover) return _s.hover.color;
-        return _s.box.color;
-    };
-
-    const getBorderColor = function () {
-        if (box.enabled != 1) return box.style.disabled.borderColor;
-        if (box.isAsking == 1) return box.style.ask.button.borderColor;
-        return box.style.box.borderColor;
-    };
-
-    // WHY none when disabled: a flat button is not one that can be pressed in
-    const getBoxShadow = function () {
-        if (box.enabled != 1) return "none";
-        if (box.isAsking == 1) return box.style.ask.button.boxShadow;
-        return box.style.box.boxShadow || "";
-    };
-
-    const getTextColor = function () {
-        if (box.enabled != 1) return box.style.disabled.textColor;
-        if (box.isAsking == 1) return box.style.ask.button.textColor;
-        return box.style.label.textColor;
-    };
-
-    const getIconOpacity = function () {
-        if (box.enabled != 1) return box.style.disabled.iconOpacity;
-        return (box.style.icon.opacity === undefined) ? 1 : box.style.icon.opacity;
+        if (isHover && box.waiting != 1) look.color = _s.hover.color;
+        return look;
     };
 
     // The press: smaller and darker while pressed (only with animated: 1)
@@ -255,28 +240,51 @@ const SmartButton = function (params = {}) {
         };
     };
 
-    const getIconFilter = function () {
-        if (box.isAsking == 1 && box.enabled == 1) return box.style.ask.button.iconFilter;
-        return box.style.icon.filter || "none";
-    };
-
     // Everything that changes with the state: the box, the content, the press, the keyboard and the screen reader
     const render = function () {
         const isEnabled = (box.enabled == 1);
-        box.color = getBoxColor();
-        box.border = (box.isAsking == 1) ? box.style.ask.button.border : box.style.box.border;
-        box.borderColor = getBorderColor();
-        box.css = Object.assign({ boxShadow: getBoxShadow() }, getPressCss());
-        if (box.label) box.label.textColor = getTextColor();
+        const look = getLook();
+        box.color = look.color;
+        box.border = look.border;
+        box.borderColor = look.borderColor;
+        box.boxShadow = look.boxShadow;
+        box.css = getPressCss();
+        if (box.label) box.label.textColor = look.textColor;
         if (box.icon) {
-            box.icon.opacity = getIconOpacity();
-            box.icon.css = { filter: getIconFilter() };
+            box.icon.opacity = look.iconOpacity;
+            box.icon.css = { filter: look.iconFilter };
         }
         box.layout.css = { filter: isEnabled ? "none" : "grayscale(1)" };
         box.layout.opacity = (box.waiting == 1) ? box.style.waiting.contentOpacity : 1;
         box.cursor = isEnabled ? "pointer" : "default";
         box.tabIndex = isEnabled ? 0 : -1;
         box.aria = { disabled: !isEnabled, label: box.ariaLabel || box.labelText || "" };
+    };
+
+    // The room inside: an icon button has none (its icon in the middle); an icon left of a text has a little less
+    // on its side (style.layout.iconSideTrim)
+    const paintPadding = function () {
+        if (isIconButton) {
+            box.layout.padding = 0;
+            return;
+        }
+        const _l = box.style.layout;
+        const isIconLeft = box.icon && box.label && box.iconPosition !== "top";
+        const padding = Array.isArray(_l.padding) ? _l.padding[0] : _l.padding;
+        const trim = isIconLeft ? _l.iconSideTrim : 0;
+        box.layout.css = { paddingLeft: Math.max(0, padding - trim) + "px" };
+    };
+
+    // The style on the objects (box, layout, icon, label, focus ring); render() gives the colors of the state.
+    const applyStyle = function () {
+        const _s = box.style;
+        box.props(_s.box);
+        box.layout.props(_s.layout);
+        paintPadding();
+        if (box.icon) box.icon.props(_s.icon);
+        if (box.label) box.label.props(_s.label);
+        box.setFocusRing(_s.focus.ringColor);
+        render();
     };
 
     const press = function (event) {
@@ -294,8 +302,7 @@ const SmartButton = function (params = {}) {
 
     const startAsk = function () {
         // WHY one at a time: the bubble of another button would stay over this one
-        const other = SmartButton.askingButton;
-        if (other && other !== box) other.cancelAsk();
+        if (SmartButton.askingButton) SmartButton.askingButton.cancelAsk();
         SmartButton.askingButton = box;
         box.isAsking = 1;
         render();
@@ -343,33 +350,37 @@ const SmartButton = function (params = {}) {
         wave.onfinish = function () { layer.remove(); };
     };
 
-    // *** WAITING
+    // *** THE MOTION
 
-    // The press transitions, or the still look back (only when it was animated before)
+    // The transitions: the press (animated: 1, not with reduced motion) and the color under the mouse (always)
+    // WHY not setMotion(): it starts after a timer, and the press must answer the first click
     const applyAnimated = function () {
-        if (!isMotionOn()) {
-            if (!wasAnimated) return;
-            wasAnimated = 0;
-            render();
-            box.setMotionNow(STILL_MOTION);
-            return;
-        }
-        wasAnimated = 1;
         const time = box.style.press.time + "s";
-        // WHY not setMotion(): it starts after a timer, and the press must answer the first click
-        box.setMotionNow("transform " + time + ", filter " + time + ", box-shadow " + time + ", " + STILL_MOTION);
-        render();
+        const pressMotion = isMotionOn() ? "transform " + time + ", filter " + time + ", box-shadow " + time + ", " : "";
+        box.setMotionNow(pressMotion + STILL_MOTION);
     };
+
+    // *** WAITING
 
     // The clock fits the button: at most its size, smaller in a small button (the dots keep their size)
     const fitWaitingIcon = function () {
         const icon = box.waitingCover.icon;
         if (box.waitingType == "clock") {
             const _w = box.style.waiting;
-            const size = Math.max(0, Math.min(_w.clockSize, Math.min(box.width, box.height) - _w.space));
+            const room = Math.min(box.width, box.height) - _w.space;
+            const size = basic.clamp(room, 0, _w.clockSize);
             icon.setSize(size, size);
         }
         icon.center();
+    };
+
+    const startWaiting = function () {
+        box.cancelAsk();
+        box.waiting = 1;
+        box.aria = { busy: true };
+        box.waitingCover.visible = 1;
+        fitWaitingIcon();
+        render();
     };
 
     const endWaiting = function () {
@@ -400,6 +411,7 @@ const SmartButton = function (params = {}) {
     box.setAnimated = function (value) {
         box.animated = basic.isOn(value) ? 1 : 0;
         applyAnimated();
+        render(); // WHY: a button pressed now loses its press look with animated: 0
     };
     // USAGE: get: button.animated, set: button.setAnimated(0)
 
@@ -412,11 +424,8 @@ const SmartButton = function (params = {}) {
         box.enabled = basic.isOn(value) ? 1 : 0;
         if (box.enabled != 1) {
             box.cancelAsk();
-            isHover = 0;
             isPressed = 0;
             isSpaceDown = 0;
-        } else {
-            isHover = box.elem.matches(":hover") ? 1 : 0; // WHY: the mouse may have stayed on it while it was off
         }
         render();
     };
@@ -472,44 +481,12 @@ const SmartButton = function (params = {}) {
     };
     // USAGE: button.setTone("green"), button.setTone("") (the gray of its template)
 
-    // The room inside: an icon button has none (its icon in the middle); an icon left of a text has a little less
-    // on its side (style.layout.iconSideTrim)
-    const paintPadding = function () {
-        if (isIconButton) {
-            box.layout.padding = 0;
-            return;
-        }
-        const _l = box.style.layout;
-        const isIconLeft = box.icon && box.label && box.iconPosition !== "top";
-        const padding = Array.isArray(_l.padding) ? _l.padding[0] : _l.padding;
-        const trim = isIconLeft ? (Number(_l.iconSideTrim) || 0) : 0;
-        box.layout.css = { paddingLeft: Math.max(0, padding - trim) + "px" };
-    };
-
-    // The style on the objects (box, layout, icon, label, focus ring); render() gives the colors of the state.
-    const applyStyle = function () {
-        const _s = box.style;
-        box.props(_s.box);
-        box.layout.props(_s.layout);
-        paintPadding();
-        if (box.icon) box.icon.props(_s.icon);
-        if (box.label) box.label.props(_s.label);
-        box.setFocusRing(_s.focus.ringColor);
-        render();
-    };
-
     // delay: ms before the wait ends (only for 0)
     box.setWaiting = function (value, delay = 0) {
-        const isWaiting = basic.isOn(value) ? 1 : 0;
         if (cancelWaitingEnd) cancelWaitingEnd();
         cancelWaitingEnd = null;
-        if (isWaiting) {
-            box.cancelAsk();
-            box.waiting = 1;
-            box.aria = { busy: true };
-            box.waitingCover.visible = 1;
-            fitWaitingIcon();
-            render();
+        if (basic.isOn(value)) {
+            startWaiting();
             return;
         }
         if (box.waiting != 1) return;
@@ -517,22 +494,15 @@ const SmartButton = function (params = {}) {
             endWaiting();
             return;
         }
-        cancelWaitingEnd = box.after(delay, function () {
-            cancelWaitingEnd = null;
-            endWaiting();
-        });
+        cancelWaitingEnd = box.after(delay, endWaiting);
     };
     // USAGE: get: button.waiting, set: button.setWaiting(1) / button.setWaiting(0, 1000)
 
     // *** OBJECT VIEW:
 
-    // BOX: Container look
-    box.props(box.style.box);
+    // BOX: Container (its look: applyStyle(), when its objects are made)
     box.clickable = 1;
     box.role = "button";
-    box.setFocusRing(box.style.focus.ringColor);
-    // (the transitions: applyAnimated(); WHY not setMotion() here: its timer came after them and wrote over them)
-    box.setMotionNow(STILL_MOTION);
 
     // GROUP: Layout (icon, label). iconPosition "top" puts the icon above the label.
     // WHY "100%" for a fixed size: the group fills the inside of the border; with the size of the box itself it was
@@ -559,26 +529,28 @@ const SmartButton = function (params = {}) {
         }
 
     endAutoLayout();
-    box.layout.setMotionNow(WAITING_MOTION);
-    paintPadding();
 
     // BOX: Waiting cover (clear: the content fades under it; it holds the animation and takes the mouse)
     box.waitingCover = startBox(0, 0, "100%", "100%", {
         color: "transparent",
-        clickable: 1, // WHY: the button under it gets no hover look while waiting
+        clickable: 1, // WHY: it takes the mouse, so its "progress" cursor shows (the hover color: render())
         cursor: "progress",
     });
         if (box.waitingType == "dots") {
             box.waitingCover.icon = SmartButton.createDots(box.style.waiting.dots);
         } else {
-            const clock = Box(0, 0, 0, 0, { color: "transparent" });
-            clock.elem.innerHTML = SmartButton.createClockSvg(SmartButton.clocks[box.style.waiting.clock] || SmartButton.clocks.ozden);
-            box.waitingCover.icon = clock;
+            const clockStyle = SmartButton.clocks[box.style.waiting.clock] || SmartButton.clocks.ozden;
+            box.waitingCover.icon = Box(0, 0, 0, 0, { color: "transparent", html: SmartButton.createClockSvg(clockStyle) });
         }
     endBox();
     box.waitingCover.visible = 0;
 
     // *** OBJECT INIT CODE:
+
+    // WHY the look before the transitions: nothing fades in at the first view
+    applyStyle();
+    box.layout.setMotionNow(WAITING_MOTION);
+    applyAnimated();
 
     box.on("click", function (self, event) {
         press(event);
@@ -628,13 +600,7 @@ const SmartButton = function (params = {}) {
         render();
     });
 
-    applyAnimated();
-    render();
-
-    if (box.waiting == 1) {
-        box.waiting = 0;
-        box.setWaiting(1);
-    }
+    if (box.waiting == 1) box.setWaiting(1);
 
     return endObject(box);
 
@@ -704,10 +670,15 @@ SmartButton.styles = {
 
 // THE DARK TEMPLATES (2026-10-31, the draft _designs/smart-button-dark.htm): the shapes of ozdenType1-4 with the
 // colors of a dark page (the cards of Ozden Panel / Ozden Manager, #1A1A19). The icon turns white, the waiting clock
-// is the dark one, the dots yellow; the ask stays red.
-SmartButton.createDarkTemplate = function (box, hoverColor) {
+// is the dark one, the dots yellow; the ask stays orange.
+// THE EDGE AND THE BOTTOM LINE (the user, 2026-11-04): the edge of ozdenType1 in white (0.35) and its 2 px line in
+// white, a little fainter than there (0.2). A light tone on a dark template keeps them too.
+SmartButton.DARK_EDGE = White(0.35);
+SmartButton.DARK_BOTTOM_LINE = "inset 0 -2px 0 " + White(0.2);
+// boxKeys: only the keys of the box that differ from ozdenType1Dark (as the light templates from ozdenType1)
+SmartButton.createDarkTemplate = function (boxKeys, hoverColor = "#383835") {
     return {
-        box: box,
+        box: Object.assign({ color: "#2E2E2C", borderColor: SmartButton.DARK_EDGE, boxShadow: SmartButton.DARK_BOTTOM_LINE }, boxKeys),
         hover: { color: hoverColor },
         label: { textColor: White(0.85) },
         icon: { opacity: 0.85, filter: SmartButton.WHITE_ICON },
@@ -717,13 +688,9 @@ SmartButton.createDarkTemplate = function (box, hoverColor) {
         waiting: { clock: "ozdenDark", dots: { color: "#F1C74A" } },
     };
 };
-// THE EDGE AND THE BOTTOM LINE (the user, 2026-11-04): the edge of ozdenType1 in white (0.35) and its 2 px line in
-// white, a little fainter than there (0.2). A light tone on a dark template keeps them too.
-SmartButton.DARK_EDGE = White(0.35);
-SmartButton.DARK_BOTTOM_LINE = "inset 0 -2px 0 " + White(0.2);
-SmartButton.styles.ozdenType1Dark = SmartButton.createDarkTemplate({ color: "#2E2E2C", borderColor: SmartButton.DARK_EDGE, boxShadow: SmartButton.DARK_BOTTOM_LINE }, "#383835"); // an edge and a bottom line
-SmartButton.styles.ozdenType2Dark = SmartButton.createDarkTemplate({ color: "#2E2E2C", borderColor: SmartButton.DARK_EDGE, boxShadow: "none" }, "#383835"); // only the edge
-SmartButton.styles.ozdenType3Dark = SmartButton.createDarkTemplate({ color: "#2E2E2C", borderColor: White(0.1), boxShadow: "none" }, "#383835"); // a faint edge: the 0.1 of ozdenType3 in white (the user, 2026-11-04)
+SmartButton.styles.ozdenType1Dark = SmartButton.createDarkTemplate({}); // an edge and a bottom line
+SmartButton.styles.ozdenType2Dark = SmartButton.createDarkTemplate({ boxShadow: "none" }); // only the edge
+SmartButton.styles.ozdenType3Dark = SmartButton.createDarkTemplate({ borderColor: White(0.1), boxShadow: "none" }); // a faint edge: the 0.1 of ozdenType3 in white (the user, 2026-11-04)
 SmartButton.styles.ozdenType4Dark = SmartButton.createDarkTemplate({ color: White(0), border: 0, borderColor: "transparent", boxShadow: "none" }, White(0.08)); // a ghost
 
 // *** THE TONES (the user, 2026-11-04): the colors of the kit, with simple color names; a tone for a dark page ends
@@ -749,6 +716,15 @@ SmartButton.tones = {
     blueDark: { color: "#335A6B", hover: "#38657A", text: SmartButton.LIGHT_TEXT },
 };
 
+// THE LOOK, the one place of its order: style > tone > the template (styleName) > the defaults. It fills params.style
+// and returns params (getTemplateColors reads a template with it too).
+SmartButton.applyLook = function (params) {
+    SmartButton.applyTone(params);
+    basic.applyStylePackage(params, SmartButton.styles, SmartButtonDefaults);
+    mergeIntoIfMissing(params.style, SmartButtonDefaults.style);
+    return params;
+};
+
 // A tone as a style. No tone: the colors of the template (setTone("") makes a button gray again).
 SmartButton.getToneStyle = function (toneName, styleName) {
     if (!toneName) return SmartButton.getTemplateColors(styleName);
@@ -769,9 +745,7 @@ SmartButton.getToneStyle = function (toneName, styleName) {
 
 // The colors of a template: the button, the button under the mouse, its text and its icon
 SmartButton.getTemplateColors = function (styleName) {
-    const template = {};
-    mergeIntoIfMissing(template, SmartButton.styles[styleName] || {});
-    mergeIntoIfMissing(template, SmartButtonDefaults.style);
+    const template = SmartButton.applyLook({ styleName: styleName }).style;
     return {
         box: { color: template.box.color },
         hover: { color: template.hover.color },
