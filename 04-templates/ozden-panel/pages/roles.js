@@ -756,6 +756,7 @@ const RolesPage = function(params = {}) {
                 btnRoleMenu = createButton("•••", "", function() { });
                 btnRoleMenu.elem.setAttribute("aria-label", "Role actions");
                 btnRoleMenu.elem.style.marginTop = "12px";
+                btnRoleMenu.shrink = 0; // WHY: next to the growing name field it got narrower than its text on a narrow screen (the third dot was cut)
 
             endGroup();
 
