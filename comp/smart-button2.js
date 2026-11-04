@@ -11,21 +11,25 @@ Its samples: 02-comp-examples/new-smart-button*.htm (the model page: new-smart-b
 
 - A button with an icon and a text (or only one of them); the icon on the left or on top (iconPosition).
 - THE LOOK IN THREE STEPS (the user, 2026-11-04). The order: style > tone > the template.
-  1. styleName: the template, gray. "ozdenType1" (THE DEFAULT: #E3E3E3, a thin dark edge and a darker line at the
-     bottom), "ozdenType2" (no bottom line), "ozdenType3" (a faint edge), "ozdenType4" (a ghost: no surface, no edge,
-     only its hover is gray). For a dark page (2026-10-31, the draft _designs/smart-button-dark.htm):
+  1. styleName: the template (the shape), gray. "ozdenType1" (THE DEFAULT: #E3E3E3, a thin dark edge and a darker
+     line at the bottom), "ozdenType2" (no bottom line), "ozdenType3" (a faint edge), "ozdenType4" (a ghost: no
+     surface, no edge, only its hover is gray), "pill" (round, no edge, a bold text), "outlined" (round, a thicker
+     edge with a line at its bottom). For a dark page (2026-10-31, the draft _designs/smart-button-dark.htm):
      "ozdenType1Dark" ... "ozdenType4Dark" (#2E2E2C, a white text and icon, the dark waiting clock).
-  2. tone: a color of the kit (SmartButton.tones): "white", and the situations "primary" (the main action), "danger"
-     (a delete, a reject), "warning" (go on, but look first), "success" (after a good result), "info" (nothing
-     changes). "": the gray of the template. setTone() after create. The tones are light colors with the dark text of
-     the light templates (on a dark template give the text color with style too).
+     A template is only a style (SmartButton.styles).
+  2. tone: a color of the kit (SmartButton.tones), three colors: the button, the button under the mouse, its text.
+     "white", "cyan" (the main action), "orange" (a delete, a reject), "yellow" (go on, but look first), "green"
+     (after a good result), "blue" (nothing changes). For a dark page: "cyanDark", "orangeDark", "yellowDark",
+     "greenDark", "blueDark" (deeper, a light text and a white icon). "": the gray of the template. setTone().
+     A tone looks the same on every template: its text (and its icon) come with it.
   3. style: your own look, only the keys you change. A color is two colors: the button and the button under the mouse.
      style: { box: { color: "#9DC7B5" }, hover: { color: "#91BCA9" } }
   Pressed, a button gets a little smaller and darker (animated: 1, style.press): a press has no color of its own.
 - AN ICON BUTTON: labelText: "" -> the icon in the middle, no room at the sides; with no width it is a square
-  (40 x 40). The same template and tone as a text button. Give it an ariaLabel.
+  (44 x 44). The same template and tone as a text button. Give it an ariaLabel.
   An "auto" height keeps the room of style.layout.padding (Ex: padding [10, 10] -> 44 x 44).
-- HEIGHT: 40 by default. An icon on top of a text makes it "auto" (as high as its padding and content).
+- HEIGHT: 44 by default (the user, 2026-11-04: 40 looked narrow); every template, pill and outlined too. An icon on
+  top of a text makes it "auto" (as high as its padding and content).
 - KEYBOARD AND ACCESSIBILITY: role "button", Tab reaches it, Enter / Space press it (Space when it goes up), a focus
   ring only for the keyboard; ariaLabel for a button with only an icon (else labelText is read).
 - setEnabled(0): no click, no hover, out of the Tab order (aria-disabled): a flat light gray button, a faint edge, no
@@ -38,7 +42,8 @@ Its samples: 02-comp-examples/new-smart-button*.htm (the model page: new-smart-b
   form with an error must not ask "Sure?" first). press(): a press like a click (the ask too), Ex: Enter in a field.
 - WAITING: setWaiting(1) while a job runs (a download, a save): the text and the icon fade and a small animation is
   in the middle; the button can not be clicked. waitingType: "clock" (the default: the clock of the waiting views
-  with moving hands; waitingClock "ozden" or "ozdenDark") or "dots" (three dots one after the other).
+  with moving hands; style.waiting.clock "ozden", or "ozdenDark" in the dark templates) or "dots" (three dots one
+  after the other).
   setWaiting(0) ends it (after delay ms, if given). Nothing turns with prefers-reduced-motion.
   (comp/loading-screen.js draws its clock and its dots with SmartButton.createClockSvg / createDots)
 - MOTION: animated: 1 (default): pressed 0.94 and a little darker. ripple: 0 (default; 1 gives a wave from the
@@ -47,14 +52,16 @@ Its samples: 02-comp-examples/new-smart-button*.htm (the model page: new-smart-b
 
 USAGE:
 SmartButton({ labelText: "Cancel", onClick: function (self) { } }); // the default: ozdenType1, gray
-SmartButton({ tone: "primary", labelText: "Send", iconFile: "../assets/icons/send.png", onClick: send });
+SmartButton({ tone: "cyan", labelText: "Send", iconFile: "../assets/icons/send.png", onClick: send });
+SmartButton({ styleName: "pill", tone: "blue", labelText: "Follow" });
+SmartButton({ styleName: "ozdenType1Dark", tone: "blueDark", labelText: "Send" }); // on a dark page
 SmartButton({ styleName: "ozdenType2", tone: "white", labelText: "", iconFile: "trash.svg", ariaLabel: "Delete", ask: "Click again to delete.", onClick: deleteFile });
 SmartButton({ labelText: "Archive", style: { box: { color: "#C3DBCE" }, hover: { color: "#B5D0C1" } } }); // your own color
 const btnDownload = SmartButton({ labelText: "Download", onClick: function (self) {
     self.setWaiting(1);
     download().then(function () { self.setWaiting(0); });
 } });
-btnSave.setTone("success"); // another color after create ("": the gray of its template)
+btnSave.setTone("green"); // another color after create ("": the gray of its template)
 
 Started Date: January 2026
 Developer: Bugra Ozden
@@ -68,10 +75,10 @@ Webpage: https://bug7a.github.io/js-components/
 // Default values:
 const SmartButtonDefaults = {
     key: "0",
-    styleName: "ozdenType1", // the template (SmartButton.styles): "ozdenType1" (the default) ... "ozdenType4", "ozdenType1Dark" ... "ozdenType4Dark"
-    tone: "", // a color of the kit (SmartButton.tones): "white", "primary", "danger", "warning", "success", "info". "": the gray of the template. setTone()
+    styleName: "ozdenType1", // the template (SmartButton.styles): "ozdenType1" (the default) ... "ozdenType4", "pill", "outlined", "ozdenType1Dark" ... "ozdenType4Dark"
+    tone: "", // a color of the kit (SmartButton.tones): "white", "cyan", "orange", "yellow", "green", "blue", "cyanDark"... "": the gray of the template. setTone()
     width: "auto", // an icon button (labelText: "") is a square
-    height: 40, // "auto": as high as its padding and content (an icon on top of a text is "auto")
+    height: 44, // "auto": as high as its padding and content (an icon on top of a text is "auto")
     labelText: "Button", // "": an icon button
     iconFile: "", // "": no icon (Ex: "../comp/smart-button/alert-black.png")
     iconPosition: "left", // "left", "top"
@@ -79,7 +86,6 @@ const SmartButtonDefaults = {
     ariaLabel: "", // "": labelText is read. An icon button needs it (Ex: "Delete")
     waiting: 0, // 1: it waits (set later with setWaiting)
     waitingType: "clock", // "clock" (the default wait) or "dots"
-    waitingClock: "ozden", // the look of the clock: "ozden" (a white face, dark lines) or "ozdenDark" (SmartButton.clocks)
     animated: 1, // 1: pressed it gets smaller and darker (style.press). setAnimated()
     ripple: 0, // 1: a wave from the pressed point (it works with animated: 0 too). setRipple()
     ask: "", // "Click again to delete.": two clicks (the first one asks with a red button and this text in a bubble). setAsk()
@@ -117,7 +123,7 @@ const SmartButtonDefaults = {
             color: "#D9D9D9", // under the mouse (pressed: this color, darker)
         },
         // ask: the look of the button while it asks, and the bubble over it (Tooltip.BUBBLE_LOOK keys).
-        // #DE815B (2026-11-03, the user: the orange of danger, was #E8796D); its own value, not the danger tone,
+        // #DE815B (2026-11-03, the user: the orange of danger, was #E8796D); its own value, not the orange tone,
         // so the two can be changed apart.
         ask: {
             button: {
@@ -154,6 +160,7 @@ const SmartButtonDefaults = {
             time: 0.6, // s
         },
         waiting: {
+            clock: "ozden", // the look of the clock: "ozden" (a white face, dark lines) or "ozdenDark" (SmartButton.clocks)
             contentOpacity: 0.18, // the text and the icon while waiting
             clockSize: 30, // at most; a small button gets a smaller clock
             space: 14, // the room around the clock in a small button
@@ -168,7 +175,7 @@ const SmartButton = function (params = {}) {
     SmartButton.applyTone(params);
     basic.applyStylePackage(params, SmartButton.styles, SmartButtonDefaults);
     const hasText = (params.labelText !== "");
-    // WHY: 40 is the height of a row; an icon above its text needs more (about 60)
+    // WHY: 44 is the height of a row; an icon above its text needs more (about 60)
     if (params.iconPosition === "top" && hasText && params.height === undefined) params.height = "auto";
     mergeIntoIfMissing(params, SmartButtonDefaults);
     // AN ICON BUTTON (no text): a square when no width is given.
@@ -463,7 +470,7 @@ const SmartButton = function (params = {}) {
         box.tone = toneName || "";
         box.setStyle(SmartButton.getToneStyle(box.tone, box.styleName));
     };
-    // USAGE: button.setTone("success"), button.setTone("") (the gray of its template)
+    // USAGE: button.setTone("green"), button.setTone("") (the gray of its template)
 
     // The room inside: an icon button has none (its icon in the middle); an icon left of a text has a little less
     // on its side (style.layout.iconSideTrim)
@@ -565,7 +572,7 @@ const SmartButton = function (params = {}) {
             box.waitingCover.icon = SmartButton.createDots(box.style.waiting.dots);
         } else {
             const clock = Box(0, 0, 0, 0, { color: "transparent" });
-            clock.elem.innerHTML = SmartButton.createClockSvg(SmartButton.clocks[box.waitingClock] || SmartButton.clocks.ozden);
+            clock.elem.innerHTML = SmartButton.createClockSvg(SmartButton.clocks[box.style.waiting.clock] || SmartButton.clocks.ozden);
             box.waitingCover.icon = clock;
         }
     endBox();
@@ -667,61 +674,105 @@ SmartButton.injectCss = function () {
         "@media (prefers-reduced-motion: reduce) { .smart-button-hand, .smart-button-dot { animation: none !important; } }");
 };
 
-// *** THE TEMPLATES (the user, 2026-10-30: the buttons of 02-comp-examples/smart-button-3-ozden.htm), all gray.
-// A template has only the keys that differ from the default (ozdenType1). Its color: a tone, or style.
+// *** THE TEMPLATES (the shapes), all gray. A template is a style with only the keys that differ from the default
+// (ozdenType1); its color comes from a tone or from style. Every template has the default height (44).
+SmartButton.WHITE_ICON = "brightness(0) invert(1)"; // a CSS filter: any icon file turns white
+SmartButton.ROUND = 100; // pill, outlined: always round, at any height
+SmartButton.EDGE_WIDTH = 2; // outlined: the edge and the line at its bottom
+
 SmartButton.styles = {
+    // (the user, 2026-10-30: the buttons of 02-comp-examples/smart-button-3-ozden.htm)
     ozdenType1: SmartButtonDefaults.style, // an edge and a bottom line
     ozdenType2: { box: { boxShadow: "none" } }, // only the edge
     ozdenType3: { box: { borderColor: Black(0.1), boxShadow: "none" } }, // a faint edge
     ozdenType4: { box: { color: White(0), border: 0, borderColor: "transparent", boxShadow: "none" } }, // a ghost
+    // ROUND (the user, 2026-11-02: the buttons of 02-comp-examples/smart-button-alternatif.htm). WHY a smaller text
+    // and icon (the user, 2026-11-04): they were 52 px high with a 30 px icon; now as high as the other buttons
+    pill: { // no edge, a bold text
+        layout: { gap: 10, padding: [18, 0] },
+        icon: { width: 26, height: 26, opacity: 1 },
+        label: { fontSize: 18, fontFamily: "opensans-bold" },
+        box: { border: 0, borderColor: "transparent", round: SmartButton.ROUND, boxShadow: "none" },
+    },
+    outlined: { // a thicker edge with a line at its bottom
+        layout: { gap: 8, padding: [14, 0] },
+        icon: { width: 26, height: 26, opacity: 1 },
+        label: { fontSize: 18 },
+        box: { border: SmartButton.EDGE_WIDTH, round: SmartButton.ROUND, boxShadow: "inset 0 -" + SmartButton.EDGE_WIDTH + "px 0 " + Black(0.35) },
+    },
 };
 
 // THE DARK TEMPLATES (2026-10-31, the draft _designs/smart-button-dark.htm): the shapes of ozdenType1-4 with the
 // colors of a dark page (the cards of Ozden Panel / Ozden Manager, #1A1A19). The icon turns white, the waiting clock
-// is the dark one, the dots yellow; the ask stays red. Packages of params (a "style" key): waitingClock is a param.
-SmartButton.createDarkPackage = function (box, hoverColor) {
+// is the dark one, the dots yellow; the ask stays red.
+SmartButton.createDarkTemplate = function (box, hoverColor) {
     return {
-        style: {
-            box: box,
-            hover: { color: hoverColor },
-            label: { textColor: White(0.85) },
-            icon: { opacity: 0.85, filter: "brightness(0) invert(1)" },
-            focus: { ringColor: "rgba(101, 162, 147, 0.75)" },
-            disabled: { color: "#232322", borderColor: White(0.06), textColor: White(0.28), iconOpacity: 0.25 },
-            press: { brightness: 0.88 },
-            waiting: { dots: { color: "#F1C74A" } },
-        },
-        waitingClock: "ozdenDark",
+        box: box,
+        hover: { color: hoverColor },
+        label: { textColor: White(0.85) },
+        icon: { opacity: 0.85, filter: SmartButton.WHITE_ICON },
+        focus: { ringColor: "rgba(101, 162, 147, 0.75)" },
+        disabled: { color: "#232322", borderColor: White(0.06), textColor: White(0.28), iconOpacity: 0.25 },
+        press: { brightness: 0.88 },
+        waiting: { clock: "ozdenDark", dots: { color: "#F1C74A" } },
     };
 };
-SmartButton.styles.ozdenType1Dark = SmartButton.createDarkPackage({ color: "#2E2E2C", borderColor: White(0.16), boxShadow: "inset 0 -2px 0 rgba(0, 0, 0, 0.45)" }, "#383835"); // an edge and a bottom line
-SmartButton.styles.ozdenType2Dark = SmartButton.createDarkPackage({ color: "#2E2E2C", borderColor: White(0.16), boxShadow: "none" }, "#383835"); // only the edge
-SmartButton.styles.ozdenType3Dark = SmartButton.createDarkPackage({ color: "#2E2E2C", borderColor: White(0.06), boxShadow: "none" }, "#383835"); // a faint edge
-SmartButton.styles.ozdenType4Dark = SmartButton.createDarkPackage({ color: White(0), border: 0, borderColor: "transparent", boxShadow: "none" }, White(0.08)); // a ghost
+SmartButton.styles.ozdenType1Dark = SmartButton.createDarkTemplate({ color: "#2E2E2C", borderColor: White(0.16), boxShadow: "inset 0 -2px 0 rgba(0, 0, 0, 0.45)" }, "#383835"); // an edge and a bottom line
+SmartButton.styles.ozdenType2Dark = SmartButton.createDarkTemplate({ color: "#2E2E2C", borderColor: White(0.16), boxShadow: "none" }, "#383835"); // only the edge
+SmartButton.styles.ozdenType3Dark = SmartButton.createDarkTemplate({ color: "#2E2E2C", borderColor: White(0.06), boxShadow: "none" }, "#383835"); // a faint edge
+SmartButton.styles.ozdenType4Dark = SmartButton.createDarkTemplate({ color: White(0), border: 0, borderColor: "transparent", boxShadow: "none" }, White(0.08)); // a ghost
 
-// *** THE TONES (the user, 2026-11-04): white and the colors of the situations (chosen on the draft
-// _designs/smart-button-colors.htm, 2026-10-31). Only these colors are in the button: a page gives any other color
-// with style (Ex: 02-comp-examples/new-smart-button-alternatif.htm). A tone is written as a style: the color of the
-// button and its color under the mouse.
+// *** THE TONES (the user, 2026-11-04): the colors of the kit, with simple color names; a tone for a dark page ends
+// with "Dark". A tone is three colors: the button, the button under the mouse and its text (DARK_TEXT, or LIGHT_TEXT:
+// it turns the icon white too). The light ones are white and the colors of the situations (chosen on the draft
+// _designs/smart-button-colors.htm, 2026-10-31). Any other color: style (Ex: new-smart-button-alternatif.htm).
+SmartButton.DARK_TEXT = Black(0.75);
+SmartButton.LIGHT_TEXT = White(0.9);
 SmartButton.tones = {
-    white: { box: { color: "white" }, hover: { color: "whitesmoke" } },
-    primary: { box: { color: "#5BBAC1" }, hover: { color: "#50AEB5" } }, // the main action: Save, Send
-    danger: { box: { color: "#DE815B" }, hover: { color: "#D4724B" } }, // a delete, a reject
-    warning: { box: { color: "#F1C74A" }, hover: { color: "#E6BB3C" } }, // go on, but look first
-    success: { box: { color: "#7BC362" }, hover: { color: "#70B756" } }, // after a good result: Done
-    info: { box: { color: "#52A8D0" }, hover: { color: "#479CC4" } }, // nothing changes: Details, Help
+    white: { color: "white", hover: "whitesmoke", text: SmartButton.DARK_TEXT },
+    cyan: { color: "#5BBAC1", hover: "#50AEB5", text: SmartButton.DARK_TEXT }, // the main action: Save, Send
+    orange: { color: "#DE815B", hover: "#D4724B", text: SmartButton.DARK_TEXT }, // a delete, a reject
+    yellow: { color: "#F1C74A", hover: "#E6BB3C", text: SmartButton.DARK_TEXT }, // go on, but look first
+    green: { color: "#7BC362", hover: "#70B756", text: SmartButton.DARK_TEXT }, // after a good result: Done
+    blue: { color: "#52A8D0", hover: "#479CC4", text: SmartButton.DARK_TEXT }, // nothing changes: Details, Help
+    // For a dark page: the same colors, 45 % over the dark card #1A1A19 (53 % under the mouse).
+    // WHY 45 %: the light text reads on every one of them (contrast 4.8 - 6.7; 4.5 is enough)
+    cyanDark: { color: "#376265", hover: "#3C6F72", text: SmartButton.LIGHT_TEXT },
+    orangeDark: { color: "#724837", hover: "#82513C", text: SmartButton.LIGHT_TEXT },
+    yellowDark: { color: "#7B682F", hover: "#8C7633", text: SmartButton.LIGHT_TEXT },
+    greenDark: { color: "#46663A", hover: "#4D7440", text: SmartButton.LIGHT_TEXT },
+    blueDark: { color: "#335A6B", hover: "#38657A", text: SmartButton.LIGHT_TEXT },
 };
 
-// The two colors of a tone; with no tone, the two colors of the template (setTone("") makes a button gray again).
+// A tone as a style. No tone: the colors of the template (setTone("") makes a button gray again).
 SmartButton.getToneStyle = function (toneName, styleName) {
-    if (toneName) {
-        const tone = SmartButton.tones[toneName];
-        if (!tone) console.warn("SmartButton: tone not found: " + toneName);
-        return tone || {};
+    if (!toneName) return SmartButton.getTemplateColors(styleName);
+    const tone = SmartButton.tones[toneName];
+    if (!tone) {
+        console.warn("SmartButton: tone not found: " + toneName);
+        return {};
     }
-    const templateStyle = basic.applyStylePackage({ styleName: styleName }, SmartButton.styles, SmartButtonDefaults).style;
-    mergeIntoIfMissing(templateStyle, SmartButtonDefaults.style);
-    return { box: { color: templateStyle.box.color }, hover: { color: templateStyle.hover.color } };
+    // WHY the icon: an icon file is drawn dark; with a light text it turns white
+    const isLightText = (tone.text === SmartButton.LIGHT_TEXT);
+    return {
+        box: { color: tone.color },
+        hover: { color: tone.hover },
+        label: { textColor: tone.text },
+        icon: { filter: isLightText ? SmartButton.WHITE_ICON : "none" },
+    };
+};
+
+// The colors of a template: the button, the button under the mouse, its text and its icon
+SmartButton.getTemplateColors = function (styleName) {
+    const template = {};
+    mergeIntoIfMissing(template, SmartButton.styles[styleName] || {});
+    mergeIntoIfMissing(template, SmartButtonDefaults.style);
+    return {
+        box: { color: template.box.color },
+        hover: { color: template.hover.color },
+        label: { textColor: template.label.textColor },
+        icon: { filter: template.icon.filter },
+    };
 };
 
 // The tone goes under the style of the page, so a color the page gives still wins.
