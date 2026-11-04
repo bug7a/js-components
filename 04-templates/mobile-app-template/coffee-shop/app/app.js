@@ -350,7 +350,7 @@ App.createButton = function (params = {}) {
         ...params,
     });
 };
-// USAGE: App.createButton({ labelText: "Save", styleName: "primary", onClick: save });
+// USAGE: App.createButton({ labelText: "Save", tone: "cyan", onClick: save });
 
 // A button with only an icon (the header, a row of a list)
 App.createIconButton = function (iconPath, ariaLabel, onClick) {
@@ -359,7 +359,7 @@ App.createIconButton = function (iconPath, ariaLabel, onClick) {
         labelText: "",
         iconFile: App.makeIcon(iconPath, App.colors.text),
         ariaLabel: ariaLabel,
-        height: "auto", // WHY: as high as it is wide (10 + 24 + 10), not the default 40 of SmartButton
+        height: "auto", // WHY: as high as it is wide (10 + 24 + 10)
         style: { layout: { padding: [10, 10] } },
         onClick: onClick,
     });

@@ -60,7 +60,7 @@ App.addPage({
                 });
 
                 SmartButton({
-                    styleName: "primary",
+                    tone: "cyan",
                     labelText: "Add",
                     width: 80,
                     height: FIELD_HEIGHT,

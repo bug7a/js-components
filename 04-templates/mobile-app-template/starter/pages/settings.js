@@ -38,7 +38,7 @@ App.addPage({
         App.endCard();
 
         App.createButton({
-            styleName: "danger",
+            tone: "orange",
             labelText: "Delete my data",
             ask: "Click again to delete the saved data.",
             onClick: deleteSavedData,

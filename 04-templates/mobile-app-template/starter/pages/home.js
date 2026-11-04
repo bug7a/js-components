@@ -61,7 +61,7 @@ App.addPage({
                 height: 260,
                 content: function () {
                     App.createText("A panel from the bottom: for a short choice, a filter, a share menu...");
-                    App.createButton({ styleName: "primary", labelText: "Close", onClick: () => sheet.close() });
+                    App.createButton({ tone: "cyan", labelText: "Close", onClick: () => sheet.close() });
                 },
             });
         }
