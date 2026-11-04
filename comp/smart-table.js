@@ -4,6 +4,10 @@
 
 SmartTable- v25.07 - "Optimized for big data"
 
+WHEN TO USE IT (the user, 2026-11-04): to show very big data well, in both directions: very many rows (only the rows
+that are seen are made) and very many columns (it scrolls sideways). A table that looks better for data that is not so
+big: comp/data-table.js (DataTable). A few rows inside a text: comp/tiny-table.js (TinyTable).
+
 - SmartTable is a JavaScript table component designed to run smoothly even with millions of records. Thanks to its virtual scroll architecture, it only writes the visible rows to the DOM, eliminating memory and performance issues with large datasets. It makes data exploration easy with real-time filtering, multi-column sorting, and both horizontal and vertical scroll support. Custom cell designs can be created for each column via createCustomItemCell, allowing flexible visual content per column. Since column widths, heights, and colors are all configurable through parameters, it can be quickly adapted to different projects.
 
 

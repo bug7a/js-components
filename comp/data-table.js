@@ -6,9 +6,11 @@ Data Table - v26.10
 
 A table made from data: the columns from a list of objects, the rows from a list of arrays (or objects).
 (The new version of UITable, 2022 (its template 04-template-m1/js-data-table is gone): the m2 / m3 component pattern.)
+WHEN TO USE IT (the user, 2026-11-04): the better looking table (style packages, sorting, search, selection, your own
+cells), but the data it can hold has a limit: every row is a basic.js object (short and middle lists, up to some
+hundreds of rows). Very big data (thousands or millions of rows, very many columns): comp/smart-table.js (SmartTable:
+it makes only the rows that are seen). A few rows inside a text: comp/tiny-table.js (TinyTable).
 - Samples: 02-comp-examples/data-table.htm, data-table-2.htm ... data-table-5.htm (data: assets/data-table/).
-- FOR SHORT AND MIDDLE LISTS (up to some hundreds of rows): every row is a basic.js object. For very many rows
-  (thousands, millions) use comp/smart-table.js (SmartTable): it makes only the rows that are seen.
 - Sorting: a click on a sortable title (again: the other direction), the keyboard (Enter / Space on a title), sortBy().
 - Search: showSearch: 1 puts a SearchInput (comp/search-input-v2.js, load it first) in the header; search().
 - Selection: a click, the arrow keys (Home / End), Enter runs onRowClick. select(id), getSelectedData().

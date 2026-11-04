@@ -7,6 +7,9 @@ Tiny Table - v26.10
 A light table for short lists: a colored title row, one line rows (a long text ends with "..."), a soft color under
 the mouse. The new version of comp-m1/tiny-table.js with the same look. (comp/tiny-table.js and
 comp-m1/tiny-table.js have the same global name TinyTable: a page loads only one of them.)
+WHEN TO USE IT (the user, 2026-11-04): a small table between the lines of a page, like a table in a text, for small
+data that needs nothing more: it has no sorting, no search and no selection. A table with them: comp/data-table.js
+(DataTable); very big data: comp/smart-table.js (SmartTable).
 - columns: [{ title, width, align }]; rows: [["1", "404", "Not found"], ...]. The texts are plain text;
   allowHtml: 1 lets them be HTML (Ex: <b>bold</b>), only for texts of your own code, never for user input.
 - bodyHeight: "auto" (as high as the rows) or a number: the rows scroll (basic/scroll-bar.js ScrollBar when loaded).
