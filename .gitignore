@@ -41,3 +41,6 @@ _dist/
 
 # The screenshots of Claude's reports (2026-10-31): inside the repository so VS Code opens their links; never in git
 _screenshots/
+
+# The Tauri template stays on this computer until it is finished (the user, 2026-11-04): never add it
+04-templates/tauri-starter/
