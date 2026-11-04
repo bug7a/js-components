@@ -24,7 +24,7 @@
     // Dialog (comp-m4): a dialog over the page with fields and buttons. The look of the first dialog of
     // 02-comp-examples/smart-button-3-ozden.htm; the features of comp/modal.js.
     // A dialog for every situation (2026-10-31): the button types primary, danger, warning, success, info take the
-    // situation packages of SmartButton (primary, danger...: chosen on _designs/smart-button-colors.htm).
+    // tones of SmartButton (cyan, orange, yellow, green, blue: chosen on _designs/smart-button-colors.htm).
     // - Dialog({ buttons: [{ text, type: "primary" | "secondary" | "danger" | "warning" | "success" | "info" | "icon" }] })
     // - Dialog.confirm({ ..., danger: 1 }) / Dialog.confirm({ ..., confirmType: "warning" })
     // - Dialog.alert({ ..., buttonType: "success" })
@@ -49,7 +49,7 @@
 
     const LAUNCH_BUTTON_HEIGHT = 40;
 
-    // The situations: the button type of a dialog, the SmartButton package of its color, the dialog it opens
+    // The situations: the button type of a dialog, the SmartButton tone of its color, the dialog it opens
     const SITUATIONS = [
         { type: "primary", text: "Publish", open: function () { openPublishDialog(); } },
         { type: "danger", text: "Delete", open: function () { openDeleteConfirm(); } },
@@ -136,7 +136,7 @@
     const openAllTypes = function () {
         Dialog({
             titleText: "Every button type",
-            messageText: "The situation packages of SmartButton, as the Dialog uses them.",
+            messageText: "The tones of SmartButton, as the Dialog uses them.",
             width: 680, // the card (a number)
             buttons: [
                 { key: "secondary", text: "Cancel", type: "secondary" },
@@ -167,10 +167,10 @@
 
     // A button in the color of a situation: it opens the dialog of that situation
     const createSituationButton = function (situation) {
-        const styleName = DialogDefaults.style.buttons[situation.type].styleName;
+        const look = DialogDefaults.style.buttons[situation.type];
         const group = VGroup({ hug: 1, align: "center top", gap: 6, clipContent: 0 });
-            SmartButton({ styleName: styleName, labelText: situation.text, height: LAUNCH_BUTTON_HEIGHT, onClick: situation.open });
-            Label({ text: situation.type + " · " + styleName, fontSize: 11, textColor: Black(0.45) });
+            SmartButton({ styleName: look.styleName, tone: look.tone, labelText: situation.text, height: LAUNCH_BUTTON_HEIGHT, onClick: situation.open });
+            Label({ text: situation.type + " · " + look.tone, fontSize: 11, textColor: Black(0.45) });
         endGroup();
         return group;
     };
@@ -183,7 +183,7 @@
 
             Label({ text: "Dialog", fontSize: 26, bold: 1, textColor: Black(0.8) });
 
-            Label({ text: "A dialog for every situation (the button type of the dialog · the SmartButton package)", fontSize: 13, textColor: Black(0.5) });
+            Label({ text: "A dialog for every situation (the button type of the dialog · the SmartButton tone)", fontSize: 13, textColor: Black(0.5) });
 
             HGroup({ hug: 1, gap: 12, wrap: 1, align: "center top", clipContent: 0 });
                 SITUATIONS.forEach(createSituationButton);

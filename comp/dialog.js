@@ -11,9 +11,9 @@ NOTE: still in development (the user, 2026-10-29): more style packages come; the
 
 - Buttons (SmartButton of comp-m4, load it first): [{ text, type, key, iconFile, align, ask, ariaLabel, onClick }]
   - type: "primary" (the main action), "secondary" (Cancel), "danger" (a delete), "warning", "success", "info"
-    (the situation packages of SmartButton: primary, danger...), "icon" (only an icon: a square).
+    (the tones of SmartButton: cyan, orange, yellow, green, blue), "icon" (only an icon: a white square).
   - align: "left": at the left side of the footer (Ex: the trash); the others stay at the right side.
-  - ask: "Click again to delete." -> two clicks: the first one turns the button red and shows the text in a bubble
+  - ask: "Click again to delete." -> two clicks: the first one turns the button orange and shows the text in a bubble
     over it; the second one runs onClick. It forgets after 5 s. (The ask of SmartButton, 2026-10-30.)
   - onClick(dialog, button) returns false: the dialog stays open. A Promise: the button waits (its clock), the
     others are disabled, and the dialog closes when it ends (a rejected one keeps it open).
@@ -30,8 +30,9 @@ NOTE: still in development (the user, 2026-10-29): more style packages come; the
   (topIconFile: a file or an "<svg" text: dark in a light gray circle). The look: style.centered.
 - Motion: the cover comes from nothing and the card rises 50 px while it comes (0.2 s); it goes at once; none with reduced motion.
 - Style packages: "ozden" (default). (Dialog.styles)
-- The buttons (the user, 2026-10-30): style.buttons[type] = { styleName, style }: a style package of SmartButton
-  (primary / secondary / danger: "ozdenType1", icon: "ozdenType2") and only the keys that differ (the colors).
+- The buttons (the user, 2026-10-30): style.buttons[type] = { styleName, tone, style }: a template of SmartButton
+  ("ozdenType1"; icon: "ozdenType2"), a tone of it (primary: "cyan", danger: "orange"...; icon: "white"; the user,
+  2026-11-04) and only the keys that differ.
 - Scale (2026-11-01): scale multiplies every size of the dialog (its style, width, motion, its buttons and the bubble
   of their ask). null (default): basic.uiScale (1; a page fitted with page.fit() sets 1 / page.zoom: the dialog keeps
   its size on the screen). Dialog.confirm / alert / prompt take it too. The objects of content(dialog) are made by
@@ -111,22 +112,21 @@ const DialogDefaults = {
             // The buttons are on the band of the footer (its color and line, the user 2026-10-30), one under the other
             footerPadding: [22, 18],
         },
-        // The looks of the buttons: a style package of SmartButton and only what differs from it. The colors of the
-        // situations are the situation packages of SmartButton (2026-10-31, the draft _designs/smart-button-colors.htm)
+        // The looks of the buttons: a template of SmartButton, a tone of it and only what differs from them. The colors
+        // of the situations are the tones of SmartButton (2026-10-31, the draft _designs/smart-button-colors.htm)
         buttons: {
-            primary: { styleName: "primary", style: {} },
-            secondary: { styleName: "ozdenType1", style: {} }, // the gray of the package
-            danger: { styleName: "danger", style: {} },
-            warning: { styleName: "warning", style: {} },
-            success: { styleName: "success", style: {} },
-            info: { styleName: "info", style: {} },
+            primary: { styleName: "ozdenType1", tone: "cyan", style: {} },
+            secondary: { styleName: "ozdenType1", tone: "", style: {} }, // the gray of the template
+            danger: { styleName: "ozdenType1", tone: "orange", style: {} },
+            warning: { styleName: "ozdenType1", tone: "yellow", style: {} },
+            success: { styleName: "ozdenType1", tone: "green", style: {} },
+            info: { styleName: "ozdenType1", tone: "blue", style: {} },
+            // white, whitesmoke under the mouse (the user, 2026-11-04: as the trash of the SmartButton samples; it was
+            // a pink hover). An icon button has no room at its sides by itself.
             icon: {
                 styleName: "ozdenType2",
+                tone: "white",
                 style: {
-                    layout: { gap: 0, padding: [0, 0] },
-                    box: { color: "white" },
-                    hover: { color: "#FDF1EF" },
-                    active: { color: "#FDF1EF" },
                     icon: { opacity: 1 }, // (30 px until 2026-10-29)
                 },
             },
@@ -286,15 +286,14 @@ const Dialog = function (params = {}) {
         const style = JSON.parse(JSON.stringify(look.style));
         if (_s.ask) style.ask = _s.ask;
         if (box.scale === 1) return style;
-        return scaleButtonStyle(style, look.styleName);
+        return scaleButtonStyle(style, look);
     };
 
-    // WHY: SmartButton has no scale param: its whole style (the look over its package) is multiplied here, and the
-    //      button gets scale 1 (a SmartButton that has one must not multiply it again)
-    const scaleButtonStyle = function (style, styleName) {
-        const buttonParams = { styleName: styleName, style: style };
-        const fullStyle = basic.applyStylePackage(buttonParams, SmartButton.styles, SmartButtonDefaults).style;
-        mergeIntoIfMissing(fullStyle, SmartButtonDefaults.style);
+    // WHY: SmartButton has no scale param: its whole style (the look over its template and tone) is multiplied here,
+    //      and the button gets scale 1 (a SmartButton that has one must not multiply it again).
+    //      The whole style has the colors of the tone: a style given in full wins over a tone.
+    const scaleButtonStyle = function (style, look) {
+        const fullStyle = SmartButton.applyLook({ styleName: look.styleName, tone: look.tone, style: style }).style;
         const scaled = basic.scaleStyle(fullStyle, box.scale);
         // (the sizes that are not named like one)
         scaled.layout.iconSideTrim = fullStyle.layout.iconSideTrim * box.scale;
@@ -312,6 +311,7 @@ const Dialog = function (params = {}) {
 
         const button = SmartButton({
             styleName: look.styleName,
+            tone: look.tone || "",
             scale: 1, // WHY: its style is in the px of the dialog already (getButtonStyle)
             width: getButtonWidth(isIcon),
             height: isCentered ? _s.centered.buttonHeight : _s.footer.buttonHeight,
