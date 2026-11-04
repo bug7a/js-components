@@ -775,6 +775,20 @@
             table.remove();
         });
 
+        test("SmartTable: the numbers of the info line are in the language of the page, not always Turkish (locale)", async function () {
+            const records = [];
+            for (let i = 1; i <= 12499; i++) records.push({ id: i, name: "N", email: "", active: 1 });
+            const table = SmartTable({ width: 500, itemLineCount: 3, itemDataList: records });
+            await wait(200);
+            const pageText = table.boxInfoLine.label.text;
+            table.setLocale("tr-TR");
+            const turkishText = table.boxInfoLine.label.text;
+            const pageNumber = (12499).toLocaleString(document.documentElement.lang || "tr-TR");
+            check("SmartTable: the numbers of the info line are in the language of the page, not always Turkish (locale)",
+                pageText.endsWith("/ " + pageNumber) && turkishText.endsWith("/ 12.499"), pageText + " | " + turkishText);
+            table.remove();
+        });
+
         // *** FORM (comp/form.js)
 
         test("Form: a press that is not a click does not send; a click sends once", async function () {

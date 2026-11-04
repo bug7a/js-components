@@ -57,8 +57,11 @@
                 padding: [5, 5],
             });
 
+            // TRY: click a row, then ↑ ↓, Page Up / Page Down, Home / End (Enter: onSelect). Make the window taller or
+            // shorter: fitLineCount: 1 keeps the rows 40 px high (itemHeight) and changes their count. (2026-11-04)
             window.smartTable1 = SmartTable({
                 fillTestData: 1,
+                fitLineCount: 1,
                 titleDataList: titleDataList,
                 itemDataList: itemDataList,
                 createCustomItemCell: createCustomItemCell,

@@ -20,7 +20,17 @@ Webpage: https://bug7a.github.io/js-components/
 - Arama sütunu: Arama kutusunun sağındaki kutuya (ALL) basınca sütun listesi açılır. Arama sadece seçilen sütunda yapılır.
 -- searchTitleIndex: -1 (ALL: tüm sütunlar), showSearchTitleSelect: 0 ise kutu gizlenir.
 -- Liste için comp/context-menu.js yüklenmelidir. Yüklenmemiş ise, kutuya her basışta sıradaki sütuna geçer.
-- Eğer itemHeight 20px den küçük ise otomatik itemLineCount düşür ve eğer itemHeight büyükse 100px den itemLineCount arttır.
+- fitLineCount: 1 (2026-11-04): the rows are about itemHeight px high and their count follows the height of the table
+  (style.height "100%" in a window that grows or shrinks). 0 (default): itemLineCount rows share the height of the table.
+  setItemLineCount(count) makes another count of rows.
+- The keys (2026-11-04, canSelect: 1 by default): a click selects a row and gives the table the focus. The selected
+  row: style.selectedItemCellColor (null: the color of the row under the mouse) and the line style.selectedBar at its
+  left. Then ↑ ↓ move one row, Page Up / Page Down one page, Home / End to the first / the last record, Enter runs
+  onSelect like a click. The selected row stays seen after a sort or a filter. The edge of the table shows the focus
+  of the keyboard (style.focusRingColor). selectItem(itemData), clearSelection(), getSelectedIndex(),
+  box.selectedItemData. canSelect: 0: no selection and no keys (a click only runs onSelect).
+- locale (2026-11-04): the language of the numbers of the info line. "": the language of the page (<html lang>); a page
+  with no language keeps "tr-TR". Ex: "en-US" -> 12,499, "tr-TR" -> 12.499. setLocale(locale).
 - wheelScroll: 1 ise fare tekerleği tablonun satırlarını kaydırır (sayfa kaymaz). Varsayılan 0: tekerlek sayfayı kaydırır, satırlar scroll çubuğu ve butonlar ile kaydırılır.
 -- smartTable.setWheelScroll(1) ile sonradan açılabilir.
 - allowHtml (2026-10-29): 0 (varsayılan): hücre değerleri düz metin yazılır (kullanıcının yazdığı bir ad veya başlık
@@ -50,6 +60,9 @@ const SmartTableDefaults = {
     wheelScroll: 0, // 1: The mouse wheel scrolls the rows (and the page does not scroll). 0: The wheel is left to the page.
     allowHtml: 0, // 1: The cell values are written as HTML. 0: As plain text (safe for the text of the users)
     allTitlesText: "ALL",
+    canSelect: 1, // 1: a click or a key selects a row; Enter runs onSelect. 0: no selection, no keys
+    fitLineCount: 0, // 1: rows of about itemHeight px, as many as the height of the table holds
+    locale: "", // the numbers of the info line ("": the language of the page). Ex: "en-US", "tr-TR"
     sortByTitleIndex: 0,
     sortDirection: "A-Z", // "A-Z" or "Z-A"
     fillTestData: 0,
@@ -111,6 +124,9 @@ const SmartTableDefaults = {
         line1Color: "white",
         line2Color: "whitesmoke",
         highlightItemCellColor: "#F3E7C2",
+        selectedItemCellColor: null, // null: highlightItemCellColor (the row under the mouse)
+        selectedBar: { width: 3, color: "rgba(95, 158, 160, 0.9)" }, // the line at the left of the selected row (width 0: none)
+        focusRingColor: "rgba(95, 158, 160, 0.6)", // the edge of the table when the keys move its rows
         highlightTitleCellColor: White(0.2),
         verticalScrollWidth: 20,
         verticalScrollMargin: 2,
@@ -163,6 +179,8 @@ const SmartTable = function (params = {}) {
     const RESIZE_DELAY = 3; // ms
     const LOADING_MIN_ITEM_COUNT = 1000; // WHY: Küçük listelerde loading bir an yanıp sönmesin.
     const TEST_DATA_REPEAT_COUNT = 100000;
+    const DEFAULT_LOCALE = "tr-TR"; // WHY: the numbers were always Turkish before (2026-11-04); a page with no language keeps them
+    const targetItemHeight = box.itemHeight; // fitLineCount: the height of a row, before the rows share the height
 
     // *** PRIVATE FUNCTIONS:
 
@@ -190,6 +208,8 @@ const SmartTable = function (params = {}) {
     box.visibleItemDataList = [...box.itemDataList];
     // The SearchInput of the filter, made in createToolbar [var]. USAGE: table.searchInput.setText("") (a new list)
     box.searchInput = null;
+    // The selected record (canSelect: 1), null: none [var]. USAGE: table.selectItem(data), table.getSelectedIndex()
+    box.selectedItemData = null;
     // [var]
     box.titleCellList = [];
     // [var]
@@ -249,6 +269,8 @@ const SmartTable = function (params = {}) {
     const hideItemLine = function (itemLine) {
         itemLine.opacity = 0;
         itemLine.clickable = 0;
+        itemLine.itemData = null;
+        paintItemLine(itemLine);
     };
 
     const fillItemLine = function (itemLine, rowData) {
@@ -256,8 +278,7 @@ const SmartTable = function (params = {}) {
         itemLine.opacity = 1;
         itemLine.clickable = 1;
         itemLine.itemData = rowData; // WHY: Line a basıldığında bu bilgi kullanılacak.
-
-        // TODO: If selected itemData == this item data then make colored.
+        paintItemLine(itemLine);
 
         for (let j = 0; j < box.titleCellCount; j++) {
 
@@ -505,6 +526,7 @@ const SmartTable = function (params = {}) {
     box.clearColumnHighlight = function (titleCell) {
         if (!box.highlightTitle) return;
         paintColumn(titleCell, "transparent", "transparent");
+        box.itemLineList.forEach(paintItemLine); // WHY: the selected row gets its color back
     };
 
     box.applyColumnHighlight = function (titleCell) {
@@ -515,8 +537,9 @@ const SmartTable = function (params = {}) {
     // Tüm bilgi satırlarını oluştur.
     box.createItemLines = function () {
 
+        // WHY remove(): the objects of the old rows (and of the cells of the page) are cleaned, not only taken off the page
+        box.itemLineList.forEach(function (itemLine) { itemLine.remove(); });
         box.itemLineList = [];
-        box.boxItemLineGroup.html = "";
 
         for (let i = 0; i < box.itemLineCount; i++) {
             const itemLineIndex = i;
@@ -549,6 +572,10 @@ const SmartTable = function (params = {}) {
         endGroup();
 
         itemLine.on("click", function (self) {
+            if (box.canSelect == 1) {
+                box.selectItem(self.itemData);
+                box.elem.focus({ preventScroll: true }); // WHY preventScroll: the page must not move to the table
+            }
             box.onSelect(self.itemData);
         });
 
@@ -561,6 +588,31 @@ const SmartTable = function (params = {}) {
         for (let i = 0; i < box.titleCellCount; i++) {
             itemLine["itemCell" + i].color = color;
         }
+    };
+
+    // The color of the cells of a row: the selected record, else the row under the mouse (highlightLine), else none
+    const paintItemLine = function (itemLine) {
+
+        const isSelected = Boolean(itemLine.itemData) && itemLine.itemData === box.selectedItemData;
+        let color = "transparent";
+        if (itemLine.isHover && box.highlightLine) color = box.style.highlightItemCellColor;
+        if (isSelected) color = getSelectedColor();
+        paintItemLineCells(itemLine, color);
+
+        // WHY the bar: by default the selected row has the color of the row under the mouse; the bar tells them apart
+        const firstCell = itemLine["itemCell0"];
+        if (firstCell) firstCell.boxShadow = isSelected ? getSelectedBarShadow() : "none";
+
+    };
+
+    const getSelectedBarShadow = function () {
+        // WHY + the border: the edge of the table (style.boxBorder) is drawn over the first px of the row
+        const width = (basic.num(box.style.boxBorder.border) || 0) + box.style.selectedBar.width;
+        return "inset " + width + "px 0 0 " + box.style.selectedBar.color;
+    };
+
+    const getSelectedColor = function () {
+        return box.style.selectedItemCellColor || box.style.highlightItemCellColor;
     };
 
     // Hücre oluştur.
@@ -594,13 +646,13 @@ const SmartTable = function (params = {}) {
         endAutoLayout();
 
         itemCell.on("mouseover", function (self, event) {
-            if (!box.highlightLine) return;
-            paintItemLineCells(itemLine, box.style.highlightItemCellColor);
+            itemLine.isHover = 1;
+            paintItemLine(itemLine);
         });
 
         itemCell.on("mouseout", function (self, event) {
-            if (!box.highlightLine) return;
-            paintItemLineCells(itemLine, "transparent");
+            itemLine.isHover = 0;
+            paintItemLine(itemLine);
         });
 
         itemCell = box.createCustomItemCell(itemCell, titleDataIndex);
@@ -718,6 +770,96 @@ const SmartTable = function (params = {}) {
 
     };
 
+    // *** SELECTION AND KEYS (canSelect: 1):
+
+    // The index of the selected record in the records that are seen (filtered and sorted), -1: none
+    box.getSelectedIndex = function () {
+        if (!box.selectedItemData) return -1;
+        return box.visibleItemDataList.indexOf(box.selectedItemData);
+    };
+
+    // Selects a record (one of itemDataList, null: none) and scrolls the rows to it
+    box.selectItem = function (itemData) {
+        if (box.canSelect != 1) return;
+        box.selectedItemData = itemData || null;
+        scrollToSelected();
+        box.refreshData();
+    };
+    // USAGE: smartTable.selectItem(smartTable.visibleItemDataList[0])
+
+    box.clearSelection = function () {
+        box.selectItem(null);
+    };
+
+    box.setCanSelect = function (value) {
+        box.canSelect = basic.isOn(value) ? 1 : 0;
+        if (box.canSelect != 1) box.selectedItemData = null;
+        applyCanSelect();
+        box.refreshData();
+    };
+    // USAGE: smartTable.setCanSelect(0)
+
+    // The table takes the focus (Tab, a click on a row) only when it can select
+    const applyCanSelect = function () {
+        box.tabIndex = (box.canSelect == 1) ? 0 : null;
+        if (box.canSelect != 1) box.elem.blur();
+    };
+
+    // The edge of the table shows the focus of the keyboard (:focus-visible), not of the mouse.
+    // WHY on boxBorder (not setFocusRing): the rows cover an outline that is drawn inside the table itself
+    const paintFocus = function () {
+        const hasKeyboardFocus = box.elem.matches(":focus-visible");
+        box.boxBorder.css.outline = hasKeyboardFocus ? "2px solid " + box.style.focusRingColor : "none";
+        box.boxBorder.css.outlineOffset = "-2px";
+    };
+
+    // The rows move as little as they can to show the selected record
+    const scrollToSelected = function () {
+        const index = box.getSelectedIndex();
+        if (index == -1) return;
+        let topIndex = box.startedItemIndexForScrolling;
+        if (index < topIndex) topIndex = index;
+        if (index >= topIndex + box.itemLineCount) topIndex = index - box.itemLineCount + 1;
+        box.startedItemIndexForScrolling = clampScrollIndex(topIndex);
+        box.syncScrollPosition();
+    };
+
+    // A step of rows from the selected record. Nothing selected: a step down starts before the first record, up after the last.
+    const moveSelection = function (step) {
+        const count = box.visibleItemDataList.length;
+        if (count == 0) return;
+        let index = box.getSelectedIndex();
+        if (index == -1) index = (step > 0) ? -1 : count;
+        box.selectItem(box.visibleItemDataList[basic.clamp(index + step, 0, count - 1)]);
+    };
+
+    // ↑ ↓ one row, Page Up / Page Down one page, Home / End to the first / the last record (0: not a key of the rows)
+    const getKeyStep = function (key) {
+        const pageStep = box.itemLineCount;
+        const count = box.visibleItemDataList.length;
+        const steps = { ArrowDown: 1, ArrowUp: -1, PageDown: pageStep, PageUp: -pageStep, Home: -count, End: count };
+        return steps[key] || 0;
+    };
+
+    const onKeyDown = function (self, event) {
+
+        // WHY: only the table itself takes the keys (not its filter box); a key with Cmd / Ctrl / Alt is left to the page
+        if (box.canSelect != 1 || event.target != box.elem) return;
+        if (event.metaKey || event.ctrlKey || event.altKey) return;
+
+        if (event.key == "Enter") {
+            if (box.selectedItemData) box.onSelect(box.selectedItemData);
+            return;
+        }
+
+        const step = getKeyStep(event.key);
+        if (step == 0) return;
+        event.preventDefault(); // WHY: the arrows and the page keys must not scroll the page
+        moveSelection(step);
+        paintFocus(); // WHY: a table that got the focus with a click shows it once the keys are used
+
+    };
+
     box.scrollPage = function (direction) { // +1 ise aşağı (bir sayfa boyu), -1 ise yukarı
 
         const newIndex = clampScrollIndex(box.startedItemIndexForScrolling + (direction * box.itemLineCount));
@@ -749,12 +891,25 @@ const SmartTable = function (params = {}) {
         let end = box.startedItemIndexForScrolling + box.itemLineCount;
         if (end > totalData) end = totalData;
 
-        // Sayıları binlik ayırıcı ile formatlamak (12499 -> 12.499)
-        const formatNumber = (number) => number.toLocaleString('tr-TR');
-
         box.boxInfoLine.label.text = `${formatNumber(start)} - ${formatNumber(end)} / ${formatNumber(totalData)}`;
 
     };
+
+    // A number in the language of the numbers (locale): 12499 -> "12,499" (en) or "12.499" (tr)
+    const formatNumber = function (number) {
+        try {
+            return number.toLocaleString(box.locale || document.documentElement.lang || DEFAULT_LOCALE);
+        } catch (error) {
+            // WHY: a wrong language tag (Ex: "en_US") throws a RangeError
+            return number.toLocaleString(DEFAULT_LOCALE);
+        }
+    };
+
+    box.setLocale = function (locale) {
+        box.locale = locale;
+        box.updateInfoLabel();
+    };
+    // USAGE: smartTable.setLocale("en-US")
 
     box.setScrollToTop = function () {
         box.startedItemIndexForScrolling = 0;
@@ -828,6 +983,9 @@ const SmartTable = function (params = {}) {
             box.visibleItemDataList = filteredList;
 
             box.setScrollToTop();
+            // WHY: the selected record stays selected and seen after a sort or a filter; a record that is gone is not
+            if (box.getSelectedIndex() == -1) box.selectedItemData = null;
+            scrollToSelected();
             box.refreshData();
 
             box.showLoading(0);
@@ -1174,32 +1332,81 @@ const SmartTable = function (params = {}) {
     };
     // USAGE: smartTable.setWheelScroll(1)
 
-    box.createResizeEvent = function () {
+    // The height the rows share: the table without its title line and its info line
+    const getRowsHeight = function () {
+        return box.height - box.titleHeight - box.infoHeight;
+    };
 
-        const resizeUI = function () {
+    // The parts that depend on the size of the table (onResize)
+    const refreshLayout = function () {
 
-            if (box.recalcItemHeight) {
+        if (box.recalcItemHeight && box.fitLineCount == 1) {
 
-                const itemHeight = (box.height - box.titleHeight - box.infoHeight) / box.itemLineCount;
+            fitItemLines();
 
-                // WHY: Hesaplanan yükseklik mevcut itemHeight ile aynı ise satırlar hiç görünür yapılmıyordu.
-                if (box.itemHeight != itemHeight || (box.itemLineList[0] && !box.itemLineList[0].visible)) {
-                    box.setItemHeight(itemHeight);
-                }
+        } else if (box.recalcItemHeight) {
 
+            const itemHeight = getRowsHeight() / box.itemLineCount;
+
+            // WHY: Hesaplanan yükseklik mevcut itemHeight ile aynı ise satırlar hiç görünür yapılmıyordu.
+            if (box.itemHeight != itemHeight || (box.itemLineList[0] && !box.itemLineList[0].visible)) {
+                box.setItemHeight(itemHeight);
             }
 
-            box.stretchLastCell(box.calcLastCellWidth());
-            box.initScrollMetrics();
-            box.syncScrollPosition();
-            box.scrollBar.refreshScroll(); // Ekranı daraltırken, scroll gereksiz görünmesin diye.
+        }
 
-            box.refreshData();
+        box.stretchLastCell(box.calcLastCellWidth());
+        box.initScrollMetrics();
+        box.syncScrollPosition();
+        box.scrollBar.refreshScroll(); // Ekranı daraltırken, scroll gereksiz görünmesin diye.
 
-        };
+        box.refreshData();
+
+    };
+
+    // fitLineCount: 1 -> as many rows of about targetItemHeight as the table holds; they share its height exactly
+    const fitItemLines = function () {
+        const rowsHeight = getRowsHeight();
+        if (rowsHeight <= 0) return; // WHY: the table is not drawn yet
+        const lineCount = Math.max(1, Math.round(rowsHeight / targetItemHeight));
+        if (lineCount != box.itemLineList.length) {
+            box.setItemLineCount(lineCount);
+            return;
+        }
+        box.setItemHeight(rowsHeight / lineCount);
+    };
+
+    // Makes count rows: only these rows exist, they show the records from startedItemIndexForScrolling.
+    // (fitLineCount: 1 makes the count again when the size of the table changes.)
+    box.setItemLineCount = function (count) {
+
+        box.itemLineCount = Math.max(1, Math.round(count));
+        box.createItemLines();
+
+        const rowsHeight = getRowsHeight();
+        const hasRowsHeight = box.recalcItemHeight && rowsHeight > 0;
+        box.setItemHeight(hasRowsHeight ? rowsHeight / box.itemLineCount : box.itemHeight);
+
+        box.stretchLastCell(box.calcLastCellWidth());
+        box.startedItemIndexForScrolling = clampScrollIndex(box.startedItemIndexForScrolling);
+        scrollToSelected();
+        box.initScrollMetrics();
+        box.syncScrollPosition();
+        box.refreshData();
+
+    };
+    // USAGE: smartTable.setItemLineCount(20)
+
+    box.setFitLineCount = function (value) {
+        box.fitLineCount = basic.isOn(value) ? 1 : 0;
+        refreshLayout();
+    };
+    // USAGE: smartTable.setFitLineCount(1)
+
+    box.createResizeEvent = function () {
 
         box.onResize(function (self) {
-            box.resizeTimer = waitAndRun(box.resizeTimer, resizeUI, RESIZE_DELAY);
+            box.resizeTimer = waitAndRun(box.resizeTimer, refreshLayout, RESIZE_DELAY);
         });
 
     };
@@ -1315,6 +1522,10 @@ const SmartTable = function (params = {}) {
     box.createTitleLine();
     box.createItemLines();
     box.createScrollEvents();
+    box.on("keydown", onKeyDown);
+    box.on("focus", paintFocus);
+    box.on("blur", paintFocus);
+    applyCanSelect();
     box.stretchLastCell(box.calcLastCellWidth());
     box.updateSortIcon();
     box.updateSearchTitleSelect();
