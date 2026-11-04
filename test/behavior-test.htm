@@ -617,7 +617,7 @@
 
         test("SmartButton: a held Enter presses once", async function () {
             let count = 0;
-            const button = SmartButton({ styleName: "classic", labelText: "Go", onClick: function () { count++; } });
+            const button = SmartButton({ labelText: "Go", onClick: function () { count++; } });
             key(button.elem, "keydown", "Enter");
             key(button.elem, "keydown", "Enter", { repeat: true });
             key(button.elem, "keydown", "Enter", { repeat: true });
@@ -625,31 +625,38 @@
             button.remove();
         });
 
-        test("SmartButton: a tone colors any shape, and style wins over it", async function () {
-            const packageBefore = JSON.stringify(SmartButton.styles.primary);
-            const outlined = SmartButton({ styleName: "outlined", tone: "primary", labelText: "Go" });
-            check("SmartButton: outlined takes the edge of the tone", outlined.style.box.borderColor === SmartButton.TONES.primary.color, outlined.style.box.borderColor);
+        // 2026-11-04 (the user): a tone is three colors (the button, under the mouse, the text) on any template
+        test("SmartButton: a tone colors any template, and style wins over it", async function () {
+            const templateBefore = JSON.stringify(SmartButton.styles.ozdenType2);
+            const cyan = SmartButton.tones.cyan;
+            const outlined = SmartButton({ styleName: "outlined", tone: "cyan", labelText: "Go" });
+            check("SmartButton: outlined takes the colors of the tone", outlined.style.box.color === cyan.color && outlined.style.hover.color === cyan.hover && outlined.style.label.textColor === cyan.text, outlined.style.box.color);
             const own = SmartButton({ styleName: "pill", tone: "blue", style: { box: { color: "tomato" } }, labelText: "Go" });
-            check("SmartButton: style wins over tone", own.style.box.color === "tomato", own.style.box.color);
-            const shared = SmartButton({ styleName: "pill", tone: "blue", style: SmartButton.styles.primary, labelText: "Go" });
-            check("SmartButton: a package given as style is not changed", JSON.stringify(SmartButton.styles.primary) === packageBefore);
-            outlined.setTone("", "pill");
-            check("SmartButton: setTone goes back to the package", outlined.style.box.color === SmartButton.TONES.gray.tint && outlined.style.box.border === 0, outlined.style.box.color);
-            [outlined, own, shared].forEach(function (button) { button.remove(); });
+            check("SmartButton: style wins over tone", own.style.box.color === "tomato" && own.style.hover.color === SmartButton.tones.blue.hover, own.style.box.color + " / " + own.style.hover.color);
+            const shared = SmartButton({ tone: "green", style: SmartButton.styles.ozdenType2, labelText: "Go" });
+            check("SmartButton: a template given as style is not changed", JSON.stringify(SmartButton.styles.ozdenType2) === templateBefore);
+            const dark = SmartButton({ styleName: "ozdenType1Dark", tone: "cyanDark", labelText: "Go" });
+            check("SmartButton: the light text of a dark tone turns the icon white", dark.style.label.textColor === SmartButton.LIGHT_TEXT && dark.style.icon.filter === SmartButton.WHITE_ICON, dark.style.icon.filter);
+            outlined.setTone("");
+            const gray = SmartButton.getTemplateColors("outlined");
+            check("SmartButton: setTone(\"\") gives the colors of the template back", outlined.style.box.color === gray.box.color && outlined.style.label.textColor === gray.label.textColor, outlined.style.box.color);
+            [outlined, own, shared, dark].forEach(function (button) { button.remove(); });
         });
 
-        // 2026-11-03 (the user): 40 by default; ozdenType1 was 29 px with "auto"
-        test("SmartButton: 40 high by default, the shapes as high as their content", async function () {
+        // 2026-11-04 (the user): 44 by default and on every template (pill and outlined were 52; classic 36: gone)
+        test("SmartButton: 44 high on every template, an icon button is a square", async function () {
+            const ICON = "../comp/smart-button/alert-black.png";
             const plain = SmartButton({ labelText: "Go" });
-            const pill = SmartButton({ styleName: "pill", tone: "blue", labelText: "Go", iconFile: "../comp/smart-button/alert-black.png" });
-            const classic = SmartButton({ styleName: "classic", labelText: "Go" });
-            const iconOnTop = SmartButton({ labelText: "Go", iconFile: "../comp/smart-button/alert-black.png", iconPosition: "top" });
+            const pill = SmartButton({ styleName: "pill", tone: "blue", labelText: "Go", iconFile: ICON });
+            const outlined = SmartButton({ styleName: "outlined", labelText: "Go", iconFile: ICON });
+            const iconButton = SmartButton({ labelText: "", ariaLabel: "Alert", iconFile: ICON });
+            const iconOnTop = SmartButton({ labelText: "Go", iconFile: ICON, iconPosition: "top" });
             await basic.nextFrame();
-            check("SmartButton: the default is 40 high", plain.elem.offsetHeight === 40, plain.elem.offsetHeight);
-            check("SmartButton: pill keeps its 52 px", pill.elem.offsetHeight === 52, pill.elem.offsetHeight);
-            check("SmartButton: classic keeps its height", classic.elem.offsetHeight === 36, classic.elem.offsetHeight);
-            check("SmartButton: an icon on top is not cut at 40", iconOnTop.elem.offsetHeight > 40, iconOnTop.elem.offsetHeight);
-            [plain, pill, classic, iconOnTop].forEach(function (button) { button.remove(); });
+            check("SmartButton: the default is 44 high", plain.elem.offsetHeight === 44, plain.elem.offsetHeight);
+            check("SmartButton: pill and outlined are 44 high too", pill.elem.offsetHeight === 44 && outlined.elem.offsetHeight === 44, pill.elem.offsetHeight + " / " + outlined.elem.offsetHeight);
+            check("SmartButton: an icon button is a 44 x 44 square", iconButton.elem.offsetWidth === 44 && iconButton.elem.offsetHeight === 44, iconButton.elem.offsetWidth + " x " + iconButton.elem.offsetHeight);
+            check("SmartButton: an icon on top is not cut at 44", iconOnTop.elem.offsetHeight > 44, iconOnTop.elem.offsetHeight);
+            [plain, pill, outlined, iconButton, iconOnTop].forEach(function (button) { button.remove(); });
         });
 
         // *** TOGGLE (comp/toggle.js)

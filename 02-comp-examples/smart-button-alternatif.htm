@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartButton</title>
+    <title>SmartButton - Pill and outlined</title>
 
     <!-- LIBRARY FILES -->
     <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
@@ -19,18 +19,64 @@
 
         /* Bismillah */
 
-        // SMARTBUTTON · STATUS BUTTONS
-        // The shape comes from styleName, the color from tone (a name of SmartButton.TONES).
-        // - SmartButton({ styleName: "pill", tone: "orange", labelText, iconFile })
-        // - "pill": a soft tint, "pillSolid": the full color, "outlined": a colored edge
-        // - button.setTone("blue", "pillSolid"), button.setText(text), button.setIcon(file) -> after create
+        // SMARTBUTTON · STATUS BUTTONS (2026-11-04)
+        // The shape is a template of SmartButton ("pill", "outlined"); the colors are this page's own (SmartButton
+        // keeps only the tones of the kit). As high as every other button (44).
+        // Every button is one SmartButton({ ... }) call; the colors and the icons come from the small helpers below.
+        // - SmartButton({ styleName: "pill", labelText, iconFile: pillIcon("clock", COLORS.orange), style: pillColors(COLORS.orange) })
+        // - pillColors: a soft tint, pillSolidColors: the full color, outlinedColors: a colored edge
+        // - button.setStyle(colors), button.setText(text), button.setIcon(file) -> after create
         // TRY: click the buttons of "Click to change": "Add" becomes "Added" (click again: back to "Add").
 
         // *** VARIABLES:
 
         const ROW_MAX_WIDTH = 960;
-        const ICON_BUTTON_SIZE = 52;
         const LIGHT_GRAY_CIRCLE = "#A9A9A9";
+
+        // THE COLORS OF THIS PAGE (the old SmartButton.TONES): color: the strong color; solidHover: its hover;
+        // tint / hover: the soft surface; deep: the text of outlined; pillText: the text of pill (color when not
+        // given); light: the light part of a two-tone icon. A new color is one new row.
+        const COLORS = {
+            gray: { color: "#6E6F74", deep: "#3A3A3A", tint: "#F0F0F0", hover: "#E6E6E6", solidHover: "#5F6065", light: "#C4C5C9", pillText: "#3A3A3A" },
+            blue: { color: "#2F6FED", deep: "#2563D8", tint: "#E4EDFD", hover: "#D8E5FC", solidHover: "#2563D8", light: "#93B7F7" },
+            green: { color: "#3F9A6C", deep: "#2F8259", tint: "#E6F5EE", hover: "#D9EFE4", solidHover: "#358A5E", light: "#9FD6BC" },
+            purple: { color: "#8B5CF0", deep: "#7C4FE0", tint: "#EFE9FD", hover: "#E6DDFC", solidHover: "#7C4FE0", light: "#C9B4F7" },
+            orange: { color: "#F28C33", deep: "#B8651E", tint: "#FDF1E3", hover: "#FCE8D2", solidHover: "#E57E25", light: "#F7C393" },
+            red: { color: "#E5564A", deep: "#C8443A", tint: "#FDECEA", hover: "#FBDFDC", solidHover: "#D84A3E", light: "#F4B1AB" },
+            yellow: { color: "#D9A400", deep: "#8F6B00", tint: "#FFF7DB", hover: "#FFF0C2", solidHover: "#C99700", light: "#F5DC8A", pillText: "#B88A00" },
+            teal: { color: "#0E9A9A", deep: "#0B7F7F", tint: "#E4F5F5", hover: "#D6EEEE", solidHover: "#0B8C8C", light: "#92D6D6" },
+            sky: { color: "#4FB5D4", deep: "#2A7C93", tint: "#E3F7FB", hover: "#D5F2F8", solidHover: "#3FA6C6", light: "#A5DEEC", pillText: "#2E8BC0" },
+            navy: { color: "#2A3A8C", deep: "#1C2A78", tint: "#DFE3EF", hover: "#D3D8E9", solidHover: "#1C2A78", light: "#8F9AC6" },
+            pink: { color: "#E8457C", deep: "#C93668", tint: "#FDE8EF", hover: "#FBDBE6", solidHover: "#DC3A70", light: "#F5AFC7" },
+        };
+
+        // THE COLORS OF A BUTTON: a style made from a color of COLORS (the shape is the template of SmartButton)
+        // pill: a soft tint, a bold text in the color
+        const pillColors = function (color) {
+            return {
+                box: { color: color.tint },
+                hover: { color: color.hover },
+                label: { textColor: color.pillText || color.color },
+            };
+        };
+
+        // pill: the full color, a white text
+        const pillSolidColors = function (color) {
+            return {
+                box: { color: color.color },
+                hover: { color: color.solidHover },
+                label: { textColor: "white" },
+            };
+        };
+
+        // outlined: a colored edge with the line at its bottom, a deep text
+        const outlinedColors = function (color) {
+            return {
+                box: { color: color.tint, borderColor: color.color, boxShadow: "inset 0 -" + SmartButton.EDGE_WIDTH + "px 0 " + color.color },
+                hover: { color: color.hover },
+                label: { textColor: color.deep },
+            };
+        };
 
         // The icons: a filled circle and a white mark in it (circleColor, markColor)
         const MARKS = {
@@ -76,78 +122,23 @@
             return svgIcon(TWO_TONE_ICONS[name].split("LIGHT").join(lightColor).split("STRONG").join(strongColor));
         };
 
-        // A state in its own color on a soft tint of it
-        const pillState = function (text, mark, toneName) {
-            const tone = SmartButton.TONES[toneName];
-            return { text: text, styleName: "pill", tone: toneName, icon: circleIcon(mark, tone.pillText || tone.color, "white") };
+        // THE ICON OF A BUTTON: a colored circle with a white mark (pill), a white circle with a colored mark (a full
+        // pill), a gray circle (a state before it is chosen), a two-tone drawing (outlined)
+        const pillIcon = function (mark, color) {
+            return circleIcon(mark, color.pillText || color.color, "white");
         };
 
-        // A gray state, before it is chosen
-        const grayState = function (text, mark, next) {
-            return { text: text, styleName: "pill", tone: "", icon: circleIcon(mark, LIGHT_GRAY_CIRCLE, "white"), next: next };
+        const solidIcon = function (mark, color) {
+            return circleIcon(mark, "white", color.color);
         };
 
-        // A state in the full color: the circle is white and its mark has the color
-        const solidState = function (text, mark, toneName, next) {
-            const tone = SmartButton.TONES[toneName];
-            return { text: text, styleName: "pillSolid", tone: toneName, icon: circleIcon(mark, "white", tone.color), next: next };
+        const grayIcon = function (mark) {
+            return circleIcon(mark, LIGHT_GRAY_CIRCLE, "white");
         };
 
-        // A colored edge and a two-tone icon
-        const outlinedState = function (text, iconName, toneName) {
-            const tone = SmartButton.TONES[toneName];
-            return { text: text, styleName: "outlined", tone: toneName, icon: twoToneIcon(iconName, tone.light, tone.color) };
+        const outlinedIcon = function (name, color) {
+            return twoToneIcon(name, color.light, color.color);
         };
-
-        // THE STATES: the text, the shape, the color, the icon. next: the state a click changes it to
-        const STATES = {
-            // Order status
-            draft: grayState("Draft", "pencil"),
-            waiting: pillState("Waiting", "clock", "orange"),
-            preparing: pillState("Preparing", "dots", "blue"),
-            onTheWay: pillState("On the way", "arrow", "purple"),
-            accepted: pillState("Accepted", "check", "green"),
-            declined: pillState("Declined", "cross", "red"),
-            // Click to change
-            add: grayState("Add", "plus", "added"),
-            added: solidState("Added", "check", "blue", "add"),
-            follow: grayState("Follow", "plus", "following"),
-            following: solidState("Following", "check", "purple", "follow"),
-            like: grayState("Like", "heart", "liked"),
-            liked: solidState("Liked", "heart", "pink", "like"),
-            save: grayState("Save", "bookmark", "saved"),
-            saved: solidState("Saved", "bookmark", "teal", "save"),
-            // Labels
-            newItem: pillState("New", "star", "yellow"),
-            verified: pillState("Verified", "check", "teal"),
-            info: pillState("Info", "info", "sky"),
-            locked: pillState("Locked", "lock", "gray"),
-            // Outlined
-            music: outlinedState("Music", "music", "blue"),
-            travel: outlinedState("Travel", "compass", "green"),
-            photos: outlinedState("Photos", "photo", "purple"),
-            coffee: outlinedState("Coffee", "coffee", "orange"),
-            games: outlinedState("Games", "gamepad", "navy"),
-            gifts: outlinedState("Gifts", "gift", "pink"),
-        };
-
-        // ICON ONLY: the outlined look without a text. Its name is read by a screen reader (ariaLabel).
-        const ICON_BUTTONS = [
-            outlinedState("Display", "display", "blue"),
-            outlinedState("Wallet", "wallet", "green"),
-            outlinedState("Notes", "notes", "purple"),
-            outlinedState("Boost", "rocket", "orange"),
-            outlinedState("Privacy", "lock", "navy"),
-            outlinedState("Weather", "cloudSun", "sky"),
-        ];
-
-        // THE ROWS: a title and the states side by side
-        const ROWS = [
-            { title: "Order status", states: ["draft", "waiting", "preparing", "onTheWay", "accepted", "declined"] },
-            { title: "Click to change", states: ["add", "follow", "like", "save"] },
-            { title: "Labels", states: ["newItem", "verified", "info", "locked"] },
-            { title: "Outlined", states: ["music", "travel", "photos", "coffee", "games", "gifts"] },
-        ];
 
         // *** START:
 
@@ -160,8 +151,60 @@
 
                 VGroup({ width: "100%", height: "auto", align: "center top", gap: 40, padding: [20, 60], clipContent: 0 });
 
-                    ROWS.forEach(createRow);
-                    createIconRow();
+                    startRow("Order status");
+                        SmartButton({ styleName: "pill", labelText: "Draft", iconFile: grayIcon("pencil"), style: pillColors(COLORS.gray) });
+                        SmartButton({ styleName: "pill", labelText: "Waiting", iconFile: pillIcon("clock", COLORS.orange), style: pillColors(COLORS.orange) });
+                        SmartButton({ styleName: "pill", labelText: "Preparing", iconFile: pillIcon("dots", COLORS.blue), style: pillColors(COLORS.blue) });
+                        SmartButton({ styleName: "pill", labelText: "On the way", iconFile: pillIcon("arrow", COLORS.purple), style: pillColors(COLORS.purple) });
+                        SmartButton({ styleName: "pill", labelText: "Accepted", iconFile: pillIcon("check", COLORS.green), style: pillColors(COLORS.green) });
+                        SmartButton({ styleName: "pill", labelText: "Declined", iconFile: pillIcon("cross", COLORS.red), style: pillColors(COLORS.red) });
+                    endRow();
+
+                    // A click changes the look; a second click brings it back
+                    startRow("Click to change");
+                        createSwitchButton(
+                            { text: "Add", icon: grayIcon("plus"), colors: pillColors(COLORS.gray) },
+                            { text: "Added", icon: solidIcon("check", COLORS.blue), colors: pillSolidColors(COLORS.blue) }
+                        );
+                        createSwitchButton(
+                            { text: "Follow", icon: grayIcon("plus"), colors: pillColors(COLORS.gray) },
+                            { text: "Following", icon: solidIcon("check", COLORS.purple), colors: pillSolidColors(COLORS.purple) }
+                        );
+                        createSwitchButton(
+                            { text: "Like", icon: grayIcon("heart"), colors: pillColors(COLORS.gray) },
+                            { text: "Liked", icon: solidIcon("heart", COLORS.pink), colors: pillSolidColors(COLORS.pink) }
+                        );
+                        createSwitchButton(
+                            { text: "Save", icon: grayIcon("bookmark"), colors: pillColors(COLORS.gray) },
+                            { text: "Saved", icon: solidIcon("bookmark", COLORS.teal), colors: pillSolidColors(COLORS.teal) }
+                        );
+                    endRow();
+
+                    startRow("Labels");
+                        SmartButton({ styleName: "pill", labelText: "New", iconFile: pillIcon("star", COLORS.yellow), style: pillColors(COLORS.yellow) });
+                        SmartButton({ styleName: "pill", labelText: "Verified", iconFile: pillIcon("check", COLORS.teal), style: pillColors(COLORS.teal) });
+                        SmartButton({ styleName: "pill", labelText: "Info", iconFile: pillIcon("info", COLORS.sky), style: pillColors(COLORS.sky) });
+                        SmartButton({ styleName: "pill", labelText: "Locked", iconFile: pillIcon("lock", COLORS.gray), style: pillColors(COLORS.gray) });
+                    endRow();
+
+                    startRow("Outlined");
+                        SmartButton({ styleName: "outlined", labelText: "Music", iconFile: outlinedIcon("music", COLORS.blue), style: outlinedColors(COLORS.blue) });
+                        SmartButton({ styleName: "outlined", labelText: "Travel", iconFile: outlinedIcon("compass", COLORS.green), style: outlinedColors(COLORS.green) });
+                        SmartButton({ styleName: "outlined", labelText: "Photos", iconFile: outlinedIcon("photo", COLORS.purple), style: outlinedColors(COLORS.purple) });
+                        SmartButton({ styleName: "outlined", labelText: "Coffee", iconFile: outlinedIcon("coffee", COLORS.orange), style: outlinedColors(COLORS.orange) });
+                        SmartButton({ styleName: "outlined", labelText: "Games", iconFile: outlinedIcon("gamepad", COLORS.navy), style: outlinedColors(COLORS.navy) });
+                        SmartButton({ styleName: "outlined", labelText: "Gifts", iconFile: outlinedIcon("gift", COLORS.pink), style: outlinedColors(COLORS.pink) });
+                    endRow();
+
+                    // ONLY AN ICON (labelText: ""): a circle; its name is read by a screen reader (ariaLabel)
+                    startRow("Outlined, only an icon");
+                        SmartButton({ styleName: "outlined", labelText: "", ariaLabel: "Display", iconFile: outlinedIcon("display", COLORS.blue), style: outlinedColors(COLORS.blue) });
+                        SmartButton({ styleName: "outlined", labelText: "", ariaLabel: "Wallet", iconFile: outlinedIcon("wallet", COLORS.green), style: outlinedColors(COLORS.green) });
+                        SmartButton({ styleName: "outlined", labelText: "", ariaLabel: "Notes", iconFile: outlinedIcon("notes", COLORS.purple), style: outlinedColors(COLORS.purple) });
+                        SmartButton({ styleName: "outlined", labelText: "", ariaLabel: "Boost", iconFile: outlinedIcon("rocket", COLORS.orange), style: outlinedColors(COLORS.orange) });
+                        SmartButton({ styleName: "outlined", labelText: "", ariaLabel: "Privacy", iconFile: outlinedIcon("lock", COLORS.navy), style: outlinedColors(COLORS.navy) });
+                        SmartButton({ styleName: "outlined", labelText: "", ariaLabel: "Weather", iconFile: outlinedIcon("cloudSun", COLORS.sky), style: outlinedColors(COLORS.sky) });
+                    endRow();
 
                 endGroup();
 
@@ -173,72 +216,33 @@
 
         // *** FUNCTIONS:
 
-        // GROUP: A title and its buttons, side by side (they wrap on a narrow screen)
-        const createRow = function (row) {
+        // GROUP: A title and its buttons side by side (they wrap on a narrow screen); the buttons are made between the two
+        const startRow = function (title) {
             VGroup({ width: "100%", height: "auto", align: "center top", gap: 16, clipContent: 0, css: { maxWidth: ROW_MAX_WIDTH + "px" } });
-
-                Label({ text: row.title, fontSize: 14, textColor: Black(0.45) });
-
+                Label({ text: title, fontSize: 14, textColor: Black(0.45) });
                 HGroup({ width: "100%", height: "auto", align: "center center", gap: 14, wrap: 1, clipContent: 0 });
+        };
 
-                    row.states.forEach(createStatusButton);
-
+        const endRow = function () {
                 endGroup();
-
             endGroup();
         };
 
-        // GROUP: The buttons with only an icon
-        const createIconRow = function () {
-            VGroup({ width: "100%", height: "auto", align: "center top", gap: 16, clipContent: 0, css: { maxWidth: ROW_MAX_WIDTH + "px" } });
-
-                Label({ text: "Outlined, only an icon", fontSize: 14, textColor: Black(0.45) });
-
-                HGroup({ width: "100%", height: "auto", align: "center center", gap: 14, wrap: 1, clipContent: 0 });
-
-                    ICON_BUTTONS.forEach(createIconButton);
-
-                endGroup();
-
-            endGroup();
-        };
-
-        // SMARTBUTTON: A round button with only an icon
-        const createIconButton = function (state) {
+        // SMARTBUTTON: A pill that changes its look at every click. off: its look when made, on: after a click.
+        // off, on: { text, icon, colors }
+        const createSwitchButton = function (off, on) {
             return SmartButton({
-                styleName: state.styleName,
-                tone: state.tone,
-                labelText: "",
-                ariaLabel: state.text,
-                iconFile: state.icon,
-                width: ICON_BUTTON_SIZE,
-                height: ICON_BUTTON_SIZE,
-                style: { layout: { padding: 0 } },
-            });
-        };
-
-        // SMARTBUTTON: A status button
-        const createStatusButton = function (stateName) {
-            let state = STATES[stateName];
-
-            return SmartButton({
-                styleName: state.styleName,
-                tone: state.tone,
-                labelText: state.text,
-                iconFile: state.icon,
+                styleName: "pill",
+                labelText: off.text,
+                iconFile: off.icon,
+                style: off.colors,
                 onClick: function (self) {
-                    if (!state.next) return;
-                    state = STATES[state.next];
-                    showState(self, state);
+                    const next = (self.labelText == off.text) ? on : off;
+                    self.setText(next.text);
+                    self.setIcon(next.icon);
+                    self.setStyle(next.colors);
                 },
             });
-        };
-
-        // Changes the look of a button after create
-        const showState = function (button, state) {
-            button.setText(state.text);
-            button.setIcon(state.icon);
-            button.setTone(state.tone, state.styleName);
         };
 
     </script>

@@ -112,7 +112,6 @@
         const style = JSON.parse(JSON.stringify(data.look));
         if (option && option.style) Object.keys(option.style).forEach(function (part) { style[part] = Object.assign({}, style[part], option.style[part]); });
         return SmartButton(Object.assign({
-            styleName: "classic",
             width: data.width || "auto",
             height: BUTTON_HEIGHT,
             labelText: data.text,
@@ -140,11 +139,11 @@
 
     const makeWaiting = function (button, option) {
         button.elem.style.setProperty("--bench-color", button.style.box.color);
+        button.setWaiting(1); // WHY first: the waiting cover is made at the first wait (SmartButton v26.11)
         if (option.css) {
             button.elem.classList.add("bench-" + option.key);
             button.waitingCover.elem.classList.add("bench-" + option.key + "-cover");
         }
-        button.setWaiting(1);
     };
 
     const createPart = function (title, text, options, makeState) {

@@ -343,25 +343,11 @@ CATALOG.COMPONENTS = [
             { file: "02-comp-examples/smart-button.htm", title: "The default (the model page)" },
             { file: "02-comp-examples/smart-button-3-ozden.htm", title: "Dialogs (ozden)" },
             { file: "02-comp-examples/smart-button-alternatif.htm", title: "Pill and outlined (an alternative)" },
-            { file: "02-comp-examples/smart-button-4-dark.htm", title: "Dark packages" },
+            { file: "02-comp-examples/smart-button-4-dark.htm", title: "Dark templates and tones" },
             { file: "02-comp-examples/smart-button-5-features.htm", title: "All features" },
         ],
-        en: "The default button: an icon and a text (or one of them), ozden, pill and outlined style packages, a waiting clock or dots while a job runs, and a two-click ask with a bubble.",
-        tr: "Varsayılan düğme: ikon ve yazı (ya da biri), ozden, pill ve outlined stil paketleri, bir iş sürerken bekleme saati ya da noktaları ve balonlu iki tıklamalı onay.",
-    },
-    {
-        // A DRAFT (the user, 2026-11-04): it takes the place of smart-button.js when it is ready
-        key: "smart-button2", name: "SmartButton", cat: "actions",
-        source: "comp/smart-button2.js",
-        samples: [
-            { file: "02-comp-examples/new-smart-button.htm", title: "The default (the model page)" },
-            { file: "02-comp-examples/new-smart-button-3-ozden.htm", title: "Dialogs (ozden)" },
-            { file: "02-comp-examples/new-smart-button-alternatif.htm", title: "Pill and outlined (an alternative)" },
-            { file: "02-comp-examples/new-smart-button-4-dark.htm", title: "Dark templates and tones" },
-            { file: "02-comp-examples/new-smart-button-5-features.htm", title: "All features" },
-        ],
-        en: "A draft: the simpler SmartButton (comp/smart-button2.js) that will take the place of comp/smart-button.js. The look in three steps: styleName (the template: ozdenType1-4, pill, outlined), tone (white, cyan, orange, yellow, green, blue, and blueDark... for a dark page) and style (your own colors: the color and the color under the mouse; pressed, it gets darker by itself). An empty text makes an icon button.",
-        tr: "Taslak: comp/smart-button.js'in yerini alacak daha sade SmartButton (comp/smart-button2.js). Görünüş üç adımda: styleName (kalıp: ozdenType1-4, pill, outlined), tone (white, cyan, orange, yellow, green, blue ve koyu sayfa için blueDark...) ve style (kendi renklerin: renk ve fare üzerindeyken renk; basınca kendiliğinden koyulaşır). Boş bir metin ikon düğmesi yapar.",
+        en: "The default button: an icon and a text (or one of them; an empty text makes an icon button). The look in three steps: styleName (the template: ozdenType1-4, pill, outlined, ozdenType1Dark-4Dark), tone (white, cyan, orange, yellow, green, blue, and blueDark... for a dark page) and style (your own colors: the color and the color under the mouse; pressed, it gets darker by itself). A waiting clock or dots while a job runs, and a two-click ask with a bubble.",
+        tr: "Varsayılan düğme: ikon ve yazı (ya da biri; boş bir metin ikon düğmesi yapar). Görünüş üç adımda: styleName (kalıp: ozdenType1-4, pill, outlined, ozdenType1Dark-4Dark), tone (white, cyan, orange, yellow, green, blue ve koyu sayfa için blueDark...) ve style (kendi renklerin: renk ve fare üzerindeyken renk; basınca kendiliğinden koyulaşır). Bir iş sürerken bekleme saati ya da noktaları ve balonlu iki tıklamalı onay.",
     },
     {
         key: "smart-table", name: "SmartTable", cat: "data",
