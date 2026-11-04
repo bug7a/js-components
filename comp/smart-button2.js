@@ -717,10 +717,10 @@ SmartButton.createDarkTemplate = function (box, hoverColor) {
         waiting: { clock: "ozdenDark", dots: { color: "#F1C74A" } },
     };
 };
-// THE EDGE AND THE BOTTOM LINE (the user, 2026-11-04): the numbers of ozdenType1 (an edge of 0.35, a line of 0.25),
-// white instead of black; the line is 3 px. A light tone on a dark template keeps them too.
+// THE EDGE AND THE BOTTOM LINE (the user, 2026-11-04): the edge of ozdenType1 in white (0.35) and its 2 px line in
+// white, a little fainter than there (0.2). A light tone on a dark template keeps them too.
 SmartButton.DARK_EDGE = White(0.35);
-SmartButton.DARK_BOTTOM_LINE = "inset 0 -3px 0 " + White(0.25);
+SmartButton.DARK_BOTTOM_LINE = "inset 0 -2px 0 " + White(0.2);
 SmartButton.styles.ozdenType1Dark = SmartButton.createDarkTemplate({ color: "#2E2E2C", borderColor: SmartButton.DARK_EDGE, boxShadow: SmartButton.DARK_BOTTOM_LINE }, "#383835"); // an edge and a bottom line
 SmartButton.styles.ozdenType2Dark = SmartButton.createDarkTemplate({ color: "#2E2E2C", borderColor: SmartButton.DARK_EDGE, boxShadow: "none" }, "#383835"); // only the edge
 SmartButton.styles.ozdenType3Dark = SmartButton.createDarkTemplate({ color: "#2E2E2C", borderColor: White(0.06), boxShadow: "none" }, "#383835"); // a faint edge
