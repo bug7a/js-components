@@ -34,8 +34,8 @@ UI COMPONENT TEMPLATE
   setAnimated(0/1).
 - height: "auto" -> The list grows with its rows (no scrolling). Otherwise it scrolls with basic/scroll-bar.js
   (if it is loaded).
-- Style packages: "classic" (default: the rows of the comp-m1 SelectItem list, 02-comp-m1-samples/select-item.htm,
-  and the tiles of javascript-mobile-app-template), "modern", "dark".
+- Style packages: "ozden" (default: the rows of the comp-m1 SelectItem list, 02-comp-m1-samples/select-item.htm,
+  and the tiles of javascript-mobile-app-template; it was "classic", the old name still works), "modern", "dark".
   Select with styleName. (ItemList.styles)
 
 USAGE:
@@ -99,8 +99,8 @@ const ItemListDefaults = {
     ariaLabel: "List",
     onItemClick: function (self, item, index, event) { },
     onChange: function (self, selectedItems) { }, // Not at create time, not by setItems(), not with silent: 1
-    styleName: "classic", // "classic", "modern", "dark" or a name added to ItemList.styles
-    style: { // Classic style package (default): the rows of the comp-m1 SelectItem list, the tiles of javascript-mobile-app-template
+    styleName: "ozden", // "ozden", "modern", "dark" or a name added to ItemList.styles
+    style: { // The ozden style package (default): the rows of the comp-m1 SelectItem list, the tiles of javascript-mobile-app-template
         box: {
             color: "transparent",
             border: 1,
@@ -204,7 +204,7 @@ const ItemList = function (params = {}) {
     const givenHover = params.style && params.style.hover;
     const isHoverOff = !!givenHover && Object.keys(givenHover).length === 0;
 
-    // Merge style package: params.style > ItemList.styles[styleName] > ItemListDefaults.style (classic)
+    // Merge style package: params.style > ItemList.styles[styleName] > ItemListDefaults.style (ozden)
     basic.applyStylePackage(params, ItemList.styles, ItemListDefaults);
 
     // Merge params:
@@ -1273,12 +1273,15 @@ ItemList.getCheckSvg = function (color, size) {
 // USAGE: ItemList({ styleName: "modern" })
 // USAGE: ItemList({ styleName: "dark", style: { row: { round: 4 } } }) // Change only some keys.
 // USAGE: ItemList({ style: ItemList.styles.dark }) // The same as styleName: "dark". (The package is copied, never changed.)
-// NOTE: A new package needs only the keys that differ from the default (classic) style.
+// NOTE: A new package needs only the keys that differ from the default (ozden) style.
 // USAGE: ItemList.styles.myStyle = { row: { color: "ivory" } };
 ItemList.styles = {
 
     // The rows of the comp-m1 SelectItem list (white under the mouse, the selected one half transparent) and the
     // tiles of javascript-mobile-app-template (a grey icon in a circle that grows when it is selected).
+    ozden: ItemListDefaults.style,
+
+    // WHY: The old name of ozden: a page written with styleName: "classic" gets the same look without a warning.
     classic: ItemListDefaults.style,
 
     // Light cards with a thin border and a check mark on the selected rows.
@@ -1296,7 +1299,7 @@ ItemList.styles = {
             boxShadow: "0px 1px 2px rgba(0, 0, 0, 0.04)",
             motion: "background-color 0.2s, border-color 0.2s",
         },
-        // WHY: The effects of the classic tiles (a grey icon in a circle that grows) are turned off.
+        // WHY: The effects of the ozden tiles (a grey icon in a circle that grows) are turned off.
         tile: {
             width: 132,
             height: "auto",
@@ -1350,7 +1353,7 @@ ItemList.styles = {
             round: 10,
             motion: "background-color 0.2s, border-color 0.2s",
         },
-        // WHY: The effects of the classic tiles (a grey icon in a circle that grows) are turned off.
+        // WHY: The effects of the ozden tiles (a grey icon in a circle that grows) are turned off.
         tile: {
             width: 132,
             height: "auto",

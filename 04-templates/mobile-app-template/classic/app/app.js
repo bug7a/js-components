@@ -525,7 +525,7 @@ App.createMenu = function () {
             height: "auto",
             items: AppSettings.menu.map((item, index) => ({ key: String(index), title: item.title, menuItem: item })),
             selectedKeys: ["0"],
-            styleName: "classic",
+            styleName: "ozden",
             style: {
                 box: { border: 0, padding: [4, 0] },
                 row: { height: 54, padding: [36, 0], gap: 10, color: "transparent", border: 1, borderColor: "transparent", round: 4 },

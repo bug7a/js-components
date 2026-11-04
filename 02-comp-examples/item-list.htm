@@ -55,8 +55,8 @@
 
     // The page look of each style package (the list sits on it)
     const STYLE_PAGES = {
-        classic: { color: "whitesmoke", textColor: Black(0.5) }, // The box of the comp-m1 SelectItem list
-        classicTiles: { color: "white", textColor: Black(0.5) }, // The category list of javascript-mobile-app-template
+        ozden: { color: "whitesmoke", textColor: Black(0.5) }, // The box of the comp-m1 SelectItem list
+        ozdenTiles: { color: "white", textColor: Black(0.5) }, // The category list of javascript-mobile-app-template
         modern: { color: "#F4F5F2", textColor: Black(0.5) },
         dark: { color: "#141414", textColor: White(0.5) },
     };
@@ -119,7 +119,7 @@
 
                 // GROUP: The three style packages
                 HGroup({ width: "100%", height: "auto", align: "center top", gap: 20, wrap: 1 });
-                    createStyleSample("classic", "single", "The list of comp-m1 SelectItem: rows as wide as the list, white under the mouse, the selected one half transparent.");
+                    createStyleSample("ozden", "single", "The list of comp-m1 SelectItem: rows as wide as the list, white under the mouse, the selected one half transparent.");
                     createStyleSample("modern", "multiple", "Light cards; a check mark on the selected rows.");
                     createStyleSample("dark", "multiple", "The dark cards of the Ozden Panel (webpage-ozden-panel).");
                 endGroup();
@@ -127,8 +127,8 @@
                 // GROUP: The other layouts
                 HGroup({ width: "100%", height: "auto", align: "center top", gap: 20, wrap: 1 });
 
-                    const classicLook = STYLE_PAGES.classicTiles;
-                    const horizontalCard = startCard("layout: \"horizontal\" · classic", "One row of tiles, like the categories of the template: a grey icon in a circle; the selected one grows, gets its colors and a bold title.", classicLook);
+                    const ozdenLook = STYLE_PAGES.ozdenTiles;
+                    const horizontalCard = startCard("layout: \"horizontal\" · ozden", "One row of tiles, like the categories of the template: a grey icon in a circle; the selected one grows, gets its colors and a bold title.", ozdenLook);
                     horizontalCard.width = 2 * STYLE_CARD_WIDTH + 20;
                         ItemList({ width: "100%", height: 216, layout: "horizontal", items: DRINKS.map(withoutDesc), selectedKeys: ["coffee"] });
                     endCard();
@@ -139,7 +139,7 @@
                     endCard();
 
                     // Your own rows: createItemView
-                    startCard("createItemView", "Your own row: a title and a price. style.row.height: \"auto\".", classicLook);
+                    startCard("createItemView", "Your own row: a title and a price. style.row.height: \"auto\".", ozdenLook);
                         ItemList({
                             width: "100%",
                             height: "auto",

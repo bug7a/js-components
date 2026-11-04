@@ -249,7 +249,7 @@ const SelectBoxDefaults = {
         disabled: {
             opacity: 0.4,
         },
-        // The style of the ItemList of createItemView (the keys of ItemList.styles.classic: row, hover, selected,
+        // The style of the ItemList of createItemView (the keys of ItemList.styles.ozden: row, hover, selected,
         // disabled, check...). Its empty text takes style.empty. The check mark is shown only for multiple.
         itemList: {
             box: { color: "transparent", border: 0, round: 0, padding: 0 },
