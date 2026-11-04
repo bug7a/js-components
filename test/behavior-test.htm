@@ -40,6 +40,7 @@
         <script src="../comp/login-page-v2.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/slider.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/check-box.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/radio-button.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/hold-to-confirm-button.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/smart-table.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/dialog.js" type="text/javascript" charset="utf-8"></script>
@@ -1188,6 +1189,21 @@
             const outColor = colorOf(checkBox);
             check("CheckBox: hoverMark.color colors the empty square under the mouse", hoverColor === "rgb(255, 255, 255)" && outColor === "rgb(245, 245, 245)" && plainHover === plainBefore, hoverColor + " / " + outColor + " / plain: " + plainBefore + " -> " + plainHover);
             [checkBox, plain].forEach(function (item) { item.remove(); });
+        });
+
+        test("RadioButton: hoverMark.color colors the empty circle under the mouse", async function () {
+            const radio = RadioButton({ group: "hoverMarkTest", labelText: "Hover", style: { mark: { color: "rgb(245, 245, 245)" }, hoverMark: { color: "rgb(255, 255, 255)" } } });
+            const plain = RadioButton({ group: "hoverMarkTest", labelText: "Plain" }); // no hoverMark.color: the circle keeps its color
+            const colorOf = function (item) { return item.mark.elem.style.backgroundColor; };
+            const plainBefore = colorOf(plain);
+            radio.elem.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+            plain.elem.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+            const hoverColor = colorOf(radio);
+            const plainHover = colorOf(plain);
+            radio.elem.dispatchEvent(new MouseEvent("mouseout", { bubbles: true }));
+            const outColor = colorOf(radio);
+            check("RadioButton: hoverMark.color colors the empty circle under the mouse", hoverColor === "rgb(255, 255, 255)" && outColor === "rgb(245, 245, 245)" && plainHover === plainBefore, hoverColor + " / " + outColor + " / plain: " + plainBefore + " -> " + plainHover);
+            [radio, plain].forEach(function (item) { item.remove(); });
         });
 
         // *** HOLD TO CONFIRM (comp/hold-to-confirm-button.js)

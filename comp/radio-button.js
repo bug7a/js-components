@@ -2,7 +2,7 @@
 
 /*
 
-Radio Button - v26.09
+Radio Button - v26.11
 
 UI COMPONENT TEMPLATE
 - A customizable radio button with a label.
@@ -11,6 +11,7 @@ UI COMPONENT TEMPLATE
 - Supports: checked, enabled, value, label position (left/right),
   keyboard (Space/Enter to select, Arrow keys to move in the group).
 - Whole object background can change on hover and checked states (style.hoverBox, style.checkedBox).
+- The empty circle under the mouse: style.hoverMark (its borderColor, and its color when given; v26.11).
 - Style packages: "classic" (default), "modern", "dark". Select with styleName. (RadioButton.styles)
 
 Started Date: September 2026
@@ -66,7 +67,8 @@ const RadioButtonDefaults = {
             color: White(1),
             borderColor: "#141414",
         },
-        hoverMark: { // Mouse over (only border)
+        hoverMark: { // Mouse over (the empty circle)
+            color: null, // null: uses mark.color (2026-11-04: a package could not change it)
             borderColor: Black(0.7),
         },
         dot: {
@@ -132,7 +134,8 @@ const RadioButton = function (params = {}) {
             box.dot.css = { opacity: "1", transform: "scale(1)" };
             return;
         }
-        box.mark.color = box.style.mark.color;
+        const hoverColor = box.style.hoverMark.color;
+        box.mark.color = (isHover && hoverColor) ? hoverColor : box.style.mark.color;
         box.mark.borderColor = (isHover) ? box.style.hoverMark.borderColor : box.style.mark.borderColor;
         box.dot.css = { opacity: "0", transform: "scale(" + DOT_HIDDEN_SCALE + ")" };
     };
@@ -393,7 +396,8 @@ RadioButton.styles = {
     // White circle with a border. When checked, dark border and dark dot. No background.
     classic: RadioButtonDefaults.style,
 
-    // Light circle, thin border. When checked, the circle stays without border behind the dot, on a light background.
+    // Light circle, thin border. When checked, the dot in a white circle with an edge (the user, 2026-11-04; it was
+    // only the dot: the circle had the color of the row and no edge).
     modern: {
         box: { // Whole object background
             color: "transparent",
@@ -421,11 +425,12 @@ RadioButton.styles = {
             borderColor: Black(0.7),
             round: 100,
         },
-        checkedMark: { // Checked circle (stays without border, behind the dot)
-            color: "#DFECEC", // Same as hoverCheckedBox.color, so the circle is not visible on mouse over.
-            borderColor: "transparent",
+        checkedMark: { // Checked circle: white with an edge, behind the dot (was #DFECEC, no edge)
+            color: "white",
+            borderColor: Black(0.7),
         },
-        hoverMark: { // Mouse over (only border)
+        hoverMark: { // Mouse over: the empty circle turns white
+            color: "white",
             borderColor: Black(0.7),
         },
         dot: {
