@@ -22,10 +22,10 @@
 
         // SMARTBUTTON 2 · THE MODEL PAGE (the copy of smart-button.htm for the simpler comp/smart-button2.js, the user
         // 2026-11-04). The look in three steps: styleName (the template), tone (a color of the kit), style (your own).
-        // - SmartButton({ labelText, onClick })                         -> the default: ozdenType1, gray, 40 px high
-        // - SmartButton({ tone: "primary", labelText, onClick })        -> a color: white, primary, danger, warning, success, info
+        // - SmartButton({ labelText, onClick })                         -> the default: ozdenType1, gray, 44 px high
+        // - SmartButton({ tone: "cyan", labelText, onClick })           -> a color: white, cyan, orange, yellow, green, blue
         // - SmartButton({ styleName: "ozdenType2", tone: "white", labelText: "", iconFile, ariaLabel })  -> an icon button (a square)
-        // - button.setTone("success")                                   -> another color after create
+        // - button.setTone("green")                                     -> another color after create
         // - button.setWaiting(1) / setWaiting(0)                        -> it waits while a job runs
         // - ask: "Click again to delete."                               -> two clicks (load tooltip.js for the bubble)
         // TRY: press Save, then Delete twice, then Replace twice.
@@ -55,11 +55,11 @@
         const TONES = [
             { tone: "", text: "Default 1", note: "normal button" }, // DEFAULT or SECONDARY olarak kullanılabilir
             { tone: "white", text: "Default 2 color white", note: "normal button white" }, // DEFAULT or SECONDARY olarak kullanılabilir.
-            { tone: "primary", text: "Save", icon: ICONS.save, note: "the main action" },
-            { tone: "danger", text: "Delete", icon: ICONS.trash, note: "a delete, a reject" },
-            { tone: "warning", text: "Replace", icon: ICONS.replace, note: "go on, but look first" },
-            { tone: "success", text: "Done", icon: ICONS.check, note: "after a good result" },
-            { tone: "info", text: "Details", icon: ICONS.info, note: "nothing changes" },
+            { tone: "cyan", text: "Save", icon: ICONS.save, note: "the main action" },
+            { tone: "orange", text: "Delete", icon: ICONS.trash, note: "a delete, a reject" },
+            { tone: "yellow", text: "Replace", icon: ICONS.replace, note: "go on, but look first" },
+            { tone: "green", text: "Done", icon: ICONS.check, note: "after a good result" },
+            { tone: "blue", text: "Details", icon: ICONS.info, note: "nothing changes" },
         ];
 
         let lblResult;
@@ -151,38 +151,38 @@
 
                 SmartButton({ labelText: "Cancel", onClick: function () { showResult("Canceled."); } });
 
-                SmartButton({ tone: "primary", labelText: "Save", iconFile: ICONS.save, onClick: save });
+                SmartButton({ tone: "cyan", labelText: "Save", iconFile: ICONS.save, onClick: save });
 
             endCard();
         };
 
-        // Save -> it waits -> "Saved" (success) -> back to Save (primary)
+        // Save -> it waits -> "Saved" (green) -> back to Save (cyan)
         const save = function (self) {
             self.setWaiting(1);
             self.after(SAVE_TIME, function () {
                 self.setWaiting(0);
-                self.setTone("success");
+                self.setTone("green");
                 self.setText("Saved");
                 self.setIcon(ICONS.check);
                 showResult("Saved.");
                 self.after(SAVED_TIME, function () {
-                    self.setTone("primary");
+                    self.setTone("cyan");
                     self.setText("Save");
                     self.setIcon(ICONS.save);
                 });
             });
         };
 
-        // A file: Details (info), Replace (a warning that asks), Download (waits with the dots)
+        // A file: Details (blue), Replace (a yellow warning that asks), Download (waits with the dots)
         const createFileCard = function () {
             startCard("report.pdf", "2.4 MB · changed today. Replace asks again: the old file will be lost.");
 
-                SmartButton({ tone: "info", labelText: "Details", iconFile: ICONS.info, onClick: function () { showResult("Details: 12 pages, PDF 1.7."); } });
+                SmartButton({ tone: "blue", labelText: "Details", iconFile: ICONS.info, onClick: function () { showResult("Details: 12 pages, PDF 1.7."); } });
 
                 createSpace();
 
                 SmartButton({
-                    tone: "warning",
+                    tone: "yellow",
                     labelText: "Replace",
                     iconFile: ICONS.replace,
                     ask: "The old file will be lost. Click again.",

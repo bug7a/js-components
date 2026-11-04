@@ -21,6 +21,8 @@
         // SMARTBUTTON 2 · THE DARK TEMPLATES (the copy of smart-button-4-dark.htm for comp/smart-button2.js, 2026-11-04)
         // ozdenType1Dark ... ozdenType4Dark: the shapes of ozdenType1-4 for a dark page (the draft
         // _designs/smart-button-dark.htm). The icon turns white, the waiting clock is the dark one.
+        // The tones of a dark page end with "Dark" (cyanDark ... blueDark: a light text, a white icon); the light tones
+        // keep their dark text on a dark template too.
         // - SmartButton({ styleName: "ozdenType1Dark", labelText, iconFile, onClick })
         // TRY: press "Download" (it waits 2 s), click "Delete" twice, press Tab to see the focus ring.
 
@@ -31,6 +33,8 @@
         const DOWNLOAD_TIME = 2000; // ms: a job that takes time (the sample)
         const ICON_FILE = "../comp/smart-button/alert-black.png"; // a black icon: the dark packages turn it white
         const PACKAGES = ["ozdenType1Dark", "ozdenType2Dark", "ozdenType3Dark", "ozdenType4Dark"];
+        const DARK_TONES = ["cyanDark", "orangeDark", "yellowDark", "greenDark", "blueDark"];
+        const LIGHT_TONES = ["white", "cyan", "orange", "yellow", "green", "blue"];
 
         // *** START:
 
@@ -46,6 +50,8 @@
                     Label({ text: "SmartButton 2 · dark templates", fontSize: 24, bold: 1, textColor: White(0.9) });
 
                     PACKAGES.forEach(createPackageRow);
+                    createToneRow("Tones for a dark page (on ozdenType1Dark)", DARK_TONES);
+                    createToneRow("The light tones on a dark page (their text stays dark)", LIGHT_TONES);
 
                 endGroup();
 
@@ -82,6 +88,27 @@
                     SmartButton({ styleName: styleName, height: BUTTON_HEIGHT, labelText: "Delete", ask: "Click again to delete." });
 
                     SmartButton({ styleName: styleName, height: BUTTON_HEIGHT, labelText: "Disabled", iconFile: ICON_FILE, enabled: 0 });
+
+                endGroup();
+
+            endGroup();
+
+            return card;
+
+        };
+
+        // GROUP: The tones on the default dark template, each with the icon (a light text turns it white)
+        const createToneRow = function (title, tones) {
+
+            const card = VGroup({ width: "auto", height: "auto", align: "left top", gap: 14, padding: 24, color: CARD_COLOR, round: 10, border: 1, borderColor: White(0.08), clipContent: 0 });
+
+                Label({ text: title, fontSize: 14, bold: 1, textColor: White(0.6) });
+
+                HGroup({ width: "auto", height: "auto", align: "left center", gap: 12, wrap: 1, clipContent: 0 });
+
+                    tones.forEach(function (toneName) {
+                        SmartButton({ styleName: "ozdenType1Dark", tone: toneName, height: BUTTON_HEIGHT, labelText: toneName, iconFile: ICON_FILE });
+                    });
 
                 endGroup();
 
