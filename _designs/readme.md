@@ -43,6 +43,8 @@ Bu klasör ara sıra kullanılır: taslaklar **her bileşen değişikliğinde g�
 
 | Dosya | Bileşen | İçinde |
 |---|---|---|
+| `item-list-modern.htm` | `comp/item-list.js` (ItemList) | `modern` paketi (2026-11-04): bütün liste (arama kutusu, bölümler, çoklu seçim, kaydırma çubuğu) ve grid; satır ve kutucuk (tile) için 16 durum: normal, seçim yok, yalnız başlık, uzun yazı, hover, basılı, klavye odağı, seçili, seçili + odak, kapalı, kapalı + seçili, bölüm, boş, sonuç yok, arama kutusu (boş / yazılı) |
+| `item-list-dark.htm` | `comp/item-list.js` (ItemList) | `dark` paketi (2026-11-04): item-list-modern.htm'nin aynısı, #141414 zeminde |
 | `progress-bar.htm` | `comp/progress-bar.js` (ProgressBar) | classic, modern, ozden; 14 durum |
 | `smart-button.htm` | `comp/smart-button.js` (SmartButton) | ozdenType1–4, classic; dört içerik, hover, basılı, odak, kapalı, bekliyor (saat, noktalar), "Sure?" balonu, "Sure?" yazılı düğme |
 | `smart-button-colors.htm` | `comp/smart-button.js` (SmartButton) | durumların renkleri (2026-10-31; seçilenler bileşende: v26.11'den beri `SmartButton.tones.cyan` / `orange` / `yellow` / `green` / `blue`): silme, ana işlem, uyarı, başarı, vazgeç, bilgi; her satırda düzenlenecek SEÇİLEN düğme (normal, hover, basılı, kapalı) ve depoda bugün kullanılan aday renkler (nereden geldikleriyle) |
