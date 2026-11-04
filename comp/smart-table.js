@@ -188,6 +188,8 @@ const SmartTable = function (params = {}) {
     box.state = "normal";
     // Created items by data [var]
     box.visibleItemDataList = [...box.itemDataList];
+    // The SearchInput of the filter, made in createToolbar [var]. USAGE: table.searchInput.setText("") (a new list)
+    box.searchInput = null;
     // [var]
     box.titleCellList = [];
     // [var]
@@ -913,7 +915,7 @@ const SmartTable = function (params = {}) {
         });
         box.boxInfoLine.add(that);
 
-        SearchInput(box.searchInputParams);
+        box.searchInput = SearchInput(box.searchInputParams);
         that.setText(box.searchKeyword);
         that.onSubmit = function (searchedText, self) {
             box.searchKeyword = searchedText;
