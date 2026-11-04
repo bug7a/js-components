@@ -717,7 +717,8 @@ SmartButton.createDarkTemplate = function (box, hoverColor) {
         waiting: { clock: "ozdenDark", dots: { color: "#F1C74A" } },
     };
 };
-// WHY the bottom line in the color of the edge (the user, 2026-11-04): a dark line under a light edge looked strange
+// WHY the bottom line in the color of the edge (the user, 2026-11-04): a dark line under a light edge looked strange.
+// A light tone on a dark template keeps this line too, though it is barely seen on it (the user chose so, 2026-11-04)
 SmartButton.DARK_EDGE = White(0.16);
 SmartButton.styles.ozdenType1Dark = SmartButton.createDarkTemplate({ color: "#2E2E2C", borderColor: SmartButton.DARK_EDGE, boxShadow: "inset 0 -2px 0 " + SmartButton.DARK_EDGE }, "#383835"); // an edge and a bottom line
 SmartButton.styles.ozdenType2Dark = SmartButton.createDarkTemplate({ color: "#2E2E2C", borderColor: SmartButton.DARK_EDGE, boxShadow: "none" }, "#383835"); // only the edge
@@ -737,7 +738,8 @@ SmartButton.tones = {
     yellow: { color: "#F1C74A", hover: "#E6BB3C", text: SmartButton.DARK_TEXT }, // go on, but look first
     green: { color: "#7BC362", hover: "#70B756", text: SmartButton.DARK_TEXT }, // after a good result: Done
     blue: { color: "#52A8D0", hover: "#479CC4", text: SmartButton.DARK_TEXT }, // nothing changes: Details, Help
-    // For a dark page: the same colors, 45 % over the dark card #1A1A19 (53 % under the mouse).
+    // For a dark page: the same colors, 45 % over the dark card #1A1A19 (53 % under the mouse); chosen by the user on
+    // the draft _designs/smart-button2-dark-tones.htm (2026-11-04).
     // WHY 45 %: the light text reads on every one of them (contrast 4.8 - 6.7; 4.5 is enough)
     cyanDark: { color: "#376265", hover: "#3C6F72", text: SmartButton.LIGHT_TEXT },
     orangeDark: { color: "#724837", hover: "#82513C", text: SmartButton.LIGHT_TEXT },
