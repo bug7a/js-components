@@ -21,50 +21,41 @@
 
     // SmartButton 2 (the copy of smart-button-3-ozden.htm for comp/smart-button2.js, 2026-11-04): the button
     // standards in the ozden look (a white card, a thin line, a line at the bottom): Primary (the colored action, it
-    // waits with the clock of setWaiting()), Secondary (Cancel, gray and white) and Alternative (the trash, only an
-    // icon: it asks again, two clicks). Each look: a template (styleName), a tone, and only the colors this page
-    // changes (style: the color and the color under the mouse; pressed it gets darker by itself).
+    // waits with the clock of setWaiting()), Default (Cancel, gray and white) and Alternative (the trash, only an
+    // icon: it asks again, two clicks). Every button is one SmartButton({ ... }) call; its colors are a style object
+    // at the top of the page (the color and the color under the mouse; pressed, it gets darker by itself).
 
-    // *** THE COLORS AND SIZES OF THE PAGE
+    // *** THE PAGE
     const PAGE_COLOR = "#F0F1EE";
-    const CARD_COLOR = "white";
-    const LINE = Black(0.1);
+    const COVER_COLOR = Black(0.8); // behind the dialog (the cover of a Dialog)
     const BOTTOM_LINE = "inset 0 -3px 0 rgba(0, 0, 0, 0.06)"; // the soft line at the bottom of the ozden fields
-    const ACTION_LINE = "rgba(35, 35, 35, 0.4)";
-    const TEAL = "#9DC7B5"; // the Publish button
-    const TEAL_HOVER = "#91BCA9"; // a little darker than TEAL
-    // The other colors of the action (basic-designer, 2026-10-29); the hover a little darker
-    const CYAN = "#5BBAC1";
-    const CYAN_HOVER = "#50AFB6";
-    const SKY = "#52A8D0";
-    const SKY_HOVER = "#479DC5";
-    const ORANGE = "#DE815B";
-    const ORANGE_HOVER = "#D4724B";
-    const SLATE = "#8FA6BE";
-    const SLATE_HOVER = "#8199B2";
-    // The colored plain buttons (basic-designer, 2026-10-29); the hover a little darker
-    const SOFT_YELLOW = "#F8E57A";
-    const SOFT_YELLOW_HOVER = "#EFDA62";
-    const ROSE = "#D97F80";
-    const ROSE_HOVER = "#CF7071";
-    const MINT = "#C3DBCE";
-    const MINT_HOVER = "#B5D0C1";
-    const MIST = "#CEDBE1"; // (basic-designer, 2026-10-29: the soft row)
-    const MIST_HOVER = "#C1D0D7";
-    const LAVENDER = "#CFC3DD";
-    const LAVENDER_HOVER = "#C3B6D3";
+    const INK = "#232323"; // the texts and the edge of the card
+    const CARD_WIDTH = 674; // (basic-designer, 2026-10-29: was 460; five actions in a row)
+    const CARD_HEIGHT = 524;
+    const CARD_ROUND = 8;
+    const CARD_BORDER = 2;
+    const TEXT_SIZE = 16;
+    const PRIMARY_ROW_COLOR = "#FFFBDB"; // the row of the Primary buttons
+    const TRASH_WIDTH = 50; // as in the footer of a Dialog
     const RED = "#E8796D"; // danger (design.md)
-    const DIALOG_WIDTH = 674; // (basic-designer, 2026-10-29: was 460; five actions in a row)
-    const COVER_COLOR = Black(0.8); // behind the dialogs (the cover of a Dialog component later)
-    const BUTTON_HEIGHT = 44; // the default of SmartButton 2 (the user, 2026-11-04: 40 looked narrow)
-    const TEXT_SIZE = 14;
-    const CARD_ROUND = 14;
-    const STANDARDS_CARD_HEIGHT = 524; // the card of the button standards
-    const STANDARDS_INK = "#232323"; // its texts
-    const PRIMARY_ROW_COLOR = "#FFFBDB"; // the row of the Primary button
-    // The first dialog (ozden): bigger texts and buttons
-    const OZDEN_SIZES = { titleSize: 20, textSize: 16, buttonHeight: 44, trashWidth: 50, cardRound: 8, cardBorder: 2, cardBorderColor: "#232323" };
     const JOB_TIME = 1200; // ms: the action takes time (the sample)
+
+    // *** THE COLORS OF THE BUTTONS (basic-designer, 2026-10-29): style objects of SmartButton.
+    // The actions: a little lighter edge; WHY icon opacity 0.7: the transparency of the text (the icon lines are black)
+    const ACTION_LINE = "rgba(35, 35, 35, 0.4)";
+    const TEAL_ACTION = { box: { color: "#9DC7B5", borderColor: ACTION_LINE }, hover: { color: "#91BCA9" }, icon: { opacity: 0.7 } }; // Publish
+    const CYAN_ACTION = { box: { color: "#5BBAC1", borderColor: ACTION_LINE }, hover: { color: "#50AFB6" }, icon: { opacity: 0.7 } };
+    const SKY_ACTION = { box: { color: "#52A8D0", borderColor: ACTION_LINE }, hover: { color: "#479DC5" }, icon: { opacity: 0.7 } };
+    const ORANGE_ACTION = { box: { color: "#DE815B", borderColor: ACTION_LINE }, hover: { color: "#D4724B" }, icon: { opacity: 0.7 } };
+    const SLATE_ACTION = { box: { color: "#8FA6BE", borderColor: ACTION_LINE }, hover: { color: "#8199B2" }, icon: { opacity: 0.7 } };
+    // The plain buttons in soft colors
+    const SOFT_YELLOW = { box: { color: "#F8E57A" }, hover: { color: "#EFDA62" } };
+    const ROSE = { box: { color: "#D97F80" }, hover: { color: "#CF7071" } };
+    const MINT = { box: { color: "#C3DBCE" }, hover: { color: "#B5D0C1" } };
+    const MIST = { box: { color: "#CEDBE1" }, hover: { color: "#C1D0D7" } };
+    const LAVENDER = { box: { color: "#CFC3DD" }, hover: { color: "#C3B6D3" } };
+    // The trash: a bigger bin; it asks in red before it deletes (the bin turns white)
+    const TRASH = { icon: { width: 30, height: 30, opacity: 1 }, ask: { button: { color: RED, border: 0, borderColor: RED, boxShadow: BOTTOM_LINE } } };
 
     // *** THE ICONS: minimal lines (the user, 2026-11-02): no circle, no fill. Black lines: the look gives them the
     // transparency of the text (WHY not in the color: two lines that cross would be darker there)
@@ -92,213 +83,100 @@
         trash: binIcon("#6B6F73"),
     };
 
-    // *** THE BUTTON LOOKS: a template of SmartButton (styleName), a tone of SmartButton ("white") and only what this
-    // page changes on it (style). Every ozden template is #E3E3E3; the colors below are ideas to choose from.
-    const packageLook = function (styleName, changes = {}, tone = "") {
-        return { styleName: styleName, tone: tone, style: changes };
-    };
-    // A button in its own color (the hover a little darker)
-    const colorLook = function (styleName, color, hoverColor) {
-        return packageLook(styleName, { box: { color: color }, hover: { color: hoverColor } });
-    };
-    // The trash: a bigger bin (an icon button of SmartButton: no room at the sides)
-    const trashLook = function (styleName, tone = "") {
-        return packageLook(styleName, { icon: { width: 30, height: 30, opacity: 1 } }, tone);
-    };
-    // The red "Sure?" of every trash (style.ask.button: on its own template; the bin turns white)
-    const TRASH_ASK = { color: RED, border: 0, borderColor: RED, boxShadow: BOTTOM_LINE };
-
-    const LOOKS = {
-        // Primary (ozdenType1): the actions in their colors, a little lighter edge
-        // WHY icon opacity 0.7: the transparency of the text of the template, the lines are black
-        publish: packageLook("ozdenType1", { box: { color: TEAL, borderColor: ACTION_LINE }, hover: { color: TEAL_HOVER }, icon: { opacity: 0.7 } }),
-        // Secondary (ozdenType1): Cancel, gray (the template itself) and white (the tone: whitesmoke under the mouse)
-        cancel: packageLook("ozdenType1"),
-        whiteCancel: packageLook("ozdenType1", {}, "white"),
-        // Alternative (ozdenType2): a white trash, plain buttons in a few colors
-        trash: trashLook("ozdenType2", "white"),
-        whitePlain: packageLook("ozdenType2", {}, "white"),
-        yellowPlain: colorLook("ozdenType2", SOFT_YELLOW, SOFT_YELLOW_HOVER),
-        rosePlain: colorLook("ozdenType2", ROSE, ROSE_HOVER),
-        mintPlain: colorLook("ozdenType2", MINT, MINT_HOVER),
-        // Alternative (ozdenType3): the same kinds with a fainter edge, a gray bin
-        softTrash: trashLook("ozdenType3"),
-        softGrayPlain: packageLook("ozdenType3"),
-        softYellowPlain: colorLook("ozdenType3", SOFT_YELLOW, SOFT_YELLOW_HOVER),
-        softMistPlain: colorLook("ozdenType3", MIST, MIST_HOVER),
-        softLavenderPlain: colorLook("ozdenType3", LAVENDER, LAVENDER_HOVER),
-        // Alternative (ozdenType4): no surface, no edge (only the hover shows that they are buttons)
-        ghostPlain: packageLook("ozdenType4"),
-        ghostTrash: trashLook("ozdenType4"),
-    };
-    // The other actions: the teal one in another color
-    const actionColorLook = function (color, hoverColor) {
-        const look = JSON.parse(JSON.stringify(LOOKS.publish));
-        look.style.box.color = color;
-        look.style.hover.color = hoverColor;
-        return look;
-    };
-    LOOKS.publishCyan = actionColorLook(CYAN, CYAN_HOVER);
-    LOOKS.publishSky = actionColorLook(SKY, SKY_HOVER);
-    LOOKS.publishOrange = actionColorLook(ORANGE, ORANGE_HOVER);
-    LOOKS.publishSlate = actionColorLook(SLATE, SLATE_HOVER);
-
-    // SMARTBUTTON: A button in a look ({ styleName, tone, style }) and its own params
-    const lookButton = function (look, params) {
-        return SmartButton(Object.assign({ styleName: look.styleName, tone: look.tone, style: look.style }, params));
-    };
-
-    // GROUP: A card of the button standards: a title text, then a row of buttons for each kind (Primary, Secondary,
-    // Alternative). Returns the card.
-    // dialog: { text, actions: [{ text, icon, look }], plainButtons: [{ text, look }], softRow: { trash, buttons: [{ text, look }] },
-    //          ghostRow: { button: { text, look }, trash },
-    //          looks: { cancel, whiteCancel, trash } (each { styleName, tone, style }), trashLabel, textSize, buttonHeight, trashWidth, cardRound, cardBorder, cardBorderColor }
-    // (the sizes and the frame: the first look of the page when they are not given)
-    const createDialog = function (dialog) {
-
-        const buttonHeight = dialog.buttonHeight || BUTTON_HEIGHT;
-        const cardRound = dialog.cardRound || CARD_ROUND;
-
-        const card = VGroup({
-            width: DIALOG_WIDTH,
-            height: STANDARDS_CARD_HEIGHT,
-            align: "left top",
-            gap: 0,
-            color: CARD_COLOR,
-            round: cardRound,
-            border: dialog.cardBorder || 1,
-            borderColor: dialog.cardBorderColor || LINE,
-            boxShadow: "0 10px 30px rgba(0, 0, 0, 0.08), " + BOTTOM_LINE,
-            clipContent: 0,
-        });
-        that.css = { maxWidth: "calc(100vw - 40px)" };
-
-            // GROUP: Content (it fills the card: the height of the card in its edge; basic-designer, 2026-10-29)
-            VGroup({ width: "100%", height: STANDARDS_CARD_HEIGHT - 2 * (dialog.cardBorder || 1), align: "left top", gap: 8, padding: [24, 22] });
-                Label({ plainText: dialog.text, width: "100%", fontSize: dialog.textSize || TEXT_SIZE, textColor: STANDARDS_INK, fontFamily: "opensans-bold", css: { whiteSpace: "normal", lineHeight: "1.5", textWrap: "balance" } });
-
-                // SECONDARY: Cancel, gray and white
-                createSectionTitle("Default (ozdenType1)", dialog);
-                HGroup({ width: "100%", height: "auto", align: "left center", gap: 10, clipContent: 0 });
-                    lookButton(dialog.looks.cancel, { height: buttonHeight, labelText: "Cancel" });
-                    lookButton(dialog.looks.whiteCancel, { height: buttonHeight, labelText: "Cancel" });
-                endGroup();
-
-                // PRIMARY: the actions, each with its icon, text and color
-                createSectionTitle("Primary (ozdenType1)", dialog);
-                HGroup({ width: "100%", height: "auto", align: "left center", gap: 10, color: PRIMARY_ROW_COLOR, clipContent: 0 });
-                    dialog.actions.forEach(function (action) {
-                        lookButton(action.look, {
-                            height: buttonHeight,
-                            labelText: action.text,
-                            iconFile: action.icon,
-                            onClick: function (self) {
-                                self.setWaiting(1);
-                                self.after(JOB_TIME, function () { self.setWaiting(0); });
-                            },
-                        });
-                    });
-                endGroup();
-
-                // ALTERNATIVE: the trash (it asks before it deletes), then plain buttons in a few colors
-                createSectionTitle("Alternative (ozdenType2)", dialog);
-                HGroup({ height: "auto", align: "left center", gap: 10, clipContent: 0 });
-                    card.btnTrash = createTrashButton(dialog, dialog.looks.trash, dialog.trashWidth || buttonHeight, buttonHeight);
-                    dialog.plainButtons.forEach(function (plain) {
-                        lookButton(plain.look, { height: buttonHeight, labelText: plain.text });
-                    });
-                endGroup();
-
-                // ALTERNATIVE (soft): the same kinds with a fainter edge, a gray bin
-                createSectionTitle("Alternative (ozdenType3)", dialog);
-                HGroup({ width: "100%", height: "auto", align: "left center", gap: 10, clipContent: 0 });
-                    createTrashButton(dialog, dialog.softRow.trash, dialog.trashWidth || buttonHeight, buttonHeight);
-                    dialog.softRow.buttons.forEach(function (plain) {
-                        lookButton(plain.look, { height: buttonHeight, labelText: plain.text });
-                    });
-                endGroup();
-
-                // ALTERNATIVE (ghost): a text button and a bin with no surface (their hover shows they are buttons)
-                createSectionTitle("Alternative (ozdenType4)", dialog);
-                HGroup({ height: "auto", align: "left center", gap: 10, clipContent: 0 });
-                    lookButton(dialog.ghostRow.button.look, { height: buttonHeight, labelText: dialog.ghostRow.button.text });
-                    createTrashButton(dialog, dialog.ghostRow.trash, dialog.trashWidth || buttonHeight, buttonHeight);
-                endGroup();
-            endGroup();
-
-        endGroup();
-
-        return card;
-
-    };
-
-    // LABEL: The name of a kind of button over its row
-    const createSectionTitle = function (text, dialog) {
-        return Label({ plainText: text, width: "100%", fontSize: dialog.textSize || TEXT_SIZE, textColor: STANDARDS_INK });
-    };
-
-    // The trash: the first click asks (the button turns red, a bubble over it), the second one deletes. It forgets
-    // after 5 s. (ask of SmartButton: the bubble stays inside the card)
-    // look: the look of this trash (each row has its own)
-    const createTrashButton = function (dialog, look, width, height) {
-        return SmartButton({
-            width: width,
-            height: height,
-            labelText: "",
-            ariaLabel: dialog.trashLabel,
-            iconFile: ICONS.trash,
-            styleName: look.styleName,
-            tone: look.tone,
-            style: Object.assign({ ask: { button: TRASH_ASK } }, look.style),
-            ask: "Click again to " + dialog.trashLabel.toLowerCase() + ".",
-        });
-    };
+    // *** START:
 
     const start = function () {
 
         page.color = PAGE_COLOR;
 
-        // BOX: Cover (behind the dialogs; a Dialog component made from this page will use it as its cover)
+        // BOX: Cover (behind the dialog)
         Box(0, 0, "100%", "100%", { color: COVER_COLOR });
 
         const pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
 
             VGroup({ width: "100%", height: "100%", align: "center top", gap: 30, padding: [20, 50], clipContent: 0 }); // (basic-designer, 2026-10-30: was "auto")
 
-                createDialog({
-                    text: "Button styles",
-                    // (basic-designer, 2026-10-29: five actions, each with its own icon and text)
-                    actions: [
-                        { text: "Edit", icon: ICONS.edit, look: LOOKS.publish },
-                        { text: "Save", icon: ICONS.save, look: LOOKS.publishCyan },
-                        { text: "Send", icon: ICONS.send, look: LOOKS.publishSky },
-                        { text: "Upload", icon: ICONS.upload, look: LOOKS.publishOrange },
-                        { text: "Print", icon: ICONS.print, look: LOOKS.publishSlate },
-                    ],
-                    // (the texts are different sample texts: basic-designer, 2026-10-29)
-                    plainButtons: [
-                        { text: "Details", look: LOOKS.whitePlain },
-                        { text: "Later", look: LOOKS.yellowPlain },
-                        { text: "Report", look: LOOKS.rosePlain },
-                        { text: "Archive", look: LOOKS.mintPlain },
-                    ],
-                    softRow: {
-                        trash: LOOKS.softTrash,
-                        buttons: [
-                            { text: "Send", look: LOOKS.softGrayPlain },
-                            { text: "Print", look: LOOKS.softYellowPlain },
-                            { text: "Save", look: LOOKS.softMistPlain },
-                            { text: "Upload", look: LOOKS.softLavenderPlain },
-                        ],
-                    },
-                    ghostRow: {
-                        button: { text: "Upload", look: LOOKS.ghostPlain },
-                        trash: LOOKS.ghostTrash,
-                    },
-                    looks: { cancel: LOOKS.cancel, whiteCancel: LOOKS.whiteCancel, trash: LOOKS.trash },
-                    ...OZDEN_SIZES,
-                    trashLabel: "Delete the draft",
-                });
+                // GROUP: The card of the button standards
+                VGroup({ width: CARD_WIDTH, height: CARD_HEIGHT, align: "left top", gap: 0, color: "white", round: CARD_ROUND, border: CARD_BORDER, borderColor: INK, boxShadow: "0 10px 30px rgba(0, 0, 0, 0.08), " + BOTTOM_LINE, clipContent: 0 });
+                that.css = { maxWidth: "calc(100vw - 40px)" };
+
+                    // GROUP: Content (it fills the card: the height of the card in its edge; basic-designer, 2026-10-29)
+                    VGroup({ width: "100%", height: CARD_HEIGHT - 2 * CARD_BORDER, align: "left top", gap: 8, padding: [24, 22] });
+
+                        Label({ plainText: "Button styles", width: "100%", fontSize: TEXT_SIZE, textColor: INK, fontFamily: "opensans-bold", css: { whiteSpace: "normal", lineHeight: "1.5", textWrap: "balance" } });
+
+                        // DEFAULT: Cancel, gray and white
+                        createSectionTitle("Default (ozdenType1)");
+                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 10, clipContent: 0 });
+                            SmartButton({ labelText: "Cancel" });
+                            SmartButton({ tone: "white", labelText: "Cancel" });
+                        endGroup();
+
+                        // PRIMARY: the actions, each in its own color (it waits while the job runs)
+                        createSectionTitle("Primary (ozdenType1)");
+                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 10, color: PRIMARY_ROW_COLOR, clipContent: 0 });
+                            SmartButton({ labelText: "Edit", iconFile: ICONS.edit, style: TEAL_ACTION, onClick: waitForJob });
+                            SmartButton({ labelText: "Save", iconFile: ICONS.save, style: CYAN_ACTION, onClick: waitForJob });
+                            SmartButton({ labelText: "Send", iconFile: ICONS.send, style: SKY_ACTION, onClick: waitForJob });
+                            SmartButton({ labelText: "Upload", iconFile: ICONS.upload, style: ORANGE_ACTION, onClick: waitForJob });
+                            SmartButton({ labelText: "Print", iconFile: ICONS.print, style: SLATE_ACTION, onClick: waitForJob });
+                        endGroup();
+
+                        // ALTERNATIVE (ozdenType2): the white trash (it asks before it deletes), plain buttons in a few colors
+                        createSectionTitle("Alternative (ozdenType2)");
+                        HGroup({ height: "auto", align: "left center", gap: 10, clipContent: 0 });
+                            SmartButton({
+                                styleName: "ozdenType2",
+                                tone: "white",
+                                width: TRASH_WIDTH,
+                                labelText: "",
+                                iconFile: ICONS.trash,
+                                ariaLabel: "Delete the draft",
+                                ask: "Click again to delete the draft.",
+                                style: TRASH,
+                            });
+                            SmartButton({ styleName: "ozdenType2", tone: "white", labelText: "Details" });
+                            SmartButton({ styleName: "ozdenType2", labelText: "Later", style: SOFT_YELLOW });
+                            SmartButton({ styleName: "ozdenType2", labelText: "Report", style: ROSE });
+                            SmartButton({ styleName: "ozdenType2", labelText: "Archive", style: MINT });
+                        endGroup();
+
+                        // ALTERNATIVE (ozdenType3): the same kinds with a fainter edge, a gray bin
+                        createSectionTitle("Alternative (ozdenType3)");
+                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 10, clipContent: 0 });
+                            SmartButton({
+                                styleName: "ozdenType3",
+                                width: TRASH_WIDTH,
+                                labelText: "",
+                                iconFile: ICONS.trash,
+                                ariaLabel: "Delete the draft",
+                                ask: "Click again to delete the draft.",
+                                style: TRASH,
+                            });
+                            SmartButton({ styleName: "ozdenType3", labelText: "Send" });
+                            SmartButton({ styleName: "ozdenType3", labelText: "Print", style: SOFT_YELLOW });
+                            SmartButton({ styleName: "ozdenType3", labelText: "Save", style: MIST });
+                            SmartButton({ styleName: "ozdenType3", labelText: "Upload", style: LAVENDER });
+                        endGroup();
+
+                        // ALTERNATIVE (ozdenType4): a text button and a bin with no surface (their hover shows they are buttons)
+                        createSectionTitle("Alternative (ozdenType4)");
+                        HGroup({ height: "auto", align: "left center", gap: 10, clipContent: 0 });
+                            SmartButton({ styleName: "ozdenType4", labelText: "Upload" });
+                            SmartButton({
+                                styleName: "ozdenType4",
+                                width: TRASH_WIDTH,
+                                labelText: "",
+                                iconFile: ICONS.trash,
+                                ariaLabel: "Delete the draft",
+                                ask: "Click again to delete the draft.",
+                                style: TRASH,
+                            });
+                        endGroup();
+
+                    endGroup();
+
+                endGroup();
 
             endGroup();
 
@@ -306,6 +184,19 @@
 
         if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: pageBox });
 
+    };
+
+    // *** FUNCTIONS:
+
+    // LABEL: The name of a kind of button over its row
+    const createSectionTitle = function (text) {
+        return Label({ plainText: text, width: "100%", fontSize: TEXT_SIZE, textColor: INK });
+    };
+
+    // A job that takes time: the button waits, then it is as before
+    const waitForJob = function (button) {
+        button.setWaiting(1);
+        button.after(JOB_TIME, function () { button.setWaiting(0); });
     };
 
     </script>
