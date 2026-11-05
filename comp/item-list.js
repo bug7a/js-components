@@ -5,9 +5,10 @@
 ItemList - v26.11
 
 UI COMPONENT TEMPLATE
-- NEW PROJECTS (the user, 2026-11-05): use styleName "ozden" (the default: the rows of the old comp-m1 SelectItem,
-  white with a thin line above and under them under the mouse; its search box the ozden SearchInput in white),
-  unless the user asks for another look.
+- NEW PROJECTS (the user, 2026-11-05): use styleName "ozden" on a light page (the default: the rows of the old
+  comp-m1 SelectItem, white with a thin line above and under them under the mouse; its search box the ozden
+  SearchInput in white) and "ozdenDark" on a dark page (02-comp-examples/item-list.htm), unless the user asks for
+  another look.
 - A list of items: an icon, a title and a description on every row, or your own row (createItemView).
   The new version of comp-m1/item-list.js (ItemList.create / setItemCreationFunction).
 - Layouts: "vertical" (a list), "horizontal" (one row of tiles: categories, cards) and "grid" (tiles that
