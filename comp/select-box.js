@@ -32,6 +32,9 @@ UI COMPONENT TEMPLATE
 - Style packages: "classic" (default), "dark", "ozden" (the look of the old comp-m1 SelectItem / SelectText
   as a package of params: 350 x 50, a search box, the list goes down to the bottom of the page).
   Select with styleName. (SelectBox.styles) ("legacy" was merged into "ozden" on 2026-10-31.)
+  NEW PROJECTS (the user, 2026-11-05): use "classic" (the default) on a light page and "dark" on a dark page, the
+  looks of 02-comp-examples/select-box.htm, unless the user asks for another look ("ozden" only when asked: the
+  look of the old comp-m1 SelectItem / SelectText).
 - scale: multiplies every size (the style, width / height / panelMinWidth / panelMaxHeight, the spaces in the
   code, the search box, the rows, the checks). Its default is basic.uiScale: on a page fitted with page.fit()
   (basic.uiScale = 1 / page.zoom) the field and its list keep their size on the screen. The objects of
@@ -1653,7 +1656,7 @@ SelectBox.styles = {
 
 
 // The look of the old comp-m1 SelectItem and SelectText: a whitesmoke box with a thin border, the list opens
-// over the field with a fade, a yellow search box (SearchInput), rows that get white under the mouse, the
+// over the field with a fade, a white search box (SearchInput; yellow until 2026-11-05), rows that get white under the mouse, the
 // selected one half transparent. A package of params: a 350 x 50 field, a search box, the list down to the
 // bottom of the page. Text rows; your own rows and field: createItemView / createValueView
 // (02-comp-examples/select-box-ozden-item.htm). The params of the package are used when the page does not give them.
@@ -1685,11 +1688,12 @@ SelectBox.styles.ozden = {
             motionDuration: 200,
             startScale: 0.9,
         },
-        // The yellow search bar of the comp-m1 SelectItem: it was this SearchInput (the comp-m1 one) with these params.
+        // The search bar of the comp-m1 SelectItem: it was this SearchInput (the comp-m1 one) with these params.
+        // WHITE (the user, 2026-11-05): as the search box of ItemList ozden; it was the yellow of comp-m1 (#FFFCD6)
         searchInput: {
             styleName: "classic",
             height: 40,
-            color: "#FFFCD6",
+            color: "white",
             border: 0,
             borderColor: "transparent",
             borderBottomStyle: "2px solid rgba(0, 0, 0, 0.06)",
@@ -1705,7 +1709,7 @@ SelectBox.styles.ozden = {
             invertIconColor: 0,
         },
         search: {
-            color: "#FFFCD6",
+            color: "white", // (as searchInput, the user 2026-11-05)
             border: 0,
             borderColor: "transparent",
             round: 2,
