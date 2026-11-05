@@ -21,6 +21,7 @@ NOTE: still in development (the user, 2026-10-29): more style packages come; the
   fields (comp/input-b.js, load it with comp/tooltip.js; without it a plain Input). A "primary" button checks
   them first: an error is written under the message and the field gets the focus. getValues() -> { key: value }.
 - content(dialog): any objects in the body (under the message).
+- setStatus(text, type): a line under the content: "error" (red), "success" (green, 2026-11-05) or "info" (gray).
 - Closes with a button, Escape, a click on the cover (closeOnCover) or close(). onClose(dialog, reason, buttonKey).
 - Keyboard: Tab stays in the dialog; the first field (else the primary button) gets the focus; the focus goes back to
   the opener when it closes. More than one dialog: Escape closes the top one.
@@ -98,7 +99,9 @@ const DialogDefaults = {
         },
         title: { fontSize: 20, textColor: "#1B1F23", fontFamily: "opensans-bold" },
         message: { fontSize: 16, textColor: Black(0.55), lineHeight: 1.5 },
-        status: { fontSize: 13, errorColor: "#E8796D", infoColor: Black(0.55) },
+        // successColor (the user, 2026-11-05: "it is saved" under the content): the green of SmartButton (#7BC362), deeper.
+        // WHY deeper: #7BC362 is 2.2:1 on white; #498335 is 4.6:1, enough for a small text
+        status: { fontSize: 13, errorColor: "#E8796D", infoColor: Black(0.55), successColor: "#498335" },
         footer: { color: "#FAFAF9", lineColor: Black(0.1), padding: [16, 14], gap: 10, buttonHeight: 40, iconButtonWidth: 50 },
         fieldStyleName: "ozden", // the styleName of the InputB fields
         // variant: "centered" (a layout the user drew, the colors of ozden)
@@ -506,13 +509,14 @@ const Dialog = function (params = {}) {
         return isBusy;
     };
 
-    // A line under the message: type "error" (red) or "info"; "" hides it
+    // A line under the message (and the fields, the content): type "error" (red), "success" (green) or "info"; "" hides it
     box.setStatus = function (text, type = "info") {
+        const colors = { error: _s.status.errorColor, success: _s.status.successColor, info: _s.status.infoColor };
         box.lblStatus.plainText = text || "";
-        box.lblStatus.textColor = (type == "error") ? _s.status.errorColor : _s.status.infoColor;
+        box.lblStatus.textColor = colors[type] || _s.status.infoColor;
         box.lblStatus.visible = text ? 1 : 0;
     };
-    // USAGE: dialog.setStatus("Could not save.", "error")
+    // USAGE: dialog.setStatus("Could not save.", "error") / dialog.setStatus("The title is saved.", "success")
 
     box.setTitle = function (text) {
         box.titleText = text;
