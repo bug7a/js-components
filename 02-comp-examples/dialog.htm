@@ -33,7 +33,7 @@
     // - Dialog.alert({ ..., buttonType: "success" })
     // Dialogs with content (2026-11-05, the user): a file to upload (SelectFile), choices (CheckBox), a text to edit
     // (an InputB field: Save is on only when it is changed, it waits, then the dialog says that it is saved) and an
-    // order to change (SortableList). The trash of a dialog has the faint edge of ozdenType3, as Cancel.
+    // order to change (SortableList).
     // TRY: open each dialog; on Delete click twice (the first click asks); in Publish leave the title empty.
 
     const WORK_TIME = 1200; // ms: a job that takes time (the sample)
@@ -54,9 +54,6 @@
     const TRASH_ICON = "../04-templates/todo-app-example/images/trash.svg";
     const UPLOAD_ICON = svgIcon("black",
         '<path d="M12 15V4.5M7.5 9 12 4.5 16.5 9M5 19.5h14" fill="none" stroke="COLOR" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>');
-
-    // The dialogs with a trash: an icon button with the faint edge of ozdenType3, as Cancel (the user, 2026-11-05)
-    const DIALOG_STYLE = { buttons: { icon: { styleName: "ozdenType3" } } };
 
     const UPLOAD_MAX_SIZE = 10 * 1024 * 1024; // bytes (10 MB)
     const CONTACT_WAYS = ["E-mail", "SMS", "Push notifications", "Phone call"];
@@ -96,7 +93,6 @@
     // The dialog of the design: a field, the trash (asks again), Cancel and Publish (it waits)
     const openPublishDialog = function () {
         Dialog({
-            style: DIALOG_STYLE,
             titleText: "Publish the article?",
             messageText: "Your article will be seen by everyone on the blog. You can still change it after it is published.",
             fields: [{ key: "title", titleText: "ARTICLE TITLE", placeholder: "How I started to garden", required: 1 }],
@@ -193,7 +189,6 @@
     // dialog stays open and says under the field that it is saved.
     const openEditDialog = function () {
         const dialog = Dialog({
-            style: DIALOG_STYLE,
             titleText: "Edit the title",
             messageText: "The title of the article. Save is on when you change it.",
             fields: [{ key: "title", titleText: "ARTICLE TITLE", value: articleTitle, required: 1 }],

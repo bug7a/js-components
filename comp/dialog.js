@@ -32,7 +32,7 @@ NOTE: still in development (the user, 2026-10-29): more style packages come; the
 - Motion: the cover comes from nothing and the card rises 50 px while it comes (0.2 s); it goes at once; none with reduced motion.
 - Style packages: "ozden" (default). (Dialog.styles)
 - The buttons (the user, 2026-10-30): style.buttons[type] = { styleName, tone, style }: a template of SmartButton
-  ("ozdenType1"; Cancel: "ozdenType3", a faint edge, the user 2026-11-05; icon: "ozdenType2"), a tone of it
+  ("ozdenType1"; Cancel and icon: "ozdenType3", a faint edge, the user 2026-11-05), a tone of it
   (primary: "cyan", danger: "orange"...; icon: "white"; the user, 2026-11-04) and only the keys that differ.
 - Scale (2026-11-01): scale multiplies every size of the dialog (its style, width, motion, its buttons and the bubble
   of their ask). null (default): basic.uiScale (1; a page fitted with page.fit() sets 1 / page.zoom: the dialog keeps
@@ -101,7 +101,8 @@ const DialogDefaults = {
         message: { fontSize: 16, textColor: Black(0.55), lineHeight: 1.5 },
         // successColor (the user, 2026-11-05: "it is saved" under the content): the green of SmartButton (#7BC362), deeper.
         // WHY deeper: #7BC362 is 2.2:1 on white; #498335 is 4.6:1, enough for a small text
-        status: { fontSize: 13, errorColor: "#E8796D", infoColor: Black(0.55), successColor: "#498335" },
+        // errorColor (the user, 2026-11-05): #E8796D deeper and calmer (the same hue). WHY: #E8796D is 2.8:1 on white; #C74B3D is 4.7:1
+        status: { fontSize: 13, errorColor: "#C74B3D", infoColor: Black(0.55), successColor: "#498335" },
         footer: { color: "#FAFAF9", lineColor: Black(0.1), padding: [16, 14], gap: 10, buttonHeight: 40, iconButtonWidth: 50 },
         fieldStyleName: "ozden", // the styleName of the InputB fields
         // variant: "centered" (a layout the user drew, the colors of ozden)
@@ -127,9 +128,10 @@ const DialogDefaults = {
             success: { styleName: "ozdenType1", tone: "green", style: {} },
             info: { styleName: "ozdenType1", tone: "blue", style: {} },
             // white, whitesmoke under the mouse (the user, 2026-11-04: as the trash of the SmartButton samples; it was
-            // a pink hover). An icon button has no room at its sides by itself.
+            // a pink hover). An icon button has no room at its sides by itself. A faint edge as Cancel (the user,
+            // 2026-11-05: ozdenType3; it was ozdenType2)
             icon: {
-                styleName: "ozdenType2",
+                styleName: "ozdenType3",
                 tone: "white",
                 style: {
                     icon: { opacity: 1 }, // (30 px until 2026-10-29)
