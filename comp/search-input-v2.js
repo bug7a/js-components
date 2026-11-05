@@ -7,6 +7,8 @@ Search Input - v24.04
 UI COMPONENT TEMPLATE
 - You can customize, this template code as you need:
 - Style packages: "classic" (default), "ozden", "ozdenDark". Select with styleName. (SearchInput.styles)
+-- "ozden" and "ozdenDark" are 44 px high (the user, 2026-11-05; "classic" and the defaults: 50). A height given by
+   the page wins over it.
 -- A package is a package of params (basic.js v26.10.27): its keys fill the params you did not give.
 -- SearchInput.styles.myStyle = { style: {}, color: "white", textColor: "#222", ... };
 - animated: 1 adds small motions (not at the first view): under the mouse a thin line and a bigger search icon,
@@ -500,6 +502,7 @@ SearchInput.styles = {
         textColor: "rgba(0, 0, 0, 0.8)",
         placeholderColor: "",
         fontSize: 20,
+        height: 44, // (the user, 2026-11-05: the default is 50) as the search box of ItemList and SelectBox ozden
         border: 1,
         borderColor: "rgba(0, 0, 0, 0.1)",
         borderBottomStyle: "3px solid rgba(0, 0, 0, 0.06)",
@@ -525,6 +528,7 @@ SearchInput.styles = {
         textColor: "rgba(255, 255, 255, 0.88)",
         placeholderColor: "rgba(255, 255, 255, 0.35)",
         fontSize: 20,
+        height: 44, // (the user, 2026-11-05: the default is 50) as the search box of ItemList and SelectBox ozden
         border: 1,
         borderColor: "rgba(255, 255, 255, 0.1)",
         borderBottomStyle: "3px solid rgba(255, 255, 255, 0.06)",

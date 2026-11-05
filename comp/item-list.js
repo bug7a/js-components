@@ -1570,7 +1570,7 @@ ItemList.styles = {
         empty: { fontSize: 14, textColor: Black(0.45) },
         search: {
             styleName: "classic", // WHY: not the ozden package of the default search box
-            height: 40,
+            height: 44, // (the user, 2026-11-05: it was 40) as ozden and ozdenDark
             padding: [8, 8, 8, 4],
             fontSize: 15,
             color: "white",
@@ -1625,7 +1625,7 @@ ItemList.styles = {
         empty: { fontSize: 14, textColor: White(0.45) },
         search: {
             styleName: "classic", // WHY: not the ozden package of the default search box
-            height: 40,
+            height: 44, // (the user, 2026-11-05: it was 40) as ozden and ozdenDark
             padding: [8, 8, 8, 4],
             fontSize: 15,
             color: "#232322", // surface2: a field
