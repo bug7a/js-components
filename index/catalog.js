@@ -399,9 +399,9 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "line-progress-bar", name: "LineProgressBar", cat: "feedback",
-        source: "comp/line-progress-bar.js", samples: ["02-comp-examples/line-progress-bar.htm"],
-        en: "A progress bar drawn with thin vertical lines.",
-        tr: "İnce dikey çizgilerle çizilen ilerleme çubuğu.",
+        source: "comp/line-progress-bar.js", deps: ["comp/tooltip.js"], samples: ["02-comp-examples/line-progress-bar.htm"],
+        en: "A progress bar drawn with vertical lines: thin, or thick with round ends; the value in a bubble with an arrow.",
+        tr: "Dikey çizgilerle çizilen ilerleme çubuğu: ince ya da uçları yuvarlak kalın çizgiler; değer oklu bir balonda.",
     },
     {
         key: "input-b", name: "InputB", cat: "inputs",

@@ -3,13 +3,25 @@
 /*
 
 Component: LineProgressBar
-Version: 1.2 (2026-11-05: the lines follow the width; a bar made in a hidden container works)
+Version: 1.3 (2026-11-05: thick lines with round ends, the value in a bubble with an arrow, setPrimaryColor;
+         1.2 2026-11-05: the lines follow the width; a bar made in a hidden container works)
 Created: November 2025
 Description: A progress bar component composed of vertical lines.
+
+- The lines (the user, 2026-11-05): lineWidth, lineGap and lineRound ("full": the top and the bottom are half
+  circles). headGrow: 1 (default) makes the line at the progress and its two neighbors wider and longer; 0: every
+  line is the same. primaryColor: the full lines; secondaryColor: the empty ones.
+- valueBubble: 1 shows the value all the time in a bubble of comp/tooltip.js (load it first) over the last full
+  line, its arrow pointing at it (valueBubbleLook: the keys of Tooltip.BUBBLE_LOOK; its color is primaryColor).
+  showValueLabel: the small label that shows for a moment when the value changes.
+- 0% has no full line (2026-11-05: one line was full at 0%).
 
 USAGE:
 const bar = LineProgressBar({ width: 300, height: 40, showValueLabel: true });
 bar.setProgress(45); // 0 to 100
+const upload = LineProgressBar({ width: 360, height: 36, lineWidth: 6, lineGap: 4, lineRound: "full", headGrow: 0,
+    primaryColor: "#7BC362", secondaryColor: "#E2E1DD", valueBubble: 1 }); // thick round lines, a bubble
+upload.setPrimaryColor("#52A8D0");
 
 NOTE (September 2026): Renamed from "ProgressBar" to "LineProgressBar".
 WHY: comp/progress-bar.js is the standard "ProgressBar". Two "const ProgressBar" on the same page
@@ -25,9 +37,15 @@ const LineProgressBarDefaults = {
     width: 300,
     height: 50,
     progress: 0, // 0 to 100
-    primaryColor: "indianred",
-    secondaryColor: "lightgray",
-    showValueLabel: false,
+    primaryColor: "indianred", // the full lines
+    secondaryColor: "lightgray", // the empty lines
+    lineWidth: 1, // px
+    lineGap: 3, // px between two lines
+    lineRound: 3, // px, or "full": the top and the bottom of a line are half circles
+    headGrow: 1, // 1: the line at the progress and its two neighbors are wider and longer; 0: every line the same
+    showValueLabel: false, // the value in a small label for a moment when it changes
+    valueBubble: 0, // 1: the value all the time in a bubble with an arrow over the last full line (comp/tooltip.js)
+    valueBubbleLook: {}, // the keys of Tooltip.BUBBLE_LOOK (its color: primaryColor)
     backgroundColor: "transparent",
 };
 
@@ -41,15 +59,14 @@ const LineProgressBar = function (params = {}) {
     box.clipContent = 0; // WHY: The head of the progress and the value label stand out of the box.
 
     // *** PRIVATE VARIABLES:
-    const LINE_WIDTH = 1;
-    const LINE_GAP = 3;
-    const UNIT_WIDTH = LINE_WIDTH + LINE_GAP;
-    const LINE_ROUND = 3;
+    const UNIT_WIDTH = box.lineWidth + box.lineGap;
+    const LINE_ROUND = (box.lineRound === "full") ? box.lineWidth / 2 : box.lineRound;
     // The line at the progress (the head) and its two neighbors are wider and longer (overhang: px at the top and the bottom).
-    const HEAD_LOOK = { width: 3, overhang: 2, zIndex: 10, color: "black" };
-    const NEIGHBOR_LOOK = { width: 2, overhang: 1, zIndex: 5 };
+    const HEAD_LOOK = { width: box.lineWidth * 3, overhang: 2, zIndex: 10, color: "black" };
+    const NEIGHBOR_LOOK = { width: box.lineWidth * 2, overhang: 1, zIndex: 5 };
     const VALUE_LABEL_TOP = -25; // Above the lines
     const VALUE_LABEL_SHOW_TIME = 1000; // ms after the last change
+    const VALUE_BUBBLE_Z_INDEX = 2; // over the content of the page (and over a Dialog that holds the bar: zIndexAbove)
 
     let totalLines = 0; // follows the width of the box (0 while it is not drawn: a closed tab, a hidden group)
     const lines = [];
@@ -57,6 +74,8 @@ const LineProgressBar = function (params = {}) {
 
     let valueLabel = null;
     let cancelValueLabelHide = null; // The cancel function of the waiting hide (box.after)
+    let valueBubble = null;
+    let isBubblePlaceWaiting = 0;
 
     // *** PUBLIC VARIABLES:
     box.currentProgress = box.progress;
@@ -80,6 +99,7 @@ const LineProgressBar = function (params = {}) {
         buildLines();
 
         if (box.showValueLabel) createValueLabel();
+        if (box.valueBubble == 1) createValueBubble();
     };
 
     // WHY again on a resize: the lines were made once from the width at create time. A bar made in a closed tab or
@@ -92,7 +112,7 @@ const LineProgressBar = function (params = {}) {
         createIn(lineContainer, function () {
             for (let i = 0; i < totalLines; i++) {
                 lines.push(Box({
-                    width: LINE_WIDTH,
+                    width: box.lineWidth,
                     height: box.height,
                     left: i * UNIT_WIDTH,
                     top: 0,
@@ -120,11 +140,14 @@ const LineProgressBar = function (params = {}) {
         valueLabel.setMotion("opacity 0.3s");
     };
 
-    // The index of the head line. (100% would be one past the last line.)
+    // How many lines are full (0%: none, 100%: all)
+    const getFullCount = function () {
+        return Math.round((box.currentProgress / 100) * totalLines);
+    };
+
+    // The index of the head line: the last full one (-1: no full line)
     const getHeadIndex = function () {
-        const headIndex = Math.floor((box.currentProgress / 100) * totalLines);
-        if (headIndex >= totalLines) return totalLines - 1;
-        return headIndex;
+        return getFullCount() - 1;
     };
 
     // A wider line keeps the center of a normal line: it moves left by half of the extra width.
@@ -132,13 +155,15 @@ const LineProgressBar = function (params = {}) {
         const normalLeft = index * UNIT_WIDTH;
         const look = {
             color: (index <= headIndex) ? box.primaryColor : box.secondaryColor,
-            width: LINE_WIDTH,
+            width: box.lineWidth,
             overhang: 0,
             zIndex: 0,
         };
-        if (index === headIndex) Object.assign(look, HEAD_LOOK);
-        if (index === headIndex - 1 || index === headIndex + 1) Object.assign(look, NEIGHBOR_LOOK);
-        look.left = normalLeft - (look.width - LINE_WIDTH) / 2;
+        if (box.headGrow == 1) {
+            if (index === headIndex) Object.assign(look, HEAD_LOOK);
+            if (index === headIndex - 1 || index === headIndex + 1) Object.assign(look, NEIGHBOR_LOOK);
+        }
+        look.left = normalLeft - (look.width - box.lineWidth) / 2;
         return look;
     };
 
@@ -157,11 +182,11 @@ const LineProgressBar = function (params = {}) {
         }
     };
 
-    // The center of the head line. No head line (a negative progress, no lines): 0.
+    // The center of the head line. No head line (no full line, no lines): 0.
     const getHeadCenter = function (headIndex) {
         if (headIndex < 0) return 0;
-        const headLeft = getLineLook(headIndex, headIndex).left;
-        return headLeft + (HEAD_LOOK.width / 2);
+        const look = getLineLook(headIndex, headIndex);
+        return look.left + (look.width / 2);
     };
 
     // The label shows the value over the head line for a short time.
@@ -179,10 +204,56 @@ const LineProgressBar = function (params = {}) {
         });
     };
 
+    // *** THE VALUE BUBBLE (valueBubble: 1): a bubble of comp/tooltip.js on page, over the last full line
+
+    const createValueBubble = function () {
+        if (typeof Tooltip === "undefined") {
+            console.warn("LineProgressBar: valueBubble needs comp/tooltip.js (Tooltip).");
+            return;
+        }
+        const look = Object.assign({ color: box.primaryColor }, box.valueBubbleLook);
+        look.zIndex = basic.zIndexAbove(box, VALUE_BUBBLE_Z_INDEX);
+        valueBubble = Tooltip.createBubble("", look);
+        box.own(valueBubble); // (it is on page: it goes with the bar)
+        box.listenTo(window, "scroll", queueBubblePlace, true); // WHY capture: the scroll of a box does not bubble up
+        box.onPageResize(placeValueBubble);
+        // WHY: a text measured before its font came is narrower; the bubble is placed again when the fonts are ready
+        if (document.fonts && document.fonts.status != "loaded") document.fonts.ready.then(placeValueBubble);
+    };
+
+    // The point of the arrow: the top of the last full line (no full line: the left end of the bar)
+    const getBubbleTarget = function () {
+        const headIndex = getHeadIndex();
+        if (headIndex >= 0) return Tooltip.toPageRect(lines[headIndex]);
+        const rect = Tooltip.toPageRect(box);
+        return { left: rect.left, top: rect.top, width: 0, height: rect.height };
+    };
+
+    // The bubble is seen only while the bar is (a closed tab, a box scrolled away)
+    const placeValueBubble = function () {
+        if (!valueBubble || valueBubble._isRemoved) return;
+        const isShown = (totalLines > 0 && Tooltip.isInSight(box));
+        valueBubble.visible = isShown ? 1 : 0;
+        if (!isShown) return;
+        valueBubble.label.plainText = Math.round(box.currentProgress) + "%";
+        Tooltip.place(valueBubble, getBubbleTarget(), "top");
+    };
+
+    // Once a frame while a box scrolls
+    const queueBubblePlace = function () {
+        if (isBubblePlaceWaiting) return;
+        isBubblePlaceWaiting = 1;
+        requestAnimationFrame(function () {
+            isBubblePlaceWaiting = 0;
+            placeValueBubble();
+        });
+    };
+
     const updateVisuals = function () {
         const headIndex = getHeadIndex();
         paintLines(headIndex);
         if (box.showValueLabel && valueLabel) showValueLabel(headIndex);
+        placeValueBubble();
     };
 
     // *** PUBLIC FUNCTIONS:
@@ -194,12 +265,28 @@ const LineProgressBar = function (params = {}) {
     };
     // USAGE: get: bar.currentProgress, set: bar.setProgress(60)
 
+    // The color of the full lines (and of the bubble, when its look has no color of its own)
+    box.setPrimaryColor = function (color) {
+        box.primaryColor = color;
+        if (valueBubble && !box.valueBubbleLook.color) Tooltip.paintBubble(valueBubble, color);
+        if (valueLabel) valueLabel.color = color;
+        paintLines(getHeadIndex());
+    };
+    // USAGE: bar.setPrimaryColor("#52A8D0")
+
+    // The color of the empty lines
+    box.setSecondaryColor = function (color) {
+        box.secondaryColor = color;
+        paintLines(getHeadIndex());
+    };
+
     // *** OBJECT INIT CODE:
     createLines();
     updateVisuals();
     box.onResize(function () {
         if (countLines() !== totalLines) buildLines();
         paintLines(getHeadIndex()); // (not updateVisuals: the value label shows only when the value changes)
+        placeValueBubble();
     });
 
     return endObject(box);

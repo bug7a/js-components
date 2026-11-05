@@ -2092,6 +2092,20 @@
             group.remove();
         });
 
+        // 2026-11-05: at 0% one line was full (the head was the first line)
+        test("LineProgressBar: 0% has no full line, 100% has them all", async function () {
+            const FULL = "rgb(1, 2, 3)";
+            const bar = LineProgressBar({ width: 100, height: 20, primaryColor: FULL, headGrow: 0 });
+            const countFull = function () {
+                return Array.from(bar.elem.querySelectorAll(".basic_box")).filter(function (el) { return el.style.backgroundColor === FULL; }).length;
+            };
+            const atZero = countFull();
+            bar.setProgress(100);
+            const atHundred = countFull();
+            check("LineProgressBar: 0% has no full line, 100% has them all", atZero === 0 && atHundred === 25, "0%: " + atZero + ", 100%: " + atHundred + " (of 25)");
+            bar.remove();
+        });
+
         test("SelectTime in a removed container: its lists leave no window listener (basic.js v26.11.05)", async function () {
             const countResize = function () { return page._box._eventFuncList.filter(function (e) { return e.eventName === "resize"; }).length; };
             const before = countResize();
