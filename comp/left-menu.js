@@ -15,8 +15,8 @@ UI COMPONENT TEMPLATE
 -- itemHeight: the height of a button item. A page fitted with page.fit() is zoomed: for a finger give Ex: 44 / page.zoom.
 -- leftMenu.setOpenOnClick(1) changes it later.
 - Style packages (2026-11-05, the user): "dark" (default: a dark menu with a red selection) and "light" (for a light
-  page: a light menu with a line at its right side, a soft shadow while it is open over the page, the red of the dark
-  menu in light tones, dark icons and a dark scroll bar). A package is a package of params (LeftMenu.styles):
+  page: a light menu with a line at its right side, a soft shadow while it is open over the page, the cyan of
+  SmartButton in light tones, dark icons and a dark scroll bar). A package is a package of params (LeftMenu.styles):
   LeftMenu({ styleName: "light" }), LeftMenu({ styleName: "light", selectedColor: "#DCEBEC" }) (a param wins).
   Samples: 02-comp-examples/left-menu.htm (dark), left-menu-2.htm (light).
 
@@ -518,13 +518,14 @@ LeftMenu.styles = {
     dark: { style: {} },
 
     // For a light page (2026-11-05, the user): a light menu with a line at its right side and a soft shadow while it is
-    // open over the page; the red of the dark menu in light tones; dark icons and a dark scroll bar.
+    // open over the page; the cyan of SmartButton (#5BBAC1) in light tones (the user chose it over the red of the
+    // dark menu, the same day); dark icons and a dark scroll bar.
     light: {
         style: {},
         backgroundColor: "#F7F7F5",
         hoverColor: Black(0.05),
-        selectedColor: "#F2D7D2",
-        titleColor: "#B0544B",
+        selectedColor: "#D1ECEE", // (#5BBAC1, 28 % on white)
+        titleColor: "#3D8F96", // (a darker #5BBAC1: it reads on the light menu)
         textColor: Black(0.6),
         selectedTextColor: Black(0.88),
         invertIconColor: 0,
