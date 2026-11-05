@@ -193,7 +193,8 @@
         });
     };
 
-    const openConfirm = async function () {
+    // LOG OUT: Dialog.confirm (a Promise of true / false)
+    const openLogoutConfirm = async function () {
         const isSure = await Dialog.confirm({
             variant: "centered",
             topIconTone: "yellow",
@@ -204,10 +205,11 @@
             danger: 1,
             style: { buttons: { danger: { style: YELLOW_BUTTON_STYLE } } },
         });
-        showResult("confirm: " + isSure);
+        showResult("log out: " + isSure);
     };
 
-    const openAlert = async function () {
+    // SAVED: Dialog.alert (a Promise that ends when it closes)
+    const openSavedAlert = async function () {
         await Dialog.alert({
             variant: "centered",
             topIconTone: "green",
@@ -216,7 +218,7 @@
             messageText: "Your changes are saved.",
             buttonType: "success",
         });
-        showResult("alert: closed");
+        showResult("saved: closed");
     };
 
     // The page tells how a dialog was closed (keyOfNo: the button that says no)
@@ -405,6 +407,16 @@
         });
     };
 
+    // GROUP: a small title and the buttons of its dialogs (they wrap on a narrow screen)
+    const createGroup = function (group) {
+        VGroup({ hug: 1, align: "center top", gap: 8, clipContent: 0 });
+            Label({ text: group.titleText, fontSize: 13, textColor: Black(0.5) });
+            HGroup({ hug: 1, gap: 10, wrap: 1, align: "center top", clipContent: 0 });
+                group.buttons.forEach(function (button) { createButton(button.text, button.open); });
+            endGroup();
+        endGroup();
+    };
+
     const createButton = function (text, onClick) {
         return SmartButton({ styleName: "ozdenType1", labelText: text, height: 40, style: { box: { color: "white" } }, onClick: onClick }); // white inside (its hover stays gray)
     };
@@ -416,34 +428,35 @@
 
         // BOX: the page scrolls when its buttons are higher than the screen (a phone)
         startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
-            VGroup({ width: "100%", height: "auto", align: "center", gap: 14, padding: [16, 24] });
+            // WHY gap 22 (8 in a group): a title is nearer to its own buttons than to the buttons of the group above
+            VGroup({ width: "100%", height: "auto", align: "center", gap: 22, padding: [16, 24] });
             that.css = { minHeight: "100%" }; // WHY: in the middle of the screen while it is not higher than it
 
                 Label({ text: "Dialog: centered", fontSize: 26, bold: 1, textColor: Black(0.8) });
 
-                HGroup({ hug: 1, gap: 10, wrap: 1, clipContent: 0 });
-                    createButton("Delete account", openDeleteDialog);
-                    createButton("Dialog.confirm", openConfirm);
-                    createButton("Dialog.alert", openAlert);
-                endGroup();
-
-                HGroup({ hug: 1, gap: 10, wrap: 1, clipContent: 0 });
-                    createButton("Notifications", openNotificationsDialog);
-                    createButton("No connection", openOfflineDialog);
-                    createButton("Unsaved changes", openUnsavedConfirm);
-                endGroup();
-
-                HGroup({ hug: 1, gap: 10, wrap: 1, clipContent: 0 });
-                    createButton("Session ended", openSessionAlert);
-                    createButton("Something went wrong", openErrorDialog);
-                    createButton("Check your inbox", openInboxDialog);
-                endGroup();
-
-                HGroup({ hug: 1, gap: 10, wrap: 1, clipContent: 0 });
-                    createButton("Order placed", openOrderDialog);
-                    createButton("Rate the app", openRateDialog);
-                    createButton("Location", openLocationDialog);
-                endGroup();
+                // The dialogs by their situation: a small title and their buttons
+                [
+                    { titleText: "Before a change", buttons: [
+                        { text: "Delete account", open: openDeleteDialog },
+                        { text: "Log out", open: openLogoutConfirm },
+                        { text: "Leave without saving", open: openUnsavedConfirm },
+                    ] },
+                    { titleText: "After a good result", buttons: [
+                        { text: "Saved", open: openSavedAlert },
+                        { text: "Order placed", open: openOrderDialog },
+                        { text: "Check your inbox", open: openInboxDialog },
+                    ] },
+                    { titleText: "When something is wrong", buttons: [
+                        { text: "Something went wrong", open: openErrorDialog },
+                        { text: "No connection", open: openOfflineDialog },
+                        { text: "Session ended", open: openSessionAlert },
+                    ] },
+                    { titleText: "Requests", buttons: [
+                        { text: "Notifications", open: openNotificationsDialog },
+                        { text: "Location", open: openLocationDialog },
+                        { text: "Rate the app", open: openRateDialog },
+                    ] },
+                ].forEach(createGroup);
 
                 lblResult = Label({ plainText: "-", fontSize: 14, textColor: Black(0.5) });
 
