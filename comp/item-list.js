@@ -185,11 +185,11 @@ const ItemListDefaults = {
         check: { visible: 0, size: 22, color: "#373836", iconColor: "white", borderColor: Black(0.25) }, // A mark on the selected rows
         empty: { fontSize: 16, textColor: Black(0.4) },
         // The search box (showSearch: 1): the params of SearchInput: its ozden package (its font and icon sizes, its
-        // icons, its bottom line), white, nearly square and without a border (the user, 2026-11-05), as high as the old
-        // UISearchBox of the template.
+        // icons, its bottom line), white, nearly square and without a border (the user, 2026-11-05), 44 px high (the
+        // user, 2026-11-05: it was 40, the old UISearchBox of the template; ozdenDark takes it too).
         search: {
             styleName: "ozden", // A package of SearchInput.styles
-            height: 40,
+            height: 44,
             padding: [0, 0, 0, 0], // left, top, right, bottom: 0, as wide as the list
             color: "white",
             border: 0, // WHY: the list has its own border: only the bottom line of the package

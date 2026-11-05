@@ -1729,7 +1729,7 @@ SelectBox.styles.ozden = {
         // SearchInput of the comp-m1 SelectItem (in its yellow #FFFCD6 until 2026-11-05).
         searchInput: {
             styleName: "ozden",
-            height: 40,
+            height: 44, // (the user, 2026-11-05: it was 40) as ItemList ozden; ozdenDark takes it too
             searchIconLeft: 16, // WHY: the default of SearchInput, as ItemList ozden (SelectBoxDefaults has 10)
             color: "white",
             border: 0,
@@ -1742,7 +1742,7 @@ SelectBox.styles.ozden = {
             round: 2,
             fontSize: 18,
             textColor: "rgba(0, 0, 0, 0.8)",
-            height: 40,
+            height: 44, // as searchInput (this own search box: a page without comp/search-input-v2.js)
             padding: [16, 0],
             iconSize: 22,
             borderBottom: "2px solid rgba(0, 0, 0, 0.06)",
