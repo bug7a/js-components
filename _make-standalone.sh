@@ -28,7 +28,9 @@
 # --in-place: the project folder itself becomes standalone (its pages are rewritten, basic/ and comp/
 #   are made in it). For sites that live so in the repository (03-webpages/webpage-basicjs,
 #   04-templates/todo-app-example, __projects/webpage-ozden-panel). A project made in place with one
-#   file per component keeps that layout at the next runs (comp/_sources.txt tells it).
+#   file per component keeps that layout at the next runs (comp/_sources.txt tells it). A component
+#   line written later into such a page (../comp/name.js, over or under its comp/components.min.js
+#   line) goes into the one file, and the page keeps one line for it. (2026-11-05)
 #
 # --gzip: every text file of the output (.htm, .js, .css, .svg, .json, fonts...) is also written as
 #   name.gz (gzip -9), next to it. For a server that sends the packed files itself (Ex: a small board
@@ -226,7 +228,12 @@ pages.forEach(function (page) {
                 const name = inside.slice(1).join("/");
                 if (inside.length === 2 && fs.existsSync(path.join(REPO, "basic", name))) basicFiles[name] = path.join(REPO, "basic", name);
             } else if (inside[0] === "comp" && inside.length === 2 && inside[1] === ONE_FILE_NAME) {
-                (pageComps[page] = pageComps[page] || []).push.apply(pageComps[page], oldOneFile);
+                const list = (pageComps[page] = pageComps[page] || []);
+                // WHY: a component line over this one became the one file already: two lines would load every component twice
+                if (list.length) rewrites.push({ page: page, from: value, to: "", note: "(removed: a line above it loads " + ONE_FILE_NAME + " now)" });
+                oldOneFile.forEach(function (source) {
+                    if (list.indexOf(source) === -1) list.push(source);
+                });
             } else if (inside[0] === "comp" && inside.length === 2) {
                 const source = oldSources[inside[1]];
                 if (source) compFiles[inside[1]] = source;
@@ -315,7 +322,7 @@ if (isOneFile) console.log("  comp/   " + (oneFileOrder.length ? ONE_FILE_NAME +
 else console.log("  comp/   " + (Object.keys(compFiles).length ? Object.keys(compFiles).sort().map((name) => name + " <- " + compFiles[name]).join(", ") : "(none)"));
 if (MAKE_GZIP) console.log("  gzip:   every text file of the output also as name.gz");
 rewrites.forEach(function (item) {
-    console.log("  " + rel(item.page) + ": " + item.from + " -> " + (item.to || "(removed: it is in " + ONE_FILE_NAME + ")"));
+    console.log("  " + rel(item.page) + ": " + item.from + " -> " + (item.to || item.note || "(removed: it is in " + ONE_FILE_NAME + ")"));
 });
 
 // The basic/ twins that are older than their source
