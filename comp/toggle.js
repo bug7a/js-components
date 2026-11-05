@@ -7,6 +7,8 @@ UI COMPONENT TEMPLATE
 - An on / off switch: a round knob (box.button) slides on a track (box.background). A click switches it.
 - Style packages: "modern" (default: the knob is smaller when off) and "classic" (the old UIToggle). Select with
   styleName. (Toggle.styles)
+-- "modern" (2026-11-05, the user): a darker line around the colored track when on (selectedBorderColor: the light
+   look had no clear edge when on). Its size (70 x 40) and its round knob as before.
 -- "classic": the look of comp-m1/ui-toggle.js (javascript-mobile-app-template, a 600 px design): 60 x 40, a light
    gray track that turns blue, a white knob of the same size on and off, with a shadow.
 -- A package is a package of params (basic.js v26.10.27): its keys fill the params you did not give, also the
@@ -22,7 +24,9 @@ UI COMPONENT TEMPLATE
   in behind the knob, a mark in the knob turns in with a small spring, the mark grows a little under the mouse, the knob
   gets flatter while pressed. A toggle without marks does not change. Off with prefers-reduced-motion. setAnimated().
 - offButtonScale: the size of the knob when off (1: the same size as on).
-- backgroundStyle.selectedBorderColor: the line of the track when on ("": the same as borderColor).
+- backgroundStyle.selectedBorderColor: the line of the track when on ("": the same as borderColor). A page that gives
+  its own borderColor and no selectedBorderColor keeps that line when on too (the line of "modern" when on is for
+  its own colors).
 - backgroundStyle.left, top, width, height: a track of another size than the box (Ex: "float").
 - buttonStyle.shadow / buttonStyle.selectedShadow: the shadow of the knob when off / on.
 
@@ -90,13 +94,27 @@ const ToggleDefaults = {
 
 const Toggle = function(params = {}) {
 
+    // WHY copies: a page gives the same styles to many toggles ({ ...DARK_TOGGLE }); the merges below and
+    //      setBackgroundSelectedColor() wrote into them, so one toggle changed the others.
+    ["backgroundStyle", "buttonStyle", "markStyle"].forEach(function(name) {
+        if (params[name]) params[name] = Object.assign({}, params[name]);
+    });
+    // WHY: a page that gives its own line of the track (borderColor) keeps it when on too, as before: the line
+    //      of a package when on (modern: selectedBorderColor) is for the colors of that package (2026-11-05).
+    const ownStyle = params.backgroundStyle || {};
+    const keepsOwnLine = (ownStyle.borderColor !== undefined && ownStyle.selectedBorderColor === undefined);
+
     // Merge style package: your params > Toggle.styles[styleName] (a package of params) > ToggleDefaults
     basic.applyStylePackage(params, Toggle.styles, ToggleDefaults);
 
     // Merge params:
     mergeIntoIfMissing(params, ToggleDefaults);
+    if (keepsOwnLine) params.backgroundStyle.selectedBorderColor = ""; // ("": the line of borderColor)
 
     // Edit params, if needed:
+    // WHY: a switch keeps its size in a row: a narrow row made it narrower than its knob needs (the knob is placed
+    //      for its width). A page can give shrink: 1.
+    if (params.shrink === undefined) params.shrink = 0;
     params.color = "transparent";
     params.clickable = 1;
     params.clipContent = 0;
@@ -429,7 +447,12 @@ Toggle.MARK_PATHS = {
 Toggle.styles = {
 
     // The look of ToggleDefaults: a whitesmoke track that turns blue, a small gray knob that grows when on.
-    modern: { style: {} },
+    // A darker line around the colored track when on (the user, 2026-11-05: the light look had no clear edge when on);
+    // a page with its own line (borderColor) keeps it.
+    modern: {
+        style: {},
+        backgroundStyle: { selectedBorderColor: Black(0.2) }, // over the color: a darker line of it
+    },
 
     // The look of the old UIToggle (comp-m1/ui-toggle.js, javascript-mobile-app-template, a 600 px design):
     // a light gray track that turns blue, a white knob of the same size on and off; its shadow falls to the
