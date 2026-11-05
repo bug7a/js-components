@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>LogView</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- LIBRARY FILES -->
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- COMPONENT FILES -->
+        <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/check-box.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/log-view.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+
+        /* Bismillah */
+
+        // LogView (comp/log-view.js): the output of a program, in the two themes.
+        // The buttons write to both of them. Scroll up while a job runs: the view stays, and a button goes back to the end.
+
+        // *** VARIABLES:
+        const PAGE_COLOR = "#ECEBE8";
+        const SOFT_TEXT = "#6F6E6B";
+        const PANEL_MIN_WIDTH = 340;
+        const PANEL_MAX_WIDTH = 620;
+        const JOB_LINE_TIME = 120; // ms: a line of the job
+        const MANY_LINES_COUNT = 5000;
+
+        const FIRST_LINES = [
+            { text: "Program started", level: "info" },
+            { text: "Reading config.json", level: "info" },
+            { text: "cache: 31 items", level: "debug" },
+            { text: "14 files found", level: "success" },
+            { text: "photo.jpg is very large (48 MB), it will take a while", level: "warn" },
+            { text: "disk.bin can not be read: permission denied", level: "error" },
+            { text: "A long line wraps under its own text, not under its time: /Users/me/Documents/projects/photos/2026/november/holiday/raw/IMG_2041.CR3", level: "info" },
+            { text: "<b>This is not bold:</b> a text is shown as it is, never as HTML", level: "info" },
+            { text: "name      size\nphoto.jpg 48 MB\nnotes.txt  2 KB", level: "info" },
+        ];
+
+        const JOB_LINES = [
+            { text: "Job started", level: "info" },
+            { text: "Connecting to the server", level: "debug" },
+            { text: "Connected", level: "success" },
+            { text: "Copying a.txt", level: "info" },
+            { text: "Copying b.txt", level: "info" },
+            { text: "b.txt is older than the copy on the server", level: "warn" },
+            { text: "Copying c.txt", level: "info" },
+            { text: "Copying d.bin", level: "info" },
+            { text: "d.bin was not copied: no room on the disk", level: "error" },
+            { text: "Copying e.txt", level: "info" },
+        ];
+
+        let logViews = [];
+        let jobLineIndex = 0;
+        let jobTimer = null;
+        let btnJob;
+
+        // First running function. (basic.js calls it when the page is ready)
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            // BOX: Page (it scrolls when the window is lower than the samples)
+            const pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+
+            // GROUP: The title, the controls and the two themes
+            VGroup({ width: "100%", height: "auto", align: "center top", gap: 16, padding: [16, 28], clipContent: 0 });
+
+                Label({ text: "LogView", fontSize: 24, bold: 1, textColor: Black(0.8) });
+
+                createControls();
+
+                // GROUP: The two themes side by side (one under the other on a narrow screen)
+                HGroup({ width: "100%", height: "auto", align: "center top", gap: 20, wrap: 1 });
+                    logViews.push(createPanel("Light", "styleName: \"light\" (default)", "light"));
+                    logViews.push(createPanel("Dark", "styleName: \"dark\"", "dark"));
+                endGroup();
+
+            endGroup();
+
+            endBox();
+
+            ScrollBar({ scrollableBox: pageBox });
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        const eachLog = function (func) {
+            logViews.forEach(func);
+        };
+
+        // GROUP: The buttons and the check boxes
+        const createControls = function () {
+
+            HGroup({ width: "100%", height: "auto", align: "center center", gap: 8, wrap: 1 });
+                btnJob = SmartButton({ labelText: "Run a job", tone: "cyan", onClick: toggleJob });
+                SmartButton({ labelText: "Write " + MANY_LINES_COUNT + " lines", onClick: writeManyLines });
+                SmartButton({ labelText: "Clear", onClick: function () { eachLog(function (log) { log.clearLines(); }); } });
+            endGroup();
+
+            HGroup({ width: "100%", height: "auto", align: "center center", gap: 18, wrap: 1 });
+                CheckBox({ labelText: "Time", checked: 1, onChange: function (self) { eachLog(function (log) { log.setShowTime(self.checked); }); } });
+                CheckBox({ labelText: "Level", checked: 1, onChange: function (self) { eachLog(function (log) { log.setShowLevel(self.checked); }); } });
+                CheckBox({ labelText: "Wrap lines", checked: 1, onChange: function (self) { eachLog(function (log) { log.setWrapLines(self.checked); }); } });
+                CheckBox({ labelText: "Only warnings and errors", onChange: function (self) {
+                    const levels = (self.checked) ? ["warn", "error"] : [];
+                    eachLog(function (log) { log.setLevels(levels); });
+                } });
+            endGroup();
+
+        };
+
+        // GROUP: A title and a LogView. Returns the LogView.
+        const createPanel = function (titleText, noteText, styleName) {
+            VGroup({ width: "auto", height: "auto", align: "left top", gap: 8, css: { flex: "1 1 " + PANEL_MIN_WIDTH + "px", maxWidth: PANEL_MAX_WIDTH + "px", minWidth: "0" } });
+                HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
+                    Label({ text: titleText, fontSize: 15, bold: 1, textColor: Black(0.75) });
+                    Label({ text: basic.escapeHtml(noteText), fontSize: 12, textColor: SOFT_TEXT });
+                endGroup();
+                const log = LogView({ styleName: styleName, height: 340, lines: FIRST_LINES });
+            endGroup();
+            return log;
+        };
+
+        const writeJobLine = function () {
+            const line = JOB_LINES[jobLineIndex % JOB_LINES.length];
+            jobLineIndex++;
+            eachLog(function (log) { log.addLine(line.text, line.level); });
+        };
+
+        const toggleJob = function () {
+            if (jobTimer) {
+                clearInterval(jobTimer);
+                jobTimer = null;
+                btnJob.setText("Run a job");
+                return;
+            }
+            jobTimer = setInterval(writeJobLine, JOB_LINE_TIME);
+            btnJob.setText("Stop the job");
+        };
+
+        // WHY: The lines that come at once are drawn together, and only the last 1000 of them (maxLines).
+        const writeManyLines = function () {
+            for (let i = 1; i <= MANY_LINES_COUNT; i++) {
+                eachLog(function (log) { log.addLine("Line " + i + " of " + MANY_LINES_COUNT, "debug"); });
+            }
+        };
+
+        </script>
+
+    </head>
+    <body>
+    </body>
+</html>
