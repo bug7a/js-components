@@ -16,15 +16,20 @@ UI COMPONENT TEMPLATE
   hover, a click, Enter or ArrowRight (at the left when there is no room). ArrowLeft or Escape closes only the
   submenu. A click on an item of a submenu closes every menu and calls onClick(self, item, index) of the menu
   (self: the menu of the click, item: the item of the submenu). Submenus can have submenus.
+- For a menu of a program (2026-11-05, MenuBar uses them): an item with shortcut has a soft text at its end (only
+  a text: the page runs it, or MenuBar), an item with checked (0 / 1) has a check mark in the icon place
+  (setItemChecked), and openBelow(obj) opens the menu under an object (over it when there is no room).
 - Style packages: "classic" (default), "dark". Select with styleName. (ContextMenu.styles)
 
-ITEM: { text, key, iconFile, icon, items, enabled, data, onClick }
+ITEM: { text, key, iconFile, icon, items, shortcut, checked, enabled, data, onClick }
 - A string is also accepted: "Copy" -> { text: "Copy" }
 - "-" or { type: "separator" }: Separator line
 - icon: an SVG text ("<svg ...>", your own code, not a user text). Drawn with the color of the text of the item
   (use stroke="currentColor" or fill="currentColor"), so one icon works in every style (dark too). Its size: style.icon.
 - iconFile: an image file (the old way; its colors are its own).
 - items: the items of its submenu (the item itself is not clicked).
+- shortcut: a soft text at the end of the row ("Ctrl+S").
+- checked: 0 or 1: the item is a choice that can be on: a check mark when 1 (its place stays empty when 0). Over an icon.
 - enabled: 0 -> Shown, but can not be clicked.
 - onClick: function (self, item, index) {} -> Optional, only for this item.
 
@@ -34,6 +39,8 @@ const menu2 = ContextMenu({ items: [{ text: "Copy to", icon: "<svg ...>", items:
 menu.attachTo(myBox);                 // Right click on myBox opens the menu.
 menu.attachTo(myButton, "click");     // Left click on myButton opens the menu.
 menu.openAt(event.clientX, event.clientY);
+menu.openBelow(myButton);             // Under the object, at its left edge.
+menu.setItemChecked("wrap", 1);
 
 Started Date: September 2026
 Developer: Bugra Ozden
@@ -57,6 +64,7 @@ const ContextMenuDefaults = {
     onClick: function (self, item, index) { }, // self.source: The object that opened the menu.
     onOpen: function (self) { },
     onClose: function (self) { },
+    onSideKey: function (self, direction) { }, // ArrowRight (1) / ArrowLeft (-1) that no submenu takes (MenuBar: the next menu)
     parentMenu: null, // (inside) The menu of a submenu: it handles the keys and the clicks outside for it.
     styleName: "classic", // "classic", "dark" or a name added to ContextMenu.styles
     style: { // Classic style package (default)
@@ -94,6 +102,11 @@ const ContextMenuDefaults = {
         submenu: {
             arrowOpacity: 0.55, // The › at the end of an item with a submenu
             overlap: 4, // px: a submenu covers the edge of its menu a little
+        },
+        shortcut: {
+            fontSize: 12,
+            opacity: 0.6, // It takes the color of the text of its item.
+            space: 24, // Space before it
         },
         separator: {
             color: Black(0.1),
@@ -144,6 +157,7 @@ const ContextMenu = function (params = {}) {
     const OPEN_MOTION = "opacity 0.12s, transform 0.12s";
     const ARROW_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4l4 4-4 4"/></svg>';
     const ARROW_WIDTH = 14;
+    const CHECK_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5l3 3 6-7"/></svg>';
     let openSubmenuIndex = -1; // The item whose submenu is open (-1: none)
 
     // *** PUBLIC VARIABLES:
@@ -173,6 +187,10 @@ const ContextMenu = function (params = {}) {
 
     const isSubmenuItem = function (item) {
         return !!(item && item.type == "item" && Array.isArray(item.items) && item.items.length);
+    };
+
+    const isCheckItem = function (item) {
+        return (item.type == "item" && item.checked !== undefined && item.checked !== null);
     };
 
     const openSubmenu = function () {
@@ -226,6 +244,7 @@ const ContextMenu = function (params = {}) {
         // WHY: An SVG icon and the › are drawn with currentColor: they take the color of the text.
         if (row.icon && row.icon.isSvg) row.icon.textColor = textColor;
         if (row.arrow) row.arrow.textColor = textColor;
+        if (row.lblShortcut) row.lblShortcut.textColor = textColor;
     };
 
     // Enabled/disabled view of a row. (Colors, cursor, icon opacity)
@@ -258,6 +277,12 @@ const ContextMenu = function (params = {}) {
             }
         }
 
+    };
+
+    const showCheckMark = function (row) {
+        const isChecked = basic.isOn(row.item.checked);
+        row.icon.text = (isChecked) ? CHECK_ICON : "";
+        row.aria = { checked: (isChecked) ? "true" : "false" };
     };
 
     const createSeparator = function () {
@@ -293,7 +318,14 @@ const ContextMenu = function (params = {}) {
             // ICON: Only if one of the items has an icon.
             // WHY: Items without an icon get an empty space, so every text starts at the same place.
             if (hasIcon) {
-                if (item.icon) {
+                if (isCheckItem(item)) {
+                    // LABEL: The check mark (the color of the text)
+                    row.icon = Label({ width: _s.icon.width, height: _s.icon.height, shrink: 0 });
+                    row.icon.elem.classList.add("context-menu-svg");
+                    row.icon.isSvg = 1;
+                    row.role = "menuitemcheckbox";
+                    showCheckMark(row);
+                } else if (item.icon) {
                     // LABEL: An SVG icon (the color of the text)
                     row.icon = Label({ width: _s.icon.width, height: _s.icon.height, shrink: 0 });
                     row.icon.text = item.icon;
@@ -327,6 +359,17 @@ const ContextMenu = function (params = {}) {
             });
             row.label.css.minWidth = "0";
             row.label.grow = 1; // WHY: the › of a submenu goes to the end of the row
+
+            // LABEL: Its shortcut
+            if (item.shortcut) {
+                row.lblShortcut = Label({
+                    plainText: item.shortcut,
+                    fontSize: _s.shortcut.fontSize,
+                    opacity: _s.shortcut.opacity,
+                    shrink: 0,
+                    css: { marginLeft: (_s.shortcut.space - _s.item.gap) + "px", whiteSpace: "nowrap" },
+                });
+            }
 
             // LABEL: › (the item opens a submenu)
             if (isSubmenuItem(item)) {
@@ -363,7 +406,7 @@ const ContextMenu = function (params = {}) {
         rows = [];
         activeIndex = -1;
 
-        const hasIcon = box.items.some(function (item) { return item.type == "item" && (item.iconFile || item.icon); });
+        const hasIcon = box.items.some(function (item) { return item.type == "item" && (item.iconFile || item.icon || isCheckItem(item)); });
 
         box.items.forEach(function (item, index) {
             // WHY: One createIn per row: endGroup() (in createItem) sets the container to the last started group, not to box.content.
@@ -463,6 +506,24 @@ const ContextMenu = function (params = {}) {
 
     };
 
+    // Under the object at its left edge; over it when there is no room under it and there is room over it.
+    const positionBelow = function (rect) {
+
+        const menuWidth = box.elem.offsetWidth;
+        const menuHeight = box.elem.offsetHeight;
+        const left = withPageZoom(rect.left);
+        const bottom = withPageZoom(rect.bottom);
+        const top = withPageZoom(rect.top);
+        const hasRoomBelow = (bottom + menuHeight <= page.height - PAGE_SIDE_SPACE);
+        const hasRoomAbove = (top - menuHeight >= PAGE_SIDE_SPACE);
+        const opensAbove = (!hasRoomBelow && hasRoomAbove);
+
+        box.left = Math.max(PAGE_SIDE_SPACE, Math.min(left, page.width - menuWidth - PAGE_SIDE_SPACE));
+        box.top = (opensAbove) ? (top - menuHeight) : Math.max(PAGE_SIDE_SPACE, Math.min(bottom, page.height - menuHeight - PAGE_SIDE_SPACE));
+        box.css.transformOrigin = "left " + ((opensAbove) ? "bottom" : "top");
+
+    };
+
     const onDocumentPointerDown = function (event) {
 
         if (isInsideMenu(event.target)) return;
@@ -516,6 +577,11 @@ const ContextMenu = function (params = {}) {
             box.clickItem(activeIndex);
         } else if (event.key === "Tab") {
             rootMenu().close();
+        } else if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+            // WHY: the side keys that no menu used go to the first menu (MenuBar: the next menu of the bar).
+            event.preventDefault();
+            const firstMenu = rootMenu();
+            firstMenu.onSideKey(firstMenu, (event.key === "ArrowRight") ? 1 : -1);
         }
 
     };
@@ -574,6 +640,14 @@ const ContextMenu = function (params = {}) {
     };
     // USAGE: menu.setItemEnabled("paste", 0)
 
+    box.setItemChecked = function (key, checked) {
+        const item = box.getItemByKey(key);
+        if (!item || !isCheckItem(item)) return;
+        item.checked = toFlag(checked);
+        showCheckMark(rows[box.items.indexOf(item)]);
+    };
+    // USAGE: menu.setItemChecked("wrap", 1)
+
     // Shows the menu: place() puts it. (A submenu has no events of its own: its first menu has them.)
     const showMenu = function (place) {
 
@@ -624,6 +698,18 @@ const ContextMenu = function (params = {}) {
         box.openAt(event.clientX, event.clientY, source);
     };
     // USAGE: myBox.on("contextmenu", function (self, event) { event.preventDefault(); menu.openWithEvent(event, self); });
+
+    // Open under the object. (It is the source of the menu.)
+    box.openBelow = function (obj) {
+
+        if (box.enabled != 1 || box.items.length == 0) return;
+        if (isOpen) box.close();
+
+        box.source = obj;
+        showMenu(function () { positionBelow(obj.elem.getBoundingClientRect()); });
+
+    };
+    // USAGE: menu.openBelow(myButton)
 
     box.close = function () {
 
