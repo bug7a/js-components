@@ -70,6 +70,7 @@ Theme.list = {
         primaryHover: "#468A79",
         primaryActive: "#2C5A38",
         accent: "#65A293",
+        accent2: "#3987E5", // The second color of the data, next to accent. They must be told apart.
 
         danger: "#E66767",
         warning: "#C98500",
@@ -116,6 +117,9 @@ Theme.list = {
         primaryHover: "#739FCC",
         primaryActive: "#35669A",
         accent: "#3470AF", // WHY: A bit darker. The light accent was hard to read on white.
+        // WHY not info: accent is blue in this theme, like info, so two series with them could not be told apart.
+        //     Checked for color blindness next to accent and warning.
+        accent2: "#0E9F7E",
 
         danger: "#C6413F",
         warning: "#9A6600",
@@ -160,6 +164,7 @@ Theme.list = {
         primaryHover: "#468A79",
         primaryActive: "#2C5A38",
         accent: "#6FB0A0",
+        accent2: "#4E96E8",
 
         danger: "#E66767",
         warning: "#D69324",

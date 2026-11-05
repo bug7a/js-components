@@ -39,7 +39,7 @@ const HomePage = function(params = {}) {
     const PRIMARY_COLOR = T.primary;
     const ACCENT_COLOR = T.accent;
     // WHY: The first chart color follows the panel color. Others are from the GraphBox dark theme.
-    const CHART_COLORS = [ACCENT_COLOR, T.info, T.warning, "#D55181", "#9085E9", T.danger];
+    const CHART_COLORS = [ACCENT_COLOR, T.accent2, T.warning, "#D55181", "#9085E9", T.danger];
 
     const STATUS_COLORS = {
         "Paid": ACCENT_COLOR,

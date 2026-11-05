@@ -46,7 +46,7 @@ const ReportsPage = function(params = {}) {
     const GOOD_COLOR = ACCENT_COLOR;
     const BAD_COLOR = T.danger;
     // One color for each category (same order with CATEGORIES)
-    const CATEGORY_COLORS = [ACCENT_COLOR, T.info, T.warning, "#D55181", "#9085E9"];
+    const CATEGORY_COLORS = [ACCENT_COLOR, T.accent2, T.warning, "#D55181", "#9085E9"];
 
     const CATEGORIES = ReportsPage.CATEGORIES;
     const REGIONS = ReportsPage.REGIONS;
