@@ -2167,6 +2167,9 @@
                 field.value = text;
                 field.dispatchEvent(new InputEvent("input", { bubbles: true }));
                 key(field, "keydown", "Enter");
+                // WHY: Enter calls blur() and the field saves on its blur; a window that is not in focus (behind
+                //      another app, on another screen) gets no blur event, so the test sends it (a second save is skipped)
+                if (!document.hasFocus()) field.dispatchEvent(new FocusEvent("blur"));
             };
             const errorsBefore = uncaught.length;
             typeColor("#12345");
