@@ -567,7 +567,7 @@ DetailView.setFiles = function (paths) {
 };
 
 // Sayfanın <script src> etiketlerinden, bileşen klasörlerindeki dosyalar. ("comp/tabs.js")
-// NOTE: Yorum satırı içindeki etiketler ve alt klasördeki kütüphaneler (chart-box/chart.umd.min.js) alınmaz.
+// NOTE: Yorum satırı içindeki etiketler ve alt klasördeki kütüphaneler alınmaz.
 DetailView.findComponentScripts = function (html, samplePath) {
 
     const clean = html.replace(/<!--[\s\S]*?-->/g, "");

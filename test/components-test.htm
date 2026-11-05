@@ -91,7 +91,6 @@
             { file: "comp/action-button.js", name: "ActionButton" },
             { file: "comp/action-tab-bar.js", name: "ActionTabBar", params: { items: [{ key: "status", text: "STATUS", iconFile: "../assets/tab-bar/status.png" }, { key: "tools", text: "TOOLS", iconFile: "../assets/tab-bar/settings.png" }] } },
             { file: "comp/breadcrumbs.js", name: "Breadcrumbs" },
-            { file: "comp/chart-box.js", name: "ChartBox" },
             { file: "comp/context-menu.js", name: "ContextMenu" },
             { file: "comp/menu-bar.js", name: "MenuBar", deps: ["comp/context-menu.js"], params: { menus: [{ text: "File", items: ["Open", { text: "Recent", items: ["a.txt"] }] }] } },
             { file: "comp/status-bar.js", name: "StatusBar", params: { messageText: "Ready" }, setup: function () { return { items: ["UTF-8", { key: "zoom", text: "100%", onClick: function () { } }] }; } },

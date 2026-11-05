@@ -261,12 +261,6 @@ CATALOG.COMPONENTS = [
         tr: "Kütüphanesiz grafikler: tek dosya SVG olarak çizer. Çizgi, alan, çubuk, pasta, halka, radar, nokta ve kabarcık; ipucu, açıklama listesi, tablo ve iki tema.",
     },
     {
-        key: "chart-box", name: "ChartBox", cat: "data",
-        source: "comp/chart-box.js", samples: ["02-comp-examples/chart-box.htm"],
-        en: "Chart.js charts used like a basic.js object. Not for new pages: use GraphBox.",
-        tr: "Chart.js grafiklerini bir basic.js nesnesi gibi kullanır. Yeni sayfalarda değil: GraphBox kullanılır.",
-    },
-    {
         key: "gauge", name: "Gauge", cat: "data",
         source: "comp/gauge.js", samples: ["02-comp-examples/gauge.htm"],
         en: "A value drawn on an arc: a full ring or a half arc.",

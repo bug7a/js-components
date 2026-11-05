@@ -52,7 +52,7 @@ Nearly 70 components. Every one has a live example with its code in the [compone
 | **Selection** | `SelectBox`, `Filters`, `SelectDate`, `SelectTime`, `SelectColor`, `SelectFile`, `CheckBox`, `RadioButton`, `Toggle` |
 | **Buttons and menus** | `SmartButton`, `HoldToConfirmButton`, `ContextMenu` |
 | **Navigation** | `Tabs`, `Breadcrumbs`, `LeftMenu`, `BottomBar`, `PageControl` |
-| **Data and charts** | `SmartTable`, `ChartBox`, `Gauge`, `SparkLineBox`, `ProgressBar`, `TimeLine`, `SortableList` |
+| **Data and charts** | `SmartTable`, `GraphBox`, `Gauge`, `SparkLineBox`, `ProgressBar`, `TimeLine`, `SortableList` |
 | **Overlays and feedback** | `Dialog`, `SidePanel`, `Toast`, `Tooltip`, `LoadingScreen` |
 | **Pages and views** | `LoginPage`, `WebView`, `PropertyPanel`, `LabelEditor` |
 

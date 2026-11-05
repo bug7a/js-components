@@ -9,7 +9,8 @@ page is 02-comp-examples/graph-box.htm. A small box with a number and a graph st
 
 UI COMPONENT
 - Charts with no library: this one file draws the whole chart as one SVG. No Chart.js, no other file, no internet.
-  (comp/chart-box.js is the bridge to Chart.js. Its params and functions are the model here, so a page can move over.)
+  (It took the place of ChartBox, the bridge to Chart.js, archived on 2026-11-06. Its params and functions were the
+  model here, so an old page can move over: see below.)
 - Chart types: "line", "area", "bar" (more than one dataset: bars side by side; stacked: 1 one on the other;
   horizontal: 1 bars that grow to the right), "pie", "doughnut" (the first dataset: a part of the whole), "radar",
   "scatter" and "bubble" (two number axes: data: [{ x: 1, y: 2 }]).

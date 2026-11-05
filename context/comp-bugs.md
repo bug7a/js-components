@@ -252,7 +252,7 @@ Satır numaraları 2026-11-05'teki dosyalara göredir.
 - PageControl: hızlı iki sayfa değişiminde ilk sayfanın `onClose`'u kaybolur; `removePage` silinen sayfa için
   `onClose` çağırır (`page-control.js:270-279`).
 - ✅ (düzeltildi 2026-11-05) ChartBox sayfanın `labels` / `values` dizilerini değiştirir (`chart-box.js:143, 146, 511-519`): kopyalanmalı.
-- ChartBox `alpha()` adlı ve `hsl()` renkleri saydam yapmaz (`chart-box.js:831-851`).
+- ✅ (arşivlendi 2026-11-06: `GraphBox` geldi, `Alpha()` kullanılır) ChartBox `alpha()` adlı ve `hsl()` renkleri saydam yapmaz (`chart-box.js:831-851`).
 - WebView `autoHeight` büyür ama küçülmez (`web-view.js:217, 220`).
 - Slider `setMinValue()` / `setMaxValue()` boş (`slider.js:186-191`).
 - ✅ (düzeltildi 2026-11-05) SliderField ve Stepper: alan odaktayken silinirse yazılan değer `remove()`'dan sonra gönderilir
