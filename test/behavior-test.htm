@@ -2753,6 +2753,18 @@
             pages.remove();
         });
 
+        test("WebView: an existing page of the same site calls onLoad, a removed box calls nothing after the answer", async function () {
+            const calls = [];
+            const view = WebView({ width: 300, height: 200, url: "components-test.htm", onLoad: function () { calls.push("onLoad"); }, onError: function () { calls.push("onError"); } });
+            await wait(900);
+            view.remove();
+            const late = [];
+            const removed = WebView({ width: 300, height: 200, url: "missing-page-of-the-test.htm", onLoad: function () { late.push("onLoad"); }, onError: function () { late.push("onError"); } });
+            removed.remove();
+            await wait(400);
+            check("WebView: an existing page of the same site calls onLoad, a removed box calls nothing after the answer", calls.join(",") === "onLoad" && late.length === 0, calls.join(",") + " / " + late.join(","));
+        });
+
         test("WebView: a missing page of the same site calls onError (also a 404 page of a server)", async function () {
             const calls = [];
             const view = WebView({ width: 300, height: 200, url: "missing-page-of-the-test.htm", onLoad: function () { calls.push("onLoad"); }, onError: function () { calls.push("onError"); } });

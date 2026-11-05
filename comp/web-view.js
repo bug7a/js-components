@@ -186,31 +186,72 @@ const WebView = function (params = {}) {
 
     // WHY: a real server (Live Server, nginx, GitHub Pages) answers a missing page with a 404 and its own HTML page: that
     //      document can be read, so only file:// called onError (2026-11-05). The status of the answer tells it.
-    const hasErrorStatus = function () {
+    // The status of the page in the iframe. null: the browser does not tell it.
+    const getResponseStatus = function () {
         try {
             const entry = iframe.contentWindow.performance.getEntriesByType("navigation")[0];
-            return Boolean(entry && entry.responseStatus >= 400);
+            return (entry && entry.responseStatus !== undefined) ? entry.responseStatus : null;
         } catch (error) {
-            return false;
+            return null;
         }
     };
 
-    const onIframeLoad = function () {
-        if (!box) return;
-        // WHY: Chrome fires "load" for about:blank too. Nothing is loaded then.
-        if (!box.url && !box.htmlText) return;
-        // WHY: A failed same origin page (404, missing file) also fires "load", with the error page of the browser. Its document can not be read.
-        //      Only the page opened by load() is checked (isLoading). A link in the page can open another site in the
-        //      iframe (a payment or 3D Secure page of a shop); its document can not be read either, but it is not an error.
-        if (isLoading && box.url && isSameOrigin(box.url) && (!box.getDocument() || hasErrorStatus())) {
-            setLoading(0);
-            box.onError(box);
-            return;
-        }
+    const finishLoad = function () {
         box.isLoaded = 1;
         setLoading(0);
         startHeightObserver();
         box.onLoad(box);
+    };
+
+    const finishWithError = function () {
+        setLoading(0);
+        box.onError(box);
+    };
+
+    // WHY: Safari does not tell the status of a page (no responseStatus), so a 404 page looked like a page that loaded.
+    //      The server is asked once more. WHY HEAD: It sends no page, and a URL that does something on a GET runs only once.
+    const askResponseStatus = function (url) {
+        const finish = function (isError) {
+            // WHY: The box can be removed, or another page can be opened, while the answer comes.
+            if (!box || box.url !== url || !isLoading) return;
+            if (isError) finishWithError();
+            else finishLoad();
+        };
+        fetch(url, { method: "HEAD", cache: "no-cache" }).then(function (response) {
+            const isMethodRefused = (response.status === 405 || response.status === 501);
+            finish(response.status >= 400 && !isMethodRefused);
+        }, function () {
+            finish(false);
+        });
+    };
+
+    const onIframeLoad = function () {
+
+        if (!box) return;
+        // WHY: Chrome fires "load" for about:blank too. Nothing is loaded then.
+        if (!box.url && !box.htmlText) return;
+
+        // WHY: Only the page opened by load() is checked (isLoading). A link in the page can open another site in the
+        //      iframe (a payment or 3D Secure page of a shop); its document can not be read either, but it is not an error.
+        if (!isLoading || !box.url || !isSameOrigin(box.url)) {
+            finishLoad();
+            return;
+        }
+
+        // WHY: A failed same origin page (404, missing file) also fires "load", with the error page of the browser. Its document can not be read.
+        if (!box.getDocument()) {
+            finishWithError();
+            return;
+        }
+
+        const status = getResponseStatus();
+        if (status === null) {
+            askResponseStatus(box.url);
+            return;
+        }
+        if (status >= 400) finishWithError();
+        else finishLoad();
+
     };
 
     // Messages of this iframe only
