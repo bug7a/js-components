@@ -52,7 +52,9 @@ A DATASET: { label: "2026", data: [12, null, 7], color: "#2A78D6", type: "line" 
 - null in data: no value at that place (a line breaks there).
 - color: its own color. colors: [...]: a color for each bar.
 - type: "line", "area", "bar" (only this dataset; the others keep the type of the chart: a mixed chart).
-- fill: 1 (a soft area under the line), "gradient" (it fades towards the base line).
+- fill: 1 (a soft area under the line), "gradient" (it fades towards the base line). fillTo: "start": the area ends at
+  the start of the axis, not at 0. (Ex: a cold room: under 0 an area up to 0 would fill the part over the line.)
+- showInLegend: 0: no item in the legend.
 - curve: "linear", "smooth". dashed: 1 (Ex: a target). showPoints: 1, 0, "auto". hidden: 1.
 
 MOVING A PAGE FROM ChartBox: the same functions (setType, setValues, addValue, setData, update, setTheme, download...)
@@ -60,8 +62,10 @@ and these changes:
 - title, subtitle -> titleText, subtitleText. style.chart -> style.colors.
 - In a dataset: tension -> curve: "smooth". borderDash -> dashed: 1. pointRadius: 0 -> showPoints: 0.
   borderColor / backgroundColor -> color. fill: true -> fill: 1. ChartBox.gradient() -> fill: "gradient".
-- options.scales.y.max -> maxValue. options.scales.x.ticks.maxTicksLimit -> maxLabels. options.cutout -> style.pie.hole.
+- options.scales.y.max -> maxValue. suggestedMax -> softMaxValue. ticks.stepSize -> valueStep.
+  options.scales.x.ticks.maxTicksLimit -> maxLabels. options.cutout -> style.pie.hole.
   options.elements.point.radius: 0 -> showPoints: 0. A color for each slice: backgroundColor: [...] -> colors: [...].
+  fill: "start" -> fillTo: "start". maxBarThickness -> style.bar.maxThickness. A legend filter -> showInLegend: 0.
 - There is no options, plugins and box.chart: this is not Chart.js. A chart with two value axes can not be made, on purpose:
   where two scales meet is free, so it shows a relation that is not in the data. (Two charts, one under the other.)
 - "polarArea" is not here yet.
@@ -103,6 +107,9 @@ const GraphBoxDefaults = {
     beginAtZero: 1, // 1: The value axis holds 0. (A bar chart always holds it: the length of a bar is its value.)
     minValue: null, // null: From the values.
     maxValue: null, // null: From the values. Ex: 100
+    softMinValue: null, // The axis goes at least this low. Unlike minValue, a smaller value still widens it.
+    softMaxValue: null, // The axis goes at least this high. Ex: 260
+    valueStep: 0, // 0: The axis finds its own step. Ex: 1: a line and a text for every whole number.
     minX: null, // scatter, bubble: the limits of the x axis. null: From the values. (They do not hold 0 by themselves.)
     maxX: null,
     sizeText: "Size", // bubble: the name of its size in the tooltip
@@ -532,7 +539,7 @@ const GraphBox = function (params = {}) {
 
         if (low === Infinity) return null; // No values
 
-        getTargetValues().forEach(function (value) {
+        getHeldValues().forEach(function (value) {
             low = Math.min(low, value);
             high = Math.max(high, value);
         });
@@ -542,7 +549,9 @@ const GraphBox = function (params = {}) {
             high = Math.max(high, 0);
         }
 
-        return applyFixedLimits(low, high, box.minValue, box.maxValue);
+        const limits = applyFixedLimits(low, high, box.minValue, box.maxValue);
+        limits.fixedStep = toNumber(box.valueStep);
+        return limits;
 
     };
 
@@ -559,7 +568,7 @@ const GraphBox = function (params = {}) {
 
     const createValueScale = function (limits, length, tickSpace = _s.axis.tickSpace, formatTick = formatTickText) {
         const tickCount = Math.max(2, Math.floor(length / tickSpace));
-        const scale = GraphBox.niceScale(limits.low, limits.high, tickCount);
+        const scale = GraphBox.niceScale(limits.low, limits.high, tickCount, limits.fixedStep);
         if (limits.hasFixedLow) scale.min = limits.low;
         if (limits.hasFixedHigh) scale.max = limits.high;
         scale.ticks = scale.ticks.filter(function (tick) {
@@ -586,6 +595,14 @@ const GraphBox = function (params = {}) {
 
     const getTargetValues = function () {
         return getTargetLines().map(function (line) { return toNumber(line.value); });
+    };
+
+    // What the axis holds, also when no value is there.
+    const getHeldValues = function () {
+        const softValues = [toNumber(box.softMinValue), toNumber(box.softMaxValue)].filter(function (value) {
+            return value !== null;
+        });
+        return getTargetValues().concat(softValues);
     };
 
     // No label: its value. label: "": no text.
@@ -1169,6 +1186,13 @@ const GraphBox = function (params = {}) {
         return "url(#" + id + ")";
     };
 
+    // Where an area ends: at 0 (stacked: on the one before it), or with fillTo: "start" at the start of the axis.
+    const getAreaBaseValue = function (seriesItem, index, axes) {
+        const scale = axes.scale;
+        if (seriesItem.dataset.fillTo === "start") return scale.min;
+        return Math.min(scale.max, Math.max(scale.min, seriesItem.ranges[index].from));
+    };
+
     const drawArea = function (seriesItem, segment, segmentPlace, axes) {
 
         if (segment.length < 2) return;
@@ -1180,7 +1204,7 @@ const GraphBox = function (params = {}) {
             return axes.toPoint(index, seriesItem.ranges[index].to);
         });
         const lowerPoints = segment.slice().reverse().map(function (index) {
-            return axes.toPoint(index, Math.min(axes.scale.max, Math.max(axes.scale.min, seriesItem.ranges[index].from)));
+            return axes.toPoint(index, getAreaBaseValue(seriesItem, index, axes));
         });
 
         const shape = addShape(markLayer, "path", {
@@ -1916,8 +1940,9 @@ const GraphBox = function (params = {}) {
 
     const measureScatterPlot = function (points, width, height) {
 
-        const yValues = points.map(function (point) { return point.y; }).concat(getTargetValues());
+        const yValues = points.map(function (point) { return point.y; }).concat(getHeldValues());
         const yLimits = getLimitsOf(yValues, box.minValue, box.maxValue);
+        yLimits.fixedStep = toNumber(box.valueStep);
         const xLimits = getLimitsOf(points.map(function (point) { return point.x; }), box.minX, box.maxX);
         const titleRooms = getAxisTitleRooms();
         const textHeight = getAxisTextHeight();
@@ -2545,7 +2570,7 @@ const GraphBox = function (params = {}) {
     const getSeriesEntries = function () {
         return box.data.datasets.map(function (dataset, position) {
             return {
-                text: dataset.label || "",
+                text: (dataset.showInLegend === 0 || dataset.showInLegend === false) ? "" : (dataset.label || ""),
                 color: getSeriesColor(dataset, position),
                 keyShape: getKeyShape(dataset),
                 isHidden: basic.isOn(dataset.hidden),
@@ -3302,6 +3327,18 @@ const GraphBox = function (params = {}) {
         drawChange();
     };
 
+    // The axis goes at least this far, more if a value needs it. null: from the values.
+    box.setSoftLimits = function (softMinValue, softMaxValue) {
+        box.softMinValue = softMinValue;
+        box.softMaxValue = softMaxValue;
+        drawChange();
+    };
+
+    box.setValueStep = function (step) {
+        box.valueStep = step;
+        drawChange();
+    };
+
     // scatter, bubble: The limits of the x axis. null: from the values.
     box.setXLimits = function (minX, maxX) {
         box.minX = minX;
@@ -3490,15 +3527,8 @@ GraphBox.THEMES = {
 
 // *** STATIC FUNCTIONS: the math of a chart. They need no box.
 
-// Clean numbers for an axis: { min, max, ticks, decimals }. tickCount: about how many spaces between the ticks.
-GraphBox.niceScale = function (low, high, tickCount = 5) {
-
-    if (!(high > low)) {
-        // WHY: One value (or all the same): the scale needs some height, or every place divides by 0.
-        const room = Math.abs(low) * 0.1 || 1;
-        low = (low === 0) ? 0 : low - room;
-        high = high + room;
-    }
+// The clean step of an axis: { step, decimals }. tickCount: about how many spaces between the ticks.
+GraphBox.findNiceStep = function (low, high, tickCount) {
 
     // WHY the tolerance: A rough step of 1.08 would become 2, and half of the chart would be empty. A step a little
     //     under the rough one only adds a line or two.
@@ -3508,8 +3538,38 @@ GraphBox.niceScale = function (low, high, tickCount = 5) {
     const fraction = [1, 2, 2.5, 5, 10].find(function (candidate) {
         return (roughStep / power <= candidate * STEP_TOLERANCE);
     });
-    const step = fraction * power;
-    const decimals = Math.max(0, -Math.floor(Math.log10(power))) + ((fraction === 2.5) ? 1 : 0);
+
+    return {
+        step: fraction * power,
+        decimals: Math.max(0, -Math.floor(Math.log10(power))) + ((fraction === 2.5) ? 1 : 0),
+    };
+
+};
+
+// How many digits a number has after its point. 0.25 -> 2
+GraphBox.countDecimals = function (number) {
+    const parts = String(number).split(".");
+    return (parts[1]) ? parts[1].length : 0;
+};
+
+// Clean numbers for an axis: { min, max, ticks, decimals }. tickCount: about how many spaces between the ticks.
+// fixedStep: the step of the page. (Ex: 1: every floor of a building.)
+GraphBox.niceScale = function (low, high, tickCount = 5, fixedStep = 0) {
+
+    if (!(high > low)) {
+        // WHY: One value (or all the same): the scale needs some height, or every place divides by 0.
+        const room = Math.abs(low) * 0.1 || 1;
+        low = (low === 0) ? 0 : low - room;
+        high = high + room;
+    }
+
+    // WHY the limit: A small step on a very wide axis would make millions of lines and freeze the page.
+    const MAX_FIXED_TICKS = 500;
+    const canUseFixedStep = (fixedStep > 0 && (high - low) / fixedStep <= MAX_FIXED_TICKS);
+    const found = (canUseFixedStep)
+        ? { step: fixedStep, decimals: GraphBox.countDecimals(fixedStep) }
+        : GraphBox.findNiceStep(low, high, tickCount);
+    const step = found.step;
 
     // WHY the small number: 0.3 / 0.1 is 2.9999999999999996, and its floor would add a tick under the values.
     const CALCULATION_ERROR = 1e-9;
@@ -3518,10 +3578,10 @@ GraphBox.niceScale = function (low, high, tickCount = 5) {
 
     const ticks = [];
     for (let place = firstPlace; place <= lastPlace; place++) {
-        ticks.push(Number((place * step).toFixed(decimals)));
+        ticks.push(Number((place * step).toFixed(found.decimals)));
     }
 
-    return { min: ticks[0], max: ticks[ticks.length - 1], ticks: ticks, decimals: decimals };
+    return { min: ticks[0], max: ticks[ticks.length - 1], ticks: ticks, decimals: found.decimals };
 
 };
 

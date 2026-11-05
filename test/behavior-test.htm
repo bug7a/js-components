@@ -3690,6 +3690,60 @@
             check("GraphBox: animated: where a line can not move, the line and its points fade together; a bar still moves", results === "transform | opacity | opacity", results);
         });
 
+        test("GraphBox: valueStep: a line for every step, a step too small for the axis is not used, a soft limit widens the axis but a value can pass it", async function () {
+            const stepTicks = GraphBox.niceScale(0, 4, 2, 1).ticks.join(",");
+            const halfTicks = GraphBox.niceScale(0, 1, 2, 0.25).ticks.join(",");
+            const hugeCount = GraphBox.niceScale(0, 1000000000, 4, 1).ticks.length;
+
+            const tickTextsOf = function (chart) {
+                return Array.from(chart.svg.querySelectorAll("text")).map(function (label) { return label.textContent; });
+            };
+            const floors = GraphBox({
+                width: 400, height: 300, type: "line", legend: "none", labels: ["A", "B"], values: [1, 3],
+                minValue: 0, maxValue: 4, valueStep: 1,
+                formatValue: function (value) { return ["B1", "L", "2", "3", "4"][value]; },
+            });
+            const floorTexts = tickTextsOf(floors);
+            floors.remove();
+
+            const soft = GraphBox({ width: 400, height: 300, type: "line", legend: "none", labels: ["A", "B"], values: [10, 20], softMaxValue: 260 });
+            const softTexts = tickTextsOf(soft);
+            soft.setValues([10, 400]);
+            const passedTexts = tickTextsOf(soft);
+            soft.remove();
+
+            const isSoftRight = (softTexts.includes("250") || softTexts.includes("300")) && (passedTexts.includes("400"));
+            check("GraphBox: valueStep: a line for every step, a step too small for the axis is not used, a soft limit widens the axis but a value can pass it",
+                stepTicks === "0,1,2,3,4" && halfTicks === "0,0.25,0.5,0.75,1" && hugeCount < 50 && floorTexts.includes("B1") && floorTexts.includes("L") && floorTexts.includes("4") && isSoftRight,
+                [stepTicks, halfTicks, hugeCount, floorTexts.join(","), softTexts.join(","), passedTexts.join(",")].join(" | "));
+        });
+
+        test("GraphBox: fillTo: start: an area under 0 ends at the start of the axis, by default at 0", async function () {
+            const areaBoxOf = function (params) {
+                // WHY the limits: Values that touch both ends of the axis fill the whole height, with any area.
+                const chart = GraphBox(Object.assign({ width: 400, height: 300, type: "line", legend: "none", beginAtZero: 0, showPoints: 0, minValue: -30, maxValue: 0, labels: ["A", "B"] }, params));
+                const areaBox = chart.svg.querySelector("path").getBBox(); // The area is drawn first.
+                const lineBox = chart.svg.querySelectorAll("path")[1].getBBox();
+                chart.remove();
+                return { areaTop: areaBox.y, areaBottom: areaBox.y + areaBox.height, lineTop: lineBox.y, lineBottom: lineBox.y + lineBox.height };
+            };
+            const toStart = areaBoxOf({ datasets: [{ data: [-18, -16], fill: 1, fillTo: "start" }] });
+            const toBase = areaBoxOf({ datasets: [{ data: [-18, -16], fill: 1 }] });
+            const isUnderLine = (Math.abs(toStart.areaTop - toStart.lineTop) < 1 && toStart.areaBottom > toStart.lineBottom);
+            const isOverLine = (toBase.areaBottom <= toBase.lineBottom + 1 && toBase.areaTop < toBase.lineTop);
+            check("GraphBox: fillTo: start: an area under 0 ends at the start of the axis, by default at 0", isUnderLine && isOverLine, JSON.stringify([toStart, toBase]));
+        });
+
+        test("GraphBox: showInLegend: 0 takes a dataset out of the legend, it is still drawn; the legend comes back with it", async function () {
+            const chart = GraphBox({ width: 400, height: 300, type: "line", legend: "top", showPoints: 0, labels: ["A", "B"], datasets: [{ label: "One", data: [1, 2] }, { label: "Two", data: [3, 4], showInLegend: 0 }] });
+            const itemsAtStart = chart.legendItems.length;
+            const linesAtStart = chart.svg.querySelectorAll("path").length;
+            chart.data.datasets[1].showInLegend = 1;
+            chart.update();
+            check("GraphBox: showInLegend: 0 takes a dataset out of the legend, it is still drawn; the legend comes back with it", itemsAtStart === 1 && linesAtStart === 2 && chart.legendItems.length === 2, [itemsAtStart, linesAtStart, chart.legendItems.length].join(" "));
+            chart.remove();
+        });
+
         test("GraphBox: setTheme() changes the look, setStyle() keeps the other keys", async function () {
             const chart = GraphBox({ width: 400, height: 240, type: "bar", titleText: "Title", labels: ["A"], values: [1] });
             const lightColor = chart.color;
