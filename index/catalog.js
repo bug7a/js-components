@@ -322,6 +322,21 @@ CATALOG.COMPONENTS = [
         tr: "Yaklaşık 2.000 satıra kadar listeler için tablo: sıralama, arama, klavyeyle seçim, kendi hücreleriniz ve id ile satır güncelleme. Daha fazla satır için: SmartTable.",
     },
     {
+        key: "splitter", name: "Splitter", cat: "pages",
+        source: "comp/splitter.js", samples: ["02-comp-examples/splitter.htm"],
+        en: "Two areas with a line between them: a drag changes their sizes, side by side or one under the other. Keyboard, limits, sizes that follow the window. Light and dark themes.",
+        tr: "Aralarında çizgi olan iki alan: sürükleyince boyutları değişir, yan yana ya da alt alta. Klavye, sınırlar, pencereyi izleyen boyutlar. Aydınlık ve karanlık tema.",
+    },
+    {
+        key: "code-editor", name: "CodeEditor", cat: "inputs",
+        source: "comp/code-editor.js", samples: [
+            { file: "02-comp-examples/code-editor.htm", title: "Basic" },
+            { file: "02-comp-examples/code-editor-2.htm", title: "A small code editor: MenuBar, Splitter, TreeView, CodeEditor, LogView and StatusBar" },
+        ],
+        en: "A text editor for code: line numbers, colors for Python, JavaScript, JSON, HTML, CSS, SQL and Bash, indent keys, and a file of 100000 lines stays fast. Light and dark themes.",
+        tr: "Kod için metin düzenleyici: satır numaraları; Python, JavaScript, JSON, HTML, CSS, SQL ve Bash için renkler; girinti tuşları; 100000 satırlık dosyada bile hızlı. Aydınlık ve karanlık tema.",
+    },
+    {
         key: "image-view", name: "ImageView", cat: "pages",
         source: "comp/image-view.js", samples: ["02-comp-examples/image-view.htm"],
         en: "A place to look at a picture or a plot: zoom with the wheel or two fingers, move with a drag, a small toolbar. A plot that is drawn again does not blink. Light and dark themes.",
