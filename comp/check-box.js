@@ -65,10 +65,10 @@ const CheckBoxDefaults = {
             round: 5,
         },
         checkedMark: { // Checked square
-            // (the user, 2026-11-05: blue, not the black #141414 of the first version) The blue of SmartButton
-            // (#52A8D0), deeper. WHY deeper: #52A8D0 is 2.67:1 on white, too light for a mark; #2C7BA0 is 4.7:1.
-            color: "#2C7BA0",
-            borderColor: "#2C7BA0",
+            // (the user, 2026-11-05: #242424, a soft black; the #141414 of the first version, then the blue
+            // #2C7BA0 were tried the same day)
+            color: "#242424",
+            borderColor: "#242424",
         },
         hoverMark: { // Mouse over (the empty square)
             color: null, // null: uses mark.color (2026-11-04: a package could not change it)
