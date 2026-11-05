@@ -1843,6 +1843,23 @@
             toggle.remove();
         });
 
+        test("Toggle modern: when on, a shadow to the left of the knob and a thin line around it; none when off; a page's own shadow wins", async function () {
+            const readShadow = (toggle) => getComputedStyle(toggle.button.elem).boxShadow;
+            const toggle = Toggle({ left: 20, top: 100, value: 1 });
+            const ownColors = Toggle({ left: 120, top: 100, value: 1, buttonStyle: { selectedColor: "gold" } });
+            const ownShadow = Toggle({ left: 220, top: 100, value: 1, buttonStyle: { selectedShadow: "none" } });
+            const classic = Toggle({ left: 320, top: 100, value: 1, styleName: "classic" });
+            const on = readShadow(toggle);
+            toggle.setValue(0);
+            const off = readShadow(toggle);
+            const hasBoth = on.includes("-4px 0px 6px -1px") && on.includes("0px 0px 0px 1px");
+            const isClassicKept = readShadow(classic).includes("-1px 0px 6px 0px");
+            check("Toggle modern: when on, a shadow to the left of the knob and a thin line around it; none when off; a page's own shadow wins",
+                hasBoth && off === "none" && readShadow(ownColors) === on && readShadow(ownShadow) === "none" && isClassicKept,
+                [on, off, readShadow(ownColors), readShadow(ownShadow), readShadow(classic)].join(" / "));
+            [toggle, ownColors, ownShadow, classic].forEach((item) => item.remove());
+        });
+
         test("Toggle: a page's own line (borderColor) stays when on; one style object given to two toggles is not shared", async function () {
             const OWN = { backgroundStyle: { color: "black", selectedColor: "green", borderColor: "gray" } };
             const first = Toggle({ left: 20, top: 100, value: 1, ...OWN });

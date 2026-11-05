@@ -9,6 +9,8 @@ UI COMPONENT TEMPLATE
   styleName. (Toggle.styles)
 -- "modern" (2026-11-05, the user): a darker line around the colored track when on (selectedBorderColor: the light
    look had no clear edge when on). Its size (70 x 40) and its round knob as before.
+   2026-11-06 (the user): when on, a shadow to the left of the knob and a thin line around it, so the white knob stands
+   out on the track (buttonStyle.selectedShadow). A page with its own selectedShadow keeps that.
 -- "classic": the look of comp-m1/ui-toggle.js (javascript-mobile-app-template, a 600 px design): 60 x 40, a light
    gray track that turns blue, a white knob of the same size on and off, with a shadow.
 -- A package is a package of params (basic.js v26.10.27): its keys fill the params you did not give, also the
@@ -449,9 +451,16 @@ Toggle.styles = {
     // The look of ToggleDefaults: a whitesmoke track that turns blue, a small gray knob that grows when on.
     // A darker line around the colored track when on (the user, 2026-11-05: the light look had no clear edge when on);
     // a page with its own line (borderColor) keeps it.
+    // WHY the two shadows of the knob when on (the user, 2026-11-06: the white knob did not stand out on its track):
+    // the first falls only to the left, its negative spread keeps it inside the track. The second is the thin line
+    // around the knob, in the strength of the line of the track. A real border would be gray over the white knob (no
+    // sharper edge), and it would need a color for each state.
     modern: {
         style: {},
         backgroundStyle: { selectedBorderColor: Black(0.2) }, // over the color: a darker line of it
+        buttonStyle: {
+            selectedShadow: "-4px 0px 6px -1px rgba(0, 0, 0, 0.5), 0px 0px 0px 1px rgba(0, 0, 0, 0.2)",
+        },
     },
 
     // The look of the old UIToggle (comp-m1/ui-toggle.js, javascript-mobile-app-template, a 600 px design):
