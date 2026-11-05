@@ -158,8 +158,11 @@
 
             page.color = PAGE_COLOR;
 
-            for (let i = 0; i < HISTORY_COUNT; i++) {
-                CARS.forEach(function (c) { pushHistory(c); });
+            // WHY the dates: The first values are made in one moment, and every label of the chart said the same time.
+            const now = Date.now();
+            for (let i = HISTORY_COUNT - 1; i >= 0; i--) {
+                const date = new Date(now - i * 1000);
+                CARS.forEach(function (c) { pushHistory(c, date); });
             }
             CARS.forEach(function (c) { addEvent(c, "Info", "Connected (" + c.serial + ")"); });
 
@@ -379,9 +382,9 @@
 
         };
 
-        const pushHistory = function (c) {
+        const pushHistory = function (c, date = new Date()) {
             const h = c.history;
-            h.labels.push(new Date().toLocaleTimeString("en-GB"));
+            h.labels.push(date.toLocaleTimeString("en-GB"));
             h.floor.push(round2(c.floorPos));
             if (h.labels.length > HISTORY_COUNT) { h.labels.shift(); h.floor.shift(); }
         };
