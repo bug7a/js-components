@@ -726,10 +726,12 @@ SmartButton.styles = {
 // THE DARK TEMPLATES (2026-10-31, the draft _designs/smart-button-dark.htm): the shapes of ozdenType1-4 with the
 // colors of a dark page (the cards of Ozden Panel / Ozden Manager, #1A1A19). The icon turns white, the waiting clock
 // is the dark one, the dots yellow; the ask stays orange.
-// THE EDGE AND THE BOTTOM LINE (the user, 2026-11-04): the edge of ozdenType1 in white (0.35) and its 2 px line in
-// white, a little fainter than there (0.2). A light tone on a dark template keeps them too.
-SmartButton.DARK_EDGE = White(0.35);
-SmartButton.DARK_BOTTOM_LINE = "inset 0 -2px 0 " + White(0.2);
+// THE EDGE AND THE BOTTOM LINE (the user, 2026-11-04): the edge of ozdenType1 in white and its 2 px line in white, a
+// little fainter. A light tone on a dark template keeps them too.
+// WHY 0.2 / 0.12 (the user, 2026-11-05: 0.35 / 0.2 were too bright on a dark page; a white edge on a dark page is
+//     much stronger than the same black on a light one): still twice the faint edge of ozdenType3Dark (0.1).
+SmartButton.DARK_EDGE = White(0.2);
+SmartButton.DARK_BOTTOM_LINE = "inset 0 -2px 0 " + White(0.12);
 // boxKeys: only the keys of the box that differ from ozdenType1Dark (as the light templates from ozdenType1)
 SmartButton.createDarkTemplate = function (boxKeys, hoverColor = "#383835") {
     return {
