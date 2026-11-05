@@ -3386,6 +3386,99 @@
             chart.remove();
         });
 
+        test("GraphBox: animated: 0 writes no motion, animated: 1 moves a change but not the first view", async function () {
+            const hasMotionStyle = function (chart) {
+                return chart.svg.innerHTML.includes("transition") || chart.svg.innerHTML.includes("transform:");
+            };
+            const still = GraphBox({ width: 300, height: 200, type: "bar", labels: ["A", "B"], values: [1, 2] });
+            still.setValues([3, 4]);
+            still.addValue("C", 5);
+            const isStill = !hasMotionStyle(still);
+            still.remove();
+
+            const moving = GraphBox({ width: 300, height: 200, type: "bar", animated: 1, labels: ["A", "B"], values: [1, 2] });
+            const isFirstViewStill = !hasMotionStyle(moving);
+            moving.setValues([3, 4]);
+            const bar = moving.svg.querySelector("path");
+            const isBarMoving = bar.getAnimations().length > 0;
+            const barEnd = bar.getAnimations()[0];
+            if (barEnd) barEnd.finish();
+            const isEndRight = (getComputedStyle(bar).transform === "none");
+            moving.remove();
+
+            check("GraphBox: animated: 0 writes no motion, animated: 1 moves a change but not the first view", isStill && isFirstViewStill && isBarMoving && isEndRight, [isStill, isFirstViewStill, isBarMoving, isEndRight].join(" "));
+        });
+
+        test("GraphBox: animated: a new size does not move, a value of a full live chart slides in from the place of the last one", async function () {
+            const chart = GraphBox({ width: 400, height: 200, type: "line", animated: 1, maxCount: 3, labels: ["A", "B", "C"], values: [1, 2, 3], maxValue: 3 });
+            await wait(30);
+            const markLayer = chart.svg.querySelector('g[clip-path] g');
+            chart.width = 500;
+            await wait(60);
+            const isResizeStill = (chart.svg.getAnimations({ subtree: true }).length === 0);
+            const spacing = Number(chart.svg.querySelectorAll("circle")[1].getAttribute("cx")) - Number(chart.svg.querySelectorAll("circle")[0].getAttribute("cx"));
+            chart.addValue("D", 4);
+            const layerMotion = markLayer.getAnimations()[0];
+            let startX = null;
+            if (layerMotion) {
+                layerMotion.pause();
+                layerMotion.currentTime = 0;
+                startX = new DOMMatrix(getComputedStyle(markLayer).transform).m41;
+                layerMotion.finish();
+            }
+            check("GraphBox: animated: a new size does not move, a value of a full live chart slides in from the place of the last one", isResizeStill && !!layerMotion && Math.abs(startX - spacing) < 1, [isResizeStill, !!layerMotion, startX, spacing].join(" "));
+            chart.remove();
+        });
+
+        test("GraphBox: animated: the tooltip fades in where it must be, setAnimated(0) brings the still look back", async function () {
+            const chart = GraphBox({ width: 400, height: 240, type: "bar", animated: 1, labels: ["A", "B"], values: [1, 2] });
+            await wait(30);
+            const plotWidth = chart.plot.elem.clientWidth;
+            graphBoxMoveMouse(chart, plotWidth * 0.75, 60);
+            const isTransformed = chart.tooltip.css.transform.includes("translate");
+            const isLeftZero = (chart.tooltip.left == 0);
+            pointer(chart.plot.elem, "pointerleave", 0, 0, "mouse");
+            await wait(200);
+            const isGone = (chart.tooltip.visible == 0);
+            graphBoxMoveMouse(chart, plotWidth * 0.25, 60);
+            chart.setAnimated(0);
+            const isStillAgain = (chart.tooltip.css.transform === "" && chart.tooltip.css.transition === "" && Number(chart.tooltip.left) > 0);
+            check("GraphBox: animated: the tooltip fades in where it must be, setAnimated(0) brings the still look back", isTransformed && isLeftZero && isGone && isStillAgain, [isTransformed, isLeftZero, isGone, isStillAgain].join(" "));
+            chart.remove();
+        });
+
+        test("GraphBox: Enter on a legend item hides its dataset and the item keeps the focus, a dataset added by hand has no error", async function () {
+            const chart = GraphBox({ width: 400, height: 240, type: "line", labels: ["A", "B"], datasets: [{ label: "One", data: [1, 2] }, { label: "Two", data: [3, 4] }] });
+            const item = chart.legendItems[0];
+            item.elem.focus();
+            key(item.elem, "keydown", "Enter");
+            const isSameObject = (chart.legendItems[0] === item && document.activeElement === item.elem);
+            const isHidden = (chart.data.datasets[0].hidden == 1 && item.elem.getAttribute("aria-pressed") === "false");
+            chart.data.datasets.push({ label: "By hand" });
+            chart.update();
+            const isItemAdded = (chart.legendItems.length === 3);
+            check("GraphBox: Enter on a legend item hides its dataset and the item keeps the focus, a dataset added by hand has no error", isSameObject && isHidden && isItemAdded, [isSameObject, isHidden, isItemAdded].join(" "));
+            chart.remove();
+        });
+
+        test("GraphBox: Enter on a place gives the first dataset on the screen, a long name stays in the tooltip", async function () {
+            const clicks = [];
+            const chart = GraphBox({
+                width: 240, height: 200, type: "bar", legend: "none",
+                labels: ["A label that is much longer than this small chart can show"],
+                datasets: [{ label: "Hidden", data: [1], hidden: 1 }, { label: "A dataset with a long name, longer than the box", data: [2] }],
+                onClick: function (self, item) { clicks.push(item.datasetIndex); },
+            });
+            await wait(30);
+            key(chart.plot.elem, "keydown", "ArrowRight");
+            key(chart.plot.elem, "keydown", "Enter");
+            const boxRect = chart.elem.getBoundingClientRect();
+            const tipRect = chart.tooltip.elem.getBoundingClientRect();
+            const isInside = (tipRect.left >= boxRect.left && tipRect.right <= boxRect.right && chart.tooltip.visible == 1);
+            check("GraphBox: Enter on a place gives the first dataset on the screen, a long name stays in the tooltip", clicks[0] === 1 && isInside, clicks.join(",") + " " + [tipRect.left, tipRect.right, boxRect.left, boxRect.right].join(" "));
+            chart.remove();
+        });
+
         test("GraphBox: setTheme() changes the look, setStyle() keeps the other keys", async function () {
             const chart = GraphBox({ width: 400, height: 240, type: "bar", titleText: "Title", labels: ["A"], values: [1] });
             const lightColor = chart.color;

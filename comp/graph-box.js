@@ -21,6 +21,8 @@ UI COMPONENT
 - setTableView(1): the same values as a table. A chart can not be read by everyone (a color, a screen reader); this
   can. getTableData() gives its rows.
 - getImage() and download("chart.png"): the whole card as a picture.
+- animated: 1: a change of the data moves the marks to their new places, a new value of a live chart slides in, the
+  tooltip follows softly. No motion at the first view, and none when the system asks for less motion.
 
 USAGE:
 const sales = GraphBox({
@@ -68,7 +70,8 @@ const GraphBoxDefaults = {
     values: null, // [12, 19, 7] Shortcut: creates one dataset.
     datasets: null, // [{ label: "2026", data: [12, 19, 7], ...see A DATASET above }]
     data: null, // { labels, datasets } (Used instead of labels, values and datasets.)
-    legend: "auto", // "auto" (2+ datasets; a pie: at the right, or at the bottom of a narrow box), "top", "bottom", "left", "right", "none"
+    // "auto" (2+ datasets; a pie: at the right, or at the bottom of a narrow box), "top", "bottom", "left", "right", "none"
+    legend: "auto",
     stacked: 0, // 1: Bars one on the other, lines and areas over each other. The tooltip adds totalText.
     horizontal: 0, // 1: The values grow to the right. (Long names read better so.)
     totalText: "Total", // The last row of the tooltip of a stacked chart. "": No total
@@ -92,6 +95,7 @@ const GraphBoxDefaults = {
     locale: "", // "": The language of the browser. Ex: "tr-TR"
     maxCount: 0, // addValue(): 0: No limit. Ex: 20 (the first value is removed, for live data)
     emptyText: "No data", // In the middle of a chart with no values. "": Nothing
+    animated: 0, // 1: Small motions when the data changes. setAnimated()
     onClick: function (self, item, event) { }, // item: { datasetIndex, index, label, value, datasetLabel, dataset }
     style: {
         box: {
@@ -150,6 +154,7 @@ const GraphBoxDefaults = {
             gap: 2, // Between two slices
             hole: 0.62, // A doughnut: the hole, as a part of the radius
             hoverGrow: 4, // Px: the slice under the mouse
+            changeOpacity: 0.4, // animated: 1: a slice comes from this opacity when the values change.
             centerFontSize: 26,
         },
         radar: {
@@ -204,22 +209,32 @@ const GraphBox = function (params = {}) {
     // *** PRIVATE VARIABLES:
     let _s = box.style;
     const SVG_NS = "http://www.w3.org/2000/svg";
+    const MOTION_TIME = 0.25; // Seconds
+    const TOOLTIP_CLOSE_TIME = 0.15;
+    const MOTION_EASE = "cubic-bezier(0.2, 0.8, 0.2, 1)";
     const LEGEND_FLOWS = { top: "column", bottom: "column-reverse", left: "row", right: "row-reverse" };
     const STEP_KEYS = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
     const hasClickEvent = (box.onClick !== GraphBoxDefaults.onClick);
+    const SUMMARY_VALUE_COUNT = 100;
     const FULL_CIRCLE = Math.PI * 2;
     const TOP_ANGLE = -Math.PI / 2; // The first slice starts at the top.
     const colorIndexes = new Map(); // The key of a series -> its place in the colors of the theme
     const hiddenSliceKeys = new Set(); // WHY keys, not places: A slice stays hidden when the values come again.
     const tooltipRows = [];
     let colors = null; // The colors of the theme + style.colors
-    let svg, definitions, gridLayer, washLayer, markLayer, overlayLayer, valueLayer;
+    let svg, definitions, gridLayer, washLayer, clipLayer, markLayer, overlayLayer, valueLayer;
     let view = null; // What the last drawing knows about its marks. null: nothing is drawn.
     let activeItem = null; // { index, datasetIndex }: under the mouse, or chosen with the keyboard.
     let pointer = null; // { x, y } in the plot. null: the keyboard chose the item.
     let legendSignature = "";
     let drawnSize = "";
     let legendPlace = "";
+    let marks = new Map(); // What the last drawing made: its name -> { shape, rect or point }. (For the motion)
+    let drawnAxes = null; // The axes of the last drawing of a line or bar chart. (For the motion)
+    let isChangeWaiting = 0; // 1: The next drawing shows a change of the data, so it can move.
+    let addedValueShift = null; // A number: addValue() is waiting to be drawn; so many old values went out at the left.
+    let isTooltipShown = 0;
+    let cancelTooltipHide = null;
 
     // *** PUBLIC VARIABLES:
     // [var] { labels, datasets } A copy of the data of the page. After a change: box.update()
@@ -326,6 +341,10 @@ const GraphBox = function (params = {}) {
         return colors.colors[colorIndexes.get(getSeriesKey(dataset, position))] || colors.otherColor;
     };
 
+    const getSeriesKeyOf = function (seriesItem) {
+        return getSeriesKey(seriesItem.dataset, seriesItem.datasetIndex);
+    };
+
     const getMarkColor = function (seriesItem, index) {
         const ownColors = seriesItem.dataset.colors;
         return (ownColors && ownColors[index]) || seriesItem.color;
@@ -369,8 +388,13 @@ const GraphBox = function (params = {}) {
         [definitions, gridLayer, washLayer, markLayer, overlayLayer, valueLayer].forEach(function (layer) {
             layer.replaceChildren();
         });
-        markLayer.removeAttribute("clip-path");
+        clipLayer.removeAttribute("clip-path");
         overlayLayer.removeAttribute("clip-path");
+    };
+
+    // What a drawing made, by a name that stays the same in the next drawing. geometry: { rect } or { point }
+    const rememberMark = function (markType, seriesKey, place, shape, geometry) {
+        marks.set(markType + "|" + seriesKey + "|" + place, Object.assign({ shape: shape }, geometry));
     };
 
     // A line of 1 px is sharp only in the middle of a pixel.
@@ -564,7 +588,7 @@ const GraphBox = function (params = {}) {
             width: plot.right - plot.left + room * 2,
             height: plot.bottom - plot.top + room * 2,
         });
-        markLayer.setAttribute("clip-path", "url(#" + id + ")");
+        clipLayer.setAttribute("clip-path", "url(#" + id + ")");
         overlayLayer.setAttribute("clip-path", "url(#" + id + ")");
     };
 
@@ -667,7 +691,8 @@ const GraphBox = function (params = {}) {
         const bottom = Math.max(top + 1, height - (textHeight + labelGap + titleRooms.bottom));
         const tickSpace = Math.max(_s.axis.tickSpace, tickWidth + _s.axis.labelSpace);
 
-        return { left: left, top: top, right: right, bottom: bottom, maxLabelWidth: maxLabelWidth, scale: createValueScale(limits, right - left, tickSpace) };
+        const scale = createValueScale(limits, right - left, tickSpace);
+        return { left: left, top: top, right: right, bottom: bottom, maxLabelWidth: maxLabelWidth, scale: scale };
 
     };
 
@@ -840,8 +865,9 @@ const GraphBox = function (params = {}) {
         if (range.from !== 0) basePosition += direction * _s.bar.gap;
 
         // WHY: A very small value is still there: it does not vanish, or turn over after the gap.
-        const isTooShort = (Math.abs(endPosition - basePosition) < _s.bar.minLength || Math.sign(endPosition - basePosition) !== direction);
-        if (isTooShort) basePosition = endPosition - direction * _s.bar.minLength;
+        const isTurnedOver = (Math.sign(endPosition - basePosition) !== direction);
+        const isTooShort = (Math.abs(endPosition - basePosition) < _s.bar.minLength);
+        if (isTurnedOver || isTooShort) basePosition = endPosition - direction * _s.bar.minLength;
 
         return { basePosition: basePosition, endPosition: endPosition };
 
@@ -907,10 +933,11 @@ const GraphBox = function (params = {}) {
     // A bar: its round corners are at the end of its value, its base is square.
     const drawBar = function (seriesItem, index, range, roundSide, slotStart, thickness, axes) {
         const rect = createBarRect(range, slotStart, thickness, axes);
-        addShape(markLayer, "path", {
+        const shape = addShape(markLayer, "path", {
             d: GraphBox.barPath(rect, _s.bar.round, roundSide),
             fill: getMarkColor(seriesItem, index),
         });
+        rememberMark("bar", getSeriesKeyOf(seriesItem), index, shape, { rect: rect });
         seriesItem.barRects[index] = rect;
         if (!basic.isOn(box.showValues)) return;
         if (isStacked()) {
@@ -985,7 +1012,7 @@ const GraphBox = function (params = {}) {
         return "url(#" + id + ")";
     };
 
-    const drawArea = function (seriesItem, segment, axes) {
+    const drawArea = function (seriesItem, segment, segmentPlace, axes) {
 
         if (segment.length < 2) return;
 
@@ -999,20 +1026,21 @@ const GraphBox = function (params = {}) {
             return axes.toPoint(index, Math.min(axes.scale.max, Math.max(axes.scale.min, seriesItem.ranges[index].from)));
         });
 
-        addShape(markLayer, "path", {
+        const shape = addShape(markLayer, "path", {
             d: "M" + GraphBox.pointText(upperPoints[0]) + GraphBox.curveCommands(upperPoints, isSmooth, axes.isHorizontal) +
                 "L" + GraphBox.pointText(lowerPoints[0]) + GraphBox.curveCommands(lowerPoints, isSmooth, axes.isHorizontal) + "Z",
             fill: (isGradient) ? addGradient(seriesItem.color) : seriesItem.color,
             "fill-opacity": (isGradient) ? 1 : _s.line.fillOpacity,
         });
+        rememberMark("area", getSeriesKeyOf(seriesItem), segmentPlace, shape);
 
     };
 
     const drawAreas = function (series, axes) {
         series.filter(isLineSeries).forEach(function (seriesItem) {
             if (!getFillType(seriesItem.dataset)) return;
-            getSegments(seriesItem).forEach(function (segment) {
-                drawArea(seriesItem, segment, axes);
+            getSegments(seriesItem).forEach(function (segment, segmentPlace) {
+                drawArea(seriesItem, segment, segmentPlace, axes);
             });
         });
     };
@@ -1044,7 +1072,9 @@ const GraphBox = function (params = {}) {
 
         seriesItem.points = [];
 
-        getSegments(seriesItem).forEach(function (segment) {
+        const seriesKey = getSeriesKeyOf(seriesItem);
+
+        getSegments(seriesItem).forEach(function (segment, segmentPlace) {
 
             const points = segment.map(function (index) {
                 const point = axes.toPoint(index, seriesItem.ranges[index].to);
@@ -1052,7 +1082,7 @@ const GraphBox = function (params = {}) {
                 return point;
             });
 
-            addShape(markLayer, "path", {
+            const line = addShape(markLayer, "path", {
                 d: "M" + GraphBox.pointText(points[0]) + GraphBox.curveCommands(points, isSmooth, axes.isHorizontal),
                 fill: "none",
                 stroke: seriesItem.color,
@@ -1061,11 +1091,13 @@ const GraphBox = function (params = {}) {
                 "stroke-linejoin": "round",
                 "stroke-dasharray": (seriesItem.dataset.dashed) ? _s.line.dash : "none",
             });
+            rememberMark("line", seriesKey, segmentPlace, line);
 
             // WHY the lone value: It has no line, so without a point it would not be seen.
             if (hasPoints || points.length === 1) {
-                points.forEach(function (point) {
-                    addPoint(markLayer, point, seriesItem.color, _s.line.pointRadius);
+                points.forEach(function (point, pointPlace) {
+                    const dot = addPoint(markLayer, point, seriesItem.color, _s.line.pointRadius);
+                    rememberMark("point", seriesKey, segment[pointPlace], dot, { point: point });
                 });
             }
 
@@ -1228,6 +1260,7 @@ const GraphBox = function (params = {}) {
         limits.valueRooms = measureValueRooms(series);
 
         const axes = createAxes(series, limits, indexCount, width, height);
+        drawnAxes = axes;
 
         clipMarks(axes.plot);
         drawValueAxis(axes);
@@ -1286,7 +1319,7 @@ const GraphBox = function (params = {}) {
     };
 
     const addSlice = function (layer, slice, shape, outerRadius) {
-        addShape(layer, "path", {
+        return addShape(layer, "path", {
             d: GraphBox.slicePath(shape.center, shape.innerRadius, outerRadius, slice.startAngle, slice.endAngle, _s.pie.gap),
             fill: slice.color,
         });
@@ -1371,10 +1404,12 @@ const GraphBox = function (params = {}) {
             },
             getReadout: function (item) {
                 const slice = findSlice(item);
-                return {
-                    titleText: getLabelText(slice.index),
-                    rows: [{ color: slice.color, valueText: formatValueText(slice.value), nameText: getShareText(slice.value, total) }],
+                const row = {
+                    color: slice.color,
+                    valueText: formatValueText(slice.value),
+                    nameText: getShareText(slice.value, total),
                 };
+                return { titleText: getLabelText(slice.index), rows: [row] };
             },
             // For the keyboard: on the middle of the slice.
             getAnchor: function (item) {
@@ -1402,7 +1437,8 @@ const GraphBox = function (params = {}) {
 
         addSliceAngles(slices, total);
         slices.forEach(function (slice) {
-            addSlice(markLayer, slice, shape, outerRadius);
+            const sliceShape = addSlice(markLayer, slice, shape, outerRadius);
+            rememberMark("slice", "", slice.index, sliceShape, { isSlice: 1 });
             if (basic.isOn(box.showValues)) drawSliceValue(slice, shape, total);
         });
         drawPieCenter(shape);
@@ -1450,7 +1486,12 @@ const GraphBox = function (params = {}) {
 
         shape.scale.ticks.forEach(function (tick) {
             const points = indexes.map(function (index) { return toRadarPoint(shape, index, tick); });
-            addShape(gridLayer, "path", { d: GraphBox.polygonPath(points), fill: "none", stroke: colors.gridColor, "stroke-width": 1 });
+            addShape(gridLayer, "path", {
+                d: GraphBox.polygonPath(points),
+                fill: "none",
+                stroke: colors.gridColor,
+                "stroke-width": 1,
+            });
         });
 
         indexes.forEach(function (index) {
@@ -1495,19 +1536,21 @@ const GraphBox = function (params = {}) {
             if (range) seriesItem.points[index] = toRadarPoint(shape, index, range.to);
         });
 
-        const points = seriesItem.points.filter(Boolean);
-        addShape(markLayer, "path", {
-            d: GraphBox.polygonPath(points),
+        const seriesKey = getSeriesKeyOf(seriesItem);
+        const polygon = addShape(markLayer, "path", {
+            d: GraphBox.polygonPath(seriesItem.points.filter(Boolean)),
             fill: seriesItem.color,
             "fill-opacity": _s.radar.fillOpacity,
             stroke: seriesItem.color,
             "stroke-width": _s.line.width,
             "stroke-linejoin": "round",
         });
+        rememberMark("line", seriesKey, 0, polygon);
 
         if (shape.indexCount * _s.line.pointSpace > shape.radius * FULL_CIRCLE) return; // No room for the points
-        points.forEach(function (point) {
-            addPoint(markLayer, point, seriesItem.color, _s.line.pointRadius - 1);
+        seriesItem.points.forEach(function (point, index) {
+            const dot = addPoint(markLayer, point, seriesItem.color, _s.line.pointRadius - 1);
+            rememberMark("point", seriesKey, index, dot, { point: point });
         });
 
     };
@@ -1699,8 +1742,10 @@ const GraphBox = function (params = {}) {
     };
 
     const drawScatterPoint = function (point) {
-        const dot = addPoint(markLayer, { x: point.px, y: point.py }, point.color, point.radius);
+        const place = { x: point.px, y: point.py };
+        const dot = addPoint(markLayer, place, point.color, point.radius);
         if (box.type === "bubble") dot.setAttribute("fill-opacity", _s.scatter.bubbleOpacity);
+        rememberMark("point", point.datasetIndex, point.index, dot, { point: place });
     };
 
     const findNearestPoint = function (points, x, y) {
@@ -1798,10 +1843,18 @@ const GraphBox = function (params = {}) {
 
         const width = box.plot.elem.clientWidth;
         const height = box.plot.elem.clientHeight;
-        if (width <= 0 || height <= 0) return; // WHY: Not on the screen yet. onResize draws it when it comes.
+        if (width <= 0 || height <= 0) {
+            addedValueShift = null;
+            return; // WHY: Not on the screen yet. onResize draws it when it comes.
+        }
 
         drawnSize = width + "x" + height;
         clearLayers();
+
+        const oldMarks = marks;
+        const oldAxes = drawnAxes;
+        marks = new Map();
+        drawnAxes = null;
 
         svg.setAttribute("width", width);
         svg.setAttribute("height", height);
@@ -1817,6 +1870,120 @@ const GraphBox = function (params = {}) {
         if (activeItem && (!view || !view.hasItem(activeItem))) activeItem = null;
         paintActiveItem();
 
+        if (isChangeWaiting && isMotionOn()) playMotion(oldMarks, oldAxes);
+        isChangeWaiting = 0;
+        addedValueShift = null;
+
+    };
+
+    // The drawing of a change of the data: it may move. (A new size or a font does not.)
+    const drawChange = function () {
+        isChangeWaiting = 1;
+        drawPlot();
+    };
+
+    // THE MOTION OF A CHANGE:
+    // WHY like this: Every drawing makes its shapes again. So a new shape is first put where the old one was, without a
+    //     transition, and then its transition takes it to its real place. Only transform and opacity change, and the
+    //     "d" of a line: a line has no other way to change its form, and it does not move the layout of the page. (A
+    //     browser that can not move a "d" just shows the new line.)
+
+    const isMotionOn = function () {
+        if (box.animated != 1) return false;
+        return !(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    };
+
+    const toMotionText = function (property, time = MOTION_TIME) {
+        return property + " " + time + "s " + MOTION_EASE;
+    };
+
+    const toPathText = function (path) {
+        return 'path("' + path + '")';
+    };
+
+    // The transform that puts a bar of the new drawing on the place of the old one.
+    const getRectMatrix = function (rect, oldRect) {
+        const scaleX = (rect.width) ? oldRect.width / rect.width : 1;
+        const scaleY = (rect.height) ? oldRect.height / rect.height : 1;
+        const moveX = oldRect.left - scaleX * rect.left;
+        const moveY = oldRect.top - scaleY * rect.top;
+        return "matrix(" + [scaleX, 0, 0, scaleY, moveX, moveY].join(",") + ")";
+    };
+
+    // What a mark does: { shape, property, from, to }. null: it just stays.
+    const createMove = function (mark, oldMark) {
+        const shape = mark.shape;
+        if (!oldMark) return { shape: shape, property: "opacity", from: "0", to: "1" };
+        // WHY a fade: The ends of an arc go on straight lines between their two places, so a moving slice loses its form.
+        if (mark.isSlice) return { shape: shape, property: "opacity", from: _s.pie.changeOpacity, to: "1" };
+        if (mark.rect) return { shape: shape, property: "transform", from: getRectMatrix(mark.rect, oldMark.rect), to: "none" };
+        if (mark.point) {
+            const moveX = oldMark.point.x - mark.point.x;
+            const moveY = oldMark.point.y - mark.point.y;
+            return { shape: shape, property: "transform", from: "translate(" + moveX + "px, " + moveY + "px)", to: "none" };
+        }
+        if (!GraphBox.canMovePaths()) return null;
+        const from = toPathText(oldMark.shape.getAttribute("d"));
+        return { shape: shape, property: "d", from: from, to: toPathText(shape.getAttribute("d")) };
+    };
+
+    const runMoves = function (moves) {
+        moves.forEach(function (move) {
+            move.shape.style.transition = "none";
+            move.shape.style[move.property] = move.from;
+        });
+        void svg.getBoundingClientRect(); // WHY: The start must be applied before the transitions are on.
+        moves.forEach(function (move) {
+            move.shape.style.transition = toMotionText(move.property);
+            move.shape.style[move.property] = move.to;
+        });
+    };
+
+    // addValue(): the values stay as they are. Only their places change: one to the left (or closer, while the chart
+    // fills up), and the scale. So one transform of all the marks puts the new drawing on the old one.
+    const getAddedValueMatrix = function (oldAxes, newAxes, shift) {
+
+        const newStart = newAxes.toIndexPosition(0);
+        const newEnd = newAxes.toIndexPosition(1);
+        const oldStart = oldAxes.toIndexPosition(shift);
+        const oldEnd = oldAxes.toIndexPosition(shift + 1);
+        const scaleX = (oldEnd - oldStart) / ((newEnd - newStart) || 1);
+
+        const scale = newAxes.scale;
+        const newBottom = newAxes.toValuePosition(scale.min);
+        const newTop = newAxes.toValuePosition(scale.max);
+        const oldBottom = oldAxes.toValuePosition(scale.min);
+        const oldTop = oldAxes.toValuePosition(scale.max);
+        const scaleY = (oldTop - oldBottom) / ((newTop - newBottom) || 1);
+
+        if (!scaleX || !scaleY) return null; // WHY: The first values: there is no width of a place to start from.
+        return "matrix(" + [scaleX, 0, 0, scaleY, oldStart - scaleX * newStart, oldBottom - scaleY * newBottom].join(",") + ")";
+
+    };
+
+    const playAddedValueMotion = function (oldAxes) {
+        const matrix = getAddedValueMatrix(oldAxes, drawnAxes, addedValueShift);
+        if (matrix) runMoves([{ shape: markLayer, property: "transform", from: matrix, to: "none" }]);
+    };
+
+    const playMotion = function (oldMarks, oldAxes) {
+
+        if (!oldMarks.size) return; // WHY: No motion at the first view.
+
+        const isAddedValue = (addedValueShift !== null && oldAxes && drawnAxes && !drawnAxes.isHorizontal);
+        if (isAddedValue) {
+            playAddedValueMotion(oldAxes);
+            return;
+        }
+
+        const moves = [];
+        marks.forEach(function (mark, name) {
+            const move = createMove(mark, oldMarks.get(name));
+            if (move) moves.push(move);
+        });
+        if (valueLayer.childElementCount) moves.push({ shape: valueLayer, property: "opacity", from: "0", to: "1" });
+        runMoves(moves);
+
     };
 
     // WHY: A screen reader can not read an SVG drawing: the title and every value are read from this text.
@@ -1824,7 +1991,8 @@ const GraphBox = function (params = {}) {
         const parts = [box.titleText || box.type + " chart"];
         if (box.subtitleText) parts.push(box.subtitleText);
         getVisibleSeries().forEach(function (seriesItem) {
-            const values = seriesItem.dataset.data.map(function (value, index) {
+            // WHY the limit: Nobody listens to thousands of values, and a live chart makes this text every second.
+            const values = seriesItem.dataset.data.slice(0, SUMMARY_VALUE_COUNT).map(function (value, index) {
                 if (isScatterType()) {
                     const point = toScatterValue(value);
                     return (point) ? formatXText(point.x) + " " + formatValueText(point.y) : "";
@@ -1847,7 +2015,7 @@ const GraphBox = function (params = {}) {
                 group.key = Box({ width: _s.tooltip.keyWidth, height: _s.tooltip.keyHeight, round: _s.tooltip.keyHeight / 2 });
                 group.key.shrink = 0;
                 group.lblValue = Label({ fontSize: _s.tooltip.fontSize, fontFamily: "opensans-bold", css: { whiteSpace: "nowrap" } });
-                group.lblName = Label({ fontSize: _s.tooltip.fontSize, ellipsis: 1, css: { maxWidth: _s.tooltip.maxNameWidth + "px" } });
+                group.lblName = Label({ fontSize: _s.tooltip.fontSize, ellipsis: 1 });
             endGroup();
             return group;
         });
@@ -1865,9 +2033,12 @@ const GraphBox = function (params = {}) {
         row.lblName.plainText = rowData.nameText;
         row.lblName.textColor = colors.tooltipMutedColor;
         row.lblName.visible = (rowData.nameText) ? 1 : 0;
+        row.lblName.css = { maxWidth: Math.min(_s.tooltip.maxNameWidth, box.elem.clientWidth / 2) + "px" };
     };
 
     const fillTooltip = function (readout) {
+        const titleRoom = box.elem.clientWidth - (_s.tooltip.edge + _s.tooltip.padding[0]) * 2;
+        box.lblTooltipTitle.css = { maxWidth: titleRoom + "px" };
         box.lblTooltipTitle.plainText = readout.titleText;
         box.lblTooltipTitle.visible = (readout.titleText) ? 1 : 0;
         while (tooltipRows.length < readout.rows.length) createTooltipRow();
@@ -1898,8 +2069,67 @@ const GraphBox = function (params = {}) {
         let left = anchorX + distance;
         if (left + tooltipWidth > box.elem.clientWidth - edge) left = anchorX - distance - tooltipWidth;
 
-        box.tooltip.left = Math.max(edge, left);
-        box.tooltip.top = Math.max(edge, Math.min(box.elem.clientHeight - tooltipHeight - edge, anchorY - tooltipHeight / 2));
+        moveTooltip(
+            Math.max(edge, left),
+            Math.max(edge, Math.min(box.elem.clientHeight - tooltipHeight - edge, anchorY - tooltipHeight / 2))
+        );
+
+    };
+
+    // WHY transform when it moves: left and top would move the layout at every move of the mouse.
+    const moveTooltip = function (left, top) {
+        if (!isMotionOn()) {
+            box.tooltip.left = left;
+            box.tooltip.top = top;
+            return;
+        }
+        box.tooltip.left = 0;
+        box.tooltip.top = 0;
+        box.tooltip.css = { transform: "translate(" + left + "px, " + top + "px)" };
+    };
+
+    const showTooltip = function () {
+
+        const wasHidden = !isTooltipShown;
+        isTooltipShown = 1;
+        if (cancelTooltipHide) cancelTooltipHide();
+        cancelTooltipHide = null;
+        box.tooltip.visible = 1;
+
+        if (!isMotionOn()) {
+            placeTooltip();
+            return;
+        }
+
+        // It comes where it must be and fades in: it does not fly from where it was the last time.
+        if (wasHidden) {
+            box.tooltip.setMotionNow("none");
+            box.tooltip.opacity = 0;
+            placeTooltip();
+            void box.tooltip.elem.offsetWidth; // WHY: The start must be applied before the transition is on.
+        }
+        box.tooltip.setMotionNow(toMotionText("transform") + ", " + toMotionText("opacity"));
+        box.tooltip.opacity = 1;
+        placeTooltip();
+
+    };
+
+    const hideTooltip = function () {
+
+        if (!isTooltipShown) return;
+        isTooltipShown = 0;
+
+        if (!isMotionOn()) {
+            box.tooltip.visible = 0;
+            return;
+        }
+
+        box.tooltip.setMotionNow(toMotionText("opacity", TOOLTIP_CLOSE_TIME));
+        box.tooltip.opacity = 0;
+        cancelTooltipHide = box.after(TOOLTIP_CLOSE_TIME * 1000, function () {
+            cancelTooltipHide = null;
+            box.tooltip.visible = 0;
+        });
 
     };
 
@@ -1910,16 +2140,16 @@ const GraphBox = function (params = {}) {
         washLayer.replaceChildren();
         overlayLayer.replaceChildren();
 
+        if (view && activeItem) view.paintItem(activeItem);
+
         const readout = (view && activeItem) ? view.getReadout(activeItem) : null;
-        const isShown = (readout && readout.rows.length > 0);
-        box.tooltip.visible = (isShown) ? 1 : 0;
+        if (!readout || !readout.rows.length) {
+            hideTooltip();
+            return;
+        }
 
-        if (!view || !activeItem) return;
-
-        view.paintItem(activeItem);
-        if (!isShown) return;
         fillTooltip(readout);
-        placeTooltip();
+        showTooltip();
 
     };
 
@@ -1935,7 +2165,7 @@ const GraphBox = function (params = {}) {
             paintActiveItem();
             return;
         }
-        if (item && box.tooltip.visible == 1) placeTooltip();
+        if (item && isTooltipShown) placeTooltip();
     };
 
     const clearActiveItem = function () {
@@ -1949,9 +2179,17 @@ const GraphBox = function (params = {}) {
         return { x: (event.clientX - rect.left) / zoom, y: (event.clientY - rect.top) / zoom };
     };
 
+    // The keyboard chooses a place, not a dataset: the first one on the screen with a value there.
+    const getFirstDatasetIndexAt = function (index) {
+        const seriesItem = getVisibleSeries().find(function (candidate) {
+            return getValue(candidate.dataset, index) !== null;
+        });
+        return (seriesItem) ? seriesItem.datasetIndex : 0;
+    };
+
     // The item of a click: { datasetIndex, index, label, value, datasetLabel, dataset }
     const createClickItem = function (item) {
-        const datasetIndex = (item.datasetIndex === null) ? 0 : item.datasetIndex;
+        const datasetIndex = (item.datasetIndex === null) ? getFirstDatasetIndexAt(item.index) : item.datasetIndex;
         const dataset = box.data.datasets[datasetIndex];
         if (!dataset) return null;
         return {
@@ -2082,9 +2320,16 @@ const GraphBox = function (params = {}) {
 
     };
 
-    const toggleLegendEntry = function (entry) {
+    const toggleLegendItem = function (item) {
+        const entry = item.entry;
         const setVisible = (isPieType()) ? box.setSliceVisible : box.setDatasetVisible;
         setVisible(entry.position, entry.isHidden ? 1 : 0);
+    };
+
+    const paintLegendItem = function (item, entry) {
+        item.entry = entry;
+        item.opacity = (entry.isHidden) ? _s.legend.hiddenOpacity : 1;
+        item.aria = { pressed: !entry.isHidden };
     };
 
     const createLegendItem = function (entry) {
@@ -2099,28 +2344,42 @@ const GraphBox = function (params = {}) {
 
         endGroup();
 
-        item.opacity = (entry.isHidden) ? _s.legend.hiddenOpacity : 1;
         item.cursor = "pointer";
         item.role = "button";
         item.tabIndex = 0;
-        item.aria = { pressed: !entry.isHidden };
         item.setFocusRing(colors.focusColor);
-        item.on("click", function () { toggleLegendEntry(entry); });
+        item.on("click", toggleLegendItem);
         item.on("keydown", function (self, event) {
             if (event.key !== "Enter" && event.key !== " ") return;
             event.preventDefault();
-            toggleLegendEntry(entry);
+            toggleLegendItem(item);
         });
+        paintLegendItem(item, entry);
 
         return item;
 
     };
 
+    // What makes the objects of the legend different.
+    const getLegendSignature = function (entries) {
+        const parts = entries.map(function (entry) {
+            return [entry.text, entry.color, entry.keyShape, entry.position];
+        });
+        return JSON.stringify(parts) + colors.textColor;
+    };
+
     const createLegend = function () {
 
         const entries = getLegendEntries();
-        const signature = JSON.stringify(entries) + colors.textColor;
-        if (signature === legendSignature) return; // WHY: Live data: the same legend is not made every second.
+        const signature = getLegendSignature(entries);
+
+        // WHY: Live data: the same legend is not made every second. A hidden item keeps its object: it keeps the focus.
+        if (signature === legendSignature) {
+            box.legendItems.forEach(function (item, itemPlace) {
+                paintLegendItem(item, entries[itemPlace]);
+            });
+            return;
+        }
         legendSignature = signature;
 
         box.legendItems.forEach(function (item) { item.remove(); });
@@ -2184,8 +2443,13 @@ const GraphBox = function (params = {}) {
                     textColor: (cellIndex === 0 || isHead) ? colors.titleColor : colors.textColor,
                     ellipsis: 1,
                     role: (isHead) ? "columnheader" : "cell",
-                    // WHY tabular-nums: The digits of the numbers of a column stand under each other.
-                    css: { flex: "1 1 0", minWidth: "0px", padding: "0px " + _s.table.cellPadding + "px", textAlign: (cellIndex === 0) ? "left" : "right", fontVariantNumeric: "tabular-nums" },
+                    css: {
+                        flex: "1 1 0",
+                        minWidth: "0px",
+                        padding: "0px " + _s.table.cellPadding + "px",
+                        textAlign: (cellIndex === 0) ? "left" : "right",
+                        fontVariantNumeric: "tabular-nums", // WHY: The digits of a column stand under each other.
+                    },
                 });
                 if (isHead) label.fontFamily = _s.table.headFontFamily;
             });
@@ -2196,6 +2460,7 @@ const GraphBox = function (params = {}) {
 
     const createTable = function () {
 
+        const oldScroll = (box.tableBox) ? box.tableBox.elem.scrollTop : 0;
         if (box.tableBox) box.tableBox.remove();
         box.tableBox = null;
         if (box.tableView != 1) return;
@@ -2211,6 +2476,7 @@ const GraphBox = function (params = {}) {
         });
         box.tableBox.css = { flex: "1 1 0", minHeight: "0px", alignSelf: "stretch" };
         box.tableBox.aria = { label: box.titleText || box.type + " chart" };
+        box.tableBox.elem.scrollTop = oldScroll; // WHY: A live chart makes its table again every second.
 
     };
 
@@ -2276,8 +2542,8 @@ const GraphBox = function (params = {}) {
         const shapeBox = shape.getBBox();
         const gradient = context.createLinearGradient(0, shapeBox.y, 0, shapeBox.y + shapeBox.height);
         svg.getElementById(match[1]).querySelectorAll("stop").forEach(function (stop) {
-            const opacity = stop.getAttribute("stop-opacity");
-            gradient.addColorStop(Number(stop.getAttribute("offset")), GraphBox.toTransparent(stop.getAttribute("stop-color"), opacity));
+            const color = GraphBox.toTransparent(stop.getAttribute("stop-color"), stop.getAttribute("stop-opacity"));
+            gradient.addColorStop(Number(stop.getAttribute("offset")), color);
         });
         return gradient;
     };
@@ -2333,7 +2599,8 @@ const GraphBox = function (params = {}) {
         applyImageClip(context, layer);
         Array.from(layer.children).forEach(function (shape) {
             const name = shape.tagName.toLowerCase();
-            if (name === "text") paintImageText(context, shape);
+            if (name === "g") paintImageLayer(context, shape);
+            else if (name === "text") paintImageText(context, shape);
             else paintImageShape(context, shape, name);
         });
         context.restore();
@@ -2405,6 +2672,9 @@ const GraphBox = function (params = {}) {
         box.border = _s.box.border;
         box.borderColor = _s.box.borderColor || colors.borderColor;
         box.round = _s.box.round;
+        box.layout.gap = _s.box.gap;
+        box.layout.css = { padding: _s.box.padding + "px" };
+        box.body.gap = _s.box.gap;
         box.lblTitle.textColor = colors.titleColor;
         box.lblSubtitle.textColor = colors.textColor;
         box.lblEmpty.textColor = colors.mutedTextColor;
@@ -2427,7 +2697,18 @@ const GraphBox = function (params = {}) {
         drawPlot();
     };
 
+    // WHY: A page can change box.data by hand before box.update().
+    const prepareData = function () {
+        if (!box.data.labels) box.data.labels = [];
+        if (!box.data.datasets) box.data.datasets = [];
+        box.data.datasets.forEach(function (dataset) {
+            if (!dataset.data) dataset.data = [];
+        });
+    };
+
     const drawData = function () {
+        isChangeWaiting = 1;
+        prepareData();
         assignColors();
         createLegend();
         refreshLayout();
@@ -2502,12 +2783,15 @@ const GraphBox = function (params = {}) {
         const list = (Array.isArray(values)) ? values : [values];
         const datasets = box.data.datasets;
 
+        let removedCount = 0;
         if (box.maxCount > 0) {
             while (box.data.labels.length >= box.maxCount) {
                 box.data.labels.shift();
                 datasets.forEach(function (dataset) { dataset.data.shift(); });
+                removedCount++;
             }
         }
+        addedValueShift = removedCount;
 
         box.data.labels.push(label);
         datasets.forEach(function (dataset, position) {
@@ -2621,7 +2905,7 @@ const GraphBox = function (params = {}) {
 
         const plotPlace = getPlaceInBox(box.plot);
         context.translate(plotPlace.left, plotPlace.top);
-        [gridLayer, washLayer, markLayer, overlayLayer, valueLayer].forEach(function (layer) {
+        [gridLayer, washLayer, clipLayer, overlayLayer, valueLayer].forEach(function (layer) {
             paintImageLayer(context, layer);
         });
 
@@ -2654,24 +2938,36 @@ const GraphBox = function (params = {}) {
 
     box.setStacked = function (stacked) {
         box.stacked = (basic.isOn(stacked)) ? 1 : 0;
-        drawPlot();
+        drawChange();
     };
 
     box.setHorizontal = function (horizontal) {
         box.horizontal = (basic.isOn(horizontal)) ? 1 : 0;
-        drawPlot();
+        drawChange();
     };
+
+    box.setAnimated = function (value) {
+        box.animated = (basic.isOn(value)) ? 1 : 0;
+        if (box.animated == 1) return;
+        // WHY: The tooltip goes back to left and top, with no transform and no transition.
+        box.tooltip.setMotionNow("");
+        box.tooltip.css = { transform: "" };
+        box.tooltip.opacity = 1;
+        box.tooltip.visible = (isTooltipShown) ? 1 : 0;
+        if (isTooltipShown) placeTooltip();
+    };
+    // USAGE: graph.setAnimated(1)
 
     box.setCurve = function (curve) {
         box.curve = curve;
-        drawPlot();
+        drawChange();
     };
 
     // The limits of the value axis. null: from the values.
     box.setValueLimits = function (minValue, maxValue) {
         box.minValue = minValue;
         box.maxValue = maxValue;
-        drawPlot();
+        drawChange();
     };
 
     // scatter, bubble: The limits of the x axis. null: from the values.
@@ -2758,21 +3054,31 @@ const GraphBox = function (params = {}) {
     definitions = addShape(svg, "defs", {});
     gridLayer = addShape(svg, "g", {});
     washLayer = addShape(svg, "g", {}); // The band under the mouse: behind the marks
-    markLayer = addShape(svg, "g", {});
+    clipLayer = addShape(svg, "g", {}); // WHY two: A live chart moves markLayer, and its clip must stay where it is.
+    markLayer = addShape(clipLayer, "g", {});
     overlayLayer = addShape(svg, "g", {}); // The points under the mouse: over the marks
     valueLayer = addShape(svg, "g", {}); // The texts of the values: not clipped with the marks
     box.plot.elem.appendChild(svg);
 
     // GROUP: Tooltip (out of the layout, it never catches the mouse)
-    box.tooltip = VGroup({ left: 0, top: 0, hug: 1, align: "left top", gap: _s.tooltip.gap, padding: _s.tooltip.padding, round: _s.tooltip.round });
+    box.tooltip = VGroup({
+        left: 0,
+        top: 0,
+        hug: 1,
+        align: "left top",
+        gap: _s.tooltip.gap,
+        padding: _s.tooltip.padding,
+        round: _s.tooltip.round,
+    });
 
-        box.lblTooltipTitle = Label({ fontSize: _s.tooltip.fontSize, css: { whiteSpace: "nowrap" } });
+        box.lblTooltipTitle = Label({ fontSize: _s.tooltip.fontSize, ellipsis: 1 });
 
         // NOTE: The rows are made by fillTooltip().
 
     endGroup();
     box.tooltip.boxShadow = _s.tooltip.shadow;
     box.tooltip.zIndex = 1;
+    box.tooltip.role = "status"; // WHY: A screen reader reads the value the arrow keys chose.
     box.tooltip.visible = 0;
 
     // *** OBJECT INIT CODE:
@@ -2945,6 +3251,11 @@ GraphBox.barPath = function (rect, round, side) {
         "L" + point(left + bottomLeft, bottom) + "Q" + point(left, bottom) + point(left, bottom - bottomLeft) +
         "L" + point(left, top + topLeft) + "Q" + point(left, top) + point(left + topLeft, top) + "Z";
 
+};
+
+// Can the browser move the "d" of a path with a transition?
+GraphBox.canMovePaths = function () {
+    return !!(window.CSS && CSS.supports && CSS.supports("d", 'path("M0 0")'));
 };
 
 // The red, green, blue and alpha of any color the browser knows. WHY the canvas: It reads every way to write a color.
