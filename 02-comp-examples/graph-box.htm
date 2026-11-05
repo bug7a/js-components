@@ -92,6 +92,45 @@
                             values: [1200, 1350, 1500, null, 1700, 1900],
                         });
 
+                        // STACKED: The tooltip adds the total
+                        addChart({
+                            type: "bar",
+                            stacked: 1,
+                            titleText: "Support Tickets",
+                            subtitleText: "stacked: 1, a gap between the parts",
+                            labels: MONTHS,
+                            datasets: [
+                                { label: "Solved", data: [120, 140, 130, 160, 170, 190] },
+                                { label: "Waiting", data: [40, 35, 50, 30, 45, 25] },
+                                { label: "Closed", data: [20, 25, 15, 30, 20, 35] },
+                            ],
+                        });
+
+                        // HORIZONTAL: Long names read better so
+                        addChart({
+                            type: "bar",
+                            horizontal: 1,
+                            titleText: "Top Pages",
+                            subtitleText: "horizontal: 1",
+                            labels: ["Getting started", "Components", "Examples and templates", "Pricing", "A very long name of a page that is cut"],
+                            values: [8400, 6100, 4800, 2300, 1200],
+                        });
+
+                        // STACKED AREA: Every area is on the one before it
+                        addChart({
+                            type: "area",
+                            stacked: 1,
+                            curve: "smooth",
+                            titleText: "Traffic",
+                            subtitleText: "stacked: 1 on an area chart",
+                            labels: MONTHS,
+                            datasets: [
+                                { label: "Search", data: [420, 510, 470, 620, 680, 750] },
+                                { label: "Social", data: [210, 280, 260, 300, 340, 310] },
+                                { label: "Direct", data: [150, 170, 190, 180, 220, 240] },
+                            ],
+                        });
+
                         // MIXED: Bars and a line in one chart
                         addChart({
                             type: "bar",
@@ -148,6 +187,8 @@
                         addButton("Line", function () { chartDemo.setType("line"); });
                         addButton("Area", function () { chartDemo.setType("area"); });
                         addButton("Bar", function () { chartDemo.setType("bar"); });
+                        addButton("Stacked", function () { chartDemo.setStacked(chartDemo.stacked ? 0 : 1); });
+                        addButton("Horizontal", function () { chartDemo.setHorizontal(chartDemo.horizontal ? 0 : 1); });
                         addButton("Random", function () {
                             chartDemo.data.datasets.forEach(function (dataset) {
                                 dataset.data = dataset.data.map(function () { return random(5, 30); });

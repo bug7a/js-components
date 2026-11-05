@@ -3077,6 +3077,66 @@
             check("GraphBox: the chart follows the size of its box, and it comes when a hidden box is shown", widthAfter === widthAtStart + 200 && pathsWhileHidden === 0 && pathsWhenShown > 0, widthAtStart + " -> " + widthAfter + ", paths " + pathsWhileHidden + " -> " + pathsWhenShown);
         });
 
+        test("GraphBox: stacked: the values are one on the other, a negative one under the base line, the tooltip has the total", async function () {
+            const chart = GraphBox({
+                width: 400, height: 260, type: "bar", stacked: 1, legend: "none", maxValue: 100, minValue: -100,
+                labels: ["A"],
+                datasets: [{ label: "One", data: [30] }, { label: "Two", data: [20] }, { label: "Under", data: [-40] }],
+            });
+            await wait(30);
+            const bars = Array.from(chart.svg.querySelectorAll("path")).map(function (path) { return path.getBBox(); });
+            const unit = bars[0].height / 30; // px of one value
+            const isSameSlot = (Math.abs(bars[0].x - bars[1].x) < 0.1 && Math.abs(bars[0].x - bars[2].x) < 0.1);
+            const gapBetween = bars[0].y - (bars[1].y + bars[1].height); // "Two" is over "One", with the gap
+            const isUnderBase = Math.abs(bars[2].y - (bars[0].y + bars[0].height)) < 1;
+            graphBoxMoveMouse(chart, bars[0].x + 2, bars[0].y + 2);
+            const readout = chart.tooltip.elem.innerText;
+            check("GraphBox: stacked: the values are one on the other, a negative one under the base line, the tooltip has the total",
+                isSameSlot && Math.abs(gapBetween - GraphBoxDefaults.style.bar.gap) < 0.5 && isUnderBase && Math.abs(bars[2].height - unit * 40) < 1.5 && readout.includes("Total") && readout.includes("10"),
+                JSON.stringify(bars.map(function (bar) { return [bar.x, bar.y, bar.height]; })) + " " + readout);
+            chart.remove();
+        });
+
+        test("GraphBox: stacked areas: each one is on the one before it, a tiny value of a stack still shows", async function () {
+            const area = GraphBox({
+                width: 400, height: 260, type: "area", stacked: 1, showPoints: 0, legend: "none", maxValue: 100,
+                labels: ["A", "B"],
+                datasets: [{ label: "One", data: [20, 20] }, { label: "Two", data: [30, 30] }],
+            });
+            const lines = Array.from(area.svg.querySelectorAll('path[fill="none"]')).map(function (path) { return path.getBBox().y; });
+            const base = Number(Array.from(area.svg.querySelectorAll("line")).pop().getAttribute("y1"));
+            const isOverFirst = lines.length === 2 && Math.abs((base - lines[1]) - (base - lines[0]) * 2.5) < 2;
+            area.remove();
+
+            const tiny = GraphBox({
+                width: 400, height: 260, type: "bar", stacked: 1, legend: "none",
+                labels: ["A"], datasets: [{ label: "Big", data: [10000] }, { label: "Tiny", data: [1] }],
+            });
+            const bars = Array.from(tiny.svg.querySelectorAll("path")).map(function (path) { return path.getBBox(); });
+            const isTinyShown = (bars.length === 2 && bars[1].height >= GraphBoxDefaults.style.bar.minLength);
+            tiny.remove();
+
+            check("GraphBox: stacked areas: each one is on the one before it, a tiny value of a stack still shows", isOverFirst && isTinyShown, JSON.stringify(lines) + " base " + base + " " + JSON.stringify(bars));
+        });
+
+        test("GraphBox: horizontal: the bars grow to the right, the mouse finds the place from its height, setters work", async function () {
+            const chart = GraphBox({ width: 500, height: 260, type: "bar", horizontal: 1, labels: ["A", "B"], values: [50, 100], maxValue: 100 });
+            await wait(30);
+            const bars = Array.from(chart.svg.querySelectorAll("path")).map(function (path) { return path.getBBox(); });
+            const isLengthRight = Math.abs(bars[1].width - bars[0].width * 2) < 1 && Math.abs(bars[0].x - bars[1].x) < 0.1;
+            const isOrderRight = bars[0].y < bars[1].y;
+            graphBoxMoveMouse(chart, bars[1].x + 4, bars[1].y + 4);
+            const titleAtSecond = chart.lblTooltipTitle.elem.textContent;
+            graphBoxMoveMouse(chart, bars[0].x + 300, bars[0].y + 4); // Past the end of the bar, at its height
+            const titleAtFirst = chart.lblTooltipTitle.elem.textContent;
+            chart.setHorizontal(0);
+            const upright = chart.svg.querySelector("path").getBBox();
+            check("GraphBox: horizontal: the bars grow to the right, the mouse finds the place from its height, setters work",
+                isLengthRight && isOrderRight && titleAtSecond === "B" && titleAtFirst === "A" && upright.height > upright.width,
+                JSON.stringify(bars) + " " + titleAtSecond + titleAtFirst);
+            chart.remove();
+        });
+
         test("GraphBox: setTheme() changes the look, setStyle() keeps the other keys", async function () {
             const chart = GraphBox({ width: 400, height: 240, type: "bar", titleText: "Title", labels: ["A"], values: [1] });
             const lightColor = chart.color;

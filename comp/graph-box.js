@@ -7,7 +7,8 @@ GraphBox - v26.11
 UI COMPONENT
 - Charts with no library: this one file draws the whole chart as one SVG. No Chart.js, no other file, no internet.
   (comp/chart-box.js is the bridge to Chart.js. Its params and functions are the model here, so a page can move over.)
-- Chart types: "line", "area", "bar" (more than one dataset: bars side by side).
+- Chart types: "line", "area", "bar" (more than one dataset: bars side by side; stacked: 1 one on the other;
+  horizontal: 1 bars that grow to the right).
 - Light and dark themes ("light", "dark", "auto"). A dataset gets its color from the theme and keeps it, also when
   another dataset is hidden or removed.
 - The axis finds clean numbers by itself (0, 20K, 40K...). A label that has no room is skipped (a line chart: time)
@@ -58,6 +59,9 @@ const GraphBoxDefaults = {
     datasets: null, // [{ label: "2026", data: [12, 19, 7], ...see A DATASET above }]
     data: null, // { labels, datasets } (Used instead of labels, values and datasets.)
     legend: "auto", // "auto" (2+ datasets), "top", "bottom", "left", "right", "none"
+    stacked: 0, // 1: Bars one on the other, lines and areas over each other. The tooltip adds totalText.
+    horizontal: 0, // 1: The values grow to the right. (Long names read better so.)
+    totalText: "Total", // The last row of the tooltip of a stacked chart. "": No total
     beginAtZero: 1, // 1: The value axis holds 0. (A bar chart always holds it: the length of a bar is its value.)
     minValue: null, // null: From the values.
     maxValue: null, // null: From the values. Ex: 100
@@ -91,11 +95,13 @@ const GraphBoxDefaults = {
             labelSpace: 10, // At least this many px between two labels
             labelAngle: 35, // Degrees. The labels of the bars turn when they have no room. 0: A label is skipped instead.
             maxLabelShare: 0.3, // A turned label is cut with "..." at this much of the height of the chart.
+            maxSideLabelShare: 0.35, // horizontal: 1: a label is cut with "..." at this much of the width of the chart.
         },
         bar: {
             maxThickness: 24,
             round: 4, // Only at the end of the value. The base stays square.
-            gap: 2, // Between two bars side by side
+            gap: 2, // Between two bars side by side, and between two values of a stack
+            minLength: 1, // A very small value is still this long.
             bandShare: 0.72, // How much of its place a group of bars can fill
         },
         line: {
@@ -351,13 +357,28 @@ const GraphBox = function (params = {}) {
         }, box.data.labels.length);
     };
 
-    // Where every value starts and ends on the value axis.
+    const getStackName = function (seriesItem, value) {
+        if (!isBarSeries(seriesItem)) return "lines";
+        return (value < 0) ? "barsUnderBase" : "barsOverBase"; // WHY: A bar under the base line grows on its own side.
+    };
+
+    // Where a value starts and ends on the value axis. A stacked value starts where the one before it ended.
+    const createValueRange = function (seriesItem, index, stackTotals) {
+        const value = getValue(seriesItem.dataset, index);
+        if (value === null) return null;
+        if (box.stacked != 1) return { from: 0, to: value };
+        const totals = stackTotals[getStackName(seriesItem, value)];
+        const from = totals[index] || 0;
+        totals[index] = from + value;
+        return { from: from, to: from + value };
+    };
+
     const addValueRanges = function (series, indexCount) {
+        const stackTotals = { lines: [], barsOverBase: [], barsUnderBase: [] };
         series.forEach(function (seriesItem) {
             seriesItem.ranges = [];
             for (let index = 0; index < indexCount; index++) {
-                const value = getValue(seriesItem.dataset, index);
-                seriesItem.ranges.push((value === null) ? null : { from: 0, to: value });
+                seriesItem.ranges.push(createValueRange(seriesItem, index, stackTotals));
             }
         });
     };
@@ -393,8 +414,8 @@ const GraphBox = function (params = {}) {
 
     };
 
-    const createValueScale = function (limits, length) {
-        const tickCount = Math.max(2, Math.floor(length / _s.axis.tickSpace));
+    const createValueScale = function (limits, length, tickSpace = _s.axis.tickSpace) {
+        const tickCount = Math.max(2, Math.floor(length / tickSpace));
         const scale = GraphBox.niceScale(limits.low, limits.high, tickCount);
         if (limits.hasFixedLow) scale.min = limits.low;
         if (limits.hasFixedHigh) scale.max = limits.high;
@@ -409,11 +430,15 @@ const GraphBox = function (params = {}) {
 
     // THE AXES OF A LINE OR BAR CHART:
 
+    const getPointRoom = function () {
+        return _s.line.pointRadius + _s.line.pointRing + 1;
+    };
+
     // The room of the texts around the plot, and the scale that fits it.
     const measurePlot = function (limits, hasBands, indexCount, width, height, labelRoom) {
 
         const labelGap = _s.axis.labelGap;
-        const pointRoom = _s.line.pointRadius + _s.line.pointRing + 1;
+        const pointRoom = getPointRoom();
         const top = Math.max(pointRoom, Math.ceil(_s.axis.fontSize / 2));
         const bottom = height - (labelRoom + labelGap);
         const scale = createValueScale(limits, bottom - top);
@@ -432,8 +457,8 @@ const GraphBox = function (params = {}) {
     };
 
     // Px between two places of the index axis
-    const measureSpacing = function (plot, hasBands, indexCount) {
-        const indexLength = plot.right - plot.left;
+    const measureSpacing = function (plot, hasBands, indexCount, isHorizontal) {
+        const indexLength = (isHorizontal) ? plot.bottom - plot.top : plot.right - plot.left;
         return (hasBands) ? indexLength / indexCount : indexLength / Math.max(1, indexCount - 1);
     };
 
@@ -469,47 +494,102 @@ const GraphBox = function (params = {}) {
 
     };
 
+    // horizontal: 1: the labels are at the left, and the texts of the values under the plot.
+    const measureSidewaysPlot = function (limits, hasBands, indexCount, width, height) {
+
+        const labelGap = _s.axis.labelGap;
+        const textHeight = getAxisTextHeight();
+        const pointRoom = getPointRoom();
+        const maxLabelWidth = width * _s.axis.maxSideLabelShare;
+        const labelWidth = Math.min(maxLabelWidth, measureWidestText(getLabelTexts(indexCount)));
+        const tickWidth = measureWidestText([formatTickText(limits.low, 0), formatTickText(limits.high, 0)]);
+
+        const left = Math.ceil(labelWidth) + labelGap;
+        const right = Math.max(left + 1, width - Math.max(pointRoom, Math.ceil(tickWidth / 2)));
+        const top = (hasBands) ? 0 : Math.max(pointRoom, Math.ceil(textHeight / 2));
+        const bottom = Math.max(top + 1, height - (textHeight + labelGap));
+        const tickSpace = Math.max(_s.axis.tickSpace, tickWidth + _s.axis.labelSpace);
+
+        return { left: left, top: top, right: right, bottom: bottom, maxLabelWidth: maxLabelWidth, scale: createValueScale(limits, right - left, tickSpace) };
+
+    };
+
+    // The labels at the left of the plot: { texts, step, angle, room }. Only a step: a text can not be high.
+    const planSideLabels = function (indexCount, spacing, maxLabelWidth) {
+        const texts = getLabelTexts(indexCount).map(function (text) {
+            return GraphBox.fitText(text, maxLabelWidth, _s.axis.fontSize, _s.axis.fontFamily);
+        });
+        const step = Math.max(1, Math.ceil(getAxisTextHeight() / Math.max(1, spacing)));
+        return { texts: texts, step: step, angle: 0, room: 0 };
+    };
+
+    const planUprightPlot = function (limits, hasBands, indexCount, width, height) {
+
+        const flatRoom = getAxisTextHeight();
+        const firstPlot = measurePlot(limits, hasBands, indexCount, width, height, flatRoom);
+        const labelPlan = planIndexLabels(hasBands, indexCount, measureSpacing(firstPlot, hasBands, indexCount, 0), height);
+
+        // WHY again: Turned labels need more room under the plot, so the plot and its scale change.
+        const hasMoreRoom = (labelPlan.room !== flatRoom);
+        const plot = (hasMoreRoom) ? measurePlot(limits, hasBands, indexCount, width, height, labelPlan.room) : firstPlot;
+        return { plot: plot, labelPlan: labelPlan };
+
+    };
+
+    const planSidewaysPlot = function (limits, hasBands, indexCount, width, height) {
+        const plot = measureSidewaysPlot(limits, hasBands, indexCount, width, height);
+        const spacing = measureSpacing(plot, hasBands, indexCount, 1);
+        return { plot: plot, labelPlan: planSideLabels(indexCount, spacing, plot.maxLabelWidth) };
+    };
+
     const createAxes = function (series, limits, indexCount, width, height) {
 
         const hasBands = series.some(isBarSeries);
-        const flatRoom = getAxisTextHeight();
-
-        let plot = measurePlot(limits, hasBands, indexCount, width, height, flatRoom);
-        const labelPlan = planIndexLabels(hasBands, indexCount, measureSpacing(plot, hasBands, indexCount), height);
-
-        // WHY again: Turned labels need more room under the plot, so the plot and its scale change.
-        if (labelPlan.room !== flatRoom) plot = measurePlot(limits, hasBands, indexCount, width, height, labelPlan.room);
-
+        const isHorizontal = (box.horizontal == 1);
+        const planner = (isHorizontal) ? planSidewaysPlot : planUprightPlot;
+        const plan = planner(limits, hasBands, indexCount, width, height);
+        const plot = plan.plot;
         const scale = plot.scale;
-        const indexLength = plot.right - plot.left;
-        const spacing = measureSpacing(plot, hasBands, indexCount);
+        const spacing = measureSpacing(plot, hasBands, indexCount, isHorizontal);
+        const indexStart = (isHorizontal) ? plot.top : plot.left;
+        const indexLength = (isHorizontal) ? plot.bottom - plot.top : plot.right - plot.left;
         const scaleSpan = (scale.max - scale.min) || 1;
 
         const axes = {
+            isHorizontal: isHorizontal,
             hasBands: hasBands,
             indexCount: indexCount,
             spacing: spacing,
             plot: plot,
             scale: scale,
-            labelPlan: labelPlan,
+            labelPlan: plan.labelPlan,
         };
 
         axes.toIndexPosition = function (index) {
-            if (hasBands) return plot.left + spacing * (index + 0.5);
-            if (indexCount === 1) return plot.left + indexLength / 2;
-            return plot.left + spacing * index;
+            if (hasBands) return indexStart + spacing * (index + 0.5);
+            if (indexCount === 1) return indexStart + indexLength / 2;
+            return indexStart + spacing * index;
         };
 
         axes.toValuePosition = function (value) {
-            return plot.bottom - (value - scale.min) / scaleSpan * (plot.bottom - plot.top);
+            const share = (value - scale.min) / scaleSpan;
+            if (isHorizontal) return plot.left + share * (plot.right - plot.left);
+            return plot.bottom - share * (plot.bottom - plot.top);
+        };
+
+        // A point from its places on the two axes.
+        axes.joinPositions = function (indexPosition, valuePosition) {
+            if (isHorizontal) return { x: valuePosition, y: indexPosition };
+            return { x: indexPosition, y: valuePosition };
         };
 
         axes.toPoint = function (index, value) {
-            return { x: axes.toIndexPosition(index), y: axes.toValuePosition(value) };
+            return axes.joinPositions(axes.toIndexPosition(index), axes.toValuePosition(value));
         };
 
-        axes.toIndex = function (position) {
-            const place = (position - plot.left) / spacing;
+        axes.toIndex = function (x, y) {
+            const position = (isHorizontal) ? y : x;
+            const place = (position - indexStart) / spacing;
             const index = (hasBands) ? Math.floor(place) : Math.round(place);
             return Math.min(indexCount - 1, Math.max(0, index));
         };
@@ -526,22 +606,47 @@ const GraphBox = function (params = {}) {
 
     };
 
-    const drawValueAxis = function (axes) {
-
+    // A line of the value axis: across the plot.
+    const addValueLine = function (axes, position, color) {
         const plot = axes.plot;
+        if (axes.isHorizontal) return addLine(gridLayer, position, plot.top, position, plot.bottom, color);
+        return addLine(gridLayer, plot.left, position, plot.right, position, color);
+    };
+
+    const addTickText = function (axes, text, position) {
+        if (axes.isHorizontal) {
+            addText(gridLayer, text, position, axes.plot.bottom + _s.axis.labelGap + getAxisTextHeight() / 2);
+            return;
+        }
+        addText(gridLayer, text, axes.plot.left - _s.axis.labelGap, position, "end");
+    };
+
+    const drawValueAxis = function (axes) {
 
         axes.scale.ticks.forEach(function (tick, tickIndex) {
             const position = toPixelCenter(axes.toValuePosition(tick));
-            addLine(gridLayer, plot.left, position, plot.right, position, colors.gridColor);
-            addText(gridLayer, axes.scale.tickTexts[tickIndex], plot.left - _s.axis.labelGap, position, "end");
+            addValueLine(axes, position, colors.gridColor);
+            addTickText(axes, axes.scale.tickTexts[tickIndex], position);
         });
 
-        const basePosition = toPixelCenter(axes.toValuePosition(axes.baseValue));
-        addLine(gridLayer, plot.left, basePosition, plot.right, basePosition, colors.axisColor);
+        addValueLine(axes, toPixelCenter(axes.toValuePosition(axes.baseValue)), colors.axisColor);
 
     };
 
+    const drawSideLabels = function (axes) {
+        const plan = axes.labelPlan;
+        const x = axes.plot.left - _s.axis.labelGap;
+        for (let index = 0; index < axes.indexCount; index += plan.step) {
+            addText(gridLayer, plan.texts[index], x, axes.toIndexPosition(index), "end");
+        }
+    };
+
     const drawIndexLabels = function (axes) {
+
+        if (axes.isHorizontal) {
+            drawSideLabels(axes);
+            return;
+        }
 
         const plan = axes.labelPlan;
         const flatY = axes.plot.bottom + _s.axis.labelGap + getAxisTextHeight() / 2;
@@ -567,23 +672,57 @@ const GraphBox = function (params = {}) {
         return Math.max(1, Math.min(_s.bar.maxThickness, free / slotCount));
     };
 
-    // A bar: its round corners are at the end of its value, its base is square.
-    const drawBar = function (seriesItem, index, range, slotStart, thickness, axes) {
+    // The base and the end of a bar on the value axis.
+    const getBarEnds = function (range, axes) {
 
-        const basePosition = axes.toValuePosition(range.from);
         const endPosition = axes.toValuePosition(range.to);
-        const top = Math.min(basePosition, endPosition);
-        const barLength = Math.max(1, Math.abs(endPosition - basePosition));
-        const roundSide = (endPosition <= basePosition) ? "top" : "bottom";
-        const rect = { left: slotStart, top: top, width: thickness, height: barLength };
+        let basePosition = axes.toValuePosition(range.from);
+        const direction = Math.sign(endPosition - basePosition);
 
+        // WHY: The gap is in the geometry, not a line in the color of the box, so a box with no color has it too.
+        if (range.from !== 0) basePosition += direction * _s.bar.gap;
+
+        // WHY: A very small value is still there: it does not vanish, or turn over after the gap.
+        const isTooShort = (Math.abs(endPosition - basePosition) < _s.bar.minLength || Math.sign(endPosition - basePosition) !== direction);
+        if (isTooShort) basePosition = endPosition - direction * _s.bar.minLength;
+
+        return { basePosition: basePosition, endPosition: endPosition };
+
+    };
+
+    const createBarRect = function (range, slotStart, thickness, axes) {
+        const ends = getBarEnds(range, axes);
+        const start = Math.min(ends.basePosition, ends.endPosition);
+        const barLength = Math.abs(ends.endPosition - ends.basePosition);
+        if (axes.isHorizontal) return { left: start, top: slotStart, width: barLength, height: thickness };
+        return { left: slotStart, top: start, width: thickness, height: barLength };
+    };
+
+    const getRoundSide = function (range, axes) {
+        const isGoingUp = (range.to >= range.from);
+        if (axes.isHorizontal) return (isGoingUp) ? "right" : "left";
+        return (isGoingUp) ? "top" : "bottom";
+    };
+
+    // Is it the last value of its stack on its side of the base line? Only that one has round corners.
+    const isOuterValue = function (barSeries, seriesPlace, index, range) {
+        const isOverBase = (range.to >= range.from);
+        for (let place = seriesPlace + 1; place < barSeries.length; place++) {
+            const laterRange = barSeries[place].ranges[index];
+            if (!laterRange || laterRange.from === laterRange.to) continue;
+            if ((laterRange.to >= laterRange.from) === isOverBase) return false;
+        }
+        return true;
+    };
+
+    // A bar: its round corners are at the end of its value, its base is square.
+    const drawBar = function (seriesItem, index, range, roundSide, slotStart, thickness, axes) {
+        const rect = createBarRect(range, slotStart, thickness, axes);
         addShape(markLayer, "path", {
             d: GraphBox.barPath(rect, _s.bar.round, roundSide),
             fill: getMarkColor(seriesItem, index),
         });
-
         seriesItem.barRects[index] = rect;
-
     };
 
     const drawBars = function (series, axes) {
@@ -591,16 +730,20 @@ const GraphBox = function (params = {}) {
         const barSeries = series.filter(isBarSeries);
         if (!barSeries.length) return;
 
-        const slotCount = barSeries.length;
+        const isStacked = (box.stacked == 1);
+        const slotCount = (isStacked) ? 1 : barSeries.length;
         const thickness = getBarThickness(axes, slotCount);
         const groupLength = thickness * slotCount + _s.bar.gap * (slotCount - 1);
 
-        barSeries.forEach(function (seriesItem, slot) {
-            seriesItem.barRects = [];
+        barSeries.forEach(function (seriesItem, seriesPlace) {
+            const slot = (isStacked) ? 0 : seriesPlace;
             const slotOffset = slot * (thickness + _s.bar.gap) - groupLength / 2;
+            seriesItem.barRects = [];
             seriesItem.ranges.forEach(function (range, index) {
                 if (!range || range.from === range.to) return;
-                drawBar(seriesItem, index, range, axes.toIndexPosition(index) + slotOffset, thickness, axes);
+                const isRound = (!isStacked || isOuterValue(barSeries, seriesPlace, index, range));
+                const roundSide = (isRound) ? getRoundSide(range, axes) : "";
+                drawBar(seriesItem, index, range, roundSide, axes.toIndexPosition(index) + slotOffset, thickness, axes);
             });
         });
 
@@ -659,8 +802,8 @@ const GraphBox = function (params = {}) {
         });
 
         addShape(markLayer, "path", {
-            d: "M" + GraphBox.pointText(upperPoints[0]) + GraphBox.curveCommands(upperPoints, isSmooth) +
-                "L" + GraphBox.pointText(lowerPoints[0]) + GraphBox.curveCommands(lowerPoints, isSmooth) + "Z",
+            d: "M" + GraphBox.pointText(upperPoints[0]) + GraphBox.curveCommands(upperPoints, isSmooth, axes.isHorizontal) +
+                "L" + GraphBox.pointText(lowerPoints[0]) + GraphBox.curveCommands(lowerPoints, isSmooth, axes.isHorizontal) + "Z",
             fill: (isGradient) ? addGradient(seriesItem.color) : seriesItem.color,
             "fill-opacity": (isGradient) ? 1 : _s.line.fillOpacity,
         });
@@ -709,7 +852,7 @@ const GraphBox = function (params = {}) {
             });
 
             addShape(markLayer, "path", {
-                d: "M" + GraphBox.pointText(points[0]) + GraphBox.curveCommands(points, isSmooth),
+                d: "M" + GraphBox.pointText(points[0]) + GraphBox.curveCommands(points, isSmooth, axes.isHorizontal),
                 fill: "none",
                 stroke: seriesItem.color,
                 "stroke-width": _s.line.width,
@@ -766,18 +909,22 @@ const GraphBox = function (params = {}) {
 
     const paintBandWash = function (axes, index) {
         const plot = axes.plot;
-        addShape(washLayer, "rect", {
-            x: axes.toIndexPosition(index) - axes.spacing / 2,
-            y: plot.top,
-            width: axes.spacing,
-            height: plot.bottom - plot.top,
-            fill: colors.hoverColor,
-        });
+        const bandStart = axes.toIndexPosition(index) - axes.spacing / 2;
+        const shape = (axes.isHorizontal)
+            ? { x: plot.left, y: bandStart, width: plot.right - plot.left, height: axes.spacing }
+            : { x: bandStart, y: plot.top, width: axes.spacing, height: plot.bottom - plot.top };
+        shape.fill = colors.hoverColor;
+        addShape(washLayer, "rect", shape);
     };
 
     const paintCrosshair = function (axes, index) {
+        const plot = axes.plot;
         const position = toPixelCenter(axes.toIndexPosition(index));
-        addLine(washLayer, position, axes.plot.top, position, axes.plot.bottom, colors.axisColor);
+        if (axes.isHorizontal) {
+            addLine(washLayer, plot.left, position, plot.right, position, colors.axisColor);
+            return;
+        }
+        addLine(washLayer, position, plot.top, position, plot.bottom, colors.axisColor);
     };
 
     const paintActivePoints = function (series, index) {
@@ -789,33 +936,39 @@ const GraphBox = function (params = {}) {
 
     const getCartesianReadout = function (series, index) {
         const rows = [];
+        let total = 0;
         series.forEach(function (seriesItem) {
             const value = getValue(seriesItem.dataset, index);
             if (value === null) return;
+            total += value;
             rows.push({
                 color: getMarkColor(seriesItem, index),
                 valueText: formatValueText(value),
                 nameText: seriesItem.dataset.label || "",
             });
         });
+        if (box.stacked == 1 && box.totalText && rows.length > 1) {
+            rows.push({ color: "transparent", valueText: formatValueText(total), nameText: box.totalText });
+        }
         return { titleText: getLabelText(index), rows: rows };
     };
 
-    // For the keyboard: over the highest value at that place.
+    // For the keyboard: at the end of the longest value at that place.
     const getCartesianAnchor = function (series, axes, index) {
-        let y = axes.plot.bottom;
+        const nearestEnd = (axes.isHorizontal) ? Math.max : Math.min;
+        let valuePosition = axes.toValuePosition(axes.baseValue);
         series.forEach(function (seriesItem) {
             const range = seriesItem.ranges[index];
-            if (range) y = Math.min(y, axes.toValuePosition(range.to));
+            if (range) valuePosition = nearestEnd(valuePosition, axes.toValuePosition(range.to));
         });
-        return { x: axes.toIndexPosition(index), y: y };
+        return axes.joinPositions(axes.toIndexPosition(index), valuePosition);
     };
 
     const createCartesianView = function (series, axes) {
         return {
             findItem: function (x, y) {
                 if (!axes.isInsidePlot(x, y)) return null;
-                const index = axes.toIndex(x);
+                const index = axes.toIndex(x, y);
                 return { index: index, datasetIndex: findNearestDataset(series, index, x, y) };
             },
             stepItem: function (item, step) {
@@ -1325,6 +1478,16 @@ const GraphBox = function (params = {}) {
     };
     // USAGE: "auto", "top", "bottom", "left", "right", "none"
 
+    box.setStacked = function (stacked) {
+        box.stacked = (basic.isOn(stacked)) ? 1 : 0;
+        drawPlot();
+    };
+
+    box.setHorizontal = function (horizontal) {
+        box.horizontal = (basic.isOn(horizontal)) ? 1 : 0;
+        drawPlot();
+    };
+
     box.setCurve = function (curve) {
         box.curve = curve;
         drawPlot();
@@ -1560,36 +1723,35 @@ GraphBox.roundNumber = function (value) {
     return Math.round(value * 100) / 100;
 };
 
-// A rectangle with round corners only at one side (the end of the value). side: "top", "bottom"
+// A rectangle with round corners only at one side (the end of the value). side: "top", "bottom", "left", "right", ""
 GraphBox.barPath = function (rect, round, side) {
 
     const left = rect.left;
     const right = rect.left + rect.width;
     const top = rect.top;
     const bottom = rect.top + rect.height;
-    const radius = Math.min(round, rect.width / 2, rect.height);
+    const isUpright = (side === "top" || side === "bottom");
+    const radius = (isUpright) ? Math.min(round, rect.width / 2, rect.height) : Math.min(round, rect.height / 2, rect.width);
+
+    const topLeft = (side === "top" || side === "left") ? radius : 0;
+    const topRight = (side === "top" || side === "right") ? radius : 0;
+    const bottomRight = (side === "bottom" || side === "right") ? radius : 0;
+    const bottomLeft = (side === "bottom" || side === "left") ? radius : 0;
+
     const point = function (x, y) { return GraphBox.pointText({ x: x, y: y }); };
 
-    if (side === "top") {
-        return "M" + point(left, bottom) + "L" + point(left, top + radius) +
-            "Q" + point(left, top) + point(left + radius, top) +
-            "L" + point(right - radius, top) +
-            "Q" + point(right, top) + point(right, top + radius) +
-            "L" + point(right, bottom) + "Z";
-    }
-
-    return "M" + point(left, top) + "L" + point(right, top) +
-        "L" + point(right, bottom - radius) +
-        "Q" + point(right, bottom) + point(right - radius, bottom) +
-        "L" + point(left + radius, bottom) +
-        "Q" + point(left, bottom) + point(left, bottom - radius) + "Z";
+    return "M" + point(left + topLeft, top) +
+        "L" + point(right - topRight, top) + "Q" + point(right, top) + point(right, top + topRight) +
+        "L" + point(right, bottom - bottomRight) + "Q" + point(right, bottom) + point(right - bottomRight, bottom) +
+        "L" + point(left + bottomLeft, bottom) + "Q" + point(left, bottom) + point(left, bottom - bottomLeft) +
+        "L" + point(left, top + topLeft) + "Q" + point(left, top) + point(left + topLeft, top) + "Z";
 
 };
 
 // The commands of a line that starts at the first point (its "M" is written by the caller).
-GraphBox.curveCommands = function (points, isSmooth) {
+GraphBox.curveCommands = function (points, isSmooth, isHorizontal) {
 
-    if (isSmooth && points.length > 2) return GraphBox.smoothCommands(points);
+    if (isSmooth && points.length > 2) return GraphBox.smoothCommands(points, isHorizontal);
 
     let commands = "";
     for (let i = 1; i < points.length; i++) commands += "L" + GraphBox.pointText(points[i]);
@@ -1599,15 +1761,18 @@ GraphBox.curveCommands = function (points, isSmooth) {
 
 // A smooth line that never goes over or under a value (monotone cubic).
 // WHY monotone: A plain curve makes a hill higher than the real value; a chart must not show a value that is not there.
-GraphBox.smoothCommands = function (points) {
+// NOTE: The line moves forward on the index axis: on x, or on y on a horizontal chart.
+GraphBox.smoothCommands = function (points, isHorizontal) {
 
+    const indexKey = (isHorizontal) ? "y" : "x";
+    const valueKey = (isHorizontal) ? "x" : "y";
     const count = points.length;
     const widths = [];
     const slopes = [];
 
     for (let i = 0; i < count - 1; i++) {
-        widths[i] = points[i + 1].x - points[i].x;
-        slopes[i] = (points[i + 1].y - points[i].y) / widths[i];
+        widths[i] = points[i + 1][indexKey] - points[i][indexKey];
+        slopes[i] = (points[i + 1][valueKey] - points[i][valueKey]) / widths[i];
     }
 
     const tangents = [slopes[0]];
@@ -1622,11 +1787,18 @@ GraphBox.smoothCommands = function (points) {
     }
     tangents[count - 1] = slopes[count - 2];
 
+    const createControl = function (indexPosition, valuePosition) {
+        const control = {};
+        control[indexKey] = indexPosition;
+        control[valueKey] = valuePosition;
+        return control;
+    };
+
     let commands = "";
     for (let i = 0; i < count - 1; i++) {
         const third = widths[i] / 3;
-        const firstControl = { x: points[i].x + third, y: points[i].y + tangents[i] * third };
-        const secondControl = { x: points[i + 1].x - third, y: points[i + 1].y - tangents[i + 1] * third };
+        const firstControl = createControl(points[i][indexKey] + third, points[i][valueKey] + tangents[i] * third);
+        const secondControl = createControl(points[i + 1][indexKey] - third, points[i + 1][valueKey] - tangents[i + 1] * third);
         commands += "C" + GraphBox.pointText(firstControl) + GraphBox.pointText(secondControl) + GraphBox.pointText(points[i + 1]);
     }
     return commands;
