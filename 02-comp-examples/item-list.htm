@@ -20,7 +20,7 @@
 
     /* Bismillah */
 
-    // ItemList (comp-m4): the three style packages, the layouts, multiple selection, search and your own rows.
+    // ItemList (comp-m4): the four style packages, the layouts, multiple selection, search and your own rows.
 
     const FRUITS_PATH = "../assets/fruids/";
     const DRINKS_PATH = "../assets/categories/";
@@ -56,6 +56,7 @@
     // The page look of each style package (the list sits on it)
     const STYLE_PAGES = {
         ozden: { color: "whitesmoke", textColor: Black(0.5) }, // The box of the comp-m1 SelectItem list
+        ozdenDark: { color: "#1A1A19", textColor: White(0.5) },
         ozdenTiles: { color: "white", textColor: Black(0.5) }, // The category list of javascript-mobile-app-template
         modern: { color: "#F4F5F2", textColor: Black(0.5) },
         dark: { color: "#141414", textColor: White(0.5) },
@@ -117,9 +118,11 @@
                 Label({ text: "ItemList", fontSize: 26, bold: 1, textColor: Black(0.8) });
                 Label({ plainText: "comp-m4 · the new version of comp-m1/item-list.js", fontSize: 14, textColor: Black(0.45) });
 
-                // GROUP: The three style packages
+                // GROUP: The four style packages, two in a row: a light one and its dark one
                 HGroup({ width: "100%", height: "auto", align: "center top", gap: 20, wrap: 1 });
+                that.css = { maxWidth: (2 * STYLE_CARD_WIDTH + 20) + "px" };
                     createStyleSample("ozden", "single", "The list of comp-m1 SelectItem: rows as wide as the list, white with a thin line above and under them under the mouse, the selected one half transparent.");
+                    createStyleSample("ozdenDark", "single", "The dark theme of ozden: the same rows on a dark page, a lighter gray with a thin light line above and under them under the mouse.");
                     createStyleSample("modern", "multiple", "Light cards; a check mark on the selected rows.");
                     createStyleSample("dark", "multiple", "The dark cards of the Ozden Panel (webpage-ozden-panel).");
                 endGroup();

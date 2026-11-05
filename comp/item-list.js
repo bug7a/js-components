@@ -40,7 +40,8 @@ UI COMPONENT TEMPLATE
 - height: "auto" -> The list grows with its rows (no scrolling). Otherwise it scrolls with basic/scroll-bar.js
   (if it is loaded).
 - Style packages: "ozden" (default: the rows of the comp-m1 SelectItem list, 02-comp-m1-samples/select-item.htm,
-  and the tiles of javascript-mobile-app-template; it was "classic", the old name still works), "modern", "dark".
+  and the tiles of javascript-mobile-app-template; it was "classic", the old name still works), "ozdenDark" (the
+  same on a dark page), "modern", "dark".
   Select with styleName. (ItemList.styles)
 
 USAGE:
@@ -104,7 +105,7 @@ const ItemListDefaults = {
     ariaLabel: "List",
     onItemClick: function (self, item, index, event) { },
     onChange: function (self, selectedItems) { }, // Not at create time, not by setItems(), not with silent: 1
-    styleName: "ozden", // "ozden", "modern", "dark" or a name added to ItemList.styles
+    styleName: "ozden", // "ozden", "ozdenDark", "modern", "dark" or a name added to ItemList.styles
     style: { // The ozden style package (default): the rows of the comp-m1 SelectItem list, the tiles of javascript-mobile-app-template
         box: {
             color: "transparent",
@@ -1316,6 +1317,23 @@ ItemList.styles = {
 
     // WHY: The old name of ozden: a page written with styleName: "classic" gets the same look without a warning.
     classic: ItemListDefaults.style,
+
+    // The dark theme of ozden (the user, 2026-11-05): the same shapes on a dark page (#1A1A19). A row gets a lighter
+    // gray with a thin light line above and under it under the mouse, the selected one is half transparent, the
+    // search box is the ozdenDark SearchInput in the gray of the mouse.
+    ozdenDark: {
+        box: { borderColor: White(0.22) },
+        hover: { color: "#262624", lineColor: White(0.14) },
+        focus: { ringColor: White(0.5) },
+        title: { textColor: White(0.88) },
+        desc: { textColor: White(0.45) },
+        section: { textColor: White(0.4) },
+        check: { color: "#E6E6E4", iconColor: "#1A1A19", borderColor: White(0.3) },
+        empty: { textColor: White(0.4) },
+        tile: { frameColor: White(0.06), selectedColor: "#262624" },
+        search: { styleName: "ozdenDark", color: "#262624" },
+        scrollBar: { bar_color: "#CFCFCD", bar_mouseOverColor: "#CFCFCD" },
+    },
 
     // Light cards with a thin border and a check mark on the selected rows.
     modern: {
