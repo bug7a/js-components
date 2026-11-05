@@ -52,9 +52,9 @@ Pages load the source files (`name.js`). Components have no `.min.js` files.
 ## Default components
 
 - A button: `SmartButton`. **Use the default look: give no `styleName`** (it is `ozdenType1`: a gray surface, a thin edge, a darker line at the bottom).
-  - The main action of a screen: `styleName: "primary"`. A delete: `styleName: "danger"`. Also `warning`, `success`, `info`.
-  - A quiet button in a list or a toolbar: `styleName: "ozdenType4"`. On a dark page: `ozdenType1Dark` ... `ozdenType4Dark`.
-  - `pill`, `pillSolid` and `outlined` are for status labels and for a design the user asks for, not for ordinary buttons. Their color comes from `tone` (`blue`, `primary`, `danger`...).
+  - Its color is `tone`: the main action of a screen `tone: "cyan"`, a delete `tone: "orange"`; also `yellow` (look first), `green` (done), `blue` (details, help), `white`. (There is no `styleName: "primary"` / `"danger"` any more: the button stays gray.)
+  - A quiet button in a list or a toolbar: `styleName: "ozdenType4"`. On a dark page: `ozdenType1Dark` ... `ozdenType4Dark`, with the dark tones (`cyanDark`, `orangeDark`...).
+  - `pill` and `outlined` are for status labels and for a design the user asks for, not for ordinary buttons. Their color comes from `tone` too.
 - A dialog: `Dialog` (`Dialog.confirm`, `Dialog.alert`, `Dialog.prompt`).
 - A bubble or popover: `Tooltip`.
 - A search box: `SearchInput` with `styleName: "ozden"`, or `"ozdenDark"` on a dark page.
