@@ -3954,6 +3954,24 @@
 
         test("MenuBar: an item gives onClick its item and its menu; a disabled one does not run; the list of the page does not change", async function () {
             const clicks = [];
+        test("MenuBar: the mouse leaves the focus alone when a menu closes (the ring of the keyboard does not show)", async function () {
+            const bar = MenuBar({ menus: makeTestMenus() });
+            await wait(30);
+            const file = bar.menuList[0];
+            const other = Input({ left: 10, top: 60, width: 100, height: 30 });
+            other.inputElement.focus();
+            mouseClick(file.title.elem);
+            file.contextMenu.elem.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0, pointerId: 1 }));
+            file.contextMenu.clickItem(0);
+            const staysOff = document.activeElement !== file.title.elem;
+            mouseClick(file.title.elem);
+            key(document.body, "keydown", "Escape");
+            const backWithKey = document.activeElement === file.title.elem;
+            check("MenuBar: the mouse leaves the focus alone when a menu closes (the ring of the keyboard does not show)", staysOff && backWithKey, staysOff + " " + backWithKey);
+            other.remove();
+            bar.remove();
+        });
+
             let itemClicks = 0;
             const menus = makeTestMenus();
             menus[0].items[0].onClick = function (self, item, menu) { itemClicks += (self === bar && item.key === "save" && menu.key === "file") ? 1 : 0; };

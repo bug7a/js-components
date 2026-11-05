@@ -105,6 +105,7 @@ const MenuBar = function (params = {}) {
     let openIndex = -1; // The menu that is open (-1: none)
     let openIndexAtPress = -1; // The menu that was open when the mouse was pressed
     let focusIndex = 0; // The title that the Tab key comes to
+    let isUsedWithKeys = 0; // 1: the last thing was a key, not the mouse
 
     // *** PUBLIC VARIABLES:
     box.menuList = []; // [{ menu, title, contextMenu }]: the menus and their objects
@@ -253,8 +254,9 @@ const MenuBar = function (params = {}) {
         if (openIndex != index) return;
         openIndex = -1;
         paintTitles();
-        // WHY: The focus was in the menu, and it would be lost. A press outside moves it again just after this.
-        box.menuList[index].title.elem.focus({ preventScroll: true });
+        // WHY the keys: the focus was in the menu, and a keyboard user would lose the place. After the mouse a focus by
+        //     code would show the ring of the keyboard on the title.
+        if (isUsedWithKeys) box.menuList[index].title.elem.focus({ preventScroll: true });
         box.onMenuClose(box, box.menuList[index].menu);
     };
 
@@ -502,7 +504,11 @@ const MenuBar = function (params = {}) {
     // *** OBJECT INIT CODE:
 
     // WHY capture on window: it runs before the capture of ContextMenu on document, which closes the menu.
-    box.listenTo(window, "pointerdown", function () { openIndexAtPress = openIndex; }, true);
+    box.listenTo(window, "pointerdown", function () {
+        openIndexAtPress = openIndex;
+        isUsedWithKeys = 0;
+    }, true);
+    box.listenTo(window, "keydown", function () { isUsedWithKeys = 1; }, true);
     box.listenTo(window, "keydown", onWindowKeyDown);
 
     applyBarLook();
