@@ -23,10 +23,6 @@
         let chkTerms, chkNewsletter, chkDisabled, lblResult, btnSubmit;
         const interestList = [];
 
-        // The checked square in the blue of SmartButton (the user, 2026-11-05)
-        const BLUE = SmartButton.tones.blue.color;
-        const BLUE_STYLE = { checkedMark: { color: BLUE, borderColor: BLUE } };
-
         const start = function () {
 
             page.color = "whitesmoke";
@@ -59,7 +55,6 @@
 
                         chkTerms = CheckBox({
                             labelText: "I accept the terms of use",
-                            style: BLUE_STYLE,
                             onChange: function (self) {
                                 println("Terms: " + self.checked);
                                 btnSubmit.setEnabled(self.checked);
@@ -69,7 +64,6 @@
                         chkNewsletter = CheckBox({
                             labelText: "Send me the newsletter",
                             checked: 1,
-                            style: BLUE_STYLE,
                         });
 
                         btnSubmit = SmartButton({
@@ -97,7 +91,6 @@
                                 key: String(index),
                                 labelText: name,
                                 checked: (index == 0) ? 1 : 0,
-                                style: BLUE_STYLE,
                                 onChange: refreshInterests,
                             });
                             interestList.push(that);
@@ -132,12 +125,10 @@
                             labelText: "Disabled (checked)",
                             checked: 1,
                             enabled: 0,
-                            style: BLUE_STYLE,
                         });
 
                         CheckBox({
                             labelText: "Enable the check box above",
-                            style: BLUE_STYLE,
                             onChange: function (self) {
                                 chkDisabled.setEnabled(self.checked);
                             },
@@ -146,7 +137,6 @@
                         CheckBox({
                             labelText: "Label on the left",
                             labelPosition: "left",
-                            style: BLUE_STYLE,
                         });
 
                         CheckBox({
@@ -163,8 +153,8 @@
 
                         // Without label
                         HGroup({ width: "auto", height: "auto", gap: 4 });
-                            CheckBox({ style: BLUE_STYLE });
-                            CheckBox({ checked: 1, style: BLUE_STYLE });
+                            CheckBox();
+                            CheckBox({ checked: 1 });
                             CheckBox({ checked: 1, style: { checkedMark: { color: "#FE5D49", borderColor: "#FE5D49" } } });
                         endGroup();
 
