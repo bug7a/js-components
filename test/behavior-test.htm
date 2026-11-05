@@ -3514,6 +3514,124 @@
             chart.remove();
         });
 
+        test("GraphBox: a target line is on its value, the axis holds it, the tooltip shows it, no label: its value", async function () {
+            const chart = GraphBox({ width: 400, height: 260, type: "bar", legend: "none", labels: ["A", "B"], values: [10, 20], targetLines: [{ value: 50, label: "Goal" }, { value: 25 }] });
+            await wait(30);
+            const texts = Array.from(chart.svg.querySelectorAll("text")).map(function (label) { return label.textContent; });
+            const lines = Array.from(chart.svg.querySelectorAll("line"));
+            const targets = lines.filter(function (line) { return line.getAttribute("stroke-dasharray"); });
+            const axisLines = lines.filter(function (line) { return !line.getAttribute("stroke-dasharray"); }).map(function (line) { return Number(line.getAttribute("y1")); });
+            const tickTop = axisLines[axisLines.length - 2];
+            const base = axisLines[0];
+            const expectedY = base - (base - tickTop); // 50 is the top tick
+            const isOnValue = (targets.length === 2 && Math.abs(Number(targets[0].getAttribute("y1")) - expectedY) <= 1);
+            const isSecondOnValue = (targets.length === 2 && Math.abs(Number(targets[1].getAttribute("y1")) - (base - (base - tickTop) / 2)) <= 1);
+            const bar = chart.svg.querySelector("path").getBBox();
+            graphBoxMoveMouse(chart, bar.x + 2, bar.y + 2);
+            const readout = chart.tooltip.elem.innerText;
+            check("GraphBox: a target line is on its value, the axis holds it, the tooltip shows it, no label: its value",
+                isOnValue && isSecondOnValue && texts.includes("Goal") && texts.includes("25") && readout.includes("Goal") && readout.includes("50"),
+                [isOnValue, isSecondOnValue, texts.join(","), readout].join(" | "));
+            chart.remove();
+        });
+
+        test("GraphBox: a target line stands up on a sideways chart, one out of a fixed limit is not drawn, empty data draws none", async function () {
+            const sideways = GraphBox({ width: 400, height: 260, type: "bar", horizontal: 1, legend: "none", labels: ["A"], values: [10], maxValue: 100, targetLines: [{ value: 50, label: "Goal" }, { value: 500, label: "Out" }] });
+            const targets = Array.from(sideways.svg.querySelectorAll("line")).filter(function (line) { return line.getAttribute("stroke-dasharray"); });
+            const isStanding = (targets.length === 1 && targets[0].getAttribute("x1") === targets[0].getAttribute("x2") && targets[0].getAttribute("y1") !== targets[0].getAttribute("y2"));
+            sideways.remove();
+
+            const empty = GraphBox({ width: 400, height: 260, type: "line", labels: [], values: [], targetLines: [{ value: 50, label: "Goal" }] });
+            const isEmptyStill = (empty.svg.querySelectorAll("line").length === 0 && empty.lblEmpty.visible == 1);
+            empty.remove();
+
+            const scatter = GraphBox({ width: 400, height: 260, type: "scatter", legend: "none", datasets: [{ data: [[1, 2], [2, 3]] }], targetLines: [{ value: 9, label: "Goal" }] });
+            const hasScatterLine = Array.from(scatter.svg.querySelectorAll("line")).some(function (line) { return line.getAttribute("stroke-dasharray"); });
+            scatter.setTargetLines([]);
+            const isRemoved = !Array.from(scatter.svg.querySelectorAll("line")).some(function (line) { return line.getAttribute("stroke-dasharray"); });
+            scatter.remove();
+
+            check("GraphBox: a target line stands up on a sideways chart, one out of a fixed limit is not drawn, empty data draws none", isStanding && isEmptyStill && hasScatterLine && isRemoved, [isStanding, isEmptyStill, hasScatterLine, isRemoved].join(" "));
+        });
+
+        test("GraphBox: too many slices: the smallest are Other, every color is free, the table keeps them all, maxSlices: 0 turns it off", async function () {
+            const labels = [];
+            const values = [];
+            for (let i = 0; i < 14; i++) {
+                labels.push("L" + i);
+                values.push(i + 1); // The biggest are the last ones.
+            }
+            const chart = GraphBox({ width: 500, height: 320, type: "pie", labels: labels, values: values, otherText: "Rest" });
+            await wait(30);
+            const slices = Array.from(chart.svg.querySelectorAll("path"));
+            const fills = slices.map(function (slice) { return slice.getAttribute("fill"); });
+            const themeColors = GraphBox.THEMES.light.colors;
+            const isEightSlices = (slices.length === 8);
+            const areColorsFree = (new Set(fills).size === 8);
+            const isOtherGray = (fills[fills.length - 1] === GraphBox.THEMES.light.otherColor);
+            const areKeptInTheme = fills.slice(0, 7).every(function (fill) { return themeColors.includes(fill); });
+            const legendTexts = chart.legendItems.map(function (item) { return item.label.elem.textContent; }).join(",");
+            const isLegendRight = (legendTexts === "L7,L8,L9,L10,L11,L12,L13,Rest");
+            const tableRows = chart.getTableData().rows.length;
+
+            chart.setMaxSlices(0);
+            const allSlices = chart.svg.querySelectorAll("path").length;
+            check("GraphBox: too many slices: the smallest are Other, every color is free, the table keeps them all, maxSlices: 0 turns it off",
+                isEightSlices && areColorsFree && isOtherGray && areKeptInTheme && isLegendRight && tableRows === 14 && allSlices === 14,
+                [isEightSlices, areColorsFree, isOtherGray, areKeptInTheme, legendTexts, tableRows, allSlices].join(" | "));
+            chart.remove();
+        });
+
+        test("GraphBox: Other: its tooltip names the small slices, the legend hides it, a click gives them, the other colors stay", async function () {
+            const clicks = [];
+            const chart = GraphBox({
+                width: 500, height: 320, type: "pie", maxSlices: 3,
+                labels: ["Big", "Small A", "Small B", "Small C", "Middle"],
+                values: [50, 3, 2, 1, 40],
+                onClick: function (self, item) { clicks.push(item); },
+            });
+            await wait(30);
+            const keptColors = Array.from(chart.svg.querySelectorAll("path")).slice(0, 2).map(function (slice) { return slice.getAttribute("fill"); }).join(",");
+            // The last slice ends at the top: "Other" is just left of the top of the pie.
+            const centerX = chart.plot.elem.clientWidth / 2;
+            const centerY = chart.plot.elem.clientHeight / 2;
+            const radius = Math.min(chart.plot.elem.clientWidth, chart.plot.elem.clientHeight) / 2;
+            const titleAtOther = (function () {
+                for (let share = 0.005; share < 0.06; share += 0.005) {
+                    const angle = -Math.PI / 2 - share * Math.PI * 2;
+                    graphBoxMoveMouse(chart, centerX + Math.cos(angle) * radius * 0.7, centerY + Math.sin(angle) * radius * 0.7);
+                    if (chart.tooltip.visible == 1 && chart.lblTooltipTitle.elem.textContent === "Other") return "Other";
+                }
+                return chart.lblTooltipTitle.elem.textContent;
+            })();
+            const readout = chart.tooltip.elem.innerText;
+            chart.plot.elem.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+            const click = clicks[0] || {};
+            pointer(chart.plot.elem, "pointerleave", 0, 0, "mouse");
+            const isClickRight = (click.label === "Other" && click.value === 6 && click.index === GraphBox.OTHER_SLICE && click.otherItems.length === 3 && click.otherItems[0].label === "Small A");
+
+            chart.setSliceVisible(GraphBox.OTHER_SLICE, 0);
+            const afterHide = Array.from(chart.svg.querySelectorAll("path")).map(function (slice) { return slice.getAttribute("fill"); }).join(",");
+            const tableAfterHide = chart.getTableData().rows.length;
+            check("GraphBox: Other: its tooltip names the small slices, the legend hides it, a click gives them, the other colors stay",
+                titleAtOther === "Other" && readout.includes("Small A") && readout.includes("Small C") && isClickRight && afterHide === keptColors && tableAfterHide === 2,
+                [titleAtOther, readout, isClickRight, afterHide, keptColors, tableAfterHide].join(" | "));
+            chart.remove();
+        });
+
+        test("GraphBox: a slice keeps its color when the values change which ones are Other", async function () {
+            const chart = GraphBox({ width: 500, height: 320, type: "pie", maxSlices: 3, labels: ["A", "B", "C", "D"], values: [40, 30, 2, 1] });
+            const colorOf = function (name) {
+                const item = chart.legendItems.find(function (legendItem) { return legendItem.label.elem.textContent === name; });
+                return (item) ? item.key.color : "";
+            };
+            const colorOfB = colorOf("B");
+            chart.setValues([1, 30, 40, 2]); // A goes into Other, C comes out of it.
+            const isKept = (colorOf("B") === colorOfB && colorOf("C") !== colorOfB && colorOf("C") !== "" && colorOf("A") === "");
+            check("GraphBox: a slice keeps its color when the values change which ones are Other", isKept, [colorOfB, colorOf("B"), colorOf("C"), colorOf("A")].join(" | "));
+            chart.remove();
+        });
+
         test("GraphBox: setTheme() changes the look, setStyle() keeps the other keys", async function () {
             const chart = GraphBox({ width: 400, height: 240, type: "bar", titleText: "Title", labels: ["A"], values: [1] });
             const lightColor = chart.color;

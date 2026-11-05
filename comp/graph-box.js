@@ -16,6 +16,10 @@ UI COMPONENT
   or it turns (a bar chart: every bar needs its name).
 - Mouse, touch and keyboard: a tooltip with every dataset at that place. (Left / right arrows, Escape, Enter.)
 - The legend hides and shows a dataset (or a slice of a pie) with a click.
+- targetLines: a line of a goal or a limit over the chart, with no dataset: [{ value: 90000, label: "Target" }]. The axis
+  holds it, and the tooltip shows it next to the values.
+- maxSlices: a pie with too many slices can not be read, so its smallest slices become one "Other" slice. The tooltip
+  names them and the table keeps every one of them.
 - showValues: 1: the values on the chart, only where they fit: at the end of a bar, in a part of a stack, in a slice,
   at the end of a line. A value that has no room stays in the tooltip and in the table.
 - setTableView(1): the same values as a table. A chart can not be read by everyone (a color, a screen reader); this
@@ -87,6 +91,9 @@ const GraphBoxDefaults = {
     stacked: 0, // 1: Bars one on the other, lines and areas over each other. The tooltip adds totalText.
     horizontal: 0, // 1: The values grow to the right. (Long names read better so.)
     totalText: "Total", // The last row of the tooltip of a stacked chart. "": No total
+    targetLines: null, // [{ value: 90000, label: "Target", color: "" }] No label: its value. label: "": No text.
+    maxSlices: 8, // A pie, a doughnut: at most this many slices; the smallest ones become "Other". 0: No limit.
+    otherText: "Other", // The name of that slice
     centerText: "", // The big text in the middle of a doughnut. Ex: "1,284"
     centerSubText: "", // The small text under it. Ex: "Users"
     beginAtZero: 1, // 1: The value axis holds 0. (A bar chart always holds it: the length of a bar is its value.)
@@ -165,7 +172,13 @@ const GraphBoxDefaults = {
             gradientOpacity: 0.3, // At the top of a "gradient" fill
             dash: "5 5",
         },
+        target: {
+            width: 1.5,
+            dash: "6 4", // WHY dashed: A goal or a limit is not a value. A line of the grid is never dashed.
+            labelGap: 3, // Between the line and its text
+        },
         pie: {
+            otherRows: 5, // How many of the small slices the tooltip of "Other" names
             gap: 2, // Between two slices
             hole: 0.62, // A doughnut: the hole, as a part of the radius
             hoverGrow: 4, // Px: the slice under the mouse
@@ -234,6 +247,7 @@ const GraphBox = function (params = {}) {
     const FULL_CIRCLE = Math.PI * 2;
     const TOP_ANGLE = -Math.PI / 2; // The first slice starts at the top.
     const colorIndexes = new Map(); // The key of a series -> its place in the colors of the theme
+    const sliceColorIndexes = new Map(); // The same for the slices of a pie
     const hiddenSliceKeys = new Set(); // WHY keys, not places: A slice stays hidden when the values come again.
     const tooltipRows = [];
     let colors = null; // The colors of the theme + style.colors
@@ -329,25 +343,30 @@ const GraphBox = function (params = {}) {
 
     // WHY: A color follows its series, not its place in the list: a reader who learned "Target is orange" must not
     //      be misled when another series is removed. So a new series takes the first free color.
-    const assignColors = function () {
+    const assignColorIndexes = function (keys, indexes) {
 
-        const datasets = box.data.datasets;
         const takenIndexes = new Set();
 
-        datasets.forEach(function (dataset, position) {
-            const index = colorIndexes.get(getSeriesKey(dataset, position));
-            if (index !== undefined) takenIndexes.add(index);
+        keys.forEach(function (key) {
+            if (indexes.has(key)) takenIndexes.add(indexes.get(key));
         });
 
-        datasets.forEach(function (dataset, position) {
-            const key = getSeriesKey(dataset, position);
-            if (colorIndexes.has(key)) return;
+        keys.forEach(function (key) {
+            if (indexes.has(key)) return;
             let freeIndex = 0;
             while (takenIndexes.has(freeIndex)) freeIndex++;
             takenIndexes.add(freeIndex);
-            colorIndexes.set(key, freeIndex);
+            indexes.set(key, freeIndex);
         });
 
+    };
+
+    const assignColors = function () {
+        const seriesKeys = box.data.datasets.map(function (dataset, position) {
+            return getSeriesKey(dataset, position);
+        });
+        assignColorIndexes(seriesKeys, colorIndexes);
+        if (isPieType()) assignColorIndexes(getSliceColorKeys(), sliceColorIndexes);
     };
 
     // WHY otherColor: Past the eighth color a new hue can not be told from the others. So it is a quiet gray.
@@ -507,6 +526,11 @@ const GraphBox = function (params = {}) {
 
         if (low === Infinity) return null; // No values
 
+        getTargetValues().forEach(function (value) {
+            low = Math.min(low, value);
+            high = Math.max(high, value);
+        });
+
         if (box.beginAtZero == 1 || series.some(isBarSeries)) {
             low = Math.min(low, 0);
             high = Math.max(high, 0);
@@ -544,6 +568,84 @@ const GraphBox = function (params = {}) {
     // The base of the bars and the areas: 0, or the nearest edge when the axis does not hold 0.
     const getBaseValue = function (scale) {
         return Math.min(scale.max, Math.max(scale.min, 0));
+    };
+
+    // THE TARGET LINES:
+
+    const getTargetLines = function () {
+        return (box.targetLines || []).filter(function (line) {
+            return toNumber(line.value) !== null;
+        });
+    };
+
+    const getTargetValues = function () {
+        return getTargetLines().map(function (line) { return toNumber(line.value); });
+    };
+
+    // No label: its value. label: "": no text.
+    const getTargetText = function (line) {
+        return (line.label === undefined) ? formatValueText(toNumber(line.value)) : String(line.label);
+    };
+
+    const getTargetColor = function (line) {
+        return line.color || colors.targetColor;
+    };
+
+    // A text with a ring in the color of the box: it stays clear over a line or a bar.
+    const addClearText = function (layer, text, x, y, anchor, color) {
+        const label = addText(layer, text, x, y, anchor, color);
+        label.setAttribute("stroke", getSurfaceColor());
+        label.setAttribute("stroke-width", 3);
+        label.setAttribute("paint-order", "stroke");
+        return label;
+    };
+
+    // Over the line at its right end; under it when there is no room over it.
+    const addUprightTargetText = function (text, plot, position) {
+        const textHeight = getAxisTextHeight();
+        const distance = textHeight / 2 + _s.target.labelGap;
+        const y = (position - distance - textHeight / 2 >= 0) ? position - distance : position + distance;
+        addClearText(valueLayer, text, plot.right, y, "end", colors.textColor);
+    };
+
+    // At the top, at the right of the line; at its left when there is no room at its right.
+    const addSidewaysTargetText = function (text, plot, position) {
+        const y = plot.top + getAxisTextHeight() / 2;
+        const distance = _s.target.labelGap + 1;
+        const hasRoom = (position + distance + measureAxisText(text) <= plot.right);
+        const x = (hasRoom) ? position + distance : position - distance;
+        addClearText(valueLayer, text, x, y, (hasRoom) ? "start" : "end", colors.textColor);
+    };
+
+    const drawTargetLine = function (line, linePlace, plot, position, isSideways) {
+
+        const start = (isSideways) ? { x: position, y: plot.top } : { x: plot.left, y: position };
+        const end = (isSideways) ? { x: position, y: plot.bottom } : { x: plot.right, y: position };
+        const shape = addShape(markLayer, "line", {
+            x1: start.x,
+            y1: start.y,
+            x2: end.x,
+            y2: end.y,
+            stroke: getTargetColor(line),
+            "stroke-width": _s.target.width,
+            "stroke-dasharray": _s.target.dash,
+        });
+        rememberMark("target", linePlace, 0, shape, { point: start });
+
+        const text = getTargetText(line);
+        if (!text) return;
+        if (isSideways) addSidewaysTargetText(text, plot, position);
+        else addUprightTargetText(text, plot, position);
+
+    };
+
+    // toPosition: the place of a value on the value axis. A line out of the scale (a fixed limit) is not drawn.
+    const drawTargetLines = function (plot, scale, toPosition, isSideways) {
+        getTargetLines().forEach(function (line, linePlace) {
+            const value = toNumber(line.value);
+            if (value < scale.min || value > scale.max) return;
+            drawTargetLine(line, linePlace, plot, toPosition(value), isSideways);
+        });
     };
 
     // THE VALUES ON THE CHART:
@@ -1230,6 +1332,13 @@ const GraphBox = function (params = {}) {
         });
     };
 
+    const addTargetRows = function (rows) {
+        if (box.type === "radar") return;
+        getTargetLines().forEach(function (line) {
+            rows.push({ color: getTargetColor(line), valueText: formatValueText(toNumber(line.value)), nameText: line.label || "" });
+        });
+    };
+
     // The tooltip of one place: every series at that place.
     const getPlaceReadout = function (series, index) {
         const rows = [];
@@ -1247,6 +1356,7 @@ const GraphBox = function (params = {}) {
         if (isStacked() && box.totalText && rows.length > 1) {
             rows.push({ color: "transparent", valueText: formatValueText(total), nameText: box.totalText });
         }
+        if (rows.length) addTargetRows(rows);
         return { titleText: getLabelText(index), rows: rows };
     };
 
@@ -1310,6 +1420,7 @@ const GraphBox = function (params = {}) {
         drawAreas(series, axes);
         drawBars(series, axes);
         drawLines(series, axes);
+        drawTargetLines(axes.plot, axes.scale, axes.toValuePosition, axes.isHorizontal);
 
         return createCartesianView(series, axes);
 
@@ -1322,28 +1433,90 @@ const GraphBox = function (params = {}) {
     };
 
     const getSliceKey = function (index) {
+        if (index === GraphBox.OTHER_SLICE) return "#other";
         return getLabelText(index) || ("#" + index);
     };
 
-    const getSliceColor = function (dataset, index) {
-        return (dataset.colors && dataset.colors[index]) || colors.colors[index] || colors.otherColor;
+    const getSliceName = function (index) {
+        return (index === GraphBox.OTHER_SLICE) ? box.otherText : getLabelText(index);
     };
 
     const getSliceCount = function (dataset) {
         return Math.max(box.data.labels.length, dataset.data.length);
     };
 
-    // The slices on the screen: only the ones with a value. (A slice can not be less than nothing.)
-    const createSlices = function () {
+    // Every place of the first dataset that has a value: { index, value }. (A slice can not be less than nothing.)
+    const getValuedSlices = function () {
         const dataset = box.data.datasets[0];
         const slices = [];
         if (!dataset) return slices;
         for (let index = 0; index < getSliceCount(dataset); index++) {
             const value = getValue(dataset, index);
-            if (hiddenSliceKeys.has(getSliceKey(index)) || !(value > 0)) continue;
-            slices.push({ index: index, value: value, color: getSliceColor(dataset, index) });
+            if (value > 0) slices.push({ index: index, value: value });
         }
         return slices;
+    };
+
+    // The slices that stay alone, and the smallest ones that are drawn as one: { kept, folded }. Each keeps its place.
+    // WHY not from the visible slices: Hiding a slice with the legend must not change the other slices.
+    const splitSlices = function () {
+
+        const slices = getValuedSlices();
+        const maxSlices = toNumber(box.maxSlices) || 0;
+        if (!maxSlices || slices.length <= maxSlices) return { kept: slices, folded: [] };
+
+        const biggest = slices.slice().sort(function (first, second) { return second.value - first.value; });
+        const keptSlices = new Set(biggest.slice(0, Math.max(1, maxSlices - 1)));
+        return {
+            kept: slices.filter(function (slice) { return keptSlices.has(slice); }),
+            folded: slices.filter(function (slice) { return !keptSlices.has(slice); }),
+        };
+
+    };
+
+    // Who gets a color of the theme. WHY not only the slices with a value: A slice keeps its color, also while its value is 0.
+    const getSliceColorKeys = function () {
+        const dataset = box.data.datasets[0];
+        const parts = splitSlices();
+        const keys = [];
+        if (!dataset) return keys;
+        if (parts.folded.length) return parts.kept.map(function (slice) { return getSliceKey(slice.index); });
+        for (let index = 0; index < getSliceCount(dataset); index++) keys.push(getSliceKey(index));
+        return keys;
+    };
+
+    const getSliceColor = function (dataset, index) {
+        if (index === GraphBox.OTHER_SLICE) return colors.otherColor;
+        const ownColor = dataset.colors && dataset.colors[index];
+        return ownColor || colors.colors[sliceColorIndexes.get(getSliceKey(index))] || colors.otherColor;
+    };
+
+    const isSliceHidden = function (index) {
+        return hiddenSliceKeys.has(getSliceKey(index));
+    };
+
+    // The slices on the screen: { index, value, color }, and "Other" with its small slices.
+    const createSlices = function () {
+
+        const dataset = box.data.datasets[0];
+        const parts = splitSlices();
+        const slices = parts.kept.filter(function (slice) {
+            return !isSliceHidden(slice.index);
+        }).map(function (slice) {
+            return { index: slice.index, value: slice.value, color: getSliceColor(dataset, slice.index) };
+        });
+
+        if (parts.folded.length && !isSliceHidden(GraphBox.OTHER_SLICE)) {
+            slices.push({
+                index: GraphBox.OTHER_SLICE,
+                value: getTotal(parts.folded),
+                color: colors.otherColor,
+                folded: parts.folded,
+            });
+        }
+
+        return slices;
+
     };
 
     const addSliceAngles = function (slices, total) {
@@ -1416,6 +1589,22 @@ const GraphBox = function (params = {}) {
 
     };
 
+    // The tooltip of "Other" names its biggest small slices, and how many more there are.
+    const getFoldedRows = function (slice) {
+
+        if (!slice.folded) return [];
+
+        const biggest = slice.folded.slice().sort(function (first, second) { return second.value - first.value; });
+        const rows = biggest.slice(0, _s.pie.otherRows).map(function (foldedSlice) {
+            return { color: "transparent", valueText: formatValueText(foldedSlice.value), nameText: getLabelText(foldedSlice.index) };
+        });
+
+        const restCount = biggest.length - rows.length;
+        if (restCount > 0) rows.push({ color: "transparent", valueText: "+" + restCount, nameText: "" });
+        return rows;
+
+    };
+
     const createPieView = function (slices, shape, total) {
 
         const findSlice = function (item) {
@@ -1450,7 +1639,7 @@ const GraphBox = function (params = {}) {
                     valueText: formatValueText(slice.value),
                     nameText: getShareText(slice.value, total),
                 };
-                return { titleText: getLabelText(slice.index), rows: [row] };
+                return { titleText: getSliceName(slice.index), rows: [row].concat(getFoldedRows(slice)) };
             },
             // For the keyboard: on the middle of the slice.
             getAnchor: function (item) {
@@ -1563,10 +1752,7 @@ const GraphBox = function (params = {}) {
         shape.scale.ticks.forEach(function (tick, tickIndex) {
             if (tick === shape.scale.min) return;
             const point = toRadarPoint(shape, 0, tick);
-            const label = addText(gridLayer, shape.scale.tickTexts[tickIndex], point.x + 4, point.y, "start");
-            label.setAttribute("stroke", getSurfaceColor());
-            label.setAttribute("stroke-width", 3);
-            label.setAttribute("paint-order", "stroke");
+            addClearText(gridLayer, shape.scale.tickTexts[tickIndex], point.x + 4, point.y, "start", colors.mutedTextColor);
         });
     };
 
@@ -1716,7 +1902,8 @@ const GraphBox = function (params = {}) {
 
     const measureScatterPlot = function (points, width, height) {
 
-        const yLimits = getLimitsOf(points.map(function (point) { return point.y; }), box.minValue, box.maxValue);
+        const yValues = points.map(function (point) { return point.y; }).concat(getTargetValues());
+        const yLimits = getLimitsOf(yValues, box.minValue, box.maxValue);
         const xLimits = getLimitsOf(points.map(function (point) { return point.x; }), box.minX, box.maxX);
         const titleRooms = getAxisTitleRooms();
         const textHeight = getAxisTextHeight();
@@ -1866,6 +2053,7 @@ const GraphBox = function (params = {}) {
             point.py = axes.toY(point.y);
             drawScatterPoint(point);
         });
+        drawTargetLines(axes.plot, axes.plot.yScale, axes.toY, 0);
 
         return createScatterView(points);
 
@@ -2047,6 +2235,9 @@ const GraphBox = function (params = {}) {
                 return getLabelText(index) + " " + formatValueText(number);
             });
             parts.push((seriesItem.dataset.label || "") + " " + values.filter(Boolean).join(", "));
+        });
+        getTargetLines().forEach(function (line) {
+            parts.push((line.label || "") + " " + formatValueText(toNumber(line.value)));
         });
         return parts.join(". ");
     };
@@ -2232,11 +2423,28 @@ const GraphBox = function (params = {}) {
         return (seriesItem) ? seriesItem.datasetIndex : 0;
     };
 
+    // "Other" of a pie is not a place of the data: its value is the total and otherItems names its small slices.
+    const createOtherClickItem = function (dataset) {
+        const folded = splitSlices().folded;
+        return {
+            datasetIndex: 0,
+            index: GraphBox.OTHER_SLICE,
+            label: box.otherText,
+            value: getTotal(folded),
+            datasetLabel: dataset.label || "",
+            dataset: dataset,
+            otherItems: folded.map(function (slice) {
+                return { index: slice.index, label: box.data.labels[slice.index], value: slice.value };
+            }),
+        };
+    };
+
     // The item of a click: { datasetIndex, index, label, value, datasetLabel, dataset }
     const createClickItem = function (item) {
         const datasetIndex = (item.datasetIndex === null) ? getFirstDatasetIndexAt(item.index) : item.datasetIndex;
         const dataset = box.data.datasets[datasetIndex];
         if (!dataset) return null;
+        if (item.index === GraphBox.OTHER_SLICE) return createOtherClickItem(dataset);
         return {
             datasetIndex: datasetIndex,
             index: item.index,
@@ -2319,20 +2527,33 @@ const GraphBox = function (params = {}) {
         });
     };
 
+    const createSliceEntry = function (dataset, index) {
+        return {
+            text: getSliceName(index),
+            color: getSliceColor(dataset, index),
+            keyShape: "box",
+            isHidden: isSliceHidden(index),
+            position: index,
+        };
+    };
+
+    // Every label; when small slices are one slice, only what is on the chart.
     const getSliceEntries = function () {
+
         const dataset = box.data.datasets[0];
-        const entries = [];
-        if (!dataset) return entries;
-        for (let index = 0; index < getSliceCount(dataset); index++) {
-            entries.push({
-                text: getLabelText(index),
-                color: getSliceColor(dataset, index),
-                keyShape: "box",
-                isHidden: hiddenSliceKeys.has(getSliceKey(index)),
-                position: index,
-            });
+        if (!dataset) return [];
+
+        const parts = splitSlices();
+        if (parts.folded.length) {
+            const entries = parts.kept.map(function (slice) { return createSliceEntry(dataset, slice.index); });
+            entries.push(createSliceEntry(dataset, GraphBox.OTHER_SLICE));
+            return entries;
         }
+
+        const entries = [];
+        for (let index = 0; index < getSliceCount(dataset); index++) entries.push(createSliceEntry(dataset, index));
         return entries;
+
     };
 
     const getLegendEntries = function () {
@@ -2458,8 +2679,16 @@ const GraphBox = function (params = {}) {
         return { head: [box.tableHeadText].concat(names), rows: rows };
     };
 
+    // WHY every small slice one by one: The table is where a value can always be read. Nothing is folded here.
+    const getTableSlices = function () {
+        const parts = splitSlices();
+        const kept = parts.kept.filter(function (slice) { return !isSliceHidden(slice.index); });
+        const folded = (isSliceHidden(GraphBox.OTHER_SLICE)) ? [] : parts.folded;
+        return kept.concat(folded).sort(function (first, second) { return first.index - second.index; });
+    };
+
     const getSliceTableData = function () {
-        const slices = createSlices();
+        const slices = getTableSlices();
         const total = getTotal(slices);
         const dataset = box.data.datasets[0];
         const rows = slices.map(function (slice) {
@@ -2890,7 +3119,7 @@ const GraphBox = function (params = {}) {
         drawData();
     };
 
-    // Hide or show a slice of a pie or a doughnut.
+    // Hide or show a slice of a pie or a doughnut. (index: GraphBox.OTHER_SLICE: the "Other" slice)
     box.setSliceVisible = function (index, visible) {
         const key = getSliceKey(index);
         if (basic.isOn(visible)) hiddenSliceKeys.delete(key);
@@ -2994,6 +3223,18 @@ const GraphBox = function (params = {}) {
         link.click();
     };
     // USAGE: graph.download("sales.png")
+
+    box.setTargetLines = function (lines) {
+        box.targetLines = (lines || []).slice();
+        drawChange();
+    };
+    // USAGE: graph.setTargetLines([{ value: 90000, label: "Target" }, { value: 20000, label: "Limit", color: "tomato" }])
+
+    box.setMaxSlices = function (count) {
+        box.maxSlices = count;
+        drawData();
+    };
+    // USAGE: graph.setMaxSlices(6) / graph.setMaxSlices(0) // every slice alone
 
     box.setStacked = function (stacked) {
         box.stacked = (basic.isOn(stacked)) ? 1 : 0;
@@ -3170,6 +3411,7 @@ const GraphBox = function (params = {}) {
 // *** STATIC VARIABLES:
 
 GraphBox._idCounter = 0; // WHY: The id of a gradient or a clip must be alone on the whole page.
+GraphBox.OTHER_SLICE = -1; // The index of the "Other" slice of a pie
 
 // *** THEMES: the colors. (The style param has the shapes; style.colors changes some colors of one chart.)
 // USAGE: GraphBox({ theme: "dark", ... }) // "light", "dark", "auto" (the system setting)
@@ -3186,6 +3428,7 @@ GraphBox.THEMES = {
         gridColor: "#E1E0D9",
         axisColor: "#C3C2B7",
         hoverColor: "rgba(11, 11, 11, 0.05)",
+        targetColor: "#52514E",
         focusColor: "rgba(42, 120, 214, 0.7)",
         otherColor: "#A9A8A0",
         tooltipColor: "#0B0B0B",
@@ -3202,6 +3445,7 @@ GraphBox.THEMES = {
         gridColor: "#2C2C2A",
         axisColor: "#383835",
         hoverColor: "rgba(255, 255, 255, 0.06)",
+        targetColor: "#C3C2B7",
         focusColor: "rgba(57, 135, 229, 0.8)",
         otherColor: "#6F6E69",
         tooltipColor: "#2C2C2A",

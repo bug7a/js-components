@@ -71,13 +71,14 @@
                             formatValue: function (value) { return "₺" + value.toLocaleString("tr-TR"); },
                         });
 
-                        // BAR: One dataset (no legend), a click
+                        // BAR: One dataset (no legend), a target line with no dataset, a click
                         addChart({
                             type: "bar",
                             titleText: "Sales by Category",
-                            subtitleText: "Units sold per product category",
+                            subtitleText: "Units sold per product category, targetLines",
                             labels: ["Electronics", "Clothing", "Home", "Cosmetics", "Books"],
                             values: [1250, 2100, 840, 1600, 920],
+                            targetLines: [{ value: 1500, label: "Target" }],
                             onClick: function (self, item) {
                                 lblClicked.text = "Clicked: <b>" + item.label + "</b> = " + item.value;
                             },
@@ -194,6 +195,27 @@
                             datasets: [
                                 { data: [{ x: 12, y: 40, r: 80, label: "North" }, { x: 18, y: 62, r: 30, label: "South" }, { x: 25, y: 35, r: 55, label: "East" }, { x: 31, y: 74, r: 12, label: "West" }, { x: 38, y: 50, r: 95, label: "Center" }] },
                             ],
+                        });
+
+                        // MANY SLICES: maxSlices: 8 by default: the smallest ones are "Other"
+                        addChart({
+                            type: "doughnut",
+                            titleText: "Visitors by Country",
+                            subtitleText: "14 countries: the tooltip of \"Other\" names the small ones",
+                            labels: ["Turkey", "Germany", "USA", "France", "Netherlands", "Azerbaijan", "UK", "Italy", "Spain", "Greece", "Japan", "Canada", "Brazil", "Egypt"],
+                            values: [4200, 2600, 1900, 1200, 950, 800, 720, 300, 280, 210, 140, 120, 90, 60],
+                        });
+
+                        // TWO LIMITS: On a chart that grows to the right they stand up
+                        addChart({
+                            type: "bar",
+                            horizontal: 1,
+                            titleText: "Response Time",
+                            subtitleText: "targetLines with their own color",
+                            labels: ["Login", "Search", "Checkout", "Reports"],
+                            values: [120, 340, 480, 760],
+                            targetLines: [{ value: 300, label: "Goal" }, { value: 600, label: "Limit", color: "#E34948" }],
+                            formatValue: function (value) { return value + " ms"; },
                         });
 
                         // MIXED: Bars and a line in one chart
