@@ -31,6 +31,8 @@
 #   file per component keeps that layout at the next runs (comp/_sources.txt tells it). A component
 #   line written later into such a page (../comp/name.js, over or under its comp/components.min.js
 #   line) goes into the one file, and the page keeps one line for it. (2026-11-05)
+#   To take a component out of that one file, delete its line in comp/_sources.txt and run the script
+#   again (the pages are not changed). The code that uses it must go first. (2026-11-05, the user)
 #
 # --gzip: every text file of the output (.htm, .js, .css, .svg, .json, fonts...) is also written as
 #   name.gz (gzip -9), next to it. For a server that sends the packed files itself (Ex: a small board
@@ -179,6 +181,8 @@ if (IN_PLACE && fs.existsSync(SOURCES_FILE)) {
     fs.readFileSync(SOURCES_FILE, "utf8").split("\n").forEach(function (line) {
         const match = /^(\S+)\s+<-\s+(\S+)/.exec(line);
         if (!match) return;
+        // WHY: the lines of components.min.js may be deleted by hand (2026-11-05), so a typo must not stop the run
+        if (!fs.existsSync(path.join(REPO, match[2]))) { warnings.push("comp/_sources.txt: " + match[2] + " is not in the repository (skipped)"); return; }
         if (match[1] === ONE_FILE_NAME) oldOneFile.push(match[2]);
         else oldSources[match[1]] = match[2];
     });
@@ -231,6 +235,7 @@ pages.forEach(function (page) {
                 const list = (pageComps[page] = pageComps[page] || []);
                 // WHY: a component line over this one became the one file already: two lines would load every component twice
                 if (list.length) rewrites.push({ page: page, from: value, to: "", note: "(removed: a line above it loads " + ONE_FILE_NAME + " now)" });
+                else if (!oldOneFile.length) rewrites.push({ page: page, from: value, to: "", note: "(removed: comp/_sources.txt lists no component of it)" });
                 oldOneFile.forEach(function (source) {
                     if (list.indexOf(source) === -1) list.push(source);
                 });
@@ -478,8 +483,12 @@ const writeGzipFiles = function () {
             fs.writeFileSync(path.join(COMP_OUT, name), (await minifyComponent(source)) + "\n");
             sourcesLines.push(name + " <- " + source);
         }
+        // WHY: only a run in place with one file reads this file again; elsewhere an edit here does nothing
+        const howToEdit = (IN_PLACE && isOneFile)
+            ? "To take a component out of " + ONE_FILE_NAME + ": delete its line, then run the script again (--in-place)."
+            : "Do not edit: run the script again.";
         fs.writeFileSync(SOURCES_FILE,
-            "# Made by _make-standalone.sh (repository root). Do not edit: run the script again.\n"
+            "# Made by _make-standalone.sh (repository root). " + howToEdit + "\n"
             + "# <file in comp/> <- <its source in the repository>\n"
             + sourcesLines.join("\n") + "\n");
     }
