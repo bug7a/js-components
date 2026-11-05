@@ -1,5 +1,9 @@
 # comp/: mutlaka düzeltilmesi gereken hatalar
 
+**Durum (2026-11-05): 24 maddenin hepsi düzeltildi**, her başlık bir commit: A `991b98f` (basic.js v26.11.05 dahil),
+B `cd89b4c`, C `e6c8a53`, D `43c24cd`, E `c2dfa11`. Her birinin testi `test/behavior-test.htm`'de (152/152). En
+alttaki "daha düşük öncelikli" bulgular duruyor.
+
 2026-11-05 · `comp/` klasöründeki 70 bileşenin incelemesi. Bir sonraki adımda bu liste sırayla düzeltilir: her düzeltilen
 hata `test/behavior-test.htm`'e bir `test()` alır (depo kuralı) ve buradaki satırı "düzeltildi" olur.
 
