@@ -88,6 +88,7 @@
             success: "#34D399",
             error: "#F87171",
             popup: "#16161E",                            // Tooltips and the list of the missing entries
+            popupRound: 10,                              // px: their round corners (one value: 2026-11-05, the user)
             font: "'Plus Jakarta Sans', opensans, sans-serif",
         };
         THEME.gradient = "linear-gradient(110deg, " + THEME.accent + " 0%, " + THEME.accent2 + " 100%)";
@@ -114,6 +115,7 @@
                 minWidth: 700,
                 maxWidth: 700,
                 buttonColor: THEME.accent,
+                hintRound: THEME.popupRound, // the list of the missing entries and the hint of the send button
                 buttonText: "SEND MESSAGE",
                 showDetailWarning: 1,
                 missingEntryText: "{{count}} missing entry",
@@ -168,6 +170,7 @@
                 warningBallType: "icon", // "color", "icon"
                 requiredColor: THEME.text,
                 requiredIconColor: "rgba(255, 255, 255, 0.28)",
+                tooltipStyle: { round: THEME.popupRound }, // the warning of the input
             };
 
             // Unit (TR, length) of the inputs:
@@ -546,7 +549,6 @@
             form.lblWarningDetail.color = THEME.popup;
             form.lblWarningDetail.textColor = THEME.text;
             form.lblWarningDetail.borderColor = THEME.lineHover;
-            form.lblWarningDetail.round = 10;
             Object.assign(form.lblWarningDetail.elem.style, { fontFamily: THEME.font, fontSize: "13px", lineHeight: "1.7" });
 
             // TOOLTIP: On the passive send button
@@ -555,7 +557,6 @@
                 tooltip.lbl_color = THEME.popup;
                 tooltip.lbl_textColor = THEME.text;
                 tooltip.lbl_borderColor = THEME.lineHover;
-                tooltip.lbl_round = 8;
             }
 
             // SCROLL BAR: The page (the form scrolls)

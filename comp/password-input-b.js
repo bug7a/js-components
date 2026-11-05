@@ -147,7 +147,7 @@ const PasswordInputB = function(params = {}) {
         lbl_textColor: "#141414",
         lbl_borderColor: "#141414",
         lbl_fontSize: 14,
-        lbl_round: 2,
+        lbl_round: box.tooltipStyle.round, // (the round of the warning hint of the field: one value, 2026-11-05)
     });
     // WHY: The tooltip may be made outside the box (after InputB is closed); box.own() removes it with the box.
     box.own(box.btnShowPassword.tooltip);

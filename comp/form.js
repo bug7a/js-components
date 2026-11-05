@@ -32,6 +32,9 @@ const FormDefaults = {
     doubleInputAlwaysHorizontal: 0,
     showPassiveButtonHint: 1, // 1: A hint is shown when the mouse is over the passive send button.
     passiveButtonHintText: "Please fill in the missing fields to send the form.",
+    // px: the round corners of the hints of the form: the list of the missing entries and the hint of the passive
+    // send button (the user, 2026-11-05: one value; the hint of the button was 2, sharper than the list)
+    hintRound: 4,
     onEdit: function(input) {},
     onSendClick: function(json) {},
 };
@@ -503,7 +506,7 @@ const Form = function(params = {}) {
                             lbl_borderColor: "#141414",
                             lbl_border: 1,
                             lbl_fontSize: 14,
-                            lbl_round: 2,
+                            lbl_round: box.hintRound,
                         });
 
                         layoutSendCover();
@@ -535,7 +538,7 @@ const Form = function(params = {}) {
                         padding: [8, 2],
                         position: "absolute",
                         fontSize: 12,
-                        round: 4,
+                        round: box.hintRound,
                         border: 1,
                         opacity: 0,
                     });

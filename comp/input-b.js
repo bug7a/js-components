@@ -119,7 +119,7 @@ const InputBDefaults = {
         textColor: "#141414",
         border: 1,
         borderColor: "#141414",
-        round: 2,
+        round: 4, // (the user, 2026-11-05: the round of the hints of Form, hintRound; it was 2)
         fontSize: 14,
     },
 

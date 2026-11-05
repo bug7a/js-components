@@ -912,6 +912,24 @@
             form.remove();
         });
 
+        test("Form: the hint of the passive send button is as round as the list of the missing entries (and the hints of the fields)", async function () {
+            const form = Form({});
+            const input = InputB({ titleText: "Name", isRequired: 1 });
+            form.addInput(input);
+            const password = PasswordInputB({ titleText: "Password" });
+            await wait(50);
+            form.btnSendCover.elem.dispatchEvent(new MouseEvent("mouseover"));
+            const hintRadius = window.lblHint ? getComputedStyle(window.lblHint.elem).borderTopLeftRadius : "(no hint)";
+            form.btnSendCover.elem.dispatchEvent(new MouseEvent("mouseout"));
+            const listRadius = getComputedStyle(form.lblWarningDetail.elem).borderTopLeftRadius;
+            const rounds = [input.warningBall.tooltip.lbl_round, password.btnShowPassword.tooltip.lbl_round];
+            const isFieldRound = rounds.every(function (round) { return round === form.hintRound; });
+            check("Form: the hint of the passive send button is as round as the list of the missing entries (and the hints of the fields)",
+                hintRadius === listRadius && hintRadius === form.hintRound + "px" && isFieldRound, "hint: " + hintRadius + ", list: " + listRadius + ", fields: " + rounds.join(", "));
+            form.remove();
+            password.remove();
+        });
+
         // *** INPUT B (comp/input-b.js)
 
         test("EmailInputB: a fast typing that ends valid leaves no warning ball", async function () {
