@@ -78,6 +78,8 @@
         <script src="../comp/image-view.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/menu-bar.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/status-bar.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/splitter.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/code-editor.js" type="text/javascript" charset="utf-8"></script>
 
         <script>
         "use strict";
@@ -4284,12 +4286,13 @@
             log.info("Waits for its drawing");
             log.remove();
             await wait(30);
-            check("LogView: the first lines of the page are not changed, and a removed LogView draws nothing", isSame && uncaught.length === 0, isSame);
+            check("LogView: the first lines of the page are not changed, and a removed LogView draws nothing", isSame && uncaught.length === uncaughtBefore, isSame);
         });
 
         // *** IMAGE VIEW (comp/image-view.js)
 
         const makeTestPicture = function (width, height) {
+            const uncaughtBefore = uncaught.length;
             const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '"><rect width="100%" height="100%" fill="red"/><\/svg>';
             return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
         };
@@ -4558,6 +4561,405 @@
                 const fresh = Comp({});
                 const row = [colorOf(light), colorOf(dark), colorOf(lightAgain), colorOf(fresh)];
                 light.remove();
+        // *** SPLITTER (comp/splitter.js)
+
+        const dragOf = function (element, fromX, fromY, toX, toY) {
+            element.setPointerCapture = function () { }; // WHY: A synthetic pointer is not an active one.
+            pointer(element, "pointerdown", fromX, fromY);
+            pointer(element, "pointermove", toX, toY);
+            pointer(element, "pointerup", toX, toY);
+        };
+
+        test("Splitter: px stay px and a part stays a part when the box changes; the limits hold", async function () {
+            const fixed = Splitter({ left: 0, top: 0, width: 601, height: 200, firstSize: 200, minFirst: 50, minSecond: 100 });
+            const isFixedRight = fixed.first.elem.offsetWidth === 200 && fixed.second.elem.offsetLeft === 201 && fixed.second.elem.offsetWidth === 400;
+            fixed.width = 401;
+            await wait(40);
+            const keepsPixels = fixed.getFirstSize() === 200 && fixed.second.elem.offsetWidth === 200;
+            fixed.width = 251;
+            await wait(40);
+            const keepsSecondMin = fixed.second.elem.offsetWidth === 100 && fixed.getFirstSize() === 150;
+            fixed.remove();
+            const part = Splitter({ left: 0, top: 0, width: 501, height: 200, firstSize: "40%" });
+            const isPartRight = part.getFirstSize() === 200;
+            part.width = 1001;
+            await wait(40);
+            const keepsPart = part.getFirstSize() === 400;
+            part.remove();
+            const second = Splitter({ left: 0, top: 0, width: 300, height: 501, direction: "vertical", secondSize: 100 });
+            const isSecondRight = second.second.elem.offsetHeight === 100 && second.first.elem.offsetHeight === 400 && second.second.elem.offsetTop === 401;
+            second.height = 701;
+            await wait(40);
+            const keepsSecond = second.second.elem.offsetHeight === 100 && second.first.elem.offsetHeight === 600;
+            second.remove();
+            check("Splitter: px stay px and a part stays a part when the box changes; the limits hold",
+                isFixedRight && keepsPixels && keepsSecondMin && isPartRight && keepsPart && isSecondRight && keepsSecond,
+                [isFixedRight, keepsPixels, keepsSecondMin, isPartRight, keepsPart, isSecondRight, keepsSecond].join(" "));
+        });
+
+        test("Splitter: a drag moves the line inside its limits and tells onChange and onChangeEnd; a part stays a part", async function () {
+            let changes = 0;
+            let ends = 0;
+            const split = Splitter({
+                left: 0, top: 0, width: 501, height: 200, firstSize: "50%", minFirst: 100, minSecond: 100,
+                onChange: function () { changes++; }, onChangeEnd: function () { ends++; },
+            });
+            const atFirst = split.getFirstSize();
+            dragOf(split.grip.elem, 250, 50, 300, 50);
+            const moved = split.getFirstSize() === atFirst + 50 && split.first.elem.offsetWidth === 300;
+            const told = changes === 1 && ends === 1;
+            dragOf(split.grip.elem, 300, 50, 900, 50);
+            const stopsAtMax = split.getFirstSize() === 400;
+            dragOf(split.grip.elem, 400, 50, -900, 50);
+            const stopsAtMin = split.getFirstSize() === 100;
+            pointer(split.grip.elem, "pointermove", 400, 50);
+            const stopsAfterUp = split.getFirstSize() === 100;
+            split.width = 1001;
+            await wait(40);
+            const isStillPart = split.getFirstSize() === 200; // 100 of 500 is 20%, of 1000 it is 200
+            const lineStaysOn = split.grip.elem.offsetLeft < 200 && split.grip.elem.offsetLeft + split.grip.elem.offsetWidth > 200;
+            check("Splitter: a drag moves the line inside its limits and tells onChange and onChangeEnd; a part stays a part",
+                moved && told && stopsAtMax && stopsAtMin && stopsAfterUp && isStillPart && lineStaysOn,
+                [moved, told, stopsAtMax, stopsAtMin, stopsAfterUp, isStillPart, lineStaysOn, split.getFirstSize()].join(" "));
+            split.remove();
+        });
+
+        test("Splitter: the keys and a double click; setFirstSize silent; a hidden area gives its place; objects go into the areas", async function () {
+            let changes = 0;
+            const split = Splitter({ left: 0, top: 0, width: 501, height: 200, firstSize: 200, keyStep: 10, onChange: function () { changes++; } });
+            key(split.grip.elem, "keydown", "ArrowRight");
+            const forward = split.getFirstSize() === 210;
+            key(split.grip.elem, "keydown", "ArrowLeft");
+            key(split.grip.elem, "keydown", "ArrowLeft");
+            const back = split.getFirstSize() === 190;
+            key(split.grip.elem, "keydown", "ArrowUp"); // not the direction of this one
+            const otherKey = split.getFirstSize() === 190;
+            key(split.grip.elem, "keydown", "End");
+            const toEnd = split.getFirstSize() === 500 - split.minSecond;
+            key(split.grip.elem, "keydown", "Home");
+            const toHome = split.getFirstSize() === split.minFirst;
+            key(split.grip.elem, "keydown", "Enter");
+            const backToStart = split.getFirstSize() === 200;
+            split.grip.elem.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
+            changes = 0;
+            split.setFirstSize(300, 1);
+            const silent = split.getFirstSize() === 300 && changes === 0;
+            split.setFirstSize("20%");
+            const notSilent = split.getFirstSize() === 100 && changes === 1;
+            const isValueShown = split.grip.elem.getAttribute("aria-valuenow") === "20";
+            split.setAreaVisible("first", 0);
+            const hidden = split.first.elem.getClientRects().length === 0 && split.grip.elem.getClientRects().length === 0 && split.second.elem.offsetWidth === 501 && split.second.elem.offsetLeft === 0;
+            split.setAreaVisible("first", 1);
+            const shown = split.first.elem.offsetWidth === 100 && split.second.elem.offsetLeft === 101;
+            const inside = createIn(split.second, function () { return Label({ text: "Inside" }); });
+            const isInside = split.second.elem.contains(inside.elem) && inside.elem.offsetLeft === 0 && inside.elem.offsetTop === 0;
+            check("Splitter: the keys and a double click; setFirstSize silent; a hidden area gives its place; objects go into the areas",
+                forward && back && otherKey && toEnd && toHome && backToStart && silent && notSilent && isValueShown && hidden && shown && isInside,
+                [forward, back, otherKey, toEnd, toHome, backToStart, silent, notSilent, isValueShown, hidden, shown, isInside].join(" "));
+            split.remove();
+        });
+
+        test("Splitter: setTheme changes the line, and the sizes and a style of the page stay", async function () {
+            const split = Splitter({ left: 0, top: 0, width: 501, height: 200, firstSize: 200, style: { lineHover: { color: "rgb(1, 2, 3)" } } });
+            const lineColor = function () { return getComputedStyle(split.line.elem).backgroundColor; };
+            const atFirst = lineColor();
+            split.setTheme("dark");
+            const changed = lineColor() !== atFirst && split.styleName === "dark" && split.getFirstSize() === 200;
+            split.grip.elem.dispatchEvent(new MouseEvent("mouseenter"));
+            const pageStyleStays = lineColor() === "rgb(1, 2, 3)";
+            split.grip.elem.dispatchEvent(new MouseEvent("mouseleave"));
+            split.setTheme("light");
+            check("Splitter: setTheme changes the line, and the sizes and a style of the page stay", changed && pageStyleStays && lineColor() === atFirst, [changed, pageStyleStays, lineColor()].join(" "));
+            split.remove();
+        });
+
+        // *** CODE EDITOR (comp/code-editor.js)
+
+        const partsOf = function (language, text, state) {
+            return CodeEditor.tokenizeLine(text, state || null, CodeEditor.languages[language]);
+        };
+
+        const kindsOf = function (language, text, state) {
+            return partsOf(language, text, state).parts.filter(function (part) { return part[0]; }).map(function (part) { return part[0] + ":" + part[1]; }).join(" ");
+        };
+
+        const makeEditor = function (params) {
+            return CodeEditor(Object.assign({ left: 0, top: 0, width: 500, height: 200, language: "python" }, params || {}));
+        };
+
+        const editorKey = function (editor, name, extra) {
+            const event = new KeyboardEvent("keydown", Object.assign({ key: name, bubbles: true, cancelable: true }, extra || {}));
+            editor.textareaElem.dispatchEvent(event);
+            return event;
+        };
+
+        test("CodeEditor: the colors of a line by its language; a string or a comment of many lines goes on in the next line", async function () {
+            const python = kindsOf("python", 'def add(a, b=1):  # sum "x"');
+            const isPython = python === 'keyword:def function:add number:1 comment:# sum "x"';
+            const words = kindsOf("python", "şif = print(self.if_x) if True else 'a\\'b'");
+            const isUnicode = words === "builtin:print builtin:self keyword:if keyword:True keyword:else string:'a\\'b'";
+            const opening = partsOf("python", 'x = """first');
+            const middle = partsOf("python", "second", opening.state);
+            const closing = partsOf("python", 'third""" + 1', middle.state);
+            const isMultiLine = opening.state === '"""' && middle.state === '"""' && middle.parts[0][0] === "string" && closing.state === null && closing.parts[0][1] === 'third"""' && closing.parts[closing.parts.length - 1][0] === "number";
+            const js = partsOf("javascript", "const a = `x /* y");
+            const jsBlock = partsOf("javascript", "/* one", null);
+            const jsBlockEnd = partsOf("javascript", "two */ let b", jsBlock.state);
+            const isJs = js.state === "`" && jsBlock.state === "*/" && jsBlockEnd.state === null && jsBlockEnd.parts[0][1] === "two */" && kindsOf("javascript", "two */ let b", "*/").includes("keyword:let");
+            const json = kindsOf("json", '{"name": "Ada", "age": 36, "ok": true}');
+            const isJson = json === 'property:"name" string:"Ada" property:"age" number:36 property:"ok" keyword:true';
+            const sql = kindsOf("sql", "SELECT name FROM t WHERE id = 1 -- x");
+            const isSql = sql === "keyword:SELECT keyword:FROM keyword:WHERE number:1 comment:-- x";
+            const css = kindsOf("css", 'color: #fff; /* c */');
+            const isCss = css === "property:color variable:#fff comment:/* c */";
+            const html = partsOf("html", '<a href="x">t</a> <!-- c');
+            const htmlKinds = html.parts.filter(function (part) { return part[0]; }).map(function (part) { return part[0] + ":" + part[1]; }).join(" ");
+            const isHtml = htmlKinds === 'tag:<a attribute:href string:"x" tag:> tag:</a tag:> comment:<!-- c' && html.state === "-->";
+            const isText = kindsOf("text", "def if 1 'x' # y") === "";
+            const bash = kindsOf("bash", 'echo "$HOME" $USER # c');
+            const isBash = bash === 'builtin:echo string:"$HOME" variable:$USER comment:# c';
+            check("CodeEditor: the colors of a line by its language; a string or a comment of many lines goes on in the next line",
+                isPython && isUnicode && isMultiLine && isJs && isJson && isSql && isCss && isHtml && isText && isBash,
+                [isPython, python, isUnicode, words, isMultiLine, isJs, isJson, json, isSql, sql, isCss, css, isHtml, htmlKinds, isText, isBash, bash].join(" | "));
+        });
+
+        test("CodeEditor: the text stays text; the drawn text lies exactly under the text of the textarea", async function () {
+            const editor = makeEditor({ value: "<b>not bold</b>\n\tx = 'şğü'  # " + "long ".repeat(60) });
+            await wait(30);
+            const layer = editor.codeLayer.elem;
+            const hasNoHtml = !layer.querySelector("b") && layer.textContent.includes("<b>not bold</b>");
+            const area = editor.textareaElem;
+            const style = editor.style.text;
+            // WHY both: a browser may or may not count the padding at the right of a textarea in its scrollWidth.
+            const widthWithOnePadding = area.scrollWidth - style.paddingX;
+            const widthWithTwoPaddings = area.scrollWidth - 2 * style.paddingX;
+            const isSameWidth = Math.min(Math.abs(layer.scrollWidth - widthWithOnePadding), Math.abs(layer.scrollWidth - widthWithTwoPaddings)) <= 1;
+            const isSameFont = getComputedStyle(layer).fontFamily === getComputedStyle(area).fontFamily && getComputedStyle(layer).fontSize === getComputedStyle(area).fontSize && getComputedStyle(layer).lineHeight === getComputedStyle(area).lineHeight && getComputedStyle(layer).tabSize === getComputedStyle(area).tabSize;
+            area.scrollLeft = 120;
+            area.dispatchEvent(new Event("scroll"));
+            const followsX = new DOMMatrix(getComputedStyle(layer).transform).m41 === style.paddingX - area.scrollLeft;
+            check("CodeEditor: the text stays text; the drawn text lies exactly under the text of the textarea", hasNoHtml && isSameWidth && isSameFont && followsX,
+                [hasNoHtml, layer.scrollWidth, area.scrollWidth, isSameFont, followsX].join(" "));
+            editor.remove();
+        });
+
+        test("CodeEditor: only the lines that are seen are drawn; a big text stays fast; goToLine shows its line", async function () {
+            const manyLines = [];
+            for (let i = 1; i <= 100000; i++) manyLines.push("value_" + i + " = " + i + "  # line");
+            const startedAt = performance.now();
+            const editor = makeEditor({ value: manyLines.join("\n") });
+            const createTime = performance.now() - startedAt;
+            await wait(30);
+            const drawnLines = editor.codeLayer.elem.textContent.split("\n").length;
+            const isFew = drawnLines < 80 && editor.gutterLayer.elem.textContent.startsWith("1\n");
+            editor.goToLine(50000);
+            const area = editor.textareaElem;
+            const lineTop = 49999 * editor.style.text.lineHeight;
+            const isSeen = lineTop >= area.scrollTop && lineTop < area.scrollTop + area.clientHeight;
+            const isCursorThere = editor.cursorLine === 50000 && editor.cursorColumn === 1;
+            const hasItsText = editor.codeLayer.elem.textContent.includes("value_50000 = 50000");
+            const isNumbered = editor.gutterLayer.elem.textContent.split("\n").includes("50000");
+            const isMarked = editor.gutterLayer.elem.querySelector(".code-editor-active-number").textContent === "50000";
+            const typeStart = performance.now();
+            editor.insertText("x");
+            const typeTime = performance.now() - typeStart;
+            check("CodeEditor: only the lines that are seen are drawn; a big text stays fast; goToLine shows its line",
+                isFew && isSeen && isCursorThere && hasItsText && isNumbered && isMarked && createTime < 2000 && typeTime < 1000,
+                [isFew, drawnLines, isSeen, isCursorThere, hasItsText, isNumbered, isMarked, Math.round(createTime), Math.round(typeTime)].join(" "));
+            editor.remove();
+        });
+
+        test("CodeEditor: Tab, Shift + Tab, Enter, Backspace and Ctrl + / edit the lines, and undo takes them back", async function () {
+            const changes = [];
+            const editor = makeEditor({ value: "def f():\n    a\n    b\nc", onChange: function (self) { changes.push(self.value.length); } });
+            const area = editor.textareaElem;
+            area.focus();
+
+            area.setSelectionRange(0, 0);
+            editorKey(editor, "Tab");
+            const tabAtStart = area.value.startsWith("    def f");
+            document.execCommand("undo");
+            const undone = area.value.startsWith("def f") && editor.value === area.value;
+
+            area.setSelectionRange(1, 1); // in "def": to the next stop
+            editorKey(editor, "Tab");
+            const tabToStop = area.value.startsWith("d   ef f");
+            document.execCommand("undo");
+
+            area.setSelectionRange(8, 8); // the end of "def f():"
+            const enterEvent = editorKey(editor, "Enter");
+            const opensLevel = area.value.startsWith("def f():\n    \n    a") && enterEvent.defaultPrevented;
+            document.execCommand("undo");
+
+            const lineB = area.value.indexOf("    b") + 5;
+            area.setSelectionRange(lineB, lineB);
+            editorKey(editor, "Enter");
+            const keepsIndent = area.value.includes("    b\n    \nc");
+            editorKey(editor, "Backspace");
+            const backOneLevel = area.value.includes("    b\n\nc");
+            document.execCommand("undo");
+            document.execCommand("undo");
+
+            const allStart = area.value.indexOf("    a");
+            area.setSelectionRange(allStart, area.value.indexOf("c"));
+            editorKey(editor, "Tab");
+            const manyIndented = area.value === "def f():\n        a\n        b\nc" && area.selectionEnd - area.selectionStart === "        a\n        b".length;
+            editorKey(editor, "Tab", { shiftKey: true });
+            const manyBack = area.value === "def f():\n    a\n    b\nc";
+
+            area.setSelectionRange(allStart, allStart);
+            editorKey(editor, "/", { ctrlKey: true });
+            const commented = area.value.includes("    # a\n");
+            editorKey(editor, "/", { metaKey: true });
+            const uncommented = area.value.includes("    a\n");
+
+            editorKey(editor, "Escape");
+            const tabLeaves = !editorKey(editor, "Tab").defaultPrevented;
+            const tabStaysAfter = editorKey(editor, "Tab").defaultPrevented;
+
+            const hasChanges = changes.length > 5 && editor.value === area.value;
+            check("CodeEditor: Tab, Shift + Tab, Enter, Backspace and Ctrl + / edit the lines, and undo takes them back",
+                tabAtStart && undone && tabToStop && opensLevel && keepsIndent && backOneLevel && manyIndented && manyBack && commented && uncommented && tabLeaves && tabStaysAfter && hasChanges,
+                [tabAtStart, undone, tabToStop, opensLevel, keepsIndent, backOneLevel, manyIndented, manyBack, commented, uncommented, tabLeaves, tabStaysAfter, hasChanges, JSON.stringify(area.value)].join(" "));
+            editor.remove();
+        });
+
+        test("CodeEditor: read only; setValue silent; changeDelay waits; the line and the column; the width of the numbers", async function () {
+            let changes = 0;
+            let cursors = 0;
+            const editor = makeEditor({ value: "a\nb", changeDelay: 40, onChange: function () { changes++; }, onCursorChange: function () { cursors++; } });
+            const area = editor.textareaElem;
+            area.focus();
+            editor.insertText("x");
+            editor.insertText("y");
+            const waits = changes === 0;
+            await wait(120);
+            const toldOnce = changes === 1;
+            editor.setValue("one\ntwo\nthree", 1);
+            await wait(80);
+            const silent = changes === 1 && editor.value === "one\ntwo\nthree" && editor.getValue() === "one\ntwo\nthree";
+            area.setSelectionRange(9, 9);
+            area.dispatchEvent(new Event("keyup"));
+            const isPlace = editor.cursorLine === 3 && editor.cursorColumn === 2 && cursors > 0;
+            const activeTop = editor.activeLine.top;
+            const isActivePlaced = activeTop === editor.style.text.paddingY + 2 * editor.style.text.lineHeight - area.scrollTop;
+            area.setSelectionRange(0, 3);
+            const isSelected = editor.getSelectedText() === "one";
+            const narrow = editor.gutter.elem.offsetWidth;
+            editor.setValue(new Array(1200).fill("x").join("\n"), 1);
+            const wider = editor.gutter.elem.offsetWidth > narrow && editor.codeArea.elem.offsetLeft === editor.gutter.elem.offsetWidth;
+            editor.setShowLineNumbers(0);
+            const noNumbers = editor.gutter.elem.getClientRects().length === 0 && editor.codeArea.elem.offsetLeft === 0;
+            editor.setShowLineNumbers(1);
+            editor.setValue("abc", 1);
+            editor.setReadOnly(1);
+            area.setSelectionRange(0, 0);
+            const tabEvent = editorKey(editor, "Tab");
+            const readOnly = area.value === "abc" && area.readOnly && !tabEvent.defaultPrevented;
+            editor.setReadOnly(0);
+            area.focus();
+            area.setSelectionRange(0, 0);
+            editorKey(editor, "Tab");
+            const editable = area.value === "    abc";
+            check("CodeEditor: read only; setValue silent; changeDelay waits; the line and the column; the width of the numbers",
+                waits && toldOnce && silent && isPlace && isActivePlaced && isSelected && wider && noNumbers && readOnly && editable,
+                [waits, toldOnce, silent, isPlace, isActivePlaced, isSelected, wider, noNumbers, readOnly, editable].join(" "));
+            editor.remove();
+        });
+
+        test("CodeEditor: setLanguage and setTheme change the colors; the text, the undo and a style of the page stay", async function () {
+            const editor = makeEditor({ value: "def f(): pass", language: "text", style: { kinds: { string: "rgb(1, 2, 3)" } } });
+            const area = editor.textareaElem;
+            const spanCount = function () { return editor.codeLayer.elem.querySelectorAll("span").length; };
+            const noColors = spanCount() === 0;
+            editor.setLanguage("python");
+            const hasColors = spanCount() >= 2;
+            const keyword = editor.codeLayer.elem.querySelector(".code-editor-keyword");
+            const lightColor = getComputedStyle(keyword).color;
+            const lightGround = getComputedStyle(editor.elem).backgroundColor;
+            area.focus();
+            area.setSelectionRange(0, 0);
+            editor.insertText("# x\n");
+            editor.setTheme("dark");
+            const darkKeyword = editor.codeLayer.elem.querySelector(".code-editor-keyword");
+            const isDarker = getComputedStyle(darkKeyword).color !== lightColor && getComputedStyle(editor.elem).backgroundColor !== lightGround && editor.styleName === "dark";
+            const keepsText = area.value === "# x\ndef f(): pass" && editor.value === area.value;
+            const keepsPageStyle = editor.elem.style.getPropertyValue("--code-editor-string") === "rgb(1, 2, 3)";
+            document.execCommand("undo");
+            const undoWorks = area.value === "def f(): pass";
+            editor.setTheme("light");
+            const isBack = getComputedStyle(editor.elem).backgroundColor === lightGround;
+            check("CodeEditor: setLanguage and setTheme change the colors; the text, the undo and a style of the page stay",
+                noColors && hasColors && isDarker && keepsText && keepsPageStyle && undoWorks && isBack, [noColors, hasColors, isDarker, keepsText, keepsPageStyle, undoWorks, isBack].join(" "));
+            editor.remove();
+        });
+
+        test("setTheme: LogView, ImageView, MenuBar and StatusBar change their package in place; the style of the page and the content stay", async function () {
+            const groundOf = function (obj) { return getComputedStyle(obj.elem).backgroundColor; };
+            const isDark = function (color) {
+                const parts = color.match(/\d+/g).map(Number);
+                return parts[0] + parts[1] + parts[2] < 3 * 128;
+            };
+
+            const log = LogView({ left: 0, top: 0, width: 400, height: 120, lines: [{ text: "Bad", level: "error", time: "01:02:03" }] });
+            const logRow = logRows(log)[0];
+            const logAtFirst = groundOf(log);
+            const logTextAtFirst = getComputedStyle(logRow).color;
+            log.setTheme("dark");
+            const logIsDark = isDark(groundOf(log)) && log.styleName === "dark" && logRows(log)[0] === logRow;
+            const logTextChanged = getComputedStyle(logRow).color !== logTextAtFirst && logRow.textContent === "01:02:03 ERROR Bad";
+            log.setTheme("light");
+            const logIsBack = groundOf(log) === logAtFirst && getComputedStyle(logRow).color === logTextAtFirst;
+            log.remove();
+
+            const view = await makeLoadedView(1000, 500, { style: { image: { color: "rgb(1, 2, 3)" } } });
+            view.setZoomLevel(2);
+            view.setTheme("dark");
+            const viewIsDark = isDark(groundOf(view)) && isDark(groundOf(view.toolbar));
+            const viewKeeps = view.zoomLevel === 2 && getComputedStyle(view.image.elem).backgroundColor === "rgb(1, 2, 3)" && view.image.elem.getClientRects().length > 0;
+            view.clearImage();
+            const noteAtDark = getComputedStyle(view.lblEmpty.elem).color;
+            view.setTheme("light");
+            const noteChanged = getComputedStyle(view.lblEmpty.elem).color !== noteAtDark;
+            view.remove();
+
+            const bar = StatusBar({ messageText: "Saved", messageTone: "success", items: ["UTF-8", { key: "z", text: "100%", onClick: function () { } }] });
+            bar.setItemText("z", "125%");
+            bar.setTheme("dark");
+            const barIsDark = isDark(groundOf(bar)) && bar.lblMessage.plainText === "Saved" && bar.partList[1].obj.elem.textContent === "125%" && bar.partList[1].obj.elem.tagName === "BUTTON";
+            bar.remove();
+
+            const clicks = [];
+            const menuBar = MenuBar({ menus: makeTestMenus(), onClick: function (self, item) { clicks.push(item.key); } });
+            await wait(10);
+            menuBar.setItemChecked("wrap", 0);
+            const view3 = menuBar.menuList[3];
+            const oldMenu = view3.contextMenu;
+            view3.title.elem.focus();
+            menuBar.setTheme("dark");
+            const titleKeepsFocus = document.activeElement === view3.title.elem;
+            const oldMenuGone = !document.body.contains(oldMenu.elem) && document.body.contains(menuBar.menuList[3].contextMenu.elem);
+            const barDark = isDark(groundOf(menuBar)) && isDark(groundOf(menuBar.menuList[3].contextMenu));
+            menuBar.menuList[3].title.elem.click();
+            const keepsChecked = openMenuRows(menuBar.menuList[3].contextMenu)[0].getAttribute("aria-checked") === "false";
+            menuBar.menuList[3].contextMenu.close();
+            key(document.body, "keydown", "s", { ctrlKey: true });
+            const shortcutRuns = clicks.join(" ") === "save";
+            // setTheme in the onClick of an item: its menu is made again while its click runs.
+            const selfBar = MenuBar({ menus: [{ text: "View", items: [{ text: "Dark", key: "d", onClick: function (self) { self.setTheme("dark"); } }] }] });
+            await wait(10);
+            selfBar.menuList[0].title.elem.click();
+            let errorText = "";
+            try { selfBar.menuList[0].contextMenu.clickItem(0); } catch (error) { errorText = error.message; }
+            const selfIsDark = isDark(groundOf(selfBar)) && !errorText;
+            selfBar.remove();
+            menuBar.remove();
+
+            check("setTheme: LogView, ImageView, MenuBar and StatusBar change their package in place; the style of the page and the content stay",
+                logIsDark && logTextChanged && logIsBack && viewIsDark && viewKeeps && noteChanged && barIsDark && titleKeepsFocus && oldMenuGone && barDark && keepsChecked && shortcutRuns && selfIsDark,
+                [logIsDark, logTextChanged, logIsBack, viewIsDark, viewKeeps, noteChanged, barIsDark, titleKeepsFocus, oldMenuGone, barDark, keepsChecked, shortcutRuns, selfIsDark, errorText].join(" "));
+        });
+
                 dark.remove();
                 lightAgain.remove();
                 fresh.remove();
