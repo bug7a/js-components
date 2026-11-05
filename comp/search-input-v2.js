@@ -9,6 +9,10 @@ UI COMPONENT TEMPLATE
 - Style packages: "classic" (default), "ozden", "ozdenDark". Select with styleName. (SearchInput.styles)
 -- "ozden" and "ozdenDark" are 44 px high (the user, 2026-11-05; "classic" and the defaults: 50). A height given by
    the page wins over it.
+- The vertical place (2026-11-05, the user): textOffsetY / clearIconOffsetY move the text and the clear icon from the
+  middle of the box. ozden / ozdenDark: -2 / -1: center() does not count their 3 px bottom line, and the small letters
+  of Open Sans sit low in their line (measured: the text was about 3 px low, the clear icon 1 px; the search icon is
+  right where it is: its round lens is over the middle, its handle under it).
 -- A package is a package of params (basic.js v26.10.27): its keys fill the params you did not give.
 -- SearchInput.styles.myStyle = { style: {}, color: "white", textColor: "#222", ... };
 - animated: 1 adds small motions (not at the first view): under the mouse a thin line and a bigger search icon,
@@ -65,6 +69,8 @@ const SearchInputDefaults = {
     borderBottomStyle: "2px solid rgba(0, 0, 0, 0.06)",
     round: 6,
     fontSize: 20,
+    textOffsetY: 0, // px: the text up (-) or down (+) from the middle of the box (the ozden packages: -2)
+    clearIconOffsetY: 0, // px: the clear icon up (-) or down (+) from the middle of the box (the ozden packages: -1)
     invertIconColor: 0, // 1: both icons are inverted (white icons for a dark field)
     invertSearchIconColor: null, // null: invertIconColor. 0 / 1: only the search icon
     invertClearIconColor: null, // null: invertIconColor. 0 / 1: only the clear icon
@@ -160,12 +166,20 @@ const SearchInput = function(params = {}) {
         refreshTextFade();
     };
 
+    // The text and the icons in the middle of the box; textOffsetY and clearIconOffsetY move the text and the clear
+    // icon from there (the ozden packages: see SearchInput.styles.ozden).
+    const placeVertically = function(self) {
+        self.txtSearch.center("top");
+        self.txtSearch.top += self.textOffsetY;
+        self.imgClearIcon.center("top");
+        self.imgClearIcon.top += self.clearIconOffsetY;
+        self.imgIcon.center("top");
+    };
+
     const refreshLayout = function(self) {
 
         self.txtSearch.width = getTextWidth();
-        self.txtSearch.center("top");
-        self.imgClearIcon.center("top");
-        self.imgIcon.center("top");
+        placeVertically(self);
         refreshClearIcon(); // WHY: a narrower or a wider box can lose or get back its clear icon (clearIconMinTextWidth)
         refreshTextFade();
 
@@ -369,7 +383,6 @@ const SearchInput = function(params = {}) {
         });
         that.load(box.searchIconFile);
         if (isIconInverted(box.invertSearchIconColor)) that.css.filter = "invert(100%)";
-        that.center("top");
 
         // INPUT: Search textbox
         box.txtSearch = Input(box.searchIconLeft + box.searchIconSize + box.searchIconGap, 0, {
@@ -398,8 +411,9 @@ const SearchInput = function(params = {}) {
         });
         that.load(box.clearIconFile);
         if (isIconInverted(box.invertClearIconColor)) that.css.filter = "invert(100%)";
-        that.center("top");
         that.cursor = "pointer";
+
+        placeVertically(box); // (again at every resize: refreshLayout)
 
     // *** OBJECT INIT CODE:
     // Every change of the text: typed, pasted, dropped or filled by the browser.
@@ -503,6 +517,8 @@ SearchInput.styles = {
         placeholderColor: "",
         fontSize: 20,
         height: 44, // (the user, 2026-11-05: the default is 50) as the search box of ItemList and SelectBox ozden
+        textOffsetY: -2, // WHY: center() does not count the 3 px bottom line, and the small letters of Open Sans sit low
+        clearIconOffsetY: -1, // WHY: the middle of the face of the box (center() does not count the 3 px bottom line)
         border: 1,
         borderColor: "rgba(0, 0, 0, 0.1)",
         borderBottomStyle: "3px solid rgba(0, 0, 0, 0.06)",
@@ -529,6 +545,8 @@ SearchInput.styles = {
         placeholderColor: "rgba(255, 255, 255, 0.35)",
         fontSize: 20,
         height: 44, // (the user, 2026-11-05: the default is 50) as the search box of ItemList and SelectBox ozden
+        textOffsetY: -2, // WHY: center() does not count the 3 px bottom line, and the small letters of Open Sans sit low
+        clearIconOffsetY: -1, // WHY: the middle of the face of the box (center() does not count the 3 px bottom line)
         border: 1,
         borderColor: "rgba(255, 255, 255, 0.1)",
         borderBottomStyle: "3px solid rgba(255, 255, 255, 0.06)",
