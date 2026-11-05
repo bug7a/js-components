@@ -15,6 +15,10 @@ UI COMPONENT TEMPLATE
   Only transform, opacity and box-shadow change (smooth, cheap). Off when the system asks for reduced motion.
 - Place: left / top (default 0, 0), or right / bottom: SearchInput({ right: 20, bottom: 20 }) is at the right bottom
   corner of its box (the default left / top is not used then). Sample: 02-comp-examples/search-input-v2-place.htm
+- The right end (2026-11-05, the user): clearIconRight moves the clear icon and the end of the text to the left, so
+  the right end of the box is kept for an object of the page (the column chip of SmartTable); setClearIconRight().
+  A click on such an object keeps its own click (it does not start typing). clearIconMinTextWidth: a narrow box does
+  not show its clear icon when the text beside it would be narrower than this; the text gets its place.
 
 Started Date: December 2025
 Developer: Bugra Ozden
@@ -35,7 +39,9 @@ const SearchInputDefaults = {
     searchIconSize: 24,
     searchIconLeft: 16, // px: the search icon from the left side of the box
     searchIconGap: 8, // px: between the search icon and the text
+    clearIconRight: 16, // px: the clear icon from the right side of the box (more: the right end is for an object of the page)
     isCancelEnabled: 1,
+    clearIconMinTextWidth: 0, // px: the clear icon is not shown when the text beside it would be narrower (0: always shown)
     placeholderText: "Search",
     color: "whitesmoke",
     textColor: "rgba(0, 0, 0, 0.8)",
@@ -80,6 +86,7 @@ const SearchInput = function(params = {}) {
     
     // *** Private variables:
     const ICONS_SPACE = 80; // The width of the box that is not for the text, with the default icon place (16 + 8)
+    const CLEAR_ICON_PLACE = 16; // px: the text is longer by this when the clear icon is not used
 
     // animated: 1
     const MOTION_TIME = "0.25s";
@@ -106,10 +113,25 @@ const SearchInput = function(params = {}) {
 
     // *** Private functions:
 
-    // The width of the text: the box without the icons. A search icon moved from its default place (16 + 8) moves the text too.
-    const getTextWidth = function() {
+    // The width of the text beside the clear icon: the box without the icons. A search icon moved from its default
+    // place (16 + 8), or a clear icon moved from its place (clearIconRight 16), moves the text too.
+    const getTextWidthWithClearIcon = function() {
         const iconMove = (box.searchIconLeft - SearchInputDefaults.searchIconLeft) + (box.searchIconGap - SearchInputDefaults.searchIconGap);
-        return box.width - ICONS_SPACE - iconMove;
+        const clearIconMove = box.clearIconRight - SearchInputDefaults.clearIconRight;
+        return box.width - ICONS_SPACE - iconMove - clearIconMove;
+    };
+
+    // The clear icon is used: it is on, and the box has room for it (clearIconMinTextWidth)
+    const isClearIconUsed = function() {
+        if (!box.isCancelEnabled) return false;
+        if (!box.clearIconMinTextWidth) return true;
+        return getTextWidthWithClearIcon() >= box.clearIconMinTextWidth;
+    };
+
+    // The width of the text: with no clear icon, the text goes on to its place.
+    const getTextWidth = function() {
+        const width = getTextWidthWithClearIcon();
+        return isClearIconUsed() ? width : width + CLEAR_ICON_PLACE;
     };
 
     const refreshLayout = function(self) {
@@ -118,7 +140,13 @@ const SearchInput = function(params = {}) {
         self.txtSearch.center("top");
         self.imgClearIcon.center("top");
         self.imgIcon.center("top");
+        refreshClearIcon(); // WHY: a narrower or a wider box can lose or get back its clear icon (clearIconMinTextWidth)
 
+    };
+
+    // The box itself, the search icon or the text (not the clear icon, not an object of the page in the box)
+    const isFieldPart = function(target) {
+        return target === box.elem || box.imgIcon.elem.contains(target) || box.txtSearch.elem.contains(target);
     };
 
     // The text given to onSearch and onSubmit
@@ -221,10 +249,9 @@ const SearchInput = function(params = {}) {
         paintMotion();
     };
 
-    // The clear icon is shown while there is a text
+    // The clear icon is shown while there is a text (and the box has room for it)
     const refreshClearIcon = function() {
-        if (!box.isCancelEnabled) return;
-        setClearIconVisible(box.txtSearch.text.length > 0);
+        setClearIconVisible(isClearIconUsed() && box.txtSearch.text.length > 0);
     };
 
     // *** Public functions:
@@ -252,6 +279,14 @@ const SearchInput = function(params = {}) {
         box.animated = (value == 1) ? 1 : 0;
         applyAnimated();
     }
+
+    // The right end of the box for an object of the page: the clear icon and the end of the text move left.
+    box.setClearIconRight = function(right) {
+        box.clearIconRight = right;
+        box.imgClearIcon.right = right;
+        refreshLayout(box);
+    }
+    // USAGE: searchInput.setClearIconRight(60)
 
         // *** OBJECT TEMPLATE:
         box.css.borderBottom = box.borderBottomStyle;
@@ -286,7 +321,7 @@ const SearchInput = function(params = {}) {
 
         // ICON: Clear icon button
         box.imgClearIcon = Icon(5, 0, 20, 20, {
-            right: 16,
+            right: box.clearIconRight,
             opacity: 0,
             space: 0,
         });
@@ -339,10 +374,11 @@ const SearchInput = function(params = {}) {
         isFocused = 0;
         paintMotion();
     });
-    // A click on the field (an icon, the space around the text) starts typing.
+    // A click on the field (an icon, the space around the text) starts typing. (A click on an object of the page in
+    // the box, Ex: the column chip of SmartTable, is its own.)
     box.on("click", function(self, event) {
         if (event.target === box.txtSearch.inputElement) return;
-        if (box.imgClearIcon.elem.contains(event.target)) return;
+        if (!isFieldPart(event.target)) return;
         box.focus();
     });
     // WHY: setMotion waits a moment before it starts: the first view does not move.
