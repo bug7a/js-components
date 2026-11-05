@@ -11,7 +11,7 @@ UI COMPONENT TEMPLATE
 -- SearchInput.styles.myStyle = { style: {}, color: "white", textColor: "#222", ... };
 - animated: 1 adds small motions (not at the first view): under the mouse a thin line and a bigger search icon,
   while typing a stronger line and a tilted search icon (a small pulse at every letter), the clear icon grows in
-  and turns under the mouse. The "ozden" and "ozdenDark" packages are animated (animated: 0 makes them still).
+  and turns under the mouse. Off in every package, "ozden" and "ozdenDark" too (the user, 2026-10-27): give animated: 1.
   Only transform, opacity and box-shadow change (smooth, cheap). Off when the system asks for reduced motion.
 - Place: left / top (default 0, 0), or right / bottom: SearchInput({ right: 20, bottom: 20 }) is at the right bottom
   corner of its box (the default left / top is not used then). Sample: 02-comp-examples/search-input-v2-place.htm
