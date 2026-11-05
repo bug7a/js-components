@@ -25,6 +25,8 @@
     // the other. A layout the user drew, with the colors of the ozden package. The icon is in a light circle of its
     // color (topIconTone: three tones of a tone of SmartButton); it is drawn in two tones and moves once when its
     // dialog opens. The buttons take the tones of SmartButton too: Delete orange (danger), OK of Saved green (success).
+    // Three more dialogs that projects often need (the user, 2026-11-05): turn on the notifications, no connection
+    // (Try again waits), leave without saving.
 
     const WORK_TIME = 1200; // ms: a job that takes time (the sample)
 
@@ -49,20 +51,43 @@
     const SAVED_ICON =
         '<circle class="top-icon-mark" cx="12" cy="12" r="11" fill="STRONG"/>' +
         '<path class="top-icon-check" pathLength="1" d="M7.4 12.4l3.1 3.1 6.1-6.4" fill="none" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>';
+    // The bell: its knob and its clapper come out of it (written first), the bell, a shine on it
+    const BELL_ICON =
+        '<g class="top-icon-bell">' +
+            '<rect x="10.6" y="1.8" width="2.8" height="3.6" rx="1.4" fill="STRONG"/>' +
+            '<circle cx="12" cy="19.4" r="2.5" fill="STRONG"/>' +
+            '<path d="M12 4.2c-3.6 0-6.3 2.9-6.3 6.6v3.4l-1.7 2.5a1 1 0 0 0 .83 1.56h14.34a1 1 0 0 0 .83-1.56l-1.7-2.5v-3.4c0-3.7-2.7-6.6-6.3-6.6z" fill="LIGHT"/>' +
+            '<path d="M8.6 10.6a3.4 3.4 0 0 1 2.1-3" fill="none" stroke="STRONG" stroke-width="2" stroke-linecap="round"/>' +
+        '<\/g>';
+    // A cloud and the line over it (pathLength 1: it is drawn from its start)
+    const OFFLINE_ICON =
+        '<path d="M7.2 19.5a4.7 4.7 0 0 1-.9-9.3 6 6 0 0 1 11.5-.6 4.95 4.95 0 0 1-.3 9.9z" fill="LIGHT"/>' +
+        '<path class="top-icon-slash" pathLength="1" d="M4.5 4.5l15 15" fill="none" stroke="STRONG" stroke-width="2.2" stroke-linecap="round"/>';
+    // A page, its lines, and the pencil over its corner
+    const UNSAVED_ICON =
+        '<rect x="3.5" y="2.5" width="13.5" height="19" rx="2.6" fill="LIGHT"/>' +
+        '<path d="M7.2 7.6h6.2M7.2 11.4h4" fill="none" stroke="STRONG" stroke-width="2" stroke-linecap="round"/>' +
+        '<path class="top-icon-pencil" d="M18.9 9.9a1.6 1.6 0 0 1 2.3 2.3l-7.4 7.4-3.4.9.9-3.4z" fill="STRONG"/>';
 
     // Each icon moves once when its dialog opens, after the card comes: the lid of the bin lifts and falls back, the
-    // arrow goes out, the circle grows in and its check is drawn. Nothing with reduced motion.
+    // arrow goes out, the circle grows in and its check is drawn, the bell rings, the line over the cloud is drawn,
+    // the pencil writes. Nothing with reduced motion.
     const ICON_MOTION_CSS = [
-        ".top-icon-lid, .top-icon-arrow, .top-icon-mark { transform-box: fill-box; }",
+        ".top-icon-lid, .top-icon-arrow, .top-icon-mark, .top-icon-bell, .top-icon-pencil { transform-box: fill-box; }",
         ".top-icon-lid { transform-origin: 100% 100%; animation: top-icon-lift 0.5s 0.2s ease-in-out both; }",
         ".top-icon-arrow { animation: top-icon-go 0.25s 0.15s " + MOTION_EASE + " both; }",
         ".top-icon-mark { transform-origin: 50% 50%; animation: top-icon-pop 0.25s 0.1s " + MOTION_EASE + " both; }",
         ".top-icon-check { stroke-dasharray: 1; animation: top-icon-draw 0.25s 0.3s " + MOTION_EASE + " both; }",
+        ".top-icon-bell { transform-origin: 50% 0%; animation: top-icon-ring 0.6s 0.15s ease-in-out both; }",
+        ".top-icon-slash { stroke-dasharray: 1; animation: top-icon-draw 0.3s 0.25s " + MOTION_EASE + " both; }",
+        ".top-icon-pencil { animation: top-icon-write 0.5s 0.2s ease-in-out both; }",
         "@keyframes top-icon-lift { 50% { transform: translateY(-1.5px) rotate(8deg); } }",
         "@keyframes top-icon-go { from { opacity: 0; transform: translateX(-4px); } }",
         "@keyframes top-icon-pop { from { opacity: 0; transform: scale(0.6); } }",
         "@keyframes top-icon-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }",
-        "@media (prefers-reduced-motion: reduce) { .top-icon-lid, .top-icon-arrow, .top-icon-mark, .top-icon-check { animation: none; } }",
+        "@keyframes top-icon-ring { 20% { transform: rotate(12deg); } 45% { transform: rotate(-9deg); } 70% { transform: rotate(5deg); } }",
+        "@keyframes top-icon-write { 35% { transform: translate(-1.2px, 1.2px); } 70% { transform: translate(0.8px, -0.8px); } }",
+        "@media (prefers-reduced-motion: reduce) { .top-icon-lid, .top-icon-arrow, .top-icon-mark, .top-icon-check, .top-icon-bell, .top-icon-slash, .top-icon-pencil { animation: none; } }",
     ].join("\n");
 
     // The yellow button of Log out: the hover a little darker, the text of the package (not the white of danger)
@@ -140,6 +165,66 @@
         showResult("alert: closed");
     };
 
+    // The page tells how a dialog was closed (keyOfNo: the button that says no)
+    const showClose = function (reason, buttonKey, keyOfNo) {
+        if (reason != "button") showResult("Closed: " + reason);
+        else if (buttonKey == keyOfNo) showResult("Canceled.");
+    };
+
+    // NOTIFICATIONS: the page asks before it sends them
+    const openNotificationsDialog = function () {
+        Dialog({
+            variant: "centered",
+            width: 420,
+            topIconTone: "cyan",
+            topIconFile: svgIcon(BELL_ICON),
+            titleText: "Turn on notifications?",
+            messageText: "We tell you when your order is on its way. You can turn them off in the settings.",
+            buttons: [
+                { key: "later", text: "Not now", type: "secondary" },
+                { key: "turnOn", text: "Turn on", type: "primary", onClick: function () { showResult("Notifications are on."); } },
+            ],
+            onClose: function (dialog, reason, buttonKey) { showClose(reason, buttonKey, "later"); },
+        });
+    };
+
+    // NO CONNECTION: Try again waits (its clock) while the page checks the connection
+    const openOfflineDialog = function () {
+        Dialog({
+            variant: "centered",
+            width: 420,
+            topIconTone: "blue",
+            topIconFile: svgIcon(OFFLINE_ICON),
+            titleText: "No connection",
+            messageText: "Check your internet connection, then try again.",
+            buttons: [
+                { key: "cancel", text: "Cancel", type: "secondary" },
+                {
+                    key: "retry", text: "Try again", type: "info",
+                    onClick: function () {
+                        return wait(WORK_TIME).then(function () { showResult("Connected again."); });
+                    },
+                },
+            ],
+            onClose: function (dialog, reason, buttonKey) { showClose(reason, buttonKey, "cancel"); },
+        });
+    };
+
+    // UNSAVED CHANGES: Leave loses them (the yellow of a warning), Stay keeps the page
+    const openUnsavedConfirm = async function () {
+        const isLeaving = await Dialog.confirm({
+            variant: "centered",
+            topIconTone: "yellow",
+            topIconFile: svgIcon(UNSAVED_ICON),
+            titleText: "Leave without saving?",
+            messageText: "Your changes are not saved. They will be lost if you leave now.",
+            confirmText: "Leave",
+            cancelText: "Stay",
+            confirmType: "warning",
+        });
+        showResult("unsaved changes: " + (isLeaving ? "left" : "stayed"));
+    };
+
     const createButton = function (text, onClick) {
         return SmartButton({ styleName: "ozdenType1", labelText: text, height: 40, style: { box: { color: "white" } }, onClick: onClick }); // white inside (its hover stays gray)
     };
@@ -157,6 +242,12 @@
                 createButton("Delete account", openDeleteDialog);
                 createButton("Dialog.confirm", openConfirm);
                 createButton("Dialog.alert", openAlert);
+            endGroup();
+
+            HGroup({ hug: 1, gap: 10, wrap: 1, clipContent: 0 });
+                createButton("Notifications", openNotificationsDialog);
+                createButton("No connection", openOfflineDialog);
+                createButton("Unsaved changes", openUnsavedConfirm);
             endGroup();
 
             lblResult = Label({ plainText: "-", fontSize: 14, textColor: Black(0.5) });
