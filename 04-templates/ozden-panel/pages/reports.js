@@ -892,6 +892,7 @@ const ReportsPage = function(params = {}) {
             HGroup({ width: "100%", height: 520, align: "left top" });
 
                 smartTable = SmartTable({
+                    styleName: "green", // WHY: the colors of the panel are made over this look (the keys it does not give come from it, not from "classic")
                     titleDataList: titleDataList,
                     itemDataList: [],
                     titleHeight: 44,

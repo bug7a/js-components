@@ -351,15 +351,16 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "smart-table", name: "SmartTable", cat: "data",
-        source: "comp/smart-table.js", deps: ["comp/search-input-v2.js", "comp/context-menu.js"],
+        source: "comp/smart-table.js", deps: ["comp/search-input-v2.js", "comp/context-menu.js", "comp/tooltip.js"],
         samples: [
+            { file: "02-comp-examples/smart-table.htm", title: "Styles" },
             { file: "02-comp-examples/smart-table-1.htm", title: "2M rows" },
             { file: "02-comp-examples/smart-table-2.htm", title: "Actions" },
             { file: "02-comp-examples/smart-table-3.htm", title: "Edit & delete" },
             { file: "02-comp-examples/smart-table-4.htm", title: "Style" },
         ],
-        en: "Virtual-scroll table for millions of rows, with filtering, sorting, custom cells and editing.",
-        tr: "Milyonlarca satır için sanal kaydırmalı tablo: filtreleme, sıralama, özel hücreler ve düzenleme.",
+        en: "Virtual-scroll table for millions of rows, with filtering, sorting, custom cells and editing. Style packages: classic (default) and dark, the looks of DataTable, and green (the old look). A cut text shows all of it in a bubble.",
+        tr: "Milyonlarca satır için sanal kaydırmalı tablo: filtreleme, sıralama, özel hücreler ve düzenleme. Stil paketleri: DataTable'ın görünüşleri classic (varsayılan) ve dark, bir de green (eski görünüş). Sığmayan bir yazı, balonda bütünüyle görünür.",
     },
     {
         key: "check-box", name: "CheckBox", cat: "selection",

@@ -840,6 +840,7 @@ const MediaPage = function(params = {}) {
         grpList = HGroup({ width: "100%", height: 600, align: "left top" });
 
             smartTable = SmartTable({
+                styleName: "green", // WHY: the colors of the panel are made over this look (the keys it does not give come from it, not from "classic")
                 titleDataList: [
                     { name: "NAME", dataTitle: "name", dataType: "string", width: 280, shortable: 1 },
                     { name: "FOLDER", dataTitle: "folder", dataType: "string", width: 130, shortable: 1 },

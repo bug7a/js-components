@@ -358,6 +358,7 @@ const OrdersPage = function(params = {}) {
         HGroup({ width: "100%", height: 640, align: "left top" });
 
             smartTable = SmartTable({
+                styleName: "green", // WHY: the colors of the panel are made over this look (the keys it does not give come from it, not from "classic")
                 titleDataList: [
                     { name: "ORDER", dataTitle: "id", dataType: "string", width: 130, shortable: 1 },
                     { name: "DATE", dataTitle: "date", dataType: "string", width: 180, shortable: 1 },

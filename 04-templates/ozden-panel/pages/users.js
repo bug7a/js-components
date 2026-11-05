@@ -227,6 +227,7 @@ const UsersPage = function(params = {}) {
     });
 
         window.smartTable1 = SmartTable({
+            styleName: "green", // WHY: the colors of the panel are made over this look (the keys it does not give come from it, not from "classic")
             fillTestData: 0,
             titleDataList: titleDataList,
             itemDataList: itemDataList,

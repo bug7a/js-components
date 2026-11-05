@@ -2,11 +2,23 @@
 
 /*
 
-SmartTable- v25.07 - "Optimized for big data"
+SmartTable - v26.11 - "Optimized for big data"
 
 WHEN TO USE IT (the user, 2026-11-04): to show very big data well, in both directions: very many rows (only the rows
 that are seen are made) and very many columns (it scrolls sideways). A table that looks better for data that is not so
 big: comp/data-table.js (DataTable). A few rows inside a text: comp/tiny-table.js (TinyTable).
+
+STYLE PACKAGES (2026-11-05, the user): "classic" (default) and "dark" are the looks of DataTable (comp/data-table.js);
+new pages use "classic" on a light page and "dark" on a dark page. "green" is the look of SmartTable before them (the
+green title line, the dark edge). A package is a package of params: it also gives searchInputParams (the filter box is
+a SearchInput package: "ozden" / "ozdenDark"), scrollBarParams and searchTitleMenuParams. (SmartTable.styles)
+Sample: 02-comp-examples/smart-table.htm (the model page of SmartTable).
+- SmartTable({ styleName: "dark" }), SmartTable({ styleName: "dark", style: { lblItemCell: { fontSize: 14 } } })
+- A page with its own colors over the old look names it: SmartTable({ styleName: "green", style: {...} }) (the keys it
+  does not give come from that package, not from classic).
+- A cut text (2026-11-05, the user): a cell whose text does not fit (its end is "...") shows all of it in a bubble over
+  the cell when the mouse rests on it (style.cellTooltip: the look; showCellTooltip: 0 turns it off). The bubble is
+  comp/tooltip.js (Tooltip.show); without that file the browser's own hint (the title of the cell) shows the text.
 
 - SmartTable is a JavaScript table component designed to run smoothly even with millions of records. Thanks to its virtual scroll architecture, it only writes the visible rows to the DOM, eliminating memory and performance issues with large datasets. It makes data exploration easy with real-time filtering, multi-column sorting, and both horizontal and vertical scroll support. Custom cell designs can be created for each column via createCustomItemCell, allowing flexible visual content per column. Since column widths, heights, and colors are all configurable through parameters, it can be quickly adapted to different projects.
 
@@ -59,6 +71,7 @@ const SmartTableDefaults = {
     showSearchTitleSelect: 1, // 0: Hide the column select box (ALL) next to the search input.
     wheelScroll: 0, // 1: The mouse wheel scrolls the rows (and the page does not scroll). 0: The wheel is left to the page.
     allowHtml: 0, // 1: The cell values are written as HTML. 0: As plain text (safe for the text of the users)
+    showCellTooltip: 1, // 1: a cell whose text does not fit shows all of it in a bubble (comp/tooltip.js). 0: no bubble
     allTitlesText: "ALL",
     canSelect: 1, // 1: a click or a key selects a row; Enter runs onSelect. 0: no selection, no keys
     fitLineCount: 0, // 1: rows of about itemHeight px, as many as the height of the table holds
@@ -103,65 +116,73 @@ const SmartTableDefaults = {
     },
     // Filtredeki sütun listesinin (ContextMenu) parametreleri. (Sadece stil için; onClick bileşen tarafından verilir.)
     searchTitleMenuParams: {},
+    // The filter box (a SearchInput): its colors and edges come from the SearchInput package of styleName.
     searchInputParams: {
+        styleName: "ozden", // a SearchInput package: "ozden" (a light page), "ozdenDark"
         width: "50%",
         height: 36,
-        border: 1,
-        round: 8,
-        color: "white",
+        fontSize: 15,
         searchIconSize: 16,
+        searchIconOpacity: 0.5,
         placeholderText: "Filter",
-        fontSize: 16,
-        borderColor: Black(0.15), // (the user, 2026-11-05: light edges in the filter)
-        borderBottomStyle: "1px solid " + Black(0.15),
         searchIconFile: "../comp/search-input-v2/filter.png",
-        searchIconOpacity: 0.8, // (the user, 2026-11-05: a softer filter icon, in tune with the edges)
     },
-    style: {
+    styleName: "classic", // "classic", "dark", "green" or a name added to SmartTable.styles
+    style: { // Classic style package (default): the look of DataTable "classic" (2026-11-05, the user)
 
         width: "auto",
         height: "auto",
         round: 6,
         line1Color: "white",
-        line2Color: "whitesmoke",
-        highlightItemCellColor: "#F3E7C2",
-        selectedItemCellColor: null, // null: highlightItemCellColor (the row under the mouse)
-        selectedBar: { width: 3, color: "rgba(95, 158, 160, 0.9)" }, // the line at the left of the selected row (width 0: none)
+        line2Color: "#F7F7F7",
+        // WHY solid colors: the cells are painted over the stripes of the rows; DataTable's soft yellow
+        //     (rgba(254, 193, 8, 0.08) / 0.18) is mixed with white here, so a row looks the same on every stripe.
+        highlightItemCellColor: "#FFFAEB",
+        selectedItemCellColor: "#FFF4D3", // null: highlightItemCellColor (the row under the mouse)
+        selectedBar: { width: 0, color: "rgba(95, 158, 160, 0.9)" }, // the line at the left of the selected row (width 0: none)
         focusRingColor: "rgba(95, 158, 160, 0.6)", // the edge of the table when the keys move its rows
-        highlightTitleCellColor: White(0.2),
+        highlightTitleCellColor: "white",
+        titleUppercase: 1, // 1: the titles in capital letters (0: as titleDataList writes them)
         verticalScrollWidth: 20,
         verticalScrollMargin: 2,
         btnScrollDownIconFile: "../comp/smart-table/down.png",
         btnScrollUpIconFile: "../comp/smart-table/up.png",
-        btnScrollCenterIconFile: "../comp/smart-table/scroll.png",
-        sortIconFile: "../comp/smart-table/sort.png",
+        btnScrollCenterIconFile: "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 50" fill="none" stroke="#000000" stroke-opacity="0.4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 17.5v15M6.5 21 10 17.5 13.5 21M6.5 29 10 32.5 13.5 29"/></svg>'),
+        sortIconFile: "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17.71,9.88l-4.3-4.29a2,2,0,0,0-2.82,0L6.29,9.88a1,1,0,0,0,0,1.41,1,1,0,0,0,1.42,0L11,8V19a1,1,0,0,0,2,0V8l3.29,3.29a1,1,0,1,0,1.42-1.41Z"/></svg>'),
         loadingIconFile: "../comp/smart-table/clock.png",
         searchTitleCheckIconFile: "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#373836" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17.5 19 7"/></svg>'),
-        invertIconColor: 0,
+        invertIconColor: 0, // 1: the sort and the scroll arrows are drawn light (a dark page)
+        sortIcon: { size: 16, opacity: 0.25, activeOpacity: 1 }, // the arrow of a title: not sorted / sorted
+        // The bubble of a cut text: the keys of Tooltip.BUBBLE_LOOK (comp/tooltip.js) and maxWidth (px: a longer
+        // text goes on more lines)
+        cellTooltip: { fontSize: 14, color: "white", textColor: Black(0.8), round: 6, border: 1, borderColor: Black(0.15), shadow: "0 6px 16px " + Black(0.12), arrow: 10, padding: [12, 8], maxWidth: 360 },
 
         box: { color: "white" },
-        boxBorder: { border: 2, borderColor: Black(0.8) },
-        boxTitleLine: { color: "#65A293", },
-        boxTitleCell: { padding: [8, 0], borderRight: "1px solid rgba(0, 0, 0, 0.5)", borderBottom: "2px solid #141414", },
-        lblTitleCell: { fontSize: 20, fontFamily: "opensans", textColor: Black(0.8), },
-        boxItemCell: { borderBottom: "1px solid darkgray", borderRight: "1px solid rgba(0, 0, 0, 0.05)", padding: [8, 0], },
-        lblItemCell: { fontSize: 20, textColor: Black(0.75), fontFamily: "opensans", },
-        boxInfoLine: { color: "#E4E4E4", borderTop: "1px solid rgba(0, 0, 0, 0)" },
-        lblBoxInfoLine: { fontSize: 16, textColor: Black(0.85), },
-        lblNoDataFound: { color: "lightgray", padding: [8, 2], fontSize: 14, round: 8, border: 1, borderColor: Black(0.4), },
+        boxBorder: { border: 1, borderColor: Black(0.15) },
+        boxTitleLine: { color: "whitesmoke" },
+        boxTitleCell: { padding: [10, 0], borderRight: "1px solid " + Black(0.08), borderBottom: "1px solid " + Black(0.2) },
+        lblTitleCell: { fontSize: 15, fontFamily: "opensans-bold", textColor: Black(0.8) },
+        boxItemCell: { borderBottom: "1px solid " + Black(0.08), borderRight: "none", padding: [10, 0] },
+        lblItemCell: { fontSize: 15, textColor: Black(0.7), fontFamily: "opensans" },
+        boxInfoLine: { color: "white", borderTop: "1px solid " + Black(0.2) },
+        lblBoxInfoLine: { fontSize: 14, textColor: Black(0.5) },
+        lblNoDataFound: { color: "transparent", textColor: Black(0.45), padding: [8, 2], fontSize: 15, round: 8, border: 0, borderColor: "transparent" },
         // Filtre kutusundaki sütun seçim etiketi (ALL), lblNoDataFound stilinin üstüne.
-        // (the user, 2026-11-05: whitesmoke, as the pale lines of the table; the edge of the filter box)
-        lblSearchTitle: { color: "whitesmoke", border: 1, borderColor: Black(0.15) },
-        btnScrollCenter: { color: "white", round: 100, borderColor: "rgba(0,0,0,0.4)", border: 1, },
-        btnScrollUp: { color: "lightgray", round: 100, border: 1, },
-        btnScrollDown: { color: "lightgray", round: 100, border: 1, },
-        boxSort: { color: "#65A293" },
+        lblSearchTitle: { color: "white", textColor: Black(0.6), padding: [8, 2], fontSize: 12, round: 50, border: 1, borderColor: Black(0.12) },
+        btnScrollCenter: { color: "white", round: 100, border: 1, borderColor: Black(0.2) },
+        btnScrollUp: { color: "whitesmoke", round: 100, border: 1, borderColor: Black(0.15) },
+        btnScrollDown: { color: "whitesmoke", round: 100, border: 1, borderColor: Black(0.15) },
+        boxSort: { color: "transparent" },
 
     },
 };
 
 const SmartTable = function (params = {}) {
 
+    // Merge style package: params.style > SmartTable.styles[styleName] (a package of params) > SmartTableDefaults (classic)
+    basic.applyStylePackage(params, SmartTable.styles, SmartTableDefaults);
+
+    // Merge params:
     mergeIntoIfMissing(params, SmartTableDefaults);
 
     // BOX: Component container
@@ -173,8 +194,8 @@ const SmartTable = function (params = {}) {
 
     // *** PRIVATE VARIABLES:
     const DEFAULT_CELL_WIDTH = 100;
-    const SORT_ICON_SIZE = 22;
     const SCROLL_CENTER_HEIGHT = 50;
+    const CELL_TOOLTIP_DELAY = 300; // ms: the mouse rests on a cell before its bubble shows (no bubbles while it moves)
     const LOADING_ICON_SIZE = 32;
     const SEARCH_TITLE_MAX_WIDTH = "160px";
     const FILTER_DELAY = 50; // ms
@@ -183,6 +204,9 @@ const SmartTable = function (params = {}) {
     const TEST_DATA_REPEAT_COUNT = 100000;
     const DEFAULT_LOCALE = "tr-TR"; // WHY: the numbers were always Turkish before (2026-11-04); a page with no language keeps them
     const targetItemHeight = box.itemHeight; // fitLineCount: the height of a row, before the rows share the height
+    let hoveredCell = null; // the cell under the mouse (the bubble of a cut text: showCellTooltip)
+    let cellTooltip = null; // the bubble of a cut text (Tooltip.show), null: none
+    let cancelCellTooltipTimer = null;
 
     // *** PRIVATE FUNCTIONS:
 
@@ -261,6 +285,7 @@ const SmartTable = function (params = {}) {
 
         // WHY: Menü page üzerinde oluşturuluyor; box.remove() onu silmez. (Before the cascade: it detaches from its target label.)
         if (box.searchTitleMenu) box.searchTitleMenu.remove();
+        closeCellTooltip(); // WHY: the bubble is on the page too
 
         superRemove.call(box); // NOTE: basic.js remove(). It cleans all the events (listenTo too) and the objects inside.
         box = null;
@@ -325,6 +350,7 @@ const SmartTable = function (params = {}) {
 
         box.setVerticalScrollEnabled(dataList.length > lineCount);
         box.updateInfoLabel();
+        refreshCellTooltip();
 
     };
 
@@ -397,14 +423,16 @@ const SmartTable = function (params = {}) {
 
     box.createSortIcon = function (titleCell) {
 
+        const iconSize = box.style.sortIcon.size;
+
         startBox({
             align: "right center",
             color: box.style.boxSort.color,
             round: 100,
             border: 0,
             borderColor: "rgba(0,0,0,0.1)",
-            width: SORT_ICON_SIZE,
-            height: SORT_ICON_SIZE,
+            width: iconSize,
+            height: iconSize,
             right: 2,
             padding: [4, 0],
             position: "absolute",
@@ -414,11 +442,11 @@ const SmartTable = function (params = {}) {
         that.center("top");
 
         titleCell.icon = Icon({
-            width: SORT_ICON_SIZE,
-            height: SORT_ICON_SIZE,
+            width: iconSize,
+            height: iconSize,
             left: 0,
             top: 0,
-            opacity: 0.5,
+            opacity: box.style.sortIcon.opacity,
         });
         that.setMotion("opacity 0.3s, transform 0.3s");
         that.load(box.style.sortIconFile);
@@ -434,7 +462,7 @@ const SmartTable = function (params = {}) {
         box.titleCellList.forEach(function (titleCell, titleCellIndex) {
             if (titleCellIndex != currentTitleCell.titleCellIndex) {
                 titleCell.icon.rotate = 0;
-                titleCell.icon.opacity = 0.5;
+                titleCell.icon.opacity = box.style.sortIcon.opacity;
                 titleCell.sortDirection = "";
             }
         });
@@ -471,6 +499,7 @@ const SmartTable = function (params = {}) {
             ...box.style.lblTitleCell,
         });
         that.css.fontFamily = box.style.lblTitleCell.fontFamily;
+        if (box.style.titleUppercase == 1) that.css.textTransform = "uppercase";
 
         endAutoLayout();
 
@@ -514,7 +543,7 @@ const SmartTable = function (params = {}) {
             titleCell.icon.rotate = 180;
         }
 
-        titleCell.icon.opacity = 1;
+        titleCell.icon.opacity = box.style.sortIcon.activeOpacity;
 
     };
 
@@ -539,6 +568,7 @@ const SmartTable = function (params = {}) {
     // Tüm bilgi satırlarını oluştur.
     box.createItemLines = function () {
 
+        setHoveredCell(null); // WHY: the cell under the mouse is removed with its row
         // WHY remove(): the objects of the old rows (and of the cells of the page) are cleaned, not only taken off the page
         box.itemLineList.forEach(function (itemLine) { itemLine.remove(); });
         box.itemLineList = [];
@@ -608,6 +638,7 @@ const SmartTable = function (params = {}) {
     };
 
     const getSelectedBarShadow = function () {
+        if (!box.style.selectedBar.width) return "none";
         // WHY + the border: the edge of the table (style.boxBorder) is drawn over the first px of the row
         const width = (basic.num(box.style.boxBorder.border) || 0) + box.style.selectedBar.width;
         return "inset " + width + "px 0 0 " + box.style.selectedBar.color;
@@ -616,6 +647,87 @@ const SmartTable = function (params = {}) {
     const getSelectedColor = function () {
         return box.style.selectedItemCellColor || box.style.highlightItemCellColor;
     };
+
+    // *** THE BUBBLE OF A CUT TEXT (showCellTooltip: 1):
+
+    const onCellHoverChange = function (cell, isOver) {
+        if (isOver) {
+            setHoveredCell(cell);
+            return;
+        }
+        if (hoveredCell === cell) setHoveredCell(null);
+    };
+
+    const setHoveredCell = function (cell) {
+        hoveredCell = cell;
+        planCellTooltip();
+    };
+
+    // The bubble waits until the mouse rests on the cell
+    const planCellTooltip = function () {
+        closeCellTooltip();
+        if (!hoveredCell || box.showCellTooltip != 1) return;
+        cancelCellTooltipTimer = box.after(CELL_TOOLTIP_DELAY, openCellTooltip);
+    };
+
+    const openCellTooltip = function () {
+
+        cancelCellTooltipTimer = null;
+        const text = getCutText(hoveredCell);
+
+        // WHY: without comp/tooltip.js the browser's own hint (the title of the cell) shows the text
+        if (typeof Tooltip === "undefined") {
+            hoveredCell.elem.title = text;
+            return;
+        }
+
+        if (!text) return;
+        cellTooltip = Tooltip.show(hoveredCell, text, box.style.cellTooltip, "top", function (bubble) {
+            createTooltipText(text, bubble.look);
+        });
+        cellTooltip.cellText = text;
+
+    };
+
+    // The whole text of a cell whose text does not fit (its end is "..."). "": it fits, or the row has no record.
+    const getCutText = function (cell) {
+        // WHY itemData: a row with no record keeps the text of its last record, unseen
+        if (!cell.itemLine.itemData) return "";
+        const label = cell.label.elem;
+        // (a hidden label, Ex: a cell of createCustomItemCell, is 0 px wide: it fits)
+        if (label.scrollWidth <= label.clientWidth) return "";
+        return label.textContent;
+    };
+
+    // LABEL: The whole text in the bubble (a long text goes on more lines: look.maxWidth)
+    const createTooltipText = function (text, look) {
+        Label({
+            plainText: text,
+            fontSize: look.fontSize,
+            textColor: look.textColor,
+            css: { whiteSpace: "normal", overflowWrap: "anywhere", width: "max-content", maxWidth: look.maxWidth + "px" },
+        });
+    };
+
+    const closeCellTooltip = function () {
+        if (cancelCellTooltipTimer) cancelCellTooltipTimer();
+        cancelCellTooltipTimer = null;
+        if (cellTooltip) cellTooltip.remove();
+        cellTooltip = null;
+    };
+
+    // The rows were filled again (a scroll, a filter, a click): a bubble with an old text is made again
+    const refreshCellTooltip = function () {
+        if (!hoveredCell) return;
+        if (cellTooltip && cellTooltip.cellText === hoveredCell.label.elem.textContent) return;
+        planCellTooltip();
+    };
+
+    box.setShowCellTooltip = function (value) {
+        box.showCellTooltip = basic.isOn(value) ? 1 : 0;
+        planCellTooltip();
+    };
+    // USAGE: smartTable.setShowCellTooltip(0)
 
     // Hücre oluştur.
     box.createItemCell = function (cellWidth, titleDataIndex, itemLine) {
@@ -655,6 +767,11 @@ const SmartTable = function (params = {}) {
         itemCell.on("mouseout", function (self, event) {
             itemLine.isHover = 0;
             paintItemLine(itemLine);
+        });
+
+        itemCell.itemLine = itemLine; // (a row with no record shows no bubble)
+        itemCell.onHoverChange(function (self, isOver) {
+            onCellHoverChange(itemCell, isOver);
         });
 
         itemCell = box.createCustomItemCell(itemCell, titleDataIndex);
@@ -1549,3 +1666,112 @@ SmartTable.toSearchText = function (value) {
     return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ı/g, "i");
 };
 SmartTable.NOT_ASCII = /[^\u0000-\u007f]/;
+
+// *** STYLE PACKAGES:
+// USAGE: SmartTable({ styleName: "dark" })
+// USAGE: SmartTable({ styleName: "dark", style: { lblItemCell: { fontSize: 14 } } }) // Change only some keys.
+// NOTE: A package is a package of params (it has a "style" key): its other keys (searchInputParams, scrollBarParams,
+//       searchTitleMenuParams) fill the params you did not give. A new package needs only the keys that differ from
+//       the classic look (SmartTableDefaults).
+SmartTable.styles = {
+
+    // The look of DataTable "classic": a light gray title line, striped rows, a soft yellow row under the mouse and
+    // a stronger one for the selected row; the filter box is the SearchInput "ozden". (SmartTableDefaults)
+    classic: { style: {} },
+
+    // The look of DataTable "dark", for a dark page; the filter box is the SearchInput "ozdenDark", the column list
+    // is the ContextMenu "dark".
+    dark: {
+        style: {
+            line1Color: "#232428",
+            line2Color: "#27292D",
+            highlightItemCellColor: "#2E3035",
+            selectedItemCellColor: "#24383A",
+            focusRingColor: "rgba(95, 179, 181, 0.7)",
+            highlightTitleCellColor: "#33353A",
+            // WHY its own icon: invertIconColor turns only the sort and the up / down arrows
+            btnScrollCenterIconFile: "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 50" fill="none" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 17.5v15M6.5 21 10 17.5 13.5 21M6.5 29 10 32.5 13.5 29"/></svg>'),
+            searchTitleCheckIconFile: "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#E6E6E6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17.5 19 7"/></svg>'),
+            invertIconColor: 1,
+            sortIcon: { size: 16, opacity: 0.3, activeOpacity: 1 },
+            cellTooltip: { color: "#2B2D31", textColor: "rgba(255, 255, 255, 0.88)", borderColor: "rgba(255, 255, 255, 0.14)", shadow: "0 8px 24px rgba(0, 0, 0, 0.5)" },
+            box: { color: "#232428" },
+            boxBorder: { border: 1, borderColor: "rgba(255, 255, 255, 0.12)" },
+            boxTitleLine: { color: "#2B2D31" },
+            boxTitleCell: { borderRight: "1px solid rgba(255, 255, 255, 0.08)", borderBottom: "1px solid rgba(255, 255, 255, 0.14)" },
+            lblTitleCell: { textColor: "rgba(255, 255, 255, 0.85)" },
+            boxItemCell: { borderBottom: "1px solid rgba(255, 255, 255, 0.06)" },
+            lblItemCell: { textColor: "rgba(255, 255, 255, 0.75)" },
+            boxInfoLine: { color: "#232428", borderTop: "1px solid rgba(255, 255, 255, 0.14)" },
+            lblBoxInfoLine: { textColor: "rgba(255, 255, 255, 0.5)" },
+            lblNoDataFound: { textColor: "rgba(255, 255, 255, 0.45)" },
+            lblSearchTitle: { color: "#33353A", textColor: "rgba(255, 255, 255, 0.7)", borderColor: "rgba(255, 255, 255, 0.14)" },
+            btnScrollCenter: { color: "#2B2D31", borderColor: "rgba(255, 255, 255, 0.2)" },
+            btnScrollUp: { color: "#2B2D31", borderColor: "rgba(255, 255, 255, 0.14)" },
+            btnScrollDown: { color: "#2B2D31", borderColor: "rgba(255, 255, 255, 0.14)" },
+        },
+        searchInputParams: { styleName: "ozdenDark" },
+        scrollBarParams: { bar_color: "#A0A0A0", bar_mouseOverColor: "#D0D0D0" },
+        searchTitleMenuParams: { styleName: "dark" },
+    },
+
+    // The look of SmartTable before the packages (2026-11-05): the green title line, a dark edge, big texts. Every
+    // key is here: a page that changes some of them over this look (styleName: "green") gets the rest from it.
+    green: {
+        style: {
+            width: "auto",
+            height: "auto",
+            round: 6,
+            line1Color: "white",
+            line2Color: "whitesmoke",
+            highlightItemCellColor: "#F3E7C2",
+            selectedItemCellColor: null, // null: highlightItemCellColor (the row under the mouse)
+            selectedBar: { width: 3, color: "rgba(95, 158, 160, 0.9)" },
+            focusRingColor: "rgba(95, 158, 160, 0.6)",
+            highlightTitleCellColor: White(0.2),
+            titleUppercase: 0,
+            verticalScrollWidth: 20,
+            verticalScrollMargin: 2,
+            btnScrollDownIconFile: "../comp/smart-table/down.png",
+            btnScrollUpIconFile: "../comp/smart-table/up.png",
+            btnScrollCenterIconFile: "../comp/smart-table/scroll.png",
+            sortIconFile: "../comp/smart-table/sort.png",
+            loadingIconFile: "../comp/smart-table/clock.png",
+            searchTitleCheckIconFile: "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#373836" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17.5 19 7"/></svg>'),
+            invertIconColor: 0,
+            sortIcon: { size: 22, opacity: 0.5, activeOpacity: 1 },
+            box: { color: "white" },
+            boxBorder: { border: 2, borderColor: Black(0.8) },
+            boxTitleLine: { color: "#65A293" },
+            boxTitleCell: { padding: [8, 0], borderRight: "1px solid rgba(0, 0, 0, 0.5)", borderBottom: "2px solid #141414" },
+            lblTitleCell: { fontSize: 20, fontFamily: "opensans", textColor: Black(0.8) },
+            boxItemCell: { borderBottom: "1px solid darkgray", borderRight: "1px solid rgba(0, 0, 0, 0.05)", padding: [8, 0] },
+            lblItemCell: { fontSize: 20, textColor: Black(0.75), fontFamily: "opensans" },
+            boxInfoLine: { color: "#E4E4E4", borderTop: "1px solid rgba(0, 0, 0, 0)" },
+            lblBoxInfoLine: { fontSize: 16, textColor: Black(0.85) },
+            lblNoDataFound: { color: "lightgray", textColor: Black(0.8), padding: [8, 2], fontSize: 14, round: 8, border: 1, borderColor: Black(0.4) },
+            // (the user, 2026-11-05: whitesmoke, as the pale lines of the table; the edge of the filter box)
+            lblSearchTitle: { color: "whitesmoke", textColor: Black(0.8), padding: [8, 2], fontSize: 14, round: 8, border: 1, borderColor: Black(0.15) },
+            btnScrollCenter: { color: "white", round: 100, border: 1, borderColor: "rgba(0,0,0,0.4)" },
+            btnScrollUp: { color: "lightgray", round: 100, border: 1, borderColor: "rgba(0, 0, 0, 0.6)" },
+            btnScrollDown: { color: "lightgray", round: 100, border: 1, borderColor: "rgba(0, 0, 0, 0.6)" },
+            boxSort: { color: "#65A293" },
+        },
+        searchInputParams: {
+            styleName: "classic",
+            width: "50%",
+            height: 36,
+            border: 1,
+            round: 8,
+            color: "white",
+            searchIconSize: 16,
+            placeholderText: "Filter",
+            fontSize: 16,
+            borderColor: Black(0.15), // (the user, 2026-11-05: light edges in the filter)
+            borderBottomStyle: "1px solid " + Black(0.15),
+            searchIconFile: "../comp/search-input-v2/filter.png",
+            searchIconOpacity: 0.8, // (the user, 2026-11-05: a softer filter icon, in tune with the edges)
+        },
+    },
+
+};

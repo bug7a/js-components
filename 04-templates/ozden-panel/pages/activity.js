@@ -523,6 +523,7 @@ const ActivityPage = function(params = {}) {
             HGroup({ width: "100%", height: 620, align: "left top" });
 
                 smartTable = SmartTable({
+                    styleName: "green", // WHY: the colors of the panel are made over this look (the keys it does not give come from it, not from "classic")
                     titleDataList: [
                         { name: "TIME", dataTitle: "time", dataType: "string", width: 180, shortable: 1 },
                         { name: "USER", dataTitle: "user", dataType: "string", width: 170, shortable: 1 },

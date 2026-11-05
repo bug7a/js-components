@@ -817,6 +817,49 @@
             table.remove();
         });
 
+        test("SmartTable: a cut text shows all of it in a bubble over its cell; the bubble goes with the mouse and with the table", async function () {
+            const longName = "Muhammed Abdurrahman Karaosmanoğlu Yılmazoğulları";
+            const table = SmartTable({ itemLineCount: 3, itemDataList: [{ id: 1, name: longName, email: "", active: 1 }, { id: 2, name: "Ali", email: "", active: 1 }], style: { width: 600, height: "auto" } });
+            await wait(150);
+            const findBubble = function (text) {
+                return [...document.querySelectorAll("[role=status]")].find(function (elem) { return elem.textContent === text; });
+            };
+            const cutCell = table.itemLineList[0].itemCell1; // (the name column is 100 px wide)
+            const shortCell = table.itemLineList[1].itemCell1;
+            shortCell.elem.dispatchEvent(new MouseEvent("mouseenter"));
+            await wait(400);
+            const hasShortBubble = Boolean(findBubble("Ali"));
+            shortCell.elem.dispatchEvent(new MouseEvent("mouseleave"));
+            cutCell.elem.dispatchEvent(new MouseEvent("mouseenter"));
+            await wait(400);
+            const hasCutBubble = Boolean(findBubble(longName));
+            cutCell.elem.dispatchEvent(new MouseEvent("mouseleave"));
+            const isGoneWithMouse = !findBubble(longName);
+            check("SmartTable: a cut text shows all of it in a bubble over its cell (a text that fits: no bubble)",
+                hasCutBubble && !hasShortBubble, "cut: " + hasCutBubble + ", fits: " + hasShortBubble);
+            cutCell.elem.dispatchEvent(new MouseEvent("mouseenter"));
+            await wait(400);
+            table.remove();
+            check("SmartTable: the bubble goes when the mouse leaves the cell and when the table is removed",
+                isGoneWithMouse && !findBubble(longName), "after the mouse: " + isGoneWithMouse);
+        });
+
+        test("SmartTable: classic is the default; a page's own style over \"green\" keeps the other keys of that look", async function () {
+            const classicTable = SmartTable({ itemLineCount: 2, style: { width: 400, height: "auto" } });
+            const greenTable = SmartTable({ itemLineCount: 2, styleName: "green", style: { width: 400, height: "auto", line2Color: "#EEEEEE" } });
+            const darkTable = SmartTable({ itemLineCount: 2, styleName: "dark", style: { width: 400, height: "auto" } });
+            await wait(150);
+            const isClassic = (classicTable.style.boxTitleLine.color === "whitesmoke" && classicTable.searchInputParams.styleName === "ozden");
+            const isGreen = (greenTable.style.boxTitleLine.color === "#65A293" && greenTable.style.line2Color === "#EEEEEE" && greenTable.searchInputParams.styleName === "classic");
+            const isDark = (darkTable.style.line1Color === "#232428" && darkTable.searchInputParams.styleName === "ozdenDark" && darkTable.style.lblItemCell.fontSize === 15);
+            const isPackageKept = (SmartTable.styles.green.style.line2Color === "whitesmoke");
+            check("SmartTable: classic is the default; a page's own style over \"green\" keeps the other keys of that look",
+                isClassic && isGreen && isDark && isPackageKept, "classic: " + isClassic + ", green: " + isGreen + ", dark: " + isDark + ", package kept: " + isPackageKept);
+            classicTable.remove();
+            greenTable.remove();
+            darkTable.remove();
+        });
+
         // *** FORM (comp/form.js)
 
         test("Form: a press that is not a click does not send; a click sends once", async function () {
