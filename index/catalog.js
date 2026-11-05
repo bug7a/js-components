@@ -107,7 +107,7 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "select-box", name: "SelectBox", cat: "selection",
-        source: "comp/select-box.js", deps: ["comp/search-input-v2.js"], samples: ["02-comp-examples/select-box.htm", "02-comp-examples/select-box-ozden-item.htm", "02-comp-examples/select-box-ozden-text.htm"],
+        source: "comp/select-box.js", deps: ["comp/search-input-v2.js"], samples: ["02-comp-examples/select-box.htm", "02-comp-examples/select-box-ozden-item.htm", "02-comp-examples/select-box-ozden-text.htm", "02-comp-examples/select-box-ozden-dark-text.htm"],
         en: "Dropdown select for single or multiple selection, with select all and clear.",
         tr: "Tekli veya çoklu seçim için açılır liste; tümünü seç ve temizle düğmeleri.",
     },

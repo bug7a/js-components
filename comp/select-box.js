@@ -30,11 +30,11 @@ UI COMPONENT TEMPLATE
 - Your own field: createValueView(option, field, self) draws the selected option in the field with your
   objects (single selection; the placeholder and the multiple text stay as they are).
 - Style packages: "classic" (default), "dark", "ozden" (the look of the old comp-m1 SelectItem / SelectText
-  as a package of params: 350 x 50, a search box, the list goes down to the bottom of the page).
-  Select with styleName. (SelectBox.styles) ("legacy" was merged into "ozden" on 2026-10-31.)
+  as a package of params: 350 x 50, a search box, the list goes down to the bottom of the page), "ozdenDark" (the
+  same on a dark page). Select with styleName. (SelectBox.styles) ("legacy" was merged into "ozden" on 2026-10-31.)
   NEW PROJECTS (the user, 2026-11-05): use "classic" (the default) on a light page and "dark" on a dark page, the
-  looks of 02-comp-examples/select-box.htm, unless the user asks for another look ("ozden" only when asked: the
-  look of the old comp-m1 SelectItem / SelectText).
+  looks of 02-comp-examples/select-box.htm, unless the user asks for another look ("ozden" / "ozdenDark" only when
+  asked: the look of the old comp-m1 SelectItem / SelectText).
 - scale: multiplies every size (the style, width / height / panelMinWidth / panelMaxHeight, the spaces in the
   code, the search box, the rows, the checks). Its default is basic.uiScale: on a page fitted with page.fit()
   (basic.uiScale = 1 / page.zoom) the field and its list keep their size on the screen. The objects of
@@ -114,7 +114,7 @@ const SelectBoxDefaults = {
     onChange: function (self) { }, // self.value, self.getSelectedOptions()
     onOpen: function (self) { },
     onClose: function (self) { },
-    styleName: "classic", // "classic", "dark", "ozden" or a name added to SelectBox.styles
+    styleName: "classic", // "classic", "dark", "ozden", "ozdenDark" or a name added to SelectBox.styles
     style: { // Classic style package (default)
         field: {
             color: White(1),
@@ -1749,6 +1749,40 @@ SelectBox.styles.ozden = {
         scrollBar: { bar_color: "#373836", bar_mouseOverColor: "#373836", bar_opacity: 0.4, bar_mouseOverOpacity: 0.9, neverHide: 1, showDots: 1 },
     },
 };
+
+// The dark theme of ozden (the user, 2026-11-05): the shapes of ozden in the dark tones of the kit, as ItemList
+// ozdenDark: a field and a list of #1A1A19 (on a darker page, Ex: #141414), the active row #262624 with a thin light
+// line above and under it, the selected one half transparent, the ozdenDark search box (02-comp-examples/
+// select-box-ozden-dark-text.htm). Only the colors are here: the sizes and the params come from ozden (below).
+SelectBox.styles.ozdenDark = {
+    style: {
+        field: { color: "#1A1A19", borderColor: White(0.22) },
+        fieldHover: { borderColor: White(0.22) },
+        fieldFocus: { borderColor: White(0.22) },
+        fieldText: { textColor: White(0.88) },
+        placeholder: { textColor: White(0.4) },
+        arrow: { color: "white" },
+        panel: { color: "#1A1A19", borderColor: White(0.22) },
+        searchInput: { styleName: "ozdenDark", color: "#262624" },
+        search: { color: "#262624", textColor: White(0.88), borderBottom: "2px solid " + White(0.06) },
+        option: { textColor: White(0.88) },
+        optionActive: { color: "#262624", lineColor: White(0.14) },
+        optionSelected: { textColor: White(0.88), checkColor: "#E6E6E4", checkTickColor: "#1A1A19" },
+        description: { textColor: White(0.45) },
+        group: { textColor: White(0.45) },
+        empty: { textColor: White(0.45) },
+        footerButton: { textColor: White(0.8) },
+        divider: { color: White(0.08) },
+        itemListStyleName: "ozdenDark",
+        itemList: {
+            hover: { color: "#262624", lineColor: White(0.14) },
+            check: { color: "#E6E6E4", iconColor: "#1A1A19", borderColor: White(0.3) },
+        },
+        scrollBar: { bar_color: "#CFCFCD", bar_mouseOverColor: "#CFCFCD" },
+    },
+};
+// WHY: The shapes, the sizes and the params of ozden (350 x 50, the search box, the list to the bottom of the page).
+mergeIntoIfMissing(SelectBox.styles.ozdenDark, SelectBox.styles.ozden);
 
 // The old name of the dark package. (Kept: pages may use it.)
 SelectBox.DARK_STYLE = SelectBox.styles.dark;

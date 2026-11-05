@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>SelectBox - ozdenDark (text rows)</title>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+
+    <script src="../comp/search-input-v2.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/select-box.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+    /* Bismillah */
+
+    // SelectBox with styleName: "ozdenDark": the dark theme of ozden (select-box-ozden-text.htm) on a dark page:
+    // a field and a list of #1A1A19, the active row #262624 with a thin light line above and under it, the ozdenDark
+    // search box. The package gives the size (350 x 50) and the search box; fullHeightList: 1 opens the list from the
+    // top of the page to its bottom.
+
+    const FRUITS_PATH = "../assets/fruids/";
+    const PAGE_COLOR = "#141414"; // WHY: a little darker than the field (#1A1A19), as the white page under the whitesmoke field of ozden
+
+    const FRUITS = [
+        { value: "Broccoli", label: "Broccoli", description: "Vegetable", iconFile: FRUITS_PATH + "brokoli.png" },
+        { value: "Strawberry", label: "Strawberry", description: "Fruit", iconFile: FRUITS_PATH + "cilek.png" },
+        { value: "Tomato", label: "Tomato", description: "Vegetable", iconFile: FRUITS_PATH + "domates.png" },
+        { value: "Apple", label: "Apple", description: "Fruit", iconFile: FRUITS_PATH + "elma.png" },
+        { value: "Carrot", label: "Carrot", description: "Vegetable", iconFile: FRUITS_PATH + "havuc.png" },
+        { value: "Watermelon", label: "Watermelon", description: "Fruit", iconFile: FRUITS_PATH + "karpuz.png" },
+        { value: "Lemon", label: "Lemon", description: "Fruit", iconFile: FRUITS_PATH + "limon.png" },
+        { value: "Banana", label: "Banana", description: "Fruit", iconFile: FRUITS_PATH + "muz.png" },
+        { value: "Pomegranate", label: "Pomegranate", description: "Fruit", iconFile: FRUITS_PATH + "nar.png" },
+        { value: "Eggplant", label: "Eggplant", description: "Vegetable", iconFile: FRUITS_PATH + "patlican.png" },
+        { value: "Blueberry", label: "Blueberry", description: "Fruit", iconFile: FRUITS_PATH + "yabanmersini.png" },
+        { value: "Green Pepper", label: "Green Pepper", description: "Vegetable", iconFile: FRUITS_PATH + "yesilbiber.png" },
+    ];
+
+
+    let fruitSelect = null;
+
+    const start = function () {
+
+        page.color = PAGE_COLOR;
+
+        fruitSelect = SelectBox({
+            styleName: "ozdenDark",
+            fullHeightList: 1,
+            options: FRUITS.map(function (fruit) { return fruit.label; }),
+            value: "Tomato",
+            onChange: function (self) { println(self.value); },
+        });
+        fruitSelect.center();
+
+    };
+
+    </script>
+
+</head>
+<body>
+</body>
+</html>
