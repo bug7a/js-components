@@ -12,6 +12,7 @@
     <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
 
     <!-- COMPONENT FILES -->
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/radio-button.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
@@ -20,6 +21,8 @@
 
         // *** VARIABLES:
         let lblSize, lblPayment, lblPlan, rdoPremium;
+
+        const CARD_MAX_WIDTH = 420;
 
         const paymentList = [
             { value: "card", text: "Credit Card" },
@@ -44,7 +47,7 @@
                     height: "auto", // Grows with content, so the Box can scroll.
                     align: "center top",
                     gap: 30,
-                    padding: 50,
+                    padding: [16, 50], // WHY 16 at the sides: the cards fill a phone (390 px)
                 });
 
                     // LABEL: Title
@@ -83,9 +86,11 @@
 
                         // GROUP: Radio buttons
                         HGroup({
-                            width: "auto",
+                            width: "100%",
                             height: "auto",
+                            align: "left top",
                             gap: 16,
+                            wrap: 1, // WHY: the three of them do not fit in one line on a phone
                         });
 
                             paymentList.forEach(function (data) {
@@ -104,17 +109,24 @@
                             width: "auto",
                             height: "auto",
                             gap: 8,
+                            clipContent: 0, // WHY: a SmartButton lifts under the mouse
                         });
 
-                            Button({ text: "Select Cash", width: 120, height: 36, fontSize: 14 });
-                            that.on("click", function () {
-                                RadioButton.setValue("payment", "cash"); // Calls onChange
+                            SmartButton({
+                                tone: "white",
+                                labelText: "Select Cash",
+                                onClick: function () {
+                                    RadioButton.setValue("payment", "cash"); // Calls onChange
+                                },
                             });
 
-                            Button({ text: "Clear", width: 120, height: 36, fontSize: 14, color: "lightgray" });
-                            that.on("click", function () {
-                                RadioButton.clear("payment");
-                                refreshPayment();
+                            SmartButton({
+                                tone: "white",
+                                labelText: "Clear",
+                                onClick: function () {
+                                    RadioButton.clear("payment");
+                                    refreshPayment();
+                                },
                             });
 
                         endGroup();
@@ -154,13 +166,16 @@
                         });
 
                         // GROUP: Enable premium
-                        HGroup({ width: "auto", height: "auto", gap: 8 });
+                        HGroup({ width: "auto", height: "auto", gap: 8, clipContent: 0 });
 
-                            Button({ text: "Enable Premium", width: 150, height: 36, fontSize: 14, color: "lightgray" });
-                            that.on("click", function (self) {
-                                rdoPremium.setEnabled(rdoPremium.enabled ? 0 : 1);
-                                rdoPremium.setLabelText("Premium" + (rdoPremium.enabled ? "" : " (disabled)"));
-                                self.text = (rdoPremium.enabled ? "Disable" : "Enable") + " Premium";
+                            SmartButton({
+                                tone: "white",
+                                labelText: "Enable Premium",
+                                onClick: function (self) {
+                                    rdoPremium.setEnabled(rdoPremium.enabled ? 0 : 1);
+                                    rdoPremium.setLabelText("Premium" + (rdoPremium.enabled ? "" : " (disabled)"));
+                                    self.setText((rdoPremium.enabled ? "Disable" : "Enable") + " Premium");
+                                },
                             });
 
                         endGroup();
@@ -221,7 +236,7 @@
         // GROUP: A white card with a title.
         const startCard = function (title) {
             VGroup({
-                width: 420,
+                width: "100%",
                 height: "auto",
                 align: "left top",
                 gap: 12,
@@ -231,6 +246,7 @@
                 border: 1,
                 borderColor: Black(0.1),
             });
+            that.elem.style.maxWidth = CARD_MAX_WIDTH + "px"; // WHY: basic.js has no maxWidth prop
             Label({
                 text: title,
                 fontSize: 14,
