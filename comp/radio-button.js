@@ -67,14 +67,14 @@ const RadioButtonDefaults = {
         },
         checkedMark: { // Checked circle
             color: White(1),
-            borderColor: "#141414",
+            borderColor: "#242424", // (the user, 2026-11-05: the checked color of CheckBox; was #141414)
         },
         hoverMark: { // Mouse over (the empty circle)
             color: null, // null: uses mark.color (2026-11-04: a package could not change it)
             borderColor: Black(0.7),
         },
         dot: {
-            color: "#141414",
+            color: "#242424", // (the user, 2026-11-05: as the edge above)
             size: 0.5, // Ratio of the inner circle size (0 - 1)
             round: 100,
         },
