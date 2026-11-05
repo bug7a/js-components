@@ -14,10 +14,13 @@
 
     <!-- COMPONENT FILES -->
     <script src="../comp/gauge.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
         /* Bismillah */
+
+        const CARD_MAX_WIDTH = 600;
 
         // *** VARIABLES:
         let ring, nozzle, bed, arc270, modernRing;
@@ -28,7 +31,8 @@
 
             startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
 
-                VGroup({ width: "100%", height: "auto", align: "center top", gap: 30, padding: 50 });
+                // WHY 16 at the sides: the cards fill a phone (390 px)
+                VGroup({ width: "100%", height: "auto", align: "center top", gap: 30, padding: [16, 50] });
 
                     Label({ text: "Gauge", fontSize: 26, fontFamily: "opensans-bold" });
 
@@ -44,10 +48,10 @@
                             });
                         endGroup();
 
-                        HGroup({ hug: 1, gap: 8 });
+                        HGroup({ hug: 1, gap: 8, clipContent: 0 }); // WHY clipContent: a pressed SmartButton is not cut
                             addButton("+15%", function () { ring.setValue(Math.min(100, ring.value + 15)); });
                             addButton("−15%", function () { ring.setValue(Math.max(0, ring.value - 15)); });
-                            addButton("Low", function () { ring.setBarColor("#F2B24C"); ring.setSubText("Low"); });
+                            addButton("Low", function () { ring.setBarColor("#F2B24C"); ring.setSubText("Low"); }, "yellowDark");
                         endGroup();
 
                     endCard();
@@ -55,7 +59,7 @@
                     // SAMPLE 2: Half arc
                     startCard("2. Half arc (startAngle: -90, sweepAngle: 180)", "Two heaters. The white line is the target.", 1);
 
-                        HGroup({ width: "100%", height: "auto", align: "center center", gap: 30 });
+                        HGroup({ width: "100%", height: "auto", align: "center center", gap: 30, wrap: 1 }); // (a phone: one under the other)
                             nozzle = Gauge({
                                 width: 200, height: 130,
                                 styleName: "dark",
@@ -79,7 +83,7 @@
                     // SAMPLE 3: Other sweeps and styles
                     startCard("3. Any sweep, any style", "sweepAngle: 270 and the modern package.");
 
-                        HGroup({ width: "100%", height: "auto", align: "center center", gap: 30 });
+                        HGroup({ width: "100%", height: "auto", align: "center center", gap: 30, wrap: 1 }); // (a phone: one under the other)
                             arc270 = Gauge({
                                 width: 170, height: 170,
                                 startAngle: -135, sweepAngle: 270,
@@ -104,11 +108,12 @@
 
         const startCard = function (title, description = "", isDark = 0) {
             VGroup({
-                width: 600, height: "auto", align: "left top", gap: 16, padding: 20,
+                width: "100%", height: "auto", align: "left top", gap: 16, padding: 20,
                 color: (isDark) ? "#1C1C1B" : "white",
                 round: 10, border: 1, borderColor: (isDark) ? "#1C1C1B" : Black(0.1),
             });
             that.elem.style.alignItems = "stretch";
+            that.css.maxWidth = CARD_MAX_WIDTH + "px"; // (basic.js has no maxWidth prop)
             Label({ text: title, fontSize: 14, textColor: (isDark) ? White(0.5) : Black(0.45) });
             if (description) {
                 Label({ text: description, fontSize: 13, textColor: (isDark) ? White(0.4) : Black(0.35) });
@@ -118,10 +123,9 @@
 
         const endCard = function () { endGroup(); };
 
-        const addButton = function (text, onClick) {
-            const btn = Button({ text: text, width: 90, height: 34, fontSize: 14 });
-            btn.on("click", onClick);
-            return btn;
+        // BUTTON: a SmartButton of the kit for the dark card (tone: "" is the gray of the template)
+        const addButton = function (text, onClick, tone = "") {
+            return SmartButton({ styleName: "ozdenType1Dark", tone: tone, labelText: text, onClick: onClick });
         };
 
     </script>
