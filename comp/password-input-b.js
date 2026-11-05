@@ -140,16 +140,20 @@ const PasswordInputB = function(params = {}) {
 
     endAutoLayout();
 
+    // The hint of the show password button has the look of the hints of the field (tooltipStyle of the package).
+    // WHY (the user, 2026-11-05): it was always white with a dark text, also on a dark field (ozdenDark, dark).
+    //     Its bubble: tooltipStyle.color, or hintColor when that is "" (the warning hint takes the color of its ball).
+    const hintStyle = box.tooltipStyle;
     box.btnShowPassword.tooltip = Tooltip({
         target: box.btnShowPassword,
         hintText: "",
         hintPosition: "left",
-        lbl_border: 1,
-        lbl_color: "white",
-        lbl_textColor: "#141414",
-        lbl_borderColor: "#141414",
-        lbl_fontSize: 14,
-        lbl_round: box.tooltipStyle.round, // (the round of the warning hint of the field: one value, 2026-11-05)
+        lbl_border: hintStyle.border,
+        lbl_color: hintStyle.color || hintStyle.hintColor,
+        lbl_textColor: hintStyle.textColor,
+        lbl_borderColor: hintStyle.borderColor,
+        lbl_fontSize: hintStyle.fontSize,
+        lbl_round: hintStyle.round,
     });
     // WHY: The tooltip may be made outside the box (after InputB is closed); box.own() removes it with the box.
     box.own(box.btnShowPassword.tooltip);

@@ -2265,6 +2265,19 @@
             login.remove();
         });
 
+        // 2026-11-05 (the user): the show password hint was white on the dark login page
+        test("PasswordInputB: the show password hint takes the hint look of the field (white on classic, dark on ozdenDark and dark)", async function () {
+            const fields = ["classic", "ozdenDark", "dark"].map(function (styleName) {
+                return PasswordInputB({ titleText: "Password", styleName: styleName });
+            });
+            const colors = fields.map(function (field) { return field.btnShowPassword.tooltip.lbl_color; });
+            const textColors = fields.map(function (field) { return field.btnShowPassword.tooltip.lbl_textColor; });
+            check("PasswordInputB: the show password hint takes the hint look of the field (white on classic, dark on ozdenDark and dark)",
+                colors[0] === "white" && textColors[0] === "#141414" && colors[1] === "#262624" && colors[2] === "#262624",
+                "bubbles: " + colors.join(", ") + " | texts: " + textColors.join(", "));
+            fields.forEach(function (field) { field.remove(); });
+        });
+
         test("Toggle: disabled under the mouse, it stays disabled when the mouse leaves", async function () {
             const toggle = Toggle({ value: 1 });
             toggle.elem.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));

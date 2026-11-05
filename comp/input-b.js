@@ -51,7 +51,8 @@ WebSite: https://bug7a.github.io/js-components
 -- "color": Top-right colored ball (requiredColor / warningColor).
 -- "icon": Top-right icon (requiredIcon / warningIcon). Empty path uses the built-in icon.
 
-- tooltipStyle: { color, textColor, border, borderColor, round, fontSize }
+- tooltipStyle: { color, hintColor, textColor, border, borderColor, round, fontSize }
+-- hintColor: the bubble of a button of the field (the show password button of PasswordInputB) when color is "".
 -- The tooltip of the warning ball. color "": requiredColor / warningColor (the old look).
 
 - styleName: "classic" (default) | "dark" | "ozden" | "ozdenDark"  (InputB.styles)
@@ -117,9 +118,11 @@ const InputBDefaults = {
     warningIcon: "", // image path or data URI. "": built-in icon
     requiredIconColor: "#373836", // built-in required icon color (built-in warning icon uses warningColor)
 
-    // The tooltip of the warning ball (required / warning text)
+    // The tooltip of the warning ball (required / warning text), and of the buttons of the field (the show password
+    // button of PasswordInputB)
     tooltipStyle: {
         color: "", // "": requiredColor / warningColor
+        hintColor: "white", // a button of the field has no ball: its bubble when color is "" (the user, 2026-11-05)
         textColor: "#141414",
         border: 1,
         borderColor: "#141414",
@@ -675,6 +678,7 @@ InputB.styles = {
         warningColor: "indianred", // classic #E5885E (the user's choice, 2026-10-27)
 
         tooltipStyle: {
+            hintColor: "#262624", // the show password button: a dark bubble (it was white on the dark field)
             textColor: White(0.9), // classic #141414 on a white ball
             borderColor: White(0.75), // classic #141414
         },
