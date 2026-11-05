@@ -12,6 +12,9 @@ UI COMPONENT
   a new header. (Ex: "Pages", "Users", "Orders")
 - It is always created on the page and placed with fixed position, so it is never clipped by the
   bar or the group it is called from, and it stays on the screen on a small screen.
+- The width (2026-11-05, the user): maxWidth (default 380) whatever the width of the anchor; matchAnchorWidth: 1
+  makes the list as wide as the anchor, so both edges meet on a phone and on a wide screen (maxWidth is not used
+  then). Never wider than the screen. setMatchAnchorWidth(). Sample: 02-comp-examples/search-results.htm
 - The list scrolls with basic/scroll-bar.js (ScrollBar), not with the scrollbar of the browser.
 - attachTo(inputElement) does the whole keyboard work: ArrowUp / ArrowDown move, Enter opens,
   Escape closes, focus reopens the last results and blur closes them.
@@ -42,6 +45,7 @@ const SearchResultsDefaults = {
     key: "0",
     anchor: null, // The basic.js object the list opens under. (Ex: a SearchInput)
     anchorAlign: "right", // "right": the right edges meet, "left": the left edges meet.
+    matchAnchorWidth: 0, // 1: the list is as wide as the anchor (both edges meet; maxWidth is not used). setMatchAnchorWidth()
     maxWidth: 380,
     maxHeightRatio: 0.7, // Of the screen height.
     offsetY: 6, // Space between the anchor and the list.
@@ -269,12 +273,21 @@ const SearchResults = function (params = {}) {
 
     };
 
+    // The width of the list: maxWidth, or the width of the anchor (matchAnchorWidth). Never wider than the screen.
+    const getListWidth = function () {
+        const screenWidth = page.width - (box.screenMargin * 2);
+        const hasAnchor = (box.anchor && box.anchor.elem);
+        if (box.matchAnchorWidth != 1 || !hasAnchor) return Math.min(box.maxWidth, screenWidth);
+        const anchorWidth = withPageZoom(box.anchor.elem.getBoundingClientRect().width);
+        return Math.min(anchorWidth, screenWidth);
+    };
+
     // Under the anchor (over it when there is more room there), on the screen, as tall as its content up to the
     // maximum and to the room on the screen.
     const layout = function () {
 
         const padding = _s.box.padding || 0;
-        const width = Math.min(box.maxWidth, page.width - (box.screenMargin * 2));
+        const width = getListWidth(); // (as wide as the anchor: both values of anchorAlign give its left edge)
         box.width = width;
 
         // WHY: The height has to be a number, not "auto": the content is in a scrolling box and a
@@ -472,6 +485,12 @@ const SearchResults = function (params = {}) {
     // Place it again. (After the anchor moved, ex: the bar got narrower.)
     box.refresh = function () {
         if (box.isOpened === 1) layout();
+    };
+
+    // 1: the list is as wide as the anchor, 0: as wide as maxWidth.
+    box.setMatchAnchorWidth = function (value) {
+        box.matchAnchorWidth = value;
+        box.refresh();
     };
 
     // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.

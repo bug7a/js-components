@@ -71,7 +71,7 @@
                     Label({ text: "Search Results", fontSize: 26, fontFamily: "opensans-bold" });
 
                     // SAMPLE 1: Classic
-                    startCard("1. Default (classic) · SearchInput \"ozden\"", "Type \"a\" or \"ord\". ArrowUp / ArrowDown move, Enter opens, Escape closes. The list scrolls with ScrollBar.");
+                    startCard("1. Default (classic), matchAnchorWidth: 1", "SearchInput \"ozden\". Type \"a\" or \"ord\". ArrowUp / ArrowDown move, Enter opens, Escape closes. The list is as wide as the search box and scrolls with ScrollBar.");
 
                         // SEARCH INPUT: comp/search-input-v2.js, the package "ozden" (the user, 2026-11-05)
                         lightInput = SearchInput({
@@ -86,7 +86,7 @@
                     endCard();
 
                     // SAMPLE 2: Dark, left aligned
-                    startCard("2. styleName: \"dark\", anchorAlign: \"left\" · SearchInput \"ozdenDark\"", "The same component with the dark package, lined up with the left edge of the input.", 1);
+                    startCard("2. styleName: \"dark\", matchAnchorWidth: 1", "SearchInput \"ozdenDark\". The same component with the dark package, as wide as the search box.", 1);
 
                         // SEARCH INPUT: the package "ozdenDark" (the user, 2026-11-05)
                         darkInput = SearchInput({
@@ -108,8 +108,7 @@
 
             lightResults = SearchResults({
                 anchor: lightInput,
-                anchorAlign: "left",
-                maxWidth: 520,
+                matchAnchorWidth: 1, // as wide as the search box: both edges meet (on a phone too)
                 onSelect: function (self, item) {
                     lblLight.text = "Opened: " + item.text + "  (" + item.group + ")";
                     clearSearchInput(lightInput);
@@ -123,8 +122,7 @@
 
             darkResults = SearchResults({
                 anchor: darkInput,
-                anchorAlign: "left",
-                maxWidth: 520,
+                matchAnchorWidth: 1,
                 styleName: "dark",
                 onSelect: function (self, item) {
                     println("Opened: " + item.text);

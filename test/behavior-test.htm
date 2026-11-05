@@ -2521,6 +2521,22 @@
             field.remove();
         });
 
+        test("SearchResults: matchAnchorWidth: 1 opens the list as wide as its field", async function () {
+            const field = SearchInput({ left: 40, top: 100, width: 300 });
+            const results = SearchResults({ anchor: field, maxWidth: 200, matchAnchorWidth: 1 });
+            results.setItems([{ text: "Result 1" }, { text: "Result 2" }], "res");
+            await wait(50);
+            const fieldRect = field.elem.getBoundingClientRect();
+            const listRect = results.elem.getBoundingClientRect();
+            const bothEdgesMeet = Math.abs(listRect.left - fieldRect.left) < 1 && Math.abs(listRect.right - fieldRect.right) < 1;
+            check("SearchResults: matchAnchorWidth: 1 opens the list as wide as its field (both edges meet)", bothEdgesMeet, "field: " + Math.round(fieldRect.left) + "-" + Math.round(fieldRect.right) + ", list: " + Math.round(listRect.left) + "-" + Math.round(listRect.right));
+            results.setMatchAnchorWidth(0);
+            const width = results.elem.getBoundingClientRect().width;
+            check("SearchResults: setMatchAnchorWidth(0) gives the list the width of maxWidth again", Math.abs(width - 200) < 1, "width: " + Math.round(width));
+            results.remove();
+            field.remove();
+        });
+
         test("TinySelect: the list of a field near the bottom of the page is on the page", async function () {
             const select = TinySelect({ left: 100, top: page.height - 50, list: [1, 2, 3, 4, 5].map(function (n) { return { id: String(n), label: "Item " + n }; }) });
             TinySelect.createList(select);
