@@ -12,6 +12,9 @@ UI COMPONENT
   tabWidth (2026-11-05, the user): "auto" (default) is as wide as its tabs; a width (Ex: the panelWidth) makes the
   tabs share it. tabStyle: more keys of the style of that Tabs (pillBar, tab, pillActive, pillIndicator...), over the
   look made from the tab_ params.
+- LoginPageLightStyle: the params of a light page (...LoginPageLightStyle, or mergeIntoIfMissing). Its tab bar
+  (2026-11-05, the user): one light gray (#EFEFEF), the edge of the Google / Apple buttons (Black(0.2)), a white
+  selected tab with a soft shadow (its tabStyle). A page that gives its own tabStyle after it replaces that shadow.
 - The LOGIN / SIGN UP buttons (2026-11-05, the user): buttonStyleName "" (default) keeps the flat buttons in
   primaryColor; a SmartButton template (Ex: "ozdenType3") makes them SmartButtons of the kit, in buttonTone (Ex:
   "blue"), with the text color of the tone. A passive one has the passive look of SmartButton.
@@ -86,12 +89,17 @@ const LoginPageDefaults = {
 const LoginPageLightStyle = {
     panelName: "MY PANEL v25.08.11",
     primaryColor: "#65A293", // "#2C5A38", "#65A293"
-    tab_backgroundColorBottom: "whitesmoke", // "#242424", "whitesmoke"
-    tab_backgroundColorTop: "#DBDDDC", // "#242424", "#DBDDDC",
-    tab_border: 0, // 1, 0
-    tab_borderColor: Black(0), // White(0.1), Black(0.2),
+    // THE TAB BAR (the user, 2026-11-05): one light gray (the ozden fields under the mouse; it was a gradient from
+    // whitesmoke to #DBDDDC), the edge of the Google / Apple buttons (customLoginButton), a white selected tab
+    tab_backgroundColorBottom: "#EFEFEF", // "#242424", "#EFEFEF"
+    tab_backgroundColorTop: "#EFEFEF", // "#242424", "#EFEFEF",
+    tab_border: 1, // 1, 1
+    tab_borderColor: Black(0.2), // White(0.1), Black(0.2),
     tab_textColor: "#373836", // White(0.75), "#373836",
     tab_selectedColor: "white", // "#000000", "white",
+    tabStyle: {
+        pillIndicator: { shadow: "0 1px 2px rgba(0, 0, 0, 0.12)" }, // WHY: a white tab on the light gray is lost without it
+    },
     input_backgroundColor: "#F6F6F6", // "#141414", "#F6F6F6",
     input_lineColor: "transparent",
     input_selectedBackgroundColor: "#F3F4E0", // "#202020", "#F3F4E0",
