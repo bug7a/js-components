@@ -60,6 +60,7 @@ Pages load the source files (`name.js`). Components have no `.min.js` files.
 - A search box: `SearchInput` with `styleName: "ozden"`, or `"ozdenDark"` on a dark page.
 - A text field: `InputB` and the fields made from it (`EmailInputB`, `PhoneInputB`, `PasswordInputB`, `URLInputB`, `NumberInputB`, `CurrencyInputB`, `TextareaB`) with `styleName: "ozden"`, or `"ozdenDark"` on a dark page.
 - A list: `ItemList` with `styleName: "ozden"` (its default).
+- A dropdown select: `SelectBox` with its default look (`styleName: "classic"`), or `"dark"` on a dark page.
 - A loading view: `LoadingScreen`.
 
 ## Publish
