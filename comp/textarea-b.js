@@ -74,8 +74,10 @@ const TextareaB = function(params = {}) {
     // The textarea grows with its text (the inputBox scrolls).
     const autoGrow = function(elem) {
         elem.style.height = "auto"; // WHY: First reset, so scrollHeight is the height of the text (also when it got shorter).
+        // WHY: not drawn yet (a closed tab, a Dialog filled before it opens): scrollHeight is 0 and a 0 px textarea
+        //      could not be seen or clicked (2026-11-05). box.onResize grows it when it is shown.
+        if (elem.scrollHeight === 0) return;
         elem.style.height = elem.scrollHeight + "px";
-        elem.style.minHeight = "";
         // WHY: After the browser drew the new height.
         box.after(0, () => box.inputBox.scrollBar.refreshScroll());
     };
@@ -123,7 +125,9 @@ const TextareaB = function(params = {}) {
         textareaElem.classList.add("minimal");
         textareaElem.style.cssText = "background-color:transparent;font-size:20px;resize:none;width:100%;padding:0px 0px;box-sizing:border-box";
         textareaElem.style.overflow = "hidden";
-        textareaElem.style.minHeight = box.inputBox.height + "px";
+        // WHY a CSS size, not the measured one: the field is clickable in all its height, also when it is made hidden
+        //     (box.inputBox.height is 0 then) and after the text changed (autoGrow cleared the measured one)
+        textareaElem.style.minHeight = "calc(100% - 4px)";
         textareaElem.style.height = "auto";
         
         textareaElem.placeholder = box.placeholder;
@@ -187,8 +191,10 @@ const TextareaB = function(params = {}) {
     box.checkIfInputIsRequiredAndEmpty();
 
     refreshCount();
-    
-    textareaElem.style.minHeight = (box.inputBox.height - 4) + "px";
+
+    box.onResize(function() {
+        autoGrow(textareaElem); // WHY: a field made or filled while hidden gets its height when it is shown
+    });
 
     return endExtendedObject(box);
 

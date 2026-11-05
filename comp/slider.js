@@ -110,7 +110,9 @@ const Slider = function(params = {}) {
         thumbBox.left = newLeft;
         updateTrack(animated);
         // WHY round: parseInt cut the fraction of the position, so setValue(50) gave 49 (46 of 101 values were one less)
-        box.currentValue = (maxLeft > 0) ? Math.round(((newLeft / maxLeft) * valueRange) + minValue) : minValue;
+        // WHY only with a width: a slider not drawn yet (a closed tab, a hidden group: width 0) has no position to read;
+        //     its value became the minimum, and a settings page saved 0 (2026-11-05)
+        if (maxLeft > 0) box.currentValue = Math.round(((newLeft / maxLeft) * valueRange) + minValue);
         if (animated == 0) valueBox.dontMotion();
         valueBox.text = box.currentValue;
         valueBox.aline(thumbBox, "top", VALUE_BUBBLE_SPACE, "center");
@@ -153,6 +155,8 @@ const Slider = function(params = {}) {
         const newLeft = (val - minValue) * pixelsPerValue;
         showHideTracks(val, 1);
         updateThumbPosition(newLeft, 1);
+        box.currentValue = Math.round(val); // WHY: the value is the truth, not the position (width 0 while hidden)
+        valueBox.text = box.currentValue;
 
         if (isFirstRun) {
             isFirstRun = 0;

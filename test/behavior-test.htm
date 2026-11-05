@@ -2001,6 +2001,51 @@
             started.remove();
         });
 
+        // *** THE REVIEW OF comp/ (2026-11-05) - C: made in a hidden container, made in an open group
+
+        test("Slider: made in a hidden group it keeps its value, also one set while hidden", async function () {
+            const group = VGroup({ width: 400, height: 80, visible: 0 });
+                const slider = Slider({ width: "100%", currentValue: 60 });
+            endGroup();
+            const hiddenValue = slider.getValue();
+            slider.setValue(80);
+            const setWhileHidden = slider.getValue();
+            group.visible = 1;
+            await wait(200);
+            check("Slider: made in a hidden group it keeps its value, also one set while hidden", hiddenValue === 60 && setWhileHidden === 80 && slider.getValue() === 80, "hidden: " + hiddenValue + ", set while hidden: " + setWhileHidden + ", shown: " + slider.getValue());
+            group.remove();
+        });
+
+        test("TextareaB: filled while hidden, it is as tall as its field when shown", async function () {
+            const group = VGroup({ width: 400, height: 200, visible: 0 });
+                const note = TextareaB({ width: 360, height: 140, titleText: "Note" });
+            endGroup();
+            note.setInputValue("A saved note.");
+            group.visible = 1;
+            await wait(200);
+            const textHeight = note.textareaElem.getBoundingClientRect().height;
+            const fieldHeight = note.inputBox.elem.getBoundingClientRect().height;
+            check("TextareaB: filled while hidden, it is as tall as its field when shown", textHeight > 0 && textHeight >= fieldHeight - 6, "textarea: " + textHeight + ", field: " + fieldHeight);
+            group.remove();
+        });
+
+        test("SidePanel: made in an open group of the page, startBody() keeps every object in the panel", async function () {
+            const group = VGroup({ width: 300, height: 200 });
+                const panel = SidePanel({ side: "right", titleText: "Notes", opened: 1 });
+                panel.startBody();
+                    const first = SmartButton({ labelText: "One" });
+                    const second = SmartButton({ labelText: "Two" });
+                    const note = Label({ text: "Notes" });
+                panel.endBody();
+                const afterPanel = Label({ text: "in the group" });
+            endGroup();
+            const isInBody = [first, second, note].every(function (obj) { return panel.body.elem.contains(obj.elem); });
+            const isAfterInGroup = group.elem.contains(afterPanel.elem);
+            check("SidePanel: made in an open group of the page, startBody() keeps every object in the panel", isInBody && isAfterInGroup, "in the body: " + isInBody + ", the next label in the group: " + isAfterInGroup);
+            panel.remove();
+            group.remove();
+        });
+
         // *** RUN
 
         const runTests = async function () {

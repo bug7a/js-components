@@ -354,13 +354,20 @@ const SidePanel = function (params = {}) {
     };
 
     // The objects created between these two calls go into the body of the panel.
+    // WHY a group of their own (on the start / end stack, as PageControl.startPage and Tabs.startPanel): only the
+    //     default container was set. In a panel made while a group of the page was open, the endObject() of the first
+    //     component (or an endGroup()) in the body went back to that group, and the next objects were drawn outside
+    //     the panel (2026-11-05). The group has the gap and the alignment of the body, so the look is the same.
     box.startBody = function () {
         bodyStack.push(getDefaultContainerBox());
         setDefaultContainerBox(box.body);
+        const content = VGroup({ width: "100%", height: "auto", align: "left top", gap: _s.body.gap, color: "transparent", position: "relative" });
+        content.css.alignItems = "stretch";
         return box.body;
     };
 
     box.endBody = function () {
+        endGroup(); // the group of startBody()
         const previous = bodyStack.pop();
         if (previous) setDefaultContainerBox(previous);
     };
