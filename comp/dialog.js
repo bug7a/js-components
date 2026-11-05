@@ -29,6 +29,9 @@ NOTE: still in development (the user, 2026-10-29): more style packages come; the
 - variant: "centered" (the user, 2026-10-29): the title and the message in the middle, the buttons one under the other
   (as wide as the card; the primary / danger one first, on the gray band of the footer) and an icon at the top
   (topIconFile: a file or an "<svg" text: dark in a light gray circle). The look: style.centered.
+  topIconTone (the user, 2026-11-05): "cyan", "orange", "yellow", "green" or "blue" (the tones of SmartButton) puts
+  the icon in three tones of it (Dialog.ICON_TONES): a light circle, and in an "<svg" text the words LIGHT and STRONG
+  are filled in with a light and a strong tone (a two-tone icon; currentColor is the strong tone). "": gray.
 - Motion: the cover comes from nothing and the card rises 50 px while it comes (0.2 s); it goes at once; none with reduced motion.
 - Style packages: "ozden" (default). (Dialog.styles)
 - The buttons (the user, 2026-10-30): style.buttons[type] = { styleName, tone, style }: a template of SmartButton
@@ -80,7 +83,8 @@ const DialogDefaults = {
     removeOnClose: 1, // 0: close() only hides it; open() shows it again
     ariaLabel: "", // when there is no title
     variant: "", // "": the buttons in a row at the bottom; "centered": the texts in the middle, the buttons one under the other
-    topIconFile: "", // "centered": the icon at the top (a file, or an "<svg" text drawn with currentColor)
+    topIconFile: "", // "centered": the icon at the top (a file, or an "<svg" text drawn with currentColor or LIGHT / STRONG)
+    topIconTone: "", // "centered": "cyan", "orange", "yellow", "green", "blue": the circle and the icon in its tones; "": gray
     scale: null, // every size multiplied (Ex: 1.5). null: basic.uiScale (1 / page.zoom on a page fitted with page.fit())
     onOpen: function (dialog) { },
     onClose: function (dialog, reason, buttonKey) { }, // reason: "button", "escape", "cover", "api"
@@ -110,7 +114,7 @@ const DialogDefaults = {
             // (2026-10-30, the user: a light gray circle on white, a dark icon; was a dark circle on a gray area)
             iconArea: { height: 116, color: "white", round: 6 }, // the area at the top
             iconCircle: { size: 100, color: "#EEEEEE" },
-            icon: { size: 56, color: "#232323" },
+            icon: { size: 56, color: "#232323", lightColor: "#D2D2D0" }, // lightColor: LIGHT of a two-tone icon (no tone)
             buttonHeight: 48,
             buttonGap: 10,
             // The buttons are on the band of the footer (its color and line, the user 2026-10-30), one under the other
@@ -579,13 +583,29 @@ const Dialog = function (params = {}) {
         box.footer.css = { alignItems: "stretch", borderTop: LINE_WIDTH + "px solid " + _s.footer.lineColor, borderRadius: "0 0 " + _s.card.round + "px " + _s.card.round + "px", flexShrink: "0" };
     };
 
-    // The icon at the top: a dark icon in a light gray circle
+    // The colors of the icon at the top: three tones of topIconTone, else the gray of the style
+    const getTopIconLook = function () {
+        const tone = Dialog.ICON_TONES[box.topIconTone];
+        if (tone) return tone;
+        const _c = _s.centered;
+        return { circle: _c.iconCircle.color, light: _c.icon.lightColor, strong: _c.icon.color };
+    };
+
+    // WHY: the words LIGHT and STRONG in an "<svg" text are the places of the two colors of a two-tone icon
+    const fillIconColors = function (file, look) {
+        const text = String(file);
+        if (!text.trim().startsWith("<svg")) return file;
+        return text.split("LIGHT").join(look.light).split("STRONG").join(look.strong);
+    };
+
+    // The icon at the top: in a light circle (gray: a dark icon; topIconTone: the tones of SmartButton)
     const createTopIcon = function () {
         const _c = _s.centered;
+        const look = getTopIconLook();
         box.iconArea = HGroup({ width: "100%", height: _c.iconArea.height, align: "center center", color: _c.iconArea.color, round: _c.iconArea.round });
         box.iconArea.css = { flexShrink: "0", marginBottom: SECTION_SPACE + "px" };
-            HGroup({ width: _c.iconCircle.size, height: _c.iconCircle.size, align: "center center", color: _c.iconCircle.color, round: _c.iconCircle.size / 2 });
-                box.topIcon = createIconView(box.topIconFile, _c.icon);
+            HGroup({ width: _c.iconCircle.size, height: _c.iconCircle.size, align: "center center", color: look.circle, round: _c.iconCircle.size / 2 });
+                box.topIcon = createIconView(fillIconColors(box.topIconFile, look), { size: _c.icon.size, color: look.strong });
             endGroup();
         endGroup();
     };
@@ -593,11 +613,14 @@ const Dialog = function (params = {}) {
     // WHY two ways: an "<svg" text takes the color of the style (currentColor); a file keeps its own colors
     const createIconView = function (file, look) {
         if (String(file).trim().startsWith("<svg")) {
-            const label = Label({ width: look.size, height: look.size, text: file, textColor: look.color, css: { lineHeight: "0" } });
+            // WHY clipContent 0 and overflow visible: a part that moves (the lid of a bin that lifts) goes out of the
+            //     drawing for a moment; it was cut at the top (the user, 2026-11-05)
+            const label = Label({ width: look.size, height: look.size, text: file, textColor: look.color, clipContent: 0, css: { lineHeight: "0" } });
             const svg = label.elem.querySelector("svg");
             if (svg) {
                 svg.setAttribute("width", "100%");
                 svg.setAttribute("height", "100%");
+                svg.style.overflow = "visible";
             }
             return label;
         }
@@ -781,6 +804,7 @@ Dialog.confirm = function (params = {}) {
             style: params.style || {},
             variant: params.variant || "",
             topIconFile: params.topIconFile || "",
+            topIconTone: params.topIconTone || "",
             scale: params.scale,
             buttons: [
                 { key: "cancel", text: params.cancelText || "Cancel", type: "secondary" },
@@ -829,6 +853,7 @@ Dialog.alert = function (params = {}) {
             style: params.style || {},
             variant: params.variant || "",
             topIconFile: params.topIconFile || "",
+            topIconTone: params.topIconTone || "",
             scale: params.scale,
             buttons: [{ key: "ok", text: params.buttonText || "OK", type: params.buttonType || "primary" }],
             onClose: function () { resolve(); },
@@ -847,6 +872,7 @@ Dialog.prompt = function (params = {}) {
             style: params.style || {},
             variant: params.variant || "",
             topIconFile: params.topIconFile || "",
+            topIconTone: params.topIconTone || "",
             scale: params.scale,
             fields: [{ key: "value", titleText: params.fieldText || "", placeholder: params.placeholder || "", value: params.value || "", required: params.required ? 1 : 0, validate: params.validate }],
             buttons: [
@@ -858,6 +884,18 @@ Dialog.prompt = function (params = {}) {
     });
 };
 // USAGE: const name = await Dialog.prompt({ titleText: "Rename", value: "a.pdf", validate: (t) => (t.trim()) ? "" : "A name is needed." })
+
+// The tones of an icon at the top (topIconTone): the circle behind it, the LIGHT shape and the STRONG details, made
+// from the tones of SmartButton (the user, 2026-11-05: the icons of 02-comp-examples/dialog-centered.htm).
+// WHY STRONG this deep: the details read on the light shape (2.6:1) and on the circle (3.6:1), a white mark on it (3.9:1)
+Dialog.ICON_TONES = {
+    cyan: { circle: "#EAF6F7", light: "#A5D9DD", strong: "#36898F" },
+    orange: { circle: "#FBEFEA", light: "#EDBAA5", strong: "#C4532A" },
+    yellow: { circle: "#FDF8E7", light: "#F5D77D", strong: "#9A7409" },
+    green: { circle: "#EEF7EB", light: "#B6DEA9", strong: "#4A8F33" },
+    blue: { circle: "#E9F4F9", light: "#A0CFE5", strong: "#2E81A8" },
+};
+// USAGE: Dialog({ variant: "centered", topIconTone: "green", topIconFile: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="STRONG"/>...</svg>' })
 
 // *** STYLE PACKAGES:
 // USAGE: Dialog({ style: { card: { round: 12 } } }) // Change only some keys. (The width of the card is the param width.)

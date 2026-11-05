@@ -23,7 +23,8 @@
 
     // Dialog (comp-m4), variant: "centered": an icon at the top, the texts in the middle, the buttons one under
     // the other. A layout the user drew, with the colors of the ozden package. The icon is in a light circle of its
-    // color; it is drawn in two tones and moves once when its dialog opens.
+    // color (topIconTone: three tones of a tone of SmartButton); it is drawn in two tones and moves once when its
+    // dialog opens. The buttons take the tones of SmartButton too: Delete orange (danger), OK of Saved green (success).
 
     const WORK_TIME = 1200; // ms: a job that takes time (the sample)
 
@@ -31,7 +32,7 @@
 
     // THE ICONS AT THE TOP (the user, 2026-11-05: drawn again, the styles of 02-comp-examples/smart-button-alternatif.htm):
     // a thing is two-tone (a big LIGHT shape with STRONG details), a state is a circle mark (a STRONG circle, a white
-    // mark). LIGHT and STRONG are filled in with the colors of the dialog (ICON_LOOKS).
+    // mark). The dialog fills LIGHT and STRONG in with the tones of its topIconTone (Dialog.ICON_TONES).
     // The bin: the lid and its handle, the bin, its two lines
     const TRASH_ICON =
         '<g class="top-icon-lid">' +
@@ -64,8 +65,7 @@
         "@media (prefers-reduced-motion: reduce) { .top-icon-lid, .top-icon-arrow, .top-icon-mark, .top-icon-check { animation: none; } }",
     ].join("\n");
 
-    // The yellow button (Delete, Log out): the hover a little darker, the text of the package (not the white of
-    // danger); the same as the Delete of dialog.htm
+    // The yellow button of Log out: the hover a little darker, the text of the package (not the white of danger)
     const YELLOW_BUTTON_STYLE = {
         box: { color: "#F8E57A" },
         hover: { color: "#EFDA62" },
@@ -73,28 +73,9 @@
         label: { textColor: SmartButton.styles.ozdenType1.label.textColor },
     };
 
-    // The colors of an icon at the top, three tones of a tone of SmartButton: the circle behind it, the LIGHT shape
-    // and the STRONG details. WHY STRONG this deep: the details read on the light shape and on the circle (2.6 - 4:1).
-    const ICON_LOOKS = {
-        orange: { circle: "#FBEFEA", light: "#EDBAA5", strong: "#C4532A" }, // a delete (the ask of Delete is orange too)
-        yellow: { circle: "#FDF8E7", light: "#F5D77D", strong: "#9A7409" }, // look first (the yellow button of Log out)
-        green: { circle: "#EEF7EB", light: "#B6DEA9", strong: "#4A8F33" }, // done
-    };
-
-    // An icon at the top in the colors of a look (an "<svg" text: the dialog puts it in its circle)
-    const createTopIcon = function (body, iconLookName) {
-        const look = ICON_LOOKS[iconLookName];
-        const colored = body.split("LIGHT").join(look.light).split("STRONG").join(look.strong);
-        return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">' + colored + "<\/svg>";
-    };
-
-    // The style of a dialog of this page: the circle of its top icon and its own buttons
-    // (Cancel has the faint edge of ozdenType3: the default of Dialog since 2026-11-05)
-    const getDialogStyle = function (iconLookName, buttons = {}) {
-        return {
-            centered: { iconCircle: { color: ICON_LOOKS[iconLookName].circle } },
-            buttons: buttons,
-        };
+    // An icon at the top: its drawing as an "<svg" text (the dialog fills its colors in)
+    const svgIcon = function (body) {
+        return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">' + body + "<\/svg>";
     };
 
     let lblResult;
@@ -107,19 +88,19 @@
         return new Promise(function (resolve) { setTimeout(resolve, ms); });
     };
 
-    // The dialog of the design: Delete (yellow, it asks again, then it waits) and Cancel
+    // The dialog of the design: Delete (orange: danger, it asks again, then it waits) and Cancel
     const openDeleteDialog = function () {
         Dialog({
             variant: "centered",
             width: 420,
-            style: getDialogStyle("orange", { primary: { style: YELLOW_BUTTON_STYLE } }),
-            topIconFile: createTopIcon(TRASH_ICON, "orange"),
+            topIconTone: "orange",
+            topIconFile: svgIcon(TRASH_ICON),
             titleText: "Delete Account?",
             messageText: "Are you sure you want to delete your account?",
             buttons: [
                 { key: "cancel", text: "Cancel", type: "secondary" },
                 {
-                    key: "delete", text: "Delete", type: "primary",
+                    key: "delete", text: "Delete", type: "danger",
                     ask: "Click again to delete your account.",
                     onClick: function () {
                         return wait(WORK_TIME).then(function () { showResult("The account is deleted."); });
@@ -136,12 +117,13 @@
     const openConfirm = async function () {
         const isSure = await Dialog.confirm({
             variant: "centered",
-            topIconFile: createTopIcon(LOGOUT_ICON, "yellow"),
+            topIconTone: "yellow",
+            topIconFile: svgIcon(LOGOUT_ICON),
             titleText: "Log out?",
             messageText: "You can log in again with your e-mail address.",
             confirmText: "Log out",
             danger: 1,
-            style: getDialogStyle("yellow", { danger: { style: YELLOW_BUTTON_STYLE } }),
+            style: { buttons: { danger: { style: YELLOW_BUTTON_STYLE } } },
         });
         showResult("confirm: " + isSure);
     };
@@ -149,10 +131,11 @@
     const openAlert = async function () {
         await Dialog.alert({
             variant: "centered",
-            style: getDialogStyle("green"),
-            topIconFile: createTopIcon(SAVED_ICON, "green"),
+            topIconTone: "green",
+            topIconFile: svgIcon(SAVED_ICON),
             titleText: "Saved",
             messageText: "Your changes are saved.",
+            buttonType: "success",
         });
         showResult("alert: closed");
     };
