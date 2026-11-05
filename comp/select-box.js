@@ -287,6 +287,7 @@ const SelectBox = function (params = {}) {
 
     // Merge style package: params.style > SelectBox.styles[styleName] > SelectBoxDefaults.style (classic)
     basic.applyStylePackage(params, SelectBox.styles, SelectBoxDefaults);
+    SelectBox.fillSearchInputPackage(params.style);
 
     // Merge params:
     mergeIntoIfMissing(params, SelectBoxDefaults);
@@ -1526,6 +1527,20 @@ SelectBox.canUseSearchInput = function () {
     return (typeof SearchInput === "function") && !!SearchInput.styles;
 };
 
+// A search box in a package of SearchInput (style.searchInput.styleName): the params of that package fill
+// style.searchInput before SelectBoxDefaults does. The keys of the SelectBox package still win.
+// WHY: The look keys of the classic search box of SelectBoxDefaults filled every missing key, so a search box with
+//      styleName "ozden" kept the classic icons, sizes and colors (the search box of SelectBox ozden looked old).
+SelectBox.fillSearchInputPackage = function (style) {
+    const searchInput = style.searchInput;
+    if (!searchInput || !SelectBox.canUseSearchInput()) return;
+    const searchPackage = SearchInput.styles[searchInput.styleName];
+    if (!searchPackage) return;
+    const packageParams = Object.assign({}, searchPackage);
+    delete packageParams.style;
+    mergeIntoIfMissing(searchInput, packageParams);
+};
+
 // An icon file of style.searchInput: a name without a folder ("search.svg") is taken from the folder of the
 // loaded comp/search-input-v2.js. WHY: SearchInput gives paths from a page in a samples folder ("../comp/");
 // a page of another folder did not find them. A path ("../my/search.svg") or a data: URL is used as it is.
@@ -1683,25 +1698,16 @@ SelectBox.styles.ozden = {
             motionDuration: 200,
             startScale: 0.9,
         },
-        // The search bar of the comp-m1 SelectItem: it was this SearchInput (the comp-m1 one) with these params.
-        // WHITE (the user, 2026-11-05): as the search box of ItemList ozden; it was the yellow of comp-m1 (#FFFCD6)
+        // The search bar: the ozden SearchInput (its icons, its font and icon sizes, its bottom line) in white, nearly
+        // square and without a border: the search box of ItemList ozden (the user, 2026-11-05). It was the classic
+        // SearchInput of the comp-m1 SelectItem (in its yellow #FFFCD6 until 2026-11-05).
         searchInput: {
-            styleName: "classic",
+            styleName: "ozden",
             height: 40,
+            searchIconLeft: 16, // WHY: the default of SearchInput, as ItemList ozden (SelectBoxDefaults has 10)
             color: "white",
             border: 0,
-            borderColor: "transparent",
-            borderBottomStyle: "2px solid rgba(0, 0, 0, 0.06)",
             round: 2,
-            fontSize: 18,
-            textColor: "rgba(0, 0, 0, 0.8)",
-            placeholderColor: "",
-            searchIconFile: "search.svg",
-            clearIconFile: "clear.svg",
-            searchIconSize: 22,
-            searchIconOpacity: 1,
-            clearIconOpacity: 0.6,
-            invertIconColor: 0,
         },
         search: {
             color: "white", // (as searchInput, the user 2026-11-05)

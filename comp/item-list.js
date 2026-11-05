@@ -22,7 +22,7 @@ UI COMPONENT TEMPLATE
 - Keyboard: the arrow keys move the focus (Up / Down in a list, Left / Right in a row, all four in a grid),
   Home / End, Enter or Space selects. Only one row is in the Tab order.
 - A combobox whose keyboard stays in its field (SelectBox) shows its active row with setActiveKey(key): the look of
-  the mouse (style.hover), also on a selected row. null: none.
+  the mouse (style.hover), also on a selected row, and only on that row. null: none.
 - Items: strings or objects { key, title, desc, iconFile, searchText, disabled }. Any other keys stay on the
   item for your createItemView. An item without a key gets its index as its key.
 - Sections: an item { type: "section", title: "VIEWS" } is a title row between the items (style.section). It is
@@ -1239,12 +1239,17 @@ const ItemList = function (params = {}) {
     };
 
     // The active row of a combobox (SelectBox: the row of its arrow keys) gets the look of the mouse (style.hover),
-    // also when it is selected. null: none.
+    // also when it is selected. It is then the only row with that look. null: none.
     // WHY: The keyboard stays in the field of the combobox: the list does not get the focus, it only shows the row.
+    //      The mouse makes its row active itself (SelectBox: mousemove), so the row under the mouse loses its look
+    //      when the arrow keys move the active row: two rows were white.
     box.setActiveKey = function (key) {
-        const oldEntry = findEntry(activeKey);
+        const oldEntries = entries.filter(function (e) { return e.isHover || e.key === activeKey; });
         activeKey = (key === null || key === undefined) ? null : String(key);
-        if (oldEntry) paintRow(oldEntry);
+        oldEntries.forEach(function (e) {
+            e.isHover = 0;
+            paintRow(e);
+        });
         const entry = findEntry(activeKey);
         if (entry) paintRow(entry);
     };

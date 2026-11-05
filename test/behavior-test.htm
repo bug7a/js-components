@@ -1301,6 +1301,31 @@
                 "own rows: " + ownRows.join(" | ") + " ;; ItemList rows: " + listRows.join(" | ") + " ;; classic: " + classicRows.join(" | "));
         });
 
+        test("SelectBox: a search box in a package of SearchInput (ozden) has its look, not the classic keys of SelectBox", async function () {
+            const lookOf = function (params) {
+                const select = SelectBox(Object.assign({ width: 240, options: ["Apple", "Banana"], searchable: 1 }, params));
+                const search = select.searchGroup;
+                const look = [search.fontSize, search.searchIconSize, search.searchIconOpacity, search.searchIconFile.startsWith("data:") ? "ozden icon" : "classic icon"].join(" / ");
+                select.remove();
+                return look;
+            };
+            const ozden = lookOf({ styleName: "ozden" });
+            const classic = lookOf({});
+            check("SelectBox: a search box in a package of SearchInput (ozden) has its look, not the classic keys of SelectBox",
+                ozden === "20 / 24 / 0.4 / ozden icon" && classic === "14 / 16 / 0.55 / classic icon", "ozden: " + ozden + ", classic: " + classic);
+        });
+
+        test("ItemList in a combobox: setActiveKey leaves the look of the mouse only on the active row", async function () {
+            const list = ItemList({ width: 300, height: 300, items: ["Apple", "Banana", "Cherry"] });
+            list.getRow("0").elem.dispatchEvent(new MouseEvent("mouseenter"));
+            const mouseRow = list.getRow("0").elem.style.backgroundColor;
+            list.setActiveKey("2");
+            const looks = ["0", "1", "2"].map(function (k) { return list.getRow(k).elem.style.backgroundColor; }).join(",");
+            list.remove();
+            check("ItemList in a combobox: setActiveKey leaves the look of the mouse only on the active row",
+                mouseRow === "white" && looks === "transparent,transparent,white", "the mouse row: " + mouseRow + ", after the keys: " + looks);
+        });
+
         test("ItemList: a search with no result shows its text in the list", async function () {
             const list = ItemList({ width: 300, height: 300, items: ["Apple", "Banana"] });
             await wait(30);
