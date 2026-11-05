@@ -24,8 +24,6 @@
 
         <script>
 
-        const googleLogo = "https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg";
-        const appleLogo = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSRsP-EH-Fc-gjQMFgxj4g1pkFGVCK8Y2deHA&s";
     
 
         let loginPage = null;
@@ -85,8 +83,9 @@
             });
 
             // Add custom login buttons:
-            loginPage.createButtonWithIcon("Sign in with Google", googleLogo, onLoginWithGoogle);
-            loginPage.createButtonWithIcon("Sign in with Apple", appleLogo, onLoginWithApple);
+            // (Their logos are drawn by LoginPage: the apple in the text color of its button; the user, 2026-11-05)
+            loginPage.createButtonWithIcon("Sign in with Google", LoginPage.GOOGLE_LOGO, onLoginWithGoogle);
+            loginPage.createButtonWithIcon("Sign in with Apple", LoginPage.getAppleLogo(loginPage.style.customLoginButton.textColor), onLoginWithApple);
 
             // TEST
             fillTestData();

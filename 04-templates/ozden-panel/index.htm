@@ -168,12 +168,10 @@
             // WHY: The panel name of the login page is written in white inside the component.
             if (!T.isDark && loginPage.title) loginPage.title.textColor = Black(0.35);
 
-            const _googleIconFile = "https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg";
-            const _appleIconFile = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSRsP-EH-Fc-gjQMFgxj4g1pkFGVCK8Y2deHA&s";
-
-            // Add custom login buttons:
-            loginPage.createButtonWithIcon("Sign in with Google", _googleIconFile, onLoginWithGoogle);
-            loginPage.createButtonWithIcon("Sign in with Apple", _appleIconFile, onLoginWithApple);
+            // Add custom login buttons: their logos are drawn by LoginPage, the apple in the text color of its button
+            // (dark on the light theme, light on the dark one; the user, 2026-11-05)
+            loginPage.createButtonWithIcon("Sign in with Google", LoginPage.GOOGLE_LOGO, onLoginWithGoogle);
+            loginPage.createButtonWithIcon("Sign in with Apple", LoginPage.getAppleLogo(loginPage.style.customLoginButton.textColor), onLoginWithApple);
 
             // TEST
             fillTestData();
