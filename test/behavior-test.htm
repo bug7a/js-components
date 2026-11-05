@@ -3137,6 +3137,89 @@
             chart.remove();
         });
 
+        test("GraphBox: pie: the slices take the whole circle by their values, the mouse finds its slice", async function () {
+            const chart = GraphBox({ width: 500, height: 300, type: "pie", legend: "none", labels: ["A", "B", "C", "D"], values: [50, 25, 25, 0] });
+            await wait(30);
+            const slices = chart.svg.querySelectorAll("path");
+            const size = Math.min(chart.plot.elem.clientWidth, chart.plot.elem.clientHeight);
+            const centerX = chart.plot.elem.clientWidth / 2;
+            const centerY = chart.plot.elem.clientHeight / 2;
+            const radius = size / 4;
+            const titleAt = function (x, y) {
+                graphBoxMoveMouse(chart, x, y);
+                return (chart.tooltip.visible == 1) ? chart.lblTooltipTitle.elem.textContent : "";
+            };
+            // Clockwise from the top: A takes the right half, B the bottom left, C the top left.
+            const titles = [titleAt(centerX + radius, centerY), titleAt(centerX - radius / 2, centerY + radius), titleAt(centerX - radius / 2, centerY - radius), titleAt(1, 1)].join(",");
+            check("GraphBox: pie: the slices take the whole circle by their values, the mouse finds its slice", slices.length === 3 && titles === "A,B,C,", slices.length + " slices, " + titles);
+            chart.remove();
+        });
+
+        test("GraphBox: a doughnut has a hole the mouse passes through, one slice is a whole ring, the share is in the tooltip", async function () {
+            const chart = GraphBox({ width: 500, height: 300, type: "doughnut", legend: "none", labels: ["A", "B"], values: [30, 90], centerText: "120" });
+            await wait(30);
+            const centerX = chart.plot.elem.clientWidth / 2;
+            const centerY = chart.plot.elem.clientHeight / 2;
+            graphBoxMoveMouse(chart, centerX, centerY);
+            const isHoleEmpty = (chart.tooltip.visible == 0);
+            const box = chart.svg.querySelector("path").getBBox();
+            graphBoxMoveMouse(chart, centerX + chart.plot.elem.clientHeight * 0.35, centerY - 40);
+            const readout = chart.tooltip.elem.innerText;
+            const isShareShown = (readout.includes("30") && readout.includes("25%"));
+            const hasCenterText = Array.from(chart.svg.querySelectorAll("text")).some(function (text) { return text.textContent === "120"; });
+            pointer(chart.plot.elem, "pointerleave", 0, 0, "mouse");
+            chart.setValues([30, 0]);
+            const ring = chart.svg.querySelector("path");
+            const isWholeRing = (chart.svg.querySelectorAll("path").length === 1 && (ring.getAttribute("d").match(/M/g) || []).length === 2 && ring.getBBox().width > box.width);
+            check("GraphBox: a doughnut has a hole the mouse passes through, one slice is a whole ring, the share is in the tooltip", isHoleEmpty && isShareShown && hasCenterText && isWholeRing, [isHoleEmpty, readout, hasCenterText, isWholeRing].join(" | "));
+            chart.remove();
+        });
+
+        test("GraphBox: the legend hides a slice and it stays hidden when the values come again, the colors stay", async function () {
+            const chart = GraphBox({ width: 500, height: 300, type: "pie", labels: ["A", "B", "C"], values: [1, 1, 1] });
+            await wait(30);
+            const getColors = function () {
+                return Array.from(chart.svg.querySelectorAll("path")).map(function (path) { return path.getAttribute("fill"); }).join(",");
+            };
+            const colorsAtStart = getColors().split(",");
+            chart.legendItems[0].elem.click();
+            const afterHide = getColors();
+            chart.setValues([2, 3, 4]);
+            const afterValues = getColors();
+            chart.legendItems[0].elem.click();
+            const afterShow = getColors();
+            const expectedHidden = colorsAtStart[1] + "," + colorsAtStart[2];
+            check("GraphBox: the legend hides a slice and it stays hidden when the values come again, the colors stay", afterHide === expectedHidden && afterValues === expectedHidden && afterShow === colorsAtStart.join(","), [colorsAtStart, afterHide, afterValues, afterShow].join(" | "));
+            chart.remove();
+        });
+
+        test("GraphBox: a pie with no values, or wrong values, draws no NaN, a very small slice is still there", async function () {
+            const sets = [[], [0, 0], [null, null], [-5, -1], ["a", "b"], [5], [100, 0.001, 0.001]];
+            const wrong = [];
+            ["pie", "doughnut"].forEach(function (type) {
+                sets.forEach(function (values, setIndex) {
+                    const chart = GraphBox({ width: 300, height: 200, type: type, labels: ["A", "B", "C"].slice(0, values.length), values: values });
+                    if (/NaN|Infinity|undefined/.test(chart.svg.innerHTML)) wrong.push(type + " " + setIndex);
+                    if (setIndex === 6 && chart.svg.querySelectorAll("path").length !== 3) wrong.push(type + " small slice");
+                    if (setIndex < 5 && chart.lblEmpty.visible != 1) wrong.push(type + " empty text " + setIndex);
+                    chart.remove();
+                });
+            });
+            check("GraphBox: a pie with no values, or wrong values, draws no NaN, a very small slice is still there", wrong.length === 0, wrong.join(", "));
+        });
+
+        test("GraphBox: a pie moves its legend under it in a narrow box, with no error of the observer", async function () {
+            const chart = GraphBox({ width: 600, height: 300, type: "pie", labels: ["A", "B"], values: [1, 1] });
+            await wait(50);
+            const isSideAtStart = chart.body.css.flexDirection === "row-reverse";
+            chart.width = 300;
+            await wait(80);
+            const isUnderAfter = chart.body.css.flexDirection === "column-reverse";
+            const plotSize = Number(chart.svg.getAttribute("width"));
+            chart.remove();
+            check("GraphBox: a pie moves its legend under it in a narrow box, with no error of the observer", isSideAtStart && isUnderAfter && plotSize <= 300 && uncaught.length === 0, [isSideAtStart, isUnderAfter, plotSize, uncaught.join("|")].join(" "));
+        });
+
         test("GraphBox: setTheme() changes the look, setStyle() keeps the other keys", async function () {
             const chart = GraphBox({ width: 400, height: 240, type: "bar", titleText: "Title", labels: ["A"], values: [1] });
             const lightColor = chart.color;

@@ -131,6 +131,28 @@
                             ],
                         });
 
+                        // DOUGHNUT: The total in the hole
+                        addChart({
+                            type: "doughnut",
+                            titleText: "Traffic Sources",
+                            subtitleText: "How users come to the site",
+                            labels: ["Organic Search", "Social Media", "Direct", "E-Mail", "Referral"],
+                            values: [42, 28, 15, 10, 5],
+                            centerText: "12.4K",
+                            centerSubText: "Visits",
+                            formatValue: function (value) { return value + "%"; },
+                        });
+
+                        // PIE: A click on the legend hides a slice
+                        addChart({
+                            type: "pie",
+                            titleText: "Budget",
+                            subtitleText: "The tooltip adds the share of each part",
+                            labels: ["Salaries", "Rent", "Marketing", "Other"],
+                            values: [52000, 18000, 12500, 7500],
+                            formatValue: function (value) { return "₺" + value.toLocaleString("tr-TR"); },
+                        });
+
                         // MIXED: Bars and a line in one chart
                         addChart({
                             type: "bar",

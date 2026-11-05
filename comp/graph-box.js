@@ -8,13 +8,13 @@ UI COMPONENT
 - Charts with no library: this one file draws the whole chart as one SVG. No Chart.js, no other file, no internet.
   (comp/chart-box.js is the bridge to Chart.js. Its params and functions are the model here, so a page can move over.)
 - Chart types: "line", "area", "bar" (more than one dataset: bars side by side; stacked: 1 one on the other;
-  horizontal: 1 bars that grow to the right).
+  horizontal: 1 bars that grow to the right), "pie", "doughnut" (the first dataset: a part of the whole).
 - Light and dark themes ("light", "dark", "auto"). A dataset gets its color from the theme and keeps it, also when
   another dataset is hidden or removed.
 - The axis finds clean numbers by itself (0, 20K, 40K...). A label that has no room is skipped (a line chart: time)
   or it turns (a bar chart: every bar needs its name).
 - Mouse, touch and keyboard: a tooltip with every dataset at that place. (Left / right arrows, Escape, Enter.)
-- The legend hides and shows a dataset with a click.
+- The legend hides and shows a dataset (or a slice of a pie) with a click.
 
 USAGE:
 const sales = GraphBox({
@@ -50,7 +50,7 @@ const GraphBoxDefaults = {
     key: "0",
     width: 500,
     height: 300,
-    type: "line", // "line", "area", "bar"
+    type: "line", // "line", "area", "bar", "pie", "doughnut"
     theme: "light", // "light", "dark", "auto" (follows the system setting)
     titleText: "",
     subtitleText: "",
@@ -58,10 +58,12 @@ const GraphBoxDefaults = {
     values: null, // [12, 19, 7] Shortcut: creates one dataset.
     datasets: null, // [{ label: "2026", data: [12, 19, 7], ...see A DATASET above }]
     data: null, // { labels, datasets } (Used instead of labels, values and datasets.)
-    legend: "auto", // "auto" (2+ datasets), "top", "bottom", "left", "right", "none"
+    legend: "auto", // "auto" (2+ datasets; a pie: at the right, or at the bottom of a narrow box), "top", "bottom", "left", "right", "none"
     stacked: 0, // 1: Bars one on the other, lines and areas over each other. The tooltip adds totalText.
     horizontal: 0, // 1: The values grow to the right. (Long names read better so.)
     totalText: "Total", // The last row of the tooltip of a stacked chart. "": No total
+    centerText: "", // The big text in the middle of a doughnut. Ex: "1,284"
+    centerSubText: "", // The small text under it. Ex: "Users"
     beginAtZero: 1, // 1: The value axis holds 0. (A bar chart always holds it: the length of a bar is its value.)
     minValue: null, // null: From the values.
     maxValue: null, // null: From the values. Ex: 100
@@ -86,7 +88,14 @@ const GraphBoxDefaults = {
         },
         title: { fontSize: 16, fontFamily: "opensans-bold" },
         subtitle: { fontSize: 12 },
-        legend: { fontSize: 12, gap: 14, lineGap: 6, keyGap: 6, hiddenOpacity: 0.4 },
+        legend: {
+            fontSize: 12,
+            gap: 14,
+            lineGap: 6,
+            keyGap: 6,
+            hiddenOpacity: 0.4,
+            sideMinWidth: 400, // A pie: the legend is at its side only in a box as wide as this.
+        },
         axis: {
             fontSize: 12,
             fontFamily: "opensans, system-ui, -apple-system, 'Segoe UI', sans-serif",
@@ -112,6 +121,12 @@ const GraphBoxDefaults = {
             fillOpacity: 0.1,
             gradientOpacity: 0.3, // At the top of a "gradient" fill
             dash: "5 5",
+        },
+        pie: {
+            gap: 2, // Between two slices
+            hole: 0.62, // A doughnut: the hole, as a part of the radius
+            hoverGrow: 4, // Px: the slice under the mouse
+            centerFontSize: 26,
         },
         tooltip: {
             fontSize: 12,
@@ -147,7 +162,10 @@ const GraphBox = function (params = {}) {
     const LEGEND_FLOWS = { top: "column", bottom: "column-reverse", left: "row", right: "row-reverse" };
     const STEP_KEYS = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
     const hasClickEvent = (box.onClick !== GraphBoxDefaults.onClick);
+    const FULL_CIRCLE = Math.PI * 2;
+    const TOP_ANGLE = -Math.PI / 2; // The first slice starts at the top.
     const colorIndexes = new Map(); // The key of a series -> its place in the colors of the theme
+    const hiddenSliceKeys = new Set(); // WHY keys, not places: A slice stays hidden when the values come again.
     const tooltipRows = [];
     let colors = null; // The colors of the theme + style.colors
     let svg, definitions, gridLayer, washLayer, markLayer, overlayLayer;
@@ -156,6 +174,7 @@ const GraphBox = function (params = {}) {
     let pointer = null; // { x, y } in the plot. null: the keyboard chose the item.
     let legendSignature = "";
     let drawnSize = "";
+    let legendPlace = "";
 
     // *** PUBLIC VARIABLES:
     // [var] { labels, datasets } A copy of the data of the page. After a change: box.update()
@@ -1014,7 +1033,159 @@ const GraphBox = function (params = {}) {
 
     };
 
+    // THE PIE AND THE DOUGHNUT:
+
+    const isPieType = function () {
+        return (box.type === "pie" || box.type === "doughnut");
+    };
+
+    const getSliceKey = function (index) {
+        return getLabelText(index) || ("#" + index);
+    };
+
+    const getSliceColor = function (dataset, index) {
+        return (dataset.colors && dataset.colors[index]) || colors.colors[index] || colors.otherColor;
+    };
+
+    const getSliceCount = function (dataset) {
+        return Math.max(box.data.labels.length, dataset.data.length);
+    };
+
+    // The slices on the screen: only the ones with a value. (A slice can not be less than nothing.)
+    const createSlices = function () {
+        const dataset = box.data.datasets[0];
+        const slices = [];
+        if (!dataset) return slices;
+        for (let index = 0; index < getSliceCount(dataset); index++) {
+            const value = getValue(dataset, index);
+            if (hiddenSliceKeys.has(getSliceKey(index)) || !(value > 0)) continue;
+            slices.push({ index: index, value: value, color: getSliceColor(dataset, index) });
+        }
+        return slices;
+    };
+
+    const addSliceAngles = function (slices, total) {
+        let angle = TOP_ANGLE;
+        slices.forEach(function (slice) {
+            slice.startAngle = angle;
+            angle += slice.value / total * FULL_CIRCLE;
+            slice.endAngle = angle;
+        });
+    };
+
+    const getTotal = function (slices) {
+        return slices.reduce(function (sum, slice) { return sum + slice.value; }, 0);
+    };
+
+    const addSlice = function (layer, slice, shape, outerRadius) {
+        addShape(layer, "path", {
+            d: GraphBox.slicePath(shape.center, shape.innerRadius, outerRadius, slice.startAngle, slice.endAngle, _s.pie.gap),
+            fill: slice.color,
+        });
+    };
+
+    // The text in the hole: it gets smaller when it has no room.
+    const drawPieCenter = function (shape) {
+
+        if (!shape.innerRadius || !box.centerText) return;
+
+        const roomWidth = shape.innerRadius * 1.6;
+        const family = "opensans-bold";
+        const fullWidth = GraphBox.measureText(box.centerText, _s.pie.centerFontSize, family);
+        const fontSize = Math.min(_s.pie.centerFontSize, _s.pie.centerFontSize * roomWidth / fullWidth);
+        const subHeight = (box.centerSubText) ? getAxisTextHeight() : 0;
+        const center = shape.center;
+
+        const label = addText(markLayer, box.centerText, center.x, center.y - subHeight / 2, "middle", colors.titleColor);
+        label.setAttribute("font-size", fontSize);
+        label.setAttribute("font-family", family);
+
+        if (!subHeight) return;
+        const subText = GraphBox.fitText(box.centerSubText, roomWidth, _s.axis.fontSize, _s.axis.fontFamily);
+        addText(markLayer, subText, center.x, center.y + fontSize / 2 + subHeight / 2 - 2, "middle", colors.textColor);
+
+    };
+
+    // WHY: When the values already are percents (they add up to 100), a second percent says nothing.
+    const getShareText = function (value, total) {
+        if (Math.round(total) === 100) return "";
+        return GraphBox.formatPercent(value / total, box.locale);
+    };
+
+    const createPieView = function (slices, shape, total) {
+
+        const findSlice = function (item) {
+            return slices.find(function (slice) { return slice.index === item.index; });
+        };
+
+        return {
+            findItem: function (x, y) {
+                const distance = Math.hypot(x - shape.center.x, y - shape.center.y);
+                if (distance > shape.outerRadius + _s.pie.hoverGrow || distance < shape.innerRadius) return null;
+                let angle = Math.atan2(y - shape.center.y, x - shape.center.x);
+                if (angle < TOP_ANGLE) angle += FULL_CIRCLE;
+                const slice = slices.find(function (candidate) { return angle < candidate.endAngle; });
+                return (slice) ? { index: slice.index, datasetIndex: 0 } : null;
+            },
+            stepItem: function (item, step) {
+                const place = (item) ? slices.indexOf(findSlice(item)) + step : 0;
+                const slice = slices[Math.min(slices.length - 1, Math.max(0, place))];
+                return { index: slice.index, datasetIndex: 0 };
+            },
+            hasItem: function (item) {
+                return !!findSlice(item);
+            },
+            paintItem: function (item) {
+                // WHY a copy over it: The slice itself is not made again; the copy goes with the next move.
+                addSlice(overlayLayer, findSlice(item), shape, shape.outerRadius + _s.pie.hoverGrow);
+            },
+            getReadout: function (item) {
+                const slice = findSlice(item);
+                return {
+                    titleText: getLabelText(slice.index),
+                    rows: [{ color: slice.color, valueText: formatValueText(slice.value), nameText: getShareText(slice.value, total) }],
+                };
+            },
+            // For the keyboard: on the middle of the slice.
+            getAnchor: function (item) {
+                const slice = findSlice(item);
+                const angle = (slice.startAngle + slice.endAngle) / 2;
+                const radius = (shape.outerRadius + shape.innerRadius) / 2;
+                return { x: shape.center.x + radius * Math.cos(angle), y: shape.center.y + radius * Math.sin(angle) };
+            },
+        };
+
+    };
+
+    const drawPie = function (width, height) {
+
+        const slices = createSlices();
+        const total = getTotal(slices);
+        if (!(total > 0)) return null;
+
+        const outerRadius = Math.max(1, Math.min(width, height) / 2 - _s.pie.hoverGrow);
+        const shape = {
+            center: { x: width / 2, y: height / 2 },
+            outerRadius: outerRadius,
+            innerRadius: (box.type === "doughnut") ? outerRadius * _s.pie.hole : 0,
+        };
+
+        addSliceAngles(slices, total);
+        slices.forEach(function (slice) {
+            addSlice(markLayer, slice, shape, outerRadius);
+        });
+        drawPieCenter(shape);
+
+        return createPieView(slices, shape, total);
+
+    };
+
     // THE PLOT:
+
+    const drawChart = function (width, height) {
+        if (isPieType()) return drawPie(width, height);
+        return drawCartesian(width, height);
+    };
 
     const drawPlot = function () {
 
@@ -1030,7 +1201,7 @@ const GraphBox = function (params = {}) {
         svg.setAttribute("font-family", _s.axis.fontFamily);
         svg.setAttribute("font-size", _s.axis.fontSize);
 
-        view = drawCartesian(width, height);
+        view = drawChart(width, height);
 
         box.lblEmpty.plainText = box.emptyText;
         box.lblEmpty.visible = (view) ? 0 : 1;
@@ -1235,7 +1406,7 @@ const GraphBox = function (params = {}) {
 
     // THE LEGEND:
 
-    const getLegendEntries = function () {
+    const getSeriesEntries = function () {
         return box.data.datasets.map(function (dataset, position) {
             return {
                 text: dataset.label || "",
@@ -1244,20 +1415,41 @@ const GraphBox = function (params = {}) {
                 isHidden: basic.isOn(dataset.hidden),
                 position: position,
             };
-        }).filter(function (entry) {
-            return entry.text !== "";
         });
+    };
+
+    const getSliceEntries = function () {
+        const dataset = box.data.datasets[0];
+        const entries = [];
+        if (!dataset) return entries;
+        for (let index = 0; index < getSliceCount(dataset); index++) {
+            entries.push({
+                text: getLabelText(index),
+                color: getSliceColor(dataset, index),
+                isLine: false,
+                isHidden: hiddenSliceKeys.has(getSliceKey(index)),
+                position: index,
+            });
+        }
+        return entries;
+    };
+
+    const getLegendEntries = function () {
+        const entries = (isPieType()) ? getSliceEntries() : getSeriesEntries();
+        return entries.filter(function (entry) { return entry.text !== ""; });
     };
 
     const getLegendPosition = function () {
         if (box.legend === 0 || box.legend === false || box.legend === "none") return "none";
         if (box.legend !== "auto") return box.legend;
+        if (isPieType()) return (box.elem.clientWidth >= _s.legend.sideMinWidth) ? "right" : "bottom";
         return (box.data.datasets.length >= 2) ? "top" : "none";
     };
 
     const applyLegendPosition = function () {
 
         const position = getLegendPosition();
+        legendPlace = position;
         box.legendGroup.visible = (position === "none") ? 0 : 1;
         if (position === "none") return;
 
@@ -1273,7 +1465,8 @@ const GraphBox = function (params = {}) {
     };
 
     const toggleLegendEntry = function (entry) {
-        box.setDatasetVisible(entry.position, entry.isHidden ? 1 : 0);
+        const setVisible = (isPieType()) ? box.setSliceVisible : box.setDatasetVisible;
+        setVisible(entry.position, entry.isHidden ? 1 : 0);
     };
 
     const createLegendItem = function (entry) {
@@ -1365,6 +1558,9 @@ const GraphBox = function (params = {}) {
     const onPlotResize = function () {
         const size = box.plot.elem.clientWidth + "x" + box.plot.elem.clientHeight;
         if (size !== drawnSize) drawPlot(); // WHY: The observer also runs once when it starts.
+        // WHY later: Moving the legend changes the size of the plot, and an observer must not change what it watches
+        //     while it runs (the browser reports it as an error of the page).
+        if (getLegendPosition() !== legendPlace) box.after(0, refreshLayout);
     };
 
     const onSystemThemeChange = function () {
@@ -1456,11 +1652,26 @@ const GraphBox = function (params = {}) {
         drawData();
     };
 
+    // Hide or show a slice of a pie or a doughnut.
+    box.setSliceVisible = function (index, visible) {
+        const key = getSliceKey(index);
+        if (basic.isOn(visible)) hiddenSliceKeys.delete(key);
+        else hiddenSliceKeys.add(key);
+        drawData();
+    };
+
     box.setType = function (type) {
         box.type = type;
         drawData();
     };
-    // USAGE: "line", "area", "bar"
+    // USAGE: "line", "area", "bar", "pie", "doughnut"
+
+    // The texts in the middle of a doughnut.
+    box.setCenterText = function (text, subText = box.centerSubText) {
+        box.centerText = text;
+        box.centerSubText = subText;
+        drawPlot();
+    };
 
     box.setTitle = function (text) {
         box.titleText = text;
@@ -1697,6 +1908,11 @@ GraphBox.formatCompactNumber = function (value, locale, decimals = 0) {
     return value.toLocaleString(locale || undefined, options);
 };
 
+// 0.423 -> "42.3%"
+GraphBox.formatPercent = function (share, locale) {
+    return share.toLocaleString(locale || undefined, { style: "percent", maximumFractionDigits: 1 });
+};
+
 GraphBox.measureText = function (text, fontSize, fontFamily) {
     if (!GraphBox._measureContext) GraphBox._measureContext = document.createElement("canvas").getContext("2d");
     GraphBox._measureContext.font = fontSize + "px " + fontFamily;
@@ -1745,6 +1961,56 @@ GraphBox.barPath = function (rect, round, side) {
         "L" + point(right, bottom - bottomRight) + "Q" + point(right, bottom) + point(right - bottomRight, bottom) +
         "L" + point(left + bottomLeft, bottom) + "Q" + point(left, bottom) + point(left, bottom - bottomLeft) +
         "L" + point(left, top + topLeft) + "Q" + point(left, top) + point(left + topLeft, top) + "Z";
+
+};
+
+// A whole circle or ring. WHY two arcs: One arc from a point to the same point draws nothing.
+GraphBox.ringPath = function (center, innerRadius, outerRadius) {
+    const circle = function (radius, direction) {
+        const first = GraphBox.pointText({ x: center.x - radius, y: center.y });
+        const second = GraphBox.pointText({ x: center.x + radius, y: center.y });
+        const arc = "A" + radius + " " + radius + " 0 1 " + direction + " ";
+        return "M" + first + arc + second + arc + first + "Z";
+    };
+    // WHY the other direction: A path that turns the other way makes a hole.
+    return circle(outerRadius, 1) + ((innerRadius > 0) ? circle(innerRadius, 0) : "");
+};
+
+// A slice of a pie or a ring. Angles in radians, growing clockwise.
+// WHY the gap is in the geometry: A line in the color of the box would not be seen on a box with no color. Half of the
+//     gap is the same px at every radius, so the sides of a slice stay parallel to the sides of the next one.
+GraphBox.slicePath = function (center, innerRadius, outerRadius, startAngle, endAngle, gap) {
+
+    const sweep = endAngle - startAngle;
+    if (sweep >= Math.PI * 2 - 0.0001) return GraphBox.ringPath(center, innerRadius, outerRadius);
+
+    const pointAt = function (radius, angle) {
+        return GraphBox.pointText({ x: center.x + radius * Math.cos(angle), y: center.y + radius * Math.sin(angle) });
+    };
+    const arcTo = function (radius, angle, isLarge, direction) {
+        return "A" + radius + " " + radius + " 0 " + (isLarge ? 1 : 0) + " " + direction + " " + pointAt(radius, angle);
+    };
+
+    // A slice thinner than the gap keeps no gap: it must still be seen.
+    const halfGap = (sweep > gap / outerRadius) ? gap / 2 : 0;
+    const outerPad = halfGap / outerRadius;
+    const innerPad = (innerRadius > 0) ? halfGap / innerRadius : Infinity;
+
+    const outerSweep = sweep - outerPad * 2;
+    let path = "M" + pointAt(outerRadius, startAngle + outerPad) + arcTo(outerRadius, endAngle - outerPad, outerSweep > Math.PI, 1);
+
+    if (sweep > innerPad * 2) {
+        const innerSweep = sweep - innerPad * 2;
+        path += "L" + pointAt(innerRadius, endAngle - innerPad) + arcTo(innerRadius, startAngle + innerPad, innerSweep > Math.PI, 0);
+        return path + "Z";
+    }
+
+    // The two sides meet before the hole, on the middle line of the slice.
+    // WHY the limit: The sides of a very big slice meet far away; near the center nobody can see the small difference.
+    const meetDistance = halfGap / Math.sin(sweep / 2);
+    const meetRadius = (sweep > Math.PI) ? Math.min(meetDistance, gap) : meetDistance;
+    path += "L" + pointAt(Math.max(innerRadius, meetRadius), startAngle + sweep / 2);
+    return path + "Z";
 
 };
 
