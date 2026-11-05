@@ -14,7 +14,8 @@ data (tens of thousands of rows, very many columns): comp/smart-table.js (SmartT
 seen; 100 000 rows in about 0.1 s in the Tauri template). A few rows inside a text: comp/tiny-table.js (TinyTable).
 - Samples: 02-comp-examples/data-table.htm, data-table-2.htm ... data-table-5.htm (data: assets/data-table/).
 - Sorting: a click on a sortable title (again: the other direction), the keyboard (Enter / Space on a title), sortBy().
-- Search: showSearch: 1 puts a SearchInput (comp/search-input-v2.js, load it first) in the header; search().
+- Search: showSearch: 1 puts a SearchInput (comp/search-input-v2.js, load it first) in the header; search(). Escape
+  clears it (2026-11-05; searchParams: { clearOnEscape: 0 } turns it off).
 - Selection: a click, the arrow keys (Home / End), Enter runs onRowClick. select(id), getSelectedData().
 - updateRows() adds, changes and removes rows by their id: the sorting, the search and the selection stay.
 - Your own cell: column.createView(cell, value, row, self) makes objects in the cell (a chart, a button). It runs
@@ -571,7 +572,7 @@ const DataTable = function (params = {}) {
         }
 
         const searchParams = Object.assign(
-            { styleName: _s.searchStyleName },
+            { styleName: _s.searchStyleName, clearOnEscape: 1 }, // (Escape clears the search, as in SmartTable: the user, 2026-11-05)
             DataTable.getSearchIconFiles(),
             _s.search,
             box.searchParams,

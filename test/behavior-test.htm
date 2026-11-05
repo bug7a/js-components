@@ -1292,12 +1292,19 @@
             table.searchKeyword = "abc";
             pressEscape(table.searchInput.txtSearch.inputElement);
             const isTableCleared = (table.searchKeyword === "" && table.searchInput.getText() === "");
+            const dataTable = DataTable({ width: 500, height: 300, showSearch: 1, columns: [{ key: "name", title: "Name" }], rows: [["Paris"], ["London"], ["Berlin"]] });
+            dataTable.searchInput.setText("paris");
+            dataTable.search("paris");
+            const foundCount = dataTable.shownRows.length;
+            pressEscape(dataTable.searchInput.txtSearch.inputElement);
+            const isDataTableCleared = (foundCount === 1 && dataTable.shownRows.length === 3 && dataTable.searchInput.getText() === "");
             check("SearchInput: clearOnEscape: Escape clears the text and uses the key; an empty field leaves it to the page; off by default",
-                usedWithText === 1 && isCleared && usedWhenEmpty === 0 && usedByPlain === 0 && plain.getText() === "abc" && isTableCleared,
-                "used with a text: " + usedWithText + ", cleared: " + isCleared + ", used when empty: " + usedWhenEmpty + ", plain: " + usedByPlain + " / " + plain.getText() + ", SmartTable: " + isTableCleared);
+                usedWithText === 1 && isCleared && usedWhenEmpty === 0 && usedByPlain === 0 && plain.getText() === "abc" && isTableCleared && isDataTableCleared,
+                "used with a text: " + usedWithText + ", cleared: " + isCleared + ", used when empty: " + usedWhenEmpty + ", plain: " + usedByPlain + " / " + plain.getText() + ", SmartTable: " + isTableCleared + ", DataTable: " + isDataTableCleared + " (" + foundCount + " found)");
             search.remove();
             plain.remove();
             table.remove();
+            dataTable.remove();
         });
 
         test("SearchInput: right / bottom place it (the default left / top does not win)", async function () {
