@@ -873,8 +873,8 @@
                 const chip = table.lblSelectedSortKey;
                 return {
                     isChipAtEnd: (right(search) - right(chip) <= 8),
-                    // (a cut text goes half of its fade under the chip and fades out there: SearchInput textFadeWidth)
-                    isTextBeforeChip: (right(search.txtSearch) <= left(chip) + search.textFadeWidth / 2),
+                    // (a cut text goes a little under the chip and fades out there: SearchInput.TEXT_UNDER_END)
+                    isTextBeforeChip: (right(search.txtSearch) <= left(chip) + SearchInput.TEXT_UNDER_END),
                     isClearBeforeChip: (right(search.imgClearIcon) <= left(chip)),
                     isClearShown: (search.imgClearIcon.opacity > 0),
                 };
@@ -1269,6 +1269,35 @@
                 isRightFade(restMask) && isLeftFade(typingMask) && caretInTextMask === "" && shortMask === "",
                 "rest: " + restMask + " | typing: " + typingMask + " | caret in the text: " + caretInTextMask + " | short: " + shortMask);
             search.remove();
+        });
+
+        test("SearchInput: clearOnEscape: Escape clears the text and uses the key; an empty field leaves it to the page; off by default", async function () {
+            const submitted = [];
+            const search = SearchInput({ clearOnEscape: 1, onSubmit: function (text) { submitted.push(text); } });
+            const plain = SearchInput({});
+            const table = SmartTable({ itemLineCount: 2, style: { width: 500, height: "auto" } });
+            // Returns 1 when the key was used (a Dialog around the field would not close)
+            const pressEscape = function (input) {
+                const event = new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true });
+                input.dispatchEvent(event);
+                return event.defaultPrevented ? 1 : 0;
+            };
+            search.setText("abc");
+            const usedWithText = pressEscape(search.txtSearch.inputElement);
+            const isCleared = (search.getText() === "" && submitted[submitted.length - 1] === "");
+            const usedWhenEmpty = pressEscape(search.txtSearch.inputElement);
+            plain.setText("abc");
+            const usedByPlain = pressEscape(plain.txtSearch.inputElement);
+            table.searchInput.setText("abc");
+            table.searchKeyword = "abc";
+            pressEscape(table.searchInput.txtSearch.inputElement);
+            const isTableCleared = (table.searchKeyword === "" && table.searchInput.getText() === "");
+            check("SearchInput: clearOnEscape: Escape clears the text and uses the key; an empty field leaves it to the page; off by default",
+                usedWithText === 1 && isCleared && usedWhenEmpty === 0 && usedByPlain === 0 && plain.getText() === "abc" && isTableCleared,
+                "used with a text: " + usedWithText + ", cleared: " + isCleared + ", used when empty: " + usedWhenEmpty + ", plain: " + usedByPlain + " / " + plain.getText() + ", SmartTable: " + isTableCleared);
+            search.remove();
+            plain.remove();
+            table.remove();
         });
 
         test("SearchInput: right / bottom place it (the default left / top does not win)", async function () {

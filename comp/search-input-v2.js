@@ -20,8 +20,13 @@ UI COMPONENT TEMPLATE
   A click on such an object keeps its own click (it does not start typing). clearIconMinTextWidth: a narrow box does
   not show its clear icon when the text beside it would be narrower than this; the text gets its place.
 - A cut text (2026-11-05, the user): a text longer than the box is not cut sharply: it fades out over textFadeWidth px
-  at the side where it goes on (under the clear icon, an object of the page, or the search icon). While typing, only
-  the far side of a caret at the end of the text fades, so the caret is always seen. textFadeWidth: 0 cuts sharply.
+  at the side where it goes on (under the clear icon, an object of the page, or the search icon). While not typing,
+  it goes on under the icon at its end (SearchInput.TEXT_UNDER_END: 20 px, the width of the clear icon) and fades
+  out slowly into it. While typing, the text ends before the icon and only the far side of a caret at the end of the
+  text fades, so the caret is always seen. textFadeWidth: 0 cuts sharply.
+- Escape (2026-11-05, the user): clearOnEscape: 1 makes Escape clear the text, as the clear icon (also in a narrow
+  box with no clear icon). The key is used (preventDefault): a Dialog or a SidePanel around the field does not close;
+  in an empty field Escape goes on to them. Off by default; SmartTable turns it on for its filter.
 
 Started Date: December 2025
 Developer: Bugra Ozden
@@ -46,6 +51,7 @@ const SearchInputDefaults = {
     isCancelEnabled: 1,
     clearIconMinTextWidth: 0, // px: the clear icon is not shown when the text beside it would be narrower (0: always shown)
     textFadeWidth: 24, // px: a text longer than the box fades out over this width where it is cut (0: cut sharply)
+    clearOnEscape: 0, // 1: Escape clears the text (as the clear icon); in an empty field it goes on to the page
     placeholderText: "Search",
     color: "whitesmoke",
     textColor: "rgba(0, 0, 0, 0.8)",
@@ -133,12 +139,18 @@ const SearchInput = function(params = {}) {
     };
 
     // The width of the text: with no clear icon, the text goes on to its place. While not typing, a cut text goes on
-    // under the icon (or the object of the page) at its end and fades out there: half of its fade is under it.
-    // WHY not while typing: the caret at the end of the text must not be under the icon.
+    // under the icon (or the object of the page) at its end and fades out there.
     const getTextWidth = function() {
         const width = getTextWidthWithClearIcon();
         const textWidth = isClearIconUsed() ? width : width + CLEAR_ICON_PLACE;
-        return isFocused ? textWidth : textWidth + box.textFadeWidth / 2;
+        return textWidth + getTextUnderEnd();
+    };
+
+    // How far the text goes under the icon at its end (0 while typing, or with no fade)
+    // WHY not while typing: the caret at the end of the text must not be under the icon.
+    const getTextUnderEnd = function() {
+        if (isFocused || !box.textFadeWidth) return 0;
+        return SearchInput.TEXT_UNDER_END;
     };
 
     const refreshTextWidth = function() {
@@ -174,12 +186,14 @@ const SearchInput = function(params = {}) {
         box.txtSearch.css = { maskImage: mask, webkitMaskImage: mask };
     };
 
-    // A mask that is transparent at a cut side and reaches the text after textFadeWidth px ("": no fade)
+    // A mask that is transparent at a cut side and reaches the text after textFadeWidth px ("": no fade). At the end
+    // the fade is longer by the part under the icon: the text fades out slowly into it.
     const getTextFadeMask = function(isCutLeft, isCutRight) {
         if (!isCutLeft && !isCutRight) return "";
-        const fade = box.textFadeWidth + "px";
-        const start = isCutLeft ? "transparent 0px, #000 " + fade : "#000 0px";
-        const end = isCutRight ? "#000 calc(100% - " + fade + "), transparent 100%" : "#000 100%";
+        const startFade = box.textFadeWidth + "px";
+        const endFade = (box.textFadeWidth + getTextUnderEnd()) + "px";
+        const start = isCutLeft ? "transparent 0px, #000 " + startFade : "#000 0px";
+        const end = isCutRight ? "#000 calc(100% - " + endFade + "), transparent 100%" : "#000 100%";
         return "linear-gradient(to right, " + start + ", " + end + ")";
     };
 
@@ -288,6 +302,26 @@ const SearchInput = function(params = {}) {
         setClearIconVisible(isClearIconUsed() && box.txtSearch.text.length > 0);
     };
 
+    // The text goes (the clear icon, or Escape: clearOnEscape); the page gets an empty search.
+    const clearText = function() {
+        setClearIconVisible(0);
+        box.txtSearch.text = "";
+        refreshTextFade();
+        box.onSearch(getSearchedText(), box);
+        box.onSubmit(getSearchedText(), box);
+    };
+
+    // clearOnEscape: Escape clears a text. In an empty field the key goes on to the page (a Dialog closes).
+    const onEscapeKey = function(self, event) {
+        if (event.key !== "Escape" || event.isComposing) return;
+        if (box.clearOnEscape != 1 || box.txtSearch.text === "") return;
+        // WHY: the first Escape is for the text: a Dialog or a SidePanel around the field must not close with it
+        //      (they leave a used key: defaultPrevented)
+        event.preventDefault();
+        event.stopPropagation();
+        clearText();
+    };
+
     // *** Public functions:
     box.publicFunc = () => {};
 
@@ -383,16 +417,9 @@ const SearchInput = function(params = {}) {
     // The text scrolls in its box (typing at the end, the blur takes it back to its start), a click moves the caret.
     box.listenTo(box.txtSearch.inputElement, "scroll", refreshTextFade);
     box.listenTo(box.txtSearch.inputElement, "mouseup", refreshTextFade);
+    box.listenTo(box.txtSearch.inputElement, "keydown", onEscapeKey);
     box.onResize(refreshLayout);
-    box.imgClearIcon.onClick(function(self) {
-
-        setClearIconVisible(0);
-        box.txtSearch.text = "";
-        refreshTextFade();
-        box.onSearch(getSearchedText(), box);
-        box.onSubmit(getSearchedText(), box);
-
-    });
+    box.imgClearIcon.onClick(clearText);
     box.imgClearIcon.onHoverChange(function(self, isOver) {
         isClearHovered = isOver;
         paintMotion();
@@ -430,6 +457,10 @@ const SearchInput = function(params = {}) {
     return endObject(box);
 
 };
+
+// px: while not typing, a cut text goes this far under the clear icon (its width) or the object at its end, and fades
+// out there (2026-11-05, the user: "a little into the icon, fading slowly"; it was half of the fade, 12 px)
+SearchInput.TEXT_UNDER_END = 20;
 
 // Sayfaya bir kez eklenen ::placeholder kuralı. (Sadece placeholderColor verilen inputları etkiler.)
 SearchInput.addPlaceholderStyle = function() {

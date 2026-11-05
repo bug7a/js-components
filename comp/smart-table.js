@@ -32,7 +32,8 @@ Webpage: https://bug7a.github.io/js-components/
 - Arama sütunu: Arama kutusunun sağ ucundaki etikete (ALL) basınca sütun listesi açılır. Arama sadece seçilen sütunda yapılır.
 -- (2026-11-05, the user) The chip is in the filter box at its right end; the clear icon shows at its left while
    there is a text, and a narrow box shows no clear icon (searchInputParams.clearIconMinTextWidth: 80 px of text).
-   A narrow table gives the filter box the room up to the count (up to 240 px).
+   A narrow table gives the filter box the room up to the count (up to 240 px). Escape clears the filter
+   (searchInputParams.clearOnEscape: 1); in an empty filter it goes on to the page (a Dialog around closes).
 -- searchTitleIndex: -1 (ALL: tüm sütunlar), showSearchTitleSelect: 0 ise kutu gizlenir.
 -- Liste için comp/context-menu.js yüklenmelidir. Yüklenmemiş ise, kutuya her basışta sıradaki sütuna geçer.
 - fitLineCount: 1 (2026-11-04): the rows are about itemHeight px high and their count follows the height of the table
@@ -130,6 +131,7 @@ const SmartTableDefaults = {
         placeholderText: "Filter",
         searchIconFile: "../comp/search-input-v2/filter.png",
         clearIconMinTextWidth: 80, // (the user, 2026-11-05: a narrow filter box has no clear icon; its text keeps that place)
+        clearOnEscape: 1, // Escape clears the filter (the user, 2026-11-05: a narrow box has no clear icon)
     },
     styleName: "classic", // "classic", "dark", "green" or a name added to SmartTable.styles
     style: { // Classic style package (default): the look of DataTable "classic" (2026-11-05, the user)
