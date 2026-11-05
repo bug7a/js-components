@@ -11,6 +11,8 @@ Tooltip - v26.10
   still points at its place.
 - Tooltip.show(target, text, look, side, content): a bubble at an object, not under the mouse (Ex: the "Click
   again" of a SmartButton ask); it returns the bubble, bubble.remove() takes it away. look: Tooltip.BUBBLE_LOOK keys.
+  It stays at its target while a box under it scrolls, and hides while the target is out of sight (2026-11-05,
+  the user: the bubble of an ask stayed where it was shown). The popover does the same.
 - CONTENT (2026-10-30): content: function (bubble) { ... } builds its own objects in the bubble in place of the text
   (a title and a text, a shortcut, a user card...); they are made one under the other (look.contentGap).
 - POPOVER (2026-10-30): trigger: "click" (or Tooltip.openPopover()): a click on the target opens the bubble and it
@@ -408,7 +410,43 @@ Tooltip.show = function(target, text, look, side = "top", content = null) {
         });
     }
     if (bubble.look.grow) Tooltip.grow(bubble);
+    Tooltip.followScroll(bubble, target, side);
     return bubble;
+};
+
+// The bubble goes with its target when a box scrolls, once a frame (bubble.remove() cleans the event)
+Tooltip.followScroll = function(bubble, target, side) {
+    let isPlaceWaiting = false;
+    const placeAgain = function() {
+        isPlaceWaiting = false;
+        if (bubble._isRemoved || target._isRemoved) return;
+        bubble.visible = Tooltip.isInSight(target) ? 1 : 0;
+        Tooltip.place(bubble, Tooltip.toPageRect(target), side);
+    };
+    // WHY on window in the capture phase: a scroll event does not bubble up; so it comes from every box that scrolls
+    bubble.listenTo(window, "scroll", function() {
+        if (isPlaceWaiting) return;
+        isPlaceWaiting = true;
+        requestAnimationFrame(placeAgain);
+    }, true);
+};
+
+// Is a part of the object seen: inside the screen and inside every box around it that cuts its content
+Tooltip.isInSight = function(obj) {
+    const rect = obj.elem.getBoundingClientRect();
+    let left = Math.max(rect.left, 0);
+    let top = Math.max(rect.top, 0);
+    let right = Math.min(rect.right, window.innerWidth);
+    let bottom = Math.min(rect.bottom, window.innerHeight);
+    for (let elem = obj.elem.parentElement; elem && elem !== document.body; elem = elem.parentElement) {
+        if (getComputedStyle(elem).overflow == "visible") continue;
+        const box = elem.getBoundingClientRect();
+        left = Math.max(left, box.left);
+        top = Math.max(top, box.top);
+        right = Math.min(right, box.right);
+        bottom = Math.min(bottom, box.bottom);
+    }
+    return (right > left) && (bottom > top);
 };
 // USAGE: const bubble = Tooltip.show(button, "Click again to delete.", { color: "#E8796D", textColor: "white", arrow: 12, grow: 1 });
 // USAGE: Tooltip.show(avatar, "", look, "bottom", function (bubble) { Label({ text: "Ayşe Kaya", bold: 1 }); });

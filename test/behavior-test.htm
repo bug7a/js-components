@@ -203,6 +203,24 @@
             target.remove();
         });
 
+        test("Tooltip.show: the bubble goes with its target when a box scrolls, and hides out of sight", async function () {
+            const scrollBox = startBox(0, 0, 200, 200, { scrollY: 1 });
+                const target = Button(20, 150, 80, 30, { text: "Ask" });
+                Box(0, 0, 10, 1000);
+            endBox();
+            const bubble = Tooltip.show(target, "Click again");
+            const topBefore = bubble.top;
+            scrollBox.elem.scrollTop = 40;
+            await wait(60);
+            const moved = Math.round(topBefore - bubble.top);
+            scrollBox.elem.scrollTop = 400;
+            await wait(60);
+            const isHidden = !bubble.visible;
+            check("Tooltip.show: the bubble goes with its target when a box scrolls, and hides out of sight", moved === 40 && isHidden, "moved: " + moved + ", hidden: " + isHidden);
+            bubble.remove();
+            scrollBox.remove();
+        });
+
         // *** NOTICE (comp/notice.js)
 
         test("Notice over a Dialog: it is on top, Escape closes only the notice", async function () {
