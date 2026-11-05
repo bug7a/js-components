@@ -94,6 +94,15 @@ CATALOG.COMPONENTS = [
         tr: "Farenin olduğu yerde açılan sade menü; yazılı veya ikonlu öğeler (SVG ikonlar yazının rengini alır) ve alt menüler.",
     },
     {
+        key: "menu-bar", name: "MenuBar", cat: "actions",
+        source: "comp/menu-bar.js", deps: ["comp/context-menu.js"], samples: [
+            { file: "02-comp-examples/menu-bar.htm", title: "Basic" },
+            { file: "02-comp-examples/menu-bar-2.htm", title: "A small program: MenuBar, ImageView, LogView and StatusBar" },
+        ],
+        en: "The row of menus at the top of a window: File, Edit, View. Shortcuts, check marks, submenus and the arrow keys. Light and dark themes.",
+        tr: "Pencerenin üstündeki menü çubuğu: Dosya, Düzenle, Görünüm. Kısayollar, onay işaretleri, alt menüler ve ok tuşları. Aydınlık ve karanlık tema.",
+    },
+    {
         key: "filters", name: "Filters", cat: "selection",
         source: "comp/filters.js", samples: ["02-comp-examples/filters.htm"],
         en: "A filter menu: a button and a panel with a search field, groups of check boxes, the number of the selected options and Clear all. In the page or as a popup.",
@@ -228,6 +237,12 @@ CATALOG.COMPONENTS = [
         tr: "Gelip giden kısa mesajlar: başarılı, hata, yükleniyor ve Geri Al gibi eylemler.",
     },
     {
+        key: "status-bar", name: "StatusBar", cat: "feedback",
+        source: "comp/status-bar.js", samples: ["02-comp-examples/status-bar.htm"],
+        en: "The thin bar at the bottom of a window: a short message that can go away by itself, a turning circle for a job, small parts that can be clicked. Light and dark themes.",
+        tr: "Pencerenin altındaki ince çubuk: kendiliğinden kaybolabilen kısa mesaj, süren iş için dönen halka, tıklanabilen küçük parçalar. Aydınlık ve karanlık tema.",
+    },
+    {
         key: "side-panel", name: "SidePanel", cat: "feedback",
         source: "comp/side-panel.js", samples: ["02-comp-examples/side-panel.htm", "02-comp-examples/side-panel-2.htm"],
         en: "A drawer that slides in from a side of the screen, or of a box like an app column, over the page.",
@@ -276,6 +291,12 @@ CATALOG.COMPONENTS = [
         tr: "Dikey zaman çizelgesi: her öğe için bir nokta ve noktaların arasında bir çizgi.",
     },
     {
+        key: "log-view", name: "LogView", cat: "data",
+        source: "comp/log-view.js", samples: ["02-comp-examples/log-view.htm"],
+        en: "The output of a program: colored lines with their time and level, following the last line. Fast output is drawn in batches. Light and dark themes.",
+        tr: "Bir programın çıktısı: saati ve düzeyiyle renkli satırlar, son satırı kendiliğinden izler. Hızlı çıktı topluca çizilir. Aydınlık ve karanlık tema.",
+    },
+    {
         key: "scrolling-text", name: "ScrollingText", cat: "data",
         source: "comp/scrolling-text.js", samples: ["02-comp-examples/scrolling-text.htm"],
         en: "A one line text that slides to show its end when it does not fit: always, or only under the mouse.",
@@ -299,6 +320,12 @@ CATALOG.COMPONENTS = [
         ],
         en: "A table for lists up to about 2,000 rows: sorting, search, keyboard selection, your own cells and row updates by id. For more rows: SmartTable.",
         tr: "Yaklaşık 2.000 satıra kadar listeler için tablo: sıralama, arama, klavyeyle seçim, kendi hücreleriniz ve id ile satır güncelleme. Daha fazla satır için: SmartTable.",
+    },
+    {
+        key: "image-view", name: "ImageView", cat: "pages",
+        source: "comp/image-view.js", samples: ["02-comp-examples/image-view.htm"],
+        en: "A place to look at a picture or a plot: zoom with the wheel or two fingers, move with a drag, a small toolbar. A plot that is drawn again does not blink. Light and dark themes.",
+        tr: "Resim ya da grafiğe bakma alanı: tekerlek ya da iki parmakla yakınlaştırma, sürükleyerek kaydırma, küçük araç çubuğu. Yeniden çizilen grafik yanıp sönmez. Aydınlık ve karanlık tema.",
     },
     {
         key: "web-view", name: "WebView", cat: "pages",
