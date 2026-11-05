@@ -143,6 +143,7 @@ const GraphBoxDefaults = {
             fontFamily: "opensans, system-ui, -apple-system, 'Segoe UI', sans-serif",
             labelGap: 8, // Between a text of the axis and the chart
             tickSpace: 32, // At least this many px between two lines of the value axis
+            sideTickSpace: 64, // The same on an axis that runs to the right: its numbers are side by side.
             labelSpace: 10, // At least this many px between two labels
             labelAngle: 35, // Degrees. The labels of the bars turn when they have no room. 0: A label is skipped instead.
             maxLabelShare: 0.3, // A turned label is cut with "..." at this much of the height of the chart.
@@ -727,7 +728,7 @@ const GraphBox = function (params = {}) {
         const right = Math.max(left + 1, width - Math.max(pointRoom, Math.ceil(tickWidth / 2), limits.valueRooms.end));
         const top = (hasBands) ? 0 : Math.max(pointRoom, Math.ceil(textHeight / 2));
         const bottom = Math.max(top + 1, height - (textHeight + labelGap + titleRooms.bottom));
-        const tickSpace = Math.max(_s.axis.tickSpace, tickWidth + _s.axis.labelSpace);
+        const tickSpace = Math.max(_s.axis.sideTickSpace, tickWidth + _s.axis.labelSpace);
 
         const scale = createValueScale(limits, right - left, tickSpace);
         return { left: left, top: top, right: right, bottom: bottom, maxLabelWidth: maxLabelWidth, scale: scale };
@@ -1729,7 +1730,7 @@ const GraphBox = function (params = {}) {
 
         const xTickWidth = measureWidestText([formatXTickText(xLimits.low, 0), formatXTickText(xLimits.high, 0)]);
         const right = Math.max(left + 1, width - Math.max(edgeRoom, Math.ceil(xTickWidth / 2)));
-        const xTickSpace = Math.max(_s.axis.tickSpace, xTickWidth + _s.axis.labelSpace);
+        const xTickSpace = Math.max(_s.axis.sideTickSpace, xTickWidth + _s.axis.labelSpace);
         const xScale = createValueScale(xLimits, right - left, xTickSpace, formatXTickText);
 
         return { left: left, top: top, right: right, bottom: bottom, xScale: xScale, yScale: yScale };
