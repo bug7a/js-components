@@ -31,6 +31,9 @@
         let loginPage = null;
         let userData = null;
 
+        const PANEL_WIDTH = 420;
+        const PAGE_SIDE_PADDING = 30; // px: the padding of LoginPage at the sides of the page
+
         // First running function.
         window.onload = function() {
 
@@ -55,9 +58,12 @@
 
         const initLoginView = function() {
                 
+            // WHY: a phone narrower than the panel (390 px): the panel takes the screen without the sides of the page
+            const panelWidth = Math.min(PANEL_WIDTH, page.width - PAGE_SIDE_PADDING * 2);
+
             // Show Login Page
             loginPage = LoginPage({
-                panelWidth: 420,
+                panelWidth: panelWidth,
                 inputStyleName: "ozdenDark", // the fields: the InputB package "ozdenDark"
                 primaryColor: "#2C5A38",
                 panelName: "MY PANEL v25.08.11",
