@@ -15,6 +15,8 @@ UI COMPONENT TEMPLATE
   of the page to its bottom, and it stays that high when a search leaves a few rows (the comp-m1 SelectItem
   selection_fullScreen). A resize of the page places it again (the normal list closes).
 - Options can have a description, an icon, a group title and can be disabled.
+- style.optionSelected.canSelectAgain: 0 (ozden, ozdenDark): the selected row (single) can not be chosen again, as
+  in the comp-m1 SelectItem: no look under the mouse or the keys, the keys skip it, a click on it does nothing.
 - Clear button in the field (clearable: 1).
 - Keyboard: Enter / Space / ArrowDown opens. ArrowUp / ArrowDown / Home / End move, Enter selects,
   Escape closes, Tab closes. Typing on the closed field opens the search with the typed letter.
@@ -223,6 +225,7 @@ const SelectBoxDefaults = {
             fontFamily: "opensans-bold", // Single selection. "": the font does not change
             showTick: 1, // Single selection: a tick on the right
             opacity: 1,
+            canSelectAgain: 1, // 0 (single): the selected row can not be chosen again: no look under the mouse or the keys, the keys skip it, a click on it does nothing
         },
         optionDisabled: {
             opacity: 0.4,
@@ -365,6 +368,16 @@ const SelectBox = function (params = {}) {
     const isSelected = function (option) {
         if (isMultiple()) return box.value.some(function (v) { return sameValue(v, option.value); });
         return sameValue(box.value, option.value);
+    };
+
+    // single, style.optionSelected.canSelectAgain: 0 (ozden): the selected row can not be chosen again.
+    const isLockedOption = function (option) {
+        return _s.optionSelected.canSelectAgain == 0 && !isMultiple() && isSelected(option);
+    };
+
+    // A row the mouse and the keys can make active (and choose): not disabled, not the locked selected one.
+    const isActivatable = function (option) {
+        return !option.disabled && !isLockedOption(option);
     };
 
     const findOption = function (value) {
@@ -640,10 +653,23 @@ const SelectBox = function (params = {}) {
 
     const prepareListRow = function (item, row, index) {
         row.elem.id = id + "-option-" + index;
-        if (item.option.disabled) row.cursor = "default";
         row.on("mousemove", function () {
             const rowIndex = rows.findIndex(function (shown) { return shown.row === row; });
-            if (rowIndex >= 0 && rowIndex != activeIndex && !item.option.disabled) setActive(rowIndex, 0);
+            onRowMouseMove(rowIndex, item.option);
+        });
+    };
+
+    // The mouse on a row makes it active. WHY: On the locked selected row no row is active (the last one is not
+    // left white): the row under the mouse can not be chosen.
+    const onRowMouseMove = function (index, option) {
+        if (index < 0 || index == activeIndex || option.disabled) return;
+        setActive(isLockedOption(option) ? -1 : index, 0);
+    };
+
+    // The cursor of the rows of the ItemList: a hand only on a row that can be chosen (the selection changes them).
+    const refreshListCursors = function () {
+        box.itemList.forEach(function (item, row) {
+            row.cursor = isActivatable(item.option) ? "pointer" : "default";
         });
     };
 
@@ -651,6 +677,7 @@ const SelectBox = function (params = {}) {
     const renderItemList = function () {
         if (!box.itemList) createItemList();
         syncListSelection();
+        refreshListCursors();
         box.itemList.search(searchText);
         rows = [];
         box.itemList.forEach(function (item, row) {
@@ -668,8 +695,9 @@ const SelectBox = function (params = {}) {
     };
 
     // A click on a row: the ItemList changes its selection (onListChange). The selected row clicked again
-    // (single) is not a change, but the list closes like the normal rows.
+    // (single) is not a change, but the list closes like the normal rows (not the locked one: nothing happens).
     const onListItemClick = function (list, item) {
+        if (isLockedOption(item.option)) return;
         if (!isMultiple() && isSelected(item.option)) afterSelect(JSON.stringify(box.value));
     };
 
@@ -723,12 +751,12 @@ const SelectBox = function (params = {}) {
         else if (bottom > area.scrollTop + area.clientHeight) area.scrollTop = bottom - area.clientHeight;
     };
 
-    // Active row after the list is drawn: the first selected one, or the first enabled one
+    // Active row after the list is drawn: the first selected one, or the first one that can be chosen
     const getStartActiveIndex = function () {
         if (_s.optionActive.showAtOpen == 0) return -1;
-        const selectedIndex = rows.findIndex(function (item) { return isSelected(item.option) && !item.option.disabled; });
+        const selectedIndex = rows.findIndex(function (item) { return isSelected(item.option) && isActivatable(item.option); });
         if (selectedIndex >= 0) return selectedIndex;
-        return rows.findIndex(function (item) { return !item.option.disabled; });
+        return rows.findIndex(function (item) { return isActivatable(item.option); });
     };
 
     const createDescription = function (html) {
@@ -756,7 +784,7 @@ const SelectBox = function (params = {}) {
         row.elem.id = id + "-option-" + index;
         row.role = "option";
         row.aria = { selected: (selected) ? "true" : "false" };
-        row.cursor = (option.disabled) ? "default" : "pointer";
+        row.cursor = isActivatable(option) ? "pointer" : "default";
         if (option.disabled) {
             row.aria = { disabled: "true" };
             row.opacity = _s.optionDisabled.opacity;
@@ -798,11 +826,11 @@ const SelectBox = function (params = {}) {
         endGroup();
 
         row.on("mousemove", function () {
-            if (activeIndex != index && !option.disabled) setActive(index, 0);
+            onRowMouseMove(index, option);
         });
 
         row.on("click", function () {
-            if (!option.disabled) selectOption(option);
+            if (isActivatable(option)) selectOption(option);
         });
 
         return row;
@@ -831,14 +859,14 @@ const SelectBox = function (params = {}) {
 
     };
 
-    // step: +1 or -1. Skips disabled options.
+    // step: +1 or -1. Skips the rows that can not be chosen (disabled, the locked selected one).
     const moveActive = function (step) {
         if (rows.length == 0) return;
         // WHY: With no active row (-1), ArrowUp starts from the end: (-1 - 1) % length was the row before the last one.
         let index = (activeIndex < 0 && step < 0) ? rows.length : activeIndex;
         for (let i = 0; i < rows.length; i++) {
             index = (index + step + rows.length) % rows.length;
-            if (!rows[index].option.disabled) return setActive(index);
+            if (isActivatable(rows[index].option)) return setActive(index);
         }
     };
 
@@ -888,7 +916,9 @@ const SelectBox = function (params = {}) {
             const scrollTop = box.list.elem.scrollTop;
             renderList();
             box.list.elem.scrollTop = scrollTop; // WHY: The list must not jump after a click.
-            setActive(keepActive, 0);
+            // WHY: The row just chosen may be the locked selected one now (canSelectAgain: 0): no active row then.
+            const keptRow = rows[keepActive];
+            setActive((keptRow && isActivatable(keptRow.option)) ? keepActive : -1, 0);
         }
 
         // WHY: The selected option clicked again is not a change.
@@ -1016,7 +1046,7 @@ const SelectBox = function (params = {}) {
 
     const selectActiveRow = function () {
         const item = rows[activeIndex];
-        if (item && !item.option.disabled) selectOption(item.option);
+        if (item && isActivatable(item.option)) selectOption(item.option);
     };
 
     // A letter typed without Ctrl / Cmd / Alt
@@ -1733,7 +1763,9 @@ SelectBox.styles.ozden = {
             iconMargin: [0, 0],
         },
         optionActive: { color: "white", lineColor: Black(0.2), showAtOpen: 0 }, // (The lines: the user, 2026-11-05, as ItemList ozden)
-        optionSelected: { textColor: "rgba(0, 0, 0, 0.8)", checkColor: "#373836", checkTickColor: "white", fontFamily: "", showTick: 0, opacity: 0.5 },
+        // WHY canSelectAgain 0 (the user, 2026-11-05): the selected item of the comp-m1 SelectItem was not clickable
+        //     (opacity 0.5, clickable 0): it did not get the white under the mouse and a click on it did nothing.
+        optionSelected: { textColor: "rgba(0, 0, 0, 0.8)", checkColor: "#373836", checkTickColor: "white", fontFamily: "", showTick: 0, opacity: 0.5, canSelectAgain: 0 },
         description: { fontSize: 14, textColor: "gray", marginTop: -4 }, // WHY: -4: the old title (top 25) and description (top 49) overlap a little.
         highlight: { color: "transparent" },
         empty: { fontSize: 16, textColor: Black(0.45) },
@@ -1742,7 +1774,7 @@ SelectBox.styles.ozden = {
         itemList: {
             row: { padding: [19, 0], gap: 20, round: 0, motion: "background-color 0.2s, box-shadow 0.2s" }, // WHY: 19: see option.padding
             hover: { color: "white", lineColor: Black(0.2) },
-            selected: { color: "transparent", opacity: 0.5 }, // WHY: transparent: no color of its own; the active row is white on it too.
+            selected: { color: "transparent", opacity: 0.5 }, // WHY: transparent: no look of its own (it can not be chosen again).
             check: { size: 22, color: "#373836", iconColor: "white", borderColor: Black(0.25) },
         },
         // The scroll bar of the comp-m1 ItemList: always shown, with the dots at its ends.

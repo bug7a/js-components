@@ -1278,19 +1278,20 @@
             probe.style.boxShadow = "inset 0 1px 0 " + Black(0.2) + ", inset 0 -1px 0 " + Black(0.2);
             const LINES = probe.style.boxShadow;
             const createRowView = function (option) { Label({ text: option.label }); };
-            // The shadows of the first row, of the selected row and of the first row again, while the mouse moves on them.
+            // The shadows of the first row, of the third row and of the first row again, while the mouse moves on them.
+            // (The selected one can not be chosen again in ozden: its own test, canSelectAgain.)
             const activeShadows = function (params) {
                 const select = SelectBox(Object.assign({ width: 240, options: ["Apple", "Banana", "Cherry"], value: "Banana" }, params));
                 select.open();
                 const rows = [...select.panel.elem.querySelectorAll('[role="option"]')];
                 rows[0].dispatchEvent(new MouseEvent("mousemove"));
                 const first = rows[0].style.boxShadow;
-                rows[1].dispatchEvent(new MouseEvent("mousemove"));
-                const selected = rows[1].style.boxShadow;
+                rows[2].dispatchEvent(new MouseEvent("mousemove"));
+                const third = rows[2].style.boxShadow;
                 const firstAfter = rows[0].style.boxShadow;
                 select.close();
                 select.remove();
-                return [first, selected, firstAfter];
+                return [first, third, firstAfter];
             };
             const ownRows = activeShadows({ styleName: "ozden" });
             const listRows = activeShadows({ styleName: "ozden", createItemView: createRowView });
@@ -1313,6 +1314,36 @@
             const classic = lookOf({});
             check("SelectBox: a search box in a package of SearchInput (ozden) has its look, not the classic keys of SelectBox",
                 ozden === "20 / 24 / 0.4 / ozden icon" && classic === "14 / 16 / 0.55 / classic icon", "ozden: " + ozden + ", classic: " + classic);
+        });
+
+        test("SelectBox ozden: the selected row can not be chosen again (no look, the keys skip it, a click does nothing), classic can", async function () {
+            const createRowView = function (option) { Label({ text: option.label }); };
+            // The mouse on Apple, then on the selected Banana; the arrow down from Apple; a click on Banana.
+            const tryAgain = function (params) {
+                const select = SelectBox(Object.assign({ width: 240, options: ["Apple", "Banana", "Cherry"], value: "Banana", searchable: 1 }, params));
+                select.open();
+                const rowsOf = function () { return [...select.panel.elem.querySelectorAll('[role="option"]')]; };
+                const lookOf = function (row) { return (row.style.backgroundColor === "transparent" || row.style.backgroundColor === "") ? "-" : "lit"; };
+                rowsOf()[0].dispatchEvent(new MouseEvent("mousemove"));
+                rowsOf()[1].dispatchEvent(new MouseEvent("mousemove"));
+                const onSelected = rowsOf().map(lookOf).join("");
+                const cursor = rowsOf()[1].style.cursor;
+                rowsOf()[0].dispatchEvent(new MouseEvent("mousemove"));
+                key(select.searchInput.inputElement, "keydown", "ArrowDown");
+                const afterKey = rowsOf().map(lookOf).join("");
+                rowsOf()[1].click();
+                const result = [onSelected, cursor, afterKey, select.isOpen() ? "open" : "closed", select.value].join(" / ");
+                select.close();
+                select.remove();
+                return result;
+            };
+            const ozdenRows = tryAgain({ styleName: "ozden" });
+            const ozdenListRows = tryAgain({ styleName: "ozden", createItemView: createRowView });
+            const classicRows = tryAgain({});
+            const LOCKED = "--- / default / --lit / open / Banana";
+            const isOk = ozdenRows === LOCKED && ozdenListRows === LOCKED && classicRows === "-lit- / pointer / -lit- / closed / Banana";
+            check("SelectBox ozden: the selected row can not be chosen again (no look, the keys skip it, a click does nothing), classic can", isOk,
+                "ozden: " + ozdenRows + " ;; ozden ItemList rows: " + ozdenListRows + " ;; classic: " + classicRows);
         });
 
         test("ItemList in a combobox: setActiveKey leaves the look of the mouse only on the active row", async function () {
