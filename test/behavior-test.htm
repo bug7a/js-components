@@ -134,12 +134,12 @@
         });
 
         test("Dialog: topIconTone fills LIGHT and STRONG of the icon and colors its circle", async function () {
-            const icon = '<svg viewBox="0 0 24 24"><rect width="20" height="20" fill="LIGHT"/><circle r="3" fill="STRONG"/><\/svg>';
+            const icon = '<svg viewBox="0 0 24 24"><rect width="20" height="20" fill="LIGHT"/><circle r="3" fill="STRONG"/><circle r="1" fill="CIRCLE"/><\/svg>';
             const dialog = Dialog({ variant: "centered", topIconTone: "green", topIconFile: icon, titleText: "Saved" });
             await wait(30);
             const html = dialog.iconArea.elem.innerHTML;
             const tone = Dialog.ICON_TONES.green;
-            const isFilled = html.includes(tone.light) && html.includes(tone.strong) && !/LIGHT|STRONG/.test(html);
+            const isFilled = html.includes(tone.light) && html.includes(tone.strong) && html.includes(tone.circle) && !/LIGHT|STRONG|CIRCLE/.test(html);
             const circleColor = dialog.iconArea.elem.firstElementChild.style.backgroundColor;
             check("Dialog: topIconTone fills LIGHT and STRONG of the icon and colors its circle", isFilled && circleColor === "rgb(238, 247, 235)", "filled: " + isFilled + ", circle: " + circleColor);
             dialog.close("api");

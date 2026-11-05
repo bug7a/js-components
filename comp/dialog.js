@@ -32,6 +32,7 @@ NOTE: still in development (the user, 2026-10-29): more style packages come; the
   topIconTone (the user, 2026-11-05): "cyan", "orange", "yellow", "green" or "blue" (the tones of SmartButton) puts
   the icon in three tones of it (Dialog.ICON_TONES): a light circle, and in an "<svg" text the words LIGHT and STRONG
   are filled in with a light and a strong tone (a two-tone icon; currentColor is the strong tone). "": gray.
+  CIRCLE in it is the color of the circle: a ring that cuts a part out (Ex: around the dot of a new mail).
 - Motion: the cover comes from nothing and the card rises 50 px while it comes (0.2 s); it goes at once; none with reduced motion.
 - Style packages: "ozden" (default). (Dialog.styles)
 - The buttons (the user, 2026-10-30): style.buttons[type] = { styleName, tone, style }: a template of SmartButton
@@ -591,11 +592,12 @@ const Dialog = function (params = {}) {
         return { circle: _c.iconCircle.color, light: _c.icon.lightColor, strong: _c.icon.color };
     };
 
-    // WHY: the words LIGHT and STRONG in an "<svg" text are the places of the two colors of a two-tone icon
+    // WHY: the words LIGHT and STRONG in an "<svg" text are the places of the two colors of a two-tone icon; CIRCLE
+    //      is the color of the circle behind it (a ring around a part looks cut out of the icon)
     const fillIconColors = function (file, look) {
         const text = String(file);
         if (!text.trim().startsWith("<svg")) return file;
-        return text.split("LIGHT").join(look.light).split("STRONG").join(look.strong);
+        return text.split("LIGHT").join(look.light).split("STRONG").join(look.strong).split("CIRCLE").join(look.circle);
     };
 
     // The icon at the top: in a light circle (gray: a dark icon; topIconTone: the tones of SmartButton)

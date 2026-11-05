@@ -26,7 +26,8 @@
     // color (topIconTone: three tones of a tone of SmartButton); it is drawn in two tones and moves once when its
     // dialog opens. The buttons take the tones of SmartButton too: Delete orange (danger), OK of Saved green (success).
     // Three more dialogs that projects often need (the user, 2026-11-05): turn on the notifications, no connection
-    // (Try again waits), leave without saving.
+    // (Try again waits), leave without saving. And three more: the session has ended, something went wrong (Try again
+    // waits), check your inbox (Send again waits and says under the message that the link is sent).
 
     const WORK_TIME = 1200; // ms: a job that takes time (the sample)
 
@@ -68,12 +69,34 @@
         '<rect x="3.5" y="2.5" width="13.5" height="19" rx="2.6" fill="LIGHT"/>' +
         '<path d="M7.2 7.6h6.2M7.2 11.4h4" fill="none" stroke="STRONG" stroke-width="2" stroke-linecap="round"/>' +
         '<path class="top-icon-pencil" d="M18.9 9.9a1.6 1.6 0 0 1 2.3 2.3l-7.4 7.4-3.4.9.9-3.4z" fill="STRONG"/>';
+    // A lock: its shackle comes out of it (written first), the lock, its keyhole
+    const LOCK_ICON =
+        '<path class="top-icon-shackle" d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7" fill="none" stroke="STRONG" stroke-width="2.2" stroke-linecap="round"/>' +
+        '<rect x="4" y="9.5" width="16" height="12" rx="3.2" fill="LIGHT"/>' +
+        '<circle cx="12" cy="14.6" r="1.8" fill="STRONG"/>' +
+        '<path d="M12 15.6v2.3" fill="none" stroke="STRONG" stroke-width="2" stroke-linecap="round"/>';
+    // A circle mark: an exclamation mark
+    const ERROR_ICON =
+        '<g class="top-icon-shake">' +
+            '<circle cx="12" cy="12" r="11" fill="STRONG"/>' +
+            '<path d="M12 6.8v6.4" fill="none" stroke="white" stroke-width="2.4" stroke-linecap="round"/>' +
+            '<circle cx="12" cy="16.9" r="1.5" fill="white"/>' +
+        '<\/g>';
+    // An envelope, its flap, and the dot of a new mail (a ring in the color of the circle cuts it out of the envelope)
+    const INBOX_ICON =
+        '<rect x="2.5" y="5" width="19" height="14" rx="3" fill="LIGHT"/>' +
+        '<path d="M6 9l6 4.2L18 9" fill="none" stroke="STRONG" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<g class="top-icon-dot">' +
+            '<circle cx="19.2" cy="5.4" r="3.5" fill="CIRCLE"/>' +
+            '<circle cx="19.2" cy="5.4" r="2.4" fill="STRONG"/>' +
+        '<\/g>';
 
     // Each icon moves once when its dialog opens, after the card comes: the lid of the bin lifts and falls back, the
     // arrow goes out, the circle grows in and its check is drawn, the bell rings, the line over the cloud is drawn,
-    // the pencil writes. Nothing with reduced motion.
+    // the pencil writes, the lock closes, the exclamation mark shakes ("no"), the dot of the new mail grows in.
+    // Nothing with reduced motion.
     const ICON_MOTION_CSS = [
-        ".top-icon-lid, .top-icon-arrow, .top-icon-mark, .top-icon-bell, .top-icon-pencil { transform-box: fill-box; }",
+        ".top-icon-lid, .top-icon-arrow, .top-icon-mark, .top-icon-bell, .top-icon-pencil, .top-icon-dot { transform-box: fill-box; }",
         ".top-icon-lid { transform-origin: 100% 100%; animation: top-icon-lift 0.5s 0.2s ease-in-out both; }",
         ".top-icon-arrow { animation: top-icon-go 0.25s 0.15s " + MOTION_EASE + " both; }",
         ".top-icon-mark { transform-origin: 50% 50%; animation: top-icon-pop 0.25s 0.1s " + MOTION_EASE + " both; }",
@@ -81,13 +104,18 @@
         ".top-icon-bell { transform-origin: 50% 0%; animation: top-icon-ring 0.6s 0.15s ease-in-out both; }",
         ".top-icon-slash { stroke-dasharray: 1; animation: top-icon-draw 0.3s 0.25s " + MOTION_EASE + " both; }",
         ".top-icon-pencil { animation: top-icon-write 0.5s 0.2s ease-in-out both; }",
+        ".top-icon-shackle { animation: top-icon-close 0.35s 0.2s " + MOTION_EASE + " both; }",
+        ".top-icon-shake { animation: top-icon-shake 0.45s 0.2s ease-in-out both; }",
+        ".top-icon-dot { transform-origin: 50% 50%; animation: top-icon-pop 0.25s 0.3s " + MOTION_EASE + " both; }",
         "@keyframes top-icon-lift { 50% { transform: translateY(-1.5px) rotate(8deg); } }",
         "@keyframes top-icon-go { from { opacity: 0; transform: translateX(-4px); } }",
         "@keyframes top-icon-pop { from { opacity: 0; transform: scale(0.6); } }",
         "@keyframes top-icon-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }",
         "@keyframes top-icon-ring { 20% { transform: rotate(12deg); } 45% { transform: rotate(-9deg); } 70% { transform: rotate(5deg); } }",
         "@keyframes top-icon-write { 35% { transform: translate(-1.2px, 1.2px); } 70% { transform: translate(0.8px, -0.8px); } }",
-        "@media (prefers-reduced-motion: reduce) { .top-icon-lid, .top-icon-arrow, .top-icon-mark, .top-icon-check, .top-icon-bell, .top-icon-slash, .top-icon-pencil { animation: none; } }",
+        "@keyframes top-icon-close { from { transform: translateY(-2.5px); } }",
+        "@keyframes top-icon-shake { 15% { transform: translateX(-2px); } 35% { transform: translateX(2px); } 55% { transform: translateX(-1.5px); } 75% { transform: translateX(1px); } }",
+        "@media (prefers-reduced-motion: reduce) { .top-icon-lid, .top-icon-arrow, .top-icon-mark, .top-icon-check, .top-icon-bell, .top-icon-slash, .top-icon-pencil, .top-icon-shackle, .top-icon-shake, .top-icon-dot { animation: none; } }",
     ].join("\n");
 
     // The yellow button of Log out: the hover a little darker, the text of the package (not the white of danger)
@@ -225,6 +253,78 @@
         showResult("unsaved changes: " + (isLeaving ? "left" : "stayed"));
     };
 
+    // SESSION ENDED: the page logged the user out after a while; one button
+    const openSessionAlert = async function () {
+        await Dialog.alert({
+            variant: "centered",
+            topIconTone: "blue",
+            topIconFile: svgIcon(LOCK_ICON),
+            titleText: "Your session has ended",
+            messageText: "For your safety, you were logged out after a while. Log in again to go on.",
+            buttonText: "Log in again",
+        });
+        showResult("session: log in again");
+    };
+
+    // SOMETHING WENT WRONG: Try again waits (its clock); Close gives up
+    const openErrorDialog = function () {
+        Dialog({
+            variant: "centered",
+            width: 420,
+            topIconTone: "orange",
+            topIconFile: svgIcon(ERROR_ICON),
+            titleText: "Something went wrong",
+            messageText: "We could not save your changes. Please try again in a moment.",
+            buttons: [
+                { key: "close", text: "Close", type: "secondary" },
+                {
+                    key: "retry", text: "Try again", type: "primary",
+                    onClick: function () {
+                        return wait(WORK_TIME).then(function () { showResult("Saved on the second try."); });
+                    },
+                },
+            ],
+            onClose: function (dialog, reason, buttonKey) { showClose(reason, buttonKey, "close"); },
+        });
+    };
+
+    // CHECK YOUR INBOX: after a sign-up. Send again waits (its clock), then the dialog stays open and says that the
+    // link is sent.
+    const openInboxDialog = function () {
+        Dialog({
+            variant: "centered",
+            width: 420,
+            topIconTone: "cyan",
+            topIconFile: svgIcon(INBOX_ICON),
+            titleText: "Check your inbox",
+            messageText: "We sent a link to ayse@example.com. Open it to verify your e-mail address.",
+            buttons: [
+                {
+                    key: "again", text: "Send again", type: "secondary",
+                    onClick: function (dialog) {
+                        sendLinkAgain(dialog);
+                        return false; // WHY: the dialog stays open: it says that the link is sent
+                    },
+                },
+                { key: "ok", text: "Got it", type: "primary", onClick: function () { showResult("inbox: got it"); } },
+            ],
+            onClose: function (dialog, reason) {
+                if (reason != "button") showResult("Closed: " + reason);
+            },
+        });
+    };
+
+    // WHY setBusy, not a Promise from onClick: a Promise closes the dialog when it ends
+    const sendLinkAgain = function (dialog) {
+        dialog.setStatus("");
+        dialog.setBusy(1, "again"); // its clock; the other button waits
+        wait(WORK_TIME).then(function () {
+            if (!dialog.isOpen()) return;
+            dialog.setBusy(0);
+            dialog.setStatus("A new link is sent.", "success");
+        });
+    };
+
     const createButton = function (text, onClick) {
         return SmartButton({ styleName: "ozdenType1", labelText: text, height: 40, style: { box: { color: "white" } }, onClick: onClick }); // white inside (its hover stays gray)
     };
@@ -248,6 +348,12 @@
                 createButton("Notifications", openNotificationsDialog);
                 createButton("No connection", openOfflineDialog);
                 createButton("Unsaved changes", openUnsavedConfirm);
+            endGroup();
+
+            HGroup({ hug: 1, gap: 10, wrap: 1, clipContent: 0 });
+                createButton("Session ended", openSessionAlert);
+                createButton("Something went wrong", openErrorDialog);
+                createButton("Check your inbox", openInboxDialog);
             endGroup();
 
             lblResult = Label({ plainText: "-", fontSize: 14, textColor: Black(0.5) });
