@@ -19,7 +19,7 @@ UI COMPONENT TEMPLATE
   setLimits().
 - Style packages: "classic" (default), "modern", "ozden" (the lines of comp-m1 UIProgressBar: the track of the
   default, the bar its main color at 50% with an edge of it, a dark limit line with a text; the user 2026-10-29).
-  Select with styleName. (ProgressBar.styles)
+  "ozdenDark" (the same bar for a dark page). Select with styleName. (ProgressBar.styles)
 - THE TRACK of every bar (basic-designer, 2026-10-30): 16 px, #F2F2F2, a 2 px light gray edge, round 4 (the default;
   "modern" keeps its own: 10 px, no edge, round ends).
 - Everything is drawn with code (no image files needed).
@@ -622,6 +622,57 @@ ProgressBar.styles = {
         valueText: {
             fontSize: 14,
             textColor: "rgba(35, 35, 35, 0.6)",
+        },
+    },
+
+    // The ozden bar for a dark page (2026-11-06): a dark track with a soft edge, the bar in the main color of the kit.
+    ozdenDark: {
+        layout: {
+            gap: 8,
+        },
+        track: {
+            color: "#2A2A29",
+            borderColor: White(0.18),
+        },
+        bar: {
+            color: "#5BBAC1",
+            fillOpacity: 0.5,
+            border: 2,
+            borderColor: "", // the main color
+            motion: 0.3,
+        },
+        secondBar: {
+            color: "", // the main color, lighter
+            fillOpacity: 0.2,
+            borderOpacity: 0.45,
+        },
+        stripes: {
+            color: White(0.25),
+            size: 14,
+            speed: 0.8,
+        },
+        successBar: {
+            color: "#40A5AF",
+        },
+        errorBar: {
+            color: "#FE5D49",
+        },
+        limit: {
+            color: White(0.75),
+            width: 4,
+            round: 2,
+            overhang: 4,
+            textSize: 14,
+            textColor: White(0.75),
+            textSpace: 8,
+        },
+        title: {
+            fontSize: 15,
+            textColor: White(0.88),
+        },
+        valueText: {
+            fontSize: 14,
+            textColor: White(0.6),
         },
     },
 

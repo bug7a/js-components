@@ -125,6 +125,21 @@
                     ProgressBar({ width: BAR_WIDTH, styleName: "ozden", value: 85, limits: [{ value: 80, text: "limit 80" }], status: "error", valuePosition: "right" });
                 endCard();
 
+                // 6. A dark page
+                VGroup({ width: CARD_WIDTH, height: "auto", align: "left top", gap: 16, padding: [20, 22], color: "#1A1A19", round: 12 });
+                that.css = { maxWidth: "calc(100vw - 40px)" };
+                    Label({ plainText: "6. For a dark page", fontSize: 15, bold: 1, textColor: White(0.9) });
+                    Label({ plainText: "styleName: \"ozdenDark\": a dark track, the bar in the main color of the kit.", fontSize: 13, textColor: White(0.55), width: "100%", css: { whiteSpace: "normal" } });
+                    ProgressBar({
+                        width: BAR_WIDTH,
+                        styleName: "ozdenDark",
+                        titleText: "Storage",
+                        value: 70,
+                        secondValue: 5,
+                        limits: [80],
+                    });
+                endGroup();
+
             endGroup();
 
         endBox();
