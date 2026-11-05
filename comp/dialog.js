@@ -31,8 +31,8 @@ NOTE: still in development (the user, 2026-10-29): more style packages come; the
 - Motion: the cover comes from nothing and the card rises 50 px while it comes (0.2 s); it goes at once; none with reduced motion.
 - Style packages: "ozden" (default). (Dialog.styles)
 - The buttons (the user, 2026-10-30): style.buttons[type] = { styleName, tone, style }: a template of SmartButton
-  ("ozdenType1"; icon: "ozdenType2"), a tone of it (primary: "cyan", danger: "orange"...; icon: "white"; the user,
-  2026-11-04) and only the keys that differ.
+  ("ozdenType1"; Cancel: "ozdenType3", a faint edge, the user 2026-11-05; icon: "ozdenType2"), a tone of it
+  (primary: "cyan", danger: "orange"...; icon: "white"; the user, 2026-11-04) and only the keys that differ.
 - Scale (2026-11-01): scale multiplies every size of the dialog (its style, width, motion, its buttons and the bubble
   of their ask). null (default): basic.uiScale (1; a page fitted with page.fit() sets 1 / page.zoom: the dialog keeps
   its size on the screen). Dialog.confirm / alert / prompt take it too. The objects of content(dialog) are made by
@@ -116,7 +116,9 @@ const DialogDefaults = {
         // of the situations are the tones of SmartButton (2026-10-31, the draft _designs/smart-button-colors.htm)
         buttons: {
             primary: { styleName: "ozdenType1", tone: "cyan", style: {} },
-            secondary: { styleName: "ozdenType1", tone: "", style: {} }, // the gray of the template
+            // the gray of the template, a faint edge (the user, 2026-11-05: as the Cancel of 02-comp-examples/smart-button.htm;
+            // it was ozdenType1)
+            secondary: { styleName: "ozdenType3", tone: "", style: {} },
             danger: { styleName: "ozdenType1", tone: "orange", style: {} },
             warning: { styleName: "ozdenType1", tone: "yellow", style: {} },
             success: { styleName: "ozdenType1", tone: "green", style: {} },

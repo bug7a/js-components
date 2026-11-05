@@ -23,7 +23,7 @@
 
     // Dialog (comp-m4), variant: "centered": an icon at the top, the texts in the middle, the buttons one under
     // the other. A layout the user drew, with the colors of the ozden package. The icon is in a light circle of its
-    // color, and Cancel has a faint edge (ozdenType3), as the Cancel of 02-comp-examples/smart-button.htm.
+    // color.
 
     const WORK_TIME = 1200; // ms: a job that takes time (the sample)
 
@@ -52,12 +52,13 @@
         green: { circle: "#E2F2DC", icon: "#4E9435" }, // done
     };
 
-    // The style of a dialog of this page: the color of its top icon, Cancel with a faint edge, and its own buttons
+    // The style of a dialog of this page: the color of its top icon and its own buttons
+    // (Cancel has the faint edge of ozdenType3: the default of Dialog since 2026-11-05)
     const getDialogStyle = function (iconLookName, buttons = {}) {
         const look = ICON_LOOKS[iconLookName];
         return {
             centered: { iconCircle: { color: look.circle }, icon: { color: look.icon } },
-            buttons: Object.assign({ secondary: { styleName: "ozdenType3" } }, buttons),
+            buttons: buttons,
         };
     };
 
