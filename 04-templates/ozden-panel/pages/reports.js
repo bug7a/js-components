@@ -16,7 +16,7 @@ COMPONENTS:
 - CheckBox (comp-m3): Compare with the previous period
 - SmartButton (comp-m4) + ContextMenu (comp-m4): Export menu
 - MiniGraphBox / SparkLineBox (comp-m4): Summary boxes (bars for counts, a line for money and rates)
-- ChartBox (comp-m4): Revenue, regions, orders by category, refund rates
+- GraphBox: Revenue, regions, orders by category, refund rates
 - SmartTable (comp-m3): Report details (sort, filter)
 
 */
@@ -37,7 +37,7 @@ const ReportsPage = function(params = {}) {
     const ASSETS = "assets/";
     const LIB_PATH = "../../";
 
-    const CARD_COLOR = T.surface; // Same with ChartBox dark theme background
+    const CARD_COLOR = T.surface; // Same with GraphBox dark theme background
     const CARD_BORDER_COLOR = Ink(0.1);
     const FIELD_COLOR = T.surface2;
     const PRIMARY_COLOR = T.primary;
@@ -280,7 +280,7 @@ const ReportsPage = function(params = {}) {
         chartRevenue.data.datasets[1].data = previousRevenue.map(function(value) { return (value === null) ? null : Math.round(value); });
         chartRevenue.data.datasets[1].label = "Previous (" + formatDate(previousFrom) + " – " + formatDate(previousTo) + ")";
         chartRevenue.data.datasets[1].hidden = !filter.compare;
-        if (chartRevenue.chart) chartRevenue.chart.setDatasetVisibility(1, filter.compare == 1); // WHY: After a legend click, Chart.js does not read dataset.hidden.
+        chartRevenue.data.datasets[1].showInLegend = (filter.compare) ? 1 : 0;
         chartRevenue.update();
 
         // REGIONS
@@ -419,15 +419,17 @@ const ReportsPage = function(params = {}) {
         endGroup();
     };
 
-    const createChartBox = function(flex, params) {
+    const createChart = function(flex, params) {
 
-        const chart = ChartBox({
+        const chart = GraphBox({
             theme: T.chartTheme,
+            animated: 1,
+            ...params,
             style: {
                 box: { color: CARD_COLOR, borderColor: CARD_BORDER_COLOR, round: 12, padding: 16 },
-                chart: { colors: CATEGORY_COLORS },
+                colors: { colors: CATEGORY_COLORS },
+                ...params.style,
             },
-            ...params,
         });
         setFlex(chart, flex);
         // WHY: The chart gets the row height, if a card in the same row is taller.
@@ -500,11 +502,6 @@ const ReportsPage = function(params = {}) {
     box.destroy = function() {
 
         clearTimeout(reportTimer);
-
-        // WHY: ChartBox keeps a Chart.js instance with resize listeners. remove() cleans it.
-        [chartRevenue, chartRegion, chartCategory, chartRefund].forEach(function(chart) {
-            if (chart) chart.remove();
-        });
 
         // WHY: These components have objects or events on the page. box.remove() does not remove them.
         if (smartTable) smartTable.remove();
@@ -781,52 +778,34 @@ const ReportsPage = function(params = {}) {
         startRow();
 
             // LINE: Revenue (current and previous period)
-            chartRevenue = createChartBox("2 1 520px", {
+            chartRevenue = createChart("2 1 520px", {
                 height: 340,
                 type: "line",
-                title: "Revenue",
-                subtitle: "Selected period compared with the previous period of the same length",
+                titleText: "Revenue",
+                subtitleText: "Selected period compared with the previous period of the same length",
+                curve: "smooth",
+                showPoints: 0,
+                maxLabels: 10,
                 labels: [],
                 datasets: [
-                    {
-                        label: "Revenue",
-                        data: [],
-                        fill: true,
-                        tension: 0.3,
-                        backgroundColor: ChartBox.gradient("rgba(101, 162, 147, 0.3)", "rgba(101, 162, 147, 0)"),
-                    },
-                    {
-                        label: "Previous",
-                        data: [],
-                        tension: 0.3,
-                        borderDash: [5, 5],
-                        borderColor: PREVIOUS_COLOR,
-                        pointBackgroundColor: PREVIOUS_COLOR,
-                    },
+                    { label: "Revenue", data: [], fill: "gradient" },
+                    { label: "Previous", data: [], dashed: 1, color: PREVIOUS_COLOR },
                 ],
                 legend: "top",
                 formatValue: formatMoneyShort,
-                options: {
-                    elements: { point: { radius: 0 } },
-                    scales: { x: { ticks: { maxTicksLimit: 10 } } },
-                    // WHY: "Previous" is not shown in the legend when compare is off. (Other items can still be hidden with a click.)
-                    plugins: { legend: { labels: { filter: function(item) { return !(item.datasetIndex == 1 && !filter.compare); } } } },
-                },
             });
 
             // DOUGHNUT: Regions
-            chartRegion = createChartBox("1 1 320px", {
+            chartRegion = createChart("1 1 320px", {
                 height: 340,
                 type: "doughnut",
-                title: "Revenue by Region",
-                subtitle: "All regions in the date range",
+                titleText: "Revenue by Region",
+                subtitleText: "All regions in the date range",
                 legend: "bottom",
                 labels: REGIONS.map(function(region) { return region.name; }),
                 values: REGIONS.map(function() { return 0; }),
                 formatValue: formatMoneyShort,
-                options: {
-                    cutout: "68%",
-                },
+                style: { pie: { hole: 0.68 } },
                 onClick: function(self, item) {
                     // Filter the report by the clicked region.
                     regionSelect.setSelectedIndex(item.index + 1);
@@ -838,34 +817,31 @@ const ReportsPage = function(params = {}) {
         startRow();
 
             // BAR: Orders by category (stacked)
-            chartCategory = createChartBox("2 1 520px", {
+            chartCategory = createChart("2 1 520px", {
                 height: 340,
                 type: "bar",
                 stacked: 1,
-                title: "Orders by Category",
-                subtitle: "Number of orders in each period",
+                titleText: "Orders by Category",
+                subtitleText: "Number of orders in each period",
                 legend: "top",
+                maxLabels: 12,
                 labels: [],
                 datasets: CATEGORIES.map(function(category) { return { label: category.name, data: [] }; }),
-                options: {
-                    datasets: { bar: { maxBarThickness: 36 } },
-                    scales: { x: { ticks: { maxTicksLimit: 12 } } },
-                },
+                style: { bar: { maxThickness: 36 } },
             });
 
             // BAR: Refund rate by category (horizontal)
-            chartRefund = createChartBox("1 1 320px", {
+            chartRefund = createChart("1 1 320px", {
                 height: 340,
                 type: "bar",
                 horizontal: 1,
-                title: "Refund Rate",
-                subtitle: "Refunds / orders, by category",
+                titleText: "Refund Rate",
+                subtitleText: "Refunds / orders, by category",
                 labels: CATEGORIES.map(function(category) { return category.name; }),
                 datasets: [{
                     label: "Refund rate",
                     data: [],
-                    backgroundColor: CATEGORY_COLORS, // Same colors with "Orders by Category"
-                    hoverBackgroundColor: CATEGORY_COLORS,
+                    colors: CATEGORY_COLORS, // Same colors with "Orders by Category"
                 }],
                 formatValue: function(value) { return value + "%"; },
             });

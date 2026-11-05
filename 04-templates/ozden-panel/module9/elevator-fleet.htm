@@ -23,7 +23,7 @@
         <script src="../../../comp/radio-button.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp/hold-to-confirm-button.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp/spark-line-box.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp/chart-box.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/graph-box.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp/context-menu.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp/select-date.js" type="text/javascript" charset="utf-8"></script>
 
@@ -525,8 +525,8 @@
         const setPill = function (label, text, color) {
             label.text = text;
             label.textColor = color;
-            label.color = ChartBox.alpha(color, 0.12);
-            label.borderColor = ChartBox.alpha(color, 0.4);
+            label.color = Alpha(color, 0.12);
+            label.borderColor = Alpha(color, 0.4);
         };
 
         const createInfoLine = function (title, first) {
@@ -787,44 +787,44 @@
 
             startRow();
 
-                chartPosition = ChartBox({
+                chartPosition = GraphBox({
                     height: 320,
                     type: "line",
                     theme: T.chartTheme,
-                    title: "Car Position",
-                    subtitle: "Live, last " + CHART_COUNT + " seconds",
+                    titleText: "Car Position",
+                    subtitleText: "Live, last " + CHART_COUNT + " seconds",
                     maxCount: CHART_COUNT,
                     beginAtZero: 0,
-                    animated: 0,
+                    minValue: 0,
+                    maxValue: TOP_INDEX,
+                    valueStep: 1, // WHY: Every floor has its own line and its own name.
+                    curve: "smooth",
+                    showPoints: 0,
+                    maxLabels: 6,
                     labels: [],
-                    datasets: [{ label: "Floor", data: [], fill: "start", tension: 0.2, backgroundColor: ChartBox.gradient("rgba(101, 162, 147, 0.3)", "rgba(101, 162, 147, 0)") }],
+                    datasets: [{ label: "Floor", data: [], fill: "gradient", fillTo: "start" }],
                     formatValue: function (value) { return FLOORS[Math.round(value)] || value; },
-                    options: {
-                        elements: { point: { radius: 0 } },
-                        scales: { x: { ticks: { maxTicksLimit: 6 } }, y: { min: 0, max: TOP_INDEX, ticks: { stepSize: 1, autoSkip: false, callback: function (value) { return FLOORS[value] || ""; } } } },
-                    },
                     style: {
                         box: { color: CARD_COLOR, borderColor: CARD_BORDER_COLOR, round: 12, padding: 16 },
-                        chart: { colors: [ACCENT_COLOR] },
+                        colors: { colors: [ACCENT_COLOR] },
                     },
                 });
                 setFlex(chartPosition, "2 1 520px");
                 chartPosition.elem.style.height = "auto";
                 chartPosition.elem.style.minHeight = "320px";
 
-                chartStops = ChartBox({
+                chartStops = GraphBox({
                     height: 320,
                     type: "bar",
                     theme: T.chartTheme,
-                    title: "Stops by Floor Today",
-                    subtitle: "Whole fleet",
+                    titleText: "Stops by Floor Today",
+                    subtitleText: "Whole fleet",
                     horizontal: 1,
-                    beginAtZero: 1,
                     labels: FLOORS.slice(),
                     values: fleet.stopsByFloorToday.slice(),
                     style: {
                         box: { color: CARD_COLOR, borderColor: CARD_BORDER_COLOR, round: 12, padding: 16 },
-                        chart: { colors: [T.info] },
+                        colors: { colors: [T.info] },
                     },
                 });
                 setFlex(chartStops, "1 1 260px");
@@ -1019,7 +1019,7 @@
                 return "<g id='car-" + key + "' class='car' style='transform: translate(" + LANE_X[key] + "px, " + SHAFT_BOTTOM + "px); transition: transform 0.9s linear'>" +
                     "<text id='dir-" + key + "' y='-34' text-anchor='middle' class='t-dir' style='opacity:0'></text>" +
                     "<circle id='status-" + key + "' cx='0' cy='-22' r='5' fill='" + Ink(0.3) + "' stroke='" + Black(0.3) + "'/>" +
-                    "<rect x='-38' y='-15' width='76' height='30' rx='7' fill='" + ChartBox.alpha(color, 0.16) + "' stroke='" + color + "' stroke-width='2'/>" +
+                    "<rect x='-38' y='-15' width='76' height='30' rx='7' fill='" + Alpha(color, 0.16) + "' stroke='" + color + "' stroke-width='2'/>" +
                     "<g style='clip-path: inset(2px round 5px)'>" +
                     "<rect id='glow-" + key + "' x='-20' y='-13' width='40' height='26' fill='" + WARNING_COLOR + "' style='opacity:0; transition: opacity 0.4s'/>" +
                     "<rect id='door-l-" + key + "' x='-20' y='-13' width='20' height='26' fill='" + Ink(0.35) + "' style='transition: transform 0.5s'/>" +
@@ -1190,13 +1190,10 @@
 
             car = CARS[index];
 
-            chartPosition.whenReady(function () {
-                chartPosition.data.labels = car.history.labels.slice();
-                chartPosition.data.datasets[0].data = car.history.floor.slice();
-                chartPosition.update("none");
-                chartPosition.data.datasets[0].borderColor = FLEET_COLORS[car.key];
-                chartPosition.update("none");
-            });
+            chartPosition.data.labels = car.history.labels.slice();
+            chartPosition.data.datasets[0].data = car.history.floor.slice();
+            chartPosition.data.datasets[0].color = FLEET_COLORS[car.key];
+            chartPosition.update();
 
             renderAll();
 
@@ -1342,10 +1339,8 @@
             kpiBoxList[1].setValues(h.wait);
             kpiBoxList[2].setValues(h.doors);
             kpiBoxList[3].setValues(h.faults);
-            chartStops.whenReady(function () {
-                chartStops.data.datasets[0].data = fleet.stopsByFloorToday.slice();
-                chartStops.update("none");
-            });
+            chartStops.data.datasets[0].data = fleet.stopsByFloorToday.slice();
+            chartStops.update();
         };
 
         const renderControls = function () {

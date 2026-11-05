@@ -26,7 +26,7 @@
         <script src="../../../comp/radio-button.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp/hold-to-confirm-button.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp/spark-line-box.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp/chart-box.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/graph-box.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp/context-menu.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp/select-time.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp/select-date.js" type="text/javascript" charset="utf-8"></script>
@@ -52,7 +52,7 @@
         const ASSETS = "../assets/";
 
         const PAGE_COLOR = T.page;
-        const CARD_COLOR = T.surface; // Same with ChartBox dark theme background
+        const CARD_COLOR = T.surface; // Same with GraphBox dark theme background
         const CARD_BORDER_COLOR = Ink(0.1);
         const FIELD_COLOR = T.surface2;
         const PRIMARY_COLOR = T.primary;
@@ -703,38 +703,35 @@
             startRow();
 
                 // LINE: Live temperature
-                chartTemp = ChartBox({
+                chartTemp = GraphBox({
                     height: 340,
                     type: "line",
                     theme: T.chartTheme,
-                    title: "Temperature",
-                    subtitle: "Live, last " + CHART_COUNT + " seconds",
+                    titleText: "Temperature",
+                    subtitleText: "Live, last " + CHART_COUNT + " seconds",
                     maxCount: CHART_COUNT,
                     beginAtZero: 0,
-                    animated: 0, // WHY: A new value every second. With animation, new points rise from the bottom every time.
+                    showPoints: 0,
+                    maxLabels: 6,
                     labels: [],
                     datasets: [
                         {
                             label: "Temperature",
                             data: [],
-                            fill: "start", // WHY: "true" fills to 0. Temperatures can be negative.
-                            tension: 0.35,
-                            backgroundColor: ChartBox.gradient("rgba(101, 162, 147, 0.3)", "rgba(101, 162, 147, 0)"),
+                            curve: "smooth",
+                            fill: "gradient",
+                            fillTo: "start", // WHY: Temperatures can be negative: an area up to 0 would fill the part over the line.
                         },
                         {
                             label: "Target",
                             data: [],
-                            borderDash: [5, 5],
+                            dashed: 1,
                         },
                     ],
                     formatValue: function (value) { return value + " °C"; },
-                    options: {
-                        elements: { point: { radius: 0 } },
-                        scales: { x: { ticks: { maxTicksLimit: 6 } } },
-                    },
                     style: {
                         box: { color: CARD_COLOR, borderColor: CARD_BORDER_COLOR, round: 12, padding: 16 },
-                        chart: { colors: CHART_COLORS },
+                        colors: { colors: CHART_COLORS },
                     },
                 });
                 setFlex(chartTemp, "2 1 520px");
@@ -1068,7 +1065,7 @@
             chartTemp.data.labels = h.labels.slice(-CHART_COUNT);
             chartTemp.data.datasets[0].data = h.temp.slice(-CHART_COUNT);
             chartTemp.data.datasets[1].data = h.target.slice(-CHART_COUNT);
-            chartTemp.update("none");
+            chartTemp.update();
             chartTemp.setSubtitle((device.online) ? "Live, last " + CHART_COUNT + " seconds" : "Last data before the connection was lost");
 
             kpiBoxList[0].setValues(h.tempPoints);
@@ -1105,8 +1102,8 @@
             const status = STATUS_LIST[getStatus(d)];
             lblStatus.text = "● " + status.text;
             lblStatus.textColor = status.color;
-            lblStatus.color = ChartBox.alpha(status.color, 0.12);
-            lblStatus.borderColor = ChartBox.alpha(status.color, 0.4);
+            lblStatus.color = Alpha(status.color, 0.12);
+            lblStatus.borderColor = Alpha(status.color, 0.4);
 
             infoLabels.uptime.text = (hasData) ? formatUptime(d.uptime) : "—";
 

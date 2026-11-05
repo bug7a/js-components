@@ -25,7 +25,7 @@
         <script src="../../../comp/hold-to-confirm-button.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp/progress-bar.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp/spark-line-box.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp/chart-box.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/graph-box.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp/context-menu.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp/gauge.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp/tabs.js" type="text/javascript" charset="utf-8"></script>
@@ -40,7 +40,7 @@
         - Managing a small fleet of Arduino / ESP boards: the board and its firmware, live telemetry
           (free RAM, loop frequency, Wi-Fi signal, sensors), the pins, the serial monitor, the
           libraries of the sketch and the outputs of the board.
-        - Everything is built from the components of the kit: Gauge, SparkLineBox, ChartBox, Tabs,
+        - Everything is built from the components of the kit: Gauge, SparkLineBox, GraphBox, Tabs,
           TinyTable, ProgressBar, Stepper, Slider, Toggle, RadioButton, TinySelect, ContextMenu,
           SmartButton, HoldToConfirmButton, Dialog and ScrollBar.
         - Runs inside the admin panel (iframe), but it can work alone too.
@@ -448,8 +448,8 @@
         const showAlert = function (text, color) {
             lblAlert.text = text;
             lblAlert.textColor = color;
-            alertBox.color = ChartBox.alpha(color, 0.12);
-            alertBox.borderColor = ChartBox.alpha(color, 0.4);
+            alertBox.color = Alpha(color, 0.12);
+            alertBox.borderColor = Alpha(color, 0.4);
             alertBox.visible = 1;
         };
 
@@ -596,14 +596,13 @@
 
                 startCard("Sensors", "The last " + CHART_COUNT + " readings", "1 1 100%");
 
-                    chartSensors = ChartBox({
+                    chartSensors = GraphBox({
                         width: "100%", height: 220, type: "line", theme: T.chartTheme, legend: "top",
-                        maxCount: CHART_COUNT, animated: 0, labels: [],
+                        maxCount: CHART_COUNT, curve: "smooth", showPoints: 0, labels: [],
                         datasets: [
-                            { label: "Temperature (C)", data: [], borderColor: TEMP_COLOR, tension: 0.3 },
-                            { label: "Humidity (%)", data: [], borderColor: HUM_COLOR, tension: 0.3 },
+                            { label: "Temperature (C)", data: [], color: TEMP_COLOR },
+                            { label: "Humidity (%)", data: [], color: HUM_COLOR },
                         ],
-                        options: { elements: { point: { radius: 0 } } },
                     });
 
                 endCard();
@@ -978,8 +977,8 @@
         const setPill = function (label, text, color) {
             label.text = text;
             label.textColor = color;
-            label.color = ChartBox.alpha(color, 0.12);
-            label.borderColor = ChartBox.alpha(color, 0.4);
+            label.color = Alpha(color, 0.12);
+            label.borderColor = Alpha(color, 0.4);
         };
 
         const createInfoLine = function (title, first) {

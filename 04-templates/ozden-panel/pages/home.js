@@ -11,7 +11,7 @@ COMPONENTS:
 - Tabs (comp-m4): Period select
 - SmartButton (comp-m4): Header and quick action buttons
 - MiniGraphBox / SparkLineBox (comp-m4): KPI boxes (bars for counts, a line for money and live values)
-- ChartBox (comp-m4): Line, doughnut and bar charts (Chart.js is loaded from comp/chart-box)
+- GraphBox: Line, doughnut and bar charts
 - TinyTable (comp-m4): Recent orders
 - LineProgressBar (comp-m3): Monthly goals
 - Badge (comp-m2): Notification count
@@ -33,12 +33,12 @@ const HomePage = function(params = {}) {
 
     const ASSETS = "assets/";
 
-    const CARD_COLOR = T.surface; // Same with ChartBox dark theme background
+    const CARD_COLOR = T.surface; // Same with GraphBox dark theme background
     const CARD_BORDER_COLOR = Ink(0.1);
     const BUTTON_COLOR = T.surface2;
     const PRIMARY_COLOR = T.primary;
     const ACCENT_COLOR = T.accent;
-    // WHY: The first chart color follows the panel color. Others are from ChartBox dark theme.
+    // WHY: The first chart color follows the panel color. Others are from the GraphBox dark theme.
     const CHART_COLORS = [ACCENT_COLOR, T.info, T.warning, "#D55181", "#9085E9", T.danger];
 
     const STATUS_COLORS = {
@@ -187,18 +187,20 @@ const HomePage = function(params = {}) {
         endGroup();
     };
 
-    const createChartBox = function(params) {
+    const createChart = function(params) {
 
         const flex = params.flex;
-        delete params.flex; // Not a ChartBox param
+        delete params.flex; // Not a GraphBox param
 
-        const chart = ChartBox({
+        const chart = GraphBox({
             theme: T.chartTheme,
+            animated: 1,
+            ...params,
             style: {
                 box: { color: CARD_COLOR, borderColor: CARD_BORDER_COLOR, round: 12, padding: 16 },
-                chart: { colors: CHART_COLORS },
+                colors: { colors: CHART_COLORS },
+                ...params.style,
             },
-            ...params,
         });
         setFlex(chart, flex);
         // WHY: The chart gets the row height, if a card in the same row is taller.
@@ -263,11 +265,6 @@ const HomePage = function(params = {}) {
     box.destroy = function() {
 
         clearInterval(liveTimer);
-
-        // WHY: ChartBox keeps a Chart.js instance with resize listeners. remove() cleans it.
-        [chartRevenue, chartTraffic, chartCategory].forEach(function(chart) {
-            if (chart) chart.remove();
-        });
 
         box.remove();
         box = null;
@@ -398,47 +395,33 @@ const HomePage = function(params = {}) {
         startRow();
 
             // LINE: Revenue (data comes from setPeriod)
-            chartRevenue = createChartBox({
+            chartRevenue = createChart({
                 flex: "2 1 520px",
                 height: 340,
                 type: "line",
-                title: "Revenue",
-                subtitle: " ",
+                titleText: "Revenue",
+                subtitleText: " ",
+                curve: "smooth",
                 labels: [],
                 datasets: [
-                    {
-                        label: "Actual",
-                        data: [],
-                        fill: true,
-                        tension: 0.4,
-                        spanGaps: false,
-                        backgroundColor: ChartBox.gradient("rgba(101, 162, 147, 0.35)", "rgba(101, 162, 147, 0)"),
-                    },
-                    {
-                        label: "Target",
-                        data: [],
-                        borderDash: [5, 5],
-                        pointRadius: 0,
-                        tension: 0.4,
-                    },
+                    { label: "Actual", data: [], fill: "gradient" },
+                    { label: "Target", data: [], dashed: 1 },
                 ],
                 formatValue: formatMoney,
             });
 
             // DOUGHNUT: Traffic sources
-            chartTraffic = createChartBox({
+            chartTraffic = createChart({
                 flex: "1 1 320px",
                 height: 340,
                 type: "doughnut",
-                title: "Traffic Sources",
-                subtitle: "How users come to the site",
+                titleText: "Traffic Sources",
+                subtitleText: "How users come to the site",
                 legend: "bottom",
                 labels: ["Organic Search", "Social Media", "Direct", "E-Mail", "Referral"],
                 values: [42, 28, 15, 10, 5],
                 formatValue: function(value) { return value + "%"; },
-                options: {
-                    cutout: "70%",
-                },
+                style: { pie: { hole: 0.7 } },
             });
 
         endGroup();
@@ -534,13 +517,13 @@ const HomePage = function(params = {}) {
         startRow();
 
             // BAR: Sales by category
-            chartCategory = createChartBox({
+            chartCategory = createChart({
                 flex: "1 1 420px",
                 height: 320,
                 type: "bar",
                 horizontal: 1,
-                title: "Sales by Category",
-                subtitle: "Units sold this month",
+                titleText: "Sales by Category",
+                subtitleText: "Units sold this month",
                 labels: ["Electronics", "Clothing", "Home", "Cosmetics", "Books"],
                 values: [1250, 2100, 840, 1600, 920],
                 onClick: function(self, item) {

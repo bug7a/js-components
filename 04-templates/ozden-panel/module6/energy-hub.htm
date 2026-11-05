@@ -1329,23 +1329,19 @@
         const renderChart = function () {
 
             const c = system.chart;
-            chartPower.whenReady(function () {
-                chartPower.data.datasets[0].data = c.solar.slice();
-                chartPower.data.datasets[1].data = c.consumption.slice();
-                chartPower.data.datasets[2].data = c.battery.slice();
-                chartPower.data.datasets[3].data = c.grid.slice();
-                chartPower.update("none");
-            });
+            chartPower.data.datasets[0].data = c.solar.slice();
+            chartPower.data.datasets[1].data = c.consumption.slice();
+            chartPower.data.datasets[2].data = c.battery.slice();
+            chartPower.data.datasets[3].data = c.grid.slice();
+            chartPower.update();
 
             // Energy mix: solar used directly = consumption - grid import - battery discharge
             const t = system.today;
             const fromBattery = t.discharge;
             const fromGrid = t.import;
             const fromSolar = Math.max(0, t.consumption - fromGrid - fromBattery);
-            chartMix.whenReady(function () {
-                chartMix.data.datasets[0].data = [round2(fromSolar), round2(fromBattery), round2(fromGrid)];
-                chartMix.update();
-            });
+            chartMix.data.datasets[0].data = [round2(fromSolar), round2(fromBattery), round2(fromGrid)];
+            chartMix.update();
 
         };
 

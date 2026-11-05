@@ -26,7 +26,7 @@
         <script src="../../../comp/hold-to-confirm-button.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp/progress-bar.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp/spark-line-box.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp/chart-box.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/graph-box.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp/context-menu.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp/select-time.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp/select-date.js" type="text/javascript" charset="utf-8"></script>
@@ -153,7 +153,7 @@
         let mapBox, map = {};
         let zoneInfo = {};
         let kpiBoxList = [];
-        let chartClimate, chartRuntime;
+        let chartTemperature, chartMoisture, chartRuntime;
         let lblModeInfo, setpointSliders = {}, setpointLabels = {};
         let actuatorToggles = {}, actuatorStates = {}, lblVent, sliderVent;
         let selectLightFrom, selectLightTo, lblIrrigation, sliderIrrigation, chkRain, lblNutrients, btnDoseAcid, btnDoseNutrient;
@@ -486,8 +486,8 @@
         const setPill = function (label, text, color) {
             label.text = text;
             label.textColor = color;
-            label.color = ChartBox.alpha(color, 0.12);
-            label.borderColor = ChartBox.alpha(color, 0.4);
+            label.color = Alpha(color, 0.12);
+            label.borderColor = Alpha(color, 0.4);
         };
 
         const createInfoLine = function (title, first) {
@@ -753,43 +753,52 @@
 
             startRow();
 
-                chartClimate = ChartBox({
+                // WHY two charts (the user, 2026-11-06): °C and % on one chart needed two value axes. Where two scales meet
+                //     is free, so that chart showed a relation that is not in the data.
+                chartTemperature = GraphBox({
                     height: 320, type: "line", theme: T.chartTheme,
-                    title: "Zone Climate Today", subtitle: "Every 15 minutes",
-                    beginAtZero: 0, animated: 0, legend: "top",
+                    titleText: "Zone Temperature Today", subtitleText: "Every 15 minutes",
+                    beginAtZero: 0, softMinValue: 10, softMaxValue: 35,
+                    curve: "smooth", showPoints: 0, maxLabels: 8,
                     labels: [],
-                    datasets: [
-                        { label: "Temperature (°C)", data: [], borderColor: TEMP_COLOR, tension: 0.35, yAxisID: "y" },
-                        { label: "Humidity (%)", data: [], borderColor: HUMIDITY_COLOR, tension: 0.35, yAxisID: "y1" },
-                        { label: "Soil (%)", data: [], borderColor: SOIL_COLOR, tension: 0.35, borderDash: [5, 4], yAxisID: "y1" },
-                    ],
-                    options: {
-                        elements: { point: { radius: 0 } },
-                        interaction: { mode: "index", intersect: false },
-                        scales: {
-                            x: { ticks: { maxTicksLimit: 8 } },
-                            y: { position: "left", suggestedMin: 10, suggestedMax: 35, title: { display: true, text: "°C" } },
-                            y1: { position: "right", min: 0, max: 100, grid: { drawOnChartArea: false }, title: { display: true, text: "%" } },
-                        },
-                    },
+                    datasets: [{ label: "Temperature", data: [], color: TEMP_COLOR }],
+                    formatValue: function (value) { return value + " °C"; },
                     style: {
                         box: { color: CARD_COLOR, borderColor: CARD_BORDER_COLOR, round: 12, padding: 16 },
-                        chart: { colors: [TEMP_COLOR, HUMIDITY_COLOR, SOIL_COLOR] },
                     },
                 });
-                setFlex(chartClimate, "2 1 520px");
-                chartClimate.elem.style.height = "auto";
-                chartClimate.elem.style.minHeight = "320px";
+                setFlex(chartTemperature, "1 1 320px");
+                chartTemperature.elem.style.height = "auto";
+                chartTemperature.elem.style.minHeight = "320px";
 
-                chartRuntime = ChartBox({
+                chartMoisture = GraphBox({
+                    height: 320, type: "line", theme: T.chartTheme,
+                    titleText: "Humidity and Soil Today", subtitleText: "Every 15 minutes",
+                    legend: "top", minValue: 0, maxValue: 100,
+                    curve: "smooth", showPoints: 0, maxLabels: 8,
+                    labels: [],
+                    datasets: [
+                        { label: "Humidity", data: [], color: HUMIDITY_COLOR },
+                        { label: "Soil", data: [], color: SOIL_COLOR, dashed: 1 },
+                    ],
+                    formatValue: function (value) { return value + "%"; },
+                    style: {
+                        box: { color: CARD_COLOR, borderColor: CARD_BORDER_COLOR, round: 12, padding: 16 },
+                    },
+                });
+                setFlex(chartMoisture, "1 1 320px");
+                chartMoisture.elem.style.height = "auto";
+                chartMoisture.elem.style.minHeight = "320px";
+
+                chartRuntime = GraphBox({
                     height: 320, type: "bar", theme: T.chartTheme, horizontal: 1,
-                    title: "Actuator Runtime Today", subtitle: "Minutes, selected zone",
+                    titleText: "Actuator Runtime Today", subtitleText: "Minutes, selected zone",
                     labels: ["Heater", "Fan", "Lights", "Irrigation", "CO₂"],
                     values: [0, 0, 0, 0, 0],
                     formatValue: function (value) { return value + " min"; },
                     style: {
                         box: { color: CARD_COLOR, borderColor: CARD_BORDER_COLOR, round: 12, padding: 16 },
-                        chart: { colors: [ACCENT_COLOR] },
+                        colors: { colors: [ACCENT_COLOR] },
                     },
                 });
                 setFlex(chartRuntime, "1 1 280px");
@@ -1098,17 +1107,21 @@
 
         // *** RENDER:
 
+        const fillClimateCharts = function () {
+            chartTemperature.data.labels = zone.chart.labels.slice();
+            chartTemperature.data.datasets[0].data = zone.chart.temp.slice();
+            chartTemperature.update();
+            chartMoisture.data.labels = zone.chart.labels.slice();
+            chartMoisture.data.datasets[0].data = zone.chart.humidity.slice();
+            chartMoisture.data.datasets[1].data = zone.chart.soil.slice();
+            chartMoisture.update();
+        };
+
         const selectZone = function (index) {
 
             zone = ZONES[index];
 
-            chartClimate.whenReady(function () {
-                chartClimate.data.labels = zone.chart.labels.slice();
-                chartClimate.data.datasets[0].data = zone.chart.temp.slice();
-                chartClimate.data.datasets[1].data = zone.chart.humidity.slice();
-                chartClimate.data.datasets[2].data = zone.chart.soil.slice();
-                chartClimate.update("none");
-            });
+            fillClimateCharts();
 
             renderAll();
 
@@ -1214,18 +1227,10 @@
         };
 
         const renderCharts = function () {
-            chartClimate.whenReady(function () {
-                chartClimate.data.labels = zone.chart.labels.slice();
-                chartClimate.data.datasets[0].data = zone.chart.temp.slice();
-                chartClimate.data.datasets[1].data = zone.chart.humidity.slice();
-                chartClimate.data.datasets[2].data = zone.chart.soil.slice();
-                chartClimate.update("none");
-            });
-            chartRuntime.whenReady(function () {
-                const r = zone.runtime;
-                chartRuntime.data.datasets[0].data = [r.heater, r.fan, r.lights, r.irrigation, r.co2];
-                chartRuntime.update("none");
-            });
+            fillClimateCharts();
+            const r = zone.runtime;
+            chartRuntime.data.datasets[0].data = [r.heater, r.fan, r.lights, r.irrigation, r.co2];
+            chartRuntime.update();
         };
 
         const renderControls = function () {

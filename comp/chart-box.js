@@ -5,7 +5,7 @@
 Chart Box - v26.09
 
 NOT FOR NEW PROJECTS (the user, 2026-11-05): use comp/graph-box.js (GraphBox: the same kind of params and functions, one
-file, no Chart.js; the changes for moving a page are in its header). This file stays only for the pages that still use it.
+file, no Chart.js; the changes for moving a page are in its header). This file stays for a page that still needs Chart.js itself.
 
 UI COMPONENT TEMPLATE
 - A bridge between basic.js and Chart.js (https://www.chartjs.org). Use Chart.js charts like a basic.js object.

@@ -77,7 +77,7 @@ Theme.list = {
         success: "#5DB182",
 
         scrollBar: "#A0A0A0",
-        chartTheme: "dark", // ChartBox
+        chartTheme: "dark", // GraphBox
         compStyle: "dark", // Tabs, Stepper, Gauge... style packages
         iconFilter: "invert(100%)", // The icon files of the panel are black
         invertIcon: 1, // invertIconColor / invertColor parameters
