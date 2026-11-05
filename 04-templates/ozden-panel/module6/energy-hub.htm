@@ -25,7 +25,7 @@
         <script src="../../../comp/progress-bar.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp/spark-line-box.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp/gauge.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../../comp/chart-box.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../comp/graph-box.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../../comp/context-menu.js" type="text/javascript" charset="utf-8"></script>
 
         <!--
@@ -53,7 +53,7 @@
         const ASSETS = "../assets/";
 
         const PAGE_COLOR = T.page;
-        const CARD_COLOR = T.surface; // Same with ChartBox dark theme background
+        const CARD_COLOR = T.surface; // Same with GraphBox dark theme background
         const CARD_BORDER_COLOR = Ink(0.1);
         const FIELD_COLOR = T.surface2;
         const PRIMARY_COLOR = T.primary;
@@ -487,8 +487,8 @@
         const setPill = function (label, text, color) {
             label.text = text;
             label.textColor = color;
-            label.color = ChartBox.alpha(color, 0.12);
-            label.borderColor = ChartBox.alpha(color, 0.4);
+            label.color = Alpha(color, 0.12);
+            label.borderColor = Alpha(color, 0.4);
         };
 
         const createInfoLine = function (title, first) {
@@ -727,7 +727,7 @@
                 if (n.label == "left") { tx = n.x - NODE_R - 14; ty = n.y - 4; anchor = "end"; }
 
                 nodes += "<g transform='translate(" + n.x + " " + n.y + ")'>" +
-                    "<circle id='node-" + key + "' r='" + NODE_R + "' fill='" + ChartBox.alpha(n.color, 0.12) + "' stroke='" + ChartBox.alpha(n.color, 0.6) + "' stroke-width='1.5'/>" +
+                    "<circle id='node-" + key + "' r='" + NODE_R + "' fill='" + Alpha(n.color, 0.12) + "' stroke='" + Alpha(n.color, 0.6) + "' stroke-width='1.5'/>" +
                     "<g id='icon-" + key + "' fill='none' stroke='" + n.color + "' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>" + FLOW_ICONS[key] + "</g>" +
                     "</g>" +
                     "<text x='" + tx + "' y='" + ty + "' text-anchor='" + anchor + "' class='t-title'>" + n.title + "</text>" +
@@ -806,31 +806,27 @@
             startRow();
 
                 // LINE: Power today
-                chartPower = ChartBox({
+                chartPower = GraphBox({
                     height: 340,
                     type: "line",
                     theme: T.chartTheme,
-                    title: "Power Today",
-                    subtitle: "Every 15 minutes. Battery: + charging, − discharging. Grid: + import, − export.",
+                    titleText: "Power Today",
+                    subtitleText: "Every 15 minutes. Battery: + charging, − discharging. Grid: + import, − export.",
                     beginAtZero: 0,
-                    animated: 0,
                     legend: "top",
+                    curve: "smooth",
+                    showPoints: 0,
+                    maxLabels: 9,
                     labels: getChartLabels(),
                     datasets: [
-                        { label: "Solar", data: [], borderColor: SOLAR_COLOR, fill: "origin", tension: 0.35, backgroundColor: ChartBox.gradient("rgba(232, 176, 74, 0.35)", "rgba(232, 176, 74, 0)") },
-                        { label: "Consumption", data: [], borderColor: HOME_COLOR, tension: 0.35 },
-                        { label: "Battery", data: [], borderColor: BATTERY_COLOR, tension: 0.35, borderDash: [5, 4] },
-                        { label: "Grid", data: [], borderColor: GRID_COLOR, tension: 0.35 },
+                        { label: "Solar", data: [], color: SOLAR_COLOR, fill: "gradient" },
+                        { label: "Consumption", data: [], color: HOME_COLOR },
+                        { label: "Battery", data: [], color: BATTERY_COLOR, dashed: 1 },
+                        { label: "Grid", data: [], color: GRID_COLOR },
                     ],
                     formatValue: function (value) { return value + " kW"; },
-                    options: {
-                        elements: { point: { radius: 0 } },
-                        interaction: { mode: "index", intersect: false },
-                        scales: { x: { ticks: { maxTicksLimit: 9 } } },
-                    },
                     style: {
                         box: { color: CARD_COLOR, borderColor: CARD_BORDER_COLOR, round: 12, padding: 16 },
-                        chart: { colors: [SOLAR_COLOR, HOME_COLOR, BATTERY_COLOR, GRID_COLOR] }, // WHY: The legend uses the theme colors.
                     },
                 });
                 setFlex(chartPower, "2 1 560px");
@@ -838,19 +834,19 @@
                 chartPower.elem.style.minHeight = "340px";
 
                 // DOUGHNUT: Energy mix today
-                chartMix = ChartBox({
+                chartMix = GraphBox({
                     height: 340,
                     type: "doughnut",
                     theme: T.chartTheme,
-                    title: "Energy Mix Today",
-                    subtitle: "Where the used energy came from",
+                    titleText: "Energy Mix Today",
+                    subtitleText: "Where the used energy came from",
                     legend: "bottom",
                     labels: ["Solar", "Battery", "Grid"],
-                    datasets: [{ data: [0, 0, 0], backgroundColor: [SOLAR_COLOR, BATTERY_COLOR, GRID_COLOR], borderColor: CARD_COLOR, borderWidth: 3 }],
+                    datasets: [{ data: [0, 0, 0], colors: [SOLAR_COLOR, BATTERY_COLOR, GRID_COLOR] }],
                     formatValue: function (value) { return value + " kWh"; },
-                    options: { cutout: "68%" },
                     style: {
                         box: { color: CARD_COLOR, borderColor: CARD_BORDER_COLOR, round: 12, padding: 16 },
+                        pie: { hole: 0.68, gap: 3 },
                     },
                 });
                 setFlex(chartMix, "1 1 320px");
@@ -1096,7 +1092,7 @@
                         HGroup({ width: "100%", height: 26, align: "left center", gap: 2 });
                             for (let hour = 0; hour < 24; hour++) {
                                 const tariff = TARIFFS[getTariffId(hour * 60)];
-                                const cell = Box({ width: "auto", height: 26, round: 3, color: ChartBox.alpha(tariff.color, 0.35), border: 2, borderColor: "transparent" });
+                                const cell = Box({ width: "auto", height: 26, round: 3, color: Alpha(tariff.color, 0.35), border: 2, borderColor: "transparent" });
                                 cell.elem.style.flex = "1 1 0";
                                 cell.elem.title = formatMinute(hour * 60) + " · " + tariff.text + " " + tariff.price.toFixed(2) + " $/kWh";
                                 tariffCells.push(cell);
@@ -1239,7 +1235,7 @@
 
             setFlowLine("grid", n.grid, (n.grid >= 0) ? 1 : -1);
             setNodeText("grid", (system.gridOnline) ? formatKw(n.grid) : "Offline", (!system.gridOnline) ? "Power cut" : (n.grid > 0.05) ? "Import" : (n.grid < -0.05) ? "Export" : "Idle");
-            flow.svg.querySelector("#node-grid").setAttribute("stroke", (system.gridOnline) ? ChartBox.alpha(GRID_COLOR, 0.6) : ERROR_COLOR);
+            flow.svg.querySelector("#node-grid").setAttribute("stroke", (system.gridOnline) ? Alpha(GRID_COLOR, 0.6) : ERROR_COLOR);
 
             setFlowLine("home", n.home, -1);
             setNodeText("home", formatKw(n.home), system.loads.filter(function (l) { return l.running; }).length + " smart loads on");

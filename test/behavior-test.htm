@@ -2896,7 +2896,8 @@
 
         test("GraphBox: the axis gets clean numbers", async function () {
             const cases = [
-                [0, 94000, 4, "0,25000,50000,75000,100000"],
+                [0, 94000, 4, "0,20000,40000,60000,80000,100000"],
+                [-0.5, 6, 6, "-1,0,1,2,3,4,5,6"], // WHY: A step of 2 would leave a third of the chart empty.
                 [0.1, 0.3, 4, "0.1,0.15,0.2,0.25,0.3"],
                 [-5, 5, 4, "-5,-2.5,0,2.5,5"],
                 [0, 0, 4, "0,0.25,0.5,0.75,1"],
@@ -3631,6 +3632,30 @@
             chart.setValues([1, 30, 40, 2]); // A goes into Other, C comes out of it.
             const isKept = (colorOf("B") === colorOfB && colorOf("C") !== colorOfB && colorOf("C") !== "" && colorOf("A") === "");
             check("GraphBox: a slice keeps its color when the values change which ones are Other", isKept, [colorOfB, colorOf("B"), colorOf("C"), colorOf("A")].join(" | "));
+            chart.remove();
+        });
+
+        test("GraphBox: maxLabels: at most so many labels on the index axis", async function () {
+            const labels = [];
+            for (let i = 0; i < 96; i++) labels.push("L" + i);
+            const chart = GraphBox({ width: 700, height: 240, type: "line", legend: "none", maxLabels: 9, labels: labels, values: labels.map(function (label, i) { return i; }) });
+            const shown = Array.from(chart.svg.querySelectorAll("text")).filter(function (label) { return /^L\d+$/.test(label.textContent); }).map(function (label) { return label.textContent; });
+            check("GraphBox: maxLabels: at most so many labels on the index axis", shown.length <= 9 && shown.length >= 8 && shown[0] === "L0" && shown[1] === "L11", shown.join(","));
+            chart.remove();
+        });
+
+        test("GraphBox: a long subtitle goes on the next line and stays whole, the picture writes it on its lines too", async function () {
+            const sentence = "Every fifteen minutes the battery is plus when charging and minus when it is discharging in this chart";
+            const chart = GraphBox({ width: 240, height: 300, type: "bar", titleText: "Title", subtitleText: sentence, labels: ["A"], values: [1] });
+            await wait(30);
+            const label = chart.lblSubtitle.elem;
+            const isWhole = (label.scrollWidth <= label.clientWidth + 1 && label.getBoundingClientRect().height > 20);
+            const context = document.createElement("canvas").getContext("2d");
+            context.font = "12px opensans";
+            const lines = GraphBox.wrapText(context, sentence, 200);
+            const isWrapped = (lines.length > 1 && lines.join(" ") === sentence && lines.every(function (line) { return context.measureText(line).width <= 201; }));
+            const plotHeight = chart.plot.elem.clientHeight;
+            check("GraphBox: a long subtitle goes on the next line and stays whole, the picture writes it on its lines too", isWhole && isWrapped && plotHeight > 50, [isWhole, isWrapped, plotHeight].join(" "));
             chart.remove();
         });
 

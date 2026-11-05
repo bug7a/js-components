@@ -57,7 +57,8 @@ and these changes:
 - title, subtitle -> titleText, subtitleText. style.chart -> style.colors.
 - In a dataset: tension -> curve: "smooth". borderDash -> dashed: 1. pointRadius: 0 -> showPoints: 0.
   borderColor / backgroundColor -> color. fill: true -> fill: 1. ChartBox.gradient() -> fill: "gradient".
-- options.scales.y.max -> maxValue. options.cutout -> style.pie.hole. options.elements.point.radius: 0 -> showPoints: 0.
+- options.scales.y.max -> maxValue. options.scales.x.ticks.maxTicksLimit -> maxLabels. options.cutout -> style.pie.hole.
+  options.elements.point.radius: 0 -> showPoints: 0. A color for each slice: backgroundColor: [...] -> colors: [...].
 - There is no options, plugins and box.chart: this is not Chart.js. A chart with two value axes can not be made, on purpose:
   where two scales meet is free, so it shows a relation that is not in the data. (Two charts, one under the other.)
 - "polarArea" is not here yet.
@@ -107,6 +108,7 @@ const GraphBoxDefaults = {
     showValues: 0, // 1: The values on the chart, only where they fit.
     tableView: 0, // 1: A table of the values in place of the chart. setTableView()
     tableHeadText: "", // The title of the first column of the table
+    maxLabels: 0, // At most this many labels on the index axis. 0: As many as fit.
     curve: "linear", // "linear", "smooth" (never goes over a value)
     showPoints: "auto", // "auto": When there is room for them. 1, 0
     formatValue: null, // function (value) { return value + " ₺"; } For the tooltip and the value axis.
@@ -789,6 +791,12 @@ const GraphBox = function (params = {}) {
         return labelTexts;
     };
 
+    // maxLabels: the step that leaves at most that many labels.
+    const getMinLabelStep = function (indexCount) {
+        const maxLabels = toNumber(box.maxLabels) || 0;
+        return (maxLabels > 0) ? Math.max(1, Math.ceil(indexCount / maxLabels)) : 1;
+    };
+
     // How the labels of the index axis are written: { texts, step, angle, room }
     // WHY: A label that has no room is skipped on a line chart: it is time, the reader can follow it. A bar chart needs
     //      the name of every bar, so its labels turn, while each one still has a line of its own.
@@ -798,11 +806,13 @@ const GraphBox = function (params = {}) {
         const textHeight = getAxisTextHeight();
         const needed = measureWidestText(texts) + _s.axis.labelSpace;
         const angle = _s.axis.labelAngle;
+        const minStep = getMinLabelStep(indexCount);
 
-        if (needed <= spacing) return { texts: texts, step: 1, angle: 0, room: textHeight };
+        if (needed <= spacing) return { texts: texts, step: minStep, angle: 0, room: textHeight };
 
         if (!hasBands || !angle || spacing < textHeight) {
-            return { texts: texts, step: Math.ceil(needed / Math.max(1, spacing)), angle: 0, room: textHeight };
+            const step = Math.max(minStep, Math.ceil(needed / Math.max(1, spacing)));
+            return { texts: texts, step: step, angle: 0, room: textHeight };
         }
 
         const radians = angle * Math.PI / 180;
@@ -811,7 +821,7 @@ const GraphBox = function (params = {}) {
             return GraphBox.fitText(text, maxWidth, _s.axis.fontSize, _s.axis.fontFamily);
         });
         const room = Math.ceil(measureWidestText(shortTexts) * Math.sin(radians) + textHeight * Math.cos(radians));
-        return { texts: shortTexts, step: 1, angle: angle, room: room };
+        return { texts: shortTexts, step: minStep, angle: angle, room: room };
 
     };
 
@@ -842,7 +852,7 @@ const GraphBox = function (params = {}) {
         const texts = getLabelTexts(indexCount).map(function (text) {
             return GraphBox.fitText(text, maxLabelWidth, _s.axis.fontSize, _s.axis.fontFamily);
         });
-        const step = Math.max(1, Math.ceil(getAxisTextHeight() / Math.max(1, spacing)));
+        const step = Math.max(getMinLabelStep(indexCount), Math.ceil(getAxisTextHeight() / Math.max(1, spacing)));
         return { texts: texts, step: step, angle: 0, room: 0 };
     };
 
@@ -2585,6 +2595,7 @@ const GraphBox = function (params = {}) {
             flexWrap: (isSide) ? "nowrap" : "wrap",
             alignItems: (isSide) ? "flex-start" : "center",
             alignSelf: (isSide) ? "center" : "auto",
+            justifyContent: (isPieType() && !isSide) ? "center" : "flex-start",
             alignContent: "flex-start", // WHY: Lines in the middle of a smaller box: the first ones could not be reached.
             maxHeight: (isSide) ? "100%" : _s.legend.maxLinesShare,
             maxWidth: (isSide) ? _s.legend.maxSideShare : "100%",
@@ -2910,7 +2921,11 @@ const GraphBox = function (params = {}) {
         context.textAlign = "left";
         context.textBaseline = "middle";
         context.globalAlpha = opacity;
-        context.fillText(label.elem.textContent, place.left, place.top + place.height / 2);
+        const lines = GraphBox.wrapText(context, label.elem.textContent, place.width);
+        const lineHeight = place.height / lines.length;
+        lines.forEach(function (line, linePlace) {
+            context.fillText(line, place.left, place.top + lineHeight * (linePlace + 0.5));
+        });
         context.globalAlpha = 1;
     };
 
@@ -3320,7 +3335,8 @@ const GraphBox = function (params = {}) {
         box.texts.shrink = 0;
 
             box.lblTitle = Label({ ..._s.title, ellipsis: 1, css: { maxWidth: "100%" } });
-            box.lblSubtitle = Label({ ..._s.subtitle, ellipsis: 1, css: { maxWidth: "100%" } });
+            // WHY no "...": A subtitle is a sentence that can explain the chart. On a phone it goes on the next line.
+            box.lblSubtitle = Label({ ..._s.subtitle, css: { maxWidth: "100%", whiteSpace: "normal", textWrap: "balance" } });
 
         endGroup();
 
@@ -3467,10 +3483,13 @@ GraphBox.niceScale = function (low, high, tickCount = 5) {
         high = high + room;
     }
 
+    // WHY the tolerance: A rough step of 1.08 would become 2, and half of the chart would be empty. A step a little
+    //     under the rough one only adds a line or two.
+    const STEP_TOLERANCE = 1.2;
     const roughStep = (high - low) / Math.max(1, tickCount);
     const power = Math.pow(10, Math.floor(Math.log10(roughStep)));
     const fraction = [1, 2, 2.5, 5, 10].find(function (candidate) {
-        return (roughStep / power <= candidate);
+        return (roughStep / power <= candidate * STEP_TOLERANCE);
     });
     const step = fraction * power;
     const decimals = Math.max(0, -Math.floor(Math.log10(power))) + ((fraction === 2.5) ? 1 : 0);
@@ -3520,6 +3539,25 @@ GraphBox.fitText = function (text, maxWidth, fontSize, fontFamily) {
     let length = text.length - 1;
     while (length > 0 && !isFitting(text.slice(0, length) + "…")) length--;
     return text.slice(0, length) + "…";
+};
+
+// The lines of a text in this width, with the font of the context. (The canvas does not wrap a text by itself.)
+// WHY the small room: A text that just fits its label is not wrapped for a part of a px of a measure.
+GraphBox.wrapText = function (context, text, maxWidth) {
+    const MEASURE_ROOM = 1;
+    const lines = [];
+    let line = "";
+    text.split(" ").forEach(function (word) {
+        const longerLine = (line) ? line + " " + word : word;
+        if (line && context.measureText(longerLine).width > maxWidth + MEASURE_ROOM) {
+            lines.push(line);
+            line = word;
+            return;
+        }
+        line = longerLine;
+    });
+    lines.push(line);
+    return lines;
 };
 
 GraphBox.pointText = function (point) {
