@@ -58,6 +58,7 @@ Pages load the source files (`name.js`). Components have no `.min.js` files.
 - A dialog: `Dialog` (`Dialog.confirm`, `Dialog.alert`, `Dialog.prompt`).
 - A bubble or popover: `Tooltip`.
 - A search box: `SearchInput` with `styleName: "ozden"`, or `"ozdenDark"` on a dark page.
+- A text field: `InputB` and the fields made from it (`EmailInputB`, `PhoneInputB`, `PasswordInputB`, `URLInputB`, `NumberInputB`, `CurrencyInputB`, `TextareaB`) with `styleName: "ozden"`, or `"ozdenDark"` on a dark page.
 - A loading view: `LoadingScreen`.
 
 ## Publish

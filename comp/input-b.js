@@ -6,6 +6,10 @@ InputB - v25.07
 
 UI COMPONENT TEMPLATE
 - You can customize, this template code as you need:
+- NEW PROJECTS (the user, 2026-11-05): use styleName "ozden" on a light page and "ozdenDark" on a dark page (the
+  look of 02-comp-examples/input-b-ex7-ozden.htm), unless the user asks for another one. The fields made from InputB
+  (EmailInputB, PhoneInputB, PasswordInputB, URLInputB, NumberInputB, CurrencyInputB, TextareaB) take the same
+  packages: give them the same styleName. The default (classic) stays for the pages made before.
 
 
 Started Date: 25.07
