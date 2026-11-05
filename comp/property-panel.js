@@ -1622,6 +1622,9 @@ const PropertyPanel = function (params = {}) {
     const formatBase = function (base, format) {
         if (format === "hex" || base.charAt(0) !== "#") return base;
         const rgb = readColor(base);
+        // WHY: a "#" that is not a color (a typo: "#12345", "#") threw here in the rgb and hsl formats: the picker stayed
+        //      half drawn and the next color could not be typed (2026-11-05). It is shown as it is.
+        if (!rgb) return base;
         if (format === "rgb") return rgb.r + ", " + rgb.g + ", " + rgb.b;
         const hsl = rgbToHsl(rgb);
         return hsl.h + ", " + hsl.s + "%, " + hsl.l + "%";
@@ -1687,7 +1690,15 @@ const PropertyPanel = function (params = {}) {
             }
         });
 
-        alphaEl.addEventListener("blur", function () { commitAlpha(percentOfInput()); });
+        // WHY the shown text: the % field wrote the value at every blur, also with no change (and after Escape):
+        //     "transparent" became "rgba(0, 0, 0, 0)", "rgb(55, 56, 54)" "#373836", and basic-designer got a change
+        //     the user did not make (2026-11-05). The number field has the same check.
+        alphaEl.addEventListener("blur", function () {
+            const parts = splitAlpha(api.getValue());
+            const shownText = (parts.base) ? Math.round(parts.alpha * 100) + "%" : "";
+            if (String(alphaInput.text).trim() === shownText) return;
+            commitAlpha(percentOfInput());
+        });
         alphaEl.addEventListener("keydown", function (event) {
             const isArrow = (event.key === "ArrowUp" || event.key === "ArrowDown");
             if (isArrow) {

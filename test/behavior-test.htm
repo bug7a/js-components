@@ -2130,6 +2130,72 @@
             view.remove();
         });
 
+        // *** THE REVIEW OF comp/ (2026-11-05) - E: PropertyPanel (basic-designer) and UIEffects
+
+        test("PropertyPanel: a color typo in the RGB format of the picker does not throw, and a color can be typed again", async function () {
+            const panel = PropertyPanel({ data: { sections: [{ key: "s", title: "S", items: [{ key: "fill", type: "color", label: "Fill", value: "#3871E0" }] }] } });
+            await wait(50);
+            panel.elem.querySelector("[aria-haspopup=dialog]").click();
+            const picker = Array.from(document.querySelectorAll("[role=dialog]")).pop();
+            picker.querySelector("[aria-label='Color format (HEX, RGB, HSL)']").click(); // HEX -> RGB
+            const typeColor = function (text) {
+                const field = picker.querySelector("input[aria-label='Fill']");
+                field.focus();
+                field.value = text;
+                field.dispatchEvent(new InputEvent("input", { bubbles: true }));
+                key(field, "keydown", "Enter");
+            };
+            const errorsBefore = uncaught.length;
+            typeColor("#12345");
+            await wait(30);
+            typeColor("255, 0, 0");
+            await wait(30);
+            check("PropertyPanel: a color typo in the RGB format of the picker does not throw, and a color can be typed again", uncaught.length === errorsBefore && panel.getValue("fill") === "#FF0000", "errors: " + (uncaught.length - errorsBefore) + ", value: " + panel.getValue("fill"));
+            uncaught.length = errorsBefore; // WHY: a failure here is this test's, not "no uncaught errors" of the end
+            document.body.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, cancelable: true }));
+            panel.remove();
+        });
+
+        test("PropertyPanel: leaving the % field of a color with no edit (or with Escape) changes nothing", async function () {
+            const changes = [];
+            const panel = PropertyPanel({
+                data: { sections: [{ key: "s", title: "S", items: [
+                    { key: "a", type: "color", label: "A", value: "transparent" },
+                    { key: "b", type: "color", label: "B", value: "rgb(55, 56, 54)" },
+                    { key: "c", type: "color", label: "C", value: "rgba(0, 0, 0, 0.125)" },
+                ] }] },
+                onChange: function (change) { changes.push(change.key); },
+            });
+            await wait(50);
+            ["A", "B", "C"].forEach(function (name) {
+                const percent = panel.elem.querySelector("input[aria-label='" + name + " opacity (%)']");
+                percent.focus();
+                percent.blur();
+            });
+            const percentC = panel.elem.querySelector("input[aria-label='C opacity (%)']");
+            percentC.focus();
+            key(percentC, "keydown", "Escape");
+            check("PropertyPanel: leaving the % field of a color with no edit (or with Escape) changes nothing", changes.length === 0 && panel.getValue("a") === "transparent" && panel.getValue("c") === "rgba(0, 0, 0, 0.125)", "changes: " + changes.join(",") + ", a: " + panel.getValue("a"));
+            panel.remove();
+        });
+
+        test("UIEffects spotlight: quick passes of the mouse leave no light in the object", async function () {
+            const button = Button(20, 20, 160, 40, { text: "Save" });
+            UIEffects.hover(button, "spotlight");
+            const pass = function () {
+                button.elem.dispatchEvent(new PointerEvent("pointerenter", { pointerType: "mouse", clientX: 40, clientY: 30 }));
+                button.elem.dispatchEvent(new PointerEvent("pointermove", { bubbles: true, pointerType: "mouse", clientX: 60, clientY: 30 }));
+                button.elem.dispatchEvent(new PointerEvent("pointerleave", { pointerType: "mouse", clientX: 200, clientY: 30 }));
+            };
+            for (let i = 0; i < 4; i++) {
+                pass();
+                await wait(100); // back within the 300 ms fade
+            }
+            await wait(500);
+            check("UIEffects spotlight: quick passes of the mouse leave no light in the object", button.elem.querySelectorAll("span").length === 0 && button.text === "Save", "spans: " + button.elem.querySelectorAll("span").length + ", text: " + button.text.slice(0, 40));
+            button.remove();
+        });
+
         // *** RUN
 
         const runTests = async function () {

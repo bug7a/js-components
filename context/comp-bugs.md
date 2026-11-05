@@ -204,14 +204,14 @@ Satır numaraları 2026-11-05'teki dosyalara göredir.
 
 ## E. PropertyPanel (basic-designer) ve UIEffects
 
-**22. PropertyPanel: renk seçicide "#" ya da "#12345" yazınca hata, renk kayboluyor**
+**22. PropertyPanel: renk seçicide "#" ya da "#12345" yazınca hata, renk kayboluyor** · ✅ düzeltildi (2026-11-05)
 - Yer: `comp/property-panel.js:1624-1625` (`formatBase`; 1643, 1660'tan çağrılır)
 - Ne oluyor: seçicinin biçimi RGB ya da HSL iken `readColor(base)` null döner ve `.r` okunur: TypeError. Eski renk
   silinir ("#"), seçici yarım çizilir, o biçimde düzeltmek de yine fırlatır (`255, 0, 0` yazılamaz). Yalnızca HEX'e
   dönmek kurtarır.
 - Düzeltme: `formatBase`'te `if (!rgb) return base;`.
 
-**23. PropertyPanel: renk alanının % kutusundan geçmek değeri yeniden yazıyor (basic-designer'da sahte değişiklik)**
+**23. PropertyPanel: renk alanının % kutusundan geçmek değeri yeniden yazıyor (basic-designer'da sahte değişiklik)** · ✅ düzeltildi (2026-11-05)
 - Yer: `comp/property-panel.js:1690` (1665-1672; Escape 1702-1705)
 - Ne oluyor: % kutusu her blur'da yazar ("değişmedi" kontrolü yok), Escape iptal etmez: "transparent" →
   "rgba(0, 0, 0, 0)", "rgb(55, 56, 54)" → "#373836", 0.125 → 0.13 ve `onChange` çalışır. basic-designer'da bir renk
@@ -219,7 +219,7 @@ Satır numaraları 2026-11-05'teki dosyalara göredir.
   bu koruma var (612-614).
 - Düzeltme: metin gösterilen yüzdeyle aynıysa yazma; Escape eski değeri geri koysun.
 
-**24. UIEffects spotlight: hızlı gir-çık her seferinde düğmenin içinde bir span bırakıyor**
+**24. UIEffects spotlight: hızlı gir-çık her seferinde düğmenin içinde bir span bırakıyor** · ✅ düzeltildi (2026-11-05)
 - Yer: `comp/ui-effects.js:578-586` (`off()`: 599)
 - Ne oluyor: ayrılınca solan ışığı silen zamanlayıcıyı, 300 ms içinde geri dönen farenin `move()`'u iptal eder; span
   sonsuza dek kalır. Her hızlı geçiş bir span ekler; `btn.text` onları da döner ("Save<span ...>").

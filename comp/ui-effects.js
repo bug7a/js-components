@@ -568,22 +568,26 @@ UIEffects.types.spotlight = function (obj, o, fx) {
     const size = o.size ?? 180;
     const LIGHT_FADE_MS = 300;
     let light = null;
-    let removeTimer = null;
+    const fadingLights = new Set(); // the lights that fade out (removed after LIGHT_FADE_MS)
     return {
         motion: [],
         render: function (st) {
             if (!light) return;
             light.style.opacity = st.over ? 1 : 0;
             // WHY: The light is removed after it fades out. It is a child of the object (button.text reads it too).
-            clearTimeout(removeTimer);
             if (!st.over) {
                 const oldLight = light;
                 light = null;
-                removeTimer = setTimeout(function () { oldLight.remove(); }, LIGHT_FADE_MS);
+                fadingLights.add(oldLight);
+                setTimeout(function () {
+                    oldLight.remove();
+                    fadingLights.delete(oldLight);
+                }, LIGHT_FADE_MS);
             }
         },
         move: function (event) {
-            clearTimeout(removeTimer);
+            // WHY no clearTimeout of the fading light here: it cancelled its removal, so every quick out-and-in left
+            //     a span in the object for good (button.text returned "Save<span ...>", 2026-11-05)
             // WHY: button.text = "..." clears the button's HTML, so the light is created again when it is lost.
             if (!light || light.parentNode !== obj.elem) {
                 light = UIEffects._overlay(obj);
@@ -596,7 +600,8 @@ UIEffects.types.spotlight = function (obj, o, fx) {
             light.style.background = "radial-gradient(circle " + size + "px at " + center + ", " + color + ", transparent)";
         },
         off: function () {
-            clearTimeout(removeTimer);
+            fadingLights.forEach(function (oldLight) { oldLight.remove(); });
+            fadingLights.clear();
             if (light) light.remove();
         },
     };
