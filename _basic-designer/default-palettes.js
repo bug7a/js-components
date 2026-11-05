@@ -35,14 +35,15 @@ BasicDesigner.DEFAULT_PALETTES = [
         ["#65A293", "field focus (InputB)"],
     ] },
 
-    // The jobs of the colors of an app: buttons, messages.
+    // The jobs of the colors of an app: the tones of SmartButton (comp/smart-button.js, SmartButton.tones), so a
+    // color taken by its job is the color of its button (the user, 2026-11-05; the old roles went to the groups below).
     { key: "roles", name: "Roles (primary, warning...)", colors: [
-        ["#3F67EB", "primary"],
-        ["#E8EAEE", "secondary"],
-        ["#6BAF83", "confirm"],
-        ["#EAB04E", "warning"],
-        ["#E06A49", "remove"],
-        ["#6253B5", "help"],
+        ["#5BBAC1", "primary: the main action (SmartButton cyan)"],
+        ["#FFFFFF", "secondary (SmartButton white)"],
+        ["#7BC362", "confirm: done (SmartButton green)"],
+        ["#F1C74A", "warning: look first (SmartButton yellow)"],
+        ["#DE815B", "remove: a delete (SmartButton orange)"],
+        ["#52A8D0", "help: details (SmartButton blue)"],
         ["indianred", "error (indianred)"],
     ] },
 
@@ -62,6 +63,7 @@ BasicDesigner.DEFAULT_PALETTES = [
         ["#BDBDBD", ""],
         ["#D9D9D9", ""],
         ["#E3E3E3", ""],
+        ["#E8EAEE", "cool gray"],
         ["#F2F2F2", ""],
         ["whitesmoke", "whitesmoke"],
         ["#FFFFFF", "white"],
@@ -101,16 +103,21 @@ BasicDesigner.DEFAULT_PALETTES = [
     { key: "flat", name: "Bright (flat UI)", colors: [
         ["#DE635E", "red"],
         ["#EE6A52", "tomato"],
+        ["#E06A49", "flame"],
         ["#E89E5A", "orange"],
+        ["#EAB04E", "amber"],
         ["#ECCA62", "yellow"],
         ["#86CD9B", "mint"],
+        ["#6BAF83", "fern"],
         ["#56AD6A", "green"],
         ["#48975D", "dark green"],
         ["#76C7EE", "light blue"],
         ["#519ED8", "blue"],
         ["#4A82E5", "royal blue"],
+        ["#3F67EB", "ultramarine"],
         ["#AF73D6", "lilac"],
         ["#8E57DE", "purple"],
+        ["#6253B5", "violet"],
     ] },
 
     // Warm sets: the warm reds, yellows, greens and blues, each from light to dark.
