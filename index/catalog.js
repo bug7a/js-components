@@ -291,8 +291,8 @@ CATALOG.COMPONENTS = [
             { file: "02-comp-examples/data-table-4.htm", title: "Add & delete" },
             { file: "02-comp-examples/data-table-5.htm", title: "Custom cells" },
         ],
-        en: "A table for short and middle lists: sorting, search, keyboard selection, your own cells and row updates by id. For very many rows: SmartTable.",
-        tr: "Kısa ve orta uzunlukta listeler için tablo: sıralama, arama, klavyeyle seçim, kendi hücreleriniz ve id ile satır güncelleme. Çok fazla satır için: SmartTable.",
+        en: "A table for lists up to about 2,000 rows: sorting, search, keyboard selection, your own cells and row updates by id. For more rows: SmartTable.",
+        tr: "Yaklaşık 2.000 satıra kadar listeler için tablo: sıralama, arama, klavyeyle seçim, kendi hücreleriniz ve id ile satır güncelleme. Daha fazla satır için: SmartTable.",
     },
     {
         key: "web-view", name: "WebView", cat: "pages",
