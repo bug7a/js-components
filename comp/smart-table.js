@@ -29,7 +29,10 @@ Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
 
 
-- Arama sütunu: Arama kutusunun sağındaki kutuya (ALL) basınca sütun listesi açılır. Arama sadece seçilen sütunda yapılır.
+- Arama sütunu: Arama kutusunun sağ ucundaki etikete (ALL) basınca sütun listesi açılır. Arama sadece seçilen sütunda yapılır.
+-- (2026-11-05, the user) The chip is in the filter box at its right end; the clear icon shows at its left while
+   there is a text, and a narrow box shows no clear icon (searchInputParams.clearIconMinTextWidth: 80 px of text).
+   A narrow table gives the filter box the room up to the count (up to 240 px).
 -- searchTitleIndex: -1 (ALL: tüm sütunlar), showSearchTitleSelect: 0 ise kutu gizlenir.
 -- Liste için comp/context-menu.js yüklenmelidir. Yüklenmemiş ise, kutuya her basışta sıradaki sütuna geçer.
 - fitLineCount: 1 (2026-11-04): the rows are about itemHeight px high and their count follows the height of the table
@@ -126,6 +129,7 @@ const SmartTableDefaults = {
         searchIconOpacity: 0.5,
         placeholderText: "Filter",
         searchIconFile: "../comp/search-input-v2/filter.png",
+        clearIconMinTextWidth: 80, // (the user, 2026-11-05: a narrow filter box has no clear icon; its text keeps that place)
     },
     styleName: "classic", // "classic", "dark", "green" or a name added to SmartTable.styles
     style: { // Classic style package (default): the look of DataTable "classic" (2026-11-05, the user)
@@ -198,12 +202,19 @@ const SmartTable = function (params = {}) {
     const CELL_TOOLTIP_DELAY = 300; // ms: the mouse rests on a cell before its bubble shows (no bubbles while it moves)
     const LOADING_ICON_SIZE = 32;
     const SEARCH_TITLE_MAX_WIDTH = "160px";
+    const SEARCH_TITLE_RIGHT = 6; // px: the chip (ALL) from the right side of the filter box
+    const SEARCH_TITLE_GAP = 6; // px: between the clear icon of the filter box and the chip
+    const SEARCH_MIN_WIDTH = 240; // px: a narrow table gives the filter box more than its share of the line, up to this
+    const TOOLBAR_PADDING = 8; // px: the filter box from the left side of the info line
+    const TOOLBAR_GAP = 12; // px: between the filter box and the count
+    const COUNT_RIGHT = 14; // px: the count from the right side of the info line
     const FILTER_DELAY = 50; // ms
     const RESIZE_DELAY = 3; // ms
     const LOADING_MIN_ITEM_COUNT = 1000; // WHY: Küçük listelerde loading bir an yanıp sönmesin.
     const TEST_DATA_REPEAT_COUNT = 100000;
     const DEFAULT_LOCALE = "tr-TR"; // WHY: the numbers were always Turkish before (2026-11-04); a page with no language keeps them
     const targetItemHeight = box.itemHeight; // fitLineCount: the height of a row, before the rows share the height
+    let searchClearIconRight = 0; // the place of the clear icon of the filter box with no chip (its own)
     let hoveredCell = null; // the cell under the mouse (the bubble of a cut text: showCellTooltip)
     let cellTooltip = null; // the bubble of a cut text (Tooltip.show), null: none
     let cancelCellTooltipTimer = null;
@@ -1184,11 +1195,32 @@ const SmartTable = function (params = {}) {
 
     };
 
+    // A narrow table: the filter box is wider than its share of the line (searchInputParams.width, Ex: "50%"), up to
+    // SEARCH_MIN_WIDTH and up to the count. A width in px stays as it is.
+    const applySearchWidth = function () {
+        const width = String(box.searchInputParams.width);
+        box.searchInput.css.minWidth = "0px"; // WHY: a long count makes it narrower
+        if (!width.endsWith("%")) return;
+        box.searchInput.css.flexGrow = "1";
+        box.searchInput.css.maxWidth = "max(" + width + ", " + SEARCH_MIN_WIDTH + "px)";
+    };
+
+    // The chip keeps the right end of the filter box: the clear icon and the text of SearchInput are at its left.
+    const fitSearchToTitle = function () {
+        const titleWidth = box.lblSelectedSortKey.elem.offsetWidth;
+        const hasTitle = (titleWidth > 0);
+        box.searchInput.setClearIconRight(hasTitle ? SEARCH_TITLE_RIGHT + titleWidth + SEARCH_TITLE_GAP : searchClearIconRight);
+    };
+
     box.createToolbar = function () {
 
+        // GROUP: The filter box and the count, in one line
+        // WHY one line (flex): a narrow table gives the filter box the room up to the count, and a long count makes
+        //     it narrower (it never covers the count). (2026-11-05, the user)
         HGroup({
             align: "left center",
-            padding: [8, 0],
+            gap: TOOLBAR_GAP,
+            padding: [TOOLBAR_PADDING, 0],
         });
         box.boxInfoLine.add(that);
 
@@ -1198,44 +1230,37 @@ const SmartTable = function (params = {}) {
             box.searchKeyword = searchedText;
             box.filterAndSortData();
         }
-
-        endGroup();
-
-        HGroup({
-            align: "right center",
-            padding: [14, 0],
-        });
-        box.boxInfoLine.add(that);
+        searchClearIconRight = that.clearIconRight;
+        applySearchWidth();
 
         box.boxInfoLine.label = Label({
             text: "0 - 0 / 0",
             ...box.style.lblBoxInfoLine,
         });
+        that.css = { marginLeft: "auto", marginRight: (COUNT_RIGHT - TOOLBAR_PADDING) + "px", flexShrink: "0" };
 
         endGroup();
 
-        // Center the label
-        HGroup({
-            align: "right center",
-            width: "50%",
-            padding: [40, 0],
-        });
-        box.boxInfoLine.add(that);
-
-        // LABEL: Arama sütunu seçimi (ALL)
-        box.lblSelectedSortKey = Label({
-            text: box.allTitlesText,
-            opacity: 1,
-            clickable: 1,
-            ...box.style.lblNoDataFound,
-            ...box.style.lblSearchTitle, // WHY: Etiket filtre kutusunun içinde duruyor; "no data" etiketinden ayrı stil verilebilsin.
+        // LABEL: Arama sütunu seçimi (ALL): in the filter box, at its right end (2026-11-05, the user)
+        box.lblSelectedSortKey = createIn(box.searchInput, function () {
+            return Label({
+                text: box.allTitlesText,
+                right: SEARCH_TITLE_RIGHT,
+                opacity: 1,
+                clickable: 1,
+                ...box.style.lblNoDataFound,
+                ...box.style.lblSearchTitle, // WHY: Etiket filtre kutusunun içinde duruyor; "no data" etiketinden ayrı stil verilebilsin.
+            });
         });
         that.cursor = "pointer";
         that.ellipsis = 1;
         that.css.maxWidth = SEARCH_TITLE_MAX_WIDTH;
+        // WHY CSS: the chip stays in the middle of the box when its text or its font changes
+        that.css.top = "50%";
+        that.css.transform = "translateY(-50%)";
         that.setMotion("opacity 0.2s");
-
-        endGroup();
+        // WHY onResize: a column name is wider than ALL; a hidden chip is 0 px (showSearchTitleSelect: 0)
+        that.onResize(fitSearchToTitle);
 
         if (typeof ContextMenu === "function") {
 

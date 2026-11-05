@@ -860,6 +860,37 @@
             darkTable.remove();
         });
 
+        test("SmartTable: the column chip is at the right end of the filter box; the text and the clear icon stay at its left; a narrow box has no clear icon", async function () {
+            const wideTable = SmartTable({ itemLineCount: 2, style: { width: 700, height: "auto" } });
+            const narrowTable = SmartTable({ itemLineCount: 2, style: { width: 260, height: "auto" } });
+            wideTable.searchInput.setText("abc");
+            narrowTable.searchInput.setText("abc");
+            await wait(150);
+            const right = function (obj) { return obj.elem.getBoundingClientRect().right; };
+            const left = function (obj) { return obj.elem.getBoundingClientRect().left; };
+            const getLayout = function (table) {
+                const search = table.searchInput;
+                const chip = table.lblSelectedSortKey;
+                return {
+                    isChipAtEnd: (right(search) - right(chip) <= 8),
+                    isTextBeforeChip: (right(search.txtSearch) <= left(chip)),
+                    isClearBeforeChip: (right(search.imgClearIcon) <= left(chip)),
+                    isClearShown: (search.imgClearIcon.opacity > 0),
+                };
+            };
+            const wide = getLayout(wideTable);
+            const narrow = getLayout(narrowTable);
+            wideTable.setSearchTitleIndex(2); // (a column name: a wider chip)
+            await wait(150);
+            const wideColumn = getLayout(wideTable);
+            const isWideRight = wide.isChipAtEnd && wide.isTextBeforeChip && wide.isClearBeforeChip && wide.isClearShown && wideColumn.isClearBeforeChip && wideColumn.isTextBeforeChip;
+            const isNarrowRight = narrow.isChipAtEnd && narrow.isTextBeforeChip && !narrow.isClearShown;
+            check("SmartTable: the column chip is at the right end of the filter box; the text and the clear icon stay at its left; a narrow box has no clear icon",
+                isWideRight && isNarrowRight, "wide: " + JSON.stringify(wide) + ", a column: " + JSON.stringify(wideColumn) + ", narrow: " + JSON.stringify(narrow));
+            wideTable.remove();
+            narrowTable.remove();
+        });
+
         // *** FORM (comp/form.js)
 
         test("Form: a press that is not a click does not send; a click sends once", async function () {
