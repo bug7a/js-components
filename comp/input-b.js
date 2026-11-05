@@ -719,7 +719,7 @@ InputB.styles = {
     // The fields of the contact form of __projects/webpage-ozden-panel (js/sections/contact.js, inputStyle and
     // styleInput): a see-through field, a green border on focus. BLACK TONES (the user, 2026-11-05): the popups and
     // the edge of the warning ball are the black of the kit (the dark cards #1A1A19), not the dark green of that site
-    // (#0E1A14, #16261D); the focus line stays the focus color of the dark kit (SmartButton ozdenType1Dark).
+    // (#0E1A14, #16261D); the focus line is white (one color: no green left).
     ozdenDark: {
         style: {},
         backgroundColor: "rgba(255, 255, 255, 0.04)", // FIELD_BG
@@ -728,7 +728,7 @@ InputB.styles = {
         lineColor: Black(0),
         selectedLineColor: Black(0),
         backBorderColor: "rgba(255, 255, 255, 0.10)", // FIELD_LINE
-        selectedBackBorderColor: "rgba(101, 162, 147, 0.75)", // FIELD_LINE_SELECTED (SITE.PRIMARY_LIGHT)
+        selectedBackBorderColor: White(0.45), // the focus line: a white one (it was the green of that site; the user, 2026-11-05)
         backBorderTopRound: 10,
         backBorderBottomRound: 10,
 
