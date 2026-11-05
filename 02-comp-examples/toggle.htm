@@ -24,6 +24,7 @@
         // - Toggle({ value, aria: { label }, onChange })   self.value is 0 or 1
         // - toggle.setValue(0 / 1), toggle.switch()        onChange runs
         // - toggle.setSecondState("disabled" / "normal")   can not be changed, Tab skips it
+        // - buttonStyle: { selectedShadow }                the shadow of the knob when on
         // TRY: turn "Notifications" off: the two rows under it close. Tab and Space work too.
         // The shapes and colors: toggle-2.htm, toggle-3.htm.
 
@@ -37,10 +38,19 @@
         const LIGHT = { card: "white", line: Black(0.1), title: Black(0.85), text: Black(0.5) };
         const DARK = { card: DARK_CARD_COLOR, line: White(0.12), title: White(0.9), text: White(0.5) };
 
+        // WHY: the knob is at the right when on: this shadow falls only to its left, on the track, so the white knob
+        //      stands out. The negative spread keeps it inside the track (no dirty edge on the white card).
+        const KNOB_SHADOW_WHEN_ON = "-4px 0px 6px -1px rgba(0, 0, 0, 0.5)";
+
+        // The switch for a light page: the default look with a clearer knob when on
+        const LIGHT_TOGGLE = {
+            buttonStyle: { selectedShadow: KNOB_SHADOW_WHEN_ON },
+        };
+
         // The switch for a dark page: your own colors over the default look
         const DARK_TOGGLE = {
             backgroundStyle: { color: "black", selectedColor: GREEN_ON_DARK, borderColor: White(0.25) },
-            buttonStyle: { color: White(0.25), selectedColor: White(0.75) },
+            buttonStyle: { color: White(0.25), selectedColor: White(0.75), selectedShadow: KNOB_SHADOW_WHEN_ON },
         };
 
         let lblStatus;
@@ -80,16 +90,19 @@
             startCard(LIGHT);
 
                 createRow(LIGHT, "Notifications", "Tell me about new messages", {
+                    ...LIGHT_TOGGLE,
                     value: 1,
                     onChange: onNotificationsChange,
                 });
 
                 toggleSound = createRow(LIGHT, "Sound", "Play a sound with a notification", {
+                    ...LIGHT_TOGGLE,
                     value: 1,
                     onChange: showChange,
                 });
 
                 toggleBadge = createRow(LIGHT, "Badge", "Show the number of new messages", {
+                    ...LIGHT_TOGGLE,
                     onChange: showChange,
                 });
 
