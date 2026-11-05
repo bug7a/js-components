@@ -171,7 +171,7 @@ const ItemListDefaults = {
             height: 40,
             padding: [0, 0, 0, 0], // left, top, right, bottom: 0, as wide as the list
             fontSize: 18,
-            color: "#FFFCD6", // (the user, 2026-11-05: the pale yellow of the search box of SelectBox ozden, the comp-m1 SelectItem; it was white, the yellow of SmartButton was too strong)
+            color: "white",
             textColor: "rgba(0, 0, 0, 0.8)",
             placeholderColor: "",
             border: 0,
