@@ -46,6 +46,29 @@ BasicDesigner.DEFAULT_PALETTES = [
         ["indianred", "error (indianred)"],
     ] },
 
+    // Plain names (the user, 2026-11-05, from a picture of a palette): six grays, then the colors by hue. Its colors
+    // are the ones of "Bright (flat UI)" (the picture showed them 3-7 values darker: its color profile); the grays
+    // are read from the picture.
+    { key: "general", name: "General (Gray 1 → Purple 2)", colors: [
+        ["#323232", "Gray 1"],
+        ["#4E4E4E", "Gray 2"],
+        ["#808080", "Gray 3"],
+        ["#BBBBBB", "Gray 4"],
+        ["#DDDDDD", "Gray 5"],
+        ["#EFEFEF", "Gray 6"],
+        ["#DE635E", "Red"],
+        ["#E89E5A", "Orange"],
+        ["#ECCA62", "Yellow"],
+        ["#48975D", "Green 1"],
+        ["#56AD6A", "Green 2"],
+        ["#86CD9B", "Green 3"],
+        ["#4A82E5", "Blue 1"],
+        ["#519ED8", "Blue 2"],
+        ["#76C7EE", "Blue 3"],
+        ["#8E57DE", "Purple 1"],
+        ["#AF73D6", "Purple 2"],
+    ] },
+
     // Black to white.
     { key: "grays", name: "Grays (black → white)", colors: [
         ["#000000", "black"],
