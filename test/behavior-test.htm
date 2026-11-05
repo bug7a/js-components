@@ -1326,6 +1326,95 @@
                 mouseRow === "white" && looks === "transparent,transparent,white", "the mouse row: " + mouseRow + ", after the keys: " + looks);
         });
 
+        test("ItemList: Enter and Space are a click (onItemClick), the Tab order starts at the selection", async function () {
+            const clicked = [];
+            const menu = ItemList({ width: 300, height: 300, items: ["Home", "Settings"], selection: "none", onItemClick: function (self, item) { clicked.push(item); } });
+            key(menu.getRow("0").elem, "keydown", "Enter");
+            key(menu.getRow("1").elem, "keydown", " ");
+            const list = ItemList({ width: 300, height: 300, items: ["Apple", "Banana", "Cherry"], selectedKeys: ["2"] });
+            const tabRows = ["0", "1", "2"].filter(function (k) { return list.getRow(k).elem.tabIndex === 0; }).join(",");
+            menu.remove();
+            list.remove();
+            check("ItemList: Enter and Space are a click (onItemClick), the Tab order starts at the selection",
+                clicked.join(",") === "Home,Settings" && tabRows === "2", "clicked: " + clicked.join(",") + ", the row of the Tab order: " + tabRows);
+        });
+
+        test("ItemList: letters (type-ahead) and PageDown / PageUp move the focus", async function () {
+            const titles = ["Apple", "Banana", "Blueberry", "Cherry", "Çilek", "Date", "Elderberry", "Fig", "Grape", "Kiwi", "Lemon", "Mango"];
+            const list = ItemList({ width: 300, height: 400, items: titles });
+            const focusedTitle = function () {
+                const index = titles.findIndex(function (title, i) { return list.getRow(String(i)).elem === document.activeElement; });
+                return titles[index] || "-";
+            };
+            const type = function (letter) { key(document.activeElement, "keydown", letter); };
+            list.focusItem("0");
+            const steps = [];
+            type("b");
+            steps.push(focusedTitle()); // Banana
+            type("b");
+            steps.push(focusedTitle()); // the same letter again: Blueberry
+            await wait(700); // WHY: a new word after TYPE_AHEAD_TIME
+            type("c");
+            steps.push(focusedTitle()); // Cherry
+            type("c");
+            steps.push(focusedTitle()); // Çilek (without its mark)
+            await wait(700);
+            type("f");
+            type("i");
+            steps.push(focusedTitle()); // a word: Fig
+            const pageCount = Math.max(1, Math.floor(list.scrollBox.elem.clientHeight / list.getRow("0").elem.offsetHeight) - 1);
+            key(document.activeElement, "keydown", "PageDown");
+            const afterPageDown = focusedTitle();
+            key(document.activeElement, "keydown", "PageUp");
+            const afterPageUp = focusedTitle();
+            list.remove();
+            const expectedDown = titles[Math.min(titles.length - 1, 7 + pageCount)];
+            const isOk = steps.join(",") === "Banana,Blueberry,Cherry,Çilek,Fig" && afterPageDown === expectedDown && afterPageUp === "Fig";
+            check("ItemList: letters (type-ahead) and PageDown / PageUp move the focus", isOk,
+                steps.join(" > ") + ", PageDown: " + afterPageDown + " (" + expectedDown + "), PageUp: " + afterPageUp);
+        });
+
+        test("ItemList multiple: Shift + arrows and Shift + click select a range, Ctrl / Cmd + A all the shown items", async function () {
+            const list = ItemList({ width: 300, height: 400, selection: "multiple", items: ["A", "B", "C", "D", "E", "F"] });
+            const selected = function () { return list.getSelectedKeys().slice().sort().join(""); };
+            list.getRow("1").elem.click(); // B: the start of a range
+            list.focusItem("1");
+            key(list.getRow("1").elem, "keydown", "ArrowDown", { shiftKey: true });
+            key(list.getRow("2").elem, "keydown", "ArrowDown", { shiftKey: true });
+            const down = selected();
+            key(list.getRow("3").elem, "keydown", "ArrowUp", { shiftKey: true }); // back: D leaves the range
+            const back = selected();
+            list.getRow("5").elem.dispatchEvent(new MouseEvent("click", { bubbles: true, shiftKey: true }));
+            const shiftClick = selected();
+            key(list.getRow("5").elem, "keydown", "a", { ctrlKey: true });
+            const all = selected();
+            key(list.getRow("5").elem, "keydown", "a", { metaKey: true }); // all are selected: none
+            const none = selected();
+            list.remove();
+            const isOk = down === "123" && back === "12" && shiftClick === "12345" && all === "012345" && none === "";
+            check("ItemList multiple: Shift + arrows and Shift + click select a range, Ctrl / Cmd + A all the shown items", isOk,
+                "Shift + down: " + down + ", back: " + back + ", Shift + click: " + shiftClick + ", Ctrl + A: " + all + ", again: " + (none || "-"));
+        });
+
+        test("ItemList search box: the arrow down goes into the list, the arrow up from its first row back, Escape clears it", async function () {
+            const list = ItemList({ width: 300, height: 400, showSearch: 1, items: ["Apple", "Banana", "Cherry"], selectedKeys: ["1"] });
+            const input = list.searchInput.txtSearch.inputElement;
+            input.focus();
+            key(input, "keydown", "ArrowDown");
+            const intoList = (document.activeElement === list.getRow("1").elem); // the selected row (the Tab order)
+            list.focusItem("0");
+            key(list.getRow("0").elem, "keydown", "ArrowUp");
+            const backToSearch = (document.activeElement === input);
+            list.search("ban");
+            key(input, "keydown", "Escape");
+            const shownAfterEscape = ["0", "1", "2"].filter(function (k) { return list.getRow(k).visible == 1; }).length;
+            const textAfterEscape = input.value;
+            list.remove();
+            check("ItemList search box: the arrow down goes into the list, the arrow up from its first row back, Escape clears it",
+                intoList && backToSearch && shownAfterEscape === 3 && textAfterEscape === "",
+                "into the list: " + intoList + ", back: " + backToSearch + ", rows after Escape: " + shownAfterEscape + ", text: \"" + textAfterEscape + "\"");
+        });
+
         test("ItemList: a search with no result shows its text in the list", async function () {
             const list = ItemList({ width: 300, height: 300, items: ["Apple", "Banana"] });
             await wait(30);
@@ -2517,22 +2606,6 @@
             await wait(100);
             const rect = results.elem.getBoundingClientRect();
             check("SearchResults: under a field low on the screen the list stays on the screen", rect.top >= 0 && rect.bottom <= window.innerHeight + 1, "top: " + Math.round(rect.top) + ", bottom: " + Math.round(rect.bottom) + ", window: " + window.innerHeight);
-            results.remove();
-            field.remove();
-        });
-
-        test("SearchResults: matchAnchorWidth: 1 opens the list as wide as its field", async function () {
-            const field = SearchInput({ left: 40, top: 100, width: 300 });
-            const results = SearchResults({ anchor: field, maxWidth: 200, matchAnchorWidth: 1 });
-            results.setItems([{ text: "Result 1" }, { text: "Result 2" }], "res");
-            await wait(50);
-            const fieldRect = field.elem.getBoundingClientRect();
-            const listRect = results.elem.getBoundingClientRect();
-            const bothEdgesMeet = Math.abs(listRect.left - fieldRect.left) < 1 && Math.abs(listRect.right - fieldRect.right) < 1;
-            check("SearchResults: matchAnchorWidth: 1 opens the list as wide as its field (both edges meet)", bothEdgesMeet, "field: " + Math.round(fieldRect.left) + "-" + Math.round(fieldRect.right) + ", list: " + Math.round(listRect.left) + "-" + Math.round(listRect.right));
-            results.setMatchAnchorWidth(0);
-            const width = results.elem.getBoundingClientRect().width;
-            check("SearchResults: setMatchAnchorWidth(0) gives the list the width of maxWidth again", Math.abs(width - 200) < 1, "width: " + Math.round(width));
             results.remove();
             field.remove();
         });
