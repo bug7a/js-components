@@ -873,7 +873,8 @@
                 const chip = table.lblSelectedSortKey;
                 return {
                     isChipAtEnd: (right(search) - right(chip) <= 8),
-                    isTextBeforeChip: (right(search.txtSearch) <= left(chip)),
+                    // (a cut text goes half of its fade under the chip and fades out there: SearchInput textFadeWidth)
+                    isTextBeforeChip: (right(search.txtSearch) <= left(chip) + search.textFadeWidth / 2),
                     isClearBeforeChip: (right(search.imgClearIcon) <= left(chip)),
                     isClearShown: (search.imgClearIcon.opacity > 0),
                 };
@@ -1240,6 +1241,33 @@
             el.focus();
             document.execCommand("insertText", false, "abc"); // the same input event as a paste or an autofill
             check("SearchInput: a pasted text is searched", texts[texts.length - 1] === "abc", "onSearch: " + texts.join(", "));
+            search.remove();
+        });
+
+        test("SearchInput: a cut text fades out where it goes on; while typing only the far side of a caret at the end", async function () {
+            const search = SearchInput({ width: 220, height: 40 });
+            const input = search.txtSearch.inputElement;
+            const getMask = function () { return search.txtSearch.elem.style.maskImage || search.txtSearch.elem.style.webkitMaskImage || ""; };
+            const isRightFade = function (mask) { return mask.includes("transparent 100%") && !mask.includes("transparent 0px"); };
+            const isLeftFade = function (mask) { return mask.includes("transparent 0px") && !mask.includes("transparent 100%"); };
+            search.setText("a text that is much longer than the box of the search");
+            await wait(50);
+            const restMask = getMask();
+            // (the events, not focus(): the window of the test may not be in focus)
+            input.dispatchEvent(new FocusEvent("focus"));
+            input.setSelectionRange(input.value.length, input.value.length);
+            input.scrollLeft = input.scrollWidth; // (the browser shows the caret at the end)
+            input.dispatchEvent(new KeyboardEvent("keyup", { key: "End" }));
+            const typingMask = getMask();
+            input.setSelectionRange(2, 2);
+            input.dispatchEvent(new KeyboardEvent("keyup", { key: "Home" }));
+            const caretInTextMask = getMask();
+            input.dispatchEvent(new FocusEvent("blur"));
+            search.setText("short");
+            const shortMask = getMask();
+            check("SearchInput: a cut text fades out where it goes on; while typing only the far side of a caret at the end",
+                isRightFade(restMask) && isLeftFade(typingMask) && caretInTextMask === "" && shortMask === "",
+                "rest: " + restMask + " | typing: " + typingMask + " | caret in the text: " + caretInTextMask + " | short: " + shortMask);
             search.remove();
         });
 

@@ -19,6 +19,9 @@ UI COMPONENT TEMPLATE
   the right end of the box is kept for an object of the page (the column chip of SmartTable); setClearIconRight().
   A click on such an object keeps its own click (it does not start typing). clearIconMinTextWidth: a narrow box does
   not show its clear icon when the text beside it would be narrower than this; the text gets its place.
+- A cut text (2026-11-05, the user): a text longer than the box is not cut sharply: it fades out over textFadeWidth px
+  at the side where it goes on (under the clear icon, an object of the page, or the search icon). While typing, only
+  the far side of a caret at the end of the text fades, so the caret is always seen. textFadeWidth: 0 cuts sharply.
 
 Started Date: December 2025
 Developer: Bugra Ozden
@@ -42,6 +45,7 @@ const SearchInputDefaults = {
     clearIconRight: 16, // px: the clear icon from the right side of the box (more: the right end is for an object of the page)
     isCancelEnabled: 1,
     clearIconMinTextWidth: 0, // px: the clear icon is not shown when the text beside it would be narrower (0: always shown)
+    textFadeWidth: 24, // px: a text longer than the box fades out over this width where it is cut (0: cut sharply)
     placeholderText: "Search",
     color: "whitesmoke",
     textColor: "rgba(0, 0, 0, 0.8)",
@@ -128,10 +132,18 @@ const SearchInput = function(params = {}) {
         return getTextWidthWithClearIcon() >= box.clearIconMinTextWidth;
     };
 
-    // The width of the text: with no clear icon, the text goes on to its place.
+    // The width of the text: with no clear icon, the text goes on to its place. While not typing, a cut text goes on
+    // under the icon (or the object of the page) at its end and fades out there: half of its fade is under it.
+    // WHY not while typing: the caret at the end of the text must not be under the icon.
     const getTextWidth = function() {
         const width = getTextWidthWithClearIcon();
-        return isClearIconUsed() ? width : width + CLEAR_ICON_PLACE;
+        const textWidth = isClearIconUsed() ? width : width + CLEAR_ICON_PLACE;
+        return isFocused ? textWidth : textWidth + box.textFadeWidth / 2;
+    };
+
+    const refreshTextWidth = function() {
+        box.txtSearch.width = getTextWidth();
+        refreshTextFade();
     };
 
     const refreshLayout = function(self) {
@@ -141,12 +153,34 @@ const SearchInput = function(params = {}) {
         self.imgClearIcon.center("top");
         self.imgIcon.center("top");
         refreshClearIcon(); // WHY: a narrower or a wider box can lose or get back its clear icon (clearIconMinTextWidth)
+        refreshTextFade();
 
     };
 
     // The box itself, the search icon or the text (not the clear icon, not an object of the page in the box)
     const isFieldPart = function(target) {
         return target === box.elem || box.imgIcon.elem.contains(target) || box.txtSearch.elem.contains(target);
+    };
+
+    // The sides where the text is cut fade out (it goes on under an icon or an object of the page).
+    // WHY only the far side of a caret at the end while typing: a faded side hid the caret (arrows, a click in the text).
+    const refreshTextFade = function() {
+        const input = box.txtSearch.inputElement;
+        const isCutLeft = (input.scrollLeft > 0);
+        const isCutRight = (input.scrollLeft + input.clientWidth < input.scrollWidth - 1);
+        const isCaretAtEnd = (input.selectionStart === input.value.length);
+        const canFade = (box.textFadeWidth > 0) && (!isFocused || isCaretAtEnd);
+        const mask = canFade ? getTextFadeMask(isCutLeft, isCutRight) : "";
+        box.txtSearch.css = { maskImage: mask, webkitMaskImage: mask };
+    };
+
+    // A mask that is transparent at a cut side and reaches the text after textFadeWidth px ("": no fade)
+    const getTextFadeMask = function(isCutLeft, isCutRight) {
+        if (!isCutLeft && !isCutRight) return "";
+        const fade = box.textFadeWidth + "px";
+        const start = isCutLeft ? "transparent 0px, #000 " + fade : "#000 0px";
+        const end = isCutRight ? "#000 calc(100% - " + fade + "), transparent 100%" : "#000 100%";
+        return "linear-gradient(to right, " + start + ", " + end + ")";
     };
 
     // The text given to onSearch and onSubmit
@@ -260,6 +294,7 @@ const SearchInput = function(params = {}) {
     box.setText = function(text) {
         box.txtSearch.text = text;
         refreshClearIcon();
+        refreshTextFade();
     }
 
     box.getText = function() {
@@ -337,17 +372,23 @@ const SearchInput = function(params = {}) {
     box.listenTo(box.txtSearch.inputElement, "input", function() {
         box.onSearch(getSearchedText(), box);
         refreshClearIcon();
+        refreshTextFade();
     });
 
     // Sadece enter a basınca.
     box.listenTo(box.txtSearch.inputElement, "keyup", function(self, event) {
         if (event.key === "Enter") box.onSubmit(getSearchedText(), box);
+        refreshTextFade(); // (the arrows, Home and End move the caret)
     });
+    // The text scrolls in its box (typing at the end, the blur takes it back to its start), a click moves the caret.
+    box.listenTo(box.txtSearch.inputElement, "scroll", refreshTextFade);
+    box.listenTo(box.txtSearch.inputElement, "mouseup", refreshTextFade);
     box.onResize(refreshLayout);
     box.imgClearIcon.onClick(function(self) {
 
         setClearIconVisible(0);
         box.txtSearch.text = "";
+        refreshTextFade();
         box.onSearch(getSearchedText(), box);
         box.onSubmit(getSearchedText(), box);
 
@@ -367,12 +408,14 @@ const SearchInput = function(params = {}) {
     box.listenTo(box.txtSearch.inputElement, "focus", function() {
         isFocused = 1;
         paintMotion();
+        refreshTextWidth();
     });
     // WHY: "input" and not keyup: arrows, Shift and Enter do not change the text, they must not pulse.
     box.listenTo(box.txtSearch.inputElement, "input", pulseSearchIcon);
     box.listenTo(box.txtSearch.inputElement, "blur", function() {
         isFocused = 0;
         paintMotion();
+        refreshTextWidth();
     });
     // A click on the field (an icon, the space around the text) starts typing. (A click on an object of the page in
     // the box, Ex: the column chip of SmartTable, is its own.)
