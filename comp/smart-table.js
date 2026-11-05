@@ -112,9 +112,10 @@ const SmartTableDefaults = {
         searchIconSize: 16,
         placeholderText: "Filter",
         fontSize: 16,
-        borderColor: "rgba(0, 0, 0, 0.4)",
-        borderBottomStyle: "1px solid rgba(0, 0, 0, 0.4)",
+        borderColor: Black(0.4),
+        borderBottomStyle: "1px solid " + Black(0.4),
         searchIconFile: "../comp/search-input-v2/filter.png",
+        searchIconOpacity: 0.8, // (the user, 2026-11-05: a softer filter icon, in tune with the edges)
     },
     style: {
 
@@ -148,8 +149,9 @@ const SmartTableDefaults = {
         boxInfoLine: { color: "#E4E4E4", borderTop: "1px solid rgba(0, 0, 0, 0)" },
         lblBoxInfoLine: { fontSize: 16, textColor: Black(0.85), },
         lblNoDataFound: { color: "lightgray", padding: [8, 2], fontSize: 14, round: 8, border: 1, borderColor: Black(0.4), },
-        // Filtre kutusundaki sütun seçim etiketi (ALL). Boş ise lblNoDataFound stili kullanılır.
-        lblSearchTitle: {},
+        // Filtre kutusundaki sütun seçim etiketi (ALL), lblNoDataFound stilinin üstüne.
+        // (the user, 2026-11-05: whitesmoke, as the pale lines of the table; the edge of the filter box)
+        lblSearchTitle: { color: "whitesmoke", border: 1, borderColor: Black(0.4) },
         btnScrollCenter: { color: "white", round: 100, borderColor: "rgba(0,0,0,0.4)", border: 1, },
         btnScrollUp: { color: "lightgray", round: 100, border: 1, },
         btnScrollDown: { color: "lightgray", round: 100, border: 1, },
