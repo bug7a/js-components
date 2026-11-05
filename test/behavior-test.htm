@@ -1681,6 +1681,18 @@
             }
         };
 
+        // 2026-11-05 (the user): the tab of the login pages grew with a motion when the page opened
+        test("Tabs: the indicator has no motion before the first change of the tab (a late size is drawn at once); a change moves it", async function () {
+            const tabs = Tabs({ variant: "pill", tabs: [{ key: "a", text: "A" }, { key: "b", text: "B" }], value: "a" });
+            await wait(80); // (after the first view)
+            const motionAtStart = tabs.indicator.elem.style.transition;
+            tabs.setValue("b");
+            const motionAfterChange = tabs.indicator.elem.style.transition;
+            check("Tabs: the indicator has no motion before the first change of the tab (a late size is drawn at once); a change moves it",
+                !/left/.test(motionAtStart) && /left/.test(motionAfterChange), "at the start: " + motionAtStart + " | after a change: " + motionAfterChange);
+            tabs.remove();
+        });
+
         test("Tabs: on a zoomed page (zoom 0.5, basic.uiScale 2) the bar keeps its size on the screen", async function () {
             await document.fonts.ready;
             const measureTabs = function () {

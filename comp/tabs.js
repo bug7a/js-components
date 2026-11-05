@@ -224,7 +224,9 @@ const Tabs = function (params = {}) {
     const isFullWidth = basic.isOn(box.fullWidth);
     let items = []; // [{ tab, group, label, countLabel, badgeDot, closeButton, icon, panel, isHovered }]
     let panelStack = []; // startPanel() / endPanel()
-    let isIndicatorReady = 0;
+    let isIndicatorMoving = 0; // the indicator moves with a motion (startIndicatorMotion: the first change of the tab)
+    let isFirstViewDone = 0; // the bar has been drawn once
+    let shownValue = null; // the tab the indicator shows
     const scale = box.scale; // The px of the code below are multiplied by it, like the style.
     const SCROLL_SPACE_X = 24 * scale; // Space next to the active tab when the strip scrolls to it.
     const SCROLL_SPACE_Y = 8 * scale;
@@ -360,13 +362,16 @@ const Tabs = function (params = {}) {
         indicator.color = item.tab.selectedColor || indicatorColor;
         indicator.opacity = 1;
 
-        // WHY: The first position must not be animated. (The indicator would fly in from the corner.)
-        if (!isIndicatorReady) {
-            isIndicatorReady = 1;
-            indicator.elem.offsetWidth;
-            indicator.setMotionNow(getIndicatorMotion());
-        }
+    };
 
+    // The indicator moves with a motion from one tab to another, after the first view.
+    // WHY not from its first place (the user, 2026-11-05): the tab of the login pages grew with a motion when the
+    //     page opened: the first size was measured before the fonts and the page were ready, and the motion that was
+    //     on followed the right size. Its first place and the sizes before the first change are drawn at once.
+    const startIndicatorMotion = function () {
+        if (isIndicatorMoving || !isFirstViewDone) return;
+        isIndicatorMoving = 1;
+        box.indicator.setMotionNow(getIndicatorMotion());
     };
 
     const getIndicatorMotion = function () {
@@ -421,6 +426,8 @@ const Tabs = function (params = {}) {
     // WHY: One place, so a change can not forget its panel or its place in the Tab order.
     const showActiveTab = function () {
         paintTabs();
+        if (shownValue !== null && shownValue !== box.value) startIndicatorMotion();
+        shownValue = box.value;
         refreshLayout();
         showActivePanel();
         makeTabbable(findItem(box.value));
@@ -434,7 +441,7 @@ const Tabs = function (params = {}) {
 
     // WHY: New tabs: the indicator jumps to its first place, it does not fly from the old one.
     const resetIndicator = function () {
-        isIndicatorReady = 0;
+        isIndicatorMoving = 0;
         box.indicator.setMotionNow("none");
     };
 
@@ -1183,6 +1190,9 @@ const Tabs = function (params = {}) {
     box.value = resolveActiveKey(initialValue);
     box.setEnabled(box.enabled);
     showActiveTab();
+    requestAnimationFrame(function () {
+        isFirstViewDone = 1; // (a change of the tab before it is not a move: startIndicatorMotion)
+    });
 
     return endObject(box);
 
