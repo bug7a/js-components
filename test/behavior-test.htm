@@ -3220,6 +3220,81 @@
             check("GraphBox: a pie moves its legend under it in a narrow box, with no error of the observer", isSideAtStart && isUnderAfter && plotSize <= 300 && uncaught.length === 0, [isSideAtStart, isUnderAfter, plotSize, uncaught.join("|")].join(" "));
         });
 
+        test("GraphBox: radar: a point is as far from the center as its value, the mouse finds the spoke, stacked changes nothing", async function () {
+            const chart = GraphBox({ width: 500, height: 320, type: "radar", stacked: 1, legend: "none", labels: ["A", "B", "C", "D"], maxValue: 100, datasets: [{ label: "One", data: [100, 50, 100, 50] }] });
+            await wait(30);
+            const points = Array.from(chart.svg.querySelectorAll("circle")).map(function (dot) { return { x: Number(dot.getAttribute("cx")), y: Number(dot.getAttribute("cy")) }; });
+            const center = { x: chart.plot.elem.clientWidth / 2, y: chart.plot.elem.clientHeight / 2 };
+            const distances = points.map(function (point) { return Math.hypot(point.x - center.x, point.y - center.y); });
+            const isDistanceRight = points.length === 4 && Math.abs(distances[0] - distances[1] * 2) < 1 && Math.abs(distances[0] - distances[2]) < 1;
+            const isTopFirst = points.length === 4 && Math.abs(points[0].x - center.x) < 1 && points[0].y < center.y;
+            graphBoxMoveMouse(chart, center.x + 60, center.y - 2);
+            const titleAtRight = chart.lblTooltipTitle.elem.textContent;
+            check("GraphBox: radar: a point is as far from the center as its value, the mouse finds the spoke, stacked changes nothing", isDistanceRight && isTopFirst && titleAtRight === "B", JSON.stringify(distances) + " " + titleAtRight);
+            chart.remove();
+        });
+
+        test("GraphBox: scatter: the mouse only has to be near a point, a name of a point is its title, wrong values are skipped", async function () {
+            const chart = GraphBox({
+                width: 500, height: 320, type: "scatter", legend: "none",
+                datasets: [{ label: "Group", data: [{ x: 10, y: 10, label: "<b>First</b>" }, [20, 30], { x: "a", y: 1 }, null, [30, 20]] }],
+            });
+            await wait(30);
+            const dots = Array.from(chart.svg.querySelectorAll("circle"));
+            const first = { x: Number(dots[0].getAttribute("cx")), y: Number(dots[0].getAttribute("cy")) };
+            graphBoxMoveMouse(chart, first.x + 8, first.y - 8);
+            const isFound = (chart.tooltip.visible == 1 && chart.lblTooltipTitle.elem.textContent === "<b>First</b>");
+            graphBoxMoveMouse(chart, first.x + 60, first.y - 90);
+            const secondTitle = chart.lblTooltipTitle.elem.textContent;
+            const isFar = (chart.tooltip.visible == 0 || secondTitle === "Group");
+            check("GraphBox: scatter: the mouse only has to be near a point, a name of a point is its title, wrong values are skipped", dots.length === 3 && isFound && isFar, dots.length + " " + chart.lblTooltipTitle.elem.textContent);
+            chart.remove();
+        });
+
+        test("GraphBox: bubble: the area of a bubble follows its value", async function () {
+            const chart = GraphBox({ width: 500, height: 320, type: "bubble", legend: "none", datasets: [{ data: [[1, 1, 100], [2, 2, 25]] }] });
+            const radiuses = Array.from(chart.svg.querySelectorAll("circle")).map(function (dot) { return Number(dot.getAttribute("r")); });
+            check("GraphBox: bubble: the area of a bubble follows its value", radiuses.length === 2 && Math.abs(radiuses[0] / radiuses[1] - 2) < 0.01 && radiuses[0] === GraphBoxDefaults.style.scatter.maxBubble, radiuses.join(","));
+            chart.remove();
+        });
+
+        test("GraphBox: radar, scatter and bubble with no data or wrong values draw no NaN", async function () {
+            const sets = [
+                { labels: [], datasets: [] },
+                { labels: ["A"], values: [null] },
+                { labels: ["A", "B"], values: [0, 0] },
+                { labels: ["A", "B", "C"], values: [5, null, "x"] },
+                { datasets: [{ data: [{ x: 1, y: 1 }] }] },
+                { datasets: [{ data: [[1, 1, 0], [1, 1, 0]] }] },
+                { datasets: [{ data: [null, "x", { x: "a" }] }] },
+            ];
+            const wrong = [];
+            ["radar", "scatter", "bubble"].forEach(function (type) {
+                sets.forEach(function (set, setIndex) {
+                    const chart = GraphBox(Object.assign({ width: 300, height: 200, type: type }, set));
+                    if (/NaN|Infinity|undefined/.test(chart.svg.innerHTML)) wrong.push(type + " " + setIndex);
+                    chart.remove();
+                });
+            });
+            check("GraphBox: radar, scatter and bubble with no data or wrong values draw no NaN", wrong.length === 0, wrong.join(", "));
+        });
+
+        test("GraphBox: a value over a fixed limit stays in the plot, the titles of the axes take their own room", async function () {
+            const chart = GraphBox({ width: 400, height: 240, type: "bar", labels: ["A", "B"], values: [50, 500], maxValue: 100 });
+            const bars = Array.from(chart.svg.querySelectorAll("path")).map(function (path) { return path.getBBox(); });
+            const axisLines = Array.from(chart.svg.querySelectorAll("line")).map(function (axisLine) { return Number(axisLine.getAttribute("y1")); });
+            const plotTop = axisLines[axisLines.length - 2];
+            const isCapped = (Math.abs(bars[1].y - plotTop) <= 1);
+
+            const barLeftWithout = bars[0].x;
+            chart.setAxisTexts("Under", "Side");
+            const texts = Array.from(chart.svg.querySelectorAll("text")).map(function (label) { return label.textContent; });
+            const movedBar = chart.svg.querySelector("path").getBBox();
+            const isTitleShown = (texts.includes("Under") && texts.includes("Side") && movedBar.x > barLeftWithout - 8 && movedBar.height < bars[0].height);
+            check("GraphBox: a value over a fixed limit stays in the plot, the titles of the axes take their own room", isCapped && isTitleShown, [bars[1].y, plotTop, movedBar.height, bars[0].height].join(" "));
+            chart.remove();
+        });
+
         test("GraphBox: setTheme() changes the look, setStyle() keeps the other keys", async function () {
             const chart = GraphBox({ width: 400, height: 240, type: "bar", titleText: "Title", labels: ["A"], values: [1] });
             const lightColor = chart.color;

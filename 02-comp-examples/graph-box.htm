@@ -153,6 +153,46 @@
                             formatValue: function (value) { return "₺" + value.toLocaleString("tr-TR"); },
                         });
 
+                        // RADAR: Two datasets on the same rings
+                        addChart({
+                            type: "radar",
+                            titleText: "System Metrics",
+                            subtitleText: "Current vs. optimized server",
+                            legend: "bottom",
+                            labels: ["Speed", "Security", "Uptime", "Scaling", "Memory", "Cost"],
+                            datasets: [
+                                { label: "Optimized", data: [90, 85, 99, 92, 80, 88] },
+                                { label: "Current", data: [65, 70, 85, 60, 50, 60] },
+                            ],
+                        });
+
+                        // SCATTER: Two number axes, a name for a point
+                        addChart({
+                            type: "scatter",
+                            titleText: "Height and Weight",
+                            subtitleText: "Two groups, the titles of the axes",
+                            xAxisText: "Height (cm)",
+                            yAxisText: "Weight (kg)",
+                            datasets: [
+                                { label: "Group A", data: [{ x: 158, y: 52, label: "Ayşe" }, [162, 58], [165, 57], [168, 63], [171, 66], [174, 64], [176, 72]] },
+                                { label: "Group B", data: [[170, 74], [173, 78], [177, 81], [180, 80], [183, 88], [186, 91], [190, 95]] },
+                            ],
+                        });
+
+                        // BUBBLE: The area of a bubble follows its value
+                        addChart({
+                            type: "bubble",
+                            titleText: "Markets",
+                            subtitleText: "Price, sales and the size of the market",
+                            sizeText: "Market",
+                            xAxisText: "Price",
+                            yAxisText: "Sales",
+                            legend: "none",
+                            datasets: [
+                                { data: [{ x: 12, y: 40, r: 80, label: "North" }, { x: 18, y: 62, r: 30, label: "South" }, { x: 25, y: 35, r: 55, label: "East" }, { x: 31, y: 74, r: 12, label: "West" }, { x: 38, y: 50, r: 95, label: "Center" }] },
+                            ],
+                        });
+
                         // MIXED: Bars and a line in one chart
                         addChart({
                             type: "bar",

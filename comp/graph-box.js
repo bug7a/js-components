@@ -8,7 +8,8 @@ UI COMPONENT
 - Charts with no library: this one file draws the whole chart as one SVG. No Chart.js, no other file, no internet.
   (comp/chart-box.js is the bridge to Chart.js. Its params and functions are the model here, so a page can move over.)
 - Chart types: "line", "area", "bar" (more than one dataset: bars side by side; stacked: 1 one on the other;
-  horizontal: 1 bars that grow to the right), "pie", "doughnut" (the first dataset: a part of the whole).
+  horizontal: 1 bars that grow to the right), "pie", "doughnut" (the first dataset: a part of the whole), "radar",
+  "scatter" and "bubble" (two number axes: data: [{ x: 1, y: 2 }]).
 - Light and dark themes ("light", "dark", "auto"). A dataset gets its color from the theme and keeps it, also when
   another dataset is hidden or removed.
 - The axis finds clean numbers by itself (0, 20K, 40K...). A label that has no room is skipped (a line chart: time)
@@ -28,6 +29,10 @@ const sales = GraphBox({
 });
 sales.addValue("Apr", 15);
 sales.setTheme("dark");
+
+A SCATTER DATASET: { label: "Group A", data: [{ x: 170, y: 65, label: "Ayşe" }, [182, 80]] }
+- A bubble has a size too: { x: 170, y: 65, r: 12 } or [170, 65, 12]. (Its area follows the value.)
+- graph.addPoint({ x: 1, y: 2 }, 0) adds a point to a dataset.
 
 A DATASET: { label: "2026", data: [12, null, 7], color: "#2A78D6", type: "line" }
 - null in data: no value at that place (a line breaks there).
@@ -50,7 +55,7 @@ const GraphBoxDefaults = {
     key: "0",
     width: 500,
     height: 300,
-    type: "line", // "line", "area", "bar", "pie", "doughnut"
+    type: "line", // "line", "area", "bar", "pie", "doughnut", "radar", "scatter", "bubble"
     theme: "light", // "light", "dark", "auto" (follows the system setting)
     titleText: "",
     subtitleText: "",
@@ -67,9 +72,15 @@ const GraphBoxDefaults = {
     beginAtZero: 1, // 1: The value axis holds 0. (A bar chart always holds it: the length of a bar is its value.)
     minValue: null, // null: From the values.
     maxValue: null, // null: From the values. Ex: 100
+    minX: null, // scatter, bubble: the limits of the x axis. null: From the values. (They do not hold 0 by themselves.)
+    maxX: null,
+    sizeText: "Size", // bubble: the name of its size in the tooltip
+    xAxisText: "", // A small title under the chart. Ex: "Height (cm)"
+    yAxisText: "", // A small title at the left of the chart, turned. Ex: "Weight (kg)"
     curve: "linear", // "linear", "smooth" (never goes over a value)
     showPoints: "auto", // "auto": When there is room for them. 1, 0
     formatValue: null, // function (value) { return value + " ₺"; } For the tooltip and the value axis.
+    formatX: null, // scatter, bubble: the same for the x axis.
     locale: "", // "": The language of the browser. Ex: "tr-TR"
     maxCount: 0, // addValue(): 0: No limit. Ex: 20 (the first value is removed, for live data)
     emptyText: "No data", // In the middle of a chart with no values. "": Nothing
@@ -89,6 +100,11 @@ const GraphBoxDefaults = {
         title: { fontSize: 16, fontFamily: "opensans-bold" },
         subtitle: { fontSize: 12 },
         legend: {
+            keys: {
+                line: { width: 14, height: 2, round: 1 },
+                box: { width: 10, height: 10, round: 2 },
+                dot: { width: 8, height: 8, round: 4 },
+            },
             fontSize: 12,
             gap: 14,
             lineGap: 6,
@@ -127,6 +143,17 @@ const GraphBoxDefaults = {
             hole: 0.62, // A doughnut: the hole, as a part of the radius
             hoverGrow: 4, // Px: the slice under the mouse
             centerFontSize: 26,
+        },
+        radar: {
+            ringSpace: 28, // About this many px between two rings
+            fillOpacity: 0.15,
+            maxLabelShare: 0.28, // A label is cut with "..." at this much of the width of the chart.
+            showTicks: 1, // 1: The numbers of the rings
+        },
+        scatter: {
+            maxBubble: 22, // Px: the radius of the biggest bubble
+            bubbleOpacity: 0.65,
+            hitRadius: 14, // Px: the mouse finds a point this far from it. (A point of 8 px is too small to aim at.)
         },
         tooltip: {
             fontSize: 12,
@@ -324,6 +351,8 @@ const GraphBox = function (params = {}) {
         [definitions, gridLayer, washLayer, markLayer, overlayLayer].forEach(function (layer) {
             layer.replaceChildren();
         });
+        markLayer.removeAttribute("clip-path");
+        overlayLayer.removeAttribute("clip-path");
     };
 
     // A line of 1 px is sharp only in the middle of a pixel.
@@ -376,6 +405,10 @@ const GraphBox = function (params = {}) {
         }, box.data.labels.length);
     };
 
+    const isStacked = function () {
+        return (box.stacked == 1 && box.type !== "radar");
+    };
+
     const getStackName = function (seriesItem, value) {
         if (!isBarSeries(seriesItem)) return "lines";
         return (value < 0) ? "barsUnderBase" : "barsOverBase"; // WHY: A bar under the base line grows on its own side.
@@ -385,7 +418,7 @@ const GraphBox = function (params = {}) {
     const createValueRange = function (seriesItem, index, stackTotals) {
         const value = getValue(seriesItem.dataset, index);
         if (value === null) return null;
-        if (box.stacked != 1) return { from: 0, to: value };
+        if (!isStacked()) return { from: 0, to: value };
         const totals = stackTotals[getStackName(seriesItem, value)];
         const from = totals[index] || 0;
         totals[index] = from + value;
@@ -422,18 +455,22 @@ const GraphBox = function (params = {}) {
             high = Math.max(high, 0);
         }
 
-        const minValue = toNumber(box.minValue);
-        const maxValue = toNumber(box.maxValue);
+        return applyFixedLimits(low, high, box.minValue, box.maxValue);
+
+    };
+
+    const applyFixedLimits = function (low, high, fixedLow, fixedHigh) {
+        const minValue = toNumber(fixedLow);
+        const maxValue = toNumber(fixedHigh);
         return {
             low: (minValue === null) ? low : minValue,
             high: (maxValue === null) ? high : maxValue,
             hasFixedLow: (minValue !== null),
             hasFixedHigh: (maxValue !== null),
         };
-
     };
 
-    const createValueScale = function (limits, length, tickSpace = _s.axis.tickSpace) {
+    const createValueScale = function (limits, length, tickSpace = _s.axis.tickSpace, formatTick = formatTickText) {
         const tickCount = Math.max(2, Math.floor(length / tickSpace));
         const scale = GraphBox.niceScale(limits.low, limits.high, tickCount);
         if (limits.hasFixedLow) scale.min = limits.low;
@@ -442,9 +479,49 @@ const GraphBox = function (params = {}) {
             return (tick >= scale.min && tick <= scale.max);
         });
         scale.tickTexts = scale.ticks.map(function (tick) {
-            return formatTickText(tick, scale.decimals);
+            return formatTick(tick, scale.decimals);
         });
         return scale;
+    };
+
+    // The base of the bars and the areas: 0, or the nearest edge when the axis does not hold 0.
+    const getBaseValue = function (scale) {
+        return Math.min(scale.max, Math.max(scale.min, 0));
+    };
+
+    const getAxisTitleRooms = function () {
+        const room = getAxisTextHeight() + 2;
+        return { left: (box.yAxisText) ? room : 0, bottom: (box.xAxisText) ? room : 0 };
+    };
+
+    // WHY: A value over a fixed limit (maxValue: 100) must not draw over the title. A little room is left for the points.
+    const clipMarks = function (plot) {
+        const room = getPointRoom();
+        GraphBox._idCounter += 1;
+        const id = "graph-box-clip-" + GraphBox._idCounter;
+        const clip = addShape(definitions, "clipPath", { id: id });
+        addShape(clip, "rect", {
+            x: plot.left - room,
+            y: plot.top - room,
+            width: plot.right - plot.left + room * 2,
+            height: plot.bottom - plot.top + room * 2,
+        });
+        markLayer.setAttribute("clip-path", "url(#" + id + ")");
+        overlayLayer.setAttribute("clip-path", "url(#" + id + ")");
+    };
+
+    // The small titles of the axes: at the edges of the chart.
+    const drawAxisTitles = function (plot, height) {
+        const textHeight = getAxisTextHeight();
+        if (box.xAxisText) {
+            addText(gridLayer, box.xAxisText, (plot.left + plot.right) / 2, height - textHeight / 2, "middle", colors.textColor);
+        }
+        if (box.yAxisText) {
+            const x = textHeight / 2;
+            const y = (plot.top + plot.bottom) / 2;
+            const title = addText(gridLayer, box.yAxisText, x, y, "middle", colors.textColor);
+            title.setAttribute("transform", "rotate(-90 " + x + " " + y + ")");
+        }
     };
 
     // THE AXES OF A LINE OR BAR CHART:
@@ -458,16 +535,17 @@ const GraphBox = function (params = {}) {
 
         const labelGap = _s.axis.labelGap;
         const pointRoom = getPointRoom();
+        const titleRooms = getAxisTitleRooms();
         const top = Math.max(pointRoom, Math.ceil(_s.axis.fontSize / 2));
-        const bottom = height - (labelRoom + labelGap);
+        const bottom = height - (labelRoom + labelGap + titleRooms.bottom);
         const scale = createValueScale(limits, bottom - top);
 
-        let left = Math.ceil(measureWidestText(scale.tickTexts)) + labelGap;
+        let left = titleRooms.left + Math.ceil(measureWidestText(scale.tickTexts)) + labelGap;
         let right = width - pointRoom;
 
         // WHY: Without bands the first and the last value are on the edges, so half of their labels is out of the plot.
         if (!hasBands && indexCount > 0) {
-            left = Math.max(left, Math.ceil(measureAxisText(getLabelText(0)) / 2));
+            left = Math.max(left, titleRooms.left + Math.ceil(measureAxisText(getLabelText(0)) / 2));
             right = width - Math.max(pointRoom, Math.ceil(measureAxisText(getLabelText(indexCount - 1)) / 2));
         }
 
@@ -522,11 +600,12 @@ const GraphBox = function (params = {}) {
         const maxLabelWidth = width * _s.axis.maxSideLabelShare;
         const labelWidth = Math.min(maxLabelWidth, measureWidestText(getLabelTexts(indexCount)));
         const tickWidth = measureWidestText([formatTickText(limits.low, 0), formatTickText(limits.high, 0)]);
+        const titleRooms = getAxisTitleRooms();
 
-        const left = Math.ceil(labelWidth) + labelGap;
+        const left = titleRooms.left + Math.ceil(labelWidth) + labelGap;
         const right = Math.max(left + 1, width - Math.max(pointRoom, Math.ceil(tickWidth / 2)));
         const top = (hasBands) ? 0 : Math.max(pointRoom, Math.ceil(textHeight / 2));
-        const bottom = Math.max(top + 1, height - (textHeight + labelGap));
+        const bottom = Math.max(top + 1, height - (textHeight + labelGap + titleRooms.bottom));
         const tickSpace = Math.max(_s.axis.tickSpace, tickWidth + _s.axis.labelSpace);
 
         return { left: left, top: top, right: right, bottom: bottom, maxLabelWidth: maxLabelWidth, scale: createValueScale(limits, right - left, tickSpace) };
@@ -613,8 +692,7 @@ const GraphBox = function (params = {}) {
             return Math.min(indexCount - 1, Math.max(0, index));
         };
 
-        // The base of the bars and the areas: 0, or the nearest edge when the axis does not hold 0.
-        axes.baseValue = Math.min(scale.max, Math.max(scale.min, 0));
+        axes.baseValue = getBaseValue(scale);
 
         axes.isInsidePlot = function (x, y) {
             const room = _s.axis.labelGap;
@@ -694,8 +772,9 @@ const GraphBox = function (params = {}) {
     // The base and the end of a bar on the value axis.
     const getBarEnds = function (range, axes) {
 
-        const endPosition = axes.toValuePosition(range.to);
-        let basePosition = axes.toValuePosition(range.from);
+        const scale = axes.scale;
+        const endPosition = axes.toValuePosition(Math.min(scale.max, Math.max(scale.min, range.to)));
+        let basePosition = axes.toValuePosition(Math.min(scale.max, Math.max(scale.min, range.from)));
         const direction = Math.sign(endPosition - basePosition);
 
         // WHY: The gap is in the geometry, not a line in the color of the box, so a box with no color has it too.
@@ -749,18 +828,18 @@ const GraphBox = function (params = {}) {
         const barSeries = series.filter(isBarSeries);
         if (!barSeries.length) return;
 
-        const isStacked = (box.stacked == 1);
-        const slotCount = (isStacked) ? 1 : barSeries.length;
+        const isBarStacked = isStacked();
+        const slotCount = (isBarStacked) ? 1 : barSeries.length;
         const thickness = getBarThickness(axes, slotCount);
         const groupLength = thickness * slotCount + _s.bar.gap * (slotCount - 1);
 
         barSeries.forEach(function (seriesItem, seriesPlace) {
-            const slot = (isStacked) ? 0 : seriesPlace;
+            const slot = (isBarStacked) ? 0 : seriesPlace;
             const slotOffset = slot * (thickness + _s.bar.gap) - groupLength / 2;
             seriesItem.barRects = [];
             seriesItem.ranges.forEach(function (range, index) {
                 if (!range || range.from === range.to) return;
-                const isRound = (!isStacked || isOuterValue(barSeries, seriesPlace, index, range));
+                const isRound = (!isBarStacked || isOuterValue(barSeries, seriesPlace, index, range));
                 const roundSide = (isRound) ? getRoundSide(range, axes) : "";
                 drawBar(seriesItem, index, range, roundSide, axes.toIndexPosition(index) + slotOffset, thickness, axes);
             });
@@ -798,8 +877,8 @@ const GraphBox = function (params = {}) {
     };
 
     const addGradient = function (color) {
-        GraphBox._gradientCounter += 1;
-        const id = "graph-box-gradient-" + GraphBox._gradientCounter;
+        GraphBox._idCounter += 1;
+        const id = "graph-box-gradient-" + GraphBox._idCounter;
         const gradient = addShape(definitions, "linearGradient", { id: id, x1: 0, y1: 0, x2: 0, y2: 1 });
         addShape(gradient, "stop", { offset: 0, "stop-color": color, "stop-opacity": _s.line.gradientOpacity });
         addShape(gradient, "stop", { offset: 1, "stop-color": color, "stop-opacity": 0 });
@@ -844,14 +923,17 @@ const GraphBox = function (params = {}) {
         return (axes.spacing >= _s.line.pointSpace && !seriesItem.dataset.dashed);
     };
 
+    // WHY twice the ring, under the fill: A line of a circle is half inside it. So the point keeps its size, and the
+    //     ring is out of it.
     const addPoint = function (layer, point, color, radius) {
-        addShape(layer, "circle", {
+        return addShape(layer, "circle", {
             cx: point.x,
             cy: point.y,
             r: radius,
             fill: color,
             stroke: getSurfaceColor(),
-            "stroke-width": _s.line.pointRing,
+            "stroke-width": _s.line.pointRing * 2,
+            "paint-order": "stroke",
         });
     };
 
@@ -953,7 +1035,8 @@ const GraphBox = function (params = {}) {
         });
     };
 
-    const getCartesianReadout = function (series, index) {
+    // The tooltip of one place: every series at that place.
+    const getPlaceReadout = function (series, index) {
         const rows = [];
         let total = 0;
         series.forEach(function (seriesItem) {
@@ -966,7 +1049,7 @@ const GraphBox = function (params = {}) {
                 nameText: seriesItem.dataset.label || "",
             });
         });
-        if (box.stacked == 1 && box.totalText && rows.length > 1) {
+        if (isStacked() && box.totalText && rows.length > 1) {
             rows.push({ color: "transparent", valueText: formatValueText(total), nameText: box.totalText });
         }
         return { titleText: getLabelText(index), rows: rows };
@@ -1004,7 +1087,7 @@ const GraphBox = function (params = {}) {
                 paintActivePoints(series, item.index);
             },
             getReadout: function (item) {
-                return getCartesianReadout(series, item.index);
+                return getPlaceReadout(series, item.index);
             },
             getAnchor: function (item) {
                 return getCartesianAnchor(series, axes, item.index);
@@ -1023,8 +1106,10 @@ const GraphBox = function (params = {}) {
 
         const axes = createAxes(series, limits, indexCount, width, height);
 
+        clipMarks(axes.plot);
         drawValueAxis(axes);
         drawIndexLabels(axes);
+        drawAxisTitles(axes.plot, height);
         drawAreas(series, axes);
         drawBars(series, axes);
         drawLines(series, axes);
@@ -1180,10 +1265,386 @@ const GraphBox = function (params = {}) {
 
     };
 
+    // THE RADAR:
+
+    // The place of the chart: its center, its radius and the labels that fit at its sides.
+    const measureRadar = function (indexCount, width, height) {
+        const maxLabelWidth = width * _s.radar.maxLabelShare;
+        const texts = getLabelTexts(indexCount).map(function (text) {
+            return GraphBox.fitText(text, maxLabelWidth, _s.axis.fontSize, _s.axis.fontFamily);
+        });
+        const sideRoom = measureWidestText(texts) + _s.axis.labelGap;
+        const upRoom = getAxisTextHeight() + _s.axis.labelGap;
+        return {
+            center: { x: width / 2, y: height / 2 },
+            radius: Math.max(1, Math.min(width / 2 - sideRoom, height / 2 - upRoom)),
+            texts: texts,
+            indexCount: indexCount,
+        };
+    };
+
+    const getSpokeAngle = function (shape, index) {
+        return TOP_ANGLE + index / shape.indexCount * FULL_CIRCLE;
+    };
+
+    const toRadarPoint = function (shape, index, value) {
+        const scale = shape.scale;
+        const share = (value - scale.min) / ((scale.max - scale.min) || 1);
+        const angle = getSpokeAngle(shape, index);
+        return {
+            x: shape.center.x + share * shape.radius * Math.cos(angle),
+            y: shape.center.y + share * shape.radius * Math.sin(angle),
+        };
+    };
+
+    const drawRadarGrid = function (shape) {
+
+        const indexes = [];
+        for (let index = 0; index < shape.indexCount; index++) indexes.push(index);
+
+        shape.scale.ticks.forEach(function (tick) {
+            const points = indexes.map(function (index) { return toRadarPoint(shape, index, tick); });
+            addShape(gridLayer, "path", { d: GraphBox.polygonPath(points), fill: "none", stroke: colors.gridColor, "stroke-width": 1 });
+        });
+
+        indexes.forEach(function (index) {
+            const end = toRadarPoint(shape, index, shape.scale.max);
+            addLine(gridLayer, shape.center.x, shape.center.y, end.x, end.y, colors.gridColor);
+        });
+
+    };
+
+    const drawRadarLabels = function (shape) {
+        const distance = shape.radius + _s.axis.labelGap;
+        shape.texts.forEach(function (text, index) {
+            const angle = getSpokeAngle(shape, index);
+            const cosine = Math.cos(angle);
+            const SIDE_LIMIT = 0.2; // A label near the top or the bottom stays in the middle of its spoke.
+            let anchor = "middle";
+            if (cosine > SIDE_LIMIT) anchor = "start";
+            if (cosine < -SIDE_LIMIT) anchor = "end";
+            const x = shape.center.x + distance * cosine;
+            const y = shape.center.y + distance * Math.sin(angle) + Math.sin(angle) * getAxisTextHeight() / 2;
+            addText(gridLayer, text, x, y, anchor, colors.textColor);
+        });
+    };
+
+    // The numbers of the rings: on the first spoke, with a ring in the color of the box, so a line does not cut them.
+    const drawRadarTicks = function (shape) {
+        if (!basic.isOn(_s.radar.showTicks)) return;
+        shape.scale.ticks.forEach(function (tick, tickIndex) {
+            if (tick === shape.scale.min) return;
+            const point = toRadarPoint(shape, 0, tick);
+            const label = addText(gridLayer, shape.scale.tickTexts[tickIndex], point.x + 4, point.y, "start");
+            label.setAttribute("stroke", getSurfaceColor());
+            label.setAttribute("stroke-width", 3);
+            label.setAttribute("paint-order", "stroke");
+        });
+    };
+
+    const drawRadarSeries = function (seriesItem, shape) {
+
+        seriesItem.points = [];
+        seriesItem.ranges.forEach(function (range, index) {
+            if (range) seriesItem.points[index] = toRadarPoint(shape, index, range.to);
+        });
+
+        const points = seriesItem.points.filter(Boolean);
+        addShape(markLayer, "path", {
+            d: GraphBox.polygonPath(points),
+            fill: seriesItem.color,
+            "fill-opacity": _s.radar.fillOpacity,
+            stroke: seriesItem.color,
+            "stroke-width": _s.line.width,
+            "stroke-linejoin": "round",
+        });
+
+        if (shape.indexCount * _s.line.pointSpace > shape.radius * FULL_CIRCLE) return; // No room for the points
+        points.forEach(function (point) {
+            addPoint(markLayer, point, seriesItem.color, _s.line.pointRadius - 1);
+        });
+
+    };
+
+    const createRadarView = function (series, shape) {
+
+        const count = shape.indexCount;
+
+        return {
+            findItem: function (x, y) {
+                const distanceX = x - shape.center.x;
+                const distanceY = y - shape.center.y;
+                if (Math.hypot(distanceX, distanceY) > shape.radius + _s.axis.labelGap) return null;
+                const angle = Math.atan2(distanceY, distanceX) - TOP_ANGLE;
+                const index = (Math.round(angle / FULL_CIRCLE * count) + count) % count;
+                return { index: index, datasetIndex: findNearestDataset(series, index, x, y) };
+            },
+            stepItem: function (item, step) {
+                if (!item) return { index: 0, datasetIndex: null };
+                return { index: (item.index + step + count) % count, datasetIndex: null };
+            },
+            hasItem: function (item) {
+                return (item.index < count);
+            },
+            paintItem: function (item) {
+                const end = toRadarPoint(shape, item.index, shape.scale.max);
+                addLine(washLayer, shape.center.x, shape.center.y, end.x, end.y, colors.axisColor);
+                paintActivePoints(series, item.index);
+            },
+            getReadout: function (item) {
+                return getPlaceReadout(series, item.index);
+            },
+            getAnchor: function (item) {
+                return toRadarPoint(shape, item.index, shape.scale.max);
+            },
+        };
+
+    };
+
+    const drawRadar = function (width, height) {
+
+        const series = getVisibleSeries();
+        const indexCount = getIndexCount(series);
+        addValueRanges(series, indexCount);
+
+        const limits = getValueLimits(series);
+        if (!limits) return null;
+
+        const shape = measureRadar(indexCount, width, height);
+        shape.scale = createValueScale(limits, shape.radius, _s.radar.ringSpace);
+
+        drawRadarGrid(shape);
+        drawRadarLabels(shape);
+        drawRadarTicks(shape);
+        series.forEach(function (seriesItem) {
+            drawRadarSeries(seriesItem, shape);
+        });
+
+        return createRadarView(series, shape);
+
+    };
+
+    // THE SCATTER AND THE BUBBLE:
+
+    const isScatterType = function () {
+        return (box.type === "scatter" || box.type === "bubble");
+    };
+
+    // A value of a dataset: { x, y }, [x, y], { x, y, r }, [x, y, r]. null: it can not be drawn.
+    const toScatterValue = function (item) {
+        if (item === null || item === undefined) return null;
+        const source = (Array.isArray(item)) ? { x: item[0], y: item[1], r: item[2] } : item;
+        const x = toNumber(source.x);
+        const y = toNumber(source.y);
+        if (x === null || y === null) return null;
+        return { x: x, y: y, size: toNumber(source.r), label: source.label };
+    };
+
+    const createScatterPoints = function (series) {
+        const points = [];
+        series.forEach(function (seriesItem) {
+            seriesItem.dataset.data.forEach(function (item, index) {
+                const value = toScatterValue(item);
+                if (!value) return;
+                points.push(Object.assign(value, {
+                    index: index,
+                    datasetIndex: seriesItem.datasetIndex,
+                    color: getMarkColor(seriesItem, index),
+                    seriesName: seriesItem.dataset.label || "",
+                }));
+            });
+        });
+        return points;
+    };
+
+    const getLimitsOf = function (numbers, fixedLow, fixedHigh) {
+        return applyFixedLimits(Math.min.apply(null, numbers), Math.max.apply(null, numbers), fixedLow, fixedHigh);
+    };
+
+    const formatXText = function (value) {
+        if (box.formatX) return String(box.formatX(value));
+        return GraphBox.formatNumber(value, box.locale);
+    };
+
+    const formatXTickText = function (value, decimals) {
+        if (box.formatX) return String(box.formatX(value));
+        return GraphBox.formatCompactNumber(value, box.locale, decimals);
+    };
+
+    // The radius of every point. (The area of a bubble follows its value, not its width: the eye reads the area.)
+    const addPointRadiuses = function (points) {
+        if (box.type !== "bubble") {
+            points.forEach(function (point) { point.radius = _s.line.pointRadius; });
+            return;
+        }
+        const biggest = points.reduce(function (size, point) { return Math.max(size, point.size || 0); }, 0);
+        points.forEach(function (point) {
+            const share = (biggest > 0) ? Math.sqrt(Math.max(0, point.size || 0) / biggest) : 1;
+            point.radius = Math.max(_s.line.pointRing, share * _s.scatter.maxBubble);
+        });
+    };
+
+    const measureScatterPlot = function (points, width, height) {
+
+        const yLimits = getLimitsOf(points.map(function (point) { return point.y; }), box.minValue, box.maxValue);
+        const xLimits = getLimitsOf(points.map(function (point) { return point.x; }), box.minX, box.maxX);
+        const titleRooms = getAxisTitleRooms();
+        const textHeight = getAxisTextHeight();
+        const labelGap = _s.axis.labelGap;
+        const edgeRoom = getPointRoom();
+
+        const top = edgeRoom;
+        const bottom = Math.max(top + 1, height - (textHeight + labelGap + titleRooms.bottom));
+        const yScale = createValueScale(yLimits, bottom - top);
+        const left = titleRooms.left + Math.ceil(measureWidestText(yScale.tickTexts)) + labelGap;
+
+        const xTickWidth = measureWidestText([formatXTickText(xLimits.low, 0), formatXTickText(xLimits.high, 0)]);
+        const right = Math.max(left + 1, width - Math.max(edgeRoom, Math.ceil(xTickWidth / 2)));
+        const xTickSpace = Math.max(_s.axis.tickSpace, xTickWidth + _s.axis.labelSpace);
+        const xScale = createValueScale(xLimits, right - left, xTickSpace, formatXTickText);
+
+        return { left: left, top: top, right: right, bottom: bottom, xScale: xScale, yScale: yScale };
+
+    };
+
+    const createScatterAxes = function (plot) {
+
+        // WHY the inset: A bubble is big, so the smallest and the biggest values must not be drawn on the edges.
+        const inset = (box.type === "bubble") ? _s.scatter.maxBubble : 0;
+        const xScale = plot.xScale;
+        const yScale = plot.yScale;
+        const xLength = plot.right - plot.left - inset * 2;
+        const yLength = plot.bottom - plot.top - inset * 2;
+
+        return {
+            plot: plot,
+            toX: function (value) {
+                return plot.left + inset + (value - xScale.min) / ((xScale.max - xScale.min) || 1) * xLength;
+            },
+            toY: function (value) {
+                return plot.bottom - inset - (value - yScale.min) / ((yScale.max - yScale.min) || 1) * yLength;
+            },
+        };
+
+    };
+
+    const drawScatterGrid = function (axes) {
+
+        const plot = axes.plot;
+        const textHeight = getAxisTextHeight();
+
+        plot.yScale.ticks.forEach(function (tick, tickIndex) {
+            const y = toPixelCenter(axes.toY(tick));
+            addLine(gridLayer, plot.left, y, plot.right, y, colors.gridColor);
+            addText(gridLayer, plot.yScale.tickTexts[tickIndex], plot.left - _s.axis.labelGap, y, "end");
+        });
+
+        plot.xScale.ticks.forEach(function (tick, tickIndex) {
+            const x = toPixelCenter(axes.toX(tick));
+            addLine(gridLayer, x, plot.top, x, plot.bottom, colors.gridColor);
+            addText(gridLayer, plot.xScale.tickTexts[tickIndex], x, plot.bottom + _s.axis.labelGap + textHeight / 2);
+        });
+
+        const baseY = toPixelCenter((plot.yScale.min < 0 && plot.yScale.max > 0) ? axes.toY(0) : plot.bottom);
+        const baseX = toPixelCenter((plot.xScale.min < 0 && plot.xScale.max > 0) ? axes.toX(0) : plot.left);
+        addLine(gridLayer, plot.left, baseY, plot.right, baseY, colors.axisColor);
+        addLine(gridLayer, baseX, plot.top, baseX, plot.bottom, colors.axisColor);
+
+    };
+
+    const drawScatterPoint = function (point) {
+        const dot = addPoint(markLayer, { x: point.px, y: point.py }, point.color, point.radius);
+        if (box.type === "bubble") dot.setAttribute("fill-opacity", _s.scatter.bubbleOpacity);
+    };
+
+    const findNearestPoint = function (points, x, y) {
+        let nearest = null;
+        let nearestDistance = Infinity;
+        points.forEach(function (point) {
+            const distance = Math.hypot(point.px - x, point.py - y);
+            const reach = Math.max(_s.scatter.hitRadius, point.radius);
+            if (distance > reach || distance >= nearestDistance) return;
+            nearest = point;
+            nearestDistance = distance;
+        });
+        return nearest;
+    };
+
+    const getScatterReadout = function (point) {
+        const rows = [
+            { color: point.color, valueText: formatValueText(point.y), nameText: box.yAxisText || "y" },
+            { color: "transparent", valueText: formatXText(point.x), nameText: box.xAxisText || "x" },
+        ];
+        if (box.type === "bubble" && point.size !== null) {
+            rows.push({ color: "transparent", valueText: GraphBox.formatNumber(point.size, box.locale), nameText: box.sizeText });
+        }
+        return { titleText: (point.label === undefined) ? point.seriesName : String(point.label), rows: rows };
+    };
+
+    const createScatterView = function (points) {
+
+        const findPoint = function (item) {
+            return points.find(function (point) {
+                return (point.datasetIndex === item.datasetIndex && point.index === item.index);
+            });
+        };
+
+        return {
+            findItem: function (x, y) {
+                const point = findNearestPoint(points, x, y);
+                return (point) ? { index: point.index, datasetIndex: point.datasetIndex } : null;
+            },
+            stepItem: function (item, step) {
+                const place = (item) ? points.indexOf(findPoint(item)) + step : 0;
+                const point = points[Math.min(points.length - 1, Math.max(0, place))];
+                return { index: point.index, datasetIndex: point.datasetIndex };
+            },
+            hasItem: function (item) {
+                return !!findPoint(item);
+            },
+            paintItem: function (item) {
+                const point = findPoint(item);
+                addPoint(overlayLayer, { x: point.px, y: point.py }, point.color, point.radius + 1);
+            },
+            getReadout: function (item) {
+                return getScatterReadout(findPoint(item));
+            },
+            getAnchor: function (item) {
+                const point = findPoint(item);
+                return { x: point.px, y: point.py };
+            },
+        };
+
+    };
+
+    const drawScatter = function (width, height) {
+
+        const points = createScatterPoints(getVisibleSeries());
+        if (!points.length) return null;
+
+        const axes = createScatterAxes(measureScatterPlot(points, width, height));
+
+        clipMarks(axes.plot);
+        drawScatterGrid(axes);
+        drawAxisTitles(axes.plot, height);
+        addPointRadiuses(points);
+
+        points.forEach(function (point) {
+            point.px = axes.toX(point.x);
+            point.py = axes.toY(point.y);
+            drawScatterPoint(point);
+        });
+
+        return createScatterView(points);
+
+    };
+
     // THE PLOT:
 
     const drawChart = function (width, height) {
         if (isPieType()) return drawPie(width, height);
+        if (isScatterType()) return drawScatter(width, height);
+        if (box.type === "radar") return drawRadar(width, height);
         return drawCartesian(width, height);
     };
 
@@ -1218,6 +1679,10 @@ const GraphBox = function (params = {}) {
         if (box.subtitleText) parts.push(box.subtitleText);
         getVisibleSeries().forEach(function (seriesItem) {
             const values = seriesItem.dataset.data.map(function (value, index) {
+                if (isScatterType()) {
+                    const point = toScatterValue(value);
+                    return (point) ? formatXText(point.x) + " " + formatValueText(point.y) : "";
+                }
                 const number = toNumber(value);
                 if (number === null) return "";
                 return getLabelText(index) + " " + formatValueText(number);
@@ -1406,12 +1871,19 @@ const GraphBox = function (params = {}) {
 
     // THE LEGEND:
 
+    // A key looks like its mark.
+    const getKeyShape = function (dataset) {
+        const type = getDatasetType(dataset);
+        if (type === "bar") return "box";
+        return (type === "scatter" || type === "bubble") ? "dot" : "line";
+    };
+
     const getSeriesEntries = function () {
         return box.data.datasets.map(function (dataset, position) {
             return {
                 text: dataset.label || "",
                 color: getSeriesColor(dataset, position),
-                isLine: (getDatasetType(dataset) !== "bar"),
+                keyShape: getKeyShape(dataset),
                 isHidden: basic.isOn(dataset.hidden),
                 position: position,
             };
@@ -1426,7 +1898,7 @@ const GraphBox = function (params = {}) {
             entries.push({
                 text: getLabelText(index),
                 color: getSliceColor(dataset, index),
-                isLine: false,
+                keyShape: "box",
                 isHidden: hiddenSliceKeys.has(getSliceKey(index)),
                 position: index,
             });
@@ -1471,12 +1943,10 @@ const GraphBox = function (params = {}) {
 
     const createLegendItem = function (entry) {
 
-        const keyHeight = (entry.isLine) ? 2 : 10;
-
-        // GROUP: One item: its key looks like its mark (a line or a box), its text is never in the data color.
+        // GROUP: One item: its key looks like its mark, its text is never in the data color.
         const item = HGroup({ hug: 1, gap: _s.legend.keyGap, align: "left center" });
 
-            item.key = Box({ width: (entry.isLine) ? 14 : 10, height: keyHeight, round: 2, color: entry.color });
+            item.key = Box({ ..._s.legend.keys[entry.keyShape], color: entry.color });
             item.key.shrink = 0;
 
             item.label = Label({ plainText: entry.text, fontSize: _s.legend.fontSize, textColor: colors.textColor, ellipsis: 1 });
@@ -1634,6 +2104,16 @@ const GraphBox = function (params = {}) {
     };
     // USAGE: graph.addValue("May", 42) or graph.addValue("May", [42, 30]) (one value for each dataset)
 
+    // scatter, bubble: Add a point to a dataset.
+    box.addPoint = function (point, datasetIndex = 0) {
+        const dataset = box.data.datasets[datasetIndex];
+        if (!dataset) return;
+        if (box.maxCount > 0 && dataset.data.length >= box.maxCount) dataset.data.shift();
+        dataset.data.push(point);
+        drawData();
+    };
+    // USAGE: graph.addPoint({ x: 170, y: 65 }, 0)
+
     box.addDataset = function (dataset) {
         box.data.datasets.push(copyDataset(dataset));
         drawData();
@@ -1664,7 +2144,7 @@ const GraphBox = function (params = {}) {
         box.type = type;
         drawData();
     };
-    // USAGE: "line", "area", "bar", "pie", "doughnut"
+    // USAGE: "line", "area", "bar", "pie", "doughnut", "radar", "scatter", "bubble"
 
     // The texts in the middle of a doughnut.
     box.setCenterText = function (text, subText = box.centerSubText) {
@@ -1711,8 +2191,26 @@ const GraphBox = function (params = {}) {
         drawPlot();
     };
 
+    // scatter, bubble: The limits of the x axis. null: from the values.
+    box.setXLimits = function (minX, maxX) {
+        box.minX = minX;
+        box.maxX = maxX;
+        drawPlot();
+    };
+
+    box.setAxisTexts = function (xAxisText, yAxisText) {
+        box.xAxisText = xAxisText;
+        box.yAxisText = yAxisText;
+        drawPlot();
+    };
+
     box.setFormatValue = function (func) {
         box.formatValue = func;
+        drawPlot();
+    };
+
+    box.setFormatX = function (func) {
+        box.formatX = func;
         drawPlot();
     };
 
@@ -1821,7 +2319,7 @@ const GraphBox = function (params = {}) {
 
 // *** STATIC VARIABLES:
 
-GraphBox._gradientCounter = 0; // WHY: The id of a gradient must be alone on the whole page.
+GraphBox._idCounter = 0; // WHY: The id of a gradient or a clip must be alone on the whole page.
 
 // *** THEMES: the colors. (The style param has the shapes; style.colors changes some colors of one chart.)
 // USAGE: GraphBox({ theme: "dark", ... }) // "light", "dark", "auto" (the system setting)
@@ -1962,6 +2460,12 @@ GraphBox.barPath = function (rect, round, side) {
         "L" + point(left + bottomLeft, bottom) + "Q" + point(left, bottom) + point(left, bottom - bottomLeft) +
         "L" + point(left, top + topLeft) + "Q" + point(left, top) + point(left + topLeft, top) + "Z";
 
+};
+
+// A closed shape through the points.
+GraphBox.polygonPath = function (points) {
+    if (!points.length) return "";
+    return "M" + points.map(function (point) { return GraphBox.pointText(point); }).join("L") + "Z";
 };
 
 // A whole circle or ring. WHY two arcs: One arc from a point to the same point draws nothing.
