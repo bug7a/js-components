@@ -4,6 +4,9 @@
 
 GraphBox - v26.11
 
+NEW PROJECTS (the user, 2026-11-05): the chart of new pages and projects, with theme: "dark" on a dark page. The model
+page is 02-comp-examples/graph-box.htm. A small box with a number and a graph stays MiniGraphBox / SparkLineBox.
+
 UI COMPONENT
 - Charts with no library: this one file draws the whole chart as one SVG. No Chart.js, no other file, no internet.
   (comp/chart-box.js is the bridge to Chart.js. Its params and functions are the model here, so a page can move over.)

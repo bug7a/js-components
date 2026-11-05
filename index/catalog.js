@@ -255,16 +255,16 @@ CATALOG.COMPONENTS = [
         tr: "İkon, başlık, dönen gösterge ve ilerleme içeren tam ekran açılış ve yükleme ekranı.",
     },
     {
-        key: "chart-box", name: "ChartBox", cat: "data",
-        source: "comp/chart-box.js", samples: ["02-comp-examples/chart-box.htm"],
-        en: "Chart.js charts used like a basic.js object.",
-        tr: "Chart.js grafiklerini bir basic.js nesnesi gibi kullanır.",
-    },
-    {
         key: "graph-box", name: "GraphBox", cat: "data",
         source: "comp/graph-box.js", samples: ["02-comp-examples/graph-box.htm"],
         en: "Charts with no library: one file draws them as SVG. Line, area, bar, pie, doughnut, radar, scatter and bubble, with a tooltip, a legend, a table and two themes.",
         tr: "Kütüphanesiz grafikler: tek dosya SVG olarak çizer. Çizgi, alan, çubuk, pasta, halka, radar, nokta ve kabarcık; ipucu, açıklama listesi, tablo ve iki tema.",
+    },
+    {
+        key: "chart-box", name: "ChartBox", cat: "data",
+        source: "comp/chart-box.js", samples: ["02-comp-examples/chart-box.htm"],
+        en: "Chart.js charts used like a basic.js object. Not for new pages: use GraphBox.",
+        tr: "Chart.js grafiklerini bir basic.js nesnesi gibi kullanır. Yeni sayfalarda değil: GraphBox kullanılır.",
     },
     {
         key: "gauge", name: "Gauge", cat: "data",
