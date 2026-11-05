@@ -202,6 +202,7 @@ const SmartButton = function (params = {}) {
     let isHover = 0;
     let isPressed = 0;
     let isSpaceDown = 0; // Space went down on this button (it presses when it goes up, like a real button)
+    let isMotionStarted = 0; // the transitions are on after the first view (startMotion)
 
     // *** PRIVATE FUNCTIONS:
 
@@ -373,9 +374,24 @@ const SmartButton = function (params = {}) {
     // The transitions: the press (animated: 1, not with reduced motion) and the color under the mouse (always)
     // WHY not setMotion(): it starts after a timer, and the press must answer the first click
     const applyAnimated = function () {
+        if (!isMotionStarted) return; // (startMotion turns them on)
         const time = box.style.press.time + "s";
         const pressMotion = isMotionOn() ? "transform " + time + ", filter " + time + ", box-shadow " + time + ", " : "";
         box.setMotionNow(pressMotion + STILL_MOTION);
+    };
+
+    // The transitions start after the first view: a state set while the button is made (Ex: setEnabled(0) right
+    // after a Dialog is made) is drawn at once, not as a move from its first look (the user, 2026-11-05: the Save
+    // button of a dialog turned from blue to gray when the dialog opened)
+    // WHY the frame and the read: the look of now must be the start of a transition, not the look before it
+    const startMotion = function () {
+        requestAnimationFrame(function () {
+            if (box._isRemoved) return;
+            void box.elem.offsetWidth; // (the browser takes the look of now)
+            isMotionStarted = 1;
+            box.layout.setMotionNow(WAITING_MOTION);
+            applyAnimated();
+        });
     };
 
     // *** WAITING
@@ -586,8 +602,7 @@ const SmartButton = function (params = {}) {
 
     // WHY the look before the transitions: nothing fades in at the first view
     applyStyle();
-    box.layout.setMotionNow(WAITING_MOTION);
-    applyAnimated();
+    startMotion();
 
     box.on("click", function (self, event) {
         press(event);

@@ -666,6 +666,21 @@
             button.remove();
         });
 
+        // 2026-11-05 (the user): the Save button of a dialog turned from blue to gray when the dialog opened
+        test("SmartButton: a state set while it is made is drawn at once (no move from its first look); a later change moves", async function () {
+            const button = SmartButton({ labelText: "Save", tone: "cyan" });
+            const enabledColor = getComputedStyle(button.elem).backgroundColor; // (a read: as a Dialog that measures its content)
+            button.setEnabled(0);
+            const disabledColor = getComputedStyle(button.elem).backgroundColor;
+            await wait(100); // (after the first view: the transitions are on)
+            button.setEnabled(1);
+            const startOfMove = getComputedStyle(button.elem).backgroundColor;
+            check("SmartButton: a state set while it is made is drawn at once (no move from its first look); a later change moves",
+                disabledColor !== enabledColor && startOfMove === disabledColor,
+                "enabled: " + enabledColor + ", disabled at once: " + disabledColor + ", a later change starts at: " + startOfMove);
+            button.remove();
+        });
+
         // 2026-11-04 (the user): a tone is three colors (the button, under the mouse, the text) on any template
         test("SmartButton: a tone colors any template, and style wins over it", async function () {
             const templateBefore = JSON.stringify(SmartButton.styles.ozdenType2);
