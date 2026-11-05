@@ -797,6 +797,26 @@
             directMenu.remove();
         });
 
+        // 2026-11-05 (the user): a light theme for a light page
+        test("LeftMenu: the light package colors the menu, its line, its shadow while open and its scroll bar; a param wins; dark stays", async function () {
+            const light = LeftMenu({ styleName: "light", openOnClick: 0 });
+            const own = LeftMenu({ styleName: "light", openOnClick: 0, selectedColor: "#DCEBEC" });
+            const dark = LeftMenu({ openOnClick: 0 });
+            const closedShadow = light.elem.style.boxShadow;
+            light.expand();
+            const openShadow = light.elem.style.boxShadow;
+            light.collapse();
+            const isLight = light.backgroundColor === LeftMenu.styles.light.backgroundColor && Boolean(light.line) &&
+                closedShadow === "" && openShadow !== "" && light.scrollBar.bar_color === LeftMenu.styles.light.scrollBarColor;
+            const isOwn = own.selectedColor === "#DCEBEC" && own.backgroundColor === LeftMenu.styles.light.backgroundColor;
+            const isDark = dark.backgroundColor === "#141414" && !dark.line && dark.scrollBar.bar_color === "#FFFFFF";
+            check("LeftMenu: the light package colors the menu, its line, its shadow while open and its scroll bar; a param wins; dark stays",
+                isLight && isOwn && isDark, "light: " + isLight + " (shadow closed / open: " + closedShadow + " / " + openShadow + "), own: " + isOwn + ", dark: " + isDark);
+            light.remove();
+            own.remove();
+            dark.remove();
+        });
+
         // *** NUMERIC KEYBOARD (comp/numeric-keyboard.js)
 
         test("NumericKeyboard: a held Enter calls onEnter once", async function () {

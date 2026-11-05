@@ -14,6 +14,11 @@ UI COMPONENT TEMPLATE
    once and the menu stays closed (2026-11-02, for a short menu with clear icons).
 -- itemHeight: the height of a button item. A page fitted with page.fit() is zoomed: for a finger give Ex: 44 / page.zoom.
 -- leftMenu.setOpenOnClick(1) changes it later.
+- Style packages (2026-11-05, the user): "dark" (default: a dark menu with a red selection) and "light" (for a light
+  page: a light menu with a line at its right side, a soft shadow while it is open over the page, the red of the dark
+  menu in light tones, dark icons and a dark scroll bar). A package is a package of params (LeftMenu.styles):
+  LeftMenu({ styleName: "light" }), LeftMenu({ styleName: "light", selectedColor: "#DCEBEC" }) (a param wins).
+  Samples: 02-comp-examples/left-menu.htm (dark), left-menu-2.htm (light).
 
 Started Date: December 2024
 Developer: Bugra Ozden
@@ -37,13 +42,21 @@ const LeftMenuDefaults = {
     textColor: "rgba(255, 255, 255, 0.6)",           // Text color
     selectedTextColor: "rgba(255, 255, 255, 0.95)",
     invertIconColor: 1,
+    lineColor: "",                // A line at the right side of the menu ("": none)
+    expandedShadow: "",           // The shadow of the open menu over the page ("": none). Ex: "6px 0 18px rgba(0, 0, 0, 0.08)"
+    scrollBarColor: "#FFFFFF",    // The bar of the scroll of the items (a dark one on a light menu)
     openOnClick: "auto",          // "auto": Tap on a touch device, hover with a mouse. 1: Always tap, 0: Always hover.
     items: [],                    // Menu items array
     onItemClick: function(item) {}, // Callback when item is clicked
     onMenuToggle: function(isExpanded) {}, // Callback when menu expands/collapses
+    styleName: "dark",            // "dark", "light" or a name added to LeftMenu.styles
+    style: {},                    // WHY: the look is in the flat params above; the packages are packages of params (LeftMenu.styles)
 };
 
 const LeftMenu = function(params = {}) {
+
+    // Merge style package: your params > LeftMenu.styles[styleName] (a package of params) > LeftMenuDefaults (dark)
+    basic.applyStylePackage(params, LeftMenu.styles, LeftMenuDefaults);
 
     // Merge params:
     mergeIntoIfMissing(params, LeftMenuDefaults);
@@ -240,10 +253,11 @@ const LeftMenu = function(params = {}) {
     // Expand menu
     const expandMenu = function() {
         if (isExpanded) return;
-        
+
         isExpanded = 1;
         box.state = "expanded";
         box.width = box.expandedWidth;
+        paintShadow();
 
         box.onMenuToggle(1);
     };
@@ -251,12 +265,18 @@ const LeftMenu = function(params = {}) {
     // Collapse menu
     const collapseMenu = function() {
         if (!isExpanded) return;
-        
+
         isExpanded = 0;
         box.state = "collapsed";
         box.width = WIDTH;
+        paintShadow();
 
         box.onMenuToggle(0);
+    };
+
+    // The shadow of the open menu over the page (expandedShadow)
+    const paintShadow = function() {
+        box.boxShadow = (isExpanded && box.expandedShadow) ? box.expandedShadow : "";
     };
 
     // Is this a touch device? (No mouse hover.)
@@ -421,11 +441,11 @@ const LeftMenu = function(params = {}) {
             bar_borderColor: "rgba(0, 0, 0, 1)",
             bar_width: 4,
             bar_mouseOverWidth: 4,
-            bar_mouseOverColor: "#FFFFFF",
+            bar_mouseOverColor: box.scrollBarColor,
             bar_opacity: 0.4,
             bar_mouseOverOpacity: 0.9,
             bar_padding: 2,
-            bar_color: "#FFFFFF",
+            bar_color: box.scrollBarColor,
             neverHide: 0,
             showDots: 1,
         });
@@ -453,6 +473,13 @@ const LeftMenu = function(params = {}) {
 
     endGroup();
 
+    // BOX: The line at the right side (lineColor)
+    // WHY a box made last (not a border of the menu): the colors of the selected item covered a line under them, and a
+    //     border takes a px of the 40 px of the icons
+    if (box.lineColor) {
+        box.line = Box({ right: 0, top: 0, width: 1, height: "100%", color: box.lineColor });
+    }
+
     // *** OBJECT INIT CODE:
     
     box.setOpenOnClick(box.openOnClick);
@@ -477,5 +504,33 @@ const LeftMenu = function(params = {}) {
     box.listenTo(document, "pointerdown", onDocumentPointerDown, true); // NOTE: Removed by remove().
 
     return endObject(box);
+
+};
+
+// *** STYLE PACKAGES:
+// USAGE: LeftMenu({ styleName: "light" })
+// USAGE: LeftMenu({ styleName: "light", selectedColor: "#DCEBEC" }) // A param you give wins over the package.
+// NOTE: Every package has "style: {}": the mark of a package of params (basic.js v26.10.27). A package needs only
+//       the params that differ from LeftMenuDefaults (dark).
+LeftMenu.styles = {
+
+    // The look of LeftMenuDefaults: a dark menu with a red selection.
+    dark: { style: {} },
+
+    // For a light page (2026-11-05, the user): a light menu with a line at its right side and a soft shadow while it is
+    // open over the page; the red of the dark menu in light tones; dark icons and a dark scroll bar.
+    light: {
+        style: {},
+        backgroundColor: "#F7F7F5",
+        hoverColor: Black(0.05),
+        selectedColor: "#F2D7D2",
+        titleColor: "#B0544B",
+        textColor: Black(0.6),
+        selectedTextColor: Black(0.88),
+        invertIconColor: 0,
+        lineColor: Black(0.08),
+        expandedShadow: "6px 0 18px " + Black(0.08),
+        scrollBarColor: "#373836",
+    },
 
 };

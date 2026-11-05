@@ -493,9 +493,13 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "left-menu", name: "LeftMenu", cat: "navigation",
-        source: "comp/left-menu.js", samples: ["02-comp-examples/left-menu.htm"],
-        en: "Icon side menu that opens on hover, or with a tap on touch screens.",
-        tr: "Fareyle üzerine gelince, dokunmatik ekranda dokununca açılan ikonlu yan menü.",
+        source: "comp/left-menu.js",
+        samples: [
+            { file: "02-comp-examples/left-menu.htm", title: "Dark" },
+            { file: "02-comp-examples/left-menu-2.htm", title: "Light" },
+        ],
+        en: "Icon side menu that opens on hover, or with a tap on touch screens. Style packages: dark (default) and light (for a light page).",
+        tr: "Fareyle üzerine gelince, dokunmatik ekranda dokununca açılan ikonlu yan menü. Stil paketleri: dark (varsayılan) ve light (açık renkli sayfa için).",
     },
     {
         key: "tooltip", name: "Tooltip", cat: "feedback",
