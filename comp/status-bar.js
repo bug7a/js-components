@@ -13,7 +13,7 @@ UI COMPONENT
   reduced motion.)
 - A part with onClick is a real button (Tab, Enter, Space); a part without it is only a text.
 - Stands at the bottom of its Box by itself; in a VGroup it takes its place in the column.
-- Style packages: "light" (default), "dark". Select with styleName. (StatusBar.styles)
+- Style packages: "light" (default), "dark". Select with styleName (StatusBar.styles), or later with setTheme().
 
 PART: { key, text, icon, tone, ariaLabel, onClick }
 - A string is also accepted: "UTF-8" -> { key: "UTF-8", text: "UTF-8" }
@@ -37,6 +37,7 @@ bar.setBusy(1);
 bar.setItemText("files", "4 files");
 bar.setItemVisible("zoom", 0);
 bar.setItems(["One", "Two"]);
+bar.setTheme("dark");
 StatusBar({ styleName: "dark" });
 
 Started Date: November 2026
@@ -81,6 +82,7 @@ const StatusBarDefaults = {
 const StatusBar = function (params = {}) {
 
     // Merge style package: params.style > StatusBar.styles[styleName] > StatusBarDefaults.style (light)
+    const pageStyle = params.style; // WHY: setTheme() puts it over another package.
     basic.applyStylePackage(params, StatusBar.styles, StatusBarDefaults);
 
     // Merge params:
@@ -95,7 +97,7 @@ const StatusBar = function (params = {}) {
     const box = startObject(params);
 
     // *** PRIVATE VARIABLES:
-    const _s = box.style;
+    let _s = box.style;
     let lastingText = box.messageText; // The message a message with a time goes back to
     let lastingTone = box.messageTone;
     let cancelMessageEnd = null; // The cancel function of the waiting end of a message with a time
@@ -105,6 +107,14 @@ const StatusBar = function (params = {}) {
     // NOTE: Default values are also public variables. (box.messageText, box.messageTone, box.busy...)
 
     // *** PRIVATE FUNCTIONS:
+
+    // The style of a package, with the style of the page over it. (setTheme)
+    const styleOfPackage = function (styleName) {
+        const fresh = { styleName: styleName, style: pageStyle };
+        basic.applyStylePackage(fresh, StatusBar.styles, StatusBarDefaults);
+        mergeIntoIfMissing(fresh, StatusBarDefaults);
+        return fresh.style;
+    };
 
     const normalizeItem = function (item) {
         if (typeof item == "string" || typeof item == "number") return { key: String(item), text: String(item) };
@@ -193,6 +203,21 @@ const StatusBar = function (params = {}) {
         paintMark();
     };
 
+    // LOOK: everything that comes from the style (the first drawing and setTheme)
+    const applyLook = function () {
+        box.color = _s.box.color;
+        box.css.borderTop = "1px solid " + _s.box.lineColor;
+        box.layout.gap = _s.layout.gap;
+        box.layout.padding = [_s.layout.padding, 0];
+        box.spinner.props({ width: _s.busy.size, height: _s.busy.size, round: _s.busy.size / 2 });
+        box.spinner.css.border = _s.busy.lineWidth + "px solid " + _s.busy.trackColor;
+        box.spinner.css.borderTopColor = _s.busy.color;
+        box.dot.props({ width: _s.dot.size, height: _s.dot.size, round: _s.dot.size / 2 });
+        box.lblMessage.fontSize = _s.message.fontSize;
+        createItems();
+        applyMessage();
+    };
+
     const showMessage = function (text, tone) {
         box.messageText = text;
         box.messageTone = tone;
@@ -256,6 +281,15 @@ const StatusBar = function (params = {}) {
     };
     // USAGE: bar.setItemVisible("zoom", 0)
 
+    // Another style package while it is on the page. A style given by the page stays over it.
+    box.setTheme = function (styleName) {
+        box.styleName = styleName;
+        _s = styleOfPackage(styleName);
+        box.style = _s;
+        applyLook();
+    };
+    // USAGE: bar.setTheme("dark")
+
     // *** OBJECT VIEW:
 
     // An SVG icon in a part stands next to its text.
@@ -269,36 +303,22 @@ const StatusBar = function (params = {}) {
         "@media (prefers-reduced-motion: reduce) { .status-bar-spinner { animation: none; } }");
 
     // BOX: The bar
-    box.color = _s.box.color;
-    box.css = { borderTop: "1px solid " + _s.box.lineColor, boxSizing: "border-box" };
+    box.css.boxSizing = "border-box";
     box.role = "group";
     box.aria = { label: box.ariaLabel };
 
     // GROUP: The message at the left, the parts at the right
-    box.layout = HGroup({
-        width: "100%",
-        height: "100%",
-        align: "left center",
-        gap: _s.layout.gap,
-        padding: [_s.layout.padding, 0],
-    });
+    box.layout = HGroup({ width: "100%", height: "100%", align: "left center" });
 
         // BOX: The turning circle
-        box.spinner = Box({
-            width: _s.busy.size,
-            height: _s.busy.size,
-            color: "transparent",
-            round: _s.busy.size / 2,
-            shrink: 0,
-            css: { border: _s.busy.lineWidth + "px solid " + _s.busy.trackColor, borderTopColor: _s.busy.color },
-        });
+        box.spinner = Box({ color: "transparent", shrink: 0 });
         box.spinner.elem.classList.add("status-bar-spinner");
 
         // BOX: The dot of a tone
-        box.dot = Box({ width: _s.dot.size, height: _s.dot.size, round: _s.dot.size / 2, shrink: 0 });
+        box.dot = Box({ shrink: 0 });
 
         // LABEL: The message
-        box.lblMessage = Label({ fontSize: _s.message.fontSize, ellipsis: 1, grow: 1, shrink: 1, css: { minWidth: "0", flexBasis: "0" } });
+        box.lblMessage = Label({ ellipsis: 1, grow: 1, shrink: 1, css: { minWidth: "0", flexBasis: "0" } });
         box.lblMessage.role = "status";
 
         // GROUP: The parts
@@ -309,8 +329,8 @@ const StatusBar = function (params = {}) {
 
     // *** OBJECT INIT CODE:
 
-    box.setItems(params.items);
-    applyMessage();
+    box.items = (Array.isArray(params.items)) ? params.items.map(normalizeItem) : [];
+    applyLook();
 
     return endObject(box);
 

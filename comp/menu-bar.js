@@ -18,7 +18,7 @@ UI COMPONENT
   on the page Ctrl+C copies it.
 - An item can remove the bar in its onClick (a page that draws its window again).
 - Too many titles for a narrow window: the row scrolls sideways.
-- Style packages: "light" (default), "dark". Select with styleName. (MenuBar.styles)
+- Style packages: "light" (default), "dark". Select with styleName (MenuBar.styles), or later with setTheme().
 
 MENU: { text, key, enabled, items, onClick }
 - items: its items (below). A menu without items is a title that only runs its onClick.
@@ -46,6 +46,7 @@ bar.setItemEnabled("quit", 1);
 bar.setItemChecked("wrap", 0);
 bar.setMenus([...]);
 bar.closeMenu();
+bar.setTheme("dark");            // the check marks and the disabled items stay
 MenuBar({ styleName: "dark" });
 
 Started Date: November 2026
@@ -90,6 +91,7 @@ const MenuBarDefaults = {
 const MenuBar = function (params = {}) {
 
     // Merge style package: params.style > MenuBar.styles[styleName] > MenuBarDefaults.style (light)
+    const pageStyle = params.style; // WHY: setTheme() puts it over another package.
     basic.applyStylePackage(params, MenuBar.styles, MenuBarDefaults);
 
     // Merge params:
@@ -99,7 +101,7 @@ const MenuBar = function (params = {}) {
     const box = startObject(params);
 
     // *** PRIVATE VARIABLES:
-    const _s = box.style;
+    let _s = box.style;
     let openIndex = -1; // The menu that is open (-1: none)
     let openIndexAtPress = -1; // The menu that was open when the mouse was pressed
     let focusIndex = 0; // The title that the Tab key comes to
@@ -109,6 +111,14 @@ const MenuBar = function (params = {}) {
     // NOTE: Default values are also public variables. (box.menus, box.enabled...)
 
     // *** PRIVATE FUNCTIONS:
+
+    // The style of a package, with the style of the page over it. (setTheme)
+    const styleOfPackage = function (styleName) {
+        const fresh = { styleName: styleName, style: pageStyle };
+        basic.applyStylePackage(fresh, MenuBar.styles, MenuBarDefaults);
+        mergeIntoIfMissing(fresh, MenuBarDefaults);
+        return fresh.style;
+    };
 
     const isOpen = function (index) {
         return (openIndex == index);
@@ -248,27 +258,9 @@ const MenuBar = function (params = {}) {
         box.onMenuClose(box, box.menuList[index].menu);
     };
 
-    const createMenu = function (menu, index) {
-
-        // BUTTON: The title
-        const title = Button({
-            width: "auto",
-            height: _s.title.height,
-            fontSize: _s.title.fontSize,
-            textColor: _s.title.textColor,
-            round: _s.title.round,
-            color: "transparent",
-            shrink: 0,
-            css: { padding: "0 " + _s.title.padding + "px", whiteSpace: "nowrap" },
-        });
-        title.minimal = 1;
-        title.plainText = menu.text;
-        title.role = "menuitem";
-        if (hasItems(menu)) title.aria = { haspopup: "menu" };
-        title.setFocusRing(_s.focus.ringColor);
-
-        // WHY: One ContextMenu for each menu. It stands on the page: box.remove() and removeMenus() remove it.
-        const contextMenu = ContextMenu({
+    // WHY: One ContextMenu for each menu. It stands on the page: box.remove() and removeMenus() remove it.
+    const createContextMenu = function (menu, index) {
+        return ContextMenu({
             items: toContextMenuItems(menu),
             styleName: _s.menuStyleName,
             style: _s.menu,
@@ -278,6 +270,30 @@ const MenuBar = function (params = {}) {
             onClose: function () { onContextMenuClose(index); },
             onSideKey: function (self, direction) { onSideKey(direction); },
         });
+    };
+
+    const applyTitleLook = function (title) {
+        title.props({ height: _s.title.height, fontSize: _s.title.fontSize, textColor: _s.title.textColor, round: _s.title.round });
+        title.css.padding = "0 " + _s.title.padding + "px";
+        title.setFocusRing(_s.focus.ringColor);
+    };
+
+    const createMenu = function (menu, index) {
+
+        // BUTTON: The title
+        const title = Button({
+            width: "auto",
+            color: "transparent",
+            shrink: 0,
+            css: { whiteSpace: "nowrap" },
+        });
+        title.minimal = 1;
+        title.plainText = menu.text;
+        title.role = "menuitem";
+        if (hasItems(menu)) title.aria = { haspopup: "menu" };
+        applyTitleLook(title);
+
+        const contextMenu = createContextMenu(menu, index);
 
         title.onHoverChange(function (self, isOver) {
             paintTitle(box.menuList[index], index, isOver);
@@ -298,6 +314,25 @@ const MenuBar = function (params = {}) {
             entry.title.remove();
         });
         box.menuList = [];
+    };
+
+    const applyBarLook = function () {
+        box.color = _s.box.color;
+        box.css.borderBottom = "1px solid " + _s.box.lineColor;
+        box.layout.gap = _s.layout.gap;
+        box.layout.padding = [_s.layout.padding, 0];
+    };
+
+    // LOOK: everything that comes from the style (setTheme)
+    // WHY the titles stay: one of them may have the focus. The menus are made again: a ContextMenu keeps its style.
+    const applyLook = function () {
+        applyBarLook();
+        box.menuList.forEach(function (entry, index) {
+            applyTitleLook(entry.title);
+            entry.contextMenu.remove();
+            entry.contextMenu = createContextMenu(entry.menu, index);
+        });
+        paintTitles();
     };
 
     const createMenus = function () {
@@ -426,6 +461,15 @@ const MenuBar = function (params = {}) {
     };
     // USAGE: get: bar.enabled, set: bar.setEnabled(0)
 
+    // Another style package while it is on the page. A style given by the page stays over it.
+    box.setTheme = function (styleName) {
+        box.styleName = styleName;
+        _s = styleOfPackage(styleName);
+        box.style = _s;
+        applyLook();
+    };
+    // USAGE: bar.setTheme("dark")
+
     // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
     const superRemove = box.remove;
     box.superRemove = superRemove;
@@ -441,8 +485,7 @@ const MenuBar = function (params = {}) {
     // *** OBJECT VIEW:
 
     // BOX: The bar
-    box.color = _s.box.color;
-    box.css = { borderBottom: "1px solid " + _s.box.lineColor, boxSizing: "border-box" };
+    box.css.boxSizing = "border-box";
     box.role = "menubar";
     box.aria = { label: box.ariaLabel };
 
@@ -451,8 +494,6 @@ const MenuBar = function (params = {}) {
         width: "100%",
         height: "100%",
         align: "left center",
-        gap: _s.layout.gap,
-        padding: [_s.layout.padding, 0],
         scrollX: 1, // WHY: A narrow window still reaches every title.
     });
     box.layout.css.scrollbarWidth = "none";
@@ -464,6 +505,7 @@ const MenuBar = function (params = {}) {
     box.listenTo(window, "pointerdown", function () { openIndexAtPress = openIndex; }, true);
     box.listenTo(window, "keydown", onWindowKeyDown);
 
+    applyBarLook();
     box.setMenus(params.menus);
 
     return endObject(box);

@@ -15,7 +15,7 @@ UI COMPONENT
 - A plot that is drawn again does not blink: setImage() keeps the old picture until the new one is ready, and a new
   picture of the same size keeps the zoom and the place. (A picture of another size opens fitted.)
 - The pixels stay sharp from 300% up (pixelatedZoom), to look at a picture pixel by pixel.
-- Style packages: "light" (default), "dark". Select with styleName. (ImageView.styles)
+- Style packages: "light" (default), "dark". Select with styleName (ImageView.styles), or later with setTheme().
 
 USAGE:
 const view = ImageView({ width: 600, height: 400, imageFile: "photo.jpg", altText: "A cat" });
@@ -28,6 +28,7 @@ view.zoomToActualSize();         // 100%
 view.setZoomLevel(2);            // 200%
 println(view.zoomLevel);         // read it
 view.setShowToolbar(0);
+view.setTheme("dark");           // the picture and its zoom stay
 ImageView({ styleName: "dark", enlargeToFit: 1, onZoomChange: function (self) { println(self.zoomLevel); } });
 ImageView({ style: { image: { color: "white" } } }); // A ground behind a transparent picture
 
@@ -77,6 +78,7 @@ const ImageViewDefaults = {
 const ImageView = function (params = {}) {
 
     // Merge style package: params.style > ImageView.styles[styleName] > ImageViewDefaults.style (light)
+    const pageStyle = params.style; // WHY: setTheme() puts it over another package.
     basic.applyStylePackage(params, ImageView.styles, ImageViewDefaults);
 
     // Merge params:
@@ -86,7 +88,7 @@ const ImageView = function (params = {}) {
     const box = startObject(params);
 
     // *** PRIVATE VARIABLES:
-    const _s = box.style;
+    let _s = box.style;
     const WHEEL_SPEED = 0.002; // How much a pixel of the wheel zooms
     const PINCH_SPEED = 0.01; // WHY: The pinch of a trackpad comes as a wheel with small numbers.
     const WHEEL_LINE_HEIGHT = 16; // px: a wheel that counts in lines
@@ -104,6 +106,7 @@ const ImageView = function (params = {}) {
     let imageTop = 0;
     let isFitted = 1; // 1: the picture follows the size of the box
     let hasImage = 0;
+    let noteKind = "empty"; // "empty", "error", "": what the note says ("": no note)
     const pointers = new Map(); // The fingers (or the mouse) on the picture: pointerId -> { x, y }
     let lastPinch = null; // { distance, x, y }
 
@@ -114,6 +117,14 @@ const ImageView = function (params = {}) {
     // NOTE: Default values are also public variables. (box.imageFile, box.minZoom, box.maxZoom...)
 
     // *** PRIVATE FUNCTIONS:
+
+    // The style of a package, with the style of the page over it. (setTheme)
+    const styleOfPackage = function (styleName) {
+        const fresh = { styleName: styleName, style: pageStyle };
+        basic.applyStylePackage(fresh, ImageView.styles, ImageViewDefaults);
+        mergeIntoIfMissing(fresh, ImageViewDefaults);
+        return fresh.style;
+    };
 
     // A point of an event in the box. WHY the scale: on a page fitted with page.fit() a screen px is not a px of the box.
     const screenScale = function () {
@@ -195,14 +206,51 @@ const ImageView = function (params = {}) {
         box.css.touchAction = canMove() ? "none" : "pan-x pan-y";
     };
 
-    // PAINT: what is shown: the picture, or a note ("": no note; a picture is loading, or it is there)
-    const paintContent = function (noteText, noteColor) {
+    // PAINT: what is shown: the picture, or a note (no note: a picture is loading, or it is there)
+    const paintContent = function () {
+        const isError = (noteKind === "error");
+        const noteColor = (isError) ? _s.error.textColor : _s.empty.textColor;
         box.image.visible = (hasImage) ? 1 : 0;
         box.toolbar.visible = (hasImage && box.showToolbar == 1) ? 1 : 0;
-        box.emptyGroup.visible = (noteText) ? 1 : 0;
-        box.lblEmpty.plainText = noteText;
+        box.emptyGroup.visible = (noteKind) ? 1 : 0;
+        box.lblEmpty.plainText = (isError) ? box.errorText : box.emptyText;
         box.lblEmpty.textColor = noteColor;
         box.icoEmpty.textColor = noteColor;
+    };
+
+    const applyToolButtonLook = function (button) {
+        const look = _s.toolButton;
+        button.props({ width: look.size, height: look.size, fontSize: _s.zoomText.fontSize, textColor: look.textColor, round: look.round });
+        button.setFocusRing(_s.focus.ringColor);
+    };
+
+    // LOOK: everything that comes from the style (the first drawing and setTheme)
+    const applyLook = function () {
+        const toolbarLook = _s.toolbar;
+        const emptySpace = _s.empty.space + "px";
+        box.props(_s.box);
+        box.setFocusRing(_s.focus.ringColor);
+        box.elem.style.setProperty("--image-view-icon", _s.toolButton.iconSize + "px");
+        box.image.color = _s.image.color;
+        box.emptyGroup.round = _s.empty.round;
+        // WHY in css: the bottom and right props of basic.js clear top and left.
+        box.emptyGroup.css = { left: emptySpace, top: emptySpace, right: emptySpace, bottom: emptySpace };
+        box.emptyGroup.css.border = "1px dashed " + _s.empty.lineColor;
+        box.icoEmpty.props({ width: _s.empty.iconSize, height: _s.empty.iconSize });
+        box.lblEmpty.fontSize = _s.empty.fontSize;
+        box.toolbar.props({
+            gap: toolbarLook.gap,
+            padding: toolbarLook.padding,
+            color: toolbarLook.color,
+            border: toolbarLook.border,
+            borderColor: toolbarLook.borderColor,
+            round: toolbarLook.round,
+            boxShadow: toolbarLook.shadow,
+        });
+        box.toolbar.css.bottom = toolbarLook.bottom + "px";
+        [box.btnZoomOut, box.btnZoomText, box.btnZoomIn, box.btnFit].forEach(applyToolButtonLook);
+        box.btnZoomText.width = _s.zoomText.width;
+        paintContent();
     };
 
     // Everything of a zoom change goes through here.
@@ -248,13 +296,15 @@ const ImageView = function (params = {}) {
             paintZoom();
             box.onZoomChange(box);
         }
-        paintContent("", _s.empty.textColor);
+        noteKind = "";
+        paintContent();
         box.onLoad(box);
     };
 
     const onImageError = function () {
         hasImage = 0;
-        paintContent(box.errorText, _s.error.textColor);
+        noteKind = "error";
+        paintContent();
         box.onError(box);
     };
 
@@ -286,7 +336,6 @@ const ImageView = function (params = {}) {
 
     const onPointerDown = function (self, event) {
         if (!hasImage || event.button !== 0 || box.toolbar.elem.contains(event.target)) return;
-        box.elem.focus({ preventScroll: true });
         pointers.set(event.pointerId, pointInBox(event));
         capturePointer(event.pointerId);
         if (pointers.size == 2) lastPinch = pinchOfPointers();
@@ -362,23 +411,16 @@ const ImageView = function (params = {}) {
 
     // BUTTON: of the toolbar
     const makeToolButton = function (ariaLabel, onClick) {
-        const look = _s.toolButton;
         const button = Button({
-            width: look.size,
-            height: look.size,
-            fontSize: _s.zoomText.fontSize,
-            textColor: look.textColor,
             color: "transparent",
-            round: look.round,
             shrink: 0,
             css: { padding: "0", display: "flex", alignItems: "center", justifyContent: "center" },
         });
         button.minimal = 1;
         button.isUsable = 1;
         button.aria = { label: ariaLabel };
-        button.setFocusRing(_s.focus.ringColor);
         button.onHoverChange(function (self, isOver) {
-            self.color = (isOver && self.isUsable) ? look.hoverColor : "transparent";
+            self.color = (isOver && self.isUsable) ? _s.toolButton.hoverColor : "transparent";
         });
         button.on("click", onClick);
         return button;
@@ -400,15 +442,17 @@ const ImageView = function (params = {}) {
         box.image.alt = altText;
         // WHY: The old picture stays until the new one is ready (a browser keeps it on the screen meanwhile).
         if (file) {
-            paintContent("", _s.empty.textColor);
+            noteKind = "";
+            paintContent();
             box.image.load(file);
             return;
         }
         hasImage = 0;
+        noteKind = "empty";
         pointers.clear();
         lastPinch = null;
         box.image.elem.removeAttribute("src");
-        paintContent(box.emptyText, _s.empty.textColor);
+        paintContent();
     };
     // USAGE: view.setImage("plot.png", "The sales of the year")
 
@@ -444,52 +488,46 @@ const ImageView = function (params = {}) {
     };
     // USAGE: view.setShowToolbar(0)
 
+    // Another style package while it is on the page. A style given by the page stays over it.
+    box.setTheme = function (styleName) {
+        box.styleName = styleName;
+        _s = styleOfPackage(styleName);
+        box.style = _s;
+        applyLook();
+    };
+    // USAGE: view.setTheme("dark")
+
     // *** OBJECT VIEW:
 
     // An SVG icon fills its place in a button.
     basic.addCss("image-view-icon", ".image-view-icon svg { display: block; width: var(--image-view-icon); height: var(--image-view-icon); }");
 
     // BOX: The frame
-    box.props(_s.box);
     box.clickable = 1;
     box.tabIndex = 0;
     box.role = "group";
     box.aria = { label: box.ariaLabel };
-    box.setFocusRing(_s.focus.ringColor);
-    box.elem.style.setProperty("--image-view-icon", _s.toolButton.iconSize + "px");
 
     // ICON: The picture
-    box.image = Icon({ left: 0, top: 0, width: 1, height: 1, color: _s.image.color, visible: 0 });
+    box.image = Icon({ left: 0, top: 0, width: 1, height: 1, visible: 0 });
     // WHY: The size comes from zoomAtPoint; the picture is never stretched by its element.
     box.image.imageFit = "fill";
 
     // GROUP: The note of an empty view (or of a picture that can not be opened), in the middle at every size
-    // WHY in css: the bottom and right props of basic.js clear top and left.
-    const emptySpace = _s.empty.space + "px";
     box.emptyGroup = VGroup({
         align: "center center",
         gap: 8,
         padding: 12,
-        round: _s.empty.round,
-        css: {
-            position: "absolute",
-            left: emptySpace,
-            top: emptySpace,
-            right: emptySpace,
-            bottom: emptySpace,
-            width: "auto",
-            height: "auto",
-            border: "1px dashed " + _s.empty.lineColor,
-        },
+        css: { position: "absolute", width: "auto", height: "auto" },
     });
 
         // LABEL: Its icon (the color of the text)
-        box.icoEmpty = Label({ width: _s.empty.iconSize, height: _s.empty.iconSize });
+        box.icoEmpty = Label({});
         box.icoEmpty.text = svgIcon(ICONS.picture);
         box.icoEmpty.elem.classList.add("image-view-note-icon");
 
         // LABEL: Its text
-        box.lblEmpty = Label({ fontSize: _s.empty.fontSize, textAlign: "center" });
+        box.lblEmpty = Label({ textAlign: "center" });
 
     endGroup();
     basic.addCss("image-view-note-icon", ".image-view-note-icon svg { display: block; width: 100%; height: 100%; }");
@@ -499,15 +537,8 @@ const ImageView = function (params = {}) {
         width: "auto",
         height: "auto",
         align: "center center",
-        gap: _s.toolbar.gap,
-        padding: _s.toolbar.padding,
-        color: _s.toolbar.color,
-        border: _s.toolbar.border,
-        borderColor: _s.toolbar.borderColor,
-        round: _s.toolbar.round,
-        boxShadow: _s.toolbar.shadow,
         // WHY: In the middle at every size of the box and of its text.
-        css: { position: "absolute", left: "50%", top: "auto", bottom: _s.toolbar.bottom + "px", transform: "translateX(-50%)" },
+        css: { position: "absolute", left: "50%", top: "auto", transform: "translateX(-50%)" },
     });
     box.toolbar.clickable = 1; // WHY: A click between its buttons must not fall on the picture.
 
@@ -515,7 +546,6 @@ const ImageView = function (params = {}) {
 
         // BUTTON: The zoom. A click goes to 100%.
         box.btnZoomText = makeToolButton(box.buttonTexts.actualSize, function () { box.zoomToActualSize(); });
-        box.btnZoomText.width = _s.zoomText.width;
 
         box.btnZoomIn = makeIconButton("plus", box.buttonTexts.zoomIn, function () { box.zoomIn(); });
         box.btnFit = makeIconButton("fit", box.buttonTexts.fit, function () { box.zoomToFit(); });
@@ -536,6 +566,7 @@ const ImageView = function (params = {}) {
     box.on("keydown", onKeyDown);
     box.onResize(onBoxResize);
 
+    applyLook();
     box.setImage(box.imageFile, box.altText);
 
     return endObject(box);

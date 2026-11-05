@@ -16,7 +16,7 @@ UI COMPONENT
 - A fast program does not draw for each line: the lines that come together are drawn together.
 - setLevels(["warn", "error"]) shows only those levels.
 - Uses ScrollBar (basic/scroll-bar.js) if the page has loaded it; it works without it too.
-- Style packages: "light" (default), "dark". Select with styleName. (LogView.styles)
+- Style packages: "light" (default), "dark". Select with styleName (LogView.styles), or later with setTheme().
 
 USAGE:
 const log = LogView({ width: 600, height: 300 });
@@ -33,6 +33,7 @@ log.setShowTime(0);
 log.setShowLevel(0);
 log.setWrapLines(0);
 log.setAutoScroll(0);                                     // it does not follow the last line
+log.setTheme("dark");                                     // the lines stay
 log.scrollToEnd();                                        // goes to the end, and follows again
 LogView({ styleName: "dark", lines: ["First line", { text: "Second line", level: "warn" }] });
 LogView({ levelTexts: { info: "BİLGİ", warn: "UYARI", error: "HATA" }, emptyText: "Henüz çıktı yok.", newLinesText: "{count} yeni" });
@@ -101,6 +102,7 @@ const LogViewDefaults = {
 const LogView = function (params = {}) {
 
     // Merge style package: params.style > LogView.styles[styleName] > LogViewDefaults.style (light)
+    const pageStyle = params.style; // WHY: setTheme() puts it over another package.
     basic.applyStylePackage(params, LogView.styles, LogViewDefaults);
 
     // Merge params:
@@ -114,12 +116,13 @@ const LogView = function (params = {}) {
     const box = startObject(params);
 
     // *** PRIVATE VARIABLES:
-    const _s = box.style;
+    let _s = box.style;
     const BOTTOM_SPACE = 4; // px: this near to the end counts as the end
     const TIME_LENGTH = 8; // "12:03:41"
     let shownLevels = []; // []: all of them
     let isFollowing = 1; // 0: the reader scrolled up
     let newLineCount = 0; // The lines that came after the reader scrolled up
+    let lastScrollTop = 0; // The place the last scroll event saw
     let cancelDraw = null; // The cancel function of the waiting drawing
 
     // *** PUBLIC VARIABLES:
@@ -127,6 +130,14 @@ const LogView = function (params = {}) {
     // NOTE: Default values are also public variables. (box.maxLines, box.autoScroll, box.showTime...)
 
     // *** PRIVATE FUNCTIONS:
+
+    // The style of a package, with the style of the page over it. (setTheme)
+    const styleOfPackage = function (styleName) {
+        const fresh = { styleName: styleName, style: pageStyle };
+        basic.applyStylePackage(fresh, LogView.styles, LogViewDefaults);
+        mergeIntoIfMissing(fresh, LogViewDefaults);
+        return fresh.style;
+    };
 
     const lookOfLevel = function (level) {
         return _s.levels[level] || _s.levels.info;
@@ -180,30 +191,31 @@ const LogView = function (params = {}) {
         };
     };
 
-    // DATA: the object of one line. Its container must be set. (createIn)
-    const createRow = function (line) {
+    // PAINT: everything of the row of a line that comes from the style and the params
+    const paintRow = function (line) {
         const look = lookOfLevel(line.level);
-        const row = Label({
-            width: "auto",
+        line.row.props({
             fontSize: _s.line.fontSize,
             lineHeight: _s.line.lineHeight,
             fontFamily: _s.line.fontFamily,
             textColor: look.text,
             color: look.color,
-            selectable: 1,
-            cursor: "text",
-            shrink: 0,
         });
         // WHY: pre-wrap keeps the spaces of the output (a table written with spaces); anywhere breaks a long path.
-        row.css = {
+        line.row.css = {
             whiteSpace: (box.wrapLines == 1) ? "pre-wrap" : "pre",
             overflowWrap: "anywhere",
             padding: _s.line.space + "px " + _s.line.paddingX + "px",
             ...hangingIndent(),
         };
-        row.text = rowText(line);
-        row.visible = isLevelShown(line.level) ? 1 : 0;
-        return row;
+        line.row.text = rowText(line);
+        line.row.visible = isLevelShown(line.level) ? 1 : 0;
+    };
+
+    // DATA: the object of one line. Its container must be set. (createIn)
+    const createRow = function (line) {
+        line.row = Label({ width: "auto", selectable: 1, cursor: "text", shrink: 0 });
+        paintRow(line);
     };
 
     const isSelectingText = function () {
@@ -251,7 +263,7 @@ const LogView = function (params = {}) {
         dropOldLines();
         const newLines = box.lines.filter(function (line) { return !line.row; });
         createIn(box.lineGroup, function () {
-            newLines.forEach(function (line) { line.row = createRow(line); });
+            newLines.forEach(createRow);
         });
         if (box.autoScroll == 1 && !isFollowing) {
             newLineCount += newLines.filter(function (line) { return isLevelShown(line.level); }).length;
@@ -273,22 +285,48 @@ const LogView = function (params = {}) {
 
     // Everything of the rows that depends on a param (setShowTime, setShowLevel, setWrapLines, setLevels)
     const refreshRows = function () {
-        const indent = hangingIndent();
         box.lineGroup.css.width = (box.wrapLines == 1) ? "100%" : "max-content";
         box.lines.forEach(function (line) {
-            if (!line.row) return;
-            line.row.text = rowText(line);
-            line.row.visible = isLevelShown(line.level) ? 1 : 0;
-            line.row.css.whiteSpace = (box.wrapLines == 1) ? "pre-wrap" : "pre";
-            line.row.css.paddingLeft = indent.paddingLeft;
-            line.row.css.textIndent = indent.textIndent;
+            if (line.row) paintRow(line);
         });
         paintNotes();
         followLastLine();
     };
 
+    // LOOK: everything that comes from the style (the first drawing and setTheme)
+    const applyLook = function () {
+        const look = _s.newLines;
+        box.props(_s.box);
+        box.scrollArea.setFocusRing(_s.focus.ringColor);
+        box.lineGroup.padding = [0, _s.area.paddingY];
+        box.lblEmpty.props(_s.empty);
+        box.btnNewLines.props({
+            height: look.height,
+            fontSize: look.fontSize,
+            color: look.color,
+            textColor: look.textColor,
+            round: look.round,
+            boxShadow: look.shadow,
+        });
+        box.btnNewLines.css.padding = "0 " + look.paddingX + "px";
+        box.btnNewLines.css.bottom = look.bottom + "px";
+        box.btnNewLines.setFocusRing(_s.focus.ringColor);
+        applyScrollBarLook();
+        refreshRows();
+    };
+
+    const applyScrollBarLook = function () {
+        if (!box.scrollBar) return;
+        Object.assign(box.scrollBar, _s.scrollBar);
+        box.scrollBar.boxScrollBarTop.color = _s.scrollBar.bar_color;
+        box.scrollBar.boxScrollBarLeft.color = _s.scrollBar.bar_color;
+    };
+
     // The reader moved: at the end the view follows again, above it the view stays.
     const onScroll = function () {
+        // WHY: A scroll event comes a frame late. If lines came meanwhile and nothing moved, it would look like a scroll up.
+        if (box.scrollArea.elem.scrollTop === lastScrollTop) return;
+        lastScrollTop = box.scrollArea.elem.scrollTop;
         const wasFollowing = isFollowing;
         isFollowing = isAtEnd() ? 1 : 0;
         if (isFollowing && !wasFollowing) {
@@ -321,6 +359,7 @@ const LogView = function (params = {}) {
         newLineCount = 0;
         isFollowing = 1;
         box.scrollArea.elem.scrollTop = 0;
+        lastScrollTop = 0;
         paintNotes();
     };
     // USAGE: log.clearLines()
@@ -382,10 +421,16 @@ const LogView = function (params = {}) {
     };
     // USAGE: log.setLevels(["warn", "error"]) / log.setLevels([]) // all of them
 
-    // *** OBJECT VIEW:
+    // Another style package while it is on the page. A style given by the page stays over it.
+    box.setTheme = function (styleName) {
+        box.styleName = styleName;
+        _s = styleOfPackage(styleName);
+        box.style = _s;
+        applyLook();
+    };
+    // USAGE: log.setTheme("dark")
 
-    // BOX: The frame
-    box.props(_s.box);
+    // *** OBJECT VIEW:
 
     // BOX: The lines scroll in it
     box.scrollArea = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
@@ -395,7 +440,6 @@ const LogView = function (params = {}) {
     box.scrollArea.role = "log";
     box.scrollArea.aria = { label: box.ariaLabel };
     box.scrollArea.tabIndex = 0; // WHY: The keys of a focused box scroll it (arrows, Page Up, Home, End).
-    box.scrollArea.setFocusRing(_s.focus.ringColor);
 
         // GROUP: The lines
         box.lineGroup = VGroup({
@@ -403,7 +447,6 @@ const LogView = function (params = {}) {
             height: "auto",
             align: "left top",
             gap: 0,
-            padding: [0, _s.area.paddingY],
             css: { minWidth: "100%", boxSizing: "border-box", alignItems: "stretch" },
         });
         endGroup();
@@ -412,31 +455,21 @@ const LogView = function (params = {}) {
 
     // GROUP: The text of an empty view, in the middle at every size
     box.emptyGroup = VGroup({ left: 0, top: 0, width: "100%", height: "100%", align: "center center", padding: 12 });
-        box.lblEmpty = Label({ plainText: box.emptyText, ..._s.empty, textAlign: "center" });
+        box.lblEmpty = Label({ plainText: box.emptyText, textAlign: "center" });
     endGroup();
 
     // BUTTON: Goes back to the end
-    const newLinesLook = _s.newLines;
     box.btnNewLines = Button({
         width: "auto",
-        height: newLinesLook.height,
-        fontSize: newLinesLook.fontSize,
-        color: newLinesLook.color,
-        textColor: newLinesLook.textColor,
-        round: newLinesLook.round,
-        boxShadow: newLinesLook.shadow,
         css: {
-            padding: "0 " + newLinesLook.paddingX + "px",
             whiteSpace: "nowrap",
             left: "50%",
             top: "auto",
-            bottom: newLinesLook.bottom + "px",
             transform: "translateX(-50%)", // WHY: In the middle at every width of its text.
         },
         visible: 0,
     });
     box.btnNewLines.minimal = 1;
-    box.btnNewLines.setFocusRing(_s.focus.ringColor);
 
     if (typeof ScrollBar !== "undefined") {
         box.scrollBar = ScrollBar(Object.assign({ scrollableBox: box.scrollArea }, _s.scrollBar));
@@ -447,7 +480,7 @@ const LogView = function (params = {}) {
     box.scrollArea.on("scroll", onScroll);
     box.btnNewLines.on("click", box.scrollToEnd);
     box.btnNewLines.onHoverChange(function (self, isOver) {
-        self.color = (isOver) ? newLinesLook.hoverColor : newLinesLook.color;
+        self.color = (isOver) ? _s.newLines.hoverColor : _s.newLines.color;
     });
 
     // WHY: A narrower box wraps more lines, and a hidden box has no end to go to: the end is found again.
@@ -457,6 +490,7 @@ const LogView = function (params = {}) {
         if (line && typeof line == "object") addLines(line.text, line.level || "info", line.time || currentTime());
         else addLines(line, "info", currentTime());
     });
+    applyLook();
     drawNewLines();
 
     return endObject(box);

@@ -24,7 +24,7 @@
         /* Bismillah */
 
         // A small program made of MenuBar, ImageView, LogView and StatusBar (a tool that a Python program can open).
-        // View > Dark theme: a style package is chosen when an object is made, so the window is made again.
+        // View > Dark theme: setTheme() of the four objects changes their style packages; nothing is made again.
 
         // *** VARIABLES:
         const NARROW_WIDTH = 720; // px: the picture and the output go one under the other
@@ -45,7 +45,6 @@
 
         let themeName = "light";
         let hasWordWrap = 1;
-        let savedLines = [{ text: "Program started", level: "info" }];
         let imageIndex = 0;
         let windowGroup, menuBar, imageView, logView, statusBar;
         let jobTimer = null;
@@ -59,11 +58,7 @@
 
         // *** OTHER FUNCTIONS:
 
-        // WHY a function: the theme of the objects is chosen when they are made.
         const drawWindow = function () {
-
-            if (logView) savedLines = logView.lines.map(function (line) { return { text: line.text, level: line.level, time: line.time }; });
-            if (windowGroup) windowGroup.remove();
 
             page.color = THEMES[themeName].pageColor;
 
@@ -93,7 +88,7 @@
                         width: "auto",
                         height: "auto",
                         wrapLines: hasWordWrap,
-                        lines: savedLines,
+                        lines: [{ text: "Program started", level: "info" }],
                         style: { box: { border: 0, round: 0 } },
                         grow: 1,
                         css: { flexBasis: "0", minWidth: "0", minHeight: "0", alignSelf: "stretch" },
@@ -114,7 +109,6 @@
             endGroup();
 
             placeAreas();
-            if (jobTimer) statusBar.setBusy(1);
 
         };
 
@@ -167,7 +161,10 @@
 
         const toggleTheme = function () {
             themeName = (themeName === "dark") ? "light" : "dark";
-            drawWindow();
+            page.color = THEMES[themeName].pageColor;
+            [menuBar, imageView, logView, statusBar].forEach(function (obj) { obj.setTheme(themeName); });
+            menuBar.setItemChecked("dark", (themeName === "dark") ? 1 : 0);
+            placeAreas();
         };
 
         const toggleWordWrap = function () {
