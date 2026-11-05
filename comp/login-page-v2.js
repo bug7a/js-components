@@ -9,6 +9,9 @@ UI COMPONENT
   onLoginClick / onSignupClick and calls box.waiting.show() / hide() and box.showAlert() around it.
 - The tab bar is comp-m4 Tabs (the pill variant, colored by the tab_ params), the waiting cover is comp-m4
   LoadingScreen with the moving clock (box.waiting.show() / hide(); waitingCoverColor, waitingClock).
+- The LOGIN / SIGN UP buttons (2026-11-05, the user): buttonStyleName "" (default) keeps the flat buttons in
+  primaryColor; a SmartButton template (Ex: "ozdenType3") makes them SmartButtons of the kit, in buttonTone (Ex:
+  "blue"), with the text color of the tone. A passive one has the passive look of SmartButton.
 
 LOAD FIRST (in this order):
     basic.js, comp/ui-effects.js, comp/tooltip.js, comp/input-b.js, comp/email-input-b.js,
@@ -43,6 +46,8 @@ const LoginPageDefaults = {
     tab_textColor: White(0.75), // White(0.75), "#373836",
     tab_selectedColor: "#000000", // "#000000", "white",
     inputStyleName: "", // "": the fields take the input_ colors below. An InputB package ("ozden", "ozdenDark"...): the fields take its look.
+    buttonStyleName: "", // "": LOGIN / SIGN UP are flat buttons in primaryColor. A SmartButton template ("ozdenType3"...): SmartButtons
+    buttonTone: "", // The tone of those SmartButtons (Ex: "blue"; "": the gray of the template)
     input_backgroundColor: "#141414",
     input_lineColor: "transparent",
     input_selectedBackgroundColor: "#202020",
@@ -116,6 +121,7 @@ const LoginPage = function(params = {}) {
     const TAB_MOTION = 0.2; // seconds: the selected tab slides
     const TAB_BAR_PADDING = 2; // px around the tabs, in the bar
     const WAITING_FADE_TIME = 0.2; // seconds
+    const ACTION_BUTTON_HEIGHT = 50; // px: LOGIN / SIGN UP (the height of the buttons of the page under them)
 
     box.customButtonCount = 0;
 
@@ -225,19 +231,9 @@ const LoginPage = function(params = {}) {
                         };
 
                         // Login button
-                        box.loginBtn = Button({
-                            text: "LOGIN",
-                            textColor: White(0.75),
-                            fontSize: 20,
-                            width: "100%",
-                            height: 50,
-                            round: 4,
-                            color: box.primaryColor,
-                            minimal: 1
+                        box.loginBtn = createActionButton("LOGIN", function(self, event) {
+                            box.onLoginClick(self, event);
                         });
-                        box.loginBtn.clickable = 1;
-                        box.loginBtn.cursor = "pointer";
-                        UIEffects.press(that);
 
                         // or group
                         box.boxOR = startBox({
@@ -325,19 +321,9 @@ const LoginPage = function(params = {}) {
                             checkSignupForm();
                         };
 
-                        box.signupBtn =  Button({
-                            text: "SIGN UP",
-                            textColor: White(0.75),
-                            fontSize: 20,
-                            width: "100%",
-                            height: 50,
-                            round: 4,
-                            color: box.primaryColor,
-                            minimal: 1
+                        box.signupBtn = createActionButton("SIGN UP", function(self, event) {
+                            box.onSignupClick(self, event);
                         });
-                        UIEffects.press(that);
-                        box.signupBtn.clickable = 1;
-                        box.signupBtn.cursor = "pointer";
 
                     endAutoLayout(); // END SIGN UP VIEW
 
@@ -384,19 +370,6 @@ const LoginPage = function(params = {}) {
 
         // Waiting
         createWaiting();
-
-        // events:
-        // WHY the checks: a passive button is only clickable 0 (no mouse), a <button> still clicks on Tab + Enter: an
-        //     invalid e-mail logged in, a 1-letter password signed up (2026-11-05). WHY box.onLoginClick read at the
-        //     click: a function given after creation (loginPage.onLoginClick = fn) was never called.
-        box.loginBtn.on("click", function(self, event) {
-            if (box.loginBtn.clickable != 1) return;
-            box.onLoginClick(self, event);
-        });
-        box.signupBtn.on("click", function(self, event) {
-            if (box.signupBtn.clickable != 1) return;
-            box.onSignupClick(self, event);
-        });
 
         // First check
         checkLoginForm();
@@ -562,8 +535,53 @@ const LoginPage = function(params = {}) {
 
     };
 
+    // An action button of a view (LOGIN, SIGN UP): a SmartButton of the kit (buttonStyleName, buttonTone), or the
+    // flat button in primaryColor. action(self, event) runs while the button is active.
+    // WHY box.onLoginClick read at the click (in the action of the caller): a function given after creation
+    //     (loginPage.onLoginClick = fn) was never called.
+    const createActionButton = function(text, action) {
+
+        // (a passive SmartButton runs no onClick, also on a key)
+        if (box.buttonStyleName) {
+            return SmartButton({
+                styleName: box.buttonStyleName,
+                tone: box.buttonTone,
+                labelText: text,
+                width: "100%",
+                height: ACTION_BUTTON_HEIGHT,
+                onClick: action,
+            });
+        }
+
+        const button = Button({
+            text: text,
+            textColor: White(0.75),
+            fontSize: 20,
+            width: "100%",
+            height: ACTION_BUTTON_HEIGHT,
+            round: 4,
+            color: box.primaryColor,
+            minimal: 1,
+        });
+        button.clickable = 1;
+        button.cursor = "pointer";
+        UIEffects.press(button);
+        // WHY the check: a passive button is only clickable 0 (no mouse), a <button> still clicks on Tab + Enter: an
+        //     invalid e-mail logged in, a 1-letter password signed up (2026-11-05)
+        button.on("click", function(self, event) {
+            if (button.clickable != 1) return;
+            action(self, event);
+        });
+        return button;
+
+    };
+
     // The send buttons are passive (gray, not clickable) until their form is ready.
     const setButtonActive = function(btn, isActive) {
+        if (box.buttonStyleName) {
+            btn.setEnabled(isActive ? 1 : 0); // (a SmartButton: its own passive look)
+            return;
+        }
         btn.clickable = isActive ? 1 : 0;
         btn.css.filter = isActive ? "grayscale(0%)" : "grayscale(100%)";
     };

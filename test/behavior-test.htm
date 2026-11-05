@@ -2247,6 +2247,24 @@
             login.remove();
         });
 
+        // 2026-11-05 (the user): LOGIN of login-page-v2.htm is a blue ozdenType3 SmartButton
+        test("LoginPageV2: buttonStyleName makes LOGIN a SmartButton; passive it does not log in (a click, Enter), active it does", async function () {
+            let logins = 0;
+            const login = LoginPage({ buttonStyleName: "ozdenType3", buttonTone: "blue", onLoginClick: function () { logins++; } });
+            const button = login.loginBtn;
+            const isSmartButton = (typeof button.setEnabled === "function" && button.tone === "blue" && button.enabled != 1);
+            button.elem.click();
+            key(button.elem, "keydown", "Enter");
+            const passiveLogins = logins;
+            login.loginEmail.setInputValue("a@b.co");
+            login.loginPassword.setInputValue("123456");
+            login.loginEmail.onEdit();
+            button.elem.click();
+            check("LoginPageV2: buttonStyleName makes LOGIN a SmartButton; passive it does not log in (a click, Enter), active it does",
+                isSmartButton && passiveLogins === 0 && logins === 1 && button.enabled == 1, "SmartButton (passive at first): " + isSmartButton + ", logins while passive: " + passiveLogins + ", after: " + logins);
+            login.remove();
+        });
+
         test("Toggle: disabled under the mouse, it stays disabled when the mouse leaves", async function () {
             const toggle = Toggle({ value: 1 });
             toggle.elem.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));

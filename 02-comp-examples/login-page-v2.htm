@@ -74,6 +74,11 @@
                     mustUseSpecialChar: 0,
                 },
                 ...LoginPageLightStyle,
+                // (after the light style: these win over it; the user, 2026-11-05)
+                tab_border: 1, // a line around the tab bar
+                tab_borderColor: Black(0.12),
+                buttonStyleName: "ozdenType3", // LOGIN / SIGN UP: SmartButtons of the kit, in the text color of the tone
+                buttonTone: "blue",
             });
 
             // Add custom login buttons:
