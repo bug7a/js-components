@@ -31,8 +31,12 @@
 #   file per component keeps that layout at the next runs (comp/_sources.txt tells it). A component
 #   line written later into such a page (../comp/name.js, over or under its comp/components.min.js
 #   line) goes into the one file, and the page keeps one line for it. (2026-11-05)
-#   To take a component out of that one file, delete its line in comp/_sources.txt and run the script
-#   again (the pages are not changed). The code that uses it must go first. (2026-11-05, the user)
+#   To take a component out, delete its line in comp/_sources.txt and run the script again: it leaves
+#   components.min.js (the pages are not changed), or, with one file per component, its <script> line
+#   leaves every page. The code that uses it must go first. (2026-11-05, the user) A file of comp/ that
+#   the script did not make (no name.min.js with a source in comp/ of the repository) keeps its line:
+#   it is deleted with a warning, as comp/ is made again from scratch. A line whose source is not in
+#   the repository (a typo, comp-m2/... from before 2026-10-31) stops the run before anything is written.
 #
 # --gzip: every text file of the output (.htm, .js, .css, .svg, .json, fonts...) is also written as
 #   name.gz (gzip -9), next to it. For a server that sends the packed files itself (Ex: a small board
@@ -177,15 +181,24 @@ const baseDirOf = function (page, html) {
 // Where a comp/ file came from in the last run (components.min.js: one line for each of its sources)
 const oldSources = {};
 const oldOneFile = [];
-if (IN_PLACE && fs.existsSync(SOURCES_FILE)) {
+const hadSources = IN_PLACE && fs.existsSync(SOURCES_FILE);
+const missingSources = [];
+if (hadSources) {
     fs.readFileSync(SOURCES_FILE, "utf8").split("\n").forEach(function (line) {
         const match = /^(\S+)\s+<-\s+(\S+)/.exec(line);
         if (!match) return;
-        // WHY: the lines of components.min.js may be deleted by hand (2026-11-05), so a typo must not stop the run
-        if (!fs.existsSync(path.join(REPO, match[2]))) { warnings.push("comp/_sources.txt: " + match[2] + " is not in the repository (skipped)"); return; }
+        if (!fs.existsSync(path.join(REPO, match[2]))) missingSources.push(match[2]);
         if (match[1] === ONE_FILE_NAME) oldOneFile.push(match[2]);
         else oldSources[match[1]] = match[2];
     });
+}
+// WHY (2026-11-05): a line of a source that is not there (a typo, or comp-m2/... from before 2026-10-31) stops
+//      the run before anything is written. Skipped, it changed the layout and took the components out of the pages.
+if (missingSources.length) {
+    console.log("comp/_sources.txt of " + rel(PROJECT) + " names sources that are not in the repository (nothing was written):");
+    missingSources.forEach(function (source) { console.log("  " + source); });
+    console.log("Write their place in the repository (Ex: comp/form.js), or delete the line to take the component out.");
+    process.exit(1);
 }
 // One file is the default. --separate: one file each. WHY: a project made in place with one file for each
 // component keeps that layout (its pages load those files) unless --one-file is given.
@@ -241,7 +254,11 @@ pages.forEach(function (page) {
                 });
             } else if (inside[0] === "comp" && inside.length === 2) {
                 const source = oldSources[inside[1]];
+                const sourceInRepo = "comp/" + inside[1].replace(/\.min\.js$/, ".js");
+                const madeHere = hadSources && /\.min\.js$/.test(inside[1]) && fs.existsSync(path.join(REPO, sourceInRepo));
                 if (source) compFiles[inside[1]] = source;
+                // WHY (2026-11-05, the user): a line deleted in comp/_sources.txt takes the component out of the pages, as out of components.min.js
+                else if (madeHere) rewrites.push({ page: page, from: value, to: "", note: "(removed: " + sourceInRepo + " is not in comp/_sources.txt)" });
                 else warnings.push(rel(page) + ": " + value + " is in comp/ but not in comp/_sources.txt (it will be deleted)");
             }
             continue;
@@ -483,10 +500,10 @@ const writeGzipFiles = function () {
             fs.writeFileSync(path.join(COMP_OUT, name), (await minifyComponent(source)) + "\n");
             sourcesLines.push(name + " <- " + source);
         }
-        // WHY: only a run in place with one file reads this file again; elsewhere an edit here does nothing
-        const howToEdit = (IN_PLACE && isOneFile)
-            ? "To take a component out of " + ONE_FILE_NAME + ": delete its line, then run the script again (--in-place)."
-            : "Do not edit: run the script again.";
+        // WHY: only a run in place reads this file again; elsewhere an edit here does nothing
+        let howToEdit = "Do not edit: run the script again.";
+        if (IN_PLACE && isOneFile) howToEdit = "To take a component out of " + ONE_FILE_NAME + ": delete its line, then run the script again (--in-place).";
+        else if (IN_PLACE) howToEdit = "To take a component out of the pages: delete its line, then run the script again (--in-place).";
         fs.writeFileSync(SOURCES_FILE,
             "# Made by _make-standalone.sh (repository root). " + howToEdit + "\n"
             + "# <file in comp/> <- <its source in the repository>\n"
