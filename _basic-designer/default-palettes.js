@@ -7,20 +7,29 @@
 
 BasicDesigner.DEFAULT_PALETTES = [
 
-    // The colors used the most: the first place to look.
+    // The colors used the most in the projects: the first place to look (the user, 2026-11-05: the tones of
+    // SmartButton, its dark tones, whitesmoke, the checked color of CheckBox and the other colors of the kit; the
+    // favorites before that went to the groups below).
     { key: "favorites", name: "★ Favorites", colors: [
-        ["indianred", "indianred (warnings)"],
+        ["#FFFFFF", "white (SmartButton white)"],
         ["whitesmoke", "whitesmoke (fields, soft backgrounds)"],
-        ["#FFFFFF", "white"],
-        ["#232323", "ink"],
-        ["#E07B5F", "coral"],
-        ["#E8B455", "mustard"],
-        ["#5BBAC1", "teal"],
-        ["#52A8D0", "sky"],
-        ["#6488BE", "steel blue"],
-        ["#C077A6", "orchid"],
-        ["#F8E57A", "lemon"],
-        ["#FFFBDB", "cream"],
+        ["#F4F5F2", "soft box (InputB ozden, ItemList)"],
+        ["#5BBAC1", "SmartButton cyan (the main action)"],
+        ["#DE815B", "SmartButton orange (a delete)"],
+        ["#F1C74A", "SmartButton yellow (look first)"],
+        ["#7BC362", "SmartButton green (done)"],
+        ["#52A8D0", "SmartButton blue (details, help)"],
+        ["#376265", "SmartButton cyanDark"],
+        ["#724837", "SmartButton orangeDark"],
+        ["#7B682F", "SmartButton yellowDark"],
+        ["#46663A", "SmartButton greenDark"],
+        ["#335A6B", "SmartButton blueDark"],
+        ["#1A1A19", "dark card (the dark tones sit on it)"],
+        ["#242424", "checked CheckBox / RadioButton"],
+        ["#141414", "dark of the kit (BottomBar circle)"],
+        ["indianred", "indianred (warnings, badges)"],
+        ["cadetblue", "cadetblue (focus, modern CheckBox)"],
+        ["#65A293", "field focus (InputB)"],
     ] },
 
     // The jobs of the colors of an app: buttons, messages.
@@ -58,6 +67,7 @@ BasicDesigner.DEFAULT_PALETTES = [
     // Warm grays, sand and stone: backgrounds, cards, soft text.
     { key: "neutrals", name: "Neutrals (sand, stone)", colors: [
         ["#FFFCEC", "ivory"],
+        ["#FFFBDB", "cream"],
         ["#F9FBEF", "paper"],
         ["#F1EDE5", "linen"],
         ["#F0E6E6", "blush white"],
@@ -102,12 +112,15 @@ BasicDesigner.DEFAULT_PALETTES = [
 
     // Warm sets: the warm reds, yellows, greens and blues, each from light to dark.
     { key: "best", name: "Warm sets", colors: [
+        ["#E07B5F", "coral"],
         ["#DE7466", "salmon"],
         ["#DD6B5A", "coral red"],
         ["#C3594A", "brick"],
         ["#BF2A2A", "red"],
+        ["#F8E57A", "lemon"],
         ["#EBBE60", "honey"],
         ["#EBB651", "gold"],
+        ["#E8B455", "mustard"],
         ["#CDA24F", "old gold"],
         ["#7BC362", "leaf"],
         ["#7BB56D", "moss"],
@@ -134,6 +147,7 @@ BasicDesigner.DEFAULT_PALETTES = [
         ["#9DC7B5", "sage"],
         ["#68AF8E", "jade"],
         ["#6FC7BD", "aqua"],
+        ["#5BBAC1", "teal"],
         ["#60AEAC", "teal"],
         ["#5CA3AE", "sea"],
         ["#CEDBE1", "ice"],
@@ -145,6 +159,7 @@ BasicDesigner.DEFAULT_PALETTES = [
         ["#DAD7E6", "lavender mist"],
         ["#CFC3DD", "lavender"],
         ["#C08BBE", "orchid"],
+        ["#C077A6", "orchid pink"],
         ["#B596A9", "mauve"],
         ["#7B436E", "plum"],
     ] },
@@ -181,7 +196,9 @@ BasicDesigner.DEFAULT_PALETTES = [
         ["#85BFDB", "sky"],
         ["#75B8CF", "lagoon"],
         ["#6DB1C3", "ocean"],
+        ["#52A8D0", "sky blue"],
         ["#5D99D0", "harbor"],
+        ["#6488BE", "steel blue"],
         ["#5A8DCB", "blue"],
         ["#436EBD", "deep blue"],
         ["#1A2E7C", "navy"],
