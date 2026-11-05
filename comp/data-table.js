@@ -577,25 +577,31 @@ const DataTable = function (params = {}) {
     // Adds, changes and removes rows by their id. The objects of the rows that stay are kept.
     box.updateRows = function (rows) {
 
+        // WHY a list for each id: rows with the same id (object rows with no id, a first column that repeats) kept
+        //     only the last one in the map. The others stayed on the screen out of box.rowList, so clearRows() and
+        //     setRows() could not remove them either ("ghost" rows, 2026-11-05).
         const oldRows = new Map();
-        box.rowList.forEach(function (row) { oldRows.set(row.id, row); });
+        box.rowList.forEach(function (row) {
+            if (!oldRows.has(row.id)) oldRows.set(row.id, []);
+            oldRows.get(row.id).push(row);
+        });
 
         box.rows = Array.isArray(rows) ? rows.slice() : [];
         box.rowList = [];
 
         box.rows.forEach(function (data) {
-            const row = oldRows.get(getRowId(data));
+            const sameId = oldRows.get(getRowId(data));
+            const row = (sameId && sameId.length) ? sameId.shift() : null;
             if (!row) {
                 addRowObject(data);
                 return;
             }
-            oldRows.delete(row.id);
             refreshRow(row, data);
             box.rowList.push(row);
         });
 
         const hadSelection = !!box.selectedRow;
-        oldRows.forEach(removeRowObject);
+        oldRows.forEach(function (list) { list.forEach(function (row) { removeRowObject(row); }); });
         showRows();
         if (hadSelection && !box.selectedRow) box.onSelect(box, null);
 

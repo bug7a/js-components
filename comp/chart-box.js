@@ -131,25 +131,31 @@ const ChartBox = function (params = {}) {
         return Object.assign(basic.resolveTheme(ChartBox.THEMES, box.theme), _s.chart);
     };
 
+    // WHY copies: the arrays of the page became the data of Chart.js, so addValue() and maxCount changed them (two
+    //     charts that shared a labels array moved it twice, and every point was under a wrong time, 2026-11-05)
+    const copyDataset = function (dataset) {
+        return Object.assign({}, dataset, { data: (dataset.data || []).slice() });
+    };
+
+    const copyData = function (data) {
+        return Object.assign({}, data, {
+            labels: (data.labels || []).slice(),
+            datasets: (data.datasets || []).map(copyDataset),
+        });
+    };
+
     const createData = function () {
 
-        let data = chartParams.data;
+        if (chartParams.data) return copyData(chartParams.data);
 
-        if (!data) {
-            let datasets = chartParams.datasets;
-            if (!datasets) {
-                datasets = [];
-                if (chartParams.values) {
-                    datasets.push({ label: box.title || "", data: chartParams.values });
-                }
+        let datasets = chartParams.datasets;
+        if (!datasets) {
+            datasets = [];
+            if (chartParams.values) {
+                datasets.push({ label: box.title || "", data: chartParams.values });
             }
-            data = { labels: chartParams.labels || [], datasets: datasets };
         }
-
-        if (!data.labels) data.labels = [];
-        if (!data.datasets) data.datasets = [];
-
-        return data;
+        return copyData({ labels: chartParams.labels, datasets: datasets });
 
     };
 
@@ -468,19 +474,20 @@ const ChartBox = function (params = {}) {
     };
 
     box.setData = function (data) {
-        box.data.labels = data.labels || [];
-        box.data.datasets = data.datasets || [];
+        const copy = copyData(data);
+        box.data.labels = copy.labels;
+        box.data.datasets = copy.datasets;
         box.refreshOptions(); // WHY: Legend "auto" depends on the dataset count.
     };
     // USAGE: chartBox.setData({ labels: ["A", "B"], datasets: [{ label: "X", data: [1, 2] }] })
 
     box.setLabels = function (labels) {
-        box.data.labels = labels;
+        box.data.labels = (labels || []).slice();
         box.update();
     };
 
     box.setDatasets = function (datasets) {
-        box.data.datasets = datasets;
+        box.data.datasets = (datasets || []).map(copyDataset);
         box.refreshOptions();
     };
 
@@ -488,7 +495,7 @@ const ChartBox = function (params = {}) {
     box.setValues = function (values, datasetIndex = 0) {
         const dataset = box.data.datasets[datasetIndex];
         if (dataset) {
-            dataset.data = values;
+            dataset.data = (values || []).slice();
             box.update();
         } else {
             box.addDataset({ label: box.title || "", data: values });
@@ -525,7 +532,7 @@ const ChartBox = function (params = {}) {
     // USAGE: chartBox.addValue("May", 42) or chartBox.addValue("May", [42, 30]) (one value for each dataset)
 
     box.addDataset = function (dataset) {
-        box.data.datasets.push(dataset);
+        box.data.datasets.push(copyDataset(dataset));
         box.refreshOptions();
     };
 

@@ -232,29 +232,30 @@ Satır numaraları 2026-11-05'teki dosyalara göredir.
 
 ## Daha düşük öncelikli (gerçek ama nadir, kolay bir çaresi var ya da yalnızca görünüş)
 
-- PhoneInputB `setCountryCode()` numaranın ilk rakamlarını kaydırır (`phone-input-b.js:156-159`); tek çağıran numarayı
+- ✅ (düzeltildi 2026-11-05) PhoneInputB `setCountryCode()` numaranın ilk rakamlarını kaydırır (`phone-input-b.js:156-159`); tek çağıran numarayı
   zaten siliyor.
-- NumberInputB / CurrencyInputB: ikinci bir ondalık ayırıcı rakamları siler ("12.5" → "1.2"; yapıştırılan
-  "1.234.567" → "1.23"; `number-input-b.js:83`, `currency-input-b.js:153`); Currency'de grup ayırıcısından hemen
-  sonra Backspace bir şey yapmaz.
+- ✅ (düzeltildi 2026-11-05: ilk ayırıcı kalır, rakam düşmez) NumberInputB / CurrencyInputB: ikinci bir ondalık
+  ayırıcı rakamları siler ("12.5" → "1.2"; `number-input-b.js:83`, `currency-input-b.js:153`). Kalan: yapıştırılan
+  "1.234.567" yine "1.23" olur (iki ondalık sınırı; noktaların binlik mi ondalık mı olduğu bilinemez); Currency'de
+  grup ayırıcısından hemen sonra Backspace bir şey yapmaz.
 - Form `showMessage()` eksik bir nesneyle (`onClose` yok) fırlatır (`form.js:98-105, 157-158`); bütün çağıranlar
   tam nesne veriyor.
 - TagInput: ayırıcı (",") içeren bir öneri ikiye bölünür (`tag-input.js:593`).
 - LoginPageV2: yaratıldıktan sonra atanan `onLoginClick` çağrılmaz (`login-page-v2.js:389-390`).
 - FullScreenSelect: kendisini silen bir `onChange`'den sonra konsolda TypeError (`full-screen-select.js:433-436`).
 - TinySelect `setSelectedIndex(-1)` fırlatır (`tiny-select.js:89-91`); çağıranlar zaten kontrol ediyor.
-- DataTable `updateRows()` tekrar eden id'lerde eski satırları bırakır; bunlar `clearRows()` / `setRows()`'dan sonra
+- ✅ (düzeltildi 2026-11-05) DataTable `updateRows()` tekrar eden id'lerde eski satırları bırakır; bunlar `clearRows()` / `setRows()`'dan sonra
   da ekranda kalır (`data-table.js:578-598`). Ucuz bir savunma düzeltmesi değer.
 - DataTable `setRows()` / `clearRows()` seçimi `onSelect(null)` demeden siler (`data-table.js:569-574, 633-638`).
 - TreeView: hiç açılmamış tembel bir düğüme `addNode()` onun `onLoadChildren`'ını engeller (`tree-view.js:705`).
 - SortableList `moveItem()` diğer satırları kilitli bir satırın üstünden geçirir (`sortable-list.js:971-980`).
 - PageControl: hızlı iki sayfa değişiminde ilk sayfanın `onClose`'u kaybolur; `removePage` silinen sayfa için
   `onClose` çağırır (`page-control.js:270-279`).
-- ChartBox sayfanın `labels` / `values` dizilerini değiştirir (`chart-box.js:143, 146, 511-519`): kopyalanmalı.
+- ✅ (düzeltildi 2026-11-05) ChartBox sayfanın `labels` / `values` dizilerini değiştirir (`chart-box.js:143, 146, 511-519`): kopyalanmalı.
 - ChartBox `alpha()` adlı ve `hsl()` renkleri saydam yapmaz (`chart-box.js:831-851`).
 - WebView `autoHeight` büyür ama küçülmez (`web-view.js:217, 220`).
 - Slider `setMinValue()` / `setMaxValue()` boş (`slider.js:186-191`).
-- SliderField ve Stepper: alan odaktayken silinirse yazılan değer `remove()`'dan sonra gönderilir
+- ✅ (düzeltildi 2026-11-05) SliderField ve Stepper: alan odaktayken silinirse yazılan değer `remove()`'dan sonra gönderilir
   (`slider-field.js:717`, `stepper.js:593`).
 - UIEffects hover (`color`, `border`, `fill`): hover sırasında sayfanın verdiği rengi ayrılınca eskisiyle ezer
   (`ui-effects.js:439-447, 471-476, 298-305`).

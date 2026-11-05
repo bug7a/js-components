@@ -251,7 +251,9 @@ const Stepper = function (params = {}) {
 
     // apply: 1 -> The typed value is used. 0 -> Cancel.
     const endEdit = function (apply) {
-        if (!isEditing) return;
+        // WHY: Chrome fires blur when a focused field is removed: a half typed value went to onChange of a field that
+        //      was removed (a panel built again while the user typed, 2026-11-05)
+        if (!isEditing || box.isRemoved) return;
         isEditing = 0;
         box.input.visible = 0;
         box.lblValue.visible = 1;

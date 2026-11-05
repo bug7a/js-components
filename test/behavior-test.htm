@@ -68,6 +68,11 @@
         <script src="../comp/page-control.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/tree-view.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/web-view.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/number-input-b.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/currency-input-b.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/data-table.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/chart-box/chart-4.5.1.umd.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/chart-box.js" type="text/javascript" charset="utf-8"></script>
 
         <script>
         "use strict";
@@ -2194,6 +2199,84 @@
             await wait(500);
             check("UIEffects spotlight: quick passes of the mouse leave no light in the object", button.elem.querySelectorAll("span").length === 0 && button.text === "Save", "spans: " + button.elem.querySelectorAll("span").length + ", text: " + button.text.slice(0, 40));
             button.remove();
+        });
+
+        // *** THE REVIEW OF comp/ (2026-11-05) - the lower ones that were cheap to fix
+
+        test("DataTable: updateRows() with rows of the same id leaves no row on the screen that is not in the data", async function () {
+            const drawnRows = function (table) { return Array.from(table.rowsGroup.elem.children).filter(function (el) { return el.style.display != "none"; }).length; };
+            const table = DataTable({ columns: [{ key: "name", title: "Name" }, { key: "city", title: "City" }], rows: [{ name: "Ann", city: "Paris" }, { name: "Bob", city: "Rome" }, { name: "Cem", city: "Oslo" }] });
+            await wait(30);
+            table.updateRows([{ name: "Dan", city: "Bern" }]); // (object rows with no id: all have the same id)
+            const afterUpdate = drawnRows(table);
+            table.clearRows();
+            check("DataTable: updateRows() with rows of the same id leaves no row on the screen that is not in the data", afterUpdate === 1 && drawnRows(table) === 0, "after updateRows: " + afterUpdate + ", after clearRows: " + drawnRows(table));
+            table.remove();
+        });
+
+        test("NumberInputB and CurrencyInputB: a second decimal separator typed in the number keeps every digit", async function () {
+            const insertAt = function (field, position, letter) {
+                const el = field.input.inputElement;
+                el.focus();
+                el.value = el.value.slice(0, position) + letter + el.value.slice(position);
+                el.setSelectionRange(position + 1, position + 1);
+                el.dispatchEvent(new Event("input", { bubbles: true }));
+                return el.value;
+            };
+            const typeText = function (field, text) {
+                for (const letter of text) insertAt(field, field.input.inputElement.value.length, letter);
+            };
+            const number = NumberInputB({ titleText: "Number" });
+            const currency = CurrencyInputB({ titleText: "Price" });
+            typeText(number, "12.5");
+            typeText(currency, "12.5");
+            const numberValue = insertAt(number, 1, "."); // the point moved: "1.25"
+            const currencyValue = insertAt(currency, 1, ".");
+            check("NumberInputB and CurrencyInputB: a second decimal separator typed in the number keeps every digit", numberValue === "1.25" && currencyValue === "1.25", "number: " + numberValue + ", currency: " + currencyValue);
+            number.remove();
+            currency.remove();
+        });
+
+        test("ChartBox: addValue() and maxCount do not change the arrays of the page", async function () {
+            const hours = ["10:00", "10:01", "10:02"];
+            const values = [10, 20, 30];
+            const cpu = ChartBox({ width: 300, height: 150, type: "line", labels: hours, values: values, maxCount: 3 });
+            const memory = ChartBox({ width: 300, height: 150, type: "line", labels: hours, values: [50, 55, 60], maxCount: 3 });
+            await new Promise(function (resolve) { cpu.whenReady(function () { memory.whenReady(resolve); }); });
+            cpu.addValue("10:03", 40);
+            memory.addValue("10:03", 65);
+            const isPageSame = (hours.join(",") === "10:00,10:01,10:02" && values.join(",") === "10,20,30");
+            const isChartRight = (cpu.data.labels.join(",") === "10:01,10:02,10:03" && memory.data.labels.join(",") === "10:01,10:02,10:03" && cpu.data.datasets[0].data.join(",") === "20,30,40");
+            check("ChartBox: addValue() and maxCount do not change the arrays of the page", isPageSame && isChartRight, "page: " + hours.join(",") + " / " + values.join(",") + ", cpu: " + cpu.data.labels.join(",") + ", memory: " + memory.data.labels.join(","));
+            cpu.remove();
+            memory.remove();
+        });
+
+        test("SliderField and Stepper: a value typed in a field that is removed is not sent", async function () {
+            const calls = [];
+            const field = SliderField({ value: 3, onChange: function () { calls.push("slider field"); } });
+            field.elem.focus();
+            key(field.elem, "keydown", "7"); // starts typing a value
+            field.remove();
+            const stepper = Stepper({ value: 1, onChange: function () { calls.push("stepper"); } });
+            stepper.valueBox.elem.click(); // starts typing a value
+            stepper.input.inputElement.value = "9";
+            stepper.remove();
+            await wait(50);
+            check("SliderField and Stepper: a value typed in a field that is removed is not sent", calls.length === 0, "onChange of: " + calls.join(", "));
+        });
+
+        test("PhoneInputB: setCountryCode() keeps the number, a number filled without its code keeps its digits", async function () {
+            const phone = PhoneInputB({ width: 300, inputValue: "+90 (555) 123-4567" });
+            phone.setCountryCode("+1");
+            const changed = phone.getInputValue();
+            const filled = PhoneInputB({ width: 300 });
+            const el = filled.input.inputElement;
+            el.value = "5551234567"; // (autofill: the digits, with no code)
+            el.dispatchEvent(new Event("input", { bubbles: true }));
+            check("PhoneInputB: setCountryCode() keeps the number, a number filled without its code keeps its digits", changed === "+1 (555) 123-4567" && filled.getInputValue() === "+90 (555) 123-4567", changed + ", " + filled.getInputValue());
+            phone.remove();
+            filled.remove();
         });
 
         // *** RUN

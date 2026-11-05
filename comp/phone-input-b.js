@@ -58,6 +58,7 @@ const PhoneInputB = function(params = {}) {
 
     // *** PRIVATE VARIABLES:
     const inputElem = box.input.inputElement;
+    let codeInField = box.countryCode; // the country code written in the field (setCountryCode() changes box.countryCode first)
 
     // *** PRIVATE FUNCTIONS:
 
@@ -153,10 +154,15 @@ const PhoneInputB = function(params = {}) {
 
         let value = inputElem.value; // WHY: The field itself, also when it holds only the mask. (getInputValue() is "" then.)
 
-        // 1. Başından countryCode uzunluğu kadar karakteri sil
-        if (typeof box.countryCode === "string" && box.countryCode.length > 0) {
-            value = value.substring(box.countryCode.length);
-        }
+        // 1. The country code at the start of the field goes: the one in the field, or the new one (the longest).
+        // WHY: the first countryCode.length characters went without a look: "+90 (555) 123-4567" became
+        //      "+1 (055) 512-3456" after setCountryCode("+1") (a valid wrong number), and a number autofilled
+        //      without its code lost its first digits (2026-11-05)
+        const codes = [codeInField, box.countryCode].filter(function(code) {
+            return typeof code === "string" && code.length > 0 && value.indexOf(code) === 0;
+        });
+        codes.sort(function(a, b) { return b.length - a.length; });
+        if (codes.length) value = value.substring(codes[0].length);
 
         // 2. Yalnızca rakamlar kalsın (the characters of the mask go too)
         let digits = value.replace(/[^0-9]/g, "");
@@ -167,6 +173,7 @@ const PhoneInputB = function(params = {}) {
 
         // 3. Şimdi countryCode + phoneMask formatına uygun şekilde doldur
         box.setInputValue(fillMaskWithDigits(getFullMask(), digits));
+        codeInField = box.countryCode;
         setCursorToFirstUnderscore();
 
     };

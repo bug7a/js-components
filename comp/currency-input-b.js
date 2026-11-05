@@ -149,8 +149,11 @@ const CurrencyInputB = function(params = {}) {
         if (box.allowDecimal) {
             const separator = box.decimalSeparator;
             const parts = value.split(separator);
+            // WHY the first one stays and no digit goes: the value was built again from two parts, so "12.5" with a
+            //     "." typed after the 1 became "1.2", and a pasted "1.234.567" "1.23" (2026-11-05)
             if (parts.length > 2) {
-                value = parts.pop() + separator + parts.join("");
+                parts.splice(1, parts.length - 1, parts.slice(1).join(""));
+                value = parts[0] + separator + parts[1];
             }
             if (parts.length === 2 && box.maxDecimalDigits >= 0) {
                 parts[1] = parts[1].substring(0, box.maxDecimalDigits);
