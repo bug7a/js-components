@@ -162,7 +162,7 @@ const GraphBoxDefaults = {
             fontFamily: "opensans, system-ui, -apple-system, 'Segoe UI', sans-serif",
             labelGap: 8, // Between a text of the axis and the chart
             tickSpace: 32, // At least this many px between two lines of the value axis
-            sideTickSpace: 64, // The same on an axis that runs to the right: its numbers are side by side.
+            sideTickSpace: 90, // The same on an axis that runs to the right: its numbers are side by side.
             labelSpace: 10, // At least this many px between two labels
             labelAngle: 35, // Degrees. The labels of the bars turn when they have no room. 0: A label is skipped instead.
             maxLabelShare: 0.3, // A turned label is cut with "..." at this much of the height of the chart.
@@ -829,7 +829,7 @@ const GraphBox = function (params = {}) {
         const angle = _s.axis.labelAngle;
         const minStep = getMinLabelStep(indexCount);
 
-        if (needed <= spacing) return { texts: texts, step: minStep, angle: 0, room: textHeight };
+        if (needed <= spacing * minStep) return { texts: texts, step: minStep, angle: 0, room: textHeight };
 
         if (!hasBands || !angle || spacing < textHeight) {
             const step = Math.max(minStep, Math.ceil(needed / Math.max(1, spacing)));
@@ -844,6 +844,13 @@ const GraphBox = function (params = {}) {
         const room = Math.ceil(measureWidestText(shortTexts) * Math.sin(radians) + textHeight * Math.cos(radians));
         return { texts: shortTexts, step: minStep, angle: angle, room: room };
 
+    };
+
+    // WHY: The room at the right was measured from the values, before the numbers of the axis were known. The last number
+    //      stands in the middle of the end of the plot, so half of it must stay in the box: "2.25K" is wider than "2.1K".
+    const getRightOfLastTick = function (scale, width) {
+        const lastText = scale.tickTexts[scale.tickTexts.length - 1] || "";
+        return width - Math.ceil(measureAxisText(lastText) / 2);
     };
 
     // horizontal: 1: the labels are at the left, and the texts of the values under the plot.
@@ -864,7 +871,8 @@ const GraphBox = function (params = {}) {
         const tickSpace = Math.max(_s.axis.sideTickSpace, tickWidth + _s.axis.labelSpace);
 
         const scale = createValueScale(limits, right - left, tickSpace);
-        return { left: left, top: top, right: right, bottom: bottom, maxLabelWidth: maxLabelWidth, scale: scale };
+        const lastRight = Math.min(right, getRightOfLastTick(scale, width));
+        return { left: left, top: top, right: Math.max(left + 1, lastRight), bottom: bottom, maxLabelWidth: maxLabelWidth, scale: scale };
 
     };
 
@@ -1958,8 +1966,9 @@ const GraphBox = function (params = {}) {
         const right = Math.max(left + 1, width - Math.max(edgeRoom, Math.ceil(xTickWidth / 2)));
         const xTickSpace = Math.max(_s.axis.sideTickSpace, xTickWidth + _s.axis.labelSpace);
         const xScale = createValueScale(xLimits, right - left, xTickSpace, formatXTickText);
+        const lastRight = Math.min(right, getRightOfLastTick(xScale, width));
 
-        return { left: left, top: top, right: right, bottom: bottom, xScale: xScale, yScale: yScale };
+        return { left: left, top: top, right: Math.max(left + 1, lastRight), bottom: bottom, xScale: xScale, yScale: yScale };
 
     };
 

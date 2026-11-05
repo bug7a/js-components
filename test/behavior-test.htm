@@ -3761,6 +3761,23 @@
             chart.remove();
         });
 
+        test("GraphBox: maxLabels leaves room: the labels of the bars stay flat, the last number of a sideways axis stays in the box", async function () {
+            const labels = [];
+            for (let i = 0; i < 30; i++) labels.push(i + " Oct");
+            const bars = GraphBox({ width: 620, height: 300, type: "bar", legend: "none", maxLabels: 12, labels: labels, values: labels.map(function (label, i) { return i + 1; }) });
+            const isFlat = !bars.svg.querySelector("text[transform]");
+            bars.remove();
+
+            const sideways = GraphBox({ width: 500, height: 260, type: "bar", horizontal: 1, legend: "none", labels: ["A", "B"], values: [2100, 1200], formatValue: function (value) { return "₺" + value.toLocaleString("tr-TR") + ",00"; } });
+            await wait(30);
+            const texts = Array.from(sideways.svg.querySelectorAll("text"));
+            const lastTick = texts.filter(function (label) { return label.textContent.indexOf(",00") > 0; }).pop();
+            const isInBox = (lastTick.getBBox().x + lastTick.getBBox().width <= Number(sideways.svg.getAttribute("width")) + 0.5);
+            sideways.remove();
+
+            check("GraphBox: maxLabels leaves room: the labels of the bars stay flat, the last number of a sideways axis stays in the box", isFlat && isInBox, [isFlat, isInBox].join(" "));
+        });
+
         test("GraphBox: setTheme() changes the look, setStyle() keeps the other keys", async function () {
             const chart = GraphBox({ width: 400, height: 240, type: "bar", titleText: "Title", labels: ["A"], values: [1] });
             const lightColor = chart.color;
