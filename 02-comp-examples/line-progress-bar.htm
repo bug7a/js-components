@@ -23,7 +23,7 @@
 
         // LineProgressBar (the user, 2026-11-05): thick lines with round ends. An empty line is light gray, or nearly
         // black (#242424: the checked color of CheckBox); the full lines take a tone of SmartButton. A bubble with an
-        // arrow (comp/tooltip.js) shows the value over the last full line.
+        // arrow (comp/tooltip.js) shows the value over the last full line; it slides to a new value (animated: 1).
 
         const LIGHT_LINE = "#E2E1DD";
         const DARK_LINE = "#242424"; // the checked color of CheckBox
@@ -109,6 +109,7 @@
                     secondaryColor: data.lineColor,
                     valueBubble: 1,
                     valueBubbleLook: { textColor: tone.text, fontSize: 14, bold: 1, arrow: 10 }, // (its color: the tone)
+                    animated: 1, // the bubble slides to a new value
                 });
             endCard();
             return bar;

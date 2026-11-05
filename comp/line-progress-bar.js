@@ -3,7 +3,8 @@
 /*
 
 Component: LineProgressBar
-Version: 1.3 (2026-11-05: thick lines with round ends, the value in a bubble with an arrow, setPrimaryColor;
+Version: 1.3 (2026-11-05: thick lines with round ends, the value in a bubble with an arrow, setPrimaryColor,
+         animated: the bubble slides to a new value;
          1.2 2026-11-05: the lines follow the width; a bar made in a hidden container works)
 Created: November 2025
 Description: A progress bar component composed of vertical lines.
@@ -14,6 +15,9 @@ Description: A progress bar component composed of vertical lines.
 - valueBubble: 1 shows the value all the time in a bubble of comp/tooltip.js (load it first) over the last full
   line, its arrow pointing at it (valueBubbleLook: the keys of Tooltip.BUBBLE_LOOK; its color is primaryColor).
   showValueLabel: the small label that shows for a moment when the value changes.
+- animated: 1 (the user, 2026-11-05; context/basic-js-animated-rules.md): the bubble slides to a new value in 0.25 s
+  (a transform from where it is seen, so a quick row of values is one smooth way); it does not slide at the first
+  view, with a scroll or a resize, nor when the system asks for reduced motion. setAnimated(0/1).
 - 0% has no full line (2026-11-05: one line was full at 0%).
 
 USAGE:
@@ -46,6 +50,7 @@ const LineProgressBarDefaults = {
     showValueLabel: false, // the value in a small label for a moment when it changes
     valueBubble: 0, // 1: the value all the time in a bubble with an arrow over the last full line (comp/tooltip.js)
     valueBubbleLook: {}, // the keys of Tooltip.BUBBLE_LOOK (its color: primaryColor)
+    animated: 0, // 1: the bubble of the value slides to a new value (box.setAnimated(0/1))
     backgroundColor: "transparent",
 };
 
@@ -67,6 +72,9 @@ const LineProgressBar = function (params = {}) {
     const VALUE_LABEL_TOP = -25; // Above the lines
     const VALUE_LABEL_SHOW_TIME = 1000; // ms after the last change
     const VALUE_BUBBLE_Z_INDEX = 2; // over the content of the page (and over a Dialog that holds the bar: zIndexAbove)
+    // MOTION (animated: 1)
+    const MOTION_TIME = "0.25s";
+    const MOTION_EASE = "cubic-bezier(0.2, 0.8, 0.2, 1)"; // a fast start, a soft stop
 
     let totalLines = 0; // follows the width of the box (0 while it is not drawn: a closed tab, a hidden group)
     const lines = [];
@@ -76,6 +84,7 @@ const LineProgressBar = function (params = {}) {
     let cancelValueLabelHide = null; // The cancel function of the waiting hide (box.after)
     let valueBubble = null;
     let isBubblePlaceWaiting = 0;
+    let isCreated = 0; // WHY: nothing moves at the first view
 
     // *** PUBLIC VARIABLES:
     box.currentProgress = box.progress;
@@ -229,14 +238,43 @@ const LineProgressBar = function (params = {}) {
         return { left: rect.left, top: rect.top, width: 0, height: rect.height };
     };
 
-    // The bubble is seen only while the bar is (a closed tab, a box scrolled away)
-    const placeValueBubble = function () {
+    const isMotionOn = function () {
+        if (box.animated != 1) return false;
+        return !(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    };
+
+    // The middle of the top of the bubble as it is seen now, in the px of the page (its transform too)
+    const getBubblePoint = function () {
+        const rect = valueBubble.elem.getBoundingClientRect();
+        return Tooltip.toPagePoint(rect.left + rect.width / 2, rect.top);
+    };
+
+    // The bubble is seen only while the bar is (a closed tab, a box scrolled away).
+    // isSliding: a new value: the bubble slides from where it is seen to its new place (animated)
+    const placeValueBubble = function (isSliding = false) {
         if (!valueBubble || valueBubble._isRemoved) return;
         const isShown = (totalLines > 0 && Tooltip.isInSight(box));
+        const canSlide = (isSliding === true && isCreated && isMotionOn() && valueBubble.visible == 1);
+        const from = (canSlide) ? getBubblePoint() : null;
         valueBubble.visible = isShown ? 1 : 0;
         if (!isShown) return;
+        if (box.animated == 1) {
+            valueBubble.setMotionNow("none");
+            valueBubble.css = { transform: "none" };
+        }
         valueBubble.label.plainText = Math.round(box.currentProgress) + "%";
         Tooltip.place(valueBubble, getBubbleTarget(), "top");
+        if (from) slideBubbleFrom(from);
+    };
+
+    // WHY a transform (not left / top): only transform and opacity move (the rules); the bubble is put at its new
+    //     place at once, moved back to where it was seen, and then it goes to its place
+    const slideBubbleFrom = function (from) {
+        const to = getBubblePoint();
+        valueBubble.css = { transform: "translate(" + (from.x - to.x) + "px, " + (from.y - to.y) + "px)" };
+        void valueBubble.elem.offsetHeight; // WHY: the start look must be drawn before the motion is turned on
+        valueBubble.setMotionNow("transform " + MOTION_TIME + " " + MOTION_EASE);
+        valueBubble.css = { transform: "none" };
     };
 
     // Once a frame while a box scrolls
@@ -253,7 +291,7 @@ const LineProgressBar = function (params = {}) {
         const headIndex = getHeadIndex();
         paintLines(headIndex);
         if (box.showValueLabel && valueLabel) showValueLabel(headIndex);
-        placeValueBubble();
+        placeValueBubble(true);
     };
 
     // *** PUBLIC FUNCTIONS:
@@ -280,6 +318,15 @@ const LineProgressBar = function (params = {}) {
         paintLines(getHeadIndex());
     };
 
+    box.setAnimated = function (value) {
+        box.animated = (value == 1) ? 1 : 0;
+        if (box.animated != 1 && valueBubble) {
+            valueBubble.setMotionNow("none");
+            valueBubble.css = { transform: "none" };
+        }
+    };
+    // USAGE: bar.setAnimated(1)
+
     // *** OBJECT INIT CODE:
     createLines();
     updateVisuals();
@@ -288,6 +335,7 @@ const LineProgressBar = function (params = {}) {
         paintLines(getHeadIndex()); // (not updateVisuals: the value label shows only when the value changes)
         placeValueBubble();
     });
+    isCreated = 1;
 
     return endObject(box);
 };

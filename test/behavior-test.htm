@@ -2106,6 +2106,26 @@
             bar.remove();
         });
 
+        test("LineProgressBar: animated 1 slides its bubble to a new value (a transform), animated 0 writes no motion", async function () {
+            // WHY left / top: an object of this page is made out of the screen, and the bubble of a bar that is not seen hides
+            const moving = LineProgressBar({ left: 20, top: 80, width: 200, height: 20, valueBubble: 1, animated: 1, progress: 10 });
+            const still = LineProgressBar({ left: 20, top: 160, width: 200, height: 20, valueBubble: 1, progress: 10 });
+            await wait(50);
+            moving.setProgress(90);
+            still.setProgress(80);
+            const bubbleOf = function (text) {
+                return Array.from(document.querySelectorAll("[role=status]")).find(function (el) { return el.textContent === text; });
+            };
+            // WHY computed: the transform of the style is "none" at once (the end of the motion); the motion is in the computed one
+            const slideStart = getComputedStyle(bubbleOf("90%")).transform;
+            await wait(400);
+            const slideEnd = getComputedStyle(bubbleOf("90%")).transform;
+            const stillTransform = bubbleOf("80%").style.transform;
+            const isRight = slideStart.startsWith("matrix(") && slideEnd === "none" && stillTransform === "";
+            check("LineProgressBar: animated 1 slides its bubble to a new value (a transform), animated 0 writes no motion", isRight, [slideStart, slideEnd, stillTransform].join(" / "));
+            [moving, still].forEach(function (bar) { bar.remove(); });
+        });
+
         test("SelectTime in a removed container: its lists leave no window listener (basic.js v26.11.05)", async function () {
             const countResize = function () { return page._box._eventFuncList.filter(function (e) { return e.eventName === "resize"; }).length; };
             const before = countResize();
