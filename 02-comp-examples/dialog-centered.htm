@@ -23,17 +23,46 @@
 
     // Dialog (comp-m4), variant: "centered": an icon at the top, the texts in the middle, the buttons one under
     // the other. A layout the user drew, with the colors of the ozden package. The icon is in a light circle of its
-    // color.
+    // color; it is drawn in two tones and moves once when its dialog opens.
 
     const WORK_TIME = 1200; // ms: a job that takes time (the sample)
 
-    // The icons at the top: drawn with lines in the color of the style (currentColor)
-    const svgLines = function (body) {
-        return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + body + "<\/svg>";
-    };
-    const TRASH_ICON = svgLines('<path d="M4 7l16-2.5"/><path d="M10 5.5V3.8h4v1"/><path d="M6.5 8.5l1 11.5h9l1-11.5"/><path d="M10.5 11v6M13.5 11v6"/>');
-    const LOGOUT_ICON = svgLines('<path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/><path d="M10 16l-4-4 4-4"/><path d="M6 12h10"/>');
-    const CHECK_ICON = svgLines('<path d="M5 12.5l4.5 4.5L19 7.5"/>');
+    const MOTION_EASE = "cubic-bezier(0.2, 0.8, 0.2, 1)"; // a fast start, a soft stop
+
+    // THE ICONS AT THE TOP (the user, 2026-11-05: drawn again, the styles of 02-comp-examples/smart-button-alternatif.htm):
+    // a thing is two-tone (a big LIGHT shape with STRONG details), a state is a circle mark (a STRONG circle, a white
+    // mark). LIGHT and STRONG are filled in with the colors of the dialog (ICON_LOOKS).
+    // The bin: the lid and its handle, the bin, its two lines
+    const TRASH_ICON =
+        '<g class="top-icon-lid">' +
+            '<path d="M9.6 4.6V3.9a1.4 1.4 0 0 1 1.4-1.4h2a1.4 1.4 0 0 1 1.4 1.4v.7" fill="none" stroke="STRONG" stroke-width="2" stroke-linecap="round"/>' +
+            '<rect x="3.5" y="4.6" width="17" height="3" rx="1.5" fill="STRONG"/>' +
+        '<\/g>' +
+        '<path d="M5.2 9.2h13.6l-1.05 10.2a2.3 2.3 0 0 1-2.29 2.1H8.54a2.3 2.3 0 0 1-2.29-2.1z" fill="LIGHT"/>' +
+        '<path d="M10 12.4v5.4M14 12.4v5.4" fill="none" stroke="STRONG" stroke-width="2" stroke-linecap="round"/>';
+    // A door and the arrow that goes out of it
+    const LOGOUT_ICON =
+        '<rect x="3" y="2.5" width="13" height="19" rx="3" fill="LIGHT"/>' +
+        '<path class="top-icon-arrow" d="M9 12h11.5M17 8.3l3.7 3.7-3.7 3.7" fill="none" stroke="STRONG" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>';
+    // A circle mark: the check (pathLength 1: it is drawn from its start)
+    const SAVED_ICON =
+        '<circle class="top-icon-mark" cx="12" cy="12" r="11" fill="STRONG"/>' +
+        '<path class="top-icon-check" pathLength="1" d="M7.4 12.4l3.1 3.1 6.1-6.4" fill="none" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>';
+
+    // Each icon moves once when its dialog opens, after the card comes: the lid of the bin lifts and falls back, the
+    // arrow goes out, the circle grows in and its check is drawn. Nothing with reduced motion.
+    const ICON_MOTION_CSS = [
+        ".top-icon-lid, .top-icon-arrow, .top-icon-mark { transform-box: fill-box; }",
+        ".top-icon-lid { transform-origin: 100% 100%; animation: top-icon-lift 0.5s 0.2s ease-in-out both; }",
+        ".top-icon-arrow { animation: top-icon-go 0.25s 0.15s " + MOTION_EASE + " both; }",
+        ".top-icon-mark { transform-origin: 50% 50%; animation: top-icon-pop 0.25s 0.1s " + MOTION_EASE + " both; }",
+        ".top-icon-check { stroke-dasharray: 1; animation: top-icon-draw 0.25s 0.3s " + MOTION_EASE + " both; }",
+        "@keyframes top-icon-lift { 50% { transform: translateY(-1.5px) rotate(8deg); } }",
+        "@keyframes top-icon-go { from { opacity: 0; transform: translateX(-4px); } }",
+        "@keyframes top-icon-pop { from { opacity: 0; transform: scale(0.6); } }",
+        "@keyframes top-icon-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }",
+        "@media (prefers-reduced-motion: reduce) { .top-icon-lid, .top-icon-arrow, .top-icon-mark, .top-icon-check { animation: none; } }",
+    ].join("\n");
 
     // The yellow button (Delete, Log out): the hover a little darker, the text of the package (not the white of
     // danger); the same as the Delete of dialog.htm
@@ -44,20 +73,26 @@
         label: { textColor: SmartButton.styles.ozdenType1.label.textColor },
     };
 
-    // The colors of the icons at the top (the user, 2026-11-05: more colorful): a light circle of a tone of SmartButton
-    // and the icon in a deeper one. WHY deeper: the tone itself is only 1.5 - 2.3:1 on its light circle; these are 3.2:1.
+    // The colors of an icon at the top, three tones of a tone of SmartButton: the circle behind it, the LIGHT shape
+    // and the STRONG details. WHY STRONG this deep: the details read on the light shape and on the circle (2.6 - 4:1).
     const ICON_LOOKS = {
-        orange: { circle: "#F8E3DB", icon: "#D65926" }, // a delete (the tone of a delete; the ask of Delete is orange too)
-        yellow: { circle: "#FCF3D7", icon: "#A88009" }, // look first (the yellow button of Log out)
-        green: { circle: "#E2F2DC", icon: "#4E9435" }, // done
+        orange: { circle: "#FBEFEA", light: "#EDBAA5", strong: "#C4532A" }, // a delete (the ask of Delete is orange too)
+        yellow: { circle: "#FDF8E7", light: "#F5D77D", strong: "#9A7409" }, // look first (the yellow button of Log out)
+        green: { circle: "#EEF7EB", light: "#B6DEA9", strong: "#4A8F33" }, // done
     };
 
-    // The style of a dialog of this page: the color of its top icon and its own buttons
+    // An icon at the top in the colors of a look (an "<svg" text: the dialog puts it in its circle)
+    const createTopIcon = function (body, iconLookName) {
+        const look = ICON_LOOKS[iconLookName];
+        const colored = body.split("LIGHT").join(look.light).split("STRONG").join(look.strong);
+        return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">' + colored + "<\/svg>";
+    };
+
+    // The style of a dialog of this page: the circle of its top icon and its own buttons
     // (Cancel has the faint edge of ozdenType3: the default of Dialog since 2026-11-05)
     const getDialogStyle = function (iconLookName, buttons = {}) {
-        const look = ICON_LOOKS[iconLookName];
         return {
-            centered: { iconCircle: { color: look.circle }, icon: { color: look.icon } },
+            centered: { iconCircle: { color: ICON_LOOKS[iconLookName].circle } },
             buttons: buttons,
         };
     };
@@ -78,7 +113,7 @@
             variant: "centered",
             width: 420,
             style: getDialogStyle("orange", { primary: { style: YELLOW_BUTTON_STYLE } }),
-            topIconFile: TRASH_ICON,
+            topIconFile: createTopIcon(TRASH_ICON, "orange"),
             titleText: "Delete Account?",
             messageText: "Are you sure you want to delete your account?",
             buttons: [
@@ -101,7 +136,7 @@
     const openConfirm = async function () {
         const isSure = await Dialog.confirm({
             variant: "centered",
-            topIconFile: LOGOUT_ICON,
+            topIconFile: createTopIcon(LOGOUT_ICON, "yellow"),
             titleText: "Log out?",
             messageText: "You can log in again with your e-mail address.",
             confirmText: "Log out",
@@ -115,7 +150,7 @@
         await Dialog.alert({
             variant: "centered",
             style: getDialogStyle("green"),
-            topIconFile: CHECK_ICON,
+            topIconFile: createTopIcon(SAVED_ICON, "green"),
             titleText: "Saved",
             messageText: "Your changes are saved.",
         });
@@ -129,6 +164,7 @@
     const start = function () {
 
         page.color = "#F0F1EE";
+        basic.addCss("dialog-centered-icons", ICON_MOTION_CSS);
 
         VGroup({ align: "center", gap: 14 });
 
