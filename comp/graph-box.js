@@ -176,6 +176,7 @@ const GraphBoxDefaults = {
             fillOpacity: 0.1,
             gradientOpacity: 0.3, // At the top of a "gradient" fill
             dash: "5 5",
+            changeOpacity: 0.3, // animated: 1: where a line can not move (Safari), it comes from this opacity.
         },
         target: {
             width: 1.5,
@@ -1253,7 +1254,7 @@ const GraphBox = function (params = {}) {
             if (hasPoints || points.length === 1) {
                 points.forEach(function (point, pointPlace) {
                     const dot = addPoint(markLayer, point, seriesItem.color, _s.line.pointRadius);
-                    rememberMark("point", seriesKey, segment[pointPlace], dot, { point: point });
+                    rememberMark("point", seriesKey, segment[pointPlace], dot, { point: point, isOnLine: 1 });
                 });
             }
 
@@ -1790,7 +1791,7 @@ const GraphBox = function (params = {}) {
         if (shape.indexCount * _s.line.pointSpace > shape.radius * FULL_CIRCLE) return; // No room for the points
         seriesItem.points.forEach(function (point, index) {
             const dot = addPoint(markLayer, point, seriesItem.color, _s.line.pointRadius - 1);
-            rememberMark("point", seriesKey, index, dot, { point: point });
+            rememberMark("point", seriesKey, index, dot, { point: point, isOnLine: 1 });
         });
 
     };
@@ -2127,8 +2128,8 @@ const GraphBox = function (params = {}) {
     // THE MOTION OF A CHANGE:
     // WHY like this: Every drawing makes its shapes again. So a new shape is first put where the old one was, without a
     //     transition, and then its transition takes it to its real place. Only transform and opacity change, and the
-    //     "d" of a line: a line has no other way to change its form, and it does not move the layout of the page. (A
-    //     browser that can not move a "d" just shows the new line.)
+    //     "d" of a line: a line has no other way to change its form, and it does not move the layout of the page.
+    //     (Safari can not move a "d": there a line and its points come with a fade, together.)
 
     const isMotionOn = function () {
         if (box.animated != 1) return false;
@@ -2153,20 +2154,33 @@ const GraphBox = function (params = {}) {
     };
 
     // What a mark does: { shape, property, from, to }. null: it just stays.
+    const createFade = function (shape, fromOpacity) {
+        return { shape: shape, property: "opacity", from: String(fromOpacity), to: "1" };
+    };
+
     const createMove = function (mark, oldMark) {
+
         const shape = mark.shape;
-        if (!oldMark) return { shape: shape, property: "opacity", from: "0", to: "1" };
+        if (!oldMark) return createFade(shape, 0);
+
         // WHY a fade: The ends of an arc go on straight lines between their two places, so a moving slice loses its form.
-        if (mark.isSlice) return { shape: shape, property: "opacity", from: _s.pie.changeOpacity, to: "1" };
+        if (mark.isSlice) return createFade(shape, _s.pie.changeOpacity);
+
         if (mark.rect) return { shape: shape, property: "transform", from: getRectMatrix(mark.rect, oldMark.rect), to: "none" };
+
+        // WHY together: A point that slides away from a line that is already at its new place looks broken.
+        const isLineMark = (mark.isOnLine || !mark.point);
+        if (isLineMark && !GraphBox.canMovePaths()) return createFade(shape, _s.line.changeOpacity);
+
         if (mark.point) {
             const moveX = oldMark.point.x - mark.point.x;
             const moveY = oldMark.point.y - mark.point.y;
             return { shape: shape, property: "transform", from: "translate(" + moveX + "px, " + moveY + "px)", to: "none" };
         }
-        if (!GraphBox.canMovePaths()) return null;
+
         const from = toPathText(oldMark.shape.getAttribute("d"));
         return { shape: shape, property: "d", from: from, to: toPathText(shape.getAttribute("d")) };
+
     };
 
     const runMoves = function (moves) {

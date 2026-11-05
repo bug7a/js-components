@@ -3659,6 +3659,25 @@
             chart.remove();
         });
 
+        test("GraphBox: animated: where a line can not move, the line and its points fade together; a bar still moves", async function () {
+            const realCheck = GraphBox.canMovePaths;
+            GraphBox.canMovePaths = function () { return false; };
+            const motionsOf = function (shape) {
+                return shape.getAnimations().map(function (motion) { return motion.transitionProperty; }).join(",");
+            };
+            const chart = GraphBox({ width: 400, height: 240, type: "bar", animated: 1, labels: ["A", "B", "C"], datasets: [{ label: "Bars", data: [1, 2, 3] }, { label: "Line", type: "line", data: [3, 2, 1] }] });
+            chart.data.datasets[0].data = [3, 1, 2];
+            chart.data.datasets[1].data = [1, 3, 2];
+            chart.update();
+            const bar = chart.svg.querySelector('path[d*="Q"]');
+            const line = chart.svg.querySelector('path[fill="none"]');
+            const dot = chart.svg.querySelector("circle");
+            const results = [motionsOf(bar), motionsOf(line), motionsOf(dot)].join(" | ");
+            chart.remove();
+            GraphBox.canMovePaths = realCheck;
+            check("GraphBox: animated: where a line can not move, the line and its points fade together; a bar still moves", results === "transform | opacity | opacity", results);
+        });
+
         test("GraphBox: setTheme() changes the look, setStyle() keeps the other keys", async function () {
             const chart = GraphBox({ width: 400, height: 240, type: "bar", titleText: "Title", labels: ["A"], values: [1] });
             const lightColor = chart.color;
