@@ -74,6 +74,10 @@
         <script src="../comp/chart-box/chart-4.5.1.umd.min.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/chart-box.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/graph-box.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/log-view.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/image-view.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/menu-bar.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/status-bar.js" type="text/javascript" charset="utf-8"></script>
 
         <script>
         "use strict";
@@ -3424,6 +3428,898 @@
         });
 
         // *** RUN
+
+        // *** CONTEXT MENU for a program (comp/context-menu.js)
+
+        const openMenuRows = function (menu) {
+            return Array.from(menu.elem.querySelectorAll('[role="menuitem"], [role="menuitemcheckbox"]'));
+        };
+
+        test("ContextMenu: a shortcut stands at the end of its row, a check mark follows setItemChecked", async function () {
+            const menu = ContextMenu({ items: [
+                { text: "Save", key: "save", shortcut: "Ctrl+S" },
+                { text: "Wrap", key: "wrap", checked: 1 },
+                { text: "Open", key: "open" },
+            ] });
+            menu.openAt(40, 40);
+            await wait(30);
+            const shortcut = findByText("Ctrl+S", menu.elem);
+            const name = findByText("Save", menu.elem);
+            const rows = openMenuRows(menu);
+            const isAtEnd = !!shortcut && shortcut.getBoundingClientRect().left > name.getBoundingClientRect().right;
+            const wrapRow = rows[1];
+            const isCheckedAtFirst = wrapRow.getAttribute("aria-checked") === "true" && !!wrapRow.querySelector("svg");
+            menu.setItemChecked("wrap", 0);
+            const isOffNow = wrapRow.getAttribute("aria-checked") === "false" && !wrapRow.querySelector("svg");
+            const textLeft = function (text) { return findByText(text, menu.elem).getBoundingClientRect().left; };
+            const isSameStart = textLeft("Wrap") === textLeft("Open");
+            menu.setItemChecked("open", 1); // not a check item: nothing changes
+            const isPlainStill = !rows[2].querySelector("svg");
+            check("ContextMenu: a shortcut stands at the end of its row, a check mark follows setItemChecked",
+                isAtEnd && isCheckedAtFirst && isOffNow && isSameStart && isPlainStill, [isAtEnd, isCheckedAtFirst, isOffNow, isSameStart, isPlainStill].join(" "));
+            menu.remove();
+        });
+
+        test("ContextMenu: openBelow puts the menu under the object, and over it when there is no room", async function () {
+            const opener = Box({ left: 40, top: 40, width: 100, height: 30 });
+            const menu = ContextMenu({ items: ["One", "Two"] });
+            menu.openBelow(opener);
+            const isUnder = menu.elem.offsetTop === 70 && menu.elem.offsetLeft === 40 && menu.source === opener;
+            menu.close();
+            opener.top = page.height - 40;
+            menu.openBelow(opener);
+            const rect = menu.elem.getBoundingClientRect();
+            const isOver = rect.bottom <= opener.elem.getBoundingClientRect().top + 1;
+            check("ContextMenu: openBelow puts the menu under the object, and over it when there is no room", isUnder && isOver, isUnder + " " + isOver);
+            menu.remove();
+            opener.remove();
+        });
+
+        test("ContextMenu: the side keys go to onSideKey only when no submenu takes them", async function () {
+            const sides = [];
+            const menu = ContextMenu({
+                items: [{ text: "Plain", key: "plain" }, { text: "More", items: [{ text: "Inner", key: "inner" }] }],
+                onSideKey: function (self, direction) { sides.push(direction); },
+            });
+            menu.openAt(40, 40);
+            await wait(30);
+            key(document.body, "keydown", "ArrowDown"); // Plain
+            key(document.body, "keydown", "ArrowRight");
+            key(document.body, "keydown", "ArrowLeft");
+            const fromPlain = sides.join(",");
+            key(document.body, "keydown", "ArrowDown"); // More
+            key(document.body, "keydown", "ArrowRight"); // opens the submenu
+            const countAfterOpen = sides.length;
+            key(document.body, "keydown", "ArrowRight"); // Inner has no submenu: to the first menu
+            const fromInner = sides[sides.length - 1];
+            key(document.body, "keydown", "ArrowLeft"); // closes only the submenu
+            const countAfterClose = sides.length;
+            check("ContextMenu: the side keys go to onSideKey only when no submenu takes them",
+                fromPlain === "1,-1" && countAfterOpen === 2 && fromInner === 1 && countAfterClose === 3 && menu.isOpen() == 1,
+                [fromPlain, countAfterOpen, fromInner, countAfterClose, menu.isOpen()].join(" "));
+            menu.remove();
+        });
+
+        // *** MENU BAR (comp/menu-bar.js)
+
+        const mouseClick = function (element) {
+            element.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, cancelable: true, button: 0, pointerId: 1 }));
+            element.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, detail: 1 }));
+        };
+
+        const makeTestMenus = function () {
+            return [
+                { text: "File", key: "file", items: [
+                    { text: "Save", key: "save", shortcut: "Ctrl+S" },
+                    { text: "Quit", key: "quit", shortcut: "Ctrl+Q", enabled: 0 },
+                    { text: "Recent", key: "recent", items: [{ text: "a.txt", key: "a", shortcut: "Ctrl+Shift+A" }, { text: "b.txt", key: "b" }] },
+                ] },
+                { text: "Off", key: "off", enabled: 0, items: ["Nothing"] },
+                { text: "Edit", key: "edit", items: [{ text: "Copy", key: "copy", shortcut: "Ctrl+C" }, { text: "Reload", key: "reload", shortcut: "F5" }] },
+                { text: "View", key: "view", items: [{ text: "Wrap", key: "wrap", checked: 1 }, { text: "Deep", items: [{ text: "Inner", key: "inner", checked: 0 }] }] },
+            ];
+        };
+
+        test("MenuBar: a click opens a menu under its title, a second click closes it, a third opens it again", async function () {
+            const bar = MenuBar({ menus: makeTestMenus() });
+            await wait(30);
+            const entry = bar.menuList[0];
+            mouseClick(entry.title.elem);
+            const opened = entry.contextMenu.isOpen() == 1;
+            const isUnder = entry.contextMenu.elem.getBoundingClientRect().top >= entry.title.elem.getBoundingClientRect().bottom - 1;
+            const isExpanded = entry.title.elem.getAttribute("aria-expanded") === "true";
+            mouseClick(entry.title.elem);
+            const closed = entry.contextMenu.isOpen() == 0;
+            mouseClick(entry.title.elem);
+            const openedAgain = entry.contextMenu.isOpen() == 1;
+            check("MenuBar: a click opens a menu under its title, a second click closes it, a third opens it again",
+                opened && isUnder && isExpanded && closed && openedAgain, [opened, isUnder, isExpanded, closed, openedAgain].join(" "));
+            bar.remove();
+        });
+
+        test("MenuBar: the mouse on another title opens that one only while a menu is open", async function () {
+            const bar = MenuBar({ menus: makeTestMenus() });
+            await wait(30);
+            const file = bar.menuList[0];
+            const edit = bar.menuList[2];
+            edit.title.elem.dispatchEvent(new MouseEvent("mouseenter"));
+            const staysClosed = edit.contextMenu.isOpen() == 0;
+            mouseClick(file.title.elem);
+            edit.title.elem.dispatchEvent(new MouseEvent("mouseenter"));
+            const switched = edit.contextMenu.isOpen() == 1 && file.contextMenu.isOpen() == 0;
+            bar.menuList[1].title.elem.dispatchEvent(new MouseEvent("mouseenter")); // disabled
+            const stillEdit = edit.contextMenu.isOpen() == 1 && bar.menuList[1].contextMenu.isOpen() == 0;
+            check("MenuBar: the mouse on another title opens that one only while a menu is open", staysClosed && switched && stillEdit, [staysClosed, switched, stillEdit].join(" "));
+            bar.remove();
+        });
+
+        test("MenuBar: the arrow keys go between the menus (a disabled one is passed), Escape gives the focus back", async function () {
+            const bar = MenuBar({ menus: makeTestMenus() });
+            await wait(30);
+            const file = bar.menuList[0];
+            const edit = bar.menuList[2];
+            const view = bar.menuList[3];
+            file.title.elem.focus();
+            key(file.title.elem, "keydown", "ArrowDown");
+            const opened = file.contextMenu.isOpen() == 1 && file.contextMenu.hasActive() == 1;
+            key(document.body, "keydown", "ArrowRight");
+            const passedDisabled = edit.contextMenu.isOpen() == 1 && file.contextMenu.isOpen() == 0 && edit.contextMenu.hasActive() == 1;
+            key(document.body, "keydown", "ArrowRight");
+            const onView = view.contextMenu.isOpen() == 1;
+            key(document.body, "keydown", "ArrowRight");
+            const wrapped = file.contextMenu.isOpen() == 1;
+            key(document.body, "keydown", "Escape");
+            const closed = file.contextMenu.isOpen() == 0;
+            const hasFocus = document.activeElement === file.title.elem;
+            key(file.title.elem, "keydown", "ArrowRight");
+            const movedFocus = document.activeElement === edit.title.elem && edit.title.elem.tabIndex === 0 && file.title.elem.tabIndex === -1;
+            check("MenuBar: the arrow keys go between the menus (a disabled one is passed), Escape gives the focus back",
+                opened && passedDisabled && onView && wrapped && closed && hasFocus && movedFocus,
+                [opened, passedDisabled, onView, wrapped, closed, hasFocus, movedFocus].join(" "));
+            bar.remove();
+        });
+
+        test("MenuBar: Enter on a title opens it (also after a mouse click on an item of it)", async function () {
+            const bar = MenuBar({ menus: makeTestMenus() });
+            await wait(30);
+            const file = bar.menuList[0];
+            mouseClick(file.title.elem);
+            // The press on an item is inside the menu: the menu stays open until its click.
+            file.contextMenu.elem.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0, pointerId: 1 }));
+            file.contextMenu.clickItem(0);
+            const closed = file.contextMenu.isOpen() == 0;
+            file.title.elem.click(); // WHY: Enter and Space make a click with detail 0.
+            const opened = file.contextMenu.isOpen() == 1 && file.contextMenu.hasActive() == 1;
+            check("MenuBar: Enter on a title opens it (also after a mouse click on an item of it)", closed && opened, closed + " " + opened);
+            bar.remove();
+        });
+
+        test("MenuBar: an item gives onClick its item and its menu; a disabled one does not run; the list of the page does not change", async function () {
+            const clicks = [];
+            let itemClicks = 0;
+            const menus = makeTestMenus();
+            menus[0].items[0].onClick = function (self, item, menu) { itemClicks += (self === bar && item.key === "save" && menu.key === "file") ? 1 : 0; };
+            const bar = MenuBar({ menus: menus, onClick: function (self, item, menu) { clicks.push(menu.key + ">" + item.key); } });
+            await wait(30);
+            const file = bar.menuList[0];
+            file.title.elem.click();
+            file.contextMenu.clickItem(0); // Save
+            file.title.elem.click();
+            file.contextMenu.clickItem(1); // Quit: disabled
+            const isOpenAfterDisabled = file.contextMenu.isOpen() == 1;
+            file.contextMenu.clickItem(2); // Recent: opens its submenu
+            await wait(10);
+            const innerRow = findByText("a.txt");
+            innerRow.parentElement.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+            bar.setItemEnabled("quit", 1);
+            bar.setItemChecked("wrap", 0);
+            const isListSame = menus[0].items[1].enabled === 0 && menus[3].items[0].checked === 1;
+            check("MenuBar: an item gives onClick its item and its menu; a disabled one does not run; the list of the page does not change",
+                clicks.join(" ") === "file>save file>a" && itemClicks === 1 && isOpenAfterDisabled && file.contextMenu.isOpen() == 0 && isListSame,
+                [clicks.join(" "), itemClicks, isOpenAfterDisabled, file.contextMenu.isOpen(), isListSame].join(" | "));
+            bar.remove();
+        });
+
+        test("MenuBar: a shortcut runs its item (Ctrl and Cmd, a submenu too), not when it is disabled", async function () {
+            const clicks = [];
+            const bar = MenuBar({ menus: makeTestMenus(), onClick: function (self, item) { clicks.push(item.key); } });
+            await wait(30);
+            key(document.body, "keydown", "s", { ctrlKey: true });
+            key(document.body, "keydown", "s", { metaKey: true });
+            key(document.body, "keydown", "S", { ctrlKey: true, shiftKey: true }); // not Save: it has no shift
+            key(document.body, "keydown", "A", { ctrlKey: true, shiftKey: true }); // in a submenu
+            key(document.body, "keydown", "q", { ctrlKey: true }); // disabled
+            key(document.body, "keydown", "F5");
+            key(document.body, "keydown", "s"); // no Ctrl
+            check("MenuBar: a shortcut runs its item (Ctrl and Cmd, a submenu too), not when it is disabled",
+                clicks.join(" ") === "save save a reload", clicks.join(" "));
+            bar.remove();
+        });
+
+        test("MenuBar: in a text field Ctrl+C stays with the field and a key without Ctrl too, Ctrl+S runs; a selected text is copied by the browser; nothing runs under a Dialog", async function () {
+            const clicks = [];
+            const bar = MenuBar({ menus: makeTestMenus(), onClick: function (self, item) { clicks.push(item.key); } });
+            const field = Input({ left: 10, top: 60, width: 100, height: 30 });
+            await wait(30);
+            field.elem.focus();
+            key(field.inputElement, "keydown", "c", { ctrlKey: true });
+            key(field.inputElement, "keydown", "F5");
+            key(field.inputElement, "keydown", "s", { ctrlKey: true });
+            const inField = clicks.join(" ");
+            clicks.length = 0;
+            field.elem.blur();
+            key(document.body, "keydown", "c", { ctrlKey: true });
+            const copyRuns = clicks.join(" ");
+            clicks.length = 0;
+            const selected = Label({ left: 10, top: 100, text: "A text", selectable: 1 });
+            window.getSelection().selectAllChildren(selected.elem);
+            const copyEvent = new KeyboardEvent("keydown", { key: "c", ctrlKey: true, bubbles: true, cancelable: true });
+            document.body.dispatchEvent(copyEvent);
+            const leftToBrowser = clicks.length === 0 && !copyEvent.defaultPrevented;
+            window.getSelection().removeAllRanges();
+            selected.remove();
+            const dialog = Dialog({ removeOnClose: 1, buttons: [] });
+            await wait(30);
+            key(document.body, "keydown", "s", { ctrlKey: true });
+            const underDialog = clicks.length;
+            dialog.remove();
+            await wait(30);
+            key(document.body, "keydown", "s", { ctrlKey: true });
+            const afterDialog = clicks.join(" ");
+            check("MenuBar: in a text field Ctrl+C stays with the field and a key without Ctrl too, Ctrl+S runs; a selected text is copied by the browser; nothing runs under a Dialog",
+                inField === "save" && copyRuns === "copy" && leftToBrowser && underDialog === 0 && afterDialog === "save",
+                [inField, copyRuns, leftToBrowser, underDialog, afterDialog].join(" | "));
+            field.remove();
+            bar.remove();
+        });
+
+        test("MenuBar: setItemChecked and setItemEnabled reach the items of a menu and of a submenu", async function () {
+            const clicks = [];
+            const bar = MenuBar({ menus: makeTestMenus(), onClick: function (self, item) { clicks.push(item.key); } });
+            await wait(30);
+            const view = bar.menuList[3];
+            const file = bar.menuList[0];
+            bar.setItemChecked("wrap", 0);
+            view.title.elem.click();
+            const wrapRow = openMenuRows(view.contextMenu)[0];
+            const isOff = wrapRow.getAttribute("aria-checked") === "false";
+            view.contextMenu.close();
+            bar.setItemChecked("inner", 1);
+            view.title.elem.click();
+            view.contextMenu.clickItem(1); // Deep: its submenu
+            await wait(10);
+            const isInnerOn = !!findByText("Inner") && findByText("Inner").parentElement.getAttribute("aria-checked") === "true";
+            view.contextMenu.close();
+            bar.setItemEnabled("quit", 1);
+            key(document.body, "keydown", "q", { ctrlKey: true });
+            const ranWhenEnabled = clicks.join(" ");
+            bar.setItemEnabled("save", 0);
+            file.title.elem.click();
+            const isSaveOff = openMenuRows(file.contextMenu)[0].getAttribute("aria-disabled") === "true";
+            file.contextMenu.close();
+            key(document.body, "keydown", "s", { ctrlKey: true });
+            check("MenuBar: setItemChecked and setItemEnabled reach the items of a menu and of a submenu",
+                isOff && isInnerOn && ranWhenEnabled === "quit" && isSaveOff && clicks.length === 1,
+                [isOff, isInnerOn, ranWhenEnabled, isSaveOff, clicks.length].join(" "));
+            bar.remove();
+        });
+
+        test("MenuBar: an item can remove the bar in its onClick (a click and a shortcut); a held key runs a shortcut once", async function () {
+            let bar = null;
+            let runs = 0;
+            let removals = 0;
+            const uncaughtBefore = uncaught.length;
+            const makeBar = function () {
+                bar = MenuBar({
+                    menus: [{ text: "View", items: [{ text: "Dark", key: "dark", shortcut: "Ctrl+D", onClick: function () { removals++; bar.remove(); } }] }],
+                    onClick: function () { runs++; },
+                });
+            };
+            makeBar();
+            await wait(10);
+            bar.menuList[0].title.elem.click();
+            let errorText = "";
+            try { bar.menuList[0].contextMenu.clickItem(0); } catch (error) { errorText = error.message; }
+            const afterClick = removals === 1 && bar.isRemoved && !document.body.contains(bar.elem);
+            makeBar();
+            await wait(10);
+            key(document.body, "keydown", "d", { ctrlKey: true });
+            const afterShortcut = removals === 2 && bar.isRemoved;
+            await wait(10);
+            bar = MenuBar({ menus: [{ text: "Tools", items: [{ text: "Job", key: "job", shortcut: "F5" }] }], onClick: function () { runs++; } });
+            await wait(10);
+            const held = new KeyboardEvent("keydown", { key: "F5", repeat: true, bubbles: true, cancelable: true });
+            document.body.dispatchEvent(held);
+            const isHeldStopped = runs === 0 && held.defaultPrevented;
+            key(document.body, "keydown", "F5");
+            const isRunOnce = runs === 1;
+            check("MenuBar: an item can remove the bar in its onClick (a click and a shortcut); a held key runs a shortcut once",
+                !errorText && afterClick && afterShortcut && isHeldStopped && isRunOnce && uncaught.length === uncaughtBefore,
+                [errorText, afterClick, afterShortcut, isHeldStopped, isRunOnce, runs].join(" | "));
+            bar.remove();
+        });
+
+        test("MenuBar: remove() with an open menu takes its menus from the page; setMenus() makes new ones", async function () {
+            const bar = MenuBar({ menus: makeTestMenus() });
+            await wait(30);
+            const oldMenu = bar.menuList[0].contextMenu;
+            bar.setMenus([{ text: "One", items: ["A"] }]);
+            const oldIsGone = !document.body.contains(oldMenu.elem);
+            const newCount = bar.menuList.length;
+            const titleText = bar.menuList[0].title.elem.textContent;
+            const newMenu = bar.menuList[0].contextMenu;
+            bar.menuList[0].title.elem.click();
+            bar.remove();
+            const isGone = !document.body.contains(newMenu.elem) && !document.body.contains(bar.elem);
+            let isSafeTwice = true;
+            try { bar.remove(); } catch (error) { isSafeTwice = false; }
+            check("MenuBar: remove() with an open menu takes its menus from the page; setMenus() makes new ones",
+                oldIsGone && newCount === 1 && titleText === "One" && isGone && isSafeTwice, [oldIsGone, newCount, titleText, isGone, isSafeTwice].join(" "));
+        });
+
+        test("MenuBar: the text of a shortcut, and how it is read", async function () {
+            const shown = MenuBar.shortcutText("Ctrl+Shift+S");
+            const isShownRight = (MenuBar.isMac()) ? (shown === "⇧⌘S") : (shown === "Ctrl+Shift+S");
+            const parsed = MenuBar.parseShortcut("Ctrl+Shift+S");
+            const isParsed = parsed.ctrl && parsed.shift && !parsed.alt && parsed.key === "s";
+            const space = MenuBar.isShortcutEvent(MenuBar.parseShortcut("Ctrl+Space"), new KeyboardEvent("keydown", { key: " ", ctrlKey: true }));
+            check("MenuBar: the text of a shortcut, and how it is read", isShownRight && isParsed && space, [shown, isParsed, space].join(" "));
+        });
+
+        // *** STATUS BAR (comp/status-bar.js)
+
+        test("StatusBar: a message with a time goes back to the lasting one, a new message stops the old time", async function () {
+            const bar = StatusBar({ messageText: "Ready" });
+            bar.setMessage("Saved", "success", 40);
+            const during = bar.lblMessage.plainText + (bar.dot.elem.style.display !== "none" ? " dot" : "");
+            await wait(90);
+            const after = bar.lblMessage.plainText + " " + bar.messageTone + (bar.dot.elem.style.display === "none" ? "no dot" : "");
+            bar.setMessage("A", "", 40);
+            bar.setMessage("B");
+            await wait(90);
+            const lasting = bar.lblMessage.plainText;
+            bar.setMessage("C", "", 40);
+            bar.setMessage("D", "", 400);
+            await wait(90);
+            const newer = bar.lblMessage.plainText;
+            check("StatusBar: a message with a time goes back to the lasting one, a new message stops the old time",
+                during === "Saved dot" && after === "Ready no dot" && lasting === "B" && newer === "D", [during, after, lasting, newer].join(" | "));
+            bar.remove();
+        });
+
+        test("StatusBar: a part with onClick is a button, the others are texts; a text is never HTML", async function () {
+            let clicks = 0;
+            const bar = StatusBar({
+                items: [
+                    "UTF-8",
+                    { key: "zoom", text: "100%", onClick: function (self, part) { clicks += (self === bar && part.key === "zoom") ? 1 : 0; } },
+                    { key: "plain", text: "<b>x</b>" },
+                    { key: "icon", text: "<b>y</b>", icon: "<svg></svg>" },
+                ],
+            });
+            await wait(30);
+            const parts = bar.partList;
+            const isRightKind = parts[0].obj.elem.tagName === "DIV" && parts[1].obj.elem.tagName === "BUTTON";
+            parts[1].obj.elem.click();
+            parts[0].obj.elem.click();
+            bar.setItemText("zoom", "125%");
+            const isChanged = parts[1].obj.elem.textContent === "125%" && bar.getItem("zoom").text === "125%";
+            const isPlain = !parts[2].obj.elem.querySelector("b") && parts[2].obj.elem.textContent === "<b>x</b>";
+            const isPlainWithIcon = !parts[3].obj.elem.querySelector("b") && !!parts[3].obj.elem.querySelector("svg");
+            bar.setItemVisible("zoom", 0);
+            const isHidden = parts[1].obj.elem.getClientRects().length === 0;
+            bar.setItemVisible("zoom", 1);
+            const isBack = getComputedStyle(parts[1].obj.elem).display.includes("flex");
+            check("StatusBar: a part with onClick is a button, the others are texts; a text is never HTML",
+                isRightKind && clicks === 1 && isChanged && isPlain && isPlainWithIcon && isHidden && isBack,
+                [isRightKind, clicks, isChanged, isPlain, isPlainWithIcon, isHidden, isBack].join(" "));
+            bar.remove();
+        });
+
+        test("StatusBar: setBusy shows the circle instead of the dot of the tone", async function () {
+            const bar = StatusBar({ messageText: "Saved", messageTone: "success" });
+            const isShown = function (obj) { return obj.elem.getClientRects().length > 0; };
+            const atFirst = !isShown(bar.spinner) && isShown(bar.dot);
+            bar.setBusy(1);
+            const whenBusy = isShown(bar.spinner) && !isShown(bar.dot) && bar.busy === 1;
+            bar.setBusy(0);
+            const afterBusy = !isShown(bar.spinner) && isShown(bar.dot);
+            check("StatusBar: setBusy shows the circle instead of the dot of the tone", atFirst && whenBusy && afterBusy, [atFirst, whenBusy, afterBusy].join(" "));
+            bar.remove();
+        });
+
+        test("StatusBar: it stands at the bottom of a Box and in the column of a VGroup; a long message ends with ... and the parts stay", async function () {
+            const holder = startBox({ left: 0, top: 0, width: 300, height: 200 });
+                const bar = StatusBar({ messageText: "A very long message that does not fit in this narrow bar at all", items: ["3 files", "UTF-8"] });
+            endBox();
+            await wait(30);
+            const isAtBottom = bar.elem.getBoundingClientRect().bottom === holder.elem.getBoundingClientRect().bottom;
+            const message = bar.lblMessage.elem;
+            const isCut = message.scrollWidth > message.clientWidth;
+            const lastPart = bar.partList[1].obj.elem.getBoundingClientRect();
+            const isPartIn = lastPart.right <= holder.elem.getBoundingClientRect().right && lastPart.width > 10;
+            holder.remove();
+            const column = VGroup({ left: 0, top: 0, width: 300, height: 200, gap: 0 });
+                const first = Box({ width: "100%", height: 50 });
+                const columnBar = StatusBar({ messageText: "x" });
+            endGroup();
+            await wait(30);
+            const isInColumn = columnBar.elem.getBoundingClientRect().top === first.elem.getBoundingClientRect().bottom;
+            column.remove();
+            const givenTop = StatusBar({ top: 10, messageText: "x" });
+            const keepsTop = givenTop.elem.getBoundingClientRect().top === page.elem.getBoundingClientRect().top + 10;
+            givenTop.remove();
+            check("StatusBar: it stands at the bottom of a Box and in the column of a VGroup; a long message ends with ... and the parts stay",
+                isAtBottom && isCut && isPartIn && isInColumn && keepsTop, [isAtBottom, isCut, isPartIn, isInColumn, keepsTop].join(" "));
+        });
+
+        // *** LOG VIEW (comp/log-view.js)
+
+        const logRows = function (log) {
+            return Array.from(log.lineGroup.elem.children);
+        };
+
+        const isLogAtEnd = function (log) {
+            const elem = log.scrollArea.elem;
+            return elem.scrollHeight - elem.scrollTop - elem.clientHeight <= 4;
+        };
+
+        // WHY the event by hand: a tab in the background does not send it on time.
+        const scrollLog = function (log, top) {
+            log.scrollArea.elem.scrollTop = top;
+            log.scrollArea.elem.dispatchEvent(new Event("scroll"));
+        };
+
+        test("LogView: a text is shown as a text, a text of many lines is many rows, its last end of line is no row", async function () {
+            const log = LogView({ left: 0, top: 0, width: 500, height: 200, showTime: 0, showLevel: 0 });
+            log.addLine("<b>bold</b>");
+            log.addLine("one\ntwo\n");
+            log.addLine("carriage\r\nreturn");
+            log.addLine("   spaces stay");
+            await wait(30);
+            const rows = logRows(log);
+            const texts = rows.map(function (row) { return row.textContent; }).join("|");
+            const hasNoElement = !log.lineGroup.elem.querySelector("b");
+            const keepsSpaces = getComputedStyle(rows[5].firstChild.parentElement).whiteSpace === "pre-wrap";
+            check("LogView: a text is shown as a text, a text of many lines is many rows, its last end of line is no row",
+                texts === "<b>bold</b>|one|two|carriage|return|   spaces stay" && hasNoElement && keepsSpaces, texts);
+            log.remove();
+        });
+
+        test("LogView: its time, the name of its level and a long line that wraps under its own text", async function () {
+            const log = LogView({ left: 0, top: 0, width: 300, height: 200, lines: [
+                { text: "Old line", level: "warn", time: "01:02:03" },
+                "A long line, long enough to wrap in this narrow view, and then to wrap again",
+            ] });
+            const rows = logRows(log);
+            const first = rows[0].textContent;
+            const hasTimeNow = /^\d\d:\d\d:\d\d INFO  A long/.test(rows[1].textContent);
+            const wraps = rows[1].offsetHeight > rows[0].offsetHeight;
+            const indentOfFirst = parseFloat(getComputedStyle(rows[1]).textIndent);
+            const paddingOfLong = parseFloat(getComputedStyle(rows[1]).paddingLeft);
+            const hangs = indentOfFirst < 0 && paddingOfLong > 40;
+            log.setShowTime(0);
+            log.setShowLevel(0);
+            const noPrefix = rows[0].textContent === "Old line" && parseFloat(getComputedStyle(rows[0]).textIndent) === 0;
+            check("LogView: its time, the name of its level and a long line that wraps under its own text",
+                first === "01:02:03 WARN  Old line" && hasTimeNow && wraps && hangs && noPrefix, [first, hasTimeNow, wraps, hangs, noPrefix].join(" | "));
+            log.remove();
+        });
+
+        test("LogView: it follows the last line; a scroll up holds the view and counts the new lines; its button goes back", async function () {
+            const log = LogView({ left: 0, top: 0, width: 400, height: 120 });
+            for (let i = 0; i < 50; i++) log.info("Line " + i);
+            await wait(30);
+            const followed = isLogAtEnd(log);
+            scrollLog(log, 0);
+            log.info("x");
+            log.warn("y");
+            await wait(30);
+            const held = log.scrollArea.elem.scrollTop === 0;
+            const buttonText = log.btnNewLines.elem.textContent;
+            const buttonShown = log.btnNewLines.elem.getClientRects().length > 0;
+            log.btnNewLines.elem.click();
+            const wentBack = isLogAtEnd(log) && log.btnNewLines.elem.getClientRects().length === 0;
+            log.info("z");
+            await wait(30);
+            const followsAgain = isLogAtEnd(log);
+            scrollLog(log, 0);
+            log.info("w");
+            await wait(30);
+            scrollLog(log, log.scrollArea.elem.scrollHeight); // the reader scrolls to the end
+            const buttonGoes = log.btnNewLines.elem.getClientRects().length === 0;
+            check("LogView: it follows the last line; a scroll up holds the view and counts the new lines; its button goes back",
+                followed && held && buttonText === "↓ 2 new" && buttonShown && wentBack && followsAgain && buttonGoes,
+                [followed, held, buttonText, buttonShown, wentBack, followsAgain, buttonGoes].join(" "));
+            log.remove();
+        });
+
+        test("LogView: autoScroll: 0 stays where it is, with no button; setAutoScroll(1) goes to the end", async function () {
+            const log = LogView({ left: 0, top: 0, width: 400, height: 120, autoScroll: 0 });
+            for (let i = 0; i < 50; i++) log.info("Line " + i);
+            await wait(30);
+            const stays = log.scrollArea.elem.scrollTop === 0;
+            scrollLog(log, 10);
+            log.info("x");
+            await wait(30);
+            const hasNoButton = log.btnNewLines.elem.getClientRects().length === 0;
+            log.setAutoScroll(1);
+            const atEnd = isLogAtEnd(log);
+            check("LogView: autoScroll: 0 stays where it is, with no button; setAutoScroll(1) goes to the end", stays && hasNoButton && atEnd, [stays, hasNoButton, atEnd].join(" "));
+            log.remove();
+        });
+
+        test("LogView: maxLines drops the oldest lines, and the lines being read stay in place", async function () {
+            const log = LogView({ left: 0, top: 0, width: 400, height: 120, maxLines: 40 });
+            for (let i = 1; i <= 60; i++) log.info("Line " + i);
+            await wait(30);
+            const rows = logRows(log);
+            const isCut = rows.length === 40 && log.lines.length === 40 && rows[0].textContent.includes("Line 21");
+            scrollLog(log, 300);
+            const row = logRows(log)[25];
+            const topBefore = row.getBoundingClientRect().top;
+            for (let i = 61; i <= 65; i++) log.info("Line " + i);
+            await wait(30);
+            const topAfter = row.getBoundingClientRect().top;
+            const isInPlace = Math.abs(topAfter - topBefore) <= 1 && logRows(log)[0].textContent.includes("Line 26");
+            log.setMaxLines(10);
+            const isCutAgain = log.lines.length === 10 && logRows(log).length === 10;
+            check("LogView: maxLines drops the oldest lines, and the lines being read stay in place", isCut && isInPlace && isCutAgain, [isCut, topBefore, topAfter, isCutAgain].join(" "));
+            log.remove();
+        });
+
+        test("LogView: the lines that come at once are drawn together, and only the last maxLines of them", async function () {
+            const log = LogView({ left: 0, top: 0, width: 400, height: 120, maxLines: 100 });
+            for (let i = 1; i <= 20000; i++) log.info("Line " + i);
+            const notDrawnYet = logRows(log).length === 0;
+            await wait(30);
+            const rows = logRows(log);
+            const isDrawn = rows.length === 100 && rows[99].textContent.includes("Line 20000") && isLogAtEnd(log);
+            check("LogView: the lines that come at once are drawn together, and only the last maxLines of them", notDrawnYet && isDrawn, notDrawnYet + " " + rows.length);
+            log.remove();
+        });
+
+        test("LogView: a selected text holds the view; setLevels shows only those levels; clearLines shows the empty text", async function () {
+            const log = LogView({ left: 0, top: 0, width: 400, height: 120 });
+            const isEmptyAtFirst = log.lblEmpty.elem.getClientRects().length > 0;
+            for (let i = 0; i < 30; i++) log.info("Line " + i);
+            log.error("Bad");
+            log.warn("Careful");
+            await wait(30);
+            const hidesEmpty = log.lblEmpty.elem.getClientRects().length === 0;
+            const selection = window.getSelection();
+            selection.selectAllChildren(logRows(log)[5]);
+            scrollLog(log, 100);
+            scrollLog(log, log.scrollArea.elem.scrollHeight);
+            const topBefore = log.scrollArea.elem.scrollTop;
+            log.info("New");
+            await wait(30);
+            const heldBySelection = log.scrollArea.elem.scrollTop === topBefore;
+            selection.removeAllRanges();
+            log.info("Newer");
+            await wait(30);
+            const freeAgain = isLogAtEnd(log) && log.scrollArea.elem.scrollTop > topBefore;
+            log.setLevels(["warn", "error"]);
+            const shown = logRows(log).filter(function (row) { return row.getClientRects().length > 0; }).length;
+            const text = log.getText().replace(/\d\d:\d\d:\d\d /g, "");
+            log.setLevels(["debug"]);
+            const emptyWhenNoneShown = log.lblEmpty.elem.getClientRects().length > 0;
+            log.setLevels([]);
+            log.clearLines();
+            const isCleared = log.lines.length === 0 && logRows(log).length === 0 && log.lblEmpty.elem.getClientRects().length > 0;
+            check("LogView: a selected text holds the view; setLevels shows only those levels; clearLines shows the empty text",
+                isEmptyAtFirst && hidesEmpty && heldBySelection && freeAgain && shown === 2 && text === "ERROR Bad\nWARN  Careful" && emptyWhenNoneShown && isCleared,
+                [isEmptyAtFirst, hidesEmpty, heldBySelection, freeAgain, shown, text, emptyWhenNoneShown, isCleared].join(" | "));
+            log.remove();
+        });
+
+        test("LogView: setWrapLines(0) keeps a long line on one row, and the view scrolls sideways", async function () {
+            const log = LogView({ left: 0, top: 0, width: 200, height: 120, lines: ["A very long line that does not fit in this narrow view at all, not at all"] });
+            const row = logRows(log)[0];
+            const wrappedHeight = row.offsetHeight;
+            const fromTheStart = LogView({ left: 0, top: 200, width: 200, height: 120, wrapLines: 0, lines: ["A very long line that does not fit in this narrow view at all, not at all"] });
+            const isOneLineFromStart = logRows(fromTheStart)[0].offsetHeight < wrappedHeight && fromTheStart.scrollArea.elem.scrollWidth > fromTheStart.scrollArea.elem.clientWidth;
+            fromTheStart.remove();
+            log.setWrapLines(0);
+            const oneLineHeight = row.offsetHeight;
+            const elem = log.scrollArea.elem;
+            const scrolls = elem.scrollWidth > elem.clientWidth && getComputedStyle(elem).overflowX === "auto";
+            log.setWrapLines(1);
+            const wrapsAgain = row.offsetHeight === wrappedHeight && getComputedStyle(elem).overflowX === "hidden";
+            check("LogView: setWrapLines(0) keeps a long line on one row, and the view scrolls sideways",
+                isOneLineFromStart && oneLineHeight < wrappedHeight && scrolls && wrapsAgain, [isOneLineFromStart, wrappedHeight, oneLineHeight, scrolls, wrapsAgain].join(" "));
+            log.remove();
+        });
+
+        test("LogView: the first lines of the page are not changed, and a removed LogView draws nothing", async function () {
+            const firstLines = ["One", { text: "Two", level: "warn" }];
+            const log = LogView({ lines: firstLines });
+            const isSame = firstLines.length === 2 && firstLines[0] === "One" && !firstLines[1].row && log.lines.length === 2;
+            log.info("Waits for its drawing");
+            log.remove();
+            await wait(30);
+            check("LogView: the first lines of the page are not changed, and a removed LogView draws nothing", isSame && uncaught.length === 0, isSame);
+        });
+
+        // *** IMAGE VIEW (comp/image-view.js)
+
+        const makeTestPicture = function (width, height) {
+            const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '"><rect width="100%" height="100%" fill="red"/><\/svg>';
+            return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
+        };
+
+        // The view after its picture is loaded. (Its element: 400 x 300 with a line of 1 px: its inside is 398 x 298.)
+        const makeLoadedView = async function (width, height, params) {
+            let isLoaded = 0;
+            const view = ImageView(Object.assign({
+                left: 0, top: 0, width: 400, height: 300,
+                imageFile: makeTestPicture(width, height),
+                onLoad: function () { isLoaded = 1; },
+            }, params || {}));
+            for (let i = 0; i < 200 && !isLoaded; i++) await wait(10);
+            return view;
+        };
+
+        const isNear = function (a, b) {
+            return Math.abs(a - b) < 0.6;
+        };
+
+        test("ImageView: a picture opens fitted and in the middle, and it follows the size of the box", async function () {
+            const view = await makeLoadedView(1000, 500);
+            const isFitted = isNear(view.zoomLevel * 1000, 398) && isNear(view.image.width, 398) && isNear(view.image.left, 0);
+            const isInMiddle = isNear(view.image.top, (298 - 199) / 2);
+            view.width = 200;
+            await wait(60);
+            const followsBox = isNear(view.image.width, 198);
+            check("ImageView: a picture opens fitted and in the middle, and it follows the size of the box", isFitted && isInMiddle && followsBox, [view.image.width, view.image.top].join(" "));
+            view.remove();
+        });
+
+        test("ImageView: a small picture stays at 100% in the middle; enlargeToFit: 1 makes it grow", async function () {
+            const small = await makeLoadedView(100, 100);
+            const staysSmall = small.zoomLevel === 1 && isNear(small.image.left, 149) && isNear(small.image.top, 99);
+            small.remove();
+            const grown = await makeLoadedView(100, 100, { enlargeToFit: 1 });
+            const growsUp = isNear(grown.zoomLevel, 2.98);
+            grown.remove();
+            check("ImageView: a small picture stays at 100% in the middle; enlargeToFit: 1 makes it grow", staysSmall && growsUp, staysSmall + " " + growsUp);
+        });
+
+        test("ImageView: the wheel zooms around the mouse, and the point under it stays there", async function () {
+            let changes = 0;
+            const view = await makeLoadedView(1000, 500, { onZoomChange: function () { changes++; } });
+            changes = 0;
+            const rect = view.elem.getBoundingClientRect();
+            const point = { x: 100, y: 100 };
+            const pictureX = (point.x - view.image.left) / view.zoomLevel;
+            const pictureY = (point.y - view.image.top) / view.zoomLevel;
+            const wheel = new WheelEvent("wheel", { bubbles: true, cancelable: true, deltaY: -500, clientX: rect.left + 1 + point.x, clientY: rect.top + 1 + point.y });
+            view.elem.dispatchEvent(wheel);
+            const isBigger = view.zoomLevel > 1;
+            const isSamePoint = isNear((point.x - view.image.left) / view.zoomLevel, pictureX) && isNear((point.y - view.image.top) / view.zoomLevel, pictureY);
+            check("ImageView: the wheel zooms around the mouse, and the point under it stays there",
+                isBigger && isSamePoint && wheel.defaultPrevented && changes === 1, [view.zoomLevel, isSamePoint, wheel.defaultPrevented, changes].join(" "));
+            view.remove();
+        });
+
+        test("ImageView: wheelZoom: 0 leaves the wheel to the page around it", async function () {
+            const view = await makeLoadedView(1000, 500, { wheelZoom: 0 });
+            const zoom = view.zoomLevel;
+            const wheel = new WheelEvent("wheel", { bubbles: true, cancelable: true, deltaY: -500 });
+            view.elem.dispatchEvent(wheel);
+            check("ImageView: wheelZoom: 0 leaves the wheel to the page around it", view.zoomLevel === zoom && !wheel.defaultPrevented, view.zoomLevel);
+            view.remove();
+        });
+
+        test("ImageView: a drag moves a big picture, and leaves no gap at its edges; a fitted picture does not move", async function () {
+            const view = await makeLoadedView(1000, 500);
+            view.elem.setPointerCapture = function () { }; // WHY: A synthetic pointer is not an active one.
+            const rect = view.elem.getBoundingClientRect();
+            const drag = function (fromX, fromY, toX, toY) {
+                pointer(view.elem, "pointerdown", rect.left + fromX, rect.top + fromY);
+                pointer(view.elem, "pointermove", rect.left + toX, rect.top + toY);
+                pointer(view.elem, "pointerup", rect.left + toX, rect.top + toY);
+            };
+            const topAtFirst = view.image.top;
+            drag(100, 100, 200, 180);
+            const fittedStays = view.image.top === topAtFirst && view.image.left === 0;
+            view.setZoomLevel(1);
+            const leftBefore = view.image.left;
+            drag(200, 100, 150, 100);
+            const moved = isNear(view.image.left, leftBefore - 50);
+            drag(10, 100, 390, 100); // far to the right
+            drag(10, 100, 390, 100);
+            const noGapAtLeft = view.image.left === 0;
+            drag(390, 100, 10, 100);
+            drag(390, 100, 10, 100);
+            drag(390, 100, 10, 100);
+            const noGapAtRight = isNear(view.image.left, 398 - 1000);
+            const stopsAfterUp = (function () {
+                const before = view.image.left;
+                pointer(view.elem, "pointermove", rect.left + 200, rect.top + 100);
+                return view.image.left === before;
+            })();
+            check("ImageView: a drag moves a big picture, and leaves no gap at its edges; a fitted picture does not move",
+                fittedStays && moved && noGapAtLeft && noGapAtRight && stopsAfterUp, [fittedStays, moved, noGapAtLeft, noGapAtRight, stopsAfterUp].join(" "));
+            view.remove();
+        });
+
+        test("ImageView: two fingers zoom", async function () {
+            const view = await makeLoadedView(1000, 500);
+            view.elem.setPointerCapture = function () { };
+            const rect = view.elem.getBoundingClientRect();
+            const finger = function (type, id, x, y) {
+                view.elem.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, clientX: rect.left + x, clientY: rect.top + y, pointerId: id, pointerType: "touch" }));
+            };
+            const zoomAtFirst = view.zoomLevel;
+            finger("pointerdown", 1, 150, 150);
+            finger("pointerdown", 2, 250, 150);
+            finger("pointermove", 1, 100, 150);
+            finger("pointermove", 2, 300, 150);
+            const isDouble = isNear(view.zoomLevel / zoomAtFirst, 2);
+            finger("pointerup", 1, 100, 150);
+            finger("pointerup", 2, 300, 150);
+            check("ImageView: two fingers zoom", isDouble, view.zoomLevel / zoomAtFirst);
+            view.remove();
+        });
+
+        test("ImageView: the limits of the zoom and of its buttons; the text of the zoom; sharp pixels from 300%", async function () {
+            const view = await makeLoadedView(1000, 500);
+            const fitted = view.zoomLevel;
+            view.setZoomLevel(100);
+            const isAtMost = view.zoomLevel === view.maxZoom && view.btnZoomText.elem.textContent === "800%";
+            const plusOff = view.btnZoomIn.elem.getAttribute("aria-disabled") === "true" && view.btnZoomOut.elem.getAttribute("aria-disabled") === "false";
+            const isSharp = view.image.elem.style.imageRendering === "pixelated";
+            view.setZoomLevel(0.001);
+            const isAtLeast = view.zoomLevel === view.minZoom;
+            const minusOff = view.btnZoomOut.elem.getAttribute("aria-disabled") === "true";
+            const isSoft = view.image.elem.style.imageRendering === "auto";
+            view.btnFit.elem.click();
+            const isFittedAgain = view.zoomLevel === fitted;
+            view.btnZoomText.elem.click();
+            const isActual = view.zoomLevel === 1;
+            view.btnZoomIn.elem.click();
+            const isStepUp = view.zoomLevel === 1.25;
+            view.btnZoomOut.elem.click();
+            const isStepDown = view.zoomLevel === 1;
+            check("ImageView: the limits of the zoom and of its buttons; the text of the zoom; sharp pixels from 300%",
+                isAtMost && plusOff && isSharp && isAtLeast && minusOff && isSoft && isFittedAgain && isActual && isStepUp && isStepDown,
+                [isAtMost, plusOff, isSharp, isAtLeast, minusOff, isSoft, isFittedAgain, isActual, isStepUp, isStepDown].join(" "));
+            view.remove();
+        });
+
+        test("ImageView: a very big picture can still go down to its fitted size", async function () {
+            const view = await makeLoadedView(20000, 10000);
+            const fitted = view.zoomLevel;
+            const isUnderMin = fitted < view.minZoom && isNear(view.image.width, 398);
+            view.setZoomLevel(1);
+            view.zoomToFit();
+            check("ImageView: a very big picture can still go down to its fitted size", isUnderMin && view.zoomLevel === fitted, fitted);
+            view.remove();
+        });
+
+        test("ImageView: the keys zoom and move; Ctrl + 0 stays with the browser", async function () {
+            const view = await makeLoadedView(1000, 500);
+            const fitted = view.zoomLevel;
+            key(view.elem, "keydown", "+");
+            const zoomedIn = isNear(view.zoomLevel * 100, fitted * 125);
+            key(view.elem, "keydown", "-");
+            const zoomedOut = isNear(view.zoomLevel * 100, fitted * 100);
+            key(view.elem, "keydown", "1");
+            const isActual = view.zoomLevel === 1;
+            const leftBefore = view.image.left;
+            key(view.elem, "keydown", "ArrowRight");
+            const moved = view.image.left !== leftBefore;
+            const withCtrl = new KeyboardEvent("keydown", { key: "0", ctrlKey: true, bubbles: true, cancelable: true });
+            view.elem.dispatchEvent(withCtrl);
+            const keptByBrowser = !withCtrl.defaultPrevented && view.zoomLevel === 1;
+            key(view.elem, "keydown", "0");
+            const isFitted = view.zoomLevel === fitted;
+            check("ImageView: the keys zoom and move; Ctrl + 0 stays with the browser",
+                zoomedIn && zoomedOut && isActual && moved && keptByBrowser && isFitted, [zoomedIn, zoomedOut, isActual, moved, keptByBrowser, isFitted].join(" "));
+            view.remove();
+        });
+
+        test("ImageView: a double click goes to 100% at the mouse and back; a small picture goes to 200%", async function () {
+            const view = await makeLoadedView(1000, 500);
+            const fitted = view.zoomLevel;
+            view.elem.dispatchEvent(new MouseEvent("dblclick", { bubbles: true, clientX: 50, clientY: 50 }));
+            const isActual = view.zoomLevel === 1;
+            view.elem.dispatchEvent(new MouseEvent("dblclick", { bubbles: true, clientX: 50, clientY: 50 }));
+            const isBack = view.zoomLevel === fitted;
+            view.remove();
+            const small = await makeLoadedView(100, 100);
+            small.elem.dispatchEvent(new MouseEvent("dblclick", { bubbles: true, clientX: 50, clientY: 50 }));
+            const isDouble = small.zoomLevel === 2;
+            small.remove();
+            check("ImageView: a double click goes to 100% at the mouse and back; a small picture goes to 200%", isActual && isBack && isDouble, [isActual, isBack, isDouble].join(" "));
+        });
+
+        test("ImageView: empty, a file that can not be opened, a new picture that opens fitted again", async function () {
+            let errors = 0;
+            let loads = 0;
+            const view = ImageView({ left: 0, top: 0, width: 400, height: 300, onError: function () { errors++; }, onLoad: function () { loads++; } });
+            const isShown = function (obj) { return obj.elem.getClientRects().length > 0; };
+            const isEmpty = isShown(view.lblEmpty) && view.lblEmpty.elem.textContent === view.emptyText && !isShown(view.toolbar) && !isShown(view.image);
+            view.setImage("data:image/png;base64,AAAA");
+            const noNoteWhileLoading = !isShown(view.lblEmpty);
+            for (let i = 0; i < 200 && !errors; i++) await wait(10);
+            const isError = isShown(view.lblEmpty) && view.lblEmpty.elem.textContent === view.errorText && !isShown(view.toolbar) && errors === 1;
+            view.setImage(makeTestPicture(1000, 500), "A red box");
+            for (let i = 0; i < 200 && !loads; i++) await wait(10);
+            const isLoaded = isShown(view.image) && isShown(view.toolbar) && !isShown(view.lblEmpty) && view.image.elem.alt === "A red box";
+            const fitted = view.zoomLevel;
+            view.setZoomLevel(4);
+            loads = 0;
+            view.setImage(makeTestPicture(500, 500));
+            for (let i = 0; i < 200 && !loads; i++) await wait(10);
+            const isFittedAgain = isNear(view.zoomLevel * 500, 298) && view.naturalWidth === 500;
+            view.clearImage();
+            const isClear = isShown(view.lblEmpty) && !isShown(view.image) && !isShown(view.toolbar) && !view.image.elem.getAttribute("src");
+            view.setZoomLevel(3); // no picture: nothing happens
+            check("ImageView: empty, a file that can not be opened, a new picture that opens fitted again",
+                isEmpty && noNoteWhileLoading && isError && isLoaded && isFittedAgain && isClear && fitted > 0, [isEmpty, noNoteWhileLoading, isError, isLoaded, isFittedAgain, isClear].join(" "));
+            view.remove();
+        });
+
+        test("ImageView: a plot that is drawn again does not blink, and it keeps its zoom and its place", async function () {
+            let loads = 0;
+            let zoomChanges = 0;
+            const view = await makeLoadedView(1000, 500, { onZoomChange: function () { zoomChanges++; } });
+            view.onLoad = function () { loads++; };
+            view.setZoomLevel(2);
+            view.elem.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true, cancelable: true }));
+            const zoom = view.zoomLevel;
+            const left = view.image.left;
+            const top = view.image.top;
+            zoomChanges = 0;
+            view.setImage(makeTestPicture(1000, 500) + "%20"); // the same size, another address
+            const isShownWhileLoading = view.image.elem.getClientRects().length > 0 && view.toolbar.elem.getClientRects().length > 0;
+            for (let i = 0; i < 200 && !loads; i++) await wait(10);
+            const keepsAll = view.zoomLevel === zoom && view.image.left === left && view.image.top === top && zoomChanges === 0;
+            loads = 0;
+            view.setImage(makeTestPicture(800, 800));
+            for (let i = 0; i < 200 && !loads; i++) await wait(10);
+            const otherSizeFits = isNear(view.zoomLevel * 800, 298) && zoomChanges === 1;
+            check("ImageView: a plot that is drawn again does not blink, and it keeps its zoom and its place",
+                isShownWhileLoading && keepsAll && otherSizeFits, [isShownWhileLoading, keepsAll, otherSizeFits, view.zoomLevel].join(" "));
+            view.remove();
+        });
+
+        test("ImageView: setShowToolbar hides its toolbar, a press on the toolbar does not drag", async function () {
+            const view = await makeLoadedView(1000, 500);
+            const isShown = function (obj) { return obj.elem.getClientRects().length > 0; };
+            view.setShowToolbar(0);
+            const isHidden = !isShown(view.toolbar);
+            view.setShowToolbar(1);
+            const isBack = isShown(view.toolbar);
+            view.setZoomLevel(1);
+            const leftBefore = view.image.left;
+            view.elem.setPointerCapture = function () { };
+            pointer(view.btnZoomIn.elem, "pointerdown", 100, 100);
+            pointer(view.elem, "pointermove", 50, 100);
+            pointer(view.elem, "pointerup", 50, 100);
+            check("ImageView: setShowToolbar hides its toolbar, a press on the toolbar does not drag", isHidden && isBack && view.image.left === leftBefore, [isHidden, isBack, view.image.left, leftBefore].join(" "));
+            view.remove();
+        });
+
+        test("LogView, ImageView, MenuBar and StatusBar: the dark package changes their colors, and never the light one", async function () {
+            const colorOf = function (obj) { return getComputedStyle(obj.elem).backgroundColor; };
+            const pairs = [LogView, ImageView, MenuBar, StatusBar].map(function (Comp) {
+                const light = Comp({});
+                const dark = Comp({ styleName: "dark" });
+                const lightAgain = Comp({ style: { box: { color: "rgb(1, 2, 3)" } } });
+                const fresh = Comp({});
+                const row = [colorOf(light), colorOf(dark), colorOf(lightAgain), colorOf(fresh)];
+                light.remove();
+                dark.remove();
+                lightAgain.remove();
+                fresh.remove();
+                return row;
+            });
+            const isRight = pairs.every(function (row) { return row[0] !== row[1] && row[2] === "rgb(1, 2, 3)" && row[3] === row[0]; });
+            check("LogView, ImageView, MenuBar and StatusBar: the dark package changes their colors, and never the light one", isRight, JSON.stringify(pairs));
+        });
 
         const runTests = async function () {
 
