@@ -73,6 +73,7 @@
         <script src="../comp/data-table.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/chart-box/chart-4.5.1.umd.min.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/chart-box.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/graph-box.js" type="text/javascript" charset="utf-8"></script>
 
         <script>
         "use strict";
@@ -2872,6 +2873,222 @@
             check("ChartBox: addValue() and maxCount do not change the arrays of the page", isPageSame && isChartRight, "page: " + hours.join(",") + " / " + values.join(",") + ", cpu: " + cpu.data.labels.join(",") + ", memory: " + memory.data.labels.join(","));
             cpu.remove();
             memory.remove();
+        });
+
+        // *** GRAPH BOX (comp/graph-box.js)
+
+        // The middle of the place of a value, on the screen. (The text of the axis has the same x.)
+        const graphBoxPlotPoint = function (chart, x, y) {
+            const rect = chart.plot.elem.getBoundingClientRect();
+            return { x: rect.left + x, y: rect.top + y };
+        };
+
+        const graphBoxMoveMouse = function (chart, x, y) {
+            const point = graphBoxPlotPoint(chart, x, y);
+            pointer(chart.plot.elem, "pointermove", point.x, point.y, "mouse");
+        };
+
+        test("GraphBox: the axis gets clean numbers", async function () {
+            const cases = [
+                [0, 94000, 4, "0,25000,50000,75000,100000"],
+                [0.1, 0.3, 4, "0.1,0.15,0.2,0.25,0.3"],
+                [-5, 5, 4, "-5,-2.5,0,2.5,5"],
+                [0, 0, 4, "0,0.25,0.5,0.75,1"],
+                [7, 7, 4, "6,6.5,7,7.5,8"],
+                [-3, -1, 2, "-3,-2,-1"],
+            ];
+            const wrong = cases.filter(function (item) {
+                return GraphBox.niceScale(item[0], item[1], item[2]).ticks.join(",") !== item[3];
+            }).map(function (item) {
+                return item[0] + ".." + item[1] + ": " + GraphBox.niceScale(item[0], item[1], item[2]).ticks.join(",");
+            });
+            check("GraphBox: the axis gets clean numbers", wrong.length === 0, wrong.join(" | "));
+        });
+
+        test("GraphBox: addValue() and maxCount do not change the arrays of the page", async function () {
+            const hours = ["10:00", "10:01", "10:02"];
+            const values = [10, 20, 30];
+            const cpu = GraphBox({ width: 300, height: 150, labels: hours, values: values, maxCount: 3 });
+            const memory = GraphBox({ width: 300, height: 150, labels: hours, values: [50, 55, 60], maxCount: 3 });
+            cpu.addValue("10:03", 40);
+            memory.addValue("10:03", 65);
+            const isPageSame = (hours.join(",") === "10:00,10:01,10:02" && values.join(",") === "10,20,30");
+            const isChartRight = (cpu.data.labels.join(",") === "10:01,10:02,10:03" && cpu.data.datasets[0].data.join(",") === "20,30,40" && memory.data.labels.join(",") === "10:01,10:02,10:03");
+            check("GraphBox: addValue() and maxCount do not change the arrays of the page", isPageSame && isChartRight, cpu.data.labels.join(",") + " / " + hours.join(","));
+            cpu.remove();
+            memory.remove();
+        });
+
+        test("GraphBox: empty data, holes and wrong values draw no NaN", async function () {
+            const sets = [
+                { labels: [], values: [] },
+                { labels: ["A"], values: [null] },
+                { labels: ["A"], values: [5] },
+                { labels: ["A", "B", "C"], values: [0, 0, 0] },
+                { labels: ["A", "B", "C"], values: [3, null, "abc"] },
+                { labels: ["A", "B", "C", "D"], values: [-3, 2, undefined, "4"] },
+                { labels: ["A", "B"], datasets: [] },
+                { labels: ["A", "B"], datasets: [{ label: "Hidden", data: [1, 2], hidden: 1 }] },
+            ];
+            const wrong = [];
+            ["line", "area", "bar"].forEach(function (type) {
+                sets.forEach(function (set, setIndex) {
+                    const chart = GraphBox(Object.assign({ width: 300, height: 150, type: type, curve: "smooth" }, set));
+                    if (/NaN|Infinity|undefined/.test(chart.svg.innerHTML)) wrong.push(type + " " + setIndex);
+                    chart.remove();
+                });
+            });
+            check("GraphBox: empty data, holes and wrong values draw no NaN", wrong.length === 0, wrong.join(", "));
+        });
+
+        test("GraphBox: a bar is as long as its value, a negative bar goes under the base line", async function () {
+            const chart = GraphBox({ width: 400, height: 240, type: "bar", labels: ["A", "B", "C"], values: [50, 100, -50], maxValue: 100, minValue: -100 });
+            const bars = Array.from(chart.svg.querySelectorAll("path")).map(function (path) { return path.getBBox(); });
+            const isCount = (bars.length === 3);
+            const isLengthRight = isCount && Math.abs(bars[1].height - bars[0].height * 2) < 1 && Math.abs(bars[2].height - bars[0].height) < 1;
+            const base = isCount ? bars[0].y + bars[0].height : 0;
+            const isSideRight = isCount && Math.abs(bars[2].y - base) < 1 && Math.abs(bars[1].y + bars[1].height - base) < 1;
+            check("GraphBox: a bar is as long as its value, a negative bar goes under the base line", isLengthRight && isSideRight, JSON.stringify(bars.map(function (bar) { return [bar.y, bar.height]; })));
+            chart.remove();
+        });
+
+        test("GraphBox: a line breaks at an empty value, a lone value keeps a point", async function () {
+            const chart = GraphBox({ width: 400, height: 240, type: "line", showPoints: 0, labels: ["A", "B", "C", "D", "E"], values: [1, 2, null, 3, null] });
+            const lines = chart.svg.querySelectorAll("path");
+            const points = chart.svg.querySelectorAll("circle");
+            check("GraphBox: a line breaks at an empty value, a lone value keeps a point", lines.length === 2 && points.length === 1, lines.length + " lines, " + points.length + " points");
+            chart.remove();
+        });
+
+        test("GraphBox: a smooth line never goes over its values", async function () {
+            const chart = GraphBox({ width: 400, height: 240, type: "line", curve: "smooth", showPoints: 0, labels: ["A", "B", "C", "D"], values: [10, 80, 10, 80], maxValue: 100 });
+            const line = chart.svg.querySelector("path").getBBox();
+            // The lines of the axis: from the tick of 0 to the tick of 100, then the base line.
+            const axisLines = Array.from(chart.svg.querySelectorAll("line")).map(function (axisLine) { return Number(axisLine.getAttribute("y1")); });
+            const scaleBase = axisLines[0];
+            const scaleTop = axisLines[axisLines.length - 2];
+            const topOfValues = scaleBase - (scaleBase - scaleTop) * 0.8;
+            check("GraphBox: a smooth line never goes over its values", scaleTop < scaleBase && line.y >= topOfValues - 1, "top " + line.y + ", the highest value " + topOfValues);
+            chart.remove();
+        });
+
+        test("GraphBox: the tooltip shows every dataset at that place, a name is plain text, the mouse leaves: it goes", async function () {
+            const chart = GraphBox({
+                width: 400, height: 240, type: "line",
+                labels: ["Jan", "Feb", "<b>Mar</b>"],
+                datasets: [{ label: "<i>One</i>", data: [1, 2, 3] }, { label: "Two", data: [4, 5, null] }],
+            });
+            await wait(30);
+            const points = chart.svg.querySelectorAll("circle");
+            graphBoxMoveMouse(chart, Number(points[1].getAttribute("cx")), 60);
+            const isFebShown = (chart.tooltip.visible == 1 && chart.lblTooltipTitle.elem.textContent === "Feb");
+            const rowsAtFeb = chart.tooltip.elem.innerText; // WHY innerText: A row with no value is hidden, it keeps its old text.
+            graphBoxMoveMouse(chart, Number(points[2].getAttribute("cx")), 60);
+            const rowsAtMar = chart.tooltip.elem.innerText;
+            const isPlainText = (chart.tooltip.elem.querySelector("b") === null && chart.tooltip.elem.querySelector("i") === null);
+            const isHoleSkipped = (rowsAtMar.includes("<b>Mar</b>") && rowsAtMar.includes("<i>One</i>") && !rowsAtMar.includes("Two"));
+            pointer(chart.plot.elem, "pointerleave", 0, 0, "mouse");
+            check("GraphBox: the tooltip shows every dataset at that place, a name is plain text, the mouse leaves: it goes",
+                isFebShown && rowsAtFeb.includes("Two") && rowsAtFeb.includes("<i>One</i>") && isPlainText && isHoleSkipped && chart.tooltip.visible == 0,
+                rowsAtFeb + " / " + rowsAtMar);
+            chart.remove();
+        });
+
+        test("GraphBox: a hover does not make the marks again, the tooltip stays inside the box", async function () {
+            const chart = GraphBox({ width: 300, height: 200, type: "bar", labels: ["A", "B", "C", "D"], datasets: [{ label: "A long name of a dataset", data: [1, 2, 3, 4] }] });
+            await wait(30);
+            const firstBar = chart.svg.querySelector("path");
+            const plot = chart.plot.elem;
+            const boxRect = chart.elem.getBoundingClientRect();
+            let isInside = true;
+            [[2, 2], [plot.clientWidth - 2, 2], [plot.clientWidth - 2, plot.clientHeight - 2], [40, plot.clientHeight - 2]].forEach(function (place) {
+                graphBoxMoveMouse(chart, place[0], place[1]);
+                const rect = chart.tooltip.elem.getBoundingClientRect();
+                if (chart.tooltip.visible != 1) return;
+                if (rect.left < boxRect.left || rect.top < boxRect.top || rect.right > boxRect.right || rect.bottom > boxRect.bottom) isInside = false;
+            });
+            check("GraphBox: a hover does not make the marks again, the tooltip stays inside the box", firstBar === chart.svg.querySelector("path") && isInside, "inside: " + isInside);
+            chart.remove();
+        });
+
+        test("GraphBox: a click on the legend hides a dataset, and the others keep their colors", async function () {
+            const chart = GraphBox({
+                width: 400, height: 240, type: "bar", labels: ["A", "B"],
+                datasets: [{ label: "One", data: [1, 2] }, { label: "Two", data: [3, 4] }, { label: "Three", data: [5, 6] }],
+            });
+            const getBarColors = function () {
+                const colors = Array.from(chart.svg.querySelectorAll("path")).map(function (path) { return path.getAttribute("fill"); });
+                return Array.from(new Set(colors)).join(",");
+            };
+            const colorsAtStart = getBarColors().split(",");
+            chart.legendItems[0].elem.click();
+            const colorsAfterHide = getBarColors().split(",");
+            chart.removeDataset(0);
+            const colorsAfterRemove = getBarColors().split(",");
+            chart.addDataset({ label: "New", data: [7, 8] });
+            const colorsAfterAdd = getBarColors().split(",");
+            const isHidden = (colorsAfterHide.length === 2 && colorsAfterHide[0] === colorsAtStart[1] && colorsAfterHide[1] === colorsAtStart[2]);
+            const isKept = (colorsAfterRemove[0] === colorsAtStart[1] && colorsAfterRemove[1] === colorsAtStart[2]);
+            const isNewColorFree = (colorsAfterAdd.length === 3 && colorsAfterAdd[2] === colorsAtStart[0]);
+            check("GraphBox: a click on the legend hides a dataset, and the others keep their colors", isHidden && isKept && isNewColorFree, [colorsAtStart, colorsAfterHide, colorsAfterRemove, colorsAfterAdd].join(" | "));
+            chart.remove();
+        });
+
+        test("GraphBox: a click gives the bar under the mouse, Enter gives the one the arrows chose", async function () {
+            const clicks = [];
+            const chart = GraphBox({
+                width: 400, height: 240, type: "bar", labels: ["A", "B"],
+                datasets: [{ label: "One", data: [10, 20] }, { label: "Two", data: [30, 40] }],
+                onClick: function (self, item) { clicks.push(item.label + " " + item.datasetLabel + " " + item.value); },
+            });
+            await wait(30);
+            const bar = chart.svg.querySelectorAll("path")[3].getBBox(); // The second dataset at "B"
+            graphBoxMoveMouse(chart, bar.x + bar.width / 2, bar.y + bar.height / 2);
+            const point = graphBoxPlotPoint(chart, bar.x + bar.width / 2, bar.y + bar.height / 2);
+            chart.plot.elem.dispatchEvent(new MouseEvent("click", { bubbles: true, clientX: point.x, clientY: point.y }));
+            pointer(chart.plot.elem, "pointerleave", 0, 0, "mouse");
+            key(chart.plot.elem, "keydown", "ArrowRight");
+            key(chart.plot.elem, "keydown", "ArrowRight");
+            const isTooltipShown = (chart.tooltip.visible == 1 && chart.lblTooltipTitle.elem.textContent === "B");
+            key(chart.plot.elem, "keydown", "Enter");
+            key(chart.plot.elem, "keydown", "Escape");
+            check("GraphBox: a click gives the bar under the mouse, Enter gives the one the arrows chose",
+                clicks[0] === "B Two 40" && clicks[1] === "B One 20" && isTooltipShown && chart.tooltip.visible == 0, clicks.join(" | "));
+            chart.remove();
+        });
+
+        test("GraphBox: the chart follows the size of its box, and it comes when a hidden box is shown", async function () {
+            const chart = GraphBox({ width: 400, height: 240, type: "line", labels: ["A", "B"], values: [1, 2] });
+            await wait(30);
+            const widthAtStart = Number(chart.svg.getAttribute("width"));
+            chart.width = 600;
+            await wait(60);
+            const widthAfter = Number(chart.svg.getAttribute("width"));
+            chart.remove();
+
+            const holder = Box({ width: 400, height: 240, visible: 0 });
+            const hiddenChart = createIn(holder, function () { return GraphBox({ labels: ["A", "B"], values: [1, 2] }); });
+            const pathsWhileHidden = hiddenChart.svg.querySelectorAll("path").length;
+            holder.visible = 1;
+            await wait(60);
+            const pathsWhenShown = hiddenChart.svg.querySelectorAll("path").length;
+            holder.remove();
+
+            check("GraphBox: the chart follows the size of its box, and it comes when a hidden box is shown", widthAfter === widthAtStart + 200 && pathsWhileHidden === 0 && pathsWhenShown > 0, widthAtStart + " -> " + widthAfter + ", paths " + pathsWhileHidden + " -> " + pathsWhenShown);
+        });
+
+        test("GraphBox: setTheme() changes the look, setStyle() keeps the other keys", async function () {
+            const chart = GraphBox({ width: 400, height: 240, type: "bar", titleText: "Title", labels: ["A"], values: [1] });
+            const lightColor = chart.color;
+            chart.setTheme("dark");
+            const darkColor = chart.color;
+            const barInDark = chart.svg.querySelector("path").getAttribute("fill");
+            chart.setStyle({ box: { round: 3 }, colors: { colors: ["#123456"] } });
+            const barAfterStyle = chart.svg.querySelector("path").getAttribute("fill");
+            const isRight = (lightColor === GraphBox.THEMES.light.backgroundColor && darkColor === GraphBox.THEMES.dark.backgroundColor &&
+                barInDark === GraphBox.THEMES.dark.colors[0] && barAfterStyle === "#123456" && chart.round == 3 && chart.style.box.padding === GraphBoxDefaults.style.box.padding);
+            check("GraphBox: setTheme() changes the look, setStyle() keeps the other keys", isRight, [lightColor, darkColor, barInDark, barAfterStyle].join(" | "));
+            chart.remove();
         });
 
         test("SliderField and Stepper: a value typed in a field that is removed is not sent", async function () {

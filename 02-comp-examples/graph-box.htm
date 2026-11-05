@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Graph Box</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp/graph-box.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // *** VARIABLES:
+        let charts = [];
+        let chartDemo, chartLive;
+        let lblTitle, lblClicked;
+        let isDark = 0;
+        let isPaused = 0;
+        let liveSecond = 0;
+
+        const CHART_WIDTH = 520;
+        const CHART_HEIGHT = 320;
+        const PAGE_COLORS = { light: "#F9F9F7", dark: "#0D0D0D" };
+
+        const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
+
+        const start = function () {
+
+            page.color = PAGE_COLORS.light;
+
+            // BOX: Full screen scrollable container
+            // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
+            startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+
+                // GROUP: Page layout
+                // WHY 16 at the sides: the charts fill a phone (390 px)
+                VGroup({ width: "100%", height: "auto", align: "center top", gap: 24, padding: [16, 40], clipContent: 0 });
+
+                    lblTitle = Label({ text: "Graph Box", fontSize: 26, fontFamily: "opensans-bold", textColor: "#0B0B0B" });
+
+                    addButton("Dark theme", function (self) {
+                        isDark = (isDark) ? 0 : 1;
+                        self.setText((isDark) ? "Light theme" : "Dark theme");
+                        applyPageTheme();
+                    });
+
+                    // SAMPLE 1: The charts people ask for most
+                    startRow();
+
+                        // LINE: A soft gradient under the first line, a dashed target, a text for the values
+                        addChart({
+                            type: "line",
+                            curve: "smooth",
+                            titleText: "Monthly Revenue",
+                            subtitleText: "Actual vs. target, last 6 months",
+                            labels: MONTHS,
+                            datasets: [
+                                { label: "Actual", data: [42000, 58000, 51000, 69000, 83000, 94000], fill: "gradient" },
+                                { label: "Target", data: [40000, 50000, 60000, 70000, 80000, 90000], dashed: 1 },
+                            ],
+                            formatValue: function (value) { return "₺" + value.toLocaleString("tr-TR"); },
+                        });
+
+                        // BAR: One dataset (no legend), a click
+                        addChart({
+                            type: "bar",
+                            titleText: "Sales by Category",
+                            subtitleText: "Units sold per product category",
+                            labels: ["Electronics", "Clothing", "Home", "Cosmetics", "Books"],
+                            values: [1250, 2100, 840, 1600, 920],
+                            onClick: function (self, item) {
+                                lblClicked.text = "Clicked: <b>" + item.label + "</b> = " + item.value;
+                            },
+                        });
+
+                        // AREA: A value is missing in April: the area breaks there
+                        addChart({
+                            type: "area",
+                            titleText: "Active Users",
+                            subtitleText: "No data for April",
+                            labels: MONTHS,
+                            values: [1200, 1350, 1500, null, 1700, 1900],
+                        });
+
+                        // MIXED: Bars and a line in one chart
+                        addChart({
+                            type: "bar",
+                            titleText: "Orders and Returns",
+                            subtitleText: "A line can go over the bars (type on a dataset)",
+                            labels: MONTHS,
+                            datasets: [
+                                { label: "Orders", data: [320, 410, 380, 450, 520, 610] },
+                                { label: "Returns", data: [40, 55, 38, 62, 48, 70] },
+                                { label: "Average", data: [180, 232, 209, 256, 284, 340], type: "line" },
+                            ],
+                        });
+
+                    endGroup();
+
+                    lblClicked = Label({ text: "Click a bar in \"Sales by Category\".", fontSize: 13, textColor: Black(0.55) });
+
+                    // SAMPLE 2: Live data and functions
+                    startRow();
+
+                        // LIVE: A new value every second, max 20 values
+                        chartLive = addChart({
+                            type: "line",
+                            titleText: "Live Data",
+                            subtitleText: "addValue() every second, maxCount: 20",
+                            maxCount: 20,
+                            labels: [],
+                            datasets: [
+                                { label: "CPU", data: [] },
+                                { label: "Memory", data: [] },
+                            ],
+                            maxValue: 100,
+                            emptyText: "",
+                            formatValue: function (value) { return value + "%"; },
+                        });
+
+                        // DEMO: Functions
+                        chartDemo = addChart({
+                            type: "bar",
+                            titleText: "Quarterly Results",
+                            subtitleText: "Change the chart with the buttons below",
+                            labels: ["Q1", "Q2", "Q3", "Q4"],
+                            datasets: [
+                                { label: "2025", data: [12, 19, 14, 21] },
+                                { label: "2026", data: [15, 22, 18, 25] },
+                            ],
+                        });
+
+                    endGroup();
+
+                    // GROUP: Buttons
+                    HGroup({ width: "100%", height: "auto", align: "center center", gap: 8, wrap: 1, clipContent: 0 });
+
+                        addButton("Line", function () { chartDemo.setType("line"); });
+                        addButton("Area", function () { chartDemo.setType("area"); });
+                        addButton("Bar", function () { chartDemo.setType("bar"); });
+                        addButton("Random", function () {
+                            chartDemo.data.datasets.forEach(function (dataset) {
+                                dataset.data = dataset.data.map(function () { return random(5, 30); });
+                            });
+                            chartDemo.update();
+                        });
+                        addButton("Pause live", function (self) {
+                            isPaused = (isPaused) ? 0 : 1;
+                            self.setText((isPaused) ? "Continue live" : "Pause live");
+                        });
+
+                    endGroup();
+
+                endGroup();
+
+            endBox();
+
+            setLoopTimer(1000);
+
+        };
+
+        // Runs every second.
+        const loop = function () {
+            if (isPaused || !chartLive) return;
+            liveSecond++;
+            chartLive.addValue(liveSecond + "s", [random(30, 70), random(50, 65)]);
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        const applyPageTheme = function () {
+            const theme = (isDark) ? "dark" : "light";
+            page.color = PAGE_COLORS[theme];
+            lblTitle.textColor = (isDark) ? "#FFFFFF" : "#0B0B0B";
+            lblClicked.textColor = (isDark) ? White(0.6) : Black(0.55);
+            charts.forEach(function (chart) { chart.setTheme(theme); });
+        };
+
+        // GROUP: Charts side by side (one under the other on a phone)
+        const startRow = function () {
+            HGroup({ width: "100%", height: "auto", align: "center top", gap: 20, wrap: 1 });
+        };
+
+        const addChart = function (params) {
+            const chart = GraphBox({
+                width: CHART_WIDTH,
+                height: CHART_HEIGHT,
+                css: { maxWidth: "100%" },
+                ...params,
+            });
+            charts.push(chart);
+            return chart;
+        };
+
+        const addButton = function (text, func) {
+            return SmartButton({ labelText: text, onClick: func });
+        };
+
+    </script>
+</head>
+
+<body></body>
+
+</html>

@@ -246,6 +246,12 @@ CATALOG.COMPONENTS = [
         tr: "Chart.js grafiklerini bir basic.js nesnesi gibi kullanır.",
     },
     {
+        key: "graph-box", name: "GraphBox", cat: "data",
+        source: "comp/graph-box.js", samples: ["02-comp-examples/graph-box.htm"],
+        en: "Charts with no library: one file draws them as SVG. Line, area and bar, with a tooltip, a legend and two themes.",
+        tr: "Kütüphanesiz grafikler: tek dosya SVG olarak çizer. Çizgi, alan ve çubuk; ipucu, gösterge ve iki tema.",
+    },
+    {
         key: "gauge", name: "Gauge", cat: "data",
         source: "comp/gauge.js", samples: ["02-comp-examples/gauge.htm"],
         en: "A value drawn on an arc: a full ring or a half arc.",
