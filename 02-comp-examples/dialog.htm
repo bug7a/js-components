@@ -339,6 +339,18 @@
         showResult("prompt: " + name);
     };
 
+    // styleName: "ozdenDark": the card, the field and the buttons of a dialog on a dark page
+    const openDarkDialog = async function () {
+        const name = await Dialog.prompt({
+            styleName: "ozdenDark",
+            titleText: "New folder",
+            messageText: "A name for the new folder:",
+            placeholder: "Photos",
+            required: 1,
+        });
+        showResult("Dark dialog: " + name);
+    };
+
     const createButton = function (text, onClick) {
         const button = SmartButton({ styleName: "ozdenType1", labelText: text, height: LAUNCH_BUTTON_HEIGHT, style: { box: { color: "white" } }, onClick: onClick }); // white inside (its hover stays gray)
         return button;
@@ -371,6 +383,7 @@
             HGroup({ hug: 1, gap: 10, wrap: 1, clipContent: 0 });
                 createButton("Every button type", openAllTypes);
                 createButton("Dialog.prompt", openPrompt);
+                createButton("A dark dialog", openDarkDialog);
             endGroup();
 
             Label({ text: "Dialogs with content", fontSize: 13, textColor: Black(0.5) });

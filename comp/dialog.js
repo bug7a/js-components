@@ -34,7 +34,8 @@ NOTE: still in development (the user, 2026-10-29): more style packages come; the
   are filled in with a light and a strong tone (a two-tone icon; currentColor is the strong tone). "": gray.
   CIRCLE in it is the color of the circle: a ring that cuts a part out (Ex: around the dot of a new mail).
 - Motion: the cover comes from nothing and the card rises 50 px while it comes (0.2 s); it goes at once; none with reduced motion.
-- Style packages: "ozden" (default). (Dialog.styles)
+- Style packages: "ozden" (default), "ozdenDark" (for a dark page; Dialog.confirm / alert / prompt take styleName too).
+  (Dialog.styles)
 - The buttons (the user, 2026-10-30): style.buttons[type] = { styleName, tone, style }: a template of SmartButton
   ("ozdenType1"; Cancel and icon: "ozdenType3", a faint edge, the user 2026-11-05), a tone of it
   (primary: "cyan", danger: "orange"...; icon: "white"; the user, 2026-11-04) and only the keys that differ.
@@ -904,4 +905,41 @@ Dialog.ICON_TONES = {
 // NOTE: more packages come (the user, 2026-10-29); a new one needs only the keys that differ from ozden.
 Dialog.styles = {
     ozden: DialogDefaults.style,
+
+    // For a dark page (2026-11-06): the black tones of the kit; the fields and the buttons take their dark looks.
+    ozdenDark: {
+        cover: { color: Black(0.65) },
+        card: {
+            color: "#232322",
+            border: 1,
+            borderColor: White(0.16),
+            boxShadow: "0 10px 30px rgba(0, 0, 0, 0.45)",
+        },
+        title: { textColor: White(0.92) },
+        message: { textColor: White(0.62) },
+        // WHY these colors: the errorColor and successColor of ozden are deepened for white; on this card they are too dark.
+        status: { errorColor: "#FF9F93", infoColor: White(0.6), successColor: "#7FE3B5" },
+        footer: { color: "#1C1C1B", lineColor: White(0.1) },
+        fieldStyleName: "ozdenDark",
+        centered: {
+            iconArea: { color: "#232322" },
+            iconCircle: { color: "#32322F" },
+            icon: { color: White(0.88), lightColor: White(0.35) },
+        },
+        buttons: {
+            primary: { styleName: "ozdenType1Dark", tone: "cyanDark", style: {} },
+            secondary: { styleName: "ozdenType3Dark", tone: "", style: {} },
+            danger: { styleName: "ozdenType1Dark", tone: "orangeDark", style: {} },
+            warning: { styleName: "ozdenType1Dark", tone: "yellowDark", style: {} },
+            success: { styleName: "ozdenType1Dark", tone: "greenDark", style: {} },
+            info: { styleName: "ozdenType1Dark", tone: "blueDark", style: {} },
+            icon: {
+                styleName: "ozdenType3Dark",
+                tone: "",
+                style: {
+                    icon: { opacity: 1 },
+                },
+            },
+        },
+    },
 };
