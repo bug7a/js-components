@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>CodeEditor</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- LIBRARY FILES -->
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- COMPONENT FILES -->
+        <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/check-box.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/code-editor.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+
+        /* Bismillah */
+
+        // CodeEditor (comp/code-editor.js): line numbers and colors, in the two themes. Write in them: Tab indents,
+        // Enter keeps the indent, Ctrl (or Cmd) + / comments the lines out, and undo takes them back.
+        // The buttons change the language of both of them. "100000 lines" shows that a big text stays fast.
+
+        // *** VARIABLES:
+        const PAGE_COLOR = "#ECEBE8";
+        const SOFT_TEXT = "#6F6E6B";
+        const PANEL_MIN_WIDTH = 340;
+        const PANEL_MAX_WIDTH = 620;
+        const EDITOR_HEIGHT = 340;
+        const MANY_LINES_COUNT = 100000;
+
+        const SAMPLES = {
+            python: [
+                '"""A small program: the sum of a list."""',
+                "",
+                "from statistics import mean",
+                "",
+                "PRICES = [12.5, 7, 0x10]  # three prices",
+                "",
+                "",
+                "@staticmethod",
+                "def total(values, tax=0.18):",
+                '    """More than one line',
+                '    of a text."""',
+                "    result = sum(values) * (1 + tax)",
+                "    if result > 100 and not values:",
+                '        print("Too much", result)',
+                "    return round(result, 2)",
+                "",
+                "",
+                'print(f"Total: {total(PRICES)}")',
+            ],
+            javascript: [
+                "// A small component of basic.js",
+                "const Counter = function (params = {}) {",
+                "    let count = 0;",
+                "    const label = Label({ text: `Count: ${count}`, fontSize: 20 });",
+                "    /* A click: one",
+                "       more */",
+                '    label.on("click", function () {',
+                "        count += 1;",
+                '        label.text = "Count: " + count;',
+                "    });",
+                "    return label;",
+                "};",
+            ],
+            json: [
+                "{",
+                '    "name": "basicjs",',
+                '    "version": 0.1,',
+                '    "stable": false,',
+                '    "tags": ["gui", null],',
+                '    "author": { "name": "Bugra" }',
+                "}",
+            ],
+            html: [
+                "<!-- A page -->",
+                '<div class="card" data-id="7">',
+                "    <h1>Title</h1>",
+                '    <img src="photo.png"',
+                '         alt="A photo">',
+                "</div>",
+            ],
+            css: [
+                "/* A card */",
+                ".card {",
+                "    color: #333;",
+                "    margin: 10px 2em;",
+                '    font-family: "Open Sans";',
+                "}",
+            ],
+            sql: [
+                "-- The best customers",
+                "SELECT name, SUM(total) AS spent",
+                "FROM orders",
+                "WHERE total > 100 AND status = 'paid'",
+                "GROUP BY name",
+                "ORDER BY spent DESC LIMIT 10;",
+            ],
+            bash: [
+                "#!/bin/sh",
+                "# Copies the files",
+                'for file in "$HOME"/*.txt; do',
+                '    echo "Copying $file"',
+                "    cp $file /tmp/",
+                "done",
+            ],
+        };
+
+        const LANGUAGE_NAMES = { python: "Python", javascript: "JavaScript", json: "JSON", html: "HTML", css: "CSS", sql: "SQL", bash: "Bash" };
+
+        let editors = [];
+
+        // First running function. (basic.js calls it when the page is ready)
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            // BOX: Page (it scrolls when the window is lower than the samples)
+            const pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+
+            // GROUP: The title, the controls and the two themes
+            VGroup({ width: "100%", height: "auto", align: "center top", gap: 16, padding: [16, 28], clipContent: 0 });
+
+                Label({ text: "CodeEditor", fontSize: 24, bold: 1, textColor: Black(0.8) });
+
+                createControls();
+
+                // GROUP: The two themes side by side (one under the other on a narrow screen)
+                HGroup({ width: "100%", height: "auto", align: "center top", gap: 20, wrap: 1 });
+                    editors.push(createPanel("Light", "styleName: \"light\" (default)", "light"));
+                    editors.push(createPanel("Dark", "styleName: \"dark\"", "dark"));
+                endGroup();
+
+            endGroup();
+
+            endBox();
+
+            ScrollBar({ scrollableBox: pageBox });
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        const eachEditor = function (func) {
+            editors.forEach(func);
+        };
+
+        const showLanguage = function (language) {
+            eachEditor(function (editor) {
+                editor.setLanguage(language);
+                editor.setValue(SAMPLES[language].join("\n"), 1);
+            });
+        };
+
+        const showManyLines = function () {
+            const lines = [];
+            for (let i = 1; i <= MANY_LINES_COUNT; i++) lines.push("value_" + i + " = " + i + "  # line " + i);
+            eachEditor(function (editor) {
+                editor.setLanguage("python");
+                editor.setValue(lines.join("\n"), 1);
+                editor.goToLine(MANY_LINES_COUNT / 2);
+            });
+        };
+
+        // GROUP: The buttons and the check boxes
+        const createControls = function () {
+
+            HGroup({ width: "100%", height: "auto", align: "center center", gap: 8, wrap: 1 });
+                Object.keys(LANGUAGE_NAMES).forEach(function (language) {
+                    SmartButton({ labelText: LANGUAGE_NAMES[language], onClick: function () { showLanguage(language); } });
+                });
+                SmartButton({ labelText: MANY_LINES_COUNT + " lines", tone: "cyan", onClick: showManyLines });
+            endGroup();
+
+            HGroup({ width: "100%", height: "auto", align: "center center", gap: 18, wrap: 1 });
+                CheckBox({ labelText: "Line numbers", checked: 1, onChange: function (self) { eachEditor(function (editor) { editor.setShowLineNumbers(self.checked); }); } });
+                CheckBox({ labelText: "Read only", onChange: function (self) { eachEditor(function (editor) { editor.setReadOnly(self.checked); }); } });
+            endGroup();
+
+        };
+
+        // GROUP: A title, a CodeEditor and the place of its cursor. Returns the CodeEditor.
+        const createPanel = function (titleText, noteText, styleName) {
+            VGroup({ width: "auto", height: "auto", align: "left top", gap: 8, css: { flex: "1 1 " + PANEL_MIN_WIDTH + "px", maxWidth: PANEL_MAX_WIDTH + "px", minWidth: "0" } });
+
+                HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
+                    Label({ text: titleText, fontSize: 15, bold: 1, textColor: Black(0.75) });
+                    Label({ text: basic.escapeHtml(noteText), fontSize: 12, textColor: SOFT_TEXT });
+                endGroup();
+
+                const lblPlace = Label({ text: "Line 1, column 1", fontSize: 12, textColor: SOFT_TEXT });
+
+                const editor = CodeEditor({
+                    styleName: styleName,
+                    height: EDITOR_HEIGHT,
+                    language: "python",
+                    value: SAMPLES.python.join("\n"),
+                    onCursorChange: function (self) {
+                        lblPlace.plainText = "Line " + self.cursorLine + ", column " + self.cursorColumn;
+                    },
+                });
+
+            endGroup();
+            return editor;
+        };
+
+        </script>
+
+    </head>
+    <body>
+    </body>
+</html>

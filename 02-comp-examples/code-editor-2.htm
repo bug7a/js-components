@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>A small code editor</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- LIBRARY FILES -->
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- COMPONENT FILES -->
+        <script src="../comp/context-menu.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/menu-bar.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/status-bar.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/splitter.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/tree-view.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/code-editor.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/log-view.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+
+        /* Bismillah */
+
+        // A small code editor: MenuBar, Splitter, TreeView, CodeEditor, LogView and StatusBar in one window.
+        // Click a file. Ctrl (or Cmd) + S saves it, F5 runs it, View > Dark theme changes the theme in place.
+
+        // *** VARIABLES:
+        const THEMES = {
+            light: { pageColor: "#FFFFFF", treeStyleName: "classic" },
+            dark: { pageColor: "#1C1C1B", treeStyleName: "dark" },
+        };
+        const SAVED_MESSAGE_TIME = 3000; // ms
+        const RUN_LINE_TIME = 300; // ms
+        const FILE_LIST_WIDTH = 190;
+        const OUTPUT_HEIGHT = 150;
+
+        const FILES = {
+            "main.py": {
+                language: "python",
+                value: [
+                    '"""The first program."""',
+                    "",
+                    "from tools import total",
+                    "",
+                    "PRICES = [12.5, 7, 16]  # three prices",
+                    "",
+                    "",
+                    "def main():",
+                    '    print("Total:", total(PRICES))',
+                    "",
+                    "",
+                    'if __name__ == "__main__":',
+                    "    main()",
+                ].join("\n"),
+            },
+            "tools.py": {
+                language: "python",
+                value: [
+                    "def total(values, tax=0.18):",
+                    '    """The sum of the values, with the tax."""',
+                    "    return round(sum(values) * (1 + tax), 2)",
+                ].join("\n"),
+            },
+            "settings.json": {
+                language: "json",
+                value: ['{', '    "language": "en",', '    "dark": false,', '    "size": [800, 600]', '}'].join("\n"),
+            },
+            "report.sql": {
+                language: "sql",
+                value: ["SELECT name, SUM(total) AS spent", "FROM orders", "GROUP BY name", "ORDER BY spent DESC;"].join("\n"),
+            },
+        };
+
+        const RUN_LINES = [
+            { text: "python main.py", level: "debug" },
+            { text: "Reading 3 prices", level: "info" },
+            { text: "Total: 41.89", level: "success" },
+            { text: "A price has no tax rate: the default was used", level: "warn" },
+        ];
+
+        let themeName = "light";
+        let openFileName = "main.py";
+        let menuBar, outerSplit, treeView, editor, logView, statusBar;
+        let runTimer = null;
+        let runLineIndex = 0;
+
+        // First running function. (basic.js calls it when the page is ready)
+        const start = function () {
+
+            page.color = THEMES[themeName].pageColor;
+
+            // GROUP: The window: the bars take their own height, the areas the rest
+            VGroup({ left: 0, top: 0, width: "100%", height: "100%", align: "left top", gap: 0 });
+
+                menuBar = MenuBar({ styleName: themeName, menus: makeMenus(), shrink: 0 });
+
+                // BOX: The areas
+                startBox({ width: "100%", height: "auto", color: "transparent", grow: 1, css: { minHeight: "0", flexBasis: "0" } });
+
+                    outerSplit = Splitter({ styleName: themeName, firstSize: FILE_LIST_WIDTH, minFirst: 100, minSecond: 200 });
+
+                    createFileList();
+
+                    createIn(outerSplit.second, function () {
+                        const innerSplit = Splitter({ styleName: themeName, direction: "vertical", secondSize: OUTPUT_HEIGHT, minFirst: 80, minSecond: 60 });
+                        themedObjects.push(innerSplit);
+                        createIn(innerSplit.first, function () {
+                            editor = CodeEditor({
+                                styleName: themeName,
+                                height: "100%",
+                                language: FILES[openFileName].language,
+                                value: FILES[openFileName].value,
+                                style: { box: { border: 0, round: 0 } },
+                                onChange: function (self) { FILES[openFileName].value = self.value; },
+                                onCursorChange: showCursor,
+                            });
+                        });
+                        createIn(innerSplit.second, function () {
+                            logView = LogView({
+                                styleName: themeName,
+                                height: "100%",
+                                style: { box: { border: 0, round: 0 } },
+                                emptyText: "F5 runs the program. Its output comes here.",
+                            });
+                        });
+                    });
+
+                endBox();
+
+                statusBar = StatusBar({
+                    styleName: themeName,
+                    messageText: "Ready",
+                    shrink: 0,
+                    items: [
+                        { key: "place", text: "Line 1, column 1" },
+                        { key: "language", text: FILES[openFileName].language },
+                    ],
+                });
+
+            endGroup();
+
+            themedObjects.push(menuBar, outerSplit, editor, logView, statusBar);
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        const themedObjects = []; // The objects with setTheme()
+
+        // WHY made again: TreeView has no setTheme(); a style package is chosen when it is made.
+        const createFileList = function () {
+            if (treeView) treeView.remove();
+            treeView = createIn(outerSplit.first, function () {
+                return TreeView({
+                    styleName: THEMES[themeName].treeStyleName,
+                    width: "100%",
+                    height: "100%",
+                    value: openFileName,
+                    items: Object.keys(FILES).map(function (name) { return { key: name, text: name }; }),
+                    style: { box: { border: 0, round: 0 } },
+                    onSelect: function (self) { openFile(self.value); },
+                });
+            });
+        };
+
+        const makeMenus = function () {
+            return [
+                { text: "File", items: [
+                    { text: "Save", key: "save", shortcut: "Ctrl+S", onClick: save },
+                ] },
+                { text: "View", items: [
+                    { text: "Dark theme", key: "dark", checked: 0, onClick: toggleTheme },
+                    { text: "Line numbers", key: "numbers", checked: 1, onClick: function (self, item) { toggleLineNumbers(item); } },
+                    { text: "File list", key: "files", checked: 1, onClick: function (self, item) { toggleFileList(item); } },
+                ] },
+                { text: "Run", items: [
+                    { text: "Run the program", key: "run", shortcut: "F5", onClick: toggleRun },
+                    { text: "Clear the output", key: "clear", onClick: function () { logView.clearLines(); } },
+                ] },
+            ];
+        };
+
+        const showCursor = function (self) {
+            statusBar.setItemText("place", "Line " + self.cursorLine + ", column " + self.cursorColumn);
+        };
+
+        const openFile = function (name) {
+            openFileName = name;
+            editor.setLanguage(FILES[name].language);
+            editor.setValue(FILES[name].value, 1);
+            statusBar.setItemText("language", FILES[name].language);
+            statusBar.setMessage(name);
+        };
+
+        const save = function () {
+            statusBar.setMessage(openFileName + " was saved", "success", SAVED_MESSAGE_TIME);
+            logView.success("Saved: " + openFileName);
+        };
+
+        const toggleTheme = function () {
+            themeName = (themeName === "dark") ? "light" : "dark";
+            page.color = THEMES[themeName].pageColor;
+            themedObjects.forEach(function (obj) { obj.setTheme(themeName); });
+            createFileList();
+            menuBar.setItemChecked("dark", (themeName === "dark") ? 1 : 0);
+        };
+
+        const toggleLineNumbers = function (item) {
+            editor.setShowLineNumbers(!item.checked);
+            menuBar.setItemChecked("numbers", !item.checked);
+        };
+
+        const toggleFileList = function (item) {
+            outerSplit.setAreaVisible("first", !item.checked);
+            menuBar.setItemChecked("files", !item.checked);
+        };
+
+        const writeRunLine = function () {
+            const line = RUN_LINES[runLineIndex % RUN_LINES.length];
+            runLineIndex++;
+            logView.addLine(line.text, line.level);
+        };
+
+        const toggleRun = function () {
+            if (runTimer) {
+                clearInterval(runTimer);
+                runTimer = null;
+                statusBar.setBusy(0);
+                statusBar.setMessage("Ready");
+                return;
+            }
+            runTimer = setInterval(writeRunLine, RUN_LINE_TIME);
+            statusBar.setBusy(1);
+            statusBar.setMessage("Running... (F5 stops it)");
+        };
+
+        </script>
+
+    </head>
+    <body>
+    </body>
+</html>
