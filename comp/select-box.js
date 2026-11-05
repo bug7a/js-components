@@ -261,7 +261,7 @@ const SelectBoxDefaults = {
             box: { color: "transparent", border: 0, round: 0, padding: 0 },
             list: { gap: 0 },
             row: { height: "auto", padding: [8, 8], gap: 10, color: "transparent", round: 6, motion: "" },
-            hover: { color: Black(0.06) },
+            hover: { color: Black(0.06), lineColor: "" }, // WHY: "": no lines above and under the row (ItemList ozden has them).
             selected: { color: Black(0.04), opacity: 1 },
             disabled: { opacity: 0.4 },
             focus: { ringColor: "transparent" }, // WHY: The keyboard stays in the field / search box (the active row is painted).

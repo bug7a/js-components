@@ -6,7 +6,8 @@ ItemList - v26.11
 
 UI COMPONENT TEMPLATE
 - NEW PROJECTS (the user, 2026-11-05): use styleName "ozden" (the default: the rows of the old comp-m1 SelectItem,
-  its search box white), unless the user asks for another look.
+  white with a thin line above and under them under the mouse; its search box the ozden SearchInput in white),
+  unless the user asks for another look.
 - A list of items: an icon, a title and a description on every row, or your own row (createItemView).
   The new version of comp-m1/item-list.js (ItemList.create / setItemCreationFunction).
 - Layouts: "vertical" (a list), "horizontal" (one row of tiles: categories, cards) and "grid" (tiles that
@@ -114,7 +115,7 @@ const ItemListDefaults = {
             gap: 0, // Between the rows of the vertical layout
         },
         // A row of the vertical layout (the list of comp-m1 SelectItem, 02-comp-m1-samples/select-item.htm):
-        // as wide as the list, white under the mouse, the selected one half transparent.
+        // as wide as the list, white under the mouse with a thin line above and under it, the selected one half transparent.
         row: {
             height: 80, // "auto": as high as its content (a createItemView)
             padding: [20, 12],
@@ -125,7 +126,8 @@ const ItemListDefaults = {
             round: 0,
             opacity: 1,
             boxShadow: "",
-            motion: "background-color 0.2s",
+            lineColor: "", // A line at the top and at the bottom of the row (1 px, inside it: no row moves). "": none
+            motion: "background-color 0.2s, box-shadow 0.2s", // WHY: box-shadow: the lines come and go with the color.
         },
         // An item of the horizontal and grid layouts: the icon on top, the texts under it
         // (the category items of the home page of the template)
@@ -158,9 +160,9 @@ const ItemListDefaults = {
             textColor: Black(0.4),
         },
         // A state: only the keys that change
-        hover: { color: "white" }, // style: { hover: {} }: no look under the mouse
+        hover: { color: "white", lineColor: Black(0.2) }, // style: { hover: {} }: no look under the mouse. (The lines: the user, 2026-11-05)
         pressed: { color: null }, // A click, Enter or Space: this color at once, then it fades back (style.row.motion). null: none
-        selected: { color: "transparent", opacity: 0.5 }, // WHY: transparent: a selected row does not get white under the mouse.
+        selected: { color: "transparent", lineColor: "", opacity: 0.5 }, // WHY: a selected row does not get the white and its lines under the mouse.
         disabled: { opacity: 0.4 },
         focus: { ringColor: "rgba(55, 56, 54, 0.5)" }, // The ring of the keyboard focus
         icon: { size: 50, round: 4, color: "transparent" },
@@ -168,20 +170,16 @@ const ItemListDefaults = {
         desc: { fontSize: 14, textColor: "gray", marginTop: -4 }, // WHY: -4: the old title (top 25) and description (top 49) overlap a little.
         check: { visible: 0, size: 22, color: "#373836", iconColor: "white", borderColor: Black(0.25) }, // A mark on the selected rows
         empty: { fontSize: 16, textColor: Black(0.4) },
-        // The search box (showSearch: 1): the params of SearchInput. The old UISearchBox of the template, a little smaller.
+        // The search box (showSearch: 1): the params of SearchInput: its ozden package, white and nearly square
+        // (the user, 2026-11-05), as high as the old UISearchBox of the template.
         search: {
+            styleName: "ozden", // A package of SearchInput.styles: its border, its bottom line, its icons
             height: 40,
             padding: [0, 0, 0, 0], // left, top, right, bottom: 0, as wide as the list
             fontSize: 18,
             color: "white",
-            textColor: "rgba(0, 0, 0, 0.8)",
-            placeholderColor: "",
-            border: 0,
-            borderColor: "rgba(0, 0, 0, 0.1)",
-            borderBottomStyle: "2px solid rgba(0, 0, 0, 0.06)",
-            round: 6,
+            round: 2,
             searchIconSize: 20,
-            invertIconColor: 0,
         },
         scrollBar: {
             bar_border: 0,
@@ -362,12 +360,27 @@ const ItemList = function (params = {}) {
 
         row.color = look.color;
         row.borderColor = look.borderColor;
+        paintLines(row, look.lineColor || "");
         row.css.opacity = String(isEntryEnabled(entry) ? look.opacity : _s.disabled.opacity);
         row.aria = { selected: isOn ? "true" : "false", disabled: isEntryEnabled(entry) ? "false" : "true" };
 
         if (row.lblTitle) row.lblTitle.textColor = (isOn && _s.title.selectedTextColor) ? _s.title.selectedTextColor : _s.title.textColor;
         if (row.check) paintCheck(row.check, isOn);
         if (row.isTile) paintTile(row, isOn);
+    };
+
+    // The lines at the top and at the bottom of a row (look.lineColor): inset shadows, so no row moves.
+    // WHY: Only when the lines change: the own shadow of a row (style.row.boxShadow, or one set by createItemView)
+    //      stays under them, and a package without lines never touches it.
+    const paintLines = function (row, lineColor) {
+        const shownLineColor = row.shownLineColor || "";
+        if (lineColor === shownLineColor) return;
+        if (!shownLineColor) row.ownShadow = row.boxShadow;
+        row.shownLineColor = lineColor;
+        const shadows = [];
+        if (lineColor) shadows.push("inset 0 1px 0 " + lineColor, "inset 0 -1px 0 " + lineColor);
+        if (row.ownShadow) shadows.push(row.ownShadow);
+        row.boxShadow = shadows.join(", ");
     };
 
     // The effects of a selected tile: the circle goes, the icon grows and gets its colors, the title is bold.
@@ -1321,7 +1334,7 @@ ItemList.styles = {
             hover: { color: "#F7F8F6", borderColor: Black(0.14) },
         },
         section: { padding: [14, 6], fontSize: 13, textColor: Black(0.45) }, // WHY: 14: over the texts of the cards
-        hover: { color: "#F7F8F6", borderColor: Black(0.14) },
+        hover: { color: "#F7F8F6", borderColor: Black(0.14), lineColor: "" }, // WHY: "": the lines of ozden are not filled in.
         selected: { color: "#EEF6F3", borderColor: "#3D7A6B", opacity: 1 },
         focus: { ringColor: "rgba(61, 122, 107, 0.6)" },
         icon: { size: 40, round: 10, color: "#F1F2EF" },
@@ -1330,6 +1343,7 @@ ItemList.styles = {
         check: { visible: 1, size: 20, color: "#3D7A6B", iconColor: "white", borderColor: Black(0.2) },
         empty: { fontSize: 14, textColor: Black(0.45) },
         search: {
+            styleName: "classic", // WHY: not the ozden package of the default search box
             height: 40,
             padding: [8, 8, 8, 4],
             fontSize: 15,
@@ -1375,7 +1389,7 @@ ItemList.styles = {
             hover: { color: "#232322" },
         },
         section: { padding: [14, 6], fontSize: 13, textColor: White(0.45) }, // WHY: 14: over the texts of the cards
-        hover: { color: "#232322" }, // surface2
+        hover: { color: "#232322", lineColor: "" }, // surface2. WHY: "": the lines of ozden are not filled in.
         selected: { color: "#2C2C2A", borderColor: "#65A293", opacity: 1 }, // surface3, accent
         focus: { ringColor: "#65A293" },
         icon: { size: 40, round: 8, color: "#232322" },
@@ -1384,6 +1398,7 @@ ItemList.styles = {
         check: { visible: 1, size: 20, color: "#65A293", iconColor: "#141414", borderColor: White(0.25) },
         empty: { fontSize: 14, textColor: White(0.45) },
         search: {
+            styleName: "classic", // WHY: not the ozden package of the default search box
             height: 40,
             padding: [8, 8, 8, 4],
             fontSize: 15,

@@ -106,7 +106,7 @@ App.addPage({
                 box: { color: "transparent", border: 0, padding: [App.BAR_SPACE, 10] },
                 list: { gap: 4 },
                 row: { height: 90, padding: [10, 0], gap: 20, round: 13, color: "transparent", motion: "background-color 0.3s" },
-                hover: { color: Black(0.04) },
+                hover: { color: Black(0.04), lineColor: "" }, // WHY: "": no lines above and under the row (ozden has them).
                 selected: { color: App.colors.whitesmoke, opacity: 1 },
             },
             createItemView: createRow,

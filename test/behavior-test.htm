@@ -1220,6 +1220,42 @@
             defaultList.remove();
         });
 
+        test("ItemList: ozden draws a line above and under the row under the mouse, the own shadow of a row stays", async function () {
+            // WHY: The browser writes a shadow in its own words: the expected ones are read back the same way.
+            const asWritten = function (shadow) {
+                const probe = document.createElement("div");
+                probe.style.boxShadow = shadow;
+                return probe.style.boxShadow;
+            };
+            const OWN_SHADOW = asWritten("inset 0 -1px 0 " + Black(0.05));
+            const hover = (row, isOver) => row.elem.dispatchEvent(new MouseEvent(isOver ? "mouseenter" : "mouseleave"));
+            const shadowsUnderMouse = function (row) {
+                hover(row, 1);
+                const over = row.elem.style.boxShadow;
+                hover(row, 0);
+                return [over, row.elem.style.boxShadow];
+            };
+            const ozdenList = ItemList({ width: 300, height: 300, items: ["Apple", "Banana"], selectedKeys: ["1"] });
+            const shadowList = ItemList({ width: 300, height: 300, items: ["Apple"], style: { row: { boxShadow: OWN_SHADOW } } });
+            const modernList = ItemList({ width: 300, height: 300, items: ["Apple"], styleName: "modern" });
+            const ozden = shadowsUnderMouse(ozdenList.getRow("0"));
+            const selected = shadowsUnderMouse(ozdenList.getRow("1"));
+            const own = shadowsUnderMouse(shadowList.getRow("0"));
+            const modernBefore = modernList.getRow("0").elem.style.boxShadow;
+            const modern = shadowsUnderMouse(modernList.getRow("0"));
+            const LINES = "inset 0 1px 0 " + Black(0.2) + ", inset 0 -1px 0 " + Black(0.2);
+            const isOzdenOk = ozden[0] === asWritten(LINES) && ozden[1] === "";
+            const isSelectedOk = selected[0] === "" && selected[1] === "";
+            const isOwnOk = own[0] === asWritten(LINES + ", " + OWN_SHADOW) && own[1] === OWN_SHADOW;
+            const isModernOk = modern[0] === modernBefore && modern[1] === modernBefore && modernBefore !== "";
+            check("ItemList: ozden draws a line above and under the row under the mouse, the own shadow of a row stays",
+                isOzdenOk && isSelectedOk && isOwnOk && isModernOk,
+                "ozden: " + ozden.join(" -> ") + " | selected: " + selected.join(" -> ") + " | own: " + own.join(" -> ") + " | modern: " + modern.join(" -> "));
+            ozdenList.remove();
+            shadowList.remove();
+            modernList.remove();
+        });
+
         test("ItemList: a search with no result shows its text in the list", async function () {
             const list = ItemList({ width: 300, height: 300, items: ["Apple", "Banana"] });
             await wait(30);

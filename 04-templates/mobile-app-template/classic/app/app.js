@@ -529,7 +529,7 @@ App.createMenu = function () {
             style: {
                 box: { border: 0, padding: [4, 0] },
                 row: { height: 54, padding: [36, 0], gap: 10, color: "transparent", border: 1, borderColor: "transparent", round: 4 },
-                hover: { color: Black(0.06) },
+                hover: { color: Black(0.06), lineColor: "" }, // WHY: "": no lines above and under the row (ozden has them).
                 selected: { color: "white", borderColor: Black(0.2), opacity: 1 },
             },
             createItemView: App.createMenuRow,

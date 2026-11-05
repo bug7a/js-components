@@ -123,7 +123,7 @@ App.addPage({
                 list: { gap: 4 },
                 row: { height: 50, padding: [20, 0], gap: 12, round: 13, color: "transparent", motion: "background-color 0.3s" },
                 section: { height: 50, padding: [20, 0], fontSize: 24, textColor: Black(0.35) },
-                hover: { color: Black(0.06) },
+                hover: { color: Black(0.06), lineColor: "" }, // WHY: "": no lines above and under the row (ozden has them).
                 pressed: { color: Black(0.2) },
             },
             createItemView: createRow,
