@@ -9,6 +9,9 @@ UI COMPONENT
   onLoginClick / onSignupClick and calls box.waiting.show() / hide() and box.showAlert() around it.
 - The tab bar is comp-m4 Tabs (the pill variant, colored by the tab_ params), the waiting cover is comp-m4
   LoadingScreen with the moving clock (box.waiting.show() / hide(); waitingCoverColor, waitingClock).
+  tabWidth (2026-11-05, the user): "auto" (default) is as wide as its tabs; a width (Ex: the panelWidth) makes the
+  tabs share it. tabStyle: more keys of the style of that Tabs (pillBar, tab, pillActive, pillIndicator...), over the
+  look made from the tab_ params.
 - The LOGIN / SIGN UP buttons (2026-11-05, the user): buttonStyleName "" (default) keeps the flat buttons in
   primaryColor; a SmartButton template (Ex: "ozdenType3") makes them SmartButtons of the kit, in buttonTone (Ex:
   "blue"), with the text color of the tone. A passive one has the passive look of SmartButton.
@@ -45,6 +48,8 @@ const LoginPageDefaults = {
     tab_border: 1, // 1, 0
     tab_textColor: White(0.75), // White(0.75), "#373836",
     tab_selectedColor: "#000000", // "#000000", "white",
+    tabWidth: "auto", // the LOGIN / SIGN UP bar: "auto" (as wide as its tabs) or a width the tabs share (Ex: the panelWidth)
+    tabStyle: {}, // more keys of the style of its Tabs (pillBar, tab, pillActive, pillIndicator...), over the tab_ look
     inputStyleName: "", // "": the fields take the input_ colors below. An InputB package ("ozden", "ozdenDark"...): the fields take its look.
     buttonStyleName: "", // "": LOGIN / SIGN UP are flat buttons in primaryColor. A SmartButton template ("ozdenType3"...): SmartButtons
     buttonTone: "", // The tone of those SmartButtons (Ex: "blue"; "": the gray of the template)
@@ -449,15 +454,39 @@ const LoginPage = function(params = {}) {
 
     };
 
+    // The look of the LOGIN / SIGN UP bar from the tab_ params (the style of a pill Tabs)
+    const getTabBarStyle = function(barPadding) {
+        return {
+            pillBar: {
+                color: box.tab_backgroundColorBottom,
+                padding: [barPadding, barPadding],
+                gap: 3,
+                round: 8,
+                border: box.tab_border,
+                borderColor: box.tab_borderColor,
+            },
+            tab: { fontSize: 14, textColor: box.tab_textColor, padding: [12, 4], round: 6, minHeight: 0 },
+            tabHover: { color: "transparent", textColor: box.tab_textColor },
+            pillActive: { textColor: box.tab_textColor },
+            pillIndicator: { color: box.tab_selectedColor, round: 6, shadow: "none", motion: TAB_MOTION },
+        };
+    };
+
     // The LOGIN / SIGN UP bar: a pill Tabs in the colors of the tab_ params.
     const createTabBar = function() {
 
         // WHY: the edge of the bar is drawn inside its padding (as the old bar did), so the bar is not bigger with it.
         const barPadding = Math.max(0, TAB_BAR_PADDING - basic.num(box.tab_border));
 
+        // (the keys of tabStyle win over the look made from the tab_ params)
+        const tabStyle = JSON.parse(JSON.stringify(box.tabStyle || {}));
+        mergeIntoIfMissing(tabStyle, getTabBarStyle(barPadding));
+
         box.tabBar = Tabs({
             scale: 1, // WHY: the rest of this component is not scaled (basic.uiScale): its tab bar must not be either
             variant: "pill",
+            width: box.tabWidth,
+            fullWidth: (box.tabWidth === "auto") ? 0 : 1, // a width: the tabs share it
             tabs: [
                 { key: TAB_KEYS[0], text: "LOGIN" },
                 { key: TAB_KEYS[1], text: "SIGN UP" },
@@ -465,20 +494,7 @@ const LoginPage = function(params = {}) {
             value: TAB_KEYS[0],
             showArrows: 0,
             ariaLabel: "Login or sign up",
-            style: {
-                pillBar: {
-                    color: box.tab_backgroundColorBottom,
-                    padding: [barPadding, barPadding],
-                    gap: 3,
-                    round: 8,
-                    border: box.tab_border,
-                    borderColor: box.tab_borderColor,
-                },
-                tab: { fontSize: 14, textColor: box.tab_textColor, padding: [12, 4], round: 6, minHeight: 0 },
-                tabHover: { color: "transparent", textColor: box.tab_textColor },
-                pillActive: { textColor: box.tab_textColor },
-                pillIndicator: { color: box.tab_selectedColor, round: 6, shadow: "none", motion: TAB_MOTION },
-            },
+            style: tabStyle,
             onChange: function(self) {
                 box.setActiveTab(self.getIndex());
             },
