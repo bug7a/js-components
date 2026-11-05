@@ -15,8 +15,8 @@ UI COMPONENT
   checkBoxParams, "classic" by default; the row is the check box, its checked mark takes the accent). Load them
   before this file; without them a plain field and a plain check are drawn.
 - animated: 1 (2026-11-05): the panel and an opened section come with a fade and a short slide (they go faster),
-  the arrows turn with a small spring, and the search field gets the motions of SearchInput. Nothing moves at the
-  first view; off when the system asks for reduced motion. setAnimated(0/1).
+  the arrows turn with a small spring, and the search field and the check boxes get their own motions (SearchInput,
+  CheckBox). Nothing moves at the first view; off when the system asks for reduced motion. setAnimated(0/1).
 - The icon of the button is two-tone (2026-11-05): sliders on a light box, in the accent (style.buttonIcon).
 - Style packages: "light" (default). Select with styleName. (Filters.styles)
 
@@ -75,7 +75,8 @@ const FiltersDefaults = {
     // placeholder is searchPlaceholder; its animated is the animated of Filters (unless it is given here).
     searchInputParams: { styleName: "ozden", width: "100%", height: 50, fontSize: 18, searchIconSize: 20 },
     // The check boxes (the user, 2026-11-05): the params of every CheckBox (comp/check-box.js). The row look is
-    // style.row and the checked mark is the accent; a style given here wins.
+    // style.row and the checked mark is the accent; a style given here wins. Their animated is the animated of
+    // Filters (unless it is given here).
     checkBoxParams: { styleName: "classic", style: {} },
     onChange: function (self) { }, // The selection changed: self.getSelected(). (Not at create time, not with silent: 1)
     onPanelToggle: function (self) { }, // The panel opened / closed: self.panelOpened
@@ -239,6 +240,11 @@ const Filters = function (params = {}) {
 
     const applyAnimated = function () {
         if (box.searchInput) box.searchInput.setAnimated(box.animated);
+        box.sectionViews.forEach(function (view) {
+            view.rows.forEach(function (rowView) {
+                if (rowView.checkBox) rowView.checkBox.setAnimated(box.animated);
+            });
+        });
         if (isMotionOn()) {
             setArrowMotions();
             wasAnimated = 1;
@@ -278,6 +284,7 @@ const Filters = function (params = {}) {
             height: _s.row.height,
             labelText: basic.escapeHtml(option.labelText), // WHY: the label of a CheckBox is HTML
             checked: option.checked ? 1 : 0,
+            animated: (box.checkBoxParams.animated !== undefined) ? box.checkBoxParams.animated : box.animated,
             style: checkBoxStyle,
             onChange: function (self) {
                 option.checked = self.checked ? 1 : 0;

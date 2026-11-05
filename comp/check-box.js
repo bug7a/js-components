@@ -12,6 +12,10 @@ UI COMPONENT TEMPLATE
   The label is HTML: a text of the user goes in with basic.escapeHtml(text).
 - Whole object background can change on hover and checked states (style.hoverBox, style.checkedBox).
 - The empty square under the mouse: style.hoverMark (its borderColor, and its color when given; v26.11).
+- animated: 1 (the user, 2026-11-05; context/basic-js-animated-rules.md): the square grows a little under the mouse
+  (1.05) and the tick draws in from 0.6 with a fade, in 0.25 s with a soft stop. Nothing moves at the first view; off
+  when the system asks for reduced motion. animated: 0 (default) keeps the short tick motion it always had.
+  setAnimated(0/1).
 - Style packages: "classic" (default), "modern", "dark". Select with styleName. (CheckBox.styles)
   NEW PROJECTS (the user, 2026-11-04): use "classic" on a light page and "dark" on a dark page, unless the user
   asks for another one ("modern" only when asked).
@@ -35,6 +39,7 @@ const CheckBoxDefaults = {
     labelText: "",
     labelPosition: "right", // "right", "left"
     wrapLabel: 0, // 1: a long label wraps (the check box needs a width); 0: one line
+    animated: 0, // 1: the square grows a little under the mouse, the tick draws in (box.setAnimated(0/1))
     onChange: function (self) { }, // self.checked
     styleName: "classic", // "classic", "modern", "dark" or a name added to CheckBox.styles
     style: { // Classic style package (default)
@@ -111,6 +116,12 @@ const CheckBox = function (params = {}) {
     const TICK_HEIGHT_RATIO = 0.58;
     const TICK_RAISE_RATIO = 0.06; // The tick is lifted a little above the center.
     const TICK_HIDDEN_SCALE = 0.4; // The tick grows from this size when checked.
+    // MOTION (animated: 1)
+    const MOTION_TIME = "0.25s";
+    const MOTION_EASE = "cubic-bezier(0.2, 0.8, 0.2, 1)"; // a fast start, a soft stop
+    const HOVER_GROW = 1.05; // the square under the mouse
+    const TICK_COME_SCALE = 0.6; // the tick draws in from this size
+    let wasAnimated = 0;
 
     // *** PUBLIC VARIABLES:
     // NOTE: Default values are also public variables. (box.checked, box.enabled, box.labelText)
@@ -139,7 +150,8 @@ const CheckBox = function (params = {}) {
         const hoverColor = box.style.hoverMark.color;
         box.mark.color = (isHover && hoverColor) ? hoverColor : box.style.mark.color;
         box.mark.borderColor = (isHover) ? box.style.hoverMark.borderColor : box.style.mark.borderColor;
-        box.tick.css = { opacity: "0", transform: "rotate(45deg) scale(" + TICK_HIDDEN_SCALE + ")" };
+        const hiddenScale = (isMotionOn()) ? TICK_COME_SCALE : TICK_HIDDEN_SCALE;
+        box.tick.css = { opacity: "0", transform: "rotate(45deg) scale(" + hiddenScale + ")" };
     };
 
     const paintEnabled = function () {
@@ -149,12 +161,49 @@ const CheckBox = function (params = {}) {
         box.tabIndex = (isEnabled) ? 0 : -1;
     };
 
+    // *** MOTION (animated: 1)
+
+    const isMotionOn = function () {
+        if (box.animated != 1) return false;
+        return !(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    };
+
+    const getMarkTransform = function () {
+        if (isMouseOver && box.enabled == 1) return "scale(" + HOVER_GROW + ")";
+        return "none";
+    };
+
+    const paintMotion = function () {
+        if (!isMotionOn()) return;
+        box.mark.css = { transform: getMarkTransform() };
+    };
+
+    // The transitions of the motion, or the still look again (only when it was animated)
+    const applyAnimated = function () {
+        const tickTime = (isMotionOn()) ? MOTION_TIME + " " + MOTION_EASE : MOTION_DURATION;
+        if (isMotionOn()) {
+            // WHY the origin at the side of the edge: the grown square does not go out of the box at that edge
+            box.mark.css = { transformOrigin: (box.labelPosition === "left") ? "right center" : "left center" };
+            box.mark.setMotion("background-color " + MOTION_DURATION + ", border-color " + MOTION_DURATION + ", transform " + MOTION_TIME + " " + MOTION_EASE);
+            box.tick.css = { transition: "transform " + tickTime + ", opacity " + tickTime };
+            wasAnimated = 1;
+        } else if (wasAnimated) {
+            // WHY Now: the still look comes back at once (setMotion waits a moment: it is for the first view)
+            box.mark.setMotionNow("background-color " + MOTION_DURATION + ", border-color " + MOTION_DURATION);
+            box.mark.css = { transform: "none" };
+            box.tick.css = { transition: "transform " + tickTime + ", opacity " + tickTime };
+            wasAnimated = 0;
+        }
+        paint();
+    };
+
     // The look of the current state (checked, mouse over, enabled).
     const paint = function () {
         const isHover = (isMouseOver && box.enabled == 1);
         box.color = getBoxColor(isHover);
         paintMark(isHover);
         paintEnabled();
+        paintMotion();
         box.aria = { checked: (box.checked == 1), disabled: (box.enabled != 1) };
     };
 
@@ -195,6 +244,12 @@ const CheckBox = function (params = {}) {
     box.refresh = function () {
         paint();
     };
+
+    box.setAnimated = function (value) {
+        box.animated = (value == 1) ? 1 : 0;
+        applyAnimated();
+    };
+    // USAGE: checkBox.setAnimated(1)
 
     // *** OBJECT VIEW:
     box.clickable = 1;
@@ -294,7 +349,7 @@ const CheckBox = function (params = {}) {
 
     box.checked = basic.isOn(box.checked) ? 1 : 0;
     box.enabled = basic.isOn(box.enabled) ? 1 : 0;
-    paint();
+    applyAnimated(); // (it paints)
 
     return endObject(box);
 
