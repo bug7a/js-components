@@ -20,7 +20,8 @@
     /* Bismillah */
 
     // SelectBox with styleName: "ozden": text rows, the look of the old comp-m1 SelectText.
-    // The package gives the size (350 x 50), the search box and the list down to the page bottom.
+    // The package gives the size (350 x 50) and the search box; fullHeightList: 1 opens the list from the top of the
+    // page to its bottom (the comp-m1 SelectText opened full screen).
     // Your own rows (a picture, a description...): select-box-ozden-item.htm (createItemView).
 
     const FRUITS_PATH = "../assets/fruids/";
@@ -47,6 +48,7 @@
 
         fruitSelect = SelectBox({
             styleName: "ozden",
+            fullHeightList: 1,
             options: FRUITS.map(function (fruit) { return fruit.label; }),
             value: "Tomato",
             onChange: function (self) { println(self.value); },

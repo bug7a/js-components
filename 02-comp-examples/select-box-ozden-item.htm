@@ -61,7 +61,8 @@
     const start = function () {
 
         fruitSelect = SelectBox({
-            styleName: "ozden",         // 350 px wide, a search box, the list down to the page bottom
+            styleName: "ozden",         // 350 px wide, a search box; the rows: the ItemList package "ozden"
+            fullHeightList: 1,          // the list from the top of the page to its bottom (the comp-m1 SelectItem opened full screen)
             height: ROW_HEIGHT,
             options: FRUITS,
             value: "Tomato",

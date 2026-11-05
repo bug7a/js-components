@@ -249,6 +249,9 @@ const SelectBoxDefaults = {
         disabled: {
             opacity: 0.4,
         },
+        // The package of the ItemList of createItemView (ItemList.styles; the user, 2026-11-05: "ozden" by its name, the
+        // rows of the old comp-m1 SelectItem; "classic" is only its old name)
+        itemListStyleName: "ozden",
         // The style of the ItemList of createItemView (the keys of ItemList.styles.ozden: row, hover, selected,
         // disabled, check...). Its empty text takes style.empty. The check mark is shown only for multiple.
         itemList: {
@@ -613,6 +616,7 @@ const SelectBox = function (params = {}) {
                 ariaLabel: box.ariaLabel || "List",
                 onItemClick: onListItemClick,
                 onChange: onListChange,
+                styleName: _s.itemListStyleName,
                 style: getItemListStyle(),
                 scale: 1, // WHY: style.itemList is scaled already (with the style of SelectBox).
             });
