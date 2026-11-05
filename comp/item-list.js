@@ -14,6 +14,9 @@ UI COMPONENT TEMPLATE
 - Layouts: "vertical" (a list), "horizontal" (one row of tiles: categories, cards) and "grid" (tiles that
   wrap: files, icons, pictures). setLayout() changes it later.
 - Selection: "single", "multiple" or "none". The selected keys: getSelectedKeys(), the items: getSelected().
+  style.selected.canSelectAgain: 0 (ozden, ozdenDark; modern and dark: 1): in a single list the selected row can not
+  be chosen again: a click, Enter or Space does nothing (no onItemClick), no look under the mouse, no hand cursor.
+  The keys can still go to it (its focus ring; a screen reader reads it as selected).
   onChange(self, selectedItems) is NOT called at create time, by setItems() or with silent: 1.
 - Search box: showSearch: 1 puts a SearchInput (comp/search-input-v2.js, load it first) over the list;
   its look is style.search, more params in searchParams (Ex: the icon paths for your page). box.searchInput.
@@ -170,7 +173,10 @@ const ItemListDefaults = {
         // A state: only the keys that change
         hover: { color: "white", lineColor: Black(0.2) }, // style: { hover: {} }: no look under the mouse. (The lines: the user, 2026-11-05)
         pressed: { color: null }, // A click, Enter or Space: this color at once, then it fades back (style.row.motion). null: none
-        selected: { color: "transparent", lineColor: "", opacity: 0.5 }, // WHY: a selected row does not get the white and its lines under the mouse.
+        // WHY: a selected row does not get the white and its lines under the mouse.
+        // canSelectAgain 0 (single; the user, 2026-11-05, as SelectBox ozden and the comp-m1 SelectItem): it can not be
+        // chosen again: a click, Enter or Space does nothing (no onItemClick), no look under the mouse, no hand.
+        selected: { color: "transparent", lineColor: "", opacity: 0.5, canSelectAgain: 0 },
         disabled: { opacity: 0.4 },
         focus: { ringColor: "rgba(55, 56, 54, 0.5)" }, // The ring of the keyboard focus
         icon: { size: 50, round: 4, color: "transparent" },
@@ -302,6 +308,16 @@ const ItemList = function (params = {}) {
         return box.enabled == 1 && !basic.isOn(entry.data.disabled);
     };
 
+    // single, style.selected.canSelectAgain: 0 (ozden): the selected row can not be chosen again.
+    const isLockedEntry = function (entry) {
+        return box.selection === "single" && _s.selected.canSelectAgain == 0 && isSelected(entry);
+    };
+
+    // A row a click, Enter or Space chooses: enabled, not the locked selected one.
+    const isEntryChoosable = function (entry) {
+        return isEntryEnabled(entry) && !isLockedEntry(entry);
+    };
+
     const getSelectedItems = function () {
         return selectedKeys.map(findEntry).filter(Boolean).map(function (e) { return e.item; });
     };
@@ -358,8 +374,11 @@ const ItemList = function (params = {}) {
         const hoverLook = isTile ? _s.tile.hover : _s.hover;
         const selectedLook = isTile ? { color: _s.tile.selectedColor || _s.selected.color, borderColor: _s.selected.borderColor } : _s.selected;
         // WHY: The active row takes the look of the mouse after the selection: the keyboard sees it on a selected row too.
-        const activeLook = (entry.key === activeKey) ? hoverLook : {};
-        const look = Object.assign({}, _s.row, entry.isHover ? hoverLook : {}, isOn ? selectedLook : {}, activeLook);
+        // WHY: The locked selected row gets no look of the mouse (canSelectAgain: 0).
+        const isLocked = isLockedEntry(entry);
+        const activeLook = (entry.key === activeKey && !isLocked) ? hoverLook : {};
+        const mouseLook = (entry.isHover && !isLocked) ? hoverLook : {};
+        const look = Object.assign({}, _s.row, mouseLook, isOn ? selectedLook : {}, activeLook);
         if (look.opacity === undefined) look.opacity = 1;
         // WHY: In the look, not only in the click: a paint of the selection or of the mouse keeps the pressed color.
         if (entry.isPressed && _s.pressed.color) look.color = _s.pressed.color;
@@ -377,6 +396,7 @@ const ItemList = function (params = {}) {
         row.color = look.color;
         row.borderColor = look.borderColor;
         paintLines(row, look.lineColor || "");
+        row.cursor = isEntryChoosable(entry) ? "pointer" : "default";
         row.css.opacity = String(isEntryEnabled(entry) ? look.opacity : _s.disabled.opacity);
         row.aria = { selected: isOn ? "true" : "false", disabled: isEntryEnabled(entry) ? "false" : "true" };
 
@@ -531,7 +551,6 @@ const ItemList = function (params = {}) {
         row.shrink = 0;
         row.round = _s.row.round;
         row.border = _s.row.border;
-        row.cursor = "pointer";
         row.clickable = 1;
         row.clipContent = 0; // WHY: The focus ring is drawn on the edge of the row.
         if (_s.row.boxShadow) row.boxShadow = _s.row.boxShadow;
@@ -910,7 +929,7 @@ const ItemList = function (params = {}) {
     // list: the rows from the anchor to this one (selectRange).
     // WHY: Enter and Space did not call onItemClick: a list without selection (a menu) could not be used with keys.
     const activateEntry = function (entry, event) {
-        if (!isEntryEnabled(entry)) return;
+        if (!isEntryChoosable(entry)) return;
         flashRow(entry);
         focusedKey = entry.key;
         refreshTabOrder();
@@ -1542,7 +1561,7 @@ ItemList.styles = {
         },
         section: { padding: [14, 6], fontSize: 13, textColor: Black(0.45) }, // WHY: 14: over the texts of the cards
         hover: { color: "#F7F8F6", borderColor: Black(0.14), lineColor: "" }, // WHY: "": the lines of ozden are not filled in.
-        selected: { color: "#EEF6F3", borderColor: "#3D7A6B", opacity: 1 },
+        selected: { color: "#EEF6F3", borderColor: "#3D7A6B", opacity: 1, canSelectAgain: 1 }, // WHY: 1: a card is a card again (not the ozden rule)
         focus: { ringColor: "rgba(61, 122, 107, 0.6)" },
         icon: { size: 40, round: 10, color: "#F1F2EF" },
         title: { fontSize: 15, textColor: Black(0.85), fontFamily: "opensans-bold" },
@@ -1597,7 +1616,7 @@ ItemList.styles = {
         },
         section: { padding: [14, 6], fontSize: 13, textColor: White(0.45) }, // WHY: 14: over the texts of the cards
         hover: { color: "#232322", lineColor: "" }, // surface2. WHY: "": the lines of ozden are not filled in.
-        selected: { color: "#2C2C2A", borderColor: "#65A293", opacity: 1 }, // surface3, accent
+        selected: { color: "#2C2C2A", borderColor: "#65A293", opacity: 1, canSelectAgain: 1 }, // surface3, accent. WHY: 1: as modern
         focus: { ringColor: "#65A293" },
         icon: { size: 40, round: 8, color: "#232322" },
         title: { fontSize: 15, textColor: White(0.9), fontFamily: "opensans-bold" },

@@ -1256,8 +1256,9 @@
             modernList.remove();
         });
 
-        test("ItemList: setActiveKey gives a row the look of the mouse, also a selected row; null takes it back", async function () {
-            const list = ItemList({ width: 300, height: 300, items: ["Apple", "Banana"], selectedKeys: ["1"] });
+        test("ItemList: setActiveKey gives a row the look of the mouse, also a selected one that can be chosen again; null takes it back", async function () {
+            // WHY canSelectAgain 1: the selected row of ozden can not be chosen again (no look at all: its own test).
+            const list = ItemList({ width: 300, height: 300, items: ["Apple", "Banana"], selectedKeys: ["1"], style: { selected: { canSelectAgain: 1 } } });
             const lookOf = (key) => list.getRow(key).elem.style.backgroundColor + " / " + (list.getRow(key).elem.style.boxShadow ? "lines" : "none");
             list.setActiveKey("0");
             const apple = lookOf("0");
@@ -1268,7 +1269,7 @@
             const bananaAfter = lookOf("1");
             list.remove();
             const isOk = apple === "white / lines" && appleAfter === "transparent / none" && banana === "white / lines" && bananaAfter === "transparent / none";
-            check("ItemList: setActiveKey gives a row the look of the mouse, also a selected row; null takes it back", isOk,
+            check("ItemList: setActiveKey gives a row the look of the mouse, also a selected one that can be chosen again; null takes it back", isOk,
                 "Apple: " + apple + " -> " + appleAfter + ", Banana (selected): " + banana + " -> " + bananaAfter);
         });
 
@@ -1340,10 +1341,33 @@
             const ozdenRows = tryAgain({ styleName: "ozden" });
             const ozdenListRows = tryAgain({ styleName: "ozden", createItemView: createRowView });
             const classicRows = tryAgain({});
+            const classicListRows = tryAgain({ createItemView: createRowView }); // WHY: its ItemList gets the 1 of SelectBox
             const LOCKED = "--- / default / --lit / open / Banana";
-            const isOk = ozdenRows === LOCKED && ozdenListRows === LOCKED && classicRows === "-lit- / pointer / -lit- / closed / Banana";
+            const FREE = "-lit- / pointer / -lit- / closed / Banana";
+            const isOk = ozdenRows === LOCKED && ozdenListRows === LOCKED && classicRows === FREE && classicListRows === FREE;
             check("SelectBox ozden: the selected row can not be chosen again (no look, the keys skip it, a click does nothing), classic can", isOk,
-                "ozden: " + ozdenRows + " ;; ozden ItemList rows: " + ozdenListRows + " ;; classic: " + classicRows);
+                "ozden: " + ozdenRows + " ;; ozden ItemList rows: " + ozdenListRows + " ;; classic: " + classicRows + " ;; classic ItemList rows: " + classicListRows);
+        });
+
+        test("ItemList ozden: the selected row (single) can not be chosen again (a click, Enter, Space do nothing; no hand), modern can", async function () {
+            // The mouse on the selected Banana, then a click, Enter and Space on it.
+            const tryAgain = function (params) {
+                const clicked = [];
+                const list = ItemList(Object.assign({ width: 300, height: 300, items: ["Apple", "Banana"], selectedKeys: ["1"], onItemClick: function (self, item) { clicked.push(item); } }, params));
+                const banana = list.getRow("1").elem;
+                banana.dispatchEvent(new MouseEvent("mouseenter"));
+                const look = banana.style.backgroundColor;
+                banana.click();
+                key(banana, "keydown", "Enter");
+                key(banana, "keydown", " ");
+                const result = [clicked.length, banana.style.cursor, look].join(" / ");
+                list.remove();
+                return result;
+            };
+            const ozden = tryAgain({});
+            const modern = tryAgain({ styleName: "modern" });
+            check("ItemList ozden: the selected row (single) can not be chosen again (a click, Enter, Space do nothing; no hand), modern can",
+                ozden === "0 / default / transparent" && modern.startsWith("3 / pointer"), "ozden: " + ozden + " ;; modern: " + modern);
         });
 
         test("ItemList in a combobox: setActiveKey leaves the look of the mouse only on the active row", async function () {

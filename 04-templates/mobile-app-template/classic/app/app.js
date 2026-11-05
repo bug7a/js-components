@@ -530,7 +530,7 @@ App.createMenu = function () {
                 box: { border: 0, padding: [4, 0] },
                 row: { height: 54, padding: [36, 0], gap: 10, color: "transparent", border: 1, borderColor: "transparent", round: 4 },
                 hover: { color: Black(0.06), lineColor: "" }, // WHY: "": no lines above and under the row (ozden has them).
-                selected: { color: "white", borderColor: Black(0.2), opacity: 1 },
+                selected: { color: "white", borderColor: Black(0.2), opacity: 1, canSelectAgain: 1 }, // WHY: 1: the page of the menu opens again (and the menu closes)
             },
             createItemView: App.createMenuRow,
             onItemClick: function (self, item) {

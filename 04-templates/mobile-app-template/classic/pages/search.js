@@ -107,7 +107,7 @@ App.addPage({
                 list: { gap: 4 },
                 row: { height: 90, padding: [10, 0], gap: 20, round: 13, color: "transparent", motion: "background-color 0.3s" },
                 hover: { color: Black(0.04), lineColor: "" }, // WHY: "": no lines above and under the row (ozden has them).
-                selected: { color: App.colors.whitesmoke, opacity: 1 },
+                selected: { color: App.colors.whitesmoke, opacity: 1, canSelectAgain: 1 }, // WHY: 1: the selected product opens again
             },
             createItemView: createRow,
             onItemClick: (self, item) => ProductPreview.open(item.product),

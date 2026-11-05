@@ -610,7 +610,10 @@ const SelectBox = function (params = {}) {
 
     const getItemListStyle = function () {
         const check = Object.assign({}, _s.itemList.check, { visible: isMultiple() ? 1 : 0 });
-        return Object.assign({}, _s.itemList, { empty: _s.itemList.empty || _s.empty, check: check });
+        // WHY: The rows of the ItemList follow optionSelected.canSelectAgain: one setting for both kinds of rows (the
+        //      ozden package of ItemList has 0, so a classic SelectBox must give its 1).
+        const selected = Object.assign({}, _s.itemList.selected, { canSelectAgain: _s.optionSelected.canSelectAgain });
+        return Object.assign({}, _s.itemList, { empty: _s.itemList.empty || _s.empty, check: check, selected: selected });
     };
 
     const createListItemView = function (item, row) {
@@ -666,18 +669,11 @@ const SelectBox = function (params = {}) {
         setActive(isLockedOption(option) ? -1 : index, 0);
     };
 
-    // The cursor of the rows of the ItemList: a hand only on a row that can be chosen (the selection changes them).
-    const refreshListCursors = function () {
-        box.itemList.forEach(function (item, row) {
-            row.cursor = isActivatable(item.option) ? "pointer" : "default";
-        });
-    };
 
     // The search, the selection and the active row of the ItemList (its rows are made only once).
     const renderItemList = function () {
         if (!box.itemList) createItemList();
-        syncListSelection();
-        refreshListCursors();
+        syncListSelection(); // WHY: Also the cursors: the ItemList gives a hand only to a row that can be chosen.
         box.itemList.search(searchText);
         rows = [];
         box.itemList.forEach(function (item, row) {
