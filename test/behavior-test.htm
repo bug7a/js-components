@@ -4697,15 +4697,52 @@
             view.remove();
         });
 
-        test("LogView, ImageView, MenuBar and StatusBar: the dark package changes their colors, and never the light one", async function () {
-            const colorOf = function (obj) { return getComputedStyle(obj.elem).backgroundColor; };
-            const pairs = [LogView, ImageView, MenuBar, StatusBar].map(function (Comp) {
-                const light = Comp({});
-                const dark = Comp({ styleName: "dark" });
-                const lightAgain = Comp({ style: { box: { color: "rgb(1, 2, 3)" } } });
-                const fresh = Comp({});
-                const row = [colorOf(light), colorOf(dark), colorOf(lightAgain), colorOf(fresh)];
-                light.remove();
+        // *** THE DARK PACKAGES OF A WHOLE WINDOW (the Python package: App(theme="dark"))
+
+        // NOTE: ProgressBar ozdenDark is not here: this page loads LineProgressBar under that name.
+        test("Dark packages: Toggle dark and Dialog ozdenDark take the dark tones", async function () {
+            const isDark = function (color) {
+                const parts = color.match(/\d+(\.\d+)?/g).map(Number);
+                return parts[0] + parts[1] + parts[2] < 3 * 128;
+            };
+            const isLight = function (color) { return !isDark(color); };
+            const ground = function (element) { return getComputedStyle(element).backgroundColor; };
+
+            const toggle = Toggle({ left: 0, top: 0, styleName: "dark" });
+            const plainToggle = Toggle({ left: 100, top: 0 });
+            const toggleLooks = toggle.backgroundStyle.color === "black" && plainToggle.backgroundStyle.color === "whitesmoke"
+                && toggle.width === 70 && Toggle.styles.modern.backgroundStyle.color === undefined;
+            toggle.remove();
+            plainToggle.remove();
+
+            const dialog = Dialog({
+                styleName: "ozdenDark", titleText: "Name", removeOnClose: 1,
+                fields: [{ key: "n", titleText: "N" }],
+                buttons: [{ key: "ok", text: "OK", type: "primary" }, { key: "no", text: "No", type: "secondary" }],
+            });
+            await wait(30);
+            const cardIsDark = isDark(ground(dialog.card.elem));
+            const titleIsLight = isLight(getComputedStyle(findByText("Name", dialog.card.elem)).color);
+            const fieldIsDark = isDark(ground(dialog.elem.querySelector("input")));
+            const button = dialog.getButton("ok");
+            const buttonIsDarkTone = ground(button.elem) === "rgb(55, 98, 101)"; // cyanDark
+            const keepsSizes = dialog.style.footer.buttonHeight === 40;
+            dialog.close("api");
+            await wait(10);
+
+            const promise = Dialog.confirm({ styleName: "ozdenDark", titleText: "Sure?", danger: 1 });
+            await wait(30);
+            const top = Dialog.getTop();
+            const confirmIsDark = isDark(ground(top.card.elem)) && ground(top.getButton("confirm").elem) === "rgb(114, 72, 55)"; // orangeDark
+            top.getButton("cancel").elem.click();
+            await promise;
+            const packageStays = Dialog.styles.ozden.card.color === "white";
+
+            check("Dark packages: Toggle dark and Dialog ozdenDark take the dark tones",
+                toggleLooks && cardIsDark && titleIsLight && fieldIsDark && buttonIsDarkTone && keepsSizes && confirmIsDark && packageStays,
+                [toggleLooks, cardIsDark, titleIsLight, fieldIsDark, buttonIsDarkTone, keepsSizes, confirmIsDark, packageStays].join(" "));
+        });
+
         // *** SPLITTER (comp/splitter.js)
 
         const dragOf = function (element, fromX, fromY, toX, toY) {
