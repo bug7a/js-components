@@ -717,7 +717,9 @@ InputB.styles = {
     },
 
     // The fields of the contact form of __projects/webpage-ozden-panel (js/sections/contact.js, inputStyle and
-    // styleInput): a see-through field on the dark green page (#0E1A14), a green border on focus.
+    // styleInput): a see-through field, a green border on focus. BLACK TONES (the user, 2026-11-05): the popups and
+    // the edge of the warning ball are the black of the kit (the dark cards #1A1A19), not the dark green of that site
+    // (#0E1A14, #16261D); the focus line stays the focus color of the dark kit (SmartButton ozdenType1Dark).
     ozdenDark: {
         style: {},
         backgroundColor: "rgba(255, 255, 255, 0.04)", // FIELD_BG
@@ -737,14 +739,14 @@ InputB.styles = {
         inputColorScheme: "dark",
         placeholderColor: "rgba(255, 255, 255, 0.35)", // SITE.ON_DARK_FAINT (the site leaves it to the browser)
         descriptionTextColor: "rgba(255, 255, 255, 0.35)", // SITE.ON_DARK_FAINT
-        warningBallBorderColor: "#0E1A14", // SITE.INK: the page under the field
+        warningBallBorderColor: "#1A1A19", // the page under the field: a dark card of the kit
 
         warningBallType: "icon",
         warningColor: "#E5885E", // SITE.ACCENT
         requiredIconColor: "rgba(255, 255, 255, 0.28)",
 
         tooltipStyle: {
-            color: "#16261D", // POPUP_BG (SITE.INK_SOFT)
+            color: "#262624", // a popup: a little lighter than the dark card #1A1A19
             textColor: "rgba(255, 255, 255, 0.94)", // SITE.ON_DARK
             borderColor: "rgba(255, 255, 255, 0.22)", // FIELD_LINE_HOVER
             round: 6,
@@ -758,7 +760,7 @@ InputB.styles = {
         selectStyle: {
             color: "rgba(255, 255, 255, 0.07)", // FIELD_BG_SELECTED
             invertIconColor: 1,
-            listBackgroundColor: "#16261D", // POPUP_BG (SITE.INK_SOFT)
+            listBackgroundColor: "#262624", // as the tooltip
             listTextColor: "rgba(255, 255, 255, 0.94)", // SITE.ON_DARK
             listBorderColor: "rgba(255, 255, 255, 0.22)", // FIELD_LINE_HOVER
         },

@@ -26,12 +26,13 @@
         /* Bismillah */
 
         // InputB with styleName: "ozden" (the fields of __projects/contact-form)
-        // and "ozdenDark" (the contact form of __projects/webpage-ozden-panel).
+        // and "ozdenDark" (the contact form of __projects/webpage-ozden-panel, in the black tones of the kit since
+        // 2026-11-05).
         // EmailInputB, PhoneInputB, URLInputB and TextareaB are made from InputB, so they take the same packages.
 
         // The pages of the two projects
         const LIGHT_PAGE_COLOR = "white";
-        const DARK_PAGE_COLOR = "#0E1A14"; // SITE.INK of webpage-ozden-panel
+        const DARK_PAGE_COLOR = "#1A1A19"; // the dark cards of the kit (it was the dark green of webpage-ozden-panel)
         const DARK_CARD_COLOR = "rgba(255, 255, 255, 0.03)";
         const DARK_CARD_BORDER_COLOR = "rgba(255, 255, 255, 0.10)";
         const CARD_WIDTH = 420;
@@ -57,7 +58,7 @@
                             addFields("ozden");
                         endCard();
 
-                        // CARD: ozdenDark on the dark green page of the site
+                        // CARD: ozdenDark on a black page
                         startCard("styleName: \"ozdenDark\"", DARK_PAGE_COLOR, DARK_CARD_BORDER_COLOR, White(0.45));
                             VGroup({ width: "100%", height: "auto", align: "left top", gap: 14, padding: 20, color: DARK_CARD_COLOR, round: 14, border: 1, borderColor: DARK_CARD_BORDER_COLOR });
                             that.css.alignItems = "stretch";
