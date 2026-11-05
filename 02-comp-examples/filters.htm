@@ -12,7 +12,9 @@
         <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
         <script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
 
-        <!-- COMPONENT FILES -->
+        <!-- COMPONENT FILES (Filters takes its search field and its check boxes from SearchInput and CheckBox) -->
+        <script src="../comp/search-input-v2.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/check-box.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/filters.js" type="text/javascript" charset="utf-8"></script>
 
         <script>
@@ -22,6 +24,7 @@
         // Filters (comp/filters.js):
         // 1. The panel is open, in the layout of the page.
         // 2. A popup (panelMode: "popup"): only the button; the panel opens over the page. Another accent color and other data.
+        // Both are animated (animated: 1): the panel and an opened section come with a fade and a short slide, the arrows turn.
 
         const PAGE_COLOR = "#ECEBE8";
         const SOFT_TEXT = "#8C8B88";
@@ -67,6 +70,7 @@
                 that.clipContent = 0;
                     Label({ text: "1. The panel in the page", fontSize: 14, textColor: SOFT_TEXT });
                     vehicleFilters = Filters({
+                        animated: 1,
                         sections: VEHICLE_SECTIONS,
                         onChange: showSelected,
                     });
@@ -78,6 +82,7 @@
                 that.clipContent = 0;
                     Label({ text: "2. panelMode: popup, accentColor, panelHeight", fontSize: 14, textColor: SOFT_TEXT });
                     productFilters = Filters({
+                        animated: 1,
                         width: 320,
                         panelHeight: 360,
                         panelMode: "popup",
