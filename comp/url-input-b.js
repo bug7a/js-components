@@ -90,6 +90,31 @@ const URLInputB = function(params = {}) {
         return box.tinySelect.list[box.tinySelect.selectedIndex].label + box.input.text;
     };
 
+    // The protocol of the list that starts the value (the longest: "https://www." before "https://"), or -1
+    const findProtocolIndex = function(value) {
+        const list = box.tinySelect.list;
+        let found = -1;
+        list.forEach(function(item, index) {
+            const isLonger = (found === -1 || item.label.length > list[found].label.length);
+            if (value.indexOf(item.label) === 0 && isLonger) found = index;
+        });
+        return found;
+    };
+
+    const superSetInputValue = box.setInputValue;
+    // WHY: getInputValue() gives the protocol and the text; the setInputValue of InputB wrote them all into the text,
+    //      so a saved value came back as "https://www.https://www.example.com" and could not be sent (2026-11-05)
+    box.setInputValue = function(value) { // *** OVERRIDE ***
+        const text = String(value ?? "");
+        const index = findProtocolIndex(text);
+        if (index === -1) {
+            superSetInputValue(text);
+            return;
+        }
+        box.tinySelect.setSelectedIndex(index, 1);
+        superSetInputValue(text.slice(box.tinySelect.list[index].label.length));
+    };
+
     // *** OBJECT VIEW:
         AutoLayout({
             color: "transparent",
@@ -139,7 +164,9 @@ const URLInputB = function(params = {}) {
     }
     inputElem.addEventListener("input", function(){ box.inputFunc() });
 
-    box.checkIfInputIsRequiredAndEmpty();
+    // WHY: a start value with its protocol (as getInputValue() gives it) was put whole into the text
+    if (findProtocolIndex(box.input.text) > -1) box.setInputValue(box.input.text);
+    box.checkInputValue(); // WHY: the valid check too (the start value was only checked for required)
 
     return endExtendedObject(box);
 };

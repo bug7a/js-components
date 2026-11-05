@@ -258,6 +258,7 @@ const PageControl = function (params = {}) {
             dot.aria = { label: "Page " + String(item.key) };
             dot.on("click", function (self, event) {
                 event.stopPropagation();
+                if (box.enabled != 1) return; // WHY: setEnabled(0) stopped the arrows, keys and swipe, not the dots
                 box.open(item.key);
             });
             dotList.push(dot);

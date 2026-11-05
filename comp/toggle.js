@@ -383,6 +383,7 @@ const Toggle = function(params = {}) {
     box.on("pointerdown", () => setPressed(true));
     ["pointerup", "pointerleave", "pointercancel"].forEach((name) => box.on(name, () => setPressed(false)));
     box.on("click", function(self, event) {
+        if (box.secondState === "disabled") return; // WHY: as the keys: a click from code or assistive tools
         box.switch();
     });
     box.on("keydown", function(self, event) {
@@ -391,10 +392,14 @@ const Toggle = function(params = {}) {
         event.preventDefault(); // WHY: Space would scroll the page.
         box.switch();
     });
+    // WHY the disabled check: a toggle disabled under the mouse (in its own onChange, while saving) was enabled again
+    //     by the next mouseout (clickable 0 itself fires one; on a phone: the next tap anywhere) (2026-11-05)
     box.on("mouseover", function(self, event) {
+        if (box.secondState === "disabled") return;
         box.setSecondState("mouseover");
     });
     box.on("mouseout", function(self, event) {
+        if (box.secondState === "disabled") return;
         box.setSecondState("normal");
     });
     box.onResize(function(self) {

@@ -86,7 +86,7 @@ Satır numaraları 2026-11-05'teki dosyalara göredir.
 
 ## B. Güvenlik kilidi aşılıyor, yanlış veri gönderiliyor
 
-**6. SmartButton'un sorusu (`ask`) çift tıklamayla geçiliyor**
+**6. SmartButton'un sorusu (`ask`) çift tıklamayla geçiliyor** · ✅ düzeltildi (2026-11-05)
 - Yer: `comp/smart-button.js:299-304`
 - Ne oluyor: çift tıklamanın ikinci tıklaması soruyu onaylar: `SmartButton({ ask: "Click again to delete.", onClick })`
   hemen çalışır; `Dialog.confirm({ danger: 1, ask })` hemen `true` döner (gerçek fareyle de denendi). Basılı tutulan
@@ -94,7 +94,7 @@ Satır numaraları 2026-11-05'teki dosyalara göredir.
 - Düzeltme: soru açıkken `event.detail > 1` olan ya da sorudan sonraki ~400 ms içindeki tıklamayı yok say (Form
   `form.js:470`'te `detail > 1` ile yapıyor).
 
-**7. InputB `setRequired()` geçersiz bir değerin uyarısını gizliyor: Form geçersiz veriyi gönderiyor**
+**7. InputB `setRequired()` geçersiz bir değerin uyarısını gizliyor: Form geçersiz veriyi gönderiyor** · ✅ düzeltildi (2026-11-05)
 - Yer: `comp/input-b.js:396-399` (ayrıca 274-280 ve yaratılırken 615)
 - Ne oluyor: `setRequired()` ve yaratılırken yapılan kontrol yalnızca "boş mu"ya bakar; dolu her değerde uyarıyı
   gizler ve durumu 0 yapar. E-posta alanına "abc" yazılmışken (gönder düğmesi pasif) `setRequired(1)` çağrılınca durum
@@ -102,25 +102,25 @@ Satır numaraları 2026-11-05'teki dosyalara göredir.
   (`updateQuestions()`, her yıldız tıklamasında). `EmailInputB({ inputValue: "not-an-email" })` da durum 0 ile başlar.
 - Düzeltme: zorunluluk kontrolünden sonra `showWarningIfNotValid(isValid())` (setRequired'da ve yaratılırken).
 
-**8. LoginPageV2: pasif LOGIN / SIGN UP düğmeleri Tab + Enter ile çalışıyor**
+**8. LoginPageV2: pasif LOGIN / SIGN UP düğmeleri Tab + Enter ile çalışıyor** · ✅ düzeltildi (2026-11-05)
 - Yer: `comp/login-page-v2.js:557-560, 389-390`
 - Ne oluyor: pasif düğmeler yalnızca `clickable = 0`; `<button>` oldukları için Tab + Enter yine tıklar ve tıklama
   işleyicisi durumu kontrol etmez. Geçersiz e-postayla LOGIN, 1 harflik şifreyle SIGN UP çalışır.
 - Düzeltme: işleyicide `if (box.loginBtn.clickable != 1) return;` (SIGN UP için de); Form'un gönder düğmesi gibi.
 
-**9. Toggle: üzerindeyken kapatılan (disabled) düğme fare ayrılınca yeniden açılıyor**
+**9. Toggle: üzerindeyken kapatılan (disabled) düğme fare ayrılınca yeniden açılıyor** · ✅ düzeltildi (2026-11-05)
 - Yer: `comp/toggle.js:394-399` (`setSecondState`: 302)
 - Ne oluyor: mouseover / mouseout "disabled"a bakmadan `setSecondState` çağırır; `clickable`, `tabIndex`, `opacity`
   geri gelir. Kendi `onChange`'inde kapatılan bir toggle (kaydederken) fare 2 px kıpırdayınca bile açılır; dokunmatikte
   bir sonraki dokunuşta. Sonraki tıklama kilitli değeri geri çevirir.
 - Düzeltme: iki işleyicide de `if (box.secondState === "disabled") return;` ya da ayrı bir `isDisabled` bayrağı.
 
-**10. PageControl: kapalıyken (setEnabled(0)) noktalar sayfayı yine değiştiriyor**
+**10. PageControl: kapalıyken (setEnabled(0)) noktalar sayfayı yine değiştiriyor** · ✅ düzeltildi (2026-11-05)
 - Yer: `comp/page-control.js:259-262` (`setEnabled`: 605)
 - Ne oluyor: oklar, tuşlar, kaydırma ve autoPlay durur; noktaların tıklaması `enabled`'a bakmaz, `onChange` çalışır.
 - Düzeltme: nokta tıklamasında `if (box.enabled != 1) return;`.
 
-**11. URLInputB: okunan değer geri yazılamıyor, ön doldurulan adres bozuk gönderiliyor**
+**11. URLInputB: okunan değer geri yazılamıyor, ön doldurulan adres bozuk gönderiliyor** · ✅ düzeltildi (2026-11-05)
 - Yer: `comp/url-input-b.js:87-91` (`setInputValue` InputB'den: `input-b.js:332-339`)
 - Ne oluyor: `getInputValue()` protokol + metin döner, `setInputValue()` hepsini metin kısmına yazar:
   "https://www.https://www.example.com/news", durum 2. `URLInputB({ inputValue: "https://www.example.com" })` bir

@@ -65,6 +65,7 @@
         <script src="../comp/action-tab-bar.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/line-progress-bar.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/select-time.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/page-control.js" type="text/javascript" charset="utf-8"></script>
 
         <script>
         "use strict";
@@ -1935,6 +1936,69 @@
             await wait(30);
             check("SidePanel: an Escape that closes a list in it, or that a Dialog over it keeps, does not close the panel", afterList === 1 && afterDialog === 1 && panel.isOpened === 0, "after the list: " + afterList + ", after the dialog: " + afterDialog + ", then: " + panel.isOpened);
             panel.remove();
+        });
+
+        // *** THE REVIEW OF comp/ (2026-11-05) - B: guards that were passed, wrong data that was sent
+
+        test("SmartButton: the second click of a double click does not answer the ask; a later click does", async function () {
+            let clicks = 0;
+            const button = SmartButton({ labelText: "Delete", ask: "Sure?", onClick: function () { clicks++; } });
+            button.elem.dispatchEvent(new MouseEvent("click", { bubbles: true, detail: 1 }));
+            button.elem.dispatchEvent(new MouseEvent("click", { bubbles: true, detail: 2 }));
+            const afterDouble = clicks;
+            await wait(450);
+            button.elem.dispatchEvent(new MouseEvent("click", { bubbles: true, detail: 1 }));
+            check("SmartButton: the second click of a double click does not answer the ask; a later click does", afterDouble === 0 && clicks === 1, "after the double click: " + afterDouble + ", after a later click: " + clicks);
+            button.remove();
+        });
+
+        test("EmailInputB: setRequired() and the start value keep the warning of an invalid e-mail", async function () {
+            const typed = EmailInputB({ width: 300 });
+            typed.setInputValue("abc");
+            const beforeRequired = typed.status;
+            typed.setRequired(1);
+            const started = EmailInputB({ width: 300, inputValue: "not-an-email" });
+            check("EmailInputB: setRequired() and the start value keep the warning of an invalid e-mail", beforeRequired === 2 && typed.status === 2 && started.status === 2, "typed: " + beforeRequired + " -> " + typed.status + ", start value: " + started.status);
+            typed.remove();
+            started.remove();
+        });
+
+        test("LoginPageV2: a passive LOGIN button does not log in (a click that Enter makes)", async function () {
+            let logins = 0;
+            const login = LoginPage({ onLoginClick: function () { logins++; } });
+            const isPassive = (login.loginBtn.clickable != 1);
+            login.loginBtn.elem.click(); // WHY elem.click(): the click of Tab + Enter (pointer-events do not stop it)
+            check("LoginPageV2: a passive LOGIN button does not log in (a click that Enter makes)", isPassive && logins === 0, "passive: " + isPassive + ", logins: " + logins);
+            login.remove();
+        });
+
+        test("Toggle: disabled under the mouse, it stays disabled when the mouse leaves", async function () {
+            const toggle = Toggle({ value: 1 });
+            toggle.elem.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+            toggle.setSecondState("disabled");
+            toggle.elem.dispatchEvent(new MouseEvent("mouseout", { bubbles: true }));
+            toggle.elem.click();
+            check("Toggle: disabled under the mouse, it stays disabled when the mouse leaves", toggle.secondState === "disabled" && toggle.clickable != 1 && toggle.value == 1, "state: " + toggle.secondState + ", clickable: " + toggle.clickable + ", value: " + toggle.value);
+            toggle.remove();
+        });
+
+        test("PageControl: a disabled control does not change the page from its dots", async function () {
+            const pages = PageControl({ width: 300, height: 200, pages: ["a", "b", "c"], dots: 1, transition: "none" });
+            pages.setEnabled(0);
+            const dots = pages.dotsBox.elem.querySelectorAll("[role=button]");
+            dots[2].dispatchEvent(new MouseEvent("click", { bubbles: true }));
+            check("PageControl: a disabled control does not change the page from its dots", dots.length === 3 && pages.value === "a", "dots: " + dots.length + ", value: " + pages.value);
+            pages.remove();
+        });
+
+        test("URLInputB: the value it gives can be put back, also as the start value", async function () {
+            const url = URLInputB({ width: 360 });
+            url.setInputValue("https://www.example.com/news");
+            url.setInputValue(url.getInputValue());
+            const started = URLInputB({ width: 360, inputValue: "https://www.example.com" });
+            check("URLInputB: the value it gives can be put back, also as the start value", url.getInputValue() === "https://www.example.com/news" && url.status === 0 && started.getInputValue() === "https://www.example.com" && started.status === 0, url.getInputValue() + " (" + url.status + "), " + started.getInputValue() + " (" + started.status + ")");
+            url.remove();
+            started.remove();
         });
 
         // *** RUN

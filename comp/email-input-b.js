@@ -51,6 +51,7 @@ const EmailInputB = function(params = {}) {
     // *** OBJECT VIEW:
 
     // *** OBJECT INIT CODE:
+    box.checkInputValue(); // WHY: InputB checked the start value before this isValid(): "not-an-email" got status 0
 
     return endExtendedObject(box);
 

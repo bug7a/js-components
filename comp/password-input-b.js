@@ -158,6 +158,7 @@ const PasswordInputB = function(params = {}) {
     });
 
     box.setShowPassword(box.showPassword);
+    box.checkInputValue(); // WHY: InputB checked the start value before this isValid()
 
     return endExtendedObject(box);
 

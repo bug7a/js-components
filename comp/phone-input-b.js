@@ -282,6 +282,8 @@ const PhoneInputB = function(params = {}) {
 
     }
 
+    box.checkInputValue(); // WHY: InputB checked the start value before this isValid()
+
     return endExtendedObject(box);
 
 };

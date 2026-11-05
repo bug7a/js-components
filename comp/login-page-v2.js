@@ -386,8 +386,17 @@ const LoginPage = function(params = {}) {
         createWaiting();
 
         // events:
-        box.loginBtn.on("click", box.onLoginClick);
-        box.signupBtn.on("click", box.onSignupClick);
+        // WHY the checks: a passive button is only clickable 0 (no mouse), a <button> still clicks on Tab + Enter: an
+        //     invalid e-mail logged in, a 1-letter password signed up (2026-11-05). WHY box.onLoginClick read at the
+        //     click: a function given after creation (loginPage.onLoginClick = fn) was never called.
+        box.loginBtn.on("click", function(self, event) {
+            if (box.loginBtn.clickable != 1) return;
+            box.onLoginClick(self, event);
+        });
+        box.signupBtn.on("click", function(self, event) {
+            if (box.signupBtn.clickable != 1) return;
+            box.onSignupClick(self, event);
+        });
 
         // First check
         checkLoginForm();

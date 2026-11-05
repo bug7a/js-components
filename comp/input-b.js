@@ -283,6 +283,14 @@ const InputB = function(params = {}) {
         return 1;
     };
 
+    // Both checks of a value (required, valid). WHY both: the required check hides the warning of any value that is
+    // not empty: an invalid e-mail got status 0 and a Form sent it (2026-11-05).
+    // A child that overrides isValid() calls it at the end of its own init code too.
+    box.checkInputValue = function() {
+        box.checkIfInputIsRequiredAndEmpty();
+        box.showWarningIfNotValid(box.isValid());
+    };
+
     box.showWarningIfNotValid = function(isValid) {
         if (box.getInputValue().length === 0) return;
 
@@ -395,7 +403,7 @@ const InputB = function(params = {}) {
     // Enables required field validation and sets the custom message
     box.setRequired = function(isRequired) {
         box.isRequired = isRequired ? 1 : 0;
-        box.checkIfInputIsRequiredAndEmpty();
+        box.checkInputValue();
     };
 
     box.setRequiredText = function(text) {
@@ -612,7 +620,7 @@ const InputB = function(params = {}) {
         }
         inputElem.addEventListener("input", function(){ box.inputFunc() });
 
-        box.checkIfInputIsRequiredAndEmpty();
+        box.checkInputValue();
     }
 
     // WHY on box: the field and the warning ball are one field for the user (the title gets no mouse: pointer-events none)

@@ -193,10 +193,12 @@ const SmartButton = function (params = {}) {
 
     // *** PRIVATE VARIABLES:
     const WAITING_MOTION = "opacity 0.2s"; // the content fades while waiting
+    const ASK_ANSWER_DELAY = 400; // ms: a click this soon after the question is the second click of a double click
     const STILL_MOTION = "background-color 0.2s"; // the color under the mouse (animated: 0 too)
     let cancelWaitingEnd = null;
     let cancelAskTimer = null;
     let askBubble = null;
+    let askStartTime = 0; // when the question was shown (isAnswerTooSoon)
     let isHover = 0;
     let isPressed = 0;
     let isSpaceDown = 0; // Space went down on this button (it presses when it goes up, like a real button)
@@ -293,8 +295,16 @@ const SmartButton = function (params = {}) {
         render();
     };
 
+    // WHY: the second click of a double click answered the ask before it was read (SmartButton({ ask }) and a
+    //      Dialog.confirm with danger and ask ran at once, 2026-11-05)
+    const isAnswerTooSoon = function (event) {
+        if (event && event.detail > 1) return true;
+        return (Date.now() - askStartTime < ASK_ANSWER_DELAY);
+    };
+
     const press = function (event) {
         if (!canPress()) return;
+        if (box.isAsking == 1 && isAnswerTooSoon(event)) return;
         if (typeof box.onBeforeClick === "function" && box.onBeforeClick(box) === false) return;
         if (box.ask && box.isAsking != 1) {
             startAsk();
@@ -311,6 +321,7 @@ const SmartButton = function (params = {}) {
         if (SmartButton.askingButton) SmartButton.askingButton.cancelAsk();
         SmartButton.askingButton = box;
         box.isAsking = 1;
+        askStartTime = Date.now();
         render();
         if (typeof Tooltip !== "undefined") askBubble = Tooltip.show(box, box.ask, box.style.ask.bubble);
         cancelAskTimer = box.after(box.style.ask.time, box.cancelAsk);
