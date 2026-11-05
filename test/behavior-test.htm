@@ -1256,6 +1256,51 @@
             modernList.remove();
         });
 
+        test("ItemList: setActiveKey gives a row the look of the mouse, also a selected row; null takes it back", async function () {
+            const list = ItemList({ width: 300, height: 300, items: ["Apple", "Banana"], selectedKeys: ["1"] });
+            const lookOf = (key) => list.getRow(key).elem.style.backgroundColor + " / " + (list.getRow(key).elem.style.boxShadow ? "lines" : "none");
+            list.setActiveKey("0");
+            const apple = lookOf("0");
+            list.setActiveKey("1");
+            const appleAfter = lookOf("0");
+            const banana = lookOf("1");
+            list.setActiveKey(null);
+            const bananaAfter = lookOf("1");
+            list.remove();
+            const isOk = apple === "white / lines" && appleAfter === "transparent / none" && banana === "white / lines" && bananaAfter === "transparent / none";
+            check("ItemList: setActiveKey gives a row the look of the mouse, also a selected row; null takes it back", isOk,
+                "Apple: " + apple + " -> " + appleAfter + ", Banana (selected): " + banana + " -> " + bananaAfter);
+        });
+
+        test("SelectBox ozden: the active row gets a line above and under it (its own rows and the rows of an ItemList), classic none", async function () {
+            // WHY: The browser writes a shadow in its own words: the expected one is read back the same way.
+            const probe = document.createElement("div");
+            probe.style.boxShadow = "inset 0 1px 0 " + Black(0.2) + ", inset 0 -1px 0 " + Black(0.2);
+            const LINES = probe.style.boxShadow;
+            const createRowView = function (option) { Label({ text: option.label }); };
+            // The shadows of the first row, of the selected row and of the first row again, while the mouse moves on them.
+            const activeShadows = function (params) {
+                const select = SelectBox(Object.assign({ width: 240, options: ["Apple", "Banana", "Cherry"], value: "Banana" }, params));
+                select.open();
+                const rows = [...select.panel.elem.querySelectorAll('[role="option"]')];
+                rows[0].dispatchEvent(new MouseEvent("mousemove"));
+                const first = rows[0].style.boxShadow;
+                rows[1].dispatchEvent(new MouseEvent("mousemove"));
+                const selected = rows[1].style.boxShadow;
+                const firstAfter = rows[0].style.boxShadow;
+                select.close();
+                select.remove();
+                return [first, selected, firstAfter];
+            };
+            const ownRows = activeShadows({ styleName: "ozden" });
+            const listRows = activeShadows({ styleName: "ozden", createItemView: createRowView });
+            const classicRows = activeShadows({ createItemView: createRowView });
+            const hasLines = (shadows) => shadows[0] === LINES && shadows[1] === LINES && shadows[2] === "";
+            const isOk = hasLines(ownRows) && hasLines(listRows) && classicRows.join("") === "";
+            check("SelectBox ozden: the active row gets a line above and under it (its own rows and the rows of an ItemList), classic none", isOk,
+                "own rows: " + ownRows.join(" | ") + " ;; ItemList rows: " + listRows.join(" | ") + " ;; classic: " + classicRows.join(" | "));
+        });
+
         test("ItemList: a search with no result shows its text in the list", async function () {
             const list = ItemList({ width: 300, height: 300, items: ["Apple", "Banana"] });
             await wait(30);

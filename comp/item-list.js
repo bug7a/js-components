@@ -20,6 +20,8 @@ UI COMPONENT TEMPLATE
   matched without their marks: "isik" finds "Işık"). It returns the count of the shown items.
 - Keyboard: the arrow keys move the focus (Up / Down in a list, Left / Right in a row, all four in a grid),
   Home / End, Enter or Space selects. Only one row is in the Tab order.
+- A combobox whose keyboard stays in its field (SelectBox) shows its active row with setActiveKey(key): the look of
+  the mouse (style.hover), also on a selected row. null: none.
 - Items: strings or objects { key, title, desc, iconFile, searchText, disabled }. Any other keys stay on the
   item for your createItemView. An item without a key gets its index as its key.
 - Sections: an item { type: "section", title: "VIEWS" } is a title row between the items (style.section). It is
@@ -108,7 +110,7 @@ const ItemListDefaults = {
             color: "transparent",
             border: 1,
             borderColor: "rgba(20, 20, 20, 0.45)",
-            round: 8,
+            round: 6, // (the user, 2026-11-05)
             padding: 0, // Around the rows of the vertical layout
         },
         list: {
@@ -170,16 +172,16 @@ const ItemListDefaults = {
         desc: { fontSize: 14, textColor: "gray", marginTop: -4 }, // WHY: -4: the old title (top 25) and description (top 49) overlap a little.
         check: { visible: 0, size: 22, color: "#373836", iconColor: "white", borderColor: Black(0.25) }, // A mark on the selected rows
         empty: { fontSize: 16, textColor: Black(0.4) },
-        // The search box (showSearch: 1): the params of SearchInput: its ozden package, white and nearly square
-        // (the user, 2026-11-05), as high as the old UISearchBox of the template.
+        // The search box (showSearch: 1): the params of SearchInput: its ozden package (its font and icon sizes, its
+        // icons, its bottom line), white, nearly square and without a border (the user, 2026-11-05), as high as the old
+        // UISearchBox of the template.
         search: {
-            styleName: "ozden", // A package of SearchInput.styles: its border, its bottom line, its icons
+            styleName: "ozden", // A package of SearchInput.styles
             height: 40,
             padding: [0, 0, 0, 0], // left, top, right, bottom: 0, as wide as the list
-            fontSize: 18,
             color: "white",
+            border: 0, // WHY: the list has its own border: only the bottom line of the package
             round: 2,
-            searchIconSize: 20,
         },
         scrollBar: {
             bar_border: 0,
@@ -225,6 +227,7 @@ const ItemList = function (params = {}) {
     let removedEntries = []; // animated: the removed items whose rows still fade out (they leave after the motion)
     let selectedKeys = []; // Strings, in the order they were selected
     let focusedKey = null;
+    let activeKey = null; // The active row of a combobox (setActiveKey)
     let searchText = "";
     let wasAnimated = 0;
     const EMPTY_TEXT_TOP = 24; // The "No results" text under the top of the list
@@ -343,7 +346,9 @@ const ItemList = function (params = {}) {
         const isTile = entry.row.isTile;
         const hoverLook = isTile ? _s.tile.hover : _s.hover;
         const selectedLook = isTile ? { color: _s.tile.selectedColor || _s.selected.color, borderColor: _s.selected.borderColor } : _s.selected;
-        const look = Object.assign({}, _s.row, entry.isHover ? hoverLook : {}, isOn ? selectedLook : {});
+        // WHY: The active row takes the look of the mouse after the selection: the keyboard sees it on a selected row too.
+        const activeLook = (entry.key === activeKey) ? hoverLook : {};
+        const look = Object.assign({}, _s.row, entry.isHover ? hoverLook : {}, isOn ? selectedLook : {}, activeLook);
         if (look.opacity === undefined) look.opacity = 1;
         // WHY: In the look, not only in the click: a paint of the selection or of the mouse keeps the pressed color.
         if (entry.isPressed && _s.pressed.color) look.color = _s.pressed.color;
@@ -1229,6 +1234,17 @@ const ItemList = function (params = {}) {
     box.refresh = function () {
         paintAll();
         refreshEmptyText();
+    };
+
+    // The active row of a combobox (SelectBox: the row of its arrow keys) gets the look of the mouse (style.hover),
+    // also when it is selected. null: none.
+    // WHY: The keyboard stays in the field of the combobox: the list does not get the focus, it only shows the row.
+    box.setActiveKey = function (key) {
+        const oldEntry = findEntry(activeKey);
+        activeKey = (key === null || key === undefined) ? null : String(key);
+        if (oldEntry) paintRow(oldEntry);
+        const entry = findEntry(activeKey);
+        if (entry) paintRow(entry);
     };
 
     // *** OBJECT VIEW:

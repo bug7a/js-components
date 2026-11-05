@@ -213,6 +213,7 @@ const SelectBoxDefaults = {
         },
         optionActive: {
             color: Black(0.06),
+            lineColor: "", // A line above and under the active row (1 px, inside it: no row moves). "": none
             showAtOpen: 1, // 0: no row is marked when the list opens (only under the mouse / the keyboard)
         },
         optionSelected: {
@@ -643,10 +644,6 @@ const SelectBox = function (params = {}) {
             const rowIndex = rows.findIndex(function (shown) { return shown.row === row; });
             if (rowIndex >= 0 && rowIndex != activeIndex && !item.option.disabled) setActive(rowIndex, 0);
         });
-        // WHY: The ItemList paints the row again when the mouse leaves it; the keyboard row keeps its color.
-        row.onHoverChange(function () {
-            if (rows[activeIndex] && rows[activeIndex].row === row) row.color = getActiveColor();
-        });
     };
 
     // The search, the selection and the active row of the ItemList (its rows are made only once).
@@ -702,17 +699,12 @@ const SelectBox = function (params = {}) {
         return getFilteredOptions();
     };
 
-    const getActiveColor = function () {
-        return (usesItemList) ? _s.itemList.hover.color : _s.optionActive.color;
-    };
-
-    // The look of a row that is not active any more.
-    const paintInactiveRow = function (row) {
-        if (usesItemList) {
-            box.itemList.refresh(); // WHY: The ItemList knows its look (selected, under the mouse).
-            return;
-        }
-        row.color = "transparent";
+    // The look of an own row (not of an ItemList), active (under the mouse or the arrow keys) or not: style.optionActive.
+    const paintOptionRow = function (row, isActive) {
+        row.color = isActive ? _s.optionActive.color : "transparent";
+        const lineColor = _s.optionActive.lineColor;
+        // WHY: Only with lines: a package without them never touches the shadow of a row.
+        if (lineColor) row.boxShadow = isActive ? "inset 0 1px 0 " + lineColor + ", inset 0 -1px 0 " + lineColor : "";
     };
 
     // Scrolls the list to show a row.
@@ -819,17 +811,19 @@ const SelectBox = function (params = {}) {
     // scroll: 1 -> Move the list to show the active row.
     const setActive = function (index, scroll = 1) {
 
-        if (rows[activeIndex]) paintInactiveRow(rows[activeIndex].row);
+        if (rows[activeIndex] && !usesItemList) paintOptionRow(rows[activeIndex].row, 0);
         activeIndex = index;
 
         const item = rows[activeIndex];
+        // WHY: The ItemList paints its own rows: it knows their look (selected, under the mouse).
+        if (usesItemList && box.itemList) box.itemList.setActiveKey(item ? getListKey(item.option) : null);
         if (!item) {
             box.panel.aria = { activedescendant: null };
             box.aria = { activedescendant: null };
             return;
         }
 
-        item.row.color = getActiveColor();
+        if (!usesItemList) paintOptionRow(item.row, 1);
         box.aria = { activedescendant: item.row.elem.id };
         if (box.searchInput) box.searchInput.inputElement.setAttribute("aria-activedescendant", item.row.elem.id);
         if (scroll) scrollToRow(item.row);
@@ -1656,8 +1650,9 @@ SelectBox.styles = {
 
 
 // The look of the old comp-m1 SelectItem and SelectText: a whitesmoke box with a thin border, the list opens
-// over the field with a fade, a white search box (SearchInput; yellow until 2026-11-05), rows that get white under the mouse, the
-// selected one half transparent. A package of params: a 350 x 50 field, a search box, the list down to the
+// over the field with a fade, a white search box (SearchInput; yellow until 2026-11-05), rows that get white with a
+// thin line above and under them under the mouse (the lines since 2026-11-05), the selected one half transparent.
+// A package of params: a 350 x 50 field, a search box, the list down to the
 // bottom of the page. Text rows; your own rows and field: createItemView / createValueView
 // (02-comp-examples/select-box-ozden-item.htm). The params of the package are used when the page does not give them.
 SelectBox.styles.ozden = {
@@ -1731,16 +1726,17 @@ SelectBox.styles.ozden = {
             iconRound: 4,
             iconMargin: [0, 0],
         },
-        optionActive: { color: "white", showAtOpen: 0 },
+        optionActive: { color: "white", lineColor: Black(0.2), showAtOpen: 0 }, // (The lines: the user, 2026-11-05, as ItemList ozden)
         optionSelected: { textColor: "rgba(0, 0, 0, 0.8)", checkColor: "#373836", checkTickColor: "white", fontFamily: "", showTick: 0, opacity: 0.5 },
         description: { fontSize: 14, textColor: "gray", marginTop: -4 }, // WHY: -4: the old title (top 25) and description (top 49) overlap a little.
         highlight: { color: "transparent" },
         empty: { fontSize: 16, textColor: Black(0.45) },
-        // createItemView: the rows of the comp-m1 SelectItem list (white under the mouse, the selected one half transparent).
+        // createItemView: the rows of the comp-m1 SelectItem list (white with a thin line above and under them under the mouse,
+        // the selected one half transparent), as ItemList ozden.
         itemList: {
-            row: { padding: [19, 0], gap: 20, round: 0, motion: "background-color 0.2s" }, // WHY: 19: see option.padding
-            hover: { color: "white" },
-            selected: { color: "transparent", opacity: 0.5 }, // WHY: transparent: a selected row does not get white under the mouse.
+            row: { padding: [19, 0], gap: 20, round: 0, motion: "background-color 0.2s, box-shadow 0.2s" }, // WHY: 19: see option.padding
+            hover: { color: "white", lineColor: Black(0.2) },
+            selected: { color: "transparent", opacity: 0.5 }, // WHY: transparent: no color of its own; the active row is white on it too.
             check: { size: 22, color: "#373836", iconColor: "white", borderColor: Black(0.25) },
         },
         // The scroll bar of the comp-m1 ItemList: always shown, with the dots at its ends.
