@@ -32,16 +32,9 @@
         const CARD_MAX_WIDTH = 480;
         const PAGE_COLOR = "#F4F5F2";
         const DARK_CARD_COLOR = "#1A1A19";
-        const GREEN_ON_DARK = "#2C5A38";
 
         const LIGHT = { card: "white", line: Black(0.1), title: Black(0.85), text: Black(0.5) };
         const DARK = { card: DARK_CARD_COLOR, line: White(0.12), title: White(0.9), text: White(0.5) };
-
-        // The switch for a dark page: your own colors over the default look
-        const DARK_TOGGLE = {
-            backgroundStyle: { color: "black", selectedColor: GREEN_ON_DARK, borderColor: White(0.25) },
-            buttonStyle: { color: White(0.25), selectedColor: White(0.75) },
-        };
 
         let lblStatus;
         let toggleSound, toggleBadge;
@@ -100,14 +93,14 @@
         const createDarkCard = function () {
             startCard(DARK);
 
-                createRow(DARK, "Dark theme", "On a dark page, with your own colors", {
-                    ...DARK_TOGGLE,
+                createRow(DARK, "Dark theme", "On a dark page: styleName \"dark\"", {
+                    styleName: "dark",
                     value: 1,
                     onChange: showChange,
                 });
 
                 createRow(DARK, "Automatic updates", "Managed by your company", {
-                    ...DARK_TOGGLE,
+                    styleName: "dark",
                     value: 1,
                 }).setSecondState("disabled");
 

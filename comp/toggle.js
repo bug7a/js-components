@@ -5,8 +5,8 @@ Toggle - v25.08
 
 UI COMPONENT TEMPLATE
 - An on / off switch: a round knob (box.button) slides on a track (box.background). A click switches it.
-- Style packages: "modern" (default: the knob is smaller when off) and "classic" (the old UIToggle). Select with
-  styleName. (Toggle.styles)
+- Style packages: "modern" (default: the knob is smaller when off), "classic" (the old UIToggle), "dark" (for a dark
+  page) and more shapes (toggle-2.htm). Select with styleName. (Toggle.styles)
 -- "modern" (2026-11-05, the user): a darker line around the colored track when on (selectedBorderColor: the light
    look had no clear edge when on). Its size (70 x 40) and its round knob as before.
    2026-11-06 (the user): when on, a shadow to the left of the knob and a thin line around it, so the white knob stands
@@ -461,6 +461,13 @@ Toggle.styles = {
         buttonStyle: {
             selectedShadow: "-4px 0px 6px -1px rgba(0, 0, 0, 0.5), 0px 0px 0px 1px rgba(0, 0, 0, 0.2)",
         },
+    },
+
+    // For a dark page (2026-11-06): a black track that turns green, a soft knob (the dark card of toggle.htm).
+    dark: {
+        style: {},
+        backgroundStyle: { color: "black", selectedColor: "#2C5A38", borderColor: White(0.25) },
+        buttonStyle: { color: White(0.25), selectedColor: White(0.75) },
     },
 
     // The look of the old UIToggle (comp-m1/ui-toggle.js, javascript-mobile-app-template, a 600 px design):
