@@ -10,6 +10,34 @@ Naming rule for the additions: no new globals (one exception, the user's choice 
 
 ---
 
+## v26.11.05 (2026-11-05)
+
+### `basic.zIndexAbove(obj, minimum)`: a list or a menu over the layer of its field
+
+The popups of the components (the lists of SelectBox, SelectDate, SelectTime, SelectColor, TinySelect,
+FullScreenSelect, the menu of ContextMenu, the lists of SearchResults, TagInput and Filters) are made on `page` with a
+fixed z-index (1000 - 3000). A Dialog is at 4000 and up, an open SidePanel at 1001, so a list opened from a field
+inside them opened behind them and could not be used (found in a review of `comp/`, 2026-11-05).
+
+```javascript
+box.panel.zIndex = basic.zIndexAbove(box, 1001);   // when the panel opens
+```
+
+- The layer of `obj` is its ancestor that is a direct child of `page` (a Dialog, a SidePanel, a Tooltip popover); the
+  result is its z-index + 1, and at least `minimum`.
+- An object in the normal content of the page has no layer: the result is `minimum` (the old fixed value), so nothing
+  changes outside the layers.
+
+### Fix: `remove()` of a parent also cleans the panels its components own
+
+`remove()` removes the basic.js objects inside the object. A component removed that way (its parent was removed: a page
+change) removes the panel it made on `page` (with `own()`, or in its own `remove()`). That panel is not inside the
+parent, but a global counter made it skip its own cleaning too: its ScrollBars kept a `page.onResize` listener, a
+resize-detection entry and a MutationObserver, and its components (LabelEditor's Steppers and SelectColors) their
+document listeners and DOM, at every page change (SelectTime: 2 window listeners each time; LabelEditor: 11 listeners
+and 130 DOM nodes). Now an object skips its own cleaning only when it is inside an object whose cleaning runs (DOM
+containment). A direct `remove()` worked before and is the same.
+
 ## v26.11.01 (2026-11-01)
 
 ### `basic.uiScale`, `basic.scaleStyle()`, `basic.scaleSize()`, `basic.scaleCssText()`: the components keep their size on a fitted page

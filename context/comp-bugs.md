@@ -19,7 +19,7 @@ Satır numaraları 2026-11-05'teki dosyalara göredir.
 
 ## A. Sayfayı bozan, veri kaybettiren, büyüyen sızıntı
 
-**1. LineProgressBar gizli bir kapta yapılınca hata fırlatıyor (kritik)**
+**1. LineProgressBar gizli bir kapta yapılınca hata fırlatıyor (kritik)** · ✅ düzeltildi (2026-11-05)
 - Yer: `comp/line-progress-bar.js:54, 87`
 - Ne oluyor: çizgi sayısı yapılırken bir kez `box.width`'ten hesaplanıyor. Kapalı bir Tabs panelinde ya da `visible: 0`
   bir grupta genişlik 0, çizgi dizisi boş, `lineContainer.add(...[])` = `add(undefined)` fırlatıyor ("Cannot set
@@ -30,7 +30,7 @@ Satır numaraları 2026-11-05'teki dosyalara göredir.
 - Düzeltme: sıfır çizgiye karşı koruma (her çizgiyi tek tek ekle); çizgileri gerçek genişlikten `box.onResize` ile
   yeniden kur.
 
-**2. basic.js: bir üst kutu silinince bileşenlerin sahiplendiği nesneler temizlenmiyor (kritik, sızıntı büyüyor)**
+**2. basic.js: bir üst kutu silinince bileşenlerin sahiplendiği nesneler temizlenmiyor (kritik, sızıntı büyüyor)** · ✅ düzeltildi (2026-11-05)
 - Yer: `basic/basic.js:1347, 1388-1393` (`removeCascadeDepth`)
 - Ne oluyor: bir üst kutu silinirken `removeCascadeDepth` 1'dir; bileşenin `box.own(obj)` ile sahiplendiği nesne
   (açılır panel) kendi silme adımını atlar, içindeki ScrollBar'lar ve bileşenler hiç `remove()` almaz. Her sayfa
@@ -46,7 +46,7 @@ Satır numaraları 2026-11-05'teki dosyalara göredir.
 - Düzeltme (basic.js): atlamaya genel sayaç yerine DOM içerilmesiyle karar ver (yalnızca bu, `remove()`'u ezen yolu da
   kapsar) ya da `owned.remove()` çağrısının çevresinde sayacı 0 yap. basic.js değişince `.min` ikizi yeniden yapılır.
 
-**3. Açılır listeler ve menüler Dialog'un ya da SidePanel'in arkasında açılıyor**
+**3. Açılır listeler ve menüler Dialog'un ya da SidePanel'in arkasında açılıyor** · ✅ düzeltildi (2026-11-05)
 - Kök: açılır parçalar `page`'e sabit bir z-index ile konuyor. Dialog 4000 + 2n (`dialog.js:428`), SidePanel'in
   örtüsü 1000, paneli 1001 (`side-panel.js:389, 539`). Bu yüzden bir Dialog ya da SidePanel içindeki form
   bileşenleri kullanılamıyor: liste kartın arkasında açılır, tıklama kartın kendisine gider.
@@ -67,7 +67,7 @@ Satır numaraları 2026-11-05'teki dosyalara göredir.
   üstünde bir z-index alır (basic.js'te ya da paylaşılan bir yardımcıda bir "en üst katman" sayacı). Hep üstte olması
   gerekenlere örnek: Notice 50000 (`notice.js:50`).
 
-**4. SortableList ve ItemList: satırdaki bir alana yazarken Backspace bütün satırı siliyor**
+**4. SortableList ve ItemList: satırdaki bir alana yazarken Backspace bütün satırı siliyor** · ✅ düzeltildi (2026-11-05)
 - Yer: `comp/sortable-list.js:380-422` (bağlandığı yer 786), `comp/item-list.js:574, 989`
 - Ne oluyor: satırın keydown'u, satırın içindeki bir Input'tan (`createItemView`) gelen tuşlara da bakıyor.
   SortableList'te Backspace / Delete satırı siler (`onRemove`), Space yazılamaz (satırı tutar); oklar, Home / End odağı
@@ -75,7 +75,7 @@ Satır numaraları 2026-11-05'teki dosyalara göredir.
 - Düzeltme: `if (event.target !== row.elem) return;` (DataTable, SmartTable, PageControl, SettingsRow, Stepper,
   SliderField zaten böyle yapıyor).
 
-**5. SidePanel başka bir şeyin kullandığı Escape ile de kapanıyor**
+**5. SidePanel başka bir şeyin kullandığı Escape ile de kapanıyor** · ✅ düzeltildi (2026-11-05)
 - Yer: `comp/side-panel.js:249-252` (Dialog: `dialog.js:734-736`)
 - Ne oluyor: paneldeki açık bir SelectBox / SelectDate / FullScreenSelect listesini Escape ile kapatınca panel de
   kapanır; panelin üstünde kapanmayan bir Dialog varken (`closeOnEscape: 0`, cevap bekleyen `Dialog.confirm`) Escape

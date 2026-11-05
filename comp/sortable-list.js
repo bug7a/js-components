@@ -379,6 +379,9 @@ const SortableList = function (params = {}) {
 
     const onRowKeyDown = function (entry, event) {
 
+        // WHY: the keys of a field inside the row (createItemView) are its own: Backspace in it removed the row,
+        //      a space could not be typed (DataTable, SmartTable and Stepper check the target too)
+        if (event.target !== entry.row.elem) return;
         if (box.enabled != 1 || isSettling) return;
         const key = event.key;
         const index = indexOf(entry);

@@ -196,6 +196,8 @@ const TinySelect = function(params = {}) {
 
 };
 
+TinySelect.Z_INDEX = 1000; // the list on page; over a Dialog or a SidePanel that holds the field (basic.zIndexAbove)
+
 // Create a tiny list to user selection
 TinySelect.createList = function(connectedUI) {
 
@@ -213,6 +215,7 @@ TinySelect.createList = function(connectedUI) {
     that.color = "transparent";
     that.css.whiteSpace = "nowrap";
     page.add(that);
+    listBox.zIndex = basic.zIndexAbove(connectedUI, TinySelect.Z_INDEX); // WHY: it had none: under a Dialog or a SidePanel
 
         listBox.grp = startFlexBox({
             flexDirection: "column",

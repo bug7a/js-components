@@ -387,6 +387,7 @@ const Filters = function (params = {}) {
         const value = (isOpened) ? 1 : 0;
         if (value === box.panelOpened) return;
         box.panelOpened = value;
+        if (value && isPopup) box.panel.zIndex = basic.zIndexAbove(box, PANEL_Z_INDEX); // WHY: over a Dialog that holds the filters
         box.panel.visible = value;
         box.btnFilters.aria = { expanded: value ? "true" : "false" };
         if (value) placePanel();

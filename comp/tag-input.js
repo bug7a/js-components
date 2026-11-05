@@ -202,6 +202,7 @@ const TagInput = function (params = {}) {
     const PAGE_MARGIN = 8; // The panel stays this far from the edges of the page
     const MIN_PANEL_WIDTH = 160;
     const MIN_LIST_HEIGHT = 60; // When the list is made shorter to fit the page
+    const PANEL_Z_INDEX = 1001; // the panel on the page, over the content (over a Dialog that holds the field: at open)
 
     // *** PUBLIC VARIABLES:
     // NOTE: Default values are also public variables. (box.tags, box.suggestions, box.maxTags)
@@ -572,6 +573,7 @@ const TagInput = function (params = {}) {
         if (!filtered.length && box.allowCustom == 1) return closePanel(); // Custom tags: an empty list is not useful.
         if (!isOpen) {
             isOpen = 1;
+            box.panel.zIndex = basic.zIndexAbove(box, PANEL_Z_INDEX); // WHY: over a Dialog that holds the field
             box.panel.visible = 1;
             box.input.inputElement.setAttribute("aria-expanded", "true");
         }
@@ -926,7 +928,7 @@ const TagInput = function (params = {}) {
     // WHY: visible: 0 at create time makes the children absolute (not flex items). Hide it after the children are added.
     box.panel.css.alignItems = "stretch";
     box.panel.boxShadow = _s.panel.shadow;
-    box.panel.zIndex = 1001;
+    box.panel.zIndex = PANEL_Z_INDEX;
 
         // BOX: List (scrolls)
         box.list = Box({ width: "100%", height: "auto", color: "transparent", scrollY: 1, position: "relative" });

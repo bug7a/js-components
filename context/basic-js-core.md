@@ -124,6 +124,7 @@ Objects created directly on `page` from inside another object (without `own`) ar
 - `waitAndRun(timer, fn, ms)`: a debounce (`timer = waitAndRun(timer, fn, 120)`). `await basic.sleep(ms)`, `await basic.nextFrame()`.
 - `basic.addCss(id, css)`: a `<style>` once (for `:hover`, `::placeholder`, `@keyframes`).
 - `withPageZoom(px)`: a mouse position in page units when the page is zoomed.
+- `basic.zIndexAbove(obj, minimum)` (v26.11.05): the z-index of a list or a menu a component opens on `page` from `obj`: over the layer that holds `obj` (a Dialog, a SidePanel, a popover), at least `minimum`. Set it when the popup opens.
 
 ## Gotchas
 - A global helper of a page must not be named like a basic.js global (`Box`, `Label`, `random`, `println`...). Prefer `MyPage.createButton`.

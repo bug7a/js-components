@@ -987,6 +987,8 @@ const ItemList = function (params = {}) {
     };
 
     const onRowKeyDown = function (entry, event) {
+        // WHY: the keys of a field inside the row (createItemView) are its own: a space could not be typed in it
+        if (event.target !== entry.row.elem) return;
         if (box.enabled != 1 || entry.isLeaving) return;
         const shown = getShownEntries();
 

@@ -479,6 +479,7 @@ const FullScreenSelect = function (params = {}) {
         box.isOpen = 1;
         FullScreenSelect.openedSelect = box;
         if (!box.panel) createPanel();
+        box.panel.zIndex = basic.zIndexAbove(box, _s.panel.zIndex); // WHY at open: a field in a Dialog (4000 and up) opens its list over it
         applyContent();
         showPanel(1);
         resetPanel(); // (after showPanel: a hidden list can not scroll to the selected item)

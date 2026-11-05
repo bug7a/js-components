@@ -2,12 +2,17 @@
 
 /*
 
-basic.js (v26.11.01) A lightweight JavaScript library for building web-based applications with simple code. No need to write HTML or CSS — just use basic JavaScript.
+basic.js (v26.11.05) A lightweight JavaScript library for building web-based applications with simple code. No need to write HTML or CSS — just use basic JavaScript.
 - Project Site: https://bug7a.github.io/basic.js/
 
-v26.11.01 is v26.09.18 plus the additions below. Every page and component written for the
+v26.11.05 is v26.09.18 plus the additions below. Every page and component written for the
 previous versions works unchanged (same defaults, same DOM), except the global names moved under
 basic.* in v26.10.25 (see below).
+
+WHAT IS NEW IN v26.11.05 (see basic/basic-what-is-new.md):
+- basic:      zIndexAbove(obj, minimum): the z-index of a list or a menu that opens from obj, over the layer that holds
+              obj (a Dialog, a SidePanel)
+- Fix:        remove() of a parent also cleans the panels its components own on page (their ScrollBars leaked)
 
 WHAT IS NEW IN v26.11.01 (see basic/basic-what-is-new.md):
 - basic:      uiScale, scaleStyle(style, factor), scaleSize(value, factor): the components drawn in screen px keep
@@ -68,7 +73,7 @@ Licensed under the Apache License, Version 2.0
 "use strict";
 const basic = {};
 
-basic.version = "26.11.01";
+basic.version = "26.11.05";
 basic.library = "basic.js";
 basic.isReady = 0; // 1 after the page object is created (before start() runs).
 
@@ -112,7 +117,9 @@ let defaultContainerBox = null;
 let previousDefaultContainerBox;
 let loopTimer;
 const resizeDetection = {};
-let removeCascadeDepth = 0; // remove(): 0 -> Children of the object are removed too. (Only in the first remove() call)
+// remove(): the elements whose cascade runs now. An object inside one of them is removed by that cascade, so it does
+// not run its own; any other object (Ex: a panel a component owns on page) runs its own cascade. (v26.11.05)
+const removeCascadeRoots = [];
 
 const motionController = {};
 // WHY: WITH_MOTION_TIME must stay longer than DONT_MOTION_TIME: withMotion() runs after the transition of setMotion() is on.
@@ -537,6 +544,20 @@ basic.scaleStyle = function ($style, $factor) {
         scaled[key] = basic.isSizeKey(key) ? basic.scaleSize(value, $factor) : value;
     }
     return scaled;
+};
+
+// v26.11.05: the z-index of a layer (a list, a menu) that opens from obj: over the layer that holds obj, and at least
+// $minimum. The layer of obj is its ancestor that is a direct child of page (a Dialog, a SidePanel, a popover); an
+// object in the normal content of the page has no layer (the result is $minimum).
+// WHY: the popups of the components are made on page with a fixed z-index (1000 - 3000), so a list opened from a field
+//      in a Dialog (4000 and up) or in a SidePanel (1001) opened behind it and could not be used.
+// USAGE: box.panel.zIndex = basic.zIndexAbove(box, 1001);   (when the panel opens: the field may have moved)
+basic.zIndexAbove = function ($obj, $minimum = 0) {
+    let node = ($obj && $obj.elem) ? $obj.elem : $obj;
+    while (node && node.parentElement && node.parentElement !== page.elem) node = node.parentElement;
+    const isInLayer = (node && node.parentElement === page.elem);
+    const layerZIndex = isInLayer ? (parseInt(getComputedStyle(node).zIndex, 10) || 0) : 0;
+    return Math.max($minimum, layerZIndex + 1);
 };
 
 // basic.storage.loadOr("settings", { theme: "light" })
@@ -1344,9 +1365,16 @@ class Basic_UIComponent {
         //      (resizeDetection list and ResizeObserver, page.onResize of ScrollBar, SelectDate, SelectTime,
         //      static lists like RadioButton groups...), so a removed page stayed in the memory with all
         //      of its objects (about 400 DOM nodes and 250 event listeners for every page change).
-        if (removeCascadeDepth == 0) {
+        // v26.11.05 WHY containment, not a global counter: a component removed by the cascade of its parent removes
+        //      the panel it owns on page (own(), or its remove()). That panel is not inside the parent, but the old
+        //      counter skipped its cascade too, so its ScrollBars and components leaked (a page.onResize listener, a
+        //      MutationObserver and the DOM of every list) at every page change.
+        const thisElem = this.elem;
+        const isInCascade = removeCascadeRoots.some(function (rootElem) { return rootElem !== thisElem && rootElem.contains(thisElem); });
 
-            removeCascadeDepth++;
+        if (!isInCascade) {
+
+            removeCascadeRoots.push(thisElem);
 
             try {
 
@@ -1370,7 +1398,7 @@ class Basic_UIComponent {
                 }
 
             } finally {
-                removeCascadeDepth--;
+                removeCascadeRoots.pop();
             }
 
         }

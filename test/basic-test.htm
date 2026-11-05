@@ -53,7 +53,7 @@
         const runTests = async function () {
 
             // *** LIBRARY INFO
-            check("basic.version", basic.version === "26.11.01", basic.version);
+            check("basic.version", basic.version === "26.11.05", basic.version);
             check("basic.library", basic.library === "basic.js", basic.library);
             check("basic.isReady", basic.isReady === 1);
 
@@ -478,6 +478,26 @@
             basic.addCss("basic-test-css", ".x { color: blue; }", 1);
             check("basic.addCss: replace", css1.textContent.indexOf("blue") > 0);
             css1.remove();
+
+            // *** v26.11.05: basic.zIndexAbove, remove() cleans what the removed components own
+            const layerBox = createIn(page, function () { return Box(0, 0, 50, 50); }); // WHY page: a layer is a direct child of page
+            layerBox.elem.style.zIndex = "4002"; // a Dialog
+            const boxInLayer = createIn(layerBox, function () { return Box(0, 0, 20, 20); });
+            const boxOnPage = createIn(page, function () { return Box(0, 0, 20, 20); });
+            check("basic.zIndexAbove: over the layer that holds the object, at least the minimum",
+                basic.zIndexAbove(boxInLayer, 1001) === 4003 && basic.zIndexAbove(layerBox, 10) === 4003 && basic.zIndexAbove(boxOnPage, 1001) === 1001,
+                basic.zIndexAbove(boxInLayer, 1001) + ", " + basic.zIndexAbove(boxOnPage, 1001));
+            layerBox.remove();
+            boxOnPage.remove();
+            const ownerParent = Box(0, 0, 50, 50);
+            const ownerChild = createIn(ownerParent, function () { return Box(0, 0, 20, 20); });
+            const ownedPanel = createIn(page, function () { return Box(0, 0, 10, 10); }); // on page, as the list of a select
+            const objectInOwned = createIn(ownedPanel, function () { return Box(0, 0, 5, 5); });
+            ownerChild.own(ownedPanel);
+            ownerParent.remove(); // a page change
+            check("remove(): the parent also cleans what its children own, with the objects inside it (v26.11.05)",
+                ownerChild._isRemoved && ownedPanel._isRemoved && objectInOwned._isRemoved && !document.body.contains(ownedPanel.elem),
+                "owned: " + ownedPanel._isRemoved + ", inside it: " + objectInOwned._isRemoved);
 
             // *** v26.11.01: basic.uiScale, basic.scaleStyle, basic.scaleSize, basic.scaleCssText
             check("basic.uiScale: 1 by default", basic.uiScale === 1);

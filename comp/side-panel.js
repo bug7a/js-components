@@ -248,7 +248,14 @@ const SidePanel = function (params = {}) {
 
     const onKeyDown = function (self, event) {
         if (event.code !== "Escape") return;
-        if (box.isOpened === 1 && box.closeOnEscape == 1) box.close();
+        // WHY after the event: a list opened from the panel can listen on window too, after the panel
+        //      (FullScreenSelect). An Escape that closed a list, or that a Dialog over the panel kept, closed the panel
+        //      too (the sheet of the mobile template is removed when it closes: its typed text was lost).
+        box.after(0, function () {
+            if (event.defaultPrevented) return; // used by a list, a menu or a Dialog
+            if (typeof Dialog === "function" && Dialog.getTop()) return; // a modal over the panel
+            if (box.isOpened === 1 && box.closeOnEscape == 1) box.close();
+        });
     };
 
     // *** PUBLIC VARIABLES:

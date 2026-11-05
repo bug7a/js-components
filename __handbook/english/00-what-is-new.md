@@ -4,6 +4,13 @@ This document contains new features, updates, and changes added to the basic.js 
 
 ---
 
+## Version 26.11.05
+
+*   **`basic.zIndexAbove(obj, minimum)`:** the z-index of a list or a menu that opens from `obj`, over the layer that holds `obj` (a Dialog, a SidePanel, a Tooltip popover) and at least `minimum`. The lists and menus of the components use it when they open, so a SelectBox, a SelectDate or a ContextMenu inside a Dialog or a SidePanel opens over it (it opened behind it). Outside a layer nothing changes.
+*   **Fix: `remove()` of a parent also cleans the panels its components own:** the list panels of the components inside a removed container (a page change) kept their ScrollBars, window listeners and DOM; a direct `remove()` worked. Now both clean everything. Reference: `basic/basic-what-is-new.md`.
+
+---
+
 ## Version 26.11.01
 
 *   **The components keep their size on a fitted page:** on a page fitted with `page.fit(600, 800)` (zoomed to 0.65 on a phone) set `basic.uiScale = 1 / page.zoom` once: Tabs, Dialog, Toast, Tooltip, SelectBox and SelectDate take it as the default of their new `scale` param and stay as big as on a normal page. `basic.scaleStyle(style, factor)`, `basic.scaleSize(value, factor)` and `basic.scaleCssText(text, factor)` (the px of a shadow) multiply the sizes of a style for your own components. With the default 1 nothing changes. Reference: `basic/basic-what-is-new.md`.

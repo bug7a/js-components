@@ -733,11 +733,16 @@ Dialog.closeAll = function () {
 document.addEventListener("keydown", function (event) {
     if (event.key != "Escape" || event.defaultPrevented) return;
     const top = Dialog.getTop();
-    if (!top || !basic.isOn(top.closeOnEscape) || top.isBusy()) return;
+    if (!top) return;
     // WHY: the focus in an object made on page over the dialog (Ex: the list of a FullScreenSelect): its Escape
     const target = event.target;
     const isFocusFree = (target === document.body || target === document.documentElement);
     if (!isFocusFree && !top.elem.contains(target)) return;
+    // WHY: a modal keeps its Escape even when it does not close (closeOnEscape 0, busy): a SidePanel under it closed
+    if (!basic.isOn(top.closeOnEscape) || top.isBusy()) {
+        event.preventDefault();
+        return;
+    }
     event.preventDefault();
     event.stopPropagation();
     top.close("escape");

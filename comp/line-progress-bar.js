@@ -3,7 +3,7 @@
 /*
 
 Component: LineProgressBar
-Version: 1.1
+Version: 1.2 (2026-11-05: the lines follow the width; a bar made in a hidden container works)
 Created: November 2025
 Description: A progress bar component composed of vertical lines.
 
@@ -51,8 +51,9 @@ const LineProgressBar = function (params = {}) {
     const VALUE_LABEL_TOP = -25; // Above the lines
     const VALUE_LABEL_SHOW_TIME = 1000; // ms after the last change
 
-    const totalLines = Math.floor(box.width / UNIT_WIDTH);
+    let totalLines = 0; // follows the width of the box (0 while it is not drawn: a closed tab, a hidden group)
     const lines = [];
+    let lineContainer = null;
 
     let valueLabel = null;
     let cancelValueLabelHide = null; // The cancel function of the waiting hide (box.after)
@@ -61,32 +62,45 @@ const LineProgressBar = function (params = {}) {
     box.currentProgress = box.progress;
 
     // *** PRIVATE FUNCTIONS:
+    const countLines = function () {
+        return Math.max(0, Math.floor(box.width / UNIT_WIDTH));
+    };
+
     const createLines = function () {
 
-        const lineContainer = Box({
-            width: box.width,
-            height: box.height,
+        lineContainer = Box({
+            width: "100%",
+            height: "100%",
             color: "transparent",
             position: "absolute",
             left: 0,
             top: 0,
         });
 
-        for (let i = 0; i < totalLines; i++) {
-            const line = Box({
-                width: LINE_WIDTH,
-                height: box.height,
-                left: i * UNIT_WIDTH,
-                top: 0,
-                color: box.secondaryColor,
-                position: "absolute",
-            });
-            lines.push(line);
-        }
-
-        lineContainer.add(...lines);
+        buildLines();
 
         if (box.showValueLabel) createValueLabel();
+    };
+
+    // WHY again on a resize: the lines were made once from the width at create time. A bar made in a closed tab or
+    //     a hidden group ("100%": width 0) had no lines, and lineContainer.add(...[]) threw: the start() of the page
+    //     stopped there, with its started boxes left open (2026-11-05).
+    const buildLines = function () {
+        lines.forEach(function (line) { line.remove(); });
+        lines.length = 0;
+        totalLines = countLines();
+        createIn(lineContainer, function () {
+            for (let i = 0; i < totalLines; i++) {
+                lines.push(Box({
+                    width: LINE_WIDTH,
+                    height: box.height,
+                    left: i * UNIT_WIDTH,
+                    top: 0,
+                    color: box.secondaryColor,
+                    position: "absolute",
+                }));
+            }
+        });
     };
 
     const createValueLabel = function () {
@@ -183,6 +197,10 @@ const LineProgressBar = function (params = {}) {
     // *** OBJECT INIT CODE:
     createLines();
     updateVisuals();
+    box.onResize(function () {
+        if (countLines() !== totalLines) buildLines();
+        paintLines(getHeadIndex()); // (not updateVisuals: the value label shows only when the value changes)
+    });
 
     return endObject(box);
 };

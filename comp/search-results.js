@@ -337,6 +337,7 @@ const SearchResults = function (params = {}) {
 
         if (!box.wrapper) render();
 
+        box.zIndex = basic.zIndexAbove(box.anchor, box.zIndexValue); // WHY: a search field in a Dialog or a SidePanel opens its list over them
         box.visible = 1;
         layout();
 

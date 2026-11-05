@@ -580,6 +580,10 @@ const ContextMenu = function (params = {}) {
         isOpen = 1;
         openPageSize = page.width + "x" + page.height;
 
+        // WHY: a menu of a row in a Dialog or a SidePanel opens over them (it was under them, invisible but holding
+        //      the keys); a submenu over its menu
+        box.zIndex = basic.zIndexAbove(box.parentMenu || box.source, _ms.zIndex);
+
         // Show hidden (opacity 0) first, so the size can be measured.
         box.setMotion("none");
         box.opacity = 0;

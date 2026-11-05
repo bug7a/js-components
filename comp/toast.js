@@ -599,7 +599,8 @@ Toast.options = {
     offsetBottom: null, // Space to the bottom edge (Ex: over a tab bar). null: offset
     gap: 10, // Space between toasts
     maxVisible: 5, // In one position
-    zIndex: 3000,
+    zIndex: 45000, // WHY: over the Dialogs (4000 and up: a toast under the cover of a dialog could not be clicked, its
+                   //      Undo closed the dialog), under Notice (50000) and Tooltip (100000) (2026-11-05)
     smallScreenWidth: 520, // Page width: toasts use the full width below this.
     durations: { success: 3000, info: 4000, warning: 5000, error: 7000, loading: 0 },
     // The px above (width, offsets, gap, smallScreenWidth) multiplied, and the scale of a toast without its own.

@@ -4,6 +4,13 @@ Bu belgede basic.js kütüphanesine eklenen yeni özellikler, güncellemeler ve 
 
 ---
 
+## Versiyon 26.11.05
+
+*   **`basic.zIndexAbove(obj, minimum)`:** `obj`'den açılan bir listenin ya da menünün z-index'i: `obj`'yi tutan katmanın (bir Dialog, bir SidePanel, bir Tooltip popover'ı) üstünde, en az `minimum`. Bileşenlerin listeleri ve menüleri açılırken bunu kullanır; bir Dialog ya da SidePanel içindeki SelectBox, SelectDate ya da ContextMenu artık onun üstünde açılır (arkasında açılıyordu). Bir katmanın dışında bir şey değişmez.
+*   **Düzeltme: bir üst kutunun `remove()`'u, bileşenlerinin sahiplendiği panelleri de temizler:** silinen bir kabın (sayfa değişimi) içindeki bileşenlerin liste panelleri ScrollBar'larını, pencere dinleyicilerini ve DOM'larını tutuyordu; doğrudan `remove()` çalışıyordu. Artık ikisi de her şeyi temizler. Örnekli başvuru: `basic/basic-what-is-new.md`.
+
+---
+
 ## Versiyon 26.11.01
 
 *   **Bileşenler sığdırılmış bir sayfada boylarını korur:** `page.fit(600, 800)` ile sığdırılan (telefonda 0.65'e küçülen) bir sayfada bir kez `basic.uiScale = 1 / page.zoom` yazın: Tabs, Dialog, Toast, Tooltip, SelectBox ve SelectDate bunu yeni `scale` parametrelerinin varsayılanı olarak alır ve normal bir sayfadaki kadar büyük kalır. `basic.scaleStyle(style, factor)`, `basic.scaleSize(value, factor)` ve `basic.scaleCssText(text, factor)` (bir gölgenin px'leri) kendi bileşenleriniz için bir stilin ölçülerini çarpar. Varsayılan 1 ile hiçbir şey değişmez. Örnekli başvuru: `basic/basic-what-is-new.md`.

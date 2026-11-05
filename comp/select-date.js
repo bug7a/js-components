@@ -583,6 +583,10 @@ const SelectDate = function (params = {}) {
         setView(focusDate.getFullYear(), focusDate.getMonth());
         renderPanel();
 
+        // WHY at open: a field in a Dialog or a SidePanel (their layer is over 1001) opens its list over them
+        const layerZIndex = basic.zIndexAbove(box, OVERLAY_Z_INDEX);
+        box.overlay.zIndex = layerZIndex;
+        box.panel.zIndex = layerZIndex + 1;
         box.overlay.visible = 1;
         box.panel.visible = 1;
         positionPanel();

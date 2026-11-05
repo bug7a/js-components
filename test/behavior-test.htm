@@ -63,6 +63,8 @@
         <script src="../comp/bottom-bar.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/period-bar.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/action-tab-bar.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/line-progress-bar.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/select-time.js" type="text/javascript" charset="utf-8"></script>
 
         <script>
         "use strict";
@@ -1830,6 +1832,109 @@
             bar.btnAction.elem.click();
             check("ActionTabBar: setValue moves the line under the tab, the + calls onAction", bar.value === "c" && changes === 1 && Math.abs(moved - expected) < 1 && isSelected && actions === 1, "value: " + bar.value + ", onChange: " + changes + ", moved: " + moved + " (" + expected + "), selected: " + isSelected + ", onAction: " + actions);
             bar.remove();
+        });
+
+        // *** THE REVIEW OF comp/ (2026-11-05, context/comp-bugs.md) - A: what broke the page, lost data or leaked
+
+        test("LineProgressBar: made in a hidden group it does not throw, and draws its lines when shown", async function () {
+            const group = VGroup({ width: 400, height: 60, visible: 0 });
+                const bar = LineProgressBar({ width: "100%", height: 20 });
+            endGroup();
+            const label = Label({ text: "after the bar" });
+            const isLabelOutside = !group.elem.contains(label.elem); // WHY: the throw left the group open
+            group.visible = 1;
+            await wait(200);
+            const lineCount = bar.elem.querySelectorAll(".basic_box").length - 1; // (- the line container)
+            check("LineProgressBar: made in a hidden group it does not throw, and draws its lines when shown", isLabelOutside && lineCount === 100, "lines: " + lineCount + ", the next label outside the group: " + isLabelOutside);
+            label.remove();
+            group.remove();
+        });
+
+        test("SelectTime in a removed container: its lists leave no window listener (basic.js v26.11.05)", async function () {
+            const countResize = function () { return page._box._eventFuncList.filter(function (e) { return e.eventName === "resize"; }).length; };
+            const before = countResize();
+            for (let i = 0; i < 3; i++) {
+                const view = startBox(0, 0, 300, 300);
+                    SelectTime({ left: 10, top: 10 });
+                endBox();
+                view.remove(); // a page change
+            }
+            check("SelectTime in a removed container: its lists leave no window listener (basic.js v26.11.05)", countResize() === before, "window resize listeners: " + before + " -> " + countResize());
+        });
+
+        test("A SelectBox and a ContextMenu in a Dialog open over it; a Toast is over the Dialog", async function () {
+            let select = null;
+            let row = null;
+            const dialog = Dialog({
+                titleText: "Order",
+                content: function () {
+                    select = SelectBox({ width: 200, options: ["Small", "Large"] });
+                    row = Label({ text: "row", width: 100, height: 30 });
+                },
+                buttons: [{ key: "ok", text: "OK", type: "primary" }],
+            });
+            const menu = ContextMenu({ target: row, items: [{ text: "Open", key: "open" }] });
+            await wait(50);
+            const zOf = function (elem) { return Number(getComputedStyle(elem).zIndex); };
+            select.open();
+            const selectZ = zOf(select.panel.elem);
+            select.close();
+            menu.openWithEvent({ clientX: 20, clientY: 20 }, row);
+            const menuZ = zOf(menu.elem);
+            menu.close();
+            const toast = Toast.info("Saved.");
+            const toastZ = zOf(toast.elem.parentElement);
+            const dialogZ = zOf(dialog.elem);
+            toast.remove();
+            menu.remove();
+            dialog.remove();
+            check("A SelectBox and a ContextMenu in a Dialog open over it; a Toast is over the Dialog", selectZ > dialogZ && menuZ > dialogZ && toastZ > dialogZ, "dialog " + dialogZ + ", select " + selectZ + ", menu " + menuZ + ", toast " + toastZ);
+        });
+
+        test("SortableList and ItemList: the keys of a field in a row stay in the field", async function () {
+            const removed = [];
+            const fields = [];
+            const sortable = SortableList({
+                width: 300, height: 200, removable: 1,
+                items: [{ key: "q1", text: "Name" }, { key: "q2", text: "City" }],
+                createItemView: function (item) { fields.push(Input({ width: "100%", height: 32, text: item.text, position: "relative" })); },
+                onRemove: function (self, item) { removed.push(item.key); },
+            });
+            const list = ItemList({
+                width: 300, height: 200, style: { row: { height: "auto" } },
+                items: [{ key: "a", title: "Apple" }],
+                createItemView: function (item) { fields.push(Input({ width: 200, height: 32, text: item.title, position: "relative" })); },
+            });
+            await wait(50);
+            key(fields[0].inputElement, "keydown", "Backspace");
+            const space = new KeyboardEvent("keydown", { key: " ", bubbles: true, cancelable: true });
+            fields[2].inputElement.dispatchEvent(space);
+            check("SortableList and ItemList: the keys of a field in a row stay in the field", removed.length === 0 && sortable.getKeys().length === 2 && !space.defaultPrevented && list.getSelectedKeys().length === 0, "removed: " + removed.join(",") + ", space taken: " + space.defaultPrevented + ", selected: " + list.getSelectedKeys().join(","));
+            sortable.remove();
+            list.remove();
+        });
+
+        test("SidePanel: an Escape that closes a list in it, or that a Dialog over it keeps, does not close the panel", async function () {
+            const panel = SidePanel({ side: "right", titleText: "Filters", opened: 1 });
+            let select = null;
+            panel.startBody();
+                select = SelectBox({ width: 200, options: ["A", "B"] });
+            panel.endBody();
+            await wait(50);
+            select.open();
+            key(document.activeElement || document.body, "keydown", "Escape", { code: "Escape" });
+            await wait(30);
+            const afterList = panel.isOpened;
+            const dialog = Dialog({ titleText: "Saving", closeOnEscape: 0, buttons: [{ key: "ok", text: "OK", type: "primary" }] });
+            await wait(30);
+            key(document.activeElement || document.body, "keydown", "Escape", { code: "Escape" });
+            await wait(30);
+            const afterDialog = panel.isOpened;
+            dialog.remove();
+            key(document.body, "keydown", "Escape", { code: "Escape" });
+            await wait(30);
+            check("SidePanel: an Escape that closes a list in it, or that a Dialog over it keeps, does not close the panel", afterList === 1 && afterDialog === 1 && panel.isOpened === 0, "after the list: " + afterList + ", after the dialog: " + afterDialog + ", then: " + panel.isOpened);
+            panel.remove();
         });
 
         // *** RUN
