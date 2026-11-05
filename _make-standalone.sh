@@ -312,8 +312,8 @@ console.log("Project: " + rel(PROJECT) + "  (" + pages.length + " page" + (pages
 console.log("  out:    " + (IN_PLACE ? "the project folder itself (--in-place)" : (isInside(OUT, REPO) ? rel(OUT) : OUT)));
 console.log("  basic/  " + Object.keys(basicFiles).sort().join(", "));
 if (isOneFile) console.log("  comp/   " + (oneFileOrder.length ? ONE_FILE_NAME + " <- " + oneFileOrder.join(", ") : "(none)"));
-if (MAKE_GZIP) console.log("  gzip:   every text file of the output also as name.gz");
 else console.log("  comp/   " + (Object.keys(compFiles).length ? Object.keys(compFiles).sort().map((name) => name + " <- " + compFiles[name]).join(", ") : "(none)"));
+if (MAKE_GZIP) console.log("  gzip:   every text file of the output also as name.gz");
 rewrites.forEach(function (item) {
     console.log("  " + rel(item.page) + ": " + item.from + " -> " + (item.to || "(removed: it is in " + ONE_FILE_NAME + ")"));
 });
