@@ -3295,6 +3295,93 @@
             chart.remove();
         });
 
+        test("GraphBox: showValues: a value only where it fits, nothing over the title, a text never in the data color", async function () {
+            const wide = GraphBox({ width: 400, height: 240, type: "bar", showValues: 1, labels: ["A", "B"], values: [100, 200], maxValue: 200 });
+            const wideTexts = Array.from(wide.svg.querySelectorAll("text")).filter(function (label) { return label.textContent === "100" || label.textContent === "200"; });
+            const axisTop = Number(Array.from(wide.svg.querySelectorAll("line")).slice(-2)[0].getAttribute("y1"));
+            const topValue = Array.from(wide.svg.lastChild.querySelectorAll("text")).find(function (label) { return label.textContent === "200"; });
+            const isRoomKept = (topValue && Number(topValue.getAttribute("y")) > 0 && axisTop > 14);
+            const isTextColor = (topValue && topValue.getAttribute("fill") === GraphBox.THEMES.light.textColor);
+            wide.remove();
+
+            const narrow = GraphBox({ width: 160, height: 240, type: "bar", showValues: 1, labels: ["A", "B", "C", "D", "E", "F"], values: [10000000, 2000000, 3000000, 4000000, 5000000, 6000000] });
+            const narrowValues = narrow.svg.lastChild.querySelectorAll("text").length;
+            narrow.remove();
+
+            const stack = GraphBox({ width: 400, height: 300, type: "bar", stacked: 1, showValues: 1, legend: "none", labels: ["A"], datasets: [{ label: "Big", data: [90] }, { label: "Tiny", data: [1] }] });
+            const stackValues = Array.from(stack.svg.lastChild.querySelectorAll("text")).map(function (label) { return label.textContent; }).join(",");
+            stack.remove();
+
+            const lines = GraphBox({ width: 400, height: 240, type: "line", showValues: 1, labels: ["A", "B"], datasets: [{ label: "One", data: [1, 50] }, { label: "Two", data: [1, 50] }, { label: "Three", data: [1, 10] }] });
+            const lineValues = Array.from(lines.svg.lastChild.querySelectorAll("text")).map(function (label) { return label.textContent; }).join(",");
+            lines.remove();
+
+            check("GraphBox: showValues: a value only where it fits, nothing over the title, a text never in the data color",
+                wideTexts.length >= 2 && isRoomKept && isTextColor && narrowValues === 0 && stackValues === "90" && lineValues === "50,10",
+                [wideTexts.length, isRoomKept, isTextColor, narrowValues, stackValues, lineValues].join(" | "));
+        });
+
+        test("GraphBox: the text in a colored mark is white or ink, by its color", async function () {
+            const pairs = [["#2A78D6", "#FFFFFF"], ["#008300", "#FFFFFF"], ["#EDA100", "#0B0B0B"], ["#1BAF7A", "#0B0B0B"], ["white", "#0B0B0B"], ["rgb(0, 0, 0)", "#FFFFFF"]];
+            const wrong = pairs.filter(function (pair) { return GraphBox.getTextColorOn(pair[0]) !== pair[1]; });
+            check("GraphBox: the text in a colored mark is white or ink, by its color", wrong.length === 0, wrong.join(" | "));
+        });
+
+        test("GraphBox: the table has every value, a name is plain text, and it follows the data", async function () {
+            const chart = GraphBox({
+                width: 400, height: 240, type: "bar", tableHeadText: "Quarter",
+                labels: ["<b>Q1</b>", "Q2"],
+                datasets: [{ label: "2025", data: [12, null] }, { label: "2026", data: [15, 22], hidden: 1 }],
+            });
+            const dataAtStart = chart.getTableData();
+            const isDataRight = (JSON.stringify(dataAtStart) === JSON.stringify({ head: ["Quarter", "2025"], rows: [["<b>Q1</b>", "12"], ["Q2", ""]] }));
+            chart.setTableView(1);
+            await wait(30);
+            const hasPlainName = (chart.tableBox.elem.querySelector("b") === null && chart.tableBox.elem.textContent.includes("<b>Q1</b>"));
+            const isPlotHidden = (chart.plot.visible == 0 && chart.tableBox.elem.getBoundingClientRect().height > 0);
+            chart.setValues([99, 98]);
+            const isFollowing = chart.tableBox.elem.textContent.includes("99");
+            chart.setTableView(0);
+            await wait(30);
+            const isBack = (chart.plot.visible == 1 && chart.tableBox === null && chart.svg.querySelectorAll("path").length === 2);
+            check("GraphBox: the table has every value, a name is plain text, and it follows the data", isDataRight && hasPlainName && isPlotHidden && isFollowing && isBack, [JSON.stringify(dataAtStart), hasPlainName, isPlotHidden, isFollowing, isBack].join(" | "));
+            chart.remove();
+        });
+
+        test("GraphBox: the table of a pie has the share, of a scatter its axes", async function () {
+            const pie = GraphBox({ width: 400, height: 240, type: "pie", labels: ["A", "B"], values: [30, 90] });
+            const pieRows = JSON.stringify(pie.getTableData().rows);
+            pie.remove();
+            const scatter = GraphBox({ width: 400, height: 240, type: "bubble", xAxisText: "X", yAxisText: "Y", sizeText: "S", datasets: [{ label: "G", data: [[1, 2, 3]] }] });
+            const scatterData = JSON.stringify(scatter.getTableData());
+            scatter.remove();
+            check("GraphBox: the table of a pie has the share, of a scatter its axes", pieRows === JSON.stringify([["A", "30", "25%"], ["B", "90", "75%"]]) && scatterData === JSON.stringify({ head: ["", "X", "Y", "S"], rows: [["G", "1", "2", "3"]] }), pieRows + " " + scatterData);
+        });
+
+        test("GraphBox: getImage() paints the card, the marks, the legend and the title on a canvas", async function () {
+            const chart = GraphBox({
+                width: 400, height: 240, type: "bar", titleText: "Title", labels: ["A"], legend: "top",
+                datasets: [{ label: "One", data: [100], color: "#FF0000" }],
+            });
+            await wait(30);
+            const canvas = chart.getCanvas(1);
+            const context = canvas.getContext("2d");
+            const bar = chart.svg.querySelector("path").getBBox();
+            const plotRect = chart.plot.elem.getBoundingClientRect();
+            const boxRect = chart.elem.getBoundingClientRect();
+            const barPixel = context.getImageData(plotRect.left - boxRect.left + bar.x + bar.width / 2, plotRect.top - boxRect.top + bar.y + bar.height / 2, 1, 1).data;
+            const keyRect = chart.legendItems[0].key.elem.getBoundingClientRect();
+            const keyPixel = context.getImageData(keyRect.left - boxRect.left + keyRect.width / 2, keyRect.top - boxRect.top + keyRect.height / 2, 1, 1).data;
+            const titleRect = chart.lblTitle.elem.getBoundingClientRect();
+            const titlePixels = context.getImageData(titleRect.left - boxRect.left, titleRect.top - boxRect.top, titleRect.width, titleRect.height).data;
+            let darkPixels = 0;
+            for (let i = 0; i < titlePixels.length; i += 4) { if (titlePixels[i] < 100) darkPixels++; }
+            const url = chart.getImage();
+            const isRed = function (pixel) { return pixel[0] > 200 && pixel[1] < 60 && pixel[2] < 60; };
+            check("GraphBox: getImage() paints the card, the marks, the legend and the title on a canvas", isRed(barPixel) && isRed(keyPixel) && darkPixels > 5 && url.startsWith("data:image/png"), [Array.from(barPixel), Array.from(keyPixel), darkPixels].join(" | "));
+            chart.remove();
+        });
+
         test("GraphBox: setTheme() changes the look, setStyle() keeps the other keys", async function () {
             const chart = GraphBox({ width: 400, height: 240, type: "bar", titleText: "Title", labels: ["A"], values: [1] });
             const lightColor = chart.color;

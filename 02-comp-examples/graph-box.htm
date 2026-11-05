@@ -97,7 +97,8 @@
                             type: "bar",
                             stacked: 1,
                             titleText: "Support Tickets",
-                            subtitleText: "stacked: 1, a gap between the parts",
+                            subtitleText: "stacked: 1, showValues: 1 (only the ones that fit)",
+                            showValues: 1,
                             labels: MONTHS,
                             datasets: [
                                 { label: "Solved", data: [120, 140, 130, 160, 170, 190] },
@@ -111,7 +112,8 @@
                             type: "bar",
                             horizontal: 1,
                             titleText: "Top Pages",
-                            subtitleText: "horizontal: 1",
+                            subtitleText: "horizontal: 1, showValues: 1",
+                            showValues: 1,
                             labels: ["Getting started", "Components", "Examples and templates", "Pricing", "A very long name of a page that is cut"],
                             values: [8400, 6100, 4800, 2300, 1200],
                         });
@@ -147,7 +149,8 @@
                         addChart({
                             type: "pie",
                             titleText: "Budget",
-                            subtitleText: "The tooltip adds the share of each part",
+                            subtitleText: "showValues: 1, the tooltip adds the share too",
+                            showValues: 1,
                             labels: ["Salaries", "Rent", "Marketing", "Other"],
                             values: [52000, 18000, 12500, 7500],
                             formatValue: function (value) { return "₺" + value.toLocaleString("tr-TR"); },
@@ -257,6 +260,11 @@
                             });
                             chartDemo.update();
                         });
+                        addButton("Table", function (self) {
+                            chartDemo.setTableView(chartDemo.tableView ? 0 : 1);
+                            self.setText((chartDemo.tableView) ? "Chart" : "Table");
+                        });
+                        addButton("Download", function () { chartDemo.download("quarterly.png"); });
                         addButton("Pause live", function (self) {
                             isPaused = (isPaused) ? 0 : 1;
                             self.setText((isPaused) ? "Continue live" : "Pause live");

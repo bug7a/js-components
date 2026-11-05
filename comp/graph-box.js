@@ -16,6 +16,11 @@ UI COMPONENT
   or it turns (a bar chart: every bar needs its name).
 - Mouse, touch and keyboard: a tooltip with every dataset at that place. (Left / right arrows, Escape, Enter.)
 - The legend hides and shows a dataset (or a slice of a pie) with a click.
+- showValues: 1: the values on the chart, only where they fit: at the end of a bar, in a part of a stack, in a slice,
+  at the end of a line. A value that has no room stays in the tooltip and in the table.
+- setTableView(1): the same values as a table. A chart can not be read by everyone (a color, a screen reader); this
+  can. getTableData() gives its rows.
+- getImage() and download("chart.png"): the whole card as a picture.
 
 USAGE:
 const sales = GraphBox({
@@ -77,6 +82,9 @@ const GraphBoxDefaults = {
     sizeText: "Size", // bubble: the name of its size in the tooltip
     xAxisText: "", // A small title under the chart. Ex: "Height (cm)"
     yAxisText: "", // A small title at the left of the chart, turned. Ex: "Weight (kg)"
+    showValues: 0, // 1: The values on the chart, only where they fit.
+    tableView: 0, // 1: A table of the values in place of the chart. setTableView()
+    tableHeadText: "", // The title of the first column of the table
     curve: "linear", // "linear", "smooth" (never goes over a value)
     showPoints: "auto", // "auto": When there is room for them. 1, 0
     formatValue: null, // function (value) { return value + " ₺"; } For the tooltip and the value axis.
@@ -155,6 +163,16 @@ const GraphBoxDefaults = {
             bubbleOpacity: 0.65,
             hitRadius: 14, // Px: the mouse finds a point this far from it. (A point of 8 px is too small to aim at.)
         },
+        values: {
+            gap: 4, // Between a mark and its value
+            sidePadding: 3, // A value in a mark needs this much room at its sides.
+        },
+        table: {
+            fontSize: 12,
+            rowHeight: 28,
+            cellPadding: 8,
+            headFontFamily: "opensans-bold",
+        },
         tooltip: {
             fontSize: 12,
             round: 6,
@@ -195,7 +213,7 @@ const GraphBox = function (params = {}) {
     const hiddenSliceKeys = new Set(); // WHY keys, not places: A slice stays hidden when the values come again.
     const tooltipRows = [];
     let colors = null; // The colors of the theme + style.colors
-    let svg, definitions, gridLayer, washLayer, markLayer, overlayLayer;
+    let svg, definitions, gridLayer, washLayer, markLayer, overlayLayer, valueLayer;
     let view = null; // What the last drawing knows about its marks. null: nothing is drawn.
     let activeItem = null; // { index, datasetIndex }: under the mouse, or chosen with the keyboard.
     let pointer = null; // { x, y } in the plot. null: the keyboard chose the item.
@@ -348,7 +366,7 @@ const GraphBox = function (params = {}) {
     };
 
     const clearLayers = function () {
-        [definitions, gridLayer, washLayer, markLayer, overlayLayer].forEach(function (layer) {
+        [definitions, gridLayer, washLayer, markLayer, overlayLayer, valueLayer].forEach(function (layer) {
             layer.replaceChildren();
         });
         markLayer.removeAttribute("clip-path");
@@ -489,6 +507,46 @@ const GraphBox = function (params = {}) {
         return Math.min(scale.max, Math.max(scale.min, 0));
     };
 
+    // THE VALUES ON THE CHART:
+
+    const getLastValue = function (seriesItem) {
+        for (let index = seriesItem.dataset.data.length - 1; index >= 0; index--) {
+            const value = getValue(seriesItem.dataset, index);
+            if (value !== null) return value;
+        }
+        return null;
+    };
+
+    // The texts at the far end of the chart: the last value of a line, every value of a sideways bar.
+    const getEndValueTexts = function (series) {
+        const isSideways = (box.horizontal == 1);
+        const texts = [];
+        series.forEach(function (seriesItem) {
+            if (!isBarSeries(seriesItem)) {
+                const lastValue = getLastValue(seriesItem);
+                if (lastValue !== null && !isSideways) texts.push(formatValueText(lastValue));
+                return;
+            }
+            if (!isSideways || isStacked()) return;
+            seriesItem.dataset.data.forEach(function (value) {
+                const number = toNumber(value);
+                if (number !== null) texts.push(formatValueText(number));
+            });
+        });
+        return texts;
+    };
+
+    // The room the values need around the plot: over the bars and at the far end.
+    const measureValueRooms = function (series) {
+        if (!basic.isOn(box.showValues)) return { top: 0, end: 0 };
+        const hasUprightBarValues = (box.horizontal != 1 && !isStacked() && series.some(isBarSeries));
+        const endTexts = getEndValueTexts(series);
+        return {
+            top: (hasUprightBarValues) ? getAxisTextHeight() : 0,
+            end: (endTexts.length) ? Math.ceil(measureWidestText(endTexts)) + _s.axis.labelGap : 0,
+        };
+    };
+
     const getAxisTitleRooms = function () {
         const room = getAxisTextHeight() + 2;
         return { left: (box.yAxisText) ? room : 0, bottom: (box.xAxisText) ? room : 0 };
@@ -536,17 +594,18 @@ const GraphBox = function (params = {}) {
         const labelGap = _s.axis.labelGap;
         const pointRoom = getPointRoom();
         const titleRooms = getAxisTitleRooms();
-        const top = Math.max(pointRoom, Math.ceil(_s.axis.fontSize / 2));
+        const top = Math.max(pointRoom, Math.ceil(_s.axis.fontSize / 2)) + limits.valueRooms.top;
         const bottom = height - (labelRoom + labelGap + titleRooms.bottom);
         const scale = createValueScale(limits, bottom - top);
 
         let left = titleRooms.left + Math.ceil(measureWidestText(scale.tickTexts)) + labelGap;
-        let right = width - pointRoom;
+        let right = width - Math.max(pointRoom, limits.valueRooms.end);
 
         // WHY: Without bands the first and the last value are on the edges, so half of their labels is out of the plot.
         if (!hasBands && indexCount > 0) {
             left = Math.max(left, titleRooms.left + Math.ceil(measureAxisText(getLabelText(0)) / 2));
-            right = width - Math.max(pointRoom, Math.ceil(measureAxisText(getLabelText(indexCount - 1)) / 2));
+            const lastLabelRoom = Math.ceil(measureAxisText(getLabelText(indexCount - 1)) / 2);
+            right = width - Math.max(pointRoom, lastLabelRoom, limits.valueRooms.end);
         }
 
         return { left: left, top: top, right: Math.max(left + 1, right), bottom: Math.max(top + 1, bottom), scale: scale };
@@ -603,7 +662,7 @@ const GraphBox = function (params = {}) {
         const titleRooms = getAxisTitleRooms();
 
         const left = titleRooms.left + Math.ceil(labelWidth) + labelGap;
-        const right = Math.max(left + 1, width - Math.max(pointRoom, Math.ceil(tickWidth / 2)));
+        const right = Math.max(left + 1, width - Math.max(pointRoom, Math.ceil(tickWidth / 2), limits.valueRooms.end));
         const top = (hasBands) ? 0 : Math.max(pointRoom, Math.ceil(textHeight / 2));
         const bottom = Math.max(top + 1, height - (textHeight + labelGap + titleRooms.bottom));
         const tickSpace = Math.max(_s.axis.tickSpace, tickWidth + _s.axis.labelSpace);
@@ -813,6 +872,38 @@ const GraphBox = function (params = {}) {
         return true;
     };
 
+    // A value in a part of a stack, only when it fits: nothing is cut. Its color comes from the color of the part.
+    const drawStackValue = function (seriesItem, index, rect) {
+        const text = formatValueText(getValue(seriesItem.dataset, index));
+        const roomWidth = rect.width - _s.values.sidePadding * 2;
+        const roomHeight = rect.height - _s.values.sidePadding * 2;
+        if (measureAxisText(text) > roomWidth || _s.axis.fontSize > roomHeight) return;
+        const color = GraphBox.getTextColorOn(getMarkColor(seriesItem, index));
+        const label = addText(valueLayer, text, rect.left + rect.width / 2, rect.top + rect.height / 2, "middle", color);
+        label.setAttribute("font-family", "opensans-bold");
+    };
+
+    // A value after the end of its bar, only when it fits in the place of the bar.
+    const drawBarValue = function (seriesItem, index, range, rect, slotLength, axes) {
+
+        const text = formatValueText(getValue(seriesItem.dataset, index));
+        const isGoingUp = (range.to >= range.from);
+        const gap = _s.values.gap;
+
+        if (axes.isHorizontal) {
+            if (_s.axis.fontSize > slotLength) return;
+            const x = (isGoingUp) ? rect.left + rect.width + gap : rect.left - gap;
+            addText(valueLayer, text, x, rect.top + rect.height / 2, (isGoingUp) ? "start" : "end", colors.textColor);
+            return;
+        }
+
+        if (measureAxisText(text) > slotLength) return;
+        const textMiddle = getAxisTextHeight() / 2 + gap;
+        const y = (isGoingUp) ? rect.top - textMiddle : rect.top + rect.height + textMiddle;
+        addText(valueLayer, text, rect.left + rect.width / 2, y, "middle", colors.textColor);
+
+    };
+
     // A bar: its round corners are at the end of its value, its base is square.
     const drawBar = function (seriesItem, index, range, roundSide, slotStart, thickness, axes) {
         const rect = createBarRect(range, slotStart, thickness, axes);
@@ -821,6 +912,14 @@ const GraphBox = function (params = {}) {
             fill: getMarkColor(seriesItem, index),
         });
         seriesItem.barRects[index] = rect;
+        if (!basic.isOn(box.showValues)) return;
+        if (isStacked()) {
+            drawStackValue(seriesItem, index, rect);
+            return;
+        }
+        const slotCount = seriesItem.slotCount;
+        const slotLength = (slotCount > 1) ? thickness + _s.bar.gap : axes.spacing;
+        drawBarValue(seriesItem, index, range, rect, slotLength, axes);
     };
 
     const drawBars = function (series, axes) {
@@ -837,6 +936,7 @@ const GraphBox = function (params = {}) {
             const slot = (isBarStacked) ? 0 : seriesPlace;
             const slotOffset = slot * (thickness + _s.bar.gap) - groupLength / 2;
             seriesItem.barRects = [];
+            seriesItem.slotCount = slotCount;
             seriesItem.ranges.forEach(function (range, index) {
                 if (!range || range.from === range.to) return;
                 const isRound = (!isBarStacked || isOuterValue(barSeries, seriesPlace, index, range));
@@ -973,10 +1073,32 @@ const GraphBox = function (params = {}) {
 
     };
 
+    // The last value of every line. WHY only the last: A number on every point can not be read.
+    // WHY skipped: Two lines that end at the same place would write over each other. The legend still names them.
+    const drawLineEndValues = function (series, axes) {
+
+        if (!basic.isOn(box.showValues) || axes.isHorizontal) return;
+
+        const usedPlaces = [];
+        const textHeight = getAxisTextHeight();
+
+        series.filter(isLineSeries).forEach(function (seriesItem) {
+            const lastPoint = seriesItem.points[seriesItem.points.length - 1];
+            if (!lastPoint) return;
+            const isFree = usedPlaces.every(function (y) { return Math.abs(y - lastPoint.y) >= textHeight; });
+            if (!isFree) return;
+            usedPlaces.push(lastPoint.y);
+            const text = formatValueText(getLastValue(seriesItem));
+            addText(valueLayer, text, lastPoint.x + _s.axis.labelGap, lastPoint.y, "start", colors.textColor);
+        });
+
+    };
+
     const drawLines = function (series, axes) {
         series.filter(isLineSeries).forEach(function (seriesItem) {
             drawLineSeries(seriesItem, axes);
         });
+        drawLineEndValues(series, axes);
     };
 
     // THE ACTIVE ITEM OF A LINE OR BAR CHART:
@@ -1103,6 +1225,7 @@ const GraphBox = function (params = {}) {
 
         const limits = getValueLimits(series);
         if (!limits) return null;
+        limits.valueRooms = measureValueRooms(series);
 
         const axes = createAxes(series, limits, indexCount, width, height);
 
@@ -1197,6 +1320,28 @@ const GraphBox = function (params = {}) {
         return GraphBox.formatPercent(value / total, box.locale);
     };
 
+    // A slice shows its share (or its value, when the values are already percents), only when it fits.
+    const drawSliceValue = function (slice, shape, total) {
+
+        const text = getShareText(slice.value, total) || formatValueText(slice.value);
+        const isPie = (shape.innerRadius === 0);
+        const PIE_LABEL_PLACE = 0.65;
+        const radius = (isPie) ? shape.outerRadius * PIE_LABEL_PLACE : (shape.outerRadius + shape.innerRadius) / 2;
+        const sweep = slice.endAngle - slice.startAngle;
+        const halfAngle = Math.min(sweep / 2, Math.PI / 2);
+        const chordRoom = 2 * radius * Math.sin(halfAngle) - _s.values.sidePadding * 2;
+        const ringRoom = (isPie) ? chordRoom : shape.outerRadius - shape.innerRadius - _s.values.sidePadding * 2;
+        const textWidth = measureAxisText(text);
+        if (textWidth > chordRoom || textWidth > ringRoom || _s.axis.fontSize > chordRoom) return;
+
+        const angle = (slice.startAngle + slice.endAngle) / 2;
+        const x = shape.center.x + radius * Math.cos(angle);
+        const y = shape.center.y + radius * Math.sin(angle);
+        const label = addText(valueLayer, text, x, y, "middle", GraphBox.getTextColorOn(slice.color));
+        label.setAttribute("font-family", "opensans-bold");
+
+    };
+
     const createPieView = function (slices, shape, total) {
 
         const findSlice = function (item) {
@@ -1258,6 +1403,7 @@ const GraphBox = function (params = {}) {
         addSliceAngles(slices, total);
         slices.forEach(function (slice) {
             addSlice(markLayer, slice, shape, outerRadius);
+            if (basic.isOn(box.showValues)) drawSliceValue(slice, shape, total);
         });
         drawPieCenter(shape);
 
@@ -1984,6 +2130,273 @@ const GraphBox = function (params = {}) {
 
     };
 
+    // THE TABLE:
+
+    const getPlaceTableData = function () {
+        const series = getVisibleSeries();
+        const rows = [];
+        for (let index = 0; index < getIndexCount(series); index++) {
+            const cells = series.map(function (seriesItem) {
+                const value = getValue(seriesItem.dataset, index);
+                return (value === null) ? "" : formatValueText(value);
+            });
+            rows.push([getLabelText(index)].concat(cells));
+        }
+        const names = series.map(function (seriesItem) { return seriesItem.dataset.label || ""; });
+        return { head: [box.tableHeadText].concat(names), rows: rows };
+    };
+
+    const getSliceTableData = function () {
+        const slices = createSlices();
+        const total = getTotal(slices);
+        const dataset = box.data.datasets[0];
+        const rows = slices.map(function (slice) {
+            return [getLabelText(slice.index), formatValueText(slice.value), GraphBox.formatPercent(slice.value / total, box.locale)];
+        });
+        return { head: [box.tableHeadText, (dataset && dataset.label) || "", "%"], rows: rows };
+    };
+
+    const getPointTableData = function () {
+        const isBubble = (box.type === "bubble");
+        const rows = createScatterPoints(getVisibleSeries()).map(function (point) {
+            const name = (point.label === undefined) ? point.seriesName : String(point.label);
+            const cells = [name, formatXText(point.x), formatValueText(point.y)];
+            if (isBubble) cells.push((point.size === null) ? "" : GraphBox.formatNumber(point.size, box.locale));
+            return cells;
+        });
+        const head = [box.tableHeadText, box.xAxisText || "x", box.yAxisText || "y"];
+        if (isBubble) head.push(box.sizeText);
+        return { head: head, rows: rows };
+    };
+
+    const createTableRow = function (cells, isHead) {
+
+        const row = HGroup({ width: "100%", height: _s.table.rowHeight, align: "left center" });
+        row.shrink = 0;
+        row.role = "row";
+        row.css = { borderBottom: "1px solid " + colors.gridColor };
+
+            cells.forEach(function (cell, cellIndex) {
+                const label = Label({
+                    plainText: cell,
+                    width: "auto",
+                    fontSize: _s.table.fontSize,
+                    textColor: (cellIndex === 0 || isHead) ? colors.titleColor : colors.textColor,
+                    ellipsis: 1,
+                    role: (isHead) ? "columnheader" : "cell",
+                    // WHY tabular-nums: The digits of the numbers of a column stand under each other.
+                    css: { flex: "1 1 0", minWidth: "0px", padding: "0px " + _s.table.cellPadding + "px", textAlign: (cellIndex === 0) ? "left" : "right", fontVariantNumeric: "tabular-nums" },
+                });
+                if (isHead) label.fontFamily = _s.table.headFontFamily;
+            });
+
+        endGroup();
+
+    };
+
+    const createTable = function () {
+
+        if (box.tableBox) box.tableBox.remove();
+        box.tableBox = null;
+        if (box.tableView != 1) return;
+
+        const tableData = box.getTableData();
+
+        box.tableBox = createIn(box.body, function () {
+            const group = VGroup({ width: "100%", height: "auto", align: "left top", scrollY: 1, role: "table" });
+                createTableRow(tableData.head, 1);
+                tableData.rows.forEach(function (cells) { createTableRow(cells, 0); });
+            endGroup();
+            return group;
+        });
+        box.tableBox.css = { flex: "1 1 0", minHeight: "0px", alignSelf: "stretch" };
+        box.tableBox.aria = { label: box.titleText || box.type + " chart" };
+
+    };
+
+    // WHY drawn again: The data may have changed while the plot was hidden.
+    const applyTableView = function () {
+        if (box.tableView == 1) clearActiveItem();
+        refreshLayout();
+        createTable();
+    };
+
+    // THE IMAGE:
+    // WHY a canvas, not the SVG in a picture: An SVG in a picture can not use the fonts of the page, so every text would
+    //     change and it would not fit its room. Here every shape is painted again from its own attributes.
+
+    const applyRotation = function (context, shape) {
+        const match = /rotate\((-?[\d.]+) (-?[\d.]+) (-?[\d.]+)\)/.exec(shape.getAttribute("transform") || "");
+        if (!match) return;
+        const x = Number(match[2]);
+        const y = Number(match[3]);
+        context.translate(x, y);
+        context.rotate(Number(match[1]) * Math.PI / 180);
+        context.translate(-x, -y);
+    };
+
+    const paintImageText = function (context, shape) {
+        context.save();
+        applyRotation(context, shape);
+        const fontSize = shape.getAttribute("font-size") || _s.axis.fontSize;
+        const fontFamily = shape.getAttribute("font-family") || _s.axis.fontFamily;
+        context.font = fontSize + "px " + fontFamily;
+        context.textAlign = { start: "left", middle: "center", end: "right" }[shape.getAttribute("text-anchor")];
+        context.textBaseline = "middle";
+        const x = Number(shape.getAttribute("x"));
+        const y = Number(shape.getAttribute("y"));
+        if (shape.getAttribute("stroke")) {
+            context.strokeStyle = shape.getAttribute("stroke");
+            context.lineWidth = Number(shape.getAttribute("stroke-width")) || 1;
+            context.strokeText(shape.textContent, x, y);
+        }
+        context.fillStyle = shape.getAttribute("fill");
+        context.fillText(shape.textContent, x, y);
+        context.restore();
+    };
+
+    const createImagePath = function (shape, name) {
+        const path = new Path2D();
+        const read = function (key) { return Number(shape.getAttribute(key)); };
+        if (name === "path") return new Path2D(shape.getAttribute("d"));
+        if (name === "line") {
+            path.moveTo(read("x1"), read("y1"));
+            path.lineTo(read("x2"), read("y2"));
+        }
+        if (name === "rect") path.rect(read("x"), read("y"), read("width"), read("height"));
+        if (name === "circle") path.arc(read("cx"), read("cy"), read("r"), 0, FULL_CIRCLE);
+        return path;
+    };
+
+    // A fill: a color, or a gradient of the SVG made again for the canvas.
+    const getImageFill = function (context, shape) {
+        const fill = shape.getAttribute("fill");
+        const match = /^url\(#(.+)\)$/.exec(fill || "");
+        if (!match) return fill;
+        const shapeBox = shape.getBBox();
+        const gradient = context.createLinearGradient(0, shapeBox.y, 0, shapeBox.y + shapeBox.height);
+        svg.getElementById(match[1]).querySelectorAll("stop").forEach(function (stop) {
+            const opacity = stop.getAttribute("stop-opacity");
+            gradient.addColorStop(Number(stop.getAttribute("offset")), GraphBox.toTransparent(stop.getAttribute("stop-color"), opacity));
+        });
+        return gradient;
+    };
+
+    const paintImageShape = function (context, shape, name) {
+
+        const path = createImagePath(shape, name);
+        const fill = getImageFill(context, shape);
+        const stroke = shape.getAttribute("stroke");
+        const dash = shape.getAttribute("stroke-dasharray");
+
+        const paintFill = function () {
+            if (!fill || fill === "none") return;
+            context.globalAlpha = Number(shape.getAttribute("fill-opacity") || 1);
+            context.fillStyle = fill;
+            context.fill(path, "nonzero");
+            context.globalAlpha = 1;
+        };
+
+        const paintStroke = function () {
+            if (!stroke || stroke === "none") return;
+            context.strokeStyle = stroke;
+            context.lineWidth = Number(shape.getAttribute("stroke-width")) || 1;
+            context.lineCap = shape.getAttribute("stroke-linecap") || "butt";
+            context.lineJoin = shape.getAttribute("stroke-linejoin") || "miter";
+            context.setLineDash((dash && dash !== "none") ? dash.split(" ").map(Number) : []);
+            context.stroke(path);
+            context.setLineDash([]);
+        };
+
+        if (shape.getAttribute("paint-order") === "stroke") {
+            paintStroke();
+            paintFill();
+            return;
+        }
+        paintFill();
+        paintStroke();
+
+    };
+
+    const applyImageClip = function (context, layer) {
+        const match = /^url\(#(.+)\)$/.exec(layer.getAttribute("clip-path") || "");
+        if (!match) return;
+        const rect = svg.getElementById(match[1]).querySelector("rect");
+        const read = function (key) { return Number(rect.getAttribute(key)); };
+        context.beginPath();
+        context.rect(read("x"), read("y"), read("width"), read("height"));
+        context.clip();
+    };
+
+    const paintImageLayer = function (context, layer) {
+        context.save();
+        applyImageClip(context, layer);
+        Array.from(layer.children).forEach(function (shape) {
+            const name = shape.tagName.toLowerCase();
+            if (name === "text") paintImageText(context, shape);
+            else paintImageShape(context, shape, name);
+        });
+        context.restore();
+    };
+
+    // The place of an object in the card, in px of the card.
+    const getPlaceInBox = function (object) {
+        const boxRect = box.elem.getBoundingClientRect();
+        const rect = object.elem.getBoundingClientRect();
+        const zoom = getZoom(box.elem, boxRect);
+        return {
+            left: (rect.left - boxRect.left) / zoom,
+            top: (rect.top - boxRect.top) / zoom,
+            width: rect.width / zoom,
+            height: rect.height / zoom,
+        };
+    };
+
+    const paintImageLabel = function (context, label, opacity = 1) {
+        if (label.visible != 1 || !label.elem.textContent) return;
+        const place = getPlaceInBox(label);
+        const style = getComputedStyle(label.elem);
+        context.font = style.fontSize + " " + style.fontFamily;
+        context.fillStyle = style.color;
+        context.textAlign = "left";
+        context.textBaseline = "middle";
+        context.globalAlpha = opacity;
+        context.fillText(label.elem.textContent, place.left, place.top + place.height / 2);
+        context.globalAlpha = 1;
+    };
+
+    const paintImageCard = function (context, width, height) {
+        const surfaceColor = getSurfaceColor();
+        const border = Number(box.border) || 0;
+        const round = Number(box.round) || 0;
+        context.beginPath();
+        if (context.roundRect) context.roundRect(border / 2, border / 2, width - border, height - border, round);
+        else context.rect(border / 2, border / 2, width - border, height - border);
+        if (surfaceColor !== "transparent") {
+            context.fillStyle = surfaceColor;
+            context.fill();
+        }
+        if (!border) return;
+        context.strokeStyle = box.borderColor;
+        context.lineWidth = border;
+        context.stroke();
+    };
+
+    const paintImageLegend = function (context) {
+        if (box.legendGroup.visible != 1) return;
+        box.legendItems.forEach(function (item) {
+            const place = getPlaceInBox(item.key);
+            context.globalAlpha = Number(item.opacity);
+            context.fillStyle = item.key.color;
+            context.beginPath();
+            if (context.roundRect) context.roundRect(place.left, place.top, place.width, place.height, Number(item.key.round) || 0);
+            else context.rect(place.left, place.top, place.width, place.height);
+            context.fill();
+            context.globalAlpha = 1;
+            paintImageLabel(context, item.label, Number(item.opacity));
+        });
+    };
+
     // THE LOOK AND THE TEXTS:
 
     const applyLook = function () {
@@ -2010,6 +2423,7 @@ const GraphBox = function (params = {}) {
 
     const refreshLayout = function () {
         applyLegendPosition();
+        box.plot.visible = (box.tableView == 1) ? 0 : 1;
         drawPlot();
     };
 
@@ -2017,6 +2431,7 @@ const GraphBox = function (params = {}) {
         assignColors();
         createLegend();
         refreshLayout();
+        createTable();
     };
 
     const drawAll = function () {
@@ -2169,6 +2584,74 @@ const GraphBox = function (params = {}) {
     };
     // USAGE: "auto", "top", "bottom", "left", "right", "none"
 
+    box.setShowValues = function (value) {
+        box.showValues = (basic.isOn(value)) ? 1 : 0;
+        drawPlot();
+    };
+
+    // The table of the values in place of the chart.
+    box.setTableView = function (value) {
+        box.tableView = (basic.isOn(value)) ? 1 : 0;
+        applyTableView();
+    };
+    // USAGE: graph.setTableView(graph.tableView ? 0 : 1)
+
+    // The values as texts, the same as the tooltip: { head: ["", "2025", "2026"], rows: [["Q1", "12", "15"], ...] }
+    box.getTableData = function () {
+        if (isPieType()) return getSliceTableData();
+        if (isScatterType()) return getPointTableData();
+        return getPlaceTableData();
+    };
+
+    // The whole card on a new canvas. scale: 2: sharp on every screen.
+    box.getCanvas = function (scale = 2) {
+
+        const width = box.elem.offsetWidth;
+        const height = box.elem.offsetHeight;
+        const canvas = document.createElement("canvas");
+        canvas.width = width * scale;
+        canvas.height = height * scale;
+
+        const context = canvas.getContext("2d");
+        context.scale(scale, scale);
+        paintImageCard(context, width, height);
+        paintImageLabel(context, box.lblTitle);
+        paintImageLabel(context, box.lblSubtitle);
+        paintImageLegend(context);
+
+        const plotPlace = getPlaceInBox(box.plot);
+        context.translate(plotPlace.left, plotPlace.top);
+        [gridLayer, washLayer, markLayer, overlayLayer, valueLayer].forEach(function (layer) {
+            paintImageLayer(context, layer);
+        });
+
+        return canvas;
+
+    };
+
+    // The picture of the card. (Data URL)
+    box.getImage = function (imageType = "image/png", scale = 2) {
+        const canvas = box.getCanvas(scale);
+        if (imageType === "image/jpeg") {
+            // WHY: A JPEG has no transparent pixels: the round corners of the card would be black.
+            const context = canvas.getContext("2d");
+            context.setTransform(1, 0, 0, 1, 0, 0);
+            context.globalCompositeOperation = "destination-over";
+            context.fillStyle = "#FFFFFF";
+            context.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        return canvas.toDataURL(imageType);
+    };
+
+    box.download = function (fileName = "chart.png") {
+        const isJpeg = fileName.toLowerCase().endsWith(".jpg");
+        const link = document.createElement("a");
+        link.href = box.getImage((isJpeg) ? "image/jpeg" : "image/png");
+        link.download = fileName;
+        link.click();
+    };
+    // USAGE: graph.download("sales.png")
+
     box.setStacked = function (stacked) {
         box.stacked = (basic.isOn(stacked)) ? 1 : 0;
         drawPlot();
@@ -2277,6 +2760,7 @@ const GraphBox = function (params = {}) {
     washLayer = addShape(svg, "g", {}); // The band under the mouse: behind the marks
     markLayer = addShape(svg, "g", {});
     overlayLayer = addShape(svg, "g", {}); // The points under the mouse: over the marks
+    valueLayer = addShape(svg, "g", {}); // The texts of the values: not clipped with the marks
     box.plot.elem.appendChild(svg);
 
     // GROUP: Tooltip (out of the layout, it never catches the mouse)
@@ -2288,6 +2772,7 @@ const GraphBox = function (params = {}) {
 
     endGroup();
     box.tooltip.boxShadow = _s.tooltip.shadow;
+    box.tooltip.zIndex = 1;
     box.tooltip.visible = 0;
 
     // *** OBJECT INIT CODE:
@@ -2460,6 +2945,39 @@ GraphBox.barPath = function (rect, round, side) {
         "L" + point(left + bottomLeft, bottom) + "Q" + point(left, bottom) + point(left, bottom - bottomLeft) +
         "L" + point(left, top + topLeft) + "Q" + point(left, top) + point(left + topLeft, top) + "Z";
 
+};
+
+// The red, green, blue and alpha of any color the browser knows. WHY the canvas: It reads every way to write a color.
+GraphBox.readColor = function (color) {
+    if (!GraphBox._colorContext) {
+        const canvas = document.createElement("canvas");
+        canvas.width = 1;
+        canvas.height = 1;
+        GraphBox._colorContext = canvas.getContext("2d", { willReadFrequently: true });
+    }
+    const context = GraphBox._colorContext;
+    context.clearRect(0, 0, 1, 1);
+    context.fillStyle = color;
+    context.fillRect(0, 0, 1, 1);
+    return context.getImageData(0, 0, 1, 1).data;
+};
+
+// "#2A78D6", 0.3 -> "rgba(42, 120, 214, 0.3)"
+GraphBox.toTransparent = function (color, opacity) {
+    const rgba = GraphBox.readColor(color);
+    return "rgba(" + rgba[0] + ", " + rgba[1] + ", " + rgba[2] + ", " + opacity + ")";
+};
+
+// White or ink for a text on this color. WHY not the color of the data: A text must be read.
+GraphBox.getTextColorOn = function (color) {
+    const rgba = GraphBox.readColor(color);
+    const toLinear = function (part) {
+        const share = part / 255;
+        return (share <= 0.03928) ? share / 12.92 : Math.pow((share + 0.055) / 1.055, 2.4);
+    };
+    const luminance = 0.2126 * toLinear(rgba[0]) + 0.7152 * toLinear(rgba[1]) + 0.0722 * toLinear(rgba[2]);
+    const DARK_TEXT_LUMINANCE = 0.2; // From here the ink is easier to read than white.
+    return (luminance > DARK_TEXT_LUMINANCE) ? "#0B0B0B" : "#FFFFFF";
 };
 
 // A closed shape through the points.
