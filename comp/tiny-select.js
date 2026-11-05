@@ -197,6 +197,8 @@ const TinySelect = function(params = {}) {
 };
 
 TinySelect.Z_INDEX = 1000; // the list on page; over a Dialog or a SidePanel that holds the field (basic.zIndexAbove)
+TinySelect.PAGE_MARGIN = 8; // px: the list stays this far from the top and the bottom of the page
+TinySelect.MIN_LIST_HEIGHT = 80; // px: the list is not made shorter than this to fit the page (it scrolls)
 
 // Create a tiny list to user selection
 TinySelect.createList = function(connectedUI) {
@@ -239,6 +241,7 @@ TinySelect.createList = function(connectedUI) {
                     spaceX: 6,
                     textColor: connectedUI.listTextColor,
                 });
+                lbl.elem.style.flexShrink = "0"; // WHY: in a list made shorter to fit the page, the items scroll, not shrink
 
                 if (connectedUI.selectedIndex != lbl.index) {
 
@@ -265,8 +268,21 @@ TinySelect.createList = function(connectedUI) {
 
     // WHY: totalLeft/totalTop do not count the scroll of parent boxes. In a scrolled page, the list was opened at a wrong place.
     const rect = connectedUI.elem.getBoundingClientRect();
+    const fieldTop = withPageZoom(rect.top);
+    const fieldBottom = withPageZoom(rect.bottom);
+    // WHY the room: the list was always under the field, with no limit: near the bottom of the page (it never scrolls)
+    //     its items were below the page and could not be chosen (2026-11-05)
+    const listHeight = listBox.grp.height;
+    const roomBelow = page.height - fieldBottom - TinySelect.PAGE_MARGIN;
+    const roomAbove = fieldTop - TinySelect.PAGE_MARGIN;
+    const isAbove = (listHeight > roomBelow && roomAbove > roomBelow);
+    const room = Math.max(TinySelect.MIN_LIST_HEIGHT, isAbove ? roomAbove : roomBelow);
+    if (listHeight > room) {
+        listBox.grp.height = room;
+        listBox.grp.scrollY = 1;
+    }
     listBox.grp.left = withPageZoom(rect.right) - listBox.grp.width;
-    listBox.grp.top = withPageZoom(rect.bottom);
+    listBox.grp.top = isAbove ? fieldTop - Math.min(listHeight, room) : fieldBottom;
 
     endFlexBox();
 

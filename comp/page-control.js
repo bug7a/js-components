@@ -319,8 +319,21 @@ const PageControl = function (params = {}) {
         } catch (error) { }
     };
 
+    // The mouse button was released outside the box before the drag took the pointer: no pointerup came here.
+    // WHY: the next moves with no button pressed swiped the pages, and a click left them half way (2026-11-05)
+    const endLostDrag = function () {
+        const wasActive = drag.active;
+        drag = null;
+        box.track.cursor = "";
+        if (wasActive) showActivePage(1); // Back to the place
+    };
+
     const onPointerMove = function (self, event) {
         if (!drag || event.pointerId !== drag.id) return;
+        if (event.pointerType === "mouse" && event.buttons === 0) {
+            endLostDrag();
+            return;
+        }
         drag.x = event.clientX;
         drag.y = event.clientY;
         const dx = drag.x - drag.startX;

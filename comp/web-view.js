@@ -184,6 +184,17 @@ const WebView = function (params = {}) {
         }
     };
 
+    // WHY: a real server (Live Server, nginx, GitHub Pages) answers a missing page with a 404 and its own HTML page: that
+    //      document can be read, so only file:// called onError (2026-11-05). The status of the answer tells it.
+    const hasErrorStatus = function () {
+        try {
+            const entry = iframe.contentWindow.performance.getEntriesByType("navigation")[0];
+            return Boolean(entry && entry.responseStatus >= 400);
+        } catch (error) {
+            return false;
+        }
+    };
+
     const onIframeLoad = function () {
         if (!box) return;
         // WHY: Chrome fires "load" for about:blank too. Nothing is loaded then.
@@ -191,7 +202,7 @@ const WebView = function (params = {}) {
         // WHY: A failed same origin page (404, missing file) also fires "load", with the error page of the browser. Its document can not be read.
         //      Only the page opened by load() is checked (isLoading). A link in the page can open another site in the
         //      iframe (a payment or 3D Secure page of a shop); its document can not be read either, but it is not an error.
-        if (isLoading && box.url && isSameOrigin(box.url) && !box.getDocument()) {
+        if (isLoading && box.url && isSameOrigin(box.url) && (!box.getDocument() || hasErrorStatus())) {
             setLoading(0);
             box.onError(box);
             return;

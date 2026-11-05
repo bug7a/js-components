@@ -707,8 +707,16 @@ const TreeView = function (params = {}) {
         indexNodes([node], parentNode);
         parentNode.children.splice(at, 0, node);
 
-        // Not drawn yet (closed or not created): drawn when it opens. Only the arrow of the parent can change.
         const parent = recs.get(parentNode.key);
+        // WHY: an open parent with no group of children yet (it was empty, lazy, or emptied by setChildren): the new
+        //      child was not drawn, and setValue() and the keys could not reach it (2026-11-05)
+        if (parent && !parent.built && isOpen(parent)) {
+            buildChildren(parent);
+            drawRow(parent);
+            return;
+        }
+
+        // Not drawn yet (closed or not created): drawn when it opens. Only the arrow of the parent can change.
         if (!parent || !parent.built) {
             if (parent) drawRow(parent);
             return;

@@ -66,6 +66,8 @@
         <script src="../comp/line-progress-bar.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/select-time.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/page-control.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/tree-view.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/web-view.js" type="text/javascript" charset="utf-8"></script>
 
         <script>
         "use strict";
@@ -2044,6 +2046,88 @@
             check("SidePanel: made in an open group of the page, startBody() keeps every object in the panel", isInBody && isAfterInGroup, "in the body: " + isInBody + ", the next label in the group: " + isAfterInGroup);
             panel.remove();
             group.remove();
+        });
+
+        // *** THE REVIEW OF comp/ (2026-11-05) - D: wrong results, content lost off the screen
+
+        test("TreeView: a node added into an open empty folder is drawn and can be selected", async function () {
+            const tree = TreeView({ width: 300, height: 200, items: [{ key: "docs", text: "docs", children: [], expanded: 1 }, { key: "readme", text: "readme.md" }] });
+            await wait(30);
+            tree.addNode("docs", { key: "docs/a.txt", text: "a.txt" });
+            tree.setValue("docs/a.txt");
+            const row = tree.getRowElem("docs/a.txt");
+            check("TreeView: a node added into an open empty folder is drawn and can be selected", Boolean(row) && row.offsetParent !== null && tree.value === "docs/a.txt", "row: " + Boolean(row) + ", value: " + tree.value);
+            tree.remove();
+        });
+
+        test("SmartTable: the filter finds a Turkish capital İ from a lowercase keyword", async function () {
+            const table = SmartTable({ itemLineCount: 4, itemDataList: [{ id: 1, name: "İbrahim" }, { id: 2, name: "İstanbul" }, { id: 3, name: "Ali" }], style: { width: 500, height: "auto" } }); // (the filter is on one column: the name)
+            await wait(100);
+            const counts = [];
+            for (const word of ["istanbul", "ibrahim", "ali"]) {
+                table.searchKeyword = word;
+                table.filterAndSortData();
+                await wait(120);
+                counts.push(table.visibleItemDataList.length);
+            }
+            check("SmartTable: the filter finds a Turkish capital İ from a lowercase keyword", counts.join(",") === "1,1,1", "istanbul, ibrahim, ali: " + counts.join(", "));
+            table.remove();
+        });
+
+        test("SelectFile: directory: 1 keeps every file of the chosen folder", async function () {
+            let errors = null;
+            const folder = SelectFile({ directory: 1, showPreview: 0, onError: function (self, list) { errors = list; } });
+            const files = new DataTransfer();
+            ["a.txt", "b.txt", "c.txt"].forEach(function (name) { files.items.add(new File(["x"], name, { type: "text/plain" })); });
+            folder.input.files = files.files;
+            folder.input.dispatchEvent(new Event("change"));
+            check("SelectFile: directory: 1 keeps every file of the chosen folder", folder.files.length === 3 && errors === null, "files: " + folder.files.length + ", errors: " + JSON.stringify(errors));
+            folder.remove();
+        });
+
+        test("SearchResults: under a field low on the screen the list stays on the screen", async function () {
+            const field = SearchInput({ left: 20, top: page.height - 90, width: 360 });
+            const items = [];
+            for (let i = 1; i <= 8; i++) items.push({ text: "Result " + i, desc: "description " + i });
+            const results = SearchResults({ anchor: field, anchorAlign: "left" });
+            results.setItems(items, "res");
+            results.open();
+            await wait(100);
+            const rect = results.elem.getBoundingClientRect();
+            check("SearchResults: under a field low on the screen the list stays on the screen", rect.top >= 0 && rect.bottom <= window.innerHeight + 1, "top: " + Math.round(rect.top) + ", bottom: " + Math.round(rect.bottom) + ", window: " + window.innerHeight);
+            results.remove();
+            field.remove();
+        });
+
+        test("TinySelect: the list of a field near the bottom of the page is on the page", async function () {
+            const select = TinySelect({ left: 100, top: page.height - 50, list: [1, 2, 3, 4, 5].map(function (n) { return { id: String(n), label: "Item " + n }; }) });
+            TinySelect.createList(select);
+            const last = Array.from(document.querySelectorAll("div")).find(function (el) { return el.childElementCount === 0 && el.textContent === "Item 5"; });
+            const bottom = last.getBoundingClientRect().bottom;
+            if (select.closeListBox) select.closeListBox();
+            check("TinySelect: the list of a field near the bottom of the page is on the page", bottom <= page.height, "the last item ends at " + Math.round(bottom) + " (page " + page.height + ")");
+            select.remove();
+        });
+
+        test("PageControl: a mouse press released outside does not make a later mouse move swipe the pages", async function () {
+            const pages = PageControl({ width: 300, height: 200, pages: ["a", "b", "c"], value: "b" });
+            await wait(30);
+            const trackBefore = pages.track.elem.style.transform;
+            const rect = pages.elem.getBoundingClientRect();
+            pointer(pages.elem, "pointerdown", rect.left + 150, rect.top + 100, "mouse");
+            // (released outside the box: no pointerup here; the next moves come with no button pressed)
+            pointer(pages.elem, "pointermove", rect.left + 60, rect.top + 100, "mouse");
+            pointer(pages.elem, "pointermove", rect.left + 20, rect.top + 100, "mouse");
+            check("PageControl: a mouse press released outside does not make a later mouse move swipe the pages", pages.track.elem.style.transform === trackBefore && pages.value === "b", "before: " + trackBefore + ", after: " + pages.track.elem.style.transform);
+            pages.remove();
+        });
+
+        test("WebView: a missing page of the same site calls onError (also a 404 page of a server)", async function () {
+            const calls = [];
+            const view = WebView({ width: 300, height: 200, url: "missing-page-of-the-test.htm", onLoad: function () { calls.push("onLoad"); }, onError: function () { calls.push("onError"); } });
+            await wait(800);
+            check("WebView: a missing page of the same site calls onError (also a 404 page of a server)", calls.join(",") === "onError", "callbacks: " + calls.join(","));
+            view.remove();
         });
 
         // *** RUN

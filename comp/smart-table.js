@@ -924,7 +924,7 @@ const SmartTable = function (params = {}) {
     // WHY: "value ?" kontrolü 0 ve false değerlerini aranamaz yapıyordu.
     const hasKeyword = function (value, searchKeyword) {
         if (value === undefined || value === null) return false;
-        return String(value).toLowerCase().includes(searchKeyword);
+        return SmartTable.toSearchText(value).includes(searchKeyword);
     };
 
     const filterItems = function (itemList, searchKeyword) {
@@ -974,7 +974,7 @@ const SmartTable = function (params = {}) {
         box.filterTimer = waitAndRun(box.filterTimer, function () {
 
             box.filterTimer = null;
-            const searchKeyword = String(box.searchKeyword ?? "").toLowerCase().trim();
+            const searchKeyword = SmartTable.toSearchText(box.searchKeyword ?? "").trim();
 
             // WHY: A copy; sort() must not change the order of box.itemDataList.
             const filteredList = filterItems([...box.itemDataList], searchKeyword);
@@ -1536,3 +1536,14 @@ const SmartTable = function (params = {}) {
     return endObject(box);
 
 };
+
+// The text of a cell (and of the keyword) for the filter: lowercase in Turkish ("İ" -> "i", not "i" + a dot), without
+// the marks of the letters, "ı" as "i" (as DataTable.toSearchText).
+// WHY: toLowerCase() made "İstanbul" "i̇stanbul": the keyword "istanbul" found nothing (2026-11-05).
+// WHY the fast way: most texts have no letter outside ASCII after the lowercase, and a table can have 100 000 rows.
+SmartTable.toSearchText = function (value) {
+    const text = String(value).toLocaleLowerCase("tr");
+    if (!SmartTable.NOT_ASCII.test(text)) return text;
+    return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ı/g, "i");
+};
+SmartTable.NOT_ASCII = /[^\u0000-\u007f]/;

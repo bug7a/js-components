@@ -448,7 +448,10 @@ const SelectFile = function (params = {}) {
         let newFiles = readValidFiles(fileList, errors);
 
         let addedCount = 0;
-        if (box.multiple != 1) {
+        // WHY directory too: a folder is many files; directory: 1 without multiple: 1 kept only the first file of the
+        //     folder and said "Only one file can be selected." (sample 3 of select-file.htm, 2026-11-05)
+        const isMultiple = (box.multiple == 1 || box.directory == 1);
+        if (!isMultiple) {
             if (newFiles.length > 1) {
                 errors.push(createError("maxFiles", "", "Only one file can be selected."));
             }

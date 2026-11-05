@@ -144,6 +144,7 @@ const SearchResults = function (params = {}) {
     let inputElem = null;           // attachTo()
     let inputRemovers = [];         // The removers of the events of that input.
     const SECTION_SPACE = "4px";    // Above a group header and the hint
+    const MIN_LIST_HEIGHT = 60;     // px: the list is not made shorter than this to fit the screen (it scrolls)
 
     // *** PRIVATE FUNCTIONS:
 
@@ -268,19 +269,13 @@ const SearchResults = function (params = {}) {
 
     };
 
-    // Under the anchor, on the screen, as tall as its content up to the maximum.
+    // Under the anchor (over it when there is more room there), on the screen, as tall as its content up to the
+    // maximum and to the room on the screen.
     const layout = function () {
 
         const padding = _s.box.padding || 0;
         const width = Math.min(box.maxWidth, page.width - (box.screenMargin * 2));
         box.width = width;
-
-        if (box.anchor && box.anchor.elem) {
-            const rect = box.anchor.elem.getBoundingClientRect();
-            const left = (box.anchorAlign === "left") ? withPageZoom(rect.left) : withPageZoom(rect.right) - width;
-            box.left = Math.max(box.screenMargin, Math.min(left, page.width - width - box.screenMargin));
-            box.top = withPageZoom(rect.bottom) + box.offsetY;
-        }
 
         // WHY: The height has to be a number, not "auto": the content is in a scrolling box and a
         //      box does not grow with it. It is also what the ScrollBar needs.
@@ -289,8 +284,26 @@ const SearchResults = function (params = {}) {
         //      even when there was nothing to scroll.
         const border = _s.box.border || 0;
         const contentHeight = (box.wrapper) ? box.wrapper.elem.offsetHeight : 0;
+        const fullHeight = contentHeight + (padding * 2) + (border * 2);
         const maxHeight = Math.round(window.innerHeight * box.maxHeightRatio);
-        box.height = Math.min(contentHeight + (padding * 2) + (border * 2), maxHeight);
+        let height = Math.min(fullHeight, maxHeight);
+
+        if (box.anchor && box.anchor.elem) {
+            const rect = box.anchor.elem.getBoundingClientRect();
+            const left = (box.anchorAlign === "left") ? withPageZoom(rect.left) : withPageZoom(rect.right) - width;
+            box.left = Math.max(box.screenMargin, Math.min(left, page.width - width - box.screenMargin));
+            // WHY the room: the list was always under the anchor, so under a field low on the screen its rows were
+            //     below the window (the box itself out of the screen: they could not be scrolled up) (2026-11-05)
+            const anchorTop = withPageZoom(rect.top);
+            const anchorBottom = withPageZoom(rect.bottom);
+            const roomBelow = page.height - anchorBottom - box.offsetY - box.screenMargin;
+            const roomAbove = anchorTop - box.offsetY - box.screenMargin;
+            const isAbove = (height > roomBelow && roomAbove > roomBelow);
+            height = Math.min(height, Math.max(MIN_LIST_HEIGHT, isAbove ? roomAbove : roomBelow));
+            box.top = isAbove ? anchorTop - box.offsetY - height : anchorBottom + box.offsetY;
+        }
+
+        box.height = height;
 
         if (box.scrollBar) box.scrollBar.refreshScroll();
 

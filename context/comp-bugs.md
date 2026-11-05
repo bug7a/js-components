@@ -129,14 +129,14 @@ Satır numaraları 2026-11-05'teki dosyalara göredir.
 
 ## C. Gizli bir kapta yapılınca değer ya da görünüm kayboluyor
 
-**12. Slider: kapalı bir sekmede değeri 0 oluyor**
+**12. Slider: kapalı bir sekmede değeri 0 oluyor** · ✅ düzeltildi (2026-11-05)
 - Yer: `comp/slider.js:113` (82-85, 147-155, 355-362)
 - Ne oluyor: değer başparmağın yerinden geri okunuyor; genişlik 0 iken `currentValue` en küçük değere yazılır.
   `Slider({ width: "100%", currentValue: 60 })` kapalı bir Tabs panelinde `getValue()` = 0 döner; açılınca da 0'da
   durur; gizliyken `setValue(80)` de 0. Bir ayar sayfası 0 kaydeder.
 - Düzeltme: istenen değeri asıl kaynak tut; başparmağı yeniden boyutlanınca ondan yerleştir.
 
-**13. TextareaB: gizliyken doldurulan alan görünmüyor ve tıklanamıyor**
+**13. TextareaB: gizliyken doldurulan alan görünmüyor ve tıklanamıyor** · ✅ düzeltildi (2026-11-05)
 - Yer: `comp/textarea-b.js:77` (126, 191)
 - Ne oluyor: `autoGrow` yüksekliği gizliyken 0 olan `scrollHeight`'tan alır ve `minHeight`'ı siler. Kapalı bir
   sekmede (ya da açılmadan doldurulan bir Dialog / SidePanel'de) `setInputValue(note)`: textarea 0 px, yazı görünmez,
@@ -144,7 +144,7 @@ Satır numaraları 2026-11-05'teki dosyalara göredir.
   `onResize` yok.
 - Düzeltme: görünür olunca (`onResize`) yüksekliği yeniden hesapla; gizliyken ölçü okuma.
 
-**14. SidePanel `startBody()`: ikinci bileşen panelin dışına düşüyor**
+**14. SidePanel `startBody()`: ikinci bileşen panelin dışına düşüyor** · ✅ düzeltildi (2026-11-05)
 - Yer: `comp/side-panel.js:350-359`
 - Ne oluyor: `startBody()` yalnızca `setDefaultContainerBox(body)` yapar, başlat / bitir yığınına girmez. Sayfanın
   açık bir grubunun içinde yapılan bir panelde, gövdeye konan ikinci bileşen (ya da ilk `endGroup()`) sayfanın grubuna
@@ -154,38 +154,38 @@ Satır numaraları 2026-11-05'teki dosyalara göredir.
 
 ## D. Yanlış sonuç, ekranda kaybolan içerik
 
-**15. TreeView: boş ve açık bir klasöre eklenen düğüm görünmüyor**
+**15. TreeView: boş ve açık bir klasöre eklenen düğüm görünmüyor** · ✅ düzeltildi (2026-11-05)
 - Yer: `comp/tree-view.js:711-715` (`addChildNode`)
 - Ne oluyor: açık bir üst düğümün çocuk grubu hiç kurulmamışsa (boş, tembel, `setChildren(key, [])`'den sonra)
   `addNode()` yalnızca oku yeniden çizer; yeni çocuk çizilmez, `setValue` ve oklar ona ulaşamaz. Tembel bir dosya
   ağacında açılmış boş bir klasöre ilk dosyayı eklemek bunu yapar.
 - Düzeltme: üst düğüm açık ve kurulmamışsa `buildChildren(parent)`.
 
-**16. SmartTable: filtre Türkçe "İ"yi bulamıyor**
+**16. SmartTable: filtre Türkçe "İ"yi bulamıyor** · ✅ düzeltildi (2026-11-05)
 - Yer: `comp/smart-table.js:925-928, 977` (`hasKeyword`, `filterAndSortData`)
 - Ne oluyor: iki taraf da `toLowerCase()`; "İ" küçültülünce "i" + birleşen nokta olur. "istanbul", "ibrahim", "ışık"
   0 satır bulur (DataTable, ItemList, FullScreenSelect buluyor).
 - Düzeltme: `DataTable.toSearchText` gibi: `toLocaleLowerCase("tr")`, işaretleri sil, ı → i.
 
-**17. SelectFile: `directory: 1` klasörün yalnızca ilk dosyasını alıyor**
+**17. SelectFile: `directory: 1` klasörün yalnızca ilk dosyasını alıyor** · ✅ düzeltildi (2026-11-05)
 - Yer: `comp/select-file.js:451-457` (641)
 - Ne oluyor: `multiple: 1` verilmeden `directory: 1` tek dosya yoluna girer: 3 dosyalı bir klasörden 1'i kalır ve
   "Only one file can be selected." hatası gelir. Örnek sayfanın 3. örneği (`select-file.htm`) böyle.
 - Düzeltme: `const isMultiple = (box.multiple == 1 || box.directory == 1)`.
 
-**18. SearchResults: ekranın alt kısmındaki bir arama alanının sonuçları ekran dışında kalıyor**
+**18. SearchResults: ekranın alt kısmındaki bir arama alanının sonuçları ekran dışında kalıyor** · ✅ düzeltildi (2026-11-05)
 - Yer: `comp/search-results.js:282, 292-293` (`layout`)
 - Ne oluyor: liste hep alanın altına konur, yalnızca yatayda sınırlanır. Alttaki bir alanda 8 satırın 4'ü pencerenin
   altında kalır, kutu ekran dışında olduğu için kaydırılamaz.
 - Düzeltme: alttaki boşluğa göre yükseklik ver ya da yukarı aç (TagInput, Filters, SelectBox gibi).
 
-**19. TinySelect: liste ekranın altında kesiliyor**
+**19. TinySelect: liste ekranın altında kesiliyor** · ✅ düzeltildi (2026-11-05)
 - Yer: `comp/tiny-select.js:264-266`
 - Ne oluyor: liste hep alanın altına konur; yukarı açılmaz, en yüksek bir boyu ve kaydırması yok. Alttaki bir alanda
   öğeler sayfanın kenarının altında kalır; uzun bir liste her yerde kesilir.
 - Düzeltme: sığmıyorsa yukarı aç, en yüksek boy + kaydırma (SelectColor `positionPanel` gibi).
 
-**20. PageControl: dışarıda bırakılan bir basış, sonra yalnızca fareyi gezdirince sayfaları kaydırıyor**
+**20. PageControl: dışarıda bırakılan bir basış, sonra yalnızca fareyi gezdirince sayfaları kaydırıyor** · ✅ düzeltildi (2026-11-05)
 - Yer: `comp/page-control.js:321` (300, 715-718)
 - Ne oluyor: işaretçi ancak 6 px hareketten sonra yakalanır; kutunun dışında bırakılan bir basış `drag`'i silmez ve
   fare her zaman aynı `pointerId`'yi taşır. Sonra basmadan gezdirilen fare sayfaları sürükler, bir tıklama onları
@@ -194,7 +194,7 @@ Satır numaraları 2026-11-05'teki dosyalara göredir.
 - Düzeltme: fareyle `pointermove`'da `event.buttons === 0` ise sürüklemeyi bitir; ya da `pointerdown`'da yakala;
   ya da `pointerup`'ı `box.listenTo(window, ...)` ile de dinle.
 
-**21. WebView: bir HTTP sunucusunda 404 sayfası `onError` değil `onLoad` çağırıyor**
+**21. WebView: bir HTTP sunucusunda 404 sayfası `onError` değil `onLoad` çağırıyor** · ✅ düzeltildi (2026-11-05)
 - Yer: `comp/web-view.js:194`
 - Ne oluyor: `onError` yalnızca iframe belgesi okunamazsa çalışır; gerçek sunucular (Live Server, nginx, GitHub
   Pages) eksik sayfaya okunabilir bir 404 belgesi döner. Yalnızca file:// `onError` verir. Başlık aynı kökenli 404'te
