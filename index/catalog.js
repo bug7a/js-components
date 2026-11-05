@@ -263,8 +263,8 @@ CATALOG.COMPONENTS = [
     {
         key: "graph-box", name: "GraphBox", cat: "data",
         source: "comp/graph-box.js", samples: ["02-comp-examples/graph-box.htm"],
-        en: "Charts with no library: one file draws them as SVG. Line, area and bar, with a tooltip, a legend and two themes.",
-        tr: "Kütüphanesiz grafikler: tek dosya SVG olarak çizer. Çizgi, alan ve çubuk; ipucu, gösterge ve iki tema.",
+        en: "Charts with no library: one file draws them as SVG. Line, area, bar, pie, doughnut, radar, scatter and bubble, with a tooltip, a legend, a table and two themes.",
+        tr: "Kütüphanesiz grafikler: tek dosya SVG olarak çizer. Çizgi, alan, çubuk, pasta, halka, radar, nokta ve kabarcık; ipucu, açıklama listesi, tablo ve iki tema.",
     },
     {
         key: "gauge", name: "Gauge", cat: "data",

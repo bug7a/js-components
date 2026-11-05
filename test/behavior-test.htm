@@ -3479,6 +3479,41 @@
             chart.remove();
         });
 
+        test("GraphBox: the value of a negative bar does not touch the labels, a legend of many lines starts at its first line", async function () {
+            const textBoxOf = function (chart, name) {
+                const label = Array.from(chart.svg.querySelectorAll("text")).find(function (candidate) { return candidate.textContent === name; });
+                return label.getBoundingClientRect();
+            };
+            const upright = GraphBox({ width: 400, height: 240, type: "bar", showValues: 1, legend: "none", labels: ["A", "B"], values: [10, -20], minValue: -20 });
+            await wait(30);
+            const isUnderFree = (textBoxOf(upright, "-20").bottom <= textBoxOf(upright, "B").top + 1);
+            upright.remove();
+
+            const sideways = GraphBox({ width: 400, height: 240, type: "bar", horizontal: 1, showValues: 1, legend: "none", labels: ["Name", "Other"], values: [10, -20], minValue: -20 });
+            await wait(30);
+            const isSideFree = (textBoxOf(sideways, "Other").right <= textBoxOf(sideways, "-20").left + 1);
+            sideways.remove();
+
+            const labels = [];
+            for (let i = 0; i < 40; i++) labels.push("Slice number " + i);
+            const pie = GraphBox({ width: 300, height: 260, type: "pie", labels: labels, values: labels.map(function () { return 1; }) });
+            await wait(30);
+            const groupTop = pie.legendGroup.elem.getBoundingClientRect().top;
+            const firstTop = pie.legendItems[0].elem.getBoundingClientRect().top;
+            const isFirstLineSeen = (firstTop >= groupTop - 1);
+            pie.remove();
+
+            check("GraphBox: the value of a negative bar does not touch the labels, a legend of many lines starts at its first line", isUnderFree && isSideFree && isFirstLineSeen, [isUnderFree, isSideFree, isFirstLineSeen].join(" "));
+        });
+
+        test("GraphBox: whenReady() runs at once, as a page of ChartBox expects it to run", async function () {
+            const chart = GraphBox({ width: 300, height: 200, labels: ["A"], values: [1] });
+            let readyChart = null;
+            chart.whenReady(function (self) { readyChart = self; });
+            check("GraphBox: whenReady() runs at once, as a page of ChartBox expects it to run", readyChart === chart);
+            chart.remove();
+        });
+
         test("GraphBox: setTheme() changes the look, setStyle() keeps the other keys", async function () {
             const chart = GraphBox({ width: 400, height: 240, type: "bar", titleText: "Title", labels: ["A"], values: [1] });
             const lightColor = chart.color;

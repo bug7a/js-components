@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>GraphBox bench</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp/chart-box.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/graph-box.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // THE BENCH: Chart.js (ChartBox) at the left, GraphBox at the right, with the same data.
+        // WHY: To see where GraphBox is not as good yet, before a page moves over.
+
+        // *** VARIABLES:
+        const CARD_WIDTH = 520;
+        const CARD_HEIGHT = 320;
+        const PAGE_COLORS = { light: "#F4F5F2", dark: "#0D0D0D" };
+        const TEXT_COLORS = { light: "#0B0B0B", dark: "#F0EFEC" };
+        const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
+
+        const rows = [];
+        const texts = [];
+        let liveRow = null;
+        let liveSecond = 0;
+        let theme = "light";
+
+        // The two components take the same keys, only these differ.
+        const CASES = [
+            {
+                titleText: "Line",
+                subtitleText: "Two lines, a dashed target, a text for the values",
+                type: "line",
+                labels: MONTHS,
+                formatValue: function (value) { return "₺" + value.toLocaleString("tr-TR"); },
+                chartDatasets: [
+                    { label: "Actual", data: [42000, 58000, 51000, 69000, 83000, 94000], tension: 0.4, fill: true },
+                    { label: "Target", data: [40000, 50000, 60000, 70000, 80000, 90000], borderDash: [5, 5], pointRadius: 0 },
+                ],
+                graphDatasets: [
+                    { label: "Actual", data: [42000, 58000, 51000, 69000, 83000, 94000], curve: "smooth", fill: 1 },
+                    { label: "Target", data: [40000, 50000, 60000, 70000, 80000, 90000], dashed: 1 },
+                ],
+            },
+            {
+                titleText: "Bar",
+                subtitleText: "One dataset",
+                type: "bar",
+                labels: ["Electronics", "Clothing", "Home", "Cosmetics", "Books"],
+                datasets: [{ label: "Units", data: [1250, 2100, 840, 1600, 920] }],
+            },
+            {
+                titleText: "Stacked",
+                subtitleText: "stacked: 1",
+                type: "bar",
+                stacked: 1,
+                labels: MONTHS,
+                datasets: [
+                    { label: "Solved", data: [120, 140, 130, 160, 170, 190] },
+                    { label: "Waiting", data: [40, 35, 50, 30, 45, 25] },
+                    { label: "Closed", data: [20, 25, 15, 30, 20, 35] },
+                ],
+            },
+            {
+                titleText: "Horizontal",
+                subtitleText: "horizontal: 1",
+                type: "bar",
+                horizontal: 1,
+                labels: ["Getting started", "Components", "Examples and templates", "Pricing"],
+                datasets: [{ label: "Views", data: [8400, 6100, 4800, 2300] }],
+            },
+            {
+                titleText: "Doughnut",
+                subtitleText: "A part of the whole",
+                type: "doughnut",
+                labels: ["Organic Search", "Social Media", "Direct", "E-Mail", "Referral"],
+                datasets: [{ data: [42, 28, 15, 10, 5] }],
+                formatValue: function (value) { return value + "%"; },
+            },
+            {
+                titleText: "Radar",
+                subtitleText: "Two datasets",
+                type: "radar",
+                legend: "bottom",
+                labels: ["Speed", "Security", "Uptime", "Scaling", "Memory", "Cost"],
+                datasets: [
+                    { label: "Optimized", data: [90, 85, 99, 92, 80, 88] },
+                    { label: "Current", data: [65, 70, 85, 60, 50, 60] },
+                ],
+            },
+            {
+                titleText: "Scatter",
+                subtitleText: "Two number axes",
+                type: "scatter",
+                beginAtZero: 0,
+                datasets: [
+                    { label: "Group A", data: [{ x: 158, y: 52 }, { x: 162, y: 58 }, { x: 165, y: 57 }, { x: 168, y: 63 }, { x: 171, y: 66 }, { x: 174, y: 64 }] },
+                    { label: "Group B", data: [{ x: 170, y: 74 }, { x: 173, y: 78 }, { x: 177, y: 81 }, { x: 180, y: 80 }, { x: 183, y: 88 }, { x: 186, y: 91 }] },
+                ],
+            },
+            {
+                titleText: "Live",
+                subtitleText: "addValue() every second, maxCount: 20",
+                type: "line",
+                isLive: 1,
+                maxCount: 20,
+                maxValue: 100,
+                labels: [],
+                datasets: [{ label: "CPU", data: [] }, { label: "Memory", data: [] }],
+                formatValue: function (value) { return value + "%"; },
+            },
+        ];
+
+        const start = function () {
+
+            page.color = PAGE_COLORS.light;
+
+            // BOX: The page scrolls in this box.
+            startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+
+                // WHY clipContent: A pressed SmartButton is not cut.
+                VGroup({ width: "100%", height: "auto", align: "center top", gap: 20, padding: [16, 30], clipContent: 0 });
+
+                    addText("GraphBox bench", 26, "opensans-bold");
+                    addText("Left: Chart.js (ChartBox). Right: GraphBox. The same data.", 14);
+
+                    // GROUP: The buttons
+                    HGroup({ hug: 1, gap: 8, wrap: 1, clipContent: 0 });
+                        SmartButton({ labelText: "Dark", onClick: toggleTheme });
+                        SmartButton({ labelText: "Random values", onClick: randomizeAll });
+                    endGroup();
+
+                    CASES.forEach(addRow);
+
+                endGroup();
+
+            endBox();
+
+            setLoopTimer(1000);
+
+        };
+
+        // Runs every second.
+        const loop = function () {
+            if (!liveRow) return;
+            liveSecond++;
+            const values = [random(30, 70), random(50, 65)];
+            liveRow.forEach(function (chart) { chart.addValue(liveSecond + "s", values); });
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        const addText = function (text, fontSize, fontFamily) {
+            const label = Label({ plainText: text, fontSize: fontSize, textColor: TEXT_COLORS.light });
+            if (fontFamily) label.fontFamily = fontFamily;
+            texts.push(label);
+        };
+
+        const createChartParams = function (item) {
+            const params = Object.assign({}, item);
+            delete params.titleText;
+            delete params.subtitleText;
+            delete params.isLive;
+            delete params.chartDatasets;
+            delete params.graphDatasets;
+            params.width = CARD_WIDTH;
+            params.height = CARD_HEIGHT;
+            params.css = { maxWidth: "100%" };
+            return params;
+        };
+
+        // The same case with the two components, side by side (one under the other on a phone).
+        const addRow = function (item) {
+
+            const chartParams = createChartParams(item);
+            chartParams.title = item.titleText;
+            chartParams.subtitle = item.subtitleText;
+            if (item.chartDatasets) chartParams.datasets = item.chartDatasets;
+
+            const graphParams = createChartParams(item);
+            graphParams.titleText = item.titleText;
+            graphParams.subtitleText = item.subtitleText;
+            graphParams.animated = 1;
+            graphParams.emptyText = "";
+            if (item.graphDatasets) graphParams.datasets = item.graphDatasets;
+
+            HGroup({ width: "100%", height: "auto", align: "center top", gap: 16, wrap: 1 });
+                const row = [ChartBox(chartParams), GraphBox(graphParams)];
+            endGroup();
+
+            rows.push(row);
+            if (item.isLive) liveRow = row;
+
+        };
+
+        const toggleTheme = function (self) {
+            theme = (theme === "light") ? "dark" : "light";
+            self.setText((theme === "light") ? "Dark" : "Light");
+            page.color = PAGE_COLORS[theme];
+            texts.forEach(function (label) { label.textColor = TEXT_COLORS[theme]; });
+            rows.forEach(function (row) {
+                row.forEach(function (chart) { chart.setTheme(theme); });
+            });
+        };
+
+        const randomizeValue = function (value) {
+            if (typeof value === "object" && value !== null) return { x: value.x, y: Math.round(value.y * random(80, 120) / 100) };
+            return Math.round(value * random(50, 150) / 100);
+        };
+
+        // WHY the same for both: box.data and box.update() are the same in the two components.
+        const randomizeAll = function () {
+            rows.forEach(function (row) {
+                if (row === liveRow) return;
+                const newValues = row[0].data.datasets.map(function (dataset) { return dataset.data.map(randomizeValue); });
+                row.forEach(function (chart) {
+                    chart.data.datasets.forEach(function (dataset, position) { dataset.data = newValues[position].slice(); });
+                    chart.update();
+                });
+            });
+        };
+
+    </script>
+</head>
+
+<body></body>
+
+</html>

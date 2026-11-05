@@ -83,7 +83,7 @@ MyComp.styles = {
 - A package has only the keys that differ from the default style. A new key in the default style is filled into every package: when the old look of a package must stay, give it that key (Ex: `opacity: 1` in `selected`).
 - `mergeIntoIfMissing` copies 4 levels; deeper objects are kept by reference. Keep the style flat.
 - **A package of params** (v26.10.27): a package with its own `style` key. Its `style` goes into the style, its other keys fill the params that were not given, so a package can also change a param outside the style (an icon file, a size): `MyComp.styles.dark = { style: { box: { color: "#1A1A19" } }, iconFile: "my-comp/icon-white.svg" }`. A component whose look is all in flat params (comp-m2 `InputB`) marks its packages with `style: {}`. Such a package can not be given as `style: Comp.styles.dark`: use `styleName`. (Ex: the `LabelEditor` `dark` package also gives `newLabel` a light text color.)
-- Colors of themes the user picks at run time (`Modal`, `Toast`, `ChartBox`): `X.THEMES` + `basic.resolveTheme(X.THEMES, name)`; `style` keeps only the shapes.
+- Colors of themes the user picks at run time (`Modal`, `Toast`, `ChartBox`, `GraphBox`): `X.THEMES` + `basic.resolveTheme(X.THEMES, name)`; `style` keeps only the shapes.
 
 ## Events and state
 - **`onChange` is not called at create time, by `setItems()` / `setOptions()`, or with `silent: 1`**, and not when the value did not change.

@@ -48,6 +48,18 @@ A DATASET: { label: "2026", data: [12, null, 7], color: "#2A78D6", type: "line" 
 - fill: 1 (a soft area under the line), "gradient" (it fades towards the base line).
 - curve: "linear", "smooth". dashed: 1 (Ex: a target). showPoints: 1, 0, "auto". hidden: 1.
 
+MOVING A PAGE FROM ChartBox: the same functions (setType, setValues, addValue, setData, update, setTheme, download...)
+and these changes:
+- title, subtitle -> titleText, subtitleText. style.chart -> style.colors.
+- In a dataset: tension -> curve: "smooth". borderDash -> dashed: 1. pointRadius: 0 -> showPoints: 0.
+  borderColor / backgroundColor -> color. fill: true -> fill: 1. ChartBox.gradient() -> fill: "gradient".
+- options.scales.y.max -> maxValue. options.cutout -> style.pie.hole. options.elements.point.radius: 0 -> showPoints: 0.
+- There is no options, plugins and box.chart: this is not Chart.js. A chart with two value axes can not be made, on purpose:
+  where two scales meet is free, so it shows a relation that is not in the data. (Two charts, one under the other.)
+- "polarArea" is not here yet.
+
+NEEDS: basic.js v26.10.25 (basic.resolveTheme, listenTo, setFocusRing...).
+
 Started Date: November 2026
 Developer: Bugra Ozden
 Email: bugra.ozden@gmail.com
@@ -123,12 +135,14 @@ const GraphBoxDefaults = {
             keyGap: 6,
             hiddenOpacity: 0.4,
             sideMinWidth: 400, // A pie: the legend is at its side only in a box as wide as this.
+            maxSideShare: "45%", // The legend at a side
+            maxLinesShare: "40%", // The legend over or under the chart
         },
         axis: {
             fontSize: 12,
             fontFamily: "opensans, system-ui, -apple-system, 'Segoe UI', sans-serif",
             labelGap: 8, // Between a text of the axis and the chart
-            tickSpace: 40, // About this many px between two lines of the value axis
+            tickSpace: 32, // At least this many px between two lines of the value axis
             labelSpace: 10, // At least this many px between two labels
             labelAngle: 35, // Degrees. The labels of the bars turn when they have no room. 0: A label is skipped instead.
             maxLabelShare: 0.3, // A turned label is cut with "..." at this much of the height of the chart.
@@ -158,7 +172,7 @@ const GraphBoxDefaults = {
             centerFontSize: 26,
         },
         radar: {
-            ringSpace: 28, // About this many px between two rings
+            ringSpace: 16, // At least this many px between two rings
             fillOpacity: 0.15,
             maxLabelShare: 0.28, // A label is cut with "..." at this much of the width of the chart.
             showTicks: 1, // 1: The numbers of the rings
@@ -560,15 +574,39 @@ const GraphBox = function (params = {}) {
         return texts;
     };
 
-    // The room the values need around the plot: over the bars and at the far end.
+    // The texts of the values of the bars under the base line: they are between the plot and the labels.
+    const getUnderBaseTexts = function (series) {
+        if (isStacked()) return [];
+        const texts = [];
+        series.filter(isBarSeries).forEach(function (seriesItem) {
+            seriesItem.dataset.data.forEach(function (value) {
+                const number = toNumber(value);
+                if (number !== null && number < 0) texts.push(formatValueText(number));
+            });
+        });
+        return texts;
+    };
+
+    // The room the values need around the plot. top, bottom: an upright bar chart. start, end: a chart that grows to
+    // the right. (end also: the last value of a line.)
     const measureValueRooms = function (series) {
-        if (!basic.isOn(box.showValues)) return { top: 0, end: 0 };
-        const hasUprightBarValues = (box.horizontal != 1 && !isStacked() && series.some(isBarSeries));
+
+        if (!basic.isOn(box.showValues)) return { top: 0, bottom: 0, start: 0, end: 0 };
+
+        const isSideways = (box.horizontal == 1);
+        const textHeight = getAxisTextHeight();
+        const gap = _s.axis.labelGap;
+        const hasUprightBarValues = (!isSideways && !isStacked() && series.some(isBarSeries));
         const endTexts = getEndValueTexts(series);
+        const underBaseTexts = getUnderBaseTexts(series);
+
         return {
-            top: (hasUprightBarValues) ? getAxisTextHeight() : 0,
-            end: (endTexts.length) ? Math.ceil(measureWidestText(endTexts)) + _s.axis.labelGap : 0,
+            top: (hasUprightBarValues) ? textHeight : 0,
+            bottom: (!isSideways && underBaseTexts.length) ? textHeight : 0,
+            start: (isSideways && underBaseTexts.length) ? Math.ceil(measureWidestText(underBaseTexts)) + gap : 0,
+            end: (endTexts.length) ? Math.ceil(measureWidestText(endTexts)) + gap : 0,
         };
+
     };
 
     const getAxisTitleRooms = function () {
@@ -619,7 +657,7 @@ const GraphBox = function (params = {}) {
         const pointRoom = getPointRoom();
         const titleRooms = getAxisTitleRooms();
         const top = Math.max(pointRoom, Math.ceil(_s.axis.fontSize / 2)) + limits.valueRooms.top;
-        const bottom = height - (labelRoom + labelGap + titleRooms.bottom);
+        const bottom = height - (labelRoom + labelGap + titleRooms.bottom + limits.valueRooms.bottom);
         const scale = createValueScale(limits, bottom - top);
 
         let left = titleRooms.left + Math.ceil(measureWidestText(scale.tickTexts)) + labelGap;
@@ -685,7 +723,7 @@ const GraphBox = function (params = {}) {
         const tickWidth = measureWidestText([formatTickText(limits.low, 0), formatTickText(limits.high, 0)]);
         const titleRooms = getAxisTitleRooms();
 
-        const left = titleRooms.left + Math.ceil(labelWidth) + labelGap;
+        const left = titleRooms.left + Math.ceil(labelWidth) + labelGap + limits.valueRooms.start;
         const right = Math.max(left + 1, width - Math.max(pointRoom, Math.ceil(tickWidth / 2), limits.valueRooms.end));
         const top = (hasBands) ? 0 : Math.max(pointRoom, Math.ceil(textHeight / 2));
         const bottom = Math.max(top + 1, height - (textHeight + labelGap + titleRooms.bottom));
@@ -745,6 +783,7 @@ const GraphBox = function (params = {}) {
             plot: plot,
             scale: scale,
             labelPlan: plan.labelPlan,
+            valueRooms: limits.valueRooms,
         };
 
         axes.toIndexPosition = function (index) {
@@ -816,7 +855,7 @@ const GraphBox = function (params = {}) {
 
     const drawSideLabels = function (axes) {
         const plan = axes.labelPlan;
-        const x = axes.plot.left - _s.axis.labelGap;
+        const x = axes.plot.left - _s.axis.labelGap - axes.valueRooms.start;
         for (let index = 0; index < axes.indexCount; index += plan.step) {
             addText(gridLayer, plan.texts[index], x, axes.toIndexPosition(index), "end");
         }
@@ -830,8 +869,9 @@ const GraphBox = function (params = {}) {
         }
 
         const plan = axes.labelPlan;
-        const flatY = axes.plot.bottom + _s.axis.labelGap + getAxisTextHeight() / 2;
-        const turnedY = axes.plot.bottom + _s.axis.labelGap;
+        const labelTop = axes.plot.bottom + axes.valueRooms.bottom + _s.axis.labelGap;
+        const flatY = labelTop + getAxisTextHeight() / 2;
+        const turnedY = labelTop;
 
         for (let index = 0; index < axes.indexCount; index += plan.step) {
             const x = axes.toIndexPosition(index);
@@ -1865,7 +1905,7 @@ const GraphBox = function (params = {}) {
 
         box.lblEmpty.plainText = box.emptyText;
         box.lblEmpty.visible = (view) ? 0 : 1;
-        box.plot.aria = { label: getSummaryText() };
+        applySummary();
 
         if (activeItem && (!view || !view.hasItem(activeItem))) activeItem = null;
         paintActiveItem();
@@ -1984,6 +2024,10 @@ const GraphBox = function (params = {}) {
         if (valueLayer.childElementCount) moves.push({ shape: valueLayer, property: "opacity", from: "0", to: "1" });
         runMoves(moves);
 
+    };
+
+    const applySummary = function () {
+        box.plot.aria = { label: getSummaryText() };
     };
 
     // WHY: A screen reader can not read an SVG drawing: the title and every value are read from this text.
@@ -2309,13 +2353,20 @@ const GraphBox = function (params = {}) {
         box.legendGroup.visible = (position === "none") ? 0 : 1;
         if (position === "none") return;
 
+        // WHY the limits and the scroll: A legend of many items must leave room for the chart.
         const isSide = (position === "left" || position === "right");
         box.body.css = { flexDirection: LEGEND_FLOWS[position] };
         box.legendGroup.width = (isSide) ? "auto" : "100%";
+        box.legendGroup.scrollY = 1;
         box.legendGroup.css = {
             flexDirection: (isSide) ? "column" : "row",
             flexWrap: (isSide) ? "nowrap" : "wrap",
             alignItems: (isSide) ? "flex-start" : "center",
+            alignSelf: (isSide) ? "center" : "auto",
+            alignContent: "flex-start", // WHY: Lines in the middle of a smaller box: the first ones could not be reached.
+            maxHeight: (isSide) ? "100%" : _s.legend.maxLinesShare,
+            maxWidth: (isSide) ? _s.legend.maxSideShare : "100%",
+            overflowX: "hidden",
         };
 
     };
@@ -2336,11 +2387,12 @@ const GraphBox = function (params = {}) {
 
         // GROUP: One item: its key looks like its mark, its text is never in the data color.
         const item = HGroup({ hug: 1, gap: _s.legend.keyGap, align: "left center" });
+        item.shrink = 0;
 
             item.key = Box({ ..._s.legend.keys[entry.keyShape], color: entry.color });
             item.key.shrink = 0;
 
-            item.label = Label({ plainText: entry.text, fontSize: _s.legend.fontSize, textColor: colors.textColor, ellipsis: 1 });
+            item.label = Label({ plainText: entry.text, fontSize: _s.legend.fontSize, textColor: colors.textColor, css: { whiteSpace: "nowrap" } });
 
         endGroup();
 
@@ -2689,6 +2741,7 @@ const GraphBox = function (params = {}) {
         box.lblSubtitle.plainText = box.subtitleText;
         box.lblSubtitle.visible = (box.subtitleText) ? 1 : 0;
         box.texts.visible = (box.titleText || box.subtitleText) ? 1 : 0;
+        applySummary();
     };
 
     const refreshLayout = function () {
@@ -2744,6 +2797,11 @@ const GraphBox = function (params = {}) {
     };
 
     // *** PUBLIC FUNCTIONS:
+
+    // WHY: The same as ChartBox, so a page can move over. Here it runs at once: nothing is loaded.
+    box.whenReady = function (func) {
+        func(box);
+    };
 
     // Redraw after the data changed. Ex: box.data.datasets[0].data[2] = 50; box.update();
     box.update = function () {
