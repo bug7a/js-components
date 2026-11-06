@@ -33,11 +33,11 @@
             classic: {
                 gap: 6,
                 track: { height: 16, color: "#F2F2F2", round: 4, border: 2, borderColor: "rgba(0, 0, 0, 0.1)" },
-                darkTrack: { color: "#242424", borderColor: White(0.1) },
-                bar: { color: "#141414", fillOpacity: 1, border: 0, borderColor: "", boxShadow: "none", innerRound: "" },
-                secondBar: { color: Black(0.35), fillOpacity: 0.2, lighten: 0, borderOpacity: 0.45, place: "under" },
+                darkTrack: { color: "#242424", borderColor: White(0.4), limitColor: White(0.7) },
+                bar: { color: "#141414", fillOpacity: 1, border: 0, borderColor: "", boxShadow: "none", innerRound: "", joinEdge: 1 },
+                secondBar: { color: Black(0.35), fillOpacity: 0.2, lighten: 0, borderOpacity: 0.45 },
                 stripes: { color: "rgba(255, 255, 255, 0.35)", size: 14 },
-                limit: { color: "indianred", width: 1, round: 0, overhang: 6, textSize: 13, textColor: Black(0.7), textSpace: 6 },
+                limit: { shape: "line", color: "indianred", width: 1, round: 0, overhang: 6, dotSize: 6, barColor: "white", secondBarColor: "", textSize: 13, textColor: Black(0.7), textSpace: 6 },
                 successColor: "#2E9E5B",
                 errorColor: "#D64545",
                 title: { fontSize: 14, textColor: Black(0.8) },
@@ -46,11 +46,11 @@
             modern: {
                 gap: 8,
                 track: { height: 10, color: "#DFECEC", round: 100, border: 0, borderColor: "transparent" },
-                darkTrack: { color: "#242424", borderColor: White(0.1) },
-                bar: { color: "cadetblue", fillOpacity: 1, border: 0, borderColor: "", boxShadow: "none", innerRound: "" },
-                secondBar: { color: Black(0.35), fillOpacity: 0.2, lighten: 0, borderOpacity: 0.45, place: "under" },
+                darkTrack: { color: "#242424", borderColor: White(0.4), limitColor: White(0.7) },
+                bar: { color: "cadetblue", fillOpacity: 1, border: 0, borderColor: "", boxShadow: "none", innerRound: "", joinEdge: 1 },
+                secondBar: { color: Black(0.35), fillOpacity: 0.2, lighten: 0, borderOpacity: 0.45 },
                 stripes: { color: "rgba(255, 255, 255, 0.35)", size: 14 },
-                limit: { color: "indianred", width: 1, round: 0, overhang: 6, textSize: 13, textColor: Black(0.7), textSpace: 6 },
+                limit: { shape: "line", color: "indianred", width: 1, round: 0, overhang: 6, dotSize: 6, barColor: "white", secondBarColor: "", textSize: 13, textColor: Black(0.7), textSpace: 6 },
                 successColor: "#6FCF97",
                 errorColor: "tomato",
                 title: { fontSize: 16, textColor: Black(0.85) },
@@ -59,11 +59,11 @@
             ozden: {
                 gap: 8,
                 track: { height: 16, color: "#F2F2F2", round: 100, border: 2, borderColor: "rgba(0, 0, 0, 0.1)" },
-                darkTrack: { color: "#242424", borderColor: White(0.1) },
-                bar: { color: "#5BBAC1", fillOpacity: 1, border: 1, borderColor: "rgba(0, 0, 0, 0.35)", boxShadow: "inset 0 -2px 0 rgba(0, 0, 0, 0.25)", innerRound: 0 },
-                secondBar: { color: "", fillOpacity: 0.2, lighten: 0.5, borderOpacity: 0.45, place: "after" },
+                darkTrack: { color: "#242424", borderColor: White(0.4), limitColor: White(0.7) },
+                bar: { color: "#5BBAC1", fillOpacity: 1, border: 1, borderColor: "rgba(0, 0, 0, 0.35)", boxShadow: "inset 0 -2px 0 rgba(0, 0, 0, 0.25)", innerRound: 0, joinEdge: 0 },
+                secondBar: { color: "", fillOpacity: 0.2, lighten: 0.5, borderOpacity: 0.45 },
                 stripes: { color: "rgba(255, 255, 255, 0.55)", size: 14 },
-                limit: { color: "rgba(0, 0, 0, 0.7)", width: 4, round: 2, overhang: 4, textSize: 14, textColor: "rgba(0, 0, 0, 0.7)", textSpace: 8 },
+                limit: { shape: "dot", color: "rgba(0, 0, 0, 0.7)", width: 4, round: 2, overhang: 4, dotSize: 6, barColor: "white", secondBarColor: "", textSize: 14, textColor: "rgba(0, 0, 0, 0.7)", textSpace: 8 },
                 successColor: "#7BC362",
                 errorColor: "#DE815B",
                 title: { fontSize: 15, textColor: "#232323" },
@@ -81,13 +81,13 @@
             { name: "Two parts (70 + 5)", titleText: "Storage", value: 70, secondValue: 5, valuePosition: "top", valueText: "70% + 5%" },
             { name: "Stripes on the value", value: 55, valuePosition: "right", stripes: 1 },
             { name: "Stripes on both parts", value: 45, secondValue: 20, valuePosition: "right", stripes: 1, secondStripes: 1, valueText: "45% + 20%" },
-            { name: "Limit lines", value: 60, valuePosition: "none", limits: [{ value: 30, color: SOFT_BLUE }, { value: 80 }] },
+            { name: "Limits (lines or dots)", value: 60, valuePosition: "none", limits: [{ value: 30, color: SOFT_BLUE }, { value: 80 }] },
             { name: "A limit with its text", titleText: "Speed", value: 85, valuePosition: "top", limits: [{ value: 80, text: "limit 80" }] },
             { name: "Status: success", titleText: "Saved", value: 100, valuePosition: "top", status: "success" },
             { name: "Status: error", titleText: "Failed", value: 35, valuePosition: "top", status: "error" },
             { name: "Indeterminate (a still frame)", titleText: "Connecting...", valuePosition: "top", indeterminate: 1 },
             { name: "Another main color", value: 50, secondValue: 10, valuePosition: "right", barColor: "#40A5AF", valueText: "50% + 10%" },
-            { name: "A dark track (darkTrack: 1)", value: 40, secondValue: 20, valuePosition: "right", darkTrack: 1, valueText: "40% + 20%" },
+            { name: "A dark track (darkTrack: 1)", value: 40, secondValue: 20, valuePosition: "right", darkTrack: 1, valueText: "40% + 20%", limits: [{ value: 80 }] },
         ];
         const INDETERMINATE_WIDTH = 35; // % of the track (the moving bar)
         const INDETERMINATE_LEFT = 30; // % (where the still frame shows it)
@@ -156,14 +156,15 @@
 
         };
 
-        // BOX: The track, the two parts over it and the limit lines (the lines are longer than the track)
+        // BOX: The track, the two parts over it and the limits (a line is longer than the track; a dot is inside it)
         const drawTrackArea = function (look, state) {
 
             const _t = look.track;
             const _l = look.limit;
             const limits = state.limits || [];
+            const isDot = (_l.shape == "dot");
             const hasText = limits.some(function (limit) { return limit.text; });
-            const overhang = limits.length ? _l.overhang : 0;
+            const overhang = (limits.length && !isDot) ? _l.overhang : 0;
             const textRoom = hasText ? _l.textSpace + Math.ceil(_l.textSize * 1.4) : 0;
 
             const area = startBox({ width: "auto", height: _t.height + overhang * 2 + textRoom, color: "transparent", clipContent: 0 });
@@ -173,15 +174,16 @@
                 const trackColors = state.darkTrack ? look.darkTrack : _t;
                 Box({ left: 0, top: overhang, width: "100%", height: _t.height, color: trackColors.color, round: _t.round, border: _t.border, borderColor: trackColors.borderColor });
 
-                // BOX: Bar layer (as big as the track; it clips the bars)
-                startBox({ left: 0, top: overhang, width: "100%", height: _t.height, color: "transparent", round: _t.round });
+                // BOX: Bar layer (as big as the track; it clips the bars). WHY a size container: the dots are placed in cqw
+                startBox({ left: 0, top: overhang, width: "100%", height: _t.height, color: "transparent", round: _t.round, css: { containerType: "inline-size" } });
 
                     drawParts(look, state);
 
                 endBox();
 
                 limits.forEach(function (limit) {
-                    drawLimit(look, limit);
+                    if (!isDot) drawLimitLine(look, limit);
+                    drawLimitText(look, limit, overhang);
                 });
 
             endBox();
@@ -190,7 +192,8 @@
 
         };
 
-        // The second part and the bar: their colors from the main color and their ends, as the component paints them
+        // The second part and the bar: their colors from the main color and their ends, as the component paints them;
+        // the dots of the limits: on the track under the parts, and inside each part
         const drawParts = function (look, state) {
 
             const _b = look.bar;
@@ -198,29 +201,52 @@
             const mainColor = getMainColor(look, state);
             const edgeColor = _b.borderColor || mainColor;
 
+            drawDots(look, state, "track", 0);
+
             if (state.indeterminate) {
                 const moving = Box({ top: 0, width: INDETERMINATE_WIDTH + "%", height: "100%", color: getFill(mainColor, _b.fillOpacity), round: look.track.round, border: _b.border, borderColor: edgeColor, boxShadow: _b.boxShadow });
                 moving.css = { left: INDETERMINATE_LEFT + "%" };
                 return;
             }
 
-            // BOX: Second part (from 0 to value + secondValue, under the bar; or after the bar: secondBar.place "after")
+            // BOX: Second part (from 0 to value + secondValue, under the bar)
             if (state.secondValue) {
-                const isAfter = (_sb.place == "after");
-                const secondStart = isAfter ? state.value : 0;
                 const secondEdge = (_sb.color || _sb.lighten) ? edgeColor : (_b.borderColor || Alpha(mainColor, _sb.borderOpacity));
-                const second = Box({ left: secondStart + "%", top: 0, width: (state.value + state.secondValue - secondStart) + "%", height: "100%", color: getSecondColor(_sb, mainColor), border: _b.border, borderColor: secondEdge, boxShadow: _b.boxShadow });
-                setEnds(second, look, !isAfter || state.value <= 0, state.value + state.secondValue >= 100);
+                const second = Box({ left: 0, top: 0, width: (state.value + state.secondValue) + "%", height: "100%", color: getSecondColor(_sb, mainColor), border: _b.border, borderColor: secondEdge, boxShadow: _b.boxShadow });
+                setEnds(second, look, 1, state.value + state.secondValue >= 100);
                 if (state.secondStripes) paintStripes(second, look);
+                createIn(second, function () { drawDots(look, state, "second", _b.border); });
             }
 
-            // BOX: Bar (the value)
+            // BOX: Bar (the value); joinEdge 0: no edge where the second part starts
             if (state.value > 0) {
                 const valueBar = Box({ left: 0, top: 0, width: state.value + "%", height: "100%", color: getFill(mainColor, _b.fillOpacity), border: _b.border, borderColor: edgeColor, boxShadow: _b.boxShadow });
                 setEnds(valueBar, look, 1, state.value >= 100);
+                if (state.secondValue && _b.joinEdge == 0) valueBar.css = { borderRightWidth: "0px" };
                 if (state.stripes) paintStripes(valueBar, look);
+                createIn(valueBar, function () { drawDots(look, state, "bar", _b.border); });
             }
 
+        };
+
+        // BOX: The dots of the limits (limit.shape "dot") in a part, in the color of that part: a part shows them
+        // where it is. edge: a dot inside a part starts inside its edge
+        const drawDots = function (look, state, part, edge) {
+            const _l = look.limit;
+            if (_l.shape != "dot") return;
+            (state.limits || []).forEach(function (limit) {
+                const dot = Box({ top: (look.track.height - _l.dotSize) / 2 - edge, width: _l.dotSize, height: _l.dotSize, round: _l.dotSize / 2, color: getDotColor(look, state, part, limit) });
+                dot.css = { left: "calc(" + limit.value + "cqw - " + (edge + _l.dotSize / 2) + "px)" };
+            });
+        };
+
+        // A dot: white on the bar, the main color on the second part; on the track its own color or the color of the track
+        const getDotColor = function (look, state, part, limit) {
+            const _l = look.limit;
+            if (part == "bar") return _l.barColor;
+            if (part == "second") return _l.secondBarColor || getMainColor(look, state);
+            if (limit.color) return limit.color;
+            return state.darkTrack ? look.darkTrack.limitColor : _l.color;
         };
 
         // An end at an end of the track is as round as the track; an end in the middle has bar.innerRound ("": the
@@ -239,14 +265,18 @@
             return getFill(mainColor, secondBar.fillOpacity);
         };
 
-        // BOX: A limit line (over and under the track) and its text under it
-        const drawLimit = function (look, limit) {
+        // BOX: A limit line (over and under the track)
+        const drawLimitLine = function (look, limit) {
             const _l = look.limit;
-            const lineHeight = look.track.height + _l.overhang * 2;
-            const line = Box({ top: 0, width: _l.width, height: lineHeight, color: limit.color || _l.color, round: _l.round });
+            const line = Box({ top: 0, width: _l.width, height: look.track.height + _l.overhang * 2, color: limit.color || _l.color, round: _l.round });
             line.css = { left: "calc(" + limit.value + "% - " + (_l.width / 2) + "px)" };
+        };
+
+        // LABEL: The text of a limit, under its line (or under the track)
+        const drawLimitText = function (look, limit, overhang) {
             if (!limit.text) return;
-            const text = Label({ top: lineHeight + _l.textSpace, text: limit.text, fontSize: _l.textSize, textColor: limit.color || _l.textColor });
+            const _l = look.limit;
+            const text = Label({ top: look.track.height + overhang * 2 + _l.textSpace, text: limit.text, fontSize: _l.textSize, textColor: limit.color || _l.textColor });
             text.css = { left: limit.value + "%", transform: "translateX(-50%)", whiteSpace: "nowrap" };
         };
 
