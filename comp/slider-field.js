@@ -2,7 +2,7 @@
 
 /*
 
-SliderField - v26.09
+SliderField - v26.11
 
 UI COMPONENT TEMPLATE
 - A slider in the shape of a field: [ Width  |  ·  ·  ·  ·  ·     3 ]
@@ -13,13 +13,16 @@ UI COMPONENT TEMPLATE
   and a valueFormat() for your own text.
 - Keyboard: ArrowRight / ArrowUp one step, ArrowLeft / ArrowDown one step back, PageUp / PageDown ten steps,
   Home / End min / max, Enter (or a digit) starts the typing, Escape cancels it.
-- Step dots: one dot for each step, up to maxTicks (then fewer dots that divide the range evenly).
-  Dots under the fill, the label or the value are hidden. showTicks: 0 hides them all.
+- Step dots: one dot for each step, up to maxTicks and as many as there is room for (tick.minSpace; then fewer dots
+  that divide the range evenly). Dots under the fill, the label or the value are hidden. showTicks: 0 hides them all.
 - Width can be a percent ("100%"): the view is updated with box.onResize (basic.js removes it with the box).
 - onChange is called while dragging (every new value), onChangeEnd when the change is finished
   (the drag is released, a key step, a typed value). Neither is called at create time or with silent: 1.
 - Everything is drawn with code (no image files needed). Accessibility: role="slider", aria-valuenow...
-- Style packages: "classic" (default), "modern", "dark". Select with styleName. (SliderField.styles)
+- Style packages: "classic" (default), "modern", "dark", "ozden". Select with styleName. (SliderField.styles)
+  "ozden" (2026-11-06): for every page, in the colors of SmartButton: a cyan fill with an edge and a white knob; the
+  label is always on the fill and the value never (style.fill.aroundLabel, beforeValue), a focus ring. Its sample:
+  02-comp-examples/slider-field-ozden.htm.
 - Not the same as comp/slider.js (Slider: a Material style track with a round thumb).
 
 USAGE:
@@ -29,6 +32,8 @@ sfWidth.setValue(5, 1);             // silent
 SliderField({ labelText: "Opacity", value: 80, min: 0, max: 100, step: 5, unitText: "%" });
 SliderField({ labelText: "Scale", value: 1.5, min: 0.5, max: 3, step: 0.1 }); // precision "auto" -> 1 decimal
 SliderField({ labelText: "Blur", width: "100%", valueFormat: (value) => (value === 0) ? "Off" : value + " px" });
+SliderField({ styleName: "ozden", labelText: "Volume", value: 60, min: 0, max: 100, unitText: "%" });
+SliderField({ styleName: "ozden", labelText: "Speed", style: { fill: { color: "#7BC362", hoverColor: "#70B756", activeColor: "#67AD4D" } } }); // the green of SmartButton
 
 Started Date: September 2026
 Developer: Bugra Ozden
@@ -59,16 +64,20 @@ const SliderFieldDefaults = {
     valueFormat: function (value, self) { return self.formatNumber(value) + self.unitText; }, // Text of the value
     onChange: function (self) { }, // self.value (also while dragging)
     onChangeEnd: function (self) { }, // After a drag, a key step or a typed value
-    styleName: "classic", // "classic", "modern", "dark" or a name added to SliderField.styles
+    styleName: "classic", // "classic", "modern", "dark", "ozden" or a name added to SliderField.styles
     style: { // Classic style package (default)
         box: {
             color: "#F2F2F4",
+            hoverColor: "", // Under the mouse. "": the same color
             border: 1,
             borderColor: "#E8E8EB",
             round: 12,
+            boxShadow: "none",
         },
         boxFocus: { // Keyboard focus
             borderColor: "#9A9AA0",
+            ringColor: "", // A ring inside the edge, over the fill. "": no ring
+            ringWidth: 2,
         },
         fill: {
             color: "#E1E1E4",
@@ -76,6 +85,14 @@ const SliderFieldDefaults = {
             activeColor: "#D5D5DA", // While dragging
             minWidth: 26, // Fill width at min (the handle stays visible)
             round: 11,
+            innerRound: "", // The right corners while the fill ends inside the field. "": the same as round, 0: straight
+            aroundLabel: 0, // 1: at min the fill holds the label (labelSpace after it): the label is always on the fill
+            labelSpace: 16,
+            beforeValue: 0, // 1: at max the fill ends before the value (valueSpace before it): the value is never on the fill
+            valueSpace: 16,
+            border: 0,
+            borderColor: "transparent",
+            boxShadow: "none", // Ex: a line at its bottom: "inset 0 -2px 0 rgba(0, 0, 0, 0.25)"
         },
         handle: {
             width: 3,
@@ -85,6 +102,9 @@ const SliderFieldDefaults = {
             hoverColor: "#86868C",
             activeColor: "#5E5E64",
             round: 2,
+            border: 0,
+            borderColor: "transparent",
+            boxShadow: "none",
         },
         tick: {
             size: 3,
@@ -110,6 +130,7 @@ const SliderFieldDefaults = {
         },
         disabled: {
             opacity: 0.5,
+            filter: "none", // Ex: "grayscale(1)": a colored fill turns gray
         },
     }
 };
@@ -151,6 +172,7 @@ const SliderField = function (params = {}) {
     const VALUE_DOT_SPACE = 10; // px: no dots this close to the value text
     const TEXT_OVERLAP = 4; // px: the handle may touch a text this much before it is hidden
     const FILL_DOT_SPACE = 4; // px: no dots this close to the end of the fill
+    const HANDLE_DOT_SPACE = 8; // px: no dots this close to the right side of the handle
     const VALUE_CLICK_SPACE = 6; // px: a click this close to the value text starts the typing
     const INPUT_MIN_WIDTH = 64;
     const INPUT_EXTRA_WIDTH = 28; // The input is wider than the value text
@@ -192,18 +214,47 @@ const SliderField = function (params = {}) {
         return (w > 0) ? w : (Number(box.width) || 0);
     };
 
+    // The widest value text of min, max and the value: the end of the track does not move while the text changes.
+    const getWidestValueWidth = function () {
+        const texts = [box.valueFormat(box.min, box), box.valueFormat(box.max, box), box.valueFormat(box.value, box)];
+        const widths = texts.map(function (text) { return SliderField.measureText(text, box.lblValue.elem); });
+        return Math.max.apply(null, widths);
+    };
+
+    // Where the end of the fill moves: { start, end } (the fill width at min and at max).
+    // fill.aroundLabel: at min the fill holds the label, so the label is always on the fill.
+    // fill.beforeValue: at max the fill ends before the value, so the value is never on the fill.
+    // WHY: the end of a colored fill that crossed a text cut its letters in two colors.
+    const getTrack = function () {
+        const width = getWidth();
+        let start = _s.fill.minWidth;
+        let end = width;
+        if (_s.fill.aroundLabel == 1 && box.labelText) {
+            start = Math.max(start, _s.label.padding + box.lblLabel.elem.offsetWidth + _s.fill.labelSpace);
+        }
+        if (_s.fill.beforeValue == 1) {
+            end = width - _s.value.padding - getWidestValueWidth() - _s.fill.valueSpace;
+        }
+        return { start: start, end: Math.max(start, end) };
+    };
+
     // Fill width for a ratio (0-1)
-    const getFillWidth = function (ratio) {
-        const minWidth = _s.fill.minWidth;
-        return minWidth + ratio * Math.max(0, getWidth() - minWidth);
+    const getFillWidth = function (ratio, track) {
+        return track.start + ratio * (track.end - track.start);
     };
 
     // Value for an x position inside the box (the handle follows the pointer).
     const getValueAt = function (x) {
-        const minWidth = _s.fill.minWidth;
-        const space = Math.max(1, getWidth() - minWidth);
-        const ratio = Math.min(1, Math.max(0, (x + _s.handle.inset + _s.handle.width / 2 - minWidth) / space));
+        const track = getTrack();
+        const space = Math.max(1, track.end - track.start);
+        const fillWidth = x + _s.handle.inset + _s.handle.width / 2; // the fill that puts the middle of the handle at x
+        const ratio = Math.min(1, Math.max(0, (fillWidth - track.start) / space));
         return clampValue(box.min + ratio * (box.max - box.min));
+    };
+
+    // WHY: with fill.aroundLabel a click on the label is not a click on the track (it gave min).
+    const isOnLabelOfFill = function (x) {
+        return (_s.fill.aroundLabel == 1 && box.labelText && x < getTrack().start);
     };
 
     // The x of the pointer in the px of the box. WHY the scale (2026-11-03): in a scaled parent (page.fit, a transform,
@@ -215,21 +266,23 @@ const SliderField = function (params = {}) {
         return (event.clientX - rect.left) / (scale || 1) - box.elem.clientLeft;
     };
 
-    // Number of dot spaces: every step, or a divisor of the steps up to maxTicks.
-    const getTickCount = function () {
+    // Number of dot spaces: every step, or a divisor of the steps, up to maxTicks and as many as the track has room for
+    // (tick.minSpace). WHY the room: dots that were too close were all hidden, a short track showed none.
+    const getTickCount = function (trackLength) {
         if (box.showTicks != 1) return 0;
         const steps = Math.round((box.max - box.min) / box.step);
         if (steps < 1) return 0;
-        if (steps <= box.maxTicks) return steps;
-        for (let count = box.maxTicks; count >= 2; count--) {
+        const maxCount = Math.min(box.maxTicks, Math.floor(trackLength / _s.tick.minSpace));
+        if (steps <= maxCount) return steps;
+        for (let count = maxCount; count >= 2; count--) {
             if (steps % count === 0) return count;
         }
         return 0;
     };
 
     // Creates the dots again when the count changes.
-    const buildTicks = function () {
-        const count = getTickCount();
+    const buildTicks = function (trackLength) {
+        const count = getTickCount(trackLength);
         if (count === tickCount && ticks.length === ((count > 0) ? count + 1 : 0)) return;
         ticks.forEach(function (tick) { tick.remove(); });
         ticks = [];
@@ -248,21 +301,33 @@ const SliderField = function (params = {}) {
                 tick.css = {
                     top: "calc(50% - " + (_s.tick.size / 2) + "px)",
                     transition: "opacity " + FADE_TIME,
+                    opacity: "0", // WHY: a new dot under the label faded out from 1 (the dots are made again when the field is resized)
                 };
                 ticks.push(tick);
             }
         });
     };
 
+    // WHY: at the right end of the field the fill is as round as the field, or the round corner cuts its edge
+    const setFillCorners = function (fillWidth, width) {
+        const round = _s.fill.round;
+        const isInside = (fillWidth < width - 0.5);
+        const endRound = (isInside && _s.fill.innerRound !== "") ? _s.fill.innerRound : round;
+        box.fill.css.borderRadius = round + "px " + endRound + "px " + endRound + "px " + round + "px";
+    };
+
     // Positions: fill, handle, value text, dots.
     const refreshLayout = function () {
 
         const width = getWidth();
-        const fillWidth = getFillWidth(getRatio());
+        const track = getTrack();
+        const fillWidth = getFillWidth(getRatio(), track);
         const handleLeft = fillWidth - _s.handle.inset - _s.handle.width;
 
         box.fill.width = fillWidth;
+        setFillCorners(fillWidth, width);
         box.handle.left = handleLeft;
+        buildTicks(track.end - track.start);
 
         // Areas that hide the dots
         const labelRight = (box.labelText) ? _s.label.padding + box.lblLabel.elem.offsetWidth + LABEL_DOT_SPACE : 0;
@@ -275,13 +340,13 @@ const SliderField = function (params = {}) {
         box.handle.css.opacity = (isOnLabel || isOnValue) ? "0" : "1";
 
         if (tickCount > 0) {
-            const space = (width - _s.fill.minWidth) / tickCount;
-            const isTooClose = (space < _s.tick.minSpace);
+            // WHY the handle: a knob is wider than the end of the fill (ozden)
+            const dotsLeft = Math.max(fillWidth + FILL_DOT_SPACE, handleRight + HANDLE_DOT_SPACE);
             for (let i = 0; i <= tickCount; i++) {
-                const x = getFillWidth(i / tickCount) - _s.handle.inset - _s.handle.width / 2;
+                const x = getFillWidth(i / tickCount, track) - _s.handle.inset - _s.handle.width / 2;
                 const tick = ticks[i];
                 tick.left = x - _s.tick.size / 2;
-                const isVisible = !isTooClose && x > fillWidth + FILL_DOT_SPACE && x > labelRight && x < valueLeft;
+                const isVisible = x > dotsLeft && x > labelRight && x < valueLeft;
                 tick.css.opacity = (isVisible) ? "1" : "0";
             }
         }
@@ -296,9 +361,13 @@ const SliderField = function (params = {}) {
     };
 
     const paintState = function () {
+        const isHoverColor = (isHover && box.enabled == 1 && _s.box.hoverColor);
+        box.color = (isHoverColor) ? _s.box.hoverColor : _s.box.color;
         box.fill.color = getStateColor(_s.fill);
         box.handle.color = getStateColor(_s.handle);
-        box.borderColor = ((isFocused && isKeyboardFocus) || isEditing) ? _s.boxFocus.borderColor : _s.box.borderColor;
+        const isFocusLook = ((isFocused && isKeyboardFocus) || isEditing);
+        box.borderColor = (isFocusLook) ? _s.boxFocus.borderColor : _s.box.borderColor;
+        box.focusRing.visible = (isFocusLook && _s.boxFocus.ringColor) ? 1 : 0;
     };
 
     const updateView = function () {
@@ -468,12 +537,13 @@ const SliderField = function (params = {}) {
             if (box.value !== startValueOfDrag) box.onChangeEnd(box);
             return;
         }
-        // A click: on the value text -> typing, anywhere else -> jump there.
+        // A click: on the value text -> typing, on the label of a fill around it -> only the focus, anywhere else -> jump there.
         const valueLeft = getWidth() - _s.value.padding - box.lblValue.elem.offsetWidth - VALUE_CLICK_SPACE;
         if (box.editable == 1 && x >= valueLeft) {
             startEdit();
             return;
         }
+        if (isOnLabelOfFill(x)) return;
         changeValue(getValueAt(x), 1);
     };
 
@@ -519,8 +589,7 @@ const SliderField = function (params = {}) {
     box.setRange = function (min, max) {
         box.min = Number(min) || 0;
         box.max = Math.max(box.min, Number(max) || 0);
-        buildTicks();
-        box.setValue(box.value, 1);
+        box.setValue(box.value, 1); // (the dots are made again in refreshLayout)
     };
     // USAGE: slider.setRange(0, 100)
 
@@ -534,7 +603,6 @@ const SliderField = function (params = {}) {
 
     box.setStep = function (step) {
         box.step = Math.abs(Number(step)) || 1;
-        buildTicks();
         box.setValue(box.value, 1);
     };
 
@@ -559,7 +627,6 @@ const SliderField = function (params = {}) {
 
     box.setShowTicks = function (showTicks) {
         box.showTicks = basic.isOn(showTicks) ? 1 : 0;
-        buildTicks();
         refreshLayout();
     };
 
@@ -572,6 +639,7 @@ const SliderField = function (params = {}) {
             setSlideMotion(1);
         }
         box.css.opacity = (isEnabled) ? "1" : String(_s.disabled.opacity);
+        box.css.filter = (isEnabled) ? "none" : _s.disabled.filter;
         box.cursor = (isEnabled) ? "pointer" : "default";
         box.tabIndex = (isEnabled) ? 0 : -1;
         box.aria = { disabled: (isEnabled) ? "false" : "true" };
@@ -601,10 +669,11 @@ const SliderField = function (params = {}) {
     box.css = {
         outline: "none",
         boxSizing: "border-box",
-        transition: "border-color " + FADE_TIME,
+        transition: "border-color " + FADE_TIME + ", background-color " + FADE_TIME,
         touchAction: "pan-y", // WHY: A horizontal drag moves the slider, a vertical one still scrolls the page.
         userSelect: "none",
     };
+    box.boxShadow = _bs.boxShadow;
     box.clipContent = 1;
 
     // BOX: Filled part
@@ -615,6 +684,9 @@ const SliderField = function (params = {}) {
         height: "100%",
         color: _s.fill.color,
         round: _s.fill.round,
+        border: _s.fill.border,
+        borderColor: _s.fill.borderColor,
+        boxShadow: _s.fill.boxShadow,
     });
 
     // BOX: Layer of the step dots
@@ -628,6 +700,9 @@ const SliderField = function (params = {}) {
         height: _s.handle.height,
         color: _s.handle.color,
         round: _s.handle.round,
+        border: _s.handle.border,
+        borderColor: _s.handle.borderColor,
+        boxShadow: _s.handle.boxShadow,
     });
     box.handle.css.top = "calc(50% - " + (_s.handle.height / 2) + "px)";
 
@@ -660,6 +735,19 @@ const SliderField = function (params = {}) {
     styleTextLabel(box.lblLabel, _s.label);
     styleTextLabel(box.lblValue, _s.value);
 
+    // BOX: Ring of the keyboard focus (boxFocus.ringColor). WHY a box: an outline of the field is drawn under the fill
+    box.focusRing = Box({
+        left: 0,
+        top: 0,
+        width: "100%",
+        height: "100%",
+        color: "transparent",
+        border: _s.boxFocus.ringWidth,
+        borderColor: _s.boxFocus.ringColor,
+        round: Math.max(0, _s.box.round - _s.box.border),
+    });
+    box.focusRing.visible = 0;
+
     // INPUT: Typing the value (hidden until the edit starts)
     box.input = Input({
         left: 0,
@@ -685,7 +773,7 @@ const SliderField = function (params = {}) {
     box.input.visible = 0;
 
     // WHY: Only the box gets the pointer events, so event.target is always the box (or the input).
-    [box.fill, box.tickLayer, box.handle].forEach(function (obj) { obj.clickable = 0; });
+    [box.fill, box.tickLayer, box.handle, box.focusRing].forEach(function (obj) { obj.clickable = 0; });
 
     // *** OBJECT INIT CODE:
 
@@ -720,6 +808,8 @@ const SliderField = function (params = {}) {
     box.input.inputElement.addEventListener("keydown", onKeyDown);
 
     box.onResize(function () { refreshLayout(); });
+    // WHY: the label and the value are measured; a font that is loaded later changes their widths.
+    if (document.fonts) document.fonts.ready.then(function () { if (!box.isRemoved) refreshLayout(); });
 
     box.min = Number(box.min) || 0;
     box.max = Number(box.max);
@@ -728,7 +818,6 @@ const SliderField = function (params = {}) {
     box.step = Math.abs(Number(box.step)) || 1;
     box.maxTicks = Math.max(2, Number(box.maxTicks) || SliderFieldDefaults.maxTicks);
     box.value = clampValue(startValue);
-    buildTicks();
     setSlideMotion(1);
     box.setEnabled(box.enabled);
     updateView();
@@ -742,6 +831,14 @@ const SliderField = function (params = {}) {
 // WHY: Label.text uses innerHTML. Texts must not be read as HTML.
 SliderField.escapeHtml = basic.escapeHtml; // (the name is kept: other code may use it)
 
+// The width of a text in the font of an element, measured on a canvas (nothing changes in the page).
+SliderField.measureText = function (text, elem) {
+    if (!SliderField.textCanvas) SliderField.textCanvas = document.createElement("canvas").getContext("2d");
+    const css = getComputedStyle(elem);
+    SliderField.textCanvas.font = css.fontStyle + " " + css.fontWeight + " " + css.fontSize + " " + css.fontFamily;
+    return SliderField.textCanvas.measureText(String(text)).width;
+};
+
 // *** STYLE PACKAGES:
 // USAGE: SliderField({ styleName: "modern" })
 // USAGE: SliderField({ styleName: "dark", style: { fill: { color: "#3D7A6B" } } }) // Change only some keys.
@@ -752,6 +849,24 @@ SliderField.styles = {
 
     // Light gray field, gray fill. (Like the property sliders of design tools)
     classic: SliderFieldDefaults.style,
+
+    // For every page (2026-11-06): the colors of SmartButton and of ProgressBar ozden. The fill is a cyan SmartButton
+    // ozdenType1 (an edge and a line at its bottom) that ends with a white knob, straight inside the field. The label
+    // is always on the fill (aroundLabel) and the value never (beforeValue): the end of the fill cuts no text. A ring
+    // for the keyboard focus, a gray fill when it is off. Another tone: style: { fill: { color, hoverColor, activeColor } }.
+    // handle.inset -6: the middle of the knob is at the end of the fill. WHY a dark focus ring: the focus color of the
+    // kit (cadetblue) did not show on the cyan fill; black 50 % has a contrast of 3 on the fill and on the field.
+    ozden: {
+        box: { color: "#F2F2F2", hoverColor: "#EDEDED", border: 1, borderColor: "rgba(0, 0, 0, 0.12)", round: 8, boxShadow: "none" },
+        boxFocus: { borderColor: "rgba(0, 0, 0, 0.5)", ringColor: "rgba(0, 0, 0, 0.5)", ringWidth: 2 },
+        fill: { color: "#5BBAC1", hoverColor: "#50AEB5", activeColor: "#4AA5AC", minWidth: 28, round: 7, innerRound: 0, aroundLabel: 1, labelSpace: 16, beforeValue: 1, valueSpace: 16, border: 1, borderColor: "rgba(0, 0, 0, 0.35)", boxShadow: "inset 0 -2px 0 rgba(0, 0, 0, 0.25)" },
+        handle: { width: 12, height: 30, inset: -6, color: "#FFFFFF", hoverColor: "#FFFFFF", activeColor: "#F2F2F2", round: 4, border: 1, borderColor: "rgba(0, 0, 0, 0.35)", boxShadow: "inset 0 -2px 0 rgba(0, 0, 0, 0.25)" },
+        tick: { size: 4, color: "rgba(0, 0, 0, 0.2)", minSpace: 10 },
+        label: { fontSize: 16, textColor: "rgba(0, 0, 0, 0.7)", fontFamily: "", padding: 14 },
+        value: { fontSize: 16, textColor: "rgba(0, 0, 0, 0.8)", fontFamily: "opensans-bold", padding: 14 },
+        input: { color: "#FFFFFF", textColor: "rgba(0, 0, 0, 0.8)", round: 6 },
+        disabled: { opacity: 0.55, filter: "grayscale(1)" },
+    },
 
     // Cadetblue fill. Same colors as the modern CheckBox, RadioButton, ProgressBar, Tabs and Stepper.
     modern: {
