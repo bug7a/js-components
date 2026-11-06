@@ -20,7 +20,7 @@
         /* Bismillah */
 
         // *** VARIABLES:
-        let lblSize, lblPlan, rdoPremium, scrollBox;
+        let lblSize, lblPlan, scrollBox;
 
         // The colors of the page (Ozden Panel dark theme)
         const PAGE_COLOR = "#000000";
@@ -86,10 +86,31 @@
                     // SAMPLE 2: States
                     startCard("2. States");
 
-                        RadioButton({ group: "plan", value: "free", labelText: "Free", checked: 1, onChange: refreshPlan, styleName: "dark" });
+                        RadioButton({
+                            group: "plan",
+                            value: "free",
+                            labelText: "Free",
+                            checked: 1,
+                            onChange: refreshPlan,
+                            styleName: "dark",
+                        });
                         RadioButton({ group: "plan", value: "pro", labelText: "Pro", onChange: refreshPlan, styleName: "dark" });
-                        rdoPremium = RadioButton({ group: "plan", value: "premium", labelText: "Premium (disabled)", enabled: 0, onChange: refreshPlan, styleName: "dark" });
-                        RadioButton({ group: "plan", value: "team", labelText: "Label on the left", labelPosition: "left", onChange: refreshPlan, styleName: "dark" });
+                        RadioButton({
+                            group: "plan",
+                            value: "premium",
+                            labelText: "Premium (disabled)",
+                            enabled: 0,
+                            onChange: refreshPlan,
+                            styleName: "dark",
+                        });
+                        RadioButton({
+                            group: "plan",
+                            value: "team",
+                            labelText: "Label on the left",
+                            labelPosition: "left",
+                            onChange: refreshPlan,
+                            styleName: "dark",
+                        });
 
                         lblPlan = Label({
                             text: "",
@@ -117,7 +138,7 @@
 
             endBox();
 
-            if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: scrollBox });
+            ScrollBar({ scrollableBox: scrollBox });
 
             refreshSize();
             refreshPlan();

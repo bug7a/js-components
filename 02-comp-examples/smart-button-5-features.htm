@@ -19,7 +19,7 @@
 
     /* Bismillah */
 
-    // SmartButton (2026-11-04): the places of the
+    // SmartButton: the places of the
     // icon, your own look, setText / setIcon, the waiting cover, the motion and the keyboard. No styleName: the
     // default template ozdenType1.
     // (The other samples: smart-button.htm the model page (the tones), smart-button-alternatif.htm pill and
@@ -58,10 +58,27 @@
 
     // GROUP: A card with a title and a short description
     const startCard = function (title, description) {
-        VGroup({ width: 640, height: "auto", align: "left top", gap: 14, padding: 20, color: "white", round: 12, border: 1, borderColor: Black(0.08), clipContent: 0 });
-        that.css = { maxWidth: "100%" };
+        VGroup({
+            width: 640,
+            height: "auto",
+            align: "left top",
+            gap: 14,
+            padding: 20,
+            color: "white",
+            round: 12,
+            border: 1,
+            borderColor: Black(0.08),
+            clipContent: 0,
+            css: { maxWidth: "100%" },
+        });
         Label({ plainText: title, fontSize: 15, bold: 1, textColor: Black(0.8) });
-        Label({ plainText: description, width: "100%", fontSize: 13, textColor: Black(0.5), css: { lineHeight: "1.4", whiteSpace: "normal" } });
+        Label({
+            plainText: description,
+            width: "100%",
+            fontSize: 13,
+            textColor: Black(0.5),
+            css: { lineHeight: "1.4", whiteSpace: "normal" },
+        });
         HGroup({ width: "100%", height: "auto", align: "left center", gap: 12, wrap: 1, clipContent: 0 });
     };
 
@@ -99,18 +116,29 @@
 
                 Label({ text: "SmartButton", fontSize: 26, bold: 1, textColor: Black(0.8) });
 
-                startCard("The place of the icon", "iconPosition: \"left\" (default) or \"top\". labelText: \"\" -> an icon button: a square with the icon in the middle (give it an ariaLabel). No iconFile -> only the text.");
+                startCard(
+                    "The place of the icon",
+                    "iconPosition: \"left\" (default) or \"top\". labelText: \"\" -> an icon button: a square with the icon in the middle (give it an ariaLabel). No iconFile -> only the text."
+                );
                     SmartButton({ labelText: "Lock", iconFile: ICONS + "lock.png" });
                     SmartButton({ labelText: "Plant", iconFile: ICONS + "plant.png", iconPosition: "top", style: LOOKS.square });
                     SmartButton({ labelText: "", ariaLabel: "Delete", iconFile: ICONS + "trash.svg" });
                     SmartButton({ labelText: "Only text" });
                 endCard();
 
-                startCard("Your own look: style", "styleName is the template (ozdenType1 - 4), tone a color of the kit (white, cyan, orange...), style your own keys: box, hover, layout, icon and label. A color is two colors: box.color and hover.color; pressed, it gets darker by itself.");
+                startCard(
+                    "Your own look: style",
+                    "styleName is the template (ozdenType1 - 4), tone a color of the kit (white, cyan, orange...), style your own keys: box, hover, layout, icon and label. A color is two colors: box.color and hover.color; pressed, it gets darker by itself."
+                );
                     SmartButton({ labelText: "Continue", style: LOOKS.blue });
                     SmartButton({ labelText: "Delete", iconFile: ICONS + "trash.svg", style: LOOKS.redEdge });
                     SmartButton({ styleName: "ozdenType4", labelText: "Filter", iconFile: ICONS + "panel.png", style: LOOKS.pill });
-                    SmartButton({ styleName: "ozdenType4", labelText: "Alert", iconFile: ICONS + "alert-black.png", style: LOOKS.pill });
+                    SmartButton({
+                        styleName: "ozdenType4",
+                        labelText: "Alert",
+                        iconFile: ICONS + "alert-black.png",
+                        style: LOOKS.pill,
+                    });
                 endCard();
 
                 startCard("setText() and setIcon()", "A button that changes itself: the lamp is turned on and off.");
@@ -125,7 +153,10 @@
                     });
                 endCard();
 
-                startCard("Waiting: setWaiting()", "The waiting clock over the button while a job runs (the default wait); it can not be clicked then. setWaiting(0, delay) ends it later. style.waiting.clock: \"ozdenDark\" is the dark clock (the dark templates have it), waitingType: \"dots\" three dots.");
+                startCard(
+                    "Waiting: setWaiting()",
+                    "The waiting clock over the button while a job runs (the default wait); it can not be clicked then. setWaiting(0, delay) ends it later. style.waiting.clock: \"ozdenDark\" is the dark clock (the dark templates have it), waitingType: \"dots\" three dots."
+                );
                     SmartButton({ tone: "cyan", labelText: "Save", onClick: saveWithWaiting });
                     SmartButton({
                         labelText: "Delete",
@@ -141,7 +172,10 @@
                     SmartButton({ labelText: "Dots", waitingType: "dots", onClick: waitForJob });
                 endCard();
 
-                startCard("Motion: animated and ripple", "animated is on by default: pressed, a button gets smaller and a little darker (its color under the mouse, darker: a press has no color of its own). ripple is off by default (since 2026-11-03): a wave from the pressed point (its color fits the button). Each one can be turned off.");
+                startCard(
+                    "Motion: animated and ripple",
+                    "animated is on by default: pressed, a button gets smaller and a little darker (its color under the mouse, darker: a press has no color of its own). ripple is off by default (since 2026-11-03): a wave from the pressed point (its color fits the button). Each one can be turned off."
+                );
                     SmartButton({ tone: "cyan", labelText: "Both", ripple: 1 });
                     SmartButton({ labelText: "Both", iconFile: ICONS + "plant.png", ripple: 1 });
                     SmartButton({ tone: "cyan", labelText: "Only press", ripple: 0 });
@@ -149,7 +183,10 @@
                     SmartButton({ labelText: "Still", animated: 0, ripple: 0 });
                 endCard();
 
-                startCard("Keyboard and setEnabled()", "Tab reaches every button (a ring only for the keyboard), Enter or Space presses it. A disabled button is gray, can not be pressed and is out of the Tab order.");
+                startCard(
+                    "Keyboard and setEnabled()",
+                    "Tab reaches every button (a ring only for the keyboard), Enter or Space presses it. A disabled button is gray, can not be pressed and is out of the Tab order."
+                );
                     const btnSend = SmartButton({ tone: "cyan", labelText: "Send", enabled: 0 });
                     SmartButton({
                         labelText: "Enable Send",
@@ -165,7 +202,7 @@
 
         endBox();
 
-        if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: pageBox });
+        ScrollBar({ scrollableBox: pageBox });
 
     };
 

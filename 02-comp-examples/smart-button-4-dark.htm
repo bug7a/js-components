@@ -18,7 +18,7 @@
 
         /* Bismillah */
 
-        // SMARTBUTTON · THE DARK TEMPLATES (2026-11-04)
+        // SMARTBUTTON · THE DARK TEMPLATES
         // ozdenType1Dark ... ozdenType4Dark: the shapes of ozdenType1-4 for a dark page (the draft
         // _designs/smart-button-dark.htm). The icon turns white, the waiting clock is the dark one.
         // The tones of a dark page end with "Dark" (cyanDark ... blueDark: a light text, a white icon); the light tones
@@ -106,7 +106,18 @@
 
         // GROUP: A dark card with a title; the buttons made between startCard() and endCard() go side by side (they wrap)
         const startCard = function (title) {
-            VGroup({ width: "auto", height: "auto", align: "left top", gap: 14, padding: 24, color: CARD_COLOR, round: 10, border: 1, borderColor: White(0.08), clipContent: 0 });
+            VGroup({
+                width: "auto",
+                height: "auto",
+                align: "left top",
+                gap: 14,
+                padding: 24,
+                color: CARD_COLOR,
+                round: 10,
+                border: 1,
+                borderColor: White(0.08),
+                clipContent: 0,
+            });
                 Label({ text: title, fontSize: 14, bold: 1, textColor: White(0.6) });
                 HGroup({ width: "auto", height: "auto", align: "left center", gap: 12, wrap: 1, clipContent: 0 });
         };

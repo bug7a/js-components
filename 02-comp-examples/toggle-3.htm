@@ -78,7 +78,10 @@
                     endCard();
 
                     // SAMPLE 3: Your own texts
-                    startCard("3. Your own texts", "onMark, offMark: any short text. A param you give wins over the package. A longer text needs a wider toggle.");
+                    startCard(
+                        "3. Your own texts",
+                        "onMark, offMark: any short text. A param you give wins over the package. A longer text needs a wider toggle."
+                    );
                         startToggleRow();
                             addToggle({ styleName: "label", onMark: "YES", offMark: "NO" });
                             addToggle({ styleName: "label", onMark: "AÇIK", offMark: "KAPALI", width: 92, value: 1 });
@@ -87,7 +90,10 @@
                     endCard();
 
                     // SAMPLE 4: The place of a mark
-                    startCard("4. markPlace", "Any toggle can have marks: \"track\" (the default) or \"knob\". markStyle: size, lineWidth, fontSize, color, selectedColor.");
+                    startCard(
+                        "4. markPlace",
+                        "Any toggle can have marks: \"track\" (the default) or \"knob\". markStyle: size, lineWidth, fontSize, color, selectedColor."
+                    );
                         startToggleRow();
                             addToggle({ onMark: "check", offMark: "cross", offButtonScale: 1, value: 1 });
                             addToggle({ styleName: "classic", onMark: "check", offMark: "cross", markPlace: "knob",
@@ -118,7 +124,10 @@
                     endCard();
 
                     // SAMPLE 7: animated
-                    startCard("7. animated", "1 (the default): small motions of a toggle with marks. Click and hold these two, and go over them with the mouse. At the right: animated: 0.");
+                    startCard(
+                        "7. animated",
+                        "1 (the default): small motions of a toggle with marks. Click and hold these two, and go over them with the mouse. At the right: animated: 0."
+                    );
                         startToggleRow();
                             addToggle({ styleName: "tick", animated: 1, value: 1 });
                             addToggle({ styleName: "badge", animated: 1, value: 1 });
@@ -139,7 +148,7 @@
 
             endBox();
 
-            if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: scrollBox });
+            ScrollBar({ scrollableBox: scrollBox });
 
         };
 
@@ -160,7 +169,12 @@
         const addStyleRow = function (styleName, description) {
             HGroup({ width: "100%", height: "auto", align: "left center", gap: 16, wrap: 1, clipContent: 0 });
                 VGroup({ width: STYLE_NAME_WIDTH, height: "auto", align: "left top", gap: 2, grow: 1 });
-                    Label({ plainText: "\"" + styleName + "\"", fontSize: 15, fontFamily: "opensans-bold", textColor: Black(0.75) });
+                    Label({
+                        plainText: "\"" + styleName + "\"",
+                        fontSize: 15,
+                        fontFamily: "opensans-bold",
+                        textColor: Black(0.75),
+                    });
                     Label({ plainText: description, width: "100%", fontSize: 12, textColor: Black(0.45) });
                 endGroup();
                 HGroup({ hug: 1, align: "left center", gap: 20, clipContent: 0 });

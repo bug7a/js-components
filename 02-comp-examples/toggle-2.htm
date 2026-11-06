@@ -57,7 +57,10 @@
                     });
 
                     // SAMPLE 1: modern
-                    startCard("1. styleName: \"modern\" (the default)", "70 x 40: the knob is smaller when off (offButtonScale: 0.6).");
+                    startCard(
+                        "1. styleName: \"modern\" (the default)",
+                        "70 x 40: the knob is smaller when off (offButtonScale: 0.6)."
+                    );
                         HGroup({ width: "100%", height: "auto", align: "left center", gap: 24, wrap: 1, clipContent: 0 });
                             addToggle("", { value: 0 });
                             addToggle("", { value: 1 });
@@ -65,7 +68,10 @@
                     endCard();
 
                     // SAMPLE 2: classic
-                    startCard("2. styleName: \"classic\"", "The look of the old UIToggle (a 600 px design): 60 x 40, a white knob of the same size on and off, with a shadow.");
+                    startCard(
+                        "2. styleName: \"classic\"",
+                        "The look of the old UIToggle (a 600 px design): 60 x 40, a white knob of the same size on and off, with a shadow."
+                    );
                         HGroup({ width: "100%", height: "auto", align: "left center", gap: 24, wrap: 1, clipContent: 0 });
                             addToggle("", { styleName: "classic", value: 0 });
                             addToggle("", { styleName: "classic", value: 1 });
@@ -73,7 +79,10 @@
                     endCard();
 
                     // SAMPLE 3: classic with your own color
-                    startCard("3. classic with your own color", "backgroundStyle: { selectedColor } wins over the package; its other keys stay.");
+                    startCard(
+                        "3. classic with your own color",
+                        "backgroundStyle: { selectedColor } wins over the package; its other keys stay."
+                    );
                         HGroup({ width: "100%", height: "auto", align: "left center", gap: 24, wrap: 1, clipContent: 0 });
                             addToggle("Green", { styleName: "classic", value: 1, backgroundStyle: { selectedColor: GREEN } });
                             addToggle("Coral", { styleName: "classic", value: 1, backgroundStyle: { selectedColor: CORAL } });
@@ -100,7 +109,8 @@
         // A toggle with its state under it ("on", "Green: off"). name: "" -> only the state.
         const addToggle = function (name, params) {
             let toggle, lblState;
-            VGroup({ hug: 1, align: "center top", gap: 8, clipContent: 0 }); // WHY: the shadow of the classic knob goes a little out of the toggle.
+            // WHY: the shadow of the classic knob goes a little out of the toggle.
+            VGroup({ hug: 1, align: "center top", gap: 8, clipContent: 0 });
                 toggle = Toggle(params);
                 lblState = Label({ text: "", fontSize: 13, textColor: Black(0.45) });
             endGroup();

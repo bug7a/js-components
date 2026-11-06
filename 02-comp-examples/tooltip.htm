@@ -186,7 +186,13 @@
                 css: { maxWidth: CARD_MAX_WIDTH + "px" },
             });
             Label({ plainText: title, fontSize: 16, bold: 1, textColor: Black(0.8) });
-            Label({ plainText: description, width: "100%", fontSize: 13, textColor: Black(0.5), css: { marginTop: "-8px" } });
+            Label({
+                plainText: description,
+                width: "100%",
+                fontSize: 13,
+                textColor: Black(0.5),
+                css: { marginTop: "-8px" },
+            });
             HGroup({ width: "100%", height: "auto", align: "left center", gap: 4, wrap: 1, clipContent: 0 });
         };
 

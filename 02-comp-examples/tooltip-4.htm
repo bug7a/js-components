@@ -111,7 +111,14 @@
 
     // GROUP: A row of places for bubbles, each with a dot under the arrow (they wrap on a narrow screen)
     const createRow = function (row) {
-        HGroup({ width: "100%", height: "auto", align: "center center", wrap: 1, clipContent: 0, css: { maxWidth: PAGE_MAX_WIDTH + "px" } });
+        HGroup({
+            width: "100%",
+            height: "auto",
+            align: "center center",
+            wrap: 1,
+            clipContent: 0,
+            css: { maxWidth: PAGE_MAX_WIDTH + "px" },
+        });
             row.forEach(createSlot);
         endGroup();
     };
@@ -176,7 +183,15 @@
     const createTalkRow = function () {
         Label({ text: "Move the mouse on a talk", fontSize: 13, textColor: Black(0.45), css: { marginTop: "32px" } });
 
-        HGroup({ width: "100%", height: "auto", align: "center center", gap: 10, wrap: 1, clipContent: 0, css: { maxWidth: PAGE_MAX_WIDTH + "px" } });
+        HGroup({
+            width: "100%",
+            height: "auto",
+            align: "center center",
+            gap: 10,
+            wrap: 1,
+            clipContent: 0,
+            css: { maxWidth: PAGE_MAX_WIDTH + "px" },
+        });
 
             TALKS.forEach(function (talk) {
                 const lblTalk = Label({
