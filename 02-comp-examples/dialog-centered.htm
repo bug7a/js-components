@@ -21,11 +21,11 @@
 
     /* Bismillah */
 
-    // Dialog (comp-m4), variant: "centered": an icon at the top, the texts in the middle, the buttons one under
-    // the other. A layout the user drew, with the colors of the ozden package. The icon is in a light circle of its
+    // Dialog, variant: "centered": an icon at the top, the texts in the middle, the buttons one under
+    // the other, with the colors of the ozden package. The icon is in a light circle of its
     // color (topIconTone: three tones of a tone of SmartButton); it is drawn in two tones and moves once when its
     // dialog opens. The buttons take the tones of SmartButton too: Delete orange (danger), OK of Saved green (success).
-    // Three more dialogs that projects often need (the user, 2026-11-05): turn on the notifications, no connection
+    // Three more dialogs that projects often need: turn on the notifications, no connection
     // (Try again waits), leave without saving. And three more: the session has ended, something went wrong (Try again
     // waits), check your inbox (Send again waits and says under the message that the link is sent). And three more: the
     // order is placed, rate the app, allow the location.
@@ -34,7 +34,340 @@
 
     const MOTION_EASE = "cubic-bezier(0.2, 0.8, 0.2, 1)"; // a fast start, a soft stop
 
-    // THE ICONS AT THE TOP (the user, 2026-11-05: drawn again, the styles of 02-comp-examples/smart-button-alternatif.htm):
+    // The yellow button of Log out: the hover a little darker, the text of the package (not the white of danger)
+    const YELLOW_BUTTON_STYLE = {
+        box: { color: "#F8E57A" },
+        hover: { color: "#EFDA62" },
+        active: { color: "#EFDA62" },
+        label: { textColor: SmartButton.styles.ozdenType1.label.textColor },
+    };
+
+    // An icon at the top: its drawing as an "<svg" text (the dialog fills its colors in)
+    const svgIcon = function (body) {
+        return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">' + body + "<\/svg>";
+    };
+
+    let lblResult;
+
+    const showResult = function (text) {
+        lblResult.plainText = text;
+    };
+
+    // The dialog of the design: Delete (orange: danger, it asks again, then it waits) and Cancel
+    const openDeleteDialog = function () {
+        Dialog({
+            variant: "centered",
+            width: 420,
+            topIconTone: "orange",
+            topIconFile: svgIcon(TRASH_ICON),
+            titleText: "Delete Account?",
+            messageText: "Are you sure you want to delete your account?",
+            buttons: [
+                { key: "cancel", text: "Cancel", type: "secondary" },
+                {
+                    key: "delete", text: "Delete", type: "danger",
+                    ask: "Click again to delete your account.",
+                    onClick: async function () {
+                        await basic.sleep(WORK_TIME);
+                        showResult("The account is deleted.");
+                    },
+                },
+            ],
+            onClose: function (dialog, reason, buttonKey) { showClose(reason, buttonKey, "cancel"); },
+        });
+    };
+
+    // LOG OUT: Dialog.confirm (a Promise of true / false)
+    const openLogoutConfirm = async function () {
+        const isSure = await Dialog.confirm({
+            variant: "centered",
+            topIconTone: "yellow",
+            topIconFile: svgIcon(LOGOUT_ICON),
+            titleText: "Log out?",
+            messageText: "You can log in again with your e-mail address.",
+            confirmText: "Log out",
+            danger: 1,
+            style: { buttons: { danger: { style: YELLOW_BUTTON_STYLE } } },
+        });
+        showResult("log out: " + isSure);
+    };
+
+    // SAVED: Dialog.alert (a Promise that ends when it closes)
+    const openSavedAlert = async function () {
+        await Dialog.alert({
+            variant: "centered",
+            topIconTone: "green",
+            topIconFile: svgIcon(SAVED_ICON),
+            titleText: "Saved",
+            messageText: "Your changes are saved.",
+            buttonType: "success",
+        });
+        showResult("saved: closed");
+    };
+
+    // The page tells how a dialog was closed (keyOfNo: the button that says no)
+    const showClose = function (reason, buttonKey, keyOfNo) {
+        if (reason != "button") showResult("Closed: " + reason);
+        else if (buttonKey == keyOfNo) showResult("Canceled.");
+    };
+
+    // NOTIFICATIONS: the page asks before it sends them
+    const openNotificationsDialog = function () {
+        Dialog({
+            variant: "centered",
+            width: 420,
+            topIconTone: "cyan",
+            topIconFile: svgIcon(BELL_ICON),
+            titleText: "Turn on notifications?",
+            messageText: "We tell you when your order is on its way. You can turn them off in the settings.",
+            buttons: [
+                { key: "later", text: "Not now", type: "secondary" },
+                {
+                    key: "turnOn", text: "Turn on", type: "primary",
+                    onClick: function () { showResult("Notifications are on."); },
+                },
+            ],
+            onClose: function (dialog, reason, buttonKey) { showClose(reason, buttonKey, "later"); },
+        });
+    };
+
+    // NO CONNECTION: Try again waits (its clock) while the page checks the connection
+    const openOfflineDialog = function () {
+        Dialog({
+            variant: "centered",
+            width: 420,
+            topIconTone: "blue",
+            topIconFile: svgIcon(OFFLINE_ICON),
+            titleText: "No connection",
+            messageText: "Check your internet connection, then try again.",
+            buttons: [
+                { key: "cancel", text: "Cancel", type: "secondary" },
+                {
+                    key: "retry", text: "Try again", type: "info",
+                    onClick: async function () {
+                        await basic.sleep(WORK_TIME);
+                        showResult("Connected again.");
+                    },
+                },
+            ],
+            onClose: function (dialog, reason, buttonKey) { showClose(reason, buttonKey, "cancel"); },
+        });
+    };
+
+    // UNSAVED CHANGES: Leave loses them (the yellow of a warning), Stay keeps the page
+    const openUnsavedConfirm = async function () {
+        const isLeaving = await Dialog.confirm({
+            variant: "centered",
+            topIconTone: "yellow",
+            topIconFile: svgIcon(UNSAVED_ICON),
+            titleText: "Leave without saving?",
+            messageText: "Your changes are not saved. They will be lost if you leave now.",
+            confirmText: "Leave",
+            cancelText: "Stay",
+            confirmType: "warning",
+        });
+        showResult("unsaved changes: " + (isLeaving ? "left" : "stayed"));
+    };
+
+    // SESSION ENDED: the page logged the user out after a while; one button
+    const openSessionAlert = async function () {
+        await Dialog.alert({
+            variant: "centered",
+            topIconTone: "blue",
+            topIconFile: svgIcon(LOCK_ICON),
+            titleText: "Your session has ended",
+            messageText: "For your safety, you were logged out after a while. Log in again to go on.",
+            buttonText: "Log in again",
+        });
+        showResult("session: log in again");
+    };
+
+    // SOMETHING WENT WRONG: Try again waits (its clock); Close gives up
+    const openErrorDialog = function () {
+        Dialog({
+            variant: "centered",
+            width: 420,
+            topIconTone: "orange",
+            topIconFile: svgIcon(ERROR_ICON),
+            titleText: "Something went wrong",
+            messageText: "We could not save your changes. Please try again in a moment.",
+            buttons: [
+                { key: "close", text: "Close", type: "secondary" },
+                {
+                    key: "retry", text: "Try again", type: "primary",
+                    onClick: async function () {
+                        await basic.sleep(WORK_TIME);
+                        showResult("Saved on the second try.");
+                    },
+                },
+            ],
+            onClose: function (dialog, reason, buttonKey) { showClose(reason, buttonKey, "close"); },
+        });
+    };
+
+    // CHECK YOUR INBOX: after a sign-up. Send again waits (its clock), then the dialog stays open and says that the
+    // link is sent.
+    const openInboxDialog = function () {
+        Dialog({
+            variant: "centered",
+            width: 420,
+            topIconTone: "cyan",
+            topIconFile: svgIcon(INBOX_ICON),
+            titleText: "Check your inbox",
+            messageText: "We sent a link to ayse@example.com. Open it to verify your e-mail address.",
+            buttons: [
+                {
+                    key: "again", text: "Send again", type: "secondary",
+                    onClick: function (dialog) {
+                        sendLinkAgain(dialog);
+                        return false; // WHY: the dialog stays open: it says that the link is sent
+                    },
+                },
+                { key: "ok", text: "Got it", type: "primary", onClick: function () { showResult("inbox: got it"); } },
+            ],
+            onClose: function (dialog, reason) {
+                if (reason != "button") showResult("Closed: " + reason);
+            },
+        });
+    };
+
+    // WHY setBusy, not a Promise from onClick: a Promise closes the dialog when it ends
+    const sendLinkAgain = async function (dialog) {
+        dialog.setStatus("");
+        dialog.setBusy(1, "again"); // its clock; the other button waits
+        await basic.sleep(WORK_TIME);
+        if (!dialog.isOpen()) return;
+        dialog.setBusy(0);
+        dialog.setStatus("A new link is sent.", "success");
+    };
+
+    // ORDER PLACED: after a payment; Track the order is the next step (the green of a good result)
+    const openOrderDialog = function () {
+        Dialog({
+            variant: "centered",
+            width: 420,
+            topIconTone: "green",
+            topIconFile: svgIcon(ORDER_ICON),
+            titleText: "Your order is placed",
+            messageText: "Thank you! We sent the details to ayse@example.com. It arrives on Friday.",
+            buttons: [
+                { key: "shop", text: "Keep shopping", type: "secondary" },
+                {
+                    key: "track", text: "Track the order", type: "success",
+                    onClick: function () { showResult("order: track the order"); },
+                },
+            ],
+            onClose: function (dialog, reason, buttonKey) {
+                if (reason != "button") showResult("Closed: " + reason);
+                else if (buttonKey == "shop") showResult("order: keep shopping");
+            },
+        });
+    };
+
+    // RATE THE APP: asked once in a while; Not now asks again later
+    const openRateDialog = function () {
+        Dialog({
+            variant: "centered",
+            width: 420,
+            topIconTone: "yellow",
+            topIconFile: svgIcon(RATE_ICON),
+            titleText: "Do you like the app?",
+            messageText: "A rating in the store helps us a lot. It takes a few seconds.",
+            buttons: [
+                { key: "later", text: "Not now", type: "secondary" },
+                {
+                    key: "rate", text: "Rate the app", type: "primary",
+                    onClick: function () { showResult("rate: the store opens"); },
+                },
+            ],
+            onClose: function (dialog, reason, buttonKey) { showClose(reason, buttonKey, "later"); },
+        });
+    };
+
+    // LOCATION: the page asks before the browser does, and says why
+    const openLocationDialog = function () {
+        Dialog({
+            variant: "centered",
+            width: 420,
+            topIconTone: "blue",
+            topIconFile: svgIcon(LOCATION_ICON),
+            titleText: "Allow your location?",
+            messageText: "We use it to show the stores near you. It is never shared.",
+            buttons: [
+                { key: "later", text: "Not now", type: "secondary" },
+                { key: "allow", text: "Allow", type: "primary", onClick: function () { showResult("location: allowed"); } },
+            ],
+            onClose: function (dialog, reason, buttonKey) { showClose(reason, buttonKey, "later"); },
+        });
+    };
+
+    // GROUP: a small title and the buttons of its dialogs (they wrap on a narrow screen)
+    const createGroup = function (group) {
+        VGroup({ hug: 1, align: "center top", gap: 8, clipContent: 0 });
+            Label({ text: group.titleText, fontSize: 13, textColor: Black(0.5) });
+            HGroup({ hug: 1, gap: 10, wrap: 1, align: "center top", clipContent: 0 });
+                group.buttons.forEach(function (button) { createButton(button.text, button.open); });
+            endGroup();
+        endGroup();
+    };
+
+    const createButton = function (text, onClick) {
+        return SmartButton({
+            styleName: "ozdenType1",
+            labelText: text,
+            height: 40,
+            style: { box: { color: "white" } }, // white inside (its hover stays gray)
+            onClick: onClick,
+        });
+    };
+
+    const start = function () {
+
+        page.color = "#F0F1EE";
+        basic.addCss("dialog-centered-icons", ICON_MOTION_CSS);
+
+        // BOX: the page scrolls when its buttons are higher than the screen (a phone)
+        startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+            // WHY gap 22 (8 in a group): a title is nearer to its own buttons than to the buttons of the group above
+            // WHY minHeight: in the middle of the screen while it is not higher than it
+            VGroup({ width: "100%", height: "auto", align: "center", gap: 22, padding: [16, 24], css: { minHeight: "100%" } });
+
+                Label({ text: "Dialog: centered", fontSize: 26, bold: 1, textColor: Black(0.8) });
+
+                // The dialogs by their situation: a small title and their buttons
+                [
+                    { titleText: "Before a change", buttons: [
+                        { text: "Delete account", open: openDeleteDialog },
+                        { text: "Log out", open: openLogoutConfirm },
+                        { text: "Leave without saving", open: openUnsavedConfirm },
+                    ] },
+                    { titleText: "After a good result", buttons: [
+                        { text: "Saved", open: openSavedAlert },
+                        { text: "Order placed", open: openOrderDialog },
+                        { text: "Check your inbox", open: openInboxDialog },
+                    ] },
+                    { titleText: "When something is wrong", buttons: [
+                        { text: "Something went wrong", open: openErrorDialog },
+                        { text: "No connection", open: openOfflineDialog },
+                        { text: "Session ended", open: openSessionAlert },
+                    ] },
+                    { titleText: "Requests", buttons: [
+                        { text: "Notifications", open: openNotificationsDialog },
+                        { text: "Location", open: openLocationDialog },
+                        { text: "Rate the app", open: openRateDialog },
+                    ] },
+                ].forEach(createGroup);
+
+                lblResult = Label({ plainText: "-", fontSize: 14, textColor: Black(0.5) });
+
+            endGroup();
+        endBox();
+
+    };
+
+    // *** THE DRAWINGS
+
+    // THE ICONS AT THE TOP (the styles of 02-comp-examples/smart-button-alternatif.htm):
     // a thing is two-tone (a big LIGHT shape with STRONG details), a state is a circle mark (a STRONG circle, a white
     // mark). The dialog fills LIGHT and STRONG in with the tones of its topIconTone (Dialog.ICON_TONES).
     // The bin: the lid and its handle, the bin, its two lines
@@ -143,327 +476,6 @@
         "@keyframes top-icon-drop { 0% { opacity: 0; transform: translateY(-5px); } 60% { opacity: 1; transform: translateY(0.8px); } }",
         "@media (prefers-reduced-motion: reduce) { .top-icon-lid, .top-icon-arrow, .top-icon-mark, .top-icon-check, .top-icon-bell, .top-icon-slash, .top-icon-pencil, .top-icon-shackle, .top-icon-shake, .top-icon-dot, .top-icon-star, .top-icon-sparkle, .top-icon-pin { animation: none; } }",
     ].join("\n");
-
-    // The yellow button of Log out: the hover a little darker, the text of the package (not the white of danger)
-    const YELLOW_BUTTON_STYLE = {
-        box: { color: "#F8E57A" },
-        hover: { color: "#EFDA62" },
-        active: { color: "#EFDA62" },
-        label: { textColor: SmartButton.styles.ozdenType1.label.textColor },
-    };
-
-    // An icon at the top: its drawing as an "<svg" text (the dialog fills its colors in)
-    const svgIcon = function (body) {
-        return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">' + body + "<\/svg>";
-    };
-
-    let lblResult;
-
-    const showResult = function (text) {
-        lblResult.plainText = text;
-    };
-
-    const wait = function (ms) {
-        return new Promise(function (resolve) { setTimeout(resolve, ms); });
-    };
-
-    // The dialog of the design: Delete (orange: danger, it asks again, then it waits) and Cancel
-    const openDeleteDialog = function () {
-        Dialog({
-            variant: "centered",
-            width: 420,
-            topIconTone: "orange",
-            topIconFile: svgIcon(TRASH_ICON),
-            titleText: "Delete Account?",
-            messageText: "Are you sure you want to delete your account?",
-            buttons: [
-                { key: "cancel", text: "Cancel", type: "secondary" },
-                {
-                    key: "delete", text: "Delete", type: "danger",
-                    ask: "Click again to delete your account.",
-                    onClick: function () {
-                        return wait(WORK_TIME).then(function () { showResult("The account is deleted."); });
-                    },
-                },
-            ],
-            onClose: function (dialog, reason, buttonKey) {
-                if (reason != "button") showResult("Closed: " + reason);
-                else if (buttonKey == "cancel") showResult("Canceled.");
-            },
-        });
-    };
-
-    // LOG OUT: Dialog.confirm (a Promise of true / false)
-    const openLogoutConfirm = async function () {
-        const isSure = await Dialog.confirm({
-            variant: "centered",
-            topIconTone: "yellow",
-            topIconFile: svgIcon(LOGOUT_ICON),
-            titleText: "Log out?",
-            messageText: "You can log in again with your e-mail address.",
-            confirmText: "Log out",
-            danger: 1,
-            style: { buttons: { danger: { style: YELLOW_BUTTON_STYLE } } },
-        });
-        showResult("log out: " + isSure);
-    };
-
-    // SAVED: Dialog.alert (a Promise that ends when it closes)
-    const openSavedAlert = async function () {
-        await Dialog.alert({
-            variant: "centered",
-            topIconTone: "green",
-            topIconFile: svgIcon(SAVED_ICON),
-            titleText: "Saved",
-            messageText: "Your changes are saved.",
-            buttonType: "success",
-        });
-        showResult("saved: closed");
-    };
-
-    // The page tells how a dialog was closed (keyOfNo: the button that says no)
-    const showClose = function (reason, buttonKey, keyOfNo) {
-        if (reason != "button") showResult("Closed: " + reason);
-        else if (buttonKey == keyOfNo) showResult("Canceled.");
-    };
-
-    // NOTIFICATIONS: the page asks before it sends them
-    const openNotificationsDialog = function () {
-        Dialog({
-            variant: "centered",
-            width: 420,
-            topIconTone: "cyan",
-            topIconFile: svgIcon(BELL_ICON),
-            titleText: "Turn on notifications?",
-            messageText: "We tell you when your order is on its way. You can turn them off in the settings.",
-            buttons: [
-                { key: "later", text: "Not now", type: "secondary" },
-                { key: "turnOn", text: "Turn on", type: "primary", onClick: function () { showResult("Notifications are on."); } },
-            ],
-            onClose: function (dialog, reason, buttonKey) { showClose(reason, buttonKey, "later"); },
-        });
-    };
-
-    // NO CONNECTION: Try again waits (its clock) while the page checks the connection
-    const openOfflineDialog = function () {
-        Dialog({
-            variant: "centered",
-            width: 420,
-            topIconTone: "blue",
-            topIconFile: svgIcon(OFFLINE_ICON),
-            titleText: "No connection",
-            messageText: "Check your internet connection, then try again.",
-            buttons: [
-                { key: "cancel", text: "Cancel", type: "secondary" },
-                {
-                    key: "retry", text: "Try again", type: "info",
-                    onClick: function () {
-                        return wait(WORK_TIME).then(function () { showResult("Connected again."); });
-                    },
-                },
-            ],
-            onClose: function (dialog, reason, buttonKey) { showClose(reason, buttonKey, "cancel"); },
-        });
-    };
-
-    // UNSAVED CHANGES: Leave loses them (the yellow of a warning), Stay keeps the page
-    const openUnsavedConfirm = async function () {
-        const isLeaving = await Dialog.confirm({
-            variant: "centered",
-            topIconTone: "yellow",
-            topIconFile: svgIcon(UNSAVED_ICON),
-            titleText: "Leave without saving?",
-            messageText: "Your changes are not saved. They will be lost if you leave now.",
-            confirmText: "Leave",
-            cancelText: "Stay",
-            confirmType: "warning",
-        });
-        showResult("unsaved changes: " + (isLeaving ? "left" : "stayed"));
-    };
-
-    // SESSION ENDED: the page logged the user out after a while; one button
-    const openSessionAlert = async function () {
-        await Dialog.alert({
-            variant: "centered",
-            topIconTone: "blue",
-            topIconFile: svgIcon(LOCK_ICON),
-            titleText: "Your session has ended",
-            messageText: "For your safety, you were logged out after a while. Log in again to go on.",
-            buttonText: "Log in again",
-        });
-        showResult("session: log in again");
-    };
-
-    // SOMETHING WENT WRONG: Try again waits (its clock); Close gives up
-    const openErrorDialog = function () {
-        Dialog({
-            variant: "centered",
-            width: 420,
-            topIconTone: "orange",
-            topIconFile: svgIcon(ERROR_ICON),
-            titleText: "Something went wrong",
-            messageText: "We could not save your changes. Please try again in a moment.",
-            buttons: [
-                { key: "close", text: "Close", type: "secondary" },
-                {
-                    key: "retry", text: "Try again", type: "primary",
-                    onClick: function () {
-                        return wait(WORK_TIME).then(function () { showResult("Saved on the second try."); });
-                    },
-                },
-            ],
-            onClose: function (dialog, reason, buttonKey) { showClose(reason, buttonKey, "close"); },
-        });
-    };
-
-    // CHECK YOUR INBOX: after a sign-up. Send again waits (its clock), then the dialog stays open and says that the
-    // link is sent.
-    const openInboxDialog = function () {
-        Dialog({
-            variant: "centered",
-            width: 420,
-            topIconTone: "cyan",
-            topIconFile: svgIcon(INBOX_ICON),
-            titleText: "Check your inbox",
-            messageText: "We sent a link to ayse@example.com. Open it to verify your e-mail address.",
-            buttons: [
-                {
-                    key: "again", text: "Send again", type: "secondary",
-                    onClick: function (dialog) {
-                        sendLinkAgain(dialog);
-                        return false; // WHY: the dialog stays open: it says that the link is sent
-                    },
-                },
-                { key: "ok", text: "Got it", type: "primary", onClick: function () { showResult("inbox: got it"); } },
-            ],
-            onClose: function (dialog, reason) {
-                if (reason != "button") showResult("Closed: " + reason);
-            },
-        });
-    };
-
-    // WHY setBusy, not a Promise from onClick: a Promise closes the dialog when it ends
-    const sendLinkAgain = function (dialog) {
-        dialog.setStatus("");
-        dialog.setBusy(1, "again"); // its clock; the other button waits
-        wait(WORK_TIME).then(function () {
-            if (!dialog.isOpen()) return;
-            dialog.setBusy(0);
-            dialog.setStatus("A new link is sent.", "success");
-        });
-    };
-
-    // ORDER PLACED: after a payment; Track the order is the next step (the green of a good result)
-    const openOrderDialog = function () {
-        Dialog({
-            variant: "centered",
-            width: 420,
-            topIconTone: "green",
-            topIconFile: svgIcon(ORDER_ICON),
-            titleText: "Your order is placed",
-            messageText: "Thank you! We sent the details to ayse@example.com. It arrives on Friday.",
-            buttons: [
-                { key: "shop", text: "Keep shopping", type: "secondary" },
-                { key: "track", text: "Track the order", type: "success", onClick: function () { showResult("order: track the order"); } },
-            ],
-            onClose: function (dialog, reason, buttonKey) {
-                if (reason != "button") showResult("Closed: " + reason);
-                else if (buttonKey == "shop") showResult("order: keep shopping");
-            },
-        });
-    };
-
-    // RATE THE APP: asked once in a while; Not now asks again later
-    const openRateDialog = function () {
-        Dialog({
-            variant: "centered",
-            width: 420,
-            topIconTone: "yellow",
-            topIconFile: svgIcon(RATE_ICON),
-            titleText: "Do you like the app?",
-            messageText: "A rating in the store helps us a lot. It takes a few seconds.",
-            buttons: [
-                { key: "later", text: "Not now", type: "secondary" },
-                { key: "rate", text: "Rate the app", type: "primary", onClick: function () { showResult("rate: the store opens"); } },
-            ],
-            onClose: function (dialog, reason, buttonKey) { showClose(reason, buttonKey, "later"); },
-        });
-    };
-
-    // LOCATION: the page asks before the browser does, and says why
-    const openLocationDialog = function () {
-        Dialog({
-            variant: "centered",
-            width: 420,
-            topIconTone: "blue",
-            topIconFile: svgIcon(LOCATION_ICON),
-            titleText: "Allow your location?",
-            messageText: "We use it to show the stores near you. It is never shared.",
-            buttons: [
-                { key: "later", text: "Not now", type: "secondary" },
-                { key: "allow", text: "Allow", type: "primary", onClick: function () { showResult("location: allowed"); } },
-            ],
-            onClose: function (dialog, reason, buttonKey) { showClose(reason, buttonKey, "later"); },
-        });
-    };
-
-    // GROUP: a small title and the buttons of its dialogs (they wrap on a narrow screen)
-    const createGroup = function (group) {
-        VGroup({ hug: 1, align: "center top", gap: 8, clipContent: 0 });
-            Label({ text: group.titleText, fontSize: 13, textColor: Black(0.5) });
-            HGroup({ hug: 1, gap: 10, wrap: 1, align: "center top", clipContent: 0 });
-                group.buttons.forEach(function (button) { createButton(button.text, button.open); });
-            endGroup();
-        endGroup();
-    };
-
-    const createButton = function (text, onClick) {
-        return SmartButton({ styleName: "ozdenType1", labelText: text, height: 40, style: { box: { color: "white" } }, onClick: onClick }); // white inside (its hover stays gray)
-    };
-
-    const start = function () {
-
-        page.color = "#F0F1EE";
-        basic.addCss("dialog-centered-icons", ICON_MOTION_CSS);
-
-        // BOX: the page scrolls when its buttons are higher than the screen (a phone)
-        startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
-            // WHY gap 22 (8 in a group): a title is nearer to its own buttons than to the buttons of the group above
-            VGroup({ width: "100%", height: "auto", align: "center", gap: 22, padding: [16, 24] });
-            that.css = { minHeight: "100%" }; // WHY: in the middle of the screen while it is not higher than it
-
-                Label({ text: "Dialog: centered", fontSize: 26, bold: 1, textColor: Black(0.8) });
-
-                // The dialogs by their situation: a small title and their buttons
-                [
-                    { titleText: "Before a change", buttons: [
-                        { text: "Delete account", open: openDeleteDialog },
-                        { text: "Log out", open: openLogoutConfirm },
-                        { text: "Leave without saving", open: openUnsavedConfirm },
-                    ] },
-                    { titleText: "After a good result", buttons: [
-                        { text: "Saved", open: openSavedAlert },
-                        { text: "Order placed", open: openOrderDialog },
-                        { text: "Check your inbox", open: openInboxDialog },
-                    ] },
-                    { titleText: "When something is wrong", buttons: [
-                        { text: "Something went wrong", open: openErrorDialog },
-                        { text: "No connection", open: openOfflineDialog },
-                        { text: "Session ended", open: openSessionAlert },
-                    ] },
-                    { titleText: "Requests", buttons: [
-                        { text: "Notifications", open: openNotificationsDialog },
-                        { text: "Location", open: openLocationDialog },
-                        { text: "Rate the app", open: openRateDialog },
-                    ] },
-                ].forEach(createGroup);
-
-                lblResult = Label({ plainText: "-", fontSize: 14, textColor: Black(0.5) });
-
-            endGroup();
-        endBox();
-
-    };
 
     </script>
 
