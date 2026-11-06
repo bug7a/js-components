@@ -146,6 +146,12 @@ const Tooltip = function(params = {}) {
         Tooltip.place(window.lblHint, { left: box.mouseX, top: box.mouseY, width: 0, height: 0 }, box.hintPosition);
     }
 
+    // The bubble goes away until the mouse comes on the target again.
+    box.hideHint = function() {
+        // WHY owner: one bubble is shared; a late call must not remove the bubble of another object.
+        if (window.lblHint && window.lblHint.owner === box) removeHintLabel();
+    }
+
     box.setLbl_color = function(color) {
         box.lbl_color = color;
         if (box.look && box.look.color) box.look = Object.assign({}, box.look, { color: color });

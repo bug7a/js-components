@@ -79,6 +79,7 @@
         <script src="../comp/splitter.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/accordion.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/grid-group.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/tool-bar.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/code-editor.js" type="text/javascript" charset="utf-8"></script>
 
         <script>
@@ -5010,6 +5011,486 @@
             pointer(element, "pointermove", toX, toY);
             pointer(element, "pointerup", toX, toY);
         };
+
+        // *** TOOL BAR (comp/tool-bar.js)
+
+        const toolButton = function (bar, name) {
+            return bar.elem.querySelector('button[aria-label="' + name + '"]');
+        };
+
+        const isOnScreen = function (element) {
+            return element.getClientRects().length > 0;
+        };
+
+        test("ToolBar: an item calls its onClick, then the one of the bar; a line, an empty place, a text; a text is never HTML", async function () {
+            const clicks = [];
+            const bar = ToolBar({
+                width: 500,
+                items: [
+                    { key: "save", icon: "save", hint: "Save", onClick: function (self, item) { clicks.push("item " + item.key + " " + (self === bar)); } },
+                    "-",
+                    "Plain",
+                    " ",
+                    { key: "html", text: "<b>Bold</b>" },
+                ],
+                onClick: function (self, item) { clicks.push("bar " + (item.key || item.text)); },
+            });
+            await wait(30);
+            mouseClick(toolButton(bar, "Save"));
+            mouseClick(toolButton(bar, "Plain"));
+            const html = toolButton(bar, "<b>Bold</b>");
+            const barRect = bar.elem.getBoundingClientRect();
+            const saveRect = toolButton(bar, "Save").getBoundingClientRect();
+            const atTheEnd = Math.round(barRect.right - html.getBoundingClientRect().right);
+            const isPlain = (html.querySelector("b") === null && html.textContent === "<b>Bold</b>");
+            const isToolbar = (bar.elem.getAttribute("role") === "toolbar");
+            check("ToolBar: an item calls its onClick, then the one of the bar; a line, an empty place, a text; a text is never HTML",
+                clicks.join(",") === "item save true,bar save,bar Plain" && atTheEnd === 6 && isPlain && isToolbar && saveRect.width === 30 && saveRect.height === 30,
+                [clicks.join(","), atTheEnd, isPlain, isToolbar, saveRect.width, saveRect.height].join(" | "));
+            bar.remove();
+        });
+
+        test("ToolBar: a disabled item and a disabled bar run nothing; setItemEnabled and setEnabled bring them back", async function () {
+            const clicks = [];
+            const bar = ToolBar({
+                items: [{ key: "off", icon: "save", hint: "Off", enabled: 0 }, { key: "on", icon: "undo", hint: "On" }],
+                onClick: function (self, item) { clicks.push(item.key); },
+            });
+            await wait(30);
+            const off = toolButton(bar, "Off");
+            const on = toolButton(bar, "On");
+            off.dispatchEvent(new MouseEvent("mouseenter"));
+            const hoverColor = off.style.backgroundColor;
+            mouseClick(off);
+            bar.clickItem("off");
+            const whileOff = clicks.join(",");
+            const look = [off.getAttribute("aria-disabled"), off.style.opacity].join(" ");
+            bar.setItemEnabled("off", 1);
+            mouseClick(off);
+            const afterOn = clicks.join(",");
+            clicks.length = 0;
+            bar.setEnabled(0);
+            mouseClick(on);
+            bar.clickItem("on");
+            key(document.body, "keydown", "s", { ctrlKey: true });
+            const barOff = clicks.length;
+            bar.setEnabled(1);
+            mouseClick(on);
+            check("ToolBar: a disabled item and a disabled bar run nothing; setItemEnabled and setEnabled bring them back",
+                whileOff === "" && hoverColor === "transparent" && look === "true 0.35" && afterOn === "off" && barOff === 0 && clicks.join() === "on",
+                [whileOff, hoverColor, look, afterOn, barOff, clicks.join()].join(" | "));
+            bar.remove();
+        });
+
+        test("ToolBar: a toggle stays pressed; one of a group stays pressed, also in a menu; checked alone belongs to the page; the list of the page does not change", async function () {
+            const clicks = [];
+            const list = [
+                { key: "bold", icon: "bold", hint: "Bold", toggle: 1 },
+                { key: "left", icon: "alignLeft", hint: "Left", group: "align", checked: 1 },
+                { key: "right", icon: "alignRight", hint: "Right", group: "align" },
+                { key: "playing", icon: "play", hint: "Playing", checked: 0 },
+                { key: "view", text: "View", items: [{ key: "a", text: "A", group: "view", checked: 1 }, { key: "b", text: "B", group: "view" }] },
+            ];
+            const bar = ToolBar({ items: list, onClick: function (self, item) { clicks.push(item.key); } });
+            await wait(30);
+            const bold = toolButton(bar, "Bold");
+            const left = toolButton(bar, "Left");
+            const right = toolButton(bar, "Right");
+            const playing = toolButton(bar, "Playing");
+            const offColor = bold.style.backgroundColor;
+            mouseClick(bold);
+            const boldOn = [bold.getAttribute("aria-pressed"), bold.style.backgroundColor !== offColor, bar.isItemChecked("bold")].join();
+            mouseClick(bold);
+            const boldOff = [bold.getAttribute("aria-pressed"), bold.style.backgroundColor === offColor, bar.isItemChecked("bold")].join();
+            mouseClick(right);
+            mouseClick(right);
+            const group = [left.getAttribute("aria-pressed"), right.getAttribute("aria-pressed")].join();
+            clicks.length = 0;
+            bar.setItemChecked("left", 1);
+            const silent = clicks.length;
+            const groupBack = bar.getCheckedKeys().join();
+            mouseClick(playing);
+            const playingAfterClick = playing.getAttribute("aria-pressed");
+            bar.setItemChecked("playing", 1);
+            const playingByPage = [playing.getAttribute("aria-pressed"), playing.style.backgroundColor !== offColor].join();
+            bar.setItemChecked("playing", 0);
+            bar.clickItem("b");
+            const inMenu = bar.getCheckedKeys().join();
+            const isListSame = (list[0].checked === undefined && list[2].checked === undefined && list[4].items[0].checked === 1 && list[4].items[1].checked === undefined);
+            check("ToolBar: a toggle stays pressed; one of a group stays pressed, also in a menu; checked alone belongs to the page; the list of the page does not change",
+                boldOn === "true,true,true" && boldOff === "false,true,false" && group === "false,true" && silent === 0 && groupBack === "left,a" &&
+                playingAfterClick === "false" && playingByPage === "true,true" && inMenu === "left,b" && isListSame,
+                [boldOn, boldOff, group, silent, groupBack, playingAfterClick, playingByPage, inMenu, isListSame].join(" | "));
+            bar.remove();
+        });
+
+        test("ToolBar: the buttons that do not fit go into the \"...\" menu and run from there; they come back; no line stays at the end", async function () {
+            const clicks = [];
+            const names = ["One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight"];
+            const items = names.map(function (name) { return { key: name, icon: "save", hint: name }; });
+            items.splice(2, 0, "-");
+            items[7].toggle = 1; // Seven
+            const bar = ToolBar({ width: 800, items: items, onClick: function (self, item) { clicks.push(item.key); } });
+            await wait(30);
+            const more = toolButton(bar, "More");
+            const seven = toolButton(bar, "Seven");
+            const wideFits = names.every(function (name) { return isOnScreen(toolButton(bar, name)); }) && !isOnScreen(more);
+            bar.width = 180;
+            await wait(60);
+            const row = bar.layout.elem;
+            const narrowFits = (row.scrollWidth <= row.clientWidth && isOnScreen(more));
+            const shownNames = names.filter(function (name) { return isOnScreen(toolButton(bar, name)); });
+            const isLastTheMore = (more.getBoundingClientRect().left > toolButton(bar, shownNames[shownNames.length - 1]).getBoundingClientRect().left);
+            mouseClick(more);
+            const isOpen = bar.menu.isOpen() == 1;
+            const menuTexts = bar.menu.items.map(function (item) { return item.text; });
+            const expected = names.slice(shownNames.length);
+            bar.menu.clickItem(menuTexts.indexOf("Seven"));
+            const ran = clicks.join();
+            const checkedFromMenu = bar.isItemChecked("Seven");
+            mouseClick(more);
+            const isCheckedInMenu = bar.menu.items[menuTexts.indexOf("Seven")].checked === 1;
+            bar.closeMenu();
+            bar.width = 143; // WHY: Room for two buttons, the line and "...", not for a third button.
+            await wait(60);
+            const line = Array.from(row.children).filter(function (child) { return child.tagName !== "BUTTON" && isOnScreen(child); });
+            const lastShown = Array.from(row.children).filter(isOnScreen).pop();
+            bar.width = 800;
+            await wait(60);
+            const backFits = names.every(function (name) { return isOnScreen(toolButton(bar, name)); }) && !isOnScreen(more);
+            const display = getComputedStyle(seven).display;
+            check("ToolBar: the buttons that do not fit go into the \"...\" menu and run from there; they come back; no line stays at the end",
+                wideFits && narrowFits && isLastTheMore && isOpen && menuTexts.join() === expected.join() && ran === "Seven" && checkedFromMenu && isCheckedInMenu &&
+                line.length === 0 && lastShown === more && backFits && display === "flex",
+                [wideFits, narrowFits, isLastTheMore, isOpen, menuTexts.join(), expected.join(), ran, checkedFromMenu, isCheckedInMenu, line.length, lastShown === more, backFits, display].join(" | "));
+            bar.remove();
+        });
+
+        test("ToolBar: a button with items opens a menu under it, a second click closes it, a third opens it; its items run; an empty list does not stay open", async function () {
+            const clicks = [];
+            const bar = ToolBar({
+                items: [
+                    { key: "menu", text: "Menu", onClick: function () { clicks.push("never: it opens the menu"); }, items: [
+                        { key: "one", text: "One", onClick: function (self, item) { clicks.push("item " + item.key + " " + (self === bar)); } },
+                        "-",
+                        "Two",
+                    ] },
+                    { key: "empty", text: "Empty", items: [] },
+                ],
+                onClick: function (self, item) { clicks.push("bar " + (item.key || item.text)); },
+            });
+            await wait(30);
+            const button = toolButton(bar, "Menu");
+            mouseClick(button);
+            const opened = bar.menu.isOpen() == 1;
+            const isUnder = bar.menu.elem.getBoundingClientRect().top >= button.getBoundingClientRect().bottom - 1;
+            const isExpanded = [button.getAttribute("aria-expanded"), button.getAttribute("aria-haspopup")].join();
+            const openColor = button.style.backgroundColor;
+            mouseClick(button);
+            const closed = bar.menu.isOpen() == 0;
+            const closedColor = button.style.backgroundColor;
+            mouseClick(button);
+            const openedAgain = bar.menu.isOpen() == 1;
+            bar.menu.clickItem(0);
+            const afterItem = [bar.menu.isOpen(), button.getAttribute("aria-expanded")].join();
+            mouseClick(button);
+            bar.menu.clickItem(2);
+            const empty = toolButton(bar, "Empty");
+            mouseClick(empty);
+            const emptyState = [bar.menu.isOpen(), empty.getAttribute("aria-expanded")].join();
+            check("ToolBar: a button with items opens a menu under it, a second click closes it, a third opens it; its items run; an empty list does not stay open",
+                opened && isUnder && isExpanded === "true,menu" && openColor !== closedColor && closed && openedAgain && afterItem === "0,false" &&
+                clicks.join() === "item one true,bar one,bar Two" && emptyState === "0,false",
+                [opened, isUnder, isExpanded, openColor, closedColor, closed, openedAgain, afterItem, clicks.join(), emptyState].join(" | "));
+            bar.remove();
+        });
+
+        test("ToolBar: the keys: one Tab stop; the arrows, Home and End skip a disabled button and go round; ArrowDown and Enter open a menu; Escape comes back", async function () {
+            const bar = ToolBar({
+                items: [
+                    { key: "a", icon: "save", hint: "A" },
+                    { key: "b", icon: "undo", hint: "B", enabled: 0 },
+                    "-",
+                    { key: "c", icon: "redo", hint: "C" },
+                    { key: "m", text: "M", items: ["One", "Two"] },
+                ],
+            });
+            await wait(30);
+            const button = function (name) { return toolButton(bar, name); };
+            const tabStops = function () {
+                return ["A", "B", "C", "M"].filter(function (name) { return button(name).tabIndex === 0; }).join();
+            };
+            const focused = function () { return document.activeElement.getAttribute("aria-label"); };
+            const firstStop = tabStops();
+            button("A").focus();
+            key(button("A"), "keydown", "ArrowRight");
+            const toC = focused();
+            const stopFollows = tabStops();
+            key(button("C"), "keydown", "ArrowLeft");
+            const backToA = focused();
+            key(button("A"), "keydown", "ArrowLeft");
+            const roundToM = focused();
+            key(button("M"), "keydown", "ArrowRight");
+            const roundToA = focused();
+            key(button("A"), "keydown", "End");
+            const end = focused();
+            key(button("M"), "keydown", "Home");
+            const home = focused();
+            key(button("M"), "keydown", "End");
+            key(button("M"), "keydown", "ArrowDown");
+            const openedDown = bar.menu.isOpen() == 1;
+            const focusInMenu = bar.menu.elem.contains(document.activeElement);
+            key(document.activeElement, "keydown", "Escape");
+            const closedByEscape = bar.menu.isOpen() == 0;
+            const focusBack = focused();
+            button("M").click(); // WHY: Enter and Space make a click with detail 0.
+            const openedByEnter = bar.menu.isOpen() == 1 && bar.menu.elem.contains(document.activeElement);
+            key(document.activeElement, "keydown", "Escape");
+            key(button("C"), "keydown", "ArrowDown"); // No menu: nothing
+            const noMenu = bar.menu.isOpen() == 0;
+            check("ToolBar: the keys: one Tab stop; the arrows, Home and End skip a disabled button and go round; ArrowDown and Enter open a menu; Escape comes back",
+                firstStop === "A" && toC === "C" && stopFollows === "C" && backToA === "A" && roundToM === "M" && roundToA === "A" && end === "M" && home === "A" &&
+                openedDown && focusInMenu && closedByEscape && focusBack === "M" && openedByEnter && noMenu,
+                [firstStop, toC, stopFollows, backToA, roundToM, roundToA, end, home, openedDown, focusInMenu, closedByEscape, focusBack, openedByEnter, noMenu].join(" | "));
+            bar.remove();
+        });
+
+        test("ToolBar: a shortcut runs its item (a menu of it too), also when it is in the \"...\" menu; a held key once; not when disabled, hidden, under a Dialog; in a field only with Ctrl", async function () {
+            const clicks = [];
+            const bar = ToolBar({
+                width: 90,
+                items: [
+                    { key: "first", icon: "undo", hint: "First" },
+                    { key: "save", icon: "save", hint: "Save", shortcut: "Ctrl+S" },
+                    { key: "off", icon: "redo", hint: "Off", shortcut: "Ctrl+Q", enabled: 0 },
+                    { key: "more", text: "More items", items: [{ key: "deep", text: "Deep", shortcut: "F9" }] },
+                ],
+                onClick: function (self, item) { clicks.push(item.key); },
+            });
+            const field = Input({ left: 10, top: 60, width: 100, height: 30 });
+            await wait(60);
+            const isHiddenOne = !isOnScreen(toolButton(bar, "Save"));
+            key(document.body, "keydown", "s", { ctrlKey: true });
+            key(document.body, "keydown", "s", { metaKey: true });
+            key(document.body, "keydown", "F9");
+            key(document.body, "keydown", "q", { ctrlKey: true });
+            const normal = clicks.join();
+            clicks.length = 0;
+            const held = new KeyboardEvent("keydown", { key: "s", ctrlKey: true, repeat: true, bubbles: true, cancelable: true });
+            document.body.dispatchEvent(held);
+            const heldKey = [clicks.length, held.defaultPrevented].join();
+            field.elem.focus();
+            key(field.inputElement, "keydown", "F9");
+            key(field.inputElement, "keydown", "s", { ctrlKey: true });
+            const inField = clicks.join();
+            field.elem.blur();
+            clicks.length = 0;
+            const dialog = Dialog({ removeOnClose: 1, buttons: [] });
+            await wait(30);
+            key(document.body, "keydown", "s", { ctrlKey: true });
+            const underDialog = clicks.length;
+            dialog.remove();
+            await wait(30);
+            bar.visible = 0;
+            key(document.body, "keydown", "s", { ctrlKey: true });
+            const whenHidden = clicks.length;
+            bar.visible = 1;
+            key(document.body, "keydown", "s", { ctrlKey: true });
+            const whenBack = clicks.join();
+            check("ToolBar: a shortcut runs its item (a menu of it too), also when it is in the \"...\" menu; a held key once; not when disabled, hidden, under a Dialog; in a field only with Ctrl",
+                isHiddenOne && normal === "save,save,deep" && heldKey === "0,true" && inField === "save" && underDialog === 0 && whenHidden === 0 && whenBack === "save",
+                [isHiddenOne, normal, heldKey, inField, underDialog, whenHidden, whenBack].join(" | "));
+            field.remove();
+            bar.remove();
+        });
+
+        test("ToolBar: a key that is also in a MenuBar runs once, in the bar made first", async function () {
+            const clicks = [];
+            const makeMenuBar = function () {
+                return MenuBar({ menus: [{ text: "File", items: [{ text: "Save", key: "save", shortcut: "Ctrl+S" }] }], onClick: function () { clicks.push("menu"); } });
+            };
+            const makeToolBar = function () {
+                return ToolBar({ items: [{ key: "save", icon: "save", hint: "Save", shortcut: "Ctrl+S" }], onClick: function () { clicks.push("tool"); } });
+            };
+            const firstMenu = makeMenuBar();
+            const secondTool = makeToolBar();
+            await wait(30);
+            key(document.body, "keydown", "s", { ctrlKey: true });
+            const menuFirst = clicks.join();
+            firstMenu.remove();
+            secondTool.remove();
+            clicks.length = 0;
+            const firstTool = makeToolBar();
+            const secondMenu = makeMenuBar();
+            await wait(30);
+            key(document.body, "keydown", "s", { ctrlKey: true });
+            const toolFirst = clicks.join();
+            firstTool.remove();
+            secondMenu.remove();
+            check("ToolBar: a key that is also in a MenuBar runs once, in the bar made first", menuFirst === "menu" && toolFirst === "tool", [menuFirst, toolFirst].join(" | "));
+        });
+
+        test("ToolBar: the bubble of a button: its name and shortcut, none for a plain text button; a click hides it until the mouse comes back; setItemHint, setItemText", async function () {
+            const bar = ToolBar({
+                items: [
+                    { key: "save", icon: "save", hint: "Save", shortcut: "Ctrl+S" },
+                    { key: "plain", text: "Plain" },
+                ],
+            });
+            await wait(30);
+            const hover = function (button) { button.dispatchEvent(new MouseEvent("mouseover", { bubbles: true, clientX: 40, clientY: 40 })); };
+            const leave = function (button) { button.dispatchEvent(new MouseEvent("mouseout", { bubbles: true })); };
+            const bubbleText = function () { return (window.lblHint) ? window.lblHint.label.text : ""; };
+            const save = toolButton(bar, "Save");
+            const plain = toolButton(bar, "Plain");
+            const shortcutText = MenuBar.shortcutText("Ctrl+S");
+            hover(save);
+            const shown = bubbleText();
+            save.dispatchEvent(new MouseEvent("mousemove", { bubbles: true, clientX: 41, clientY: 41 }));
+            mouseClick(save);
+            const afterClick = bubbleText();
+            leave(save);
+            hover(save);
+            const shownAgain = bubbleText();
+            leave(save);
+            hover(plain);
+            const onPlain = bubbleText();
+            leave(plain);
+            bar.setItemHint("plain", "With a name");
+            hover(plain);
+            const hintAdded = [bubbleText(), plain.getAttribute("aria-label")].join();
+            leave(plain);
+            bar.setItemHint("plain", "");
+            hover(plain);
+            const hintRemoved = [bubbleText(), plain.getAttribute("aria-label")].join();
+            leave(plain);
+            bar.setItemText("plain", "<i>New</i>");
+            const newText = [plain.textContent, plain.querySelector("i") === null, plain.getAttribute("aria-label")].join();
+            hover(save);
+            const bubble = window.lblHint;
+            bar.remove();
+            const isBubbleGone = (window.lblHint === null && bubble.isRemoved == 1);
+            const texts = [
+                ToolBar.getHintText({ hint: "Save" }),
+                ToolBar.getHintText({ text: "Run" }),
+                ToolBar.getHintText({ text: "Run", shortcut: "F9" }),
+                ToolBar.getHintText({ shortcut: "F9" }),
+            ].join();
+            check("ToolBar: the bubble of a button: its name and shortcut, none for a plain text button; a click hides it until the mouse comes back; setItemHint, setItemText",
+                shown === "Save (" + shortcutText + ")" && afterClick === "" && shownAgain === shown && onPlain === "" && hintAdded === "With a name,With a name" &&
+                hintRemoved === ",Plain" && newText === "<i>New</i>,true,<i>New</i>" && isBubbleGone && texts === "Save,,Run (F9),F9",
+                [shown, afterClick, shownAgain, onPlain, hintAdded, hintRemoved, newText, isBubbleGone, texts].join(" | "));
+        });
+
+        test("Tooltip: hideHint() removes only its own bubble", async function () {
+            const first = Tooltip({ target: Button({ left: 0, top: 0, width: 50, height: 30 }), hintText: "First" });
+            const firstTarget = first.target;
+            const second = Tooltip({ target: Button({ left: 60, top: 0, width: 50, height: 30 }), hintText: "Second" });
+            const secondTarget = second.target;
+            secondTarget.elem.dispatchEvent(new MouseEvent("mouseover", { bubbles: true, clientX: 70, clientY: 10 }));
+            first.hideHint();
+            const stays = !!window.lblHint;
+            second.hideHint();
+            const gone = (window.lblHint === null);
+            second.hideHint();
+            check("Tooltip: hideHint() removes only its own bubble", stays && gone, [stays, gone].join(" | "));
+            first.remove();
+            second.remove();
+            firstTarget.remove();
+            secondTarget.remove();
+        });
+
+        test("ToolBar: setTheme() paints a new package, the style of the page stays on it, its menu follows; setItems() makes new buttons", async function () {
+            const bar = ToolBar({
+                style: { button: { iconSize: 22 } },
+                items: [{ key: "bold", icon: "bold", hint: "Bold", toggle: 1, checked: 1 }, { key: "menu", text: "Menu", items: ["One"] }],
+            });
+            await wait(30);
+            const bold = toolButton(bar, "Bold");
+            const lightPressed = bold.style.backgroundColor;
+            const lightMenu = bar.menu;
+            const lightBar = bar.elem.style.backgroundColor;
+            mouseClick(toolButton(bar, "Menu"));
+            bar.setTheme("dark");
+            const closedByTheme = lightMenu.isRemoved == 1;
+            const dark = [bar.styleName, bar.menu.styleName, bar.style.button.iconSize, getComputedStyle(bar.elem).getPropertyValue("--tool-bar-icon").trim()].join();
+            const isPainted = (bar.elem.style.backgroundColor !== lightBar && bold.style.backgroundColor !== lightPressed);
+            mouseClick(toolButton(bar, "Menu"));
+            const menuOpens = bar.menu.isOpen() == 1;
+            bar.closeMenu();
+            bar.setTheme("light");
+            const lightBack = (bold.style.backgroundColor === lightPressed && bar.elem.style.backgroundColor === lightBar && bar.style.button.iconSize === 22);
+            const clicks = [];
+            bar.onClick = function (self, item) { clicks.push(item.key); };
+            bar.setItems([{ key: "new", icon: "new", hint: "New" }]);
+            const newOnes = [toolButton(bar, "Bold") === null, bar.getCheckedKeys().length].join();
+            mouseClick(toolButton(bar, "New"));
+            check("ToolBar: setTheme() paints a new package, the style of the page stays on it, its menu follows; setItems() makes new buttons",
+                closedByTheme && dark === "dark,dark,22,22px" && isPainted && menuOpens && lightBack && newOnes === "true,0" && clicks.join() === "new",
+                [closedByTheme, dark, isPainted, menuOpens, lightBack, newOnes, clicks.join()].join(" | "));
+            bar.remove();
+        });
+
+        test("ToolBar: an item can remove the bar (a click, a menu, a shortcut); remove() takes its menu and its keys", async function () {
+            const clicks = [];
+            const makeBar = function () {
+                const bar = ToolBar({
+                    items: [
+                        { key: "gone", icon: "save", hint: "Gone", shortcut: "Ctrl+S", onClick: function () { bar.remove(); } },
+                        { key: "menu", text: "Menu", items: [{ key: "inner", text: "Inner", onClick: function () { bar.remove(); } }] },
+                    ],
+                    onClick: function () { clicks.push("the bar was removed"); },
+                });
+                return bar;
+            };
+            const byClick = makeBar();
+            await wait(30);
+            mouseClick(toolButton(byClick, "Gone"));
+            const byMenu = makeBar();
+            await wait(30);
+            const menuOfBar = byMenu.menu;
+            mouseClick(toolButton(byMenu, "Menu"));
+            menuOfBar.clickItem(0);
+            const byKey = makeBar();
+            await wait(30);
+            key(document.body, "keydown", "s", { ctrlKey: true });
+            key(document.body, "keydown", "s", { ctrlKey: true });
+            const removed = [byClick.isRemoved, byMenu.isRemoved, menuOfBar.isRemoved, byKey.isRemoved].join();
+            const open = makeBar();
+            await wait(30);
+            const openMenu = open.menu;
+            mouseClick(toolButton(open, "Menu"));
+            open.remove();
+            open.remove();
+            check("ToolBar: an item can remove the bar (a click, a menu, a shortcut); remove() takes its menu and its keys",
+                removed === "1,1,1,1" && clicks.length === 0 && openMenu.isRemoved == 1,
+                [removed, clicks.length, openMenu.isRemoved].join(" | "));
+        });
+
+        test("ToolBar: every icon of ToolBar.ICONS is drawn at its size; its own SVG and an image file; an unknown name draws nothing", async function () {
+            const names = Object.keys(ToolBar.ICONS);
+            const items = names.map(function (name) { return { key: name, icon: name, hint: name }; });
+            items.push({ key: "own", icon: "<svg id='own-icon' viewBox='0 0 24 24'></svg>", hint: "Own" });
+            items.push({ key: "file", iconFile: 'a"b.png', hint: "File" });
+            const bar = ToolBar({ width: 1500, items: items });
+            await wait(30);
+            const badNames = names.filter(function (name) {
+                const icon = toolButton(bar, name).querySelector(".tool-bar-icon");
+                const rect = icon.getBoundingClientRect();
+                const drawing = icon.querySelector("svg path, svg circle, svg rect");
+                return !(drawing && rect.width === 18 && rect.height === 18);
+            });
+            const own = toolButton(bar, "Own").querySelector("#own-icon") !== null;
+            const image = toolButton(bar, "File").querySelector("img");
+            const warn = console.warn;
+            console.warn = function () {};
+            const unknown = ToolBar.getIconSvg("no such icon");
+            console.warn = warn;
+            check("ToolBar: every icon of ToolBar.ICONS is drawn at its size; its own SVG and an image file; an unknown name draws nothing",
+                badNames.length === 0 && own && image.getAttribute("src") === 'a"b.png' && unknown === "",
+                [badNames.join(), own, image.getAttribute("src"), unknown].join(" | "));
+            bar.remove();
+        });
 
         // *** GRID GROUP (comp/grid-group.js)
 

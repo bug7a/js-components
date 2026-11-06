@@ -133,15 +133,6 @@ const MenuBar = function (params = {}) {
         return (Array.isArray(menu.items) && menu.items.length > 0);
     };
 
-    // WHY a copy: setItemChecked() and setItemEnabled() write in the items, and the data of the page must not change
-    //      (two bars can be made from one list).
-    const copyItem = function (item) {
-        if (typeof item != "object" || item === null) return item;
-        const copy = Object.assign({}, item);
-        if (Array.isArray(item.items)) copy.items = item.items.map(copyItem);
-        return copy;
-    };
-
     // WHY: A ContextMenu makes its own copy of its items. Each copy knows the item of the bar, so a callback gets its
     //      present state. Its shortcut is the text to show, and it runs through runItem() alone.
     const toContextMenuItem = function (item) {
@@ -347,61 +338,19 @@ const MenuBar = function (params = {}) {
         paintTitles();
     };
 
-    // SHORTCUTS: the items of all the menus (their submenus too) that have one.
-
-    const forEachItem = function (items, func) {
-        (items || []).forEach(function (item) {
-            if (typeof item != "object" || item === null) return;
-            func(item);
-            forEachItem(item.items, func);
-        });
-    };
-
-    const isTextField = function (element) {
-        if (!element || !element.tagName) return false;
-        return (element.tagName === "INPUT" || element.tagName === "TEXTAREA" || element.isContentEditable);
-    };
-
-    // WHY the rects: a closed Dialog can stay in the page, hidden.
-    const isDialogOpen = function () {
-        return Array.from(document.querySelectorAll('[aria-modal="true"]')).some(function (element) {
-            return element.getClientRects().length > 0;
-        });
-    };
-
-    // WHY: In a text field these keys belong to the field (a menu may also have Copy and Paste).
-    const isKeyOfField = function (shortcut) {
-        return (!shortcut.ctrl || (MenuBar.FIELD_KEYS.indexOf(shortcut.key) >= 0 && !shortcut.alt));
-    };
-
-    // WHY: A text selected on the page (a line of a LogView) is copied by the browser, also with a Copy in a menu.
-    const isCopyOfSelection = function (shortcut) {
-        return (shortcut.ctrl && shortcut.key === "c" && !window.getSelection().isCollapsed);
-    };
-
     // The item (and its menu) that runs with this key. null: none.
     const findShortcutItem = function (event) {
-        const inTextField = isTextField(event.target);
-        let found = null;
-        box.menuList.forEach(function (entry) {
-            if (!isMenuEnabled(entry.menu)) return;
-            forEachItem(entry.menu.items, function (item) {
-                if (found || !item.shortcut) return;
-                const shortcut = MenuBar.parseShortcut(item.shortcut);
-                if (!MenuBar.isShortcutEvent(shortcut, event)) return;
-                if (inTextField && isKeyOfField(shortcut)) return;
-                if (isCopyOfSelection(shortcut)) return;
-                if (item.enabled !== undefined && !basic.isOn(item.enabled)) return;
-                found = { item: item, menu: entry.menu };
-            });
-        });
-        return found;
+        for (const entry of box.menuList) {
+            const item = (isMenuEnabled(entry.menu)) ? MenuBar.findShortcutItem(entry.menu.items, event) : null;
+            if (item) return { item: item, menu: entry.menu };
+        }
+        return null;
     };
 
     const onWindowKeyDown = function (self, event) {
         if (box.enabled != 1 || event.defaultPrevented) return;
         const found = findShortcutItem(event);
-        if (!found || isDialogOpen()) return;
+        if (!found || MenuBar.isDialogOpen()) return;
         event.preventDefault(); // WHY: Ctrl+S must not also open the save window of the browser.
         if (event.repeat) return; // WHY: A held key runs it once (a job that starts and stops many times).
         box.closeMenu();
@@ -412,7 +361,7 @@ const MenuBar = function (params = {}) {
     const findItem = function (key) {
         let found = null;
         box.menuList.forEach(function (entry) {
-            forEachItem(entry.menu.items, function (item) {
+            MenuBar.forEachItem(entry.menu.items, function (item) {
                 if (!found && item.key == key) found = { item: item, entry: entry };
             });
         });
@@ -429,7 +378,7 @@ const MenuBar = function (params = {}) {
     // *** PUBLIC FUNCTIONS:
 
     box.setMenus = function (menus) {
-        box.menus = (Array.isArray(menus)) ? menus.map(copyItem) : [];
+        box.menus = (Array.isArray(menus)) ? menus.map(MenuBar.copyItem) : [];
         createMenus();
     };
     // USAGE: bar.setMenus([{ text: "File", items: ["Open", "Save"] }])
@@ -543,6 +492,63 @@ MenuBar.isShortcutEvent = function (shortcut, event) {
     if (shortcut.ctrl != isCtrlDown || shortcut.shift != event.shiftKey || shortcut.alt != event.altKey) return false;
     const key = (event.key === " ") ? "space" : String(event.key).toLowerCase();
     return (key == shortcut.key);
+};
+
+// WHY a copy: setItemChecked() and setItemEnabled() write in the items, and the data of the page must not change
+//      (two bars can be made from one list).
+MenuBar.copyItem = function (item) {
+    if (typeof item != "object" || item === null) return item;
+    const copy = Object.assign({}, item);
+    if (Array.isArray(item.items)) copy.items = item.items.map(MenuBar.copyItem);
+    return copy;
+};
+
+// SHORTCUTS of a list of items: the items (their submenus too) that have one. (ToolBar uses them too.)
+
+MenuBar.forEachItem = function (items, func) {
+    (items || []).forEach(function (item) {
+        if (typeof item != "object" || item === null) return;
+        func(item);
+        MenuBar.forEachItem(item.items, func);
+    });
+};
+
+MenuBar.isTextField = function (element) {
+    if (!element || !element.tagName) return false;
+    return (element.tagName === "INPUT" || element.tagName === "TEXTAREA" || element.isContentEditable);
+};
+
+// WHY the rects: a closed Dialog can stay in the page, hidden.
+MenuBar.isDialogOpen = function () {
+    return Array.from(document.querySelectorAll('[aria-modal="true"]')).some(function (element) {
+        return element.getClientRects().length > 0;
+    });
+};
+
+// WHY: In a text field these keys belong to the field (a menu may also have Copy and Paste).
+MenuBar.isKeyOfField = function (shortcut) {
+    return (!shortcut.ctrl || (MenuBar.FIELD_KEYS.indexOf(shortcut.key) >= 0 && !shortcut.alt));
+};
+
+// WHY: A text selected on the page (a line of a LogView) is copied by the browser, also with a Copy in a menu.
+MenuBar.isCopyOfSelection = function (shortcut) {
+    return (shortcut.ctrl && shortcut.key === "c" && !window.getSelection().isCollapsed);
+};
+
+// The first item of a list that runs with this key. null: none.
+MenuBar.findShortcutItem = function (items, event) {
+    const inTextField = MenuBar.isTextField(event.target);
+    let found = null;
+    MenuBar.forEachItem(items, function (item) {
+        if (found || !item.shortcut) return;
+        const shortcut = MenuBar.parseShortcut(item.shortcut);
+        if (!MenuBar.isShortcutEvent(shortcut, event)) return;
+        if (inTextField && MenuBar.isKeyOfField(shortcut)) return;
+        if (MenuBar.isCopyOfSelection(shortcut)) return;
+        if (item.enabled !== undefined && !basic.isOn(item.enabled)) return;
+        found = item;
+    });
+    return found;
 };
 
 // The text to show in an item. On a Mac: "Ctrl+Shift+S" -> "⇧⌘S"

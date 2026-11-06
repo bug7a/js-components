@@ -103,6 +103,12 @@ CATALOG.COMPONENTS = [
         tr: "Pencerenin üstündeki menü çubuğu: Dosya, Düzenle, Görünüm. Kısayollar, onay işaretleri, alt menüler ve ok tuşları. Aydınlık ve karanlık tema.",
     },
     {
+        key: "tool-bar", name: "ToolBar", cat: "actions",
+        source: "comp/tool-bar.js", deps: ["comp/tooltip.js", "comp/context-menu.js", "comp/menu-bar.js"], samples: ["02-comp-examples/tool-bar.htm"],
+        en: "The row of small buttons of a window, under its menus: icons with a hint, lines between the groups, buttons that stay pressed, a button that opens a menu. What does not fit goes into a \"...\" menu. Shortcuts and the arrow keys. Light and dark themes.",
+        tr: "Pencerenin menülerinin altındaki küçük düğme satırı: ipuçlu ikonlar, gruplar arasında çizgiler, basılı kalan düğmeler, menü açan düğme. Sığmayanlar \"...\" menüsüne girer. Kısayollar ve ok tuşları. Aydınlık ve karanlık tema.",
+    },
+    {
         key: "filters", name: "Filters", cat: "selection",
         source: "comp/filters.js", samples: ["02-comp-examples/filters.htm"],
         en: "A filter menu: a button and a panel with a search field, groups of check boxes, the number of the selected options and Clear all. In the page or as a popup.",
