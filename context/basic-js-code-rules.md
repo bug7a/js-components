@@ -52,7 +52,7 @@ Bu kurallar `comp-m*`, sayfalar, şablonlar ve projeler (oyun, designer...) içi
 
 ## 5. Yorumlar NEDEN'i anlatır
 
-- Kod NE yaptığını zaten söyler. Yorum, koddan anlaşılmayanı yazar: `// WHY: ...`.
+- Kod NE yaptığını zaten söyler. Bir kod yorum gerektiriyorsa yorum şunu yazar: neden, hangi sorunu çözmek için yazıldı (`// WHY: ...`).
 - Bir kod parçası açıklama istiyorsa, önce sadeleştirilir ya da adı olan bir fonksiyona taşınır; yorum son çaredir.
 - Tarih, kişi ve olay hikâyesi kod yorumuna yazılmaz (`(the user, 2026-11-05)`, `it was blue`, `the old sample`): projenin dokümanına ve commit mesajına yazılır. Eski bir tarihli yorum örnek alınmaz; dokunuldukça temizlenir. Bir yönlendirme notu (`NEW PROJECTS: use ...`) kalır, ama tarihsiz. (Bugra, 2026-11-06)
 - Kullanım örneği (`// USAGE: tabs.setValue("open")`) setter'ın hemen altında, bir satır.
