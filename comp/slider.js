@@ -2,11 +2,22 @@
 
 /*
 
-Component Template - v25.06
+Slider - v26.11
 
 UI COMPONENT TEMPLATE
-- You can customize, this template code as you need:
+- A value from 0 to 100, chosen by dragging the thumb. The value bubble over the thumb shows the value while it is
+  dragged (showValueOnDrag) and for a while after setValue() (showValueOnSet).
+- Style packages (2026-11-06): "classic" (the default: inspired by Google Material 3: a thick track in two parts,
+  a thin line for the thumb, a dot at the end) and "round" (a thin track and a round white knob: the look of most
+  web and phone sliders; a ring in the track color while it is dragged). Select with styleName. (Slider.styles)
+  The colors and the height of the track stay params (trackColor, trackHeight...): a package fills the ones the
+  page does not give, so Slider({ styleName: "round", trackColor: "tomato" }) is a tomato round slider.
+- Needs basic.js v26.10.27 (a package of params).
 
+USAGE:
+const volume = Slider({ width: 280, currentValue: 70, onDragMove: function (value) { println(value); } });
+volume.setValue(40);
+Slider({ styleName: "round", width: "100%", currentValue: 30 });
 
 Started Date: June 2024
 Developer: Bugra Ozden
@@ -39,16 +50,54 @@ const SliderDefaults = {
     showValueOnSet: 1,
     showValueOnDrag: 1,
 
+    styleName: "classic", // "classic", "round" or a name added to Slider.styles
+    style: { // Classic style package (default): inspired by Material 3
+        thumb: { // The part that is dragged: a line (classic) or a knob (round)
+            areaWidth: 20, // px: the part that takes the mouse and the finger (the thumb is in its middle)
+            width: 4,
+            height: 0, // 0: as high as the slider
+            round: 2,
+            boxShadow: "", // "": none
+        },
+        dragging: { // The thumb while it is dragged ("": as it is)
+            width: 2, // the line gets thinner
+            trackSpace: 3, // the tracks come closer
+            ringSize: 0, // px: a ring in the track color around the thumb (0: none)
+            ringOpacity: 0.2,
+        },
+        track: {
+            space: 6, // px between the thumb and the tracks (negative: the tracks go under the thumb)
+            outerRound: 16, // the ends of the slider
+            innerRound: 4, // the ends at the thumb
+        },
+        trackDot: { // The dot at the end of the empty track (size 0: none)
+            size: 4,
+            right: 4,
+        },
+        value: { // The bubble of the value over the thumb
+            color: "rgba(0,0,0,0.9)",
+            textColor: "white",
+            fontSize: 14,
+            padding: [11, 9],
+            round: 16,
+            space: 6, // px between the bubble and the thumb
+        },
+    },
+
 };
 
 const Slider = function(params = {}) {
 
+    // Merge style package: params.style > Slider.styles[styleName] > SliderDefaults.style (classic)
+    basic.applyStylePackage(params, Slider.styles, SliderDefaults);
+
+    // Merge params:
+    mergeIntoIfMissing(params, SliderDefaults);
+
     // BOX: Component container
-    const box = startObject();
+    const box = startObject(params);
 
-    // Values are ready to use
-    box.props(SliderDefaults, params);
-
+    const _s = box.style;
     const thumbHeight = (box.minThumbHeight > box.trackHeight) ? box.minThumbHeight : box.trackHeight;
     box.height = thumbHeight;
     box.clipContent = 0;
@@ -65,14 +114,9 @@ const Slider = function(params = {}) {
     let dragScale = 1; // Screen px of one px of the slider, measured when a drag starts (getScreenScale)
     let cancelHideValue = null; // the timer of showValue() (box.after)
 
-    const TRACK_SPACE = 6; // Between the thumb line and the tracks
-    const DRAG_TRACK_SPACE = 3; // The same while dragging (the line is thinner)
-    const THUMB_LINE_WIDTH = 4;
-    const DRAG_THUMB_LINE_WIDTH = 2;
-    const VALUE_BUBBLE_SPACE = 6; // Between the value bubble and the thumb
     const VALUE_SHOW_DURATION = 1200; // ms: the value bubble is hidden after it (showValue)
 
-    let trackSpace = TRACK_SPACE;
+    let trackSpace = _s.track.space;
     let isFirstRun = 1;
 
     // *** PRIVATE FUNCTIONS:
@@ -110,6 +154,11 @@ const Slider = function(params = {}) {
         valueBox.opacity = 0;
     };
 
+    // WHY "- thumbLineBox.top": the space is over the thumb you see (a knob is lower than the top of its area).
+    const placeValueBubble = function() {
+        valueBox.aline(thumbBox, "top", _s.value.space - thumbLineBox.top, "center");
+    };
+
     const updateThumbPosition = function(newLeft, animated = 0) {
         const maxLeft = getMaxLeft();
         if (newLeft < 0 || !isFinite(newLeft)) newLeft = 0;
@@ -123,16 +172,39 @@ const Slider = function(params = {}) {
         if (maxLeft > 0) box.currentValue = Math.round(((newLeft / maxLeft) * valueRange) + minValue);
         if (animated == 0) valueBox.dontMotion();
         valueBox.text = box.currentValue;
-        valueBox.aline(thumbBox, "top", VALUE_BUBBLE_SPACE, "center");
+        placeValueBubble();
     };
 
-    // While dragging: a thinner thumb line, closer tracks and the value bubble (showValueOnDrag).
+    // The look of the thumb and of the tracks: style.thumb and style.track, or style.dragging while it is dragged.
+    const getThumbWidth = function($isDragging) {
+        if ($isDragging && _s.dragging.width !== "") return _s.dragging.width;
+        return _s.thumb.width;
+    };
+
+    const getTrackSpace = function($isDragging) {
+        if ($isDragging && _s.dragging.trackSpace !== "") return _s.dragging.trackSpace;
+        return _s.track.space;
+    };
+
+    // Its own shadow, and the ring in the track color while it is dragged ("": no shadow)
+    const getThumbShadow = function($isDragging) {
+        const shadows = [];
+        if (_s.thumb.boxShadow) shadows.push(_s.thumb.boxShadow);
+        if ($isDragging && _s.dragging.ringSize) {
+            const ringColor = Alpha(box.trackColor, _s.dragging.ringOpacity);
+            shadows.push("0 0 0 " + _s.dragging.ringSize + "px " + ringColor);
+        }
+        return shadows.join(", ");
+    };
+
+    // While dragging: the look of style.dragging (classic: a thinner thumb line, closer tracks) and the value bubble (showValueOnDrag).
     const setIsDragging = function($isDragging) {
         isDragging = $isDragging;
-        trackSpace = (isDragging) ? DRAG_TRACK_SPACE : TRACK_SPACE;
+        trackSpace = getTrackSpace(isDragging);
         // NOTE: withMotion() runs later: the callback reads the value of this call ($isDragging).
         thumbLineBox.withMotion(function(){
-            thumbLineBox.width = ($isDragging) ? DRAG_THUMB_LINE_WIDTH : THUMB_LINE_WIDTH;
+            thumbLineBox.width = getThumbWidth($isDragging);
+            thumbLineBox.boxShadow = getThumbShadow($isDragging);
             thumbLineBox.center("left");
             updateTrack(1);
             box.showValueClean();
@@ -194,11 +266,11 @@ const Slider = function(params = {}) {
         cancelHideValue = null;
     }
 
-    // Sets the minimum selectable value
+    // NOT DONE YET: the range is always 0 - 100 (a page maps its own range, Ex: ozden-panel createSlider).
     box.setMinValue = function(val) {
     };
 
-    // Sets the maximum selectable value
+    // NOT DONE YET: the range is always 0 - 100.
     box.setMaxValue = function(val) {
     };
 
@@ -233,10 +305,10 @@ const Slider = function(params = {}) {
             borderColor: "rgba(0, 0, 0, 0.4)",
         });
         that.css = {
-            borderTopRightRadius: "4px",
-            borderTopLeftRadius: "16px",
-            borderBottomRightRadius: "4px",
-            borderBottomLeftRadius: "16px",
+            borderTopRightRadius: _s.track.innerRound + "px",
+            borderTopLeftRadius: _s.track.outerRound + "px",
+            borderBottomRightRadius: _s.track.innerRound + "px",
+            borderBottomLeftRadius: _s.track.outerRound + "px",
         };
         that.setMotion("width 0.2s, opacity 0.2s");
         that.center("top");
@@ -250,10 +322,10 @@ const Slider = function(params = {}) {
             color: box.trackBackgroundColor,
         });
         that.css = {
-            borderTopRightRadius: "16px",
-            borderTopLeftRadius: "4px",
-            borderBottomRightRadius: "16px",
-            borderBottomLeftRadius: "4px",
+            borderTopRightRadius: _s.track.outerRound + "px",
+            borderTopLeftRadius: _s.track.innerRound + "px",
+            borderBottomRightRadius: _s.track.outerRound + "px",
+            borderBottomLeftRadius: _s.track.innerRound + "px",
         };
         that.setMotion("width 0.2s, opacity 0.2s");
         that.center("top");
@@ -261,50 +333,53 @@ const Slider = function(params = {}) {
         // BOX: Track dot
         const trackDot = Box({
             color: box.trackColor,
-            width: 4,
-            height: 4,
-            round: 4,
+            width: _s.trackDot.size,
+            height: _s.trackDot.size,
+            round: _s.trackDot.size,
         });
         emptyTrackBox.add(that);
         that.center("top");
-        that.right = 4;
+        that.right = _s.trackDot.right;
 
         // BOX: Thumb (the draggable part)
         const thumbBox = startBox({
-            width: 20,
+            width: _s.thumb.areaWidth,
             height: thumbHeight,
             top: 0,
             left: 0,
             color: "transparent",
             clickable: 1,
+            clipContent: 0, // WHY: the ring of a dragged knob (style.dragging.ringSize) is wider than the thumb
         });
         that.cursor = "pointer";
         that.setMotion("left 0.2s");
 
-            // BOX: Thumb line
+            // BOX: Thumb line (classic) or knob (round)
             const thumbLineBox = Box({
                 top: 0,
-                width: THUMB_LINE_WIDTH,
-                height: thumbHeight,
+                width: _s.thumb.width,
+                height: _s.thumb.height || thumbHeight,
                 color: box.thumbColor,
-                round: 2,
+                round: _s.thumb.round,
                 borderColor: "rgba(0, 0, 0, 0.4)",
+                boxShadow: getThumbShadow(false),
             });
-            that.setMotion("width 0.2s, left 0.2s");
+            that.setMotion("width 0.2s, left 0.2s, box-shadow 0.2s");
             that.center("left");
+            that.center("top");
 
         endBox();
 
         // LABEL: Value
         const valueBox = Label({
             text: "67",
-            color: "rgba(0,0,0,0.9)",
-            textColor: "white",
-            fontSize: 14,
-            padding: [11, 9],
-            round: 16,
+            color: _s.value.color,
+            textColor: _s.value.textColor,
+            fontSize: _s.value.fontSize,
+            padding: _s.value.padding,
+            round: _s.value.round,
         });
-        valueBox.aline(thumbBox, "top", VALUE_BUBBLE_SPACE, "center");
+        placeValueBubble();
         hideValueBubble();
         valueBox.setMotion("transform 0.2s, opacity 0.2s, left 0.2s");
 
@@ -385,5 +460,58 @@ const Slider = function(params = {}) {
     box.setValue(box.currentValue);
 
     return endObject(box);
+
+};
+
+// *** STYLE PACKAGES:
+// USAGE: Slider({ styleName: "round" })
+// USAGE: Slider({ styleName: "round", trackColor: "tomato" }) // The colors and the height of the track are params.
+// USAGE: Slider({ styleName: "round", style: { value: { color: "tomato" } } }) // Change only some keys.
+// NOTE: A new package needs only the keys that differ from the default (classic) style.
+// USAGE: Slider.styles.myStyle = { trackColor: "tomato", style: { trackDot: { size: 0 } } };
+Slider.styles = {
+
+    // Inspired by Google Material 3: a thick track in two parts with a space at the thumb, a thin line for the
+    // thumb (thinner while it is dragged), a dot at the end of the empty track.
+    classic: SliderDefaults.style,
+
+    // The look of most web and phone sliders (2026-11-06): a thin round track, a round white knob with a soft
+    // shadow, a ring in the track color while it is dragged, a small value bubble. A package of params: the colors
+    // and the height of the track are params, a page can give its own.
+    round: {
+        trackHeight: 6,
+        trackBackgroundColor: "rgba(0, 0, 0, 0.12)",
+        thumbColor: "white",
+        style: {
+            thumb: {
+                areaWidth: 24, // as wide as the knob: the knob goes to the ends of the track
+                width: 24,
+                height: 24,
+                round: 12,
+                boxShadow: "0 1px 3px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.04)",
+            },
+            dragging: {
+                width: "",
+                trackSpace: "",
+                ringSize: 6,
+                ringOpacity: 0.2,
+            },
+            track: {
+                space: -12, // the tracks meet under the middle of the knob
+                outerRound: 3,
+                innerRound: 3,
+            },
+            trackDot: {
+                size: 0,
+            },
+            value: {
+                color: "#232323",
+                fontSize: 13,
+                padding: [9, 5],
+                round: 8,
+                space: 10, // (over the ring of the drag)
+            },
+        },
+    },
 
 };

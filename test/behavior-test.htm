@@ -1199,6 +1199,19 @@
             check("Slider: on a zoomed page (page.fit) the thumb goes as far as the mouse", Math.abs(thumbMove - MOUSE_MOVE) < 2, "the mouse: " + MOUSE_MOVE + " px, the thumb: " + thumbMove + " px");
         });
 
+        test("Slider: the round package gives a knob; the page keeps its params and the packages do not change", async function () {
+            const round = Slider({ styleName: "round", style: { thumb: { width: 30, height: 30 } } });
+            const tomato = Slider({ styleName: "round", trackColor: "tomato" });
+            const classic = Slider({});
+            const knob = getSliderThumb(round).firstElementChild.getBoundingClientRect();
+            const line = getSliderThumb(classic).firstElementChild.getBoundingClientRect();
+            const row = [knob.width, knob.height, line.width, line.height, round.trackHeight, tomato.trackColor, classic.trackHeight, Slider.styles.round.style.thumb.width, Slider.styles.classic.thumb.width];
+            round.remove();
+            tomato.remove();
+            classic.remove();
+            check("Slider: the round package gives a knob; the page keeps its params and the packages do not change", row.join(" ") === "30 30 4 44 6 tomato 16 24 4", row.join(" "));
+        });
+
         // *** SIDE PANEL (comp/side-panel.js)
 
         test("SidePanel: with a zoomed page (page.fit) it is sized in the px of the page", async function () {
