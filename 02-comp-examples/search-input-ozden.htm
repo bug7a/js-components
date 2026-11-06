@@ -22,6 +22,7 @@
         // The look comes only from the package: the samples give no look params.
         // basic-designer:
         // http://127.0.0.1:5505/_basic-designer/index.htm?page=02-comp-examples/search-input-ozden.htm
+        // WHY a name for every SearchInput: it is the name of its layer in basic-designer.
 
         // *** VARIABLES:
         let lblSearched;
@@ -38,7 +39,7 @@
 
                     // SAMPLES: ozden
                     caption("ozden · empty");
-                    SearchInput({
+                    const searchEmpty = SearchInput({
                         styleName: "ozden",
                         onSearch: showSearched,
                     });
@@ -52,7 +53,7 @@
                     searchWithText.setText("fishing boat");
 
                     caption("ozden · wide (480)");
-                    SearchInput({
+                    const searchWide = SearchInput({
                         styleName: "ozden",
                         width: 480,
                         height: 40,
@@ -63,7 +64,7 @@
                     });
 
                     caption("ozden · animated: 1 (move the mouse over it, click, type, clear; the packages are still: animated 0)");
-                    SearchInput({
+                    const searchAnimated = SearchInput({
                         styleName: "ozden",
                         animated: 1,
                         placeholderText: "Search products",
@@ -84,7 +85,7 @@
                         searchDark.setText("fishing boat");
 
                         Label({ text: "ozdenDark · animated: 1", fontSize: 12, textColor: White(0.45) });
-                        SearchInput({
+                        const searchDarkAnimated = SearchInput({
                             styleName: "ozdenDark",
                             animated: 1,
                             placeholderText: "Search products",
@@ -95,7 +96,7 @@
 
                     // CLASSIC (to compare)
                     caption("classic · to compare");
-                    SearchInput({
+                    const searchClassic = SearchInput({
                         styleName: "classic",
                         onSearch: showSearched,
                     });

@@ -105,7 +105,7 @@
                     // SAMPLE 2: Pill (segmented control)
                     startCard("2. Pill variant", "A filled shape moves behind the active tab. fullWidth: 1 shares the width.");
 
-                        Tabs({
+                        const tabsPill = Tabs({
                             variant: "pill",
                             tabs: ["Day", "Week", "Month", "Year"],
                             value: "Week",
@@ -130,7 +130,7 @@
                     // SAMPLE 3: Closable tabs, add button, many tabs (scroll)
                     startCard("3. Document tabs (closable, addButton)", "Close with (x), Delete key or the middle mouse button. Too many tabs: arrows appear and the wheel scrolls.");
 
-                        Tabs({
+                        const tabsDocs = Tabs({
                             width: "100%",
                             closable: 1,
                             addButton: 1,
@@ -216,7 +216,7 @@
                     // SAMPLE 6: Modern style
                     startCard("6. Modern Style", "");
 
-                        Tabs({
+                        const tabsModern = Tabs({
                             styleName: "modern",
                             width: "100%",
                             tabs: [
@@ -239,7 +239,7 @@
                     // SAMPLE 7: Dark style
                     startCard("7. Dark Style", "", 1);
 
-                        Tabs({
+                        const tabsDark = Tabs({
                             styleName: "dark",
                             width: "100%",
                             tabs: [
