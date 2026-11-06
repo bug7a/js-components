@@ -405,7 +405,7 @@ Theme.fillTableWidth = function(table) {
 };
 
 // The Dialog of the panel: a card in the surface color; the main button is a SmartButton ozdenType1 with only its
-// color changed (the user, 2026-10-31): the same orange in every dialog and theme.
+// color changed: the same orange in every dialog and theme.
 const DIALOG_ACTION_COLOR = "#DE815B";
 const DIALOG_ACTION_HOVER_COLOR = "#D0724D"; // a little darker under the mouse
 

@@ -505,7 +505,7 @@
             const btn = SmartButton({
                 styleName: "ozdenType2",
                 width: params.width || "auto",
-                height: 40, // WHY: the height of the fields and the selects of the panel (the user, 2026-11-04; SmartButton: 44)
+                height: 40, // WHY: the height of the fields and the selects of the panel (SmartButton: 44)
                 labelText: text,
                 iconFile: (iconFile) ? ASSETS + iconFile : "",
                 onClick: onClick,
@@ -755,7 +755,7 @@
 
             startRow();
 
-                // WHY two charts (the user, 2026-11-06): °C and % on one chart needed two value axes. Where two scales meet
+                // WHY two charts: °C and % on one chart needed two value axes. Where two scales meet
                 //     is free, so that chart showed a relation that is not in the data.
                 chartTemperature = GraphBox({
                     height: 320, type: "line", theme: T.chartTheme,

@@ -294,7 +294,7 @@ const RolesPage = function(params = {}) {
                     styleName: "ozdenType4",
                     width: "100%",
                     height: "auto", // WHY: two lines (the name of the role and its counts)
-                    // WHY the bold name (the user, 2026-11-04): the new templates have a regular text; the name leads, its counts under it
+                    // WHY the bold name: the new templates have a regular text; the name leads, its counts under it
                     labelText: "<span style='font-family: opensans-bold'>" + escapeHtml(role.name) + "</span>" + tag + "<br><span style='font-size:12px; color:" + Ink(0.45) + "'>" + countsText + "</span>",
                     ariaLabel: role.name + ((role.isSystem) ? " (system)" : "") + ", " + countsText, // WHY: the label is HTML (it was read with its tags)
                     iconFile: "",
@@ -630,7 +630,7 @@ const RolesPage = function(params = {}) {
         const btn = SmartButton({
             styleName: "ozdenType2",
             width: params.width || "auto",
-            height: 40, // WHY: the height of the fields and the selects of the panel (the user, 2026-11-04; SmartButton: 44)
+            height: 40, // WHY: the height of the fields and the selects of the panel (SmartButton: 44)
             labelText: text,
             ariaLabel: params.ariaLabel || "", // "": the text is read
             iconFile: (iconFile) ? ASSETS + iconFile : "",

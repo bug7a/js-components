@@ -57,7 +57,7 @@ GOTCHAS (CLAUDE.md):
 WHEN THE NEW COMPONENT IS READY:
 - A sample page: 02-comp-mX-samples/<name>.htm (a scrolling Box, the cards of the other sample pages).
 - test/components-test.htm: add it to COMPONENTS ({ file, name, deps }) and open it (the tab title: ALL PASS).
-- No .min.js twin (2026-10-30): the pages load the source; a copy that leaves the repo gets its .min file
+- No .min.js twin: the pages load the source; a copy that leaves the repo gets its .min file
   from ./_make-standalone.sh (all in comp/components.min.js, or one file per component with --separate).
 - The catalog: index/catalog.js (and the <noscript> list of index.htm), and its line in CLAUDE.md.
 

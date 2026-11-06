@@ -517,7 +517,7 @@ const SettingsPage = function(params = {}) {
     const createButton = function(text, iconFile, onClick, params = {}) {
         const btn = SmartButton({
             styleName: "ozdenType2",
-            height: 40, // WHY: the height of the fields and the selects of the panel (the user, 2026-11-04; SmartButton: 44)
+            height: 40, // WHY: the height of the fields and the selects of the panel (SmartButton: 44)
             labelText: text,
             iconFile: (iconFile) ? ASSETS + iconFile : "",
             onClick: onClick,

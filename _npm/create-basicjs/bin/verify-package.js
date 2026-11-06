@@ -1,7 +1,7 @@
 "use strict";
 
 // npm runs this before it publishes. WHY: _npm/create-basicjs/ has only the tool: a package published from there has
-// no starter, and "npm create" fails for everybody (0.1.0, 2026-11-02).
+// no starter, and "npm create" fails for everybody (0.1.0).
 
 const fs = require("fs");
 const path = require("path");

@@ -35,7 +35,7 @@ Developer: Bugra Ozden
     Error.stackTraceLimit = 60; // WHY: A component inside a component inside the page goes deep.
 
     // WHY: designer.js too: a component made again by the designer must not point to the designer.
-    // WHY _?: the folder is _basic-designer since 2026-10-31 (basic-designer before); without it the frames of this
+    // WHY _?: the folder is _basic-designer (basic-designer before); without it the frames of this
     //     file were not skipped: every component was named "callerName" and its params were not found.
     const SKIP_FILES = /\/basic\/basic(\.min)?\.js$|\/_?basic-designer\/(runtime|designer)\.js$/;
     const TYPE_KEY = Symbol("basicDesignerType");

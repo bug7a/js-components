@@ -152,7 +152,7 @@
     };
 
     // What the screen shows of the keys the panel reads differently (lineHeight, padding): undo must bring it back.
-    // WHY: readProps() was the same before and after, so a Label left 0 px high passed (found 2026-11-02).
+    // WHY: readProps() was the same before and after, so a Label left 0 px high passed.
     const screenLook = function (o) {
         const box = W().getComputedStyle(o.elem);
         return [textOf(o).lineHeight, box.paddingTop, box.paddingLeft, o.elem.offsetHeight].join(" / ");

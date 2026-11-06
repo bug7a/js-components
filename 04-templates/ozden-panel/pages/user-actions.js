@@ -312,7 +312,7 @@ const UserActionsPage = function(params = {}) {
         const btnSignOut = SmartButton({
             styleName: "ozdenType2",
             width: "auto",
-            height: 40, // WHY: the height of the fields and the selects of the panel (the user, 2026-11-04; SmartButton: 44)
+            height: 40, // WHY: the height of the fields and the selects of the panel (SmartButton: 44)
             labelText: "Sign Out",
             iconFile: "",
             onClick: function() {

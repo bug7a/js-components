@@ -169,7 +169,7 @@
             if (!T.isDark && loginPage.title) loginPage.title.textColor = Black(0.35);
 
             // Add custom login buttons: their logos are drawn by LoginPage, the apple in the text color of its button
-            // (dark on the light theme, light on the dark one; the user, 2026-11-05)
+            // (dark on the light theme, light on the dark one)
             loginPage.createButtonWithIcon("Sign in with Google", LoginPage.GOOGLE_LOGO, onLoginWithGoogle);
             loginPage.createButtonWithIcon("Sign in with Apple", LoginPage.getAppleLogo(loginPage.style.customLoginButton.textColor), onLoginWithApple);
 

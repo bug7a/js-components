@@ -205,7 +205,7 @@ BasicDesigner.previewText = function (obj) {
     return (t.length > 28) ? t.slice(0, 27) + "…" : t;
 };
 
-// *** NAMES (2026-11-03, the user): an object added in the designer gets a name at once (btn12, box45: its kind and
+// *** NAMES: an object added in the designer gets a name at once (btn12, box45: its kind and
 // a number), so it has one even when the user gives none. A name can be changed in the panel (Name); the prompt asks
 // the AI to give the automatic ones a name that says what the object is.
 BasicDesigner.NAME_PREFIXES = { Box: "box", VGroup: "group", HGroup: "group", Label: "lbl", Button: "btn", Input: "inp", Icon: "icon" };
@@ -1196,8 +1196,8 @@ BasicDesigner.borderOf = function (obj) {
 // The values that go back as they were written, not as the panel reads them.
 // WHY: The panel reads what is on the screen, and writing that back is not the same thing:
 //      border: 0 with minimal, an inline 0px hid the border of basic.css when minimal was reverted too.
-//      lineHeight: 0 for "not set", an inline 0px made a Label 0 px high and hid its text (2026-11-02).
-//      padding: "6, 1" for the padding of a Button from the browser, a text its setter can not take (2026-11-02).
+//      lineHeight: 0 for "not set", an inline 0px made a Label 0 px high and hid its text.
+//      padding: "6, 1" for the padding of a Button from the browser, a text its setter can not take.
 BasicDesigner.RAW_VALUES = {
     border: { field: "_border", css: "borderWidth", elemOf: function (obj) { return obj.buttonElement || obj.inputElement || obj._textElem || obj.elem; } },
     padding: { field: "_padding", css: "padding", elemOf: function (obj) { return obj.elem; } },
@@ -1632,7 +1632,6 @@ BasicDesigner.sizeSection = function (p) {
     ];
     if (!p.isGroup) items.push([BasicDesigner.paddingItem(p.padding)]);
     // WHY mark: a line at the left of Size and Position: the eye finds them, Fill and border comes right after them
-    //      (the user, 2026-11-03)
     return { key: "size", title: "Size", mark: 1, items: items };
 };
 
@@ -1684,7 +1683,7 @@ BasicDesigner.parsePaddingText = function (typed) {
 // SIZE: width / height. A number (px), or a text: "100%", "calc(100% - 20px)", "auto", "50vw"...
 // The menu (⌄) has the usual ones. Short ways to write them (parseSizeText): "%100" -> 100%, "fill" -> 100%,
 // "a" / "hug" -> auto, "100%-20" / "%100 - 20" -> calc(100% - 20px). A text value is dragged from its size now.
-// NOTE: auto is hug (the user, 2026-10-27): hug: 1 of basic.js is the short way of giving it.
+// NOTE: auto is hug: hug: 1 of basic.js is the short way of giving it.
 BasicDesigner.SIZE_PRESETS = [
     { value: "auto", text: "auto (hug)" },
     { value: "100%", text: "fill (100%)" },
@@ -1742,8 +1741,8 @@ BasicDesigner.measuredSize = function (key) {
     return (key === "width") ? obj.elem.offsetWidth : obj.elem.offsetHeight;
 };
 
-// THE DISTANCE TO A SIDE (G-007, 2026-10-31): one field for an axis. Its prefix says the side (Left / Right, Top /
-// Bottom) and a click on it changes the side ("__side:right"); its menu gives a value (the user, 2026-11-03: only
+// THE DISTANCE TO A SIDE (G-007): one field for an axis. Its prefix says the side (Left / Right, Top /
+// Bottom) and a click on it changes the side ("__side:right"); its menu gives a value (only
 // these three); a text value like the sizes (100%, calc...).
 BasicDesigner.SIDE_NAMES = { left: "Left", right: "Right", top: "Top", bottom: "Bottom" };
 // WHY these widths: the switch and the field fill a full row (100 + the gap 8 + 108); "Bottom" fits the switch
@@ -1756,7 +1755,7 @@ BasicDesigner.SIDE_VALUE_PRESETS = [
 ];
 BasicDesigner.SIDE_PREFIX = "__side:";
 
-// A row of an axis (the user, 2026-11-03): a switch of its two sides (both are seen, the chosen one is marked) and the
+// A row of an axis: a switch of its two sides (both are seen, the chosen one is marked) and the
 // distance; the arrows of the field are dragged to change it. sides: ["left", "right"] or ["top", "bottom"]
 BasicDesigner.sideRow = function (axisKey, label, sides, side, value) {
     const switchItem = {
@@ -1872,7 +1871,7 @@ BasicDesigner.setPositioning = function (obj, mode) {
     BasicDesigner.changeSides(obj, function () { obj.position = "relative"; });
 };
 
-// SNAP TO THE PARENT (2026-11-01, the user): a side at 0, or the middle (50% minus half of the object's size, so it
+// SNAP TO THE PARENT: a side at 0, or the middle (50% minus half of the object's size, so it
 // stays in the middle while its size stays). It also chooses the side, which was hidden in the menu of the field.
 BasicDesigner.snapItem = function () {
     return { key: "__snap", type: "segmented", label: "Snap to the parent", span: 2, options: [
@@ -2260,7 +2259,7 @@ BasicDesigner.parseParam = function (text, old) {
     try { return JSON.parse(t); } catch (e) { return t; }
 };
 
-// THE PARAMETERS | BOX SWITCH of a component (G-004, 2026-10-31): a segmented item of the panel in the Box view, and
+// THE PARAMETERS | BOX SWITCH of a component (G-004): a segmented item of the panel in the Box view, and
 // the same look drawn by inspectSwitch in the Parameters view.
 BasicDesigner.INSPECT_OPTIONS = [{ value: "params", text: "Parameters" }, { value: "box", text: "Box" }];
 
@@ -2592,7 +2591,7 @@ BasicDesigner.paintPageRow = function () {
     if (!ui.pageRow) return;
     const icon = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="' + BasicDesigner.PAGE_ICON + '"/></svg>';
     const mark = (BasicDesigner.hasPageChanges()) ? '<span style="color:' + C.dim + '">•</span>' : "";
-    // (the name white, the icon keeps PAGE_COLOR: the user, 2026-10-28)
+    // (the name white, the icon keeps PAGE_COLOR)
     ui.pageRow.text = icon + "<span style=\"font-family:opensans-bold; color:" + C.text + "\">Page</span>" + mark;
     if (s.isPageSelected) ui.pageRow.color = C.selectedRow;
     else ui.pageRow.color = (ui.pageRow.isHover) ? C.hover : "transparent";
@@ -4178,7 +4177,7 @@ BasicDesigner.buildToolbox = function () {
 
 // *** COMPONENTS IN THE TOOLBOX: the components the page loads (comp/name.js with a "const XxxDefaults").
 
-// WHY comp/ and comp-xx/: the components are in one comp/ folder since 2026-10-31 (comp-m2/m3/m4 before; a copied
+// WHY comp/ and comp-xx/: the components are in one comp/ folder (comp-m2/m3/m4 before; a copied
 //     project may still have them): the old pattern found none of them and the menu of the toolbox was empty.
 BasicDesigner.COMPONENT_FILE = /\/comp(-[\w-]+)?\/[\w-]+\.js$/;
 
@@ -4280,10 +4279,10 @@ BasicDesigner.onComponentMenuKey = function (event) {
     }
 };
 
-// *** THE COMPONENTS PANEL (O-005, 2026-10-31): every component of the repository (index/catalog.js), the loaded ones
+// *** THE COMPONENTS PANEL (O-005): every component of the repository (index/catalog.js), the loaded ones
 // marked, a search; a switch loads a component into the canvas (and the files it needs) or takes it out. The page file
 // is not changed: the prompt asks for its <script> lines. A component can not be taken out while the page has objects
-// of it, or while a loaded component needs it (the user chose A).
+// of it, or while a loaded component needs it.
 
 BasicDesigner.catalog = null; // [{ name, source, deps, text }] read once
 
@@ -4655,7 +4654,7 @@ BasicDesigner.onToolboxKey = function (event) {
 };
 
 // THE TIP of a button (its name and what it does): comp/tooltip.js in the colors of the menus, with an arrow that
-// points at the button (the user, 2026-11-03). Over the button; under it when there is no room (the top bar).
+// points at the button. Over the button; under it when there is no room (the top bar).
 BasicDesigner.TIP_TEXT_WIDTH = 200; // The text of the tip wraps at this width.
 
 BasicDesigner.tipLook = function () {
@@ -4809,7 +4808,7 @@ BasicDesigner.buildTopBar = function () {
         ui.lblTopChanges = Label({ text: "", fontSize: 12, textColor: C.soft, css: { whiteSpace: "nowrap", marginRight: "6px" } });
         ui.lblTopChanges.shrink = 0;
 
-        // Send to AI (VS Code only), and Copy prompt at its right: send it, or copy it (the user, 2026-10-31).
+        // Send to AI (VS Code only), and Copy prompt at its right: send it, or copy it.
         if (BasicDesigner.isInVSCode) ui.btnTopSend = BasicDesigner.sendButton(false);
         ui.btnTopCopy = BasicDesigner.copyButton(false);
 
@@ -5053,7 +5052,7 @@ BasicDesigner.rememberPage = function (pagePath) {
     basic.storage.save(BasicDesigner.RECENT_KEY, list.slice(0, BasicDesigner.config.recentCount));
 };
 
-// *** PATHS THAT ARE NOT THERE ANY MORE (2026-11-03, the user: an old recent page "did not open"; a folder was moved):
+// *** PATHS THAT ARE NOT THERE ANY MORE (an old recent page "did not open"; a folder was moved):
 // they leave the recent pages and folders, and the saved session of a page goes with it. Only a sure answer
 // (404, ENOENT) removes a path: an error of the network or a server that does not list folders keeps it.
 
@@ -5219,7 +5218,7 @@ BasicDesigner.closePageMenu = function () {
 
 // The list under the field, with the typed text in them: "Recent pages", the pages of the selected folder (its
 // name as the title; "Open Folder…" when there is none), then "Recent folders" (a click selects one) at the bottom
-// (the user, 2026-11-03). The paths that are not there any more are removed the first time (forgetMissingPaths).
+// The paths that are not there any more are removed the first time (forgetMissingPaths).
 BasicDesigner.openPageMenu = function (filter) {
     BasicDesigner.forgetMissingPaths().then(function (isChanged) {
         if (isChanged && BasicDesigner.ui.pageMenu) BasicDesigner.openPageMenu(filter);
@@ -6659,7 +6658,7 @@ BasicDesigner.setMode = function (mode) {
         if (BasicDesigner.state.rt) BasicDesigner.refreshLayers();
     } else {
         BasicDesigner.setHover(null);
-        // WHY (G-006, 2026-10-31): the frame and the name of the selected object stayed over the page while playing with it
+        // WHY (G-006): the frame and the name of the selected object stayed over the page while playing with it
         if (s.selected || s.isPageSelected) BasicDesigner.select(null, "mode");
     }
 };
@@ -8031,7 +8030,7 @@ BasicDesigner.build = function () {
     startBox(0, cfg.topHeight, cfg.leftWidth, "calc(100% - " + cfg.topHeight + "px)", { color: C.bar });
         that.elem.style.borderRight = "1px solid " + C.line;
 
-        // GROUP: Header of the layers in one line (G-005, 2026-10-31): the title, the number of objects, the search,
+        // GROUP: Header of the layers in one line (G-005): the title, the number of objects, the search,
         // collapse / expand
         const layersHeader = HGroup(12, 4, cfg.leftWidth - 18, 28, { align: "left center", gap: 6, color: "transparent" });
             Label({ text: "Layers", fontSize: 12, textColor: C.text, fontFamily: "opensans-bold" });
@@ -8070,7 +8069,7 @@ BasicDesigner.build = function () {
             ariaLabel: "Layers",
             style: BasicDesigner.treeStyle(),
             onSelect: function (self, node) { BasicDesigner.select(BasicDesigner.objectOfKey(node.key), "tree"); },
-            // A double click: its name, in place (the user, 2026-11-03). Enter: the code.
+            // A double click: its name, in place. Enter: the code.
             onActivate: function (self, node, event) {
                 const obj = BasicDesigner.objectOfKey(node.key);
                 if (!obj) return;
@@ -8190,7 +8189,7 @@ BasicDesigner.build = function () {
         // GROUP: Parameters | Box (as at the top of the Box view)
         BasicDesigner.inspectSwitch(16, cfg.topHeight + 12, cfg.rightWidth - 32);
 
-        // GROUP: Name (the same name as the Name of the Box view; 2026-11-03, the user)
+        // GROUP: Name (the same name as the Name of the Box view)
         HGroup(16, cfg.topHeight + 48, cfg.rightWidth - 32, 26, { align: "left center", gap: 8, color: "transparent" });
             Label({ text: "Name", fontSize: 11, textColor: C.soft });
             ui.paramsName = Input({ height: 26, fontSize: 12, color: C.field, textColor: C.text, border: 0, round: 5, placeholder: "No name in the code" });

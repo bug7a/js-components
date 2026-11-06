@@ -25,7 +25,7 @@ const ModulePage = function(params = {}) {
     box.container.add(box);
     box.container.page = box;
 
-        // BOX: The page of the module in an iframe (comp-m4 WebView; the comp-m1 UIWebView until 2026-10-30)
+        // BOX: The page of the module in an iframe (WebView)
         // WHY no surface, edge, round and loading cover: the module fills the view; a white cover flashed on the
         //     dark themes (UIWebView had none of them)
         box.htmPage = WebView({

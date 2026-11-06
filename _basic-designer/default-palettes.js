@@ -1,13 +1,13 @@
 /* Bismillah */
 
 // DEFAULT PALETTES: the color groups that are always in the color picker of basic-designer (after "Used on this
-// page", the UI tokens and your own color groups). Made from the palettes of Bugra (the user, 2026-10-27).
+// page", the UI tokens and your own color groups). Made from the palettes of Bugra.
 // A color: [value, name]. The name is the hint of the swatch ("" -> only the value).
 // The order of a group is light to dark or by hue, so a color is found by its place.
 
 BasicDesigner.DEFAULT_PALETTES = [
 
-    // The colors used the most in the projects: the first place to look (the user, 2026-11-05: the tones of
+    // The colors used the most in the projects: the first place to look (the tones of
     // SmartButton, its dark tones, whitesmoke, the checked color of CheckBox and the other colors of the kit; the
     // favorites before that went to the groups below).
     { key: "favorites", name: "★ Favorites", colors: [
@@ -46,7 +46,7 @@ BasicDesigner.DEFAULT_PALETTES = [
         ["indianred", "error (indianred)"],
     ] },
 
-    // Plain names (the user, 2026-11-05, from a picture of a palette): six grays, then the colors by hue. Its colors
+    // Plain names (from a picture of a palette): six grays, then the colors by hue. Its colors
     // are the ones of "Bright (flat UI)" (the picture showed them 3-7 values darker: its color profile); the grays
     // are read from the picture.
     { key: "general", name: "General (Gray 1 → Purple 2)", colors: [
@@ -69,7 +69,7 @@ BasicDesigner.DEFAULT_PALETTES = [
         ["#AF73D6", "Purple 2"],
     ] },
 
-    // Earth colors and slate blues (the user, 2026-11-05, from a picture of six color sets): grays, reds and browns,
+    // Earth colors and slate blues (from a picture of six color sets): grays, reds and browns,
     // yellows and creams, greens, blues. The colors that were nearly the same (the creams of every set) are one here.
     // Read from the picture: a value may be a few points off the color it was made with.
     { key: "earth", name: "Earth & slate (sets)", colors: [

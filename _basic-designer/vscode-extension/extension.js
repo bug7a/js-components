@@ -2,7 +2,7 @@
 
 /*
 
-basic designer - VS Code extension - v0.0.1 (prototype, 2026-10-26)
+basic designer - VS Code extension - v0.0.1 (prototype)
 
 - Explorer > right click an .htm / .html file > "Open in basic designer": the page opens in basic designer
   (_basic-designer) in a webview. A small server (lib/server.js) gives the repository from 127.0.0.1,
@@ -113,7 +113,7 @@ const design = async function (uri) {
     await placeDesigner();
 };
 
-// WHERE THE DESIGNER OPENS (2026-11-01, the user: a tab among the code files was not handy).
+// WHERE THE DESIGNER OPENS (a tab among the code files was not handy).
 // "newWindow": its own window (VS Code 1.85+), "maximized": the editor area without the side bars, "tab": a tab.
 const placeDesigner = async function () {
     const openIn = settings().get("openIn");
