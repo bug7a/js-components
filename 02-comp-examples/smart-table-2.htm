@@ -20,8 +20,9 @@
     <script>
 
         let newId = null;
+        let smartTable1;
 
-        let titleDataList = [
+        const titleDataList = [
             { name: "ID", dataTitle: "id", dataType: "integer", width: 100, shortable: 1 },
             { name: "NAME", dataTitle: "name", dataType: "string", width: 180, shortable: 1 },
             { name: "EMAIL", dataTitle: "email", dataType: "string", width: 290, shortable: 0 },
@@ -53,21 +54,7 @@
 
         const itemDataListCopy = [...itemDataList];
 
-        const MyButton = function (text) {
-
-            const btn = Button({
-                text: text,
-                width: 280,
-                padding: [12, 0],
-                color: "lightgray",
-                minimal: 1,
-            });
-
-            return btn;
-
-        };
-
-        window.onload = function () {
+        const start = function () {
 
             page.color = "white";
             newId = findNextAvailableID();
@@ -78,12 +65,12 @@
                 gap: 4,
             });
 
-            createAllButtons();
+                createAllButtons();
 
             endGroup();
 
             // Smart Data Table
-            window.smartTable1 = SmartTable({
+            smartTable1 = SmartTable({
                 top: 0,
                 titleDataList: titleDataList,
                 style: { width: "50%", height: "100%" },
@@ -91,79 +78,75 @@
             smartTable1.right = smartTable1.getVerticalScrollWidth() + 2;
             smartTable1.setItemDataList(itemDataList);
             smartTable1.onSelect = function (data) {
-
                 console.log(data);
+            };
 
-            }
-
-            // Hybrid useage with HTML pages:
+            // Hybrid usage with HTML pages:
             // document.getElementById("element-id").appendChild(smartTable1.elem);
 
         };
 
+        const createButton = function (text, onClick) {
+            const btn = Button({
+                text: text,
+                width: 280,
+                padding: [12, 0],
+                color: "lightgray",
+                minimal: 1,
+            });
+            btn.on("click", onClick);
+        };
+
         const createAllButtons = function () {
 
-            // Clean Data Table
-            MyButton("Clear All");
-            that.on("click", function () {
+            createButton("Clear All", function () {
                 itemDataList = [];
                 smartTable1.setItemDataList([]);
             });
 
-            // Insert New Line
-            MyButton("Insert New Row");
-            that.on("click", function () {
-                itemDataList.push({ id: newId, name: "User " + newId, desc: "desc", email: "user" + newId + "@test.com", active: newId % 2 });
+            createButton("Insert New Row", function () {
+                itemDataList.push({
+                    id: newId,
+                    name: "User " + newId,
+                    desc: "desc",
+                    email: "user" + newId + "@test.com",
+                    active: newId % 2,
+                });
                 newId++;
                 smartTable1.setItemDataList(itemDataList);
             });
 
-            // Delete Last Row
-            MyButton("Delete Last Row");
-            that.on("click", function () {
+            createButton("Delete Last Row", function () {
                 if (itemDataList.length > 0) {
                     itemDataList.pop();
                     smartTable1.setItemDataList(itemDataList);
                 }
             });
 
-            // Restore Original Data
-            MyButton("Restore Original Data");
-            that.on("click", function () {
+            createButton("Restore Original Data", function () {
                 itemDataList = [...itemDataListCopy];
-                //newId = findNextAvailableID();
                 smartTable1.setItemDataList(itemDataList);
             });
 
-            // Load 1M Test Data
-            MyButton("Load 1M Test Data");
-            that.on("click", function () {
+            createButton("Load 1M Test Data", function () {
                 smartTable1.generateTestData();
                 smartTable1.filterAndSortData();
             });
 
-            // Scroll To Top
-            MyButton("Scroll To Top");
-            that.on("click", function () {
+            createButton("Scroll To Top", function () {
                 smartTable1.setScrollToTop();
                 smartTable1.refreshData();
             });
 
-            // Widen EMAIL Column
-            MyButton("Widen EMAIL Column");
-            that.on("click", function () {
+            createButton("Widen EMAIL Column", function () {
                 smartTable1.setTitleCellWidth(2, 400);
             });
 
-            // Toggle Row Highlight
-            MyButton("Toggle Row Highlight");
-            that.on("click", function () {
+            createButton("Toggle Row Highlight", function () {
                 smartTable1.highlightLine = !smartTable1.highlightLine;
             });
 
-            // Toggle Column Highlight
-            MyButton("Toggle Column Highlight");
-            that.on("click", function () {
+            createButton("Toggle Column Highlight", function () {
                 smartTable1.highlightTitle = !smartTable1.highlightTitle;
             });
 

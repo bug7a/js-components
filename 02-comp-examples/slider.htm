@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        
+
         <title>Slider JS Component</title>
-        
+
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -18,10 +18,7 @@
 
         <script>
 
-        let sliderA, sliderB;
-        
-        // First running function.
-        window.onload = function() {
+        const start = function () {
 
             page.color = "lightgray";
 
@@ -36,7 +33,7 @@
                 createSliderTitle("Carrots", "../assets/fruids/havuc.png");
 
                 // SLIDER: A
-                sliderA = Slider({
+                const sliderA = Slider({
                     currentValue: random(0,100),
                 });
 
@@ -50,29 +47,13 @@
                 createSliderTitle("Blueberries", "../assets/fruids/yabanmersini.png");
 
                 // SLIDER: B
-                sliderB = Slider({
+                const sliderB = Slider({
                     trackHeight: 44,
                     trackColor: "indianred",
                     currentValue: random(0,100),
-
                 });
 
             endAutoLayout();
-
-            /*
-            // Performance test
-            startBox(0, 0, "100%", "100%");
-            that.color = "transparent";
-            that.scrollY = 1;
-                for(var i = 0; i < 300; i++) {
-                    Slider({
-                        left: 20,
-                        top: 20 + (i * 50),
-                        currentValue: random(0,100),
-                    });
-                }
-            endBox();
-            */
 
             // GROUP: Top left buttons
             AutoLayout({
@@ -82,38 +63,12 @@
                 padding: [20, 20],
             });
 
-                const labelStyle = function(lbl) {
-                    lbl.padding = [12,4];
-                    //lbl.color = "lightgray",
-                    lbl.color = "white",
-                    //lbl.border = 1,
-                    lbl.border = 0,
-                    lbl.borderColor = "rgba(0,0,0,0.1)";
-                    lbl.round = 8;
-                    lbl.fontSize = 14;
-                    lbl.elem.style.cursor = "pointer";
-                };
-
-                const labelClickEffect = function(lbl) {
-                    // You can add
-                };
-
-                // BUTTON: Set Random Value
-                Label({
-                    text: "Set Random Values",
-                });
-                labelStyle(that);
-                that.on("click", function() {
+                createPageButton("Set Random Values", function () {
                     sliderA.setValue(random(0,100));
                     sliderB.setValue(random(0,100));
                 });
 
-                // BUTTON: Show Value
-                Label({
-                    text: "Show Values",
-                });
-                labelStyle(that);
-                that.on("click", function() {
+                createPageButton("Show Values", function () {
                     sliderA.showValue();
                     sliderB.showValue();
                 });
@@ -142,9 +97,24 @@
 
         };
 
-        const createSliderTitle = function(titleText, iconPath) {
+        // A label that works as a button
+        const createPageButton = function (text, onClick) {
+            const button = Label({
+                text: text,
+                padding: [12, 4],
+                color: "white",
+                border: 0,
+                borderColor: "rgba(0,0,0,0.1)",
+                round: 8,
+                fontSize: 14,
+                cursor: "pointer",
+            });
+            button.on("click", onClick);
+        };
 
-            // SLIDER A TITLE:
+        const createSliderTitle = function (titleText, iconPath) {
+
+            // GROUP: An icon and a title
             AutoLayout({
                 flow: "horizontal",
                 align: "left center",
@@ -172,8 +142,8 @@
 
     </head>
     <body>
-        
+
         <!-- HTML content -->
-        
+
     </body>
 </html>

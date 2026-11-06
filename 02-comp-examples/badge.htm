@@ -15,11 +15,7 @@
 
     <script>
 
-        // VARIABLES            
-        let box1, box2, badge1;
-
-        // First running function.
-        window.onload = function () {
+        const start = function () {
 
             page.color = "#f5f5f5";
 
@@ -27,35 +23,33 @@
                 gap: 10,
             });
 
-            box1 = Box(0, 0, 100, 100, {
-                color: "lightgray",
-                round: 5,
-            });
+                const box1 = Box(0, 0, 100, 100, {
+                    color: "lightgray",
+                    round: 5,
+                });
 
-            // Badge with number
-            badge1 = Badge({
-                value: 1,
-                maxValue: 99,
-            });
-            box1.add(that);
+                // Badge with number
+                const badge1 = Badge({
+                    value: 1,
+                    maxValue: 99,
+                });
+                box1.add(badge1);
 
-            box2 = Box(0, 0, 100, 100, {
-                color: "lightgray",
-                round: 5,
-            });
+                const box2 = Box(0, 0, 100, 100, {
+                    color: "lightgray",
+                    round: 5,
+                });
 
-            // Badge with number
-            Badge({
-                value: 999,
-                maxValue: 9,
-            });
-            box2.add(that);
+                // Badge with number
+                const badge2 = Badge({
+                    value: 999,
+                    maxValue: 9,
+                });
+                box2.add(badge2);
 
             endAutoLayout();
 
-            //badge1.setValue(0); // hidden
-            //badge1.setValue(1); // dot
-            //badge1.setValue(10); // number
+            // badge.setValue(0): hidden, setValue(1): a dot, setValue(10): a number
 
         };
     </script>

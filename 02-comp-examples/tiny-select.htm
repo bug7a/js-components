@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        
+
         <title>Tiny Select</title>
-        
+
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
 
@@ -16,13 +16,10 @@
 
         <script type="text/javascript">
 
-        let tinySelectA;
-        let tinySelectB;
-        
-        window.onload = function() {
+        const start = function () {
 
             // TINY SELECT: Minimal select text
-            tinySelectA = TinySelect({
+            const tinySelectA = TinySelect({
                 left: 40,
                 top: 40,
                 title: "Theme",
@@ -35,12 +32,10 @@
                 ],
                 selectedIndex: 2,
             });
-            that.onSelect = function(index, id, label, title) {
-                console.log(`${title}: ${label} (${id})`);
-            };
+            tinySelectA.onSelect = showSelected;
 
             // TINY SELECT:
-            tinySelectB = TinySelect({
+            const tinySelectB = TinySelect({
                 title: "Language",
                 label: "",
                 list: [
@@ -51,35 +46,25 @@
                 ],
                 selectedIndex: 3,
             });
-            that.onSelect = function(index, id, label, title) {
-                console.log(`${title}: ${label} (${id})`);
-            };
+            tinySelectB.onSelect = showSelected;
 
             // Put second object bottom of the previous object.
-            that.aline(prevThat, "bottom", 4, "left");
+            tinySelectB.aline(tinySelectA, "bottom", 4, "left");
 
-            // OTHER Methods
-            /*
-            tinySelectA.setList([
-                    { id: "1", label: "English" },
-                    { id: "2", label: "Spanish" },
-                    { id: "3", label: "French" },
-                    { id: "4", label: "Turkish" },
-                ], 1);
-            tinySelectA.setSelectedIndex(2);
-            tinySelectA.setTitle("Diffrent");
-            tinySelectA.setDisabled(1);
-            tinySelectA.setColor("whitesmoke");
-            */
+            // Other functions: setList(list, selectedIndex), setSelectedIndex(), setTitle(), setDisabled(), setColor()
 
+        };
+
+        const showSelected = function (index, id, label, title) {
+            console.log(`${title}: ${label} (${id})`);
         };
 
         </script>
 
     </head>
     <body>
-        
+
         <!-- HTML content -->
-        
+
     </body>
 </html>

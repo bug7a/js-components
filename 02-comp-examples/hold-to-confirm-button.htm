@@ -15,124 +15,124 @@
 
     <script>
 
+        const ASSETS_PATH = "../comp/hold-to-confirm-button/";
+
         const UI_STATES = {
             SHOW_FRUID: "show-fruid",
             DELETE_FRUID: "delete-fruid",
-            DISABLE_DELETE: "disable-delete-button"
+            DISABLE_DELETE: "disable-delete-button",
         };
 
-        window.onload = function () {
+        // *** VARIABLES:
+        let icoFruid, btnConfirm, btnShow;
+
+        const start = function () {
 
             page.color = "whitesmoke";
 
-            // Icon container
+            // GROUP: Icon
             HGroup({
                 height: "50%",
             });
 
-            // Icon
-            window.icoFruid = Icon({
-                width: 80,
-                height: 80,
-            });
-            that.load("../assets/fruids/yabanmersini.png");
-            that.setMotion("opacity 0.2s");
+                icoFruid = Icon({
+                    width: 80,
+                    height: 80,
+                });
+                icoFruid.load("../assets/fruids/yabanmersini.png");
+                icoFruid.setMotion("opacity 0.2s");
 
             endGroup();
 
-            // Buttons container
+            // GROUP: Buttons
             HGroup({
                 gap: 8,
             });
 
-            const _assetsPath = "../comp/hold-to-confirm-button/";
+                // Confirm Button
+                btnConfirm = HoldToConfirmButton({
+                    width: "auto",
+                    labelText: "Hold to Delete",
+                    completedText: "DELETED",
+                    iconFile: ASSETS_PATH + "trash.png",
+                    holdingIconFile: ASSETS_PATH + "trash-red.png",
+                    style: {
+                        layout: { gap: 4, padding: [18, 5] },
+                        label: { fontSize: 20, textColor: Black(0.65) },
+                        box: { color: "white", border: 1, borderColor: Black(0.3), round: 8 },
+                        holdingBox: { color: "#FFD1CB" },
+                    },
+                });
 
-            // Confirm Button
-            window.btnConfirm = HoldToConfirmButton({
-                width: "auto",
-                labelText: "Hold to Delete",
-                completedText: "DELETED",
-                iconFile: _assetsPath + "trash.png",
-                holdingIconFile: _assetsPath + "trash-red.png",
-                style: {
-                    layout: { gap: 4, padding: [18, 5], },
-                    label: { fontSize: 20, textColor: Black(0.65), },
-                    box: { color: "white", border: 1, borderColor: Black(0.3), round: 8, },
-                    holdingBox: { color: "#FFD1CB", },
-                }
-            });
+                btnConfirm.onConfirm = function (self) {
+                    console.log("Button held!");
+                    refreshView(UI_STATES.DELETE_FRUID);
+                };
 
-            btnConfirm.onConfirm = function (self) {
-                console.log("Button held!");
-                refreshView(UI_STATES.DELETE_FRUID);
-            };
+                btnConfirm.onReset = function (self) {
+                    refreshView(UI_STATES.DISABLE_DELETE);
+                };
 
-            btnConfirm.onReset = function (self) {
-                refreshView(UI_STATES.DISABLE_DELETE);
-            };
+                // Show Button
+                btnShow = Button({
+                    text: "Show",
+                    color: "white",
+                    minimal: 1,
+                    round: 8,
+                    border: 1,
+                });
 
-            // Show Button
-            window.btnShow = Button({
-                text: "Show",
-                color: "white",
-                minimal: 1,
-                round: 8,
-                border: 1,
-            });
-
-            btnShow.on("click", function () {
-                refreshView(UI_STATES.SHOW_FRUID);
-            });
-            //that.elem.style.fontFamily = "opensans-bold";
+                btnShow.on("click", function () {
+                    refreshView(UI_STATES.SHOW_FRUID);
+                });
 
             endGroup();
 
-            // FUNCTIONS:
+            refreshView(UI_STATES.SHOW_FRUID);
 
-            const refreshView = function (state) {
+        };
 
-                switch (state) {
+        // *** OTHER FUNCTIONS:
 
-                    case UI_STATES.SHOW_FRUID:
+        const refreshView = function (state) {
 
-                        // show icon
-                        icoFruid.opacity = 1;
+            switch (state) {
 
-                        // delete button usable
-                        btnConfirm.opacity = 1;
-                        btnConfirm.clickable = 1;
+                case UI_STATES.SHOW_FRUID:
 
-                        // show button disabled
-                        btnShow.opacity = 0.5;
-                        btnShow.clickable = 0;
+                    // show icon
+                    icoFruid.opacity = 1;
 
-                        break;
+                    // delete button usable
+                    btnConfirm.opacity = 1;
+                    btnConfirm.clickable = 1;
 
-                    case UI_STATES.DELETE_FRUID:
+                    // show button disabled
+                    btnShow.opacity = 0.5;
+                    btnShow.clickable = 0;
 
-                        // show icon
-                        icoFruid.opacity = 0;
+                    break;
 
-                        break;
+                case UI_STATES.DELETE_FRUID:
 
-                    case UI_STATES.DISABLE_DELETE:
+                    // hide icon
+                    icoFruid.opacity = 0;
 
-                        // delete button disabled
-                        btnConfirm.opacity = 0.5;
-                        btnConfirm.clickable = 0;
+                    break;
 
-                        // show button usable
-                        btnShow.opacity = 1;
-                        btnShow.clickable = 1;
+                case UI_STATES.DISABLE_DELETE:
 
-                        break;
+                    // delete button disabled
+                    btnConfirm.opacity = 0.5;
+                    btnConfirm.clickable = 0;
 
-                }
-            };
+                    // show button usable
+                    btnShow.opacity = 1;
+                    btnShow.clickable = 1;
 
-            // INIT CODE:
+                    break;
 
-            refreshView("show-fruid");
+            }
 
         };
     </script>
