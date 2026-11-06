@@ -22,7 +22,7 @@
         // *** VARIABLES:
         let isDark = 0;
         let lblTitle, lblPosition, lblUndo, lblCopyCount;
-        let cardList = [];
+        const cardList = [];
         let fileCount = 3;
         let copyCount = 0;
 
@@ -47,18 +47,21 @@
                     padding: 40,
                 });
 
-                    lblTitle = Label({ text: "Toast", fontSize: 26, textColor: "#1B1B1A" });
-                    that.elem.style.fontFamily = "opensans-bold";
+                    lblTitle = Label({ text: "Toast", fontSize: 26, fontFamily: "opensans-bold", textColor: "#1B1B1A" });
 
                     // SAMPLE 1: Types
                     startCard("1. Types (success, error, warning, info, loading)");
 
                         startButtonRow();
                             smallButton("Success", function () { Toast.success("Changes are saved."); });
-                            smallButton("Error", function () { Toast.error("Could not connect to the server. Check your internet connection.", { title: "Connection error" }); });
+                            smallButton("Error", function () {
+                                Toast.error("Could not connect to the server. Check your internet connection.", { title: "Connection error" });
+                            });
                             smallButton("Warning", function () { Toast.warning("Only 2 products are left in stock."); });
                             smallButton("Info", function () { Toast.info("A new version is available."); });
-                            smallButton("Loading (stays)", function () { Toast.show({ type: "loading", message: "Waiting for the server..." }); });
+                            smallButton("Loading (stays)", function () {
+                                Toast.show({ type: "loading", message: "Waiting for the server..." });
+                            });
                         endGroup();
 
                         infoLabel("Move the mouse on a toast: the time stops. The error toast stays longer (7 s).");
@@ -72,7 +75,10 @@
 
                         startButtonRow();
                             smallButton("Delete a file", function () {
-                                if (fileCount == 0) return Toast.warning("There are no files to delete.");
+                                if (fileCount == 0) {
+                                    Toast.warning("There are no files to delete.");
+                                    return;
+                                }
                                 fileCount--;
                                 lblUndo.text = "Files: <b>" + fileCount + "</b>";
                                 Toast.show({
@@ -136,7 +142,8 @@
                         startButtonRow();
                             smallButton("Copy link", function () {
                                 copyCount++;
-                                Toast.show({ key: "copy", type: "success", message: "Link is copied." + ((copyCount > 1) ? " (" + copyCount + " times)" : "") });
+                                const countText = (copyCount > 1) ? " (" + copyCount + " times)" : "";
+                                Toast.show({ key: "copy", type: "success", message: "Link is copied." + countText });
                             });
                             smallButton("Without key", function () {
                                 Toast.success("Link is copied.");
@@ -167,7 +174,9 @@
                                 Toast.info("Theme: " + ((isDark) ? "dark" : "light"));
                             });
                             smallButton("Show 8 (max 5)", function () {
-                                for (let i = 1; i <= 8; i++) Toast.info("Message " + i, { duration: 8000 });
+                                for (let i = 1; i <= 8; i++) {
+                                    Toast.info("Message " + i, { duration: 8000 });
+                                }
                             });
                             smallButton("Sticky (duration: 0)", function () {
                                 Toast.warning("This toast stays until you close it.", { duration: 0 });
@@ -218,10 +227,10 @@
                 round: 10,
                 border: 1,
                 borderColor: Black(0.1),
+                css: { maxWidth: "100%" },
             });
-            that.elem.style.maxWidth = "100%";
             card.titleLabel = Label({
-                text: Toast.escapeHtml(title),
+                text: title,
                 fontSize: 14,
                 textColor: Black(0.45),
             });
@@ -233,13 +242,20 @@
         };
 
         const startButtonRow = function () {
-            HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
-            that.elem.style.flexWrap = "wrap";
+            HGroup({ width: "100%", height: "auto", align: "left center", gap: 8, wrap: 1 });
         };
 
         const smallButton = function (text, onClick) {
-            const btn = Button({ text: text, width: "auto", height: 36, fontSize: 14, color: "#E8E8E8", textColor: Black(0.75), round: 6 });
-            btn.elem.style.padding = "0 14px";
+            const btn = Button({
+                text: text,
+                width: "auto",
+                height: 36,
+                fontSize: 14,
+                color: "#E8E8E8",
+                textColor: Black(0.75),
+                round: 6,
+                css: { padding: "0 14px" },
+            });
             btn.on("click", onClick);
             return btn;
         };

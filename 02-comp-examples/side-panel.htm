@@ -77,7 +77,13 @@
                     startCard("3. onBeforeClose", "Return false to keep the panel open. Here the first close is stopped, like an unsaved form.");
 
                         startButtonRow();
-                            SmartButton({ labelText: "Open form", onClick: function () { isDirty = 1; vetoPanel.open(); } });
+                            SmartButton({
+                                labelText: "Open form",
+                                onClick: function () {
+                                    isDirty = 1;
+                                    vetoPanel.open();
+                                },
+                            });
                         endGroup();
 
                     endCard();
@@ -93,12 +99,16 @@
             rightPanel = SidePanel({
                 side: "right",
                 titleText: "Right Panel",
-                onOpen: function (self) { lblInfo.text = "Opened: " + self.titleText; },
-                onClose: function (self) { lblInfo.text = "Closed: " + self.titleText; },
+                onOpen: showOpened,
+                onClose: showClosed,
             });
             rightPanel.startBody();
                 Label({ text: "side: \"right\"", fontSize: 15, fontFamily: "opensans-bold" });
-                Label({ text: "The panel is as tall as the screen and slides in from the right edge. On a narrow screen it gets smaller by itself.", fontSize: 15, textColor: Black(0.6) });
+                Label({
+                    text: "The panel is as tall as the screen and slides in from the right edge. On a narrow screen it gets smaller by itself.",
+                    fontSize: 15,
+                    textColor: Black(0.6),
+                });
             rightPanel.endBody();
 
             leftPanel = SidePanel({
@@ -106,8 +116,8 @@
                 panelSize: 320,
                 styleName: "modern",
                 titleText: "Left Panel",
-                onOpen: function (self) { lblInfo.text = "Opened: " + self.titleText; },
-                onClose: function (self) { lblInfo.text = "Closed: " + self.titleText; },
+                onOpen: showOpened,
+                onClose: showClosed,
             });
             leftPanel.startBody();
                 Label({ text: "styleName: \"modern\"", fontSize: 15, fontFamily: "opensans-bold" });
@@ -119,8 +129,8 @@
                 panelSize: 300,
                 styleName: "dark",
                 titleText: "Bottom Sheet",
-                onOpen: function (self) { lblInfo.text = "Opened: " + self.titleText; },
-                onClose: function (self) { lblInfo.text = "Closed: " + self.titleText; },
+                onOpen: showOpened,
+                onClose: showClosed,
             });
             bottomPanel.startBody();
                 Label({ text: "side: \"bottom\", styleName: \"dark\"", fontSize: 15, fontFamily: "opensans-bold", textColor: White(0.9) });
@@ -131,8 +141,8 @@
                 side: "top",
                 panelSize: 220,
                 titleText: "Top Panel",
-                onOpen: function (self) { lblInfo.text = "Opened: " + self.titleText; },
-                onClose: function (self) { lblInfo.text = "Closed: " + self.titleText; },
+                onOpen: showOpened,
+                onClose: showClosed,
             });
             topPanel.startBody();
                 Label({ text: "side: \"top\"", fontSize: 15, fontFamily: "opensans-bold" });
@@ -161,15 +171,27 @@
             });
             vetoPanel.startBody();
                 Label({ text: "onBeforeClose", fontSize: 15, fontFamily: "opensans-bold" });
-                Label({ text: "The first close is stopped and the title changes. The second one really closes the panel.", fontSize: 15, textColor: Black(0.6) });
+                Label({
+                    text: "The first close is stopped and the title changes. The second one really closes the panel.",
+                    fontSize: 15,
+                    textColor: Black(0.6),
+                });
             vetoPanel.endBody();
 
         };
 
         // *** OTHER FUNCTIONS:
 
+        const showOpened = function (panel) {
+            lblInfo.text = "Opened: " + panel.titleText;
+        };
+
+        const showClosed = function (panel) {
+            lblInfo.text = "Closed: " + panel.titleText;
+        };
+
         // GROUP: A card with a title and a short description.
-        const startCard = function (title, description = "") {
+        const startCard = function (title, description) {
             VGroup({
                 width: "100%",
                 height: "auto",
@@ -180,14 +202,16 @@
                 round: 10,
                 border: 1,
                 borderColor: Black(0.1),
+                css: { alignItems: "stretch", maxWidth: CARD_MAX_WIDTH + "px" },
             });
-            that.elem.style.alignItems = "stretch";
-            that.css = { maxWidth: CARD_MAX_WIDTH + "px" };
             Label({ text: title, fontSize: 14, textColor: Black(0.45) });
-            if (description) {
-                Label({ width: "100%", text: description, fontSize: 13, textColor: Black(0.35), css: { whiteSpace: "normal" } }); // WHY normal: a long line goes on the next line on a phone
-                that.elem.style.marginTop = "-10px";
-            }
+            Label({
+                width: "100%",
+                text: description,
+                fontSize: 13,
+                textColor: Black(0.35),
+                css: { whiteSpace: "normal", marginTop: "-10px" }, // WHY normal: a long line goes on the next line on a phone
+            });
         };
 
         const endCard = function () {

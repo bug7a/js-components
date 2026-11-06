@@ -20,12 +20,13 @@
 
     /* Bismillah */
 
-    // DataTable (comp-m4): the three style packages, the search, the selection, updateRows() and your own cells.
+    // DataTable: the three style packages, the search, the selection, updateRows() and your own cells.
     // For very many rows: comp/smart-table.js (02-comp-examples/smart-table-1.htm, 2M rows).
 
     const CARD_WIDTH = 560;
     const WIDE_CARD_WIDTH = 2 * CARD_WIDTH + 20;
     const TABLE_HEIGHT = 380;
+    const ORDER_COUNT = 40;
     const STATUS_COLORS = { Paid: "seagreen", Waiting: "#C98A00", Late: "indianred" };
 
     const NAMES = ["Ayşe Yılmaz", "John Smith", "İlker Şahin", "Jane Doe", "Emre Çelik", "Sofia Rodriguez", "Peter Johnson",
@@ -35,8 +36,12 @@
 
     // 40 orders: [id, customer, city, amount, status]
     const ORDERS = [];
-    for (let i = 1; i <= 40; i++) {
-        ORDERS.push([i, NAMES[i % NAMES.length], CITIES[(i * 3) % CITIES.length], (i * 37) % 500 + 20, STATUSES[(i * 7) % STATUSES.length]]);
+    for (let i = 1; i <= ORDER_COUNT; i++) {
+        const customer = NAMES[i % NAMES.length];
+        const city = CITIES[(i * 3) % CITIES.length];
+        const amount = (i * 37) % 500 + 20;
+        const status = STATUSES[(i * 7) % STATUSES.length];
+        ORDERS.push([i, customer, city, amount, status]);
     }
 
     const ORDER_COLUMNS = [
@@ -54,23 +59,38 @@
 
     // GROUP: A card with a title and a short description.
     const startCard = function (title, description, look, width = CARD_WIDTH) {
-        const card = VGroup({ width: width, height: "auto", align: "left top", gap: 12, padding: 16, color: look.color, round: 12, border: 1, borderColor: Black(0.1) });
-        that.css = { alignItems: "stretch", maxWidth: "100%" };
+        VGroup({
+            width: width,
+            height: "auto",
+            align: "left top",
+            gap: 12,
+            padding: 16,
+            color: look.color,
+            round: 12,
+            border: 1,
+            borderColor: Black(0.1),
+            css: { alignItems: "stretch", maxWidth: "100%" },
+        });
         Label({ plainText: title, fontSize: 14, textColor: look.textColor, bold: 1 });
-        if (description) Label({ plainText: description, fontSize: 13, textColor: look.textColor, width: "100%", css: { lineHeight: "1.4" } });
-        return card;
+        Label({
+            plainText: description,
+            fontSize: 13,
+            textColor: look.textColor,
+            width: "100%",
+            css: { lineHeight: "1.4" },
+        });
     };
 
     const endCard = function () {
         endGroup();
     };
 
-    const createInfoLabel = function (look) {
-        return Label({ plainText: "Click a row (or Tab to the table, then the arrow keys).", width: "100%", fontSize: 13, textColor: look.textColor });
-    };
-
     const showRow = function (label, row) {
-        label.plainText = row ? "Selected: " + row.data.join(" · ") : "Nothing is selected.";
+        if (!row) {
+            label.plainText = "Nothing is selected.";
+            return;
+        }
+        label.plainText = "Selected: " + row.data.join(" · ");
     };
 
     const createStyleSample = function (styleName, description, look) {
@@ -86,13 +106,26 @@
                 sortKey: "id",
                 onSelect: function (self, row) { showRow(info, row); },
             });
-            const info = createInfoLabel(look);
+            const info = Label({
+                plainText: "Click a row (or Tab to the table, then the arrow keys).",
+                width: "100%",
+                fontSize: 13,
+                textColor: look.textColor,
+            });
         endCard();
     };
 
     // LABEL: A colored status badge (column.createView)
     const createStatusBadge = function (cell, status) {
-        Label({ plainText: status, fontSize: 12, bold: 1, textColor: "white", color: STATUS_COLORS[status], round: 10, padding: [10, 2] });
+        Label({
+            plainText: status,
+            fontSize: 12,
+            bold: 1,
+            textColor: "white",
+            color: STATUS_COLORS[status],
+            round: 10,
+            padding: [10, 2],
+        });
     };
 
     // The rows change with updateRows(): the sorting, the search and the selection stay.
@@ -100,15 +133,29 @@
 
         const look = LOOKS.light;
         const rows = ORDERS.slice(0, 8).map(function (data) { return data.slice(); });
+        const statusColumn = {
+            key: "status",
+            title: "Status",
+            valueIndex: 4,
+            width: 120,
+            align: "center",
+            sortable: 1,
+            createView: createStatusBadge,
+        };
 
-        startCard("updateRows() · your own cells (column.createView)", "Add, change and remove rows: only the changed rows are drawn again. The status is a badge made by the column.", look, WIDE_CARD_WIDTH);
+        startCard(
+            "updateRows() · your own cells (column.createView)",
+            "Add, change and remove rows: only the changed rows are drawn again. The status is a badge made by the column.",
+            look,
+            WIDE_CARD_WIDTH
+        );
 
             const table = DataTable({
                 width: "100%",
                 height: TABLE_HEIGHT,
                 styleName: "minimal",
                 rowHeight: 48,
-                columns: ORDER_COLUMNS.concat([{ key: "status", title: "Status", valueIndex: 4, width: 120, align: "center", sortable: 1, createView: createStatusBadge }]),
+                columns: ORDER_COLUMNS.concat([statusColumn]),
                 rows: rows,
                 sortKey: "amount",
                 sortDirection: "desc",
@@ -150,11 +197,19 @@
             VGroup({ width: "100%", height: "auto", align: "center top", gap: 24, padding: 32 });
 
                 Label({ text: "DataTable", fontSize: 26, bold: 1, textColor: Black(0.8) });
-                Label({ plainText: "comp-m4 · more samples: data-table-2 ... data-table-5 · for very many rows: SmartTable (comp-m3)", fontSize: 14, textColor: Black(0.45) });
+                Label({
+                    plainText: "comp-m4 · more samples: data-table-2 ... data-table-5 · for very many rows: SmartTable (comp-m3)",
+                    fontSize: 14,
+                    textColor: Black(0.45),
+                });
 
                 // GROUP: The style packages
                 HGroup({ width: "100%", height: "auto", align: "center top", gap: 20, wrap: 1 });
-                    createStyleSample("classic", "A gray title row, striped rows, a soft yellow selection. Search: try \"istanbul\" (the Turkish letters are found without their marks).", LOOKS.light);
+                    createStyleSample(
+                        "classic",
+                        "A gray title row, striped rows, a soft yellow selection. Search: try \"istanbul\" (the Turkish letters are found without their marks).",
+                        LOOKS.light
+                    );
                     createStyleSample("minimal", "White, only lines: a table inside a page.", LOOKS.light);
                     createStyleSample("dark", "For a dark page; the search box is ozdenDark.", LOOKS.dark);
                 endGroup();
@@ -165,7 +220,7 @@
 
         endBox();
 
-        if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: pageBox });
+        ScrollBar({ scrollableBox: pageBox });
 
     };
 

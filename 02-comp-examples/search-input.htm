@@ -18,7 +18,7 @@
 
         /* Bismillah */
 
-        // DESIGN PAGE: SearchInput with styleName "classic" (the user, 2026-11-06): a standard search box: white, a thin
+        // DESIGN PAGE: SearchInput with styleName "classic": a standard search box: white, a thin
         // gray edge, round corners, a line search icon on the left, a gray round clear button; while typing the edge is
         // dark and 2 px (focusBorderColor). The look comes only from the package (SearchInput.styles.classic): the
         // samples give no look params. Without a styleName a SearchInput has the "original" look (the default).
@@ -58,8 +58,18 @@
                     searchWithText.setText("running shoes");
 
                     // GROUP: A white card with a search box as wide as the card
-                    VGroup({ width: "100%", height: "auto", align: "left top", gap: 12, padding: 20, color: "white", round: 10, border: 1, borderColor: Black(0.1) });
-                    that.css = { maxWidth: CARD_WIDTH + "px" };
+                    VGroup({
+                        width: "100%",
+                        height: "auto",
+                        align: "left top",
+                        gap: 12,
+                        padding: 20,
+                        color: "white",
+                        round: 10,
+                        border: 1,
+                        borderColor: Black(0.1),
+                        css: { maxWidth: CARD_WIDTH + "px" },
+                    });
                         caption("classic · on a white card, as wide as the card (width: \"100%\")");
                         SearchInput({
                             styleName: "classic",
