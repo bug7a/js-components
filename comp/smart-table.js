@@ -1785,7 +1785,7 @@ SmartTable.styles = {
             boxSort: { color: "#65A293" },
         },
         searchInputParams: {
-            styleName: "classic",
+            styleName: "original", // the first look of SearchInput ("classic" became a standard search box, 2026-11-06)
             width: "50%",
             height: 36,
             border: 1,

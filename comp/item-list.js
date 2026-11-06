@@ -1569,7 +1569,7 @@ ItemList.styles = {
         check: { visible: 1, size: 20, color: "#3D7A6B", iconColor: "white", borderColor: Black(0.2) },
         empty: { fontSize: 14, textColor: Black(0.45) },
         search: {
-            styleName: "classic", // WHY: not the ozden package of the default search box
+            styleName: "original", // WHY: not the ozden package of the default search box; the first look of SearchInput ("classic" became a standard search box, 2026-11-06)
             height: 44, // (the user, 2026-11-05: it was 40) as ozden and ozdenDark
             padding: [8, 8, 8, 4],
             fontSize: 15,
@@ -1624,7 +1624,7 @@ ItemList.styles = {
         check: { visible: 1, size: 20, color: "#65A293", iconColor: "#141414", borderColor: White(0.25) },
         empty: { fontSize: 14, textColor: White(0.45) },
         search: {
-            styleName: "classic", // WHY: not the ozden package of the default search box
+            styleName: "original", // WHY: not the ozden package of the default search box; the first look of SearchInput ("classic" became a standard search box, 2026-11-06)
             height: 44, // (the user, 2026-11-05: it was 40) as ozden and ozdenDark
             padding: [8, 8, 8, 4],
             fontSize: 15,

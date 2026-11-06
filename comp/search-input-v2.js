@@ -6,9 +6,14 @@ Search Input - v24.04
 
 UI COMPONENT TEMPLATE
 - You can customize, this template code as you need:
-- Style packages: "classic" (default), "ozden", "ozdenDark". Select with styleName. (SearchInput.styles)
--- "ozden" and "ozdenDark" are 44 px high (the user, 2026-11-05; "classic" and the defaults: 50). A height given by
-   the page wins over it.
+- Style packages: "original" (the default: the first look of SearchInput, whitesmoke with a soft bottom line; the
+  pages and components made before 2026-11-06 keep it), "classic" (a standard search box, the user 2026-11-06:
+  white, a thin gray edge, round corners, a line search icon, a dark edge while typing), "ozden", "ozdenDark".
+  Select with styleName. (SearchInput.styles)
+-- "classic", "ozden" and "ozdenDark" are 44 px high (the user, 2026-11-05; "original" and the defaults: 50). A
+   height given by the page wins over it.
+- focusBorderColor (2026-11-06): the edge while typing, 2 px of this color ("": the edge does not change). It is a
+  color, not a motion: also with animated: 0. "classic" has it.
 - The vertical place (2026-11-05, the user): textOffsetY / clearIconOffsetY move the text and the clear icon from the
   middle of the box. ozden / ozdenDark: -2 / -1: center() does not count their 3 px bottom line, and the small letters
   of Open Sans sit low in their line (measured: the text was about 3 px low, the clear icon 1 px; the search icon is
@@ -67,6 +72,7 @@ const SearchInputDefaults = {
     border: 0,
     borderColor: "rgba(0, 0, 0, 0.1)",
     borderBottomStyle: "2px solid rgba(0, 0, 0, 0.06)",
+    focusBorderColor: "", // the edge while typing: 2 px of this color ("": it does not change)
     round: 6,
     fontSize: 20,
     textOffsetY: 0, // px: the text up (-) or down (+) from the middle of the box (the ozden packages: -2)
@@ -79,7 +85,7 @@ const SearchInputDefaults = {
     focusRingColor: "rgba(0, 0, 0, 0.16)", // animated: the line while typing
     onSearch: function(searchedText, self) {},
     onSubmit: function(searchedText, self) {},
-    styleName: "classic", // "classic", "ozden", "ozdenDark" or a name added to SearchInput.styles
+    styleName: "original", // "original" (the look of these defaults), "classic", "ozden", "ozdenDark" or a name added to SearchInput.styles
     style: {}, // WHY: the look is in the flat params above; the packages are packages of params (see SearchInput.styles).
 };
 
@@ -125,6 +131,7 @@ const SearchInput = function(params = {}) {
     let wasAnimated = 0;
     let isPulsing = 0;
     let cancelPulse = null;
+    let restBorderColor = ""; // focusBorderColor: the edge before typing
 
     // *** Public variables:
     box.publicVar = "";
@@ -313,6 +320,21 @@ const SearchInput = function(params = {}) {
         paintMotion();
     };
 
+    // THE EDGE WHILE TYPING (focusBorderColor): the edge and an inset line of the same color, 2 px. WHY also with
+    // animated: 0: a field shows where the typing goes; it is a color, not a motion. (animated: 1 draws its own line.)
+    const paintFocusEdge = function() {
+        if (!box.focusBorderColor) return;
+        if (isFocused) {
+            restBorderColor = box.borderColor;
+            box.borderColor = box.focusBorderColor;
+        } else {
+            box.borderColor = restBorderColor;
+            box.css.borderBottom = box.borderBottomStyle;
+        }
+        if (isMotionOn()) return;
+        box.boxShadow = isFocused ? "inset 0 0 0 1px " + box.focusBorderColor : "";
+    };
+
     // The clear icon is shown while there is a text (and the box has room for it)
     const refreshClearIcon = function() {
         setClearIconVisible(isClearIconUsed() && box.txtSearch.text.length > 0);
@@ -451,6 +473,7 @@ const SearchInput = function(params = {}) {
     box.listenTo(box.txtSearch.inputElement, "focus", function() {
         isFocused = 1;
         paintMotion();
+        paintFocusEdge();
         refreshTextWidth();
     });
     // WHY: "input" and not keyup: arrows, Shift and Enter do not change the text, they must not pulse.
@@ -458,6 +481,7 @@ const SearchInput = function(params = {}) {
     box.listenTo(box.txtSearch.inputElement, "blur", function() {
         isFocused = 0;
         paintMotion();
+        paintFocusEdge();
         refreshTextWidth();
     });
     // A click on the field (an icon, the space around the text) starts typing. (A click on an object of the page in
@@ -498,8 +522,37 @@ SearchInput.addPlaceholderStyle = function() {
 // NOTE: A package needs only the params that differ from SearchInputDefaults.
 SearchInput.styles = {
 
-    // The look of SearchInputDefaults (whitesmoke, a soft bottom line).
-    classic: { style: {} },
+    // The look of SearchInputDefaults: the first look of SearchInput (whitesmoke, a soft bottom line), the default.
+    // WHY a name of its own (the user, 2026-11-06): "classic" became a standard search box; the pages, the templates
+    // and the components made before keep this look (ItemList, SelectBox, SmartTable "green", FullScreenSelect).
+    original: { style: {} },
+
+    // A standard search box (the user, 2026-11-06): white, a thin gray edge, round 8, 44 px, a line search icon on
+    // the left, a gray round clear button, the text 16 px; while typing the edge is dark and 2 px.
+    classic: {
+        style: {},
+        searchIconFile: "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L20 20"/></svg>'),
+        clearIconFile: "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#8C8C8C"/><path d="M9 9l6 6M15 9l-6 6" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/></svg>'),
+        searchIconSize: 20,
+        searchIconOpacity: 0.55,
+        clearIconOpacity: 1, // (its gray is in the drawing)
+        invertIconColor: 0,
+        color: "white",
+        textColor: "rgba(0, 0, 0, 0.85)",
+        placeholderColor: "rgba(0, 0, 0, 0.45)",
+        fontSize: 16,
+        height: 44,
+        textOffsetY: -2, // WHY: the small letters of Open Sans sit low in their line: their middle meets the icons
+        clearIconOffsetY: 0,
+        border: 1,
+        borderColor: "rgba(0, 0, 0, 0.2)",
+        borderBottomStyle: "1px solid rgba(0, 0, 0, 0.2)",
+        focusBorderColor: "rgba(0, 0, 0, 0.6)",
+        round: 8,
+        animated: 0, // 1: small hover / focus motions
+        hoverRingColor: "rgba(0, 0, 0, 0.08)",
+        focusRingColor: "rgba(0, 0, 0, 0.16)",
+    },
 
     // Bugra's style: a round field with a thin line, a soft search icon and a white round clear button. (Change, add or remove any look param.)
     ozden: {

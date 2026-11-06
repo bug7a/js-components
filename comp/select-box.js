@@ -170,7 +170,7 @@ const SelectBoxDefaults = {
         // The search box when it is a SearchInput: its params (a styleName of SearchInput.styles and its look params).
         // An icon file without a folder ("search.svg") is taken from the folder of comp/search-input-v2.js.
         searchInput: {
-            styleName: "classic",
+            styleName: "original", // the first look of SearchInput ("classic" became a standard search box, 2026-11-06)
             height: 38,
             searchIconLeft: 10, // WHY: the icon and the text at the place of the own search input (icon 18, text 42)
             color: Black(0.04),
@@ -1651,7 +1651,7 @@ SelectBox.styles = {
         arrow: { color: "rgba(255, 255, 255, 0.55)" },
         panel: { color: "#232322", border: 1, borderColor: "rgba(255, 255, 255, 0.12)", round: 10, padding: 6, shadow: "0 8px 24px rgba(0, 0, 0, 0.5)" },
         searchInput: {
-            styleName: "classic",
+            styleName: "original", // the first look of SearchInput ("classic" became a standard search box, 2026-11-06)
             height: 38,
             searchIconLeft: 10, // WHY: the icon and the text at the place of the own search input (icon 18, text 42)
             color: "rgba(255, 255, 255, 0.05)",

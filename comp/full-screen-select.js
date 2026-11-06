@@ -69,7 +69,7 @@ const FullScreenSelectDefaults = {
         arrow: { size: 16, right: 8, gap: 7, opacity: 0.7, invert: 0 }, // gap: from the middle to each arrow
         panel: { color: "white", zIndex: 3000, slide: 150 }, // slide: px, from below when it opens
         search: { left: 20, top: 40, height: 50, closeGap: 10, color: "whitesmoke", textColor: "gray", round: 25, fontSize: 20, iconOpacity: 0.4 }, // closeGap: to the close button
-        searchStyleName: "classic",
+        searchStyleName: "original", // the first look of SearchInput ("classic" became a standard search box, 2026-11-06)
         closeButton: { size: 30, right: 20, top: 50, color: "#D8D8D8", iconSize: 14, iconOpacity: 0.5, invert: 0 },
         list: { left: 10, top: 110, gap: 0 },
         item: { height: 60, sideSpace: 20, round: 4, color: "white", fontSize: 20, textColor: "#4A4A4A", textLeft: 30 },

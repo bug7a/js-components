@@ -902,7 +902,7 @@
             const darkTable = SmartTable({ itemLineCount: 2, styleName: "dark", style: { width: 400, height: "auto" } });
             await wait(150);
             const isClassic = (classicTable.style.boxTitleLine.color === "whitesmoke" && classicTable.searchInputParams.styleName === "ozden");
-            const isGreen = (greenTable.style.boxTitleLine.color === "#65A293" && greenTable.style.line2Color === "#EEEEEE" && greenTable.searchInputParams.styleName === "classic");
+            const isGreen = (greenTable.style.boxTitleLine.color === "#65A293" && greenTable.style.line2Color === "#EEEEEE" && greenTable.searchInputParams.styleName === "original");
             const isDark = (darkTable.style.line1Color === "#232428" && darkTable.searchInputParams.styleName === "ozdenDark" && darkTable.style.lblItemCell.fontSize === 15);
             const isPackageKept = (SmartTable.styles.green.style.line2Color === "whitesmoke");
             check("SmartTable: classic is the default; a page's own style over \"green\" keeps the other keys of that look",
