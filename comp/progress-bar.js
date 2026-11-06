@@ -11,17 +11,23 @@ UI COMPONENT TEMPLATE
 - Status colors: "normal", "success", "error".
 - Value text position: "top" (right of the title), "right" (right of the bar), "none".
 - TWO PARTS (2026-10-29, the user): secondValue is a second part after the value (Ex: 70 done + 5 on the way);
-  its own color (style.secondBar). The value text and onComplete are of the value only.
+  its own color (style.secondBar). The value text and onComplete are of the value only. style.secondBar.place:
+  "under" (the default: from 0, under the bar) or "after" (a second bar next to the bar; "ozden").
 - STRIPES: stripes: 1 (the value) and secondStripes: 1 (the second part) draw light diagonal stripes that move
   slowly (a job is running); setStripes() / setSecondStripes(). Still with prefers-reduced-motion. (style.stripes)
 - LIMITS: limits: [80] or [{ value: 30, color: "#7BA7D9" }, { value: 80, text: "80" }]: vertical lines over the bar
   at these values (in the units of value / max), a little longer than the bar, a text under a line (style.limit);
   setLimits().
-- Style packages: "classic" (default), "modern", "ozden" (the lines of comp-m1 UIProgressBar: the track of the
-  default, the bar its main color at 50% with an edge of it, a dark limit line with a text; the user 2026-10-29).
-  "ozdenDark" (the same bar for a dark page). Select with styleName. (ProgressBar.styles)
+- Style packages: "classic" (default), "modern", "ozden" (the user, 2026-11-06: the bar is a cyan SmartButton
+  ozdenType1, with its edge and its line at the bottom; a round track, the second part a light bar next to it; a dark
+  limit line with a text). "ozdenDark" (the ozden bar of 2026-10-29 for a dark page). Select with styleName.
+  (ProgressBar.styles)
+- THE ENDS: an end of a bar at an end of the track is as round as the track; an end in the middle of the track has
+  style.bar.innerRound ("": as round as the track; "ozden": 0, straight).
+- A DARK TRACK: darkTrack: 1 gives the track the colors of style.darkTrack (#242424 with a faint white edge; the
+  user, 2026-11-06); the bars keep theirs. setDarkTrack().
 - THE TRACK of every bar (basic-designer, 2026-10-30): 16 px, #F2F2F2, a 2 px light gray edge, round 4 (the default;
-  "modern" keeps its own: 10 px, no edge, round ends).
+  "modern" keeps its own: 10 px, no edge, round ends; "ozden" has round ends).
 - Everything is drawn with code (no image files needed).
 
 NOTE: comp/line-progress-bar.js (vertical lines style) is named LineProgressBar, so both can be loaded on the same page.
@@ -46,6 +52,7 @@ const ProgressBarDefaults = {
     stripes: 0, // 1: moving stripes on the value part
     secondStripes: 0, // 1: moving stripes on the second part
     limits: [], // Lines at these values: [80] or [{ value: 80, color: "indianred" }]
+    darkTrack: 0, // 1: the track in the colors of style.darkTrack (the bars keep theirs)
     indeterminate: 0, // 1: Progress is not known, show a moving bar.
     status: "normal", // "normal", "success", "error"
     titleText: "",
@@ -68,17 +75,25 @@ const ProgressBarDefaults = {
             borderColor: "rgba(0, 0, 0, 0.1)",
             css: {}, // Ex: { backgroundImage: "linear-gradient(#EEE, #D0D0D0)" }
         },
+        darkTrack: { // The track with darkTrack: 1 (its size and its round are of track)
+            color: "#242424",
+            borderColor: White(0.1),
+        },
         bar: {
             color: "#141414", // the main color (also of the edge, when borderColor is "")
             fillOpacity: 1, // the inside of the bar: the main color at this opacity (Ex: 0.5 with an edge of 1)
             border: 0,
             borderColor: "", // "": the main color (of the status too)
+            boxShadow: "none", // of both parts (Ex: "inset 0 -2px 0 rgba(0, 0, 0, 0.25)": a line at the bottom)
+            innerRound: "", // px: an end in the middle of the track (0: straight). "": as round as the track
             motion: 0.3, // Seconds. 0: No animation
         },
         secondBar: { // The second part (secondValue)
-            color: Black(0.35), // "": the main color at fillOpacity (it follows the main color)
-            fillOpacity: 0.2,
+            color: Black(0.35), // "": the main color, lighter (it follows the main color: fillOpacity or lighten)
+            fillOpacity: 0.2, // (color "") the main color at this opacity
+            lighten: 0, // 0 - 1 (color ""): the main color mixed with this much white, not transparent; 0: fillOpacity
             borderOpacity: 0.45, // its edge (when the bar has one): the main color at this opacity
+            place: "under", // "under": from 0, under the bar; "after": a second bar next to the bar
         },
         stripes: {
             color: "rgba(255, 255, 255, 0.35)",
@@ -146,7 +161,9 @@ const ProgressBar = function (params = {}) {
     };
 
     const getBarMotion = function () {
-        return "width " + box.style.bar.motion + "s, " + COLOR_MOTION;
+        const time = box.style.bar.motion + "s";
+        // WHY left: a second bar next to the bar moves with the end of the value (secondBar.place "after")
+        return "left " + time + ", width " + time + ", " + COLOR_MOTION;
     };
 
     // Change the bar size without animation. (Ex: from the moving bar to the value)
@@ -178,12 +195,69 @@ const ProgressBar = function (params = {}) {
 
     const paintBars = function () {
         const _b = box.style.bar;
-        const _sb = box.style.secondBar;
         const mainColor = getBarColor();
         paintPart(box.bar, mainColor, Number(_b.fillOpacity), _b.borderColor || mainColor);
-        // WHY "": the second part follows the main color (one color to change for a new look)
-        if (_sb.color) paintPart(box.secondBar, _sb.color, 1, _b.borderColor || mainColor);
-        else paintPart(box.secondBar, mainColor, Number(_sb.fillOpacity), _b.borderColor || Alpha(mainColor, Number(_sb.borderOpacity)));
+        paintSecondBar(mainColor);
+        box.bar.boxShadow = _b.boxShadow;
+        box.secondBar.boxShadow = _b.boxShadow;
+    };
+
+    // WHY color "": the second part follows the main color (one color to change for a new look)
+    const paintSecondBar = function (mainColor) {
+        const _b = box.style.bar;
+        const _sb = box.style.secondBar;
+        if (_sb.color) {
+            paintPart(box.secondBar, _sb.color, 1, _b.borderColor || mainColor);
+            return;
+        }
+        if (Number(_sb.lighten) > 0) {
+            paintPart(box.secondBar, mixWithWhite(mainColor, Number(_sb.lighten)), 1, _b.borderColor || mainColor);
+            return;
+        }
+        paintPart(box.secondBar, mainColor, Number(_sb.fillOpacity), _b.borderColor || Alpha(mainColor, Number(_sb.borderOpacity)));
+    };
+
+    // A lighter color that is not transparent: the track does not show through it (Ex: a dark track)
+    const mixWithWhite = function (color, whiteShare) {
+        const colorPercent = Math.round((1 - whiteShare) * 100);
+        return "color-mix(in srgb, " + color + " " + colorPercent + "%, white)";
+    };
+
+    // The track: its own colors, or the dark ones (darkTrack: 1)
+    const paintTrack = function () {
+        const colors = (box.darkTrack == 1) ? box.style.darkTrack : box.style.track;
+        box.track.color = colors.color;
+        box.track.borderColor = colors.borderColor;
+    };
+
+    // "under": the second bar is from 0 under the bar, so their round ends meet as one bar; "after": it starts where
+    // the bar ends, a second bar next to it
+    const placeSecondBar = function () {
+        const start = (box.style.secondBar.place === "after") ? box.value : 0;
+        box.secondBar.left = toPercent(start) + "%";
+        box.secondBar.width = toPercent(box.value + box.secondValue - start) + "%";
+    };
+
+    // THE ENDS: an end at an end of the track is as round as the track (its edge follows the round of the track);
+    // an end in the middle of the track has bar.innerRound. The moving bar of indeterminate is round at both ends.
+    const paintEnds = function () {
+        const isBarAtRightEnd = (box.indeterminate == 1) || (box.value >= box.max);
+        const isSecondAtLeftEnd = (box.style.secondBar.place !== "after") || (box.value <= 0);
+        const isSecondAtRightEnd = (box.value + box.secondValue >= box.max);
+        setEnds(box.bar, 1, isBarAtRightEnd);
+        setEnds(box.secondBar, isSecondAtLeftEnd, isSecondAtRightEnd);
+    };
+
+    const setEnds = function (bar, isLeftAtEnd, isRightAtEnd) {
+        const left = (isLeftAtEnd ? box.style.track.round : getInnerRound()) + "px";
+        const right = (isRightAtEnd ? box.style.track.round : getInnerRound()) + "px";
+        bar.css = { borderRadius: left + " " + right + " " + right + " " + left };
+    };
+
+    const getInnerRound = function () {
+        const innerRound = box.style.bar.innerRound;
+        if (innerRound === "" || innerRound === undefined || innerRound === null) return box.style.track.round;
+        return Number(innerRound);
     };
 
     // The moving stripes: a CSS class with the colors of style.stripes (css variables)
@@ -289,12 +363,13 @@ const ProgressBar = function (params = {}) {
             stopMoveAnimation();
             box.bar.width = box.getPercent() + "%";
             box.bar.visible = (box.value > 0) ? 1 : 0; // WHY: a bar with an edge was a thin line at 0
-            // WHY from 0: the second bar is under the first one, so their round ends meet as one bar
             box.secondValue = clampSecondValue(box.secondValue);
-            box.secondBar.width = toPercent(box.value + box.secondValue) + "%";
+            placeSecondBar();
             box.secondBar.visible = (box.secondValue > 0) ? 1 : 0;
             box.aria = { valuenow: String(box.value) };
         }
+
+        paintEnds();
 
         if (box.valueLabel) {
             box.valueLabel.text = (box.indeterminate == 1) ? "" : box.valueFormat(box);
@@ -359,6 +434,12 @@ const ProgressBar = function (params = {}) {
         paintStripes(box.secondBar, box.secondStripes);
     };
 
+    box.setDarkTrack = function (value) {
+        box.darkTrack = basic.isOn(value) ? 1 : 0;
+        paintTrack();
+    };
+    // USAGE: get: progressBar.darkTrack, set: progressBar.setDarkTrack(1) // the track #242424 (style.darkTrack)
+
     box.setLimits = function (limits) {
         box.limits = Array.isArray(limits) ? limits.slice() : [];
         drawLimits();
@@ -409,6 +490,7 @@ const ProgressBar = function (params = {}) {
     // USAGE: progressBar.reset() // value: 0, status: "normal"
 
     box.refresh = function () {
+        paintTrack();
         updateView();
     };
 
@@ -492,7 +574,7 @@ const ProgressBar = function (params = {}) {
                 });
                 box.barLayer.clipContent = 1;
 
-                    // BOX: Second part (under the bar, from 0 to value + secondValue)
+                    // BOX: Second part (under the bar, from 0 to value + secondValue; or after it: secondBar.place)
                     box.secondBar = Box({
                         left: 0,
                         top: 0,
@@ -549,7 +631,10 @@ const ProgressBar = function (params = {}) {
     box.limits = Array.isArray(box.limits) ? box.limits.slice() : [];
     box.limitLines = [];
 
+    box.darkTrack = basic.isOn(box.darkTrack) ? 1 : 0;
+
     updateTopRow();
+    paintTrack();
     updateView();
     drawLimits();
     paintStripes(box.bar, box.stripes == 1);
@@ -574,26 +659,32 @@ ProgressBar.styles = {
     // Thin dark bar on a light gray track.
     classic: ProgressBarDefaults.style,
 
-    // The ozden bar (the user, 2026-10-29): the lines of comp-m1/ui-progress-bar.js (UIProgressBar): the track of the
-    // default (16 px, a 2 px light gray edge, round 4; 2026-10-30, was 20 px, white, a 3 px edge, round ends); the
-    // bar is its main color at 50% with a 2 px edge of the main color, over the edge of the track; a 4 px dark limit
-    // line with its text under it. The main color can change (style.bar.color: the inside, the edge and the second
-    // part follow it); yellow for now (UIProgressBar "yellow").
+    // The ozden bar (the user, 2026-11-06; it was the lines of comp-m1 UIProgressBar, 2026-10-29): the colors of
+    // SmartButton. The bar is a cyan SmartButton ozdenType1 (its edge and its line at the bottom: it looks raised);
+    // the track keeps the colors of the default (#F2F2F2, a 2 px light gray edge; darkTrack: 1 is #242424) and its
+    // two ends are round; an end in the middle of the track is straight. The second part is a second bar next to the
+    // bar, the main color mixed with white (not transparent). A 4 px dark limit line with its text under it.
+    // The main color can change (style.bar.color: the second part follows it); the tones of SmartButton fit.
     ozden: {
         layout: {
             gap: 8,
         },
+        track: {
+            round: 100, // the two ends are half circles
+        },
         bar: {
-            color: "#F1C74A",
-            fillOpacity: 0.5,
-            border: 2, // (as wide as the edge of the track: the bar covers it)
-            borderColor: "", // the main color
+            color: "#5BBAC1", // cyan (SmartButton.tones.cyan)
+            fillOpacity: 1,
+            border: 1, // the edge and the bottom line of SmartButton ozdenType1
+            borderColor: "rgba(0, 0, 0, 0.35)",
+            boxShadow: "inset 0 -2px 0 rgba(0, 0, 0, 0.25)",
+            innerRound: 0, // straight in the middle of the track
             motion: 0.3,
         },
         secondBar: {
             color: "", // the main color, lighter
-            fillOpacity: 0.2,
-            borderOpacity: 0.45,
+            lighten: 0.5, // half white: not transparent (it looks the same on a dark track)
+            place: "after", // a second bar next to the bar
         },
         stripes: {
             color: "rgba(255, 255, 255, 0.55)",
@@ -601,10 +692,10 @@ ProgressBar.styles = {
             speed: 0.8,
         },
         successBar: {
-            color: "#40A5AF", // the colors of UIProgressBar
+            color: "#7BC362", // green (SmartButton.tones.green)
         },
         errorBar: {
-            color: "#FE5D49",
+            color: "#DE815B", // orange (SmartButton.tones.orange)
         },
         limit: {
             color: "rgba(0, 0, 0, 0.7)",
@@ -626,6 +717,7 @@ ProgressBar.styles = {
     },
 
     // The ozden bar for a dark page (2026-11-06): a dark track with a soft edge, the bar in the main color of the kit.
+    // (Still the ozden bar of 2026-10-29: half its color with an edge of it; the ozden package changed on 2026-11-06.)
     ozdenDark: {
         layout: {
             gap: 8,
