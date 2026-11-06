@@ -134,7 +134,8 @@ const PasswordInputB = function(params = {}) {
         });
         that.clickable = 1;
         that.cursor = "pointer";
-        if (box.showPasswordIconInvert == 1) {
+        // WHY selectStyle too: a dark package has white icons there, and the black eye could not be seen on its field.
+        if (box.showPasswordIconInvert == 1 || box.selectStyle.invertIconColor == 1) {
             box.btnShowPassword.css.filter = "invert(100%)";
         }
 

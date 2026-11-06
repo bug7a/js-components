@@ -2838,6 +2838,17 @@
         });
 
         // 2026-11-05 (the user): the show password hint was white on the dark login page
+        test("PasswordInputB: the eye is white on a dark field", async function () {
+            const filterOf = function (styleName) {
+                const password = PasswordInputB({ titleText: "Password", styleName: styleName });
+                const filter = password.btnShowPassword.elem.style.filter;
+                password.remove();
+                return filter;
+            };
+            const filters = ["classic", "ozden", "dark", "ozdenDark"].map(filterOf);
+            check("PasswordInputB: the eye is white on a dark field", filters.join() === ",,invert(100%),invert(100%)", filters.join());
+        });
+
         test("PasswordInputB: the show password hint takes the hint look of the field (white on classic, dark on ozdenDark and dark)", async function () {
             const fields = ["classic", "ozdenDark", "dark"].map(function (styleName) {
                 return PasswordInputB({ titleText: "Password", styleName: styleName });
