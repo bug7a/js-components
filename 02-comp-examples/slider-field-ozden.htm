@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>SliderField - ozden</title>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp/slider-field.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+    /* Bismillah */
+
+    // SliderField with styleName "ozden" (2026-11-06): for every page, in the colors of SmartButton. The fill is a cyan
+    // SmartButton ozdenType1 (an edge and a line at its bottom) that ends with a white knob. The label is always on the
+    // fill and the value never, so the end of the fill cuts no text. A ring for the keyboard focus, a gray fill when it
+    // is off. Every slider of this page is one SliderField({ ... }) call: copy it as it is.
+
+    // *** THE COLORS AND SIZES OF THE PAGE
+    const PAGE_COLOR = "#F4F5F2";
+    const INK = "#232323";
+    const CARD_WIDTH = 560;
+    const PREVIEW_TEXT = "Small steps every day. A slider shows where a value is between its two ends, and the hand moves it there.";
+    // Another color of the fill: a tone of SmartButton (SmartButton.tones), its hover and its color while dragging
+    const GREEN_FILL = { color: "#7BC362", hoverColor: "#70B756", activeColor: "#67AD4D" };
+    const YELLOW_FILL = { color: "#F1C74A", hoverColor: "#E6BB3C", activeColor: "#DCB133" };
+    const ORANGE_FILL = { color: "#DE815B", hoverColor: "#D4724B", activeColor: "#CB6942" };
+    const BLUE_FILL = { color: "#52A8D0", hoverColor: "#479CC4", activeColor: "#3F93BB" };
+
+    let lblPreview;
+
+    const start = function () {
+
+        page.color = PAGE_COLOR;
+
+        // BOX: Scrolling page
+        const scrollBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+
+            VGroup({ width: "100%", height: "auto", align: "center top", gap: 24, padding: [30, 20] });
+
+                Label({ plainText: "SliderField: ozden", fontSize: 26, bold: 1, textColor: INK });
+
+                // 1. The look, in a settings card
+                startCard("1. The ozden look", "styleName: \"ozden\". Drag the knob, click a point of the field or click the value to type it. The sliders change the text above them (onChange).");
+
+                    // BOX: The text the sliders change
+                    VGroup({ width: "100%", height: "auto", align: "left top", padding: 16, color: "#FAFAF9", round: 8, border: 1, borderColor: Black(0.06) });
+                        lblPreview = Label({ width: "100%", plainText: PREVIEW_TEXT, fontSize: 16, lineHeight: "1.4", textColor: INK, css: { whiteSpace: "normal" } });
+                    endGroup();
+
+                    SliderField({
+                        styleName: "ozden",
+                        width: "100%",
+                        labelText: "Text size",
+                        value: 16,
+                        min: 12,
+                        max: 24,
+                        unitText: " px",
+                        onChange: function (self) { lblPreview.fontSize = self.value; },
+                    });
+
+                    SliderField({
+                        styleName: "ozden",
+                        width: "100%",
+                        labelText: "Line height",
+                        value: 1.4,
+                        min: 1,
+                        max: 2,
+                        step: 0.1,
+                        onChange: function (self) { lblPreview.lineHeight = String(self.value); },
+                    });
+
+                    SliderField({
+                        styleName: "ozden",
+                        width: "100%",
+                        labelText: "Opacity",
+                        value: 100,
+                        min: 10,
+                        max: 100,
+                        step: 5,
+                        unitText: "%",
+                        onChange: function (self) { lblPreview.opacity = self.value / 100; },
+                    });
+
+                endCard();
+
+                // 2. Values of every kind
+                startCard("2. Negative values and your own text", "valueFormat() writes the value (0 is \"Mute\", the balance is \"L 3\" or \"R 3\"). The value stays out of the fill, even when it is long.");
+
+                    SliderField({
+                        styleName: "ozden",
+                        width: "100%",
+                        labelText: "Volume",
+                        value: 70,
+                        min: 0,
+                        max: 100,
+                        valueFormat: function (value) { return (value === 0) ? "Mute" : value + "%"; },
+                    });
+
+                    SliderField({
+                        styleName: "ozden",
+                        width: "100%",
+                        labelText: "Balance",
+                        value: 0,
+                        min: -10,
+                        max: 10,
+                        valueFormat: formatBalance,
+                    });
+
+                    SliderField({ styleName: "ozden", width: "100%", labelText: "Bass", value: 3, min: -12, max: 12, unitText: " dB" });
+
+                endCard();
+
+                // 3. Another color
+                startCard("3. The tones of SmartButton", "style: { fill: { color, hoverColor, activeColor } } gives the fill another color: green after a good result, yellow to look first, orange for a risk, blue when nothing changes.");
+
+                    SliderField({ styleName: "ozden", width: "100%", labelText: "Daily goal", value: 8, min: 0, max: 12, unitText: " k", style: { fill: GREEN_FILL } });
+                    SliderField({ styleName: "ozden", width: "100%", labelText: "Warn at", value: 75, min: 50, max: 100, step: 5, unitText: "%", style: { fill: YELLOW_FILL } });
+                    SliderField({ styleName: "ozden", width: "100%", labelText: "Risk", value: 3, min: 1, max: 5, style: { fill: ORANGE_FILL } });
+                    SliderField({ styleName: "ozden", width: "100%", labelText: "Zoom", value: 125, min: 50, max: 200, step: 25, unitText: "%", style: { fill: BLUE_FILL } });
+
+                endCard();
+
+                // 4. Off, and the keyboard
+                startCard("4. Off, and the keyboard", "setEnabled(0): a gray fill that does not move. Tab gives the focus ring (only the keyboard draws it): the arrow keys move one step, PageUp / PageDown ten, Home / End go to the ends, Enter or a digit types the value, Escape cancels it.");
+
+                    const sfQuality = SliderField({ styleName: "ozden", width: "100%", labelText: "Quality", value: 80, min: 0, max: 100, unitText: "%", enabled: 0 });
+
+                    startButtonRow();
+                        SmartButton({ tone: "white", labelText: "On / Off", onClick: function () { sfQuality.setEnabled(!sfQuality.enabled); } });
+                    endGroup();
+
+                endCard();
+
+            endGroup();
+
+        endBox();
+
+        if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: scrollBox });
+
+    };
+
+    // *** OTHER FUNCTIONS
+
+    // -3 -> "L 3", 0 -> "Center", 3 -> "R 3"
+    const formatBalance = function (value) {
+        if (value === 0) return "Center";
+        const side = (value < 0) ? "L " : "R ";
+        return side + Math.abs(value);
+    };
+
+    // GROUP: A white card with a title and a description; endCard() closes it
+    const startCard = function (title, description) {
+        VGroup({ width: CARD_WIDTH, height: "auto", align: "left top", gap: 14, padding: [20, 22], color: "white", round: 8, border: 1, borderColor: Black(0.1) });
+        that.css = { maxWidth: "calc(100vw - 40px)", alignItems: "stretch" };
+        Label({ plainText: title, fontSize: 15, bold: 1, textColor: INK });
+        Label({ plainText: description, fontSize: 13, textColor: Black(0.5), width: "100%", css: { whiteSpace: "normal", marginTop: "-6px" } });
+    };
+
+    const endCard = function () { endGroup(); };
+
+    // GROUP: SmartButtons side by side (endGroup() closes it)
+    const startButtonRow = function () {
+        HGroup({ hug: 1, align: "left center", gap: 8, wrap: 1, clipContent: 0 }); // WHY clipContent 0: the focus ring of a SmartButton is not cut
+    };
+
+    </script>
+
+</head>
+<body>
+</body>
+</html>

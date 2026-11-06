@@ -180,9 +180,13 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "slider-field", name: "SliderField", cat: "inputs",
-        source: "comp/slider-field.js", samples: ["02-comp-examples/slider-field.htm"],
-        en: "A slider in the shape of a field: the label at the left, the value at the right, step dots, drag, click to jump and typed editing.",
-        tr: "Alan şeklinde kaydırıcı: solda etiket, sağda değer, adım noktaları; sürükleme, tıklayıp atlama ve elle yazma.",
+        source: "comp/slider-field.js",
+        samples: [
+            { file: "02-comp-examples/slider-field.htm", title: "Basic" },
+            { file: "02-comp-examples/slider-field-ozden.htm", title: "ozden, a knob, the tones of SmartButton" },
+        ],
+        en: "A slider in the shape of a field: the label at the left, the value at the right, step dots, drag, click to jump and typed editing. The ozden look: a cyan fill with a white knob that never cuts a text.",
+        tr: "Alan şeklinde kaydırıcı: solda etiket, sağda değer, adım noktaları; sürükleme, tıklayıp atlama ve elle yazma. ozden görünüşü: hiçbir yazıyı kesmeyen, beyaz topuzlu camgöbeği dolgu.",
     },
     {
         key: "property-panel", name: "PropertyPanel", cat: "inputs",
@@ -517,8 +521,8 @@ CATALOG.COMPONENTS = [
             { file: "02-comp-examples/slider-round.htm", title: "round (the model page)" },
             { file: "02-comp-examples/slider.htm", title: "classic (Material 3)" },
         ],
-        en: "Slider for choosing a value in a range. Two looks: round (a thin track and a round white knob: the look of new pages) and classic (inspired by Material 3).",
-        tr: "Bir aralıktan değer seçmek için kaydırıcı. İki görünüm: round (ince bir ray ve yuvarlak beyaz bir tutamaç: yeni sayfaların görünümü) ve classic (Material 3'ten esinlenildi).",
+        en: "Slider for choosing a value in a range, on a step. Looks: round (a thin track and a round white knob: the look of new pages), roundDark for a dark page, and classic (inspired by Material 3).",
+        tr: "Bir aralıktan, adım adım değer seçmek için kaydırıcı. Görünümler: round (ince bir ray ve yuvarlak beyaz bir tutamaç: yeni sayfaların görünümü), koyu sayfa için roundDark ve classic (Material 3'ten esinlenildi).",
     },
     {
         key: "toggle", name: "Toggle", cat: "selection",
