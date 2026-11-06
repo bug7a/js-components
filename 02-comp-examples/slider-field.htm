@@ -22,9 +22,7 @@
         /* Bismillah */
 
         // *** VARIABLES:
-        let sfDefault, lblDefault;
-        let boxPreview, boxShape;
-        let sfApi, lblApi;
+        let lblDefault, lblApi;
 
         const start = function () {
 
@@ -54,9 +52,12 @@
                     });
 
                     // SAMPLE 1: Default
-                    startCard("1. Default", "Drag anywhere on the field or click a point. Click the value to type it. Arrow keys, PageUp / PageDown, Home / End work when it has the focus.");
+                    startCard(
+                        "1. Default",
+                        "Drag anywhere on the field or click a point. Click the value to type it. Arrow keys, PageUp / PageDown, Home / End work when it has the focus."
+                    );
 
-                        sfDefault = SliderField({
+                        SliderField({
                             labelText: "Width",
                             value: 3,
                             min: 0,
@@ -70,27 +71,55 @@
                     endCard();
 
                     // SAMPLE 2: Property panel
-                    startCard("2. Property panel", "width: \"100%\" sliders that change a shape. The dots divide the range evenly when there are too many steps (maxTicks).");
+                    startCard(
+                        "2. Property panel",
+                        "width: \"100%\" sliders that change a shape. The dots divide the range evenly when there are too many steps (maxTicks)."
+                    );
 
-                        HGroup({ width: "100%", height: "auto", align: "left top", gap: 20 });
-                        that.elem.style.flexWrap = "wrap";
+                        HGroup({ width: "100%", height: "auto", align: "left top", gap: 20, wrap: 1 });
 
                             // BOX: Preview
-                            boxPreview = startBox({ width: 180, height: 220, color: "#F2F2F4", round: 12 });
-                                boxShape = Box({ width: 100, height: 100, color: "cadetblue", round: 12 });
+                            startBox({ width: 180, height: 220, color: "#F2F2F4", round: 12 });
+                                const boxShape = Box({ width: 100, height: 100, color: "cadetblue", round: 12 });
                                 boxShape.center();
                                 boxShape.setMotion("width 0.1s, height 0.1s, left 0.1s, top 0.1s");
                             endBox();
 
                             // GROUP: Sliders
-                            VGroup({ width: 300, height: "auto", align: "left top", gap: 8 });
-                            that.elem.style.flex = "1 1 240px";
+                            VGroup({ width: 300, height: "auto", align: "left top", gap: 8, css: { flex: "1 1 240px" } });
 
-                                SliderField({ width: "100%", labelText: "Width", value: 100, min: 20, max: 160, step: 10, unitText: "px", onChange: function (self) { boxShape.width = self.value; boxShape.center(); } });
-                                SliderField({ width: "100%", labelText: "Height", value: 100, min: 20, max: 200, step: 10, unitText: "px", onChange: function (self) { boxShape.height = self.value; boxShape.center(); } });
-                                SliderField({ width: "100%", labelText: "Radius", value: 12, min: 0, max: 50, step: 1, valueFormat: function (value) { return value + "%"; }, onChange: function (self) { boxShape.elem.style.borderRadius = self.value + "%"; } });
-                                SliderField({ width: "100%", labelText: "Opacity", value: 1, min: 0, max: 1, step: 0.05, valueFormat: function (value) { return Math.round(value * 100) + "%"; }, onChange: function (self) { boxShape.opacity = self.value; } });
-                                SliderField({ width: "100%", labelText: "Rotate", value: 0, min: -180, max: 180, step: 15, unitText: "°", onChange: function (self) { boxShape.elem.style.transform = "rotate(" + self.value + "deg)"; } });
+                                SliderField({
+                                    width: "100%", labelText: "Width", value: 100, min: 20, max: 160, step: 10, unitText: "px",
+                                    onChange: function (self) {
+                                        boxShape.width = self.value;
+                                        boxShape.center();
+                                    },
+                                });
+
+                                SliderField({
+                                    width: "100%", labelText: "Height", value: 100, min: 20, max: 200, step: 10, unitText: "px",
+                                    onChange: function (self) {
+                                        boxShape.height = self.value;
+                                        boxShape.center();
+                                    },
+                                });
+
+                                SliderField({
+                                    width: "100%", labelText: "Radius", value: 12, min: 0, max: 50, step: 1,
+                                    valueFormat: function (value) { return value + "%"; },
+                                    onChange: function (self) { boxShape.css.borderRadius = self.value + "%"; },
+                                });
+
+                                SliderField({
+                                    width: "100%", labelText: "Opacity", value: 1, min: 0, max: 1, step: 0.05,
+                                    valueFormat: function (value) { return Math.round(value * 100) + "%"; },
+                                    onChange: function (self) { boxShape.opacity = self.value; },
+                                });
+
+                                SliderField({
+                                    width: "100%", labelText: "Rotate", value: 0, min: -180, max: 180, step: 15, unitText: "°",
+                                    onChange: function (self) { boxShape.rotate = self.value; },
+                                });
 
                             endGroup();
 
@@ -103,13 +132,19 @@
 
                         SliderField({ labelText: "Scale", value: 1.5, min: 0.5, max: 3, step: 0.1, unitText: "×" });
                         SliderField({ labelText: "Weight", value: 2.25, min: 0, max: 5, step: 0.25, unitText: " kg" });
-                        SliderField({ labelText: "Blur", value: 0, min: 0, max: 20, valueFormat: function (value) { return (value === 0) ? "Off" : value + " px"; } });
+                        SliderField({
+                            labelText: "Blur", value: 0, min: 0, max: 20,
+                            valueFormat: function (value) { return (value === 0) ? "Off" : value + " px"; },
+                        });
                         SliderField({ labelText: "Volume", value: 64, min: 0, max: 100, showTicks: 0, unitText: "%" });
 
                     endCard();
 
                     // SAMPLE 4: Styles
-                    startCard("4. Styles: ozden, modern and dark", "styleName: \"ozden\": a look for general use, in the colors of SmartButton (more on slider-field-ozden.htm).");
+                    startCard(
+                        "4. Styles: ozden, modern and dark",
+                        "styleName: \"ozden\": a look for general use, in the colors of SmartButton (more on slider-field-ozden.htm)."
+                    );
 
                         SliderField({ styleName: "ozden", labelText: "Volume", value: 60, min: 0, max: 100, unitText: "%" });
                         SliderField({ styleName: "ozden", labelText: "Size", value: 4, min: 0, max: 10 });
@@ -125,24 +160,53 @@
                     endCard();
 
                     // SAMPLE 5: API
-                    startCard("5. API", "setValue(), increase(), decrease(), setRange(), setStep(), setLabelText(), setUnitText(), setShowTicks(), setEnabled()");
+                    startCard(
+                        "5. API",
+                        "setValue(), increase(), decrease(), setRange(), setStep(), setLabelText(), setUnitText(), setShowTicks(), setEnabled()"
+                    );
 
-                        sfApi = SliderField({
+                        const sfApi = SliderField({
                             labelText: "Size",
                             value: 5,
                             min: 0,
                             max: 10,
-                            onChange: function (self) { lblApi.text = "Value: " + self.value + " (range " + self.min + " – " + self.max + ", step " + self.step + ")"; },
+                            onChange: function (self) {
+                                lblApi.text = "Value: " + self.value + " (range " + self.min + " – " + self.max + ", step " + self.step + ")";
+                            },
                         });
 
-                        // GROUP: Buttons
-                        HGroup({ width: "100%", height: "auto", gap: 8, wrap: 1, clipContent: 0 }); // WHY clipContent 0: the focus ring of a SmartButton is not cut
+                        // GROUP: Buttons. WHY clipContent 0: the focus ring of a SmartButton is not cut
+                        HGroup({ width: "100%", height: "auto", gap: 8, wrap: 1, clipContent: 0 });
                             SmartButton({ labelText: "Set 8", onClick: function () { sfApi.setValue(8); } });
                             SmartButton({ labelText: "+3", onClick: function () { sfApi.increase(3); } });
                             SmartButton({ tone: "white", labelText: "−3", onClick: function () { sfApi.decrease(3); } });
-                            SmartButton({ tone: "white", labelText: "Range 0–100", onClick: function () { sfApi.setRange(0, 100); sfApi.onChange(sfApi); } });
-                            SmartButton({ tone: "white", labelText: "Step 5", onClick: function () { sfApi.setStep((sfApi.step === 5) ? 1 : 5); sfApi.onChange(sfApi); } });
-                            SmartButton({ tone: "white", labelText: "Label", onClick: function () { sfApi.setLabelText((sfApi.labelText === "Size") ? "Font size" : "Size"); } });
+
+                            SmartButton({
+                                tone: "white",
+                                labelText: "Range 0–100",
+                                onClick: function () {
+                                    sfApi.setRange(0, 100);
+                                    sfApi.onChange(sfApi);
+                                },
+                            });
+
+                            SmartButton({
+                                tone: "white",
+                                labelText: "Step 5",
+                                onClick: function () {
+                                    sfApi.setStep((sfApi.step === 5) ? 1 : 5);
+                                    sfApi.onChange(sfApi);
+                                },
+                            });
+
+                            SmartButton({
+                                tone: "white",
+                                labelText: "Label",
+                                onClick: function () {
+                                    sfApi.setLabelText((sfApi.labelText === "Size") ? "Font size" : "Size");
+                                },
+                            });
+
                             SmartButton({ tone: "white", labelText: "Unit", onClick: function () { sfApi.setUnitText(sfApi.unitText ? "" : "px"); } });
                             SmartButton({ tone: "white", labelText: "Dots", onClick: function () { sfApi.setShowTicks(!sfApi.showTicks); } });
                             SmartButton({ tone: "white", labelText: "On / Off", onClick: function () { sfApi.setEnabled(!sfApi.enabled); } });
@@ -156,14 +220,14 @@
 
             endBox();
 
-            if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: scrollBox });
+            ScrollBar({ scrollableBox: scrollBox });
 
         };
 
         // *** OTHER FUNCTIONS:
 
         // GROUP: A card with a title and a short description.
-        const startCard = function (title, description = "") {
+        const startCard = function (title, description) {
             VGroup({
                 width: 560,
                 height: "auto",
@@ -174,22 +238,19 @@
                 round: 10,
                 border: 1,
                 borderColor: Black(0.1),
+                css: { alignItems: "stretch", maxWidth: "100%" },
             });
-            that.elem.style.alignItems = "stretch";
-            that.elem.style.maxWidth = "100%";
             Label({
                 text: title,
                 fontSize: 14,
                 textColor: Black(0.45),
             });
-            if (description) {
-                Label({
-                    text: description,
-                    fontSize: 13,
-                    textColor: Black(0.35),
-                });
-                that.elem.style.marginTop = "-10px";
-            }
+            Label({
+                text: description,
+                fontSize: 13,
+                textColor: Black(0.35),
+                css: { marginTop: "-10px" },
+            });
         };
 
         const endCard = function () {

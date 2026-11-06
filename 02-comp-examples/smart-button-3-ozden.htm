@@ -19,8 +19,7 @@
 
     /* Bismillah */
 
-    // SmartButton (2026-11-04): the button
-    // standards in the ozden look (a white card, a thin line, a line at the bottom): Primary (the colored action, it
+    // SmartButton: the button standards in the ozden look (a white card, a thin line, a line at the bottom): Primary (the colored action, it
     // waits with the clock of setWaiting()), Default (Cancel, gray and white) and Alternative (the trash, only an
     // icon: it asks again, two clicks). Every button is one SmartButton({ ... }) call; its colors are a style object
     // at the top of the page (the color and the color under the mouse; pressed, it gets darker by itself).
@@ -30,7 +29,7 @@
     const COVER_COLOR = Black(0.8); // behind the dialog (the cover of a Dialog)
     const BOTTOM_LINE = "inset 0 -3px 0 rgba(0, 0, 0, 0.06)"; // the soft line at the bottom of the ozden fields
     const INK = "#232323"; // the texts and the edge of the card
-    const CARD_WIDTH = 674; // (basic-designer, 2026-10-29: was 460; five actions in a row)
+    const CARD_WIDTH = 674; // five actions in a row
     const CARD_HEIGHT = 524;
     const CARD_ROUND = 8;
     const CARD_BORDER = 2;
@@ -40,14 +39,21 @@
     const RED = "#E8796D"; // danger (design.md)
     const JOB_TIME = 1200; // ms: the action takes time (the sample)
 
-    // *** THE COLORS OF THE BUTTONS (basic-designer, 2026-10-29): style objects of SmartButton.
+    // *** THE COLORS OF THE BUTTONS: style objects of SmartButton.
     // The actions: a little lighter edge; WHY icon opacity 0.7: the transparency of the text (the icon lines are black)
     const ACTION_LINE = "rgba(35, 35, 35, 0.4)";
-    const TEAL_ACTION = { box: { color: "#9DC7B5", borderColor: ACTION_LINE }, hover: { color: "#91BCA9" }, icon: { opacity: 0.7 } }; // Publish
-    const CYAN_ACTION = { box: { color: "#5BBAC1", borderColor: ACTION_LINE }, hover: { color: "#50AFB6" }, icon: { opacity: 0.7 } };
-    const SKY_ACTION = { box: { color: "#52A8D0", borderColor: ACTION_LINE }, hover: { color: "#479DC5" }, icon: { opacity: 0.7 } };
-    const ORANGE_ACTION = { box: { color: "#DE815B", borderColor: ACTION_LINE }, hover: { color: "#D4724B" }, icon: { opacity: 0.7 } };
-    const SLATE_ACTION = { box: { color: "#8FA6BE", borderColor: ACTION_LINE }, hover: { color: "#8199B2" }, icon: { opacity: 0.7 } };
+    const actionStyle = function (color, hoverColor) {
+        return {
+            box: { color: color, borderColor: ACTION_LINE },
+            hover: { color: hoverColor },
+            icon: { opacity: 0.7 },
+        };
+    };
+    const TEAL_ACTION = actionStyle("#9DC7B5", "#91BCA9");
+    const CYAN_ACTION = actionStyle("#5BBAC1", "#50AFB6");
+    const SKY_ACTION = actionStyle("#52A8D0", "#479DC5");
+    const ORANGE_ACTION = actionStyle("#DE815B", "#D4724B");
+    const SLATE_ACTION = actionStyle("#8FA6BE", "#8199B2");
     // The plain buttons in soft colors
     const SOFT_YELLOW = { box: { color: "#F8E57A" }, hover: { color: "#EFDA62" } };
     const ROSE = { box: { color: "#D97F80" }, hover: { color: "#CF7071" } };
@@ -55,18 +61,23 @@
     const MIST = { box: { color: "#CEDBE1" }, hover: { color: "#C1D0D7" } };
     const LAVENDER = { box: { color: "#CFC3DD" }, hover: { color: "#C3B6D3" } };
     // The trash: a bigger bin; it asks in red before it deletes (the bin turns white)
-    const TRASH = { icon: { width: 30, height: 30, opacity: 1 }, ask: { button: { color: RED, border: 0, boxShadow: BOTTOM_LINE } } };
+    const TRASH = {
+        icon: { width: 30, height: 30, opacity: 1 },
+        ask: { button: { color: RED, border: 0, boxShadow: BOTTOM_LINE } },
+    };
 
-    // *** THE ICONS: minimal lines (the user, 2026-11-02): no circle, no fill. Black lines: the look gives them the
+    // *** THE ICONS: minimal lines: no circle, no fill. Black lines: the look gives them the
     // transparency of the text (WHY not in the color: two lines that cross would be darker there)
     const LINE_WIDTH = 1.7;
     const svgIcon = function (body) {
-        return "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">' + body + "<\/svg>");
+        const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">' + body + "<\/svg>";
+        return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
     };
     const lineIcon = function (paths) {
-        return svgIcon('<path d="' + paths + '" fill="none" stroke="black" stroke-width="' + LINE_WIDTH + '" stroke-linecap="round" stroke-linejoin="round"/>');
+        const lineStyle = 'fill="none" stroke="black" stroke-width="' + LINE_WIDTH + '" stroke-linecap="round" stroke-linejoin="round"';
+        return svgIcon('<path d="' + paths + '" ' + lineStyle + '/>');
     };
-    // A soft bin (the user's drawing, 2026-10-29): curves only, the rim and the cross are holes (the button shows through)
+    // A soft bin: curves only, the rim and the cross are holes (the button shows through)
     const TRASH_PATH = "M 4 6 Q 4 2 12 2 Q 20 2 20 6 L 18.5 18 Q 18 22 12 22 Q 6 22 5.5 18 Z " +
         "M 6.7 5.9 C 6.7 3.7 17.3 3.7 17.3 5.9 C 17.3 8.1 6.7 8.1 6.7 5.9 Z " +
         "M 9 11 Q 9.7 10.3 10.4 11 L 12 12.6 L 13.6 11 Q 14.3 10.3 15 11 Q 15.7 11.7 15 12.4 L 13.4 14 L 15 15.6 " +
@@ -94,16 +105,34 @@
 
         startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
 
-            VGroup({ width: "100%", height: "100%", align: "center top", gap: 30, padding: [20, 50], clipContent: 0 }); // (basic-designer, 2026-10-30: was "auto")
+            VGroup({ width: "100%", height: "100%", align: "center top", gap: 30, padding: [20, 50], clipContent: 0 });
 
                 // GROUP: The card of the button standards
-                VGroup({ width: CARD_WIDTH, height: CARD_HEIGHT, align: "left top", gap: 0, color: "white", round: CARD_ROUND, border: CARD_BORDER, borderColor: INK, boxShadow: "0 10px 30px rgba(0, 0, 0, 0.08), " + BOTTOM_LINE, clipContent: 0 });
-                that.css = { maxWidth: "calc(100vw - 40px)" };
+                VGroup({
+                    width: CARD_WIDTH,
+                    height: CARD_HEIGHT,
+                    align: "left top",
+                    gap: 0,
+                    color: "white",
+                    round: CARD_ROUND,
+                    border: CARD_BORDER,
+                    borderColor: INK,
+                    boxShadow: "0 10px 30px rgba(0, 0, 0, 0.08), " + BOTTOM_LINE,
+                    clipContent: 0,
+                    css: { maxWidth: "calc(100vw - 40px)" },
+                });
 
-                    // GROUP: Content (it fills the card: the height of the card in its edge; basic-designer, 2026-10-29)
+                    // GROUP: Content (it fills the card: the height of the card in its edge)
                     VGroup({ width: "100%", height: CARD_HEIGHT - 2 * CARD_BORDER, align: "left top", gap: 8, padding: [24, 22] });
 
-                        Label({ plainText: "Button styles", width: "100%", fontSize: TEXT_SIZE, textColor: INK, fontFamily: "opensans-bold", css: { whiteSpace: "normal", lineHeight: "1.5", textWrap: "balance" } });
+                        Label({
+                            plainText: "Button styles",
+                            width: "100%",
+                            fontSize: TEXT_SIZE,
+                            textColor: INK,
+                            fontFamily: "opensans-bold",
+                            css: { whiteSpace: "normal", lineHeight: "1.5", textWrap: "balance" },
+                        });
 
                         // DEFAULT: Cancel, gray and white
                         createSectionTitle("Default (ozdenType1)");
