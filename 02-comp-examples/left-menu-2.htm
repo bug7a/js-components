@@ -19,7 +19,7 @@
 
     /* Bismillah */
 
-    // LeftMenu (comp-m2): the "light" package for a light page (2026-11-05, the user). The dark one: left-menu.htm.
+    // LeftMenu: the "light" package for a light page. The dark one: left-menu.htm.
     // Rest the mouse on the menu (a tap on a touch screen): it opens over the page.
 
     const TOP_BAR_HEIGHT = 40;
@@ -41,8 +41,7 @@
         page.color = PAGE_COLOR;
 
         // BOX: Top bar
-        startBox(0, 0, "100%", TOP_BAR_HEIGHT, { color: "white" });
-            that.css = { borderBottom: "1px solid " + Black(0.08) };
+        startBox(0, 0, "100%", TOP_BAR_HEIGHT, { color: "white", css: { borderBottom: "1px solid " + Black(0.08) } });
             Label({ left: 16, text: "Workspace", fontSize: 15, bold: 1, textColor: Black(0.75) });
             that.center("top");
         endBox();
@@ -58,7 +57,12 @@
             padding: 32,
         });
             lblPageTitle = Label({ text: "Home", fontSize: 26, bold: 1, textColor: Black(0.8) });
-            Label({ text: "Rest the mouse on the menu: it opens over the page.", width: "100%", fontSize: 15, textColor: Black(0.5) });
+            Label({
+                text: "Rest the mouse on the menu: it opens over the page.",
+                width: "100%",
+                fontSize: 15,
+                textColor: Black(0.5),
+            });
         endGroup();
 
         // MENU: Left menu (made last: it opens over the page)
@@ -70,7 +74,12 @@
                 lblPageTitle.text = item.text;
             },
         });
-        menu.addItemToBottom({ key: "settings", type: "button", text: "Settings", icon: "../comp/left-menu/setting.png" });
+        menu.addItemToBottom({
+            key: "settings",
+            type: "button",
+            text: "Settings",
+            icon: "../comp/left-menu/setting.png",
+        });
         menu.setSelectedItem("home");
 
     };

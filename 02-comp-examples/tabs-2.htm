@@ -18,12 +18,12 @@
 
         /* Bismillah */
 
-        // Tabs (comp-m4) with the look of the old UITabs sample: 02-comp-m1-samples/ui-tabs.htm
+        // Tabs with big icon tabs.
         // - variant: "pill" + a style for every bar (the colors, sizes and rounds of the old sample).
         // - selectedColor, selectedTextColor and selectedIconFile of a tab: the active tab takes its own colors and icon.
 
         // ICONS: The image files of the old sample.
-        const ICON_PATH = "tabs-2/"; // (copied from the old UITabs sample, archived on 2026-10-30)
+        const ICON_PATH = "tabs-2/";
 
         const tabList1 = [
             { key: "1", text: "LOW", iconFile: ICON_PATH + "lamp.png", selectedColor: "white", selectedIconFile: ICON_PATH + "lamp-on.png" },
@@ -136,7 +136,7 @@
                         },
                     });
                     // WHY: A fixed width bar (autoWidth: 0 in the old sample): the tabs stay in the middle.
-                    tabs1.stripInner.elem.style.margin = "0 auto";
+                    tabs1.stripInner.css.margin = "0 auto";
 
                     // *** EXAMPLE 2:
                     tabs2 = Tabs({
@@ -174,7 +174,7 @@
 
             endBox();
             const pageBox = that;
-            if (typeof ScrollBar === "function") ScrollBar({ scrollableBox: pageBox });
+            ScrollBar({ scrollableBox: pageBox });
 
         };
 

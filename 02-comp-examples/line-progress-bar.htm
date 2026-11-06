@@ -21,7 +21,7 @@
 
         /* Bismillah */
 
-        // LineProgressBar (the user, 2026-11-05): thick lines with round ends. An empty line is light gray, or nearly
+        // LineProgressBar: thick lines with round ends. An empty line is light gray, or nearly
         // black (#242424: the checked color of CheckBox); the full lines take a tone of SmartButton. A bubble with an
         // arrow (comp/tooltip.js) shows the value over the last full line; it slides to a new value (animated: 1).
 
@@ -59,7 +59,14 @@
                 VGroup({ width: "100%", height: "auto", align: "center top", gap: 22, padding: [16, 40] });
 
                     Label({ text: "LineProgressBar", fontSize: 26, fontFamily: "opensans-bold", textColor: Black(0.8) });
-                    Label({ text: "Thick lines with round ends; the full lines in a tone of SmartButton, the value in a bubble.", fontSize: 14, textColor: Black(0.5), width: "100%", textAlign: "center", css: { whiteSpace: "normal", textWrap: "balance" } });
+                    Label({
+                        text: "Thick lines with round ends; the full lines in a tone of SmartButton, the value in a bubble.",
+                        fontSize: 14,
+                        textColor: Black(0.5),
+                        width: "100%",
+                        textAlign: "center",
+                        css: { whiteSpace: "normal", textWrap: "balance" },
+                    });
 
                     bars = BARS.map(createBar);
 
@@ -117,8 +124,20 @@
 
         // GROUP: A white card with a title (endCard closes it)
         const startCard = function (title) {
-            VGroup({ width: "100%", height: "auto", align: "left top", gap: 12, padding: [20, 18], color: "white", round: 12, border: 1, borderColor: Black(0.08), clipContent: 0 });
-            that.elem.style.maxWidth = CARD_MAX_WIDTH + "px"; // WHY: basic.js has no maxWidth prop
+            // WHY: basic.js has no maxWidth prop
+            VGroup({
+                width: "100%",
+                height: "auto",
+                align: "left top",
+                gap: 12,
+                padding: [20, 18],
+                color: "white",
+                round: 12,
+                border: 1,
+                borderColor: Black(0.08),
+                clipContent: 0,
+                css: { maxWidth: CARD_MAX_WIDTH + "px" },
+            });
                 Label({ text: title, fontSize: 14, textColor: Black(0.5) });
         };
 
@@ -128,7 +147,8 @@
 
         // GROUP: buttons in a row that wraps on a narrow screen
         const createButtonRow = function (createButtons) {
-            HGroup({ width: "100%", height: "auto", align: "left top", gap: 8, wrap: 1, clipContent: 0 }); // WHY clipContent 0: a SmartButton lifts under the mouse
+            // WHY clipContent 0: a SmartButton lifts under the mouse
+            HGroup({ width: "100%", height: "auto", align: "left top", gap: 8, wrap: 1, clipContent: 0 });
                 createButtons();
             endGroup();
         };

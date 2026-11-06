@@ -73,7 +73,14 @@
                         startButtonRow();
                             SmartButton({ labelText: "- 10", onClick: function () { prgBasic.addValue(-10); } });
                             SmartButton({ labelText: "+ 10", onClick: function () { prgBasic.addValue(10); } });
-                            SmartButton({ tone: "white", labelText: "Reset", onClick: function () { prgBasic.reset(); lblBasic.text = "Value: 0"; } });
+                            SmartButton({
+                                tone: "white",
+                                labelText: "Reset",
+                                onClick: function () {
+                                    prgBasic.reset();
+                                    lblBasic.text = "Value: 0";
+                                },
+                            });
                         endGroup();
 
                         lblBasic = addInfoLabel("Value: 40");
@@ -276,8 +283,8 @@
                 round: 10,
                 border: 1,
                 borderColor: Black(0.1),
+                css: { maxWidth: CARD_MAX_WIDTH + "px" },
             });
-            that.css = { maxWidth: CARD_MAX_WIDTH + "px" };
             Label({
                 text: title,
                 fontSize: 14,
@@ -291,7 +298,8 @@
 
         // GROUP: SmartButtons side by side (endGroup() closes it)
         const startButtonRow = function () {
-            HGroup({ width: "auto", height: "auto", align: "left center", gap: 8, wrap: 1, clipContent: 0 }); // WHY clipContent 0: the focus ring of a SmartButton is not cut
+            // WHY clipContent 0: the focus ring of a SmartButton is not cut
+            HGroup({ width: "auto", height: "auto", align: "left center", gap: 8, wrap: 1, clipContent: 0 });
         };
 
         const addInfoLabel = function (text) {

@@ -105,11 +105,16 @@
     // A row of the Usage Examples: the name on the left, its file on the right.
     // (createItemView is called only for the items: the sections are drawn by ItemList, style.section.)
     ItemListSample.createExampleRow = function (item) {
-        Label({ plainText: item.title, fontSize: 19, textColor: White(0.85), ellipsis: 1 });
-        that.grow = 1;
-        that.css.minWidth = "0px"; // WHY: A long name ends with "..." before the file name.
-        Label({ plainText: item.desc, fontSize: 12, textColor: White(0.65) });
-        that.shrink = 0;
+        // WHY: A long name ends with "..." before the file name.
+        Label({
+            plainText: item.title,
+            fontSize: 19,
+            textColor: White(0.85),
+            ellipsis: 1,
+            grow: 1,
+            css: { minWidth: "0px" },
+        });
+        Label({ plainText: item.desc, fontSize: 12, textColor: White(0.65), shrink: 0 });
     };
 
     // The items of the animated list: the two sections and the first foods under them.

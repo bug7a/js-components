@@ -19,7 +19,7 @@
 
     /* Bismillah */
 
-    // SidePanel (comp-m4) in a container: a 400 px column in the middle of the page, like the column of a mobile
+    // SidePanel in a container: a 400 px column in the middle of the page, like the column of a mobile
     // app on a wide screen. The menu (right) and the sheet (bottom) are made in the column (container: appColumn):
     // they are as tall or as wide as the column, their cover darkens only the column, and they follow its size.
     // The menu: whitesmoke, round corners at its left, fade: 0 (it only slides), a darker cover, 200 ms.
@@ -91,16 +91,22 @@
         createIn(appColumn, function () {
 
             // GROUP: The top bar over the content
-            VGroup({ align: "left top", gap: 0, color: "transparent" });
-            that.css.alignItems = "stretch";
+            VGroup({ align: "left top", gap: 0, color: "transparent", css: { alignItems: "stretch" } });
 
                 createTopBar();
 
                 // BOX: The content scrolls. The column does not: the panels cover it.
                 startBox({ width: "100%", height: "auto", grow: 1, color: "transparent", scrollY: 1 });
 
-                    VGroup({ width: "100%", height: "auto", align: "left top", gap: 12, padding: BAR_SPACE, color: "transparent" });
-                    that.css.alignItems = "stretch";
+                    VGroup({
+                        width: "100%",
+                        height: "auto",
+                        align: "left top",
+                        gap: 12,
+                        padding: BAR_SPACE,
+                        color: "transparent",
+                        css: { alignItems: "stretch" },
+                    });
 
                         createInfoCard();
                         MESSAGES.forEach(createMessageRow);
@@ -118,9 +124,16 @@
     // GROUP: The title of the page and the menu button
     const createTopBar = function () {
 
-        HGroup({ width: "100%", height: BAR_HEIGHT, align: "left center", gap: 10, padding: [BAR_SPACE, 0], color: "white" });
-        that.shrink = 0;
-        that.css.borderBottom = "1px solid " + LINE_COLOR;
+        HGroup({
+            width: "100%",
+            height: BAR_HEIGHT,
+            align: "left center",
+            gap: 10,
+            padding: [BAR_SPACE, 0],
+            color: "white",
+            shrink: 0,
+            css: { borderBottom: "1px solid " + LINE_COLOR },
+        });
 
             lblTitle = Label({ text: MENU_ITEMS[0], fontSize: 20, bold: 1, textColor: INK, grow: 1 });
 
@@ -142,15 +155,39 @@
     // GROUP: What the sample shows, its buttons and what happened last
     const createInfoCard = function () {
 
-        VGroup({ width: "100%", height: "auto", align: "left top", gap: 10, padding: BAR_SPACE, color: "white", round: CARD_ROUND, border: 1, borderColor: LINE_COLOR });
-        that.css.alignItems = "stretch";
+        VGroup({
+            width: "100%",
+            height: "auto",
+            align: "left top",
+            gap: 10,
+            padding: BAR_SPACE,
+            color: "white",
+            round: CARD_ROUND,
+            border: 1,
+            borderColor: LINE_COLOR,
+            css: { alignItems: "stretch" },
+        });
 
             Label({ text: "container: appColumn", fontSize: 15, bold: 1, textColor: INK });
-            Label({ text: "The menu and the sheet are made in this column: they are as tall or as wide as the column, their cover darkens only the column, and they follow its size.", fontSize: 13, textColor: SOFT_INK });
+            Label({
+                text: "The menu and the sheet are made in this column: they are as tall or as wide as the column, their cover darkens only the column, and they follow its size.",
+                fontSize: 13,
+                textColor: SOFT_INK,
+            });
 
             HGroup({ width: "100%", height: "auto", align: "left center", gap: 10, wrap: 1 });
-                SmartButton({ labelText: "Menu", height: BUTTON_HEIGHT, style: BUTTON_LOOK, onClick: function () { sideMenu.open(); } });
-                SmartButton({ labelText: "Share", height: BUTTON_HEIGHT, style: BUTTON_LOOK, onClick: function () { shareSheet.open(); } });
+                SmartButton({
+                    labelText: "Menu",
+                    height: BUTTON_HEIGHT,
+                    style: BUTTON_LOOK,
+                    onClick: function () { sideMenu.open(); },
+                });
+                SmartButton({
+                    labelText: "Share",
+                    height: BUTTON_HEIGHT,
+                    style: BUTTON_LOOK,
+                    onClick: function () { shareSheet.open(); },
+                });
             endGroup();
 
             lblInfo = Label({ text: "No panel was opened yet.", fontSize: 13, textColor: SOFT_INK });
@@ -162,7 +199,17 @@
     // GROUP: A message of the inbox (the content under the panels)
     const createMessageRow = function (message) {
 
-        VGroup({ width: "100%", height: "auto", align: "left top", gap: 2, padding: [BAR_SPACE, 12], color: "white", round: CARD_ROUND, border: 1, borderColor: LINE_COLOR });
+        VGroup({
+            width: "100%",
+            height: "auto",
+            align: "left top",
+            gap: 2,
+            padding: [BAR_SPACE, 12],
+            color: "white",
+            round: CARD_ROUND,
+            border: 1,
+            borderColor: LINE_COLOR,
+        });
             Label({ text: message.from, fontSize: 14, bold: 1, textColor: INK });
             Label({ text: message.subject, fontSize: 13, textColor: SOFT_INK });
         endGroup();

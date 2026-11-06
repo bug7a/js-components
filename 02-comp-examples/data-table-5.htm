@@ -86,7 +86,14 @@
         // BOX: A small bar; the value (0 - 100) fills a part of it
         const createSmallChart = function (cell, value) {
 
-            startBox({ width: CHART_WIDTH, height: CHART_HEIGHT, color: "white", border: 1, borderColor: Black(0.8), round: 2 });
+            startBox({
+                width: CHART_WIDTH,
+                height: CHART_HEIGHT,
+                color: "white",
+                border: 1,
+                borderColor: Black(0.8),
+                round: 2,
+            });
 
                 // BOX: Value
                 Box(0, 0, Math.max(0, Math.min(100, value)) + "%", "100%", {

@@ -105,7 +105,14 @@
         };
 
         const createButton = function (text, color, onClick) {
-            const button = Button({ text: text, width: BUTTON_WIDTH, height: BUTTON_HEIGHT, fontSize: 18, minimal: 1, color: color });
+            const button = Button({
+                text: text,
+                width: BUTTON_WIDTH,
+                height: BUTTON_HEIGHT,
+                fontSize: 18,
+                minimal: 1,
+                color: color,
+            });
             button.on("click", onClick);
             return button;
         };

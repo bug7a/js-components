@@ -62,7 +62,7 @@
 
         fruitSelect = SelectBox({
             styleName: "ozden",         // 350 px wide, a search box; the rows: the ItemList package "ozden"
-            fullHeightList: 1,          // the list from the top of the page to its bottom (the comp-m1 SelectItem opened full screen)
+            fullHeightList: 1,          // the list from the top of the page to its bottom
             height: ROW_HEIGHT,
             options: FRUITS,
             value: "Tomato",
@@ -99,8 +99,8 @@
 
             Label({ plainText: option.label, fontSize: 20, textColor: Black(0.8) });
 
-            Label({ plainText: option.description, fontSize: 14, textColor: "gray" });
-            that.css = { marginTop: "-4px" };   // WHY: the old title and description were this close
+            // WHY: the title and the description stay close
+            Label({ plainText: option.description, fontSize: 14, textColor: "gray", css: { marginTop: "-4px" } });
 
         endGroup();
 
