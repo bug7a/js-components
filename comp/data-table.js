@@ -14,7 +14,7 @@ data (tens of thousands of rows, very many columns): comp/smart-table.js (SmartT
 seen; 100 000 rows in about 0.1 s in the Tauri template). A few rows inside a text: comp/tiny-table.js (TinyTable).
 - Samples: 02-comp-examples/data-table.htm, data-table-2.htm ... data-table-5.htm (data: assets/data-table/).
 - Sorting: a click on a sortable title (again: the other direction), the keyboard (Enter / Space on a title), sortBy().
-- Search: showSearch: 1 puts a SearchInput (comp/search-input-v2.js, load it first) in the header; search(). Escape
+- Search: showSearch: 1 puts a SearchInput (comp/search-input.js, load it first) in the header; search(). Escape
   clears it (2026-11-05; searchParams: { clearOnEscape: 0 } turns it off).
 - Selection: a click, the arrow keys (Home / End), Enter runs onRowClick. select(id), getSelectedData().
 - updateRows() adds, changes and removes rows by their id: the sorting, the search and the selection stay.
@@ -85,7 +85,7 @@ const DataTableDefaults = {
     canSelect: 1, // 0: a click runs onRowClick, no row is selected
     rowHeight: "auto", // "auto": as high as its text (more lines); a number: one line, cut with "..."
     titleText: "", // "": no title in the header
-    showSearch: 0, // 1: a search box in the header (comp/search-input-v2.js SearchInput must be loaded)
+    showSearch: 0, // 1: a search box in the header (comp/search-input.js SearchInput must be loaded)
     searchParams: {}, // More params of the SearchInput. Ex: { placeholderText: "Ara" }
     emptyText: "There are no records.",
     noResultText: "No records found.",
@@ -567,7 +567,7 @@ const DataTable = function (params = {}) {
     const createSearch = function () {
 
         if (typeof SearchInput === "undefined") {
-            console.warn("DataTable: showSearch needs comp/search-input-v2.js (SearchInput).");
+            console.warn("DataTable: showSearch needs comp/search-input.js (SearchInput).");
             return;
         }
 
@@ -843,13 +843,13 @@ DataTable.toAriaSort = function (direction) {
     return (direction == "desc") ? "descending" : "ascending";
 };
 
-// The icons of the search box next to comp/search-input-v2.js, wherever the page is.
+// The icons of the search box next to comp/search-input.js, wherever the page is.
 // WHY: SearchInput gives paths from a page in a samples folder ("../comp/..."); a page of another folder did not
 //      find them. The folder of the loaded script is the same from every page.
 DataTable.getSearchIconFiles = function () {
-    const script = document.querySelector('script[src*="search-input-v2"]');
+    const script = document.querySelector('script[src*="search-input"]');
     if (!script) return {};
-    const folder = script.getAttribute("src").replace(/search-input-v2(\.min)?\.js.*$/, "search-input-v2/");
+    const folder = script.getAttribute("src").replace(/search-input(\.min)?\.js.*$/, "search-input/");
     return { searchIconFile: folder + "search.svg", clearIconFile: folder + "clear-round.svg" };
 };
 

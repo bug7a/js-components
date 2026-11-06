@@ -1,6 +1,6 @@
 # basic.js animated rules
 
-How a component gets an `animated` param (the user, 2026-10-27). The model is `comp/search-input-v2.js`
+How a component gets an `animated` param (the user, 2026-10-27). The model is `comp/search-input.js`
 (`SearchInput`, `animated: 1`): read it before adding `animated` to another component.
 
 ## What the param is

@@ -85,7 +85,7 @@ Aşağıdaki maddeler önem sırasına göre dizildi. **Önce ölçmek** doğru 
 
 **YAPILDI (2026-10-23):** `basic.addCss(id, css, replace)` basic.js'te (bkz. 10. madde). Bileşenlerin kendi kopyaları dokunuldukça buna geçecek.
 
-**Nerede:** Bileşenlerin kendi kopyaları: `Tabs.injectCss`, `RichTextEditor.injectCss` ve `comp/tag-input.js`, `loading-screen.js`, `web-view.js`, `ui-standards.js`, `comp/search-input-v2.js` içinde `document.createElement("style")` kodu (7 dosya).
+**Nerede:** Bileşenlerin kendi kopyaları: `Tabs.injectCss`, `RichTextEditor.injectCss` ve `comp/tag-input.js`, `loading-screen.js`, `web-view.js`, `ui-standards.js`, `comp/search-input.js` içinde `document.createElement("style")` kodu (7 dosya).
 
 **Sorun:** Her bileşen aynı 6-8 satırı yazıyor: id ile "zaten var mı?" kontrolü, `<style>` oluşturma, `head`'e ekleme. basic.js'in `css` özelliği yalnızca satır içi (inline) stil yazar. Sözde elemanlar (`::-webkit-scrollbar`, `::placeholder`), `@keyframes`, `:hover` ve `contenteditable` içeriğinin stilleri satır içi yazılamaz, bu yüzden bu kopyalar gerekiyor.
 

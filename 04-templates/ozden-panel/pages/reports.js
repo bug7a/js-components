@@ -924,8 +924,8 @@ const ReportsPage = function(params = {}) {
                         placeholderText: "Filter (Ex: Books, 2026-09)",
                         fontSize: 14,
                         invertIconColor: T.invertIcon,
-                        searchIconFile: LIB_PATH + "comp/search-input-v2/filter.png",
-                        clearIconFile: LIB_PATH + "comp/search-input-v2/clear.svg",
+                        searchIconFile: LIB_PATH + "comp/search-input/filter.png",
+                        clearIconFile: LIB_PATH + "comp/search-input/clear.svg",
                     },
                     // Filtre kutusundaki sütun seçim listesi (ALL) de koyu tema ile açılsın.
                     searchTitleMenuParams: {

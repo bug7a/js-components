@@ -177,8 +177,8 @@ App.addPage({
                 height: 50,
                 searchIconOpacity: 0.4,
                 placeholderText: "Search",
-                searchIconFile: AppSettings.componentPath + "search-input-v2/search.svg",
-                clearIconFile: AppSettings.componentPath + "search-input-v2/clear.svg",
+                searchIconFile: AppSettings.componentPath + "search-input/search.svg",
+                clearIconFile: AppSettings.componentPath + "search-input/clear.svg",
                 onSearch: (text) => fileList.search(text),
             });
         endBox();

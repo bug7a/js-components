@@ -266,8 +266,8 @@ const UsersPage = function(params = {}) {
                 placeholderText: "Filter the table",
                 fontSize: 15,
                 invertIconColor: T.invertIcon,
-                searchIconFile: "../../comp/search-input-v2/filter.png",
-                clearIconFile: "../../comp/search-input-v2/clear.svg",
+                searchIconFile: "../../comp/search-input/filter.png",
+                clearIconFile: "../../comp/search-input/clear.svg",
 
             },
             // Filtre kutusundaki sütun seçim listesi (ALL) de koyu tema ile açılsın.

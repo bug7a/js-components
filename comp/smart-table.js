@@ -129,7 +129,7 @@ const SmartTableDefaults = {
         searchIconSize: 16,
         searchIconOpacity: 0.5,
         placeholderText: "Filter",
-        searchIconFile: "../comp/search-input-v2/filter.png",
+        searchIconFile: "../comp/search-input/filter.png",
         clearIconMinTextWidth: 80, // (the user, 2026-11-05: a narrow filter box has no clear icon; its text keeps that place)
         clearOnEscape: 1, // Escape clears the filter (the user, 2026-11-05: a narrow box has no clear icon)
     },
@@ -1796,7 +1796,7 @@ SmartTable.styles = {
             fontSize: 16,
             borderColor: Black(0.15), // (the user, 2026-11-05: light edges in the filter)
             borderBottomStyle: "1px solid " + Black(0.15),
-            searchIconFile: "../comp/search-input-v2/filter.png",
+            searchIconFile: "../comp/search-input/filter.png",
             searchIconOpacity: 0.8, // (the user, 2026-11-05: a softer filter icon, in tune with the edges)
         },
     },

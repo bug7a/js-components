@@ -8,7 +8,7 @@ A select field that opens its list on the whole screen: a search box at the top,
 (a phone app, a long list). The new version of comp-m1/ui-select-text.js (UISelectText, removed on 2026-10-28) with the same look.
 - The field: the text of the selected item, two small arrows at the right side. A click (or Enter, Space, the down
   arrow) opens the list. autoWidth: 1 -> the field is as wide as its text.
-- The list: it comes in from below with a fade. The search box (comp/search-input-v2.js SearchInput, load it
+- The list: it comes in from below with a fade. The search box (comp/search-input.js SearchInput, load it
   first; without it there is no search box) shows only the items with the typed text (Turkish letters are found
   without their marks); Enter selects the first one. The selected item has a soft yellow color.
   searchIconFile / clearIconFile: the icons of the search box ("": the default files of SearchInput, which are

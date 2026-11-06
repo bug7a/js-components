@@ -18,7 +18,7 @@ UI COMPONENT TEMPLATE
   be chosen again: a click, Enter or Space does nothing (no onItemClick), no look under the mouse, no hand cursor.
   The keys can still go to it (its focus ring; a screen reader reads it as selected).
   onChange(self, selectedItems) is NOT called at create time, by setItems() or with silent: 1.
-- Search box: showSearch: 1 puts a SearchInput (comp/search-input-v2.js, load it first) over the list;
+- Search box: showSearch: 1 puts a SearchInput (comp/search-input.js, load it first) over the list;
   its look is style.search, more params in searchParams (Ex: the icon paths for your page). box.searchInput.
 - Search: search(text) shows only the matching items (title, desc and searchText; Turkish letters are
   matched without their marks: "isik" finds "Işık"). It returns the count of the shown items.
@@ -104,8 +104,8 @@ const ItemListDefaults = {
     createItemView: null, // function (item, row, self) { ... } Objects created here go into the row (instead of the icon and texts). Not called for a section.
     createSectionView: null, // function (item, row, self) { ... } Your own section row (instead of its title)
     animated: 0, // 1: addItem / removeItem move the rows (a new row fades in, a removed one fades out). setAnimated(0/1)
-    showSearch: 0, // 1: a search box over the list (comp/search-input-v2.js SearchInput must be loaded)
-    searchParams: {}, // More params of the SearchInput. Ex: { placeholderText: "Ara", searchIconFile: "../comp/search-input-v2/search.svg" }
+    showSearch: 0, // 1: a search box over the list (comp/search-input.js SearchInput must be loaded)
+    searchParams: {}, // More params of the SearchInput. Ex: { placeholderText: "Ara", searchIconFile: "../comp/search-input/search.svg" }
     emptyText: "No items",
     noResultText: "No results",
     enabled: 1,
@@ -1215,7 +1215,7 @@ const ItemList = function (params = {}) {
     const createSearch = function () {
         if (box.showSearch != 1) return 0;
         if (typeof SearchInput === "undefined") {
-            console.warn("ItemList: showSearch needs comp/search-input-v2.js (SearchInput).");
+            console.warn("ItemList: showSearch needs comp/search-input.js (SearchInput).");
             return 0;
         }
         const search = _s.search;

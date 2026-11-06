@@ -25,7 +25,7 @@ UI COMPONENT TEMPLATE
   and turns under the mouse. Off in every package, "ozden" and "ozdenDark" too (the user, 2026-10-27): give animated: 1.
   Only transform, opacity and box-shadow change (smooth, cheap). Off when the system asks for reduced motion.
 - Place: left / top (default 0, 0), or right / bottom: SearchInput({ right: 20, bottom: 20 }) is at the right bottom
-  corner of its box (the default left / top is not used then). Sample: 02-comp-examples/search-input-v2-place.htm
+  corner of its box (the default left / top is not used then). Sample: 02-comp-examples/search-input-place.htm
 - The right end (2026-11-05, the user): clearIconRight moves the clear icon and the end of the text to the left, so
   the right end of the box is kept for an object of the page (the column chip of SmartTable); setClearIconRight().
   A click on such an object keeps its own click (it does not start typing). clearIconMinTextWidth: a narrow box does

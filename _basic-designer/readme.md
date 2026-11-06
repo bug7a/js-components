@@ -61,7 +61,7 @@ VS Code'da (**Open in basic designer**, eklenti 0.0.8+) designer'ın açıldığ
 
 ## Tasarımlar nerede (kullanıcı, 2026-11-02)
 
-Tasarımlar deponun kökündeki `_designs/` klasöründedir. Bu klasördeki eski `designs/` kaldırıldı. Bir bileşenin davranışı denenirken depodaki örnek açılır: `index.htm?page=02-comp-examples/search-input-v2-ozden.htm`. Bir sayfa `<meta name="basic-designer-page" content="...">` ile başka bir sayfaya yönlendirebilir.
+Tasarımlar deponun kökündeki `_designs/` klasöründedir. Bu klasördeki eski `designs/` kaldırıldı. Bir bileşenin davranışı denenirken depodaki örnek açılır: `index.htm?page=02-comp-examples/search-input-ozden.htm`. Bir sayfa `<meta name="basic-designer-page" content="...">` ile başka bir sayfaya yönlendirebilir.
 
 ## Denetim (test) sayfası
 

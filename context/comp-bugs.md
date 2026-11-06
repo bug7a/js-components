@@ -107,7 +107,7 @@ Satır numaraları 2026-11-05'teki dosyalara göredir.
 - Düzeltme: zorunluluk kontrolünden sonra `showWarningIfNotValid(isValid())` (setRequired'da ve yaratılırken).
 
 **8. LoginPageV2: pasif LOGIN / SIGN UP düğmeleri Tab + Enter ile çalışıyor** · ✅ düzeltildi (2026-11-05)
-- Yer: `comp/login-page-v2.js:557-560, 389-390`
+- Yer: `comp/login-page.js:557-560, 389-390`
 - Ne oluyor: pasif düğmeler yalnızca `clickable = 0`; `<button>` oldukları için Tab + Enter yine tıklar ve tıklama
   işleyicisi durumu kontrol etmez. Geçersiz e-postayla LOGIN, 1 harflik şifreyle SIGN UP çalışır.
 - Düzeltme: işleyicide `if (box.loginBtn.clickable != 1) return;` (SIGN UP için de); Form'un gönder düğmesi gibi.
@@ -241,7 +241,7 @@ Satır numaraları 2026-11-05'teki dosyalara göredir.
 - Form `showMessage()` eksik bir nesneyle (`onClose` yok) fırlatır (`form.js:98-105, 157-158`); bütün çağıranlar
   tam nesne veriyor.
 - TagInput: ayırıcı (",") içeren bir öneri ikiye bölünür (`tag-input.js:593`).
-- LoginPageV2: yaratıldıktan sonra atanan `onLoginClick` çağrılmaz (`login-page-v2.js:389-390`).
+- LoginPageV2: yaratıldıktan sonra atanan `onLoginClick` çağrılmaz (`login-page.js:389-390`).
 - FullScreenSelect: kendisini silen bir `onChange`'den sonra konsolda TypeError (`full-screen-select.js:433-436`).
 - TinySelect `setSelectedIndex(-1)` fırlatır (`tiny-select.js:89-91`); çağıranlar zaten kontrol ediyor.
 - ✅ (düzeltildi 2026-11-05) DataTable `updateRows()` tekrar eden id'lerde eski satırları bırakır; bunlar `clearRows()` / `setRows()`'dan sonra

@@ -17,7 +17,7 @@
         <script src="../comp/input-b.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/textarea-b.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/slider-field.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp/search-input-v2.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/search-input.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/full-screen-select.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/item-list.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/side-panel.js" type="text/javascript" charset="utf-8"></script>
@@ -37,7 +37,7 @@
         <script src="../comp/settings-row.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/loading-screen.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/ui-effects.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp/login-page-v2.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/login-page.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/slider.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/check-box.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/radio-button.js" type="text/javascript" charset="utf-8"></script>
@@ -59,7 +59,7 @@
         <script src="../comp/stepper.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/filters.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/toggle.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../comp/badge-v2.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/badge.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/bottom-bar.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/period-bar.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/action-tab-bar.js" type="text/javascript" charset="utf-8"></script>
@@ -1073,7 +1073,7 @@
             holder.remove();
         });
 
-        // *** LOGIN PAGE (comp/login-page-v2.js)
+        // *** LOGIN PAGE (comp/login-page.js)
 
         test("LoginPage: the hidden tab can not be clicked", async function () {
             let logins = 0;
@@ -1725,8 +1725,8 @@
         // *** FULL SCREEN SELECT (comp/full-screen-select.js)
 
         test("FullScreenSelect: searchIconFile / clearIconFile go to the search box of the list (none given: SearchInput's own)", async function () {
-            const SEARCH_FILE = "../comp/search-input-v2/search.svg?given";
-            const CLEAR_FILE = "../comp/search-input-v2/clear.svg?given";
+            const SEARCH_FILE = "../comp/search-input/search.svg?given";
+            const CLEAR_FILE = "../comp/search-input/clear.svg?given";
             const given = FullScreenSelect({ items: ["A", "B"], searchIconFile: SEARCH_FILE, clearIconFile: CLEAR_FILE });
             given.open();
             const search = given.panel.searchInput;
@@ -1741,7 +1741,7 @@
             plain.remove();
         });
 
-        // *** SEARCH INPUT (comp/search-input-v2.js)
+        // *** SEARCH INPUT (comp/search-input.js)
 
         test("SearchInput: a pasted text is searched", async function () {
             const texts = [];
@@ -2308,7 +2308,7 @@
                 "bubble " + sizeText(normal.bubble) + " / " + sizeText(zoomed.bubble) + ", gap " + normal.gap.toFixed(1) + " / " + zoomed.gap.toFixed(1));
         });
 
-        // *** BOTTOM BAR (comp/bottom-bar.js) and BADGE (comp/badge-v2.js)
+        // *** BOTTOM BAR (comp/bottom-bar.js) and BADGE (comp/badge.js)
 
         const BOTTOM_BAR_ITEMS = [
             { icon: "../02-comp-examples/bottom-bar/icon1.png", text: "Home" },
@@ -2762,7 +2762,7 @@
             login.remove();
         });
 
-        // 2026-11-05 (the user): LOGIN of login-page-v2.htm is a blue ozdenType3 SmartButton
+        // 2026-11-05 (the user): LOGIN of login-page.htm is a blue ozdenType3 SmartButton
         test("LoginPageV2: buttonStyleName makes LOGIN a SmartButton; passive it does not log in (a click, Enter), active it does", async function () {
             let logins = 0;
             const login = LoginPage({ buttonStyleName: "ozdenType3", buttonTone: "blue", onLoginClick: function () { logins++; } });

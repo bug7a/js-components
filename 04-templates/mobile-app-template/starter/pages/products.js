@@ -47,8 +47,8 @@ App.addPage({
             searchParams: {
                 styleName: "ozden",
                 placeholderText: "Search",
-                searchIconFile: AppSettings.componentPath + "search-input-v2/search.svg",
-                clearIconFile: AppSettings.componentPath + "search-input-v2/clear-round.svg",
+                searchIconFile: AppSettings.componentPath + "search-input/search.svg",
+                clearIconFile: AppSettings.componentPath + "search-input/clear-round.svg",
             },
             style: { box: { border: 0 } },
             onItemClick: function (self, item) {

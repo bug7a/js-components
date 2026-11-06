@@ -10,7 +10,7 @@ UI COMPONENT
 - Made in basic-designer from a picture, then turned into this component.
 - The groups (sections) open and close (a click, or Enter / Space on the title); the search shows the options with
   the text; every change of the selection goes to onChange (not at create time, not with silent: 1).
-- The fields of the kit (the user, 2026-11-05): the search field is a SearchInput (comp/search-input-v2.js, its
+- The fields of the kit (the user, 2026-11-05): the search field is a SearchInput (comp/search-input.js, its
   params: searchInputParams, "ozden" by default) and every option is a CheckBox (comp/check-box.js, its params:
   checkBoxParams, "classic" by default; the row is the check box, its checked mark takes the accent). Load them
   before this file; without them a plain field and a plain check are drawn.
@@ -71,7 +71,7 @@ const FiltersDefaults = {
     // [{ key, titleText, opened, options: [{ key, labelText, checked }] or ["text"] }]
     sections: [],
     animated: 0, // 1: the panel and an opened section come in, the arrows turn (box.setAnimated(0/1))
-    // The search field (the user, 2026-11-05): the params of its SearchInput (comp/search-input-v2.js). Its
+    // The search field (the user, 2026-11-05): the params of its SearchInput (comp/search-input.js). Its
     // placeholder is searchPlaceholder; its animated is the animated of Filters (unless it is given here).
     searchInputParams: { styleName: "ozden", width: "100%", height: 50, fontSize: 18, searchIconSize: 20 },
     // The check boxes (the user, 2026-11-05): the params of every CheckBox (comp/check-box.js). The row look is
@@ -451,7 +451,7 @@ const Filters = function (params = {}) {
 
     // *** THE SEARCH FIELD
 
-    // A SearchInput (comp/search-input-v2.js); without it, a plain field
+    // A SearchInput (comp/search-input.js); without it, a plain field
     const createSearchField = function () {
         if (!hasSearchInput) {
             createPlainSearchField();

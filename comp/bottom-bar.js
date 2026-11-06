@@ -11,7 +11,7 @@ WebPage: https://bug7a.github.io/
 
 - Design idea from an Instagram post by shahinurstk02
 
-NEEDS: comp/badge-v2.js (Badge), loaded before the first item is created.
+NEEDS: comp/badge.js (Badge), loaded before the first item is created.
 NOTE: Each item needs two icon files: "home.png" (normal) and "homes.png" (selected: the same name + "s").
 
 THE NAME OF THE SELECTED ITEM (labelMode):
@@ -74,7 +74,7 @@ const BottomBarDefaults = {
     hoverEffect: true, // For desktop usage
     labelMode: "inline", // "inline": the name next to the selected icon, "float": over it for a moment, "none": no names
     floatLabelTime: 600, // ms: from the moment the name shows over the selected item to its fade out ("float")
-    badge: { // The params of the Badge of every item (comp/badge-v2.js)
+    badge: { // The params of the Badge of every item (comp/badge.js)
         showZero: 0, // 1: a badge set to 0 shows "0" (0: hidden)
         dotForOne: 1, // 1: a dot for 1, 0: the number 1
         maxValue: 99, // More: "99+"

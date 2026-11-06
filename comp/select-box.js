@@ -8,7 +8,7 @@ UI COMPONENT TEMPLATE
 - A dropdown select: a field that opens a list (popup) under or above it.
 - Single or multiple selection (multiple: 1). "Select all" and "Clear" for multiple.
 - Search in the list (searchable: "auto" -> when there are more than 8 options). Matches are highlighted.
-- The search box is a SearchInput (comp/search-input-v2.js, with its clear button) when that file is loaded
+- The search box is a SearchInput (comp/search-input.js, with its clear button) when that file is loaded
   before this one (useSearchInput: 1). Its look: style.searchInput (the params of SearchInput). Without it the
   search box is an own input (its look: style.search).
 - The list at the full height of the page (fullHeightList: 1): as wide as the field, at its left, from the top
@@ -107,7 +107,7 @@ const SelectBoxDefaults = {
     maxRenderCount: 300,
     enabled: 1,
     useScrollBar: 1, // basic/scroll-bar.js on the list (load it first). 0: the scrollbar of the browser (hidden by basic.css in Chrome).
-    useSearchInput: 1, // 1: the search box is a SearchInput when comp/search-input-v2.js is loaded first (style.searchInput). 0: the own input (style.search)
+    useSearchInput: 1, // 1: the search box is a SearchInput when comp/search-input.js is loaded first (style.searchInput). 0: the own input (style.search)
     fullHeightList: 0, // 1: the list opens from the top of the page to its bottom, as wide as the field, at its left. (box.setFullHeightList())
     scale: null, // Multiplies every size. null: basic.uiScale (1, or 1 / page.zoom on a fitted page). (Only at create time)
     ariaLabel: "",
@@ -168,7 +168,7 @@ const SelectBoxDefaults = {
             startScale: 0.9,
         },
         // The search box when it is a SearchInput: its params (a styleName of SearchInput.styles and its look params).
-        // An icon file without a folder ("search.svg") is taken from the folder of comp/search-input-v2.js.
+        // An icon file without a folder ("search.svg") is taken from the folder of comp/search-input.js.
         searchInput: {
             styleName: "original", // the first look of SearchInput ("classic" became a standard search box, 2026-11-06)
             height: 38,
@@ -341,7 +341,7 @@ const SelectBox = function (params = {}) {
     // createItemView: the list is an ItemList (box.itemList), made at the first open.
     const usesItemList = (typeof box.createItemView === "function") && SelectBox.canUseItemList();
     let fieldViewOption = null; // The option that createValueView has drawn in the field
-    // The search box is a SearchInput (box.searchGroup) when comp/search-input-v2.js is loaded. box.searchInput: its input.
+    // The search box is a SearchInput (box.searchGroup) when comp/search-input.js is loaded. box.searchInput: its input.
     const usesSearchInput = (box.useSearchInput == 1) && SelectBox.canUseSearchInput();
 
     // *** PUBLIC VARIABLES:
@@ -1134,7 +1134,7 @@ const SelectBox = function (params = {}) {
         input.setAttribute("autocomplete", "off");
     };
 
-    // A SearchInput of comp/search-input-v2.js (style.searchInput), with its clear button.
+    // A SearchInput of comp/search-input.js (style.searchInput), with its clear button.
     const createSearchInput = function () {
         const params = Object.assign({}, _s.searchInput);
         params.searchIconFile = SelectBox.getSearchIconFile(params.searchIconFile);
@@ -1547,7 +1547,7 @@ SelectBox.canUseItemList = function () {
     return false;
 };
 
-// The search box is a SearchInput when comp/search-input-v2.js is loaded (no warning without it: the own box).
+// The search box is a SearchInput when comp/search-input.js is loaded (no warning without it: the own box).
 // WHY: SearchInput.styles: the comp-m1 SearchInput had the same global name and not the same params.
 SelectBox.canUseSearchInput = function () {
     return (typeof SearchInput === "function") && !!SearchInput.styles;
@@ -1568,13 +1568,13 @@ SelectBox.fillSearchInputPackage = function (style) {
 };
 
 // An icon file of style.searchInput: a name without a folder ("search.svg") is taken from the folder of the
-// loaded comp/search-input-v2.js. WHY: SearchInput gives paths from a page in a samples folder ("../comp/");
+// loaded comp/search-input.js. WHY: SearchInput gives paths from a page in a samples folder ("../comp/");
 // a page of another folder did not find them. A path ("../my/search.svg") or a data: URL is used as it is.
 SelectBox.getSearchIconFile = function (file) {
     if (!file || file.includes("/")) return file;
-    const script = document.querySelector('script[src*="search-input-v2"]');
+    const script = document.querySelector('script[src*="search-input"]');
     if (!script) return file;
-    return script.getAttribute("src").replace(/search-input-v2(\.min)?\.js.*$/, "search-input-v2/") + file;
+    return script.getAttribute("src").replace(/search-input(\.min)?\.js.*$/, "search-input/") + file;
 };
 
 // "Apple" -> { value: "Apple", label: "Apple", description: "", iconFile: "", group: "", disabled: 0 }
@@ -1742,7 +1742,7 @@ SelectBox.styles.ozden = {
             round: 2,
             fontSize: 18,
             textColor: "rgba(0, 0, 0, 0.8)",
-            height: 44, // as searchInput (this own search box: a page without comp/search-input-v2.js)
+            height: 44, // as searchInput (this own search box: a page without comp/search-input.js)
             padding: [16, 0],
             iconSize: 22,
             borderBottom: "2px solid rgba(0, 0, 0, 0.06)",

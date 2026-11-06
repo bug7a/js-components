@@ -71,7 +71,7 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "search-results", name: "SearchResults", cat: "navigation",
-        source: "comp/search-results.js", deps: ["comp/search-input-v2.js"], samples: ["02-comp-examples/search-results.htm"],
+        source: "comp/search-results.js", deps: ["comp/search-input.js"], samples: ["02-comp-examples/search-results.htm"],
         en: "The result list that opens under a search input, like an autocomplete or a command palette.",
         tr: "Arama kutusunun altında açılan sonuç listesi; otomatik tamamlama veya komut paleti gibi.",
     },
@@ -116,7 +116,7 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "select-box", name: "SelectBox", cat: "selection",
-        source: "comp/select-box.js", deps: ["comp/search-input-v2.js"], samples: ["02-comp-examples/select-box.htm", "02-comp-examples/select-box-ozden-item.htm", "02-comp-examples/select-box-ozden-text.htm", "02-comp-examples/select-box-ozden-dark-text.htm"],
+        source: "comp/select-box.js", deps: ["comp/search-input.js"], samples: ["02-comp-examples/select-box.htm", "02-comp-examples/select-box-ozden-item.htm", "02-comp-examples/select-box-ozden-text.htm", "02-comp-examples/select-box-ozden-dark-text.htm"],
         en: "Dropdown select for single or multiple selection, with select all and clear.",
         tr: "Tekli veya çoklu seçim için açılır liste; tümünü seç ve temizle düğmeleri.",
     },
@@ -128,7 +128,7 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "full-screen-select", name: "FullScreenSelect", cat: "selection",
-        source: "comp/full-screen-select.js", deps: ["comp/search-input-v2.js"], samples: ["02-comp-examples/full-screen-select.htm"],
+        source: "comp/full-screen-select.js", deps: ["comp/search-input.js"], samples: ["02-comp-examples/full-screen-select.htm"],
         en: "A select field whose list opens on the whole screen, with a search box: for phones and long lists. The new version of UISelectText.",
         tr: "Listesi tüm ekranda açılan, arama kutulu seçim alanı: telefonlar ve uzun listeler için. UISelectText'in yeni sürümü.",
     },
@@ -308,7 +308,7 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "data-table", name: "DataTable", cat: "data",
-        source: "comp/data-table.js", deps: ["comp/search-input-v2.js"],
+        source: "comp/data-table.js", deps: ["comp/search-input.js"],
         samples: [
             { file: "02-comp-examples/data-table.htm", title: "Styles" },
             { file: "02-comp-examples/data-table-2.htm", title: "Basic" },
@@ -397,7 +397,7 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "smart-table", name: "SmartTable", cat: "data",
-        source: "comp/smart-table.js", deps: ["comp/search-input-v2.js", "comp/context-menu.js", "comp/tooltip.js"],
+        source: "comp/smart-table.js", deps: ["comp/search-input.js", "comp/context-menu.js", "comp/tooltip.js"],
         samples: [
             { file: "02-comp-examples/smart-table.htm", title: "Styles" },
             { file: "02-comp-examples/smart-table-1.htm", title: "2M rows" },
@@ -438,7 +438,7 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "bottom-bar", name: "BottomBar", cat: "navigation",
-        source: "comp/bottom-bar.js", deps: ["comp/badge-v2.js"],
+        source: "comp/bottom-bar.js", deps: ["comp/badge.js"],
         samples: ["02-comp-examples/bottom-bar.htm", { file: "02-comp-examples/bottom-bar-2.htm", title: "Old template look" }],
         en: "Mobile app bottom bar built from a JSON list of buttons, with badges; the name of the selected item next to it, over it for a moment or hidden, a color per item, keyboard ready.",
         tr: "JSON listesinden oluşturulan, rozetli mobil uygulama alt çubuğu; seçili öğenin adı yanında, bir an üstünde ya da gizli, öğe başına renk, klavyeyle kullanılabilir.",
@@ -510,7 +510,7 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "search-input", name: "SearchInput", cat: "inputs",
-        source: "comp/search-input-v2.js", samples: [{ file: "02-comp-examples/search-input-v2.htm", title: "classic: a standard search box" }, { file: "02-comp-examples/search-input-v2-place.htm", title: "Place: right / bottom" }],
+        source: "comp/search-input.js", samples: [{ file: "02-comp-examples/search-input.htm", title: "classic: a standard search box" }, { file: "02-comp-examples/search-input-place.htm", title: "Place: right / bottom" }],
         en: "Search field with a search icon and a clear button.",
         tr: "Arama ikonu ve temizleme düğmeli arama kutusu.",
     },
@@ -565,16 +565,16 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "badge", name: "BadgeV2", cat: "feedback",
-        source: "comp/badge-v2.js", samples: ["02-comp-examples/badgeV2.htm"],
+        source: "comp/badge.js", samples: ["02-comp-examples/badge.htm"],
         en: "Notification badge on an object: a dot or a number; 0 and 1 can be shown as numbers, and the number can have its own look (a white ring).",
         tr: "Bir nesnenin üzerinde bildirim rozeti: nokta ya da sayı; 0 ve 1 de sayı olarak gösterilebilir, sayının kendi görünüşü olabilir (beyaz halka).",
     },
     {
         key: "login-page", name: "LoginPage", cat: "pages",
-        source: "comp/login-page-v2.js", deps: ["comp/ui-effects.js", "comp/tooltip.js", "comp/input-b.js", "comp/email-input-b.js", "comp/password-input-b.js", "comp/tabs.js", "comp/smart-button.js", "comp/loading-screen.js"],
+        source: "comp/login-page.js", deps: ["comp/ui-effects.js", "comp/tooltip.js", "comp/input-b.js", "comp/email-input-b.js", "comp/password-input-b.js", "comp/tabs.js", "comp/smart-button.js", "comp/loading-screen.js"],
         samples: [
-            { file: "02-comp-examples/login-page-v2.htm", title: "Light" },
-            { file: "02-comp-examples/login-page-dark-v2.htm", title: "Dark" },
+            { file: "02-comp-examples/login-page.htm", title: "Light" },
+            { file: "02-comp-examples/login-page-dark.htm", title: "Dark" },
         ],
         en: "A ready login and sign up page with e-mail, password and social buttons.",
         tr: "E-posta, şifre ve sosyal giriş düğmeleriyle hazır giriş ve kayıt sayfası.",

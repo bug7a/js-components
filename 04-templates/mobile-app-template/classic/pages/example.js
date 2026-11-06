@@ -149,8 +149,8 @@ const ExampleViews = {
 
     "search-input": function (box) {
         const iconFiles = {
-            searchIconFile: AppSettings.componentPath + "search-input-v2/search.svg",
-            clearIconFile: AppSettings.componentPath + "search-input-v2/clear.svg",
+            searchIconFile: AppSettings.componentPath + "search-input/search.svg",
+            clearIconFile: AppSettings.componentPath + "search-input/clear.svg",
         };
         // GROUP: The green half
         VGroup({ width: "100%", height: "50%", align: "center center", color: App.colors.green });

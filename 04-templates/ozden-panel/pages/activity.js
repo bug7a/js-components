@@ -429,8 +429,8 @@ const ActivityPage = function(params = {}) {
                     searchIconSize: 16,
                     placeholderText: "Search user, target, IP",
                     invertIconColor: T.invertIcon,
-                    searchIconFile: LIB_PATH + "comp/search-input-v2/search.svg",
-                    clearIconFile: LIB_PATH + "comp/search-input-v2/clear.svg",
+                    searchIconFile: LIB_PATH + "comp/search-input/search.svg",
+                    clearIconFile: LIB_PATH + "comp/search-input/clear.svg",
                     onSearch: function(text) {
                         filter.search = text;
                         searchTimer = waitAndRun(searchTimer, renderTable, 200); // WHY: Filtering thousands of rows on every key is slow.
@@ -862,8 +862,8 @@ ActivityPage.getSmartTableStyle = function(libPath) {
             textColor: Ink(0.9), placeholderColor: Ink(0.4), fontSize: 14,
             placeholderText: "Filter the table",
             searchIconSize: 15, searchIconOpacity: 0.55, invertIconColor: T.invertIcon,
-            searchIconFile: libPath + "comp/search-input-v2/filter.png",
-            clearIconFile: libPath + "comp/search-input-v2/clear.svg",
+            searchIconFile: libPath + "comp/search-input/filter.png",
+            clearIconFile: libPath + "comp/search-input/clear.svg",
         },
         // Filtre kutusundaki sütun seçim listesi (ALL) de koyu tema ile açılsın.
         searchTitleMenuParams: {

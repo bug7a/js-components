@@ -27,8 +27,8 @@
         <script src="../../comp/email-input-b.js" charset="utf-8" defer></script>
         <script src="../../comp/password-input-b.js" charset="utf-8" defer></script>
         <script src="../../comp/left-menu.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../comp/badge-v2.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../comp/search-input-v2.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../comp/badge.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../comp/search-input.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../comp/tiny-select.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../comp/loading-screen.js" type="text/javascript" charset="utf-8"></script>
@@ -41,7 +41,7 @@
         <script src="../../comp/context-menu.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../comp/search-results.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../comp/smart-table.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../../comp/login-page-v2.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../comp/login-page.js" type="text/javascript" charset="utf-8"></script>
         <!-- Home page (dashboard) components -->
         <script src="../../comp/tiny-table.js" type="text/javascript" charset="utf-8"></script>
         <script src="../../comp/line-progress-bar.js" type="text/javascript" charset="utf-8"></script>
@@ -160,7 +160,7 @@
             };
 
             // WHY: The login page is dark by itself. The light theme uses the light style of the
-            //      component (comp/login-page-v2.js). mergeIntoIfMissing fills only what is not set above.
+            //      component (comp/login-page.js). mergeIntoIfMissing fills only what is not set above.
             if (!T.isDark) mergeIntoIfMissing(loginParams, LoginPageLightStyle);
 
             loginPage = LoginPage(loginParams);

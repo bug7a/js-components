@@ -867,8 +867,8 @@ const RolesPage = function(params = {}) {
                     searchIconSize: 16,
                     placeholderText: "Search members",
                     invertIconColor: T.invertIcon,
-                    searchIconFile: LIB_PATH + "comp/search-input-v2/search.svg",
-                    clearIconFile: LIB_PATH + "comp/search-input-v2/clear.svg",
+                    searchIconFile: LIB_PATH + "comp/search-input/search.svg",
+                    clearIconFile: LIB_PATH + "comp/search-input/clear.svg",
                     onSearch: function(text) {
                         memberSearch = text;
                         renderMembers();

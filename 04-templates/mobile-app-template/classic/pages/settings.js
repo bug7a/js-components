@@ -100,8 +100,8 @@ App.addPage({
                 placeholderText: "Filter",
                 arrowIconFile: AppSettings.componentPath + "full-screen-select/arrow.svg",
                 closeIconFile: AppSettings.componentPath + "full-screen-select/cancel.svg",
-                searchIconFile: AppSettings.componentPath + "search-input-v2/search.svg",
-                clearIconFile: AppSettings.componentPath + "search-input-v2/clear.svg",
+                searchIconFile: AppSettings.componentPath + "search-input/search.svg",
+                clearIconFile: AppSettings.componentPath + "search-input/clear.svg",
                 style: { box: { color: "white" }, itemSelected: { color: "#E1F0FF" } },
                 onChange: function (self) {
                     saveSetting(key, self.selectedKey);

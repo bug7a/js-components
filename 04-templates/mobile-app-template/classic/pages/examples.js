@@ -16,7 +16,7 @@ const ExampleList = [
     { title: "Tabs", desc: "comp/tabs.js", example: "tabs" },
     { title: "Title", desc: "comp/page-header.js", example: "page-header" },
     { title: "Left Title", desc: "comp/settings-row.js", example: "settings-row" },
-    { title: "Search Input", desc: "comp/search-input-v2.js", example: "search-input" },
+    { title: "Search Input", desc: "comp/search-input.js", example: "search-input" },
     { title: "Action Button", desc: "comp/action-button.js", example: "action-button" },
     { title: "Progress Bar", desc: "comp/progress-bar.js", example: "progress-bar" },
     { title: "Notice", desc: "comp/notice.js", example: "notice" },
@@ -106,8 +106,8 @@ App.addPage({
                 borderBottomStyle: "2px solid " + Black(0.2),
                 searchIconOpacity: 0.4,
                 placeholderText: "Search",
-                searchIconFile: AppSettings.componentPath + "search-input-v2/search.svg",
-                clearIconFile: AppSettings.componentPath + "search-input-v2/clear.svg",
+                searchIconFile: AppSettings.componentPath + "search-input/search.svg",
+                clearIconFile: AppSettings.componentPath + "search-input/clear.svg",
                 onSearch: (text) => exampleList.search(text),
             });
         endBox();
