@@ -21,7 +21,7 @@ UI COMPONENT TEMPLATE
   bar, a little longer than it; "dot" ("ozden", the user 2026-11-06): a dot inside the track that has the color of
   the part under it (limit.barColor on the bar, secondBarColor on the second part, color on the track; on a dark
   track darkTrack.limitColor), half and half while the end of the bar goes over it. The own color of a limit is
-  its color on the track.
+  its color on the track. limit.dotOpacity: every dot ("ozden": 0.85).
 - Style packages: "classic" (default), "modern", "ozden" (the user, 2026-11-06: the bar is a cyan SmartButton
   ozdenType1, with its edge and its line at the bottom; a round track, the second part a light bar next to it; a dark
   limit line with a text). "ozdenDark" (the ozden bar of 2026-10-29 for a dark page). Select with styleName.
@@ -29,7 +29,7 @@ UI COMPONENT TEMPLATE
 - THE ENDS: an end of a bar at an end of the track is as round as the track; an end in the middle of the track has
   style.bar.innerRound ("": as round as the track; "ozden": 0, straight).
 - A DARK TRACK: darkTrack: 1 gives the track the colors of style.darkTrack (#242424 with a faint white edge; the
-  user, 2026-11-06); the bars keep theirs. setDarkTrack().
+  user, 2026-11-06; "ozden": Black(0.85) with no edge); the bars keep theirs. setDarkTrack().
 - THE TRACK of every bar (basic-designer, 2026-10-30): 16 px, #F2F2F2, a 2 px light gray edge, round 4 (the default;
   "modern" keeps its own: 10 px, no edge, round ends; "ozden" has round ends).
 - Everything is drawn with code (no image files needed).
@@ -112,6 +112,7 @@ const ProgressBarDefaults = {
             round: 0,
             overhang: 6, // px over and under the track (a line)
             dotSize: 6, // px (a dot)
+            dotOpacity: 1, // a dot, on every part (Ex: 0.85: a little softer)
             barColor: "white", // a dot on the bar
             secondBarColor: "", // a dot on the second part ("": the main color)
             textSize: 13, // the text of a limit ({ value, text }) under it
@@ -319,7 +320,7 @@ const ProgressBar = function (params = {}) {
     // WHY cqw: the bar layer is a size container, so a dot inside a bar is placed on the width of the track
     const createLimitDot = function (limit, edge) {
         const size = box.style.limit.dotSize;
-        const dot = Box({ top: (box.style.track.height - size) / 2 - edge, width: size, height: size, round: size / 2 });
+        const dot = Box({ top: (box.style.track.height - size) / 2 - edge, width: size, height: size, round: size / 2, opacity: box.style.limit.dotOpacity });
         dot.css = { left: "calc(" + getLimitPercent(limit) + "cqw - " + (edge + size / 2) + "px)" };
         return dot;
     };
@@ -531,7 +532,7 @@ const ProgressBar = function (params = {}) {
         paintTrack();
         paintLimitDots();
     };
-    // USAGE: get: progressBar.darkTrack, set: progressBar.setDarkTrack(1) // the track #242424 (style.darkTrack)
+    // USAGE: get: progressBar.darkTrack, set: progressBar.setDarkTrack(1) // the colors of style.darkTrack
 
     box.setLimits = function (limits) {
         box.limits = Array.isArray(limits) ? limits.slice() : [];
@@ -763,9 +764,9 @@ ProgressBar.styles = {
 
     // The ozden bar (the user, 2026-11-06; it was the lines of comp-m1 UIProgressBar, 2026-10-29): the colors of
     // SmartButton. The bar is a cyan SmartButton ozdenType1 (its edge and its line at the bottom: it looks raised);
-    // the track keeps the colors of the default (#F2F2F2, a 2 px light gray edge; darkTrack: 1 is #242424) and its
-    // two ends are round; an end in the middle of the track is straight. The second part is a second bar next to the
-    // bar, the main color mixed with white (not transparent). A 4 px dark limit line with its text under it.
+    // the track keeps the colors of the default (#F2F2F2, a 2 px light gray edge) and its two ends are round; an end
+    // in the middle of the track is straight. darkTrack: 1 is a soft black with no edge. The second part is a second
+    // bar next to the bar, the main color mixed with white (not transparent). A limit is a dot, a little soft.
     // The main color can change (style.bar.color: the second part follows it); the tones of SmartButton fit.
     ozden: {
         layout: {
@@ -773,6 +774,11 @@ ProgressBar.styles = {
         },
         track: {
             round: 100, // the two ends are half circles
+        },
+        darkTrack: { // (the user, 2026-11-06)
+            color: Black(0.85),
+            borderColor: "transparent", // no edge: the color of the track fills its place (the same size)
+            limitColor: White(0.7),
         },
         bar: {
             color: "#5BBAC1", // cyan (SmartButton.tones.cyan)
@@ -803,6 +809,7 @@ ProgressBar.styles = {
             shape: "dot", // a dot inside the track, in the color of the part under it (the user, 2026-11-06)
             color: "rgba(0, 0, 0, 0.7)", // on the track
             dotSize: 6,
+            dotOpacity: 0.85, // every dot (the user, 2026-11-06)
             barColor: "white", // on the bar
             secondBarColor: "", // on the second part: the main color
             width: 4, // (shape "line": the line of 2026-10-29)
