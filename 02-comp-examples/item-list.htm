@@ -130,7 +130,7 @@
             VGroup({ width: "100%", height: "auto", align: "center top", gap: 24, padding: 32 });
 
                 Label({ text: "ItemList", fontSize: 26, bold: 1, textColor: Black(0.8) });
-                Label({ plainText: "comp-m4 · the new version of comp-m1/item-list.js", fontSize: 14, textColor: Black(0.45) });
+                Label({ plainText: "Style packages, layouts, multiple selection, search and your own rows", fontSize: 14, textColor: Black(0.45) });
 
                 // GROUP: The four style packages, two in a row: a light one and its dark one
                 HGroup({
@@ -145,7 +145,7 @@
                     createStyleSample(
                         "ozden",
                         "single",
-                        "The list of comp-m1 SelectItem: rows as wide as the list, white with a thin line above and under them under the mouse, the selected one half transparent (it can not be chosen again)."
+                        "Rows as wide as the list, white with a thin line above and under them under the mouse, the selected one half transparent (it can not be chosen again)."
                     );
 
                     createStyleSample(
@@ -156,7 +156,7 @@
 
                     createStyleSample("modern", "multiple", "Light cards; a check mark on the selected rows.");
 
-                    createStyleSample("dark", "multiple", "The dark cards of the Ozden Panel (webpage-ozden-panel).");
+                    createStyleSample("dark", "multiple", "Dark cards; a check mark on the selected rows.");
 
                 endGroup();
 
@@ -166,7 +166,7 @@
                     const ozdenLook = STYLE_PAGES.ozdenTiles;
                     const horizontalCard = startCard(
                         "layout: \"horizontal\" · ozden",
-                        "One row of tiles, like the categories of the template: a grey icon in a circle; the selected one grows, gets its colors and a bold title.",
+                        "One row of tiles, for categories: a grey icon in a circle; the selected one grows, gets its colors and a bold title.",
                         ozdenLook
                     );
                     horizontalCard.width = TWO_CARDS_WIDTH;
