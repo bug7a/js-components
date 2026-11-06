@@ -24,7 +24,7 @@
         // http://127.0.0.1:5505/_basic-designer/index.htm?page=02-comp-examples/search-input-ozden.htm
 
         // *** VARIABLES:
-        let scrollBox, searchEmpty, searchWithText, searchWide, searchAnimated, searchDark, searchDarkAnimated, searchClassic, lblSearched;
+        let lblSearched;
 
         const start = function () {
 
@@ -32,19 +32,19 @@
 
             // BOX: Scrolling page
             // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
-            scrollBox = startBox(0, 0, "100%", "100%", { color: "#FFFFFF", scrollY: 1 });
+            const scrollBox = startBox(0, 0, "100%", "100%", { color: "#FFFFFF", scrollY: 1 });
 
                 VGroup({ width: "100%", height: "auto", align: "left top", gap: 28, padding: 40 });
 
-                    // BUGRA
+                    // SAMPLES: ozden
                     caption("ozden · empty");
-                    searchEmpty = SearchInput({
+                    SearchInput({
                         styleName: "ozden",
                         onSearch: showSearched,
                     });
 
                     caption("ozden · with text (setText shows the clear icon)");
-                    searchWithText = SearchInput({
+                    const searchWithText = SearchInput({
                         styleName: "ozden",
                         placeholderText: "Search products",
                         onSearch: showSearched,
@@ -52,7 +52,7 @@
                     searchWithText.setText("fishing boat");
 
                     caption("ozden · wide (480)");
-                    searchWide = SearchInput({
+                    SearchInput({
                         styleName: "ozden",
                         width: 480,
                         height: 40,
@@ -63,7 +63,7 @@
                     });
 
                     caption("ozden · animated: 1 (move the mouse over it, click, type, clear; the packages are still: animated 0)");
-                    searchAnimated = SearchInput({
+                    SearchInput({
                         styleName: "ozden",
                         animated: 1,
                         placeholderText: "Search products",
@@ -72,11 +72,11 @@
 
                     lblSearched = Label({ text: "Searched: -", fontSize: 13, textColor: Black(0.5) });
 
-                    // BUGRA DARK
+                    // SAMPLES: ozdenDark
                     VGroup({ hug: 1, align: "left top", gap: 12, padding: 24, color: "#1E1F22", round: 16 });
 
                         Label({ text: "ozdenDark · on a dark page", fontSize: 12, textColor: White(0.45) });
-                        searchDark = SearchInput({
+                        const searchDark = SearchInput({
                             styleName: "ozdenDark",
                             placeholderText: "Search products",
                             onSearch: showSearched,
@@ -84,7 +84,7 @@
                         searchDark.setText("fishing boat");
 
                         Label({ text: "ozdenDark · animated: 1", fontSize: 12, textColor: White(0.45) });
-                        searchDarkAnimated = SearchInput({
+                        SearchInput({
                             styleName: "ozdenDark",
                             animated: 1,
                             placeholderText: "Search products",
@@ -95,7 +95,7 @@
 
                     // CLASSIC (to compare)
                     caption("classic · to compare");
-                    searchClassic = SearchInput({
+                    SearchInput({
                         styleName: "classic",
                         onSearch: showSearched,
                     });
@@ -104,7 +104,7 @@
 
             endBox();
 
-            if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: scrollBox });
+            ScrollBar({ scrollableBox: scrollBox });
 
         };
 

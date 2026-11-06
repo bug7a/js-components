@@ -20,18 +20,14 @@
         /* Bismillah */
 
         // *** VARIABLES:
-        let tabsBasic, lblBasic;
-        let tabsPill, lblPill;
-        let tabsDocs, lblDocs, docCounter = 4;
-        let tabsPanels;
-        let tabsVertical;
-        let tabsModern, tabsDark;
+        let lblBasic, lblPill, lblDocs;
+        let docCounter = 4;
 
         // ICONS: Inline SVG (no image file needed)
-        const svgIcon = function (paths, color = "#555") {
-            return "data:image/svg+xml," + encodeURIComponent(
-                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + paths + '</svg>'
-            );
+        const svgIcon = function (paths) {
+            const svgStart = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#555"'
+                + ' stroke-width="2" stroke-linecap="round" stroke-linejoin="round">';
+            return "data:image/svg+xml," + encodeURIComponent(svgStart + paths + "</svg>");
         };
         const ICON_HOME = svgIcon('<path d="M3 11 12 3l9 8"/><path d="M5 10v10h14V10"/>');
         const ICON_BOX = svgIcon('<path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/>');
@@ -68,7 +64,7 @@
                     // SAMPLE 1: Default (underline) with icons, counts, a badge and a disabled tab
                     startCard("1. Default (underline)", "Icons, counts, a badge dot and a disabled tab. Use the arrow keys when a tab has the focus.");
 
-                        tabsBasic = Tabs({
+                        const tabsBasic = Tabs({
                             width: "100%",
                             tabs: [
                                 { key: "home", text: "Overview", iconFile: ICON_HOME },
@@ -85,9 +81,21 @@
 
                         // GROUP: Buttons
                         HGroup({ width: "auto", height: "auto", gap: 8 });
-                            addSampleButton("Orders +1", function () { tabsBasic.setCount("orders", (tabsBasic.getTab("orders").count || 0) + 1); });
-                            addSampleButton("Badge", function () { tabsBasic.setBadge("customers", 1); }, 1);
-                            addSampleButton("Settings", function () { tabsBasic.setTabEnabled("settings", tabsBasic.getTab("settings").disabled); }, 1);
+
+                            addSampleButton("Orders +1", function () {
+                                const orderCount = tabsBasic.getTab("orders").count || 0;
+                                tabsBasic.setCount("orders", orderCount + 1);
+                            });
+
+                            addSampleButton("Badge", function () {
+                                tabsBasic.setBadge("customers", 1);
+                            }, 1);
+
+                            addSampleButton("Settings", function () {
+                                const isDisabled = tabsBasic.getTab("settings").disabled;
+                                tabsBasic.setTabEnabled("settings", isDisabled);
+                            }, 1);
+
                         endGroup();
 
                         lblBasic = addInfoLabel("Active: orders");
@@ -97,7 +105,7 @@
                     // SAMPLE 2: Pill (segmented control)
                     startCard("2. Pill variant", "A filled shape moves behind the active tab. fullWidth: 1 shares the width.");
 
-                        tabsPill = Tabs({
+                        Tabs({
                             variant: "pill",
                             tabs: ["Day", "Week", "Month", "Year"],
                             value: "Week",
@@ -108,7 +116,11 @@
                             variant: "pill",
                             width: "100%",
                             fullWidth: 1,
-                            tabs: [{ key: "list", text: "List" }, { key: "grid", text: "Grid" }, { key: "map", text: "Map", count: 3 }],
+                            tabs: [
+                                { key: "list", text: "List" },
+                                { key: "grid", text: "Grid" },
+                                { key: "map", text: "Map", count: 3 },
+                            ],
                         });
 
                         lblPill = addInfoLabel("Range: Week");
@@ -118,7 +130,7 @@
                     // SAMPLE 3: Closable tabs, add button, many tabs (scroll)
                     startCard("3. Document tabs (closable, addButton)", "Close with (x), Delete key or the middle mouse button. Too many tabs: arrows appear and the wheel scrolls.");
 
-                        tabsDocs = Tabs({
+                        Tabs({
                             width: "100%",
                             closable: 1,
                             addButton: 1,
@@ -129,10 +141,16 @@
                                 self.setValue(tab.key);
                             },
                             onClose: function (self, tab) {
-                                if (self.getTabs().length === 1) { lblDocs.text = "The last tab can not be closed."; return false; }
+                                if (self.getTabs().length === 1) {
+                                    lblDocs.text = "The last tab can not be closed.";
+                                    return false;
+                                }
                                 lblDocs.text = "Closed: " + tab.text;
                             },
-                            onChange: function (self) { lblDocs.text = "Active: " + (self.getActiveTab() ? self.getActiveTab().text : "-"); },
+                            onChange: function (self) {
+                                const activeTab = self.getActiveTab();
+                                lblDocs.text = "Active: " + (activeTab ? activeTab.text : "-");
+                            },
                         });
 
                         lblDocs = addInfoLabel("Active: Untitled 1");
@@ -142,7 +160,7 @@
                     // SAMPLE 4: Panels
                     startCard("4. Panels (panels: 1)", "startPanel(key) ... endPanel() puts objects into the panel of a tab.");
 
-                        tabsPanels = Tabs({
+                        const tabsPanels = Tabs({
                             width: "100%",
                             panels: 1,
                             panelHeight: 120,
@@ -172,7 +190,7 @@
                     // SAMPLE 5: Vertical
                     startCard("5. Vertical (vertical: 1) with panels", "");
 
-                        tabsVertical = Tabs({
+                        const tabsVertical = Tabs({
                             width: "100%",
                             vertical: 1,
                             panels: 1,
@@ -198,10 +216,15 @@
                     // SAMPLE 6: Modern style
                     startCard("6. Modern Style", "");
 
-                        tabsModern = Tabs({
+                        Tabs({
                             styleName: "modern",
                             width: "100%",
-                            tabs: [{ key: "all", text: "All", count: 34 }, { key: "vip", text: "VIP", count: 3 }, { key: "new", text: "New", count: 2, badge: 1 }, { key: "risk", text: "At risk", count: 2 }],
+                            tabs: [
+                                { key: "all", text: "All", count: 34 },
+                                { key: "vip", text: "VIP", count: 3 },
+                                { key: "new", text: "New", count: 2, badge: 1 },
+                                { key: "risk", text: "At risk", count: 2 },
+                            ],
                         });
 
                         Tabs({
@@ -216,10 +239,15 @@
                     // SAMPLE 7: Dark style
                     startCard("7. Dark Style", "", 1);
 
-                        tabsDark = Tabs({
+                        Tabs({
                             styleName: "dark",
                             width: "100%",
-                            tabs: [{ key: "all", text: "All", count: 34 }, { key: "vip", text: "VIP", count: 3 }, { key: "new", text: "New", count: 2 }, { key: "lead", text: "Lead", count: 24 }],
+                            tabs: [
+                                { key: "all", text: "All", count: 34 },
+                                { key: "vip", text: "VIP", count: 3 },
+                                { key: "new", text: "New", count: 2 },
+                                { key: "lead", text: "Lead", count: 24 },
+                            ],
                         });
 
                         Tabs({
@@ -250,8 +278,8 @@
                 round: 10,
                 border: 1,
                 borderColor: (isDark) ? "#1C1C1B" : Black(0.1),
+                css: { alignItems: "stretch" },
             });
-            that.elem.style.alignItems = "stretch";
             Label({
                 text: title,
                 fontSize: 14,
@@ -262,8 +290,8 @@
                     text: description,
                     fontSize: 13,
                     textColor: (isDark) ? White(0.4) : Black(0.35),
+                    css: { marginTop: "-10px" },
                 });
-                that.elem.style.marginTop = "-10px";
             }
         };
 

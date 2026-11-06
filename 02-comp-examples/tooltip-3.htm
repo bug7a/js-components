@@ -19,8 +19,8 @@
 
     /* Bismillah */
 
-    // Tooltip (comp-m2), 2026-10-30: content(bubble) puts your own objects in the bubble; trigger: "click" (or
-    // Tooltip.openPopover()) makes a popover: it stays, its buttons can be clicked, a click outside or Escape closes it.
+    // Tooltip: content(bubble) puts your own objects in the bubble; trigger: "click" (or Tooltip.openPopover()) makes
+    // a popover: it stays, its buttons can be clicked, a click outside or Escape closes it.
 
     const INK = "#232323";
     const SOFT_INK = "rgba(35, 35, 35, 0.6)";
@@ -30,7 +30,18 @@
 
     // The bubbles (Tooltip.BUBBLE_LOOK keys)
     const HINT_LOOK = { color: INK, textColor: "white", border: 0, round: 8, padding: [12, 10], arrow: 10, contentGap: 6 };
-    const POPOVER_LOOK = { color: "white", textColor: INK, border: 1, borderColor: Black(0.2), round: 10, padding: [16, 14], arrow: 12, contentGap: 12, shadow: "0 10px 30px rgba(0, 0, 0, 0.12)", grow: 1 };
+    const POPOVER_LOOK = {
+        color: "white",
+        textColor: INK,
+        border: 1,
+        borderColor: Black(0.2),
+        round: 10,
+        padding: [16, 14],
+        arrow: 12,
+        contentGap: 12,
+        shadow: "0 10px 30px rgba(0, 0, 0, 0.12)",
+        grow: 1,
+    };
 
     // The white plain button of the page (the hover of ozdenType2 stays gray)
     const PLAIN = { styleName: "ozdenType2", style: { box: { color: "white" } } };
@@ -43,10 +54,27 @@
 
     // GROUP: A card with a title and a short description
     const startCard = function (title, description) {
-        VGroup({ width: 640, height: "auto", align: "left top", gap: 14, padding: 20, color: "white", round: 12, border: 1, borderColor: Black(0.08), clipContent: 0 });
-        that.css = { maxWidth: "100%" };
+        VGroup({
+            width: 640,
+            height: "auto",
+            align: "left top",
+            gap: 14,
+            padding: 20,
+            color: "white",
+            round: 12,
+            border: 1,
+            borderColor: Black(0.08),
+            clipContent: 0,
+            css: { maxWidth: "100%" },
+        });
         Label({ plainText: title, fontSize: 15, bold: 1, textColor: Black(0.8) });
-        Label({ plainText: description, width: "100%", fontSize: 13, textColor: Black(0.5), css: { lineHeight: "1.4", whiteSpace: "normal" } });
+        Label({
+            plainText: description,
+            width: "100%",
+            fontSize: 13,
+            textColor: Black(0.5),
+            css: { lineHeight: "1.4", whiteSpace: "normal" },
+        });
         HGroup({ width: "100%", height: "auto", align: "left center", gap: 12, wrap: 1, clipContent: 0 });
     };
 
@@ -71,7 +99,18 @@
     // A user card: the first letters in a circle, the name and the role
     const userCard = function () {
         HGroup({ hug: 1, align: "left center", gap: 10 });
-            Label({ width: 40, height: 40, text: "AK", fontSize: 15, bold: 1, textColor: "white", color: "#5BBAC1", round: 20, textAlign: "center", css: { lineHeight: "40px" } });
+            Label({
+                width: 40,
+                height: 40,
+                text: "AK",
+                fontSize: 15,
+                bold: 1,
+                textColor: "white",
+                color: "#5BBAC1",
+                round: 20,
+                textAlign: "center",
+                css: { lineHeight: "40px" },
+            });
             VGroup({ hug: 1, align: "left top", gap: 0 });
                 Label({ text: "Ayşe Kaya", fontSize: 14, bold: 1, textColor: "white" });
                 Label({ text: "Designer · online", fontSize: 12, textColor: White(0.7) });
@@ -87,7 +126,9 @@
             { text: "a number", isOk: 1 },
             { text: "a capital letter", isOk: 0 },
         ].forEach(function (rule) {
-            Label({ text: (rule.isOk ? "✓ " : "✗ ") + rule.text, fontSize: 13, textColor: rule.isOk ? "#7FD6A3" : "#FF9A8F" });
+            const mark = rule.isOk ? "✓ " : "✗ ";
+            const markColor = rule.isOk ? "#7FD6A3" : "#FF9A8F";
+            Label({ text: mark + rule.text, fontSize: 13, textColor: markColor });
         });
     };
 
@@ -95,7 +136,16 @@
     const sharePopover = function () {
         Label({ text: "Share the link", fontSize: 14, bold: 1, textColor: INK });
         HGroup({ hug: 1, align: "left center", gap: 8 });
-            Label({ width: 230, text: SHARE_LINK, fontSize: 13, textColor: SOFT_INK, color: "#F4F4F4", round: 6, padding: [10, 8], ellipsis: 1 });
+            Label({
+                width: 230,
+                text: SHARE_LINK,
+                fontSize: 13,
+                textColor: SOFT_INK,
+                color: "#F4F4F4",
+                round: 6,
+                padding: [10, 8],
+                ellipsis: 1,
+            });
             SmartButton({
                 labelText: "Copy",
                 height: 36,
@@ -135,7 +185,12 @@
             SmartButton({
                 labelText: "Delete",
                 height: 36,
-                style: { box: { color: RED, borderColor: RED }, hover: { color: "#E0695C" }, active: { color: "#E0695C" }, label: { textColor: "white" } },
+                style: {
+                    box: { color: RED, borderColor: RED },
+                    hover: { color: "#E0695C" },
+                    active: { color: "#E0695C" },
+                    label: { textColor: "white" },
+                },
                 onClick: function () {
                     showResult("report.pdf is deleted.");
                     Tooltip.closePopover();
@@ -154,7 +209,10 @@
 
                 Label({ text: "Tooltip: content and popover", fontSize: 26, bold: 1, textColor: Black(0.8) });
 
-                startCard("1. Your own content (under the mouse)", "content: function (bubble) { ... } builds its objects in the bubble, one under the other (look.contentGap), in place of hintText. It follows the mouse like a hint.");
+                startCard(
+                    "1. Your own content (under the mouse)",
+                    "content: function (bubble) { ... } builds its objects in the bubble, one under the other (look.contentGap), in place of hintText. It follows the mouse like a hint."
+                );
                     const btnSave = SmartButton({ labelText: "Save", ...PLAIN });
                     btnSave.tooltip = Tooltip({ target: btnSave, content: saveHint, lbl_arrow: 10, look: HINT_LOOK });
 
@@ -165,7 +223,10 @@
                     btnPassword.tooltip = Tooltip({ target: btnPassword, content: passwordRules, hintPosition: "right", lbl_arrow: 10, look: HINT_LOOK });
                 endCard();
 
-                startCard("2. A popover (a click)", "trigger: \"click\": a click opens the bubble and it stays; its buttons can be clicked. A click outside, Escape or a second click on the button closes it; one popover at a time.");
+                startCard(
+                    "2. A popover (a click)",
+                    "trigger: \"click\": a click opens the bubble and it stays; its buttons can be clicked. A click outside, Escape or a second click on the button closes it; one popover at a time."
+                );
                     const btnShare = SmartButton({ labelText: "Share", ...PLAIN });
                     btnShare.tooltip = Tooltip({ target: btnShare, trigger: "click", content: sharePopover, hintPosition: "bottom", look: POPOVER_LOOK });
 
@@ -176,7 +237,10 @@
                     btnDelete.tooltip = Tooltip({ target: btnDelete, trigger: "click", content: deletePopover, hintPosition: "top", look: POPOVER_LOOK });
                 endCard();
 
-                startCard("3. A popover from the code", "Tooltip.openPopover(target, content, look, side, text, { onClose }) opens one at any object (here at the text under the button); Tooltip.closePopover() closes it.");
+                startCard(
+                    "3. A popover from the code",
+                    "Tooltip.openPopover(target, content, look, side, text, { onClose }) opens one at any object (here at the text under the button); Tooltip.closePopover() closes it."
+                );
                     VGroup({ hug: 1, align: "left top", gap: 12, clipContent: 0 });
                         const lblTarget = Label({ text: "The popover opens here", fontSize: 14, textColor: SOFT_INK });
                         SmartButton({
