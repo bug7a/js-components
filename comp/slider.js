@@ -12,6 +12,13 @@ UI COMPONENT TEMPLATE
 - A value from minValue to maxValue (0 - 100 by default) on a step (1), chosen by dragging the thumb. The value
   bubble over the thumb shows the value while it is dragged (showValueOnDrag) and for a while after setValue()
   (showValueOnSet). (2026-11-06: minValue, maxValue, step, setMinValue(), setMaxValue(), setStep(); it was 0 - 100.)
+- A press on the track (2026-11-06): the mouse moves the thumb there and drags from there. A finger: a move to the
+  side drags from there, a tap moves the thumb there, a move up or down scrolls the page (touch-action: pan-y).
+- The keyboard (2026-11-06): ArrowRight / ArrowUp one step, ArrowLeft / ArrowDown one step back, PageUp / PageDown
+  ten steps, Home / End the ends. role "slider" with aria-valuenow / valuemin / valuemax (ariaLabel: its name);
+  a ring around the thumb only for the keyboard (style.focus).
+- A key, a tap and a click on the track are short drags for the page: onDragStart, onDragMove(value), onDragEnd,
+  so a page that saves in onDragEnd saves them too.
 - Style packages (2026-11-06): "classic" (the default: inspired by Google Material 3: a thick track in two parts,
   a thin line for the thumb, a dot at the end), "round" (a thin track and a round white knob: the look of most web
   and phone sliders; a ring in the track color while it is dragged) and "roundDark" (round for a dark page).
@@ -60,7 +67,9 @@ const SliderDefaults = {
     showValueOnSet: 1,
     showValueOnDrag: 1,
 
-    styleName: "classic", // "classic", "round" or a name added to Slider.styles
+    ariaLabel: "", // The name a screen reader says (Ex: "Volume"). "": none
+
+    styleName: "classic", // "classic", "round", "roundDark" or a name added to Slider.styles
     style: { // Classic style package (default): inspired by Material 3
         thumb: { // The part that is dragged: a line (classic) or a knob (round)
             areaWidth: 20, // px: the part that takes the mouse and the finger (the thumb is in its middle)
@@ -92,6 +101,11 @@ const SliderDefaults = {
             round: 16,
             space: 6, // px between the bubble and the thumb
         },
+        focus: { // The ring around the thumb when the slider has the focus of the keyboard
+            ringColor: "", // "": the track color
+            ringWidth: 2,
+            ringSpace: 2, // px between the thumb and the ring
+        },
     },
 
 };
@@ -118,7 +132,9 @@ const Slider = function(params = {}) {
 
     // *** PRIVATE VARIABLES:
     let isDragging = false;
-
+    let isKeyboardFocus = 0; // The ring of the focus shows only for the keyboard
+    let isTrackClick = false; // A mouse press on the track that has not moved yet (its value stays shown after it)
+    let pendingTouch = null; // { x, y } of a finger on the track, until its direction is known
 
     let startX = 0;
     let startLeft = 0;
@@ -126,6 +142,9 @@ const Slider = function(params = {}) {
     let cancelHideValue = null; // the timer of showValue() (box.after)
 
     const VALUE_SHOW_DURATION = 1200; // ms: the value bubble is hidden after it (showValue)
+    const TOUCH_SLOP = 6; // px: a smaller move of a finger is still a tap
+    const PAGE_STEPS = 10; // PageUp / PageDown
+    const FOCUS_RING_OPACITY = 0.8; // of the track color (style.focus.ringColor "")
 
     let trackSpace = _s.track.space;
     let isFirstRun = 1;
@@ -153,11 +172,15 @@ const Slider = function(params = {}) {
         return (dot < 0) ? 0 : text.length - dot - 1;
     };
 
+    const getStep = function() {
+        return (box.step > 0) ? box.step : 1;
+    };
+
     // A value inside the range, on a step.
     const toStepValue = function(value) {
         value = Number(value);
         if (!isFinite(value)) value = box.minValue;
-        const step = (box.step > 0) ? box.step : 1;
+        const step = getStep();
         const steps = Math.round((value - box.minValue) / step);
         let stepValue = Number((box.minValue + steps * step).toFixed(getStepDecimals()));
         if (stepValue < box.minValue) stepValue = box.minValue;
@@ -174,6 +197,26 @@ const Slider = function(params = {}) {
     const getScreenScale = function() {
         if (box.elem.offsetWidth <= 0) return 1;
         return (box.elem.getBoundingClientRect().width / box.elem.offsetWidth) || 1;
+    };
+
+    // The value under a point of the screen: the middle of the thumb goes there.
+    const getValueAtClientX = function(clientX) {
+        const maxLeft = getMaxLeft();
+        if (maxLeft <= 0) return box.currentValue;
+        const pointLeft = (clientX - box.elem.getBoundingClientRect().left) / getScreenScale();
+        const thumbLeft = Math.min(Math.max(pointLeft - thumbBox.width / 2, 0), maxLeft);
+        return toStepValue((thumbLeft / maxLeft) * getValueRange() + box.minValue);
+    };
+
+    // The value, its text in the bubble and for a screen reader. (Only this function writes them.)
+    const writeValue = function(value) {
+        box.currentValue = value;
+        valueBox.text = value;
+        box.aria = {
+            valuenow: String(value),
+            valuemin: String(box.minValue),
+            valuemax: String(box.maxValue),
+        };
     };
 
     const updateTrack = function(animated = 0) {
@@ -203,24 +246,28 @@ const Slider = function(params = {}) {
         const maxLeft = getMaxLeft();
         if (newLeft < 0 || !isFinite(newLeft)) newLeft = 0;
         if (newLeft > maxLeft) newLeft = maxLeft;
-        if (animated == 0) thumbBox.dontMotion();
-        thumbBox.left = newLeft;
-        updateTrack(animated);
         // WHY round: parseInt cut the fraction of the position, so setValue(50) gave 49 (46 of 101 values were one less)
         // WHY only with a width: a slider not drawn yet (a closed tab, a hidden group: width 0) has no position to read;
         //     its value became the minimum, and a settings page saved 0 (2026-11-05)
-        if (maxLeft > 0) box.currentValue = toStepValue(((newLeft / maxLeft) * getValueRange()) + box.minValue);
+        let value = box.currentValue;
+        if (maxLeft > 0) {
+            value = toStepValue(((newLeft / maxLeft) * getValueRange()) + box.minValue);
+            newLeft = getLeftOfValue(value); // WHY: the thumb stands on its step (a step of 1 on 0 - 10 is 30 px)
+        }
+        if (animated == 0) thumbBox.dontMotion();
+        thumbBox.left = newLeft;
+        updateTrack(animated);
         if (animated == 0) valueBox.dontMotion();
-        valueBox.text = box.currentValue;
+        writeValue(value);
         placeValueBubble();
     };
 
-    // The thumb on a value, without animation and without the bubble (a resize, a new range).
-    const placeThumbAtValue = function(value) {
-        updateThumbPosition(getLeftOfValue(value));
-        box.currentValue = value; // WHY: updateThumbPosition() reads the value back from the position.
-        valueBox.text = value;
-        showHideTracks(value, 0);
+    // The thumb on a value (setValue, a key, a press on the track, a resize, a new range).
+    // WHY writeValue after: updateThumbPosition() reads the value back from the position (0 while it is hidden).
+    const moveThumbToValue = function(value, animated) {
+        showHideTracks(value, animated);
+        updateThumbPosition(getLeftOfValue(value), animated);
+        writeValue(value);
     };
 
     // The look of the thumb and of the tracks: style.thumb and style.track, or style.dragging while it is dragged.
@@ -246,22 +293,43 @@ const Slider = function(params = {}) {
     };
 
     // While dragging: the look of style.dragging (classic: a thinner thumb line, closer tracks) and the value bubble (showValueOnDrag).
-    const setIsDragging = function($isDragging) {
+    // $isValueKept: at the end, the bubble stays for a while (a click on the track: it was there only for a moment).
+    const setIsDragging = function($isDragging, $isValueKept = false) {
         isDragging = $isDragging;
         trackSpace = getTrackSpace(isDragging);
-        // NOTE: withMotion() runs later: the callback reads the value of this call ($isDragging).
+        // NOTE: withMotion() runs later: the callback reads the values of this call ($isDragging, $isValueKept).
         thumbLineBox.withMotion(function(){
             thumbLineBox.width = getThumbWidth($isDragging);
             thumbLineBox.boxShadow = getThumbShadow($isDragging);
             thumbLineBox.center("left");
             updateTrack(1);
             box.showValueClean();
+            if (!$isDragging && $isValueKept) {
+                box.showValue();
+                return;
+            }
             if (!$isDragging) {
                 hideValueBubble();
                 return;
             }
             if (box.showValueOnDrag) showValueBubble();
         });
+    };
+
+    // The ring around the thumb, only for the keyboard (style.focus).
+    const paintFocus = function() {
+        const ringColor = _s.focus.ringColor || Alpha(box.trackColor, FOCUS_RING_OPACITY);
+        thumbLineBox.css.outline = (isKeyboardFocus) ? _s.focus.ringWidth + "px solid " + ringColor : "";
+        thumbLineBox.css.outlineOffset = _s.focus.ringSpace + "px";
+    };
+
+    // WHY try: matches() throws in an old browser that does not know :focus-visible.
+    const isFocusOfKeyboard = function() {
+        try {
+            return box.elem.matches(":focus-visible") ? 1 : 0;
+        } catch (error) {
+            return 0;
+        }
     };
 
     const showHideTracks = function($currentLeft, animated) {
@@ -276,11 +344,7 @@ const Slider = function(params = {}) {
     // *** PUBLIC FUNCTIONS:
     box.setValue = function(val) {
 
-        val = toStepValue(val);
-        showHideTracks(val, 1);
-        updateThumbPosition(getLeftOfValue(val), 1);
-        box.currentValue = val; // WHY: the value is the truth, not the position (width 0 while hidden)
-        valueBox.text = box.currentValue;
+        moveThumbToValue(toStepValue(val), 1); // WHY: the value is the truth, not the position (width 0 while hidden)
 
         if (isFirstRun) {
             isFirstRun = 0;
@@ -312,9 +376,7 @@ const Slider = function(params = {}) {
 
     // The value is put inside the new range and on a step; the thumb moves to it without the bubble.
     const applyRange = function() {
-        const value = toStepValue(box.currentValue);
-        box.currentValue = value;
-        placeThumbAtValue(value);
+        moveThumbToValue(toStepValue(box.currentValue), 0);
     };
 
     // The value at the left end. USAGE: slider.setMinValue(12)
@@ -449,6 +511,7 @@ const Slider = function(params = {}) {
     // Mouse Events
     // WHY: "e.clientX || e.touches[0]" threw at the left edge of the screen: clientX 0 is falsy, a mouse event has no touches.
     const getClientX = (e) => (e.touches && e.touches.length) ? e.touches[0].clientX : e.clientX;
+    const getClientY = (e) => (e.touches && e.touches.length) ? e.touches[0].clientY : e.clientY;
 
     // The removers of the document events of a drag (box.listenTo: remove() cleans them too)
     let dragEventRemovers = [];
@@ -458,17 +521,12 @@ const Slider = function(params = {}) {
         dragEventRemovers = [];
     };
 
-    const onMouseDown = (self, e) => {
-        // WHY: Only the main button: the right one (its menu) started a drag too.
-        const isOtherButton = (e.type === "mousedown" && e.button !== 0);
-        if (isOtherButton) return;
-        // WHY: After a touch the browser sends mousedown and mouseup too: a tap gave two onDragStart and two onDragEnd.
-        if (e.type === "touchstart") e.preventDefault();
+    const startDrag = (clientX) => {
         setIsDragging(true);
-        startX = getClientX(e);
+        startX = clientX;
         startLeft = parseFloat(thumbBox.left) || 0; // (not parseInt: a click on the thumb moved it a part of a pixel)
         dragScale = getScreenScale();
-        
+
         removeDragEvents(); // WHY: a second touch before the end of a drag must not add the events twice
         dragEventRemovers = [
             box.listenTo(document, "mousemove", onMouseMove),
@@ -482,9 +540,86 @@ const Slider = function(params = {}) {
         box.onDragStart();
     };
 
+    // The thumb goes to a point of the track; the page hears it when the value changes (onDragMove).
+    const moveThumbToPoint = (clientX, animated) => {
+        const value = getValueAtClientX(clientX);
+        if (value === box.currentValue) return;
+        moveThumbToValue(value, animated);
+        box.onDragMove(value);
+    };
+
+    // A press on the thumb starts a drag. A press of the mouse on the track moves the thumb there and drags from there.
+    const onPress = (self, e) => {
+        // WHY: Only the main button: the right one (its menu) started a drag too.
+        const isOtherButton = (e.type === "mousedown" && e.button !== 0);
+        if (isOtherButton) return;
+        isKeyboardFocus = 0;
+        paintFocus();
+        const isOnThumb = thumbBox.elem.contains(e.target);
+        if (!isOnThumb && e.type === "touchstart") {
+            waitForTouchDirection(e);
+            return;
+        }
+        // WHY: After a touch the browser sends mousedown and mouseup too: a tap gave two onDragStart and two onDragEnd.
+        if (e.type === "touchstart") e.preventDefault();
+        if (isOnThumb) {
+            startDrag(getClientX(e));
+            return;
+        }
+        isTrackClick = true;
+        startDrag(getClientX(e));
+        moveThumbToPoint(getClientX(e), 1);
+        startLeft = parseFloat(thumbBox.left) || 0; // the drag goes on from the new place
+    };
+
+    // A finger on the track: a move to the side drags from there, a lift is a tap there, a move up or down is the
+    // scroll of the page. WHY: a finger that scrolls a page of sliders must not change their values.
+    const waitForTouchDirection = (e) => {
+        pendingTouch = { x: getClientX(e), y: getClientY(e) };
+        removeDragEvents();
+        dragEventRemovers = [
+            box.listenTo(document, "touchmove", onPendingTouchMove, { passive: false }),
+            box.listenTo(document, "touchend", onPendingTouchEnd),
+            box.listenTo(document, "touchcancel", cancelPendingTouch),
+        ];
+    };
+
+    const cancelPendingTouch = () => {
+        pendingTouch = null;
+        removeDragEvents();
+    };
+
+    const onPendingTouchMove = (self, e) => {
+        const dx = getClientX(e) - pendingTouch.x;
+        const dy = getClientY(e) - pendingTouch.y;
+        const isSmallMove = (Math.abs(dx) < TOUCH_SLOP && Math.abs(dy) < TOUCH_SLOP);
+        if (isSmallMove) return;
+        if (Math.abs(dy) >= Math.abs(dx)) {
+            cancelPendingTouch(); // the page scrolls
+            return;
+        }
+        e.preventDefault();
+        pendingTouch = null;
+        startDrag(getClientX(e));
+        moveThumbToPoint(getClientX(e), 0);
+        startLeft = parseFloat(thumbBox.left) || 0;
+    };
+
+    // A tap on the track: a short drag for the page (onDragStart, onDragMove, onDragEnd).
+    const onPendingTouchEnd = (self, e) => {
+        e.preventDefault(); // WHY: the mousedown and mouseup of the browser after a tap would be a second press
+        const tapX = pendingTouch.x;
+        cancelPendingTouch();
+        box.onDragStart();
+        moveThumbToPoint(tapX, 1);
+        box.onDragEnd();
+        if (box.showValueOnDrag) box.showValue();
+    };
+
     const onMouseMove = (self, e) => {
         if (!isDragging) return;
         e.preventDefault();
+        isTrackClick = false;
         const clientX = getClientX(e);
         const maxLeft = getMaxLeft();
         let dx = (clientX - startX) / dragScale;
@@ -500,18 +635,66 @@ const Slider = function(params = {}) {
 
     const onMouseUp = () => {
         removeDragEvents();
-        setIsDragging(false);
+        setIsDragging(false, isTrackClick && box.showValueOnDrag);
+        isTrackClick = false;
         box.onDragEnd();
     };
 
-    thumbBox.on("mousedown", onMouseDown);
-    thumbBox.on("touchstart", onMouseDown, { passive: false });
+    // The keys that change the value (a key is a short drag for the page: onDragStart, onDragMove, onDragEnd).
+    const keyValues = {
+        ArrowRight: () => box.currentValue + getStep(),
+        ArrowUp: () => box.currentValue + getStep(),
+        ArrowLeft: () => box.currentValue - getStep(),
+        ArrowDown: () => box.currentValue - getStep(),
+        PageUp: () => box.currentValue + getStep() * PAGE_STEPS,
+        PageDown: () => box.currentValue - getStep() * PAGE_STEPS,
+        Home: () => box.minValue,
+        End: () => box.maxValue,
+    };
+
+    const onKeyDown = (self, e) => {
+        if (!Object.prototype.hasOwnProperty.call(keyValues, e.key)) return;
+        e.preventDefault(); // WHY: the arrows and PageUp / PageDown scrolled the page too
+        isKeyboardFocus = 1;
+        paintFocus();
+        const value = toStepValue(keyValues[e.key]());
+        if (value === box.currentValue) return;
+        box.onDragStart();
+        moveThumbToValue(value, 1);
+        if (box.showValueOnDrag) box.showValue();
+        box.onDragMove(value);
+        box.onDragEnd();
+    };
+
+    const onFocus = () => {
+        isKeyboardFocus = isFocusOfKeyboard();
+        paintFocus();
+    };
+
+    const onBlur = () => {
+        isKeyboardFocus = 0;
+        paintFocus();
+    };
+
+    box.role = "slider";
+    box.tabIndex = 0;
+    box.aria = { label: box.ariaLabel };
+    box.cursor = "pointer";
+    // WHY pan-y: a finger that moves up or down on the slider scrolls the page; a move to the side is ours.
+    // WHY outline none: the ring of the focus is around the thumb (paintFocus), not around the whole slider.
+    box.css = { touchAction: "pan-y", outline: "none" };
+
+    box.on("mousedown", onPress);
+    box.on("touchstart", onPress, { passive: false });
+    box.on("keydown", onKeyDown);
+    box.on("focus", onFocus);
+    box.on("blur", onBlur);
 
     // WHY: With width: "100%" the slider gets its real width after the layout, and it changes with
     //      the page. The thumb must stay on its value. (No animation and no value bubble here.)
     box.onResize(function() {
         if (isDragging) return;
-        placeThumbAtValue(box.currentValue);
+        moveThumbToValue(box.currentValue, 0);
     });
 
     box.setValue(box.currentValue);

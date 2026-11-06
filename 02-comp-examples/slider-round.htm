@@ -54,7 +54,7 @@
                 Label({ plainText: "Slider: round", fontSize: 26, bold: 1, textColor: INK });
 
                 // 1. The look
-                startCard("1. The round look", "styleName: \"round\". Drag the knob: a ring in the track color around it and the value over it.");
+                startCard("1. The round look", "styleName: \"round\". Drag the knob (a ring in the track color around it, the value over it) or press the track. The keyboard: Tab, the arrows, PageUp / PageDown, Home / End.");
                     Slider({
                         width: "100%",
                         styleName: "round",
@@ -64,7 +64,7 @@
                 endCard();
 
                 // 2. A settings list
-                startCard("2. A settings list", "The value is written next to the title (onDragMove), so the bubble is off: showValueOnDrag: 0 and showValueOnSet: 0.");
+                startCard("2. A settings list", "The value is written next to the title (onDragMove; a key and a tap call it too), so the bubble is off: showValueOnDrag: 0 and showValueOnSet: 0. ariaLabel: the name a screen reader says.");
 
                     // ROW: Volume
                     VGroup({ width: "100%", height: "auto", gap: 2, clipContent: 0 }); // WHY clipContent 0: the ring of the knob is wider than the slider at its ends
@@ -76,6 +76,7 @@
                             width: "100%",
                             styleName: "round",
                             currentValue: 70,
+                            ariaLabel: "Volume",
                             showValueOnDrag: 0,
                             showValueOnSet: 0,
                             onDragMove: function (value) { lblVolume.plainText = value + "%"; },
@@ -92,6 +93,7 @@
                             width: "100%",
                             styleName: "round",
                             currentValue: 45,
+                            ariaLabel: "Brightness",
                             showValueOnDrag: 0,
                             showValueOnSet: 0,
                             onDragMove: function (value) { lblBrightness.plainText = value + "%"; },
@@ -110,6 +112,7 @@
                             minValue: 12,
                             maxValue: 24,
                             currentValue: 18,
+                            ariaLabel: "Text size",
                             showValueOnDrag: 0,
                             showValueOnSet: 0,
                             onDragMove: function (value) { lblTextSize.plainText = value + " px"; },

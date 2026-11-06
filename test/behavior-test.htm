@@ -1120,12 +1120,8 @@
             let isStarted = false;
             const slider = Slider({ width: 250, onDragStart: function () { isStarted = true; }, onDragMove: function () { moveCount++; } });
             await wait(50);
-            // WHY: the thumb is private; the one that starts a drag is found by trying every element
-            const elements = [slider.elem].concat(Array.from(slider.elem.querySelectorAll("*")));
-            for (const element of elements) {
-                if (isStarted) break;
-                element.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, clientX: 10 }));
-            }
+            // WHY the thumb: a press on the track moves the thumb there first (one more onDragMove)
+            getSliderThumb(slider).dispatchEvent(new MouseEvent("mousedown", { bubbles: true, clientX: 10 }));
             document.dispatchEvent(new MouseEvent("mousemove", { clientX: 60 }));
             const movesBeforeRemove = moveCount;
             slider.remove();
@@ -1133,16 +1129,24 @@
             check("Slider: a remove() during a drag takes the document events with it", isStarted && movesBeforeRemove === 1 && moveCount === 1, "started: " + isStarted + ", moves: " + movesBeforeRemove + " / " + moveCount);
         });
 
-        // WHY: the thumb is private: it is the only part of a Slider with the pointer cursor
+        // WHY: the thumb is private: it is the only part inside a Slider that takes the mouse (the cursor of the
+        //      slider is a pointer everywhere since a press on the track moves the thumb)
         const getSliderThumb = function (slider) {
-            return Array.from(slider.elem.querySelectorAll("*")).find(function (element) { return getComputedStyle(element).cursor === "pointer"; });
+            return Array.from(slider.elem.querySelectorAll("*")).find(function (element) { return getComputedStyle(element).pointerEvents === "auto"; });
         };
 
         // WHY: an Event with touches, not a TouchEvent: desktop Chrome without a touch screen has no TouchEvent
-        const makeSliderTouch = function (type, clientX) {
+        const makeSliderTouch = function (type, clientX, clientY = 0) {
             const event = new Event(type, { bubbles: true, cancelable: true });
-            Object.defineProperty(event, "touches", { value: [{ clientX: clientX, clientY: 0 }] });
+            Object.defineProperty(event, "touches", { value: [{ clientX: clientX, clientY: clientY }] });
             return event;
+        };
+
+        // The screen x of a value of a Slider: the middle of its thumb there (width 250, thumb 20: 230 px of travel)
+        const getSliderPointOf = function (slider, ratio) {
+            const rect = slider.elem.getBoundingClientRect();
+            const thumbWidth = getSliderThumb(slider).getBoundingClientRect().width;
+            return rect.left + thumbWidth / 2 + ratio * (rect.width - thumbWidth);
         };
 
         test("Slider: a tap of a finger is one drag (the browser does not send its mousedown and mouseup too)", async function () {
@@ -1245,6 +1249,77 @@
             dark.remove();
             round.remove();
             check("Slider: roundDark gives the dark colors and never changes round", row.join(" | ") === White(0.16) + " | #F2F2F2 | rgba(0, 0, 0, 0.12) | #232323 | #232323", row.join(" | "));
+        });
+
+        test("Slider: a click on the track moves the thumb there and drags from there; the thumb stands on its step", async function () {
+            const calls = [];
+            const slider = Slider({
+                width: 250,
+                maxValue: 10,
+                onDragStart: function () { calls.push("start"); },
+                onDragMove: function (value) { calls.push(value); },
+                onDragEnd: function () { calls.push("end"); },
+            });
+            await wait(50);
+            slider.elem.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, button: 0, clientX: getSliderPointOf(slider, 0.7) }));
+            const afterClick = slider.getValue();
+            document.dispatchEvent(new MouseEvent("mousemove", { clientX: getSliderPointOf(slider, 0.84) }));
+            document.dispatchEvent(new MouseEvent("mouseup", {}));
+            const finalValue = slider.getValue();
+            const thumbMiddle = getSliderThumb(slider).getBoundingClientRect().left + getSliderThumb(slider).getBoundingClientRect().width / 2;
+            const stepMiddle = getSliderPointOf(slider, finalValue / 10);
+            slider.remove();
+            check("Slider: a click on the track moves the thumb there and drags from there; the thumb stands on its step", afterClick === 7 && finalValue === 8 && Math.abs(thumbMiddle - stepMiddle) < 0.5 && calls.join(" ") === "start 7 8 end", "click: " + afterClick + ", drag: " + finalValue + ", thumb off its step: " + (thumbMiddle - stepMiddle).toFixed(2) + " px, calls: " + calls.join(" "));
+        });
+
+        test("Slider: a finger on the track: up or down scrolls the page, to the side drags from there, a tap moves the thumb there", async function () {
+            const calls = [];
+            const slider = Slider({
+                width: 250,
+                onDragStart: function () { calls.push("start"); },
+                onDragMove: function (value) { calls.push(value); },
+                onDragEnd: function () { calls.push("end"); },
+            });
+            await wait(50);
+            const middle = getSliderPointOf(slider, 0.5);
+            slider.elem.dispatchEvent(makeSliderTouch("touchstart", middle, 100));
+            const scrollMove = makeSliderTouch("touchmove", middle + 2, 130);
+            document.dispatchEvent(scrollMove);
+            document.dispatchEvent(makeSliderTouch("touchend", middle + 2, 130));
+            const afterScroll = [slider.getValue(), calls.length, scrollMove.defaultPrevented].join(" ");
+            slider.elem.dispatchEvent(makeSliderTouch("touchstart", middle, 100));
+            const sideMove = makeSliderTouch("touchmove", getSliderPointOf(slider, 0.6), 101);
+            document.dispatchEvent(sideMove);
+            document.dispatchEvent(makeSliderTouch("touchend", 0, 0));
+            const afterSide = [slider.getValue(), sideMove.defaultPrevented].join(" ");
+            slider.elem.dispatchEvent(makeSliderTouch("touchstart", getSliderPointOf(slider, 0.25), 100));
+            const tapEnd = makeSliderTouch("touchend", 0, 0);
+            document.dispatchEvent(tapEnd);
+            const afterTap = [slider.getValue(), tapEnd.defaultPrevented].join(" ");
+            slider.remove();
+            const row = [afterScroll, afterSide, afterTap, calls.join(" ")].join(" | ");
+            check("Slider: a finger on the track: up or down scrolls the page, to the side drags from there, a tap moves the thumb there", row === "0 0 false | 60 true | 25 true | start 60 end start 25 end", row);
+        });
+
+        test("Slider: the keys change the value by its step (a key is a short drag); role slider, aria-valuenow; the ring only for the keyboard", async function () {
+            let endCount = 0;
+            const slider = Slider({ width: 250, maxValue: 10, step: 0.5, currentValue: 5, onDragEnd: function () { endCount++; } });
+            await wait(50);
+            const values = [];
+            ["ArrowRight", "ArrowLeft", "ArrowLeft", "PageUp", "End", "ArrowUp", "Home", "ArrowDown"].forEach(function (keyName) {
+                key(slider.elem, "keydown", keyName);
+                values.push(slider.getValue());
+            });
+            const endsOfKeys = endCount;
+            const line = getSliderThumb(slider).firstElementChild;
+            const ringAfterKeys = line.style.outlineStyle;
+            slider.elem.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, button: 0, clientX: getSliderPointOf(slider, 0.5) }));
+            document.dispatchEvent(new MouseEvent("mouseup", {}));
+            const ringAfterMouse = line.style.outlineStyle;
+            const aria = [slider.elem.getAttribute("role"), slider.elem.tabIndex, slider.elem.getAttribute("aria-valuenow"), slider.elem.getAttribute("aria-valuemax")].join(" ");
+            slider.remove();
+            const row = [values.join(" "), endsOfKeys, ringAfterKeys, ringAfterMouse || "none", aria].join(" | ");
+            check("Slider: the keys change the value by its step (a key is a short drag); role slider, aria-valuenow; the ring only for the keyboard", row === "5.5 5 4.5 9.5 10 10 0 0 | 6 | solid | none | slider 0 5 10", row);
         });
 
         // *** SIDE PANEL (comp/side-panel.js)
