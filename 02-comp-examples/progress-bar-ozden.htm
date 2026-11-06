@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 
-    <title>ProgressBar - ozden, two parts, stripes, limits</title>
+    <title>ProgressBar - ozden, two parts, stripes, limits, a dark track</title>
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -21,16 +21,20 @@
 
     /* Bismillah */
 
-    // ProgressBar (comp-m4) with styleName "ozden" (2026-10-29): the lines of comp-m1 UIProgressBar (a white round track
-    // with a light gray edge, the bar its main color at 50% with an edge of it, a dark limit line with a text);
-    // a second part (value + secondValue), moving stripes on each part (stripes / secondStripes) and limit lines.
+    // ProgressBar with styleName "ozden" (the user, 2026-11-06): the colors of SmartButton. The bar is a cyan SmartButton
+    // ozdenType1 (an edge and a line at its bottom: it looks raised); the track keeps its light colors and has round
+    // ends, or it is dark (darkTrack: 1); the second part (secondValue) is a second bar next to the value, lighter and
+    // not transparent; moving stripes on each part (stripes / secondStripes) and limit lines.
 
     // *** THE COLORS AND SIZES OF THE PAGE
     const PAGE_COLOR = "#F0F1EE";
     const INK = "#232323";
     const CARD_WIDTH = 560;
     const BAR_WIDTH = 400;
-    const SOFT_BLUE = "#7BA7D9"; // a limit in another color (the picture)
+    // The tones of SmartButton (SmartButton.tones): another main color, the color of a limit
+    const ORANGE = "#DE815B";
+    const YELLOW = "#F1C74A";
+    const BLUE = "#52A8D0";
     const UPLOAD_STEP_TIME = 300; // ms
 
     let uploadBar = null;
@@ -47,7 +51,7 @@
                 Label({ plainText: "ProgressBar: ozden", fontSize: 26, bold: 1, textColor: INK });
 
                 // 1. The look
-                startCard("1. The ozden look", "styleName: \"ozden\" (the lines of comp-m1 UIProgressBar). limits: [{ value: 60, text: \"60\" }]: a line a little longer than the bar, its text under it.");
+                startCard("1. The ozden look", "styleName: \"ozden\": the bar is a cyan SmartButton ozdenType1 (an edge and a line at its bottom), the track has round ends. limits: [{ value: 60, text: \"60\" }]: a line a little longer than the bar, its text under it.");
                     ProgressBar({
                         width: BAR_WIDTH,
                         styleName: "ozden",
@@ -61,12 +65,37 @@
                         styleName: "ozden",
                         value: 60,
                         valuePosition: "none",
-                        limits: [{ value: 30, color: SOFT_BLUE }, 80],
+                        limits: [{ value: 30, color: BLUE }, 80],
                     });
                 endCard();
 
-                // 2. Two parts
-                startCard("2. Two parts: value + secondValue", "70 done and 5 on the way. The second part is the main color, lighter (or its own: style.secondBar.color); the value text and onComplete are of the value only.");
+                // 2. A dark track
+                startCard("2. A dark track: darkTrack: 1", "The track is #242424 with a faint white edge (style.darkTrack); the bars keep their colors. setDarkTrack() changes it.");
+                    const darkTrackBar = ProgressBar({
+                        width: BAR_WIDTH,
+                        styleName: "ozden",
+                        darkTrack: 1,
+                        titleText: "Storage",
+                        value: 55,
+                        secondValue: 15,
+                        valueFormat: function (self) { return self.value + "% + " + self.secondValue + "%"; },
+                    });
+                    ProgressBar({
+                        width: BAR_WIDTH,
+                        styleName: "ozden",
+                        darkTrack: 1,
+                        value: 35,
+                        stripes: 1,
+                        valuePosition: "right",
+                        style: { bar: { color: YELLOW } },
+                    });
+                    startButtonRow();
+                        SmartButton({ labelText: "dark track on / off", onClick: function () { darkTrackBar.setDarkTrack(!darkTrackBar.darkTrack); } });
+                    endGroup();
+                endCard();
+
+                // 3. Two parts
+                startCard("3. Two parts: value + secondValue", "70 done and 5 on the way. The second part is a second bar next to the value: the main color mixed with white, not transparent (or its own: style.secondBar.color); the value text and onComplete are of the value only.");
                     const twoParts = ProgressBar({
                         width: BAR_WIDTH,
                         styleName: "ozden",
@@ -84,8 +113,8 @@
                     endGroup();
                 endCard();
 
-                // 3. Stripes
-                startCard("3. Moving stripes", "stripes: 1 on the value, secondStripes: 1 on the second part; setStripes() / setSecondStripes() turn them on and off. (Still with reduced motion.)");
+                // 4. Stripes
+                startCard("4. Moving stripes", "stripes: 1 on the value, secondStripes: 1 on the second part; setStripes() / setSecondStripes() turn them on and off. (Still with reduced motion.)");
                     const striped = ProgressBar({
                         width: BAR_WIDTH,
                         styleName: "ozden",
@@ -102,14 +131,14 @@
                     endGroup();
                 endCard();
 
-                // 4. A job: the done part grows, the part on the way has stripes
-                startCard("4. An upload", "The value is what is saved, the second part what is being sent (with stripes). The limit is the quota.");
+                // 5. A job: the done part grows, the part on the way has stripes
+                startCard("5. An upload", "The value is what is saved, the second part what is being sent (with stripes). The limit is the quota.");
                     uploadBar = ProgressBar({
                         width: BAR_WIDTH,
                         styleName: "ozden",
                         titleText: "Uploading 12 files",
                         secondStripes: 1,
-                        limits: [{ value: 90, color: "indianred" }],
+                        limits: [{ value: 90, color: ORANGE }],
                         valueFormat: function (self) { return Math.round(self.getPercent()) + "%"; },
                         onComplete: function (self) { self.setTitleText("Done"); },
                     });
@@ -118,18 +147,18 @@
                     endGroup();
                 endCard();
 
-                // 5. Another main color
-                startCard("5. Another main color", "Only style: { bar: { color } }: the inside (50%), the edge and the second part follow it. The colors of UIProgressBar, and status: \"error\".");
-                    ProgressBar({ width: BAR_WIDTH, styleName: "ozden", value: 45, secondValue: 10, valuePosition: "right", style: { bar: { color: "#40A5AF" } } });
-                    ProgressBar({ width: BAR_WIDTH, styleName: "ozden", value: 65, secondValue: 10, stripes: 1, valuePosition: "right", style: { bar: { color: "#588ABE" } } });
-                    ProgressBar({ width: BAR_WIDTH, styleName: "ozden", value: 30, valuePosition: "right", style: { bar: { color: "#CC75AA" } } });
+                // 6. Another main color
+                startCard("6. Another main color", "Only style: { bar: { color } }: a tone of SmartButton (blue, yellow); the second part follows it. status: \"success\" is the green of SmartButton, \"error\" its orange.");
+                    ProgressBar({ width: BAR_WIDTH, styleName: "ozden", value: 45, secondValue: 10, valuePosition: "right", style: { bar: { color: BLUE } } });
+                    ProgressBar({ width: BAR_WIDTH, styleName: "ozden", value: 65, secondValue: 10, stripes: 1, valuePosition: "right", style: { bar: { color: YELLOW } } });
+                    ProgressBar({ width: BAR_WIDTH, styleName: "ozden", value: 100, status: "success", valuePosition: "right" });
                     ProgressBar({ width: BAR_WIDTH, styleName: "ozden", value: 85, limits: [{ value: 80, text: "limit 80" }], status: "error", valuePosition: "right" });
                 endCard();
 
-                // 6. A dark page
+                // 7. A dark page
                 VGroup({ width: CARD_WIDTH, height: "auto", align: "left top", gap: 16, padding: [20, 22], color: "#1A1A19", round: 12 });
                 that.css = { maxWidth: "calc(100vw - 40px)" };
-                    Label({ plainText: "6. For a dark page", fontSize: 15, bold: 1, textColor: White(0.9) });
+                    Label({ plainText: "7. For a dark page", fontSize: 15, bold: 1, textColor: White(0.9) });
                     Label({ plainText: "styleName: \"ozdenDark\": a dark track, the bar in the main color of the kit.", fontSize: 13, textColor: White(0.55), width: "100%", css: { whiteSpace: "normal" } });
                     ProgressBar({
                         width: BAR_WIDTH,

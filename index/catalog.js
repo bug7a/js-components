@@ -213,10 +213,10 @@ CATALOG.COMPONENTS = [
         source: "comp/progress-bar.js",
         samples: [
             { file: "02-comp-examples/progress-bar.htm", title: "Basic" },
-            { file: "02-comp-examples/progress-bar-ozden.htm", title: "ozden, two parts, stripes, limits" },
+            { file: "02-comp-examples/progress-bar-ozden.htm", title: "ozden, two parts, stripes, limits, a dark track" },
         ],
-        en: "Horizontal progress bar with a title and a value text; determinate or indeterminate. Two parts (70 + 5) in their own colors, moving stripes and limit lines.",
-        tr: "Başlık ve değer yazılı yatay ilerleme çubuğu; belirli veya belirsiz ilerleme. Kendi renklerinde iki parça (70 + 5), kayan çizgiler ve limit çizgileri.",
+        en: "Horizontal progress bar with a title and a value text; determinate or indeterminate. Two parts (70 + 5) in their own colors, moving stripes, limit lines and a dark track.",
+        tr: "Başlık ve değer yazılı yatay ilerleme çubuğu; belirli veya belirsiz ilerleme. Kendi renklerinde iki parça (70 + 5), kayan çizgiler, limit çizgileri ve koyu bir arka plan.",
     },
     {
         key: "dialog", name: "Dialog", cat: "feedback",
