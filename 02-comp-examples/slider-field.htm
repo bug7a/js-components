@@ -9,12 +9,13 @@
     <!-- LIBRARY FILES -->
     <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
     <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
-    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
-    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
     <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
 
     <!-- COMPONENT FILES -->
     <script src="../comp/slider-field.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -42,7 +43,7 @@
                     height: "auto", // Grows with content, so the Box can scroll.
                     align: "center top",
                     gap: 30,
-                    padding: 50,
+                    padding: [16, 50], // WHY 16 at the sides: a 320 px slider fits in a card on a phone (390 px)
                 });
 
                     // LABEL: Title
@@ -133,17 +134,16 @@
                         });
 
                         // GROUP: Buttons
-                        HGroup({ width: "100%", height: "auto", gap: 8 });
-                        that.elem.style.flexWrap = "wrap";
-                            addSampleButton("Set 8", function () { sfApi.setValue(8); });
-                            addSampleButton("+3", function () { sfApi.increase(3); });
-                            addSampleButton("−3", function () { sfApi.decrease(3); }, 1);
-                            addSampleButton("Range 0–100", function () { sfApi.setRange(0, 100); sfApi.onChange(sfApi); }, 1);
-                            addSampleButton("Step 5", function () { sfApi.setStep((sfApi.step === 5) ? 1 : 5); sfApi.onChange(sfApi); }, 1);
-                            addSampleButton("Label", function () { sfApi.setLabelText((sfApi.labelText === "Size") ? "Font size" : "Size"); }, 1);
-                            addSampleButton("Unit", function () { sfApi.setUnitText(sfApi.unitText ? "" : "px"); }, 1);
-                            addSampleButton("Dots", function () { sfApi.setShowTicks(!sfApi.showTicks); }, 1);
-                            addSampleButton("On / Off", function () { sfApi.setEnabled(!sfApi.enabled); }, 1);
+                        HGroup({ width: "100%", height: "auto", gap: 8, wrap: 1, clipContent: 0 }); // WHY clipContent 0: the focus ring of a SmartButton is not cut
+                            SmartButton({ labelText: "Set 8", onClick: function () { sfApi.setValue(8); } });
+                            SmartButton({ labelText: "+3", onClick: function () { sfApi.increase(3); } });
+                            SmartButton({ tone: "white", labelText: "−3", onClick: function () { sfApi.decrease(3); } });
+                            SmartButton({ tone: "white", labelText: "Range 0–100", onClick: function () { sfApi.setRange(0, 100); sfApi.onChange(sfApi); } });
+                            SmartButton({ tone: "white", labelText: "Step 5", onClick: function () { sfApi.setStep((sfApi.step === 5) ? 1 : 5); sfApi.onChange(sfApi); } });
+                            SmartButton({ tone: "white", labelText: "Label", onClick: function () { sfApi.setLabelText((sfApi.labelText === "Size") ? "Font size" : "Size"); } });
+                            SmartButton({ tone: "white", labelText: "Unit", onClick: function () { sfApi.setUnitText(sfApi.unitText ? "" : "px"); } });
+                            SmartButton({ tone: "white", labelText: "Dots", onClick: function () { sfApi.setShowTicks(!sfApi.showTicks); } });
+                            SmartButton({ tone: "white", labelText: "On / Off", onClick: function () { sfApi.setEnabled(!sfApi.enabled); } });
                         endGroup();
 
                         lblApi = addInfoLabel("Value: 5 (range 0 – 10, step 1)");
@@ -192,18 +192,6 @@
 
         const endCard = function () {
             endGroup();
-        };
-
-        const addSampleButton = function (text, onClick, isSecondary = 0) {
-            const btn = Button({
-                text: text,
-                width: 110,
-                height: 36,
-                fontSize: 14,
-            });
-            if (isSecondary) btn.color = "lightgray";
-            btn.on("click", onClick);
-            return btn;
         };
 
         const addInfoLabel = function (text) {
