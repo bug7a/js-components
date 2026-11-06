@@ -24,7 +24,8 @@
     // ProgressBar with styleName "ozden" (the user, 2026-11-06): the colors of SmartButton. The bar is a cyan SmartButton
     // ozdenType1 (an edge and a line at its bottom: it looks raised); the track keeps its light colors and has round
     // ends, or it is dark (darkTrack: 1); the second part (secondValue) is a second bar next to the value, lighter and
-    // not transparent; moving stripes on each part (stripes / secondStripes) and limit lines.
+    // not transparent, with no edge between them; moving stripes on each part (stripes / secondStripes); a limit is a
+    // dot in the track in the color of the part under it.
 
     // *** THE COLORS AND SIZES OF THE PAGE
     const PAGE_COLOR = "#F0F1EE";
@@ -36,6 +37,8 @@
     const YELLOW = "#F1C74A";
     const BLUE = "#52A8D0";
     const UPLOAD_STEP_TIME = 300; // ms
+
+    const LIMIT_STEP = 10; // the buttons of card 1
 
     let uploadBar = null;
     let uploadTimer = null;
@@ -51,7 +54,7 @@
                 Label({ plainText: "ProgressBar: ozden", fontSize: 26, bold: 1, textColor: INK });
 
                 // 1. The look
-                startCard("1. The ozden look", "styleName: \"ozden\": the bar is a cyan SmartButton ozdenType1 (an edge and a line at its bottom), the track has round ends. limits: [{ value: 60, text: \"60\" }]: a line a little longer than the bar, its text under it.");
+                startCard("1. The ozden look", "styleName: \"ozden\": the bar is a cyan SmartButton ozdenType1 (an edge and a line at its bottom), the track has round ends. limits: [{ value: 60, text: \"60\" }]: a dot in the track, its text under it. A dot is white on the bar and dark on the track (a limit's own color: on the track); half and half while the end of the bar goes over it.");
                     ProgressBar({
                         width: BAR_WIDTH,
                         styleName: "ozden",
@@ -60,17 +63,21 @@
                         valuePosition: "none",
                         limits: [{ value: 60, text: "60" }],
                     });
-                    ProgressBar({
+                    const limitsBar = ProgressBar({
                         width: BAR_WIDTH,
                         styleName: "ozden",
-                        value: 60,
+                        value: 50,
                         valuePosition: "none",
-                        limits: [{ value: 30, color: BLUE }, 80],
+                        limits: [30, { value: 70, color: BLUE }],
                     });
+                    startButtonRow();
+                        SmartButton({ labelText: "- 10", onClick: function () { limitsBar.addValue(-LIMIT_STEP); } });
+                        SmartButton({ labelText: "+ 10", onClick: function () { limitsBar.addValue(LIMIT_STEP); } });
+                    endGroup();
                 endCard();
 
                 // 2. A dark track
-                startCard("2. A dark track: darkTrack: 1", "The track is #242424 with a faint white edge (style.darkTrack); the bars keep their colors. setDarkTrack() changes it.");
+                startCard("2. A dark track: darkTrack: 1", "The track is #242424 with a light gray edge (style.darkTrack); the bars keep their colors, a limit dot on it is light gray. setDarkTrack() changes it.");
                     const darkTrackBar = ProgressBar({
                         width: BAR_WIDTH,
                         styleName: "ozden",
@@ -78,6 +85,7 @@
                         titleText: "Storage",
                         value: 55,
                         secondValue: 15,
+                        limits: [80],
                         valueFormat: function (self) { return self.value + "% + " + self.secondValue + "%"; },
                     });
                     ProgressBar({
@@ -95,7 +103,7 @@
                 endCard();
 
                 // 3. Two parts
-                startCard("3. Two parts: value + secondValue", "70 done and 5 on the way. The second part is a second bar next to the value: the main color mixed with white, not transparent (or its own: style.secondBar.color); the value text and onComplete are of the value only.");
+                startCard("3. Two parts: value + secondValue", "70 done and 5 on the way. The second part is a second bar next to the value: the main color mixed with white, not transparent (or its own: style.secondBar.color), with no edge between them; a dot on it is the main color. The value text and onComplete are of the value only.");
                     const twoParts = ProgressBar({
                         width: BAR_WIDTH,
                         styleName: "ozden",
