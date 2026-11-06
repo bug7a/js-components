@@ -851,10 +851,11 @@ SliderField.styles = {
     // Light gray field, gray fill. (Like the property sliders of design tools)
     classic: SliderFieldDefaults.style,
 
-    // For general use (2026-11-06, the user asked for a more usable look): the colors of SmartButton and of ProgressBar ozden. The fill is a cyan SmartButton
-    // ozdenType1 (an edge and a line at its bottom) that ends with a white knob, straight inside the field. The label
-    // is always on the fill (aroundLabel) and the value never (beforeValue): the end of the fill cuts no text. A ring
-    // for the keyboard focus, a gray fill when it is off. Another tone: style: { fill: { color, hoverColor, activeColor } }.
+    // For general use (2026-11-06, the user asked for a more usable look): the colors of SmartButton and of ProgressBar
+    // ozden. The fill is a cyan SmartButton ozdenType1 (an edge and a line at its bottom) that ends with a white knob,
+    // straight inside the field. The label is always on the fill (aroundLabel) and the value never (beforeValue): the
+    // end of the fill cuts no text. A ring for the keyboard focus, a gray fill when it is off.
+    // Another tone: style: { fill: { color, hoverColor, activeColor } }.
     // handle.inset -6: the middle of the knob is at the end of the fill. WHY a dark focus ring: the focus color of the
     // kit (cadetblue) did not show on the cyan fill; black 50 % has a contrast of 3 on the fill and on the field.
     ozden: {
