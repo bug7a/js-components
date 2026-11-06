@@ -365,7 +365,7 @@ const Tabs = function (params = {}) {
     };
 
     // The indicator moves with a motion from one tab to another, after the first view.
-    // WHY not from its first place (the user, 2026-11-05): the tab of the login pages grew with a motion when the
+    // WHY not from its first place: the tab of the login pages grew with a motion when the
     //     page opened: the first size was measured before the fonts and the page were ready, and the motion that was
     //     on followed the right size. Its first place and the sizes before the first change are drawn at once.
     const startIndicatorMotion = function () {

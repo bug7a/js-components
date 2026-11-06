@@ -4,13 +4,12 @@
 
 GraphBox - v26.11
 
-NEW PROJECTS (the user, 2026-11-05): the chart of new pages and projects, with theme: "dark" on a dark page. The model
+NEW PROJECTS: the chart of new pages and projects, with theme: "dark" on a dark page. The model
 page is 02-comp-examples/graph-box.htm. A small box with a number and a graph stays MiniGraphBox / SparkLineBox.
 
 UI COMPONENT
 - Charts with no library: this one file draws the whole chart as one SVG. No Chart.js, no other file, no internet.
-  (It took the place of ChartBox, the bridge to Chart.js, archived on 2026-11-06. Its params and functions were the
-  model here, so an old page can move over: see below.)
+  (An old page of ChartBox, the bridge to Chart.js, can move over: see below.)
 - Chart types: "line", "area", "bar" (more than one dataset: bars side by side; stacked: 1 one on the other;
   horizontal: 1 bars that grow to the right), "pie", "doughnut" (the first dataset: a part of the whole), "radar",
   "scatter" and "bubble" (two number axes: data: [{ x: 1, y: 2 }]).

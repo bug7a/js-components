@@ -5,7 +5,7 @@
 WebView - v26.09
 
 UI COMPONENT TEMPLATE
-- A box that shows a web page or an HTML text in an iframe. The new version of comp-m1/ui-web-view.js.
+- A box that shows a web page or an HTML text in an iframe.
 - load(url), loadHtml(html) (srcdoc), reload(), clear(). The iframe always fills the box (also with width: "100%").
 - Loading overlay (spinner) until the page is ready, a placeholder text when nothing is loaded, and showError(text)
   for your own error messages. A same origin URL that fails (404, missing file) calls onError. Other origins can not be
@@ -185,7 +185,7 @@ const WebView = function (params = {}) {
     };
 
     // WHY: a real server (Live Server, nginx, GitHub Pages) answers a missing page with a 404 and its own HTML page: that
-    //      document can be read, so only file:// called onError (2026-11-05). The status of the answer tells it.
+    //      document can be read, so only file:// called onError. The status of the answer tells it.
     // The status of the page in the iframe. null: the browser does not tell it.
     const getResponseStatus = function () {
         try {

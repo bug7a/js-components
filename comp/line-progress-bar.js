@@ -3,22 +3,20 @@
 /*
 
 Component: LineProgressBar
-Version: 1.3 (2026-11-05: thick lines with round ends, the value in a bubble with an arrow, setPrimaryColor,
-         animated: the bubble slides to a new value;
-         1.2 2026-11-05: the lines follow the width; a bar made in a hidden container works)
+Version: 1.3
 Created: November 2025
 Description: A progress bar component composed of vertical lines.
 
-- The lines (the user, 2026-11-05): lineWidth, lineGap and lineRound ("full": the top and the bottom are half
+- The lines: lineWidth, lineGap and lineRound ("full": the top and the bottom are half
   circles). headGrow: 1 (default) makes the line at the progress and its two neighbors wider and longer; 0: every
   line is the same. primaryColor: the full lines; secondaryColor: the empty ones.
 - valueBubble: 1 shows the value all the time in a bubble of comp/tooltip.js (load it first) over the last full
   line, its arrow pointing at it (valueBubbleLook: the keys of Tooltip.BUBBLE_LOOK; its color is primaryColor).
   showValueLabel: the small label that shows for a moment when the value changes.
-- animated: 1 (the user, 2026-11-05; context/basic-js-animated-rules.md): the bubble slides to a new value in 0.25 s
+- animated: 1 (context/basic-js-animated-rules.md): the bubble slides to a new value in 0.25 s
   (a transform from where it is seen, so a quick row of values is one smooth way); it does not slide at the first
   view, with a scroll or a resize, nor when the system asks for reduced motion. setAnimated(0/1).
-- 0% has no full line (2026-11-05: one line was full at 0%).
+- 0% has no full line (one line was full at 0%).
 
 USAGE:
 const bar = LineProgressBar({ width: 300, height: 40, showValueLabel: true });
@@ -113,7 +111,7 @@ const LineProgressBar = function (params = {}) {
 
     // WHY again on a resize: the lines were made once from the width at create time. A bar made in a closed tab or
     //     a hidden group ("100%": width 0) had no lines, and lineContainer.add(...[]) threw: the start() of the page
-    //     stopped there, with its started boxes left open (2026-11-05).
+    //     stopped there, with its started boxes left open.
     const buildLines = function () {
         lines.forEach(function (line) { line.remove(); });
         lines.length = 0;

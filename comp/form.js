@@ -33,7 +33,7 @@ const FormDefaults = {
     showPassiveButtonHint: 1, // 1: A hint is shown when the mouse is over the passive send button.
     passiveButtonHintText: "Please fill in the missing fields to send the form.",
     // px: the round corners of the hints of the form: the list of the missing entries and the hint of the passive
-    // send button (the user, 2026-11-05: one value; the hint of the button was 2, sharper than the list)
+    // send button (one value, so they have the same corners)
     hintRound: 4,
     onEdit: function(input) {},
     onSendClick: function(json) {},
@@ -464,7 +464,7 @@ const Form = function(params = {}) {
                         minimal: box.minimalButton,
                     });
                     actionButtonEffect(that);
-                    // WHY click (it was mousedown): a right click, or a press dragged away from the button, sent the
+                    // WHY click, not mousedown: a right click, or a press dragged away from the button, sent the
                     //     form; and Enter / Space on the focused button (a <button>: they give a click) did nothing
                     that.on("click", function(self, event) {
                         // NOTE: The button is ready only when the form is checked (checkForm). The keyboard reaches

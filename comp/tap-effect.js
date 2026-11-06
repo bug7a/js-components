@@ -4,7 +4,7 @@
 
 Tap Effect - v26.11
 
-A soft circle where the screen is tapped: the tap effect of the old javascript-mobile-app-template. A black circle
+A soft circle where the screen is tapped. A black circle
 (80 px, opacity 0.05) comes in the middle of the tap, fades to 0 in 0.2 s (it starts 50 ms after the tap) and goes
 (removed at 250 ms). It is over everything and never catches a tap: the tap goes to the object under it.
 - TapEffect.start(options): the taps of the page make circles. TapEffect.stop(): no more circles (its window
@@ -29,7 +29,7 @@ TapEffect.stop();
 TapEffect.show(200, 300); // a circle at x 200, y 300 of the page
 if (TapEffect.isOn) TapEffect.stop();
 
-Started Date: November 2026 (the tap circle of javascript-mobile-app-template)
+Started Date: November 2026
 Developer: Bugra Ozden
 Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/

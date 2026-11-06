@@ -18,7 +18,7 @@ IMPORTANT: About the file path
 - In folder selection (directory: 1), "path" is the relative path in the folder. (Ex: "photos/2026/a.jpg")
 - In desktop environments (Electron), "path" is the real disk path when the environment provides it. The row shows the
   name; its bubble shows the path.
-- A program that has the file dialog of its system and real paths (the Python library, 2026-11-06):
+- A program that has the file dialog of its system and real paths (the Python library):
   onOpenDialog: function (self) {} opens its dialog in the place of the dialog of the page, and it gives what was chosen to
   addFiles([{ name, path, size, type, lastModified, previewAddress }]): plain objects, not File objects.
   previewAddress: a picture for the list (a plain object has no blob to make one from).
@@ -472,7 +472,7 @@ const SelectFile = function (params = {}) {
 
         let addedCount = 0;
         // WHY directory too: a folder is many files; directory: 1 without multiple: 1 kept only the first file of the
-        //     folder and said "Only one file can be selected." (sample 3 of select-file.htm, 2026-11-05)
+        //     folder and said "Only one file can be selected." (sample 3 of select-file.htm)
         const isMultiple = (box.multiple == 1 || box.directory == 1);
         if (!isMultiple) {
             if (newFiles.length > 1) {

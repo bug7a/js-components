@@ -4,8 +4,7 @@
 
 AppBar - v26.11
 
-THE TOP BAR OF A TAB PAGE of a mobile app, with the look of the old javascript-mobile-app-template
-(js/ui-top-bar.js, the "topBar" of its tab pages).
+THE TOP BAR OF A TAB PAGE of a mobile app.
 - The sizes are px of a 600 px design: the page is fitted with page.fit(600, 800), like the mobile template
   (04-templates/mobile-app-template/classic).
 - A white bar, 105 px high. The title (28 px, bold) in the middle (titleAlign "center") or at the left ("left");
@@ -31,7 +30,7 @@ bar.setLine(0);
 bar.setBackVisible(1);
 bar.setMenuVisible(0);
 
-Started Date: November 2026 (the look of bug7a/javascript-mobile-app-template)
+Started Date: November 2026
 Developer: Bugra Ozden
 Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
@@ -65,8 +64,8 @@ const AppBarDefaults = {
             side: 20, // The space at the left and the right
             bottom: 24, // The buttons and the title stand this far from the bottom
             titleGap: 10, // The least space between a button and the title
-            // WHY: the back arrow of the old template was its 34 px icon at (side, bottom), in line with the title;
-            //      in a 40 px button it stands that far only when the button goes 3 px to the left and down
+            // WHY: the back arrow is in line with the title, at (side, bottom): in a 40 px button it stands that far only
+            //      when the button goes 3 px to the left and down
             backShift: 3,
         },
         title: {
@@ -219,13 +218,13 @@ AppBar.toSvgFile = function (svg) {
     return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
 };
 
-// A back arrow with a shaft (24 x 24; the shape and the size of the arrow of the old template)
+// A back arrow with a shaft (24 x 24)
 AppBar.drawBackArrow = function (color) {
     return '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="' + color +
         '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H7.6M12 7l-5 5 5 5"/></svg>';
 };
 
-// Three dots one under the other (24 x 24; as big and as far apart as the dots of the old template)
+// Three dots one under the other (24 x 24)
 AppBar.MENU_DOT_RADIUS = 2.5;
 AppBar.MENU_DOT_PLACES = [2.5, 12, 21.5];
 AppBar.drawMenuDots = function (color) {

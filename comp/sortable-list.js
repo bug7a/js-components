@@ -4,8 +4,6 @@
 
 SortableList - v26.10
 
-2026-10-28: Drag preview escapes scroll clipping; document pointer events prevent stuck rows.
-
 UI COMPONENT TEMPLATE
 - A list whose order can be changed. (Sıralama nesnesi: verilen itemlerin sırasını düzenleyebildiğin liste.)
 - Items: strings or objects { key, text, desc, locked }. getItems() / getKeys() give the new order.

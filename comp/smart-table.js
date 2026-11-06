@@ -4,19 +4,19 @@
 
 SmartTable - v26.11 - "Optimized for big data"
 
-WHEN TO USE IT (the user, 2026-11-04): to show very big data well, in both directions: very many rows (only the rows
+WHEN TO USE IT: to show very big data well, in both directions: very many rows (only the rows
 that are seen are made) and very many columns (it scrolls sideways). A table that looks better for data that is not so
 big: comp/data-table.js (DataTable). A few rows inside a text: comp/tiny-table.js (TinyTable).
 
-STYLE PACKAGES (2026-11-05, the user): "classic" (default) and "dark" are the looks of DataTable (comp/data-table.js);
+STYLE PACKAGES: "classic" (default) and "dark" are the looks of DataTable (comp/data-table.js);
 new pages use "classic" on a light page and "dark" on a dark page. "green" is the look of SmartTable before them (the
 green title line, the dark edge). A package is a package of params: it also gives searchInputParams (the filter box is
 a SearchInput package: "ozden" / "ozdenDark"), scrollBarParams and searchTitleMenuParams. (SmartTable.styles)
 Sample: 02-comp-examples/smart-table.htm (the model page of SmartTable).
 - SmartTable({ styleName: "dark" }), SmartTable({ styleName: "dark", style: { lblItemCell: { fontSize: 14 } } })
-- A page with its own colors over the old look names it: SmartTable({ styleName: "green", style: {...} }) (the keys it
+- A page with its own colors over the green look names it: SmartTable({ styleName: "green", style: {...} }) (the keys it
   does not give come from that package, not from classic).
-- A cut text (2026-11-05, the user): a cell whose text does not fit (its end is "...") shows all of it in a bubble over
+- A cut text: a cell whose text does not fit (its end is "...") shows all of it in a bubble over
   the cell when the mouse rests on it (style.cellTooltip: the look; showCellTooltip: 0 turns it off). The bubble is
   comp/tooltip.js (Tooltip.show); without that file the browser's own hint (the title of the cell) shows the text.
 
@@ -30,26 +30,26 @@ Webpage: https://bug7a.github.io/js-components/
 
 
 - Arama sütunu: Arama kutusunun sağ ucundaki etikete (ALL) basınca sütun listesi açılır. Arama sadece seçilen sütunda yapılır.
--- (2026-11-05, the user) The chip is in the filter box at its right end; the clear icon shows at its left while
+-- The chip is in the filter box at its right end; the clear icon shows at its left while
    there is a text, and a narrow box shows no clear icon (searchInputParams.clearIconMinTextWidth: 80 px of text).
    A narrow table gives the filter box the room up to the count (up to 240 px). Escape clears the filter
    (searchInputParams.clearOnEscape: 1); in an empty filter it goes on to the page (a Dialog around closes).
 -- searchTitleIndex: -1 (ALL: tüm sütunlar), showSearchTitleSelect: 0 ise kutu gizlenir.
 -- Liste için comp/context-menu.js yüklenmelidir. Yüklenmemiş ise, kutuya her basışta sıradaki sütuna geçer.
-- fitLineCount: 1 (2026-11-04): the rows are about itemHeight px high and their count follows the height of the table
+- fitLineCount: 1: the rows are about itemHeight px high and their count follows the height of the table
   (style.height "100%" in a window that grows or shrinks). 0 (default): itemLineCount rows share the height of the table.
   setItemLineCount(count) makes another count of rows.
-- The keys (2026-11-04, canSelect: 1 by default): a click selects a row and gives the table the focus. The selected
+- The keys (canSelect: 1 by default): a click selects a row and gives the table the focus. The selected
   row: style.selectedItemCellColor (null: the color of the row under the mouse) and the line style.selectedBar at its
   left. Then ↑ ↓ move one row, Page Up / Page Down one page, Home / End to the first / the last record, Enter runs
   onSelect like a click. The selected row stays seen after a sort or a filter. The edge of the table shows the focus
   of the keyboard (style.focusRingColor). selectItem(itemData), clearSelection(), getSelectedIndex(),
   box.selectedItemData. canSelect: 0: no selection and no keys (a click only runs onSelect).
-- locale (2026-11-04): the language of the numbers of the info line. "": the language of the page (<html lang>); a page
+- locale: the language of the numbers of the info line. "": the language of the page (<html lang>); a page
   with no language keeps "tr-TR". Ex: "en-US" -> 12,499, "tr-TR" -> 12.499. setLocale(locale).
 - wheelScroll: 1 ise fare tekerleği tablonun satırlarını kaydırır (sayfa kaymaz). Varsayılan 0: tekerlek sayfayı kaydırır, satırlar scroll çubuğu ve butonlar ile kaydırılır.
 -- smartTable.setWheelScroll(1) ile sonradan açılabilir.
-- allowHtml (2026-10-29): 0 (varsayılan): hücre değerleri düz metin yazılır (kullanıcının yazdığı bir ad veya başlık
+- allowHtml: 0 (varsayılan): hücre değerleri düz metin yazılır (kullanıcının yazdığı bir ad veya başlık
   HTML olarak çalışmaz). 1: değerler HTML olarak yazılır (Ex: "<b>12</b>"). createCustomItemCell / updateCustomItemCell
   içinde cell.label.text ile yazılan kendi değerleriniz etkilenmez.
 
@@ -130,11 +130,11 @@ const SmartTableDefaults = {
         searchIconOpacity: 0.5,
         placeholderText: "Filter",
         searchIconFile: "../comp/search-input/filter.png",
-        clearIconMinTextWidth: 80, // (the user, 2026-11-05: a narrow filter box has no clear icon; its text keeps that place)
-        clearOnEscape: 1, // Escape clears the filter (the user, 2026-11-05: a narrow box has no clear icon)
+        clearIconMinTextWidth: 80, // (a narrow filter box has no clear icon; its text keeps that place)
+        clearOnEscape: 1, // Escape clears the filter (a narrow box has no clear icon)
     },
     styleName: "classic", // "classic", "dark", "green" or a name added to SmartTable.styles
-    style: { // Classic style package (default): the look of DataTable "classic" (2026-11-05, the user)
+    style: { // Classic style package (default): the look of DataTable "classic"
 
         width: "auto",
         height: "auto",
@@ -214,7 +214,7 @@ const SmartTable = function (params = {}) {
     const RESIZE_DELAY = 3; // ms
     const LOADING_MIN_ITEM_COUNT = 1000; // WHY: Küçük listelerde loading bir an yanıp sönmesin.
     const TEST_DATA_REPEAT_COUNT = 100000;
-    const DEFAULT_LOCALE = "tr-TR"; // WHY: the numbers were always Turkish before (2026-11-04); a page with no language keeps them
+    const DEFAULT_LOCALE = "tr-TR"; // WHY: the numbers were always Turkish before; a page with no language keeps them
     const targetItemHeight = box.itemHeight; // fitLineCount: the height of a row, before the rows share the height
     let searchClearIconRight = 0; // the place of the clear icon of the filter box with no chip (its own)
     let hoveredCell = null; // the cell under the mouse (the bubble of a cut text: showCellTooltip)
@@ -1218,7 +1218,7 @@ const SmartTable = function (params = {}) {
 
         // GROUP: The filter box and the count, in one line
         // WHY one line (flex): a narrow table gives the filter box the room up to the count, and a long count makes
-        //     it narrower (it never covers the count). (2026-11-05, the user)
+        //     it narrower (it never covers the count).
         HGroup({
             align: "left center",
             gap: TOOLBAR_GAP,
@@ -1243,7 +1243,7 @@ const SmartTable = function (params = {}) {
 
         endGroup();
 
-        // LABEL: Arama sütunu seçimi (ALL): in the filter box, at its right end (2026-11-05, the user)
+        // LABEL: Arama sütunu seçimi (ALL): in the filter box, at its right end
         box.lblSelectedSortKey = createIn(box.searchInput, function () {
             return Label({
                 text: box.allTitlesText,
@@ -1685,7 +1685,7 @@ const SmartTable = function (params = {}) {
 
 // The text of a cell (and of the keyword) for the filter: lowercase in Turkish ("İ" -> "i", not "i" + a dot), without
 // the marks of the letters, "ı" as "i" (as DataTable.toSearchText).
-// WHY: toLowerCase() made "İstanbul" "i̇stanbul": the keyword "istanbul" found nothing (2026-11-05).
+// WHY: toLowerCase() made "İstanbul" "i̇stanbul": the keyword "istanbul" found nothing.
 // WHY the fast way: most texts have no letter outside ASCII after the lowercase, and a table can have 100 000 rows.
 SmartTable.toSearchText = function (value) {
     const text = String(value).toLocaleLowerCase("tr");
@@ -1742,7 +1742,7 @@ SmartTable.styles = {
         searchTitleMenuParams: { styleName: "dark" },
     },
 
-    // The look of SmartTable before the packages (2026-11-05): the green title line, a dark edge, big texts. Every
+    // The green title line, a dark edge, big texts. Every
     // key is here: a page that changes some of them over this look (styleName: "green") gets the rest from it.
     green: {
         style: {
@@ -1777,7 +1777,7 @@ SmartTable.styles = {
             boxInfoLine: { color: "#E4E4E4", borderTop: "1px solid rgba(0, 0, 0, 0)" },
             lblBoxInfoLine: { fontSize: 16, textColor: Black(0.85) },
             lblNoDataFound: { color: "lightgray", textColor: Black(0.8), padding: [8, 2], fontSize: 14, round: 8, border: 1, borderColor: Black(0.4) },
-            // (the user, 2026-11-05: whitesmoke, as the pale lines of the table; the edge of the filter box)
+            // (whitesmoke, as the pale lines of the table; the edge of the filter box)
             lblSearchTitle: { color: "whitesmoke", textColor: Black(0.8), padding: [8, 2], fontSize: 14, round: 8, border: 1, borderColor: Black(0.15) },
             btnScrollCenter: { color: "white", round: 100, border: 1, borderColor: "rgba(0,0,0,0.4)" },
             btnScrollUp: { color: "lightgray", round: 100, border: 1, borderColor: "rgba(0, 0, 0, 0.6)" },
@@ -1785,7 +1785,7 @@ SmartTable.styles = {
             boxSort: { color: "#65A293" },
         },
         searchInputParams: {
-            styleName: "original", // the first look of SearchInput ("classic" became a standard search box, 2026-11-06)
+            styleName: "original", // the first look of SearchInput
             width: "50%",
             height: 36,
             border: 1,
@@ -1794,10 +1794,10 @@ SmartTable.styles = {
             searchIconSize: 16,
             placeholderText: "Filter",
             fontSize: 16,
-            borderColor: Black(0.15), // (the user, 2026-11-05: light edges in the filter)
+            borderColor: Black(0.15), // (light edges in the filter)
             borderBottomStyle: "1px solid " + Black(0.15),
             searchIconFile: "../comp/search-input/filter.png",
-            searchIconOpacity: 0.8, // (the user, 2026-11-05: a softer filter icon, in tune with the edges)
+            searchIconOpacity: 0.8, // (a softer filter icon, in tune with the edges)
         },
     },
 

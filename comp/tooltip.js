@@ -5,20 +5,19 @@
 Tooltip - v26.10
 
 - A hint over an object: it follows the mouse while the mouse is on its target (Tooltip({ target, hintText })).
-- THE BUBBLE (2026-10-30, the user): an optional arrow (lbl_arrow, px) that points at the mouse / the target; the
+- THE BUBBLE: an optional arrow (lbl_arrow, px) that points at the mouse / the target; the
   edge of the bubble (lbl_border) goes around the arrow too, as one line. The bubble never goes out of the screen:
   it slides inside, or goes to the other side when there is no room (top <-> bottom, left <-> right); the arrow
   still points at its place.
 - Tooltip.show(target, text, look, side, content): a bubble at an object, not under the mouse (Ex: the "Click
   again" of a SmartButton ask); it returns the bubble, bubble.remove() takes it away. look: Tooltip.BUBBLE_LOOK keys.
-  It stays at its target while a box under it scrolls, and hides while the target is out of sight (2026-11-05,
-  the user: the bubble of an ask stayed where it was shown). The popover does the same.
-- CONTENT (2026-10-30): content: function (bubble) { ... } builds its own objects in the bubble in place of the text
+  It stays at its target while a box under it scrolls, and hides while the target is out of sight. The popover does the same.
+- CONTENT: content: function (bubble) { ... } builds its own objects in the bubble in place of the text
   (a title and a text, a shortcut, a user card...); they are made one under the other (look.contentGap).
-- POPOVER (2026-10-30): trigger: "click" (or Tooltip.openPopover()): a click on the target opens the bubble and it
+- POPOVER: trigger: "click" (or Tooltip.openPopover()): a click on the target opens the bubble and it
   stays; its content can be clicked (buttons, fields). A click outside, Escape or a second click on the target closes
   it. One popover at a time (Tooltip.closePopover()).
-- SCALE (2026-11-01): scale (the param of Tooltip(), look.scale of Tooltip.show() / openPopover()) multiplies every
+- SCALE: scale (the param of Tooltip(), look.scale of Tooltip.show() / openPopover()) multiplies every
   size of the bubble: its text, padding, round corners, edge, shadow, arrow and its gaps. null (default):
   basic.uiScale when the bubble opens (1; a page fitted with page.fit() sets 1 / page.zoom: the bubble keeps its
   size on the screen). The objects of content(bubble) are made by the page: bubble.look.scale is their scale.

@@ -6,7 +6,7 @@ PasswordInputB - v25.07
 
 UI COMPONENT TEMPLATE
 - You can customize, this template code as you need:
-- NEW PROJECTS (the user, 2026-11-05): styleName "ozden" on a light page, "ozdenDark" on a dark page (the packages
+- NEW PROJECTS: styleName "ozden" on a light page, "ozdenDark" on a dark page (the packages
   of InputB, comp/input-b.js; the look of 02-comp-examples/input-b-ex7-ozden.htm), unless the user asks for another one.
 
 Started Date: June 2024
@@ -26,7 +26,7 @@ const PasswordInputBDefaults = {
     titleText: "PASSWORD",
     placeholder: "Enter your password",
     warningText: "",
-    warningColor: "#E5885E", // "#F1BF3C"
+    warningColor: "#E5885E",
     maxChar: 25,
     showPassword: 0,
     showShowPasswordButton: 1, // enable show/hide icon by default
@@ -142,7 +142,7 @@ const PasswordInputB = function(params = {}) {
     endAutoLayout();
 
     // The hint of the show password button has the look of the hints of the field (tooltipStyle of the package).
-    // WHY (the user, 2026-11-05): it was always white with a dark text, also on a dark field (ozdenDark, dark).
+    // WHY: a white hint with a dark text does not suit a dark field (ozdenDark, dark).
     //     Its bubble: tooltipStyle.color, or hintColor when that is "" (the warning hint takes the color of its ball).
     const hintStyle = box.tooltipStyle;
     box.btnShowPassword.tooltip = Tooltip({

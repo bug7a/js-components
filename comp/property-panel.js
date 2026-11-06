@@ -10,7 +10,7 @@ UI COMPONENT TEMPLATE
 - Built from a JSON (data): header tabs, a title with action icons, and sections of items.
   footer: one more section, fixed at the bottom (out of the scrolling part). Ex: a note field.
   A section with mark: 1 has a line in the accent color at its left (style.panel.markWidth): a place the eye
-  finds again (Ex: Size and Position; 2026-11-03, the user: a lighter background was too weak, an inverted one too strong).
+  finds again (Ex: Size and Position). WHY a line: a lighter background is too weak, an inverted one too strong.
   headerTitle: a name at the left of the header; the tabs and the headerItem come next to it.
   empty: { icon, title, text, hints: [{ keys, text }] } -> a page in the middle in place of the sections
   (Ex: nothing is selected).
@@ -18,7 +18,7 @@ UI COMPONENT TEMPLATE
   built by its own function (see *** ITEM TYPES):
     number     -> [X  396]  prefix text or icon (drag the prefix to change the value; prefixWidth for a word), unit, min, max, step, autoText
                   prefixClick: a click on the prefix (not a drag) gives this value, like a pick of the menu of a combo;
-                  the prefix lights up under the mouse (Ex: "Left" -> the value "__side:right"; 2026-11-03)
+                  the prefix lights up under the mouse (Ex: "Left" -> the value "__side:right")
                   parseText(text): a text that is not a plain number goes to it; it returns the value ("100%", "auto")
                   or undefined (the old value comes back). A text value is shown as it is.
                   textToNumber(value): the number of a text value, to drag or step it (Ex: "100%" -> its width in px).
@@ -47,7 +47,7 @@ UI COMPONENT TEMPLATE
                   the field, a right click opens the same menu (Copy to, Delete; a ContextMenu with a submenu when
                   comp/context-menu.js is loaded). Kept with recentColorsKey.
 - Items of a row: put them in an array. span: 1 (one column), 2 (two columns), "full", or a width in px (a
-  number over 2, 2026-11-03: Ex: a switch of 100 and a field of 108 fill a row with the gap). An iconButton takes the
+  number over 2: Ex: a switch of 100 and a field of 108 fill a row with the gap). An iconButton takes the
   small last column. label: the caption above the item.
 - Listen to every change from outside: onChange(change, panel) or panel.listen(fn) (returns a remover).
   change = { kind: "value" | "action" | "tab" | "addColor" | "removeColor" | "orderColors", key, value, oldValue, item, sectionKey }
@@ -101,7 +101,7 @@ const PropertyPanelDefaults = {
             color: "#2C2C2C",
             dividerColor: "#444444",
             markWidth: 3, // A section with mark: 1: a line in the accent color at its left
-            markOpacity: 0.65, // WHY: mixed with the panel, it stays calm (the user, 2026-11-03)
+            markOpacity: 0.65, // WHY: mixed with the panel, it stays calm
             headerHeight: 48,
             paddingLeft: 16,
             paddingRight: 8,
@@ -172,7 +172,7 @@ const PropertyPanelDefaults = {
             handleSize: 12,
             sliderHeight: 12,
             swatchSize: 18,
-            swatchGap: 5, // WHY 5 (was 6): with the room of the rings (swatchRoom) 9 colors still fit one row
+            swatchGap: 5, // WHY 5: with the room of the rings (swatchRoom) 9 colors still fit one row
             swatchRoom: 4, // px around the colors: the selected ring (3) and the hover growth are not cut by the scroll
             swatchesMaxHeight: 126, // More colors scroll
             quickSwatchSize: 14, // The colors under a color field (the ticks of the picker)
@@ -1623,7 +1623,7 @@ const PropertyPanel = function (params = {}) {
         if (format === "hex" || base.charAt(0) !== "#") return base;
         const rgb = readColor(base);
         // WHY: a "#" that is not a color (a typo: "#12345", "#") threw here in the rgb and hsl formats: the picker stayed
-        //      half drawn and the next color could not be typed (2026-11-05). It is shown as it is.
+        //      half drawn and the next color could not be typed. It is shown as it is.
         if (!rgb) return base;
         if (format === "rgb") return rgb.r + ", " + rgb.g + ", " + rgb.b;
         const hsl = rgbToHsl(rgb);
@@ -1692,7 +1692,7 @@ const PropertyPanel = function (params = {}) {
 
         // WHY the shown text: the % field wrote the value at every blur, also with no change (and after Escape):
         //     "transparent" became "rgba(0, 0, 0, 0)", "rgb(55, 56, 54)" "#373836", and basic-designer got a change
-        //     the user did not make (2026-11-05). The number field has the same check.
+        //     the user did not make. The number field has the same check.
         alphaEl.addEventListener("blur", function () {
             const parts = splitAlpha(api.getValue());
             const shownText = (parts.base) ? Math.round(parts.alpha * 100) + "%" : "";
@@ -2090,7 +2090,7 @@ const PropertyPanel = function (params = {}) {
                 grid.elem.insertBefore(square.elem, (isBefore) ? target.obj.elem : target.obj.elem.nextSibling);
             };
             // WHY window, not setPointerCapture: moving the square in the grid (insertBefore) loses the capture,
-            //     and its pointerup never came (found with a real drag, 2026-11-03)
+            //     and its pointerup never came (found with a real drag)
             square.elem.addEventListener("pointerdown", function (event) {
                 if (event.button !== 0) return;
                 const startX = event.clientX;

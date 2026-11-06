@@ -7,17 +7,16 @@ Filters - v26.11
 UI COMPONENT
 - A filter menu: a "Filters" button, and under it a panel with a search field, groups of options with check
   boxes and a footer with the number of the selected options and "Clear all".
-- Made in basic-designer from a picture, then turned into this component.
 - The groups (sections) open and close (a click, or Enter / Space on the title); the search shows the options with
   the text; every change of the selection goes to onChange (not at create time, not with silent: 1).
-- The fields of the kit (the user, 2026-11-05): the search field is a SearchInput (comp/search-input.js, its
+- The fields of the kit: the search field is a SearchInput (comp/search-input.js, its
   params: searchInputParams, "ozden" by default) and every option is a CheckBox (comp/check-box.js, its params:
   checkBoxParams, "classic" by default; the row is the check box, its checked mark takes the accent). Load them
   before this file; without them a plain field and a plain check are drawn.
-- animated: 1 (2026-11-05): the panel and an opened section come with a fade and a short slide (they go faster),
+- animated: 1: the panel and an opened section come with a fade and a short slide (they go faster),
   the arrows turn with a small spring, and the search field and the check boxes get their own motions (SearchInput,
   CheckBox). Nothing moves at the first view; off when the system asks for reduced motion. setAnimated(0/1).
-- The icon of the button is two-tone (2026-11-05): sliders on a light box, in the accent (style.buttonIcon).
+- The icon of the button is two-tone: sliders on a light box, in the accent (style.buttonIcon).
 - Style packages: "light" (default). Select with styleName. (Filters.styles)
 
 USAGE:
@@ -71,10 +70,10 @@ const FiltersDefaults = {
     // [{ key, titleText, opened, options: [{ key, labelText, checked }] or ["text"] }]
     sections: [],
     animated: 0, // 1: the panel and an opened section come in, the arrows turn (box.setAnimated(0/1))
-    // The search field (the user, 2026-11-05): the params of its SearchInput (comp/search-input.js). Its
+    // The search field: the params of its SearchInput (comp/search-input.js). Its
     // placeholder is searchPlaceholder; its animated is the animated of Filters (unless it is given here).
     searchInputParams: { styleName: "ozden", width: "100%", height: 50, fontSize: 18, searchIconSize: 20 },
-    // The check boxes (the user, 2026-11-05): the params of every CheckBox (comp/check-box.js). The row look is
+    // The check boxes: the params of every CheckBox (comp/check-box.js). The row look is
     // style.row and the checked mark is the accent; a style given here wins. Their animated is the animated of
     // Filters (unless it is given here).
     checkBoxParams: { styleName: "classic", style: {} },
@@ -770,7 +769,7 @@ Filters.icon = function (name, size, strokeWidth = 2) {
     return '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="' + strokeWidth + '" stroke-linecap="round" stroke-linejoin="round">' + Filters.ICON_PATHS[name] + '</svg>';
 };
 
-// A two-tone icon (the user, 2026-11-05: the style of 02-comp-examples/smart-button-alternatif.htm): a big LIGHT shape
+// A two-tone icon (the style of 02-comp-examples/smart-button-alternatif.htm): a big LIGHT shape
 // with STRONG details; the two colors are filled in. name: "filter" (sliders on a light box)
 Filters.TWO_TONE_PATHS = {
     filter: '<rect x="2.5" y="2.5" width="19" height="19" rx="3" fill="LIGHT"/>' +

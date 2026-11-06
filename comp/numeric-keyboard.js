@@ -5,9 +5,9 @@
 Numeric Keyboard - v26.10
 
 Number keys on the screen (a PIN, an amount, a kiosk, a touch screen): a title, the typed value, the keys.
-The new version of comp-m1/ui-numeric-keyboard.js (UINumericKeyboard) with the same look: white keys with a thin
+The look: white keys with a thin
 dark line and round corners, a big bold value, a small gray title.
-- keyLayout "wide": two rows (1 2 3 4 5 ⌫ / 6 7 8 9 0), the old one. "phone": 1-9 in three rows, then ⌫ 0 ✓ (onEnter).
+- keyLayout "wide": two rows (1 2 3 4 5 ⌫ / 6 7 8 9 0). "phone": 1-9 in three rows, then ⌫ 0 ✓ (onEnter).
 - maxLength: the most digits; mask: 1 shows • for each digit (a PIN).
 - The keyboard of the computer works too while the component has the focus: the digits, Backspace, Enter.
 - The backspace key is drawn with SVG (no image file).
@@ -19,7 +19,7 @@ NumericKeyboard({ keyLayout: "phone", titleText: "AMOUNT", maxLength: 8, onEnter
 pin.setValue("12");
 pin.clear();
 
-Started Date: 1 September 2022 (UINumericKeyboard), October 2026 (NumericKeyboard)
+Started Date: October 2026
 Developer: Bugra Ozden
 Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
@@ -32,7 +32,7 @@ Webpage: https://bug7a.github.io/js-components/
 const NumericKeyboardDefaults = {
     width: "auto", // As wide as the keys
     height: "auto",
-    keyLayout: "wide", // "wide": two rows (the old one); "phone": a 3 x 4 grid with an enter key
+    keyLayout: "wide", // "wide": two rows; "phone": a 3 x 4 grid with an enter key
     titleText: "PIN", // "": no title
     value: "",
     maxLength: 4,
@@ -41,7 +41,7 @@ const NumericKeyboardDefaults = {
     onChange: function (self) {},
     onEnter: function (self) {},
     styleName: "classic", // "classic", "dark" or a name added to NumericKeyboard.styles
-    style: { // Classic style package: the look of UINumericKeyboard
+    style: { // Classic style package
         box: { color: "transparent" },
         layout: { gap: 10, padding: [35, 20] },
         title: { fontSize: 18, textColor: "rgba(20, 20, 20, 0.5)" },
@@ -279,7 +279,6 @@ const NumericKeyboard = function (params = {}) {
 // NOTE: A new package needs only the keys that differ from the classic style.
 NumericKeyboard.styles = {
 
-    // The look of UINumericKeyboard.
     classic: NumericKeyboardDefaults.style,
 
     // For a dark page.

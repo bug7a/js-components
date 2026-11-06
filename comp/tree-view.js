@@ -17,7 +17,7 @@ UI COMPONENT TEMPLATE
   Space opens / closes, typing a letter jumps to the next row that starts with it (typeAhead).
 - Mouse: click selects, a click on the arrow opens / closes, a double click -> onActivate (and opens / closes;
   toggleOnDoubleClick: 0 -> it only activates). onActivate(self, node, event): event.type "dblclick" or "keydown".
-- getRowElem(key): the element of a row (its text: [data-part=text]), Ex: to put a field over it (2026-11-03).
+- getRowElem(key): the element of a row (its text: [data-part=text]), Ex: to put a field over it.
 - Accessibility: tree / treeitem / group roles, aria-level, aria-expanded, aria-selected, aria-activedescendant.
 - onSelect is NOT called when the component is created or when the value is set with silent: 1.
 - Style packages: "classic" (default), "modern", "dark". Select with styleName. (TreeView.styles)
@@ -709,7 +709,7 @@ const TreeView = function (params = {}) {
 
         const parent = recs.get(parentNode.key);
         // WHY: an open parent with no group of children yet (it was empty, lazy, or emptied by setChildren): the new
-        //      child was not drawn, and setValue() and the keys could not reach it (2026-11-05)
+        //      child was not drawn, and setValue() and the keys could not reach it
         if (parent && !parent.built && isOpen(parent)) {
             buildChildren(parent);
             drawRow(parent);

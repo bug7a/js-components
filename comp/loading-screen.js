@@ -9,15 +9,15 @@ UI COMPONENT
   It covers its container (the page by default) and fades out when close() is called.
 - Parts (all optional): an icon (an image file or an SVG text), a title, a message, a spinner
   ("ring", "dots" or "clock") and a progress bar (setProgress(0 - 1)).
-- spinnerType "clock" (2026-10-29, the user): the clock of the waiting views (comp-m1/ui-waiting-view/clock.png:
-  a white face, a dark edge and dark hands) with moving hands: the minute hand turns fast, the hour hand 12 times
-  slower. Always 30 px (the user): the hour hand 2 px, the minute hand (the long one) 2 px in indianred, and an
+- spinnerType "clock": the clock of the waiting views
+  (a white face, a dark edge and dark hands) with moving hands: the minute hand turns fast, the hour hand 12 times
+  slower. Always 30 px: the hour hand 2 px, the minute hand (the long one) 2 px in indianred, and an
   indianred dot (4 px) in the middle over the place where the hands meet. Drawn as SVG in px (no file);
   style.clock. The hands stand still with prefers-reduced-motion.
-  THE DEFAULT WAIT (the user, 2026-10-29): spinnerType is "clock" by default. Its two looks are LoadingScreen.clocks
+  THE DEFAULT WAIT: spinnerType is "clock" by default. Its two looks are LoadingScreen.clocks
   "ozden" (a white face, dark lines: the default) and "ozdenDark" (a dark face, light lines, a yellow minute hand); the style packages
   "ozden" and "ozdenDark" are the screens made for them.
-- NEEDS comp/smart-button.js, loaded first (2026-10-30): the clock and the dots are the drawings of SmartButton
+- NEEDS comp/smart-button.js, loaded first: the clock and the dots are the drawings of SmartButton
   (SmartButton.clocks, createClockSvg, createDots): one drawing for the whole suite.
 - minDuration: the screen stays at least this long, so a fast load does not show a short flash.
 - The cover takes the clicks, so nothing under it can be clicked while it is open.
@@ -316,7 +316,7 @@ const LoadingScreen = function (params = {}) {
 
 };
 
-// *** THE CLOCKS: the two looks of the waiting clock (the user, 2026-10-29): the clocks of SmartButton
+// *** THE CLOCKS: the two looks of the waiting clock: the clocks of SmartButton
 LoadingScreen.clocks = SmartButton.clocks;
 
 // *** STYLE PACKAGES:

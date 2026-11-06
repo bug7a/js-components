@@ -6,7 +6,7 @@ PhoneInputB - v25.07
 
 UI COMPONENT TEMPLATE
 - You can customize, this template code as you need:
-- NEW PROJECTS (the user, 2026-11-05): styleName "ozden" on a light page, "ozdenDark" on a dark page (the packages
+- NEW PROJECTS: styleName "ozden" on a light page, "ozdenDark" on a dark page (the packages
   of InputB, comp/input-b.js; the look of 02-comp-examples/input-b-ex7-ozden.htm), unless the user asks for another one.
 
 
@@ -34,7 +34,7 @@ const PhoneInputBDefaults = {
     titleText: "PHONE NUMBER",
     placeholder: "(auto)",
     warningText: "Invalid phone number format",
-    warningColor: "#E5885E", // "#F1BF3C"
+    warningColor: "#E5885E",
     countryCode: "+90",
     phoneMask: " (___) ___-____",
     //phoneMask: " (___) ___ __ __",
@@ -159,7 +159,7 @@ const PhoneInputB = function(params = {}) {
         // 1. The country code at the start of the field goes: the one in the field, or the new one (the longest).
         // WHY: the first countryCode.length characters went without a look: "+90 (555) 123-4567" became
         //      "+1 (055) 512-3456" after setCountryCode("+1") (a valid wrong number), and a number autofilled
-        //      without its code lost its first digits (2026-11-05)
+        //      without its code lost its first digits
         const codes = [codeInField, box.countryCode].filter(function(code) {
             return typeof code === "string" && code.length > 0 && value.indexOf(code) === 0;
         });

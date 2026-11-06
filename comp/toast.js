@@ -17,7 +17,7 @@ UI COMPONENT TEMPLATE
 - maxVisible: Old toasts are closed when there are too many.
 - Small screens: Toasts use the full width.
 - Accessibility: Errors use role="alert", others role="status". Escape closes the focused toast.
-- Scale (2026-11-01): scale multiplies every size of a toast (its style, its shadow, its motion); the scale of
+- Scale: scale multiplies every size of a toast (its style, its shadow, its motion); the scale of
   Toast.options multiplies the places of the toasts (width, offsets, gap, smallScreenWidth). null (default):
   Toast.options.scale, else basic.uiScale (1; a page fitted with page.fit() sets 1 / page.zoom: the toasts keep
   their size on the screen).
@@ -600,7 +600,7 @@ Toast.options = {
     gap: 10, // Space between toasts
     maxVisible: 5, // In one position
     zIndex: 45000, // WHY: over the Dialogs (4000 and up: a toast under the cover of a dialog could not be clicked, its
-                   //      Undo closed the dialog), under Notice (50000) and Tooltip (100000) (2026-11-05)
+                   //      Undo closed the dialog), under Notice (50000) and Tooltip (100000)
     smallScreenWidth: 520, // Page width: toasts use the full width below this.
     durations: { success: 3000, info: 4000, warning: 5000, error: 7000, loading: 0 },
     // The px above (width, offsets, gap, smallScreenWidth) multiplied, and the scale of a toast without its own.

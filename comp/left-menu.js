@@ -11,10 +11,10 @@ UI COMPONENT TEMPLATE
   the first tap opens the menu (it does not select an item, because the texts are not visible when it is closed),
   the second tap selects the item and closes the menu. A tap outside the menu also closes it.
 -- openOnClick: "auto" (touch device: tap, mouse: hover), 1: always tap, 0: always hover, "direct": a tap selects at
-   once and the menu stays closed (2026-11-02, for a short menu with clear icons).
+   once and the menu stays closed (for a short menu with clear icons).
 -- itemHeight: the height of a button item. A page fitted with page.fit() is zoomed: for a finger give Ex: 44 / page.zoom.
 -- leftMenu.setOpenOnClick(1) changes it later.
-- Style packages (2026-11-05, the user): "dark" (default: a dark menu with a red selection) and "light" (for a light
+- Style packages: "dark" (default: a dark menu with a red selection) and "light" (for a light
   page: a light menu with a line at its right side, a soft shadow while it is open over the page, the cyan of
   SmartButton in light tones, dark icons and a dark scroll bar). A package is a package of params (LeftMenu.styles):
   LeftMenu({ styleName: "light" }), LeftMenu({ styleName: "light", selectedColor: "#DCEBEC" }) (a param wins).
@@ -517,9 +517,9 @@ LeftMenu.styles = {
     // The look of LeftMenuDefaults: a dark menu with a red selection.
     dark: { style: {} },
 
-    // For a light page (2026-11-05, the user): a light menu with a line at its right side and a soft shadow while it is
-    // open over the page; the cyan of SmartButton (#5BBAC1) in light tones (the user chose it over the red of the
-    // dark menu, the same day); dark icons and a dark scroll bar.
+    // For a light page: a light menu with a line at its right side and a soft shadow while it is
+    // open over the page; the cyan of SmartButton (#5BBAC1) in light tones;
+    // dark icons and a dark scroll bar.
     light: {
         style: {},
         backgroundColor: "#F7F7F5",

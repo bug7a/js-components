@@ -4,22 +4,18 @@
 
 Smart Button - v26.11
 
-THE DEFAULT BUTTON of new pages and projects (the user, 2026-10-30). It was ButtonWithIcon
-(comp/button-with-icon.js) until 2026-10-30.
-v26.11 (the user, 2026-11-04): designed again, simpler (the style system of v26.10 had become too hard to use: its
-packages classic, icon, primary / danger..., pillSolid and SmartButton.TONES are gone; the old file is in
-__archive/components-old-2026-11-04/).
+THE DEFAULT BUTTON of new pages and projects.
 
 THE MODEL PAGE: 02-comp-examples/smart-button.htm: new pages and projects take their buttons from it.
 The other samples: smart-button-alternatif.htm (pill and outlined with the colors of the page), smart-button-3-ozden.htm
 (the templates), smart-button-4-dark.htm (the dark templates and tones), smart-button-5-features.htm.
 
 - A button with an icon and a text (or only one of them); the icon on the left or on top (iconPosition).
-- THE LOOK IN THREE STEPS (the user, 2026-11-04). The order: style > tone > the template.
+- THE LOOK IN THREE STEPS. The order: style > tone > the template.
   1. styleName: the template (the shape), gray. "ozdenType1" (THE DEFAULT: #E3E3E3, a thin dark edge and a darker
      line at the bottom), "ozdenType2" (no bottom line), "ozdenType3" (a faint edge), "ozdenType4" (a ghost: no
      surface, no edge, only its hover is gray), "pill" (round, no edge, a bold text), "outlined" (round, a thicker
-     edge with a line at its bottom). For a dark page (2026-10-31, the draft _designs/smart-button-dark.htm):
+     edge with a line at its bottom). For a dark page (the draft _designs/smart-button-dark.htm):
      "ozdenType1Dark" ... "ozdenType4Dark" (#2E2E2C, a white text and icon, the dark waiting clock).
      A template is only a style (SmartButton.styles).
   2. tone: a color of the kit (SmartButton.tones), three colors: the button, the button under the mouse, its text.
@@ -33,7 +29,7 @@ The other samples: smart-button-alternatif.htm (pill and outlined with the color
 - AN ICON BUTTON: labelText: "" -> the icon in the middle, no room at the sides; with no width it is a square
   (44 x 44). The same template and tone as a text button. Give it an ariaLabel.
   An "auto" height keeps the room of style.layout.padding (Ex: padding [10, 10] -> 44 x 44).
-- HEIGHT: 44 by default (the user, 2026-11-04: 40 looked narrow); every template, pill and outlined too. An icon on
+- HEIGHT: 44 by default (40 looked narrow); every template, pill and outlined too. An icon on
   top of a text makes it "auto" (as high as its padding and content).
 - KEYBOARD AND ACCESSIBILITY: role "button", Tab reaches it, Enter / Space press it (Space when it goes up), a focus
   ring only for the keyboard; ariaLabel for a button with only an icon (else labelText is read).
@@ -103,7 +99,7 @@ const SmartButtonDefaults = {
             padding: [16, 0],
             align: "center center",
             // px less space on the side of the icon (an icon left of a text): the empty edge in an icon file and its
-            // thin lines made that side look wider (measured 1 - 3 px; the user, 2026-10-30). 0: the same on both sides
+            // thin lines made that side look wider (measured 1 - 3 px). 0: the same on both sides
             iconSideTrim: 2,
         },
         icon: {
@@ -128,7 +124,7 @@ const SmartButtonDefaults = {
             color: "#D9D9D9", // under the mouse (pressed: this color, darker)
         },
         // ask: the look of the button while it asks, and the bubble over it (Tooltip.BUBBLE_LOOK keys).
-        // #DE815B (2026-11-03, the user: the orange of danger, was #E8796D); its own value, not the orange tone,
+        // #DE815B (the orange of danger); its own value, not the orange tone,
         // so the two can be changed apart.
         ask: {
             button: {
@@ -152,7 +148,7 @@ const SmartButtonDefaults = {
             textColor: "rgba(0, 0, 0, 0.3)",
             iconOpacity: 0.25, // (and no color)
         },
-        // The press (animated: 1). WHY no color for it (the user, 2026-11-04): two colors are enough, the press
+        // The press (animated: 1). WHY no color for it: two colors are enough, the press
         // only darkens the color of the moment
         press: {
             scale: 0.94, // while pressed
@@ -297,7 +293,7 @@ const SmartButton = function (params = {}) {
     };
 
     // WHY: the second click of a double click answered the ask before it was read (SmartButton({ ask }) and a
-    //      Dialog.confirm with danger and ask ran at once, 2026-11-05)
+    //      Dialog.confirm with danger and ask ran at once)
     const isAnswerTooSoon = function (event) {
         if (event && event.detail > 1) return true;
         return (Date.now() - askStartTime < ASK_ANSWER_DELAY);
@@ -381,7 +377,7 @@ const SmartButton = function (params = {}) {
     };
 
     // The transitions start after the first view: a state set while the button is made (Ex: setEnabled(0) right
-    // after a Dialog is made) is drawn at once, not as a move from its first look (the user, 2026-11-05: the Save
+    // after a Dialog is made) is drawn at once, not as a move from its first look (the Save
     // button of a dialog turned from blue to gray when the dialog opened)
     // WHY the frame and the read: the look of now must be the start of a transition, not the look before it
     const startMotion = function () {
@@ -408,7 +404,7 @@ const SmartButton = function (params = {}) {
         icon.center();
     };
 
-    // BOX: Waiting cover, made at the first wait: most buttons never wait (it was 2/3 of the objects of a button).
+    // BOX: Waiting cover, made at the first wait: most buttons never wait (it is 2/3 of the objects of a button).
     // Clear: the content fades under it; it holds the animation and takes the mouse.
     const createWaitingCover = function () {
         saveCurrentThat(); // WHY: a wait must not change `that` (Ex: that.setWaiting(1) right after create)
@@ -527,7 +523,7 @@ const SmartButton = function (params = {}) {
 
     // Only the given keys change; the other keys of the style stay, inside a part too (ask.button, waiting.dots).
     // WHY a new object for each part: the old one can be shared with other buttons (the same style object of a page)
-    // WHY not Object.assign (until 2026-11-04): it replaced ask.button whole, so { ask: { button: { color } } } lost
+    // WHY not Object.assign: it replaces ask.button whole, so { ask: { button: { color } } } would lose
     //     the white text and the white icon of the ask
     box.setStyle = function (style) {
         Object.keys(style || {}).forEach(function (part) {
@@ -702,13 +698,13 @@ SmartButton.ROUND = 100; // pill, outlined: always round, at any height
 SmartButton.EDGE_WIDTH = 2; // outlined: the edge and the line at its bottom
 
 SmartButton.styles = {
-    // (the user, 2026-10-30: the buttons of 02-comp-examples/smart-button-3-ozden.htm)
+    // (the buttons of 02-comp-examples/smart-button-3-ozden.htm)
     ozdenType1: SmartButtonDefaults.style, // an edge and a bottom line
     ozdenType2: { box: { boxShadow: "none" } }, // only the edge
     ozdenType3: { box: { borderColor: Black(0.1), boxShadow: "none" } }, // a faint edge
     ozdenType4: { box: { color: White(0), border: 0, borderColor: "transparent", boxShadow: "none" } }, // a ghost
-    // ROUND (the user, 2026-11-02: the buttons of 02-comp-examples/smart-button-alternatif.htm). WHY a smaller text
-    // and icon (the user, 2026-11-04): they were 52 px high with a 30 px icon; now as high as the other buttons
+    // ROUND (the buttons of 02-comp-examples/smart-button-alternatif.htm). WHY a smaller text
+    // and icon: they were 52 px high with a 30 px icon; now as high as the other buttons
     pill: { // no edge, a bold text
         layout: { gap: 10, padding: [18, 0] },
         icon: { width: 26, height: 26, opacity: 1 },
@@ -723,12 +719,12 @@ SmartButton.styles = {
     },
 };
 
-// THE DARK TEMPLATES (2026-10-31, the draft _designs/smart-button-dark.htm): the shapes of ozdenType1-4 with the
+// THE DARK TEMPLATES (the draft _designs/smart-button-dark.htm): the shapes of ozdenType1-4 with the
 // colors of a dark page (the cards of Ozden Panel / Ozden Manager, #1A1A19). The icon turns white, the waiting clock
 // is the dark one, the dots yellow; the ask stays orange.
-// THE EDGE AND THE BOTTOM LINE (the user, 2026-11-04): the edge of ozdenType1 in white and its 2 px line in white, a
+// THE EDGE AND THE BOTTOM LINE: the edge of ozdenType1 in white and its 2 px line in white, a
 // little fainter. A light tone on a dark template keeps them too.
-// WHY 0.2 / 0.12 (the user, 2026-11-05: 0.35 / 0.2 were too bright on a dark page; a white edge on a dark page is
+// WHY 0.2 / 0.12 (0.35 / 0.2 were too bright on a dark page; a white edge on a dark page is
 //     much stronger than the same black on a light one): still twice the faint edge of ozdenType3Dark (0.1).
 SmartButton.DARK_EDGE = White(0.2);
 SmartButton.DARK_BOTTOM_LINE = "inset 0 -2px 0 " + White(0.12);
@@ -747,13 +743,13 @@ SmartButton.createDarkTemplate = function (boxKeys, hoverColor = "#383835") {
 };
 SmartButton.styles.ozdenType1Dark = SmartButton.createDarkTemplate({}); // an edge and a bottom line
 SmartButton.styles.ozdenType2Dark = SmartButton.createDarkTemplate({ boxShadow: "none" }); // only the edge
-SmartButton.styles.ozdenType3Dark = SmartButton.createDarkTemplate({ borderColor: White(0.1), boxShadow: "none" }); // a faint edge: the 0.1 of ozdenType3 in white (the user, 2026-11-04)
+SmartButton.styles.ozdenType3Dark = SmartButton.createDarkTemplate({ borderColor: White(0.1), boxShadow: "none" }); // a faint edge: the 0.1 of ozdenType3 in white
 SmartButton.styles.ozdenType4Dark = SmartButton.createDarkTemplate({ color: White(0), border: 0, borderColor: "transparent", boxShadow: "none" }, White(0.08)); // a ghost
 
-// *** THE TONES (the user, 2026-11-04): the colors of the kit, with simple color names; a tone for a dark page ends
+// *** THE TONES: the colors of the kit, with simple color names; a tone for a dark page ends
 // with "Dark". A tone is three colors: the button, the button under the mouse and its text (DARK_TEXT, or LIGHT_TEXT:
 // it turns the icon white too). The light ones are white and the colors of the situations (chosen on the draft
-// _designs/smart-button-colors.htm, 2026-10-31). Any other color: style (Ex: 02-comp-examples/smart-button-alternatif.htm).
+// _designs/smart-button-colors.htm). Any other color: style (Ex: 02-comp-examples/smart-button-alternatif.htm).
 SmartButton.DARK_TEXT = Black(0.75);
 SmartButton.LIGHT_TEXT = White(0.9);
 SmartButton.tones = {
@@ -764,7 +760,7 @@ SmartButton.tones = {
     green: { color: "#7BC362", hover: "#70B756", text: SmartButton.DARK_TEXT }, // after a good result: Done
     blue: { color: "#52A8D0", hover: "#479CC4", text: SmartButton.DARK_TEXT }, // nothing changes: Details, Help
     // For a dark page: the same colors, 45 % over the dark card #1A1A19 (53 % under the mouse); chosen by the user on
-    // the draft _designs/smart-button2-dark-tones.htm (2026-11-04).
+    // the draft _designs/smart-button2-dark-tones.htm.
     // WHY 45 %: the light text reads on every one of them (contrast 4.8 - 6.7; 4.5 is enough)
     cyanDark: { color: "#376265", hover: "#3C6F72", text: SmartButton.LIGHT_TEXT },
     orangeDark: { color: "#724837", hover: "#82513C", text: SmartButton.LIGHT_TEXT },
@@ -823,7 +819,7 @@ SmartButton.applyTone = function (params) {
 
 // *** THE WAITING DRAWINGS: the clock and the dots (comp/loading-screen.js uses them too)
 
-// The clocks of the waiting views with moving hands (the user, 2026-10-29). The sizes are px on a 30 px clock.
+// The clocks of the waiting views with moving hands. The sizes are px on a 30 px clock.
 SmartButton.clocks = {
     ozden: { // a white face, dark lines
         faceColor: "#FFFFFF",
@@ -840,7 +836,7 @@ SmartButton.clocks = {
         hourTurn: 19.2, // seconds for one turn of the hour hand (12 x minuteTurn: a real clock)
     },
 };
-// a dark face, light lines; WHY yellow (the user, 2026-10-29): indianred was weak on the dark face (contrast 3.6,
+// a dark face, light lines; WHY yellow: indianred was weak on the dark face (contrast 3.6,
 // #F1C74A 8.9); the hour hand is dimmer, so the yellow minute hand leads (as the red one on the light clock)
 SmartButton.clocks.ozdenDark = Object.assign({}, SmartButton.clocks.ozden, {
     faceColor: "#2A2A2A",

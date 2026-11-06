@@ -12,11 +12,11 @@ UI COMPONENT TEMPLATE
 - "-" in the item list adds a separator line.
 - Closes on: item click, click outside, Escape, mouse wheel outside, page resize, window blur.
 - Keyboard: ArrowUp/ArrowDown to move, Enter or Space to click, Escape to close.
-- Submenus (2026-11-03, the user): an item with items: [...] has a › at its end. Its menu opens at its side on
+- Submenus: an item with items: [...] has a › at its end. Its menu opens at its side on
   hover, a click, Enter or ArrowRight (at the left when there is no room). ArrowLeft or Escape closes only the
   submenu. A click on an item of a submenu closes every menu and calls onClick(self, item, index) of the menu
   (self: the menu of the click, item: the item of the submenu). Submenus can have submenus.
-- For a menu of a program (2026-11-05, MenuBar uses them): an item with shortcut has a soft text at its end (only
+- For a menu of a program (MenuBar uses them): an item with shortcut has a soft text at its end (only
   a text: the page runs it, or MenuBar), an item with checked (0 / 1) has a check mark in the icon place
   (setItemChecked), and openBelow(obj) opens the menu under an object (over it when there is no room).
 - Style packages: "classic" (default), "dark". Select with styleName. (ContextMenu.styles)
@@ -26,7 +26,7 @@ ITEM: { text, key, iconFile, icon, items, shortcut, checked, enabled, data, onCl
 - "-" or { type: "separator" }: Separator line
 - icon: an SVG text ("<svg ...>", your own code, not a user text). Drawn with the color of the text of the item
   (use stroke="currentColor" or fill="currentColor"), so one icon works in every style (dark too). Its size: style.icon.
-- iconFile: an image file (the old way; its colors are its own).
+- iconFile: an image file (its colors are its own).
 - items: the items of its submenu (the item itself is not clicked).
 - shortcut: a soft text at the end of the row ("Ctrl+S").
 - checked: 0 or 1: the item is a choice that can be on: a check mark when 1 (its place stays empty when 0). Over an icon.
@@ -556,8 +556,7 @@ const ContextMenu = function (params = {}) {
 
         if (event.key === "Escape" || (event.key === "ArrowLeft" && box.parentMenu)) {
             event.preventDefault();
-            // WHY: this Escape closes the menu only (a page listener after it would also clear its selection:
-            //      basic-designer, 2026-11-03)
+            // WHY: this Escape closes the menu only (a page listener after it would also clear its selection)
             if (event.key === "Escape") event.stopPropagation();
             // A submenu closes only itself; its item in the menu before stays active.
             if (box.parentMenu) box.parentMenu.closeSubmenu();
@@ -654,7 +653,7 @@ const ContextMenu = function (params = {}) {
         isOpen = 1;
         openPageSize = page.width + "x" + page.height;
 
-        // WHY: a menu of a row in a Dialog or a SidePanel opens over them (it was under them, invisible but holding
+        // WHY: a menu of a row in a Dialog or a SidePanel opens over them (under them it is invisible but holds
         //      the keys); a submenu over its menu
         box.zIndex = basic.zIndexAbove(box.parentMenu || box.source, _ms.zIndex);
 

@@ -20,11 +20,11 @@ UI COMPONENT TEMPLATE
   (the drag is released, a key step, a typed value). Neither is called at create time or with silent: 1.
 - Everything is drawn with code (no image files needed). Accessibility: role="slider", aria-valuenow...
 - Style packages: "classic" (default), "modern", "dark", "ozden". Select with styleName. (SliderField.styles)
-  "ozden" (2026-11-06, the user: a more usable look for general use), in the colors of SmartButton: a cyan fill with
+  "ozden" (a more usable look for general use), in the colors of SmartButton: a cyan fill with
   an edge and a white knob; the label is always on the fill and the value never (style.fill.aroundLabel, beforeValue),
   a focus ring. Its sample: 02-comp-examples/slider-field-ozden.htm.
-- Not the same as comp/slider.js (Slider: a track with a round thumb). THE SLIDER OF NEW PAGES is Slider "round"
-  (the user, 2026-11-06, CLAUDE.md); SliderField is the parallel design, for a page that asks for its shape.
+- Not the same as comp/slider.js (Slider: a track with a round thumb). THE SLIDER OF NEW PAGES is Slider "round";
+  SliderField is the parallel design, for a page that asks for its shape.
 
 USAGE:
 const sfWidth = SliderField({ labelText: "Width", value: 3, min: 0, max: 10, onChange: (self) => println(self.value) });
@@ -258,9 +258,9 @@ const SliderField = function (params = {}) {
         return (_s.fill.aroundLabel == 1 && box.labelText && x < getTrack().start);
     };
 
-    // The x of the pointer in the px of the box. WHY the scale (2026-11-03): in a scaled parent (page.fit, a transform,
+    // The x of the pointer in the px of the box. WHY the scale: in a scaled parent (page.fit, a transform,
     // the layer of a game UI) the rect is in screen px and the width in the own px of the box: a drag to 80 % gave
-    // 60 % (the game Fishing Company Tycoon fixed it in its copy, 2026-10-12).
+    // 60 % (the game Fishing Company Tycoon fixed it in its copy).
     const getPointerX = function (event) {
         const rect = box.elem.getBoundingClientRect();
         const scale = (box.elem.offsetWidth > 0) ? rect.width / box.elem.offsetWidth : 1;
@@ -424,7 +424,7 @@ const SliderField = function (params = {}) {
     // apply: 1 -> The typed value is used. 0 -> Cancel.
     const endEdit = function (apply) {
         // WHY: Chrome fires blur when a focused field is removed: a half typed value went to onChange of a field that
-        //      was removed (a panel built again while the user typed, 2026-11-05)
+        //      was removed (a panel built again while the user typed)
         if (!isEditing || box.isRemoved) return;
         isEditing = 0;
         box.input.visible = 0;
@@ -851,7 +851,7 @@ SliderField.styles = {
     // Light gray field, gray fill. (Like the property sliders of design tools)
     classic: SliderFieldDefaults.style,
 
-    // For general use (2026-11-06, the user asked for a more usable look): the colors of SmartButton and of ProgressBar
+    // For general use: the colors of SmartButton and of ProgressBar
     // ozden. The fill is a cyan SmartButton ozdenType1 (an edge and a line at its bottom) that ends with a white knob,
     // straight inside the field. The label is always on the fill (aroundLabel) and the value never (beforeValue): the
     // end of the fill cuts no text. A ring for the keyboard focus, a gray fill when it is off.

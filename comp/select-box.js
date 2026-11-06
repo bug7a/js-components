@@ -12,11 +12,11 @@ UI COMPONENT TEMPLATE
   before this one (useSearchInput: 1). Its look: style.searchInput (the params of SearchInput). Without it the
   search box is an own input (its look: style.search).
 - The list at the full height of the page (fullHeightList: 1): as wide as the field, at its left, from the top
-  of the page to its bottom, and it stays that high when a search leaves a few rows (the comp-m1 SelectItem
-  selection_fullScreen). A resize of the page places it again (the normal list closes).
+  of the page to its bottom, and it stays that high when a search leaves a few rows.
+  A resize of the page places it again (the normal list closes).
 - Options can have a description, an icon, a group title and can be disabled.
-- style.optionSelected.canSelectAgain: 0 (ozden, ozdenDark): the selected row (single) can not be chosen again, as
-  in the comp-m1 SelectItem: no look under the mouse or the keys, the keys skip it, a click on it does nothing.
+- style.optionSelected.canSelectAgain: 0 (ozden, ozdenDark): the selected row (single) can not be chosen again:
+  no look under the mouse or the keys, the keys skip it, a click on it does nothing.
 - Clear button in the field (clearable: 1).
 - Keyboard: Enter / Space / ArrowDown opens. ArrowUp / ArrowDown / Home / End move, Enter selects,
   Escape closes, Tab closes. Typing on the closed field opens the search with the typed letter.
@@ -25,18 +25,17 @@ UI COMPONENT TEMPLATE
 - Big lists: Only the first "maxRenderCount" matches are drawn. (Search shows the others.)
 - The list scrolls with basic/scroll-bar.js (useScrollBar: 1, style.scrollBar) when it is loaded before.
 - Your own rows: createItemView(option, row, self) draws an option with your objects. The list is then a
-  comp-m4 ItemList (load comp/item-list.js before this file; without it: a warning and the normal rows).
+  ItemList (load comp/item-list.js before this file; without it: a warning and the normal rows).
   The search box, the keyboard, single / multiple, disabled options and onChange work the same.
   (Not in this mode: the group titles, the highlight of the search and maxRenderCount.) The list: box.itemList.
   The search finds the label, the description, the group and option.searchText (Turkish letters without marks).
 - Your own field: createValueView(option, field, self) draws the selected option in the field with your
   objects (single selection; the placeholder and the multiple text stay as they are).
-- Style packages: "classic" (default), "dark", "ozden" (the look of the old comp-m1 SelectItem / SelectText
-  as a package of params: 350 x 50, a search box, the list goes down to the bottom of the page), "ozdenDark" (the
-  same on a dark page). Select with styleName. (SelectBox.styles) ("legacy" was merged into "ozden" on 2026-10-31.)
-  NEW PROJECTS (the user, 2026-11-05): use "classic" (the default) on a light page and "dark" on a dark page, the
+- Style packages: "classic" (default), "dark", "ozden" (a package of params: 350 x 50, a search box, the list goes down to the bottom of the page),
+  "ozdenDark" (the same on a dark page). Select with styleName. (SelectBox.styles)
+  NEW PROJECTS: use "classic" (the default) on a light page and "dark" on a dark page, the
   looks of 02-comp-examples/select-box.htm, unless the user asks for another look ("ozden" / "ozdenDark" only when
-  asked: the look of the old comp-m1 SelectItem / SelectText).
+  asked).
 - scale: multiplies every size (the style, width / height / panelMinWidth / panelMaxHeight, the spaces in the
   code, the search box, the rows, the checks). Its default is basic.uiScale: on a page fitted with page.fit()
   (basic.uiScale = 1 / page.zoom) the field and its list keep their size on the screen. The objects of
@@ -170,7 +169,7 @@ const SelectBoxDefaults = {
         // The search box when it is a SearchInput: its params (a styleName of SearchInput.styles and its look params).
         // An icon file without a folder ("search.svg") is taken from the folder of comp/search-input.js.
         searchInput: {
-            styleName: "original", // the first look of SearchInput ("classic" became a standard search box, 2026-11-06)
+            styleName: "original", // the first look of SearchInput
             height: 38,
             searchIconLeft: 10, // WHY: the icon and the text at the place of the own search input (icon 18, text 42)
             color: Black(0.04),
@@ -256,8 +255,7 @@ const SelectBoxDefaults = {
         disabled: {
             opacity: 0.4,
         },
-        // The package of the ItemList of createItemView (ItemList.styles; the user, 2026-11-05: "ozden" by its name, the
-        // rows of the old comp-m1 SelectItem; "classic" is only its old name)
+        // The package of the ItemList of createItemView (ItemList.styles)
         itemListStyleName: "ozden",
         // The style of the ItemList of createItemView (the keys of ItemList.styles.ozden: row, hover, selected,
         // disabled, check...). Its empty text takes style.empty. The check mark is shown only for multiple.
@@ -1003,7 +1001,7 @@ const SelectBox = function (params = {}) {
     // The height of the panel and the list for fullHeightList (1) or the normal list (0).
     const applyListHeightMode = function () {
         const isFullHeight = (box.fullHeightList == 1);
-        // WHY: a full height list touches the top and the bottom of the page: square corners, like the old SelectItem.
+        // WHY: a full height list touches the top and the bottom of the page: square corners.
         box.panel.round = isFullHeight ? 0 : _s.panel.round;
         box.panel.height = "auto";
         box.panel.css.minHeight = "";
@@ -1548,7 +1546,7 @@ SelectBox.canUseItemList = function () {
 };
 
 // The search box is a SearchInput when comp/search-input.js is loaded (no warning without it: the own box).
-// WHY: SearchInput.styles: the comp-m1 SearchInput had the same global name and not the same params.
+// WHY SearchInput.styles: an older SearchInput had the same global name and not the same params.
 SelectBox.canUseSearchInput = function () {
     return (typeof SearchInput === "function") && !!SearchInput.styles;
 };
@@ -1602,7 +1600,7 @@ SelectBox.getArrowSvg = function (color, size = 16) {
     return '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
 };
 
-// Up and down arrows (the "unfold more" icon of the comp-m1 SelectItem)
+// Up and down arrows (the "unfold more" icon)
 SelectBox.getUnfoldSvg = function (color, size = 20) {
     return '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 -960 960 960" fill="' + color + '"><path d="M480-80 240-320l57-57 183 183 183-183 57 57L480-80ZM298-584l-58-56 240-240 240 240-58 56-182-182-182 182Z"/></svg>';
 };
@@ -1641,7 +1639,7 @@ SelectBox.styles = {
     // White field, dark text, a soft line.
     classic: SelectBoxDefaults.style,
 
-    // Dark theme. (The other dark packages of comp-m4 use these colors.)
+    // Dark theme. (The other dark packages use these colors.)
     dark: {
         field: { color: "#232322", border: 1, borderColor: "rgba(255, 255, 255, 0.10)", round: 8, padding: [12, 0] },
         fieldHover: { borderColor: "rgba(255, 255, 255, 0.30)" },
@@ -1651,7 +1649,7 @@ SelectBox.styles = {
         arrow: { color: "rgba(255, 255, 255, 0.55)" },
         panel: { color: "#232322", border: 1, borderColor: "rgba(255, 255, 255, 0.12)", round: 10, padding: 6, shadow: "0 8px 24px rgba(0, 0, 0, 0.5)" },
         searchInput: {
-            styleName: "original", // the first look of SearchInput ("classic" became a standard search box, 2026-11-06)
+            styleName: "original", // the first look of SearchInput
             height: 38,
             searchIconLeft: 10, // WHY: the icon and the text at the place of the own search input (icon 18, text 42)
             color: "rgba(255, 255, 255, 0.05)",
@@ -1690,9 +1688,8 @@ SelectBox.styles = {
 };
 
 
-// The look of the old comp-m1 SelectItem and SelectText: a whitesmoke box with a thin border, the list opens
-// over the field with a fade, a white search box (SearchInput; yellow until 2026-11-05), rows that get white with a
-// thin line above and under them under the mouse (the lines since 2026-11-05), the selected one half transparent.
+// A whitesmoke box with a thin border, the list opens over the field with a fade, a white search box (SearchInput),
+// rows that get white with a thin line above and under them under the mouse, the selected one half transparent.
 // A package of params: a 350 x 50 field, a search box, the list down to the
 // bottom of the page. Text rows; your own rows and field: createItemView / createValueView
 // (02-comp-examples/select-box-ozden-item.htm). The params of the package are used when the page does not give them.
@@ -1725,18 +1722,17 @@ SelectBox.styles.ozden = {
             startScale: 0.9,
         },
         // The search bar: the ozden SearchInput (its icons, its font and icon sizes, its bottom line) in white, nearly
-        // square and without a border: the search box of ItemList ozden (the user, 2026-11-05). It was the classic
-        // SearchInput of the comp-m1 SelectItem (in its yellow #FFFCD6 until 2026-11-05).
+        // square and without a border: the search box of ItemList ozden.
         searchInput: {
             styleName: "ozden",
-            height: 44, // (the user, 2026-11-05: it was 40) as ItemList ozden; ozdenDark takes it too
+            height: 44, // as ItemList ozden; ozdenDark takes it too
             searchIconLeft: 16, // WHY: the default of SearchInput, as ItemList ozden (SelectBoxDefaults has 10)
             color: "white",
             border: 0,
             round: 2,
         },
         search: {
-            color: "white", // (as searchInput, the user 2026-11-05)
+            color: "white", // (as searchInput)
             border: 0,
             borderColor: "transparent",
             round: 2,
@@ -1758,27 +1754,27 @@ SelectBox.styles.ozden = {
             iconRound: 4,
             iconMargin: [0, 0],
         },
-        optionActive: { color: "white", lineColor: Black(0.2), showAtOpen: 0 }, // (The lines: the user, 2026-11-05, as ItemList ozden)
-        // WHY canSelectAgain 0 (the user, 2026-11-05): the selected item of the comp-m1 SelectItem was not clickable
-        //     (opacity 0.5, clickable 0): it did not get the white under the mouse and a click on it did nothing.
+        optionActive: { color: "white", lineColor: Black(0.2), showAtOpen: 0 }, // as ItemList ozden
+        // WHY canSelectAgain 0: the selected item is half transparent and not clickable: it does not get the white under
+        //     the mouse and a click on it does nothing.
         optionSelected: { textColor: "rgba(0, 0, 0, 0.8)", checkColor: "#373836", checkTickColor: "white", fontFamily: "", showTick: 0, opacity: 0.5, canSelectAgain: 0 },
-        description: { fontSize: 14, textColor: "gray", marginTop: -4 }, // WHY: -4: the old title (top 25) and description (top 49) overlap a little.
+        description: { fontSize: 14, textColor: "gray", marginTop: -4 }, // WHY -4: the title and the description overlap a little.
         highlight: { color: "transparent" },
         empty: { fontSize: 16, textColor: Black(0.45) },
-        // createItemView: the rows of the comp-m1 SelectItem list (white with a thin line above and under them under the mouse,
-        // the selected one half transparent), as ItemList ozden.
+        // createItemView: rows that are white with a thin line above and under them under the mouse, the selected one
+        // half transparent, as ItemList ozden.
         itemList: {
             row: { padding: [19, 0], gap: 20, round: 0, motion: "background-color 0.2s, box-shadow 0.2s" }, // WHY: 19: see option.padding
             hover: { color: "white", lineColor: Black(0.2) },
             selected: { color: "transparent", opacity: 0.5 }, // WHY: transparent: no look of its own (it can not be chosen again).
             check: { size: 22, color: "#373836", iconColor: "white", borderColor: Black(0.25) },
         },
-        // The scroll bar of the comp-m1 ItemList: always shown, with the dots at its ends.
+        // The scroll bar: always shown, with the dots at its ends.
         scrollBar: { bar_color: "#373836", bar_mouseOverColor: "#373836", bar_opacity: 0.4, bar_mouseOverOpacity: 0.9, neverHide: 1, showDots: 1 },
     },
 };
 
-// The dark theme of ozden (the user, 2026-11-05): the shapes of ozden in the dark tones of the kit, as ItemList
+// The dark theme of ozden: the shapes of ozden in the dark tones of the kit, as ItemList
 // ozdenDark: a field and a list of #1A1A19 (on a darker page, Ex: #141414), the active row #262624 with a thin light
 // line above and under it, the selected one half transparent, the ozdenDark search box (02-comp-examples/
 // select-box-ozden-dark-text.htm). Only the colors are here: the sizes and the params come from ozden (below).

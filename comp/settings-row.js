@@ -4,8 +4,7 @@
 
 SettingsRow - v26.11
 
-A ROW OF A SETTINGS PAGE of a mobile app, with the look of the old javascript-mobile-app-template
-(components/ui-left-title.js, UILeftTitle, as its settings page used it).
+A ROW OF A SETTINGS PAGE of a mobile app.
 - The sizes are px of a 600 px design: the page is fitted with page.fit(600, 800), like the mobile template
   (04-templates/mobile-app-template/classic).
 - A white row, 100 px high, a thin line at the bottom. A title (20 px) at the left; with a small text (descText,
@@ -34,7 +33,7 @@ endGroup();
 videoRow.setDescText("");          // the small text fades out, the title slides to the middle
 videoRow.setTitleColor("orangered");
 
-Started Date: November 2026 (the look of bug7a/javascript-mobile-app-template)
+Started Date: November 2026
 Developer: Bugra Ozden
 Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
@@ -256,7 +255,7 @@ SettingsRow.toSvgFile = function (svg) {
     return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
 };
 
-// A chevron to the right (24 x 24; the shape of the arrow of the old template)
+// A chevron to the right (24 x 24)
 SettingsRow.drawChevron = function (color) {
     return '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="' + color +
         '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.6 6l6 6-6 6"/></svg>';

@@ -13,7 +13,7 @@ UI COMPONENT TEMPLATE
 - Whole object background can change on hover and checked states (style.hoverBox, style.checkedBox).
 - The empty circle under the mouse: style.hoverMark (its borderColor, and its color when given; v26.11).
 - Style packages: "classic" (default), "modern", "dark". Select with styleName. (RadioButton.styles)
-  NEW PROJECTS (the user, 2026-11-04): use "classic" on a light page and "dark" on a dark page, unless the user
+  NEW PROJECTS: use "classic" on a light page and "dark" on a dark page, unless the user
   asks for another one ("modern" only when asked).
 
 Started Date: September 2026
@@ -67,14 +67,14 @@ const RadioButtonDefaults = {
         },
         checkedMark: { // Checked circle
             color: White(1),
-            borderColor: "#242424", // (the user, 2026-11-05: the checked color of CheckBox; was #141414)
+            borderColor: "#242424", // the checked color of CheckBox
         },
         hoverMark: { // Mouse over (the empty circle)
-            color: null, // null: uses mark.color (2026-11-04: a package could not change it)
+            color: null, // null: uses mark.color (a package could not change it)
             borderColor: Black(0.7),
         },
         dot: {
-            color: "#242424", // (the user, 2026-11-05: as the edge above)
+            color: "#242424", // (as the edge above)
             size: 0.5, // Ratio of the inner circle size (0 - 1)
             round: 100,
         },
@@ -398,8 +398,7 @@ RadioButton.styles = {
     // White circle with a border. When checked, dark border and dark dot. No background.
     classic: RadioButtonDefaults.style,
 
-    // Light circle, thin border. When checked, the dot in a white circle with an edge (the user, 2026-11-04; it was
-    // only the dot: the circle had the color of the row and no edge).
+    // Light circle, thin border. When checked, the dot in a white circle with an edge.
     modern: {
         box: { // Whole object background
             color: "transparent",
@@ -427,7 +426,7 @@ RadioButton.styles = {
             borderColor: Black(0.7),
             round: 100,
         },
-        checkedMark: { // Checked circle: white with an edge, behind the dot (was #DFECEC, no edge)
+        checkedMark: { // Checked circle: white with an edge, behind the dot
             color: "white",
             borderColor: Black(0.7),
         },

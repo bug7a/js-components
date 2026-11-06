@@ -8,11 +8,9 @@ UI COMPONENT
 - A floating action button at the bottom right of its container (the page): a round button with a + icon.
   A click opens the menu of actions at its left side; a click on an action, on the button again, outside the
   menu or Escape closes it. With fewer than 2 actions the button runs onAction at once (no menu).
-- The new version of comp-m1/ui-action-button.js (UIActionButton), with the same look. (Sample:
-  02-comp-m1-samples/ui-action-button.htm)
 - The component covers its container (100% x 100%) but lets the mouse through: only the button, the open menu
   and its cover (to close it) catch clicks.
-- Style packages: "classic" (default, the look of UIActionButton), "ozden" (an ink button with a white icon, a
+- Style packages: "classic" (default), "ozden" (an ink button with a white icon, a
   white menu with a shadow, animated: 1). Select with styleName. (ActionButton.styles)
 - animated: 1 (context/basic-js-animated-rules.md): the button grows a little with a soft shadow under the mouse
   and gets smaller when pressed, the menu grows out of the button and closes faster, its actions come in one
@@ -37,7 +35,7 @@ ActionButton({ animated: 1, items: [...] }); // small, smooth motions
 ActionButton({ onAction: function () { addNewNote(); } }); // no items: a direct button
 ActionButton({ style: { button: { color: "#8BC34A" } } }); // Change only some keys of the style.
 
-Started Date: October 2026 (UIActionButton: 22 August 2022)
+Started Date: October 2026
 Developer: Bugra Ozden
 Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
@@ -67,7 +65,7 @@ const ActionButtonDefaults = {
     onAction: function (key, self) { }, // An action was chosen (no items: key is "", one item: its key)
     onMenuToggle: function (self) { }, // The menu opened / closed: self.menuOpened
     styleName: "classic", // "classic", "ozden" or a name added to ActionButton.styles
-    style: { // Classic style package (default): the look of UIActionButton
+    style: { // Classic style package (default)
         button: {
             size: 90,
             color: "#FFD541",
@@ -409,7 +407,7 @@ const ActionButton = function (params = {}) {
         height: "auto",
         align: "left top",
         gap: _s.item.gap,
-        padding: [0, 0, 0, _s.item.gap], // WHY: UIActionButton left one line under the last action too.
+        padding: [0, 0, 0, _s.item.gap], // WHY: one line under the last action too.
         color: _s.menu.color,
         round: _s.menu.round,
         border: _s.menu.border,
@@ -468,7 +466,7 @@ const ActionButton = function (params = {}) {
 
 // *** STATIC FUNCTIONS:
 
-// The items with every value filled: a text -> { key: text, labelText: text }; id (UIActionButton) is a key too.
+// The items with every value filled: a text -> { key: text, labelText: text }; id is a key too.
 ActionButton.normalizeItems = function (items) {
     return (Array.isArray(items) ? items : []).map(function (item) {
         if (typeof item !== "object" || item === null) return { key: String(item), labelText: String(item) };
@@ -483,7 +481,7 @@ ActionButton.normalizeItems = function (items) {
 // USAGE: ActionButton({ style: { button: { color: "#8BC34A" } } }) // Change only some keys.
 ActionButton.styles = {
 
-    // The look of UIActionButton (comp-m1): a yellow round button, a white menu with thin lines.
+    // A yellow round button, a white menu with thin lines.
     classic: ActionButtonDefaults.style,
 
     // Bugra's style: an ink round button with a white +, a white rounded menu with a soft shadow, animated.

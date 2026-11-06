@@ -6,7 +6,7 @@ InputB - v25.07
 
 UI COMPONENT TEMPLATE
 - You can customize, this template code as you need:
-- NEW PROJECTS (the user, 2026-11-05): use styleName "ozden" on a light page and "ozdenDark" on a dark page (the
+- NEW PROJECTS: use styleName "ozden" on a light page and "ozdenDark" on a dark page (the
   look of 02-comp-examples/input-b-ex7-ozden.htm), unless the user asks for another one. The fields made from InputB
   (EmailInputB, PhoneInputB, PasswordInputB, URLInputB, NumberInputB, CurrencyInputB, TextareaB) take the same
   packages: give them the same styleName. The default (classic) stays for the pages made before.
@@ -53,7 +53,7 @@ WebSite: https://bug7a.github.io/js-components
 
 - tooltipStyle: { color, hintColor, textColor, border, borderColor, round, fontSize }
 -- hintColor: the bubble of a button of the field (the show password button of PasswordInputB) when color is "".
--- The tooltip of the warning ball. color "": requiredColor / warningColor (the old look).
+-- The tooltip of the warning ball. color "": requiredColor / warningColor.
 
 - styleName: "classic" (default) | "dark" | "ozden" | "ozdenDark"  (InputB.styles)
 -- The look of InputB is in flat params (backgroundColor, lineColor, titleTextColor...), not in one
@@ -87,10 +87,10 @@ const InputBDefaults = {
     descriptionText: "",
 
     backgroundColor: "#F6F6F6",
-    selectedBackgroundColor: "#F3F4E0", // "#F1E2C4", "#F4FAFF",
+    selectedBackgroundColor: "#F3F4E0",
     hoverBackgroundColor: "", // the field under the mouse (not while it is selected). "": no change
     lineColor: "#373836",
-    selectedLineColor: "#65A293", // "#F1E2C4", "#588ABE",
+    selectedLineColor: "#65A293",
     backBorderColor: Black(0),
     selectedBackBorderColor: Black(0),
     backBorderTopRound: 2,
@@ -109,7 +109,7 @@ const InputBDefaults = {
     requiredText: "Required",
     requiredColor: "white",
     warningText: "Invalid value format",
-    warningColor: "#E5885E", // "#F1BF3C"
+    warningColor: "#E5885E",
     animatedWarningBall: 1,
 
     warningBallType: "color", // "color": colored ball, "icon": icon image
@@ -122,11 +122,11 @@ const InputBDefaults = {
     // button of PasswordInputB)
     tooltipStyle: {
         color: "", // "": requiredColor / warningColor
-        hintColor: "white", // a button of the field has no ball: its bubble when color is "" (the user, 2026-11-05)
+        hintColor: "white", // a button of the field has no ball: its bubble when color is ""
         textColor: "#141414",
         border: 1,
         borderColor: "#141414",
-        round: 4, // (the user, 2026-11-05: the round of the hints of Form, hintRound; it was 2)
+        round: 4, // the round of the hints of Form (hintRound)
         fontSize: 14,
     },
 
@@ -291,7 +291,7 @@ const InputB = function(params = {}) {
     };
 
     // Both checks of a value (required, valid). WHY both: the required check hides the warning of any value that is
-    // not empty: an invalid e-mail got status 0 and a Form sent it (2026-11-05).
+    // not empty: an invalid e-mail got status 0 and a Form sent it.
     // A child that overrides isValid() calls it at the end of its own init code too.
     box.checkInputValue = function() {
         box.checkIfInputIsRequiredAndEmpty();
@@ -675,10 +675,10 @@ InputB.styles = {
 
         requiredColor: "#141414", // classic white: the ball takes the color of the page under it
         requiredIconColor: White(0.75), // classic #373836
-        warningColor: "indianred", // classic #E5885E (the user's choice, 2026-10-27)
+        warningColor: "indianred", // classic #E5885E
 
         tooltipStyle: {
-            hintColor: "#262624", // the show password button: a dark bubble (it was white on the dark field)
+            hintColor: "#262624", // the show password button: a dark bubble
             textColor: White(0.9), // classic #141414 on a white ball
             borderColor: White(0.75), // classic #141414
         },
@@ -697,7 +697,7 @@ InputB.styles = {
         },
     },
 
-    // The fields of __projects/contact-form (contact-form.htm, inputStyle): a gray rounded field,
+    // A gray rounded field,
     // no line, a soft dark border on focus, the warning shown as an icon.
     ozden: {
         style: {},
@@ -706,7 +706,7 @@ InputB.styles = {
         hoverBackgroundColor: "#EFEFEF", // a little darker under the mouse
         lineColor: Black(0),
         selectedLineColor: Black(0),
-        backBorderColor: Black(0.05), // a faint edge (it was none)
+        backBorderColor: Black(0.05), // a faint edge
         selectedBackBorderColor: Black(0.4),
         backBorderTopRound: 8,
         backBorderBottomRound: 8,
@@ -724,10 +724,8 @@ InputB.styles = {
         },
     },
 
-    // The fields of the contact form of __projects/webpage-ozden-panel (js/sections/contact.js, inputStyle and
-    // styleInput): a see-through field, a green border on focus. BLACK TONES (the user, 2026-11-05): the popups and
-    // the edge of the warning ball are the black of the kit (the dark cards #1A1A19), not the dark green of that site
-    // (#0E1A14, #16261D); the focus line is white (one color: no green left).
+    // A see-through field. The popups and the edge of the warning ball are the black of the kit (the dark cards
+    // #1A1A19); the focus line is white.
     ozdenDark: {
         style: {},
         backgroundColor: "rgba(255, 255, 255, 0.04)", // FIELD_BG
@@ -736,7 +734,7 @@ InputB.styles = {
         lineColor: Black(0),
         selectedLineColor: Black(0),
         backBorderColor: "rgba(255, 255, 255, 0.10)", // FIELD_LINE
-        selectedBackBorderColor: White(0.45), // the focus line: a white one (it was the green of that site; the user, 2026-11-05)
+        selectedBackBorderColor: White(0.45), // the focus line: a white one
         backBorderTopRound: 10,
         backBorderBottomRound: 10,
 

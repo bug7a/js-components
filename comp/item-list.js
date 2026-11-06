@@ -5,12 +5,10 @@
 ItemList - v26.11
 
 UI COMPONENT TEMPLATE
-- NEW PROJECTS (the user, 2026-11-05): use styleName "ozden" on a light page (the default: the rows of the old
-  comp-m1 SelectItem, white with a thin line above and under them under the mouse; its search box the ozden
-  SearchInput in white) and "ozdenDark" on a dark page (02-comp-examples/item-list.htm), unless the user asks for
+- NEW PROJECTS: use styleName "ozden" on a light page (the default: rows that are white with a thin line above
+  and under them under the mouse; its search box the ozden SearchInput in white) and "ozdenDark" on a dark page (02-comp-examples/item-list.htm), unless the user asks for
   another look.
 - A list of items: an icon, a title and a description on every row, or your own row (createItemView).
-  The new version of comp-m1/item-list.js (ItemList.create / setItemCreationFunction).
 - Layouts: "vertical" (a list), "horizontal" (one row of tiles: categories, cards) and "grid" (tiles that
   wrap: files, icons, pictures). setLayout() changes it later.
 - Selection: "single", "multiple" or "none". The selected keys: getSelectedKeys(), the items: getSelected().
@@ -47,9 +45,8 @@ UI COMPONENT TEMPLATE
   setAnimated(0/1).
 - height: "auto" -> The list grows with its rows (no scrolling). Otherwise it scrolls with basic/scroll-bar.js
   (if it is loaded).
-- Style packages: "ozden" (default: the rows of the comp-m1 SelectItem list, 02-comp-m1-samples/select-item.htm,
-  and the tiles of javascript-mobile-app-template; it was "classic", the old name still works), "ozdenDark" (the
-  same on a dark page), "modern", "dark".
+- Style packages: "ozden" (default; the name "classic" still works), "ozdenDark" (the same on a dark page),
+  "modern", "dark".
   Select with styleName. (ItemList.styles)
 
 USAGE:
@@ -82,7 +79,7 @@ ItemList({ selection: "none", style: { pressed: { color: Black(0.2) }, row: { mo
 const animatedList = ItemList({ animated: 1, items: ["A", "B", "C"] });
 animatedList.removeItem("0");               // "A" fades out, then "B" and "C" move up
 
-Started Date: 14 March 2022 (comp-m1), October 2026 (comp-m4)
+Started Date: October 2026
 Developer: Bugra Ozden
 Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
@@ -114,18 +111,18 @@ const ItemListDefaults = {
     onItemClick: function (self, item, index, event) { },
     onChange: function (self, selectedItems) { }, // Not at create time, not by setItems(), not with silent: 1
     styleName: "ozden", // "ozden", "ozdenDark", "modern", "dark" or a name added to ItemList.styles
-    style: { // The ozden style package (default): the rows of the comp-m1 SelectItem list, the tiles of javascript-mobile-app-template
+    style: { // The ozden style package (default)
         box: {
             color: "transparent",
             border: 1,
             borderColor: "rgba(20, 20, 20, 0.45)",
-            round: 6, // (the user, 2026-11-05)
+            round: 6,
             padding: 0, // Around the rows of the vertical layout
         },
         list: {
             gap: 0, // Between the rows of the vertical layout
         },
-        // A row of the vertical layout (the list of comp-m1 SelectItem, 02-comp-m1-samples/select-item.htm):
+        // A row of the vertical layout:
         // as wide as the list, white under the mouse with a thin line above and under it, the selected one half transparent.
         row: {
             height: 80, // "auto": as high as its content (a createItemView)
@@ -171,22 +168,21 @@ const ItemListDefaults = {
             textColor: Black(0.4),
         },
         // A state: only the keys that change
-        hover: { color: "white", lineColor: Black(0.2) }, // style: { hover: {} }: no look under the mouse. (The lines: the user, 2026-11-05)
+        hover: { color: "white", lineColor: Black(0.2) }, // style: { hover: {} }: no look under the mouse.
         pressed: { color: null }, // A click, Enter or Space: this color at once, then it fades back (style.row.motion). null: none
         // WHY: a selected row does not get the white and its lines under the mouse.
-        // canSelectAgain 0 (single; the user, 2026-11-05, as SelectBox ozden and the comp-m1 SelectItem): it can not be
+        // canSelectAgain 0 (single, as SelectBox ozden): it can not be
         // chosen again: a click, Enter or Space does nothing (no onItemClick), no look under the mouse, no hand.
         selected: { color: "transparent", lineColor: "", opacity: 0.5, canSelectAgain: 0 },
         disabled: { opacity: 0.4 },
         focus: { ringColor: "rgba(55, 56, 54, 0.5)" }, // The ring of the keyboard focus
         icon: { size: 50, round: 4, color: "transparent" },
         title: { fontSize: 20, textColor: "rgba(0, 0, 0, 0.8)", fontFamily: "", selectedTextColor: "" },
-        desc: { fontSize: 14, textColor: "gray", marginTop: -4 }, // WHY: -4: the old title (top 25) and description (top 49) overlap a little.
+        desc: { fontSize: 14, textColor: "gray", marginTop: -4 }, // WHY -4: the title and the description overlap a little.
         check: { visible: 0, size: 22, color: "#373836", iconColor: "white", borderColor: Black(0.25) }, // A mark on the selected rows
         empty: { fontSize: 16, textColor: Black(0.4) },
         // The search box (showSearch: 1): the params of SearchInput: its ozden package (its font and icon sizes, its
-        // icons, its bottom line), white, nearly square and without a border (the user, 2026-11-05), 44 px high (the
-        // user, 2026-11-05: it was 40, the old UISearchBox of the template; ozdenDark takes it too).
+        // icons, its bottom line), white, nearly square and without a border, 44 px high (ozdenDark takes it too).
         search: {
             styleName: "ozden", // A package of SearchInput.styles
             height: 44,
@@ -1503,14 +1499,14 @@ ItemList.getCheckSvg = function (color, size) {
 // USAGE: ItemList.styles.myStyle = { row: { color: "ivory" } };
 ItemList.styles = {
 
-    // The rows of the comp-m1 SelectItem list (white under the mouse, the selected one half transparent) and the
-    // tiles of javascript-mobile-app-template (a grey icon in a circle that grows when it is selected).
+    // The rows: white under the mouse, the selected one half transparent. The tiles: a grey icon in a circle that
+    // grows when it is selected.
     ozden: ItemListDefaults.style,
 
     // WHY: The old name of ozden: a page written with styleName: "classic" gets the same look without a warning.
     classic: ItemListDefaults.style,
 
-    // The dark theme of ozden (the user, 2026-11-05): the same shapes on a dark page (#1A1A19). A row gets a lighter
+    // The dark theme of ozden: the same shapes on a dark page (#1A1A19). A row gets a lighter
     // gray with a thin light line above and under it under the mouse, the selected one is half transparent, the
     // search box is the ozdenDark SearchInput in the gray of the mouse.
     ozdenDark: {
@@ -1569,8 +1565,8 @@ ItemList.styles = {
         check: { visible: 1, size: 20, color: "#3D7A6B", iconColor: "white", borderColor: Black(0.2) },
         empty: { fontSize: 14, textColor: Black(0.45) },
         search: {
-            styleName: "original", // WHY: not the ozden package of the default search box; the first look of SearchInput ("classic" became a standard search box, 2026-11-06)
-            height: 44, // (the user, 2026-11-05: it was 40) as ozden and ozdenDark
+            styleName: "original", // WHY: not the ozden package of the default search box; the first look of SearchInput
+            height: 44, // as ozden and ozdenDark
             padding: [8, 8, 8, 4],
             fontSize: 15,
             color: "white",
@@ -1624,8 +1620,8 @@ ItemList.styles = {
         check: { visible: 1, size: 20, color: "#65A293", iconColor: "#141414", borderColor: White(0.25) },
         empty: { fontSize: 14, textColor: White(0.45) },
         search: {
-            styleName: "original", // WHY: not the ozden package of the default search box; the first look of SearchInput ("classic" became a standard search box, 2026-11-06)
-            height: 44, // (the user, 2026-11-05: it was 40) as ozden and ozdenDark
+            styleName: "original", // WHY: not the ozden package of the default search box; the first look of SearchInput
+            height: 44, // as ozden and ozdenDark
             padding: [8, 8, 8, 4],
             fontSize: 15,
             color: "#232322", // surface2: a field

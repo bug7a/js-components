@@ -6,7 +6,7 @@ PageControl - v26.09
 
 UI COMPONENT TEMPLATE
 - A box that holds pages side by side and shows one of them. The pages slide (or fade) when another one is opened.
-  The new version of comp-m1/ui-page-control.js. (Wizards, onboarding screens, carousels, mobile app screens...)
+  (Wizards, onboarding screens, carousels, mobile app screens...)
 - Pages are created with addPage(key) and filled with startPage(key) ... endPage(), or with getPage(key).
 - Transitions: "slide" (horizontal, default), "slide-vertical", "fade", "none". The move is done with CSS transforms.
 - The pages always have the size of the box: width: "100%" and window resizes need no code. (No setSizes())
@@ -320,7 +320,7 @@ const PageControl = function (params = {}) {
     };
 
     // The mouse button was released outside the box before the drag took the pointer: no pointerup came here.
-    // WHY: the next moves with no button pressed swiped the pages, and a click left them half way (2026-11-05)
+    // WHY: the next moves with no button pressed swiped the pages, and a click left them half way
     const endLostDrag = function () {
         const wasActive = drag.active;
         drag = null;

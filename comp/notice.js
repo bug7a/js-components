@@ -5,8 +5,8 @@
 Notice - v26.10
 
 A short message in the middle of the screen over a soft dark cover: "Process completed", "No internet connection".
-It comes in, stays a moment (displayTime) and goes. The new version of comp-m1/ui-notice.js (notice.show) with the
-same look: a round box with a thin line and a soft shadow, a big text, a color by its type, an icon at the left.
+It comes in, stays a moment (displayTime) and goes. The look:
+a round box with a thin line and a soft shadow, a big text, a color by its type, an icon at the left.
 - Notice.show({ messageText, descText, type, iconFile, displayTime }) makes it on page. Only one at a time: a new
   notice takes the place of the one that is seen.
 - type: "info" (white), "warning" (yellow), "error" (red), "note" (blue), "success" (green). Notice.COLORS
@@ -22,7 +22,7 @@ Notice.show({ messageText: "Failed to copy", type: "error", iconFile: "../assets
 const notice = Notice.show({ messageText: "Saving...", displayTime: 0 }); notice.close();
 Notice.close(); // the notice that is seen
 
-Started Date: 1 September 2022 (notice), October 2026 (Notice)
+Started Date: October 2026
 Developer: Bugra Ozden
 Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
@@ -46,7 +46,7 @@ const NoticeDefaults = {
     closeOnClick: 1,
     onClose: function (self) {},
     styleName: "classic", // "classic" or a name added to Notice.styles
-    style: { // Classic style package: the look of comp-m1 notice
+    style: { // Classic style package
         cover: { color: "rgba(0, 0, 0, 0.2)", zIndex: 50000 }, // WHY: over the dialogs (Dialog, Modal: 4000 and up), under Tooltip (100000)
         message: { round: 8, border: 2, borderColor: "rgba(0, 0, 0, 0.2)", padding: [24, 18], gap: 20, maxWidth: 480, boxShadow: "0px 0px 12px rgba(0, 0, 0, 0.1)" },
         text: { fontSize: 20, textColor: "rgba(0, 0, 0, 0.8)", fontFamily: "opensans" },
@@ -196,7 +196,7 @@ const Notice = function (params = {}) {
 
 // *** STATIC VARIABLES AND FUNCTIONS:
 
-// The colors of the types (comp-m1 notice.colors). textColor: "" -> style.text.textColor
+// The colors of the types. textColor: "" -> style.text.textColor
 Notice.COLORS = {
     info: { color: "white", textColor: "" },
     warning: { color: "#FFD541", textColor: "#141414" },

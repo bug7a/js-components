@@ -13,8 +13,7 @@ Button, hover and attention effects for basic.js objects (Button, Box, groups, L
   box-shadow values are combined, so they do not overwrite each other.
 - play(obj, name) plays an animation one time, loop(obj, name) repeats it until stop().
 - press(), hover(), focusGroup() and loop() return a function that removes the effect: off() / stop().
-- button() is the same function as press() and attention() is the same as loop(). They stay for the old code
-  (comp/ui-effects.js had only UIEffects.button(btn)).
+- button() is the same function as press() and attention() is the same as loop(). They stay for the old code.
 - Hover effects do not run for touch (no sticky hover on phones). Press effects do.
 - A disabled button (btn.enabled = 0) has no effects.
 - play() and loop() do nothing when the user prefers reduced motion (UIEffects.reduceMotion).
@@ -49,7 +48,7 @@ NOTES:
 - ripple, shine and spotlight add a <span> into the object for a short time (not on Icon and Input).
 - Add your own type: UIEffects.types.myType = function (obj, o, fx) { return { motion: [...], render: function (st) {} }; };
 
-Started Date: 2025 (v26.09: rewritten with more effects)
+Started Date: 2025
 Developer: Bugra Ozden
 Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
@@ -73,7 +72,7 @@ UIEffects.press = function (obj, type = "default", options = {}) {
     return UIEffects._add(obj, type, options, 1);
 };
 
-// The old name of press() (comp/ui-effects.js). The old code keeps working.
+// The old name of press(): the old code keeps working.
 UIEffects.button = UIEffects.press;
 
 // Hover effect only (no press state).
@@ -587,7 +586,7 @@ UIEffects.types.spotlight = function (obj, o, fx) {
         },
         move: function (event) {
             // WHY no clearTimeout of the fading light here: it cancelled its removal, so every quick out-and-in left
-            //     a span in the object for good (button.text returned "Save<span ...>", 2026-11-05)
+            //     a span in the object for good (button.text returned "Save<span ...>")
             // WHY: button.text = "..." clears the button's HTML, so the light is created again when it is lost.
             if (!light || light.parentNode !== obj.elem) {
                 light = UIEffects._overlay(obj);

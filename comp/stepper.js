@@ -5,7 +5,7 @@
 Stepper - v26.09
 
 UI COMPONENT TEMPLATE
-- A number stepper: [ − ] value [ + ]. The new version of comp-m1/ui-stepper.js.
+- A number stepper: [ − ] value [ + ].
 - min, max, step and precision (decimals). Ex: 0.5 kg steps, 0.25 hours.
 - Unit text after the value ("kg", "%", "pcs") and a valueFormat() for your own text ("1,250").
 - Editable: click the value and type a number. Enter or blur applies it, Escape cancels. (editable: 1)
@@ -19,7 +19,7 @@ UI COMPONENT TEMPLATE
 - style.button.opacity (1) / disabledOpacity: a button that can / can not be clicked (at min / max). fadeDuration:
   the time of the fade between them (s). 0: at once (the default).
 - Style packages: "classic" (default), "modern", "dark", "ozden". Select with styleName. (Stepper.styles)
--- "ozden": the look of the old UIStepper (comp-m1/ui-stepper.js, javascript-mobile-app-template, a 600 px design).
+-- "ozden": for a 600 px design.
    It is a package of params (basic.js v26.10.27): it also gives the size, 150 x 50.
 
 USAGE:
@@ -252,7 +252,7 @@ const Stepper = function (params = {}) {
     // apply: 1 -> The typed value is used. 0 -> Cancel.
     const endEdit = function (apply) {
         // WHY: Chrome fires blur when a focused field is removed: a half typed value went to onChange of a field that
-        //      was removed (a panel built again while the user typed, 2026-11-05)
+        //      was removed (a panel built again while the user typed)
         if (!isEditing || box.isRemoved) return;
         isEditing = 0;
         box.input.visible = 0;
@@ -671,7 +671,7 @@ Stepper.styles = {
         disabled: { opacity: 0.4 },
     },
 
-    // The look of the old UIStepper (comp-m1/ui-stepper.js, javascript-mobile-app-template, a 600 px design):
+    // For a 600 px design:
     // round white buttons with a dark line on a transparent box, the value between them; at min / max a button
     // fades to 0.4. (Its name is not "classic": that is the default look, and LabelEditor asks for it by name.)
     ozden: {
@@ -688,8 +688,8 @@ Stepper.styles = {
                 borderColor: "rgba(0, 0, 0, 0.8)",
                 round: 21,
                 iconColor: "rgba(0, 0, 0, 0.65)",
-                iconSize: 24, // WHY: the + of the old 32 px icon: 16 px long, a 2.7 px line
-                opacity: 0.9, // (the line and the icon are a little lighter, as in the old one)
+                iconSize: 24, // WHY: a + 16 px long, with a 2.7 px line
+                opacity: 0.9, // the line and the icon are a little lighter
                 disabledOpacity: 0.4,
                 fadeDuration: 0.2,
             },

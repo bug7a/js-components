@@ -12,12 +12,12 @@ UI COMPONENT TEMPLATE
   The label is HTML: a text of the user goes in with basic.escapeHtml(text).
 - Whole object background can change on hover and checked states (style.hoverBox, style.checkedBox).
 - The empty square under the mouse: style.hoverMark (its borderColor, and its color when given; v26.11).
-- animated: 1 (the user, 2026-11-05; context/basic-js-animated-rules.md): the square grows a little under the mouse
+- animated: 1 (context/basic-js-animated-rules.md): the square grows a little under the mouse
   (1.05) and the tick draws in from 0.6 with a fade, in 0.25 s with a soft stop. Nothing moves at the first view; off
   when the system asks for reduced motion. animated: 0 (default) keeps the short tick motion it always had.
   setAnimated(0/1).
 - Style packages: "classic" (default), "modern", "dark". Select with styleName. (CheckBox.styles)
-  NEW PROJECTS (the user, 2026-11-04): use "classic" on a light page and "dark" on a dark page, unless the user
+  NEW PROJECTS: use "classic" on a light page and "dark" on a dark page, unless the user
   asks for another one ("modern" only when asked).
 
 Started Date: September 2026
@@ -70,13 +70,12 @@ const CheckBoxDefaults = {
             round: 5,
         },
         checkedMark: { // Checked square
-            // (the user, 2026-11-05: #242424, a soft black; the #141414 of the first version, then the blue
-            // #2C7BA0 were tried the same day)
+            // #242424: a soft black
             color: "#242424",
             borderColor: "#242424",
         },
         hoverMark: { // Mouse over (the empty square)
-            color: null, // null: uses mark.color (2026-11-04: a package could not change it)
+            color: null, // null: uses mark.color, so a package can change it
             borderColor: Black(0.7),
         },
         tick: {
@@ -366,8 +365,7 @@ CheckBox.styles = {
     // White box with a border. When checked, dark filled box with a white tick. No background.
     classic: CheckBoxDefaults.style,
 
-    // Light box, thin border. When checked, the tick on a white square with an edge (the user, 2026-11-04; it was only
-    // the tick: the square had the color of the row and no edge).
+    // Light box, thin border. When checked, the tick on a white square with an edge.
     modern: {
         box: { // Whole object background
             color: "transparent",
@@ -395,7 +393,7 @@ CheckBox.styles = {
             borderColor: Black(0.7),
             round: 4,
         },
-        checkedMark: { // Checked square: white with an edge, behind the tick (was #DFECEC, no edge)
+        checkedMark: { // Checked square: white with an edge, behind the tick
             color: "white",
             borderColor: Black(0.7),
         },

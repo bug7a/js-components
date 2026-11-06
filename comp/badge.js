@@ -17,7 +17,7 @@ badge.setValue(0); // hidden
 badge.setValue(1); // a dot
 badge.setValue(12); // the number
 
-// A number with a white ring, also for 0 and 1 (the badge of the old mobile app template):
+// A number with a white ring, also for 0 and 1:
 Badge({
     value: 0,
     showZero: 1,

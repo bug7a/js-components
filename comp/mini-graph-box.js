@@ -12,7 +12,7 @@ UI COMPONENT TEMPLATE
   and all the bars move one step to the left.
 - WHY: Bar objects are created one time. Only their heights and colors change. (Fast for live data)
 - Bar count: As many bars as fit in the width. It is calculated again when the size changes.
-- TOOLTIP (2026-10-28, the user: "at once, no delay"): the mouse over the bars shows the value of the bar under it in a
+- TOOLTIP ("at once, no delay"): the mouse over the bars shows the value of the bar under it in a
   small box over the bar. The bar is found from the mouse x (the bars are thin), the box follows live values.
   valueFormat(value, index, self) makes its text; showTooltip: 0 turns it off.
 

@@ -5,8 +5,7 @@
 Scrolling Text - v26.10
 
 A one line text that slides to show its end when it does not fit in its box (a long name, a title, a cell).
-The new version of comp-m1/ui-scrolling-text.js (UIScrollingText: only a sample page, a TODO) with the same motion:
-the text waits at its start, slides to its end, waits, and goes back.
+The text waits at its start, slides to its end, waits, and goes back.
 - mode "always": it slides again and again (the faded edges show that there is more text).
 - The edges: the left one is clear while the text is at its start, the right one fades where the text goes on; at
   the end the text slides a little more (fade.width), so its last letters are clear too.
@@ -23,7 +22,7 @@ ScrollingText({ width: 120, labelText: "A long name of a file.pdf", mode: "hover
 ScrollingText({ width: 200, labelText: "A long title", waitTime: 2, minWaitTime: 0.8, fullWaitDistance: 200 });
 text.setText("Another text");
 
-Started Date: 1 October 2022 (UIScrollingText), October 2026 (ScrollingText)
+Started Date: October 2026
 Developer: Bugra Ozden
 Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/

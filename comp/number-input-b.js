@@ -6,7 +6,7 @@ NumberInputB - v25.07
 
 UI COMPONENT TEMPLATE
 - You can customize, this template code as you need:
-- NEW PROJECTS (the user, 2026-11-05): styleName "ozden" on a light page, "ozdenDark" on a dark page (the packages
+- NEW PROJECTS: styleName "ozden" on a light page, "ozdenDark" on a dark page (the packages
   of InputB, comp/input-b.js; the look of 02-comp-examples/input-b-ex7-ozden.htm), unless the user asks for another one.
 
 
@@ -82,7 +82,7 @@ const NumberInputB = function(params = {}) {
             const separator = box.decimalSeparator;
             const parts = value.split(separator);
             // WHY the first one stays and no digit goes: the value was built again from two parts, so "12.5" with a
-            //     "." typed after the 1 became "1.2", and a pasted "1.234.567" "1.23" (2026-11-05)
+            //     "." typed after the 1 became "1.2", and a pasted "1.234.567" "1.23"
             if (parts.length > 2) {
                 parts.splice(1, parts.length - 1, parts.slice(1).join(""));
                 value = parts[0] + separator + parts[1];

@@ -357,7 +357,7 @@ const SidePanel = function (params = {}) {
     // WHY a group of their own (on the start / end stack, as PageControl.startPage and Tabs.startPanel): only the
     //     default container was set. In a panel made while a group of the page was open, the endObject() of the first
     //     component (or an endGroup()) in the body went back to that group, and the next objects were drawn outside
-    //     the panel (2026-11-05). The group has the gap and the alignment of the body, so the look is the same.
+    //     the panel. The group has the gap and the alignment of the body, so the look is the same.
     box.startBody = function () {
         bodyStack.push(getDefaultContainerBox());
         setDefaultContainerBox(box.body);

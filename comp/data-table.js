@@ -5,23 +5,22 @@
 Data Table - v26.10
 
 A table made from data: the columns from a list of objects, the rows from a list of arrays (or objects).
-(The new version of UITable, 2022 (its template 04-template-m1/js-data-table is gone): the m2 / m3 component pattern.)
-WHEN TO USE IT (the user, 2026-11-04): the better looking table (style packages, sorting, search, selection, your own
+WHEN TO USE IT: the better looking table (style packages, sorting, search, selection, your own
 cells), but the data it can hold has a limit: every row is a basic.js object (about 9 DOM nodes), all made at once.
-Measured 2026-11-05 (headless Chrome, Apple M1, 4 columns), the time to the screen: 200 rows 0.07 s, 1 000 rows
+Measured (headless Chrome, Apple M1, 4 columns), the time to the screen: 200 rows 0.07 s, 1 000 rows
 0.13 s, 2 000 rows 0.27 s, 5 000 rows 0.65 s, 10 000 rows 1.4 s (a phone is slower). Up to about 2 000 rows. Very big
 data (tens of thousands of rows, very many columns): comp/smart-table.js (SmartTable: it makes only the rows that are
 seen; 100 000 rows in about 0.1 s in the Tauri template). A few rows inside a text: comp/tiny-table.js (TinyTable).
 - Samples: 02-comp-examples/data-table.htm, data-table-2.htm ... data-table-5.htm (data: assets/data-table/).
 - Sorting: a click on a sortable title (again: the other direction), the keyboard (Enter / Space on a title), sortBy().
 - Search: showSearch: 1 puts a SearchInput (comp/search-input.js, load it first) in the header; search(). Escape
-  clears it (2026-11-05; searchParams: { clearOnEscape: 0 } turns it off).
+  clears it (searchParams: { clearOnEscape: 0 } turns it off).
 - Selection: a click, the arrow keys (Home / End), Enter runs onRowClick. select(id), getSelectedData().
 - updateRows() adds, changes and removes rows by their id: the sorting, the search and the selection stay.
 - Your own cell: column.createView(cell, value, row, self) makes objects in the cell (a chart, a button). It runs
   again when the value of the row changes (updateRows, updateRow).
 - The rows scroll with the ScrollBar of basic.js (basic/scroll-bar.js, load it first; useScrollBar: 0 turns it off).
-- The rows off the screen are not laid out or drawn (CSS content-visibility: auto, 2026-11-05): 10 000 rows came on the
+- The rows off the screen are not laid out or drawn (CSS content-visibility: auto): 10 000 rows came on the
   screen in 2.2 s before, 1.4 s now, a sort took 315 ms, now 210 ms.
 - The values are shown as plain text (a value can not inject HTML).
 - Style packages: "classic" (default), "minimal" (white, lines only), "dark". (DataTable.styles)
@@ -63,7 +62,7 @@ table.search("paris");
 table.select(2);
 DataTable({ styleName: "dark", ... });
 
-Started Date: 1 October 2022 (UITable), October 2026 (DataTable)
+Started Date: October 2026
 Developer: Bugra Ozden
 Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
@@ -300,7 +299,7 @@ const DataTable = function (params = {}) {
     const createRow = function (data) {
 
         // GROUP: Row
-        // WHY content-visibility (2026-11-05): the browser does not lay out and draw the rows off the screen. Measured
+        // WHY content-visibility: the browser does not lay out and draw the rows off the screen. Measured
         //     with 10 000 rows: on the screen 2.2 s -> 1.5 s, a sort 315 -> 151 ms. Every row is still made (most of
         //     the time); the "auto" of contain-intrinsic-size keeps the real height of a row once it was drawn.
         const row = HGroup({
@@ -572,7 +571,7 @@ const DataTable = function (params = {}) {
         }
 
         const searchParams = Object.assign(
-            { styleName: _s.searchStyleName, clearOnEscape: 1 }, // (Escape clears the search, as in SmartTable: the user, 2026-11-05)
+            { styleName: _s.searchStyleName, clearOnEscape: 1 }, // (Escape clears the search, as in SmartTable)
             DataTable.getSearchIconFiles(),
             _s.search,
             box.searchParams,
@@ -601,7 +600,7 @@ const DataTable = function (params = {}) {
 
         // WHY a list for each id: rows with the same id (object rows with no id, a first column that repeats) kept
         //     only the last one in the map. The others stayed on the screen out of box.rowList, so clearRows() and
-        //     setRows() could not remove them either ("ghost" rows, 2026-11-05).
+        //     setRows() could not remove them either ("ghost" rows).
         const oldRows = new Map();
         box.rowList.forEach(function (row) {
             if (!oldRows.has(row.id)) oldRows.set(row.id, []);

@@ -6,15 +6,14 @@ Search Input - v24.04
 
 UI COMPONENT TEMPLATE
 - You can customize, this template code as you need:
-- Style packages: "original" (the default: the first look of SearchInput, whitesmoke with a soft bottom line; the
-  pages and components made before 2026-11-06 keep it), "classic" (a standard search box, the user 2026-11-06:
+- Style packages: "original" (the default: whitesmoke with a soft bottom line), "classic" (a standard search box:
   white, a thin gray edge, round corners, a line search icon, a dark edge while typing), "ozden", "ozdenDark".
   Select with styleName. (SearchInput.styles)
--- "classic", "ozden" and "ozdenDark" are 44 px high (the user, 2026-11-05; "original" and the defaults: 50). A
+-- "classic", "ozden" and "ozdenDark" are 44 px high ("original" and the defaults: 50). A
    height given by the page wins over it.
-- focusBorderColor (2026-11-06): the edge while typing, 2 px of this color ("": the edge does not change). It is a
+- focusBorderColor: the edge while typing, 2 px of this color ("": the edge does not change). It is a
   color, not a motion: also with animated: 0. "classic" has it.
-- The vertical place (2026-11-05, the user): textOffsetY / clearIconOffsetY move the text and the clear icon from the
+- The vertical place: textOffsetY / clearIconOffsetY move the text and the clear icon from the
   middle of the box. ozden / ozdenDark: -2 / -1: center() does not count their 3 px bottom line, and the small letters
   of Open Sans sit low in their line (measured: the text was about 3 px low, the clear icon 1 px; the search icon is
   right where it is: its round lens is over the middle, its handle under it).
@@ -22,20 +21,20 @@ UI COMPONENT TEMPLATE
 -- SearchInput.styles.myStyle = { style: {}, color: "white", textColor: "#222", ... };
 - animated: 1 adds small motions (not at the first view): under the mouse a thin line and a bigger search icon,
   while typing a stronger line and a tilted search icon (a small pulse at every letter), the clear icon grows in
-  and turns under the mouse. Off in every package, "ozden" and "ozdenDark" too (the user, 2026-10-27): give animated: 1.
+  and turns under the mouse. Off in every package, "ozden" and "ozdenDark" too: give animated: 1.
   Only transform, opacity and box-shadow change (smooth, cheap). Off when the system asks for reduced motion.
 - Place: left / top (default 0, 0), or right / bottom: SearchInput({ right: 20, bottom: 20 }) is at the right bottom
   corner of its box (the default left / top is not used then). Sample: 02-comp-examples/search-input-place.htm
-- The right end (2026-11-05, the user): clearIconRight moves the clear icon and the end of the text to the left, so
+- The right end: clearIconRight moves the clear icon and the end of the text to the left, so
   the right end of the box is kept for an object of the page (the column chip of SmartTable); setClearIconRight().
   A click on such an object keeps its own click (it does not start typing). clearIconMinTextWidth: a narrow box does
   not show its clear icon when the text beside it would be narrower than this; the text gets its place.
-- A cut text (2026-11-05, the user): a text longer than the box is not cut sharply: it fades out over textFadeWidth px
+- A cut text: a text longer than the box is not cut sharply: it fades out over textFadeWidth px
   at the side where it goes on (under the clear icon, an object of the page, or the search icon). While not typing,
   it goes on under the icon at its end (SearchInput.TEXT_UNDER_END: 20 px, the width of the clear icon) and fades
   out slowly into it. While typing, the text ends before the icon and only the far side of a caret at the end of the
   text fades, so the caret is always seen. textFadeWidth: 0 cuts sharply.
-- Escape (2026-11-05, the user): clearOnEscape: 1 makes Escape clear the text, as the clear icon (also in a narrow
+- Escape: clearOnEscape: 1 makes Escape clear the text, as the clear icon (also in a narrow
   box with no clear icon). The key is used (preventDefault): a Dialog or a SidePanel around the field does not close;
   in an empty field Escape goes on to them. Off by default; SmartTable turns it on for its filter.
 
@@ -439,7 +438,7 @@ const SearchInput = function(params = {}) {
 
     // *** OBJECT INIT CODE:
     // Every change of the text: typed, pasted, dropped or filled by the browser.
-    // WHY "input" (it was keyup): a text pasted with the mouse, dropped or filled by the browser was never searched
+    // WHY "input", not keyup: a text pasted with the mouse, dropped or filled by the browser was never searched
     //     (the list kept the old text); and the arrows, Enter, Escape, which change nothing, searched again.
     box.listenTo(box.txtSearch.inputElement, "input", function() {
         box.onSearch(getSearchedText(), box);
@@ -499,7 +498,7 @@ const SearchInput = function(params = {}) {
 };
 
 // px: while not typing, a cut text goes this far under the clear icon (its width) or the object at its end, and fades
-// out there (2026-11-05, the user: "a little into the icon, fading slowly"; it was half of the fade, 12 px)
+// out there.
 SearchInput.TEXT_UNDER_END = 20;
 
 // Sayfaya bir kez eklenen ::placeholder kuralı. (Sadece placeholderColor verilen inputları etkiler.)
@@ -522,12 +521,11 @@ SearchInput.addPlaceholderStyle = function() {
 // NOTE: A package needs only the params that differ from SearchInputDefaults.
 SearchInput.styles = {
 
-    // The look of SearchInputDefaults: the first look of SearchInput (whitesmoke, a soft bottom line), the default.
-    // WHY a name of its own (the user, 2026-11-06): "classic" became a standard search box; the pages, the templates
-    // and the components made before keep this look (ItemList, SelectBox, SmartTable "green", FullScreenSelect).
+    // The look of SearchInputDefaults (whitesmoke, a soft bottom line), the default. ItemList, SelectBox,
+    // SmartTable "green" and FullScreenSelect use it by this name.
     original: { style: {} },
 
-    // A standard search box (the user, 2026-11-06): white, a thin gray edge, round 8, 44 px, a line search icon on
+    // A standard search box: white, a thin gray edge, round 8, 44 px, a line search icon on
     // the left, a gray round clear button, the text 16 px; while typing the edge is dark and 2 px.
     classic: {
         style: {},
@@ -561,7 +559,7 @@ SearchInput.styles = {
         clearIconFile: "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#FFFFFF" stroke="rgba(0,0,0,0.12)" stroke-width="1"/><path d="M8 8l8 8M16 8l-8 8" fill="none" stroke="#333333" stroke-width="2" stroke-linecap="round"/></svg>'),
         searchIconSize: 24,
         searchIconOpacity: 0.4,
-        clearIconOpacity: 0.6, // WHY: at 0.6 the white circle faded into the field (the user, 2026-10-27).
+        clearIconOpacity: 0.6, // WHY: at 0.6 the white circle faded into the field.
         invertIconColor: 0,
         invertSearchIconColor: null, // null: invertIconColor
         invertClearIconColor: null, // null: invertIconColor
@@ -569,7 +567,7 @@ SearchInput.styles = {
         textColor: "rgba(0, 0, 0, 0.8)",
         placeholderColor: "",
         fontSize: 20,
-        height: 44, // (the user, 2026-11-05: the default is 50) as the search box of ItemList and SelectBox ozden
+        height: 44, // (the default is 50) as the search box of ItemList and SelectBox ozden
         textOffsetY: -2, // WHY: center() does not count the 3 px bottom line, and the small letters of Open Sans sit low
         clearIconOffsetY: -1, // WHY: the middle of the face of the box (center() does not count the 3 px bottom line)
         border: 1,
@@ -597,7 +595,7 @@ SearchInput.styles = {
         textColor: "rgba(255, 255, 255, 0.88)",
         placeholderColor: "rgba(255, 255, 255, 0.35)",
         fontSize: 20,
-        height: 44, // (the user, 2026-11-05: the default is 50) as the search box of ItemList and SelectBox ozden
+        height: 44, // (the default is 50) as the search box of ItemList and SelectBox ozden
         textOffsetY: -2, // WHY: center() does not count the 3 px bottom line, and the small letters of Open Sans sit low
         clearIconOffsetY: -1, // WHY: the middle of the face of the box (center() does not count the 3 px bottom line)
         border: 1,

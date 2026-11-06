@@ -5,7 +5,7 @@
 Full Screen Select - v26.11
 
 A select field that opens its list on the whole screen: a search box at the top, a close button, the items under it
-(a phone app, a long list). The new version of comp-m1/ui-select-text.js (UISelectText, removed on 2026-10-28) with the same look.
+(a phone app, a long list).
 - The field: the text of the selected item, two small arrows at the right side. A click (or Enter, Space, the down
   arrow) opens the list. autoWidth: 1 -> the field is as wide as its text.
 - The list: it comes in from below with a fade. The search box (comp/search-input.js SearchInput, load it
@@ -18,8 +18,8 @@ A select field that opens its list on the whole screen: a search box at the top,
 - Only one list is open at a time (FullScreenSelect.openedSelect). The list is made on page when it first opens,
   hidden when it closes and removed with the field (box.own); setItems() makes it again at the next open.
 - Motion: the list comes in from below with a fade in 0.2 s (transform and opacity) and goes out at once
-  (the user, 2026-10-28); no motion when the system asks for reduced motion.
-- Style packages: "classic" (default, the look of UISelectText), "dark". (FullScreenSelect.styles)
+; no motion when the system asks for reduced motion.
+- Style packages: "classic" (default), "dark". (FullScreenSelect.styles)
 
 USAGE:
 const fruits = FullScreenSelect({
@@ -34,7 +34,7 @@ fruits.getSelectedItem();            // { key, title } or null
 fruits.open(); fruits.close();
 FullScreenSelect({ styleName: "dark", ... });
 
-Started Date: 22 February 2022 (UISelectText), October 2026 (FullScreenSelect)
+Started Date: October 2026
 Developer: Bugra Ozden
 Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
@@ -47,7 +47,7 @@ Webpage: https://bug7a.github.io/js-components/
 const FullScreenSelectDefaults = {
     width: 200,
     height: 50,
-    items: [], // [{ key, title }] or ["Text"] (the text is its key). ({ id, name } of UISelectText is read too.)
+    items: [], // [{ key, title }] or ["Text"] (the text is its key). ({ id, name } is read too.)
     selectedKey: null, // null: the first item
     placeholderText: "Search",
     emptyText: "No results",
@@ -62,14 +62,14 @@ const FullScreenSelectDefaults = {
     onOpen: function (self) {},
     onClose: function (self) {},
     styleName: "classic", // "classic", "dark" or a name added to FullScreenSelect.styles
-    style: { // Classic style package (default): the look of UISelectText
+    style: { // Classic style package (default)
         box: { color: "whitesmoke", round: 4, border: 0 },
         focus: { ringColor: "rgba(95, 158, 160, 0.6)" },
         label: { left: 10, fontSize: 20, textColor: Black(0.8) },
         arrow: { size: 16, right: 8, gap: 7, opacity: 0.7, invert: 0 }, // gap: from the middle to each arrow
         panel: { color: "white", zIndex: 3000, slide: 150 }, // slide: px, from below when it opens
         search: { left: 20, top: 40, height: 50, closeGap: 10, color: "whitesmoke", textColor: "gray", round: 25, fontSize: 20, iconOpacity: 0.4 }, // closeGap: to the close button
-        searchStyleName: "original", // the first look of SearchInput ("classic" became a standard search box, 2026-11-06)
+        searchStyleName: "original", // the first look of SearchInput
         closeButton: { size: 30, right: 20, top: 50, color: "#D8D8D8", iconSize: 14, iconOpacity: 0.5, invert: 0 },
         list: { left: 10, top: 110, gap: 0 },
         item: { height: 60, sideSpace: 20, round: 4, color: "white", fontSize: 20, textColor: "#4A4A4A", textLeft: 30 },
@@ -533,7 +533,7 @@ const FullScreenSelect = function (params = {}) {
         css: { top: "50%", transform: "translateY(-50%)", whiteSpace: "nowrap", overflow: "hidden" },
     });
     if (box.autoWidth != 1) {
-        // WHY a mask: a long text fades out before the arrows on any color of the field (UISelectText: a box with the gradient of its color)
+        // WHY a mask: a long text fades out before the arrows on any color of the field
         const fade = "linear-gradient(to right, black calc(100% - " + TEXT_FADE + "px), transparent)";
         box.lblText.css = { maskImage: fade, webkitMaskImage: fade };
     }
@@ -588,7 +588,7 @@ FullScreenSelect.toSearchText = function (value) {
 // NOTE: A new package needs only the keys that differ from the classic style.
 FullScreenSelect.styles = {
 
-    // The look of UISelectText: a whitesmoke field, a white list, a soft yellow selected item.
+    // A whitesmoke field, a white list, a soft yellow selected item.
     classic: FullScreenSelectDefaults.style,
 
     // For a dark page.

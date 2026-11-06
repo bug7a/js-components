@@ -126,7 +126,7 @@ const TinySelect = function(params = {}) {
 
     // *** OBJECT VIEW:
     // WHY: In a row (the protocol of URLInputB), a box shrinks for its "100%" neighbour and cut "https://www.".
-    //      The old TinySelect was a flex group, and a group does not shrink (flexShrink 0): the same here.
+    //      A flex group does not shrink (flexShrink 0): the same here.
     box.shrink = 0;
     box.css.whiteSpace = "nowrap";
     box.cursor = "pointer";
@@ -187,7 +187,7 @@ const TinySelect = function(params = {}) {
         TinySelect.createList(box);
     });
     box.setTitle(box.title);
-    // WHY: Silent: onSelect is a choice of the user, not the start value (2026-10-26; the pages that use it
+    // WHY: Silent: onSelect is a choice of the user, not the start value (the pages that use it
     //      guarded against this first call with isReady / isRendering).
     box.setSelectedIndex(box.selectedIndex, 1);
     box.setDisabled(box.disabled);
@@ -271,7 +271,7 @@ TinySelect.createList = function(connectedUI) {
     const fieldTop = withPageZoom(rect.top);
     const fieldBottom = withPageZoom(rect.bottom);
     // WHY the room: the list was always under the field, with no limit: near the bottom of the page (it never scrolls)
-    //     its items were below the page and could not be chosen (2026-11-05)
+    //     its items were below the page and could not be chosen
     const listHeight = listBox.grp.height;
     const roomBelow = page.height - fieldBottom - TinySelect.PAGE_MARGIN;
     const roomAbove = fieldTop - TinySelect.PAGE_MARGIN;

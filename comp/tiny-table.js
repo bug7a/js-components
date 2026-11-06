@@ -5,9 +5,8 @@
 Tiny Table - v26.10
 
 A light table for short lists: a colored title row, one line rows (a long text ends with "..."), a soft color under
-the mouse. The new version of comp-m1/tiny-table.js with the same look. (comp/tiny-table.js and
-comp-m1/tiny-table.js have the same global name TinyTable: a page loads only one of them.)
-WHEN TO USE IT (the user, 2026-11-04): a small table between the lines of a page, like a table in a text, for small
+the mouse.
+WHEN TO USE IT: a small table between the lines of a page, like a table in a text, for small
 data that needs nothing more: it has no sorting, no search and no selection. A table with them: comp/data-table.js
 (DataTable); very big data: comp/smart-table.js (SmartTable).
 - columns: [{ title, width, align }]; rows: [["1", "404", "Not found"], ...]. The texts are plain text;
@@ -18,7 +17,7 @@ data that needs nothing more: it has no sorting, no search and no selection. A t
 - onCellCreate(cell, self): change a cell when it is made (cell.rowIndex, cell.columnIndex, cell.value, cell.label).
 - onRowClick(self, rowIndex): a click on a row.
 - setRows(rows): new rows (the cells are made again).
-- Style packages: "classic" (default, the look of the comp-m1 TinyTable), "light", "dark". (TinyTable.styles)
+- Style packages: "classic" (default), "light", "dark". (TinyTable.styles)
 
 USAGE:
 TinyTable({
@@ -27,7 +26,7 @@ TinyTable({
     style: { header: { color: "indianred" } },
 });
 
-Started Date: June 2024 (comp-m1), October 2026 (comp-m4)
+Started Date: October 2026
 Developer: Bugra Ozden
 Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
@@ -47,7 +46,7 @@ const TinyTableDefaults = {
     onCellCreate: function (cell, self) {}, // cell.rowIndex, cell.columnIndex, cell.value, cell.label (Ex: cell.label.bold = 1)
     onRowClick: function (self, rowIndex) {},
     styleName: "classic", // "classic", "light", "dark" or a name added to TinyTable.styles
-    style: { // Classic style package (default): the comp-m1 TinyTable
+    style: { // Classic style package (default)
         box: { color: "white", border: 2, borderColor: "#141414", round: 4 },
         header: { color: "#141414", lineColor: "#141414", textColor: "white", fontSize: 18, padding: [8, 8] },
         body: { color: "white", paddingY: 10 },
@@ -258,7 +257,7 @@ const TinyTable = function (params = {}) {
 // NOTE: A new package needs only the keys that differ from the classic style.
 TinyTable.styles = {
 
-    // The comp-m1 TinyTable: a black title row, a black frame.
+    // A black title row, a black frame.
     classic: TinyTableDefaults.style,
 
     // A soft gray title row and frame.

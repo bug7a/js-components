@@ -10,7 +10,7 @@ UI COMPONENT TEMPLATE
 - Indeterminate: a moving bar, when the progress is not known. (Ex: "Connecting...")
 - Status colors: "normal", "success", "error".
 - Value text position: "top" (right of the title), "right" (right of the bar), "none".
-- TWO PARTS (2026-10-29, the user): secondValue is a second part after the value (Ex: 70 done + 5 on the way);
+- TWO PARTS: secondValue is a second part after the value (Ex: 70 done + 5 on the way);
   its own color (style.secondBar). The value text and onComplete are of the value only. It is drawn from 0 under the
   bar: a second part that is not transparent ("ozden") looks like a second bar next to it; bar.joinEdge: 0 leaves
   out the edge of the bar between them, the two colors meet ("ozden").
@@ -18,19 +18,19 @@ UI COMPONENT TEMPLATE
   slowly (a job is running); setStripes() / setSecondStripes(). Still with prefers-reduced-motion. (style.stripes)
 - LIMITS: limits: [80] or [{ value: 30, color: "#7BA7D9" }, { value: 80, text: "80" }]: marks at these values (in
   the units of value / max), a text under a mark (style.limit); setLimits(). limit.shape "line": a line over the
-  bar, a little longer than it; "dot" ("ozden", the user 2026-11-06): a dot inside the track that has the color of
+  bar, a little longer than it; "dot" ("ozden"): a dot inside the track that has the color of
   the part under it (limit.barColor on the bar, secondBarColor on the second part, color on the track; on a dark
   track darkTrack.limitColor), half and half while the end of the bar goes over it. The own color of a limit is
   its color on the track. limit.dotOpacity: every dot ("ozden": 0.85).
-- Style packages: "classic" (default), "modern", "ozden" (the user, 2026-11-06: the bar is a cyan SmartButton
+- Style packages: "classic" (default), "modern", "ozden" (the bar is a cyan SmartButton
   ozdenType1, with its edge and its line at the bottom; a round track, the second part a light bar next to it; a dark
-  limit line with a text). "ozdenDark" (the ozden bar of 2026-10-29 for a dark page). Select with styleName.
+  limit line with a text). "ozdenDark" (for a dark page). Select with styleName.
   (ProgressBar.styles)
 - THE ENDS: an end of a bar at an end of the track is as round as the track; an end in the middle of the track has
   style.bar.innerRound ("": as round as the track; "ozden": 0, straight).
-- A DARK TRACK: darkTrack: 1 gives the track the colors of style.darkTrack (#242424 with a faint white edge; the
-  user, 2026-11-06; "ozden": Black(0.85) with no edge); the bars keep theirs. setDarkTrack().
-- THE TRACK of every bar (basic-designer, 2026-10-30): 16 px, #F2F2F2, a 2 px light gray edge, round 4 (the default;
+- A DARK TRACK: darkTrack: 1 gives the track the colors of style.darkTrack (#242424 with a faint white edge;
+  "ozden": Black(0.85) with no edge); the bars keep theirs. setDarkTrack().
+- THE TRACK of every bar: 16 px, #F2F2F2, a 2 px light gray edge, round 4 (the default;
   "modern" keeps its own: 10 px, no edge, round ends; "ozden" has round ends).
 - Everything is drawn with code (no image files needed).
 
@@ -71,7 +71,7 @@ const ProgressBarDefaults = {
         layout: {
             gap: 6, // Space between the title row and the bar
         },
-        track: { // Background of the bar (basic-designer, 2026-10-30: the default of every bar; was 8 px, Black(0.1), no edge)
+        track: { // Background of the bar
             height: 16,
             color: "#F2F2F2",
             round: 4,
@@ -248,7 +248,7 @@ const ProgressBar = function (params = {}) {
         paintJoin();
     };
 
-    // bar.joinEdge 0: where the second part starts, the bar has no edge: the two colors meet (the user, 2026-11-06)
+    // bar.joinEdge 0: where the second part starts, the bar has no edge: the two colors meet
     const paintJoin = function () {
         const hasSecondAfter = (box.indeterminate != 1) && (box.value > 0) && (box.secondValue > 0);
         const isSeamless = hasSecondAfter && (box.style.bar.joinEdge == 0);
@@ -762,7 +762,7 @@ ProgressBar.styles = {
     // Thin dark bar on a light gray track.
     classic: ProgressBarDefaults.style,
 
-    // The ozden bar (the user, 2026-11-06; it was the lines of comp-m1 UIProgressBar, 2026-10-29): the colors of
+    // The ozden bar: the colors of
     // SmartButton. The bar is a cyan SmartButton ozdenType1 (its edge and its line at the bottom: it looks raised);
     // the track keeps the colors of the default (#F2F2F2, a 2 px light gray edge) and its two ends are round; an end
     // in the middle of the track is straight. darkTrack: 1 is a soft black with no edge. The second part is a second
@@ -775,7 +775,7 @@ ProgressBar.styles = {
         track: {
             round: 100, // the two ends are half circles
         },
-        darkTrack: { // (the user, 2026-11-06)
+        darkTrack: {
             color: Black(0.85),
             borderColor: "transparent", // no edge: the color of the track fills its place (the same size)
             limitColor: White(0.7),
@@ -806,13 +806,13 @@ ProgressBar.styles = {
             color: "#DE815B", // orange (SmartButton.tones.orange)
         },
         limit: {
-            shape: "dot", // a dot inside the track, in the color of the part under it (the user, 2026-11-06)
+            shape: "dot", // a dot inside the track, in the color of the part under it
             color: "rgba(0, 0, 0, 0.7)", // on the track
             dotSize: 6,
-            dotOpacity: 0.85, // every dot (the user, 2026-11-06)
+            dotOpacity: 0.85, // every dot
             barColor: "white", // on the bar
             secondBarColor: "", // on the second part: the main color
-            width: 4, // (shape "line": the line of 2026-10-29)
+            width: 4, // shape "line"
             round: 2,
             overhang: 4,
             textSize: 14,
@@ -829,8 +829,7 @@ ProgressBar.styles = {
         },
     },
 
-    // The ozden bar for a dark page (2026-11-06): a dark track with a soft edge, the bar in the main color of the kit.
-    // (Still the ozden bar of 2026-10-29: half its color with an edge of it; the ozden package changed on 2026-11-06.)
+    // The ozden bar for a dark page: a dark track with a soft edge, the bar in the main color of the kit.
     ozdenDark: {
         layout: {
             gap: 8,
@@ -890,7 +889,7 @@ ProgressBar.styles = {
             height: 10,
             color: "#DFECEC", // 20% of bar color on white
             round: 100,
-            border: 0, // WHY: no edge (the default has one since 2026-10-30)
+            border: 0, // WHY: no edge (the default has one)
             borderColor: "transparent",
         },
         bar: {

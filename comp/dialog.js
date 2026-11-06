@@ -5,41 +5,40 @@
 Dialog - v26.10
 
 A dialog window over the page: a title, a message, your fields (inputs) or any content, and buttons. The page under
-it waits (a modal dialog: a dark cover, the keyboard stays in the dialog). The new version of comp/dialog.js with
-the features of comp/modal.js and the look of 02-comp-examples/smart-button-3-ozden.htm (the first dialog).
-NOTE: still in development (the user, 2026-10-29): more style packages come; their buttons may be animated.
+it waits (a modal dialog: a dark cover, the keyboard stays in the dialog).
+NOTE: still in development: more style packages come; their buttons may be animated.
 
-- Buttons (SmartButton of comp-m4, load it first): [{ text, type, key, iconFile, align, ask, ariaLabel, onClick }]
+- Buttons (SmartButton, load it first): [{ text, type, key, iconFile, align, ask, ariaLabel, onClick }]
   - type: "primary" (the main action), "secondary" (Cancel), "danger" (a delete), "warning", "success", "info"
     (the tones of SmartButton: cyan, orange, yellow, green, blue), "icon" (only an icon: a white square).
   - align: "left": at the left side of the footer (Ex: the trash); the others stay at the right side.
   - ask: "Click again to delete." -> two clicks: the first one turns the button orange and shows the text in a bubble
-    over it; the second one runs onClick. It forgets after 5 s. (The ask of SmartButton, 2026-10-30.)
+    over it; the second one runs onClick. It forgets after 5 s. (The ask of SmartButton.)
   - onClick(dialog, button) returns false: the dialog stays open. A Promise: the button waits (its clock), the
     others are disabled, and the dialog closes when it ends (a rejected one keeps it open).
 - Fields: fields: [{ key, titleText, placeholder, value, required, validate(value) -> error text }] make InputB
   fields (comp/input-b.js, load it with comp/tooltip.js; without it a plain Input). A "primary" button checks
   them first: an error is written under the message and the field gets the focus. getValues() -> { key: value }.
 - content(dialog): any objects in the body (under the message).
-- setStatus(text, type): a line under the content: "error" (red), "success" (green, 2026-11-05) or "info" (gray).
+- setStatus(text, type): a line under the content: "error" (red), "success" (green) or "info" (gray).
 - Closes with a button, Escape, a click on the cover (closeOnCover) or close(). onClose(dialog, reason, buttonKey).
 - Keyboard: Tab stays in the dialog; the first field (else the primary button) gets the focus; the focus goes back to
   the opener when it closes. More than one dialog: Escape closes the top one.
 - Dialog.confirm(), Dialog.alert(), Dialog.prompt(): Promises.
-- variant: "centered" (the user, 2026-10-29): the title and the message in the middle, the buttons one under the other
+- variant: "centered": the title and the message in the middle, the buttons one under the other
   (as wide as the card; the primary / danger one first, on the gray band of the footer) and an icon at the top
   (topIconFile: a file or an "<svg" text: dark in a light gray circle). The look: style.centered.
-  topIconTone (the user, 2026-11-05): "cyan", "orange", "yellow", "green" or "blue" (the tones of SmartButton) puts
+  topIconTone: "cyan", "orange", "yellow", "green" or "blue" (the tones of SmartButton) puts
   the icon in three tones of it (Dialog.ICON_TONES): a light circle, and in an "<svg" text the words LIGHT and STRONG
   are filled in with a light and a strong tone (a two-tone icon; currentColor is the strong tone). "": gray.
   CIRCLE in it is the color of the circle: a ring that cuts a part out (Ex: around the dot of a new mail).
 - Motion: the cover comes from nothing and the card rises 50 px while it comes (0.2 s); it goes at once; none with reduced motion.
 - Style packages: "ozden" (default), "ozdenDark" (for a dark page; Dialog.confirm / alert / prompt take styleName too).
   (Dialog.styles)
-- The buttons (the user, 2026-10-30): style.buttons[type] = { styleName, tone, style }: a template of SmartButton
-  ("ozdenType1"; Cancel and icon: "ozdenType3", a faint edge, the user 2026-11-05), a tone of it
-  (primary: "cyan", danger: "orange"...; icon: "white"; the user, 2026-11-04) and only the keys that differ.
-- Scale (2026-11-01): scale multiplies every size of the dialog (its style, width, motion, its buttons and the bubble
+- The buttons: style.buttons[type] = { styleName, tone, style }: a template of SmartButton
+  ("ozdenType1"; Cancel and icon: "ozdenType3", a faint edge), a tone of it
+  (primary: "cyan", danger: "orange"...; icon: "white") and only the keys that differ.
+- Scale: scale multiplies every size of the dialog (its style, width, motion, its buttons and the bubble
   of their ask). null (default): basic.uiScale (1; a page fitted with page.fit() sets 1 / page.zoom: the dialog keeps
   its size on the screen). Dialog.confirm / alert / prompt take it too. The objects of content(dialog) are made by
   the page: dialog.scale is their scale. (The InputB fields keep their own px: InputB has no scale param yet.)
@@ -60,7 +59,7 @@ if (await Dialog.confirm({ titleText: "Delete the file?", messageText: "It can n
 const name = await Dialog.prompt({ titleText: "Rename", value: "report.pdf", validate: (text) => (text.trim()) ? "" : "A name is needed." });
 Dialog.alert({ titleText: "Saved", scale: 1.5 }); // every size x 1.5 (default: basic.uiScale)
 
-Started Date: June 2024 (comp-m2 Dialog), October 2026 (comp-m4 Dialog)
+Started Date: October 2026
 Developer: Bugra Ozden
 Email: bugra.ozden@gmail.com
 Webpage: https://bug7a.github.io/js-components/
@@ -105,47 +104,45 @@ const DialogDefaults = {
         },
         title: { fontSize: 20, textColor: "#1B1F23", fontFamily: "opensans-bold" },
         message: { fontSize: 16, textColor: Black(0.55), lineHeight: 1.5 },
-        // successColor (the user, 2026-11-05: "it is saved" under the content): the green of SmartButton (#7BC362), deeper.
+        // successColor ("it is saved" under the content): the green of SmartButton (#7BC362), deeper.
         // WHY deeper: #7BC362 is 2.2:1 on white; #498335 is 4.6:1, enough for a small text
-        // errorColor (the user, 2026-11-05): #E8796D deeper and calmer (the same hue). WHY: #E8796D is 2.8:1 on white; #C74B3D is 4.7:1
+        // errorColor: #E8796D deeper and calmer (the same hue). WHY: #E8796D is 2.8:1 on white; #C74B3D is 4.7:1
         status: { fontSize: 13, errorColor: "#C74B3D", infoColor: Black(0.55), successColor: "#498335" },
         footer: { color: "#FAFAF9", lineColor: Black(0.1), padding: [16, 14], gap: 10, buttonHeight: 40, iconButtonWidth: 50 },
         fieldStyleName: "ozden", // the styleName of the InputB fields
-        // variant: "centered" (a layout the user drew, the colors of ozden)
+        // variant: "centered" (the colors of ozden)
         centered: {
-            // (2026-10-30, the user: a light gray circle on white, a dark icon; was a dark circle on a gray area)
+            // A light gray circle on white, a dark icon
             iconArea: { height: 116, color: "white", round: 6 }, // the area at the top
             iconCircle: { size: 100, color: "#EEEEEE" },
             icon: { size: 56, color: "#232323", lightColor: "#D2D2D0" }, // lightColor: LIGHT of a two-tone icon (no tone)
             buttonHeight: 48,
             buttonGap: 10,
-            // The buttons are on the band of the footer (its color and line, the user 2026-10-30), one under the other
+            // The buttons are on the band of the footer (its color and line), one under the other
             footerPadding: [22, 18],
         },
         // The looks of the buttons: a template of SmartButton, a tone of it and only what differs from them. The colors
-        // of the situations are the tones of SmartButton (2026-10-31, the draft _designs/smart-button-colors.htm)
+        // of the situations are the tones of SmartButton (the draft _designs/smart-button-colors.htm)
         buttons: {
             primary: { styleName: "ozdenType1", tone: "cyan", style: {} },
-            // the gray of the template, a faint edge (the user, 2026-11-05: as the Cancel of 02-comp-examples/smart-button.htm;
-            // it was ozdenType1)
+            // the gray of the template, a faint edge (as the Cancel of 02-comp-examples/smart-button.htm)
             secondary: { styleName: "ozdenType3", tone: "", style: {} },
             danger: { styleName: "ozdenType1", tone: "orange", style: {} },
             warning: { styleName: "ozdenType1", tone: "yellow", style: {} },
             success: { styleName: "ozdenType1", tone: "green", style: {} },
             info: { styleName: "ozdenType1", tone: "blue", style: {} },
-            // white, whitesmoke under the mouse (the user, 2026-11-04: as the trash of the SmartButton samples; it was
-            // a pink hover). An icon button has no room at its sides by itself. A faint edge as Cancel (the user,
-            // 2026-11-05: ozdenType3; it was ozdenType2)
+            // white, whitesmoke under the mouse (as the trash of the SmartButton samples). An icon button has no room at
+            // its sides by itself. A faint edge as Cancel (ozdenType3)
             icon: {
                 styleName: "ozdenType3",
                 tone: "white",
                 style: {
-                    icon: { opacity: 1 }, // (30 px until 2026-10-29)
+                    icon: { opacity: 1 },
                 },
             },
         },
         // A button that asks again (ask): its red look and its bubble (comp/tooltip.js) are the style.ask of
-        // SmartButton (its default, the user 2026-10-30). A page or a package may give its own here:
+        // SmartButton (its default). A page or a package may give its own here:
         // ask: { button: { color, border, borderColor, boxShadow, textColor, iconFilter }, bubble, time }
     },
 };
@@ -194,7 +191,7 @@ const Dialog = function (params = {}) {
     const id = "dialog-" + (Dialog.counter++);
     const OPEN_TIME = "0.2s";
     const OPEN_CURVE = "cubic-bezier(0.2, 0.8, 0.2, 1)"; // fast at first, soft at its place
-    const OPEN_MOVE = 50 * box.scale; // px: the card comes up from here (the user, 2026-10-29)
+    const OPEN_MOVE = 50 * box.scale; // px: the card comes up from here
     // The px of the view that are not in the style (multiplied by scale, like the style)
     const LINE_WIDTH = 1 * box.scale; // the line over the footer
     const SECTION_SPACE = 8 * box.scale; // over the fields, under the icon at the top
@@ -348,7 +345,7 @@ const Dialog = function (params = {}) {
     // Before the press of a button (and before its ask: the button asks "Sure?" itself, SmartButton ask)
     const canPressButton = function (item) {
         if (!box || isBusy) return false;
-        // WHY the fields first (the user, 2026-10-29): a form with an error must not ask "Sure?" first
+        // WHY the fields first: a form with an error must not ask "Sure?" first
         if (item.data.type == "primary" && box.fieldList.length) {
             const error = checkFields();
             box.setStatus(error, "error");
@@ -617,7 +614,7 @@ const Dialog = function (params = {}) {
     const createIconView = function (file, look) {
         if (String(file).trim().startsWith("<svg")) {
             // WHY clipContent 0 and overflow visible: a part that moves (the lid of a bin that lifts) goes out of the
-            //     drawing for a moment; it was cut at the top (the user, 2026-11-05)
+            //     drawing for a moment; it was cut at the top
             const label = Label({ width: look.size, height: look.size, text: file, textColor: look.color, clipContent: 0, css: { lineHeight: "0" } });
             const svg = label.elem.querySelector("svg");
             if (svg) {
@@ -635,7 +632,7 @@ const Dialog = function (params = {}) {
     box.color = _s.cover.color;
     // WHY: "absolute", not "fixed": the cover is on page, as big as page (page never scrolls). page.fit() / page.zoom give
     //      <body> a transform, and a fixed box inside a transformed one is measured on it (a 0 px high body: the
-    //      dialog was not seen; the admin panel, 2026-10-31).
+    //      dialog is not seen).
     box.css = { position: "absolute" };
     box.elem.style.display = "block"; // WHY: visible keeps the display type: without it, visible: 1 does not show it again
     box.clickable = 1;
@@ -889,7 +886,7 @@ Dialog.prompt = function (params = {}) {
 // USAGE: const name = await Dialog.prompt({ titleText: "Rename", value: "a.pdf", validate: (t) => (t.trim()) ? "" : "A name is needed." })
 
 // The tones of an icon at the top (topIconTone): the circle behind it, the LIGHT shape and the STRONG details, made
-// from the tones of SmartButton (the user, 2026-11-05: the icons of 02-comp-examples/dialog-centered.htm).
+// from the tones of SmartButton (the icons of 02-comp-examples/dialog-centered.htm).
 // WHY STRONG this deep: the details read on the light shape (2.6:1) and on the circle (3.6:1), a white mark on it (3.9:1)
 Dialog.ICON_TONES = {
     cyan: { circle: "#EAF6F7", light: "#A5D9DD", strong: "#36898F" },
@@ -902,11 +899,11 @@ Dialog.ICON_TONES = {
 
 // *** STYLE PACKAGES:
 // USAGE: Dialog({ style: { card: { round: 12 } } }) // Change only some keys. (The width of the card is the param width.)
-// NOTE: more packages come (the user, 2026-10-29); a new one needs only the keys that differ from ozden.
+// NOTE: more packages come; a new one needs only the keys that differ from ozden.
 Dialog.styles = {
     ozden: DialogDefaults.style,
 
-    // For a dark page (2026-11-06): the black tones of the kit; the fields and the buttons take their dark looks.
+    // For a dark page: the black tones of the kit; the fields and the buttons take their dark looks.
     ozdenDark: {
         cover: { color: Black(0.65) },
         card: {

@@ -6,7 +6,7 @@ TextareaB - v25.07
 
 UI COMPONENT TEMPLATE
 - You can customize, this template code as you need:
-- NEW PROJECTS (the user, 2026-11-05): styleName "ozden" on a light page, "ozdenDark" on a dark page (the packages
+- NEW PROJECTS: styleName "ozden" on a light page, "ozdenDark" on a dark page (the packages
   of InputB, comp/input-b.js; the look of 02-comp-examples/input-b-ex7-ozden.htm), unless the user asks for another one.
 
 
@@ -29,7 +29,7 @@ const TextareaBDefaults = {
     showCount: 1, // 0, 1
     lengthText: "length: ",
     warningText: "The entered text must be longer than 80",
-    warningColor: "#E5885E", // "#F1BF3C"
+    warningColor: "#E5885E",
     maxChar: 255,
     height: 170, // 170 (4line)
     rightPadding: 5,
@@ -77,7 +77,7 @@ const TextareaB = function(params = {}) {
     const autoGrow = function(elem) {
         elem.style.height = "auto"; // WHY: First reset, so scrollHeight is the height of the text (also when it got shorter).
         // WHY: not drawn yet (a closed tab, a Dialog filled before it opens): scrollHeight is 0 and a 0 px textarea
-        //      could not be seen or clicked (2026-11-05). box.onResize grows it when it is shown.
+        //      could not be seen or clicked. box.onResize grows it when it is shown.
         if (elem.scrollHeight === 0) return;
         elem.style.height = elem.scrollHeight + "px";
         // WHY: After the browser drew the new height.

@@ -6,7 +6,7 @@ EmailInputB - v25.07
 
 UI COMPONENT TEMPLATE
 - You can customize, this template code as you need:
-- NEW PROJECTS (the user, 2026-11-05): styleName "ozden" on a light page, "ozdenDark" on a dark page (the packages
+- NEW PROJECTS: styleName "ozden" on a light page, "ozdenDark" on a dark page (the packages
   of InputB, comp/input-b.js; the look of 02-comp-examples/input-b-ex7-ozden.htm), unless the user asks for another one.
 
 
@@ -26,7 +26,7 @@ const EmailInputBDefaults = {
     titleText: "EMAIL",
     placeholder: "example@site.com",
     warningText: "Invalid email format",
-    warningColor: "#E5885E", // "#F1BF3C"
+    warningColor: "#E5885E",
     maxChar: 40,
 };
 

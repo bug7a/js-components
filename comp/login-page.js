@@ -7,18 +7,18 @@ LoginPage - v26.10
 UI COMPONENT
 - A full page with two views: LOGIN and SIGN UP (a tab bar switches them). The page does the service work in
   onLoginClick / onSignupClick and calls box.waiting.show() / hide() and box.showAlert() around it.
-- The tab bar is comp-m4 Tabs (the pill variant, colored by the tab_ params), the waiting cover is comp-m4
+- The tab bar is Tabs (the pill variant, colored by the tab_ params), the waiting cover is
   LoadingScreen with the moving clock (box.waiting.show() / hide(); waitingCoverColor, waitingClock).
-  tabWidth (2026-11-05, the user): "auto" (default) is as wide as its tabs; a width (Ex: the panelWidth) makes the
+  tabWidth: "auto" (default) is as wide as its tabs; a width (Ex: the panelWidth) makes the
   tabs share it. tabStyle: more keys of the style of that Tabs (pillBar, tab, pillActive, pillIndicator...), over the
   look made from the tab_ params.
 - LoginPageLightStyle: the params of a light page (...LoginPageLightStyle, or mergeIntoIfMissing). Its tab bar
-  (2026-11-05, the user): one light gray (#EFEFEF), the edge of the Google / Apple buttons (Black(0.2)), a white
+: one light gray (#EFEFEF), the edge of the Google / Apple buttons (Black(0.2)), a white
   selected tab with a soft shadow (its tabStyle). A page that gives its own tabStyle after it replaces that shadow.
-- The LOGIN / SIGN UP buttons (2026-11-05, the user): buttonStyleName "" (default) keeps the flat buttons in
+- The LOGIN / SIGN UP buttons: buttonStyleName "" (default) keeps the flat buttons in
   primaryColor; a SmartButton template (Ex: "ozdenType3") makes them SmartButtons of the kit, in buttonTone (Ex:
   "blue"), with the text color of the tone. A passive one has the passive look of SmartButton.
-- The logos of createButtonWithIcon (2026-11-05, the user), drawn in the page (no links to other sites):
+- The logos of createButtonWithIcon, drawn in the page (no links to other sites):
   LoginPage.GOOGLE_LOGO (the colored G) and LoginPage.getAppleLogo(color) (the apple in one color on a transparent
   ground: give it the text color of its button, loginPage.style.customLoginButton.textColor).
 
@@ -49,7 +49,7 @@ const LoginPageDefaults = {
     //autoFit: 1, // add page.fit() function onResize
     primaryColor: "#2C5A38",
     tab_backgroundColorBottom: "#242424", // "#242424", "whitesmoke"
-    tab_backgroundColorTop: "#242424", // "#242424", "#DBDDDC",
+    tab_backgroundColorTop: "#242424",
     tab_borderColor: White(0.1), // White(0.1), Black(0),
     tab_border: 1, // 1, 0
     tab_textColor: White(0.75), // White(0.75), "#373836",
@@ -91,11 +91,10 @@ const LoginPageDefaults = {
 
 const LoginPageLightStyle = {
     panelName: "MY PANEL v25.08.11",
-    primaryColor: "#65A293", // "#2C5A38", "#65A293"
-    // THE TAB BAR (the user, 2026-11-05): one light gray (the ozden fields under the mouse; it was a gradient from
-    // whitesmoke to #DBDDDC), the edge of the Google / Apple buttons (customLoginButton), a white selected tab
-    tab_backgroundColorBottom: "#EFEFEF", // "#242424", "#EFEFEF"
-    tab_backgroundColorTop: "#EFEFEF", // "#242424", "#EFEFEF",
+    primaryColor: "#65A293",
+    // THE TAB BAR: one light gray (the ozden fields under the mouse), the edge of the Google / Apple buttons (customLoginButton), a white selected tab
+    tab_backgroundColorBottom: "#EFEFEF",
+    tab_backgroundColorTop: "#EFEFEF",
     tab_border: 1, // 1, 1
     tab_borderColor: Black(0.2), // White(0.1), Black(0.2),
     tab_textColor: "#373836", // White(0.75), "#373836",
@@ -103,9 +102,9 @@ const LoginPageLightStyle = {
     tabStyle: {
         pillIndicator: { shadow: "0 1px 2px rgba(0, 0, 0, 0.12)" }, // WHY: a white tab on the light gray is lost without it
     },
-    input_backgroundColor: "#F6F6F6", // "#141414", "#F6F6F6",
+    input_backgroundColor: "#F6F6F6",
     input_lineColor: "transparent",
-    input_selectedBackgroundColor: "#F3F4E0", // "#202020", "#F3F4E0",
+    input_selectedBackgroundColor: "#F3F4E0",
     input_textColor: Black(0.85), // Black(0.85), White(0.85)
     input_border: 1, // 1, 0
     input_borderColor: Black(0.1), // White(0.1), Black(0.1)
@@ -486,7 +485,7 @@ const LoginPage = function(params = {}) {
     // The LOGIN / SIGN UP bar: a pill Tabs in the colors of the tab_ params.
     const createTabBar = function() {
 
-        // WHY: the edge of the bar is drawn inside its padding (as the old bar did), so the bar is not bigger with it.
+        // WHY: the edge of the bar is drawn inside its padding, so the bar is not bigger with it.
         const barPadding = Math.max(0, TAB_BAR_PADDING - basic.num(box.tab_border));
 
         // (the keys of tabStyle win over the look made from the tab_ params)
@@ -594,7 +593,7 @@ const LoginPage = function(params = {}) {
         button.cursor = "pointer";
         UIEffects.press(button);
         // WHY the check: a passive button is only clickable 0 (no mouse), a <button> still clicks on Tab + Enter: an
-        //     invalid e-mail logged in, a 1-letter password signed up (2026-11-05)
+        //     invalid e-mail logged in, a 1-letter password signed up
         button.on("click", function(self, event) {
             if (button.clickable != 1) return;
             action(self, event);
@@ -639,8 +638,8 @@ const LoginPage = function(params = {}) {
 
 };
 
-// *** THE LOGOS OF THE SIGN-IN BUTTONS (createButtonWithIcon; the user, 2026-11-05)
-// WHY: They were links to other sites: the Apple one was a search result picture (a white apple in a black square).
+// *** THE LOGOS OF THE SIGN-IN BUTTONS (createButtonWithIcon)
+// WHY drawn here: no link to another site, no picture file.
 
 // An SVG text as a picture file (Icon.load).
 LoginPage.toSvgFile = function(svg) {

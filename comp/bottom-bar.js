@@ -17,8 +17,7 @@ NOTE: Each item needs two icon files: "home.png" (normal) and "homes.png" (selec
 THE NAME OF THE SELECTED ITEM (labelMode):
 - "inline" (the default): next to its icon, in the selected box.
 - "float": the selected box is only around the icon; the name shows over it in a small pill (style.floatLabel) and
-  fades out after floatLabelTime ms. The pill follows the selected box. (The tab bar of the old
-  javascript-mobile-app-template; sample: 02-comp-examples/bottom-bar-2.htm)
+  fades out after floatLabelTime ms. The pill follows the selected box. (Sample: 02-comp-examples/bottom-bar-2.htm)
 - "none": no names.
 ITEM COLORS: items[i].color is the color of the selected box behind that item (else style.selectedBox.color).
 BADGES: the badge param goes to the Badge of every item (its style is the badgeStyle of Badge). An item shows its
@@ -38,7 +37,7 @@ bar.setBadge(1, 5);
 bar.selectByIndex(0);
 bar.setLabelMode("float");
 
-// The tab bar of the old mobile app template: a white bar, a circle in the color of the item behind the selected
+// A tab bar: a white bar, a circle in the color of the item behind the selected
 // icon, its name over it for a moment, a number badge with a white ring (also "0" and "1").
 BottomBar({
     bottom: 0,
@@ -102,7 +101,7 @@ const BottomBarDefaults = {
             iconGap: 6,
             selectionPadding: 14,
             // px more after the name of the selected item: an icon file has an empty edge at its left, a name has none
-            // at its right, so the same padding looked smaller after the name (the user, 2026-11-02). 0: no more space
+            // at its right, so the same padding looked smaller after the name. 0: no more space
             labelEndSpace: 6,
         },
         icon: {

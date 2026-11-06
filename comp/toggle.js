@@ -5,17 +5,17 @@ Toggle - v25.08
 
 UI COMPONENT TEMPLATE
 - An on / off switch: a round knob (box.button) slides on a track (box.background). A click switches it.
-- Style packages: "modern" (default: the knob is smaller when off), "classic" (the old UIToggle), "dark" (for a dark
+- Style packages: "modern" (default: the knob is smaller when off), "classic", "dark" (for a dark
   page) and more shapes (toggle-2.htm). Select with styleName. (Toggle.styles)
--- "modern" (2026-11-05, the user): a darker line around the colored track when on (selectedBorderColor: the light
-   look had no clear edge when on). Its size (70 x 40) and its round knob as before.
-   2026-11-06 (the user): when on, a shadow to the left of the knob and a thin line around it, so the white knob stands
+-- "modern": a darker line around the colored track when on (selectedBorderColor: the light
+   look had no clear edge when on). Its size: 70 x 40, a round knob.
+   When on, a shadow to the left of the knob and a thin line around it, so the white knob stands
    out on the track (buttonStyle.selectedShadow). A page with its own selectedShadow keeps that.
--- "classic": the look of comp-m1/ui-toggle.js (javascript-mobile-app-template, a 600 px design): 60 x 40, a light
+-- "classic": for a 600 px design: 60 x 40, a light
    gray track that turns blue, a white knob of the same size on and off, with a shadow.
 -- A package is a package of params (basic.js v26.10.27): its keys fill the params you did not give, also the
    keys inside backgroundStyle and buttonStyle (Ex: the classic package with your own selectedColor).
--- "float", "round", "slim", "outline", "square": the other shapes of the old UIToggle, with their sizes, in soft colors
+-- "float", "round", "slim", "outline", "square": other shapes, with their sizes, in soft colors
    (the "Soft" palette of basic-designer). "float": a knob bigger than its track, "round": a big knob, "slim": a low
    track, "outline": a line around the track when off, "square": small corners.
 -- "tick", "badge", "label": with marks. "tick": a check or a cross on the track, "badge": in the knob, on a green or
@@ -102,7 +102,7 @@ const Toggle = function(params = {}) {
         if (params[name]) params[name] = Object.assign({}, params[name]);
     });
     // WHY: a page that gives its own line of the track (borderColor) keeps it when on too, as before: the line
-    //      of a package when on (modern: selectedBorderColor) is for the colors of that package (2026-11-05).
+    //      of a package when on (modern: selectedBorderColor) is for the colors of that package.
     const ownStyle = params.backgroundStyle || {};
     const keepsOwnLine = (ownStyle.borderColor !== undefined && ownStyle.selectedBorderColor === undefined);
 
@@ -165,7 +165,7 @@ const Toggle = function(params = {}) {
         const isOn = (box.state === "selected");
         const moved = `translateX(${isOn ? distance : 0}px)`;
         if (isPressed && isMotionOn()) return `${moved} scale(${PRESSED_KNOB_SCALE_X}, ${PRESSED_KNOB_SCALE_Y})`;
-        // WHY the old order here: animated: 0 writes the same text as before.
+        // WHY this order: with animated: 0 the transform text stays as it always was.
         return `scale(${isOn ? 1 : box.offButtonScale}) ${moved}`;
     };
 
@@ -413,7 +413,7 @@ const Toggle = function(params = {}) {
         box.switch();
     });
     // WHY the disabled check: a toggle disabled under the mouse (in its own onChange, while saving) was enabled again
-    //     by the next mouseout (clickable 0 itself fires one; on a phone: the next tap anywhere) (2026-11-05)
+    //     by the next mouseout (clickable 0 itself fires one; on a phone: the next tap anywhere)
     box.on("mouseover", function(self, event) {
         if (box.secondState === "disabled") return;
         box.setSecondState("mouseover");
@@ -449,9 +449,9 @@ Toggle.MARK_PATHS = {
 Toggle.styles = {
 
     // The look of ToggleDefaults: a whitesmoke track that turns blue, a small gray knob that grows when on.
-    // A darker line around the colored track when on (the user, 2026-11-05: the light look had no clear edge when on);
+    // A darker line around the colored track when on (the light look had no clear edge when on);
     // a page with its own line (borderColor) keeps it.
-    // WHY the two shadows of the knob when on (the user, 2026-11-06: the white knob did not stand out on its track):
+    // WHY the two shadows of the knob when on (the white knob did not stand out on its track):
     // the first falls only to the left, its negative spread keeps it inside the track. The second is the thin line
     // around the knob, in the strength of the line of the track. A real border would be gray over the white knob (no
     // sharper edge), and it would need a color for each state.
@@ -463,14 +463,14 @@ Toggle.styles = {
         },
     },
 
-    // For a dark page (2026-11-06): a black track that turns green, a soft knob (the dark card of toggle.htm).
+    // For a dark page: a black track that turns green, a soft knob (the dark card of toggle.htm).
     dark: {
         style: {},
         backgroundStyle: { color: "black", selectedColor: "#2C5A38", borderColor: White(0.25) },
         buttonStyle: { color: White(0.25), selectedColor: White(0.75) },
     },
 
-    // The look of the old UIToggle (comp-m1/ui-toggle.js, javascript-mobile-app-template, a 600 px design):
+    // For a 600 px design:
     // a light gray track that turns blue, a white knob of the same size on and off; its shadow falls to the
     // middle of the track.
     classic: {

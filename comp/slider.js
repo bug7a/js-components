@@ -5,21 +5,21 @@
 Slider - v26.11
 
 UI COMPONENT TEMPLATE
-- NEW PROJECTS (the user, 2026-11-06): a page or a project that needs a slider uses this component with styleName
+- NEW PROJECTS: a page or a project that needs a slider uses this component with styleName
   "round" (02-comp-examples/slider-round.htm), unless the user asks for another look. "classic" stays the default
   of the file, for the pages made before. On a dark page: "roundDark". SliderField (comp/slider-field.js, a
   slider in the shape of a field) is a parallel design: only when a page asks for that shape.
 - A value from minValue to maxValue (0 - 100 by default) on a step (1), chosen by dragging the thumb. The value
   bubble over the thumb shows the value while it is dragged (showValueOnDrag) and for a while after setValue()
-  (showValueOnSet). (2026-11-06: minValue, maxValue, step, setMinValue(), setMaxValue(), setStep(); it was 0 - 100.)
-- A press on the track (2026-11-06): the mouse moves the thumb there and drags from there. A finger: a move to the
+  (showValueOnSet). (minValue, maxValue, step, setMinValue(), setMaxValue(), setStep().)
+- A press on the track: the mouse moves the thumb there and drags from there. A finger: a move to the
   side drags from there, a tap moves the thumb there, a move up or down scrolls the page (touch-action: pan-y).
-- The keyboard (2026-11-06): ArrowRight / ArrowUp one step, ArrowLeft / ArrowDown one step back, PageUp / PageDown
+- The keyboard: ArrowRight / ArrowUp one step, ArrowLeft / ArrowDown one step back, PageUp / PageDown
   ten steps, Home / End the ends. role "slider" with aria-valuenow / valuemin / valuemax (ariaLabel: its name);
   a ring around the thumb only for the keyboard (style.focus).
 - A key, a tap and a click on the track are short drags for the page: onDragStart, onDragMove(value), onDragEnd,
   so a page that saves in onDragEnd saves them too.
-- Style packages (2026-11-06): "classic" (the default: inspired by Google Material 3: a thick track in two parts,
+- Style packages: "classic" (the default: inspired by Google Material 3: a thick track in two parts,
   a thin line for the thumb, a dot at the end), "round" (a thin track and a round white knob: the look of most web
   and phone sliders; a ring in the track color while it is dragged) and "roundDark" (round for a dark page).
   Select with styleName. (Slider.styles)
@@ -248,7 +248,7 @@ const Slider = function(params = {}) {
         if (newLeft > maxLeft) newLeft = maxLeft;
         // WHY round: parseInt cut the fraction of the position, so setValue(50) gave 49 (46 of 101 values were one less)
         // WHY only with a width: a slider not drawn yet (a closed tab, a hidden group: width 0) has no position to read;
-        //     its value became the minimum, and a settings page saved 0 (2026-11-05)
+        //     its value became the minimum, and a settings page saved 0
         let value = box.currentValue;
         if (maxLeft > 0) {
             value = toStepValue(((newLeft / maxLeft) * getValueRange()) + box.minValue);
@@ -715,7 +715,7 @@ Slider.styles = {
     // thumb (thinner while it is dragged), a dot at the end of the empty track.
     classic: SliderDefaults.style,
 
-    // The look of most web and phone sliders (2026-11-06): a thin round track, a round white knob with a soft
+    // The look of most web and phone sliders: a thin round track, a round white knob with a soft
     // shadow, a ring in the track color while it is dragged, a small value bubble. A package of params: the colors
     // and the height of the track are params, a page can give its own.
     round: {
@@ -754,7 +754,7 @@ Slider.styles = {
         },
     },
 
-    // The round look for a dark page (2026-11-06): a light empty track, the main cyan of the kit, a stronger ring
+    // The round look for a dark page: a light empty track, the main cyan of the kit, a stronger ring
     // and a light value bubble with a dark text (a dark bubble was lost on the page).
     roundDark: {
         trackHeight: 6,

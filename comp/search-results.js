@@ -12,7 +12,7 @@ UI COMPONENT
   a new header. (Ex: "Pages", "Users", "Orders")
 - It is always created on the page and placed with fixed position, so it is never clipped by the
   bar or the group it is called from, and it stays on the screen on a small screen.
-- The width (2026-11-05, the user): maxWidth (default 380) whatever the width of the anchor; matchAnchorWidth: 1
+- The width: maxWidth (default 380) whatever the width of the anchor; matchAnchorWidth: 1
   makes the list as wide as the anchor, so both edges meet on a phone and on a wide screen (maxWidth is not used
   then). Never wider than the screen. setMatchAnchorWidth(). Sample: 02-comp-examples/search-results.htm
 - The list scrolls with basic/scroll-bar.js (ScrollBar), not with the scrollbar of the browser.
@@ -306,7 +306,7 @@ const SearchResults = function (params = {}) {
             const left = (box.anchorAlign === "left") ? withPageZoom(rect.left) : withPageZoom(rect.right) - width;
             box.left = Math.max(box.screenMargin, Math.min(left, page.width - width - box.screenMargin));
             // WHY the room: the list was always under the anchor, so under a field low on the screen its rows were
-            //     below the window (the box itself out of the screen: they could not be scrolled up) (2026-11-05)
+            //     below the window (the box itself out of the screen: they could not be scrolled up)
             const anchorTop = withPageZoom(rect.top);
             const anchorBottom = withPageZoom(rect.bottom);
             const roomBelow = page.height - anchorBottom - box.offsetY - box.screenMargin;
