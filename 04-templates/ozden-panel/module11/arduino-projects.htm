@@ -719,9 +719,9 @@
                             createSmallTitle("D5 · Fan speed (PWM)");
                             lblPwm = Label({ text: "", fontSize: 14, textColor: Ink(0.9) });
                         endGroup();
-                        // NOTE: Slider (comp-m2) sends the value (0 - 100) to onDragMove, not the object.
-                        pwmSlider = createSlider(ACCENT_COLOR, function (value) {
-                            board.pwm = Math.round(value / 100 * 255);
+                        // NOTE: Slider sends the value to onDragMove, not the object.
+                        pwmSlider = createSlider(ACCENT_COLOR, { minValue: 0, maxValue: 255, step: 1 }, function (value) {
+                            board.pwm = value;
                             lblPwm.text = board.pwm + " / 255";
                         }, function () {
                             addSerial(board, "analogWrite(D5, " + board.pwm + ")");
@@ -801,7 +801,7 @@
 
             isRendering = 1;
             intervalStepper.setValue(board.intervalMs, 1);
-            pwmSlider.setValue(Math.round(board.pwm / 255 * 100));
+            pwmSlider.setValue(board.pwm);
             RadioButton.setValue("arduinoMode", board.mode, 1);
             isRendering = 0;
 
@@ -1011,16 +1011,18 @@
             return btn;
         };
 
-        const createSlider = function (color, onDragMove, onDragEnd) {
+        // range: { minValue, maxValue, step }: the real values of the setting (no converter)
+        const createSlider = function (color, range, onDragMove, onDragEnd) {
             return Slider({
                 width: "100%",
-                trackHeight: 8,
-                minThumbHeight: 26,
+                styleName: T.sliderStyle,
+                minThumbHeight: 36, // WHY 36: the ring of a dragged knob (24 + 2 x 6 px) fits; the default 44 made the cards taller
                 trackColor: color,
-                trackBackgroundColor: Ink(0.1),
-                thumbColor: Ink(0.9),
+                minValue: range.minValue,
+                maxValue: range.maxValue,
+                step: range.step,
                 showValueOnSet: 0,
-                showValueOnDrag: 0, // WHY: Slider shows 0-100. The real value is in a label.
+                showValueOnDrag: 0, // WHY: the value is shown in a label.
                 onDragMove: onDragMove,
                 onDragEnd: onDragEnd,
             });

@@ -15,6 +15,7 @@ USAGE (in a page or a component):
     Label({ text: "Saved", textColor: Theme.textOn(T.primary) });       // Text on a colored box
     icon.elem.style.filter = T.iconFilter;                              // Panel icons are black files
     Tabs({ styleName: T.compStyle });                                   // Style package of a component
+    Slider({ styleName: T.sliderStyle });                               // round, or roundDark on a dark theme
     Theme.confirm({ titleText: "Delete?", onAnswer: fn });            // Dialog, also Theme.tabsStyle(), tableStyle(), createWaiting()
 
 NOTE: Ink(alpha) is white on the dark themes and black on the light one. It is the ink of texts,
@@ -80,6 +81,7 @@ Theme.list = {
         scrollBar: "#A0A0A0",
         chartTheme: "dark", // GraphBox
         compStyle: "dark", // Tabs, Stepper, Gauge... style packages
+        sliderStyle: "roundDark", // Slider (the slider of new pages: round, roundDark on a dark page)
         iconFilter: "invert(100%)", // The icon files of the panel are black
         invertIcon: 1, // invertIconColor / invertColor parameters
     },
@@ -129,6 +131,7 @@ Theme.list = {
         scrollBar: "#8A8F92",
         chartTheme: "light",
         compStyle: "modern",
+        sliderStyle: "round",
         iconFilter: "none",
         invertIcon: 0,
     },
@@ -174,6 +177,7 @@ Theme.list = {
         scrollBar: "#8FA2BC",
         chartTheme: "dark",
         compStyle: "dark",
+        sliderStyle: "roundDark",
         iconFilter: "invert(100%)",
         invertIcon: 1,
     },

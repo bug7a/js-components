@@ -429,16 +429,18 @@
             });
         };
 
-        const createSlider = function (color, onDragMove, onDragEnd) {
+        // range: { minValue, maxValue, step }: the real values of the setting (no converter)
+        const createSlider = function (color, range, onDragMove, onDragEnd) {
             return Slider({
                 width: 250,
-                trackHeight: 8,
-                minThumbHeight: 26,
+                styleName: T.sliderStyle,
+                minThumbHeight: 36, // WHY 36: the ring of a dragged knob (24 + 2 x 6 px) fits; the default 44 made the cards taller
                 trackColor: color,
-                trackBackgroundColor: Ink(0.1),
-                thumbColor: Ink(0.9),
+                minValue: range.minValue,
+                maxValue: range.maxValue,
+                step: range.step,
                 showValueOnSet: 0,
-                showValueOnDrag: 0, // WHY: Slider shows 0-100. The real value is shown in a label.
+                showValueOnDrag: 0, // WHY: the value is shown in a label.
                 onDragMove: onDragMove,
                 onDragEnd: onDragEnd,
             });
@@ -641,10 +643,10 @@
                         lblSpeed = Label({ text: "", fontSize: 15, textColor: Ink(0.95) });
                         that.elem.style.fontFamily = "opensans-bold";
                     endGroup();
-                    sliderSpeed = createSlider(ACCENT_COLOR,
-                        function (value) { lblSpeed.text = sliderToSpeed(value) + "%"; },
+                    sliderSpeed = createSlider(ACCENT_COLOR, { minValue: 50, maxValue: 200, step: 10 },
+                        function (value) { lblSpeed.text = value + "%"; },
                         function () {
-                            const speed = sliderToSpeed(sliderSpeed.getValue());
+                            const speed = sliderSpeed.getValue();
                             if (speed == printer.speed) return;
                             printer.speed = speed;
                             addEvent(printer, "Info", "Print speed set to " + speed + "%");
@@ -660,10 +662,10 @@
                         lblFan = Label({ text: "", fontSize: 15, textColor: Ink(0.95) });
                         that.elem.style.fontFamily = "opensans-bold";
                     endGroup();
-                    sliderFan = createSlider(BED_COLOR,
-                        function (value) { lblFan.text = Math.round(value) + "%"; },
+                    sliderFan = createSlider(BED_COLOR, { minValue: 0, maxValue: 100, step: 1 },
+                        function (value) { lblFan.text = value + "%"; },
                         function () {
-                            const fan = Math.round(sliderFan.getValue());
+                            const fan = sliderFan.getValue();
                             if (fan == printer.fan) return;
                             printer.fan = fan;
                             addEvent(printer, "Info", "Fan speed set to " + fan + "%");
@@ -936,16 +938,6 @@
                 "</svg>";
         };
 
-        // *** VALUE CONVERTERS:
-
-        const sliderToSpeed = function (value) {
-            return Math.round((50 + value * 1.5) / 10) * 10; // 50% - 200%
-        };
-
-        const speedToSlider = function (speed) {
-            return (speed - 50) / 1.5;
-        };
-
         // *** ACTIONS:
 
         const jog = function (axis, step) {
@@ -1142,8 +1134,8 @@
             const p = printer;
             isRendering = 1;
 
-            if (sliderToSpeed(sliderSpeed.getValue()) != p.speed) sliderSpeed.setValue(speedToSlider(p.speed));
-            if (Math.round(sliderFan.getValue()) != p.fan) sliderFan.setValue(p.fan);
+            if (sliderSpeed.getValue() != p.speed) sliderSpeed.setValue(p.speed);
+            if (sliderFan.getValue() != p.fan) sliderFan.setValue(p.fan);
             if (toggleLights.value !== p.lights) toggleLights.setValue(p.lights);
 
             const presetIndex = PRESETS.findIndex(function (preset) { return preset.nozzle == p.nozzle.target && preset.bed == p.bed.target; });

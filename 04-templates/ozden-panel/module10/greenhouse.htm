@@ -520,16 +520,18 @@
             return btn;
         };
 
-        const createSlider = function (color, onDragMove, onDragEnd) {
+        // range: { minValue, maxValue, step }: the real values of the setting (no converter)
+        const createSlider = function (color, range, onDragMove, onDragEnd) {
             return Slider({
                 width: 250,
-                trackHeight: 8,
-                minThumbHeight: 26,
+                styleName: T.sliderStyle,
+                minThumbHeight: 36, // WHY 36: the ring of a dragged knob (24 + 2 x 6 px) fits; the default 44 made the cards taller
                 trackColor: color,
-                trackBackgroundColor: Ink(0.1),
-                thumbColor: Ink(0.9),
+                minValue: range.minValue,
+                maxValue: range.maxValue,
+                step: range.step,
                 showValueOnSet: 0,
-                showValueOnDrag: 0, // WHY: Slider shows 0-100. The real value is shown in a label.
+                showValueOnDrag: 0, // WHY: the value is shown in a label.
                 onDragMove: onDragMove,
                 onDragEnd: onDragEnd,
             });
@@ -840,10 +842,10 @@
                                 setpointLabels[item.key] = Label({ text: "", fontSize: 15, textColor: Ink(0.95) });
                                 that.elem.style.fontFamily = "opensans-bold";
                             endGroup();
-                            setpointSliders[item.key] = createSlider(item.color,
-                                function (value) { setpointLabels[item.key].text = sliderToRange(value, item.min, item.max) + item.unit; },
+                            setpointSliders[item.key] = createSlider(item.color, { minValue: item.min, maxValue: item.max, step: 1 },
+                                function (value) { setpointLabels[item.key].text = value + item.unit; },
                                 function () {
-                                    const v = sliderToRange(setpointSliders[item.key].getValue(), item.min, item.max);
+                                    const v = setpointSliders[item.key].getValue();
                                     if (v === zone.setpoints[item.key]) return;
                                     zone.setpoints[item.key] = v;
                                     setpointLabels[item.key].text = v + item.unit;
@@ -889,10 +891,10 @@
                             lblVent = Label({ text: "", fontSize: 15, textColor: Ink(0.95) });
                             that.elem.style.fontFamily = "opensans-bold";
                         endGroup();
-                        sliderVent = createSlider(ACCENT_COLOR,
-                            function (value) { lblVent.text = Math.round(value / 10) * 10 + "% open"; },
+                        sliderVent = createSlider(ACCENT_COLOR, { minValue: 0, maxValue: 100, step: 10 },
+                            function (value) { lblVent.text = value + "% open"; },
                             function () {
-                                const v = Math.round(sliderVent.getValue() / 10) * 10;
+                                const v = sliderVent.getValue();
                                 if (v === zone.vent) return;
                                 zone.vent = v;
                                 addEvent(zone, "Info", "Roof vents set to " + v + "% (manual)");
@@ -929,10 +931,10 @@
                             lblIrrigation = Label({ text: "", fontSize: 15, textColor: Ink(0.95) });
                             that.elem.style.fontFamily = "opensans-bold";
                         endGroup();
-                        sliderIrrigation = createSlider(HUMIDITY_COLOR,
-                            function (value) { lblIrrigation.text = sliderToRange(value, 2, 20) + " min"; },
+                        sliderIrrigation = createSlider(HUMIDITY_COLOR, { minValue: 2, maxValue: 20, step: 1 },
+                            function (value) { lblIrrigation.text = value + " min"; },
                             function () {
-                                const v = sliderToRange(sliderIrrigation.getValue(), 2, 20);
+                                const v = sliderIrrigation.getValue();
                                 if (v === zone.irrigationMinutes) return;
                                 zone.irrigationMinutes = v;
                                 addEvent(zone, "Info", "Irrigation run time set to " + v + " min");
@@ -1056,16 +1058,6 @@
                 bays +
                 "</svg>";
 
-        };
-
-        // *** VALUE CONVERTERS:
-
-        const sliderToRange = function (value, min, max) {
-            return Math.round(min + value / 100 * (max - min));
-        };
-
-        const rangeToSlider = function (v, min, max) {
-            return (v - min) / (max - min) * 100;
         };
 
         // *** ACTIONS:
@@ -1242,7 +1234,7 @@
             Object.keys(setpointSliders).forEach(function (key) {
                 const item = setpointSliders[key].range;
                 setpointLabels[key].text = zone.setpoints[key] + item.unit;
-                if (sliderToRange(setpointSliders[key].getValue(), item.min, item.max) !== zone.setpoints[key]) setpointSliders[key].setValue(rangeToSlider(zone.setpoints[key], item.min, item.max));
+                if (setpointSliders[key].getValue() !== zone.setpoints[key]) setpointSliders[key].setValue(zone.setpoints[key]);
             });
             isRendering = 0;
             renderCharts();
@@ -1258,7 +1250,7 @@
                 actuatorStates[item.key].color = (on) ? ((item.key === "lights") ? LIGHT_COLOR : (item.key === "irrigation") ? HUMIDITY_COLOR : ACCENT_COLOR) : Ink(0.2);
             });
             lblVent.text = z.vent + "% open";
-            if (Math.round(sliderVent.getValue() / 10) * 10 !== z.vent) sliderVent.setValue(z.vent);
+            if (sliderVent.getValue() !== z.vent) sliderVent.setValue(z.vent);
             setInteractive(sliderVent, manual);
             isRendering = 0;
         };
@@ -1268,7 +1260,7 @@
             selectLightFrom.setTime(zone.lightFrom, 1);
             selectLightTo.setTime(zone.lightTo, 1);
             lblIrrigation.text = zone.irrigationMinutes + " min";
-            if (sliderToRange(sliderIrrigation.getValue(), 2, 20) !== zone.irrigationMinutes) sliderIrrigation.setValue(rangeToSlider(zone.irrigationMinutes, 2, 20));
+            if (sliderIrrigation.getValue() !== zone.irrigationMinutes) sliderIrrigation.setValue(zone.irrigationMinutes);
             chkRain.setChecked((zone.skipRain) ? 1 : 0, 1);
             isRendering = 0;
         };

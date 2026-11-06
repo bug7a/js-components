@@ -97,8 +97,9 @@ const SettingsPage = function(params = {}) {
         { key: "security", title: "Security alerts", desc: "New sign in, password change" },
     ];
 
-    const SESSION_TIMEOUT_MIN = 5; // Minutes (Slider: 0)
-    const SESSION_TIMEOUT_MAX = 120; // Minutes (Slider: 100)
+    const SESSION_TIMEOUT_MIN = 5; // Minutes
+    const SESSION_TIMEOUT_MAX = 120; // Minutes
+    const SESSION_TIMEOUT_STEP = 5; // Minutes
 
     // Settings
     let saved = SettingsPage.load();
@@ -145,16 +146,6 @@ const SettingsPage = function(params = {}) {
     const formatDateBy = function(format, date) {
         const pad = function(n) { return String(n).padStart(2, "0"); };
         return format.replace("YYYY", date.getFullYear()).replace("MM", pad(date.getMonth() + 1)).replace("DD", pad(date.getDate()));
-    };
-
-    const timeoutToSlider = function(minutes) {
-        return Math.round((minutes - SESSION_TIMEOUT_MIN) / (SESSION_TIMEOUT_MAX - SESSION_TIMEOUT_MIN) * 100);
-    };
-
-    // 5 minute steps
-    const sliderToTimeout = function(value) {
-        const minutes = SESSION_TIMEOUT_MIN + value / 100 * (SESSION_TIMEOUT_MAX - SESSION_TIMEOUT_MIN);
-        return Math.round(minutes / 5) * 5;
     };
 
     const maskApiKey = function(key) {
@@ -216,7 +207,7 @@ const SettingsPage = function(params = {}) {
         selectTimes[1].setTime(values.quietTo, 1);
         selectTimes.forEach(function(selectTime) { selectTime.setEnabled(values.quietHours); });
 
-        sliderTimeout.setValue(timeoutToSlider(values.sessionTimeout));
+        sliderTimeout.setValue(values.sessionTimeout);
         lblTimeout.text = values.sessionTimeout + " min";
 
         lblApiKey.text = (isApiKeyVisible) ? values.apiKey : maskApiKey(values.apiKey);
@@ -766,18 +757,20 @@ const SettingsPage = function(params = {}) {
 
                         sliderTimeout = Slider({
                             width: 200,
-                            trackHeight: 10,
-                            minThumbHeight: 28,
+                            styleName: T.sliderStyle,
+                            minThumbHeight: 36, // WHY 36: the ring of a dragged knob (24 + 2 x 6 px) fits; the default 44 made the row taller
                             trackColor: ACCENT_COLOR,
-                            trackBackgroundColor: Ink(0.1),
-                            thumbColor: Ink(0.9),
+                            minValue: SESSION_TIMEOUT_MIN,
+                            maxValue: SESSION_TIMEOUT_MAX,
+                            step: SESSION_TIMEOUT_STEP,
+                            ariaLabel: "Session timeout",
                             showValueOnSet: 0,
-                            showValueOnDrag: 0, // WHY: Slider shows 0-100. Minutes are shown in lblTimeout.
+                            showValueOnDrag: 0, // WHY: the minutes are shown in lblTimeout.
                             onDragMove: function(value) {
-                                lblTimeout.text = sliderToTimeout(value) + " min";
+                                lblTimeout.text = value + " min";
                             },
                             onDragEnd: function() {
-                                setDraft("sessionTimeout", sliderToTimeout(sliderTimeout.getValue()));
+                                setDraft("sessionTimeout", sliderTimeout.getValue());
                             },
                         });
 

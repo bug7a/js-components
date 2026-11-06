@@ -61,8 +61,8 @@
         const ERROR_COLOR = T.danger;
         const CHART_COLORS = [ACCENT_COLOR, T.accent2, WARNING_COLOR, "#D55181", "#9085E9"];
 
-        const TARGET_MIN = -30; // °C (Slider: 0)
-        const TARGET_MAX = 10; // °C (Slider: 100)
+        const TARGET_MIN = -30; // °C (the left end of the slider)
+        const TARGET_MAX = 10; // °C
         const CHART_COUNT = 30; // Seconds on the chart
         const HISTORY_COUNT = 60; // Values kept for the mini graphs
         const LATEST_FIRMWARE = "v2.5.0";
@@ -411,14 +411,6 @@
 
         const isControllable = function (d) {
             return d.online && !d.restarting;
-        };
-
-        const targetToSlider = function (target) {
-            return Math.round((target - TARGET_MIN) / (TARGET_MAX - TARGET_MIN) * 100);
-        };
-
-        const sliderToTarget = function (value) {
-            return Math.round(TARGET_MIN + value / 100 * (TARGET_MAX - TARGET_MIN));
         };
 
         // WHY: Some components have no enabled setting. "inert" blocks the mouse and keyboard for all the children.
@@ -878,18 +870,18 @@
 
                         sliderTarget = Slider({
                             width: 280,
-                            trackHeight: 10,
-                            minThumbHeight: 28,
+                            styleName: T.sliderStyle,
+                            minThumbHeight: 36, // WHY 36: the ring of a dragged knob (24 + 2 x 6 px) fits; the default 44 made the card taller
                             trackColor: ACCENT_COLOR,
-                            trackBackgroundColor: Ink(0.1),
-                            thumbColor: Ink(0.9),
+                            minValue: TARGET_MIN,
+                            maxValue: TARGET_MAX,
                             showValueOnSet: 0,
-                            showValueOnDrag: 0, // WHY: Slider shows 0-100. The real value is shown in lblTarget.
+                            showValueOnDrag: 0, // WHY: the value is shown in lblTarget.
                             onDragMove: function (value) {
-                                lblTarget.text = sliderToTarget(value) + " °C";
+                                lblTarget.text = value + " °C";
                             },
                             onDragEnd: function () {
-                                const target = sliderToTarget(sliderTarget.getValue());
+                                const target = sliderTarget.getValue();
                                 if (target == device.target) return;
                                 device.target = target;
                                 addEvent(device, "Info", "Target temperature set to " + target + " °C");
@@ -1154,7 +1146,7 @@
 
             lblTarget.text = d.target + " °C";
             infoLabels.setpoint.text = d.target + " °C";
-            if (sliderToTarget(sliderTarget.getValue()) != d.target) sliderTarget.setValue(targetToSlider(d.target));
+            if (sliderTarget.getValue() != d.target) sliderTarget.setValue(d.target);
             setInteractive(sliderTarget, controllable);
 
             selectDefrostTime.setTime(d.defrostTime, 1);

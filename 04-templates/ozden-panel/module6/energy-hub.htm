@@ -534,16 +534,18 @@
             });
         };
 
-        const createSlider = function (width, color, onDragMove, onDragEnd) {
+        // range: { minValue, maxValue, step }: the real values of the setting (no converter)
+        const createSlider = function (width, color, range, onDragMove, onDragEnd) {
             const slider = Slider({
                 width: width,
-                trackHeight: 8,
-                minThumbHeight: 26,
+                styleName: T.sliderStyle,
+                minThumbHeight: 36, // WHY 36: the ring of a dragged knob (24 + 2 x 6 px) fits; the default 44 made the cards taller
                 trackColor: color,
-                trackBackgroundColor: Ink(0.1),
-                thumbColor: Ink(0.9),
+                minValue: range.minValue,
+                maxValue: range.maxValue,
+                step: range.step,
                 showValueOnSet: 0,
-                showValueOnDrag: 0, // WHY: Slider shows 0-100. The real value is shown in a label.
+                showValueOnDrag: 0, // WHY: the value is shown in a label.
                 onDragMove: onDragMove,
                 onDragEnd: onDragEnd,
             });
@@ -889,10 +891,10 @@
                             that.elem.style.fontFamily = "opensans-bold";
                         endGroup();
 
-                        sliderReserve = createSlider(260, WARNING_COLOR,
-                            function (value) { lblReserve.text = sliderToReserve(value) + "%"; },
+                        sliderReserve = createSlider(260, WARNING_COLOR, { minValue: 10, maxValue: 90, step: 5 },
+                            function (value) { lblReserve.text = value + "%"; },
                             function () {
-                                const reserve = sliderToReserve(sliderReserve.getValue());
+                                const reserve = sliderReserve.getValue();
                                 if (reserve == system.reserve) return;
                                 system.reserve = reserve;
                                 addEvent("Info", "Battery reserve set to " + reserve + "%");
@@ -950,10 +952,10 @@
                             that.elem.style.fontFamily = "opensans-bold";
                         endGroup();
 
-                        sliderEvLimit = createSlider(260, EV_COLOR,
-                            function (value) { lblEvLimit.text = getLimitText(sliderToAmps(value)); },
+                        sliderEvLimit = createSlider(260, EV_COLOR, { minValue: 6, maxValue: 32, step: 1 },
+                            function (value) { lblEvLimit.text = getLimitText(value); },
                             function () {
-                                const amps = sliderToAmps(sliderEvLimit.getValue());
+                                const amps = sliderEvLimit.getValue();
                                 if (amps == system.ev.limitA) return;
                                 system.ev.limitA = amps;
                                 addEvent("Info", "EV current limit set to " + amps + " A");
@@ -1143,22 +1145,6 @@
         };
 
         // *** VALUE CONVERTERS:
-
-        const sliderToReserve = function (value) {
-            return Math.round((10 + value * 0.8) / 5) * 5; // 10% - 90%
-        };
-
-        const reserveToSlider = function (reserve) {
-            return (reserve - 10) / 0.8;
-        };
-
-        const sliderToAmps = function (value) {
-            return Math.round(6 + value / 100 * 26); // 6 A - 32 A
-        };
-
-        const ampsToSlider = function (amps) {
-            return (amps - 6) / 26 * 100;
-        };
 
         const getLimitText = function (amps) {
             return amps + " A · " + (amps * 230 / 1000).toFixed(1) + " kW";
@@ -1352,7 +1338,7 @@
 
             RadioButton.setValue("energyMode", system.mode, 1);
             lblReserve.text = system.reserve + "%";
-            if (sliderToReserve(sliderReserve.getValue()) != system.reserve) sliderReserve.setValue(reserveToSlider(system.reserve));
+            if (sliderReserve.getValue() != system.reserve) sliderReserve.setValue(system.reserve);
 
             const info = {
                 self: "The battery is used down to the reserve. The reserve is kept for power cuts.",
@@ -1373,7 +1359,7 @@
 
             if (toggleEv.value !== ev.enabled) toggleEv.setValue(ev.enabled);
             lblEvLimit.text = getLimitText(ev.limitA);
-            if (sliderToAmps(sliderEvLimit.getValue()) != ev.limitA) sliderEvLimit.setValue(ampsToSlider(ev.limitA));
+            if (sliderEvLimit.getValue() != ev.limitA) sliderEvLimit.setValue(ev.limitA);
             chkSolarOnly.setChecked(ev.solarOnly, 1);
             const index = TARGET_SOC_LIST.indexOf(ev.targetSoc);
             if (index >= 0 && index != targetSelect.selectedIndex) targetSelect.setSelectedIndex(index);

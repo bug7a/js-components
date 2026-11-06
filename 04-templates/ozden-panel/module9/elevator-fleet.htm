@@ -562,16 +562,18 @@
             return btn;
         };
 
-        const createSlider = function (color, onDragMove, onDragEnd) {
+        // range: { minValue, maxValue, step }: the real values of the setting (no converter)
+        const createSlider = function (color, range, onDragMove, onDragEnd) {
             return Slider({
                 width: 250,
-                trackHeight: 8,
-                minThumbHeight: 26,
+                styleName: T.sliderStyle,
+                minThumbHeight: 36, // WHY 36: the ring of a dragged knob (24 + 2 x 6 px) fits; the default 44 made the cards taller
                 trackColor: color,
-                trackBackgroundColor: Ink(0.1),
-                thumbColor: Ink(0.9),
+                minValue: range.minValue,
+                maxValue: range.maxValue,
+                step: range.step,
                 showValueOnSet: 0,
-                showValueOnDrag: 0, // WHY: Slider shows 0-100. The real value is shown in a label.
+                showValueOnDrag: 0, // WHY: the value is shown in a label.
                 onDragMove: onDragMove,
                 onDragEnd: onDragEnd,
             });
@@ -867,10 +869,10 @@
                             lblHold = Label({ text: "", fontSize: 15, textColor: Ink(0.95) });
                             that.elem.style.fontFamily = "opensans-bold";
                         endGroup();
-                        sliderHold = createSlider(WARNING_COLOR,
-                            function (value) { lblHold.text = sliderToHold(value) + " s"; },
+                        sliderHold = createSlider(WARNING_COLOR, { minValue: 2, maxValue: 10, step: 1 },
+                            function (value) { lblHold.text = value + " s"; },
                             function () {
-                                const hold = sliderToHold(sliderHold.getValue());
+                                const hold = sliderHold.getValue();
                                 if (hold === fleet.doorHoldTicks) return;
                                 fleet.doorHoldTicks = hold;
                                 addEvent(car, "Info", "Door hold time set to " + hold + " s");
@@ -1060,16 +1062,6 @@
                 "<text id='load-value' x='" + cx + "' y='" + (cy - 8) + "' text-anchor='middle' style='fill:" + Ink(0.95) + "; font-size:26px; font-weight:bold'></text>" +
                 "<text id='load-percent' x='" + cx + "' y='" + (cy + 12) + "' text-anchor='middle' style='fill:" + Ink(0.45) + "; font-size:12px'></text>" +
                 "</svg>";
-        };
-
-        // *** VALUE CONVERTERS:
-
-        const sliderToHold = function (value) {
-            return Math.round(2 + value / 100 * 8); // 2 - 10 seconds
-        };
-
-        const holdToSlider = function (hold) {
-            return (hold - 2) / 8 * 100;
         };
 
         // *** ACTIONS:
@@ -1357,7 +1349,7 @@
             };
             lblModeInfo.text = info[car.mode];
             lblHold.text = fleet.doorHoldTicks + " s";
-            if (sliderToHold(sliderHold.getValue()) !== fleet.doorHoldTicks) sliderHold.setValue(holdToSlider(fleet.doorHoldTicks));
+            if (sliderHold.getValue() !== fleet.doorHoldTicks) sliderHold.setValue(fleet.doorHoldTicks);
             isRendering = 0;
         };
 
