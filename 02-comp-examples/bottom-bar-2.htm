@@ -20,7 +20,7 @@
 
     /* Bismillah */
 
-    // BottomBar (comp-m3) drawn like the tab bar of the old javascript-mobile-app-template: a white bar, a circle in
+    // BottomBar drawn like the tab bar of a mobile app: a white bar, a circle in
     // the color of the selected item behind its icon (it slides to the item), the name of the item over it for a
     // moment (labelMode: "float") and a number badge with a white ring. The page is a 600 px design fitted to the
     // screen (page.fit), like 04-templates/mobile-app-template/classic: every size is a px of that design.
@@ -29,14 +29,15 @@
     const MAX_ZOOM_WIDTH = 600; // A wider screen does not make the design bigger: the column is in the middle.
     const BAR_HEIGHT = 80;
     const ICON_SIZE = 40;
-    const CIRCLE_PADDING = 14; // The circle around the selected icon (68 px, in the 80 px bar), as in the classic template
+    // The circle around the selected icon (68 px, in the 80 px bar), as in the classic template
+    const CIRCLE_PADDING = 14;
     const NAME_SPACE = 19; // Between the circle and the name over it
     const TASKS_INDEX = 3;
     const TASKS_FIRST_BADGE = 3;
     const BADGE_VALUES = [0, 1, 3, 120, ""]; // "": no badge
     const ICON_FOLDER = "bottom-bar/";
 
-    // The tabs of the old template. color: the circle behind the selected icon (none: style.selectedBox.color)
+    // The tabs. color: the circle behind the selected icon (none: style.selectedBox.color)
     const TABS = [
         { icon: ICON_FOLDER + "home.png", text: "Home", color: "#5ABB9F" },
         { icon: ICON_FOLDER + "search.png", text: "Search" },
@@ -51,7 +52,7 @@
     let lblSelected;
     let lblBadge;
 
-    // The look of the old template (a new object for every bar: a bar fills its defaults into its style)
+    // The look of the bar (a new object for every bar: a bar fills its defaults into its style)
     const getOldTemplateStyle = function () {
         return {
             // WHY gradient: it is the CSS background of the bar box, written over its color.
@@ -64,7 +65,7 @@
         };
     };
 
-    // The number badge of the old template: indianred with a white ring, also "0" and "1"
+    // The number badge: indianred with a white ring, also "0" and "1"
     const getOldTemplateBadge = function () {
         return {
             showZero: 1,
@@ -104,7 +105,16 @@
 
     // A card: a title and its content (endCard closes it)
     const startCard = function (title) {
-        VGroup({ width: "100%", height: "auto", align: "left top", gap: 16, padding: 24, color: "#E8E8E4", round: 16, clipContent: 0 });
+        VGroup({
+            width: "100%",
+            height: "auto",
+            align: "left top",
+            gap: 16,
+            padding: 24,
+            color: "#E8E8E4",
+            round: 16,
+            clipContent: 0,
+        });
             Label({ text: title, fontSize: 22, bold: 1, textColor: Black(0.8) });
     };
 

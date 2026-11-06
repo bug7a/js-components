@@ -63,7 +63,10 @@
                 // GROUP: The buttons
                 HGroup({ width: "100%", height: "auto", align: "center center", gap: 8, wrap: 1 });
                     btnList = SmartButton({ labelText: "Hide the list", onClick: toggleList });
-                    SmartButton({ labelText: "A wide list", onClick: function () { eachOuter(function (split) { split.setFirstSize("50%"); }); } });
+                    SmartButton({
+                        labelText: "A wide list",
+                        onClick: function () { eachOuter(function (split) { split.setFirstSize("50%"); }); },
+                    });
                 endGroup();
 
                 // GROUP: The two themes side by side (one under the other on a narrow screen)
@@ -95,7 +98,13 @@
         // GROUP: A title and a small window with two Splitters
         const createWindow = function (titleText, noteText, styleName, treeStyleName, windowColor, lineColor, softColor) {
 
-            VGroup({ width: "auto", height: "auto", align: "left top", gap: 8, css: { flex: "1 1 " + WINDOW_MIN_WIDTH + "px", maxWidth: WINDOW_MAX_WIDTH + "px", minWidth: "0" } });
+            VGroup({
+                width: "auto",
+                height: "auto",
+                align: "left top",
+                gap: 8,
+                css: { flex: "1 1 " + WINDOW_MIN_WIDTH + "px", maxWidth: WINDOW_MAX_WIDTH + "px", minWidth: "0" },
+            });
 
                 HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
                     Label({ text: titleText, fontSize: 15, bold: 1, textColor: Black(0.75) });
@@ -103,17 +112,36 @@
                 endGroup();
 
                 // BOX: The window
-                startBox({ width: "100%", height: WINDOW_HEIGHT, color: windowColor, border: 1, borderColor: lineColor, round: 8 });
+                startBox({
+                    width: "100%",
+                    height: WINDOW_HEIGHT,
+                    color: windowColor,
+                    border: 1,
+                    borderColor: lineColor,
+                    round: 8,
+                });
 
                     const outer = Splitter({ styleName: styleName, firstSize: 130, minFirst: 80, minSecond: 120 });
                     outerSplitters.push(outer);
 
                     createIn(outer.first, function () {
-                        TreeView({ styleName: treeStyleName, width: "100%", height: "100%", items: FILES, style: { box: { border: 0, round: 0 } } });
+                        TreeView({
+                            styleName: treeStyleName,
+                            width: "100%",
+                            height: "100%",
+                            items: FILES,
+                            style: { box: { border: 0, round: 0 } },
+                        });
                     });
 
                     createIn(outer.second, function () {
-                        const inner = Splitter({ styleName: styleName, direction: "vertical", secondSize: 100, minFirst: 60, minSecond: 50 });
+                        const inner = Splitter({
+                            styleName: styleName,
+                            direction: "vertical",
+                            secondSize: 100,
+                            minFirst: 60,
+                            minSecond: 50,
+                        });
                         createIn(inner.first, function () {
                             Label({ text: "The content", fontSize: 14, textColor: softColor, css: { padding: "12px" } });
                         });

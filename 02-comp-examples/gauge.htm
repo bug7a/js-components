@@ -23,7 +23,7 @@
         const CARD_MAX_WIDTH = 600;
 
         // *** VARIABLES:
-        let ring, nozzle, bed, arc270, modernRing;
+        let ring;
 
         const start = function () {
 
@@ -51,7 +51,10 @@
                         HGroup({ hug: 1, gap: 8, clipContent: 0 }); // WHY clipContent: a pressed SmartButton is not cut
                             addButton("+15%", function () { ring.setValue(Math.min(100, ring.value + 15)); });
                             addButton("−15%", function () { ring.setValue(Math.max(0, ring.value - 15)); });
-                            addButton("Low", function () { ring.setBarColor("#F2B24C"); ring.setSubText("Low"); }, "yellowDark");
+                            addButton("Low", function () {
+                                ring.setBarColor("#F2B24C");
+                                ring.setSubText("Low");
+                            }, "yellowDark");
                         endGroup();
 
                     endCard();
@@ -59,8 +62,9 @@
                     // SAMPLE 2: Half arc
                     startCard("2. Half arc (startAngle: -90, sweepAngle: 180)", "Two heaters. The white line is the target.", 1);
 
-                        HGroup({ width: "100%", height: "auto", align: "center center", gap: 30, wrap: 1 }); // (a phone: one under the other)
-                            nozzle = Gauge({
+                        // (a phone: one under the other)
+                        HGroup({ width: "100%", height: "auto", align: "center center", gap: 30, wrap: 1 });
+                            Gauge({
                                 width: 200, height: 130,
                                 styleName: "dark",
                                 startAngle: -90, sweepAngle: 180,
@@ -68,7 +72,7 @@
                                 valueSuffix: "°", subText: "Target 220°", titleText: "Nozzle",
                                 style: { bar: { color: "#E0715A" }, value: { fontSize: 26 } },
                             });
-                            bed = Gauge({
+                            Gauge({
                                 width: 200, height: 130,
                                 styleName: "dark",
                                 startAngle: -90, sweepAngle: 180,
@@ -83,13 +87,14 @@
                     // SAMPLE 3: Other sweeps and styles
                     startCard("3. Any sweep, any style", "sweepAngle: 270 and the modern package.");
 
-                        HGroup({ width: "100%", height: "auto", align: "center center", gap: 30, wrap: 1 }); // (a phone: one under the other)
-                            arc270 = Gauge({
+                        // (a phone: one under the other)
+                        HGroup({ width: "100%", height: "auto", align: "center center", gap: 30, wrap: 1 });
+                            Gauge({
                                 width: 170, height: 170,
                                 startAngle: -135, sweepAngle: 270,
                                 value: 68, subText: "Disk used", valueSuffix: "%",
                             });
-                            modernRing = Gauge({
+                            Gauge({
                                 width: 170, height: 170,
                                 styleName: "modern",
                                 value: 82, subText: "Score",
@@ -111,17 +116,23 @@
                 width: "100%", height: "auto", align: "left top", gap: 16, padding: 20,
                 color: (isDark) ? "#1C1C1B" : "white",
                 round: 10, border: 1, borderColor: (isDark) ? "#1C1C1B" : Black(0.1),
+                // (basic.js has no maxWidth prop)
+                css: { alignItems: "stretch", maxWidth: CARD_MAX_WIDTH + "px" },
             });
-            that.elem.style.alignItems = "stretch";
-            that.css.maxWidth = CARD_MAX_WIDTH + "px"; // (basic.js has no maxWidth prop)
             Label({ text: title, fontSize: 14, textColor: (isDark) ? White(0.5) : Black(0.45) });
             if (description) {
-                Label({ text: description, fontSize: 13, textColor: (isDark) ? White(0.4) : Black(0.35) });
-                that.elem.style.marginTop = "-10px";
+                Label({
+                    text: description,
+                    fontSize: 13,
+                    textColor: (isDark) ? White(0.4) : Black(0.35),
+                    css: { marginTop: "-10px" },
+                });
             }
         };
 
-        const endCard = function () { endGroup(); };
+        const endCard = function () {
+            endGroup();
+        };
 
         // BUTTON: a SmartButton of the kit for the dark card (tone: "" is the gray of the template)
         const addButton = function (text, onClick, tone = "") {

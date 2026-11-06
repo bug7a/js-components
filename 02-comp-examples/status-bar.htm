@@ -56,8 +56,14 @@
                 // GROUP: The buttons
                 HGroup({ width: "100%", height: "auto", align: "center center", gap: 8, wrap: 1 });
                     SmartButton({ labelText: "Save", tone: "cyan", onClick: showSaved });
-                    SmartButton({ labelText: "A warning", onClick: function () { setMessage("The disk is nearly full", "warn"); } });
-                    SmartButton({ labelText: "An error", onClick: function () { setMessage("The file can not be written", "error"); } });
+                    SmartButton({
+                        labelText: "A warning",
+                        onClick: function () { setMessage("The disk is nearly full", "warn"); },
+                    });
+                    SmartButton({
+                        labelText: "An error",
+                        onClick: function () { setMessage("The file can not be written", "error"); },
+                    });
                     SmartButton({ labelText: "Ready", onClick: function () { setMessage("Ready", ""); } });
                     btnBusy = SmartButton({ labelText: "Start a job", onClick: toggleBusy });
                     SmartButton({ labelText: "Add a file", onClick: addFile });
@@ -90,7 +96,13 @@
         // GROUP: A title and a small window with a StatusBar. Returns the StatusBar.
         const createWindow = function (titleText, noteText, styleName, windowColor, lineColor, softColor) {
 
-            VGroup({ width: "auto", height: "auto", align: "left top", gap: 8, css: { flex: "1 1 " + WINDOW_MIN_WIDTH + "px", maxWidth: WINDOW_MAX_WIDTH + "px", minWidth: "0" } });
+            VGroup({
+                width: "auto",
+                height: "auto",
+                align: "left top",
+                gap: 8,
+                css: { flex: "1 1 " + WINDOW_MIN_WIDTH + "px", maxWidth: WINDOW_MAX_WIDTH + "px", minWidth: "0" },
+            });
 
                 HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
                     Label({ text: titleText, fontSize: 15, bold: 1, textColor: Black(0.75) });
@@ -99,7 +111,14 @@
 
                 // BOX: The window
                 // NOTE: The StatusBar stands at the bottom of a Box by itself.
-                startBox({ width: "100%", height: WINDOW_HEIGHT, color: windowColor, border: 1, borderColor: lineColor, round: 8 });
+                startBox({
+                    width: "100%",
+                    height: WINDOW_HEIGHT,
+                    color: windowColor,
+                    border: 1,
+                    borderColor: lineColor,
+                    round: 8,
+                });
 
                     Label({ left: 14, top: 14, text: "The window of a program", fontSize: 13, textColor: softColor });
 

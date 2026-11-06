@@ -53,10 +53,17 @@
 
                 // GROUP: The buttons
                 HGroup({ width: "100%", height: "auto", align: "center center", gap: 8, wrap: 1 });
-                    SmartButton({ labelText: "A plot", tone: "cyan", onClick: function () { setImage(makePlot(), "A plot of two curves"); } });
+                    SmartButton({
+                        labelText: "A plot",
+                        tone: "cyan",
+                        onClick: function () { setImage(makePlot(), "A plot of two curves"); },
+                    });
                     SmartButton({ labelText: "Draw the plot again", onClick: drawPlotAgain });
                     SmartButton({ labelText: "A picture", onClick: function () { setImage(PHOTO_FILE, "A bowl of olives"); } });
-                    SmartButton({ labelText: "Small, from a canvas", onClick: function () { setImage(makeSmallPicture(), "A small picture"); } });
+                    SmartButton({
+                        labelText: "Small, from a canvas",
+                        onClick: function () { setImage(makeSmallPicture(), "A small picture"); },
+                    });
                     SmartButton({ labelText: "A missing file", onClick: function () { setImage(BROKEN_FILE, ""); } });
                     SmartButton({ labelText: "Empty", onClick: function () { setImage("", ""); } });
                 endGroup();
@@ -86,7 +93,13 @@
 
         // GROUP: A title, an ImageView and its zoom. Returns the ImageView.
         const createPanel = function (titleText, noteText, styleName) {
-            VGroup({ width: "auto", height: "auto", align: "left top", gap: 8, css: { flex: "1 1 " + PANEL_MIN_WIDTH + "px", maxWidth: PANEL_MAX_WIDTH + "px", minWidth: "0" } });
+            VGroup({
+                width: "auto",
+                height: "auto",
+                align: "left top",
+                gap: 8,
+                css: { flex: "1 1 " + PANEL_MIN_WIDTH + "px", maxWidth: PANEL_MAX_WIDTH + "px", minWidth: "0" },
+            });
 
                 HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
                     Label({ text: titleText, fontSize: 15, bold: 1, textColor: Black(0.75) });

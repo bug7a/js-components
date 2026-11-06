@@ -51,15 +51,14 @@
                     Label({
                         text: "Spark Line Box",
                         fontSize: 26,
+                        fontFamily: "opensans-bold",
                     });
-                    that.elem.style.fontFamily = "opensans-bold";
 
                     // SAMPLE 1: Live graphs
                     startCard("1. Live data (a new value every 0.5 seconds)");
 
                         // GROUP: Graphs
-                        HGroup({ width: "100%", height: "auto", align: "left top", gap: 16 });
-                        that.elem.style.flexWrap = "wrap";
+                        HGroup({ width: "100%", height: "auto", align: "left top", gap: 16, wrap: 1 });
 
                             graphSold = SparkLineBox({
                                 title: "Sold Items",
@@ -123,8 +122,7 @@
                         });
 
                         // GROUP: Buttons
-                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
-                        that.elem.style.flexWrap = "wrap";
+                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 8, wrap: 1 });
 
                             smallButton("Add value", function () {
                                 const value = random(5, 40);
@@ -168,8 +166,7 @@
                     startCard("3. The same data: MiniGraphBox (bars) and SparkLineBox (line)");
 
                         // GROUP: Graphs
-                        HGroup({ width: "100%", height: "auto", align: "left top", gap: 16 });
-                        that.elem.style.flexWrap = "wrap";
+                        HGroup({ width: "100%", height: "auto", align: "left top", gap: 16, wrap: 1 });
 
                             const data = randomList(30, 20, 60);
 
@@ -270,9 +267,17 @@
         };
 
         const smallButton = function (text, func) {
-            const btn = Button({ text: text, width: "auto", height: 34, fontSize: 13, color: "#E8E8E8", textColor: Black(0.75), round: 6 });
-            btn.elem.style.padding = "0 14px";
-            btn.on("click", function (self) { func(self); });
+            const btn = Button({
+                text: text,
+                width: "auto",
+                height: 34,
+                fontSize: 13,
+                color: "#E8E8E8",
+                textColor: Black(0.75),
+                round: 6,
+                css: { padding: "0 14px" },
+            });
+            btn.on("click", func);
             return btn;
         };
 

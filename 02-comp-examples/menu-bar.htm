@@ -93,7 +93,13 @@
         // GROUP: A title and a small window with a MenuBar
         const createWindow = function (titleText, noteText, styleName, windowColor, lineColor, softColor) {
 
-            VGroup({ width: "auto", height: "auto", align: "left top", gap: 8, css: { flex: "1 1 " + WINDOW_MIN_WIDTH + "px", maxWidth: WINDOW_MAX_WIDTH + "px", minWidth: "0" } });
+            VGroup({
+                width: "auto",
+                height: "auto",
+                align: "left top",
+                gap: 8,
+                css: { flex: "1 1 " + WINDOW_MIN_WIDTH + "px", maxWidth: WINDOW_MAX_WIDTH + "px", minWidth: "0" },
+            });
 
                 HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
                     Label({ text: titleText, fontSize: 15, bold: 1, textColor: Black(0.75) });
@@ -102,9 +108,23 @@
 
                 // BOX: The window
                 // NOTE: The MenuBar stands at the top of a Box by itself.
-                startBox({ width: "100%", height: WINDOW_HEIGHT, color: windowColor, border: 1, borderColor: lineColor, round: 8 });
+                startBox({
+                    width: "100%",
+                    height: WINDOW_HEIGHT,
+                    color: windowColor,
+                    border: 1,
+                    borderColor: lineColor,
+                    round: 8,
+                });
 
-                    const lblResult = Label({ left: 14, top: 50, width: "calc(100% - 28px)", text: "Choose something from a menu.", fontSize: 14, textColor: softColor });
+                    const lblResult = Label({
+                        left: 14,
+                        top: 50,
+                        width: "calc(100% - 28px)",
+                        text: "Choose something from a menu.",
+                        fontSize: 14,
+                        textColor: softColor,
+                    });
 
                     MenuBar({
                         styleName: styleName,

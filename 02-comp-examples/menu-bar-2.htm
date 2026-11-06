@@ -68,7 +68,14 @@
                 menuBar = MenuBar({ styleName: themeName, menus: makeMenus(), shrink: 0 });
 
                 // GROUP: The picture and the output
-                windowGroup.areas = HGroup({ width: "100%", height: "auto", align: "left top", gap: 0, grow: 1, css: { minHeight: "0", flexBasis: "0" } });
+                windowGroup.areas = HGroup({
+                    width: "100%",
+                    height: "auto",
+                    align: "left top",
+                    gap: 0,
+                    grow: 1,
+                    css: { minHeight: "0", flexBasis: "0" },
+                });
 
                     imageView = ImageView({
                         styleName: themeName,

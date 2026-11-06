@@ -19,8 +19,7 @@
 
     /* Bismillah */
 
-    // AppBar (comp-m4), 2026-11-01: the top bar of a tab page of a mobile app, with the look of the old
-    // javascript-mobile-app-template. The page is a 600 px design fitted to the screen (page.fit(600, 800)),
+    // AppBar: the top bar of a tab page of a mobile app. The page is a 600 px design fitted to the screen (page.fit(600, 800)),
     // like the mobile template: every size here is a px of that design.
 
     const DESIGN_WIDTH = 600;
@@ -45,13 +44,27 @@
 
     // LABEL: What the bar under it shows
     const createCaption = function (text) {
-        Label({ plainText: text, width: "100%", fontSize: TEXT_SIZE, textColor: Black(0.5), padding: [SPACE, 0] });
-        that.css = { margin: "28px 0 10px" };
+        Label({
+            plainText: text,
+            width: "100%",
+            fontSize: TEXT_SIZE,
+            textColor: Black(0.5),
+            padding: [SPACE, 0],
+            css: { margin: "28px 0 10px" },
+        });
     };
 
     // The buttons that change the last bar
     const createSetterButtons = function (bar) {
-        HGroup({ width: "100%", height: "auto", align: "left center", gap: 10, wrap: 1, padding: [SPACE, 14], clipContent: 0 });
+        HGroup({
+            width: "100%",
+            height: "auto",
+            align: "left center",
+            gap: 10,
+            wrap: 1,
+            padding: [SPACE, 14],
+            clipContent: 0,
+        });
 
             SmartButton({ labelText: "Left / Center", height: 50, onClick: function () {
                 bar.setTitleAlign((bar.titleAlign == "left") ? "center" : "left");
@@ -95,7 +108,7 @@
 
             VGroup({ width: "100%", height: "auto", align: "left top", gap: 0, padding: [0, 0, 0, BOTTOM_SPACE] });
 
-                // The bar of a page in the place of the tabs (the old "Default Example"): back, the title in the middle, ⋮
+                // The bar of a page in the place of the tabs: back, the title in the middle, ⋮
                 AppBar({ titleText: "Default Example", showBack: 1, line: 1, onBack: onBack, onMenu: onMenu });
 
                 createCaption("titleAlign: \"left\", line: 1 (the Settings tab)");
@@ -105,7 +118,13 @@
                 AppBar({ titleText: "Home", showMenu: 0 });
 
                 createCaption("A long title ends with \"...\"");
-                AppBar({ titleText: "Privacy Policy and Terms of Use of This Application", showBack: 1, line: 1, onBack: onBack, onMenu: onMenu });
+                AppBar({
+                    titleText: "Privacy Policy and Terms of Use of This Application",
+                    showBack: 1,
+                    line: 1,
+                    onBack: onBack,
+                    onMenu: onMenu,
+                });
 
                 createCaption("Your own colors: color, iconColor, style.title");
                 AppBar({
@@ -123,7 +142,13 @@
                 createSetterButtons(bar);
 
                 // LABEL: The last onBack / onMenu
-                lblResult = Label({ plainText: "Click a back or a menu button.", width: "100%", fontSize: TEXT_SIZE, textColor: GREEN, padding: [SPACE, 0] });
+                lblResult = Label({
+                    plainText: "Click a back or a menu button.",
+                    width: "100%",
+                    fontSize: TEXT_SIZE,
+                    textColor: GREEN,
+                    padding: [SPACE, 0],
+                });
 
             endGroup();
 

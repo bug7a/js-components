@@ -18,8 +18,7 @@
 
         /* Bismillah */
 
-        // SAMPLE: ActionButton (comp/action-button.js), the new version of comp-m1/ui-action-button.js
-        // (02-comp-m1-samples/ui-action-button.htm) with the same look. Above it: styleName "ozden".
+        // SAMPLE: ActionButton (comp/action-button.js). Above it: styleName "ozden".
 
         const ACTIONS = [
             { key: "photo", labelText: "Take a Photo" },
@@ -35,7 +34,13 @@
             page.color = "whitesmoke";
 
             // LABEL: What onAction gives
-            lblAction = Label({ left: 40, top: 40, text: "Click the yellow button at the bottom right.", fontSize: 16, textColor: Black(0.5) });
+            lblAction = Label({
+                left: 40,
+                top: 40,
+                text: "Click the yellow button at the bottom right.",
+                fontSize: 16,
+                textColor: Black(0.5),
+            });
 
             // BUTTON: animated on / off (context/basic-js-animated-rules.md)
             btnAnimated = Button({ left: 40, top: 80, width: 160, height: 40, fontSize: 15, text: "animated: 1" });
