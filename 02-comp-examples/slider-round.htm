@@ -24,6 +24,7 @@
 
     // Slider with styleName "round" (2026-11-06): a thin round track and a round white knob, the look of most web and
     // phone sliders. While the knob is dragged: a ring in the track color around it and the value over it.
+    // The model page of the slider of new pages and projects; "roundDark" on a dark page (card 7).
 
     // *** THE COLORS AND SIZES OF THE PAGE
     const PAGE_COLOR = "#F0F1EE";
@@ -34,8 +35,7 @@
     const YELLOW = "#F1C74A";
     const GREEN = "#2E9E74";
     const BUBBLE_ROOM = "24px"; // over a slider that shows its value bubble
-    const TEXT_SIZE_MIN = 12; // px: the text size of the settings, from the 0 - 100 of the slider
-    const TEXT_SIZE_MAX = 24;
+    const DARK_CARD_COLOR = "#1A1A19";
 
     let lblVolume = null;
     let lblBrightness = null;
@@ -98,19 +98,21 @@
                         });
                     endGroup();
 
-                    // ROW: Text size (the 0 - 100 of the slider becomes 12 - 24 px)
+                    // ROW: Text size (minValue / maxValue: 12 - 24 px)
                     VGroup({ width: "100%", height: "auto", gap: 2, clipContent: 0 });
                         HGroup({ width: "100%", height: "auto", align: "left center", justify: "space-between" });
                             Label({ plainText: "Text size", fontSize: 15, textColor: INK });
-                            lblTextSize = Label({ plainText: toTextSize(50) + " px", fontSize: 15, textColor: SOFT_INK });
+                            lblTextSize = Label({ plainText: "18 px", fontSize: 15, textColor: SOFT_INK });
                         endGroup();
                         Slider({
                             width: "100%",
                             styleName: "round",
-                            currentValue: 50,
+                            minValue: 12,
+                            maxValue: 24,
+                            currentValue: 18,
                             showValueOnDrag: 0,
                             showValueOnSet: 0,
-                            onDragMove: function (value) { lblTextSize.plainText = toTextSize(value) + " px"; },
+                            onDragMove: function (value) { lblTextSize.plainText = value + " px"; },
                         });
                     endGroup();
 
@@ -165,6 +167,32 @@
                     endGroup();
                 endCard();
 
+                // 6. A range and a step
+                startCard("6. A range and a step", "minValue: 0, maxValue: 10, step: 0.5: the value goes 0, 0.5, 1 ... 10. setMinValue(), setMaxValue() and setStep() change them later.");
+                    Slider({
+                        width: "100%",
+                        styleName: "round",
+                        minValue: 0,
+                        maxValue: 10,
+                        step: 0.5,
+                        currentValue: 6.5,
+                    });
+                    that.css = { marginTop: BUBBLE_ROOM };
+                endCard();
+
+                // 7. A dark page
+                VGroup({ width: CARD_WIDTH, height: "auto", align: "left top", gap: 16, padding: [20, 22], color: DARK_CARD_COLOR, round: 8 });
+                that.css = { maxWidth: "100%" };
+                    Label({ plainText: "7. For a dark page", fontSize: 15, bold: 1, textColor: White(0.9) });
+                    Label({ plainText: "styleName: \"roundDark\": a light empty track, the main cyan of the kit and a light value bubble.", fontSize: 13, textColor: White(0.55), width: "100%", css: { whiteSpace: "normal", marginTop: "-8px" } });
+                    Slider({
+                        width: "100%",
+                        styleName: "roundDark",
+                        currentValue: 40,
+                    });
+                    that.css = { marginTop: BUBBLE_ROOM };
+                endGroup();
+
             endGroup();
 
         endBox();
@@ -174,11 +202,6 @@
     };
 
     // *** OTHER FUNCTIONS
-
-    const toTextSize = function (sliderValue) {
-        const sizeRange = TEXT_SIZE_MAX - TEXT_SIZE_MIN;
-        return Math.round(TEXT_SIZE_MIN + (sliderValue / 100) * sizeRange);
-    };
 
     const startCard = function (title, description) {
         VGroup({ width: CARD_WIDTH, height: "auto", align: "left top", gap: 16, padding: [20, 22], color: "white", round: 8, border: 1, borderColor: Black(0.1) });

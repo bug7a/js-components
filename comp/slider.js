@@ -7,14 +7,15 @@ Slider - v26.11
 UI COMPONENT TEMPLATE
 - NEW PROJECTS (the user, 2026-11-06): a page or a project that needs a slider uses this component with styleName
   "round" (02-comp-examples/slider-round.htm), unless the user asks for another look. "classic" stays the default
-  of the file, for the pages made before. No dark package yet: on a dark page give trackBackgroundColor a light
-  color (Ex: White(0.15)). The value is 0 - 100: a page maps its own range. SliderField (comp/slider-field.js, a
+  of the file, for the pages made before. On a dark page: "roundDark". SliderField (comp/slider-field.js, a
   slider in the shape of a field) is a parallel design: only when a page asks for that shape.
-- A value from 0 to 100, chosen by dragging the thumb. The value bubble over the thumb shows the value while it is
-  dragged (showValueOnDrag) and for a while after setValue() (showValueOnSet).
+- A value from minValue to maxValue (0 - 100 by default) on a step (1), chosen by dragging the thumb. The value
+  bubble over the thumb shows the value while it is dragged (showValueOnDrag) and for a while after setValue()
+  (showValueOnSet). (2026-11-06: minValue, maxValue, step, setMinValue(), setMaxValue(), setStep(); it was 0 - 100.)
 - Style packages (2026-11-06): "classic" (the default: inspired by Google Material 3: a thick track in two parts,
-  a thin line for the thumb, a dot at the end) and "round" (a thin track and a round white knob: the look of most
-  web and phone sliders; a ring in the track color while it is dragged). Select with styleName. (Slider.styles)
+  a thin line for the thumb, a dot at the end), "round" (a thin track and a round white knob: the look of most web
+  and phone sliders; a ring in the track color while it is dragged) and "roundDark" (round for a dark page).
+  Select with styleName. (Slider.styles)
   The colors and the height of the track stay params (trackColor, trackHeight...): a package fills the ones the
   page does not give, so Slider({ styleName: "round", trackColor: "tomato" }) is a tomato round slider.
 - Needs basic.js v26.10.27 (a package of params).
@@ -23,6 +24,7 @@ USAGE:
 const volume = Slider({ width: 280, currentValue: 70, onDragMove: function (value) { println(value); } });
 volume.setValue(40);
 Slider({ styleName: "round", width: "100%", currentValue: 30 });
+Slider({ styleName: "round", minValue: 12, maxValue: 24, step: 0.5, currentValue: 16 }); // 12, 12.5 ... 24
 
 Started Date: June 2024
 Developer: Bugra Ozden
@@ -39,6 +41,9 @@ const SliderDefaults = {
     width: 250,
 
     currentValue: 0, // Current selected value
+    minValue: 0, // The value at the left end (setMinValue)
+    maxValue: 100, // The value at the right end (setMaxValue)
+    step: 1, // The values are min + n * step (Ex: 0.5). setStep()
     
     minThumbHeight: 44,
     thumbColor: "rgba(0,0,0,0.7)", // Color of the draggable button
@@ -103,6 +108,10 @@ const Slider = function(params = {}) {
     const box = startObject(params);
 
     const _s = box.style;
+    // WHY: A value from a page can be a text ("12"): "12" + 1 * 0.5 would be "120.5".
+    box.minValue = Number(box.minValue);
+    box.maxValue = Number(box.maxValue);
+    box.step = Number(box.step);
     const thumbHeight = (box.minThumbHeight > box.trackHeight) ? box.minThumbHeight : box.trackHeight;
     box.height = thumbHeight;
     box.clipContent = 0;
@@ -110,9 +119,6 @@ const Slider = function(params = {}) {
     // *** PRIVATE VARIABLES:
     let isDragging = false;
 
-    const minValue = 0; // Minimum slider value
-    const maxValue = 100; // Maximum slider value
-    const valueRange = maxValue - minValue;
 
     let startX = 0;
     let startLeft = 0;
@@ -132,6 +138,35 @@ const Slider = function(params = {}) {
     const getMaxLeft = function() {
         const max = box.width - thumbBox.width;
         return (max > 0) ? max : 0;
+    };
+
+    // WHY: Read every time: setMinValue() / setMaxValue() change the range. (A range of 0 would divide by 0.)
+    const getValueRange = function() {
+        const range = box.maxValue - box.minValue;
+        return (range > 0) ? range : 1;
+    };
+
+    // The number of decimals of the step (0.5 -> 1), so 0.1 + 0.2 is written 0.3, not 0.30000000000000004
+    const getStepDecimals = function() {
+        const text = String(box.step);
+        const dot = text.indexOf(".");
+        return (dot < 0) ? 0 : text.length - dot - 1;
+    };
+
+    // A value inside the range, on a step.
+    const toStepValue = function(value) {
+        value = Number(value);
+        if (!isFinite(value)) value = box.minValue;
+        const step = (box.step > 0) ? box.step : 1;
+        const steps = Math.round((value - box.minValue) / step);
+        let stepValue = Number((box.minValue + steps * step).toFixed(getStepDecimals()));
+        if (stepValue < box.minValue) stepValue = box.minValue;
+        if (stepValue > box.maxValue) stepValue = box.maxValue;
+        return stepValue;
+    };
+
+    const getLeftOfValue = function(value) {
+        return (value - box.minValue) * (getMaxLeft() / getValueRange());
     };
 
     // How many screen px is one px of the slider? (page.fit() zooms the page, a parent can have a scale)
@@ -174,10 +209,18 @@ const Slider = function(params = {}) {
         // WHY round: parseInt cut the fraction of the position, so setValue(50) gave 49 (46 of 101 values were one less)
         // WHY only with a width: a slider not drawn yet (a closed tab, a hidden group: width 0) has no position to read;
         //     its value became the minimum, and a settings page saved 0 (2026-11-05)
-        if (maxLeft > 0) box.currentValue = Math.round(((newLeft / maxLeft) * valueRange) + minValue);
+        if (maxLeft > 0) box.currentValue = toStepValue(((newLeft / maxLeft) * getValueRange()) + box.minValue);
         if (animated == 0) valueBox.dontMotion();
         valueBox.text = box.currentValue;
         placeValueBubble();
+    };
+
+    // The thumb on a value, without animation and without the bubble (a resize, a new range).
+    const placeThumbAtValue = function(value) {
+        updateThumbPosition(getLeftOfValue(value));
+        box.currentValue = value; // WHY: updateThumbPosition() reads the value back from the position.
+        valueBox.text = value;
+        showHideTracks(value, 0);
     };
 
     // The look of the thumb and of the tracks: style.thumb and style.track, or style.dragging while it is dragged.
@@ -226,21 +269,17 @@ const Slider = function(params = {}) {
             trackBox.dontMotion();
             emptyTrackBox.dontMotion();
         }
-        trackBox.opacity = ($currentLeft == minValue) ? 0 : 1;
-        emptyTrackBox.opacity = ($currentLeft == maxValue) ? 0 : 1;
+        trackBox.opacity = ($currentLeft <= box.minValue) ? 0 : 1;
+        emptyTrackBox.opacity = ($currentLeft >= box.maxValue) ? 0 : 1;
     }
 
     // *** PUBLIC FUNCTIONS:
     box.setValue = function(val) {
 
-        if (val < minValue) val = minValue;
-        if (val > maxValue) val = maxValue;
-
-        const pixelsPerValue = getMaxLeft() / valueRange;
-        const newLeft = (val - minValue) * pixelsPerValue;
+        val = toStepValue(val);
         showHideTracks(val, 1);
-        updateThumbPosition(newLeft, 1);
-        box.currentValue = Math.round(val); // WHY: the value is the truth, not the position (width 0 while hidden)
+        updateThumbPosition(getLeftOfValue(val), 1);
+        box.currentValue = val; // WHY: the value is the truth, not the position (width 0 while hidden)
         valueBox.text = box.currentValue;
 
         if (isFirstRun) {
@@ -271,12 +310,29 @@ const Slider = function(params = {}) {
         cancelHideValue = null;
     }
 
-    // NOT DONE YET: the range is always 0 - 100 (a page maps its own range, Ex: ozden-panel createSlider).
-    box.setMinValue = function(val) {
+    // The value is put inside the new range and on a step; the thumb moves to it without the bubble.
+    const applyRange = function() {
+        const value = toStepValue(box.currentValue);
+        box.currentValue = value;
+        placeThumbAtValue(value);
     };
 
-    // NOT DONE YET: the range is always 0 - 100.
+    // The value at the left end. USAGE: slider.setMinValue(12)
+    box.setMinValue = function(val) {
+        box.minValue = Number(val);
+        applyRange();
+    };
+
+    // The value at the right end. USAGE: slider.setMaxValue(24)
     box.setMaxValue = function(val) {
+        box.maxValue = Number(val);
+        applyRange();
+    };
+
+    // The values are min + n * step. USAGE: slider.setStep(0.5)
+    box.setStep = function(val) {
+        box.step = Number(val);
+        applyRange();
     };
 
     // Sets the color of the filled portion of the slider
@@ -455,11 +511,7 @@ const Slider = function(params = {}) {
     //      the page. The thumb must stay on its value. (No animation and no value bubble here.)
     box.onResize(function() {
         if (isDragging) return;
-        const value = box.currentValue;
-        updateThumbPosition((value - minValue) * (getMaxLeft() / valueRange));
-        box.currentValue = value; // WHY: updateThumbPosition() reads the value back from the position.
-        valueBox.text = value;
-        showHideTracks(value, 0);
+        placeThumbAtValue(box.currentValue);
     });
 
     box.setValue(box.currentValue);
@@ -515,6 +567,46 @@ Slider.styles = {
                 padding: [9, 5],
                 round: 8,
                 space: 10, // (over the ring of the drag)
+            },
+        },
+    },
+
+    // The round look for a dark page (2026-11-06): a light empty track, the main cyan of the kit, a stronger ring
+    // and a light value bubble with a dark text (a dark bubble was lost on the page).
+    roundDark: {
+        trackHeight: 6,
+        trackColor: "#5BBAC1",
+        trackBackgroundColor: White(0.16),
+        thumbColor: "white",
+        style: {
+            thumb: {
+                areaWidth: 24,
+                width: 24,
+                height: 24,
+                round: 12,
+                boxShadow: "0 1px 3px rgba(0, 0, 0, 0.5)",
+            },
+            dragging: {
+                width: "",
+                trackSpace: "",
+                ringSize: 6,
+                ringOpacity: 0.3,
+            },
+            track: {
+                space: -12,
+                outerRound: 3,
+                innerRound: 3,
+            },
+            trackDot: {
+                size: 0,
+            },
+            value: {
+                color: "#F2F2F2",
+                textColor: "#232323",
+                fontSize: 13,
+                padding: [9, 5],
+                round: 8,
+                space: 10,
             },
         },
     },

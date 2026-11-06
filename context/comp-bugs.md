@@ -254,7 +254,7 @@ Satır numaraları 2026-11-05'teki dosyalara göredir.
 - ✅ (düzeltildi 2026-11-05) ChartBox sayfanın `labels` / `values` dizilerini değiştirir (`chart-box.js:143, 146, 511-519`): kopyalanmalı.
 - ✅ (arşivlendi 2026-11-06: `GraphBox` geldi, `Alpha()` kullanılır) ChartBox `alpha()` adlı ve `hsl()` renkleri saydam yapmaz (`chart-box.js:831-851`).
 - WebView `autoHeight` büyür ama küçülmez (`web-view.js:217, 220`).
-- Slider `setMinValue()` / `setMaxValue()` boş (`slider.js:186-191`).
+- ✅ (düzeltildi 2026-11-06: `minValue` / `maxValue` / `step` ve setter'ları) Slider `setMinValue()` / `setMaxValue()` boş (`slider.js:186-191`).
 - ✅ (düzeltildi 2026-11-05) SliderField ve Stepper: alan odaktayken silinirse yazılan değer `remove()`'dan sonra gönderilir
   (`slider-field.js:717`, `stepper.js:593`).
 - UIEffects hover (`color`, `border`, `fill`): hover sırasında sayfanın verdiği rengi ayrılınca eskisiyle ezer

@@ -1212,6 +1212,41 @@
             check("Slider: the round package gives a knob; the page keeps its params and the packages do not change", row.join(" ") === "30 30 4 44 6 tomato 16 24 4", row.join(" "));
         });
 
+        test("Slider: minValue, maxValue and step: the value stays in the range and on a step (setValue, a drag, the setters)", async function () {
+            const slider = Slider({ width: 250, minValue: 12, maxValue: 24, step: 0.5, currentValue: 16 });
+            await wait(50);
+            const row = [slider.getValue()];
+            slider.setValue(30);
+            row.push(slider.getValue());
+            slider.setValue(13.3);
+            row.push(slider.getValue());
+            slider.setValue("20");
+            row.push(slider.getValue());
+            getSliderThumb(slider).dispatchEvent(new MouseEvent("mousedown", { bubbles: true, clientX: 10 }));
+            document.dispatchEvent(new MouseEvent("mousemove", { clientX: 600 }));
+            document.dispatchEvent(new MouseEvent("mouseup", {}));
+            row.push(slider.getValue());
+            slider.setMaxValue(20);
+            row.push(slider.getValue());
+            slider.setMinValue(0);
+            slider.setStep(5);
+            row.push(slider.getValue());
+            const tenths = Slider({ minValue: 0, maxValue: 1, step: 0.1, currentValue: 0.3 });
+            row.push(tenths.getValue());
+            slider.remove();
+            tenths.remove();
+            check("Slider: minValue, maxValue and step: the value stays in the range and on a step (setValue, a drag, the setters)", row.join(" ") === "16 24 13.5 20 24 20 20 0.3", row.join(" "));
+        });
+
+        test("Slider: roundDark gives the dark colors and never changes round", async function () {
+            const dark = Slider({ styleName: "roundDark" });
+            const round = Slider({ styleName: "round" });
+            const row = [dark.trackBackgroundColor, dark.style.value.color, round.trackBackgroundColor, round.style.value.color, Slider.styles.round.style.value.color];
+            dark.remove();
+            round.remove();
+            check("Slider: roundDark gives the dark colors and never changes round", row.join(" | ") === White(0.16) + " | #F2F2F2 | rgba(0, 0, 0, 0.12) | #232323 | #232323", row.join(" | "));
+        });
+
         // *** SIDE PANEL (comp/side-panel.js)
 
         test("SidePanel: with a zoomed page (page.fit) it is sized in the px of the page", async function () {
