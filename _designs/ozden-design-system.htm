@@ -133,7 +133,7 @@
         const CHECK = { size: 22, border: 2, borderColor: Black(0.35), checkedColor: "#141414", round: 5, labelSize: 16, labelColor: Black(0.8), gap: 10 };
         const PILL_TABS = { color: "whitesmoke", padding: 2, gap: 3, round: 8, tabPadding: [12, 4], tabRound: 6, fontSize: 14, textColor: "#373836", selectedColor: "white", height: 32 };
 
-        const PROGRESS = { width: 350, trackHeight: 16, trackColor: "#F2F2F2", trackBorder: 2, trackBorderColor: Black(0.1), round: 4, barColor: "#F1C74A", fillOpacity: 0.5, barBorder: 2, limitColor: Black(0.7), limitWidth: 4, overhang: 4, titleSize: 15, titleColor: "#232323", valueSize: 14, valueColor: "rgba(35, 35, 35, 0.6)" };
+        const PROGRESS = { width: 350, trackHeight: 16, trackColor: "#F2F2F2", trackBorder: 2, trackBorderColor: Black(0.1), round: 100, barColor: "#5BBAC1", barBorder: 1, barBorderColor: Black(0.35), barShadow: "inset 0 -2px 0 " + Black(0.25), innerRound: 0, limitColor: Black(0.7), limitWidth: 4, overhang: 4, titleSize: 15, titleColor: "#232323", valueSize: 14, valueColor: "rgba(35, 35, 35, 0.6)" };
         const TOOLTIP = { color: White(0.95), textColor: Black(0.85), fontSize: 13, padding: [10, 6], round: 6, arrow: 10, shadow: "0 2px 10px rgba(0, 0, 0, 0.12)" };
         const NOTICE = { round: 8, border: 2, borderColor: Black(0.2), padding: [24, 18], gap: 20, fontSize: 20, descSize: 17, shadow: "0px 0px 12px rgba(0, 0, 0, 0.1)", warningColor: "#FFD541", textColor: "#141414" };
         const CLOCK = { size: 30, faceColor: "#FFFFFF", lineColor: "#141414", hourColor: "#141414", edgeWidth: 2, handWidth: 2, hourLength: 7.5, minuteLength: 10, minuteColor: "indianred", centerColor: "indianred", centerSize: 4 };
@@ -593,7 +593,7 @@
             });
         };
 
-        // GROUP: A ProgressBar: the title and value, the track, the half-colored bar, the limit line
+        // GROUP: A ProgressBar: the title and value, the track, the raised bar, the limit line
         const drawProgress = function (value, limit) {
             const group = VGroup({ width: PROGRESS.width, height: "auto", align: "left top", gap: 10, clipContent: 0 });
                 HGroup({ width: "100%", height: "auto", align: "left center" });
@@ -609,10 +609,13 @@
             return group;
         };
 
-        // BOX: The bar (its color at half, a full edge of it, over the edge of the track)
+        // BOX: The bar (a SmartButton ozdenType1: its color, a dark edge and a line at its bottom), over the edge of the
+        // track; round at the ends of the track, straight in the middle of it
         const drawProgressFill = function (value) {
-            const fill = Box({ color: Alpha(PROGRESS.barColor, PROGRESS.fillOpacity), round: PROGRESS.round, border: PROGRESS.barBorder, borderColor: PROGRESS.barColor });
+            const rightRound = (value >= 1) ? PROGRESS.round : PROGRESS.innerRound;
+            const fill = Box({ color: PROGRESS.barColor, border: PROGRESS.barBorder, borderColor: PROGRESS.barBorderColor, boxShadow: PROGRESS.barShadow });
             fill.css = { left: -PROGRESS.trackBorder + "px", top: -PROGRESS.trackBorder + "px", width: "calc(" + (value * 100) + "% + " + (PROGRESS.trackBorder * 2) + "px)", height: "calc(100% + " + (PROGRESS.trackBorder * 2) + "px)", boxSizing: "border-box" };
+            fill.css = { borderRadius: PROGRESS.round + "px " + rightRound + "px " + rightRound + "px " + PROGRESS.round + "px" };
             return fill;
         };
 

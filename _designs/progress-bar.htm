@@ -16,7 +16,7 @@
 
         /* Bismillah */
 
-        // DRAFT DESIGN of comp/progress-bar.js (ProgressBar), 2026-10-30.
+        // DRAFT DESIGN of comp/progress-bar.js (ProgressBar), 2026-10-30 (ozden: the look of SmartButton, 2026-11-06).
         // Every state of every style package side by side, drawn with plain basic.js objects (no ProgressBar here).
         // Change a color, a size, an edge in basic-designer; then the change is carried to the component by hand
         // (ProgressBarDefaults.style / ProgressBar.styles). The values below are copies of the packages: keep them
@@ -33,8 +33,9 @@
             classic: {
                 gap: 6,
                 track: { height: 16, color: "#F2F2F2", round: 4, border: 2, borderColor: "rgba(0, 0, 0, 0.1)" },
-                bar: { color: "#141414", fillOpacity: 1, border: 0, borderColor: "" },
-                secondBar: { color: Black(0.35), fillOpacity: 0.2, borderOpacity: 0.45 },
+                darkTrack: { color: "#242424", borderColor: White(0.1) },
+                bar: { color: "#141414", fillOpacity: 1, border: 0, borderColor: "", boxShadow: "none", innerRound: "" },
+                secondBar: { color: Black(0.35), fillOpacity: 0.2, lighten: 0, borderOpacity: 0.45, place: "under" },
                 stripes: { color: "rgba(255, 255, 255, 0.35)", size: 14 },
                 limit: { color: "indianred", width: 1, round: 0, overhang: 6, textSize: 13, textColor: Black(0.7), textSpace: 6 },
                 successColor: "#2E9E5B",
@@ -45,8 +46,9 @@
             modern: {
                 gap: 8,
                 track: { height: 10, color: "#DFECEC", round: 100, border: 0, borderColor: "transparent" },
-                bar: { color: "cadetblue", fillOpacity: 1, border: 0, borderColor: "" },
-                secondBar: { color: Black(0.35), fillOpacity: 0.2, borderOpacity: 0.45 },
+                darkTrack: { color: "#242424", borderColor: White(0.1) },
+                bar: { color: "cadetblue", fillOpacity: 1, border: 0, borderColor: "", boxShadow: "none", innerRound: "" },
+                secondBar: { color: Black(0.35), fillOpacity: 0.2, lighten: 0, borderOpacity: 0.45, place: "under" },
                 stripes: { color: "rgba(255, 255, 255, 0.35)", size: 14 },
                 limit: { color: "indianred", width: 1, round: 0, overhang: 6, textSize: 13, textColor: Black(0.7), textSpace: 6 },
                 successColor: "#6FCF97",
@@ -56,13 +58,14 @@
             },
             ozden: {
                 gap: 8,
-                track: { height: 16, color: "#F2F2F2", round: 4, border: 2, borderColor: "rgba(0, 0, 0, 0.1)" },
-                bar: { color: "#F1C74A", fillOpacity: 0.5, border: 2, borderColor: "" },
-                secondBar: { color: "", fillOpacity: 0.2, borderOpacity: 0.45 },
+                track: { height: 16, color: "#F2F2F2", round: 100, border: 2, borderColor: "rgba(0, 0, 0, 0.1)" },
+                darkTrack: { color: "#242424", borderColor: White(0.1) },
+                bar: { color: "#5BBAC1", fillOpacity: 1, border: 1, borderColor: "rgba(0, 0, 0, 0.35)", boxShadow: "inset 0 -2px 0 rgba(0, 0, 0, 0.25)", innerRound: 0 },
+                secondBar: { color: "", fillOpacity: 0.2, lighten: 0.5, borderOpacity: 0.45, place: "after" },
                 stripes: { color: "rgba(255, 255, 255, 0.55)", size: 14 },
                 limit: { color: "rgba(0, 0, 0, 0.7)", width: 4, round: 2, overhang: 4, textSize: 14, textColor: "rgba(0, 0, 0, 0.7)", textSpace: 8 },
-                successColor: "#40A5AF",
-                errorColor: "#FE5D49",
+                successColor: "#7BC362",
+                errorColor: "#DE815B",
                 title: { fontSize: 15, textColor: "#232323" },
                 valueText: { fontSize: 14, textColor: "rgba(35, 35, 35, 0.6)" },
             },
@@ -84,6 +87,7 @@
             { name: "Status: error", titleText: "Failed", value: 35, valuePosition: "top", status: "error" },
             { name: "Indeterminate (a still frame)", titleText: "Connecting...", valuePosition: "top", indeterminate: 1 },
             { name: "Another main color", value: 50, secondValue: 10, valuePosition: "right", barColor: "#40A5AF", valueText: "50% + 10%" },
+            { name: "A dark track (darkTrack: 1)", value: 40, secondValue: 20, valuePosition: "right", darkTrack: 1, valueText: "40% + 20%" },
         ];
         const INDETERMINATE_WIDTH = 35; // % of the track (the moving bar)
         const INDETERMINATE_LEFT = 30; // % (where the still frame shows it)
@@ -165,8 +169,9 @@
             const area = startBox({ width: "auto", height: _t.height + overhang * 2 + textRoom, color: "transparent", clipContent: 0 });
             area.css = { flex: "1 1 0", minWidth: "0", position: "relative" };
 
-                // BOX: Track
-                Box({ left: 0, top: overhang, width: "100%", height: _t.height, color: _t.color, round: _t.round, border: _t.border, borderColor: _t.borderColor });
+                // BOX: Track (its colors, or the dark ones)
+                const trackColors = state.darkTrack ? look.darkTrack : _t;
+                Box({ left: 0, top: overhang, width: "100%", height: _t.height, color: trackColors.color, round: _t.round, border: _t.border, borderColor: trackColors.borderColor });
 
                 // BOX: Bar layer (as big as the track; it clips the bars)
                 startBox({ left: 0, top: overhang, width: "100%", height: _t.height, color: "transparent", round: _t.round });
@@ -185,7 +190,7 @@
 
         };
 
-        // The second part (under) and the bar: their colors from the main color, as the component paints them
+        // The second part and the bar: their colors from the main color and their ends, as the component paints them
         const drawParts = function (look, state) {
 
             const _b = look.bar;
@@ -194,25 +199,44 @@
             const edgeColor = _b.borderColor || mainColor;
 
             if (state.indeterminate) {
-                const moving = Box({ top: 0, width: INDETERMINATE_WIDTH + "%", height: "100%", color: getFill(mainColor, _b.fillOpacity), round: look.track.round, border: _b.border, borderColor: edgeColor });
+                const moving = Box({ top: 0, width: INDETERMINATE_WIDTH + "%", height: "100%", color: getFill(mainColor, _b.fillOpacity), round: look.track.round, border: _b.border, borderColor: edgeColor, boxShadow: _b.boxShadow });
                 moving.css = { left: INDETERMINATE_LEFT + "%" };
                 return;
             }
 
-            // BOX: Second part (from 0 to value + secondValue)
+            // BOX: Second part (from 0 to value + secondValue, under the bar; or after the bar: secondBar.place "after")
             if (state.secondValue) {
-                const secondColor = _sb.color ? _sb.color : getFill(mainColor, _sb.fillOpacity);
-                const secondEdge = _sb.color ? edgeColor : (_b.borderColor || Alpha(mainColor, _sb.borderOpacity));
-                const second = Box({ left: 0, top: 0, width: (state.value + state.secondValue) + "%", height: "100%", color: secondColor, round: look.track.round, border: _b.border, borderColor: secondEdge });
+                const isAfter = (_sb.place == "after");
+                const secondStart = isAfter ? state.value : 0;
+                const secondEdge = (_sb.color || _sb.lighten) ? edgeColor : (_b.borderColor || Alpha(mainColor, _sb.borderOpacity));
+                const second = Box({ left: secondStart + "%", top: 0, width: (state.value + state.secondValue - secondStart) + "%", height: "100%", color: getSecondColor(_sb, mainColor), border: _b.border, borderColor: secondEdge, boxShadow: _b.boxShadow });
+                setEnds(second, look, !isAfter || state.value <= 0, state.value + state.secondValue >= 100);
                 if (state.secondStripes) paintStripes(second, look);
             }
 
             // BOX: Bar (the value)
             if (state.value > 0) {
-                const valueBar = Box({ left: 0, top: 0, width: state.value + "%", height: "100%", color: getFill(mainColor, _b.fillOpacity), round: look.track.round, border: _b.border, borderColor: edgeColor });
+                const valueBar = Box({ left: 0, top: 0, width: state.value + "%", height: "100%", color: getFill(mainColor, _b.fillOpacity), border: _b.border, borderColor: edgeColor, boxShadow: _b.boxShadow });
+                setEnds(valueBar, look, 1, state.value >= 100);
                 if (state.stripes) paintStripes(valueBar, look);
             }
 
+        };
+
+        // An end at an end of the track is as round as the track; an end in the middle has bar.innerRound ("": the
+        // round of the track)
+        const setEnds = function (part, look, isLeftAtEnd, isRightAtEnd) {
+            const innerRound = (look.bar.innerRound === "") ? look.track.round : look.bar.innerRound;
+            const left = (isLeftAtEnd ? look.track.round : innerRound) + "px";
+            const right = (isRightAtEnd ? look.track.round : innerRound) + "px";
+            part.css = { borderRadius: left + " " + right + " " + right + " " + left };
+        };
+
+        // The second part: its own color, the main color mixed with white (lighten), or the main color at fillOpacity
+        const getSecondColor = function (secondBar, mainColor) {
+            if (secondBar.color) return secondBar.color;
+            if (secondBar.lighten) return "color-mix(in srgb, " + mainColor + " " + Math.round((1 - secondBar.lighten) * 100) + "%, white)";
+            return getFill(mainColor, secondBar.fillOpacity);
         };
 
         // BOX: A limit line (over and under the track) and its text under it
