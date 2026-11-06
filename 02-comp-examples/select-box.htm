@@ -68,6 +68,7 @@
 
                         SelectBox({
                             width: 280,
+                            css: { maxWidth: "100%" }, // WHY: on a phone the card is narrower than this width
                             options: ["Apple", "Banana", "Cherry", "Grape", "Orange"],
                             value: "Banana",
                             clearable: 1,
@@ -139,6 +140,7 @@
 
                         SelectBox({
                             width: 320,
+                            css: { maxWidth: "100%" }, // WHY: on a phone the card is narrower than this width
                             options: [
                                 { value: "card", label: "Credit card", description: "Visa, Mastercard", iconFile: PAYMENT_ICONS.card },
                                 { value: "bank", label: "Bank transfer", description: "1-2 business days", iconFile: PAYMENT_ICONS.bank },
@@ -160,6 +162,7 @@
 
                         SelectBox({
                             width: 300,
+                            css: { maxWidth: "100%" }, // WHY: on a phone the card is narrower than this width
                             options: [
                                 { value: "active", label: "Active", description: "Visible in the store" },
                                 { value: "draft", label: "Draft", description: "Only the team can see it" },
