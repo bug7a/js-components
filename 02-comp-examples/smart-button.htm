@@ -20,7 +20,7 @@
 
         /* Bismillah */
 
-        // SMARTBUTTON · THE MODEL PAGE: new pages and projects take their buttons from it (the user, 2026-11-04).
+        // SMARTBUTTON · THE MODEL PAGE: new pages and projects take their buttons from it.
         // The look in three steps: styleName (the template), tone (a color of the kit), style (your own).
         // - SmartButton({ labelText, onClick })                         -> the default: ozdenType1, gray, 44 px high
         // - SmartButton({ tone: "cyan", labelText, onClick })           -> a color: white, cyan, orange, yellow, green, blue
@@ -42,7 +42,9 @@
         // The icons (24 x 24 lines; the color is in the drawing)
         const ICON_COLOR = "#1F1F1F";
         const lineIcon = function (paths) {
-            return "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + ICON_COLOR + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + paths + "<\/svg>");
+            const svgStart = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + ICON_COLOR + '"'
+                + ' stroke-width="2" stroke-linecap="round" stroke-linejoin="round">';
+            return "data:image/svg+xml;utf8," + encodeURIComponent(svgStart + paths + "<\/svg>");
         };
         const ICONS = {
             save: lineIcon('<path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4M8 20v-6h8v6"/>'),
@@ -88,15 +90,34 @@
 
         // GROUP: A white card with a title and a text; its footer stays open: the buttons go into it, endCard() closes it
         const startCard = function (title, text) {
-            VGroup({ width: CARD_WIDTH, height: "auto", align: "left top", gap: 0, color: "white", round: 10, border: 1, borderColor: Black(0.08), clipContent: 0 });
-            that.css = { maxWidth: "100%" };
+            VGroup({
+                width: CARD_WIDTH,
+                height: "auto",
+                align: "left top",
+                gap: 0,
+                color: "white",
+                round: 10,
+                border: 1,
+                borderColor: Black(0.08),
+                clipContent: 0,
+                css: { maxWidth: "100%" },
+            });
                 VGroup({ width: "100%", height: "auto", align: "left top", gap: 6, padding: [24, 20] });
                     Label({ text: title, fontSize: 18, bold: 1, textColor: Black(0.8) });
                     Label({ width: "100%", text: text, fontSize: 14, textColor: Black(0.55), css: { whiteSpace: "normal" } });
                 endGroup();
                 // GROUP: Footer
-                HGroup({ width: "100%", height: "auto", align: "left center", gap: 10, padding: [20, 16], color: "#F7F7F5", wrap: 1, clipContent: 0 });
-                that.css = { borderTop: "1px solid " + Black(0.06), borderRadius: "0 0 10px 10px" };
+                HGroup({
+                    width: "100%",
+                    height: "auto",
+                    align: "left center",
+                    gap: 10,
+                    padding: [20, 16],
+                    color: "#F7F7F5",
+                    wrap: 1,
+                    clipContent: 0,
+                    css: { borderTop: "1px solid " + Black(0.06), borderRadius: "0 0 10px 10px" },
+                });
         };
 
         const endCard = function () {
@@ -199,7 +220,12 @@
         const createFileCard = function () {
             startCard("report.pdf", "2.4 MB · changed today. Replace asks again: the old file will be lost.");
 
-                SmartButton({ tone: "blue", labelText: "Details", iconFile: ICONS.info, onClick: function () { showResult("Details: 12 pages, PDF 1.7."); } });
+                SmartButton({
+                    tone: "blue",
+                    labelText: "Details",
+                    iconFile: ICONS.info,
+                    onClick: function () { showResult("Details: 12 pages, PDF 1.7."); },
+                });
 
                 createSpace();
 
