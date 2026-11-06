@@ -10,12 +10,19 @@ UI COMPONENT TEMPLATE
 - Supports: multiple, accept (type filter), maxSize, maxFiles, directory selection, enabled.
 - A low zone (zoneHeight): what does not fit is hidden: first the icon, then the hint, then the description. The title stays.
 - Everything is drawn with code (no image files needed).
+- Style packages: "classic" (default), "dark". Select with styleName. (SelectFile.styles)
 
 IMPORTANT: About the file path
 - Browsers do NOT give the real disk path of a file (security rule).
   You get: name, size, type, lastModified and the File object (to read or upload the file).
 - In folder selection (directory: 1), "path" is the relative path in the folder. (Ex: "photos/2026/a.jpg")
-- In desktop environments (Electron), "path" is the real disk path when the environment provides it.
+- In desktop environments (Electron), "path" is the real disk path when the environment provides it. The row shows the
+  name; its bubble shows the path.
+- A program that has the file dialog of its system and real paths (the Python library, 2026-11-06):
+  onOpenDialog: function (self) {} opens its dialog in the place of the dialog of the page, and it gives what was chosen to
+  addFiles([{ name, path, size, type, lastModified, previewAddress }]): plain objects, not File objects.
+  previewAddress: a picture for the list (a plain object has no blob to make one from).
+  getFileDetails(): the files without their File objects, for a program that keeps them as text.
 
 Started Date: September 2026
 Developer: Bugra Ozden
@@ -46,8 +53,10 @@ const SelectFileDefaults = {
     descText: "or click to select",
     hintText: "", // Empty: created from accept and maxSize
     dropText: "Drop to add",
-    onChange: function (self) { }, // self.files: [{ file, name, path, size, sizeText, type, extension, lastModified }]
+    onChange: function (self) { }, // self.files: [{ file, name, displayName, path, size, sizeText, type, extension, lastModified }]
     onError: function (self, errors) { }, // errors: [{ type: "accept" | "maxSize" | "maxFiles", name, message }]
+    onOpenDialog: null, // function (self): the dialog of a program, in the place of the dialog of the page (see above)
+    styleName: "classic", // "classic", "dark" or a name added to SelectFile.styles
     style: {
         zone: {
             color: White(1),
@@ -112,6 +121,9 @@ const SelectFileDefaults = {
 
 const SelectFile = function (params = {}) {
 
+    // Merge style package: params.style > SelectFile.styles[styleName] > SelectFileDefaults.style (classic)
+    basic.applyStylePackage(params, SelectFile.styles, SelectFileDefaults);
+
     // Merge params:
     mergeIntoIfMissing(params, SelectFileDefaults);
 
@@ -138,7 +150,7 @@ const SelectFile = function (params = {}) {
     const BADGE_MAX_LETTERS = 4; // "JPEG", "DOCX"
 
     // *** PUBLIC VARIABLES:
-    // [var] Selected files: [{ file, name, path, size, sizeText, type, extension, lastModified }]
+    // [var] Selected files: [{ file, name, displayName, path, size, sizeText, type, extension, lastModified }]
     box.files = [];
     // [var] "normal", "hover", "dragover"
     box.state = "normal";
@@ -178,11 +190,13 @@ const SelectFile = function (params = {}) {
         return {
             file: file,
             name: file.name,
+            // WHY not the path: a real disk path does not fit in a row; the relative path of a folder says where it is.
+            displayName: file.webkitRelativePath || file.name,
             // WHY: Browsers do not give the real path. Electron may give it with file.path.
             path: file.path || file.webkitRelativePath || file.name,
             size: file.size,
             sizeText: SelectFile.formatSize(file.size),
-            type: file.type,
+            type: file.type || "",
             extension: getExtension(file.name),
             lastModified: file.lastModified,
         };
@@ -262,18 +276,27 @@ const SelectFile = function (params = {}) {
         revokePreviews();
     };
 
+    // The address of a picture for the list. "": none (a plain object of a program without a previewAddress).
+    const getPreviewAddress = function (info) {
+        if (info.file.previewAddress) return info.file.previewAddress;
+        if (!(info.file instanceof Blob)) return "";
+        const url = URL.createObjectURL(info.file);
+        previewUrls.push(url);
+        return url;
+    };
+
     // ICON: Image preview, or LABEL: extension badge
     const createThumbnail = function (info) {
 
         const thumbSize = _s.item.height - THUMB_INSET;
+        const isImage = (box.showPreview == 1 && info.type.startsWith("image/"));
+        const previewAddress = (isImage) ? getPreviewAddress(info) : "";
 
-        if (box.showPreview == 1 && info.type.startsWith("image/")) {
-            const url = URL.createObjectURL(info.file);
-            previewUrls.push(url);
+        if (previewAddress) {
             const icoPreview = Icon({ width: thumbSize, height: thumbSize, round: _s.badge.round });
             icoPreview.css.objectFit = "cover";
             icoPreview.shrink = 0;
-            icoPreview.load(url);
+            icoPreview.load(previewAddress);
             return;
         }
 
@@ -352,7 +375,7 @@ const SelectFile = function (params = {}) {
                 // LABEL: Name
                 const lblName = Label({
                     width: "100%",
-                    plainText: info.path,
+                    plainText: info.displayName,
                     ..._s.itemName,
                 });
                 lblName.css = { whiteSpace: "nowrap", textOverflow: "ellipsis" };
@@ -481,6 +504,10 @@ const SelectFile = function (params = {}) {
     // Open the file dialog.
     box.open = function () {
         if (box.enabled != 1) return;
+        if (typeof box.onOpenDialog === "function") {
+            box.onOpenDialog(box);
+            return;
+        }
         box.input.value = ""; // WHY: The same file can be selected again.
         box.input.click();
     };
@@ -490,11 +517,20 @@ const SelectFile = function (params = {}) {
         return box.files.slice();
     };
 
-    box.removeFile = function (index) {
+    box.getFileDetails = function () {
+        return box.files.map(function (info) {
+            const details = Object.assign({}, info);
+            delete details.file;
+            return details;
+        });
+    };
+
+    // silent: 1 -> onChange is not called.
+    box.removeFile = function (index, silent = 0) {
         if (index < 0 || index >= box.files.length) return;
         box.files.splice(index, 1);
         renderList();
-        box.onChange(box);
+        if (!silent) box.onChange(box);
     };
 
     box.clear = function (silent = 0) {
@@ -714,6 +750,32 @@ const SelectFile = function (params = {}) {
     renderList();
 
     return endObject(box);
+
+};
+
+// *** STYLE PACKAGES:
+
+// USAGE: SelectFile.styles.myStyle = { zone: { round: 14 } };
+SelectFile.styles = {
+
+    // White, dark text, a dashed line.
+    classic: SelectFileDefaults.style,
+
+    // Dark theme, same colors as SelectColor "dark".
+    dark: {
+        zone: { color: "#232322", borderColor: "rgba(255, 255, 255, 0.22)" },
+        zoneHover: { color: "#2A2A29", borderColor: "rgba(255, 255, 255, 0.40)" },
+        zoneDragOver: { color: "#26332F", borderColor: "#65A293" },
+        icon: { color: "rgba(255, 255, 255, 0.55)", dragOverColor: "#65A293" },
+        title: { textColor: "rgba(255, 255, 255, 0.90)" },
+        desc: { textColor: "rgba(255, 255, 255, 0.55)" },
+        hint: { textColor: "rgba(255, 255, 255, 0.40)" },
+        item: { color: "#232322", borderColor: "rgba(255, 255, 255, 0.12)" },
+        itemName: { textColor: "rgba(255, 255, 255, 0.90)" },
+        itemSize: { textColor: "rgba(255, 255, 255, 0.50)" },
+        badge: { color: "rgba(255, 255, 255, 0.10)", textColor: "rgba(255, 255, 255, 0.70)" },
+        removeButton: { textColor: "rgba(255, 255, 255, 0.55)" },
+    },
 
 };
 

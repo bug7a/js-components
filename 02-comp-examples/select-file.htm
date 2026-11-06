@@ -20,7 +20,9 @@
         /* Bismillah */
 
         // *** VARIABLES:
-        let fileSingle, fileImages, fileFolder, fileCompact;
+        const LIGHT_CARD = { color: "white", borderColor: Black(0.1), titleColor: Black(0.45) };
+        const DARK_CARD = { color: "#1C1C1B", borderColor: White(0.12), titleColor: White(0.55) };
+        let fileSingle, fileImages, fileFolder, fileCompact, fileDark;
         let lblSingle, lblContent, lblImages, lblErrors, lblFolder;
 
         const start = function () {
@@ -210,6 +212,20 @@
 
                     endCard();
 
+                    // SAMPLE 5: On a dark page; a file of a program (a plain object with a real path)
+                    startCard("5. On a Dark Page: styleName \"dark\"", DARK_CARD);
+
+                        fileDark = SelectFile({
+                            styleName: "dark",
+                            multiple: 1,
+                            zoneHeight: 130,
+                        });
+                        fileDark.addFiles([
+                            { name: "report.pdf", path: "/Users/ada/report.pdf", size: 240000, type: "application/pdf", lastModified: 1 },
+                        ]);
+
+                    endCard();
+
                 endGroup();
 
             endBox();
@@ -218,23 +234,23 @@
 
         // *** OTHER FUNCTIONS:
 
-        // GROUP: A white card with a title.
-        const startCard = function (title) {
+        // GROUP: A card with a title.
+        const startCard = function (title, look = LIGHT_CARD) {
             VGroup({
                 width: 420,
                 height: "auto",
                 align: "left top",
                 gap: 12,
                 padding: 20,
-                color: "white",
+                color: look.color,
                 round: 10,
                 border: 1,
-                borderColor: Black(0.1),
+                borderColor: look.borderColor,
             });
             Label({
                 text: title,
                 fontSize: 14,
-                textColor: Black(0.45),
+                textColor: look.titleColor,
             });
         };
 

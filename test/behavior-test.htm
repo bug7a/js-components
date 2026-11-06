@@ -377,6 +377,63 @@
             select.remove();
         });
 
+        test("SelectFile: a file of a program is a plain object with its path; the row shows its name", async function () {
+            const path = "/Users/ada/photos/sea.png";
+            const dot = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+            const select = SelectFile({ multiple: 1 });
+            select.addFiles([
+                { name: "sea.png", path: path, size: 2048, type: "image/png", lastModified: 5 },
+                { name: "dot.gif", path: "/Users/ada/dot.gif", size: 40, type: "image/gif", lastModified: 5, previewAddress: dot },
+            ]);
+            const details = select.getFileDetails();
+            const rows = select.list.elem.innerText;
+            const pictures = select.list.elem.querySelectorAll("img");
+            const isRight = details.length === 2 && details[0].path === path && !("file" in details[0])
+                && rows.includes("sea.png") && !rows.includes("/Users/ada")
+                && pictures.length === 1 && pictures[0].src === dot;
+            check("SelectFile: a file of a program is a plain object with its path; the row shows its name", isRight,
+                JSON.stringify(details[0]) + " | " + rows + " | pictures: " + pictures.length);
+            select.remove();
+        });
+
+        test("SelectFile: onOpenDialog opens the dialog of a program in the place of the dialog of the page", async function () {
+            let asked = 0;
+            let pageDialogs = 0;
+            const select = SelectFile({ onOpenDialog: function () { asked++; } });
+            select.input.addEventListener("click", function (event) {
+                pageDialogs++;
+                event.preventDefault();
+            });
+            select.zone.elem.click();
+            select.open();
+            check("SelectFile: onOpenDialog opens the dialog of a program in the place of the dialog of the page",
+                asked === 2 && pageDialogs === 0, "asked: " + asked + ", dialogs of the page: " + pageDialogs);
+            select.remove();
+        });
+
+        test("SelectFile: removeFile(index, 1) does not call onChange", async function () {
+            let changes = 0;
+            const select = SelectFile({ multiple: 1, onChange: function () { changes++; } });
+            select.addFiles([{ name: "a.txt", size: 1 }, { name: "b.txt", size: 2 }, { name: "c.txt", size: 3 }]);
+            select.removeFile(0, 1);
+            const afterSilent = changes;
+            select.removeFile(0);
+            check("SelectFile: removeFile(index, 1) does not call onChange",
+                afterSilent === 1 && changes === 2 && select.files.length === 1, "onChange: " + afterSilent + ", " + changes);
+            select.remove();
+        });
+
+        test("SelectFile: the dark package, and a style of the page over it", async function () {
+            const groundOf = (select) => getComputedStyle(select.zone.elem).backgroundColor;
+            const dark = SelectFile({ styleName: "dark" });
+            const own = SelectFile({ styleName: "dark", style: { zone: { color: "rgb(1, 2, 3)" } } });
+            const light = SelectFile();
+            const grounds = [dark, own, light].map(groundOf);
+            check("SelectFile: the dark package, and a style of the page over it",
+                grounds.join() === "rgb(35, 35, 34),rgb(1, 2, 3),rgb(255, 255, 255)", grounds.join());
+            [dark, own, light].forEach((select) => select.remove());
+        });
+
         // *** PROPERTY PANEL (comp/property-panel.js)
 
         test("PropertyPanel: leaving a number field without a change keeps the value", async function () {
