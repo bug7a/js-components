@@ -20,7 +20,7 @@
         /* Bismillah */
 
         // *** VARIABLES:
-        let chkTerms, chkNewsletter, chkDisabled, lblResult, btnSubmit;
+        let chkTerms, chkNewsletter, chkDisabled, lblResult, lblInterests, btnSubmit;
         const interestList = [];
 
         const start = function () {
@@ -87,13 +87,13 @@
                     startCard("2. From Data");
 
                         ["JavaScript", "Design", "Music", "Travel"].forEach(function (name, index) {
-                            CheckBox({
+                            const chkInterest = CheckBox({
                                 key: String(index),
                                 labelText: name,
                                 checked: (index == 0) ? 1 : 0,
                                 onChange: refreshInterests,
                             });
-                            interestList.push(that);
+                            interestList.push(chkInterest);
                         });
 
                         // GROUP: Buttons
@@ -109,12 +109,11 @@
 
                         endGroup();
 
-                        Label({
+                        lblInterests = Label({
                             text: "",
                             fontSize: 14,
                             textColor: Black(0.5),
                         });
-                        window.lblInterests = that;
 
                     endCard();
 

@@ -25,26 +25,20 @@
 
         /* Bismillah */
 
-        // InputB with styleName: "ozden" (the fields of __projects/contact-form)
-        // and "ozdenDark" (the contact form of __projects/webpage-ozden-panel, in the black tones of the kit since
-        // 2026-11-05).
+        // InputB with styleName: "ozden" (on a light page) and "ozdenDark" (on a dark page).
         // EmailInputB, PhoneInputB, URLInputB and TextareaB are made from InputB, so they take the same packages.
 
-        // The pages of the two projects
         const LIGHT_PAGE_COLOR = "white";
-        const DARK_PAGE_COLOR = "#1A1A19"; // the dark cards of the kit (it was the dark green of webpage-ozden-panel)
+        const DARK_PAGE_COLOR = "#1A1A19";
         const DARK_CARD_COLOR = "rgba(255, 255, 255, 0.03)";
         const DARK_CARD_BORDER_COLOR = "rgba(255, 255, 255, 0.10)";
         const CARD_WIDTH = 420;
-
-        // *** VARIABLES:
-        let pageBox;
 
         const start = function () {
 
             page.color = "#F4F5F2";
 
-            pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+            const pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
 
                 VGroup({ width: "100%", height: "auto", align: "center top", padding: 40, gap: 24 });
 
@@ -60,8 +54,18 @@
 
                         // CARD: ozdenDark on a black page
                         startCard("styleName: \"ozdenDark\"", DARK_PAGE_COLOR, DARK_CARD_BORDER_COLOR, White(0.45));
-                            VGroup({ width: "100%", height: "auto", align: "left top", gap: 14, padding: 20, color: DARK_CARD_COLOR, round: 14, border: 1, borderColor: DARK_CARD_BORDER_COLOR });
-                            that.css.alignItems = "stretch";
+                            VGroup({
+                                width: "100%",
+                                height: "auto",
+                                align: "left top",
+                                gap: 14,
+                                padding: 20,
+                                color: DARK_CARD_COLOR,
+                                round: 14,
+                                border: 1,
+                                borderColor: DARK_CARD_BORDER_COLOR,
+                                css: { alignItems: "stretch" },
+                            });
                                 addFields("ozdenDark");
                             endGroup();
                         endCard();
@@ -72,7 +76,7 @@
 
             endBox();
 
-            if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: pageBox });
+            ScrollBar({ scrollableBox: pageBox });
 
         };
 
@@ -136,8 +140,18 @@
 
         // GROUP: A card with a caption, in the color of its page.
         const startCard = function (caption, color, borderColor, captionColor) {
-            VGroup({ width: CARD_WIDTH, height: "auto", align: "left top", gap: 14, padding: 24, color: color, round: 16, border: 1, borderColor: borderColor });
-            that.css.alignItems = "stretch";
+            VGroup({
+                width: CARD_WIDTH,
+                height: "auto",
+                align: "left top",
+                gap: 14,
+                padding: 24,
+                color: color,
+                round: 16,
+                border: 1,
+                borderColor: borderColor,
+                css: { alignItems: "stretch" },
+            });
             Label({ text: caption, fontSize: 12, textColor: captionColor, css: { letterSpacing: "1px" } });
         };
 

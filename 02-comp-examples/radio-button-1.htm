@@ -171,11 +171,7 @@
                             SmartButton({
                                 tone: "white",
                                 labelText: "Enable Premium",
-                                onClick: function (self) {
-                                    rdoPremium.setEnabled(rdoPremium.enabled ? 0 : 1);
-                                    rdoPremium.setLabelText("Premium" + (rdoPremium.enabled ? "" : " (disabled)"));
-                                    self.setText((rdoPremium.enabled ? "Disable" : "Enable") + " Premium");
-                                },
+                                onClick: togglePremium,
                             });
 
                         endGroup();
@@ -210,7 +206,13 @@
                         HGroup({ width: "auto", height: "auto", gap: 8 });
                             RadioButton({ group: "mini" });
                             RadioButton({ group: "mini", checked: 1 });
-                            RadioButton({ group: "mini", style: { dot: { color: "#FE5D49", round: 2 }, checkedMark: { borderColor: "#FE5D49" } } });
+                            RadioButton({
+                                group: "mini",
+                                style: {
+                                    dot: { color: "#FE5D49", round: 2 },
+                                    checkedMark: { borderColor: "#FE5D49" },
+                                },
+                            });
                         endGroup();
 
                         Label({
@@ -245,8 +247,8 @@
                 round: 10,
                 border: 1,
                 borderColor: Black(0.1),
+                css: { maxWidth: CARD_MAX_WIDTH + "px" },
             });
-            that.elem.style.maxWidth = CARD_MAX_WIDTH + "px"; // WHY: basic.js has no maxWidth prop
             Label({
                 text: title,
                 fontSize: 14,
@@ -264,11 +266,27 @@
 
         const refreshPayment = function () {
             const selected = RadioButton.getSelected("payment");
-            lblPayment.text = "Payment: " + (selected ? selected.labelText + " (" + selected.value + ")" : "none");
+            if (!selected) {
+                lblPayment.text = "Payment: none";
+                return;
+            }
+            lblPayment.text = "Payment: " + selected.labelText + " (" + selected.value + ")";
         };
 
         const refreshPlan = function () {
             lblPlan.text = "Plan: " + RadioButton.getValue("plan");
+        };
+
+        const togglePremium = function (btn) {
+            if (rdoPremium.enabled) {
+                rdoPremium.setEnabled(0);
+                rdoPremium.setLabelText("Premium (disabled)");
+                btn.setText("Enable Premium");
+                return;
+            }
+            rdoPremium.setEnabled(1);
+            rdoPremium.setLabelText("Premium");
+            btn.setText("Disable Premium");
         };
 
     </script>
