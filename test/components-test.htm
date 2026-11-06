@@ -62,6 +62,7 @@
 
         // kind "object": a namespace, not a constructor. Only loading is checked.
         const COMPONENTS = [
+            { file: "comp/accordion.js", name: "Accordion", params: { sections: ["One", { key: "two", title: "Two", opened: 1 }] } },
             { file: "comp/badge.js", name: "Badge" },
             { file: "comp/currency-input-b.js", name: "CurrencyInputB", deps: INPUT_B },
             { file: "comp/email-input-b.js", name: "EmailInputB", deps: INPUT_B },

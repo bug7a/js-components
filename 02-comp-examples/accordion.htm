@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>Accordion</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- LIBRARY FILES -->
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- COMPONENT FILES -->
+        <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/input-b.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/check-box.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/slider.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/accordion.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+
+        /* Bismillah */
+
+        // Accordion (comp/accordion.js): sections that fold, in the two themes.
+        // The first one: more than one section can be open; a section with a note, an icon, a disabled one.
+        // The second one (multiple: 0): a section that opens closes the others: questions and answers.
+        // Tab comes to the rows; Enter or Space opens and closes; the arrows move between the rows.
+
+        // *** VARIABLES:
+        const PAGE_COLOR = "#ECEBE8";
+        const SOFT_TEXT = "#6F6E6B";
+        const COLUMN_MIN_WIDTH = 320;
+        const COLUMN_MAX_WIDTH = 480;
+        const USER_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4.5"/><path d="M3.5 21c.8-4.6 4.2-7 8.5-7s7.7 2.4 8.5 7z"/></svg>';
+        const BELL_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5c-3.9 0-6.5 2.9-6.5 6.8 0 4.2-1.6 5.7-2.5 6.9-.5.7 0 1.8.9 1.8h16.2c.9 0 1.4-1.1.9-1.8-.9-1.2-2.5-2.7-2.5-6.9 0-3.9-2.6-6.8-6.5-6.8z"/><circle cx="12" cy="20.5" r="2"/></svg>';
+        const LOOKS = {
+            light: {
+                title: "Light", note: "styleName: \"light\" (default)", checkBox: "classic", input: "ozden", slider: "round",
+                textColor: Black(0.8), softColor: Black(0.55),
+            },
+            dark: {
+                title: "Dark", note: "styleName: \"dark\"", checkBox: "dark", input: "ozdenDark", slider: "roundDark",
+                textColor: White(0.85), softColor: White(0.55), windowColor: "#1C1C1B",
+            },
+        };
+        const QUESTIONS = [
+            { key: "install", title: "How do I install it?", answer: "Copy the files of the library next to your page. There is nothing to build.", opened: 1 },
+            { key: "internet", title: "Does it need the internet?", answer: "No. The library and its components are files of your page." },
+            { key: "long", title: "A long question stays on one line, and the end of it is cut with an ellipsis", answer: "The whole question is the title of the section." },
+        ];
+
+        let accordions = [];
+        let isAnimated = 0;
+        let btnAnimated;
+
+        // First running function. (basic.js calls it when the page is ready)
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            // BOX: Page (it scrolls when the window is lower than the samples)
+            const pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+
+            // GROUP: The title, the controls and the two themes
+            VGroup({ width: "100%", height: "auto", align: "center top", gap: 16, padding: [16, 28], clipContent: 0 });
+
+                Label({ text: "Accordion", fontSize: 24, bold: 1, textColor: Black(0.8) });
+
+                // GROUP: The buttons
+                HGroup({ width: "100%", height: "auto", align: "center center", gap: 8, wrap: 1 });
+                    SmartButton({ labelText: "Open all", onClick: function () { eachAccordion(function (one) { one.openAll(); }); } });
+                    SmartButton({ labelText: "Close all", onClick: function () { eachAccordion(function (one) { one.closeAll(); }); } });
+                    btnAnimated = SmartButton({ labelText: "animated: 0", onClick: toggleAnimated });
+                endGroup();
+
+                // GROUP: The two themes side by side (one under the other on a narrow screen)
+                HGroup({ width: "100%", height: "auto", align: "center top", gap: 20, wrap: 1, clipContent: 0 });
+                    createColumn(LOOKS.light, "light");
+                    createColumn(LOOKS.dark, "dark");
+                endGroup();
+
+            endGroup();
+
+            endBox();
+
+            ScrollBar({ scrollableBox: pageBox });
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        const eachAccordion = function (func) {
+            accordions.forEach(func);
+        };
+
+        const toggleAnimated = function () {
+            isAnimated = (isAnimated) ? 0 : 1;
+            btnAnimated.setText("animated: " + isAnimated);
+            eachAccordion(function (one) { one.setAnimated(isAnimated); });
+        };
+
+        // GROUP: The name of a theme and its two samples
+        const createColumn = function (look, styleName) {
+
+            VGroup({
+                width: "auto",
+                height: "auto",
+                align: "left top",
+                gap: 8,
+                padding: (look.windowColor) ? 14 : 0,
+                color: look.windowColor || "transparent",
+                round: 12,
+                css: { flex: "1 1 " + COLUMN_MIN_WIDTH + "px", maxWidth: COLUMN_MAX_WIDTH + "px", minWidth: "0" },
+                clipContent: 0,
+            });
+
+                HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
+                    Label({ text: look.title, fontSize: 15, bold: 1, textColor: look.textColor });
+                    Label({ text: look.note, fontSize: 13, textColor: look.softColor });
+                endGroup();
+
+                createSettings(look, styleName);
+                Label({ text: "multiple: 0", fontSize: 13, textColor: look.softColor, css: { marginTop: "8px" } });
+                createQuestions(look, styleName);
+
+            endGroup();
+
+        };
+
+        // Settings: more than one section can be open.
+        const createSettings = function (look, styleName) {
+
+            const settings = Accordion({
+                styleName: styleName,
+                sections: [
+                    { key: "account", title: "Account", icon: USER_ICON, opened: 1 },
+                    { key: "notifications", title: "Notifications", icon: BELL_ICON, note: "2 on" },
+                    { key: "locked", title: "Only for admins", disabled: 1 },
+                ],
+                onToggle: function (self, section) { println(styleName + ": " + section.key + " " + section.opened); },
+            });
+            accordions.push(settings);
+
+            settings.startSection("account");
+                InputB({ styleName: look.input, width: "100%", titleText: "Name", placeholder: "Ada", maxChar: 40 });
+                Label({ text: "Text size", fontSize: 13, textColor: look.softColor });
+                Slider({ styleName: look.slider, width: "100%", currentValue: 40 });
+            settings.endSection();
+
+            settings.startSection("notifications");
+                CheckBox({ styleName: look.checkBox, labelText: "By e-mail", checked: 1 });
+                CheckBox({ styleName: look.checkBox, labelText: "On this computer", checked: 1 });
+            settings.endSection();
+
+        };
+
+        // Questions: a question that opens closes the others.
+        const createQuestions = function (look, styleName) {
+
+            const questions = Accordion({ styleName: styleName, multiple: 0, sections: QUESTIONS });
+            accordions.push(questions);
+
+            QUESTIONS.forEach(function (question) {
+                createIn(questions.getContent(question.key), function () {
+                    Label({ width: "100%", text: question.answer, fontSize: 14, textColor: look.softColor });
+                });
+            });
+
+        };
+
+        </script>
+    </head>
+
+    <body></body>
+
+</html>

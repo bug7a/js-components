@@ -320,6 +320,12 @@ CATALOG.COMPONENTS = [
         tr: "Yaklaşık 2.000 satıra kadar listeler için tablo: sıralama, arama, klavyeyle seçim, kendi hücreleriniz ve id ile satır güncelleme. Daha fazla satır için: SmartTable.",
     },
     {
+        key: "accordion", name: "Accordion", cat: "pages",
+        source: "comp/accordion.js", samples: ["02-comp-examples/accordion.htm"],
+        en: "Sections that fold: a title row and the objects under it, one or more open, with a note, an icon and the keyboard. A closed section keeps its objects. Light and dark themes.",
+        tr: "Katlanan bölümler: bir başlık satırı ve altında nesneleri, biri ya da birkaçı açık; not, ikon ve klavye. Kapalı bölüm nesnelerini korur. Aydınlık ve karanlık tema.",
+    },
+    {
         key: "splitter", name: "Splitter", cat: "pages",
         source: "comp/splitter.js", samples: ["02-comp-examples/splitter.htm"],
         en: "Two areas with a line between them: a drag changes their sizes, side by side or one under the other. Keyboard, limits, sizes that follow the window. Light and dark themes.",

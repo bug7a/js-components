@@ -77,6 +77,7 @@
         <script src="../comp/menu-bar.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/status-bar.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/splitter.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/accordion.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/code-editor.js" type="text/javascript" charset="utf-8"></script>
 
         <script>
@@ -5008,6 +5009,183 @@
             pointer(element, "pointermove", toX, toY);
             pointer(element, "pointerup", toX, toY);
         };
+
+        // *** ACCORDION (comp/accordion.js)
+
+        test("Accordion: a click and the keys open and close, onToggle says which; a disabled section does not; silent", async function () {
+            const toggled = [];
+            const one = Accordion({
+                left: 0, top: 0, width: 300,
+                sections: [{ key: "a", title: "A" }, { key: "b", title: "B", opened: 1 }, { key: "c", title: "C", disabled: 1 }],
+                onToggle: function (self, section) { toggled.push(section.key + section.opened); },
+            });
+            const rows = one.elem.querySelectorAll('[role="button"]');
+            const startKeys = one.getOpenKeys().join();
+            rows[0].click();
+            const afterClick = one.isOpen("a");
+            key(rows[0], "keydown", "Enter");
+            const afterEnter = one.isOpen("a");
+            key(rows[0], "keydown", " ");
+            const expanded = rows[0].getAttribute("aria-expanded");
+            rows[2].click();
+            key(rows[2], "keydown", "Enter");
+            const disabledStays = one.isOpen("c") === 0 && rows[2].tabIndex === -1;
+            rows[0].focus();
+            key(rows[0], "keydown", "ArrowDown");
+            const afterDown = (document.activeElement === rows[1]);
+            key(rows[1], "keydown", "ArrowDown"); // the disabled row is passed over: it stays on the last one that can
+            const stays = (document.activeElement === rows[1]);
+            key(rows[1], "keydown", "Home");
+            const afterHome = (document.activeElement === rows[0]);
+            const toggledByUser = toggled.join();
+            one.close("b", 1);
+            one.open("c", 1); // code can open a disabled section
+            const isRight = startKeys === "b" && afterClick === 1 && afterEnter === 0 && expanded === "true" && disabledStays
+                && afterDown && stays && afterHome && toggledByUser === "a1,a0,a1" && toggled.length === 3 && one.getOpenKeys().join() === "a,c";
+            check("Accordion: a click and the keys open and close, onToggle says which; a disabled section does not; silent", isRight,
+                [startKeys, afterClick, afterEnter, expanded, disabledStays, afterDown, stays, afterHome, toggled.join(), one.getOpenKeys().join()].join(" | "));
+            one.remove();
+        });
+
+        test("Accordion: multiple: 0: a section that opens closes the others, and only one is open at the start", async function () {
+            const toggled = [];
+            const one = Accordion({
+                left: 0, top: 0, width: 300, multiple: 0,
+                sections: [{ key: "a", title: "A", opened: 1 }, { key: "b", title: "B", opened: 1 }, "C"],
+                onToggle: function (self, section) { toggled.push(section.key + section.opened); },
+            });
+            const atStart = one.getOpenKeys().join();
+            one.open("C");
+            const afterOpen = one.getOpenKeys().join();
+            one.openAll();
+            check("Accordion: multiple: 0: a section that opens closes the others, and only one is open at the start",
+                atStart === "a" && afterOpen === "C" && toggled.join() === "a0,C1" && one.getOpenKeys().join() === "C",
+                atStart + " | " + afterOpen + " | " + toggled.join());
+            one.remove();
+        });
+
+        test("Accordion: a closed section keeps its objects in its flow, out of sight and out of the reach of the keyboard", async function () {
+            const one = Accordion({ left: 0, top: 0, width: 300, sections: ["A", "B"] });
+            const closedHeight = one.elem.offsetHeight;
+            const field = createIn(one.getContent("A"), function () { return Input({ width: 120, height: 30 }); });
+            const frame = one.getContent("A").elem.parentElement;
+            const isOutOfReach = frame.hasAttribute("inert") && frame.offsetHeight === 0 && one.elem.offsetHeight === closedHeight;
+            const keepsItsSize = (field.elem.offsetWidth === 120 && one.getContent("A").elem.offsetHeight > 30);
+            const isInFlow = (getComputedStyle(field.elem).position === "relative");
+            one.open("A");
+            const isOpenNow = !frame.hasAttribute("inert") && frame.offsetHeight > 30 && one.elem.offsetHeight > closedHeight + 30;
+            one.close("A");
+            const isBack = frame.offsetHeight === 0 && one.elem.offsetHeight === closedHeight;
+            check("Accordion: a closed section keeps its objects in its flow, out of sight and out of the reach of the keyboard",
+                isOutOfReach && keepsItsSize && isInFlow && isOpenNow && isBack,
+                [isOutOfReach, keepsItsSize, isInFlow, isOpenNow, isBack].join(" | "));
+            one.remove();
+        });
+
+        test("Accordion: startSection / endSection: a group in it goes back to the section, and the page goes on where it was", async function () {
+            const holder = startBox(0, 0, 300, 300, { color: "transparent" });
+                const one = Accordion({ width: 300, sections: ["A"] });
+                one.startSection("A");
+                    HGroup({ hug: 1 });
+                        const inGroup = Label({ text: "In a group" });
+                    endGroup();
+                    const afterGroup = Label({ text: "After the group" });
+                one.endSection();
+                const outside = Label({ text: "Outside" });
+            endBox();
+            const content = one.getContent("A").elem;
+            const made = one.startSection("New");
+            one.endSection();
+            const isRight = content.contains(inGroup.elem) && content.contains(afterGroup.elem)
+                && inGroup.elem.parentElement !== afterGroup.elem.parentElement
+                && !one.elem.contains(outside.elem) && outside.elem.parentElement === holder.elem
+                && one.getSection("New").title === "New" && one.getContent("New").elem.contains(made.elem);
+            check("Accordion: startSection / endSection: a group in it goes back to the section, and the page goes on where it was", isRight, String(isRight));
+            holder.remove();
+        });
+
+        test("Accordion: a section is added, changed and removed; a title is never HTML; a line only between the sections", async function () {
+            const warn = console.warn;
+            let warnings = 0;
+            console.warn = function () { warnings++; };
+            const one = Accordion({ left: 0, top: 0, width: 300, sections: ["A", "B"] });
+            const lineShown = function () {
+                return Array.from(one.list.elem.children).map(function (group) { return (group.children[0].offsetHeight > 0) ? 1 : 0; }).join("");
+            };
+            const atStart = lineShown();
+            const twin = one.addSection("B");
+            console.warn = warn;
+            one.addSection({ key: "c", title: "C <b>bold</b>", note: "5 <i>files</i>" });
+            const text = one.list.elem.innerText;
+            const isPlain = text.includes("C <b>bold</b>") && text.includes("5 <i>files</i>");
+            one.setSectionTitle("c", "New title");
+            one.setSectionNote("c", "");
+            const changed = one.list.elem.innerText.includes("New title") && !one.list.elem.innerText.includes("files");
+            one.removeSection("A");
+            const afterRemove = lineShown();
+            one.setSections([{ key: "x", title: "X", opened: 1 }]);
+            const isRight = atStart === "01" && twin === null && warnings === 1 && isPlain && changed && afterRemove === "01"
+                && one.getOpenKeys().join() === "x" && one.sections.length === 1;
+            check("Accordion: a section is added, changed and removed; a title is never HTML; a line only between the sections", isRight,
+                [atStart, twin, warnings, isPlain, changed, afterRemove, one.getOpenKeys().join()].join(" | "));
+            one.remove();
+        });
+
+        test("Accordion: setTheme changes the look, and the open sections, their objects and a style of the page stay", async function () {
+            const groundOf = (obj) => getComputedStyle(obj.elem).backgroundColor;
+            const one = Accordion({ left: 0, top: 0, width: 300, sections: [{ key: "a", title: "A", opened: 1 }] });
+            const own = Accordion({ left: 0, top: 0, width: 300, sections: ["A"], style: { box: { color: "rgb(1, 2, 3)" } } });
+            const field = createIn(one.getContent("a"), function () { return Label({ text: "Stays" }); });
+            const light = groundOf(one);
+            one.setTheme("dark");
+            own.setTheme("dark");
+            const isRight = light === "rgb(255, 255, 255)" && groundOf(one) === "rgb(35, 35, 34)" && groundOf(own) === "rgb(1, 2, 3)"
+                && one.isOpen("a") === 1 && field.elem.isConnected;
+            check("Accordion: setTheme changes the look, and the open sections, their objects and a style of the page stay", isRight,
+                [light, groundOf(one), groundOf(own), one.isOpen("a")].join(" | "));
+            one.remove();
+            own.remove();
+        });
+
+        test("Accordion: animated: the arrow turns and the objects fade; animated: 0 writes nothing; setAnimated(0) writes the still look back", async function () {
+            const still = Accordion({ left: 0, top: 0, width: 300, sections: ["A"] });
+            const moving = Accordion({ left: 0, top: 0, width: 300, sections: ["A"], animated: 1 });
+            await wait(300);
+            const contentOf = (one) => one.getContent("A");
+            const frameOf = (one) => contentOf(one).elem.parentElement;
+            const arrowOf = (one) => one.list.elem.querySelector('[role="button"]').lastElementChild;
+            const stillOpacity = getComputedStyle(contentOf(still).elem).opacity;
+            const movingOpacity = getComputedStyle(contentOf(moving).elem).opacity;
+            const hasMotion = arrowOf(moving).style.transition.includes("transform") && contentOf(moving).elem.style.transition.includes("opacity");
+            const stillHasNone = (arrowOf(still).style.transition === "" && contentOf(still).elem.style.transition === "");
+            moving.open("A");
+            const openNow = (frameOf(moving).style.height === "auto");
+            moving.close("A");
+            const waitsToClose = (frameOf(moving).offsetHeight > 0);
+            for (let i = 0; i < 40 && frameOf(moving).offsetHeight > 0; i++) await wait(25); // WHY: a busy page runs its timers late
+            const closedNow = (frameOf(moving).offsetHeight === 0);
+            moving.setAnimated(0);
+            const isStillAgain = contentOf(moving).elem.style.opacity === "1" && contentOf(moving).elem.style.transform === "";
+            const isRight = stillOpacity === "1" && movingOpacity === "0" && hasMotion && stillHasNone && openNow && waitsToClose && closedNow && isStillAgain;
+            check("Accordion: animated: the arrow turns and the objects fade; animated: 0 writes nothing; setAnimated(0) writes the still look back", isRight,
+                [stillOpacity, movingOpacity, hasMotion, stillHasNone, openNow, waitsToClose, closedNow, isStillAgain].join(" | "));
+            still.remove();
+            moving.remove();
+        });
+
+        test("Accordion: height \"auto\" grows with its sections; a fixed height scrolls them inside", async function () {
+            const sections = ["A", "B", "C", "D", "E", "F"];
+            const auto = Accordion({ left: 0, top: 0, width: 300, sections: sections });
+            const fixed = Accordion({ left: 0, top: 0, width: 300, height: 120, sections: sections });
+            await wait(50);
+            const autoHeight = auto.elem.offsetHeight;
+            const isRight = autoHeight > 240 && !auto.scrollBar && fixed.elem.offsetHeight === 120
+                && fixed.listArea.elem.scrollHeight > fixed.listArea.elem.clientHeight && !!fixed.scrollBar;
+            check("Accordion: height \"auto\" grows with its sections; a fixed height scrolls them inside", isRight,
+                [autoHeight, fixed.elem.offsetHeight, fixed.listArea ? fixed.listArea.elem.scrollHeight : "no area"].join(" | "));
+            auto.remove();
+            fixed.remove();
+        });
 
         test("Splitter: px stay px and a part stays a part when the box changes; the limits hold", async function () {
             const fixed = Splitter({ left: 0, top: 0, width: 601, height: 200, firstSize: 200, minFirst: 50, minSecond: 100 });
