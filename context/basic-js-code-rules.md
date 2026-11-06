@@ -54,7 +54,7 @@ Bu kurallar `comp-m*`, sayfalar, şablonlar ve projeler (oyun, designer...) içi
 
 - Kod NE yaptığını zaten söyler. Yorum, koddan anlaşılmayanı yazar: `// WHY: ...`.
 - Bir kod parçası açıklama istiyorsa, önce sadeleştirilir ya da adı olan bir fonksiyona taşınır; yorum son çaredir.
-- Tarih, kişi ve olay hikâyesi kod yorumuna değil, gerekiyorsa `docs/` ya da commit mesajına.
+- Tarih, kişi ve olay hikâyesi kod yorumuna yazılmaz (`(the user, 2026-11-05)`, `it was blue`, `the old sample`): projenin dokümanına ve commit mesajına yazılır. Eski bir tarihli yorum örnek alınmaz; dokunuldukça temizlenir. Bir yönlendirme notu (`NEW PROJECTS: use ...`) kalır, ama tarihsiz. (Bugra, 2026-11-06)
 - Kullanım örneği (`// USAGE: tabs.setValue("open")`) setter'ın hemen altında, bir satır.
 
 ## 6. Sayılar ve renkler adla
@@ -88,4 +88,4 @@ Bu kurallar `comp-m*`, sayfalar, şablonlar ve projeler (oyun, designer...) içi
 2. `elem.style` yazdığım yerin basic.js'te bir karşılığı var mı?
 3. Uzun bir satır, iç içe bir ternary ya da adsız bir sayı kaldı mı?
 4. Global bir şeyi kutunun üzerinden mi kaydettim (`listenTo`, `after`, `own`)?
-5. Yorumlarım NEDEN'i mi anlatıyor?
+5. Yorumlarım NEDEN'i mi anlatıyor (tarih, kişi ve hikâyeyi değil)?

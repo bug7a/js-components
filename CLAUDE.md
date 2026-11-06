@@ -75,7 +75,7 @@ Pictures that must be drawn go to the Codex CLI. **Ask before making one: only a
 
 ## How the code reads: `context/basic-js-code-rules.md` (the user, 2026-10-23)
 
-Code written with basic.js reads like plain prose, without needing comments to be understood. **Read `context/basic-js-code-rules.md` before writing basic.js code and follow it**: names that say what they do, the props of basic.js instead of `elem.style`, short functions with early returns, one thought per line (no long one-liners, no nested ternaries), comments for WHY only, named numbers, global things through the box. Correctness wins over a rule, with a `// WHY:` line.
+Code written with basic.js reads like plain prose, without needing comments to be understood. **Read `context/basic-js-code-rules.md` before writing basic.js code and follow it**: names that say what they do, the props of basic.js instead of `elem.style`, short functions with early returns, one thought per line (no long one-liners, no nested ternaries), comments for WHY only (no date, no person, no story in a code comment: they go to `context/repo-map.md` and the commit message, the user 2026-11-06; an old dated comment is not a model to copy), named numbers, global things through the box. Correctness wins over a rule, with a `// WHY:` line.
 
 ## Writing a component (m2/m3 pattern)
 
