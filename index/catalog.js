@@ -514,11 +514,11 @@ CATALOG.COMPONENTS = [
         key: "slider", name: "Slider", cat: "inputs",
         source: "comp/slider.js",
         samples: [
+            { file: "02-comp-examples/slider-round.htm", title: "round (the model page)" },
             { file: "02-comp-examples/slider.htm", title: "classic (Material 3)" },
-            { file: "02-comp-examples/slider-round.htm", title: "round" },
         ],
-        en: "Slider for choosing a value in a range. Two looks: classic (inspired by Material 3) and round (a thin track and a round white knob).",
-        tr: "Bir aralıktan değer seçmek için kaydırıcı. İki görünüm: classic (Material 3'ten esinlenildi) ve round (ince bir ray ve yuvarlak beyaz bir tutamaç).",
+        en: "Slider for choosing a value in a range. Two looks: round (a thin track and a round white knob: the look of new pages) and classic (inspired by Material 3).",
+        tr: "Bir aralıktan değer seçmek için kaydırıcı. İki görünüm: round (ince bir ray ve yuvarlak beyaz bir tutamaç: yeni sayfaların görünümü) ve classic (Material 3'ten esinlenildi).",
     },
     {
         key: "toggle", name: "Toggle", cat: "selection",

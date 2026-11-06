@@ -62,6 +62,7 @@ Pages load the source files (`name.js`). Components have no `.min.js` files.
 - A list: `ItemList` with `styleName: "ozden"` (its default), or `"ozdenDark"` on a dark page.
 - A dropdown select: `SelectBox` with its default look (`styleName: "classic"`), or `"dark"` on a dark page.
 - A chart: `GraphBox`, with `theme: "dark"` on a dark page.
+- A slider: `Slider` with `styleName: "round"`. Its value is 0 - 100: map your own range in the page. On a dark page give it `trackBackgroundColor: White(0.15)` (there is no dark package yet).
 - A loading view: `LoadingScreen`.
 
 ## Publish

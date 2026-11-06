@@ -5,6 +5,11 @@
 Slider - v26.11
 
 UI COMPONENT TEMPLATE
+- NEW PROJECTS (the user, 2026-11-06): a page or a project that needs a slider uses this component with styleName
+  "round" (02-comp-examples/slider-round.htm), unless the user asks for another look. "classic" stays the default
+  of the file, for the pages made before. No dark package yet: on a dark page give trackBackgroundColor a light
+  color (Ex: White(0.15)). The value is 0 - 100: a page maps its own range. SliderField (comp/slider-field.js, a
+  slider in the shape of a field) is a parallel design: only when a page asks for that shape.
 - A value from 0 to 100, chosen by dragging the thumb. The value bubble over the thumb shows the value while it is
   dragged (showValueOnDrag) and for a while after setValue() (showValueOnSet).
 - Style packages (2026-11-06): "classic" (the default: inspired by Google Material 3: a thick track in two parts,
