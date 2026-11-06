@@ -21,7 +21,7 @@
         /* Bismillah */
 
         // *** VARIABLES:
-        let charts = [];
+        const charts = [];
         let chartDemo, chartLive;
         let lblTitle, lblClicked;
         let isDark = 0;
@@ -178,8 +178,14 @@
                             xAxisText: "Height (cm)",
                             yAxisText: "Weight (kg)",
                             datasets: [
-                                { label: "Group A", data: [{ x: 158, y: 52, label: "Ayşe" }, [162, 58], [165, 57], [168, 63], [171, 66], [174, 64], [176, 72]] },
-                                { label: "Group B", data: [[170, 74], [173, 78], [177, 81], [180, 80], [183, 88], [186, 91], [190, 95]] },
+                                {
+                                    label: "Group A",
+                                    data: [{ x: 158, y: 52, label: "Ayşe" }, [162, 58], [165, 57], [168, 63], [171, 66], [174, 64], [176, 72]],
+                                },
+                                {
+                                    label: "Group B",
+                                    data: [[170, 74], [173, 78], [177, 81], [180, 80], [183, 88], [186, 91], [190, 95]],
+                                },
                             ],
                         });
 
@@ -193,7 +199,15 @@
                             yAxisText: "Sales",
                             legend: "none",
                             datasets: [
-                                { data: [{ x: 12, y: 40, r: 80, label: "North" }, { x: 18, y: 62, r: 30, label: "South" }, { x: 25, y: 35, r: 55, label: "East" }, { x: 31, y: 74, r: 12, label: "West" }, { x: 38, y: 50, r: 95, label: "Center" }] },
+                                {
+                                    data: [
+                                        { x: 12, y: 40, r: 80, label: "North" },
+                                        { x: 18, y: 62, r: 30, label: "South" },
+                                        { x: 25, y: 35, r: 55, label: "East" },
+                                        { x: 31, y: 74, r: 12, label: "West" },
+                                        { x: 38, y: 50, r: 95, label: "Center" },
+                                    ],
+                                },
                             ],
                         });
 
@@ -202,7 +216,10 @@
                             type: "doughnut",
                             titleText: "Visitors by Country",
                             subtitleText: "14 countries: the tooltip of \"Other\" names the small ones",
-                            labels: ["Turkey", "Germany", "USA", "France", "Netherlands", "Azerbaijan", "UK", "Italy", "Spain", "Greece", "Japan", "Canada", "Brazil", "Egypt"],
+                            labels: [
+                                "Turkey", "Germany", "USA", "France", "Netherlands", "Azerbaijan", "UK",
+                                "Italy", "Spain", "Greece", "Japan", "Canada", "Brazil", "Egypt",
+                            ],
                             values: [4200, 2600, 1900, 1200, 950, 800, 720, 300, 280, 210, 140, 120, 90, 60],
                         });
 
@@ -214,7 +231,10 @@
                             subtitleText: "targetLines with their own color",
                             labels: ["Login", "Search", "Checkout", "Reports"],
                             values: [120, 340, 480, 760],
-                            targetLines: [{ value: 300, label: "Goal" }, { value: 600, label: "Limit", color: "#E34948" }],
+                            targetLines: [
+                                { value: 300, label: "Goal" },
+                                { value: 600, label: "Limit", color: "#E34948" },
+                            ],
                             formatValue: function (value) { return value + " ms"; },
                         });
 

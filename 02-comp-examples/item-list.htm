@@ -20,12 +20,14 @@
 
     /* Bismillah */
 
-    // ItemList (comp-m4): the four style packages, the layouts, multiple selection, search and your own rows.
+    // ItemList: the style packages, the layouts, multiple selection, search and your own rows.
 
     const FRUITS_PATH = "../assets/fruids/";
     const DRINKS_PATH = "../assets/categories/";
     const STYLE_CARD_WIDTH = 380;
     const STYLE_LIST_HEIGHT = 420;
+    const CARD_GAP = 20;
+    const TWO_CARDS_WIDTH = 2 * STYLE_CARD_WIDTH + CARD_GAP;
 
     const FRUITS = [
         { key: "broccoli", title: "Broccoli", desc: "Vegetable", iconFile: FRUITS_PATH + "brokoli.png" },
@@ -55,28 +57,40 @@
 
     // The page look of each style package (the list sits on it)
     const STYLE_PAGES = {
-        ozden: { color: "whitesmoke", textColor: Black(0.5) }, // The box of the comp-m1 SelectItem list
+        ozden: { color: "whitesmoke", textColor: Black(0.5) },
         ozdenDark: { color: "#1A1A19", textColor: White(0.5) },
-        ozdenTiles: { color: "white", textColor: Black(0.5) }, // The category list of javascript-mobile-app-template
+        ozdenTiles: { color: "white", textColor: Black(0.5) },
         modern: { color: "#F4F5F2", textColor: Black(0.5) },
         dark: { color: "#141414", textColor: White(0.5) },
     };
 
     // GROUP: A card with a title and a short description.
     const startCard = function (title, description, look) {
-        const card = VGroup({ width: STYLE_CARD_WIDTH, height: "auto", align: "left top", gap: 12, padding: 16, color: look.color, round: 12, border: 1, borderColor: Black(0.1) });
-        that.css = { alignItems: "stretch", maxWidth: "100%" };
+        const card = VGroup({
+            width: STYLE_CARD_WIDTH,
+            height: "auto",
+            align: "left top",
+            gap: 12,
+            padding: 16,
+            color: look.color,
+            round: 12,
+            border: 1,
+            borderColor: Black(0.1),
+            css: { alignItems: "stretch", maxWidth: "100%" },
+        });
         Label({ plainText: title, fontSize: 14, textColor: look.textColor, bold: 1 });
-        if (description) Label({ plainText: description, fontSize: 13, textColor: look.textColor, width: "100%", css: { lineHeight: "1.4" } });
+        Label({
+            plainText: description,
+            fontSize: 13,
+            textColor: look.textColor,
+            width: "100%",
+            css: { lineHeight: "1.4" },
+        });
         return card;
     };
 
     const endCard = function () {
         endGroup();
-    };
-
-    const createInfoLabel = function (look) {
-        return Label({ plainText: "", width: "100%", fontSize: 13, textColor: look.textColor });
     };
 
     const withoutDesc = function (item) {
@@ -102,7 +116,7 @@
                 selectedKeys: ["strawberry"],
                 onChange: function (self) { showSelection(info, self); },
             });
-            const info = createInfoLabel(look);
+            const info = Label({ plainText: "", width: "100%", fontSize: 13, textColor: look.textColor });
             showSelection(info, list);
         endCard();
     };
@@ -119,26 +133,66 @@
                 Label({ plainText: "comp-m4 · the new version of comp-m1/item-list.js", fontSize: 14, textColor: Black(0.45) });
 
                 // GROUP: The four style packages, two in a row: a light one and its dark one
-                HGroup({ width: "100%", height: "auto", align: "center top", gap: 20, wrap: 1 });
-                that.css = { maxWidth: (2 * STYLE_CARD_WIDTH + 20) + "px" };
-                    createStyleSample("ozden", "single", "The list of comp-m1 SelectItem: rows as wide as the list, white with a thin line above and under them under the mouse, the selected one half transparent (it can not be chosen again).");
-                    createStyleSample("ozdenDark", "single", "The dark theme of ozden: the same rows on a dark page, a lighter gray with a thin light line above and under them under the mouse.");
+                HGroup({
+                    width: "100%",
+                    height: "auto",
+                    align: "center top",
+                    gap: CARD_GAP,
+                    wrap: 1,
+                    css: { maxWidth: TWO_CARDS_WIDTH + "px" },
+                });
+
+                    createStyleSample(
+                        "ozden",
+                        "single",
+                        "The list of comp-m1 SelectItem: rows as wide as the list, white with a thin line above and under them under the mouse, the selected one half transparent (it can not be chosen again)."
+                    );
+
+                    createStyleSample(
+                        "ozdenDark",
+                        "single",
+                        "The dark theme of ozden: the same rows on a dark page, a lighter gray with a thin light line above and under them under the mouse."
+                    );
+
                     createStyleSample("modern", "multiple", "Light cards; a check mark on the selected rows.");
+
                     createStyleSample("dark", "multiple", "The dark cards of the Ozden Panel (webpage-ozden-panel).");
+
                 endGroup();
 
                 // GROUP: The other layouts
-                HGroup({ width: "100%", height: "auto", align: "center top", gap: 20, wrap: 1 });
+                HGroup({ width: "100%", height: "auto", align: "center top", gap: CARD_GAP, wrap: 1 });
 
                     const ozdenLook = STYLE_PAGES.ozdenTiles;
-                    const horizontalCard = startCard("layout: \"horizontal\" · ozden", "One row of tiles, like the categories of the template: a grey icon in a circle; the selected one grows, gets its colors and a bold title.", ozdenLook);
-                    horizontalCard.width = 2 * STYLE_CARD_WIDTH + 20;
-                        ItemList({ width: "100%", height: 216, layout: "horizontal", items: DRINKS.map(withoutDesc), selectedKeys: ["coffee"] });
+                    const horizontalCard = startCard(
+                        "layout: \"horizontal\" · ozden",
+                        "One row of tiles, like the categories of the template: a grey icon in a circle; the selected one grows, gets its colors and a bold title.",
+                        ozdenLook
+                    );
+                    horizontalCard.width = TWO_CARDS_WIDTH;
+
+                        ItemList({
+                            width: "100%",
+                            height: 216,
+                            layout: "horizontal",
+                            items: DRINKS.map(withoutDesc),
+                            selectedKeys: ["coffee"],
+                        });
+
                     endCard();
 
                     const darkLook = STYLE_PAGES.dark;
                     startCard("layout: \"grid\"", "Tiles that wrap (files, icons, pictures). Arrow keys move in all four ways.", darkLook);
-                        ItemList({ width: "100%", height: 420, layout: "grid", styleName: "dark", selection: "multiple", items: DRINKS });
+
+                        ItemList({
+                            width: "100%",
+                            height: 420,
+                            layout: "grid",
+                            styleName: "dark",
+                            selection: "multiple",
+                            items: DRINKS,
+                        });
+
                     endCard();
 
                     // Your own rows: createItemView
@@ -153,8 +207,7 @@
                                 { key: "3", title: "Orange juice", price: "3.75" },
                             ],
                             createItemView: function (item, row) {
-                                Label({ plainText: item.title, fontSize: 17, textColor: Black(0.8) });
-                                that.grow = 1;
+                                Label({ plainText: item.title, fontSize: 17, textColor: Black(0.8), grow: 1 });
                                 Label({ plainText: "$ " + item.price, fontSize: 17, textColor: "#3D7A6B", bold: 1 });
                             },
                         });
@@ -166,7 +219,7 @@
 
         endBox();
 
-        if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: pageBox });
+        ScrollBar({ scrollableBox: pageBox });
 
     };
 

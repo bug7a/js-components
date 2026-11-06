@@ -22,7 +22,7 @@
 
     /* Bismillah */
 
-    // SmartTable (comp-m3): the model page (2026-11-05, the user). New pages take their table from here:
+    // SmartTable: the model page. New pages take their table from here:
     // "classic" (the default) on a light page, "dark" on a dark page; both are the looks of DataTable. "green" is the
     // look of SmartTable before them. Rest the mouse on a cut text: a bubble shows all of it (comp/tooltip.js).
     // More samples: smart-table-1.htm (2M rows) ... smart-table-4.htm (your own style).
@@ -52,10 +52,11 @@
     const CUSTOMERS = [];
     for (let i = 1; i <= CUSTOMER_COUNT; i++) {
         const name = NAMES[i % NAMES.length];
+        const mailDomain = (i % 3) ? "mail.com" : "company-with-a-long-name.co.uk";
         CUSTOMERS.push({
             id: i,
             name: name,
-            email: toEmailName(name) + "@" + ((i % 3) ? "mail.com" : "company-with-a-long-name.co.uk"),
+            email: toEmailName(name) + "@" + mailDomain,
             city: CITIES[(i * 3) % CITIES.length],
             orders: (i * 37) % 90 + 1,
             note: NOTES[i % NOTES.length],
@@ -79,11 +80,26 @@
 
     // GROUP: A card with a title and a short description.
     const startCard = function (title, description, look) {
-        const card = VGroup({ width: CARD_WIDTH, height: "auto", align: "left top", gap: 12, padding: 16, color: look.color, round: 12, border: 1, borderColor: Black(0.1) });
-        that.css = { alignItems: "stretch", maxWidth: "100%" };
+        VGroup({
+            width: CARD_WIDTH,
+            height: "auto",
+            align: "left top",
+            gap: 12,
+            padding: 16,
+            color: look.color,
+            round: 12,
+            border: 1,
+            borderColor: Black(0.1),
+            css: { alignItems: "stretch", maxWidth: "100%" },
+        });
         Label({ plainText: title, fontSize: 14, textColor: look.textColor, bold: 1 });
-        Label({ plainText: description, fontSize: 13, textColor: look.textColor, width: "100%", css: { lineHeight: "1.4" } });
-        return card;
+        Label({
+            plainText: description,
+            fontSize: 13,
+            textColor: look.textColor,
+            width: "100%",
+            css: { lineHeight: "1.4" },
+        });
     };
 
     const endCard = function () {
@@ -106,7 +122,12 @@
                 style: { width: "100%", height: "auto" },
                 onSelect: function (customer) { showCustomer(info, customer); },
             });
-            const info = Label({ plainText: "Click a row, then ↑ ↓, Page Up / Page Down, Home / End.", width: "100%", fontSize: 13, textColor: look.textColor });
+            const info = Label({
+                plainText: "Click a row, then ↑ ↓, Page Up / Page Down, Home / End.",
+                width: "100%",
+                fontSize: 13,
+                textColor: look.textColor,
+            });
         endCard();
     };
 
@@ -119,20 +140,42 @@
             VGroup({ width: "100%", height: "auto", align: "center top", gap: 24, padding: 32 });
 
                 Label({ text: "SmartTable", fontSize: 26, bold: 1, textColor: Black(0.8) });
-                Label({ plainText: "comp-m3 · very many rows and columns · more samples: smart-table-1 ... smart-table-4 · a better looking table for fewer rows: DataTable", width: "100%", fontSize: 14, textColor: Black(0.45), textAlign: "center" });
+                Label({
+                    plainText: "comp-m3 · very many rows and columns · more samples: smart-table-1 ... smart-table-4 · a better looking table for fewer rows: DataTable",
+                    width: "100%",
+                    fontSize: 14,
+                    textColor: Black(0.45),
+                    textAlign: "center",
+                });
 
                 // GROUP: The style packages
                 HGroup({ width: "100%", height: "auto", align: "center top", gap: 20, wrap: 1 });
-                    createStyleSample("classic", "The default, for a light page: the look of DataTable \"classic\". Rest the mouse on a cut e-mail or note: a bubble shows all of it.", LOOKS.light);
-                    createStyleSample("dark", "For a dark page: the look of DataTable \"dark\". The filter box is the SearchInput \"ozdenDark\".", LOOKS.dark);
-                    createStyleSample("green", "The look of SmartTable before the packages (until 2026-11-05). A page with its own colors over it names it (styleName: \"green\").", LOOKS.light);
+
+                    createStyleSample(
+                        "classic",
+                        "The default, for a light page: the look of DataTable \"classic\". Rest the mouse on a cut e-mail or note: a bubble shows all of it.",
+                        LOOKS.light
+                    );
+
+                    createStyleSample(
+                        "dark",
+                        "For a dark page: the look of DataTable \"dark\". The filter box is the SearchInput \"ozdenDark\".",
+                        LOOKS.dark
+                    );
+
+                    createStyleSample(
+                        "green",
+                        "The look of SmartTable before the packages (until 2026-11-05). A page with its own colors over it names it (styleName: \"green\").",
+                        LOOKS.light
+                    );
+
                 endGroup();
 
             endGroup();
 
         endBox();
 
-        if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: pageBox });
+        ScrollBar({ scrollableBox: pageBox });
 
     };
 
