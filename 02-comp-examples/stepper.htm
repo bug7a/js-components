@@ -20,10 +20,7 @@
         /* Bismillah */
 
         // *** VARIABLES:
-        let stpQuantity, lblQuantity;
-        let stpWeight, lblWeight;
-        let stpPercent, stpHour, lblHour;
-        let stpCompact, stpApi, lblApi;
+        let lblQuantity, lblWeight, lblHour, lblApi;
 
         const start = function () {
 
@@ -53,16 +50,20 @@
                     });
 
                     // SAMPLE 1: Default
-                    startCard("1. Default", "Click the value to type it. Hold a button to change the value continuously. Arrow keys, PageUp / PageDown, Home / End work when it has the focus.");
+                    startCard(
+                        "1. Default",
+                        "Click the value to type it. Hold a button to change the value continuously. Arrow keys, PageUp / PageDown, Home / End work when it has the focus."
+                    );
 
                         HGroup({ width: "100%", height: "auto", align: "left center", gap: 16 });
 
-                            stpQuantity = Stepper({
+                            Stepper({
                                 value: 1,
                                 min: 1,
                                 max: 10,
                                 onChange: function (self) {
-                                    lblQuantity.text = "Quantity: " + self.value + ((self.value === self.max) ? " (max)" : "");
+                                    const maxNote = (self.value === self.max) ? " (max)" : "";
+                                    lblQuantity.text = "Quantity: " + self.value + maxNote;
                                 },
                             });
 
@@ -77,7 +78,7 @@
 
                         HGroup({ width: "100%", height: "auto", align: "left center", gap: 16 });
 
-                            stpWeight = Stepper({
+                            Stepper({
                                 width: 170,
                                 value: 2.5,
                                 min: 0,
@@ -97,10 +98,9 @@
                     // SAMPLE 3: Not editable, wrap
                     startCard("3. Percent (not editable) and hours (wrap: 1)", "The percent value can not be typed. The hour goes from 23 back to 0.");
 
-                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 16 });
-                        that.elem.style.flexWrap = "wrap";
+                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 16, wrap: 1 });
 
-                            stpPercent = Stepper({
+                            Stepper({
                                 value: 50,
                                 min: 0,
                                 max: 100,
@@ -109,13 +109,13 @@
                                 editable: 0,
                             });
 
-                            stpHour = Stepper({
+                            Stepper({
                                 value: 9,
                                 min: 0,
                                 max: 23,
                                 wrap: 1,
-                                valueFormat: function (value) { return String(value).padStart(2, "0") + ":00"; },
-                                onChange: function (self) { lblHour.text = "Alarm at " + String(self.value).padStart(2, "0") + ":00"; },
+                                valueFormat: toHourText,
+                                onChange: function (self) { lblHour.text = "Alarm at " + toHourText(self.value); },
                             });
 
                             lblHour = addInfoLabel("Alarm at 09:00");
@@ -127,32 +127,42 @@
                     // SAMPLE 4: Compact layout, sizes
                     startCard("4. Compact layout and sizes", "layout: \"compact\" puts both buttons at the right, like a spinner.");
 
-                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 16 });
-                        that.elem.style.flexWrap = "wrap";
+                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 16, wrap: 1 });
 
-                            stpCompact = Stepper({ layout: "compact", width: 130, value: 3, min: 0, max: 99 });
+                            Stepper({ layout: "compact", width: 130, value: 3, min: 0, max: 99 });
 
-                            Stepper({ width: 120, height: 36, value: 2, min: 0, max: 9, style: { button: { width: 30, iconSize: 12 }, value: { fontSize: 15 } } });
+                            Stepper({
+                                width: 120, height: 36, value: 2, min: 0, max: 9,
+                                style: { button: { width: 30, iconSize: 12 }, value: { fontSize: 15 } },
+                            });
 
-                            Stepper({ width: 200, height: 56, value: 250, min: 0, max: 5000, step: 50, unitText: " ml", style: { button: { width: 48, iconSize: 18 }, value: { fontSize: 22 } } });
+                            Stepper({
+                                width: 200, height: 56, value: 250, min: 0, max: 5000, step: 50, unitText: " ml",
+                                style: { button: { width: 48, iconSize: 18 }, value: { fontSize: 22 } },
+                            });
 
                         endGroup();
 
                     endCard();
 
                     // SAMPLE 5: Styles
-                    startCard("5. Modern and Dark Styles", "");
+                    startCard("5. Modern and Dark Styles");
 
-                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 16 });
-                        that.elem.style.flexWrap = "wrap";
+                        HGroup({ width: "100%", height: "auto", align: "left center", gap: 16, wrap: 1 });
 
                             Stepper({ styleName: "modern", value: 4, min: 1, max: 12 });
-                            Stepper({ styleName: "modern", layout: "compact", width: 140, value: 1.5, min: 0, max: 10, step: 0.25, precision: 2, unitText: " h" });
+                            Stepper({
+                                styleName: "modern", layout: "compact", width: 140,
+                                value: 1.5, min: 0, max: 10, step: 0.25, precision: 2, unitText: " h",
+                            });
 
                             // GROUP: Dark background
                             HGroup({ width: "auto", height: "auto", align: "left center", gap: 16, padding: 16, color: "#1C1C1B", round: 10 });
                                 Stepper({ styleName: "dark", value: 2, min: 0, max: 5 });
-                                Stepper({ styleName: "dark", layout: "compact", width: 130, value: 20, min: 0, max: 100, step: 10, unitText: "%" });
+                                Stepper({
+                                    styleName: "dark", layout: "compact", width: 130,
+                                    value: 20, min: 0, max: 100, step: 10, unitText: "%",
+                                });
                             endGroup();
 
                         endGroup();
@@ -162,21 +172,28 @@
                     // SAMPLE 6: API
                     startCard("6. API", "setValue(), increase(), decrease(), setRange(), setStep(), setUnitText(), setEnabled()");
 
-                        stpApi = Stepper({
+                        const stpApi = Stepper({
                             value: 5,
                             min: 0,
                             max: 10,
-                            onChange: function (self) { lblApi.text = "Value: " + self.value + " (range " + self.min + " – " + self.max + ", step " + self.step + ")"; },
+                            onChange: function (self) {
+                                lblApi.text = "Value: " + self.value + " (range " + self.min + " – " + self.max + ", step " + self.step + ")";
+                            },
                         });
 
                         // GROUP: Buttons
-                        HGroup({ width: "100%", height: "auto", gap: 8 });
-                        that.elem.style.flexWrap = "wrap";
+                        HGroup({ width: "100%", height: "auto", gap: 8, wrap: 1 });
                             addSampleButton("Set 8", function () { stpApi.setValue(8); });
                             addSampleButton("+3", function () { stpApi.increase(3); });
                             addSampleButton("−3", function () { stpApi.decrease(3); }, 1);
-                            addSampleButton("Range 0–100", function () { stpApi.setRange(0, 100); stpApi.onChange(stpApi); }, 1);
-                            addSampleButton("Step 5", function () { stpApi.setStep((stpApi.step === 5) ? 1 : 5); stpApi.onChange(stpApi); }, 1);
+                            addSampleButton("Range 0–100", function () {
+                                stpApi.setRange(0, 100);
+                                stpApi.onChange(stpApi);
+                            }, 1);
+                            addSampleButton("Step 5", function () {
+                                stpApi.setStep((stpApi.step === 5) ? 1 : 5);
+                                stpApi.onChange(stpApi);
+                            }, 1);
                             addSampleButton("Unit", function () { stpApi.setUnitText(stpApi.unitText ? "" : " pcs"); }, 1);
                             addSampleButton("On / Off", function () { stpApi.setEnabled(!stpApi.enabled); }, 1);
                         endGroup();
@@ -193,6 +210,11 @@
 
         // *** OTHER FUNCTIONS:
 
+        // 9 -> "09:00"
+        const toHourText = function (hour) {
+            return String(hour).padStart(2, "0") + ":00";
+        };
+
         // GROUP: A card with a title and a short description.
         const startCard = function (title, description = "") {
             VGroup({
@@ -205,8 +227,8 @@
                 round: 10,
                 border: 1,
                 borderColor: Black(0.1),
+                css: { alignItems: "stretch" },
             });
-            that.elem.style.alignItems = "stretch";
             Label({
                 text: title,
                 fontSize: 14,
@@ -217,8 +239,8 @@
                     text: description,
                     fontSize: 13,
                     textColor: Black(0.35),
+                    css: { marginTop: "-10px" },
                 });
-                that.elem.style.marginTop = "-10px";
             }
         };
 

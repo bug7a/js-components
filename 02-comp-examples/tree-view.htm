@@ -21,16 +21,21 @@
         /* Bismillah */
 
         // *** VARIABLES:
-        let treeFiles, lblFiles, newFileCount = 0;
-        let treeLazy, lblLazy;
-        let treeLayers, lblLayers;
-        let treeBig, lblBig;
+        let lblFiles, lblLazy, lblLayers, lblBig;
+        let newFileCount = 0;
+
+        const LOAD_TIME = 600; // ms: the lazy children come after this
+        const COUNTRIES = {
+            eu: ["Türkiye", "Germany", "France", "Italy"],
+            as: ["Japan", "Korea", "India"],
+            am: ["Brazil", "Canada", "Mexico", "Chile"],
+        };
 
         // ICONS: Inline SVG (no image file needed)
         const svgIcon = function (paths, color = "#777") {
-            return "data:image/svg+xml," + encodeURIComponent(
-                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + paths + '</svg>'
-            );
+            const svgStart = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + color + '"'
+                + ' stroke-width="2" stroke-linecap="round" stroke-linejoin="round">';
+            return "data:image/svg+xml," + encodeURIComponent(svgStart + paths + "</svg>");
         };
         const ICON_FOLDER = svgIcon('<path d="M3 6a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>', "#D9A441");
         const ICON_FILE = svgIcon('<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/>');
@@ -40,7 +45,8 @@
             return { key: key, text: text, iconFile: ICON_FOLDER, children: children, expanded: expanded };
         };
         const file = function (key, text, note) {
-            return { key: key, text: text, iconFile: /\.(png|jpg|svg)$/.test(text) ? ICON_IMAGE : ICON_FILE, note: note };
+            const isImage = /\.(png|jpg|svg)$/.test(text);
+            return { key: key, text: text, iconFile: isImage ? ICON_IMAGE : ICON_FILE, note: note };
         };
 
         const start = function () {
@@ -49,11 +55,10 @@
 
             // BOX: Full screen scrollable container
             // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
-            startBox(0, 0, "100%", "100%", {
+            const pageBox = startBox(0, 0, "100%", "100%", {
                 color: "transparent",
                 scrollY: 1,
             });
-            const pageBox = that;
 
                 // GROUP: Page layout
                 VGroup({
@@ -72,9 +77,12 @@
                     });
 
                     // SAMPLE 1: File explorer
-                    startCard("1. File explorer (classic)", "Icons and notes. Click the arrow or press ArrowRight / ArrowLeft to open and close, ArrowUp / ArrowDown to move, Enter or a double click to open a file, type a letter to jump.");
+                    startCard(
+                        "1. File explorer (classic)",
+                        "Icons and notes. Click the arrow or press ArrowRight / ArrowLeft to open and close, ArrowUp / ArrowDown to move, Enter or a double click to open a file, type a letter to jump."
+                    );
 
-                        treeFiles = TreeView({
+                        const treeFiles = TreeView({
                             width: "100%",
                             height: 280,
                             items: [
@@ -99,7 +107,10 @@
                                 { key: "secret", text: ".env (disabled)", iconFile: ICON_FILE, disabled: 1 },
                             ],
                             value: "src/app.js",
-                            onSelect: function (self, node) { lblFiles.plainText = "Selected: " + self.getPath(node.key).map(function (n) { return n.text; }).join(" / "); },
+                            onSelect: function (self, node) {
+                                const names = self.getPath(node.key).map(function (n) { return n.text; });
+                                lblFiles.plainText = "Selected: " + names.join(" / ");
+                            },
                             onActivate: function (self, node) { lblFiles.plainText = "Open: " + node.key; },
                         });
 
@@ -109,13 +120,16 @@
                             addSampleButton("Collapse all", function () { treeFiles.collapseAll(); }, 1);
                             addSampleButton("New file", function () {
                                 newFileCount++;
-                                const parent = treeFiles.getSelectedNode();
-                                const parentKey = (parent && parent.children) ? parent.key : treeFiles.getParent(treeFiles.value) ? treeFiles.getParent(treeFiles.value).key : null;
-                                const node = treeFiles.addNode(parentKey, file("new-" + newFileCount, "new-" + newFileCount + ".js", "0 KB"), 0);
+                                const fileName = "new-" + newFileCount;
+                                const parentKey = getFolderKeyOfSelected(treeFiles);
+                                const node = treeFiles.addNode(parentKey, file(fileName, fileName + ".js", "0 KB"), 0);
                                 if (parentKey) treeFiles.expand(parentKey);
                                 treeFiles.setValue(node.key);
                             }, 1);
-                            addSampleButton("Remove", function () { if (treeFiles.value) treeFiles.removeNode(treeFiles.value); lblFiles.plainText = "Removed."; }, 1);
+                            addSampleButton("Remove", function () {
+                                if (treeFiles.value) treeFiles.removeNode(treeFiles.value);
+                                lblFiles.plainText = "Removed.";
+                            }, 1);
                         endGroup();
 
                         lblFiles = addInfoLabel("Selected: src / app.js");
@@ -123,9 +137,12 @@
                     endCard();
 
                     // SAMPLE 2: Lazy children, modern style
-                    startCard("2. Lazy children (modern)", "hasChildren: 1 shows an arrow without children. When it opens, onLoadChildren asks for them; setChildren() draws only that branch.");
+                    startCard(
+                        "2. Lazy children (modern)",
+                        "hasChildren: 1 shows an arrow without children. When it opens, onLoadChildren asks for them; setChildren() draws only that branch."
+                    );
 
-                        treeLazy = TreeView({
+                        TreeView({
                             styleName: "modern",
                             width: "100%",
                             height: "auto", // Grows with its rows.
@@ -138,15 +155,14 @@
                                 self.updateNode(node.key, { note: "loading…" });
                                 lblLazy.plainText = "Loading " + node.text + " …";
                                 setTimeout(function () {
-                                    const data = {
-                                        eu: ["Türkiye", "Germany", "France", "Italy"],
-                                        as: ["Japan", "Korea", "India"],
-                                        am: ["Brazil", "Canada", "Mexico", "Chile"],
-                                    }[node.key];
-                                    self.setChildren(node.key, data.map(function (name) { return { key: node.key + "/" + name, text: name }; }));
-                                    self.updateNode(node.key, { note: data.length + " countries" });
+                                    const countries = COUNTRIES[node.key];
+                                    const children = countries.map(function (name) {
+                                        return { key: node.key + "/" + name, text: name };
+                                    });
+                                    self.setChildren(node.key, children);
+                                    self.updateNode(node.key, { note: countries.length + " countries" });
                                     lblLazy.plainText = node.text + " loaded.";
-                                }, 600);
+                                }, LOAD_TIME);
                             },
                         });
 
@@ -155,9 +171,12 @@
                     endCard();
 
                     // SAMPLE 3: Dark style, tags (the layers of a design tool)
-                    startCard("3. Layers (dark)", "tag: a second text in the accent color (tagColor per node). note: a soft text. textColor per node.");
+                    startCard(
+                        "3. Layers (dark)",
+                        "tag: a second text in the accent color (tagColor per node). note: a soft text. textColor per node."
+                    );
 
-                        treeLayers = TreeView({
+                        TreeView({
                             styleName: "dark",
                             width: "100%",
                             height: 220,
@@ -187,30 +206,32 @@
                     endCard();
 
                     // SAMPLE 4: A big tree
-                    startCard("4. A big tree (10 000 nodes)", "Only the open branches are created: 100 groups of 100 items. Open them, then use the keyboard.");
+                    startCard(
+                        "4. A big tree (10 000 nodes)",
+                        "Only the open branches are created: 100 groups of 100 items. Open them, then use the keyboard."
+                    );
 
-                        const bigItems = [];
-                        for (let g = 1; g <= 100; g++) {
-                            const children = [];
-                            for (let i = 1; i <= 100; i++) children.push({ key: g + "-" + i, text: "Item " + g + "." + i, note: "#" + ((g - 1) * 100 + i) });
-                            bigItems.push({ key: "g" + g, text: "Group " + g, children: children, note: "100" });
-                        }
-                        const t0 = performance.now();
-                        treeBig = TreeView({ width: "100%", height: 240, items: bigItems });
-                        const ms = Math.round(performance.now() - t0);
+                        const bigItems = createBigItems();
+                        const createStart = performance.now();
+                        const treeBig = TreeView({ width: "100%", height: 240, items: bigItems });
+                        const createTime = Math.round(performance.now() - createStart);
 
                         // GROUP: Buttons
                         HGroup({ width: "auto", height: "auto", gap: 8, wrap: 1 });
                             addSampleButton("Expand all", function () {
-                                const t = performance.now();
+                                const expandStart = performance.now();
                                 treeBig.expandAll();
-                                lblBig.plainText = "Expand all: " + Math.round(performance.now() - t) + " ms (10 000 rows created)";
+                                const expandTime = Math.round(performance.now() - expandStart);
+                                lblBig.plainText = "Expand all: " + expandTime + " ms (10 000 rows created)";
                             });
                             addSampleButton("Collapse all", function () { treeBig.collapseAll(); }, 1);
-                            addSampleButton("Go to 73.40", function () { treeBig.setValue("73-40"); treeBig.focus(); }, 1);
+                            addSampleButton("Go to 73.40", function () {
+                                treeBig.setValue("73-40");
+                                treeBig.focus();
+                            }, 1);
                         endGroup();
 
-                        lblBig = addInfoLabel("Created in " + ms + " ms (100 rows).");
+                        lblBig = addInfoLabel("Created in " + createTime + " ms (100 rows).");
 
                     endCard();
 
@@ -218,12 +239,35 @@
 
             endBox();
 
-            // WHY: page.onResize() and the ScrollBar need the scroll box.
-            if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: pageBox });
+            ScrollBar({ scrollableBox: pageBox });
 
         };
 
-        const startCard = function (title, description = "") {
+        // *** OTHER FUNCTIONS:
+
+        // The new file goes into the selected folder, or next to the selected file.
+        const getFolderKeyOfSelected = function (tree) {
+            const selected = tree.getSelectedNode();
+            if (selected && selected.children) return selected.key;
+            const parent = tree.getParent(tree.value);
+            return parent ? parent.key : null;
+        };
+
+        // 100 groups of 100 items
+        const createBigItems = function () {
+            const items = [];
+            for (let g = 1; g <= 100; g++) {
+                const children = [];
+                for (let i = 1; i <= 100; i++) {
+                    children.push({ key: g + "-" + i, text: "Item " + g + "." + i, note: "#" + ((g - 1) * 100 + i) });
+                }
+                items.push({ key: "g" + g, text: "Group " + g, children: children, note: "100" });
+            }
+            return items;
+        };
+
+        // GROUP: A card with a title and a short description.
+        const startCard = function (title, description) {
             VGroup({
                 width: 560,
                 height: "auto",
@@ -234,22 +278,19 @@
                 round: 10,
                 border: 1,
                 borderColor: Black(0.1),
+                css: { alignItems: "stretch", maxWidth: "100%" },
             });
-            that.elem.style.alignItems = "stretch";
-            that.elem.style.maxWidth = "100%";
             Label({
                 text: title,
                 fontSize: 14,
                 textColor: Black(0.45),
             });
-            if (description) {
-                Label({
-                    text: description,
-                    fontSize: 13,
-                    textColor: Black(0.35),
-                });
-                that.elem.style.marginTop = "-10px";
-            }
+            Label({
+                text: description,
+                fontSize: 13,
+                textColor: Black(0.35),
+                css: { marginTop: "-10px" },
+            });
         };
 
         const endCard = function () {
