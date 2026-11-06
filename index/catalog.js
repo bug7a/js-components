@@ -510,7 +510,7 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "search-input", name: "SearchInput", cat: "inputs",
-        source: "comp/search-input-v2.js", samples: [{ file: "02-comp-examples/search-input-v2.htm", title: "Basic" }, { file: "02-comp-examples/search-input-v2-place.htm", title: "Place: right / bottom" }],
+        source: "comp/search-input-v2.js", samples: [{ file: "02-comp-examples/search-input-v2.htm", title: "classic: a standard search box" }, { file: "02-comp-examples/search-input-v2-place.htm", title: "Place: right / bottom" }],
         en: "Search field with a search icon and a clear button.",
         tr: "Arama ikonu ve temizleme düğmeli arama kutusu.",
     },
