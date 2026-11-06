@@ -7,7 +7,7 @@ This file gives Claude Code guidance for working in this repository.
 ## Working rules of this project (the user, 2026-11-02)
 
 - **Commit:** finished and checked work goes to `main` on its own, in small logical commits. The user pushes. The clones under `~/Documents/GitHub` are committed by the user.
-- **Tests:** a changed component: `test/behavior-test.htm` and `test/components-test.htm`. A changed sample only: that page and its look at 390 px.
+- **Tests:** a changed component: `test/behavior-test.htm` and `test/components-test.htm`. A changed sample only: that page and its look at 390 px. When pages must stay the same (a cleanup, a change in a component): `node test/compare-pages.js` (the user, 2026-11-06; the `test/` row of the repo map).
 - **A new sample:** add it to `index/catalog.js` on your own, and order the samples of the component when needed.
 - **Published copies** (the `basic.js`, handbook and `js-components` sites, the mobile template repository, the `create-basicjs` npm package): updated only when the user says so. Do not remind in reports that they are behind.
 - **A side problem found on the way:** small and safe (a line or so, checked by a test): fix it in the same job and report it. Bigger: only suggest it.
