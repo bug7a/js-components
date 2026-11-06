@@ -36,11 +36,10 @@
 
             // BOX: Full screen scrollable container
             // WHY: page does not scroll. Scrollable content must be inside a Box with scrollY: 1.
-            startBox(0, 0, "100%", "100%", {
+            const pageBox = startBox(0, 0, "100%", "100%", {
                 color: "transparent",
                 scrollY: 1,
             });
-            const pageBox = that;
 
                 // GROUP: Page layout
                 VGroup({
@@ -59,7 +58,10 @@
                     });
 
                     // SAMPLE 1: Default
-                    startCard("1. Default (the saved styles are kept in this browser)", "Click \"+ Add label\", then click a label: its properties open at the right side of the screen. Write a style name and Save. Select another label and click the style chip to apply it. Saving the same name again updates every label that uses it.");
+                    startCard(
+                        "1. Default (the saved styles are kept in this browser)",
+                        "Click \"+ Add label\", then click a label: its properties open at the right side of the screen. Write a style name and Save. Select another label and click the style chip to apply it. Saving the same name again updates every label that uses it."
+                    );
 
                         edtLabels = LabelEditor({
                             width: "100%",
@@ -83,16 +85,24 @@
                         lblInfo = addInfoLabel("");
 
                         // GROUP: Buttons
-                        HGroup({ width: "100%", height: "auto", gap: 8 });
-                        that.elem.style.flexWrap = "wrap";
-                            addSampleButton("Print JSON", function () { println(JSON.stringify(edtLabels.getLabels(), null, 2)); lblInfo.text = "getLabels() is printed to the console."; });
-                            addSampleButton("Reset styles", function () { edtLabels.setSavedStyles([{ name: "Title", props: { fontSize: 26, bold: 1, textColor: "#1F2328" } }]); showInfo(); }, 1);
+                        HGroup({ width: "100%", height: "auto", gap: 8, wrap: 1 });
+                            addSampleButton("Print JSON", function () {
+                                println(JSON.stringify(edtLabels.getLabels(), null, 2));
+                                lblInfo.text = "getLabels() is printed to the console.";
+                            });
+                            addSampleButton("Reset styles", function () {
+                                edtLabels.setSavedStyles([{ name: "Title", props: { fontSize: 26, bold: 1, textColor: "#1F2328" } }]);
+                                showInfo();
+                            }, 1);
                         endGroup();
 
                     endCard();
 
                     // SAMPLE 2: Dark, Turkish texts
-                    startCard("2. Dark style and Turkish texts", "styleName: \"dark\", texts: { ... }. Without storageKey the saved styles live only on this page.");
+                    startCard(
+                        "2. Dark style and Turkish texts",
+                        "styleName: \"dark\", texts: { ... }. Without storageKey the saved styles live only on this page."
+                    );
 
                         edtTurkish = LabelEditor({
                             width: "100%",
@@ -119,7 +129,7 @@
 
             endBox();
 
-            if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: pageBox });
+            ScrollBar({ scrollableBox: pageBox });
 
             showInfo();
 
@@ -145,9 +155,8 @@
                 round: 10,
                 border: 1,
                 borderColor: Black(0.1),
+                css: { alignItems: "stretch", maxWidth: "100%" },
             });
-            that.elem.style.alignItems = "stretch";
-            that.elem.style.maxWidth = "100%";
             Label({
                 text: title,
                 fontSize: 14,
@@ -158,8 +167,8 @@
                     text: description,
                     fontSize: 13,
                     textColor: Black(0.35),
+                    css: { marginTop: "-10px" },
                 });
-                that.elem.style.marginTop = "-10px";
             }
         };
 

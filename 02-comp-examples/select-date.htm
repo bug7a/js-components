@@ -20,7 +20,7 @@
         /* Bismillah */
 
         // *** VARIABLES:
-        let dateBirth, dateCheckIn, dateCheckOut, dateInline, dateDisabled;
+        let dateCheckIn, dateCheckOut, dateInline, dateDisabled;
         let lblBirth, lblStay, lblInline;
 
         const start = function () {
@@ -53,7 +53,7 @@
                     // SAMPLE 1: Default (popup)
                     startCard("1. Default");
 
-                        dateBirth = SelectDate({
+                        SelectDate({
                             width: 260,
                             placeholder: "Birth date",
                             maxDate: new Date(), // No future dates

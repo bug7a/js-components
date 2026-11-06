@@ -20,7 +20,7 @@
         /* Bismillah */
 
         // *** VARIABLES:
-        let colorDefault, colorOwn, colorInline, colorFunctions;
+        let colorFunctions;
         let lblDefault, lblOwn, lblInline, lblFunctions;
         let boxPreview;
 
@@ -54,7 +54,7 @@
                     // SAMPLE 1: Default (popup)
                     startCard("1. Default (20 colors, 5 columns)");
 
-                        colorDefault = SelectColor({
+                        SelectColor({
                             selectedColor: "#3871E0",
                             onChange: function (self) {
                                 lblDefault.text = "value: \"" + self.value + "\"";
@@ -83,7 +83,7 @@
                     // SAMPLE 2: Own palette, no text
                     startCard("2. Own palette (setColors), showText: 0");
 
-                        colorOwn = SelectColor({
+                        SelectColor({
                             width: 70,
                             columns: 4,
                             showText: 0,
@@ -101,7 +101,7 @@
                     // SAMPLE 3: Inline with a custom style
                     startCard("3. Inline (custom style, 10 columns)");
 
-                        colorInline = SelectColor({
+                        SelectColor({
                             inline: 1,
                             columns: 10,
                             selectedColor: "#E8D44D",
@@ -200,9 +200,17 @@
         };
 
         const smallButton = function (text, func) {
-            const btn = Button({ text: text, width: "auto", height: 34, fontSize: 13, color: "#E8E8E8", textColor: Black(0.75), round: 6 });
-            btn.elem.style.padding = "0 14px";
-            btn.on("click", function (self) { func(self); });
+            const btn = Button({
+                text: text,
+                width: "auto",
+                height: 34,
+                fontSize: 13,
+                color: "#E8E8E8",
+                textColor: Black(0.75),
+                round: 6,
+                css: { padding: "0 14px" },
+            });
+            btn.on("click", func);
             return btn;
         };
 

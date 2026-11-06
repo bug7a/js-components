@@ -71,9 +71,12 @@
                     Label({ text: "Search Results", fontSize: 26, fontFamily: "opensans-bold" });
 
                     // SAMPLE 1: Classic
-                    startCard("1. Default (classic), matchAnchorWidth: 1", "SearchInput \"ozden\". Type \"a\" or \"ord\". ArrowUp / ArrowDown move, Enter opens, Escape closes. The list is as wide as the search box and scrolls with ScrollBar.");
+                    startCard(
+                        "1. Default (classic), matchAnchorWidth: 1",
+                        "SearchInput \"ozden\". Type \"a\" or \"ord\". ArrowUp / ArrowDown move, Enter opens, Escape closes. The list is as wide as the search box and scrolls with ScrollBar."
+                    );
 
-                        // SEARCH INPUT: comp/search-input.js, the package "ozden" (the user, 2026-11-05)
+                        // SEARCH INPUT: comp/search-input.js, the package "ozden"
                         lightInput = SearchInput({
                             styleName: "ozden",
                             width: "100%",
@@ -86,9 +89,13 @@
                     endCard();
 
                     // SAMPLE 2: Dark, left aligned
-                    startCard("2. styleName: \"dark\", matchAnchorWidth: 1", "SearchInput \"ozdenDark\". The same component with the dark package, as wide as the search box.", 1);
+                    startCard(
+                        "2. styleName: \"dark\", matchAnchorWidth: 1",
+                        "SearchInput \"ozdenDark\". The same component with the dark package, as wide as the search box.",
+                        1
+                    );
 
-                        // SEARCH INPUT: the package "ozdenDark" (the user, 2026-11-05)
+                        // SEARCH INPUT: the package "ozdenDark"
                         darkInput = SearchInput({
                             styleName: "ozdenDark",
                             width: "100%",
@@ -149,13 +156,17 @@
                 round: 10,
                 border: 1,
                 borderColor: (isDark) ? "#1C1C1B" : Black(0.1),
+                // WHY: basic.js has no maxWidth prop (a phone: the full width)
+                css: { alignItems: "stretch", maxWidth: CARD_MAX_WIDTH + "px" },
             });
-            that.elem.style.alignItems = "stretch";
-            that.elem.style.maxWidth = CARD_MAX_WIDTH + "px"; // WHY: basic.js has no maxWidth prop (a phone: the full width)
             Label({ text: title, fontSize: 14, textColor: (isDark) ? White(0.5) : Black(0.45) });
             if (description) {
-                Label({ text: description, fontSize: 13, textColor: (isDark) ? White(0.4) : Black(0.35) });
-                that.elem.style.marginTop = "-10px";
+                Label({
+                    text: description,
+                    fontSize: 13,
+                    textColor: (isDark) ? White(0.4) : Black(0.35),
+                    css: { marginTop: "-10px" },
+                });
             }
         };
 

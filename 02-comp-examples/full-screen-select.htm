@@ -20,8 +20,7 @@
 
     /* Bismillah */
 
-    // FullScreenSelect (comp-m4): a select field whose list opens on the whole screen, with a search box.
-    // The new version of comp-m1/ui-select-text.js (UISelectText, removed) with the same look; the page is its old sample.
+    // FullScreenSelect: a select field whose list opens on the whole screen, with a search box.
     // The keyboard: Tab to a field, Enter opens; in the list: type to search, the arrow keys, Enter, Escape.
 
     const FRUITS = [
@@ -77,7 +76,12 @@
 
                 // The two fields of ui-select-text-e2.htm
                 startField("Fruits:");
-                    const fruits = FullScreenSelect({ width: FIELD_WIDTH, items: FRUITS, selectedKey: "banana", onChange: function (self) { showSelected(fruitsInfo, self); } });
+                    const fruits = FullScreenSelect({
+                        width: FIELD_WIDTH,
+                        items: FRUITS,
+                        selectedKey: "banana",
+                        onChange: function (self) { showSelected(fruitsInfo, self); },
+                    });
                     const fruitsInfo = createInfo();
                     showSelected(fruitsInfo, fruits);
                 endField();
@@ -92,7 +96,15 @@
                 endField();
 
                 // GROUP: The dark package
-                VGroup({ width: "100%", height: "auto", align: "left top", gap: 10, padding: SPACE, color: "#141414", round: 12 });
+                VGroup({
+                    width: "100%",
+                    height: "auto",
+                    align: "left top",
+                    gap: 10,
+                    padding: SPACE,
+                    color: "#141414",
+                    round: 12,
+                });
                     Label({ plainText: "styleName: \"dark\"", fontSize: 16, textColor: White(0.6) });
                     FullScreenSelect({ width: FIELD_WIDTH - 2 * SPACE, styleName: "dark", items: FRUITS, selectedKey: "mango" });
                 endGroup();
@@ -101,7 +113,7 @@
 
         endBox();
 
-        if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: pageBox });
+        ScrollBar({ scrollableBox: pageBox });
 
     };
 

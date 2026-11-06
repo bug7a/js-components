@@ -21,7 +21,7 @@
 
         // *** VARIABLES:
         const CARD_MAX_WIDTH = 460;
-        let menuText, menuIcon, menuFiles, menuMore, menuSub;
+        let menuMore;
         let lblText, lblIcon, lblFiles, lblMore, lblSub;
         let fileRows = [];
 
@@ -78,8 +78,8 @@
                     Label({
                         text: "Context Menu",
                         fontSize: 26,
+                        fontFamily: "opensans-bold",
                     });
-                    that.elem.style.fontFamily = "opensans-bold";
 
                     // SAMPLE 1: Text only
                     startCard("1. Text only (no icon: texts are near the left side)");
@@ -88,7 +88,7 @@
 
                         lblText = infoLabel("Clicked: -");
 
-                        menuText = ContextMenu({
+                        ContextMenu({
                             target: areaText,
                             items: [
                                 { text: "Refresh", key: "refresh" },
@@ -113,7 +113,7 @@
 
                         lblIcon = infoLabel("Clicked: -");
 
-                        menuIcon = ContextMenu({
+                        ContextMenu({
                             target: areaIcon,
                             items: [
                                 { text: "Open", key: "open", iconFile: ICON.open },
@@ -163,10 +163,9 @@
                                     fontSize: 14,
                                     textColor: Black(0.8),
                                     color: "transparent",
+                                    cursor: "default",
+                                    css: { padding: "9px 12px", boxSizing: "border-box" },
                                 });
-                                row.elem.style.padding = "9px 12px";
-                                row.elem.style.boxSizing = "border-box";
-                                row.elem.style.cursor = "default";
                                 row.fileName = name;
                                 fileRows.push(row);
 
@@ -176,7 +175,7 @@
 
                         lblFiles = infoLabel("Right click a file.");
 
-                        menuFiles = ContextMenu({
+                        ContextMenu({
                             target: fileRows,
                             items: [
                                 { text: "Open", key: "open", iconFile: ICON.open },
@@ -201,8 +200,16 @@
                     startCard("4. Left click (trigger: \"click\")");
 
                         // BUTTON: More
-                        const btnMore = Button({ text: "More ⋯", width: "auto", height: 36, fontSize: 14, color: "#E8E8E8", textColor: Black(0.75), round: 6 });
-                        btnMore.elem.style.padding = "0 16px";
+                        const btnMore = Button({
+                            text: "More ⋯",
+                            width: "auto",
+                            height: 36,
+                            fontSize: 14,
+                            color: "#E8E8E8",
+                            textColor: Black(0.75),
+                            round: 6,
+                            css: { padding: "0 16px" },
+                        });
 
                         lblMore = infoLabel("Click the button. Click it again to close.");
 
@@ -224,7 +231,7 @@
 
                         lblSub = infoLabel("Clicked: -");
 
-                        menuSub = ContextMenu({
+                        ContextMenu({
                             target: areaSub,
                             styleName: "dark",
                             items: [
@@ -296,9 +303,8 @@
                 align: "center center",
                 color: "#F7F8FA",
                 round: 8,
+                css: { border: "1px dashed " + Black(0.2), boxSizing: "border-box" },
             });
-            area.elem.style.border = "1px dashed " + Black(0.2);
-            area.elem.style.boxSizing = "border-box";
                 Label({ text: text, fontSize: 14, textColor: Black(0.4) });
             endGroup();
             return area;

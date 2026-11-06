@@ -38,7 +38,8 @@
 
             startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
 
-                VGroup({ width: "100%", height: "auto", align: "center top", gap: 30, padding: [16, 50] }); // WHY 16 at the sides: the cards fill a phone (390 px)
+                // WHY 16 at the sides: the cards fill a phone (390 px)
+                VGroup({ width: "100%", height: "auto", align: "center top", gap: 30, padding: [16, 50] });
 
                     Label({ text: "LoadingScreen", fontSize: 26, fontFamily: "opensans-bold" });
 
@@ -79,7 +80,10 @@
                                     value = Math.min(1, value + 0.1);
                                     loading.setProgress(value);
                                     loading.setMessage(Math.round(value * 100) + "%");
-                                    if (value >= 1) { clearInterval(timer); loading.close(); }
+                                    if (value >= 1) {
+                                        clearInterval(timer);
+                                        loading.close();
+                                    }
                                 }, 250);
                             });
                         endGroup();
@@ -87,10 +91,20 @@
                     endCard();
 
                     // SAMPLE 2: The clock (spinnerType: "clock")
-                    startCard("2. The clock", "The default wait: the clock of the waiting views with moving hands (the minute hand fast, the hour hand 12 times slower), always 30 px. Its looks: LoadingScreen.clocks \"ozden\" and \"ozdenDark\"; the style packages \"ozden\" and \"ozdenDark\" are the screens made for them.");
+                    startCard(
+                        "2. The clock",
+                        "The default wait: the clock of the waiting views with moving hands (the minute hand fast, the hour hand 12 times slower), always 30 px. Its looks: LoadingScreen.clocks \"ozden\" and \"ozdenDark\"; the style packages \"ozden\" and \"ozdenDark\" are the screens made for them."
+                    );
 
-                        startBox({ width: "100%", height: 200, color: "white", round: 8, border: 1, borderColor: Black(0.1) });
-                        that.elem.style.overflow = "hidden";
+                        startBox({
+                            width: "100%",
+                            height: 200,
+                            color: "white",
+                            round: 8,
+                            border: 1,
+                            borderColor: Black(0.1),
+                            css: { overflow: "hidden" },
+                        });
 
                             clockLoading = LoadingScreen({
                                 spinnerType: "clock",
@@ -149,8 +163,15 @@
                     // SAMPLE 3: Inside a box
                     startCard("3. Inside a box", "It covers only its container. open() and close() can be called again and again.");
 
-                        startBox({ width: "100%", height: 260, color: "white", round: 8, border: 1, borderColor: Black(0.1) });
-                        that.elem.style.overflow = "hidden";
+                        startBox({
+                            width: "100%",
+                            height: 260,
+                            color: "white",
+                            round: 8,
+                            border: 1,
+                            borderColor: Black(0.1),
+                            css: { overflow: "hidden" },
+                        });
 
                             Label({ left: 20, top: 20, text: "The content of the box", fontSize: 16 });
 
@@ -193,17 +214,17 @@
             VGroup({
                 width: "100%", height: "auto", align: "left top", gap: 16, padding: 20,
                 color: "white", round: 10, border: 1, borderColor: Black(0.1),
+                css: { maxWidth: CARD_MAX_WIDTH + "px", alignItems: "stretch" },
             });
-            that.elem.style.maxWidth = CARD_MAX_WIDTH + "px"; // WHY: basic.js has no maxWidth prop
-            that.elem.style.alignItems = "stretch";
             Label({ text: title, fontSize: 14, textColor: Black(0.45) });
             if (description) {
-                Label({ text: description, fontSize: 13, textColor: Black(0.35) });
-                that.elem.style.marginTop = "-10px";
+                Label({ text: description, fontSize: 13, textColor: Black(0.35), css: { marginTop: "-10px" } });
             }
         };
 
-        const endCard = function () { endGroup(); };
+        const endCard = function () {
+            endGroup();
+        };
 
         const addButton = function (text, onClick) {
             return SmartButton({ tone: "white", labelText: text, onClick: onClick });

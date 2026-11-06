@@ -17,8 +17,7 @@
 
     /* Bismillah */
 
-    // Notice (comp-m4): a short message in the middle of the screen. The new version of comp-m1/ui-notice.js
-    // (the first three buttons are its sample). A click or Escape closes it before its time.
+    // Notice: a short message in the middle of the screen. A click or Escape closes it before its time.
 
     const BUTTON_WIDTH = 250;
     const ALERT_ICON = "../assets/icons/alert.png";
@@ -51,7 +50,12 @@
             });
 
             createButton("Alert Message", "warning", function () {
-                Notice.show({ messageText: "No internet connection.", descText: "Please, try again later.", type: "warning", displayTime: 2500 });
+                Notice.show({
+                    messageText: "No internet connection.",
+                    descText: "Please, try again later.",
+                    type: "warning",
+                    displayTime: 2500,
+                });
             });
 
             createButton("Error Message", "error", function () {
@@ -63,7 +67,12 @@
             });
 
             createButton("Success (until a click)", "success", function () {
-                Notice.show({ messageText: "Your order is on its way.", descText: "Click anywhere to close.", type: "success", displayTime: 0 });
+                Notice.show({
+                    messageText: "Your order is on its way.",
+                    descText: "Click anywhere to close.",
+                    type: "success",
+                    displayTime: 0,
+                });
             });
 
         endGroup();

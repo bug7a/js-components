@@ -21,7 +21,7 @@
         /* Bismillah */
 
         // *** VARIABLES:
-        let crumbBasic, crumbIcon, crumbCollapse, crumbExplorer, crumbWrap;
+        let crumbCollapse, crumbExplorer, crumbWrap;
         let lblBasic, lblExplorer, grpFolders, btnBack;
         let folderButtons = [];
 
@@ -83,7 +83,7 @@
                     // SAMPLE 1: Basic, text separator
                     startCard("1. Basic (separator: \"/\")");
 
-                        crumbBasic = Breadcrumbs({
+                        Breadcrumbs({
                             separator: "/",
                             items: [
                                 { text: "Home", key: "home" },
@@ -107,7 +107,7 @@
                     // SAMPLE 2: Chevron and icon
                     startCard("2. Chevron & Icon");
 
-                        crumbIcon = Breadcrumbs({
+                        Breadcrumbs({
                             items: [
                                 { text: "Home", iconFile: HOME_ICON },
                                 "Settings",
@@ -212,8 +212,8 @@
                             style: {
                                 current: { textColor: "#FE5D49" },
                             },
+                            css: { outline: "1px dashed " + Black(0.15) },
                         });
-                        crumbWrap.elem.style.outline = "1px dashed " + Black(0.15);
 
                     endCard();
 
@@ -239,8 +239,8 @@
                 round: 10,
                 border: 1,
                 borderColor: Black(0.1),
+                css: { maxWidth: CARD_MAX_WIDTH + "px" },
             });
-            that.elem.style.maxWidth = CARD_MAX_WIDTH + "px"; // WHY: basic.js has no maxWidth prop
             Label({
                 text: Breadcrumbs.escapeHtml(title),
                 fontSize: 14,

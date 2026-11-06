@@ -20,11 +20,10 @@
         /* Bismillah */
 
         // *** VARIABLES:
-        let tagsBasic, lblBasic;
-        let tagsCategory, lblCategory;
-        let tagsEmail, lblEmail;
-        let tagsModern, lblModern;
-        let tagsDark;
+        let lblBasic;
+        let lblCategory;
+        let lblEmail;
+        let lblModern;
         let tagsApi, lblApi;
 
         const start = function () {
@@ -55,9 +54,12 @@
                     });
 
                     // SAMPLE 1: Default (classic)
-                    startCard("1. Default", "Type and press Enter or \",\". Suggestions open while typing. Backspace selects and removes the last tag.");
+                    startCard(
+                        "1. Default",
+                        "Type and press Enter or \",\". Suggestions open while typing. Backspace selects and removes the last tag."
+                    );
 
-                        tagsBasic = TagInput({
+                        TagInput({
                             width: "100%",
                             tags: ["audio", "guide"],
                             suggestions: ["audio", "fitness", "guide", "sale", "home", "news", "tips", "gift", "office", "2026"],
@@ -75,9 +77,12 @@
                     endCard();
 
                     // SAMPLE 2: Only the suggestions (fixed categories)
-                    startCard("2. Fixed list (allowCustom: 0)", "Only the categories in the list can be added. The list opens on focus.");
+                    startCard(
+                        "2. Fixed list (allowCustom: 0)",
+                        "Only the categories in the list can be added. The list opens on focus."
+                    );
 
-                        tagsCategory = TagInput({
+                        TagInput({
                             width: "100%",
                             allowCustom: 0,
                             showSuggestionsOnFocus: 1,
@@ -95,9 +100,12 @@
                     endCard();
 
                     // SAMPLE 3: Validation (e-mail recipients)
-                    startCard("3. Validation (e-mail recipients)", "validate() returns an error text. Paste \"a@x.com, b@x.com; c@x.com\" to add many at once.");
+                    startCard(
+                        "3. Validation (e-mail recipients)",
+                        "validate() returns an error text. Paste \"a@x.com, b@x.com; c@x.com\" to add many at once."
+                    );
 
-                        tagsEmail = TagInput({
+                        TagInput({
                             width: "100%",
                             placeholder: "Add an e-mail address",
                             separators: ",; ",
@@ -119,7 +127,7 @@
                     // SAMPLE 4: Modern style
                     startCard("4. Modern Style", "Round chips. lowercase: 1 makes \"Audio\" -> \"audio\".");
 
-                        tagsModern = TagInput({
+                        TagInput({
                             styleName: "modern",
                             width: "100%",
                             lowercase: 1,
@@ -137,7 +145,7 @@
                     // SAMPLE 5: Dark style
                     startCard("5. Dark Style", "", 1);
 
-                        tagsDark = TagInput({
+                        TagInput({
                             styleName: "dark",
                             width: "100%",
                             tags: ["vip", "newsletter"],
@@ -159,8 +167,7 @@
                         });
 
                         // GROUP: Buttons
-                        HGroup({ width: "100%", height: "auto", gap: 8 });
-                        that.elem.style.flexWrap = "wrap";
+                        HGroup({ width: "100%", height: "auto", gap: 8, wrap: 1 });
                             addSampleButton("Set 3", function () { tagsApi.setTags(["red", "green", "blue"]); });
                             addSampleButton("Add", function () { tagsApi.addTag("tag " + random(1, 99)); });
                             addSampleButton("Remove 1st", function () { tagsApi.removeTag(tagsApi.getTags()[0]); }, 1);
@@ -204,8 +211,8 @@
                     text: description,
                     fontSize: 13,
                     textColor: (isDark) ? White(0.4) : Black(0.35),
+                    css: { marginTop: "-10px" },
                 });
-                that.elem.style.marginTop = "-10px";
             }
         };
 
