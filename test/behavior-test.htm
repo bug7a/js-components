@@ -5492,6 +5492,15 @@
             bar.remove();
         });
 
+        test("ToolBar: a button with no name has an empty text in the \"...\" menu", async function () {
+            const bar = ToolBar({ width: 60, items: [{ icon: "save" }, { icon: "undo" }, { icon: "redo" }] });
+            await wait(60);
+            mouseClick(toolButton(bar, "More"));
+            const texts = bar.menu.items.map(function (item) { return item.text; });
+            check("ToolBar: a button with no name has an empty text in the \"...\" menu", texts.length > 0 && texts.every(function (text) { return text === ""; }), texts.join());
+            bar.remove();
+        });
+
         // *** GRID GROUP (comp/grid-group.js)
 
         test("GridGroup: a number makes equal columns; the objects go left to right, then under; they are in its flow", async function () {

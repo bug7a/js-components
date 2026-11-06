@@ -345,7 +345,7 @@ const ToolBar = function (params = {}) {
         const copy = Object.assign({}, item);
         copy.toolItem = item;
         copy.onClick = null;
-        copy.text = item.text || item.hint || String(item.key);
+        copy.text = String(item.text || item.hint || item.key || "");
         if (item.icon) copy.icon = ToolBar.getIconSvg(item.icon);
         if (item.shortcut) copy.shortcut = MenuBar.shortcutText(item.shortcut);
         if (isToggle(item)) copy.checked = (isChecked(item)) ? 1 : 0;
