@@ -37,7 +37,7 @@
                 bar: { color: "#141414", fillOpacity: 1, border: 0, borderColor: "", boxShadow: "none", innerRound: "", joinEdge: 1 },
                 secondBar: { color: Black(0.35), fillOpacity: 0.2, lighten: 0, borderOpacity: 0.45 },
                 stripes: { color: "rgba(255, 255, 255, 0.35)", size: 14 },
-                limit: { shape: "line", color: "indianred", width: 1, round: 0, overhang: 6, dotSize: 6, barColor: "white", secondBarColor: "", textSize: 13, textColor: Black(0.7), textSpace: 6 },
+                limit: { shape: "line", color: "indianred", width: 1, round: 0, overhang: 6, dotSize: 6, dotOpacity: 1, barColor: "white", secondBarColor: "", textSize: 13, textColor: Black(0.7), textSpace: 6 },
                 successColor: "#2E9E5B",
                 errorColor: "#D64545",
                 title: { fontSize: 14, textColor: Black(0.8) },
@@ -50,7 +50,7 @@
                 bar: { color: "cadetblue", fillOpacity: 1, border: 0, borderColor: "", boxShadow: "none", innerRound: "", joinEdge: 1 },
                 secondBar: { color: Black(0.35), fillOpacity: 0.2, lighten: 0, borderOpacity: 0.45 },
                 stripes: { color: "rgba(255, 255, 255, 0.35)", size: 14 },
-                limit: { shape: "line", color: "indianred", width: 1, round: 0, overhang: 6, dotSize: 6, barColor: "white", secondBarColor: "", textSize: 13, textColor: Black(0.7), textSpace: 6 },
+                limit: { shape: "line", color: "indianred", width: 1, round: 0, overhang: 6, dotSize: 6, dotOpacity: 1, barColor: "white", secondBarColor: "", textSize: 13, textColor: Black(0.7), textSpace: 6 },
                 successColor: "#6FCF97",
                 errorColor: "tomato",
                 title: { fontSize: 16, textColor: Black(0.85) },
@@ -59,11 +59,11 @@
             ozden: {
                 gap: 8,
                 track: { height: 16, color: "#F2F2F2", round: 100, border: 2, borderColor: "rgba(0, 0, 0, 0.1)" },
-                darkTrack: { color: "#242424", borderColor: White(0.4), limitColor: White(0.7) },
+                darkTrack: { color: Black(0.85), borderColor: "transparent", limitColor: White(0.7) },
                 bar: { color: "#5BBAC1", fillOpacity: 1, border: 1, borderColor: "rgba(0, 0, 0, 0.35)", boxShadow: "inset 0 -2px 0 rgba(0, 0, 0, 0.25)", innerRound: 0, joinEdge: 0 },
                 secondBar: { color: "", fillOpacity: 0.2, lighten: 0.5, borderOpacity: 0.45 },
                 stripes: { color: "rgba(255, 255, 255, 0.55)", size: 14 },
-                limit: { shape: "dot", color: "rgba(0, 0, 0, 0.7)", width: 4, round: 2, overhang: 4, dotSize: 6, barColor: "white", secondBarColor: "", textSize: 14, textColor: "rgba(0, 0, 0, 0.7)", textSpace: 8 },
+                limit: { shape: "dot", color: "rgba(0, 0, 0, 0.7)", width: 4, round: 2, overhang: 4, dotSize: 6, dotOpacity: 0.85, barColor: "white", secondBarColor: "", textSize: 14, textColor: "rgba(0, 0, 0, 0.7)", textSpace: 8 },
                 successColor: "#7BC362",
                 errorColor: "#DE815B",
                 title: { fontSize: 15, textColor: "#232323" },
@@ -235,7 +235,7 @@
             const _l = look.limit;
             if (_l.shape != "dot") return;
             (state.limits || []).forEach(function (limit) {
-                const dot = Box({ top: (look.track.height - _l.dotSize) / 2 - edge, width: _l.dotSize, height: _l.dotSize, round: _l.dotSize / 2, color: getDotColor(look, state, part, limit) });
+                const dot = Box({ top: (look.track.height - _l.dotSize) / 2 - edge, width: _l.dotSize, height: _l.dotSize, round: _l.dotSize / 2, color: getDotColor(look, state, part, limit), opacity: _l.dotOpacity });
                 dot.css = { left: "calc(" + limit.value + "cqw - " + (edge + _l.dotSize / 2) + "px)" };
             });
         };
