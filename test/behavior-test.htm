@@ -1133,6 +1133,72 @@
             check("Slider: a remove() during a drag takes the document events with it", isStarted && movesBeforeRemove === 1 && moveCount === 1, "started: " + isStarted + ", moves: " + movesBeforeRemove + " / " + moveCount);
         });
 
+        // WHY: the thumb is private: it is the only part of a Slider with the pointer cursor
+        const getSliderThumb = function (slider) {
+            return Array.from(slider.elem.querySelectorAll("*")).find(function (element) { return getComputedStyle(element).cursor === "pointer"; });
+        };
+
+        // WHY: an Event with touches, not a TouchEvent: desktop Chrome without a touch screen has no TouchEvent
+        const makeSliderTouch = function (type, clientX) {
+            const event = new Event(type, { bubbles: true, cancelable: true });
+            Object.defineProperty(event, "touches", { value: [{ clientX: clientX, clientY: 0 }] });
+            return event;
+        };
+
+        test("Slider: a tap of a finger is one drag (the browser does not send its mousedown and mouseup too)", async function () {
+            const slider = Slider({ width: 250 });
+            await wait(50);
+            const touchStart = makeSliderTouch("touchstart", 10);
+            getSliderThumb(slider).dispatchEvent(touchStart);
+            document.dispatchEvent(makeSliderTouch("touchend", 10));
+            slider.remove();
+            // WHY: after a touchstart that is not cancelled the browser sends mousedown and mouseup: a second drag
+            check("Slider: a tap of a finger is one drag (the browser does not send its mousedown and mouseup too)", touchStart.defaultPrevented, "touchstart cancelled: " + touchStart.defaultPrevented);
+        });
+
+        test("Slider: a touch the system takes (touchcancel) ends the drag", async function () {
+            let moveCount = 0;
+            let endCount = 0;
+            const slider = Slider({ width: 250, onDragMove: function () { moveCount++; }, onDragEnd: function () { endCount++; } });
+            await wait(50);
+            getSliderThumb(slider).dispatchEvent(makeSliderTouch("touchstart", 10));
+            document.dispatchEvent(makeSliderTouch("touchcancel", 10));
+            const otherTouch = makeSliderTouch("touchmove", 120); // the next finger, somewhere else on the page
+            document.dispatchEvent(otherTouch);
+            const value = slider.getValue();
+            slider.remove();
+            check("Slider: a touch the system takes (touchcancel) ends the drag", endCount === 1 && moveCount === 0 && value === 0 && !otherTouch.defaultPrevented, "ends: " + endCount + ", moves: " + moveCount + ", value: " + value + ", the page could not scroll: " + otherTouch.defaultPrevented);
+        });
+
+        test("Slider: the right mouse button does not start a drag", async function () {
+            let startCount = 0;
+            const slider = Slider({ width: 250, onDragStart: function () { startCount++; } });
+            await wait(50);
+            getSliderThumb(slider).dispatchEvent(new MouseEvent("mousedown", { bubbles: true, button: 2, clientX: 10 }));
+            document.dispatchEvent(new MouseEvent("mousemove", { clientX: 120 }));
+            const value = slider.getValue();
+            document.dispatchEvent(new MouseEvent("mouseup", { button: 2 }));
+            slider.remove();
+            check("Slider: the right mouse button does not start a drag", startCount === 0 && value === 0, "drag starts: " + startCount + ", value: " + value);
+        });
+
+        test("Slider: on a zoomed page (page.fit) the thumb goes as far as the mouse", async function () {
+            const ZOOM = 2;
+            const MOUSE_MOVE = 100; // screen px
+            page.zoom = ZOOM;
+            const slider = Slider({ width: 250 });
+            await wait(50);
+            const thumb = getSliderThumb(slider);
+            const startX = thumb.getBoundingClientRect().left;
+            thumb.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, clientX: startX + 5 }));
+            document.dispatchEvent(new MouseEvent("mousemove", { clientX: startX + 5 + MOUSE_MOVE }));
+            document.dispatchEvent(new MouseEvent("mouseup", {}));
+            const thumbMove = thumb.getBoundingClientRect().left - startX;
+            page.zoom = 1;
+            slider.remove();
+            check("Slider: on a zoomed page (page.fit) the thumb goes as far as the mouse", Math.abs(thumbMove - MOUSE_MOVE) < 2, "the mouse: " + MOUSE_MOVE + " px, the thumb: " + thumbMove + " px");
+        });
+
         // *** SIDE PANEL (comp/side-panel.js)
 
         test("SidePanel: with a zoomed page (page.fit) it is sized in the px of the page", async function () {

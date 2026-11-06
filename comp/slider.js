@@ -62,6 +62,7 @@ const Slider = function(params = {}) {
 
     let startX = 0;
     let startLeft = 0;
+    let dragScale = 1; // Screen px of one px of the slider, measured when a drag starts (getScreenScale)
     let cancelHideValue = null; // the timer of showValue() (box.after)
 
     const TRACK_SPACE = 6; // Between the thumb line and the tracks
@@ -82,6 +83,13 @@ const Slider = function(params = {}) {
     const getMaxLeft = function() {
         const max = box.width - thumbBox.width;
         return (max > 0) ? max : 0;
+    };
+
+    // How many screen px is one px of the slider? (page.fit() zooms the page, a parent can have a scale)
+    // WHY: The mouse moves in screen px: on a page zoomed to 2 the thumb went twice as far as the mouse.
+    const getScreenScale = function() {
+        if (box.elem.offsetWidth <= 0) return 1;
+        return (box.elem.getBoundingClientRect().width / box.elem.offsetWidth) || 1;
     };
 
     const updateTrack = function(animated = 0) {
@@ -315,9 +323,15 @@ const Slider = function(params = {}) {
     };
 
     const onMouseDown = (self, e) => {
+        // WHY: Only the main button: the right one (its menu) started a drag too.
+        const isOtherButton = (e.type === "mousedown" && e.button !== 0);
+        if (isOtherButton) return;
+        // WHY: After a touch the browser sends mousedown and mouseup too: a tap gave two onDragStart and two onDragEnd.
+        if (e.type === "touchstart") e.preventDefault();
         setIsDragging(true);
         startX = getClientX(e);
         startLeft = parseFloat(thumbBox.left) || 0; // (not parseInt: a click on the thumb moved it a part of a pixel)
+        dragScale = getScreenScale();
         
         removeDragEvents(); // WHY: a second touch before the end of a drag must not add the events twice
         dragEventRemovers = [
@@ -325,6 +339,9 @@ const Slider = function(params = {}) {
             box.listenTo(document, "mouseup", onMouseUp),
             box.listenTo(document, "touchmove", onMouseMove, { passive: false }),
             box.listenTo(document, "touchend", onMouseUp),
+            // WHY: The system can take a touch (a call, a gesture of the screen): its touchend never comes, and the
+            //      next touch anywhere on the page moved the thumb and could not scroll the page.
+            box.listenTo(document, "touchcancel", onMouseUp),
         ];
         box.onDragStart();
     };
@@ -334,7 +351,7 @@ const Slider = function(params = {}) {
         e.preventDefault();
         const clientX = getClientX(e);
         const maxLeft = getMaxLeft();
-        let dx = clientX - startX;
+        let dx = (clientX - startX) / dragScale;
         let newLeft = startLeft + dx;
 
         if (newLeft < 0) newLeft = 0;
