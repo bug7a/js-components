@@ -20,7 +20,7 @@
         /* Bismillah */
 
         // *** VARIABLES:
-        let lineDefault, lineOrder, lineStyle, lineLive;
+        let lineLive;
         let lblDefault, lblLive;
         let liveCount = 0;
 
@@ -54,7 +54,7 @@
                     // SAMPLE 1: Default
                     startCard("1. Default");
 
-                        lineDefault = TimeLine({
+                        TimeLine({
                             width: "100%",
                             items: [
                                 { time: "09:30", title: "Order created", text: "Order #1024 was created by Ayşe Yılmaz." },
@@ -71,7 +71,7 @@
                     // SAMPLE 2: Item colors, no time
                     startCard("2. Item colors (color), without time");
 
-                        lineOrder = TimeLine({
+                        TimeLine({
                             width: "100%",
                             items: [
                                 { title: "Opened", text: "The ticket is waiting for an answer.", color: "#5DB182" },
@@ -86,7 +86,7 @@
                     // SAMPLE 3: Style and clickable items
                     startCard("3. Style package and clickableItems");
 
-                        lineStyle = TimeLine({
+                        TimeLine({
                             width: "100%",
                             itemGap: 26,
                             dotSize: 16,
@@ -211,9 +211,17 @@
         };
 
         const smallButton = function (text, func) {
-            const btn = Button({ text: text, width: "auto", height: 34, fontSize: 13, color: "#E8E8E8", textColor: Black(0.75), round: 6 });
-            btn.elem.style.padding = "0 14px";
-            btn.on("click", function (self) { func(self); });
+            const btn = Button({
+                text: text,
+                width: "auto",
+                height: 34,
+                fontSize: 13,
+                color: "#E8E8E8",
+                textColor: Black(0.75),
+                round: 6,
+                css: { padding: "0 14px" },
+            });
+            btn.on("click", func);
             return btn;
         };
 

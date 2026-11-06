@@ -68,7 +68,10 @@
                     });
 
                     // SAMPLE 1: Press effects
-                    startCard("1. Press effects", "UIEffects.press(btn, type): a hover effect, a press effect and a pointer cursor. (UIEffects.button() is the old name, it still works.)");
+                    startCard(
+                        "1. Press effects",
+                        "UIEffects.press(btn, type): a hover effect, a press effect and a pointer cursor. (UIEffects.button() is the old name, it still works.)"
+                    );
 
                         startRow();
 
@@ -97,7 +100,10 @@
                     endCard();
 
                     // SAMPLE 2: Fill
-                    startCard("2. Outline buttons: fill", "UIEffects.press(btn, \"fill\", { color, textColor, direction }). The background fills from one side.");
+                    startCard(
+                        "2. Outline buttons: fill",
+                        "UIEffects.press(btn, \"fill\", { color, textColor, direction }). The background fills from one side."
+                    );
 
                         startRow();
 
@@ -112,7 +118,10 @@
                     endCard();
 
                     // SAMPLE 3: Combined effects
-                    startCard("3. Combined effects", "Give a list of types: UIEffects.press(btn, [\"lift\", \"ripple\"]). The last one is the classic basic.js button with the first effect: UIEffects.press(btn).");
+                    startCard(
+                        "3. Combined effects",
+                        "Give a list of types: UIEffects.press(btn, [\"lift\", \"ripple\"]). The last one is the classic basic.js button with the first effect: UIEffects.press(btn)."
+                    );
 
                         startRow();
 
@@ -129,7 +138,10 @@
                     endCard();
 
                     // SAMPLE 4: Hover effects on cards
-                    startCard("4. Hover effects on cards", "UIEffects.hover(card, type) shows that the pointer is over an object. The last card is a button: UIEffects.press(card, \"lift\").");
+                    startCard(
+                        "4. Hover effects on cards",
+                        "UIEffects.hover(card, type) shows that the pointer is over an object. The last card is a button: UIEffects.press(card, \"lift\")."
+                    );
 
                         startRow();
 
@@ -150,7 +162,10 @@
                     endCard();
 
                     // SAMPLE 5: Tilt and spotlight
-                    startCard("5. 3D tilt and spotlight", "\"tilt\" turns to the pointer. \"spotlight\" is a light that follows the pointer. They can be used together.");
+                    startCard(
+                        "5. 3D tilt and spotlight",
+                        "\"tilt\" turns to the pointer. \"spotlight\" is a light that follows the pointer. They can be used together."
+                    );
 
                         startRow();
 
@@ -163,14 +178,21 @@
                     endCard();
 
                     // SAMPLE 6: Links
-                    startCard("6. Links and texts", "UIEffects.hover(label, \"underline\"): a line grows under the text. \"fade\" is a simple alternative.");
+                    startCard(
+                        "6. Links and texts",
+                        "UIEffects.hover(label, \"underline\"): a line grows under the text. \"fade\" is a simple alternative."
+                    );
 
                         startRow();
 
                             ["Documentation", "Examples", "GitHub"].forEach(function (text) {
-                                const link = Label({ text: text, fontSize: 16, textColor: COLORS.blue });
-                                link.elem.style.cursor = "pointer";
-                                link.elem.style.paddingBottom = "2px";
+                                const link = Label({
+                                    text: text,
+                                    fontSize: 16,
+                                    textColor: COLORS.blue,
+                                    cursor: "pointer",
+                                    css: { paddingBottom: "2px" },
+                                });
                                 UIEffects.hover(link, "underline");
                                 link.on("click", function () { lblClicked.text = "Link: " + text; });
                             });
@@ -182,7 +204,10 @@
                     endCard();
 
                     // SAMPLE 7: Focus group
-                    startCard("7. Focus group", "UIEffects.focusGroup(list, { scale: 1.04, grayscale: 1 }): when one card is hovered, the others are dimmed.");
+                    startCard(
+                        "7. Focus group",
+                        "UIEffects.focusGroup(list, { scale: 1.04, grayscale: 1 }): when one card is hovered, the others are dimmed."
+                    );
 
                         startRow();
 
@@ -199,7 +224,10 @@
                     endCard();
 
                     // SAMPLE 8: play()
-                    startCard("8. play(): one-time animations", "UIEffects.play(obj, name). Ex: shake an input when its value is not valid.");
+                    startCard(
+                        "8. play(): one-time animations",
+                        "UIEffects.play(obj, name). Ex: shake an input when its value is not valid."
+                    );
 
                         startRow();
 
@@ -231,7 +259,10 @@
                     endCard();
 
                     // SAMPLE 9: loop()
-                    startCard("9. loop(): repeats until stop()", "const stop = UIEffects.loop(obj, name); stop(); For a new message, a waiting action or the next step.");
+                    startCard(
+                        "9. loop(): repeats until stop()",
+                        "const stop = UIEffects.loop(obj, name); stop(); For a new message, a waiting action or the next step."
+                    );
 
                         startRow();
 
@@ -324,8 +355,8 @@
                 round: 10,
                 border: 1,
                 borderColor: Black(0.1),
+                css: { alignItems: "stretch" },
             });
-            that.elem.style.alignItems = "stretch";
             Label({
                 text: title,
                 fontSize: 14,
@@ -336,8 +367,8 @@
                     text: description,
                     fontSize: 13,
                     textColor: Black(0.35),
+                    css: { marginTop: "-10px" },
                 });
-                that.elem.style.marginTop = "-10px";
             }
         };
 
@@ -377,8 +408,8 @@
                 color: "white",
                 textColor: color,
                 round: 8,
+                css: { border: "2px solid " + color },
             });
-            btn.elem.style.border = "2px solid " + color;
             return btn;
         };
 
@@ -423,7 +454,7 @@
                 color: COLORS.dark,
                 round: 14,
             });
-            if (background) card.elem.style.backgroundImage = background;
+            if (background) card.css.backgroundImage = background;
                 Label({ text: title, fontSize: 17, fontFamily: "opensans-bold", textColor: "white" });
                 Label({ text: text, fontSize: 13, textColor: White(0.7) });
             endGroup();

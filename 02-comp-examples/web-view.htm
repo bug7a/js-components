@@ -76,7 +76,10 @@
                     });
 
                     // SAMPLE 1: Load pages, toolbar
-                    startCard("1. Pages with a toolbar", "load(url), reload(), clear(). The spinner is shown until the page is loaded.");
+                    startCard(
+                        "1. Pages with a toolbar",
+                        "load(url), reload(), clear(). The spinner is shown until the page is loaded."
+                    );
 
                         viewPage = WebView({
                             width: "100%",
@@ -89,12 +92,14 @@
                         });
 
                         // GROUP: Buttons
-                        HGroup({ width: "100%", height: "auto", gap: 8 });
-                        that.elem.style.flexWrap = "wrap";
+                        HGroup({ width: "100%", height: "auto", gap: 8, wrap: 1 });
                             PAGES.forEach(function (url) {
                                 addSampleButton(url.replace(".htm", ""), function () { viewPage.load(url); });
                             });
-                            addSampleButton("Clear", function () { viewPage.clear(); lblPage.text = "Cleared"; }, 1);
+                            addSampleButton("Clear", function () {
+                                viewPage.clear();
+                                lblPage.text = "Cleared";
+                            }, 1);
                             addSampleButton("Error", function () { viewPage.showError("This is how an error looks. (showError)"); }, 1);
                         endGroup();
 
@@ -103,7 +108,10 @@
                     endCard();
 
                     // SAMPLE 2: HTML text and messages
-                    startCard("2. HTML text (loadHtml) and messages (postMessage / onMessage)", "The page and the parent talk with window.postMessage. Only the messages of this iframe are delivered.");
+                    startCard(
+                        "2. HTML text (loadHtml) and messages (postMessage / onMessage)",
+                        "The page and the parent talk with window.postMessage. Only the messages of this iframe are delivered."
+                    );
 
                         viewMessage = WebView({
                             width: "100%",
@@ -116,8 +124,7 @@
                         });
 
                         // GROUP: Buttons
-                        HGroup({ width: "100%", height: "auto", gap: 8 });
-                        that.elem.style.flexWrap = "wrap";
+                        HGroup({ width: "100%", height: "auto", gap: 8, wrap: 1 });
                             addSampleButton("Dark theme", function () { viewMessage.postMessage({ type: "theme", value: "dark" }); });
                             addSampleButton("Light theme", function () { viewMessage.postMessage({ type: "theme", value: "light" }); });
                             addSampleButton("Reload", function () { viewMessage.reload(); }, 1);
@@ -128,7 +135,10 @@
                     endCard();
 
                     // SAMPLE 3: Scaled preview
-                    startCard("3. Preview (scale: 0.5, interactive: 0)", "A half size preview. The page can not be clicked; the click goes to onClick.");
+                    startCard(
+                        "3. Preview (scale: 0.5, interactive: 0)",
+                        "A half size preview. The page can not be clicked; the click goes to onClick."
+                    );
 
                         HGroup({ width: "100%", height: "auto", align: "left top", gap: 16 });
 
@@ -191,8 +201,8 @@
                 round: 10,
                 border: 1,
                 borderColor: Black(0.1),
+                css: { alignItems: "stretch" },
             });
-            that.elem.style.alignItems = "stretch";
             Label({
                 text: title,
                 fontSize: 14,
@@ -203,8 +213,8 @@
                     text: description,
                     fontSize: 13,
                     textColor: Black(0.35),
+                    css: { marginTop: "-10px" },
                 });
-                that.elem.style.marginTop = "-10px";
             }
         };
 

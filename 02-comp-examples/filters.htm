@@ -51,7 +51,7 @@
         ];
 
         // *** VARIABLES:
-        let pageBox, vehicleFilters, productFilters, lblResult;
+        let pageBox, vehicleFilters, lblResult;
 
         // First running function. (basic.js calls it when the page is ready)
         const start = function () {
@@ -81,7 +81,7 @@
                 VGroup({ hug: 1, align: "left top", gap: 10 });
                 that.clipContent = 0;
                     Label({ text: "2. panelMode: popup, accentColor, panelHeight", fontSize: 14, textColor: SOFT_TEXT });
-                    productFilters = Filters({
+                    Filters({
                         animated: 1,
                         width: 320,
                         panelHeight: 360,
@@ -98,7 +98,7 @@
 
             endBox();
 
-            if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: pageBox });
+            ScrollBar({ scrollableBox: pageBox });
 
             showSelected(vehicleFilters);
 

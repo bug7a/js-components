@@ -178,15 +178,28 @@
             endGroup();
 
             HGroup({ width: "100%", height: "auto", align: "center center", gap: 18, wrap: 1 });
-                CheckBox({ labelText: "Line numbers", checked: 1, onChange: function (self) { eachEditor(function (editor) { editor.setShowLineNumbers(self.checked); }); } });
-                CheckBox({ labelText: "Read only", onChange: function (self) { eachEditor(function (editor) { editor.setReadOnly(self.checked); }); } });
+                CheckBox({
+                    labelText: "Line numbers",
+                    checked: 1,
+                    onChange: function (self) { eachEditor(function (editor) { editor.setShowLineNumbers(self.checked); }); },
+                });
+                CheckBox({
+                    labelText: "Read only",
+                    onChange: function (self) { eachEditor(function (editor) { editor.setReadOnly(self.checked); }); },
+                });
             endGroup();
 
         };
 
         // GROUP: A title, a CodeEditor and the place of its cursor. Returns the CodeEditor.
         const createPanel = function (titleText, noteText, styleName) {
-            VGroup({ width: "auto", height: "auto", align: "left top", gap: 8, css: { flex: "1 1 " + PANEL_MIN_WIDTH + "px", maxWidth: PANEL_MAX_WIDTH + "px", minWidth: "0" } });
+            VGroup({
+                width: "auto",
+                height: "auto",
+                align: "left top",
+                gap: 8,
+                css: { flex: "1 1 " + PANEL_MIN_WIDTH + "px", maxWidth: PANEL_MAX_WIDTH + "px", minWidth: "0" },
+            });
 
                 HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
                     Label({ text: titleText, fontSize: 15, bold: 1, textColor: Black(0.75) });

@@ -107,9 +107,21 @@
             endGroup();
 
             HGroup({ width: "100%", height: "auto", align: "center center", gap: 18, wrap: 1 });
-                CheckBox({ labelText: "Time", checked: 1, onChange: function (self) { eachLog(function (log) { log.setShowTime(self.checked); }); } });
-                CheckBox({ labelText: "Level", checked: 1, onChange: function (self) { eachLog(function (log) { log.setShowLevel(self.checked); }); } });
-                CheckBox({ labelText: "Wrap lines", checked: 1, onChange: function (self) { eachLog(function (log) { log.setWrapLines(self.checked); }); } });
+                CheckBox({
+                    labelText: "Time",
+                    checked: 1,
+                    onChange: function (self) { eachLog(function (log) { log.setShowTime(self.checked); }); },
+                });
+                CheckBox({
+                    labelText: "Level",
+                    checked: 1,
+                    onChange: function (self) { eachLog(function (log) { log.setShowLevel(self.checked); }); },
+                });
+                CheckBox({
+                    labelText: "Wrap lines",
+                    checked: 1,
+                    onChange: function (self) { eachLog(function (log) { log.setWrapLines(self.checked); }); },
+                });
                 CheckBox({ labelText: "Only warnings and errors", onChange: function (self) {
                     const levels = (self.checked) ? ["warn", "error"] : [];
                     eachLog(function (log) { log.setLevels(levels); });
@@ -120,7 +132,13 @@
 
         // GROUP: A title and a LogView. Returns the LogView.
         const createPanel = function (titleText, noteText, styleName) {
-            VGroup({ width: "auto", height: "auto", align: "left top", gap: 8, css: { flex: "1 1 " + PANEL_MIN_WIDTH + "px", maxWidth: PANEL_MAX_WIDTH + "px", minWidth: "0" } });
+            VGroup({
+                width: "auto",
+                height: "auto",
+                align: "left top",
+                gap: 8,
+                css: { flex: "1 1 " + PANEL_MIN_WIDTH + "px", maxWidth: PANEL_MAX_WIDTH + "px", minWidth: "0" },
+            });
                 HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
                     Label({ text: titleText, fontSize: 15, bold: 1, textColor: Black(0.75) });
                     Label({ text: basic.escapeHtml(noteText), fontSize: 12, textColor: SOFT_TEXT });

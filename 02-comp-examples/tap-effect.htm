@@ -19,8 +19,7 @@
 
     /* Bismillah */
 
-    // TapEffect (comp-m4): a soft circle where the screen is tapped, the tap effect of the old
-    // javascript-mobile-app-template. Tap anywhere: a card, the page, the button. The circle never catches the tap:
+    // TapEffect: a soft circle where the screen is tapped. Tap anywhere: a card, the page, the button. The circle never catches the tap:
     // the card under it still gets it ("Tapped: ...").
 
     const CARD_WIDTH = 140;
@@ -80,7 +79,13 @@
 
                 HGroup({ hug: 1, align: "left center", gap: 14, clipContent: 0 });
                     // WHY ripple: 0: only the circle of TapEffect is seen, not the wave of the button too
-                    btnStartStop = SmartButton({ labelText: "Stop", width: BUTTON_WIDTH, height: BUTTON_HEIGHT, ripple: 0, onClick: toggleTapEffect });
+                    btnStartStop = SmartButton({
+                        labelText: "Stop",
+                        width: BUTTON_WIDTH,
+                        height: BUTTON_HEIGHT,
+                        ripple: 0,
+                        onClick: toggleTapEffect,
+                    });
                     lblState = Label({ text: "", fontSize: 14, textColor: Black(0.5) });
                 endGroup();
 

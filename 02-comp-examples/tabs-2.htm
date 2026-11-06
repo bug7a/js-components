@@ -19,10 +19,10 @@
         /* Bismillah */
 
         // Tabs with big icon tabs.
-        // - variant: "pill" + a style for every bar (the colors, sizes and rounds of the old sample).
+        // - variant: "pill" + a style for every bar.
         // - selectedColor, selectedTextColor and selectedIconFile of a tab: the active tab takes its own colors and icon.
 
-        // ICONS: The image files of the old sample.
+        // ICONS: Image files.
         const ICON_PATH = "tabs-2/";
 
         const tabList1 = [
@@ -115,7 +115,7 @@
                 scrollY: 1,
             });
 
-                // GROUP: Page layout (top: 100, 80 between the bars, like the old sample)
+                // GROUP: Page layout (top: 100, 80 between the bars)
                 VGroup({
                     width: "100%",
                     height: "auto",
@@ -135,7 +135,7 @@
                             console.log("tabs1: " + self.value);
                         },
                     });
-                    // WHY: A fixed width bar (autoWidth: 0 in the old sample): the tabs stay in the middle.
+                    // WHY: A fixed width bar (autoWidth: 0): the tabs stay in the middle.
                     tabs1.stripInner.css.margin = "0 auto";
 
                     // *** EXAMPLE 2:

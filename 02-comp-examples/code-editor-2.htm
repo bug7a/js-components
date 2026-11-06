@@ -99,14 +99,26 @@
                 menuBar = MenuBar({ styleName: themeName, menus: makeMenus(), shrink: 0 });
 
                 // BOX: The areas
-                startBox({ width: "100%", height: "auto", color: "transparent", grow: 1, css: { minHeight: "0", flexBasis: "0" } });
+                startBox({
+                    width: "100%",
+                    height: "auto",
+                    color: "transparent",
+                    grow: 1,
+                    css: { minHeight: "0", flexBasis: "0" },
+                });
 
                     outerSplit = Splitter({ styleName: themeName, firstSize: FILE_LIST_WIDTH, minFirst: 100, minSecond: 200 });
 
                     createFileList();
 
                     createIn(outerSplit.second, function () {
-                        const innerSplit = Splitter({ styleName: themeName, direction: "vertical", secondSize: OUTPUT_HEIGHT, minFirst: 80, minSecond: 60 });
+                        const innerSplit = Splitter({
+                            styleName: themeName,
+                            direction: "vertical",
+                            secondSize: OUTPUT_HEIGHT,
+                            minFirst: 80,
+                            minSecond: 60,
+                        });
                         themedObjects.push(innerSplit);
                         createIn(innerSplit.first, function () {
                             editor = CodeEditor({

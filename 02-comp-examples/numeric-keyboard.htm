@@ -19,14 +19,21 @@
 
     /* Bismillah */
 
-    // NumericKeyboard (comp-m4): number keys on the screen. The new version of comp-m1/ui-numeric-keyboard.js
-    // (the first one is its sample). Click a keyboard (or Tab to it) and type with the keys of the computer too.
+    // NumericKeyboard: number keys on the screen. Click a keyboard (or Tab to it) and type with the keys of the computer too.
 
     const AMOUNT_LENGTH = 8;
 
     // GROUP: A title over a sample
     const startSample = function (title, look = {}) {
-        VGroup({ hug: 1, align: "center top", gap: 8, padding: look.padding || 0, color: look.color || "transparent", round: 12, clipContent: 0 });
+        VGroup({
+            hug: 1,
+            align: "center top",
+            gap: 8,
+            padding: look.padding || 0,
+            color: look.color || "transparent",
+            round: 12,
+            clipContent: 0,
+        });
         Label({ plainText: title, fontSize: 14, bold: 1, textColor: look.textColor || Black(0.5) });
     };
 
@@ -87,7 +94,7 @@
 
         endBox();
 
-        if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: pageBox });
+        ScrollBar({ scrollableBox: pageBox });
 
     };
 

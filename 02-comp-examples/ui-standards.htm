@@ -60,10 +60,21 @@
                 });
 
                     Label({ text: "UI Standards", ...UI.styles.title });
-                    Label({ text: "Design tokens and themes. Every color is a CSS variable, so a theme change updates all objects at once.", ...UI.styles.caption });
+                    Label({
+                        text: "Design tokens and themes. Every color is a CSS variable, so a theme change updates all objects at once.",
+                        ...UI.styles.caption,
+                    });
 
                     // GROUP: Theme selector
-                    HGroup({ width: "auto", height: "auto", align: "center center", gap: UI.SPACING_S, padding: UI.SPACING_S, ...UI.styles.card, round: UI.ROUND_FULL });
+                    HGroup({
+                        width: "auto",
+                        height: "auto",
+                        align: "center center",
+                        gap: UI.SPACING_S,
+                        padding: UI.SPACING_S,
+                        ...UI.styles.card,
+                        round: UI.ROUND_FULL,
+                    });
                         ["light", "dark", "auto", "sepia"].forEach(function (themeName) {
                             themeButtons[themeName] = Button({
                                 text: themeName,
@@ -79,21 +90,30 @@
                     lblTheme = Label({ text: "", ...UI.styles.caption });
 
                     // SAMPLE 1: Backgrounds, texts and lines
-                    startCard("1. Backgrounds, texts and lines", "The name says the job of the color. The job is the same in every theme: UI.COLOR_SURFACE is the card color (white in light, black in dark).");
+                    startCard(
+                        "1. Backgrounds, texts and lines",
+                        "The name says the job of the color. The job is the same in every theme: UI.COLOR_SURFACE is the card color (white in light, black in dark)."
+                    );
                         startRow();
                             ["COLOR_PAGE", "COLOR_SURFACE", "COLOR_SURFACE_SOFT", "COLOR_BORDER", "COLOR_TEXT", "COLOR_TEXT_STRONG", "COLOR_TEXT_SOFT", "COLOR_BUTTON_TEXT"].forEach(addSwatch);
                         endRow();
                     endCard();
 
                     // SAMPLE 2: Brand and states
-                    startCard("2. Brand and states", "UI.COLOR_PRIMARY, COLOR_SECONDARY and the state colors. The state colors use the palette colors (success: green, danger: red...).");
+                    startCard(
+                        "2. Brand and states",
+                        "UI.COLOR_PRIMARY, COLOR_SECONDARY and the state colors. The state colors use the palette colors (success: green, danger: red...)."
+                    );
                         startRow();
                             ["COLOR_PRIMARY", "COLOR_SECONDARY", "COLOR_SUCCESS", "COLOR_WARNING", "COLOR_DANGER", "COLOR_INFO"].forEach(addSwatch);
                         endRow();
                     endCard();
 
                     // SAMPLE 3: Palette and grays
-                    startCard("3. Palette and grays", "The palette is the same in every theme (charts, tags, avatars). Grays: 100 is near the page color, 900 is near the text color, so they change places in the dark theme.");
+                    startCard(
+                        "3. Palette and grays",
+                        "The palette is the same in every theme (charts, tags, avatars). Grays: 100 is near the page color, 900 is near the text color, so they change places in the dark theme."
+                    );
                         startRow();
                             ["COLOR_PINK", "COLOR_GREEN", "COLOR_BLUE", "COLOR_RED", "COLOR_YELLOW", "COLOR_SAND"].forEach(addSwatch);
                         endRow();
@@ -110,7 +130,10 @@
                     endCard();
 
                     // SAMPLE 5: Corners and spacing
-                    startCard("5. Corners and spacing", "UI.ROUND_XS, ROUND_S, ROUND_M, ROUND_L, ROUND_FULL (2, 4, 8, 13, 100) and UI.SPACING_S / M / L (8, 16, 32)");
+                    startCard(
+                        "5. Corners and spacing",
+                        "UI.ROUND_XS, ROUND_S, ROUND_M, ROUND_L, ROUND_FULL (2, 4, 8, 13, 100) and UI.SPACING_S / M / L (8, 16, 32)"
+                    );
                         startRow();
                             ["ROUND_XS", "ROUND_S", "ROUND_M", "ROUND_L", "ROUND_FULL"].forEach(function (name) {
                                 VGroup({ width: 80, height: "auto", gap: 6, color: "transparent" });
@@ -130,7 +153,10 @@
                     endCard();
 
                     // SAMPLE 6: Style presets
-                    startCard("6. Style presets", "Label({ text: \"Title\", ...UI.styles.title }) when creating, or UI.style(that, \"card\") later. Your own props after the preset win.");
+                    startCard(
+                        "6. Style presets",
+                        "Label({ text: \"Title\", ...UI.styles.title }) when creating, or UI.style(that, \"card\") later. Your own props after the preset win."
+                    );
 
                         startRow();
                             Label({ text: "title", ...UI.styles.title });
@@ -162,7 +188,10 @@
                     endCard();
 
                     // SAMPLE 7: alpha()
-                    startCard("7. Colors with alpha", "UI.alpha(UI.COLOR_PRIMARY, 0.2): works with the tokens and follows the theme.");
+                    startCard(
+                        "7. Colors with alpha",
+                        "UI.alpha(UI.COLOR_PRIMARY, 0.2): works with the tokens and follows the theme."
+                    );
                         startRow();
                             [0.1, 0.25, 0.5, 0.75, 1].forEach(function (alpha) {
                                 VGroup({ width: 90, height: "auto", gap: 6, color: "transparent" });
@@ -170,16 +199,36 @@
                                     Label({ text: String(alpha), ...UI.styles.caption });
                                 endGroup();
                             });
-                            Label({ text: "Selected", ...UI.styles.text, color: UI.alpha(UI.COLOR_SUCCESS, 0.2), textColor: UI.COLOR_TEXT, padding: [UI.PADDING_X, UI.PADDING_Y], round: UI.ROUND_S });
-                            Label({ text: "Error", ...UI.styles.text, color: UI.alpha(UI.COLOR_DANGER, 0.2), textColor: UI.COLOR_DANGER, padding: [UI.PADDING_X, UI.PADDING_Y], round: UI.ROUND_S });
+                            Label({
+                                text: "Selected",
+                                ...UI.styles.text,
+                                color: UI.alpha(UI.COLOR_SUCCESS, 0.2),
+                                textColor: UI.COLOR_TEXT,
+                                padding: [UI.PADDING_X, UI.PADDING_Y],
+                                round: UI.ROUND_S,
+                            });
+                            Label({
+                                text: "Error",
+                                ...UI.styles.text,
+                                color: UI.alpha(UI.COLOR_DANGER, 0.2),
+                                textColor: UI.COLOR_DANGER,
+                                padding: [UI.PADDING_X, UI.PADDING_Y],
+                                round: UI.ROUND_S,
+                            });
                         endRow();
                     endCard();
 
                     // SAMPLE 8: Values in code
-                    startCard("8. Values in code", "UI.getColor() for canvas or Chart.js, UI.onThemeChange(), UI.breakpoint() and UI.motion()");
+                    startCard(
+                        "8. Values in code",
+                        "UI.getColor() for canvas or Chart.js, UI.onThemeChange(), UI.breakpoint() and UI.motion()"
+                    );
                         lblColorPrimary = Label({ text: "", ...UI.styles.text });
                         lblBreakpoint = Label({ text: "", ...UI.styles.text });
-                        Label({ text: "UI.motion([\"opacity\", \"left\"]) → \"" + UI.motion(["opacity", "left"]) + "\"", ...UI.styles.text });
+                        Label({
+                            text: "UI.motion([\"opacity\", \"left\"]) → \"" + UI.motion(["opacity", "left"]) + "\"",
+                            ...UI.styles.text,
+                        });
                     endCard();
 
                 endGroup();
@@ -222,12 +271,11 @@
                 gap: UI.SPACING_M,
                 padding: 20,
                 ...UI.styles.card,
+                css: { alignItems: "stretch" },
             });
-            that.elem.style.alignItems = "stretch";
             Label({ text: title, ...UI.styles.text, fontFamily: UI.FONT_FAMILY_BOLD });
             if (description) {
-                Label({ text: description, ...UI.styles.caption });
-                that.elem.style.marginTop = "-10px";
+                Label({ text: description, ...UI.styles.caption, css: { marginTop: "-10px" } });
             }
         };
 
@@ -236,7 +284,14 @@
         };
 
         const startRow = function () {
-            HGroup({ width: "100%", height: "auto", align: "left center", gap: UI.SPACING_S, wrap: 1, color: "transparent" });
+            HGroup({
+                width: "100%",
+                height: "auto",
+                align: "left center",
+                gap: UI.SPACING_S,
+                wrap: 1,
+                color: "transparent",
+            });
         };
 
         const endRow = function () {
@@ -245,8 +300,23 @@
 
         // A color sample: the color, its token name and its value in the current theme.
         const addSwatch = function (tokenName) {
-            VGroup({ width: 162, height: "auto", align: "left top", gap: 4, padding: 6, ...UI.styles.card, round: UI.ROUND_M });
-                Box({ width: "100%", height: 50, color: UI[tokenName], round: UI.ROUND_S, border: 1, borderColor: UI.COLOR_BORDER });
+            VGroup({
+                width: 162,
+                height: "auto",
+                align: "left top",
+                gap: 4,
+                padding: 6,
+                ...UI.styles.card,
+                round: UI.ROUND_M,
+            });
+                Box({
+                    width: "100%",
+                    height: 50,
+                    color: UI[tokenName],
+                    round: UI.ROUND_S,
+                    border: 1,
+                    borderColor: UI.COLOR_BORDER,
+                });
                 Label({ text: tokenName, ...UI.styles.caption, textColor: UI.COLOR_TEXT });
                 colorValueLabels.push({ label: Label({ text: "", ...UI.styles.caption }), token: UI[tokenName] });
             endGroup();

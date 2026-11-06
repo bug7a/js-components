@@ -20,8 +20,7 @@
 
     /* Bismillah */
 
-    // TinyTable (comp-m4): a light table for short lists. The new version of comp-m1/tiny-table.js with the same look
-    // (the first table is its sample: 02-comp-m1-samples/tiny-table.htm).
+    // TinyTable: a light table for short lists.
 
     const COLUMNS = [
         { title: "ID", width: 50, align: "center" },
@@ -53,7 +52,15 @@
     // GROUP: A title over a sample
     // WHY clipContent: 0: a group cuts its content at its round corners; the corner of the table was cut there
     const startSample = function (title, look = {}) {
-        VGroup({ hug: 1, align: "left top", gap: 10, padding: look.padding || 0, color: look.color || "transparent", round: 12, clipContent: 0 });
+        VGroup({
+            hug: 1,
+            align: "left top",
+            gap: 10,
+            padding: look.padding || 0,
+            color: look.color || "transparent",
+            round: 12,
+            clipContent: 0,
+        });
         Label({ plainText: title, fontSize: 14, bold: 1, textColor: look.textColor || Black(0.5) });
     };
 
@@ -85,7 +92,13 @@
                 endSample();
 
                 startSample("styleName: \"light\" · bodyHeight: " + SCROLL_HEIGHT + " (the rows scroll)");
-                    TinyTable({ styleName: "light", columns: COLUMNS, rows: PLAIN_ROWS.concat(PLAIN_ROWS), bodyHeight: SCROLL_HEIGHT, onCellCreate: boldValue });
+                    TinyTable({
+                        styleName: "light",
+                        columns: COLUMNS,
+                        rows: PLAIN_ROWS.concat(PLAIN_ROWS),
+                        bodyHeight: SCROLL_HEIGHT,
+                        onCellCreate: boldValue,
+                    });
                 endSample();
 
                 startSample("styleName: \"dark\"", { color: "#141414", textColor: White(0.6), padding: 20 });
@@ -96,7 +109,7 @@
 
         endBox();
 
-        if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: pageBox });
+        ScrollBar({ scrollableBox: pageBox });
 
     };
 

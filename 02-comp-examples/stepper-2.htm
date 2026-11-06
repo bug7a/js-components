@@ -19,11 +19,11 @@
 
         /* Bismillah */
 
-        // The "ozden" package of Stepper (the look of the old UIStepper of javascript-mobile-app-template) and
+        // The "ozden" package of Stepper and
         // style.button.border / borderColor (a line around the buttons) on the other packages.
 
         // *** VARIABLES:
-        let stpAtMin, stpMiddle, stpAtMax, lblOzden;
+        let lblOzden;
         const CARD_MAX_WIDTH = 560;
 
         const start = function () {
@@ -54,13 +54,16 @@
                     });
 
                     // SAMPLE 1: ozden
-                    startCard("1. styleName: \"ozden\"", "The look of the old UIStepper (a 600 px design): 150 x 50, round white buttons with a dark line. At min / max a button fades to 0.4.");
+                    startCard(
+                        "1. styleName: \"ozden\"",
+                        "The look of the old UIStepper (a 600 px design): 150 x 50, round white buttons with a dark line. At min / max a button fades to 0.4."
+                    );
 
                         HGroup({ width: "100%", height: "auto", align: "left center", gap: 16, wrap: 1 });
 
-                            stpAtMin = Stepper({ styleName: "ozden", value: 1, min: 1, max: 10, onChange: showOzdenValue });
-                            stpMiddle = Stepper({ styleName: "ozden", value: 5, min: 1, max: 10, onChange: showOzdenValue });
-                            stpAtMax = Stepper({ styleName: "ozden", value: 10, min: 1, max: 10, onChange: showOzdenValue });
+                            Stepper({ styleName: "ozden", value: 1, min: 1, max: 10, onChange: showOzdenValue });
+                            Stepper({ styleName: "ozden", value: 5, min: 1, max: 10, onChange: showOzdenValue });
+                            Stepper({ styleName: "ozden", value: 10, min: 1, max: 10, onChange: showOzdenValue });
 
                         endGroup();
 
@@ -69,7 +72,10 @@
                     endCard();
 
                     // SAMPLE 2: ozden with your params
-                    startCard("2. ozden with your own params", "A param you give wins over the package: width: 180 and a unit; a gray pill behind the buttons (style.box.color).");
+                    startCard(
+                        "2. ozden with your own params",
+                        "A param you give wins over the package: width: 180 and a unit; a gray pill behind the buttons (style.box.color)."
+                    );
 
                         HGroup({ width: "100%", height: "auto", align: "left center", gap: 16, wrap: 1 });
 
@@ -81,16 +87,31 @@
                     endCard();
 
                     // SAMPLE 3: The line around the buttons
-                    startCard("3. style.button.border and borderColor", "A line around the buttons, on any package. (0 and \"transparent\" by default: no line)");
+                    startCard(
+                        "3. style.button.border and borderColor",
+                        "A line around the buttons, on any package. (0 and \"transparent\" by default: no line)"
+                    );
 
                         HGroup({ width: "100%", height: "auto", align: "left center", gap: 16, wrap: 1 });
 
                             Stepper({ value: 2, min: 0, max: 9, style: { button: { border: 1, borderColor: Black(0.25) } } });
-                            Stepper({ styleName: "modern", value: 4, min: 1, max: 12, style: { button: { border: 1, borderColor: "cadetblue" } } });
+                            Stepper({
+                                styleName: "modern",
+                                value: 4,
+                                min: 1,
+                                max: 12,
+                                style: { button: { border: 1, borderColor: "cadetblue" } },
+                            });
 
                             // GROUP: Dark background
                             HGroup({ hug: 1, align: "left center", padding: 16, color: "#1C1C1B", round: 10 });
-                                Stepper({ styleName: "dark", value: 2, min: 0, max: 5, style: { button: { border: 1, borderColor: White(0.25) } } });
+                                Stepper({
+                                    styleName: "dark",
+                                    value: 2,
+                                    min: 0,
+                                    max: 5,
+                                    style: { button: { border: 1, borderColor: White(0.25) } },
+                                });
                             endGroup();
 
                         endGroup();
