@@ -326,6 +326,12 @@ CATALOG.COMPONENTS = [
         tr: "Katlanan bölümler: bir başlık satırı ve altında nesneleri, biri ya da birkaçı açık; not, ikon ve klavye. Kapalı bölüm nesnelerini korur. Aydınlık ve karanlık tema.",
     },
     {
+        key: "grid-group", name: "GridGroup", cat: "pages",
+        source: "comp/grid-group.js", samples: ["02-comp-examples/grid-group.htm"],
+        en: "A group whose objects stand in columns and rows: a form of titles and fields, the keys of a calculator, tiles. Equal columns, px, parts of the room, an object over more than one cell.",
+        tr: "Nesneleri sütun ve satırlara dizen grup: başlık ve alanlardan bir form, hesap makinesinin tuşları, kutucuklar. Eşit sütunlar, px, oranlar, birden çok hücreye yayılan nesne.",
+    },
+    {
         key: "splitter", name: "Splitter", cat: "pages",
         source: "comp/splitter.js", samples: ["02-comp-examples/splitter.htm"],
         en: "Two areas with a line between them: a drag changes their sizes, side by side or one under the other. Keyboard, limits, sizes that follow the window. Light and dark themes.",

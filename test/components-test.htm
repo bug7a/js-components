@@ -61,9 +61,11 @@
         const INPUT_B = ["comp/tooltip.js", "comp/input-b.js"];
 
         // kind "object": a namespace, not a constructor. Only loading is checked.
+        // kind "group": started like HGroup: endGroup() closes it.
         const COMPONENTS = [
             { file: "comp/accordion.js", name: "Accordion", params: { sections: ["One", { key: "two", title: "Two", opened: 1 }] } },
             { file: "comp/badge.js", name: "Badge" },
+            { file: "comp/grid-group.js", name: "GridGroup", kind: "group", params: { columns: 3, gap: 8 } },
             { file: "comp/currency-input-b.js", name: "CurrencyInputB", deps: INPUT_B },
             { file: "comp/email-input-b.js", name: "EmailInputB", deps: INPUT_B },
             { file: "comp/form.js", name: "Form", deps: ["comp/tooltip.js"] },
@@ -274,6 +276,7 @@
             let box = null;
             try {
                 box = Comp(params);
+                if (test.kind === "group") endGroup();
             } catch (e) {
                 check("creates with default values", false, e.message + ((e.stack || "").split("\n")[1] || "").replace(/\s+at\s+/, " at "));
                 return { steps: steps };
@@ -321,6 +324,7 @@
 
             try {
                 const box2 = Comp(params);
+                if (test.kind === "group") endGroup();
                 await sleep(test.wait || 400);
                 box2.remove();
             } catch (e) {
