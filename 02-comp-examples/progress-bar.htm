@@ -8,15 +8,18 @@
 
     <!-- LIBRARY FILES -->
     <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
-    <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
-    <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
 
     <!-- COMPONENT FILES -->
     <script src="../comp/progress-bar.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
         /* Bismillah */
+
+        const CARD_MAX_WIDTH = 420;
 
         // *** VARIABLES:
         let prgBasic, lblBasic;
@@ -41,7 +44,7 @@
                     height: "auto", // Grows with content, so the Box can scroll.
                     align: "center top",
                     gap: 30,
-                    padding: 50,
+                    padding: [16, 50], // WHY 16 at the sides: the cards fill a phone (390 px)
                 });
 
                     // LABEL: Title
@@ -67,10 +70,10 @@
                         });
 
                         // GROUP: Buttons
-                        HGroup({ width: "auto", height: "auto", gap: 8 });
-                            addSampleButton("- 10", function () { prgBasic.addValue(-10); });
-                            addSampleButton("+ 10", function () { prgBasic.addValue(10); });
-                            addSampleButton("Reset", function () { prgBasic.reset(); lblBasic.text = "Value: 0"; }, 1);
+                        startButtonRow();
+                            SmartButton({ labelText: "- 10", onClick: function () { prgBasic.addValue(-10); } });
+                            SmartButton({ labelText: "+ 10", onClick: function () { prgBasic.addValue(10); } });
+                            SmartButton({ tone: "white", labelText: "Reset", onClick: function () { prgBasic.reset(); lblBasic.text = "Value: 0"; } });
                         endGroup();
 
                         lblBasic = addInfoLabel("Value: 40");
@@ -96,18 +99,26 @@
                         });
 
                         // GROUP: Buttons
-                        HGroup({ width: "auto", height: "auto", gap: 8 });
-                            addSampleButton("Start", startUpload);
-                            addSampleButton("Fail", function () {
-                                stopUpload();
-                                prgUpload.setStatus("error");
-                                prgUpload.setTitleText("Upload failed");
-                            }, 1);
-                            addSampleButton("Reset", function () {
-                                stopUpload();
-                                prgUpload.reset();
-                                prgUpload.setTitleText("Uploading photos");
-                            }, 1);
+                        startButtonRow();
+                            SmartButton({ tone: "cyan", labelText: "Start", onClick: startUpload });
+                            SmartButton({
+                                tone: "orange",
+                                labelText: "Fail",
+                                onClick: function () {
+                                    stopUpload();
+                                    prgUpload.setStatus("error");
+                                    prgUpload.setTitleText("Upload failed");
+                                },
+                            });
+                            SmartButton({
+                                tone: "white",
+                                labelText: "Reset",
+                                onClick: function () {
+                                    stopUpload();
+                                    prgUpload.reset();
+                                    prgUpload.setTitleText("Uploading photos");
+                                },
+                            });
                         endGroup();
 
                     endCard();
@@ -122,15 +133,22 @@
                         });
 
                         // GROUP: Buttons
-                        HGroup({ width: "auto", height: "auto", gap: 8 });
-                            addSampleButton("Connected", function () {
-                                prgConnect.setTitleText("Downloading data");
-                                prgConnect.setValue(25); // A known value ends the indeterminate mode.
+                        startButtonRow();
+                            SmartButton({
+                                labelText: "Connected",
+                                onClick: function () {
+                                    prgConnect.setTitleText("Downloading data");
+                                    prgConnect.setValue(25); // A known value ends the indeterminate mode.
+                                },
                             });
-                            addSampleButton("Waiting", function () {
-                                prgConnect.setTitleText("Connecting to the server...");
-                                prgConnect.setIndeterminate(1);
-                            }, 1);
+                            SmartButton({
+                                tone: "white",
+                                labelText: "Waiting",
+                                onClick: function () {
+                                    prgConnect.setTitleText("Connecting to the server...");
+                                    prgConnect.setIndeterminate(1);
+                                },
+                            });
                         endGroup();
 
                     endCard();
@@ -182,10 +200,13 @@
                         });
 
                         // GROUP: Buttons
-                        HGroup({ width: "auto", height: "auto", gap: 8 });
-                            addSampleButton("Random", function () {
-                                prgModern.setValue(random(0, 50));
-                                prgModernTasks.setValue(random(0, 100));
+                        startButtonRow();
+                            SmartButton({
+                                labelText: "Random",
+                                onClick: function () {
+                                    prgModern.setValue(random(0, 50));
+                                    prgModernTasks.setValue(random(0, 100));
+                                },
                             });
                         endGroup();
 
@@ -246,7 +267,7 @@
         // GROUP: A white card with a title.
         const startCard = function (title) {
             VGroup({
-                width: 420,
+                width: "100%",
                 height: "auto",
                 align: "left top",
                 gap: 16,
@@ -256,6 +277,7 @@
                 border: 1,
                 borderColor: Black(0.1),
             });
+            that.css = { maxWidth: CARD_MAX_WIDTH + "px" };
             Label({
                 text: title,
                 fontSize: 14,
@@ -267,16 +289,9 @@
             endGroup();
         };
 
-        const addSampleButton = function (text, onClick, isSecondary = 0) {
-            const btn = Button({
-                text: text,
-                width: 100,
-                height: 36,
-                fontSize: 14,
-            });
-            if (isSecondary) btn.color = "lightgray";
-            btn.on("click", onClick);
-            return btn;
+        // GROUP: SmartButtons side by side (endGroup() closes it)
+        const startButtonRow = function () {
+            HGroup({ width: "auto", height: "auto", align: "left center", gap: 8, wrap: 1, clipContent: 0 }); // WHY clipContent 0: the focus ring of a SmartButton is not cut
         };
 
         const addInfoLabel = function (text) {
