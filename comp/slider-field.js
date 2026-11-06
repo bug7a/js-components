@@ -20,10 +20,11 @@ UI COMPONENT TEMPLATE
   (the drag is released, a key step, a typed value). Neither is called at create time or with silent: 1.
 - Everything is drawn with code (no image files needed). Accessibility: role="slider", aria-valuenow...
 - Style packages: "classic" (default), "modern", "dark", "ozden". Select with styleName. (SliderField.styles)
-  "ozden" (2026-11-06): for every page, in the colors of SmartButton: a cyan fill with an edge and a white knob; the
-  label is always on the fill and the value never (style.fill.aroundLabel, beforeValue), a focus ring. Its sample:
-  02-comp-examples/slider-field-ozden.htm.
-- Not the same as comp/slider.js (Slider: a Material style track with a round thumb).
+  "ozden" (2026-11-06, the user: a more usable look for general use), in the colors of SmartButton: a cyan fill with
+  an edge and a white knob; the label is always on the fill and the value never (style.fill.aroundLabel, beforeValue),
+  a focus ring. Its sample: 02-comp-examples/slider-field-ozden.htm.
+- Not the same as comp/slider.js (Slider: a track with a round thumb). THE SLIDER OF NEW PAGES is Slider "round"
+  (the user, 2026-11-06, CLAUDE.md); SliderField is the parallel design, for a page that asks for its shape.
 
 USAGE:
 const sfWidth = SliderField({ labelText: "Width", value: 3, min: 0, max: 10, onChange: (self) => println(self.value) });
@@ -850,7 +851,7 @@ SliderField.styles = {
     // Light gray field, gray fill. (Like the property sliders of design tools)
     classic: SliderFieldDefaults.style,
 
-    // For every page (2026-11-06): the colors of SmartButton and of ProgressBar ozden. The fill is a cyan SmartButton
+    // For general use (2026-11-06, the user asked for a more usable look): the colors of SmartButton and of ProgressBar ozden. The fill is a cyan SmartButton
     // ozdenType1 (an edge and a line at its bottom) that ends with a white knob, straight inside the field. The label
     // is always on the fill (aroundLabel) and the value never (beforeValue): the end of the fill cuts no text. A ring
     // for the keyboard focus, a gray fill when it is off. Another tone: style: { fill: { color, hoverColor, activeColor } }.
