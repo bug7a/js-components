@@ -15,6 +15,7 @@
 
     <!-- COMPONENT FILES -->
     <script src="../comp/progress-bar.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -75,11 +76,11 @@
                         limits: [80],
                         valueFormat: function (self) { return self.value + "% + " + self.secondValue + "%"; },
                     });
-                    HGroup({ hug: 1, gap: 8, wrap: 1 });
-                        addButton("value +5", function () { twoParts.setValue(twoParts.value + 5); });
-                        addButton("second +5", function () { twoParts.setSecondValue(twoParts.secondValue + 5); });
-                        addButton("setValues(40, 20)", function () { twoParts.setValues(40, 20); });
-                        addButton("reset()", function () { twoParts.reset(); });
+                    startButtonRow();
+                        SmartButton({ labelText: "value +5", onClick: function () { twoParts.setValue(twoParts.value + 5); } });
+                        SmartButton({ labelText: "second +5", onClick: function () { twoParts.setSecondValue(twoParts.secondValue + 5); } });
+                        SmartButton({ labelText: "setValues(40, 20)", onClick: function () { twoParts.setValues(40, 20); } });
+                        SmartButton({ tone: "white", labelText: "reset()", onClick: function () { twoParts.reset(); } });
                     endGroup();
                 endCard();
 
@@ -95,9 +96,9 @@
                         limits: [80],
                         valuePosition: "right",
                     });
-                    HGroup({ hug: 1, gap: 8, wrap: 1 });
-                        addButton("stripes on / off", function () { striped.setStripes(!striped.stripes); });
-                        addButton("second on / off", function () { striped.setSecondStripes(!striped.secondStripes); });
+                    startButtonRow();
+                        SmartButton({ labelText: "stripes on / off", onClick: function () { striped.setStripes(!striped.stripes); } });
+                        SmartButton({ labelText: "second on / off", onClick: function () { striped.setSecondStripes(!striped.secondStripes); } });
                     endGroup();
                 endCard();
 
@@ -112,8 +113,8 @@
                         valueFormat: function (self) { return Math.round(self.getPercent()) + "%"; },
                         onComplete: function (self) { self.setTitleText("Done"); },
                     });
-                    HGroup({ hug: 1, gap: 8 });
-                        addButton("start", startUpload);
+                    startButtonRow();
+                        SmartButton({ tone: "cyan", labelText: "start", onClick: startUpload });
                     endGroup();
                 endCard();
 
@@ -168,10 +169,9 @@
 
     const endCard = function () { endGroup(); };
 
-    const addButton = function (text, onClick) {
-        const button = Button({ text: text, height: 32, fontSize: 13 });
-        button.on("click", onClick);
-        return button;
+    // GROUP: SmartButtons side by side, one under the other on a narrow screen (endGroup() closes it)
+    const startButtonRow = function () {
+        HGroup({ hug: 1, align: "left center", gap: 8, wrap: 1, clipContent: 0 }); // WHY clipContent 0: the focus ring of a SmartButton is not cut
     };
 
     </script>
