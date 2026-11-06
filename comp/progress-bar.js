@@ -11,13 +11,17 @@ UI COMPONENT TEMPLATE
 - Status colors: "normal", "success", "error".
 - Value text position: "top" (right of the title), "right" (right of the bar), "none".
 - TWO PARTS (2026-10-29, the user): secondValue is a second part after the value (Ex: 70 done + 5 on the way);
-  its own color (style.secondBar). The value text and onComplete are of the value only. style.secondBar.place:
-  "under" (the default: from 0, under the bar) or "after" (a second bar next to the bar; "ozden").
+  its own color (style.secondBar). The value text and onComplete are of the value only. It is drawn from 0 under the
+  bar: a second part that is not transparent ("ozden") looks like a second bar next to it; bar.joinEdge: 0 leaves
+  out the edge of the bar between them, the two colors meet ("ozden").
 - STRIPES: stripes: 1 (the value) and secondStripes: 1 (the second part) draw light diagonal stripes that move
   slowly (a job is running); setStripes() / setSecondStripes(). Still with prefers-reduced-motion. (style.stripes)
-- LIMITS: limits: [80] or [{ value: 30, color: "#7BA7D9" }, { value: 80, text: "80" }]: vertical lines over the bar
-  at these values (in the units of value / max), a little longer than the bar, a text under a line (style.limit);
-  setLimits().
+- LIMITS: limits: [80] or [{ value: 30, color: "#7BA7D9" }, { value: 80, text: "80" }]: marks at these values (in
+  the units of value / max), a text under a mark (style.limit); setLimits(). limit.shape "line": a line over the
+  bar, a little longer than it; "dot" ("ozden", the user 2026-11-06): a dot inside the track that has the color of
+  the part under it (limit.barColor on the bar, secondBarColor on the second part, color on the track; on a dark
+  track darkTrack.limitColor), half and half while the end of the bar goes over it. The own color of a limit is
+  its color on the track.
 - Style packages: "classic" (default), "modern", "ozden" (the user, 2026-11-06: the bar is a cyan SmartButton
   ozdenType1, with its edge and its line at the bottom; a round track, the second part a light bar next to it; a dark
   limit line with a text). "ozdenDark" (the ozden bar of 2026-10-29 for a dark page). Select with styleName.
@@ -77,7 +81,8 @@ const ProgressBarDefaults = {
         },
         darkTrack: { // The track with darkTrack: 1 (its size and its round are of track)
             color: "#242424",
-            borderColor: White(0.1),
+            borderColor: White(0.4),
+            limitColor: White(0.7), // a limit dot on it (limit.shape "dot")
         },
         bar: {
             color: "#141414", // the main color (also of the edge, when borderColor is "")
@@ -86,6 +91,7 @@ const ProgressBarDefaults = {
             borderColor: "", // "": the main color (of the status too)
             boxShadow: "none", // of both parts (Ex: "inset 0 -2px 0 rgba(0, 0, 0, 0.25)": a line at the bottom)
             innerRound: "", // px: an end in the middle of the track (0: straight). "": as round as the track
+            joinEdge: 1, // 0: no edge of the bar where the second part starts (the two colors meet)
             motion: 0.3, // Seconds. 0: No animation
         },
         secondBar: { // The second part (secondValue)
@@ -93,7 +99,6 @@ const ProgressBarDefaults = {
             fillOpacity: 0.2, // (color "") the main color at this opacity
             lighten: 0, // 0 - 1 (color ""): the main color mixed with this much white, not transparent; 0: fillOpacity
             borderOpacity: 0.45, // its edge (when the bar has one): the main color at this opacity
-            place: "under", // "under": from 0, under the bar; "after": a second bar next to the bar
         },
         stripes: {
             color: "rgba(255, 255, 255, 0.35)",
@@ -101,13 +106,17 @@ const ProgressBarDefaults = {
             speed: 0.8, // seconds for one step of the stripes
         },
         limit: {
-            color: "indianred", // (a limit can have its own color)
-            width: 1, // px
+            shape: "line", // "line": over the track, a little longer; "dot": inside the track, in the color of the part under it
+            color: "indianred", // (a limit can have its own color) a dot: on the track
+            width: 1, // px (a line)
             round: 0,
-            overhang: 6, // px over and under the track
-            textSize: 13, // the text of a limit ({ value, text }) under its line
+            overhang: 6, // px over and under the track (a line)
+            dotSize: 6, // px (a dot)
+            barColor: "white", // a dot on the bar
+            secondBarColor: "", // a dot on the second part ("": the main color)
+            textSize: 13, // the text of a limit ({ value, text }) under it
             textColor: Black(0.7),
-            textSpace: 6, // px between the line and its text
+            textSpace: 6, // px between the line (or the track) and its text
         },
         successBar: {
             color: "#2E9E5B",
@@ -161,9 +170,7 @@ const ProgressBar = function (params = {}) {
     };
 
     const getBarMotion = function () {
-        const time = box.style.bar.motion + "s";
-        // WHY left: a second bar next to the bar moves with the end of the value (secondBar.place "after")
-        return "left " + time + ", width " + time + ", " + COLOR_MOTION;
+        return "width " + box.style.bar.motion + "s, " + COLOR_MOTION;
     };
 
     // Change the bar size without animation. (Ex: from the moving bar to the value)
@@ -230,22 +237,21 @@ const ProgressBar = function (params = {}) {
         box.track.borderColor = colors.borderColor;
     };
 
-    // "under": the second bar is from 0 under the bar, so their round ends meet as one bar; "after": it starts where
-    // the bar ends, a second bar next to it
-    const placeSecondBar = function () {
-        const start = (box.style.secondBar.place === "after") ? box.value : 0;
-        box.secondBar.left = toPercent(start) + "%";
-        box.secondBar.width = toPercent(box.value + box.secondValue - start) + "%";
-    };
-
     // THE ENDS: an end at an end of the track is as round as the track (its edge follows the round of the track);
     // an end in the middle of the track has bar.innerRound. The moving bar of indeterminate is round at both ends.
     const paintEnds = function () {
         const isBarAtRightEnd = (box.indeterminate == 1) || (box.value >= box.max);
-        const isSecondAtLeftEnd = (box.style.secondBar.place !== "after") || (box.value <= 0);
         const isSecondAtRightEnd = (box.value + box.secondValue >= box.max);
         setEnds(box.bar, 1, isBarAtRightEnd);
-        setEnds(box.secondBar, isSecondAtLeftEnd, isSecondAtRightEnd);
+        setEnds(box.secondBar, 1, isSecondAtRightEnd);
+        paintJoin();
+    };
+
+    // bar.joinEdge 0: where the second part starts, the bar has no edge: the two colors meet (the user, 2026-11-06)
+    const paintJoin = function () {
+        const hasSecondAfter = (box.indeterminate != 1) && (box.value > 0) && (box.secondValue > 0);
+        const isSeamless = hasSecondAfter && (box.style.bar.joinEdge == 0);
+        box.bar.css = { borderRightWidth: (isSeamless ? 0 : box.style.bar.border) + "px" };
     };
 
     const setEnds = function (bar, isLeftAtEnd, isRightAtEnd) {
@@ -270,30 +276,113 @@ const ProgressBar = function (params = {}) {
         bar.elem.style.setProperty("--progress-stripe-speed", _st.speed + "s");
     };
 
-    // LIMITS: thin vertical lines over the track; a number or { value, color }
+    // LIMITS: lines over the track (limit.shape "line") or dots inside it ("dot"), and their texts
     const drawLimits = function () {
         box.limitLines.forEach(function (line) { line.remove(); });
+        box.limitDots.forEach(function (item) { item.dot.remove(); });
         box.limitLines = [];
+        box.limitDots = [];
+        if (isDotLimit()) drawLimitDots();
+        else drawLimitLines();
+        drawLimitTexts();
+        layoutTrackArea();
+    };
+
+    const drawLimitLines = function () {
         const _l = box.style.limit;
         const lineHeight = box.style.track.height + _l.overhang * 2;
         createIn(box.trackArea, function () {
-            box.limits.forEach(function (limit) {
-                const data = (typeof limit === "object" && limit !== null) ? limit : { value: limit };
-                const value = Number(data.value);
-                if (isNaN(value)) return;
-                const left = toPercent(Math.min(Math.max(value, 0), box.max)) + "%";
-                const line = Box({ top: 0, width: _l.width, height: lineHeight, color: data.color || _l.color, round: _l.round });
-                line.css = { left: "calc(" + left + " - " + (_l.width / 2) + "px)" };
+            getLimitList().forEach(function (limit) {
+                const line = Box({ top: 0, width: _l.width, height: lineHeight, color: limit.color || _l.color, round: _l.round });
+                line.css = { left: "calc(" + getLimitLeft(limit) + " - " + (_l.width / 2) + "px)" };
                 box.limitLines.push(line);
-                // LABEL: the text of the limit, under its line
-                if (data.text === undefined || data.text === "") return;
-                const text = Label({ top: lineHeight + _l.textSpace, fontSize: _l.textSize, textColor: data.color || _l.textColor });
-                text.plainText = data.text;
-                text.css = { left: left, transform: "translateX(-50%)", whiteSpace: "nowrap" };
+            });
+        });
+    };
+
+    // A dot for each limit in each holder of dots: the holder of the track is under the bars, the others are inside
+    // the bars. So a bar shows its own dots where it is (also half a dot at its end) and covers the dots of the track.
+    const drawLimitDots = function () {
+        const holders = { track: box.trackDots, second: box.secondDots, bar: box.barDots };
+        Object.keys(holders).forEach(function (part) {
+            const edge = (part === "track") ? 0 : box.style.bar.border; // (a holder in a bar starts inside its edge)
+            createIn(holders[part], function () {
+                getLimitList().forEach(function (limit) {
+                    box.limitDots.push({ dot: createLimitDot(limit, edge), part: part, limit: limit });
+                });
+            });
+        });
+        paintLimitDots();
+    };
+
+    // BOX: A dot in the middle of the track, at the place of its limit.
+    // WHY cqw: the bar layer is a size container, so a dot inside a bar is placed on the width of the track
+    const createLimitDot = function (limit, edge) {
+        const size = box.style.limit.dotSize;
+        const dot = Box({ top: (box.style.track.height - size) / 2 - edge, width: size, height: size, round: size / 2 });
+        dot.css = { left: "calc(" + getLimitPercent(limit) + "cqw - " + (edge + size / 2) + "px)" };
+        return dot;
+    };
+
+    // LABEL: the text of a limit, under its line (or under the track)
+    const drawLimitTexts = function () {
+        const _l = box.style.limit;
+        const top = box.style.track.height + getOverhang() * 2 + _l.textSpace;
+        createIn(box.trackArea, function () {
+            getLimitList().forEach(function (limit) {
+                if (limit.text === undefined || limit.text === "") return;
+                const text = Label({ top: top, fontSize: _l.textSize, textColor: limit.color || _l.textColor });
+                text.plainText = limit.text;
+                text.css = { left: getLimitLeft(limit), transform: "translateX(-50%)", whiteSpace: "nowrap" };
                 box.limitLines.push(text);
             });
         });
-        layoutTrackArea();
+    };
+
+    const isDotLimit = function () {
+        return box.style.limit.shape === "dot";
+    };
+
+    // A limit is a number or { value, color, text }; one without a number value is left out
+    const getLimitList = function () {
+        const list = box.limits.map(function (limit) {
+            return (typeof limit === "object" && limit !== null) ? limit : { value: limit };
+        });
+        return list.filter(function (limit) { return !isNaN(Number(limit.value)); });
+    };
+
+    const getLimitPercent = function (limit) {
+        return toPercent(Math.min(Math.max(Number(limit.value), 0), box.max));
+    };
+
+    const getLimitLeft = function (limit) {
+        return getLimitPercent(limit) + "%";
+    };
+
+    // px of a limit line over and under the track (a dot is inside it)
+    const getOverhang = function () {
+        const hasLines = (box.limits.length > 0) && !isDotLimit();
+        return hasLines ? box.style.limit.overhang : 0;
+    };
+
+    // The color of a dot is of the part under it; the own color of a limit is its color on the track
+    const paintLimitDots = function () {
+        box.limitDots.forEach(function (item) {
+            item.dot.color = getDotColor(item.part, item.limit);
+        });
+    };
+
+    const getDotColor = function (part, limit) {
+        const _l = box.style.limit;
+        if (part === "bar") return _l.barColor;
+        if (part === "second") return _l.secondBarColor || getBarColor();
+        if (limit.color) return limit.color;
+        return (box.darkTrack == 1) ? box.style.darkTrack.limitColor : _l.color;
+    };
+
+    // BOX: A holder of the limit dots, as big as the bar (or the track) it is in
+    const createDotHolder = function () {
+        return Box({ left: 0, top: 0, width: "100%", height: "100%", color: "transparent" });
     };
 
     // The track (and the bars over it) are in the middle of the area; the area is taller with limit lines, and
@@ -301,9 +390,8 @@ const ProgressBar = function (params = {}) {
     const layoutTrackArea = function () {
         const _t = box.style.track;
         const _l = box.style.limit;
-        const hasLimits = box.limits.length > 0;
         const hasText = box.limits.some(function (limit) { return limit && typeof limit === "object" && limit.text !== undefined && limit.text !== ""; });
-        const overhang = hasLimits ? _l.overhang : 0;
+        const overhang = getOverhang();
         box.trackArea.height = _t.height + overhang * 2 + (hasText ? _l.textSpace + Math.ceil(_l.textSize * 1.4) : 0);
         box.track.top = overhang;
         box.barLayer.top = overhang;
@@ -357,19 +445,23 @@ const ProgressBar = function (params = {}) {
             box.bar.visible = 1;
             box.bar.width = box.style.indeterminate.barWidth + "%";
             box.secondBar.visible = 0;
+            box.barDots.visible = 0; // WHY: the moving bar would carry the dots of the limits with it
             startMoveAnimation();
             box.aria = { valuenow: null };
         } else {
             stopMoveAnimation();
             box.bar.width = box.getPercent() + "%";
             box.bar.visible = (box.value > 0) ? 1 : 0; // WHY: a bar with an edge was a thin line at 0
+            box.barDots.visible = 1;
+            // WHY from 0: the second bar is under the first one, so their round ends meet as one bar
             box.secondValue = clampSecondValue(box.secondValue);
-            placeSecondBar();
+            box.secondBar.width = toPercent(box.value + box.secondValue) + "%";
             box.secondBar.visible = (box.secondValue > 0) ? 1 : 0;
             box.aria = { valuenow: String(box.value) };
         }
 
         paintEnds();
+        paintLimitDots();
 
         if (box.valueLabel) {
             box.valueLabel.text = (box.indeterminate == 1) ? "" : box.valueFormat(box);
@@ -437,6 +529,7 @@ const ProgressBar = function (params = {}) {
     box.setDarkTrack = function (value) {
         box.darkTrack = basic.isOn(value) ? 1 : 0;
         paintTrack();
+        paintLimitDots();
     };
     // USAGE: get: progressBar.darkTrack, set: progressBar.setDarkTrack(1) // the track #242424 (style.darkTrack)
 
@@ -573,9 +666,13 @@ const ProgressBar = function (params = {}) {
                     round: box.style.track.round,
                 });
                 box.barLayer.clipContent = 1;
+                box.barLayer.css = { containerType: "inline-size" }; // WHY: the dots of the limits are placed in cqw
 
-                    // BOX: Second part (under the bar, from 0 to value + secondValue; or after it: secondBar.place)
-                    box.secondBar = Box({
+                    // BOX: The dots of the limits on the track (limit.shape "dot"), under the bars
+                    box.trackDots = createDotHolder();
+
+                    // BOX: Second part (under the bar, from 0 to value + secondValue)
+                    box.secondBar = startBox({
                         left: 0,
                         top: 0,
                         width: "0%",
@@ -585,9 +682,11 @@ const ProgressBar = function (params = {}) {
                         border: box.style.bar.border,
                         borderColor: box.style.bar.borderColor,
                     });
+                        box.secondDots = createDotHolder();
+                    endBox();
 
                     // BOX: Bar
-                    box.bar = Box({
+                    box.bar = startBox({
                         left: 0,
                         top: 0,
                         width: "0%",
@@ -597,6 +696,8 @@ const ProgressBar = function (params = {}) {
                         border: box.style.bar.border,
                         borderColor: box.style.bar.borderColor,
                     });
+                        box.barDots = createDotHolder();
+                    endBox();
 
                 endBox();
 
@@ -630,6 +731,7 @@ const ProgressBar = function (params = {}) {
 
     box.limits = Array.isArray(box.limits) ? box.limits.slice() : [];
     box.limitLines = [];
+    box.limitDots = [];
 
     box.darkTrack = basic.isOn(box.darkTrack) ? 1 : 0;
 
@@ -679,12 +781,12 @@ ProgressBar.styles = {
             borderColor: "rgba(0, 0, 0, 0.35)",
             boxShadow: "inset 0 -2px 0 rgba(0, 0, 0, 0.25)",
             innerRound: 0, // straight in the middle of the track
+            joinEdge: 0, // no edge between the bar and the second part
             motion: 0.3,
         },
         secondBar: {
             color: "", // the main color, lighter
-            lighten: 0.5, // half white: not transparent (it looks the same on a dark track)
-            place: "after", // a second bar next to the bar
+            lighten: 0.5, // half white: not transparent, so it looks like a second bar next to the bar
         },
         stripes: {
             color: "rgba(255, 255, 255, 0.55)",
@@ -698,8 +800,12 @@ ProgressBar.styles = {
             color: "#DE815B", // orange (SmartButton.tones.orange)
         },
         limit: {
-            color: "rgba(0, 0, 0, 0.7)",
-            width: 4,
+            shape: "dot", // a dot inside the track, in the color of the part under it (the user, 2026-11-06)
+            color: "rgba(0, 0, 0, 0.7)", // on the track
+            dotSize: 6,
+            barColor: "white", // on the bar
+            secondBarColor: "", // on the second part: the main color
+            width: 4, // (shape "line": the line of 2026-10-29)
             round: 2,
             overhang: 4,
             textSize: 14,
