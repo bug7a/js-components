@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        
+
         <title>CurrencyInputB JS Component</title>
-        
+
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
 
@@ -22,12 +22,8 @@
         <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
 
         <script>
-        
-        // *** VARIABLES:          
-        let myInput;
 
-        // First running function.
-        window.onload = function() {
+        const start = function () {
 
             page.color = "white";
 
@@ -35,7 +31,7 @@
             AutoLayout();
 
                 // INPUT: #1
-                myInput = CurrencyInputB({
+                const myInput = CurrencyInputB({
                     key: "1",
                     width: 350,
                     isRequired: 0,
@@ -49,13 +45,13 @@
                     groupSeparator: ",", // for thousands grouping
                     unitText: "TL",
                 });
-                
+
             endAutoLayout(); // END GROUP
 
             // Get value
-            myInput.onEdit = function() {
+            myInput.onEdit = function () {
                 console.log(myInput.getInputValue());
-            }
+            };
 
         };
 
@@ -63,8 +59,8 @@
 
     </head>
     <body>
-        
+
         <!-- HTML content -->
-        
+
     </body>
 </html>

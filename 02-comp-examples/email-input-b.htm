@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        
+
         <title>EmailInputB JS Component</title>
-        
+
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
 
@@ -22,12 +22,8 @@
         <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
 
         <script>
-        
-        // *** VARIABLES:          
-        let myInput;
 
-        // First running function.
-        window.onload = function() {
+        const start = function () {
 
             page.color = "white";
 
@@ -35,23 +31,23 @@
             AutoLayout();
 
                 // INPUT: #1
-                myInput = EmailInputB({
+                const myInput = EmailInputB({
                     key: "1",
                     width: 350,
                     isRequired: 1,
                     titleText: "EMAIL",
                     placeholder: "example@site.com",
                     warningText: "Invalid email format",
-                    warningColor: "#E5885E", // "#F1BF3C"
+                    warningColor: "#E5885E",
                     maxChar: 40,
                 });
-                
+
             endAutoLayout(); // END GROUP
 
             // Get value
-            myInput.onEdit = function() {
+            myInput.onEdit = function () {
                 console.log(myInput.getInputValue());
-            }
+            };
 
         };
 
@@ -59,8 +55,8 @@
 
     </head>
     <body>
-        
+
         <!-- HTML content -->
-        
+
     </body>
 </html>

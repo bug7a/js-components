@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        
+
         <title>InputB JS Component</title>
-        
+
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
 
@@ -21,13 +21,8 @@
         <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
 
         <script>
-        
-        // *** VARIABLES:          
-        let myInput1, myInput2, myInput3;
-        //const inputList = [];
 
-        // First running function.
-        window.onload = function() {
+        const start = function () {
 
             page.color = "white";
 
@@ -38,23 +33,22 @@
             });
 
                 // INPUT: #1
-                myInput1 = InputB({
+                const myInput1 = InputB({
                     key: "1",
                     isRequired: 1,
                     placeholder: "Jack",
                     leftPadding: 20,
                     backgroundColor: "transparent",
-                    selectedBackgroundColor: "whitesmoke", // "#F1E2C4", "#F4FAFF",
+                    selectedBackgroundColor: "whitesmoke",
                     lineColor: "transparent",
-                    selectedLineColor: "transparent", // "#F1E2C4", "#588ABE",
+                    selectedLineColor: "transparent",
                 });
-                that.setTitle("FIRST NAME");
-                that.background.border = 1;
-                that.background.borderColor = "lightgray";
-                //inputList.push(that);
+                myInput1.setTitle("FIRST NAME");
+                myInput1.background.border = 1;
+                myInput1.background.borderColor = "lightgray";
 
                 // INPUT: #2
-                myInput2 = InputB({
+                const myInput2 = InputB({
                     key: "2",
                     titleText: "HEIGHT",
                     placeholder: "175",
@@ -62,17 +56,16 @@
                     unitText: "cm",
                     isRequired: 0,
                     backgroundColor: "whitesmoke",
-                    selectedBackgroundColor: "whitesmoke", // "#F1E2C4", "#F4FAFF",
+                    selectedBackgroundColor: "whitesmoke",
                     lineColor: "transparent",
-                    selectedLineColor: "lightgray", // "#F1E2C4", "#588ABE",
+                    selectedLineColor: "lightgray",
                 });
-                that.onEdit = function() {
+                myInput2.onEdit = function () {
                     console.log(myInput2.getInputValue());
-                }
-                //inputList.push(that);
+                };
 
                 // INPUT: #3
-                myInput3 = InputB({
+                const myInput3 = InputB({
                     key: "3",
                     placeholder: "Sample",
                     titleText: "INPUT TITLE",
@@ -83,19 +76,18 @@
                     rightPadding: 20,
                     unitText: "",
                     backgroundColor: "transparent",
-                    selectedBackgroundColor: "transparent", // "#F1E2C4", "#F4FAFF",
+                    selectedBackgroundColor: "transparent",
                     lineColor: "transparent",
-                    selectedLineColor: "transparent", // "#F1E2C4", "#588ABE",
+                    selectedLineColor: "transparent",
                 });
-                that.inputGroup.gap = 4;
-                that.input.color = "whitesmoke";
-                that.input.border = 1;
-                that.input.borderColor = "lightgray";
-                that.input.inputElement.style.padding = "0px 12px";
-                that.onEdit = function() {
+                myInput3.inputGroup.gap = 4;
+                myInput3.input.color = "whitesmoke";
+                myInput3.input.border = 1;
+                myInput3.input.borderColor = "lightgray";
+                myInput3.input.inputElement.style.padding = "0px 12px";
+                myInput3.onEdit = function () {
                     console.log(myInput3.getInputValue());
                 };
-                //inputList.push(that);
 
             endAutoLayout(); // END GROUP
 
@@ -105,8 +97,8 @@
 
     </head>
     <body>
-        
+
         <!-- HTML content -->
-        
+
     </body>
 </html>

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        
+
         <title>InputB JS Component</title>
-        
+
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
 
@@ -22,13 +22,8 @@
         <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
 
         <script>
-        
-        // *** VARIABLES:          
-        let myInput1, myInput2, myInput3;
-        //const inputList = [];
 
-        // First running function.
-        window.onload = function() {
+        const start = function () {
 
             page.color = "white";
 
@@ -39,17 +34,16 @@
             });
 
                 // INPUT: #1
-                myInput1 = InputB({
+                const myInput1 = InputB({
                     key: "1",
                     isRequired: 1,
                     placeholder: "Jack",
                     leftPadding: 20,
                 });
-                that.setTitle("FIRST NAME");
-                //inputList.push(that);
+                myInput1.setTitle("FIRST NAME");
 
                 // INPUT: #2
-                myInput2 = NumberInputB({
+                const myInput2 = NumberInputB({
                     key: "2",
                     titleText: "HEIGHT",
                     placeholder: "175",
@@ -60,14 +54,12 @@
                     allowNegative: 0,
                     allowDecimal: 0,
                 });
-                that.onEdit = function() {
+                myInput2.onEdit = function () {
                     console.log(myInput2.getInputValue());
-                }
-                //inputList.push(that);
-
+                };
 
                 // INPUT: #3
-                myInput3 = InputB({
+                const myInput3 = InputB({
                     key: "3",
                     placeholder: "",
                     titleText: "COUNT",
@@ -79,11 +71,10 @@
                         fontSize: 16,
                     },
                 });
-                that.onEdit = function() {
+                myInput3.onEdit = function () {
                     const currentLength = myInput3.input.text.length;
                     myInput3.setUnitText(`${currentLength}/${myInput3.maxChar}`);
                 };
-                //inputList.push(that);
 
             endAutoLayout(); // END GROUP
 
@@ -95,41 +86,34 @@
                 padding: [20, 20],
             });
 
-                const styleSettingButton = function(btn) {
-                    btn.width = "auto";
-                    btn.height = "auto";
-                    btn.color = "lightgray";
-                    btn.fontSize = 16;
-                    btn.padding = [8, 4];
-                    btn.minimal = 1;
-                }
-
-                Button({
-                    text: "Button A",
-                });
-                styleSettingButton(that);
-                that.on("click", function() {
-                    console.log("Button A");
-                });
-
-                Button({
-                    text: "Button B",
-                });
-                styleSettingButton(that);
-                that.on("click", function() {
-                    console.log("Button B");
-                });
+                createSettingButton("Button A");
+                createSettingButton("Button B");
 
             endAutoLayout();
 
+        };
+
+        const createSettingButton = function (text) {
+            const btn = Button({
+                text: text,
+                width: "auto",
+                height: "auto",
+                color: "lightgray",
+                fontSize: 16,
+                padding: [8, 4],
+                minimal: 1,
+            });
+            btn.on("click", function () {
+                console.log(text);
+            });
         };
 
         </script>
 
     </head>
     <body>
-        
+
         <!-- HTML content -->
-        
+
     </body>
 </html>

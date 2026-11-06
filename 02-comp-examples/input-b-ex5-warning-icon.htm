@@ -18,11 +18,7 @@
 
         <script>
 
-        // *** VARIABLES:
-        let myInput1, myInput2, myInput3;
-
-        // First running function.
-        window.onload = function() {
+        const start = function () {
 
             page.color = "white";
 
@@ -33,7 +29,7 @@
             });
 
                 // INPUT: #1 Colored ball (default)
-                myInput1 = InputB({
+                InputB({
                     key: "1",
                     isRequired: 1,
                     titleText: "COLOR BALL (DEFAULT)",
@@ -41,7 +37,7 @@
                 });
 
                 // INPUT: #2 Built-in icons
-                myInput2 = EmailInputB({
+                EmailInputB({
                     key: "2",
                     isRequired: 1,
                     titleText: "BUILT-IN ICON",
@@ -51,7 +47,7 @@
                 });
 
                 // INPUT: #3 Custom icons (image path or data URI)
-                myInput3 = EmailInputB({
+                EmailInputB({
                     key: "3",
                     isRequired: 1,
                     titleText: "CUSTOM ICON",

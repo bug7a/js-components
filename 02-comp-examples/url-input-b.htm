@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        
+
         <title>URLInputB JS Component</title>
-        
+
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- , user-scalable=no -->
 
@@ -23,12 +23,8 @@
         <!-- <script src="components.js" type="text/javascript" charset="utf-8"></script> -->
 
         <script>
-        
-        // *** VARIABLES:          
-        let myInput;
 
-        // First running function.
-        window.onload = function() {
+        const start = function () {
 
             page.color = "white";
 
@@ -36,7 +32,7 @@
             AutoLayout();
 
                 // INPUT: #1
-                myInput = URLInputB({
+                const myInput = URLInputB({
                     key: "1",
                     width: 400,
                     isRequired: 1,
@@ -58,18 +54,18 @@
                         paddingX: 0,
                         arrowSize: 20,
                         fontSize: 20,
-                        color: "rgba(0,0,0,0.05)", // "whitesmoke"
+                        color: "rgba(0,0,0,0.05)",
                         round: 3,
                         listOverTextColor: "#65A293",
                     },
                 });
-                
+
             endAutoLayout(); // END GROUP
 
             // Get value
-            myInput.onEdit = function() {
+            myInput.onEdit = function () {
                 console.log(myInput.getInputValue());
-            }
+            };
 
         };
 
@@ -77,8 +73,8 @@
 
     </head>
     <body>
-        
+
         <!-- HTML content -->
-        
+
     </body>
 </html>

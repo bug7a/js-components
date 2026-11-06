@@ -42,8 +42,18 @@
                     Label({ text: "InputB · styleName: \"dark\"", fontSize: 22, textColor: White(0.9) });
 
                     // GROUP: A dark card (Ozden Panel)
-                    VGroup({ width: CARD_WIDTH, height: "auto", align: "left top", gap: 14, padding: 20, color: CARD_COLOR, round: 12, border: 1, borderColor: CARD_BORDER_COLOR });
-                    that.css.alignItems = "stretch";
+                    VGroup({
+                        width: CARD_WIDTH,
+                        height: "auto",
+                        align: "left top",
+                        gap: 14,
+                        padding: 20,
+                        color: CARD_COLOR,
+                        round: 12,
+                        border: 1,
+                        borderColor: CARD_BORDER_COLOR,
+                        css: { alignItems: "stretch" },
+                    });
 
                         addCaption("REQUIRED");
                         InputB({
@@ -95,7 +105,7 @@
 
             endBox();
 
-            if (typeof ScrollBar !== "undefined") ScrollBar({ scrollableBox: pageBox });
+            ScrollBar({ scrollableBox: pageBox });
 
         };
 
