@@ -90,6 +90,7 @@
         <script src="../comp/markdown-view.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/tool-bar.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/code-editor.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/minimal-accent.js" type="text/javascript" charset="utf-8"></script>
 
         <script>
         "use strict";
@@ -1280,6 +1281,33 @@
             check("Splitter minimal: no ring of basic.js on its line", !minimal.grip.elem.classList.contains("basic-focus-ring"), minimal.grip.elem.className);
             check("Splitter light: the ring of basic.js as before", plain.grip.elem.classList.contains("basic-focus-ring"), plain.grip.elem.className);
             [minimal, plain].forEach(function (split) { split.remove(); });
+        });
+
+        test("MinimalAccent: the minimal packages in a color of the page; minimal stays as it is", async function () {
+            const BLUE = "#2A78D6";
+            const look = MinimalAccent.addPackages("minimalTestBlue", BLUE);
+            MinimalAccent.addPackages("minimalTestYellow", "#F5C400");
+            check("MinimalAccent: it returns the names of the two packages", look.light === "minimalTestBlue" && look.dark === "minimalTestBlueDark", JSON.stringify(look));
+            check("MinimalAccent: the ink of a toggle is the color; minimal keeps its ink", Toggle.styles.minimalTestBlue.buttonStyle.selectedColor === BLUE && Toggle.styles.minimal.buttonStyle.selectedColor === "#1F1F1F", Toggle.styles.minimalTestBlue.buttonStyle.selectedColor);
+            const darkInk = Toggle.styles.minimalTestBlueDark.buttonStyle.selectedColor;
+            const darkContrast = MinimalAccent.contrast(MinimalAccent.toRgb(darkInk), MinimalAccent.toRgb("#1A1A19"));
+            check("MinimalAccent: the color of a dark window reads on the dark ground (4.5:1)", darkContrast >= 4.5 && darkInk !== BLUE, darkInk + " " + darkContrast.toFixed(2));
+            const textOnBlue = SelectDate.styles.minimalTestBlue.style.selectedDay.textColor;
+            const textOnYellow = SelectDate.styles.minimalTestYellow.style.selectedDay.textColor;
+            check("MinimalAccent: the text on the color is white or dark, the one that reads", textOnBlue === "#FFFFFF" && textOnYellow === "#1A1A19", textOnBlue + " / " + textOnYellow);
+            const dialogLook = Dialog.styles.minimalTestBlue;
+            const darkDialogLook = Dialog.styles.minimalTestBlueDark;
+            check("MinimalAccent: a Dialog takes the new fields and main button; a delete stays minimalDanger", dialogLook.fieldStyleName === "minimalTestBlue" && dialogLook.buttons.primary.tone === "minimalTestBlue" && dialogLook.buttons.danger.styleName === "minimalDanger" && darkDialogLook.buttons.primary.tone === "minimalTestBlueDark" && darkDialogLook.buttons.danger.styleName === "minimalDangerDark", JSON.stringify(dialogLook.buttons.primary));
+            const toggle = Toggle({ styleName: "minimalTestBlue", value: 1 });
+            const button = SmartButton({ styleName: "minimalTestBlue", tone: "minimalTestBlue", labelText: "Save" });
+            const yellowButton = SmartButton({ styleName: "minimalTestYellow", tone: "minimalTestYellow", labelText: "Save" });
+            await basic.nextFrame();
+            const knob = getComputedStyle(toggle.button.elem).backgroundColor;
+            const fill = getComputedStyle(button.elem).backgroundColor;
+            check("MinimalAccent: an on toggle and the main button are in the color", knob === "rgb(42, 120, 214)" && fill === "rgb(42, 120, 214)", knob + " / " + fill);
+            check("MinimalAccent: a light color gets a dark text on the button", SmartButton.tones.minimalTestBlue.text === SmartButton.LIGHT_TEXT && SmartButton.tones.minimalTestYellow.text === "#1A1A19", SmartButton.tones.minimalTestYellow.text);
+            check("MinimalAccent: Toast and Tooltip have the looks too", Toast.THEMES.minimalTestBlue.actionText === BLUE && Tooltip.looks.minimalTestBlue === Tooltip.looks.minimal, Toast.THEMES.minimalTestBlue.actionText);
+            [toggle, button, yellowButton].forEach(function (object) { object.remove(); });
         });
 
         // *** TOGGLE (comp/toggle.js)

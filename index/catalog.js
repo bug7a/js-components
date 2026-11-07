@@ -406,6 +406,12 @@ CATALOG.COMPONENTS = [
         tr: "Ekrana dokunulan yerde beliren yumuşak bir daire; her şeyin üstünde, dokunuşu engellemez. TapEffect.start() / stop(), page.fit() ile sığdırılmış sayfada da çalışır.",
     },
     {
+        key: "minimal-accent", name: "MinimalAccent", cat: "styles",
+        source: "comp/minimal-accent.js", samples: ["02-comp-examples/minimal-accent.htm"],
+        en: "The minimal theme in a color of the page: MinimalAccent.addPackages(\"minimalBlue\", \"#2A78D6\") gives every minimal component a light and a dark package in that color (an on toggle, a checked box, the selected tab, the main button). The lines and the texts stay as they are.",
+        tr: "Minimal tema sayfanın bir rengiyle: MinimalAccent.addPackages(\"minimalBlue\", \"#2A78D6\") her minimal bileşene o renkte açık ve koyu bir paket verir (açık anahtar, işaretli kutu, seçili sekme, ana düğme). Çizgiler ve yazılar olduğu gibi kalır.",
+    },
+    {
         key: "app-bar", name: "AppBar", cat: "navigation",
         source: "comp/app-bar.js", deps: ["comp/smart-button.js"], samples: ["02-comp-examples/app-bar.htm"],
         en: "The top bar of a tab page of a mobile app: a title in the middle or at the left, a back and a menu button. For a mobile app with a 600 px design (page.fit(600, 800)): on a normal page its sizes are too big.",
