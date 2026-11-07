@@ -5174,6 +5174,7 @@
             const firstLines = ["One", { text: "Two", level: "warn" }];
             const log = LogView({ lines: firstLines });
             const isSame = firstLines.length === 2 && firstLines[0] === "One" && !firstLines[1].row && log.lines.length === 2;
+            const uncaughtBefore = uncaught.length;
             log.info("Waits for its drawing");
             log.remove();
             await wait(30);
@@ -5183,7 +5184,6 @@
         // *** IMAGE VIEW (comp/image-view.js)
 
         const makeTestPicture = function (width, height) {
-            const uncaughtBefore = uncaught.length;
             const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '"><rect width="100%" height="100%" fill="red"/><\/svg>';
             return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
         };
@@ -8405,6 +8405,15 @@
                 [logIsDark, logTextChanged, logIsBack, viewIsDark, viewKeeps, noteChanged, barIsDark, titleKeepsFocus, oldMenuGone, barDark, keepsChecked, shortcutRuns, selfIsDark, errorText].join(" "));
         });
 
+        test("LogView, ImageView, MenuBar and StatusBar: the dark package changes their colors, and never the light one", async function () {
+            const colorOf = function (obj) { return getComputedStyle(obj.elem).backgroundColor; };
+            const pairs = [LogView, ImageView, MenuBar, StatusBar].map(function (Comp) {
+                const light = Comp({});
+                const dark = Comp({ styleName: "dark" });
+                const lightAgain = Comp({ style: { box: { color: "rgb(1, 2, 3)" } } });
+                const fresh = Comp({});
+                const row = [colorOf(light), colorOf(dark), colorOf(lightAgain), colorOf(fresh)];
+                light.remove();
                 dark.remove();
                 lightAgain.remove();
                 fresh.remove();
