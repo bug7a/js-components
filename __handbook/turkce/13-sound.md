@@ -9,7 +9,7 @@ basic.js kütüphanesinde `BSound` sınıfı, tarayıcı üzerinde ses ve müzik
 Basit bir `BSound` örneği (instance) yaratılarak ve müzik dosyası adresi belirtilerek oluşturulur.
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     const backgroundMusic = new BSound();
     
@@ -54,7 +54,7 @@ fxOkey.onLoad(function(loadedSound) {
 ### Örnek 1: Döngüsel Arka Plan Müziği ve Buton Kontrolü
 
 ```javascript
-window.onload = function() {
+const start = function () {
     
     // Sesi hazırla
     const gameMusic = new BSound();

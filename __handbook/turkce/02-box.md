@@ -14,7 +14,7 @@ basic.js kütüphanesinde `Box()` nesnesi, ekranda dikdörtgen veya kare şeklin
 Bir `Box` oluşturmanın standart yolu parametre objesi ile oluşturmaktır:
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     const myBox = Box({ 
         left: 20, 
@@ -137,7 +137,7 @@ createIn(card, function (box) {           // box === card
 Kutuya tıklandığında çalışacak bir kod eklemek:
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     const myBox = Box({ 
         width: 100, 

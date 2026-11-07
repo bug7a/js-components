@@ -9,7 +9,7 @@ basic.js kütüphanesinde resim veya ikon dosyalarını (PNG, JPG, SVG vb.) ekra
 Hızlı `Icon` fonksiyonu temel bir imaj kontrolü verir.
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     const myIcon = Icon({ 
         left: 20, 
@@ -54,7 +54,7 @@ Resim belgemize tamamen çekildiğinde/yüklendiğinde bunu algılamak ve ona g�
 ### Örnek 1: Resmi Yükleyip Boyutları Ekrana Yazdırma
 
 ```javascript
-window.onload = function() {
+const start = function () {
     
     const icoLogo = Icon({
         right: 20,

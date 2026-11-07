@@ -43,7 +43,7 @@ let lblText;
 let clickedCount = 0;
     
 // Uygulama çalışınca tetiklenecek ilk (ana) fonksiyon
-window.onload = function() {
+const start = function () {
 
     // Her şeyin üzerinde barındığı sayfanın (page) rengini değiştiriyoruz
     page.color = "whitesmoke";
@@ -91,6 +91,8 @@ const increaseOne = function(self, event) {
 
 };
 ```
+
+basic.js, sayfa hazır olunca `start` adlı fonksiyonu çağırır. (Eski sayfalar `window.onload = function () { ... }` yazar: o da çalışır.)
 
 ---
 

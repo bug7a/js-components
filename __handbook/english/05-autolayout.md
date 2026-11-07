@@ -144,7 +144,7 @@ lbl.position = "relative";
 Aligns three boxes side by side:
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     const BOX_SIZE = 50;
 
@@ -164,7 +164,7 @@ window.onload = function() {
 Aligns labels one under the other:
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     VGroup({ align: "top left", gap: 4, padding: 20 });
 
@@ -182,7 +182,7 @@ window.onload = function() {
 A horizontal row inside a vertical group:
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     VGroup({ align: "top center", gap: 15, padding: 20 });
 
@@ -206,7 +206,7 @@ window.onload = function() {
 A card-like structure — containing an icon, title, and description:
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     page.color = "#F0F2F5";
 
@@ -301,7 +301,7 @@ Creating objects over an array via a loop:
 ```javascript
 const ITEMS = ["ID", "Name", "Email"];
 
-window.onload = function() {
+const start = function () {
 
     HGroup({ align: "center", gap: 4, padding: 20 });
 

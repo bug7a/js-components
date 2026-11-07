@@ -9,7 +9,7 @@ In the basic.js library, the `BSound` class is used to manage and play audio and
 It is created by instantiating a simple `BSound` object and specifying the music file address.
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     const backgroundMusic = new BSound();
     
@@ -54,7 +54,7 @@ fxOkey.onLoad(function(loadedSound) {
 ### Example 1: Looping Background Music and Button Control
 
 ```javascript
-window.onload = function() {
+const start = function () {
     
     // Prepare the sound
     const gameMusic = new BSound();

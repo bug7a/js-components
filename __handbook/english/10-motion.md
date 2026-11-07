@@ -9,7 +9,7 @@ In the basic.js library, the `Motion` mechanism is used to change the positions,
 An animation command first defines which properties will change in "what duration" as a rule and is given to the object with `.setMotion()`.
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     HGroup();
 
@@ -50,7 +50,7 @@ Takes the general CSS (transition) command string applied to the object.
 It is a smart function that is run once with a small timestamp to handle animations that usually consist of multiple CSS variables or are added instantly (to prevent browser bugs).
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     HGroup();
 
@@ -93,7 +93,7 @@ Pulling a structure that was initially created on the screen but is invisible (o
 ```javascript
 let box = null;
 
-window.onload = function() {
+const start = function () {
 
     page.color = Black(0.8);
 

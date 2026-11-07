@@ -9,7 +9,7 @@ In the `basic.js` library, the `Label()` object is used to display texts, titles
 The standard way to create a `Label`:
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     Label({ 
         left: 20, 
@@ -47,7 +47,7 @@ window.onload = function() {
 Readable titles and descriptions can be created by lining them up inside HGroup and VGroup.
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     VGroup({ align: "top left", gap: 10, padding: 20 });
 

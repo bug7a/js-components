@@ -8,7 +8,7 @@
 Bir nesne oluşturulduğunda, farklı bir nesne oluşturulana kadar geçerliliğini korumak üzere otomatik olarak **`that`** global değişkenine atanır. Bir önceki oluşturulan nesneye ise **`prevThat`** değişkeni üzerinden erişilebilir.
 
 ```javascript
-window.onload = function() {
+const start = function () {
     
     // 1. Nesne: KIRMIZI KUTU
     Box(10, 10, 100, 100, { color: "red" });

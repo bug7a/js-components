@@ -9,7 +9,7 @@ In the `basic.js` library, the `Input()` object is used to get text or number en
 Creating with a default text box and title:
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     const inpName = Input({ 
         left: 30, 
@@ -47,7 +47,7 @@ Alternative (Fast) Format:
 To detect live (instantly) even if the user adds or removes a single letter to the value in the text box, `.on("input", ...)` is used.
 
 ```javascript
-window.onload = function() {
+const start = function () {
     
     const inpCity = Input({
         left: 50,

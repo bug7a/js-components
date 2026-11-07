@@ -68,7 +68,7 @@ Label({ text: "Zoom: " + page.zoom.toFixed(2), fontSize: 20 });
 Yukarıdaki komutun biraz daha pratik formudur. Belirtilen içerik ölçülerini bozmadan (en boy oranıyla) sayfaya akıllıca sığdırır.
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     // Başlangıçta sayfayı bir kere ekrana sığdır.
     page.autoFit(1280, 720);
@@ -108,7 +108,7 @@ Sayfa üzerine (**body** dahilindeki boş bir yöne) her tıklandığında için
 
 **`page.onResize(fonksiyon)`**
 Pencere boyutu her değiştiğinde eyleme geçilecek fonksiyon verilir.
-- Sayfanın açıldığı (window.onload) **İLK AN TETİKLENMEZ!** Programcı açılıştaki boyutlandırılmayı mecburen 1 kere manuel çağırmalıdır.
+- Sayfanın açıldığı (`start()`) **İLK AN TETİKLENMEZ!** Programcı açılıştaki boyutlandırılmayı mecburen 1 kere manuel çağırmalıdır.
 - Etkiyi kaldırmak için `page.remove_onResize(fonksiyon_adi)` kullanılır.
 
 ---

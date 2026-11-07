@@ -43,7 +43,7 @@ let lblText;
 let clickedCount = 0;
     
 // The first (main) function to be triggered when the application runs
-window.onload = function() {
+const start = function () {
 
     // We change the color of the page where everything resides
     page.color = "whitesmoke";
@@ -91,6 +91,8 @@ const increaseOne = function(self, event) {
 
 };
 ```
+
+basic.js calls the function named `start` when the page is ready. (Older pages write `window.onload = function () { ... }`: it works too.)
 
 ---
 

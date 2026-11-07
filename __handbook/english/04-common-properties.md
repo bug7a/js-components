@@ -8,7 +8,7 @@ The five core interface elements (**Box, Label, Button, Input** and **Icon**) in
 When an object is created, it is automatically assigned to the global variable **`that`** to preserve its validity until a different object is created. The previously created object can be accessed via the **`prevThat`** variable.
 
 ```javascript
-window.onload = function() {
+const start = function () {
     
     // 1st Object: RED BOX
     Box(10, 10, 100, 100, { color: "red" });

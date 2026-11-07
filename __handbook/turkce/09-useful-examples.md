@@ -8,7 +8,7 @@ basic.js kullanırken CSS özelliklerine JavaScript üzerinden pratik olarak nas
 Nesnelere derinlik (gölge) katmak için, objenin element (`elem`) özellikleri üzerinden standart CSS gölgeleme tanımları kullanılabilir.
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     page.color = "whitesmoke";
 
@@ -33,7 +33,7 @@ window.onload = function() {
 Kutunun kendi `border` özelliğini kullanmak boyutları kaydırabilir. Bunun yerine gölgelendirme (box-shadow) hilesiyle yer kaplamayan iç veya dış kenarlıklar (border) yapılabilir.
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     VGroup({ gap: 20 });
 
@@ -56,7 +56,7 @@ window.onload = function() {
 Uzun bir metnin (ne kadar uzun olursa olsun) alt satıra geçmesini engellemek veya kutuya sığmadığında sonuna üç nokta (`...`) eklemek için CSS beyaz boşluk kuralları kullanılır.
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     // Sadece alt satıra geçmeyi engeller (Taşar)
     Label(20, 80, 200, {
@@ -84,7 +84,7 @@ window.onload = function() {
 Bir objenin/metnin üzerine gelindiğinde farenin (mouse) "el işareti"ne dönüşmesi, kullanıcılara tıklanabildiğine dair güçlü bir mesaj verir.
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     Label({
         text: "Bana Tıkla",
@@ -106,7 +106,7 @@ window.onload = function() {
 `.on("click")` dışında temel DOM olaylarını da (örn: `mouseover`, `mouseout`) `addEventListener` ile yakalayabilirsiniz.
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     const lbl = Label(20, 20, {
         text: "Fare ile üzerine gel!",
@@ -133,7 +133,7 @@ window.onload = function() {
 Normal şartlarda objeler varsayılan `clipContent: 1` davranışı ile kutu sınırlarını kestikleri noktada görünmez olurlar (overflow: hidden). Eğer bir açılır menü ya da alt bileşen, kapsayıcı kutudan dışarı taşmalıysa `clipContent: 0` özelliği kullanılarak sınır dışı görünürlük sağlanır (overflow: visible).
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     HGroup();
 
@@ -167,7 +167,7 @@ window.onload = function() {
 Arayüzleri şıklaştırmak amacıyla çizgisel (linear), merkezden (radial) ya da dairesel (conic) renk geçişleri CSS `background` komutlarıyla eklenebilir.
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     VGroup({ gap: 8, });
 
@@ -198,7 +198,7 @@ window.onload = function() {
 Bir `Icon` ya da genel bir objenin rengini, pusluğunu ve karşıtlığını tek tıkla değiştirebilirsiniz.
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     Icon(10, 10, 100, 100, { border: 1 }).load("test.png");
     
@@ -226,7 +226,7 @@ window.onload = function() {
 Yazılarınızın standardı dışına çıkmak istediğinizde, sisteme yüklü bir Google Fonts ya da harici web font değerini doğrudan atayabilirsiniz.
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     Label(20, 20, { text: "Farklı Bir Font Denemesi" });
 
@@ -242,7 +242,7 @@ window.onload = function() {
 Fare efektiyle arayüz elemanlarını CSS Matrix/Transform destekli olarak büyütüp küçültebilir ve animasyonlar ekleyebilirsiniz.
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     HGroup();
 
@@ -282,7 +282,7 @@ window.onload = function() {
 Kütüphanede kullanıcı arayüzü dokunmatik cihazlardaki "metin kopyalama çubuğu" açılmaması için kapatılmıştır. Ancak dilediğiniz bir metnin Mouse/Ekran ile kopyalanmasını isterseniz seçilebilirliği aktif edebilirsiniz.
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     Label(10, 10, { text: "Kopyalanabilir Makale Formatı..." });
 
@@ -299,7 +299,7 @@ window.onload = function() {
 Bileşenlere hazır bir sınıfı atayarak global bir CSS bloğunu (`.css` dosyasında yazılmış) etkili biçimde çalıştırabilirsiniz.
 
 ```javascript
-window.onload = function() {
+const start = function () {
     
     Box(10, 10, 50, 50, { color: "red" });
 
@@ -317,7 +317,7 @@ window.onload = function() {
 Belirli bir objenin yalnızca sağında veya solunda, bazı köşelerinde farklı çerçeveler olmasını isterseniz tekil sınırları CSS ile çizebilirsiniz.
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     page.color = "whitesmoke";
 

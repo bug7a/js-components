@@ -8,7 +8,7 @@ The useful code snippets below demonstrate how to practically manipulate CSS pro
 To add depth (shadow) to objects, standard CSS shadow definitions can be used through the element (`elem`) properties of the object.
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     page.color = "whitesmoke";
 
@@ -33,7 +33,7 @@ window.onload = function() {
 Using the object's own `border` property may shift dimensions. Instead, you can create inner or outer borders without affecting layout using the box-shadow trick.
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     VGroup({ gap: 20 });
 
@@ -56,7 +56,7 @@ window.onload = function() {
 To prevent long text from wrapping or to truncate it with ellipsis (`...`) when it overflows, CSS white-space rules are used.
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     // Prevent wrapping only (overflow allowed)
     Label(20, 80, 200, {
@@ -84,7 +84,7 @@ window.onload = function() {
 Changing the mouse cursor to a pointer (hand) when hovering over an object/text gives a strong indication that it is clickable.
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     Label({
         text: "Click Me",
@@ -105,7 +105,7 @@ window.onload = function() {
 Besides `.on("click")`, you can also listen to native DOM events like `mouseover` and `mouseout`.
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     const lbl = Label(20, 20, {
         text: "Hover over me!",
@@ -131,7 +131,7 @@ window.onload = function() {
 By default, objects use `clipContent: 1` (overflow: hidden). If child elements need to overflow outside the container, use `clipContent: 0` (overflow: visible).
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     HGroup();
 
@@ -161,7 +161,7 @@ window.onload = function() {
 Enhance UI with linear, radial, or conic gradients using CSS background.
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     VGroup({ gap: 8 });
 
@@ -188,7 +188,7 @@ window.onload = function() {
 You can quickly adjust color, blur, and contrast of an `Icon` or any object.
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     Icon(10, 10, 100, 100, { border: 1 }).load("test.png");
 
@@ -206,7 +206,7 @@ window.onload = function() {
 You can assign custom fonts (Google Fonts or external fonts) directly.
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     Label(20, 20, { text: "Custom Font Example" });
 
@@ -221,7 +221,7 @@ window.onload = function() {
 You can scale elements and add animations using CSS transform.
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     HGroup();
 
@@ -259,7 +259,7 @@ window.onload = function() {
 Text selection is disabled by default. You can enable it if needed.
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     Label(10, 10, { text: "Selectable text..." });
 
@@ -275,7 +275,7 @@ window.onload = function() {
 You can attach predefined CSS classes.
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     Box(10, 10, 50, 50, { color: "red" });
 
@@ -290,7 +290,7 @@ window.onload = function() {
 You can define borders individually per side.
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     page.color = "whitesmoke";
 

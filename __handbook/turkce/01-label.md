@@ -9,7 +9,7 @@ basic.js kütüphanesinde `Label()` nesnesi, kullanıcılar tarafından doğruda
 Bir `Label` oluşturmanın standart yolu:
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     Label({ 
         left: 20, 
@@ -47,7 +47,7 @@ window.onload = function() {
 HGroup ve VGroup içinde sıralanarak okunabilir başlık ve açıklamalar yaratılabilir.
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     VGroup({ align: "top left", gap: 10, padding: 20 });
 

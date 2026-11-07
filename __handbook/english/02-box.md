@@ -14,7 +14,7 @@ In the `basic.js` library, the `Box()` object is used to create basic rectangula
 The standard way to create a `Box` is with a parameter object:
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     const myBox = Box({ 
         left: 20, 
@@ -137,7 +137,7 @@ createIn(card, function (box) {           // box === card
 Adding code to run when the box is clicked:
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     const myBox = Box({ 
         width: 100, 

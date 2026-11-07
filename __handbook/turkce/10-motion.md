@@ -9,7 +9,7 @@ basic.js kütüphanesinde oluşturulan herhangi bir GUI nesnesinin (Box, Button,
 Animasyon komutu, öncelikle hangi özelliklerin "hangi sürede" değişeceğini bir kural olarak tanımlar ve `.setMotion()` ile nesneye verilir.
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     HGroup();
 
@@ -50,7 +50,7 @@ Nesneye uygulanan genel CSS (transition) komut stringini alır.
 Genellikle birden fazla css değişkeniyle oluşan veya anlık eklenen animasyonların düzgün işlenmesi adına (browser buglarını önlemek için) ufak bir zaman damgasıyla bir kere çalıştırılan akıllı bir fonksiyondur.
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     HGroup();
 
@@ -93,7 +93,7 @@ Ekranda baştan oluşturulmuş ancak görünmez (opacity = 0) olan bir yapıyı,
 ```javascript
 let box = null;
 
-window.onload = function() {
+const start = function () {
 
     page.color = Black(0.8);
 
