@@ -5501,6 +5501,28 @@
             bar.remove();
         });
 
+        test("ToolBar: its bubble has no edge, and it follows the theme", async function () {
+            const bar = ToolBar({ items: [{ key: "save", icon: "save", hint: "Save" }] });
+            await wait(30);
+            const save = toolButton(bar, "Save");
+            const bubbleLook = function () {
+                save.dispatchEvent(new MouseEvent("mouseover", { bubbles: true, clientX: 40, clientY: 40 }));
+                const bubble = window.lblHint.elem;
+                const look = [getComputedStyle(bubble).borderTopWidth, bubble.style.backgroundColor].join(" ");
+                save.dispatchEvent(new MouseEvent("mouseout", { bubbles: true }));
+                return look;
+            };
+            const light = bubbleLook();
+            bar.setTheme("dark");
+            const dark = bubbleLook();
+            bar.setTheme("light");
+            const back = bubbleLook();
+            check("ToolBar: its bubble has no edge, and it follows the theme",
+                light === "0px rgb(43, 43, 42)" && dark === "0px rgb(74, 74, 72)" && back === light,
+                [light, dark, back].join(" | "));
+            bar.remove();
+        });
+
         // *** GRID GROUP (comp/grid-group.js)
 
         test("GridGroup: a number makes equal columns; the objects go left to right, then under; they are in its flow", async function () {

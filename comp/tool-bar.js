@@ -82,6 +82,7 @@ const ToolBarDefaults = {
         buttonHover: { color: Black(0.07) },
         buttonOn: { color: Black(0.13), textColor: Black(0.92) }, // It stays pressed, or its menu is open.
         separator: { height: 18, space: 4, color: Black(0.16) },
+        bubble: { fontSize: 12, padding: [9, 5], color: "#2B2B2A", textColor: White(0.95), round: 6, border: 0, shadow: "0 2px 8px " + Black(0.18) }, // Its hint
         disabled: { opacity: 0.35 },
         focus: { ringColor: "rgba(63, 141, 148, 0.8)" },
         menuStyleName: "classic", // The package of its menu
@@ -213,6 +214,7 @@ const ToolBar = function (params = {}) {
             gap: _s.button.gap + "px",
         };
         entry.object.setFocusRing(_s.focus.ringColor);
+        if (entry.tooltip) entry.tooltip.look = _s.bubble;
     };
 
     const applyBarLook = function () {
@@ -224,7 +226,7 @@ const ToolBar = function (params = {}) {
     };
 
     const createTooltip = function (entry, text) {
-        return Tooltip({ target: entry.object, hintText: text, hintPosition: "bottom" });
+        return Tooltip({ target: entry.object, hintText: text, hintPosition: "bottom", look: _s.bubble });
     };
 
     // The bubble of a button, and its name. WHY aria: an icon button has no other name for a screen reader.
@@ -711,6 +713,7 @@ ToolBar.styles = {
         buttonHover: { color: White(0.09) },
         buttonOn: { color: White(0.17), textColor: White(0.95) },
         separator: { color: White(0.16) },
+        bubble: { color: "#4A4A48", shadow: "0 2px 8px " + Black(0.45) },
         focus: { ringColor: "rgba(111, 198, 205, 0.8)" },
         menuStyleName: "dark",
     },
