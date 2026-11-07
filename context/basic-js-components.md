@@ -16,8 +16,8 @@ const MyCompDefaults = {
     value: 0,
     enabled: 1,
     onChange: function (self) { }, // Not at create time, not with silent: 1
-    styleName: "classic", // "classic", "dark" or a name added to MyComp.styles
-    style: { // Classic style package (default)
+    styleName: "light", // "light", "dark" or a name added to MyComp.styles
+    style: { // Light style package (default)
         box: { color: "white", border: 1, borderColor: Black(0.15), round: 8 },
         label: { fontSize: 15, textColor: Black(0.85) },
         hover: { color: "#F5F6F4" },
@@ -67,7 +67,7 @@ const MyComp = function (params = {}) {
 
 // *** STYLE PACKAGES:
 MyComp.styles = {
-    classic: MyCompDefaults.style,
+    light: MyCompDefaults.style,
     dark: { box: { color: "#1A1A19", borderColor: White(0.1) }, label: { textColor: White(0.9) } }, // only the keys that differ
 };
 ```
@@ -79,6 +79,7 @@ MyComp.styles = {
 - The house header (`/* Bismillah */`, name - version, what it does, `USAGE:`, developer) and the section markers (`// *** PRIVATE VARIABLES:`, `// *** OBJECT VIEW:`, `// BOX:`, `// LABEL:`...).
 
 ## Style packages
+- A new component has the packages `light` (the default) and `dark`. An older component keeps its names (`classic`, `modern`...).
 - `basic.applyStylePackage(params, Comp.styles, CompDefaults)` is the first line: `params.style` > the package of `styleName` > the defaults. The package is copied, never changed.
 - A package has only the keys that differ from the default style. A new key in the default style is filled into every package: when the old look of a package must stay, give it that key (Ex: `opacity: 1` in `selected`).
 - `mergeIntoIfMissing` copies 4 levels; deeper objects are kept by reference. Keep the style flat.
