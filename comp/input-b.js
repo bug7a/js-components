@@ -702,8 +702,8 @@ InputB.styles = {
     ozden: {
         style: {},
         backgroundColor: "#F6F6F6",
-        selectedBackgroundColor: "#F6F6F6",
-        hoverBackgroundColor: "#EFEFEF", // a little darker under the mouse
+        selectedBackgroundColor: "#FFFFFF", // F6F6F6
+        hoverBackgroundColor: "#F6F6F6", // a little darker under the mouse EFEFEF
         lineColor: Black(0),
         selectedLineColor: Black(0),
         backBorderColor: Black(0.05), // a faint edge
@@ -712,7 +712,7 @@ InputB.styles = {
         backBorderBottomRound: 8,
         titleBold: 1, // as ozdenDark
         warningBallType: "icon",
-        warningColor: "#E5885E",
+        warningColor: "#E5885E", // E5885E, F1C74A
 
         tooltipStyle: {
             round: 6, // as ozdenDark
@@ -730,7 +730,7 @@ InputB.styles = {
         style: {},
         backgroundColor: "rgba(255, 255, 255, 0.04)", // FIELD_BG
         selectedBackgroundColor: "rgba(255, 255, 255, 0.07)", // FIELD_BG_SELECTED
-        hoverBackgroundColor: "rgba(255, 255, 255, 0.06)", // a little lighter under the mouse
+        hoverBackgroundColor: "rgba(255, 255, 255, 0.04)", // a little lighter under the mouse
         lineColor: Black(0),
         selectedLineColor: Black(0),
         backBorderColor: "rgba(255, 255, 255, 0.10)", // FIELD_LINE
