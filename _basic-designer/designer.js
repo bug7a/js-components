@@ -1077,7 +1077,8 @@ BasicDesigner.markEmptyBoxes = function () {
         style.textContent = "." + BasicDesigner.EMPTY_BOX_CLASS + " { outline: " + BasicDesigner.EMPTY_BOX_EDGE + " !important; outline-offset: -1px; }";
         (doc.head || doc.documentElement).appendChild(style);
     }
-    const isOn = BasicDesigner.settings.emptyBoxEdges !== false;
+    // WHY only in Select mode: in Interact mode the page is used as it is, and a box that paints nothing is not seen.
+    const isOn = BasicDesigner.settings.emptyBoxEdges !== false && s.mode === "select";
     s.rt.objects.forEach(function (obj) {
         if (!obj.elem || obj._isRemoved) return;
         obj.elem.classList.toggle(BasicDesigner.EMPTY_BOX_CLASS, isOn && obj.elem.isConnected && BasicDesigner.isEmptyBox(obj));
@@ -6967,6 +6968,7 @@ BasicDesigner.setMode = function (mode) {
     ui.btnSelect.setActive(mode === "select");
     ui.btnInteract.setActive(mode === "interact");
     ui.cover.visible = (mode === "select") ? 1 : 0;
+    BasicDesigner.markEmptyBoxes();
     if (mode === "select") {
         // WHY: Objects created or removed while playing with the page.
         if (BasicDesigner.state.rt) BasicDesigner.refreshLayers();

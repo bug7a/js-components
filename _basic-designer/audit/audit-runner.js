@@ -709,6 +709,19 @@
         }, function () { const o = checkNow(); return same([o.labelText, W().getComputedStyle(o.elem).opacity].join(","), "Changed,0.5"); },
         /labelText/, function () { const o = checkNow(); return same([o.labelText, W().getComputedStyle(o.elem).opacity].join(","), "Check me,1"); });
 
+        // The dashed edge of an empty box (groupPlain paints nothing): drawn in Select mode, not in Interact mode (the page
+        // as it is)
+        const edgeOf = function (o) { return W().getComputedStyle(o.elem).outlineStyle; };
+        const inSelect = edgeOf(A.groupPlain);
+        BD.setMode("interact");
+        await sleep(30);
+        const inInteract = edgeOf(A.groupPlain);
+        BD.setMode("select");
+        await sleep(30);
+        const backInSelect = edgeOf(A.groupPlain);
+        if ([inSelect, inInteract, backInSelect].join(",") === "dashed,none,dashed") R.passed.push("edges of empty boxes: not in Interact mode");
+        else R.fails.push("edges of empty boxes: select " + inSelect + ", interact " + inInteract + ", select again " + backInSelect);
+
         R.done = true;
         return R;
     };
