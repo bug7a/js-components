@@ -113,7 +113,7 @@ const TimeLine = function (params = {}) {
 
     const normalizeItem = function (item) {
         if (typeof item == "string" || typeof item == "number") {
-            return { title: String(item) };
+            return { time: "", title: String(item), text: "" }; // WHY: an undefined time made an empty label; its gap moved the title.
         }
         return Object.assign({ time: "", title: "", text: "" }, item);
     };

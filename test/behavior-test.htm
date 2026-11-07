@@ -81,6 +81,7 @@
         <script src="../comp/accordion.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/grid-group.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/step-bar.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/time-line.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/tag-input.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/canvas.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/range-slider.js" type="text/javascript" charset="utf-8"></script>
@@ -7454,6 +7455,19 @@
             const titles = Array.from(quiet.elem.querySelectorAll(".basic_label")).filter(function (label) { return label.textContent === "A" && label.getClientRects().length > 0; }).length;
             quiet.remove();
             check("StepBar: setSteps(), showTitles: 0, setTheme()", after === "2,2" && dark === "true,36" && titles === 0, [after, dark, titles].join(" | "));
+        });
+
+        // *** TIME LINE (comp/time-line.js)
+
+        test("TimeLine: a text item has only its title, at the top as in an object item (an empty time label and its gap moved it 2 px down)", async function () {
+            const line = TimeLine({ width: 300, items: ["A text item", { title: "An object item" }] });
+            await basic.nextFrame();
+            const textsOf = function (index) { return line.content.elem.children[index].children[1]; };
+            const titleTopOf = function (index) { return textsOf(index).firstElementChild.getBoundingClientRect().top - textsOf(index).getBoundingClientRect().top; };
+            const labelCounts = [textsOf(0).children.length, textsOf(1).children.length].join();
+            const titleTops = [titleTopOf(0), titleTopOf(1)].join();
+            check("TimeLine: a text item has only its title, at the top as in an object item", labelCounts === "1,1" && titleTops === "0,0", labelCounts + " | " + titleTops);
+            line.remove();
         });
 
         // *** ITEM LIST: the gallery packages (comp/item-list.js)
