@@ -23,10 +23,10 @@ UI COMPONENT TEMPLATE
 - Style packages: "classic" (default), "modern", "dark". Select with styleName. (TreeView.styles)
 - Everything is drawn with code (no image files needed).
 
-NODE: { key, text, iconFile, tag, tagColor, note, textColor, children, expanded, hasChildren, disabled, data }
+NODE: { key, text, iconFile, tag, tagColor, note, noteColor, textColor, children, expanded, hasChildren, disabled, data }
 - text: Plain text (never read as HTML).
 - tag: A short second text after the text, in the accent color (Ex: the type of a layer). tagColor: its own color.
-- note: A soft text at the end (Ex: a size, a count, a preview).
+- note: A soft text at the end (Ex: a size, a count, a preview). noteColor: its own color.
 - iconFile: An image (a file or a data:image/svg+xml URI).
 - children: [NODE]. expanded: 1 -> open. hasChildren: 1 -> an arrow without children (lazy, see onLoadChildren).
 - data: Anything of yours. It is kept by reference.
@@ -278,7 +278,7 @@ const TreeView = function (params = {}) {
             "min-width:0",
             "overflow:hidden",
             "text-overflow:ellipsis",
-            "color:" + _s.note.textColor,
+            "color:" + escapeText(node.noteColor || _s.note.textColor),
             "font-size:" + _s.note.fontSize + "px",
         ];
         return span(styles, escapeText(node.note));
@@ -794,6 +794,12 @@ const TreeView = function (params = {}) {
         return box.getNode(box.value);
     };
 
+    // The node of the row under an event of the mouse, or null. (Ex: a right click selects its row.)
+    box.getNodeOfEvent = function (event) {
+        const rec = getRecOfEvent(event);
+        return (rec) ? rec.node : null;
+    };
+
     // silent: 1 -> onSelect is not called. null: nothing is selected.
     box.setValue = function (key, silent = 0) {
         if (key === null || key === undefined) {
@@ -991,6 +997,7 @@ const TreeView = function (params = {}) {
         // LABEL: Empty text
         box.lblEmpty = Label({
             plainText: box.emptyText,
+            left: 0,
             width: "100%",
             top: EMPTY_TEXT_TOP,
             fontSize: _s.empty.fontSize,

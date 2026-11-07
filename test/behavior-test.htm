@@ -79,6 +79,7 @@
         <script src="../comp/splitter.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/accordion.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/grid-group.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/json-view.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/markdown-view.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/tool-bar.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/code-editor.js" type="text/javascript" charset="utf-8"></script>
@@ -5974,6 +5975,345 @@
             check("MarkdownView: remove(): a text that was still coming draws nothing; a heading of an old text is not found",
                 view.isRemoved == 1 && group.isRemoved == 1 && stays === 0 && !group.elem.textContent.includes("More"),
                 [view.isRemoved, group.isRemoved, stays].join(" | "));
+        });
+
+        // *** JSON VIEW (comp/json-view.js)
+
+        const jsonRowText = function (view, key) {
+            const row = view.tree.getRowElem(key);
+            return (row) ? row.textContent : null;
+        };
+
+        const jsonRowCount = function (view) {
+            return Array.from(view.tree.elem.querySelectorAll('[role="treeitem"]')).filter(function (row) { return row.getClientRects().length > 0; }).length;
+        };
+
+        test("JsonView: a row has a key and a value in the color of its kind; a branch is made when it opens", async function () {
+            const value = { name: "Ada", age: 36, ok: true, none: null, list: [1, "b"], empty: {}, emptyList: [], sub: { deep: { deeper: 1 } }, "odd key": 1 };
+            const view = JsonView({ width: 400, height: 400, value: value });
+            await wait(30);
+            const texts = ["name", "age", "ok", "none", "list", "list[0]", "list[1]", "empty", "emptyList", "sub", "sub.deep", '["odd key"]'].map(function (key) { return jsonRowText(view, key); }).join("|");
+            const expected = 'name"Ada"|age36|oktrue|nonenull|list[2]|01|1"b"|empty{0}|emptyList[0]|sub{1}|deep{1}|odd key1';
+            const colorOf = function (key) { return view.tree.getNode(key).noteColor; };
+            const colors = [colorOf("name"), colorOf("age"), colorOf("ok"), colorOf("none")].join();
+            const style = view.style.kinds;
+            const isLazy = (view.tree.getNode("sub.deep.deeper") === null);
+            const hasArrow = (view.tree.getRowElem("sub.deep").querySelector("[data-tv-arrow] svg") !== null);
+            const emptyHasNoArrow = (view.tree.getRowElem("empty").querySelector("[data-tv-arrow] svg") === null);
+            mouseClick(view.tree.getRowElem("sub.deep").querySelector("[data-tv-arrow]"));
+            const opened = jsonRowText(view, "sub.deep.deeper");
+            const mono = getComputedStyle(view.tree.getRowElem("name")).fontFamily.includes("monospace");
+            check("JsonView: a row has a key and a value in the color of its kind; a branch is made when it opens",
+                texts === expected && colors === [style.string, style.number, style.boolean, style.null].join() && isLazy && hasArrow && emptyHasNoArrow && opened === "deeper1" && mono,
+                [texts, colors, isLazy, hasArrow, emptyHasNoArrow, opened, mono].join(" | "));
+            view.remove();
+        });
+
+        test("JsonView: a value that is not an object; nothing shows its empty text; expandLevel", async function () {
+            const scalar = JsonView({ width: 300, height: 100, value: 5 });
+            await wait(20);
+            const number = [jsonRowCount(scalar), jsonRowText(scalar, "$")].join();
+            scalar.setValue("A text");
+            const text = jsonRowText(scalar, "$");
+            scalar.setValue([]);
+            const emptyList = jsonRowText(scalar, "$");
+            scalar.setValue(null);
+            const none = [jsonRowCount(scalar), scalar.tree.lblEmpty.elem.getClientRects().length > 0, scalar.tree.lblEmpty.elem.textContent].join();
+            scalar.setEmptyTextProbe = null;
+            scalar.remove();
+            const closed = JsonView({ width: 300, height: 200, value: { a: { b: { c: 1 } } }, expandLevel: 0 });
+            const two = JsonView({ width: 300, height: 200, value: { a: { b: { c: 1 } } }, expandLevel: 2 });
+            await wait(20);
+            const counts = [jsonRowCount(closed), jsonRowCount(two)].join();
+            closed.remove();
+            two.remove();
+            const list = JsonView({ width: 300, height: 200, value: [10, [20]] });
+            await wait(20);
+            const inList = [jsonRowText(list, "[0]"), jsonRowText(list, "[1]"), jsonRowText(list, "[1][0]")].join();
+            list.remove();
+            check("JsonView: a value that is not an object; nothing shows its empty text; expandLevel",
+                number === "1,5" && text === '"A text"' && emptyList === "[0]" && none === "0,true,No value" && counts === "1,3" && inList === "010,1[1],020",
+                [number, text, emptyList, none, counts, inList].join(" | "));
+        });
+
+        test("JsonView: a click gives the path, the kind and the value of a row; not at create time, not with selectPath()", async function () {
+            const entries = [];
+            const value = { users: [{ "a b": "x", "0": 1 }], total: 3, sub: { in: true } };
+            const view = JsonView({ width: 400, height: 400, value: value, expandLevel: 3, onSelect: function (self, entry) { entries.push(entry); } });
+            await wait(30);
+            const atStart = [entries.length, view.getSelectedPath(), view.getSelectedPathText(), view.getSelectedValue()].join();
+            mouseClick(view.tree.getRowElem('users[0]["a b"]'));
+            const leaf = entries[0];
+            const leafText = [leaf.key, leaf.label, leaf.kind, leaf.pathText, leaf.value, JSON.stringify(leaf.path)].join("|");
+            const selected = [view.getSelectedPathText(), view.getSelectedValue(), JSON.stringify(view.getSelectedPath())].join("|");
+            mouseClick(view.tree.getRowElem("users[0]"));
+            const branch = entries[1];
+            const branchText = [branch.kind, branch.value, branch.label, JSON.stringify(view.getSelectedValue())].join("|");
+            mouseClick(view.tree.getRowElem('users[0]["0"]'));
+            const numberKey = [entries[2].pathText, JSON.stringify(entries[2].path)].join("|");
+            const before = entries.length;
+            view.selectPath(["sub", "in"]);
+            const silent = [entries.length === before, view.getSelectedPathText(), view.getSelectedValue()].join();
+            view.selectPath(["no", "such"]);
+            const stays = view.getSelectedPathText();
+            view.setValue({ other: 1 });
+            const cleared = [view.getSelectedPath(), view.getSelectedPathText(), view.getValue().other].join();
+            check("JsonView: a click gives the path, the kind and the value of a row; not at create time, not with selectPath()",
+                atStart === "0,,," && leafText === 'users[0]["a b"]|a b|string|users[0]["a b"]|x|["users",0,"a b"]' && selected === 'users[0]["a b"]|x|["users",0,"a b"]' &&
+                branchText === 'object||0|{"0":1,"a b":"x"}' && numberKey === 'users[0]["0"]|["users",0,"0"]' && silent === "true,sub.in,true" && stays === "sub.in" && cleared === ",,1",
+                [atStart, leafText, selected, branchText, numberKey, silent, stays, cleared].join(" || "));
+            view.remove();
+        });
+
+        test("JsonView: a key and a value are never read as HTML; a long text is cut on its row", async function () {
+            window.jsonViewRan = 0;
+            const long = "x".repeat(1000);
+            const value = { "<b>key</b>": "<img src=x onerror=\"window.jsonViewRan = 1\">", long: long };
+            const view = JsonView({ width: 300, height: 200, value: value });
+            await wait(50);
+            const rows = view.tree.elem;
+            const safe = [rows.querySelectorAll("b").length, rows.querySelectorAll("img").length, window.jsonViewRan].join();
+            const shown = jsonRowText(view, '["<b>key</b>"]');
+            const longRow = jsonRowText(view, "long");
+            const area = view.tree.listArea.elem;
+            const stays = (area.scrollWidth <= area.clientWidth);
+            mouseClick(view.tree.getRowElem("long"));
+            const whole = view.getSelectedValue().length;
+            check("JsonView: a key and a value are never read as HTML; a long text is cut on its row",
+                safe === "0,0,0" && shown === '<b>key</b>"<img src=x onerror=\\"window.jsonViewRan = 1\\">"' && longRow.length < 320 && longRow.endsWith("…") && stays && whole === 1000,
+                [safe, shown, longRow.length, stays, whole].join(" | "));
+            view.remove();
+        });
+
+        test("JsonView: a long list comes in pages: a million items open at once, and selectPath() goes through them", async function () {
+            const items = [];
+            for (let index = 0; index < 1000000; index++) items.push(index);
+            const started = Date.now();
+            const view = JsonView({ width: 300, height: 200, value: { items: items } });
+            await wait(20);
+            const pages = jsonRowCount(view);
+            const firstPage = [jsonRowText(view, "items<0-10000>"), jsonRowText(view, "items<990000-1000000>")].join();
+            view.selectPath(["items", 765432]);
+            const selected = [view.getSelectedPathText(), view.getSelectedValue(), jsonRowText(view, "items[765432]")].join();
+            const rowsAfter = view.tree.elem.querySelectorAll('[role="treeitem"]').length;
+            const time = Date.now() - started;
+            view.remove();
+            const names = {};
+            for (let index = 0; index < 25; index++) names["k" + index] = index;
+            const small = JsonView({ width: 300, height: 200, value: names, pageSize: 10 });
+            await wait(20);
+            const objectPages = jsonRowCount(small);
+            small.selectPath(["k17"]);
+            const inObject = [small.getSelectedPathText(), small.getSelectedValue()].join();
+            mouseClick(small.tree.getRowElem("$<10-20>"));
+            const page = [small.getSelectedPathText(), Object.keys(small.getSelectedValue()).length, Object.keys(small.getSelectedValue())[0]].join();
+            small.remove();
+            const exact = [JsonView.pageStep(100, 100), JsonView.pageStep(101, 100), JsonView.pageStep(10000, 100), JsonView.pageStep(10001, 100), JsonView.pageStep(1000000, 100)].join();
+            check("JsonView: a long list comes in pages: a million items open at once, and selectPath() goes through them",
+                pages === 101 && firstPage === "[0 … 9999],[990000 … 999999]" && selected === "items[765432],765432,765432765432" && rowsAfter < 500 && time < 3000 &&
+                objectPages === 3 && inObject === "k17,17" && page === "$,10,k10" && exact === "1,100,100,10000,10000",
+                [pages, firstPage, selected, rowsAfter, time, objectPages, inObject, page, exact].join(" | "));
+        });
+
+        test("JsonView: setJsonText(): a good text is drawn, a text that is not JSON shows its error", async function () {
+            const view = JsonView({ width: 300, height: 200 });
+            await wait(20);
+            const good = [view.setJsonText('{"a": [1]}'), jsonRowText(view, "a"), view.errorText].join("|");
+            const empty = view.tree.lblEmpty;
+            const normalColor = view.style.tree.empty.textColor;
+            const bad = view.setJsonText('{"a": }');
+            const badState = [bad, jsonRowCount(view), view.errorText.length > 0, empty.elem.textContent === view.errorText, view.getValue(), view.tree.lblEmpty.textColor === view.style.error.textColor].join();
+            view.setTheme("dark");
+            const afterTheme = [view.tree.lblEmpty.elem.textContent === view.errorText, view.tree.lblEmpty.textColor === view.style.error.textColor].join();
+            view.setTheme("light");
+            view.setValue(null);
+            const clean = [view.errorText, view.tree.lblEmpty.elem.textContent, view.tree.lblEmpty.textColor === normalColor].join();
+            check("JsonView: setJsonText(): a good text is drawn, a text that is not JSON shows its error",
+                good === "1|a[1]|" && badState === "0,0,true,true,,true" && afterTheme === "true,true" && clean === ",No value,true",
+                [good, badState, afterTheme, clean].join(" | "));
+            view.remove();
+        });
+
+        test("JsonView: Ctrl+C and the right click copy a value or a path; a right click selects its row", async function () {
+            const copied = [];
+            const told = [];
+            const realCopy = JsonView.copyToClipboard;
+            JsonView.copyToClipboard = function (text) {
+                copied.push(text);
+                return Promise.resolve();
+            };
+            const value = { name: "Ada", sub: { a: 1 }, number: 5 };
+            const view = JsonView({ width: 300, height: 300, value: value, onCopy: function (self, text) { told.push(text); } });
+            await wait(30);
+            const area = view.tree.listArea.elem;
+            key(area, "keydown", "c", { ctrlKey: true }); // Nothing is selected
+            const nothing = copied.length;
+            mouseClick(view.tree.getRowElem("name"));
+            const event = new KeyboardEvent("keydown", { key: "c", metaKey: true, bubbles: true, cancelable: true });
+            area.dispatchEvent(event);
+            mouseClick(view.tree.getRowElem("sub"));
+            key(area, "keydown", "C", { ctrlKey: true });
+            mouseClick(view.tree.getRowElem("number"));
+            key(area, "keydown", "c", { ctrlKey: true });
+            key(area, "keydown", "c");
+            await wait(10);
+            const byKeys = copied.join("|");
+            copied.length = 0;
+            const rightClick = function (element) {
+                element.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: 40, clientY: 40, button: 2 }));
+            };
+            rightClick(view.tree.getRowElem("sub.a"));
+            const menu = view.menu;
+            const opened = [menu.isOpen(), view.getSelectedPathText()].join();
+            menu.clickItem(1);
+            rightClick(view.tree.getRowElem("name"));
+            menu.clickItem(0);
+            await wait(10);
+            const byMenu = copied.join("|");
+            rightClick(area);
+            const onEmptyPlace = menu.isOpen();
+            rightClick(view.tree.getRowElem("name"));
+            const backOnRow = menu.isOpen();
+            menu.close();
+            JsonView.copyToClipboard = realCopy;
+            check("JsonView: Ctrl+C and the right click copy a value or a path; a right click selects its row",
+                nothing === 0 && event.defaultPrevented && byKeys === 'Ada|{\n  "a": 1\n}|5' && opened === "1,sub.a" && byMenu === "sub.a|Ada" && onEmptyPlace == 0 && backOnRow == 1 && told.length === 5,
+                [nothing, event.defaultPrevented, byKeys, opened, byMenu, onEmptyPlace, backOnRow, told.length].join(" | "));
+            view.remove();
+        });
+
+        test("JsonView: setTheme(): a new package; the open rows, the selection, the scroll and the style of the page stay", async function () {
+            const value = { a: { b: 1 }, c: { d: 2 } };
+            for (let index = 0; index < 40; index++) value["k" + index] = index;
+            const view = JsonView({ width: 300, height: 120, value: value, expandLevel: 0, style: { kinds: { number: "tomato" } } });
+            await wait(30);
+            view.tree.expand("a");
+            view.tree.expand("c");
+            view.tree.collapse("a");
+            mouseClick(view.tree.getRowElem("c.d"));
+            view.tree.listArea.elem.scrollTop = 60;
+            const oldTree = view.tree;
+            const oldMenu = view.menu;
+            const lightGround = view.elem.style.backgroundColor;
+            view.setTheme("dark");
+            const replaced = [oldTree.isRemoved, oldMenu.isRemoved, view.menu.styleName].join();
+            const stays = [view.tree.getRowElem("a.b") === null || view.tree.getRowElem("a.b").getClientRects().length === 0, jsonRowText(view, "c.d"), view.getSelectedPathText(), view.tree.listArea.elem.scrollTop].join();
+            const colors = [view.elem.style.backgroundColor !== lightGround, view.tree.getNode("c").textColor === JsonView.styles.dark.kinds.key, view.tree.getNode("c.d").noteColor].join();
+            const font = getComputedStyle(view.tree.getRowElem("c")).fontFamily.includes("monospace");
+            mouseClick(view.tree.getRowElem("c"));
+            const stillWorks = view.getSelectedPathText();
+            view.setTheme("light");
+            const back = [view.elem.style.backgroundColor === lightGround, view.styleName].join();
+            check("JsonView: setTheme(): a new package; the open rows, the selection, the scroll and the style of the page stay",
+                replaced === "1,1,dark" && stays === "true,d2,c.d,60" && colors === "true,true,tomato" && font && stillWorks === "c" && back === "true,light",
+                [replaced, stays, colors, font, stillWorks, back].join(" | "));
+            view.remove();
+        });
+
+        test("JsonView: expandAll() stops at its limit, collapseAll() closes; setValue() starts the open rows again", async function () {
+            const value = { a: { b: { c: { d: 1 } } }, e: [1, [2, [3]]] };
+            const view = JsonView({ width: 300, height: 300, value: value, expandLevel: 0 });
+            await wait(30);
+            view.expandAll();
+            const all = jsonRowCount(view);
+            view.collapseAll();
+            const closed = jsonRowCount(view);
+            view.tree.expand("a");
+            view.setValue(value);
+            const again = jsonRowCount(view);
+            const items = [];
+            for (let index = 0; index < 90; index++) items.push(["a", "b", "c", "d"]);
+            const limit = JsonView.MAX_ROWS_OF_EXPAND_ALL;
+            JsonView.MAX_ROWS_OF_EXPAND_ALL = 40;
+            view.setValue(items);
+            view.expandAll();
+            const stopped = view.tree.elem.querySelectorAll('[role="treeitem"]').length;
+            JsonView.MAX_ROWS_OF_EXPAND_ALL = limit;
+            check("JsonView: expandAll() stops at its limit, collapseAll() closes; setValue() starts the open rows again",
+                all === 10 && closed === 2 && again === 2 && stopped < 160, [all, closed, again, stopped].join(" | "));
+            view.remove();
+        });
+
+        test("JsonView: height \"auto\" grows with its rows, a number scrolls; remove() takes its menu", async function () {
+            const value = {};
+            for (let index = 0; index < 30; index++) value["k" + index] = index;
+            const auto = JsonView({ width: 300, height: "auto", value: { a: 1 } });
+            await wait(30);
+            const small = auto.elem.offsetHeight;
+            auto.setValue(value);
+            await wait(30);
+            const big = auto.elem.offsetHeight;
+            auto.remove();
+            const fixed = JsonView({ width: 300, height: 100, value: value });
+            await wait(30);
+            const fixedHeight = fixed.elem.offsetHeight;
+            const scrolls = (fixed.tree.listArea.elem.scrollHeight > fixed.tree.listArea.elem.clientHeight);
+            const menu = fixed.menu;
+            fixed.remove();
+            fixed.remove();
+            check("JsonView: height \"auto\" grows with its rows, a number scrolls; remove() takes its menu",
+                big > small * 10 && small > 20 && fixedHeight === 100 && scrolls && menu.isRemoved == 1 && fixed.isRemoved == 1,
+                [small, big, fixedHeight, scrolls, menu.isRemoved, fixed.isRemoved].join(" | "));
+        });
+
+        test("JsonView: the kinds and the texts of unusual values; the text of a path", async function () {
+            const date = new Date(Date.UTC(2026, 10, 7));
+            const kinds = [null, undefined, 1, "a", true, [], {}, date, BigInt(5), function () {}].map(JsonView.kindOf).join();
+            const texts = [JsonView.valueText(date, "string"), JsonView.valueText(BigInt(5), "number"), JsonView.valueText(undefined, "null"), JsonView.valueText("a\nb", "string")].join("|");
+            const paths = [JsonView.pathText([]), JsonView.pathText(["a"]), JsonView.pathText(["a", "b"]), JsonView.pathText([0, 1]), JsonView.pathText(["a b", "c.d", "e"]), JsonView.pathText(["$x", "_y"])].join("|");
+            const copies = [JsonView.textToCopy("a"), JsonView.textToCopy(1), JsonView.textToCopy(null), JsonView.textToCopy([1])].join("|");
+            const round = { a: 1 };
+            round.self = round;
+            const roundCopy = JsonView.textToCopy(round);
+            const view = JsonView({ width: 300, height: 200, value: round });
+            await wait(20);
+            const began = Date.now();
+            view.expandAll();
+            const withItself = (jsonRowCount(view) > 2 && jsonRowCount(view) < 100 && Date.now() - began < 1000);
+            view.remove();
+            check("JsonView: the kinds and the texts of unusual values; the text of a path",
+                kinds === "null,null,number,string,boolean,array,object,string,number,null" &&
+                texts === '"2026-11-07T00:00:00.000Z"|5|undefined|"a\\nb"' &&
+                paths === '$|a|a.b|[0][1]|["a b"]["c.d"].e|$x._y' && copies === "a|1|null|[\n  1\n]" && roundCopy === "[object Object]" && withItself,
+                [kinds, texts, paths, copies, roundCopy, withItself].join(" | "));
+        });
+
+        test("TreeView: the text of an empty tree stands inside the tree, also the error of a JsonView", async function () {
+            const isInside = function (label, owner) {
+                const rect = label.elem.getBoundingClientRect();
+                const around = owner.elem.getBoundingClientRect();
+                return (rect.left >= around.left && rect.right <= around.right && rect.top >= around.top && rect.bottom <= around.bottom && rect.height > 0);
+            };
+            const tree = TreeView({ left: 30, top: 30, width: 300, height: 200 });
+            await wait(20);
+            const empty = isInside(tree.lblEmpty, tree);
+            tree.remove();
+            const view = JsonView({ left: 30, top: 30, width: 300, height: 200 });
+            view.setJsonText("{ not json");
+            await wait(20);
+            const error = isInside(view.tree.lblEmpty, view);
+            view.remove();
+            check("TreeView: the text of an empty tree stands inside the tree, also the error of a JsonView", empty && error, [empty, error].join(" | "));
+        });
+
+        test("TreeView: noteColor paints a note, getNodeOfEvent() finds the row of an event", async function () {
+            const tree = TreeView({ left: 0, top: 0, width: 300, height: 200, items: [{ key: "a", text: "A", note: "n", noteColor: "red" }, { key: "b", text: "B", note: "m" }] });
+            await wait(20);
+            const noteOf = function (key) { return tree.getRowElem(key).lastElementChild; };
+            const colored = noteOf("a").style.color;
+            const plainColor = noteOf("b").style.color;
+            tree.updateNode("b", { noteColor: "blue" });
+            const updated = noteOf("b").style.color;
+            let found = null;
+            tree.listArea.on("mousemove", function (self, event) { found = tree.getNodeOfEvent(event); });
+            noteOf("b").dispatchEvent(new MouseEvent("mousemove", { bubbles: true }));
+            const onRow = (found) ? found.key : "";
+            tree.listArea.elem.dispatchEvent(new MouseEvent("mousemove", { bubbles: true }));
+            const onEmpty = found;
+            check("TreeView: noteColor paints a note, getNodeOfEvent() finds the row of an event",
+                colored === "red" && plainColor !== "red" && updated === "blue" && onRow === "b" && onEmpty === null,
+                [colored, plainColor, updated, onRow, onEmpty].join(" | "));
+            tree.remove();
         });
 
         // *** GRID GROUP (comp/grid-group.js)

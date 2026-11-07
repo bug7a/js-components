@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>JsonView</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- LIBRARY FILES -->
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- COMPONENT FILES -->
+        <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/context-menu.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/tree-view.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/json-view.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+
+        /* Bismillah */
+
+        // JsonView (comp/json-view.js): a value of JSON as a tree.
+        // 1. The answer of a server, in the two themes. A click on a row tells its path; right click or Ctrl+C copies.
+        // 2. A list of a million items: the rows are made when a branch opens, and a long list comes in pages.
+        // 3. A text of JSON: a text that is not JSON shows its error.
+
+        // *** VARIABLES:
+        const PAGE_COLOR = "#ECEBE8";
+        const SOFT_TEXT = "#6F6E6B";
+        const CARD_MIN_WIDTH = 440;
+        const CARD_MAX_WIDTH = 620;
+        const CARD_ROUND = 12;
+        const VIEW_HEIGHT = 380;
+        const SMALL_VIEW_HEIGHT = 240;
+        const BIG_LIST_COUNT = 1000000;
+
+        const ANSWER = {
+            status: "ok",
+            count: 2,
+            pageTime: 0.042,
+            cached: false,
+            nextPage: null,
+            users: [
+                { id: 7, name: "Ada Yılmaz", email: "ada@example.com", active: true, roles: ["admin", "editor"], address: { city: "İzmir", zip: "35000" } },
+                { id: 12, name: "Can Demir", email: "can@example.com", active: false, roles: [], address: null },
+            ],
+            "a key with spaces": "A long text that does not fit its row and is cut with three dots at its end, but the whole of it is copied.",
+        };
+        const GOOD_TEXT = '{"name": "Ada", "age": 36, "tags": ["a", "b"]}';
+        const BROKEN_TEXT = '{"name": "Ada", "age": }';
+
+        let lblPath;
+
+        // First running function. (basic.js calls it when the page is ready)
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            // BOX: Page (it scrolls when the window is lower than the samples)
+            const pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+
+            // GROUP: The title and the samples
+            VGroup({ width: "100%", height: "auto", align: "center top", gap: 16, padding: [16, 28], clipContent: 0 });
+
+                Label({ text: "JsonView", fontSize: 24, bold: 1, textColor: Black(0.8) });
+
+                // GROUP: The samples side by side (one under the other on a narrow screen)
+                HGroup({ width: "100%", height: "auto", align: "center top", gap: 20, wrap: 1, clipContent: 0 });
+                    createAnswer("Light", "styleName: \"light\" (default)", "light");
+                    createAnswer("Dark", "styleName: \"dark\"", "dark");
+                    createBigList();
+                    createFromText();
+                endGroup();
+
+            endGroup();
+
+            endBox();
+
+            ScrollBar({ scrollableBox: pageBox });
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        // GROUP: A card with a title and a note. endGroup() closes it.
+        const startCard = function (titleText, noteText) {
+            VGroup({
+                width: "auto",
+                height: "auto",
+                align: "left top",
+                gap: 10,
+                clipContent: 0,
+                css: { flex: "1 1 " + CARD_MIN_WIDTH + "px", maxWidth: CARD_MAX_WIDTH + "px", minWidth: "0" },
+            });
+            HGroup({ width: "100%", height: "auto", align: "left center", gap: 8 });
+                Label({ text: titleText, fontSize: 15, bold: 1, textColor: Black(0.75) });
+                Label({ text: noteText, fontSize: 13, textColor: SOFT_TEXT });
+            endGroup();
+        };
+
+        const showEntry = function (self, entry) {
+            lblPath.plainText = entry.pathText + "  (" + entry.kind + ")";
+        };
+
+        const showCopied = function (self, text) {
+            lblPath.plainText = "Copied: " + text.slice(0, 60);
+        };
+
+        const createAnswer = function (titleText, noteText, styleName) {
+
+            startCard(titleText, noteText);
+
+                JsonView({ height: VIEW_HEIGHT, styleName: styleName, value: ANSWER, expandLevel: 2, round: CARD_ROUND, onSelect: showEntry, onCopy: showCopied });
+                if (styleName === "light") lblPath = Label({ text: "A click on a row tells its path", fontSize: 13, textColor: SOFT_TEXT });
+
+            endGroup();
+
+        };
+
+        const createBigList = function () {
+
+            const items = [];
+            for (let index = 0; index < BIG_LIST_COUNT; index++) items.push({ id: index, name: "Item " + index });
+
+            startCard("A list of a million items", "pageSize: 100");
+
+                const view = JsonView({ height: SMALL_VIEW_HEIGHT, value: { items: items }, round: CARD_ROUND, onSelect: showEntry });
+                SmartButton({ labelText: "Go to item 765432", onClick: function () { view.selectPath(["items", 765432, "name"]); } });
+
+            endGroup();
+
+        };
+
+        const createFromText = function () {
+
+            startCard("A text of JSON", "setJsonText()");
+
+                const view = JsonView({ height: SMALL_VIEW_HEIGHT, round: CARD_ROUND });
+                view.setJsonText(GOOD_TEXT);
+                HGroup({ width: "100%", height: "auto", align: "left center", gap: 8, wrap: 1, clipContent: 0 });
+                    SmartButton({ labelText: "A good text", onClick: function () { view.setJsonText(GOOD_TEXT); } });
+                    SmartButton({ labelText: "A broken text", onClick: function () { view.setJsonText(BROKEN_TEXT); } });
+                endGroup();
+
+            endGroup();
+
+        };
+
+        </script>
+    </head>
+
+    <body></body>
+
+</html>

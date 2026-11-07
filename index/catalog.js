@@ -295,6 +295,12 @@ CATALOG.COMPONENTS = [
         tr: "Dikey zaman çizelgesi: her öğe için bir nokta ve noktaların arasında bir çizgi.",
     },
     {
+        key: "json-view", name: "JsonView", cat: "data",
+        source: "comp/json-view.js", deps: ["comp/tree-view.js", "comp/context-menu.js"], samples: ["02-comp-examples/json-view.htm"],
+        en: "A value of JSON as a tree: the answer of a server, a settings file. Keys and values in colors, the path of a row, right click to copy. A list of a million items opens at once. A text that is not JSON shows its error. Light and dark themes.",
+        tr: "JSON değerini ağaç olarak gösterir: sunucu cevabı, ayar dosyası. Renkli anahtar ve değerler, satırın yolu, sağ tıkla kopyalama. Bir milyon öğelik liste hemen açılır. JSON olmayan metin hatasını gösterir. Aydınlık ve karanlık tema.",
+    },
+    {
         key: "markdown-view", name: "MarkdownView", cat: "data",
         source: "comp/markdown-view.js", deps: ["comp/code-editor.js"], samples: ["02-comp-examples/markdown-view.htm"],
         en: "A text written in Markdown, drawn on the page: a report, the answer of an AI. Headings, lists, tables, pictures, code with colors and a button that copies it. A text is never read as HTML. A text that comes piece by piece. Light and dark themes.",
