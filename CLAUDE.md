@@ -9,10 +9,11 @@ This file gives Claude Code guidance for working in this repository.
 - **Commit:** finished and checked work goes to `main` on its own, in small logical commits. The user pushes. The clones under `~/Documents/GitHub` are committed by the user.
 - **Tests:** a changed component: `test/behavior-test.htm` and `test/components-test.htm`. A changed sample only: that page and its look at 390 px. When pages must stay the same (a cleanup, a change in a component): `node test/compare-pages.js` (the user, 2026-11-06; the `test/` row of the repo map).
 - **A new sample:** add it to `index/catalog.js` on your own, and order the samples of the component when needed.
+- **A new UI (the user, 2026-11-07):** a new component or sample goes in directly. A bench page or a draft in `_designs/` only when the user asks, or when a design in use will change. The old version goes to `__archive/`, not to an `old-YYYY-MM-DD/` folder.
 - **Published copies** (the `basic.js`, handbook and `js-components` sites, the mobile template repository, the `create-basicjs` npm package): updated only when the user says so. Do not remind in reports that they are behind.
 - **A side problem found on the way:** small and safe (a line or so, checked by a test): fix it in the same job and report it. Bigger: only suggest it.
 - **Not tested (Windows, a real phone):** write it only when it matters for that job.
-- **Screenshots:** a small sample change gets one result image. Before / after is for a fixed bug.
+- **Screenshots:** a small sample change gets one result image. Before / after is for a fixed bug and for a changed design of a component or a page (the user, 2026-11-07).
 - **Old screenshots:** once in a session, before the first new image goes into `_screenshots/`, delete the images there older than 48 hours (`find _screenshots -type f -mmin +2880 ! -name readme.md -delete`; the user, 2026-11-03). Never `readme.md`.
 
 ## What this is
