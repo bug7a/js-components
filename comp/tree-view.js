@@ -20,7 +20,7 @@ UI COMPONENT TEMPLATE
 - getRowElem(key): the element of a row (its text: [data-part=text]), Ex: to put a field over it.
 - Accessibility: tree / treeitem / group roles, aria-level, aria-expanded, aria-selected, aria-activedescendant.
 - onSelect is NOT called when the component is created or when the value is set with silent: 1.
-- Style packages: "classic" (default), "modern", "dark". Select with styleName. (TreeView.styles)
+- Style packages: "light" (default; the old name "classic" works too), "modern", "dark". Select with styleName. (TreeView.styles)
 - Everything is drawn with code (no image files needed).
 
 NODE: { key, text, iconFile, tag, tagColor, note, noteColor, textColor, children, expanded, hasChildren, disabled, data }
@@ -81,8 +81,8 @@ const TreeViewDefaults = {
     onToggle: function (self, node) { }, // node.expanded: 1 or 0
     onHover: function (self, node) { }, // node: null when the mouse leaves the rows
     onLoadChildren: function (self, node) { }, // hasChildren: 1 and no children. Call self.setChildren(node.key, [...]).
-    styleName: "classic", // "classic", "modern", "dark" or a name added to TreeView.styles
-    style: { // Classic style package (default)
+    styleName: "light", // "light" ("classic": its old name), "modern", "dark" or a name added to TreeView.styles
+    style: { // Light style package (default)
         box: {
             color: "transparent",
             border: 0,
@@ -139,7 +139,7 @@ const TreeViewDefaults = {
 
 const TreeView = function (params = {}) {
 
-    // Merge style package: params.style > TreeView.styles[styleName] > TreeViewDefaults.style (classic)
+    // Merge style package: params.style > TreeView.styles[styleName] > TreeViewDefaults.style (light)
     basic.applyStylePackage(params, TreeView.styles, TreeViewDefaults);
 
     // Merge params:
@@ -1083,7 +1083,7 @@ TreeView.getChevronSvg = function (color, size) {
 TreeView.styles = {
 
     // Dark text, gray hover and selection on a light page.
-    classic: TreeViewDefaults.style,
+    light: TreeViewDefaults.style,
 
     // Cadetblue, same colors as the modern Tabs, CheckBox, RadioButton and TagInput.
     modern: {
@@ -1118,3 +1118,4 @@ TreeView.styles = {
     },
 
 };
+TreeView.styles.classic = TreeView.styles.light; // the old name of light: the pages made with it keep their look

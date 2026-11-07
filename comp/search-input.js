@@ -6,13 +6,13 @@ Search Input - v24.04
 
 UI COMPONENT TEMPLATE
 - You can customize, this template code as you need:
-- Style packages: "original" (the default: whitesmoke with a soft bottom line), "classic" (a standard search box:
+- Style packages: "original" (the default: whitesmoke with a soft bottom line), "light" (its old name "classic": a standard search box:
   white, a thin gray edge, round corners, a line search icon, a dark edge while typing), "ozden", "ozdenDark".
   Select with styleName. (SearchInput.styles)
--- "classic", "ozden" and "ozdenDark" are 44 px high ("original" and the defaults: 50). A
+-- "light", "ozden" and "ozdenDark" are 44 px high ("original" and the defaults: 50). A
    height given by the page wins over it.
 - focusBorderColor: the edge while typing, 2 px of this color ("": the edge does not change). It is a
-  color, not a motion: also with animated: 0. "classic" has it. focusBorderWidth: 1 only the edge (minimal).
+  color, not a motion: also with animated: 0. "light" has it. focusBorderWidth: 1 only the edge (minimal).
 - The vertical place: textOffsetY / clearIconOffsetY move the text and the clear icon from the
   middle of the box. ozden / ozdenDark: -2 / -1: center() does not count their 3 px bottom line, and the small letters
   of Open Sans sit low in their line (measured: the text was about 3 px low, the clear icon 1 px; the search icon is
@@ -85,7 +85,7 @@ const SearchInputDefaults = {
     focusRingColor: "rgba(0, 0, 0, 0.16)", // animated: the line while typing
     onSearch: function(searchedText, self) {},
     onSubmit: function(searchedText, self) {},
-    styleName: "original", // "original" (the look of these defaults), "classic", "ozden", "ozdenDark", "minimal", "minimalDark" or a name added to SearchInput.styles
+    styleName: "original", // "original" (the look of these defaults), "light" ("classic": its old name), "ozden", "ozdenDark", "minimal", "minimalDark" or a name added to SearchInput.styles
     style: {}, // WHY: the look is in the flat params above; the packages are packages of params (see SearchInput.styles).
 };
 
@@ -529,7 +529,7 @@ SearchInput.styles = {
 
     // A standard search box: white, a thin gray edge, round 8, 44 px, a line search icon on
     // the left, a gray round clear button, the text 16 px; while typing the edge is dark and 2 px.
-    classic: {
+    light: {
         style: {},
         searchIconFile: "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L20 20"/></svg>'),
         clearIconFile: "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#8C8C8C"/><path d="M9 9l6 6M15 9l-6 6" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/></svg>'),
@@ -610,6 +610,7 @@ SearchInput.styles = {
     },
 
 };
+SearchInput.styles.classic = SearchInput.styles.light; // the old name of light: the pages made with it keep their look
 
 // The minimal theme (_designs/minimal-theme.htm): 28 px, a 13 px text, no fill, a thin line with round ends that turns
 // ink while typing, a line search icon and a line cross. minimalDark: the same in white on a dark window.

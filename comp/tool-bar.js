@@ -85,7 +85,7 @@ const ToolBarDefaults = {
         bubble: { fontSize: 12, padding: [9, 5], color: "#2B2B2A", textColor: White(0.95), round: 6, border: 0, shadow: "0 2px 8px " + Black(0.18) }, // Its hint
         disabled: { opacity: 0.35 },
         focus: { ringColor: "rgba(63, 141, 148, 0.8)" },
-        menuStyleName: "classic", // The package of its menu
+        menuStyleName: "light", // The package of its menu
         menu: { item: { height: 30, fontSize: 13 } }, // Over that package
         menuMinWidth: 170,
     },

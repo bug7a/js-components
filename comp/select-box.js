@@ -34,9 +34,9 @@ UI COMPONENT TEMPLATE
   The search finds the label, the description, the group and option.searchText (Turkish letters without marks).
 - Your own field: createValueView(option, field, self) draws the selected option in the field with your
   objects (single selection; the placeholder and the multiple text stay as they are).
-- Style packages: "classic" (default), "dark", "ozden" (a package of params: 350 x 50, a search box, the list goes down to the bottom of the page),
+- Style packages: "light" (default; the old name "classic" works too), "dark", "ozden" (a package of params: 350 x 50, a search box, the list goes down to the bottom of the page),
   "ozdenDark" (the same on a dark page). Select with styleName. (SelectBox.styles)
-  NEW PROJECTS: use "classic" (the default) on a light page and "dark" on a dark page, the
+  NEW PROJECTS: use "light" (the default) on a light page and "dark" on a dark page, the
   looks of 02-comp-examples/select-box.htm, unless the user asks for another look ("ozden" / "ozdenDark" only when
   asked).
 - scale: multiplies every size (the style, width / height / panelMinWidth / panelMaxHeight, the spaces in the
@@ -118,8 +118,8 @@ const SelectBoxDefaults = {
     onChange: function (self) { }, // self.value, self.getSelectedOptions()
     onOpen: function (self) { },
     onClose: function (self) { },
-    styleName: "classic", // "classic", "dark", "ozden", "ozdenDark", "minimal", "minimalDark" or a name added to SelectBox.styles
-    style: { // Classic style package (default)
+    styleName: "light", // "light" ("classic": its old name), "dark", "ozden", "ozdenDark", "minimal", "minimalDark" or a name added to SelectBox.styles
+    style: { // Light style package (default)
         field: {
             color: White(1),
             border: 1,
@@ -295,7 +295,7 @@ const SelectBoxDefaults = {
 
 const SelectBox = function (params = {}) {
 
-    // Merge style package: params.style > SelectBox.styles[styleName] > SelectBoxDefaults.style (classic)
+    // Merge style package: params.style > SelectBox.styles[styleName] > SelectBoxDefaults.style (light)
     basic.applyStylePackage(params, SelectBox.styles, SelectBoxDefaults);
     SelectBox.fillSearchInputPackage(params.style);
 
@@ -1656,7 +1656,7 @@ SelectBox.getCheckSvg = function (checked, style, size = 18) {
 SelectBox.styles = {
 
     // White field, dark text, a soft line.
-    classic: SelectBoxDefaults.style,
+    light: SelectBoxDefaults.style,
 
     // Dark theme. (The other dark packages use these colors.)
     dark: {
@@ -1705,6 +1705,7 @@ SelectBox.styles = {
     },
 
 };
+SelectBox.styles.classic = SelectBox.styles.light; // the old name of light: the pages made with it keep their look
 
 
 // A whitesmoke box with a thin border, the list opens over the field with a fade, a white search box (SearchInput),

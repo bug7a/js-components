@@ -14,8 +14,8 @@ UI COMPONENT TEMPLATE
 - The empty circle under the mouse: style.hoverMark (its borderColor, and its color when given; v26.11).
 - style.focus.ringColor: the keyboard focus shows on the mark (its edge in this color, 2 px). "": none (the old
   packages); "minimal" / "minimalDark" have it.
-- Style packages: "classic" (default), "modern", "dark", "minimal", "minimalDark". Select with styleName. (RadioButton.styles)
-  NEW PROJECTS: use "classic" on a light page and "dark" on a dark page, unless the user
+- Style packages: "light" (default; the old name "classic" works too), "modern", "dark", "minimal", "minimalDark". Select with styleName. (RadioButton.styles)
+  NEW PROJECTS: use "light" on a light page and "dark" on a dark page, unless the user
   asks for another one ("modern" only when asked).
 
 Started Date: September 2026
@@ -39,8 +39,8 @@ const RadioButtonDefaults = {
     labelText: "",
     labelPosition: "right", // "right", "left"
     onChange: function (self) { }, // Called when this radio button is selected.
-    styleName: "classic", // "classic", "modern", "dark", "minimal", "minimalDark" or a name added to RadioButton.styles
-    style: { // Classic style package (default)
+    styleName: "light", // "light" ("classic": its old name), "modern", "dark", "minimal", "minimalDark" or a name added to RadioButton.styles
+    style: { // Light style package (default)
         box: { // Whole object background
             color: "transparent",
             round: 0,
@@ -95,7 +95,7 @@ const RadioButtonDefaults = {
 
 const RadioButton = function (params = {}) {
 
-    // Merge style package: params.style > RadioButton.styles[styleName] > RadioButtonDefaults.style (classic)
+    // Merge style package: params.style > RadioButton.styles[styleName] > RadioButtonDefaults.style (light)
     basic.applyStylePackage(params, RadioButton.styles, RadioButtonDefaults);
 
     // Merge params:
@@ -414,7 +414,7 @@ RadioButton.clear = function (group = "default") {
 RadioButton.styles = {
 
     // White circle with a border. When checked, dark border and dark dot. No background.
-    classic: RadioButtonDefaults.style,
+    light: RadioButtonDefaults.style,
 
     // Light circle, thin border. When checked, the dot in a white circle with an edge.
     modern: {
@@ -489,6 +489,7 @@ RadioButton.styles = {
     },
 
 };
+RadioButton.styles.classic = RadioButton.styles.light; // the old name of light: the pages made with it keep their look
 
 // The minimal theme (_designs/minimal-theme.htm): a 14 px circle of a line, darker under the mouse; when checked an ink
 // line and a 6 px ink dot inside it, no fill; a 13 px text.

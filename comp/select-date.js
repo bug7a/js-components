@@ -10,7 +10,7 @@ UI COMPONENT TEMPLATE
 - Supports: minDate, maxDate, first day of week, date format, language (en, tr),
   Today/Clear buttons, enabled, keyboard navigation.
 - Everything is drawn with code (no image files needed).
-- Style packages: "classic" (default), "dark". Select with styleName. (SelectDate.styles)
+- Style packages: "light" (default; the old name "classic" works too), "dark". Select with styleName. (SelectDate.styles)
 - scale: multiplies every size (the style, width / height, the field, the calendar and its cells). Its default is
   basic.uiScale: on a page fitted with page.fit() (basic.uiScale = 1 / page.zoom) the field and the calendar keep
   their size on the screen. (Needs basic.js v26.11.01 for a scale other than 1.)
@@ -48,8 +48,8 @@ const SelectDateDefaults = {
     onChange: function (self) { }, // self.date (Date or null), self.value ("YYYY-MM-DD"), self.dateText
     onOpen: function (self) { },
     onClose: function (self) { },
-    styleName: "classic", // "classic", "dark" or a name added to SelectDate.styles
-    style: { // Classic style package (default)
+    styleName: "light", // "light" ("classic": its old name), "dark" or a name added to SelectDate.styles
+    style: { // Light style package (default)
         field: {
             color: White(1),
             border: 1,
@@ -126,7 +126,7 @@ const SelectDateDefaults = {
 
 const SelectDate = function (params = {}) {
 
-    // Merge style package: params.style > SelectDate.styles[styleName] > SelectDateDefaults.style (classic)
+    // Merge style package: params.style > SelectDate.styles[styleName] > SelectDateDefaults.style (light)
     basic.applyStylePackage(params, SelectDate.styles, SelectDateDefaults);
 
     // Merge params:
@@ -982,7 +982,7 @@ SelectDate.format = function (date, format = "DD.MM.YYYY", language = "en") {
 SelectDate.styles = {
 
     // White, dark text, a soft line.
-    classic: SelectDateDefaults.style,
+    light: SelectDateDefaults.style,
 
     // Dark theme, same colors as SelectBox "dark".
     dark: {
@@ -1005,3 +1005,4 @@ SelectDate.styles = {
     },
 
 };
+SelectDate.styles.classic = SelectDate.styles.light; // the old name of light: the pages made with it keep their look

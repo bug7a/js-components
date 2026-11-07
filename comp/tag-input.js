@@ -16,7 +16,7 @@ UI COMPONENT TEMPLATE
   ArrowLeft / ArrowRight move between the chips, Delete removes the selected chip. Escape closes the suggestions.
 - Counter: "3 / 5" when there is a maxTags limit.
 - Accessibility: The chips have role="listitem" and aria-labels, the suggestion list is a listbox.
-- Style packages: "classic" (default), "modern", "dark". Select with styleName. (TagInput.styles)
+- Style packages: "light" (default; the old name "classic" works too), "modern", "dark". Select with styleName. (TagInput.styles)
 - Everything is drawn with code (no image files needed).
 
 USAGE:
@@ -74,8 +74,8 @@ const TagInputDefaults = {
         long: "A tag can have up to {max} characters.",
         notAllowed: "Choose a tag from the list.",
     },
-    styleName: "classic", // "classic", "modern", "dark" or a name added to TagInput.styles
-    style: { // Classic style package (default)
+    styleName: "light", // "light" ("classic": its old name), "modern", "dark" or a name added to TagInput.styles
+    style: { // Light style package (default)
         field: {
             color: White(1),
             border: 1,
@@ -169,7 +169,7 @@ const TagInputDefaults = {
 
 const TagInput = function (params = {}) {
 
-    // Merge style package: params.style > TagInput.styles[styleName] > TagInputDefaults.style (classic)
+    // Merge style package: params.style > TagInput.styles[styleName] > TagInputDefaults.style (light)
     basic.applyStylePackage(params, TagInput.styles, TagInputDefaults);
 
     // Merge params:
@@ -1018,7 +1018,7 @@ TagInput.injectCss = function () {
 TagInput.styles = {
 
     // Gray chips in a white field.
-    classic: TagInputDefaults.style,
+    light: TagInputDefaults.style,
 
     // Round cadetblue chips, same colors as the modern CheckBox, RadioButton and ProgressBar.
     modern: {
@@ -1067,3 +1067,4 @@ TagInput.styles = {
     },
 
 };
+TagInput.styles.classic = TagInput.styles.light; // the old name of light: the pages made with it keep their look

@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-    <title>Search Input: classic</title>
+    <title>Search Input: light</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -18,9 +18,9 @@
 
         /* Bismillah */
 
-        // DESIGN PAGE: SearchInput with styleName "classic": a standard search box: white, a thin
+        // DESIGN PAGE: SearchInput with styleName "light": a standard search box: white, a thin
         // gray edge, round corners, a line search icon on the left, a gray round clear button; while typing the edge is
-        // dark and 2 px (focusBorderColor). The look comes only from the package (SearchInput.styles.classic): the
+        // dark and 2 px (focusBorderColor). The look comes only from the package (SearchInput.styles.light): the
         // samples give no look params. Without a styleName a SearchInput has the "original" look (the default).
 
         // *** THE COLORS AND SIZES OF THE PAGE
@@ -41,17 +41,17 @@
                 // WHY 16 at the sides: the white card fills a phone (390 px)
                 VGroup({ width: "100%", height: "auto", align: "left top", gap: 24, padding: [16, 40] });
 
-                    Label({ text: "SearchInput: classic", fontSize: 24, bold: 1, textColor: Black(0.8) });
+                    Label({ text: "SearchInput: light", fontSize: 24, bold: 1, textColor: Black(0.8) });
 
-                    caption("classic · empty (click it: the edge while typing)");
+                    caption("light · empty (click it: the edge while typing)");
                     SearchInput({
-                        styleName: "classic",
+                        styleName: "light",
                         onSearch: showSearched,
                     });
 
-                    caption("classic · with text (setText shows the clear icon)");
+                    caption("light · with text (setText shows the clear icon)");
                     const searchWithText = SearchInput({
-                        styleName: "classic",
+                        styleName: "light",
                         placeholderText: "Search products",
                         onSearch: showSearched,
                     });
@@ -70,9 +70,9 @@
                         borderColor: Black(0.1),
                         css: { maxWidth: CARD_WIDTH + "px" },
                     });
-                        caption("classic · on a white card, as wide as the card (width: \"100%\")");
+                        caption("light · on a white card, as wide as the card (width: \"100%\")");
                         SearchInput({
-                            styleName: "classic",
+                            styleName: "light",
                             width: "100%",
                             placeholderText: "Search in all pages",
                             onSearch: showSearched,

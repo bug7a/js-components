@@ -19,7 +19,7 @@ UI COMPONENT TEMPLATE
 - onChange is called while dragging (every new value), onChangeEnd when the change is finished
   (the drag is released, a key step, a typed value). Neither is called at create time or with silent: 1.
 - Everything is drawn with code (no image files needed). Accessibility: role="slider", aria-valuenow...
-- Style packages: "classic" (default), "modern", "dark", "ozden". Select with styleName. (SliderField.styles)
+- Style packages: "light" (default; the old name "classic" works too), "modern", "dark", "ozden". Select with styleName. (SliderField.styles)
   "ozden" (a more usable look for general use), in the colors of SmartButton: a cyan fill with
   an edge and a white knob; the label is always on the fill and the value never (style.fill.aroundLabel, beforeValue),
   a focus ring. Its sample: 02-comp-examples/slider-field-ozden.htm.
@@ -65,8 +65,8 @@ const SliderFieldDefaults = {
     valueFormat: function (value, self) { return self.formatNumber(value) + self.unitText; }, // Text of the value
     onChange: function (self) { }, // self.value (also while dragging)
     onChangeEnd: function (self) { }, // After a drag, a key step or a typed value
-    styleName: "classic", // "classic", "modern", "dark", "ozden" or a name added to SliderField.styles
-    style: { // Classic style package (default)
+    styleName: "light", // "light" ("classic": its old name), "modern", "dark", "ozden" or a name added to SliderField.styles
+    style: { // Light style package (default)
         box: {
             color: "#F2F2F4",
             hoverColor: "", // Under the mouse. "": the same color
@@ -138,7 +138,7 @@ const SliderFieldDefaults = {
 
 const SliderField = function (params = {}) {
 
-    // Merge style package: params.style > SliderField.styles[styleName] > SliderFieldDefaults.style (classic)
+    // Merge style package: params.style > SliderField.styles[styleName] > SliderFieldDefaults.style (light)
     basic.applyStylePackage(params, SliderField.styles, SliderFieldDefaults);
 
     // Merge params:
@@ -849,7 +849,7 @@ SliderField.measureText = function (text, elem) {
 SliderField.styles = {
 
     // Light gray field, gray fill. (Like the property sliders of design tools)
-    classic: SliderFieldDefaults.style,
+    light: SliderFieldDefaults.style,
 
     // For general use: the colors of SmartButton and of ProgressBar
     // ozden. The fill is a cyan SmartButton ozdenType1 (an edge and a line at its bottom) that ends with a white knob,
@@ -897,3 +897,4 @@ SliderField.styles = {
     },
 
 };
+SliderField.styles.classic = SliderField.styles.light; // the old name of light: the pages made with it keep their look

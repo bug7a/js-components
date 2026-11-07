@@ -58,8 +58,8 @@ const GaugeDefaults = {
     duration: 600, // Length of the animation, in milliseconds.
     ariaLabel: "Gauge",
     onValueChange: function (self) { },
-    styleName: "classic", // "classic", "dark", "modern" or a name added to Gauge.styles
-    style: { // Classic style package (default)
+    styleName: "light", // "light" ("classic": its old name), "dark", "modern" or a name added to Gauge.styles
+    style: { // Light style package (default)
         track: {
             color: Black(0.08),
             width: 12,
@@ -95,7 +95,7 @@ const GaugeDefaults = {
 
 const Gauge = function (params = {}) {
 
-    // Merge style package: params.style > Gauge.styles[styleName] > GaugeDefaults.style (classic)
+    // Merge style package: params.style > Gauge.styles[styleName] > GaugeDefaults.style (light)
     basic.applyStylePackage(params, Gauge.styles, GaugeDefaults);
 
     // Merge params:
@@ -410,7 +410,7 @@ const Gauge = function (params = {}) {
 Gauge.styles = {
 
     // On a light card.
-    classic: GaugeDefaults.style,
+    light: GaugeDefaults.style,
 
     // On a dark card. The same colors as the "dark" Tabs, Stepper and SidePanel.
     dark: {
@@ -433,3 +433,4 @@ Gauge.styles = {
     },
 
 };
+Gauge.styles.classic = Gauge.styles.light; // the old name of light: the pages made with it keep their look

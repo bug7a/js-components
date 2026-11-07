@@ -40,7 +40,7 @@ const NumericKeyboardDefaults = {
     showValue: 1, // 0: only the keys (the value is shown somewhere else)
     onChange: function (self) {},
     onEnter: function (self) {},
-    styleName: "classic", // "classic", "dark" or a name added to NumericKeyboard.styles
+    styleName: "light", // "light" ("classic": its old name), "dark" or a name added to NumericKeyboard.styles
     style: { // Classic style package
         box: { color: "transparent" },
         layout: { gap: 10, padding: [35, 20] },
@@ -276,10 +276,10 @@ const NumericKeyboard = function (params = {}) {
 
 // *** STYLE PACKAGES:
 // USAGE: NumericKeyboard({ styleName: "dark" })
-// NOTE: A new package needs only the keys that differ from the classic style.
+// NOTE: A new package needs only the keys that differ from the light style.
 NumericKeyboard.styles = {
 
-    classic: NumericKeyboardDefaults.style,
+    light: NumericKeyboardDefaults.style,
 
     // For a dark page.
     dark: {
@@ -293,3 +293,4 @@ NumericKeyboard.styles = {
     },
 
 };
+NumericKeyboard.styles.classic = NumericKeyboard.styles.light; // the old name of light: the pages made with it keep their look

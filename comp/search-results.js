@@ -19,7 +19,7 @@ UI COMPONENT
 - attachTo(inputElement) does the whole keyboard work: ArrowUp / ArrowDown move, Enter opens,
   Escape closes, focus reopens the last results and blur closes them.
 - The texts are written with plainText (textContent), so a name with < or & is shown as it is.
-- Style packages: "classic" (default), "dark", "modern". Select with styleName. (SearchResults.styles)
+- Style packages: "light" (default; the old name "classic" works too), "dark", "modern". Select with styleName. (SearchResults.styles)
 
 USAGE:
 const results = SearchResults({
@@ -65,8 +65,8 @@ const SearchResultsDefaults = {
     onOpen: function (self) { },
     onClose: function (self) { },
     onActiveChange: function (self, item, index) { },
-    styleName: "classic", // "classic", "dark", "modern" or a name added to SearchResults.styles
-    style: { // Classic style package (default)
+    styleName: "light", // "light" ("classic": its old name), "dark", "modern" or a name added to SearchResults.styles
+    style: { // Light style package (default)
         box: {
             color: White(1),
             border: 1,
@@ -120,7 +120,7 @@ const SearchResultsDefaults = {
 
 const SearchResults = function (params = {}) {
 
-    // Merge style package: params.style > SearchResults.styles[styleName] > SearchResultsDefaults.style (classic)
+    // Merge style package: params.style > SearchResults.styles[styleName] > SearchResultsDefaults.style (light)
     basic.applyStylePackage(params, SearchResults.styles, SearchResultsDefaults);
 
     // Merge params:
@@ -564,7 +564,7 @@ const SearchResults = function (params = {}) {
 SearchResults.styles = {
 
     // White list, gray text.
-    classic: SearchResultsDefaults.style,
+    light: SearchResultsDefaults.style,
 
     // Dark list. The same colors as the "dark" Tabs, Stepper and SidePanel.
     dark: {
@@ -591,3 +591,4 @@ SearchResults.styles = {
     },
 
 };
+SearchResults.styles.classic = SearchResults.styles.light; // the old name of light: the pages made with it keep their look

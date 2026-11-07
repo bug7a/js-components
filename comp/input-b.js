@@ -55,7 +55,7 @@ WebSite: https://bug7a.github.io/js-components
 -- hintColor: the bubble of a button of the field (the show password button of PasswordInputB) when color is "".
 -- The tooltip of the warning ball. color "": requiredColor / warningColor.
 
-- styleName: "classic" (default) | "dark" | "ozden" | "ozdenDark" | "minimal" | "minimalDark"  (InputB.styles)
+- styleName: "light" (default; "classic": its old name) | "dark" | "ozden" | "ozdenDark" | "minimal" | "minimalDark"  (InputB.styles)
 -- minimal / minimalDark (_designs/minimal-theme.htm): the title over a 28 px field of a line (titlePosition "above").
 - The sizes: titleFontSize, inputFontSize, inputHeight, fieldPadding, descriptionFontSize (the defaults: 16, 20, 40, 14, 14).
 - titlePosition: "inside" (default: the title in the field) | "above" (the title over the field, titleGap under it).
@@ -81,7 +81,7 @@ WebSite: https://bug7a.github.io/js-components
 const InputBDefaults = {
 
     key: "0",
-    styleName: "classic", // "classic", "dark", "ozden", "ozdenDark", "minimal", "minimalDark" or a name added to InputB.styles
+    styleName: "light", // "light" ("classic": its old name), "dark", "ozden", "ozdenDark", "minimal", "minimalDark" or a name added to InputB.styles
     type: "text",
     width: 350,
     height: "auto",
@@ -717,7 +717,7 @@ InputB.setPlaceholderColor = function(inputElement, color) {
 InputB.styles = {
 
     // The default look (InputBDefaults): a light field with a line under it.
-    classic: { style: {} },
+    light: { style: {} },
 
     // The dark theme of classic: the same shape (a line under the field, no border, the warning as a colored
     // ball), each color of classic turned to its dark side. (The rounded, bordered dark fields are ozdenDark.)
@@ -836,6 +836,7 @@ InputB.styles = {
     },
 
 };
+InputB.styles.classic = InputB.styles.light; // the old name of light: the pages made with it keep their look
 
 // The minimal theme (_designs/minimal-theme.htm): the title (12 px) over the field, a 28 px field of a line with a
 // 13 px text, no fill; the line gets darker under the mouse and turns ink while typing. minimalDark: the same on a

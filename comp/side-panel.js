@@ -22,7 +22,7 @@ UI COMPONENT
 - The content goes into the body with startBody() ... endBody(). The body scrolls when it is tall.
 - onBeforeClose can stop the closing. (Ex: unsaved changes.)
 - Everything is drawn with code (no image files needed). Accessibility: role="dialog", aria-modal.
-- Style packages: "classic" (default), "modern", "dark". Select with styleName. (SidePanel.styles)
+- Style packages: "light" (default; the old name "classic" works too), "modern", "dark". Select with styleName. (SidePanel.styles)
 
 USAGE:
 const panel = SidePanel({ side: "right", titleText: "Filters" });
@@ -69,8 +69,8 @@ const SidePanelDefaults = {
     onOpen: function (self) { },
     onClose: function (self) { },
     onBeforeClose: function (self) { }, // Return false to keep the panel open.
-    styleName: "classic", // "classic", "modern", "dark" or a name added to SidePanel.styles
-    style: { // Classic style package (default)
+    styleName: "light", // "light" ("classic": its old name), "modern", "dark" or a name added to SidePanel.styles
+    style: { // Light style package (default)
         panel: {
             color: White(1),
             border: 1,
@@ -108,7 +108,7 @@ const SidePanelDefaults = {
 
 const SidePanel = function (params = {}) {
 
-    // Merge style package: params.style > SidePanel.styles[styleName] > SidePanelDefaults.style (classic)
+    // Merge style package: params.style > SidePanel.styles[styleName] > SidePanelDefaults.style (light)
     basic.applyStylePackage(params, SidePanel.styles, SidePanelDefaults);
 
     // Merge params:
@@ -562,7 +562,7 @@ SidePanel.Z_INDEX = 1000;
 SidePanel.styles = {
 
     // White panel, gray divider.
-    classic: SidePanelDefaults.style,
+    light: SidePanelDefaults.style,
 
     // Round corners, cadetblue title. Same colors as the modern Tabs, Stepper and ProgressBar.
     modern: {
@@ -585,3 +585,4 @@ SidePanel.styles = {
     },
 
 };
+SidePanel.styles.classic = SidePanel.styles.light; // the old name of light: the pages made with it keep their look

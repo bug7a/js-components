@@ -19,7 +19,7 @@ A select field that opens its list on the whole screen: a search box at the top,
   hidden when it closes and removed with the field (box.own); setItems() makes it again at the next open.
 - Motion: the list comes in from below with a fade in 0.2 s (transform and opacity) and goes out at once
 ; no motion when the system asks for reduced motion.
-- Style packages: "classic" (default), "dark". (FullScreenSelect.styles)
+- Style packages: "light" (default; the old name "classic" works too), "dark". (FullScreenSelect.styles)
 
 USAGE:
 const fruits = FullScreenSelect({
@@ -61,8 +61,8 @@ const FullScreenSelectDefaults = {
     onChange: function (self) {}, // self.selectedKey changed (not at create time, not with silent: 1)
     onOpen: function (self) {},
     onClose: function (self) {},
-    styleName: "classic", // "classic", "dark" or a name added to FullScreenSelect.styles
-    style: { // Classic style package (default)
+    styleName: "light", // "light" ("classic": its old name), "dark" or a name added to FullScreenSelect.styles
+    style: { // Light style package (default)
         box: { color: "whitesmoke", round: 4, border: 0 },
         focus: { ringColor: "rgba(95, 158, 160, 0.6)" },
         label: { left: 10, fontSize: 20, textColor: Black(0.8) },
@@ -83,7 +83,7 @@ const FullScreenSelectDefaults = {
 
 const FullScreenSelect = function (params = {}) {
 
-    // Merge style package: params.style > FullScreenSelect.styles[styleName] > FullScreenSelectDefaults.style (classic)
+    // Merge style package: params.style > FullScreenSelect.styles[styleName] > FullScreenSelectDefaults.style (light)
     basic.applyStylePackage(params, FullScreenSelect.styles, FullScreenSelectDefaults);
 
     // Merge params:
@@ -585,11 +585,11 @@ FullScreenSelect.toSearchText = function (value) {
 // *** STYLE PACKAGES:
 // USAGE: FullScreenSelect({ styleName: "dark" })
 // USAGE: FullScreenSelect({ style: { itemSelected: { color: "#BFDBC9" } } }) // Change only some keys.
-// NOTE: A new package needs only the keys that differ from the classic style.
+// NOTE: A new package needs only the keys that differ from the light style.
 FullScreenSelect.styles = {
 
     // A whitesmoke field, a white list, a soft yellow selected item.
-    classic: FullScreenSelectDefaults.style,
+    light: FullScreenSelectDefaults.style,
 
     // For a dark page.
     dark: {
@@ -610,3 +610,4 @@ FullScreenSelect.styles = {
     },
 
 };
+FullScreenSelect.styles.classic = FullScreenSelect.styles.light; // the old name of light: the pages made with it keep their look

@@ -21,7 +21,7 @@ UI COMPONENT TEMPLATE
 - Keyboard: Tab to a label, Enter / Space selects it, Delete removes it, Escape closes the panel.
 - getLabels() / setLabels() give and take plain objects, to save the work or to draw it somewhere else.
 - The label texts are shown as plain text (not HTML).
-- Style packages: "classic" (default), "dark". Select with styleName. (LabelEditor.styles)
+- Style packages: "light" (default; the old name "classic" works too), "dark". Select with styleName. (LabelEditor.styles)
 
 NEEDS: basic.js v26.10.27 (its "dark" package is a package of params).
 NEEDS (load them before this file):
@@ -121,8 +121,8 @@ const LabelEditorDefaults = {
     onChange: function (self) { }, // The labels changed. self.getLabels()
     onSelect: function (self, index) { }, // index: -1 when nothing is selected
     onStylesChange: function (self) { }, // The saved styles changed. self.getSavedStyles()
-    styleName: "classic", // "classic", "dark" or a name added to LabelEditor.styles
-    style: { // Classic style package (default)
+    styleName: "light", // "light" ("classic": its old name), "dark" or a name added to LabelEditor.styles
+    style: { // Light style package (default)
         box: { color: "#F4F5F2", border: 1, borderColor: Black(0.12), round: 10 },
         header: { color: White(1), dividerColor: Black(0.08), titleColor: "#1F2328", titleSize: 15 },
         list: { color: "#F4F5F2", padding: 24, gap: 12, emptyColor: Black(0.4) },
@@ -134,11 +134,11 @@ const LabelEditorDefaults = {
         chip: { color: White(1), borderColor: Black(0.14), activeBorderColor: "#2F6FB0", round: 16, closeColor: Black(0.4) },
         // The components in the panel: their style package names and their style changes.
         // WHY: Not nested deeper (Ex: parts.checkBox.style.label): mergeIntoIfMissing stops at 4 levels.
-        sidePanelStyleName: "classic",
-        stepperStyleName: "classic",
-        tabsStyleName: "classic",
-        checkBoxStyleName: "classic",
-        selectColorStyleName: "classic",
+        sidePanelStyleName: "light",
+        stepperStyleName: "light",
+        tabsStyleName: "light",
+        checkBoxStyleName: "light",
+        selectColorStyleName: "light",
         sidePanelStyle: {},
         stepperStyle: {},
         tabsStyle: {},
@@ -157,7 +157,7 @@ const LabelEditor = function (params = {}) {
     ].filter(function (pair) { return pair[1] === "undefined"; }).map(function (pair) { return pair[0]; });
     if (_missing.length) console.error("LabelEditor: Load these components before label-editor.js: " + _missing.join(", "));
 
-    // Merge style package: your params > LabelEditor.styles[styleName] > LabelEditorDefaults (classic)
+    // Merge style package: your params > LabelEditor.styles[styleName] > LabelEditorDefaults (light)
     basic.applyStylePackage(params, LabelEditor.styles, LabelEditorDefaults);
 
     // Merge params:
@@ -1088,14 +1088,14 @@ LabelEditor.getCloseSvg = function (color, size) {
 // *** STYLE PACKAGES:
 // USAGE: LabelEditor({ styleName: "dark" })
 // USAGE: LabelEditor({ style: { selection: { color: "tomato" } } }) // Change only some keys.
-// USAGE: LabelEditor({ style: LabelEditor.styles.classic }) // The same as styleName: "classic". (The package is copied, never changed.)
+// USAGE: LabelEditor({ style: LabelEditor.styles.light }) // The same as styleName: "light". (The package is copied, never changed.)
 // NOTE: "dark" is a package of params (it has a "style" key): it also gives new labels a light text color and a palette for the dark list. Use it with styleName: "dark".
 // NOTE: A new package needs only the keys that differ from the default (classic) style.
 // NOTE: xxxStyleName / xxxStyle: the style package and the style changes of the components in the panel.
 LabelEditor.styles = {
 
     // Light gray work area, white header and panel.
-    classic: LabelEditorDefaults.style,
+    light: LabelEditorDefaults.style,
 
     // Dark theme, same colors as SidePanel, Stepper and Tabs "dark".
     // A package of params (basic.js v26.10.27): "style" is the look, "newLabel" the new labels, "colorPalette" the color pickers.
@@ -1135,3 +1135,4 @@ LabelEditor.styles = {
     },
 
 };
+LabelEditor.styles.classic = LabelEditor.styles.light; // the old name of light: the pages made with it keep their look

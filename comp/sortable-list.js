@@ -20,7 +20,7 @@ UI COMPONENT TEMPLATE
 - onChange(self, item, fromIndex, toIndex) is NOT called when the component is created,
   by setItems() or by the silent: 1 parameter.
 - Everything is drawn with code (no image files needed).
-- Style packages: "classic" (default), "modern", "dark". Select with styleName. (SortableList.styles)
+- Style packages: "light" (default; the old name "classic" works too), "modern", "dark". Select with styleName. (SortableList.styles)
 
 USAGE:
 const list = SortableList({
@@ -79,8 +79,8 @@ const SortableListDefaults = {
     onItemClick: function (self, item, index) { },
     onDragStart: function (self, item, index) { },
     onDragEnd: function (self, item, index) { }, // index: the new position
-    styleName: "classic", // "classic", "modern", "dark" or a name added to SortableList.styles
-    style: { // Classic style package (default)
+    styleName: "light", // "light" ("classic": its old name), "modern", "dark" or a name added to SortableList.styles
+    style: { // Light style package (default)
         box: {
             color: "transparent",
             border: 0,
@@ -159,7 +159,7 @@ const SortableListDefaults = {
 
 const SortableList = function (params = {}) {
 
-    // Merge style package: params.style > SortableList.styles[styleName] > SortableListDefaults.style (classic)
+    // Merge style package: params.style > SortableList.styles[styleName] > SortableListDefaults.style (light)
     basic.applyStylePackage(params, SortableList.styles, SortableListDefaults);
 
     // Merge params:
@@ -1137,7 +1137,7 @@ SortableList.getCloseSvg = function (color, size) {
 SortableList.styles = {
 
     // White rows with a thin border.
-    classic: SortableListDefaults.style,
+    light: SortableListDefaults.style,
 
     // Soft cadetblue rows, no border. Same colors as the modern Stepper, CheckBox, ProgressBar and Tabs.
     modern: {
@@ -1171,3 +1171,4 @@ SortableList.styles = {
     },
 
 };
+SortableList.styles.classic = SortableList.styles.light; // the old name of light: the pages made with it keep their look

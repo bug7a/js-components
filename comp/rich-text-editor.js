@@ -20,7 +20,7 @@ UI COMPONENT TEMPLATE
   basic/scroll-bar.js (if it is loaded).
 - onChange(self) is called while the user writes. It is NOT called when the component is created or by setHtml().
 - Everything is drawn with code (no image files needed).
-- Style packages: "classic" (default), "modern", "dark". Select with styleName. (RichTextEditor.styles)
+- Style packages: "light" (default; the old name "classic" works too), "modern", "dark". Select with styleName. (RichTextEditor.styles)
 
 USAGE:
 const editor = RichTextEditor({
@@ -84,8 +84,8 @@ const RichTextEditorDefaults = {
     onChange: function (self) { }, // self.getHtml(), self.getText()
     onFocus: function (self) { },
     onBlur: function (self) { },
-    styleName: "classic", // "classic", "modern", "dark" or a name added to RichTextEditor.styles
-    style: { // Classic style package (default)
+    styleName: "light", // "light" ("classic": its old name), "modern", "dark" or a name added to RichTextEditor.styles
+    style: { // Light style package (default)
         box: {
             color: White(1),
             border: 1,
@@ -156,7 +156,7 @@ const RichTextEditorDefaults = {
 
 const RichTextEditor = function (params = {}) {
 
-    // Merge style package: params.style > RichTextEditor.styles[styleName] > RichTextEditorDefaults.style (classic)
+    // Merge style package: params.style > RichTextEditor.styles[styleName] > RichTextEditorDefaults.style (light)
     basic.applyStylePackage(params, RichTextEditor.styles, RichTextEditorDefaults);
 
     // Merge params:
@@ -1029,7 +1029,7 @@ RichTextEditor.injectCss = function () {
 RichTextEditor.styles = {
 
     // White area, light gray toolbar.
-    classic: RichTextEditorDefaults.style,
+    light: RichTextEditorDefaults.style,
 
     // Rounder, cadetblue. Same colors as the modern Stepper, SortableList, CheckBox and Tabs.
     modern: {
@@ -1059,3 +1059,4 @@ RichTextEditor.styles = {
     },
 
 };
+RichTextEditor.styles.classic = RichTextEditor.styles.light; // the old name of light: the pages made with it keep their look

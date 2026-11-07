@@ -81,7 +81,7 @@ const JsonViewDefaults = {
             array: Black(0.45),
             page: Black(0.5),
         },
-        // A style of TreeView, over its "classic" package
+        // A style of TreeView, over its "light" package
         tree: {
             box: { color: "transparent", padding: [6, 6] },
             row: { height: 26, fontSize: 13, textColor: Black(0.8), indent: 16, gap: 8 },
@@ -93,7 +93,7 @@ const JsonViewDefaults = {
             empty: { textColor: Black(0.45), fontSize: 14 },
         },
         error: { textColor: "#C0392B" }, // A text that is not JSON
-        menuStyleName: "classic", // The package of its menu
+        menuStyleName: "light", // The package of its menu
         menu: { item: { height: 30, fontSize: 13 } }, // Over that package
         menuMinWidth: 150,
     },
@@ -299,7 +299,7 @@ const JsonView = function (params = {}) {
                 emptyText: box.emptyText,
                 useScrollBar: box.useScrollBar,
                 ariaLabel: box.ariaLabel,
-                styleName: "classic",
+                styleName: "light",
                 style: _s.tree,
                 onSelect: onTreeSelect,
                 onToggle: onToggle,

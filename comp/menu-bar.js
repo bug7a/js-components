@@ -80,7 +80,7 @@ const MenuBarDefaults = {
         titleOpen: { color: Black(0.11) },
         disabled: { opacity: 0.4 },
         focus: { ringColor: "rgba(63, 141, 148, 0.8)" },
-        menuStyleName: "classic", // The package of its ContextMenus
+        menuStyleName: "light", // The package of its ContextMenus
         menu: { // Over that package
             item: { height: 30, fontSize: 13 },
         },

@@ -19,7 +19,7 @@ UI COMPONENT TEMPLATE
 - For a menu of a program (MenuBar uses them): an item with shortcut has a soft text at its end (only
   a text: the page runs it, or MenuBar), an item with checked (0 / 1) has a check mark in the icon place
   (setItemChecked), and openBelow(obj) opens the menu under an object (over it when there is no room).
-- Style packages: "classic" (default), "dark". Select with styleName. (ContextMenu.styles)
+- Style packages: "light" (default; the old name "classic" works too), "dark". Select with styleName. (ContextMenu.styles)
 
 ITEM: { text, key, iconFile, icon, items, shortcut, checked, enabled, data, onClick }
 - A string is also accepted: "Copy" -> { text: "Copy" }
@@ -66,8 +66,8 @@ const ContextMenuDefaults = {
     onClose: function (self) { },
     onSideKey: function (self, direction) { }, // ArrowRight (1) / ArrowLeft (-1) that no submenu takes (MenuBar: the next menu)
     parentMenu: null, // (inside) The menu of a submenu: it handles the keys and the clicks outside for it.
-    styleName: "classic", // "classic", "dark" or a name added to ContextMenu.styles
-    style: { // Classic style package (default)
+    styleName: "light", // "light" ("classic": its old name), "dark" or a name added to ContextMenu.styles
+    style: { // Light style package (default)
         menu: {
             color: "white",
             border: 1,
@@ -117,7 +117,7 @@ const ContextMenuDefaults = {
 
 const ContextMenu = function (params = {}) {
 
-    // Merge style package: params.style > ContextMenu.styles[styleName] > ContextMenuDefaults.style (classic)
+    // Merge style package: params.style > ContextMenu.styles[styleName] > ContextMenuDefaults.style (light)
     basic.applyStylePackage(params, ContextMenu.styles, ContextMenuDefaults);
 
     // Merge params:
@@ -906,7 +906,7 @@ ContextMenu.escapeHtml = basic.escapeHtml;
 ContextMenu.styles = {
 
     // White, dark text, a soft line.
-    classic: ContextMenuDefaults.style,
+    light: ContextMenuDefaults.style,
 
     // Dark theme, same colors as SelectBox "dark".
     dark: {
@@ -918,3 +918,4 @@ ContextMenu.styles = {
     },
 
 };
+ContextMenu.styles.classic = ContextMenu.styles.light; // the old name of light: the pages made with it keep their look

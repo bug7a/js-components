@@ -8,8 +8,8 @@ WHEN TO USE IT: to show very big data well, in both directions: very many rows (
 that are seen are made) and very many columns (it scrolls sideways). A table that looks better for data that is not so
 big: comp/data-table.js (DataTable). A few rows inside a text: comp/tiny-table.js (TinyTable).
 
-STYLE PACKAGES: "classic" (default) and "dark" are the looks of DataTable (comp/data-table.js);
-new pages use "classic" on a light page and "dark" on a dark page. "green" is the look of SmartTable before them (the
+STYLE PACKAGES: "light" (default; the old name "classic" works too) and "dark" are the looks of DataTable (comp/data-table.js);
+new pages use "light" on a light page and "dark" on a dark page. "green" is the look of SmartTable before them (the
 green title line, the dark edge). A package is a package of params: it also gives searchInputParams (the filter box is
 a SearchInput package: "ozden" / "ozdenDark"), scrollBarParams and searchTitleMenuParams. (SmartTable.styles)
 Sample: 02-comp-examples/smart-table.htm (the model page of SmartTable).
@@ -133,8 +133,8 @@ const SmartTableDefaults = {
         clearIconMinTextWidth: 80, // (a narrow filter box has no clear icon; its text keeps that place)
         clearOnEscape: 1, // Escape clears the filter (a narrow box has no clear icon)
     },
-    styleName: "classic", // "classic", "dark", "green" or a name added to SmartTable.styles
-    style: { // Classic style package (default): the look of DataTable "classic"
+    styleName: "light", // "light" ("classic": its old name), "dark", "green" or a name added to SmartTable.styles
+    style: { // Light style package (default): the look of DataTable "light"
 
         width: "auto",
         height: "auto",
@@ -185,7 +185,7 @@ const SmartTableDefaults = {
 
 const SmartTable = function (params = {}) {
 
-    // Merge style package: params.style > SmartTable.styles[styleName] (a package of params) > SmartTableDefaults (classic)
+    // Merge style package: params.style > SmartTable.styles[styleName] (a package of params) > SmartTableDefaults (light)
     basic.applyStylePackage(params, SmartTable.styles, SmartTableDefaults);
 
     // Merge params:
@@ -1702,9 +1702,9 @@ SmartTable.NOT_ASCII = /[^\u0000-\u007f]/;
 //       the classic look (SmartTableDefaults).
 SmartTable.styles = {
 
-    // The look of DataTable "classic": a light gray title line, striped rows, a soft yellow row under the mouse and
+    // The look of DataTable "light": a light gray title line, striped rows, a soft yellow row under the mouse and
     // a stronger one for the selected row; the filter box is the SearchInput "ozden". (SmartTableDefaults)
-    classic: { style: {} },
+    light: { style: {} },
 
     // The look of DataTable "dark", for a dark page; the filter box is the SearchInput "ozdenDark", the column list
     // is the ContextMenu "dark".
@@ -1802,3 +1802,4 @@ SmartTable.styles = {
     },
 
 };
+SmartTable.styles.classic = SmartTable.styles.light; // the old name of light: the pages made with it keep their look

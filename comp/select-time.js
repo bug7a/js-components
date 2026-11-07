@@ -13,7 +13,7 @@ UI COMPONENT TEMPLATE
   language (en, tr), Now/Clear buttons, enabled, keyboard navigation.
 - Everything is drawn with code (no image files needed).
 - Value: "HH:mm" text. (Ex: "19:30")
-- Style packages: "classic" (default), "dark". Select with styleName. (SelectTime.styles)
+- Style packages: "light" (default; the old name "classic" works too), "dark". Select with styleName. (SelectTime.styles)
 
 Keyboard (when the panel is focused):
 - ArrowUp/ArrowDown: change the value of the active column, ArrowLeft/ArrowRight: change the column,
@@ -49,8 +49,8 @@ const SelectTimeDefaults = {
     onChange: function (self) { }, // self.value ("19:30" or ""), self.hours, self.minutes (number or null), self.timeText
     onOpen: function (self) { },
     onClose: function (self) { },
-    styleName: "classic", // "classic", "dark" or a name added to SelectTime.styles
-    style: { // Classic style package (default)
+    styleName: "light", // "light" ("classic": its old name), "dark" or a name added to SelectTime.styles
+    style: { // Light style package (default)
         field: {
             color: White(1),
             border: 1,
@@ -132,7 +132,7 @@ const SelectTimeDefaults = {
 
 const SelectTime = function (params = {}) {
 
-    // Merge style package: params.style > SelectTime.styles[styleName] > SelectTimeDefaults.style (classic)
+    // Merge style package: params.style > SelectTime.styles[styleName] > SelectTimeDefaults.style (light)
     basic.applyStylePackage(params, SelectTime.styles, SelectTimeDefaults);
 
     // Merge params:
@@ -960,7 +960,7 @@ SelectTime.format = function (minutesOfDay, format = "HH:mm") {
 SelectTime.styles = {
 
     // White, dark text, a soft line.
-    classic: SelectTimeDefaults.style,
+    light: SelectTimeDefaults.style,
 
     // Dark theme, same colors as SelectBox "dark".
     dark: {
@@ -981,3 +981,4 @@ SelectTime.styles = {
     },
 
 };
+SelectTime.styles.classic = SelectTime.styles.light; // the old name of light: the pages made with it keep their look

@@ -11,7 +11,7 @@ UI COMPONENT
   the text; every change of the selection goes to onChange (not at create time, not with silent: 1).
 - The fields of the kit: the search field is a SearchInput (comp/search-input.js, its
   params: searchInputParams, "ozden" by default) and every option is a CheckBox (comp/check-box.js, its params:
-  checkBoxParams, "classic" by default; the row is the check box, its checked mark takes the accent). Load them
+  checkBoxParams, "light" by default; the row is the check box, its checked mark takes the accent). Load them
   before this file; without them a plain field and a plain check are drawn.
 - animated: 1: the panel and an opened section come with a fade and a short slide (they go faster),
   the arrows turn with a small spring, and the search field and the check boxes get their own motions (SearchInput,
@@ -40,7 +40,7 @@ Filters({ panelOpened: 0 });                 // only the button: a click opens t
 Filters({ panelMode: "popup", panelOpened: 0 }); // the panel opens over the page; a click outside / Escape closes it
 Filters({ style: { accentColor: "#2E7D5B" } }); // change only some keys of the style
 Filters({ animated: 1 });                    // the motions (filters.setAnimated(0) stops them)
-Filters({ checkBoxParams: { styleName: "modern" }, searchInputParams: { styleName: "classic" } });
+Filters({ checkBoxParams: { styleName: "modern" }, searchInputParams: { styleName: "light" } });
 
 Started Date: October 2026
 Developer: Bugra Ozden
@@ -76,7 +76,7 @@ const FiltersDefaults = {
     // The check boxes: the params of every CheckBox (comp/check-box.js). The row look is
     // style.row and the checked mark is the accent; a style given here wins. Their animated is the animated of
     // Filters (unless it is given here).
-    checkBoxParams: { styleName: "classic", style: {} },
+    checkBoxParams: { styleName: "light", style: {} },
     onChange: function (self) { }, // The selection changed: self.getSelected(). (Not at create time, not with silent: 1)
     onPanelToggle: function (self) { }, // The panel opened / closed: self.panelOpened
     styleName: "light", // "light" or a name added to Filters.styles

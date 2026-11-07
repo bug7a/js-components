@@ -18,8 +18,8 @@ UI COMPONENT TEMPLATE
   setAnimated(0/1).
 - style.focus.ringColor: the keyboard focus shows on the mark (its edge in this color, 2 px). "": none (the old
   packages); "minimal" / "minimalDark" have it.
-- Style packages: "classic" (default), "modern", "dark", "minimal", "minimalDark". Select with styleName. (CheckBox.styles)
-  NEW PROJECTS: use "classic" on a light page and "dark" on a dark page, unless the user
+- Style packages: "light" (default; the old name "classic" works too), "modern", "dark", "minimal", "minimalDark". Select with styleName. (CheckBox.styles)
+  NEW PROJECTS: use "light" on a light page and "dark" on a dark page, unless the user
   asks for another one ("modern" only when asked).
 
 Started Date: September 2026
@@ -43,8 +43,8 @@ const CheckBoxDefaults = {
     wrapLabel: 0, // 1: a long label wraps (the check box needs a width); 0: one line
     animated: 0, // 1: the square grows a little under the mouse, the tick draws in (box.setAnimated(0/1))
     onChange: function (self) { }, // self.checked
-    styleName: "classic", // "classic", "modern", "dark", "minimal", "minimalDark" or a name added to CheckBox.styles
-    style: { // Classic style package (default)
+    styleName: "light", // "light" ("classic": its old name), "modern", "dark", "minimal", "minimalDark" or a name added to CheckBox.styles
+    style: { // Light style package (default)
         box: { // Whole object background
             color: "transparent",
             round: 0,
@@ -99,7 +99,7 @@ const CheckBoxDefaults = {
 
 const CheckBox = function (params = {}) {
 
-    // Merge style package: params.style > CheckBox.styles[styleName] > CheckBoxDefaults.style (classic)
+    // Merge style package: params.style > CheckBox.styles[styleName] > CheckBoxDefaults.style (light)
     basic.applyStylePackage(params, CheckBox.styles, CheckBoxDefaults);
 
     // Merge params:
@@ -381,7 +381,7 @@ const CheckBox = function (params = {}) {
 CheckBox.styles = {
 
     // White box with a border. When checked, dark filled box with a white tick. No background.
-    classic: CheckBoxDefaults.style,
+    light: CheckBoxDefaults.style,
 
     // Light box, thin border. When checked, the tick on a white square with an edge.
     modern: {
@@ -452,6 +452,7 @@ CheckBox.styles = {
     },
 
 };
+CheckBox.styles.classic = CheckBox.styles.light; // the old name of light: the pages made with it keep their look
 
 // The minimal theme (_designs/minimal-theme.htm): a 14 px square of a line, darker under the mouse; when checked an ink
 // line and an ink tick inside it, no fill; a 13 px text.

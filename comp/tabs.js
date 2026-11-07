@@ -20,7 +20,7 @@ UI COMPONENT TEMPLATE
   activates, Delete closes a closable tab. Tab key moves the focus out of the bar (roving tabindex).
 - Accessibility: tablist / tab / tabpanel roles, aria-selected, aria-controls.
 - onChange is NOT called when the component is created or when the value is set with silent: 1.
-- Style packages: "classic" (default), "modern", "dark". Select with styleName. (Tabs.styles)
+- Style packages: "light" (default; the old name "classic" works too), "modern", "dark". Select with styleName. (Tabs.styles)
 - Everything is drawn with code (no image files needed).
 - scale: multiplies every size (the style, width / height / barWidth / panelHeight, the spaces in the code).
   Its default is basic.uiScale: on a page fitted with page.fit() (basic.uiScale = 1 / page.zoom) the tabs keep
@@ -87,8 +87,8 @@ const TabsDefaults = {
     onChange: function (self) { }, // self.value, self.previousValue, self.getActiveTab()
     onClose: function (self, tab) { }, // Return false to keep the tab.
     onAdd: function (self) { },
-    styleName: "classic", // "classic", "modern", "dark", "minimal", "minimalDark" or a name added to Tabs.styles
-    style: { // Classic style package (default)
+    styleName: "light", // "light" ("classic": its old name), "modern", "dark", "minimal", "minimalDark" or a name added to Tabs.styles
+    style: { // Light style package (default)
         bar: { // Underline variant
             color: "transparent",
             padding: [0, 0], // [x, y]
@@ -196,7 +196,7 @@ const TabsDefaults = {
 
 const Tabs = function (params = {}) {
 
-    // Merge style package: params.style > Tabs.styles[styleName] > TabsDefaults.style (classic)
+    // Merge style package: params.style > Tabs.styles[styleName] > TabsDefaults.style (light)
     basic.applyStylePackage(params, Tabs.styles, TabsDefaults);
 
     // Merge params:
@@ -1279,7 +1279,7 @@ Tabs.injectCss = function () {
 Tabs.styles = {
 
     // Dark text and a dark line on a light page.
-    classic: TabsDefaults.style,
+    light: TabsDefaults.style,
 
     // Cadetblue, same colors as the modern CheckBox, RadioButton, ProgressBar and TagInput.
     modern: {
@@ -1326,6 +1326,7 @@ Tabs.styles = {
     },
 
 };
+Tabs.styles.classic = Tabs.styles.light; // the old name of light: the pages made with it keep their look
 
 // The minimal theme (_designs/minimal-theme.htm): a 13 px text, a 2 px ink line under the selected tab on one thin
 // line, no fill under the mouse (the text gets darker); the pill variant: a line around the bar and an ink line

@@ -22,7 +22,7 @@ UI COMPONENT TEMPLATE
   the part under it (limit.barColor on the bar, secondBarColor on the second part, color on the track; on a dark
   track darkTrack.limitColor), half and half while the end of the bar goes over it. The own color of a limit is
   its color on the track. limit.dotOpacity: every dot ("ozden": 0.85).
-- Style packages: "classic" (default), "modern", "ozden" (the bar is a cyan SmartButton
+- Style packages: "light" (default; the old name "classic" works too), "modern", "ozden" (the bar is a cyan SmartButton
   ozdenType1, with its edge and its line at the bottom; a round track, the second part a light bar next to it; a dark
   limit line with a text). "ozdenDark" (for a dark page). Select with styleName.
   (ProgressBar.styles)
@@ -66,8 +66,8 @@ const ProgressBarDefaults = {
     },
     onChange: function (self) { }, // self.value
     onComplete: function (self) { }, // Called once when the value reaches max.
-    styleName: "classic", // "classic", "modern", "ozden", "ozdenDark", "minimal", "minimalDark" or a name added to ProgressBar.styles
-    style: { // Classic style package (default)
+    styleName: "light", // "light" ("classic": its old name), "modern", "ozden", "ozdenDark", "minimal", "minimalDark" or a name added to ProgressBar.styles
+    style: { // Light style package (default)
         layout: {
             gap: 6, // Space between the title row and the bar
         },
@@ -142,7 +142,7 @@ const ProgressBarDefaults = {
 
 const ProgressBar = function (params = {}) {
 
-    // Merge style package: params.style > ProgressBar.styles[styleName] > ProgressBarDefaults.style (classic)
+    // Merge style package: params.style > ProgressBar.styles[styleName] > ProgressBarDefaults.style (light)
     basic.applyStylePackage(params, ProgressBar.styles, ProgressBarDefaults);
 
     // Merge params:
@@ -760,7 +760,7 @@ const ProgressBar = function (params = {}) {
 ProgressBar.styles = {
 
     // Thin dark bar on a light gray track.
-    classic: ProgressBarDefaults.style,
+    light: ProgressBarDefaults.style,
 
     // The ozden bar: the colors of
     // SmartButton. The bar is a cyan SmartButton ozdenType1 (its edge and its line at the bottom: it looks raised);
@@ -917,6 +917,7 @@ ProgressBar.styles = {
     },
 
 };
+ProgressBar.styles.classic = ProgressBar.styles.light; // the old name of light: the pages made with it keep their look
 
 // The moving stripes (a class can have an animation; its colors are css variables of the bar)
 ProgressBar.injectCss = function () {

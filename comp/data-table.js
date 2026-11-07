@@ -23,7 +23,7 @@ seen; 100 000 rows in about 0.1 s in the Tauri template). A few rows inside a te
 - The rows off the screen are not laid out or drawn (CSS content-visibility: auto): 10 000 rows came on the
   screen in 2.2 s before, 1.4 s now, a sort took 315 ms, now 210 ms.
 - The values are shown as plain text (a value can not inject HTML).
-- Style packages: "classic" (default), "minimal" (white, lines only), "dark". (DataTable.styles)
+- Style packages: "light" (default; the old name "classic" works too), "plain" (white, lines only), "dark". (DataTable.styles)
 
 A COLUMN:
 {
@@ -93,8 +93,8 @@ const DataTableDefaults = {
     onRowClick: function (self, row) {}, // A click on a row, or Enter on the selected row
     onSelect: function (self, row) {}, // The selected row changed (row: null when nothing is selected). Not with silent: 1
     onSort: function (self) {}, // self.sortKey, self.sortDirection
-    styleName: "classic", // "classic", "minimal", "dark" or a name added to DataTable.styles
-    style: { // Classic style package (default)
+    styleName: "light", // "light" ("classic": its old name), "plain", "dark" or a name added to DataTable.styles
+    style: { // Light style package (default)
         box: { color: "white", border: 1, borderColor: Black(0.15), round: 6 },
         focus: { ringColor: "rgba(95, 158, 160, 0.6)" },
         header: { height: 60, padding: [16, 0], gap: 12 },
@@ -132,7 +132,7 @@ const DataTableDefaults = {
 
 const DataTable = function (params = {}) {
 
-    // Merge style package: params.style > DataTable.styles[styleName] > DataTableDefaults.style (classic)
+    // Merge style package: params.style > DataTable.styles[styleName] > DataTableDefaults.style (light)
     basic.applyStylePackage(params, DataTable.styles, DataTableDefaults);
 
     // Merge params:
@@ -853,16 +853,16 @@ DataTable.getSearchIconFiles = function () {
 };
 
 // *** STYLE PACKAGES:
-// USAGE: DataTable({ styleName: "minimal" })
+// USAGE: DataTable({ styleName: "plain" })
 // USAGE: DataTable({ styleName: "dark", style: { row: { fontSize: 13 } } }) // Change only some keys.
-// NOTE: A new package needs only the keys that differ from the classic style.
+// NOTE: A new package needs only the keys that differ from the light style.
 DataTable.styles = {
 
     // A light gray title row, striped rows, a soft yellow selection.
-    classic: DataTableDefaults.style,
+    light: DataTableDefaults.style,
 
     // White, no stripes, only lines: a table in a page.
-    minimal: {
+    plain: {
         box: { color: "white", border: 0, round: 0 },
         titleRow: { height: 50, color: "white", lineColor: Black(0.2) },
         titleCell: { lineColor: "transparent", hoverColor: "whitesmoke", uppercase: 0 },
@@ -892,3 +892,4 @@ DataTable.styles = {
     },
 
 };
+DataTable.styles.classic = DataTable.styles.light; // the old name of light: the pages made with it keep their look

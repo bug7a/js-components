@@ -438,8 +438,8 @@ CATALOG.COMPONENTS = [
             { file: "02-comp-examples/smart-table-3.htm", title: "Edit & delete" },
             { file: "02-comp-examples/smart-table-4.htm", title: "Style" },
         ],
-        en: "Virtual-scroll table for millions of rows, with filtering, sorting, custom cells and editing. Style packages: classic (default) and dark, the looks of DataTable, and green (the old look). A cut text shows all of it in a bubble.",
-        tr: "Milyonlarca satır için sanal kaydırmalı tablo: filtreleme, sıralama, özel hücreler ve düzenleme. Stil paketleri: DataTable'ın görünüşleri classic (varsayılan) ve dark, bir de green (eski görünüş). Sığmayan bir yazı, balonda bütünüyle görünür.",
+        en: "Virtual-scroll table for millions of rows, with filtering, sorting, custom cells and editing. Style packages: light (default; its old name classic) and dark, the looks of DataTable, and green (the old look). A cut text shows all of it in a bubble.",
+        tr: "Milyonlarca satır için sanal kaydırmalı tablo: filtreleme, sıralama, özel hücreler ve düzenleme. Stil paketleri: DataTable'ın görünüşleri light (varsayılan; eski adı classic) ve dark, bir de green (eski görünüş). Sığmayan bir yazı, balonda bütünüyle görünür.",
     },
     {
         key: "check-box", name: "CheckBox", cat: "selection",
@@ -546,7 +546,7 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "search-input", name: "SearchInput", cat: "inputs",
-        source: "comp/search-input.js", samples: [{ file: "02-comp-examples/search-input.htm", title: "classic: a standard search box" }, { file: "02-comp-examples/search-input-place.htm", title: "Place: right / bottom" }, "02-comp-examples/minimal-theme.htm"],
+        source: "comp/search-input.js", samples: [{ file: "02-comp-examples/search-input.htm", title: "light: a standard search box" }, { file: "02-comp-examples/search-input-place.htm", title: "Place: right / bottom" }, "02-comp-examples/minimal-theme.htm"],
         en: "Search field with a search icon and a clear button.",
         tr: "Arama ikonu ve temizleme düğmeli arama kutusu.",
     },

@@ -18,7 +18,7 @@ UI COMPONENT TEMPLATE
 - A line around the buttons: style.button.border and borderColor (0 and "transparent" by default: no line).
 - style.button.opacity (1) / disabledOpacity: a button that can / can not be clicked (at min / max). fadeDuration:
   the time of the fade between them (s). 0: at once (the default).
-- Style packages: "classic" (default), "modern", "dark", "ozden". Select with styleName. (Stepper.styles)
+- Style packages: "light" (default; the old name "classic" works too), "modern", "dark", "ozden". Select with styleName. (Stepper.styles)
 -- "ozden": for a 600 px design.
    It is a package of params (basic.js v26.10.27): it also gives the size, 150 x 50.
 
@@ -63,8 +63,8 @@ const StepperDefaults = {
     onChange: function (self) { }, // self.value
     onMinReached: function (self) { }, // Called when the value arrives at min
     onMaxReached: function (self) { }, // Called when the value arrives at max
-    styleName: "classic", // "classic", "modern", "dark", "ozden", "minimal", "minimalDark" or a name added to Stepper.styles
-    style: { // Classic style package (default)
+    styleName: "light", // "light" ("classic": its old name), "modern", "dark", "ozden", "minimal", "minimalDark" or a name added to Stepper.styles
+    style: { // Light style package (default)
         box: {
             color: White(1),
             border: 1,
@@ -107,7 +107,7 @@ const StepperDefaults = {
 
 const Stepper = function (params = {}) {
 
-    // Merge style package: params.style > Stepper.styles[styleName] > StepperDefaults.style (classic)
+    // Merge style package: params.style > Stepper.styles[styleName] > StepperDefaults.style (light)
     basic.applyStylePackage(params, Stepper.styles, StepperDefaults);
 
     // Merge params:
@@ -649,7 +649,7 @@ Stepper.getMinusSvg = function (color, size) {
 Stepper.styles = {
 
     // Gray buttons in a white box.
-    classic: StepperDefaults.style,
+    light: StepperDefaults.style,
 
     // Round pill, cadetblue buttons. Same colors as the modern CheckBox, RadioButton, ProgressBar and Tabs.
     modern: {
@@ -673,7 +673,7 @@ Stepper.styles = {
 
     // For a 600 px design:
     // round white buttons with a dark line on a transparent box, the value between them; at min / max a button
-    // fades to 0.4. (Its name is not "classic": that is the default look, and LabelEditor asks for it by name.)
+    // fades to 0.4. (Its name is not "light": that is the default look, and LabelEditor asks for it by name.)
     ozden: {
         width: 150,
         height: 50, // WHY: 42 px buttons (50 - 2 x padding)
@@ -699,6 +699,7 @@ Stepper.styles = {
     },
 
 };
+Stepper.styles.classic = Stepper.styles.light; // the old name of light: the pages made with it keep their look
 
 // The minimal theme (_designs/minimal-theme.htm): 96 x 28, a line around it (ink while it is focused), no fill; the
 // buttons have no fill either (a faint one under the mouse: a Stepper has no line of its own per button), a 12 px

@@ -10,7 +10,7 @@ UI COMPONENT TEMPLATE
 - Supports: multiple, accept (type filter), maxSize, maxFiles, directory selection, enabled.
 - A low zone (zoneHeight): what does not fit is hidden: first the icon, then the hint, then the description. The title stays.
 - Everything is drawn with code (no image files needed).
-- Style packages: "classic" (default), "dark". Select with styleName. (SelectFile.styles)
+- Style packages: "light" (default; the old name "classic" works too), "dark". Select with styleName. (SelectFile.styles)
 
 IMPORTANT: About the file path
 - Browsers do NOT give the real disk path of a file (security rule).
@@ -56,7 +56,7 @@ const SelectFileDefaults = {
     onChange: function (self) { }, // self.files: [{ file, name, displayName, path, size, sizeText, type, extension, lastModified }]
     onError: function (self, errors) { }, // errors: [{ type: "accept" | "maxSize" | "maxFiles", name, message }]
     onOpenDialog: null, // function (self): the dialog of a program, in the place of the dialog of the page (see above)
-    styleName: "classic", // "classic", "dark" or a name added to SelectFile.styles
+    styleName: "light", // "light" ("classic": its old name), "dark" or a name added to SelectFile.styles
     style: {
         zone: {
             color: White(1),
@@ -121,7 +121,7 @@ const SelectFileDefaults = {
 
 const SelectFile = function (params = {}) {
 
-    // Merge style package: params.style > SelectFile.styles[styleName] > SelectFileDefaults.style (classic)
+    // Merge style package: params.style > SelectFile.styles[styleName] > SelectFileDefaults.style (light)
     basic.applyStylePackage(params, SelectFile.styles, SelectFileDefaults);
 
     // Merge params:
@@ -759,7 +759,7 @@ const SelectFile = function (params = {}) {
 SelectFile.styles = {
 
     // White, dark text, a dashed line.
-    classic: SelectFileDefaults.style,
+    light: SelectFileDefaults.style,
 
     // Dark theme, same colors as SelectColor "dark".
     dark: {
@@ -778,6 +778,7 @@ SelectFile.styles = {
     },
 
 };
+SelectFile.styles.classic = SelectFile.styles.light; // the old name of light: the pages made with it keep their look
 
 // *** STATIC FUNCTIONS:
 

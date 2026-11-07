@@ -10,7 +10,7 @@ UI COMPONENT TEMPLATE
 - The selected color has a mark (a dot) in a color that can be seen on it (light or dark).
 - Everything is drawn with code (no image files needed).
 - Value: the color text. (Ex: "#3871E0")
-- Style packages: "classic" (default), "dark". Select with styleName. (SelectColor.styles)
+- Style packages: "light" (default; the old name "classic" works too), "dark". Select with styleName. (SelectColor.styles)
 
 Keyboard:
 - Field: Enter, Space or ArrowDown opens the panel.
@@ -55,8 +55,8 @@ const SelectColorDefaults = {
     onChange: function (self) { }, // self.value ("#3871E0" or "")
     onOpen: function (self) { },
     onClose: function (self) { },
-    styleName: "classic", // "classic", "dark" or a name added to SelectColor.styles
-    style: { // Classic style package (default)
+    styleName: "light", // "light" ("classic": its old name), "dark" or a name added to SelectColor.styles
+    style: { // Light style package (default)
         field: {
             color: White(1),
             border: 1,
@@ -111,7 +111,7 @@ const SelectColorDefaults = {
 
 const SelectColor = function (params = {}) {
 
-    // Merge style package: params.style > SelectColor.styles[styleName] > SelectColorDefaults.style (classic)
+    // Merge style package: params.style > SelectColor.styles[styleName] > SelectColorDefaults.style (light)
     basic.applyStylePackage(params, SelectColor.styles, SelectColorDefaults);
 
     // Merge params:
@@ -591,7 +591,7 @@ SelectColor.toRgb = function (colorText) {
 SelectColor.styles = {
 
     // White, dark text, a soft line.
-    classic: SelectColorDefaults.style,
+    light: SelectColorDefaults.style,
 
     // Dark theme, same colors as SelectBox "dark".
     dark: {
@@ -605,3 +605,4 @@ SelectColor.styles = {
     },
 
 };
+SelectColor.styles.classic = SelectColor.styles.light; // the old name of light: the pages made with it keep their look
