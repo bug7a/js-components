@@ -12,7 +12,7 @@ UI COMPONENT TEMPLATE
   keyboard (Space/Enter to select, Arrow keys to move in the group).
 - Whole object background can change on hover and checked states (style.hoverBox, style.checkedBox).
 - The empty circle under the mouse: style.hoverMark (its borderColor, and its color when given; v26.11).
-- Style packages: "classic" (default), "modern", "dark". Select with styleName. (RadioButton.styles)
+- Style packages: "classic" (default), "modern", "dark", "minimal", "minimalDark". Select with styleName. (RadioButton.styles)
   NEW PROJECTS: use "classic" on a light page and "dark" on a dark page, unless the user
   asks for another one ("modern" only when asked).
 
@@ -37,7 +37,7 @@ const RadioButtonDefaults = {
     labelText: "",
     labelPosition: "right", // "right", "left"
     onChange: function (self) { }, // Called when this radio button is selected.
-    styleName: "classic", // "classic", "modern", "dark" or a name added to RadioButton.styles
+    styleName: "classic", // "classic", "modern", "dark", "minimal", "minimalDark" or a name added to RadioButton.styles
     style: { // Classic style package (default)
         box: { // Whole object background
             color: "transparent",
@@ -471,3 +471,19 @@ RadioButton.styles = {
     },
 
 };
+
+// The minimal theme (_designs/minimal-theme.htm): a 14 px circle of a line, darker under the mouse; when checked an ink
+// line and a 6 px ink dot inside it, no fill; a 13 px text.
+RadioButton.createMinimalStyle = function (colors) {
+    return {
+        layout: { gap: 8, padding: [0, 2], align: "left center" },
+        mark: { width: 14, height: 14, color: "transparent", border: 1, borderColor: colors.line, round: 100 },
+        checkedMark: { color: "transparent", borderColor: colors.ink },
+        hoverMark: { color: null, borderColor: colors.lineHover },
+        dot: { color: colors.ink, size: 0.5, round: 100 },
+        label: { fontSize: 13, textColor: colors.text },
+        disabled: { opacity: 0.4 },
+    };
+};
+RadioButton.styles.minimal = RadioButton.createMinimalStyle({ line: Black(0.2), lineHover: Black(0.45), ink: "#1F1F1F", text: Black(0.85) });
+RadioButton.styles.minimalDark = RadioButton.createMinimalStyle({ line: White(0.18), lineHover: White(0.42), ink: "#EDEDEB", text: White(0.88) });

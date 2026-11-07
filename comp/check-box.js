@@ -16,7 +16,7 @@ UI COMPONENT TEMPLATE
   (1.05) and the tick draws in from 0.6 with a fade, in 0.25 s with a soft stop. Nothing moves at the first view; off
   when the system asks for reduced motion. animated: 0 (default) keeps the short tick motion it always had.
   setAnimated(0/1).
-- Style packages: "classic" (default), "modern", "dark". Select with styleName. (CheckBox.styles)
+- Style packages: "classic" (default), "modern", "dark", "minimal", "minimalDark". Select with styleName. (CheckBox.styles)
   NEW PROJECTS: use "classic" on a light page and "dark" on a dark page, unless the user
   asks for another one ("modern" only when asked).
 
@@ -41,7 +41,7 @@ const CheckBoxDefaults = {
     wrapLabel: 0, // 1: a long label wraps (the check box needs a width); 0: one line
     animated: 0, // 1: the square grows a little under the mouse, the tick draws in (box.setAnimated(0/1))
     onChange: function (self) { }, // self.checked
-    styleName: "classic", // "classic", "modern", "dark" or a name added to CheckBox.styles
+    styleName: "classic", // "classic", "modern", "dark", "minimal", "minimalDark" or a name added to CheckBox.styles
     style: { // Classic style package (default)
         box: { // Whole object background
             color: "transparent",
@@ -434,3 +434,19 @@ CheckBox.styles = {
     },
 
 };
+
+// The minimal theme (_designs/minimal-theme.htm): a 14 px square of a line, darker under the mouse; when checked an ink
+// line and an ink tick inside it, no fill; a 13 px text.
+CheckBox.createMinimalStyle = function (colors) {
+    return {
+        layout: { gap: 8, padding: [0, 2], align: "left center" },
+        mark: { width: 14, height: 14, color: "transparent", border: 1, borderColor: colors.line, round: 3 },
+        checkedMark: { color: "transparent", borderColor: colors.ink },
+        hoverMark: { color: null, borderColor: colors.lineHover },
+        tick: { color: colors.ink, thickness: 1.5 },
+        label: { fontSize: 13, textColor: colors.text },
+        disabled: { opacity: 0.4 },
+    };
+};
+CheckBox.styles.minimal = CheckBox.createMinimalStyle({ line: Black(0.2), lineHover: Black(0.45), ink: "#1F1F1F", text: Black(0.85) });
+CheckBox.styles.minimalDark = CheckBox.createMinimalStyle({ line: White(0.18), lineHover: White(0.42), ink: "#EDEDEB", text: White(0.88) });

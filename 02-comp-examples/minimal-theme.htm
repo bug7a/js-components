@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>Minimal theme</title>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../basic/scroll-bar.js" type="text/javascript" charset="utf-8"></script>
+
+    <!-- COMPONENT FILES -->
+    <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/check-box.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/radio-button.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/toggle.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+    /* Bismillah */
+
+    // The minimal theme: styleName "minimal" on a light window, "minimalDark" on a dark one (the design:
+    // _designs/minimal-theme.htm). Small (28 px, a 13 px text) and made of lines: a component has no fill of its
+    // own, it takes the ground of its window. The main action is the only filled button: tone "ink" / "inkDark".
+    // The components that have it so far: SmartButton, CheckBox, RadioButton, Toggle.
+
+    // *** THE COLORS AND SIZES OF THE PAGE
+    const PAGE_COLOR = "#EDEDEB";
+    const LIGHT_WINDOW_COLOR = "#FFFFFF";
+    const DARK_WINDOW_COLOR = "#1A1A19";
+    const LIGHT_TITLE_COLOR = Black(0.85);
+    const DARK_TITLE_COLOR = White(0.88);
+    const LIGHT_CAPTION_COLOR = Black(0.45);
+    const DARK_CAPTION_COLOR = White(0.45);
+    const WINDOW_WIDTH = 460;
+    const ICON_LIGHT = Black(0.85);
+
+    // A line icon (24 x 24, the color in the drawing): SmartButton turns it white in minimalDark
+    const lineIcon = function (paths) {
+        const svgStart = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + ICON_LIGHT + '"'
+            + ' stroke-width="2" stroke-linecap="round" stroke-linejoin="round">';
+        return "data:image/svg+xml;utf8," + encodeURIComponent(svgStart + paths + "<\/svg>");
+    };
+    const ICON_SAVE = lineIcon('<path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4M8 20v-6h8v6"/>');
+    const ICON_TRASH = lineIcon('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/>');
+    const ICON_MORE = lineIcon('<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>');
+
+    const start = function () {
+
+        page.color = PAGE_COLOR;
+
+        // BOX: Scrolling page
+        const pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+
+            HGroup({ width: "100%", height: "auto", align: "center top", gap: 24, padding: 40, wrap: 1, clipContent: 0 });
+
+                // GROUP: The light window (minimal)
+                VGroup({ width: WINDOW_WIDTH, height: "auto", align: "left top", gap: 14, padding: 28, color: LIGHT_WINDOW_COLOR, round: 10, clipContent: 0 });
+
+                    Label({ text: "minimal", fontSize: 18, bold: 1, textColor: LIGHT_TITLE_COLOR });
+
+                    Label({ text: "BUTTONS", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
+                    HGroup({ hug: 1, align: "left center", gap: 8, clipContent: 0 });
+                        SmartButton({ styleName: "minimal", labelText: "Save", iconFile: ICON_SAVE });
+                        SmartButton({ styleName: "minimal", tone: "ink", labelText: "Send" });
+                        SmartButton({ styleName: "minimal", labelText: "Delete", iconFile: ICON_TRASH, ask: "Click again to delete." });
+                        SmartButton({ styleName: "minimal", labelText: "", iconFile: ICON_MORE, ariaLabel: "More" });
+                    endGroup();
+                    HGroup({ hug: 1, align: "left center", gap: 8, clipContent: 0 });
+                        SmartButton({ styleName: "minimal", labelText: "Disabled", enabled: 0 });
+                        SmartButton({ styleName: "minimal", labelText: "Waiting", waiting: 1 });
+                    endGroup();
+
+                    Label({ text: "CHOICES", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
+                    HGroup({ hug: 1, align: "left center", gap: 20, clipContent: 0 });
+                        CheckBox({ styleName: "minimal", labelText: "Remember me", checked: 1 });
+                        CheckBox({ styleName: "minimal", labelText: "Send the news" });
+                    endGroup();
+                    HGroup({ hug: 1, align: "left center", gap: 20, clipContent: 0 });
+                        RadioButton({ styleName: "minimal", group: "lightPlan", labelText: "Monthly", checked: 1 });
+                        RadioButton({ styleName: "minimal", group: "lightPlan", labelText: "Yearly" });
+                    endGroup();
+                    HGroup({ hug: 1, align: "left center", gap: 10, clipContent: 0 });
+                        Toggle({ styleName: "minimal", value: 1 });
+                        Label({ text: "Sounds", fontSize: 13, textColor: LIGHT_TITLE_COLOR });
+                    endGroup();
+
+                endGroup();
+
+                // GROUP: The dark window (minimalDark)
+                VGroup({ width: WINDOW_WIDTH, height: "auto", align: "left top", gap: 14, padding: 28, color: DARK_WINDOW_COLOR, round: 10, clipContent: 0 });
+
+                    Label({ text: "minimalDark", fontSize: 18, bold: 1, textColor: DARK_TITLE_COLOR });
+
+                    Label({ text: "BUTTONS", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
+                    HGroup({ hug: 1, align: "left center", gap: 8, clipContent: 0 });
+                        SmartButton({ styleName: "minimalDark", labelText: "Save", iconFile: ICON_SAVE });
+                        SmartButton({ styleName: "minimalDark", tone: "inkDark", labelText: "Send" });
+                        SmartButton({ styleName: "minimalDark", labelText: "Delete", iconFile: ICON_TRASH, ask: "Click again to delete." });
+                        SmartButton({ styleName: "minimalDark", labelText: "", iconFile: ICON_MORE, ariaLabel: "More" });
+                    endGroup();
+                    HGroup({ hug: 1, align: "left center", gap: 8, clipContent: 0 });
+                        SmartButton({ styleName: "minimalDark", labelText: "Disabled", enabled: 0 });
+                        SmartButton({ styleName: "minimalDark", labelText: "Waiting", waiting: 1 });
+                    endGroup();
+
+                    Label({ text: "CHOICES", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
+                    HGroup({ hug: 1, align: "left center", gap: 20, clipContent: 0 });
+                        CheckBox({ styleName: "minimalDark", labelText: "Remember me", checked: 1 });
+                        CheckBox({ styleName: "minimalDark", labelText: "Send the news" });
+                    endGroup();
+                    HGroup({ hug: 1, align: "left center", gap: 20, clipContent: 0 });
+                        RadioButton({ styleName: "minimalDark", group: "darkPlan", labelText: "Monthly", checked: 1 });
+                        RadioButton({ styleName: "minimalDark", group: "darkPlan", labelText: "Yearly" });
+                    endGroup();
+                    HGroup({ hug: 1, align: "left center", gap: 10, clipContent: 0 });
+                        Toggle({ styleName: "minimalDark", value: 1 });
+                        Label({ text: "Sounds", fontSize: 13, textColor: DARK_TITLE_COLOR });
+                    endGroup();
+
+                endGroup();
+
+            endGroup();
+
+        endBox();
+
+        if (typeof ScrollBar === "function") ScrollBar({ scrollableBox: pageBox });
+
+    };
+
+    </script>
+
+</head>
+<body>
+</body>
+</html>

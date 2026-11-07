@@ -90,7 +90,7 @@ const ToggleDefaults = {
         shadow: "none", // off
         selectedShadow: "-1px 0px 4px rgba(0, 0, 0, 0.15)", // on
     },
-    styleName: "modern", // "modern", "classic", "float", "round", "slim", "outline", "square", "tick", "badge", "label" or a name added to Toggle.styles
+    styleName: "modern", // "modern", "classic", "float", "round", "slim", "outline", "square", "tick", "badge", "label", "minimal", "minimalDark" or a name added to Toggle.styles
     style: {}, // WHY: the look is in the params above; the packages are packages of params (see Toggle.styles).
 };
 
@@ -678,3 +678,20 @@ Toggle.styles = {
     },
 
 };
+
+// The minimal theme (_designs/minimal-theme.htm): a 28 x 16 track of a line, no fill; the 10 px knob is at the left in
+// the line color when off, at the right in ink with an ink line around the track when on.
+Toggle.createMinimalStyle = function (colors) {
+    return {
+        style: {},
+        width: 28,
+        height: 16,
+        spacing: 3, // WHY: a 10 px knob (16 - 2 x 3)
+        offButtonScale: 1,
+        backgroundStyle: { color: "transparent", selectedColor: "transparent", border: 1, borderColor: colors.line, selectedBorderColor: colors.ink, round: 100 },
+        buttonStyle: { color: colors.lineHover, selectedColor: colors.ink, border: 0, round: 100, shadow: "none", selectedShadow: "none" },
+        markStyle: { color: colors.lineHover, selectedColor: colors.ink },
+    };
+};
+Toggle.styles.minimal = Toggle.createMinimalStyle({ line: Black(0.2), lineHover: Black(0.45), ink: "#1F1F1F" });
+Toggle.styles.minimalDark = Toggle.createMinimalStyle({ line: White(0.18), lineHover: White(0.42), ink: "#EDEDEB" });

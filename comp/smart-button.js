@@ -17,7 +17,9 @@ The other samples: smart-button-alternatif.htm (pill and outlined with the color
      surface, no edge, only its hover is gray), "pill" (round, no edge, a bold text), "outlined" (round, a thicker
      edge with a line at its bottom). For a dark page (the draft _designs/smart-button-dark.htm):
      "ozdenType1Dark" ... "ozdenType4Dark" (#2E2E2C, a white text and icon, the dark waiting clock).
-     A template is only a style (SmartButton.styles).
+     "minimal" / "minimalDark" (the minimal theme, _designs/minimal-theme.htm): 28 px high, a 13 px text, only a line
+     that gets darker under the mouse; the main action takes the tone "ink" / "inkDark".
+     A template is only a style (SmartButton.styles); the minimal ones also give the height.
   2. tone: a color of the kit (SmartButton.tones), three colors: the button, the button under the mouse, its text.
      "white", "cyan" (the main action), "orange" (a delete, a reject), "yellow" (go on, but look first), "green"
      (after a good result), "blue" (nothing changes). For a dark page: "cyanDark", "orangeDark", "yellowDark",
@@ -76,8 +78,8 @@ Webpage: https://bug7a.github.io/js-components/
 // Default values:
 const SmartButtonDefaults = {
     key: "0",
-    styleName: "ozdenType1", // the template (SmartButton.styles): "ozdenType1" (the default) ... "ozdenType4", "pill", "outlined", "ozdenType1Dark" ... "ozdenType4Dark"
-    tone: "", // a color of the kit (SmartButton.tones): "white", "cyan", "orange", "yellow", "green", "blue", "cyanDark"... "": the gray of the template. setTone()
+    styleName: "ozdenType1", // the template (SmartButton.styles): "ozdenType1" (the default) ... "ozdenType4", "pill", "outlined", "ozdenType1Dark" ... "ozdenType4Dark", "minimal", "minimalDark"
+    tone: "", // a color of the kit (SmartButton.tones): "white", "cyan", "orange", "yellow", "green", "blue", "cyanDark"..., "ink" / "inkDark" (minimal). "": the gray of the template. setTone()
     width: "auto", // an icon button (labelText: "") is a square
     height: 44, // "auto": as high as its padding and content (an icon on top of a text is "auto")
     labelText: "Button", // "": an icon button
@@ -122,6 +124,7 @@ const SmartButtonDefaults = {
         },
         hover: {
             color: "#D9D9D9", // under the mouse (pressed: this color, darker)
+            borderColor: "", // the edge under the mouse. "": the edge of box (the minimal templates darken it)
         },
         // ask: the look of the button while it asks, and the bubble over it (Tooltip.BUBBLE_LOOK keys).
         // #DE815B (the orange of danger); its own value, not the orange tone,
@@ -232,7 +235,10 @@ const SmartButton = function (params = {}) {
         if (box.enabled != 1) return Object.assign(look, _s.disabled, { boxShadow: "none" });
         if (box.isAsking == 1) return Object.assign(look, _s.ask.button);
         // WHY not while waiting: the button stays in its own color under the animation
-        if (isHover && box.waiting != 1) look.color = _s.hover.color;
+        if (isHover && box.waiting != 1) {
+            look.color = _s.hover.color;
+            if (_s.hover.borderColor) look.borderColor = _s.hover.borderColor;
+        }
         return look;
     };
 
@@ -746,6 +752,34 @@ SmartButton.styles.ozdenType2Dark = SmartButton.createDarkTemplate({ boxShadow: 
 SmartButton.styles.ozdenType3Dark = SmartButton.createDarkTemplate({ borderColor: White(0.1), boxShadow: "none" }); // a faint edge: the 0.1 of ozdenType3 in white
 SmartButton.styles.ozdenType4Dark = SmartButton.createDarkTemplate({ color: White(0), border: 0, borderColor: "transparent", boxShadow: "none" }, White(0.08)); // a ghost
 
+// THE MINIMAL TEMPLATES (the draft _designs/minimal-theme.htm): small (28 px, a 13 px text, a 14 px icon) and made of
+// lines: no fill, the edge gets darker under the mouse, a blue focus ring, a ring clock. The main action takes the
+// tone "ink" (inkDark on a dark page): the only filled button of the theme.
+SmartButton.createMinimalTemplate = function (colors) {
+    return {
+        height: 28,
+        style: {
+            layout: { gap: 6, padding: [10, 0], iconSideTrim: 0 },
+            icon: { width: 14, height: 14, opacity: 1, filter: colors.iconFilter },
+            label: { fontSize: 13, textColor: colors.text },
+            box: { color: "transparent", border: 1, borderColor: colors.line, round: 4, boxShadow: "none" },
+            hover: { color: "transparent", borderColor: colors.lineHover },
+            focus: { ringColor: colors.focus },
+            disabled: { color: "transparent", borderColor: colors.disabledLine, textColor: colors.disabledText, iconOpacity: 0.4 },
+            press: { scale: 0.97, brightness: 1 },
+            waiting: { clock: colors.clock, contentOpacity: 0.15, clockSize: 16, space: 6 },
+        },
+    };
+};
+SmartButton.styles.minimal = SmartButton.createMinimalTemplate({
+    text: Black(0.85), line: Black(0.2), lineHover: Black(0.45), focus: "#3D8BD9",
+    disabledLine: Black(0.08), disabledText: Black(0.34), iconFilter: "none", clock: "minimal",
+});
+SmartButton.styles.minimalDark = SmartButton.createMinimalTemplate({
+    text: White(0.88), line: White(0.18), lineHover: White(0.42), focus: "#7FB6DE",
+    disabledLine: White(0.07), disabledText: White(0.35), iconFilter: SmartButton.WHITE_ICON, clock: "minimalDark",
+});
+
 // *** THE TONES: the colors of the kit, with simple color names; a tone for a dark page ends
 // with "Dark". A tone is three colors: the button, the button under the mouse and its text (DARK_TEXT, or LIGHT_TEXT:
 // it turns the icon white too). The light ones are white and the colors of the situations (chosen on the draft
@@ -767,6 +801,9 @@ SmartButton.tones = {
     yellowDark: { color: "#7B682F", hover: "#8C7633", text: SmartButton.LIGHT_TEXT },
     greenDark: { color: "#46663A", hover: "#4D7440", text: SmartButton.LIGHT_TEXT },
     blueDark: { color: "#335A6B", hover: "#38657A", text: SmartButton.LIGHT_TEXT },
+    // The main action of the minimal templates (the ink of the theme)
+    ink: { color: "#1F1F1F", hover: "#3A3A3A", text: SmartButton.LIGHT_TEXT },
+    inkDark: { color: "#EDEDEB", hover: "#FFFFFF", text: SmartButton.DARK_TEXT },
 };
 
 // THE LOOK, the one place of its order: style > tone > the template (styleName) > the defaults. It fills params.style
@@ -844,6 +881,21 @@ SmartButton.clocks.ozdenDark = Object.assign({}, SmartButton.clocks.ozden, {
     hourColor: "rgba(255, 255, 255, 0.6)",
     minuteColor: "#F1C74A",
     centerColor: "#F1C74A",
+});
+
+// The ring clocks of the minimal templates: no face, thin lines in the color of the text
+SmartButton.clocks.minimal = Object.assign({}, SmartButton.clocks.ozden, {
+    faceColor: "transparent",
+    lineColor: Black(0.85),
+    edgeWidth: 2.5,
+    hourWidth: 2.5,
+    minuteWidth: 2.5,
+    minuteColor: Black(0.85),
+    centerColor: "transparent",
+});
+SmartButton.clocks.minimalDark = Object.assign({}, SmartButton.clocks.minimal, {
+    lineColor: White(0.88),
+    minuteColor: White(0.88),
 });
 
 // The clock as an SVG text (as wide as its box): a face with an edge, the minute hand up, the hour hand to the right.

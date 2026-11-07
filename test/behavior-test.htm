@@ -880,6 +880,36 @@
             [plain, pill, outlined, iconButton, iconOnTop].forEach(function (button) { button.remove(); });
         });
 
+        test("SmartButton minimal: 28 high, an icon button a 28 square, its edge darker under the mouse", async function () {
+            const ICON = "../comp/smart-button/alert-black.png";
+            const minimal = SmartButton({ styleName: "minimal", labelText: "Go" });
+            const iconButton = SmartButton({ styleName: "minimal", labelText: "", ariaLabel: "Alert", iconFile: ICON });
+            const plain = SmartButton({ labelText: "Go" });
+            await basic.nextFrame();
+            const edgeBefore = minimal.elem.style.borderColor;
+            const plainEdgeBefore = plain.elem.style.borderColor;
+            minimal.elem.dispatchEvent(new MouseEvent("mouseenter"));
+            plain.elem.dispatchEvent(new MouseEvent("mouseenter"));
+            await basic.nextFrame();
+            const edgeOver = minimal.elem.style.borderColor;
+            const plainEdgeOver = plain.elem.style.borderColor;
+            check("SmartButton minimal: 28 high", minimal.elem.offsetHeight === 28, minimal.elem.offsetHeight);
+            check("SmartButton minimal: an icon button is a 28 x 28 square", iconButton.elem.offsetWidth === 28 && iconButton.elem.offsetHeight === 28, iconButton.elem.offsetWidth + " x " + iconButton.elem.offsetHeight);
+            check("SmartButton minimal: the edge is darker under the mouse, the default template keeps its edge", edgeOver !== edgeBefore && plainEdgeOver === plainEdgeBefore, edgeBefore + " -> " + edgeOver + " / default: " + plainEdgeBefore + " -> " + plainEdgeOver);
+            [minimal, iconButton, plain].forEach(function (button) { button.remove(); });
+        });
+
+        test("CheckBox, RadioButton, Toggle minimal: a 14 px mark, a 28 x 16 toggle", async function () {
+            const checkBox = CheckBox({ styleName: "minimalDark", labelText: "A", checked: 1 });
+            const radio = RadioButton({ styleName: "minimal", group: "minimalTest", labelText: "B", checked: 1 });
+            const toggle = Toggle({ styleName: "minimal", value: 1 });
+            await basic.nextFrame();
+            check("CheckBox minimalDark: a 14 px square", checkBox.mark.elem.offsetWidth === 14, checkBox.mark.elem.offsetWidth);
+            check("RadioButton minimal: a 14 px circle", radio.mark.elem.offsetWidth === 14, radio.mark.elem.offsetWidth);
+            check("Toggle minimal: 28 x 16", toggle.elem.offsetWidth === 28 && toggle.elem.offsetHeight === 16, toggle.elem.offsetWidth + " x " + toggle.elem.offsetHeight);
+            [checkBox, radio, toggle].forEach(function (object) { object.remove(); });
+        });
+
         // *** TOGGLE (comp/toggle.js)
 
         test("Toggle: the keyboard and screen readers can use it", async function () {
