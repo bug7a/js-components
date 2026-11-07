@@ -248,9 +248,7 @@ const SelectFile = function (params = {}) {
         box.zone.borderColor = zoneStyle.borderColor;
 
         const iconColor = (state == "dragover") ? _s.icon.dragOverColor : _s.icon.color;
-        box.iconArrow.color = iconColor;
-        box.iconHead.css.borderColor = iconColor;
-        box.iconTray.css.borderColor = iconColor;
+        box.icon.textColor = iconColor;
 
         box.title.text = (state == "dragover") ? box.dropText : box.titleText;
 
@@ -608,29 +606,17 @@ const SelectFile = function (params = {}) {
         box.zone.role = "button";
         box.zone.setMotion(ZONE_MOTION);
 
-            // BOX: Upload icon (tray + arrow, drawn)
-            box.icon = startBox({
+            // BOX: Upload icon (a cloud and an arrow, drawn with currentColor)
+            box.icon = Box({
                 width: 40,
                 height: 40,
                 color: "transparent",
+                textColor: _s.icon.color,
                 shrink: 0,
             });
             box.icon.css.marginBottom = ICON_SPACE + "px";
-            box.icon.clipContent = 0;
+            box.icon.elem.innerHTML = SelectFile.UPLOAD_ICON;
 
-                // Arrow head
-                box.iconHead = Box({ left: 12, top: 4, width: 16, height: 16, color: "transparent" });
-                that.css = { borderLeft: "3px solid", borderTop: "3px solid", transform: "rotate(45deg)" };
-
-                // Arrow body
-                box.iconArrow = Box({ left: 18.5, top: 6, width: 3, height: 22, color: _s.icon.color, round: 2 });
-
-                // Tray
-                box.iconTray = Box({ left: 2, top: 22, width: 36, height: 14, color: "transparent" });
-                // WHY: border first, then borderTop: the order of the keys is the order they are written.
-                that.css = { border: "3px solid", borderTop: "none", borderRadius: "0 0 6px 6px" };
-
-            endBox();
             if (box.showIcon != 1) box.icon.visible = 0;
 
             // LABEL: Title
@@ -781,6 +767,12 @@ SelectFile.styles = {
 SelectFile.styles.classic = SelectFile.styles.light; // the old name of light: the pages made with it keep their look
 
 // *** STATIC FUNCTIONS:
+
+// The upload icon: a cloud open at the bottom, an arrow going up through it.
+SelectFile.UPLOAD_ICON = '<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="2.5 2.5 19 19" fill="none"'
+    + ' stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:block">'
+    + '<path d="M8.5 18H7a4 4 0 0 1-.5-7.97A6 6 0 0 1 17.6 9a4.6 4.6 0 0 1-.6 9h-1.5"/>'
+    + '<path d="M12 20.5V12M9 15l3-3 3 3"/></svg>';
 
 // 1536 -> "1.5 KB"
 SelectFile.formatSize = function (bytes) {
