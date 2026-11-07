@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Minimal theme draft</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- LIBRARY FILES (a draft: no component, only basic.js objects) -->
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Regular.ttf" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../basic/font/open-sans/OpenSans-Bold.ttf" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../basic/basic.css">
+    <script src="../basic/basic.js" type="text/javascript" charset="utf-8"></script>
+
+    <script>
+
+        /* Bismillah */
+
+        // DRAFT DESIGN: the "minimal" theme (the packages minimal and minimalDark) of the common components, for the
+        // windows of the Python UI. Small (28 px controls, 13 px text) and made of lines: no fill and no shadow of
+        // its own, so a component takes the ground of the window it is on, and every state is a line that changes.
+        // One card per component: a row per state, a column per package. Drawn with plain basic.js objects (no
+        // component here). No component has these packages yet: the values below are the design itself.
+        // http://127.0.0.1:5505/_basic-designer/index.htm?page=_designs/minimal-theme.htm
+
+        // *** THE TWO PACKAGES (a column of every grid)
+
+        const MINIMAL = {
+            name: "minimal",
+            ground: "#FFFFFF", // the window: the components have no fill of their own
+            text: Black(0.85),
+            softText: Black(0.55), // titles of fields, values, descriptions
+            faintText: Black(0.35), // placeholders
+            line: Black(0.2),
+            lineHover: Black(0.45),
+            ink: "#1F1F1F", // the line of a focused field, a checked mark, a selected row, the primary button
+            inkHover: "#3A3A3A",
+            onInk: "#FFFFFF",
+            track: Black(0.12), // the empty part of a slider and a progress bar
+            danger: "#C9503C",
+            dangerLine: "rgba(201, 80, 60, 0.5)",
+            focus: "#3D8BD9", // the ring of the keyboard focus
+        };
+
+        const MINIMAL_DARK = {
+            name: "minimalDark",
+            ground: "#1A1A19",
+            text: White(0.88),
+            softText: White(0.55),
+            faintText: White(0.35),
+            line: White(0.18),
+            lineHover: White(0.42),
+            ink: "#EDEDEB",
+            inkHover: "#FFFFFF",
+            onInk: "#1A1A19",
+            track: White(0.14),
+            danger: "#FF9F93",
+            dangerLine: "rgba(255, 159, 147, 0.5)",
+            focus: "#7FB6DE",
+        };
+
+        const THEMES = [MINIMAL, MINIMAL_DARK];
+
+        // *** THE SIZES (the same in both packages)
+
+        const FONT = { regular: "opensans", bold: "opensans-bold" };
+
+        const SIZE = {
+            control: 28, // the height of a button, a field, a select, a row
+            round: 4,
+            line: 1,
+            text: 13,
+            small: 12,
+            caption: 11,
+            icon: 14,
+            disabledOpacity: 0.4,
+            focusGap: 2, // px between a thing and its focus ring
+            focusWidth: 2,
+        };
+
+        const BUTTON = { padding: [10, 0], gap: 6, pressScale: 0.97, waitingOpacity: 0.15, spinnerSize: 14 };
+        const FIELD = { width: 220, padding: [8, 0], titleGap: 4, caretHeight: 14, textareaHeight: 72, textareaPadding: [8, 6] };
+        const SEARCH = { width: 220, round: 14, padding: [10, 0], gap: 6 };
+        const SELECT = { width: 220, padding: [10, 0], panelGap: 4 };
+        const CHECK = { size: 14, round: 3, tickSize: 10, tickStroke: 3, dotSize: 6, gap: 8 };
+        const TOGGLE = { width: 28, height: 16, knob: 10, space: 2 };
+        const SLIDER = { width: 200, height: 20, trackHeight: 2, thumbSize: 12, thumbHoverSize: 14, bubblePadding: [6, 2], bubbleRoom: 26 };
+        const PROGRESS = { width: 200, trackHeight: 2, gap: 6 };
+        const LIST = { width: 240, padding: 4, tallRowHeight: 44, rowPadding: [8, 0], rowRound: 3, gap: 8, sectionPadding: [8, 6] };
+        const TABS = { width: 260, labelPadding: [10, 7], underline: 2 };
+        const STEPPER = { buttonWidth: 28, valueWidth: 40, iconSize: 12 };
+        const TOOLTIP = { padding: [8, 4], gap: 6 };
+        const MENU = { width: 180, separatorMargin: 4 };
+        const DIALOG = { width: 320, round: 6, padding: 16, gap: 6, footerGap: 8, footerSpace: 10, titleSize: 14 };
+        const TOAST = { height: 36, padding: [12, 0], gap: 8 };
+
+        // *** THE PAGE AROUND THE GRIDS
+
+        const PAGE_COLOR = "#EDEDEB";
+        const CARD = { padding: [28, 24], round: 10, gap: 16, line: Black(0.08) };
+        const GRID = { titleWidth: 140, cellPadding: [20, 14], cellGap: 20, line: Black(0.08), round: 8 };
+        const CAPTION_COLOR = Black(0.45);
+        const SWATCH = { width: 120, height: 28 };
+
+        // *** THE ICONS (24 x 24 lines; the color is in the drawing)
+
+        const ICON_PATHS = {
+            save: '<path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4"/><path d="M8 20v-6h8v6"/>',
+            trash: '<path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/>',
+            more: '<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',
+            search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+            chevronDown: '<path d="m6 9 6 6 6-6"/>',
+            check: '<path d="m5 12 5 5 9-10"/>',
+            close: '<path d="M6 6l12 12M18 6 6 18"/>',
+            eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+            folder: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+            file: '<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/>',
+            minus: '<path d="M5 12h14"/>',
+            plus: '<path d="M12 5v14M5 12h14"/>',
+            done: '<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>',
+        };
+
+        const svgIcon = function (color, paths, strokeWidth = 2) {
+            return "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="' + strokeWidth + '" stroke-linecap="round" stroke-linejoin="round">' + paths + "<\/svg>");
+        };
+
+        // ICON: A line icon in one color
+        const drawIcon = function (name, color, size = SIZE.icon, strokeWidth = 2) {
+            const icon = Icon({ width: size, height: size });
+            icon.load(svgIcon(color, ICON_PATHS[name], strokeWidth));
+            return icon;
+        };
+
+        // The ring of the keyboard focus: a thin line a little away from the thing (the gap is the ground)
+        const getFocusRing = function (theme) {
+            const outer = SIZE.focusGap + SIZE.focusWidth;
+            return "0 0 0 " + SIZE.focusGap + "px " + theme.ground + ", 0 0 0 " + outer + "px " + theme.focus;
+        };
+
+        // *** THE STATES (a row of a grid; the cells read them)
+
+        const TOKEN_ROWS = [
+            { name: "Lines", tokens: ["line", "lineHover", "ink"] },
+            { name: "Texts", tokens: ["text", "softText", "faintText"] },
+            { name: "Signals", tokens: ["danger", "focus", "track"] },
+            { name: "Type", type: 1 },
+            { name: "Sizes", sizes: 1 },
+        ];
+
+        const BUTTON_KINDS = [
+            { kind: "line", text: "Save", icon: "save" },
+            { kind: "primary", text: "Send", icon: "" },
+            { kind: "danger", text: "Delete", icon: "trash" },
+            { kind: "quiet", text: "Cancel", icon: "" },
+            { kind: "line", text: "", icon: "more" },
+        ];
+
+        const BUTTON_STATES = [
+            { name: "normal" },
+            { name: "hover", hover: 1 },
+            { name: "pressed", pressed: 1 },
+            { name: "keyboard focus", focus: 1 },
+            { name: "disabled", disabled: 1 },
+            { name: "waiting", waiting: 1 },
+        ];
+
+        const FIELD_STATES = [
+            { name: "empty", title: "E-mail", placeholder: "name@mail.com" },
+            { name: "hover", title: "E-mail", placeholder: "name@mail.com", hover: 1 },
+            { name: "focus, typing", title: "E-mail", value: "bugra@", focus: 1 },
+            { name: "filled", title: "E-mail", value: "bugra@ozden.com" },
+            { name: "error", title: "E-mail", value: "bugra@", error: "Write the whole address." },
+            { name: "disabled", title: "E-mail", value: "bugra@ozden.com", disabled: 1 },
+            { name: "PasswordInputB", title: "Password", value: "••••••••", password: 1 },
+            { name: "TextareaB", title: "Note", value: "Two lines of a note that goes on to the next line.", textarea: 1 },
+        ];
+
+        const SEARCH_STATES = [
+            { name: "empty", placeholder: "Search" },
+            { name: "hover", placeholder: "Search", hover: 1 },
+            { name: "focus, typing", value: "fruit", focus: 1 },
+        ];
+
+        const SELECT_OPTIONS = ["Apple", "Banana", "Cherry", "Grape"];
+
+        const SELECT_STATES = [
+            { name: "nothing chosen", placeholder: "Choose a fruit" },
+            { name: "hover", placeholder: "Choose a fruit", hover: 1 },
+            { name: "chosen", value: "Apple" },
+            { name: "open", value: "Apple", isOpen: 1, hoverOption: "Banana" },
+            { name: "disabled", value: "Apple", disabled: 1 },
+        ];
+
+        const CHOICE_STATES = [
+            { name: "off" },
+            { name: "hover", hover: 1 },
+            { name: "on", on: 1 },
+            { name: "on + hover", on: 1, hover: 1 },
+            { name: "keyboard focus", focus: 1 },
+            { name: "disabled", disabled: 1 },
+            { name: "disabled + on", on: 1, disabled: 1 },
+        ];
+
+        const SLIDER_STATES = [
+            { name: "normal", value: 0.4 },
+            { name: "hover", value: 0.4, hover: 1 },
+            { name: "dragging", value: 0.62, dragging: 1 },
+            { name: "keyboard focus", value: 0.4, focus: 1 },
+            { name: "disabled", value: 0.4, disabled: 1 },
+            { name: "range (RangeSlider)", from: 0.2, value: 0.7 },
+        ];
+
+        const PROGRESS_STATES = [
+            { name: "not started", value: 0 },
+            { name: "working", value: 0.62 },
+            { name: "done", value: 1 },
+            { name: "stopped", value: 0.35, error: "The connection was lost." },
+        ];
+
+        const LIST_STATES = [
+            { name: "normal", rows: [{ title: "Projects", icon: "folder" }] },
+            { name: "hover", rows: [{ title: "Projects", icon: "folder", hover: 1 }] },
+            { name: "selected", rows: [{ title: "Projects", icon: "folder", selected: 1 }] },
+            { name: "keyboard focus", rows: [{ title: "Projects", icon: "folder", focus: 1 }] },
+            { name: "disabled", rows: [{ title: "Projects", icon: "folder", disabled: 1 }] },
+            { name: "two lines", rows: [{ title: "report.pdf", desc: "2.4 MB · yesterday", icon: "file" }] },
+            { name: "long text", rows: [{ title: "The annual report of the second half of the year", icon: "file" }] },
+            { name: "section title", rows: [{ section: "Recent" }, { title: "Projects", icon: "folder" }] },
+            { name: "empty", isEmpty: 1 },
+            { name: "the whole list", rows: [
+                { section: "Folders" },
+                { title: "Projects", icon: "folder" },
+                { title: "Designs", icon: "folder", hover: 1 },
+                { title: "Archive", icon: "folder", selected: 1 },
+                { section: "Files" },
+                { title: "report.pdf", icon: "file" },
+                { title: "notes.txt", icon: "file", disabled: 1 },
+            ] },
+        ];
+
+        const TAB_NAMES = ["General", "Sound", "Advanced"];
+
+        const TAB_STATES = [
+            { name: "normal", selected: 0 },
+            { name: "hover", selected: 0, hover: 1 },
+            { name: "keyboard focus", selected: 0, focus: 1 },
+            { name: "a disabled tab", selected: 0, disabled: 2 },
+        ];
+
+        const STEPPER_STATES = [
+            { name: "normal", value: 3 },
+            { name: "hover on +", value: 3, hoverPlus: 1 },
+            { name: "at the minimum", value: 0, atMinimum: 1 },
+            { name: "disabled", value: 3, disabled: 1 },
+        ];
+
+        const OVERLAY_STATES = [
+            { name: "Tooltip", draw: "tooltip" },
+            { name: "ContextMenu", draw: "menu" },
+            { name: "Dialog", draw: "dialog" },
+            { name: "Toast", draw: "toast" },
+        ];
+
+        // *** THE PAGE
+
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            // BOX: Scrolling page
+            startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1, scrollX: 1 });
+
+                VGroup({ width: "max-content", height: "auto", align: "left top", gap: 28, padding: 40, clipContent: 0 });
+
+                    VGroup({ hug: 1, align: "left top", gap: 4 });
+                        Label({ text: "Minimal theme · draft", fontSize: 26, fontFamily: FONT.bold, textColor: "#232323" });
+                        Label({ text: "For the Python UI: 28 px controls, 13 px text, lines instead of fills, no shadow. A component has no fill of its own: it takes the ground of the window, and every state is a line.", fontSize: 14, textColor: CAPTION_COLOR, width: 760 });
+                    endGroup();
+
+                    drawComponent({ title: "Tokens", note: "The colors of the two packages, the type and the sizes.", cellWidth: 450, states: TOKEN_ROWS, drawCell: drawTokenCell });
+                    drawComponent({ title: "SmartButton", note: "line (the default), primary (the only fill), danger, quiet, only an icon. Under the mouse the line gets darker.", cellWidth: 400, states: BUTTON_STATES, drawCell: drawButtonCell });
+                    drawComponent({ title: "InputB · PasswordInputB · TextareaB", note: "The title over the field, a line around it: darker under the mouse, ink when it is focused.", cellWidth: 270, states: FIELD_STATES, drawCell: drawFieldCell });
+                    drawComponent({ title: "SearchInput", note: "Round ends, the icon in the line color, a cross when there is text.", cellWidth: 270, states: SEARCH_STATES, drawCell: drawSearchCell });
+                    drawComponent({ title: "SelectBox", note: "A field with a chevron. Its list has the rows of ItemList.", cellWidth: 270, states: SELECT_STATES, drawCell: drawSelectCell });
+                    drawComponent({ title: "CheckBox · RadioButton · Toggle", note: "Lines when off; an ink mark inside the line when on.", cellWidth: 380, states: CHOICE_STATES, drawCell: drawChoiceCell });
+                    drawComponent({ title: "Slider · RangeSlider", note: "A 2 px track, the chosen part in ink, a round knob with a line.", cellWidth: 250, states: SLIDER_STATES, drawCell: drawSliderCell });
+                    drawComponent({ title: "ProgressBar", note: "The same 2 px track, the title and the value over it.", cellWidth: 250, states: PROGRESS_STATES, drawCell: drawProgressCell });
+                    drawComponent({ title: "ItemList", note: "A row has a line only when something happens to it: under the mouse, selected (ink and a check), focused.", cellWidth: 290, states: LIST_STATES, drawCell: drawListCell });
+                    drawComponent({ title: "Tabs", note: "The text and a 2 px ink line under the selected tab, on one thin line.", cellWidth: 310, states: TAB_STATES, drawCell: drawTabsCell });
+                    drawComponent({ title: "Stepper", note: "Minus, the value, plus in one line.", cellWidth: 220, states: STEPPER_STATES, drawCell: drawStepperCell });
+                    drawComponent({ title: "Tooltip · ContextMenu · Dialog · Toast", note: "Things over the page need a ground: the ground of the window and a line, still no shadow.", cellWidth: 380, states: OVERLAY_STATES, drawCell: drawOverlayCell });
+
+                endGroup();
+
+            endBox();
+
+        };
+
+        // *** THE GRID
+
+        // GROUP: A white card: the name of the component, a note and the grid of its states
+        const drawComponent = function (spec) {
+            const card = VGroup({ width: "auto", height: "auto", align: "left top", gap: CARD.gap, padding: CARD.padding, color: "white", round: CARD.round, border: 1, borderColor: CARD.line, clipContent: 0 });
+                VGroup({ hug: 1, align: "left top", gap: 2 });
+                    Label({ text: spec.title, fontSize: 18, fontFamily: FONT.bold, textColor: "#232323" });
+                    Label({ text: spec.note, fontSize: 13, textColor: CAPTION_COLOR });
+                endGroup();
+                drawGrid(spec);
+            endGroup();
+            return card;
+        };
+
+        // GROUP: The column titles, then a row per state
+        const drawGrid = function (spec) {
+            const grid = VGroup({ hug: 1, align: "left top", gap: 0, round: GRID.round, border: 1, borderColor: GRID.line });
+                drawGridHeader(spec);
+                spec.states.forEach(function (state) {
+                    drawGridRow(spec, state);
+                });
+            endGroup();
+            return grid;
+        };
+
+        const drawGridHeader = function (spec) {
+            const header = HGroup({ hug: 1, align: "left center", gap: 0 });
+                drawCaption("State", GRID.titleWidth);
+                THEMES.forEach(function (theme) {
+                    drawCaption(theme.name, spec.cellWidth);
+                });
+            endGroup();
+            return header;
+        };
+
+        const drawCaption = function (text, width) {
+            return Label({ width: width, text: text.toUpperCase(), fontSize: SIZE.caption, fontFamily: FONT.bold, textColor: CAPTION_COLOR, padding: [14, 10], css: { letterSpacing: "0.3px" } });
+        };
+
+        // GROUP: The name of a state and its cell in every package (the cells of a row are as high as the highest)
+        const drawGridRow = function (spec, state) {
+            const row = HGroup({ hug: 1, align: "left top", gap: 0, clipContent: 0 });
+            row.css = { alignItems: "stretch", borderTop: "1px solid " + GRID.line };
+                Label({ width: GRID.titleWidth, text: state.name, fontSize: SIZE.small, textColor: Black(0.6), padding: [14, 14] });
+                THEMES.forEach(function (theme) {
+                    drawCell(spec, state, theme);
+                });
+            endGroup();
+            return row;
+        };
+
+        // GROUP: One state in one package, on the ground of its window
+        const drawCell = function (spec, state, theme) {
+            const cell = HGroup({ width: spec.cellWidth, height: "auto", align: "left center", gap: GRID.cellGap, padding: GRID.cellPadding, color: theme.ground, clipContent: 0 });
+                spec.drawCell(state, theme);
+            endGroup();
+            return cell;
+        };
+
+        // *** TOKENS
+
+        const drawTokenCell = function (state, theme) {
+            if (state.type) return drawTypeSamples(theme);
+            if (state.sizes) return drawSizeSamples(theme);
+            state.tokens.forEach(function (name) {
+                drawSwatch(name, theme[name], theme);
+            });
+        };
+
+        // GROUP: A color tile with its name and its value
+        const drawSwatch = function (name, value, theme) {
+            const group = VGroup({ width: SWATCH.width, height: "auto", align: "left top", gap: 3 });
+                Box({ width: SWATCH.width, height: SWATCH.height, color: value, round: SIZE.round, border: 1, borderColor: theme.line, position: "relative" });
+                Label({ text: name, fontSize: SIZE.caption, fontFamily: FONT.bold, textColor: theme.text });
+                Label({ text: value, fontSize: 10, textColor: theme.softText });
+            endGroup();
+            return group;
+        };
+
+        const drawTypeSamples = function (theme) {
+            const group = VGroup({ hug: 1, align: "left top", gap: 6 });
+                Label({ text: "Control text · 13", fontSize: SIZE.text, textColor: theme.text });
+                Label({ text: "Field title, value, description · 12", fontSize: SIZE.small, textColor: theme.softText });
+                Label({ text: "SECTION · 11 BOLD", fontSize: SIZE.caption, fontFamily: FONT.bold, textColor: theme.faintText, css: { letterSpacing: "0.3px" } });
+            endGroup();
+            return group;
+        };
+
+        const drawSizeSamples = function (theme) {
+            const group = HGroup({ hug: 1, align: "left center", gap: 14 });
+                Label({ width: 56, height: SIZE.control, text: "28", fontSize: SIZE.small, textColor: theme.softText, textAlign: "center", border: SIZE.line, borderColor: theme.line, round: SIZE.round, lineHeight: (SIZE.control - 2) + "px" });
+                Box({ width: CHECK.size, height: CHECK.size, color: "transparent", border: SIZE.line, borderColor: theme.line, round: CHECK.round, position: "relative" });
+                drawIcon("folder", theme.text);
+                Label({ text: "control 28 · round 4 · line 1<br>mark 14 · icon 14", fontSize: SIZE.caption, textColor: theme.softText, lineHeight: "1.5" });
+            endGroup();
+            return group;
+        };
+
+        // *** SMART BUTTON
+
+        const drawButtonCell = function (state, theme) {
+            const group = HGroup({ hug: 1, align: "left center", gap: 8, clipContent: 0 });
+                BUTTON_KINDS.forEach(function (kind) {
+                    drawButton(kind, state, theme);
+                });
+            endGroup();
+            return group;
+        };
+
+        // GROUP: A button in one state
+        const drawButton = function (kind, state, theme) {
+            const isIconOnly = (kind.text == "");
+            const button = HGroup({
+                width: isIconOnly ? SIZE.control : "auto",
+                height: SIZE.control,
+                align: "center center",
+                gap: BUTTON.gap,
+                padding: isIconOnly ? 0 : BUTTON.padding,
+                color: getButtonFill(kind, state, theme),
+                round: SIZE.round,
+                border: SIZE.line,
+                borderColor: getButtonLine(kind, state, theme),
+                clipContent: 0,
+            });
+            button.css = { position: "relative" };
+            if (state.pressed) button.css = { transform: "scale(" + BUTTON.pressScale + ")" };
+            if (state.focus) button.boxShadow = getFocusRing(theme);
+            if (state.disabled) button.opacity = SIZE.disabledOpacity;
+
+                const textColor = getButtonTextColor(kind, theme);
+                const contentOpacity = state.waiting ? BUTTON.waitingOpacity : 1;
+                if (kind.icon) drawIcon(kind.icon, textColor).opacity = contentOpacity;
+                if (!isIconOnly) Label({ text: kind.text, fontSize: SIZE.text, textColor: textColor, opacity: contentOpacity, css: { whiteSpace: "nowrap" } });
+                if (state.waiting) drawSpinner(textColor);
+
+            endGroup();
+            return button;
+        };
+
+        const getButtonFill = function (kind, state, theme) {
+            if (kind.kind != "primary") return "transparent";
+            if (state.hover || state.pressed) return theme.inkHover;
+            return theme.ink;
+        };
+
+        const getButtonLine = function (kind, state, theme) {
+            const isActive = (state.hover || state.pressed);
+            if (kind.kind == "primary") return getButtonFill(kind, state, theme);
+            if (kind.kind == "danger") return isActive ? theme.danger : theme.dangerLine;
+            if (kind.kind == "quiet") return isActive ? theme.line : "transparent";
+            return isActive ? theme.lineHover : theme.line;
+        };
+
+        const getButtonTextColor = function (kind, theme) {
+            if (kind.kind == "primary") return theme.onInk;
+            if (kind.kind == "danger") return theme.danger;
+            return theme.text;
+        };
+
+        // LABEL: A turning ring over the faded content (the button keeps its size while it waits)
+        const drawSpinner = function (color) {
+            const spinner = Label({ width: BUTTON.spinnerSize, height: BUTTON.spinnerSize, text: getSpinnerSvg(color), css: { lineHeight: "0" } });
+            spinner.css = { position: "absolute", left: "50%", top: "50%", transform: "translate(-50%, -50%)" };
+            return spinner;
+        };
+
+        const getSpinnerSvg = function (color) {
+            return '<svg viewBox="0 0 16 16" width="100%" height="100%" style="display: block">' +
+                '<circle cx="8" cy="8" r="6.5" fill="none" stroke="' + color + '" stroke-opacity="0.25" stroke-width="1.5"/>' +
+                '<path d="M8 1.5a6.5 6.5 0 0 1 6.5 6.5" fill="none" stroke="' + color + '" stroke-width="1.5" stroke-linecap="round"/>' +
+                "<\/svg>";
+        };
+
+        // *** INPUT B
+
+        const drawFieldCell = function (state, theme) {
+            const field = VGroup({ width: FIELD.width, height: "auto", align: "left top", gap: FIELD.titleGap, clipContent: 0 });
+            if (state.disabled) field.opacity = SIZE.disabledOpacity;
+                Label({ text: state.title, fontSize: SIZE.small, textColor: theme.softText });
+                drawFieldBox(state, theme);
+                if (state.error) Label({ text: state.error, fontSize: SIZE.small, textColor: theme.danger });
+            endGroup();
+            return field;
+        };
+
+        // GROUP: The line around the text (a textarea is higher and its text starts at the top)
+        const drawFieldBox = function (state, theme) {
+            const box = HGroup({
+                width: "100%",
+                height: state.textarea ? FIELD.textareaHeight : SIZE.control,
+                align: state.textarea ? "left top" : "left center",
+                gap: BUTTON.gap,
+                padding: state.textarea ? FIELD.textareaPadding : FIELD.padding,
+                color: "transparent",
+                round: SIZE.round,
+                border: SIZE.line,
+                borderColor: getFieldLine(state, theme),
+            });
+                drawFieldText(state, theme);
+                if (state.focus) drawCaret(theme);
+                if (state.password) drawIcon("eye", theme.softText);
+            endGroup();
+            return box;
+        };
+
+        const drawFieldText = function (state, theme) {
+            const hasValue = !!state.value;
+            const text = hasValue ? state.value : state.placeholder;
+            const label = Label({ text: text, fontSize: SIZE.text, textColor: hasValue ? theme.text : theme.faintText });
+            if (state.password) label.grow = 1;
+            if (state.textarea) label.props({ width: "100%", lineHeight: "1.45" });
+            return label;
+        };
+
+        // BOX: The text cursor, right after the text (the gap of the group is for the icons)
+        const drawCaret = function (theme) {
+            const caret = Box({ width: 1, height: FIELD.caretHeight, color: theme.ink, position: "relative" });
+            caret.css = { marginLeft: (1 - BUTTON.gap) + "px" };
+            return caret;
+        };
+
+        const getFieldLine = function (state, theme) {
+            if (state.error) return theme.danger;
+            if (state.focus) return theme.ink;
+            if (state.hover) return theme.lineHover;
+            return theme.line;
+        };
+
+        // *** SEARCH INPUT
+
+        const drawSearchCell = function (state, theme) {
+            const search = HGroup({ width: SEARCH.width, height: SIZE.control, align: "left center", gap: SEARCH.gap, padding: SEARCH.padding, color: "transparent", round: SEARCH.round, border: SIZE.line, borderColor: getFieldLine(state, theme) });
+                drawIcon("search", theme.softText);
+                drawSearchText(state, theme);
+                if (state.focus) drawCaret(theme);
+                if (state.value) drawIcon("close", theme.softText, 12);
+            endGroup();
+            return search;
+        };
+
+        const drawSearchText = function (state, theme) {
+            const hasValue = !!state.value;
+            const text = hasValue ? state.value : state.placeholder;
+            return Label({ text: text, fontSize: SIZE.text, textColor: hasValue ? theme.text : theme.faintText });
+        };
+
+        // *** SELECT BOX
+
+        const drawSelectCell = function (state, theme) {
+            const group = VGroup({ width: SELECT.width, height: "auto", align: "left top", gap: SELECT.panelGap, clipContent: 0 });
+            if (state.disabled) group.opacity = SIZE.disabledOpacity;
+                drawSelectField(state, theme);
+                if (state.isOpen) drawSelectPanel(state, theme);
+            endGroup();
+            return group;
+        };
+
+        // GROUP: The field: the chosen option (or the placeholder) and the chevron
+        const drawSelectField = function (state, theme) {
+            const field = HGroup({ width: "100%", height: SIZE.control, align: "left center", gap: BUTTON.gap, padding: SELECT.padding, color: "transparent", round: SIZE.round, border: SIZE.line, borderColor: getSelectLine(state, theme) });
+                drawSearchText(state, theme).grow = 1;
+                const chevron = drawIcon("chevronDown", theme.softText);
+                if (state.isOpen) chevron.css = { transform: "rotate(180deg)" };
+            endGroup();
+            return field;
+        };
+
+        const getSelectLine = function (state, theme) {
+            if (state.isOpen) return theme.ink;
+            if (state.hover) return theme.lineHover;
+            return theme.line;
+        };
+
+        // GROUP: The open list under the field: the rows of ItemList
+        const drawSelectPanel = function (state, theme) {
+            const panel = drawListFrame(theme, "100%");
+                SELECT_OPTIONS.forEach(function (option) {
+                    drawListRow({ title: option, selected: (option == state.value), hover: (option == state.hoverOption) }, theme);
+                });
+            endGroup();
+            return panel;
+        };
+
+        // *** CHECK BOX, RADIO BUTTON, TOGGLE
+
+        const drawChoiceCell = function (state, theme) {
+            drawChoice(state, theme, "Remember me", drawCheckMark);
+            drawChoice(state, theme, "Monthly", drawRadioMark);
+            drawChoice(state, theme, "Sounds", drawToggleMark);
+        };
+
+        // GROUP: A mark and its text
+        const drawChoice = function (state, theme, text, drawMark) {
+            const choice = HGroup({ hug: 1, align: "left center", gap: CHECK.gap, clipContent: 0 });
+            if (state.disabled) choice.opacity = SIZE.disabledOpacity;
+                const mark = drawMark(state, theme);
+                if (state.focus) mark.boxShadow = getFocusRing(theme);
+                Label({ text: text, fontSize: SIZE.text, textColor: theme.text, css: { whiteSpace: "nowrap" } });
+            endGroup();
+            return choice;
+        };
+
+        const getMarkLine = function (state, theme) {
+            if (state.on) return theme.ink;
+            if (state.hover) return theme.lineHover;
+            return theme.line;
+        };
+
+        // GROUP: The square of a CheckBox, an ink tick in it when on
+        const drawCheckMark = function (state, theme) {
+            const mark = HGroup({ width: CHECK.size, height: CHECK.size, align: "center center", color: "transparent", border: SIZE.line, borderColor: getMarkLine(state, theme), round: CHECK.round });
+                if (state.on) drawIcon("check", theme.ink, CHECK.tickSize, CHECK.tickStroke);
+            endGroup();
+            return mark;
+        };
+
+        // GROUP: The circle of a RadioButton, an ink dot in it when on
+        const drawRadioMark = function (state, theme) {
+            const mark = HGroup({ width: CHECK.size, height: CHECK.size, align: "center center", color: "transparent", border: SIZE.line, borderColor: getMarkLine(state, theme), round: 100 });
+                if (state.on) Box({ width: CHECK.dotSize, height: CHECK.dotSize, color: theme.ink, round: 100, position: "relative" });
+            endGroup();
+            return mark;
+        };
+
+        // GROUP: The track of a Toggle: its knob at the left (off, in the line color) or at the right (on, in ink)
+        const drawToggleMark = function (state, theme) {
+            const track = HGroup({ width: TOGGLE.width, height: TOGGLE.height, align: state.on ? "right center" : "left center", padding: [TOGGLE.space, 0], color: "transparent", border: SIZE.line, borderColor: getMarkLine(state, theme), round: 100 });
+                Box({ width: TOGGLE.knob, height: TOGGLE.knob, color: state.on ? theme.ink : theme.lineHover, round: 100, position: "relative" });
+            endGroup();
+            return track;
+        };
+
+        // *** SLIDER
+
+        const drawSliderCell = function (state, theme) {
+            const slider = Box({ width: SLIDER.width, height: SLIDER.height, color: "transparent", position: "relative", clipContent: 0 });
+            if (state.dragging) slider.css = { marginTop: SLIDER.bubbleRoom + "px" };
+            if (state.disabled) slider.opacity = SIZE.disabledOpacity;
+            createIn(slider, function () {
+                const from = state.from || 0;
+                drawTrack(0, 1, theme.track, SLIDER);
+                drawTrack(from, state.value, theme.ink, SLIDER);
+                if (state.from !== undefined) drawThumb(state.from, state, theme);
+                drawThumb(state.value, state, theme);
+                if (state.dragging) drawValueBubble(state.value, theme);
+            });
+            return slider;
+        };
+
+        // BOX: A part of the track, from one value to another (0 - 1)
+        const drawTrack = function (from, to, color, look) {
+            const track = Box({ color: color, round: look.trackHeight / 2 });
+            track.css = { left: (from * 100) + "%", top: "calc(50% - " + (look.trackHeight / 2) + "px)", width: ((to - from) * 100) + "%", height: look.trackHeight + "px" };
+            return track;
+        };
+
+        // BOX: The knob: the ground of the window with an ink line
+        const drawThumb = function (value, state, theme) {
+            const size = state.hover ? SLIDER.thumbHoverSize : SLIDER.thumbSize;
+            const thumb = Box({ width: size, height: size, color: theme.ground, border: SIZE.line, borderColor: theme.ink, round: 100 });
+            thumb.css = { left: "calc(" + (value * 100) + "% - " + (size / 2) + "px)", top: "calc(50% - " + (size / 2) + "px)" };
+            if (state.focus) thumb.boxShadow = getFocusRing(theme);
+            return thumb;
+        };
+
+        // LABEL: The value over the knob while it is dragged
+        const drawValueBubble = function (value, theme) {
+            const bubble = Label({ text: Math.round(value * 100), fontSize: SIZE.caption, textColor: theme.onInk, color: theme.ink, round: 3, padding: SLIDER.bubblePadding });
+            bubble.css = { left: (value * 100) + "%", top: "-" + SLIDER.bubbleRoom + "px", transform: "translateX(-50%)" };
+            return bubble;
+        };
+
+        // *** PROGRESS BAR
+
+        const drawProgressCell = function (state, theme) {
+            const group = VGroup({ width: PROGRESS.width, height: "auto", align: "left top", gap: PROGRESS.gap });
+                HGroup({ width: "100%", height: "auto", align: "left center" });
+                    Label({ text: "Uploading files", fontSize: SIZE.small, textColor: theme.text, grow: 1 });
+                    Label({ text: Math.round(state.value * 100) + " %", fontSize: SIZE.small, textColor: theme.softText });
+                endGroup();
+                const track = Box({ width: "100%", height: PROGRESS.trackHeight, color: "transparent", position: "relative" });
+                createIn(track, function () {
+                    drawTrack(0, 1, theme.track, PROGRESS);
+                    drawTrack(0, state.value, state.error ? theme.danger : theme.ink, PROGRESS);
+                });
+                if (state.error) Label({ text: state.error, fontSize: SIZE.small, textColor: theme.danger });
+            endGroup();
+            return group;
+        };
+
+        // *** ITEM LIST
+
+        const drawListCell = function (state, theme) {
+            if (state.isEmpty) return drawEmptyList(theme);
+            const list = drawListFrame(theme, LIST.width);
+                state.rows.forEach(function (row) {
+                    drawListRow(row, theme);
+                });
+            endGroup();
+            return list;
+        };
+
+        // GROUP: The line around a list (no fill: the window shows through). Ended by the caller.
+        const drawListFrame = function (theme, width) {
+            return VGroup({ width: width, height: "auto", align: "left top", gap: 0, padding: LIST.padding, color: theme.ground, round: SIZE.round, border: SIZE.line, borderColor: theme.line, clipContent: 0 });
+        };
+
+        // GROUP: A row (or a section title): a line around it only when it is under the mouse, selected or focused
+        const drawListRow = function (row, theme) {
+            if (row.section) return drawListSection(row.section, theme);
+            const isTall = !!row.desc;
+            const group = HGroup({
+                width: "100%",
+                height: isTall ? LIST.tallRowHeight : SIZE.control,
+                align: "left center",
+                gap: LIST.gap,
+                padding: LIST.rowPadding,
+                color: "transparent",
+                round: LIST.rowRound,
+                border: SIZE.line,
+                borderColor: getRowLine(row, theme),
+                clipContent: 0,
+            });
+            if (row.focus) group.boxShadow = getFocusRing(theme);
+            if (row.disabled) group.opacity = SIZE.disabledOpacity;
+                const textColor = row.selected ? theme.ink : theme.text;
+                if (row.icon) drawIcon(row.icon, row.selected ? theme.ink : theme.softText).shrink = 0;
+                drawRowTexts(row, textColor, theme);
+                if (row.selected) drawIcon("check", theme.ink).shrink = 0;
+            endGroup();
+            return group;
+        };
+
+        const getRowLine = function (row, theme) {
+            if (row.selected) return theme.ink;
+            if (row.hover) return theme.lineHover;
+            return "transparent";
+        };
+
+        const drawRowTexts = function (row, textColor, theme) {
+            const texts = VGroup({ width: "auto", height: "auto", align: "left center", gap: 0, grow: 1 });
+            // WHY: a long title would widen the row out of the list; from 0 the texts only take the free room.
+            texts.css = { minWidth: "0", flexBasis: "0" };
+                Label({ width: "100%", text: row.title, fontSize: SIZE.text, textColor: textColor, ellipsis: 1 });
+                if (row.desc) Label({ width: "100%", text: row.desc, fontSize: SIZE.small, textColor: theme.softText, ellipsis: 1 });
+            endGroup();
+            return texts;
+        };
+
+        const drawListSection = function (text, theme) {
+            return Label({ width: "100%", text: text.toUpperCase(), fontSize: SIZE.caption, fontFamily: FONT.bold, textColor: theme.faintText, padding: LIST.sectionPadding, css: { letterSpacing: "0.3px" } });
+        };
+
+        // GROUP: A dashed frame with an icon and a short text in its middle
+        const drawEmptyList = function (theme) {
+            const empty = VGroup({ width: LIST.width, height: 96, align: "center center", gap: 6, color: "transparent", round: SIZE.round, border: SIZE.line, borderColor: theme.line });
+            empty.css = { borderStyle: "dashed" };
+                drawIcon("folder", theme.faintText, 20);
+                Label({ text: "No items yet", fontSize: SIZE.small, textColor: theme.softText });
+            endGroup();
+            return empty;
+        };
+
+        // *** TABS
+
+        const drawTabsCell = function (state, theme) {
+            const bar = HGroup({ width: TABS.width, height: "auto", align: "left bottom", gap: 0, clipContent: 0 });
+            bar.css = { borderBottom: SIZE.line + "px solid " + theme.line };
+                TAB_NAMES.forEach(function (name, index) {
+                    drawTab(name, index, state, theme);
+                });
+            endGroup();
+            return bar;
+        };
+
+        // GROUP: A tab: its text and the line under it (ink when selected)
+        const drawTab = function (name, index, state, theme) {
+            const isSelected = (index == state.selected);
+            const isTarget = (index == 1); // the hover and the focus are drawn on the second tab
+            const tab = VGroup({ hug: 1, align: "left top", gap: 0, round: SIZE.round, clipContent: 0 });
+            if (index === state.disabled) tab.opacity = SIZE.disabledOpacity;
+            if (isTarget && state.focus) tab.boxShadow = getFocusRing(theme);
+                Label({ text: name, fontSize: SIZE.text, textColor: getTabTextColor(isSelected, isTarget && state.hover, theme), padding: TABS.labelPadding });
+                Box({ width: "100%", height: TABS.underline, color: isSelected ? theme.ink : "transparent", position: "relative" });
+            endGroup();
+            return tab;
+        };
+
+        const getTabTextColor = function (isSelected, isHover, theme) {
+            if (isSelected) return theme.ink;
+            if (isHover) return theme.text;
+            return theme.softText;
+        };
+
+        // *** STEPPER
+
+        const drawStepperCell = function (state, theme) {
+            const stepper = HGroup({ hug: 1, align: "left center", gap: 0, color: "transparent", round: SIZE.round, border: SIZE.line, borderColor: state.hoverPlus ? theme.lineHover : theme.line });
+            stepper.height = SIZE.control;
+            if (state.disabled) stepper.opacity = SIZE.disabledOpacity;
+                drawStepperButton("minus", state.atMinimum ? SIZE.disabledOpacity : 1, theme);
+                const value = Label({ width: STEPPER.valueWidth, height: "100%", text: state.value, fontSize: SIZE.text, textColor: theme.text, textAlign: "center", lineHeight: (SIZE.control - 2) + "px" });
+                value.css = { borderLeft: SIZE.line + "px solid " + theme.line, borderRight: SIZE.line + "px solid " + theme.line };
+                drawStepperButton("plus", 1, theme);
+            endGroup();
+            return stepper;
+        };
+
+        const drawStepperButton = function (iconName, opacity, theme) {
+            const button = HGroup({ width: STEPPER.buttonWidth, height: "100%", align: "center center", opacity: opacity });
+                drawIcon(iconName, theme.text, STEPPER.iconSize);
+            endGroup();
+            return button;
+        };
+
+        // *** TOOLTIP, CONTEXT MENU, DIALOG, TOAST
+
+        const drawOverlayCell = function (state, theme) {
+            if (state.draw == "tooltip") return drawTooltip(theme);
+            if (state.draw == "menu") return drawMenu(theme);
+            if (state.draw == "dialog") return drawDialog(theme);
+            return drawToast(theme);
+        };
+
+        // GROUP: A tooltip over the button it explains
+        const drawTooltip = function (theme) {
+            const group = VGroup({ hug: 1, align: "left top", gap: TOOLTIP.gap, clipContent: 0 });
+                Label({ text: "Save the file (⌘S)", fontSize: SIZE.small, textColor: theme.text, color: theme.ground, round: SIZE.round, border: SIZE.line, borderColor: theme.line, padding: TOOLTIP.padding, css: { whiteSpace: "nowrap" } });
+                drawButton(BUTTON_KINDS[0], { hover: 1 }, theme);
+            endGroup();
+            return group;
+        };
+
+        // GROUP: A menu: rows of ItemList, a short line between the groups, the delete in the danger color
+        const drawMenu = function (theme) {
+            const menu = VGroup({ width: MENU.width, height: "auto", align: "left top", gap: 0, padding: LIST.padding, color: theme.ground, round: SIZE.round, border: SIZE.line, borderColor: theme.line, clipContent: 0 });
+                drawMenuRow("Copy", "⌘C", 0, theme.text, theme);
+                drawMenuRow("Paste", "⌘V", 1, theme.text, theme);
+                drawMenuSeparator(theme);
+                drawMenuRow("Delete", "⌫", 0, theme.danger, theme);
+            endGroup();
+            return menu;
+        };
+
+        const drawMenuRow = function (text, shortcut, isHover, textColor, theme) {
+            const row = HGroup({ width: "100%", height: SIZE.control, align: "left center", gap: LIST.gap, padding: LIST.rowPadding, color: "transparent", round: LIST.rowRound, border: SIZE.line, borderColor: isHover ? theme.lineHover : "transparent" });
+                Label({ text: text, fontSize: SIZE.text, textColor: textColor, grow: 1 });
+                Label({ text: shortcut, fontSize: SIZE.small, textColor: theme.faintText });
+            endGroup();
+            return row;
+        };
+
+        const drawMenuSeparator = function (theme) {
+            const line = Box({ width: "100%", height: SIZE.line, color: theme.line, position: "relative" });
+            line.css = { margin: MENU.separatorMargin + "px 0" };
+            return line;
+        };
+
+        // GROUP: A dialog card: the title, the message, the buttons at the right
+        const drawDialog = function (theme) {
+            const card = VGroup({ width: DIALOG.width, height: "auto", align: "left top", gap: DIALOG.gap, padding: DIALOG.padding, color: theme.ground, round: DIALOG.round, border: SIZE.line, borderColor: theme.lineHover, clipContent: 0 });
+                Label({ text: "Delete the file?", fontSize: DIALOG.titleSize, fontFamily: FONT.bold, textColor: theme.text });
+                Label({ width: "100%", text: "report.pdf goes to the trash. You can take it back from there.", fontSize: SIZE.text, textColor: theme.softText, lineHeight: "1.45" });
+                const footer = HGroup({ width: "100%", height: "auto", align: "right center", gap: DIALOG.footerGap, clipContent: 0 });
+                footer.css = { marginTop: DIALOG.footerSpace + "px" };
+                    drawButton({ kind: "quiet", text: "Cancel", icon: "" }, {}, theme);
+                    drawButton({ kind: "danger", text: "Delete", icon: "" }, {}, theme);
+                endGroup();
+            endGroup();
+            return card;
+        };
+
+        // GROUP: A short message with an action
+        const drawToast = function (theme) {
+            const toast = HGroup({ hug: 1, align: "left center", gap: TOAST.gap, padding: TOAST.padding, color: theme.ground, round: SIZE.round, border: SIZE.line, borderColor: theme.line });
+            toast.height = TOAST.height;
+                drawIcon("done", theme.text);
+                Label({ text: "The file is saved.", fontSize: SIZE.text, textColor: theme.text, css: { whiteSpace: "nowrap" } });
+                Label({ text: "Undo", fontSize: SIZE.text, fontFamily: FONT.bold, textColor: theme.ink });
+            endGroup();
+            return toast;
+        };
+
+    </script>
+
+</head>
+
+<body>
+</body>
+
+</html>
