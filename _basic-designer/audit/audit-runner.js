@@ -1195,4 +1195,204 @@
         return R;
     };
 
+    // MANUAL MODE and the object buttons of the toolbox (2026-11-07): a click adds at 0, 0 of the box, over the others (in
+    // a group position: "absolute", in the code too), a drag takes an object out of the flow of its group, Cmd+drag, a new
+    // object of the toolbox and a drop in the layers stay manual in a group; a manual object of a group stays manual when it
+    // is brought to front or copied; send to back; the keys M, ] and [; the buttons follow the selection; without manual
+    // mode a click adds into the flow as before. Results in window.MANUAL.
+    window.runManualAudit = async function () {
+        const R = window.MANUAL = { done: false, fails: [], passed: [] };
+        const check = function (name, run, isDone, promptPattern, isBack) { return checkStep(R, name, run, isDone, promptPattern, isBack); };
+        const A = window.AUD;
+        const same = function (a, b) { return (a === b) ? true : JSON.stringify(a) + " != " + JSON.stringify(b); };
+        const posOf = function (o) { return W().getComputedStyle(o.elem).position; };
+        const lastOf = function (container) {
+            const list = BD.childObjects(container);
+            return list[list.length - 1];
+        };
+        const itemOf = function (type) { return BD.toolboxItems.find(function (i) { return i.type === type; }); };
+        const noneAdded = function () { return same(BD.state.addedObjects.length, 0); };
+        const key = function (text) { document.body.dispatchEvent(new KeyboardEvent("keydown", { key: text, bubbles: true, cancelable: true })); };
+        // An empty place of a group (its right end: its objects are narrower), in the coordinates of the designer
+        const emptyPlaceOf = function (o) {
+            const frame = BD.ui.frameBox.elem.getBoundingClientRect();
+            const r = o.elem.getBoundingClientRect();
+            return { x: frame.left + r.right - 40, y: frame.top + r.top + 30 };
+        };
+        const wasSnap = BD.settings.snap;
+        const wasManual = BD.state.isManualMode;
+        BD.settings.snap = false;
+        BD.setManualMode(true, true);
+        try {
+            // 1. A click on the toolbox: at 0, 0 of the selected group, over the others, position: "absolute" in the code
+            await check("a click adds at 0, 0 of a group", async function () {
+                BD.select(A.groupGiven);
+                await sleep(30);
+                BD.addObject(itemOf("Box"));
+            }, function () {
+                const o = BD.state.addedObjects[0];
+                if (!o) return "not added";
+                return same([posOf(o), o.elem.offsetLeft, o.elem.offsetTop, lastOf(A.groupGiven) === o].join(","), "absolute,0,0,true");
+            }, /code: Box\(\{ left: 0, top: 0, position: "absolute" \}\)/, noneAdded);
+
+            // 2. ... of a Box: 0, 0, over the others (the new box is selected: the label goes into it)
+            await check("a click adds at 0, 0 of a box", async function () {
+                BD.select(A.boxGiven);
+                await sleep(30);
+                BD.addObject(itemOf("Box"));
+                await sleep(50);
+                BD.addObject(itemOf("Label"));
+            }, function () {
+                const o = BD.state.addedObjects[1];
+                if (!o) return "not added";
+                const box = BD.state.addedObjects[0];
+                return same([o.elem.parentElement === box.elem, o.elem.offsetLeft, o.elem.offsetTop, lastOf(box) === o].join(","), "true,0,0,true");
+            }, /code: Label\(\{ text: "New label", left: 0, top: 0 \}\)/, noneAdded);
+
+            // 3. A drag on the canvas takes an object out of the flow of its group: manual where the mouse leaves it
+            const label = A.labelPlain;
+            let start = null;
+            await check("a drag takes an object out of its group's flow", async function () {
+                BD.select(label);
+                await sleep(30);
+                const c = screenCenter(label);
+                start = label.elem.getBoundingClientRect();
+                // WHY the cover: it chooses the drag (a free move in manual mode)
+                BD.ui.cover.elem.dispatchEvent(new PointerEvent("pointerdown", { clientX: c.x, clientY: c.y, button: 0, pointerId: 1, bubbles: true }));
+                BD.onMoveMove(pointer(c.x + 20, c.y + 30));
+                BD.onMoveMove(pointer(c.x + 40, c.y + 60));
+                BD.onMoveEnd(pointer(c.x + 40, c.y + 60));
+            }, function () {
+                // WHY 1 px: a part of a flow may be at half a pixel; a manual place is a whole pixel (a half one is blurred)
+                const r = label.elem.getBoundingClientRect();
+                const isMoved = Math.abs(r.left - start.left - 40) <= 1 && Math.abs(r.top - start.top - 60) <= 1;
+                return same([posOf(label), isMoved].join(","), "absolute,true");
+            }, /- position: relative -> absolute/, function () { return same(posOf(label), "relative"); });
+
+            // 4. Cmd+drag into a group: manual at the mouse, over the others
+            let dropLeft = 0;
+            await check("cmd+drag into a group stays manual", async function () {
+                const c = screenCenter(A.boxPlain);
+                const to = emptyPlaceOf(A.groupGiven);
+                const frame = BD.ui.frameBox.elem.getBoundingClientRect();
+                dropLeft = Math.round(to.x - frame.left - A.groupGiven.elem.getBoundingClientRect().left);
+                BD.pressDrag(pointer(c.x, c.y, { metaKey: true }), { kind: "move", obj: A.boxPlain });
+                BD.onDragMove(pointer(c.x + 10, c.y + 10, { metaKey: true }));
+                BD.onDragMove(pointer(to.x, to.y, { metaKey: true }));
+                BD.onDragEnd(pointer(to.x, to.y, { metaKey: true }));
+            }, function () {
+                const isIn = (A.boxPlain.elem.parentElement === A.groupGiven.elem);
+                return same([isIn, posOf(A.boxPlain), lastOf(A.groupGiven) === A.boxPlain, A.boxPlain.elem.offsetLeft].join(","), ["true", "absolute", "true", dropLeft].join(","));
+            }, /- move it/, function () { return same(A.boxPlain.elem.parentElement === BD.state.win.page.elem, true); });
+
+            // 5. A new object dragged from the toolbox into a group: manual at the mouse
+            await check("a new label dropped into a group stays manual", async function () {
+                const to = emptyPlaceOf(A.groupGiven);
+                BD.pressDrag(pointer(to.x - 200, to.y + 200), { kind: "new", item: itemOf("Label") });
+                BD.onDragMove(pointer(to.x - 190, to.y + 190));
+                BD.onDragMove(pointer(to.x, to.y));
+                BD.onDragEnd(pointer(to.x, to.y));
+            }, function () {
+                const o = BD.state.addedObjects[0];
+                if (!o) return "not added";
+                return same([o.elem.parentElement === A.groupGiven.elem, posOf(o), lastOf(A.groupGiven) === o].join(","), "true,absolute,true");
+            }, /position: "absolute"/, noneAdded);
+
+            // 6. The layers: a manual box dropped into a group stays manual
+            await check("a manual box moved into a group in the layers stays manual", async function () {
+                const r = rowOf(A.groupGiven).getBoundingClientRect();
+                await dragTree(A.boxPlain, r.left + 60, r.top + r.height / 2);
+            }, function () {
+                return same([A.boxPlain.elem.parentElement === A.groupGiven.elem, posOf(A.boxPlain)].join(","), "true,absolute");
+            }, /- move it/, function () { return same(A.boxPlain.elem.parentElement === BD.state.win.page.elem, true); });
+
+            // 7. Bring to front (the button of the toolbox): a manual object of a group stays manual, at its place
+            let placeBefore = "";
+            await check("bring to front keeps a manual object of a group manual", async function () {
+                BD.select(label);
+                await sleep(30);
+                BD.setPositioning(label, "manual");
+                BD.refreshChanges();
+                await sleep(650); // WHY: More than HISTORY_MERGE_TIME: the front is an undo step of its own.
+                placeBefore = label.elem.style.left + " " + label.elem.style.top;
+                BD.ui.objectButtons.find(function (b) { return b._key === "front"; }).elem.click();
+            }, function () {
+                const place = label.elem.style.left + " " + label.elem.style.top;
+                return same([posOf(label), lastOf(A.groupPlain) === label, place].join(","), ["absolute", "true", placeBefore].join(","));
+            }, /- move it/, function () { return same(lastOf(A.groupPlain) === label, false); });
+
+            // 8. Send to back (the menu of the object): the first one of its box
+            await check("send to back", async function () {
+                BD.select(A.inputPlain);
+                await sleep(30);
+                BD.onObjectMenu("back", A.inputPlain);
+            }, function () { return same(BD.childObjects(A.groupPlain)[0] === A.inputPlain, true); },
+            /- move it/, function () { return same(lastOf(A.groupPlain) === A.inputPlain, true); });
+
+            // 9. The keys ] and [
+            await check("the key ]", async function () {
+                BD.select(label);
+                await sleep(30);
+                key("]");
+            }, function () { return same(lastOf(A.groupPlain) === label, true); }, /- move it/, function () { return same(BD.childObjects(A.groupPlain)[0] === label, true); });
+            await check("the key [", async function () {
+                BD.select(A.inputPlain);
+                await sleep(30);
+                key("[");
+            }, function () { return same(BD.childObjects(A.groupPlain)[0] === A.inputPlain, true); }, /- move it/, function () { return same(lastOf(A.groupPlain) === A.inputPlain, true); });
+
+            // 10. A copy of a manual object of a group stays manual (10 px from it)
+            await check("a copy of a manual object of a group stays manual", async function () {
+                BD.select(label);
+                await sleep(30);
+                BD.setPositioning(label, "manual");
+                BD.refreshChanges();
+                await sleep(650);
+                BD.duplicateObject(label);
+            }, function () {
+                const copy = BD.state.addedObjects[0];
+                if (!copy) return "no copy";
+                return same([posOf(copy), copy.elem.offsetLeft - label.elem.offsetLeft, copy.elem.offsetTop - label.elem.offsetTop].join(","), "absolute,10,10");
+            }, /position: "absolute"/, noneAdded);
+
+            // 11. The buttons follow the selection: pale without one, and when the object can not do it
+            BD.select(null);
+            await sleep(30);
+            const stateOf = function () {
+                return BD.ui.objectButtons.map(function (b) { return b._key + ":" + ((b.elem.getAttribute("aria-disabled") === "true") ? "off" : "on"); }).join(" ");
+            };
+            const noSelection = stateOf();
+            BD.select(label); // the first one of groupPlain
+            await sleep(30);
+            const first = stateOf();
+            const expected = ["front:off back:off duplicate:off delete:off", "front:on back:off duplicate:on delete:on"];
+            if (noSelection === expected[0] && first === expected[1]) R.passed.push("the buttons follow the selection");
+            else R.fails.push("the buttons follow the selection: " + noSelection + " / " + first);
+
+            // 12. The key M turns manual mode off and on (and its button shows it)
+            key("m");
+            const offState = [BD.state.isManualMode, BD.ui.btnManual.elem.getAttribute("aria-pressed")].join(",");
+            key("m");
+            const onState = [BD.state.isManualMode, BD.ui.btnManual.elem.getAttribute("aria-pressed")].join(",");
+            if (offState === "false,false" && onState === "true,true") R.passed.push("the key M");
+            else R.fails.push("the key M: " + offState + " / " + onState);
+
+            // 13. Without manual mode a click adds into the flow of the group, as before
+            BD.setManualMode(false, true);
+            await check("no manual mode: a click adds into the flow of a group", async function () {
+                BD.select(A.groupGiven);
+                await sleep(30);
+                BD.addObject(itemOf("Box"));
+            }, function () {
+                const o = BD.state.addedObjects[0];
+                return (o) ? same(posOf(o), "relative") : "not added";
+            }, /code: Box\(\{\}\)/, noneAdded);
+        } finally {
+            BD.settings.snap = wasSnap;
+            BD.setManualMode(wasManual, true);
+        }
+        R.done = true;
+        return R;
+    };
+
 })();

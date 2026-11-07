@@ -105,6 +105,8 @@ BasicDesigner.state = {
     selected: null,
     hovered: null,
     mode: "select", // "select" | "interact"
+    isManualMode: false, // MANUAL MODE (the toolbox): a drag puts an object where the mouse leaves it, also in a group;
+                         // a new object of a click goes to 0, 0 of its box, over the others (manualPlaceIn)
     canSave: false, // 1 when the page is ready: the changes are saved in basic.storage (SESSION)
     isReplaying: false, // applySession is making the saved changes again
     placeLog: [], // add / move / delete with refs, in order (SESSION)
@@ -2231,6 +2233,7 @@ BasicDesigner.NO_SELECTION = {
 BasicDesigner.showProperties = function (obj) {
 
     const panel = BasicDesigner.ui.panel;
+    BasicDesigner.refreshObjectButtons();
     if (!panel) return;
 
     const isComponent = !!(obj && obj.__bd.component && obj.__bd.params);
@@ -3271,6 +3274,16 @@ BasicDesigner.placeForNew = function (selected) {
     return { container: target.containerBox || BasicDesigner.state.win.page, before: BasicDesigner.nextObject(target) };
 };
 
+// MANUAL MODE: a new object at 0, 0 of the container, over its other objects (the last one), also in a group.
+BasicDesigner.manualPlaceIn = function (container) {
+    return { container: container, before: null, point: { x: 0, y: 0 }, isManual: true };
+};
+
+// A manual object (position: absolute) in a group: it keeps that place when it is copied or moved in the layers.
+BasicDesigner.isManualInGroup = function (obj) {
+    return !!(obj.containerBox && obj.containerBox._isFlex && BasicDesigner.isManual(obj));
+};
+
 // Makes the object with the basic.js of the page (the iframe), in the container.
 BasicDesigner.BASIC_TYPES = ["Box", "VGroup", "HGroup", "Label", "Button", "Input", "Icon"];
 
@@ -3293,12 +3306,15 @@ BasicDesigner.createInPage = function (type, props, container) {
 };
 
 // Puts obj into place.container, before place.before. In a Box (not a group) at place.point or its own left / top.
+// place.isManual: in a group too (manual mode). A manual object that only changes its order in its box (bring to front,
+// the layers) stays manual. WHY: it became a part of the flow of its group and jumped to another place.
 BasicDesigner.putInPlace = function (obj, place) {
     const container = place.container;
     const before = (place.before && place.before !== obj) ? place.before.elem : null;
+    const staysManual = place.isManual || (obj.containerBox === container && obj.elem.isConnected && BasicDesigner.isManual(obj));
     container.elem.insertBefore(obj.elem, before);
     obj.parentBox = container;
-    if (container._isFlex) {
+    if (container._isFlex && !staysManual) {
         // WHY: The same styles basic.js gives an object made in a group (a flex item).
         obj.css = { position: "relative", left: "0px", top: "0px" };
         return;
@@ -3307,7 +3323,9 @@ BasicDesigner.putInPlace = function (obj, place) {
 };
 
 BasicDesigner.addObject = function (item) {
-    BasicDesigner.addObjectAt(item, BasicDesigner.placeForNew(BasicDesigner.state.selected));
+    const s = BasicDesigner.state;
+    const place = BasicDesigner.placeForNew(s.selected);
+    BasicDesigner.addObjectAt(item, (s.isManualMode) ? BasicDesigner.manualPlaceIn(place.container) : place);
 };
 
 BasicDesigner.addObjectAt = function (item, place) {
@@ -3320,11 +3338,13 @@ BasicDesigner.addObjectAt = function (item, place) {
 
     const props = Object.assign({}, item.props);
     // WHY: In a Box (not a group) an object without left / top is at -1000 (the default of basic.js).
-    if (!place.container._isFlex) {
+    if (!place.container._isFlex || place.isManual) {
         const point = place.point || { x: BasicDesigner.NEW_OBJECT_SPACE, y: BasicDesigner.NEW_OBJECT_SPACE };
         props.left = Math.round(point.x);
         props.top = Math.round(point.y);
     }
+    // WHY: basic.js makes an object of a group a part of its flow (relative); the code must say it is not.
+    if (place.isManual && place.container._isFlex) props.position = "absolute";
 
     // A component of another page that this page does not load: its file is loaded into the page first
     const missingScript = BasicDesigner.loadMissingComponent(item);
@@ -3338,12 +3358,14 @@ BasicDesigner.addObjectAt = function (item, place) {
     // (before the object is on the page: it does not count its own name)
     const name = item.name || BasicDesigner.newNameFor(item.type);
     BasicDesigner.logPlace("add", { type: item.type, place: place, props: item.props, copyOf: item.copyOf, script: item.script, name: name });
-    BasicDesigner.putInPlace(obj, { container: place.container, before: place.before });
+    BasicDesigner.putInPlace(obj, { container: place.container, before: place.before, isManual: place.isManual });
 
     obj.__bd.added = { type: item.type, props: props, copyOf: item.copyOf || "", script: missingScript, name: name };
     s.addedObjects.push(obj);
     s.changes.set("add:" + obj.__bd.id, { obj: obj, kind: "add", key: "added", targets: new Map(), count: 1 });
     BasicDesigner.afterPlaceChange(obj);
+    // WHY: 0, 0 of a box that scrolls may be out of sight (manual mode)
+    if (place.isManual && !s.isReplaying) obj.elem.scrollIntoView({ block: "nearest", inline: "nearest" });
     const loadedNote = (missingScript) ? " (this page did not load it: its file " + missingScript + " is loaded here; the prompt asks for its <script>)" : "";
     BasicDesigner.setStatus(item.type + " added" + loadedNote + ". Change it on the right; Copy prompt writes it into the code.");
 
@@ -3589,6 +3611,7 @@ BasicDesigner.logPlace = function (kind, values) {
         container: place.container ? BasicDesigner.refOf(place.container) : null,
         before: place.before ? BasicDesigner.refOf(place.before) : null,
         point: place.point || null,
+        isManual: place.isManual || false, // manual mode: in a group too, at the point
         props: values.props || null, // add: the props (a copy has its own)
         copyOf: values.copyOf || null, // add: the description of the copied object
         script: values.script || null, // add: the file of a component that the page may not load (a copy of another page)
@@ -3633,7 +3656,7 @@ BasicDesigner.applySession = function (session) {
     session.places.forEach(function (op) {
         const container = op.container ? find(op.container) : null;
         const before = op.before ? find(op.before) : null;
-        const place = { container: container, before: before, point: op.point || undefined };
+        const place = { container: container, before: before, point: op.point || undefined, isManual: !!op.isManual };
         if (op.kind === "add") {
             const toolboxItem = BasicDesigner.toolboxItems.find(function (i) { return i.type === op.type; });
             const item = (op.props) ? { type: op.type, props: op.props, copyOf: op.copyOf, script: op.script } : Object.assign({}, toolboxItem);
@@ -3896,15 +3919,17 @@ BasicDesigner.canvasTargetAt = function (x, y) {
 };
 
 // In a group: before the first object whose middle is after the mouse. In a Box: at the mouse (left / top).
+// Manual mode: at the mouse in a group too, over the others.
 BasicDesigner.placeInContainer = function (container, x, y) {
     const rect = container.elem.getBoundingClientRect();
-    if (!container._isFlex) {
+    const isManual = BasicDesigner.state.isManualMode;
+    if (!container._isFlex || isManual) {
         const except = BasicDesigner.drag.obj || null;
         const snapX = BasicDesigner.snapValue(x - rect.left + container.elem.scrollLeft, BasicDesigner.snapTargets(container, except, "x"));
         const snapY = BasicDesigner.snapValue(y - rect.top + container.elem.scrollTop, BasicDesigner.snapTargets(container, except, "y"));
         BasicDesigner.showSnapLine("x", container, snapX.target);
         BasicDesigner.showSnapLine("y", container, snapY.target);
-        return { area: "canvas", container: container, before: null, point: { x: snapX.value, y: snapY.value } };
+        return { area: "canvas", container: container, before: null, point: { x: snapX.value, y: snapY.value }, isManual: isManual };
     }
     const isVertical = (container._flow === "vertical");
     const children = BasicDesigner.childObjects(container).filter(function (o) {
@@ -4041,6 +4066,11 @@ BasicDesigner.drop = function (drag, target) {
         BasicDesigner.deleteObject(drag.obj);
         return;
     }
+    // MANUAL MODE in the layers: the place in the rows (over or under the others) and 0, 0 for a new object; a manual
+    // object keeps its left / top.
+    const isManualInRows = BasicDesigner.state.isManualMode && target.area === "tree";
+    if (isManualInRows && drag.kind === "new") target = Object.assign({}, target, { point: { x: 0, y: 0 }, isManual: true });
+    if (isManualInRows && drag.kind === "move" && BasicDesigner.isManual(drag.obj)) target = Object.assign({}, target, { isManual: true });
     if (drag.kind === "new") {
         BasicDesigner.addObjectAt(drag.item, target);
         return;
@@ -4077,6 +4107,7 @@ BasicDesigner.moveObject = function (obj, target) {
     BasicDesigner.logPlace("move", { obj: obj, place: target });
     BasicDesigner.putInPlace(obj, target);
 
+    if (obj.__bd.added) BasicDesigner.writeAddedPlace(obj);
     if (target.point) {
         const left = Math.round(target.point.x);
         const top = Math.round(target.point.y);
@@ -4102,6 +4133,18 @@ BasicDesigner.moveObject = function (obj, target) {
     BasicDesigner.afterPlaceChange(obj);
     BasicDesigner.setStatus(BasicDesigner.title(obj).short + " moved.");
 
+};
+
+// The code of an added object says where it is now: position: "absolute" for a manual one in a group; no left / top in
+// the flow of a group. WHY: basic.js moves an object of a group by its left / top (relative): the code looked moved.
+BasicDesigner.writeAddedPlace = function (obj) {
+    const props = obj.__bd.added.props;
+    const isInFlow = obj.containerBox._isFlex && !BasicDesigner.isManual(obj);
+    delete props.position;
+    if (BasicDesigner.isManualInGroup(obj)) props.position = "absolute";
+    if (!isInFlow) return;
+    delete props.left;
+    delete props.top;
 };
 
 BasicDesigner.deleteObject = function (obj) {
@@ -4247,9 +4290,11 @@ BasicDesigner.bindDragSources = function () {
         const hit = BasicDesigner.hitTest(event.clientX - frameRect.left, event.clientY - frameRect.top);
         const obj = BasicDesigner.movableOf(hit);
         if (!obj) return;
-        // WHY: A manual object is moved where the mouse puts it. Cmd/Ctrl+drag: into another box (the other drag).
+        // WHY: A manual object is moved where the mouse puts it, in manual mode an object of a group too (it leaves the
+        //      flow when the drag starts). Cmd/Ctrl+drag: into another box (the other drag).
         const isCommand = event.metaKey || event.ctrlKey;
-        if (BasicDesigner.isManual(obj) && !isCommand) BasicDesigner.pressMove(event, obj);
+        const isFreeMove = BasicDesigner.isManual(obj) || BasicDesigner.state.isManualMode;
+        if (isFreeMove && !isCommand) BasicDesigner.pressMove(event, obj);
         else BasicDesigner.pressDrag(event, { kind: "move", obj: obj });
     });
     window.addEventListener("pointermove", BasicDesigner.onDragMove);
@@ -4308,6 +4353,12 @@ BasicDesigner.buildToolbox = function () {
             "Click an object to select it, drag it to move it.");
         ui.btnInteract = BasicDesigner.createModeButton("interact", BasicDesigner.MODE_ICONS.interact, "Interact (I)",
             "Use the page like a user: click, type, scroll.");
+        ui.btnManual = BasicDesigner.iconButton({
+            path: BasicDesigner.MODE_ICONS.manual,
+            name: "Manual mode (M)",
+            description: "On: a drag puts an object where the mouse leaves it, also in a group (it leaves the flow). A click on a new object puts it at 0, 0 of its box, over the others.",
+            onClick: function () { BasicDesigner.setManualMode(!BasicDesigner.state.isManualMode); },
+        });
 
         // BOX: Divider
         const divider = Box({ width: 1, height: 20, color: C.line });
@@ -4325,8 +4376,16 @@ BasicDesigner.buildToolbox = function () {
             "The components the page loads (Tabs, SelectBox...). Click one to add it, or drag it to a place.",
             BasicDesigner.layerIconColors.component);
 
+        // BOX: Divider
+        const divider3 = Box({ width: 1, height: 20, color: C.line });
+        divider3.shrink = 0;
+        divider3.css = { margin: "0px 4px" };
+
+        ui.objectButtons = BasicDesigner.OBJECT_ACTIONS.map(BasicDesigner.createObjectButton);
+
     endGroup();
 
+    BasicDesigner.setManualMode(basic.storage.load(BasicDesigner.MANUAL_MODE_KEY) === 1, true);
 
 };
 
@@ -4685,6 +4744,7 @@ BasicDesigner.MODE_ICONS = {
     select: "M4 2.5l8.5 5.2-3.9.9 2.3 4-1.7 1-2.3-4L4.4 12.3z",
     components: "M8 1.8l5.6 3.1v6.2L8 14.2l-5.6-3.1V4.9zM2.4 4.9L8 8l5.6-3.1M8 8v6.2",
     interact: "M6 8.5V3.5a1 1 0 0 1 2 0v4M8 7V2.8a1 1 0 0 1 2 0v4.7M10 7.5V4a1 1 0 0 1 2 0v5.5a4.5 4.5 0 0 1-4.5 4.5h-.4a4 4 0 0 1-3.2-1.6L2.7 9.8a1 1 0 0 1 1.5-1.3L6 10.3",
+    manual: "M8 1.8v12.4M1.8 8h12.4M6.2 3.6L8 1.8l1.8 1.8M6.2 12.4L8 14.2l1.8-1.8M3.6 6.2L1.8 8l1.8 1.8M12.4 6.2L14.2 8l-1.8 1.8",
 };
 
 // A mode button of the toolbox (Select / Interact). setActive(isOn): the look of the active mode.
@@ -4776,6 +4836,90 @@ BasicDesigner.createModeButton = function (mode, path, name, description, color)
             else BasicDesigner.setMode(mode);
         },
     });
+};
+
+// MANUAL MODE: remembered (basic.storage). silent: no message (the start).
+BasicDesigner.MANUAL_MODE_KEY = "basic-designer-manual-mode";
+
+BasicDesigner.setManualMode = function (isOn, silent) {
+    const s = BasicDesigner.state;
+    s.isManualMode = !!isOn;
+    BasicDesigner.ui.btnManual.setActive(s.isManualMode);
+    basic.storage.save(BasicDesigner.MANUAL_MODE_KEY, (s.isManualMode) ? 1 : 0);
+    if (silent) return;
+    if (s.isManualMode) BasicDesigner.setStatus("Manual mode: a drag puts an object where the mouse leaves it, also in a group. A new object (a click) goes to 0, 0 of its box, over the others.");
+    else BasicDesigner.setStatus("Manual mode is off: an object of a group moves in its flow.");
+};
+
+// THE OBJECT BUTTONS: the most used actions of the selected object (also in its menu, and with their keys). A button that
+// can not act now is pale (refreshObjectButtons). Their icons: OBJECT_MENU_ICONS.
+BasicDesigner.OBJECT_ACTIONS = [
+    { key: "front", name: "Bring to front (])", description: "Over the other objects of its box: it becomes the last one (the last row of its box in the layers; in a group, the last in its flow)." },
+    { key: "back", name: "Send to back ([)", description: "Under the other objects of its box: it becomes the first one." },
+    { key: "duplicate", name: "Duplicate (⌘D)", description: "A copy right after it, with what is in it." },
+    { key: "delete", name: "Delete (⌫)", description: "An object of the code: Revert all brings it back." },
+];
+
+BasicDesigner.createObjectButton = function (action) {
+    const btn = BasicDesigner.iconButton({
+        path: BasicDesigner.OBJECT_MENU_ICONS[action.key],
+        name: action.name,
+        description: action.description,
+        onClick: function () {
+            const s = BasicDesigner.state;
+            const obj = s.selected && BasicDesigner.movableOf(s.selected);
+            if (obj) BasicDesigner.onObjectMenu(action.key, obj);
+        },
+    });
+    btn._key = action.key;
+    btn.setEnabled(false);
+    return btn;
+};
+
+BasicDesigner.refreshObjectButtons = function () {
+    const ui = BasicDesigner.ui;
+    if (!ui.objectButtons) return;
+    const s = BasicDesigner.state;
+    const selected = (s.mode === "select" && s.selected && s.selected.elem.isConnected) ? s.selected : null;
+    const can = BasicDesigner.objectActionsOf(selected && BasicDesigner.movableOf(selected));
+    ui.objectButtons.forEach(function (btn) { btn.setEnabled(!!can[btn._key]); });
+};
+
+// What the object can do now: { front, back, duplicate, delete } (the menu of the object asks the same).
+BasicDesigner.objectActionsOf = function (obj) {
+    if (!obj) return {};
+    const canReorder = BasicDesigner.canReorder(obj);
+    return {
+        front: canReorder && !!BasicDesigner.nextObject(obj),
+        back: canReorder && !!BasicDesigner.previousObject(obj),
+        duplicate: BasicDesigner.canCopy(obj),
+        delete: true,
+    };
+};
+
+// Can obj change its order in its box? In a box of the page or on the page itself, not inside a component (its code
+// makes that order).
+BasicDesigner.canReorder = function (obj) {
+    const container = obj.containerBox;
+    if (!container) return false;
+    return container === BasicDesigner.state.win.page || BasicDesigner.isPlainContainer(container);
+};
+
+// BRING TO FRONT / SEND TO BACK: the last / the first object of its box, so it is drawn over / under the others.
+// WHY the order and not a zIndex (basic.js bringToFront): the layers show the order, and the code keeps it (a move in the
+// prompt), as Move up / down in the layers.
+BasicDesigner.bringToFront = function (obj) {
+    if (!BasicDesigner.canReorder(obj) || !BasicDesigner.nextObject(obj)) return;
+    BasicDesigner.moveObject(obj, { container: obj.containerBox, before: null });
+    BasicDesigner.setStatus(BasicDesigner.title(obj).short + ": over the other objects of its box.");
+};
+
+BasicDesigner.sendToBack = function (obj) {
+    if (!BasicDesigner.canReorder(obj)) return;
+    const first = BasicDesigner.childObjects(obj.containerBox)[0];
+    if (!first || first === obj) return;
+    BasicDesigner.moveObject(obj, { container: obj.containerBox, before: first });
+    BasicDesigner.setStatus(BasicDesigner.title(obj).short + ": under the other objects of its box.");
 };
 
 BasicDesigner.createToolboxButton = function (item) {
@@ -6177,11 +6321,13 @@ BasicDesigner.closeDialog = function () {
 BasicDesigner.SHORTCUTS = [
     ["V", "Select mode"],
     ["I", "Interact mode (use the page)"],
+    ["M", "Manual mode: a drag puts an object where the mouse leaves it; a new object goes to 0, 0 of its box"],
     ["Cmd/Ctrl+Z", "Undo"],
     ["Shift+Cmd/Ctrl+Z", "Redo"],
     ["Cmd/Ctrl+O", "Open a page"],
     ["Delete / Backspace", "Delete the selected object"],
     ["Cmd/Ctrl+D", "Copy the selected object"],
+    ["] / [", "Bring the selected object to front / send it to back (in its box)"],
     ["Arrow keys", "Move a manual object 1 px / change the order in a group"],
     ["Shift+Arrow keys", "Move a manual object 10 px"],
     ["Alt (hold)", "Distances to the object under the mouse"],
@@ -6910,6 +7056,7 @@ BasicDesigner.onKey = function (event) {
     if (event.key === "Escape") { BasicDesigner.select(null); }
     else if (event.key === "v" || event.key === "V") { BasicDesigner.setMode("select"); }
     else if (event.key === "i" || event.key === "I") { BasicDesigner.setMode("interact"); }
+    else if ((event.key === "m" || event.key === "M") && !isCommand) { BasicDesigner.setManualMode(!s.isManualMode); }
     else if (event.key === "Enter" && s.selected) { BasicDesigner.openInEditor(BasicDesigner.nameFrame(s.selected)); }
 };
 
@@ -7149,6 +7296,7 @@ BasicDesigner.onMoveMove = function (event) {
         if (distance < BasicDesigner.DRAG_START_DISTANCE) return;
         mv.isStarted = true;
         if (BasicDesigner.state.selected !== mv.obj) BasicDesigner.select(mv.obj);
+        if (!BasicDesigner.isManual(mv.obj)) BasicDesigner.leaveFlow(mv);
     }
     event.preventDefault();
     const place = BasicDesigner.moveTo(event);
@@ -7164,6 +7312,16 @@ BasicDesigner.onMoveMove = function (event) {
         else obj.bottom = parent.clientHeight - place.top - mv.height;
     });
     BasicDesigner.startOverlayLoop();
+};
+
+// MANUAL MODE: an object of a group becomes manual where it is (one "sides" change with the move), then it moves.
+// WHY its size again: out of the flow a part that grew in it (grow, stretch) has its own size.
+BasicDesigner.leaveFlow = function (mv) {
+    BasicDesigner.setPositioning(mv.obj, "manual");
+    mv.left = BasicDesigner.distanceFrom(mv.obj, "left");
+    mv.top = BasicDesigner.distanceFrom(mv.obj, "top");
+    mv.width = mv.obj.elem.offsetWidth;
+    mv.height = mv.obj.elem.offsetHeight;
 };
 
 BasicDesigner.onMoveEnd = function () {
@@ -7400,8 +7558,8 @@ BasicDesigner.duplicateObject = function (obj) {
         BasicDesigner.setStatus("This object can not be copied (a component whose parameters were not caught).");
         return;
     }
-    const place = { container: obj.containerBox, before: BasicDesigner.nextObject(obj) };
-    if (!obj.containerBox._isFlex) {
+    const place = { container: obj.containerBox, before: BasicDesigner.nextObject(obj), isManual: BasicDesigner.isManualInGroup(obj) };
+    if (!obj.containerBox._isFlex || place.isManual) {
         place.point = { x: BasicDesigner.distanceFrom(obj, "left") + BasicDesigner.COPY_OFFSET, y: BasicDesigner.distanceFrom(obj, "top") + BasicDesigner.COPY_OFFSET };
     }
     BasicDesigner.addObjectAt(item, place);
@@ -7472,8 +7630,8 @@ BasicDesigner.copyChildren = function (source, copy) {
             skipped++;
             return;
         }
-        const place = { container: copy, before: null };
-        if (!copy._isFlex) place.point = { x: BasicDesigner.distanceFrom(child, "left"), y: BasicDesigner.distanceFrom(child, "top") };
+        const place = { container: copy, before: null, isManual: BasicDesigner.isManualInGroup(child) };
+        if (!copy._isFlex || place.isManual) place.point = { x: BasicDesigner.distanceFrom(child, "left"), y: BasicDesigner.distanceFrom(child, "top") };
         BasicDesigner.addObjectAt(item, place);
         const childCopy = BasicDesigner.lastAddedObject();
         if (childCopy && BasicDesigner.isContainerType(item.type)) skipped += BasicDesigner.copyChildren(child, childCopy);
@@ -7535,6 +7693,12 @@ BasicDesigner.onObjectKey = function (event) {
     }
     if (isCommand && (event.key === "d" || event.key === "D")) {
         BasicDesigner.duplicateObject(obj);
+        return true;
+    }
+    // WHY no check of Alt: on some keyboards (Turkish Q of a Mac) [ and ] are written with Alt.
+    if (!isCommand && (event.key === "]" || event.key === "[")) {
+        if (event.key === "]") BasicDesigner.bringToFront(obj);
+        else BasicDesigner.sendToBack(obj);
         return true;
     }
     // WHY: In the layers the arrow keys move between the rows (TreeView).
@@ -7944,7 +8108,7 @@ BasicDesigner.clipboard = null; // { item, point, children }
 BasicDesigner.snapshotOf = function (obj) {
     const item = BasicDesigner.copyItemOf(obj);
     if (!item) return null;
-    const snap = { item: item, point: { x: BasicDesigner.distanceFrom(obj, "left"), y: BasicDesigner.distanceFrom(obj, "top") }, children: [] };
+    const snap = { item: item, point: { x: BasicDesigner.distanceFrom(obj, "left"), y: BasicDesigner.distanceFrom(obj, "top") }, isManual: BasicDesigner.isManualInGroup(obj), children: [] };
     if (!BasicDesigner.isContainerType(item.type)) return snap;
     BasicDesigner.childObjects(obj).forEach(function (child) {
         const childSnap = BasicDesigner.snapshotOf(child);
@@ -7959,8 +8123,8 @@ BasicDesigner.addSnapshot = function (snap, place) {
     const copy = BasicDesigner.lastAddedObject();
     if (!copy) return null;
     snap.children.forEach(function (childSnap) {
-        const childPlace = { container: copy, before: null };
-        if (!copy._isFlex) childPlace.point = childSnap.point;
+        const childPlace = { container: copy, before: null, isManual: !!childSnap.isManual };
+        if (!copy._isFlex || childPlace.isManual) childPlace.point = childSnap.point;
         BasicDesigner.addSnapshot(childSnap, childPlace);
     });
     return copy;
@@ -8120,6 +8284,8 @@ BasicDesigner.OBJECT_MENU_ICONS = {
     editText: "M3 4.5V3h10v1.5M8 3v10M6.5 13h3",
     moveUp: "M8 13V3M4.5 6.5L8 3l3.5 3.5",
     moveDown: "M8 3v10M4.5 9.5L8 13l3.5-3.5",
+    front: "M3 2.5h10M8 14V5.5M4.8 8.7L8 5.5l3.2 3.2",
+    back: "M3 13.5h10M8 2v8.5M4.8 7.3L8 10.5l3.2-3.2",
     openCode: "M5.5 4.5L2 8l3.5 3.5M10.5 4.5L14 8l-3.5 3.5",
     delete: "M2.5 4.5h11M6.5 4.5V3h3v1.5M4 4.5l.7 8.5h6.6l.7-8.5",
 };
@@ -8129,8 +8295,8 @@ BasicDesigner.objectMenuIcon = function (key) {
 };
 
 BasicDesigner.objectMenuItems = function (obj) {
-    const container = obj.containerBox;
-    const canReorder = BasicDesigner.isPlainContainer(container);
+    const canReorder = BasicDesigner.canReorder(obj);
+    const can = BasicDesigner.objectActionsOf(obj);
     const isText = BasicDesigner.TEXT_TYPES.indexOf(obj._type) !== -1;
     const canCopy = (BasicDesigner.canCopy(obj)) ? 1 : 0;
     return [
@@ -8142,6 +8308,8 @@ BasicDesigner.objectMenuItems = function (obj) {
         "-",
         { text: "Move up in the layers", key: "moveUp", enabled: (canReorder && BasicDesigner.previousObject(obj)) ? 1 : 0 },
         { text: "Move down in the layers", key: "moveDown", enabled: (canReorder && BasicDesigner.nextObject(obj)) ? 1 : 0 },
+        { text: "Bring to front · ]", key: "front", enabled: (can.front) ? 1 : 0 },
+        { text: "Send to back · [", key: "back", enabled: (can.back) ? 1 : 0 },
         "-",
         { text: "Open the code · Enter", key: "openCode" },
         { text: "Delete · ⌫", key: "delete" },
@@ -8166,6 +8334,8 @@ BasicDesigner.onObjectMenu = function (key, obj) {
     if (key === "editText") BasicDesigner.editTextInPlace(obj);
     if (key === "moveUp") BasicDesigner.moveObject(obj, { container: container, before: BasicDesigner.previousObject(obj) });
     if (key === "moveDown") BasicDesigner.moveObject(obj, { container: container, before: BasicDesigner.nextObject(BasicDesigner.nextObject(obj)) });
+    if (key === "front") BasicDesigner.bringToFront(obj);
+    if (key === "back") BasicDesigner.sendToBack(obj);
     if (key === "openCode") BasicDesigner.openInEditor(BasicDesigner.nameFrame(obj));
     if (key === "delete") BasicDesigner.deleteObject(obj);
 };
