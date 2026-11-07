@@ -20,7 +20,7 @@
         // windows of the Python UI. Small (28 px controls, 13 px text) and made of lines: no fill and no shadow of
         // its own, so a component takes the ground of the window it is on, and every state is a line that changes.
         // One card per component: a row per state, a column per package. Drawn with plain basic.js objects (no
-        // component here). No component has these packages yet: the values below are the design itself.
+        // component here). The components have these packages (minimal, minimalDark): this draft is their design.
         // http://127.0.0.1:5505/_basic-designer/index.htm?page=_designs/minimal-theme.htm
 
         // *** THE TWO PACKAGES (a column of every grid)
@@ -42,6 +42,13 @@
             danger: "#C24A36",
             dangerLine: "rgba(194, 74, 54, 0.5)",
             focus: "#3D8BD9", // the ring of the keyboard focus
+            hover: Black(0.05), // a faint fill under the mouse: a day, a cell, a row of a picker
+            fill: Black(0.06), // the value part of a SliderField (fillHover, fillActive: under the mouse, dragged)
+            fillHover: Black(0.08),
+            fillActive: Black(0.11),
+            grid: Black(0.08), // the lines of a chart
+            chart: "#2A78D6", // the first color of the data (the colors of GraphBox light)
+            cover: Black(0.3), // the window behind a SidePanel or a Dialog
         };
 
         const MINIMAL_DARK = {
@@ -61,6 +68,13 @@
             danger: "#FF9F93",
             dangerLine: "rgba(255, 159, 147, 0.5)",
             focus: "#7FB6DE",
+            hover: White(0.07),
+            fill: White(0.08),
+            fillHover: White(0.11),
+            fillActive: White(0.14),
+            grid: White(0.07),
+            chart: "#3987E5",
+            cover: Black(0.6),
         };
 
         const THEMES = [MINIMAL, MINIMAL_DARK];
@@ -100,6 +114,16 @@
         const BARS = { width: 340, menuPadding: [10, 0], toolHeight: 36, toolPadding: [4, 0], toolGap: 2, separatorHeight: 16, statusHeight: 24, statusPadding: [10, 0], statusGap: 16 };
         const DIALOG = { width: 320, round: 6, padding: 16, gap: 6, footerGap: 8, footerSpace: 10, titleSize: 14 };
         const TOAST = { height: 36, padding: [12, 0], gap: 8 };
+        const PICKER = { dateWidth: 150, timeWidth: 110, colorWidth: 150, panelGap: 4, panelPadding: 8, daySize: 28, cellWidth: 52, barWidth: 3, barSpace: 14, barHeight: 56, columnGap: 4, swatchSize: 22, swatchGap: 6, swatchColumns: 5, swatchDot: 6, fieldSwatch: 16, footerHeight: 30 };
+        const FILE_ZONE = { width: 300, height: 120, iconSize: 28, rowHeight: 42, gap: 6, rowPadding: [10, 0], typeWidth: 26 };
+        const ACCORDION = { width: 280, rowHeight: 32, rowPadding: [10, 0], arrowSize: 12, contentPadding: [10, 10], contentGap: 10 };
+        const SLIDER_FIELD = { width: 220, labelText: "Size", labelPadding: 10, labelWidth: 24, labelSpace: 16, valueWidth: 32, valueSpace: 6, handleWidth: 2, handleHeight: 12, handleInset: 6, tickSize: 2, tickCount: 5, fillRound: 3 };
+        const STEP_BAR = { width: 300, circle: 20, lineSpace: 5, ringSpace: 2, ringWidth: 1.5, hoverRing: 4, titleSpace: 6, checkSize: 12 };
+        const TAG_INPUT = { width: 260, tagHeight: 20, tagPadding: [6, 0], tagRound: 3, tagGap: 3, gap: 4, padding: [6, 3], crossSize: 10 };
+        const SPLITTER = { width: 260, height: 70, activeSize: 2, firstWidth: 100 };
+        const SIDE_PANEL = { width: 300, height: 190, panelWidth: 200, headerHeight: 40, headerPadding: [16, 0], titleSize: 14, bodyPadding: [16, 14], bodyGap: 10 };
+        const LOADING = { width: 260, height: 180, gap: 10, titleSize: 15, ringSize: 30, ringLine: 2, progressWidth: 140, progressHeight: 2, progress: 0.4 };
+        const CHART = { width: 300, padding: 12, gap: 10, plotHeight: 100, axisWidth: 22, barWidth: 22, barRound: 2, max: 10, ticks: [0, 5, 10], values: [5, 9, 3, 7, 4], labels: ["A", "B", "C", "D", "E"] };
 
         // *** THE PAGE AROUND THE GRIDS
 
@@ -125,6 +149,11 @@
             minus: '<path d="M5 12h14"/>',
             plus: '<path d="M12 5v14M5 12h14"/>',
             done: '<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>',
+            calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+            clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+            chevronLeft: '<path d="m15 6-6 6 6 6"/>',
+            chevronRight: '<path d="m9 6 6 6-6 6"/>',
+            upload: '<path d="M7 18a4.5 4.5 0 0 1-.5-9A6 6 0 0 1 18 9.5a4 4 0 0 1-1 8.5"/><path d="M12 12v8M9 15l3-3 3 3"/>',
         };
 
         const svgIcon = function (color, paths, strokeWidth = 2) {
@@ -150,6 +179,7 @@
             { name: "Lines", tokens: ["line", "lineHover", "ink"] },
             { name: "Texts", tokens: ["text", "softText", "faintText"] },
             { name: "Signals", tokens: ["danger", "focus", "track"] },
+            { name: "Fills", tokens: ["hover", "fill", "grid"] },
             { name: "Type", type: 1 },
             { name: "Sizes", sizes: 1 },
         ];
@@ -303,6 +333,99 @@
             { name: "Toast", draw: "toast" },
         ];
 
+        const WEEK_DAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
+        // November 2026, Monday first: the 1st is a Sunday (6 empty places before it); the days before offBefore are off
+        const MONTH = { title: "November 2026", emptyDays: 6, dayCount: 30, today: 7, offBefore: 3 };
+
+        const DATE_STATES = [
+            { name: "empty", placeholder: "Date" },
+            { name: "hover", placeholder: "Date", hover: 1 },
+            { name: "chosen", value: "12.11.2026" },
+            { name: "open", value: "12.11.2026", isOpen: 1, chosenDay: 12, hoverDay: 20 },
+            { name: "disabled", value: "12.11.2026", disabled: 1 },
+        ];
+
+        const HOURS = ["12", "13", "14", "15", "16"];
+        const MINUTES = ["20", "25", "30", "35", "40"];
+
+        const TIME_STATES = [
+            { name: "chosen", value: "14:30" },
+            { name: "open", value: "14:30", isOpen: 1, chosenHour: "14", chosenMinute: "30", hoverHour: "15" },
+        ];
+
+        const PALETTE = [
+            "#141414", "#5A5A5A", "#9A9A9A", "#D0D0D0", "#FFFFFF",
+            "#D64545", "#E0A038", "#E8D44D", "#5DB182", "#3E8E62",
+            "#3871E0", "#5AA9E6", "#7B61D9", "#B45FC0", "#E06AA0",
+            "#8D6E63", "#C89F7B", "#2E4A7D", "#1F6F6B", "#7A8B2E",
+        ];
+
+        const COLOR_STATES = [
+            { name: "chosen", value: "#3871E0" },
+            { name: "open", value: "#3871E0", isOpen: 1 },
+        ];
+
+        const FILES = [
+            { type: "PDF", name: "report-2026.pdf", size: "47 KB · application/pdf" },
+            { type: "TXT", name: "notes.txt", size: "1.2 KB · text/plain" },
+        ];
+
+        const FILE_STATES = [
+            { name: "normal", files: [] },
+            { name: "hover", files: [], hover: 1 },
+            { name: "a file over it", files: [], dragOver: 1 },
+            { name: "two files", files: FILES },
+        ];
+
+        const SECTIONS = [
+            { title: "General", note: "3 settings" },
+            { title: "Advanced", note: "" },
+            { title: "Locked", note: "", disabled: 1 },
+        ];
+
+        const ACCORDION_STATES = [
+            { name: "one open", openIndex: 0 },
+            { name: "hover on a row", hoverIndex: 1 },
+            { name: "keyboard focus", focusIndex: 1 },
+        ];
+
+        const SLIDER_FIELD_STATES = [
+            { name: "normal", value: 0.4 },
+            { name: "hover", value: 0.4, hover: 1 },
+            { name: "dragging", value: 0.6, dragging: 1 },
+            { name: "keyboard focus", value: 0.4, focus: 1 },
+            { name: "at the minimum", value: 0 },
+            { name: "disabled", value: 0.4, disabled: 1 },
+        ];
+
+        const STEP_NAMES = ["Cart", "Address", "Payment", "Done"];
+
+        const STEP_STATES = [
+            { name: "normal", current: 2 },
+            { name: "hover on a done step", current: 2, hoverIndex: 0 },
+            { name: "keyboard focus", current: 2, focusIndex: 0 },
+        ];
+
+        const TAG_STATES = [
+            { name: "empty", tags: [], placeholder: "Add a tag..." },
+            { name: "tags", tags: ["audio", "guide"] },
+            { name: "focus, typing", tags: ["audio"], value: "fi", focus: 1, suggestions: ["fitness", "film", "finance"] },
+            { name: "a tag chosen by the keyboard", tags: ["audio", "guide"], chosenTag: "guide", focus: 1 },
+            { name: "error", tags: ["audio"], value: "audio", error: "\"audio\" is already added." },
+        ];
+
+        const SPLITTER_STATES = [
+            { name: "normal" },
+            { name: "hover, dragging", active: 1 },
+            { name: "keyboard focus", focus: 1 },
+        ];
+
+        const PANEL_STATES = [
+            { name: "SidePanel", draw: "sidePanel" },
+            { name: "LoadingScreen", draw: "loading" },
+            { name: "GraphBox", draw: "chart" },
+        ];
+
         // *** THE PAGE
 
         const start = function () {
@@ -334,6 +457,16 @@
                     drawComponent({ title: "TreeView", note: "The rows of ItemList, moved in by their level, a chevron before a folder.", cellWidth: 290, states: TREE_STATES, drawCell: drawTreeCell });
                     drawComponent({ title: "MenuBar · ToolBar · StatusBar", note: "The bars of a window: one line between them and the page; the buttons are quiet buttons.", cellWidth: 380, states: BAR_STATES, drawCell: drawBarCell });
                     drawComponent({ title: "Tooltip · ContextMenu · Dialog · Toast", note: "Things over the page need a ground: the ground of the window and a line, still no shadow.", cellWidth: 380, states: OVERLAY_STATES, drawCell: drawOverlayCell });
+                    drawComponent({ title: "SelectDate", note: "The field of SelectBox with a 14 px line calendar; the calendar on the ground of the window, 28 px days: a line around today, the chosen day in ink.", cellWidth: 300, states: DATE_STATES, drawCell: drawDateCell });
+                    drawComponent({ title: "SelectTime", note: "The same field with a line clock; two columns of 28 px cells, the chosen ones in ink, a thin scroll bar beside the cells.", cellWidth: 260, states: TIME_STATES, drawCell: drawTimeCell });
+                    drawComponent({ title: "SelectColor", note: "A 16 px swatch in the field; a palette of 22 px swatches with a soft line, a dot on the chosen one.", cellWidth: 260, states: COLOR_STATES, drawCell: drawColorCell });
+                    drawComponent({ title: "SelectFile", note: "A dashed line of 3:1 (a click chooses a file), darker under the mouse, ink while a file is over it; 42 px rows.", cellWidth: 340, states: FILE_STATES, drawCell: drawFileCell });
+                    drawComponent({ title: "Accordion", note: "A soft line around the sections and between them, 32 px rows, a faint row under the mouse.", cellWidth: 320, states: ACCORDION_STATES, drawCell: drawAccordionCell });
+                    drawComponent({ title: "SliderField", note: "A 28 px field, a faint fill for the value and a 2 px handle that never crosses the label or the value.", cellWidth: 260, states: SLIDER_FIELD_STATES, drawCell: drawSliderFieldCell });
+                    drawComponent({ title: "StepBar", note: "20 px circles: ink for the steps behind and the step of now, a soft line for the next ones; the keyboard: a ring around the circle.", cellWidth: 340, states: STEP_STATES, drawCell: drawStepCell });
+                    drawComponent({ title: "TagInput", note: "20 px tags with a soft line in a 28 px field; the typed part of a suggestion in bold.", cellWidth: 300, states: TAG_STATES, drawCell: drawTagCell });
+                    drawComponent({ title: "Splitter", note: "The soft line; 2 px of ink under the mouse, 2 px of the focus color for the keyboard.", cellWidth: 300, states: SPLITTER_STATES, drawCell: drawSplitterCell });
+                    drawComponent({ title: "SidePanel · LoadingScreen · GraphBox", note: "A panel with a line and no shadow, a loading screen with the ring of the minimal button, a chart in the colors of the theme.", cellWidth: 340, states: PANEL_STATES, drawCell: drawPanelCell });
 
                 endGroup();
 
@@ -1070,6 +1203,525 @@
                 Label({ text: "Undo", fontSize: SIZE.text, fontFamily: FONT.bold, textColor: theme.ink });
             endGroup();
             return toast;
+        };
+
+
+        // *** SELECT DATE, SELECT TIME, SELECT COLOR
+
+        // GROUP: The field of a picker: the text (or the placeholder) and a line icon at its right
+        const drawPickerField = function (state, theme, width, iconName) {
+            const field = HGroup({ width: width, height: SIZE.control, align: "left center", gap: BUTTON.gap, padding: SELECT.padding, color: "transparent", round: SIZE.round, border: SIZE.line, borderColor: getSelectLine(state, theme) });
+                drawSearchText(state, theme).grow = 1;
+                drawIcon(iconName, theme.softText);
+            endGroup();
+            return field;
+        };
+
+        // GROUP: The panel of a picker on the ground of the window: a line, no shadow. Ended by the caller.
+        const drawPickerPanel = function (theme, gap) {
+            return VGroup({ width: "auto", height: "auto", align: "left top", gap: gap, padding: PICKER.panelPadding, color: theme.ground, round: SIZE.round, border: SIZE.line, borderColor: theme.line, clipContent: 0 });
+        };
+
+        // GROUP: The foot of a picker: a line over two text buttons
+        const drawPickerFooter = function (theme, leftText, rightText) {
+            const footer = HGroup({ width: "100%", height: PICKER.footerHeight, align: "left center", gap: 0, padding: [4, 0] });
+            footer.css = { borderTop: SIZE.line + "px solid " + theme.line, marginTop: "6px" };
+                Label({ text: leftText, fontSize: SIZE.small, textColor: theme.ink, grow: 1 });
+                Label({ text: rightText, fontSize: SIZE.small, textColor: theme.ink });
+            endGroup();
+            return footer;
+        };
+
+        const drawDateCell = function (state, theme) {
+            const group = VGroup({ width: "auto", height: "auto", align: "left top", gap: PICKER.panelGap, clipContent: 0 });
+            if (state.disabled) group.opacity = SIZE.disabledOpacity;
+                drawPickerField(state, theme, PICKER.dateWidth, "calendar");
+                if (state.isOpen) drawCalendar(state, theme);
+            endGroup();
+            return group;
+        };
+
+        // GROUP: The calendar: the month between its arrows, the week days, the days in rows of seven
+        const drawCalendar = function (state, theme) {
+            const panel = drawPickerPanel(theme, 0);
+                const head = HGroup({ width: "100%", height: SIZE.control, align: "left center", gap: 0 });
+                    drawIcon("chevronLeft", theme.softText);
+                    Label({ text: MONTH.title, fontSize: SIZE.text, fontFamily: FONT.bold, textColor: theme.text, textAlign: "center", grow: 1 });
+                    drawIcon("chevronRight", theme.softText);
+                endGroup();
+                HGroup({ hug: 1, align: "left center", gap: 0 });
+                    WEEK_DAYS.forEach(function (day) {
+                        Label({ width: PICKER.daySize, height: PICKER.daySize, text: day, fontSize: SIZE.caption, textColor: theme.softText, textAlign: "center", lineHeight: PICKER.daySize + "px" });
+                    });
+                endGroup();
+                const places = getMonthPlaces();
+                for (let start = 0; start < places.length; start += WEEK_DAYS.length) {
+                    drawWeek(places.slice(start, start + WEEK_DAYS.length), state, theme);
+                }
+                drawPickerFooter(theme, "Today", "Clear");
+            endGroup();
+            return panel;
+        };
+
+        // The places of the month: 0 for an empty place before the 1st, then the days
+        const getMonthPlaces = function () {
+            const places = [];
+            for (let i = 0; i < MONTH.emptyDays; i++) places.push(0);
+            for (let day = 1; day <= MONTH.dayCount; day++) places.push(day);
+            return places;
+        };
+
+        const drawWeek = function (days, state, theme) {
+            const week = HGroup({ hug: 1, align: "left center", gap: 0 });
+                days.forEach(function (day) {
+                    drawDay(day, state, theme);
+                });
+            endGroup();
+            return week;
+        };
+
+        // LABEL: A day: ink when chosen, a line around today, a faint fill under the mouse, faint when it is off
+        const drawDay = function (day, state, theme) {
+            const cell = Label({ width: PICKER.daySize, height: PICKER.daySize, text: (day) ? String(day) : "", fontSize: SIZE.text, textColor: theme.text, textAlign: "center", lineHeight: PICKER.daySize + "px", round: SIZE.round, color: "transparent" });
+            if (!day) return cell;
+            if (day < MONTH.offBefore) cell.textColor = theme.faintText;
+            if (day === state.hoverDay) cell.color = theme.hover;
+            if (day === MONTH.today) cell.boxShadow = "inset 0 0 0 " + SIZE.line + "px " + theme.edge;
+            if (day === state.chosenDay) cell.props({ color: theme.ink, textColor: theme.onInk });
+            return cell;
+        };
+
+        const drawTimeCell = function (state, theme) {
+            const group = VGroup({ width: "auto", height: "auto", align: "left top", gap: PICKER.panelGap, clipContent: 0 });
+                drawPickerField(state, theme, PICKER.timeWidth, "clock");
+                if (state.isOpen) drawTimePanel(state, theme);
+            endGroup();
+            return group;
+        };
+
+        // GROUP: The hours and the minutes side by side, the foot under them
+        const drawTimePanel = function (state, theme) {
+            const panel = drawPickerPanel(theme, 0);
+                HGroup({ hug: 1, align: "left top", gap: PICKER.columnGap, clipContent: 0 });
+                    drawTimeColumn("Hour", HOURS, state.chosenHour, state.hoverHour, theme, 1);
+                    drawTimeColumn("Minute", MINUTES, state.chosenMinute, "", theme, 0);
+                endGroup();
+                drawPickerFooter(theme, "Now", "Clear");
+            endGroup();
+            return panel;
+        };
+
+        // GROUP: A column: its title (darker for the column of the keyboard), the cells, a thin scroll bar beside them
+        const drawTimeColumn = function (title, values, chosen, hovered, theme, isKeyboardColumn) {
+            const column = VGroup({ width: PICKER.cellWidth + PICKER.barSpace, height: "auto", align: "center top", gap: 4 });
+                Label({ text: title, fontSize: SIZE.caption, textColor: (isKeyboardColumn) ? theme.text : theme.softText });
+                const cells = VGroup({ width: "100%", height: "auto", align: "center top", gap: 0, css: { position: "relative" } });
+                    values.forEach(function (value) {
+                        drawTimeValue(value, chosen, hovered, theme);
+                    });
+                    Box({ width: PICKER.barWidth, height: PICKER.barHeight, color: theme.text, opacity: 0.3, round: 2, css: { position: "absolute", left: "auto", right: "2px", top: SIZE.control + "px" } });
+                endGroup();
+            endGroup();
+            return column;
+        };
+
+        const drawTimeValue = function (value, chosen, hovered, theme) {
+            const cell = Label({ width: PICKER.cellWidth, height: SIZE.control, text: value, fontSize: SIZE.text, textColor: theme.text, textAlign: "center", lineHeight: SIZE.control + "px", round: SIZE.round, color: "transparent" });
+            if (value === hovered) cell.color = theme.hover;
+            if (value === chosen) cell.props({ color: theme.ink, textColor: theme.onInk });
+            return cell;
+        };
+
+        const drawColorCell = function (state, theme) {
+            const group = VGroup({ width: "auto", height: "auto", align: "left top", gap: PICKER.panelGap, clipContent: 0 });
+                drawColorField(state, theme);
+                if (state.isOpen) drawPalette(state, theme);
+            endGroup();
+            return group;
+        };
+
+        // GROUP: The field: a swatch of the color and its text
+        const drawColorField = function (state, theme) {
+            const field = HGroup({ width: PICKER.colorWidth, height: SIZE.control, align: "left center", gap: 8, padding: SELECT.padding, color: "transparent", round: SIZE.round, border: SIZE.line, borderColor: getSelectLine(state, theme) });
+                Box({ width: PICKER.fieldSwatch, height: PICKER.fieldSwatch, color: state.value, round: 3, border: SIZE.line, borderColor: theme.line, position: "relative" });
+                drawSearchText(state, theme);
+            endGroup();
+            return field;
+        };
+
+        // GROUP: The palette in rows of five
+        const drawPalette = function (state, theme) {
+            const panel = drawPickerPanel(theme, PICKER.swatchGap);
+                for (let start = 0; start < PALETTE.length; start += PICKER.swatchColumns) {
+                    const row = HGroup({ hug: 1, align: "left center", gap: PICKER.swatchGap });
+                        PALETTE.slice(start, start + PICKER.swatchColumns).forEach(function (color) {
+                            drawPaletteSwatch(color, state, theme);
+                        });
+                    endGroup();
+                }
+            endGroup();
+            return panel;
+        };
+
+        // GROUP: A color with a soft line; a dot on the chosen one
+        const drawPaletteSwatch = function (color, state, theme) {
+            const swatch = HGroup({ width: PICKER.swatchSize, height: PICKER.swatchSize, align: "center center", color: color, round: SIZE.round, border: SIZE.line, borderColor: theme.line });
+                if (color === state.value) Box({ width: PICKER.swatchDot, height: PICKER.swatchDot, color: "#FFFFFF", round: 100, position: "relative" });
+            endGroup();
+            return swatch;
+        };
+
+        // *** SELECT FILE
+
+        const drawFileCell = function (state, theme) {
+            const group = VGroup({ width: FILE_ZONE.width, height: "auto", align: "left top", gap: FILE_ZONE.gap, clipContent: 0 });
+                drawFileZone(state, theme);
+                state.files.forEach(function (file) {
+                    drawFileRow(file, theme);
+                });
+            endGroup();
+            return group;
+        };
+
+        // GROUP: The zone: a dashed line, the upload icon, a bold title and a soft text under it
+        const drawFileZone = function (state, theme) {
+            const zone = VGroup({ width: "100%", height: FILE_ZONE.height, align: "center center", gap: 4, color: (state.dragOver) ? theme.hover : "transparent", round: SIZE.round, border: SIZE.line, borderColor: getZoneLine(state, theme) });
+            zone.css = { borderStyle: "dashed" };
+                drawIcon("upload", (state.dragOver) ? theme.ink : theme.softText, FILE_ZONE.iconSize);
+                Label({ text: "Drag and drop a file here", fontSize: SIZE.text, fontFamily: FONT.bold, textColor: theme.text });
+                Label({ text: "or click to select", fontSize: SIZE.small, textColor: theme.softText });
+            endGroup();
+            return zone;
+        };
+
+        const getZoneLine = function (state, theme) {
+            if (state.dragOver) return theme.ink;
+            if (state.hover) return theme.edgeHover;
+            return theme.edge;
+        };
+
+        // GROUP: A chosen file: its type, its name and its size, a cross
+        const drawFileRow = function (file, theme) {
+            const row = HGroup({ width: "100%", height: FILE_ZONE.rowHeight, align: "left center", gap: 10, padding: FILE_ZONE.rowPadding, color: "transparent", round: SIZE.round, border: SIZE.line, borderColor: theme.line });
+                Label({ width: FILE_ZONE.typeWidth, text: file.type, fontSize: SIZE.caption, fontFamily: FONT.bold, textColor: theme.softText });
+                VGroup({ width: "auto", height: "auto", align: "left center", gap: 0, grow: 1 });
+                    Label({ text: file.name, fontSize: SIZE.text, textColor: theme.text });
+                    Label({ text: file.size, fontSize: SIZE.caption, textColor: theme.softText });
+                endGroup();
+                drawIcon("close", theme.softText, 12);
+            endGroup();
+            return row;
+        };
+
+        // *** ACCORDION
+
+        const drawAccordionCell = function (state, theme) {
+            const box = VGroup({ width: ACCORDION.width, height: "auto", align: "left top", gap: 0, color: "transparent", round: SIZE.round, border: SIZE.line, borderColor: theme.line });
+                SECTIONS.forEach(function (section, index) {
+                    drawSection(section, index, state, theme);
+                });
+            endGroup();
+            return box;
+        };
+
+        // GROUP: A section: its row (a title, a note, an arrow) and the objects of an open one under it
+        const drawSection = function (section, index, state, theme) {
+            const isOpen = (index === state.openIndex);
+            const row = HGroup({ width: "100%", height: ACCORDION.rowHeight, align: "left center", gap: 8, padding: ACCORDION.rowPadding, color: (index === state.hoverIndex) ? theme.hover : "transparent" });
+            if (index > 0) row.css = { borderTop: SIZE.line + "px solid " + theme.line };
+            if (index === state.focusIndex) row.boxShadow = "inset 0 0 0 " + SIZE.focusWidth + "px " + theme.focus;
+            if (section.disabled) row.opacity = SIZE.disabledOpacity;
+                Label({ text: section.title, fontSize: SIZE.text, fontFamily: FONT.bold, textColor: theme.text, grow: 1 });
+                if (section.note) Label({ text: section.note, fontSize: SIZE.small, textColor: theme.softText });
+                const arrow = drawIcon("chevronDown", theme.softText, ACCORDION.arrowSize);
+                if (isOpen) arrow.css = { transform: "rotate(180deg)" };
+            endGroup();
+            if (isOpen) drawSectionObjects(theme);
+            return row;
+        };
+
+        // GROUP: The objects of an open section: two choices
+        const drawSectionObjects = function (theme) {
+            const objects = VGroup({ width: "100%", height: "auto", align: "left top", gap: ACCORDION.contentGap, padding: ACCORDION.contentPadding });
+                drawChoice({}, theme, "Open with the system", drawCheckMark);
+                drawChoice({ on: 1 }, theme, "Look for updates", drawCheckMark);
+            endGroup();
+            return objects;
+        };
+
+        // *** SLIDER FIELD
+
+        // BOX: A field: the fill of the value, the handle at its end, the label, the value, the dots of the steps
+        const drawSliderFieldCell = function (state, theme) {
+            const field = Box({ width: SLIDER_FIELD.width, height: SIZE.control, color: "transparent", round: SIZE.round, border: SIZE.line, borderColor: (state.focus) ? theme.focus : theme.edge, position: "relative" });
+            if (state.focus) field.boxShadow = "inset 0 0 0 " + SIZE.line + "px " + theme.focus;
+            if (state.disabled) field.opacity = SIZE.disabledOpacity;
+            createIn(field, function () {
+                const track = getSliderFieldTrack();
+                const fillWidth = track.start + state.value * (track.end - track.start);
+                Box({ left: 0, top: 0, width: fillWidth, height: "100%", color: getSliderFieldFill(state, theme), css: { borderRadius: SLIDER_FIELD.fillRound + "px 0 0 " + SLIDER_FIELD.fillRound + "px" } });
+                drawSliderFieldTicks(fillWidth, track.end, theme);
+                Box({ left: fillWidth - SLIDER_FIELD.handleInset - SLIDER_FIELD.handleWidth, top: (SIZE.control - 2 - SLIDER_FIELD.handleHeight) / 2, width: SLIDER_FIELD.handleWidth, height: SLIDER_FIELD.handleHeight, color: getSliderFieldHandle(state, theme), round: 1 });
+                Label({ left: SLIDER_FIELD.labelPadding, top: 0, height: "100%", text: SLIDER_FIELD.labelText, fontSize: SIZE.small, textColor: theme.softText, lineHeight: (SIZE.control - 2) + "px" });
+                Label({ left: "auto", top: 0, height: "100%", text: Math.round(state.value * 100) + " px", fontSize: SIZE.text, textColor: theme.text, lineHeight: (SIZE.control - 2) + "px", css: { right: SLIDER_FIELD.labelPadding + "px" } });
+            });
+            return field;
+        };
+
+        // Where the end of the fill moves: after the label (aroundLabel), before the value (beforeValue)
+        const getSliderFieldTrack = function () {
+            const inner = SLIDER_FIELD.width - 2;
+            const start = SLIDER_FIELD.labelPadding + SLIDER_FIELD.labelWidth + SLIDER_FIELD.labelSpace;
+            const end = inner - SLIDER_FIELD.labelPadding - SLIDER_FIELD.valueWidth - SLIDER_FIELD.valueSpace;
+            return { start: start, end: end };
+        };
+
+        const getSliderFieldFill = function (state, theme) {
+            if (state.dragging) return theme.fillActive;
+            if (state.hover) return theme.fillHover;
+            return theme.fill;
+        };
+
+        const getSliderFieldHandle = function (state, theme) {
+            if (state.dragging) return theme.ink;
+            if (state.hover) return theme.edgeHover;
+            return theme.edge;
+        };
+
+        // BOX: The dots of the steps in the empty part
+        const drawSliderFieldTicks = function (from, to, theme) {
+            const space = (to - from) / (SLIDER_FIELD.tickCount + 1);
+            const top = (SIZE.control - 2 - SLIDER_FIELD.tickSize) / 2;
+            for (let i = 1; i <= SLIDER_FIELD.tickCount; i++) {
+                Box({ left: Math.round(from + space * i), top: top, width: SLIDER_FIELD.tickSize, height: SLIDER_FIELD.tickSize, color: theme.line, round: 1 });
+            }
+        };
+
+        // *** STEP BAR
+
+        const drawStepCell = function (state, theme) {
+            const bar = HGroup({ width: STEP_BAR.width, height: "auto", align: "left top", gap: 0, clipContent: 0 });
+                STEP_NAMES.forEach(function (name, index) {
+                    drawStep(name, index, state, theme);
+                });
+            endGroup();
+            return bar;
+        };
+
+        // GROUP: A step: the halves of the line to its neighbours, its circle and its title
+        const drawStep = function (name, index, state, theme) {
+            const isDone = (index < state.current);
+            const isNow = (index === state.current);
+            const step = VGroup({ width: "auto", height: "auto", align: "center top", gap: STEP_BAR.titleSpace, clipContent: 0, css: { flex: "1 1 0", minWidth: "0", position: "relative" } });
+                if (index > 0) drawStepLine((isDone || isNow) ? theme.ink : theme.line, "left");
+                if (index < STEP_NAMES.length - 1) drawStepLine((isDone) ? theme.ink : theme.line, "right");
+                drawStepCircle(index, isDone, isNow, state, theme);
+                Label({ text: name, fontSize: SIZE.small, fontFamily: (isNow) ? FONT.bold : FONT.regular, textColor: (isDone || isNow) ? theme.text : theme.softText });
+            endGroup();
+            return step;
+        };
+
+        // BOX: The half of the line on one side of the circle (STEP_BAR.lineSpace away from it)
+        const drawStepLine = function (color, side) {
+            const length = "calc(50% - " + (STEP_BAR.circle / 2 + STEP_BAR.lineSpace) + "px)";
+            const top = (STEP_BAR.circle - SIZE.line) / 2;
+            const place = (side === "left") ? { left: "0px" } : { left: "auto", right: "0px" };
+            return Box({ height: SIZE.line, color: color, css: Object.assign({ position: "absolute", top: top + "px", width: length }, place) });
+        };
+
+        // GROUP: The circle: ink behind and now (a check behind), a soft line ahead; the ring of the mouse or of the keyboard
+        const drawStepCircle = function (index, isDone, isNow, state, theme) {
+            const isReached = (isDone || isNow);
+            const circle = HGroup({ width: STEP_BAR.circle, height: STEP_BAR.circle, align: "center center", round: 100, color: (isReached) ? theme.ink : "transparent", border: SIZE.line, borderColor: (isReached) ? theme.ink : theme.line, clipContent: 0 });
+            if (index === state.hoverIndex) circle.boxShadow = "0 0 0 " + STEP_BAR.hoverRing + "px " + theme.hover;
+            if (index === state.focusIndex) circle.css = { outline: STEP_BAR.ringWidth + "px solid " + theme.focus, outlineOffset: STEP_BAR.ringSpace + "px" };
+                if (isDone) drawIcon("check", theme.onInk, STEP_BAR.checkSize, 2.5);
+                if (!isDone) Label({ text: String(index + 1), fontSize: SIZE.caption, textColor: (isNow) ? theme.onInk : theme.softText });
+            endGroup();
+            return circle;
+        };
+
+        // *** TAG INPUT
+
+        const drawTagCell = function (state, theme) {
+            const group = VGroup({ width: TAG_INPUT.width, height: "auto", align: "left top", gap: PICKER.panelGap, clipContent: 0 });
+                drawTagField(state, theme);
+                if (state.error) Label({ text: state.error, fontSize: SIZE.caption, textColor: theme.danger });
+                if (state.suggestions) drawSuggestions(state, theme);
+            endGroup();
+            return group;
+        };
+
+        // GROUP: The field: the tags, the typed text (or the placeholder), the text cursor
+        const drawTagField = function (state, theme) {
+            const field = HGroup({ width: "100%", height: SIZE.control, align: "left center", gap: TAG_INPUT.gap, padding: TAG_INPUT.padding, color: "transparent", round: SIZE.round, border: SIZE.line, borderColor: getTagLine(state, theme) });
+                state.tags.forEach(function (tag) {
+                    drawTag(tag, (tag === state.chosenTag), theme);
+                });
+                if (state.value) Label({ text: state.value, fontSize: SIZE.text, textColor: theme.text });
+                if (state.placeholder) Label({ text: state.placeholder, fontSize: SIZE.text, textColor: theme.faintText, css: { marginLeft: "4px" } });
+                if (state.focus && !state.chosenTag) drawCaret(theme).css = { marginLeft: (1 - TAG_INPUT.gap) + "px" };
+            endGroup();
+            return field;
+        };
+
+        const getTagLine = function (state, theme) {
+            if (state.error) return theme.danger;
+            if (state.focus) return theme.ink;
+            return theme.edge;
+        };
+
+        // GROUP: A tag: a soft line around its text and a cross (ink when the keyboard chose it)
+        const drawTag = function (text, isChosen, theme) {
+            const tag = HGroup({ width: "auto", height: TAG_INPUT.tagHeight, align: "left center", gap: TAG_INPUT.tagGap, padding: TAG_INPUT.tagPadding, color: (isChosen) ? theme.ink : "transparent", round: TAG_INPUT.tagRound, border: SIZE.line, borderColor: (isChosen) ? theme.ink : theme.line });
+                Label({ text: text, fontSize: SIZE.small, textColor: (isChosen) ? theme.onInk : theme.text });
+                drawIcon("close", (isChosen) ? theme.onInk : theme.softText, TAG_INPUT.crossSize);
+            endGroup();
+            return tag;
+        };
+
+        // GROUP: The suggestions under the field: rows of ItemList, the typed part in bold
+        const drawSuggestions = function (state, theme) {
+            const list = drawListFrame(theme, "100%");
+                state.suggestions.forEach(function (word) {
+                    const typed = word.slice(0, state.value.length);
+                    const rest = word.slice(state.value.length);
+                    const row = HGroup({ width: "100%", height: SIZE.control, align: "left center", gap: 0, padding: LIST.rowPadding });
+                        Label({ text: '<span style="font-family: ' + FONT.bold + '">' + typed + "<\/span>" + rest, fontSize: SIZE.text, textColor: theme.text });
+                    endGroup();
+                });
+            endGroup();
+            return list;
+        };
+
+        // *** SPLITTER
+
+        // GROUP: Two areas and the line between them
+        const drawSplitterCell = function (state, theme) {
+            const areas = HGroup({ width: SPLITTER.width, height: SPLITTER.height, align: "left top", gap: 0, color: "transparent", round: SIZE.round, border: SIZE.line, borderColor: theme.line });
+                Box({ width: SPLITTER.firstWidth, height: "100%", color: "transparent", position: "relative" });
+                Box({ width: getSplitterLineSize(state), height: "100%", color: getSplitterLineColor(state, theme), position: "relative" });
+                Box({ width: "auto", height: "100%", color: "transparent", position: "relative", grow: 1 });
+            endGroup();
+            return areas;
+        };
+
+        const getSplitterLineSize = function (state) {
+            if (state.active || state.focus) return SPLITTER.activeSize;
+            return SIZE.line;
+        };
+
+        const getSplitterLineColor = function (state, theme) {
+            if (state.active) return theme.ink;
+            if (state.focus) return theme.focus;
+            return theme.line;
+        };
+
+        // *** SIDE PANEL, LOADING SCREEN, GRAPH BOX
+
+        const drawPanelCell = function (state, theme) {
+            if (state.draw === "sidePanel") return drawSidePanel(theme);
+            if (state.draw === "loading") return drawLoadingScreen(theme);
+            return drawChart(theme);
+        };
+
+        // GROUP: A window under its cover, the panel at its right: a line and no shadow, as the minimal Dialog
+        const drawSidePanel = function (theme) {
+            const windowBox = HGroup({ width: SIDE_PANEL.width, height: SIDE_PANEL.height, align: "right top", gap: 0, color: theme.cover, round: SIZE.round });
+                const panel = VGroup({ width: SIDE_PANEL.panelWidth, height: "100%", align: "left top", gap: 0, color: theme.ground });
+                panel.css = { borderLeft: SIZE.line + "px solid " + theme.edge };
+                    const header = HGroup({ width: "100%", height: SIDE_PANEL.headerHeight, align: "left center", gap: 0, padding: SIDE_PANEL.headerPadding });
+                    header.css = { borderBottom: SIZE.line + "px solid " + theme.line };
+                        Label({ text: "Filters", fontSize: SIDE_PANEL.titleSize, fontFamily: FONT.bold, textColor: theme.text, grow: 1 });
+                        drawIcon("close", theme.softText);
+                    endGroup();
+                    VGroup({ width: "100%", height: "auto", align: "left top", gap: SIDE_PANEL.bodyGap, padding: SIDE_PANEL.bodyPadding });
+                        drawChoice({ on: 1 }, theme, "Only the new ones", drawCheckMark);
+                        drawChoice({}, theme, "With a picture", drawCheckMark);
+                    endGroup();
+                endGroup();
+            endGroup();
+            return windowBox;
+        };
+
+        // GROUP: The loading screen: a title, a message, the ring of the minimal button and a 2 px progress bar
+        const drawLoadingScreen = function (theme) {
+            const screen = VGroup({ width: LOADING.width, height: LOADING.height, align: "center center", gap: LOADING.gap, color: theme.ground, round: SIZE.round, border: SIZE.line, borderColor: theme.line });
+                Label({ text: "My App", fontSize: LOADING.titleSize, fontFamily: FONT.bold, textColor: theme.text });
+                Label({ text: "Loading the data...", fontSize: SIZE.text, textColor: theme.softText });
+                Label({ width: LOADING.ringSize, height: LOADING.ringSize, text: getLoadingRingSvg(theme.ink), css: { lineHeight: "0" } });
+                drawLoadingProgress(theme);
+            endGroup();
+            return screen;
+        };
+
+        // A faint circle and a quarter of it in ink (the ring of the minimal SmartButton, still, with a 2 px line)
+        const getLoadingRingSvg = function (color) {
+            const middle = LOADING.ringSize / 2;
+            const radius = middle - LOADING.ringLine / 2;
+            const arc = "M" + middle + " " + (middle - radius) + " A" + radius + " " + radius + " 0 0 1 " + (middle + radius) + " " + middle;
+            return '<svg viewBox="0 0 ' + LOADING.ringSize + " " + LOADING.ringSize + '" width="100%" height="100%" style="display: block">' +
+                '<circle cx="' + middle + '" cy="' + middle + '" r="' + radius + '" fill="none" stroke="' + color + '" stroke-opacity="0.2" stroke-width="' + LOADING.ringLine + '"/>' +
+                '<path d="' + arc + '" fill="none" stroke="' + color + '" stroke-width="' + LOADING.ringLine + '" stroke-linecap="round"/>' +
+                "<\/svg>";
+        };
+
+        // BOX: The track of the progress, its done part in ink
+        const drawLoadingProgress = function (theme) {
+            const track = Box({ width: LOADING.progressWidth, height: LOADING.progressHeight, color: theme.track, round: 1, position: "relative" });
+            createIn(track, function () {
+                Box({ left: 0, top: 0, width: LOADING.progressWidth * LOADING.progress, height: "100%", color: theme.ink, round: 1 });
+            });
+            return track;
+        };
+
+        // GROUP: A bar chart: a line around it, a 13 px title, a faint grid with 11 px numbers, bars in the first color of the data
+        const drawChart = function (theme) {
+            const chart = VGroup({ width: CHART.width, height: "auto", align: "left top", gap: CHART.gap, padding: CHART.padding, color: theme.ground, round: SIZE.round, border: SIZE.line, borderColor: theme.line });
+                Label({ text: "Sales", fontSize: SIZE.text, fontFamily: FONT.bold, textColor: theme.text });
+                const plot = Box({ width: "100%", height: CHART.plotHeight, color: "transparent", position: "relative", clipContent: 0 }); // WHY: the numbers of the top and the bottom line stand over its edges
+                createIn(plot, function () {
+                    drawChartGrid(theme);
+                    drawChartBars(theme);
+                });
+                drawChartLabels(theme);
+            endGroup();
+            return chart;
+        };
+
+        const getPlotWidth = function () {
+            return CHART.width - CHART.padding * 2 - SIZE.line * 2;
+        };
+
+        // The lines of the grid and their numbers (the line of 0 is the axis: the soft line of the theme)
+        const drawChartGrid = function (theme) {
+            CHART.ticks.forEach(function (tick) {
+                const top = Math.round(CHART.plotHeight - (tick / CHART.max) * CHART.plotHeight);
+                Box({ left: CHART.axisWidth, top: Math.min(top, CHART.plotHeight - 1), width: getPlotWidth() - CHART.axisWidth, height: 1, color: (tick === 0) ? theme.line : theme.grid });
+                Label({ left: 0, top: top - 8, width: CHART.axisWidth - 6, text: String(tick), fontSize: SIZE.caption, textColor: theme.softText, textAlign: "right" });
+            });
+        };
+
+        // A bar per value, round at its top
+        const drawChartBars = function (theme) {
+            const slot = (getPlotWidth() - CHART.axisWidth) / CHART.values.length;
+            CHART.values.forEach(function (value, index) {
+                const height = Math.round((value / CHART.max) * CHART.plotHeight);
+                const left = Math.round(CHART.axisWidth + slot * index + (slot - CHART.barWidth) / 2);
+                Box({ left: left, top: CHART.plotHeight - height, width: CHART.barWidth, height: height, color: theme.chart, css: { borderRadius: CHART.barRound + "px " + CHART.barRound + "px 0 0" } });
+            });
+        };
+
+        // GROUP: The names of the bars under them
+        const drawChartLabels = function (theme) {
+            const slot = (getPlotWidth() - CHART.axisWidth) / CHART.values.length;
+            const labels = HGroup({ width: "100%", height: "auto", align: "left top", gap: 0 });
+            labels.css = { paddingLeft: CHART.axisWidth + "px", marginTop: (-CHART.gap + 4) + "px" };
+                CHART.labels.forEach(function (text) {
+                    Label({ width: slot, text: text, fontSize: SIZE.caption, textColor: theme.softText, textAlign: "center" });
+                });
+            endGroup();
+            return labels;
         };
 
     </script>
