@@ -59,13 +59,14 @@ Pictures that must be drawn go to the Codex CLI. **Ask before making one: only a
 - **`that`**: the most recently created object. Code commonly styles it right after creating it (`that.css = { whiteSpace: "nowrap" }`). `prevThat` is the object created before it.
 - **`page` never scrolls** (`basic.css` sets `body { overflow: hidden }`). If a page's content can be taller or wider than the screen, put it inside a full-screen `Box` and turn on that Box's scrolling. Don't try to make `page` or `<body>` scroll:
   ```js
-  startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 }); // scrollX: 1 for horizontal
+  const pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 }); // scrollX: 1 for horizontal
       VGroup({ width: "100%", height: "auto", align: "center top", gap: 20, padding: 40 }); // height "auto" so content can exceed the Box
           // ... page content
       endGroup();
   endBox();
+  ScrollBar({ scrollableBox: pageBox }); // load basic/scroll-bar.js too
   ```
-  Sample and template pages that stack content vertically must follow this rule (see `02-comp-examples/check-box-1.htm`).
+  Sample and template pages that stack content vertically must follow this rule (see `_empty-project-template.htm`). A new page gets the `ScrollBar`; an older page without it stays as it is (the user, 2026-11-07).
 - **Only a Box holds other objects.** `Box`, `startBox()` and the groups (`HGroup`/`VGroup`, which are boxes too) can contain children. `Button`, `Label`, `Input` and `Icon` can not: an object created inside a button also bubbles its mouse events to the button, so the button's hover effect fires (it broke the passive-state graying of the `Form` send button). Put an overlay in the same box as a sibling, with `position: "absolute"`, and copy the target's left/top/width/height (see `box.btnSendCover` in `comp/form.js`).
 - **Implicit containers**: new objects are added to the current default container. `startBox()`/`endBox()` and `HGroup`/`VGroup` … `endGroup()` push and pop that container. **Every start call needs a matching end call.** basic.js warns in the console about start calls that were never ended.
 - **Groups** (`HGroup`, `VGroup`: flexbox; `AutoLayout` / `endAutoLayout` are their old names: not in new code, old components keep them; the user, 2026-11-07): props are `flow: "horizontal"|"vertical"`, `align: "left top"` (any combination), `gap`, `padding` (a number or `[x, y]`), `wrap: 1`, `justify` and `hug: 1` (sets width and height to `"auto"`, so the group wraps its content). A group defaults to 100% × 100%. **Use `hug: 1` in new code**; `fit: 1` is the older name for the same thing and still works (`box.hug` and `box.fit` both read 1). Don't "fix" existing pages that use `fit`.
