@@ -26,6 +26,8 @@ BasicDesigner.PARAM_ICONS = {
     table: "M2 3h12v10H2zM2 6.5h12M2 10h12M6.5 3v10",
     braces: "M6 2.5c-1.5 0-2 .7-2 2v2c0 .9-.5 1.5-1.5 1.5 1 0 1.5.6 1.5 1.5v2c0 1.3.5 2 2 2M10 2.5c1.5 0 2 .7 2 2v2c0 .9.5 1.5 1.5 1.5-1 0-1.5.6-1.5 1.5v2c0 1.3-.5 2-2 2",
     sides: "M2.5 2.5h11v11h-11zM6 6h4v4H6z",
+    corners: "M5.5 3.5h5a3 3 0 0 1 3 3v3a3 3 0 0 1-3 3h-5a3 3 0 0 1-3-3v-3a3 3 0 0 1 3-3z", // WHY a card: the four corners are the prefix of the field
+    gap: "M2.5 3v10M13.5 3v10M5.5 8h5M7 6.5L5.5 8 7 9.5M9 6.5l1.5 1.5L9 9.5",
     shadow: "M2.5 2.5h8.5v8.5H2.5zM13.5 5.5v8h-8",
     line: "M2 5h12M2 8h5M9 8h5M2 11h2M6 11h2M10 11h2",
     motion: "M2 12.5C7 12.5 7 3.5 14 3.5",
@@ -911,13 +913,17 @@ BasicDesigner.moveByTitle = function (title, windowBox, place, reset) {
 };
 
 // options: { width, build(body, popover) } popover: { edit, draw(), close(), box, pathText }
+// view.edit: what the window changes when it is not a parameter (a property of the Box view: BasicDesigner.startBoxEdit);
+// view.row.title: its title (the name of the parameter without it).
 BasicDesigner.openParamPopover = function (view, options) {
     const C = BasicDesigner.colors;
     const ui = BasicDesigner.ui;
     const row = view.row;
     const width = options.width || 260;
     const fieldRect = view.field.elem.getBoundingClientRect();
-    const popover = { edit: BasicDesigner.startParamEdit(row), pathText: row.pathText };
+    const popover = { edit: view.edit || BasicDesigner.startParamEdit(row), pathText: row.pathText };
+    // WHY the panel: the rows of the parameters are hidden while the Box view is shown (their left is 0 then).
+    const sideBox = (view.edit) ? ui.panel : ui.paramsView;
     let btnBack = null;
 
     const placeAt = function (left, top) {
@@ -932,7 +938,7 @@ BasicDesigner.openParamPopover = function (view, options) {
             placeAt(moved.left, moved.top);
             return;
         }
-        const panelLeft = ui.paramsView.elem.getBoundingClientRect().left;
+        const panelLeft = sideBox.elem.getBoundingClientRect().left;
         placeAt(panelLeft - width - BasicDesigner.POPOVER_SPACE, fieldRect.top);
     };
 
@@ -976,7 +982,7 @@ BasicDesigner.openParamPopover = function (view, options) {
             // GROUP: The title
             const title = HGroup({ width: "100%", height: 24, align: "left center", gap: 2, color: "transparent" });
                 const lblTitle = Label({ text: "", fontSize: 12, textColor: C.text, fontFamily: "opensans-bold", ellipsis: 1 });
-                lblTitle.plainText = row.key;
+                lblTitle.plainText = row.title || row.key;
                 lblTitle.grow = 1;
                 lblTitle.css = { minWidth: "0px", lineHeight: "24px" };
                 btnBack = BasicDesigner.iconButton({ path: BasicDesigner.PARAM_ICONS.back, name: "Back to the value before", size: 24, iconSize: 14,
@@ -1476,9 +1482,9 @@ BasicDesigner.openParamColor = function (view) {
     });
 };
 
-// NUMBER: a slider, the number, the usual values.
+// NUMBER: a slider, the number, the usual values. view.range: a range of its own (rangeOfNumber guesses one).
 BasicDesigner.openParamNumber = function (view) {
-    const range = BasicDesigner.rangeOfNumber(view.row.key, view.row.value);
+    const range = view.range || BasicDesigner.rangeOfNumber(view.row.key, view.row.value);
     BasicDesigner.openParamPopover(view, {
         width: 250,
         build: function (body, popover) {
@@ -1587,8 +1593,15 @@ BasicDesigner.openParamFixedList = function (view, items) {
 
 // PADDING: its four sides around a box. The same value on all sides: one number; x and y: two; else four.
 BasicDesigner.USUAL_PADDINGS = [0, 2, 4, 6, 8, 10, 12, 16, 20, 24];
+BasicDesigner.USUAL_BORDERS = [0, 1, 2, 3, 4];
 
 BasicDesigner.openParamPadding = function (view) {
+    BasicDesigner.openParamSides(view, BasicDesigner.USUAL_PADDINGS);
+};
+
+// SIDES: a padding, or the widths of a border (the Box view): the same order in basic.js (left, top, right, bottom).
+// usualValues: the chips under them.
+BasicDesigner.openParamSides = function (view, usualValues) {
     BasicDesigner.openParamPopover(view, {
         width: 230,
         build: function (body, popover) {
@@ -1641,7 +1654,174 @@ BasicDesigner.openParamPadding = function (view) {
                 BasicDesigner.popoverCaption("The same on all sides");
             endGroup();
 
-            BasicDesigner.paramChips({ values: BasicDesigner.USUAL_PADDINGS, current: (popover.isLinked) ? sides.left : null, onPick: function (value) {
+            BasicDesigner.paramChips({ values: usualValues, current: (popover.isLinked) ? sides.left : null, onPick: function (value) {
+                popover.isLinked = true;
+                edit.set(value);
+                popover.draw();
+            } });
+        },
+    });
+};
+
+// CORNERS: the four corners of a round, around a card that shows them. The same on all corners: one number; the top ones
+// and the bottom ones: two; else four (the order of basic.js: top left, top right, bottom right, bottom left).
+BasicDesigner.USUAL_ROUNDS = [0, 2, 4, 6, 8, 10, 12, 16, 20, 999];
+BasicDesigner.PILL_ROUND = 999;
+BasicDesigner.CORNER_PREVIEW_LIMIT = 16; // px: half of the height of the card (32); a bigger round is drawn as this
+BasicDesigner.CORNER_CARD_WIDTH = 176;
+
+BasicDesigner.openParamCorners = function (view) {
+    BasicDesigner.openParamPopover(view, {
+        width: 230,
+        build: function (body, popover) {
+            const edit = popover.edit;
+            const corners = BasicDesigner.readCorners(edit.value);
+            if (popover.isLinked === undefined) popover.isLinked = (typeof edit.value === "number");
+            const fields = {};
+            let card = null;
+
+            const paint = function () {
+                const drawn = BasicDesigner.CORNER_NAMES.map(function (corner) {
+                    return Math.min(corners[corner], BasicDesigner.CORNER_PREVIEW_LIMIT) + "px";
+                });
+                card.css.borderRadius = drawn.join(" ");
+            };
+
+            const send = function (changedCorner, value) {
+                corners[changedCorner] = value;
+                if (popover.isLinked) {
+                    BasicDesigner.CORNER_NAMES.forEach(function (corner) {
+                        corners[corner] = value;
+                        if (corner !== changedCorner) fields[corner].setValue(value);
+                    });
+                }
+                paint();
+                edit.set(BasicDesigner.writeCorners(corners));
+            };
+
+            // GROUP: Two corners over or under the card, at its ends
+            const cornerRow = function (left, right) {
+                const row = HGroup({ width: BasicDesigner.CORNER_CARD_WIDTH, height: 24, align: "left center", justify: "space-between", color: "transparent" });
+                row.shrink = 0;
+                    [left, right].forEach(function (pair) {
+                        const corner = pair[0];
+                        fields[corner] = BasicDesigner.paramNumberField({ label: pair[1], value: corners[corner], width: 64, min: 0, ariaLabel: pair[2],
+                            onChange: function (value) { send(corner, value); } });
+                    });
+                endGroup();
+            };
+
+            // GROUP: The corners, around a card that shows them
+            const diagram = VGroup({ width: "100%", height: "auto", align: "center top", gap: 6, color: "transparent" });
+            diagram.shrink = 0;
+                cornerRow(["topLeft", "TL", "Top left"], ["topRight", "TR", "Top right"]);
+                card = BasicDesigner.paramPreviewCard(64);
+                card.width = BasicDesigner.CORNER_CARD_WIDTH - 32;
+                card.center();
+                cornerRow(["bottomLeft", "BL", "Bottom left"], ["bottomRight", "BR", "Bottom right"]);
+            endGroup();
+            paint();
+
+            // GROUP: The same on all corners
+            const linked = HGroup({ width: "100%", height: 20, align: "left center", gap: 8, color: "transparent" });
+            linked.shrink = 0;
+                const toggle = BasicDesigner.buildSwitch(function () {
+                    popover.isLinked = !popover.isLinked;
+                    if (popover.isLinked) send("topLeft", corners.topLeft);
+                    popover.draw();
+                });
+                toggle.setOn(popover.isLinked);
+                BasicDesigner.popoverCaption("The same on all corners");
+            endGroup();
+
+            BasicDesigner.paramChips({
+                values: BasicDesigner.USUAL_ROUNDS,
+                current: (popover.isLinked) ? corners.topLeft : null,
+                format: function (value) { return (value === BasicDesigner.PILL_ROUND) ? "Pill" : String(value); },
+                onPick: function (value) {
+                    popover.isLinked = true;
+                    edit.set(value);
+                    popover.draw();
+                },
+            });
+        },
+    });
+};
+
+// GAP: x (between the items of a line) and y (between the lines of a wrap), with a few boxes that show them.
+BasicDesigner.USUAL_GAPS = [0, 2, 4, 6, 8, 10, 12, 16, 20, 24, 32];
+BasicDesigner.GAP_PREVIEW_LIMIT = 16; // px: a bigger gap is drawn as this
+BasicDesigner.GAP_PREVIEW_ITEMS = 5;
+BasicDesigner.GAP_PREVIEW_ITEM_WIDTH = 30;
+BasicDesigner.GAP_PREVIEW_WIDTH = 124; // WHY: three boxes and the largest gap fit in a line: always two lines
+
+BasicDesigner.openParamGap = function (view) {
+    BasicDesigner.openParamPopover(view, {
+        width: 230,
+        build: function (body, popover) {
+            const C = BasicDesigner.colors;
+            const edit = popover.edit;
+            const gap = BasicDesigner.readGap(edit.value);
+            if (popover.isLinked === undefined) popover.isLinked = (gap.x === gap.y);
+            const fields = {};
+            let items = null;
+
+            const paint = function () {
+                items.css = {
+                    columnGap: Math.min(gap.x, BasicDesigner.GAP_PREVIEW_LIMIT) + "px",
+                    rowGap: Math.min(gap.y, BasicDesigner.GAP_PREVIEW_LIMIT) + "px",
+                };
+            };
+
+            const send = function (changedAxis, value) {
+                gap[changedAxis] = value;
+                if (popover.isLinked) {
+                    const otherAxis = (changedAxis === "x") ? "y" : "x";
+                    gap[otherAxis] = value;
+                    fields[otherAxis].setValue(value);
+                }
+                paint();
+                edit.set(BasicDesigner.writeGap(gap));
+            };
+
+            // GROUP: x and y
+            const row = HGroup({ width: "100%", height: 24, align: "left center", gap: 6, color: "transparent" });
+            row.shrink = 0;
+                fields.x = BasicDesigner.paramNumberField({ label: "X", value: gap.x, width: "auto", min: 0, ariaLabel: "x: between the items of a line",
+                    onChange: function (value) { send("x", value); } });
+                fields.x.css = { flex: "1 1 0px", minWidth: "0px" };
+                fields.y = BasicDesigner.paramNumberField({ label: "Y", value: gap.y, width: "auto", min: 0, ariaLabel: "y: between the lines",
+                    onChange: function (value) { send("y", value); } });
+                fields.y.css = { flex: "1 1 0px", minWidth: "0px" };
+            endGroup();
+            BasicDesigner.popoverCaption("X: between the items of a line · Y: between the lines (wrap)");
+
+            // GROUP: A few boxes in two lines that show the gap (in the middle of a light ground, whatever its height)
+            const ground = VGroup({ width: "100%", height: 64, align: "center center", round: 6, color: "#E9E9E7" });
+            ground.shrink = 0;
+                items = HGroup({ width: BasicDesigner.GAP_PREVIEW_WIDTH, height: "auto", align: "left top", wrap: 1, color: "transparent" });
+                items.shrink = 0;
+                for (let i = 0; i < BasicDesigner.GAP_PREVIEW_ITEMS; i++) {
+                    const item = Box({ width: BasicDesigner.GAP_PREVIEW_ITEM_WIDTH, height: 14, round: 3, color: C.accent });
+                    item.shrink = 0;
+                }
+                endGroup();
+            endGroup();
+            paint();
+
+            // GROUP: The same in both ways
+            const linked = HGroup({ width: "100%", height: 20, align: "left center", gap: 8, color: "transparent" });
+            linked.shrink = 0;
+                const toggle = BasicDesigner.buildSwitch(function () {
+                    popover.isLinked = !popover.isLinked;
+                    if (popover.isLinked) send("x", gap.x);
+                    popover.draw();
+                });
+                toggle.setOn(popover.isLinked);
+                BasicDesigner.popoverCaption("The same in both ways");
+            endGroup();
+
+            BasicDesigner.paramChips({ values: BasicDesigner.USUAL_GAPS, current: (popover.isLinked) ? gap.x : null, onPick: function (value) {
                 popover.isLinked = true;
                 edit.set(value);
                 popover.draw();
@@ -2262,6 +2442,8 @@ BasicDesigner.PARAM_EDITORS = {
     number: { icon: "sliders", tipName: "Number", tipText: "A slider and the usual values. (You can also drag its name.)", canScrub: true, open: BasicDesigner.openParamNumber },
     size: { icon: "chevron", tipName: "Size", tipText: "auto, fill... (You can also drag its name, or write 240, 100%, calc(100% - 20px).)", canScrub: true, open: BasicDesigner.openParamSizeList },
     padding: { icon: "sides", tipName: "Padding", tipText: "Its four sides. (You can also write 14, or 14, 10, or 14, 10, 6, 2.)", canScrub: true, open: BasicDesigner.openParamPadding },
+    corners: { icon: "corners", tipName: "Corners", tipText: "Its four corners. (You can also write 8, or 12, 0, or 12, 12, 0, 12.)", open: BasicDesigner.openParamCorners },
+    gap: { icon: "gap", tipName: "Gap", tipText: "X: between the items of a line, Y: between the lines. (You can also write 8, or 12, 8.)", open: BasicDesigner.openParamGap },
     list: { icon: "chevron", tipName: "Values", tipText: "What it can be.", open: BasicDesigner.openParamOptions },
     font: { icon: "chevron", tipName: "Fonts", tipText: "The fonts of the page and the usual ones.", open: BasicDesigner.openParamFontList },
     easing: { icon: "chevron", tipName: "Curves", tipText: "The curve of a motion.", open: function (view) { BasicDesigner.openParamFixedList(view, BasicDesigner.USUAL_EASINGS); } },

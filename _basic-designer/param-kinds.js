@@ -205,6 +205,8 @@ BasicDesigner.BORDER_KEY = /^border(Top|Right|Bottom|Left)(Style)?$|^borderStyle
 BasicDesigner.BORDER_TEXT = /^$|^none$|\b(solid|dashed|dotted|double)\b/;
 BasicDesigner.SIZE_KEY = /^(width|height|left|top|right|bottom)$|[a-z](Width|Height)$/;
 BasicDesigner.PADDING_KEY = /(^|[a-z_])(padding|margin)$/i; // [8, 4] of these names
+BasicDesigner.CORNERS_KEY = /(^|[a-z_])round$/i; // [12, 0] of these names: the corners of a round (basic.js v26.11.07)
+BasicDesigner.GAP_KEY = /(^|[a-z_])gap$/i; // [12, 8] of these names: x and y (basic.js v26.11.07)
 BasicDesigner.SIDES_KEY = /^padding$/; // 8 or [8, 4]. WHY not rightPadding: 60: one side, it stays one number.
 BasicDesigner.ALIGN_TEXT = /^$|^(left|center|right|top|bottom|middle)( (left|center|right|top|bottom|middle))?$/;
 BasicDesigner.SIDE_ALIGN_KEY = /[a-z]Align$/;
@@ -287,8 +289,8 @@ BasicDesigner.isListNote = function (note) {
     return /^\s*[[{]/.test(String(note || ""));
 };
 
-// The kind of a value: { name, options? }. name: function, readonly, table, padding, color, gradient, picture, flag, font,
-// shadow, border, motion, easing, filter, align, size, number, list, date, time, text, any.
+// The kind of a value: { name, options? }. name: function, readonly, table, padding, corners, gap, color, gradient,
+// picture, flag, font, shadow, border, motion, easing, filter, align, size, number, list, date, time, text, any.
 BasicDesigner.paramKindOf = function (key, value, def, note, componentName) {
 
     const isNotGiven = (value === null || value === undefined);
@@ -298,7 +300,10 @@ BasicDesigner.paramKindOf = function (key, value, def, note, componentName) {
     if (isNotGiven && BasicDesigner.isListNote(note)) return { name: "table" };
     if (Array.isArray(value)) {
         const isSides = (value.length >= 2 && value.length <= 4 && value.every(function (v) { return typeof v === "number"; }));
-        return { name: (isSides && BasicDesigner.PADDING_KEY.test(key)) ? "padding" : "table" };
+        if (isSides && BasicDesigner.PADDING_KEY.test(key)) return { name: "padding" };
+        if (isSides && BasicDesigner.CORNERS_KEY.test(key)) return { name: "corners" };
+        if (isSides && value.length === 2 && BasicDesigner.GAP_KEY.test(key)) return { name: "gap" };
+        return { name: "table" };
     }
     if (value !== null && typeof value === "object") return { name: (BasicDesigner.isPlain(value)) ? "table" : "readonly" };
 
@@ -390,6 +395,18 @@ BasicDesigner.PARAM_TEXT_READERS = {
         if (padding === undefined) throw new Error("not a padding. Ex: 14, or 14, 10 (x, y), or 14, 10, 6, 2 (left, top, right, bottom)");
         if (typeof padding === "number") return padding;
         return padding.split(",").map(Number);
+    },
+    corners: function (text) {
+        const round = BasicDesigner.parseListText(String(text).replace(/[[\]]/g, " "), "round");
+        if (round === undefined) throw new Error("not a round. Ex: 8, or 12, 0 (top, bottom), or 12, 12, 0, 12 (top left, top right, bottom right, bottom left)");
+        if (typeof round === "number") return round;
+        return round.split(",").map(Number);
+    },
+    gap: function (text) {
+        const gap = BasicDesigner.parseListText(String(text).replace(/[[\]]/g, " "), "gap");
+        if (gap === undefined) throw new Error("not a gap. Ex: 8, or 12, 8 (x: in a line, y: between the lines)");
+        if (typeof gap === "number") return gap;
+        return gap.split(",").map(Number);
     },
     flag: function (text, row) {
         const word = String(text).trim().toLowerCase();
@@ -610,6 +627,39 @@ BasicDesigner.writePaddingSides = function (sides) {
     if (isSameX && isSameY && sides.left === sides.top) return sides.left;
     if (isSameX && isSameY) return [sides.left, sides.top];
     return [sides.left, sides.top, sides.right, sides.bottom];
+};
+
+// CORNERS of a round: 8, [12, 0] (top, bottom), [12, 12, 0, 4] (top left, top right, bottom right, bottom left: the order
+// of basic.js) -> { topLeft, topRight, bottomRight, bottomLeft }. WHY [x, y, z] -> [x, y]: basic.js reads three as two.
+BasicDesigner.CORNER_NAMES = ["topLeft", "topRight", "bottomRight", "bottomLeft"];
+
+BasicDesigner.readCorners = function (value) {
+    if (Array.isArray(value) && value.length === 4) return { topLeft: value[0], topRight: value[1], bottomRight: value[2], bottomLeft: value[3] };
+    if (Array.isArray(value) && value.length >= 2) return { topLeft: value[0], topRight: value[0], bottomRight: value[1], bottomLeft: value[1] };
+    const first = (Array.isArray(value)) ? value[0] : value;
+    const all = (typeof first === "number") ? first : 0;
+    return { topLeft: all, topRight: all, bottomRight: all, bottomLeft: all };
+};
+
+// The shortest value that says the same.
+BasicDesigner.writeCorners = function (corners) {
+    const isTopAndBottom = (corners.topLeft === corners.topRight && corners.bottomRight === corners.bottomLeft);
+    if (isTopAndBottom && corners.topLeft === corners.bottomRight) return corners.topLeft;
+    if (isTopAndBottom) return [corners.topLeft, corners.bottomRight];
+    return [corners.topLeft, corners.topRight, corners.bottomRight, corners.bottomLeft];
+};
+
+// GAP: 8 (or "8px": basic.js reads a number gap as its text), [12, 8] (x: between the items of a line, y: between the
+// lines) -> { x, y }
+BasicDesigner.readGap = function (value) {
+    if (Array.isArray(value) && value.length >= 2) return { x: value[0], y: value[1] };
+    const first = (Array.isArray(value)) ? value[0] : value;
+    const all = parseFloat(first) || 0;
+    return { x: all, y: all };
+};
+
+BasicDesigner.writeGap = function (gap) {
+    return (gap.x === gap.y) ? gap.x : [gap.x, gap.y];
 };
 
 // PICTURE: an SVG text of a data address, or "" -> the text of the SVG. <svg ...> -> the data address.

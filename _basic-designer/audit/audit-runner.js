@@ -1038,4 +1038,161 @@
         return R;
     };
 
+    // THE WINDOWS OF THE BOX VIEW (the editors of the Parameters for a property, 2026-11-07): the button at the end of a
+    // field opens the window of its key, a change in the window goes to the object, the field, the prompt, Revert all + the
+    // session, undo and redo. The same button closes it, so do another object and a value written in the field; Alt+Down
+    // opens it. The kinds corners and gap of a parameter. Results in window.EDITORS.
+    window.runEditorAudit = async function () {
+        const R = window.EDITORS = { done: false, fails: [], passed: [] };
+        const A = window.AUD;
+        // The input of a key in the panel: named by the label of its item (a list field: by its hint, "Padding: ...").
+        const INPUT_NAMES = {
+            padding: "^='Padding:'", border: "^='Border:'", round: "^='Round:'", gap: "^='Gap:'", boxShadow: "='Shadow'",
+            opacity: "='Opacity'", fontSize: "='Font size'", lineHeight: "='Line height'", rotate: "='Rotate'", text: "='Text'",
+        };
+        const inputOf = function (key) { return BD.ui.panel.elem.querySelector("input[aria-label" + INPUT_NAMES[key] + "]"); };
+        // The button at the end of the field (the field: the group of the input of basic.js)
+        const fieldButtonOf = function (key) {
+            const input = inputOf(key);
+            const field = input && input.parentElement && input.parentElement.parentElement;
+            return (field) ? field.querySelector("[role=button]") : null;
+        };
+        const openWindow = async function (o, key) {
+            BD.select(o);
+            await sleep(50);
+            const button = fieldButtonOf(key);
+            if (!button) throw new Error("no button at the end of its field");
+            button.click();
+            await sleep(50);
+            const popover = BD.paramPopover;
+            if (!popover || popover.pathText !== "box:" + key) throw new Error("its window did not open");
+            return popover;
+        };
+        const typeIn = function (box, name, text) {
+            const input = box.querySelector("input[aria-label='" + name + "']");
+            input.value = text;
+            input.dispatchEvent(new Event("input"));
+        };
+        const press = function (box, text) {
+            const el = Array.from(box.querySelectorAll("div")).find(function (d) { return d.children.length === 0 && d.textContent === text; });
+            el.click();
+        };
+        const toggleLinked = function (box) { box.querySelector("[role=switch]").click(); };
+
+        // [object, key, what is done in the window (its element), the value after it (as the panel shows it)]
+        const CASES = [
+            ["boxGiven", "padding", function (box) {
+                toggleLinked(box);
+                typeIn(box, "left", "4");
+                typeIn(box, "top", "8");
+                typeIn(box, "right", "12");
+                typeIn(box, "bottom", "16");
+            }, "4, 8, 12, 16"],
+            ["boxGiven", "border", function (box) { press(box, "3"); }, 3],
+            ["boxLists", "round", function (box) { typeIn(box, "Top left", "20"); }, "20, 14, 0, 0"],
+            ["groupLists", "gap", function (box) { typeIn(box, "x: between the items of a line", "6"); }, "6, 8"],
+            ["boxGiven", "boxShadow", function (box) { press(box, "Medium"); }, "0px 4px 12px rgba(0, 0, 0, 0.18)"],
+            ["boxGiven", "opacity", function (box) { press(box, "0.5"); }, 0.5],
+            ["labelGiven", "fontSize", function (box) { press(box, "16"); }, 16],
+            ["labelGiven", "lineHeight", function (box) { press(box, "24"); }, 24],
+            ["boxGiven", "rotate", function (box) { press(box, "45"); }, 45],
+            ["labelGiven", "text", function (box) {
+                const area = box.querySelector("textarea");
+                area.value = "A longer text";
+                area.dispatchEvent(new Event("input"));
+            }, "A longer text"],
+        ];
+        for (const [objectName, key, act, expected] of CASES) {
+            const o = A[objectName];
+            const name = "window: " + objectName + "." + key;
+            BD.select(o);
+            await sleep(30);
+            const orig = String(BD.readProps(o)[key]);
+            await checkStep(R, name, async function () {
+                const popover = await openWindow(o, key);
+                const panelRect = BD.ui.panel.elem.getBoundingClientRect();
+                if (popover.box.elem.getBoundingClientRect().right > panelRect.left) R.fails.push(name + ": the window is over the panel");
+                act(popover.box.elem);
+                await sleep(50);
+                const shown = BD.ui.panel.getValue(key);
+                if (String(shown) !== String(expected)) R.fails.push(name + ": the field shows " + JSON.stringify(shown));
+                BD.closeParamEditors();
+            }, function () {
+                return valueOk(o, key, expected);
+            }, new RegExp("- " + key + ": "), function () {
+                const now = String(BD.readProps(o)[key]);
+                return (now === orig) ? true : "read " + JSON.stringify(now) + " (was " + orig + ")";
+            });
+        }
+
+        const isClosed = function () { return !BD.paramPopover; };
+        const closing = [];
+        // The same button closes its window
+        await openWindow(A.boxGiven, "opacity");
+        fieldButtonOf("opacity").click();
+        await sleep(50);
+        if (!isClosed()) closing.push("its button again");
+        // Another object closes it
+        await openWindow(A.boxGiven, "opacity");
+        BD.select(A.boxPlain);
+        await sleep(50);
+        if (!isClosed()) closing.push("another object");
+        // A value written in the field closes it (the panel sends it as a change)
+        await openWindow(A.boxGiven, "opacity");
+        BD.onPropertyChange({ kind: "value", key: "opacity", value: 0.8, oldValue: 0.9 });
+        await sleep(50);
+        if (!isClosed()) closing.push("a value written in the field");
+        BD.revertAll();
+        // Alt+Down in the field opens it
+        BD.select(A.boxGiven);
+        await sleep(50);
+        const input = inputOf("rotate");
+        input.focus();
+        input.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", altKey: true, bubbles: true, cancelable: true }));
+        await sleep(50);
+        if (!BD.paramPopover || BD.paramPopover.pathText !== "box:rotate") closing.push("Alt+Down did not open it");
+        BD.closeParamEditors();
+        if (closing.length) R.fails.push("open / close: " + closing.join(", "));
+        else R.passed.push("open / close");
+
+        // An older basic.js of the page: a list from a window is refused (the object keeps its value)
+        const pageBasic = W().basic;
+        const realVersion = pageBasic.version;
+        try {
+            pageBasic.version = "26.10.28";
+            const popover = await openWindow(A.boxGiven, "round");
+            toggleLinked(popover.box.elem);
+            typeIn(popover.box.elem, "Top left", "20");
+            await sleep(50);
+            const round = A.boxGiven.round;
+            if (round === 8) R.passed.push("an older basic.js");
+            else R.fails.push("an older basic.js: the round is " + JSON.stringify(round));
+        } finally {
+            pageBasic.version = realVersion;
+            BD.closeParamEditors();
+            BD.revertAll();
+        }
+
+        // The kinds of a parameter: a list of round / gap opens the corners / the gap (a number stays a number)
+        const KINDS = [["round", [12, 0], "corners"], ["buttonRound", [12, 12, 0, 4], "corners"], ["gap", [12, 8], "gap"], ["round", 8, "number"], ["padding", [8, 4], "padding"], ["gap", [1, 2, 3], "table"]];
+        const wrongKinds = KINDS.filter(function (k) { return BD.paramKindOf(k[0], k[1], undefined, "", "").name !== k[2]; });
+        if (wrongKinds.length) R.fails.push("kinds: " + JSON.stringify(wrongKinds.map(function (k) { return k[0] + " " + JSON.stringify(k[1]) + " -> " + BD.paramKindOf(k[0], k[1], undefined, "", "").name; })));
+        else R.passed.push("kinds");
+        const READ = [["corners", "12, 0", [12, 0]], ["corners", "[12,12,0,4]", [12, 12, 0, 4]], ["gap", "12 8", [12, 8]], ["gap", "8", 8]];
+        const misread = READ.filter(function (r) { return JSON.stringify(BD.PARAM_TEXT_READERS[r[0]](r[1], {})) !== JSON.stringify(r[2]); });
+        let isRefused = false;
+        try { BD.PARAM_TEXT_READERS.corners("1, 2, 3", {}); } catch (error) { isRefused = true; }
+        if (misread.length || !isRefused) R.fails.push("texts of the kinds: " + JSON.stringify(misread) + (isRefused ? "" : ", 1, 2, 3 read as a round"));
+        else R.passed.push("texts of the kinds");
+        const shortest = [
+            JSON.stringify(BD.writeCorners(BD.readCorners([12, 0]))), JSON.stringify(BD.writeCorners(BD.readCorners(8))),
+            JSON.stringify(BD.writeCorners({ topLeft: 1, topRight: 2, bottomRight: 3, bottomLeft: 4 })), JSON.stringify(BD.writeGap(BD.readGap("8px"))),
+        ].join(" ");
+        if (shortest === "[12,0] 8 [1,2,3,4] 8") R.passed.push("the shortest values");
+        else R.fails.push("the shortest values: " + shortest);
+
+        R.done = true;
+        return R;
+    };
+
 })();

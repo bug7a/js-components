@@ -1646,8 +1646,8 @@ BasicDesigner.IMAGE_FITS = [{ value: "", text: "Fill (stretch)" }, "contain", "c
 
 BasicDesigner.textSection = function (p) {
     return { key: "text", title: "Text", items: [
-        { key: "text", type: "text", label: (p.isInput) ? "Value" : "Text", value: p.text, span: "full" },
-        BasicDesigner.numberOrText("fontSize", "Font size", "Aa", p.fontSize, { min: 1 }),
+        { key: "text", type: "text", label: (p.isInput) ? "Value" : "Text", value: p.text, span: "full", button: BasicDesigner.editorButton("text") },
+        BasicDesigner.numberOrText("fontSize", "Font size", "Aa", p.fontSize, { min: 1, button: BasicDesigner.editorButton("fontSize") }),
         { key: "textColor", type: "color", label: "Text color", value: p.textColor, span: "full" },
         [{ key: "textAlign", type: "segmented", label: "Align", value: p.textAlign, options: [
             { value: "left", icon: "textLeft", hint: "Left" },
@@ -1656,7 +1656,7 @@ BasicDesigner.textSection = function (p) {
          ] },
          BasicDesigner.toggleItem("bold", "bold", "Bold", p.bold),
          BasicDesigner.toggleItem("italic", "italic", "Italic", p.italic)],
-        [BasicDesigner.numberOrText("lineHeight", "Line height", "lineHeight", p.lineHeight || "", { min: 0, placeholder: "auto" }),
+        [BasicDesigner.numberOrText("lineHeight", "Line height", "lineHeight", p.lineHeight || "", { min: 0, placeholder: "auto", button: BasicDesigner.editorButton("lineHeight") }),
          BasicDesigner.toggleItem("ellipsis", "ellipsis", "One line, \"...\" at the end", p.ellipsis)],
         BasicDesigner.selectItem("fontFamily", "Font", p.fontFamily, BasicDesigner.FONTS),
     ] };
@@ -1741,9 +1741,103 @@ BasicDesigner.listItem = function (key, value) {
         min: 0,
         parseText: function (typed) { return BasicDesigner.parseListText(typed, key); },
         commaIsList: 1, // "12,0" is two values here, not the decimal 12.0 (PropertyPanel)
+        button: BasicDesigner.editorButton(key),
     };
     if (BasicDesigner.isFourValues(value)) item.span = 2;
     return item;
+};
+
+// *** THE SMALL WINDOWS OF THE BOX VIEW: the editors of the Parameters (param-editors.js) for the properties of an object.
+// A button at the end of a field opens one (also a click on its prefix, or Alt+Down in it); the same button closes it.
+// WHY the same windows: a padding, a shadow or a number is changed in one way in both views. A change goes through
+// onPropertyChange, as one of the field: Changes, the prompt, undo / redo, the session, "All N from this line".
+BasicDesigner.BOX_EDITORS = {
+    padding: { icon: "sides", title: "Padding", hint: "Its four sides", open: function (view) { BasicDesigner.openParamSides(view, BasicDesigner.USUAL_PADDINGS); } },
+    border: { icon: "sides", title: "Border", hint: "Its four sides", open: function (view) { BasicDesigner.openParamSides(view, BasicDesigner.USUAL_BORDERS); } },
+    round: { icon: "corners", title: "Round", hint: "Its four corners", open: function (view) { BasicDesigner.openParamCorners(view); } },
+    gap: { icon: "gap", title: "Gap", hint: "X and Y", open: function (view) { BasicDesigner.openParamGap(view); } },
+    boxShadow: { icon: "shadow", title: "Shadow", hint: "Its layers, and how it looks", open: function (view) { BasicDesigner.openParamShadow(view); } },
+    opacity: { icon: "sliders", title: "Opacity", hint: "A slider and the usual values", open: function (view) { BasicDesigner.openParamNumber(view); } },
+    fontSize: { icon: "sliders", title: "Font size", hint: "A slider and the usual values", open: function (view) { BasicDesigner.openParamNumber(view); } },
+    // WHY pixels: basic.js takes a number line height as px (a parameter may be a ratio: rangeOfNumber guesses)
+    lineHeight: { icon: "sliders", title: "Line height", hint: "A slider and the usual values (px)", isPixels: true, open: function (view) { BasicDesigner.openParamNumber(view); } },
+    rotate: { icon: "sliders", title: "Rotate", hint: "A slider and the usual values", open: function (view) { BasicDesigner.openParamNumber(view); } },
+    text: { icon: "expand", title: "Text", hint: "A bigger field", open: function (view) { BasicDesigner.openParamText(view); } },
+};
+
+// The button of a field that opens its window (PropertyPanel: item.button).
+BasicDesigner.editorButton = function (key) {
+    const editor = BasicDesigner.BOX_EDITORS[key];
+    return { icon: BasicDesigner.paramIcon(editor.icon, 14), hint: editor.hint + " · Alt+Down" };
+};
+
+// field: the field of the panel (the window opens at its height).
+BasicDesigner.openBoxEditor = function (obj, key, field) {
+    const editor = BasicDesigner.BOX_EDITORS[key];
+    const pathText = "box:" + key;
+    const popover = BasicDesigner.paramPopover;
+    const isOpenHere = !!(popover && popover.pathText === pathText);
+    BasicDesigner.closeParamEditors();
+    if (isOpenHere || !field) return;
+    const value = BasicDesigner.boxEditValue(key);
+    const view = {
+        row: { key: key, title: editor.title, pathText: pathText, value: value, note: "", kind: { name: "text" } },
+        field: field,
+        box: field, // a press in it does not close the window (its button closes it)
+        edit: BasicDesigner.startBoxEdit(obj, key, value),
+    };
+    if (editor.isPixels) view.range = BasicDesigner.pixelRangeOf(value);
+    editor.open(view);
+};
+
+// The value of a property for its window: the one of the panel, a list as an array ("14, 10" -> [14, 10]).
+BasicDesigner.boxEditValue = function (key) {
+    const value = BasicDesigner.ui.panel.getValue(key);
+    return (BasicDesigner.LIST_PROPS[key]) ? BasicDesigner.listValue(value) : value;
+};
+
+BasicDesigner.pixelRangeOf = function (value) {
+    const range = Object.assign({}, BasicDesigner.LINE_PIXELS_RANGE);
+    range.max = Math.max(range.max, Math.ceil((Number(value) || 0) * 1.5)); // WHY: a value over the usual range is on the slider too
+    return range;
+};
+
+// What a window of the Box view changes (as startParamEdit for a parameter): edit.set(value) writes the field and changes the
+// object. isBox: showProperties closes the window when another object is shown.
+BasicDesigner.startBoxEdit = function (obj, key, value) {
+    const edit = {
+        id: obj.__bd.id,
+        key: key,
+        path: [key],
+        pathText: "box:" + key,
+        note: "",
+        before: value,
+        value: value,
+        isBox: true,
+        isSetting: false,
+        set: function (next) {
+            edit.value = next;
+            if (edit.onChange) edit.onChange();
+            BasicDesigner.applyBoxEdit(obj, key, next, edit);
+        },
+    };
+    return edit;
+};
+
+BasicDesigner.applyBoxEdit = function (obj, key, value, edit) {
+    const s = BasicDesigner.state;
+    const panel = BasicDesigner.ui.panel;
+    if (s.selected !== obj || !obj.elem.isConnected) return;
+    // The text of the panel: a list as "14, 10" (onPropertyChange makes it an array again)
+    const shown = (Array.isArray(value)) ? value.join(", ") : value;
+    // WHY parseListText: the same checks as a written list (an older basic.js of the page reads no list of a border).
+    const isList = (BasicDesigner.LIST_PROPS[key] && Array.isArray(value));
+    if (isList && BasicDesigner.parseListText(shown, key) === undefined) return;
+    const oldValue = panel.getValue(key);
+    panel.setValue(key, shown, 1);
+    edit.isSetting = true;
+    BasicDesigner.onPropertyChange({ kind: "value", key: key, value: shown, oldValue: oldValue });
+    edit.isSetting = false;
 };
 
 // "14, 10, 6, 2" (a list of four values as the panel shows it)
@@ -1935,7 +2029,7 @@ BasicDesigner.positionSection = function (p) {
         items.push(BasicDesigner.sideRow("__vAnchor", "Vertical", ["top", "bottom"], v, p[v]));
         items.push([BasicDesigner.snapItem()]);
     }
-    items.push([{ key: "rotate", type: "number", label: "Rotate", icon: "angle", value: p.rotate, unit: "°" }]);
+    items.push([{ key: "rotate", type: "number", label: "Rotate", icon: "angle", value: p.rotate, unit: "°", button: BasicDesigner.editorButton("rotate") }]);
     return { key: "position", title: "Position", mark: 1, items: items };
 };
 
@@ -2040,7 +2134,7 @@ BasicDesigner.pictureSection = function (p) {
 
 BasicDesigner.fillSection = function (p) {
     const roundItem = BasicDesigner.listItem("round", p.round);
-    const opacityItem = BasicDesigner.numberOrText("opacity", "Opacity", "opacity", p.opacity, { min: 0, max: 1, step: 0.05, precision: 2 });
+    const opacityItem = BasicDesigner.numberOrText("opacity", "Opacity", "opacity", p.opacity, { min: 0, max: 1, step: 0.05, precision: 2, button: BasicDesigner.editorButton("opacity") });
     // WHY: four corners do not fit in a half field: then the round has a row of its own.
     const roundRows = (roundItem.span) ? [[roundItem], [opacityItem]] : [[roundItem, opacityItem]];
     return { key: "fill", title: "Fill and border", items: [
@@ -2048,7 +2142,7 @@ BasicDesigner.fillSection = function (p) {
         ...roundRows,
         [BasicDesigner.listItem("border", p.border)],
         { key: "borderColor", type: "color", label: "Border color", value: p.borderColor, span: "full" },
-        { key: "boxShadow", type: "text", label: "Shadow", value: p.boxShadow, span: "full", placeholder: "Ex: 0 2px 8px rgba(0,0,0,0.2)" },
+        { key: "boxShadow", type: "text", label: "Shadow", value: p.boxShadow, span: "full", placeholder: "Ex: 0 2px 8px rgba(0,0,0,0.2)", button: BasicDesigner.editorButton("boxShadow") },
     ] };
 };
 
@@ -2144,6 +2238,10 @@ BasicDesigner.showProperties = function (obj) {
     BasicDesigner.ui.paramsView.visible = (isParamsView) ? 1 : 0;
     const isEditorStillThere = (isParamsView && obj.__bd.id === BasicDesigner.paramEditId);
     if (BasicDesigner.paramEditId !== null && !isEditorStillThere) BasicDesigner.closeParamEditors();
+    // WHY: a small window of the Box view changes the object it was opened for.
+    const boxEditor = BasicDesigner.paramPopover;
+    const isBoxEditorStillThere = !!(boxEditor && obj && !isParamsView && boxEditor.edit.id === obj.__bd.id);
+    if (boxEditor && boxEditor.edit.isBox && !isBoxEditorStillThere) boxEditor.close();
 
     if (!obj && BasicDesigner.state.isPageSelected) {
         BasicDesigner.showPageProperties();
@@ -2226,6 +2324,10 @@ BasicDesigner.onPropertyChange = function (change) {
         BasicDesigner.openInEditor(BasicDesigner.nameFrame(obj));
         return;
     }
+    if (obj && change.kind === "action" && change.value === "button" && BasicDesigner.BOX_EDITORS[change.key]) {
+        BasicDesigner.openBoxEditor(obj, change.key, change.field);
+        return;
+    }
     if (obj && change.kind === "tab") {
         s.inspect = change.value;
         BasicDesigner.showProperties(obj);
@@ -2233,6 +2335,9 @@ BasicDesigner.onPropertyChange = function (change) {
     }
     if (!obj || change.kind !== "value") return;
     const key = change.key;
+    // WHY: a value written in the panel while a small window is open: the window would hold the old one.
+    const boxEditor = BasicDesigner.paramPopover;
+    if (boxEditor && boxEditor.edit.isBox && !boxEditor.edit.isSetting) boxEditor.close();
 
     if (key === "__scope") {
         s.scope = change.value;
@@ -2938,6 +3043,7 @@ BasicDesigner.revertObject = function (obj) {
 
 BasicDesigner.revertAll = function () {
     const s = BasicDesigner.state;
+    BasicDesigner.closeParamEditors(); // WHY: an open window holds a value that is gone now
     // The components: made again with their first params.
     s.paramOriginal.forEach(function (params, id) {
         const current = BasicDesigner.objectOfKey(id);
