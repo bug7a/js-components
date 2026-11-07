@@ -13,7 +13,8 @@ UI COMPONENT
   reduced motion.)
 - A part with onClick is a real button (Tab, Enter, Space); a part without it is only a text.
 - Stands at the bottom of its Box by itself; in a VGroup it takes its place in the column.
-- Style packages: "light" (default), "dark". Select with styleName (StatusBar.styles), or later with setTheme().
+- Style packages: "light" (default), "dark", "minimal", "minimalDark" (a package of params: its height too; setTheme()
+  changes only the colors and the shapes). Select with styleName (StatusBar.styles), or later with setTheme().
 
 PART: { key, text, icon, tone, ariaLabel, onClick }
 - A string is also accepted: "UTF-8" -> { key: "UTF-8", text: "UTF-8" }
@@ -60,7 +61,7 @@ const StatusBarDefaults = {
     items: [], // [{ key, text, icon, tone, ariaLabel, onClick }, "Text"]
     busy: 0,
     ariaLabel: "Status bar",
-    styleName: "light", // "light", "dark" or a name added to StatusBar.styles
+    styleName: "light", // "light", "dark", "minimal", "minimalDark" or a name added to StatusBar.styles
     style: { // Light style package (default)
         box: { color: "#F4F4F2", lineColor: Black(0.12) },
         layout: { padding: 10, gap: 8 },
@@ -363,3 +364,23 @@ StatusBar.styles = {
     },
 
 };
+
+// The minimal theme (_designs/minimal-theme.htm): no fill (the ground of the window), one line over it, 12 px soft
+// texts; a part that can be clicked gets darker under the mouse (no fill). minimalDark: the same on a dark window.
+StatusBar.createMinimalStyle = function (colors) {
+    return {
+        height: 24,
+        style: {
+            box: { color: "transparent", lineColor: colors.line },
+            layout: { padding: 10, gap: 8 },
+            message: { fontSize: 12, textColor: colors.softText },
+            dot: { size: 6 },
+            busy: { size: 12, lineWidth: 1.5, color: colors.ink, trackColor: colors.track },
+            part: { fontSize: 12, textColor: colors.softText, padding: 8, iconSize: 12, iconGap: 5, lineColor: colors.line },
+            partHover: { color: "transparent", textColor: colors.text },
+            focus: { ringColor: colors.focus },
+        },
+    };
+};
+StatusBar.styles.minimal = StatusBar.createMinimalStyle({ text: Black(0.85), softText: Black(0.55), line: Black(0.2), track: Black(0.12), ink: "#1F1F1F", focus: "#3D8BD9" });
+StatusBar.styles.minimalDark = StatusBar.createMinimalStyle({ text: White(0.88), softText: White(0.55), line: White(0.18), track: White(0.14), ink: "#EDEDEB", focus: "#7FB6DE" });

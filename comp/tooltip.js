@@ -5,6 +5,8 @@
 Tooltip - v26.10
 
 - A hint over an object: it follows the mouse while the mouse is on its target (Tooltip({ target, hintText })).
+- THEMES: styleName "minimal" / "minimalDark" (Tooltip.looks: on the ground of the window with a line, no shadow,
+  no arrow); Tooltip.show(target, text, Tooltip.looks.minimal) for a bubble at an object.
 - THE BUBBLE: an optional arrow (lbl_arrow, px) that points at the mouse / the target; the
   edge of the bubble (lbl_border) goes around the arrow too, as one line. The bubble never goes out of the screen:
   it slides inside, or goes to the other side when there is no room (top <-> bottom, left <-> right); the arrow
@@ -60,6 +62,7 @@ const Tooltip = function(params = {}) {
         content: null, // function (bubble): its own objects in the bubble, in place of hintText
         trigger: "hover", // "hover": it follows the mouse; "click": a popover (it stays, its content can be clicked)
         look: null, // Tooltip.BUBBLE_LOOK keys over the lbl_ ones (Ex: { shadow, padding: [16, 14], contentGap })
+        styleName: "", // a look of Tooltip.looks under look ("minimal", "minimalDark"). "": the lbl_ params
         scale: null, // every size of the bubble multiplied (Ex: 1.5); null: basic.uiScale when the bubble opens
         visible: 0,
     };
@@ -99,12 +102,12 @@ const Tooltip = function(params = {}) {
             arrow: box.lbl_arrow,
             gap: MOUSE_GAPS[box.hintPosition] || MOUSE_GAPS.top,
             scale: box.scale,
-        }, box.look || {});
+        }, Tooltip.looks[box.styleName] || {}, box.look || {});
     };
 
     // The color of the bubble: the one of look wins over lbl_color (getLook)
     const getColor = function() {
-        return (box.look && box.look.color) || box.lbl_color;
+        return getLook().color;
     };
 
     const refreshPosition = function(event) {
@@ -516,4 +519,12 @@ Tooltip.grow = function(bubble) {
     bubble.setMotionNow("transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s"); // a little spring at the end
     bubble.opacity = 1;
     bubble.css = { transform: "none" };
+};
+
+// THE LOOKS OF THE THEMES (Tooltip.BUBBLE_LOOK keys): Tooltip({ styleName: "minimal" }), or the look of
+// Tooltip.show(target, text, Tooltip.looks.minimal). minimal (_designs/minimal-theme.htm): on the ground of the window
+// with a line, no shadow, no arrow, a 12 px text. minimalDark: the same on a dark window.
+Tooltip.looks = {
+    minimal: { fontSize: 12, padding: [8, 4], color: "#FFFFFF", textColor: Black(0.85), round: 4, border: 1, borderColor: Black(0.2), shadow: "", arrow: 0 },
+    minimalDark: { fontSize: 12, padding: [8, 4], color: "#1A1A19", textColor: White(0.88), round: 4, border: 1, borderColor: White(0.18), shadow: "", arrow: 0 },
 };

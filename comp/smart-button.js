@@ -167,7 +167,7 @@ const SmartButtonDefaults = {
             time: 0.6, // s
         },
         waiting: {
-            clock: "ozden", // the look of the clock: "ozden" (a white face, dark lines) or "ozdenDark" (SmartButton.clocks)
+            clock: "ozden", // the look of the clock: "ozden" (a white face, dark lines), "ozdenDark", or the ring of "minimal" / "minimalDark" (SmartButton.clocks)
             contentOpacity: 0.18, // the text and the icon while waiting
             clockSize: 30, // at most; a small button gets a smaller clock
             space: 14, // the room around the clock in a small button
@@ -755,7 +755,7 @@ SmartButton.styles.ozdenType3Dark = SmartButton.createDarkTemplate({ borderColor
 SmartButton.styles.ozdenType4Dark = SmartButton.createDarkTemplate({ color: White(0), border: 0, borderColor: "transparent", boxShadow: "none" }, White(0.08)); // a ghost
 
 // THE MINIMAL TEMPLATES (the draft _designs/minimal-theme.htm): small (28 px, a 13 px text, a 14 px icon) and made of
-// lines: no fill, the edge gets darker under the mouse, a blue focus ring, a thin clock. The main action takes the
+// lines: no fill, the edge gets darker under the mouse, a blue focus ring, a ring that waits. The main action takes the
 // tone "ink" (inkDark on a dark page): the only filled button of the theme.
 SmartButton.MINIMAL_DANGER = "#C9503C"; // the ask of the minimal templates (on light and dark windows: a white text)
 SmartButton.createMinimalTemplate = function (colors) {
@@ -771,7 +771,7 @@ SmartButton.createMinimalTemplate = function (colors) {
             focus: { ringColor: colors.focus },
             disabled: { color: "transparent", borderColor: colors.disabledLine, textColor: colors.disabledText, iconOpacity: 0.4 },
             press: { scale: 0.97, brightness: 1 },
-            waiting: { clock: colors.clock, contentOpacity: 0.12, clockSize: 18, space: 6 },
+            waiting: { clock: colors.clock, contentOpacity: 0.12, clockSize: 16, space: 6 },
             ask: {
                 button: { color: danger, borderColor: danger, boxShadow: "none", textColor: "white", iconFilter: SmartButton.WHITE_ICON },
                 bubble: { color: danger, textColor: "white", fontSize: 12, bold: 0, round: 4, padding: [8, 4], border: 0, borderColor: "", shadow: "none", arrow: 8, gap: 4, edge: 6 },
@@ -907,31 +907,22 @@ SmartButton.clocks.ozdenDark = Object.assign({}, SmartButton.clocks.ozden, {
     centerColor: "#F1C74A",
 });
 
-// The clocks of the minimal templates: no face, a thin edge and two hands in the color of the text.
-// WHY the hour hand faint: two hands of one color read as a line through a circle at 16 - 18 px; a faint short hand
-//     and a full long one read as a clock (as the red minute hand of the ozden clock).
-SmartButton.clocks.minimal = Object.assign({}, SmartButton.clocks.ozden, {
-    faceColor: "transparent",
+// The waiting ring of the minimal templates: a faint circle and a quarter arc turning on it, in the color of the text
+// (isRing: SmartButton.createRingSvg draws it in place of a clock).
+SmartButton.clocks.minimal = {
+    isRing: 1,
     lineColor: Black(0.85),
-    edgeWidth: 2.5, // on the 30 px drawing (1.5 px at 18 px)
-    hourColor: Black(0.35),
-    hourWidth: 2.5,
-    hourLength: 7,
-    minuteColor: Black(0.85),
-    minuteWidth: 2.5,
-    minuteLength: 9.5,
-    centerColor: "transparent",
-});
-SmartButton.clocks.minimalDark = Object.assign({}, SmartButton.clocks.minimal, {
-    lineColor: White(0.88),
-    hourColor: White(0.4),
-    minuteColor: White(0.88),
-});
+    edgeWidth: 3, // on the 30 px drawing (1.6 px at 16 px)
+    trackOpacity: 0.2, // the circle under the arc
+    turnTime: 0.8, // seconds for one turn of the arc
+};
+SmartButton.clocks.minimalDark = Object.assign({}, SmartButton.clocks.minimal, { lineColor: White(0.88) });
 
 // The clock as an SVG text (as wide as its box): a face with an edge, the minute hand up, the hour hand to the right.
 SmartButton.CLOCK_SIZE = 30; // the px of the drawing
 SmartButton.createClockSvg = function (clockStyle) {
     SmartButton.injectCss();
+    if (clockStyle.isRing) return SmartButton.createRingSvg(clockStyle);
     const c = clockStyle;
     const size = SmartButton.CLOCK_SIZE;
     const middle = size / 2;
@@ -945,6 +936,18 @@ SmartButton.createClockSvg = function (clockStyle) {
         hand(middle + c.hourLength, middle, c.hourWidth, c.hourColor || c.lineColor, c.hourTurn) + // the hour hand (under)
         hand(middle, middle - c.minuteLength, c.minuteWidth, c.minuteColor, c.minuteTurn) + // the minute hand
         '<circle cx="' + middle + '" cy="' + middle + '" r="' + (c.centerSize / 2) + '" fill="' + c.centerColor + '"/>' +
+        "</svg>";
+};
+
+// A ring that waits: a faint circle and a quarter arc turning on it (the turn of the hands of the clock)
+SmartButton.createRingSvg = function (ring) {
+    const size = SmartButton.CLOCK_SIZE;
+    const middle = size / 2;
+    const radius = middle - ring.edgeWidth / 2;
+    const arc = "M" + middle + " " + (middle - radius) + " A" + radius + " " + radius + " 0 0 1 " + (middle + radius) + " " + middle;
+    return '<svg viewBox="0 0 ' + size + ' ' + size + '" width="100%" height="100%" aria-hidden="true" style="display: block">' +
+        '<circle cx="' + middle + '" cy="' + middle + '" r="' + radius + '" fill="none" stroke="' + ring.lineColor + '" stroke-opacity="' + ring.trackOpacity + '" stroke-width="' + ring.edgeWidth + '"/>' +
+        '<path class="smart-button-hand" d="' + arc + '" fill="none" stroke="' + ring.lineColor + '" stroke-width="' + ring.edgeWidth + '" stroke-linecap="round" style="animation-duration: ' + ring.turnTime + 's"/>' +
         "</svg>";
 };
 

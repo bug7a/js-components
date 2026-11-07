@@ -33,7 +33,8 @@ NOTE: still in development: more style packages come; their buttons may be anima
   are filled in with a light and a strong tone (a two-tone icon; currentColor is the strong tone). "": gray.
   CIRCLE in it is the color of the circle: a ring that cuts a part out (Ex: around the dot of a new mail).
 - Motion: the cover comes from nothing and the card rises 50 px while it comes (0.2 s); it goes at once; none with reduced motion.
-- Style packages: "ozden" (default), "ozdenDark" (for a dark page; Dialog.confirm / alert / prompt take styleName too).
+- Style packages: "ozden" (default), "ozdenDark" (for a dark page; Dialog.confirm / alert / prompt take styleName too),
+  "minimal", "minimalDark" (_designs/minimal-theme.htm: a card with a line, no shadow, the minimal buttons and fields).
   (Dialog.styles)
 - The buttons: style.buttons[type] = { styleName, tone, style }: a template of SmartButton
   ("ozdenType1"; Cancel and icon: "ozdenType3", a faint edge), a tone of it
@@ -89,7 +90,7 @@ const DialogDefaults = {
     scale: null, // every size multiplied (Ex: 1.5). null: basic.uiScale (1 / page.zoom on a page fitted with page.fit())
     onOpen: function (dialog) { },
     onClose: function (dialog, reason, buttonKey) { }, // reason: "button", "escape", "cover", "api"
-    styleName: "ozden", // "ozden" or a name added to Dialog.styles
+    styleName: "ozden", // "ozden", "ozdenDark", "minimal", "minimalDark" or a name added to Dialog.styles
     style: { // The ozden style package (default): the first dialog of smart-button-3-ozden.htm
         cover: { color: Black(0.8), zIndex: 4000 },
         card: {
@@ -940,3 +941,48 @@ Dialog.styles = {
         },
     },
 };
+
+// The minimal theme (_designs/minimal-theme.htm): a card on the ground of the window with a line and no shadow, a
+// 14 px title, a 13 px message, the buttons at the right with no band under them: the minimal SmartButtons (the main
+// one "ink", a delete "minimalDanger"), the minimal fields. minimalDark: the same on a dark window.
+Dialog.createMinimalStyle = function (colors) {
+    const button = function (tone) {
+        return { styleName: colors.buttonName, tone: tone, style: {} };
+    };
+    return {
+        cover: { color: colors.cover },
+        card: { color: colors.ground, round: 6, border: 1, borderColor: colors.lineHover, boxShadow: "none", padding: [16, 16], gap: 6, margin: 16 },
+        title: { fontSize: 14, textColor: colors.text, fontFamily: "opensans-bold" },
+        message: { fontSize: 13, textColor: colors.softText, lineHeight: 1.45 },
+        status: { fontSize: 12, errorColor: colors.danger, infoColor: colors.softText, successColor: colors.success },
+        footer: { color: "transparent", lineColor: "transparent", padding: [16, 14], gap: 8, buttonHeight: 28, iconButtonWidth: 28 },
+        fieldStyleName: colors.fieldName,
+        centered: {
+            iconArea: { height: 76, color: colors.ground, round: 4 },
+            iconCircle: { size: 56, color: colors.iconCircle },
+            icon: { size: 28, color: colors.text, lightColor: colors.faintText },
+            buttonHeight: 28,
+            buttonGap: 8,
+            footerPadding: [16, 14],
+        },
+        buttons: {
+            primary: button(colors.inkTone),
+            secondary: button(""),
+            danger: { styleName: colors.dangerName, tone: "", style: {} },
+            warning: button(""),
+            success: button(""),
+            info: button(""),
+            icon: { styleName: colors.buttonName, tone: "", style: { icon: { opacity: 1 } } },
+        },
+    };
+};
+Dialog.styles.minimal = Dialog.createMinimalStyle({
+    cover: Black(0.3), ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), faintText: Black(0.35), lineHover: Black(0.45),
+    danger: "#C9503C", success: "#2E9E74", iconCircle: Black(0.05),
+    buttonName: "minimal", dangerName: "minimalDanger", inkTone: "ink", fieldName: "minimal",
+});
+Dialog.styles.minimalDark = Dialog.createMinimalStyle({
+    cover: Black(0.6), ground: "#1A1A19", text: White(0.88), softText: White(0.55), faintText: White(0.35), lineHover: White(0.42),
+    danger: "#FF9F93", success: "#7FE3B5", iconCircle: White(0.06),
+    buttonName: "minimalDark", dangerName: "minimalDangerDark", inkTone: "inkDark", fieldName: "minimalDark",
+});

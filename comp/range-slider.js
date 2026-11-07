@@ -17,7 +17,8 @@ UI COMPONENT
 - A bubble over a knob shows its value while it moves. formatValue: function (value) { return value + " TL"; }.
 - onChange(self) runs while it moves, onChangeEnd(self) when it is let go. A key and a tap are short moves: they call both.
   Read self.lowValue and self.highValue. Not at create time, not with setValues().
-- Style packages: "round" (default), "roundDark". Select with styleName (RangeSlider.styles), or later with setTheme().
+- Style packages: "round" (default), "roundDark", "minimal", "minimalDark" (packages of params: the height too). Select
+  with styleName (RangeSlider.styles), or later with setTheme().
 
 USAGE:
 const price = RangeSlider({
@@ -65,7 +66,7 @@ const RangeSliderDefaults = {
     highAriaLabel: "Maximum",
     onChange: function (self) { }, // It moves: self.lowValue, self.highValue
     onChangeEnd: function (self) { }, // It was let go
-    styleName: "round", // "round", "roundDark" or a name added to RangeSlider.styles
+    styleName: "round", // "round", "roundDark", "minimal", "minimalDark" or a name added to RangeSlider.styles
     style: { // The round style package (default)
         track: { height: 6, round: 3, color: Black(0.12), fillColor: "cadetblue" },
         knob: { size: 24, round: 12, color: "white", shadow: "0 1px 3px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.04)" },
@@ -545,3 +546,20 @@ RangeSlider.styles = {
     },
 
 };
+
+// The minimal theme (_designs/minimal-theme.htm), as Slider "minimal": a 2 px track, the chosen part in ink, 12 px
+// knobs in the ground of the window with a thin ink line, a small ink value bubble. minimalDark: on a dark window.
+RangeSlider.createMinimalStyle = function (colors) {
+    return {
+        height: 24,
+        style: {
+            track: { height: 2, round: 1, color: colors.track, fillColor: colors.ink },
+            knob: { size: 12, round: 6, color: colors.ground, shadow: "0 0 0 1px " + colors.ink },
+            dragging: { ringSize: 0, ringOpacity: 0 },
+            value: { color: colors.ink, textColor: colors.ground, fontSize: 11, padding: [6, 2], round: 3, space: 6 },
+            focus: { ringColor: colors.focus },
+        },
+    };
+};
+RangeSlider.styles.minimal = RangeSlider.createMinimalStyle({ ground: "#FFFFFF", ink: "#1F1F1F", track: Black(0.12), focus: "#3D8BD9" });
+RangeSlider.styles.minimalDark = RangeSlider.createMinimalStyle({ ground: "#1A1A19", ink: "#EDEDEB", track: White(0.14), focus: "#7FB6DE" });

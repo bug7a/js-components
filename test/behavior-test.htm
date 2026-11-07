@@ -957,6 +957,63 @@
             [field, plain, note, send].forEach(function (object) { object.remove(); });
         });
 
+        test("Minimal: ContextMenu and TreeView rows get a line, Toast takes the shapes of its theme; the defaults are as before", async function () {
+            const menu = ContextMenu({ styleName: "minimal", items: [{ text: "Minimal open", key: "open" }] });
+            menu.openAt(100, 100);
+            await wait(30);
+            const menuRow = Array.from(document.querySelectorAll("[role=menuitem]")).find(function (el) { return el.textContent === "Minimal open"; });
+            const edgeBefore = menuRow.style.borderColor;
+            menuRow.dispatchEvent(new MouseEvent("mouseenter"));
+            menuRow.dispatchEvent(new MouseEvent("mousemove", { bubbles: true }));
+            await wait(30);
+            check("ContextMenu minimal: the item under the mouse gets a line", menuRow.style.borderWidth === "1px" && menuRow.style.borderColor !== edgeBefore, edgeBefore + " -> " + menuRow.style.borderColor);
+            menu.close();
+            const tree = TreeView({ styleName: "minimal", width: 200, height: "auto", items: ["Alpha", "Beta"], value: "Alpha" });
+            const plainTree = TreeView({ width: 200, height: "auto", items: ["Gamma"], value: "Gamma" });
+            await basic.nextFrame();
+            const treeRow = tree.elem.querySelector("[role=treeitem]");
+            const plainRow = plainTree.elem.querySelector("[role=treeitem]");
+            check("TreeView minimal: the selected row has an ink line", treeRow.style.borderColor === "rgb(31, 31, 31)", treeRow.style.borderColor);
+            check("TreeView: the default rows have no edge", !plainRow.style.borderWidth || plainRow.style.borderWidth === "0px", plainRow.style.borderWidth);
+            const minimalToast = Toast.show({ theme: "minimal", message: "Minimal", duration: 0 });
+            const plainToast = Toast.show({ theme: "light", message: "Plain", duration: 0 });
+            await basic.nextFrame();
+            check("Toast minimal: the shapes of its theme (round 4, no shadow)", minimalToast.card.elem.style.borderRadius === "4px" && minimalToast.card.elem.style.boxShadow === "none", minimalToast.card.elem.style.borderRadius + " / " + minimalToast.card.elem.style.boxShadow);
+            check("Toast: the default shapes stay (round 10)", plainToast.card.elem.style.borderRadius === "10px", plainToast.card.elem.style.borderRadius);
+            check("Tooltip: the looks of the minimal theme have no arrow and no shadow", Tooltip.looks.minimal.arrow === 0 && !Tooltip.looks.minimalDark.shadow, JSON.stringify(Tooltip.looks.minimal));
+            minimalToast.close();
+            plainToast.close();
+            [tree, plainTree].forEach(function (object) { object.remove(); });
+        });
+
+        test("SmartButton minimal waits with a ring, the other templates with a clock", async function () {
+            const minimal = SmartButton({ styleName: "minimal", labelText: "Wait", waiting: 1 });
+            const plain = SmartButton({ labelText: "Wait", waiting: 1 });
+            await basic.nextFrame();
+            const minimalSvg = minimal.waitingCover.icon.elem.innerHTML;
+            const plainSvg = plain.waitingCover.icon.elem.innerHTML;
+            check("SmartButton minimal: the wait is a ring (an arc, no hands)", minimalSvg.indexOf("<path") >= 0 && minimalSvg.indexOf("<line") < 0, minimalSvg.slice(0, 80));
+            check("SmartButton: the other templates keep the clock (its hands)", plainSvg.indexOf("<line") >= 0, plainSvg.slice(0, 80));
+            [minimal, plain].forEach(function (button) { button.remove(); });
+        });
+
+        test("TreeView: the ring of the selected row shows for the keyboard, not after a click", async function () {
+            const tree = TreeView({ styleName: "minimal", width: 200, height: "auto", items: ["Alpha", "Beta"], value: "Alpha" });
+            await basic.nextFrame();
+            const area = tree.listArea.elem;
+            const ringOf = function () { return tree.elem.querySelector("[role=treeitem][aria-selected=true]").style.boxShadow; };
+            area.focus();
+            area.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+            await basic.nextFrame();
+            const afterClick = ringOf();
+            area.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
+            await basic.nextFrame();
+            const afterKey = ringOf();
+            check("TreeView: no ring after a click", !afterClick || afterClick === "none", afterClick);
+            check("TreeView: the ring after a key", afterKey.indexOf("inset") >= 0, afterKey);
+            tree.remove();
+        });
+
         // *** TOGGLE (comp/toggle.js)
 
         test("Toggle: the keyboard and screen readers can use it", async function () {

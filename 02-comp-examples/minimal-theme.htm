@@ -31,6 +31,15 @@
     <script src="../comp/progress-bar.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/tabs.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/stepper.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/context-menu.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/menu-bar.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/tool-bar.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/status-bar.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/tree-view.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/smart-table.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/range-slider.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/dialog.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/toast.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -40,8 +49,9 @@
     // _designs/minimal-theme.htm). Small (28 px, a 13 px text) and made of lines: a component has no fill of its
     // own, it takes the ground of its window. The main action is the only filled button: tone "ink" / "inkDark".
     // The components that have it so far: SmartButton (and minimalDanger for a delete), CheckBox, RadioButton, Toggle,
-    // InputB (EmailInputB, PasswordInputB, TextareaB...), SearchInput, SelectBox, ItemList, Slider, ProgressBar, Tabs,
-    // Stepper.
+    // InputB (EmailInputB, PasswordInputB, TextareaB...), SearchInput, SelectBox, ItemList, Slider, RangeSlider,
+    // ProgressBar, Tabs, Stepper, MenuBar (its menus: ContextMenu), ToolBar, StatusBar, TreeView, SmartTable, Tooltip,
+    // Dialog, Toast.
 
     // *** THE COLORS AND SIZES OF THE PAGE
     const PAGE_COLOR = "#EDEDEB";
@@ -56,6 +66,33 @@
     const DANGER_LIGHT = "#C9503C";
     const DANGER_DARK = "#FF9F93";
     const FRUITS = ["Apple", "Banana", "Cherry", "Grape"];
+    const MENUS = [
+        { text: "File", items: [{ text: "Open", shortcut: "Ctrl+O" }, { text: "Save", shortcut: "Ctrl+S" }, "-", { text: "Quit", enabled: 0 }] },
+        { text: "Edit", items: ["Undo", "Redo", "-", "Cut", "Copy", "Paste"] },
+        { text: "View", items: [{ text: "Word wrap", checked: 1 }] },
+    ];
+    const TOOLS = [
+        { key: "new", icon: "new", hint: "New" },
+        { key: "save", icon: "save", hint: "Save", shortcut: "Ctrl+S" },
+        "-",
+        { key: "bold", icon: "bold", hint: "Bold", toggle: 1, checked: 1 },
+        { key: "left", icon: "alignLeft", hint: "Left", group: "align" },
+        { key: "right", icon: "alignRight", hint: "Right", group: "align" },
+    ];
+    const FILES = [
+        { key: "src", text: "src", expanded: 1, children: [{ key: "app", text: "app.js", note: "4 KB" }, { key: "lib", text: "lib", children: ["a.js", "b.js"] }] },
+        { key: "readme", text: "README.md", tag: "new" },
+    ];
+    const PEOPLE_COLUMNS = [
+        { name: "Name", dataTitle: "name", dataType: "string", width: 150, shortable: 1 },
+        { name: "City", dataTitle: "city", dataType: "string", width: 120, shortable: 1 },
+        { name: "Orders", dataTitle: "orders", dataType: "integer", width: 70, shortable: 1 },
+    ];
+    const PEOPLE = [
+        { name: "Ada Lovelace", city: "London", orders: 12 },
+        { name: "Alan Turing", city: "Manchester", orders: 7 },
+        { name: "Grace Hopper", city: "New York", orders: 21 },
+    ];
 
     // A line icon (24 x 24, the color in the drawing): SmartButton turns it white in minimalDark
     const lineIcon = function (paths, color = ICON_LIGHT) {
@@ -134,6 +171,30 @@
                     Label({ text: "TABS", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
                     Tabs({ styleName: "minimal", width: 300, tabs: ["General", "Sound", "Advanced"], panelHeight: 0 });
 
+                    Label({ text: "WINDOW BARS", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
+                    VGroup({ width: "100%", height: "auto", align: "left top", gap: 0, clipContent: 0 });
+                        MenuBar({ styleName: "minimal", position: "relative", menus: MENUS });
+                        ToolBar({ styleName: "minimal", position: "relative", items: TOOLS });
+                        StatusBar({ styleName: "minimal", position: "relative", messageText: "Ready", items: ["UTF-8", "100%"] });
+                    endGroup();
+
+                    Label({ text: "TREE, TABLE, RANGE", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
+                    TreeView({ styleName: "minimal", width: 260, height: "auto", value: "app", items: FILES });
+                    SmartTable({ styleName: "minimal", titleDataList: PEOPLE_COLUMNS, itemDataList: PEOPLE, itemLineCount: 3, style: { width: "100%", height: "auto" } });
+                    RangeSlider({ styleName: "minimal", width: 260, lowValue: 20, highValue: 70 });
+
+                    Label({ text: "OVER THE PAGE", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
+                    HGroup({ hug: 1, align: "left center", gap: 8, clipContent: 0 });
+                        const lightHint = SmartButton({ styleName: "minimal", labelText: "A hint" });
+                        Tooltip({ target: lightHint, hintText: "Save the file (Ctrl+S)", styleName: "minimal" });
+                        SmartButton({ styleName: "minimal", labelText: "A dialog", onClick: function () {
+                            Dialog.confirm({ styleName: "minimal", titleText: "Delete the file?", messageText: "report.pdf goes to the trash.", confirmText: "Delete", danger: 1 });
+                        } });
+                        SmartButton({ styleName: "minimal", labelText: "A toast", onClick: function () {
+                            Toast.show({ theme: "minimal", type: "success", title: "Saved", message: "report.pdf is saved.", action: { text: "Undo", onClick: function () { } } });
+                        } });
+                    endGroup();
+
                 endGroup();
 
                 // GROUP: The dark window (minimalDark)
@@ -188,6 +249,30 @@
 
                     Label({ text: "TABS", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
                     Tabs({ styleName: "minimalDark", width: 300, tabs: ["General", "Sound", "Advanced"], panelHeight: 0 });
+
+                    Label({ text: "WINDOW BARS", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
+                    VGroup({ width: "100%", height: "auto", align: "left top", gap: 0, clipContent: 0 });
+                        MenuBar({ styleName: "minimalDark", position: "relative", menus: MENUS });
+                        ToolBar({ styleName: "minimalDark", position: "relative", items: TOOLS });
+                        StatusBar({ styleName: "minimalDark", position: "relative", messageText: "Ready", items: ["UTF-8", "100%"] });
+                    endGroup();
+
+                    Label({ text: "TREE, TABLE, RANGE", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
+                    TreeView({ styleName: "minimalDark", width: 260, height: "auto", value: "app", items: FILES });
+                    SmartTable({ styleName: "minimalDark", titleDataList: PEOPLE_COLUMNS, itemDataList: PEOPLE, itemLineCount: 3, style: { width: "100%", height: "auto" } });
+                    RangeSlider({ styleName: "minimalDark", width: 260, lowValue: 20, highValue: 70 });
+
+                    Label({ text: "OVER THE PAGE", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
+                    HGroup({ hug: 1, align: "left center", gap: 8, clipContent: 0 });
+                        const darkHint = SmartButton({ styleName: "minimalDark", labelText: "A hint" });
+                        Tooltip({ target: darkHint, hintText: "Save the file (Ctrl+S)", styleName: "minimalDark" });
+                        SmartButton({ styleName: "minimalDark", labelText: "A dialog", onClick: function () {
+                            Dialog.confirm({ styleName: "minimalDark", titleText: "Delete the file?", messageText: "report.pdf goes to the trash.", confirmText: "Delete", danger: 1 });
+                        } });
+                        SmartButton({ styleName: "minimalDark", labelText: "A toast", onClick: function () {
+                            Toast.show({ theme: "minimalDark", type: "success", title: "Saved", message: "report.pdf is saved.", action: { text: "Undo", onClick: function () { } } });
+                        } });
+                    endGroup();
 
                 endGroup();
 

@@ -104,7 +104,15 @@ const ToastDefaults = {
 
 const Toast = function (params = {}) {
 
-    // Merge params:
+    // Merge params: the shapes of its theme (Toast.THEMES[name].style: minimal), then the defaults
+    // WHY before the defaults: the shapes of a theme win over the default shapes, a style of the page over both
+    const themeOfParams = Toast.THEMES[params.theme || Toast.options.theme];
+    if (themeOfParams && themeOfParams.style) {
+        const ownStyle = {};
+        mergeIntoIfMissing(ownStyle, params.style || {});
+        mergeIntoIfMissing(ownStyle, themeOfParams.style);
+        params.style = ownStyle;
+    }
     mergeIntoIfMissing(params, ToastDefaults);
 
     const options = Toast.options;
@@ -218,8 +226,8 @@ const Toast = function (params = {}) {
         box.btnAction.visible = (hasAction) ? 1 : 0;
         if (hasAction) {
             box.btnAction.plainText = box.action.text;
-            box.btnAction.textColor = color;
-            box.btnAction.color = Toast.alpha(color, 0.12);
+            box.btnAction.textColor = theme.actionText || color;
+            box.btnAction.color = theme.actionFill || Toast.alpha(color, 0.12);
         }
 
         box.btnClose.visible = (box.closable == 1) ? 1 : 0;
@@ -592,7 +600,7 @@ Toast.POSITIONS = ["top-right", "top-center", "top-left", "bottom-right", "botto
 // Global options. Change with Toast.setOptions().
 Toast.options = {
     position: "top-right",
-    theme: "auto", // "light", "dark", "auto"
+    theme: "auto", // "light", "dark", "auto", "minimal", "minimalDark"
     width: 360,
     offset: 16, // Space to the screen edges
     offsetTop: null, // Space to the top edge (Ex: under the header of an app). null: offset
@@ -611,7 +619,8 @@ Toast.options = {
 // *** THEMES: the colors. (The style param has the shapes and the sizes.)
 // USAGE: Toast.success("Saved", { theme: "dark" })
 // USAGE: Toast.setOptions({ theme: "auto" }) // Every toast: "light", "dark", "auto" (the system setting)
-// NOTE: A new theme needs only the keys that differ from the light theme.
+// NOTE: A new theme needs only the keys that differ from the light theme. actionText / actionFill: the colors of the
+// action button ("": the color of the type, and a pale fill of it).
 // USAGE: Toast.THEMES.ocean = { background: "#0B2239", title: "#FFFFFF" };
 Toast.THEMES = {
     light: {
@@ -634,6 +643,44 @@ Toast.THEMES = {
         closeHover: "rgba(255, 255, 255, 0.08)",
         colors: { success: "#3CC08A", error: "#EF6B6A", warning: "#E8B23A", info: "#5A9CF0", loading: "rgba(255, 255, 255, 0.7)" },
     },
+};
+
+// The minimal theme (_designs/minimal-theme.htm): on the ground of the window with a line and no shadow; style: its
+// shapes too (a theme with a style gives the shapes, under the style of the page): smaller and less round.
+Toast.MINIMAL_SHAPES = {
+    card: { round: 4, padding: [12, 10], gap: 10, border: 1 },
+    icon: { size: 16, marginTop: 1 },
+    title: { fontSize: 13 },
+    message: { fontSize: 12 },
+    action: { fontSize: 12, padding: [0, 2], round: 4, marginTop: 4 }, // WHY no side room: a text with no fill, in the line of the message
+    close: { size: 20, iconSize: 14, round: 4, marginTop: -2, marginRight: -4 },
+    progress: { height: 2, opacity: 0.45 },
+};
+Toast.THEMES.minimal = {
+    background: "#FFFFFF",
+    border: Black(0.2),
+    shadow: "none",
+    title: Black(0.85),
+    message: Black(0.55),
+    close: Black(0.45),
+    closeHover: Black(0.05),
+    actionText: "#1F1F1F",
+    actionFill: "transparent",
+    colors: { success: "#2E9E74", error: "#C9503C", warning: "#B77A00", info: "#3D8BD9", loading: Black(0.55) },
+    style: Toast.MINIMAL_SHAPES,
+};
+Toast.THEMES.minimalDark = {
+    background: "#1A1A19",
+    border: White(0.18),
+    shadow: "none",
+    title: White(0.88),
+    message: White(0.55),
+    close: White(0.5),
+    closeHover: White(0.06),
+    actionText: "#EDEDEB",
+    actionFill: "transparent",
+    colors: { success: "#7FE3B5", error: "#FF9F93", warning: "#E8B23A", info: "#7FB6DE", loading: White(0.55) },
+    style: Toast.MINIMAL_SHAPES,
 };
 
 // [toast] Visible toasts (oldest first)

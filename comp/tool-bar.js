@@ -14,7 +14,8 @@ UI COMPONENT
   The same shortcut in a ToolBar and a MenuBar runs only one of them.
 - Keyboard: Tab comes to the bar (one stop); ArrowLeft, ArrowRight, Home and End go between the buttons; Enter or Space press
   a button; ArrowDown opens its menu.
-- Style packages: "light" (default), "dark". Select with styleName (ToolBar.styles), or later with setTheme().
+- Style packages: "light" (default), "dark", "minimal", "minimalDark" (a package of params: its height too; setTheme()
+  changes only the colors and the shapes). Select with styleName (ToolBar.styles), or later with setTheme().
 
 AN ITEM: { key, text, icon, iconFile, hint, shortcut, toggle, group, checked, enabled, items, data, onClick }
 - "-" or { type: "separator" }: a line between the buttons. " " or { type: "space" }: the next items stand at the right end.
@@ -74,13 +75,13 @@ const ToolBarDefaults = {
     ariaLabel: "Tool bar",
     moreText: "More", // The name of the "..." button
     onClick: function (self, item) { }, // An item (with a click, the keyboard, its shortcut or clickItem())
-    styleName: "light", // "light", "dark" or a name added to ToolBar.styles
+    styleName: "light", // "light", "dark", "minimal", "minimalDark" or a name added to ToolBar.styles
     style: { // Light style package (default)
         box: { color: "#F4F4F2", lineColor: Black(0.12) },
         layout: { padding: 6, gap: 2 },
         button: { height: 30, padding: 8, gap: 6, round: 6, fontSize: 13, iconSize: 18, textColor: Black(0.72) },
-        buttonHover: { color: Black(0.07) },
-        buttonOn: { color: Black(0.13), textColor: Black(0.92) }, // It stays pressed, or its menu is open.
+        buttonHover: { color: Black(0.07), borderColor: "" }, // borderColor: the edge (button.border). "": its own
+        buttonOn: { color: Black(0.13), textColor: Black(0.92), borderColor: "" }, // It stays pressed, or its menu is open.
         separator: { height: 18, space: 4, color: Black(0.16) },
         bubble: { fontSize: 12, padding: [9, 5], color: "#2B2B2A", textColor: White(0.95), round: 6, border: 0, shadow: "0 2px 8px " + Black(0.18) }, // Its hint
         disabled: { opacity: 0.35 },
@@ -174,6 +175,13 @@ const ToolBar = function (params = {}) {
         if (!usable.includes(tabEntry)) tabEntry = usable[0] || null;
     };
 
+    // The edge of a button (button.border: the minimal packages): on, under the mouse, or its own
+    const getButtonEdge = function (isOn, isOver) {
+        if (isOn && _s.buttonOn.borderColor) return _s.buttonOn.borderColor;
+        if (isOver && _s.buttonHover.borderColor) return _s.buttonHover.borderColor;
+        return _s.button.borderColor || "transparent";
+    };
+
     // PAINT: a button: the mouse on it, pressed, its menu open, disabled; only one of them is reached with Tab.
     const paintButton = function (entry) {
         const button = entry.object;
@@ -183,6 +191,7 @@ const ToolBar = function (params = {}) {
         if (entry.isHovered && isEnabled) color = _s.buttonHover.color;
         if (isOn) color = _s.buttonOn.color;
         button.color = color;
+        if (_s.button.border) button.borderColor = getButtonEdge(isOn, entry.isHovered && isEnabled);
         button.textColor = (isOn) ? _s.buttonOn.textColor : _s.button.textColor;
         button.opacity = (isEnabled) ? 1 : _s.disabled.opacity;
         button.cursor = (isEnabled) ? "pointer" : "default";
@@ -207,6 +216,7 @@ const ToolBar = function (params = {}) {
         if (!isPressButton(entry)) return;
         const hasText = (entry.kind === "button" && !!entry.item.text);
         entry.object.props({ height: _s.button.height, fontSize: _s.button.fontSize, round: _s.button.round });
+        if (_s.button.border) entry.object.props({ border: _s.button.border, borderColor: _s.button.borderColor || "transparent" });
         // WHY minWidth and no padding: an icon button is a square.
         entry.object.css = {
             minWidth: _s.button.height + "px",
@@ -719,3 +729,28 @@ ToolBar.styles = {
     },
 
 };
+
+// The minimal theme (_designs/minimal-theme.htm): no fill (the ground of the window), one line under it, 28 px quiet
+// buttons with a 14 px icon: a line around the one under the mouse, an ink line around the one that is on; its hint is
+// a bubble on the ground with a line, its menu ContextMenu minimal. minimalDark: the same on a dark window.
+ToolBar.createMinimalStyle = function (colors) {
+    return {
+        height: 36,
+        style: {
+            box: { color: "transparent", lineColor: colors.line },
+            layout: { padding: 4, gap: 2 },
+            button: { height: 28, padding: 8, gap: 6, round: 4, fontSize: 13, iconSize: 14, textColor: colors.text, border: 1, borderColor: "transparent" },
+            buttonHover: { color: "transparent", borderColor: colors.lineHover },
+            buttonOn: { color: "transparent", textColor: colors.ink, borderColor: colors.ink },
+            separator: { height: 16, space: 4, color: colors.line },
+            bubble: { fontSize: 12, padding: [8, 4], color: colors.ground, textColor: colors.text, round: 4, border: 1, borderColor: colors.line, shadow: "none" },
+            disabled: { opacity: 0.35 },
+            focus: { ringColor: colors.focus },
+            menuStyleName: colors.menuStyleName,
+            menu: { item: { height: 28, fontSize: 13 } },
+            menuMinWidth: 170,
+        },
+    };
+};
+ToolBar.styles.minimal = ToolBar.createMinimalStyle({ ground: "#FFFFFF", text: Black(0.85), line: Black(0.2), lineHover: Black(0.45), ink: "#1F1F1F", focus: "#3D8BD9", menuStyleName: "minimal" });
+ToolBar.styles.minimalDark = ToolBar.createMinimalStyle({ ground: "#1A1A19", text: White(0.88), line: White(0.18), lineHover: White(0.42), ink: "#EDEDEB", focus: "#7FB6DE", menuStyleName: "minimalDark" });

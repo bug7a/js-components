@@ -9,6 +9,7 @@ that are seen are made) and very many columns (it scrolls sideways). A table tha
 big: comp/data-table.js (DataTable). A few rows inside a text: comp/tiny-table.js (TinyTable).
 
 STYLE PACKAGES: "light" (default; the old name "classic" works too) and "dark" are the looks of DataTable (comp/data-table.js);
+"minimal" / "minimalDark": the minimal theme (_designs/minimal-theme.htm);
 new pages use "light" on a light page and "dark" on a dark page. "green" is the look of SmartTable before them (the
 green title line, the dark edge). A package is a package of params: it also gives searchInputParams (the filter box is
 a SearchInput package: "ozden" / "ozdenDark"), scrollBarParams and searchTitleMenuParams. (SmartTable.styles)
@@ -133,7 +134,7 @@ const SmartTableDefaults = {
         clearIconMinTextWidth: 80, // (a narrow filter box has no clear icon; its text keeps that place)
         clearOnEscape: 1, // Escape clears the filter (a narrow box has no clear icon)
     },
-    styleName: "light", // "light" ("classic": its old name), "dark", "green" or a name added to SmartTable.styles
+    styleName: "light", // "light" ("classic": its old name), "dark", "green", "minimal", "minimalDark" or a name added to SmartTable.styles
     style: { // Light style package (default): the look of DataTable "light"
 
         width: "auto",
@@ -1803,3 +1804,57 @@ SmartTable.styles = {
 
 };
 SmartTable.styles.classic = SmartTable.styles.light; // the old name of light: the pages made with it keep their look
+
+// The minimal theme (_designs/minimal-theme.htm): small (28 px rows, 30 px titles, a 13 px text), on the ground of the
+// window with a line around it; no stripes, thin lines between the rows, a soft title over a line, a faint row under
+// the mouse, a 2 px ink line at the left of the selected row. minimalDark: the same on a dark window.
+// WHY faint fills for the rows: a row of SmartTable is its cells (a line around a row needs a row box).
+SmartTable.createMinimalStyle = function (colors) {
+    return {
+        titleHeight: 30,
+        itemHeight: 28,
+        infoHeight: 28,
+        style: Object.assign({
+            round: 4,
+            line1Color: colors.ground,
+            line2Color: colors.ground,
+            highlightItemCellColor: colors.hover,
+            selectedItemCellColor: colors.selected,
+            selectedBar: { width: 2, color: colors.ink },
+            focusRingColor: colors.focus,
+            highlightTitleCellColor: colors.ground,
+            titleUppercase: 0,
+            invertIconColor: colors.invertIcons,
+            sortIcon: { size: 14, opacity: 0.3, activeOpacity: 1 },
+            cellTooltip: { fontSize: 12, color: colors.ground, textColor: colors.text, round: 4, border: 1, borderColor: colors.line, shadow: "none" },
+            box: { color: colors.ground },
+            boxBorder: { border: 1, borderColor: colors.line },
+            boxTitleLine: { color: colors.ground },
+            boxTitleCell: { padding: [10, 0], borderRight: "none", borderBottom: "1px solid " + colors.line },
+            lblTitleCell: { fontSize: 12, fontFamily: "opensans-bold", textColor: colors.softText },
+            boxItemCell: { borderBottom: "1px solid " + colors.track, borderRight: "none", padding: [10, 0] },
+            lblItemCell: { fontSize: 13, textColor: colors.text, fontFamily: "opensans" },
+            boxInfoLine: { color: colors.ground, borderTop: "1px solid " + colors.line },
+            lblBoxInfoLine: { fontSize: 12, textColor: colors.softText },
+            lblNoDataFound: { color: "transparent", textColor: colors.softText, fontSize: 12 },
+            lblSearchTitle: { color: "transparent", textColor: colors.softText, fontSize: 11, border: 0, borderColor: "transparent" }, // WHY no edge: a pill in the 22 px filter box met its edge
+            btnScrollCenter: { color: colors.ground, borderColor: colors.line },
+            btnScrollUp: { color: colors.ground, borderColor: colors.line },
+            btnScrollDown: { color: colors.ground, borderColor: colors.line },
+        }, colors.icons),
+        // WHY its sizes: the filter box of the default is 36 px high, more than the 28 px line of the minimal table
+        searchInputParams: { styleName: colors.minimalName, height: 22, fontSize: 12, searchIconSize: 12, searchIconLeft: 8 },
+        scrollBarParams: { bar_color: colors.scrollBar, bar_mouseOverColor: colors.scrollBar, bar_width: 3 },
+        searchTitleMenuParams: { styleName: colors.minimalName },
+    };
+};
+SmartTable.styles.minimal = SmartTable.createMinimalStyle({
+    ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), line: Black(0.2), track: Black(0.08), hover: Black(0.03),
+    selected: Black(0.06), ink: "#1F1F1F", focus: "#3D8BD9", scrollBar: "#9A9A98", invertIcons: 0, minimalName: "minimal", icons: {},
+});
+SmartTable.styles.minimalDark = SmartTable.createMinimalStyle({
+    ground: "#1A1A19", text: White(0.88), softText: White(0.55), line: White(0.18), track: White(0.08), hover: White(0.04),
+    selected: White(0.08), ink: "#EDEDEB", focus: "#7FB6DE", scrollBar: "#A0A0A0", invertIcons: 1, minimalName: "minimalDark",
+    // WHY the icons of dark: invertIconColor turns only the sort and the up / down arrows
+    icons: { btnScrollCenterIconFile: SmartTable.styles.dark.style.btnScrollCenterIconFile, searchTitleCheckIconFile: SmartTable.styles.dark.style.searchTitleCheckIconFile },
+});

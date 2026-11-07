@@ -53,7 +53,7 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "tree-view", name: "TreeView", cat: "navigation",
-        source: "comp/tree-view.js", samples: ["02-comp-examples/tree-view.htm"],
+        source: "comp/tree-view.js", samples: ["02-comp-examples/tree-view.htm", "02-comp-examples/minimal-theme.htm"],
         en: "A tree of nested items with lazy branches, keyboard and type-ahead: a file explorer, a category tree, a menu or design tool layers.",
         tr: "İç içe öğelerden oluşan ağaç; sonradan yüklenen dallar, klavye ve harfle atlama: dosya gezgini, kategori ağacı, menü veya tasarım aracı katmanları.",
     },
@@ -89,7 +89,7 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "context-menu", name: "ContextMenu", cat: "actions",
-        source: "comp/context-menu.js", samples: ["02-comp-examples/context-menu.htm"],
+        source: "comp/context-menu.js", samples: ["02-comp-examples/context-menu.htm", "02-comp-examples/minimal-theme.htm"],
         en: "A simple menu that opens at the mouse point, with text or icon items (SVG icons take the text color) and submenus.",
         tr: "Farenin olduğu yerde açılan sade menü; yazılı veya ikonlu öğeler (SVG ikonlar yazının rengini alır) ve alt menüler.",
     },
@@ -98,13 +98,14 @@ CATALOG.COMPONENTS = [
         source: "comp/menu-bar.js", deps: ["comp/context-menu.js"], samples: [
             { file: "02-comp-examples/menu-bar.htm", title: "Basic" },
             { file: "02-comp-examples/menu-bar-2.htm", title: "A small program: MenuBar, ImageView, LogView and StatusBar" },
+            { file: "02-comp-examples/minimal-theme.htm", title: "Minimal theme (minimal, minimalDark)" },
         ],
         en: "The row of menus at the top of a window: File, Edit, View. Shortcuts, check marks, submenus and the arrow keys. Light and dark themes.",
         tr: "Pencerenin üstündeki menü çubuğu: Dosya, Düzenle, Görünüm. Kısayollar, onay işaretleri, alt menüler ve ok tuşları. Aydınlık ve karanlık tema.",
     },
     {
         key: "tool-bar", name: "ToolBar", cat: "actions",
-        source: "comp/tool-bar.js", deps: ["comp/tooltip.js", "comp/context-menu.js", "comp/menu-bar.js"], samples: ["02-comp-examples/tool-bar.htm"],
+        source: "comp/tool-bar.js", deps: ["comp/tooltip.js", "comp/context-menu.js", "comp/menu-bar.js"], samples: ["02-comp-examples/tool-bar.htm", "02-comp-examples/minimal-theme.htm"],
         en: "The row of small buttons of a window, under its menus: icons with a hint, lines between the groups, buttons that stay pressed, a button that opens a menu. What does not fit goes into a \"...\" menu. Shortcuts and the arrow keys. Light and dark themes.",
         tr: "Pencerenin menülerinin altındaki küçük düğme satırı: ipuçlu ikonlar, gruplar arasında çizgiler, basılı kalan düğmeler, menü açan düğme. Sığmayanlar \"...\" menüsüne girer. Kısayollar ve ok tuşları. Aydınlık ve karanlık tema.",
     },
@@ -232,7 +233,7 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "dialog", name: "Dialog", cat: "feedback",
-        source: "comp/dialog.js", deps: ["comp/tooltip.js", "comp/input-b.js", "comp/smart-button.js"], samples: ["02-comp-examples/dialog.htm", "02-comp-examples/dialog-centered.htm"],
+        source: "comp/dialog.js", deps: ["comp/tooltip.js", "comp/input-b.js", "comp/smart-button.js"], samples: ["02-comp-examples/dialog.htm", "02-comp-examples/dialog-centered.htm", "02-comp-examples/minimal-theme.htm"],
         en: "A dialog over the page with fields and buttons: a button that asks again, a waiting button, keyboard; Dialog.confirm, alert and prompt. In development.",
         tr: "Sayfanın üstünde alanlı ve düğmeli diyalog: tekrar soran düğme, bekleyen düğme, klavye; Dialog.confirm, alert ve prompt. Geliştiriliyor.",
     },
@@ -244,13 +245,13 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "toast", name: "Toast", cat: "feedback",
-        source: "comp/toast.js", samples: ["02-comp-examples/toast.htm"],
+        source: "comp/toast.js", samples: ["02-comp-examples/toast.htm", "02-comp-examples/minimal-theme.htm"],
         en: "Short messages that come and go: success, error, loading, and actions like Undo.",
         tr: "Gelip giden kısa mesajlar: başarılı, hata, yükleniyor ve Geri Al gibi eylemler.",
     },
     {
         key: "status-bar", name: "StatusBar", cat: "feedback",
-        source: "comp/status-bar.js", samples: ["02-comp-examples/status-bar.htm"],
+        source: "comp/status-bar.js", samples: ["02-comp-examples/status-bar.htm", "02-comp-examples/minimal-theme.htm"],
         en: "The thin bar at the bottom of a window: a short message that can go away by itself, a turning circle for a job, small parts that can be clicked. Light and dark themes.",
         tr: "Pencerenin altındaki ince çubuk: kendiliğinden kaybolabilen kısa mesaj, süren iş için dönen halka, tıklanabilen küçük parçalar. Aydınlık ve karanlık tema.",
     },
@@ -437,6 +438,7 @@ CATALOG.COMPONENTS = [
             { file: "02-comp-examples/smart-table-2.htm", title: "Actions" },
             { file: "02-comp-examples/smart-table-3.htm", title: "Edit & delete" },
             { file: "02-comp-examples/smart-table-4.htm", title: "Style" },
+            { file: "02-comp-examples/minimal-theme.htm", title: "Minimal theme (minimal, minimalDark)" },
         ],
         en: "Virtual-scroll table for millions of rows, with filtering, sorting, custom cells and editing. Style packages: light (default; its old name classic) and dark, the looks of DataTable, and green (the old look). A cut text shows all of it in a bubble.",
         tr: "Milyonlarca satır için sanal kaydırmalı tablo: filtreleme, sıralama, özel hücreler ve düzenleme. Stil paketleri: DataTable'ın görünüşleri light (varsayılan; eski adı classic) ve dark, bir de green (eski görünüş). Sığmayan bir yazı, balonda bütünüyle görünür.",
@@ -569,7 +571,7 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "range-slider", name: "RangeSlider", cat: "inputs",
-        source: "comp/range-slider.js", samples: ["02-comp-examples/range-slider.htm"],
+        source: "comp/range-slider.js", samples: ["02-comp-examples/range-slider.htm", "02-comp-examples/minimal-theme.htm"],
         en: "A range of values on a thin bar: two knobs and the part between them: a price, the hours of a day. A step, the smallest distance, its own text in the bubble, the keyboard. Light and dark looks.",
         tr: "İnce bir bar üzerinde değer aralığı: iki düğme ve aralarındaki parça: fiyat, günün saatleri. Adım, en küçük aralık, baloncukta kendi metni, klavye. Aydınlık ve karanlık görünüş.",
     },
@@ -615,6 +617,7 @@ CATALOG.COMPONENTS = [
             { file: "02-comp-examples/tooltip-2.htm", title: "The bubble: arrow, show(), screen edges" },
             { file: "02-comp-examples/tooltip-3.htm", title: "Content and popover" },
             { file: "02-comp-examples/tooltip-4.htm", title: "Pill bubbles with tags" },
+            { file: "02-comp-examples/minimal-theme.htm", title: "Minimal theme (minimal, minimalDark)" },
         ],
         en: "A hint bubble over an object: it follows the mouse or stays at the object, with an optional bordered arrow, always inside the screen; your own content in it, or a popover that stays and can be clicked.",
         tr: "Bir nesnenin üzerinde ipucu balonu: fareyi izler ya da nesnenin yanında durur; isteğe bağlı kenarlıklı ok, hep ekranın içinde; içinde kendi içeriğin ya da açık kalan, tıklanabilen bir popover.",

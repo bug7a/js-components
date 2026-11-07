@@ -19,7 +19,7 @@ UI COMPONENT TEMPLATE
 - For a menu of a program (MenuBar uses them): an item with shortcut has a soft text at its end (only
   a text: the page runs it, or MenuBar), an item with checked (0 / 1) has a check mark in the icon place
   (setItemChecked), and openBelow(obj) opens the menu under an object (over it when there is no room).
-- Style packages: "light" (default; the old name "classic" works too), "dark". Select with styleName. (ContextMenu.styles)
+- Style packages: "light" (default; the old name "classic" works too), "dark", "minimal", "minimalDark". Select with styleName. (ContextMenu.styles)
 
 ITEM: { text, key, iconFile, icon, items, shortcut, checked, enabled, data, onClick }
 - A string is also accepted: "Copy" -> { text: "Copy" }
@@ -66,7 +66,7 @@ const ContextMenuDefaults = {
     onClose: function (self) { },
     onSideKey: function (self, direction) { }, // ArrowRight (1) / ArrowLeft (-1) that no submenu takes (MenuBar: the next menu)
     parentMenu: null, // (inside) The menu of a submenu: it handles the keys and the clicks outside for it.
-    styleName: "light", // "light" ("classic": its old name), "dark" or a name added to ContextMenu.styles
+    styleName: "light", // "light" ("classic": its old name), "dark", "minimal", "minimalDark" or a name added to ContextMenu.styles
     style: { // Light style package (default)
         menu: {
             color: "white",
@@ -85,10 +85,13 @@ const ContextMenuDefaults = {
             round: 5,
             padding: 10, // Left and right space
             gap: 10, // Space between icon and text
+            border: 0, // px: an edge around every item (its color: borderColor, itemHover.borderColor). 0: none
+            borderColor: "transparent",
         },
         itemHover: {
             textColor: Black(0.9),
             color: Black(0.06),
+            borderColor: "", // the edge of the item under the mouse (item.border). "": its own
         },
         disabled: {
             textColor: Black(0.35),
@@ -240,6 +243,7 @@ const ContextMenu = function (params = {}) {
         const style = (isOver) ? _s.itemHover : _s.item;
         const textColor = (row.item.enabled == 1) ? style.textColor : _s.disabled.textColor;
         row.color = style.color;
+        if (_s.item.border) row.borderColor = (isOver && _s.itemHover.borderColor) ? _s.itemHover.borderColor : _s.item.borderColor;
         row.label.textColor = textColor;
         // WHY: An SVG icon and the › are drawn with currentColor: they take the color of the text.
         if (row.icon && row.icon.isSvg) row.icon.textColor = textColor;
@@ -312,6 +316,7 @@ const ContextMenu = function (params = {}) {
             padding: [_s.item.padding, 0],
             round: _s.item.round,
         });
+        if (_s.item.border) row.props({ border: _s.item.border, borderColor: _s.item.borderColor });
         row.role = "menuitem";
         row.item = item;
 
@@ -919,3 +924,19 @@ ContextMenu.styles = {
 
 };
 ContextMenu.styles.classic = ContextMenu.styles.light; // the old name of light: the pages made with it keep their look
+
+// The minimal theme (_designs/minimal-theme.htm): on the ground of the window with a line and no shadow, 28 px items
+// with a 13 px text, a line around the item under the mouse. minimalDark: the same on a dark window.
+ContextMenu.createMinimalStyle = function (colors) {
+    return {
+        menu: { color: colors.ground, border: 1, borderColor: colors.line, round: 4, padding: 4, shadow: "none" },
+        item: { height: 28, fontSize: 13, textColor: colors.text, color: "transparent", round: 3, padding: 8, gap: 8, border: 1, borderColor: "transparent" },
+        itemHover: { textColor: colors.text, color: "transparent", borderColor: colors.lineHover },
+        disabled: { textColor: colors.faintText, opacity: 0.4 },
+        icon: { width: 14, height: 14, opacity: 0.85 },
+        shortcut: { fontSize: 12, opacity: 0.5, space: 20 },
+        separator: { color: colors.line, space: 4 },
+    };
+};
+ContextMenu.styles.minimal = ContextMenu.createMinimalStyle({ ground: "#FFFFFF", text: Black(0.85), faintText: Black(0.35), line: Black(0.2), lineHover: Black(0.45) });
+ContextMenu.styles.minimalDark = ContextMenu.createMinimalStyle({ ground: "#1A1A19", text: White(0.88), faintText: White(0.35), line: White(0.18), lineHover: White(0.42) });

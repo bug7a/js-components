@@ -18,7 +18,8 @@ UI COMPONENT
   on the page Ctrl+C copies it.
 - An item can remove the bar in its onClick (a page that draws its window again).
 - Too many titles for a narrow window: the row scrolls sideways.
-- Style packages: "light" (default), "dark". Select with styleName (MenuBar.styles), or later with setTheme().
+- Style packages: "light" (default), "dark", "minimal", "minimalDark" (a package of params: its height too; setTheme()
+  changes only the colors and the shapes). Select with styleName (MenuBar.styles), or later with setTheme().
 
 MENU: { text, key, enabled, items, onClick }
 - items: its items (below). A menu without items is a title that only runs its onClick.
@@ -71,13 +72,13 @@ const MenuBarDefaults = {
     onClick: function (self, item, menu) { }, // An item (with a click, the keyboard or its shortcut)
     onMenuOpen: function (self, menu) { },
     onMenuClose: function (self, menu) { },
-    styleName: "light", // "light", "dark" or a name added to MenuBar.styles
+    styleName: "light", // "light", "dark", "minimal", "minimalDark" or a name added to MenuBar.styles
     style: { // Light style package (default)
         box: { color: "#F4F4F2", lineColor: Black(0.12) },
         layout: { padding: 4, gap: 2 },
         title: { fontSize: 13, textColor: Black(0.82), height: 26, padding: 10, round: 5 },
-        titleHover: { color: Black(0.07) },
-        titleOpen: { color: Black(0.11) },
+        titleHover: { color: Black(0.07), borderColor: "" }, // borderColor: the edge (title.border). "": its own
+        titleOpen: { color: Black(0.11), borderColor: "" },
         disabled: { opacity: 0.4 },
         focus: { ringColor: "rgba(63, 141, 148, 0.8)" },
         menuStyleName: "light", // The package of its ContextMenus
@@ -154,6 +155,13 @@ const MenuBar = function (params = {}) {
         if (!box.isRemoved) box.onClick(box, item, menu); // WHY: The item may have removed the bar (a window drawn again).
     };
 
+    // The edge of a title (title.border: the minimal packages): open, under the mouse, or its own
+    const getTitleEdge = function (index, isOver) {
+        if (isOpen(index) && _s.titleOpen.borderColor) return _s.titleOpen.borderColor;
+        if (isOver && _s.titleHover.borderColor) return _s.titleHover.borderColor;
+        return _s.title.borderColor || "transparent";
+    };
+
     // PAINT: the titles: open, the mouse on it, disabled; only one of them is reached with Tab.
     const paintTitle = function (entry, index, isOver) {
         const title = entry.title;
@@ -162,6 +170,7 @@ const MenuBar = function (params = {}) {
         if (isOver && isEnabled) color = _s.titleHover.color;
         if (isOpen(index)) color = _s.titleOpen.color;
         title.color = color;
+        if (_s.title.border) title.borderColor = getTitleEdge(index, isOver && isEnabled);
         title.opacity = (isEnabled) ? 1 : _s.disabled.opacity;
         title.cursor = (isEnabled) ? "pointer" : "default";
         title.tabIndex = (index == focusIndex) ? 0 : -1;
@@ -267,6 +276,7 @@ const MenuBar = function (params = {}) {
 
     const applyTitleLook = function (title) {
         title.props({ height: _s.title.height, fontSize: _s.title.fontSize, textColor: _s.title.textColor, round: _s.title.round });
+        if (_s.title.border) title.props({ border: _s.title.border, borderColor: _s.title.borderColor || "transparent" });
         title.css.padding = "0 " + _s.title.padding + "px";
         title.setFocusRing(_s.focus.ringColor);
     };
@@ -586,3 +596,25 @@ MenuBar.styles = {
     },
 
 };
+
+// The minimal theme (_designs/minimal-theme.htm): no fill (the ground of the window), one line under it, 13 px titles
+// with a line around the one under the mouse and an ink line around the open one; its menus are ContextMenu minimal.
+MenuBar.createMinimalStyle = function (colors) {
+    return {
+        height: 30,
+        style: {
+            box: { color: "transparent", lineColor: colors.line },
+            layout: { padding: 2, gap: 2 },
+            title: { fontSize: 13, textColor: colors.text, height: 24, padding: 9, round: 3, border: 1, borderColor: "transparent" },
+            titleHover: { color: "transparent", borderColor: colors.lineHover },
+            titleOpen: { color: "transparent", borderColor: colors.ink },
+            disabled: { opacity: 0.4 },
+            focus: { ringColor: colors.focus },
+            menuStyleName: colors.menuStyleName,
+            menu: { item: { height: 28, fontSize: 13 } },
+            menuMinWidth: 180,
+        },
+    };
+};
+MenuBar.styles.minimal = MenuBar.createMinimalStyle({ text: Black(0.85), line: Black(0.2), lineHover: Black(0.45), ink: "#1F1F1F", focus: "#3D8BD9", menuStyleName: "minimal" });
+MenuBar.styles.minimalDark = MenuBar.createMinimalStyle({ text: White(0.88), line: White(0.18), lineHover: White(0.42), ink: "#EDEDEB", focus: "#7FB6DE", menuStyleName: "minimalDark" });

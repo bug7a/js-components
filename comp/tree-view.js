@@ -20,7 +20,7 @@ UI COMPONENT TEMPLATE
 - getRowElem(key): the element of a row (its text: [data-part=text]), Ex: to put a field over it.
 - Accessibility: tree / treeitem / group roles, aria-level, aria-expanded, aria-selected, aria-activedescendant.
 - onSelect is NOT called when the component is created or when the value is set with silent: 1.
-- Style packages: "light" (default; the old name "classic" works too), "modern", "dark". Select with styleName. (TreeView.styles)
+- Style packages: "light" (default; the old name "classic" works too), "modern", "dark", "minimal", "minimalDark". Select with styleName. (TreeView.styles)
 - Everything is drawn with code (no image files needed).
 
 NODE: { key, text, iconFile, tag, tagColor, note, noteColor, textColor, children, expanded, hasChildren, disabled, data }
@@ -81,7 +81,7 @@ const TreeViewDefaults = {
     onToggle: function (self, node) { }, // node.expanded: 1 or 0
     onHover: function (self, node) { }, // node: null when the mouse leaves the rows
     onLoadChildren: function (self, node) { }, // hasChildren: 1 and no children. Call self.setChildren(node.key, [...]).
-    styleName: "light", // "light" ("classic": its old name), "modern", "dark" or a name added to TreeView.styles
+    styleName: "light", // "light" ("classic": its old name), "modern", "dark", "minimal", "minimalDark" or a name added to TreeView.styles
     style: { // Light style package (default)
         box: {
             color: "transparent",
@@ -99,15 +99,20 @@ const TreeViewDefaults = {
             paddingRight: 8,
             gap: 6, // Between the arrow, the icon, the text, the tag and the note
             round: 5,
+            border: 0, // px: an edge around every row (its color: borderColor, rowHover / rowSelected.borderColor). 0: none
+            borderColor: "transparent",
+            space: 0, // px between two rows (Ex: 2: the edges of two rows do not meet)
         },
         rowHover: {
             color: Black(0.05),
+            borderColor: "", // the edge of the row under the mouse (row.border). "": its own
         },
         rowSelected: {
             color: Black(0.09),
             textColor: "#141414",
+            borderColor: "", // the edge of the selected row (row.border). "": its own
         },
-        rowFocus: { // Ring of the selected row while the tree has the focus (keyboard)
+        rowFocus: { // Ring of the selected row while the tree has the focus of the keyboard (not after a click)
             outlineColor: Black(0.25),
         },
         arrow: {
@@ -164,6 +169,7 @@ const TreeView = function (params = {}) {
     let nodeIndex = new Map(); // key -> { node, parent } (every node, also inside closed branches)
     let hoverRec = null;
     let hasFocus = 0;
+    let isKeyFocus = 0; // 1: the focus came with the keyboard (Tab) or a key was used in the tree; 0: a click
     let typeBuffer = "";
     let cancelTypeTimer = null; // (box.after: the timer is stopped by remove())
     let keyCounter = 1;
@@ -296,6 +302,12 @@ const TreeView = function (params = {}) {
         return html;
     };
 
+    const getRowEdge = function (isSelected, isHover) {
+        if (isSelected && _s.rowSelected.borderColor) return _s.rowSelected.borderColor;
+        if (isHover && _s.rowHover.borderColor) return _s.rowHover.borderColor;
+        return _s.row.borderColor;
+    };
+
     const getRowColor = function (isSelected, isHover) {
         if (isSelected) return _s.rowSelected.color;
         if (isHover) return _s.rowHover.color;
@@ -313,9 +325,10 @@ const TreeView = function (params = {}) {
         const isHover = (rec === hoverRec) && !isSelected && !node.disabled;
 
         row.color = getRowColor(isSelected, isHover);
+        if (_s.row.border) row.borderColor = getRowEdge(isSelected, isHover);
         row.textColor = (isSelected) ? _s.rowSelected.textColor : _s.row.textColor;
         row.opacity = (node.disabled) ? _s.disabled.opacity : 1;
-        row.boxShadow = (isSelected && hasFocus) ? "inset 0 0 0 1px " + _s.rowFocus.outlineColor : "none";
+        row.boxShadow = (isSelected && hasFocus && isKeyFocus) ? "inset 0 0 0 1px " + _s.rowFocus.outlineColor : "none";
 
         row.aria = {
             selected: isSelected,
@@ -364,6 +377,7 @@ const TreeView = function (params = {}) {
             role: "treeitem",
             aria: { level: level + 1 },
         });
+        if (rowStyle.border) rec.row.props({ border: rowStyle.border, borderColor: rowStyle.borderColor });
         rec.row.elem.id = getRowId(rec);
         rec.row.elem._treeRec = rec; // WHY: One click listener for all the rows finds the rec of a row with it.
         rec.row.clickable = 1;
@@ -387,7 +401,7 @@ const TreeView = function (params = {}) {
                 width: "100%",
                 height: "auto",
                 align: "left top",
-                gap: 0,
+                gap: _s.row.space,
                 color: "transparent",
                 position: "relative",
                 css: { alignItems: "stretch" },
@@ -986,7 +1000,7 @@ const TreeView = function (params = {}) {
             width: "100%",
             height: "auto",
             align: "left top",
-            gap: 0,
+            gap: _s.row.space,
             padding: _s.box.padding,
             color: "transparent",
             position: "relative",
@@ -1043,9 +1057,21 @@ const TreeView = function (params = {}) {
         setHover(getRecOfEvent(event));
     });
     box.listArea.on("mouseleave", function () { setHover(null); });
-    box.listArea.on("keydown", function (self, event) { onKeyDown(event); });
+    // WHY isKeyFocus: the ring of the selected row is for the keyboard; a click focused the tree and showed it too
+    box.listArea.on("keydown", function (self, event) {
+        if (!isKeyFocus) {
+            isKeyFocus = 1;
+            repaintSelected();
+        }
+        onKeyDown(event);
+    });
+    box.listArea.on("mousedown", function () {
+        isKeyFocus = 0;
+        repaintSelected();
+    });
     box.listArea.on("focus", function () {
         hasFocus = 1;
+        isKeyFocus = box.listArea.elem.matches(":focus-visible") ? 1 : 0;
         repaintSelected();
     });
     box.listArea.on("blur", function () {
@@ -1119,3 +1145,25 @@ TreeView.styles = {
 
 };
 TreeView.styles.classic = TreeView.styles.light; // the old name of light: the pages made with it keep their look
+
+// The minimal theme (_designs/minimal-theme.htm): a line around the tree, the rows of ItemList minimal moved in by their level: 28 px, a
+// 13 px text, no fill; a line around the row under the mouse, an ink line around the selected one (with the focus of
+// the keys: a blue line inside it). minimalDark: the same on a dark window.
+TreeView.createMinimalStyle = function (colors) {
+    return {
+        box: { color: "transparent", border: 1, borderColor: colors.line, round: 4, padding: [4, 4] },
+        row: { height: 28, fontSize: 13, textColor: colors.text, indent: 16, paddingLeft: 6, paddingRight: 8, gap: 6, round: 3, border: 1, borderColor: "transparent", space: 2 },
+        rowHover: { color: "transparent", borderColor: colors.lineHover },
+        rowSelected: { color: "transparent", textColor: colors.ink, borderColor: colors.ink },
+        rowFocus: { outlineColor: colors.focus },
+        arrow: { color: colors.softText, size: 12, motion: 0.15 },
+        icon: { size: 14 },
+        tag: { textColor: colors.softText, fontSize: 11 },
+        note: { textColor: colors.faintText, fontSize: 12 },
+        disabled: { opacity: 0.4 },
+        empty: { textColor: colors.softText, fontSize: 12 },
+        scrollBar: { bar_color: colors.scrollBar, bar_mouseOverColor: colors.scrollBar, bar_width: 3, bar_round: 2, bar_opacity: 0.45, bar_mouseOverOpacity: 0.9, bar_padding: 2 },
+    };
+};
+TreeView.styles.minimal = TreeView.createMinimalStyle({ line: Black(0.2), text: Black(0.85), softText: Black(0.55), faintText: Black(0.35), lineHover: Black(0.45), ink: "#1F1F1F", focus: "#3D8BD9", scrollBar: "#373836" });
+TreeView.styles.minimalDark = TreeView.createMinimalStyle({ line: White(0.18), text: White(0.88), softText: White(0.55), faintText: White(0.35), lineHover: White(0.42), ink: "#EDEDEB", focus: "#7FB6DE", scrollBar: "#CFCFCD" });
