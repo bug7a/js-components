@@ -1192,12 +1192,16 @@ BasicDesigner.toNumber = function (value) {
     return (String(n) === String(value).replace(/px$/, "").trim()) ? n : value;
 };
 
-// The border width on the screen. WHY: minimal (basic.css) makes the border of a Button / Input 0 while
-// obj.border still reads 1: the panel showed 1, and a change to 1 was "no change" (not in the prompt).
+// The border widths on the screen, as the panel shows a padding: 1 (every side), "0, 1" (x, y) or "0, 0, 0, 1"
+// (left, top, right, bottom). WHY the screen: minimal (basic.css) makes the border of a Button / Input 0 while
+// obj.border still reads 1 (the panel showed 1, and a change to 1 was "no change": not in the prompt); a list of
+// basic.js is drawn there in its order, [x, y, z] as basic.js reads it.
 BasicDesigner.borderOf = function (obj) {
     const elem = obj.buttonElement || obj.inputElement || obj._textElem || obj.elem;
-    const width = parseFloat(BasicDesigner.state.win.getComputedStyle(elem).borderTopWidth) || 0;
-    return Math.round(width * 100) / 100;
+    const cs = BasicDesigner.state.win.getComputedStyle(elem);
+    const widthOf = function (value) { return Math.round((parseFloat(value) || 0) * 100) / 100; };
+    const sides = [cs.borderLeftWidth, cs.borderTopWidth, cs.borderRightWidth, cs.borderBottomWidth].map(widthOf);
+    return BasicDesigner.sidesText(sides);
 };
 
 // The values that go back as they were written, not as the panel reads them.
@@ -1205,21 +1209,34 @@ BasicDesigner.borderOf = function (obj) {
 //      border: 0 with minimal, an inline 0px hid the border of basic.css when minimal was reverted too.
 //      lineHeight: 0 for "not set", an inline 0px made a Label 0 px high and hid its text.
 //      padding: "6, 1" for the padding of a Button from the browser, a text its setter can not take.
+//      round, gap: a list reads as a text too ("12, 0").
+// css: the inline styles that go back, one by one. WHY not a shorthand (borderWidth): it reads "" when only some
+//      sides are inline (the tick of a CheckBox has a border at the right and at the bottom), and "" cleared all four.
 BasicDesigner.RAW_VALUES = {
-    border: { field: "_border", css: "borderWidth", elemOf: function (obj) { return obj.buttonElement || obj.inputElement || obj._textElem || obj.elem; } },
-    padding: { field: "_padding", css: "padding", elemOf: function (obj) { return obj.elem; } },
-    lineHeight: { field: "_lineHeight", css: "lineHeight", elemOf: function (obj) { return obj._textElem || obj.elem; } },
+    border: {
+        field: "_border", css: ["borderTopWidth", "borderRightWidth", "borderBottomWidth", "borderLeftWidth"],
+        elemOf: function (obj) { return obj.buttonElement || obj.inputElement || obj._textElem || obj.elem; },
+    },
+    round: {
+        field: "_round", css: ["borderTopLeftRadius", "borderTopRightRadius", "borderBottomRightRadius", "borderBottomLeftRadius"],
+        elemOf: function (obj) { return obj.buttonElement || obj.inputElement || obj._textElem || obj.elem; },
+    },
+    padding: { field: "_padding", css: ["paddingTop", "paddingRight", "paddingBottom", "paddingLeft"], elemOf: function (obj) { return obj.elem; } },
+    gap: { field: "_gap", css: ["rowGap", "columnGap"], elemOf: function (obj) { return obj.elem; } },
+    lineHeight: { field: "_lineHeight", css: ["lineHeight"], elemOf: function (obj) { return obj._textElem || obj.elem; } },
 };
 
 BasicDesigner.rawValueOf = function (obj, key) {
     const raw = BasicDesigner.RAW_VALUES[key];
-    return { value: obj[raw.field], inline: raw.elemOf(obj).style[raw.css] };
+    const style = raw.elemOf(obj).style;
+    return { value: obj[raw.field], inline: raw.css.map(function (name) { return style[name]; }) };
 };
 
 BasicDesigner.restoreRawValue = function (obj, key, saved) {
     const raw = BasicDesigner.RAW_VALUES[key];
+    const style = raw.elemOf(obj).style;
     obj[raw.field] = saved.value;
-    raw.elemOf(obj).style[raw.css] = saved.inline;
+    raw.css.forEach(function (name, i) { style[name] = saved.inline[i]; });
 };
 
 // The padding of the object: the one given to it, or the one on the screen when none was given
@@ -1227,16 +1244,16 @@ BasicDesigner.restoreRawValue = function (obj, key, saved) {
 // WHY "if (given)": basic.js reads 0 for a padding that was not given, so 0 must fall through to the screen.
 BasicDesigner.paddingOf = function (obj, cs) {
     const given = obj.padding;
-    const sidesGiven = BasicDesigner.paddingSides(given);
-    if (sidesGiven) return BasicDesigner.paddingText(sidesGiven);
+    const sidesGiven = BasicDesigner.sidesOf(given);
+    if (sidesGiven) return BasicDesigner.sidesText(sidesGiven);
     if (given && !Array.isArray(given)) return BasicDesigner.toNumber(given);
     const onScreen = [cs.paddingLeft, cs.paddingTop, cs.paddingRight, cs.paddingBottom];
-    return BasicDesigner.paddingText(onScreen.map(function (v) { return Math.round(parseFloat(v) || 0); }));
+    return BasicDesigner.sidesText(onScreen.map(function (v) { return Math.round(parseFloat(v) || 0); }));
 };
 
-// A padding array of basic.js -> [left, top, right, bottom], or null (not an array basic.js reads).
+// A padding (or border) array of basic.js -> [left, top, right, bottom], or null (not an array basic.js reads).
 // WHY [x, y, z] -> [x, y, x, y]: basic.js reads three values as two (the third is lost): the panel shows the screen.
-BasicDesigner.paddingSides = function (value) {
+BasicDesigner.sidesOf = function (value) {
     if (!Array.isArray(value)) return null;
     const [first, second] = value;
     if (value.length === 1) return [first, first, first, first];
@@ -1247,12 +1264,51 @@ BasicDesigner.paddingSides = function (value) {
 
 // [left, top, right, bottom] as the panel shows it, the shortest text basic.js reads the same:
 // 14 (every side), "14, 10" (x, y), "14, 10, 6, 2" (four different sides).
-BasicDesigner.paddingText = function (sides) {
+BasicDesigner.sidesText = function (sides) {
     const [left, top, right, bottom] = sides;
     const isSymmetric = (left === right && top === bottom);
     if (isSymmetric && left === top) return left;
     if (isSymmetric) return left + ", " + top;
     return sides.join(", ");
+};
+
+// The round of the object as the panel shows it: 8, or a list of its corners ("12, 0": the top ones, the bottom ones).
+BasicDesigner.roundOf = function (obj) {
+    const corners = BasicDesigner.cornersOf(obj.round);
+    if (corners) return BasicDesigner.cornersText(corners);
+    return BasicDesigner.toNumber(obj.round);
+};
+
+// A round array of basic.js -> [topLeft, topRight, bottomRight, bottomLeft], or null (not an array basic.js reads).
+// WHY [x, y, z] -> [x, x, y, y]: basic.js reads three values as two ([top, bottom]).
+BasicDesigner.cornersOf = function (value) {
+    if (!Array.isArray(value)) return null;
+    const [first, second] = value;
+    if (value.length === 1) return [first, first, first, first];
+    if (value.length === 2 || value.length === 3) return [first, first, second, second];
+    if (value.length === 4) return value.slice();
+    return null;
+};
+
+// [topLeft, topRight, bottomRight, bottomLeft] as the panel shows it, the shortest text basic.js reads the same:
+// 8 (every corner), "12, 0" (top, bottom), "12, 12, 0, 12" (four different corners).
+BasicDesigner.cornersText = function (corners) {
+    const [topLeft, topRight, bottomRight, bottomLeft] = corners;
+    const isTopAndBottom = (topLeft === topRight && bottomRight === bottomLeft);
+    if (isTopAndBottom && topLeft === bottomRight) return topLeft;
+    if (isTopAndBottom) return topLeft + ", " + bottomRight;
+    return corners.join(", ");
+};
+
+// The gap of a group as the panel shows it: 8, or "12, 8" (x: between the items of a line, y: between the lines).
+// basic.js reads a number gap as its text ("8px") and an array as it was given.
+BasicDesigner.gapOf = function (obj) {
+    const gap = obj.gap;
+    const isList = Array.isArray(gap) && gap.length >= 1 && gap.length <= 3;
+    if (!isList) return BasicDesigner.toNumber(gap);
+    const x = gap[0];
+    const y = (gap.length === 1) ? x : gap[1];
+    return (x === y) ? x : x + ", " + y;
 };
 
 // The turn of the object: the one given to it, or the one on the screen (a part of a component turned with a style,
@@ -1317,7 +1373,7 @@ BasicDesigner.readProps = function (obj) {
         // fill and border
         color: obj.color || "",
         opacity: Number(cs.opacity), // on the screen: a part of a component can get it from a style (the tick of a CheckBox)
-        round: obj.round || 0,
+        round: BasicDesigner.roundOf(obj),
         border: BasicDesigner.borderOf(obj),
         borderColor: obj.borderColor || "",
         boxShadow: obj.boxShadow || "",
@@ -1341,7 +1397,7 @@ BasicDesigner.readProps = function (obj) {
         // minimal: the plain look of basic.css (no gradient, no border); a Button and an Input have it.
         minimal: (obj._type === "textbox" || obj._type === "button") ? onOff(obj.minimal) : 0,
         // group
-        gap: isGroup ? BasicDesigner.toNumber(obj.gap) : 0,
+        gap: isGroup ? BasicDesigner.gapOf(obj) : 0,
         padding: BasicDesigner.paddingOf(obj, cs),
         flow: isGroup ? (obj._flow || "horizontal") : "",
         // WHY: "center" when no align was given: the default of a basic.js group (it showed "left top").
@@ -1616,8 +1672,8 @@ BasicDesigner.inputSection = function (p) {
 };
 
 BasicDesigner.layoutSection = function (p) {
-    const gapItem = BasicDesigner.numberOrText("gap", "Gap", "G", p.gap, { min: 0 });
-    const paddingItem = BasicDesigner.paddingItem(p.padding);
+    const gapItem = BasicDesigner.listItem("gap", p.gap);
+    const paddingItem = BasicDesigner.listItem("padding", p.padding);
     // WHY: four sides do not fit in a half field ("14, 10, 6, 2" was cut): then the padding has a row of its own.
     const spacingRows = (paddingItem.span) ? [[gapItem], [paddingItem]] : [[gapItem, paddingItem]];
     return { key: "group", title: "Auto layout", items: [
@@ -1637,54 +1693,112 @@ BasicDesigner.sizeSection = function (p) {
         [BasicDesigner.sizeItem("width", "Width", "W", p.width),
          BasicDesigner.sizeItem("height", "Height", "H", p.height)],
     ];
-    if (!p.isGroup) items.push([BasicDesigner.paddingItem(p.padding)]);
+    if (!p.isGroup) items.push([BasicDesigner.listItem("padding", p.padding)]);
     // WHY mark: a line at the left of Size and Position: the eye finds them, Fill and border comes right after them
     return { key: "size", title: "Size", mark: 1, items: items };
 };
 
-// PADDING: a number field (dragged and stepped like the others) that also reads a text of sides (parsePaddingText):
-// "14, 10" or "14 10" -> x, y; "14, 10, 6, 2" -> left, top, right, bottom (the order of basic.js). A text value
-// is shown as it is and goes to the object as an array (onPropertyChange). Four sides take two columns.
-BasicDesigner.paddingItem = function (value) {
-    const item = {
-        key: "padding",
-        type: "number",
-        label: "Padding",
-        prefix: "P",
+// THE PROPS THAT TAKE A LIST of numbers: padding, and border, round and gap since basic.js v26.11.07.
+// counts: the lengths basic.js reads (three are refused: it reads [x, y, z] as [x, y] and loses the third without a
+// word). minVersion: an older basic.js of the page (a standalone copy) does not read a list of this prop.
+BasicDesigner.LIST_PROPS = {
+    padding: {
+        label: "Padding", prefix: "P", counts: [1, 2, 4],
         hint: "Padding: 14, or x, y (14, 10), or left, top, right, bottom (14, 10, 6, 2)",
+        example: "Ex: 14, or 14, 10 (x, y), or 14, 10, 6, 2 (left, top, right, bottom)",
+    },
+    border: {
+        label: "Border", prefix: "B", counts: [1, 2, 4], minVersion: "26.11.07",
+        hint: "Border: 1, or x, y (0, 1), or left, top, right, bottom (0, 0, 0, 1: a line at the bottom)",
+        example: "Ex: 1, or 0, 1 (x, y), or 0, 0, 0, 1 (left, top, right, bottom)",
+    },
+    round: {
+        label: "Round", prefix: "radius", counts: [1, 2, 4], minVersion: "26.11.07",
+        hint: "Round: 8, or top, bottom (12, 0), or top left, top right, bottom right, bottom left (12, 12, 0, 12)",
+        example: "Ex: 8, or 12, 0 (top, bottom), or 12, 12, 0, 12 (top left, top right, bottom right, bottom left)",
+    },
+    gap: {
+        label: "Gap", prefix: "G", counts: [1, 2], minVersion: "26.11.07",
+        hint: "Gap: 8, or x, y (12, 8): x between the items of a line, y between the lines (wrap)",
+        example: "Ex: 8, or 12, 8 (x: in a line, y: between the lines)",
+    },
+};
+
+// A LIST FIELD (LIST_PROPS): a number field (dragged and stepped like the others) that also reads a text of values
+// (parseListText): "14, 10" or "14 10" -> two values, "14, 10, 6, 2" -> four, in the order of basic.js. A text value
+// is shown as it is and goes to the object as an array (onPropertyChange). Four values take two columns.
+BasicDesigner.listItem = function (key, value) {
+    const prop = BasicDesigner.LIST_PROPS[key];
+    const item = {
+        key: key,
+        type: "number",
+        label: prop.label,
+        prefix: prop.prefix,
+        hint: prop.hint,
         value: (typeof value === "number") ? Math.round(value * 100) / 100 : value,
         min: 0,
-        parseText: BasicDesigner.parsePaddingText,
+        parseText: function (typed) { return BasicDesigner.parseListText(typed, key); },
     };
-    if (BasicDesigner.isFourSides(value)) item.span = 2;
+    if (BasicDesigner.isFourValues(value)) item.span = 2;
     return item;
 };
 
-// "14, 10, 6, 2" (a padding of four sides as the panel shows it)
-BasicDesigner.isFourSides = function (value) {
+// "14, 10, 6, 2" (a list of four values as the panel shows it)
+BasicDesigner.isFourValues = function (value) {
     return typeof value === "string" && value.split(",").length === 4;
 };
 
-// A typed padding -> a number, a text of two or four values ("14, 10"), or undefined (the old value comes back).
-// WHY three values are refused: basic.js reads [x, y, z] as [x, y] and loses the third without a word.
-BasicDesigner.parsePaddingText = function (typed) {
+// A typed list -> a number, a text of its values ("14, 10"), or undefined (the old value comes back; the status bar
+// says why, with an example).
+BasicDesigner.parseListText = function (typed, key) {
+    const prop = BasicDesigner.LIST_PROPS[key];
     const words = String(typed).toLowerCase().replace(/px/g, " ").trim().split(/[\s,;]+/).filter(Boolean);
     const values = words.map(Number);
-    const example = "Ex: 14, or 14, 10 (x, y), or 14, 10, 6, 2 (left, top, right, bottom)";
+    const counts = prop.counts.slice(0, -1).join(", ") + " or " + prop.counts[prop.counts.length - 1];
     if (!words.length || values.some(isNaN)) {
-        BasicDesigner.setStatus("Not a padding: \"" + typed + "\". " + example, "error");
+        BasicDesigner.setStatus("Not a " + key + ": \"" + typed + "\". " + prop.example, "error");
         return undefined;
     }
     if (values.some(function (v) { return v < 0; })) {
-        BasicDesigner.setStatus("A padding can not be less than 0: \"" + typed + "\"", "error");
+        BasicDesigner.setStatus("A " + key + " can not be less than 0: \"" + typed + "\"", "error");
         return undefined;
     }
-    if (values.length === 3 || values.length > 4) {
-        BasicDesigner.setStatus("A padding takes 1, 2 or 4 values, not " + values.length + ". " + example, "error");
+    if (prop.counts.indexOf(values.length) === -1) {
+        BasicDesigner.setStatus("A " + key + " takes " + counts + " values, not " + values.length + ". " + prop.example, "error");
         return undefined;
     }
     if (values.length === 1) return values[0];
+    if (!BasicDesigner.pageReadsList(key)) {
+        const version = BasicDesigner.pageBasicVersion();
+        const versionText = (version) ? "v" + version : "of an older version";
+        BasicDesigner.setStatus("This page loads basic.js " + versionText + ": a " + key + " of more than one value needs v" + prop.minVersion + ".", "error");
+        return undefined;
+    }
     return values.join(", ");
+};
+
+// The version of the basic.js of the page ("": a very old one, without basic.version).
+BasicDesigner.pageBasicVersion = function () {
+    const pageBasic = BasicDesigner.state.win && BasicDesigner.state.win.basic;
+    return (pageBasic && pageBasic.version) || "";
+};
+
+// Does the basic.js of the page read a list for this prop? WHY ">=": a version is the date "YY.MM.DD", the texts compare.
+BasicDesigner.pageReadsList = function (key) {
+    const minVersion = BasicDesigner.LIST_PROPS[key].minVersion;
+    if (!minVersion) return true;
+    return BasicDesigner.pageBasicVersion() >= minVersion;
+};
+
+// A typed padding (also of a component param: param-kinds.js).
+BasicDesigner.parsePaddingText = function (typed) {
+    return BasicDesigner.parseListText(typed, "padding");
+};
+
+// A list text of the panel ("14, 10") -> the array basic.js takes ([14, 10]); a number or another value as it is.
+BasicDesigner.listValue = function (value) {
+    if (typeof value !== "string" || value.indexOf(",") === -1) return value;
+    return value.split(",").map(function (v) { return Number(v.trim()) || 0; });
 };
 
 // SIZE: width / height. A number (px), or a text: "100%", "calc(100% - 20px)", "auto", "50vw"...
@@ -1922,11 +2036,14 @@ BasicDesigner.pictureSection = function (p) {
 };
 
 BasicDesigner.fillSection = function (p) {
+    const roundItem = BasicDesigner.listItem("round", p.round);
+    const opacityItem = BasicDesigner.numberOrText("opacity", "Opacity", "opacity", p.opacity, { min: 0, max: 1, step: 0.05, precision: 2 });
+    // WHY: four corners do not fit in a half field: then the round has a row of its own.
+    const roundRows = (roundItem.span) ? [[roundItem], [opacityItem]] : [[roundItem, opacityItem]];
     return { key: "fill", title: "Fill and border", items: [
         { key: "color", type: "color", label: "Color", value: p.color, span: "full", placeholder: "transparent" },
-        [BasicDesigner.numberOrText("round", "Round", "radius", p.round, { min: 0 }),
-         BasicDesigner.numberOrText("opacity", "Opacity", "opacity", p.opacity, { min: 0, max: 1, step: 0.05, precision: 2 })],
-        [BasicDesigner.numberOrText("border", "Border", "B", p.border, { min: 0 })],
+        ...roundRows,
+        [BasicDesigner.listItem("border", p.border)],
         { key: "borderColor", type: "color", label: "Border color", value: p.borderColor, span: "full" },
         { key: "boxShadow", type: "text", label: "Shadow", value: p.boxShadow, span: "full", placeholder: "Ex: 0 2px 8px rgba(0,0,0,0.2)" },
     ] };
@@ -2169,9 +2286,7 @@ BasicDesigner.onPropertyChange = function (change) {
     if (BasicDesigner.NUMBER_KEYS.indexOf(key) !== -1 && typeof value === "string" && value.trim() !== "" && !isNaN(Number(value))) {
         value = Number(value);
     }
-    if (key === "padding" && typeof value === "string" && value.indexOf(",") !== -1) {
-        value = value.split(",").map(function (v) { return Number(v.trim()) || 0; }); // "14, 10" -> [14, 10]
-    }
+    if (BasicDesigner.LIST_PROPS[key]) value = BasicDesigner.listValue(value); // "14, 10" -> [14, 10]
 
     s.historyKey = obj.__bd.id + ":" + key; // UNDO: the same key again soon is the same step
     const targets = (s.scope === "line") ? BasicDesigner.sameLineObjects(obj) : [obj];
@@ -2186,8 +2301,9 @@ BasicDesigner.onPropertyChange = function (change) {
 
     if (key === "flow") BasicDesigner.refreshTreeRow(obj); // HGroup <-> VGroup
     BasicDesigner.refreshChanges();
-    // WHY: a padding of four sides has a wider field (paddingItem): the panel is drawn again when it comes or goes.
-    if (key === "padding" && BasicDesigner.isFourSides(change.value) !== BasicDesigner.isFourSides(change.oldValue)) BasicDesigner.showProperties(obj);
+    // WHY: a list of four values has a wider field (listItem): the panel is drawn again when it comes or goes.
+    const isFourValuesChanged = (BasicDesigner.isFourValues(change.value) !== BasicDesigner.isFourValues(change.oldValue));
+    if (BasicDesigner.LIST_PROPS[key] && isFourValuesChanged) BasicDesigner.showProperties(obj);
     // WHY: minimal changes the border (0 / 1) and the look: the panel shows the new values.
     if (key === "minimal") BasicDesigner.showProperties(obj);
 
@@ -2672,6 +2788,12 @@ BasicDesigner.fmt = function (v) {
     return String(v);
 };
 
+// A value of a change as code. WHY listValue: the panel reads a list as a text ("14, 10"); the code has an array.
+BasicDesigner.fmtValue = function (key, value) {
+    if (BasicDesigner.LIST_PROPS[key]) value = BasicDesigner.listValue(value);
+    return BasicDesigner.fmt(value);
+};
+
 BasicDesigner.refreshChanges = function () {
 
     const s = BasicDesigner.state;
@@ -2721,7 +2843,7 @@ BasicDesigner.changeLinesOf = function (obj) {
             });
         } else {
             const times = (c.count > 1) ? "  (×" + c.count + ")" : "";
-            lines.push(BasicDesigner.esc(c.key + ": " + BasicDesigner.fmt(c.from) + " → " + BasicDesigner.fmt(c.to) + times));
+            lines.push(BasicDesigner.esc(c.key + ": " + BasicDesigner.fmtValue(c.key, c.from) + " → " + BasicDesigner.fmtValue(c.key, c.to) + times));
         }
     });
     if (s.names.has(obj.__bd.id)) lines.push(BasicDesigner.esc("name: " + (BasicDesigner.baseNameOf(obj) || "(none)") + " → " + s.names.get(obj.__bd.id)));
@@ -2891,7 +3013,7 @@ BasicDesigner.buildPrompt = function () {
                     BasicDesigner.sidesDiff(c.from, c.to).forEach(function (d) { out.push("   - then " + d.key + ": " + d.to); });
                     return;
                 }
-                out.push("   - then " + c.key + ": " + BasicDesigner.fmt(c.to));
+                out.push("   - then " + c.key + ": " + BasicDesigner.fmtValue(c.key, c.to));
             });
             if (s.notes.has(obj.__bd.id)) out.push("   - note: " + s.notes.get(obj.__bd.id));
             out.push("");
@@ -2935,7 +3057,7 @@ BasicDesigner.buildPrompt = function () {
                 });
                 return;
             }
-            let line = "   - " + c.key + ": " + BasicDesigner.fmt(c.from) + " -> " + BasicDesigner.fmt(c.to);
+            let line = "   - " + c.key + ": " + BasicDesigner.fmtValue(c.key, c.from) + " -> " + BasicDesigner.fmtValue(c.key, c.to);
             if (c.key === "picture") line = "   - picture (the file of the Icon: that.load(\"...\")): " + BasicDesigner.fmt(BasicDesigner.shortPicture(c.from)) + " -> " + BasicDesigner.fmt(c.to);
             if (c.count > 1) line += "   (seen on all " + c.count + " objects of this line)";
             out.push(line);
@@ -4621,6 +4743,7 @@ BasicDesigner.hideTip = function () {
 
 BasicDesigner.TOP_ICONS = {
     file: "M4 1.8h5l3 3v9.4H4zM9 1.8v3h3",
+    folder: "M1.8 4a1 1 0 0 1 1-1h3.4l1.6 1.8h5.4a1 1 0 0 1 1 1v6.4a1 1 0 0 1-1 1H2.8a1 1 0 0 1-1-1z",
     chevron: "M4.5 6.5L8 10l3.5-3.5",
     reload: "M13 8a5 5 0 1 1-1.5-3.6M13 2.5v3h-3",
     open: "M9 2.5h4.5V7M13.5 2.5L7.5 8.5M12 9.5V13H3V4h3.5",
@@ -4733,7 +4856,6 @@ BasicDesigner.buildTopBar = function () {
         // Send to AI (VS Code only), and Copy prompt at its right: send it, or copy it.
         if (BasicDesigner.isInVSCode) ui.btnTopSend = BasicDesigner.sendButton(false);
         ui.btnTopCopy = BasicDesigner.copyButton(false);
-    folder: "M1.8 4a1 1 0 0 1 1-1h3.4l1.6 1.8h5.4a1 1 0 0 1 1 1v6.4a1 1 0 0 1-1 1H2.8a1 1 0 0 1-1-1z",
 
     endGroup();
 
@@ -7192,7 +7314,8 @@ BasicDesigner.copyItemOf = function (obj) {
     keys.forEach(function (key) {
         const value = p[key];
         if (value === "" || value === undefined || value === null) return;
-        props[key] = value;
+        // WHY listValue: the panel reads a list as a text ("14, 10"), which the setter does not take: the copy lost it.
+        props[key] = (BasicDesigner.LIST_PROPS[key]) ? BasicDesigner.listValue(value) : value;
     });
     return { type: type, props: props, copyOf: BasicDesigner.describeObject(obj) };
 };

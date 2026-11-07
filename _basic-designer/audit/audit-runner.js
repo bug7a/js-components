@@ -57,14 +57,39 @@
         return hv[p[0]] + hv[p[1]];
     };
 
+    // A list of the panel ("12, 0") and the four values basic.js draws for it: corners (12, 12, 0, 0: top left, top
+    // right, bottom right, bottom left) or sides (left, top, right, bottom: "0, 1" -> 0, 1, 0, 1).
+    const isListText = function (v) { return typeof v === "string" && v.indexOf(",") !== -1; };
+    const fourValuesOf = function (v, isCorners) {
+        const n = String(v).split(",").map(function (x) { return Number(x.trim()); });
+        if (n.length === 4) return n;
+        if (n.length === 1) return [n[0], n[0], n[0], n[0]];
+        return (isCorners) ? [n[0], n[0], n[1], n[1]] : [n[0], n[1], n[0], n[1]];
+    };
+    const screenCorners = function (el) {
+        const c = W().getComputedStyle(el);
+        return [c.borderTopLeftRadius, c.borderTopRightRadius, c.borderBottomRightRadius, c.borderBottomLeftRadius].map(px);
+    };
+    // prefix + side + suffix: "border" + "Left" + "Width", "padding" + "Left" + ""
+    const screenSides = function (el, prefix, suffix) {
+        const c = W().getComputedStyle(el);
+        return ["Left", "Top", "Right", "Bottom"].map(function (side) { return px(c[prefix + side + suffix]); });
+    };
+
     // key -> function (obj, value) -> [real, expected] or null (not checked)
     window.TRUTH = {
         width: function (o, v) { return (typeof v === "number") ? [o.elem.offsetWidth, v] : null; },
         height: function (o, v) { return (typeof v === "number") ? [o.elem.offsetHeight, v] : null; },
         color: function (o, v) { return [W().getComputedStyle(fieldOf(o)).backgroundColor, normColor(v || "transparent")]; },
         opacity: function (o, v) { return [Number(W().getComputedStyle(o.elem).opacity), Number(v)]; },
-        round: function (o, v) { return [px(W().getComputedStyle(fieldOf(o)).borderTopLeftRadius), Number(v)]; },
-        border: function (o, v) { return [px(W().getComputedStyle(fieldOf(o)).borderTopWidth), Number(v)]; },
+        round: function (o, v) {
+            if (isListText(v)) return [String(screenCorners(fieldOf(o))), String(fourValuesOf(v, true))];
+            return [px(W().getComputedStyle(fieldOf(o)).borderTopLeftRadius), Number(v)];
+        },
+        border: function (o, v) {
+            if (isListText(v)) return [String(screenSides(fieldOf(o), "border", "Width")), String(fourValuesOf(v, false))];
+            return [px(W().getComputedStyle(fieldOf(o)).borderTopWidth), Number(v)];
+        },
         borderColor: function (o, v) {
             const c = W().getComputedStyle(fieldOf(o));
             return px(c.borderTopWidth) ? [c.borderTopColor, normColor(v)] : null;
@@ -85,8 +110,15 @@
             probe.style.boxShadow = "";
             return [W().getComputedStyle(o.elem).boxShadow, expected];
         },
-        gap: function (o, v) { return [px(W().getComputedStyle(o.elem).rowGap), Number(v)]; },
-        padding: function (o, v) { return (typeof v === "number") ? [px(W().getComputedStyle(o.elem).paddingTop), v] : null; },
+        gap: function (o, v) {
+            const c = W().getComputedStyle(o.elem);
+            if (isListText(v)) return [px(c.columnGap) + ", " + px(c.rowGap), String(v)];
+            return [px(c.rowGap), Number(v)];
+        },
+        padding: function (o, v) {
+            if (isListText(v)) return [String(screenSides(o.elem, "padding", "")), String(fourValuesOf(v, false))];
+            return (typeof v === "number") ? [px(W().getComputedStyle(o.elem).paddingTop), v] : null;
+        },
         flow: function (o, v) { return [W().getComputedStyle(o.elem).flexDirection === "column" ? "vertical" : "horizontal", v]; },
         wrap: function (o, v) { return [W().getComputedStyle(o.elem).flexWrap === "wrap" ? 1 : 0, v ? 1 : 0]; },
         align: function (o, v) { return [alignCode(W().getComputedStyle(o.elem)), alignTextCode(v)]; },
@@ -151,11 +183,15 @@
         return same ? true : "read " + JSON.stringify(now);
     };
 
-    // What the screen shows of the keys the panel reads differently (lineHeight, padding): undo must bring it back.
+    // What the screen shows of the keys the panel reads differently (lineHeight, and the lists: padding, border, round,
+    // gap): undo must bring it back.
     // WHY: readProps() was the same before and after, so a Label left 0 px high passed.
+    const SCREEN_KEYS = ["lineHeight", "padding", "border", "round", "gap"];
     const screenLook = function (o) {
         const box = W().getComputedStyle(o.elem);
-        return [textOf(o).lineHeight, box.paddingTop, box.paddingLeft, o.elem.offsetHeight].join(" / ");
+        const field = fieldOf(o);
+        return [textOf(o).lineHeight, String(screenSides(o.elem, "padding", "")), o.elem.offsetHeight,
+            String(screenSides(field, "border", "Width")), String(screenCorners(field)), box.columnGap + " " + box.rowGap].join(" / ");
     };
 
     // only: [names] (optional)
@@ -174,7 +210,9 @@
                 const lookBefore = screenLook(o);
                 let value = VALUES[key];
                 if (value === "__toggle") value = (key === "flow") ? (orig === "vertical" ? "horizontal" : "vertical") : (Number(orig) ? 0 : 1);
-                if (String(value) === String(orig)) continue;
+                // WHY Number: true and 1 are the same value of a switch (wrap: 1 of groupLists): no change, no prompt line
+                const isSameValue = (String(value) === String(orig)) || (typeof value === "boolean" && Number(value) === Number(orig));
+                if (isSameValue) continue;
                 AUDIT.tested++;
                 AUDIT.at = name + "." + key;
                 const fail = function (text) { AUDIT.fails.push(name + "." + key + " " + text); };
@@ -204,7 +242,7 @@
                     if (ok2 !== true) fail("redo: " + ok2);
                     BD.undo();
                     await sleep(120);
-                    if (key === "lineHeight" || key === "padding") {
+                    if (SCREEN_KEYS.indexOf(key) !== -1) {
                         const lookAfter = screenLook(o);
                         if (lookAfter !== lookBefore) fail("undo, on the screen: " + lookAfter + " (was " + lookBefore + ")");
                     }
@@ -500,14 +538,15 @@
         const t = W().getComputedStyle(o._textElem || field);
         const box = W().getComputedStyle(o.elem);
         return [o.elem.offsetWidth, o.elem.offsetHeight, c.backgroundColor, c.backgroundImage === "none" ? "flat" : "shade",
-            c.borderTopWidth, c.borderTopColor, c.borderTopLeftRadius, box.opacity, t.fontSize, t.color, t.textAlign, t.fontWeight,
-            t.fontStyle, t.fontFamily, t.lineHeight, box.paddingTop, box.paddingLeft, box.rowGap, box.justifyContent, box.alignItems,
+            String(screenSides(field, "border", "Width")), c.borderTopColor, String(screenCorners(field)), box.opacity, t.fontSize,
+            t.color, t.textAlign, t.fontWeight, t.fontStyle, t.fontFamily, t.lineHeight, String(screenSides(o.elem, "padding", "")),
+            box.columnGap + " " + box.rowGap, box.justifyContent, box.alignItems,
             (o.inputElement) ? o.inputElement.placeholder : "", (o._textElem || field).textContent].join(" | ");
     };
     const diffLook = function (a, b) {
         const x = lookOf(a).split(" | ");
         const y = lookOf(b).split(" | ");
-        const names = ["width", "height", "color", "shade", "border", "borderColor", "round", "opacity", "fontSize", "textColor", "textAlign", "fontWeight", "fontStyle", "fontFamily", "lineHeight", "paddingTop", "paddingLeft", "gap", "justify", "alignItems", "placeholder", "text"];
+        const names = ["width", "height", "color", "shade", "border", "borderColor", "round", "opacity", "fontSize", "textColor", "textAlign", "fontWeight", "fontStyle", "fontFamily", "lineHeight", "padding", "gap", "justify", "alignItems", "placeholder", "text"];
         const out = [];
         x.forEach(function (v, i) { if (v !== y[i]) out.push(names[i] + " " + v + " / copy " + y[i]); });
         return out.length ? out.join("; ") : true;
@@ -807,6 +846,128 @@
                 BD.select(now()); await sleep(30);
                 BD.applyParamValue(now(), flagPath, nextFlag);
             }, function () { return same(valueAt(flagPath), nextFlag); }, new RegExp("- param " + flagPath.join("\\.")), function () { return same(valueAt(flagPath), firstFlag); });
+        }
+
+        R.done = true;
+        return R;
+    };
+
+    // THE LISTS (basic.js v26.11.07): padding, border, round and gap typed as a list, as the panel does it: the text of
+    // parseListText, an array on the object, the screen, the panel text and its width, a prompt line of arrays, Revert
+    // all + the saved session, undo, redo. Then a Cmd+D copy, the texts that are refused, an older basic.js of the page.
+    window.runListAudit = async function () {
+        const R = window.LISTS = { done: false, fails: [], passed: [] };
+        const A = window.AUD;
+        const promptLineOf = function (key) {
+            return (BD.buildPrompt() || "").split("\n").find(function (l) { return l.indexOf("- " + key + ": ") !== -1; }) || "";
+        };
+        const fieldItemOf = function (o, key) {
+            const items = flat(BD.propertySections(BD.readProps(o)).flatMap(function (sec) { return sec.items; }));
+            return items.find(function (i) { return i.key === key; }) || {};
+        };
+        // [object, key, the typed text]: from a number to a list, and from a list (boxLists, groupLists) to another value
+        const CASES = [
+            ["boxGiven", "round", "12, 0"],
+            ["boxGiven", "round", "1, 2, 3, 4"],
+            ["boxGiven", "border", "0, 0, 0, 3"],
+            ["boxGiven", "border", "0, 2"],
+            ["buttonGiven", "round", "18, 4"],
+            ["buttonGiven", "border", "0, 0, 2, 0"],
+            ["inputGiven", "border", "0, 0, 0, 1"],
+            ["groupGiven", "gap", "12, 8"],
+            ["groupGiven", "padding", "4, 8, 12, 16"],
+            ["boxLists", "round", "14, 14, 0, 4"],
+            ["boxLists", "border", "2"],
+            ["groupLists", "gap", "6"],
+            ["groupLists", "round", "0, 12"],
+        ];
+        for (const [objectName, key, typed] of CASES) {
+            const o = A[objectName];
+            const name = objectName + "." + key + " " + JSON.stringify(typed);
+            const failsBefore = R.fails.length;
+            const fail = function (text) { R.fails.push(name + ": " + text); };
+            try {
+                BD.discardSession();
+                BD.select(o);
+                await sleep(30);
+                const orig = BD.readProps(o)[key];
+                const lookBefore = screenLook(o);
+                const value = BD.parseListText(typed, key);
+                const expected = isListText(typed) ? typed : Number(typed);
+                if (value !== expected) fail("parseListText: " + JSON.stringify(value));
+                BD.onPropertyChange({ kind: "value", key: key, value: value, oldValue: orig });
+                await sleep(650); // WHY: More than HISTORY_MERGE_TIME: every change is an undo step of its own.
+                const ok1 = valueOk(o, key, value);
+                if (ok1 !== true) fail("apply: " + ok1);
+                if (isListText(typed) && !Array.isArray(o[key])) fail("not an array on the object: " + JSON.stringify(o[key]));
+                const panelValue = BD.readProps(o)[key];
+                if (String(panelValue) !== String(value)) fail("the panel reads " + JSON.stringify(panelValue));
+                const isWide = (fieldItemOf(o, key).span === 2);
+                if (isWide !== BD.isFourValues(panelValue)) fail("the field is " + (isWide ? "two columns wide" : "one column wide"));
+                const line = promptLineOf(key);
+                if (!line || line.indexOf('"') !== -1) fail("prompt line: " + JSON.stringify(line));
+                const session = BD.buildSession();
+                BD.revertAll();
+                if (screenLook(o) !== lookBefore) fail("revert all, on the screen: " + screenLook(o) + " (was " + lookBefore + ")");
+                const back0 = BD.readProps(o)[key];
+                if (String(back0) !== String(orig)) fail("revert all: " + JSON.stringify(back0) + " (was " + JSON.stringify(orig) + ")");
+                BD.applySession(session);
+                BD.refreshChanges();
+                const ok2 = valueOk(o, key, value);
+                if (ok2 !== true) fail("session apply: " + ok2);
+                BD.undo();
+                await sleep(120);
+                if (screenLook(o) !== lookBefore) fail("undo, on the screen: " + screenLook(o) + " (was " + lookBefore + ")");
+                BD.redo();
+                await sleep(120);
+                const ok3 = valueOk(o, key, value);
+                if (ok3 !== true) fail("redo: " + ok3);
+                BD.undo();
+                await sleep(120);
+            } catch (error) {
+                fail("ERROR " + error.message);
+            }
+            if (R.fails.length === failsBefore) R.passed.push(name);
+        }
+
+        // A Cmd+D copy keeps the lists (the panel reads them as texts, a text the setters do not take), in the code too
+        const LIST_CODE = ["gap: [12,8]", "padding: [14,10]", "round: [12,12,4,12]", "border: [0,2]"];
+        await checkStep(R, "copy of a group with lists", async function () {
+            BD.select(A.groupLists);
+            await sleep(30);
+            BD.duplicateObject(A.groupLists);
+            await sleep(100);
+        }, function () {
+            const copy = BD.state.addedObjects[0];
+            if (!copy) return "no copy";
+            const look = diffLook(A.groupLists, copy);
+            if (look !== true) return look;
+            const code = (BD.buildPrompt() || "").split("\n").find(function (l) { return l.indexOf("code: HGroup(") !== -1; }) || "";
+            const hasArrays = LIST_CODE.every(function (part) { return code.indexOf(part) !== -1; });
+            return (hasArrays) ? true : "code: " + code;
+        }, /NEW: added/, function () { return (BD.state.addedObjects.length === 0) ? true : "copies left: " + BD.state.addedObjects.length; });
+
+        // The texts a list field refuses (the old value comes back) and the ones it reads
+        const REFUSED = [["padding", "1, 2, 3"], ["round", "1, 2, 3, 4, 5"], ["gap", "1, 2, 3, 4"], ["border", "-1, 2"], ["round", "a, b"]];
+        const notRefused = REFUSED.filter(function (r) { return BD.parseListText(r[1], r[0]) !== undefined; });
+        if (notRefused.length) R.fails.push("refused texts: " + JSON.stringify(notRefused));
+        else R.passed.push("refused texts");
+        const ACCEPTED = [["round", "12 0", "12, 0"], ["border", "0px 1px", "0, 1"], ["gap", "8", 8], ["padding", "14;10", "14, 10"]];
+        const misread = ACCEPTED.filter(function (a) { return BD.parseListText(a[1], a[0]) !== a[2]; });
+        if (misread.length) R.fails.push("accepted texts: " + JSON.stringify(misread));
+        else R.passed.push("accepted texts");
+
+        // An older basic.js of the page reads no list of border, round and gap (it reads one value, and a padding list)
+        const pageBasic = W().basic;
+        const realVersion = pageBasic.version;
+        try {
+            pageBasic.version = "26.10.28";
+            const listsRefused = ["round", "border", "gap"].every(function (key) { return BD.parseListText("12, 8", key) === undefined; });
+            const othersRead = (BD.parseListText("8", "round") === 8) && (BD.parseListText("14, 10", "padding") === "14, 10");
+            if (listsRefused && othersRead) R.passed.push("an older basic.js");
+            else R.fails.push("an older basic.js: lists refused " + listsRefused + ", one value and a padding read " + othersRead);
+        } finally {
+            pageBasic.version = realVersion;
         }
 
         R.done = true;
