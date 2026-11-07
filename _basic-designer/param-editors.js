@@ -347,6 +347,25 @@ BasicDesigner.buildParamRow = function (row) {
 
 // GROUP: The colors under the field of a color (the ticks of the color picker, as in the Box view). WHY the same ticks: a
 // color group chosen once is at hand under every color. It is empty while no tick is on.
+// WHY only under the color in use (the last one clicked or written): under every color row the list was three times longer.
+// Not the row under the mouse: the rows under it would move while the mouse goes down.
+BasicDesigner.activeColorRow = null; // { id, pathText }
+
+BasicDesigner.isActiveColorRow = function (pathText) {
+    const active = BasicDesigner.activeColorRow;
+    const obj = BasicDesigner.paramsObject;
+    return !!(active && obj && active.id === obj.__bd.id && active.pathText === pathText);
+};
+
+BasicDesigner.setActiveColorRow = function (pathText) {
+    const ui = BasicDesigner.ui;
+    BasicDesigner.activeColorRow = { id: BasicDesigner.paramsObject.__bd.id, pathText: pathText };
+    Object.keys(ui.paramRowViews || {}).forEach(function (key) {
+        const view = ui.paramRowViews[key];
+        if (view.strip) view.strip.setHidden(key !== pathText);
+    });
+};
+
 BasicDesigner.buildParamColorStrip = function (view) {
     const strip = BasicDesigner.ui.panel.buildColorStrip({
         key: "param:" + view.row.pathText,
@@ -357,6 +376,8 @@ BasicDesigner.buildParamColorStrip = function (view) {
         },
     });
     strip.obj.css.marginLeft = (BasicDesigner.PARAM_NAME_WIDTH + BasicDesigner.PARAM_ROW_GAP) + "px";
+    strip.setHidden(!BasicDesigner.isActiveColorRow(view.row.pathText));
+    view.input.addEventListener("focus", function () { BasicDesigner.setActiveColorRow(view.row.pathText); });
     return strip;
 };
 
@@ -1436,6 +1457,7 @@ BasicDesigner.paramComboField = function (options) {
 // COLOR: the color picker of the panel, its groups and its recent colors. WHY its swatch and not its name alone: the Box
 // view opens the same window from the same place.
 BasicDesigner.openParamColor = function (view) {
+    BasicDesigner.setActiveColorRow(view.row.pathText);
     const edit = BasicDesigner.startParamEdit(view.row);
     const color = { pathText: view.row.pathText, closedAt: 0 };
     BasicDesigner.paramColor = color;

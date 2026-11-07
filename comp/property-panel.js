@@ -1522,7 +1522,7 @@ const PropertyPanel = function (params = {}) {
             const palette = (quickColors.group) ? currentPaletteOf(item) : null;
             const groupColors = (palette) ? palette.colors : [];
             const hasLine = (recent.length && groupColors.length) ? 1 : 0;
-            strip.visible = (recent.length || groupColors.length) ? 1 : 0;
+            strip.visible = (!view.isHidden && (recent.length || groupColors.length)) ? 1 : 0;
 
             // WHY the line counts as a color: it is simpler, and only a few px are lost
             const slotCount = recent.length + hasLine + groupColors.length;
@@ -1566,6 +1566,12 @@ const PropertyPanel = function (params = {}) {
         view.setEnabled = function (enabled) {
             view.enabled = enabled;
             strip.opacity = (enabled) ? 1 : 0.5;
+        };
+
+        // isHidden: 1 -> not shown, whatever the ticks say (Ex: only under the field in use)
+        view.setHidden = function (isHidden) {
+            view.isHidden = (isHidden) ? 1 : 0;
+            view.draw();
         };
 
         quickStrips.push(view);
@@ -3314,7 +3320,7 @@ const PropertyPanel = function (params = {}) {
     // USAGE: panel.openColorPickerFor({ key: "tone", hint: "Tone", value: "#FF0000", rect: rect, opener: swatch, commit: write })
 
     // The colors under a color field, for a color that is not an item of the panel. It follows the ticks of the picker and is
-    // made in the current container. request: { key, hint, width, onPick(value) }. Returns { obj, paint(value) }.
+    // made in the current container. request: { key, hint, width, onPick(value) }. Returns { obj, paint(value), setHidden(isHidden) }.
     box.buildColorStrip = function (request) {
         const strip = buildQuickStrip({ item: { key: request.key, hint: request.hint }, sectionKey: "" }, request.width, request.onPick);
         strip.isOutside = 1;
