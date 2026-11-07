@@ -108,7 +108,7 @@ const MyComp = function (params = {}) {
 - Every default value becomes a public property on `box`. After creation, change values through explicit `setX()` methods, not JS getters or setters.
 - To inherit from another component, use `startExtendedObject(ParentComp, params)` … `endExtendedObject(box)` (see `comp/email-input-b.js`, which extends `InputB`).
 - Name components in PascalCase with a matching `XxxDefaults` object. Put component assets in a sibling folder with the same name (`comp/smart-table/*.png`).
-- Files keep the house header comment (`/* Bismillah */`, name/version, started date, developer): the one comment with a date and a person. Comments mix English and Turkish. Keep the existing section markers (`// *** PUBLIC FUNCTIONS:`, `// BOX:`, `// LABEL:`, …).
+- Files keep the house header comment (`/* Bismillah */`, name/version, started date, developer): the one comment with a date and a person. New comments are in English; an old Turkish comment changes when the code around it is touched (the user, 2026-11-07). Keep the existing section markers (`// *** PUBLIC FUNCTIONS:`, `// BOX:`, `// LABEL:`, …).
 
 ## Conventions and gotchas
 
