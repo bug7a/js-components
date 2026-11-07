@@ -1113,6 +1113,18 @@
             [untitled, titled].forEach(function (field) { field.remove(); });
         });
 
+        test("GraphBox minimal: the theme gives its shapes, a style of the page wins over them, light keeps its shapes", async function () {
+            const minimal = GraphBox({ theme: "minimal", labels: ["a", "b"], values: [1, 2] });
+            const ownRound = GraphBox({ theme: "minimalDark", labels: ["a", "b"], values: [1, 2], style: { box: { round: 9 } } });
+            const plain = GraphBox({ labels: ["a", "b"], values: [1, 2] });
+            await basic.nextFrame();
+            check("GraphBox minimal: round 4, a 13 px title", minimal.style.box.round === 4 && minimal.style.title.fontSize === 13, minimal.style.box.round + " / " + minimal.style.title.fontSize);
+            check("GraphBox minimalDark: the round of the page wins", ownRound.style.box.round === 9, ownRound.style.box.round);
+            check("GraphBox light: round 12 as before", plain.style.box.round === 12, plain.style.box.round);
+            check("GraphBox: a chart does not fill the shapes of the theme with the defaults", !("border" in GraphBox.MINIMAL_SHAPES.box), Object.keys(GraphBox.MINIMAL_SHAPES.box).join(", "));
+            [minimal, ownRound, plain].forEach(function (chart) { chart.remove(); });
+        });
+
         // *** TOGGLE (comp/toggle.js)
 
         test("Toggle: the keyboard and screen readers can use it", async function () {

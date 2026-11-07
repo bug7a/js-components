@@ -13,8 +13,9 @@ UI COMPONENT
 - Chart types: "line", "area", "bar" (more than one dataset: bars side by side; stacked: 1 one on the other;
   horizontal: 1 bars that grow to the right), "pie", "doughnut" (the first dataset: a part of the whole), "radar",
   "scatter" and "bubble" (two number axes: data: [{ x: 1, y: 2 }]).
-- Light and dark themes ("light", "dark", "auto"). A dataset gets its color from the theme and keeps it, also when
-  another dataset is hidden or removed.
+- Light and dark themes ("light", "dark", "auto"), and "minimal", "minimalDark" (the lines of _designs/minimal-theme.htm:
+  its colors and its shapes: smaller texts, less round, thin lines). A dataset gets its color from the theme and keeps it,
+  also when another dataset is hidden or removed.
 - The axis finds clean numbers by itself (0, 20K, 40K...). A label that has no room is skipped (a line chart: time)
   or it turns (a bar chart: every bar needs its name).
 - Mouse, touch and keyboard: a tooltip with every dataset at that place. (Left / right arrows, Escape, Enter.)
@@ -87,7 +88,7 @@ const GraphBoxDefaults = {
     width: 500,
     height: 300,
     type: "line", // "line", "area", "bar", "pie", "doughnut", "radar", "scatter", "bubble"
-    theme: "light", // "light", "dark", "auto" (follows the system setting)
+    theme: "light", // "light", "dark", "auto" (follows the system setting), "minimal", "minimalDark"
     titleText: "",
     subtitleText: "",
     labels: null, // ["Jan", "Feb", "Mar"]
@@ -236,7 +237,15 @@ const GraphBoxDefaults = {
 
 const GraphBox = function (params = {}) {
 
-    // Merge params:
+    // Merge params: the shapes of its theme (GraphBox.THEMES[name].style: minimal), then the defaults
+    // WHY before the defaults: the shapes of a theme win over the default shapes, a style of the page over both
+    const themeOfParams = GraphBox.THEMES[params.theme];
+    if (themeOfParams && themeOfParams.style) {
+        const ownStyle = {};
+        mergeIntoIfMissing(ownStyle, params.style || {});
+        mergeIntoIfMissing(ownStyle, themeOfParams.style);
+        params.style = ownStyle;
+    }
     mergeIntoIfMissing(params, GraphBoxDefaults);
 
     // WHY: startObject() keeps the arrays of the page by reference. The data is kept out of it: box.data is a copy.
@@ -3375,7 +3384,8 @@ const GraphBox = function (params = {}) {
         box.theme = theme;
         drawAll();
     };
-    // USAGE: "light", "dark", "auto"
+    // USAGE: "light", "dark", "auto", "minimal", "minimalDark"
+    // NOTE: It changes the colors. The shapes of a theme (minimal) come when the chart is created.
 
     // Change some values of the style. Ex: setStyle({ colors: { gridColor: "#334155" }, box: { round: 0 } })
     box.setStyle = function (style) {
@@ -3532,6 +3542,69 @@ GraphBox.THEMES = {
         tooltipMutedColor: "rgba(255, 255, 255, 0.65)",
         colors: ["#3987E5", "#D95926", "#199E70", "#C98500", "#D55181", "#008300", "#9085E9", "#E66767"],
     },
+};
+
+// The minimal theme (_designs/minimal-theme.htm): the ground of the window with a soft line, the text tokens of the
+// theme, a faint grid. style: its shapes too (a theme with a style gives the shapes, under the style of the page):
+// 13 px title, 11 px axis and legend, round 4, thin lines, a tooltip with no shadow.
+// WHY the colors of the data are those of light / dark: they were checked for color blindness.
+GraphBox.MINIMAL_SHAPES = {
+    box: { round: 4, padding: 12, gap: 10 },
+    title: { fontSize: 13, fontFamily: "opensans-bold" },
+    subtitle: { fontSize: 11 },
+    legend: {
+        keys: {
+            line: { width: 12, height: 2, round: 1 },
+            box: { width: 8, height: 8, round: 2 },
+            dot: { width: 6, height: 6, round: 3 },
+        },
+        fontSize: 11,
+        gap: 12,
+        lineGap: 4,
+        keyGap: 5,
+    },
+    axis: { fontSize: 11 },
+    bar: { maxThickness: 20, round: 2 },
+    line: { width: 1.5, pointRadius: 3, pointRing: 1.5 },
+    pie: { centerFontSize: 20 },
+    table: { fontSize: 11, rowHeight: 24 },
+    tooltip: { fontSize: 11, round: 4, padding: [8, 6], shadow: "none" },
+};
+GraphBox.THEMES.minimal = {
+    backgroundColor: "#FFFFFF",
+    borderColor: Black(0.2),
+    titleColor: Black(0.85),
+    textColor: Black(0.55),
+    mutedTextColor: Black(0.54),
+    gridColor: Black(0.08),
+    axisColor: Black(0.2),
+    hoverColor: Black(0.04),
+    targetColor: Black(0.55),
+    focusColor: "#3D8BD9",
+    otherColor: Black(0.3),
+    tooltipColor: "#1F1F1F",
+    tooltipTextColor: "#FFFFFF",
+    tooltipMutedColor: White(0.65),
+    colors: GraphBox.THEMES.light.colors,
+    style: GraphBox.MINIMAL_SHAPES,
+};
+GraphBox.THEMES.minimalDark = {
+    backgroundColor: "#1A1A19",
+    borderColor: White(0.18),
+    titleColor: White(0.88),
+    textColor: White(0.55),
+    mutedTextColor: White(0.48),
+    gridColor: White(0.07),
+    axisColor: White(0.18),
+    hoverColor: White(0.05),
+    targetColor: White(0.55),
+    focusColor: "#7FB6DE",
+    otherColor: White(0.3),
+    tooltipColor: "#EDEDEB",
+    tooltipTextColor: "#1A1A19",
+    tooltipMutedColor: Black(0.6),
+    colors: GraphBox.THEMES.dark.colors,
+    style: GraphBox.MINIMAL_SHAPES,
 };
 
 // *** STATIC FUNCTIONS: the math of a chart. They need no box.
