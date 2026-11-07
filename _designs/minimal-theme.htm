@@ -91,6 +91,9 @@
         const STEPPER = { buttonWidth: 28, valueWidth: 40, iconSize: 12 };
         const TOOLTIP = { padding: [8, 4], gap: 6 };
         const MENU = { width: 180, separatorMargin: 4 };
+        const TABLE = { width: 300, headPadding: [10, 0], cellPadding: [10, 0], emptyHeight: 64 };
+        const TREE = { width: 240, indent: 16, chevronSize: 12 };
+        const BARS = { width: 340, menuPadding: [10, 0], toolHeight: 36, toolPadding: [4, 0], toolGap: 2, separatorHeight: 16, statusHeight: 24, statusPadding: [10, 0], statusGap: 16 };
         const DIALOG = { width: 320, round: 6, padding: 16, gap: 6, footerGap: 8, footerSpace: 10, titleSize: 14 };
         const TOAST = { height: 36, padding: [12, 0], gap: 8 };
 
@@ -254,6 +257,41 @@
             { name: "disabled", value: 3, disabled: 1 },
         ];
 
+        const TABLE_COLUMNS = [{ title: "Name", grow: 1 }, { title: "Size", width: 64 }];
+        const TABLE_ROWS = [["report.pdf", "2.4 MB"], ["notes.txt", "12 KB"], ["photo.jpg", "860 KB"]];
+
+        const TABLE_STATES = [
+            { name: "normal" },
+            { name: "hover on a row", hoverRow: 1 },
+            { name: "a selected row", selectedRow: 1 },
+            { name: "sorted by Size", sortedColumn: 1 },
+            { name: "empty", isEmpty: 1 },
+        ];
+
+        const TREE_ROWS = [
+            { title: "src", level: 0, isOpen: 1, icon: "folder" },
+            { title: "comp", level: 1, isOpen: 0, icon: "folder" },
+            { title: "main.py", level: 1, icon: "file" },
+            { title: "README.md", level: 0, icon: "file" },
+        ];
+
+        const TREE_STATES = [
+            { name: "normal" },
+            { name: "hover", hover: 1 },
+            { name: "selected", selected: 1 },
+            { name: "keyboard focus", focus: 1 },
+        ];
+
+        const MENU_TITLES = ["File", "Edit", "View", "Help"];
+
+        const BAR_STATES = [
+            { name: "MenuBar", draw: "menuBar" },
+            { name: "MenuBar, Edit open", draw: "menuBar", isOpen: 1 },
+            { name: "ToolBar", draw: "toolBar" },
+            { name: "ToolBar, hover · on", draw: "toolBar", hover: 1 },
+            { name: "StatusBar", draw: "statusBar" },
+        ];
+
         const OVERLAY_STATES = [
             { name: "Tooltip", draw: "tooltip" },
             { name: "ContextMenu", draw: "menu" },
@@ -288,6 +326,9 @@
                     drawComponent({ title: "ItemList", note: "A row has a line only when something happens to it: under the mouse, selected (ink and a check), focused.", cellWidth: 290, states: LIST_STATES, drawCell: drawListCell });
                     drawComponent({ title: "Tabs", note: "The text and a 2 px ink line under the selected tab, on one thin line.", cellWidth: 310, states: TAB_STATES, drawCell: drawTabsCell });
                     drawComponent({ title: "Stepper", note: "Minus, the value, plus in one line.", cellWidth: 220, states: STEPPER_STATES, drawCell: drawStepperCell });
+                    drawComponent({ title: "SmartTable", note: "A head with a line under it, thin lines between the rows; a row under the mouse or selected gets the line of ItemList.", cellWidth: 340, states: TABLE_STATES, drawCell: drawTableCell });
+                    drawComponent({ title: "TreeView", note: "The rows of ItemList, moved in by their level, a chevron before a folder.", cellWidth: 290, states: TREE_STATES, drawCell: drawTreeCell });
+                    drawComponent({ title: "MenuBar · ToolBar · StatusBar", note: "The bars of a window: one line between them and the page; the buttons are quiet buttons.", cellWidth: 380, states: BAR_STATES, drawCell: drawBarCell });
                     drawComponent({ title: "Tooltip · ContextMenu · Dialog · Toast", note: "Things over the page need a ground: the ground of the window and a line, still no shadow.", cellWidth: 380, states: OVERLAY_STATES, drawCell: drawOverlayCell });
 
                 endGroup();
@@ -809,6 +850,154 @@
                 drawIcon(iconName, theme.text, STEPPER.iconSize);
             endGroup();
             return button;
+        };
+
+        // *** SMART TABLE
+
+        const drawTableCell = function (state, theme) {
+            const table = drawListFrame(theme, TABLE.width);
+            table.padding = 0;
+                drawTableHead(state, theme);
+                if (state.isEmpty) drawTableEmpty(theme);
+                if (!state.isEmpty) TABLE_ROWS.forEach(function (cells, index) {
+                    drawTableRow(cells, index, state, theme);
+                });
+            endGroup();
+            return table;
+        };
+
+        // GROUP: The titles of the columns, a line under them (the sorted one in ink with a chevron)
+        const drawTableHead = function (state, theme) {
+            const head = HGroup({ width: "100%", height: SIZE.control, align: "left center", gap: 0, padding: TABLE.headPadding });
+            head.css = { borderBottom: SIZE.line + "px solid " + theme.line };
+                TABLE_COLUMNS.forEach(function (column, index) {
+                    const isSorted = (index === state.sortedColumn);
+                    const title = HGroup({ width: column.width || "auto", height: "100%", align: "left center", gap: 4, grow: column.grow || 0 });
+                        Label({ text: column.title, fontSize: SIZE.small, fontFamily: FONT.bold, textColor: isSorted ? theme.ink : theme.softText });
+                        if (isSorted) drawIcon("chevronDown", theme.ink, 12);
+                    endGroup();
+                });
+            endGroup();
+            return head;
+        };
+
+        // GROUP: A row: thin lines between the rows; the line of ItemList under the mouse or when selected
+        const drawTableRow = function (cells, index, state, theme) {
+            const isHover = (state.hoverRow === index);
+            const isSelected = (state.selectedRow === index);
+            const row = HGroup({ width: "100%", height: SIZE.control, align: "left center", gap: 0, padding: TABLE.cellPadding, color: "transparent", border: SIZE.line, borderColor: getRowLine({ hover: isHover, selected: isSelected }, theme) });
+            if (index > 0 && !isHover && !isSelected) row.css = { borderTopColor: theme.track };
+                cells.forEach(function (text, column) {
+                    const width = TABLE_COLUMNS[column].width || "auto";
+                    Label({ width: width, text: text, fontSize: SIZE.text, textColor: isSelected ? theme.ink : theme.text, grow: TABLE_COLUMNS[column].grow || 0 });
+                });
+            endGroup();
+            return row;
+        };
+
+        const drawTableEmpty = function (theme) {
+            const empty = HGroup({ width: "100%", height: TABLE.emptyHeight, align: "center center" });
+                Label({ text: "No files", fontSize: SIZE.small, textColor: theme.softText });
+            endGroup();
+            return empty;
+        };
+
+        // *** TREE VIEW
+
+        const drawTreeCell = function (state, theme) {
+            const tree = drawListFrame(theme, TREE.width);
+                TREE_ROWS.forEach(function (row, index) {
+                    const isTarget = (index == 1); // the state is drawn on the second row
+                    drawTreeRow(row, isTarget ? state : {}, theme);
+                });
+            endGroup();
+            return tree;
+        };
+
+        // GROUP: A row of ItemList moved in by its level: a chevron (a folder) or its room (a file), the icon, the title
+        const drawTreeRow = function (row, state, theme) {
+            const group = HGroup({ width: "100%", height: SIZE.control, align: "left center", gap: 4, padding: [8 + row.level * TREE.indent, 0, 8, 0], color: "transparent", round: LIST.rowRound, border: SIZE.line, borderColor: getRowLine(state, theme), clipContent: 0 });
+            if (state.focus) group.boxShadow = getFocusRing(theme);
+                drawTreeChevron(row, theme);
+                drawIcon(row.icon, state.selected ? theme.ink : theme.softText);
+                Label({ text: row.title, fontSize: SIZE.text, textColor: state.selected ? theme.ink : theme.text, grow: 1, padding: [4, 0, 0, 0] });
+                if (state.selected) drawIcon("check", theme.ink);
+            endGroup();
+            return group;
+        };
+
+        const drawTreeChevron = function (row, theme) {
+            const isFolder = (row.isOpen !== undefined);
+            const chevron = drawIcon("chevronDown", isFolder ? theme.softText : "transparent", TREE.chevronSize);
+            if (isFolder && !row.isOpen) chevron.css = { transform: "rotate(-90deg)" };
+            return chevron;
+        };
+
+        // *** MENU BAR, TOOL BAR, STATUS BAR
+
+        const drawBarCell = function (state, theme) {
+            if (state.draw == "menuBar") return drawMenuBar(state, theme);
+            if (state.draw == "toolBar") return drawToolBar(state, theme);
+            return drawStatusBar(theme);
+        };
+
+        // GROUP: The titles of the menus on a line; an open one has the line of a hovered row and its menu under it
+        const drawMenuBar = function (state, theme) {
+            const group = VGroup({ hug: 1, align: "left top", gap: 4, clipContent: 0 });
+                const bar = HGroup({ width: BARS.width, height: SIZE.control, align: "left center", gap: 2 });
+                bar.css = { borderBottom: SIZE.line + "px solid " + theme.line };
+                    MENU_TITLES.forEach(function (title, index) {
+                        const isOpen = (state.isOpen && index == 1);
+                        Label({ text: title, fontSize: SIZE.text, textColor: theme.text, padding: [BARS.menuPadding[0], 3], round: LIST.rowRound, border: SIZE.line, borderColor: isOpen ? theme.lineHover : "transparent" });
+                    });
+                endGroup();
+                if (state.isOpen) drawMenu(theme).css = { marginLeft: "48px" };
+            endGroup();
+            return group;
+        };
+
+        // GROUP: Quiet icon buttons with a short line between the groups
+        const drawToolBar = function (state, theme) {
+            const bar = HGroup({ width: BARS.width, height: BARS.toolHeight, align: "left center", gap: BARS.toolGap, padding: BARS.toolPadding, clipContent: 0 });
+            bar.css = { borderBottom: SIZE.line + "px solid " + theme.line };
+                drawToolButton("save", {}, theme);
+                drawToolButton("folder", { hover: state.hover }, theme);
+                drawToolSeparator(theme);
+                drawToolButton("search", { on: state.hover }, theme);
+                drawToolButton("trash", {}, theme);
+            endGroup();
+            return bar;
+        };
+
+        // GROUP: A tool button: no line; a line under the mouse, an ink line when it is on
+        const drawToolButton = function (iconName, state, theme) {
+            const button = HGroup({ width: SIZE.control, height: SIZE.control, align: "center center", color: "transparent", round: SIZE.round, border: SIZE.line, borderColor: getToolLine(state, theme) });
+                drawIcon(iconName, state.on ? theme.ink : theme.text);
+            endGroup();
+            return button;
+        };
+
+        const getToolLine = function (state, theme) {
+            if (state.on) return theme.ink;
+            if (state.hover) return theme.lineHover;
+            return "transparent";
+        };
+
+        const drawToolSeparator = function (theme) {
+            const line = Box({ width: SIZE.line, height: BARS.separatorHeight, color: theme.line, position: "relative" });
+            line.css = { margin: "0 6px" };
+            return line;
+        };
+
+        // GROUP: Small soft texts over a line at the bottom of the window
+        const drawStatusBar = function (theme) {
+            const bar = HGroup({ width: BARS.width, height: BARS.statusHeight, align: "left center", gap: BARS.statusGap, padding: BARS.statusPadding });
+            bar.css = { borderTop: SIZE.line + "px solid " + theme.line };
+                Label({ text: "Ready", fontSize: SIZE.small, textColor: theme.softText, grow: 1 });
+                Label({ text: "Ln 12, Col 4", fontSize: SIZE.small, textColor: theme.softText });
+                Label({ text: "UTF-8", fontSize: SIZE.small, textColor: theme.softText });
+            endGroup();
+            return bar;
         };
 
         // *** TOOLTIP, CONTEXT MENU, DIALOG, TOAST

@@ -11,6 +11,7 @@ UI COMPONENT TEMPLATE
   It shows the standards of the components of this repository:
   - DEFAULTS: every default value becomes a public variable on the box (box.labelText...).
   - STYLE PACKAGES: styleName "light" / "dark" (CompName.styles). params.style > the package > CompNameDefaults.style.
+    The pairs of the kit: light / dark, minimal / minimalDark (_designs/minimal-theme.htm), ozden / ozdenDark.
   - LAYOUT: box.layout is the group that places the parts of the component.
   - STATE: box.state ("normal", "hover", "pressed", "selected", "disabled") is decided in one place (getState).
   - DRAWING: functions named by their one job: createItems() (the objects made from the data; one object:
