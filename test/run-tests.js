@@ -7,11 +7,14 @@ RUN TESTS: the self-checking test pages from the terminal, one after the other.
     node test/run-tests.js behavior                     one test page: basic, samples, components or behavior
     node test/run-tests.js basic components behavior    several
     node test/run-tests.js components --only tabs       ?only= of the page (components, samples): a part of the file name
+    node test/run-tests.js behavior --commit HEAD       the page as it is in a commit, with the basic/ and comp/ of that commit
 
 It prints the title of every page ("... - ALL PASS" or "... - 2 FAILED") and the lines of what failed or warned.
 The exit code is 1 when a page failed or did not finish, 2 when the tool itself could not run.
 It needs Chrome and puppeteer-core, like compare-pages.js (CHROME_PATH for another place of Chrome).
 WHY one page at a time: the pages measure sizes and times; two pages side by side made each other slow.
+WHY --commit: a test page is committed in parts (each session its own lines); the folder has the whole page and passes,
+while the commits had a test without its first lines, and their page did not open for two days.
 */
 
 "use strict";
@@ -65,11 +68,12 @@ const runPage = async function (browser, url) {
 // *** START:
 
 const readOptions = function (args) {
-    const options = { names: [], only: "", isHelp: false };
+    const options = { names: [], only: "", commit: "", isHelp: false };
     for (let i = 0; i < args.length; i++) {
         const arg = args[i];
         if (arg === "--help") options.isHelp = true;
         else if (arg === "--only") options.only = args[++i] || "";
+        else if (arg === "--commit") options.commit = args[++i] || "HEAD";
         else options.names.push(arg);
     }
     if (!options.names.length) options.names = DEFAULT_PAGES;
@@ -85,9 +89,10 @@ const main = async function () {
     const unknown = options.names.filter(function (name) { return !PAGES[name]; });
     if (unknown.length) throw new Error("No such test: " + unknown.join(", ") + " (" + Object.keys(PAGES).join(", ") + ")");
 
-    const server = await chrome.startServer();
+    const server = await chrome.startServer({ commit: options.commit });
     const browser = await chrome.launchChrome();
-    const origin = "http://127.0.0.1:" + server.address().port;
+    // A commit: the server gives its files under OLD_PATH (the page and the scripts it loads from there)
+    const origin = "http://127.0.0.1:" + server.address().port + ((options.commit) ? chrome.OLD_PATH : "");
     let isAllPassed = true;
 
     try {
