@@ -555,6 +555,12 @@ CATALOG.COMPONENTS = [
         tr: "Bir aralıktan, adım adım değer seçmek için kaydırıcı. Görünümler: round (ince bir ray ve yuvarlak beyaz bir tutamaç: yeni sayfaların görünümü), koyu sayfa için roundDark ve classic (Material 3'ten esinlenildi).",
     },
     {
+        key: "step-bar", name: "StepBar", cat: "navigation",
+        source: "comp/step-bar.js", samples: ["02-comp-examples/step-bar.htm"],
+        en: "The steps of a job in a row: a cart, an address, a payment. A step that is behind has a check mark and can be clicked to go back, the step of now is filled. Light and dark looks.",
+        tr: "Bir işin adımları bir satırda: sepet, adres, ödeme. Geçilen adım işaretlidir ve tıklanınca geri dönülür, şu anki adım doludur. Aydınlık ve karanlık görünüş.",
+    },
+    {
         key: "range-slider", name: "RangeSlider", cat: "inputs",
         source: "comp/range-slider.js", samples: ["02-comp-examples/range-slider.htm"],
         en: "A range of values on a thin bar: two knobs and the part between them: a price, the hours of a day. A step, the smallest distance, its own text in the bubble, the keyboard. Light and dark looks.",

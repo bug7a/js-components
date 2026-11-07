@@ -79,6 +79,7 @@
         <script src="../comp/splitter.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/accordion.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/grid-group.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/step-bar.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/range-slider.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/json-view.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/markdown-view.js" type="text/javascript" charset="utf-8"></script>
@@ -6717,6 +6718,69 @@
                 ozden.ground === "rgb(245, 245, 245)" && ozden.hover === "white" && dark.ground === "rgb(26, 26, 25)" && dark.hover === "#262624" && old.ground === ozden.ground &&
                 others === "rgba(0, 0, 0, 0),rgba(0, 0, 0, 0)" && pageCanChange === "rgba(0, 0, 0, 0)",
                 [ozden.ground, ozden.hover, dark.ground, dark.hover, old.ground, others, pageCanChange].join(" | "));
+        });
+
+        // *** STEP BAR (comp/step-bar.js)
+
+        test("StepBar: behind, now and not reached; the lines join the circles; setStep(), next(), previous() stay in range", async function () {
+            const bar = StepBar({ left: 0, top: 0, width: 400, steps: ["Cart", { key: "a", title: "<b>Address</b>", note: "Street" }, "Pay", "Done"], currentStep: 1 });
+            await wait(20);
+            const columns = Array.from(bar.row.elem.children);
+            const circleText = function (index) { return columns[index].querySelector("svg") ? "check" : columns[index].children[2].textContent; };
+            const states = [0, 1, 2, 3].map(circleText).join();
+            const current = columns.map(function (column) { return column.getAttribute("aria-current") || "-"; }).join();
+            const plain = [bar.elem.querySelectorAll("b").length, bar.elem.textContent.includes("<b>Address</b>")].join();
+            const circleRect = columns[1].children[2].getBoundingClientRect();
+            const before = columns[1].children[0].getBoundingClientRect();
+            const after = columns[0].children[1].getBoundingClientRect();
+            const joined = (Math.abs((before.top + before.height / 2) - (circleRect.top + circleRect.height / 2)) <= 1 && before.right < circleRect.left && after.right >= before.left - 1);
+            bar.next();
+            bar.next();
+            bar.next();
+            bar.next();
+            const allDone = [bar.getStep(), columns.every(function (column) { return !!column.querySelector("svg"); })].join();
+            bar.previous();
+            bar.setStep(-4);
+            const atStart = bar.getStep();
+            bar.setStep("2");
+            const fromText = bar.getStep();
+            check("StepBar: behind, now and not reached; the lines join the circles; setStep(), next(), previous() stay in range",
+                states === "check,2,3,4" && current === "-,step,-,-" && plain === "0,true" && joined && allDone === "4,true" && atStart === 0 && fromText === 2,
+                [states, current, plain, joined, allDone, atStart, fromText].join(" | "));
+            bar.remove();
+        });
+
+        test("StepBar: a step that is behind can be clicked (and Enter), not the others; canGoBack: 0 none", async function () {
+            const clicks = [];
+            const bar = StepBar({ left: 0, top: 0, width: 400, steps: ["A", "B", "C"], currentStep: 1, onStepClick: function (self, index) { clicks.push(index); } });
+            await wait(20);
+            const columns = Array.from(bar.row.elem.children);
+            columns.forEach(function (column) { column.dispatchEvent(new MouseEvent("click", { bubbles: true })); });
+            key(columns[0], "keydown", "Enter");
+            const tabs = columns.map(function (column) { return column.tabIndex; }).join();
+            const roles = columns.map(function (column) { return column.getAttribute("role"); }).join();
+            bar.remove();
+            const closed = StepBar({ left: 0, top: 0, width: 400, steps: ["A", "B"], currentStep: 1, canGoBack: 0, onStepClick: function (self, index) { clicks.push("no " + index); } });
+            closed.row.elem.children[0].dispatchEvent(new MouseEvent("click", { bubbles: true }));
+            closed.remove();
+            check("StepBar: a step that is behind can be clicked (and Enter), not the others; canGoBack: 0 none",
+                clicks.join() === "0,0" && tabs === "0,-1,-1" && roles === "button,listitem,listitem", [clicks.join(), tabs, roles].join(" | "));
+        });
+
+        test("StepBar: setSteps(), showTitles: 0, setTheme()", async function () {
+            const bar = StepBar({ left: 0, top: 0, width: 400, steps: ["A", "B", "C"], currentStep: 2, style: { circle: { size: 36 } } });
+            await wait(20);
+            bar.setSteps(["X", "Y"]);
+            const after = [bar.row.elem.children.length, bar.getStep()].join();
+            const circle = bar.row.elem.children[0].children[2];
+            const light = circle.style.backgroundColor;
+            bar.setTheme("dark");
+            const dark = [circle.style.backgroundColor !== light, circle.offsetWidth].join();
+            bar.remove();
+            const quiet = StepBar({ left: 0, top: 0, width: 400, steps: ["A", "B"], showTitles: 0 });
+            const titles = Array.from(quiet.elem.querySelectorAll(".basic_label")).filter(function (label) { return label.textContent === "A" && label.getClientRects().length > 0; }).length;
+            quiet.remove();
+            check("StepBar: setSteps(), showTitles: 0, setTheme()", after === "2,2" && dark === "true,36" && titles === 0, [after, dark, titles].join(" | "));
         });
 
         // *** GRID GROUP (comp/grid-group.js)

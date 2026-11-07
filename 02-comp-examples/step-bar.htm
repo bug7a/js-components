@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>StepBar</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- LIBRARY FILES -->
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- COMPONENT FILES -->
+        <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/step-bar.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+
+        /* Bismillah */
+
+        // StepBar (comp/step-bar.js): the steps of a job in a row.
+        // 1. An order: Back and Next move it; a click on a step that is behind goes back to it.
+        // 2. On a dark page, with notes under the titles.
+        // 3. Many steps with no titles (showTitles: 0).
+
+        // *** VARIABLES:
+        const PAGE_COLOR = "#ECEBE8";
+        const CARD_COLOR = "#FFFFFF";
+        const DARK_CARD_COLOR = "#1A1A19";
+        const SOFT_TEXT = "#6F6E6B";
+        const CARD_MIN_WIDTH = 440;
+        const CARD_MAX_WIDTH = 620;
+        const CARD_ROUND = 12;
+
+        // First running function. (basic.js calls it when the page is ready)
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            // BOX: Page (it scrolls when the window is lower than the samples)
+            const pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+
+            // GROUP: The title and the samples
+            VGroup({ width: "100%", height: "auto", align: "center top", gap: 16, padding: [16, 28], clipContent: 0 });
+
+                Label({ text: "StepBar", fontSize: 24, bold: 1, textColor: Black(0.8) });
+
+                // GROUP: The samples side by side (one under the other on a narrow screen)
+                HGroup({ width: "100%", height: "auto", align: "center top", gap: 20, wrap: 1, clipContent: 0 });
+                    createOrder();
+                    createDark();
+                    createMany();
+                endGroup();
+
+            endGroup();
+
+            endBox();
+
+            ScrollBar({ scrollableBox: pageBox });
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        // GROUP: A card with a title and a note. endGroup() closes it.
+        const startCard = function (titleText, noteText, color, textColor) {
+            VGroup({
+                width: "auto",
+                height: "auto",
+                align: "left top",
+                gap: 16,
+                padding: 20,
+                color: color,
+                round: CARD_ROUND,
+                clipContent: 0,
+                css: { flex: "1 1 " + CARD_MIN_WIDTH + "px", maxWidth: CARD_MAX_WIDTH + "px", minWidth: "0" },
+            });
+            Label({ text: titleText, fontSize: 15, bold: 1, textColor: textColor });
+            Label({ width: "100%", text: noteText, fontSize: 13, textColor: SOFT_TEXT });
+        };
+
+        const createOrder = function () {
+
+            startCard("An order", "Next and Back; a click on a step that is behind goes back to it", CARD_COLOR, Black(0.75));
+
+                const order = StepBar({
+                    steps: ["Cart", "Address", "Payment", "Done"],
+                    currentStep: 1,
+                    onStepClick: function (self, index) { self.setStep(index); },
+                });
+
+                // GROUP: The buttons
+                HGroup({ width: "100%", height: "auto", align: "left center", gap: 8, clipContent: 0 });
+                    SmartButton({ labelText: "Back", onClick: function () { order.previous(); } });
+                    SmartButton({ labelText: "Next", tone: "cyan", onClick: function () { order.next(); } });
+                endGroup();
+
+            endGroup();
+
+        };
+
+        const createDark = function () {
+
+            startCard("On a dark page", "styleName: \"dark\"; a note under a title", DARK_CARD_COLOR, White(0.85));
+
+                StepBar({
+                    styleName: "dark",
+                    steps: [{ title: "Account", note: "Your e-mail" }, { title: "Profile", note: "A name and a photo" }, { title: "Ready", note: "" }],
+                    currentStep: 2,
+                });
+
+            endGroup();
+
+        };
+
+        const createMany = function () {
+
+            startCard("Many steps", "showTitles: 0", CARD_COLOR, Black(0.75));
+
+                StepBar({ steps: ["1", "2", "3", "4", "5", "6", "7", "8"], currentStep: 5, showTitles: 0 });
+
+            endGroup();
+
+        };
+
+        </script>
+    </head>
+
+    <body></body>
+
+</html>
