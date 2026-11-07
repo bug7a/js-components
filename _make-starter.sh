@@ -131,13 +131,40 @@ fs.readdirSync(tutorialAssets).forEach(function (name) {
 });
 
 // *** DOCUMENTS
+// WHY: a project has no context/, test/ or catalog. Its docs name their copies in _basic/docs/, and what a new component
+// of the kit needs (a sample, the tests, the catalog) stays in the repository.
+const DOCS_AT_ROOT = function (text) {
+    return PATHS_AT_ROOT(text)
+        .replace(/(^|[\s(`"])comp\/([a-z])/g, "$1_basic/comp/$2")
+        .replace(/\bcontext\/(basic-js-[a-z-]+\.md)/g, "_basic/docs/$1")
+        .replace(/\bbasic\/basic-what-is-new\.md/g, "_basic/docs/what-is-new.md");
+};
+const replaceOrStop = function (text, find, to, file) {
+    const changed = text.replace(find, to);
+    if (changed === text) throw new Error("not found in " + file + ": " + find); // WHY: a missed edit must not be silent
+    return changed;
+};
+const FOR_A_PROJECT = {
+    "basic-js-components.md": function (text, file) {
+        const withTemplate = replaceOrStop(text, "`_component-template.js` at the root", "`_basic/docs/component-template.js`", file);
+        return replaceOrStop(withTemplate, /\s*## When the component is ready[\s\S]*$/, "\n", file);
+    },
+    "_component-template.js": function (text, file) {
+        const withGotchas = replaceOrStop(text, "GOTCHAS (CLAUDE.md):", "GOTCHAS:", file);
+        return replaceOrStop(withGotchas, /WHEN THE NEW COMPONENT IS READY[\s\S]*?\n\n/, "", file);
+    },
+};
+const copyDoc = function (from, to) {
+    const name = path.basename(from);
+    const edit = FOR_A_PROJECT[name] || ((text) => text);
+    fs.mkdirSync(path.dirname(to), { recursive: true });
+    fs.writeFileSync(to, DOCS_AT_ROOT(edit(fs.readFileSync(from, "utf8"), name)));
+};
 ["basic-js-core.md", "basic-js-components.md", "basic-js-code-rules.md", "basic-js-animated-rules.md"].forEach(function (name) {
-    const text = fs.readFileSync(inRepo("context/" + name), "utf8");
-    fs.mkdirSync(inBasic("docs"), { recursive: true });
-    fs.writeFileSync(inBasic("docs/" + name), PATHS_AT_ROOT(text).replace(/(^|[\s(`"])comp\/([a-z])/g, "$1_basic/comp/$2"));
+    copyDoc(inRepo("context/" + name), inBasic("docs/" + name));
 });
 copy(inRepo("basic/basic-what-is-new.md"), inBasic("docs/what-is-new.md"));
-copy(inRepo("_component-template.js"), inBasic("docs/component-template.js"));
+copyDoc(inRepo("_component-template.js"), inBasic("docs/component-template.js"));
 copy(inRepo("__handbook/english"), inBasic("docs/handbook"));
 ["test-project.htm", "test.png"].forEach((name) => fs.rmSync(inBasic("docs/handbook/" + name), { force: true }));
 
