@@ -1089,6 +1089,20 @@
             field.remove();
         });
 
+        test("StatusBar minimalDark: the texts of a tone read on the dark window; minimal keeps its dark texts", async function () {
+            const dark = StatusBar({ styleName: "minimalDark", messageText: "Not saved", messageTone: "error" });
+            const light = StatusBar({ styleName: "minimal", messageText: "Not saved", messageTone: "error" });
+            await basic.nextFrame();
+            const brightnessOf = function (bar) {
+                const channels = getComputedStyle(bar.lblMessage.elem).color.match(/\d+/g).map(Number);
+                return channels[0] + channels[1] + channels[2];
+            };
+            const LIGHT_TEXT = 450; // the sum of the three channels of a light color
+            check("StatusBar minimalDark: an error is a light text", brightnessOf(dark) > LIGHT_TEXT, brightnessOf(dark));
+            check("StatusBar minimal: an error is a dark text", brightnessOf(light) < LIGHT_TEXT, brightnessOf(light));
+            [dark, light].forEach(function (bar) { bar.remove(); });
+        });
+
         test("InputB minimal with no title: the field starts at the top and the box is as high as the field (the field of Dialog.prompt)", async function () {
             const untitled = InputB({ styleName: "minimal", titleText: "", inputValue: "report.pdf" });
             const titled = InputB({ styleName: "minimal", titleText: "Name" });
@@ -1098,6 +1112,8 @@
             check("InputB minimal with a title: the field under the title", titled.background.elem.offsetTop > 0, titled.background.elem.offsetTop);
             [untitled, titled].forEach(function (field) { field.remove(); });
         });
+
+        // *** TOGGLE (comp/toggle.js)
 
         test("Toggle: the keyboard and screen readers can use it", async function () {
             const toggle = Toggle({ value: 0 });
