@@ -562,6 +562,31 @@
                 ] }] },
                 onChange: function (change) { changes.push(change); },
             });
+            panel.open();
+            await wait(30);
+            panel.elem.querySelector("[role=button][aria-label='Its four sides']").click();
+            const prefix = Array.from(panel.elem.querySelectorAll("div")).find(function (el) { return el.textContent === "P" && el.children.length === 0; });
+            const rect = prefix.getBoundingClientRect();
+            const press = function (type, x) {
+                prefix.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 4, button: 0, clientX: x, clientY: rect.top + 5 }));
+            };
+            press("pointerdown", rect.left + 10);
+            press("pointermove", rect.left + 30);
+            press("pointerup", rect.left + 30);
+            press("pointerdown", rect.left + 10);
+            press("pointerup", rect.left + 11);
+            const input = panel.elem.querySelector("input[aria-label='shadow']");
+            input.focus();
+            input.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", altKey: true, bubbles: true, cancelable: true }));
+            const actions = changes.filter(function (c) { return c.kind === "action"; });
+            const values = changes.filter(function (c) { return c.kind === "value"; });
+            const isActionWithField = actions.length === 3 && actions.every(function (a) { return a.value === "button" && a.field && a.field.elem.isConnected; });
+            const isOrder = isActionWithField && actions[1].key === "pad" && actions[2].key === "shadow";
+            const isDragNumbers = values.length > 0 && values.every(function (v) { return v.key === "pad" && typeof v.value === "number"; });
+            check("PropertyPanel: the button of a field sends its action with the field (a click, a click on the prefix, Alt+Down); a drag of the prefix changes the value", isOrder && isDragNumbers,
+                "actions: " + actions.map(function (a) { return a.key + ":" + a.value + (a.field ? "+field" : ""); }).join(", ") + "; values: " + values.length);
+            panel.remove();
+        });
 
         // A panel with one color field and an editable group (a static palette), its picker open.
         const openColorPanel = async function (changes, colors = ["#111111", "#222222", "#333333"]) {
