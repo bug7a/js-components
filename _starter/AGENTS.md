@@ -32,7 +32,7 @@ Pages load the source files (`name.js`). Components have no `.min.js` files.
 
 - `const start = function () {}` is the entry point. basic.js creates the global `page` and then calls it. `loop()` runs every second when it exists.
 - Objects: `Box`, `Label`, `Button`, `Input`, `Icon`. Arguments: `(left, top, width, height, { props })`, or only `{ props }`.
-- Every `startBox()` needs its `endBox()`, every `HGroup()` / `VGroup()` / `AutoLayout()` needs its `endGroup()`.
+- Every `startBox()` needs its `endBox()`, every `HGroup()` / `VGroup()` needs its `endGroup()`.
 - **Only a Box or a group holds other objects.** Nothing is created inside a Button, Label, Input or Icon.
 - **`page` never scrolls.** Long content goes in a full-screen Box with `scrollY: 1`, with a `VGroup({ width: "100%", height: "auto" })` in it. Give that Box a `ScrollBar({ scrollableBox: box })`.
 - A Box with `height: "auto"` does not grow with its children. Use a group for that.
