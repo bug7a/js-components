@@ -4764,6 +4764,18 @@ BasicDesigner.svgLabel = function (path, size, color) {
     return lbl;
 };
 
+// A small title over a list, with an icon in front of it when iconPath is given (the page list, Open Folder).
+BasicDesigner.listTitle = function (title, iconPath = "") {
+    const C = BasicDesigner.colors;
+    const titleRow = HGroup({ width: "100%", height: "auto", gap: 5, align: "left center", color: "transparent" });
+    titleRow.shrink = 0;
+        if (iconPath) BasicDesigner.svgLabel(iconPath, 12, C.dim);
+        const lbl = Label({ text: "", fontSize: 11, textColor: C.dim });
+        lbl.plainText = title; // WHY: It can hold the typed text.
+    endGroup();
+    return titleRow;
+};
+
 BasicDesigner.refreshCanvasSize = function () {
     const ui = BasicDesigner.ui;
     if (!ui.lblCanvasSize || !ui.frameBox) return;
@@ -5177,15 +5189,9 @@ BasicDesigner.openPageMenu = function (filter) {
                 const list = VGroup({ width: "100%", height: "auto", align: "left top", gap: 0, padding: 4, color: "transparent", position: "relative" });
                 list.css = { alignItems: "stretch", boxSizing: "border-box" };
 
-                    // A title, with an icon in front of it when iconPath is given
-                    const addTitle = function (title, iconPath = "") {
-                        const titleRow = HGroup({ width: "100%", height: "auto", gap: 5, align: "left center", color: "transparent" });
-                        titleRow.shrink = 0;
+                    const addTitle = function (title, iconPath) {
+                        const titleRow = BasicDesigner.listTitle(title, iconPath);
                         titleRow.css = { padding: "6px 8px 2px 8px", boxSizing: "border-box" };
-                            if (iconPath) BasicDesigner.svgLabel(iconPath, 12, C.dim);
-                            const lbl = Label({ text: "", fontSize: 11, textColor: C.dim });
-                            lbl.plainText = title; // WHY: It can hold the typed text.
-                        endGroup();
                     };
                     // A row: shownText, and what a click (or Enter) does. pagePath: the open page is painted blue.
                     const addRow = function (shownText, choose, pagePath = "") {
@@ -5453,7 +5459,7 @@ BasicDesigner.openFolderDialog = function (afterOpen) {
         const recentFolders = BasicDesigner.recentFolders();
         const selectedPath = BasicDesigner.folder && BasicDesigner.folder.path;
         if (recentFolders.length) {
-            Label({ text: "Recent folders", fontSize: 11, textColor: C.dim });
+            BasicDesigner.listTitle("Recent folders", BasicDesigner.TOP_ICONS.folder);
             const recentBox = VGroup({ width: "100%", height: "auto", align: "left top", gap: 0, padding: 4, color: C.field, round: 6, border: 1, borderColor: C.line });
             recentBox.css = { alignItems: "stretch", boxSizing: "border-box" };
                 recentFolders.forEach(function (folderPath) {
@@ -5468,7 +5474,7 @@ BasicDesigner.openFolderDialog = function (afterOpen) {
                     row.on("click", function () { openRecent(folderPath); });
                 });
             endGroup();
-            Label({ text: "All folders", fontSize: 11, textColor: C.dim });
+            BasicDesigner.listTitle("All folders", BasicDesigner.TOP_ICONS.folder);
         }
         lblPath = Label({ text: "", fontSize: 12, textColor: C.accentLight });
         lblPath.css = { wordBreak: "break-all" };
