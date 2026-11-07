@@ -2,11 +2,11 @@
 
 This file gives Claude Code guidance for working in this repository.
 
-**At the start of every session, read `/Users/bugraozden/my-computer/prompt/bugra-rules.md`** (outside this repository): the user's general way of working in every project (answer in Turkish, short updates during long work, the final report as a table with colored dots, "Bilmen gerekenler", a few suggestions to choose from, warning about side effects, workbench first). It also says when to read the other files of that folder (`design.md`, `media.md`, `image-styles.md`). This CLAUDE.md wins where it says something more specific. (The basic.js code rules are a different file: `context/basic-js-code-rules.md`, below.)
+**Only for Bugra, the developer of this project: at the start of every session, read `/Users/bugraozden/my-computer/prompt/bugra-rules.md`** (outside this repository; when the file is not on this computer you work for someone else: skip it and answer in the language of the user): Bugra's general way of working in every project (answer in Turkish, short updates during long work, the final report as a table with colored dots, "Bilmen gerekenler", a few suggestions to choose from, warning about side effects, workbench first). It also says when to read the other files of that folder (`design.md`, `media.md`, `image-styles.md`). This CLAUDE.md wins where it says something more specific. (The basic.js code rules are a different file: `context/basic-js-code-rules.md`, below.)
 
 ## Working rules of this project (the user, 2026-11-02)
 
-- **Commit:** finished and checked work goes to `main` on its own, in small logical commits. The user pushes. The clones under `~/Documents/GitHub` are committed by the user.
+- **Commit (only for Bugra, the developer of this project; for anyone else, commit only when the user asks):** finished and checked work goes to `main` on its own, in small logical commits. Bugra pushes. The clones under `~/Documents/GitHub` are committed by Bugra.
 - **Tests:** a changed component: `test/behavior-test.htm` and `test/components-test.htm`. A changed sample only: that page and its look at 390 px. When pages must stay the same (a cleanup, a change in a component): `node test/compare-pages.js` (the user, 2026-11-06; the `test/` row of the repo map).
 - **A new sample:** add it to `index/catalog.js` on your own, and order the samples of the component when needed.
 - **A new UI (the user, 2026-11-07):** a new component or sample goes in directly. A bench page or a draft in `_designs/` only when the user asks, or when a design in use will change. The old version goes to `__archive/`, not to an `old-YYYY-MM-DD/` folder.
