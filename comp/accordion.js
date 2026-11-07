@@ -14,7 +14,8 @@ UI COMPONENT
 - Keyboard: Tab comes to the rows; Enter or Space opens and closes; ArrowUp, ArrowDown, Home and End move between the rows.
 - animated: 1: the arrow turns, and the objects of a section fade in when it opens. Nothing moves at the first view, and
   nothing with reduced motion. (context/basic-js-animated-rules.md: the height does not move.)
-- Style packages: "light" (default), "dark". Select with styleName (Accordion.styles), or later with setTheme().
+- Style packages: "light" (default), "dark", "minimal", "minimalDark". Select with styleName (Accordion.styles), or later
+  with setTheme().
 
 A SECTION: { key, title, note, iconFile, icon, opened, disabled, data }
 - A text is also accepted: "General" -> { key: "General", title: "General" }. Without a key: its title is its key.
@@ -66,7 +67,7 @@ const AccordionDefaults = {
     animated: 0, // 1: the arrow turns, the objects of a section fade in. setAnimated()
     useScrollBar: 1, // basic/scroll-bar.js (when it is loaded), with a height that is not "auto". 0: the scrollbar of the browser.
     onToggle: function (self, section) { }, // section.key, section.opened. (Not at create time, not with silent: 1)
-    styleName: "light", // "light", "dark" or a name added to Accordion.styles
+    styleName: "light", // "light", "dark", "minimal", "minimalDark" or a name added to Accordion.styles
     style: { // Light style package (default)
         box: { color: "white", border: 1, borderColor: Black(0.12), round: 10 },
         row: { height: 44, padding: 14, gap: 10, color: "transparent", hoverColor: Black(0.04) },
@@ -630,3 +631,24 @@ Accordion.styles = {
     },
 
 };
+
+// The minimal theme (_designs/minimal-theme.htm): no fill (the ground of the window), a soft line around it and
+// between the sections, 32 px rows with a 13 px title, a faint row under the mouse, small soft arrows and icons.
+// minimalDark: the same on a dark window.
+Accordion.createMinimalStyle = function (colors) {
+    return {
+        box: { color: "transparent", border: 1, borderColor: colors.line, round: 4 },
+        row: { height: 32, padding: 10, gap: 8, color: "transparent", hoverColor: colors.hover },
+        title: { fontSize: 13, bold: 1, textColor: colors.text },
+        note: { fontSize: 12, textColor: colors.softText },
+        icon: { size: 14, textColor: colors.softText },
+        arrow: { size: 12, textColor: colors.softText },
+        line: { size: 1, color: colors.line },
+        content: { color: "transparent", padding: [10, 10], gap: 10 },
+        disabled: { opacity: 0.4 },
+        focus: { ringColor: colors.focus },
+        scrollBar: { bar_color: colors.scrollBar, bar_mouseOverColor: colors.scrollBar, bar_width: 3, bar_round: 2 },
+    };
+};
+Accordion.styles.minimal = Accordion.createMinimalStyle({ text: Black(0.85), softText: Black(0.55), line: Black(0.2), hover: Black(0.04), focus: "#3D8BD9", scrollBar: "#9A9A98" });
+Accordion.styles.minimalDark = Accordion.createMinimalStyle({ text: White(0.88), softText: White(0.55), line: White(0.18), hover: White(0.06), focus: "#7FB6DE", scrollBar: "#A0A0A0" });

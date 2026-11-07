@@ -65,6 +65,7 @@
         <script src="../comp/action-tab-bar.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/line-progress-bar.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/select-time.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/select-color.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/page-control.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/tree-view.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/web-view.js" type="text/javascript" charset="utf-8"></script>
@@ -80,6 +81,7 @@
         <script src="../comp/accordion.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/grid-group.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/step-bar.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/tag-input.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/canvas.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/range-slider.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/json-view.js" type="text/javascript" charset="utf-8"></script>
@@ -1089,6 +1091,25 @@
             field.remove();
         });
 
+        test("Minimal: the pickers, SelectFile, Accordion, SliderField, StepBar, TagInput, Splitter, SidePanel and LoadingScreen have both packages; the fields are 28 high", async function () {
+            const components = { SelectDate, SelectTime, SelectColor, SelectFile, Accordion, SliderField, StepBar, TagInput, Splitter, SidePanel, LoadingScreen };
+            const missing = Object.keys(components).filter(function (name) {
+                const styles = components[name].styles;
+                return !(styles.minimal && styles.minimalDark);
+            });
+            check("Minimal: minimal and minimalDark in every one of them", missing.length === 0, missing.join(", "));
+            const fields = [
+                SelectDate({ styleName: "minimal" }),
+                SelectTime({ styleName: "minimalDark" }),
+                SelectColor({ styleName: "minimal" }),
+                SliderField({ styleName: "minimalDark", labelText: "Size", value: 4 }),
+            ];
+            await basic.nextFrame();
+            const heights = fields.map(function (field) { return field.elem.offsetHeight; });
+            check("Minimal: SelectDate, SelectTime, SelectColor, SliderField are 28 high", heights.every(function (height) { return height === 28; }), heights.join(", "));
+            fields.forEach(function (field) { field.remove(); });
+        });
+
         test("StatusBar minimalDark: the texts of a tone read on the dark window; minimal keeps its dark texts", async function () {
             const dark = StatusBar({ styleName: "minimalDark", messageText: "Not saved", messageTone: "error" });
             const light = StatusBar({ styleName: "minimal", messageText: "Not saved", messageTone: "error" });
@@ -1113,6 +1134,16 @@
             [untitled, titled].forEach(function (field) { field.remove(); });
         });
 
+        test("SelectTime minimal: the columns have room for their scroll bar (it does not cross the chosen hour); the light package as before", async function () {
+            const minimal = SelectTime({ styleName: "minimal", inline: 1, time: "14:30" });
+            const plain = SelectTime({ inline: 1, time: "14:30" });
+            await basic.nextFrame();
+            const roomOf = function (picker) { return picker.hoursColumn.scrollArea.elem.offsetWidth - picker.style.cell.width; };
+            check("SelectTime minimal: 14 px of room in a column", roomOf(minimal) === 14, roomOf(minimal));
+            check("SelectTime light: a column as wide as its cells", roomOf(plain) === 0, roomOf(plain));
+            [minimal, plain].forEach(function (picker) { picker.remove(); });
+        });
+
         test("GraphBox minimal: the theme gives its shapes, a style of the page wins over them, light keeps its shapes", async function () {
             const minimal = GraphBox({ theme: "minimal", labels: ["a", "b"], values: [1, 2] });
             const ownRound = GraphBox({ theme: "minimalDark", labels: ["a", "b"], values: [1, 2], style: { box: { round: 9 } } });
@@ -1123,6 +1154,47 @@
             check("GraphBox light: round 12 as before", plain.style.box.round === 12, plain.style.box.round);
             check("GraphBox: a chart does not fill the shapes of the theme with the defaults", !("border" in GraphBox.MINIMAL_SHAPES.box), Object.keys(GraphBox.MINIMAL_SHAPES.box).join(", "));
             [minimal, ownRound, plain].forEach(function (chart) { chart.remove(); });
+        });
+
+        test("TagInput minimal: the typed part of a suggestion is bold with no fill", async function () {
+            const tags = TagInput({ styleName: "minimal", suggestions: ["fitness", "film"] });
+            await basic.nextFrame();
+            tags.input.inputElement.value = "fi";
+            tags.input.inputElement.dispatchEvent(new Event("input", { bubbles: true }));
+            await basic.nextFrame();
+            const mark = tags.panel.elem.querySelector("mark");
+            const style = (mark) ? mark.style : null;
+            check("TagInput minimal: the typed part is bold, with no fill", !!style && style.fontFamily.indexOf("opensans-bold") >= 0 && style.backgroundColor === "transparent", (mark) ? mark.getAttribute("style") : "no mark");
+            tags.remove();
+        });
+
+        test("StepBar: the ring of a step under the mouse is 6 px, 4 px in minimal (circle.hoverRing)", async function () {
+            const ringOf = async function (styleName) {
+                const bar = StepBar({ styleName: styleName, steps: ["A", "B", "C"], currentStep: 2 });
+                await basic.nextFrame();
+                const column = bar.elem.querySelector("[role=button]");
+                column.dispatchEvent(new MouseEvent("mouseenter"));
+                const ringed = [...column.querySelectorAll("*")].find(function (el) { return el.style.boxShadow && el.style.boxShadow !== "none"; });
+                const ring = (ringed) ? ringed.style.boxShadow : "";
+                bar.remove();
+                return ring;
+            };
+            const lightRing = await ringOf("light");
+            const minimalRing = await ringOf("minimal");
+            check("StepBar light: a 6 px ring", lightRing.indexOf("6px") >= 0, lightRing);
+            check("StepBar minimal: a 4 px ring", minimalRing.indexOf("4px") >= 0, minimalRing);
+        });
+
+        test("SelectDate, SelectTime minimal: a 14 px line icon (an SVG); the light package keeps its drawn icon", async function () {
+            const date = SelectDate({ styleName: "minimal" });
+            const time = SelectTime({ styleName: "minimalDark" });
+            const plain = SelectDate({});
+            await basic.nextFrame();
+            const isLineIcon = function (picker) { return !!picker.icon.elem.querySelector("svg") && picker.icon.elem.offsetWidth === 14; };
+            check("SelectDate minimal: a 14 px SVG calendar", isLineIcon(date), date.icon.elem.offsetWidth);
+            check("SelectTime minimalDark: a 14 px SVG clock", isLineIcon(time), time.icon.elem.offsetWidth);
+            check("SelectDate light: the drawn calendar of 18 px", !plain.icon.elem.querySelector("svg") && plain.icon.elem.offsetWidth === 18, plain.icon.elem.offsetWidth);
+            [date, time, plain].forEach(function (picker) { picker.remove(); });
         });
 
         // *** TOGGLE (comp/toggle.js)

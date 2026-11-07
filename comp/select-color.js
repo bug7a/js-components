@@ -10,7 +10,8 @@ UI COMPONENT TEMPLATE
 - The selected color has a mark (a dot) in a color that can be seen on it (light or dark).
 - Everything is drawn with code (no image files needed).
 - Value: the color text. (Ex: "#3871E0")
-- Style packages: "light" (default; the old name "classic" works too), "dark". Select with styleName. (SelectColor.styles)
+- Style packages: "light" (default; the old name "classic" works too), "dark", "minimal", "minimalDark" (a package of
+  params: its height too). Select with styleName. (SelectColor.styles)
 
 Keyboard:
 - Field: Enter, Space or ArrowDown opens the panel.
@@ -55,7 +56,7 @@ const SelectColorDefaults = {
     onChange: function (self) { }, // self.value ("#3871E0" or "")
     onOpen: function (self) { },
     onClose: function (self) { },
-    styleName: "light", // "light" ("classic": its old name), "dark" or a name added to SelectColor.styles
+    styleName: "light", // "light" ("classic": its old name), "dark", "minimal", "minimalDark" or a name added to SelectColor.styles
     style: { // Light style package (default)
         field: {
             color: White(1),
@@ -606,3 +607,26 @@ SelectColor.styles = {
 
 };
 SelectColor.styles.classic = SelectColor.styles.light; // the old name of light: the pages made with it keep their look
+
+// The minimal theme (_designs/minimal-theme.htm): a 28 px field as the other minimal fields with a 16 px swatch; the
+// palette on the ground of the window with a line and no shadow, 22 px swatches with a soft line (a light color
+// shows on a light window too). minimalDark: the same on a dark window.
+SelectColor.createMinimalStyle = function (colors) {
+    return {
+        height: 28,
+        style: {
+            field: { color: "transparent", border: 1, borderColor: colors.edge, round: 4, padding: [8, 0], gap: 8 },
+            fieldHover: { borderColor: colors.edgeHover },
+            fieldFocus: { borderColor: colors.ink },
+            fieldText: { fontSize: 13, textColor: colors.text },
+            placeholder: { textColor: colors.faintText },
+            fieldSwatch: { width: 16, height: 16, round: 3 },
+            panel: { color: colors.ground, border: 1, borderColor: colors.line, round: 4, padding: 8, shadow: "none" },
+            swatch: { size: 22, gap: 6, round: 4, border: 1, borderColor: colors.line },
+            mark: { size: 8 },
+            disabled: { opacity: 0.4 },
+        },
+    };
+};
+SelectColor.styles.minimal = SelectColor.createMinimalStyle({ ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), faintText: Black(0.54), line: Black(0.2), edge: Black(0.45), edgeHover: Black(0.65), ink: "#1F1F1F", hover: Black(0.05), off: Black(0.25) });
+SelectColor.styles.minimalDark = SelectColor.createMinimalStyle({ ground: "#1A1A19", text: White(0.88), softText: White(0.55), faintText: White(0.48), line: White(0.18), edge: White(0.42), edgeHover: White(0.62), ink: "#EDEDEB", hover: White(0.07), off: White(0.25) });

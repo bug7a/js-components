@@ -141,19 +141,19 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "select-date", name: "SelectDate", cat: "selection",
-        source: "comp/select-date.js", samples: ["02-comp-examples/select-date.htm"],
+        source: "comp/select-date.js", samples: ["02-comp-examples/select-date.htm", "02-comp-examples/minimal-theme.htm"],
         en: "Date picker as a popup or an always visible calendar, with a month and year view.",
         tr: "Açılır veya sayfada sabit takvim olarak tarih seçici; ay ve yıl görünümü.",
     },
     {
         key: "select-time", name: "SelectTime", cat: "selection",
-        source: "comp/select-time.js", samples: ["02-comp-examples/select-time.htm"],
+        source: "comp/select-time.js", samples: ["02-comp-examples/select-time.htm", "02-comp-examples/minimal-theme.htm"],
         en: "Time picker with scrollable hour and minute columns, as a popup or inline.",
         tr: "Kaydırılabilir saat ve dakika sütunlarıyla saat seçici; açılır veya sayfada sabit.",
     },
     {
         key: "select-color", name: "SelectColor", cat: "selection",
-        source: "comp/select-color.js", samples: ["02-comp-examples/select-color.htm"],
+        source: "comp/select-color.js", samples: ["02-comp-examples/select-color.htm", "02-comp-examples/minimal-theme.htm"],
         en: "Color picker: a field that opens a palette, or an always visible palette.",
         tr: "Renk seçici: palet açan bir alan veya sayfada sabit bir palet.",
     },
@@ -165,13 +165,13 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "select-file", name: "SelectFile", cat: "inputs",
-        source: "comp/select-file.js", samples: ["02-comp-examples/select-file.htm"],
+        source: "comp/select-file.js", samples: ["02-comp-examples/select-file.htm", "02-comp-examples/minimal-theme.htm"],
         en: "Drop zone and file dialog that lists the chosen files with image previews and sizes.",
         tr: "Dosya bırakma alanı ve dosya penceresi; seçilen dosyaları önizleme ve boyutlarıyla listeler.",
     },
     {
         key: "tag-input", name: "TagInput", cat: "inputs",
-        source: "comp/tag-input.js", samples: ["02-comp-examples/tag-input.htm"],
+        source: "comp/tag-input.js", samples: ["02-comp-examples/tag-input.htm", "02-comp-examples/minimal-theme.htm"],
         en: "A field of chips for tags, keywords or e-mails, with suggestions, validation and paste splitting.",
         tr: "Etiket, anahtar kelime veya e-posta için çipli alan: öneriler, doğrulama ve yapıştırınca bölme.",
     },
@@ -192,6 +192,7 @@ CATALOG.COMPONENTS = [
         samples: [
             { file: "02-comp-examples/slider-field.htm", title: "Basic" },
             { file: "02-comp-examples/slider-field-ozden.htm", title: "ozden, a knob, the tones of SmartButton" },
+            { file: "02-comp-examples/minimal-theme.htm", title: "Minimal theme (minimal, minimalDark)" },
         ],
         en: "A slider in the shape of a field: the label at the left, the value at the right, step dots, drag, click to jump and typed editing. The ozden look: a cyan fill with a white knob that never cuts a text.",
         tr: "Alan şeklinde kaydırıcı: solda etiket, sağda değer, adım noktaları; sürükleme, tıklayıp atlama ve elle yazma. ozden görünüşü: hiçbir yazıyı kesmeyen, beyaz topuzlu camgöbeği dolgu.",
@@ -257,21 +258,21 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "side-panel", name: "SidePanel", cat: "feedback",
-        source: "comp/side-panel.js", samples: ["02-comp-examples/side-panel.htm", "02-comp-examples/side-panel-2.htm"],
+        source: "comp/side-panel.js", samples: ["02-comp-examples/side-panel.htm", "02-comp-examples/side-panel-2.htm", "02-comp-examples/minimal-theme.htm"],
         en: "A drawer that slides in from a side of the screen, or of a box like an app column, over the page.",
         tr: "Ekranın ya da bir kutunun (Ör: uygulama sütunu) bir kenarından sayfanın üzerine kayarak açılan panel (çekmece).",
     },
     {
         key: "loading-screen", name: "LoadingScreen", cat: "feedback",
-        source: "comp/loading-screen.js", deps: ["comp/smart-button.js"], samples: ["02-comp-examples/loading-screen.htm"],
+        source: "comp/loading-screen.js", deps: ["comp/smart-button.js"], samples: ["02-comp-examples/loading-screen.htm", "02-comp-examples/minimal-theme.htm"],
         en: "Full cover splash and loading screen with an icon, a title, a spinner and progress.",
         tr: "İkon, başlık, dönen gösterge ve ilerleme içeren tam ekran açılış ve yükleme ekranı.",
     },
     {
         key: "graph-box", name: "GraphBox", cat: "data",
-        source: "comp/graph-box.js", samples: ["02-comp-examples/graph-box.htm"],
-        en: "Charts with no library: one file draws them as SVG. Line, area, bar, pie, doughnut, radar, scatter and bubble, with a tooltip, a legend, a table and two themes.",
-        tr: "Kütüphanesiz grafikler: tek dosya SVG olarak çizer. Çizgi, alan, çubuk, pasta, halka, radar, nokta ve kabarcık; ipucu, açıklama listesi, tablo ve iki tema.",
+        source: "comp/graph-box.js", samples: ["02-comp-examples/graph-box.htm", "02-comp-examples/minimal-theme.htm"],
+        en: "Charts with no library: one file draws them as SVG. Line, area, bar, pie, doughnut, radar, scatter and bubble, with a tooltip, a legend, a table and its themes (light, dark, minimal).",
+        tr: "Kütüphanesiz grafikler: tek dosya SVG olarak çizer. Çizgi, alan, çubuk, pasta, halka, radar, nokta ve kabarcık; ipucu, açıklama listesi, tablo ve temaları (aydınlık, karanlık, minimal).",
     },
     {
         key: "gauge", name: "Gauge", cat: "data",
@@ -349,7 +350,7 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "accordion", name: "Accordion", cat: "pages",
-        source: "comp/accordion.js", samples: ["02-comp-examples/accordion.htm"],
+        source: "comp/accordion.js", samples: ["02-comp-examples/accordion.htm", "02-comp-examples/minimal-theme.htm"],
         en: "Sections that fold: a title row and the objects under it, one or more open, with a note, an icon and the keyboard. A closed section keeps its objects. Light and dark themes.",
         tr: "Katlanan bölümler: bir başlık satırı ve altında nesneleri, biri ya da birkaçı açık; not, ikon ve klavye. Kapalı bölüm nesnelerini korur. Aydınlık ve karanlık tema.",
     },
@@ -361,7 +362,7 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "splitter", name: "Splitter", cat: "pages",
-        source: "comp/splitter.js", samples: ["02-comp-examples/splitter.htm"],
+        source: "comp/splitter.js", samples: ["02-comp-examples/splitter.htm", "02-comp-examples/minimal-theme.htm"],
         en: "Two areas with a line between them: a drag changes their sizes, side by side or one under the other. Keyboard, limits, sizes that follow the window. Light and dark themes.",
         tr: "Aralarında çizgi olan iki alan: sürükleyince boyutları değişir, yan yana ya da alt alta. Klavye, sınırlar, pencereyi izleyen boyutlar. Aydınlık ve karanlık tema.",
     },
@@ -572,7 +573,7 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "step-bar", name: "StepBar", cat: "navigation",
-        source: "comp/step-bar.js", samples: ["02-comp-examples/step-bar.htm"],
+        source: "comp/step-bar.js", samples: ["02-comp-examples/step-bar.htm", "02-comp-examples/minimal-theme.htm"],
         en: "The steps of a job in a row: a cart, an address, a payment. A step that is behind has a check mark and can be clicked to go back, the step of now is filled. Light and dark looks.",
         tr: "Bir işin adımları bir satırda: sepet, adres, ödeme. Geçilen adım işaretlidir ve tıklanınca geri dönülür, şu anki adım doludur. Aydınlık ve karanlık görünüş.",
     },

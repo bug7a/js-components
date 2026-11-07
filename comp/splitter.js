@@ -14,7 +14,8 @@ UI COMPONENT
 - Keyboard: Tab comes to the line; the arrows move it, Home and End go to its limits; Enter, or a double click, puts it
   back where it was at the start.
 - setAreaVisible("first", 0) hides an area and the line; the other one takes the whole box.
-- Style packages: "light" (default), "dark". Select with styleName (Splitter.styles), or later with setTheme().
+- Style packages: "light" (default), "dark", "minimal", "minimalDark". Select with styleName (Splitter.styles), or later
+  with setTheme().
 
 USAGE:
 const split = Splitter({ firstSize: 240, onChangeEnd: function (self) { println(self.getFirstSize()); } });
@@ -52,7 +53,7 @@ const SplitterDefaults = {
     ariaLabel: "Change the sizes of the areas",
     onChange: function (self) { }, // The line moves. (Not at create time, not with silent: 1)
     onChangeEnd: function (self) { }, // The line is let go.
-    styleName: "light", // "light", "dark" or a name added to Splitter.styles
+    styleName: "light", // "light", "dark", "minimal", "minimalDark" or a name added to Splitter.styles
     style: { // Light style package (default)
         line: { size: 1, color: Black(0.14) }, // The line that is seen
         grip: { size: 9 }, // The place around the line that takes the mouse
@@ -370,3 +371,15 @@ Splitter.styles = {
     },
 
 };
+
+// The minimal theme (_designs/minimal-theme.htm): the soft line of the theme, a 2 px ink line under the mouse.
+// minimalDark: the same on a dark window.
+Splitter.createMinimalStyle = function (colors) {
+    return {
+        line: { size: 1, color: colors.line },
+        lineHover: { size: 2, color: colors.ink },
+        focus: { ringColor: colors.focus },
+    };
+};
+Splitter.styles.minimal = Splitter.createMinimalStyle({ line: Black(0.2), ink: "#1F1F1F", focus: "#3D8BD9" });
+Splitter.styles.minimalDark = Splitter.createMinimalStyle({ line: White(0.18), ink: "#EDEDEB", focus: "#7FB6DE" });

@@ -11,7 +11,8 @@ UI COMPONENT
 - canGoBack: 1: a click (or Enter) on a step that is behind calls onStepClick(self, index); the page decides to go
   back with setStep(index). A step that is not reached yet can not be clicked.
 - A narrow screen: the titles get thinner and wrap; showTitles: 0 leaves only the circles.
-- Style packages: "light" (default), "dark". Select with styleName (StepBar.styles), or later with setTheme().
+- Style packages: "light" (default), "dark", "minimal", "minimalDark". Select with styleName (StepBar.styles), or later
+  with setTheme().
 
 USAGE:
 const steps = StepBar({
@@ -47,9 +48,9 @@ const StepBarDefaults = {
     showTitles: 1,
     ariaLabel: "Steps",
     onStepClick: function (self, index) { }, // A step that is behind was chosen. setStep() goes there.
-    styleName: "light", // "light", "dark" or a name added to StepBar.styles
+    styleName: "light", // "light", "dark", "minimal", "minimalDark" or a name added to StepBar.styles
     style: { // Light style package (default)
-        circle: { size: 30, fontSize: 13, lineWidth: 2 },
+        circle: { size: 30, fontSize: 13, lineWidth: 2, hoverRing: 6 }, // hoverRing: the soft ring of a step that can be clicked
         title: { fontSize: 13, space: 8 },
         note: { fontSize: 12 },
         line: { size: 2, space: 6 }, // space: between a line and a circle
@@ -119,7 +120,7 @@ const StepBar = function (params = {}) {
         circle.borderColor = (isReached) ? colors[state] : colors.next;
         circle.textColor = (isReached) ? colors[state + "Text"] : colors.nextText;
         circle.text = (state === "done") ? StepBar.CHECK_SVG : String(index + 1);
-        circle.boxShadow = (part.isHovered && canClick(index)) ? "0 0 0 6px " + colors.hover : "none";
+        circle.boxShadow = (part.isHovered && canClick(index)) ? "0 0 0 " + _s.circle.hoverRing + "px " + colors.hover : "none";
         part.lblTitle.textColor = (isReached) ? colors.title : colors.titleNext;
         part.lblTitle.bold = (state === "current") ? 1 : 0;
         part.lineBefore.color = (index <= box.currentStep) ? colors.done : colors.next;
@@ -287,3 +288,29 @@ StepBar.styles = {
     },
 
 };
+
+// The minimal theme (_designs/minimal-theme.htm): 20 px circles with a 1 px line, ink for the steps that are behind
+// and the step of now, a soft line for the steps that are not reached yet; 12 px titles. minimalDark: on a dark window.
+StepBar.createMinimalStyle = function (palette) {
+    return {
+        circle: { size: 20, fontSize: 11, lineWidth: 1, hoverRing: 4 },
+        title: { fontSize: 12, space: 6 },
+        note: { fontSize: 11 },
+        line: { size: 1, space: 4 },
+        colors: {
+            done: palette.ink,
+            doneText: palette.ground,
+            current: palette.ink,
+            currentText: palette.ground,
+            next: palette.line,
+            nextText: palette.softText,
+            title: palette.text,
+            titleNext: palette.softText,
+            note: palette.softText,
+            hover: palette.hover,
+        },
+        focus: { ringColor: palette.focus },
+    };
+};
+StepBar.styles.minimal = StepBar.createMinimalStyle({ ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), line: Black(0.2), ink: "#1F1F1F", hover: Black(0.08), focus: "#3D8BD9" });
+StepBar.styles.minimalDark = StepBar.createMinimalStyle({ ground: "#1A1A19", text: White(0.88), softText: White(0.55), line: White(0.18), ink: "#EDEDEB", hover: White(0.1), focus: "#7FB6DE" });

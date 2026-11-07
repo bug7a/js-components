@@ -12,7 +12,7 @@ UI COMPONENT TEMPLATE
 - Everything is drawn with code (no image files needed). iconSvg: an icon of your own in the place of the upload icon.
 - animated: 1 (off by default): the icon lifts a little under the mouse, and lifts and grows while a file is dragged
   over the zone. Only transform changes. Off when the system asks for reduced motion.
-- Style packages: "light" (default; the old name "classic" works too), "dark". Select with styleName. (SelectFile.styles)
+- Style packages: "light" (default; the old name "classic" works too), "dark", "minimal", "minimalDark". Select with styleName. (SelectFile.styles)
 
 IMPORTANT: About the file path
 - Browsers do NOT give the real disk path of a file (security rule).
@@ -60,7 +60,7 @@ const SelectFileDefaults = {
     onChange: function (self) { }, // self.files: [{ file, name, displayName, path, size, sizeText, type, extension, lastModified }]
     onError: function (self, errors) { }, // errors: [{ type: "accept" | "maxSize" | "maxFiles", name, message }]
     onOpenDialog: null, // function (self): the dialog of a program, in the place of the dialog of the page (see above)
-    styleName: "light", // "light" ("classic": its old name), "dark" or a name added to SelectFile.styles
+    styleName: "light", // "light" ("classic": its old name), "dark", "minimal", "minimalDark" or a name added to SelectFile.styles
     style: {
         zone: {
             color: White(1),
@@ -850,3 +850,29 @@ SelectFile.formatSize = function (bytes) {
 
 // WHY: Label.text uses innerHTML. File names must not be read as HTML.
 SelectFile.escapeHtml = basic.escapeHtml; // (the name is kept: other code may use it)
+
+// The minimal theme (_designs/minimal-theme.htm): a lower zone (120 px) with no fill and a dashed line of 3:1 at least
+// (it is a control: a click chooses a file), darker under the mouse and ink while a file is dragged over it; 13 px
+// texts; the rows of the files with a soft line. minimalDark: the same on a dark window.
+SelectFile.createMinimalStyle = function (colors) {
+    return {
+        zoneHeight: 120,
+        style: {
+            zone: { color: "transparent", border: 1, borderColor: colors.edge, round: 4 },
+            zoneHover: { color: "transparent", borderColor: colors.edgeHover },
+            zoneDragOver: { color: colors.hover, borderColor: colors.ink },
+            icon: { color: colors.softText, dragOverColor: colors.ink },
+            title: { fontSize: 13, textColor: colors.text, fontFamily: "opensans-bold" },
+            desc: { fontSize: 12, textColor: colors.softText },
+            hint: { fontSize: 11, textColor: colors.softText },
+            item: { height: 42, color: "transparent", border: 1, borderColor: colors.line, round: 4 }, // WHY 42: room for the two lines of texts
+            itemName: { fontSize: 13, textColor: colors.text },
+            itemSize: { fontSize: 11, textColor: colors.softText },
+            badge: { color: "transparent", textColor: colors.softText, round: 3 },
+            removeButton: { textColor: colors.softText, hoverColor: colors.danger },
+            disabled: { opacity: 0.4 },
+        },
+    };
+};
+SelectFile.styles.minimal = SelectFile.createMinimalStyle({ text: Black(0.85), softText: Black(0.55), line: Black(0.2), edge: Black(0.45), edgeHover: Black(0.65), ink: "#1F1F1F", hover: Black(0.04), danger: "#C24A36" });
+SelectFile.styles.minimalDark = SelectFile.createMinimalStyle({ text: White(0.88), softText: White(0.55), line: White(0.18), edge: White(0.42), edgeHover: White(0.62), ink: "#EDEDEB", hover: White(0.06), danger: "#FF9F93" });

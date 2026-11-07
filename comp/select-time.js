@@ -13,7 +13,8 @@ UI COMPONENT TEMPLATE
   language (en, tr), Now/Clear buttons, enabled, keyboard navigation.
 - Everything is drawn with code (no image files needed).
 - Value: "HH:mm" text. (Ex: "19:30")
-- Style packages: "light" (default; the old name "classic" works too), "dark". Select with styleName. (SelectTime.styles)
+- Style packages: "light" (default; the old name "classic" works too), "dark", "minimal", "minimalDark" (a package of
+  params: its height too). Select with styleName. (SelectTime.styles)
 
 Keyboard (when the panel is focused):
 - ArrowUp/ArrowDown: change the value of the active column, ArrowLeft/ArrowRight: change the column,
@@ -49,7 +50,7 @@ const SelectTimeDefaults = {
     onChange: function (self) { }, // self.value ("19:30" or ""), self.hours, self.minutes (number or null), self.timeText
     onOpen: function (self) { },
     onClose: function (self) { },
-    styleName: "light", // "light" ("classic": its old name), "dark" or a name added to SelectTime.styles
+    styleName: "light", // "light" ("classic": its old name), "dark", "minimal", "minimalDark" or a name added to SelectTime.styles
     style: { // Light style package (default)
         field: {
             color: White(1),
@@ -73,6 +74,8 @@ const SelectTimeDefaults = {
         },
         icon: {
             color: Black(0.55),
+            svg: "", // An SVG text drawn in this color (stroke="currentColor"). "": the drawn clock
+            size: 18, // px of the SVG icon
         },
         panel: {
             color: White(1),
@@ -90,6 +93,7 @@ const SelectTimeDefaults = {
         column: {
             rows: 6, // Visible rows
             gap: 8, // Space between the hours and minutes columns
+            barSpace: 0, // Room around the cells of a column for its scroll bar. 0: the bar is over the right side of the cells
         },
         scrollBar: { // basic/scroll-bar.js (ScrollBar) parameters of the columns
             bar_color: "#141414",
@@ -153,8 +157,9 @@ const SelectTime = function (params = {}) {
     const _s = box.style;
     const cellWidth = _s.cell.width;
     const cellHeight = _s.cell.height;
+    const columnWidth = cellWidth + _s.column.barSpace;
     const columnHeight = cellHeight * _s.column.rows;
-    const innerWidth = (cellWidth * 2) + _s.column.gap;
+    const innerWidth = (columnWidth * 2) + _s.column.gap;
 
     let isOpen = 0;
     let isMouseOver = 0;
@@ -291,14 +296,14 @@ const SelectTime = function (params = {}) {
     const createColumn = function (title) {
 
         const group = VGroup({
-            width: cellWidth,
+            width: columnWidth,
             height: "auto",
             align: "center top",
             gap: 4,
         });
 
             group.title = Label({
-                width: cellWidth,
+                width: columnWidth,
                 text: title,
                 textAlign: "center",
                 fontSize: _s.columnTitle.fontSize,
@@ -310,13 +315,13 @@ const SelectTime = function (params = {}) {
             //      container box of it. A flex item has left = 0 and top = 0 (flex places it), so
             //      in the group the bar landed on the title. This box is the flex item instead.
             group.scrollArea = startBox({
-                width: cellWidth,
+                width: columnWidth,
                 height: columnHeight,
                 color: "transparent",
             });
 
                 // BOX: Scrollable list
-                group.scrollBox = startBox(0, 0, cellWidth, columnHeight, {
+                group.scrollBox = startBox(0, 0, columnWidth, columnHeight, {
                     color: "transparent",
                     scrollY: 1,
                 });
@@ -702,18 +707,23 @@ const SelectTime = function (params = {}) {
         that.css = { whiteSpace: "nowrap", textOverflow: "ellipsis" };
         that.grow = 1;
 
-        // BOX: Clock icon (drawn)
-        box.icon = startBox({
-            width: 18,
-            height: 18,
-            color: "transparent",
-            border: 2,
-            borderColor: _s.icon.color,
-            round: 100,
-        });
-        Box({ left: 6, top: 2, width: 2, height: 6, color: _s.icon.color, round: 1 }); // Hour hand
-        Box({ left: 6, top: 6, width: 5, height: 2, color: _s.icon.color, round: 1 }); // Minute hand
-        endBox();
+        // BOX: Clock icon: the SVG of the style, or drawn
+        if (_s.icon.svg) {
+            box.icon = Box({ width: _s.icon.size, height: _s.icon.size, color: "transparent", textColor: _s.icon.color });
+            box.icon.elem.innerHTML = _s.icon.svg;
+        } else {
+            box.icon = startBox({
+                width: 18,
+                height: 18,
+                color: "transparent",
+                border: 2,
+                borderColor: _s.icon.color,
+                round: 100,
+            });
+            Box({ left: 6, top: 2, width: 2, height: 6, color: _s.icon.color, round: 1 }); // Hour hand
+            Box({ left: 6, top: 6, width: 5, height: 2, color: _s.icon.color, round: 1 }); // Minute hand
+            endBox();
+        }
         box.icon.shrink = 0;
 
         endGroup();
@@ -982,3 +992,37 @@ SelectTime.styles = {
 
 };
 SelectTime.styles.classic = SelectTime.styles.light; // the old name of light: the pages made with it keep their look
+
+// The line clock of the minimal field (24 x 24 drawing, as the icons of the minimal SearchInput)
+SelectTime.MINIMAL_ICON = '<svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: block">' +
+    '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+
+// The minimal theme (_designs/minimal-theme.htm): a 28 px field as the other minimal fields (a 14 px line icon); the
+// columns of the hours
+// and the minutes on the ground of the window with a line and no shadow, 28 px cells: the chosen one in ink (the one fill),
+// a faint fill under the mouse, a thin scroll bar. minimalDark: the same on a dark window.
+SelectTime.createMinimalStyle = function (colors) {
+    return {
+        height: 28,
+        style: {
+            field: { color: "transparent", border: 1, borderColor: colors.edge, round: 4, padding: [10, 0] },
+            fieldHover: { borderColor: colors.edgeHover },
+            fieldFocus: { borderColor: colors.ink },
+            fieldText: { fontSize: 13, textColor: colors.text },
+            placeholder: { textColor: colors.faintText },
+            icon: { color: colors.softText, svg: SelectTime.MINIMAL_ICON, size: 14 },
+            panel: { color: colors.ground, border: 1, borderColor: colors.line, round: 4, padding: 8, shadow: "none" },
+            column: { gap: 4, barSpace: 14 }, // WHY barSpace: the bar must not cross the ink of the chosen hour
+            columnTitle: { fontSize: 11, textColor: colors.softText, activeTextColor: colors.text },
+            scrollBar: { bar_color: colors.scrollBar, bar_mouseOverColor: colors.scrollBar, bar_width: 3, bar_opacity: 0.3, bar_mouseOverOpacity: 0.6 },
+            cell: { width: 52, height: 28, round: 4, fontSize: 13, textColor: colors.text, hoverColor: colors.hover },
+            selectedCell: { color: colors.ink, textColor: colors.ground },
+            disabledCell: { textColor: colors.off },
+            footerButton: { fontSize: 12, textColor: colors.ink },
+            divider: { color: colors.line },
+            disabled: { opacity: 0.4 },
+        },
+    };
+};
+SelectTime.styles.minimal = SelectTime.createMinimalStyle({ ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), faintText: Black(0.54), line: Black(0.2), edge: Black(0.45), edgeHover: Black(0.65), ink: "#1F1F1F", hover: Black(0.05), off: Black(0.25), scrollBar: "#141414" });
+SelectTime.styles.minimalDark = SelectTime.createMinimalStyle({ ground: "#1A1A19", text: White(0.88), softText: White(0.55), faintText: White(0.48), line: White(0.18), edge: White(0.42), edgeHover: White(0.62), ink: "#EDEDEB", hover: White(0.07), off: White(0.25), scrollBar: "#FFFFFF" });

@@ -21,7 +21,8 @@ UI COMPONENT
   (SmartButton.clocks, createClockSvg, createDots): one drawing for the whole suite.
 - minDuration: the screen stays at least this long, so a fast load does not show a short flash.
 - The cover takes the clicks, so nothing under it can be clicked while it is open.
-- Style packages: "light" (default), "dark", "ozden", "ozdenDark". Select with styleName. (LoadingScreen.styles)
+- Style packages: "light" (default), "dark", "ozden", "ozdenDark", "minimal", "minimalDark". Select with styleName.
+  (LoadingScreen.styles) The minimal packages wait with the ring of the minimal SmartButton.
 - NOTE: The methods are open() / close(), not show() / hide(): those are basic.js methods of every
   object (they only change "visible").
 
@@ -49,7 +50,7 @@ const LoadingScreenDefaults = {
     top: 0,
     width: "100%",
     height: "100%",
-    styleName: "light", // "light", "dark", "ozden", "ozdenDark" or a name added to LoadingScreen.styles
+    styleName: "light", // "light", "dark", "ozden", "ozdenDark", "minimal", "minimalDark" or a name added to LoadingScreen.styles
     iconFile: "", // An image file (Ex: the app icon)
     iconSvg: "", // Or an SVG text (works with no file, also offline)
     titleText: "",
@@ -374,6 +375,25 @@ LoadingScreen.styles = {
     },
 
 };
+
+// The minimal theme (_designs/minimal-theme.htm): the ground of the window, small texts (15 px title, 13 px message),
+// the waiting ring of the minimal SmartButton, 2 px ink lines for the ring, the other spinners and the progress bar.
+// minimalDark: the same on a dark window.
+LoadingScreen.createMinimalStyle = function (colors) {
+    return {
+        box: { color: colors.ground },
+        layout: { gap: 10, padding: 24 },
+        icon: { size: 48, round: 8, marginBottom: 4 },
+        title: { fontSize: 15, textColor: colors.text, bold: 1 },
+        message: { width: 260, fontSize: 13, textColor: colors.softText },
+        spinner: { size: 24, thickness: 2, color: colors.ink, trackColor: colors.track, speed: 0.8, marginTop: 6 },
+        dots: { size: 6, gap: 5, color: colors.ink },
+        clock: Object.assign({}, colors.ring, { edgeWidth: 2 }), // WHY 2: the line of the progress bar under it (the button ring is drawn smaller)
+        progress: { width: 160, height: 2, color: colors.ink, trackColor: colors.track, round: 1 },
+    };
+};
+LoadingScreen.styles.minimal = LoadingScreen.createMinimalStyle({ ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), ink: "#1F1F1F", track: Black(0.12), ring: LoadingScreen.clocks.minimal });
+LoadingScreen.styles.minimalDark = LoadingScreen.createMinimalStyle({ ground: "#1A1A19", text: White(0.88), softText: White(0.55), ink: "#EDEDEB", track: White(0.14), ring: LoadingScreen.clocks.minimalDark });
 
 // The animations can not be set with inline styles. (the clock and the dots: SmartButton.injectCss)
 LoadingScreen.injectCss = function () {

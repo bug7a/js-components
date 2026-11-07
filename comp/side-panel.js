@@ -22,7 +22,8 @@ UI COMPONENT
 - The content goes into the body with startBody() ... endBody(). The body scrolls when it is tall.
 - onBeforeClose can stop the closing. (Ex: unsaved changes.)
 - Everything is drawn with code (no image files needed). Accessibility: role="dialog", aria-modal.
-- Style packages: "light" (default; the old name "classic" works too), "modern", "dark". Select with styleName. (SidePanel.styles)
+- Style packages: "light" (default; the old name "classic" works too), "modern", "dark", "minimal", "minimalDark".
+  Select with styleName. (SidePanel.styles)
 
 USAGE:
 const panel = SidePanel({ side: "right", titleText: "Filters" });
@@ -69,7 +70,7 @@ const SidePanelDefaults = {
     onOpen: function (self) { },
     onClose: function (self) { },
     onBeforeClose: function (self) { }, // Return false to keep the panel open.
-    styleName: "light", // "light" ("classic": its old name), "modern", "dark" or a name added to SidePanel.styles
+    styleName: "light", // "light" ("classic": its old name), "modern", "dark", "minimal", "minimalDark" or a name added to SidePanel.styles
     style: { // Light style package (default)
         panel: {
             color: White(1),
@@ -586,3 +587,19 @@ SidePanel.styles = {
 
 };
 SidePanel.styles.classic = SidePanel.styles.light; // the old name of light: the pages made with it keep their look
+
+// The minimal theme (_designs/minimal-theme.htm): the ground of the window, a line and no shadow (as the minimal
+// Dialog), a 40 px header with a 14 px title, a 24 px close button with a faint fill under the mouse.
+// minimalDark: the same on a dark window.
+SidePanel.createMinimalStyle = function (colors) {
+    return {
+        panel: { color: colors.ground, border: 1, borderColor: colors.edge, boxShadow: "none", round: 0 },
+        header: { height: 40, color: "transparent", padding: [16, 0], dividerColor: colors.line },
+        title: { fontSize: 14, textColor: colors.text, fontFamily: "opensans-bold" },
+        closeButton: { size: 24, color: "transparent", hoverColor: colors.hover, iconColor: colors.softText, round: 4 },
+        body: { padding: [16, 14], gap: 10 },
+        backdrop: { color: colors.cover },
+    };
+};
+SidePanel.styles.minimal = SidePanel.createMinimalStyle({ ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), line: Black(0.2), edge: Black(0.45), hover: Black(0.05), cover: Black(0.3) });
+SidePanel.styles.minimalDark = SidePanel.createMinimalStyle({ ground: "#1A1A19", text: White(0.88), softText: White(0.55), line: White(0.18), edge: White(0.42), hover: White(0.07), cover: Black(0.6) });

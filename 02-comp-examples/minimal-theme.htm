@@ -42,6 +42,18 @@
     <script src="../comp/range-slider.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/dialog.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/toast.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/select-date.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/select-time.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/select-color.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/select-file.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/slider-field.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/tag-input.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/step-bar.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/accordion.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/splitter.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/side-panel.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/loading-screen.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/graph-box.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -54,6 +66,8 @@
     // InputB (EmailInputB, PasswordInputB, TextareaB...), SearchInput, SelectBox, ItemList, Slider, RangeSlider,
     // ProgressBar, Tabs, Stepper, MenuBar (its menus: ContextMenu), ToolBar, StatusBar, TreeView, SmartTable,
     // DataTable, JsonEditor, Tooltip, Dialog, Toast.
+    // The pickers, the fields and the panels too: SelectDate, SelectTime, SelectColor, SliderField, TagInput,
+    // SelectFile, StepBar, Accordion, Splitter, SidePanel, LoadingScreen; GraphBox with theme: \"minimal\".
 
     // *** THE COLORS AND SIZES OF THE PAGE
     const PAGE_COLOR = "#EDEDEB";
@@ -64,6 +78,11 @@
     const LIGHT_CAPTION_COLOR = Black(0.45);
     const DARK_CAPTION_COLOR = White(0.45);
     const WINDOW_WIDTH = 460;
+    const LIGHT_LINE_COLOR = Black(0.2);
+    const DARK_LINE_COLOR = White(0.18);
+    const SPLIT_HEIGHT = 80;
+    const CHART_HEIGHT = 220;
+    const LOADING_TIME = 1500; // ms: the loading screen of the sample stays this long
     const JSON_EDITOR_HEIGHT = 280;
     const ICON_LIGHT = Black(0.85);
     const DANGER_LIGHT = "#C24A36";
@@ -100,6 +119,17 @@
         { name: "Ada Lovelace", city: "London", orders: 12 },
         { name: "Alan Turing", city: "Manchester", orders: 7 },
         { name: "Grace Hopper", city: "New York", orders: 21 },
+    ];
+    const TAGS = ["audio", "fitness", "guide", "travel"];
+    const SECTIONS = [
+        { key: "general", title: "General", note: "3 settings", opened: 1 },
+        { key: "advanced", title: "Advanced" },
+        { key: "locked", title: "Locked", disabled: 1 },
+    ];
+    const MONTHS = ["Jun", "Jul", "Aug", "Sep", "Oct", "Nov"];
+    const VISITS = [
+        { label: "2026", data: [12, 19, 7, 15, 22, 18] },
+        { label: "2025", data: [8, 11, 9, 12, 14, 13] },
     ];
 
     // A line icon (24 x 24, the color in the drawing): SmartButton turns it white in minimalDark
@@ -193,6 +223,26 @@
                     JsonEditor({ styleName: "minimal", height: JSON_EDITOR_HEIGHT, value: PEOPLE, showHint: 0 });
                     RangeSlider({ styleName: "minimal", width: 260, lowValue: 20, highValue: 70 });
 
+                    Label({ text: "PICKERS, FIELDS", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
+                    HGroup({ hug: 1, align: "left center", gap: 8, clipContent: 0 });
+                        SelectDate({ styleName: "minimal", width: 140, placeholder: "Date" });
+                        SelectTime({ styleName: "minimal", width: 100, time: "14:30" });
+                        SelectColor({ styleName: "minimal", width: 130, selectedColor: "#3871E0" });
+                    endGroup();
+                    SliderField({ styleName: "minimal", width: 260, labelText: "Size", value: 40, min: 0, max: 100, unitText: " px" });
+                    TagInput({ styleName: "minimal", width: "100%", tags: ["audio", "guide"], suggestions: TAGS });
+                    SelectFile({ styleName: "minimal", width: "100%", multiple: 1 });
+
+                    Label({ text: "STEPS, SECTIONS, AREAS", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
+                    StepBar({ styleName: "minimal", width: "100%", steps: ["Cart", "Address", "Payment", "Done"], currentStep: 2 });
+                    Accordion({ styleName: "minimal", width: "100%", height: "auto", sections: SECTIONS });
+                    startBox({ width: "100%", height: SPLIT_HEIGHT, color: "transparent", border: 1, borderColor: LIGHT_LINE_COLOR, round: 4 });
+                        Splitter({ styleName: "minimal", firstSize: 160 });
+                    endBox();
+
+                    Label({ text: "CHART", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
+                    GraphBox({ theme: "minimal", width: "100%", height: CHART_HEIGHT, type: "line", titleText: "Visits", labels: MONTHS, datasets: VISITS });
+
                     Label({ text: "OVER THE PAGE", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
                     HGroup({ hug: 1, align: "left center", gap: 8, clipContent: 0 });
                         const lightHint = SmartButton({ styleName: "minimal", labelText: "A hint" });
@@ -202,6 +252,19 @@
                         } });
                         SmartButton({ styleName: "minimal", labelText: "A toast", onClick: function () {
                             Toast.show({ theme: "minimal", type: "success", title: "Saved", message: "report.pdf is saved.", action: { text: "Undo", onClick: function () { } } });
+                        } });
+                    endGroup();
+                    const lightPanel = SidePanel({ styleName: "minimal", side: "right", panelSize: 300, titleText: "Filters" });
+                    lightPanel.startBody();
+                        CheckBox({ styleName: "minimal", labelText: "Only the new ones", checked: 1 });
+                        CheckBox({ styleName: "minimal", labelText: "With a picture" });
+                    lightPanel.endBody();
+                    HGroup({ hug: 1, align: "left center", gap: 8, clipContent: 0 });
+                        SmartButton({ styleName: "minimal", labelText: "A side panel", onClick: function () {
+                            lightPanel.open();
+                        } });
+                        SmartButton({ styleName: "minimal", labelText: "Loading", onClick: function () {
+                            LoadingScreen({ styleName: "minimal", titleText: "My App", messageText: "Loading the data...", minDuration: LOADING_TIME, removeOnClose: 1 }).close();
                         } });
                     endGroup();
 
@@ -274,6 +337,26 @@
                     JsonEditor({ styleName: "minimalDark", height: JSON_EDITOR_HEIGHT, value: PEOPLE, showHint: 0 });
                     RangeSlider({ styleName: "minimalDark", width: 260, lowValue: 20, highValue: 70 });
 
+                    Label({ text: "PICKERS, FIELDS", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
+                    HGroup({ hug: 1, align: "left center", gap: 8, clipContent: 0 });
+                        SelectDate({ styleName: "minimalDark", width: 140, placeholder: "Date" });
+                        SelectTime({ styleName: "minimalDark", width: 100, time: "14:30" });
+                        SelectColor({ styleName: "minimalDark", width: 130, selectedColor: "#3871E0" });
+                    endGroup();
+                    SliderField({ styleName: "minimalDark", width: 260, labelText: "Size", value: 40, min: 0, max: 100, unitText: " px" });
+                    TagInput({ styleName: "minimalDark", width: "100%", tags: ["audio", "guide"], suggestions: TAGS });
+                    SelectFile({ styleName: "minimalDark", width: "100%", multiple: 1 });
+
+                    Label({ text: "STEPS, SECTIONS, AREAS", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
+                    StepBar({ styleName: "minimalDark", width: "100%", steps: ["Cart", "Address", "Payment", "Done"], currentStep: 2 });
+                    Accordion({ styleName: "minimalDark", width: "100%", height: "auto", sections: SECTIONS });
+                    startBox({ width: "100%", height: SPLIT_HEIGHT, color: "transparent", border: 1, borderColor: DARK_LINE_COLOR, round: 4 });
+                        Splitter({ styleName: "minimalDark", firstSize: 160 });
+                    endBox();
+
+                    Label({ text: "CHART", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
+                    GraphBox({ theme: "minimalDark", width: "100%", height: CHART_HEIGHT, type: "line", titleText: "Visits", labels: MONTHS, datasets: VISITS });
+
                     Label({ text: "OVER THE PAGE", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
                     HGroup({ hug: 1, align: "left center", gap: 8, clipContent: 0 });
                         const darkHint = SmartButton({ styleName: "minimalDark", labelText: "A hint" });
@@ -283,6 +366,19 @@
                         } });
                         SmartButton({ styleName: "minimalDark", labelText: "A toast", onClick: function () {
                             Toast.show({ theme: "minimalDark", type: "success", title: "Saved", message: "report.pdf is saved.", action: { text: "Undo", onClick: function () { } } });
+                        } });
+                    endGroup();
+                    const darkPanel = SidePanel({ styleName: "minimalDark", side: "right", panelSize: 300, titleText: "Filters" });
+                    darkPanel.startBody();
+                        CheckBox({ styleName: "minimalDark", labelText: "Only the new ones", checked: 1 });
+                        CheckBox({ styleName: "minimalDark", labelText: "With a picture" });
+                    darkPanel.endBody();
+                    HGroup({ hug: 1, align: "left center", gap: 8, clipContent: 0 });
+                        SmartButton({ styleName: "minimalDark", labelText: "A side panel", onClick: function () {
+                            darkPanel.open();
+                        } });
+                        SmartButton({ styleName: "minimalDark", labelText: "Loading", onClick: function () {
+                            LoadingScreen({ styleName: "minimalDark", titleText: "My App", messageText: "Loading the data...", minDuration: LOADING_TIME, removeOnClose: 1 }).close();
                         } });
                     endGroup();
 

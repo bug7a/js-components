@@ -16,7 +16,8 @@ UI COMPONENT TEMPLATE
   ArrowLeft / ArrowRight move between the chips, Delete removes the selected chip. Escape closes the suggestions.
 - Counter: "3 / 5" when there is a maxTags limit.
 - Accessibility: The chips have role="listitem" and aria-labels, the suggestion list is a listbox.
-- Style packages: "light" (default; the old name "classic" works too), "modern", "dark". Select with styleName. (TagInput.styles)
+- Style packages: "light" (default; the old name "classic" works too), "modern", "dark", "minimal", "minimalDark".
+  Select with styleName. (TagInput.styles)
 - Everything is drawn with code (no image files needed).
 
 USAGE:
@@ -74,7 +75,7 @@ const TagInputDefaults = {
         long: "A tag can have up to {max} characters.",
         notAllowed: "Choose a tag from the list.",
     },
-    styleName: "light", // "light" ("classic": its old name), "modern", "dark" or a name added to TagInput.styles
+    styleName: "light", // "light" ("classic": its old name), "modern", "dark", "minimal", "minimalDark" or a name added to TagInput.styles
     style: { // Light style package (default)
         field: {
             color: White(1),
@@ -146,8 +147,9 @@ const TagInputDefaults = {
         optionActive: {
             color: Black(0.06),
         },
-        highlight: {
+        highlight: { // The typed part of a suggestion
             color: "rgba(255, 196, 0, 0.35)",
+            fontFamily: "", // "": the font of the option. Ex: "opensans-bold"
         },
         empty: {
             fontSize: 13,
@@ -465,7 +467,8 @@ const TagInput = function (params = {}) {
         const before = TagInput.escapeHtml(label.slice(0, index));
         const match = TagInput.escapeHtml(label.slice(index, index + text.length));
         const after = TagInput.escapeHtml(label.slice(index + text.length));
-        const markStyle = "background:" + _s.highlight.color + "; color: inherit; border-radius: 3px";
+        let markStyle = "background:" + _s.highlight.color + "; color: inherit; border-radius: 3px";
+        if (_s.highlight.fontFamily) markStyle += "; font-family: " + _s.highlight.fontFamily;
         return before + "<mark style='" + markStyle + "'>" + match + "</mark>" + after;
     };
 
@@ -1068,3 +1071,33 @@ TagInput.styles = {
 
 };
 TagInput.styles.classic = TagInput.styles.light; // the old name of light: the pages made with it keep their look
+
+// The minimal theme (_designs/minimal-theme.htm): a 28 px field with no fill and an edge of 3:1 at least, ink while it
+// is typed in; the tags are 20 px with a soft line (a faint fill under the mouse, ink when they are chosen with the
+// keyboard); a flat suggestion list with a line and no shadow, the typed part in bold. minimalDark: the same on a dark
+// window.
+TagInput.createMinimalStyle = function (colors) {
+    return {
+        field: { color: "transparent", border: 1, borderColor: colors.edge, round: 4, padding: [6, 3], gap: 4, minHeight: 28 },
+        fieldHover: { borderColor: colors.edgeHover },
+        fieldFocus: { borderColor: colors.ink },
+        fieldError: { borderColor: colors.danger },
+        input: { fontSize: 13, textColor: colors.text, minWidth: 80, height: 20 },
+        placeholder: { textColor: colors.faintText },
+        tag: { color: "transparent", border: 1, borderColor: colors.line, round: 3, padding: [6, 0], height: 20, gap: 3 },
+        tagHover: { color: colors.hover },
+        tagSelected: { color: colors.ink, textColor: colors.ground, removeColor: colors.ground },
+        tagText: { fontSize: 12, textColor: colors.text },
+        tagRemove: { color: colors.softText, hoverColor: colors.danger },
+        panel: { color: colors.ground, border: 1, borderColor: colors.line, round: 4, padding: 4, shadow: "none", maxHeight: 200 },
+        option: { fontSize: 13, textColor: colors.text, round: 3, padding: [8, 5] },
+        optionActive: { color: colors.hover },
+        highlight: { color: "transparent", fontFamily: "opensans-bold" }, // WHY bold: a faint fill behind a few small letters read as a smudge
+        empty: { fontSize: 12, textColor: colors.softText },
+        message: { fontSize: 11, textColor: colors.danger },
+        counter: { fontSize: 11, textColor: colors.softText },
+        disabled: { opacity: 0.4 },
+    };
+};
+TagInput.styles.minimal = TagInput.createMinimalStyle({ ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), faintText: Black(0.54), line: Black(0.2), edge: Black(0.45), edgeHover: Black(0.65), ink: "#1F1F1F", hover: Black(0.05), danger: "#C24A36" });
+TagInput.styles.minimalDark = TagInput.createMinimalStyle({ ground: "#1A1A19", text: White(0.88), softText: White(0.55), faintText: White(0.48), line: White(0.18), edge: White(0.42), edgeHover: White(0.62), ink: "#EDEDEB", hover: White(0.07), danger: "#FF9F93" });

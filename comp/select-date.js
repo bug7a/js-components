@@ -10,7 +10,8 @@ UI COMPONENT TEMPLATE
 - Supports: minDate, maxDate, first day of week, date format, language (en, tr),
   Today/Clear buttons, enabled, keyboard navigation.
 - Everything is drawn with code (no image files needed).
-- Style packages: "light" (default; the old name "classic" works too), "dark". Select with styleName. (SelectDate.styles)
+- Style packages: "light" (default; the old name "classic" works too), "dark", "minimal", "minimalDark" (a package of
+  params: its height too). Select with styleName. (SelectDate.styles)
 - scale: multiplies every size (the style, width / height, the field, the calendar and its cells). Its default is
   basic.uiScale: on a page fitted with page.fit() (basic.uiScale = 1 / page.zoom) the field and the calendar keep
   their size on the screen. (Needs basic.js v26.11.01 for a scale other than 1.)
@@ -48,7 +49,7 @@ const SelectDateDefaults = {
     onChange: function (self) { }, // self.date (Date or null), self.value ("YYYY-MM-DD"), self.dateText
     onOpen: function (self) { },
     onClose: function (self) { },
-    styleName: "light", // "light" ("classic": its old name), "dark" or a name added to SelectDate.styles
+    styleName: "light", // "light" ("classic": its old name), "dark", "minimal", "minimalDark" or a name added to SelectDate.styles
     style: { // Light style package (default)
         field: {
             color: White(1),
@@ -72,6 +73,8 @@ const SelectDateDefaults = {
         },
         icon: {
             color: Black(0.55),
+            svg: "", // An SVG text drawn in this color (stroke="currentColor"). "": the drawn calendar
+            size: 18, // px of the SVG icon
         },
         panel: {
             color: White(1),
@@ -670,19 +673,24 @@ const SelectDate = function (params = {}) {
         that.css = { whiteSpace: "nowrap", textOverflow: "ellipsis" };
         that.grow = 1;
 
-        // BOX: Calendar icon (drawn: a box, a bar at its top and two dots, in the px of an 18 px icon)
-        box.icon = startBox({
-            width: 18 * scale,
-            height: 18 * scale,
-            color: "transparent",
-            border: 2 * scale,
-            borderColor: _s.icon.color,
-            round: 4 * scale,
-        });
-        Box({ left: 0, top: 3 * scale, width: "100%", height: 2 * scale, color: _s.icon.color });
-        Box({ left: 3 * scale, top: 8 * scale, width: 3 * scale, height: 3 * scale, color: _s.icon.color });
-        Box({ left: 8 * scale, top: 8 * scale, width: 3 * scale, height: 3 * scale, color: _s.icon.color });
-        endBox();
+        // BOX: Calendar icon: the SVG of the style, or drawn (a box, a bar at its top and two dots, in the px of an 18 px icon)
+        if (_s.icon.svg) {
+            box.icon = Box({ width: _s.icon.size, height: _s.icon.size, color: "transparent", textColor: _s.icon.color });
+            box.icon.elem.innerHTML = _s.icon.svg;
+        } else {
+            box.icon = startBox({
+                width: 18 * scale,
+                height: 18 * scale,
+                color: "transparent",
+                border: 2 * scale,
+                borderColor: _s.icon.color,
+                round: 4 * scale,
+            });
+            Box({ left: 0, top: 3 * scale, width: "100%", height: 2 * scale, color: _s.icon.color });
+            Box({ left: 3 * scale, top: 8 * scale, width: 3 * scale, height: 3 * scale, color: _s.icon.color });
+            Box({ left: 8 * scale, top: 8 * scale, width: 3 * scale, height: 3 * scale, color: _s.icon.color });
+            endBox();
+        }
         box.icon.shrink = 0;
 
         endGroup();
@@ -1006,3 +1014,38 @@ SelectDate.styles = {
 
 };
 SelectDate.styles.classic = SelectDate.styles.light; // the old name of light: the pages made with it keep their look
+
+// The line calendar of the minimal field (24 x 24 drawing, as the icons of the minimal SearchInput)
+SelectDate.MINIMAL_ICON = '<svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: block">' +
+    '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>';
+
+// The minimal theme (_designs/minimal-theme.htm): a 28 px field as the other minimal fields (a line of 3:1 at least,
+// a 13 px text, a 14 px line icon); the calendar on the ground of the window with a line and no shadow, 28 px days:
+// a line around today, the chosen day in ink (the one fill), a faint fill under the mouse. minimalDark: the same on a
+// dark window.
+SelectDate.createMinimalStyle = function (colors) {
+    return {
+        height: 28,
+        style: {
+            field: { color: "transparent", border: 1, borderColor: colors.edge, round: 4, padding: [10, 0] },
+            fieldHover: { borderColor: colors.edgeHover },
+            fieldFocus: { borderColor: colors.ink },
+            fieldText: { fontSize: 13, textColor: colors.text },
+            placeholder: { textColor: colors.faintText },
+            icon: { color: colors.softText, svg: SelectDate.MINIMAL_ICON, size: 14 },
+            panel: { color: colors.ground, border: 1, borderColor: colors.line, round: 4, padding: 8, shadow: "none" },
+            title: { fontSize: 13, textColor: colors.text, fontFamily: "opensans-bold" },
+            arrow: { color: colors.softText, hoverColor: colors.hover },
+            weekDay: { fontSize: 11, textColor: colors.softText },
+            day: { size: 28, round: 4, fontSize: 12, textColor: colors.text, hoverColor: colors.hover },
+            today: { borderColor: colors.edge },
+            selectedDay: { color: colors.ink, textColor: colors.ground },
+            disabledDay: { textColor: colors.off },
+            footerButton: { fontSize: 12, textColor: colors.ink },
+            divider: { color: colors.line },
+            disabled: { opacity: 0.4 },
+        },
+    };
+};
+SelectDate.styles.minimal = SelectDate.createMinimalStyle({ ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), faintText: Black(0.54), line: Black(0.2), edge: Black(0.45), edgeHover: Black(0.65), ink: "#1F1F1F", hover: Black(0.05), off: Black(0.25) });
+SelectDate.styles.minimalDark = SelectDate.createMinimalStyle({ ground: "#1A1A19", text: White(0.88), softText: White(0.55), faintText: White(0.48), line: White(0.18), edge: White(0.42), edgeHover: White(0.62), ink: "#EDEDEB", hover: White(0.07), off: White(0.25) });

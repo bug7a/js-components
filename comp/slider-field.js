@@ -19,7 +19,8 @@ UI COMPONENT TEMPLATE
 - onChange is called while dragging (every new value), onChangeEnd when the change is finished
   (the drag is released, a key step, a typed value). Neither is called at create time or with silent: 1.
 - Everything is drawn with code (no image files needed). Accessibility: role="slider", aria-valuenow...
-- Style packages: "light" (default; the old name "classic" works too), "modern", "dark", "ozden". Select with styleName. (SliderField.styles)
+- Style packages: "light" (default; the old name "classic" works too), "modern", "dark", "ozden", "minimal", "minimalDark".
+  Select with styleName. (SliderField.styles)
   "ozden" (a more usable look for general use), in the colors of SmartButton: a cyan fill with
   an edge and a white knob; the label is always on the fill and the value never (style.fill.aroundLabel, beforeValue),
   a focus ring. Its sample: 02-comp-examples/slider-field-ozden.htm.
@@ -65,7 +66,7 @@ const SliderFieldDefaults = {
     valueFormat: function (value, self) { return self.formatNumber(value) + self.unitText; }, // Text of the value
     onChange: function (self) { }, // self.value (also while dragging)
     onChangeEnd: function (self) { }, // After a drag, a key step or a typed value
-    styleName: "light", // "light" ("classic": its old name), "modern", "dark", "ozden" or a name added to SliderField.styles
+    styleName: "light", // "light" ("classic": its old name), "modern", "dark", "ozden", "minimal", "minimalDark" or a name added to SliderField.styles
     style: { // Light style package (default)
         box: {
             color: "#F2F2F4",
@@ -903,3 +904,25 @@ SliderField.styles = {
 
 };
 SliderField.styles.classic = SliderField.styles.light; // the old name of light: the pages made with it keep their look
+
+// The minimal theme (_designs/minimal-theme.htm): a 28 px field with no fill and an edge of 3:1 at least (it is a
+// control), a faint gray fill for the value, a thin handle that darkens under the mouse and is ink while it is dragged,
+// a 12 px label and a 13 px value. WHY aroundLabel and beforeValue: the thin handle never crosses a text. The keyboard focus: a blue edge of 2 px. minimalDark: the same on a dark window.
+SliderField.createMinimalStyle = function (colors) {
+    return {
+        height: 28,
+        style: {
+            box: { color: "transparent", hoverColor: "", border: 1, borderColor: colors.edge, round: 4, boxShadow: "none" },
+            boxFocus: { borderColor: colors.focus, ringColor: colors.focus, ringWidth: 1 },
+            fill: { color: colors.fill, hoverColor: colors.fillHover, activeColor: colors.fillActive, minWidth: 20, round: 3, innerRound: 0, aroundLabel: 1, labelSpace: 16, beforeValue: 1, valueSpace: 6, border: 0, borderColor: "transparent", boxShadow: "none" },
+            handle: { width: 2, height: 12, inset: 6, color: colors.edge, hoverColor: colors.edgeHover, activeColor: colors.ink, round: 1, border: 0, borderColor: "transparent", boxShadow: "none" },
+            tick: { size: 2, color: colors.line, minSpace: 8 },
+            label: { fontSize: 12, textColor: colors.softText, fontFamily: "", padding: 10 },
+            value: { fontSize: 13, textColor: colors.text, fontFamily: "", padding: 10 },
+            input: { color: colors.ground, textColor: colors.text, round: 3 },
+            disabled: { opacity: 0.4, filter: "none" },
+        },
+    };
+};
+SliderField.styles.minimal = SliderField.createMinimalStyle({ ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), line: Black(0.2), edge: Black(0.45), edgeHover: Black(0.65), ink: "#1F1F1F", fill: Black(0.06), fillHover: Black(0.08), fillActive: Black(0.11), focus: "#3D8BD9" });
+SliderField.styles.minimalDark = SliderField.createMinimalStyle({ ground: "#1A1A19", text: White(0.88), softText: White(0.55), line: White(0.18), edge: White(0.42), edgeHover: White(0.62), ink: "#EDEDEB", fill: White(0.08), fillHover: White(0.11), fillActive: White(0.14), focus: "#7FB6DE" });
