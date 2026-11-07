@@ -36,7 +36,7 @@ const start = function () {
 ### İç Boşluklar (Padding)
 - `padding` (number / array) — Kutu içerisindeki iç boşlukları (piksel) tanımlar (Varsayılan: `0`).
     - Yalnızca sayı verildiğinde tüm kenarlardan uygulanır: `padding: 10`
-    - Array ile `[dikey, yatay]` veya `[üst, sağ, alt, sol]` şeklinde özel tanımlamalar yapılabilir: `padding: [10, 20]`, `padding: [5, 10, 15, 20]`
+    - Array ile `[yatay, dikey]` veya `[sol, üst, sağ, alt]` şeklinde özel tanımlamalar yapılabilir: `padding: [20, 10]` (solda ve sağda 20, üstte ve altta 10), `padding: [5, 10, 15, 20]` (sol 5, üst 10, sağ 15, alt 20)
 
 ---
 

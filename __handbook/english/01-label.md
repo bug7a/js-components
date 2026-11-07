@@ -36,7 +36,7 @@ const start = function () {
 ### Inner Spacing (Padding)
 - `padding` (number / array) — Defines the inner spacing (in pixels) inside the box (Default: `0`).
     - When only a number is given, it is applied from all sides: `padding: 10`
-    - Custom definitions can be made with an array as `[vertical, horizontal]` or `[top, right, bottom, left]`: `padding: [10, 20]`, `padding: [5, 10, 15, 20]`
+    - Custom definitions can be made with an array as `[horizontal, vertical]` or `[left, top, right, bottom]`: `padding: [20, 10]` (20 at the left and right, 10 at the top and bottom), `padding: [5, 10, 15, 20]` (left 5, top 10, right 15, bottom 20)
 
 ---
 
