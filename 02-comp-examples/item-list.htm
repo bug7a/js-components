@@ -24,6 +24,7 @@
 
     const FRUITS_PATH = "../assets/fruids/";
     const DRINKS_PATH = "../assets/categories/";
+    const PICTURES_PATH = "../assets/cards/";
     const STYLE_CARD_WIDTH = 380;
     const STYLE_LIST_HEIGHT = 420;
     const CARD_GAP = 20;
@@ -55,6 +56,16 @@
         { key: "tea", title: "Tea", desc: "Hot", iconFile: DRINKS_PATH + "tea.png" },
     ];
 
+    const PICTURES = [
+        { key: "olives", title: "Olives", desc: "512 x 512", iconFile: PICTURES_PATH + "olives.png" },
+        { key: "dill", title: "Dill", desc: "512 x 512", iconFile: PICTURES_PATH + "dill.png" },
+        { key: "fennel", title: "Fennel", desc: "512 x 512", iconFile: PICTURES_PATH + "fennel.png" },
+        { key: "juniper", title: "Juniper", desc: "512 x 512", iconFile: PICTURES_PATH + "juniper.png" },
+        { key: "oregano", title: "Oregano", desc: "512 x 512", iconFile: PICTURES_PATH + "oregano.png" },
+        { key: "pepper", title: "Pepper", desc: "512 x 512", iconFile: PICTURES_PATH + "pepper.png" },
+        { key: "rosehip", title: "Rosehip", desc: "512 x 512", iconFile: PICTURES_PATH + "rosehip.png" },
+    ];
+
     // The page look of each style package (the list sits on it)
     const STYLE_PAGES = {
         ozden: { color: "whitesmoke", textColor: Black(0.5) },
@@ -62,6 +73,8 @@
         ozdenTiles: { color: "white", textColor: Black(0.5) },
         modern: { color: "#F4F5F2", textColor: Black(0.5) },
         dark: { color: "#141414", textColor: White(0.5) },
+        gallery: { color: "white", textColor: Black(0.5) },
+        galleryDark: { color: "#1A1A19", textColor: White(0.5) },
     };
 
     // GROUP: A card with a title and a short description.
@@ -114,6 +127,24 @@
                 showSearch: 1,
                 items: FRUITS,
                 selectedKeys: ["strawberry"],
+                onChange: function (self) { showSelection(info, self); },
+            });
+            const info = Label({ plainText: "", width: "100%", fontSize: 13, textColor: look.textColor });
+            showSelection(info, list);
+        endCard();
+    };
+
+    // A picture gallery: layout "grid", a big photo on each tile.
+    const createGallerySample = function (styleName, description) {
+        const look = STYLE_PAGES[styleName];
+        startCard("styleName: \"" + styleName + "\" · layout: \"grid\"", description, look);
+            const list = ItemList({
+                width: "100%",
+                height: STYLE_LIST_HEIGHT,
+                layout: "grid",
+                styleName: styleName,
+                items: PICTURES,
+                selectedKeys: ["fennel"],
                 onChange: function (self) { showSelection(info, self); },
             });
             const info = Label({ plainText: "", width: "100%", fontSize: 13, textColor: look.textColor });
@@ -212,6 +243,22 @@
                             },
                         });
                     endCard();
+
+                endGroup();
+
+                // GROUP: A picture gallery, light and dark
+                HGroup({
+                    width: "100%",
+                    height: "auto",
+                    align: "center top",
+                    gap: CARD_GAP,
+                    wrap: 1,
+                    css: { maxWidth: TWO_CARDS_WIDTH + "px" },
+                });
+
+                    createGallerySample("gallery", "Pictures: a big photo with no filter that fills its square (tile.iconFit: \"cover\"), its title under it, a ring around the selected one.");
+
+                    createGallerySample("galleryDark", "The same gallery on a dark page.");
 
                 endGroup();
 

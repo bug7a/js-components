@@ -117,8 +117,8 @@ CATALOG.COMPONENTS = [
     {
         key: "item-list", name: "ItemList", cat: "selection",
         source: "comp/item-list.js", samples: ["02-comp-examples/item-list.htm", "02-comp-examples/item-list-2.htm"],
-        en: "A list of items with an icon, a title and a description (or your own rows): vertical, horizontal or grid, single or multiple selection, section titles, search and keyboard; a pressed flash and animated add / remove.",
-        tr: "İkon, başlık ve açıklamalı öğe listesi (ya da kendi satırlarınız): dikey, yatay veya ızgara; tekli veya çoklu seçim, bölüm başlıkları, arama ve klavye; tıklanınca bir an koyulaşan satır ve hareketli ekleme / çıkarma.",
+        en: "A list of items with an icon, a title and a description (or your own rows): vertical, horizontal or grid, single or multiple selection, section titles, search and keyboard; a picture gallery; a pressed flash and animated add / remove.",
+        tr: "İkon, başlık ve açıklamalı öğe listesi (ya da kendi satırlarınız): dikey, yatay veya ızgara; tekli veya çoklu seçim, bölüm başlıkları, arama ve klavye; resim galerisi; tıklanınca bir an koyulaşan satır ve hareketli ekleme / çıkarma.",
     },
     {
         key: "select-box", name: "SelectBox", cat: "selection",

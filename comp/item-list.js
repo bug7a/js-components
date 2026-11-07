@@ -45,7 +45,8 @@ UI COMPONENT TEMPLATE
   setAnimated(0/1).
 - height: "auto" -> The list grows with its rows (no scrolling). Otherwise it scrolls with basic/scroll-bar.js
   (if it is loaded).
-- Style packages: "ozden" (default; the name "classic" still works), "ozdenDark" (the same on a dark page),
+- Style packages: "ozden" (default; the name "classic" still works), "ozdenDark" (the same on a dark page), "gallery" and
+  "galleryDark" (pictures: layout "grid", a big photo on every tile with its title under it),
   "modern", "dark".
   Select with styleName. (ItemList.styles)
 
@@ -151,6 +152,7 @@ const ItemListDefaults = {
             frameColor: White(0.3),
             frameRound: 100,
             iconFilter: "grayscale(100%)", // "": none
+            iconFit: "", // How a picture fills its square: "cover" (a photo), "contain". "": as the Icon does
             iconMotion: "transform 0.3s",
             hover: {}, // The look under the mouse (the rows use style.hover)
             selectedColor: "white", // "": the color of style.selected (the rows)
@@ -465,12 +467,17 @@ const ItemList = function (params = {}) {
         return icon;
     };
 
+    const fitTileIcon = function (row) {
+        if (row.icon && _s.tile.iconFit) row.icon.imageFit = _s.tile.iconFit;
+    };
+
     // A tile icon may sit in a circle (style.tile.frameSize).
     const createTileIcon = function (row, entry) {
         const tile = _s.tile;
         if (!entry.data.iconFile) return;
         if (!(tile.frameSize > 0)) {
             row.icon = createIcon(entry, tile.iconSize);
+            fitTileIcon(row);
             return;
         }
         // GROUP: The circle behind the icon
@@ -480,6 +487,7 @@ const ItemList = function (params = {}) {
         row.iconFrame.clipContent = 0; // WHY: The selected icon grows out of the circle.
         row.iconFrame.setMotion("background-color 0.3s");
             row.icon = createIcon(entry, tile.iconSize);
+            fitTileIcon(row);
         endGroup();
     };
 
@@ -1635,6 +1643,72 @@ ItemList.styles = {
             invertIconColor: 1,
         },
         scrollBar: { bar_color: "#8A8A88", bar_mouseOverColor: "#BFBFBD", neverHide: 0, showDots: 0 },
+    },
+
+    // Pictures (layout "grid"): a big photo in its square with no filter, its title and description under it, a ring
+    // around the selected one. A picture of any shape fills its square (cover).
+    gallery: {
+        box: { color: "transparent", border: 0, padding: 0 },
+        tile: {
+            width: 132, // WHY: two in a row on a phone too
+            height: "auto",
+            padding: [8, 8],
+            gap: 6,
+            spacing: 8,
+            listPadding: 6,
+            iconSize: 116,
+            frameSize: 0,
+            iconFilter: "",
+            iconFit: "cover",
+            iconMotion: "",
+            selectedIconScale: 1,
+            selectedIconFilter: "",
+            selectedFontFamily: "",
+            selectedColor: "",
+            hover: { color: Black(0.05) },
+        },
+        row: { round: 10, border: 1, borderColor: "transparent", motion: "background-color 0.2s, border-color 0.2s" },
+        hover: { color: Black(0.05), lineColor: "" }, // WHY: "": the lines of ozden are not filled in.
+        selected: { color: "rgba(63, 141, 148, 0.1)", borderColor: "#3F8D94", opacity: 1, canSelectAgain: 1 },
+        focus: { ringColor: "rgba(63, 141, 148, 0.8)" },
+        icon: { round: 6, color: Black(0.05) },
+        title: { fontSize: 14, textColor: Black(0.82), fontFamily: "" },
+        desc: { fontSize: 12, textColor: Black(0.5), marginTop: 0 },
+        empty: { fontSize: 14, textColor: Black(0.45) },
+    },
+
+    // The pictures on a dark page.
+    galleryDark: {
+        box: { color: "transparent", border: 0, padding: 0 },
+        tile: {
+            width: 132, // WHY: two in a row on a phone too
+            height: "auto",
+            padding: [8, 8],
+            gap: 6,
+            spacing: 8,
+            listPadding: 6,
+            iconSize: 116,
+            frameSize: 0,
+            iconFilter: "",
+            iconFit: "cover",
+            iconMotion: "",
+            selectedIconScale: 1,
+            selectedIconFilter: "",
+            selectedFontFamily: "",
+            selectedColor: "",
+            hover: { color: White(0.06) },
+        },
+        row: { round: 10, border: 1, borderColor: "transparent", motion: "background-color 0.2s, border-color 0.2s" },
+        hover: { color: White(0.06), lineColor: "" },
+        selected: { color: "rgba(91, 186, 193, 0.14)", borderColor: "#5BBAC1", opacity: 1, canSelectAgain: 1 },
+        focus: { ringColor: "rgba(111, 198, 205, 0.8)" },
+        icon: { round: 6, color: White(0.06) },
+        title: { fontSize: 14, textColor: White(0.88), fontFamily: "" },
+        desc: { fontSize: 12, textColor: White(0.5), marginTop: 0 },
+        empty: { fontSize: 14, textColor: White(0.45) },
+        check: { color: "#E6E6E4", iconColor: "#1A1A19", borderColor: White(0.3) },
+        search: { styleName: "ozdenDark", color: "#262624" },
+        scrollBar: { bar_color: "#CFCFCD", bar_mouseOverColor: "#CFCFCD" },
     },
 
 };

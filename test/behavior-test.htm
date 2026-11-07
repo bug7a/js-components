@@ -6783,6 +6783,33 @@
             check("StepBar: setSteps(), showTitles: 0, setTheme()", after === "2,2" && dark === "true,36" && titles === 0, [after, dark, titles].join(" | "));
         });
 
+        // *** ITEM LIST: the gallery packages (comp/item-list.js)
+
+        test("ItemList gallery: a photo fills its square with no filter, the selected one does not grow, two tiles in a row on a phone", async function () {
+            const ITEMS = [{ key: "a", title: "A", iconFile: "../assets/cards/olives.png" }, { key: "b", title: "B", iconFile: "../assets/cards/dill.png" }];
+            const lookOf = function (styleName) {
+                const list = ItemList({ left: 0, top: 0, width: 300, height: 300, layout: "grid", styleName: styleName, items: ITEMS, selectedKeys: ["b"] });
+                const pictures = [...list.elem.querySelectorAll("img")];
+                const tops = pictures.map(function (img) { return Math.round(img.getBoundingClientRect().top); });
+                const look = {
+                    fit: pictures.map(function (img) { return getComputedStyle(img).objectFit; }).join(),
+                    filter: pictures.map(function (img) { return getComputedStyle(img).filter; }).join(),
+                    grows: pictures.some(function (img) { return ["none", "matrix(1, 0, 0, 1, 0, 0)"].indexOf(getComputedStyle(img).transform) === -1; }),
+                    oneRow: pictures.length === 2 && tops[0] === tops[1],
+                };
+                list.remove();
+                return look;
+            };
+            const light = lookOf("gallery");
+            const dark = lookOf("galleryDark");
+            const ozden = lookOf("ozden");
+            check("ItemList gallery: a photo fills its square with no filter, the selected one does not grow, two tiles in a row on a phone",
+                light.fit === "cover,cover" && light.filter === "none,none" && !light.grows && light.oneRow &&
+                dark.fit === "cover,cover" && dark.filter === "none,none" && !dark.grows && dark.oneRow &&
+                ozden.fit !== "cover,cover" && ozden.filter !== "none,none" && ozden.grows,
+                JSON.stringify({ light: light, dark: dark, ozden: ozden }));
+        });
+
         // *** GRID GROUP (comp/grid-group.js)
 
         test("GridGroup: a number makes equal columns; the objects go left to right, then under; they are in its flow", async function () {
