@@ -939,6 +939,24 @@
             [list, select, danger].forEach(function (object) { object.remove(); });
         });
 
+        test("InputB minimal: a warning colors the edge of the field; a package wins over the defaults of TextareaB; ink colors the edge", async function () {
+            const field = EmailInputB({ styleName: "minimal", titleText: "E-mail", inputValue: "bugra@" });
+            const plain = EmailInputB({ titleText: "E-mail", inputValue: "bugra@" });
+            const note = TextareaB({ styleName: "minimal", titleText: "Note" });
+            const send = SmartButton({ styleName: "minimal", tone: "ink", labelText: "Send" });
+            await basic.nextFrame();
+            const plainEdgeBefore = plain.background.elem.style.borderColor;
+            field.checkInputValue();
+            plain.checkInputValue();
+            await basic.nextFrame();
+            const fieldEdge = field.background.elem.style.borderColor;
+            check("InputB minimal: an invalid value colors the edge (warningBorderColor)", field.status == 2 && fieldEdge === "rgb(201, 80, 60)", field.status + " / " + fieldEdge);
+            check("InputB: without warningBorderColor the edge stays", plain.status == 2 && plain.background.elem.style.borderColor === plainEdgeBefore, plainEdgeBefore + " -> " + plain.background.elem.style.borderColor);
+            check("TextareaB minimal: the count takes the unitStyle of the package (not the dark pill of TextareaB)", note.unit && note.unit.elem.style.backgroundColor === "transparent", note.unit && note.unit.elem.style.backgroundColor);
+            check("SmartButton ink: the edge is the color of the button", send.style.box.borderColor === send.style.box.color && send.style.hover.borderColor === send.style.hover.color, send.style.box.borderColor + " / " + send.style.hover.borderColor);
+            [field, plain, note, send].forEach(function (object) { object.remove(); });
+        });
+
         // *** TOGGLE (comp/toggle.js)
 
         test("Toggle: the keyboard and screen readers can use it", async function () {

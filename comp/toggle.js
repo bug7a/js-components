@@ -26,6 +26,7 @@ UI COMPONENT TEMPLATE
   in behind the knob, a mark in the knob turns in with a small spring, the mark grows a little under the mouse, the knob
   gets flatter while pressed. A toggle without marks does not change. Off with prefers-reduced-motion. setAnimated().
 - offButtonScale: the size of the knob when off (1: the same size as on).
+- focusRingColor: the ring of the keyboard focus ("": the ring of basic.js). The ring follows the round of the track.
 - backgroundStyle.selectedBorderColor: the line of the track when on ("": the same as borderColor). A page that gives
   its own borderColor and no selectedBorderColor keeps that line when on too (the line of "modern" when on is for
   its own colors).
@@ -66,6 +67,7 @@ const ToggleDefaults = {
     offMark: "", // Shows when off
     markPlace: "track", // "track": on the free side of the track, "knob": in the knob (Only at create time)
     animated: 1, // 1: small motions of a toggle with marks. (box.setAnimated(0/1))
+    focusRingColor: "", // the ring of the keyboard focus. "": the ring of basic.js
     markStyle: {
         size: 16, // px: a check or a cross
         lineWidth: 3.5, // of a check or a cross, on a 24 px grid
@@ -381,7 +383,8 @@ const Toggle = function(params = {}) {
     // *** OBJECT VIEW:
     box.cursor = "pointer";
     box.role = "switch";
-    box.setFocusRing();
+    box.setFocusRing(box.focusRingColor || undefined);
+    box.round = box.backgroundStyle.round; // WHY: the ring of the focus follows the shape of the track
     if(box.invertColor === 1) box.css.filter = "invert(100%)";
 
         // BOX: background
@@ -688,10 +691,11 @@ Toggle.createMinimalStyle = function (colors) {
         height: 16,
         spacing: 3, // WHY: a 10 px knob (16 - 2 x 3)
         offButtonScale: 1,
+        focusRingColor: colors.focus,
         backgroundStyle: { color: "transparent", selectedColor: "transparent", border: 1, borderColor: colors.line, selectedBorderColor: colors.ink, round: 100 },
         buttonStyle: { color: colors.lineHover, selectedColor: colors.ink, border: 0, round: 100, shadow: "none", selectedShadow: "none" },
         markStyle: { color: colors.lineHover, selectedColor: colors.ink },
     };
 };
-Toggle.styles.minimal = Toggle.createMinimalStyle({ line: Black(0.2), lineHover: Black(0.45), ink: "#1F1F1F" });
-Toggle.styles.minimalDark = Toggle.createMinimalStyle({ line: White(0.18), lineHover: White(0.42), ink: "#EDEDEB" });
+Toggle.styles.minimal = Toggle.createMinimalStyle({ line: Black(0.2), lineHover: Black(0.45), ink: "#1F1F1F", focus: "#3D8BD9" });
+Toggle.styles.minimalDark = Toggle.createMinimalStyle({ line: White(0.18), lineHover: White(0.42), ink: "#EDEDEB", focus: "#7FB6DE" });

@@ -60,6 +60,10 @@ WebSite: https://bug7a.github.io/js-components
 - The sizes: titleFontSize, inputFontSize, inputHeight, fieldPadding, descriptionFontSize (the defaults: 16, 20, 40, 14, 14).
 - titlePosition: "inside" (default: the title in the field) | "above" (the title over the field, titleGap under it).
 - hoverBackBorderColor: the edge under the mouse ("": no change).
+- warningBorderColor: the edge while a warning shows, not while typing ("": no change). warningBallSize, warningBallBorder:
+  the colored ball (16, 2; minimal: an 8 px dot).
+- The children (EmailInputB, PhoneInputB, URLInputB, PasswordInputB, TextareaB) apply the style package before their own
+  defaults: a key the package sets (warningColor, unitStyle, rightPadding) wins over them.
 -- The look of InputB is in flat params (backgroundColor, lineColor, titleTextColor...), not in one
    "style" object. So its packages are packages of params (basic.js v26.10.27: a package with a
    "style" key): any param can be in it, also an image (requiredIcon, warningIcon).
@@ -126,6 +130,9 @@ const InputBDefaults = {
     animatedWarningBall: 1,
 
     warningBallType: "color", // "color": colored ball, "icon": icon image
+    warningBallSize: 16, // px: the colored ball (warningBallType "color")
+    warningBallBorder: 2, // px: the edge of the colored ball (warningBallBorderColor)
+    warningBorderColor: "", // the edge of the field while it shows a warning (not while typing). "": no change
     warningIconSize: 20,
     requiredIcon: "", // image path or data URI. "": built-in icon
     warningIcon: "", // image path or data URI. "": built-in icon
@@ -196,7 +203,6 @@ const InputB = function(params = {}) {
     }
 
     // *** PRIVATE VARIABLES:
-    const WARNING_BALL_SIZE = 16; // The size of the colored ball (warningBallType: "color")
     const SHOWN_BALL_SCALE = "scale(1)";
     const HIDDEN_BALL_SCALE = "scale(0.3)"; // WHY: The ball grows from small when it is shown.
     const WARNING_BALL_MOTION = "opacity 0.2s, transform 0.2s";
@@ -286,11 +292,13 @@ const InputB = function(params = {}) {
         }
         box.status = 2;
         showWarningBallOf("warning", box.warningText, box.warningColor);
+        if (box.warningBorderColor) paintBackBorder();
     };
 
     const hideWarning = function() {
         hideWarningBall();
         box.status = 0;
+        if (box.warningBorderColor) paintBackBorder();
     };
 
     // *** PUBLIC FUNCTIONS:
@@ -396,11 +404,16 @@ const InputB = function(params = {}) {
         object.height = isAutoHeight ? box.inputHeight : "calc(100% - " + fieldTop + "px)";
     };
 
-    // The edge: selected, under the mouse (hoverBackBorderColor), or its own
+    // The edge: selected, with a warning (warningBorderColor), under the mouse (hoverBackBorderColor), or its own
     const getBackBorderColor = function() {
         if (isFieldFocused) return box.selectedBackBorderColor;
+        if (box.status == 2 && box.warningBorderColor) return box.warningBorderColor;
         if (isFieldHover && box.hoverBackBorderColor) return box.hoverBackBorderColor;
         return box.backBorderColor;
+    };
+
+    const paintBackBorder = function() {
+        if (box.background) box.background.borderColor = getBackBorderColor();
     };
 
     // The colors of the field while it is focused (1) or not (0): background, border and line.
@@ -408,7 +421,7 @@ const InputB = function(params = {}) {
     box.paintFocus = function(isFocused) {
         isFieldFocused = isFocused ? 1 : 0;
         box.background.color = getBackgroundColor();
-        box.background.borderColor = getBackBorderColor();
+        paintBackBorder();
         box.line.color = (isFocused) ? box.selectedLineColor : box.lineColor;
     };
 
@@ -604,13 +617,15 @@ const InputB = function(params = {}) {
 
         // BOX: Warning Ball:
         const isIconBall = (box.warningBallType == "icon");
-        const ballSize = isIconBall ? box.warningIconSize : WARNING_BALL_SIZE;
+        const ballSize = isIconBall ? box.warningIconSize : box.warningBallSize;
+        // WHY in the middle of the right padding over a field under its title: the ball belongs to the row of the text
+        const ballRight = isTitleAbove ? Math.round((box.rightPadding - ballSize) / 2) : 5;
         box.warningBall = Box({
-            right: 5,
+            right: ballRight,
             top: isTitleAbove ? fieldTop + Math.round((box.inputHeight - ballSize) / 2) : 5,
             width: ballSize,
             height: ballSize,
-            border: isIconBall ? 0 : 2,
+            border: isIconBall ? 0 : box.warningBallBorder,
             color: isIconBall ? "transparent" : box.requiredColor,
             borderColor: box.warningBallBorderColor,
             round: 100,
@@ -680,7 +695,8 @@ const InputB = function(params = {}) {
     box.onHoverChange(function(self, isHover) {
         isFieldHover = isHover ? 1 : 0;
         box.background.color = getBackgroundColor();
-        box.background.borderColor = getBackBorderColor();
+        // WHY only with hoverBackBorderColor: a page that colors the edge itself (background.borderColor) keeps it
+        if (box.hoverBackBorderColor) paintBackBorder();
     });
 
     return endObject(box);
@@ -828,7 +844,7 @@ InputB.createMinimalStyle = function (colors) {
     return {
         style: {},
         leftPadding: 10,
-        rightPadding: 30, // WHY: the room of the warning ball
+        rightPadding: 26, // WHY: the room of the warning dot
         titleFontSize: 12,
         inputFontSize: 13,
         inputHeight: 28,
@@ -852,22 +868,27 @@ InputB.createMinimalStyle = function (colors) {
         inputColorScheme: colors.colorScheme,
         placeholderColor: colors.faintText,
         descriptionTextColor: colors.softText,
-        requiredColor: "transparent",
-        warningBallBorderColor: colors.softText,
-        warningColor: colors.danger,
+        requiredColor: colors.faintText, // a small gray dot: the field is required
+        warningBallBorderColor: "transparent",
+        warningColor: colors.danger, // a small dot in the danger color, and the edge of the field in it
+        warningBorderColor: colors.danger,
         warningBallType: "color",
+        warningBallSize: 8,
+        warningBallBorder: 0,
         requiredIconColor: colors.softText,
         tooltipStyle: { color: colors.ground, hintColor: colors.ground, textColor: colors.text, border: 1, borderColor: colors.line, round: 4, fontSize: 12 },
         selectStyle: { color: "transparent", invertIconColor: colors.invertIcons, listBackgroundColor: colors.ground, listTextColor: colors.text, listOverTextColor: colors.ink, listBorderColor: colors.line },
         showPasswordIconInvert: colors.invertIcons,
         unitStyle: { padding: [6, 1], color: "transparent", textColor: colors.softText, round: 4, fontSize: 11 },
+        // TextareaB: a thin scroll bar in the color of the text, with no dots
+        scrollBarStyle: { bar_color: colors.scrollBar, bar_mouseOverColor: colors.scrollBar, bar_width: 3, bar_mouseOverWidth: 4, bar_opacity: 0.45, bar_mouseOverOpacity: 0.9, bar_padding: 2, showDots: 0 },
     };
 };
 InputB.styles.minimal = InputB.createMinimalStyle({
     ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), faintText: Black(0.35), line: Black(0.2),
-    lineHover: Black(0.45), ink: "#1F1F1F", danger: "#C9503C", colorScheme: "", invertIcons: 0,
+    lineHover: Black(0.45), ink: "#1F1F1F", danger: "#C9503C", colorScheme: "", invertIcons: 0, scrollBar: "#373836",
 });
 InputB.styles.minimalDark = InputB.createMinimalStyle({
     ground: "#1A1A19", text: White(0.88), softText: White(0.55), faintText: White(0.35), line: White(0.18),
-    lineHover: White(0.42), ink: "#EDEDEB", danger: "#FF9F93", colorScheme: "dark", invertIcons: 1,
+    lineHover: White(0.42), ink: "#EDEDEB", danger: "#FF9F93", colorScheme: "dark", invertIcons: 1, scrollBar: "#CFCFCD",
 });

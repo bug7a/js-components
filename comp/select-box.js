@@ -17,6 +17,9 @@ UI COMPONENT TEMPLATE
 - Options can have a description, an icon, a group title and can be disabled.
 - style.optionSelected.canSelectAgain: 0 (ozden, ozdenDark): the selected row (single) can not be chosen again:
   no look under the mouse or the keys, the keys skip it, a click on it does nothing.
+- An edge around the rows (style.option.border, borderColor; optionActive.borderColor, optionSelected.borderColor) and
+  space between them (style.option.space): the minimal packages frame the row under the mouse and the selected one.
+  optionSelected.tickSize: the tick of the selected row (16).
 - Clear button in the field (clearable: 1).
 - Keyboard: Enter / Space / ArrowDown opens. ArrowUp / ArrowDown / Home / End move, Enter selects,
   Escape closes, Tab closes. Typing on the closed field opens the search with the typed letter.
@@ -211,10 +214,14 @@ const SelectBoxDefaults = {
             iconSize: 22,
             iconRound: 0,
             iconMargin: [0, 0], // [left, top and bottom]
+            border: 0, // px: an edge around every row (its color: borderColor, optionActive / optionSelected.borderColor)
+            borderColor: "transparent",
+            space: 0, // px between two rows (Ex: 2: the edges of two rows do not meet)
         },
         optionActive: {
             color: Black(0.06),
             lineColor: "", // A line above and under the active row (1 px, inside it: no row moves). "": none
+            borderColor: "", // The edge of the active row (option.border). "": the edge of the row
             showAtOpen: 1, // 0: no row is marked when the list opens (only under the mouse / the keyboard)
         },
         optionSelected: {
@@ -223,6 +230,8 @@ const SelectBoxDefaults = {
             checkTickColor: White(1),
             fontFamily: "opensans-bold", // Single selection. "": the font does not change
             showTick: 1, // Single selection: a tick on the right
+            tickSize: 16, // px of the tick
+            borderColor: "", // The edge of the selected row (option.border). "": the edge of the row
             opacity: 1,
             canSelectAgain: 1, // 0 (single): the selected row can not be chosen again: no look under the mouse or the keys, the keys skip it, a click on it does nothing
         },
@@ -319,7 +328,7 @@ const SelectBox = function (params = {}) {
     const SCREEN_MARGIN = 8 * scale; // px: the panel stays this far from the edges of the page
     const MIN_LIST_HEIGHT = 80 * scale; // px: the list is not made shorter than this when the space is small
     const CHECK_SIZE = 18 * scale; // The check box of a row (multiple)
-    const TICK_SIZE = 16 * scale; // The tick of the selected row (single)
+    const TICK_SIZE = _s.optionSelected.tickSize; // The tick of the selected row (single; the style is scaled already)
     const CLEAR_BUTTON_SIZE = 20 * scale; // The clear button of the field
     const CLEAR_ICON_SIZE = 14 * scale;
     const BUTTON_ROUND = 4 * scale; // The clear button and the footer buttons
@@ -425,10 +434,10 @@ const SelectBox = function (params = {}) {
     };
 
     // Creates the objects of a container again, in one group (container.wrapper).
-    const renderInto = function (container, buildContent) {
+    const renderInto = function (container, buildContent, gap = 0) {
         if (container.wrapper) container.wrapper.remove();
         createIn(container, function () {
-            container.wrapper = VGroup({ width: "100%", height: "auto", align: "left top", gap: 0, position: "relative" });
+            container.wrapper = VGroup({ width: "100%", height: "auto", align: "left top", gap: gap, position: "relative" });
             container.wrapper.css.alignItems = "stretch";
                 buildContent();
             endGroup();
@@ -573,7 +582,7 @@ const SelectBox = function (params = {}) {
                 Label({ text: moreText, width: "100%", textAlign: "center", padding: MORE_MESSAGE_PADDING, ..._s.empty });
             }
 
-        });
+        }, _s.option.space);
 
         setActive(getStartActiveIndex(), 0);
 
@@ -722,9 +731,17 @@ const SelectBox = function (params = {}) {
         return getFilteredOptions();
     };
 
+    // The edge of an own row (option.border): selected, active, or its own
+    const getOptionBorderColor = function (row, isActive) {
+        if (row.isSelectedOption && _s.optionSelected.borderColor) return _s.optionSelected.borderColor;
+        if (isActive && _s.optionActive.borderColor) return _s.optionActive.borderColor;
+        return _s.option.borderColor;
+    };
+
     // The look of an own row (not of an ItemList), active (under the mouse or the arrow keys) or not: style.optionActive.
     const paintOptionRow = function (row, isActive) {
         row.color = isActive ? _s.optionActive.color : "transparent";
+        if (_s.option.border) row.borderColor = getOptionBorderColor(row, isActive);
         const lineColor = _s.optionActive.lineColor;
         // WHY: Only with lines: a package without them never touches the shadow of a row.
         if (lineColor) row.boxShadow = isActive ? "inset 0 1px 0 " + lineColor + ", inset 0 -1px 0 " + lineColor : "";
@@ -774,6 +791,8 @@ const SelectBox = function (params = {}) {
             clickable: 1,
         });
         if (_s.option.minHeight) row.css.minHeight = _s.option.minHeight + "px";
+        row.isSelectedOption = selected;
+        if (_s.option.border) row.props({ border: _s.option.border, borderColor: getOptionBorderColor(row, 0) });
         if (selected && _s.optionSelected.opacity != 1) row.opacity = _s.optionSelected.opacity;
         row.elem.id = id + "-option-" + index;
         row.role = "option";
@@ -1827,9 +1846,9 @@ SelectBox.createMinimalStyle = function (colors) {
             panel: { color: colors.ground, border: 1, borderColor: colors.line, round: 4, padding: 4, shadow: "none", gap: 4 },
             searchInput: { styleName: colors.searchStyleName, height: 28, fontSize: 13, searchIconSize: 14, searchIconLeft: 10, searchIconGap: 6, round: 14 },
             search: { color: "transparent", border: 1, borderColor: colors.line, round: 4, fontSize: 13, textColor: colors.text, height: 28, padding: [10, 0], iconSize: 14 },
-            option: { fontSize: 13, textColor: colors.text, round: 3, padding: [9, 5], gap: 8, iconSize: 14 },
-            optionActive: { color: "transparent", lineColor: colors.lineHover },
-            optionSelected: { textColor: colors.ink, checkColor: colors.ink, checkTickColor: colors.ground, fontFamily: "", showTick: 1 },
+            option: { fontSize: 13, textColor: colors.text, round: 3, padding: [8, 4], gap: 8, iconSize: 14, border: 1, borderColor: "transparent", space: 2 },
+            optionActive: { color: "transparent", lineColor: "", borderColor: colors.lineHover },
+            optionSelected: { textColor: colors.ink, checkColor: colors.ink, checkTickColor: colors.ground, fontFamily: "", showTick: 1, tickSize: 12, borderColor: colors.ink },
             description: { fontSize: 12, textColor: colors.softText },
             group: { fontSize: 11, textColor: colors.faintText },
             empty: { fontSize: 12, textColor: colors.softText },

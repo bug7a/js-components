@@ -1715,12 +1715,13 @@ ItemList.styles = {
 
 // The minimal theme (_designs/minimal-theme.htm): no fill (the window shows through: its states are lines, so it
 // reads on any ground), a line around the list; 28 px rows with a 13 px title and a 14 px icon; a line around the
-// row under the mouse, an ink line, an ink title and a tick on the selected one. A row with a description needs more
-// room: style: { row: { height: 44 } }. minimalDark: the same on a dark window.
+// row under the mouse, an ink line, an ink title and a tick on the selected one; 2 px between the rows, so the lines
+// of two rows never meet. The search box is the head of the list, a line under it. A row with a description needs
+// more room: style: { row: { height: 44 } }. minimalDark: the same on a dark window.
 ItemList.createMinimalStyle = function (colors) {
     return {
         box: { color: "transparent", border: 1, borderColor: colors.line, round: 4, padding: 4 },
-        list: { gap: 0 },
+        list: { gap: 2 },
         row: { height: 28, padding: [8, 0], gap: 8, color: "transparent", border: 1, borderColor: "transparent", round: 3, lineColor: "" },
         section: { padding: [8, 6], fontSize: 11, fontFamily: "opensans-bold", textColor: colors.faintText },
         hover: { color: "transparent", lineColor: "", borderColor: colors.lineHover },
@@ -1732,8 +1733,8 @@ ItemList.createMinimalStyle = function (colors) {
         desc: { fontSize: 12, textColor: colors.softText, marginTop: 0 },
         check: { visible: 1, size: 14, color: "transparent", iconColor: colors.ink, borderColor: "transparent" },
         empty: { fontSize: 12, textColor: colors.softText },
-        search: { styleName: colors.searchStyleName, height: 28, padding: [0, 0, 0, 4], color: "transparent", border: 1, round: 14 },
-        scrollBar: { bar_color: colors.scrollBar, bar_mouseOverColor: colors.scrollBar, bar_width: 3, bar_mouseOverWidth: 4 },
+        search: { styleName: colors.searchStyleName, height: 30, padding: [0, 0, 0, 0], color: "transparent", border: 0, round: 0, borderBottomStyle: "1px solid " + colors.line, searchIconLeft: 13 },
+        scrollBar: { bar_color: colors.scrollBar, bar_mouseOverColor: colors.scrollBar, bar_width: 3, bar_mouseOverWidth: 4, showDots: 0 },
     };
 };
 ItemList.styles.minimal = ItemList.createMinimalStyle({

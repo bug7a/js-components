@@ -12,6 +12,8 @@ UI COMPONENT TEMPLATE
   keyboard (Space/Enter to select, Arrow keys to move in the group).
 - Whole object background can change on hover and checked states (style.hoverBox, style.checkedBox).
 - The empty circle under the mouse: style.hoverMark (its borderColor, and its color when given; v26.11).
+- style.focus.ringColor: the keyboard focus shows on the mark (its edge in this color, 2 px). "": none (the old
+  packages); "minimal" / "minimalDark" have it.
 - Style packages: "classic" (default), "modern", "dark", "minimal", "minimalDark". Select with styleName. (RadioButton.styles)
   NEW PROJECTS: use "classic" on a light page and "dark" on a dark page, unless the user
   asks for another one ("modern" only when asked).
@@ -85,6 +87,9 @@ const RadioButtonDefaults = {
         disabled: {
             opacity: 0.4,
         },
+        focus: { // The keyboard focus: the edge of the mark in this color, 2 px. "": no ring
+            ringColor: "",
+        },
     }
 };
 
@@ -112,6 +117,18 @@ const RadioButton = function (params = {}) {
     // NOTE: Default values are also public variables. (box.checked, box.value, box.group)
 
     // *** PRIVATE FUNCTIONS:
+
+    // The keyboard focus (style.focus.ringColor) on the mark: its edge in that color and 1 px more inside it.
+    // WHY on the mark, inside it: a ring around the whole object hid its text, and an outer ring was cut by the groups.
+    // WHY a CSS rule: only :focus-visible knows a focus of the keyboard (not of a click).
+    const showFocusOnMark = function () {
+        const ringColor = box.style.focus.ringColor;
+        if (!ringColor) return;
+        RadioButton.addFocusCss();
+        box.elem.classList.add("radio-button-focus");
+        box.mark.elem.classList.add("radio-button-mark");
+        box.elem.style.setProperty("--radio-button-focus", ringColor);
+    };
 
     const getGroupList = function () {
         return RadioButton.getGroup(box.group);
@@ -277,6 +294,7 @@ const RadioButton = function (params = {}) {
     });
     box.mark.setMotion("background-color " + MOTION_DURATION + ", border-color " + MOTION_DURATION);
     box.mark.css.boxSizing = "border-box";
+    showFocusOnMark();
 
     // BOX: dot (inner circle)
     const innerWidth = box.style.mark.width - (box.style.mark.border * 2);
@@ -483,7 +501,14 @@ RadioButton.createMinimalStyle = function (colors) {
         dot: { color: colors.ink, size: 0.5, round: 100 },
         label: { fontSize: 13, textColor: colors.text },
         disabled: { opacity: 0.4 },
+        focus: { ringColor: colors.focus },
     };
 };
-RadioButton.styles.minimal = RadioButton.createMinimalStyle({ line: Black(0.2), lineHover: Black(0.45), ink: "#1F1F1F", text: Black(0.85) });
-RadioButton.styles.minimalDark = RadioButton.createMinimalStyle({ line: White(0.18), lineHover: White(0.42), ink: "#EDEDEB", text: White(0.88) });
+RadioButton.styles.minimal = RadioButton.createMinimalStyle({ line: Black(0.2), lineHover: Black(0.45), ink: "#1F1F1F", text: Black(0.85), focus: "#3D8BD9" });
+RadioButton.styles.minimalDark = RadioButton.createMinimalStyle({ line: White(0.18), lineHover: White(0.42), ink: "#EDEDEB", text: White(0.88), focus: "#7FB6DE" });
+
+// The rule of the keyboard focus (style.focus.ringColor). WHY !important: the edge of the mark is an inline style.
+RadioButton.addFocusCss = function () {
+    basic.addCss("radio-button-focus", ".radio-button-focus:focus { outline: none; }" +
+        ".radio-button-focus:focus-visible .radio-button-mark { border-color: var(--radio-button-focus) !important; box-shadow: inset 0 0 0 1px var(--radio-button-focus); }");
+};

@@ -16,6 +16,8 @@ UI COMPONENT TEMPLATE
   (1.05) and the tick draws in from 0.6 with a fade, in 0.25 s with a soft stop. Nothing moves at the first view; off
   when the system asks for reduced motion. animated: 0 (default) keeps the short tick motion it always had.
   setAnimated(0/1).
+- style.focus.ringColor: the keyboard focus shows on the mark (its edge in this color, 2 px). "": none (the old
+  packages); "minimal" / "minimalDark" have it.
 - Style packages: "classic" (default), "modern", "dark", "minimal", "minimalDark". Select with styleName. (CheckBox.styles)
   NEW PROJECTS: use "classic" on a light page and "dark" on a dark page, unless the user
   asks for another one ("modern" only when asked).
@@ -89,6 +91,9 @@ const CheckBoxDefaults = {
         disabled: {
             opacity: 0.4,
         },
+        focus: { // The keyboard focus: the edge of the mark in this color, 2 px. "": no ring
+            ringColor: "",
+        },
     }
 };
 
@@ -126,6 +131,18 @@ const CheckBox = function (params = {}) {
     // NOTE: Default values are also public variables. (box.checked, box.enabled, box.labelText)
 
     // *** PRIVATE FUNCTIONS:
+
+    // The keyboard focus (style.focus.ringColor) on the mark: its edge in that color and 1 px more inside it.
+    // WHY on the mark, inside it: a ring around the whole object hid its text, and an outer ring was cut by the groups.
+    // WHY a CSS rule: only :focus-visible knows a focus of the keyboard (not of a click).
+    const showFocusOnMark = function () {
+        const ringColor = box.style.focus.ringColor;
+        if (!ringColor) return;
+        CheckBox.addFocusCss();
+        box.elem.classList.add("check-box-focus");
+        box.mark.elem.classList.add("check-box-mark");
+        box.elem.style.setProperty("--check-box-focus", ringColor);
+    };
 
     // The whole object background. A null color uses the color of the state below it.
     const getBoxColor = function (isHover) {
@@ -294,6 +311,7 @@ const CheckBox = function (params = {}) {
     });
     box.mark.setMotion("background-color " + MOTION_DURATION + ", border-color " + MOTION_DURATION);
     box.mark.css.boxSizing = "border-box";
+    showFocusOnMark();
     box.mark.shrink = 0; // (a wrapping label must not squeeze the mark)
 
     // BOX: tick (drawn with right and bottom borders, rotated 45deg)
@@ -446,7 +464,14 @@ CheckBox.createMinimalStyle = function (colors) {
         tick: { color: colors.ink, thickness: 1.5 },
         label: { fontSize: 13, textColor: colors.text },
         disabled: { opacity: 0.4 },
+        focus: { ringColor: colors.focus },
     };
 };
-CheckBox.styles.minimal = CheckBox.createMinimalStyle({ line: Black(0.2), lineHover: Black(0.45), ink: "#1F1F1F", text: Black(0.85) });
-CheckBox.styles.minimalDark = CheckBox.createMinimalStyle({ line: White(0.18), lineHover: White(0.42), ink: "#EDEDEB", text: White(0.88) });
+CheckBox.styles.minimal = CheckBox.createMinimalStyle({ line: Black(0.2), lineHover: Black(0.45), ink: "#1F1F1F", text: Black(0.85), focus: "#3D8BD9" });
+CheckBox.styles.minimalDark = CheckBox.createMinimalStyle({ line: White(0.18), lineHover: White(0.42), ink: "#EDEDEB", text: White(0.88), focus: "#7FB6DE" });
+
+// The rule of the keyboard focus (style.focus.ringColor). WHY !important: the edge of the mark is an inline style.
+CheckBox.addFocusCss = function () {
+    basic.addCss("check-box-focus", ".check-box-focus:focus { outline: none; }" +
+        ".check-box-focus:focus-visible .check-box-mark { border-color: var(--check-box-focus) !important; box-shadow: inset 0 0 0 1px var(--check-box-focus); }");
+};

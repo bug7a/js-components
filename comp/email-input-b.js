@@ -33,6 +33,9 @@ const EmailInputBDefaults = {
 const EmailInputB = function(params = {}) {
 
     // Merge params first
+    // WHY the style package of InputB first: a key it sets (warningColor) wins over the defaults here, as over the
+    //     defaults of InputB
+    basic.applyStylePackage(params, InputB.styles, InputBDefaults);
     mergeIntoIfMissing(params, EmailInputBDefaults);
 
     // BOX: Component container

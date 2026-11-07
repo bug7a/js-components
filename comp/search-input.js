@@ -12,7 +12,7 @@ UI COMPONENT TEMPLATE
 -- "classic", "ozden" and "ozdenDark" are 44 px high ("original" and the defaults: 50). A
    height given by the page wins over it.
 - focusBorderColor: the edge while typing, 2 px of this color ("": the edge does not change). It is a
-  color, not a motion: also with animated: 0. "classic" has it.
+  color, not a motion: also with animated: 0. "classic" has it. focusBorderWidth: 1 only the edge (minimal).
 - The vertical place: textOffsetY / clearIconOffsetY move the text and the clear icon from the
   middle of the box. ozden / ozdenDark: -2 / -1: center() does not count their 3 px bottom line, and the small letters
   of Open Sans sit low in their line (measured: the text was about 3 px low, the clear icon 1 px; the search icon is
@@ -72,6 +72,7 @@ const SearchInputDefaults = {
     borderColor: "rgba(0, 0, 0, 0.1)",
     borderBottomStyle: "2px solid rgba(0, 0, 0, 0.06)",
     focusBorderColor: "", // the edge while typing: 2 px of this color ("": it does not change)
+    focusBorderWidth: 2, // px of the edge while typing: 2 the edge and a 1 px line inside it, 1 only the edge
     round: 6,
     fontSize: 20,
     textOffsetY: 0, // px: the text up (-) or down (+) from the middle of the box (the ozden packages: -2)
@@ -331,7 +332,8 @@ const SearchInput = function(params = {}) {
             box.css.borderBottom = box.borderBottomStyle;
         }
         if (isMotionOn()) return;
-        box.boxShadow = isFocused ? "inset 0 0 0 1px " + box.focusBorderColor : "";
+        const innerLine = box.focusBorderWidth - 1; // (the edge is 1 px of it)
+        box.boxShadow = (isFocused && innerLine > 0) ? "inset 0 0 0 " + innerLine + "px " + box.focusBorderColor : "";
     };
 
     // The clear icon is shown while there is a text (and the box has room for it)
@@ -620,7 +622,7 @@ SearchInput.createMinimalStyle = function (colors) {
         style: {},
         height: 28,
         searchIconFile: lineIcon('<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>'),
-        clearIconFile: lineIcon('<path d="M7 7l10 10M17 7 7 17"/>'),
+        clearIconFile: lineIcon('<path d="M9 9l6 6M15 9l-6 6"/>'), // WHY small: the icon box is 20 px, the cross as big as the search icon
         searchIconSize: 14,
         searchIconLeft: 10,
         searchIconGap: 6,
@@ -638,6 +640,7 @@ SearchInput.createMinimalStyle = function (colors) {
         borderColor: colors.line,
         borderBottomStyle: "1px solid " + colors.line,
         focusBorderColor: colors.ink,
+        focusBorderWidth: 1, // as the other minimal fields
         round: 14,
         animated: 0,
     };

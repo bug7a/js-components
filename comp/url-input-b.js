@@ -49,6 +49,10 @@ const URLInputB = function(params = {}) {
 
     params.createInput = 0; // WHY: The input is made here, after the TinySelect of the protocol.
 
+    // WHY the style package of InputB first: a key it sets (warningColor, rightPadding) wins over the defaults here, as
+    //     over the defaults of InputB
+    basic.applyStylePackage(params, InputB.styles, InputBDefaults);
+
     // BOX: Component container
     const box = startExtendedObject(InputB, URLInputBDefaults, params);
 

@@ -679,9 +679,10 @@ const Tabs = function (params = {}) {
             paintTab(item);
         });
         group.on("keydown", function (self, event) { onTabKeyDown(item, event); });
-        group.on("focus", function () { group.boxShadow = focusRing; });
+        // WHY :focus-visible: the ring is for the keyboard. A click focuses the tab after its mousedown, so clearing the
+        //     ring at mousedown did not stop it (a click on a tab showed the ring).
+        group.on("focus", function () { group.boxShadow = group.elem.matches(":focus-visible") ? focusRing : "none"; });
         group.on("blur", function () { group.boxShadow = "none"; });
-        group.on("mousedown", function () { group.boxShadow = "none"; }); // WHY: No focus ring for mouse clicks.
 
         // Middle mouse button closes a closable tab (like a browser).
         group.on("auxclick", function (self, event) {
