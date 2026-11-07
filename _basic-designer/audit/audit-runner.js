@@ -772,6 +772,33 @@
             }, function () { return same(valueAt(paddingPath), [3, 4, 5, 6]); }, /\[3,4,5,6\]/, function () { return same(valueAt(paddingPath), firstPadding); });
         }
 
+        // The search of the rows, only the changed ones, the dot that goes back to the default
+        const isLeaf = function (row) { return !row.isGroup; };
+        BD.state.paramFilter = "color";
+        const colorRows = BD.paramRowsOf(now()).filter(isLeaf);
+        expect("the search of the rows", same(colorRows.length > 0 && colorRows.every(function (row) { return /color/i.test(row.pathText); }), true));
+        BD.state.paramFilter = "nothing has this name";
+        expect("a search with no row", same(BD.paramRowsOf(now()).length, 0));
+        BD.state.paramFilter = "";
+        BD.state.paramOnlyChanged = true;
+        const changedRows = BD.paramRowsOf(now()).filter(isLeaf);
+        expect("only the changed rows", same(changedRows.every(function (row) { return row.isGiven; }), true));
+        BD.state.paramOnlyChanged = false;
+        const resetRow = BD.paramRowsOf(now()).find(function (row) { return row.pathText === colorPath.join("."); });
+        const defaultColor = resetRow.def;
+        BD.applyParamValue(now(), colorPath, "#654321");
+        await sleep(100);
+        BD.resetParamToDefault({ row: BD.paramRowsOf(now()).find(function (row) { return row.pathText === colorPath.join("."); }) });
+        await sleep(100);
+        expect("the dot gives the default", same(valueAt(colorPath), defaultColor));
+        const removed = { a: 1, b: 2 };
+        BD.setAt(removed, ["a"], undefined);
+        expect("a key with no default goes", same(removed, { b: 2 }));
+        BD.undo();
+        await sleep(200);
+        BD.undo();
+        await sleep(200);
+
         const flagPath = stylePath("flag");
         if (flagPath) {
             const firstFlag = valueAt(flagPath);

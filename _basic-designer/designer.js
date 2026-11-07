@@ -119,6 +119,8 @@ BasicDesigner.state = {
     inspect: "params", // A component: "params" (its parameters) or "box" (the properties of its root box)
     paramOriginal: new Map(), // id -> the params of a component before its first change (Revert all)
     paramCollapsed: new Set(), // "id:path" of the closed objects in the parameters
+    paramFilter: "", // PARAMETERS: the text of the search
+    paramOnlyChanged: false, // PARAMETERS: only the values that are not the default
     notes: new Map(), // id -> text
     names: new Map(), // id -> a name given in the designer (a new name of an object of the code, or of an added one)
     pageChanges: new Map(), // the changes of the page object (page.color...): key -> { from, to }
@@ -485,6 +487,7 @@ BasicDesigner.load = async function (pagePath) {
     s.paramOriginal.clear();
     BasicDesigner.closeParamEditors();
     if (BasicDesigner.ui.tableWindow) BasicDesigner.ui.tableWindow.closeWindow();
+    BasicDesigner.clearParamFilter();
     BasicDesigner.paramNotes = {};
     BasicDesigner.paramsObject = null;
     s.expanded.clear();
@@ -2326,10 +2329,12 @@ BasicDesigner.getAt = function (object, path) {
     return o;
 };
 
+// undefined: the key goes (a key the page added has no default to go back to).
 BasicDesigner.setAt = function (object, path, value) {
     let o = object;
     for (let i = 0; i < path.length - 1; i++) o = o[path[i]];
-    o[path[path.length - 1]] = value;
+    if (value === undefined) delete o[path[path.length - 1]];
+    else o[path[path.length - 1]] = value;
 };
 
 BasicDesigner.applyParam = function (obj, path, text, oldValue) {
@@ -8127,9 +8132,11 @@ BasicDesigner.build = function () {
         endGroup();
         BasicDesigner.connectNameInput(ui.paramsName, function () { return BasicDesigner.state.selected; });
 
-        Label(16, cfg.topHeight + 84, { text: "A click on a name: its editor · • not default", fontSize: 11, textColor: C.dim });
+        BasicDesigner.buildParamFilter(16, cfg.topHeight + 82, cfg.rightWidth - 32); // param-editors.js
 
-        const paramsTop = cfg.topHeight + 108;
+        Label(16, cfg.topHeight + 114, { text: "A name opens its editor · • back to default", fontSize: 11, textColor: C.dim });
+
+        const paramsTop = cfg.topHeight + 136;
         const noteHeight = BasicDesigner.NOTE_AREA_HEIGHT;
         ui.paramsList = startBox(0, paramsTop, "100%", "calc(100% - " + paramsTop + "px - " + noteHeight + "px)", { color: "transparent", scrollY: 1 });
         endBox();

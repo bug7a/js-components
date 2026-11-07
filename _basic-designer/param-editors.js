@@ -61,6 +61,8 @@ BasicDesigner.paramIcon = function (name, size) {
 BasicDesigner.PARAM_ROW_HEIGHT = 24;
 BasicDesigner.PARAM_FIELD_HEIGHT = 22;
 BasicDesigner.PARAM_NAME_WIDTH = 104;
+BasicDesigner.PARAM_ROW_GAP = 4; // Between a name and its field
+BasicDesigner.PARAM_ROWS_SIDE = 10; // The space at both sides of the rows
 BasicDesigner.PARAM_BUTTON_WIDTH = 20;
 BasicDesigner.PARAM_SWATCH_SIZE = 14;
 BasicDesigner.PARAM_THUMB_COLOR = "#8A8A8A"; // WHY a middle gray: black icons and white icons both show on it
@@ -81,10 +83,19 @@ BasicDesigner.paramDefaultsOf = function (obj) {
     const defaults = s.rt.cloneParams(s.rt.findDefaults(obj.__bd.component) || {});
     const packages = s.rt.findStyles(obj.__bd.component);
     const stylePackage = packages && packages[obj.__bd.params.styleName];
-    if (stylePackage && BasicDesigner.isPlain(defaults.style)) {
-        const merged = s.rt.cloneParams(stylePackage);
+    if (!stylePackage) return defaults;
+    // WHY: a package with its own "style" key is a package of params: its other keys are the defaults of this look too.
+    const isParamsPackage = BasicDesigner.isPlain(stylePackage.style);
+    const packageStyle = (isParamsPackage) ? stylePackage.style : stylePackage;
+    if (BasicDesigner.isPlain(defaults.style)) {
+        const merged = s.rt.cloneParams(packageStyle);
         s.win.mergeIntoIfMissing(merged, defaults.style);
         defaults.style = merged;
+    }
+    if (isParamsPackage) {
+        Object.keys(stylePackage).forEach(function (key) {
+            if (key !== "style") defaults[key] = s.rt.cloneParams(stylePackage[key]);
+        });
     }
     return defaults;
 };
@@ -109,7 +120,14 @@ BasicDesigner.paramRowsOf = function (obj) {
         try { return JSON.stringify(value) !== JSON.stringify(def); } catch (error) { return value !== def; }
     };
 
-    const collect = function (object, path, level, defaults) {
+    const words = s.paramFilter.toLowerCase().split(/\s+/).filter(Boolean);
+    const isFiltering = (words.length > 0 || s.paramOnlyChanged);
+    const hasWords = function (pathText) {
+        const text = pathText.toLowerCase();
+        return words.every(function (word) { return text.indexOf(word) !== -1; });
+    };
+
+    const collect = function (rows, object, path, level, defaults) {
         orderOf(object, defaults).forEach(function (key) {
             const value = object[key];
             const def = BasicDesigner.isPlain(defaults) ? defaults[key] : undefined;
@@ -118,20 +136,94 @@ BasicDesigner.paramRowsOf = function (obj) {
             const note = BasicDesigner.noteOfParam(name, pathText);
             const row = { key: key, path: rowPath, pathText: pathText, level: level, value: value, def: def, note: note };
             if (BasicDesigner.isPlain(value)) {
+                // WHY open while filtering: a closed object must not hide what is searched.
                 row.isGroup = true;
-                row.isClosed = s.paramCollapsed.has(id + ":" + pathText);
-                rows.push(row);
-                if (!row.isClosed) collect(value, rowPath, level + 1, def);
+                row.isClosed = (!isFiltering && s.paramCollapsed.has(id + ":" + pathText));
+                const inside = [];
+                if (!row.isClosed) collect(inside, value, rowPath, level + 1, def);
+                const isEmptyMatch = (!s.paramOnlyChanged && hasWords(pathText) && !Object.keys(value).length);
+                if (!isFiltering || inside.length || isEmptyMatch) rows.push(row);
+                inside.forEach(function (insideRow) { rows.push(insideRow); });
                 return;
             }
             row.isGiven = isGiven(value, def);
             row.kind = BasicDesigner.paramKindOf(key, value, def, note, name);
-            rows.push(row);
+            const isChangedHere = s.changes.has(id + ":param:" + pathText);
+            const isShown = hasWords(pathText) && (!s.paramOnlyChanged || row.isGiven || isChangedHere);
+            if (isShown) rows.push(row);
         });
     };
 
-    collect(obj.__bd.params, [], 0, BasicDesigner.paramDefaultsOf(obj));
+    collect(rows, obj.__bd.params, [], 0, BasicDesigner.paramDefaultsOf(obj));
     return rows;
+};
+
+// *** THE SEARCH OF THE PARAMETERS, and "only what is not the default": some components have more than a hundred rows.
+
+BasicDesigner.PARAM_FILTER_HEIGHT = 26;
+
+BasicDesigner.applyParamFilter = function () {
+    const ui = BasicDesigner.ui;
+    const obj = BasicDesigner.currentParamsObject();
+    if (obj) BasicDesigner.showParams(obj);
+    ui.paramsList.elem.scrollTop = 0;
+};
+
+BasicDesigner.clearParamFilter = function () {
+    const ui = BasicDesigner.ui;
+    BasicDesigner.state.paramFilter = "";
+    if (ui.paramSearch) ui.paramSearch.setText("");
+};
+
+// GROUP: The search and the button of the changed values
+BasicDesigner.buildParamFilter = function (left, top, width) {
+    const C = BasicDesigner.colors;
+    const ui = BasicDesigner.ui;
+    const s = BasicDesigner.state;
+    const height = BasicDesigner.PARAM_FILTER_HEIGHT;
+    const GAP = 4;
+    const dot = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 16 16" style="display:block"><circle cx="8" cy="8" r="3.5" fill="currentColor"/></svg>';
+    HGroup(left, top, width, height, { align: "left center", gap: GAP, color: "transparent" });
+        const holder = HGroup({ width: width - height - GAP, height: height, align: "left center", color: "transparent" });
+        holder.shrink = 0;
+            ui.paramSearch = SearchInput({
+                styleName: "ozdenDark",
+                left: 0,
+                top: 0,
+                width: width - height - GAP,
+                height: height,
+                fontSize: 12,
+                searchIconSize: 14,
+                searchIconLeft: 8,
+                searchIconGap: 6,
+                clearIconRight: 8,
+                round: 5,
+                color: C.field,
+                border: 0,
+                borderBottomStyle: "none",
+                textOffsetY: 0,
+                clearIconOffsetY: 0,
+                clearOnEscape: 1,
+                placeholderText: "Search the parameters",
+                onSearch: function (text) {
+                    s.paramFilter = String(text || "");
+                    BasicDesigner.applyParamFilter();
+                },
+            });
+        endGroup();
+        ui.btnOnlyChanged = BasicDesigner.iconButton({
+            html: dot,
+            name: "Only the values that are not the default",
+            description: "The rows with a • and the rows changed here.",
+            size: height,
+            color: C.accent,
+            onClick: function () {
+                s.paramOnlyChanged = !s.paramOnlyChanged;
+                ui.btnOnlyChanged.setActive(s.paramOnlyChanged);
+                BasicDesigner.applyParamFilter();
+            },
+        });
+    endGroup();
 };
 
 // The same rows can be painted again instead of being made again. WHY: the rows stay under the mouse while a color is
@@ -161,12 +253,13 @@ BasicDesigner.drawParamRows = function (obj) {
     ui.paramRowsSignature = signature;
     createIn(ui.paramsList, function () {
         // GROUP: The rows
-        ui.paramRows = VGroup({ width: "100%", height: "auto", align: "left top", gap: 1, padding: [10, 6], color: "transparent", position: "relative" });
+        ui.paramRows = VGroup({ width: "100%", height: "auto", align: "left top", gap: 1, padding: [BasicDesigner.PARAM_ROWS_SIDE, 6], color: "transparent", position: "relative" });
         ui.paramRows.css = { alignItems: "stretch" };
             rows.forEach(function (row) {
                 const build = (row.isGroup) ? BasicDesigner.buildParamGroupRow : BasicDesigner.buildParamRow;
                 ui.paramRowViews[row.pathText] = build(row);
             });
+            if (!rows.length) BasicDesigner.popoverNote("No parameter here. Change the search, or press the • button.");
         endGroup();
     });
     ui.paramsList.elem.scrollTop = scrollTop;
@@ -237,11 +330,12 @@ BasicDesigner.buildParamGroupRow = function (row) {
 BasicDesigner.buildParamRow = function (row) {
     const view = { row: row, editor: BasicDesigner.PARAM_EDITORS[row.kind.name] || {} };
 
-    view.box = HGroup({ width: "100%", height: BasicDesigner.PARAM_ROW_HEIGHT, align: "left center", gap: 4, color: "transparent", position: "relative" });
+    view.box = HGroup({ width: "100%", height: BasicDesigner.PARAM_ROW_HEIGHT, align: "left center", gap: BasicDesigner.PARAM_ROW_GAP, color: "transparent", position: "relative" });
     view.box.shrink = 0;
         view.lblName = BasicDesigner.buildParamName(view);
         view.field = BasicDesigner.buildParamField(view);
     endGroup();
+    if (row.kind.name === "color") view.strip = BasicDesigner.buildParamColorStrip(view);
 
     view.refresh = function (next) {
         view.row = next;
@@ -251,6 +345,31 @@ BasicDesigner.buildParamRow = function (row) {
     return view;
 };
 
+// GROUP: The colors under the field of a color (the ticks of the color picker, as in the Box view). WHY the same ticks: a
+// color group chosen once is at hand under every color. It is empty while no tick is on.
+BasicDesigner.buildParamColorStrip = function (view) {
+    const strip = BasicDesigner.ui.panel.buildColorStrip({
+        key: "param:" + view.row.pathText,
+        hint: view.row.key,
+        width: BasicDesigner.config.rightWidth - BasicDesigner.PARAM_ROWS_SIDE * 2 - BasicDesigner.PARAM_NAME_WIDTH - BasicDesigner.PARAM_ROW_GAP,
+        onPick: function (value) {
+            BasicDesigner.applyParamValue(BasicDesigner.currentParamsObject(), view.row.path, value);
+        },
+    });
+    strip.obj.css.marginLeft = (BasicDesigner.PARAM_NAME_WIDTH + BasicDesigner.PARAM_ROW_GAP) + "px";
+    return strip;
+};
+
+// The dot of a value that is not the default: a click goes back to the default.
+BasicDesigner.resetParamToDefault = function (view) {
+    const row = view.row;
+    const obj = BasicDesigner.currentParamsObject();
+    BasicDesigner.closeParamEditors();
+    if (!obj) return;
+    BasicDesigner.applyParamValue(obj, row.path, row.def);
+    BasicDesigner.setStatus(row.pathText + ": back to the default.");
+};
+
 BasicDesigner.buildParamName = function (view) {
     const C = BasicDesigner.colors;
     const editor = view.editor;
@@ -258,9 +377,8 @@ BasicDesigner.buildParamName = function (view) {
     const lbl = Label({ width: BasicDesigner.PARAM_NAME_WIDTH, height: BasicDesigner.PARAM_ROW_HEIGHT, fontSize: 12, color: "transparent" });
     lbl.shrink = 0;
     lbl.css = { display: "flex", alignItems: "center", whiteSpace: "nowrap", overflow: "hidden" };
-    if (!editor.open) return lbl;
     lbl.clickable = 1;
-    lbl.cursor = (editor.canScrub) ? "ew-resize" : "pointer";
+    lbl.cursor = (editor.canScrub) ? "ew-resize" : ((editor.open) ? "pointer" : "default");
     lbl.onHoverChange(function (self, isOver) {
         lbl.isHovered = isOver;
         lbl.textColor = (isOver || view.row.isGiven) ? C.text : C.soft;
@@ -270,7 +388,11 @@ BasicDesigner.buildParamName = function (view) {
         step: function () { return BasicDesigner.rangeOfNumber(view.row.key, view.row.value).step; },
         min: function () { return BasicDesigner.rangeOfNumber(view.row.key, view.row.value).min; },
         write: function (value) { BasicDesigner.sendParamLive(BasicDesigner.paramsObject.__bd.id, view.row.path, value); },
-        onClick: function () { BasicDesigner.openParamEditor(view); },
+        onClick: function (pressEvent) {
+            const isOnDot = (pressEvent.target.closest && pressEvent.target.closest("[data-param-reset]"));
+            if (isOnDot) BasicDesigner.resetParamToDefault(view);
+            else BasicDesigner.openParamEditor(view);
+        },
     });
     return lbl;
 };
@@ -351,12 +473,19 @@ BasicDesigner.commitParamInput = function (view) {
     BasicDesigner.applyParamValue(BasicDesigner.currentParamsObject(), view.row.path, value);
 };
 
+// WHY the padding: a dot of 3 px is too small for a mouse.
+BasicDesigner.paramDotHtml = function (row) {
+    const C = BasicDesigner.colors;
+    const defaultText = (row.def === undefined) ? "not given" : BasicDesigner.shortTipText(BasicDesigner.paramText(row.def).text);
+    return '<span data-param-reset="1" title="' + BasicDesigner.esc("Back to the default: " + defaultText) + '" style="flex:0 0 auto;color:' + C.accent + ';padding:0px 4px;cursor:pointer">•</span>';
+};
+
 BasicDesigner.paintParamRow = function (view) {
     const C = BasicDesigner.colors;
     const row = view.row;
     const shown = BasicDesigner.paramText(row.value);
     const nameHtml = BasicDesigner.paramGuides(row.level) + '<span style="overflow:hidden;text-overflow:ellipsis">' + BasicDesigner.esc(row.key) + "</span>" +
-        ((row.isGiven) ? '<span style="flex:0 0 auto;color:' + C.accent + ';margin-left:3px">•</span>' : "");
+        ((row.isGiven) ? BasicDesigner.paramDotHtml(row) : "");
     if (view.nameHtml !== nameHtml) {
         view.nameHtml = nameHtml;
         view.lblName.text = nameHtml;
@@ -372,6 +501,7 @@ BasicDesigner.paintParamRow = function (view) {
 
     if (view.swatch) BasicDesigner.paintParamSwatch(view.swatch, row.value);
     if (view.thumb) BasicDesigner.paintParamThumb(view.thumb, row.value);
+    if (view.strip) view.strip.paint((row.value === null || row.value === undefined) ? "" : row.value);
     if (view.toggle) view.toggle.setOn(row.value === 1 || row.value === true);
     if (view.opener && view.editor.tipOf) view.opener.tip.description = view.editor.tipOf(row);
 };
@@ -643,7 +773,7 @@ BasicDesigner.roundToStep = function (value, step, min) {
     return Math.max(min, rounded);
 };
 
-// options: { read(): the number now (not a number: no drag), write(value), step(), min(), onClick() }
+// options: { read(): the number now (not a number: no drag), write(value), step(), min(), onClick(pressEvent) }
 BasicDesigner.scrubOn = function (handle, options) {
     handle.elem.addEventListener("pointerdown", function (event) {
         if (event.button !== 0) return;
@@ -669,7 +799,7 @@ BasicDesigner.scrubOn = function (handle, options) {
             handle.elem.removeEventListener("pointerup", onUp);
             handle.elem.removeEventListener("pointercancel", onUp);
             if (isDragging) BasicDesigner.flushParamLive();
-            else if (options.onClick) options.onClick();
+            else if (options.onClick) options.onClick(event);
         };
         handle.elem.addEventListener("pointermove", onMove);
         handle.elem.addEventListener("pointerup", onUp);
