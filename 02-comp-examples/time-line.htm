@@ -20,6 +20,8 @@
         /* Bismillah */
 
         // *** VARIABLES:
+        const DARK_CARD_COLOR = "#1A1A19";
+        const CARD_MAX_WIDTH = 460;
         let lineLive;
         let lblDefault, lblLive;
         let liveCount = 0;
@@ -41,7 +43,7 @@
                     height: "auto", // Grows with content, so the Box can scroll.
                     align: "center top",
                     gap: 30,
-                    padding: 50,
+                    padding: [16, 50], // WHY 16 at the sides: the cards fill a phone.
                 });
 
                     // LABEL: Title
@@ -84,7 +86,7 @@
                     endCard();
 
                     // SAMPLE 3: Style and clickable items
-                    startCard("3. Style package and clickableItems");
+                    startCard("3. Your own style and clickableItems");
 
                         TimeLine({
                             width: "100%",
@@ -154,9 +156,61 @@
                                 self.text = (lineLive.enabled) ? "Disable" : "Enable";
                             });
 
+                            smallButton("setTheme(\"minimal\")", function (self) {
+                                const isMinimal = (lineLive.styleName === "minimal");
+                                lineLive.setTheme(isMinimal ? "light" : "minimal");
+                                self.text = (isMinimal) ? "setTheme(\"minimal\")" : "setTheme(\"light\")";
+                            });
+
                         endGroup();
 
                         lblLive = infoLabel("Items: 1");
+
+                    endCard();
+
+                    // SAMPLE 5: A dark page
+                    startDarkCard("5. On a dark page: styleName \"dark\"");
+
+                        TimeLine({
+                            styleName: "dark",
+                            width: "100%",
+                            items: [
+                                { time: "09:30", title: "Order created", text: "Order #1024 was created by Ayşe Yılmaz." },
+                                { time: "10:05", title: "Payment received", text: "1.240,00 TL, credit card." },
+                                { time: "13:40", title: "Packed" },
+                                { time: "17:15", title: "Sent", text: "Cargo no: 7712 4455 90" },
+                            ],
+                        });
+
+                    endCard();
+
+                    // SAMPLE 6: The minimal theme
+                    startCard("6. The minimal theme: styleName \"minimal\"");
+
+                        TimeLine({
+                            styleName: "minimal",
+                            width: "100%",
+                            items: [
+                                { time: "Today, 14:02", title: "Saved", text: "report.md, 2.4 KB" },
+                                { time: "Today, 11:30", title: "Renamed", text: "notes.md is report.md now." },
+                                { time: "Yesterday", title: "Created" },
+                            ],
+                        });
+
+                    endCard();
+
+                    // SAMPLE 7: The minimal theme on a dark window
+                    startDarkCard("7. On a dark window: styleName \"minimalDark\"");
+
+                        TimeLine({
+                            styleName: "minimalDark",
+                            width: "100%",
+                            items: [
+                                { time: "Today, 14:02", title: "Saved", text: "report.md, 2.4 KB" },
+                                { time: "Today, 11:30", title: "Renamed", text: "notes.md is report.md now." },
+                                { time: "Yesterday", title: "Created" },
+                            ],
+                        });
 
                     endCard();
 
@@ -180,7 +234,7 @@
         // GROUP: A white card with a title.
         const startCard = function (title) {
             VGroup({
-                width: 460,
+                width: "100%",
                 height: "auto",
                 align: "left top",
                 gap: 16,
@@ -189,11 +243,31 @@
                 round: 10,
                 border: 1,
                 borderColor: Black(0.1),
+                css: { maxWidth: CARD_MAX_WIDTH + "px" },
             });
             Label({
                 text: title,
                 fontSize: 14,
                 textColor: Black(0.45),
+            });
+        };
+
+        // GROUP: A dark card with a title, for the dark packages.
+        const startDarkCard = function (title) {
+            VGroup({
+                width: "100%",
+                height: "auto",
+                align: "left top",
+                gap: 16,
+                padding: 20,
+                color: DARK_CARD_COLOR,
+                round: 10,
+                css: { maxWidth: CARD_MAX_WIDTH + "px" },
+            });
+            Label({
+                text: title,
+                fontSize: 14,
+                textColor: White(0.5),
             });
         };
 

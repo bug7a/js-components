@@ -11,6 +11,9 @@ UI COMPONENT TEMPLATE
   Box or in a VGroup for a long list.
 - Every color, size and space is in the style object. Nothing else is needed: no image
   files, no other component.
+- What happened, and when: a history that grows (addItem). For the steps of a job and the step of now: StepBar.
+- Style packages: "light" (default), "dark", "minimal", "minimalDark". Select with styleName (TimeLine.styles), or
+  later with setTheme(). minimal and minimalDark also give the sizes (dotSize, lineWidth, itemGap) the page does not give.
 
 ITEM: { time, title, text, color, key, data }
 - A string is also accepted: "Order created" -> { title: "Order created" }
@@ -29,6 +32,8 @@ const timeLine = TimeLine({
 });
 timeLine.addItem({ time: "14:20", title: "Sent" });
 timeLine.setItems([]);
+TimeLine({ styleName: "dark", items: ["Order created", "Packed"] }); // On a dark page
+timeLine.setTheme("minimal");
 
 Started Date: September 2026
 Developer: Bugra Ozden
@@ -51,7 +56,8 @@ const TimeLineDefaults = {
     clickableItems: 0, // 1: An item can be clicked. (onClick)
     enabled: 1,
     onClick: function (self, item, index) { },
-    style: {
+    styleName: "light", // "light", "dark", "minimal", "minimalDark" or a name added to TimeLine.styles
+    style: { // Light style package (default)
         row: {
             gap: 12, // Space between the dots and the texts
         },
@@ -89,6 +95,10 @@ const TimeLineDefaults = {
 
 const TimeLine = function (params = {}) {
 
+    // Merge style package: params.style > TimeLine.styles[styleName] > TimeLineDefaults.style (light)
+    const pageParams = Object.assign({}, params); // WHY: setTheme() puts what the page gave over another package.
+    basic.applyStylePackage(params, TimeLine.styles, TimeLineDefaults);
+
     // Merge params:
     mergeIntoIfMissing(params, TimeLineDefaults);
 
@@ -100,7 +110,7 @@ const TimeLine = function (params = {}) {
     let box = startObject(params);
 
     // *** PRIVATE VARIABLES:
-    const _s = box.style;
+    let _s = box.style;
     const TEXT_GAP = 2; // Space between the time, the title and the text
     const HOVER_MOTION = "opacity 0.15s";
     let rows = []; // Created item rows
@@ -110,6 +120,14 @@ const TimeLine = function (params = {}) {
     box.items = [];
 
     // *** PRIVATE FUNCTIONS:
+
+    // The params of a package (its style, and the sizes of a package of params), with what the page gave over them.
+    const paramsOfPackage = function (styleName) {
+        const fresh = Object.assign({}, pageParams, { styleName: styleName });
+        basic.applyStylePackage(fresh, TimeLine.styles, TimeLineDefaults);
+        mergeIntoIfMissing(fresh, TimeLineDefaults);
+        return fresh;
+    };
 
     const normalizeItem = function (item) {
         if (typeof item == "string" || typeof item == "number") {
@@ -298,6 +316,18 @@ const TimeLine = function (params = {}) {
         drawAll();
     };
 
+    // Another style package while it is on the page. What the page gave (its style, a dotSize) stays over it.
+    box.setTheme = function (styleName) {
+        const fresh = paramsOfPackage(styleName);
+        box.styleName = styleName;
+        box.style = fresh.style;
+        _s = fresh.style;
+        box.dotSize = fresh.dotSize;
+        box.lineWidth = fresh.lineWidth;
+        box.itemGap = fresh.itemGap;
+        drawAll();
+    };
+    // USAGE: timeLine.setTheme("dark")
 
     // *** OBJECT VIEW:
 
@@ -322,3 +352,43 @@ const TimeLine = function (params = {}) {
     return endObject(box);
 
 };
+
+// *** STYLE PACKAGES:
+// USAGE: TimeLine({ styleName: "dark" })
+// USAGE: TimeLine({ styleName: "dark", style: { dot: { color: "tomato" } } }) // Change only some keys.
+// NOTE: A new package needs only the keys that differ from the default (light) style.
+TimeLine.styles = {
+
+    // Blue dots on a light page.
+    light: TimeLineDefaults.style,
+
+    // For a dark page: a lighter blue, light texts. borderColor: the ring of a dot with a border, in the color of the page.
+    dark: {
+        dot: { color: "#6C98EF", borderColor: "#1A1A19" },
+        line: { color: White(0.16) },
+        time: { textColor: White(0.5) },
+        title: { textColor: White(0.88) },
+        text: { textColor: White(0.6) },
+    },
+
+};
+
+// The minimal theme (_designs/minimal-theme.htm): small ink dots on a 1 px line, a 13 px title of the normal weight and
+// 12 px texts. A package of params: it gives the sizes too, when the page does not give them. minimalDark: on a dark window.
+TimeLine.createMinimalStyle = function (palette) {
+    return {
+        dotSize: 7, // WHY odd: the 1 px line in the middle of the dot stays on a whole pixel.
+        lineWidth: 1,
+        itemGap: 16,
+        style: {
+            row: { gap: 10 },
+            dot: { color: palette.ink, borderColor: palette.ground, topSpace: 5 },
+            line: { color: palette.line },
+            time: { fontSize: 11, textColor: palette.softText },
+            title: { fontSize: 13, textColor: palette.text, bold: 0 },
+            text: { fontSize: 12, textColor: palette.softText },
+        },
+    };
+};
+TimeLine.styles.minimal = TimeLine.createMinimalStyle({ ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), line: Black(0.2), ink: "#1F1F1F" });
+TimeLine.styles.minimalDark = TimeLine.createMinimalStyle({ ground: "#1A1A19", text: White(0.88), softText: White(0.55), line: White(0.18), ink: "#EDEDEB" });

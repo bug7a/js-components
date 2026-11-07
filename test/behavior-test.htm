@@ -7459,6 +7459,33 @@
 
         // *** TIME LINE (comp/time-line.js)
 
+        test("TimeLine: the style packages; what the page gave stays over them, after setTheme() too; the default look is as before", async function () {
+            const firstRowOf = function (line) { return line.content.elem.firstElementChild; };
+            const lookOf = function (line) {
+                const rail = firstRowOf(line).children[0];
+                const title = firstRowOf(line).children[1].firstElementChild;
+                return [rail.children[0].style.width, rail.children[0].style.backgroundColor, rail.children[1].style.width, title.style.fontSize].join(" ");
+            };
+            const plain = TimeLine({ width: 300, items: ["A", "B"] });
+            const minimal = TimeLine({ styleName: "minimal", width: 300, items: ["A", "B"] });
+            const own = TimeLine({ styleName: "minimal", dotSize: 11, width: 300, items: ["A", "B"], style: { title: { fontSize: 17 } } });
+            await basic.nextFrame();
+            const plainLook = lookOf(plain);
+            const minimalLook = lookOf(minimal);
+            const ownLook = lookOf(own);
+            own.setTheme("dark");
+            const ownDarkLook = lookOf(own);
+            minimal.setTheme("light");
+            const backToLight = lookOf(minimal);
+            check("TimeLine: the default look is as before (a 12 px blue dot, a 2 px line, a 15 px title)", plainLook === "12px rgb(56, 113, 224) 2px 15px", plainLook);
+            check("TimeLine minimal: a 7 px ink dot, a 1 px line, a 13 px title", minimalLook === "7px rgb(31, 31, 31) 1px 13px", minimalLook);
+            check("TimeLine minimal: the dotSize and the style of the page stay over the package", ownLook === "11px rgb(31, 31, 31) 1px 17px", ownLook);
+            check("TimeLine setTheme(\"dark\"): the colors of dark, the sizes of the page, the other sizes of the defaults", ownDarkLook === "11px rgb(108, 152, 239) 2px 17px", ownDarkLook);
+            check("TimeLine setTheme(\"light\"): the sizes of the minimal package are gone", backToLight === plainLook, backToLight);
+            check("TimeLine: the packages are not changed", TimeLine.styles.minimal.dotSize === 7 && TimeLine.styles.minimal.style.title.fontSize === 13, JSON.stringify(TimeLine.styles.minimal));
+            [plain, minimal, own].forEach(function (line) { line.remove(); });
+        });
+
         test("TimeLine: a text item has only its title, at the top as in an object item (an empty time label and its gap moved it 2 px down)", async function () {
             const line = TimeLine({ width: 300, items: ["A text item", { title: "An object item" }] });
             await basic.nextFrame();
