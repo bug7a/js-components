@@ -6697,6 +6697,28 @@
                 [light, dark, values, back, removed].join(" || "));
         });
 
+        // *** ITEM LIST: its ground (comp/item-list.js)
+
+        test("ItemList: the ozden list has a gray ground of its own, so the white of a row under the mouse is seen on a white page", async function () {
+            const lookOf = function (styleName) {
+                const list = ItemList({ left: 0, top: 0, width: 200, height: 100, styleName: styleName, items: ["A"] });
+                const look = { ground: getComputedStyle(list.elem).backgroundColor, hover: list.style.hover.color };
+                list.remove();
+                return look;
+            };
+            const ozden = lookOf("ozden");
+            const dark = lookOf("ozdenDark");
+            const old = lookOf("classic");
+            const others = [lookOf("modern").ground, lookOf("dark").ground].join();
+            const own = ItemList({ left: 0, top: 0, width: 200, height: 100, items: ["A"], style: { box: { color: "transparent" } } });
+            const pageCanChange = getComputedStyle(own.elem).backgroundColor;
+            own.remove();
+            check("ItemList: the ozden list has a gray ground of its own, so the white of a row under the mouse is seen on a white page",
+                ozden.ground === "rgb(245, 245, 245)" && ozden.hover === "white" && dark.ground === "rgb(26, 26, 25)" && dark.hover === "#262624" && old.ground === ozden.ground &&
+                others === "rgba(0, 0, 0, 0),rgba(0, 0, 0, 0)" && pageCanChange === "rgba(0, 0, 0, 0)",
+                [ozden.ground, ozden.hover, dark.ground, dark.hover, old.ground, others, pageCanChange].join(" | "));
+        });
+
         // *** GRID GROUP (comp/grid-group.js)
 
         test("GridGroup: a number makes equal columns; the objects go left to right, then under; they are in its flow", async function () {

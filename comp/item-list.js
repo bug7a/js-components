@@ -113,7 +113,7 @@ const ItemListDefaults = {
     styleName: "ozden", // "ozden", "ozdenDark", "modern", "dark" or a name added to ItemList.styles
     style: { // The ozden style package (default)
         box: {
-            color: "transparent",
+            color: "whitesmoke", // WHY: A row is white under the mouse: on a white page a list with no color of its own shows nothing.
             border: 1,
             borderColor: "rgba(20, 20, 20, 0.45)",
             round: 6,
@@ -1510,7 +1510,7 @@ ItemList.styles = {
     // gray with a thin light line above and under it under the mouse, the selected one is half transparent, the
     // search box is the ozdenDark SearchInput in the gray of the mouse.
     ozdenDark: {
-        box: { borderColor: White(0.22) },
+        box: { color: "#1A1A19", borderColor: White(0.22) },
         hover: { color: "#262624", lineColor: White(0.14) },
         focus: { ringColor: White(0.5) },
         title: { textColor: White(0.88) },
@@ -1525,7 +1525,7 @@ ItemList.styles = {
 
     // Light cards with a thin border and a check mark on the selected rows.
     modern: {
-        box: { padding: 8 },
+        box: { color: "transparent", padding: 8 }, // WHY transparent: the gray of ozden is not its look.
         list: { gap: 8 },
         row: {
             height: 64,
@@ -1581,7 +1581,7 @@ ItemList.styles = {
 
     // The dark cards of the Ozden Panel (webpage-ozden-panel, theme "dark").
     dark: {
-        box: { padding: 8 },
+        box: { color: "transparent", padding: 8 },
         list: { gap: 8 },
         row: {
             height: 64,
