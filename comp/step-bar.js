@@ -11,6 +11,7 @@ UI COMPONENT
 - canGoBack: 1: a click (or Enter) on a step that is behind calls onStepClick(self, index); the page decides to go
   back with setStep(index). A step that is not reached yet can not be clicked.
 - A narrow screen: the titles get thinner and wrap; showTitles: 0 leaves only the circles.
+- For a history of what happened (it grows with new items): TimeLine.
 - Style packages: "light" (default), "dark", "minimal", "minimalDark". Select with styleName (StepBar.styles), or later
   with setTheme().
 

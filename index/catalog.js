@@ -295,8 +295,8 @@ CATALOG.COMPONENTS = [
     {
         key: "time-line", name: "TimeLine", cat: "data",
         source: "comp/time-line.js", samples: ["02-comp-examples/time-line.htm"],
-        en: "A vertical time line: a dot for every item and a line between the dots.",
-        tr: "Dikey zaman çizelgesi: her öğe için bir nokta ve noktaların arasında bir çizgi.",
+        en: "A vertical time line of what happened, and when: a dot for every item and a line between the dots; it grows with new items. For the steps of a job and the step of now: StepBar. Light, dark and minimal looks.",
+        tr: "Ne olduğunu ve ne zaman olduğunu gösteren dikey zaman çizelgesi: her öğe için bir nokta ve noktaların arasında bir çizgi; yeni öğelerle uzar. Bir işin adımları ve şu anki adım için: StepBar. Aydınlık, karanlık ve minimal görünüş.",
     },
     {
         key: "json-view", name: "JsonView", cat: "data",
@@ -574,8 +574,8 @@ CATALOG.COMPONENTS = [
     {
         key: "step-bar", name: "StepBar", cat: "navigation",
         source: "comp/step-bar.js", samples: ["02-comp-examples/step-bar.htm", "02-comp-examples/minimal-theme.htm"],
-        en: "The steps of a job in a row: a cart, an address, a payment. A step that is behind has a check mark and can be clicked to go back, the step of now is filled. Light and dark looks.",
-        tr: "Bir işin adımları bir satırda: sepet, adres, ödeme. Geçilen adım işaretlidir ve tıklanınca geri dönülür, şu anki adım doludur. Aydınlık ve karanlık görünüş.",
+        en: "The steps of a job in a row: a cart, an address, a payment. A step that is behind has a check mark and can be clicked to go back, the step of now is filled. For a history of what happened: TimeLine. Light, dark and minimal looks.",
+        tr: "Bir işin adımları bir satırda: sepet, adres, ödeme. Geçilen adım işaretlidir ve tıklanınca geri dönülür, şu anki adım doludur. Olanların geçmişi için: TimeLine. Aydınlık, karanlık ve minimal görünüş.",
     },
     {
         key: "range-slider", name: "RangeSlider", cat: "inputs",
