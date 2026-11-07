@@ -23,6 +23,9 @@ UI COMPONENT TEMPLATE
                   or undefined (the old value comes back). A text value is shown as it is.
                   commaIsList: 1 -> a comma separates values ("12,0" goes to parseText as a list), it is not a decimal comma.
                   textToNumber(value): the number of a text value, to drag or step it (Ex: "100%" -> its width in px).
+                  button: { icon, hint } -> [P  14, 10  ▢] a small button at the end of the field (also of a text). Its
+                  click sends { kind: "action", key, value: "button", field } (field: the field, Ex: to open an editor
+                  of the value at its height). So do a click on the prefix (not a drag; without prefixClick) and Alt+Down.
     text       -> [ name ]  a text field
     textarea   -> a text of more lines (rows: 2). caption: the first line of the placeholder (it goes while writing). Saved on blur or Cmd/Ctrl+Enter.
     select     -> [ Left ⌄]  a menu of options, optional icon, look: "plain" (no background)
@@ -393,6 +396,11 @@ const PropertyPanel = function (params = {}) {
         dispatch({ kind: "action", key: ctrl.item.key, value: value, oldValue: undefined, item: ctrl.item, sectionKey: ctrl.sectionKey });
     };
 
+    // The button at the end of a field (item.button). field: where the page opens what the button opens.
+    const sendFieldButton = function (ctrl) {
+        dispatch({ kind: "action", key: ctrl.item.key, value: "button", oldValue: undefined, item: ctrl.item, sectionKey: ctrl.sectionKey, field: ctrl.field });
+    };
+
     // *** MENU (select, combo):
 
     const closeMenu = function () {
@@ -493,9 +501,11 @@ const PropertyPanel = function (params = {}) {
 
     // *** SMALL OBJECTS USED BY THE ITEM TYPES:
 
-    // FIELD: A text input in a field, with an optional prefix (a text or an icon). Used by "number" and "text".
-    // Returns { field, input, el, prefix, setEnabled() }. The caller adds its own commit code.
+    // FIELD: A text input in a field, with an optional prefix (a text or an icon) and a button at its end (item.button).
+    // Used by "number" and "text". Returns { field, input, el, prefix, button, setEnabled() }. The caller adds its own
+    // commit code and the click of the button.
     const PREFIX_WIDTH = 26;
+    const FIELD_BUTTON_WIDTH = 22;
     const buildInputField = function (item, width, prefixValue) {
 
         const state = { isHover: 0, isFocus: 0, enabled: item.enabled != 0 };
@@ -530,12 +540,30 @@ const PropertyPanel = function (params = {}) {
             el.setAttribute("spellcheck", "false");
             el.setAttribute("aria-label", item.hint || item.label || item.prefix || item.key);
 
+            // LABEL: The button at the end (item.button: { icon, hint })
+            let button = null;
+            if (item.button) {
+                button = textLabel(getIcon(item.button.icon, 14), { width: FIELD_BUTTON_WIDTH, height: _g.itemHeight, textColor: _t.softColor });
+                button.clickable = 1;
+                button.css.borderRadius = "0px " + _s.field.round + "px " + _s.field.round + "px 0px";
+                button.role = "button";
+                button.aria = { label: item.button.hint || "" };
+                button.elem.title = item.button.hint || "";
+            }
+
         endGroup();
 
         onHover(field, function (isHover) {
             state.isHover = isHover;
             paint();
         });
+        if (button) {
+            onHover(button, function (isHover) {
+                const isLit = (isHover && state.enabled);
+                button.color = (isLit) ? _s.segmented.hoverColor : "transparent";
+                button.textColor = (isLit) ? _t.color : ink(state.enabled, _t.softColor);
+            });
+        }
         el.addEventListener("focus", function () {
             state.isFocus = 1;
             paint();
@@ -550,12 +578,16 @@ const PropertyPanel = function (params = {}) {
             el.disabled = !state.enabled;
             el.style.color = ink(state.enabled, _t.color);
             if (prefix) prefix.textColor = ink(state.enabled, _t.softColor);
+            if (button) {
+                button.textColor = ink(state.enabled, _t.softColor);
+                button.cursor = (state.enabled) ? "pointer" : "default";
+            }
             paint();
         };
 
         setEnabled(state.enabled);
 
-        return { field: field, input: input, el: el, prefix: prefix, state: state, setEnabled: setEnabled };
+        return { field: field, input: input, el: el, prefix: prefix, button: button, state: state, setEnabled: setEnabled };
 
     };
 
@@ -570,7 +602,7 @@ const PropertyPanel = function (params = {}) {
         let value = item.value;
         let scrub = null;
 
-        const { field, input, el, prefix, state, setEnabled: setFieldEnabled } = buildInputField(item, width, item.icon || item.prefix);
+        const { field, input, el, prefix, button, state, setEnabled: setFieldEnabled } = buildInputField(item, width, item.icon || item.prefix);
 
         const format = function (v) {
             if (v === null || v === undefined || v === "") return item.autoText || "";
@@ -641,11 +673,20 @@ const PropertyPanel = function (params = {}) {
                 event.preventDefault();
                 input.text = format(value);
                 el.blur();
+            } else if (button && event.altKey && event.key === "ArrowDown") {
+                event.preventDefault();
+                el.blur(); // WHY: the text written so far is kept first, the editor opens with it.
+                sendFieldButton(ctrl);
             } else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
                 event.preventDefault();
                 stepByArrow(event);
             }
         });
+        if (button) {
+            button.on("click", function () {
+                if (state.enabled) sendFieldButton(ctrl);
+            });
+        }
 
         // Scrub: drag the prefix left / right. 1 px = 1 step (Shift: 10 steps)
         // prefixClick: a press without a drag gives that value.
@@ -677,7 +718,11 @@ const PropertyPanel = function (params = {}) {
             prefix.on("pointerup", function (self, event) {
                 const isClick = (scrub && !scrub.isMoved && event.pointerId === scrub.id);
                 endScrub();
-                if (!isClick || !hasPrefixClick || !state.enabled) return;
+                if (!isClick || !state.enabled) return;
+                if (!hasPrefixClick) {
+                    if (button) sendFieldButton(ctrl); // WHY: the prefix is the name of the value: a click opens it, a drag changes it.
+                    return;
+                }
                 setValue(item.prefixClick);
                 changeValue(ctrl, item.prefixClick);
             });
@@ -2683,7 +2728,7 @@ const PropertyPanel = function (params = {}) {
 
         text: function (ctrl) {
             const item = ctrl.item;
-            const { field, input, el, setEnabled } = buildInputField(item, getSpanWidth(item.span));
+            const { field, input, el, button, state, setEnabled } = buildInputField(item, getSpanWidth(item.span));
             if (item.placeholder) input.placeholder = item.placeholder;
             const setValue = function (v) { input.text = (v === undefined || v === null) ? "" : String(v); };
             el.addEventListener("blur", function () { changeValue(ctrl, String(input.text)); });
@@ -2695,8 +2740,17 @@ const PropertyPanel = function (params = {}) {
                     event.preventDefault();
                     setValue(ctrl.item.value);
                     el.blur();
+                } else if (button && event.altKey && event.key === "ArrowDown") {
+                    event.preventDefault();
+                    el.blur(); // WHY: the text written so far is kept first, the editor opens with it.
+                    sendFieldButton(ctrl);
                 }
             });
+            if (button) {
+                button.on("click", function () {
+                    if (state.enabled) sendFieldButton(ctrl);
+                });
+            }
             setValue(item.value);
             return { field: field, setValue: setValue, setEnabled: setEnabled };
         },

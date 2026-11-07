@@ -553,6 +553,16 @@
             panel.remove();
         });
 
+        test("PropertyPanel: the button of a field sends its action with the field (a click, a click on the prefix, Alt+Down); a drag of the prefix changes the value", async function () {
+            const changes = [];
+            const panel = PropertyPanel({
+                data: { sections: [{ key: "s", title: "S", items: [
+                    { key: "pad", type: "number", prefix: "P", value: 10, button: { icon: "sliders", hint: "Its four sides" } },
+                    { key: "shadow", type: "text", value: "", span: "full", button: { icon: "sliders", hint: "Shadow" } },
+                ] }] },
+                onChange: function (change) { changes.push(change); },
+            });
+
         // A panel with one color field and an editable group (a static palette), its picker open.
         const openColorPanel = async function (changes, colors = ["#111111", "#222222", "#333333"]) {
             const panel = PropertyPanel({
