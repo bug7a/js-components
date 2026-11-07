@@ -1225,6 +1225,16 @@
         };
         const itemOf = function (type) { return BD.toolboxItems.find(function (i) { return i.type === type; }); };
         const noneAdded = function () { return same(BD.state.addedObjects.length, 0); };
+        // Over every drawn object of the page (not the ones in it): its zIndex is higher than all of theirs
+        const isOverAll = function (o) {
+            const own = parseInt(o.elem.style.zIndex, 10);
+            if (isNaN(own)) return false;
+            return BD.state.rt.objects.every(function (other) {
+                if (other === o || !other.elem || !other.elem.isConnected || o.elem.contains(other.elem) || !other.elem.getClientRects().length) return true;
+                const z = parseInt(W().getComputedStyle(other.elem).zIndex, 10);
+                return isNaN(z) || z < own;
+            });
+        };
         const key = function (text) { document.body.dispatchEvent(new KeyboardEvent("keydown", { key: text, bubbles: true, cancelable: true })); };
         // An empty place of a group (its right end: its objects are narrower), in the coordinates of the designer
         const emptyPlaceOf = function (o) {
@@ -1319,7 +1329,8 @@
                 return same([A.boxPlain.elem.parentElement === A.groupGiven.elem, posOf(A.boxPlain)].join(","), "true,absolute");
             }, /- move it/, function () { return same(A.boxPlain.elem.parentElement === BD.state.win.page.elem, true); });
 
-            // 7. Bring to front (the button of the toolbox): a manual object of a group stays manual, at its place
+            // 7. Bring to front (the button of the toolbox): a manual object of a group stays manual, at its place, with a
+            //    zIndex over every object of the page
             let placeBefore = "";
             await check("bring to front keeps a manual object of a group manual", async function () {
                 BD.select(label);
@@ -1331,8 +1342,32 @@
                 BD.ui.objectButtons.find(function (b) { return b._key === "front"; }).elem.click();
             }, function () {
                 const place = label.elem.style.left + " " + label.elem.style.top;
-                return same([posOf(label), lastOf(A.groupPlain) === label, place].join(","), ["absolute", "true", placeBefore].join(","));
-            }, /- move it/, function () { return same(lastOf(A.groupPlain) === label, false); });
+                return same([posOf(label), lastOf(A.groupPlain) === label, place, isOverAll(label)].join(","), ["absolute", "true", placeBefore, "true"].join(","));
+            }, /- move it[\s\S]*- zIndex: 0 -> \d+|- zIndex: 0 -> \d+[\s\S]*- move it/, function () {
+                return same([lastOf(A.groupPlain) === label, label.elem.style.zIndex].join(","), "false,");
+            });
+
+            // The last object of its box: a zIndex only (no move)
+            await check("bring to front of the last object of a box: a zIndex only", async function () {
+                BD.select(A.inputPlain);
+                await sleep(30);
+                key("]");
+            }, function () {
+                const isNoMove = !/- move it/.test(BD.buildPrompt() || "");
+                return same([lastOf(A.groupPlain) === A.inputPlain, isOverAll(A.inputPlain), isNoMove].join(","), "true,true,true");
+            }, /- zIndex: 0 -> /, function () { return same(A.inputPlain.elem.style.zIndex, ""); });
+
+            // Send to back takes back the zIndex that bring to front gave
+            await check("send to back takes back the zIndex of bring to front", async function () {
+                BD.select(A.buttonPlain);
+                await sleep(30);
+                BD.bringToFront(A.buttonPlain);
+                await sleep(650); // WHY: More than HISTORY_MERGE_TIME: the back is an undo step of its own.
+                BD.sendToBack(A.buttonPlain);
+            }, function () {
+                const hasZIndex = /zIndex/.test(BD.buildPrompt() || "");
+                return same([BD.childObjects(A.groupPlain)[0] === A.buttonPlain, A.buttonPlain.elem.style.zIndex, hasZIndex].join(","), "true,,false");
+            }, /- move it/, function () { return same(BD.childObjects(A.groupPlain)[1] === A.buttonPlain, true); });
 
             // 8. Send to back (the menu of the object): the first one of its box
             await check("send to back", async function () {

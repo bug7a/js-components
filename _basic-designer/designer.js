@@ -1215,6 +1215,8 @@ BasicDesigner.borderOf = function (obj) {
 //      lineHeight: 0 for "not set", an inline 0px made a Label 0 px high and hid its text.
 //      padding: "6, 1" for the padding of a Button from the browser, a text its setter can not take.
 //      round, gap: a list reads as a text too ("12, 0").
+//      zIndex: 0 for "not set"; an inline 0 is a layer of its own (a stacking context), not the same as none.
+// field: the value of basic.js that goes back (none: the inline styles are the value).
 // css: the inline styles that go back, one by one. WHY not a shorthand (borderWidth): it reads "" when only some
 //      sides are inline (the tick of a CheckBox has a border at the right and at the bottom), and "" cleared all four.
 BasicDesigner.RAW_VALUES = {
@@ -1229,18 +1231,19 @@ BasicDesigner.RAW_VALUES = {
     padding: { field: "_padding", css: ["paddingTop", "paddingRight", "paddingBottom", "paddingLeft"], elemOf: function (obj) { return obj.elem; } },
     gap: { field: "_gap", css: ["rowGap", "columnGap"], elemOf: function (obj) { return obj.elem; } },
     lineHeight: { field: "_lineHeight", css: ["lineHeight"], elemOf: function (obj) { return obj._textElem || obj.elem; } },
+    zIndex: { css: ["zIndex"], elemOf: function (obj) { return obj.elem; } },
 };
 
 BasicDesigner.rawValueOf = function (obj, key) {
     const raw = BasicDesigner.RAW_VALUES[key];
     const style = raw.elemOf(obj).style;
-    return { value: obj[raw.field], inline: raw.css.map(function (name) { return style[name]; }) };
+    return { value: (raw.field) ? obj[raw.field] : undefined, inline: raw.css.map(function (name) { return style[name]; }) };
 };
 
 BasicDesigner.restoreRawValue = function (obj, key, saved) {
     const raw = BasicDesigner.RAW_VALUES[key];
     const style = raw.elemOf(obj).style;
-    obj[raw.field] = saved.value;
+    if (raw.field) obj[raw.field] = saved.value;
     raw.css.forEach(function (name, i) { style[name] = saved.inline[i]; });
 };
 
@@ -3045,6 +3048,17 @@ BasicDesigner.revertObject = function (obj) {
     BasicDesigner.setStatus(BasicDesigner.title(obj).short + ": its changes are back to the code. (Undo: Cmd/Ctrl+Z)");
 };
 
+// The objects of a value change get the value they had again (a raw one as it was written: RAW_VALUES).
+BasicDesigner.putBackValue = function (c) {
+    c.targets.forEach(function (from, o) {
+        if (c.rawValues && c.rawValues.has(o)) {
+            BasicDesigner.restoreRawValue(o, c.key, c.rawValues.get(o));
+            return;
+        }
+        try { o[c.key] = from; } catch (error) { }
+    });
+};
+
 BasicDesigner.revertAll = function () {
     const s = BasicDesigner.state;
     BasicDesigner.closeParamEditors(); // WHY: an open window holds a value that is gone now
@@ -3071,13 +3085,7 @@ BasicDesigner.revertAll = function () {
     // WHY: The newest first: setting a side clears the opposite one (left / right), so the order matters.
     Array.from(s.changes.values()).reverse().forEach(function (c) {
         if (c.kind) return; // The value changes only (params, places and sides are put back above)
-        c.targets.forEach(function (from, o) {
-            if (c.rawValues && c.rawValues.has(o)) {
-                BasicDesigner.restoreRawValue(o, c.key, c.rawValues.get(o));
-                return;
-            }
-            try { o[c.key] = from; } catch (error) { }
-        });
+        BasicDesigner.putBackValue(c);
     });
     s.pageChanges.forEach(function (c, key) {
         try { s.win.page[key] = c.from; } catch (error) { }
@@ -4855,8 +4863,8 @@ BasicDesigner.setManualMode = function (isOn, silent) {
 // THE OBJECT BUTTONS: the most used actions of the selected object (also in its menu, and with their keys). A button that
 // can not act now is pale (refreshObjectButtons). Their icons: OBJECT_MENU_ICONS.
 BasicDesigner.OBJECT_ACTIONS = [
-    { key: "front", name: "Bring to front (])", description: "Over the other objects of its box: it becomes the last one (the last row of its box in the layers; in a group, the last in its flow)." },
-    { key: "back", name: "Send to back ([)", description: "Under the other objects of its box: it becomes the first one." },
+    { key: "front", name: "Bring to front (])", description: "Over every object of the page: the last one of its box (in a group, the last in its flow) and a zIndex over the others." },
+    { key: "back", name: "Send to back ([)", description: "Under the other objects of its box: the first one; a zIndex given here goes back." },
     { key: "duplicate", name: "Duplicate (⌘D)", description: "A copy right after it, with what is in it." },
     { key: "delete", name: "Delete (⌫)", description: "An object of the code: Revert all brings it back." },
 ];
@@ -4891,8 +4899,8 @@ BasicDesigner.objectActionsOf = function (obj) {
     if (!obj) return {};
     const canReorder = BasicDesigner.canReorder(obj);
     return {
-        front: canReorder && !!BasicDesigner.nextObject(obj),
-        back: canReorder && !!BasicDesigner.previousObject(obj),
+        front: canReorder && (!!BasicDesigner.nextObject(obj) || BasicDesigner.frontZIndexOf(obj) !== null),
+        back: canReorder && (!!BasicDesigner.previousObject(obj) || BasicDesigner.hasGivenZIndex(obj)),
         duplicate: BasicDesigner.canCopy(obj),
         delete: true,
     };
@@ -4906,21 +4914,68 @@ BasicDesigner.canReorder = function (obj) {
     return container === BasicDesigner.state.win.page || BasicDesigner.isPlainContainer(container);
 };
 
-// BRING TO FRONT / SEND TO BACK: the last / the first object of its box, so it is drawn over / under the others.
-// WHY the order and not a zIndex (basic.js bringToFront): the layers show the order, and the code keeps it (a move in the
-// prompt), as Move up / down in the layers.
+// BRING TO FRONT: the last object of its box and a zIndex over every object of the page, so it is drawn over the
+// objects of the other boxes too (the order alone puts it over its own box only). WHY the order too: the layers show it,
+// and the code keeps it (a move in the prompt), as Move up / down in the layers. One undo step: the zIndex is written
+// first, the move (or refreshChanges) writes Changes and the history once with both.
+// SEND TO BACK: the first object of its box; a zIndex given in the designer goes back to the one of its code.
 BasicDesigner.bringToFront = function (obj) {
-    if (!BasicDesigner.canReorder(obj) || !BasicDesigner.nextObject(obj)) return;
-    BasicDesigner.moveObject(obj, { container: obj.containerBox, before: null });
-    BasicDesigner.setStatus(BasicDesigner.title(obj).short + ": over the other objects of its box.");
+    if (!BasicDesigner.canReorder(obj)) return;
+    const zIndex = BasicDesigner.frontZIndexOf(obj);
+    const hasNext = !!BasicDesigner.nextObject(obj);
+    if (zIndex === null && !hasNext) return;
+    if (zIndex !== null) BasicDesigner.applyValue(obj, "zIndex", zIndex);
+    if (hasNext) {
+        BasicDesigner.moveObject(obj, { container: obj.containerBox, before: null });
+    } else {
+        BasicDesigner.refreshChanges();
+        BasicDesigner.showProperties(obj);
+    }
+    BasicDesigner.setStatus(BasicDesigner.title(obj).short + ": over every object of the page.");
 };
 
 BasicDesigner.sendToBack = function (obj) {
     if (!BasicDesigner.canReorder(obj)) return;
     const first = BasicDesigner.childObjects(obj.containerBox)[0];
-    if (!first || first === obj) return;
-    BasicDesigner.moveObject(obj, { container: obj.containerBox, before: first });
+    const isFirst = (!first || first === obj);
+    const hasGivenZIndex = BasicDesigner.hasGivenZIndex(obj);
+    if (isFirst && !hasGivenZIndex) return;
+    if (hasGivenZIndex) {
+        const id = obj.__bd.id + ":zIndex";
+        BasicDesigner.putBackValue(BasicDesigner.state.changes.get(id));
+        BasicDesigner.state.changes.delete(id);
+    }
+    if (!isFirst) {
+        BasicDesigner.moveObject(obj, { container: obj.containerBox, before: first });
+    } else {
+        BasicDesigner.refreshChanges();
+        BasicDesigner.showProperties(obj);
+    }
     BasicDesigner.setStatus(BasicDesigner.title(obj).short + ": under the other objects of its box.");
+};
+
+// The zIndex that puts obj over every object of the page: the highest of the others + 1 (at least 1); null: it is over
+// them already. WHY the whole page: a zIndex counts in a box that is a layer of its own (a stacking context); the highest
+// of the page is over the others in any of them. Not counted: the objects in obj (they go with it) and the ones that are
+// not drawn (a hidden list of a component may wait with a very big zIndex).
+BasicDesigner.frontZIndexOf = function (obj) {
+    const s = BasicDesigner.state;
+    const zIndexOf = function (o) { return parseInt(s.win.getComputedStyle(o.elem).zIndex, 10); };
+    let highest = 0;
+    s.rt.objects.forEach(function (o) {
+        if (o === obj || !o.elem || !o.elem.isConnected || obj.elem.contains(o.elem)) return;
+        if (!o.elem.getClientRects().length) return;
+        const z = zIndexOf(o);
+        if (!isNaN(z) && z > highest) highest = z;
+    });
+    const own = zIndexOf(obj);
+    if (!isNaN(own) && own > highest) return null;
+    return highest + 1;
+};
+
+// A zIndex given in the designer (Bring to front, or the Z index field)
+BasicDesigner.hasGivenZIndex = function (obj) {
+    return BasicDesigner.state.changes.has(obj.__bd.id + ":zIndex");
 };
 
 BasicDesigner.createToolboxButton = function (item) {
