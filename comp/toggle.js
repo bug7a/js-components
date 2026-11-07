@@ -693,9 +693,10 @@ Toggle.createMinimalStyle = function (colors) {
         offButtonScale: 1,
         focusRingColor: colors.focus,
         backgroundStyle: { color: "transparent", selectedColor: "transparent", border: 1, borderColor: colors.line, selectedBorderColor: colors.ink, round: 100 },
-        buttonStyle: { color: colors.lineHover, selectedColor: colors.ink, border: 0, round: 100, shadow: "none", selectedShadow: "none" },
-        markStyle: { color: colors.lineHover, selectedColor: colors.ink },
+        buttonStyle: { color: colors.knob, selectedColor: colors.ink, border: 0, round: 100, shadow: "none", selectedShadow: "none" },
+        markStyle: { color: colors.knob, selectedColor: colors.ink },
     };
 };
-Toggle.styles.minimal = Toggle.createMinimalStyle({ line: Black(0.2), lineHover: Black(0.45), ink: "#1F1F1F", focus: "#3D8BD9" });
-Toggle.styles.minimalDark = Toggle.createMinimalStyle({ line: White(0.18), lineHover: White(0.42), ink: "#EDEDEB", focus: "#7FB6DE" });
+// WHY a strong line: the line of the track shows the toggle (3:1 at least, as WCAG asks of a control)
+Toggle.styles.minimal = Toggle.createMinimalStyle({ line: Black(0.45), knob: Black(0.45), ink: "#1F1F1F", focus: "#3D8BD9" });
+Toggle.styles.minimalDark = Toggle.createMinimalStyle({ line: White(0.42), knob: White(0.42), ink: "#EDEDEB", focus: "#7FB6DE" });

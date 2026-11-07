@@ -1738,10 +1738,10 @@ ItemList.createMinimalStyle = function (colors) {
     };
 };
 ItemList.styles.minimal = ItemList.createMinimalStyle({
-    text: Black(0.85), softText: Black(0.55), faintText: Black(0.35), line: Black(0.2), lineHover: Black(0.45),
+    text: Black(0.85), softText: Black(0.55), faintText: Black(0.54), line: Black(0.2), lineHover: Black(0.45),
     ink: "#1F1F1F", focus: "#3D8BD9", searchStyleName: "minimal", scrollBar: "#373836",
 });
 ItemList.styles.minimalDark = ItemList.createMinimalStyle({
-    text: White(0.88), softText: White(0.55), faintText: White(0.35), line: White(0.18), lineHover: White(0.42),
+    text: White(0.88), softText: White(0.55), faintText: White(0.48), line: White(0.18), lineHover: White(0.42),
     ink: "#EDEDEB", focus: "#7FB6DE", searchStyleName: "minimalDark", scrollBar: "#CFCFCD",
 });

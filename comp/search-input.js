@@ -638,13 +638,13 @@ SearchInput.createMinimalStyle = function (colors) {
         textOffsetY: -1,
         clearIconOffsetY: 0,
         border: 1,
-        borderColor: colors.line,
-        borderBottomStyle: "1px solid " + colors.line,
+        borderColor: colors.edge, // WHY edge: the line that shows the field (3:1 at least)
+        borderBottomStyle: "1px solid " + colors.edge,
         focusBorderColor: colors.ink,
         focusBorderWidth: 1, // as the other minimal fields
         round: 14,
         animated: 0,
     };
 };
-SearchInput.styles.minimal = SearchInput.createMinimalStyle({ invertIcons: 0, text: Black(0.85), placeholder: Black(0.35), line: Black(0.2), ink: "#1F1F1F" });
-SearchInput.styles.minimalDark = SearchInput.createMinimalStyle({ invertIcons: 1, text: White(0.88), placeholder: White(0.35), line: White(0.18), ink: "#EDEDEB" });
+SearchInput.styles.minimal = SearchInput.createMinimalStyle({ invertIcons: 0, text: Black(0.85), placeholder: Black(0.54), edge: Black(0.45), ink: "#1F1F1F" });
+SearchInput.styles.minimalDark = SearchInput.createMinimalStyle({ invertIcons: 1, text: White(0.88), placeholder: White(0.48), edge: White(0.42), ink: "#EDEDEB" });

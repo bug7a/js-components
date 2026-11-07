@@ -493,6 +493,7 @@ RadioButton.styles.classic = RadioButton.styles.light; // the old name of light:
 
 // The minimal theme (_designs/minimal-theme.htm): a 14 px circle of a line, darker under the mouse; when checked an ink
 // line and a 6 px ink dot inside it, no fill; a 13 px text.
+// WHY a strong line: the line is the only thing that shows an empty mark (3:1 at least, as WCAG asks of a control)
 RadioButton.createMinimalStyle = function (colors) {
     return {
         layout: { gap: 8, padding: [0, 2], align: "left center" },
@@ -505,8 +506,8 @@ RadioButton.createMinimalStyle = function (colors) {
         focus: { ringColor: colors.focus },
     };
 };
-RadioButton.styles.minimal = RadioButton.createMinimalStyle({ line: Black(0.2), lineHover: Black(0.45), ink: "#1F1F1F", text: Black(0.85), focus: "#3D8BD9" });
-RadioButton.styles.minimalDark = RadioButton.createMinimalStyle({ line: White(0.18), lineHover: White(0.42), ink: "#EDEDEB", text: White(0.88), focus: "#7FB6DE" });
+RadioButton.styles.minimal = RadioButton.createMinimalStyle({ line: Black(0.45), lineHover: Black(0.65), ink: "#1F1F1F", text: Black(0.85), focus: "#3D8BD9" });
+RadioButton.styles.minimalDark = RadioButton.createMinimalStyle({ line: White(0.42), lineHover: White(0.62), ink: "#EDEDEB", text: White(0.88), focus: "#7FB6DE" });
 
 // The rule of the keyboard focus (style.focus.ringColor). WHY !important: the edge of the mark is an inline style.
 RadioButton.addFocusCss = function () {

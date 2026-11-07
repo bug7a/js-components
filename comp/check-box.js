@@ -456,6 +456,7 @@ CheckBox.styles.classic = CheckBox.styles.light; // the old name of light: the p
 
 // The minimal theme (_designs/minimal-theme.htm): a 14 px square of a line, darker under the mouse; when checked an ink
 // line and an ink tick inside it, no fill; a 13 px text.
+// WHY a strong line: the line is the only thing that shows an empty mark (3:1 at least, as WCAG asks of a control)
 CheckBox.createMinimalStyle = function (colors) {
     return {
         layout: { gap: 8, padding: [0, 2], align: "left center" },
@@ -468,8 +469,8 @@ CheckBox.createMinimalStyle = function (colors) {
         focus: { ringColor: colors.focus },
     };
 };
-CheckBox.styles.minimal = CheckBox.createMinimalStyle({ line: Black(0.2), lineHover: Black(0.45), ink: "#1F1F1F", text: Black(0.85), focus: "#3D8BD9" });
-CheckBox.styles.minimalDark = CheckBox.createMinimalStyle({ line: White(0.18), lineHover: White(0.42), ink: "#EDEDEB", text: White(0.88), focus: "#7FB6DE" });
+CheckBox.styles.minimal = CheckBox.createMinimalStyle({ line: Black(0.45), lineHover: Black(0.65), ink: "#1F1F1F", text: Black(0.85), focus: "#3D8BD9" });
+CheckBox.styles.minimalDark = CheckBox.createMinimalStyle({ line: White(0.42), lineHover: White(0.62), ink: "#EDEDEB", text: White(0.88), focus: "#7FB6DE" });
 
 // The rule of the keyboard focus (style.focus.ringColor). WHY !important: the edge of the mark is an inline style.
 CheckBox.addFocusCss = function () {

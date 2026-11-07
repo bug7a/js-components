@@ -938,5 +938,5 @@ ContextMenu.createMinimalStyle = function (colors) {
         separator: { color: colors.line, space: 4 },
     };
 };
-ContextMenu.styles.minimal = ContextMenu.createMinimalStyle({ ground: "#FFFFFF", text: Black(0.85), faintText: Black(0.35), line: Black(0.2), lineHover: Black(0.45) });
-ContextMenu.styles.minimalDark = ContextMenu.createMinimalStyle({ ground: "#1A1A19", text: White(0.88), faintText: White(0.35), line: White(0.18), lineHover: White(0.42) });
+ContextMenu.styles.minimal = ContextMenu.createMinimalStyle({ ground: "#FFFFFF", text: Black(0.85), faintText: Black(0.54), line: Black(0.2), lineHover: Black(0.45) });
+ContextMenu.styles.minimalDark = ContextMenu.createMinimalStyle({ ground: "#1A1A19", text: White(0.88), faintText: White(0.48), line: White(0.18), lineHover: White(0.42) });

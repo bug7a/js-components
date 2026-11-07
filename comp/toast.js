@@ -666,7 +666,7 @@ Toast.THEMES.minimal = {
     closeHover: Black(0.05),
     actionText: "#1F1F1F",
     actionFill: "transparent",
-    colors: { success: "#2E9E74", error: "#C9503C", warning: "#B77A00", info: "#3D8BD9", loading: Black(0.55) },
+    colors: { success: "#2E9E74", error: "#C24A36", warning: "#B77A00", info: "#3D8BD9", loading: Black(0.55) },
     style: Toast.MINIMAL_SHAPES,
 };
 Toast.THEMES.minimalDark = {

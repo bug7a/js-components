@@ -1352,5 +1352,5 @@ Tabs.createMinimalStyle = function (colors) {
         disabled: { opacity: 0.4 },
     };
 };
-Tabs.styles.minimal = Tabs.createMinimalStyle({ ground: "#FFFFFF", ink: "#1F1F1F", text: Black(0.85), softText: Black(0.55), line: Black(0.2), danger: "#C9503C", focus: "#3D8BD9" });
+Tabs.styles.minimal = Tabs.createMinimalStyle({ ground: "#FFFFFF", ink: "#1F1F1F", text: Black(0.85), softText: Black(0.55), line: Black(0.2), danger: "#C24A36", focus: "#3D8BD9" });
 Tabs.styles.minimalDark = Tabs.createMinimalStyle({ ground: "#1A1A19", ink: "#EDEDEB", text: White(0.88), softText: White(0.55), line: White(0.18), danger: "#FF9F93", focus: "#7FB6DE" });

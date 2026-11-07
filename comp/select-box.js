@@ -1838,15 +1838,15 @@ SelectBox.createMinimalStyle = function (colors) {
     return {
         height: 28,
         style: {
-            field: { color: "transparent", border: 1, borderColor: colors.line, round: 4, padding: [10, 0] },
-            fieldHover: { borderColor: colors.lineHover },
+            field: { color: "transparent", border: 1, borderColor: colors.edge, round: 4, padding: [10, 0] }, // WHY edge: 3:1 at least (a control)
+            fieldHover: { borderColor: colors.edgeHover },
             fieldFocus: { borderColor: colors.ink },
             fieldText: { fontSize: 13, textColor: colors.text },
             placeholder: { textColor: colors.faintText },
             arrow: { color: colors.softText, icon: "chevron", size: 14, opacity: 1, marginRight: 0 },
             panel: { color: colors.ground, border: 1, borderColor: colors.line, round: 4, padding: 4, shadow: "none", gap: 4 },
             searchInput: { styleName: colors.searchStyleName, height: 28, fontSize: 13, searchIconSize: 14, searchIconLeft: 10, searchIconGap: 6, round: 14 },
-            search: { color: "transparent", border: 1, borderColor: colors.line, round: 4, fontSize: 13, textColor: colors.text, height: 28, padding: [10, 0], iconSize: 14 },
+            search: { color: "transparent", border: 1, borderColor: colors.edge, round: 4, fontSize: 13, textColor: colors.text, height: 28, padding: [10, 0], iconSize: 14 },
             option: { fontSize: 13, textColor: colors.text, round: 3, padding: [8, 4], gap: 8, iconSize: 14, border: 1, borderColor: "transparent", space: 2 },
             optionActive: { color: "transparent", lineColor: "", borderColor: colors.lineHover },
             optionSelected: { textColor: colors.ink, checkColor: colors.ink, checkTickColor: colors.ground, fontFamily: "", showTick: 1, tickSize: 12, borderColor: colors.ink },
@@ -1860,10 +1860,10 @@ SelectBox.createMinimalStyle = function (colors) {
     };
 };
 SelectBox.styles.minimal = SelectBox.createMinimalStyle({
-    ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), faintText: Black(0.35),
-    line: Black(0.2), lineHover: Black(0.45), ink: "#1F1F1F", searchStyleName: "minimal", itemListStyleName: "minimal",
+    ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), faintText: Black(0.54),
+    line: Black(0.2), lineHover: Black(0.45), edge: Black(0.45), edgeHover: Black(0.65), ink: "#1F1F1F", searchStyleName: "minimal", itemListStyleName: "minimal",
 });
 SelectBox.styles.minimalDark = SelectBox.createMinimalStyle({
-    ground: "#1A1A19", text: White(0.88), softText: White(0.55), faintText: White(0.35),
-    line: White(0.18), lineHover: White(0.42), ink: "#EDEDEB", searchStyleName: "minimalDark", itemListStyleName: "minimalDark",
+    ground: "#1A1A19", text: White(0.88), softText: White(0.55), faintText: White(0.48),
+    line: White(0.18), lineHover: White(0.42), edge: White(0.42), edgeHover: White(0.62), ink: "#EDEDEB", searchStyleName: "minimalDark", itemListStyleName: "minimalDark",
 });

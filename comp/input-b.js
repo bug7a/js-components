@@ -858,9 +858,9 @@ InputB.createMinimalStyle = function (colors) {
         hoverBackgroundColor: "",
         lineColor: "transparent",
         selectedLineColor: "transparent",
-        backBorderColor: colors.line,
+        backBorderColor: colors.edge, // WHY edge: the line that shows the field (3:1 at least, as WCAG asks of a control)
         selectedBackBorderColor: colors.ink,
-        hoverBackBorderColor: colors.lineHover,
+        hoverBackBorderColor: colors.edgeHover,
         backBorderTopRound: 4,
         backBorderBottomRound: 4,
         titleTextColor: colors.softText,
@@ -886,10 +886,10 @@ InputB.createMinimalStyle = function (colors) {
     };
 };
 InputB.styles.minimal = InputB.createMinimalStyle({
-    ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), faintText: Black(0.35), line: Black(0.2),
-    lineHover: Black(0.45), ink: "#1F1F1F", danger: "#C9503C", colorScheme: "", invertIcons: 0, scrollBar: "#373836",
+    ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), faintText: Black(0.54), line: Black(0.2),
+    lineHover: Black(0.45), edge: Black(0.45), edgeHover: Black(0.65), ink: "#1F1F1F", danger: "#C24A36", colorScheme: "", invertIcons: 0, scrollBar: "#373836",
 });
 InputB.styles.minimalDark = InputB.createMinimalStyle({
-    ground: "#1A1A19", text: White(0.88), softText: White(0.55), faintText: White(0.35), line: White(0.18),
-    lineHover: White(0.42), ink: "#EDEDEB", danger: "#FF9F93", colorScheme: "dark", invertIcons: 1, scrollBar: "#CFCFCD",
+    ground: "#1A1A19", text: White(0.88), softText: White(0.55), faintText: White(0.48), line: White(0.18),
+    lineHover: White(0.42), edge: White(0.42), edgeHover: White(0.62), ink: "#EDEDEB", danger: "#FF9F93", colorScheme: "dark", invertIcons: 1, scrollBar: "#CFCFCD",
 });

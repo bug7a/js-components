@@ -757,7 +757,7 @@ SmartButton.styles.ozdenType4Dark = SmartButton.createDarkTemplate({ color: Whit
 // THE MINIMAL TEMPLATES (the draft _designs/minimal-theme.htm): small (28 px, a 13 px text, a 14 px icon) and made of
 // lines: no fill, the edge gets darker under the mouse, a blue focus ring, a ring that waits. The main action takes the
 // tone "ink" (inkDark on a dark page): the only filled button of the theme.
-SmartButton.MINIMAL_DANGER = "#C9503C"; // the ask of the minimal templates (on light and dark windows: a white text)
+SmartButton.MINIMAL_DANGER = "#C24A36"; // the ask of the minimal templates (on light and dark windows: a white text)
 SmartButton.createMinimalTemplate = function (colors) {
     const danger = SmartButton.MINIMAL_DANGER;
     return {
@@ -790,7 +790,7 @@ SmartButton.styles.minimalDark = SmartButton.createMinimalTemplate({
 // A delete in the minimal theme: the line and the text in the danger color (the line half of it, all of it under the
 // mouse). The icon keeps the color of its file: give it an icon drawn in the danger color.
 SmartButton.styles.minimalDanger = SmartButton.createMinimalTemplate({
-    text: "#C9503C", line: "rgba(201, 80, 60, 0.5)", lineHover: "#C9503C", focus: "#3D8BD9",
+    text: "#C24A36", line: "rgba(194, 74, 54, 0.5)", lineHover: "#C24A36", focus: "#3D8BD9",
     disabledLine: Black(0.08), disabledText: Black(0.34), iconFilter: "none", clock: "minimal",
 });
 SmartButton.styles.minimalDangerDark = SmartButton.createMinimalTemplate({

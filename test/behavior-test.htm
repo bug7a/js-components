@@ -978,7 +978,7 @@
             const row = list.elem.querySelector("[role=option]");
             check("ItemList minimal: a row is 28 high", !!row && row.offsetHeight === 28, row && row.offsetHeight);
             check("SelectBox minimalDark: the field is 28 high", select.elem.offsetHeight === 28, select.elem.offsetHeight);
-            check("SmartButton minimalDanger: 28 high, the text in the danger color", danger.elem.offsetHeight === 28 && danger.style.label.textColor === "#C9503C", danger.elem.offsetHeight + " / " + danger.style.label.textColor);
+            check("SmartButton minimalDanger: 28 high, the text in the danger color", danger.elem.offsetHeight === 28 && danger.style.label.textColor === "#C24A36", danger.elem.offsetHeight + " / " + danger.style.label.textColor);
             [list, select, danger].forEach(function (object) { object.remove(); });
         });
 
@@ -993,7 +993,7 @@
             plain.checkInputValue();
             await basic.nextFrame();
             const fieldEdge = field.background.elem.style.borderColor;
-            check("InputB minimal: an invalid value colors the edge (warningBorderColor)", field.status == 2 && fieldEdge === "rgb(201, 80, 60)", field.status + " / " + fieldEdge);
+            check("InputB minimal: an invalid value colors the edge (warningBorderColor)", field.status == 2 && fieldEdge === "rgb(194, 74, 54)", field.status + " / " + fieldEdge);
             check("InputB: without warningBorderColor the edge stays", plain.status == 2 && plain.background.elem.style.borderColor === plainEdgeBefore, plainEdgeBefore + " -> " + plain.background.elem.style.borderColor);
             check("TextareaB minimal: the count takes the unitStyle of the package (not the dark pill of TextareaB)", note.unit && note.unit.elem.style.backgroundColor === "transparent", note.unit && note.unit.elem.style.backgroundColor);
             check("SmartButton ink: the edge is the color of the button", send.style.box.borderColor === send.style.box.color && send.style.hover.borderColor === send.style.hover.color, send.style.box.borderColor + " / " + send.style.hover.borderColor);

@@ -30,15 +30,17 @@
             ground: "#FFFFFF", // the window: the components have no fill of their own
             text: Black(0.85),
             softText: Black(0.55), // titles of fields, values, descriptions
-            faintText: Black(0.35), // placeholders
+            faintText: Black(0.54), // placeholders (4.5:1 at least)
             line: Black(0.2),
             lineHover: Black(0.45),
+            edge: Black(0.45), // the line that shows a control (a field, a mark, a toggle): 3:1 at least
+            edgeHover: Black(0.65),
             ink: "#1F1F1F", // the line of a focused field, a checked mark, a selected row, the primary button
             inkHover: "#3A3A3A",
             onInk: "#FFFFFF",
             track: Black(0.12), // the empty part of a slider and a progress bar
-            danger: "#C9503C",
-            dangerLine: "rgba(201, 80, 60, 0.5)",
+            danger: "#C24A36",
+            dangerLine: "rgba(194, 74, 54, 0.5)",
             focus: "#3D8BD9", // the ring of the keyboard focus
         };
 
@@ -47,9 +49,11 @@
             ground: "#1A1A19",
             text: White(0.88),
             softText: White(0.55),
-            faintText: White(0.35),
+            faintText: White(0.48),
             line: White(0.18),
             lineHover: White(0.42),
+            edge: White(0.42),
+            edgeHover: White(0.62),
             ink: "#EDEDEB",
             inkHover: "#FFFFFF",
             onInk: "#1A1A19",
@@ -561,8 +565,8 @@
         const getFieldLine = function (state, theme) {
             if (state.error) return theme.danger;
             if (state.focus) return theme.ink;
-            if (state.hover) return theme.lineHover;
-            return theme.line;
+            if (state.hover) return theme.edgeHover;
+            return theme.edge;
         };
 
         // *** SEARCH INPUT
@@ -606,8 +610,8 @@
 
         const getSelectLine = function (state, theme) {
             if (state.isOpen) return theme.ink;
-            if (state.hover) return theme.lineHover;
-            return theme.line;
+            if (state.hover) return theme.edgeHover;
+            return theme.edge;
         };
 
         // GROUP: The open list under the field: the rows of ItemList
@@ -641,8 +645,8 @@
 
         const getMarkLine = function (state, theme) {
             if (state.on) return theme.ink;
-            if (state.hover) return theme.lineHover;
-            return theme.line;
+            if (state.hover) return theme.edgeHover;
+            return theme.edge;
         };
 
         // GROUP: The square of a CheckBox, an ink tick in it when on
@@ -834,7 +838,7 @@
         // *** STEPPER
 
         const drawStepperCell = function (state, theme) {
-            const stepper = HGroup({ hug: 1, align: "left center", gap: 0, color: "transparent", round: SIZE.round, border: SIZE.line, borderColor: state.hoverPlus ? theme.lineHover : theme.line });
+            const stepper = HGroup({ hug: 1, align: "left center", gap: 0, color: "transparent", round: SIZE.round, border: SIZE.line, borderColor: state.hoverPlus ? theme.edgeHover : theme.edge });
             stepper.height = SIZE.control;
             if (state.disabled) stepper.opacity = SIZE.disabledOpacity;
                 drawStepperButton("minus", state.atMinimum ? SIZE.disabledOpacity : 1, theme);
