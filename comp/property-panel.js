@@ -52,6 +52,8 @@ UI COMPONENT TEMPLATE
 - Listen to every change from outside: onChange(change, panel) or panel.listen(fn) (returns a remover).
   change = { kind: "value" | "action" | "tab" | "addColor" | "removeColor" | "orderColors", key, value, oldValue, item, sectionKey }
   The panel keeps the values: getValues(), getValue(key), getData() (the JSON with the current values).
+- openColorPickerFor(request): the same color picker (its groups, its recent colors) for a color that is not an item of
+  the panel. Ex: a parameter of a component, a cell of a table. The title of the picker moves it (a double click on it: back).
 - setValue(key, value, silent) changes an item from outside (Ex: another object was selected).
 - It is always created on the page (whatever container is open) and opened at the right side.
   open() / close() / toggle() slide it. (Not show / hide: those are basic.js methods.)
@@ -965,6 +967,7 @@ const PropertyPanel = function (params = {}) {
     const CHECKER = "repeating-conic-gradient(#BBBBBB 0% 25%, #FFFFFF 0% 50%) 0 0 / 6px 6px";
     const ALPHA_INPUT_WIDTH = 46;
     const PICKER_SPACE = 8; // Between the panel and the color picker
+    let movedPickerPlace = null; // { left, top }: the picker was moved by its title: it opens there until a double click on its title
 
     // A CSS color -> { r, g, b, a }, read by a canvas. null: this page can not read it (Ex: an unknown token).
     const readColor = function (color) {
@@ -1738,7 +1741,8 @@ const PropertyPanel = function (params = {}) {
         const hint = item.hint || item.label || item.key;
         const contentWidth = cp.width - cp.padding * 2;
         const hasScreenDropper = (typeof window.EyeDropper === "function");
-        const hasEyeDropper = hasScreenDropper || (typeof box.pickColor === "function");
+        const hasPageDropper = (typeof box.pickColor === "function" && !colorField.noPagePick);
+        const hasEyeDropper = hasScreenDropper || hasPageDropper;
         const sliderWidth = contentWidth - ((hasEyeDropper) ? _g.itemHeight + _g.gap : 0);
         let palettes = palettesOf(item, 1);
         let isPaletteListOpen = 0;
@@ -2236,19 +2240,62 @@ const PropertyPanel = function (params = {}) {
             return btn;
         };
 
-        // At the left of the panel, at the height of the field. Under the field when there is no space at the left.
+        // WHY read once: a color outside of the panel may have a field that is drawn again while the picker is open.
+        const fieldRect = colorField.rect || colorField.anchor.elem.getBoundingClientRect();
+        const besideRect = colorField.besideRect || box.elem.getBoundingClientRect();
+        let movedPlace = (colorField.besideRect) ? null : movedPickerPlace;
+
+        // At the left of the panel (or of besideRect), at the height of the field. Under the field when there is no
+        // space at the left. A picker moved by its title stays where it was left.
         const placePicker = function () {
-            const fieldRect = colorField.anchor.elem.getBoundingClientRect();
-            const panelRect = box.elem.getBoundingClientRect();
             const height = obj.elem.offsetHeight;
-            let left = panelRect.left - cp.width - PICKER_SPACE;
+            let left = besideRect.left - cp.width - PICKER_SPACE;
             let top = fieldRect.top;
             if (left < SCREEN_MARGIN) {
                 left = Math.min(fieldRect.left, window.innerWidth - cp.width - SCREEN_MARGIN);
                 top = fieldRect.bottom + MENU_OFFSET;
             }
+            if (movedPlace) {
+                left = Math.min(movedPlace.left, window.innerWidth - cp.width - SCREEN_MARGIN);
+                top = movedPlace.top;
+            }
             obj.left = Math.max(SCREEN_MARGIN, left);
             obj.top = Math.max(SCREEN_MARGIN, Math.min(top, window.innerHeight - height - SCREEN_MARGIN));
+        };
+
+        const keepMovedPlace = function (place) {
+            movedPlace = place;
+            if (!colorField.besideRect) movedPickerPlace = place;
+        };
+
+        // DRAG: the title moves the picker, so it does not cover the object that is being colored.
+        const moveByTitle = function (title) {
+            title.clickable = 1;
+            title.cursor = "move";
+            title.elem.title = "Drag to move · Double click: back to its place";
+            title.elem.addEventListener("pointerdown", function (event) {
+                if (event.button !== 0 || event.target !== title.elem) return;
+                event.preventDefault();
+                const startX = event.clientX - obj.elem.getBoundingClientRect().left;
+                const startY = event.clientY - obj.elem.getBoundingClientRect().top;
+                const onMove = function (moveEvent) {
+                    keepMovedPlace({ left: moveEvent.clientX - startX, top: moveEvent.clientY - startY });
+                    placePicker();
+                };
+                const onUp = function () {
+                    window.removeEventListener("pointermove", onMove);
+                    window.removeEventListener("pointerup", onUp);
+                    window.removeEventListener("pointercancel", onUp);
+                };
+                window.addEventListener("pointermove", onMove);
+                window.addEventListener("pointerup", onUp);
+                window.addEventListener("pointercancel", onUp);
+            });
+            title.elem.addEventListener("dblclick", function (event) {
+                if (event.target !== title.elem) return;
+                keepMovedPlace(null);
+                placePicker();
+            });
         };
 
         createIn(page, function () {
@@ -2264,7 +2311,7 @@ const PropertyPanel = function (params = {}) {
             obj.aria = { label: hint + " color" };
 
                 // GROUP: Title and close
-                HGroup({ width: contentWidth, height: _g.itemHeight, align: "left center", gap: 4, color: "transparent" });
+                const pickerTitle = HGroup({ width: contentWidth, height: _g.itemHeight, align: "left center", gap: 4, color: "transparent" });
                     textLabel("", { flex: 1, bold: 1, plainText: hint });
                     const btnClose = textLabel(getIcon("close", 14), { width: _g.itemHeight, height: _g.itemHeight, textColor: _t.softColor });
                     btnClose.round = _s.field.round;
@@ -2278,6 +2325,7 @@ const PropertyPanel = function (params = {}) {
                     btnClose.on("click", closeMenu);
                     onActivateKey(btnClose, closeMenu);
                 endGroup();
+                moveByTitle(pickerTitle);
 
                 // BOX: Saturation (left to right) and brightness (bottom to top) of the hue
                 area = startBox({ width: contentWidth, height: cp.areaHeight, round: 4, color: "transparent" });
@@ -2317,9 +2365,15 @@ const PropertyPanel = function (params = {}) {
                             const ctrlAtPick = controllers[key];
                             closeMenu();
                             box.pickColor(box, function (color) {
+                                if (!box || !color) return;
+                                const pickedValue = joinAlpha(String(color).toUpperCase(), keptAlpha);
+                                if (colorField.isOutside) {
+                                    colorField.commit(pickedValue);
+                                    return;
+                                }
                                 // WHY the same ctrl: setData() while picking (another selection) makes new items with the same keys
-                                if (!box || !color || controllers[key] !== ctrlAtPick) return;
-                                box.setValue(key, joinAlpha(String(color).toUpperCase(), keptAlpha));
+                                if (controllers[key] !== ctrlAtPick) return;
+                                box.setValue(key, pickedValue);
                             });
                         };
                         const pickFromScreen = function () {
@@ -2373,6 +2427,7 @@ const PropertyPanel = function (params = {}) {
             obj: obj,
             opener: colorField.opener,
             ctrl: ctrl,
+            colorField: colorField,
             sync: function () {
                 readState();
                 paintPicker();
@@ -2380,9 +2435,11 @@ const PropertyPanel = function (params = {}) {
             onClose: function () {
                 colorMenu = null; // (removed with the picker)
                 const value = colorField.getValue();
-                if (value === valueAtOpen) return;
-                rememberColor(value);
-                if (quickColors.recent) refreshQuickStrips();
+                if (value !== valueAtOpen) {
+                    rememberColor(value);
+                    if (quickColors.recent) refreshQuickStrips();
+                }
+                if (colorField.onClose) colorField.onClose();
             },
         };
 
@@ -3230,6 +3287,42 @@ const PropertyPanel = function (params = {}) {
         return 1;
     };
     // USAGE: panel.setValue("x", 120, 1)
+
+    // The color picker for a color that is not an item of the panel. request:
+    // { key, hint (its title), value, commit(value), onClose(), opener (an object: a click on it does not close the
+    //   picker, and opening it again from there closes it), rect (the field: the picker is at its height),
+    //   besideRect (the picker is at the left of this rect, not of the panel), noPagePick: 1 (the page can not be clicked now) }
+    box.openColorPickerFor = function (request) {
+        let value = String(request.value ?? "");
+        const colorField = {
+            isOutside: 1,
+            opener: request.opener || { elem: document.createElement("div") },
+            rect: request.rect,
+            besideRect: request.besideRect,
+            noPagePick: request.noPagePick,
+            onClose: request.onClose,
+            getValue: function () { return value; },
+            commit: function (next) {
+                value = String(next);
+                request.commit(value);
+            },
+        };
+        openColorPicker({ item: { key: request.key, hint: request.hint }, sectionKey: "" }, colorField);
+    };
+    // USAGE: panel.openColorPickerFor({ key: "tone", hint: "Tone", value: "#FF0000", rect: rect, opener: swatch, commit: write })
+
+    box.isColorPickerOpen = function () {
+        return !!(menu && menu.colorField);
+    };
+
+    box.closeColorPicker = function () {
+        if (box.isColorPickerOpen()) closeMenu();
+    };
+
+    // Is this element in a popup of the panel? (A popup of the page over it stays open for a click in the color picker.)
+    box.isPopupElement = function (element) {
+        return !!(menu && menu.obj.elem.contains(element));
+    };
 
     // Many values at once: { x: 10, y: 20 }
     box.setValues = function (values, silent = 0) {

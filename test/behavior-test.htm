@@ -523,6 +523,58 @@
             ui.panel.remove();
         });
 
+        test("PropertyPanel: openColorPickerFor gives the same picker to a color outside of the panel", async function () {
+            const sent = [];
+            let closeCount = 0;
+            const panel = PropertyPanel({ data: {}, palettes: [{ key: "mine", name: "Mine", colors: ["#111111"], canAdd: 1 }] });
+            const opener = Box(0, 0, 10, 10);
+            panel.openColorPickerFor({
+                key: "outside",
+                hint: "Outside",
+                value: "#FF0000",
+                opener: opener,
+                rect: { left: 400, top: 60, right: 420, bottom: 80 },
+                commit: function (value) { sent.push(value); },
+                onClose: function () { closeCount++; },
+            });
+            await wait(10);
+            const wasOpen = panel.isColorPickerOpen();
+            const picker = document.querySelector("[role=dialog][aria-label='Outside color']");
+            const swatch = (picker) ? picker.querySelector("[aria-label='#111111']") : null;
+            if (swatch) swatch.click();
+            const isSent = (sent[sent.length - 1] === "#111111");
+            panel.closeColorPicker();
+            await wait(10);
+            check("PropertyPanel: openColorPickerFor gives the same picker to a color outside of the panel", wasOpen && !!swatch && isSent && closeCount === 1 && !panel.isColorPickerOpen(),
+                "open " + wasOpen + ", swatch " + !!swatch + ", sent " + sent.join(",") + ", closed " + closeCount);
+            opener.remove();
+            panel.remove();
+        });
+
+        test("PropertyPanel: the title of the color picker moves it, and it opens there again", async function () {
+            const panel = PropertyPanel({ data: { sections: [{ key: "s", items: [{ key: "fill", type: "color", label: "Fill", value: "#FF0000" }] }] } });
+            await wait(10);
+            const pickerOf = function () { return document.querySelector("[role=dialog][aria-label='Fill color']"); };
+            panel.elem.querySelector("[aria-label='Open the color picker of Fill']").click();
+            await wait(10);
+            const firstLeft = pickerOf().getBoundingClientRect().left;
+            const title = pickerOf().querySelector("[title^='Drag to move']");
+            const startX = title.getBoundingClientRect().left + 40;
+            const startY = title.getBoundingClientRect().top + 5;
+            title.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0, clientX: startX, clientY: startY }));
+            window.dispatchEvent(new PointerEvent("pointermove", { clientX: startX - 30, clientY: startY }));
+            window.dispatchEvent(new PointerEvent("pointerup", { clientX: startX - 30, clientY: startY }));
+            await wait(10);
+            const movedLeft = pickerOf().getBoundingClientRect().left;
+            panel.closeColorPicker();
+            panel.elem.querySelector("[aria-label='Open the color picker of Fill']").click();
+            await wait(10);
+            const openedLeft = pickerOf().getBoundingClientRect().left;
+            check("PropertyPanel: the title of the color picker moves it, and it opens there again", Math.abs(movedLeft - firstLeft + 30) <= 1 && openedLeft === movedLeft,
+                "first " + firstLeft + ", moved " + movedLeft + ", opened " + openedLeft);
+            panel.remove();
+        });
+
         // WHY the moves go to window: the dragged color moves in the grid, and the browser stops sending it the pointer
         test("PropertyPanel: Copy to in the menu of a color opens its groups at the side, a click copies", async function () {
             const changes = [];
