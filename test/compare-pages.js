@@ -26,17 +26,13 @@ WHY one browser, one page at a time: three browsers side by side gave 22 false d
 
 "use strict";
 
-const http = require("http");
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
-const { execFileSync } = require("child_process");
+const chrome = require("./_chrome.js");
+const { ROOT, SAMPLES_FOLDER, OLD_PATH, readGitLines, isInCommit, listSamples, sleep } = chrome;
 
-const ROOT = path.resolve(__dirname, "..");
-const SAMPLES_FOLDER = "02-comp-examples";
 const OUT_FOLDER = path.join(os.tmpdir(), "compare-pages");
-const CHROME_FILE = process.env.CHROME_PATH || "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
-const OLD_PATH = "/__old__"; // the server gives the files of the old commit under this path
 
 const SIZES = [
     { width: 1280, height: 800 },
@@ -51,55 +47,9 @@ const LOAD_TIMEOUT = 30000; // ms
 const MAX_PRESSES = 60; // of a page (a table has very many rows)
 const OPENED_LEVELS = 2; // what a press opens is pressed too: a row of a list, a button of a dialog
 const TRIES = 3; // a real difference stays in every try
-const LISTEN_BACKLOG = 511; // WHY: a page asks for many files at once; a small backlog drops connections
-const MAX_FILE_SIZE = 100 * 1024 * 1024; // bytes: the biggest file read from git
 const LOG_WIDTH = 170; // letters of a line in the report
 
-const MIME_TYPES = {
-    ".htm": "text/html",
-    ".html": "text/html",
-    ".js": "text/javascript",
-    ".css": "text/css",
-    ".json": "application/json",
-    ".svg": "image/svg+xml",
-    ".png": "image/png",
-    ".jpg": "image/jpeg",
-    ".gif": "image/gif",
-    ".webp": "image/webp",
-    ".ttf": "font/ttf",
-    ".woff2": "font/woff2",
-};
-
-// *** GIT AND FILES:
-
-const runGit = function (args) {
-    return execFileSync("git", args, { cwd: ROOT, stdio: ["ignore", "pipe", "ignore"], maxBuffer: MAX_FILE_SIZE });
-};
-
-const readGitLines = function (args) {
-    return runGit(args).toString().split("\n").filter(Boolean);
-};
-
-const isInCommit = function (base, relativePath) {
-    try {
-        runGit(["cat-file", "-e", base + ":./" + relativePath]);
-        return true;
-    } catch (error) {
-        return false;
-    }
-};
-
-// WHY the folder when git has no such file: a gitignored picture is the same in both.
-const readOldFile = function (base, relativePath) {
-    if (isInCommit(base, relativePath)) return runGit(["show", base + ":./" + relativePath]);
-    return fs.readFileSync(path.join(ROOT, relativePath));
-};
-
-const listSamples = function () {
-    return fs.readdirSync(path.join(ROOT, SAMPLES_FOLDER))
-        .filter(function (name) { return name.endsWith(".htm"); })
-        .map(function (name) { return SAMPLES_FOLDER + "/" + name; });
-};
+// *** THE PAGES TO COMPARE:
 
 // The samples changed since the commit, and the samples that load a changed component.
 const findChangedPages = function (base) {
@@ -118,41 +68,6 @@ const findChangedPages = function (base) {
         if (loadsChanged) pages.add(page);
     });
     return [...pages];
-};
-
-// *** THE SERVER:
-
-// path: /comp/tabs.js is the file in the folder, /__old__/comp/tabs.js the file in the old commit.
-const startServer = function (base) {
-    const oldFiles = new Map();
-
-    const readFile = function (urlPath) {
-        const isOld = urlPath.startsWith(OLD_PATH + "/");
-        const relativePath = path.normalize(isOld ? urlPath.slice(OLD_PATH.length + 1) : urlPath.slice(1));
-        if (relativePath.startsWith("..")) throw new Error("out of the repository");
-        if (!isOld) return { data: fs.readFileSync(path.join(ROOT, relativePath)), relativePath };
-        if (!oldFiles.has(relativePath)) oldFiles.set(relativePath, readOldFile(base, relativePath));
-        return { data: oldFiles.get(relativePath), relativePath };
-    };
-
-    const server = http.createServer(function (request, response) {
-        try {
-            const urlPath = decodeURIComponent(request.url.split("?")[0]);
-            const file = readFile(urlPath);
-            response.writeHead(200, {
-                "Content-Type": MIME_TYPES[path.extname(file.relativePath)] || "application/octet-stream",
-                "Cache-Control": "no-store",
-            });
-            response.end(file.data);
-        } catch (error) {
-            response.writeHead(404);
-            response.end();
-        }
-    });
-
-    return new Promise(function (resolve) {
-        server.listen(0, "127.0.0.1", LISTEN_BACKLOG, function () { resolve(server); });
-    });
 };
 
 // *** IN THE PAGE: this function runs in the browser, before the scripts of the page.
@@ -290,22 +205,6 @@ const preparePage = function () {
 };
 
 // *** ONE RUN OF A PAGE:
-
-const loadPuppeteer = function () {
-    const places = ["puppeteer-core", path.join(ROOT, "__video/node_modules/puppeteer-core")];
-    for (const place of places) {
-        try {
-            return require(place);
-        } catch (error) {
-            // WHY no error yet: the next place may have it.
-        }
-    }
-    throw new Error("puppeteer-core is not found. Install it: npm install puppeteer-core");
-};
-
-const sleep = function (ms) {
-    return new Promise(function (resolve) { setTimeout(resolve, ms); });
-};
 
 const withoutOldPath = function (text) {
     return text.split(OLD_PATH + "/").join("/");
@@ -506,7 +405,7 @@ const readOptions = function (args) {
         if (args[i] === "--base") options.base = args[++i];
         else if (args[i] === "--all") options.isAll = true;
         else if (args[i] === "--help") options.isHelp = true;
-        else options.pages.push(args[i].includes("/") ? args[i] : SAMPLES_FOLDER + "/" + args[i]);
+        else options.pages.push(chrome.toPagePath(args[i]));
     }
     return options;
 };
@@ -544,8 +443,7 @@ const comparePage = async function (browser, port, pagePath) {
 const main = async function () {
     const options = readOptions(process.argv.slice(2));
     if (options.isHelp) {
-        const header = fs.readFileSync(__filename, "utf8").split("*/")[1];
-        console.log(header.replace("/*", "").trim());
+        console.log(chrome.helpText(__filename));
         return 0;
     }
 
@@ -558,9 +456,8 @@ const main = async function () {
     fs.rmSync(OUT_FOLDER, { recursive: true, force: true });
     fs.mkdirSync(OUT_FOLDER, { recursive: true });
 
-    const puppeteer = loadPuppeteer();
-    const server = await startServer(options.base);
-    const browser = await puppeteer.launch({ headless: "new", executablePath: CHROME_FILE, args: ["--no-sandbox"] });
+    const server = await chrome.startServer({ commit: options.base });
+    const browser = await chrome.launchChrome();
     const totals = { SAME: 0, LIVE: 0, DIFF: 0, SKIPPED: 0 };
 
     try {

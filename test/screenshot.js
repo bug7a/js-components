@@ -27,16 +27,12 @@ It needs Chrome and puppeteer-core, like compare-pages.js (CHROME_PATH for anoth
 
 "use strict";
 
-const http = require("http");
 const fs = require("fs");
 const path = require("path");
-const { execFileSync } = require("child_process");
+const chrome = require("./_chrome.js");
+const { ROOT, OLD_PATH, isInCommit, sleep } = chrome;
 
-const ROOT = path.resolve(__dirname, "..");
-const SAMPLES_FOLDER = "02-comp-examples";
 const SCREENSHOTS_FOLDER = path.join(ROOT, "_screenshots");
-const CHROME_FILE = process.env.CHROME_PATH || "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
-const OLD_PATH = "/__old__"; // the server gives the files of the old commit under this path
 
 const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 800;
@@ -46,63 +42,8 @@ const DEFAULT_WAIT = 600; // ms: the first animations of a page, the motion of a
 const DEFAULT_MARGIN = 12; // px around a clipped part
 const LOAD_TIMEOUT = 30000; // ms
 const OLD_PICTURE_AGE = 48 * 60 * 60 * 1000; // ms
-const LISTEN_BACKLOG = 511; // WHY: a page asks for many files at once; a small backlog drops connections
-const MAX_FILE_SIZE = 100 * 1024 * 1024; // bytes: the biggest file read from git
 
-const MIME_TYPES = {
-    ".htm": "text/html",
-    ".html": "text/html",
-    ".js": "text/javascript",
-    ".mjs": "text/javascript",
-    ".css": "text/css",
-    ".json": "application/json",
-    ".svg": "image/svg+xml",
-    ".png": "image/png",
-    ".jpg": "image/jpeg",
-    ".jpeg": "image/jpeg",
-    ".gif": "image/gif",
-    ".webp": "image/webp",
-    ".ico": "image/x-icon",
-    ".ttf": "font/ttf",
-    ".woff": "font/woff",
-    ".woff2": "font/woff2",
-    ".mp3": "audio/mpeg",
-    ".mp4": "video/mp4",
-};
-
-// *** GIT AND FILES:
-
-const runGit = function (args) {
-    return execFileSync("git", args, { cwd: ROOT, stdio: ["ignore", "pipe", "ignore"], maxBuffer: MAX_FILE_SIZE });
-};
-
-const isInCommit = function (commit, relativePath) {
-    try {
-        runGit(["cat-file", "-e", commit + ":./" + relativePath]);
-        return true;
-    } catch (error) {
-        return false;
-    }
-};
-
-// WHY the folder when git has no such file: a gitignored picture is the same in both.
-const readOldFile = function (commit, relativePath) {
-    if (isInCommit(commit, relativePath)) return runGit(["show", commit + ":./" + relativePath]);
-    return fs.readFileSync(path.join(ROOT, relativePath));
-};
-
-// The folder page of Live Server: basic designer reads the links with a title and the icon-directory class.
-const folderListing = function (folderPath) {
-    const names = fs.readdirSync(folderPath, { withFileTypes: true }).filter(function (entry) {
-        return entry.name.charAt(0) !== ".";
-    });
-    const links = names.map(function (entry) {
-        const kind = (entry.isDirectory()) ? "icon-directory" : "icon-file";
-        const href = encodeURIComponent(entry.name) + ((entry.isDirectory()) ? "/" : "");
-        return '<a href="' + href + '" title="' + entry.name + '" class="icon ' + kind + '">' + entry.name + "</a>";
-    });
-    return "<!DOCTYPE html><title>listing directory</title>\n" + links.join("\n");
-};
+// *** FILES:
 
 const deleteOldPictures = function () {
     if (!fs.existsSync(SCREENSHOTS_FOLDER)) return;
@@ -115,66 +56,7 @@ const deleteOldPictures = function () {
     });
 };
 
-// *** THE SERVER:
-
-// path: /comp/tabs.js is the file in the folder, /__old__/comp/tabs.js the file in the old commit.
-const startServer = function (commit) {
-    const oldFiles = new Map();
-
-    const answer = function (response, data, extension) {
-        response.writeHead(200, {
-            "Content-Type": MIME_TYPES[extension] || "application/octet-stream",
-            "Cache-Control": "no-store",
-        });
-        response.end(data);
-    };
-
-    const server = http.createServer(function (request, response) {
-        try {
-            const urlPath = decodeURIComponent(request.url.split("?")[0]);
-            const isOld = urlPath.startsWith(OLD_PATH + "/");
-            const relativePath = path.normalize((isOld) ? urlPath.slice(OLD_PATH.length + 1) : urlPath.slice(1));
-            if (relativePath.startsWith("..")) throw new Error("out of the repository");
-
-            const fullPath = path.join(ROOT, relativePath);
-            if (fs.existsSync(fullPath) && fs.statSync(fullPath).isDirectory()) {
-                answer(response, folderListing(fullPath), ".htm");
-                return;
-            }
-            if (!isOld) {
-                answer(response, fs.readFileSync(fullPath), path.extname(relativePath));
-                return;
-            }
-            if (!oldFiles.has(relativePath)) oldFiles.set(relativePath, readOldFile(commit, relativePath));
-            answer(response, oldFiles.get(relativePath), path.extname(relativePath));
-        } catch (error) {
-            response.writeHead(404);
-            response.end();
-        }
-    });
-
-    return new Promise(function (resolve) {
-        server.listen(0, "127.0.0.1", LISTEN_BACKLOG, function () { resolve(server); });
-    });
-};
-
 // *** IN THE PAGE:
-
-const loadPuppeteer = function () {
-    const places = ["puppeteer-core", path.join(ROOT, "__video/node_modules/puppeteer-core")];
-    for (const place of places) {
-        try {
-            return require(place);
-        } catch (error) {
-            // WHY no error yet: the next place may have it.
-        }
-    }
-    throw new Error("puppeteer-core is not found. Install it: npm install puppeteer-core");
-};
-
-const sleep = function (ms) {
-    return new Promise(function (resolve) { setTimeout(resolve, ms); });
-};
 
 // An address as a path of the repository (the server and the old-commit part taken out).
 const withoutOrigin = function (text) {
@@ -323,7 +205,7 @@ const readOptions = function (args) {
         else if (arg === "--scale") options.scale = Number(args[++i]);
         else if (arg === "--wait") options.wait = Number(args[++i]);
         else if (arg === "--margin") options.margin = Number(args[++i]);
-        else options.page = (arg.includes("/")) ? arg : SAMPLES_FOLDER + "/" + arg;
+        else options.page = chrome.toPagePath(arg);
     }
     if (!options.height) options.height = (options.width < PHONE_WIDTH) ? PHONE_HEIGHT : DEFAULT_HEIGHT;
     if (!options.scale) options.scale = (options.clip) ? 2 : 1;
@@ -338,8 +220,7 @@ const printLog = function (title, log) {
 const main = async function () {
     const options = readOptions(process.argv.slice(2));
     if (options.isHelp || !options.page) {
-        const header = fs.readFileSync(__filename, "utf8").split("*/")[1];
-        console.log(header.replace("/*", "").trim());
+        console.log(chrome.helpText(__filename));
         return 0;
     }
 
@@ -350,9 +231,8 @@ const main = async function () {
     deleteOldPictures();
     fs.mkdirSync(SCREENSHOTS_FOLDER, { recursive: true });
 
-    const puppeteer = loadPuppeteer();
-    const server = await startServer(options.before);
-    const browser = await puppeteer.launch({ headless: "new", executablePath: CHROME_FILE, args: ["--no-sandbox"] });
+    const server = await chrome.startServer({ commit: options.before, listFolders: true });
+    const browser = await chrome.launchChrome();
     const origin = "http://127.0.0.1:" + server.address().port;
     const file = path.join(SCREENSHOTS_FOLDER, todayText() + "-" + options.name + ".png");
     let hasError = false;

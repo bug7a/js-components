@@ -29,13 +29,9 @@ disturb it (as they disturb the pictures of compare-pages).
 
 "use strict";
 
-const http = require("http");
-const fs = require("fs");
-const path = require("path");
+const chrome = require("./_chrome.js");
+const { listSamples, toPagePath, sleep } = chrome;
 
-const ROOT = path.resolve(__dirname, "..");
-const SAMPLES_FOLDER = "02-comp-examples";
-const CHROME_FILE = process.env.CHROME_PATH || "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 const SELF_CHECK_PATH = "/__self-check__.htm"; // the page of the self check, made by the server
 
 const TABS = 3;
@@ -48,27 +44,11 @@ const PER_KIND = 1; // objects of one kind (role, class, tabindex) on a page: th
 const RELOAD_EVERY = 5; // clicks: a page is opened again, so the dialogs and menus a click opened go away
 const AROUND_LEVELS = 2; // the objects around the focused one that are read too
 const MAX_INSIDE = 80; // the objects in the focused one that are read
-const LISTEN_BACKLOG = 511; // WHY: a page asks for many files at once; a small backlog drops connections
 
 const FOCUS_TAKERS = '[tabindex]:not([tabindex="-1"]), [role=tab], [role=option], [role=treeitem], [role=menuitem], ' +
     "[role=radio], [role=checkbox], [role=switch], [role=slider], [role=button], button";
 const TEXT_FIELDS = "input, textarea, select, [contenteditable=true], [contenteditable=''], " +
     "[role=textbox], [role=searchbox], [role=combobox], [role=spinbutton]";
-
-const MIME_TYPES = {
-    ".htm": "text/html",
-    ".html": "text/html",
-    ".js": "text/javascript",
-    ".css": "text/css",
-    ".json": "application/json",
-    ".svg": "image/svg+xml",
-    ".png": "image/png",
-    ".jpg": "image/jpeg",
-    ".gif": "image/gif",
-    ".webp": "image/webp",
-    ".ttf": "font/ttf",
-    ".woff2": "font/woff2",
-};
 
 // The page of the self check: a box with a ring at every focus (a click shows it: it must be found) and a box with
 // the ring of basic.js (only for the keyboard: it must not be found).
@@ -86,69 +66,6 @@ const start = function () {
     goodBox.setFocusRing("blue");
 };
 <\/script></head><body></body></html>`;
-
-// *** THE PAGES AND THE SERVER:
-
-const listSamples = function () {
-    return fs.readdirSync(path.join(ROOT, SAMPLES_FOLDER))
-        .filter(function (name) { return name.endsWith(".htm"); })
-        .sort()
-        .map(function (name) { return SAMPLES_FOLDER + "/" + name; });
-};
-
-// A name of a sample ("tabs.htm") or a path from the root ("04-templates/web-forms/order-form.htm")
-const toPagePath = function (name) {
-    if (fs.existsSync(path.join(ROOT, name))) return name;
-    return SAMPLES_FOLDER + "/" + name;
-};
-
-const startServer = function () {
-    const server = http.createServer(function (request, response) {
-        const urlPath = decodeURIComponent(request.url.split("?")[0]);
-        if (urlPath === SELF_CHECK_PATH) {
-            response.writeHead(200, { "Content-Type": "text/html", "Cache-Control": "no-store" });
-            response.end(SELF_CHECK_PAGE);
-            return;
-        }
-        const relativePath = path.normalize(urlPath.slice(1));
-        if (relativePath.startsWith("..")) {
-            response.writeHead(404);
-            response.end();
-            return;
-        }
-        fs.readFile(path.join(ROOT, relativePath), function (error, data) {
-            if (error) {
-                response.writeHead(404);
-                response.end();
-                return;
-            }
-            response.writeHead(200, {
-                "Content-Type": MIME_TYPES[path.extname(relativePath)] || "application/octet-stream",
-                "Cache-Control": "no-store",
-            });
-            response.end(data);
-        });
-    });
-    return new Promise(function (resolve) {
-        server.listen(0, "127.0.0.1", LISTEN_BACKLOG, function () { resolve(server); });
-    });
-};
-
-const loadPuppeteer = function () {
-    const places = ["puppeteer-core", path.join(ROOT, "__video/node_modules/puppeteer-core")];
-    for (const place of places) {
-        try {
-            return require(place);
-        } catch (error) {
-            // WHY no error yet: the next place may have it.
-        }
-    }
-    throw new Error("puppeteer-core is not found. Install it: npm install puppeteer-core");
-};
-
-const sleep = function (ms) {
-    return new Promise(function (resolve) { setTimeout(resolve, ms); });
-};
 
 // *** IN THE PAGE: these functions run in the browser.
 
@@ -356,15 +273,13 @@ const printTotals = function (results) {
 const main = async function () {
     const args = process.argv.slice(2);
     if (args.includes("--help") || args.includes("-h")) {
-        const header = fs.readFileSync(__filename, "utf8").split("*/")[1];
-        console.log(header.replace("/*", "").trim());
+        console.log(chrome.helpText(__filename));
         return 0;
     }
     const pages = (args.length > 0) ? args.map(toPagePath) : listSamples();
 
-    const puppeteer = loadPuppeteer();
-    const server = await startServer();
-    const browser = await puppeteer.launch({ headless: "new", executablePath: CHROME_FILE, args: ["--no-sandbox"] });
+    const server = await chrome.startServer({ pages: { [SELF_CHECK_PATH]: SELF_CHECK_PAGE } });
+    const browser = await chrome.launchChrome();
     try {
         const port = server.address().port;
         if (!await runSelfCheck(browser, port)) return 2;
