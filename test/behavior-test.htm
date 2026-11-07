@@ -347,6 +347,31 @@
             list.remove();
         });
 
+        test("SortableList: a drag puts a row at the very top and at the very bottom (also a taller row)", async function () {
+            const list = SortableList({ width: 300, height: "auto", dragBy: "row", items: ["One", { key: "Two", text: "Two", desc: "A taller row" }, "Three", "Four"] });
+            await wait(50);
+            // The pointer goes far past the edge of the list: the row stops at the edge.
+            const dragRow = async function (text, distance) {
+                const label = findByText(text, list.elem);
+                const rect = label.getBoundingClientRect();
+                const x = rect.left + 5;
+                const y = rect.top + rect.height / 2;
+                pointer(label, "pointerdown", x, y, "touch");
+                for (let i = 1; i <= 10; i++) {
+                    pointer(document, "pointermove", x, y + distance * i / 10, "touch");
+                    await wait(16);
+                }
+                pointer(document, "pointerup", x, y + distance, "touch");
+                await wait(400);
+            };
+            await dragRow("Three", -300);
+            const afterUp = list.getKeys().join(",");
+            await dragRow("Two", 300);
+            const afterDown = list.getKeys().join(",");
+            check("SortableList: a drag puts a row at the very top and at the very bottom (also a taller row)", afterUp === "Three,One,Two,Four" && afterDown === "Three,One,Four,Two", "after the drag up: " + afterUp + ", after the drag down: " + afterDown);
+            list.remove();
+        });
+
         // *** SELECT FILE (comp/select-file.js)
 
         test("SelectFile: a low zone hides what does not fit, first the icon, and no text is squeezed", async function () {

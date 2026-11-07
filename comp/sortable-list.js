@@ -530,16 +530,28 @@ const SortableList = function (params = {}) {
         box.onDragStart(box, drag.entry.item, index);
     };
 
-    // Target: the dragged row passes a row when its center passes the center of that row.
-    const findDragTarget = function (center) {
+    // How far the dragged row moves (dy) to sit at the index: the rows between move out of its way.
+    const getDropDy = function (state, index) {
+        const from = state.index;
+        const tops = state.tops;
+        const heights = state.heights;
+        if (index < from) return tops[index] - tops[from];
+        if (index > from) return (tops[index] + heights[index]) - (tops[from] + heights[from]);
+        return 0;
+    };
+
+    // Target: the dragged row takes a place when it is past the middle of the way to it.
+    // WHY: The dragged row stops at the edge of the list. A rule like "its center passes the center of a row"
+    //      can not reach the first and the last place there (its center stops on the center of that row).
+    const findDragTarget = function (dy) {
         const index = drag.index;
-        const tops = drag.tops;
-        const heights = drag.heights;
         for (let k = drag.minIndex; k < index; k++) {
-            if (center < tops[k] + heights[k] / 2) return k;
+            const middle = (getDropDy(drag, k) + getDropDy(drag, k + 1)) / 2;
+            if (dy < middle) return k;
         }
         for (let k = drag.maxIndex; k > index; k--) {
-            if (center > tops[k] + heights[k] / 2) return k;
+            const middle = (getDropDy(drag, k - 1) + getDropDy(drag, k)) / 2;
+            if (dy > middle) return k;
         }
         return index;
     };
@@ -554,19 +566,16 @@ const SortableList = function (params = {}) {
     const updateDrag = function () {
         if (!drag || !drag.active) return;
         const index = drag.index;
-        const tops = drag.tops;
-        const heights = drag.heights;
         let dy = (drag.lastY - drag.startY) + (getScrollTop() - drag.startScroll);
-        const minDy = tops[drag.minIndex] - tops[index];
-        const maxDy = (tops[drag.maxIndex] + heights[drag.maxIndex]) - (tops[index] + heights[index]);
+        const minDy = getDropDy(drag, drag.minIndex); // The dragged row stays between its first and its last place.
+        const maxDy = getDropDy(drag, drag.maxIndex);
         dy = Math.max(minDy, Math.min(dy, maxDy));
         drag.dy = dy;
 
-        const center = tops[index] + heights[index] / 2 + dy;
-        const target = findDragTarget(center);
+        const target = findDragTarget(dy);
         drag.target = target;
 
-        const slot = heights[index] + box.rowGap;
+        const slot = drag.heights[index] + box.rowGap;
         entries.forEach(function (e, k) {
             if (k === index) return;
             let shift = 0;
@@ -634,12 +643,8 @@ const SortableList = function (params = {}) {
         stopAutoScroll();
         const finished = drag;
         const from = finished.index;
-        const tops = finished.tops;
-        const heights = finished.heights;
         const target = apply ? finished.target : from;
-        let finalDy = 0;
-        if (target > from) finalDy = (tops[target] + heights[target]) - (tops[from] + heights[from]);
-        else if (target < from) finalDy = tops[target] - tops[from];
+        const finalDy = getDropDy(finished, target);
         if (!apply) {
             entries.forEach(function (e, k) {
                 if (k !== from) e.row.css.transform = "";
