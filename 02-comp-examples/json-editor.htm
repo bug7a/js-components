@@ -26,12 +26,17 @@
         // 1. A list of products: a choice (unit), a color, on / off, a picture and a list in a cell. onChange gives the value.
         // 2. An object, the settings of a shop, in the dark theme: a choice (theme), a color, on / off, an object in a cell.
         // 3. In a window: JsonEditor.open() with Cancel and Apply.
+        // 4. The minimal theme: styleName "minimal" on a light window, "minimalDark" on a dark one.
 
         // *** VARIABLES:
         const PAGE_COLOR = "#ECEBE8";
         const SOFT_TEXT = "#6F6E6B";
         const CARD_MAX_WIDTH = 980;
         const EDITOR_HEIGHT = 380;
+        const MINIMAL_HEIGHT = 290;
+        const DARK_WINDOW_COLOR = "#1A1A19";
+        const WINDOW_SPACE = 16;
+        const WINDOW_ROUND = 10;
 
         const PRODUCTS = [
             { name: "Apple", price: 1.2, unit: "kg", color: "#D64545", inStock: true, picture: "../assets/fruids/elma.png", tags: ["red", "sweet"] },
@@ -54,6 +59,12 @@
         const THEMES = ["light", "dark"];
 
         let menuItems = ["Home", "Products", { text: "Contact", key: "contact" }, "-", { text: "About", key: "about" }];
+
+        const SHORTCUTS = [
+            { key: "save", text: "Save", shortcut: "Ctrl+S", enabled: true },
+            { key: "open", text: "Open", shortcut: "Ctrl+O", enabled: true },
+            { key: "quit", text: "Quit", shortcut: "Ctrl+Q", enabled: false },
+        ];
 
         // The icon of the button (24 x 24 lines; the color is in the drawing)
         const ICON_COLOR = "#1F1F1F";
@@ -83,6 +94,7 @@
                 createProducts();
                 createSettings();
                 createWindow();
+                createMinimal();
 
             endGroup();
 
@@ -154,6 +166,21 @@
                 SmartButton({ labelText: "Edit the menu", iconFile: TABLE_ICON, onClick: openMenuEditor });
                 lblMenu = Label({ text: "", fontSize: 13, textColor: SOFT_TEXT });
                 showMenu();
+
+            endGroup();
+
+        };
+
+        const createMinimal = function () {
+
+            startCard("The minimal theme", "styleName: \"minimal\" · \"minimalDark\" on a dark window");
+
+                JsonEditor({ styleName: "minimal", height: MINIMAL_HEIGHT, titleText: "Shortcuts", value: SHORTCUTS });
+
+                // GROUP: A dark window
+                VGroup({ width: "100%", height: "auto", align: "left top", padding: WINDOW_SPACE, color: DARK_WINDOW_COLOR, round: WINDOW_ROUND });
+                    JsonEditor({ styleName: "minimalDark", height: MINIMAL_HEIGHT, titleText: "Shortcuts", value: SHORTCUTS });
+                endGroup();
 
             endGroup();
 

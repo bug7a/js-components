@@ -6829,6 +6829,76 @@
             [quiet, asking, applying].forEach(function (win) { win.close(); });
         });
 
+        test("JsonEditor: onPickColor and onPickPicture get the cell; its setValue() writes it (the writes of one pick are one undo step); pictureBase reads a relative picture", async function () {
+            const picks = [];
+            const editor = JsonEditor({
+                width: 600,
+                height: 260,
+                value: [{ name: "A", color: "#FF0000", picture: "a.png" }],
+                pictureBase: "https://pictures.invalid/shop/",
+                onPickColor: function (self, cell) { picks.push(cell); },
+                onPickPicture: function (self, cell) { picks.push(cell); },
+            });
+            await wait(20);
+            clickJsonCell(editor, 0, "color", 12);
+            clickJsonCell(editor, 0, "picture", 12);
+            const colorCell = picks[0];
+            const pictureCell = picks[1];
+            colorCell.setValue("#00FF00");
+            colorCell.setValue("#0000FF"); // WHY two: a picker writes while it is dragged
+            pictureCell.setValue("b.png");
+            const picked = editor.getValue()[0];
+            editor.undo();
+            editor.undo();
+            const back = editor.getValue()[0];
+            const hasThumb = Array.from(editor.elem.querySelectorAll("div")).some(function (el) { return el.style.backgroundImage.indexOf("https://pictures.invalid/shop/a.png") !== -1; });
+            const row = [picks.length, colorCell.key, colorCell.value, pictureCell.key, colorCell.rect.width > 0, picked.color, picked.picture, back.color, back.picture, hasThumb].join(" | ");
+            check("JsonEditor: onPickColor and onPickPicture get the cell; its setValue() writes it (the writes of one pick are one undo step); pictureBase reads a relative picture", row === "2 | color | #FF0000 | picture | true | #0000FF | b.png | #FF0000 | a.png | true", row);
+            editor.remove();
+        });
+
+        test("JsonEditor: columns of a column give the columns of the empty list in its cells; JsonEditor.open calls onClose once", async function () {
+            const editor = JsonEditor({
+                width: 600,
+                height: 260,
+                value: [{ name: "A", items: [] }],
+                columns: [{ key: "items", columns: [{ key: "sku" }, { key: "count", kind: "number" }] }],
+            });
+            await wait(20);
+            clickJsonCell(editor, 0, "items");
+            const hasColumns = (!!findByText("sku", editor.elem) && !!findByText("count", editor.elem));
+            clickJsonCell(editor, 0, "sku"); // WHY: under the rows of an empty list: + Add a row
+            writeJsonCell(editor, "X1", "Tab");
+            writeJsonCell(editor, "4", "Tab");
+            const value = JSON.stringify(editor.getValue());
+            editor.remove();
+            let closes = 0;
+            const win = JsonEditor.open({ value: ["A"], onClose: function () { closes++; } });
+            await wait(20);
+            win.close();
+            win.close();
+            const row = [hasColumns, value, closes].join(" | ");
+            check("JsonEditor: columns of a column give the columns of the empty list in its cells; JsonEditor.open calls onClose once", row === "true | [{\"name\":\"A\",\"items\":[{\"sku\":\"X1\",\"count\":4}]}] | 1", row);
+        });
+
+        test("JsonEditor minimal and minimalDark: 28 px rows, a 13 px text, no line between the columns, the knob of a switch that is on shows; light and dark do not change", async function () {
+            const light = JsonEditor({ width: 500, height: 200, styleName: "minimal", value: [{ name: "A", on: true }] });
+            const dark = JsonEditor({ width: 500, height: 200, styleName: "minimalDark", value: [{ name: "A", on: true }] });
+            await wait(20);
+            const looks = [light, dark].map(function (editor) {
+                const firstRow = jsonContentOf(editor).lastElementChild.firstElementChild;
+                const nameCell = firstRow.children[1];
+                const switchCell = firstRow.children[2];
+                const knob = switchCell.firstElementChild.firstElementChild;
+                return [firstRow.offsetHeight, nameCell.lastElementChild.style.fontSize, nameCell.style.borderRightColor, knob.style.backgroundColor].join(" ");
+            });
+            light.remove();
+            dark.remove();
+            const isKept = (JsonEditor.styles.light.rowHeight === 30 && JsonEditor.styles.light.colors.columnLine === "#EBEBEA" && JsonEditor.styles.dark.colors.text === "#FFFFFF");
+            const row = looks.join(" / ") + " | " + isKept;
+            check("JsonEditor minimal and minimalDark: 28 px rows, a 13 px text, no line between the columns, the knob of a switch that is on shows; light and dark do not change", row === "28 13px transparent rgb(255, 255, 255) / 28 13px transparent rgb(26, 26, 25) | true", row);
+        });
+
         // *** RANGE SLIDER (comp/range-slider.js)
 
         // A slider where one value is 2 px: 224 px wide, a knob of 24 px, 0 - 100.

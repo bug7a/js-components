@@ -38,6 +38,7 @@
     <script src="../comp/tree-view.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/smart-table.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/data-table.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/json-editor.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/range-slider.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/dialog.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/toast.js" type="text/javascript" charset="utf-8"></script>
@@ -52,7 +53,7 @@
     // The components that have it so far: SmartButton (and minimalDanger for a delete), CheckBox, RadioButton, Toggle,
     // InputB (EmailInputB, PasswordInputB, TextareaB...), SearchInput, SelectBox, ItemList, Slider, RangeSlider,
     // ProgressBar, Tabs, Stepper, MenuBar (its menus: ContextMenu), ToolBar, StatusBar, TreeView, SmartTable,
-    // DataTable, Tooltip, Dialog, Toast.
+    // DataTable, JsonEditor, Tooltip, Dialog, Toast.
 
     // *** THE COLORS AND SIZES OF THE PAGE
     const PAGE_COLOR = "#EDEDEB";
@@ -63,6 +64,7 @@
     const LIGHT_CAPTION_COLOR = Black(0.45);
     const DARK_CAPTION_COLOR = White(0.45);
     const WINDOW_WIDTH = 460;
+    const JSON_EDITOR_HEIGHT = 280;
     const ICON_LIGHT = Black(0.85);
     const DANGER_LIGHT = "#C24A36";
     const DANGER_DARK = "#FF9F93";
@@ -188,6 +190,7 @@
                     TreeView({ styleName: "minimal", width: 260, height: "auto", value: "app", items: FILES });
                     SmartTable({ styleName: "minimal", titleDataList: PEOPLE_COLUMNS, itemDataList: PEOPLE, itemLineCount: 3, style: { width: "100%", height: "auto" } });
                     DataTable({ styleName: "minimal", width: "100%", height: 124, columns: PEOPLE_DATA_COLUMNS, rows: PEOPLE });
+                    JsonEditor({ styleName: "minimal", height: JSON_EDITOR_HEIGHT, value: PEOPLE, showHint: 0 });
                     RangeSlider({ styleName: "minimal", width: 260, lowValue: 20, highValue: 70 });
 
                     Label({ text: "OVER THE PAGE", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
@@ -268,6 +271,7 @@
                     TreeView({ styleName: "minimalDark", width: 260, height: "auto", value: "app", items: FILES });
                     SmartTable({ styleName: "minimalDark", titleDataList: PEOPLE_COLUMNS, itemDataList: PEOPLE, itemLineCount: 3, style: { width: "100%", height: "auto" } });
                     DataTable({ styleName: "minimalDark", width: "100%", height: 124, columns: PEOPLE_DATA_COLUMNS, rows: PEOPLE });
+                    JsonEditor({ styleName: "minimalDark", height: JSON_EDITOR_HEIGHT, value: PEOPLE, showHint: 0 });
                     RangeSlider({ styleName: "minimalDark", width: 260, lowValue: 20, highValue: 70 });
 
                     Label({ text: "OVER THE PAGE", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });

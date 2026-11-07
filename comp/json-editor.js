@@ -11,8 +11,8 @@ UI COMPONENT
   An object is a table of names and values.
 - A cell that holds a list or an object opens as a table of its own; the path at the top goes back.
 - The kind of a column comes from its values and its name: a text, a number, on / off (a switch), a color (a swatch:
-  a click on it opens the color picker of the browser), a picture (a small picture), a choice (columns: options).
-  The menu of a column changes its kind, sorts, renames, moves and deletes it.
+  a click on it opens the color picker of the browser, or onPickColor), a picture (a small picture: onPickPicture
+  chooses one), a choice (columns: options). The menu of a column changes its kind, sorts, renames, moves and deletes it.
 - Paste: a block of a spreadsheet (from the chosen cell), or a JSON list (its items become rows).
   Cmd/Ctrl+C copies the chosen rows as lines of cells.
 - The JSON view shows the same value as a text. A text that is not JSON says where its fault is; the table waits.
@@ -21,7 +21,8 @@ UI COMPONENT
 - The functions of the rows (onClick...) stay in their rows: a table and a JSON text can not hold their code.
 - JsonEditor.open(): the editor in a window over the page, with Cancel and Apply.
 - NEEDS comp/context-menu.js and comp/search-input.js, loaded first.
-- Style packages: "light" (default), "dark". Select with styleName (JsonEditor.styles).
+- Style packages: "light" (default), "dark", "minimal", "minimalDark" (the minimal theme, _designs/minimal-theme.htm).
+  Select with styleName (JsonEditor.styles).
 
 USAGE:
 const editor = JsonEditor({
@@ -42,14 +43,24 @@ const win = JsonEditor.open({
     titleText: "Products",
     value: products,
     onApply: function (value) { products = value; }, // Apply, when something was changed
+    onClose: function () { },                         // after Apply, Cancel or win.close()
 });
 win.close();                    // win.editor is the JsonEditor of the window
+JsonEditor({
+    pictureBase: "https://example.com/shop/",          // the relative pictures of the cells are read from here
+    onPickPicture: function (self, cell) { myPictureList(cell.value, cell.setValue); },
+});
 
-A COLUMN (columns): { key, kind, options, note }
+A COLUMN (columns): { key, kind, options, note, columns }
 - key: the name of the column. An empty list shows these columns. In an object: the name of a row.
 - kind: "text", "number", "flag" (on / off), "color", "picture", "option". (None: from its values and its name)
 - options: the choices of a cell: ["kg", "piece"]. A cell takes another value too, when it is written.
 - note: a soft text on the title of the column.
+- columns: [A COLUMN]: the columns of the list in its cells (the table it opens as).
+
+A CELL (onPickColor, onPickPicture): { value, key, title, x, y, rect, setValue(value) }
+- key: the name of the value (its column, or the name of the row of an object). x, y: the click. rect: the cell on the screen.
+- setValue(): writes the cell (the calls of one pick are one step of the undo: a picker may write while it is dragged).
 
 KEYS:
 - A cell: a click or a letter writes in it. Tab: the next cell. Enter: the next row. Shift+Enter: a new line in it.
@@ -80,6 +91,7 @@ const JsonEditorDefaults = {
     columns: [], // [A COLUMN] (See A COLUMN above): the columns of an empty list; the kind and the choices of a column
     showTitleBar: "auto", // "auto": when there is a title, a note or a table opened in a cell. 1: always
     showHint: 1, // The keys of the cells at the bottom
+    pictureBase: "", // The address the relative pictures of the cells are read from. "": the page
     ariaLabel: "", // "": the titleText
     texts: {
         list: "List",
@@ -155,21 +167,28 @@ const JsonEditorDefaults = {
         close: "Close",
     },
     onChange: function (self, value) { }, // The value changed in the table: a list or an object. (Not at create time, not with setValue())
-    styleName: "light", // "light", "dark" or a name added to JsonEditor.styles
+    onPickColor: null, // function (self, cell) { }: your own color picker for a color cell (See A CELL above). null: the one of the browser
+    onPickPicture: null, // function (self, cell) { }: a list of pictures for a picture cell (a click on its picture). null: the address is written
+    styleName: "light", // "light", "dark", "minimal", "minimalDark" or a name added to JsonEditor.styles
     style: { // Light style package (default)
         box: { color: "#FFFFFF", border: 1, borderColor: Black(0.12), round: 10 },
         colors: {
-            text: "#1F2328", // The values and the titles
+            text: "#1F2328", // The values
+            headText: "#1F2328", // The titles of the columns
             soft: "#6B6F76", // The note, the counts
             dim: "#9EA2A8", // The numbers of the rows, an empty value, a function
             icon: "#5A5E66", // The icons of the toolbar
-            line: "#EBEBEA", // Between the cells, the bars
+            line: "#EBEBEA", // The lines of the bars
+            rowLine: "#EBEBEA", // Between the rows
+            columnLine: "#EBEBEA", // Between the columns
             headLine: "#DEDEDC", // Under the titles of the columns
             strongLine: "#CFCFCC", // A switch that is off, the chosen part of Table | JSON
             ground: "#FFFFFF", // Behind the rows (the numbers of the rows take it: they stay over the cells)
             head: "#F7F7F5", // The titles of the columns
             field: "#F0F0EE", // A button, the search
             fieldHover: "#E6E6E3",
+            fieldLine: "", // A line around a button and around Table | JSON. "": none
+            fieldLineHover: "",
             hover: "#F3F6F9", // A row under the mouse
             selected: "#E1ECF9", // A chosen row
             segment: "#FFFFFF", // The chosen part of Table | JSON
@@ -177,7 +196,9 @@ const JsonEditorDefaults = {
             accentHover: "#2E9DEC",
             accentText: "#0B6CB5", // + Add a row, the path, a list in a cell, the messages
             onAccent: "#FFFFFF",
+            focus: "#0C8CE9", // The ring of the keyboard
             editor: "#FFFFFF", // The field of a cell
+            knob: "#FFFFFF", // The knob of a switch that is off (on: onAccent)
             swatchLine: "rgba(0, 0, 0, 0.15)",
             thumb: "#8A8A8A", // Behind a small picture: black and white icons both show on it
             scrollBar: Black(0.2),
@@ -185,6 +206,7 @@ const JsonEditorDefaults = {
             placeholder: Black(0.38),
         },
         fontSize: 12,
+        headFontSize: 12, // The titles of the columns
         titleFontSize: 14,
         codeFontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace',
         rowHeight: 30,
@@ -305,14 +327,9 @@ const JsonEditor = function (params = {}) {
         return error.message;
     };
 
-    // What the page said about a column (columns). Only the table of the value: not a cell opened in it.
+    // What the page said about a column of the table in sight (columns; a cell opened in it: the columns of its column).
     const hintOf = function (key) {
-        if (level !== levels[0]) return null;
-        return box.columns.find(function (hint) { return hint.key === key; }) || null;
-    };
-
-    const hintsOfLevel = function () {
-        return (level === levels[0]) ? box.columns : [];
+        return level.hints.find(function (hint) { return hint.key === key; }) || null;
     };
 
     const titleOf = function (column) {
@@ -336,10 +353,11 @@ const JsonEditor = function (params = {}) {
 
     // *** THE LEVELS: a cell that holds a list or an object opens as a table of its own, and goes back into its cell.
 
-    // openedCell: { rowId, columnKey } of the cell in the level under it. (null: the value of the page)
+    // hints: [A COLUMN]. openedCell: { rowId, columnKey } of the cell in the level under it. (null: the value of the page)
     const openLevel = function (name, value, hints, openedCell) {
         const data = JsonEditor.levelOf(value, hints);
         data.name = name;
+        data.hints = hints;
         data.openedCell = openedCell;
         data.undoList = [];
         data.redoList = [];
@@ -821,10 +839,10 @@ const JsonEditor = function (params = {}) {
         // GROUP: A title
         const cell = HGroup({ width: column.width, height: HEAD, align: "left center", gap: 0, padding: [SIZE.CELL_PADDING, 0], color: "transparent" });
         cell.shrink = 0;
-        cell.css = { borderRight: "1px solid " + C.line, boxSizing: "border-box", position: "relative" };
+        cell.css = { borderRight: "1px solid " + C.columnLine, boxSizing: "border-box", position: "relative" };
         cell.clickable = 1;
         cell.cursor = "pointer";
-            const lbl = Label({ text: "", height: HEAD, fontSize: _s.fontSize, textColor: (column.key === PLAIN_KEY) ? C.soft : C.text, fontFamily: "opensans-bold", ellipsis: 1 });
+            const lbl = Label({ text: "", height: HEAD, fontSize: _s.headFontSize, textColor: (column.key === PLAIN_KEY) ? C.soft : C.headText, fontFamily: "opensans-bold", ellipsis: 1 });
             lbl.plainText = title + arrow;
             lbl.grow = 1;
             lbl.css = { minWidth: "0px", lineHeight: HEAD + "px" };
@@ -940,7 +958,7 @@ const JsonEditor = function (params = {}) {
         // GROUP: A row
         view.box = HGroup({ left: 0, top: viewIndex * ROW, width: totalWidth(), height: ROW, align: "left center", gap: 0, color: "transparent" });
         view.box.clipContent = 0;
-        view.box.css = { borderBottom: "1px solid " + C.line, boxSizing: "border-box" };
+        view.box.css = { borderBottom: "1px solid " + C.rowLine, boxSizing: "border-box" };
             view.gutter = drawGutter(row);
             level.columns.forEach(function (column) { drawCell(row, column); });
             view.end = drawRowEnd();
@@ -998,7 +1016,7 @@ const JsonEditor = function (params = {}) {
         const value = row.cells[column.key];
         const cell = HGroup({ width: column.width, height: ROW - 1, align: "left center", gap: SIZE.CELL_GAP, padding: [SIZE.CELL_PADDING, 0], color: "transparent" });
         cell.shrink = 0;
-        cell.css = { borderRight: "1px solid " + C.line, boxSizing: "border-box" };
+        cell.css = { borderRight: "1px solid " + C.columnLine, boxSizing: "border-box" };
             if (kind === "flag" && value !== undefined && value !== null) drawSwitch(basic.isOn(value));
             if (kind === "color") drawSwatch(value);
             if (kind === "picture") drawThumb(value);
@@ -1014,7 +1032,7 @@ const JsonEditor = function (params = {}) {
         const toggle = startBox({ width: SIZE.SWITCH_WIDTH, height: SIZE.SWITCH_HEIGHT, round: SIZE.SWITCH_HEIGHT / 2, color: (isOn) ? C.accent : C.strongLine });
         toggle.shrink = 0;
         toggle.css = { position: "relative", left: "0px", top: "0px" };
-            Box({ left: knobLeft, top: SIZE.SWITCH_SPACE, width: SIZE.SWITCH_KNOB, height: SIZE.SWITCH_KNOB, round: SIZE.SWITCH_KNOB / 2, color: "#FFFFFF" });
+            Box({ left: knobLeft, top: SIZE.SWITCH_SPACE, width: SIZE.SWITCH_KNOB, height: SIZE.SWITCH_KNOB, round: SIZE.SWITCH_KNOB / 2, color: (isOn) ? C.onAccent : C.knob });
         endBox();
     };
 
@@ -1030,7 +1048,7 @@ const JsonEditor = function (params = {}) {
 
     // BOX: a small picture
     const drawThumb = function (value) {
-        const address = JsonEditor.pictureAddress(value);
+        const address = JsonEditor.pictureAddress(value, box.pictureBase);
         const thumb = Box({ width: SIZE.SWATCH_SIZE, height: SIZE.SWATCH_SIZE, round: 3, color: C.thumb });
         thumb.shrink = 0;
         thumb.css = { position: "relative", left: "0px", top: "0px", backgroundSize: "contain", backgroundPosition: "center", backgroundRepeat: "no-repeat" };
@@ -1202,7 +1220,11 @@ const JsonEditor = function (params = {}) {
         }
         const isOnSwatch = (hit.xInCell < SIZE.SWATCH_HIT);
         if (kind === "color" && isOnSwatch) {
-            openColorCell(row, column, hit.viewIndex);
+            openColorCell(row, column, hit.viewIndex, event);
+            return;
+        }
+        if (kind === "picture" && isOnSwatch && box.onPickPicture) {
+            box.onPickPicture(box, cellOf(row, column, hit.viewIndex, event));
             return;
         }
         const isOnEnd = (hit.xInCell > column.width - SIZE.OPTION_HIT);
@@ -1231,22 +1253,49 @@ const JsonEditor = function (params = {}) {
         const place = level.rows.indexOf(row) + 1;
         let name = textOf("rowOfPath", { number: place, column: titleOf(column) });
         if (level.isObject) name = String(row.cells[NAME_KEY]);
-        openLevel(name, row.cells[column.key], [], { rowId: row.id, columnKey: column.key });
+        const hint = hintOf((level.isObject) ? name : column.key);
+        const hints = (hint && Array.isArray(hint.columns)) ? hint.columns : [];
+        openLevel(name, row.cells[column.key], hints, { rowId: row.id, columnKey: column.key });
     };
 
-    // The color picker of the browser, at the cell. A drag in it changes the cell at once.
-    const openColorCell = function (row, column, viewIndex) {
+    // A cell for a picker (See A CELL above). The writes of one pick are one step of the undo.
+    const cellOf = function (row, column, viewIndex, event) {
+        const ownLevel = level;
         let isRemembered = false;
-        colorInput.value = JsonEditor.hexOfColor(row.cells[column.key]);
+        const contentRect = content.elem.getBoundingClientRect();
+        const left = contentRect.left + leftOfColumn(column.key) * page.zoom;
+        const top = contentRect.top + viewIndex * ROW * page.zoom;
+        const width = column.width * page.zoom;
+        const height = ROW * page.zoom;
+        return {
+            value: row.cells[column.key],
+            key: (column.key === VALUE_KEY) ? String(row.cells[NAME_KEY]) : column.key,
+            title: titleOf(column),
+            x: event.clientX,
+            y: event.clientY,
+            rect: { left: left, top: top, right: left + width, bottom: top + height, width: width, height: height },
+            setValue: function (value) {
+                // WHY: a picker of the page can stay open after the table of the cell was closed (or the editor removed).
+                if (box._isRemoved || level !== ownLevel) return;
+                if (!isRemembered) remember(); // WHY once: a picker writes while it is dragged
+                isRemembered = true;
+                setCell(row, column.key, value);
+                finishChange();
+            },
+        };
+    };
+
+    // The color picker of the page (onPickColor), or the one of the browser at the cell. A drag in it changes the cell at once.
+    const openColorCell = function (row, column, viewIndex, event) {
+        const cell = cellOf(row, column, viewIndex, event);
+        if (box.onPickColor) {
+            box.onPickColor(box, cell);
+            return;
+        }
+        colorInput.value = JsonEditor.hexOfColor(cell.value);
         colorInput.style.left = leftOfColumn(column.key) + "px";
         colorInput.style.top = (viewIndex + 1) * ROW + "px";
-        colorInput.oninput = function () {
-            if (!isRemembered) remember(); // WHY once: a drag in the picker is one step of the undo
-            isRemembered = true;
-            setCell(row, column.key, colorInput.value.toUpperCase());
-            drawRows(true);
-            reportChange();
-        };
+        colorInput.oninput = function () { cell.setValue(colorInput.value.toUpperCase()); };
         JsonEditor.openPicker(colorInput);
     };
 
@@ -1518,7 +1567,7 @@ const JsonEditor = function (params = {}) {
     // + Column: the names the page gave (columns), or a new one.
     const openColumnChooser = function (button) {
         const rect = button.elem.getBoundingClientRect();
-        const free = hintsOfLevel().filter(function (hint) { return !columnByKey(hint.key); });
+        const free = level.hints.filter(function (hint) { return !columnByKey(hint.key); });
         const askNewName = function () {
             askName({ left: rect.left, top: rect.bottom + SIZE.MENU_SPACE }, box.texts.newColumnName, "", addColumn);
         };
@@ -1541,9 +1590,10 @@ const JsonEditor = function (params = {}) {
             showStatus(box.texts.pasteList);
             return;
         }
+        if (!list.length) return;
         remember();
         const rows = JsonEditor.rowsOfList(list);
-        JsonEditor.columnsOfRows(rows, []).forEach(function (column) {
+        JsonEditor.columnsOfRows(rows, level.hints).forEach(function (column) {
             const isNewPlainColumn = (column.key === PLAIN_KEY && rows.every(function (row) { return row.shape !== "plain"; }));
             if (!columnByKey(column.key) && !isNewPlainColumn) level.columns.push(column);
         });
@@ -1661,7 +1711,7 @@ const JsonEditor = function (params = {}) {
         }
         const old = JsonEditor.valueOfLevel(level);
         remember();
-        const fresh = JsonEditor.levelOf(JsonEditor.keepFunctions(result.data, old), hintsOfLevel());
+        const fresh = JsonEditor.levelOf(JsonEditor.keepFunctions(result.data, old), level.hints);
         level.rows = fresh.rows;
         level.columns = fresh.columns;
         level.selected.clear();
@@ -1728,7 +1778,7 @@ const JsonEditor = function (params = {}) {
         lbl.cursor = "pointer";
         lbl.role = "button";
         lbl.tabIndex = 0;
-        lbl.setFocusRing(C.accent);
+        lbl.setFocusRing(C.focus);
         lbl.on("click", function () { goBackTo(index); });
         lbl.on("keydown", function (self, event) {
             if (event.key !== "Enter" && event.key !== " ") return;
@@ -1771,6 +1821,7 @@ const JsonEditor = function (params = {}) {
         viewSwitch = createIn(viewSwitchHolder, function () {
             const group = HGroup({ width: SIZE.VIEW_SWITCH_WIDTH, height: SIZE.VIEW_SWITCH_HEIGHT, align: "left center", gap: 0, color: C.field, round: 5 });
             group.shrink = 0;
+            if (C.fieldLine) group.props({ border: 1, borderColor: C.fieldLine });
             group.role = "radiogroup";
                 drawViewOption("table", box.texts.table);
                 drawViewOption("json", box.texts.json);
@@ -1798,7 +1849,7 @@ const JsonEditor = function (params = {}) {
         option.role = "radio";
         option.tabIndex = 0;
         option.aria = { checked: (isSelected) ? "true" : "false" };
-        option.setFocusRing(C.accent);
+        option.setFocusRing(C.focus);
         if (!isSelected) option.onHoverChange(function (self, isOver) { option.color = (isOver) ? C.fieldHover : "transparent"; });
         option.on("click", function () { box.setView(view); });
         option.on("keydown", function (self, event) {
@@ -1875,7 +1926,8 @@ const JsonEditor = function (params = {}) {
 
             // GROUP: The search
             const searchHolder = HGroup({ width: SIZE.SEARCH_WIDTH, height: _s.search.height, align: "left center", color: "transparent" });
-            searchHolder.css = { flex: "0 1 " + SIZE.SEARCH_WIDTH + "px", minWidth: SIZE.SEARCH_MIN_WIDTH + "px", marginLeft: SIZE.SEARCH_SPACE + "px" };
+            // WHY the basis under its width: a narrow editor keeps it on the line of the buttons; it grows up to its width.
+            searchHolder.css = { flex: "1 1 " + SIZE.SEARCH_BASIS + "px", maxWidth: SIZE.SEARCH_WIDTH + "px", minWidth: SIZE.SEARCH_MIN_WIDTH + "px", marginLeft: SIZE.SEARCH_SPACE + "px" };
                 searchInput = SearchInput({
                     ..._s.search,
                     styleName: _s.searchStyleName,
@@ -2362,6 +2414,7 @@ JsonEditor.SIZES = {
     TOOLBAR_SPACE: 8,
     TOOLBAR_LINE_HEIGHT: 20,
     SEARCH_WIDTH: 220,
+    SEARCH_BASIS: 160,
     SEARCH_MIN_WIDTH: 120,
     SEARCH_SPACE: 8, // Before the search (the buttons before it end with no line)
     VIEW_SWITCH_WIDTH: 130,
@@ -2560,11 +2613,16 @@ JsonEditor.shortPicture = function (text, template) {
     return JsonEditor.fillText(template, { kind: kind, size: size });
 };
 
-// The address of a picture: a text of an SVG becomes a data address.
-JsonEditor.pictureAddress = function (value) {
+// The address of a picture: a text of an SVG becomes a data address; a relative path is read from base (when given).
+JsonEditor.pictureAddress = function (value, base) {
     const text = String(value ?? "").trim();
     if (/^<svg\b/i.test(text)) return "data:image/svg+xml;utf8," + encodeURIComponent(text);
-    return text;
+    if (!text || !base) return text;
+    try {
+        return new URL(text, base).href;
+    } catch (error) {
+        return text; // WHY: not an address (a typed text); the picture shows nothing
+    }
 };
 
 // What sorts first: numbers by their size, texts as people read them, an empty cell at the end.
@@ -2736,13 +2794,14 @@ JsonEditor.iconOf = function (name, size) {
 JsonEditor.looksOf = function (style) {
     const C = style.colors;
     return {
-        button: { color: C.field, hoverColor: C.fieldHover, textColor: C.text, ringColor: C.accent, fontSize: style.fontSize },
-        accent: { color: C.accent, hoverColor: C.accentHover, textColor: C.onAccent, ringColor: C.accentText, fontSize: style.fontSize },
-        icon: { color: "transparent", hoverColor: C.hover, textColor: C.icon, ringColor: C.accent },
+        button: { color: C.field, hoverColor: C.fieldHover, lineColor: C.fieldLine, hoverLineColor: C.fieldLineHover, textColor: C.text, ringColor: C.focus, fontSize: style.fontSize },
+        accent: { color: C.accent, hoverColor: C.accentHover, lineColor: "", hoverLineColor: "", textColor: C.onAccent, ringColor: C.focus, fontSize: style.fontSize },
+        icon: { color: "transparent", hoverColor: C.hover, textColor: C.icon, ringColor: C.focus },
     };
 };
 
-// LABEL: a button of a text (htmlText: an icon may be in it). look: { color, hoverColor, textColor, ringColor, fontSize }
+// LABEL: a button of a text (htmlText: an icon may be in it).
+// look: { color, hoverColor, lineColor, hoverLineColor ("": no line), textColor, ringColor, fontSize }
 JsonEditor.textButton = function (htmlText, look, onPress) {
     const btn = Label({
         text: htmlText,
@@ -2759,7 +2818,11 @@ JsonEditor.textButton = function (htmlText, look, onPress) {
     btn.role = "button";
     btn.tabIndex = 0;
     btn.setFocusRing(look.ringColor);
-    btn.onHoverChange(function (self, isOver) { btn.color = (isOver) ? look.hoverColor : look.color; });
+    if (look.lineColor) btn.props({ border: 1, borderColor: look.lineColor });
+    btn.onHoverChange(function (self, isOver) {
+        btn.color = (isOver) ? look.hoverColor : look.color;
+        if (look.lineColor) btn.borderColor = (isOver) ? look.hoverLineColor : look.lineColor;
+    });
     btn.on("click", function () { onPress(btn); });
     btn.on("keydown", function (self, event) {
         if (event.key !== "Enter" && event.key !== " ") return;
@@ -2857,16 +2920,18 @@ JsonEditor.copyTextOldWay = function (text) {
 
 // *** THE WINDOW: the editor over the page, with Cancel and Apply.
 
-// options: the params of JsonEditor, onApply(value) (Apply, when something was changed) and onCancel().
-// Returns the window: win.editor is its JsonEditor, win.close() closes it (no onApply, no onCancel).
+// options: the params of JsonEditor, onApply(value) (Apply, when something was changed), onCancel() and onClose() (the window
+// closed: after Apply, Cancel or win.close()). Returns the window: win.editor is its JsonEditor, win.close() closes it.
 JsonEditor.open = function (options = {}) {
 
     const params = Object.assign({}, options);
     const onApply = params.onApply || function (value) { };
     const onCancel = params.onCancel || function () { };
+    const onClose = params.onClose || function () { };
     const onChange = params.onChange || function (self, value) { };
     delete params.onApply;
     delete params.onCancel;
+    delete params.onClose;
     const opener = document.activeElement; // WHY: the focus goes back to it, and a window opened from a Dialog goes over it
     let editor = null;
     let btnCancel = null;
@@ -2905,6 +2970,7 @@ JsonEditor.open = function (options = {}) {
         if (win._isRemoved) return;
         win.remove();
         if (opener && opener.focus && opener.isConnected) opener.focus({ preventScroll: true });
+        onClose();
     };
 
     const apply = function () {
@@ -2961,7 +3027,8 @@ JsonEditor.open = function (options = {}) {
     createIn(editor.footer, function () {
         btnCancel = JsonEditor.textButton(basic.escapeHtml(texts.cancel), looks.button, requestCancel);
         btnCancel.css = { marginLeft: "auto" }; // WHY: at the right end also without the keys of the cells (showHint: 0)
-        JsonEditor.textButton(basic.escapeHtml(texts.apply), looks.accent, apply);
+        const btnApply = JsonEditor.textButton(basic.escapeHtml(texts.apply), looks.accent, apply);
+        btnApply.elem.title = texts.apply + " (Cmd/Ctrl+Enter)";
     });
 
     // INIT:
@@ -2989,10 +3056,13 @@ JsonEditor.styles = {
         box: { color: "#262626", border: 1, borderColor: "#444444", round: 10 },
         colors: {
             text: "#FFFFFF",
+            headText: "#FFFFFF",
             soft: "#A5A5A5",
             dim: "#6E6E6E",
             icon: "#C8C8C8",
             line: "#444444",
+            rowLine: "#444444",
+            columnLine: "#444444",
             headLine: "#4D4D4D",
             strongLine: "#5C5C5C",
             ground: "#262626",
@@ -3006,6 +3076,7 @@ JsonEditor.styles = {
             accentHover: "#3AA0F0",
             accentText: "#7CC4F8",
             onAccent: "#FFFFFF",
+            focus: "#0C8CE9",
             editor: "#1E1E1E",
             swatchLine: "rgba(255, 255, 255, 0.25)",
             thumb: "#8A8A8A",
@@ -3021,3 +3092,79 @@ JsonEditor.styles = {
     },
 
 };
+
+// The minimal theme (_designs/minimal-theme.htm), as SmartTable "minimal": small (28 px rows, a 13 px text) on the ground of
+// the window with a line around it: thin lines between the rows and none between the columns, soft titles over a line, a
+// faint row under the mouse, buttons of lines (Apply is the only filled one: ink), the minimal search and menus.
+// minimalDark: the same on a dark window.
+// WHY opaque fills for the rows: the numbers of the rows stay over the cells when the table moves to the side.
+JsonEditor.createMinimalStyle = function (colors) {
+    return {
+        box: { color: colors.ground, border: 1, borderColor: colors.line, round: 4 },
+        colors: {
+            text: colors.text,
+            headText: colors.softText,
+            soft: colors.softText,
+            dim: colors.faintText,
+            icon: colors.softText,
+            line: colors.line,
+            rowLine: colors.track,
+            columnLine: "transparent",
+            headLine: colors.line,
+            strongLine: colors.edge,
+            ground: colors.ground,
+            head: colors.ground,
+            field: "transparent",
+            fieldHover: "transparent",
+            fieldLine: colors.line,
+            fieldLineHover: colors.lineHover,
+            hover: colors.hover,
+            selected: colors.selected,
+            segment: colors.ground,
+            accent: colors.ink,
+            accentHover: colors.inkHover,
+            accentText: colors.ink,
+            onAccent: colors.onInk,
+            focus: colors.focus,
+            editor: colors.ground,
+            swatchLine: colors.line,
+            thumb: "#8A8A8A",
+            scrollBar: colors.scrollBar,
+            scrollBarHover: colors.scrollBarHover,
+            placeholder: colors.faintText,
+        },
+        fontSize: 13,
+        headFontSize: 12,
+        rowHeight: 28,
+        headHeight: 30,
+        popupShadow: "none",
+        searchStyleName: colors.minimalName,
+        // WHY every key: the keys of the default search (made for its ozden package) would be over the minimal package too.
+        search: {
+            height: 28,
+            fontSize: 13,
+            searchIconSize: 14,
+            searchIconLeft: 10,
+            searchIconGap: 6,
+            clearIconRight: 8,
+            round: 14,
+            color: "transparent",
+            border: 1,
+            borderBottomStyle: "1px solid " + colors.edge,
+            textOffsetY: -1,
+            clearIconOffsetY: 0,
+        },
+        menuStyleName: colors.minimalName,
+        window: { coverColor: colors.cover, shadow: "none" },
+    };
+};
+JsonEditor.styles.minimal = JsonEditor.createMinimalStyle({
+    ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), faintText: Black(0.54), line: Black(0.2), lineHover: Black(0.45),
+    edge: Black(0.45), track: Black(0.08), hover: "#F7F7F7", selected: "#F0F0F0", ink: "#1F1F1F", inkHover: "#3A3A3A",
+    onInk: "#FFFFFF", focus: "#3D8BD9", scrollBar: Black(0.2), scrollBarHover: Black(0.35), cover: Black(0.3), minimalName: "minimal",
+});
+JsonEditor.styles.minimalDark = JsonEditor.createMinimalStyle({
+    ground: "#1A1A19", text: White(0.88), softText: White(0.55), faintText: White(0.48), line: White(0.18), lineHover: White(0.42),
+    edge: White(0.42), track: White(0.08), hover: "#232322", selected: "#2C2C2B", ink: "#EDEDEB", inkHover: "#FFFFFF",
+    onInk: "#1A1A19", focus: "#7FB6DE", scrollBar: White(0.22), scrollBarHover: White(0.35), cover: Black(0.6), minimalName: "minimalDark",
+});
