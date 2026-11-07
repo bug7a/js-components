@@ -78,6 +78,7 @@
     const LIGHT_CAPTION_COLOR = Black(0.45);
     const DARK_CAPTION_COLOR = White(0.45);
     const WINDOW_WIDTH = 460;
+    const PAGE_SIDE_SPACE = 16; // px at the sides of the windows (a phone)
     const LIGHT_LINE_COLOR = Black(0.2);
     const DARK_LINE_COLOR = White(0.18);
     const SPLIT_HEIGHT = 80;
@@ -154,10 +155,11 @@
         // BOX: Scrolling page
         const pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
 
-            HGroup({ width: "100%", height: "auto", align: "center top", gap: 24, padding: 40, wrap: 1, clipContent: 0 });
+            HGroup({ width: "100%", height: "auto", align: "center top", gap: 24, padding: [PAGE_SIDE_SPACE, 40], wrap: 1, clipContent: 0 });
 
                 // GROUP: The light window (minimal)
-                VGroup({ width: WINDOW_WIDTH, height: "auto", align: "left top", gap: 14, padding: 28, color: LIGHT_WINDOW_COLOR, round: 10, clipContent: 0 });
+                VGroup({ width: "100%", height: "auto", align: "left top", gap: 14, padding: 28, color: LIGHT_WINDOW_COLOR, round: 10, clipContent: 0 });
+                that.css = { maxWidth: WINDOW_WIDTH + "px" }; // WHY: on a phone the window is as wide as the screen
 
                     Label({ text: "minimal", fontSize: 18, bold: 1, textColor: LIGHT_TITLE_COLOR });
 
@@ -224,7 +226,7 @@
                     RangeSlider({ styleName: "minimal", width: 260, lowValue: 20, highValue: 70 });
 
                     Label({ text: "PICKERS, FIELDS", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
-                    HGroup({ hug: 1, align: "left center", gap: 8, clipContent: 0 });
+                    HGroup({ width: "100%", height: "auto", align: "left center", gap: 8, wrap: 1, clipContent: 0 }); // WHY wrap: a phone
                         SelectDate({ styleName: "minimal", width: 140, placeholder: "Date" });
                         SelectTime({ styleName: "minimal", width: 100, time: "14:30" });
                         SelectColor({ styleName: "minimal", width: 130, selectedColor: "#3871E0" });
@@ -235,7 +237,11 @@
 
                     Label({ text: "STEPS, SECTIONS, AREAS", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
                     StepBar({ styleName: "minimal", width: "100%", steps: ["Cart", "Address", "Payment", "Done"], currentStep: 2 });
-                    Accordion({ styleName: "minimal", width: "100%", height: "auto", sections: SECTIONS });
+                    const lightSettings = Accordion({ styleName: "minimal", width: "100%", height: "auto", sections: SECTIONS });
+                    lightSettings.startSection("general");
+                        CheckBox({ styleName: "minimal", labelText: "Open with the system" });
+                        CheckBox({ styleName: "minimal", labelText: "Look for updates", checked: 1 });
+                    lightSettings.endSection();
                     startBox({ width: "100%", height: SPLIT_HEIGHT, color: "transparent", border: 1, borderColor: LIGHT_LINE_COLOR, round: 4 });
                         Splitter({ styleName: "minimal", firstSize: 160 });
                     endBox();
@@ -271,7 +277,8 @@
                 endGroup();
 
                 // GROUP: The dark window (minimalDark)
-                VGroup({ width: WINDOW_WIDTH, height: "auto", align: "left top", gap: 14, padding: 28, color: DARK_WINDOW_COLOR, round: 10, clipContent: 0 });
+                VGroup({ width: "100%", height: "auto", align: "left top", gap: 14, padding: 28, color: DARK_WINDOW_COLOR, round: 10, clipContent: 0 });
+                that.css = { maxWidth: WINDOW_WIDTH + "px" }; // WHY: on a phone the window is as wide as the screen
 
                     Label({ text: "minimalDark", fontSize: 18, bold: 1, textColor: DARK_TITLE_COLOR });
 
@@ -338,7 +345,7 @@
                     RangeSlider({ styleName: "minimalDark", width: 260, lowValue: 20, highValue: 70 });
 
                     Label({ text: "PICKERS, FIELDS", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
-                    HGroup({ hug: 1, align: "left center", gap: 8, clipContent: 0 });
+                    HGroup({ width: "100%", height: "auto", align: "left center", gap: 8, wrap: 1, clipContent: 0 }); // WHY wrap: a phone
                         SelectDate({ styleName: "minimalDark", width: 140, placeholder: "Date" });
                         SelectTime({ styleName: "minimalDark", width: 100, time: "14:30" });
                         SelectColor({ styleName: "minimalDark", width: 130, selectedColor: "#3871E0" });
@@ -349,7 +356,11 @@
 
                     Label({ text: "STEPS, SECTIONS, AREAS", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
                     StepBar({ styleName: "minimalDark", width: "100%", steps: ["Cart", "Address", "Payment", "Done"], currentStep: 2 });
-                    Accordion({ styleName: "minimalDark", width: "100%", height: "auto", sections: SECTIONS });
+                    const darkSettings = Accordion({ styleName: "minimalDark", width: "100%", height: "auto", sections: SECTIONS });
+                    darkSettings.startSection("general");
+                        CheckBox({ styleName: "minimalDark", labelText: "Open with the system" });
+                        CheckBox({ styleName: "minimalDark", labelText: "Look for updates", checked: 1 });
+                    darkSettings.endSection();
                     startBox({ width: "100%", height: SPLIT_HEIGHT, color: "transparent", border: 1, borderColor: DARK_LINE_COLOR, round: 4 });
                         Splitter({ styleName: "minimalDark", firstSize: 160 });
                     endBox();
