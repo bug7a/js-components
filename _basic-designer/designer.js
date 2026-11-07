@@ -1738,6 +1738,7 @@ BasicDesigner.listItem = function (key, value) {
         value: (typeof value === "number") ? Math.round(value * 100) / 100 : value,
         min: 0,
         parseText: function (typed) { return BasicDesigner.parseListText(typed, key); },
+        commaIsList: 1, // "12,0" is two values here, not the decimal 12.0 (PropertyPanel)
     };
     if (BasicDesigner.isFourValues(value)) item.span = 2;
     return item;
@@ -7276,6 +7277,8 @@ BasicDesigner.COPY_KEYS = {
     common: ["width", "height", "color", "opacity", "round", "border", "borderColor", "boxShadow"],
     text: ["text", "fontSize", "textColor", "textAlign", "bold", "italic"],
     group: ["gap", "padding", "align", "wrap", "justify"],
+    // WHY not of a Button / Input: the panel reads the padding the browser gives them ("6, 1"), not one of the code.
+    padding: ["padding"], // a Box and a Label
     field: ["minimal"], // a Button and an Input
     input: ["placeholder", "inputType", "maxLength"],
 };
@@ -7308,6 +7311,7 @@ BasicDesigner.copyItemOf = function (obj) {
     let keys = BasicDesigner.COPY_KEYS.common.slice();
     if (p.isText) keys = keys.concat(BasicDesigner.COPY_KEYS.text);
     if (p.isGroup) keys = keys.concat(BasicDesigner.COPY_KEYS.group);
+    if (type === "Box" || type === "Label") keys = keys.concat(BasicDesigner.COPY_KEYS.padding);
     if (p.isButton || p.isInput) keys = keys.concat(BasicDesigner.COPY_KEYS.field);
     if (p.isInput) keys = keys.concat(BasicDesigner.COPY_KEYS.input);
     const props = {};

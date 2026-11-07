@@ -947,6 +947,40 @@
             return (hasArrays) ? true : "code: " + code;
         }, /NEW: added/, function () { return (BD.state.addedObjects.length === 0) ? true : "copies left: " + BD.state.addedObjects.length; });
 
+        // A Cmd+D copy of a Box keeps its lists and its padding (only the padding of a group was copied)
+        const isNoCopyLeft = function () { return (BD.state.addedObjects.length === 0) ? true : "copies left: " + BD.state.addedObjects.length; };
+        await checkStep(R, "copy of a box with lists and a padding", async function () {
+            BD.select(A.boxLists);
+            await sleep(30);
+            BD.duplicateObject(A.boxLists);
+            await sleep(100);
+        }, function () {
+            const copy = BD.state.addedObjects[0];
+            return (copy) ? diffLook(A.boxLists, copy) : "no copy";
+        }, /NEW: added/, isNoCopyLeft);
+
+        // ... and of a Label with a padding (given in the panel first). WHY no undo after it: checkStep ends at the state
+        // its Revert all made (a step of the history too): the label is clean again; one more undo brought both back.
+        await checkStep(R, "copy of a label with a padding", async function () {
+            BD.select(A.labelGiven);
+            await sleep(30);
+            BD.onPropertyChange({ kind: "value", key: "padding", value: "14, 10" });
+            await sleep(650); // WHY: More than HISTORY_MERGE_TIME: the copy is an undo step of its own.
+            BD.duplicateObject(A.labelGiven);
+            await sleep(100);
+        }, function () {
+            const copy = BD.state.addedObjects[0];
+            return (copy) ? diffLook(A.labelGiven, copy) : "no copy";
+        }, /NEW: added/, isNoCopyLeft);
+        const labelPadding = W().getComputedStyle(A.labelGiven.elem).paddingLeft;
+        if (labelPadding !== "0px") R.fails.push("copy of a label with a padding: its padding stayed after the check (" + labelPadding + ")");
+
+        // The list fields read "12,0" as a list, not as the decimal 12.0 (commaIsList of PropertyPanel)
+        const LIST_FIELDS = [["boxGiven", "round"], ["boxGiven", "border"], ["boxGiven", "padding"], ["groupGiven", "gap"], ["groupGiven", "padding"]];
+        const withoutCommaList = LIST_FIELDS.filter(function (f) { return fieldItemOf(A[f[0]], f[1]).commaIsList !== 1; });
+        if (withoutCommaList.length) R.fails.push("commaIsList: " + JSON.stringify(withoutCommaList));
+        else R.passed.push("commaIsList");
+
         // The texts a list field refuses (the old value comes back) and the ones it reads
         const REFUSED = [["padding", "1, 2, 3"], ["round", "1, 2, 3, 4, 5"], ["gap", "1, 2, 3, 4"], ["border", "-1, 2"], ["round", "a, b"]];
         const notRefused = REFUSED.filter(function (r) { return BD.parseListText(r[1], r[0]) !== undefined; });
