@@ -6,7 +6,8 @@ How a component gets an `animated` param (the user, 2026-10-27). The model is `c
 ## What the param is
 
 - `animated: 0` (default) / `1`, and `box.setAnimated(0/1)`. (`Toggle`: 1 by default, the user, 2026-11-02: only a
-  toggle with marks moves, a toggle without marks does not change.)
+  toggle with marks moves, a toggle without marks does not change. `SmartButton`, `MiniGraphBox`, `SparkLineBox`: 1 by
+  default too.)
 - `animated: 0` changes nothing: the component looks and works exactly as before (no transition, no transform,
   no box-shadow written). Only after `setAnimated(0)` on an animated object is the still look written back.
 - A style package that is the user's own look (`ozden`, `ozdenDark`...) may carry `animated: 1`; `classic` stays still.
@@ -19,11 +20,16 @@ How a component gets an `animated` param (the user, 2026-10-27). The model is `c
 - **No motion at the first view.** `setMotion()` waits a moment before it starts, so the transitions are set at
   create time and the first paint does not move. No intro animation, no loop.
 - One duration and one curve for the whole component: `0.25s`, `cubic-bezier(0.2, 0.8, 0.2, 1)` (a fast start,
-  a soft stop). Named constants at the top (`MOTION_TIME`, `MOTION_EASE`).
-- **One exception, the spring of a toggle icon (the user, 2026-10-28):** an icon that turns to show a new state
+  a soft stop). Named constants at the top (`MOTION_TIME`, `MOTION_EASE`). A panel closes faster (the table below).
+- **An exception, the spring of a toggle icon (the user, 2026-10-28):** an icon that turns to show a new state
   (+ → ×, a chevron that opens a menu) may end with a small overshoot: `transform 0.35s cubic-bezier(0.34, 1.56,
   0.64, 1)` (`SPRING_TIME`, `SPRING_EASE`). Only that turn springs; the rest of the component keeps the one curve.
   The model: `comp/action-button.js`.
+- **An exception, the press of `SmartButton` (the user, 2026-11-07; its design of 2026-11-04):** while it is pressed
+  `transform: scale(0.94)` and `filter: brightness(0.92)` in 0.15 s (`style.press`); the color under the mouse is
+  `background-color 0.2s`, also with `animated: 0`.
+- **An exception, the line of a chart:** `GraphBox` and `SparkLineBox` move a line with a `d` transition: nothing else
+  can change its form.
 - Small sizes: grow 1.05-1.08 under the mouse, about 1.06 while focused, a short pulse 1.14 for 150 ms; a tilt of
   about 10-12 deg; a turn of 90 deg for an icon like ×. Check that a grown or tilted icon does not touch its text.
 
@@ -45,7 +51,7 @@ without an icon has no icon motion and no pulse). Values are the "feel" sizes ab
 | Kind | Hover | Focus / pressed / active | Show / hide, value change |
 |---|---|---|---|
 | Field (input, select, textarea) | inset line 1 px; its icon grows 1.06 and gets clearer | inset line 2 px; the focus line under it grows from its middle (`scaleX` 0 → 1); the icon tilts | a small part (×, badge) grows in from 0.6; a typed letter: one pulse of the icon |
-| Button | lifts 1-2 px (`translateY`) or grows 1.02; a soft shadow | pressed: back down, 0.98 | a loading icon fades in; no pulse on the text |
+| Button | the color changes (the model: `comp/smart-button.js`) | pressed: 0.94 and a little darker | a loading icon fades in; no pulse on the text |
 | Icon button / small action (×, ⋯) | turns (× 90°) or grows 1.08 | pressed: 0.92 | appears from 0.6 + fade |
 | Check box / radio / switch | the box grows 1.05 or an inset line | — | the mark draws in: grows from 0.6 + fade; a switch knob slides (`translateX`) |
 | List row / tree row / menu item | an inset line or a fading tint layer (opacity) | the selected mark slides or fades in | a new row fades in from 4-8 px (`translateY`); a removed one fades out |
@@ -56,12 +62,12 @@ without an icon has no icon motion and no pulse). Values are the "feel" sizes ab
 
 - A shadow that grows: put the bigger shadow on a layer and fade its opacity, or let `box-shadow` move (small
   objects only).
-- A lift or a grow of a button or card needs room: its group gets `clipContent: 0` (or it is cut at the edge).
+- A lift or a grow of a card needs room: its group gets `clipContent: 0` (or it is cut at the edge).
 
 ## Performance
 
-- Only `transform`, `opacity` and `box-shadow` change. Never `width`, `height`, `left`, `top`, `padding`,
-  `font-size` (they move the layout).
+- Only `transform`, `opacity` and `box-shadow` change (the exceptions are above). Never `width`, `height`, `left`,
+  `top`, `padding`, `font-size` (they move the layout).
 - CSS transitions (`obj.setMotion(...)`) only: no `requestAnimationFrame` loop, no `every()` timer.
 - A line around a field is an **inset** box-shadow (`inset 0 0 0 1px color`): it does not move the layout and a
   group that clips its content does not cut it. Don't change `borderColor` for it: it also overwrites a
