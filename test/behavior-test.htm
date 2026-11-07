@@ -1089,7 +1089,15 @@
             field.remove();
         });
 
-        // *** TOGGLE (comp/toggle.js)
+        test("InputB minimal with no title: the field starts at the top and the box is as high as the field (the field of Dialog.prompt)", async function () {
+            const untitled = InputB({ styleName: "minimal", titleText: "", inputValue: "report.pdf" });
+            const titled = InputB({ styleName: "minimal", titleText: "Name" });
+            await basic.nextFrame();
+            const untitledTop = untitled.background.elem.offsetTop;
+            check("InputB minimal, no title: the field at the top, the box 28 high", untitledTop === 0 && untitled.elem.offsetHeight === 28, untitledTop + " / " + untitled.elem.offsetHeight);
+            check("InputB minimal with a title: the field under the title", titled.background.elem.offsetTop > 0, titled.background.elem.offsetTop);
+            [untitled, titled].forEach(function (field) { field.remove(); });
+        });
 
         test("Toggle: the keyboard and screen readers can use it", async function () {
             const toggle = Toggle({ value: 0 });

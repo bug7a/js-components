@@ -59,6 +59,7 @@ WebSite: https://bug7a.github.io/js-components
 -- minimal / minimalDark (_designs/minimal-theme.htm): the title over a 28 px field of a line (titlePosition "above").
 - The sizes: titleFontSize, inputFontSize, inputHeight, fieldPadding, descriptionFontSize (the defaults: 16, 20, 40, 14, 14).
 - titlePosition: "inside" (default: the title in the field) | "above" (the title over the field, titleGap under it).
+  "above" with titleText "": no title row, the field starts at the top (a title set later with setTitle() is not shown).
 - hoverBackBorderColor: the edge under the mouse ("": no change).
 - warningBorderColor: the edge while a warning shows, not while typing ("": no change). warningBallSize, warningBallBorder:
   the colored ball (16, 2; minimal: an 8 px dot).
@@ -209,8 +210,10 @@ const InputB = function(params = {}) {
     const OUT_OF_SCREEN_TOP = -1000;
     const TITLE_LINE_HEIGHT = 1.35; // of the title font size (titlePosition "above": the place of the field is known)
     const isTitleAbove = (box.titlePosition === "above");
+    // WHY: an empty title kept its row (and the gap under it) over the field; the field slid out of an "auto" box
+    const hasTitleRow = isTitleAbove && String(box.titleText) !== "";
     const titleLineHeight = Math.round(box.titleFontSize * TITLE_LINE_HEIGHT);
-    const fieldTop = isTitleAbove ? titleLineHeight + box.titleGap : 0; // px: where the field starts
+    const fieldTop = hasTitleRow ? titleLineHeight + box.titleGap : 0; // px: where the field starts
 
     // *** PUBLIC VARIABLES:
     
@@ -545,6 +548,7 @@ const InputB = function(params = {}) {
             if (box.titleLetterSpacing) that.css.letterSpacing = box.titleLetterSpacing;
             // WHY: over the field the title starts at its edge, not at the text inside it
             if (isTitleAbove) that.css = { lineHeight: titleLineHeight + "px", marginLeft: -box.leftPadding + "px", whiteSpace: "nowrap" };
+            if (isTitleAbove && !hasTitleRow) that.visible = 0;
 
             // INPUT: Main object
             if(box.createInput == 1) {
