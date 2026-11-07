@@ -4733,6 +4733,7 @@ BasicDesigner.buildTopBar = function () {
         // Send to AI (VS Code only), and Copy prompt at its right: send it, or copy it.
         if (BasicDesigner.isInVSCode) ui.btnTopSend = BasicDesigner.sendButton(false);
         ui.btnTopCopy = BasicDesigner.copyButton(false);
+    folder: "M1.8 4a1 1 0 0 1 1-1h3.4l1.6 1.8h5.4a1 1 0 0 1 1 1v6.4a1 1 0 0 1-1 1H2.8a1 1 0 0 1-1-1z",
 
     endGroup();
 
@@ -5176,10 +5177,15 @@ BasicDesigner.openPageMenu = function (filter) {
                 const list = VGroup({ width: "100%", height: "auto", align: "left top", gap: 0, padding: 4, color: "transparent", position: "relative" });
                 list.css = { alignItems: "stretch", boxSizing: "border-box" };
 
-                    const addTitle = function (title) {
-                        const lbl = Label({ text: "", fontSize: 11, textColor: C.dim, css: { padding: "6px 8px 2px 8px" } });
-                        lbl.plainText = title; // WHY: It can hold the typed text.
-                        lbl.shrink = 0;
+                    // A title, with an icon in front of it when iconPath is given
+                    const addTitle = function (title, iconPath = "") {
+                        const titleRow = HGroup({ width: "100%", height: "auto", gap: 5, align: "left center", color: "transparent" });
+                        titleRow.shrink = 0;
+                        titleRow.css = { padding: "6px 8px 2px 8px", boxSizing: "border-box" };
+                            if (iconPath) BasicDesigner.svgLabel(iconPath, 12, C.dim);
+                            const lbl = Label({ text: "", fontSize: 11, textColor: C.dim });
+                            lbl.plainText = title; // WHY: It can hold the typed text.
+                        endGroup();
                     };
                     // A row: shownText, and what a click (or Enter) does. pagePath: the open page is painted blue.
                     const addRow = function (shownText, choose, pagePath = "") {
@@ -5207,20 +5213,20 @@ BasicDesigner.openPageMenu = function (filter) {
                     };
 
                     // RECENT PAGES
-                    if (recent.length) addTitle("Recent pages");
+                    if (recent.length) addTitle("Recent pages", BasicDesigner.TOP_ICONS.file);
                     recent.forEach(function (pagePath) { addPageRow(pagePath); });
 
                     // SELECTED FOLDER: its pages, shown without the folder part of their path
                     if (folder && (folderPages.length || !text)) {
-                        addTitle("Selected folder: " + folder.path + "/" + ((folder.pages.length) ? "" : "  (no .htm page)"));
+                        addTitle("Selected folder: " + folder.path + "/" + ((folder.pages.length) ? "" : "  (no .htm page)"), BasicDesigner.TOP_ICONS.folder);
                         folderPages.forEach(function (pagePath) { addPageRow(pagePath, pagePath.slice(folder.path.length + 1)); });
                     } else if (!text) {
-                        addTitle("Selected folder");
+                        addTitle("Selected folder", BasicDesigner.TOP_ICONS.folder);
                         addRow("Open Folder…", function () { BasicDesigner.openFolderDialog(); });
                     }
 
                     // RECENT FOLDERS (at the bottom): a click selects the folder, and the list shows its pages
-                    if (recentFolders.length) addTitle("Recent folders");
+                    if (recentFolders.length) addTitle("Recent folders", BasicDesigner.TOP_ICONS.folder);
                     recentFolders.forEach(function (folderPath) {
                         addRow("▸  " + folderPath + "/", async function () {
                             if (await BasicDesigner.setFolder(folderPath)) BasicDesigner.openPagePicker();
