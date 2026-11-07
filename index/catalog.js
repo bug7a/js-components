@@ -555,6 +555,12 @@ CATALOG.COMPONENTS = [
         tr: "Bir aralıktan, adım adım değer seçmek için kaydırıcı. Görünümler: round (ince bir ray ve yuvarlak beyaz bir tutamaç: yeni sayfaların görünümü), koyu sayfa için roundDark ve classic (Material 3'ten esinlenildi).",
     },
     {
+        key: "range-slider", name: "RangeSlider", cat: "inputs",
+        source: "comp/range-slider.js", samples: ["02-comp-examples/range-slider.htm"],
+        en: "A range of values on a thin bar: two knobs and the part between them: a price, the hours of a day. A step, the smallest distance, its own text in the bubble, the keyboard. Light and dark looks.",
+        tr: "İnce bir bar üzerinde değer aralığı: iki düğme ve aralarındaki parça: fiyat, günün saatleri. Adım, en küçük aralık, baloncukta kendi metni, klavye. Aydınlık ve karanlık görünüş.",
+    },
+    {
         key: "toggle", name: "Toggle", cat: "selection",
         source: "comp/toggle.js",
         samples: [

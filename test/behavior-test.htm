@@ -79,6 +79,7 @@
         <script src="../comp/splitter.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/accordion.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/grid-group.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/range-slider.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/json-view.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/markdown-view.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/tool-bar.js" type="text/javascript" charset="utf-8"></script>
@@ -6314,6 +6315,306 @@
                 colored === "red" && plainColor !== "red" && updated === "blue" && onRow === "b" && onEmpty === null,
                 [colored, plainColor, updated, onRow, onEmpty].join(" | "));
             tree.remove();
+        });
+
+        // *** RANGE SLIDER (comp/range-slider.js)
+
+        // A slider where one value is 2 px: 224 px wide, a knob of 24 px, 0 - 100.
+        const makeRangeSlider = function (params) {
+            return RangeSlider(Object.assign({ left: 40, top: 40, width: 224, lowValue: 20, highValue: 80 }, params));
+        };
+
+        const rangeXOf = function (slider, value) {
+            return slider.elem.getBoundingClientRect().left + 12 + (value - slider.minValue) * 200 / (slider.maxValue - slider.minValue);
+        };
+
+        const rangePress = function (slider, type, value, pointerType, target) {
+            const element = target || slider.elem;
+            pointer(element, type, rangeXOf(slider, value), slider.elem.getBoundingClientRect().top + 22, pointerType || "mouse");
+        };
+
+        test("RangeSlider: the values stay on a step, inside the range and apart; setValues() and getValues()", async function () {
+            const noValues = RangeSlider({ width: 224 });
+            const atStart = noValues.getValues().join();
+            noValues.remove();
+            const slider = makeRangeSlider({ step: 5, minGap: 10 });
+            await wait(20);
+            const values = function () { return slider.getValues().join(); };
+            const first = values();
+            slider.setValues(23, 77);
+            const onStep = values();
+            slider.setValues(-50, 500);
+            const inRange = values();
+            slider.setValues(90, 10);
+            const swapped = values();
+            slider.setValues(50, 52);
+            const apart = values();
+            slider.setValues(100, 100);
+            const atEnd = values();
+            slider.setValues(0, 0);
+            const atStartEnd = values();
+            slider.setValues("20", "60");
+            const texts = values();
+            slider.setValues(null, 70);
+            const onlyHigh = values();
+            slider.setValues("not a number", 90);
+            const wrong = values();
+            slider.setStep(0.5);
+            slider.setValues(10.3, 20.2);
+            const half = values();
+            slider.setMinValue(15);
+            const newMin = values();
+            slider.setMaxValue(18);
+            const newMax = values();
+            slider.setMinGap(0);
+            slider.setValues(16, 16);
+            const noGap = values();
+            check("RangeSlider: the values stay on a step, inside the range and apart; setValues() and getValues()",
+                atStart === "0,100" && first === "20,80" && onStep === "25,75" && inRange === "0,100" && swapped === "10,90" && apart === "50,60" && atEnd === "90,100" && atStartEnd === "0,10" &&
+                texts === "20,60" && onlyHigh === "20,70" && wrong === "0,90" && half === "10.5,20.5" && newMin === "15,25" && newMax === "15,18" && noGap === "16,16",
+                [atStart, first, onStep, inRange, swapped, apart, atEnd, atStartEnd, texts, onlyHigh, wrong, half, newMin, newMax, noGap].join(" | "));
+            slider.remove();
+        });
+
+        test("RangeSlider: the knobs and the part between them stand at their values, also when the width changes", async function () {
+            const slider = makeRangeSlider({ width: "100%" });
+            const holder = Box({ left: 0, top: 0, width: 224, height: 44 });
+            holder.elem.appendChild(slider.elem);
+            slider.css.left = "0";
+            slider.css.top = "0";
+            await wait(20);
+            const placesOf = function () {
+                const around = slider.elem.getBoundingClientRect();
+                const center = function (part) {
+                    const rect = part.elem.getBoundingClientRect();
+                    return Math.round(rect.left + rect.width / 2 - around.left);
+                };
+                const fill = slider.fill.elem.getBoundingClientRect();
+                return [center(slider.lowKnob), center(slider.highKnob), Math.round(fill.left - around.left), Math.round(fill.right - around.left)].join();
+            };
+            const small = placesOf();
+            holder.width = 424;
+            await wait(20);
+            const big = placesOf();
+            slider.setValues(0, 100);
+            const ends = placesOf();
+            const barWidth = Math.round(slider.track.elem.getBoundingClientRect().width);
+            check("RangeSlider: the knobs and the part between them stand at their values, also when the width changes",
+                small === "52,172,52,172" && big === "92,332,92,332" && ends === "12,412,12,412" && barWidth === 424,
+                [small, big, ends, barWidth].join(" | "));
+            holder.remove();
+        });
+
+        test("RangeSlider: a drag moves a knob with no jump, stops at the other knob and at minGap; a press on the bar brings the nearest knob", async function () {
+            const moves = [];
+            let ends = 0;
+            const slider = makeRangeSlider({ minGap: 10, onChange: function (self) { moves.push(self.getValues().join()); }, onChangeEnd: function () { ends++; } });
+            await wait(20);
+            const low = slider.lowKnob.elem;
+            // Pressed 4 px beside its middle: it does not jump.
+            pointer(low, "pointerdown", rangeXOf(slider, 20) + 4, 60, "mouse");
+            const noJump = moves.length;
+            pointer(low, "pointermove", rangeXOf(slider, 30) + 4, 60, "mouse");
+            const moved = slider.lowValue;
+            pointer(low, "pointermove", rangeXOf(slider, 95), 60, "mouse");
+            const stoppedByGap = slider.lowValue;
+            pointer(low, "pointerup", rangeXOf(slider, 95), 60, "mouse");
+            const afterDrag = [ends, moves.length].join();
+            moves.length = 0;
+            ends = 0;
+            rangePress(slider, "pointerdown", 10);
+            const nearestLow = slider.lowValue;
+            rangePress(slider, "pointerup", 10);
+            rangePress(slider, "pointerdown", 95);
+            const nearestHigh = slider.highValue;
+            rangePress(slider, "pointermove", 85);
+            const dragsOn = slider.highValue;
+            rangePress(slider, "pointerup", 85);
+            const barPresses = [moves.join("/"), ends].join(" ");
+            ends = 0;
+            moves.length = 0;
+            pointer(slider.elem, "pointermove", rangeXOf(slider, 50), 60, "mouse");
+            const noPress = moves.length;
+            rangePress(slider, "pointerdown", 85, "mouse", slider.highKnob.elem);
+            rangePress(slider, "pointerup", 85, "mouse", slider.highKnob.elem);
+            const noMoveNoEnd = ends;
+            slider.elem.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, clientX: rangeXOf(slider, 50), pointerId: 7, button: 2 }));
+            const otherButton = slider.getValues().join();
+            slider.setEnabled(0);
+            rangePress(slider, "pointerdown", 50);
+            rangePress(slider, "pointerup", 50);
+            const notEnabled = slider.getValues().join();
+            check("RangeSlider: a drag moves a knob with no jump, stops at the other knob and at minGap; a press on the bar brings the nearest knob",
+                noJump === 0 && moved === 30 && stoppedByGap === 70 && afterDrag === "1,2" && nearestLow === 10 && nearestHigh === 95 && dragsOn === 85 && barPresses === "10,80/10,95/10,85 2" &&
+                noPress === 0 && noMoveNoEnd === 0 && otherButton === "10,85" && notEnabled === "10,85",
+                [noJump, moved, stoppedByGap, afterDrag, nearestLow, nearestHigh, dragsOn, barPresses, noPress, noMoveNoEnd, otherButton, notEnabled].join(" | "));
+            slider.remove();
+        });
+
+        test("RangeSlider: from two knobs at one place the direction of the first move chooses; at an end the one that can move", async function () {
+            const slider = makeRangeSlider({ lowValue: 50, highValue: 50 });
+            await wait(20);
+            const pressStack = function (at, to) {
+                pointer(slider.highKnob.elem, "pointerdown", rangeXOf(slider, at), 60, "mouse");
+                pointer(slider.highKnob.elem, "pointermove", rangeXOf(slider, to), 60, "mouse");
+                pointer(slider.highKnob.elem, "pointerup", rangeXOf(slider, to), 60, "mouse");
+                return slider.getValues().join();
+            };
+            const toRight = pressStack(50, 70);
+            slider.setValues(50, 50);
+            const toLeft = pressStack(50, 30);
+            slider.setValues(100, 100);
+            const atHighEnd = pressStack(100, 80);
+            slider.setValues(0, 0);
+            const atLowEnd = pressStack(0, 20);
+            slider.setValues(50, 50);
+            rangePress(slider, "pointerdown", 30);
+            const barLeft = slider.getValues().join();
+            rangePress(slider, "pointerup", 30);
+            slider.setValues(50, 50);
+            rangePress(slider, "pointerdown", 70);
+            const barRight = slider.getValues().join();
+            rangePress(slider, "pointerup", 70);
+            check("RangeSlider: from two knobs at one place the direction of the first move chooses; at an end the one that can move",
+                toRight === "50,70" && toLeft === "30,50" && atHighEnd === "80,100" && atLowEnd === "0,20" && barLeft === "30,50" && barRight === "50,70",
+                [toRight, toLeft, atHighEnd, atLowEnd, barLeft, barRight].join(" | "));
+            slider.remove();
+        });
+
+        test("RangeSlider: a finger on the bar: a tap moves a knob, a move to the side drags, the scroll of the page changes nothing; on a knob it drags at once", async function () {
+            const moves = [];
+            let ends = 0;
+            const slider = makeRangeSlider({ onChange: function (self) { moves.push(self.getValues().join()); }, onChangeEnd: function () { ends++; } });
+            await wait(20);
+            rangePress(slider, "pointerdown", 40, "touch");
+            const notYet = slider.lowValue;
+            pointer(slider.elem, "pointermove", rangeXOf(slider, 40) + 2, 62, "touch");
+            const smallMove = slider.lowValue;
+            rangePress(slider, "pointerup", 40, "touch");
+            const tap = [slider.lowValue, ends].join();
+            slider.setValues(20, 80);
+            ends = 0;
+            rangePress(slider, "pointerdown", 40, "touch");
+            rangePress(slider, "pointermove", 50, "touch");
+            const dragged = slider.lowValue;
+            rangePress(slider, "pointerup", 50, "touch");
+            const afterDrag = ends;
+            slider.setValues(20, 80);
+            ends = 0;
+            moves.length = 0;
+            rangePress(slider, "pointerdown", 40, "touch");
+            pointer(slider.elem, "pointercancel", rangeXOf(slider, 40), 200, "touch");
+            const scrolled = [slider.getValues().join(), moves.length, ends].join();
+            rangePress(slider, "pointermove", 70, "touch");
+            const noPressAfter = slider.getValues().join();
+            pointer(slider.highKnob.elem, "pointerdown", rangeXOf(slider, 80), 60, "touch");
+            pointer(slider.highKnob.elem, "pointermove", rangeXOf(slider, 70), 60, "touch");
+            pointer(slider.highKnob.elem, "pointerup", rangeXOf(slider, 70), 60, "touch");
+            const onKnob = slider.highValue;
+            const touchActions = [slider.elem.style.touchAction, slider.lowKnob.elem.style.touchAction].join();
+            check("RangeSlider: a finger on the bar: a tap moves a knob, a move to the side drags, the scroll of the page changes nothing; on a knob it drags at once",
+                notYet === 20 && smallMove === 20 && tap === "40,1" && dragged === 50 && afterDrag === 1 && scrolled === "20,80,0,0" && noPressAfter === "20,80" && onKnob === 70 && touchActions === "pan-y,none",
+                [notYet, smallMove, tap, dragged, afterDrag, scrolled, noPressAfter, onKnob, touchActions].join(" | "));
+            slider.remove();
+        });
+
+        test("RangeSlider: the keys of each knob, the other knob and minGap stop them; a screen reader hears the values", async function () {
+            const moves = [];
+            let ends = 0;
+            const slider = makeRangeSlider({ step: 2, minGap: 4, formatValue: function (value) { return value + " TL"; }, onChange: function (self) { moves.push(self.getValues().join()); }, onChangeEnd: function () { ends++; } });
+            await wait(20);
+            const low = slider.lowKnob.elem;
+            const high = slider.highKnob.elem;
+            const results = [];
+            const press = function (element, keyName) {
+                const event = new KeyboardEvent("keydown", { key: keyName, bubbles: true, cancelable: true });
+                element.dispatchEvent(event);
+                results.push(slider.getValues().join());
+                return event;
+            };
+            press(low, "ArrowRight");
+            press(low, "ArrowUp");
+            press(low, "ArrowLeft");
+            press(low, "ArrowDown");
+            press(low, "PageUp");
+            press(low, "PageDown");
+            press(high, "End");
+            press(high, "Home");
+            press(low, "End");
+            press(low, "Home");
+            const before = moves.length;
+            const atLimit = press(low, "Home");
+            const noMove = (moves.length === before);
+            const other = press(low, "a");
+            const roles = [low.getAttribute("role"), low.tabIndex, high.tabIndex, low.getAttribute("aria-label"), high.getAttribute("aria-label")].join();
+            slider.setValues(20, 60);
+            const aria = [low.getAttribute("aria-valuenow"), low.getAttribute("aria-valuetext"), low.getAttribute("aria-valuemin"), low.getAttribute("aria-valuemax"),
+                high.getAttribute("aria-valuenow"), high.getAttribute("aria-valuemin"), high.getAttribute("aria-valuemax")].join();
+            ends = 0;
+            moves.length = 0;
+            slider.setEnabled(0);
+            press(low, "ArrowRight");
+            const offState = [slider.lowValue, low.tabIndex, low.getAttribute("aria-disabled"), moves.length].join();
+            slider.setEnabled(1);
+            const onState = [low.tabIndex, low.getAttribute("aria-disabled")].join();
+            check("RangeSlider: the keys of each knob, the other knob and minGap stop them; a screen reader hears the values",
+                results.slice(0, 10).join("/") === "22,80/24,80/22,80/20,80/40,80/20,80/20,100/20,24/20,24/0,24" && atLimit.defaultPrevented && noMove && !other.defaultPrevented &&
+                roles === "slider,0,0,Minimum,Maximum" && aria === "20,20 TL,0,56,60,24,100" && offState === "20,-1,true,0" && onState === "0,false",
+                [results.join("/"), atLimit.defaultPrevented, noMove, other.defaultPrevented, roles, aria, offState, onState].join(" | "));
+            slider.remove();
+        });
+
+        test("RangeSlider: the bubble of a knob that moves, in plain text; only one at a time; it goes away", async function () {
+            const slider = makeRangeSlider({ formatValue: function (value) { return "<b>" + value + "</b>"; } });
+            await wait(20);
+            const isShown = function (knob) { return knob.lblValue.elem.getClientRects().length > 0; };
+            const atStart = [isShown(slider.lowKnob), isShown(slider.highKnob)].join();
+            pointer(slider.lowKnob.elem, "pointerdown", rangeXOf(slider, 20), 60, "mouse");
+            pointer(slider.lowKnob.elem, "pointermove", rangeXOf(slider, 30), 60, "mouse");
+            const whileMoving = [isShown(slider.lowKnob), isShown(slider.highKnob), slider.lowKnob.lblValue.elem.textContent, slider.lowKnob.lblValue.elem.querySelectorAll("b").length].join();
+            const above = (slider.lowKnob.lblValue.elem.getBoundingClientRect().bottom < slider.lowKnob.elem.getBoundingClientRect().top);
+            pointer(slider.lowKnob.elem, "pointerup", rangeXOf(slider, 30), 60, "mouse");
+            const afterUp = isShown(slider.lowKnob);
+            slider.highKnob.elem.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true, cancelable: true }));
+            const afterKey = isShown(slider.highKnob);
+            await wait(1100);
+            const later = isShown(slider.highKnob);
+            slider.remove();
+            const quiet = makeRangeSlider({ showValueOnMove: 0 });
+            await wait(20);
+            pointer(quiet.lowKnob.elem, "pointerdown", rangeXOf(quiet, 20), 60, "mouse");
+            pointer(quiet.lowKnob.elem, "pointermove", rangeXOf(quiet, 30), 60, "mouse");
+            const quietShown = isShown(quiet.lowKnob);
+            pointer(quiet.lowKnob.elem, "pointerup", rangeXOf(quiet, 30), 60, "mouse");
+            quiet.remove();
+            check("RangeSlider: the bubble of a knob that moves, in plain text; only one at a time; it goes away",
+                atStart === "false,false" && whileMoving === "true,false,<b>30</b>,0" && above && !afterUp && afterKey && !later && !quietShown,
+                [atStart, whileMoving, above, afterUp, afterKey, later, quietShown].join(" | "));
+        });
+
+        test("RangeSlider: setTheme() paints a new package, the values and the style of the page stay; remove() in a press", async function () {
+            const slider = makeRangeSlider({ style: { knob: { size: 30 } } });
+            await wait(20);
+            const looks = function () {
+                return [slider.fill.elem.style.backgroundColor, slider.track.elem.style.backgroundColor, slider.lowKnob.elem.offsetWidth, slider.styleName].join("|");
+            };
+            const light = looks();
+            slider.setTheme("roundDark");
+            const dark = looks();
+            const values = slider.getValues().join();
+            slider.setTheme("round");
+            const back = looks();
+            pointer(slider.lowKnob.elem, "pointerdown", rangeXOf(slider, 20), 60, "mouse");
+            pointer(slider.lowKnob.elem, "pointermove", rangeXOf(slider, 30), 60, "mouse");
+            const lowKnob = slider.lowKnob;
+            slider.remove();
+            slider.remove();
+            pointer(document.body, "pointermove", 10, 10, "mouse");
+            pointer(document.body, "pointerup", 10, 10, "mouse");
+            const removed = [slider.isRemoved, lowKnob.isRemoved].join();
+            check("RangeSlider: setTheme() paints a new package, the values and the style of the page stay; remove() in a press",
+                light.endsWith("|30|round") && dark.includes("|30|roundDark") && light !== dark.replace("roundDark", "round") && values === "20,80" && back === light && removed === "1,1",
+                [light, dark, values, back, removed].join(" || "));
         });
 
         // *** GRID GROUP (comp/grid-group.js)
