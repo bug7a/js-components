@@ -793,8 +793,8 @@
         expect("two sides", same(BD.writePaddingSides(BD.readPaddingSides([1, 2])), [1, 2]));
         expect("one side", same(BD.writePaddingSides(BD.readPaddingSides(5)), 5));
 
-        // 5. Every shape of a list comes back from a table, and a function stays
-        const backFromTable = function (value) { return BD.valueOfTableLevel(BD.tableLevelOf(value, [])); };
+        // 5. Every shape of a list comes back from a table (JsonEditor), and a function stays
+        const backFromTable = function (value) { return JsonEditor.valueOfLevel(JsonEditor.levelOf(value, [])); };
         [[], ["A", "B"], [1, 2], [[1, "a"], [2, "b"]], [{ a: 1 }, { a: 2, b: "x" }], ["A", { text: "B", on: 0 }, "-"], [{ a: null }], [{ a: [1, 2], b: { c: 1 } }]].forEach(function (list) {
             expect("a table of " + JSON.stringify(list), same(backFromTable(list), list));
         });
@@ -803,10 +803,10 @@
         expect("a function of a row in a table", same(backFromTable([{ text: "A", onClick: onClick }])[0].onClick === onClick, true));
         const kept = BD.keepFunctions([{ key: "b" }, { key: "a" }], [{ key: "a", onClick: onClick }, { key: "b" }]);
         expect("a function follows its row", same(kept[1].onClick === onClick && !kept[0].onClick, true));
-        expect("a pasted block", same(BD.readPastedTable("1\t2\n3\t4").grid, [["1", "2"], ["3", "4"]]));
-        expect("a pasted list", same(BD.readPastedTable("[{\"a\":1}]").list, [{ a: 1 }]));
-        expect("one pasted text", same(BD.readPastedTable("a word"), null));
-        expect("the sort of a table", same(["b", "", 10, "a", 3].sort(BD.compareTableValues), [3, 10, "a", "b", ""]));
+        expect("a pasted block", same(JsonEditor.readPastedText("1\t2\n3\t4").grid, [["1", "2"], ["3", "4"]]));
+        expect("a pasted list", same(JsonEditor.readPastedText("[{\"a\":1}]").list, [{ a: 1 }]));
+        expect("one pasted text", same(JsonEditor.readPastedText("a word"), null));
+        expect("the sort of a table", same(["b", "", 10, "a", 3].sort(JsonEditor.compareValues), [3, 10, "a", "b", ""]));
 
         // 6. A change keeps the rows of the panel, and goes through the prompt, undo, redo and the session
         const now = function () { return BD.objectOfKey(String(A.checkPlain.__bd.id)) || A.checkPlain; };

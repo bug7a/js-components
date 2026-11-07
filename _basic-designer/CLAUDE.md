@@ -11,7 +11,7 @@ Bir basic.js sayfasını görsel olarak düzenlemek: katmanlar, seçim, özellik
 - basic.js ve deponun bileşenleri (`../basic/`, `../comp/`: TreeView, PropertyPanel, ContextMenu, Tabs...). Derleme yok.
 - `designer.js`: sayfanın HTML'ini okur, aynı satırlarda `<base>` ve `runtime.js` ekler, `srcdoc` ile iframe'e verir. Adres okuyan sayfalar için `host.htm`.
 - `runtime.js`: iframe'in içinde; nesneleri ve bileşen parametrelerini (`box.__bd`) yakalar.
-- `param-kinds.js` (bir parametre ne tutar, metinden değere), `param-editors.js` (Parameters satırları ve küçük pencereler), `param-table.js` (dizi ve nesne için tablo penceresi). `runtime.js` `SKIP_FILES` bu dosyaları da bilir: yeni bir designer dosyası oraya da eklenir, yoksa bileşen yeniden yapılınca satır bilgisi designer'ı gösterir.
+- `param-kinds.js` (bir parametre ne tutar, metinden değere), `param-editors.js` (Parameters satırları ve küçük pencereler); dizi ve nesne için tablo penceresi kitin bileşeni: `comp/json-editor.js` (`JsonEditor.open`, `BasicDesigner.openParamTable`). `runtime.js` `SKIP_FILES` bu dosyaları da bilir: yeni bir designer dosyası oraya da eklenir, yoksa bileşen yeniden yapılınca satır bilgisi designer'ı gösterir. Bir `comp/` dosyası oraya giremez (sayfanın kendi kopyası da aynı adreste): bu yüzden tablonun Apply'ı bileşeni bir zamanlayıcıyla yeniden yapar.
 - VS Code eklentisi: `vscode-extension/` (`extension.js`). Dosya yazma (yeni sayfa, resim) yalnızca eklentide.
 - Live Server (port 5505) ya da eklenti ile açılır: sayfalar `fetch` ile okunur, `file://` çalışmaz.
 

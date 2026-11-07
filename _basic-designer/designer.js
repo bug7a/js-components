@@ -488,7 +488,7 @@ BasicDesigner.load = async function (pagePath) {
     s.paramOriginal.clear();
     s.defaultProps = {};
     BasicDesigner.closeParamEditors();
-    if (BasicDesigner.ui.tableWindow) BasicDesigner.ui.tableWindow.closeWindow();
+    if (BasicDesigner.ui.tableWindow) BasicDesigner.ui.tableWindow.close();
     BasicDesigner.clearParamFilter();
     BasicDesigner.paramNotes = {};
     BasicDesigner.paramsObject = null;
@@ -2353,7 +2353,7 @@ BasicDesigner.applyValue = function (obj, key, value, targets = [obj]) {
 // *** THE PARAMETERS OF A COMPONENT:
 // A table: name | value, every param of XxxDefaults (with the values it was made with), objects (style) as
 // groups, a guide line for every level. Every value is a text field with the editor of its kind (param-kinds.js,
-// param-editors.js, param-table.js). A change makes the component again with the new params, at the same place
+// param-editors.js; a list: JsonEditor.open). A change makes the component again with the new params, at the same place
 // (BasicDesigner.recreate).
 
 BasicDesigner.isPlain = function (v) {

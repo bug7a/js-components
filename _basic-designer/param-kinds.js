@@ -6,7 +6,7 @@ basic-designer: what a parameter of a component holds
 
 - Every row of the Parameters view has a kind (color, number, list...), read from its name, its value, its default and
   the comment after it in XxxDefaults: variant: "underline", // "underline", "pill"
-- The kind chooses the editor of the row (param-editors.js, param-table.js) and how a typed text becomes a value.
+- The kind chooses the editor of the row (param-editors.js; a list: JsonEditor.open) and how a typed text becomes a value.
   WHY a guess is enough: the text field of a row always stays, so a wrong kind only gives a useless button.
 - Nothing here draws. The texts of a shadow, a line, a motion and a gradient are read and written here.
 
@@ -431,30 +431,8 @@ BasicDesigner.valueOfParamText = function (text, row) {
 
 // The functions of the old value stay in a new value of a list or an object.
 // WHY: a table and a JSON text can not hold a function; the callbacks of the rows (onClick...) must not be lost.
-BasicDesigner.keepFunctions = function (value, old) {
-    if (Array.isArray(value) && Array.isArray(old)) {
-        return value.map(function (item, index) { return BasicDesigner.keepFunctions(item, BasicDesigner.sameRowOf(item, old, index)); });
-    }
-    if (!BasicDesigner.isPlain(value) || !BasicDesigner.isPlain(old)) return value;
-    const result = {};
-    Object.keys(value).forEach(function (key) {
-        result[key] = BasicDesigner.keepFunctions(value[key], old[key]);
-    });
-    Object.keys(old).forEach(function (key) {
-        if (typeof old[key] === "function" && !(key in result)) result[key] = old[key];
-    });
-    return result;
-};
-
-// The row of the old list that a new row came from: the same key (a moved row), or the same place.
-BasicDesigner.ROW_ID_KEYS = ["key", "id", "value", "text", "title"];
-BasicDesigner.sameRowOf = function (item, oldRows, index) {
-    if (!BasicDesigner.isPlain(item)) return oldRows[index];
-    const idKey = BasicDesigner.ROW_ID_KEYS.find(function (key) { return item[key] !== undefined; });
-    if (!idKey) return oldRows[index];
-    const same = oldRows.find(function (row) { return BasicDesigner.isPlain(row) && row[idKey] === item[idKey]; });
-    return (same !== undefined) ? same : oldRows[index];
-};
+// WHY of JsonEditor: one copy, the one of the table window (comp/json-editor.js, loaded before the designer).
+BasicDesigner.keepFunctions = JsonEditor.keepFunctions;
 
 // *** THE TEXTS OF CSS: read a text into parts, write the parts back.
 

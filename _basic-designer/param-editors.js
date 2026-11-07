@@ -8,7 +8,7 @@ basic-designer: the rows of the Parameters view and their small editors
   (param-kinds.js): a color has its swatch at its start (as in the Box view), a switch or a button at its end.
 - A click on the name does the same as that button; a number also changes when its name is dragged.
 - The small editors are windows at the left of the panel, so the page stays in sight and shows every change at once. Their
-  titles move them. A list of data is too big for that: it opens in its own window (param-table.js).
+  titles move them. A list of data is too big for that: it opens in its own window (JsonEditor.open of comp/json-editor.js).
 - A change makes the component again, so a drag sends only a few changes in a second (sendParamLive).
 
 Developer: Bugra Ozden
@@ -2129,23 +2129,110 @@ BasicDesigner.openParamFunction = function (view) {
     });
 };
 
-// The list of a row, or a group as a table: its own window (param-table.js).
+// The list of a row, or a group as a table: its own window (JsonEditor.open of comp/json-editor.js, over the designer).
 BasicDesigner.openParamTable = function (row) {
     const obj = BasicDesigner.currentParamsObject();
     if (!obj) return;
+    const ui = BasicDesigner.ui;
+    const s = BasicDesigner.state;
     BasicDesigner.closeParamEditors();
     const isObjectNote = /^\s*\{/.test(String(row.note || ""));
     const emptyValue = (isObjectNote) ? {} : [];
-    BasicDesigner.openTableWindow({
-        title: obj.__bd.component + " · " + row.pathText,
-        rootName: row.key,
-        note: row.note,
+    ui.tableWindow = JsonEditor.open({
+        styleName: "dark",
+        style: BasicDesigner.tableStyle(),
+        titleText: obj.__bd.component + " · " + row.pathText,
+        noteText: row.note || "",
         value: (row.value === null || row.value === undefined) ? emptyValue : row.value,
-        columnHints: BasicDesigner.columnsOfNote(obj.__bd.component, row.note),
+        columns: BasicDesigner.tableColumnsOf(BasicDesigner.columnsOfNote(obj.__bd.component, row.note)),
+        pictureBase: new URL(s.pagePath, s.rootUrl).href,
+        onPickColor: BasicDesigner.pickTableColor,
+        onPickPicture: BasicDesigner.pickTablePicture,
         onApply: function (value) {
-            const current = BasicDesigner.currentParamsObject();
-            if (current) BasicDesigner.applyParamValue(current, row.path, value);
+            // WHY a timer: the component is made again from a clean stack. Its objects would take the frames of the
+            //      table (comp/json-editor.js) as lines of the page (runtime.js can not tell them from a JsonEditor of the page).
+            setTimeout(function () {
+                const current = BasicDesigner.currentParamsObject();
+                if (current) BasicDesigner.applyParamValue(current, row.path, value);
+            }, 0);
         },
+        onClose: function () {
+            ui.tableWindow = null;
+            ui.panel.closeColorPicker();
+        },
+    });
+    // WHY: Escape closes a dialog of the designer over the table (the pictures of the project), not the table.
+    ui.tableWindow.listenTo(document, "keydown", function (self, event) {
+        if (event.key !== "Escape" || !ui.dialog) return;
+        event.stopImmediatePropagation();
+        BasicDesigner.closeDialog();
+    }, true);
+};
+
+BasicDesigner.TABLE_Z_INDEX = 8900; // WHY: under the tips (9000), the lists (9100) and the dialogs (9600) of the designer
+BasicDesigner.TABLE_ROUND = 12;
+BasicDesigner.TABLE_NOTE_DEPTH = 3; // The lists in the cells of a list whose columns come from the comments
+
+// The dark package of JsonEditor in the colors the designer has now (Settings: the background and the accent).
+BasicDesigner.tableStyle = function () {
+    const C = BasicDesigner.colors;
+    return {
+        box: { color: C.raised, borderColor: C.line, round: BasicDesigner.TABLE_ROUND },
+        colors: {
+            text: C.text,
+            headText: C.text,
+            soft: C.soft,
+            dim: C.dim,
+            icon: BasicDesigner.layerIconColors.object,
+            line: C.line,
+            rowLine: C.line,
+            columnLine: C.line,
+            headLine: C.fieldBorder,
+            strongLine: C.fieldBorderStrong,
+            ground: C.raised,
+            head: C.raised,
+            field: C.field,
+            fieldHover: C.fieldHover,
+            hover: C.hover,
+            selected: C.selectedRow,
+            segment: C.bar,
+            accent: C.accent,
+            accentHover: C.accentHover,
+            accentText: C.accentLight,
+            focus: C.accent,
+            editor: C.menu,
+        },
+        search: { color: C.field },
+        window: { zIndex: BasicDesigner.TABLE_Z_INDEX },
+    };
+};
+
+// The columns the comment of a list names, with the columns of their own lists (a cell opens as a table with them).
+BasicDesigner.tableColumnsOf = function (hints, depth = 0) {
+    if (depth >= BasicDesigner.TABLE_NOTE_DEPTH) return hints;
+    return hints.map(function (hint) {
+        const inner = BasicDesigner.columnsOfNote("", hint.note);
+        return Object.assign({}, hint, { columns: BasicDesigner.tableColumnsOf(inner, depth + 1) });
+    });
+};
+
+// A color cell of the table: the color picker of the panel (its groups, its recent colors) at the cell.
+BasicDesigner.pickTableColor = function (editor, cell) {
+    BasicDesigner.ui.panel.openColorPickerFor({
+        key: "table-cell",
+        hint: cell.title,
+        value: cell.value,
+        noPagePick: 1,
+        rect: { left: cell.x, top: cell.y, right: cell.x, bottom: cell.y + 4 },
+        besideRect: { left: cell.x - 8, top: cell.y },
+        commit: cell.setValue,
+    });
+};
+
+// A picture cell of the table: a picture of the project, written relative to the page.
+BasicDesigner.pickTablePicture = function (editor, cell) {
+    BasicDesigner.openPictureBrowser(String(cell.value || ""), function (repoPath) {
+        cell.setValue(BasicDesigner.pathFromPage(repoPath));
     });
 };
 

@@ -37,7 +37,7 @@ Developer: Bugra Ozden
     // WHY: designer.js too: a component made again by the designer must not point to the designer.
     // WHY _?: the folder is _basic-designer (basic-designer before); without it the frames of this
     //     file were not skipped: every component was named "callerName" and its params were not found.
-    const SKIP_FILES = /\/basic\/basic(\.min)?\.js$|\/_?basic-designer\/(runtime|designer|param-kinds|param-editors|param-table)\.js$/;
+    const SKIP_FILES = /\/basic\/basic(\.min)?\.js$|\/_?basic-designer\/(runtime|designer|param-kinds|param-editors)\.js$/;
     const TYPE_KEY = Symbol("basicDesignerType");
 
     const designer = {
