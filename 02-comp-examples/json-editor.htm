@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+
+        <title>JsonEditor</title>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- LIBRARY FILES -->
+        <link rel="stylesheet" type="text/css" href="../basic/basic.min.css">
+        <script src="../basic/basic.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../basic/scroll-bar.min.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- COMPONENT FILES -->
+        <script src="../comp/smart-button.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/context-menu.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/search-input.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/json-editor.js" type="text/javascript" charset="utf-8"></script>
+
+        <script>
+
+        /* Bismillah */
+
+        // JsonEditor (comp/json-editor.js): a list or an object of JSON written in a table.
+        // 1. A list of products: a choice (unit), a color, on / off, a picture and a list in a cell. onChange gives the value.
+        // 2. An object, the settings of a shop, in the dark theme: a choice (theme), a color, on / off, an object in a cell.
+        // 3. In a window: JsonEditor.open() with Cancel and Apply.
+
+        // *** VARIABLES:
+        const PAGE_COLOR = "#ECEBE8";
+        const SOFT_TEXT = "#6F6E6B";
+        const CARD_MAX_WIDTH = 980;
+        const EDITOR_HEIGHT = 380;
+
+        const PRODUCTS = [
+            { name: "Apple", price: 1.2, unit: "kg", color: "#D64545", inStock: true, picture: "../assets/fruids/elma.png", tags: ["red", "sweet"] },
+            { name: "Banana", price: 0.9, unit: "kg", color: "#E8D44D", inStock: true, picture: "../assets/fruids/muz.png", tags: ["yellow"] },
+            { name: "Watermelon", price: 4.5, unit: "piece", color: "#3E8E62", inStock: false, picture: "../assets/fruids/karpuz.png", tags: ["summer"] },
+            { name: "Strawberry", price: 3.8, unit: "box", color: "#E06AA0", inStock: true, picture: "../assets/fruids/cilek.png", tags: ["red", "spring"] },
+            { name: "Lemon", price: 1.6, unit: "kg", color: "#E0A038", inStock: false, picture: "../assets/fruids/limon.png", tags: ["sour"] },
+        ];
+        const UNITS = ["kg", "piece", "box"];
+
+        const SETTINGS = {
+            shopName: "Fresh Fruit",
+            theme: "light",
+            accentColor: "#0C8CE9",
+            showPrices: 1,
+            pageSize: 20,
+            languages: ["en", "tr"],
+            address: { city: "İzmir", zip: "35000" },
+        };
+        const THEMES = ["light", "dark"];
+
+        let menuItems = ["Home", "Products", { text: "Contact", key: "contact" }, "-", { text: "About", key: "about" }];
+
+        // The icon of the button (24 x 24 lines; the color is in the drawing)
+        const ICON_COLOR = "#1F1F1F";
+        const lineIcon = function (paths) {
+            const svgStart = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + ICON_COLOR + '"'
+                + ' stroke-width="2" stroke-linecap="round" stroke-linejoin="round">';
+            return "data:image/svg+xml;utf8," + encodeURIComponent(svgStart + paths + "<\/svg>");
+        };
+        const TABLE_ICON = lineIcon('<path d="M4 5h16v14H4zM4 10h16M4 15h16M10 5v14"/>');
+
+        let lblProducts;
+        let lblSettings;
+        let lblMenu;
+
+        // First running function. (basic.js calls it when the page is ready)
+        const start = function () {
+
+            page.color = PAGE_COLOR;
+
+            // BOX: Page (it scrolls when the window is lower than the samples)
+            const pageBox = startBox(0, 0, "100%", "100%", { color: "transparent", scrollY: 1 });
+
+            // GROUP: The title and the samples, one under the other
+            VGroup({ width: "100%", height: "auto", align: "center top", gap: 28, padding: [16, 28], clipContent: 0 });
+
+                Label({ text: "JsonEditor", fontSize: 24, bold: 1, textColor: Black(0.8) });
+                createProducts();
+                createSettings();
+                createWindow();
+
+            endGroup();
+
+            endBox();
+
+            ScrollBar({ scrollableBox: pageBox });
+
+        };
+
+        // *** OTHER FUNCTIONS:
+
+        // GROUP: A card with a title and a note. endGroup() closes it.
+        const startCard = function (titleText, noteText) {
+            VGroup({ width: "100%", height: "auto", align: "left top", gap: 10, clipContent: 0, css: { maxWidth: CARD_MAX_WIDTH + "px" } });
+            HGroup({ width: "100%", height: "auto", align: "left center", gap: 8, wrap: 1 });
+                Label({ text: titleText, fontSize: 15, bold: 1, textColor: Black(0.75) });
+                Label({ text: noteText, fontSize: 13, textColor: SOFT_TEXT });
+            endGroup();
+        };
+
+        const showProducts = function (self, value) {
+            const inStock = value.filter(function (product) { return product.inStock; });
+            lblProducts.plainText = "onChange: " + value.length + " products, " + inStock.length + " in stock";
+        };
+
+        const showSettings = function (self, value) {
+            lblSettings.plainText = "onChange: theme \"" + value.theme + "\", " + Object.keys(value).length + " settings";
+        };
+
+        const createProducts = function () {
+
+            startCard("A list of products", "a click on a cell writes in it · a title sorts · the dots move a row");
+
+                JsonEditor({
+                    height: EDITOR_HEIGHT,
+                    titleText: "Products",
+                    noteText: "A row is a product. Paste rows from a spreadsheet, or a JSON list.",
+                    value: PRODUCTS,
+                    columns: [{ key: "unit", options: UNITS }],
+                    onChange: showProducts,
+                });
+                lblProducts = Label({ text: "Change a cell: its value comes here", fontSize: 13, textColor: SOFT_TEXT });
+
+            endGroup();
+
+        };
+
+        const createSettings = function () {
+
+            startCard("An object: the settings of a shop", "styleName: \"dark\" · a row is a name and its value");
+
+                JsonEditor({
+                    styleName: "dark",
+                    height: EDITOR_HEIGHT,
+                    value: SETTINGS,
+                    columns: [{ key: "theme", options: THEMES }],
+                    onChange: showSettings,
+                });
+                lblSettings = Label({ text: "Change a value: it comes here", fontSize: 13, textColor: SOFT_TEXT });
+
+            endGroup();
+
+        };
+
+        const createWindow = function () {
+
+            startCard("In a window", "JsonEditor.open(): Cancel and Apply · a list of texts and objects together");
+
+                SmartButton({ labelText: "Edit the menu", iconFile: TABLE_ICON, onClick: openMenuEditor });
+                lblMenu = Label({ text: "", fontSize: 13, textColor: SOFT_TEXT });
+                showMenu();
+
+            endGroup();
+
+        };
+
+        const openMenuEditor = function () {
+            JsonEditor.open({
+                titleText: "The menu",
+                noteText: "A text is a link, \"-\" is a line, an object has its own key.",
+                value: menuItems,
+                onApply: function (value) {
+                    menuItems = value;
+                    showMenu();
+                },
+            });
+        };
+
+        const showMenu = function () {
+            const texts = menuItems.map(function (item) { return (typeof item === "string") ? item : item.text; });
+            lblMenu.plainText = "The menu: " + texts.join(" · ");
+        };
+
+        </script>
+    </head>
+
+    <body></body>
+
+</html>

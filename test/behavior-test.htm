@@ -83,6 +83,7 @@
         <script src="../comp/canvas.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/range-slider.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/json-view.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/json-editor.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/markdown-view.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/tool-bar.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/code-editor.js" type="text/javascript" charset="utf-8"></script>
@@ -6582,6 +6583,228 @@
                 colored === "red" && plainColor !== "red" && updated === "blue" && onRow === "b" && onEmpty === null,
                 [colored, plainColor, updated, onRow, onEmpty].join(" | "));
             tree.remove();
+        });
+
+        // *** JSON EDITOR (comp/json-editor.js)
+
+        const jsonContentOf = function (editor) {
+            return editor.elem.querySelector("div.json-editor-scroll").firstElementChild;
+        };
+
+        // The field of a cell (the first textarea of the editor; the second is the JSON view)
+        const jsonFieldOf = function (editor) {
+            return editor.elem.querySelector("textarea");
+        };
+
+        // A click on a cell: its row (from 0) and the title of its column. x: from the left of the cell.
+        const clickJsonCell = function (editor, rowIndex, title, x) {
+            const titleLabel = Array.from(editor.elem.querySelectorAll("*")).find(function (el) {
+                const isTitle = (el.childElementCount === 0 && el.textContent.trim().replace(/ [↑↓]$/, "") === title);
+                return isTitle && !el.closest("div.json-editor-scroll") && !editor.titleBar.elem.contains(el);
+            });
+            const cellRect = titleLabel.parentElement.getBoundingClientRect();
+            const contentRect = jsonContentOf(editor).getBoundingClientRect();
+            const point = { clientX: cellRect.left + (x || 20), clientY: contentRect.top + rowIndex * 30 + 15, bubbles: true, cancelable: true };
+            jsonContentOf(editor).dispatchEvent(new MouseEvent("click", point));
+        };
+
+        const writeJsonCell = function (editor, text, keyName) {
+            const field = jsonFieldOf(editor);
+            field.value = text;
+            key(field, "keydown", keyName || "Enter");
+        };
+
+        test("JsonEditor: every shape of a list and an object comes back as it was; the value of the page is not changed", async function () {
+            const values = [
+                [{ a: 1, b: "x" }, { a: 2, c: true }],
+                ["A", "B"],
+                [[1, 2], [3, 4, 5]],
+                ["A", { text: "B", key: "b" }, "-"],
+                { name: "Ada", age: 36, tags: ["a", "b"], address: { city: "İzmir" }, phone: null },
+                [],
+            ];
+            const texts = values.map(function (value) { return JSON.stringify(value); });
+            const results = values.map(function (value, index) {
+                const editor = JsonEditor({ width: 500, height: 200, value: value });
+                const isSame = JSON.stringify(editor.getValue()) === texts[index];
+                editor.remove();
+                return isSame;
+            });
+            const isUntouched = values.every(function (value, index) { return JSON.stringify(value) === texts[index]; });
+            check("JsonEditor: every shape of a list and an object comes back as it was; the value of the page is not changed", results.every(Boolean) && isUntouched, results.join() + " | untouched: " + isUntouched);
+        });
+
+        test("JsonEditor: a cell is written with a click and Enter; a number stays a number, a text that is not a number stays a text; onChange gives the value", async function () {
+            const changes = [];
+            const editor = JsonEditor({ width: 600, height: 260, value: [{ name: "Apple", price: 1.2 }, { name: "Pear", price: 2 }], onChange: function (self, value) { changes.push(value); } });
+            await wait(20);
+            clickJsonCell(editor, 0, "name");
+            writeJsonCell(editor, "Green apple"); // WHY Escape after it: Enter opens the cell of the next row
+            key(jsonFieldOf(editor), "keydown", "Escape");
+            clickJsonCell(editor, 1, "price");
+            writeJsonCell(editor, "2.5", "Tab");
+            key(jsonFieldOf(editor), "keydown", "Escape");
+            clickJsonCell(editor, 0, "price");
+            writeJsonCell(editor, "free");
+            key(jsonFieldOf(editor), "keydown", "Escape");
+            const value = editor.getValue();
+            const isLastChange = (JSON.stringify(changes[changes.length - 1]) === JSON.stringify(value));
+            const row = [value[0].name, value[1].price, typeof value[1].price, value[0].price, changes.length, isLastChange].join(" | ");
+            check("JsonEditor: a cell is written with a click and Enter; a number stays a number, a text that is not a number stays a text; onChange gives the value", row === "Green apple | 2.5 | number | free | 3 | true", row);
+            editor.remove();
+        });
+
+        test("JsonEditor: a switch turns with a click (true -> false, 1 -> 0); a color has its swatch; a choice opens its list, and its menu goes with remove()", async function () {
+            const editor = JsonEditor({ width: 700, height: 260, value: [{ name: "A", inStock: true, active: 1, color: "#D64545", unit: "kg" }], columns: [{ key: "unit", options: ["kg", "box"] }] });
+            await wait(20);
+            clickJsonCell(editor, 0, "inStock");
+            clickJsonCell(editor, 0, "active");
+            const hasSwatch = Array.from(editor.elem.querySelectorAll("div")).some(function (el) { return el.style.background.indexOf("rgb(214, 69, 69)") !== -1; });
+            const unitTitle = findByText("unit", editor.elem);
+            clickJsonCell(editor, 0, "unit", unitTitle.parentElement.offsetWidth - 10);
+            await wait(30);
+            const menu = Array.from(document.querySelectorAll("[role=menu]")).find(function (el) { return el.offsetParent !== null; });
+            const item = (menu) ? findByText("box", menu) : null;
+            if (item) item.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+            await wait(30);
+            const value = editor.getValue()[0];
+            editor.remove();
+            const isMenuGone = (!!menu && !menu.isConnected);
+            const row = [value.inStock, value.active, hasSwatch, !!item, value.unit, isMenuGone].join(" | ");
+            check("JsonEditor: a switch turns with a click (true -> false, 1 -> 0); a color has its swatch; a choice opens its list, and its menu goes with remove()", row === "false | 0 | true | true | box | true", row);
+        });
+
+        test("JsonEditor: a list in a cell opens as a table of its own; getValue() has it while it is open; the path goes back; one undo brings the cell back", async function () {
+            const editor = JsonEditor({ width: 600, height: 300, titleText: "Items", value: [{ name: "A", tags: ["x", "y"] }] });
+            await wait(20);
+            clickJsonCell(editor, 0, "tags");
+            const pathText = editor.titleRow.elem.textContent;
+            clickJsonCell(editor, 0, "value");
+            writeJsonCell(editor, "z");
+            key(jsonFieldOf(editor), "keydown", "Escape");
+            const whileOpen = editor.getValue()[0].tags.join();
+            findByText("Items", editor.titleRow.elem).dispatchEvent(new MouseEvent("click", { bubbles: true }));
+            const afterBack = editor.getValue()[0].tags.join();
+            const pathAfter = editor.titleRow.elem.textContent;
+            editor.undo();
+            const afterUndo = editor.getValue()[0].tags.join();
+            const row = [pathText.indexOf("row 1 · tags") !== -1, whileOpen, afterBack, pathAfter, afterUndo].join(" | ");
+            check("JsonEditor: a list in a cell opens as a table of its own; getValue() has it while it is open; the path goes back; one undo brings the cell back", row === "true | z,y | z,y | Items | x,y", row);
+            editor.remove();
+        });
+
+        test("JsonEditor: an object: a name used twice makes no value (getValue() null, errorText) and no onChange, until the name is right", async function () {
+            const changes = [];
+            const editor = JsonEditor({ width: 600, height: 260, value: { a: 1, b: "x" }, onChange: function (self, value) { changes.push(value); } });
+            await wait(20);
+            clickJsonCell(editor, 1, "name");
+            writeJsonCell(editor, "a");
+            key(jsonFieldOf(editor), "keydown", "Escape");
+            const twice = [editor.getValue(), editor.errorText, changes.length].join(" | ");
+            clickJsonCell(editor, 1, "name");
+            writeJsonCell(editor, "c");
+            key(jsonFieldOf(editor), "keydown", "Escape");
+            const fixed = [JSON.stringify(editor.getValue()), editor.errorText, changes.length].join(" | ");
+            const row = twice + " / " + fixed;
+            check("JsonEditor: an object: a name used twice makes no value (getValue() null, errorText) and no onChange, until the name is right", row === " | The name \"a\" is used twice. | 0 / {\"a\":1,\"c\":\"x\"} |  | 1", row);
+            editor.remove();
+        });
+
+        test("JsonEditor: the JSON view: a broken text stays and says why; a good one goes into the table (one undo step); the functions of the rows stay", async function () {
+            const onClick = function () { };
+            const editor = JsonEditor({ width: 600, height: 260, value: [{ key: "a", text: "A", onClick: onClick }] });
+            await wait(20);
+            editor.setView("json");
+            const area = editor.elem.querySelectorAll("textarea")[1];
+            const hasFunctionText = (area.value.indexOf("onClick") !== -1);
+            area.value = "[1, ";
+            const isBrokenKept = (!editor.setView("table") && editor.getView() === "json" && /^Not JSON/.test(editor.errorText));
+            area.value = '[{"key": "a", "text": "Hello"}, {"key": "b", "text": "B"}]';
+            const isGood = editor.setView("table");
+            const value = editor.getValue();
+            const isKept = (value[0].onClick === onClick && value[1].onClick === undefined);
+            editor.undo();
+            const afterUndo = editor.getValue();
+            const row = [hasFunctionText, isBrokenKept, isGood, value[0].text, isKept, afterUndo.length, afterUndo[0].text, afterUndo[0].onClick === onClick].join(" | ");
+            check("JsonEditor: the JSON view: a broken text stays and says why; a good one goes into the table (one undo step); the functions of the rows stay", row === "false | true | true | Hello | true | 1 | A | true", row);
+            editor.remove();
+        });
+
+        test("JsonEditor: paste: lines of a spreadsheet go into the cells from the chosen one; a JSON list adds its rows and its new columns", async function () {
+            const editor = JsonEditor({ width: 600, height: 260, value: [{ name: "A", price: 1 }, { name: "B", price: 2 }] });
+            await wait(20);
+            const paste = function (text) {
+                const data = new DataTransfer();
+                data.setData("text/plain", text);
+                jsonContentOf(editor).dispatchEvent(new ClipboardEvent("paste", { clipboardData: data, bubbles: true, cancelable: true }));
+            };
+            clickJsonCell(editor, 1, "name");
+            key(jsonFieldOf(editor), "keydown", "Escape"); // WHY: the cell stays chosen, its field closes
+            paste("Pear\t3.5\nPlum\t4");
+            const afterGrid = editor.getValue().map(function (item) { return item.name + " " + item.price; }).join(", ");
+            paste('[{"name": "Lime", "origin": "Mexico"}]');
+            const afterJson = editor.getValue();
+            const row = [afterGrid, afterJson.length, afterJson[3].origin].join(" | ");
+            check("JsonEditor: paste: lines of a spreadsheet go into the cells from the chosen one; a JSON list adds its rows and its new columns", row === "A 1, Pear 3.5, Plum 4 | 4 | Mexico", row);
+            editor.remove();
+        });
+
+        test("JsonEditor: the keys it uses do not go on to the page; a letter writes in the chosen cell, Delete empties it; Tab leaves the table at its last cell", async function () {
+            let pageKeys = 0;
+            const countKey = function () { pageKeys++; };
+            document.addEventListener("keydown", countKey);
+            const editor = JsonEditor({ width: 600, height: 260, value: [{ name: "A", price: 1 }] });
+            await wait(20);
+            const content = jsonContentOf(editor);
+            content.focus();
+            key(content, "keydown", "ArrowDown");
+            key(content, "keydown", "Q");
+            const field = jsonFieldOf(editor);
+            const isWritingQ = (field.value === "Q" && document.activeElement === field);
+            key(field, "keydown", "Enter");
+            const afterLetter = editor.getValue()[0].name;
+            key(content, "keydown", "ArrowRight");
+            key(content, "keydown", "Delete");
+            const afterDelete = JSON.stringify(editor.getValue());
+            const tab = new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true });
+            content.dispatchEvent(tab);
+            document.removeEventListener("keydown", countKey);
+            const row = [isWritingQ, afterLetter, afterDelete, !tab.defaultPrevented, pageKeys].join(" | ");
+            check("JsonEditor: the keys it uses do not go on to the page; a letter writes in the chosen cell, Delete empties it; Tab leaves the table at its last cell", row === "true | Q | [{\"name\":\"Q\"}] | true | 1", row);
+            editor.remove();
+        });
+
+        test("JsonEditor.open: Apply gives the value only after a change; Escape asks first when something was changed; Cmd/Ctrl+Enter applies", async function () {
+            const applied = [];
+            let canceled = 0;
+            const callbacks = {
+                onApply: function (value) { applied.push(value); },
+                onCancel: function () { canceled++; },
+            };
+            const changeFirstCell = function (win, text) {
+                clickJsonCell(win.editor, 0, "value");
+                writeJsonCell(win.editor, text);
+                key(jsonFieldOf(win.editor), "keydown", "Escape");
+            };
+            const quiet = JsonEditor.open(Object.assign({ value: ["A", "B"] }, callbacks));
+            await wait(20);
+            const isOver = (Number(getComputedStyle(quiet.elem).zIndex) >= 3900);
+            findByText("Apply", quiet.elem).dispatchEvent(new MouseEvent("click", { bubbles: true }));
+            const isQuietClosed = (quiet._isRemoved && applied.length === 0);
+            const asking = JsonEditor.open(Object.assign({ value: ["A", "B"] }, callbacks));
+            await wait(20);
+            changeFirstCell(asking, "Z");
+            key(jsonContentOf(asking.editor), "keydown", "Escape");
+            const isAsked = (!asking._isRemoved && !!findByText("Discard the changes?", asking.elem));
+            key(jsonContentOf(asking.editor), "keydown", "Escape");
+            const isCanceled = (asking._isRemoved && canceled === 1);
+            const applying = JsonEditor.open(Object.assign({ value: ["A"] }, callbacks));
+            await wait(20);
+            changeFirstCell(applying, "Y");
+            key(jsonContentOf(applying.editor), "keydown", "Enter", { metaKey: true });
+            const row = [isOver, isQuietClosed, isAsked, isCanceled, applying._isRemoved, JSON.stringify(applied)].join(" | ");
+            check("JsonEditor.open: Apply gives the value only after a change; Escape asks first when something was changed; Cmd/Ctrl+Enter applies", row === "true | true | true | true | 1 | [[\"Y\"]]", row);
+            [quiet, asking, applying].forEach(function (win) { win.close(); });
         });
 
         // *** RANGE SLIDER (comp/range-slider.js)

@@ -70,6 +70,7 @@
             { file: "comp/range-slider.js", name: "RangeSlider", params: { lowValue: 20, highValue: 80 } },
             { file: "comp/canvas.js", name: "Canvas", params: { shapes: [{ type: "circle", x: 20, y: 20, radius: 10 }] } },
             { file: "comp/json-view.js", name: "JsonView", deps: ["comp/context-menu.js", "comp/tree-view.js"], params: { height: 200, value: { a: 1, b: [1, 2] } } },
+            { file: "comp/json-editor.js", name: "JsonEditor", deps: ["comp/context-menu.js", "comp/search-input.js"], params: { height: 300, value: [{ name: "A", price: 1, tags: ["x"] }] } },
             { file: "comp/markdown-view.js", name: "MarkdownView", deps: ["comp/code-editor.js"], params: { height: 200, markdownText: "# Hi\n\n```python\nx = 1\n```" } },
             { file: "comp/tool-bar.js", name: "ToolBar", deps: ["comp/tooltip.js", "comp/context-menu.js", "comp/menu-bar.js"], params: { items: [{ key: "save", icon: "save", hint: "Save", shortcut: "Ctrl+S" }, "-", { key: "menu", text: "Menu", items: ["One"] }] } },
             { file: "comp/currency-input-b.js", name: "CurrencyInputB", deps: INPUT_B },

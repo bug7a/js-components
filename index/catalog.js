@@ -304,6 +304,12 @@ CATALOG.COMPONENTS = [
         tr: "JSON değerini ağaç olarak gösterir: sunucu cevabı, ayar dosyası. Renkli anahtar ve değerler, satırın yolu, sağ tıkla kopyalama. Bir milyon öğelik liste hemen açılır. JSON olmayan metin hatasını gösterir. Aydınlık ve karanlık tema.",
     },
     {
+        key: "json-editor", name: "JsonEditor", cat: "data",
+        source: "comp/json-editor.js", deps: ["comp/context-menu.js", "comp/search-input.js"], samples: ["02-comp-examples/json-editor.htm"],
+        en: "A list or an object of JSON written in a table: add, sort and drag rows; a switch, a color, a picture or a choice in a cell; a list in a cell opens as a table of its own. Paste from a spreadsheet, a JSON view, its own undo. In the page, or in a window with Apply. Light and dark themes.",
+        tr: "JSON bir listeyi ya da nesneyi tabloda düzenler: satır ekleme, sıralama ve sürükleme; hücrede anahtar, renk, resim ya da seçim; hücredeki liste kendi tablosu olarak açılır. Tablodan yapıştırma, JSON görünümü, kendi geri alması. Sayfanın içinde ya da Uygula düğmeli bir pencerede. Aydınlık ve karanlık tema.",
+    },
+    {
         key: "markdown-view", name: "MarkdownView", cat: "data",
         source: "comp/markdown-view.js", deps: ["comp/code-editor.js"], samples: ["02-comp-examples/markdown-view.htm"],
         en: "A text written in Markdown, drawn on the page: a report, the answer of an AI. Headings, lists, tables, pictures, code with colors and a button that copies it. A text is never read as HTML. A text that comes piece by piece. Light and dark themes.",
