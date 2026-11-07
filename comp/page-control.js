@@ -733,8 +733,9 @@ const PageControl = function (params = {}) {
     box.on("keydown", onKeyDown);
     box.on("mouseenter", function () { isHover = 1; });
     box.on("mouseleave", function () { isHover = 0; });
+    // WHY :focus-visible: the ring is for the keyboard (a click focused the box and showed it too)
     box.on("focus", function () {
-        box.boxShadow = "inset 0 0 0 2px " + _s.focus.outlineColor;
+        box.boxShadow = box.elem.matches(":focus-visible") ? "inset 0 0 0 2px " + _s.focus.outlineColor : "none";
     });
     box.on("blur", function () {
         box.boxShadow = "none";

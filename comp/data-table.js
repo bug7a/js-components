@@ -23,7 +23,8 @@ seen; 100 000 rows in about 0.1 s in the Tauri template). A few rows inside a te
 - The rows off the screen are not laid out or drawn (CSS content-visibility: auto): 10 000 rows came on the
   screen in 2.2 s before, 1.4 s now, a sort took 315 ms, now 210 ms.
 - The values are shown as plain text (a value can not inject HTML).
-- Style packages: "light" (default; the old name "classic" works too), "plain" (white, lines only), "dark". (DataTable.styles)
+- Style packages: "light" (default; the old name "classic" works too), "plain" (white, lines only), "dark",
+  "minimal", "minimalDark" (the minimal theme, _designs/minimal-theme.htm: as SmartTable "minimal"). (DataTable.styles)
 
 A COLUMN:
 {
@@ -93,7 +94,7 @@ const DataTableDefaults = {
     onRowClick: function (self, row) {}, // A click on a row, or Enter on the selected row
     onSelect: function (self, row) {}, // The selected row changed (row: null when nothing is selected). Not with silent: 1
     onSort: function (self) {}, // self.sortKey, self.sortDirection
-    styleName: "light", // "light" ("classic": its old name), "plain", "dark" or a name added to DataTable.styles
+    styleName: "light", // "light" ("classic": its old name), "plain", "dark", "minimal", "minimalDark" or a name added to DataTable.styles
     style: { // Light style package (default)
         box: { color: "white", border: 1, borderColor: Black(0.15), round: 6 },
         focus: { ringColor: "rgba(95, 158, 160, 0.6)" },
@@ -893,3 +894,32 @@ DataTable.styles = {
 
 };
 DataTable.styles.classic = DataTable.styles.light; // the old name of light: the pages made with it keep their look
+
+// The minimal theme (_designs/minimal-theme.htm), as SmartTable "minimal": small (30 px titles, rows of a 13 px text),
+// on the ground of the window with a line around it; no stripes, thin lines between the rows, soft titles over a line,
+// a faint row under the mouse and a stronger one for the selected row. minimalDark: the same on a dark window.
+DataTable.createMinimalStyle = function (colors) {
+    return {
+        box: { color: colors.ground, border: 1, borderColor: colors.line, round: 4 },
+        focus: { ringColor: colors.focus },
+        header: { height: 40, padding: [12, 0], gap: 10 },
+        headerTitle: { fontSize: 14, textColor: colors.text, fontFamily: "opensans-bold" },
+        search: { width: 200, height: 28, fontSize: 13, searchIconSize: 14 },
+        searchStyleName: colors.minimalName,
+        titleRow: { height: 30, color: colors.ground, lineColor: colors.line },
+        titleCell: { padding: 10, gap: 6, fontSize: 12, textColor: colors.softText, fontFamily: "opensans-bold", lineColor: "transparent", hoverColor: colors.hover, uppercase: 0 },
+        titleIcon: { size: 14, opacity: 0.7, invert: colors.invertIcons },
+        sortIcon: { size: 14, opacity: 0.3, activeOpacity: 1, invert: colors.invertIcons },
+        row: { padding: [10, 5], fontSize: 13, textColor: colors.text, fontFamily: "opensans", oddColor: colors.ground, evenColor: colors.ground, hoverColor: colors.hover, selectedColor: colors.selected, lineColor: colors.track },
+        empty: { fontSize: 12, textColor: colors.softText, top: 30 },
+        scrollBar: { neverHide: 0, showDots: 0, bar_color: colors.scrollBar, bar_mouseOverColor: colors.scrollBar, bar_width: 3 },
+    };
+};
+DataTable.styles.minimal = DataTable.createMinimalStyle({
+    ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), line: Black(0.2), track: Black(0.08), hover: Black(0.03),
+    selected: Black(0.06), focus: "#3D8BD9", scrollBar: "#9A9A98", invertIcons: 0, minimalName: "minimal",
+});
+DataTable.styles.minimalDark = DataTable.createMinimalStyle({
+    ground: "#1A1A19", text: White(0.88), softText: White(0.55), line: White(0.18), track: White(0.08), hover: White(0.04),
+    selected: White(0.08), focus: "#7FB6DE", scrollBar: "#A0A0A0", invertIcons: 1, minimalName: "minimalDark",
+});
