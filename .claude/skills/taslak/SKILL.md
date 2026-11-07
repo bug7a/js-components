@@ -23,7 +23,7 @@ Target: $ARGUMENTS (a component name, a `comp/` file or a page). If it is empty,
 - A grid: one row per state, one column per style package; a Label at the start of each row and over each column.
 - Every state: normal, hover, pressed, keyboard focus, disabled, waiting, error, empty, full, long text... whatever the component has. Hover / pressed / a moving part are drawn as a still frame of that moment.
 - The page scrolls inside a full-screen Box (`scrollY: 1`, `scrollX: 1`); groups that hold things that move out of their box get `clipContent: 0`.
-- A header comment: `// DRAFT DESIGN of comp/<file> (<Name>), <date>.` and the basic-designer address:
+- A header comment: `// DRAFT DESIGN of comp/<file> (<Name>).` and the basic-designer address (the date goes into the table of `_designs/readme.md`, not into the code):
   `http://127.0.0.1:5505/_basic-designer/index.htm?page=_designs/<file>.htm`
 
 ## Check and finish

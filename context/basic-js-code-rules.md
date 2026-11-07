@@ -2,7 +2,7 @@
 
 basic.js ile yazılan kod **düz yazı gibi okunmalı**: açıklamaya ihtiyaç duymadan, yukarıdan aşağı okununca ne yaptığı anlaşılmalı. Onunla kod yazmak keyifli olmalı. (Bugra, 2026-10-23)
 
-Bu kurallar `comp-m*`, sayfalar, şablonlar ve projeler (oyun, designer...) için geçerli. Bir kural doğrulukla ya da hızla çatışırsa doğruluk kazanır, ama nedeni bir `// WHY:` satırıyla yazılır (bkz. "Denge").
+Bu kurallar `comp/`, sayfalar, şablonlar ve projeler (oyun, designer...) için geçerli. Bir kural doğrulukla ya da hızla çatışırsa doğruluk kazanır, ama nedeni bir `// WHY:` satırıyla yazılır (bkz. "Denge").
 
 ---
 
@@ -54,7 +54,7 @@ Bu kurallar `comp-m*`, sayfalar, şablonlar ve projeler (oyun, designer...) içi
 
 - Kod NE yaptığını zaten söyler. Bir kod yorum gerektiriyorsa yorum şunu yazar: neden, hangi sorunu çözmek için yazıldı (`// WHY: ...`).
 - Bir kod parçası açıklama istiyorsa, önce sadeleştirilir ya da adı olan bir fonksiyona taşınır; yorum son çaredir.
-- Tarih, kişi ve olay hikâyesi kod yorumuna yazılmaz (`(the user, 2026-11-05)`, `it was blue`, `the old sample`): projenin dokümanına ve commit mesajına yazılır. Eski bir tarihli yorum örnek alınmaz; dokunuldukça temizlenir. Bir yönlendirme notu (`NEW PROJECTS: use ...`) kalır, ama tarihsiz. (Bugra, 2026-11-06)
+- Tarih, kişi ve olay hikâyesi kod yorumuna yazılmaz (`(the user, 2026-11-05)`, `it was blue`, `the old sample`): projenin dokümanına ve commit mesajına yazılır. Eski bir tarihli yorum örnek alınmaz; dokunuldukça temizlenir. Bir yönlendirme notu (`NEW PROJECTS: use ...`) kalır, ama tarihsiz. Dosyanın başındaki ev başlığı (`Started Date`, `Developer`) bu kuralın dışındadır. (Bugra, 2026-11-06)
 - Kullanım örneği (`// USAGE: tabs.setValue("open")`) setter'ın hemen altında, bir satır.
 
 ## 6. Sayılar ve renkler adla
