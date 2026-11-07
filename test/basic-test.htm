@@ -53,7 +53,7 @@
         const runTests = async function () {
 
             // *** LIBRARY INFO
-            check("basic.version", basic.version === "26.11.05", basic.version);
+            check("basic.version", basic.version === "26.11.07", basic.version);
             check("basic.library", basic.library === "basic.js", basic.library);
             check("basic.isReady", basic.isReady === 1);
 
@@ -478,6 +478,82 @@
             basic.addCss("basic-test-css", ".x { color: blue; }", 1);
             check("basic.addCss: replace", css1.textContent.indexOf("blue") > 0);
             css1.remove();
+
+            // *** v26.11.07: border and round take an array, like padding
+            const sidesOf = function (style, prefix, suffix) {
+                return ["Left", "Top", "Right", "Bottom"].map(function (side) { return style[prefix + side + suffix]; }).join(" ");
+            };
+            const cornersOf = function (style) {
+                return [style.borderTopLeftRadius, style.borderTopRightRadius, style.borderBottomRightRadius, style.borderBottomLeftRadius].join(" ");
+            };
+            const paddingBox = Box({ padding: 10 });
+            check("padding: a number (as before)", sidesOf(paddingBox.elem.style, "padding", "") === "10px 10px 10px 10px", sidesOf(paddingBox.elem.style, "padding", ""));
+            paddingBox.padding = [12, 4];
+            check("padding: [x, y] (as before)", sidesOf(paddingBox.elem.style, "padding", "") === "12px 4px 12px 4px", sidesOf(paddingBox.elem.style, "padding", ""));
+            paddingBox.padding = [1, 2, 3, 4];
+            check("padding: [left, top, right, bottom] (as before)", sidesOf(paddingBox.elem.style, "padding", "") === "1px 2px 3px 4px", sidesOf(paddingBox.elem.style, "padding", ""));
+            paddingBox.padding = [6, 7, 8];
+            const threePadding = sidesOf(paddingBox.elem.style, "padding", "");
+            paddingBox.padding = [5];
+            const onePadding = sidesOf(paddingBox.elem.style, "padding", "");
+            paddingBox.padding = [1, 2, 3, 4, 5];
+            check("padding: three values are [x, y], one value every side, five are not read (as before)",
+                threePadding === "6px 7px 6px 7px" && onePadding === "5px 5px 5px 5px" && sidesOf(paddingBox.elem.style, "padding", "") === "5px 5px 5px 5px",
+                threePadding + " / " + onePadding + " / " + sidesOf(paddingBox.elem.style, "padding", ""));
+            paddingBox.remove();
+
+            const borderBox = Box({ border: 2 });
+            check("border: a number (as before)", borderBox.elem.style.borderWidth === "2px" && borderBox.border === 2, borderBox.elem.style.borderWidth);
+            borderBox.border = [0, 1];
+            check("border: [x, y], read as given", sidesOf(borderBox.elem.style, "border", "Width") === "0px 1px 0px 1px" && borderBox.border[1] === 1, sidesOf(borderBox.elem.style, "border", "Width"));
+            borderBox.border = [0, 0, 0, 1];
+            check("border: [left, top, right, bottom] (a line at the bottom)", sidesOf(borderBox.elem.style, "border", "Width") === "0px 0px 0px 1px", sidesOf(borderBox.elem.style, "border", "Width"));
+            borderBox.border = [3, 4, 5, 6, 7];
+            check("border: an array of another length is not read (the style stays)", sidesOf(borderBox.elem.style, "border", "Width") === "0px 0px 0px 1px", sidesOf(borderBox.elem.style, "border", "Width"));
+            borderBox.border = 3;
+            check("border: a number after an array: every side", sidesOf(borderBox.elem.style, "border", "Width") === "3px 3px 3px 3px", sidesOf(borderBox.elem.style, "border", "Width"));
+            borderBox.remove();
+            const lineButton = Button({ border: [0, 0, 0, 2] });
+            lineButton.minimal = 1;
+            const lineInput = Input({ border: [0, 0, 0, 1] });
+            check("border array: on the button and on the <input>; minimal keeps it",
+                sidesOf(lineButton.buttonElement.style, "border", "Width") === "0px 0px 0px 2px" && lineButton.border.length === 4 && sidesOf(lineInput._textElem.style, "border", "Width") === "0px 0px 0px 1px",
+                sidesOf(lineButton.buttonElement.style, "border", "Width") + " / " + sidesOf(lineInput._textElem.style, "border", "Width"));
+            lineButton.remove();
+            lineInput.remove();
+
+            const roundBox = Box({ round: 8 });
+            check("round: a number (as before)", roundBox.elem.style.borderRadius === "8px" && roundBox.round === 8, roundBox.elem.style.borderRadius);
+            roundBox.round = [12, 0];
+            check("round: [top, bottom], read as given", cornersOf(roundBox.elem.style) === "12px 12px 0px 0px" && roundBox.round[0] === 12, cornersOf(roundBox.elem.style));
+            roundBox.round = [1, 2, 3, 4];
+            check("round: [topLeft, topRight, bottomRight, bottomLeft]", cornersOf(roundBox.elem.style) === "1px 2px 3px 4px", cornersOf(roundBox.elem.style));
+            roundBox.round = [6];
+            const oneRound = cornersOf(roundBox.elem.style);
+            roundBox.round = [7, 8, 9];
+            const threeRound = cornersOf(roundBox.elem.style);
+            roundBox.round = [];
+            check("round: one value every corner, three are [top, bottom], an empty array is not read",
+                oneRound === "6px 6px 6px 6px" && threeRound === "7px 7px 8px 8px" && cornersOf(roundBox.elem.style) === "7px 7px 8px 8px",
+                oneRound + " / " + threeRound + " / " + cornersOf(roundBox.elem.style));
+            roundBox.round = 5;
+            check("round: a number after an array: every corner", cornersOf(roundBox.elem.style) === "5px 5px 5px 5px", cornersOf(roundBox.elem.style));
+            roundBox.remove();
+
+            const frameBox = Box(0, 0, 100, 60, { border: [10, 0, 0, 0] });
+            const centeredBox = createIn(frameBox, function () { return Box(0, 0, 20, 20); });
+            centeredBox.center();
+            const leftWithArray = centeredBox.left;
+            const topWithArray = centeredBox.top;
+            frameBox.border = 4;
+            centeredBox.center();
+            check("center(): inside the border of each side (an array), a number as before",
+                leftWithArray === 35 && topWithArray === 20 && centeredBox.left === 36 && centeredBox.top === 16,
+                leftWithArray + ", " + topWithArray + " / " + centeredBox.left + ", " + centeredBox.top);
+            frameBox.remove();
+
+            const scaledArrays = basic.scaleStyle({ box: { round: [12, 0], border: [0, 0, 0, 1] } }, 2);
+            check("basic.scaleStyle: the arrays of round and border are multiplied", scaledArrays.box.round.join() === "24,0" && scaledArrays.box.border.join() === "0,0,0,2");
 
             // *** v26.11.05: basic.zIndexAbove, remove() cleans what the removed components own
             const layerBox = createIn(page, function () { return Box(0, 0, 50, 50); }); // WHY page: a layer is a direct child of page

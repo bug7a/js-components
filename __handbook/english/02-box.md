@@ -52,9 +52,9 @@ The main properties that can be assigned to a `Box()` object are:
 - `color` (string) — Background color (Default: `"whitesmoke"`).
 
 ### Border
-- `border` (number) — Border thickness (Default: `0`).
+- `border` (number / array) — Border thickness (Default: `0`). An array gives each side its own thickness, in the order of `padding`: `[horizontal, vertical]` or `[left, top, right, bottom]`. `border: [0, 0, 0, 1]` is a line at the bottom only.
 - `borderColor` (string) — Border color (Default: `"rgba(0, 0, 0, 0.6)"`).
-- `round` (number) — Corner roundness (Default: `0`).
+- `round` (number / array) — Corner roundness (Default: `0`). An array rounds the corners one by one: `[top, bottom]` (`round: [12, 0]`: only the two top corners) or `[topLeft, topRight, bottomRight, bottomLeft]`, clockwise as in CSS (`round: [8, 0, 0, 8]`: only the left corners).
 
 ### Scroll and Clip
 - `clipContent` (boolean) — Whether content exceeding the dimensions will overflow outside the box boundaries (Default: `1`, meaning it hides overflow).

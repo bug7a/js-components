@@ -1,6 +1,6 @@
 # basic.js Core
 
-For **basic.js v26.11.05** (`basic.version`). The changes of every version: `basic/basic-what-is-new.md`. How the code is written: `context/basic-js-code-rules.md`. Components: `context/basic-js-components.md`.
+For **basic.js v26.11.07** (`basic.version`). The changes of every version: `basic/basic-what-is-new.md`. How the code is written: `context/basic-js-code-rules.md`. Components: `context/basic-js-components.md`.
 
 basic.js builds the whole UI in plain JavaScript: it creates DOM objects directly. No HTML markup, no CSS authoring, no virtual DOM.
 
@@ -40,7 +40,7 @@ obj.props({ color: "white" });                             // props after creati
 - `basic.applyStylePackage(params, Comp.styles, CompDefaults)`: the style packages of a component (see `context/basic-js-components.md`).
 
 ### Common props
-`left`, `top`, `right`, `bottom`, `width`, `height` (a number is px; `"100%"`, `"auto"`, `"calc(...)"`), `color` (background), `textColor`, `fontSize`, `fontFamily`, `bold`, `italic`, `lineHeight`, `textAlign`, `opacity`, `visible`, `border`, `borderColor`, `round`, `padding` (a number, `[x, y]` or `[left, top, right, bottom]`), `position`, `zIndex`, `clickable`, `cursor`, `boxShadow`, `rotate`, `scrollX` / `scrollY`, `clipContent`, `grow` / `shrink`, `css` (`{ ... }` or a CSS string), `role`, `aria` (`{ label: "Close" }`), `tabIndex`.
+`left`, `top`, `right`, `bottom`, `width`, `height` (a number is px; `"100%"`, `"auto"`, `"calc(...)"`), `color` (background), `textColor`, `fontSize`, `fontFamily`, `bold`, `italic`, `lineHeight`, `textAlign`, `opacity`, `visible`, `padding` (a number, `[x, y]` or `[left, top, right, bottom]`), `border` (a number, or an array like `padding`: `[0, 0, 0, 1]` is a line at the bottom), `borderColor`, `round` (a number, `[top, bottom]` or `[topLeft, topRight, bottomRight, bottomLeft]`; v26.11.07), `position`, `zIndex`, `clickable`, `cursor`, `boxShadow`, `rotate`, `scrollX` / `scrollY`, `clipContent`, `grow` / `shrink`, `css` (`{ ... }` or a CSS string), `role`, `aria` (`{ label: "Close" }`), `tabIndex`.
 
 - **`text` is HTML.** Every text from a user or a server goes in with `plainText`.
 - Label: `ellipsis: 1` (one line, "..."), `selectable: 1`, `clipContent: 0` (the text may go out of the label).

@@ -10,6 +10,44 @@ Naming rule for the additions: no new globals (one exception, the user's choice 
 
 ---
 
+## v26.11.07 (2026-11-07)
+
+### `border` and `round` take an array, like `padding`
+
+The user's idea (2026-11-07). A line on one side or round corners on one side were written as a `css` text
+(`css = { borderBottom: "1px solid ..." }`, `css = { borderRadius: "12px 12px 0 0" }`). Now the props take them:
+
+```javascript
+Box({ border: [0, 0, 0, 1], borderColor: Black(0.1) });   // a line at the bottom only
+Box({ round: [12, 0] });                                   // the two top corners: a sheet, a tab, the head of a card
+Box({ round: [0, 12] });                                   // the two bottom corners: a list under a field
+Box({ round: [22, 0, 0, 22] });                            // the left corners: the first of two joined buttons
+```
+
+- `border`, in the order of `padding`: `4` (every side), `[x, y]` (left and right x, top and bottom y),
+  `[left, top, right, bottom]`.
+- `round`: `8` (every corner), `[top, bottom]` (the two top corners, the two bottom corners),
+  `[topLeft, topRight, bottomRight, bottomLeft]` (clockwise from the top left, as in CSS). Two values are not the
+  diagonals of CSS (`border-radius: 12px 0`): a round only at the top or only at the bottom is wanted far more often.
+- One value in an array (`[8]`) is every side / corner. Three values are read as two, as `padding` always did. An
+  array of another length is not read: the style stays as it was.
+- `border` / `round` read the value as it was given (the array), like `padding`.
+- `center()` counts the border of each side: an object is centered inside the border (it took `border * 2`; with an
+  array that was NaN). With a number nothing changes.
+- On a Button the array goes on the button, on an Input on its `<input>`, as a number does. `minimal` keeps a given
+  array (it is on the element).
+- `basic.scaleStyle()` multiplies the arrays of `round` and `border` too (it already did for `padding`).
+  `setMotion("border-radius 0.3s")` and `animate({ round: [20, 0] })` move each corner.
+- **Not in the style keys of the components:** `style.panel.border`, `style.card.round`... stay numbers. Some
+  components compute with them (CheckBox, RadioButton, SelectDate, SelectTime, SelectColor, WebView, ContextMenu:
+  `border * 2`; SliderField: `round - border`; Dialog, SidePanel, SmartTable, PropertyPanel, Tooltip: `round + "px"`
+  in a CSS text): an array there gives a wrong size. The array form is for the props of a basic.js object.
+- `padding` reads its values with the same function now: the same result (checked against the old code).
+- Fully compatible. `test/basic-test.htm`: 17 new checks, 188/188 (also with `basic.min.js`).
+- The handbook (`01-label.md`, English and Turkish) gave the order of `padding` wrong (`[vertical, horizontal]`,
+  `[top, right, bottom, left]`): it is `[horizontal, vertical]` and `[left, top, right, bottom]`, as the code always read
+  it; corrected.
+
 ## v26.11.05 (2026-11-05)
 
 ### `basic.zIndexAbove(obj, minimum)`: a list or a menu over the layer of its field

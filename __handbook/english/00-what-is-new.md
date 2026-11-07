@@ -4,6 +4,13 @@ This document contains new features, updates, and changes added to the basic.js 
 
 ---
 
+## Version 26.11.07
+
+*   **`border` and `round` take an array, like `padding`:** `border: [0, 0, 0, 1]` is a line at the bottom only (`[horizontal, vertical]` or `[left, top, right, bottom]`, the order of `padding`). `round: [12, 0]` rounds the two top corners (`[top, bottom]`), `round: [12, 12, 0, 12]` each corner on its own (`[topLeft, topRight, bottomRight, bottomLeft]`, clockwise as in CSS). `center()` counts the border of each side. A number works as before: fully compatible. Reference: `basic/basic-what-is-new.md`.
+*   **The handbook: the order of `padding`** was written wrong (`[vertical, horizontal]`, `[top, right, bottom, left]`). It is, and always was, `[horizontal, vertical]` and `[left, top, right, bottom]`: `padding: [20, 10]` is 20 at the left and right, 10 at the top and bottom. Nothing changes in the library.
+
+---
+
 ## Version 26.11.05
 
 *   **`basic.zIndexAbove(obj, minimum)`:** the z-index of a list or a menu that opens from `obj`, over the layer that holds `obj` (a Dialog, a SidePanel, a Tooltip popover) and at least `minimum`. The lists and menus of the components use it when they open, so a SelectBox, a SelectDate or a ContextMenu inside a Dialog or a SidePanel opens over it (it opened behind it). Outside a layer nothing changes.

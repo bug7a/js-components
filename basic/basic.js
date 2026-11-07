@@ -2,12 +2,16 @@
 
 /*
 
-basic.js (v26.11.05) A lightweight JavaScript library for building web-based applications with simple code. No need to write HTML or CSS — just use basic JavaScript.
+basic.js (v26.11.07) A lightweight JavaScript library for building web-based applications with simple code. No need to write HTML or CSS — just use basic JavaScript.
 - Project Site: https://bug7a.github.io/basic.js/
 
-v26.11.05 is v26.09.18 plus the additions below. Every page and component written for the
+v26.11.07 is v26.09.18 plus the additions below. Every page and component written for the
 previous versions works unchanged (same defaults, same DOM), except the global names moved under
 basic.* in v26.10.25 (see below).
+
+WHAT IS NEW IN v26.11.07 (see basic/basic-what-is-new.md):
+- Props:      border and round take an array too, like padding: border [x, y] / [left, top, right, bottom],
+              round [top, bottom] / [topLeft, topRight, bottomRight, bottomLeft]; center() counts each side
 
 WHAT IS NEW IN v26.11.05 (see basic/basic-what-is-new.md):
 - basic:      zIndexAbove(obj, minimum): the z-index of a list or a menu that opens from obj, over the layer that holds
@@ -73,7 +77,7 @@ Licensed under the Apache License, Version 2.0
 "use strict";
 const basic = {};
 
-basic.version = "26.11.05";
+basic.version = "26.11.07";
 basic.library = "basic.js";
 basic.isReady = 0; // 1 after the page object is created (before start() runs).
 
@@ -576,6 +580,33 @@ const toCssLength = function ($value) {
     return parseFloat($value) + "px"; // WHY: Same as basic.js for numbers. (NaN is ignored by the browser.)
 };
 
+// The four sides of a padding or a border: 4 (every side), [x, y] (left and right x, top and bottom y) or
+// [left, top, right, bottom]. null: a value basic.js does not read (the style stays as it was).
+// WHY three values are [x, y]: the padding of basic.js has always read them so.
+const toFourSides = function ($value) {
+    if (typeof $value === "number") return { left: $value, top: $value, right: $value, bottom: $value };
+    if (!Array.isArray($value)) return null;
+    const [first, second, third, fourth] = $value;
+    if ($value.length === 1) return { left: first, top: first, right: first, bottom: first };
+    if ($value.length === 2 || $value.length === 3) return { left: first, top: second, right: first, bottom: second };
+    if ($value.length === 4) return { left: first, top: second, right: third, bottom: fourth };
+    return null;
+};
+
+// The four corners of a round given as an array: [top, bottom] (the two top corners, the two bottom corners) or
+// [topLeft, topRight, bottomRight, bottomLeft] (clockwise from the top left, as in CSS). Three values are read as
+// two, as in padding. null: not read.
+// WHY [top, bottom], not the diagonals of CSS: a sheet, a tab or the head of a card is round only at the top, a list
+//      under a field only at the bottom. Only the left corners: [8, 0, 0, 8].
+const toFourCorners = function ($value) {
+    const [first, second, third, fourth] = $value;
+    const isTopAndBottom = ($value.length === 2 || $value.length === 3);
+    if ($value.length === 1) return { topLeft: first, topRight: first, bottomRight: first, bottomLeft: first };
+    if (isTopAndBottom) return { topLeft: first, topRight: first, bottomRight: second, bottomLeft: second };
+    if ($value.length === 4) return { topLeft: first, topRight: second, bottomRight: third, bottomLeft: fourth };
+    return null;
+};
+
 // Adds a new object's element to the current default container.
 const attachToContainer = function ($obj, $element) {
     if (!defaultContainerBox) {
@@ -837,43 +868,15 @@ class Basic_UIComponent {
         return this._padding || 0;
     }
 
+    // USAGE: padding: 10   padding: [12, 4] (x, y)   padding: [12, 4, 12, 8] (left, top, right, bottom)
     set padding($value) {
-
         this._padding = $value;
-        let paddingLeft, paddingRight, paddingTop, paddingBottom;
-
-        if (typeof $value === 'number') {
-            paddingLeft = paddingRight = paddingTop = paddingBottom = $value;
-        }
-        
-        else if (Array.isArray($value)) {
-            const len = $value.length;
-
-            if (len === 1) {
-                paddingLeft = paddingRight = paddingTop = paddingBottom = $value[0];
-            }
-            else if (len === 2 || len === 3) {
-                paddingLeft  = paddingRight  = $value[0];
-                paddingTop   = paddingBottom = $value[1];
-            }
-            else if (len === 4) {
-                paddingLeft   = $value[0];
-                paddingTop    = $value[1];
-                paddingRight  = $value[2];
-                paddingBottom = $value[3];
-            }
-            else {
-                //throw new Error('padding değeri 1–4 elemanlı bir dizi ya da tek sayı olmalıdır.');
-            }
-        }
-        else {
-            //throw new Error('padding değeri ya sayı olmalı ya da 1–4 elemanlı bir dizi olmalıdır.');
-        }
-
-        this.elem.style.paddingLeft   = paddingLeft  + 'px';
-        this.elem.style.paddingTop    = paddingTop   + 'px';
-        this.elem.style.paddingRight  = paddingRight + 'px';
-        this.elem.style.paddingBottom = paddingBottom+ 'px';
+        const sides = toFourSides($value);
+        if (!sides) return;
+        this.elem.style.paddingLeft = sides.left + "px";
+        this.elem.style.paddingTop = sides.top + "px";
+        this.elem.style.paddingRight = sides.right + "px";
+        this.elem.style.paddingBottom = sides.bottom + "px";
     }
 
     // -- Genel özellikler SONU
@@ -884,9 +887,19 @@ class Basic_UIComponent {
         return this._border;
     }
 
+    // USAGE: border: 1   border: [0, 1] (x, y)   border: [0, 0, 0, 1] (left, top, right, bottom: a line at the bottom)
     set border($value) {
         this._border = $value;
-        this._textElem.style.borderWidth = $value + "px";
+        if (!Array.isArray($value)) {
+            this._textElem.style.borderWidth = $value + "px";
+            return;
+        }
+        const sides = toFourSides($value);
+        if (!sides) return;
+        this._textElem.style.borderLeftWidth = sides.left + "px";
+        this._textElem.style.borderTopWidth = sides.top + "px";
+        this._textElem.style.borderRightWidth = sides.right + "px";
+        this._textElem.style.borderBottomWidth = sides.bottom + "px";
     }
 
     get borderColor() {
@@ -902,9 +915,19 @@ class Basic_UIComponent {
         return this._round;
     }
 
+    // USAGE: round: 8   round: [12, 0] (top, bottom)   round: [12, 12, 4, 12] (topLeft, topRight, bottomRight, bottomLeft)
     set round($value) {
         this._round = $value;
-        this._textElem.style.borderRadius = $value + "px";
+        if (!Array.isArray($value)) {
+            this._textElem.style.borderRadius = $value + "px";
+            return;
+        }
+        const corners = toFourCorners($value);
+        if (!corners) return;
+        this._textElem.style.borderTopLeftRadius = corners.topLeft + "px";
+        this._textElem.style.borderTopRightRadius = corners.topRight + "px";
+        this._textElem.style.borderBottomRightRadius = corners.bottomRight + "px";
+        this._textElem.style.borderBottomLeftRadius = corners.bottomLeft + "px";
     }
 
     // -- Kenarlık SONU
@@ -2895,22 +2918,22 @@ const setProparties = function ($this, $defaultParams, $params, $props) {
 
 
 // Centering one object to box.
+// WHY parseInt: an object on half a pixel is blurred.
 const moveToCenter = function ($this, $position) {
 
-    if ($position == "left" || !$position) {
-        const _w = $this.containerBox.width - (($this.containerBox.border || 0) * 2);
-        $this.left = parseInt((_w - $this.width) / 2);
+    // WHY Number(): a border given as a text ("2") was counted too. An array basic.js does not read is no border.
+    const border = $this.containerBox.border || 0;
+    const borderSides = toFourSides(Array.isArray(border) ? border : Number(border)) || toFourSides(0);
 
+    if ($position == "left" || !$position) {
+        const insideWidth = $this.containerBox.width - borderSides.left - borderSides.right;
+        $this.left = parseInt((insideWidth - $this.width) / 2);
     }
 
     if ($position == "top" || !$position) {
-        const _h = $this.containerBox.height - (($this.containerBox.border || 0) * 2);
-        $this.top = parseInt((_h - $this.height) / 2);
-
+        const insideHeight = $this.containerBox.height - borderSides.top - borderSides.bottom;
+        $this.top = parseInt((insideHeight - $this.height) / 2);
     }
-
-    // Her zaman tam sayı olarak ortala, yoksa bulanıklık yapabilir.
-    // NOT: Eğer, kenarlık kalınlıkları, aynı olmaz ise, hesaba katılmaz.
 
 };
 

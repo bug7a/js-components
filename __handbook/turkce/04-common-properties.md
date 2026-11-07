@@ -60,8 +60,8 @@ Pek çok nesne `width: "auto"` parametresini destekler. Ayrıca `width: "100%"` 
 - `color` (String) — Objenin zemin / arkaplan rengini ayarlar (Örn: `"red"`, `"#FFFFFF"`, `"rgba(0,0,0,0.5)"`).
 - `visible` (Boolean) — `1` ise ekranda belirir (CSS block), `0` ise tamamen kaybolup diğerlerine yer açar (CSS none).
 - `opacity` (Float) — Şeffaflık seviyesi (Max: `1` görünür, Min: `0` görünmez).
-- `round` (Integer) — Köşelerin yuvarlaklık radius derecesi. Sayı kutunun yarısını aşarsa nesne oval (daire) olur.
-- `border` (Integer) — İç alan sınırları çizen kenarlık kalınlığı (`0` ise gizlenir, `1` ise ince siyah çizgi). Objeyi dışarıya taşırmaz. İçeriden çizer.
+- `round` (Integer / Array) — Köşelerin yuvarlaklık radius derecesi. Sayı kutunun yarısını aşarsa nesne oval (daire) olur. Dizi köşeleri tek tek yuvarlar: `[üst, alt]` (`round: [12, 0]`: yalnızca üstteki köşeler) ya da `[solÜst, sağÜst, sağAlt, solAlt]`.
+- `border` (Integer / Array) — İç alan sınırları çizen kenarlık kalınlığı (`0` ise gizlenir, `1` ise ince siyah çizgi). Objeyi dışarıya taşırmaz. İçeriden çizer. `padding` gibi, dizi her kenara kendi kalınlığını verir: `[yatay, dikey]` ya da `[sol, üst, sağ, alt]` (`border: [0, 0, 0, 1]`: altta bir çizgi).
 - `borderColor` (String) — Kenarlık (border) atandıysa çizginin rengini belirler.
 - `fontSize` / `textColor` / `textAlign` — Nesne metin taşıyorsa onun stili değiştirilir. Standart yazı büyüklüğü `20` px boyutundadır. Hizalama (textAlign) `"center"`, `"right"` vb. olabilir.
 - `rotate` (Integer) — Objeyi çevirir (derece olarak: `90`, `360` vb.). CSS `transform` değerinin yalnızca `rotate()` kısmını değiştirir: oradaki bir `translateY()` ya da `scale()` kalır. `setMotion("transform 0.3s")` ile hareketli olur.

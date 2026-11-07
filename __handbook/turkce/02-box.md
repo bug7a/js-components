@@ -52,9 +52,9 @@ Alternatif olarak, doğrudan koordinat ve boyut vererek de oluşturulabilir:
 - `color` (string) — Arka plan rengi (Varsayılan: `"whitesmoke"`).
 
 ### Kenarlık (Border)
-- `border` (number) — Kenarlık kalınlığı (Varsayılan: `0`).
+- `border` (number / array) — Kenarlık kalınlığı (Varsayılan: `0`). Dizi her kenara kendi kalınlığını verir, `padding`'in sırasıyla: `[yatay, dikey]` ya da `[sol, üst, sağ, alt]`. `border: [0, 0, 0, 1]` yalnızca altta bir çizgidir.
 - `borderColor` (string) — Kenarlık rengi (Varsayılan: `"rgba(0, 0, 0, 0.6)"`).
-- `round` (number) — Köşe yuvarlaklığı (Varsayılan: `0`).
+- `round` (number / array) — Köşe yuvarlaklığı (Varsayılan: `0`). Dizi köşeleri tek tek yuvarlar: `[üst, alt]` (`round: [12, 0]`: yalnızca üstteki iki köşe) ya da `[solÜst, sağÜst, sağAlt, solAlt]`, CSS'teki gibi saat yönünde (`round: [8, 0, 0, 8]`: yalnızca soldaki köşeler).
 
 ### Kaydırma (Scroll) ve Kesme
 - `clipContent` (boolean) — Boyutları aşan içeriğin kutu sınırları dışına taşıp taşmayacağı (Varsayılan: `1` yani dışarı taşmayı gizler).
