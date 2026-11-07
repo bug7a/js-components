@@ -362,12 +362,13 @@ const Canvas = function (params = {}) {
     };
 
     // The moves of a press come here also when the pointer leaves the box.
-    // WHY try: the browser refuses a pointer that has just ended.
+    // WHY no warning: the browser refuses a pointer that has just ended (or one made by a test); then only the moves
+    //      outside the box are lost, and the press still works.
     const capturePointer = function (pointerId) {
         try {
             canvasElem.setPointerCapture(pointerId);
         } catch (error) {
-            console.warn("Canvas: " + error.message);
+            return;
         }
     };
 
