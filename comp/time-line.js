@@ -72,7 +72,7 @@ const TimeLineDefaults = {
         },
         time: {
             fontSize: 12,
-            textColor: Black(0.4),
+            textColor: Black(0.54), // WHY: 4.5:1 on white, as WCAG asks of a text
         },
         title: {
             fontSize: 15,

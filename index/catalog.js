@@ -294,7 +294,7 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "time-line", name: "TimeLine", cat: "data",
-        source: "comp/time-line.js", samples: ["02-comp-examples/time-line.htm"],
+        source: "comp/time-line.js", samples: ["02-comp-examples/time-line.htm", "02-comp-examples/minimal-theme.htm"],
         en: "A vertical time line of what happened, and when: a dot for every item and a line between the dots; it grows with new items. For the steps of a job and the step of now: StepBar. Light, dark and minimal looks.",
         tr: "Ne olduğunu ve ne zaman olduğunu gösteren dikey zaman çizelgesi: her öğe için bir nokta ve noktaların arasında bir çizgi; yeni öğelerle uzar. Bir işin adımları ve şu anki adım için: StepBar. Aydınlık, karanlık ve minimal görünüş.",
     },

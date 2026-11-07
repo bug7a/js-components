@@ -49,6 +49,7 @@
     <script src="../comp/slider-field.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/tag-input.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/step-bar.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/time-line.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/accordion.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/splitter.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/side-panel.js" type="text/javascript" charset="utf-8"></script>
@@ -67,7 +68,7 @@
     // ProgressBar, Tabs, Stepper, MenuBar (its menus: ContextMenu), ToolBar, StatusBar, TreeView, SmartTable,
     // DataTable, JsonEditor, Tooltip, Dialog, Toast.
     // The pickers, the fields and the panels too: SelectDate, SelectTime, SelectColor, SliderField, TagInput,
-    // SelectFile, StepBar, Accordion, Splitter, SidePanel, LoadingScreen; GraphBox with theme: \"minimal\".
+    // SelectFile, StepBar, TimeLine, Accordion, Splitter, SidePanel, LoadingScreen; GraphBox with theme: \"minimal\".
 
     // *** THE COLORS AND SIZES OF THE PAGE
     const PAGE_COLOR = "#EDEDEB";
@@ -126,6 +127,10 @@
         { key: "general", title: "General", note: "3 settings", opened: 1 },
         { key: "advanced", title: "Advanced" },
         { key: "locked", title: "Locked", disabled: 1 },
+    ];
+    const HISTORY = [
+        { time: "Today, 14:02", title: "Saved", text: "report.md, 2.4 KB" },
+        { time: "Yesterday", title: "Created" },
     ];
     const MONTHS = ["Jun", "Jul", "Aug", "Sep", "Oct", "Nov"];
     const VISITS = [
@@ -237,6 +242,7 @@
 
                     Label({ text: "STEPS, SECTIONS, AREAS", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
                     StepBar({ styleName: "minimal", width: "100%", steps: ["Cart", "Address", "Payment", "Done"], currentStep: 2 });
+                    TimeLine({ styleName: "minimal", width: "100%", items: HISTORY });
                     const lightSettings = Accordion({ styleName: "minimal", width: "100%", height: "auto", sections: SECTIONS });
                     lightSettings.startSection("general");
                         CheckBox({ styleName: "minimal", labelText: "Open with the system" });
@@ -356,6 +362,7 @@
 
                     Label({ text: "STEPS, SECTIONS, AREAS", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
                     StepBar({ styleName: "minimalDark", width: "100%", steps: ["Cart", "Address", "Payment", "Done"], currentStep: 2 });
+                    TimeLine({ styleName: "minimalDark", width: "100%", items: HISTORY });
                     const darkSettings = Accordion({ styleName: "minimalDark", width: "100%", height: "auto", sections: SECTIONS });
                     darkSettings.startSection("general");
                         CheckBox({ styleName: "minimalDark", labelText: "Open with the system" });
