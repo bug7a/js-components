@@ -115,7 +115,7 @@ const SelectBoxDefaults = {
     onChange: function (self) { }, // self.value, self.getSelectedOptions()
     onOpen: function (self) { },
     onClose: function (self) { },
-    styleName: "classic", // "classic", "dark", "ozden", "ozdenDark" or a name added to SelectBox.styles
+    styleName: "classic", // "classic", "dark", "ozden", "ozdenDark", "minimal", "minimalDark" or a name added to SelectBox.styles
     style: { // Classic style package (default)
         field: {
             color: White(1),
@@ -1810,3 +1810,40 @@ mergeIntoIfMissing(SelectBox.styles.ozdenDark, SelectBox.styles.ozden);
 
 // The old name of the dark package. (Kept: pages may use it.)
 SelectBox.DARK_STYLE = SelectBox.styles.dark;
+
+// The minimal theme (_designs/minimal-theme.htm): a 28 px field of a line (darker under the mouse, ink while open),
+// a 13 px text, a 14 px chevron; the list on the ground of the window with a line and no shadow, a line around the row
+// under the mouse, the selected row in ink with a check. minimalDark: the same on a dark window.
+SelectBox.createMinimalStyle = function (colors) {
+    return {
+        height: 28,
+        style: {
+            field: { color: "transparent", border: 1, borderColor: colors.line, round: 4, padding: [10, 0] },
+            fieldHover: { borderColor: colors.lineHover },
+            fieldFocus: { borderColor: colors.ink },
+            fieldText: { fontSize: 13, textColor: colors.text },
+            placeholder: { textColor: colors.faintText },
+            arrow: { color: colors.softText, icon: "chevron", size: 14, opacity: 1, marginRight: 0 },
+            panel: { color: colors.ground, border: 1, borderColor: colors.line, round: 4, padding: 4, shadow: "none", gap: 4 },
+            searchInput: { styleName: colors.searchStyleName, height: 28, fontSize: 13, searchIconSize: 14, searchIconLeft: 10, searchIconGap: 6, round: 14 },
+            search: { color: "transparent", border: 1, borderColor: colors.line, round: 4, fontSize: 13, textColor: colors.text, height: 28, padding: [10, 0], iconSize: 14 },
+            option: { fontSize: 13, textColor: colors.text, round: 3, padding: [9, 5], gap: 8, iconSize: 14 },
+            optionActive: { color: "transparent", lineColor: colors.lineHover },
+            optionSelected: { textColor: colors.ink, checkColor: colors.ink, checkTickColor: colors.ground, fontFamily: "", showTick: 1 },
+            description: { fontSize: 12, textColor: colors.softText },
+            group: { fontSize: 11, textColor: colors.faintText },
+            empty: { fontSize: 12, textColor: colors.softText },
+            footerButton: { fontSize: 12, textColor: colors.ink },
+            divider: { color: colors.line },
+            itemListStyleName: colors.itemListStyleName,
+        },
+    };
+};
+SelectBox.styles.minimal = SelectBox.createMinimalStyle({
+    ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), faintText: Black(0.35),
+    line: Black(0.2), lineHover: Black(0.45), ink: "#1F1F1F", searchStyleName: "minimal", itemListStyleName: "minimal",
+});
+SelectBox.styles.minimalDark = SelectBox.createMinimalStyle({
+    ground: "#1A1A19", text: White(0.88), softText: White(0.55), faintText: White(0.35),
+    line: White(0.18), lineHover: White(0.42), ink: "#EDEDEB", searchStyleName: "minimalDark", itemListStyleName: "minimalDark",
+});

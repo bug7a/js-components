@@ -47,7 +47,7 @@ CATALOG.CATEGORIES = [
 CATALOG.COMPONENTS = [
     {
         key: "tabs", name: "Tabs", cat: "navigation",
-        source: "comp/tabs.js", samples: ["02-comp-examples/tabs.htm"],
+        source: "comp/tabs.js", samples: ["02-comp-examples/tabs.htm", "02-comp-examples/minimal-theme.htm"],
         en: "Tab bar with underline and pill variants, counts, badges, closable tabs, a vertical mode and optional panels.",
         tr: "Alt çizgili ve hap görünümlü sekme çubuğu: sayı, rozet, kapatılabilir sekme, dikey düzen ve isteğe bağlı paneller.",
     },
@@ -116,13 +116,13 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "item-list", name: "ItemList", cat: "selection",
-        source: "comp/item-list.js", samples: ["02-comp-examples/item-list.htm", "02-comp-examples/item-list-2.htm"],
+        source: "comp/item-list.js", samples: ["02-comp-examples/item-list.htm", "02-comp-examples/item-list-2.htm", "02-comp-examples/minimal-theme.htm"],
         en: "A list of items with an icon, a title and a description (or your own rows): vertical, horizontal or grid, single or multiple selection, section titles, search and keyboard; a picture gallery; a pressed flash and animated add / remove.",
         tr: "İkon, başlık ve açıklamalı öğe listesi (ya da kendi satırlarınız): dikey, yatay veya ızgara; tekli veya çoklu seçim, bölüm başlıkları, arama ve klavye; resim galerisi; tıklanınca bir an koyulaşan satır ve hareketli ekleme / çıkarma.",
     },
     {
         key: "select-box", name: "SelectBox", cat: "selection",
-        source: "comp/select-box.js", deps: ["comp/search-input.js"], samples: ["02-comp-examples/select-box.htm", "02-comp-examples/select-box-ozden-item.htm", "02-comp-examples/select-box-ozden-text.htm", "02-comp-examples/select-box-ozden-dark-text.htm"],
+        source: "comp/select-box.js", deps: ["comp/search-input.js"], samples: ["02-comp-examples/select-box.htm", "02-comp-examples/select-box-ozden-item.htm", "02-comp-examples/select-box-ozden-text.htm", "02-comp-examples/select-box-ozden-dark-text.htm", "02-comp-examples/minimal-theme.htm"],
         en: "Dropdown select for single or multiple selection, with select all and clear.",
         tr: "Tekli veya çoklu seçim için açılır liste; tümünü seç ve temizle düğmeleri.",
     },
@@ -180,6 +180,7 @@ CATALOG.COMPONENTS = [
         samples: [
             { file: "02-comp-examples/stepper.htm", title: "Basic" },
             { file: "02-comp-examples/stepper-2.htm", title: "ozden, a line around the buttons" },
+            { file: "02-comp-examples/minimal-theme.htm", title: "Minimal theme (minimal, minimalDark)" },
         ],
         en: "Number stepper with decimals, a unit, typed editing and hold-to-repeat buttons. A line around the buttons and a round look (ozden).",
         tr: "Ondalık, birim, elle yazma ve basılı tutunca tekrarlayan düğmeleriyle sayı seçici. Düğmelerin çevresinde çizgi ve yuvarlak görünüm (ozden).",
@@ -224,6 +225,7 @@ CATALOG.COMPONENTS = [
         samples: [
             { file: "02-comp-examples/progress-bar.htm", title: "Basic" },
             { file: "02-comp-examples/progress-bar-ozden.htm", title: "ozden, two parts, stripes, limits, a dark track" },
+            { file: "02-comp-examples/minimal-theme.htm", title: "Minimal theme (minimal, minimalDark)" },
         ],
         en: "Horizontal progress bar with a title and a value text; determinate or indeterminate. Two parts (70 + 5) in their own colors, moving stripes, limit lines and a dark track.",
         tr: "Başlık ve değer yazılı yatay ilerleme çubuğu; belirli veya belirsiz ilerleme. Kendi renklerinde iki parça (70 + 5), kayan çizgiler, limit çizgileri ve koyu bir arka plan.",
@@ -491,19 +493,20 @@ CATALOG.COMPONENTS = [
             { file: "02-comp-examples/input-b-ex3-style.htm", title: "Style" },
             { file: "02-comp-examples/input-b-ex4-custom-unit.htm", title: "Custom unit" },
             { file: "02-comp-examples/input-b-ex5-warning-icon.htm", title: "Warning icon" },
+            { file: "02-comp-examples/minimal-theme.htm", title: "Minimal theme (minimal, minimalDark)" },
         ],
         en: "Labeled text field with an icon, a unit, hints and validation; the base of the other *InputB fields.",
         tr: "İkon, birim, ipucu ve doğrulama içeren etiketli metin alanı; diğer *InputB alanlarının temeli.",
     },
     {
         key: "email-input-b", name: "EmailInputB", cat: "inputs",
-        source: "comp/email-input-b.js", deps: ["comp/tooltip.js", "comp/input-b.js"], samples: ["02-comp-examples/email-input-b.htm"],
+        source: "comp/email-input-b.js", deps: ["comp/tooltip.js", "comp/input-b.js"], samples: ["02-comp-examples/email-input-b.htm", "02-comp-examples/minimal-theme.htm"],
         en: "An InputB that checks e-mail addresses.",
         tr: "E-posta adresini denetleyen InputB.",
     },
     {
         key: "password-input-b", name: "PasswordInputB", cat: "inputs",
-        source: "comp/password-input-b.js", deps: ["comp/tooltip.js", "comp/input-b.js"], samples: ["02-comp-examples/password-input-b.htm"],
+        source: "comp/password-input-b.js", deps: ["comp/tooltip.js", "comp/input-b.js"], samples: ["02-comp-examples/password-input-b.htm", "02-comp-examples/minimal-theme.htm"],
         en: "Password field with a show and hide button.",
         tr: "Göster ve gizle düğmeli şifre alanı.",
     },
@@ -537,13 +540,13 @@ CATALOG.COMPONENTS = [
     },
     {
         key: "textarea-b", name: "TextareaB", cat: "inputs",
-        source: "comp/textarea-b.js", deps: ["comp/tooltip.js", "comp/input-b.js"], samples: ["02-comp-examples/textarea-b.htm"],
+        source: "comp/textarea-b.js", deps: ["comp/tooltip.js", "comp/input-b.js"], samples: ["02-comp-examples/textarea-b.htm", "02-comp-examples/minimal-theme.htm"],
         en: "Multi-line text field in the InputB style, with a character counter.",
         tr: "InputB görünümünde, karakter sayaçlı çok satırlı metin alanı.",
     },
     {
         key: "search-input", name: "SearchInput", cat: "inputs",
-        source: "comp/search-input.js", samples: [{ file: "02-comp-examples/search-input.htm", title: "classic: a standard search box" }, { file: "02-comp-examples/search-input-place.htm", title: "Place: right / bottom" }],
+        source: "comp/search-input.js", samples: [{ file: "02-comp-examples/search-input.htm", title: "classic: a standard search box" }, { file: "02-comp-examples/search-input-place.htm", title: "Place: right / bottom" }, "02-comp-examples/minimal-theme.htm"],
         en: "Search field with a search icon and a clear button.",
         tr: "Arama ikonu ve temizleme düğmeli arama kutusu.",
     },
@@ -553,6 +556,7 @@ CATALOG.COMPONENTS = [
         samples: [
             { file: "02-comp-examples/slider-round.htm", title: "round (the model page)" },
             { file: "02-comp-examples/slider.htm", title: "classic (Material 3)" },
+            { file: "02-comp-examples/minimal-theme.htm", title: "Minimal theme (minimal, minimalDark)" },
         ],
         en: "Slider for choosing a value in a range, on a step. Looks: round (a thin track and a round white knob: the look of new pages), roundDark for a dark page, and classic (inspired by Material 3).",
         tr: "Bir aralıktan, adım adım değer seçmek için kaydırıcı. Görünümler: round (ince bir ray ve yuvarlak beyaz bir tutamaç: yeni sayfaların görünümü), koyu sayfa için roundDark ve classic (Material 3'ten esinlenildi).",

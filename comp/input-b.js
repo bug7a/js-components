@@ -55,7 +55,11 @@ WebSite: https://bug7a.github.io/js-components
 -- hintColor: the bubble of a button of the field (the show password button of PasswordInputB) when color is "".
 -- The tooltip of the warning ball. color "": requiredColor / warningColor.
 
-- styleName: "classic" (default) | "dark" | "ozden" | "ozdenDark"  (InputB.styles)
+- styleName: "classic" (default) | "dark" | "ozden" | "ozdenDark" | "minimal" | "minimalDark"  (InputB.styles)
+-- minimal / minimalDark (_designs/minimal-theme.htm): the title over a 28 px field of a line (titlePosition "above").
+- The sizes: titleFontSize, inputFontSize, inputHeight, fieldPadding, descriptionFontSize (the defaults: 16, 20, 40, 14, 14).
+- titlePosition: "inside" (default: the title in the field) | "above" (the title over the field, titleGap under it).
+- hoverBackBorderColor: the edge under the mouse ("": no change).
 -- The look of InputB is in flat params (backgroundColor, lineColor, titleTextColor...), not in one
    "style" object. So its packages are packages of params (basic.js v26.10.27: a package with a
    "style" key): any param can be in it, also an image (requiredIcon, warningIcon).
@@ -73,12 +77,20 @@ WebSite: https://bug7a.github.io/js-components
 const InputBDefaults = {
 
     key: "0",
-    styleName: "classic", // "classic", "dark", "ozden", "ozdenDark" or a name added to InputB.styles
+    styleName: "classic", // "classic", "dark", "ozden", "ozdenDark", "minimal", "minimalDark" or a name added to InputB.styles
     type: "text",
     width: 350,
     height: "auto",
     leftPadding: 20,
     rightPadding: 60,
+    // THE SIZES (the minimal packages make them small)
+    titleFontSize: 16,
+    inputFontSize: 20,
+    inputHeight: 40, // px: the row of the text
+    fieldPadding: 14, // px: over and under the title and the text (titlePosition "inside")
+    descriptionFontSize: 14,
+    titlePosition: "inside", // "inside": the title in the field, over the text. "above": the title over the field (the field is only the row of the text). (Only at create time)
+    titleGap: 4, // px between the title and the field (titlePosition "above")
     titleText: "INPUT NAME",
     placeholder: "input value",
     inputValue: "",
@@ -93,6 +105,7 @@ const InputBDefaults = {
     selectedLineColor: "#65A293",
     backBorderColor: Black(0),
     selectedBackBorderColor: Black(0),
+    hoverBackBorderColor: "", // the edge under the mouse (not while it is selected). "": no change
     backBorderTopRound: 2,
     backBorderBottomRound: 0,
 
@@ -166,6 +179,8 @@ const InputB = function(params = {}) {
 
     // Merge params:
     mergeIntoIfMissing(params, InputBDefaults);
+    // WHY read here: box.height never reads "auto" (it gives the measured size)
+    const isAutoHeight = (String(params.height) === "auto");
 
     // BOX: Component container
     const box = startObject(params);
@@ -186,11 +201,17 @@ const InputB = function(params = {}) {
     const HIDDEN_BALL_SCALE = "scale(0.3)"; // WHY: The ball grows from small when it is shown.
     const WARNING_BALL_MOTION = "opacity 0.2s, transform 0.2s";
     const OUT_OF_SCREEN_TOP = -1000;
+    const TITLE_LINE_HEIGHT = 1.35; // of the title font size (titlePosition "above": the place of the field is known)
+    const isTitleAbove = (box.titlePosition === "above");
+    const titleLineHeight = Math.round(box.titleFontSize * TITLE_LINE_HEIGHT);
+    const fieldTop = isTitleAbove ? titleLineHeight + box.titleGap : 0; // px: where the field starts
 
     // *** PUBLIC VARIABLES:
     
     // [var] 0: okay, 1: empty but required, 2: not valid
     box.status = 0;
+    // [var] px: where the field starts under the title (titlePosition "above"; 0 "inside"). TextareaB reads it.
+    box.fieldTop = fieldTop;
 
     // *** PRIVATE FUNCTIONS:
 
@@ -368,12 +389,26 @@ const InputB = function(params = {}) {
         return box.backgroundColor;
     };
 
+    // titlePosition "above": a box of the whole component (the left / right box) covers only the field
+    const placeOverField = function(object) {
+        if (!isTitleAbove) return;
+        object.top = fieldTop;
+        object.height = isAutoHeight ? box.inputHeight : "calc(100% - " + fieldTop + "px)";
+    };
+
+    // The edge: selected, under the mouse (hoverBackBorderColor), or its own
+    const getBackBorderColor = function() {
+        if (isFieldFocused) return box.selectedBackBorderColor;
+        if (isFieldHover && box.hoverBackBorderColor) return box.hoverBackBorderColor;
+        return box.backBorderColor;
+    };
+
     // The colors of the field while it is focused (1) or not (0): background, border and line.
     // NOTE: A component made from InputB (PhoneInputB, UrlInputB, TextareaB) calls this in its own focusFunc / blurFunc.
     box.paintFocus = function(isFocused) {
         isFieldFocused = isFocused ? 1 : 0;
         box.background.color = getBackgroundColor();
-        box.background.borderColor = (isFocused) ? box.selectedBackBorderColor : box.backBorderColor;
+        box.background.borderColor = getBackBorderColor();
         box.line.color = (isFocused) ? box.selectedLineColor : box.lineColor;
     };
 
@@ -461,6 +496,11 @@ const InputB = function(params = {}) {
             borderBottomRightRadius: box.backBorderBottomRound + "px",
             borderBottomLeftRadius: box.backBorderBottomRound + "px",
         };
+        // titlePosition "above": the background is only the field, under the title
+        if (isTitleAbove) {
+            box.background.top = fieldTop;
+            box.background.height = isAutoHeight ? box.inputHeight : "calc(100% - " + fieldTop + "px)";
+        }
 
         // BOX: Bottom Line
         box.line = Box({
@@ -470,33 +510,36 @@ const InputB = function(params = {}) {
             height: 2,
             color: box.lineColor,
         });
+        if (isTitleAbove && isAutoHeight) box.line.css = { bottom: "auto", top: (fieldTop + box.inputHeight - 2) + "px" };
 
         // GROUP: Title, input, description
         box.inputGroup = AutoLayout({
             flow: "vertical",
             align: "left top",
             height: "auto",
-            padding: [box.leftPadding, 14, box.rightPadding, 14],
-            gap: 0,
+            padding: isTitleAbove ? [box.leftPadding, 0, box.rightPadding, 0] : [box.leftPadding, box.fieldPadding, box.rightPadding, box.fieldPadding],
+            gap: isTitleAbove ? box.titleGap : 0,
         });
         that.position = "relative";
 
             // LABEL: Title 
             box.title = Label({
                 text: box.titleText,
-                fontSize: 16,
+                fontSize: box.titleFontSize,
                 textColor: box.titleTextColor,
                 bold: box.titleBold,
             });
             if (box.titleLetterSpacing) that.css.letterSpacing = box.titleLetterSpacing;
+            // WHY: over the field the title starts at its edge, not at the text inside it
+            if (isTitleAbove) that.css = { lineHeight: titleLineHeight + "px", marginLeft: -box.leftPadding + "px", whiteSpace: "nowrap" };
 
             // INPUT: Main object
             if(box.createInput == 1) {
                 box.input = Input({
                     text: box.inputValue,
                     minimal: 1,
-                    fontSize: 20,
-                    height: 40,
+                    fontSize: box.inputFontSize,
+                    height: box.inputHeight,
                     color: "transparent",
                     width: "100%",
                     textColor: box.inputTextColor,
@@ -509,7 +552,7 @@ const InputB = function(params = {}) {
             } else {
                 box.inputBox = Box({
                     color: "transparent",
-                    height: 40,
+                    height: box.inputHeight,
                     width: "100%",
                 });
             }
@@ -518,10 +561,11 @@ const InputB = function(params = {}) {
             if (box.createDescription == 1) {
                 box.description = Label({
                     text: box.descriptionText,
-                    fontSize: 14,
+                    fontSize: box.descriptionFontSize,
                     textColor: box.descriptionTextColor,
                 });
                 box.description.css.fontStyle = "italic";
+                if (isTitleAbove) box.description.css = { marginLeft: -box.leftPadding + "px" };
             }
             
         endAutoLayout();
@@ -542,6 +586,7 @@ const InputB = function(params = {}) {
             }
 
         endAutoLayout();
+        placeOverField(box.rightBox);
         }
 
         // GROUP: left box
@@ -549,11 +594,12 @@ const InputB = function(params = {}) {
         box.leftBox = AutoLayout({
             flow: "horizontal",
             align: "left center",
-            padding: [20, 14],
+            padding: [20, isTitleAbove ? 0 : 14],
             gap: 6,
         });
 
         endAutoLayout();
+        placeOverField(box.leftBox);
         }
 
         // BOX: Warning Ball:
@@ -561,7 +607,7 @@ const InputB = function(params = {}) {
         const ballSize = isIconBall ? box.warningIconSize : WARNING_BALL_SIZE;
         box.warningBall = Box({
             right: 5,
-            top: 5,
+            top: isTitleAbove ? fieldTop + Math.round((box.inputHeight - ballSize) / 2) : 5,
             width: ballSize,
             height: ballSize,
             border: isIconBall ? 0 : 2,
@@ -634,6 +680,7 @@ const InputB = function(params = {}) {
     box.onHoverChange(function(self, isHover) {
         isFieldHover = isHover ? 1 : 0;
         box.background.color = getBackgroundColor();
+        box.background.borderColor = getBackBorderColor();
     });
 
     return endObject(box);
@@ -773,3 +820,54 @@ InputB.styles = {
     },
 
 };
+
+// The minimal theme (_designs/minimal-theme.htm): the title (12 px) over the field, a 28 px field of a line with a
+// 13 px text, no fill; the line gets darker under the mouse and turns ink while typing. minimalDark: the same on a
+// dark window. (EmailInputB, PasswordInputB, TextareaB... take them too.)
+InputB.createMinimalStyle = function (colors) {
+    return {
+        style: {},
+        leftPadding: 10,
+        rightPadding: 30, // WHY: the room of the warning ball
+        titleFontSize: 12,
+        inputFontSize: 13,
+        inputHeight: 28,
+        fieldPadding: 0,
+        descriptionFontSize: 12,
+        titlePosition: "above",
+        titleGap: 4,
+        backgroundColor: "transparent",
+        selectedBackgroundColor: "transparent",
+        hoverBackgroundColor: "",
+        lineColor: "transparent",
+        selectedLineColor: "transparent",
+        backBorderColor: colors.line,
+        selectedBackBorderColor: colors.ink,
+        hoverBackBorderColor: colors.lineHover,
+        backBorderTopRound: 4,
+        backBorderBottomRound: 4,
+        titleTextColor: colors.softText,
+        titleBold: 0,
+        inputTextColor: colors.text,
+        inputColorScheme: colors.colorScheme,
+        placeholderColor: colors.faintText,
+        descriptionTextColor: colors.softText,
+        requiredColor: "transparent",
+        warningBallBorderColor: colors.softText,
+        warningColor: colors.danger,
+        warningBallType: "color",
+        requiredIconColor: colors.softText,
+        tooltipStyle: { color: colors.ground, hintColor: colors.ground, textColor: colors.text, border: 1, borderColor: colors.line, round: 4, fontSize: 12 },
+        selectStyle: { color: "transparent", invertIconColor: colors.invertIcons, listBackgroundColor: colors.ground, listTextColor: colors.text, listOverTextColor: colors.ink, listBorderColor: colors.line },
+        showPasswordIconInvert: colors.invertIcons,
+        unitStyle: { padding: [6, 1], color: "transparent", textColor: colors.softText, round: 4, fontSize: 11 },
+    };
+};
+InputB.styles.minimal = InputB.createMinimalStyle({
+    ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), faintText: Black(0.35), line: Black(0.2),
+    lineHover: Black(0.45), ink: "#1F1F1F", danger: "#C9503C", colorScheme: "", invertIcons: 0,
+});
+InputB.styles.minimalDark = InputB.createMinimalStyle({
+    ground: "#1A1A19", text: White(0.88), softText: White(0.55), faintText: White(0.35), line: White(0.18),
+    lineHover: White(0.42), ink: "#EDEDEB", danger: "#FF9F93", colorScheme: "dark", invertIcons: 1,
+});

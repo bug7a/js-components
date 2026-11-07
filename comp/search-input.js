@@ -84,7 +84,7 @@ const SearchInputDefaults = {
     focusRingColor: "rgba(0, 0, 0, 0.16)", // animated: the line while typing
     onSearch: function(searchedText, self) {},
     onSubmit: function(searchedText, self) {},
-    styleName: "original", // "original" (the look of these defaults), "classic", "ozden", "ozdenDark" or a name added to SearchInput.styles
+    styleName: "original", // "original" (the look of these defaults), "classic", "ozden", "ozdenDark", "minimal", "minimalDark" or a name added to SearchInput.styles
     style: {}, // WHY: the look is in the flat params above; the packages are packages of params (see SearchInput.styles).
 };
 
@@ -608,3 +608,39 @@ SearchInput.styles = {
     },
 
 };
+
+// The minimal theme (_designs/minimal-theme.htm): 28 px, a 13 px text, no fill, a thin line with round ends that turns
+// ink while typing, a line search icon and a line cross. minimalDark: the same in white on a dark window.
+SearchInput.createMinimalStyle = function (colors) {
+    const lineIcon = function (paths) {
+        const svgStart = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">';
+        return "data:image/svg+xml;utf8," + encodeURIComponent(svgStart + paths + "</svg>");
+    };
+    return {
+        style: {},
+        height: 28,
+        searchIconFile: lineIcon('<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>'),
+        clearIconFile: lineIcon('<path d="M7 7l10 10M17 7 7 17"/>'),
+        searchIconSize: 14,
+        searchIconLeft: 10,
+        searchIconGap: 6,
+        clearIconRight: 8,
+        searchIconOpacity: 0.55,
+        clearIconOpacity: 0.55,
+        invertIconColor: colors.invertIcons,
+        color: "transparent",
+        textColor: colors.text,
+        placeholderColor: colors.placeholder,
+        fontSize: 13,
+        textOffsetY: -1,
+        clearIconOffsetY: 0,
+        border: 1,
+        borderColor: colors.line,
+        borderBottomStyle: "1px solid " + colors.line,
+        focusBorderColor: colors.ink,
+        round: 14,
+        animated: 0,
+    };
+};
+SearchInput.styles.minimal = SearchInput.createMinimalStyle({ invertIcons: 0, text: Black(0.85), placeholder: Black(0.35), line: Black(0.2), ink: "#1F1F1F" });
+SearchInput.styles.minimalDark = SearchInput.createMinimalStyle({ invertIcons: 1, text: White(0.88), placeholder: White(0.35), line: White(0.18), ink: "#EDEDEB" });

@@ -117,16 +117,19 @@ const TextareaB = function(params = {}) {
     };
     
     // *** OBJECT VIEW:
-        box.inputGroup.gap = 8;
+        const isTitleAbove = (box.titlePosition === "above");
+        const TEXT_SPACE = 6; // px over and under the text in a field under its title (titlePosition "above")
+        box.inputGroup.gap = isTitleAbove ? box.titleGap : 8;
         box.inputGroup.height = "100%";
         box.inputBox.color = "transparent";
-        box.inputBox.height = "calc(100% - 20px)";
+        box.inputBox.height = isTitleAbove ? "calc(100% - " + box.fieldTop + "px)" : "calc(100% - 20px)";
         
         // WHY: A raw <textarea> (not a basic.js object): its style is written directly.
         textareaElem.classList.add("basic_textbox");
         textareaElem.classList.add("minimal");
-        textareaElem.style.cssText = "background-color:transparent;font-size:20px;resize:none;width:100%;padding:0px 0px;box-sizing:border-box";
+        textareaElem.style.cssText = "background-color:transparent;font-size:" + box.inputFontSize + "px;resize:none;width:100%;padding:0px 0px;box-sizing:border-box";
         textareaElem.style.overflow = "hidden";
+        if (isTitleAbove) textareaElem.style.padding = TEXT_SPACE + "px 0px";
         // WHY a CSS size, not the measured one: the field is clickable in all its height, also when it is made hidden
         //     (box.inputBox.height is 0 then) and after the text changed (autoGrow cleared the measured one)
         textareaElem.style.minHeight = "calc(100% - 4px)";

@@ -87,7 +87,7 @@ const TabsDefaults = {
     onChange: function (self) { }, // self.value, self.previousValue, self.getActiveTab()
     onClose: function (self, tab) { }, // Return false to keep the tab.
     onAdd: function (self) { },
-    styleName: "classic", // "classic", "modern", "dark" or a name added to Tabs.styles
+    styleName: "classic", // "classic", "modern", "dark", "minimal", "minimalDark" or a name added to Tabs.styles
     style: { // Classic style package (default)
         bar: { // Underline variant
             color: "transparent",
@@ -1325,3 +1325,30 @@ Tabs.styles = {
     },
 
 };
+
+// The minimal theme (_designs/minimal-theme.htm): a 13 px text, a 2 px ink line under the selected tab on one thin
+// line, no fill under the mouse (the text gets darker); the pill variant: a line around the bar and an ink line
+// around the selected tab. minimalDark: the same on a dark window.
+Tabs.createMinimalStyle = function (colors) {
+    return {
+        bar: { color: "transparent", padding: [0, 0], gap: 2, round: 0, dividerColor: colors.line, dividerWidth: 1 },
+        pillBar: { color: "transparent", padding: [2, 2], gap: 2, round: 4, border: 1, borderColor: colors.line },
+        tab: { fontSize: 13, textColor: colors.softText, padding: [10, 6], round: 3, gap: 6, minHeight: 30 },
+        tabHover: { color: "transparent", textColor: colors.text },
+        tabActive: { color: "transparent", textColor: colors.ink },
+        pillActive: { textColor: colors.ink },
+        tabDisabled: { opacity: 0.4 },
+        indicator: { color: colors.ink, thickness: 2, round: 1, motion: 0.25 },
+        pillIndicator: { color: "transparent", round: 3, shadow: "inset 0 0 0 1px " + colors.ink, motion: 0.25 },
+        icon: { size: 14 },
+        count: { fontSize: 11, color: "transparent", textColor: colors.softText, activeColor: colors.ink, activeTextColor: colors.ground, round: 8, padding: [5, 0] },
+        close: { color: colors.softText, hoverColor: colors.danger, size: 12 },
+        addButton: { color: colors.softText, hoverColor: colors.ink, hoverBackground: "transparent", size: 14 },
+        arrow: { color: colors.softText, background: colors.ground, size: 14 },
+        focus: { outlineColor: colors.focus },
+        panel: { color: "transparent", padding: [0, 12], round: 0, border: 0, borderColor: "transparent" },
+        disabled: { opacity: 0.4 },
+    };
+};
+Tabs.styles.minimal = Tabs.createMinimalStyle({ ground: "#FFFFFF", ink: "#1F1F1F", text: Black(0.85), softText: Black(0.55), line: Black(0.2), danger: "#C9503C", focus: "#3D8BD9" });
+Tabs.styles.minimalDark = Tabs.createMinimalStyle({ ground: "#1A1A19", ink: "#EDEDEB", text: White(0.88), softText: White(0.55), line: White(0.18), danger: "#FF9F93", focus: "#7FB6DE" });

@@ -127,9 +127,12 @@ const PasswordInputB = function(params = {}) {
     box.leftBox.add(that);
 
         // ICON: Show / hide password button
+        // WHY: a small field (minimal: 28 px) takes a smaller eye; the usual fields (40 px) keep 32
+        const EYE_RATIO = 0.6;
+        const eyeSize = (box.inputHeight >= 40) ? 32 : Math.round(box.inputHeight * EYE_RATIO);
         box.btnShowPassword = Icon({
-            width: 32,
-            height: 32,
+            width: eyeSize,
+            height: eyeSize,
             visible: box.showShowPasswordButton,
         });
         that.clickable = 1;

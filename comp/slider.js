@@ -69,7 +69,7 @@ const SliderDefaults = {
 
     ariaLabel: "", // The name a screen reader says (Ex: "Volume"). "": none
 
-    styleName: "classic", // "classic", "round", "roundDark" or a name added to Slider.styles
+    styleName: "classic", // "classic", "round", "roundDark", "minimal", "minimalDark" or a name added to Slider.styles
     style: { // Classic style package (default): inspired by Material 3
         thumb: { // The part that is dragged: a line (classic) or a knob (round)
             areaWidth: 20, // px: the part that takes the mouse and the finger (the thumb is in its middle)
@@ -795,3 +795,25 @@ Slider.styles = {
     },
 
 };
+
+// The minimal theme (_designs/minimal-theme.htm): a 2 px track, the chosen part in ink, a 12 px knob in the ground of
+// the window with a thin ink line around it (a line, not a shadow), a small ink value bubble, a blue focus ring.
+Slider.createMinimalStyle = function (colors) {
+    return {
+        minThumbHeight: 20,
+        trackHeight: 2,
+        trackColor: colors.ink,
+        trackBackgroundColor: colors.track,
+        thumbColor: colors.ground,
+        style: {
+            thumb: { areaWidth: 12, width: 12, height: 12, round: 6, boxShadow: "0 0 0 1px " + colors.ink },
+            dragging: { width: "", trackSpace: "", ringSize: 0, ringOpacity: 0 },
+            track: { space: -6, outerRound: 1, innerRound: 1 },
+            trackDot: { size: 0 },
+            value: { color: colors.ink, textColor: colors.ground, fontSize: 11, padding: [6, 2], round: 3, space: 6 },
+            focus: { ringColor: colors.focus, ringWidth: 2, ringSpace: 2 },
+        },
+    };
+};
+Slider.styles.minimal = Slider.createMinimalStyle({ ground: "#FFFFFF", ink: "#1F1F1F", track: Black(0.12), focus: "#3D8BD9" });
+Slider.styles.minimalDark = Slider.createMinimalStyle({ ground: "#1A1A19", ink: "#EDEDEB", track: White(0.14), focus: "#7FB6DE" });

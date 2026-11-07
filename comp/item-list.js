@@ -47,7 +47,7 @@ UI COMPONENT TEMPLATE
   (if it is loaded).
 - Style packages: "ozden" (default; the name "classic" still works), "ozdenDark" (the same on a dark page), "gallery" and
   "galleryDark" (pictures: layout "grid", a big photo on every tile with its title under it),
-  "modern", "dark".
+  "modern", "dark", "minimal" and "minimalDark" (lines, 28 px rows: _designs/minimal-theme.htm).
   Select with styleName. (ItemList.styles)
 
 USAGE:
@@ -111,7 +111,7 @@ const ItemListDefaults = {
     ariaLabel: "List",
     onItemClick: function (self, item, index, event) { },
     onChange: function (self, selectedItems) { }, // Not at create time, not by setItems(), not with silent: 1
-    styleName: "ozden", // "ozden", "ozdenDark", "modern", "dark" or a name added to ItemList.styles
+    styleName: "ozden", // "ozden", "ozdenDark", "modern", "dark", "gallery", "galleryDark", "minimal", "minimalDark" or a name added to ItemList.styles
     style: { // The ozden style package (default)
         box: {
             color: "whitesmoke", // WHY: A row is white under the mouse: on a white page a list with no color of its own shows nothing.
@@ -1712,3 +1712,35 @@ ItemList.styles = {
     },
 
 };
+
+// The minimal theme (_designs/minimal-theme.htm): no fill (the window shows through: its states are lines, so it
+// reads on any ground), a line around the list; 28 px rows with a 13 px title and a 14 px icon; a line around the
+// row under the mouse, an ink line, an ink title and a tick on the selected one. A row with a description needs more
+// room: style: { row: { height: 44 } }. minimalDark: the same on a dark window.
+ItemList.createMinimalStyle = function (colors) {
+    return {
+        box: { color: "transparent", border: 1, borderColor: colors.line, round: 4, padding: 4 },
+        list: { gap: 0 },
+        row: { height: 28, padding: [8, 0], gap: 8, color: "transparent", border: 1, borderColor: "transparent", round: 3, lineColor: "" },
+        section: { padding: [8, 6], fontSize: 11, fontFamily: "opensans-bold", textColor: colors.faintText },
+        hover: { color: "transparent", lineColor: "", borderColor: colors.lineHover },
+        selected: { color: "transparent", lineColor: "", borderColor: colors.ink, opacity: 1, canSelectAgain: 0 },
+        disabled: { opacity: 0.4 },
+        focus: { ringColor: colors.focus },
+        icon: { size: 14, round: 0, color: "transparent" },
+        title: { fontSize: 13, textColor: colors.text, selectedTextColor: colors.ink },
+        desc: { fontSize: 12, textColor: colors.softText, marginTop: 0 },
+        check: { visible: 1, size: 14, color: "transparent", iconColor: colors.ink, borderColor: "transparent" },
+        empty: { fontSize: 12, textColor: colors.softText },
+        search: { styleName: colors.searchStyleName, height: 28, padding: [0, 0, 0, 4], color: "transparent", border: 1, round: 14 },
+        scrollBar: { bar_color: colors.scrollBar, bar_mouseOverColor: colors.scrollBar, bar_width: 3, bar_mouseOverWidth: 4 },
+    };
+};
+ItemList.styles.minimal = ItemList.createMinimalStyle({
+    text: Black(0.85), softText: Black(0.55), faintText: Black(0.35), line: Black(0.2), lineHover: Black(0.45),
+    ink: "#1F1F1F", focus: "#3D8BD9", searchStyleName: "minimal", scrollBar: "#373836",
+});
+ItemList.styles.minimalDark = ItemList.createMinimalStyle({
+    text: White(0.88), softText: White(0.55), faintText: White(0.35), line: White(0.18), lineHover: White(0.42),
+    ink: "#EDEDEB", focus: "#7FB6DE", searchStyleName: "minimalDark", scrollBar: "#CFCFCD",
+});

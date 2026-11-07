@@ -66,7 +66,7 @@ const ProgressBarDefaults = {
     },
     onChange: function (self) { }, // self.value
     onComplete: function (self) { }, // Called once when the value reaches max.
-    styleName: "classic", // "classic", "modern" or a name added to ProgressBar.styles
+    styleName: "classic", // "classic", "modern", "ozden", "ozdenDark", "minimal", "minimalDark" or a name added to ProgressBar.styles
     style: { // Classic style package (default)
         layout: {
             gap: 6, // Space between the title row and the bar
@@ -929,3 +929,22 @@ ProgressBar.injectCss = function () {
         "@keyframes progress-bar-stripes { to { background-position: var(--progress-stripe-size) 0; } }" +
         "@media (prefers-reduced-motion: reduce) { .progress-bar-stripes { animation: none; } }");
 };
+
+// The minimal theme (_designs/minimal-theme.htm): a 2 px track with no edge, the bar in ink, a 12 px title and value;
+// an error in the danger color. minimalDark: the same on a dark window.
+ProgressBar.createMinimalStyle = function (colors) {
+    return {
+        layout: { gap: 6 },
+        track: { height: 2, color: colors.track, round: 1, border: 0, borderColor: "transparent" },
+        darkTrack: { color: colors.track, borderColor: "transparent", limitColor: colors.ink },
+        bar: { color: colors.ink, fillOpacity: 1, border: 0, borderColor: "", boxShadow: "none", innerRound: "", joinEdge: 0, motion: 0.3 },
+        secondBar: { color: colors.softText, fillOpacity: 1, lighten: 0, borderOpacity: 0 },
+        limit: { shape: "line", color: colors.danger, width: 1, overhang: 4, textSize: 11, textColor: colors.softText },
+        successBar: { color: colors.ink },
+        errorBar: { color: colors.danger },
+        title: { fontSize: 12, textColor: colors.text },
+        valueText: { fontSize: 12, textColor: colors.softText },
+    };
+};
+ProgressBar.styles.minimal = ProgressBar.createMinimalStyle({ ink: "#1F1F1F", track: Black(0.12), text: Black(0.85), softText: Black(0.55), danger: "#C9503C" });
+ProgressBar.styles.minimalDark = ProgressBar.createMinimalStyle({ ink: "#EDEDEB", track: White(0.14), text: White(0.88), softText: White(0.55), danger: "#FF9F93" });

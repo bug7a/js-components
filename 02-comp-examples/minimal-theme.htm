@@ -19,6 +19,18 @@
     <script src="../comp/check-box.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/radio-button.js" type="text/javascript" charset="utf-8"></script>
     <script src="../comp/toggle.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/tooltip.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/input-b.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/email-input-b.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/password-input-b.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/textarea-b.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/search-input.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/item-list.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/select-box.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/slider.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/progress-bar.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/tabs.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../comp/stepper.js" type="text/javascript" charset="utf-8"></script>
 
     <script>
 
@@ -27,7 +39,9 @@
     // The minimal theme: styleName "minimal" on a light window, "minimalDark" on a dark one (the design:
     // _designs/minimal-theme.htm). Small (28 px, a 13 px text) and made of lines: a component has no fill of its
     // own, it takes the ground of its window. The main action is the only filled button: tone "ink" / "inkDark".
-    // The components that have it so far: SmartButton, CheckBox, RadioButton, Toggle.
+    // The components that have it so far: SmartButton (and minimalDanger for a delete), CheckBox, RadioButton, Toggle,
+    // InputB (EmailInputB, PasswordInputB, TextareaB...), SearchInput, SelectBox, ItemList, Slider, ProgressBar, Tabs,
+    // Stepper.
 
     // *** THE COLORS AND SIZES OF THE PAGE
     const PAGE_COLOR = "#EDEDEB";
@@ -39,15 +53,23 @@
     const DARK_CAPTION_COLOR = White(0.45);
     const WINDOW_WIDTH = 460;
     const ICON_LIGHT = Black(0.85);
+    const DANGER_LIGHT = "#C9503C";
+    const DANGER_DARK = "#FF9F93";
+    const FRUITS = ["Apple", "Banana", "Cherry", "Grape"];
 
     // A line icon (24 x 24, the color in the drawing): SmartButton turns it white in minimalDark
-    const lineIcon = function (paths) {
-        const svgStart = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + ICON_LIGHT + '"'
+    const lineIcon = function (paths, color = ICON_LIGHT) {
+        const svgStart = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + color + '"'
             + ' stroke-width="2" stroke-linecap="round" stroke-linejoin="round">';
         return "data:image/svg+xml;utf8," + encodeURIComponent(svgStart + paths + "<\/svg>");
     };
     const ICON_SAVE = lineIcon('<path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4M8 20v-6h8v6"/>');
-    const ICON_TRASH = lineIcon('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/>');
+    const TRASH_PATHS = '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/>';
+    const ICON_TRASH_LIGHT = lineIcon(TRASH_PATHS, DANGER_LIGHT); // minimalDanger keeps the color of the icon file
+    const ICON_TRASH_DARK = lineIcon(TRASH_PATHS, DANGER_DARK);
+    const FOLDER_PATHS = '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>';
+    const ICON_FOLDER = lineIcon(FOLDER_PATHS, Black(0.55));
+    const ICON_FOLDER_DARK = lineIcon(FOLDER_PATHS, White(0.55)); // ItemList shows an icon file as it is
     const ICON_MORE = lineIcon('<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>');
 
     const start = function () {
@@ -68,7 +90,7 @@
                     HGroup({ hug: 1, align: "left center", gap: 8, clipContent: 0 });
                         SmartButton({ styleName: "minimal", labelText: "Save", iconFile: ICON_SAVE });
                         SmartButton({ styleName: "minimal", tone: "ink", labelText: "Send" });
-                        SmartButton({ styleName: "minimal", labelText: "Delete", iconFile: ICON_TRASH, ask: "Click again to delete." });
+                        SmartButton({ styleName: "minimalDanger", labelText: "Delete", iconFile: ICON_TRASH_LIGHT, ask: "Click again to delete." });
                         SmartButton({ styleName: "minimal", labelText: "", iconFile: ICON_MORE, ariaLabel: "More" });
                     endGroup();
                     HGroup({ hug: 1, align: "left center", gap: 8, clipContent: 0 });
@@ -90,6 +112,28 @@
                         Label({ text: "Sounds", fontSize: 13, textColor: LIGHT_TITLE_COLOR });
                     endGroup();
 
+                    Label({ text: "FIELDS", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
+                    EmailInputB({ styleName: "minimal", width: 260, titleText: "E-mail", placeholder: "name@mail.com" });
+                    PasswordInputB({ styleName: "minimal", width: 260, titleText: "Password", inputValue: "secret" });
+                    TextareaB({ styleName: "minimal", width: 260, height: 96, titleText: "Note", placeholder: "A few words" });
+                    SearchInput({ styleName: "minimal", width: 260 });
+                    SelectBox({ styleName: "minimal", width: 260, options: FRUITS, value: "Apple" });
+                    Stepper({ styleName: "minimal", value: 3 });
+
+                    Label({ text: "LIST", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
+                    ItemList({ styleName: "minimal", width: 260, height: "auto", selectedKeys: ["1"], items: [
+                        { title: "Projects", iconFile: ICON_FOLDER },
+                        { title: "Designs", iconFile: ICON_FOLDER },
+                        { title: "Archive", iconFile: ICON_FOLDER },
+                    ] });
+
+                    Label({ text: "SLIDER, PROGRESS", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
+                    Slider({ styleName: "minimal", width: 260, currentValue: 40 });
+                    ProgressBar({ styleName: "minimal", width: 260, titleText: "Uploading files", value: 62 });
+
+                    Label({ text: "TABS", fontSize: 11, bold: 1, textColor: LIGHT_CAPTION_COLOR });
+                    Tabs({ styleName: "minimal", width: 300, tabs: ["General", "Sound", "Advanced"], panelHeight: 0 });
+
                 endGroup();
 
                 // GROUP: The dark window (minimalDark)
@@ -101,7 +145,7 @@
                     HGroup({ hug: 1, align: "left center", gap: 8, clipContent: 0 });
                         SmartButton({ styleName: "minimalDark", labelText: "Save", iconFile: ICON_SAVE });
                         SmartButton({ styleName: "minimalDark", tone: "inkDark", labelText: "Send" });
-                        SmartButton({ styleName: "minimalDark", labelText: "Delete", iconFile: ICON_TRASH, ask: "Click again to delete." });
+                        SmartButton({ styleName: "minimalDangerDark", labelText: "Delete", iconFile: ICON_TRASH_DARK, ask: "Click again to delete." });
                         SmartButton({ styleName: "minimalDark", labelText: "", iconFile: ICON_MORE, ariaLabel: "More" });
                     endGroup();
                     HGroup({ hug: 1, align: "left center", gap: 8, clipContent: 0 });
@@ -122,6 +166,28 @@
                         Toggle({ styleName: "minimalDark", value: 1 });
                         Label({ text: "Sounds", fontSize: 13, textColor: DARK_TITLE_COLOR });
                     endGroup();
+
+                    Label({ text: "FIELDS", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
+                    EmailInputB({ styleName: "minimalDark", width: 260, titleText: "E-mail", placeholder: "name@mail.com" });
+                    PasswordInputB({ styleName: "minimalDark", width: 260, titleText: "Password", inputValue: "secret" });
+                    TextareaB({ styleName: "minimalDark", width: 260, height: 96, titleText: "Note", placeholder: "A few words" });
+                    SearchInput({ styleName: "minimalDark", width: 260 });
+                    SelectBox({ styleName: "minimalDark", width: 260, options: FRUITS, value: "Apple" });
+                    Stepper({ styleName: "minimalDark", value: 3 });
+
+                    Label({ text: "LIST", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
+                    ItemList({ styleName: "minimalDark", width: 260, height: "auto", selectedKeys: ["1"], items: [
+                        { title: "Projects", iconFile: ICON_FOLDER_DARK },
+                        { title: "Designs", iconFile: ICON_FOLDER_DARK },
+                        { title: "Archive", iconFile: ICON_FOLDER_DARK },
+                    ] });
+
+                    Label({ text: "SLIDER, PROGRESS", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
+                    Slider({ styleName: "minimalDark", width: 260, currentValue: 40 });
+                    ProgressBar({ styleName: "minimalDark", width: 260, titleText: "Uploading files", value: 62 });
+
+                    Label({ text: "TABS", fontSize: 11, bold: 1, textColor: DARK_CAPTION_COLOR });
+                    Tabs({ styleName: "minimalDark", width: 300, tabs: ["General", "Sound", "Advanced"], panelHeight: 0 });
 
                 endGroup();
 

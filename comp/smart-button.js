@@ -18,7 +18,8 @@ The other samples: smart-button-alternatif.htm (pill and outlined with the color
      edge with a line at its bottom). For a dark page (the draft _designs/smart-button-dark.htm):
      "ozdenType1Dark" ... "ozdenType4Dark" (#2E2E2C, a white text and icon, the dark waiting clock).
      "minimal" / "minimalDark" (the minimal theme, _designs/minimal-theme.htm): 28 px high, a 13 px text, only a line
-     that gets darker under the mouse; the main action takes the tone "ink" / "inkDark".
+     that gets darker under the mouse; the main action takes the tone "ink" / "inkDark"; a delete "minimalDanger" /
+     "minimalDangerDark" (the line and the text in the danger color).
      A template is only a style (SmartButton.styles); the minimal ones also give the height.
   2. tone: a color of the kit (SmartButton.tones), three colors: the button, the button under the mouse, its text.
      "white", "cyan" (the main action), "orange" (a delete, a reject), "yellow" (go on, but look first), "green"
@@ -78,7 +79,7 @@ Webpage: https://bug7a.github.io/js-components/
 // Default values:
 const SmartButtonDefaults = {
     key: "0",
-    styleName: "ozdenType1", // the template (SmartButton.styles): "ozdenType1" (the default) ... "ozdenType4", "pill", "outlined", "ozdenType1Dark" ... "ozdenType4Dark", "minimal", "minimalDark"
+    styleName: "ozdenType1", // the template (SmartButton.styles): "ozdenType1" (the default) ... "ozdenType4", "pill", "outlined", "ozdenType1Dark" ... "ozdenType4Dark", "minimal", "minimalDark", "minimalDanger", "minimalDangerDark"
     tone: "", // a color of the kit (SmartButton.tones): "white", "cyan", "orange", "yellow", "green", "blue", "cyanDark"..., "ink" / "inkDark" (minimal). "": the gray of the template. setTone()
     width: "auto", // an icon button (labelText: "") is a square
     height: 44, // "auto": as high as its padding and content (an icon on top of a text is "auto")
@@ -778,6 +779,16 @@ SmartButton.styles.minimal = SmartButton.createMinimalTemplate({
 SmartButton.styles.minimalDark = SmartButton.createMinimalTemplate({
     text: White(0.88), line: White(0.18), lineHover: White(0.42), focus: "#7FB6DE",
     disabledLine: White(0.07), disabledText: White(0.35), iconFilter: SmartButton.WHITE_ICON, clock: "minimalDark",
+});
+// A delete in the minimal theme: the line and the text in the danger color (the line half of it, all of it under the
+// mouse). The icon keeps the color of its file: give it an icon drawn in the danger color.
+SmartButton.styles.minimalDanger = SmartButton.createMinimalTemplate({
+    text: "#C9503C", line: "rgba(201, 80, 60, 0.5)", lineHover: "#C9503C", focus: "#3D8BD9",
+    disabledLine: Black(0.08), disabledText: Black(0.34), iconFilter: "none", clock: "minimal",
+});
+SmartButton.styles.minimalDangerDark = SmartButton.createMinimalTemplate({
+    text: "#FF9F93", line: "rgba(255, 159, 147, 0.5)", lineHover: "#FF9F93", focus: "#7FB6DE",
+    disabledLine: White(0.07), disabledText: White(0.35), iconFilter: "none", clock: "minimalDark",
 });
 
 // *** THE TONES: the colors of the kit, with simple color names; a tone for a dark page ends

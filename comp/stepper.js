@@ -63,7 +63,7 @@ const StepperDefaults = {
     onChange: function (self) { }, // self.value
     onMinReached: function (self) { }, // Called when the value arrives at min
     onMaxReached: function (self) { }, // Called when the value arrives at max
-    styleName: "classic", // "classic", "modern", "dark", "ozden" or a name added to Stepper.styles
+    styleName: "classic", // "classic", "modern", "dark", "ozden", "minimal", "minimalDark" or a name added to Stepper.styles
     style: { // Classic style package (default)
         box: {
             color: White(1),
@@ -699,3 +699,23 @@ Stepper.styles = {
     },
 
 };
+
+// The minimal theme (_designs/minimal-theme.htm): 96 x 28, a line around it (ink while it is focused), no fill; the
+// buttons have no fill either (a faint one under the mouse: a Stepper has no line of its own per button), a 12 px
+// icon, a 13 px value. minimalDark: the same on a dark window.
+Stepper.createMinimalStyle = function (colors) {
+    return {
+        width: 96,
+        height: 28,
+        style: {
+            box: { color: "transparent", border: 1, borderColor: colors.line, round: 4, padding: 0 },
+            boxFocus: { borderColor: colors.ink },
+            button: { width: 26, color: "transparent", hoverColor: colors.hover, activeColor: colors.active, border: 0, borderColor: "transparent", round: 3, iconColor: colors.text, iconSize: 12, opacity: 1, disabledOpacity: 0.3, fadeDuration: 0 },
+            value: { fontSize: 13, textColor: colors.text, fontFamily: "" },
+            input: { color: "transparent", textColor: colors.text, round: 0 },
+            disabled: { opacity: 0.4 },
+        },
+    };
+};
+Stepper.styles.minimal = Stepper.createMinimalStyle({ ink: "#1F1F1F", text: Black(0.85), line: Black(0.2), hover: Black(0.04), active: Black(0.08) });
+Stepper.styles.minimalDark = Stepper.createMinimalStyle({ ink: "#EDEDEB", text: White(0.88), line: White(0.18), hover: White(0.06), active: White(0.1) });

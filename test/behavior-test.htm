@@ -911,6 +911,34 @@
             [checkBox, radio, toggle].forEach(function (object) { object.remove(); });
         });
 
+        test("InputB minimal: the title over a 28 px field, its edge darker under the mouse; the default field is as before", async function () {
+            const minimal = InputB({ styleName: "minimal", titleText: "E-mail" });
+            const plain = InputB({ titleText: "E-mail" });
+            await basic.nextFrame();
+            const fieldHeight = minimal.background.elem.offsetHeight;
+            const isFieldUnderTitle = (minimal.background.elem.offsetTop >= minimal.title.elem.offsetHeight);
+            const edgeBefore = minimal.background.elem.style.borderColor;
+            minimal.elem.dispatchEvent(new MouseEvent("mouseenter"));
+            await basic.nextFrame();
+            const edgeOver = minimal.background.elem.style.borderColor;
+            check("InputB minimal: the field is 28 high, under its title", fieldHeight === 28 && isFieldUnderTitle, fieldHeight + " / top " + minimal.background.elem.offsetTop);
+            check("InputB minimal: the edge is darker under the mouse", edgeOver !== edgeBefore, edgeBefore + " -> " + edgeOver);
+            check("InputB: the default field keeps its sizes (a 40 px text row, the title inside)", plain.input.elem.offsetHeight === 40 && plain.background.elem.offsetTop === 0, plain.input.elem.offsetHeight + " / " + plain.background.elem.offsetTop);
+            [minimal, plain].forEach(function (field) { field.remove(); });
+        });
+
+        test("ItemList, SelectBox, SmartButton minimalDanger: 28 px rows and fields", async function () {
+            const list = ItemList({ styleName: "minimal", width: 200, height: "auto", items: ["A", "B"] });
+            const select = SelectBox({ styleName: "minimalDark", options: ["A", "B"] });
+            const danger = SmartButton({ styleName: "minimalDanger", labelText: "Delete" });
+            await basic.nextFrame();
+            const row = list.elem.querySelector("[role=option]");
+            check("ItemList minimal: a row is 28 high", !!row && row.offsetHeight === 28, row && row.offsetHeight);
+            check("SelectBox minimalDark: the field is 28 high", select.elem.offsetHeight === 28, select.elem.offsetHeight);
+            check("SmartButton minimalDanger: 28 high, the text in the danger color", danger.elem.offsetHeight === 28 && danger.style.label.textColor === "#C9503C", danger.elem.offsetHeight + " / " + danger.style.label.textColor);
+            [list, select, danger].forEach(function (object) { object.remove(); });
+        });
+
         // *** TOGGLE (comp/toggle.js)
 
         test("Toggle: the keyboard and screen readers can use it", async function () {
