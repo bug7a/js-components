@@ -69,7 +69,7 @@ const start = function () {
         
         // Son yaratılan eleman "that" isimli değişkene eşlenir.
         // Bu yüzden adını söylemeden de olay eklenebilir veya fare işareti atanabilir.
-        that.elem.style.cursor = "pointer";
+        that.cursor = "pointer";
         that.on("click", increaseOne);
 
     // Grubu Kapatıyoruz.

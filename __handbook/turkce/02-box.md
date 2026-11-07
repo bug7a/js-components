@@ -78,9 +78,9 @@ Yüksekliği içeriği kadar olan bir grupta (`height: "auto"`, `hug: 1`) kalkan
 HGroup({ width: "auto", height: "auto", gap: 12, clipContent: 0 }); // WHY: kalkışları ve gölgeleri kesilmesin
 
     Button({ text: "Oyna", width: 120, height: 44 });
-    that.elem.style.transition = "transform 0.15s";
-    that.on("mouseover", function (self) { self.elem.style.transform = "translateY(-2px)"; });
-    that.on("mouseout", function (self) { self.elem.style.transform = ""; });
+    that.setMotion("transform 0.15s");
+    that.on("mouseover", function (self) { self.css = { transform: "translateY(-2px)" }; });
+    that.on("mouseout", function (self) { self.css = { transform: "" }; });
 
 endGroup();
 ```

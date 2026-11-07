@@ -5,7 +5,7 @@ basic.js kullanırken CSS özelliklerine JavaScript üzerinden pratik olarak nas
 ---
 
 ## Gölgelendirme (Box Shadow)
-Nesnelere derinlik (gölge) katmak için, objenin element (`elem`) özellikleri üzerinden standart CSS gölgeleme tanımları kullanılabilir.
+Nesnelere derinlik (gölge) katmak için, objenin `boxShadow` özelliğine standart CSS gölgeleme tanımları verilebilir.
 
 ```javascript
 const start = function () {
@@ -15,12 +15,10 @@ const start = function () {
     VGroup({ gap: 20 });
 
         // Örnek 1: Sağ alta doğru keskin gölge
-        Box({ color: "white" });
-        that.elem.style.boxShadow = "2px 3px 6px rgba(0, 0, 0, 0.6)";
+        Box({ color: "white", boxShadow: "2px 3px 6px rgba(0, 0, 0, 0.6)" });
 
         // Örnek 2: Merkez etrafında yumuşak dağılan parıltılı gölge
-        Box({ color: "white" });
-        that.elem.style.boxShadow = "0px 0px 8px rgba(0, 0, 0, 0.2)";
+        Box({ color: "white", boxShadow: "0px 0px 8px rgba(0, 0, 0, 0.2)" });
 
     endGroup();
 
@@ -38,12 +36,10 @@ const start = function () {
     VGroup({ gap: 20 });
 
         // İç kenarlık (Inner border)
-        Box({ color: "white", round: 20 });
-        that.elem.style.boxShadow = "inset 0px 0px 0px 1px rgba(0, 0, 0, 1)";
+        Box({ color: "white", round: 20, boxShadow: "inset 0px 0px 0px 1px rgba(0, 0, 0, 1)" });
 
         // Dış kenarlık (Outer border)
-        Box({ color: "white", round: 20 });
-        that.elem.style.boxShadow = "0px 0px 0px 1px rgba(0, 0, 0, 1)";
+        Box({ color: "white", round: 20, boxShadow: "0px 0px 0px 1px rgba(0, 0, 0, 1)" });
 
     endGroup();
 
@@ -53,7 +49,7 @@ const start = function () {
 ---
 
 ## Kesilmeyen ve Taşan Metin (Nowrap & Ellipsis)
-Uzun bir metnin (ne kadar uzun olursa olsun) alt satıra geçmesini engellemek veya kutuya sığmadığında sonuna üç nokta (`...`) eklemek için CSS beyaz boşluk kuralları kullanılır.
+Uzun bir metnin (ne kadar uzun olursa olsun) alt satıra geçmesini engellemek için CSS beyaz boşluk kuralı `css` ile verilir. Kutuya sığmadığında sonuna üç nokta (`...`) eklemek için `ellipsis: 1` kullanılır.
 
 ```javascript
 const start = function () {
@@ -62,8 +58,8 @@ const start = function () {
     Label(20, 80, 200, {
         text: "Ne kadar uzun olursa olsun bir satırda kalmaya devam eden etiket.",
         color: "peru",
+        css: { whiteSpace: "nowrap" },
     });
-    that.elem.style.whiteSpace = "nowrap";
 
     // Alt satıra geçmez ve sığmadığı yerde 3 Nokta (...) ile kırpılır
     Label(20, {
@@ -71,9 +67,8 @@ const start = function () {
         color: "peru",
         bottom: 80,
         width: 200,
+        ellipsis: 1, // Taşmayı üç nokta yapar (1 satır için)
     });
-    that.elem.style.whiteSpace = "nowrap";
-    that.elem.style.textOverflow = "ellipsis"; // Taşmayı üç nokta yapar (1 satır için)
 
 };
 ```
@@ -92,10 +87,8 @@ const start = function () {
         padding: [12, 4], 
         round: 3, 
         clickable: 1, // Tıklanma olayı alınabilsin diye
+        cursor: "pointer", // İmleci "el (pointer)" tipine dönüştür
     }).center();
-
-    // İmleci "el (pointer)" tipine dönüştür
-    that.elem.style.cursor = "pointer";
 
 };
 ```
@@ -154,9 +147,9 @@ const start = function () {
         top: 10, 
         width: "auto", 
         color: "yellow",
+        css: { whiteSpace: "nowrap" },
     });
     box.add(that);
-    that.elem.style.whiteSpace = "nowrap";
 
 };
 ```
@@ -172,20 +165,16 @@ const start = function () {
     VGroup({ gap: 8, });
 
         // (Linear) Soldan sağa renk geçişi (Saydamdan -> Yeşile)
-        Box({ width: 200 });
-        that.elem.style.background = "linear-gradient(to right, #FFFFFF00, seagreen)";
+        Box({ width: 200, css: { background: "linear-gradient(to right, #FFFFFF00, seagreen)" } });
 
         // (Linear) Yukarıdan aşağı çoklu renk
-        Box({ width: 200 });
-        that.elem.style.background = "linear-gradient(to bottom, pink, purple, indianred)";
+        Box({ width: 200, css: { background: "linear-gradient(to bottom, pink, purple, indianred)" } });
 
         // (Radial) Merkezden dışarı dağılan (Güneş benzeri) renk geçişi
-        Box({ width: 200 });
-        that.elem.style.background = "radial-gradient(gold, indianred, black)";
+        Box({ width: 200, css: { background: "radial-gradient(gold, indianred, black)" } });
 
         // (Conic) Saat yönünde yuvarlak renk turu
-        Box({ width: 200 });
-        that.elem.style.background = "conic-gradient(red, yellow, green, blue, black)";
+        Box({ width: 200, css: { background: "conic-gradient(red, yellow, green, blue, black)" } });
 
     endGroup();
 
@@ -200,14 +189,11 @@ Bir `Icon` ya da genel bir objenin rengini, pusluğunu ve karşıtlığını tek
 ```javascript
 const start = function () {
 
-    Icon(10, 10, 100, 100, { border: 1 }).load("test.png");
-    
     // Tamamen Siyah / Beyaz yapar
-    that.elem.style.filter = "grayscale(100%)";
+    Icon(10, 10, 100, 100, { border: 1, css: { filter: "grayscale(100%)" } }).load("test.png");
 
     // Renkleri tam tersiyle değiştirir (Negatif etki)
-    Icon(10, 118, 100, 100, { border: 1 }).load("test.png");
-    that.elem.style.filter = "invert(100%)";
+    Icon(10, 118, 100, 100, { border: 1, css: { filter: "invert(100%)" } }).load("test.png");
 
     // DİĞER FİLTRE DEĞERLERİ:
     // "blur(5px)", "brightness(200%)", "sepia(100%)", 
@@ -215,7 +201,7 @@ const start = function () {
     // "drop-shadow(8px 8px 10px gray)" // Görselin seffaf alanlarına etki etmeden atılan gölge
 
     // BİRDEN FAZLA FİLTREYİ BİRLİKTE KULLANMAK İÇİN:
-    // that.elem.style.filter = "grayscale(50%) blur(2px)";
+    // that.css = { filter: "grayscale(50%) blur(2px)" };
 
 };
 ```
@@ -228,10 +214,8 @@ Yazılarınızın standardı dışına çıkmak istediğinizde, sisteme yüklü 
 ```javascript
 const start = function () {
 
-    Label(20, 20, { text: "Farklı Bir Font Denemesi" });
-
     // Sayfaya @font-face olarak eklenmiş olmalıdır.
-    that.elem.style.fontFamily = "opensans-bold";
+    Label(20, 20, { text: "Farklı Bir Font Denemesi", fontFamily: "opensans-bold" });
 
 };
 ```
@@ -252,23 +236,21 @@ const start = function () {
             padding: 10, 
             clickable: 1,
             round: 13,
+            // Boyut katsayısı ve merkezin durumu (tam ortadan büyür)
+            css: { transform: "scale(1)", transformOrigin: "50% 50%" },
         });
-
-        // Boyut katsayısı ve merkezin durumu
-        lbl.elem.style.transform = "scale(1)";
-        lbl.elem.style.transformOrigin = "50% 50%"; // Tam ortadan büyür
 
         // Etki geçişlerini pürüzsüzleştirir
         lbl.setMotion("transform 0.5s, background-color 0.5s");
 
         lbl.on("mouseover", function(self, event) {
             self.color = "indianred";
-            self.element.style.transform = "scale(1.2)"; // %20 daha büyüt
+            self.css = { transform: "scale(1.2)" }; // %20 daha büyüt
         });
 
         lbl.on("mouseout", function(self, event) {
             self.color = "white";
-            self.element.style.transform = "scale(1)"; // Eski haline geri getir
+            self.css = { transform: "scale(1)" }; // Eski haline geri getir
         });
 
     endGroup();
@@ -284,11 +266,9 @@ Kütüphanede kullanıcı arayüzü dokunmatik cihazlardaki "metin kopyalama çu
 ```javascript
 const start = function () {
 
-    Label(10, 10, { text: "Kopyalanabilir Makale Formatı..." });
-
-    // Bunu bir label/buton için serbest bırakır.
-    that.elem.style.userSelect = "text"; // "text" ya da "all" (komple blok seçmek için)
-    that.elem.style.pointerEvents = "auto";
+    // selectable: 1, bunu bir label/buton için serbest bırakır.
+    // Komple blok seçmek için ayrıca: css: { userSelect: "all" }
+    Label(10, 10, { text: "Kopyalanabilir Makale Formatı...", selectable: 1 });
 
 };
 ```
@@ -326,14 +306,15 @@ const start = function () {
         bottom: 40,
         width: 300, 
         height: 300, 
-        color: "rgba(255, 255, 255, 0.7)" 
+        color: "rgba(255, 255, 255, 0.7)",
+        // Her kenara farklı bir çizim vermek
+        css: {
+            borderTop: "2px dotted rgba(0, 0, 0, 0.9)", // Noktalı tavan çizgisi
+            borderBottom: "5px solid rgba(0, 0, 0, 0.9)", // Kalın ve düz taban çizgisi
+            // borderLeft: "1px dashed rgba(0, 0, 0, 0.9)",
+            // borderRight: "1px dashed rgba(0, 0, 0, 0.9)",
+        },
     });
-    
-    // Her kenara farklı bir çizim vermek
-    that.elem.style.borderTop = "2px dotted rgba(0, 0, 0, 0.9)"; // Noktalı tavan çizgisi
-    that.elem.style.borderBottom = "5px solid rgba(0, 0, 0, 0.9)"; // Kalın ve düz taban çizgisi
-    // that.elem.style.borderLeft = "1px dashed rgba(0, 0, 0, 0.9)"; 
-    // that.elem.style.borderRight = "1px dashed rgba(0, 0, 0, 0.9)";
 
 };
 ```

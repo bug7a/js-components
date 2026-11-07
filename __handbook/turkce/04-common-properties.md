@@ -153,7 +153,8 @@ lblName.onResize(function(resizedLabel) {
 
 ## DOM ve Ebeveyn Ağacı
 
-- `object.elem` — Kütüphanenin yarattığı elemanın bizzat Javascript (Document Object Model) altındaki Element karşılığıdır. `elem.style` ile her şeye müdahale edilebilir.
+- `object.css` — basic.js'te kendi özelliği olmayan bir CSS özelliği için: özelliklerde `css: { whiteSpace: "nowrap" }`, sonradan `object.css = { whiteSpace: "nowrap" }`. Yalnızca verilen anahtarlar değişir.
+- `object.elem` — Kütüphanenin yarattığı elemanın bizzat Javascript (Document Object Model) altındaki Element karşılığıdır. Kütüphanede karşılığı olmayan işler içindir (Örn: `elem.classList`); stil için özellikleri ya da `object.css`'i kullanın.
 - `object.containerBox` veya `object.parentBox` — Objenin eklendiği Container (Box sınıfından doğar) değişkenini getirir. (`page` nesnesi genel varsayılan konteynerdir).
 - `object.remove()` — Objeyi ekrandan DOM modelinden, olaylardan ve ebeveyn ağacından kalıcı siler. İçindeki basic.js nesneleri de silinir. Silinen bir nesneyi tekrar kullanmayın.
 - **Bileşenler de `remove()` ile silinir.** Bir bileşen `remove()` fonksiyonunu kendisi genişletir (`const superRemove = box.remove;` … `superRemove.call(box);`) ve global kayıtlarını orada temizler: `window` / `document` olayları, zamanlayıcılar, `page.onResize` ve doğrudan `page` üzerinde oluşturduğu nesneler (menüler, açılır kutular). Yani tek çağrı yeterlidir: `myComponent.remove();`. (Eski bileşenlerde ayrı bir `destroy()` fonksiyonu vardı. `remove()`, varsa bir alt nesnenin `destroy()` fonksiyonunu hâlâ önce çağırır.)

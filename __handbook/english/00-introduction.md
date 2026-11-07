@@ -69,7 +69,7 @@ const start = function () {
         
         // The last created element is attached to the variable named "that".
         // Therefore, an event or mouse cursor can be attached without explicitly calling its name.
-        that.elem.style.cursor = "pointer";
+        that.cursor = "pointer";
         that.on("click", increaseOne);
 
     // We Close the Group.

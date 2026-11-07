@@ -109,7 +109,7 @@ const start = function () {
         
     // Initial values (Bottom and transparent)
     box.opacity = 0;
-    box.elem.style.transform = "translateY(150px)";
+    box.css = { transform: "translateY(150px)" };
 
     // We specify which properties will change with animation
     box.setMotion("transform 0.3s, opacity 0.3s");
@@ -117,7 +117,7 @@ const start = function () {
     // A small timing interval following its creation
     box.withMotion(function(self) {
         self.opacity = 1;
-        self.elem.style.transform = "translateY(0px)";  // Jump up
+        self.css = { transform: "translateY(0px)" };  // Jump up
     });
 
 };

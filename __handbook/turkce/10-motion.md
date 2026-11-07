@@ -109,7 +109,7 @@ const start = function () {
         
     // Başlangıç değerleri (Aşağıda ve opaklıkta)
     box.opacity = 0;
-    box.elem.style.transform = "translateY(150px)";
+    box.css = { transform: "translateY(150px)" };
 
     // Hangi özelliklerin animasyon ile değişeceğini söylüyoruz
     box.setMotion("transform 0.3s, opacity 0.3s");
@@ -117,7 +117,7 @@ const start = function () {
     // Çıkarılmasını izleyen ufak bir zamanlama aralığı
     box.withMotion(function(self) {
         self.opacity = 1;
-        self.elem.style.transform = "translateY(0px)";  // Havaya sıçrat
+        self.css = { transform: "translateY(0px)" };  // Havaya sıçrat
     });
 
 };

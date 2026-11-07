@@ -89,7 +89,7 @@ const lblLink = Label({
     ...labelStyle,
 });
 // Changing the cursor is a good user experience (UX) practice.
-lblLink.elem.style.cursor = "pointer";
+lblLink.cursor = "pointer";
 
 lblLink.on("click", function() {
     println("Label element clicked.");

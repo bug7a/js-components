@@ -89,7 +89,7 @@ const lblLink = Label({
     ...labelStyle,
 });
 // İmleci değiştirmek iyi bir kullanıcı deneyimi (UX) deneyimidir.
-lblLink.elem.style.cursor = "pointer";
+lblLink.cursor = "pointer";
 
 lblLink.on("click", function() {
     println("Label elementine tıklandı.");
