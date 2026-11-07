@@ -79,6 +79,7 @@
         <script src="../comp/splitter.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/accordion.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/grid-group.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/markdown-view.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/tool-bar.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/code-editor.js" type="text/javascript" charset="utf-8"></script>
 
@@ -5521,6 +5522,454 @@
                 light === "0px rgb(43, 43, 42)" && dark === "0px rgb(74, 74, 72)" && back === light,
                 [light, dark, back].join(" | "));
             bar.remove();
+        });
+
+        // *** MARKDOWN VIEW (comp/markdown-view.js)
+
+        const markdownHtmlOf = function (view) {
+            return view.blockGroup.elem.innerHTML;
+        };
+
+        test("MarkdownView: the blocks of a text: headings, lists, check marks, a quote, a line, a table, a code", async function () {
+            const view = MarkdownView({
+                left: 0,
+                top: 0,
+                width: 500,
+                height: 400,
+                markdownText: [
+                    "# One", "", "Text of a paragraph", "on two lines.", "", "## Two", "### Three", "",
+                    "1. First", "2. Second", "   - In it", "   - In it too", "", "A text between", "", "3. Third", "",
+                    "- [x] Done", "- [ ] Not done", "",
+                    "> A quote", ">", "> ## In a quote", "", "---", "",
+                    "| A | B |", "|---|---|", "| 1 | 2 |", "",
+                    "```python", "x = 1", "```",
+                ].join("\n"),
+            });
+            await wait(30);
+            const area = view.blockGroup.elem;
+            const levels = Array.from(area.querySelectorAll('[role="heading"]')).map(function (heading) { return heading.getAttribute("aria-level"); }).join();
+            const paragraph = Array.from(area.querySelectorAll(".markdown-view-text")).find(function (label) { return label.textContent.includes("paragraph"); }).textContent;
+            const nested = area.querySelectorAll("ol > li > ul > li").length;
+            const goesOn = area.querySelector('ol[start="3"] li').textContent;
+            const checks = [area.querySelectorAll(".markdown-view-task").length, area.querySelectorAll(".markdown-view-check-on").length].join();
+            const cells = area.querySelectorAll("table th, table td").length;
+            const code = area.querySelector(".markdown-view-code").textContent;
+            const headings = view.getHeadings().map(function (heading) { return heading.id; }).join();
+            check("MarkdownView: the blocks of a text: headings, lists, check marks, a quote, a line, a table, a code",
+                levels === "1,2,3,2" && paragraph === "Text of a paragraph on two lines." && nested === 2 && goesOn === "Third" && checks === "2,1" && cells === 4 &&
+                code === "x = 1" && headings === "one,two,three,in-a-quote" && view.getText().startsWith("# One"),
+                [levels, paragraph, nested, goesOn, checks, cells, code, headings].join(" | "));
+            view.remove();
+        });
+
+        test("MarkdownView: the words of a line; what is inside a code or an address is not read again", async function () {
+            const inline = function (text) { return MarkdownView.inlineHtml(text, { remotePictures: true }); };
+            const words = inline("**b** *i* __s__ _e_ ~~d~~ `c`");
+            const plainWords = inline("a snake_case_name and 2*3*4");
+            const escaped = inline("\\*not\\* \\_it\\_");
+            const inCode = inline("`**a** <b>`");
+            const address = inline("https://a.com/__x__/*y*/z.");
+            const inBold = inline("**https://a.com**");
+            const withCode = inline("[`a`](https://a.com)");
+            const pictureLink = inline("[![alt](a.png)](https://a.com)");
+            const round = inline("[x](https://a.com/Foo_(bar))");
+            const titled = inline('[x](https://a.com "A title")');
+            const lineBreak = inline("a<br>b<br/>c");
+            const nul = inline("a\u00000\u0000b `c`");
+            const escapedAddress = inline("[x](https://a.com/a\\_b)");
+            const escapedLabel = inline("[a\\]b](https://a.com)");
+            const results = [words, plainWords, escaped, inCode, address, inBold, withCode, pictureLink, round, titled, lineBreak, nul, escapedAddress, escapedLabel];
+            const blank = ' target="_blank" rel="noopener noreferrer"';
+            const expected = [
+                "<strong>b</strong> <em>i</em> <strong>s</strong> <em>e</em> <del>d</del> <code>c</code>",
+                "a snake_case_name and 2*3*4",
+                "*not* _it_",
+                "<code>**a** &lt;b&gt;</code>",
+                '<a href="https://a.com/__x__/*y*/z"' + blank + ">https://a.com/__x__/*y*/z</a>.",
+                '<strong><a href="https://a.com"' + blank + ">https://a.com</a></strong>",
+                '<a href="https://a.com"' + blank + "><code>a</code></a>",
+                '<a href="https://a.com"' + blank + '><img src="a.png" alt="alt"></a>',
+                '<a href="https://a.com/Foo_(bar)"' + blank + ">x</a>",
+                '<a href="https://a.com"' + blank + ">x</a>",
+                "a<br>b<br>c",
+                "a0b <code>c</code>",
+                '<a href="https://a.com/a_b"' + blank + ">x</a>",
+                '<a href="https://a.com"' + blank + ">a]b</a>",
+            ];
+            const wrong = results.map(function (result, index) { return (result === expected[index]) ? "" : result; }).filter(function (result) { return result; });
+            check("MarkdownView: the words of a line; what is inside a code or an address is not read again", wrong.length === 0, wrong.join(" | "));
+        });
+
+        test("MarkdownView: a text is never read as HTML; an address that is not safe stays a text", async function () {
+            window.markdownViewRan = 0;
+            const zeroWidth = String.fromCharCode(0x200B);
+            const text = [
+                "<script>window.markdownViewRan = 1<\/script>",
+                '<img src=x onerror="window.markdownViewRan = 1">',
+                "[a](javascript:window.markdownViewRan=1)",
+                "[b](JaVaScRiPt:alert(1))",
+                "[c](java" + zeroWidth + "script:alert(1))",
+                "[d](&#106;avascript:alert(1))",
+                "[e](data:text/html,x)",
+                "[f](vbscript:x)",
+                "[f2](javascript\\:alert(1))",
+                "[f3](<javascript:alert(1)>)",
+                "[f4](java`x`script:alert(1))",
+                "![f5](javascript\\:alert(1))",
+                "![g](javascript:alert(1))",
+                "![h](data:text/html,x)",
+                '[i"onmouseover="x](https://a.com)',
+                '[j](https://a.com"onmouseover="x)',
+                '![k"onerror="x](a.png)',
+                "",
+                "# <img src=x onerror=1>",
+                "",
+                "- <img src=x onerror=1>",
+                "",
+                "> <img src=x onerror=1>",
+                "",
+                "| <img src=x onerror=1> |",
+                "|---|",
+                "| <b>x</b> |",
+                "",
+                "```<img>",
+                "<img src=x onerror=1>",
+                "```",
+                "",
+                "```html",
+                "<img src=x onerror=1>",
+                "```",
+            ].join("\n");
+            const view = MarkdownView({ width: 500, height: 300, markdownText: text });
+            await wait(60);
+            const all = Array.from(view.blockGroup.elem.querySelectorAll("*"));
+            const scripts = view.blockGroup.elem.querySelectorAll("script").length;
+            const withOn = all.filter(function (element) {
+                return Array.from(element.attributes).some(function (attribute) { return /^on/i.test(attribute.name); });
+            }).length;
+            const addresses = Array.from(view.blockGroup.elem.querySelectorAll("a")).map(function (link) { return link.getAttribute("href"); });
+            const badLinks = addresses.filter(function (address) { return /^\s*(javascript|vbscript|data):/i.test(address.split(zeroWidth).join("")); });
+            const pictures = Array.from(view.blockGroup.elem.querySelectorAll("img")).map(function (picture) { return picture.getAttribute("src"); });
+            const bold = view.blockGroup.elem.querySelectorAll("b").length;
+            const isShown = view.blockGroup.elem.textContent.includes("<script>window.markdownViewRan = 1<\/script>");
+            check("MarkdownView: a text is never read as HTML; an address that is not safe stays a text",
+                window.markdownViewRan === 0 && scripts === 0 && withOn === 0 && badLinks.length === 0 && pictures.join() === "a.png" && bold === 0 && isShown,
+                [window.markdownViewRan, scripts, withOn, badLinks.join(), pictures.join(), bold, isShown].join(" | "));
+            view.remove();
+        });
+
+        test("MarkdownView: remotePictures: 0: a picture with a remote address stays a link; a picture of the page stays", async function () {
+            const text = "![Far](https://a.com/p.png) ![Far too](//a.com/q.png) ![](https://a.com/r.png) ![Near](near.png) ![Data](data:image/png;base64,AAAA)";
+            const view = MarkdownView({ width: 500, height: 200, markdownText: text, remotePictures: 0 });
+            await wait(30);
+            const pictures = Array.from(view.blockGroup.elem.querySelectorAll("img")).map(function (picture) { return picture.getAttribute("alt"); }).join();
+            const links = Array.from(view.blockGroup.elem.querySelectorAll("a")).map(function (link) { return link.textContent; }).join();
+            const open = MarkdownView.parse("![Far](https://a.com/p.png)").blocks[0].html.startsWith("<img");
+            check("MarkdownView: remotePictures: 0: a picture with a remote address stays a link; a picture of the page stays",
+                pictures === "Near,Data" && links === "Far,Far too,https://a.com/r.png" && open, [pictures, links, open].join(" | "));
+            view.remove();
+        });
+
+        test("MarkdownView: a link: onLinkClick gets its address; without it the browser opens a new tab; \"#\" goes to the heading", async function () {
+            const addresses = [];
+            const text = "[out](https://a.com/x) [in](#calisma-ozeti) [in too](#çalışma-özeti) [none](#nothing)\n\n" + "A line\n\n".repeat(60) + "# Çalışma Özeti\n\n" + "A line\n\n".repeat(60);
+            const view = MarkdownView({ width: 400, height: 200, markdownText: text, onLinkClick: function (self, address) { addresses.push((self === view) + " " + address); } });
+            await wait(30);
+            const links = view.blockGroup.elem.querySelectorAll("a");
+            const area = view.scrollArea.elem;
+            const heading = view.blockGroup.elem.querySelector('[role="heading"]');
+            const click = function (link) {
+                const event = new MouseEvent("click", { bubbles: true, cancelable: true });
+                link.dispatchEvent(event);
+                return event.defaultPrevented;
+            };
+            const outStopped = click(links[0]);
+            const inStopped = click(links[1]);
+            const top = Math.round(heading.getBoundingClientRect().top - area.getBoundingClientRect().top);
+            area.scrollTop = 0;
+            click(links[2]);
+            const topToo = Math.round(heading.getBoundingClientRect().top - area.getBoundingClientRect().top);
+            area.scrollTop = 0;
+            click(links[3]);
+            const stays = area.scrollTop;
+            const called = addresses.join();
+            const hash = location.hash;
+            const attributes = [links[0].getAttribute("target"), links[0].getAttribute("rel"), links[1].getAttribute("target")].join();
+            view.onLinkClick = null;
+            let leftToBrowser = null;
+            document.addEventListener("click", function (event) {
+                leftToBrowser = !event.defaultPrevented;
+                event.preventDefault(); // WHY: The test must not open a tab.
+            }, { once: true });
+            links[0].dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+            check("MarkdownView: a link: onLinkClick gets its address; without it the browser opens a new tab; \"#\" goes to the heading",
+                outStopped && inStopped && called === "true https://a.com/x" && top === 12 && topToo === 12 && stays === 0 && hash === "" &&
+                attributes === "_blank,noopener noreferrer," && leftToBrowser === true,
+                [outStopped, inStopped, called, top, topToo, stays, hash, attributes, leftToBrowser].join(" | "));
+            view.remove();
+        });
+
+        test("MarkdownView: a text piece by piece: drawn together, what is above stays on the page, a code still coming is a code", async function () {
+            const view = MarkdownView({ width: 400, height: 200, markdownText: "# Title\n\nFirst " });
+            await wait(30);
+            const area = view.blockGroup.elem;
+            const heading = area.querySelector('[role="heading"]');
+            view.appendText("words ");
+            view.appendText("and ");
+            const notYet = area.textContent.includes("words");
+            view.appendText("more");
+            view.appendText(null);
+            const text = view.getText();
+            await wait(70);
+            const drawn = area.textContent.includes("First words and more");
+            const isSameObject = (area.querySelector('[role="heading"]') === heading);
+            view.appendText("\n\n```python\nx = 1");
+            await wait(70);
+            const coming = area.querySelector(".markdown-view-code").textContent;
+            view.appendText("\ny = 2\n```\n\nThe end");
+            await wait(70);
+            const ended = [area.querySelector(".markdown-view-code").textContent, area.textContent.endsWith("The end")].join();
+            check("MarkdownView: a text piece by piece: drawn together, what is above stays on the page, a code still coming is a code",
+                !notYet && text === "# Title\n\nFirst words and more" && drawn && isSameObject && coming === "x = 1" && ended === "x = 1\ny = 2,true",
+                [notYet, text, drawn, isSameObject, coming, ended].join(" | "));
+            view.remove();
+        });
+
+        test("MarkdownView: appendText() follows the end until the reader scrolls up; scrollToEnd() follows again; setText() keeps the place", async function () {
+            const view = MarkdownView({ width: 300, height: 120, markdownText: "" });
+            await wait(30);
+            const area = view.scrollArea.elem;
+            const isAtEnd = function () { return (area.scrollHeight - area.scrollTop - area.clientHeight <= 1); };
+            view.appendText("Line one\n\nLine two\n\nLine three\n\nLine four\n\nLine five\n\nLine six\n\n");
+            await wait(70);
+            const followed = (area.scrollTop > 0 && isAtEnd());
+            view.appendText("Line seven\n\nLine eight\n\n");
+            await wait(70);
+            const followedAgain = isAtEnd();
+            area.scrollTop = 0;
+            await wait(50);
+            view.appendText("Line nine\n\nLine ten\n\n");
+            await wait(70);
+            const stays = (area.scrollTop === 0);
+            view.scrollToEnd();
+            view.appendText("Line eleven\n\nLine twelve\n\n");
+            await wait(70);
+            const followsAgain = isAtEnd();
+            view.setAutoScroll(0);
+            view.appendText("Line thirteen\n\nLine fourteen\n\n");
+            await wait(70);
+            const off = !isAtEnd();
+            view.setAutoScroll(1);
+            area.scrollTop = 30;
+            await wait(50);
+            view.setText(view.getText() + "Changed");
+            const keeps = (area.scrollTop === 30);
+            view.scrollToTop();
+            check("MarkdownView: appendText() follows the end until the reader scrolls up; scrollToEnd() follows again; setText() keeps the place",
+                followed && followedAgain && stays && followsAgain && off && keeps && area.scrollTop === 0,
+                [followed, followedAgain, stays, followsAgain, off, keeps, area.scrollTop].join(" | "));
+            view.remove();
+        });
+
+        test("MarkdownView: a selection above the end stays while the text comes, and the view does not jump", async function () {
+            const view = MarkdownView({ width: 300, height: 100, markdownText: "First line\n\nSecond line\n\nThird line\n\nFourth line\n\nFifth line\n\nSixth line" });
+            await wait(30);
+            view.scrollToEnd();
+            const area = view.scrollArea.elem;
+            const first = view.blockGroup.elem.querySelector(".markdown-view-text");
+            window.getSelection().selectAllChildren(first);
+            const topBefore = area.scrollTop;
+            view.appendText("\n\nSeventh line");
+            await wait(70);
+            const selected = window.getSelection().toString().trim();
+            const stays = (area.scrollTop === topBefore);
+            window.getSelection().removeAllRanges();
+            check("MarkdownView: a selection above the end stays while the text comes, and the view does not jump",
+                selected === "First line" && stays, [selected, stays].join(" | "));
+            view.remove();
+        });
+
+        test("MarkdownView: setText(), clear() and the text of an empty view", async function () {
+            const view = MarkdownView({ width: 300, height: 120, emptyText: "<b>Nothing</b>" });
+            await wait(30);
+            const isShown = function () { return view.lblEmpty.elem.getClientRects().length > 0; };
+            const atStart = [isShown(), view.lblEmpty.elem.textContent].join();
+            view.setText("# Hi");
+            const withText = isShown();
+            const blocksWithText = view.blockGroup.elem.querySelectorAll('[role="heading"]').length;
+            view.clear();
+            const afterClear = [isShown(), view.getText(), view.blockGroup.elem.querySelectorAll('[role="heading"]').length].join();
+            view.setEmptyText("");
+            const noText = isShown();
+            view.setText(null);
+            const nothing = view.getText();
+            view.setText(123);
+            const number = view.getText();
+            check("MarkdownView: setText(), clear() and the text of an empty view",
+                atStart === "true,<b>Nothing</b>" && !withText && blocksWithText === 1 && afterClear === "true,,0" && !noText && nothing === "" && number === "123",
+                [atStart, withText, blocksWithText, afterClear, noText, nothing, number].join(" | "));
+            view.remove();
+        });
+
+        test("MarkdownView: a code: its colors, other names of a language, a long line scrolls in the code, the view stays", async function () {
+            const longLine = "x = " + "1234567890".repeat(30);
+            const text = ["```python", "for a in b:  # <c>", "    print('d')", "```", "", "```py", "pass", "```", "", "```nothing", "<b>e</b>", "```", "", "```", "plain", "```", "", "```js", "let f = `g", "h`;", "```", "", "```python", longLine, "```"].join("\n");
+            const view = MarkdownView({ width: 400, height: 300, markdownText: text });
+            await wait(30);
+            const codes = view.blockGroup.elem.querySelectorAll(".markdown-view-code");
+            const keyword = codes[0].querySelector(".code-editor-keyword");
+            const color = (keyword) ? getComputedStyle(keyword).color : "";
+            const comment = codes[0].querySelector(".code-editor-comment").textContent;
+            const alias = codes[1].querySelectorAll(".code-editor-keyword").length;
+            const unknown = [codes[2].textContent, codes[2].querySelectorAll("b").length, codes[2].querySelectorAll("span").length].join();
+            const noLanguage = codes[3].textContent;
+            const longScroller = codes[5].parentElement;
+            const scrollsInside = longScroller.scrollWidth > longScroller.clientWidth;
+            const area = view.scrollArea.elem;
+            const viewStays = (area.scrollWidth <= area.clientWidth);
+            check("MarkdownView: a code: its colors, other names of a language, a long line scrolls in the code, the view stays",
+                color === "rgb(138, 47, 142)" && comment === "# <c>" && alias === 1 && unknown === "<b>e</b>,0,0" && noLanguage === "plain" && scrollsInside && viewStays,
+                [color, comment, alias, unknown, noLanguage, scrollsInside, viewStays].join(" | "));
+            view.remove();
+        });
+
+        test("MarkdownView: the button of a code copies it, says so and comes back", async function () {
+            const copied = [];
+            const realCopy = MarkdownView.copyToClipboard;
+            MarkdownView.copyToClipboard = function (text) {
+                copied.push(text);
+                return Promise.resolve();
+            };
+            const view = MarkdownView({ width: 400, height: 200, markdownText: "```python\nx = 1\ny = 2\n```", copyText: "Kopyala", copiedText: "Kopyalandı" });
+            await wait(30);
+            const button = view.blockGroup.elem.querySelector("button");
+            const before = [button.textContent, button.getAttribute("aria-label")].join();
+            mouseClick(button);
+            await wait(30);
+            const after = button.textContent;
+            await wait(1550);
+            const back = button.textContent;
+            MarkdownView.copyToClipboard = realCopy;
+            check("MarkdownView: the button of a code copies it, says so and comes back",
+                copied.join() === "x = 1\ny = 2" && before === "Kopyala,Kopyala" && after === "Kopyalandı" && back === "Kopyala",
+                [copied.join(), before, after, back].join(" | "));
+            view.remove();
+        });
+
+        test("MarkdownView: a table: alignment, a letter |, a row with too few cells; a wide table scrolls in itself", async function () {
+            const wideCell = "word".repeat(60);
+            const text = ["| Left | Middle | Right |", "|:---|:--:|---:|", "| a\\|b | `c` |", "", "| One |", "|---|", "| " + wideCell + " |"].join("\n");
+            const view = MarkdownView({ width: 300, height: 300, markdownText: text });
+            await wait(30);
+            const tables = view.blockGroup.elem.querySelectorAll("table");
+            const aligns = Array.from(tables[0].querySelectorAll("th")).map(function (cell) { return cell.style.textAlign; }).join();
+            const cells = Array.from(tables[0].querySelectorAll("td")).map(function (cell) { return cell.textContent; }).join("/");
+            const inlineCode = tables[0].querySelectorAll("td code").length;
+            const scroller = tables[1].parentElement;
+            const scrollsInside = scroller.scrollWidth > scroller.clientWidth;
+            const area = view.scrollArea.elem;
+            const viewStays = (area.scrollWidth <= area.clientWidth);
+            check("MarkdownView: a table: alignment, a letter |, a row with too few cells; a wide table scrolls in itself",
+                aligns === ",center,right" && cells === "a|b/c/" && inlineCode === 1 && scrollsInside && viewStays,
+                [aligns, cells, inlineCode, scrollsInside, viewStays].join(" | "));
+            view.remove();
+        });
+
+        test("MarkdownView: setTheme() paints a new package, the style of the page stays, the text and the place stay", async function () {
+            const text = "# Hi\n\n" + "A line\n\n".repeat(40) + "```python\nfor a in b: pass\n```";
+            const view = MarkdownView({ width: 400, height: 200, markdownText: text, style: { text: { fontSize: 17 } } });
+            await wait(30);
+            const area = view.scrollArea.elem;
+            area.scrollTop = 150;
+            const groundOf = function () { return view.elem.style.backgroundColor; };
+            const linkOf = function () { return view.elem.style.getPropertyValue("--markdown-view-link"); };
+            const keywordOf = function () { return getComputedStyle(view.blockGroup.elem.querySelector(".code-editor-keyword")).color; };
+            const sizeOf = function () { return view.blockGroup.elem.querySelector(".markdown-view-text:not([role])").style.fontSize; };
+            const light = [groundOf(), linkOf(), keywordOf(), sizeOf()].join();
+            view.setTheme("dark");
+            const dark = [groundOf(), linkOf(), keywordOf(), sizeOf(), view.styleName].join();
+            const keepsPlace = (area.scrollTop === 150);
+            const keepsText = view.blockGroup.elem.querySelector('[role="heading"]').textContent;
+            view.setTheme("light");
+            const back = [groundOf(), linkOf(), keywordOf(), sizeOf()].join();
+            check("MarkdownView: setTheme() paints a new package, the style of the page stays, the text and the place stay",
+                light === "white,#1F7A83,rgb(138, 47, 142),17px" && dark === "rgb(28, 28, 27),#6FC6CD,rgb(215, 162, 232),17px,dark" && keepsPlace && keepsText === "Hi" && back === light,
+                [light, dark, keepsPlace, keepsText, back].join(" | "));
+            view.remove();
+        });
+
+        test("MarkdownView: height \"auto\" grows with its text, a number scrolls inside it; a wide view keeps its text narrow", async function () {
+            const text = "A line\n\n".repeat(20);
+            const auto = MarkdownView({ width: 300, height: "auto", markdownText: "A line" });
+            await wait(30);
+            const small = auto.elem.offsetHeight;
+            auto.setText(text);
+            await wait(30);
+            const big = auto.elem.offsetHeight;
+            const noArea = (auto.scrollArea === undefined);
+            auto.scrollToEnd();
+            auto.scrollToTop();
+            auto.remove();
+            const fixed = MarkdownView({ width: 300, height: 100, markdownText: text });
+            await wait(30);
+            const fixedHeight = fixed.elem.offsetHeight;
+            const scrolls = (fixed.scrollArea.elem.scrollHeight > fixed.scrollArea.elem.clientHeight);
+            fixed.remove();
+            const wide = MarkdownView({ width: 1000, height: 200, markdownText: "A line" });
+            await wait(30);
+            const pageRect = wide.blockGroup.elem.getBoundingClientRect();
+            const leftSpace = Math.round(pageRect.left - wide.elem.getBoundingClientRect().left);
+            const pageWidth = Math.round(pageRect.width);
+            wide.remove();
+            check("MarkdownView: height \"auto\" grows with its text, a number scrolls inside it; a wide view keeps its text narrow",
+                big > small * 5 && small > 30 && noArea && fixedHeight === 100 && scrolls && leftSpace === 90 && pageWidth === 820,
+                [small, big, noArea, fixedHeight, scrolls, leftSpace, pageWidth].join(" | "));
+        });
+
+        test("MarkdownView.parse(): alone: the title, heading names, the kinds of a code, titles with a line under them", async function () {
+            const parse = MarkdownView.parse;
+            const kinds = function (text) { return parse(text).blocks.map(function (block) { return block.type; }).join(); };
+            const empty = [parse(null).blocks.length, parse("").title, parse(undefined).blocks.length].join();
+            const title = parse("## Small\n\n# The **big** one\n\n# Second").title;
+            const ids = MarkdownView.headingsOf(parse("# Same\n\n# Same\n\n# Çözüm Şimdi\n\n# ...\n\n# ???\n\n# Constructor\n\n# Constructor").blocks).map(function (heading) { return heading.id; }).join();
+            const lines = parse("a\r\nb\rc").blocks[0].html;
+            const tilde = parse("~~~\n```\n~~~").blocks[0].code;
+            const longFence = parse("````md\n```\nin it\n```\n````\n\nafter");
+            const info = parse("```python title=\"a.py\"\nx\n```").blocks[0].language;
+            const notFence = kinds("``` a ``` b");
+            const inList = parse("1. Run it:\n\n   ```bash\n   ls\n     a\n   ```\n\n2. Then");
+            const unclosed = parse("```js\nlet a;").blocks[0].code;
+            const underlined = parse("Big\n===\n\nSmall\n---\n\nText\n\n---").blocks.map(function (block) { return block.type + (block.level || ""); }).join();
+            const notLine = kinds("- - -\n\n***\n\n___");
+            const listHr = kinds("- a\n---\n- b");
+            const hard = parse("a  \nb\\\nc\nd").blocks[0].html;
+            const hashtag = kinds("#tag and #more");
+            const tableInText = kinds("Text\n| a | b |\n|---|---|\n| 1 | 2 |");
+            const notTable = kinds("a | b\nc | d");
+            const results = [empty, title, ids, lines, tilde, longFence.blocks[0].code, longFence.blocks[1].html, info, notFence,
+                inList.blocks.map(function (block) { return block.type; }).join(), inList.blocks[1].code, inList.blocks[2].html.startsWith('<ol start="2">'),
+                unclosed, underlined, notLine, listHr, hard, hashtag, tableInText, notTable];
+            const expected = ["0,,0", "The big one", "same,same-2,cozum-simdi,section,section-2,constructor,constructor-2", "a b c", "```", "```\nin it\n```", "after", "python", "p",
+                "list,code,list", "ls\n  a", true,
+                "let a;", "heading1,heading2,p,line", "line,line,line", "list,line,list", "a<br>b<br>c d", "p", "p,table", "p"];
+            const wrong = results.map(function (result, index) { return (result === expected[index]) ? "" : index + ": " + result; }).filter(function (result) { return result; });
+            check("MarkdownView.parse(): alone: the title, heading names, the kinds of a code, titles with a line under them", wrong.length === 0, wrong.join(" | "));
+        });
+
+        test("MarkdownView: remove(): a text that was still coming draws nothing; a heading of an old text is not found", async function () {
+            const view = MarkdownView({ width: 300, height: 100, markdownText: "# Old\n\n# New" });
+            await wait(30);
+            view.setText("# New");
+            view.scrollToHeading("old");
+            const stays = view.scrollArea.elem.scrollTop;
+            const group = view.blockGroup;
+            view.appendText("\n\nMore");
+            view.remove();
+            view.remove();
+            await wait(70);
+            check("MarkdownView: remove(): a text that was still coming draws nothing; a heading of an old text is not found",
+                view.isRemoved == 1 && group.isRemoved == 1 && stays === 0 && !group.elem.textContent.includes("More"),
+                [view.isRemoved, group.isRemoved, stays].join(" | "));
         });
 
         // *** GRID GROUP (comp/grid-group.js)

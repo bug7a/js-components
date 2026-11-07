@@ -295,6 +295,12 @@ CATALOG.COMPONENTS = [
         tr: "Dikey zaman çizelgesi: her öğe için bir nokta ve noktaların arasında bir çizgi.",
     },
     {
+        key: "markdown-view", name: "MarkdownView", cat: "data",
+        source: "comp/markdown-view.js", deps: ["comp/code-editor.js"], samples: ["02-comp-examples/markdown-view.htm"],
+        en: "A text written in Markdown, drawn on the page: a report, the answer of an AI. Headings, lists, tables, pictures, code with colors and a button that copies it. A text is never read as HTML. A text that comes piece by piece. Light and dark themes.",
+        tr: "Markdown ile yazılmış bir metni sayfada çizer: rapor, yapay zekâ cevabı. Başlıklar, listeler, tablolar, resimler, renkli ve kopyalanan kod. Metin hiçbir zaman HTML olarak okunmaz. Parça parça gelen metin. Aydınlık ve karanlık tema.",
+    },
+    {
         key: "log-view", name: "LogView", cat: "data",
         source: "comp/log-view.js", samples: ["02-comp-examples/log-view.htm"],
         en: "The output of a program: colored lines with their time and level, following the last line. Fast output is drawn in batches. Light and dark themes.",
