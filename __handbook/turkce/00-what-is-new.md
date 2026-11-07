@@ -7,6 +7,7 @@ Bu belgede basic.js kütüphanesine eklenen yeni özellikler, güncellemeler ve 
 ## Versiyon 26.11.07
 
 *   **`border` ve `round` da `padding` gibi dizi alır:** `border: [0, 0, 0, 1]` yalnızca altta bir çizgidir (`[yatay, dikey]` ya da `[sol, üst, sağ, alt]`: `padding`'in sırası). `round: [12, 0]` üstteki iki köşeyi yuvarlar (`[üst, alt]`), `round: [12, 12, 0, 12]` her köşeyi ayrı ayrı (`[solÜst, sağÜst, sağAlt, solAlt]`, CSS'teki gibi saat yönünde). `center()` her kenarın kalınlığını ayrı sayar. Sayı eskisi gibi çalışır: tam uyumlu. Örnekli başvuru: `basic/basic-what-is-new.md`.
+*   **Grubun `gap: [x, y]`'si:** x bir satırdaki öğelerin arası, y satırların arası (`wrap: 1` ile kayan bir grupta): çipler ve etiketler için `HGroup({ wrap: 1, gap: [8, 12] })`. `padding`'in sırası. Sayı eskisi gibi çalışır.
 *   **El kitabı: `padding`'in sırası** yanlış yazılmıştı (`[dikey, yatay]`, `[üst, sağ, alt, sol]`). Doğrusu, kodun hep okuduğu gibi, `[yatay, dikey]` ve `[sol, üst, sağ, alt]`: `padding: [20, 10]` solda ve sağda 20, üstte ve altta 10'dur. Kütüphanede bir şey değişmez.
 
 ---

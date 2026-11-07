@@ -70,7 +70,7 @@ The `HGroup()` and `VGroup()` functions take a parameter object. Available param
 ### Layout Parameters
 
 - `align` (string, default: `"center"`) — Alignment direction of contents.
-- `gap` (number / string, default: `"0px"`) — Spacing between objects (pixels).
+- `gap` (number / string / array, default: `"0px"`) — Spacing between objects (pixels). `[x, y]` gives the two directions of a group that wraps (`wrap: 1`) their own space, in the order of `padding`: `gap: [8, 12]` is 8 between the objects of a line, 12 between the lines.
 - `padding` (number / array) — Inner margin. A single value or an array like `[horizontal, vertical]`.
 - `hug` (boolean) — If `true`, the size is automatically adjusted according to the content (`width/height: "auto"`), so the group wraps what is inside it.
 - `fit` (boolean) — The older name of `hug`; both do exactly the same thing and both can be read afterwards (`group.hug`, `group.fit`). Prefer `hug` in new code.

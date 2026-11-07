@@ -48,6 +48,27 @@ Box({ round: [22, 0, 0, 22] });                            // the left corners: 
   `[top, right, bottom, left]`): it is `[horizontal, vertical]` and `[left, top, right, bottom]`, as the code always read
   it; corrected.
 
+### `gap: [x, y]` of a group
+
+The user's choice (2026-11-07), after `border` and `round`. A group that wraps (`wrap: 1`: chips, tags, a grid of
+cards) needs one space between the items of a line and another between the lines. It was only a CSS text, in the
+other order: `gap: "4px 6px"` (the row gap first).
+
+```javascript
+HGroup({ wrap: 1, gap: [8, 12] });   // 8 between the chips of a line, 12 between the lines
+```
+
+- `[x, y]`, the order of `padding`: x is the space between the items of a line (horizontal), y between the lines
+  (vertical), in an HGroup and in a VGroup alike (a VGroup that does not wrap uses only y). The order of
+  `GridGroup` (`[column gap, row gap]`) too.
+- `[8]` is both; three values are read as two; another length is not read (the style stays).
+- `group.gap` reads an array as it was given; a number still reads as its CSS text (`"8px"`), as it always did.
+- The props object of the page keeps its array, so a style package can be scaled again later (a number in it is still
+  changed to its text `"8px"` by the group, as before).
+- `basic.scaleStyle()` multiplies it. `test/basic-test.htm`: 6 new checks (the real space between the items and the
+  lines), 194/194, also with `basic.min.js`; the new ones fail with the basic.js before it.
+- basic-designer reads and writes it (and `border`, `round`) as a list, like `padding` (`_basic-designer/readme.md`).
+
 ## v26.11.05 (2026-11-05)
 
 ### `basic.zIndexAbove(obj, minimum)`: a list or a menu over the layer of its field

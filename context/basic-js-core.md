@@ -70,7 +70,7 @@ endBox();
 ```
 
 - **Every start call needs its end call** (`startBox` / `endBox`, `HGroup` / `VGroup` / `endGroup`). basic.js warns about the ones not ended.
-- Group props: `align` (`"left top"`, `"center"`...), `gap`, `padding`, `wrap: 1`, `justify` (`"space-between"`...), `hug: 1` (width and height `"auto"`: the group wraps its content; `fit: 1` is its old name). A group is 100% x 100% by default.
+- Group props: `align` (`"left top"`, `"center"`...), `gap` (a number, or `[x, y]`: x between the items of a line, y between the lines of a `wrap: 1` group; v26.11.07), `padding`, `wrap: 1`, `justify` (`"space-between"`...), `hug: 1` (width and height `"auto"`: the group wraps its content; `fit: 1` is its old name). A group is 100% x 100% by default.
 - `AutoLayout` / `endAutoLayout` and `startFlexBox` / `endFlexBox` are old names of the groups: do not use them in new code.
 - **Only a Box holds other objects** (the groups are boxes). An object inside a `Button`, `Label`, `Input` or `Icon` sends its mouse events to it: put an overlay next to it in the same box, `position: "absolute"`.
 - **Objects into an existing box later:** `createIn(box, function () { ... })` (it puts the previous container back, also on an error; it returns the result of the function). `setDefaultContainerBox()` is not part of the start / end stack.

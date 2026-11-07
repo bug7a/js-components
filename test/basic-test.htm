@@ -552,8 +552,50 @@
                 leftWithArray + ", " + topWithArray + " / " + centeredBox.left + ", " + centeredBox.top);
             frameBox.remove();
 
-            const scaledArrays = basic.scaleStyle({ box: { round: [12, 0], border: [0, 0, 0, 1] } }, 2);
-            check("basic.scaleStyle: the arrays of round and border are multiplied", scaledArrays.box.round.join() === "24,0" && scaledArrays.box.border.join() === "0,0,0,2");
+            const scaledArrays = basic.scaleStyle({ box: { round: [12, 0], border: [0, 0, 0, 1], gap: [12, 8] } }, 2);
+            check("basic.scaleStyle: the arrays of round, border and gap are multiplied",
+                scaledArrays.box.round.join() === "24,0" && scaledArrays.box.border.join() === "0,0,0,2" && scaledArrays.box.gap.join() === "24,16");
+
+            // gap [x, y]: x between the items of a line, y between the lines
+            // WHY on page: the container of these tests was removed above (work.remove()), nothing in it is laid out.
+            const gapProps = { width: 100, height: "auto", align: "left top", gap: [12, 8], wrap: 1 };
+            const wrapGroup = createIn(page, function () {
+                const group = HGroup(gapProps);
+                    Box({ width: 40, height: 20 });
+                    Box({ width: 40, height: 20 });
+                    Box({ width: 40, height: 20 });
+                endGroup();
+                return group;
+            });
+            const [firstItem, secondItem, thirdItem] = wrapGroup.children;
+            const spaceInLine = secondItem.elem.offsetLeft - (firstItem.elem.offsetLeft + 40);
+            const spaceBetweenLines = thirdItem.elem.offsetTop - (firstItem.elem.offsetTop + 20);
+            check("gap [x, y]: x between the items of a line, y between the lines (wrap: 1)",
+                spaceInLine === 12 && spaceBetweenLines === 8 && wrapGroup.elem.style.columnGap === "12px" && wrapGroup.elem.style.rowGap === "8px",
+                spaceInLine + ", " + spaceBetweenLines);
+            check("gap [x, y]: read as given; the props keep their array", wrapGroup.gap[0] === 12 && Array.isArray(gapProps.gap) && gapProps.gap[1] === 8, String(wrapGroup.gap));
+            wrapGroup.gap = [6];
+            const oneGap = wrapGroup.elem.style.columnGap + " " + wrapGroup.elem.style.rowGap;
+            wrapGroup.gap = [1, 2, 3, 4];
+            check("gap: one value is both; four values are not read (the style stays)",
+                oneGap === "6px 6px" && wrapGroup.elem.style.columnGap + " " + wrapGroup.elem.style.rowGap === "6px 6px", oneGap);
+            wrapGroup.gap = 10;
+            check("gap: a number after an array: both, read as its text (as before)", wrapGroup.elem.style.gap === "10px" && wrapGroup.gap === "10px", wrapGroup.gap);
+            wrapGroup.remove();
+            const columnGroup = createIn(page, function () {
+                const group = VGroup({ width: 50, height: "auto", align: "left top", gap: [12, 8] });
+                    Box({ width: 40, height: 20 });
+                    Box({ width: 40, height: 20 });
+                endGroup();
+                return group;
+            });
+            const [upperItem, lowerItem] = columnGroup.children;
+            check("gap [x, y] in a VGroup: y between the items", lowerItem.elem.offsetTop - upperItem.elem.offsetTop === 28, lowerItem.elem.offsetTop - upperItem.elem.offsetTop);
+            columnGroup.remove();
+            const numberGroup = HGroup({ gap: 9 });
+            endGroup();
+            check("gap: a number in the props (as before)", numberGroup.elem.style.gap === "9px" && numberGroup.gap === "9px", numberGroup.gap);
+            numberGroup.remove();
 
             // *** v26.11.05: basic.zIndexAbove, remove() cleans what the removed components own
             const layerBox = createIn(page, function () { return Box(0, 0, 50, 50); }); // WHY page: a layer is a direct child of page

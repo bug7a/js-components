@@ -12,6 +12,7 @@ basic.* in v26.10.25 (see below).
 WHAT IS NEW IN v26.11.07 (see basic/basic-what-is-new.md):
 - Props:      border and round take an array too, like padding: border [x, y] / [left, top, right, bottom],
               round [top, bottom] / [topLeft, topRight, bottomRight, bottomLeft]; center() counts each side
+- Groups:     gap [x, y]: x between the items of a line, y between the lines (wrap: 1)
 
 WHAT IS NEW IN v26.11.05 (see basic/basic-what-is-new.md):
 - basic:      zIndexAbove(obj, minimum): the z-index of a list or a menu that opens from obj, over the layer that holds
@@ -3469,8 +3470,16 @@ const applyFlexAlign = function($style, align, isRow) {
     $style.alignItems = (isRow) ? alignList[1] : alignList[0];
 };
 
+// The gap of a group as a CSS text: 8 -> "8px", a text as it is, [x, y] -> "y x" (CSS writes the row gap first).
+// x is the space between the items of a line, y between the lines (wrap: 1), as in padding; [8] is both, three
+// values are read as two. null: an array basic.js does not read.
 const checkGap = function(gap) {
-    return (typeof gap == "number" && isFinite(gap)) ? gap + "px" : gap; // WHY: 2.5 -> "2.5px" too (not only integers).
+    if (typeof gap == "number" && isFinite(gap)) return gap + "px"; // WHY: 2.5 -> "2.5px" too (not only integers).
+    if (!Array.isArray(gap)) return gap;
+    const [x, y] = gap;
+    if (gap.length === 1) return x + "px";
+    if (gap.length === 2 || gap.length === 3) return y + "px " + x + "px";
+    return null;
 };
 
 // .flow, .align, .gap, .wrap, .justify of every group.
@@ -3495,13 +3504,17 @@ const FLEX_ACCESSORS = {
             if (this._justify) this.elem.style.justifyContent = getJustifyContent(this._justify); // v26.09.18: justify wins
         }
     },
+    // WHY a number reads as its text ("8px"): basic.js has always read it so. An array reads as it was given, as padding.
+    // USAGE: gap: 8   gap: [12, 8] (12 between the items of a line, 8 between the lines of a wrap: 1 group)
     gap: {
         get: function() {
             return this._gap;
         },
         set: function(gap) {
-            this._gap = checkGap(gap);
-            this.elem.style.gap = this._gap;
+            const gapText = checkGap(gap);
+            if (gapText === null) return;
+            this._gap = Array.isArray(gap) ? gap : gapText;
+            this.elem.style.gap = gapText;
         }
     },
     // (v26.09.18)
@@ -3609,6 +3622,9 @@ const startFlexBox = function(p1 = {}, p2, p3, p4, p5) {
     };
 
     Object.defineProperties(box, FLEX_ACCESSORS);
+    // WHY: the flex styles above wrote [x, y] as a text CSS does not read; the accessor writes its CSS text. The props
+    //      of the page keep their array (a style package may be scaled again later).
+    if (Array.isArray(props.gap)) box.gap = props.gap;
 
     return pushStartedBox(box);
 

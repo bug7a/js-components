@@ -7,6 +7,7 @@ This document contains new features, updates, and changes added to the basic.js 
 ## Version 26.11.07
 
 *   **`border` and `round` take an array, like `padding`:** `border: [0, 0, 0, 1]` is a line at the bottom only (`[horizontal, vertical]` or `[left, top, right, bottom]`, the order of `padding`). `round: [12, 0]` rounds the two top corners (`[top, bottom]`), `round: [12, 12, 0, 12]` each corner on its own (`[topLeft, topRight, bottomRight, bottomLeft]`, clockwise as in CSS). `center()` counts the border of each side. A number works as before: fully compatible. Reference: `basic/basic-what-is-new.md`.
+*   **`gap: [x, y]` of a group:** x between the items of a line, y between the lines of a group that wraps (`wrap: 1`): `HGroup({ wrap: 1, gap: [8, 12] })` for chips and tags. The order of `padding`. A number works as before.
 *   **The handbook: the order of `padding`** was written wrong (`[vertical, horizontal]`, `[top, right, bottom, left]`). It is, and always was, `[horizontal, vertical]` and `[left, top, right, bottom]`: `padding: [20, 10]` is 20 at the left and right, 10 at the top and bottom. Nothing changes in the library.
 
 ---
