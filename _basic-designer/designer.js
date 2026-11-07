@@ -127,6 +127,7 @@ BasicDesigner.state = {
     scriptChanges: new Map(), // the component files of the page changed in the Components panel: repo path -> "add" | "remove"
     projectNote: "", // the note for the AI about the whole project (the Page panel)
     isPageSelected: false, // the Page row is selected (not an object)
+    defaultProps: {}, // COPY: type -> the values of a new object of that type (defaultPropsOf), per page
 };
 
 // *** HELPERS:
@@ -485,6 +486,7 @@ BasicDesigner.load = async function (pagePath) {
     s.projectNote = "";
     s.isPageSelected = false;
     s.paramOriginal.clear();
+    s.defaultProps = {};
     BasicDesigner.closeParamEditors();
     if (BasicDesigner.ui.tableWindow) BasicDesigner.ui.tableWindow.closeWindow();
     BasicDesigner.clearParamFilter();
@@ -3175,7 +3177,9 @@ BasicDesigner.createInPage = function (type, props, container) {
         return w.createIn(container, function () { return factory(JSON.parse(JSON.stringify(props))); });
     }
     return w.createIn(container, function () {
-        const obj = w[type](props);
+        // WHY a copy: a group writes its flex styles into its props (flexDirection, alignItems...): they went into the
+        //      code of the prompt.
+        const obj = w[type](Object.assign({}, props));
         if (type === "VGroup" || type === "HGroup") w.endGroup();
         if (type === "Icon") obj.load(BasicDesigner.PLACEHOLDER_PICTURE);
         return obj;
@@ -7314,14 +7318,43 @@ BasicDesigner.copyItemOf = function (obj) {
     if (type === "Box" || type === "Label") keys = keys.concat(BasicDesigner.COPY_KEYS.padding);
     if (p.isButton || p.isInput) keys = keys.concat(BasicDesigner.COPY_KEYS.field);
     if (p.isInput) keys = keys.concat(BasicDesigner.COPY_KEYS.input);
+    const defaults = BasicDesigner.defaultPropsOf(type);
     const props = {};
     keys.forEach(function (key) {
         const value = p[key];
         if (value === "" || value === undefined || value === null) return;
+        if (String(value) === String(defaults[key])) return; // the copy gets it from basic.js anyway
         // WHY listValue: the panel reads a list as a text ("14, 10"), which the setter does not take: the copy lost it.
         props[key] = (BasicDesigner.LIST_PROPS[key]) ? BasicDesigner.listValue(value) : value;
     });
     return { type: type, props: props, copyOf: BasicDesigner.describeObject(obj) };
+};
+
+// Can obj be copied (Cmd+D, Cmd+C)? WHY not copyItemOf: it makes a new object on the page for the defaults
+// (defaultPropsOf); opening the menu must not change the page.
+BasicDesigner.canCopy = function (obj) {
+    if (obj.__bd.component) return !!obj.__bd.params;
+    const type = BasicDesigner.typeOf(obj);
+    return BasicDesigner.toolboxItems.some(function (i) { return i.type === type; });
+};
+
+// The values the panel reads on a new object of this type: what the basic.js of the page gives without a prop.
+// WHY: a copy wrote every value into its code, also the ones basic.js gives anyway (opacity: 1, round: 0, border: 0,
+//      padding: 0). WHY made by the page: its basic.js may be another version. Made once per type on page (not in the
+//      container of the copy: a component may watch its boxes; the values copied do not depend on it) and removed at
+//      once, so it is never drawn. {} when it can not be made: then every value is written, as before.
+BasicDesigner.defaultPropsOf = function (type) {
+    const s = BasicDesigner.state;
+    if (s.defaultProps[type]) return s.defaultProps[type];
+    let fresh = null;
+    try {
+        fresh = BasicDesigner.createInPage(type, {}, s.win.page);
+        s.defaultProps[type] = BasicDesigner.readProps(fresh);
+    } catch (error) {
+        s.defaultProps[type] = {};
+    }
+    if (fresh) fresh.remove();
+    return s.defaultProps[type];
 };
 
 // The objects in source, copied into copy (and what is in them). Returns the number of the ones not copied.
@@ -7993,7 +8026,7 @@ BasicDesigner.objectMenuItems = function (obj) {
     const container = obj.containerBox;
     const canReorder = BasicDesigner.isPlainContainer(container);
     const isText = BasicDesigner.TEXT_TYPES.indexOf(obj._type) !== -1;
-    const canCopy = (BasicDesigner.copyItemOf(obj)) ? 1 : 0;
+    const canCopy = (BasicDesigner.canCopy(obj)) ? 1 : 0;
     return [
         { text: "Duplicate · ⌘D", key: "duplicate", enabled: canCopy },
         { text: "Copy · ⌘C", key: "copy", enabled: canCopy },

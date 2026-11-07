@@ -582,6 +582,36 @@
         await copyCheck("copy an input", A.inputGiven);
         await copyCheck("copy a group", A.groupGiven);
 
+        // The code of a copy leaves out the values basic.js gives anyway, and keeps the given ones (the copy looks the same)
+        const copyCodeOf = function (type) {
+            return (BD.buildPrompt() || "").split("\n").find(function (l) { return l.indexOf("code: " + type + "(") !== -1; }) || "";
+        };
+        const copyCodeCheck = async function (name, source, mustHave, mustNotHave) {
+            await check(name, async function () {
+                BD.select(source); await sleep(30);
+                BD.duplicateObject(source);
+                await sleep(100);
+            }, function () {
+                const copy = BD.state.addedObjects[0];
+                if (!copy) return "no copy";
+                const look = diffLook(source, copy);
+                if (look !== true) return look;
+                const code = copyCodeOf(BD.typeOf(source));
+                const missing = mustHave.filter(function (part) { return code.indexOf(part) === -1; });
+                const extra = mustNotHave.filter(function (part) { return code.indexOf(part) !== -1; });
+                return (missing.length || extra.length) ? "missing " + JSON.stringify(missing) + ", not needed " + JSON.stringify(extra) + ": " + code : true;
+            }, /NEW: added/, function () { return same(BD.state.addedObjects.length, 0); });
+        };
+        await copyCodeCheck("copy code: no defaults of a Box", A.boxPlain, [], ["width:", "height:", "color:", "opacity:", "round:", "border:", "borderColor:", "padding:"]);
+        await copyCodeCheck("copy code: the given values of a Box", A.boxGiven,
+            ["width: 160", "height: 90", "color: \"#E8EEF3\"", "opacity: 0.9", "round: 8", "border: 2", "borderColor: \"#3871E0\""], ["padding:"]);
+        await copyCodeCheck("copy code: a Button keeps only what differs", A.buttonGiven,
+            ["width: 100", "height: 36", "fontSize: 14", "color: \"tomato\"", "round: 18", "text: \"Given\""], ["textAlign:", "opacity:", "minimal:", "border:", "bold:"]);
+        // WHY the flex styles: a group wrote them into the props the designer gave it, and they went into the code
+        await copyCodeCheck("copy code: a group without its flex styles", A.groupGiven,
+            ["width: 600", "height: \"auto\"", "gap: 12", "padding: 16", "color: \"white\"", "round: 10", "align: \"left top\""],
+            ["flow:", "flexDirection", "alignItems", "justifyContent", "alignContent", "flexWrap", "opacity:"]);
+
         // 5. Arrow keys on a manual box: 3 x right, Shift+down
         const box = A.boxGiven;
         const L0 = box.elem.offsetLeft;
