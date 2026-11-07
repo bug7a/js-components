@@ -128,7 +128,9 @@ box.remove = function () {
 
 Never write a `destroy()` for a component: everything is removed with `remove()`. To extend a component: `startExtendedObject(ParentComp, params)` ... `endExtendedObject(box)` (see `comp/email-input-b.js`).
 
-## When the component is ready
+## When the component is ready (only in the kit repository)
+A project made from the starter has none of the things below: there a component goes to `app/` and gets a `<script>` line in `index.htm`.
+
 1. A sample page `02-comp-examples/<name>.htm`: a scrolling Box, cards, every style package; it loads the source files (`../basic/basic.js`, `../comp/<name>.js`), not `.min.js`.
 2. `test/components-test.htm`: add it to `COMPONENTS` (`{ file, name, deps, setup }`), open `?only=<name>`: the title must say ALL PASS.
 3. No `.min.js` twin: the pages load the source. A copy that leaves the repository gets its `.min` file from `./_make-standalone.sh`.

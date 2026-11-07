@@ -54,7 +54,8 @@ GOTCHAS (CLAUDE.md):
 - A text of the user goes in with plainText (Label.text is innerHTML).
 - A Box with height: "auto" does not grow with basic.js children: put them in a group (box.layout) with position: "relative".
 
-WHEN THE NEW COMPONENT IS READY:
+WHEN THE NEW COMPONENT IS READY (only in the kit repository: a project made from the starter has none of these;
+there a component goes to app/ and gets a <script> line in index.htm):
 - A sample page: 02-comp-examples/<name>.htm (a scrolling Box, the cards of the other sample pages).
 - test/components-test.htm: add it to COMPONENTS ({ file, name, deps }) and open it (the tab title: ALL PASS).
 - No .min.js twin: the pages load the source; a copy that leaves the repo gets its .min file

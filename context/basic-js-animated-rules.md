@@ -93,4 +93,4 @@ without an icon has no icon motion and no pulse). Values are the "feel" sizes ab
 - A color that changed at once before (Ex: the line under a field on focus) is not given a color transition: an overlay that
   moves (`scaleX`) or fades does the motion, and the old color stays still under it.
 - Check in the browser: the state values (transform, opacity, box-shadow) after hover / focus / typing / hiding,
-  `animated: 0` unchanged, `setAnimated(0)` back to still, and `test/components-test.htm?only=<name>`.
+  `animated: 0` unchanged, `setAnimated(0)` back to still, and, in the kit repository, `test/components-test.htm?only=<name>`.
