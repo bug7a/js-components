@@ -22,6 +22,11 @@
         // *** VARIABLES:
         const LIGHT_CARD = { color: "white", borderColor: Black(0.1), titleColor: Black(0.45) };
         const DARK_CARD = { color: "#1C1C1B", borderColor: White(0.12), titleColor: White(0.55) };
+        // An icon of the page for sample 2 (iconSvg): a picture, drawn with currentColor.
+        const IMAGE_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
+            + ' stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'
+            + '<rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="9" cy="9.5" r="1.6"/>'
+            + '<path d="M4.5 17.5l4.5-4.5 3.5 3.5 2.5-2.5 4.5 4.5"/></svg>';
         let fileSingle, fileImages, fileFolder, fileCompact, fileDark;
         let lblSingle, lblContent, lblImages, lblErrors, lblFolder;
 
@@ -106,7 +111,7 @@
                     endCard();
 
                     // SAMPLE 2: Multiple images with limits
-                    startCard("2. Images (multiple, max 2 MB, max 5)");
+                    startCard("2. Images: an own icon, animated: 1");
 
                         fileImages = SelectFile({
                             multiple: 1,
@@ -115,6 +120,8 @@
                             maxFiles: 5,
                             titleText: "Drop images here",
                             descText: "or click to browse",
+                            iconSvg: IMAGE_ICON,
+                            animated: 1,
                             onChange: function (self) {
                                 const total = self.files.reduce(function (sum, f) { return sum + f.size; }, 0);
                                 lblImages.text = self.files.length + " image(s), total " + SelectFile.formatSize(total);

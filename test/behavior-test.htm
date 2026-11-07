@@ -396,6 +396,24 @@
             [tall, noIcon, noHint, onlyTitle].forEach((select) => select.remove());
         });
 
+        test("SelectFile: iconSvg puts an icon of the page; animated: 1 lifts it while a file is dragged over, animated: 0 writes nothing", async function () {
+            const ownIcon = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke="currentColor"/></svg>';
+            const own = SelectFile({ iconSvg: ownIcon, animated: 1 });
+            const still = SelectFile({});
+            const hasOwnIcon = own.icon.elem.querySelector("circle") != null;
+            own.zone.elem.dispatchEvent(new DragEvent("dragenter", { bubbles: true, dataTransfer: new DataTransfer() }));
+            still.zone.elem.dispatchEvent(new DragEvent("dragenter", { bubbles: true, dataTransfer: new DataTransfer() }));
+            await wait(80);
+            const ownTransform = own.icon.elem.style.transform;
+            const stillLook = still.icon.elem.style.transform + still.icon.elem.style.transition;
+            own.setIconSvg("");
+            const isUploadIconBack = own.icon.elem.querySelector("circle") == null && own.icon.elem.querySelectorAll("path").length === 2;
+            check("SelectFile: iconSvg puts an icon of the page; animated: 1 lifts it while a file is dragged over, animated: 0 writes nothing",
+                hasOwnIcon && ownTransform.indexOf("translateY(-") === 0 && stillLook === "" && isUploadIconBack,
+                hasOwnIcon + " | " + ownTransform + " | " + stillLook + " | " + isUploadIconBack);
+            [own, still].forEach((select) => select.remove());
+        });
+
         test("SelectFile: the same file again does not call onChange", async function () {
             let changes = 0;
             const select = SelectFile({ multiple: 1, onChange: function () { changes++; } });

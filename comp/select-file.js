@@ -9,7 +9,9 @@ UI COMPONENT TEMPLATE
 - Shows the selected files as a list (image preview, name, size, remove button).
 - Supports: multiple, accept (type filter), maxSize, maxFiles, directory selection, enabled.
 - A low zone (zoneHeight): what does not fit is hidden: first the icon, then the hint, then the description. The title stays.
-- Everything is drawn with code (no image files needed).
+- Everything is drawn with code (no image files needed). iconSvg: an icon of your own in the place of the upload icon.
+- animated: 1 (off by default): the icon lifts a little under the mouse, and lifts and grows while a file is dragged
+  over the zone. Only transform changes. Off when the system asks for reduced motion.
 - Style packages: "light" (default; the old name "classic" works too), "dark". Select with styleName. (SelectFile.styles)
 
 IMPORTANT: About the file path
@@ -46,6 +48,8 @@ const SelectFileDefaults = {
     maxFiles: 0, // 0: No limit (only for multiple: 1)
     enabled: 1,
     showIcon: 1, // 0: Hide the upload icon. (A zone too low for it hides it by itself.)
+    iconSvg: "", // An "<svg" text of your own, drawn with currentColor. Empty: SelectFile.UPLOAD_ICON (box.setIconSvg())
+    animated: 0, // 1: the icon lifts under the mouse, and more while a file is dragged over. (box.setAnimated(0/1))
     showList: 1,
     showPreview: 1, // Image thumbnails in the list.
     preventPageDrop: 1, // 1: A file dropped outside the zone does not open in the browser tab.
@@ -141,6 +145,13 @@ const SelectFile = function (params = {}) {
     let rows = [];
     let previewUrls = [];
     const ZONE_MOTION = "background-color 0.15s, border-color 0.15s";
+    const MOTION_TIME = "0.25s";
+    const MOTION_EASE = "cubic-bezier(0.2, 0.8, 0.2, 1)";
+    const HOVER_ICON_LIFT = 2; // px
+    const HOVER_ICON_GROW = 1.04;
+    const DROP_ICON_LIFT = 5; // px
+    const DROP_ICON_GROW = 1.08;
+    let wasAnimated = 0;
     const ZONE_GAP = 4; // Between the parts of the zone
     const ZONE_MIN_SPACE = 4; // At least this much over and under the parts of the zone
     const ICON_SPACE = 6; // More space under the icon
@@ -236,6 +247,40 @@ const SelectFile = function (params = {}) {
         return parts.join(" • ");
     };
 
+    // WHY: A user who asked the system for less motion gets the still icon.
+    const isMotionOn = function () {
+        if (box.animated != 1) return false;
+        const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        return !reduceMotion;
+    };
+
+    const getIconTransform = function () {
+        if (box.state == "dragover") return "translateY(-" + DROP_ICON_LIFT + "px) scale(" + DROP_ICON_GROW + ")";
+        if (box.state == "hover") return "translateY(-" + HOVER_ICON_LIFT + "px) scale(" + HOVER_ICON_GROW + ")";
+        return "none";
+    };
+
+    // The look of the state. (Nothing when animated is off.)
+    const paintMotion = function () {
+        if (!isMotionOn()) return;
+        box.icon.css.transform = getIconTransform();
+    };
+
+    // The transition, or the still look of animated: 0.
+    const applyAnimated = function () {
+        if (!isMotionOn()) {
+            if (wasAnimated) {
+                wasAnimated = 0;
+                box.icon.setMotion("");
+                box.icon.css.transform = "";
+            }
+            return;
+        }
+        wasAnimated = 1;
+        box.icon.setMotion("transform " + MOTION_TIME + " " + MOTION_EASE);
+        paintMotion();
+    };
+
     const setState = function (state) {
 
         box.state = state;
@@ -249,6 +294,7 @@ const SelectFile = function (params = {}) {
 
         const iconColor = (state == "dragover") ? _s.icon.dragOverColor : _s.icon.color;
         box.icon.textColor = iconColor;
+        paintMotion();
 
         box.title.text = (state == "dragover") ? box.dropText : box.titleText;
 
@@ -543,6 +589,17 @@ const SelectFile = function (params = {}) {
         addFiles(fileList);
     };
 
+    box.setAnimated = function (value) {
+        box.animated = (value == 1) ? 1 : 0;
+        applyAnimated();
+    };
+
+    // An "<svg" text drawn with currentColor. Empty: the upload icon.
+    box.setIconSvg = function (svgText) {
+        box.iconSvg = svgText || "";
+        box.icon.elem.innerHTML = box.iconSvg || SelectFile.UPLOAD_ICON;
+    };
+
     box.setEnabled = function (enabled) {
         box.enabled = basic.isOn(enabled) ? 1 : 0;
         paintEnabled();
@@ -615,7 +672,11 @@ const SelectFile = function (params = {}) {
                 shrink: 0,
             });
             box.icon.css.marginBottom = ICON_SPACE + "px";
-            box.icon.elem.innerHTML = SelectFile.UPLOAD_ICON;
+            box.icon.clipContent = 0;
+            // WHY: an svg of the page may come without a size of its own.
+            basic.addCss("select-file-icon", ".select-file-icon svg { display: block; width: 100%; height: 100%; }");
+            box.icon.elem.classList.add("select-file-icon");
+            box.setIconSvg(box.iconSvg);
 
             if (box.showIcon != 1) box.icon.visible = 0;
 
@@ -731,6 +792,7 @@ const SelectFile = function (params = {}) {
     }
 
     box.enabled = basic.isOn(box.enabled) ? 1 : 0;
+    applyAnimated();
     setState("normal");
     paintEnabled();
     renderList();
