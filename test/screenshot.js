@@ -11,8 +11,9 @@ SCREENSHOT: one picture of a page (or of a part of it) for a report, in one comm
 
 Options:
     --run "code"      runs in the page after it is loaded (await works): open a menu, a dialog, a state
-    --clip "x"        only this part: a basic.js expression (BasicDesigner.ui.pageMenu, a box or its elem)
-                      or a CSS selector ([role=dialog], #id); --margin px around it (12)
+    --clip "x"        only this part: a basic.js expression (BasicDesigner.ui.pageMenu, a box or its elem, or a list
+                      of them) or a CSS selector ([role=dialog], #id: its first element that is seen); --margin px
+                      around it (12). More than one --clip: the part that holds all of them
     --before [commit] before | after in one picture, with labels (HEAD by default)
     --name what       the file: _screenshots/YYYY-MM-DD-what.png (the name of the page by default)
     --width, --height the window (1280 x 800; a width under 500 is 844 high)
@@ -85,25 +86,39 @@ const watchPage = function (page, log) {
     });
 };
 
-// Runs in the page: the rectangle of a basic.js object or of the first element of a CSS selector.
-const findClipRect = function (clip) {
-    let found = null;
-    try {
-        found = (0, eval)(clip); // WHY indirect: the globals of the page, not the variables of this function
-    } catch (error) {
-        found = null; // WHY: a CSS selector is not JavaScript
-    }
-    if (found && found.elem) found = found.elem;
-    if (!(found instanceof Element)) {
+// Runs in the page: the rectangle that holds every clip. A clip is a basic.js expression (an object, an element or a
+// list of them) or a CSS selector (its first element that is seen).
+// WHY "seen": a closed panel or a hidden layer of the page is often the first element of a selector ([role=dialog]).
+const findClipRect = function (clips) {
+    const isSeen = function (element) {
+        const rect = element.getBoundingClientRect();
+        return (rect.width > 0 && rect.height > 0);
+    };
+    const elementsOf = function (clip) {
+        let found = null;
         try {
-            found = document.querySelector(clip);
+            found = (0, eval)(clip); // WHY indirect: the globals of the page, not the variables of this function
         } catch (error) {
-            found = null;
+            found = null; // WHY: a CSS selector is not JavaScript
         }
-    }
-    if (!found) return null;
-    const rect = found.getBoundingClientRect();
-    return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+        const list = (found && typeof found.length === "number" && !found.elem) ? Array.from(found) : [found];
+        const elements = list.map(function (item) { return (item && item.elem) ? item.elem : item; })
+            .filter(function (item) { return item instanceof Element; });
+        if (elements.length) return elements;
+        try {
+            const first = Array.from(document.querySelectorAll(clip)).find(isSeen);
+            return (first) ? [first] : [];
+        } catch (error) {
+            return [];
+        }
+    };
+    const rects = clips.flatMap(elementsOf).filter(isSeen).map(function (element) { return element.getBoundingClientRect(); });
+    if (!rects.length) return null;
+    const left = Math.min.apply(null, rects.map(function (rect) { return rect.left; }));
+    const top = Math.min.apply(null, rects.map(function (rect) { return rect.top; }));
+    const right = Math.max.apply(null, rects.map(function (rect) { return rect.right; }));
+    const bottom = Math.max.apply(null, rects.map(function (rect) { return rect.bottom; }));
+    return { x: left, y: top, width: right - left, height: bottom - top };
 };
 
 const runCode = function (code) {
@@ -139,11 +154,11 @@ const takePicture = async function (browser, url, options) {
             await sleep(options.wait);
         }
 
-        if (!options.clip) return { picture: await page.screenshot(), log };
+        if (!options.clips.length) return { picture: await page.screenshot(), log };
 
-        const rect = await page.evaluate(findClipRect, options.clip);
+        const rect = await page.evaluate(findClipRect, options.clips);
         if (!rect || rect.width === 0 || rect.height === 0) {
-            log.push({ isError: true, text: "CLIP: nothing is found for " + options.clip });
+            log.push({ isError: true, text: "CLIP: nothing is found for " + options.clips.join(" + ") });
             return { picture: await page.screenshot(), log };
         }
         const clip = clipWithMargin(rect, options.margin, options);
@@ -190,7 +205,7 @@ const todayText = function () {
 };
 
 const readOptions = function (args) {
-    const options = { page: "", run: "", clip: "", name: "", before: "", width: DEFAULT_WIDTH, height: 0,
+    const options = { page: "", run: "", clips: [], name: "", before: "", width: DEFAULT_WIDTH, height: 0,
         scale: 0, wait: DEFAULT_WAIT, margin: DEFAULT_MARGIN, isHelp: false };
     for (let i = 0; i < args.length; i++) {
         const arg = args[i];
@@ -198,7 +213,7 @@ const readOptions = function (args) {
         if (arg === "--help") options.isHelp = true;
         else if (arg === "--before") options.before = (hasValue) ? args[++i] : "HEAD";
         else if (arg === "--run") options.run = args[++i];
-        else if (arg === "--clip") options.clip = args[++i];
+        else if (arg === "--clip") options.clips.push(args[++i]);
         else if (arg === "--name") options.name = args[++i];
         else if (arg === "--width") options.width = Number(args[++i]);
         else if (arg === "--height") options.height = Number(args[++i]);
@@ -208,7 +223,7 @@ const readOptions = function (args) {
         else options.page = chrome.toPagePath(arg);
     }
     if (!options.height) options.height = (options.width < PHONE_WIDTH) ? PHONE_HEIGHT : DEFAULT_HEIGHT;
-    if (!options.scale) options.scale = (options.clip) ? 2 : 1;
+    if (!options.scale) options.scale = (options.clips.length) ? 2 : 1;
     if (!options.name) options.name = path.basename(options.page.split("?")[0]).replace(/\.html?$/i, "");
     return options;
 };
