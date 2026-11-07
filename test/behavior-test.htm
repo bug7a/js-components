@@ -5658,15 +5658,19 @@
             view.remove();
         });
 
-        test("MarkdownView: remotePictures: 0: a picture with a remote address stays a link; a picture of the page stays", async function () {
+        test("MarkdownView: a picture with a remote address stays a link, until remotePictures: 1; a picture of the page is drawn", async function () {
             const text = "![Far](https://a.com/p.png) ![Far too](//a.com/q.png) ![](https://a.com/r.png) ![Near](near.png) ![Data](data:image/png;base64,AAAA)";
-            const view = MarkdownView({ width: 500, height: 200, markdownText: text, remotePictures: 0 });
+            const view = MarkdownView({ width: 500, height: 200, markdownText: text });
             await wait(30);
             const pictures = Array.from(view.blockGroup.elem.querySelectorAll("img")).map(function (picture) { return picture.getAttribute("alt"); }).join();
             const links = Array.from(view.blockGroup.elem.querySelectorAll("a")).map(function (link) { return link.textContent; }).join();
-            const open = MarkdownView.parse("![Far](https://a.com/p.png)").blocks[0].html.startsWith("<img");
-            check("MarkdownView: remotePictures: 0: a picture with a remote address stays a link; a picture of the page stays",
-                pictures === "Near,Data" && links === "Far,Far too,https://a.com/r.png" && open, [pictures, links, open].join(" | "));
+            const closed = MarkdownView.parse("![Far](https://a.com/p.png)").blocks[0].html.startsWith("<a ");
+            const open = MarkdownView.parse("![Far](https://a.com/p.png)", { remotePictures: 1 }).blocks[0].html.startsWith("<img");
+            const allowed = MarkdownView({ width: 500, height: 200, markdownText: text, remotePictures: 1 });
+            const allPictures = allowed.blockGroup.elem.querySelectorAll("img").length;
+            allowed.remove();
+            check("MarkdownView: a picture with a remote address stays a link, until remotePictures: 1; a picture of the page is drawn",
+                pictures === "Near,Data" && links === "Far,Far too,https://a.com/r.png" && closed && open && allPictures === 5, [pictures, links, closed, open, allPictures].join(" | "));
             view.remove();
         });
 

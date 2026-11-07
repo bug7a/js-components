@@ -9,8 +9,9 @@ UI COMPONENT
 - Headings, lists (in lists, with numbers, with check marks), quotes, code, tables, lines, links, pictures, **bold**, *italic*,
   ~~deleted~~, `code`.
 - A text is never read as HTML: "<b>" is shown as it is, and a link or a picture with an address like "javascript:..." stays
-  a text. No script of a text runs. A picture with a remote address is still loaded by the browser, so its server learns that
-  the text was opened: for a text you do not trust (the answer of an AI) give remotePictures: 0, and it stays a link.
+  a text. No script of a text runs. A picture with a remote address stays a link: a browser loads a picture by itself, so its
+  server would learn that the text was opened, and its address can carry data (the answer of an AI). A text you trust:
+  remotePictures: 1. A picture of the page and a data: address are always drawn.
 - A text that comes piece by piece: appendText(). Only the blocks that changed are drawn again, and the view follows the end
   until the reader scrolls up.
 - Code: a button copies it. comp/code-editor.js, when it is loaded, gives it colors: "python", "javascript", "json", "html",
@@ -53,7 +54,7 @@ const MarkdownViewDefaults = {
     markdownText: "", // The text. setText(), appendText()
     emptyText: "", // Shown when there is no text
     autoScroll: 1, // 1: with appendText() the view follows the end, until the reader scrolls up
-    remotePictures: 1, // 0: a picture with an http address stays a link (See the note at the top)
+    remotePictures: 0, // 1: a picture with an http address is drawn, not a link (See the note at the top)
     useScrollBar: 1, // basic/scroll-bar.js (when it is loaded), with a height that is not "auto". 0: the scrollbar of the browser
     ariaLabel: "Document",
     copyText: "Copy", // The button of a code
@@ -609,10 +610,9 @@ MarkdownView.codeHtml = function (code, language) {
 // { type: "heading", level, html, text, id }, { type: "p", html }, { type: "list", html }, { type: "table", html },
 // { type: "quote", blocks }, { type: "code", language, code }, { type: "line" }
 
-// options: { remotePictures: 0 }. Returns { blocks, title }.
+// options: { remotePictures: 1 }. Returns { blocks, title }.
 MarkdownView.parse = function (text, options = {}) {
-    const isRemoteAllowed = (options.remotePictures === undefined || basic.isOn(options.remotePictures));
-    const context = { usedIds: Object.create(null), remotePictures: isRemoteAllowed }; // WHY null: a heading can be named "constructor".
+    const context = { usedIds: Object.create(null), remotePictures: basic.isOn(options.remotePictures) }; // WHY null: a heading can be named "constructor".
     const lines = String((text === null || text === undefined) ? "" : text).replace(/\r\n?/g, "\n").split("\n");
     const blocks = MarkdownView.parseBlocks(lines, context);
     const firstHeading = MarkdownView.headingsOf(blocks).find(function (heading) { return heading.level === 1; });

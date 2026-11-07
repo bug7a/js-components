@@ -106,7 +106,7 @@
             "",
             "These two are not links: [a click](javascript:alert(1)) and [a page](data:text/html,hello).",
             "",
-            "With `remotePictures: 0` this picture stays a link: ![A photo](https://example.com/photo.png)",
+            "A remote picture stays a link, until `remotePictures: 1`: ![A photo](https://example.com/photo.png)",
         ].join("\n");
 
         let lblLink;
@@ -209,9 +209,9 @@
 
         const createUnsafeText = function () {
 
-            startCard("Not read as HTML", "height: \"auto\", remotePictures: 0");
+            startCard("Not read as HTML", "height: \"auto\"");
 
-                MarkdownView({ height: "auto", markdownText: UNSAFE_TEXT, remotePictures: 0, round: CARD_ROUND });
+                MarkdownView({ height: "auto", markdownText: UNSAFE_TEXT, round: CARD_ROUND });
 
             endGroup();
 
