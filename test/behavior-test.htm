@@ -6899,6 +6899,45 @@
             check("JsonEditor minimal and minimalDark: 28 px rows, a 13 px text, no line between the columns, the knob of a switch that is on shows; light and dark do not change", row === "28 13px transparent rgb(255, 255, 255) / 28 13px transparent rgb(26, 26, 25) | true", row);
         });
 
+        test("JsonEditor: colorOf paints a color only the page can read; optionsOf gives the choices of a text (a column, a row of an object), never of a number or of a name of the table", async function () {
+            const asked = [];
+            const optionsOf = function (key) {
+                asked.push(key);
+                return (key === "tone") ? ["cyan", "orange"] : null;
+            };
+            // A choice: a click at the end of the cell opens its list, the item is clicked
+            const pickAtEnd = async function (editor, title, text) {
+                const titleLabel = findByText(title, editor.elem);
+                clickJsonCell(editor, 0, title, titleLabel.parentElement.offsetWidth - 10);
+                await wait(30);
+                const menu = Array.from(document.querySelectorAll("[role=menu]")).find(function (el) { return el.offsetParent !== null; });
+                const item = (menu) ? findByText(text, menu) : null;
+                if (item) item.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+                await wait(30);
+            };
+            const list = JsonEditor({
+                width: 600,
+                height: 260,
+                value: [{ name: "A", color: "var(--a-token-of-the-page)", tone: "cyan", size: 3 }],
+                colorOf: function (value) { return (value === "var(--a-token-of-the-page)") ? "#123456" : value; },
+                optionsOf: optionsOf,
+            });
+            await wait(20);
+            const hasSwatch = Array.from(list.elem.querySelectorAll("div")).some(function (el) { return el.style.background.indexOf("rgb(18, 52, 86)") !== -1; });
+            await pickAtEnd(list, "tone", "orange");
+            const listTone = list.getValue()[0].tone;
+            list.remove();
+            const object = JsonEditor({ width: 600, height: 260, value: { tone: "cyan", count: 2 }, optionsOf: optionsOf });
+            await wait(20);
+            await pickAtEnd(object, "value", "orange");
+            const objectTone = object.getValue().tone;
+            object.remove();
+            const isNumberAsked = (asked.indexOf("size") !== -1 || asked.indexOf("count") !== -1);
+            const isOwnKeyAsked = asked.some(function (key) { return JsonEditor.isOwnKey(key); });
+            const row = [hasSwatch, listTone, objectTone, isNumberAsked, isOwnKeyAsked].join(" | ");
+            check("JsonEditor: colorOf paints a color only the page can read; optionsOf gives the choices of a text (a column, a row of an object), never of a number or of a name of the table", row === "true | orange | orange | false | false", row);
+        });
+
         // *** RANGE SLIDER (comp/range-slider.js)
 
         // A slider where one value is 2 px: 224 px wide, a knob of 24 px, 0 - 100.

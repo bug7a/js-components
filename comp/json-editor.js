@@ -12,7 +12,8 @@ UI COMPONENT
 - A cell that holds a list or an object opens as a table of its own; the path at the top goes back.
 - The kind of a column comes from its values and its name: a text, a number, on / off (a switch), a color (a swatch:
   a click on it opens the color picker of the browser, or onPickColor), a picture (a small picture: onPickPicture
-  chooses one), a choice (columns: options). The menu of a column changes its kind, sorts, renames, moves and deletes it.
+  chooses one), a choice (columns: options, or optionsOf). The menu of a column changes its kind, sorts, renames, moves
+  and deletes it.
 - Paste: a block of a spreadsheet (from the chosen cell), or a JSON list (its items become rows).
   Cmd/Ctrl+C copies the chosen rows as lines of cells.
 - The JSON view shows the same value as a text. A text that is not JSON says where its fault is; the table waits.
@@ -49,6 +50,8 @@ win.close();                    // win.editor is the JsonEditor of the window
 JsonEditor({
     pictureBase: "https://example.com/shop/",          // the relative pictures of the cells are read from here
     onPickPicture: function (self, cell) { myPictureList(cell.value, cell.setValue); },
+    colorOf: function (value) { return myTheme.colorOf(value); },             // "var(--brand)" -> "#E0A038"
+    optionsOf: function (key) { return (key === "size") ? ["S", "M", "L"] : null; },
 });
 
 A COLUMN (columns): { key, kind, options, note, columns }
@@ -169,6 +172,8 @@ const JsonEditorDefaults = {
     onChange: function (self, value) { }, // The value changed in the table: a list or an object. (Not at create time, not with setValue())
     onPickColor: null, // function (self, cell) { }: your own color picker for a color cell (See A CELL above). null: the one of the browser
     onPickPicture: null, // function (self, cell) { }: a list of pictures for a picture cell (a click on its picture). null: the address is written
+    colorOf: null, // function (value, self) { return a color }: the color a swatch paints, when only the page can read it (Ex: a token of another document). null: the value
+    optionsOf: null, // function (key, value, self) { return [choices] or null }: the choices of a text of this name (a column, a row of an object), besides columns
     styleName: "light", // "light", "dark", "minimal", "minimalDark" or a name added to JsonEditor.styles
     style: { // Light style package (default)
         box: { color: "#FFFFFF", border: 1, borderColor: Black(0.12), round: 10 },
@@ -719,7 +724,12 @@ const JsonEditor = function (params = {}) {
     const kindOfColumn = function (column) {
         if (column.chosenKind) return column.chosenKind;
         if (column.options) return "option";
-        return JsonEditor.kindOfColumnValues(column.key, valuesOfColumn(column));
+        const values = valuesOfColumn(column);
+        const kind = JsonEditor.kindOfColumnValues(column.key, values);
+        // WHY only a text: a color, a number or a switch keeps its own editor.
+        const isText = (kind === "text" || kind === "auto");
+        if (isText && askOptions(column.key, values[0]).length) return "option";
+        return kind;
     };
 
     // An object: the kind of a value comes from its own name, not from its column.
@@ -740,13 +750,32 @@ const JsonEditor = function (params = {}) {
         if (hint && hint.options) return "option";
         const kind = JsonEditor.kindOfNamedValue(name, value);
         if (kind === "color" || kind === "picture" || kind === "flag") return kind;
+        const isText = (kind === "text" || kind === "any");
+        if (isText && askOptions(name, value).length) return "option";
         return (typeof value === "number") ? "number" : "auto";
     };
 
+    // The choices of a cell: the columns of the page (columns), else optionsOf. [] when it has none.
     const optionsOfCell = function (row, column) {
-        if (column.key !== VALUE_KEY) return column.options || [];
-        const hint = hintOf(String(row.cells[NAME_KEY] ?? ""));
-        return (hint && hint.options) ? hint.options : [];
+        const isNamed = (column.key === VALUE_KEY);
+        const key = (isNamed) ? String(row.cells[NAME_KEY] ?? "") : column.key;
+        const hint = (isNamed) ? hintOf(key) : column;
+        if (hint && hint.options) return hint.options;
+        return askOptions(key, row.cells[column.key]);
+    };
+
+    // The choices optionsOf gives for a value of this name. [] when there are none (or the name is one of the table).
+    const askOptions = function (key, value) {
+        if (!box.optionsOf || JsonEditor.isOwnKey(key)) return [];
+        const options = box.optionsOf(key, value, box);
+        return (Array.isArray(options)) ? options : [];
+    };
+
+    // The color a swatch paints (colorOf: a color only the page can read).
+    const paintedColorOf = function (value) {
+        const text = String(value ?? "").trim();
+        if (!box.colorOf || !text) return text;
+        return String(box.colorOf(text, box) || text);
     };
 
     // The typed text of a cell -> its value. It keeps the type the cell had when it can.
@@ -1038,7 +1067,7 @@ const JsonEditor = function (params = {}) {
 
     // BOX: a color over a checkerboard (a transparent color shows it)
     const drawSwatch = function (value) {
-        const color = String(value ?? "").trim() || "transparent";
+        const color = paintedColorOf(value) || "transparent";
         const swatch = Box({ width: SIZE.SWATCH_SIZE, height: SIZE.SWATCH_SIZE, round: 3, color: "transparent" });
         swatch.shrink = 0;
         swatch.css = { position: "relative", left: "0px", top: "0px" };
@@ -1292,7 +1321,7 @@ const JsonEditor = function (params = {}) {
             box.onPickColor(box, cell);
             return;
         }
-        colorInput.value = JsonEditor.hexOfColor(cell.value);
+        colorInput.value = JsonEditor.hexOfColor(paintedColorOf(cell.value));
         colorInput.style.left = leftOfColumn(column.key) + "px";
         colorInput.style.top = (viewIndex + 1) * ROW + "px";
         colorInput.oninput = function () { cell.setValue(colorInput.value.toUpperCase()); };
@@ -2713,10 +2742,14 @@ JsonEditor.kindOfNamedValue = function (name, value) {
     return "any";
 };
 
+// A name the table gives a column (a plain value, the name and the value of an object, a place in a list): not of the page.
+JsonEditor.isOwnKey = function (key) {
+    return key === JsonEditor.PLAIN_KEY || key === JsonEditor.NAME_KEY || key === JsonEditor.VALUE_KEY || /^\d+$/.test(key);
+};
+
 // The kind of a column: "flag", "color", "picture", "function", "number", "text" or "auto" (an empty column).
 JsonEditor.kindOfColumnValues = function (key, values) {
-    const isOwnKey = (key === JsonEditor.PLAIN_KEY || key === JsonEditor.NAME_KEY || key === JsonEditor.VALUE_KEY || /^\d+$/.test(key));
-    const name = (isOwnKey) ? "" : key;
+    const name = (JsonEditor.isOwnKey(key)) ? "" : key;
     const sample = values.find(function (value) { return value !== null && value !== undefined; });
     const allAre = function (check) { return values.length > 0 && values.every(check); };
     if (allAre(function (value) { return typeof value === "boolean"; })) return "flag";

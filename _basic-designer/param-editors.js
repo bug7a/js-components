@@ -2148,6 +2148,8 @@ BasicDesigner.openParamTable = function (row) {
         pictureBase: new URL(s.pagePath, s.rootUrl).href,
         onPickColor: BasicDesigner.pickTableColor,
         onPickPicture: BasicDesigner.pickTablePicture,
+        colorOf: BasicDesigner.paintableColor,
+        optionsOf: BasicDesigner.tableOptionsOf,
         onApply: function (value) {
             // WHY a timer: the component is made again from a clean stack. Its objects would take the frames of the
             //      table (comp/json-editor.js) as lines of the page (runtime.js can not tell them from a JsonEditor of the page).
@@ -2214,6 +2216,14 @@ BasicDesigner.tableColumnsOf = function (hints, depth = 0) {
         const inner = BasicDesigner.columnsOfNote("", hint.note);
         return Object.assign({}, hint, { columns: BasicDesigner.tableColumnsOf(inner, depth + 1) });
     });
+};
+
+// The choices of a text of the table from its name, as in the rows of the panel: the packages of a ...StyleName, the tones
+// of SmartButton, the sides of an ...Align. null: none (the comments give the others: columns).
+BasicDesigner.tableOptionsOf = function (key, value) {
+    const kind = BasicDesigner.paramKindOf(key, value, undefined, "", "");
+    if (kind.name !== "list") return null;
+    return kind.options.map(function (option) { return option.value; });
 };
 
 // A color cell of the table: the color picker of the panel (its groups, its recent colors) at the cell.
