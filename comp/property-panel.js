@@ -54,6 +54,7 @@ UI COMPONENT TEMPLATE
   The panel keeps the values: getValues(), getValue(key), getData() (the JSON with the current values).
 - openColorPickerFor(request): the same color picker (its groups, its recent colors) for a color that is not an item of
   the panel. Ex: a parameter of a component, a cell of a table. The title of the picker moves it (a double click on it: back).
+- buildColorStrip(request): the colors under a color field (the ticks of the picker) for such a color.
 - setValue(key, value, silent) changes an item from outside (Ex: another object was selected).
 - It is always created on the page (whatever container is open) and opened at the right side.
   open() / close() / toggle() slide it. (Not show / hide: those are basic.js methods.)
@@ -3245,7 +3246,8 @@ const PropertyPanel = function (params = {}) {
         closeMenu();
         paletteCache = null;
         controllers = {};
-        quickStrips = [];
+        // WHY: the strips of the items go with them; the ones of buildColorStrip() live outside of the panel.
+        quickStrips = quickStrips.filter(function (strip) { return strip.isOutside; });
         box.data = PropertyPanel.copyData(data || {});
         buildHeader();
         buildContent();
@@ -3310,6 +3312,15 @@ const PropertyPanel = function (params = {}) {
         openColorPicker({ item: { key: request.key, hint: request.hint }, sectionKey: "" }, colorField);
     };
     // USAGE: panel.openColorPickerFor({ key: "tone", hint: "Tone", value: "#FF0000", rect: rect, opener: swatch, commit: write })
+
+    // The colors under a color field, for a color that is not an item of the panel. It follows the ticks of the picker and is
+    // made in the current container. request: { key, hint, width, onPick(value) }. Returns { obj, paint(value) }.
+    box.buildColorStrip = function (request) {
+        const strip = buildQuickStrip({ item: { key: request.key, hint: request.hint }, sectionKey: "" }, request.width, request.onPick);
+        strip.isOutside = 1;
+        return strip;
+    };
+    // USAGE: const strip = panel.buildColorStrip({ key: "tone", hint: "Tone", width: 120, onPick: write }); strip.paint("#FF0000");
 
     box.isColorPickerOpen = function () {
         return !!(menu && menu.colorField);

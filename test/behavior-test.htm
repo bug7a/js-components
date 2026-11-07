@@ -551,6 +551,34 @@
             panel.remove();
         });
 
+        test("PropertyPanel: buildColorStrip gives the colors under a field to a color outside of the panel", async function () {
+            const key = "behavior-test-strip";
+            basic.storage.save(key + "-quick", { recent: 0, group: 1, paletteKey: "mine" });
+            const picked = [];
+            const panel = PropertyPanel({ data: {}, recentColorsKey: key, palettes: [{ key: "mine", name: "Mine", colors: ["#111111", "#222222"], canAdd: 1 }] });
+            const holder = VGroup({ width: 200, height: "auto" });
+                const strip = panel.buildColorStrip({ key: "outside", hint: "Outside", width: 120, onPick: function (value) { picked.push(value); } });
+            endGroup();
+            await wait(10);
+            const swatch = strip.obj.elem.querySelector("[aria-label='#222222 (Mine)']");
+            if (swatch) swatch.click();
+            const isPicked = (picked[0] === "#222222");
+            // WHY after setData: the panel draws its items again, this strip is not one of them.
+            panel.setData({});
+            panel.openColorPickerFor({ key: "outside", hint: "Outside", value: "", rect: { left: 400, top: 60, right: 420, bottom: 80 }, commit: function () { } });
+            await wait(10);
+            const tick = document.querySelector("[role=checkbox][title*='selected group']");
+            if (tick) tick.click();
+            await wait(10);
+            const isHidden = (strip.obj.visible == 0);
+            check("PropertyPanel: buildColorStrip gives the colors under a field to a color outside of the panel", !!swatch && isPicked && !!tick && isHidden,
+                "swatch " + !!swatch + ", picked " + picked.join(",") + ", tick " + !!tick + ", hidden " + isHidden);
+            panel.closeColorPicker();
+            holder.remove();
+            panel.remove();
+            basic.storage.remove(key + "-quick");
+        });
+
         test("PropertyPanel: the title of the color picker moves it, and it opens there again", async function () {
             const panel = PropertyPanel({ data: { sections: [{ key: "s", items: [{ key: "fill", type: "color", label: "Fill", value: "#FF0000" }] }] } });
             await wait(10);
