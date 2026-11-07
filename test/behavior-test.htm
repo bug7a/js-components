@@ -503,6 +503,28 @@
             panel.remove();
         });
 
+        test("PropertyPanel: commaIsList reads 12,0 as a list (parseText), another field 0,5 as a decimal", async function () {
+            const parsed = [];
+            const listField = { key: "round", type: "number", prefix: "R", value: 8, commaIsList: 1, parseText: function (text) { parsed.push(text); return text.split(",").join(", "); } };
+            const decimalField = { key: "opacity", type: "number", prefix: "O", value: 1, step: 0.1 };
+            const panel = PropertyPanel({ data: { sections: [{ key: "s", title: "S", items: [[listField, decimalField]] }] } });
+            await wait(30);
+            const fields = Array.from(panel.elem.querySelectorAll("input"));
+            const roundInput = fields.find(function (el) { return el.value === "8"; });
+            const opacityInput = fields.find(function (el) { return el.value === "1.0"; });
+            roundInput.focus();
+            roundInput.value = "12,0";
+            roundInput.blur();
+            opacityInput.focus();
+            opacityInput.value = "0,5";
+            opacityInput.blur();
+            const isList = (parsed[0] === "12,0" && panel.getValue("round") === "12, 0");
+            const isDecimal = (panel.getValue("opacity") === 0.5);
+            check("PropertyPanel: commaIsList reads 12,0 as a list (parseText), another field 0,5 as a decimal", isList && isDecimal,
+                "round: " + JSON.stringify(panel.getValue("round")) + ", opacity: " + panel.getValue("opacity"));
+            panel.remove();
+        });
+
         test("PropertyPanel: a click on a prefix with prefixClick gives its value, a drag of it does not", async function () {
             const changes = [];
             const panel = PropertyPanel({

@@ -21,6 +21,7 @@ UI COMPONENT TEMPLATE
                   the prefix lights up under the mouse (Ex: "Left" -> the value "__side:right")
                   parseText(text): a text that is not a plain number goes to it; it returns the value ("100%", "auto")
                   or undefined (the old value comes back). A text value is shown as it is.
+                  commaIsList: 1 -> a comma separates values ("12,0" goes to parseText as a list), it is not a decimal comma.
                   textToNumber(value): the number of a text value, to drag or step it (Ex: "100%" -> its width in px).
     text       -> [ name ]  a text field
     textarea   -> a text of more lines (rows: 2). caption: the first line of the placeholder (it goes while writing). Saved on blur or Cmd/Ctrl+Enter.
@@ -596,7 +597,9 @@ const PropertyPanel = function (params = {}) {
         const parse = function (text) {
             text = String(text).trim();
             if (item.autoText && (text === "" || text.toLowerCase() === String(item.autoText).toLowerCase())) return null;
-            const isPlainNumber = /^-?\d*[.,]?\d+(px)?$/i.test(text);
+            // WHY commaIsList: in a field of a list ("14, 10") 12,0 is two values, not the decimal 12.0
+            const plainNumber = (item.commaIsList) ? /^-?\d*\.?\d+(px)?$/i : /^-?\d*[.,]?\d+(px)?$/i;
+            const isPlainNumber = plainNumber.test(text);
             if (item.parseText && !isPlainNumber) return item.parseText(text);
             const match = text.replace(",", ".").match(/-?\d*\.?\d+/);
             if (!match) return undefined;
