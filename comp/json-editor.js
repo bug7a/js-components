@@ -1848,9 +1848,10 @@ const JsonEditor = function (params = {}) {
     const drawViewSwitch = function () {
         if (viewSwitch) viewSwitch.remove();
         viewSwitch = createIn(viewSwitchHolder, function () {
-            const group = HGroup({ width: SIZE.VIEW_SWITCH_WIDTH, height: SIZE.VIEW_SWITCH_HEIGHT, align: "left center", gap: 0, color: C.field, round: 5 });
+            const group = HGroup({ width: SIZE.VIEW_SWITCH_WIDTH, height: SIZE.VIEW_SWITCH_HEIGHT, align: "left center", gap: 0, color: C.field, round: SIZE.VIEW_SWITCH_ROUND });
             group.shrink = 0;
-            if (C.fieldLine) group.props({ border: 1, borderColor: C.fieldLine });
+            // WHY the room inside the line: the ring of the chosen part lay on the line of the group (a double edge, corners that did not meet)
+            if (C.fieldLine) group.props({ border: 1, borderColor: C.fieldLine, padding: SIZE.VIEW_SWITCH_INSET });
             group.role = "radiogroup";
                 drawViewOption("table", box.texts.table);
                 drawViewOption("json", box.texts.json);
@@ -1861,11 +1862,12 @@ const JsonEditor = function (params = {}) {
 
     const drawViewOption = function (view, text) {
         const isSelected = ((view === "json") === isJsonView);
+        const inset = (C.fieldLine) ? 1 + SIZE.VIEW_SWITCH_INSET : 0; // the line of the group and the room inside it
         const option = Label({
             text: "",
-            height: SIZE.VIEW_SWITCH_HEIGHT,
+            height: SIZE.VIEW_SWITCH_HEIGHT - inset * 2,
             fontSize: _s.fontSize - 1,
-            round: 5,
+            round: SIZE.VIEW_SWITCH_ROUND - inset, // WHY: its corners follow the corners of the group
             textColor: (isSelected) ? C.text : C.soft,
             color: (isSelected) ? C.segment : "transparent",
             clickable: 1,
@@ -2448,6 +2450,8 @@ JsonEditor.SIZES = {
     SEARCH_SPACE: 8, // Before the search (the buttons before it end with no line)
     VIEW_SWITCH_WIDTH: 130,
     VIEW_SWITCH_HEIGHT: 24,
+    VIEW_SWITCH_ROUND: 5,
+    VIEW_SWITCH_INSET: 2, // px between a line around Table | JSON and its chosen part
     FOOTER_HEIGHT: 46,
     BUTTON_HEIGHT: 28,
     ICON_BUTTON: 24,
@@ -3184,7 +3188,7 @@ JsonEditor.createMinimalStyle = function (colors) {
             color: "transparent",
             border: 1,
             borderBottomStyle: "1px solid " + colors.edge,
-            textOffsetY: -1,
+            textOffsetY: 0,
             clearIconOffsetY: 0,
         },
         menuStyleName: colors.minimalName,

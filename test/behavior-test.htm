@@ -1197,6 +1197,31 @@
             [date, time, plain].forEach(function (picker) { picker.remove(); });
         });
 
+        test("SearchInput minimal: the text in the middle of the field (it sat 1 px high)", async function () {
+            const search = SearchInput({ styleName: "minimal", width: 200 });
+            await basic.nextFrame();
+            const field = search.elem.getBoundingClientRect();
+            const text = search.txtSearch.elem.getBoundingClientRect();
+            const offset = (text.top + text.height / 2) - (field.top + field.height / 2);
+            check("SearchInput minimal: the middle of the text is the middle of the field", Math.abs(offset) <= 0.5, offset);
+            search.remove();
+        });
+
+        test("JsonEditor minimal: the chosen part of Table | JSON stays inside the line of the group; light fills its group", async function () {
+            const chosenInset = async function (styleName) {
+                const editor = JsonEditor({ styleName: styleName, width: 600, height: 200, value: [{ name: "A" }] });
+                await basic.nextFrame();
+                const group = editor.elem.querySelector("[role=radiogroup]").getBoundingClientRect();
+                const chosen = editor.elem.querySelector("[role=radio][aria-checked=true]").getBoundingClientRect();
+                editor.remove();
+                return chosen.top - group.top;
+            };
+            const minimalInset = await chosenInset("minimal");
+            const lightInset = await chosenInset("light");
+            check("JsonEditor minimal: 3 px from the top of the group (its line and 2 px of room)", minimalInset === 3, minimalInset);
+            check("JsonEditor light: the chosen part fills the group as before", lightInset === 0, lightInset);
+        });
+
         // *** TOGGLE (comp/toggle.js)
 
         test("Toggle: the keyboard and screen readers can use it", async function () {

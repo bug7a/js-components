@@ -635,7 +635,7 @@ SearchInput.createMinimalStyle = function (colors) {
         textColor: colors.text,
         placeholderColor: colors.placeholder,
         fontSize: 13,
-        textOffsetY: -1,
+        textOffsetY: 0, // WHY 0: at 13 px the band of the capitals and the line of the text sit in the middle (-1 read high)
         clearIconOffsetY: 0,
         border: 1,
         borderColor: colors.edge, // WHY edge: the line that shows the field (3:1 at least)
