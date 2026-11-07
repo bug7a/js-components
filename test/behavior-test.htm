@@ -80,6 +80,7 @@
         <script src="../comp/accordion.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/grid-group.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/step-bar.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../comp/canvas.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/range-slider.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/json-view.js" type="text/javascript" charset="utf-8"></script>
         <script src="../comp/markdown-view.js" type="text/javascript" charset="utf-8"></script>
@@ -6838,6 +6839,113 @@
                 dark.fit === "cover,cover" && dark.filter === "none,none" && !dark.grows && dark.oneRow &&
                 ozden.fit !== "cover,cover" && ozden.filter !== "none,none" && ozden.grows,
                 JSON.stringify({ light: light, dark: dark, ozden: ozden }));
+        });
+
+        // *** CANVAS (comp/canvas.js)
+
+        const canvasPointer = function (board, type, x, y) {
+            const rect = board.elem.querySelector("canvas").getBoundingClientRect();
+            board.elem.querySelector("canvas").dispatchEvent(new PointerEvent(type, { clientX: rect.left + x, clientY: rect.top + y, button: 0, pointerId: 7, bubbles: true }));
+        };
+
+        const canvasPixel = function (board, x, y) {
+            const elem = board.elem.querySelector("canvas");
+            const ratio = elem.width / elem.clientWidth;
+            return Array.from(elem.getContext("2d").getImageData(Math.round(x * ratio), Math.round(y * ratio), 1, 1).data).join();
+        };
+
+        test("Canvas: shapes have keys; update, move, remove and bring to front change only that shape; a copy goes out", async function () {
+            const board = Canvas({ left: 0, top: 0, width: 200, height: 120 });
+            const line = board.addLine(0, 0, 50, 50);
+            const own = board.addRect(10, 10, 20, 20, { key: "box" });
+            const twice = board.addRect(0, 0, 5, 5, { key: "box" });
+            const noType = board.addShape({ x: 1 });
+            board.updateShape("box", { width: 40, fill: "gold" });
+            board.moveShape(line, 5, 10);
+            const copy = board.getShape("box");
+            copy.width = 999;
+            const kept = board.getShape("box").width;
+            board.addCircle(50, 50, 10, { key: "ball" });
+            board.bringToFront("box");
+            const order = board.getShapes().map(function (shape) { return shape.key; }).join();
+            board.removeShape(line);
+            const afterRemove = board.getShapes().length;
+            board.clear();
+            const afterClear = board.getShapes().length;
+            board.remove();
+            check("Canvas: shapes have keys; update, move, remove and bring to front change only that shape; a copy goes out",
+                line === "s1" && own === "box" && twice === null && noType === null && kept === 40 && copy.fill === "gold" &&
+                order === "s1,ball,box" && afterRemove === 2 && afterClear === 0,
+                [line, own, twice, noType, kept, order, afterRemove, afterClear].join(" | "));
+        });
+
+        test("Canvas: a click finds the top shape (a thin line too), an empty place gives null", async function () {
+            const clicks = [];
+            const board = Canvas({ left: 0, top: 0, width: 200, height: 120, onClick: function (self, x, y, shape) { clicks.push(shape ? shape.key : "null@" + x + "," + y); } });
+            board.addRect(10, 10, 80, 80, { key: "under" });
+            board.addCircle(50, 50, 20, { key: "over" });
+            board.addLine(120, 20, 190, 20, { lineWidth: 1, key: "thin" });
+            [[50, 50], [15, 15], [150, 23], [150, 100]].forEach(function (place) {
+                canvasPointer(board, "pointerdown", place[0], place[1]);
+                canvasPointer(board, "pointerup", place[0], place[1]);
+            });
+            board.remove();
+            check("Canvas: a click finds the top shape (a thin line too), an empty place gives null", clicks.join() === "over,under,thin,null@150,100", clicks.join());
+        });
+
+        test("Canvas: a free line becomes a shape (onDrawEnd); a draggable shape moves (onShapeMove), not a click", async function () {
+            const events = [];
+            const board = Canvas({
+                left: 0, top: 0, width: 200, height: 120, drawing: 1, penColor: "tomato", penWidth: 5,
+                onDrawEnd: function (self, shape) { events.push("draw " + shape.type + " " + shape.points.length + " " + shape.color + " " + shape.lineWidth); },
+                onShapeMove: function (self, shape) { events.push("move " + shape.x + "," + shape.y); },
+                onClick: function () { events.push("click"); },
+            });
+            const touch = board.elem.querySelector("canvas").style.touchAction;
+            canvasPointer(board, "pointerdown", 10, 10);
+            canvasPointer(board, "pointermove", 40, 20);
+            canvasPointer(board, "pointermove", 41, 20); // WHY: nearer than 2 px: no new point
+            canvasPointer(board, "pointermove", 80, 60);
+            canvasPointer(board, "pointerup", 80, 60);
+            board.setDrawing(0);
+            board.addCircle(150, 60, 15, { draggable: 1, key: "ball" });
+            canvasPointer(board, "pointerdown", 150, 60);
+            canvasPointer(board, "pointermove", 160, 70);
+            canvasPointer(board, "pointerup", 170, 80);
+            const count = board.getShapes().length;
+            board.remove();
+            check("Canvas: a free line becomes a shape (onDrawEnd); a draggable shape moves (onShapeMove), not a click",
+                events.join() === "draw polyline 3 tomato 5,move 160,70" && count === 2 && touch === "none", events.join() + " | " + count + " | " + touch);
+        });
+
+        test("Canvas: the shapes are drawn at once after a change, sharp on the screen; getImage gives a PNG", async function () {
+            const board = Canvas({ left: 0, top: 0, width: 100, height: 60 });
+            board.addRect(0, 0, 50, 60, { fill: "rgb(255, 0, 0)" });
+            await Promise.resolve();
+            const red = canvasPixel(board, 25, 30);
+            const ground = canvasPixel(board, 75, 30);
+            board.updateShape("s1", { fill: "rgb(0, 0, 255)" });
+            const image = board.getImage();
+            const blue = canvasPixel(board, 25, 30);
+            const elem = board.elem.querySelector("canvas");
+            const isSharp = (elem.width === Math.round(elem.clientWidth * (window.devicePixelRatio || 1)));
+            board.remove();
+            check("Canvas: the shapes are drawn at once after a change, sharp on the screen; getImage gives a PNG",
+                red === "255,0,0,255" && ground === "0,0,0,0" && blue === "0,0,255,255" && image.indexOf("data:image/png;base64,") === 0 && isSharp,
+                [red, ground, blue, image.slice(0, 22), isSharp].join(" | "));
+        });
+
+        test("Canvas: setTheme(\"dark\") changes the ground and the pen of a line with no color; a color of the page stays", async function () {
+            const board = Canvas({ left: 0, top: 0, width: 100, height: 60, style: { box: { round: 2 } } });
+            board.addLine(0, 30, 100, 30, { lineWidth: 6 });
+            board.setTheme("dark");
+            await Promise.resolve();
+            const ground = getComputedStyle(board.elem).backgroundColor;
+            const pen = canvasPixel(board, 50, 30);
+            const round = getComputedStyle(board.elem).borderTopLeftRadius;
+            board.remove();
+            check("Canvas: setTheme(\"dark\") changes the ground and the pen of a line with no color; a color of the page stays",
+                ground === "rgb(26, 26, 25)" && pen === "230,230,228,255" && round === "2px", [ground, pen, round].join(" | "));
         });
 
         // *** GRID GROUP (comp/grid-group.js)

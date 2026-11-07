@@ -570,6 +570,12 @@ CATALOG.COMPONENTS = [
         tr: "İnce bir bar üzerinde değer aralığı: iki düğme ve aralarındaki parça: fiyat, günün saatleri. Adım, en küçük aralık, baloncukta kendi metni, klavye. Aydınlık ve karanlık görünüş.",
     },
     {
+        key: "canvas", name: "Canvas", cat: "data",
+        source: "comp/canvas.js", samples: ["02-comp-examples/canvas.htm"],
+        en: "A place to draw on: lines, rectangles, circles, polygons, texts and pictures, each with a key; a click finds the shape, a shape can be dragged, free drawing with a pen, the drawing as a picture. Light and dark looks.",
+        tr: "Çizim alanı: çizgi, dikdörtgen, daire, çokgen, yazı ve resim, her biri bir anahtarla; tıklama şekli bulur, şekil sürüklenebilir, kalemle serbest çizim, çizim resim olarak alınır. Aydınlık ve karanlık görünüş.",
+    },
+    {
         key: "toggle", name: "Toggle", cat: "selection",
         source: "comp/toggle.js",
         samples: [
