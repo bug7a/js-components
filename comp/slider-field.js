@@ -501,7 +501,12 @@ const SliderField = function (params = {}) {
     // *** POINTER (drag or click):
 
     const onPointerDown = function (self, event) {
-        if (box.enabled != 1 || isEditing || event.button !== 0) return;
+        // WHY: a click on a disabled field took the focus (and drew the focus of the keyboard on it)
+        if (box.enabled != 1) {
+            event.preventDefault();
+            return;
+        }
+        if (isEditing || event.button !== 0) return;
         if (event.target === box.input.inputElement) return;
         event.preventDefault(); // WHY: No text selection, the focus is given below.
         isKeyboardFocus = 0;

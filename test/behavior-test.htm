@@ -1057,6 +1057,15 @@
             tree.remove();
         });
 
+        test("SliderField: a click on a disabled field does not take the focus", async function () {
+            const field = SliderField({ labelText: "Off", value: 40, enabled: 0 });
+            await basic.nextFrame();
+            const press = new PointerEvent("pointerdown", { bubbles: true, cancelable: true, button: 0, pointerId: 1 });
+            field.elem.dispatchEvent(press);
+            check("SliderField: the press on a disabled field is stopped (the browser gives it no focus)", press.defaultPrevented === true, press.defaultPrevented);
+            field.remove();
+        });
+
         // *** TOGGLE (comp/toggle.js)
 
         test("Toggle: the keyboard and screen readers can use it", async function () {
