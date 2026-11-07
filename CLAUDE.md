@@ -15,6 +15,7 @@ This file gives Claude Code guidance for working in this repository.
 - **Not tested (Windows, a real phone):** write it only when it matters for that job.
 - **Screenshots:** a small sample change gets one result image. Before / after is for a fixed bug and for a changed design of a component or a page (the user, 2026-11-07).
 - **Old screenshots:** once in a session, before the first new image goes into `_screenshots/`, delete the images there older than 48 hours (`find _screenshots -type f -mmin +2880 ! -name readme.md -delete`; the user, 2026-11-03). Never `readme.md`.
+- **When two rules conflict (the user, 2026-11-07):** in a folder its own `CLAUDE.md` first, then this file, then `context/*.md` and `_component-template.js`, last the history notes of `context/repo-map.md`.
 
 ## What this is
 
