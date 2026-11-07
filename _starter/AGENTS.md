@@ -37,7 +37,7 @@ Pages load the source files (`name.js`). Components have no `.min.js` files.
 - **`page` never scrolls.** Long content goes in a full-screen Box with `scrollY: 1`, with a `VGroup({ width: "100%", height: "auto" })` in it. Give that Box a `ScrollBar({ scrollableBox: box })`.
 - A Box with `height: "auto"` does not grow with its children. Use a group for that.
 - A group clips its content. Around things that move or lift, use `clipContent: 0`.
-- **A group with a fixed height cuts what is taller than it.** Give a row `height: "auto"`, or give its objects a height that fits. A SmartButton with `pill`, `pillSolid` or `outlined` is about 50 px high: in a 40 px row give it `height: 40`.
+- **A group with a fixed height cuts what is taller than it.** Give a row `height: "auto"`, or give its objects a height that fits. A SmartButton is 44 px high: in a 40 px row give it `height: 40`.
 - **The page must work from 360 px wide.** Do not use a fixed width for a card or a page column: use `width: "100%"` with `css: { maxWidth: "480px" }`, and keep the side padding small (16 px).
 - **A group is 100% wide and 100% high by default.** Inside a row it pushes its neighbours out of the screen, and nothing warns you. Always give a group in a row its width. To take the free space of a row: `VGroup({ width: "auto", height: "auto", grow: 1, css: { minWidth: "0px" } })`.
 - Use `hug: 1` for a group as big as its content.

@@ -55,11 +55,11 @@ GOTCHAS (CLAUDE.md):
 - A Box with height: "auto" does not grow with basic.js children: put them in a group (box.layout) with position: "relative".
 
 WHEN THE NEW COMPONENT IS READY:
-- A sample page: 02-comp-mX-samples/<name>.htm (a scrolling Box, the cards of the other sample pages).
+- A sample page: 02-comp-examples/<name>.htm (a scrolling Box, the cards of the other sample pages).
 - test/components-test.htm: add it to COMPONENTS ({ file, name, deps }) and open it (the tab title: ALL PASS).
 - No .min.js twin: the pages load the source; a copy that leaves the repo gets its .min file
   from ./_make-standalone.sh (all in comp/components.min.js, or one file per component with --separate).
-- The catalog: index/catalog.js (and the <noscript> list of index.htm), and its line in CLAUDE.md.
+- The catalog: index/catalog.js (and the <noscript> list of index.htm), and its details in context/repo-map.md.
 
 Started Date: June 2024
 Developer: Bugra Ozden
@@ -293,7 +293,7 @@ const CompName = function (params = {}) {
 
     // REMOVE: basic.js remove() cleans the objects inside, their events, and what was added with listenTo,
     // onPageResize, after, every and own. Override it only for something else (Ex: a static list of the component,
-    // a Chart.js instance, an observer). Then keep this shape:
+    // an observer). Then keep this shape:
     // WHY: box.superRemove is overwritten by a component that extends this one, so the local copy is called below.
     const superRemove = box.remove;
     box.superRemove = superRemove;

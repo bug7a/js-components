@@ -1,6 +1,6 @@
 # basic.js Components
 
-How a component of this repository is written (comp-m4, basic.js v26.10.27). The full starting point is `_component-template.js` at the root: copy it. How the code reads: `context/basic-js-code-rules.md`. The core library: `context/basic-js-core.md`.
+How a component of this repository is written (basic.js v26.11.05). The full starting point is `_component-template.js` at the root: copy it. How the code reads: `context/basic-js-code-rules.md`. The core library: `context/basic-js-core.md`.
 
 ## The shape
 
@@ -83,7 +83,7 @@ MyComp.styles = {
 - A package has only the keys that differ from the default style. A new key in the default style is filled into every package: when the old look of a package must stay, give it that key (Ex: `opacity: 1` in `selected`).
 - `mergeIntoIfMissing` copies 4 levels; deeper objects are kept by reference. Keep the style flat.
 - **A package of params** (v26.10.27): a package with its own `style` key. Its `style` goes into the style, its other keys fill the params that were not given, so a package can also change a param outside the style (an icon file, a size): `MyComp.styles.dark = { style: { box: { color: "#1A1A19" } }, iconFile: "my-comp/icon-white.svg" }`. A component whose look is all in flat params (comp-m2 `InputB`) marks its packages with `style: {}`. Such a package can not be given as `style: Comp.styles.dark`: use `styleName`. (Ex: the `LabelEditor` `dark` package also gives `newLabel` a light text color.)
-- Colors of themes the user picks at run time (`Modal`, `Toast`, `GraphBox`): `X.THEMES` + `basic.resolveTheme(X.THEMES, name)`; `style` keeps only the shapes.
+- Colors of themes the user picks at run time (`Toast`, `GraphBox`): `X.THEMES` + `basic.resolveTheme(X.THEMES, name)`; `style` keeps only the shapes.
 
 ## Events and state
 - **`onChange` is not called at create time, by `setItems()` / `setOptions()`, or with `silent: 1`**, and not when the value did not change.
@@ -111,7 +111,7 @@ box.onPageResize(function () { ... });                             // not page.o
 box.after(300, fn); box.every(1000, fn);                           // not setTimeout / setInterval
 ```
 
-Override `remove()` only for what basic.js can not know (a static list, a Chart.js instance, a `setTimeout` loop, document events of a drag, a popup not owned):
+Override `remove()` only for what basic.js can not know (a static list, an observer, a `setTimeout` loop, document events of a drag, a popup not owned):
 
 ```javascript
 // WHY: the local copy is called, because a component that extends this one overwrites box.superRemove.
@@ -128,7 +128,7 @@ box.remove = function () {
 Never write a `destroy()` for a component: everything is removed with `remove()`. To extend a component: `startExtendedObject(ParentComp, params)` ... `endExtendedObject(box)` (see `comp/email-input-b.js`).
 
 ## When the component is ready
-1. A sample page `02-comp-mX-samples/<name>.htm`: a scrolling Box, cards, every style package; it loads the source files (`../basic/basic.js`, `../comp/<name>.js`), not `.min.js`.
+1. A sample page `02-comp-examples/<name>.htm`: a scrolling Box, cards, every style package; it loads the source files (`../basic/basic.js`, `../comp/<name>.js`), not `.min.js`.
 2. `test/components-test.htm`: add it to `COMPONENTS` (`{ file, name, deps, setup }`), open `?only=<name>`: the title must say ALL PASS.
-3. The `.min.js` twin: create an empty `<name>.min.js` once, then `./_make-min-js.sh --build comp-mX/<name>.js` (after every change too).
-4. The catalog: `index/catalog.js` (+ the `<noscript>` list in `index.htm`) and its line in CLAUDE.md.
+3. No `.min.js` twin: the pages load the source. A copy that leaves the repository gets its `.min` file from `./_make-standalone.sh`.
+4. The catalog: `index/catalog.js` (+ the `<noscript>` list in `index.htm`), and its details in `context/repo-map.md`.

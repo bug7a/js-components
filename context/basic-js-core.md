@@ -1,6 +1,6 @@
 # basic.js Core
 
-For **basic.js v26.10.27** (`basic.version`). The changes of every version: `basic/basic-what-is-new.md`. How the code is written: `context/basic-js-code-rules.md`. Components: `context/basic-js-components.md`.
+For **basic.js v26.11.05** (`basic.version`). The changes of every version: `basic/basic-what-is-new.md`. How the code is written: `context/basic-js-code-rules.md`. Components: `context/basic-js-components.md`.
 
 basic.js builds the whole UI in plain JavaScript: it creates DOM objects directly. No HTML markup, no CSS authoring, no virtual DOM.
 
