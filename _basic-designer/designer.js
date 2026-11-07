@@ -483,6 +483,10 @@ BasicDesigner.load = async function (pagePath) {
     s.projectNote = "";
     s.isPageSelected = false;
     s.paramOriginal.clear();
+    BasicDesigner.closeParamEditors();
+    if (BasicDesigner.ui.tableWindow) BasicDesigner.ui.tableWindow.closeWindow();
+    BasicDesigner.paramNotes = {};
+    BasicDesigner.paramsObject = null;
     s.expanded.clear();
     s.isTreeOpened = false;
     s.placeLog = [];
@@ -2013,7 +2017,10 @@ BasicDesigner.showProperties = function (obj) {
     if (!panel) return;
 
     const isComponent = !!(obj && obj.__bd.component && obj.__bd.params);
-    BasicDesigner.ui.paramsView.visible = (isComponent && BasicDesigner.state.inspect === "params") ? 1 : 0;
+    const isParamsView = (isComponent && BasicDesigner.state.inspect === "params");
+    BasicDesigner.ui.paramsView.visible = (isParamsView) ? 1 : 0;
+    const isEditorStillThere = (isParamsView && obj.__bd.id === BasicDesigner.paramEditId);
+    if (BasicDesigner.paramEditId !== null && !isEditorStillThere) BasicDesigner.closeParamEditors();
 
     if (!obj && BasicDesigner.state.isPageSelected) {
         BasicDesigner.showPageProperties();
@@ -2223,8 +2230,9 @@ BasicDesigner.applyValue = function (obj, key, value, targets = [obj]) {
 
 // *** THE PARAMETERS OF A COMPONENT:
 // A table: name | value, every param of XxxDefaults (with the values it was made with), objects (style) as
-// groups, a guide line for every level. Every value is a text field for now. A change makes the component
-// again with the new params, at the same place (BasicDesigner.recreate).
+// groups, a guide line for every level. Every value is a text field with the editor of its kind (param-kinds.js,
+// param-editors.js, param-table.js). A change makes the component again with the new params, at the same place
+// (BasicDesigner.recreate).
 
 BasicDesigner.isPlain = function (v) {
     if (!v || typeof v !== "object" || Array.isArray(v)) return false;
@@ -2300,126 +2308,13 @@ BasicDesigner.inspectSwitch = function (left, top, width) {
 BasicDesigner.showParams = function (obj) {
 
     const s = BasicDesigner.state;
-    const C = BasicDesigner.colors;
     const ui = BasicDesigner.ui;
     const t = BasicDesigner.title(obj);
     const id = obj.__bd.id;
 
     ui.lblParamsTitle.text = BasicDesigner.esc((t.name ? t.name + "  ·  " : "") + t.type);
     if (document.activeElement !== ui.paramsName.inputElement) ui.paramsName.text = BasicDesigner.nameOf(obj);
-    if (ui.paramRows) ui.paramRows.remove();
-
-    createIn(ui.paramsList, function () {
-
-        ui.paramRows = VGroup({ width: "100%", height: "auto", align: "left top", gap: 1, padding: [10, 6], color: "transparent", position: "relative" });
-        ui.paramRows.elem.style.alignItems = "stretch";
-
-            const guides = function (level) {
-                let html = "";
-                for (let i = 0; i < level; i++) html += '<span style="display:inline-block;flex:0 0 10px;align-self:stretch;border-left:1px solid #5A5A5A;margin-left:' + (i ? 0 : 2) + 'px"></span>';
-                return html;
-            };
-
-            // The order of XxxDefaults (the keys the page added: at the end).
-            const orderOf = function (object, defaults) {
-                const keys = Object.keys(object);
-                if (!BasicDesigner.isPlain(defaults)) return keys;
-                const first = Object.keys(defaults).filter(function (k) { return k in object; });
-                return first.concat(keys.filter(function (k) { return first.indexOf(k) === -1; }));
-            };
-
-            // Not the default value: the page (or a style package) gave it.
-            const isSet = function (value, def) {
-                if (typeof value === "function") return false;
-                try { return JSON.stringify(value) !== JSON.stringify(def); } catch (e) { return value !== def; }
-            };
-
-            const addRows = function (object, path, level, defaults) {
-                orderOf(object, defaults).forEach(function (key) {
-                    const value = object[key];
-                    const def = BasicDesigner.isPlain(defaults) ? defaults[key] : undefined;
-                    const p = path.concat([key]);
-                    const pathText = p.join(".");
-
-                    // GROUP: an object (style, style.tab...)
-                    if (BasicDesigner.isPlain(value)) {
-                        const closed = s.paramCollapsed.has(id + ":" + pathText);
-                        const head = Label({ width: "100%", height: 24, fontSize: 12, textColor: C.text, color: "transparent",
-                            text: guides(level) + '<span style="flex:0 0 14px;color:' + C.soft + '">' + (closed ? "▸" : "▾") + "</span>" +
-                                '<span style="font-family:opensans-bold">' + BasicDesigner.esc(key) + "</span>" +
-                                '<span style="color:' + C.dim + ';margin-left:6px">{ ' + Object.keys(value).length + " }</span>" });
-                        head.elem.style.display = "flex";
-                        head.elem.style.alignItems = "center";
-                        head.elem.style.whiteSpace = "nowrap";
-                        head.elem.style.flexShrink = "0";
-                        head.elem.style.position = "relative";
-                        head.clickable = 1;
-                        head.elem.style.cursor = "pointer";
-                        head.on("click", function () {
-                            if (closed) s.paramCollapsed.delete(id + ":" + pathText); else s.paramCollapsed.add(id + ":" + pathText);
-                            BasicDesigner.showParams(obj);
-                        });
-                        if (!closed) addRows(value, p, level + 1, def);
-                        return;
-                    }
-
-                    // ROW: name | value
-                    const pt = BasicDesigner.paramText(value);
-                    const row = HGroup({ width: "100%", height: 24, align: "left center", gap: 4, color: "transparent", position: "relative" });
-                    row.elem.style.flexShrink = "0";
-
-                        const given = isSet(value, def);
-                        const lbl = Label({ width: 104, height: 24, fontSize: 12, textColor: given ? C.text : C.soft, color: "transparent",
-                            text: guides(level) + '<span style="overflow:hidden;text-overflow:ellipsis">' + BasicDesigner.esc(key) + "</span>" +
-                                (given ? '<span style="flex:0 0 auto;color:' + C.accent + ';margin-left:3px">•</span>' : "") });
-                        lbl.elem.style.display = "flex";
-                        lbl.elem.style.alignItems = "center";
-                        lbl.elem.style.whiteSpace = "nowrap";
-                        lbl.elem.style.overflow = "hidden";
-                        lbl.elem.style.flexShrink = "0";
-                        lbl.elem.title = pathText + (given ? "  (not the default: " + BasicDesigner.paramText(def).text + ")" : "");
-
-                        // FIELD: a raw input (the Input of basic.js has its own big style)
-                        const holder = Box({ width: "auto", height: 22, color: C.field, round: 4, position: "relative" });
-                        holder.elem.style.flex = "1 1 0px";
-                        holder.elem.style.minWidth = "0px";
-                        const inp = document.createElement("input");
-                        inp.type = "text";
-                        inp.value = pt.text;
-                        inp.readOnly = !pt.editable;
-                        inp.spellcheck = false;
-                        inp.style.cssText = "position:absolute;left:0;top:0;width:100%;height:100%;box-sizing:border-box;border:1px solid transparent;border-radius:4px;" +
-                            "background:transparent;color:" + (pt.editable ? C.text : C.dim) + ";font:12px 'opensans-regular', sans-serif;padding:0 6px;outline:none;pointer-events:auto;user-select:text";
-                        inp.addEventListener("focus", function () { inp.style.borderColor = C.accent; });
-                        inp.addEventListener("blur", function () {
-                            inp.style.borderColor = "transparent";
-                            if (pt.editable && inp.value !== pt.text) BasicDesigner.applyParam(obj, p, inp.value, value);
-                        });
-                        inp.addEventListener("keydown", function (event) {
-                            event.stopPropagation(); // WHY: V / I / Enter are the keys of the designer.
-                            if (event.key === "Enter") inp.blur();
-                            else if (event.key === "Escape") { inp.value = pt.text; inp.blur(); }
-                        });
-                        holder.elem.appendChild(inp);
-
-                    endGroup();
-                });
-            };
-            // The default of a style value: the package of its styleName over XxxDefaults.style.
-            const defaults = s.rt.cloneParams(s.rt.findDefaults(obj.__bd.component) || {});
-            const packages = s.rt.findStyles(obj.__bd.component);
-            const pkg = packages && packages[obj.__bd.params.styleName];
-            if (pkg && BasicDesigner.isPlain(defaults.style)) {
-                const merged = s.rt.cloneParams(pkg);
-                s.win.mergeIntoIfMissing(merged, defaults.style);
-                defaults.style = merged;
-            }
-            addRows(obj.__bd.params, [], 0, defaults);
-
-        endGroup();
-
-    });
-
+    BasicDesigner.drawParamRows(obj); // param-editors.js
     ui.paramsNote.value = s.notes.get(id) || "";
     if (ui.paramsScrollBar && ui.paramsScrollBar.refreshScroll) ui.paramsScrollBar.refreshScroll();
 
@@ -2438,8 +2333,6 @@ BasicDesigner.setAt = function (object, path, value) {
 };
 
 BasicDesigner.applyParam = function (obj, path, text, oldValue) {
-
-    const s = BasicDesigner.state;
     let value;
     try {
         value = BasicDesigner.parseParam(text, oldValue);
@@ -2448,11 +2341,19 @@ BasicDesigner.applyParam = function (obj, path, text, oldValue) {
         BasicDesigner.showParams(obj);
         return;
     }
+    BasicDesigner.applyParamValue(obj, path, value);
+};
 
+// A new value of a parameter makes the component again. isLive: more changes are coming (a drag): the layers wait for the
+// last one (finishParamLive). Returns the new component.
+BasicDesigner.applyParamValue = function (obj, path, value, isLive) {
+
+    const s = BasicDesigner.state;
     const id = obj.__bd.id;
     if (!s.paramOriginal.has(id)) s.paramOriginal.set(id, s.rt.cloneParams(obj.__bd.params));
     const params = s.rt.cloneParams(obj.__bd.params);
-    BasicDesigner.setAt(params, path, value);
+    // WHY the copy: a value of the designer becomes objects of the page (the code of a component may compare with them).
+    BasicDesigner.setAt(params, path, s.rt.cloneParams(value));
 
     // A new styleName: the style of the page without the old package, plus the style values changed here.
     if (path.length === 1 && path[0] === "styleName" && obj.__bd.pageStyle !== undefined) {
@@ -2467,7 +2368,7 @@ BasicDesigner.applyParam = function (obj, path, text, oldValue) {
     }
 
     const fresh = BasicDesigner.recreate(obj, params);
-    if (!fresh) return;
+    if (!fresh) return null;
     // WHY: The params the component got (with the new package merged), not the ones given.
     if (fresh.__bd.capturedParams) fresh.__bd.params = fresh.__bd.capturedParams;
 
@@ -2482,9 +2383,23 @@ BasicDesigner.applyParam = function (obj, path, text, oldValue) {
     if (JSON.stringify(entry.to) === JSON.stringify(entry.from)) s.changes.delete(changeId);
     else s.changes.set(changeId, entry);
 
+    // WHY now: the panel is drawn below, and it must show the new component, not the removed one.
+    if (s.selected === obj) s.selected = fresh;
+    s.historyKey = changeId; // UNDO: the same key again soon is the same step (a drag in the color picker)
     BasicDesigner.refreshChanges();
-    BasicDesigner.refreshLayers().then(function () { BasicDesigner.select(fresh, "canvas"); });
+    if (!isLive) BasicDesigner.refreshLayersAfterChange(fresh);
+    return fresh;
 
+};
+
+// The layers are read again and the component is selected, unless another object was selected in the meantime.
+BasicDesigner.refreshLayersAfterChange = function (fresh) {
+    const s = BasicDesigner.state;
+    const selectedNow = s.selected;
+    BasicDesigner.refreshLayers().then(function () {
+        if (fresh._isRemoved || s.selected !== selectedNow) return;
+        BasicDesigner.select(fresh, "canvas");
+    });
 };
 
 // Makes a component again with params, at the place of the old one, and removes the old one.
@@ -3412,6 +3327,7 @@ BasicDesigner.redo = function () {
 BasicDesigner.goToSession = function (session) {
     const s = BasicDesigner.state;
     const selectedRef = (s.selected) ? BasicDesigner.refOf(s.selected) : null;
+    BasicDesigner.closeParamEditors();
     s.isUndoing = true;
     BasicDesigner.revertAll();
     if (session.count) BasicDesigner.applySession(session);
@@ -3472,7 +3388,8 @@ BasicDesigner.applySession = function (session) {
         const obj = find(item.target);
         if (!obj) return;
         const old = BasicDesigner.getAt(obj.__bd.params, item.path);
-        BasicDesigner.applyParam(obj, item.path, BasicDesigner.paramText(item.to).text, old);
+        // WHY keepFunctions: a saved session is JSON; the callbacks of the rows of a list come from the page.
+        BasicDesigner.applyParamValue(obj, item.path, BasicDesigner.keepFunctions(item.to, old));
     });
 
     session.places.forEach(function (op) {
@@ -6020,6 +5937,7 @@ BasicDesigner.SHORTCUTS = [
     ["Alt (hold)", "Distances to the object under the mouse"],
     ["Double click", "Edit the text in its place"],
     ["Double click in the layers", "Rename the object"],
+    ["Alt+Down in a parameter", "Open its editor (color, table...)"],
     ["Alt+double click, Enter", "Open the code in VS Code"],
     ["Escape", "Close a menu / clear the selection"],
     ["Cmd/Ctrl+Enter", "Save the note"],
@@ -6709,7 +6627,9 @@ BasicDesigner.onKey = function (event) {
     }
     // WHY: A dialog keeps its keys (the arrows of its tabs must not move the selected object). A key that a field
     //      or a popup already used (the sliders of the color picker) is not a key of the designer.
-    if (ui.dialog || event.defaultPrevented) return;
+    if (ui.dialog || ui.tableWindow || event.defaultPrevented) return;
+    // WHY: with the focus in the color picker, Backspace deleted the selected object.
+    if (event.target && event.target.closest && event.target.closest("[role=dialog]")) return;
     if ((event.metaKey || event.ctrlKey) && (event.key === "o" || event.key === "O")) {
         event.preventDefault(); // WHY: Not the "open a file" of the browser.
         BasicDesigner.openPagePicker();
@@ -7390,10 +7310,21 @@ BasicDesigner.pictureLabel = function (pictureParam) {
 };
 
 BasicDesigner.openPictureDialog = function (obj) {
+    BasicDesigner.openPictureBrowser(obj.picture, function (repoPath) {
+        if (!obj.elem.isConnected) return;
+        BasicDesigner.select(obj, "panel");
+        BasicDesigner.onPropertyChange({ kind: "value", key: "picture", value: BasicDesigner.pathFromPage(repoPath) });
+        // WHY: a parameter of a component makes the component again (the Icon is a new one, already selected)
+        if (obj.elem.isConnected) BasicDesigner.showProperties(obj);
+    });
+};
+
+// The folders of the project and the pictures in them. picture: the value now. onChoose(repoPath)
+BasicDesigner.openPictureBrowser = function (picture, onChoose) {
     const C = BasicDesigner.colors;
     const s = BasicDesigner.state;
     const THUMB = 36;
-    const current = BasicDesigner.repoPathOfPicture(obj.picture);
+    const current = BasicDesigner.repoPathOfPicture(picture);
     let currentPath = (current) ? BasicDesigner.folderOf(current) : BasicDesigner.folderOf(s.pagePath);
     let listBox = null;
     let lblPath = null;
@@ -7401,11 +7332,7 @@ BasicDesigner.openPictureDialog = function (obj) {
 
     const choose = function (repoPath) {
         BasicDesigner.closeDialog();
-        if (!obj.elem.isConnected) return;
-        BasicDesigner.select(obj, "panel");
-        BasicDesigner.onPropertyChange({ kind: "value", key: "picture", value: BasicDesigner.pathFromPage(repoPath) });
-        // WHY: a parameter of a component makes the component again (the Icon is a new one, already selected)
-        if (obj.elem.isConnected) BasicDesigner.showProperties(obj);
+        onChoose(repoPath);
     };
 
     // LABEL: a row: a folder (a click goes into it) or a picture with its small preview (a click chooses it)
@@ -7801,7 +7728,7 @@ BasicDesigner.isTextTarget = function (el) {
 // Cmd+C: the selected object (not when a text is selected or a field has the focus: that is a copy of a text)
 BasicDesigner.onCopyEvent = function (event) {
     const s = BasicDesigner.state;
-    if (BasicDesigner.isTextTarget(event.target) || BasicDesigner.ui.dialog || s.mode !== "select") return;
+    if (BasicDesigner.isTextTarget(event.target) || BasicDesigner.ui.dialog || BasicDesigner.ui.tableWindow || s.mode !== "select") return;
     const doc = (event.target && event.target.ownerDocument) || document;
     if (String(doc.getSelection && doc.getSelection())) return;
     const obj = s.selected && s.selected.elem.isConnected ? BasicDesigner.movableOf(s.selected) : null;
@@ -7810,7 +7737,7 @@ BasicDesigner.onCopyEvent = function (event) {
 
 // Cmd+V: a copy of the designer from the clipboard (also of another page), else the last copy here
 BasicDesigner.onPasteEvent = function (event) {
-    if (BasicDesigner.isTextTarget(event.target) || BasicDesigner.ui.dialog || BasicDesigner.state.mode !== "select") return;
+    if (BasicDesigner.isTextTarget(event.target) || BasicDesigner.ui.dialog || BasicDesigner.ui.tableWindow || BasicDesigner.state.mode !== "select") return;
     const text = (event.clipboardData) ? event.clipboardData.getData("text/plain") : "";
     const snap = BasicDesigner.snapOfClipboardText(text);
     if (!snap && !BasicDesigner.clipboard) return;
@@ -8200,7 +8127,7 @@ BasicDesigner.build = function () {
         endGroup();
         BasicDesigner.connectNameInput(ui.paramsName, function () { return BasicDesigner.state.selected; });
 
-        Label(16, cfg.topHeight + 84, { text: "Enter: apply (made again) · • not default", fontSize: 11, textColor: C.dim });
+        Label(16, cfg.topHeight + 84, { text: "A click on a name: its editor · • not default", fontSize: 11, textColor: C.dim });
 
         const paramsTop = cfg.topHeight + 108;
         const noteHeight = BasicDesigner.NOTE_AREA_HEIGHT;

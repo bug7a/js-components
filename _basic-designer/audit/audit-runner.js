@@ -644,4 +644,146 @@
         return R;
     };
 
+    // THE PARAMETERS OF A COMPONENT: the kinds, the texts they read, the data of a table, then real changes through the
+    // same functions as the editors: the value, the prompt, undo, redo and the saved session.
+    window.runParamAudit = async function () {
+        const R = window.PARAMS = { done: false, fails: [], passed: [] };
+        const A = window.AUD;
+        const same = function (a, b) { return (JSON.stringify(a) === JSON.stringify(b)) ? true : JSON.stringify(a) + " != " + JSON.stringify(b); };
+        const expect = function (name, result) {
+            if (result === true) R.passed.push(name);
+            else R.fails.push(name + ": " + result);
+        };
+
+        // 1. Kinds
+        const kindOf = function (key, value, note) { return BD.paramKindOf(key, value, value, note || "", "").name; };
+        [
+            ["textColor", "#FF0000", "", "color"], ["color", "", "", "color"], ["bar_color", null, "", "color"], ["background", "rgba(0, 0, 0, 0.1)", "", "color"],
+            ["textColor", "Text color", "", "text"], ["background", "linear-gradient(to right, #111, #222)", "", "gradient"],
+            ["iconFile", "", "", "picture"], ["arrowIcon", "data:image/svg+xml;utf8,x", "", "picture"], ["icon", "chevron", "", "text"],
+            ["enabled", 1, "", "flag"], ["animated", 0, "", "flag"], ["hoverEffect", true, "", "flag"], ["vertical", 0, "1: Tabs are stacked.", "flag"], ["border", 1, "", "number"],
+            ["fontSize", 14, "", "number"], ["opacity", 0.4, "", "number"], ["width", 240, "", "size"], ["width", "100%", "", "size"], ["width", "Width", "", "text"],
+            ["padding", 8, "", "padding"], ["padding", [8, 4], "", "padding"], ["listPadding", [12, 5], "", "padding"], ["rightPadding", 60, "", "number"],
+            ["variant", "underline", "\"underline\", \"pill\" (Only at create time)", "list"], ["closable", 1, "1: A close button. (A tab can set its own \"closable\".)", "flag"],
+            ["searchable", "auto", "1, 0, \"auto\" (more than autoSearchCount options)", "list"], ["moreText", "+{count}", "A text. Ex: \"Apple\", \"Pear\"", "text"],
+            ["shadow", "", "", "shadow"], ["boxShadow", "0 1px 3px red", "", "shadow"], ["borderBottom", "1px solid red", "", "border"], ["motion", "left 0.2s", "", "motion"],
+            ["motion", 0.2, "", "number"], ["transition", "slide", "", "text"], ["ease", "ease", "", "easing"], ["filter", "none", "", "filter"], ["align", "left top", "", "align"],
+            ["align", "Alignment", "", "text"], ["fontFamily", "opensans", "", "font"], ["date", null, "", "date"], ["time", null, "", "time"], ["time", 0.15, "", "number"],
+            ["items", [], "", "table"], ["labels", null, "[\"Jan\", \"Feb\"]", "table"], ["onClick", function () { }, "", "function"], ["format", null, "function (value) { }", "function"],
+            ["value", null, "null: the first tab", "any"], ["titleText", "Hello", "", "text"],
+        ].forEach(function (line) {
+            expect("kind of " + line[0] + " " + JSON.stringify(line[1]), same(kindOf(line[0], line[1], line[2]), line[3]));
+        });
+
+        // 2. A comment -> options and columns
+        expect("options of a comment", same(BD.optionsOfNote("1, 0, \"auto\" (more than x)"), [1, 0, "auto"]));
+        expect("no options in brackets", same(BD.optionsOfNote("1: A button. (A tab can set its own \"closable\".)"), [1]));
+        expect("no options after Ex:", same(BD.optionsOfNote("A text. Ex: \"Apple\", \"Pear\""), []));
+        expect("columns of a comment", same(BD.keysOfShape("title, width (px), align: \"left\" | \"center\"").map(function (c) { return [c.key, c.options]; }), [["title", []], ["width", []], ["align", ["left", "center"]]]));
+        const lines = ["A COLUMN:", "{", "    key: \"age\", // its name", "    type: \"number\", // \"text\" or \"number\"", "}"];
+        expect("a block of a header", same(BD.keysOfHeaderBlock(lines, "A COLUMN").map(function (c) { return c.key; }), ["key", "type"]));
+        const defaults = ["const XDefaults = {", "    a: 1, // the a", "    style: { // the style", "        box: { color: \"red\", size: 2 }, // the box", "        line: \"x // y\", // the line", "    },", "    b: function (self) { }, // the b", "};", "const other = 1; // not it"];
+        const notes = BD.readDefaultsNotes(defaults, "X");
+        expect("the comments of the defaults", same([notes.a, notes.style, notes["style.box"], notes["style.line"], notes.b, notes.other], ["the a", "the style", "the box", "the line", "the b", undefined]));
+
+        // 3. A typed text -> a value
+        const read = function (kind, text, value) { return BD.valueOfParamText(text, { kind: { name: kind }, value: value }); };
+        expect("a number", same(read("number", "12", 1), 12));
+        expect("a number takes a size", same(read("number", "auto", 1), "auto"));
+        expect("a size", same(read("size", "%100-20", 1), "calc(100% - 20px)"));
+        expect("a size of px", same(read("size", "240", "100%"), 240));
+        expect("a padding as x, y", same(read("padding", "14 10", 1), [14, 10]));
+        expect("a padding as it is shown", same(read("padding", "[14,10]", 1), [14, 10]));
+        expect("a padding of one", same(read("padding", "8", [1, 2]), 8));
+        expect("a switch keeps its type", same([read("flag", "1", 0), read("flag", "off", true), read("flag", "null", 0)], [1, false, null]));
+        expect("a list", same(read("table", "[1,2]", []), [1, 2]));
+        const refuses = function (kind, text) {
+            try {
+                read(kind, text, "");
+                return "it was taken";
+            } catch (error) {
+                return true;
+            }
+        };
+        expect("a wrong color is refused", refuses("color", "notacolor"));
+        expect("a wrong list is refused", refuses("table", "[1,"));
+        expect("three sides are refused", refuses("padding", "1 2 3"));
+
+        // 4. The texts of CSS come back the same
+        const shadow = "inset 0px -3px 0px rgba(0, 0, 0, 0.1), 0px 4px 12px 2px #111";
+        expect("a shadow", same(BD.writeShadow(BD.readShadow(shadow)), shadow));
+        expect("an empty shadow", same(BD.readShadow("none"), []));
+        expect("a line", same(BD.writeLine(BD.readLine("2px dashed rgba(0, 0, 0, 0.1)")), "2px dashed rgba(0, 0, 0, 0.1)"));
+        expect("no line", same(BD.writeLine(BD.readLine("none")), "none"));
+        expect("a motion", same(BD.writeMotion(BD.readMotion("left 0.3s ease, opacity 0.2s")), "left 0.3s ease, opacity 0.2s"));
+        expect("a motion of milliseconds", same(BD.readMotion("200ms")[0].seconds, 0.2));
+        const gradient = "linear-gradient(to right, #111, rgba(0, 0, 0, 0.5) 40%)";
+        expect("a gradient", same(BD.writeGradient(BD.readGradient(gradient)), gradient));
+        expect("another gradient is a text", same(BD.readGradient("radial-gradient(#111, #222)"), null));
+        expect("four sides", same(BD.writePaddingSides(BD.readPaddingSides([1, 2, 3, 4])), [1, 2, 3, 4]));
+        expect("two sides", same(BD.writePaddingSides(BD.readPaddingSides([1, 2])), [1, 2]));
+        expect("one side", same(BD.writePaddingSides(BD.readPaddingSides(5)), 5));
+
+        // 5. Every shape of a list comes back from a table, and a function stays
+        const backFromTable = function (value) { return BD.valueOfTableLevel(BD.tableLevelOf(value, [])); };
+        [[], ["A", "B"], [1, 2], [[1, "a"], [2, "b"]], [{ a: 1 }, { a: 2, b: "x" }], ["A", { text: "B", on: 0 }, "-"], [{ a: null }], [{ a: [1, 2], b: { c: 1 } }]].forEach(function (list) {
+            expect("a table of " + JSON.stringify(list), same(backFromTable(list), list));
+        });
+        expect("an object from a table", same(backFromTable({ a: 1, b: "x", c: null }), { a: 1, b: "x", c: null }));
+        const onClick = function () { };
+        expect("a function of a row in a table", same(backFromTable([{ text: "A", onClick: onClick }])[0].onClick === onClick, true));
+        const kept = BD.keepFunctions([{ key: "b" }, { key: "a" }], [{ key: "a", onClick: onClick }, { key: "b" }]);
+        expect("a function follows its row", same(kept[1].onClick === onClick && !kept[0].onClick, true));
+        expect("a pasted block", same(BD.readPastedTable("1\t2\n3\t4").grid, [["1", "2"], ["3", "4"]]));
+        expect("a pasted list", same(BD.readPastedTable("[{\"a\":1}]").list, [{ a: 1 }]));
+        expect("one pasted text", same(BD.readPastedTable("a word"), null));
+        expect("the sort of a table", same(["b", "", 10, "a", 3].sort(BD.compareTableValues), [3, 10, "a", "b", ""]));
+
+        // 6. A change keeps the rows of the panel, and goes through the prompt, undo, redo and the session
+        const now = function () { return BD.objectOfKey(String(A.checkPlain.__bd.id)) || A.checkPlain; };
+        const check = function (name, run, isDone, promptPattern, isBack) { return checkStep(R, name, run, isDone, promptPattern, isBack); };
+        const stylePath = function (kindName) {
+            BD.select(now()); // (the rows of the component)
+            const rows = BD.paramRowsOf(now());
+            const row = rows.find(function (item) { return item.kind && item.kind.name === kindName; });
+            return (row) ? row.path : null;
+        };
+        const valueAt = function (path) { return BD.getAt(now().__bd.params, path); };
+
+        BD.state.inspect = "params";
+        const colorPath = stylePath("color");
+        await sleep(100);
+        const inputBefore = BD.ui.paramRowViews[colorPath.join(".")].input;
+        const firstColor = valueAt(colorPath);
+        await check("a color of a parameter", async function () {
+            BD.select(now()); await sleep(30);
+            BD.sendParamLive(now().__bd.id, colorPath, "#123456");
+            BD.flushParamLive();
+        }, function () { return same(valueAt(colorPath), "#123456"); }, new RegExp("- param " + colorPath.join("\\.") + ": "), function () { return same(valueAt(colorPath), firstColor); });
+        expect("the rows stay after a change", same(BD.ui.paramRowViews[colorPath.join(".")].input === inputBefore || inputBefore.isConnected === false, true));
+
+        // WHY this one: its type changes (a number -> a list): a text would be refused at the undo and the replay.
+        const paddingPath = stylePath("padding");
+        if (paddingPath) {
+            const firstPadding = valueAt(paddingPath);
+            await check("a padding of a parameter", async function () {
+                BD.select(now()); await sleep(30);
+                BD.applyParamValue(now(), paddingPath, [3, 4, 5, 6]);
+            }, function () { return same(valueAt(paddingPath), [3, 4, 5, 6]); }, /\[3,4,5,6\]/, function () { return same(valueAt(paddingPath), firstPadding); });
+        }
+
+        const flagPath = stylePath("flag");
+        if (flagPath) {
+            const firstFlag = valueAt(flagPath);
+            const nextFlag = (firstFlag === 1 || firstFlag === true) ? 0 : 1;
+            await check("a switch of a parameter", async function () {
+                BD.select(now()); await sleep(30);
+                BD.applyParamValue(now(), flagPath, nextFlag);
+            }, function () { return same(valueAt(flagPath), nextFlag); }, new RegExp("- param " + flagPath.join("\\.")), function () { return same(valueAt(flagPath), firstFlag); });
+        }
+
+        R.done = true;
+        return R;
+    };
+
 })();

@@ -37,7 +37,7 @@ Developer: Bugra Ozden
     // WHY: designer.js too: a component made again by the designer must not point to the designer.
     // WHY _?: the folder is _basic-designer (basic-designer before); without it the frames of this
     //     file were not skipped: every component was named "callerName" and its params were not found.
-    const SKIP_FILES = /\/basic\/basic(\.min)?\.js$|\/_?basic-designer\/(runtime|designer)\.js$/;
+    const SKIP_FILES = /\/basic\/basic(\.min)?\.js$|\/_?basic-designer\/(runtime|designer|param-kinds|param-editors|param-table)\.js$/;
     const TYPE_KEY = Symbol("basicDesignerType");
 
     const designer = {
@@ -129,7 +129,12 @@ Developer: Bugra Ozden
     // A copy of params: plain objects and arrays are copied, the rest (functions, objects of basic.js) by reference.
     designer.cloneParams = function clone(v, depth = 0) {
         if (depth > 8) return v;
-        if (Array.isArray(v)) return v.map(function (x) { return clone(x, depth + 1); });
+        // WHY not v.map: a list of the designer stays a list of the designer with its own map.
+        if (Array.isArray(v)) {
+            const list = [];
+            v.forEach(function (x) { list.push(clone(x, depth + 1)); });
+            return list;
+        }
         if (isPlain(v)) {
             const out = {};
             for (const k in v) out[k] = clone(v[k], depth + 1);
