@@ -6918,7 +6918,7 @@
                 events.join() === "draw polyline 3 tomato 5,move 160,70" && count === 2 && touch === "none", events.join() + " | " + count + " | " + touch);
         });
 
-        test("Canvas: the shapes are drawn at once after a change, sharp on the screen; getImage gives a PNG", async function () {
+        test("Canvas: the shapes are drawn at once after a change, sharp on the screen; getImage gives a PNG on its ground", async function () {
             const board = Canvas({ left: 0, top: 0, width: 100, height: 60 });
             board.addRect(0, 0, 50, 60, { fill: "rgb(255, 0, 0)" });
             await Promise.resolve();
@@ -6930,9 +6930,16 @@
             const elem = board.elem.querySelector("canvas");
             const isSharp = (elem.width === Math.round(elem.clientWidth * (window.devicePixelRatio || 1)));
             board.remove();
-            check("Canvas: the shapes are drawn at once after a change, sharp on the screen; getImage gives a PNG",
-                red === "255,0,0,255" && ground === "0,0,0,0" && blue === "0,0,255,255" && image.indexOf("data:image/png;base64,") === 0 && isSharp,
-                [red, ground, blue, image.slice(0, 22), isSharp].join(" | "));
+            const picture = new Image();
+            await new Promise(function (resolve) { picture.onload = resolve; picture.src = image; });
+            const reader = document.createElement("canvas");
+            reader.width = picture.width;
+            reader.height = picture.height;
+            reader.getContext("2d").drawImage(picture, 0, 0);
+            const pictureGround = Array.from(reader.getContext("2d").getImageData(picture.width - 2, 2, 1, 1).data).join();
+            check("Canvas: the shapes are drawn at once after a change, sharp on the screen; getImage gives a PNG on its ground",
+                red === "255,0,0,255" && ground === "0,0,0,0" && blue === "0,0,255,255" && image.indexOf("data:image/png;base64,") === 0 && isSharp && pictureGround === "255,255,255,255",
+                [red, ground, blue, image.slice(0, 22), isSharp, pictureGround].join(" | "));
         });
 
         test("Canvas: setTheme(\"dark\") changes the ground and the pen of a line with no color; a color of the page stays", async function () {

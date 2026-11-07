@@ -568,11 +568,18 @@ const Canvas = function (params = {}) {
     };
     // USAGE: board.setPen("tomato", 6)
 
-    // The drawing as a picture (a data URL). A picture from another site can not be read: then "".
+    // The drawing on its ground as a picture (a data URL). A picture from another site can not be read: then "".
     box.getImage = function (imageType = "image/png") {
         drawNow();
+        const picture = document.createElement("canvas");
+        picture.width = canvasElem.width;
+        picture.height = canvasElem.height;
+        const pictureContext = picture.getContext("2d");
+        pictureContext.fillStyle = _s.box.color || "transparent";
+        pictureContext.fillRect(0, 0, picture.width, picture.height);
+        pictureContext.drawImage(canvasElem, 0, 0);
         try {
-            return canvasElem.toDataURL(imageType);
+            return picture.toDataURL(imageType);
         } catch (error) {
             console.warn("Canvas: " + error.message);
             return "";
