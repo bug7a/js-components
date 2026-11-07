@@ -24,7 +24,7 @@ Bir basic.js sayfasını görsel olarak düzenlemek: katmanlar, seçim, özellik
 
 ## Kalite
 
-- Büyük bir değişiklikten sonra `audit/audit.htm` denetimi (`audit/audit-runner.js`, readme "Denetim"): **düz bir sunucuyla** (`python3 -m http.server 5599`), Live Server ile değil (dosya değişince sayfayı yeniden yükler, uzun test yarıda kalır).
+- Büyük bir değişiklikten sonra `audit/audit.htm` denetimi (`audit/audit-runner.js`, readme "Denetim"): **düz bir sunucuyla** (bağlantı düşürmeyen bir Node sunucusu: `python3 -m http.server` test sayfalarında bağlantı düşürdü), Live Server ile değil (dosya değişince sayfayı yeniden yükler, uzun test yarıda kalır).
 - Undo / redo, Revert all ve kayıtlı oturum her yeni özellikte çalışmalı.
 - Yeni bir özellik `readme.md`'ye yazılır.
 
