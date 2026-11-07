@@ -1,0 +1,385 @@
+/* Bismillah */
+
+/*
+SCREENSHOT: one picture of a page (or of a part of it) for a report, in one command.
+
+    node test/screenshot.js tabs.htm                         a sample at 1280 px (a name alone is in 02-comp-examples)
+    node test/screenshot.js tabs.htm --width 390             at the width of a phone
+    node test/screenshot.js _basic-designer/index.htm --run "BasicDesigner.openFolderDialog()" --clip "[role=dialog]"
+    node test/screenshot.js tabs.htm --before                the page of the last commit left, the page now right
+    node test/screenshot.js tabs.htm --before HEAD~2 --name tabs-fix
+
+Options:
+    --run "code"      runs in the page after it is loaded (await works): open a menu, a dialog, a state
+    --clip "x"        only this part: a basic.js expression (BasicDesigner.ui.pageMenu, a box or its elem)
+                      or a CSS selector ([role=dialog], #id); --margin px around it (12)
+    --before [commit] before | after in one picture, with labels (HEAD by default)
+    --name what       the file: _screenshots/YYYY-MM-DD-what.png (the name of the page by default)
+    --width, --height the window (1280 x 800; a width under 500 is 844 high)
+    --scale n         pixels per px (2 for a part, 1 for the whole window)
+    --wait ms         after the load and after --run (600)
+
+It prints the file, and the errors of the page (exit code 1 when the page throws or --clip finds nothing).
+The pictures older than 48 hours in _screenshots/ are deleted first (never readme.md).
+The server lists a folder as Live Server does, so the Open Folder of basic designer works in it.
+It needs Chrome and puppeteer-core, like compare-pages.js (CHROME_PATH for another place of Chrome).
+*/
+
+"use strict";
+
+const http = require("http");
+const fs = require("fs");
+const path = require("path");
+const { execFileSync } = require("child_process");
+
+const ROOT = path.resolve(__dirname, "..");
+const SAMPLES_FOLDER = "02-comp-examples";
+const SCREENSHOTS_FOLDER = path.join(ROOT, "_screenshots");
+const CHROME_FILE = process.env.CHROME_PATH || "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+const OLD_PATH = "/__old__"; // the server gives the files of the old commit under this path
+
+const DEFAULT_WIDTH = 1280;
+const DEFAULT_HEIGHT = 800;
+const PHONE_WIDTH = 500; // a window narrower than this is a phone
+const PHONE_HEIGHT = 844;
+const DEFAULT_WAIT = 600; // ms: the first animations of a page, the motion of a menu
+const DEFAULT_MARGIN = 12; // px around a clipped part
+const LOAD_TIMEOUT = 30000; // ms
+const OLD_PICTURE_AGE = 48 * 60 * 60 * 1000; // ms
+const LISTEN_BACKLOG = 511; // WHY: a page asks for many files at once; a small backlog drops connections
+const MAX_FILE_SIZE = 100 * 1024 * 1024; // bytes: the biggest file read from git
+
+const MIME_TYPES = {
+    ".htm": "text/html",
+    ".html": "text/html",
+    ".js": "text/javascript",
+    ".mjs": "text/javascript",
+    ".css": "text/css",
+    ".json": "application/json",
+    ".svg": "image/svg+xml",
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".gif": "image/gif",
+    ".webp": "image/webp",
+    ".ico": "image/x-icon",
+    ".ttf": "font/ttf",
+    ".woff": "font/woff",
+    ".woff2": "font/woff2",
+    ".mp3": "audio/mpeg",
+    ".mp4": "video/mp4",
+};
+
+// *** GIT AND FILES:
+
+const runGit = function (args) {
+    return execFileSync("git", args, { cwd: ROOT, stdio: ["ignore", "pipe", "ignore"], maxBuffer: MAX_FILE_SIZE });
+};
+
+const isInCommit = function (commit, relativePath) {
+    try {
+        runGit(["cat-file", "-e", commit + ":./" + relativePath]);
+        return true;
+    } catch (error) {
+        return false;
+    }
+};
+
+// WHY the folder when git has no such file: a gitignored picture is the same in both.
+const readOldFile = function (commit, relativePath) {
+    if (isInCommit(commit, relativePath)) return runGit(["show", commit + ":./" + relativePath]);
+    return fs.readFileSync(path.join(ROOT, relativePath));
+};
+
+// The folder page of Live Server: basic designer reads the links with a title and the icon-directory class.
+const folderListing = function (folderPath) {
+    const names = fs.readdirSync(folderPath, { withFileTypes: true }).filter(function (entry) {
+        return entry.name.charAt(0) !== ".";
+    });
+    const links = names.map(function (entry) {
+        const kind = (entry.isDirectory()) ? "icon-directory" : "icon-file";
+        const href = encodeURIComponent(entry.name) + ((entry.isDirectory()) ? "/" : "");
+        return '<a href="' + href + '" title="' + entry.name + '" class="icon ' + kind + '">' + entry.name + "</a>";
+    });
+    return "<!DOCTYPE html><title>listing directory</title>\n" + links.join("\n");
+};
+
+const deleteOldPictures = function () {
+    if (!fs.existsSync(SCREENSHOTS_FOLDER)) return;
+    const now = Date.now();
+    fs.readdirSync(SCREENSHOTS_FOLDER).forEach(function (name) {
+        if (name === "readme.md") return;
+        const file = path.join(SCREENSHOTS_FOLDER, name);
+        const stat = fs.statSync(file);
+        if (stat.isFile() && now - stat.mtimeMs > OLD_PICTURE_AGE) fs.unlinkSync(file);
+    });
+};
+
+// *** THE SERVER:
+
+// path: /comp/tabs.js is the file in the folder, /__old__/comp/tabs.js the file in the old commit.
+const startServer = function (commit) {
+    const oldFiles = new Map();
+
+    const answer = function (response, data, extension) {
+        response.writeHead(200, {
+            "Content-Type": MIME_TYPES[extension] || "application/octet-stream",
+            "Cache-Control": "no-store",
+        });
+        response.end(data);
+    };
+
+    const server = http.createServer(function (request, response) {
+        try {
+            const urlPath = decodeURIComponent(request.url.split("?")[0]);
+            const isOld = urlPath.startsWith(OLD_PATH + "/");
+            const relativePath = path.normalize((isOld) ? urlPath.slice(OLD_PATH.length + 1) : urlPath.slice(1));
+            if (relativePath.startsWith("..")) throw new Error("out of the repository");
+
+            const fullPath = path.join(ROOT, relativePath);
+            if (fs.existsSync(fullPath) && fs.statSync(fullPath).isDirectory()) {
+                answer(response, folderListing(fullPath), ".htm");
+                return;
+            }
+            if (!isOld) {
+                answer(response, fs.readFileSync(fullPath), path.extname(relativePath));
+                return;
+            }
+            if (!oldFiles.has(relativePath)) oldFiles.set(relativePath, readOldFile(commit, relativePath));
+            answer(response, oldFiles.get(relativePath), path.extname(relativePath));
+        } catch (error) {
+            response.writeHead(404);
+            response.end();
+        }
+    });
+
+    return new Promise(function (resolve) {
+        server.listen(0, "127.0.0.1", LISTEN_BACKLOG, function () { resolve(server); });
+    });
+};
+
+// *** IN THE PAGE:
+
+const loadPuppeteer = function () {
+    const places = ["puppeteer-core", path.join(ROOT, "__video/node_modules/puppeteer-core")];
+    for (const place of places) {
+        try {
+            return require(place);
+        } catch (error) {
+            // WHY no error yet: the next place may have it.
+        }
+    }
+    throw new Error("puppeteer-core is not found. Install it: npm install puppeteer-core");
+};
+
+const sleep = function (ms) {
+    return new Promise(function (resolve) { setTimeout(resolve, ms); });
+};
+
+// An address as a path of the repository (the server and the old-commit part taken out).
+const withoutOrigin = function (text) {
+    return text.replace(/http:\/\/127\.0\.0\.1:\d+/g, "").split(OLD_PATH + "/").join("/");
+};
+
+const watchPage = function (page, log) {
+    page.on("pageerror", function (error) { log.push({ isError: true, text: "PAGE ERROR " + error.message }); });
+    page.on("dialog", function (dialog) {
+        log.push({ isError: false, text: "DIALOG " + dialog.message() });
+        dialog.dismiss().catch(function () {});
+    });
+    page.on("console", function (message) {
+        if (message.type() !== "error" && message.type() !== "warn") return;
+        if (message.text().startsWith("Failed to load resource")) return; // WHY: the "response" line names the file
+        log.push({ isError: false, text: "CONSOLE " + message.type() + " " + withoutOrigin(message.text()) });
+    });
+    page.on("response", function (response) {
+        if (response.status() < 400 || response.url().includes("favicon")) return;
+        log.push({ isError: false, text: "NOT FOUND (" + response.status() + ") " + withoutOrigin(response.url()) });
+    });
+    page.on("requestfailed", function (request) {
+        const reason = (request.failure() && request.failure().errorText) || "";
+        if (reason === "net::ERR_ABORTED") return; // WHY: a page that loads another one stops the first one
+        log.push({ isError: false, text: "REQUEST FAILED " + reason + " " + withoutOrigin(request.url()) });
+    });
+};
+
+// Runs in the page: the rectangle of a basic.js object or of the first element of a CSS selector.
+const findClipRect = function (clip) {
+    let found = null;
+    try {
+        found = (0, eval)(clip); // WHY indirect: the globals of the page, not the variables of this function
+    } catch (error) {
+        found = null; // WHY: a CSS selector is not JavaScript
+    }
+    if (found && found.elem) found = found.elem;
+    if (!(found instanceof Element)) {
+        try {
+            found = document.querySelector(clip);
+        } catch (error) {
+            found = null;
+        }
+    }
+    if (!found) return null;
+    const rect = found.getBoundingClientRect();
+    return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+};
+
+const runCode = function (code) {
+    const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
+    return new AsyncFunction(code)();
+};
+
+// The clipped part with its margin, inside the window.
+const clipWithMargin = function (rect, margin, size) {
+    const left = Math.max(0, Math.floor(rect.x - margin));
+    const top = Math.max(0, Math.floor(rect.y - margin));
+    const right = Math.min(size.width, Math.ceil(rect.x + rect.width + margin));
+    const bottom = Math.min(size.height, Math.ceil(rect.y + rect.height + margin));
+    return { x: left, y: top, width: right - left, height: bottom - top };
+};
+
+const takePicture = async function (browser, url, options) {
+    const context = await browser.createBrowserContext();
+    try {
+        const page = await context.newPage();
+        const log = [];
+        watchPage(page, log);
+        await page.setViewport({ width: options.width, height: options.height, deviceScaleFactor: options.scale });
+        await page.goto(url, { waitUntil: "load", timeout: LOAD_TIMEOUT });
+        await sleep(options.wait);
+
+        if (options.run) {
+            try {
+                await page.evaluate(runCode, options.run);
+            } catch (error) {
+                log.push({ isError: true, text: "RUN ERROR " + error.message.split("\n")[0] });
+            }
+            await sleep(options.wait);
+        }
+
+        if (!options.clip) return { picture: await page.screenshot(), log };
+
+        const rect = await page.evaluate(findClipRect, options.clip);
+        if (!rect || rect.width === 0 || rect.height === 0) {
+            log.push({ isError: true, text: "CLIP: nothing is found for " + options.clip });
+            return { picture: await page.screenshot(), log };
+        }
+        const clip = clipWithMargin(rect, options.margin, options);
+        return { picture: await page.screenshot({ clip }), log };
+    } finally {
+        await context.close();
+    }
+};
+
+// *** BEFORE | AFTER: the two pictures side by side, drawn by the browser itself (no image library).
+
+const SIDE_GAP = 16; // px between the pictures
+const LABEL_HEIGHT = 28; // px
+
+const sideBySide = async function (browser, before, after, beforeLabel, scale) {
+    const context = await browser.createBrowserContext();
+    try {
+        const page = await context.newPage();
+        const half = function (picture, label) {
+            const source = "data:image/png;base64," + Buffer.from(picture).toString("base64");
+            return '<div class="side"><div class="label">' + label + '</div><img src="' + source + '"></div>';
+        };
+        const html = "<!DOCTYPE html><style>" +
+            "body { margin: 0; background: #E9E9EC; font: 13px -apple-system, sans-serif; color: #333; }" +
+            "#all { display: inline-flex; gap: " + SIDE_GAP + "px; padding: " + SIDE_GAP + "px; align-items: flex-start; }" +
+            ".label { height: " + LABEL_HEIGHT + "px; font-weight: 600; }" +
+            "img { display: block; zoom: " + (1 / scale) + "; }" +
+            "</style><div id=\"all\">" + half(before, beforeLabel) + half(after, "after (now)") + "</div>";
+        await page.setViewport({ width: 4000, height: 3000, deviceScaleFactor: scale });
+        await page.setContent(html, { waitUntil: "load" });
+        const all = await page.$("#all");
+        return await all.screenshot();
+    } finally {
+        await context.close();
+    }
+};
+
+// *** START:
+
+const todayText = function () {
+    const now = new Date();
+    const twoDigits = function (number) { return String(number).padStart(2, "0"); };
+    return now.getFullYear() + "-" + twoDigits(now.getMonth() + 1) + "-" + twoDigits(now.getDate());
+};
+
+const readOptions = function (args) {
+    const options = { page: "", run: "", clip: "", name: "", before: "", width: DEFAULT_WIDTH, height: 0,
+        scale: 0, wait: DEFAULT_WAIT, margin: DEFAULT_MARGIN, isHelp: false };
+    for (let i = 0; i < args.length; i++) {
+        const arg = args[i];
+        const hasValue = (args[i + 1] !== undefined && !args[i + 1].startsWith("--"));
+        if (arg === "--help") options.isHelp = true;
+        else if (arg === "--before") options.before = (hasValue) ? args[++i] : "HEAD";
+        else if (arg === "--run") options.run = args[++i];
+        else if (arg === "--clip") options.clip = args[++i];
+        else if (arg === "--name") options.name = args[++i];
+        else if (arg === "--width") options.width = Number(args[++i]);
+        else if (arg === "--height") options.height = Number(args[++i]);
+        else if (arg === "--scale") options.scale = Number(args[++i]);
+        else if (arg === "--wait") options.wait = Number(args[++i]);
+        else if (arg === "--margin") options.margin = Number(args[++i]);
+        else options.page = (arg.includes("/")) ? arg : SAMPLES_FOLDER + "/" + arg;
+    }
+    if (!options.height) options.height = (options.width < PHONE_WIDTH) ? PHONE_HEIGHT : DEFAULT_HEIGHT;
+    if (!options.scale) options.scale = (options.clip) ? 2 : 1;
+    if (!options.name) options.name = path.basename(options.page.split("?")[0]).replace(/\.html?$/i, "");
+    return options;
+};
+
+const printLog = function (title, log) {
+    log.forEach(function (line) { console.log("  " + title + line.text); });
+};
+
+const main = async function () {
+    const options = readOptions(process.argv.slice(2));
+    if (options.isHelp || !options.page) {
+        const header = fs.readFileSync(__filename, "utf8").split("*/")[1];
+        console.log(header.replace("/*", "").trim());
+        return 0;
+    }
+
+    const pageFile = options.page.split("?")[0];
+    if (!fs.existsSync(path.join(ROOT, pageFile))) throw new Error("No such page: " + pageFile);
+    if (options.before && !isInCommit(options.before, pageFile)) throw new Error(pageFile + " is not in " + options.before);
+
+    deleteOldPictures();
+    fs.mkdirSync(SCREENSHOTS_FOLDER, { recursive: true });
+
+    const puppeteer = loadPuppeteer();
+    const server = await startServer(options.before);
+    const browser = await puppeteer.launch({ headless: "new", executablePath: CHROME_FILE, args: ["--no-sandbox"] });
+    const origin = "http://127.0.0.1:" + server.address().port;
+    const file = path.join(SCREENSHOTS_FOLDER, todayText() + "-" + options.name + ".png");
+    let hasError = false;
+
+    try {
+        const after = await takePicture(browser, origin + "/" + options.page, options);
+        let picture = after.picture;
+        if (options.before) {
+            const before = await takePicture(browser, origin + OLD_PATH + "/" + options.page, options);
+            picture = await sideBySide(browser, before.picture, after.picture, "before (" + options.before + ")", options.scale);
+            printLog("before: ", before.log);
+        }
+        printLog((options.before) ? "after: " : "", after.log);
+        hasError = after.log.some(function (line) { return line.isError; });
+        fs.writeFileSync(file, picture);
+    } finally {
+        await browser.close();
+        server.close();
+    }
+
+    console.log(path.relative(ROOT, file));
+    return (hasError) ? 1 : 0;
+};
+
+main().then(function (exitCode) {
+    process.exitCode = exitCode;
+}).catch(function (error) {
+    console.error(error.message);
+    process.exitCode = 2;
+});
