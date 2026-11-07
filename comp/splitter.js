@@ -58,6 +58,7 @@ const SplitterDefaults = {
         line: { size: 1, color: Black(0.14) }, // The line that is seen
         grip: { size: 9 }, // The place around the line that takes the mouse
         lineHover: { size: 3, color: "#5BBAC1" },
+        lineFocus: { size: 0, color: "" }, // The line while the keyboard is on it. "": the ring of focus.ringColor instead
         focus: { ringColor: "rgba(63, 141, 148, 0.8)" },
     },
 };
@@ -85,6 +86,7 @@ const Splitter = function (params = {}) {
     let isFirstVisible = 1;
     let isSecondVisible = 1;
     let isOver = 0;
+    let isKeyFocus = 0; // the keyboard is on the line (lineFocus)
     let dragPointerId = null;
     let dragStartPoint = 0;
     let dragStartSize = 0;
@@ -168,11 +170,17 @@ const Splitter = function (params = {}) {
     };
 
     // PAINT: the line: the mouse on it, or a drag
+    const lineLookNow = function () {
+        if (isOver || dragPointerId !== null) return _s.lineHover;
+        if (isKeyFocus && _s.lineFocus.color) return _s.lineFocus;
+        return _s.line;
+    };
+
     const paintLine = function () {
-        const isActive = (isOver || dragPointerId !== null);
-        const size = (isActive) ? _s.lineHover.size : _s.line.size;
+        const look = lineLookNow();
+        const size = look.size;
         const start = (_s.grip.size - size) / 2;
-        box.line.color = (isActive) ? _s.lineHover.color : _s.line.color;
+        box.line.color = look.color;
         if (isVertical) {
             box.line.props({ left: 0, top: start, width: "100%", height: size });
         } else {
@@ -201,7 +209,10 @@ const Splitter = function (params = {}) {
 
     // LOOK: everything that comes from the style (the first drawing and setTheme)
     const applyLook = function () {
-        box.grip.setFocusRing(_s.focus.ringColor);
+        // WHY no ring with lineFocus: the line itself shows the keyboard (and no outline of the browser either)
+        const isLineFocus = !!_s.lineFocus.color;
+        box.grip.setFocusRing((isLineFocus) ? "" : _s.focus.ringColor);
+        box.grip.css.outline = (isLineFocus) ? "none" : "";
         paintLine();
         refreshLayout();
     };
@@ -253,6 +264,8 @@ const Splitter = function (params = {}) {
     };
 
     const onKeyDown = function (self, event) {
+        isKeyFocus = 1; // WHY: a key after a click shows where the keyboard is too
+        paintLine();
         let target = null;
         if (event.key === FORWARD_KEY) target = firstPixels + box.keyStep;
         else if (event.key === BACK_KEY) target = firstPixels - box.keyStep;
@@ -344,6 +357,14 @@ const Splitter = function (params = {}) {
     box.grip.on("pointerup", onPointerEnd);
     box.grip.on("pointercancel", onPointerEnd);
     box.grip.on("keydown", onKeyDown);
+    box.grip.on("focus", function () {
+        isKeyFocus = box.grip.elem.matches(":focus-visible") ? 1 : 0;
+        paintLine();
+    });
+    box.grip.on("blur", function () {
+        isKeyFocus = 0;
+        paintLine();
+    });
     box.grip.on("dblclick", backToStart);
     box.onResize(refreshLayout);
 
@@ -378,6 +399,7 @@ Splitter.createMinimalStyle = function (colors) {
     return {
         line: { size: 1, color: colors.line },
         lineHover: { size: 2, color: colors.ink },
+        lineFocus: { size: 2, color: colors.focus },
         focus: { ringColor: colors.focus },
     };
 };

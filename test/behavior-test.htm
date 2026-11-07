@@ -1223,6 +1223,30 @@
             check("JsonEditor light: the chosen part fills the group as before", lightInset === 0, lightInset);
         });
 
+        test("StepBar minimal: the ring of the keyboard is around the circle of a step; light keeps the ring around the step", async function () {
+            const minimal = StepBar({ styleName: "minimal", steps: ["A", "B", "C"], currentStep: 2 });
+            const plain = StepBar({ steps: ["A", "B", "C"], currentStep: 2 });
+            await basic.nextFrame();
+            const minimalStep = minimal.elem.querySelector("[role=button]");
+            const plainStep = plain.elem.querySelector("[role=button]");
+            check("StepBar minimal: a ring around the circle, not around the step", minimalStep.classList.contains("step-bar-circle-ring") && !minimalStep.classList.contains("basic-focus-ring"), minimalStep.className);
+            check("StepBar light: the ring of basic.js around the step", plainStep.classList.contains("basic-focus-ring") && !plainStep.classList.contains("step-bar-circle-ring"), plainStep.className);
+            [minimal, plain].forEach(function (bar) { bar.remove(); });
+        });
+
+        test("Splitter minimal: the keyboard turns the line to the focus color (no ring); light keeps its ring", async function () {
+            const minimal = Splitter({ styleName: "minimal", width: 300, height: 100 });
+            const plain = Splitter({ width: 300, height: 100 });
+            await basic.nextFrame();
+            minimal.grip.elem.dispatchEvent(new KeyboardEvent("keydown", { key: "Shift", bubbles: true }));
+            await basic.nextFrame();
+            const lineColor = getComputedStyle(minimal.line.elem).backgroundColor;
+            check("Splitter minimal: a key paints the line in the focus color", lineColor === "rgb(61, 139, 217)", lineColor);
+            check("Splitter minimal: no ring of basic.js on its line", !minimal.grip.elem.classList.contains("basic-focus-ring"), minimal.grip.elem.className);
+            check("Splitter light: the ring of basic.js as before", plain.grip.elem.classList.contains("basic-focus-ring"), plain.grip.elem.className);
+            [minimal, plain].forEach(function (split) { split.remove(); });
+        });
+
         // *** TOGGLE (comp/toggle.js)
 
         test("Toggle: the keyboard and screen readers can use it", async function () {

@@ -67,7 +67,9 @@ const StepBarDefaults = {
             note: Black(0.5),
             hover: "rgba(63, 141, 148, 0.12)",
         },
-        focus: { ringColor: "rgba(63, 141, 148, 0.8)" },
+        // ringPlace "step": the ring of basic.js around the whole step; "circle": a ring of ringWidth px around the circle,
+        // ringSpace px away from it (it does not cross the lines between the steps)
+        focus: { ringColor: "rgba(63, 141, 148, 0.8)", ringPlace: "step", ringWidth: 2, ringSpace: 2 },
     },
 };
 
@@ -157,7 +159,19 @@ const StepBar = function (params = {}) {
         part.lblTitle.props({ fontSize: _s.title.fontSize, visible: box.showTitles });
         part.lblTitle.css.marginTop = _s.title.space + "px";
         part.lblNote.props({ fontSize: _s.note.fontSize, textColor: _s.colors.note, visible: (box.showTitles == 1 && part.step.note !== "") ? 1 : 0 });
-        part.column.setFocusRing(_s.focus.ringColor);
+        applyFocusRing(part);
+    };
+
+    // The ring of the keyboard: around the step (basic.js), or around its circle (focus.ringPlace "circle")
+    const applyFocusRing = function (part) {
+        const isCircleRing = (_s.focus.ringPlace === "circle");
+        part.column.setFocusRing((isCircleRing) ? "" : _s.focus.ringColor);
+        part.column.elem.classList.toggle("step-bar-circle-ring", isCircleRing);
+        if (!isCircleRing) return;
+        StepBar.injectCss();
+        part.column.elem.style.setProperty("--step-bar-ring", _s.focus.ringColor);
+        part.column.elem.style.setProperty("--step-bar-ring-width", _s.focus.ringWidth + "px");
+        part.column.elem.style.setProperty("--step-bar-ring-space", _s.focus.ringSpace + "px");
     };
 
     const createPart = function (step, index) {
@@ -169,6 +183,7 @@ const StepBar = function (params = {}) {
             part.lineBefore = Box({ left: 0, color: "transparent", css: { position: "absolute" } });
             part.lineAfter = Box({ left: "auto", color: "transparent", css: { position: "absolute", right: "0" } });
             part.circle = Label({ text: "", textAlign: "center", css: { display: "flex", alignItems: "center", justifyContent: "center", boxSizing: "border-box", flexShrink: "0" } });
+            part.circle.elem.classList.add("step-bar-circle");
             part.lblTitle = Label({ width: "100%", textAlign: "center", css: { overflowWrap: "break-word", padding: "0 4px", boxSizing: "border-box" } });
             part.lblTitle.plainText = step.title;
             part.lblNote = Label({ width: "100%", textAlign: "center", css: { overflowWrap: "break-word", padding: "0 4px", boxSizing: "border-box", marginTop: "2px" } });
@@ -259,6 +274,15 @@ const StepBar = function (params = {}) {
 
 };
 
+// The ring of the keyboard around the circle of a step (focus.ringPlace "circle"). WHY CSS: :focus-visible is the
+// keyboard only (a click shows no ring), and the outline follows the round of the circle.
+StepBar.injectCss = function () {
+    basic.addCss("step-bar-css",
+        ".step-bar-circle-ring:focus { outline: none; }" +
+        ".step-bar-circle-ring:focus-visible .step-bar-circle { outline: var(--step-bar-ring-width) solid var(--step-bar-ring);" +
+        " outline-offset: var(--step-bar-ring-space); }");
+};
+
 StepBar.CHECK_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"' +
     ' stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 
@@ -297,7 +321,7 @@ StepBar.createMinimalStyle = function (palette) {
         circle: { size: 20, fontSize: 11, lineWidth: 1, hoverRing: 4 },
         title: { fontSize: 12, space: 6 },
         note: { fontSize: 11 },
-        line: { size: 1, space: 4 },
+        line: { size: 1, space: 5 }, // WHY 5: the ring of the keyboard (2 + 1.5 px around the circle) does not touch the line
         colors: {
             done: palette.ink,
             doneText: palette.ground,
@@ -310,7 +334,7 @@ StepBar.createMinimalStyle = function (palette) {
             note: palette.softText,
             hover: palette.hover,
         },
-        focus: { ringColor: palette.focus },
+        focus: { ringColor: palette.focus, ringPlace: "circle", ringWidth: 1.5, ringSpace: 2 },
     };
 };
 StepBar.styles.minimal = StepBar.createMinimalStyle({ ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), line: Black(0.2), ink: "#1F1F1F", hover: Black(0.08), focus: "#3D8BD9" });
