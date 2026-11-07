@@ -889,11 +889,13 @@ InputB.createMinimalStyle = function (colors) {
         scrollBarStyle: { bar_color: colors.scrollBar, bar_mouseOverColor: colors.scrollBar, bar_width: 3, bar_mouseOverWidth: 4, bar_opacity: 0.45, bar_mouseOverOpacity: 0.9, bar_padding: 2, showDots: 0 },
     };
 };
-InputB.styles.minimal = InputB.createMinimalStyle({
+InputB.MINIMAL_COLORS = {
     ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), faintText: Black(0.54), line: Black(0.2),
     lineHover: Black(0.45), edge: Black(0.45), edgeHover: Black(0.65), ink: "#1F1F1F", danger: "#C24A36", colorScheme: "", invertIcons: 0, scrollBar: "#373836",
-});
-InputB.styles.minimalDark = InputB.createMinimalStyle({
+};
+InputB.styles.minimal = InputB.createMinimalStyle(InputB.MINIMAL_COLORS);
+InputB.MINIMAL_DARK_COLORS = {
     ground: "#1A1A19", text: White(0.88), softText: White(0.55), faintText: White(0.48), line: White(0.18),
     lineHover: White(0.42), edge: White(0.42), edgeHover: White(0.62), ink: "#EDEDEB", danger: "#FF9F93", colorScheme: "dark", invertIcons: 1, scrollBar: "#CFCFCD",
-});
+};
+InputB.styles.minimalDark = InputB.createMinimalStyle(InputB.MINIMAL_DARK_COLORS);

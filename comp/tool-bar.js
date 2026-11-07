@@ -752,5 +752,7 @@ ToolBar.createMinimalStyle = function (colors) {
         },
     };
 };
-ToolBar.styles.minimal = ToolBar.createMinimalStyle({ ground: "#FFFFFF", text: Black(0.85), line: Black(0.2), lineHover: Black(0.45), ink: "#1F1F1F", focus: "#3D8BD9", menuStyleName: "minimal" });
-ToolBar.styles.minimalDark = ToolBar.createMinimalStyle({ ground: "#1A1A19", text: White(0.88), line: White(0.18), lineHover: White(0.42), ink: "#EDEDEB", focus: "#7FB6DE", menuStyleName: "minimalDark" });
+ToolBar.MINIMAL_COLORS = { ground: "#FFFFFF", text: Black(0.85), line: Black(0.2), lineHover: Black(0.45), ink: "#1F1F1F", focus: "#3D8BD9", menuStyleName: "minimal" };
+ToolBar.styles.minimal = ToolBar.createMinimalStyle(ToolBar.MINIMAL_COLORS);
+ToolBar.MINIMAL_DARK_COLORS = { ground: "#1A1A19", text: White(0.88), line: White(0.18), lineHover: White(0.42), ink: "#EDEDEB", focus: "#7FB6DE", menuStyleName: "minimalDark" };
+ToolBar.styles.minimalDark = ToolBar.createMinimalStyle(ToolBar.MINIMAL_DARK_COLORS);

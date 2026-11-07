@@ -1086,7 +1086,7 @@ TagInput.createMinimalStyle = function (colors) {
         placeholder: { textColor: colors.faintText },
         tag: { color: "transparent", border: 1, borderColor: colors.line, round: 3, padding: [6, 0], height: 20, gap: 3 },
         tagHover: { color: colors.hover },
-        tagSelected: { color: colors.ink, textColor: colors.ground, removeColor: colors.ground },
+        tagSelected: { color: colors.ink, textColor: colors.onInk, removeColor: colors.onInk },
         tagText: { fontSize: 12, textColor: colors.text },
         tagRemove: { color: colors.softText, hoverColor: colors.danger },
         panel: { color: colors.ground, border: 1, borderColor: colors.line, round: 4, padding: 4, shadow: "none", maxHeight: 200 },
@@ -1099,5 +1099,7 @@ TagInput.createMinimalStyle = function (colors) {
         disabled: { opacity: 0.4 },
     };
 };
-TagInput.styles.minimal = TagInput.createMinimalStyle({ ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), faintText: Black(0.54), line: Black(0.2), edge: Black(0.45), edgeHover: Black(0.65), ink: "#1F1F1F", hover: Black(0.05), danger: "#C24A36" });
-TagInput.styles.minimalDark = TagInput.createMinimalStyle({ ground: "#1A1A19", text: White(0.88), softText: White(0.55), faintText: White(0.48), line: White(0.18), edge: White(0.42), edgeHover: White(0.62), ink: "#EDEDEB", hover: White(0.07), danger: "#FF9F93" });
+TagInput.MINIMAL_COLORS = { ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), faintText: Black(0.54), line: Black(0.2), edge: Black(0.45), edgeHover: Black(0.65), ink: "#1F1F1F", onInk: "#FFFFFF", hover: Black(0.05), danger: "#C24A36" };
+TagInput.styles.minimal = TagInput.createMinimalStyle(TagInput.MINIMAL_COLORS);
+TagInput.MINIMAL_DARK_COLORS = { ground: "#1A1A19", text: White(0.88), softText: White(0.55), faintText: White(0.48), line: White(0.18), edge: White(0.42), edgeHover: White(0.62), ink: "#EDEDEB", onInk: "#1A1A19", hover: White(0.07), danger: "#FF9F93" };
+TagInput.styles.minimalDark = TagInput.createMinimalStyle(TagInput.MINIMAL_DARK_COLORS);

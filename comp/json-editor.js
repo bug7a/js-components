@@ -3195,13 +3195,15 @@ JsonEditor.createMinimalStyle = function (colors) {
         window: { coverColor: colors.cover, shadow: "none" },
     };
 };
-JsonEditor.styles.minimal = JsonEditor.createMinimalStyle({
+JsonEditor.MINIMAL_COLORS = {
     ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), faintText: Black(0.54), line: Black(0.2), lineHover: Black(0.45),
     edge: Black(0.45), track: Black(0.08), hover: "#F7F7F7", selected: "#F0F0F0", ink: "#1F1F1F", inkHover: "#3A3A3A",
     onInk: "#FFFFFF", focus: "#3D8BD9", scrollBar: Black(0.2), scrollBarHover: Black(0.35), cover: Black(0.3), minimalName: "minimal",
-});
-JsonEditor.styles.minimalDark = JsonEditor.createMinimalStyle({
+};
+JsonEditor.styles.minimal = JsonEditor.createMinimalStyle(JsonEditor.MINIMAL_COLORS);
+JsonEditor.MINIMAL_DARK_COLORS = {
     ground: "#1A1A19", text: White(0.88), softText: White(0.55), faintText: White(0.48), line: White(0.18), lineHover: White(0.42),
     edge: White(0.42), track: White(0.08), hover: "#232322", selected: "#2C2C2B", ink: "#EDEDEB", inkHover: "#FFFFFF",
     onInk: "#1A1A19", focus: "#7FB6DE", scrollBar: White(0.22), scrollBarHover: White(0.35), cover: Black(0.6), minimalName: "minimalDark",
-});
+};
+JsonEditor.styles.minimalDark = JsonEditor.createMinimalStyle(JsonEditor.MINIMAL_DARK_COLORS);

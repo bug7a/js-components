@@ -403,5 +403,7 @@ Splitter.createMinimalStyle = function (colors) {
         focus: { ringColor: colors.focus },
     };
 };
-Splitter.styles.minimal = Splitter.createMinimalStyle({ line: Black(0.2), ink: "#1F1F1F", focus: "#3D8BD9" });
-Splitter.styles.minimalDark = Splitter.createMinimalStyle({ line: White(0.18), ink: "#EDEDEB", focus: "#7FB6DE" });
+Splitter.MINIMAL_COLORS = { line: Black(0.2), ink: "#1F1F1F", focus: "#3D8BD9" };
+Splitter.styles.minimal = Splitter.createMinimalStyle(Splitter.MINIMAL_COLORS);
+Splitter.MINIMAL_DARK_COLORS = { line: White(0.18), ink: "#EDEDEB", focus: "#7FB6DE" };
+Splitter.styles.minimalDark = Splitter.createMinimalStyle(Splitter.MINIMAL_DARK_COLORS);

@@ -1849,7 +1849,7 @@ SelectBox.createMinimalStyle = function (colors) {
             search: { color: "transparent", border: 1, borderColor: colors.edge, round: 4, fontSize: 13, textColor: colors.text, height: 28, padding: [10, 0], iconSize: 14 },
             option: { fontSize: 13, textColor: colors.text, round: 3, padding: [8, 4], gap: 8, iconSize: 14, border: 1, borderColor: "transparent", space: 2 },
             optionActive: { color: "transparent", lineColor: "", borderColor: colors.lineHover },
-            optionSelected: { textColor: colors.ink, checkColor: colors.ink, checkTickColor: colors.ground, fontFamily: "", showTick: 1, tickSize: 12, borderColor: colors.ink },
+            optionSelected: { textColor: colors.ink, checkColor: colors.ink, checkTickColor: colors.onInk, fontFamily: "", showTick: 1, tickSize: 12, borderColor: colors.ink },
             description: { fontSize: 12, textColor: colors.softText },
             group: { fontSize: 11, textColor: colors.faintText },
             empty: { fontSize: 12, textColor: colors.softText },
@@ -1859,11 +1859,13 @@ SelectBox.createMinimalStyle = function (colors) {
         },
     };
 };
-SelectBox.styles.minimal = SelectBox.createMinimalStyle({
+SelectBox.MINIMAL_COLORS = {
     ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), faintText: Black(0.54),
-    line: Black(0.2), lineHover: Black(0.45), edge: Black(0.45), edgeHover: Black(0.65), ink: "#1F1F1F", searchStyleName: "minimal", itemListStyleName: "minimal",
-});
-SelectBox.styles.minimalDark = SelectBox.createMinimalStyle({
+    line: Black(0.2), lineHover: Black(0.45), edge: Black(0.45), edgeHover: Black(0.65), ink: "#1F1F1F", onInk: "#FFFFFF", searchStyleName: "minimal", itemListStyleName: "minimal",
+};
+SelectBox.styles.minimal = SelectBox.createMinimalStyle(SelectBox.MINIMAL_COLORS);
+SelectBox.MINIMAL_DARK_COLORS = {
     ground: "#1A1A19", text: White(0.88), softText: White(0.55), faintText: White(0.48),
-    line: White(0.18), lineHover: White(0.42), edge: White(0.42), edgeHover: White(0.62), ink: "#EDEDEB", searchStyleName: "minimalDark", itemListStyleName: "minimalDark",
-});
+    line: White(0.18), lineHover: White(0.42), edge: White(0.42), edgeHover: White(0.62), ink: "#EDEDEB", onInk: "#1A1A19", searchStyleName: "minimalDark", itemListStyleName: "minimalDark",
+};
+SelectBox.styles.minimalDark = SelectBox.createMinimalStyle(SelectBox.MINIMAL_DARK_COLORS);

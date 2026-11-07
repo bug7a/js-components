@@ -556,10 +556,12 @@ RangeSlider.createMinimalStyle = function (colors) {
             track: { height: 2, round: 1, color: colors.track, fillColor: colors.ink },
             knob: { size: 12, round: 6, color: colors.ground, shadow: "0 0 0 1px " + colors.ink },
             dragging: { ringSize: 0, ringOpacity: 0 },
-            value: { color: colors.ink, textColor: colors.ground, fontSize: 11, padding: [6, 2], round: 3, space: 6 },
+            value: { color: colors.ink, textColor: colors.onInk, fontSize: 11, padding: [6, 2], round: 3, space: 6 },
             focus: { ringColor: colors.focus },
         },
     };
 };
-RangeSlider.styles.minimal = RangeSlider.createMinimalStyle({ ground: "#FFFFFF", ink: "#1F1F1F", track: Black(0.12), focus: "#3D8BD9" });
-RangeSlider.styles.minimalDark = RangeSlider.createMinimalStyle({ ground: "#1A1A19", ink: "#EDEDEB", track: White(0.14), focus: "#7FB6DE" });
+RangeSlider.MINIMAL_COLORS = { ground: "#FFFFFF", ink: "#1F1F1F", onInk: "#FFFFFF", track: Black(0.12), focus: "#3D8BD9" };
+RangeSlider.styles.minimal = RangeSlider.createMinimalStyle(RangeSlider.MINIMAL_COLORS);
+RangeSlider.MINIMAL_DARK_COLORS = { ground: "#1A1A19", ink: "#EDEDEB", onInk: "#1A1A19", track: White(0.14), focus: "#7FB6DE" };
+RangeSlider.styles.minimalDark = RangeSlider.createMinimalStyle(RangeSlider.MINIMAL_DARK_COLORS);

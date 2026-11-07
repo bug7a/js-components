@@ -1343,7 +1343,7 @@ Tabs.createMinimalStyle = function (colors) {
         indicator: { color: colors.ink, thickness: 2, round: 1, motion: 0.25 },
         pillIndicator: { color: "transparent", round: 3, shadow: "inset 0 0 0 1px " + colors.ink, motion: 0.25 },
         icon: { size: 14 },
-        count: { fontSize: 11, color: "transparent", textColor: colors.softText, activeColor: colors.ink, activeTextColor: colors.ground, round: 8, padding: [5, 0] },
+        count: { fontSize: 11, color: "transparent", textColor: colors.softText, activeColor: colors.ink, activeTextColor: colors.onInk, round: 8, padding: [5, 0] },
         close: { color: colors.softText, hoverColor: colors.danger, size: 12 },
         addButton: { color: colors.softText, hoverColor: colors.ink, hoverBackground: "transparent", size: 14 },
         arrow: { color: colors.softText, background: colors.ground, size: 14 },
@@ -1352,5 +1352,7 @@ Tabs.createMinimalStyle = function (colors) {
         disabled: { opacity: 0.4 },
     };
 };
-Tabs.styles.minimal = Tabs.createMinimalStyle({ ground: "#FFFFFF", ink: "#1F1F1F", text: Black(0.85), softText: Black(0.55), line: Black(0.2), danger: "#C24A36", focus: "#3D8BD9" });
-Tabs.styles.minimalDark = Tabs.createMinimalStyle({ ground: "#1A1A19", ink: "#EDEDEB", text: White(0.88), softText: White(0.55), line: White(0.18), danger: "#FF9F93", focus: "#7FB6DE" });
+Tabs.MINIMAL_COLORS = { ground: "#FFFFFF", ink: "#1F1F1F", onInk: "#FFFFFF", text: Black(0.85), softText: Black(0.55), line: Black(0.2), danger: "#C24A36", focus: "#3D8BD9" };
+Tabs.styles.minimal = Tabs.createMinimalStyle(Tabs.MINIMAL_COLORS);
+Tabs.MINIMAL_DARK_COLORS = { ground: "#1A1A19", ink: "#EDEDEB", onInk: "#1A1A19", text: White(0.88), softText: White(0.55), line: White(0.18), danger: "#FF9F93", focus: "#7FB6DE" };
+Tabs.styles.minimalDark = Tabs.createMinimalStyle(Tabs.MINIMAL_DARK_COLORS);

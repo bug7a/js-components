@@ -616,5 +616,7 @@ MenuBar.createMinimalStyle = function (colors) {
         },
     };
 };
-MenuBar.styles.minimal = MenuBar.createMinimalStyle({ text: Black(0.85), line: Black(0.2), lineHover: Black(0.45), ink: "#1F1F1F", focus: "#3D8BD9", menuStyleName: "minimal" });
-MenuBar.styles.minimalDark = MenuBar.createMinimalStyle({ text: White(0.88), line: White(0.18), lineHover: White(0.42), ink: "#EDEDEB", focus: "#7FB6DE", menuStyleName: "minimalDark" });
+MenuBar.MINIMAL_COLORS = { text: Black(0.85), line: Black(0.2), lineHover: Black(0.45), ink: "#1F1F1F", focus: "#3D8BD9", menuStyleName: "minimal" };
+MenuBar.styles.minimal = MenuBar.createMinimalStyle(MenuBar.MINIMAL_COLORS);
+MenuBar.MINIMAL_DARK_COLORS = { text: White(0.88), line: White(0.18), lineHover: White(0.42), ink: "#EDEDEB", focus: "#7FB6DE", menuStyleName: "minimalDark" };
+MenuBar.styles.minimalDark = MenuBar.createMinimalStyle(MenuBar.MINIMAL_DARK_COLORS);

@@ -384,7 +384,7 @@ StatusBar.createMinimalStyle = function (colors) {
     };
 };
 // WHY own tones: the texts of a tone must read on the ground of the window (4.5:1); the light tones were about 3:1 on dark.
-StatusBar.styles.minimal = StatusBar.createMinimalStyle({
+StatusBar.MINIMAL_COLORS = {
     text: Black(0.85), softText: Black(0.55), line: Black(0.2), track: Black(0.12), ink: "#1F1F1F", focus: "#3D8BD9",
     tones: {
         success: { text: "#1F7A5C", dot: "#2E9E74" },
@@ -392,8 +392,9 @@ StatusBar.styles.minimal = StatusBar.createMinimalStyle({
         error: { text: "#C24A36", dot: "#C24A36" },
         info: { text: "#2467B8", dot: "#3D8BD9" },
     },
-});
-StatusBar.styles.minimalDark = StatusBar.createMinimalStyle({
+};
+StatusBar.styles.minimal = StatusBar.createMinimalStyle(StatusBar.MINIMAL_COLORS);
+StatusBar.MINIMAL_DARK_COLORS = {
     text: White(0.88), softText: White(0.55), line: White(0.18), track: White(0.14), ink: "#EDEDEB", focus: "#7FB6DE",
     tones: {
         success: { text: "#7FE3B5", dot: "#7FE3B5" },
@@ -401,4 +402,5 @@ StatusBar.styles.minimalDark = StatusBar.createMinimalStyle({
         error: { text: "#FF9F93", dot: "#FF9F93" },
         info: { text: "#7FB6DE", dot: "#7FB6DE" },
     },
-});
+};
+StatusBar.styles.minimalDark = StatusBar.createMinimalStyle(StatusBar.MINIMAL_DARK_COLORS);

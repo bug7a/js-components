@@ -810,10 +810,12 @@ Slider.createMinimalStyle = function (colors) {
             dragging: { width: "", trackSpace: "", ringSize: 0, ringOpacity: 0 },
             track: { space: -6, outerRound: 1, innerRound: 1 },
             trackDot: { size: 0 },
-            value: { color: colors.ink, textColor: colors.ground, fontSize: 11, padding: [6, 2], round: 3, space: 6 },
+            value: { color: colors.ink, textColor: colors.onInk, fontSize: 11, padding: [6, 2], round: 3, space: 6 },
             focus: { ringColor: colors.focus, ringWidth: 2, ringSpace: 2 },
         },
     };
 };
-Slider.styles.minimal = Slider.createMinimalStyle({ ground: "#FFFFFF", ink: "#1F1F1F", track: Black(0.12), focus: "#3D8BD9" });
-Slider.styles.minimalDark = Slider.createMinimalStyle({ ground: "#1A1A19", ink: "#EDEDEB", track: White(0.14), focus: "#7FB6DE" });
+Slider.MINIMAL_COLORS = { ground: "#FFFFFF", ink: "#1F1F1F", onInk: "#FFFFFF", track: Black(0.12), focus: "#3D8BD9" };
+Slider.styles.minimal = Slider.createMinimalStyle(Slider.MINIMAL_COLORS);
+Slider.MINIMAL_DARK_COLORS = { ground: "#1A1A19", ink: "#EDEDEB", onInk: "#1A1A19", track: White(0.14), focus: "#7FB6DE" };
+Slider.styles.minimalDark = Slider.createMinimalStyle(Slider.MINIMAL_DARK_COLORS);

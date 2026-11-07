@@ -469,8 +469,10 @@ CheckBox.createMinimalStyle = function (colors) {
         focus: { ringColor: colors.focus },
     };
 };
-CheckBox.styles.minimal = CheckBox.createMinimalStyle({ line: Black(0.45), lineHover: Black(0.65), ink: "#1F1F1F", text: Black(0.85), focus: "#3D8BD9" });
-CheckBox.styles.minimalDark = CheckBox.createMinimalStyle({ line: White(0.42), lineHover: White(0.62), ink: "#EDEDEB", text: White(0.88), focus: "#7FB6DE" });
+CheckBox.MINIMAL_COLORS = { line: Black(0.45), lineHover: Black(0.65), ink: "#1F1F1F", text: Black(0.85), focus: "#3D8BD9" };
+CheckBox.styles.minimal = CheckBox.createMinimalStyle(CheckBox.MINIMAL_COLORS);
+CheckBox.MINIMAL_DARK_COLORS = { line: White(0.42), lineHover: White(0.62), ink: "#EDEDEB", text: White(0.88), focus: "#7FB6DE" };
+CheckBox.styles.minimalDark = CheckBox.createMinimalStyle(CheckBox.MINIMAL_DARK_COLORS);
 
 // The rule of the keyboard focus (style.focus.ringColor). WHY !important: the edge of the mark is an inline style.
 CheckBox.addFocusCss = function () {

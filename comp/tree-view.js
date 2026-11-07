@@ -1165,5 +1165,7 @@ TreeView.createMinimalStyle = function (colors) {
         scrollBar: { bar_color: colors.scrollBar, bar_mouseOverColor: colors.scrollBar, bar_width: 3, bar_round: 2, bar_opacity: 0.45, bar_mouseOverOpacity: 0.9, bar_padding: 2 },
     };
 };
-TreeView.styles.minimal = TreeView.createMinimalStyle({ line: Black(0.2), text: Black(0.85), softText: Black(0.55), faintText: Black(0.54), lineHover: Black(0.45), ink: "#1F1F1F", focus: "#3D8BD9", scrollBar: "#373836" });
-TreeView.styles.minimalDark = TreeView.createMinimalStyle({ line: White(0.18), text: White(0.88), softText: White(0.55), faintText: White(0.48), lineHover: White(0.42), ink: "#EDEDEB", focus: "#7FB6DE", scrollBar: "#CFCFCD" });
+TreeView.MINIMAL_COLORS = { line: Black(0.2), text: Black(0.85), softText: Black(0.55), faintText: Black(0.54), lineHover: Black(0.45), ink: "#1F1F1F", focus: "#3D8BD9", scrollBar: "#373836" };
+TreeView.styles.minimal = TreeView.createMinimalStyle(TreeView.MINIMAL_COLORS);
+TreeView.MINIMAL_DARK_COLORS = { line: White(0.18), text: White(0.88), softText: White(0.55), faintText: White(0.48), lineHover: White(0.42), ink: "#EDEDEB", focus: "#7FB6DE", scrollBar: "#CFCFCD" };
+TreeView.styles.minimalDark = TreeView.createMinimalStyle(TreeView.MINIMAL_DARK_COLORS);

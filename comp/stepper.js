@@ -719,5 +719,7 @@ Stepper.createMinimalStyle = function (colors) {
     };
 };
 // WHY a strong line: it shows the field of the stepper (3:1 at least, as WCAG asks of a control)
-Stepper.styles.minimal = Stepper.createMinimalStyle({ ink: "#1F1F1F", text: Black(0.85), line: Black(0.45), hover: Black(0.04), active: Black(0.08) });
-Stepper.styles.minimalDark = Stepper.createMinimalStyle({ ink: "#EDEDEB", text: White(0.88), line: White(0.42), hover: White(0.06), active: White(0.1) });
+Stepper.MINIMAL_COLORS = { ink: "#1F1F1F", text: Black(0.85), line: Black(0.45), hover: Black(0.04), active: Black(0.08) };
+Stepper.styles.minimal = Stepper.createMinimalStyle(Stepper.MINIMAL_COLORS);
+Stepper.MINIMAL_DARK_COLORS = { ink: "#EDEDEB", text: White(0.88), line: White(0.42), hover: White(0.06), active: White(0.1) };
+Stepper.styles.minimalDark = Stepper.createMinimalStyle(Stepper.MINIMAL_DARK_COLORS);

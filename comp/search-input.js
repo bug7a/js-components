@@ -646,5 +646,7 @@ SearchInput.createMinimalStyle = function (colors) {
         animated: 0,
     };
 };
-SearchInput.styles.minimal = SearchInput.createMinimalStyle({ invertIcons: 0, text: Black(0.85), placeholder: Black(0.54), edge: Black(0.45), ink: "#1F1F1F" });
-SearchInput.styles.minimalDark = SearchInput.createMinimalStyle({ invertIcons: 1, text: White(0.88), placeholder: White(0.48), edge: White(0.42), ink: "#EDEDEB" });
+SearchInput.MINIMAL_COLORS = { invertIcons: 0, text: Black(0.85), placeholder: Black(0.54), edge: Black(0.45), ink: "#1F1F1F" };
+SearchInput.styles.minimal = SearchInput.createMinimalStyle(SearchInput.MINIMAL_COLORS);
+SearchInput.MINIMAL_DARK_COLORS = { invertIcons: 1, text: White(0.88), placeholder: White(0.48), edge: White(0.42), ink: "#EDEDEB" };
+SearchInput.styles.minimalDark = SearchInput.createMinimalStyle(SearchInput.MINIMAL_DARK_COLORS);

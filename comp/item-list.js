@@ -1737,11 +1737,13 @@ ItemList.createMinimalStyle = function (colors) {
         scrollBar: { bar_color: colors.scrollBar, bar_mouseOverColor: colors.scrollBar, bar_width: 3, bar_mouseOverWidth: 4, showDots: 0 },
     };
 };
-ItemList.styles.minimal = ItemList.createMinimalStyle({
+ItemList.MINIMAL_COLORS = {
     text: Black(0.85), softText: Black(0.55), faintText: Black(0.54), line: Black(0.2), lineHover: Black(0.45),
     ink: "#1F1F1F", focus: "#3D8BD9", searchStyleName: "minimal", scrollBar: "#373836",
-});
-ItemList.styles.minimalDark = ItemList.createMinimalStyle({
+};
+ItemList.styles.minimal = ItemList.createMinimalStyle(ItemList.MINIMAL_COLORS);
+ItemList.MINIMAL_DARK_COLORS = {
     text: White(0.88), softText: White(0.55), faintText: White(0.48), line: White(0.18), lineHover: White(0.42),
     ink: "#EDEDEB", focus: "#7FB6DE", searchStyleName: "minimalDark", scrollBar: "#CFCFCD",
-});
+};
+ItemList.styles.minimalDark = ItemList.createMinimalStyle(ItemList.MINIMAL_DARK_COLORS);

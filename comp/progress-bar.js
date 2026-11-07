@@ -947,5 +947,7 @@ ProgressBar.createMinimalStyle = function (colors) {
         valueText: { fontSize: 12, textColor: colors.softText },
     };
 };
-ProgressBar.styles.minimal = ProgressBar.createMinimalStyle({ ink: "#1F1F1F", track: Black(0.12), text: Black(0.85), softText: Black(0.55), danger: "#C24A36" });
-ProgressBar.styles.minimalDark = ProgressBar.createMinimalStyle({ ink: "#EDEDEB", track: White(0.14), text: White(0.88), softText: White(0.55), danger: "#FF9F93" });
+ProgressBar.MINIMAL_COLORS = { ink: "#1F1F1F", track: Black(0.12), text: Black(0.85), softText: Black(0.55), danger: "#C24A36" };
+ProgressBar.styles.minimal = ProgressBar.createMinimalStyle(ProgressBar.MINIMAL_COLORS);
+ProgressBar.MINIMAL_DARK_COLORS = { ink: "#EDEDEB", track: White(0.14), text: White(0.88), softText: White(0.55), danger: "#FF9F93" };
+ProgressBar.styles.minimalDark = ProgressBar.createMinimalStyle(ProgressBar.MINIMAL_DARK_COLORS);

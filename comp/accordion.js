@@ -650,5 +650,7 @@ Accordion.createMinimalStyle = function (colors) {
         scrollBar: { bar_color: colors.scrollBar, bar_mouseOverColor: colors.scrollBar, bar_width: 3, bar_round: 2 },
     };
 };
-Accordion.styles.minimal = Accordion.createMinimalStyle({ text: Black(0.85), softText: Black(0.55), line: Black(0.2), hover: Black(0.04), focus: "#3D8BD9", scrollBar: "#9A9A98" });
-Accordion.styles.minimalDark = Accordion.createMinimalStyle({ text: White(0.88), softText: White(0.55), line: White(0.18), hover: White(0.06), focus: "#7FB6DE", scrollBar: "#A0A0A0" });
+Accordion.MINIMAL_COLORS = { text: Black(0.85), softText: Black(0.55), line: Black(0.2), hover: Black(0.04), focus: "#3D8BD9", scrollBar: "#9A9A98" };
+Accordion.styles.minimal = Accordion.createMinimalStyle(Accordion.MINIMAL_COLORS);
+Accordion.MINIMAL_DARK_COLORS = { text: White(0.88), softText: White(0.55), line: White(0.18), hover: White(0.06), focus: "#7FB6DE", scrollBar: "#A0A0A0" };
+Accordion.styles.minimalDark = Accordion.createMinimalStyle(Accordion.MINIMAL_DARK_COLORS);

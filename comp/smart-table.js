@@ -1848,13 +1848,15 @@ SmartTable.createMinimalStyle = function (colors) {
         searchTitleMenuParams: { styleName: colors.minimalName },
     };
 };
-SmartTable.styles.minimal = SmartTable.createMinimalStyle({
+SmartTable.MINIMAL_COLORS = {
     ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), line: Black(0.2), track: Black(0.08), hover: Black(0.03),
     selected: Black(0.06), ink: "#1F1F1F", focus: "#3D8BD9", scrollBar: "#9A9A98", invertIcons: 0, minimalName: "minimal", icons: {},
-});
-SmartTable.styles.minimalDark = SmartTable.createMinimalStyle({
+};
+SmartTable.styles.minimal = SmartTable.createMinimalStyle(SmartTable.MINIMAL_COLORS);
+SmartTable.MINIMAL_DARK_COLORS = {
     ground: "#1A1A19", text: White(0.88), softText: White(0.55), line: White(0.18), track: White(0.08), hover: White(0.04),
     selected: White(0.08), ink: "#EDEDEB", focus: "#7FB6DE", scrollBar: "#A0A0A0", invertIcons: 1, minimalName: "minimalDark",
     // WHY the icons of dark: invertIconColor turns only the sort and the up / down arrows
     icons: { btnScrollCenterIconFile: SmartTable.styles.dark.style.btnScrollCenterIconFile, searchTitleCheckIconFile: SmartTable.styles.dark.style.searchTitleCheckIconFile },
-});
+};
+SmartTable.styles.minimalDark = SmartTable.createMinimalStyle(SmartTable.MINIMAL_DARK_COLORS);

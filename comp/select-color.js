@@ -628,5 +628,7 @@ SelectColor.createMinimalStyle = function (colors) {
         },
     };
 };
-SelectColor.styles.minimal = SelectColor.createMinimalStyle({ ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), faintText: Black(0.54), line: Black(0.2), edge: Black(0.45), edgeHover: Black(0.65), ink: "#1F1F1F", hover: Black(0.05), off: Black(0.25) });
-SelectColor.styles.minimalDark = SelectColor.createMinimalStyle({ ground: "#1A1A19", text: White(0.88), softText: White(0.55), faintText: White(0.48), line: White(0.18), edge: White(0.42), edgeHover: White(0.62), ink: "#EDEDEB", hover: White(0.07), off: White(0.25) });
+SelectColor.MINIMAL_COLORS = { ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), faintText: Black(0.54), line: Black(0.2), edge: Black(0.45), edgeHover: Black(0.65), ink: "#1F1F1F", hover: Black(0.05), off: Black(0.25) };
+SelectColor.styles.minimal = SelectColor.createMinimalStyle(SelectColor.MINIMAL_COLORS);
+SelectColor.MINIMAL_DARK_COLORS = { ground: "#1A1A19", text: White(0.88), softText: White(0.55), faintText: White(0.48), line: White(0.18), edge: White(0.42), edgeHover: White(0.62), ink: "#EDEDEB", hover: White(0.07), off: White(0.25) };
+SelectColor.styles.minimalDark = SelectColor.createMinimalStyle(SelectColor.MINIMAL_DARK_COLORS);

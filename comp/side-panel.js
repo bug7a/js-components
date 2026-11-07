@@ -601,5 +601,7 @@ SidePanel.createMinimalStyle = function (colors) {
         backdrop: { color: colors.cover },
     };
 };
-SidePanel.styles.minimal = SidePanel.createMinimalStyle({ ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), line: Black(0.2), edge: Black(0.45), hover: Black(0.05), cover: Black(0.3) });
-SidePanel.styles.minimalDark = SidePanel.createMinimalStyle({ ground: "#1A1A19", text: White(0.88), softText: White(0.55), line: White(0.18), edge: White(0.42), hover: White(0.07), cover: Black(0.6) });
+SidePanel.MINIMAL_COLORS = { ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), line: Black(0.2), edge: Black(0.45), hover: Black(0.05), cover: Black(0.3) };
+SidePanel.styles.minimal = SidePanel.createMinimalStyle(SidePanel.MINIMAL_COLORS);
+SidePanel.MINIMAL_DARK_COLORS = { ground: "#1A1A19", text: White(0.88), softText: White(0.55), line: White(0.18), edge: White(0.42), hover: White(0.07), cover: Black(0.6) };
+SidePanel.styles.minimalDark = SidePanel.createMinimalStyle(SidePanel.MINIMAL_DARK_COLORS);

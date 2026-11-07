@@ -874,5 +874,7 @@ SelectFile.createMinimalStyle = function (colors) {
         },
     };
 };
-SelectFile.styles.minimal = SelectFile.createMinimalStyle({ text: Black(0.85), softText: Black(0.55), line: Black(0.2), edge: Black(0.45), edgeHover: Black(0.65), ink: "#1F1F1F", hover: Black(0.04), danger: "#C24A36" });
-SelectFile.styles.minimalDark = SelectFile.createMinimalStyle({ text: White(0.88), softText: White(0.55), line: White(0.18), edge: White(0.42), edgeHover: White(0.62), ink: "#EDEDEB", hover: White(0.06), danger: "#FF9F93" });
+SelectFile.MINIMAL_COLORS = { text: Black(0.85), softText: Black(0.55), line: Black(0.2), edge: Black(0.45), edgeHover: Black(0.65), ink: "#1F1F1F", hover: Black(0.04), danger: "#C24A36" };
+SelectFile.styles.minimal = SelectFile.createMinimalStyle(SelectFile.MINIMAL_COLORS);
+SelectFile.MINIMAL_DARK_COLORS = { text: White(0.88), softText: White(0.55), line: White(0.18), edge: White(0.42), edgeHover: White(0.62), ink: "#EDEDEB", hover: White(0.06), danger: "#FF9F93" };
+SelectFile.styles.minimalDark = SelectFile.createMinimalStyle(SelectFile.MINIMAL_DARK_COLORS);

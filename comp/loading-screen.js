@@ -392,8 +392,10 @@ LoadingScreen.createMinimalStyle = function (colors) {
         progress: { width: 160, height: 2, color: colors.ink, trackColor: colors.track, round: 1 },
     };
 };
-LoadingScreen.styles.minimal = LoadingScreen.createMinimalStyle({ ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), ink: "#1F1F1F", track: Black(0.12), ring: LoadingScreen.clocks.minimal });
-LoadingScreen.styles.minimalDark = LoadingScreen.createMinimalStyle({ ground: "#1A1A19", text: White(0.88), softText: White(0.55), ink: "#EDEDEB", track: White(0.14), ring: LoadingScreen.clocks.minimalDark });
+LoadingScreen.MINIMAL_COLORS = { ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), ink: "#1F1F1F", track: Black(0.12), ring: LoadingScreen.clocks.minimal };
+LoadingScreen.styles.minimal = LoadingScreen.createMinimalStyle(LoadingScreen.MINIMAL_COLORS);
+LoadingScreen.MINIMAL_DARK_COLORS = { ground: "#1A1A19", text: White(0.88), softText: White(0.55), ink: "#EDEDEB", track: White(0.14), ring: LoadingScreen.clocks.minimalDark };
+LoadingScreen.styles.minimalDark = LoadingScreen.createMinimalStyle(LoadingScreen.MINIMAL_DARK_COLORS);
 
 // The animations can not be set with inline styles. (the clock and the dots: SmartButton.injectCss)
 LoadingScreen.injectCss = function () {

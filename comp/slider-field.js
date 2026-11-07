@@ -924,5 +924,7 @@ SliderField.createMinimalStyle = function (colors) {
         },
     };
 };
-SliderField.styles.minimal = SliderField.createMinimalStyle({ ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), line: Black(0.2), edge: Black(0.45), edgeHover: Black(0.65), ink: "#1F1F1F", fill: Black(0.06), fillHover: Black(0.08), fillActive: Black(0.11), focus: "#3D8BD9" });
-SliderField.styles.minimalDark = SliderField.createMinimalStyle({ ground: "#1A1A19", text: White(0.88), softText: White(0.55), line: White(0.18), edge: White(0.42), edgeHover: White(0.62), ink: "#EDEDEB", fill: White(0.08), fillHover: White(0.11), fillActive: White(0.14), focus: "#7FB6DE" });
+SliderField.MINIMAL_COLORS = { ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), line: Black(0.2), edge: Black(0.45), edgeHover: Black(0.65), ink: "#1F1F1F", fill: Black(0.06), fillHover: Black(0.08), fillActive: Black(0.11), focus: "#3D8BD9" };
+SliderField.styles.minimal = SliderField.createMinimalStyle(SliderField.MINIMAL_COLORS);
+SliderField.MINIMAL_DARK_COLORS = { ground: "#1A1A19", text: White(0.88), softText: White(0.55), line: White(0.18), edge: White(0.42), edgeHover: White(0.62), ink: "#EDEDEB", fill: White(0.08), fillHover: White(0.11), fillActive: White(0.14), focus: "#7FB6DE" };
+SliderField.styles.minimalDark = SliderField.createMinimalStyle(SliderField.MINIMAL_DARK_COLORS);

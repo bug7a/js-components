@@ -1016,7 +1016,7 @@ SelectTime.createMinimalStyle = function (colors) {
             columnTitle: { fontSize: 11, textColor: colors.softText, activeTextColor: colors.text },
             scrollBar: { bar_color: colors.scrollBar, bar_mouseOverColor: colors.scrollBar, bar_width: 3, bar_opacity: 0.3, bar_mouseOverOpacity: 0.6 },
             cell: { width: 52, height: 28, round: 4, fontSize: 13, textColor: colors.text, hoverColor: colors.hover },
-            selectedCell: { color: colors.ink, textColor: colors.ground },
+            selectedCell: { color: colors.ink, textColor: colors.onInk },
             disabledCell: { textColor: colors.off },
             footerButton: { fontSize: 12, textColor: colors.ink },
             divider: { color: colors.line },
@@ -1024,5 +1024,7 @@ SelectTime.createMinimalStyle = function (colors) {
         },
     };
 };
-SelectTime.styles.minimal = SelectTime.createMinimalStyle({ ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), faintText: Black(0.54), line: Black(0.2), edge: Black(0.45), edgeHover: Black(0.65), ink: "#1F1F1F", hover: Black(0.05), off: Black(0.25), scrollBar: "#141414" });
-SelectTime.styles.minimalDark = SelectTime.createMinimalStyle({ ground: "#1A1A19", text: White(0.88), softText: White(0.55), faintText: White(0.48), line: White(0.18), edge: White(0.42), edgeHover: White(0.62), ink: "#EDEDEB", hover: White(0.07), off: White(0.25), scrollBar: "#FFFFFF" });
+SelectTime.MINIMAL_COLORS = { ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), faintText: Black(0.54), line: Black(0.2), edge: Black(0.45), edgeHover: Black(0.65), ink: "#1F1F1F", onInk: "#FFFFFF", hover: Black(0.05), off: Black(0.25), scrollBar: "#141414" };
+SelectTime.styles.minimal = SelectTime.createMinimalStyle(SelectTime.MINIMAL_COLORS);
+SelectTime.MINIMAL_DARK_COLORS = { ground: "#1A1A19", text: White(0.88), softText: White(0.55), faintText: White(0.48), line: White(0.18), edge: White(0.42), edgeHover: White(0.62), ink: "#EDEDEB", onInk: "#1A1A19", hover: White(0.07), off: White(0.25), scrollBar: "#FFFFFF" };
+SelectTime.styles.minimalDark = SelectTime.createMinimalStyle(SelectTime.MINIMAL_DARK_COLORS);

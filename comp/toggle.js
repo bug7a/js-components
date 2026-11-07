@@ -698,5 +698,7 @@ Toggle.createMinimalStyle = function (colors) {
     };
 };
 // WHY a strong line: the line of the track shows the toggle (3:1 at least, as WCAG asks of a control)
-Toggle.styles.minimal = Toggle.createMinimalStyle({ line: Black(0.45), knob: Black(0.45), ink: "#1F1F1F", focus: "#3D8BD9" });
-Toggle.styles.minimalDark = Toggle.createMinimalStyle({ line: White(0.42), knob: White(0.42), ink: "#EDEDEB", focus: "#7FB6DE" });
+Toggle.MINIMAL_COLORS = { line: Black(0.45), knob: Black(0.45), ink: "#1F1F1F", focus: "#3D8BD9" };
+Toggle.styles.minimal = Toggle.createMinimalStyle(Toggle.MINIMAL_COLORS);
+Toggle.MINIMAL_DARK_COLORS = { line: White(0.42), knob: White(0.42), ink: "#EDEDEB", focus: "#7FB6DE" };
+Toggle.styles.minimalDark = Toggle.createMinimalStyle(Toggle.MINIMAL_DARK_COLORS);

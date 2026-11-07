@@ -976,13 +976,15 @@ Dialog.createMinimalStyle = function (colors) {
         },
     };
 };
-Dialog.styles.minimal = Dialog.createMinimalStyle({
+Dialog.MINIMAL_COLORS = {
     cover: Black(0.3), ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), faintText: Black(0.54), lineHover: Black(0.45),
     danger: "#C24A36", success: "#2E9E74", iconCircle: Black(0.05),
     buttonName: "minimal", dangerName: "minimalDanger", inkTone: "ink", fieldName: "minimal",
-});
-Dialog.styles.minimalDark = Dialog.createMinimalStyle({
+};
+Dialog.styles.minimal = Dialog.createMinimalStyle(Dialog.MINIMAL_COLORS);
+Dialog.MINIMAL_DARK_COLORS = {
     cover: Black(0.6), ground: "#1A1A19", text: White(0.88), softText: White(0.55), faintText: White(0.48), lineHover: White(0.42),
     danger: "#FF9F93", success: "#7FE3B5", iconCircle: White(0.06),
     buttonName: "minimalDark", dangerName: "minimalDangerDark", inkTone: "inkDark", fieldName: "minimalDark",
-});
+};
+Dialog.styles.minimalDark = Dialog.createMinimalStyle(Dialog.MINIMAL_DARK_COLORS);

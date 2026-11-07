@@ -324,9 +324,9 @@ StepBar.createMinimalStyle = function (palette) {
         line: { size: 1, space: 5 }, // WHY 5: the ring of the keyboard (2 + 1.5 px around the circle) does not touch the line
         colors: {
             done: palette.ink,
-            doneText: palette.ground,
+            doneText: palette.onInk,
             current: palette.ink,
-            currentText: palette.ground,
+            currentText: palette.onInk,
             next: palette.line,
             nextText: palette.softText,
             title: palette.text,
@@ -337,5 +337,7 @@ StepBar.createMinimalStyle = function (palette) {
         focus: { ringColor: palette.focus, ringPlace: "circle", ringWidth: 1.5, ringSpace: 2 },
     };
 };
-StepBar.styles.minimal = StepBar.createMinimalStyle({ ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), line: Black(0.2), ink: "#1F1F1F", hover: Black(0.08), focus: "#3D8BD9" });
-StepBar.styles.minimalDark = StepBar.createMinimalStyle({ ground: "#1A1A19", text: White(0.88), softText: White(0.55), line: White(0.18), ink: "#EDEDEB", hover: White(0.1), focus: "#7FB6DE" });
+StepBar.MINIMAL_COLORS = { ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), line: Black(0.2), ink: "#1F1F1F", onInk: "#FFFFFF", hover: Black(0.08), focus: "#3D8BD9" };
+StepBar.styles.minimal = StepBar.createMinimalStyle(StepBar.MINIMAL_COLORS);
+StepBar.MINIMAL_DARK_COLORS = { ground: "#1A1A19", text: White(0.88), softText: White(0.55), line: White(0.18), ink: "#EDEDEB", onInk: "#1A1A19", hover: White(0.1), focus: "#7FB6DE" };
+StepBar.styles.minimalDark = StepBar.createMinimalStyle(StepBar.MINIMAL_DARK_COLORS);

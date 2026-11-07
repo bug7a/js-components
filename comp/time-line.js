@@ -390,5 +390,7 @@ TimeLine.createMinimalStyle = function (palette) {
         },
     };
 };
-TimeLine.styles.minimal = TimeLine.createMinimalStyle({ ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), line: Black(0.2), ink: "#1F1F1F" });
-TimeLine.styles.minimalDark = TimeLine.createMinimalStyle({ ground: "#1A1A19", text: White(0.88), softText: White(0.55), line: White(0.18), ink: "#EDEDEB" });
+TimeLine.MINIMAL_COLORS = { ground: "#FFFFFF", text: Black(0.85), softText: Black(0.55), line: Black(0.2), ink: "#1F1F1F" };
+TimeLine.styles.minimal = TimeLine.createMinimalStyle(TimeLine.MINIMAL_COLORS);
+TimeLine.MINIMAL_DARK_COLORS = { ground: "#1A1A19", text: White(0.88), softText: White(0.55), line: White(0.18), ink: "#EDEDEB" };
+TimeLine.styles.minimalDark = TimeLine.createMinimalStyle(TimeLine.MINIMAL_DARK_COLORS);
