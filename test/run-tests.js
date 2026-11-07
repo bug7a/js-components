@@ -1,0 +1,114 @@
+/* Bismillah */
+
+/*
+RUN TESTS: the self-checking test pages from the terminal, one after the other.
+
+    node test/run-tests.js                              components and behavior (the tests of a changed component)
+    node test/run-tests.js behavior                     one test page: basic, samples, components or behavior
+    node test/run-tests.js basic components behavior    several
+    node test/run-tests.js components --only tabs       ?only= of the page (components, samples): a part of the file name
+
+It prints the title of every page ("... - ALL PASS" or "... - 2 FAILED") and the lines of what failed or warned.
+The exit code is 1 when a page failed or did not finish, 2 when the tool itself could not run.
+It needs Chrome and puppeteer-core, like compare-pages.js (CHROME_PATH for another place of Chrome).
+WHY one page at a time: the pages measure sizes and times; two pages side by side made each other slow.
+*/
+
+"use strict";
+
+const chrome = require("./_chrome.js");
+
+const PAGES = {
+    basic: "test/basic-test.htm",
+    samples: "test/basic-samples-test.htm",
+    components: "test/components-test.htm",
+    behavior: "test/behavior-test.htm",
+};
+const DEFAULT_PAGES = ["components", "behavior"];
+
+const WINDOW = { width: 1280, height: 800 };
+const LOAD_TIMEOUT = 30000; // ms
+const FINISH_TIMEOUT = 10 * 60 * 1000; // ms: behavior-test takes about 70 s
+const LOOK_INTERVAL = 300; // ms between two looks at the title
+const FINISHED_TITLE = /ALL PASS| FAILED/;
+const PROBLEM_LINE = /^\s*(✗|!|FAIL|WARN)/;
+
+// *** IN THE PAGE:
+
+// The lines of the page that name a failed or warned check.
+const readProblemLines = function (problemSource) {
+    const problem = new RegExp(problemSource);
+    return document.body.innerText.split("\n").filter(function (line) { return problem.test(line); });
+};
+
+// *** ONE PAGE:
+
+const runPage = async function (browser, url) {
+    const context = await browser.createBrowserContext();
+    const errors = [];
+    try {
+        const page = await context.newPage();
+        page.on("pageerror", function (error) { errors.push("PAGE ERROR " + error.message); });
+        await page.setViewport(WINDOW);
+        await page.goto(url, { waitUntil: "load", timeout: LOAD_TIMEOUT });
+        await page.waitForFunction("/ALL PASS| FAILED/.test(document.title)", { timeout: FINISH_TIMEOUT, polling: LOOK_INTERVAL });
+        const title = await page.title();
+        const problems = await page.evaluate(readProblemLines, PROBLEM_LINE.source);
+        return { title: title, isPassed: !/ FAILED/.test(title), lines: problems.concat(errors) };
+    } catch (error) {
+        return { title: "did not finish: " + error.message.split("\n")[0], isPassed: false, lines: errors };
+    } finally {
+        await context.close();
+    }
+};
+
+// *** START:
+
+const readOptions = function (args) {
+    const options = { names: [], only: "", isHelp: false };
+    for (let i = 0; i < args.length; i++) {
+        const arg = args[i];
+        if (arg === "--help") options.isHelp = true;
+        else if (arg === "--only") options.only = args[++i] || "";
+        else options.names.push(arg);
+    }
+    if (!options.names.length) options.names = DEFAULT_PAGES;
+    return options;
+};
+
+const main = async function () {
+    const options = readOptions(process.argv.slice(2));
+    if (options.isHelp) {
+        console.log(chrome.helpText(__filename));
+        return 0;
+    }
+    const unknown = options.names.filter(function (name) { return !PAGES[name]; });
+    if (unknown.length) throw new Error("No such test: " + unknown.join(", ") + " (" + Object.keys(PAGES).join(", ") + ")");
+
+    const server = await chrome.startServer();
+    const browser = await chrome.launchChrome();
+    const origin = "http://127.0.0.1:" + server.address().port;
+    let isAllPassed = true;
+
+    try {
+        for (const name of options.names) {
+            const query = (options.only) ? "?only=" + encodeURIComponent(options.only) : "";
+            const result = await runPage(browser, origin + "/" + PAGES[name] + query);
+            console.log(result.title);
+            result.lines.forEach(function (line) { console.log("  " + line.trim()); });
+            if (!result.isPassed) isAllPassed = false;
+        }
+    } finally {
+        await browser.close();
+        server.close();
+    }
+
+    return (isAllPassed) ? 0 : 1;
+};
+
+main().then(function (exitCode) {
+    process.exitCode = exitCode;
+}).catch(function (error) {
+    console.error(error.message);
+    process.exitCode = 2;
+});
