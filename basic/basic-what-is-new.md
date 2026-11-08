@@ -35,10 +35,13 @@ basic.keepOldNames(box, TextField.OLD_NAMES, "TextField"); // right after startO
   in the browser lists what it still has to change (`compare-pages.js` sees it as a difference of the console).
 - `basic.renameOldParams(params, ...)`: only the values, for the params of a call that makes no object
   (`toast.update(values)`). It returns the params.
-- A change of the arguments of an event (`onDragMove(value)` to `onChange(self)`) is not a new name: it can not be
-  bridged this way.
+- **When the value changed too** (an event with other arguments, a flag that is the reverse), the entry is
+  `{ name: "newName", wrap: function (oldValue) { return newValue; } }`: a value given or set later with the old name
+  is wrapped on its way, so the old function is called in the old way; reading the old name gives back what was given
+  with it. `Slider.OLD_NAMES = { onDragMove: { name: "onChange", wrap: (onDragMove) => (self) => onDragMove(self.value) } }`.
+  A method whose arguments changed (`setDisabled(1)` is `setEnabled(0)`) stays a method of its component.
 - Temporary: when no page uses the old names of a component, its list and its call are deleted.
-- Fully compatible. `test/basic-test.htm`: 8 new checks, 202/202 (also with `basic.min.js`).
+- Fully compatible. `test/basic-test.htm`: 11 new checks, 205/205 (also with `basic.min.js`).
 
 ## v26.11.07 (2026-11-07)
 

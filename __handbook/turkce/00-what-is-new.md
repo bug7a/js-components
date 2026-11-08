@@ -6,7 +6,7 @@ Bu belgede basic.js kütüphanesine eklenen yeni özellikler, güncellemeler ve 
 
 ## Versiyon 26.11.08
 
-*   **`basic.keepOldNames(box, { eskiAd: "yeniAd" }, "Comp")`:** bileşen yazanlar için. Bir bileşenin parametresi yeni bir ad alınca eski adı bir süre çalışmaya devam eder: eski adla verilen değer yeni ada geçer, sonra da eski ad yenisini okur ve yazar (bir özellik, bir metot, bir olay). Konsol yeni adı bir kez söyler. `basic.renameOldParams(params, ...)` bunu yalnızca bir çağrının değerleri için yapar. Henüz yeni adlara geçmemiş sayfalar için bir köprüdür, ad vermenin bir yolu değil. Örnekli başvuru: `basic/basic-what-is-new.md`.
+*   **`basic.keepOldNames(box, { eskiAd: "yeniAd" }, "Comp")`:** bileşen yazanlar için. Bir bileşenin parametresi yeni bir ad alınca eski adı bir süre çalışmaya devam eder: eski adla verilen değer yeni ada geçer, sonra da eski ad yenisini okur ve yazar (bir özellik, bir metot, bir olay). Konsol yeni adı bir kez söyler. Değer de değiştiyse (argümanları başka bir olay) kayıt `{ name: "yeniAd", wrap: function (eskiDeger) { return yeniDeger; } }` olur. `basic.renameOldParams(params, ...)` bunu yalnızca bir çağrının değerleri için yapar. Henüz yeni adlara geçmemiş sayfalar için bir köprüdür, ad vermenin bir yolu değil. Örnekli başvuru: `basic/basic-what-is-new.md`.
 
 ---
 

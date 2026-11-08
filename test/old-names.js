@@ -7,13 +7,17 @@ OLD NAMES: where the pages still use the old names of the components (the bridge
     node test/old-names.js 04-templates/web-forms   a folder or a file (more than one: each of them)
     node test/old-names.js --short                  only the count of each file
 
-The old names come from comp/: the Comp.OLD_NAMES lists, the Comp.OLD_NAMES_BY_HAND lists (an old name whose value
-or arguments changed: the component bridges it by itself) and the old component names (const InputB = TextField;).
+The old names come from comp/: the Comp.OLD_NAMES lists (also an entry { name: "new", wrap: ... }), the
+Comp.OLD_NAMES_BY_HAND lists (an old method the component keeps by itself) and the old component names
+(const InputB = TextField;).
 It prints each line with an old name, the new name and the component; at the end the count of each folder.
 A name with a capital letter (inputValue, getInputValue) is counted as a key (inputValue:) or after a dot
 (field.inputValue); a plain word (title, message, hover) only as a key in a call of its component.
 WHY: a plain word is everywhere (the title of an item of a list); only the call tells whose it is.
-A key in a call of a component that has a param of that name is not counted (the placeholderText of a WebView).
+A key in a call of a component that has a param of that name is not counted (the placeholderText of a WebView),
+nor a name after an object with a capital letter that is not a component (BasicDesigner.onDragMove).
+A name another component has today (onSelect of SmartTable) is shown with "?" and counted apart, unless it is a key in
+a call of the component (TinySelect({ onSelect: ... })): the object before a dot is not known.
 A line it shows may still be another thing with the same name (the inputValue in the JSON of a Form): read it.
 */
 
@@ -30,17 +34,28 @@ const MAX_CALL_LENGTH = 20000; // letters: the arguments of a call are not read 
 
 // *** THE OLD NAMES OF comp/:
 
-// The keys and values of a list written as `Comp.LIST = { old: "new", ... };`
+// The keys and values of a list written as `Comp.LIST = { old: "new", old2: { name: "new2", wrap: ... } };`
 const readList = function (text, componentName, listName) {
-    const start = text.indexOf(componentName + "." + listName + " = {");
+    const head = componentName + "." + listName + " = {";
+    const start = text.indexOf(head);
     if (start === -1) return [];
-    const end = text.indexOf("};", start);
-    const body = text.slice(start, end);
+    const open = start + head.length - 1;
+    // WHY the matching brace: a wrap function in the list has its own "};"
+    const mask = maskStrings(text);
+    let depth = 0;
+    let end = open;
+    for (let i = open; i < text.length; i++) {
+        if (mask[i]) continue;
+        if (text[i] === "{") depth++;
+        if (text[i] === "}") depth--;
+        if (depth === 0) { end = i; break; }
+    }
+    const body = text.slice(open, end);
     const pairs = [];
-    const pairPattern = /^\s*([A-Za-z_$][\w$]*)\s*:\s*"([^"]*)"/gm;
+    const pairPattern = /^\s*([A-Za-z_$][\w$]*)\s*:\s*(?:"([^"]*)"|\{\s*name:\s*"([^"]*)")/gm;
     let match;
     while ((match = pairPattern.exec(body))) {
-        pairs.push({ oldName: match[1], newName: match[2] });
+        pairs.push({ oldName: match[1], newName: match[2] || match[3] });
     }
     return pairs;
 };
@@ -225,16 +240,36 @@ const checkFile = function (relativePath, names, ownParams) {
                 return !isOwnParamOfCall(text, mask, index, entry, names, ownParams);
             });
         }
+        const isShared = !entry.isComponent && isParamOfAnother(entry, names, ownParams);
         places.forEach(function (index) {
-            found.push({ line: lineNumberAt(text, index), entry: entry });
+            const isInOwnCall = (enclosingCallName(text, mask, index) === entry.component);
+            found.push({ line: lineNumberAt(text, index), entry: entry, isMaybe: isShared && !isInOwnCall });
         });
     });
     return dropRepeats(found).sort(function (a, b) { return a.line - b.line; });
 };
 
+// Another component has a param of this name today (onSelect: SmartTable, DataTable, TreeView...)
+const isParamOfAnother = function (entry, names, ownParams) {
+    let isShared = false;
+    ownParams.forEach(function (params, componentName) {
+        if (componentName === entry.component || !params.has(entry.oldName)) return;
+        const isOldThere = names.some(function (other) { return other.component === componentName && other.oldName === entry.oldName; });
+        if (!isOldThere) isShared = true;
+    });
+    return isShared;
+};
+
+// A name after a namespace of the page, not after a component or an object of it: BasicDesigner.onDragMove
+const isAfterOtherNamespace = function (text, index, names) {
+    const before = /([A-Za-z_$][\w$]*)\s*$/.exec(text.slice(Math.max(0, index - 80), index));
+    if (!before || !/^[A-Z]/.test(before[1])) return false;
+    return !names.some(function (entry) { return entry.component === before[1] || (entry.isComponent && entry.oldName === before[1]); });
+};
+
 // A key of a call of a component that has a param of that name today (WebView({ placeholderText: "" }))
 const isOwnParamOfCall = function (text, mask, index, entry, names, ownParams) {
-    if (text[index] === ".") return false;
+    if (text[index] === ".") return isAfterOtherNamespace(text, index, names);
     const callName = enclosingCallName(text, mask, index);
     const params = ownParams.get(callName);
     if (!params || !params.has(entry.oldName)) return false;
@@ -252,7 +287,7 @@ const dropRepeats = function (found) {
             if (known.components.indexOf(item.entry.component) === -1) known.components.push(item.entry.component);
             return;
         }
-        byPlace.set(id, { line: item.line, oldName: item.entry.oldName, newName: item.entry.newName, components: [item.entry.component] });
+        byPlace.set(id, { line: item.line, oldName: item.entry.oldName, newName: item.entry.newName, components: [item.entry.component], isMaybe: item.isMaybe });
     });
     return Array.from(byPlace.values());
 };
@@ -299,26 +334,32 @@ const main = function () {
     const ownParams = readOwnParams();
     const countByFolder = new Map();
     let total = 0;
+    let maybeTotal = 0;
 
     listFiles(targets).forEach(function (file) {
         const found = checkFile(file, names, ownParams);
         if (!found.length) return;
-        total += found.length;
+        const maybeCount = found.filter(function (item) { return item.isMaybe; }).length;
+        const count = found.length - maybeCount;
+        total += count;
+        maybeTotal += maybeCount;
         const folder = folderOf(file);
-        countByFolder.set(folder, (countByFolder.get(folder) || 0) + found.length);
+        countByFolder.set(folder, (countByFolder.get(folder) || 0) + count);
+        const maybeText = (maybeCount) ? " (+" + maybeCount + "?)" : "";
         if (isShort) {
-            console.log(found.length + "\t" + file);
+            console.log(count + maybeText + "\t" + file);
             return;
         }
         console.log(file);
         found.forEach(function (item) {
-            console.log("  " + item.line + "\t" + item.oldName + " -> " + item.newName + "\t(" + item.components.join(", ") + ")");
+            const mark = (item.isMaybe) ? "?" : "";
+            console.log("  " + item.line + "\t" + item.oldName + mark + " -> " + item.newName + "\t(" + item.components.join(", ") + ")");
         });
     });
 
     console.log("");
     countByFolder.forEach(function (count, folder) { console.log(count + "\t" + folder); });
-    console.log("Old names: " + total + " (" + names.length + " old names in comp/)");
+    console.log("Old names: " + total + ", maybe: " + maybeTotal + " (" + names.length + " old names in comp/)");
     return 0;
 };
 

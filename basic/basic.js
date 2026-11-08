@@ -511,7 +511,11 @@ basic.applyStylePackage = function ($params, $packages, $defaults) {
 //      method, an event set after create). The console says once which name to use. A component drops its list when
 //      no page uses its old names any more.
 // An old name wins over its new name: after startObject() the new name may hold only its default.
+// When the value changed too (an event with other arguments, a flag that is the reverse), the entry is
+// { name: "newName", wrap: function (oldValue) { return newValue; } }: a value given or set with the old name is
+// wrapped on its way (the old function is called in the old way); reading the old name gives what was given with it.
 // USAGE: basic.keepOldNames(box, { inputValue: "value", getInputValue: "getValue" }, "TextField")
+// USAGE: Slider.OLD_NAMES = { onDragMove: { name: "onChange", wrap: (onDragMove) => (self) => onDragMove(self.value) } }
 const warnedOldNames = new Set();
 
 const warnOldName = function ($componentName, $oldName, $newName) {
@@ -521,20 +525,33 @@ const warnOldName = function ($componentName, $oldName, $newName) {
     console.warn($componentName + ': "' + $oldName + '" is an old name, use "' + $newName + '"');
 };
 
+// An entry of a list of old names: "newName", or { name: "newName", wrap: function (oldValue) { return newValue; } }
+const readOldNameEntry = function ($entry) {
+    if (typeof $entry === "string") return { name: $entry, wrap: null };
+    return { name: $entry.name, wrap: $entry.wrap || null };
+};
+
 basic.keepOldNames = function ($object, $oldNames, $componentName) {
-    basic.renameOldParams($object, $oldNames, $componentName);
     for (const oldName in $oldNames) {
-        const newName = $oldNames[oldName];
+        const entry = readOldNameEntry($oldNames[oldName]);
+        let oldValue; // WHY: a wrapped old name reads back what was given with it, not the wrapped value
+        const setByOldName = function ($value) {
+            warnOldName($componentName, oldName, entry.name);
+            oldValue = $value;
+            $object[entry.name] = entry.wrap ? entry.wrap($value) : $value;
+        };
+        if (Object.prototype.hasOwnProperty.call($object, oldName)) {
+            const givenValue = $object[oldName];
+            delete $object[oldName];
+            setByOldName(givenValue);
+        }
         // WHY not enumerable: a loop over the object (remove(), the designer) does not read the old names
         Object.defineProperty($object, oldName, {
             get: function () {
-                warnOldName($componentName, oldName, newName);
-                return $object[newName];
+                warnOldName($componentName, oldName, entry.name);
+                return entry.wrap ? oldValue : $object[entry.name];
             },
-            set: function ($value) {
-                warnOldName($componentName, oldName, newName);
-                $object[newName] = $value;
-            },
+            set: setByOldName,
             enumerable: false,
             configurable: true,
         });
@@ -547,9 +564,9 @@ basic.keepOldNames = function ($object, $oldNames, $componentName) {
 basic.renameOldParams = function ($params, $oldNames, $componentName) {
     for (const oldName in $oldNames) {
         if (!Object.prototype.hasOwnProperty.call($params, oldName)) continue;
-        const newName = $oldNames[oldName];
-        warnOldName($componentName, oldName, newName);
-        $params[newName] = $params[oldName];
+        const entry = readOldNameEntry($oldNames[oldName]);
+        warnOldName($componentName, oldName, entry.name);
+        $params[entry.name] = entry.wrap ? entry.wrap($params[oldName]) : $params[oldName];
         delete $params[oldName];
     }
     return $params;

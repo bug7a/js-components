@@ -506,6 +506,31 @@
                 oldNameWarnings.length === 3 && oldNameWarnings[0] === 'TestComp: "oldValue" is an old name, use "value"', oldNameWarnings.length + ": " + oldNameWarnings[0]);
             namedBox.remove();
             check("basic.keepOldNames: an object with old names is removed as any other", namedBox.isRemoved === 1);
+            // An old name whose value changed too: { name, wrap }
+            const WRAPPED_NAMES = {
+                onOldMove: { name: "onMove", wrap: function (oldMove) { return function (self) { oldMove(self.value); }; } },
+                disabled: { name: "enabled", wrap: function (disabled) { return disabled ? 0 : 1; } },
+            };
+            const quietWarn = console.warn;
+            console.warn = function () { };
+            const wrapBox = Box(0, 0, 10, 10);
+            wrapBox.value = 7;
+            wrapBox.enabled = 1;
+            wrapBox.disabled = 1; // as startObject() puts a param of the page
+            let movedTo = null;
+            wrapBox.onOldMove = function (value) { movedTo = value; };
+            basic.keepOldNames(wrapBox, WRAPPED_NAMES, "TestWrap");
+            wrapBox.onMove(wrapBox);
+            check("basic.keepOldNames: a value given with a wrapped old name is wrapped (the old function gets the old arguments)", movedTo === 7 && wrapBox.enabled === 0, movedTo + ", " + wrapBox.enabled);
+            const laterMove = function (value) { movedTo = value * 2; };
+            wrapBox.onOldMove = laterMove;
+            wrapBox.onMove(wrapBox);
+            check("basic.keepOldNames: a wrapped old name set later is wrapped too, and reads back what was given", movedTo === 14 && wrapBox.onOldMove === laterMove);
+            const wrapParams = { disabled: 0 };
+            basic.renameOldParams(wrapParams, WRAPPED_NAMES, "TestWrap");
+            console.warn = quietWarn;
+            check("basic.renameOldParams: a wrapped value", wrapParams.enabled === 1 && !("disabled" in wrapParams));
+            wrapBox.remove();
 
             // *** v26.11.07: border and round take an array, like padding
             const sidesOf = function (style, prefix, suffix) {
