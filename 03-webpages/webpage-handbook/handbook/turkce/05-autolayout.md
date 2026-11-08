@@ -70,7 +70,7 @@ endGroup();
 ### Düzen Parametreleri
 
 - `align` (string, varsayılan: `"center"`) — İçeriklerin hizalanma yönü.
-- `gap` (number / string, varsayılan: `"0px"`) — Nesneler arası boşluk (piksel).
+- `gap` (number / string / array, varsayılan: `"0px"`) — Nesneler arası boşluk (piksel). `[x, y]`, kayan bir grupta (`wrap: 1`) iki yöne ayrı boşluk verir, `padding`'in sırasıyla: `gap: [8, 12]` bir satırdaki nesnelerin arası 8, satırların arası 12.
 - `padding` (number / array) — İç kenar boşluğu. Tek değer veya `[yatay, dikey]` şeklinde dizi.
 - `hug` (boolean) — `true` ise boyut içeriğe göre otomatik ayarlanır (`width/height: "auto"`); grup, içindeki nesneleri sarar.
 - `fit` (boolean) — `hug` parametresinin eski adı; ikisi de birebir aynı işi yapar ve sonradan ikisi de okunabilir (`group.hug`, `group.fit`). Yeni kodda `hug` tercih edin.
@@ -144,7 +144,7 @@ lbl.position = "relative";
 Üç kutuyu yan yana sıralar:
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     const BOX_SIZE = 50;
 
@@ -164,7 +164,7 @@ window.onload = function() {
 Etiketleri alt alta sıralar:
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     VGroup({ align: "top left", gap: 4, padding: 20 });
 
@@ -182,7 +182,7 @@ window.onload = function() {
 Dikey grup içinde yatay bir satır:
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     VGroup({ align: "top center", gap: 15, padding: 20 });
 
@@ -206,7 +206,7 @@ window.onload = function() {
 Kart benzeri bir yapı — ikon, başlık ve açıklama içerir:
 
 ```javascript
-window.onload = function() {
+const start = function () {
 
     page.color = "#F0F2F5";
 
@@ -301,7 +301,7 @@ Bir dizi üzerinden döngüyle nesneler oluşturma:
 ```javascript
 const ITEMS = ["ID", "Name", "Email"];
 
-window.onload = function() {
+const start = function () {
 
     HGroup({ align: "center", gap: 4, padding: 20 });
 

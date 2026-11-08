@@ -42,6 +42,7 @@ const TEXTS = {
             start: "Getting started",
             objects: "Objects",
             layout: "Layout and page",
+            components: "Components",
             more: "Motion and more",
         },
 
@@ -176,6 +177,7 @@ const TEXTS = {
             start: "Başlangıç",
             objects: "Nesneler",
             layout: "Yerleşim ve sayfa",
+            components: "Bileşenler",
             more: "Hareket ve diğerleri",
         },
 

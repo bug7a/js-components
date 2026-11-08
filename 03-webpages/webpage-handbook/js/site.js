@@ -434,7 +434,7 @@ SiteSearch.find = function (query) {
                 const section = item.section;
                 results.push({
                     text: section.heading,
-                    desc: SiteSearch.snippet(section.text, words[0]),
+                    description: SiteSearch.snippet(section.text, words[0]),
                     group: section.chapter.shortTitle,
                     hash: "#/" + section.chapter.id + (section.id ? "/" + section.id : ""),
                 });

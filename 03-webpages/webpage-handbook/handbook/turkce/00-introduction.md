@@ -43,7 +43,7 @@ let lblText;
 let clickedCount = 0;
     
 // Uygulama çalışınca tetiklenecek ilk (ana) fonksiyon
-window.onload = function() {
+const start = function () {
 
     // Her şeyin üzerinde barındığı sayfanın (page) rengini değiştiriyoruz
     page.color = "whitesmoke";
@@ -69,7 +69,7 @@ window.onload = function() {
         
         // Son yaratılan eleman "that" isimli değişkene eşlenir.
         // Bu yüzden adını söylemeden de olay eklenebilir veya fare işareti atanabilir.
-        that.elem.style.cursor = "pointer";
+        that.cursor = "pointer";
         that.on("click", increaseOne);
 
     // Grubu Kapatıyoruz.
@@ -92,6 +92,8 @@ const increaseOne = function(self, event) {
 };
 ```
 
+basic.js, sayfa hazır olunca `start` adlı fonksiyonu çağırır. (Eski sayfalar `window.onload = function () { ... }` yazar: o da çalışır.)
+
 ---
 
 ## Elkitabı (Handbook) Dosya Yapısı
@@ -110,6 +112,8 @@ Elinizdeki bu elkitabı, kütüphaneyi en verimli biçimde nasıl kullanabilece�
    Nesnelere hayat veren animasyon kontrolleri (`10-motion.md`), dahili ses oynatıcısı (`13-sound.md`) ve sisteme güç veren yardımcı fonksiyonlar (`12-utilities.md` ve `11-other-functions.md`).
 6. **Pratik Bilgiler (İpucu ve Hileler):**
    Bir bileşene gölge atamak veya arayüzde gradient gibi karmaşık hissettiren ama kütüphaneyle tek satır olan hayat kurtaran CSS/arayüz taktikleri (`09-useful-examples.md`).
+7. **Bileşenler:**
+   JS-Component Kit'in hazır bileşenlerini kullanmak (`14-using-components.md`) ve kendi bileşeninizi yazmak (`15-making-a-component.md`).
 
 Ayrıca kütüphanede meydana gelen en son gelişmelere, eklenen taze metodlara hızlıca bakmak için **`00-what-is-new.md`** sürüm notlarını inceleyebilirsiniz.
 

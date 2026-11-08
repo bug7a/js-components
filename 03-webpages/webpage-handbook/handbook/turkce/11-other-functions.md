@@ -55,6 +55,7 @@ createIn(listBox, function () {
 Uygulamada kendi oluşturduğunuz özel tasarımlı / gelişmiş bir nesneyi, basic.js ekosistemine sorunsuzca entegre edip tanıtmayı sağlar.
 - Fonksiyondan geçen nesneye, yeni bir basic.js nesnesi yaratılana dek global boyutlardaki `that` isimli değişkenden erişilebilir.
 - Eğer geliştirmek istediğiniz özel nesne; birden fazla temel bileşenden (Label, Button vs) oluşuyorsa, hepsini üzerinde barındıran temel taşıyıcı eleman olarak `Box` elemanını kullanmanız ve kutuyu makeBasicObject içine yollamanız tavsiye edilir.
+- Bir bileşen, bunu sizin yerinize yapan `startObject()` / `endObject()` ile yapılır: `15-making-a-component.md`.
 
 ---
 

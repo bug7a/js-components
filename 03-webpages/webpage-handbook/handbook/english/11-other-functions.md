@@ -55,6 +55,7 @@ If you have changed the screen dimensions (scaling/zooming) with the `page.zoom`
 Allows you to seamlessly integrate and introduce a custom-designed/advanced object you've created in the application into the basic.js ecosystem.
 - The object passed through the function can be accessed via the global `that` variable until a new basic.js object is created.
 - If the custom object you want to develop consists of multiple basic components (Label, Button, etc.), it is recommended to use a `Box` element as the main carrier housing all of them and pass that box into `makeBasicObject`.
+- A component is made with `startObject()` / `endObject()`, which do this for you: `15-making-a-component.md`.
 
 ---
 

@@ -41,6 +41,9 @@ The order and the groups of the chapters in the menu: `js/config.js` → `chapte
   Tab adds 4 spaces, **Reset** brings back the original code.
 - Short examples without `window.onload` or `start()` are run inside a `start()` function.
   A piece that uses a variable of an earlier example can give an error; the console then shows a note.
+- **Not run:** a component (`startObject`) only defines, a part of a component (`box.` without a box) and an example
+  that calls an object of another file (a component of the kit) can not run alone. An example that calls an object
+  made in an earlier block of the chapter runs with that block before it (chapter 15: the component, then its use).
 - Relative file paths in the examples (`test.png`) are resolved against the handbook folder.
 - **Search:** Searches the titles and the text of all chapters (`comp/search-results.js`). `/` or Ctrl (Cmd) + K goes to the search box.
 - **On this page:** On wide screens, the headings of the chapter on the right; the heading being read is marked.

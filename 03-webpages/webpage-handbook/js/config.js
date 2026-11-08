@@ -51,6 +51,8 @@ const CONFIG = {
         { id: "common-properties", file: "04-common-properties.md", group: "layout" },
         { id: "autolayout", file: "05-autolayout.md", group: "layout" },
         { id: "page", file: "08-page.md", group: "layout" },
+        { id: "using-components", file: "14-using-components.md", group: "components" },
+        { id: "making-a-component", file: "15-making-a-component.md", group: "components" },
         { id: "motion", file: "10-motion.md", group: "more" },
         { id: "sound", file: "13-sound.md", group: "more" },
         { id: "utilities", file: "12-utilities.md", group: "more" },

@@ -43,7 +43,7 @@ let lblText;
 let clickedCount = 0;
     
 // The first (main) function to be triggered when the application runs
-window.onload = function() {
+const start = function () {
 
     // We change the color of the page where everything resides
     page.color = "whitesmoke";
@@ -69,7 +69,7 @@ window.onload = function() {
         
         // The last created element is attached to the variable named "that".
         // Therefore, an event or mouse cursor can be attached without explicitly calling its name.
-        that.elem.style.cursor = "pointer";
+        that.cursor = "pointer";
         that.on("click", increaseOne);
 
     // We Close the Group.
@@ -92,6 +92,8 @@ const increaseOne = function(self, event) {
 };
 ```
 
+basic.js calls the function named `start` when the page is ready. (Older pages write `window.onload = function () { ... }`: it works too.)
+
 ---
 
 ## Handbook File Structure
@@ -110,6 +112,8 @@ This handbook exemplifies how you can use the library most efficiently, from bas
    Animation controls that bring objects to life (`10-motion.md`), internal audio player (`13-sound.md`), and helper functions that power the system (`12-utilities.md` and `11-other-functions.md`).
 6. **Practical Information (Tips & Tricks):**
    CSS/interface tactics that might feel complex like casting a shadow on a component or adding a gradient in the UI, but are single-line lifesavers via the library (`09-useful-examples.md`).
+7. **Components:**
+   Using the ready components of the JS-Component Kit (`14-using-components.md`) and writing a component of your own (`15-making-a-component.md`).
 
 Also, to quickly look at the latest developments and fresh methods added to the library, you can review the **`00-what-is-new.md`** release notes.
 
