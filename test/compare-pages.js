@@ -18,6 +18,9 @@ The results:
     LIVE    it differs, and it differs from itself too in the same parts (a live chart, a running animation):
             this tool can not tell; read the lines it prints
     DIFF    a real difference. The exit code is 1, the pictures and the texts are in the folder it prints
+Under a difference of a text (dom, endDom, presses, log): its first line, old and new, around the first letter that
+differs, then the changes of all its lines, word by word, the most common first:
+    the changes of all 80 lines: - "cursor: pointer;" x64, + "cursor: pointer;" x16
 
 It presses and types, nothing else: hover, drag and the keyboard are not measured.
 It needs Chrome and puppeteer-core (npm install puppeteer-core; CHROME_PATH for another place of Chrome).
@@ -48,6 +51,9 @@ const MAX_PRESSES = 60; // of a page (a table has very many rows)
 const OPENED_LEVELS = 2; // what a press opens is pressed too: a row of a list, a button of a dialog
 const TRIES = 3; // a real difference stays in every try
 const LOG_WIDTH = 170; // letters of a line in the report
+const CHANGE_KINDS = 4; // the most common changes printed under a difference
+const CHANGE_WIDTH = 60; // letters of a change in the report
+const MAX_WORDS = 400; // a longer line is not compared word by word (the table of a longer one is slow)
 
 // *** THE PAGES TO COMPARE:
 
@@ -313,15 +319,94 @@ const compareTexts = function (part, oldText, newText) {
     const oldLines = withoutTimes(oldText).split("\n");
     const newLines = withoutTimes(newText).split("\n");
     const lineCount = Math.max(oldLines.length, newLines.length);
-    let count = 0;
-    let firstLine = -1;
+    const pairs = [];
     for (let i = 0; i < lineCount; i++) {
         if (oldLines[i] === newLines[i]) continue;
-        count++;
-        if (firstLine === -1) firstLine = i;
+        pairs.push({ lineNumber: i + 1, oldLine: oldLines[i] || "", newLine: newLines[i] || "" });
     }
-    if (count === 0) return null;
-    return { part, count, lineNumber: firstLine + 1, oldLine: oldLines[firstLine] || "", newLine: newLines[firstLine] || "" };
+    if (pairs.length === 0) return null;
+    return { part, count: pairs.length, lineNumber: pairs[0].lineNumber, oldLine: pairs[0].oldLine, newLine: pairs[0].newLine, pairs };
+};
+
+// *** THE CHANGES OF ALL THE LINES (WHY: the first line alone does not tell if 168 different lines are one change):
+
+// The longest common words of two lines, as a table: common[i][j] = the count from oldWords[i] and newWords[j] on
+const commonWordsTable = function (oldWords, newWords) {
+    const common = [];
+    for (let i = oldWords.length; i >= 0; i--) {
+        common[i] = new Array(newWords.length + 1).fill(0);
+        if (i === oldWords.length) continue;
+        for (let j = newWords.length - 1; j >= 0; j--) {
+            const isSame = (oldWords[i] === newWords[j]);
+            common[i][j] = isSame ? common[i + 1][j + 1] + 1 : Math.max(common[i + 1][j], common[i][j + 1]);
+        }
+    }
+    return common;
+};
+
+// The changes of one line, word by word: [{ removed: "a b", added: "c" }] ([] for a line too long to look into)
+const changesOfLine = function (oldLine, newLine) {
+    const oldWords = oldLine ? oldLine.split(" ") : [];
+    const newWords = newLine ? newLine.split(" ") : [];
+    if (oldWords.length > MAX_WORDS || newWords.length > MAX_WORDS) return [];
+    const common = commonWordsTable(oldWords, newWords);
+    const changes = [];
+    let removed = [];
+    let added = [];
+    const closeChange = function () {
+        if (removed.length > 0 || added.length > 0) changes.push({ removed: removed.join(" "), added: added.join(" ") });
+        removed = [];
+        added = [];
+    };
+    let i = 0;
+    let j = 0;
+    while (i < oldWords.length || j < newWords.length) {
+        if (i < oldWords.length && j < newWords.length && oldWords[i] === newWords[j]) {
+            closeChange();
+            i++;
+            j++;
+        } else if (j < newWords.length && (i === oldWords.length || common[i][j + 1] >= common[i + 1][j])) {
+            added.push(newWords[j++]);
+        } else {
+            removed.push(oldWords[i++]);
+        }
+    }
+    closeChange();
+    return changes;
+};
+
+// The changes of all the different lines, the most common first: [{ removed, added, count }]
+const countChanges = function (pairs) {
+    const counts = new Map();
+    pairs.forEach(function (pair) {
+        changesOfLine(pair.oldLine, pair.newLine).forEach(function (change) {
+            const key = JSON.stringify([change.removed, change.added]);
+            const counted = counts.get(key) || { removed: change.removed, added: change.added, count: 0 };
+            counted.count++;
+            counts.set(key, counted);
+        });
+    });
+    return [...counts.values()].sort(function (a, b) { return b.count - a.count; });
+};
+
+const cutChange = function (text) {
+    return JSON.stringify(text.length > CHANGE_WIDTH ? text.slice(0, CHANGE_WIDTH) + "..." : text);
+};
+
+// + "added", - "removed", "removed" -> "added"; and how many times
+const describeChange = function (change) {
+    let text = cutChange(change.removed) + " -> " + cutChange(change.added);
+    if (!change.removed) text = "+ " + cutChange(change.added);
+    if (!change.added) text = "- " + cutChange(change.removed);
+    return text + " x" + change.count;
+};
+
+const describeChanges = function (pairs) {
+    const changes = countChanges(pairs);
+    if (changes.length === 0) return "";
+    const shown = changes.slice(0, CHANGE_KINDS).map(describeChange).join(", ");
+    const otherCount = changes.length - CHANGE_KINDS;
+    return (otherCount > 0) ? shown + " and " + otherCount + " other changes" : shown;
 };
 
 const compareRuns = function (oldRun, newRun) {
@@ -387,6 +472,8 @@ const printResult = function (size, result) {
         console.log("    " + difference.part + ", " + difference.count + " lines, the first at line " + difference.lineNumber + ":");
         console.log("      old: " + oldText);
         console.log("      new: " + newText);
+        const changes = describeChanges(difference.pairs);
+        if (changes) console.log("      the changes of all " + difference.count + " lines: " + changes);
     });
     console.log("    files: " + result.fileStart + "-old.png, -new.png, .dom.txt ...");
 };
