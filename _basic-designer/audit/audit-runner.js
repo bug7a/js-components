@@ -366,6 +366,10 @@
             BD.applyParam(o, ["labelText"], "Changed", "Check me");
         }, function () { return same(textOfCheck(), "Changed"); }, /labelText/, function () { return same(textOfCheck(), "Check me"); });
 
+        // 9-12 use the CSS rows of the panel (off by default: the setting "CSS rows in the panel")
+        const cssRowsBefore = BD.settings.cssRows;
+        BD.settings.cssRows = true;
+
         // 9. CSS with no prop of basic.js: the prompt writes it as that.css
         await check("css letterSpacing", async function () {
             BD.select(A.labelGiven); await sleep(30);
@@ -406,6 +410,15 @@
         } catch (error) {
             R.fails.push("css row removed: ERROR " + error.message);
         }
+
+        // 13. The CSS rows off (the default): the section is only the motion row
+        BD.settings.cssRows = false;
+        BD.select(A.labelGiven); await sleep(30);
+        BD.showProperties(A.labelGiven); await sleep(30);
+        const isMotionOnly = (BD.ui.panel.getValue("motion") !== undefined && BD.ui.panel.getValue("__cssPick") === undefined);
+        if (isMotionOnly) R.passed.push("css rows off: only the motion row");
+        else R.fails.push("css rows off: the CSS rows are in the panel");
+        BD.settings.cssRows = cssRowsBefore;
 
         R.done = true;
         return R;

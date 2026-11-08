@@ -2288,7 +2288,10 @@ BasicDesigner.cssRowNames = function (obj) {
 };
 
 // CSS AND MOTION: a row for each CSS property (its value, ✕), a menu and a field to add one, the motion.
+// The CSS rows only with the setting "CSS rows in the panel" (off: the section is the motion row).
 BasicDesigner.cssSection = function (obj) {
+    const motionItem = { key: "motion", type: "text", label: "Motion (setMotion)", value: BasicDesigner.motionOf(obj), span: "full", placeholder: "Ex: opacity 0.2s, left 0.3s", button: BasicDesigner.editorButton("motion") };
+    if (!BasicDesigner.settings.cssRows) return { key: "css", title: "Motion", items: [motionItem] };
     const names = BasicDesigner.cssRowNames(obj);
     const items = names.map(function (name) {
         const key = BasicDesigner.CSS_PREFIX + name;
@@ -2304,7 +2307,7 @@ BasicDesigner.cssSection = function (obj) {
         { key: "__cssPick", type: "select", label: "CSS", value: "", options: options },
         { key: "__cssName", type: "text", label: "Another one", value: "", placeholder: "Ex: hyphens" },
     ]);
-    items.push({ key: "motion", type: "text", label: "Motion (setMotion)", value: BasicDesigner.motionOf(obj), span: "full", placeholder: "Ex: opacity 0.2s, left 0.3s", button: BasicDesigner.editorButton("motion") });
+    items.push(motionItem);
     return { key: "css", title: "CSS and motion", items: items };
 };
 
@@ -5939,6 +5942,7 @@ BasicDesigner.settings = Object.assign({
     snap: true,
     snapDistance: 5,
     emptyBoxEdges: true, // a dashed edge on the boxes and the groups that paint nothing
+    cssRows: false, // the CSS rows of the panel (CSS and motion). Off: only the motion row
     rootPath: BasicDesigner.config.rootPath,
     colorGroups: [{ id: "1", name: "My colors", colors: [] }], // { id, name, colors: ["#3871E0", ...] }
     paletteOrder: [], // the keys of the default palettes (default-palettes.js) in your order; [] = their own order
@@ -6760,6 +6764,18 @@ BasicDesigner.buildGeneralSettings = function () {
             BasicDesigner.markEmptyBoxes();
         }, { color: C.field, width: 64 });
         btn.setActive(isOn());
+    });
+
+    // WHY off by default: the user is not sure yet that the panel needs them (2026-11-08); the code stays.
+    BasicDesigner.settingRow("CSS rows in the panel", function () {
+        const btn = BasicDesigner.toolButton((settings.cssRows) ? "On" : "Off", function () {
+            settings.cssRows = !settings.cssRows;
+            btn.text = (settings.cssRows) ? "On" : "Off";
+            btn.setActive(settings.cssRows);
+            BasicDesigner.saveSettings();
+            BasicDesigner.showProperties(BasicDesigner.state.selected);
+        }, { color: C.field, width: 64 });
+        btn.setActive(settings.cssRows);
     });
 
     BasicDesigner.settingRow("Snap distance (px)", function () {
