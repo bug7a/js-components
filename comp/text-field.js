@@ -10,7 +10,8 @@ UI COMPONENT TEMPLATE
   look of 02-comp-examples/text-field.htm), unless the user asks for another one. The fields made from TextField
   (EmailField, PhoneField, PasswordField, UrlField, NumberField, CurrencyField, TextAreaField) take the same
   packages: give them the same styleName. The default (classic) stays for the pages made before.
-- NEEDS comp/tooltip.js, loaded before this file: the bubble of the warning ball is a Tooltip.
+- comp/tooltip.js, loaded before this file, shows the hint of the warning ball in a bubble; without it the ball
+  has no bubble.
 
 
 Started Date: July 2025
@@ -288,8 +289,10 @@ const TextField = function(params = {}) {
     const showWarningBallOf = function(kind, hintText, ballColor) {
         hideWarningBall();
         applyWarningBallStyle(kind);
-        box.warningBall.tooltip.setHintText(hintText);
-        box.warningBall.tooltip.setLbl_color(box.tooltipStyle.color || ballColor);
+        if (box.warningBall.tooltip) {
+            box.warningBall.tooltip.setHintText(hintText);
+            box.warningBall.tooltip.setLbl_color(box.tooltipStyle.color || ballColor);
+        }
         showWarningBall();
     };
 
@@ -659,17 +662,20 @@ const TextField = function(params = {}) {
         }
 
         // TOOLTIP: warningBall
-        box.warningBall.tooltip = Tooltip({
-            target: box.warningBall,
-            hintText: "",
-            hintPosition: "left",
-            lbl_border: box.tooltipStyle.border,
-            lbl_color: box.tooltipStyle.color || "white",
-            lbl_textColor: box.tooltipStyle.textColor,
-            lbl_borderColor: box.tooltipStyle.borderColor,
-            lbl_fontSize: box.tooltipStyle.fontSize,
-            lbl_round: box.tooltipStyle.round,
-        });
+        // WHY the check: a page without comp/tooltip.js gets the ball with no bubble, not an error.
+        if (typeof Tooltip !== "undefined") {
+            box.warningBall.tooltip = Tooltip({
+                target: box.warningBall,
+                hintText: "",
+                hintPosition: "left",
+                lbl_border: box.tooltipStyle.border,
+                lbl_color: box.tooltipStyle.color || "white",
+                lbl_textColor: box.tooltipStyle.textColor,
+                lbl_borderColor: box.tooltipStyle.borderColor,
+                lbl_fontSize: box.tooltipStyle.fontSize,
+                lbl_round: box.tooltipStyle.round,
+            });
+        }
 
     // *** OBJECT INIT CODE:
     

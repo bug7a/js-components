@@ -8,6 +8,7 @@ UI COMPONENT TEMPLATE
 - You can customize, this template code as you need:
 - NEW PROJECTS: styleName "ozden" on a light page, "ozdenDark" on a dark page (the packages
   of TextField, comp/text-field.js; the look of 02-comp-examples/text-field.htm), unless the user asks for another one.
+- comp/tooltip.js, loaded before this file, shows the hint of the eye button in a bubble; without it there is no bubble.
 
 Started Date: June 2024
 Webpage: https://bug7a.github.io/js-components/
@@ -113,7 +114,9 @@ const PasswordField = function(params = {}) {
         box.showPassword = isShown ? 1 : 0;
         box.input.inputElement.type = isShown ? "text" : "password";
         // The button shows what a click does:
-        box.btnShowPassword.tooltip.setHintText(isShown ? box.hidePasswordHintText : box.showPasswordHintText);
+        if (box.btnShowPassword.tooltip) {
+            box.btnShowPassword.tooltip.setHintText(isShown ? box.hidePasswordHintText : box.showPasswordHintText);
+        }
         box.btnShowPassword.load(isShown ? box.hidePasswordIconFile : box.showPasswordIconFile);
     };
     
@@ -153,19 +156,22 @@ const PasswordField = function(params = {}) {
     // WHY: a white hint with a dark text does not suit a dark field (ozdenDark, dark).
     //     Its bubble: tooltipStyle.color, or hintColor when that is "" (the warning hint takes the color of its ball).
     const hintStyle = box.tooltipStyle;
-    box.btnShowPassword.tooltip = Tooltip({
-        target: box.btnShowPassword,
-        hintText: "",
-        hintPosition: "left",
-        lbl_border: hintStyle.border,
-        lbl_color: hintStyle.color || hintStyle.hintColor,
-        lbl_textColor: hintStyle.textColor,
-        lbl_borderColor: hintStyle.borderColor,
-        lbl_fontSize: hintStyle.fontSize,
-        lbl_round: hintStyle.round,
-    });
-    // WHY: The tooltip may be made outside the box (after TextField is closed); box.own() removes it with the box.
-    box.own(box.btnShowPassword.tooltip);
+    // WHY the check: a page without comp/tooltip.js gets the eye button with no bubble, not an error.
+    if (typeof Tooltip !== "undefined") {
+        box.btnShowPassword.tooltip = Tooltip({
+            target: box.btnShowPassword,
+            hintText: "",
+            hintPosition: "left",
+            lbl_border: hintStyle.border,
+            lbl_color: hintStyle.color || hintStyle.hintColor,
+            lbl_textColor: hintStyle.textColor,
+            lbl_borderColor: hintStyle.borderColor,
+            lbl_fontSize: hintStyle.fontSize,
+            lbl_round: hintStyle.round,
+        });
+        // WHY: The tooltip may be made outside the box (after TextField is closed); box.own() removes it with the box.
+        box.own(box.btnShowPassword.tooltip);
+    }
 
     // *** OBJECT INIT CODE:
     box.btnShowPassword.on("click", function() {

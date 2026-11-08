@@ -22,8 +22,8 @@ Bu bölüm hepsinde ortak olanı anlatır. Bir bileşenin kendi parametreleri do
 ```
 
 - **Sıra:** önce `basic.css` ve `basic.js`, sonra bileşenler, en son sayfanızın kodu.
-- **Bir bileşen başka birine ihtiyaç duyabilir**; o dosya ondan önce yüklenir: `TextField` uyarılarını bir `Tooltip` içinde gösterir, bir `Dialog`'un butonları `SmartButton`'dır. Başka bir bileşenden yapılmış bileşen ondan sonra gelir (`email-field.js`, `text-field.js`'ten sonra). Kesin liste, bileşenin örnek sayfasındaki `<script>` satırlarıdır: onları kopyalayın.
-- **Bazı dosyalar yalnızca varsa kullanılır:** `search-input.js` ondan önce yüklenmişse `SelectBox` arama kutusunu bir `SearchInput` yapar; `scroll-bar.js` yüklenmişse listesine bir `ScrollBar` verir.
+- **Bir bileşen başka birine ihtiyaç duyabilir**; o dosya ondan önce yüklenir: bir `Dialog`'un butonları `SmartButton`'dır. Başka bir bileşenden yapılmış bileşen ondan sonra gelir (`email-field.js`, `text-field.js`'ten sonra). Kesin liste, bileşenin örnek sayfasındaki `<script>` satırlarıdır: onları kopyalayın.
+- **Bazı dosyalar yalnızca varsa kullanılır:** `tooltip.js` ondan önce yüklenmişse `TextField` uyarısının ipucunu bir baloncukta gösterir; `search-input.js` yüklenmişse `SelectBox` arama kutusunu bir `SearchInput` yapar, `scroll-bar.js` yüklenmişse listesine bir `ScrollBar` verir.
 - **Bir bileşen, basic.js'in bir sürümü için yazılmıştır:** onu, birlikte geldiği `basic.js` kadar yeni (ya da daha yeni) bir `basic.js` ile kopyalayın.
 
 ---

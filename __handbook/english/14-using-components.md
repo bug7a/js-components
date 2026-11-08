@@ -22,8 +22,8 @@ This chapter is what all of them share. The params of one component are at the t
 ```
 
 - **The order:** `basic.css` and `basic.js` first, then the components, then the code of your page.
-- **A component may need another one**, and that file is loaded before it: `TextField` shows its warnings in a `Tooltip`, the buttons of a `Dialog` are `SmartButton`s. A component made from another one comes after it (`email-field.js` after `text-field.js`). The sure list is the `<script>` lines of its sample page: copy them.
-- **Some files are used only when they are there:** `SelectBox` makes its search box a `SearchInput` when `search-input.js` is loaded before it, and gives its list a `ScrollBar` when `scroll-bar.js` is.
+- **A component may need another one**, and that file is loaded before it: the buttons of a `Dialog` are `SmartButton`s. A component made from another one comes after it (`email-field.js` after `text-field.js`). The sure list is the `<script>` lines of its sample page: copy them.
+- **Some files are used only when they are there:** `TextField` shows the hint of its warning in a bubble when `tooltip.js` is loaded before it; `SelectBox` makes its search box a `SearchInput` when `search-input.js` is, and gives its list a `ScrollBar` when `scroll-bar.js` is.
 - **A component is written for a version of basic.js:** copy it with a `basic.js` at least as new as the one it came with.
 
 ---

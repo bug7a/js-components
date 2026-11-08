@@ -86,10 +86,12 @@
             { file: "comp/email-field.js", name: "EmailField", deps: INPUT_B },
             { file: "comp/form.js", name: "Form", deps: ["comp/tooltip.js"] },
             { file: "comp/text-field.js", name: "TextField", deps: ["comp/tooltip.js"] },
+            { file: "comp/text-field.js", name: "TextField", note: "without tooltip.js", params: { required: 1 } }, // the warning shows at create: a ball with no bubble
             { file: "comp/left-menu.js", name: "LeftMenu" },
             { file: "comp/login-page.js", name: "LoginPage", deps: ["comp/ui-effects.js", ...INPUT_B, "comp/email-field.js", "comp/password-field.js", "comp/tabs.js", "comp/smart-button.js", "comp/loading-screen.js"] },
             { file: "comp/number-field.js", name: "NumberField", deps: INPUT_B },
             { file: "comp/password-field.js", name: "PasswordField", deps: INPUT_B },
+            { file: "comp/password-field.js", name: "PasswordField", deps: ["comp/text-field.js"], note: "without tooltip.js" },
             { file: "comp/phone-field.js", name: "PhoneField", deps: INPUT_B },
             { file: "comp/search-input.js", name: "SearchInput" },
             { file: "comp/slider.js", name: "Slider" },
@@ -510,7 +512,7 @@
 
             setDefaultContainerBox(resultList);
             const row = VGroup({ width: "100%", height: "auto", align: "left top", gap: 2 });
-                const title = state + "  " + test.file + "  (" + test.name + ")  " + passedCount + "/" + result.steps.filter(function (s) { return s.level !== "info"; }).length;
+                const title = state + "  " + test.file + "  (" + test.name + ")  " + (test.note ? test.note + "  " : "") + passedCount + "/" + result.steps.filter(function (s) { return s.level !== "info"; }).length;
                 Label({ text: title, plainText: title, fontSize: 14, bold: state !== "PASS", textColor: color });
                 failed.concat(warned).forEach(function (s) {
                     const text = "      " + (s.level === "fail" ? "✗ " : "! ") + s.name + (s.info ? ":  " + s.info : "");
