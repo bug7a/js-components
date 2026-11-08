@@ -16,7 +16,7 @@ UI COMPONENT TEMPLATE
   blockquote and a (href: http, https, mailto, tel or a relative address). No scripts, styles or events.
   setHtml() cleans its input the same way before it is shown.
 - maxLength (characters of the text, 0: no limit) and a counter at the bottom right (showCounter: 1).
-- placeholderText, readOnly, enabled. height: the whole editor. The writing area scrolls with
+- placeholder, readOnly, enabled. height: the whole editor. The writing area scrolls with
   basic/scroll-bar.js (if it is loaded).
 - onChange(self) is called while the user writes. It is NOT called when the component is created or by setHtml().
 - Everything is drawn with code (no image files needed).
@@ -26,7 +26,7 @@ USAGE:
 const editor = RichTextEditor({
     width: 560,
     height: 300,
-    placeholderText: "Write the product description...",
+    placeholder: "Write the product description...",
     onChange: function (self) { println(self.getHtml()); },
 });
 editor.setHtml("<p>Hello <b>world</b></p>");
@@ -51,7 +51,7 @@ const RichTextEditorDefaults = {
     width: 560,
     height: 300,
     htmlText: "", // Start content (HTML, it is cleaned)
-    placeholderText: "Write something...",
+    placeholder: "Write something...",
     tools: ["bold", "italic", "underline", "strike", "|", "h2", "h3", "|", "ul", "ol", "quote", "|", "link", "clear", "|", "undo", "redo"],
     pasteAs: "clean", // "clean": keeps the allowed formats, "text": plain text
     maxLength: 0, // Characters of the text. 0: no limit
@@ -173,6 +173,7 @@ const RichTextEditor = function (params = {}) {
 
     // BOX: Component container
     let box = startObject(params);
+    basic.keepOldNames(box, RichTextEditor.OLD_NAMES, "RichTextEditor"); // the pages made with the old names, for a while
 
     // *** PRIVATE VARIABLES:
     const _s = box.style;
@@ -590,9 +591,9 @@ const RichTextEditor = function (params = {}) {
         selectRange(range);
     };
 
-    box.setPlaceholderText = function (text) {
-        box.placeholderText = String(text ?? "");
-        box.editor.setAttribute("data-placeholder", box.placeholderText);
+    box.setPlaceholder = function (text) {
+        box.placeholder = String(text ?? "");
+        box.editor.setAttribute("data-placeholder", box.placeholder);
     };
 
     box.setMaxLength = function (maxLength) {
@@ -881,7 +882,7 @@ const RichTextEditor = function (params = {}) {
     box.btnLinkRemove.on("mousedown", keepEditorFocus);
     box.btnLinkRemove.on("click", removeLink);
 
-    box.setPlaceholderText(box.placeholderText);
+    box.setPlaceholder(box.placeholder);
     box.setHtml(box.htmlText);
     box.setMaxLength(box.maxLength);
     applyEditableState();
@@ -1060,3 +1061,10 @@ RichTextEditor.styles = {
 
 };
 RichTextEditor.styles.classic = RichTextEditor.styles.light; // the old name of light: the pages made with it keep their look
+
+// THE OLD NAMES of the params, the properties and the methods (basic.keepOldNames): the pages made with them keep
+// working until they move to the new names. Delete a name when no page uses it any more.
+RichTextEditor.OLD_NAMES = {
+    placeholderText: "placeholder",
+    setPlaceholderText: "setPlaceholder",
+};

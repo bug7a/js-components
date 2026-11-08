@@ -60,8 +60,8 @@
                         SliderField({
                             labelText: "Width",
                             value: 3,
-                            min: 0,
-                            max: 10,
+                            minValue: 0,
+                            maxValue: 10,
                             onChange: function (self) { lblDefault.text = "onChange: " + self.value; },
                             onChangeEnd: function (self) { lblDefault.text = "onChangeEnd: " + self.value; },
                         });
@@ -89,7 +89,7 @@
                             VGroup({ width: 300, height: "auto", align: "left top", gap: 8, css: { flex: "1 1 240px" } });
 
                                 SliderField({
-                                    width: "100%", labelText: "Width", value: 100, min: 20, max: 160, step: 10, unitText: "px",
+                                    width: "100%", labelText: "Width", value: 100, minValue: 20, maxValue: 160, step: 10, unitText: "px",
                                     onChange: function (self) {
                                         boxShape.width = self.value;
                                         boxShape.center();
@@ -97,7 +97,7 @@
                                 });
 
                                 SliderField({
-                                    width: "100%", labelText: "Height", value: 100, min: 20, max: 200, step: 10, unitText: "px",
+                                    width: "100%", labelText: "Height", value: 100, minValue: 20, maxValue: 200, step: 10, unitText: "px",
                                     onChange: function (self) {
                                         boxShape.height = self.value;
                                         boxShape.center();
@@ -105,19 +105,19 @@
                                 });
 
                                 SliderField({
-                                    width: "100%", labelText: "Radius", value: 12, min: 0, max: 50, step: 1,
+                                    width: "100%", labelText: "Radius", value: 12, minValue: 0, maxValue: 50, step: 1,
                                     valueFormat: function (value) { return value + "%"; },
                                     onChange: function (self) { boxShape.css.borderRadius = self.value + "%"; },
                                 });
 
                                 SliderField({
-                                    width: "100%", labelText: "Opacity", value: 1, min: 0, max: 1, step: 0.05,
+                                    width: "100%", labelText: "Opacity", value: 1, minValue: 0, maxValue: 1, step: 0.05,
                                     valueFormat: function (value) { return Math.round(value * 100) + "%"; },
                                     onChange: function (self) { boxShape.opacity = self.value; },
                                 });
 
                                 SliderField({
-                                    width: "100%", labelText: "Rotate", value: 0, min: -180, max: 180, step: 15, unitText: "°",
+                                    width: "100%", labelText: "Rotate", value: 0, minValue: -180, maxValue: 180, step: 15, unitText: "°",
                                     onChange: function (self) { boxShape.rotate = self.value; },
                                 });
 
@@ -130,13 +130,13 @@
                     // SAMPLE 3: Decimals and formats
                     startCard("3. Decimals, unit text and valueFormat", "precision \"auto\" reads the decimals from the step. showTicks: 0 hides the dots.");
 
-                        SliderField({ labelText: "Scale", value: 1.5, min: 0.5, max: 3, step: 0.1, unitText: "×" });
-                        SliderField({ labelText: "Weight", value: 2.25, min: 0, max: 5, step: 0.25, unitText: " kg" });
+                        SliderField({ labelText: "Scale", value: 1.5, minValue: 0.5, maxValue: 3, step: 0.1, unitText: "×" });
+                        SliderField({ labelText: "Weight", value: 2.25, minValue: 0, maxValue: 5, step: 0.25, unitText: " kg" });
                         SliderField({
-                            labelText: "Blur", value: 0, min: 0, max: 20,
+                            labelText: "Blur", value: 0, minValue: 0, maxValue: 20,
                             valueFormat: function (value) { return (value === 0) ? "Off" : value + " px"; },
                         });
-                        SliderField({ labelText: "Volume", value: 64, min: 0, max: 100, showTicks: 0, unitText: "%" });
+                        SliderField({ labelText: "Volume", value: 64, minValue: 0, maxValue: 100, showTicks: 0, unitText: "%" });
 
                     endCard();
 
@@ -146,15 +146,15 @@
                         "styleName: \"ozden\": a look for general use, in the colors of SmartButton (more on slider-field-ozden.htm)."
                     );
 
-                        SliderField({ styleName: "ozden", labelText: "Volume", value: 60, min: 0, max: 100, unitText: "%" });
-                        SliderField({ styleName: "ozden", labelText: "Size", value: 4, min: 0, max: 10 });
-                        SliderField({ styleName: "modern", labelText: "Brightness", value: 6, min: 0, max: 10 });
-                        SliderField({ styleName: "modern", labelText: "Contrast", value: 40, min: 0, max: 100, step: 10, unitText: "%" });
+                        SliderField({ styleName: "ozden", labelText: "Volume", value: 60, minValue: 0, maxValue: 100, unitText: "%" });
+                        SliderField({ styleName: "ozden", labelText: "Size", value: 4, minValue: 0, maxValue: 10 });
+                        SliderField({ styleName: "modern", labelText: "Brightness", value: 6, minValue: 0, maxValue: 10 });
+                        SliderField({ styleName: "modern", labelText: "Contrast", value: 40, minValue: 0, maxValue: 100, step: 10, unitText: "%" });
 
                         // GROUP: Dark background
                         VGroup({ width: "100%", height: "auto", align: "left top", gap: 8, padding: 16, color: "#1C1C1B", round: 10 });
-                            SliderField({ styleName: "dark", width: "100%", labelText: "Width", value: 3, min: 0, max: 10 });
-                            SliderField({ styleName: "dark", width: "100%", labelText: "Spacing", value: 16, min: 0, max: 48, step: 4, unitText: "px" });
+                            SliderField({ styleName: "dark", width: "100%", labelText: "Width", value: 3, minValue: 0, maxValue: 10 });
+                            SliderField({ styleName: "dark", width: "100%", labelText: "Spacing", value: 16, minValue: 0, maxValue: 48, step: 4, unitText: "px" });
                         endGroup();
 
                     endCard();
@@ -168,10 +168,10 @@
                         const sfApi = SliderField({
                             labelText: "Size",
                             value: 5,
-                            min: 0,
-                            max: 10,
+                            minValue: 0,
+                            maxValue: 10,
                             onChange: function (self) {
-                                lblApi.text = "Value: " + self.value + " (range " + self.min + " – " + self.max + ", step " + self.step + ")";
+                                lblApi.text = "Value: " + self.value + " (range " + self.minValue + " – " + self.maxValue + ", step " + self.step + ")";
                             },
                         });
 

@@ -49,7 +49,7 @@ const FullScreenSelectDefaults = {
     height: 50,
     items: [], // [{ key, title }] or ["Text"] (the text is its key). ({ id, name } is read too.)
     selectedKey: null, // null: the first item
-    placeholderText: "Search",
+    placeholder: "Search",
     emptyText: "No results",
     autoWidth: 0, // 1: the field is as wide as the text of the selected item
     showSearch: 1, // 0: no search box (a short list)
@@ -94,6 +94,7 @@ const FullScreenSelect = function (params = {}) {
 
     // BOX: Component container (the field)
     let box = startObject(params);
+    basic.keepOldNames(box, FullScreenSelect.OLD_NAMES, "FullScreenSelect"); // the pages made with the old names, for a while
 
     // *** PRIVATE VARIABLES:
     const _s = box.style;
@@ -214,7 +215,7 @@ const FullScreenSelect = function (params = {}) {
         box.panel = createIn(page, function () {
 
             // BOX: Full screen list
-            const panel = startBox(0, 0, "100%", "100%", { color: _s.panel.color, zIndex: _s.panel.zIndex, role: "dialog", aria: { modal: true, label: box.ariaLabel || box.placeholderText } });
+            const panel = startBox(0, 0, "100%", "100%", { color: _s.panel.color, zIndex: _s.panel.zIndex, role: "dialog", aria: { modal: true, label: box.ariaLabel || box.placeholder } });
             panel.rows = [];
 
                 createSearch(panel);
@@ -269,7 +270,7 @@ const FullScreenSelect = function (params = {}) {
             searchIconOpacity: search.iconOpacity,
             border: 0,
             borderBottomStyle: "none",
-            placeholder: box.placeholderText,
+            placeholder: box.placeholder,
             onSearch: function (text) { filterRows(text); },
         };
         // WHY only when given: a file given here would win over the icon of the style package of SearchInput
@@ -611,3 +612,9 @@ FullScreenSelect.styles = {
 
 };
 FullScreenSelect.styles.classic = FullScreenSelect.styles.light; // the old name of light: the pages made with it keep their look
+
+// THE OLD NAMES of the params, the properties and the methods (basic.keepOldNames): the pages made with them keep
+// working until they move to the new names. Delete a name when no page uses it any more.
+FullScreenSelect.OLD_NAMES = {
+    placeholderText: "placeholder",
+};

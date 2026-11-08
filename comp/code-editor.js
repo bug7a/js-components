@@ -36,7 +36,7 @@ editor.setTabSize(2);
 editor.goToLine(120);
 editor.focusEditor();
 editor.setTheme("dark");
-CodeEditor({ styleName: "dark", placeholderText: "Write here", changeDelay: 150 });
+CodeEditor({ styleName: "dark", placeholder: "Write here", changeDelay: 150 });
 
 A NEW LANGUAGE:
 CodeEditor.languages.toml = { lineComment: "#", strings: ['"""', '"', "'"], multiLineStrings: ['"""'], keywords: ["true", "false"], propertyWords: 1 };
@@ -68,7 +68,7 @@ const CodeEditorDefaults = {
     tabSize: 4, // The spaces of one level
     readOnly: 0,
     showLineNumbers: 1,
-    placeholderText: "",
+    placeholder: "",
     changeDelay: 0, // ms: onChange waits for the typing to rest
     ariaLabel: "Code",
     onChange: function (self) { }, // self.value changed. (Not at create time, not with silent: 1)
@@ -117,6 +117,7 @@ const CodeEditor = function (params = {}) {
 
     // BOX: Component container
     const box = startObject(params);
+    basic.keepOldNames(box, CodeEditor.OLD_NAMES, "CodeEditor"); // the pages made with the old names, for a while
 
     // *** PRIVATE VARIABLES:
     let _s = box.style;
@@ -585,7 +586,7 @@ const CodeEditor = function (params = {}) {
     box.textareaElem.setAttribute("autocorrect", "off");
     box.textareaElem.setAttribute("autocapitalize", "off");
     box.textareaElem.setAttribute("aria-label", box.ariaLabel);
-    box.textareaElem.placeholder = box.placeholderText;
+    box.textareaElem.placeholder = box.placeholder;
     box.textareaElem.readOnly = (box.readOnly == 1);
     box.textareaElem.value = (box.value === null || box.value === undefined) ? "" : String(box.value);
     box.codeArea.elem.appendChild(box.textareaElem);
@@ -946,4 +947,10 @@ CodeEditor.styles = {
         },
     },
 
+};
+
+// THE OLD NAMES of the params, the properties and the methods (basic.keepOldNames): the pages made with them keep
+// working until they move to the new names. Delete a name when no page uses it any more.
+CodeEditor.OLD_NAMES = {
+    placeholderText: "placeholder",
 };

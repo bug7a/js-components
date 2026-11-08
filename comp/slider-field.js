@@ -9,7 +9,7 @@ UI COMPONENT TEMPLATE
   The label is at the left, the value at the right, the filled part ends with a small handle,
   and the dots in the empty part show the steps. (Like the property sliders of design tools.)
 - Drag anywhere on the field, or click a point to jump there. A click on the value opens the typing (editable: 1).
-- min, max, step and precision (decimals, "auto": from the step). Unit text after the value ("px", "%")
+- minValue, maxValue, step and precision (decimals, "auto": from the step). Unit text after the value ("px", "%")
   and a valueFormat() for your own text.
 - Keyboard: ArrowRight / ArrowUp one step, ArrowLeft / ArrowDown one step back, PageUp / PageDown ten steps,
   Home / End min / max, Enter (or a digit) starts the typing, Escape cancels it.
@@ -28,13 +28,13 @@ UI COMPONENT TEMPLATE
   SliderField is the parallel design, for a page that asks for its shape.
 
 USAGE:
-const sfWidth = SliderField({ labelText: "Width", value: 3, min: 0, max: 10, onChange: (self) => println(self.value) });
+const sfWidth = SliderField({ labelText: "Width", value: 3, minValue: 0, maxValue: 10, onChange: (self) => println(self.value) });
 sfWidth.setValue(5);                // onChange and onChangeEnd are called
 sfWidth.setValue(5, 1);             // silent
-SliderField({ labelText: "Opacity", value: 80, min: 0, max: 100, step: 5, unitText: "%" });
-SliderField({ labelText: "Scale", value: 1.5, min: 0.5, max: 3, step: 0.1 }); // precision "auto" -> 1 decimal
+SliderField({ labelText: "Opacity", value: 80, minValue: 0, maxValue: 100, step: 5, unitText: "%" });
+SliderField({ labelText: "Scale", value: 1.5, minValue: 0.5, maxValue: 3, step: 0.1 }); // precision "auto" -> 1 decimal
 SliderField({ labelText: "Blur", width: "100%", valueFormat: (value) => (value === 0) ? "Off" : value + " px" });
-SliderField({ styleName: "ozden", labelText: "Volume", value: 60, min: 0, max: 100, unitText: "%" });
+SliderField({ styleName: "ozden", labelText: "Volume", value: 60, minValue: 0, maxValue: 100, unitText: "%" });
 SliderField({ styleName: "ozden", labelText: "Speed", style: { fill: { color: "#7BC362", hoverColor: "#70B756", activeColor: "#67AD4D" } } }); // the green of SmartButton
 
 Started Date: September 2026
@@ -53,8 +53,8 @@ const SliderFieldDefaults = {
     height: 44,
     labelText: "", // Text at the left. Ex: "Width"
     value: 0,
-    min: 0,
-    max: 10,
+    minValue: 0,
+    maxValue: 10,
     step: 1,
     precision: "auto", // Decimals shown and used for rounding. "auto": the decimals of the step (0.25 -> 2)
     unitText: "", // After the value. Ex: "px", " kg" (with the space)
@@ -155,6 +155,7 @@ const SliderField = function (params = {}) {
 
     // BOX: Component container
     let box = startObject(params);
+    basic.keepOldNames(box, SliderField.OLD_NAMES, "SliderField"); // the pages made with the old names, for a while
 
     // *** PRIVATE VARIABLES:
     const _s = box.style;
@@ -181,7 +182,7 @@ const SliderField = function (params = {}) {
     const INPUT_SPACE = 6; // px: between the input and the sides of the box
 
     // *** PUBLIC VARIABLES:
-    // NOTE: Default values are also public variables. (box.value, box.min, box.max, box.step)
+    // NOTE: Default values are also public variables. (box.value, box.minValue, box.maxValue, box.step)
 
     // *** PRIVATE FUNCTIONS:
 
@@ -199,15 +200,15 @@ const SliderField = function (params = {}) {
     // Snaps to the steps (from min) and keeps the value in [min, max].
     const clampValue = function (value) {
         value = Number(value);
-        if (isNaN(value)) value = box.min;
-        value = Math.min(Math.max(value, box.min), box.max);
-        value = box.min + Math.round((value - box.min) / box.step) * box.step;
-        return roundValue(Math.min(Math.max(value, box.min), box.max));
+        if (isNaN(value)) value = box.minValue;
+        value = Math.min(Math.max(value, box.minValue), box.maxValue);
+        value = box.minValue + Math.round((value - box.minValue) / box.step) * box.step;
+        return roundValue(Math.min(Math.max(value, box.minValue), box.maxValue));
     };
 
     const getRatio = function () {
-        const range = box.max - box.min;
-        return (range > 0) ? (box.value - box.min) / range : 0;
+        const range = box.maxValue - box.minValue;
+        return (range > 0) ? (box.value - box.minValue) / range : 0;
     };
 
     // Inner width (without the border)
@@ -218,7 +219,7 @@ const SliderField = function (params = {}) {
 
     // The widest value text of min, max and the value: the end of the track does not move while the text changes.
     const getWidestValueWidth = function () {
-        const texts = [box.valueFormat(box.min, box), box.valueFormat(box.max, box), box.valueFormat(box.value, box)];
+        const texts = [box.valueFormat(box.minValue, box), box.valueFormat(box.maxValue, box), box.valueFormat(box.value, box)];
         const widths = texts.map(function (text) { return SliderField.measureText(text, box.lblValue.elem); });
         return Math.max.apply(null, widths);
     };
@@ -251,7 +252,7 @@ const SliderField = function (params = {}) {
         const space = Math.max(1, track.end - track.start);
         const fillWidth = x + _s.handle.inset + _s.handle.width / 2; // the fill that puts the middle of the handle at x
         const ratio = Math.min(1, Math.max(0, (fillWidth - track.start) / space));
-        return clampValue(box.min + ratio * (box.max - box.min));
+        return clampValue(box.minValue + ratio * (box.maxValue - box.minValue));
     };
 
     // WHY: with fill.aroundLabel a click on the label is not a click on the track (it gave min).
@@ -272,7 +273,7 @@ const SliderField = function (params = {}) {
     // (tick.minSpace). WHY the room: dots that were too close were all hidden, a short track showed none.
     const getTickCount = function (trackLength) {
         if (box.showTicks != 1) return 0;
-        const steps = Math.round((box.max - box.min) / box.step);
+        const steps = Math.round((box.maxValue - box.minValue) / box.step);
         if (steps < 1) return 0;
         const maxCount = Math.min(box.maxTicks, Math.floor(trackLength / _s.tick.minSpace));
         if (steps <= maxCount) return steps;
@@ -377,8 +378,8 @@ const SliderField = function (params = {}) {
         box.lblValue.plainText = text;
         box.aria = {
             valuenow: String(box.value),
-            valuemin: String(box.min),
-            valuemax: String(box.max),
+            valuemin: String(box.minValue),
+            valuemax: String(box.maxValue),
             valuetext: text,
         };
         refreshLayout();
@@ -456,8 +457,8 @@ const SliderField = function (params = {}) {
         ArrowLeft: function () { stepValue(-1); },
         PageUp: function () { stepValue(PAGE_STEPS); },
         PageDown: function () { stepValue(-PAGE_STEPS); },
-        Home: function () { changeValue(box.min, 1); },
-        End: function () { changeValue(box.max, 1); },
+        Home: function () { changeValue(box.minValue, 1); },
+        End: function () { changeValue(box.maxValue, 1); },
     };
 
     const isTypingKey = function (key) {
@@ -594,18 +595,18 @@ const SliderField = function (params = {}) {
     };
 
     box.setRange = function (min, max) {
-        box.min = Number(min) || 0;
-        box.max = Math.max(box.min, Number(max) || 0);
+        box.minValue = Number(min) || 0;
+        box.maxValue = Math.max(box.minValue, Number(max) || 0);
         box.setValue(box.value, 1); // (the dots are made again in refreshLayout)
     };
     // USAGE: slider.setRange(0, 100)
 
-    box.setMin = function (min) {
-        box.setRange(min, Math.max(Number(min) || 0, box.max));
+    box.setMinValue = function (min) {
+        box.setRange(min, Math.max(Number(min) || 0, box.maxValue));
     };
 
-    box.setMax = function (max) {
-        box.setRange(Math.min(box.min, Number(max) || 0), max);
+    box.setMaxValue = function (max) {
+        box.setRange(Math.min(box.minValue, Number(max) || 0), max);
     };
 
     box.setStep = function (step) {
@@ -818,10 +819,10 @@ const SliderField = function (params = {}) {
     // WHY: the label and the value are measured; a font that is loaded later changes their widths.
     if (document.fonts) document.fonts.ready.then(function () { if (!box.isRemoved) refreshLayout(); });
 
-    box.min = Number(box.min) || 0;
-    box.max = Number(box.max);
-    if (isNaN(box.max)) box.max = box.min;
-    if (box.max < box.min) box.max = box.min;
+    box.minValue = Number(box.minValue) || 0;
+    box.maxValue = Number(box.maxValue);
+    if (isNaN(box.maxValue)) box.maxValue = box.minValue;
+    if (box.maxValue < box.minValue) box.maxValue = box.minValue;
     box.step = Math.abs(Number(box.step)) || 1;
     box.maxTicks = Math.max(2, Number(box.maxTicks) || SliderFieldDefaults.maxTicks);
     box.value = clampValue(startValue);
@@ -928,3 +929,12 @@ SliderField.MINIMAL_COLORS = { ground: "#FFFFFF", text: Black(0.85), softText: B
 SliderField.styles.minimal = SliderField.createMinimalStyle(SliderField.MINIMAL_COLORS);
 SliderField.MINIMAL_DARK_COLORS = { ground: "#1A1A19", text: White(0.88), softText: White(0.55), line: White(0.18), edge: White(0.42), edgeHover: White(0.62), ink: "#EDEDEB", fill: White(0.08), fillHover: White(0.11), fillActive: White(0.14), focus: "#7FB6DE" };
 SliderField.styles.minimalDark = SliderField.createMinimalStyle(SliderField.MINIMAL_DARK_COLORS);
+
+// THE OLD NAMES of the params, the properties and the methods (basic.keepOldNames): the pages made with them keep
+// working until they move to the new names. Delete a name when no page uses it any more.
+SliderField.OLD_NAMES = {
+    min: "minValue",
+    max: "maxValue",
+    setMin: "setMinValue",
+    setMax: "setMaxValue",
+};

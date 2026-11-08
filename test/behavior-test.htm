@@ -1684,6 +1684,23 @@
             Toast.closeAll();
         });
 
+        test("The old names of SliderField, CodeEditor and FullScreenSelect still work", async function () {
+            const realWarn = console.warn;
+            console.warn = function () { };
+            const field = SliderField({ width: 300, min: 5, max: 50, value: 20 });
+            const isRangeKept = field.minValue === 5 && field.maxValue === 50;
+            field.setMin(10);
+            const isMethodKept = field.minValue === 10;
+            const editor = CodeEditor({ width: 300, height: 100, placeholderText: "Write" });
+            const isEditorKept = editor.placeholder === "Write" && editor.textareaElem.placeholder === "Write";
+            const select = FullScreenSelect({ placeholderText: "Find" });
+            console.warn = realWarn;
+            check("The old names of SliderField, CodeEditor and FullScreenSelect still work",
+                isRangeKept && isMethodKept && isEditorKept && select.placeholder === "Find",
+                "range: " + isRangeKept + ", setMin: " + isMethodKept + ", editor: " + isEditorKept + ", select: " + select.placeholder);
+            [field, editor, select].forEach(function (object) { object.remove(); });
+        });
+
         // *** PHONE FIELD (comp/phone-field.js)
 
         test("PhoneField: a pasted number keeps all its digits", async function () {
@@ -1746,11 +1763,11 @@
                 slider.elem.dispatchEvent(new PointerEvent("pointerup", { pointerId: 7, button: 0, clientX: x, clientY: y, bubbles: true }));
                 return slider.value;
             };
-            const plain = SliderField({ left: 0, top: 0, width: 400, min: 0, max: 10, value: 0, editable: 0 });
+            const plain = SliderField({ left: 0, top: 0, width: 400, minValue: 0, maxValue: 10, value: 0, editable: 0 });
             const holder = Box(0, 0, 800, 100, { color: "transparent" });
             holder.css = { transform: "scale(0.5)", transformOrigin: "0 0" };
             const scaled = createIn(holder, function () {
-                return SliderField({ left: 0, top: 0, width: 400, min: 0, max: 10, value: 0, editable: 0 });
+                return SliderField({ left: 0, top: 0, width: 400, minValue: 0, maxValue: 10, value: 0, editable: 0 });
             });
             const plainValue = clickAt(plain, 0.8);
             const scaledValue = clickAt(scaled, 0.8);
