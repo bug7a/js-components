@@ -121,6 +121,7 @@
                             titleText: "Drop images here",
                             descriptionText: "or click to browse",
                             iconSvg: IMAGE_ICON,
+                            // iconFile: "../assets/icons/plant.png", // a picture in its place (png, jpg, svg file): it keeps its own colors
                             animated: 1,
                             onChange: function (self) {
                                 const total = self.files.reduce(function (sum, f) { return sum + f.size; }, 0);

@@ -9,7 +9,8 @@ UI COMPONENT TEMPLATE
 - Shows the selected files as a list (image preview, name, size, remove button).
 - Supports: multiple, accept (type filter), maxSize, maxFiles, directory selection, enabled.
 - A low zone (zoneHeight): what does not fit is hidden: first the icon, then the hint, then the description. The title stays.
-- Everything is drawn with code (no image files needed). iconSvg: an icon of your own in the place of the upload icon.
+- Everything is drawn with code (no image files needed). iconSvg: an svg icon of your own (it takes the colors of the
+  style); iconFile: a picture (a png, jpg or svg file, a data: address) in its place (it keeps its own colors).
 - animated: 1 (off by default): the icon lifts a little under the mouse, and lifts and grows while a file is dragged
   over the zone. Only transform changes. Off when the system asks for reduced motion.
 - Style packages: "light" (default; the old name "classic" works too), "dark", "minimal", "minimalDark". Select with styleName. (FilePicker.styles)
@@ -51,6 +52,7 @@ const FilePickerDefaults = {
     enabled: 1,
     showIcon: 1, // 0: Hide the upload icon. (A zone too low for it hides it by itself.)
     iconSvg: "", // An "<svg" text of your own, drawn with currentColor. Empty: the icon of the style (box.setIconSvg())
+    iconFile: "", // A picture of your own (a path or a data: address) in the place of the icon, with its own colors (box.setIcon())
     animated: 0, // 1: the icon lifts under the mouse, and more while a file is dragged over. (box.setAnimated(0/1))
     showList: 1,
     showPreview: 1, // Image thumbnails in the list.
@@ -302,6 +304,19 @@ const FilePicker = function (params = {}) {
 
         box.title.text = (state == "dragover") ? box.dropText : box.titleText;
 
+    };
+
+    // The upload icon: a picture of the page (iconFile), or an "<svg" text drawn with currentColor.
+    const applyIcon = function () {
+        if (!box.iconFile) {
+            box.icon.elem.innerHTML = box.iconSvg || _s.icon.svg || FilePicker.UPLOAD_ICON;
+            return;
+        }
+        // WHY an element, not an <img> text: a path or a data: address may hold quotes
+        const picture = document.createElement("img");
+        picture.src = box.iconFile;
+        picture.alt = "";
+        box.icon.elem.replaceChildren(picture);
     };
 
     const paintEnabled = function () {
@@ -598,11 +613,18 @@ const FilePicker = function (params = {}) {
         applyAnimated();
     };
 
-    // An "<svg" text drawn with currentColor. Empty: the upload icon of the style.
+    // An "<svg" text drawn with currentColor. Empty: the upload icon of the style. (An iconFile is shown over it.)
     box.setIconSvg = function (svgText) {
         box.iconSvg = svgText || "";
-        box.icon.elem.innerHTML = box.iconSvg || _s.icon.svg || FilePicker.UPLOAD_ICON;
+        applyIcon();
     };
+
+    // A picture of your own (a path or a data: address) in the place of the icon. Empty: the svg icon.
+    box.setIcon = function (file) {
+        box.iconFile = file || "";
+        applyIcon();
+    };
+    // USAGE: filePicker.setIcon("../assets/icons/upload.png")
 
     box.setEnabled = function (enabled) {
         box.enabled = basic.isOn(enabled) ? 1 : 0;
@@ -678,9 +700,9 @@ const FilePicker = function (params = {}) {
             box.icon.css.marginBottom = _s.icon.space + "px";
             box.icon.clipContent = 0;
             // WHY: an svg of the page may come without a size of its own.
-            basic.addCss("file-picker-icon", ".file-picker-icon svg { display: block; width: 100%; height: 100%; }");
+            basic.addCss("file-picker-icon", ".file-picker-icon svg, .file-picker-icon img { display: block; width: 100%; height: 100%; object-fit: contain; }");
             box.icon.elem.classList.add("file-picker-icon");
-            box.setIconSvg(box.iconSvg);
+            applyIcon();
 
             if (box.showIcon != 1) box.icon.visible = 0;
 

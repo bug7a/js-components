@@ -421,6 +421,18 @@
             [own, still].forEach((select) => select.remove());
         });
 
+        test("FilePicker: iconFile puts a picture in the place of the icon; setIcon(\"\") brings the svg back", async function () {
+            const picture = "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8"><rect width="8" height="8" fill="red"/></svg>');
+            const select = FilePicker({ iconFile: picture, iconSvg: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>' });
+            const image = select.icon.elem.querySelector("img");
+            const hasPicture = (image != null && image.getAttribute("src") === picture && select.icon.elem.querySelector("svg") == null);
+            select.setIcon("");
+            const hasOwnSvgAgain = (select.icon.elem.querySelector("img") == null && select.icon.elem.querySelector("circle") != null);
+            select.remove();
+            check("FilePicker: iconFile puts a picture in the place of the icon; setIcon(\"\") brings the svg back", hasPicture && hasOwnSvgAgain,
+                "picture: " + hasPicture + ", the svg of the page again: " + hasOwnSvgAgain);
+        });
+
         test("FilePicker: the same file again does not call onChange", async function () {
             let changes = 0;
             const select = FilePicker({ multiple: 1, onChange: function () { changes++; } });
