@@ -18,7 +18,7 @@
 
         // DRAFT DESIGN of comp/slider-field.js (SliderField): the NEW "light" and "dark" looks of the kit, every state
         // side by side. A new design, not a copy of a package: it will take the place of the "light" and "dark"
-        // packages. A quiet gray field with round 10 corners, a fill in a tint of the accent that ends with a handle in
+        // packages. A quiet gray field with round 6 corners, a fill in a tint of the accent that ends with a handle in
         // the accent, a bold value, dots for the steps; the keyboard focus is the accent edge with a soft ring inside.
         // Plain basic.js objects (no SliderField here); under the mouse, dragging, the keyboard focus and the typing are
         // still frames of those moments. The tokens at the top are the same in every draft of the new look.
@@ -80,9 +80,9 @@
         // THE LIGHT LOOK: a quiet gray field, a fill in a tint of the accent, the handle and the focus in the accent
         const LIGHT = {
             page: { color: LIGHT_TOKENS.page, textColor: LIGHT_TOKENS.textSoft },
-            box: { color: LIGHT_TOKENS.soft, hoverColor: "", border: 1, borderColor: Black(0.08), round: 10, boxShadow: "none" }, // hoverColor "": the same color under the mouse
+            box: { color: LIGHT_TOKENS.soft, hoverColor: "", border: 1, borderColor: Black(0.08), round: 6, boxShadow: "none" }, // hoverColor "": the same color under the mouse
             boxFocus: { borderColor: LIGHT_TOKENS.accent, ringColor: LIGHT_TOKENS.focusRing, ringWidth: 2 }, // the keyboard focus: the edge and a ring inside it
-            fill: { color: "#D8E8E2", hoverColor: "#CCE1DA", activeColor: "#BFD9D0", minWidth: 26, round: 9 }, // the accent on the field at 22 %, 30 %, 38 %; activeColor: while dragging; minWidth: the fill at min
+            fill: { color: "#D8E8E2", hoverColor: "#CCE1DA", activeColor: "#BFD9D0", minWidth: 26, round: 6 }, // the accent on the field at 22 %, 30 %, 38 %; activeColor: while dragging; minWidth: the fill at min
             handle: { width: 4, height: 18, inset: 11, color: LIGHT_TOKENS.accent, hoverColor: LIGHT_TOKENS.accentHover, activeColor: LIGHT_TOKENS.accentPress, round: 2 }, // inset: from the right end of the fill
             tick: { size: 3, color: Black(0.15), minSpace: 9 },
             label: { fontSize: 15, textColor: LIGHT_TOKENS.textSoft, fontFamily: "", padding: 14 },
@@ -94,9 +94,9 @@
         // THE DARK LOOK: the same shapes on the dark surface
         const DARK = {
             page: { color: DARK_TOKENS.page, textColor: DARK_TOKENS.textSoft },
-            box: { color: DARK_TOKENS.surface, hoverColor: "", border: 1, borderColor: White(0.08), round: 10, boxShadow: "none" },
+            box: { color: DARK_TOKENS.surface, hoverColor: "", border: 1, borderColor: White(0.08), round: 6, boxShadow: "none" },
             boxFocus: { borderColor: DARK_TOKENS.accent, ringColor: DARK_TOKENS.focusRing, ringWidth: 2 },
-            fill: { color: "rgba(101, 162, 147, 0.22)", hoverColor: "rgba(101, 162, 147, 0.28)", activeColor: "rgba(101, 162, 147, 0.34)", minWidth: 26, round: 9 },
+            fill: { color: "rgba(101, 162, 147, 0.22)", hoverColor: "rgba(101, 162, 147, 0.28)", activeColor: "rgba(101, 162, 147, 0.34)", minWidth: 26, round: 6 },
             handle: { width: 4, height: 18, inset: 11, color: DARK_TOKENS.accent, hoverColor: DARK_TOKENS.accentHover, activeColor: "#8CC2B5", round: 2 },
             tick: { size: 3, color: White(0.2), minSpace: 9 },
             label: { fontSize: 15, textColor: DARK_TOKENS.textSoft, fontFamily: "", padding: 14 },
