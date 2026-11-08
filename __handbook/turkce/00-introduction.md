@@ -112,6 +112,8 @@ Elinizdeki bu elkitabı, kütüphaneyi en verimli biçimde nasıl kullanabilece�
    Nesnelere hayat veren animasyon kontrolleri (`10-motion.md`), dahili ses oynatıcısı (`13-sound.md`) ve sisteme güç veren yardımcı fonksiyonlar (`12-utilities.md` ve `11-other-functions.md`).
 6. **Pratik Bilgiler (İpucu ve Hileler):**
    Bir bileşene gölge atamak veya arayüzde gradient gibi karmaşık hissettiren ama kütüphaneyle tek satır olan hayat kurtaran CSS/arayüz taktikleri (`09-useful-examples.md`).
+7. **Bileşenler:**
+   JS-Component Kit'in hazır bileşenlerini kullanmak (`14-using-components.md`) ve kendi bileşeninizi yazmak (`15-making-a-component.md`).
 
 Ayrıca kütüphanede meydana gelen en son gelişmelere, eklenen taze metodlara hızlıca bakmak için **`00-what-is-new.md`** sürüm notlarını inceleyebilirsiniz.
 

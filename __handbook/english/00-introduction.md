@@ -112,6 +112,8 @@ This handbook exemplifies how you can use the library most efficiently, from bas
    Animation controls that bring objects to life (`10-motion.md`), internal audio player (`13-sound.md`), and helper functions that power the system (`12-utilities.md` and `11-other-functions.md`).
 6. **Practical Information (Tips & Tricks):**
    CSS/interface tactics that might feel complex like casting a shadow on a component or adding a gradient in the UI, but are single-line lifesavers via the library (`09-useful-examples.md`).
+7. **Components:**
+   Using the ready components of the JS-Component Kit (`14-using-components.md`) and writing a component of your own (`15-making-a-component.md`).
 
 Also, to quickly look at the latest developments and fresh methods added to the library, you can review the **`00-what-is-new.md`** release notes.
 
