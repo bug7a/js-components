@@ -2,12 +2,16 @@
 
 /*
 
-basic.js (v26.11.07) A lightweight JavaScript library for building web-based applications with simple code. No need to write HTML or CSS — just use basic JavaScript.
+basic.js (v26.11.08) A lightweight JavaScript library for building web-based applications with simple code. No need to write HTML or CSS — just use basic JavaScript.
 - Project Site: https://bug7a.github.io/basic.js/
 
-v26.11.07 is v26.09.18 plus the additions below. Every page and component written for the
+v26.11.08 is v26.09.18 plus the additions below. Every page and component written for the
 previous versions works unchanged (same defaults, same DOM), except the global names moved under
 basic.* in v26.10.25 (see below).
+
+WHAT IS NEW IN v26.11.08 (see basic/basic-what-is-new.md):
+- basic:      keepOldNames(box, { oldName: "newName" }, "Comp"), renameOldParams(params, ...): the old names of
+              the renamed params of a component keep working for a while (the console names the new one once)
 
 WHAT IS NEW IN v26.11.07 (see basic/basic-what-is-new.md):
 - Props:      border and round take an array too, like padding: border [x, y] / [left, top, right, bottom],
@@ -78,7 +82,7 @@ Licensed under the Apache License, Version 2.0
 "use strict";
 const basic = {};
 
-basic.version = "26.11.07";
+basic.version = "26.11.08";
 basic.library = "basic.js";
 basic.isReady = 0; // 1 after the page object is created (before start() runs).
 
@@ -496,6 +500,57 @@ basic.applyStylePackage = function ($params, $packages, $defaults) {
             if (Array.isArray(packageParams[key])) packageParams[key] = packageParams[key].slice();
         }
         mergeIntoIfMissing($params, packageParams);
+    }
+    return $params;
+};
+
+// v26.11.08: THE OLD NAMES OF A COMPONENT, FOR A WHILE
+// WHY: a param of a component that gets a new name broke every page made with the old one. The component lists its
+//      old names ({ oldName: "newName" }) and calls basic.keepOldNames() right after startObject(): a value given
+//      with an old name goes to the new name, and later the old name reads and writes the new one (a property, a
+//      method, an event set after create). The console says once which name to use. A component drops its list when
+//      no page uses its old names any more.
+// An old name wins over its new name: after startObject() the new name may hold only its default.
+// USAGE: basic.keepOldNames(box, { inputValue: "value", getInputValue: "getValue" }, "InputB")
+const warnedOldNames = new Set();
+
+const warnOldName = function ($componentName, $oldName, $newName) {
+    const id = $componentName + "." + $oldName;
+    if (warnedOldNames.has(id)) return;
+    warnedOldNames.add(id);
+    console.warn($componentName + ': "' + $oldName + '" is an old name, use "' + $newName + '"');
+};
+
+basic.keepOldNames = function ($object, $oldNames, $componentName) {
+    basic.renameOldParams($object, $oldNames, $componentName);
+    for (const oldName in $oldNames) {
+        const newName = $oldNames[oldName];
+        // WHY not enumerable: a loop over the object (remove(), the designer) does not read the old names
+        Object.defineProperty($object, oldName, {
+            get: function () {
+                warnOldName($componentName, oldName, newName);
+                return $object[newName];
+            },
+            set: function ($value) {
+                warnOldName($componentName, oldName, newName);
+                $object[newName] = $value;
+            },
+            enumerable: false,
+            configurable: true,
+        });
+    }
+    return $object;
+};
+
+// Only the values given with an old name: the params of a call that makes no object (Ex: toast.update(values)).
+// USAGE: basic.renameOldParams(values, Toast.OLD_NAMES, "Toast")
+basic.renameOldParams = function ($params, $oldNames, $componentName) {
+    for (const oldName in $oldNames) {
+        if (!Object.prototype.hasOwnProperty.call($params, oldName)) continue;
+        const newName = $oldNames[oldName];
+        warnOldName($componentName, oldName, newName);
+        $params[newName] = $params[oldName];
+        delete $params[oldName];
     }
     return $params;
 };

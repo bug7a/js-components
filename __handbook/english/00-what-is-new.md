@@ -4,6 +4,12 @@ This document contains new features, updates, and changes added to the basic.js 
 
 ---
 
+## Version 26.11.08
+
+*   **`basic.keepOldNames(box, { oldName: "newName" }, "Comp")`:** for the authors of components. When a param of a component gets a new name, its old name keeps working for a while: a value given with it goes to the new name, and later the old name reads and writes the new one (a property, a method, an event). The console names the new name once. `basic.renameOldParams(params, ...)` does it for the values of a call only. A bridge for the pages that have not moved yet, not a way to name things. Reference: `basic/basic-what-is-new.md`.
+
+---
+
 ## Version 26.11.07
 
 *   **`border` and `round` take an array, like `padding`:** `border: [0, 0, 0, 1]` is a line at the bottom only (`[horizontal, vertical]` or `[left, top, right, bottom]`, the order of `padding`). `round: [12, 0]` rounds the two top corners (`[top, bottom]`), `round: [12, 12, 0, 12]` each corner on its own (`[topLeft, topRight, bottomRight, bottomLeft]`, clockwise as in CSS). `center()` counts the border of each side. A number works as before: fully compatible. Reference: `basic/basic-what-is-new.md`.

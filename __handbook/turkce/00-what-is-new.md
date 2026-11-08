@@ -4,6 +4,12 @@ Bu belgede basic.js kütüphanesine eklenen yeni özellikler, güncellemeler ve 
 
 ---
 
+## Versiyon 26.11.08
+
+*   **`basic.keepOldNames(box, { eskiAd: "yeniAd" }, "Comp")`:** bileşen yazanlar için. Bir bileşenin parametresi yeni bir ad alınca eski adı bir süre çalışmaya devam eder: eski adla verilen değer yeni ada geçer, sonra da eski ad yenisini okur ve yazar (bir özellik, bir metot, bir olay). Konsol yeni adı bir kez söyler. `basic.renameOldParams(params, ...)` bunu yalnızca bir çağrının değerleri için yapar. Henüz yeni adlara geçmemiş sayfalar için bir köprüdür, ad vermenin bir yolu değil. Örnekli başvuru: `basic/basic-what-is-new.md`.
+
+---
+
 ## Versiyon 26.11.07
 
 *   **`border` ve `round` da `padding` gibi dizi alır:** `border: [0, 0, 0, 1]` yalnızca altta bir çizgidir (`[yatay, dikey]` ya da `[sol, üst, sağ, alt]`: `padding`'in sırası). `round: [12, 0]` üstteki iki köşeyi yuvarlar (`[üst, alt]`), `round: [12, 12, 0, 12]` her köşeyi ayrı ayrı (`[solÜst, sağÜst, sağAlt, solAlt]`, CSS'teki gibi saat yönünde). `center()` her kenarın kalınlığını ayrı sayar. Sayı eskisi gibi çalışır: tam uyumlu. Örnekli başvuru: `basic/basic-what-is-new.md`.
